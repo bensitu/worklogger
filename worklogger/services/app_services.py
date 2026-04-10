@@ -184,6 +184,8 @@ class AppServices:
     # ------------------------------------------------------------------
     def load_settings_snapshot(self) -> AppState:
         return self.load_settings()
+
+    def resolve_ai_params(self, secondary: bool = False) -> tuple[str, str, str]:
         if secondary and self.get_setting("ai_use_secondary", "0") == "1":
             key = self.get_setting("ai2_api_key", "") or self.get_setting("ai_api_key", "")
             url = self.get_setting("ai2_base_url", "") or self.get_setting("ai_base_url", "")
@@ -193,5 +195,4 @@ class AppServices:
             url = self.get_setting("ai_base_url", "")
             mdl = self.get_setting("ai_model", "")
         return key, url, mdl
-
 
