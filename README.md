@@ -60,7 +60,7 @@ WorkLogger_build.bat
 ./WorkLogger_build.sh
 ```
 
-Both scripts use `worklogger.spec`. The generated executable and packaged artifacts are expected in `dist/`. If you create a macOS DMG, place the final `.dmg` file in `dist/` as well.
+Both scripts use `worklogger.spec`. The generated executable and packaged artifacts are expected in `dist/`. If you create a macOS App, place the final `.app` file in `dist/` as well.
 
 ## Project Layout
 
