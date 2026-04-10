@@ -9,13 +9,19 @@ __pycache__/
 # Virtual Environment
 
 venv/
+venv_x86/
+venv_arm/
 env/
 .venv/
 
 # PyInstaller
 
 build/
+build_x86/
+build_arm/
 dist/
+dist_x86/
+dist_arm/
 
 # Logs
 
