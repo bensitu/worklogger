@@ -72,6 +72,6 @@ if sys.platform == 'darwin':
         bundle_identifier='dev.worklogger.app.v1',
         info_plist={
             'NSHighResolutionCapable': True,
-            'CFBundleShortVersionString': '1.0.0',
+            'CFBundleShortVersionString': '1.1.1',
         },
     )
