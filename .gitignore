@@ -1,0 +1,49 @@
+# Python
+
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual Environment
+
+venv/
+env/
+.venv/
+
+# PyInstaller
+
+build/
+dist/
+
+# Logs
+
+*.log
+
+# OS
+
+.DS_Store
+Thumbs.db
+
+# IDE
+
+.vscode/
+.idea/
+
+# Local data and user-generated files
+
+worklog.db
+*.db
+*.bak_*
+worklogger/templates/custom/*.json
+!worklogger/templates/custom/Sample_1000000000000.json
+dist/templates/custom/*.json
+!dist/templates/custom/Sample_1000000000000.json
+
+# Do not commit unit tests
+tests/
+
+# macOS and Windows release artifacts are generated in dist/
+*.exe
+*.dmg

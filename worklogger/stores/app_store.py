@@ -1,0 +1,41 @@
+from __future__ import annotations
+from dataclasses import dataclass, replace
+from typing import Callable
+
+
+@dataclass(frozen=True)
+class AppState:
+    lang: str = "en"
+    theme: str = "blue"
+    dark: bool = False
+    work_hours: float = 8.0
+    default_break: float = 1.0
+    monthly_target: float = 168.0
+    show_holidays: bool = True
+    show_note_markers: bool = True
+    week_start_monday: bool = False
+    time_input_mode: str = "manual"
+
+
+class AppStore:
+    def __init__(self, initial: AppState | None = None):
+        self._state = initial or AppState()
+        self._listeners: list[Callable[[AppState], None]] = []
+
+    @property
+    def state(self) -> AppState:
+        return self._state
+
+    def subscribe(self, listener: Callable[[AppState], None]) -> Callable[[], None]:
+        self._listeners.append(listener)
+
+        def _unsubscribe() -> None:
+            if listener in self._listeners:
+                self._listeners.remove(listener)
+        return _unsubscribe
+
+    def patch(self, **changes) -> AppState:
+        self._state = replace(self._state, **changes)
+        for listener in list(self._listeners):
+            listener(self._state)
+        return self._state
