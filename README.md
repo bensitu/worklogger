@@ -23,7 +23,7 @@ WorkLogger is a privacy-first desktop app for tracking work hours, notes, quick 
 Release packages are published through GitHub Releases:
 
 - Windows: `WorkLogger.exe`
-- macOS: `WorkLogger.dmg`
+- macOS: `WorkLogger.app`
 
 Build outputs are generated into the `dist/` directory.
 
