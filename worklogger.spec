@@ -14,6 +14,7 @@ Notes
 
 import sys
 import os
+import glob
 
 block_cipher = None
 
@@ -22,11 +23,20 @@ block_cipher = None
 # ---------------------------------------------------------------------------
 def _collect_llama_cpp():
     try:
-        from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
-        data   = collect_data_files("llama_cpp", include_py_files=False)
-        dylibs = collect_dynamic_libs("llama_cpp")
-        return data, dylibs
-    except Exception:
+        from PyInstaller.utils.hooks import collect_dynamic_libs
+        import llama_cpp
+
+        binaries = collect_dynamic_libs("llama_cpp")
+        pkg_path = os.path.dirname(llama_cpp.__file__)
+
+        libs_dir = os.path.join(pkg_path, "libs")
+        if os.path.isdir(libs_dir):
+            for lib_file in glob.glob(os.path.join(libs_dir, "*")):
+                if os.path.isfile(lib_file):
+                    binaries.append((lib_file, "llama_cpp/libs"))
+        return [], binaries
+    except Exception as e:
+        print(f"Warning: Could not collect llama_cpp: {e}")
         return [], []
 
 _llama_data, _llama_bins = _collect_llama_cpp()
@@ -64,6 +74,8 @@ a = Analysis(
         'portalocker',
         # llama_cpp declared but optional (may not be installed at build time)
         'llama_cpp',
+        'llama_cpp.llama_cpp',
+        'llama_cpp._internals',
     ],
     hookspath=[],
     runtime_hooks=[],

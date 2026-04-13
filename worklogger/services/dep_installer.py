@@ -89,16 +89,25 @@ def _pip_install(spec: str) -> tuple[bool, str]:
 
 
 def ensure_download_deps() -> None:
-    """Install portalocker and httpx if not present.
-
-    Note: pywin32 is intentionally excluded — it must be installed via the
-    system package manager on Windows (e.g. conda or the official installer).
-    portalocker will fall back to its LockBase implementation automatically
-    on environments without win32 support.
-    """
+    """Install portalocker and httpx if not present."""
+    if getattr(sys, 'frozen', False):
+        # Both httpx and portalocker are bundled; just verify importability.
+        for pkg in ("httpx", "portalocker"):
+            if not _is_importable(pkg):
+                raise ImportError(f"Missing required component: {pkg}")
+        return
     ensure("portalocker>=2.8.0", "httpx>=0.27.0")
 
 
 def ensure_inference_deps() -> None:
     """Install llama-cpp-python (CPU-only wheel by default)."""
+    # PyInstaller frozen environment: assume llama_cpp already bundled.
+    if getattr(sys, 'frozen', False):
+        # Quick validation: if import still fails, the bundle is corrupt.
+        if not _is_importable("llama_cpp"):
+            raise ImportError(
+                "Local model support is not available in this installation.\n"
+                "Please reinstall the application from the official website."
+            )
+        return
     ensure("llama-cpp-python>=0.2.90")

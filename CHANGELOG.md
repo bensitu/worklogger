@@ -16,8 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automatic fallback to external API when local model fails.
 
 ### Changed
-- Progress bar styling moved to `themes.py` (`progress_bar_qss()`); respects active theme colour.
-- Download status messages consolidated into the log area (removed separate indicator label).
+- Progress bar respects active theme colour.
+- Download status messages consolidated into the log area.
 - PyInstaller frozen-app models directory now correctly placed next to the executable, not in the temp folder.
 - `_app_root()` uses `sys.frozen` / `sys.executable` for reliable path resolution in packaged apps.
 - `max_tokens` raised to 1024–8192 (per-model via catalog `max_tokens` field).
@@ -25,8 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - `Signal(int, int)` overflow for files > 2 GB changed to `Signal(object, object)`.
-- Duplicate "Starting download…" and "Loading local model…" log messages eliminated.
-- Import .gguf for catalog-unknown models now creates a new catalog+manifest entry (no silent rename).
+
 
 ## [1.1.1] - 2026-04-10
 

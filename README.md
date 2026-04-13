@@ -10,6 +10,7 @@ WorkLogger is a privacy-first desktop app for tracking work hours, notes, quick 
 ## Highlights
 
 - Desktop-first workflow built with PySide6
+- An on-device AI-driven report generation system
 - Manual Input and Auto Record modes for different logging styles
 - Daily tracking with start, end, break, notes, and work type
 - Quick Log support for detailed daily activity capture
@@ -73,6 +74,7 @@ worklogger/
   config/        Constants, themes, translations
   core/          Time parsing and calculation logic
   data/          SQLite persistence layer
+  models/        Local models
   services/      AI, export, and calendar services
   stores/        Setting, state
   templates/     Built-in and custom report templates
