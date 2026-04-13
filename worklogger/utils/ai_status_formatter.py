@@ -38,6 +38,16 @@ def parse_status(msg: str) -> tuple[str | None, dict]:
         "Processing AI response...": "ai_status_parse",
         "Done.": "ai_status_done",
         "Error: ": "ai_status_error",
+        # Local model lifecycle keys (emitted as JSON payload by LocalModelWorker)
+        # Listed here as a documentary fallback — they are normally already
+        # decoded via the JSON payload path above.
+        "local_model_loading":         "local_model_loading",
+        "local_model_loaded":          "local_model_loaded",
+        "local_model_generating":      "local_model_generating",
+        "local_model_downloading":     "local_model_downloading",
+        "local_model_verifying":       "local_model_verifying",
+        "local_model_hash_ok":         "local_model_hash_ok",
+        "local_model_download_ok":     "local_model_download_ok",
     }
     for en, key in mapping.items():
         if "{model}" in en:

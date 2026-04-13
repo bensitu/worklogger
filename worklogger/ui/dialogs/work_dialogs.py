@@ -177,7 +177,8 @@ class NoteEditorDialog(QDialog):
             AIProgressDialog.run(
                 self, app.lang, t["note_ai_btn"],
                 api_key, base_url, model, msgs,
-                on_success=on_success
+                on_success=on_success,
+                services=app.services,
             )
 
         do_ai()
@@ -372,7 +373,8 @@ class ReportDialog(QDialog):
             AIProgressDialog.run(
                 self, app.lang, t["report_ai_gen"],
                 api_key, base_url, model, msgs,
-                on_success=on_success
+                on_success=on_success,
+                services=app.services,
             )
 
         do_ai()

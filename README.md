@@ -1,5 +1,8 @@
 # WorkLogger
 
+![License](https://img.shields.io/badge/license-GPLv3-blue)
+![Python](https://img.shields.io/badge/python-3.9+-green)
+
 WorkLogger is a privacy-first desktop app for tracking work hours, notes, quick logs, reminders, and AI-assisted reports in multiple languages.
 
 ![WorkLogger preview](docs/images/demo_1.jpg)

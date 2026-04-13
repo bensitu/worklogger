@@ -2,7 +2,7 @@
 
 import sys
 
-APP_VERSION = "1.1.1"
+APP_VERSION = "2.0.0"
 APP_NAME = "Work Logger"
 APP_AUTHOR = "Ben Situ"
 APP_ID = "dev.worklogger.app.v1"

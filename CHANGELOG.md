@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-04-13
+
+### Added
+- **Local model inference** — on-device AI via llama-cpp-python, zero data sent externally.
+- **Model catalog** (`models/catalog.json`) — 5 models: Qwen2.5-3B Q4, Qwen3-4B, SmallThinker-3B Q4/Q2, Llama-3.2-3B Q4.
+- Model Management dialog with card-style selection, per-model status, and delete controls.
+- Automatic dependency installation (httpx, portalocker, llama-cpp-python) on first use.
+- Thinking-tag stripping (`<think>`, `<|begin_of_thought|>`) for reasoning models.
+- Automatic fallback to external API when local model fails.
+
+### Changed
+- Progress bar styling moved to `themes.py` (`progress_bar_qss()`); respects active theme colour.
+- Download status messages consolidated into the log area (removed separate indicator label).
+- PyInstaller frozen-app models directory now correctly placed next to the executable, not in the temp folder.
+- `_app_root()` uses `sys.frozen` / `sys.executable` for reliable path resolution in packaged apps.
+- `max_tokens` raised to 1024–8192 (per-model via catalog `max_tokens` field).
+- `n_ctx` set to model training context (32768 / 131072) via catalog `n_ctx` field.
+
+### Fixed
+- `Signal(int, int)` overflow for files > 2 GB changed to `Signal(object, object)`.
+- Duplicate "Starting download…" and "Loading local model…" log messages eliminated.
+- Import .gguf for catalog-unknown models now creates a new catalog+manifest entry (no silent rename).
+
 ## [1.1.1] - 2026-04-10
 
 ### Fixed

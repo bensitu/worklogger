@@ -185,14 +185,23 @@ class AppServices:
     def load_settings_snapshot(self) -> AppState:
         return self.load_settings()
 
-    def resolve_ai_params(self, secondary: bool = False) -> tuple[str, str, str]:
-        if secondary and self.get_setting("ai_use_secondary", "0") == "1":
-            key = self.get_setting("ai2_api_key", "") or self.get_setting("ai_api_key", "")
-            url = self.get_setting("ai2_base_url", "") or self.get_setting("ai_base_url", "")
-            mdl = self.get_setting("ai2_model", "") or self.get_setting("ai_model", "")
-        else:
-            key = self.get_setting("ai_api_key", "")
-            url = self.get_setting("ai_base_url", "")
-            mdl = self.get_setting("ai_model", "")
+    def resolve_ai_params(self, secondary: bool = False) -> tuple:
+        """Return ``(api_key, base_url, model)`` for the active AI channel.
+
+        When the local model is enabled *and* verified the special sentinel
+        ``LOCAL_MODEL_SENTINEL`` is returned as ``api_key`` so that
+        ``AIProgressDialog.run()`` routes the request to
+        ``LocalModelWorker`` instead of the network ``AIWorker``.
+        Any failure in the local path (file missing, SHA-256 mismatch)
+        automatically falls back to the configured external model.
+        """
+        from services.local_model_service import should_use_local_model
+        from services.local_model_service import LOCAL_MODEL_SENTINEL
+        if should_use_local_model(self):
+            return LOCAL_MODEL_SENTINEL, "", ""
+        # External model (primary) — secondary slot removed in v1.2.
+        key = self.get_setting("ai_api_key", "")
+        url = self.get_setting("ai_base_url", "")
+        mdl = self.get_setting("ai_model", "")
         return key, url, mdl
 

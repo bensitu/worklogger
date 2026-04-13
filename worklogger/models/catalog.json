@@ -1,0 +1,137 @@
+[
+  {
+    "id":         "qwen25_3b_q4",
+    "label":      "Qwen2.5-3B  Q4_K_M",
+    "file":       "Qwen2.5-3B-Instruct-Q4_K_M.gguf",
+    "url":        "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf",
+    "sha256":     "",
+    "size_mb":    1930,
+    "ram_gb":     4,
+    "n_ctx":      32768,
+    "max_tokens": 8192,
+    "default":    true,
+    "hf_repo":    "Qwen/Qwen2.5-3B-Instruct-GGUF",
+    "desc": {
+      "en":    "Qwen2.5-3B 4-bit — strong multilingual, recommended for most users.",
+      "zh":    "Qwen2.5-3B 4位量化 — 多语言能力强，适合大多数用户。",
+      "zh_tw": "Qwen2.5-3B 4位量化 — 多語言能力強，適合大多數用戶。",
+      "ja":    "Qwen2.5-3B 4ビット量子化 — 多言語対応、ほとんどのユーザーに推奨。",
+      "ko":    "Qwen2.5-3B 4비트 양자화 — 다국어 지원, 대부분의 사용자에게 권장."
+    },
+    "pros": {
+      "en":    "✓ Best multilingual support · Chinese / Japanese / Korean",
+      "zh":    "✓ 最佳多语言支持 · 中文/日文/韩文",
+      "zh_tw": "✓ 最佳多語言支援 · 中文/日文/韓文",
+      "ja":    "✓ 最高の多言語対応 · 日本語 / 中国語 / 韓国語",
+      "ko":    "✓ 최고 다국어 지원 · 한국어/중국어/일본어"
+    }
+  },
+  {
+    "id":         "qwen3_4b",
+    "label":      "Qwen3-4B",
+    "file":       "Qwen3-4B-Q4_K_M.gguf",
+    "url":        "https://huggingface.co/Qwen/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Q4_K_M.gguf",
+    "sha256":     "",
+    "size_mb":    2600,
+    "ram_gb":     5,
+    "n_ctx":      40960,
+    "max_tokens": 8192,
+    "default":    false,
+    "hf_repo":    "Qwen/Qwen3-4B-GGUF",
+    "desc": {
+      "en":    "Qwen3-4B Q4_K_M — latest Qwen3 generation with thinking mode.",
+      "zh":    "Qwen3-4B Q4_K_M — 最新一代 Qwen3，支持思考模式。",
+      "zh_tw": "Qwen3-4B Q4_K_M — 最新一代 Qwen3，支援思考模式。",
+      "ja":    "Qwen3-4B Q4_K_M — 最新Qwen3世代、思考モード対応。",
+      "ko":    "Qwen3-4B Q4_K_M — 최신 Qwen3 세대, 사고 모드 지원."
+    },
+    "pros": {
+      "en":    "✓ Latest Qwen3 · Thinking mode · Strong reasoning",
+      "zh":    "✓ 最新 Qwen3 · 思考模式 · 推理能力强",
+      "zh_tw": "✓ 最新 Qwen3 · 思考模式 · 推理能力強",
+      "ja":    "✓ 最新Qwen3 · 思考モード · 高い推論能力",
+      "ko":    "✓ 최신 Qwen3 · 사고 모드 · 강한 추론력"
+    }
+  },
+  {
+    "id":         "smallthinker_q4",
+    "label":      "SmallThinker-3B  Q4_K_M",
+    "file":       "SmallThinker-3B-Preview-Q4_K_M.gguf",
+    "url":        "https://huggingface.co/bartowski/SmallThinker-3B-Preview-GGUF/resolve/main/SmallThinker-3B-Preview-Q4_K_M.gguf",
+    "sha256":     "",
+    "size_mb":    1850,
+    "ram_gb":     4,
+    "n_ctx":      32768,
+    "max_tokens": 8192,
+    "default":    false,
+    "hf_repo":    "bartowski/SmallThinker-3B-Preview-GGUF",
+    "desc": {
+      "en":    "SmallThinker-3B 4-bit — balanced speed and quality.",
+      "zh":    "SmallThinker-3B 4位量化 — 速度与质量均衡。",
+      "zh_tw": "SmallThinker-3B 4位量化 — 速度與品質均衡。",
+      "ja":    "SmallThinker-3B 4ビット量子化 — 速度と品質のバランス。",
+      "ko":    "SmallThinker-3B 4비트 양자화 — 속도와 품질 균형."
+    },
+    "pros": {
+      "en":    "✓ Good balance · Thinking mode supported",
+      "zh":    "✓ 均衡表现 · 支持思考模式",
+      "zh_tw": "✓ 均衡表現 · 支援思考模式",
+      "ja":    "✓ バランスが良い · 思考モード対応",
+      "ko":    "✓ 균형 잡힌 성능 · 사고 모드 지원"
+    }
+  },
+  {
+    "id":         "smallthinker_q2",
+    "label":      "SmallThinker-3B  Q2_K",
+    "file":       "SmallThinker-3B-Preview-Q2_K.gguf",
+    "url":        "https://huggingface.co/bartowski/SmallThinker-3B-Preview-GGUF/resolve/main/SmallThinker-3B-Preview-Q2_K.gguf",
+    "sha256":     "",
+    "size_mb":    1090,
+    "ram_gb":     2,
+    "n_ctx":      32768,
+    "max_tokens": 8192,
+    "default":    false,
+    "hf_repo":    "bartowski/SmallThinker-3B-Preview-GGUF",
+    "desc": {
+      "en":    "SmallThinker-3B 2-bit — smallest file, fastest inference.",
+      "zh":    "SmallThinker-3B 2位量化 — 文件最小，推理最快。",
+      "zh_tw": "SmallThinker-3B 2位量化 — 檔案最小，推理最快。",
+      "ja":    "SmallThinker-3B 2ビット量子化 — 最小ファイル、最速推理。",
+      "ko":    "SmallThinker-3B 2비트 양자화 — 최소 파일, 최속 추론."
+    },
+    "pros": {
+      "en":    "✓ Minimum RAM requirement (≥2 GB)",
+      "zh":    "✓ 内存需求最低（≥2 GB）",
+      "zh_tw": "✓ 記憶體需求最低（≥2 GB）",
+      "ja":    "✓ 最小RAM要件（≥2 GB）",
+      "ko":    "✓ 최소 RAM 요구사항 (≥2 GB)"
+    }
+  },
+  {
+    "id":         "llama32_3b_q4",
+    "label":      "Llama-3.2-3B  Q4_K_M",
+    "file":       "Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+    "url":        "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+    "sha256":     "",
+    "size_mb":    2020,
+    "ram_gb":     4,
+    "n_ctx":      131072,
+    "max_tokens": 8192,
+    "default":    false,
+    "hf_repo":    "bartowski/Llama-3.2-3B-Instruct-GGUF",
+    "desc": {
+      "en":    "Llama 3.2-3B 4-bit — Meta's latest compact instruct model.",
+      "zh":    "Llama 3.2-3B 4位量化 — Meta 最新小型指令模型。",
+      "zh_tw": "Llama 3.2-3B 4位量化 — Meta 最新小型指令模型。",
+      "ja":    "Llama 3.2-3B 4ビット量子化 — Metaの最新コンパクト指示モデル。",
+      "ko":    "Llama 3.2-3B 4비트 양자화 — Meta 최신 소형 지시 모델."
+    },
+    "pros": {
+      "en":    "✓ Long context (128 K) · Strong English capability",
+      "zh":    "✓ 长上下文（128 K）· 英文能力强",
+      "zh_tw": "✓ 長上下文（128 K）· 英文能力強",
+      "ja":    "✓ 長コンテキスト（128 K）· 英語能力が高い",
+      "ko":    "✓ 긴 컨텍스트 (128 K) · 강한 영어 능력"
+    }
+  }
+]
