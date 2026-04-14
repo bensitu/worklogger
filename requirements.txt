@@ -1,3 +1,18 @@
 PySide6
 tzlocal
 holidays
+
+# ── local model inference ──
+# CPU-only wheel (no CUDA build required for basic usage).
+# For GPU acceleration install the appropriate CUDA/Metal variant manually:
+#   pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu121
+# For Apple Silicon (M1/M2) install the appropriate Metal variant manually:
+#   pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/metal
+# For CPU-only usage, install the CPU wheel manually:
+#   pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
+
+llama-cpp-python>=0.2.90
+# Chunked HTTP download with streaming support (model download)
+httpx>=0.27.0
+# File-lock to prevent concurrent multi-process model downloads
+portalocker>=2.8.0

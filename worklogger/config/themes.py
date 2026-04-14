@@ -174,4 +174,22 @@ QLineEdit::placeholder,QTextEdit::placeholder,QPlainTextEdit::placeholder{{color
 QLineEdit:focus,QTextEdit:focus,QPlainTextEdit:focus{{border-color:{acc};}}
 QDialogButtonBox QPushButton{{min-width:72px;}}
 QDialogButtonBox QPushButton:disabled{{color:{dis_txt};}}
+QProgressBar{{text-align:center;color:{txt};}}
+QProgressBar::chunk{{background:{acc};border-radius:3px;}}
 """
+
+def progress_bar_qss(accent: str, dark: bool = False) -> str:
+    """Return a QProgressBar stylesheet string matching the active theme.
+
+    Used by ``LocalDownloadDialog`` so the progress-bar chunk colour
+    always reflects the current accent colour without inline hard-coding.
+    """
+    txt = "#e8e8e8" if dark else "#333333"
+    return (
+        "QProgressBar{{"
+            "text-align:center;color:{txt};border-radius:4px;"
+            "background:#d0d0d0;min-height:14px;}}"
+        "QProgressBar::chunk{{"
+            "background:{acc};border-radius:4px;}}"
+    ).format(txt=txt, acc=accent)
+

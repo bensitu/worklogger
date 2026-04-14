@@ -344,3 +344,73 @@ class AIWorker:
                     pass
 
         threading.Thread(target=_run_test, daemon=True).start()
+
+
+
+# ---------------------------------------------------------------------------
+# LocalModelWorker — same callback contract as AIWorker
+# ---------------------------------------------------------------------------
+
+class LocalModelWorker:
+    """Drop-in replacement for :class:`AIWorker` using on-device inference.
+
+    Shares the same *on_done* / *on_error* / *on_status* callback contract so
+    :class:`~ui.dialogs.ai_dialogs.AIProgressDialog` works unchanged.
+
+    Fallback error keys (emitted via *on_error*):
+    * ``"local_model_load_fail"``      — OOM / llama.cpp runtime error
+    * ``"local_model_not_downloaded"`` — file missing
+    * ``"local_model_import_error"``   — llama-cpp-python not installed
+    """
+
+    def __init__(
+        self,
+        messages: list[dict],
+        on_done:   Callable[[str], None],
+        on_error:  Callable[[str, str], None],
+        services=None,
+        max_tokens:  int   = 1024,
+        temperature: float = 0.3,
+        on_status: Optional[Callable[[str], None]] = None,
+    ) -> None:
+        self.invoker = _CallbackInvoker(on_done, on_error, on_status)
+        self.thread  = threading.Thread(
+            target=self._run,
+            args=(messages, services, max_tokens, temperature),
+            daemon=True,
+        )
+        self.thread.start()
+
+    def _run(self, messages, services, max_tokens, temperature):
+        invoker = self.invoker
+
+        def _status(key: str) -> None:
+            try:
+                invoker.status_signal.emit(json.dumps({"key": key}))
+            except Exception:
+                pass
+
+        try:
+            from services.local_model_service import LocalModelService
+            # NOTE: ai_dialogs already shows "local_model_loading" before
+            # starting this worker — do NOT emit it again here.
+            svc = LocalModelService.get(services)
+            # load_provider() triggers lazy load (may take several seconds).
+            # Auto-installs llama-cpp-python on first call if needed.
+            svc.load_provider()
+            _status("local_model_loaded")
+            _status("local_model_generating")   # "Starting generation…"
+            text = svc.generate(messages, temperature=temperature,
+                                max_tokens=max_tokens)
+            _status("ai_status_done")
+            invoker.done_signal.emit(text)
+
+        except (MemoryError, RuntimeError) as exc:
+            invoker.error_signal.emit("local_model_load_fail", str(exc))
+        except FileNotFoundError as exc:
+            invoker.error_signal.emit("local_model_not_downloaded", str(exc))
+        except ImportError as exc:
+            invoker.error_signal.emit("local_model_import_error", str(exc))
+        except Exception as exc:
+            invoker.error_signal.emit(
+                f"Local model error: {type(exc).__name__}", str(exc))

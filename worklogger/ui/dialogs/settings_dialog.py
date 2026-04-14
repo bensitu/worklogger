@@ -1,10 +1,12 @@
 from __future__ import annotations
 import sys
+import threading
 
 from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QHBoxLayout, QFormLayout, QTabWidget,
     QPushButton, QLabel, QLineEdit, QTextEdit, QScrollArea, QMessageBox,
     QDoubleSpinBox, QGroupBox, QDialogButtonBox, QComboBox,
+    QFrame, QFileDialog,
 )
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont
@@ -160,16 +162,22 @@ class SettingsDialog(QDialog):
 
         ai_scroll = QScrollArea()
         ai_scroll.setWidgetResizable(True)
+        ai_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         ai_inner = QWidget()
         ai_scroll.setWidget(ai_inner)
         aiv = QVBoxLayout(ai_inner)
         aiv.setContentsMargins(14, 14, 14, 14)
         aiv.setSpacing(12)
 
-        ai_hint = QLabel(t.get("ai_provider_hint", ""))
-        ai_hint.setWordWrap(True)
-        ai_hint.setObjectName("muted")
-        aiv.addWidget(ai_hint)
+        _acc = THEMES[app_ref.theme][app_ref.dark][0]
+        _off = "#505470" if app_ref.dark else "#b0b8cc"
+
+        # ── External Model group (ex-Primary AI) ──────────────────────────
+        grp_ext = QGroupBox(t.get("ai_external_group", "External Model"))
+        gfl = QFormLayout(grp_ext)
+        gfl.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        gfl.setSpacing(8)
+        gfl.setContentsMargins(10, 10, 10, 10)
 
         def _ai_line(placeholder=""):
             le = QLineEdit()
@@ -177,298 +185,210 @@ class SettingsDialog(QDialog):
             le.setPlaceholderText(placeholder)
             return le
 
-        def _make_ai_group(grp_title, key_attr, url_attr, model_attr,
-                           key_val, url_val, model_val,
-                           test_btn_attr, test_lbl_attr):
-            grp = QGroupBox(grp_title)
-            gfl = QFormLayout(grp)
-            gfl.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-            gfl.setSpacing(8)
-            gfl.setContentsMargins(10, 10, 10, 10)
+        self._ai_key = _ai_line(t.get("ai_key_placeholder", "sk-… / sk-ant-…"))
+        self._ai_key.setEchoMode(QLineEdit.Password)
+        self._ai_key.setText(app_ref.services.get_setting("ai_api_key", ""))
+        gfl.addRow(t["ai_api_key"], self._ai_key)
 
-            key_w = _ai_line("sk-… / sk-ant-…")
-            key_w.setEchoMode(QLineEdit.Password)
-            key_w.setText(key_val)
-            setattr(self, key_attr, key_w)
-            gfl.addRow(t["ai_api_key"], key_w)
+        self._ai_url = _ai_line(
+            t.get("ai_url_placeholder",
+                  "https://api.openai.com/v1 | https://api.anthropic.com"))
+        self._ai_url.setText(app_ref.services.get_setting("ai_base_url", ""))
+        gfl.addRow(t["ai_base_url"], self._ai_url)
 
-            url_w = _ai_line(
-                "https://api.openai.com/v1 | https://api.anthropic.com"
-            )
-            url_w.setText(url_val)
-            setattr(self, url_attr, url_w)
-            gfl.addRow(t["ai_base_url"], url_w)
+        self._ai_model = _ai_line(
+            t.get("ai_model_placeholder", "gpt-4o-mini | claude-haiku-4-5-20251001"))
+        self._ai_model.setText(app_ref.services.get_setting("ai_model", ""))
+        gfl.addRow(t["ai_model"], self._ai_model)
 
-            mdl_w = _ai_line(
-                "GPT-5 mini | claude-haiku-4-5-20251001"
-            )
-            mdl_w.setText(model_val)
-            setattr(self, model_attr, mdl_w)
-            gfl.addRow(t["ai_model"], mdl_w)
+        ext_test_row = QHBoxLayout()
+        ext_test_row.setSpacing(8)
+        self._ai_test_btn = QPushButton(t["ai_test_btn"])
+        self._ai_test_btn.setObjectName("action_btn")
+        self._ai_test_btn.setFixedWidth(80)
+        self._ai_test_lbl = QLabel()
+        self._ai_test_lbl.setObjectName("muted")
+        self._ai_test_lbl.setWordWrap(True)
+        self._ai_test_lbl.setMaximumWidth(FW - 88)  # stay within form width
+        ext_test_row.addWidget(self._ai_test_btn)
+        ext_test_row.addWidget(self._ai_test_lbl, 1)
+        ext_test_row.setStretch(1, 1)
+        gfl.addRow("", ext_test_row)
 
-            test_row = QHBoxLayout()
-            test_row.setSpacing(8)
-            test_btn = QPushButton(t["ai_test_btn"])
-            test_btn.setObjectName("action_btn")
-            test_btn.setFixedWidth(80)
-            test_lbl = QLabel()
-            test_lbl.setObjectName("muted")
-            setattr(self, test_btn_attr, test_btn)
-            setattr(self, test_lbl_attr, test_lbl)
-            test_row.addWidget(test_btn)
-            test_row.addWidget(test_lbl, 1)
-            gfl.addRow("", test_row)
+        def _run_ext_test():
+            ak  = self._ai_key.text().strip()
+            bu  = self._ai_url.text().strip()
+            mdl = self._ai_model.text().strip()
+            _fbw = self.focusWidget()
 
-            def _run_test():
-                ak = key_w.text().strip()
-                bu = url_w.text().strip()
-                mdl = mdl_w.text().strip()
-                focus_before = self.focusWidget()
+            def _restore():
+                if _fbw and _fbw is not self._ai_test_btn and _fbw.isEnabled():
+                    QTimer.singleShot(0, lambda: _fbw.setFocus(
+                        Qt.FocusReason.OtherFocusReason))
 
-                def _restore_focus():
-                    if focus_before and focus_before is not test_btn and focus_before.isEnabled() and focus_before.isVisible():
-                        QTimer.singleShot(
-                            0, lambda: focus_before.setFocus(Qt.FocusReason.OtherFocusReason))
-                    else:
-                        QTimer.singleShot(
-                            0, lambda: self.setFocus(Qt.FocusReason.OtherFocusReason))
-                if not ak:
-                    short = t.get("ai_err_api_key_missing", "Missing API Key")
-                    detail = t.get(
-                        "ai_err_api_key_missing_detail",
-                        "API Key is empty. Please enter your API Key in Settings → AI.")
-                    test_lbl.setText(t["ai_test_fail"].format(short))
-                    test_lbl.setStyleSheet("color:#e03333;font-weight:600;")
+            for val, key_miss, key_miss_d in [
+                (ak,  "ai_err_api_key_missing", "ai_err_api_key_missing_detail"),
+                (bu,  "ai_err_baseurl_missing", "ai_err_baseurl_missing_detail"),
+                (mdl, "ai_err_model_missing",   "ai_err_model_missing_detail"),
+            ]:
+                if not val:
+                    short  = t.get(key_miss, key_miss)
+                    detail = t.get(key_miss_d, key_miss_d)
+                    self._ai_test_lbl.setText(t["ai_test_fail"].format(short))
+                    self._ai_test_lbl.setStyleSheet("color:#e03333;font-weight:600;")
                     QMessageBox.warning(self, t["settings_title"], detail)
                     return
-                if not bu:
-                    short = t.get("ai_err_baseurl_missing", "Missing Base URL")
-                    detail = t.get(
-                        "ai_err_baseurl_missing_detail",
-                        "API Base URL is empty. Please enter the API Base URL in Settings → AI.")
-                    test_lbl.setText(t["ai_test_fail"].format(short))
-                    test_lbl.setStyleSheet("color:#e03333;font-weight:600;")
-                    QMessageBox.warning(self, t["settings_title"], detail)
-                    return
-                if not mdl:
-                    short = t.get("ai_err_model_missing", "Missing model")
-                    detail = t.get(
-                        "ai_err_model_missing_detail",
-                        "Model name is empty. Please enter a model name in Settings → AI.")
-                    test_lbl.setText(t["ai_test_fail"].format(short))
-                    test_lbl.setStyleSheet("color:#e03333;font-weight:600;")
-                    QMessageBox.warning(self, t["settings_title"], detail)
-                    return
-                test_btn.setEnabled(False)
-                test_lbl.setStyleSheet("")
-                test_lbl.setText(t["ai_test_testing"])
-                _restore_focus()
 
-                def _on_timeout_ui():
-                    test_lbl.setText(t["ai_test_fail"].format("Timeout"))
-                    test_lbl.setStyleSheet("color:#e03333;font-weight:600;")
-                    test_btn.setEnabled(True)
-                timer = threading.Timer(
-                    10.0, lambda: QTimer.singleShot(0, _on_timeout_ui))
-                timer.start()
-                acc_col = THEMES[app_ref.theme][app_ref.dark][0]
+            self._ai_test_btn.setEnabled(False)
+            self._ai_test_lbl.setStyleSheet("")
+            self._ai_test_lbl.setText(t["ai_test_testing"])
+            _restore()
 
-                def _on_status(msg: str):
-                    text = render_status_text(msg, T[app_ref.lang])
-                    try:
-                        QTimer.singleShot(0, lambda: test_lbl.setText(text))
-                    except Exception:
-                        pass
-
-                def _ok(_text):
-                    try:
-                        timer.cancel()
-                    except Exception:
-                        pass
-                    test_lbl.setText(t["ai_test_ok"])
-                    test_lbl.setStyleSheet(f"color:{acc_col};font-weight:600;")
-                    test_btn.setEnabled(True)
-
-                def _err(short, detail):
-                    try:
-                        timer.cancel()
-                    except Exception:
-                        pass
-                    test_lbl.setText(t["ai_test_fail"].format(short))
-                    test_lbl.setStyleSheet("color:#e03333;font-weight:600;")
-                    test_btn.setEnabled(True)
-                    if detail:
-                        mb = QMessageBox(QMessageBox.Warning,
-                                         t["settings_title"], short, parent=self)
-                        mb.setDetailedText(detail)
-                        mb.exec()
-
-                from services.ai_service import AIWorker as _AIW
-                _AIW.test(ak, bu, mdl, _ok, _err, on_status=_on_status)
-
-            test_btn.clicked.connect(_run_test)
-            return grp
-
-        grp1 = _make_ai_group(
-            t["ai_primary_group"],
-            "_ai_key", "_ai_url", "_ai_model",
-            app_ref.services.get_setting("ai_api_key",  ""),
-            app_ref.services.get_setting("ai_base_url", ""),
-            app_ref.services.get_setting("ai_model",    ""),
-            "_ai_test_btn", "_ai_test_lbl",
-        )
-        aiv.addWidget(grp1)
-
-        grp2 = QGroupBox(t["ai_secondary_group"])
-        sf = QFormLayout(grp2)
-        sf.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        sf.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
-        sf.setSpacing(8)
-        sf.setContentsMargins(10, 10, 10, 10)
-
-        _off_sw = "#505470" if app_ref.dark else "#b0b8cc"
-        _acc_sw = THEMES[app_ref.theme][app_ref.dark][0]
-        self._ai_use_sec = SwitchButton(
-            checked=app_ref.services.get_setting("ai_use_secondary", "0") == "1",
-            color_on=_acc_sw, color_off=_off_sw,
-        )
-        row_wrap = QWidget()
-        row_layout = QHBoxLayout(row_wrap)
-        row_layout.setContentsMargins(0, 0, 0, 0)
-        lbl = QLabel(t["ai_use_secondary"])
-        row_layout.addWidget(lbl)
-        row_layout.addWidget(self._ai_use_sec)
-        row_layout.addStretch()
-        sf.addRow(row_wrap)
-
-        self._ai2_key = _ai_line("sk-… / sk-ant-…")
-        self._ai2_key.setEchoMode(QLineEdit.Password)
-        self._ai2_key.setText(app_ref.services.get_setting("ai2_api_key", ""))
-        sf.addRow(t["ai2_api_key"], self._ai2_key)
-
-        self._ai2_url = _ai_line("https://api.deepseek.com/v1")
-        self._ai2_url.setText(app_ref.services.get_setting("ai2_base_url", ""))
-        sf.addRow(t["ai2_base_url"], self._ai2_url)
-
-        self._ai2_model = _ai_line("deepseek-chat / qwen-plus / claude-sonnet")
-        self._ai2_model.setText(app_ref.services.get_setting("ai2_model", ""))
-        sf.addRow(t["ai2_model"], self._ai2_model)
-
-        test2_row = QHBoxLayout()
-        test2_row.setSpacing(8)
-        self._ai2_test_btn = QPushButton(t["ai_test_btn"])
-        self._ai2_test_btn.setObjectName("action_btn")
-        self._ai2_test_btn.setFixedWidth(80)
-        self._ai2_test_lbl = QLabel()
-        self._ai2_test_lbl.setObjectName("muted")
-        test2_row.addWidget(self._ai2_test_btn)
-        test2_row.addWidget(self._ai2_test_lbl, 1)
-        sf.addRow("", test2_row)
-
-        def _run_test2():
-            ak = self._ai2_key.text().strip()
-            bu = self._ai2_url.text().strip()
-            mdl = self._ai2_model.text().strip()
-            focus_before = self.focusWidget()
-
-            def _restore_focus():
-                if focus_before and focus_before is not self._ai2_test_btn and focus_before.isEnabled() and focus_before.isVisible():
-                    QTimer.singleShot(
-                        0, lambda: focus_before.setFocus(Qt.FocusReason.OtherFocusReason))
-                else:
-                    QTimer.singleShot(
-                        0, lambda: self.setFocus(Qt.FocusReason.OtherFocusReason))
-            if not ak:
-                short = t.get("ai_err_api_key_missing", "Missing API Key")
-                detail = t.get(
-                    "ai_err_api_key_missing_detail",
-                    "API Key is empty. Please enter your API Key in Settings → AI.")
-                self._ai2_test_lbl.setText(t["ai_test_fail"].format(short))
-                self._ai2_test_lbl.setStyleSheet(
-                    "color:#e03333;font-weight:600;")
-                QMessageBox.warning(self, t["settings_title"], detail)
-                return
-            if not bu:
-                short = t.get("ai_err_baseurl_missing", "Missing Base URL")
-                detail = t.get(
-                    "ai_err_baseurl_missing_detail",
-                    "API Base URL is empty. Please enter the API Base URL in Settings → AI.")
-                self._ai2_test_lbl.setText(t["ai_test_fail"].format(short))
-                self._ai2_test_lbl.setStyleSheet(
-                    "color:#e03333;font-weight:600;")
-                QMessageBox.warning(self, t["settings_title"], detail)
-                return
-            if not mdl:
-                short = t.get("ai_err_model_missing", "Missing model")
-                detail = t.get(
-                    "ai_err_model_missing_detail",
-                    "Model name is empty. Please enter a model name in Settings → AI.")
-                self._ai2_test_lbl.setText(t["ai_test_fail"].format(short))
-                self._ai2_test_lbl.setStyleSheet(
-                    "color:#e03333;font-weight:600;")
-                QMessageBox.warning(self, t["settings_title"], detail)
-                return
-            self._ai2_test_btn.setEnabled(False)
-            self._ai2_test_lbl.setStyleSheet("")
-            self._ai2_test_lbl.setText(t["ai_test_testing"])
-            _restore_focus()
-            acc_col = THEMES[app_ref.theme][app_ref.dark][0]
-
-            def _on_to2_ui():
-                self._ai2_test_lbl.setText(t["ai_test_fail"].format("Timeout"))
-                self._ai2_test_lbl.setStyleSheet(
-                    "color:#e03333;font-weight:600;")
-                self._ai2_test_btn.setEnabled(True)
-            timer2 = threading.Timer(
-                10.0, lambda: QTimer.singleShot(0, _on_to2_ui))
-            timer2.start()
+            def _on_to():
+                self._ai_test_lbl.setText(t["ai_test_fail"].format("Timeout"))
+                self._ai_test_lbl.setStyleSheet("color:#e03333;font-weight:600;")
+                self._ai_test_btn.setEnabled(True)
+            _timer = threading.Timer(10.0, lambda: QTimer.singleShot(0, _on_to))
+            _timer.start()
 
             def _ok(_text):
-                try:
-                    timer2.cancel()
-                except Exception:
-                    pass
-                self._ai2_test_lbl.setText(t["ai_test_ok"])
-                self._ai2_test_lbl.setStyleSheet(
-                    f"color:{acc_col};font-weight:600;")
-                self._ai2_test_btn.setEnabled(True)
+                try: _timer.cancel()
+                except Exception: pass
+                self._ai_test_lbl.setText(t["ai_test_ok"])
+                self._ai_test_lbl.setStyleSheet(f"color:{_acc};font-weight:600;")
+                self._ai_test_btn.setEnabled(True)
 
             def _err(short, detail):
-                try:
-                    timer2.cancel()
-                except Exception:
-                    pass
-                self._ai2_test_lbl.setText(t["ai_test_fail"].format(short))
-                self._ai2_test_lbl.setStyleSheet(
-                    "color:#e03333;font-weight:600;")
-                self._ai2_test_btn.setEnabled(True)
+                try: _timer.cancel()
+                except Exception: pass
+                self._ai_test_lbl.setText(t["ai_test_fail"].format(short))
+                self._ai_test_lbl.setStyleSheet("color:#e03333;font-weight:600;")
+                self._ai_test_btn.setEnabled(True)
                 if detail:
-                    mb = QMessageBox(QMessageBox.Warning,
-                                     t["settings_title"], short, parent=self)
+                    mb = QMessageBox(QMessageBox.Warning, t["settings_title"],
+                                     short, parent=self)
                     mb.setDetailedText(detail)
                     mb.exec()
 
-            def _on_status2(msg: str):
+            def _on_st(msg):
                 text = render_status_text(msg, T[app_ref.lang])
-                try:
-                    QTimer.singleShot(
-                        0, lambda: self._ai2_test_lbl.setText(text))
-                except Exception:
-                    pass
+                QTimer.singleShot(0, lambda: self._ai_test_lbl.setText(text))
 
             from services.ai_service import AIWorker as _AIW
-            _AIW.test(ak, bu, mdl, _ok, _err, on_status=_on_status2)
+            _AIW.test(ak, bu, mdl, _ok, _err, on_status=_on_st)
 
-        self._ai2_test_btn.clicked.connect(_run_test2)
+        self._ai_test_btn.clicked.connect(_run_ext_test)
+        aiv.addWidget(grp_ext)
 
-        def _toggle_sec(checked):
-            for w in (self._ai2_key, self._ai2_url, self._ai2_model,
-                      self._ai2_test_btn):
-                w.setEnabled(checked)
-        self._ai_use_sec.toggled.connect(_toggle_sec)
-        _toggle_sec(self._ai_use_sec.isChecked())
+        # ── Local Model group ─────────────────────────────────────────────
+        grp_local = QGroupBox(t.get("ai_local_group", "Local Model"))
+        lfl = QVBoxLayout(grp_local)
+        lfl.setSpacing(10)
+        lfl.setContentsMargins(10, 10, 10, 10)
 
-        aiv.addWidget(grp2)
+        # Toggle row: [label]  [switch]
+        toggle_row = QWidget()
+        tr_lyt = QHBoxLayout(toggle_row)
+        tr_lyt.setContentsMargins(0, 0, 0, 0)
+        tr_lyt.setSpacing(8)
+
+        self._local_enabled_sw = SwitchButton(
+            checked=app_ref.services.get_setting("local_model_enabled", "0") == "1",
+            color_on=_acc, color_off=_off,
+        )
+        lbl_enable = QLabel(t.get("local_model_enable_label", "Enable local model"))
+        lf2 = QFont()
+        lf2.setBold(True)
+        lbl_enable.setFont(lf2)
+        tr_lyt.addWidget(lbl_enable)
+        tr_lyt.addStretch()
+        tr_lyt.addWidget(self._local_enabled_sw)
+        lfl.addWidget(toggle_row)
+
+        # Secondary description line
+        lbl_effect = QLabel(t.get(
+            "local_model_hint",
+            "When enabled, text processing uses the local model first "
+            "— no data is sent to external services.",
+        ))
+        lbl_effect.setWordWrap(True)
+        lbl_effect.setObjectName("muted")
+        lfl.addWidget(lbl_effect)
+
+        # Status label
+        self._local_status_lbl = QLabel()
+        self._local_status_lbl.setObjectName("muted")
+        lfl.addWidget(self._local_status_lbl)
+
+        # Single "Model Management" button (opens unified dialog)
+        btn_row_w = QWidget()
+        btn_row_l = QHBoxLayout(btn_row_w)
+        btn_row_l.setContentsMargins(0, 0, 0, 0)
+        btn_row_l.setSpacing(8)
+        self._local_dl_btn = QPushButton(t.get("local_model_download_btn", "Download"))
+        self._local_dl_btn.setObjectName("action_btn")
+        btn_row_l.addWidget(self._local_dl_btn)
+        btn_row_l.addStretch()
+        lfl.addWidget(btn_row_w)
+        aiv.addWidget(grp_local)
+
+        # ── Local model status refresh ────────────────────────────────────
+        def _refresh_local_status() -> None:
+            try:
+                from services.local_model_service import (
+                    verify_model_file, get_active_entry_id,
+                    load_catalog, get_models_dir, localize_field,
+                )
+                mdir     = get_models_dir()
+                entry_id = get_active_entry_id(mdir)
+                ready    = verify_model_file(mdir, entry_id)
+                catalog  = load_catalog(mdir)
+                cat      = next((c for c in catalog
+                                 if c.get("id") == entry_id),
+                                catalog[0] if catalog else {})
+                # Use inline label from catalog (no i18n key indirection)
+                lbl_text = localize_field(cat, "label", app_ref.lang) or cat.get("label", "")
+            except Exception:
+                ready    = False
+                lbl_text = ""
+            if ready:
+                status = "✓  " + t.get("local_model_status_ready", "Ready")
+                if lbl_text:
+                    status = f"✓  {lbl_text}  —  {t.get('local_model_status_ready', 'Ready')}"
+                self._local_status_lbl.setText(status)
+                self._local_status_lbl.setStyleSheet(
+                    f"color:{_acc};font-weight:600;")
+                self._local_dl_btn.setText(
+                    t.get("local_model_select_btn", "Select / Change"))
+            else:
+                self._local_status_lbl.setText(
+                    t.get("local_model_status_not_downloaded", "Not downloaded"))
+                self._local_status_lbl.setStyleSheet("")
+                self._local_dl_btn.setText(
+                    t.get("local_model_download_btn", "Download"))
+
+        _refresh_local_status()
+
+        def _open_model_management():
+            """Open the unified Model Management dialog."""
+            from ui.dialogs.local_model_dialogs import LocalDownloadDialog
+            from config.themes import THEMES
+            theme_colors = THEMES.get(app_ref.theme, THEMES["blue"])
+            accent = theme_colors.get(app_ref.dark, theme_colors.get(False, ("",)))[0]
+            dlg = LocalDownloadDialog(
+                self, app_ref.lang,
+                accent_color=accent,
+                dark=app_ref.dark,
+            )
+            dlg.exec()
+            from services.local_model_service import LocalModelService
+            LocalModelService.reset()
+            from services.download_controller import DownloadController
+            DownloadController.reset()
+            _refresh_local_status()
+
+        self._local_dl_btn.clicked.connect(_open_model_management)
+
         aiv.addStretch()
         tabs.addTab(ai_scroll, t["tab_ai"])
 
@@ -614,10 +534,10 @@ class SettingsDialog(QDialog):
         app.services.set_setting("ai_api_key", self._ai_key.text().strip())
         app.services.set_setting("ai_base_url", self._ai_url.text().strip())
         app.services.set_setting("ai_model", self._ai_model.text().strip())
-        app.services.set_setting("ai2_api_key", self._ai2_key.text().strip())
-        app.services.set_setting("ai2_base_url", self._ai2_url.text().strip())
-        app.services.set_setting("ai2_model", self._ai2_model.text().strip())
-        app.services.set_setting("ai_use_secondary", "1" if self._ai_use_sec.isChecked() else "0")
+        app.services.set_setting(
+            "local_model_enabled",
+            "1" if self._local_enabled_sw.isChecked() else "0"
+        )
 
         new_show_hol = self._show_holidays.isChecked()
         old_show_hol = app.services.get_setting("show_holidays", "1") == "1"

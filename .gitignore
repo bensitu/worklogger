@@ -50,6 +50,12 @@ dist/templates/custom/*.json
 # Do not commit unit tests
 tests/
 
+# Local models and data files
+worklogger/models/*.gguf
+worklogger/models/*.json
+worklogger/models/*.lock
+!worklogger/models/catalog.json
+
 # macOS and Windows release artifacts are generated in dist/
 *.exe
 *.dmg
