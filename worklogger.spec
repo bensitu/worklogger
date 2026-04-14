@@ -75,7 +75,7 @@ a = Analysis(
         ("worklogger/templates/ko",                         "templates/ko"),
         ("worklogger/templates/custom/Sample_1000000000000.json",
                                                             "templates/custom"),
-        # Local model catalog (model list; no GGUF file bundled)
+        # Local model catalog
         ("worklogger/models/catalog.json",                  "models"),
     ] + _llama_data + _httpx_data + _portalocker_data,
     hiddenimports=[
@@ -97,7 +97,6 @@ a = Analysis(
         "portalocker",
         "portalocker.utils",
         "portalocker.exceptions",
-        # Needed by llama_cpp import; keep explicit to avoid accidental pruning
         "numpy",
         # httpx back-end
         "httpcore",
@@ -145,7 +144,7 @@ if sys.platform == "darwin":
         bundle_identifier="dev.worklogger.app.v1",
         info_plist={
             "NSHighResolutionCapable": True,
-            "CFBundleShortVersionString": "2.0.0",
-            "CFBundleVersion": "4",
+            "CFBundleShortVersionString": "2.0.1",
+            "CFBundleVersion": "5",
         },
     )

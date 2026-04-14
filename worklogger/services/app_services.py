@@ -6,6 +6,7 @@ from calendar import monthrange
 from typing import Callable, Iterable
 import urllib.request
 import json as _json
+from PySide6.QtCore import QObject, Signal
 
 from config.constants import APP_VERSION, GITHUB_RELEASES_API
 from data.db import DB
@@ -15,16 +16,21 @@ from services import report_service
 from stores.app_store import AppState
 
 
+class _UpdateBridge(QObject):
+    done = Signal(str)
+
+
 class AppServices:
     """Aggregate service layer.
 
     All business operations pass through here so the UI never touches
-    ``DB`` directly.  Heavy-lifting (report gen, CSV/ICS, AI calls) is
-    delegated to the specialised service modules.
+    ``DB`` directly. Heavy-lifting (report gen, CSV/ICS, AI calls) is
+    delegated to specialised service modules.
     """
 
     def __init__(self, db: DB | None = None):
         self.db = db or DB()
+        self._update_bridges: list[_UpdateBridge] = []
 
     def get_setting(self, key: str, default=None):
         return self.db.get_setting(key, default)
@@ -108,21 +114,28 @@ class AppServices:
         t: dict,
         on_result: Callable[[str], None],
     ) -> None:
-        """Check for a newer release in a background thread.
+        """Check for a newer release in a background thread."""
+        bridge = _UpdateBridge()
+        self._update_bridges.append(bridge)
 
-        *on_result* is always called on the Qt main thread via
-        ``QTimer.singleShot`` so it is safe to update UI widgets.
-        """
-        from PySide6.QtCore import QTimer
+        def _deliver(msg: str) -> None:
+            try:
+                on_result(msg)
+            finally:
+                try:
+                    self._update_bridges.remove(bridge)
+                except ValueError:
+                    pass
+
+        bridge.done.connect(_deliver)
 
         def _fetch():
             msg = self._check_update_sync(t)
-            QTimer.singleShot(0, lambda: on_result(msg))
+            bridge.done.emit(msg)
 
         threading.Thread(target=_fetch, daemon=True).start()
 
     def _check_update_sync(self, t: dict) -> str:
-        """Blocking update check — must only be called from a background thread."""
         req = urllib.request.Request(
             GITHUB_RELEASES_API,
             headers={"User-Agent": "WorkLogger/" + APP_VERSION},
@@ -147,7 +160,6 @@ class AppServices:
                 return f"Update check failed: {err}"
 
     def load_settings(self) -> AppState:
-        """Load all persisted settings and return a typed ``AppState``."""
         return AppState(
             lang=self.get_setting("lang", "en"),
             theme=self.get_setting("theme", "blue"),
@@ -162,7 +174,6 @@ class AppServices:
         )
 
     def save_settings(self, state: AppState) -> None:
-        """Persist an ``AppState`` snapshot to the database in one pass."""
         mapping: dict[str, str] = {
             "lang": state.lang,
             "theme": state.theme,
@@ -178,30 +189,20 @@ class AppServices:
         for key, value in mapping.items():
             self.db.set_setting(key, value)
 
-    # ------------------------------------------------------------------
-    # Legacy shim — kept for backward compatibility with existing callers
-    # that haven't been migrated yet.  Will be removed in a future pass.
-    # ------------------------------------------------------------------
     def load_settings_snapshot(self) -> AppState:
         return self.load_settings()
 
     def resolve_ai_params(self, secondary: bool = False) -> tuple:
-        """Return ``(api_key, base_url, model)`` for the active AI channel.
-
-        When the local model is enabled *and* verified the special sentinel
-        ``LOCAL_MODEL_SENTINEL`` is returned as ``api_key`` so that
-        ``AIProgressDialog.run()`` routes the request to
-        ``LocalModelWorker`` instead of the network ``AIWorker``.
-        Any failure in the local path (file missing, SHA-256 mismatch)
-        automatically falls back to the configured external model.
-        """
         from services.local_model_service import should_use_local_model
         from services.local_model_service import LOCAL_MODEL_SENTINEL
         if should_use_local_model(self):
             return LOCAL_MODEL_SENTINEL, "", ""
-        # External model (primary) — secondary slot removed in v1.2.
-        key = self.get_setting("ai_api_key", "")
-        url = self.get_setting("ai_base_url", "")
-        mdl = self.get_setting("ai_model", "")
+        if secondary and self.get_setting("ai_use_secondary", "0") == "1":
+            key = self.get_setting("ai2_api_key", "") or self.get_setting("ai_api_key", "")
+            url = self.get_setting("ai2_base_url", "") or self.get_setting("ai_base_url", "")
+            mdl = self.get_setting("ai2_model", "") or self.get_setting("ai_model", "")
+        else:
+            key = self.get_setting("ai_api_key", "")
+            url = self.get_setting("ai_base_url", "")
+            mdl = self.get_setting("ai_model", "")
         return key, url, mdl
-
