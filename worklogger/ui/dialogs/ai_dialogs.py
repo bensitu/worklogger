@@ -139,22 +139,25 @@ class AIProgressDialog(QDialog):
             t = T[lang]
             if short in _LOCAL_FAIL_KEYS:
                 # ── Automatic fallback to external model ──────────────────
-                # 1. Tell user what happened.
+                # 1. Surface the local-model failure message in the log.
+                friendly_local = t.get(short, short)
+                dlg.log.append(f"[{t.get('local_model_download_fail', 'Local model')}] "
+                               f"{friendly_local}")
+                # 2. Announce fallback attempt.
                 dlg.append("local_model_fallback_toast")
-                # 2. Fetch real external params (api_key here is the sentinel).
+
+                # 3. Fetch external model params.
+                ext_key = ext_url = ext_mdl = ""
                 if services is not None:
                     try:
-                        ext_key, ext_url, ext_mdl = services.get_setting(
-                            "ai_api_key", ""), services.get_setting(
-                            "ai_base_url", ""), services.get_setting(
-                            "ai_model", "")
+                        ext_key = services.get_setting("ai_api_key",  "") or ""
+                        ext_url = services.get_setting("ai_base_url", "") or ""
+                        ext_mdl = services.get_setting("ai_model",    "") or ""
                     except Exception:
-                        ext_key, ext_url, ext_mdl = "", "", ""
-                else:
-                    ext_key, ext_url, ext_mdl = "", "", ""
+                        pass
 
                 if ext_key and ext_url and ext_mdl:
-                    # 3. Start external worker; reuse the same dialog.
+                    # 4a. External model is configured — start worker.
                     dlg.append("ai_init")
                     dlg._timeout_timer.start(30000)
                     dlg._worker = AIWorker(
@@ -163,9 +166,17 @@ class AIProgressDialog(QDialog):
                         on_status=on_status,
                     )
                 else:
-                    # No external model configured — show error and stop.
-                    friendly = t.get(short, short)
-                    dlg.set_error(friendly, detail)
+                    # 4b. No external model configured — explain clearly.
+                    dlg._timeout_timer.stop()
+                    dlg.log.append("")
+                    dlg.set_error(
+                        t.get("ai_err_no_fallback",
+                              "No external model configured"),
+                        t.get("ai_err_no_fallback_detail",
+                              "Local model failed and no external API key / URL / model "
+                              "name is configured.\n"
+                              "Please configure an external model in Settings → AI."),
+                    )
                     dlg.cancel_btn.setEnabled(True)
             else:
                 dlg.set_error(short, detail)

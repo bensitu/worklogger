@@ -1,9 +1,16 @@
-"""Automatic dependency installer for optional runtime packages.
+"""Dependency checker / installer for optional runtime packages.
 
-Packages needed for local model inference (llama-cpp-python, httpx) are not
-listed in requirements.txt because they are large / platform-specific.
-This module installs them on first use so the app ships as a single package
-and users never need to open a terminal.
+Frozen (PyInstaller) builds
+----------------------------
+When running as a packaged .exe or .app, llama-cpp-python, httpx and
+portalocker are bundled directly into the executable by the build spec.
+Auto-installation is skipped in this case; missing packages surface as a
+clear ImportError with instructions for the end-user.
+
+Source / development runs
+--------------------------
+Packages not yet installed are installed via ``pip`` on first use so
+developers and testers never need to run a separate setup step.
 
 Thread-safety: all public functions acquire a module-level lock.
 """
@@ -11,37 +18,49 @@ Thread-safety: all public functions acquire a module-level lock.
 from __future__ import annotations
 
 import importlib
-import subprocess
+import importlib.util
 import sys
 import threading
 
 _lock = threading.Lock()
 
-# Packages that cannot be auto-installed (require manual OS-level setup).
-_UNSUPPORTED: set = set()
 
-# ──────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 # Public API
-# ──────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 
 def ensure(*packages: str) -> None:
-    """Ensure every listed package is importable; install those that aren't.
+    """Ensure every listed package is importable.
+
+    In a **frozen** build the packages must already be bundled — pip cannot
+    install new packages into a read-only .exe/.app archive.  If a bundled
+    package is somehow missing, a clear ``ImportError`` is raised immediately
+    instead of attempting (and silently failing) a pip install.
+
+    In a **source** run packages are installed via ``pip`` if absent.
 
     *packages* are pip package specifiers, e.g. ``"httpx>=0.27.0"``.
-    Raises ``ImportError`` if any package cannot be installed.
     """
     with _lock:
-        failures = []
+        frozen = getattr(sys, "frozen", False)
+        failures: list[str] = []
         for spec in packages:
             import_name = _spec_to_import_name(spec)
             if _is_importable(import_name):
                 continue
-            ok, err = _pip_install(spec)
-            if not ok:
-                failures.append(f"{spec}: {err}")
+            if frozen:
+                # Bundled package not found — cannot pip-install in frozen app.
+                failures.append(
+                    f"{spec} (package should be bundled — "
+                    "please re-install WorkLogger)"
+                )
+            else:
+                ok, err = _pip_install(spec)
+                if not ok:
+                    failures.append(f"{spec}: {err}")
         if failures:
             raise ImportError(
-                "Could not auto-install required packages:\n"
+                "Required packages are not available:\n"
                 + "\n".join(f"  • {f}" for f in failures)
             )
 
@@ -51,28 +70,31 @@ def is_available(import_name: str) -> bool:
     return _is_importable(import_name)
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 # Internals
-# ──────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 
 def _spec_to_import_name(spec: str) -> str:
-    """``"httpx>=0.27.0"`` → ``"httpx"``; ``"llama-cpp-python"`` → ``"llama_cpp"``."""
+    """``"httpx>=0.27.0"`` → ``"httpx"``;
+    ``"llama-cpp-python"`` → ``"llama_cpp"``."""
     base = spec.split(">=")[0].split("==")[0].split(">")[0].strip()
-    # Map known hyphenated package names to their import names.
     mapping = {
         "llama-cpp-python": "llama_cpp",
         "portalocker":      "portalocker",
-            }
+    }
     return mapping.get(base, base.replace("-", "_"))
 
 
 def _is_importable(import_name: str) -> bool:
-    spec = importlib.util.find_spec(import_name)  # type: ignore[attr-defined]
-    return spec is not None
+    try:
+        return importlib.util.find_spec(import_name) is not None
+    except (ModuleNotFoundError, ValueError):
+        return False
 
 
-def _pip_install(spec: str) -> tuple[bool, str]:
-    """Run ``pip install <spec>`` and return ``(success, stderr_text)``."""
+def _pip_install(spec: str) -> tuple:
+    """Run ``pip install <spec>``; return ``(success, stderr_text)``."""
+    import subprocess
     try:
         result = subprocess.run(
             [sys.executable, "-m", "pip", "install", spec, "--quiet"],
@@ -80,7 +102,6 @@ def _pip_install(spec: str) -> tuple[bool, str]:
             timeout=300,
         )
         if result.returncode == 0:
-            # Invalidate any cached negative import results.
             importlib.invalidate_caches()
             return True, ""
         return False, result.stderr.decode(errors="replace").strip()
@@ -89,25 +110,10 @@ def _pip_install(spec: str) -> tuple[bool, str]:
 
 
 def ensure_download_deps() -> None:
-    """Install portalocker and httpx if not present."""
-    if getattr(sys, 'frozen', False):
-        # Both httpx and portalocker are bundled; just verify importability.
-        for pkg in ("httpx", "portalocker"):
-            if not _is_importable(pkg):
-                raise ImportError(f"Missing required component: {pkg}")
-        return
+    """Ensure portalocker and httpx are available for the model downloader."""
     ensure("portalocker>=2.8.0", "httpx>=0.27.0")
 
 
 def ensure_inference_deps() -> None:
-    """Install llama-cpp-python (CPU-only wheel by default)."""
-    # PyInstaller frozen environment: assume llama_cpp already bundled.
-    if getattr(sys, 'frozen', False):
-        # Quick validation: if import still fails, the bundle is corrupt.
-        if not _is_importable("llama_cpp"):
-            raise ImportError(
-                "Local model support is not available in this installation.\n"
-                "Please reinstall the application from the official website."
-            )
-        return
+    """Ensure llama-cpp-python is available for local inference."""
     ensure("llama-cpp-python>=0.2.90")

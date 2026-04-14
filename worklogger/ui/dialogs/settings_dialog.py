@@ -1,5 +1,6 @@
 from __future__ import annotations
 import sys
+import threading
 
 from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QHBoxLayout, QFormLayout, QTabWidget,
@@ -161,6 +162,7 @@ class SettingsDialog(QDialog):
 
         ai_scroll = QScrollArea()
         ai_scroll.setWidgetResizable(True)
+        ai_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         ai_inner = QWidget()
         ai_scroll.setWidget(ai_inner)
         aiv = QVBoxLayout(ai_inner)
@@ -206,8 +208,11 @@ class SettingsDialog(QDialog):
         self._ai_test_btn.setFixedWidth(80)
         self._ai_test_lbl = QLabel()
         self._ai_test_lbl.setObjectName("muted")
+        self._ai_test_lbl.setWordWrap(True)
+        self._ai_test_lbl.setMaximumWidth(FW - 88)  # stay within form width
         ext_test_row.addWidget(self._ai_test_btn)
         ext_test_row.addWidget(self._ai_test_lbl, 1)
+        ext_test_row.setStretch(1, 1)
         gfl.addRow("", ext_test_row)
 
         def _run_ext_test():
