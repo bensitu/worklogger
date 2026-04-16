@@ -24,6 +24,7 @@ class WorkRecord(NamedTuple):
     break_hours – float hours or None
     note        – free-text or None / ""
     work_type   – one of WORK_TYPE_KEYS; defaults to "normal"
+    overnight   – 1 when end time is on the next day, else 0
     """
 
     date: str
@@ -32,6 +33,7 @@ class WorkRecord(NamedTuple):
     break_hours: float | None
     note: str | None
     work_type: str = "normal"
+    overnight: int = 0
 
     # ------------------------------------------------------------------
     # Computed helpers (pure, no side-effects)
@@ -59,3 +61,7 @@ class WorkRecord(NamedTuple):
     def safe_note(self) -> str:
         """Return note string, never None."""
         return self.note or ""
+
+    @property
+    def is_overnight(self) -> bool:
+        return bool(self.overnight)

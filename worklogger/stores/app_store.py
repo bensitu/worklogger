@@ -13,6 +13,7 @@ class AppState:
     monthly_target: float = 168.0
     show_holidays: bool = True
     show_note_markers: bool = True
+    show_overnight_indicator: bool = True
     week_start_monday: bool = False
     time_input_mode: str = "manual"
 

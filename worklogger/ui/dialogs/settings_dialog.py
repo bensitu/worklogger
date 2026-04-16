@@ -13,7 +13,10 @@ from PySide6.QtGui import QFont
 
 from config.i18n import T, LANG_KEYS, LANG_NAMES
 from config.constants import APP_VERSION, APP_AUTHOR, GITHUB_URL, GPL_URL
-from config.themes import THEMES, THEME_KEYS, THEME_NAMES
+from config.themes import (
+    THEMES, THEME_KEYS, THEME_NAMES,
+    switch_off_color, local_model_download_blocked_qss, status_label_qss,
+)
 from utils.ai_status_formatter import render_status_text
 from ui.widgets import SwitchButton
 from .common import _div, _localize_msgbox_buttons
@@ -48,10 +51,10 @@ class SettingsDialog(QDialog):
         idx = self._lang_cb.findData(app_ref.lang)
         if idx >= 0:
             self._lang_cb.setCurrentIndex(idx)
-        af.addRow(t["lbl_language"].lstrip("🌍 "), self._lang_cb)
+        af.addRow(t["language"].lstrip("🌍 "), self._lang_cb)
 
         _acc = THEMES[app_ref.theme][app_ref.dark][0]
-        _off_col = "#505470" if app_ref.dark else "#b0b8cc"
+        _off_col = switch_off_color(app_ref.dark)
         dark_wrap = QWidget()
         dh = QHBoxLayout(dark_wrap)
         dh.setContentsMargins(0, 0, 0, 0)
@@ -59,7 +62,7 @@ class SettingsDialog(QDialog):
                                   color_on=_acc, color_off=_off_col)
         dh.addWidget(self._dark)
         dh.addStretch()
-        af.addRow(t["lbl_darkmode"].lstrip("🌙☀ "), dark_wrap)
+        af.addRow(t["darkmode"].lstrip("🌙☀ "), dark_wrap)
 
         self._theme_cb = QComboBox()
         self._theme_cb.setFixedWidth(FW)
@@ -100,7 +103,8 @@ class SettingsDialog(QDialog):
             "monthly_target", round(app_ref.work_hours * 21, 1)))
         gf.addRow(t["monthly_target"], self._mt)
 
-        _show_hol_on = app_ref.services.get_setting("show_holidays", "1") == "1"
+        _show_hol_on = app_ref.services.get_setting(
+            "show_holidays", "1") == "1"
         show_hol_wrap = QWidget()
         sh = QHBoxLayout(show_hol_wrap)
         sh.setContentsMargins(0, 0, 0, 0)
@@ -108,7 +112,7 @@ class SettingsDialog(QDialog):
                                            color_on=_acc, color_off=_off_col)
         sh.addWidget(self._show_holidays)
         sh.addStretch()
-        gf.addRow(t["lbl_show_holidays"], show_hol_wrap)
+        gf.addRow(t["show_holidays"], show_hol_wrap)
 
         _show_note_markers_on = app_ref.services.get_setting(
             "show_note_markers", "1") == "1"
@@ -122,9 +126,27 @@ class SettingsDialog(QDialog):
         )
         sn.addWidget(self._show_note_markers)
         sn.addStretch()
-        gf.addRow(t["lbl_show_note_markers"], show_note_markers_wrap)
+        gf.addRow(t["show_note_markers"], show_note_markers_wrap)
 
-        _week_start_on = app_ref.services.get_setting("week_start_monday", "0") == "1"
+        _show_overnight_on = app_ref.services.get_setting(
+            "show_overnight_indicator", "1") == "1"
+        overnight_wrap = QWidget()
+        ov = QHBoxLayout(overnight_wrap)
+        ov.setContentsMargins(0, 0, 0, 0)
+        self._show_overnight_indicator = SwitchButton(
+            checked=_show_overnight_on,
+            color_on=_acc,
+            color_off=_off_col,
+        )
+        ov.addWidget(self._show_overnight_indicator)
+        ov.addStretch()
+        gf.addRow(
+            t["settings_general_show_overnight_indicator"],
+            overnight_wrap,
+        )
+
+        _week_start_on = app_ref.services.get_setting(
+            "week_start_monday", "0") == "1"
         week_start_wrap = QWidget()
         ws = QHBoxLayout(week_start_wrap)
         ws.setContentsMargins(0, 0, 0, 0)
@@ -135,7 +157,8 @@ class SettingsDialog(QDialog):
         )
         ws.addWidget(self._week_start_monday)
         ws.addStretch()
-        gf.addRow(t.get("lbl_week_start_monday", "Start week on Monday"), week_start_wrap)
+        gf.addRow(t.get("week_start_monday",
+                  "Start week on Monday"), week_start_wrap)
 
         residency_key = "enable_tray" if sys.platform == "win32" else (
             "enable_menu_bar" if sys.platform == "darwin" else ""
@@ -145,13 +168,14 @@ class SettingsDialog(QDialog):
             rs = QHBoxLayout(residency_wrap)
             rs.setContentsMargins(0, 0, 0, 0)
             self._residency_switch = SwitchButton(
-                checked=app_ref.services.get_setting(residency_key, "0") == "1",
+                checked=app_ref.services.get_setting(
+                    residency_key, "0") == "1",
                 color_on=_acc,
                 color_off=_off_col,
             )
             rs.addWidget(self._residency_switch)
             rs.addStretch()
-            residency_label = "lbl_enable_tray" if sys.platform == "win32" else "lbl_enable_menu_bar"
+            residency_label = "enable_tray" if sys.platform == "win32" else "enable_menu_bar"
             gf.addRow(t[residency_label], residency_wrap)
         else:
             self._residency_switch = None
@@ -170,7 +194,7 @@ class SettingsDialog(QDialog):
         aiv.setSpacing(12)
 
         _acc = THEMES[app_ref.theme][app_ref.dark][0]
-        _off = "#505470" if app_ref.dark else "#b0b8cc"
+        _off = switch_off_color(app_ref.dark)
 
         # ── External Model group (ex-Primary AI) ──────────────────────────
         grp_ext = QGroupBox(t.get("ai_external_group", "External Model"))
@@ -187,7 +211,7 @@ class SettingsDialog(QDialog):
 
         self._ai_key = _ai_line(t.get("ai_key_placeholder", "sk-… / sk-ant-…"))
         self._ai_key.setEchoMode(QLineEdit.Password)
-        self._ai_key.setText(app_ref.services.get_setting("ai_api_key", ""))
+        self._ai_key.setText(app_ref.services.get_secret("ai_api_key"))
         gfl.addRow(t["ai_api_key"], self._ai_key)
 
         self._ai_url = _ai_line(
@@ -216,8 +240,8 @@ class SettingsDialog(QDialog):
         gfl.addRow("", ext_test_row)
 
         def _run_ext_test():
-            ak  = self._ai_key.text().strip()
-            bu  = self._ai_url.text().strip()
+            ak = self._ai_key.text().strip()
+            bu = self._ai_url.text().strip()
             mdl = self._ai_model.text().strip()
             _fbw = self.focusWidget()
 
@@ -232,10 +256,10 @@ class SettingsDialog(QDialog):
                 (mdl, "ai_err_model_missing",   "ai_err_model_missing_detail"),
             ]:
                 if not val:
-                    short  = t.get(key_miss, key_miss)
+                    short = t.get(key_miss, key_miss)
                     detail = t.get(key_miss_d, key_miss_d)
                     self._ai_test_lbl.setText(t["ai_test_fail"].format(short))
-                    self._ai_test_lbl.setStyleSheet("color:#e03333;font-weight:600;")
+                    self._ai_test_lbl.setStyleSheet(status_label_qss("error"))
                     QMessageBox.warning(self, t["settings_title"], detail)
                     return
 
@@ -246,23 +270,29 @@ class SettingsDialog(QDialog):
 
             def _on_to():
                 self._ai_test_lbl.setText(t["ai_test_fail"].format("Timeout"))
-                self._ai_test_lbl.setStyleSheet("color:#e03333;font-weight:600;")
+                self._ai_test_lbl.setStyleSheet(status_label_qss("error"))
                 self._ai_test_btn.setEnabled(True)
-            _timer = threading.Timer(10.0, lambda: QTimer.singleShot(0, _on_to))
+            _timer = threading.Timer(
+                10.0, lambda: QTimer.singleShot(0, _on_to))
             _timer.start()
 
             def _ok(_text):
-                try: _timer.cancel()
-                except Exception: pass
+                try:
+                    _timer.cancel()
+                except Exception:
+                    pass
                 self._ai_test_lbl.setText(t["ai_test_ok"])
-                self._ai_test_lbl.setStyleSheet(f"color:{_acc};font-weight:600;")
+                self._ai_test_lbl.setStyleSheet(
+                    status_label_qss("success", _acc))
                 self._ai_test_btn.setEnabled(True)
 
             def _err(short, detail):
-                try: _timer.cancel()
-                except Exception: pass
+                try:
+                    _timer.cancel()
+                except Exception:
+                    pass
                 self._ai_test_lbl.setText(t["ai_test_fail"].format(short))
-                self._ai_test_lbl.setStyleSheet("color:#e03333;font-weight:600;")
+                self._ai_test_lbl.setStyleSheet(status_label_qss("error"))
                 self._ai_test_btn.setEnabled(True)
                 if detail:
                     mb = QMessageBox(QMessageBox.Warning, t["settings_title"],
@@ -293,10 +323,12 @@ class SettingsDialog(QDialog):
         tr_lyt.setSpacing(8)
 
         self._local_enabled_sw = SwitchButton(
-            checked=app_ref.services.get_setting("local_model_enabled", "0") == "1",
+            checked=app_ref.services.get_setting(
+                "local_model_enabled", "0") == "1",
             color_on=_acc, color_off=_off,
         )
-        lbl_enable = QLabel(t.get("local_model_enable_label", "Enable local model"))
+        lbl_enable = QLabel(
+            t.get("local_model_enable_label", "Enable local model"))
         lf2 = QFont()
         lf2.setBold(True)
         lbl_enable.setFont(lf2)
@@ -325,8 +357,10 @@ class SettingsDialog(QDialog):
         btn_row_l = QHBoxLayout(btn_row_w)
         btn_row_l.setContentsMargins(0, 0, 0, 0)
         btn_row_l.setSpacing(8)
-        self._local_dl_btn = QPushButton(t.get("local_model_download_btn", "Download"))
+        self._local_dl_btn = QPushButton(
+            t.get("local_model_download_btn", "Download"))
         self._local_dl_btn.setObjectName("action_btn")
+        self._local_dl_blocked = False
         btn_row_l.addWidget(self._local_dl_btn)
         btn_row_l.addStretch()
         lfl.addWidget(btn_row_w)
@@ -337,20 +371,24 @@ class SettingsDialog(QDialog):
             try:
                 from services.local_model_service import (
                     verify_model_file, get_active_entry_id,
-                    load_catalog, get_models_dir, localize_field,
+                    load_catalog, get_models_dir, localize_field, LocalModelService,
                 )
-                mdir     = get_models_dir()
+                mdir = get_models_dir()
                 entry_id = get_active_entry_id(mdir)
-                ready    = verify_model_file(mdir, entry_id)
-                catalog  = load_catalog(mdir)
-                cat      = next((c for c in catalog
-                                 if c.get("id") == entry_id),
-                                catalog[0] if catalog else {})
+                ready = verify_model_file(mdir, entry_id)
+                present = LocalModelService.get().is_model_present()
+                catalog = load_catalog(mdir)
+                cat = next((c for c in catalog
+                            if c.get("id") == entry_id),
+                           catalog[0] if catalog else {})
                 # Use inline label from catalog (no i18n key indirection)
-                lbl_text = localize_field(cat, "label", app_ref.lang) or cat.get("label", "")
+                lbl_text = localize_field(
+                    cat, "label", app_ref.lang) or cat.get("label", "")
             except Exception:
-                ready    = False
+                ready = False
+                present = False
                 lbl_text = ""
+            enabled = self._local_enabled_sw.isChecked()
             if ready:
                 status = "✓  " + t.get("local_model_status_ready", "Ready")
                 if lbl_text:
@@ -366,15 +404,51 @@ class SettingsDialog(QDialog):
                 self._local_status_lbl.setStyleSheet("")
                 self._local_dl_btn.setText(
                     t.get("local_model_download_btn", "Download"))
+            if not present and not enabled:
+                self._local_dl_blocked = True
+                self._local_dl_btn.setEnabled(True)
+                self._local_dl_btn.setToolTip(
+                    t.get(
+                        "settings_ai_local_model_disabled_tooltip",
+                        "Local model is disabled.",
+                    )
+                )
+                if app_ref.dark:
+                    self._local_dl_btn.setStyleSheet(
+                        local_model_download_blocked_qss(True))
+                else:
+                    self._local_dl_btn.setStyleSheet(
+                        local_model_download_blocked_qss(False))
+            else:
+                self._local_dl_blocked = False
+                self._local_dl_btn.setEnabled(True)
+                self._local_dl_btn.setToolTip("")
+                self._local_dl_btn.setStyleSheet("")
 
         _refresh_local_status()
 
+        def _on_local_toggle(checked: bool):
+            app_ref.services.set_setting(
+                "local_model_enabled", "1" if checked else "0")
+            if not checked:
+                try:
+                    from services.local_model_service import LocalModelService
+                    LocalModelService.get().unload_provider()
+                    LocalModelService.reset()
+                except Exception:
+                    pass
+            _refresh_local_status()
+
+        self._local_enabled_sw.toggled.connect(_on_local_toggle)
+
         def _open_model_management():
             """Open the unified Model Management dialog."""
+            if self._local_dl_blocked:
+                return
             from ui.dialogs.local_model_dialogs import LocalDownloadDialog
-            from config.themes import THEMES
             theme_colors = THEMES.get(app_ref.theme, THEMES["blue"])
-            accent = theme_colors.get(app_ref.dark, theme_colors.get(False, ("",)))[0]
+            accent = theme_colors.get(
+                app_ref.dark, theme_colors.get(False, ("",)))[0]
             dlg = LocalDownloadDialog(
                 self, app_ref.lang,
                 accent_color=accent,
@@ -531,7 +605,7 @@ class SettingsDialog(QDialog):
         app.services.set_setting("work_hours", str(app.work_hours))
         app.services.set_setting("default_break", str(self._dl.value()))
         app.services.set_setting("monthly_target", str(self._mt.value()))
-        app.services.set_setting("ai_api_key", self._ai_key.text().strip())
+        app.services.set_secret("ai_api_key", self._ai_key.text().strip())
         app.services.set_setting("ai_base_url", self._ai_url.text().strip())
         app.services.set_setting("ai_model", self._ai_model.text().strip())
         app.services.set_setting(
@@ -549,14 +623,28 @@ class SettingsDialog(QDialog):
         app.services.set_setting("show_note_markers",
                                  "1" if new_show_note_markers else "0")
         note_markers_changed = new_show_note_markers != old_show_note_markers
-        new_week_start = self._week_start_monday.isChecked() if hasattr(self, '_week_start_monday') else False
-        old_week_start = app.services.get_setting("week_start_monday", "0") == "1"
-        app.services.set_setting("week_start_monday", "1" if new_week_start else "0")
+        new_show_overnight_indicator = self._show_overnight_indicator.isChecked()
+        old_show_overnight_indicator = app.services.get_setting(
+            "show_overnight_indicator", "1") == "1"
+        app.services.set_setting(
+            "show_overnight_indicator",
+            "1" if new_show_overnight_indicator else "0",
+        )
+        overnight_indicator_changed = (
+            new_show_overnight_indicator != old_show_overnight_indicator
+        )
+        new_week_start = self._week_start_monday.isChecked(
+        ) if hasattr(self, '_week_start_monday') else False
+        old_week_start = app.services.get_setting(
+            "week_start_monday", "0") == "1"
+        app.services.set_setting(
+            "week_start_monday", "1" if new_week_start else "0")
         week_start_changed = new_week_start != old_week_start
         residency_changed = False
         if self._residency_key and self._residency_switch is not None:
             new_residency = self._residency_switch.isChecked()
-            old_residency = app.services.get_setting(self._residency_key, "0") == "1"
+            old_residency = app.services.get_setting(
+                self._residency_key, "0") == "1"
             app.services.set_setting(self._residency_key,
                                      "1" if new_residency else "0")
             residency_changed = new_residency != old_residency
@@ -582,6 +670,7 @@ class SettingsDialog(QDialog):
             monthly_target=float(self._mt.value()),
             show_holidays=new_show_hol,
             show_note_markers=new_show_note_markers,
+            show_overnight_indicator=new_show_overnight_indicator,
             week_start_monday=new_week_start,
             time_input_mode=app._active_time_tab,
         )
@@ -597,6 +686,8 @@ class SettingsDialog(QDialog):
             else:
                 app.holidays = {}
         if note_markers_changed:
+            app.render()
+        if overnight_indicator_changed:
             app.render()
         if week_start_changed:
             app.render()

@@ -16,8 +16,9 @@ from PySide6.QtGui import QColor, QPainter, QAction
 
 from config.i18n import T, LANG_KEYS, LANG_NAMES
 from config.themes import make_qss, cell_pool, THEMES, THEME_KEYS, WT_BORDER_ACCENT
-from config.constants import WORK_TYPE_KEYS, LEAVE_TYPES
-from core.time_calc import calc_hours, detect_country
+from config.themes import CALENDAR_STYLE
+from config.constants import WORK_TYPE_KEYS, LEAVE_TYPES, MAX_SHIFT_HOURS
+from core.time_calc import calc_hours, calc_shift_span_hours, is_overnight_shift, detect_country
 from core.validator import parse_time
 from services.app_services import AppServices
 from stores.app_store import AppStore, AppState
@@ -53,22 +54,40 @@ class CalendarDayButton(QPushButton):
     def __init__(self, text: str = "", parent=None):
         super().__init__(text, parent)
         self._show_note_marker = False
-        self._marker_color = "#4f8ef7"
+        self._marker_color = CALENDAR_STYLE["note_marker_default"]
+        self._show_overnight_marker = False
+        self._overnight_marker_color = CALENDAR_STYLE["overnight_marker_default"]
 
     def set_note_marker(self, visible: bool, color: str) -> None:
         self._show_note_marker = visible
         self._marker_color = color
         self.update()
 
+    def set_overnight_marker(self, visible: bool, color: str) -> None:
+        self._show_overnight_marker = visible
+        self._overnight_marker_color = color
+        self.update()
+
     def paintEvent(self, event):
         super().paintEvent(event)
-        if not self._show_note_marker:
-            return
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
-        p.setPen(Qt.NoPen)
-        p.setBrush(QColor(self._marker_color))
-        p.drawEllipse(7, 7, 7, 7)
+        if self._show_note_marker:
+            p.setPen(Qt.NoPen)
+            p.setBrush(QColor(self._marker_color))
+            p.drawEllipse(7, 7, 7, 7)
+        if self._show_overnight_marker:
+            p.setPen(QColor(self._overnight_marker_color))
+            icon_size = int(CALENDAR_STYLE["overnight_icon_size"])
+            icon_margin = int(CALENDAR_STYLE["overnight_icon_margin"])
+            x = self.width() - icon_size - icon_margin
+            y = icon_margin
+            p.drawText(
+                x, y,
+                icon_size, icon_size,
+                Qt.AlignCenter,
+                str(CALENDAR_STYLE["overnight_icon"]),
+            )
         p.end()
 
 
@@ -80,11 +99,7 @@ class App(QWidget):
         self.current = self.today.replace(day=1)
         self.selected = self.today
 
-        saved_lang = self.services.get_setting("lang",  "en")
-        saved_theme = self.services.get_setting("theme", "blue")
-        self.lang = saved_lang if saved_lang in LANG_KEYS else "en"
-        self.theme = saved_theme if saved_theme in THEME_KEYS else "blue"
-        self.dark = self.services.get_setting("dark", "0") == "1"
+        # ── One-time defaults migration ──────────────────────────────────
         if self.services.get_setting("work_hours") is None:
             self.services.set_setting("work_hours", "8.0")
         legacy_default_break = self.services.get_setting("default_lunch")
@@ -92,14 +107,36 @@ class App(QWidget):
             self.services.set_setting("default_break", legacy_default_break or "1.0")
         if self.services.get_setting("monthly_target") is None:
             self.services.set_setting("monthly_target", str(round(8.0 * 21, 1)))
-        self.work_hours = self._safe_float_setting("work_hours", 8.0)
         if self.services.get_setting("show_holidays") is None:
             self.services.set_setting("show_holidays", "1")
         if self.services.get_setting("show_note_markers") is None:
             self.services.set_setting("show_note_markers", "1")
+        if self.services.get_setting("show_overnight_indicator") is None:
+            self.services.set_setting("show_overnight_indicator", "1")
         residency_key = self._residency_setting_key()
         if residency_key and self.services.get_setting(residency_key) is None:
             self.services.set_setting(residency_key, "0")
+
+        # ── AppStore: single source of truth for all settings state ──────
+        # All code that previously read self.lang / self.theme / self.dark /
+        # self.work_hours should use self._state.<field> instead.
+        saved_lang = self.services.get_setting("lang", "en")
+        saved_theme = self.services.get_setting("theme", "blue")
+        _def_break = self._safe_float_setting("default_break", 1.0)
+        self.store = AppStore(AppState(
+            lang=saved_lang if saved_lang in LANG_KEYS else "en",
+            theme=saved_theme if saved_theme in THEME_KEYS else "blue",
+            dark=self.services.get_setting("dark", "0") == "1",
+            work_hours=self._safe_float_setting("work_hours", 8.0),
+            default_break=_def_break,
+            monthly_target=self._safe_float_setting("monthly_target",
+                                                      self._safe_float_setting("work_hours", 8.0) * 21),
+            show_holidays=self.services.get_setting("show_holidays", "1") == "1",
+            show_note_markers=self.services.get_setting("show_note_markers", "1") == "1",
+            show_overnight_indicator=self.services.get_setting("show_overnight_indicator", "1") == "1",
+            week_start_monday=self.services.get_setting("week_start_monday", "0") == "1",
+            time_input_mode=self.services.get_setting("time_input_mode", "manual"),
+        ))
 
         self.holidays: dict = {}
         self._country = detect_country()
@@ -107,26 +144,13 @@ class App(QWidget):
         self._week_totals: list[QLabel] = []
         self._break_start: datetime | None = None
         self._break_timer: QTimer | None = None
-        self._active_time_tab = self.services.get_setting(
-            "time_input_mode", "manual")
+        self._active_time_tab = self._state.time_input_mode
         self._auto_start_time = ""
         self._auto_end_time = ""
-        self._auto_break_hours = self._safe_float_setting("default_break", 1.0)
+        self._auto_break_hours = _def_break
         self._auto_break_recorded = False
         self._tray_icon: QSystemTrayIcon | None = None
         self._tray_quit_requested = False
-        self.store = AppStore(AppState(
-            lang=self.lang,
-            theme=self.theme,
-            dark=self.dark,
-            work_hours=self.work_hours,
-            default_break=self._auto_break_hours,
-            monthly_target=self._safe_float_setting("monthly_target", self.work_hours * 21),
-            show_holidays=self.services.get_setting("show_holidays", "1") == "1",
-            show_note_markers=self.services.get_setting("show_note_markers", "1") == "1",
-            week_start_monday=self.services.get_setting("week_start_monday", "0") == "1",
-            time_input_mode=self._active_time_tab,
-        ))
 
         self._build_ui()
         self._setup_residency_icon()
@@ -136,6 +160,16 @@ class App(QWidget):
         self.render()
 
         QTimer.singleShot(0, self._load_holidays)
+
+    def _safe_float_setting(self, key: str, default: float) -> float:
+        """Read a float setting with a safe fallback for missing/bad values."""
+        try:
+            raw = self.services.get_setting(key, str(default))
+            if raw is None:
+                return default
+            return float(raw)
+        except (TypeError, ValueError):
+            return default
 
     def _load_holidays(self):
         """Load holiday data in a background thread to avoid blocking UI.
@@ -415,12 +449,52 @@ class App(QWidget):
         f.setObjectName("divider")
         return f
 
-    def _safe_float_setting(self, key: str, default: float) -> float:
-        """Read a float setting with a safe fallback for malformed values."""
-        try:
-            return float(self.services.get_setting(key, str(default)))
-        except (TypeError, ValueError):
-            return default
+    @property
+    def _state(self):
+        """Single source of truth for all persisted settings.
+
+        Replaces the former ``self.lang`` / ``self.theme`` / ``self.dark`` /
+        ``self.work_hours`` instance variables.  Always read settings through
+        here; write via ``self.store.patch()``.
+        """
+        return self.store.state
+
+    # ── Compatibility shims ──────────────────────────────────────────────
+    # SettingsDialog still writes ``app.lang = …`` / ``app.dark = …`` etc.
+    # These properties route those assignments through AppStore so the store
+    # remains the single source of truth.
+
+    @property
+    def lang(self) -> str:
+        return self._state.lang
+
+    @lang.setter
+    def lang(self, value: str) -> None:
+        self.store.patch(lang=value)
+
+    @property
+    def theme(self) -> str:
+        return self._state.theme
+
+    @theme.setter
+    def theme(self, value: str) -> None:
+        self.store.patch(theme=value)
+
+    @property
+    def dark(self) -> bool:
+        return self._state.dark
+
+    @dark.setter
+    def dark(self, value: bool) -> None:
+        self.store.patch(dark=value)
+
+    @property
+    def work_hours(self) -> float:
+        return self._state.work_hours
+
+    @work_hours.setter
+    def work_hours(self, value: float) -> None:
+        self.store.patch(work_hours=value)
 
     def _residency_setting_key(self) -> str | None:
         if sys.platform == "win32":
@@ -563,7 +637,18 @@ class App(QWidget):
             dow = T[self.lang]["days"][d.weekday()]
         else:
             dow = T[self.lang]["days"][(d.weekday() + 1) % 7]
-        self.date_banner.setText(f"{d.year}/{d.month:02d}/{d.day:02d}  {dow}")
+        overnight = False
+        rec = self.services.get_record(d.isoformat())
+        if rec and rec.is_overnight:
+            overnight = True
+        else:
+            s_txt, e_txt, _ = self._active_time_values()
+            s = parse_time(s_txt) if s_txt else None
+            e = parse_time(e_txt) if e_txt else None
+            if s and e and is_overnight_shift(s, e):
+                overnight = True
+        marker = f"  {T[self.lang]['overnight_badge']}" if overnight else ""
+        self.date_banner.setText(f"{d.year}/{d.month:02d}/{d.day:02d}  {dow}{marker}")
 
     def _time_mode(self) -> str:
         return "auto" if self.time_tabs.currentIndex() == 1 else "manual"
@@ -753,6 +838,7 @@ class App(QWidget):
         weekly: dict[int, float] = {}
         hover_border = THEMES[self.theme][self.dark][1]
         show_note_markers = self.store.state.show_note_markers
+        show_overnight_indicator = self.store.state.show_overnight_indicator
 
         for d in range(1, days + 1):
             dt = date(y, m, d)
@@ -794,7 +880,6 @@ class App(QWidget):
             abbr = t["wt_abbr"].get(wt, "")
             if abbr:
                 lines.append(abbr)
-
             btn = CalendarDayButton("\n".join(lines))
             btn.setMinimumHeight(86)
             btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -815,6 +900,9 @@ class App(QWidget):
                     f"QPushButton:hover{{border:2px solid {hover_border};}}")
             show_pending_note = show_note_markers and has_pending_note
             btn.set_note_marker(show_pending_note, hover_border)
+            overnight_marker = show_overnight_indicator and bool(rec and rec.is_overnight)
+            marker_color = CALENDAR_STYLE["overnight_marker_by_mode"][bool(self.dark)]
+            btn.set_overnight_marker(overnight_marker, marker_color)
             if show_pending_note:
                 btn.setToolTip(note_text[:200])
             else:
@@ -915,6 +1003,7 @@ class App(QWidget):
         return (s_cur, e_cur, l_cur, note_cur, wt_cur) != saved
 
     def save(self):
+        t = T[self.lang]
         s_txt, e_txt, l = self._active_time_values()
         s = parse_time(s_txt) if s_txt else None
         e = parse_time(e_txt) if e_txt else None
@@ -932,6 +1021,39 @@ class App(QWidget):
             return
         elif self._time_mode() == "manual":
             self.manual_end_in.setStyleSheet("")
+        if l < 0:
+            QMessageBox.warning(
+                self,
+                t.get("confirm_title", "Warning"),
+                t.get("break_negative_invalid", "Break hours cannot be negative."),
+            )
+            return
+        if s and e:
+            max_shift = float(self.services.get_setting("max_shift_hours", str(MAX_SHIFT_HOURS)) or MAX_SHIFT_HOURS)
+            span_h = calc_shift_span_hours(s, e, max_shift_hours=max_shift)
+            if span_h is None:
+                if self._time_mode() == "manual":
+                    self.manual_end_in.setStyleSheet(
+                        "QLineEdit{border:2px solid #e03333;}")
+                QMessageBox.warning(
+                    self,
+                    t.get("confirm_title", "Warning"),
+                    t.get(
+                        "shift_span_invalid",
+                        "Invalid time range. The shift must be within {max_hours} hours (overnight is supported).",
+                    ).format(max_hours=int(max_shift)),
+                )
+                return
+            if l >= span_h:
+                QMessageBox.warning(
+                    self,
+                    t.get("confirm_title", "Warning"),
+                    t.get(
+                        "break_too_long",
+                        "Break time must be less than the total shift duration.",
+                    ),
+                )
+                return
         wt = self.wt_combo.currentData() or "normal"
         if self._time_mode() == "manual":
             if s:
@@ -950,8 +1072,11 @@ class App(QWidget):
             self.manual_start_in.setText(s or "")
             self.manual_end_in.setText(e or "")
             self.manual_break_in.setText(str(l))
-        self.services.save_record(self.selected.isoformat(), s, e, l,
-                     self.note_in.toPlainText(), wt)
+        overnight = 1 if (s and e and is_overnight_shift(s, e)) else 0
+        self.services.save_record(
+            self.selected.isoformat(), s, e, l,
+            self.note_in.toPlainText(), wt, overnight=overnight,
+        )
         self._refresh_auto_time_labels()
         self.render()
 
@@ -1066,10 +1191,13 @@ class App(QWidget):
             self, t["export_csv"], f"worklog_{ts}.csv", "CSV (*.csv)")
         if not path:
             return
-        data = self.services.all_records()
-        self.services.export_csv_file(path, data)
-        QMessageBox.information(self, t["export_csv"],
-                                t["export_saved"].format(path))
+        try:
+            data = self.services.all_records()
+            self.services.export_csv_file(path, data)
+            QMessageBox.information(self, t["export_csv"],
+                                    t["export_saved"].format(path))
+        except OSError as exc:
+            QMessageBox.critical(self, t["export_csv"], str(exc))
 
     def _import_csv(self):
         t = T[self.lang]

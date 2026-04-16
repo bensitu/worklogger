@@ -13,6 +13,7 @@ from data.db import DB
 from services.export_service import export_csv, import_csv, build_ics
 from services.calendar_service import parse_ics_rich
 from services import report_service
+from services.key_store import get_secret, set_secret
 from stores.app_store import AppState
 
 
@@ -41,8 +42,8 @@ class AppServices:
     def get_record(self, day: str):
         return self.db.get(day)
 
-    def save_record(self, day, start, end, break_hours, note, work_type="normal") -> None:
-        self.db.save(day, start, end, break_hours, note, work_type)
+    def save_record(self, day, start, end, break_hours, note, work_type="normal", overnight: int | None = None) -> None:
+        self.db.save(day, start, end, break_hours, note, work_type, overnight=overnight)
 
     def month_records(self, ym: str):
         return self.db.month(ym)
@@ -169,6 +170,7 @@ class AppServices:
             monthly_target=float(self.get_setting("monthly_target", "168.0")),
             show_holidays=self.get_setting("show_holidays", "1") == "1",
             show_note_markers=self.get_setting("show_note_markers", "1") == "1",
+            show_overnight_indicator=self.get_setting("show_overnight_indicator", "1") == "1",
             week_start_monday=self.get_setting("week_start_monday", "0") == "1",
             time_input_mode=self.get_setting("time_input_mode", "manual"),
         )
@@ -183,6 +185,7 @@ class AppServices:
             "monthly_target": str(state.monthly_target),
             "show_holidays": "1" if state.show_holidays else "0",
             "show_note_markers": "1" if state.show_note_markers else "0",
+            "show_overnight_indicator": "1" if state.show_overnight_indicator else "0",
             "week_start_monday": "1" if state.week_start_monday else "0",
             "time_input_mode": state.time_input_mode,
         }
@@ -192,17 +195,31 @@ class AppServices:
     def load_settings_snapshot(self) -> AppState:
         return self.load_settings()
 
+    # ── Secret (API key) helpers ─────────────────────────────────────────
+    # API keys are sensitive credentials.  These methods route through
+    # key_store which tries the OS keychain first, then Fernet-encrypted DB.
+
+    _SECRET_KEYS = {"ai_api_key", "ai2_api_key"}
+
+    def get_secret(self, name: str) -> str:
+        """Return secret *name*, decrypting if stored via key_store."""
+        return get_secret(self.db, name)
+
+    def set_secret(self, name: str, value: str) -> None:
+        """Store secret *name* as securely as the environment allows."""
+        set_secret(self.db, name, value)
+
     def resolve_ai_params(self, secondary: bool = False) -> tuple:
         from services.local_model_service import should_use_local_model
         from services.local_model_service import LOCAL_MODEL_SENTINEL
         if should_use_local_model(self):
             return LOCAL_MODEL_SENTINEL, "", ""
         if secondary and self.get_setting("ai_use_secondary", "0") == "1":
-            key = self.get_setting("ai2_api_key", "") or self.get_setting("ai_api_key", "")
+            key = self.get_secret("ai2_api_key") or self.get_secret("ai_api_key")
             url = self.get_setting("ai2_base_url", "") or self.get_setting("ai_base_url", "")
             mdl = self.get_setting("ai2_model", "") or self.get_setting("ai_model", "")
         else:
-            key = self.get_setting("ai_api_key", "")
+            key = self.get_secret("ai_api_key")
             url = self.get_setting("ai_base_url", "")
             mdl = self.get_setting("ai_model", "")
         return key, url, mdl

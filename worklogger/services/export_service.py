@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime, date
 from typing import TYPE_CHECKING
 
-from core.time_calc import calc_hours
+from core.time_calc import calc_hours, shift_datetimes
 
 if TYPE_CHECKING:
     from data.db import DB
@@ -43,7 +43,9 @@ def export_csv(path: str, rows: list) -> None:
     with open(path, "w", newline="", encoding="utf-8-sig") as f:
         w = csv.writer(f)
         w.writerow(["date", "start", "end", "break", "note", "work_type"])
-        w.writerows(rows)
+        for r in rows:
+            # Keep export schema stable even if internal record gains fields.
+            w.writerow(list(r)[:6])
 
 
 def import_csv(path: str, db: "DB", required_cols: set,
@@ -100,14 +102,15 @@ def build_ics(rows: list) -> str:
     for r in rows:
         if not r.has_times:
             continue
-        d = r.date.replace("-", "")
         h = calc_hours(r.start, r.end, r.break_hours)
         note = r.safe_note().replace("\\n", " ").replace(",", "\\,")
         summary = f"Work {h:.1f}h" + (f" — {note[:60]}" if note else "")
-        sh, sm = r.start.split(":")
-        eh, em = r.end.split(":")
-        dtstart = f"{d}T{int(sh):02d}{int(sm):02d}00"
-        dtend   = f"{d}T{int(eh):02d}{int(em):02d}00"
+        dt_pair = shift_datetimes(r.date, r.start, r.end)
+        if not dt_pair:
+            continue
+        start_dt, end_dt = dt_pair
+        dtstart = start_dt.strftime("%Y%m%dT%H%M%S")
+        dtend = end_dt.strftime("%Y%m%dT%H%M%S")
         lines += [
             "BEGIN:VEVENT",
             f"DTSTART:{dtstart}", f"DTEND:{dtend}",

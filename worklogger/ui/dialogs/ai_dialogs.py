@@ -110,6 +110,14 @@ class AIProgressDialog(QDialog):
         use_local = (api_key == LOCAL_MODEL_SENTINEL)
 
         dlg.append("local_model_loading" if use_local else "ai_init")
+        local_enabled = False
+        if services is not None:
+            try:
+                local_enabled = services.get_setting("local_model_enabled", "0") == "1"
+            except Exception:
+                local_enabled = False
+        if not use_local and not local_enabled:
+            dlg.append("ai_assist_local_model_not_running")
         dlg._timeout_timer.start(30000)
 
         def on_status(msg_en: str):
@@ -144,13 +152,14 @@ class AIProgressDialog(QDialog):
                 dlg.log.append(f"[{t.get('local_model_download_fail', 'Local model')}] "
                                f"{friendly_local}")
                 # 2. Announce fallback attempt.
+                dlg.append("ai_assist_local_model_not_running")
                 dlg.append("local_model_fallback_toast")
 
                 # 3. Fetch external model params.
                 ext_key = ext_url = ext_mdl = ""
                 if services is not None:
                     try:
-                        ext_key = services.get_setting("ai_api_key",  "") or ""
+                        ext_key = services.get_secret("ai_api_key") or ""
                         ext_url = services.get_setting("ai_base_url", "") or ""
                         ext_mdl = services.get_setting("ai_model",    "") or ""
                     except Exception:

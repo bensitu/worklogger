@@ -30,12 +30,13 @@ def _fmt_entry(dt: _dt.date, rec, work_hours: float,
         h = calc_hours(rec.start, rec.end, rec.break_hours)
         ot = max(h - work_hours, 0)
         wt = rec.safe_work_type()
+        overnight = f"  [{t.get('overnight_abbr', 'Night')}]" if rec.is_overnight else ""
         ots = f"  OT+{ot:.1f}h" if ot > 0 else ""
         note = f"\n  → {rec.note}" if rec.note else ""
         line = t["report_day_line"].format(
             date=dt.isoformat(), dow=dow,
             h=f"{h:.1f}", wt=_wt_label(wt, t))
-        return line + ots + note, h, ot
+        return line + overnight + ots + note, h, ot
     elif rec and rec.is_leave:
         note = f"\n  → {rec.note}" if rec.note else ""
         return (f"{dt.isoformat()}（{dow}）[{_wt_label(rec.safe_work_type(), t)}]{note}",
