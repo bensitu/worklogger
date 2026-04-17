@@ -6,13 +6,13 @@ from typing import Any
 from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QHBoxLayout, QFormLayout, QTabWidget,
     QPushButton, QLabel, QLineEdit, QTextEdit, QScrollArea, QMessageBox,
-    QDoubleSpinBox, QGroupBox, QDialogButtonBox, QComboBox,
+    QDoubleSpinBox, QGroupBox, QDialogButtonBox, QComboBox, QProgressBar,
     QFrame, QFileDialog,
 )
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont
 
-from utils.i18n import _, msg, LANG_NAMES
+from utils.i18n import _, msg, LANG_NAMES, get_translator
 from config.constants import APP_VERSION, APP_AUTHOR, GITHUB_URL, GPL_URL
 from config.themes import (
     THEMES, THEME_KEYS, THEME_NAMES,
@@ -365,6 +365,25 @@ class SettingsDialog(QDialog):
         self._local_status_lbl = QLabel()
         self._local_status_lbl.setObjectName("muted")
         lfl.addWidget(self._local_status_lbl)
+        self._local_verify_bar = QProgressBar()
+        self._local_verify_bar.setRange(0, 100)
+        self._local_verify_bar.setValue(0)
+        self._local_verify_bar.setVisible(False)
+        lfl.addWidget(self._local_verify_bar)
+
+        verify_ctrl = QWidget()
+        verify_ctrl_l = QHBoxLayout(verify_ctrl)
+        verify_ctrl_l.setContentsMargins(0, 0, 0, 0)
+        verify_ctrl_l.setSpacing(8)
+        self._local_verify_cancel_btn = QPushButton(_("Cancel"))
+        self._local_verify_cancel_btn.setObjectName("action_btn")
+        self._local_verify_cancel_btn.setVisible(False)
+        verify_ctrl_l.addWidget(self._local_verify_cancel_btn)
+        verify_ctrl_l.addStretch()
+        lfl.addWidget(verify_ctrl)
+
+        self._local_verify_cancel_event: threading.Event | None = None
+        self._local_verify_seq = 0
 
         # Single "Model Management" button (opens unified dialog)
         btn_row_w = QWidget()
@@ -381,8 +400,45 @@ class SettingsDialog(QDialog):
         aiv.addWidget(grp_local)
 
         # ── Local model status refresh ────────────────────────────────────
-        def _apply_local_status(ready: bool, present: bool, lbl_text: str) -> None:
+        def _verify_reason_text(reason: str) -> str:
+            mapping = {
+                "timeout": msg(
+                    "local_model_verify_timeout",
+                    "Local model verification timed out.",
+                ),
+                "cancelled": msg(
+                    "local_model_verify_cancelled",
+                    "Local model verification was cancelled.",
+                ),
+                "permission_denied": msg(
+                    "local_model_verify_permission_denied",
+                    "Permission denied while verifying local model file.",
+                ),
+                "hash_mismatch": msg(
+                    "local_model_verify_failed",
+                    "Local model verification failed. Please re-download or switch model.",
+                ),
+                "io_error": msg(
+                    "local_model_verify_failed",
+                    "Local model verification failed. Please re-download or switch model.",
+                ),
+                "manifest_error": msg(
+                    "local_model_verify_failed",
+                    "Local model verification failed. Please re-download or switch model.",
+                ),
+            }
+            return mapping.get(reason, "")
+
+        def _apply_local_status(
+            ready: bool,
+            present: bool,
+            lbl_text: str,
+            verify_reason: str = "",
+        ) -> None:
             enabled = self._local_enabled_sw.isChecked()
+            self._local_verify_bar.setVisible(False)
+            self._local_verify_cancel_btn.setVisible(False)
+            self._local_verify_cancel_btn.setEnabled(False)
             if ready:
                 ready_text = _("Ready")
                 status = "✓  " + ready_text
@@ -394,11 +450,15 @@ class SettingsDialog(QDialog):
                 self._local_dl_btn.setText(
                     _("Select / Change"))
             else:
-                self._local_status_lbl.setText(
-                    _("Not downloaded"))
+                reason_text = _verify_reason_text(verify_reason)
+                if reason_text and present:
+                    self._local_status_lbl.setText(reason_text)
+                else:
+                    self._local_status_lbl.setText(
+                        _("Not downloaded"))
                 self._local_status_lbl.setStyleSheet("")
                 self._local_dl_btn.setText(
-                    _("Download"))
+                    _("Select / Change") if present else _("Download"))
             if not present and not enabled:
                 self._local_dl_blocked = True
                 self._local_dl_btn.setEnabled(False)
@@ -420,7 +480,23 @@ class SettingsDialog(QDialog):
                 self._local_dl_btn.setToolTip("")
                 self._local_dl_btn.setStyleSheet("")
 
+        def _cancel_local_verify() -> None:
+            if self._local_verify_cancel_event is not None:
+                self._local_verify_cancel_event.set()
+            self._local_verify_cancel_btn.setEnabled(False)
+
         def _refresh_local_status() -> None:
+            self._local_verify_seq += 1
+            verify_seq = self._local_verify_seq
+            if self._local_verify_cancel_event is not None:
+                self._local_verify_cancel_event.set()
+            cancel_event = threading.Event()
+            self._local_verify_cancel_event = cancel_event
+            self._local_verify_bar.setValue(0)
+            self._local_verify_bar.setVisible(True)
+            self._local_verify_cancel_btn.setVisible(True)
+            self._local_verify_cancel_btn.setEnabled(True)
+
             self._local_status_lbl.setText(
                 msg(
                     "local_model_verifying",
@@ -433,12 +509,33 @@ class SettingsDialog(QDialog):
             def _worker() -> None:
                 try:
                     from services.local_model_service import (
-                        verify_model_file, get_active_entry_id,
-                        load_catalog, get_models_dir, localize_field, LocalModelService,
+                        verify_model_file_with_reason,
+                        get_active_entry_id,
+                        load_catalog,
+                        get_models_dir,
+                        localize_field,
+                        LocalModelService,
                     )
+
+                    def _progress(percent: int) -> None:
+                        QTimer.singleShot(
+                            0,
+                            lambda p=percent: (
+                                self._local_verify_bar.setValue(p)
+                                if verify_seq == self._local_verify_seq else None
+                            ),
+                        )
+
                     mdir = get_models_dir()
                     entry_id = get_active_entry_id(mdir)
-                    ready = verify_model_file(mdir, entry_id)
+                    ready, verify_reason = verify_model_file_with_reason(
+                        mdir,
+                        entry_id,
+                        timeout_s=5.0,
+                        retries=1,
+                        progress_cb=_progress,
+                        cancel_event=cancel_event,
+                    )
                     present = LocalModelService.get().is_model_present()
                     catalog = load_catalog(mdir)
                     cat = next((c for c in catalog
@@ -450,9 +547,18 @@ class SettingsDialog(QDialog):
                 except Exception:
                     ready = False
                     present = False
+                    verify_reason = "io_error"
                     lbl_text = ""
 
-                QTimer.singleShot(0, lambda: _apply_local_status(ready, present, lbl_text))
+                QTimer.singleShot(
+                    0,
+                    lambda: _apply_local_status(
+                        ready,
+                        present,
+                        lbl_text,
+                        verify_reason if verify_seq == self._local_verify_seq else "",
+                    ) if verify_seq == self._local_verify_seq else None,
+                )
 
             threading.Thread(target=_worker, daemon=True).start()
 
@@ -477,6 +583,7 @@ class SettingsDialog(QDialog):
             _refresh_local_status()
 
         self._local_enabled_sw.toggled.connect(_on_local_toggle)
+        self._local_verify_cancel_btn.clicked.connect(_cancel_local_verify)
 
         def _open_model_management() -> None:
             """Open the unified Model Management dialog."""
@@ -673,7 +780,8 @@ Helpful details:
     def _check_update(self):
         self._check_upd_btn.setEnabled(False)
         self._upd_lbl.setText(_("Checking for updates…"))
-        self._app.services.check_update_async(_, self._upd_done)
+        tr = get_translator(self._app.lang).gettext
+        self._app.services.check_update_async(tr, self._upd_done)
 
     def _upd_done(self, msg: str):
         self._upd_lbl.setText(msg)
