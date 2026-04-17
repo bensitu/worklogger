@@ -146,15 +146,15 @@ class AppServices:
                 data = _json.loads(r.read())
             latest = data.get("tag_name", "").lstrip("v")
             if latest and latest != APP_VERSION:
-                avail_tpl = t.get("about_update_available", "v{0} available!")
+                avail_tpl = _("v{0} available!")
                 try:
                     return avail_tpl.format(latest)
                 except Exception:
                     return f"v{latest} available!"
-            return t.get("about_up_to_date", "Already up to date")
+            return _("You are on the latest version")
         except Exception as exc:
             err = str(exc)[:120]
-            template = t.get("about_update_error", "Update check failed: {0}")
+            template = _("Could not check for updates: {}")
             try:
                 return template.format(err)
             except Exception:

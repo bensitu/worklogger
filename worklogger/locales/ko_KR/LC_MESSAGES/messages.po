@@ -1,0 +1,733 @@
+
+
+msgid "days"
+msgstr "days"
+
+msgid "key"
+msgstr "key"
+
+msgid "overnight_badge"
+msgstr "overnight_badge"
+
+msgid "tpl_no_templates"
+msgstr "tpl_no_templates"
+
+msgid "tpl_saved"
+msgstr "tpl_saved"
+
+msgid "\n\nSkipped {} rows:\n{}"
+msgstr "\n\nSkipped {} rows:\n{}"
+
+msgid " days"
+msgstr " days"
+
+msgid "+"
+msgstr "+"
+
+msgid "1.0"
+msgstr "1.0"
+
+msgid "A privacy-first desktop work-hours tracker with AI-powered reporting."
+msgstr "A privacy-first desktop work-hours tracker with AI-powered reporting."
+
+msgid "AI"
+msgstr "AI"
+
+msgid "About"
+msgstr "About"
+
+msgid "Analytics"
+msgstr "Analytics"
+
+msgid "Annual"
+msgstr "Annual"
+
+msgid "Appearance"
+msgstr "Appearance"
+
+msgid "Append"
+msgstr "Append"
+
+msgid "Apply"
+msgstr "Apply"
+
+msgid "Apr"
+msgstr "Apr"
+
+msgid "April"
+msgstr "April"
+
+msgid "Aug"
+msgstr "Aug"
+
+msgid "August"
+msgstr "August"
+
+msgid "Author"
+msgstr "Author"
+
+msgid "Auto Record"
+msgstr "Auto Record"
+
+msgid "Break (h)"
+msgstr "Break (h)"
+
+msgid "Break Timer"
+msgstr "Break Timer"
+
+msgid "Break done"
+msgstr "Break done"
+
+msgid "Break hours cannot be negative."
+msgstr "Break hours cannot be negative."
+
+msgid "Built-in"
+msgstr "Built-in"
+
+msgid "CSV file is empty."
+msgstr "CSV file is empty."
+
+msgid "CTO"
+msgstr "CTO"
+
+msgid "Calendar Sync"
+msgstr "Calendar Sync"
+
+msgid "Calendar events cleared."
+msgstr "Calendar events cleared."
+
+msgid "Calendar events:"
+msgstr "Calendar events:"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "Check for Updates"
+msgstr "Check for Updates"
+
+msgid "Checking for updates…"
+msgstr "Checking for updates…"
+
+msgid "Choose a model to download"
+msgstr "Choose a model to download"
+
+msgid "Clear Calendar Events"
+msgstr "Clear Calendar Events"
+
+msgid "Clock"
+msgstr "Clock"
+
+msgid "Close"
+msgstr "Close"
+
+msgid "Confirm"
+msgstr "Confirm"
+
+msgid "Continue"
+msgstr "Continue"
+
+msgid "Could not check for updates: {}"
+msgstr "Could not check for updates: {}"
+
+msgid "Create Custom Template"
+msgstr "Create Custom Template"
+
+msgid "Custom"
+msgstr "Custom"
+
+msgid "Daily"
+msgstr "Daily"
+
+msgid "Daily avg"
+msgstr "Daily avg"
+
+msgid "Data"
+msgstr "Data"
+
+msgid "Dec"
+msgstr "Dec"
+
+msgid "December"
+msgstr "December"
+
+msgid "Default break (h)"
+msgstr "Default break (h)"
+
+msgid "Delete"
+msgstr "Delete"
+
+msgid "Delete Model"
+msgstr "Delete Model"
+
+msgid "Delete this entry?"
+msgstr "Delete this entry?"
+
+msgid "Delete this model file? This cannot be undone."
+msgstr "Delete this model file? This cannot be undone."
+
+msgid "Delete this template?"
+msgstr "Delete this template?"
+
+msgid "Discard"
+msgstr "Discard"
+
+msgid "Done"
+msgstr "Done"
+
+msgid "Download"
+msgstr "Download"
+
+msgid "Download Local Model"
+msgstr "Download Local Model"
+
+msgid "Enable local model"
+msgstr "Enable local model"
+
+msgid "End"
+msgstr "End"
+
+msgid "End time (opt.)"
+msgstr "End time (opt.)"
+
+msgid "Ended"
+msgstr "Ended"
+
+msgid "Expand notes"
+msgstr "Expand notes"
+
+msgid "Export"
+msgstr "Export"
+
+msgid "Export .ics"
+msgstr "Export .ics"
+
+msgid "Export CSV"
+msgstr "Export CSV"
+
+msgid "Exported {} events."
+msgstr "Exported {} events."
+
+msgid "External Model"
+msgstr "External Model"
+
+msgid "Feature Overview"
+msgstr "Feature Overview"
+
+msgid "Features"
+msgstr "Features"
+
+msgid "Feb"
+msgstr "Feb"
+
+msgid "February"
+msgstr "February"
+
+msgid "Fri"
+msgstr "Fri"
+
+msgid "General"
+msgstr "General"
+
+msgid "GitHub"
+msgstr "GitHub"
+
+msgid "HH:MM"
+msgstr "HH:MM"
+
+msgid "Hint / extra instructions (optional)"
+msgstr "Hint / extra instructions (optional)"
+
+msgid "Import .gguf"
+msgstr "Import .gguf"
+
+msgid "Import .ics"
+msgstr "Import .ics"
+
+msgid "Import CSV"
+msgstr "Import CSV"
+
+msgid "Import Result"
+msgstr "Import Result"
+
+msgid "Import your .ics file to let AI read your meetings when generating reports."
+msgstr "Import your .ics file to let AI read your meetings when generating reports."
+
+msgid "Imported {} calendar events."
+msgstr "Imported {} calendar events."
+
+msgid "Imported {} records."
+msgstr "Imported {} records."
+
+msgid "Insert"
+msgstr "Insert"
+
+msgid "Insert Quick Log"
+msgstr "Insert Quick Log"
+
+msgid "Integrity check failed — file may be corrupted"
+msgstr "Integrity check failed — file may be corrupted"
+
+msgid "Integrity failed"
+msgstr "Integrity failed"
+
+msgid "Jan"
+msgstr "Jan"
+
+msgid "January"
+msgstr "January"
+
+msgid "Jul"
+msgstr "Jul"
+
+msgid "July"
+msgstr "July"
+
+msgid "Jun"
+msgstr "Jun"
+
+msgid "June"
+msgstr "June"
+
+msgid "Leave days"
+msgstr "Leave days"
+
+msgid "License"
+msgstr "License"
+
+msgid "Local Model"
+msgstr "Local Model"
+
+msgid "Local model"
+msgstr "Local model"
+
+msgid "Manual Input"
+msgstr "Manual Input"
+
+msgid "Mar"
+msgstr "Mar"
+
+msgid "March"
+msgstr "March"
+
+msgid "May"
+msgstr "May"
+
+msgid "Missing columns: {}"
+msgstr "Missing columns: {}"
+
+msgid "Mon"
+msgstr "Mon"
+
+msgid "Monthly"
+msgstr "Monthly"
+
+msgid "Monthly Report"
+msgstr "Monthly Report"
+
+msgid "Monthly Work Report  {year}/{month:02d}"
+msgstr "Monthly Work Report  {year}/{month:02d}"
+
+msgid "Monthly target (h)"
+msgstr "Monthly target (h)"
+
+msgid "Monthly total"
+msgstr "Monthly total"
+
+msgid "New Template"
+msgstr "New Template"
+
+msgid "Next month"
+msgstr "Next month"
+
+msgid "Night"
+msgstr "Night"
+
+msgid "No"
+msgstr "No"
+
+msgid "No data"
+msgstr "No data"
+
+msgid "No entries yet today."
+msgstr "No entries yet today."
+
+msgid "No events found."
+msgstr "No events found."
+
+msgid "No external model configured"
+msgstr "No external model configured"
+
+msgid "No notes recorded for this period."
+msgstr "No notes recorded for this period."
+
+msgid "No templates available for this type."
+msgstr "No templates available for this type."
+
+msgid "Normal: {normal}\nRemote: {remote}\nBusiness: {biz}"
+msgstr "Normal: {normal}\nRemote: {remote}\nBusiness: {biz}"
+
+msgid "Not downloaded"
+msgstr "Not downloaded"
+
+msgid "Notes"
+msgstr "Notes"
+
+msgid "Notes reminder dot"
+msgstr "Notes reminder dot"
+
+msgid "Nov"
+msgstr "Nov"
+
+msgid "November"
+msgstr "November"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Oct"
+msgstr "Oct"
+
+msgid "October"
+msgstr "October"
+
+msgid "On break"
+msgstr "On break"
+
+msgid "Open"
+msgstr "Open"
+
+msgid "Overnight"
+msgstr "Overnight"
+
+msgid "Overtime"
+msgstr "Overtime"
+
+msgid "Overwrite existing data?"
+msgstr "Overwrite existing data?"
+
+msgid "PDF requires QtPrintSupport. Saving PNG."
+msgstr "PDF requires QtPrintSupport. Saving PNG."
+
+msgid "PTO"
+msgstr "PTO"
+
+msgid "Paid: {paid}\nComp: {comp}\nSick: {sick}"
+msgstr "Paid: {paid}\nComp: {comp}\nSick: {sick}"
+
+msgid "Please set your API key in Settings → AI."
+msgstr "Please set your API key in Settings → AI."
+
+msgid "Previous month"
+msgstr "Previous month"
+
+msgid "Public holidays"
+msgstr "Public holidays"
+
+msgid "Quarterly"
+msgstr "Quarterly"
+
+msgid "Quick Log"
+msgstr "Quick Log"
+
+msgid "Quick logs appear in daily notes and AI reports."
+msgstr "Quick logs appear in daily notes and AI reports."
+
+msgid "Quit"
+msgstr "Quit"
+
+msgid "Ready"
+msgstr "Ready"
+
+msgid "Replace"
+msgstr "Replace"
+
+msgid "Report"
+msgstr "Report"
+
+msgid "Restart"
+msgstr "Restart"
+
+msgid "Retry"
+msgstr "Retry"
+
+msgid "Sat"
+msgstr "Sat"
+
+msgid "Save"
+msgstr "Save"
+
+msgid "Save Changes"
+msgstr "Save Changes"
+
+msgid "Save changes to this template?"
+msgstr "Save changes to this template?"
+
+msgid "Saved: {}"
+msgstr "Saved: {}"
+
+msgid "Select / Change"
+msgstr "Select / Change"
+
+msgid "Sep"
+msgstr "Sep"
+
+msgid "September"
+msgstr "September"
+
+msgid "Settings"
+msgstr "Settings"
+
+msgid "Sick"
+msgstr "Sick"
+
+msgid "Standard hours (h)"
+msgstr "Standard hours (h)"
+
+msgid "Start"
+msgstr "Start"
+
+msgid "Start week on Monday"
+msgstr "Start week on Monday"
+
+msgid "Started"
+msgstr "Started"
+
+msgid "Summary: {days} work days, {total}h total, {ot}h overtime."
+msgstr "Summary: {days} work days, {total}h total, {ot}h overtime."
+
+msgid "Sun"
+msgstr "Sun"
+
+msgid "Switch Model"
+msgstr "Switch Model"
+
+msgid "Template name"
+msgstr "Template name"
+
+msgid "Template saved."
+msgstr "Template saved."
+
+msgid "Templates"
+msgstr "Templates"
+
+msgid "Test"
+msgstr "Test"
+
+msgid "Testing…"
+msgstr "Testing…"
+
+msgid "This model is already downloaded and ready."
+msgstr "This model is already downloaded and ready."
+
+msgid "Thu"
+msgstr "Thu"
+
+msgid "Time"
+msgstr "Time"
+
+msgid "Today"
+msgstr "Today"
+
+msgid "Today's entries:"
+msgstr "Today's entries:"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Trip"
+msgstr "Trip"
+
+msgid "Tue"
+msgstr "Tue"
+
+msgid "Type"
+msgstr "Type"
+
+msgid "Unsaved changes — save before switching?"
+msgstr "Unsaved changes — save before switching?"
+
+msgid "Version"
+msgstr "Version"
+
+msgid "WFH"
+msgstr "WFH"
+
+msgid "Wed"
+msgstr "Wed"
+
+msgid "Weekly"
+msgstr "Weekly"
+
+msgid "Weekly Report"
+msgstr "Weekly Report"
+
+msgid "Weekly Work Report  {start} – {end}"
+msgstr "Weekly Work Report  {start} – {end}"
+
+msgid "What are you doing?"
+msgstr "What are you doing?"
+
+msgid "Work Log"
+msgstr "Work Log"
+
+msgid "Work Logger"
+msgstr "Work Logger"
+
+msgid "Work Logger is a flexible desktop app for tracking work hours, notes, and reports.\n\nWhat you can do:\n- Switch between Manual Input and Auto Record depending on how you like to log time.\n- Record start time, end time, and break time for each day.\n- Save work type and notes together with the time record.\n- Use Quick Log for lightweight task entries during the day.\n- Keep notes for future dates even when exact work hours are not decided yet.\n- Generate daily, weekly, and monthly reports from saved data.\n- Use AI-compatible providers to turn notes into polished summaries.\n- Review monthly trends with charts, averages, overtime, and monthly targets.\n- Import calendar events and display public holidays.\n- Customize language, theme, AI settings, and reminder behavior.\n\nRecommended workflow:\n1. Pick Manual Input if you usually type times yourself.\n2. Pick Auto Record if you prefer start/end/break buttons.\n3. Add Notes or Quick Log entries as work happens.\n4. Save the day record when finished.\n5. Open Reports or AI tools when you need a summary.\n\nHelpful details:\n- Holiday names can be shown automatically on the calendar.\n- A small reminder dot can appear on days that only have notes.\n- Built-in and custom templates can be used in notes and reports."
+msgstr "Work Logger is a flexible desktop app for tracking work hours, notes, and reports.\n\nWhat you can do:\n- Switch between Manual Input and Auto Record depending on how you like to log time.\n- Record start time, end time, and break time for each day.\n- Save work type and notes together with the time record.\n- Use Quick Log for lightweight task entries during the day.\n- Keep notes for future dates even when exact work hours are not decided yet.\n- Generate daily, weekly, and monthly reports from saved data.\n- Use AI-compatible providers to turn notes into polished summaries.\n- Review monthly trends with charts, averages, overtime, and monthly targets.\n- Import calendar events and display public holidays.\n- Customize language, theme, AI settings, and reminder behavior.\n\nRecommended workflow:\n1. Pick Manual Input if you usually type times yourself.\n2. Pick Auto Record if you prefer start/end/break buttons.\n3. Add Notes or Quick Log entries as work happens.\n4. Save the day record when finished.\n5. Open Reports or AI tools when you need a summary.\n\nHelpful details:\n- Holiday names can be shown automatically on the calendar.\n- A small reminder dot can appear on days that only have notes.\n- Built-in and custom templates can be used in notes and reports."
+
+msgid "Work Report"
+msgstr "Work Report"
+
+msgid "Work Time Analytics"
+msgstr "Work Time Analytics"
+
+msgid "Work days"
+msgstr "Work days"
+
+msgid "Work type"
+msgstr "Work type"
+
+msgid "Yes"
+msgstr "Yes"
+
+msgid "You already logged {hours}h of break time. What do you want to do?"
+msgstr "You already logged {hours}h of break time. What do you want to do?"
+
+msgid "You are on the latest version"
+msgstr "You are on the latest version"
+
+msgid "gpt-4o-mini | claude-haiku-4-5-20251001"
+msgstr "gpt-4o-mini | claude-haiku-4-5-20251001"
+
+msgid "h"
+msgstr "h"
+
+msgid "https://api.openai.com/v1 | https://api.anthropic.com"
+msgstr "https://api.openai.com/v1 | https://api.anthropic.com"
+
+msgid "sk-… / sk-ant-…"
+msgstr "sk-… / sk-ant-…"
+
+msgid "v{0} available!"
+msgstr "v{0} available!"
+
+msgid "{0:.0f} / {1:.0f} MB"
+msgstr "{0:.0f} / {1:.0f} MB"
+
+msgid "{date}  ({dow})  {h}h  [{wt}]"
+msgstr "{date}  ({dow})  {h}h  [{wt}]"
+
+msgid "▶ Break"
+msgstr "▶ Break"
+
+msgid "⚙  Settings"
+msgstr "⚙  Settings"
+
+msgid "✓  Connected"
+msgstr "✓  Connected"
+
+msgid "✓  Integrity verified"
+msgstr "✓  Integrity verified"
+
+msgid "✓  Model imported"
+msgstr "✓  Model imported"
+
+msgid "✗  {}"
+msgstr "✗  {}"
+
+msgid "✨ AI Assist"
+msgstr "✨ AI Assist"
+
+msgid "✨ AI Generate"
+msgstr "✨ AI Generate"
+
+msgid "🌍  Language"
+msgstr "🌍  Language"
+
+msgid "🌙  Dark mode"
+msgstr "🌙  Dark mode"
+
+msgid "📅 Import Calendar (.ics)"
+msgstr "📅 Import Calendar (.ics)"
+
+msgid "📋 Templates"
+msgstr "📋 Templates"
+
+msgid "A different model is already downloaded.  It will be deleted before downloading the new one.  Continue?"
+msgstr "A different model is already downloaded.  It will be deleted before downloading the new one.  Continue?"
+
+msgid "AI Generated"
+msgstr "AI Generated"
+
+msgid "AI Result"
+msgstr "AI Result"
+
+msgid "API Base URL"
+msgstr "API Base URL"
+
+msgid "API Key"
+msgstr "API Key"
+
+msgid "Add"
+msgstr "Add"
+
+msgid "Break time must be less than the total shift duration."
+msgstr "Break time must be less than the total shift duration."
+
+msgid "Calendar data already exists.\n\nReplace — clear all previous calendar events before import.\nAppend — keep existing events and add new ones."
+msgstr "Calendar data already exists.\n\nReplace — clear all previous calendar events before import.\nAppend — keep existing events and add new ones."
+
+msgid "Copied!"
+msgstr "Copied!"
+
+msgid "Copy"
+msgstr "Copy"
+
+msgid "Download .md"
+msgstr "Download .md"
+
+msgid "Downloading…  You may cancel at any time; the download will resume from where it left off."
+msgstr "Downloading…  You may cancel at any time; the download will resume from where it left off."
+
+msgid "End now"
+msgstr "End now"
+
+msgid "Error"
+msgstr "Error"
+
+msgid "Invalid time range. The shift must be within {max_hours} hours (overnight is supported)."
+msgstr "Invalid time range. The shift must be within {max_hours} hours (overnight is supported)."
+
+msgid "Local model failed and no external API key / URL / model name is configured.\nPlease configure an external model in Settings → AI."
+msgstr "Local model failed and no external API key / URL / model name is configured.\nPlease configure an external model in Settings → AI."
+
+msgid "Local model is disabled."
+msgstr "Local model is disabled."
+
+msgid "Model"
+msgstr "Model"
+
+msgid "Only one model can be active at a time.  Delete the current model before switching."
+msgstr "Only one model can be active at a time.  Delete the current model before switching."
+
+msgid "Original"
+msgstr "Original"
+
+msgid "Regenerate"
+msgstr "Regenerate"
+
+msgid "Show overnight indicator"
+msgstr "Show overnight indicator"
+
+msgid "Start now"
+msgstr "Start now"
+
+msgid "When enabled, text processing uses the local model first — no data is sent to external services."
+msgstr "When enabled, text processing uses the local model first — no data is sent to external services."
+
+msgid "⚡ Quick Log"
+msgstr "⚡ Quick Log"
+
+msgid "🎨  Theme"
+msgstr "🎨  Theme"

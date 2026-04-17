@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QFont
 
-from config.i18n import T
+from utils.i18n import _, msg
 from config.themes import progress_bar_qss
 
 
@@ -76,9 +76,7 @@ class LocalDownloadDialog(QDialog):
         self._dark = dark
         self._bridge = _Bridge(self)
         self._sel_id: Optional[str] = None
-        t = T[lang]
-
-        self.setWindowTitle(t.get("local_model_download_title", "Local Model"))
+        self.setWindowTitle(_("Download Local Model"))
         self.setMinimumSize(580, 480)
         self.resize(620, 520)
         self.setModal(True)
@@ -89,8 +87,6 @@ class LocalDownloadDialog(QDialog):
 
         self._stack = QStackedWidget()
         root.addWidget(self._stack, 1)
-
-        t_dict = T[lang]
         self._stack.addWidget(self._build_select_page(t_dict))
         self._stack.addWidget(self._build_download_page(t_dict))
 
@@ -121,14 +117,14 @@ class LocalDownloadDialog(QDialog):
         lyt.setContentsMargins(16, 16, 16, 16)
         lyt.setSpacing(10)
 
-        title = QLabel(t.get("local_model_select_title", "Choose a model"))
+        title = QLabel(_("Choose a model to download"))
         tf = QFont()
         tf.setPointSize(11)
         tf.setBold(True)
         title.setFont(tf)
         lyt.addWidget(title)
 
-        hint = QLabel(t.get(
+        hint = QLabel(msg(
             "local_model_select_hint",
             "Only one model can be active at a time.  "
             "Delete the current model before switching.",
@@ -165,11 +161,11 @@ class LocalDownloadDialog(QDialog):
 
         btn_row = QHBoxLayout()
         self._sel_cancel_btn = QPushButton(
-            t.get("btn_cancel",             "Cancel"))
+            _("Cancel"))
         self._sel_import_btn = QPushButton(
-            t.get("local_model_import_btn", "Import .gguf"))
+            _("Import .gguf"))
         self._sel_next_btn = QPushButton(
-            t.get("local_model_download_btn", "Download"))
+            _("Download"))
         self._sel_next_btn.setObjectName("primary_btn")
         self._sel_import_btn.setObjectName("action_btn")
         btn_row.addWidget(self._sel_import_btn)
@@ -245,7 +241,7 @@ class LocalDownloadDialog(QDialog):
         bot_row = QHBoxLayout()
         status_lbl = QLabel()
         status_lbl.setObjectName("muted")
-        delete_btn = QPushButton(t.get("local_model_delete_btn", "Delete"))
+        delete_btn = QPushButton(_("Delete"))
         delete_btn.setObjectName("action_btn")
         delete_btn.setFixedWidth(72)
         delete_btn.hide()
@@ -274,7 +270,6 @@ class LocalDownloadDialog(QDialog):
                 load_catalog, verify_model_file, load_manifest,
                 get_models_dir, get_entry,
             )
-            t        = T[self._lang]
             mdir     = get_models_dir()
             manifest = load_manifest(mdir)
             catalog  = load_catalog(mdir)
@@ -294,29 +289,27 @@ class LocalDownloadDialog(QDialog):
                 if path and path.exists() and path.stat().st_size > 0:
                     if verify_model_file(mdir, eid):
                         card["status_lbl"].setText(
-                            "✓  " + t.get("local_model_status_ready", "Ready"))
+                            "✓  " + _("Ready"))
                         card["status_lbl"].setStyleSheet(
                             f"color:{ok_col};font-weight:600;")
                     else:
                         card["status_lbl"].setText(
-                            t.get("local_model_hash_fail", "Integrity failed"))
+                            _("Integrity failed"))
                         card["status_lbl"].setStyleSheet("color:#e03333;")
                     card["delete_btn"].show()
                 else:
                     raise ValueError("not present")
             except Exception:
                 card["status_lbl"].setText(
-                    t.get("local_model_status_not_downloaded", "Not downloaded"))
+                    _("Not downloaded"))
                 card["status_lbl"].setStyleSheet("")
                 card["delete_btn"].hide()
 
     def _delete_model(self, entry_id: str) -> None:
-        t = T[self._lang]
         reply = QMessageBox.question(
             self,
-            t.get("local_model_delete_title", "Delete"),
-            t.get("local_model_delete_confirm",
-                  "Delete this model file? This cannot be undone."),
+            _("Delete Model"),
+            _("Delete this model file? This cannot be undone."),
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No,
         )
@@ -328,7 +321,7 @@ class LocalDownloadDialog(QDialog):
             LocalModelService.reset()
             self._refresh_card_states()
         except Exception as exc:
-            QMessageBox.warning(self, t.get(
+            QMessageBox.warning(self, msg(
                 "settings_title", "Error"), str(exc))
 
     def _on_select_next(self) -> None:
@@ -337,8 +330,6 @@ class LocalDownloadDialog(QDialog):
             load_catalog, verify_model_file, get_active_entry_id,
             load_manifest, get_entry, get_models_dir, set_active_entry,
         )
-        t = T[self._lang]
-
         # Which radio is checked?
         checked = self._radio_group.checkedButton()
         sel_id = None
@@ -360,9 +351,8 @@ class LocalDownloadDialog(QDialog):
             if verify_model_file(mdir, sel_id):
                 QMessageBox.information(
                     self,
-                    t.get("local_model_download_title", "Local Model"),
-                    t.get("local_model_already_ready",
-                          "This model is already downloaded and ready."),
+                    _("Download Local Model"),
+                    _("This model is already downloaded and ready."),
                 )
                 self.accept()
                 return
@@ -372,8 +362,8 @@ class LocalDownloadDialog(QDialog):
         if active_id != sel_id and verify_model_file(mdir, active_id):
             reply = QMessageBox.question(
                 self,
-                t.get("local_model_switch_title", "Switch Model"),
-                t.get("local_model_switch_confirm",
+                _("Switch Model"),
+                msg("local_model_switch_confirm",
                       "A different model is already downloaded.  "
                       "It will be deleted before downloading the new one.  Continue?"),
                 QMessageBox.Yes | QMessageBox.No,
@@ -386,7 +376,7 @@ class LocalDownloadDialog(QDialog):
                 LocalModelService.get().delete_model(active_id)
                 LocalModelService.reset()
             except Exception as exc:
-                QMessageBox.warning(self, t.get(
+                QMessageBox.warning(self, msg(
                     "settings_title", "Error"), str(exc))
                 return
 
@@ -408,7 +398,7 @@ class LocalDownloadDialog(QDialog):
         self._dl_model_lbl.setFont(lf)
         lyt.addWidget(self._dl_model_lbl)
 
-        hint = QLabel(t.get(
+        hint = QLabel(msg(
             "local_model_download_hint",
             "Downloading…  You may cancel at any time; "
             "the download will resume from where it left off.",
@@ -433,8 +423,8 @@ class LocalDownloadDialog(QDialog):
         lyt.addWidget(self._log, 1)
 
         btn_row = QHBoxLayout()
-        self._retry_btn = QPushButton(t.get("local_model_retry", "Retry"))
-        self._action_btn = QPushButton(t.get("btn_cancel",        "Cancel"))
+        self._retry_btn = QPushButton(_("Retry"))
+        self._action_btn = QPushButton(_("Cancel"))
         self._retry_btn.setObjectName("action_btn")
         self._retry_btn.hide()
         btn_row.addWidget(self._retry_btn)
@@ -451,7 +441,6 @@ class LocalDownloadDialog(QDialog):
 
     def _start_download(self) -> None:
         from services.local_model_service import load_catalog
-        t = T[self._lang]
         eid = self._sel_id or ""
         cat = load_catalog()
         entry = next((e for e in cat if e.get("id") == eid),
@@ -460,7 +449,7 @@ class LocalDownloadDialog(QDialog):
 
         self._dl_model_lbl.setText(label)
         self._retry_btn.hide()
-        self._action_btn.setText(t.get("btn_cancel", "Cancel"))
+        self._action_btn.setText(_("Cancel"))
         self._action_btn.clicked.disconnect()
         self._action_btn.clicked.connect(self._cancel)
         self._progress.setValue(0)
@@ -487,8 +476,7 @@ class LocalDownloadDialog(QDialog):
 
     def _retry_download(self) -> None:
         self._retry_btn.hide()
-        t = T[self._lang]
-        self._action_btn.setText(t.get("btn_cancel", "Cancel"))
+        self._action_btn.setText(_("Cancel"))
         self._action_btn.clicked.disconnect()
         self._action_btn.clicked.connect(self._cancel)
         self._progress.setValue(0)
@@ -511,8 +499,7 @@ class LocalDownloadDialog(QDialog):
             dl_mb  = dl  / 1_048_576
             tot_mb = tot / 1_048_576
             self._progress.setValue(pct)
-            t   = T[self._lang]
-            fmt = t.get("local_model_progress", "{0:.0f} / {1:.0f} MB")
+            fmt = _("{0:.0f} / {1:.0f} MB")
             try:
                 self._progress.setFormat(
                     f"{fmt.format(dl_mb, tot_mb)}  {pct}%")
@@ -524,22 +511,20 @@ class LocalDownloadDialog(QDialog):
         if getattr(self, "_last_status_key", "") == key:
             return
         self._last_status_key = key
-        t = T[self._lang]
-        if key in ("local_model_hash_ok", "local_model_status_ready"):
+        if key in ("download_dialog_model_hash_ok", "download_model_status_ready"):
             return   # these appear as part of the done message; skip log noise
-        msg = t.get(key, key)
-        if msg:
-            self._log_append(msg)
+        text = msg(key, key)
+        if text:
+            self._log_append(text)
 
     def _on_done(self) -> None:
-        t = T[self._lang]
         self._progress.setValue(100)
         self._progress.setFormat("100%")
         self._log_append(
-            t.get("local_model_download_ok", "✓  Download complete"))
+            _("✓  Integrity verified"))
         self._retry_btn.hide()
         # ── Button becomes "Done / 完成" ──
-        self._action_btn.setText(t.get("btn_done", "Done"))
+        self._action_btn.setText(_("Done"))
         self._action_btn.clicked.disconnect()
         self._action_btn.clicked.connect(self.accept)
         # Reset singleton so next inference picks up the new file.
@@ -547,12 +532,11 @@ class LocalDownloadDialog(QDialog):
         LocalModelService.reset()
 
     def _on_error(self, message: str) -> None:
-        t = T[self._lang]
-        display = t.get(message, message)
+        display = msg(message, message)
         self._log_append(
-            f"\n[{t.get('local_model_download_fail', 'Error')}] {display}")
+            f"\n[{_("Integrity check failed — file may be corrupted")}] {display}")
         self._retry_btn.show()
-        self._action_btn.setText(t.get("btn_close", "Close"))
+        self._action_btn.setText(_("Close"))
         self._action_btn.clicked.disconnect()
         self._action_btn.clicked.connect(self.reject)
 
@@ -564,10 +548,9 @@ class LocalDownloadDialog(QDialog):
         Files matching a known catalog entry use that entry's canonical name.
         Unknown files create a new catalog+manifest entry under their own name.
         """
-        t = T[self._lang]
         path, _ = QFileDialog.getOpenFileName(
             self,
-            t.get("local_model_import_btn", "Import .gguf"),
+            _("Import .gguf"),
             "",
             "GGUF files (*.gguf);;All files (*)",
         )
@@ -586,13 +569,12 @@ class LocalDownloadDialog(QDialog):
             self._rebuild_cards_if_needed()
             QMessageBox.information(
                 self,
-                t.get("local_model_download_title", "Import"),
-                t.get("local_model_import_ok",
-                      "✓  Model imported successfully"),
+                _("Download Local Model"),
+                _("✓  Model imported"),
             )
         except Exception as exc:
             QMessageBox.warning(
-                self, t.get("settings_title", "Import"), str(exc))
+                self, _("Settings"), str(exc))
 
     def _rebuild_cards_if_needed(self) -> None:
         """Refresh card list if catalog has grown since dialog was opened."""

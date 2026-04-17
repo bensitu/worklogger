@@ -143,11 +143,9 @@ def render_pdf(
     from PySide6.QtGui import (QPainter, QPageLayout, QPageSize,
                                QFont, QColor, QPen, QBrush)
     from PySide6.QtCore import Qt
-    from config.i18n import T
+    from utils.i18n import _, msg
     from config.themes import THEMES
     from ui.widgets import BarChart
-
-    t = T[ctx.lang]
     acc = THEMES[ctx.theme][False][0]
 
     printer = QPrinter(QPrinter.HighResolution)
@@ -173,7 +171,7 @@ def render_pdf(
     painter.setPen(QColor("#1e2035"))
     th = pt(30)
     painter.drawText(QRectF(0, 0, pw, th),
-                     Qt.AlignHCenter | Qt.AlignVCenter, t["chart_title"])
+                     Qt.AlignHCenter | Qt.AlignVCenter, _("Work Time Analytics"))
     f2 = QFont("sans-serif")
     f2.setPixelSize(pt(10))
     painter.setFont(f2)
@@ -192,7 +190,7 @@ def render_pdf(
     mt = ctx.monthly_target
     refs = [mt / 4.3, mt * 3, mt]
     tmp = BarChart(data, ref=refs[tab_index], dark=False, accent=acc,
-                   unit=t["h_unit"], no_data=t["no_data"])
+                   unit=_("h"), no_data=_("No data"))
     tmp.resize(chart_widget.size())
     src_px = tmp.grab()
     tmp.deleteLater()

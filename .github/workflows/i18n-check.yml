@@ -1,0 +1,23 @@
+name: i18n-check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify-i18n:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Extract POT
+        run: python scripts/i18n_extract.py
+      - name: Sync PO
+        run: python scripts/i18n_sync.py
+      - name: Compile MO
+        run: python scripts/i18n_compile.py
+      - name: Check i18n consistency
+        run: python scripts/i18n_check.py

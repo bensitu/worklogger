@@ -20,10 +20,10 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont
 
-from config.i18n import T
+from utils.i18n import _, msg
 from services.ai_service import AIWorker, LocalModelWorker
 from services.local_model_service import LOCAL_MODEL_SENTINEL
-from utils.ai_status_formatter import parse_status
+from utils.formatters import parse_status
 
 # Keys emitted by LocalModelWorker that signal a failed local inference attempt.
 _LOCAL_FAIL_KEYS = frozenset({
@@ -51,7 +51,7 @@ class AIProgressDialog(QDialog):
         self.log.setFont(QFont("monospace", 9))
         layout.addWidget(self.log, 1)
 
-        self.cancel_btn = QPushButton(T[lang].get("btn_cancel", "Cancel"))
+        self.cancel_btn = QPushButton(msg("btn_cancel", "Cancel"))
         self.cancel_btn.clicked.connect(self.reject)
         layout.addWidget(self.cancel_btn)
 
@@ -61,24 +61,22 @@ class AIProgressDialog(QDialog):
         self._timeout_timer.timeout.connect(self._on_timeout)
 
     def append(self, text_key: str, **kwargs):
-        t = T[self.lang]
-        msg = t.get(text_key, text_key)
+        text = msg(text_key, text_key)
         try:
-            msg = msg.format(**kwargs)
+            text = text.format(**kwargs)
         except Exception:
             pass
-        self.log.append(msg)
+        self.log.append(text)
         sb = self.log.verticalScrollBar()
         sb.setValue(sb.maximum())
         QApplication.processEvents()
 
     def set_error(self, short_key: str, detail: str):
-        t = T[self.lang]
-        short = t.get(short_key, short_key)
+        short = msg(short_key, short_key)
         self.append(f"\n[ERROR] {short}")
         if detail:
             self.log.append(detail)
-        self.cancel_btn.setText(t.get("btn_close", "Close"))
+        self.cancel_btn.setText(_("Close"))
         self._timeout_timer.stop()
 
     def _on_timeout(self):
@@ -144,12 +142,11 @@ class AIProgressDialog(QDialog):
 
         def on_error(short: str, detail: str):
             dlg._timeout_timer.stop()
-            t = T[lang]
             if short in _LOCAL_FAIL_KEYS:
                 # ── Automatic fallback to external model ──────────────────
                 # 1. Surface the local-model failure message in the log.
-                friendly_local = t.get(short, short)
-                dlg.log.append(f"[{t.get('local_model_download_fail', 'Local model')}] "
+                friendly_local = msg(short, short)
+                dlg.log.append(f"[{_("Local model")}] "
                                f"{friendly_local}")
                 # 2. Announce fallback attempt.
                 dlg.append("ai_assist_local_model_not_running")
@@ -179,9 +176,8 @@ class AIProgressDialog(QDialog):
                     dlg._timeout_timer.stop()
                     dlg.log.append("")
                     dlg.set_error(
-                        t.get("ai_err_no_fallback",
-                              "No external model configured"),
-                        t.get("ai_err_no_fallback_detail",
+                        _("No external model configured"),
+                        msg("ai_err_no_fallback_detail",
                               "Local model failed and no external API key / URL / model "
                               "name is configured.\n"
                               "Please configure an external model in Settings → AI."),
@@ -238,7 +234,7 @@ class AIResultDialog(QDialog):
         super().__init__(parent)
         self.lang = lang
         self.on_regenerate = on_regenerate
-        self.setWindowTitle(T[lang].get("ai_result_title", "AI Result"))
+        self.setWindowTitle(msg("ai_result_title", "AI Result"))
         self.setMinimumSize(800, 500)
         self.resize(900, 600)
 
@@ -250,7 +246,7 @@ class AIResultDialog(QDialog):
 
         left_w = QWidget()
         ll = QVBoxLayout(left_w)
-        lbl_l = QLabel(T[lang].get("original_content", "Original"))
+        lbl_l = QLabel(msg("original_content", "Original"))
         lbl_l.setObjectName("muted")
         ll.addWidget(lbl_l)
         self.original_edit = QTextEdit()
@@ -261,7 +257,7 @@ class AIResultDialog(QDialog):
 
         right_w = QWidget()
         rl = QVBoxLayout(right_w)
-        lbl_r = QLabel(T[lang].get("ai_generated", "AI Generated"))
+        lbl_r = QLabel(msg("ai_generated", "AI Generated"))
         lbl_r.setObjectName("muted")
         rl.addWidget(lbl_r)
         self.generated_edit = QTextEdit()
@@ -274,9 +270,9 @@ class AIResultDialog(QDialog):
         layout.addWidget(splitter, 1)
 
         btn_layout = QHBoxLayout()
-        self.apply_btn      = QPushButton(T[lang].get("apply",      "Apply"))
-        self.regenerate_btn = QPushButton(T[lang].get("regenerate", "Regenerate"))
-        self.cancel_btn     = QPushButton(T[lang].get("btn_cancel", "Cancel"))
+        self.apply_btn      = QPushButton(msg("apply",      "Apply"))
+        self.regenerate_btn = QPushButton(msg("btn_regenerate", "Regenerate"))
+        self.cancel_btn     = QPushButton(msg("btn_cancel", "Cancel"))
         self.apply_btn.setObjectName("primary_btn")
         btn_layout.addStretch()
         btn_layout.addWidget(self.regenerate_btn)
