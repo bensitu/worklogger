@@ -13,13 +13,22 @@ if TYPE_CHECKING:
     from data.db import DB
 
 
-def _wt_label(wt: str, t: dict) -> str:
+def _wt_label(wt: str) -> str:
     mapping = {
         "normal": "wt_normal", "remote": "wt_remote",
         "business_trip": "wt_business", "paid_leave": "wt_paid",
         "comp_leave": "wt_comp", "sick_leave": "wt_sick",
     }
-    return msg(mapping.get(wt, "wt_normal"), wt)
+    fallback = {
+        "wt_normal": "Normal",
+        "wt_remote": "Remote work",
+        "wt_business": "Business trip",
+        "wt_paid": "Paid leave",
+        "wt_comp": "Comp leave",
+        "wt_sick": "Sick leave",
+    }
+    key = mapping.get(wt, "wt_normal")
+    return msg(key, fallback.get(key, wt))
 
 
 def _fmt_entry(dt: _dt.date, rec, work_hours: float,
@@ -34,11 +43,11 @@ def _fmt_entry(dt: _dt.date, rec, work_hours: float,
         note = f"\n  → {rec.note}" if rec.note else ""
         line = _("{date}  ({dow})  {h}h  [{wt}]").format(
             date=dt.isoformat(), dow=dow,
-            h=f"{h:.1f}", wt=_wt_label(wt, t))
+            h=f"{h:.1f}", wt=_wt_label(wt))
         return line + overnight + ots + note, h, ot
     elif rec and rec.is_leave:
         note = f"\n  → {rec.note}" if rec.note else ""
-        return (f"{dt.isoformat()}（{dow}）[{_wt_label(rec.safe_work_type(), t)}]{note}",
+        return (f"{dt.isoformat()}（{dow}）[{_wt_label(rec.safe_work_type())}]{note}",
                 0.0, 0.0)
     return None, 0.0, 0.0
 
@@ -81,7 +90,7 @@ def generate_monthly(
 ) -> str:
     header = _("Monthly Work Report  {year}/{month:02d}").format(year=year, month=month)
     lines = [f"# {header}", ""]
-    _, days = monthrange(year, month)
+    _first_weekday, days = monthrange(year, month)
     total = ot_total = n_days = 0.0
     recs = {r[0]: r for r in db.month(f"{year}-{month:02d}")}
     for d in range(1, days + 1):

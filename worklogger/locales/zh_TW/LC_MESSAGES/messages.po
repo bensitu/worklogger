@@ -1,25 +1,11 @@
-
-
-msgid "days"
-msgstr "days"
-
-msgid "key"
-msgstr "key"
-
-msgid "overnight_badge"
-msgstr "overnight_badge"
-
-msgid "tpl_no_templates"
-msgstr "tpl_no_templates"
-
-msgid "tpl_saved"
-msgstr "tpl_saved"
+msgid ""
+msgstr "Language: zh_TW\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
 
 msgid "\n\nSkipped {} rows:\n{}"
-msgstr "\n\nSkipped {} rows:\n{}"
+msgstr "\n\n跳過 {} 行：\n{}"
 
 msgid " days"
-msgstr " days"
+msgstr "天"
 
 msgid "+"
 msgstr "+"
@@ -27,206 +13,248 @@ msgstr "+"
 msgid "1.0"
 msgstr "1.0"
 
+msgid "A different model is already downloaded.  It will be deleted before downloading the new one.  Continue?"
+msgstr "已下載其他模型。下載新模型前會先刪除舊模型，是否繼續？"
+
 msgid "A privacy-first desktop work-hours tracker with AI-powered reporting."
-msgstr "A privacy-first desktop work-hours tracker with AI-powered reporting."
+msgstr "注重隱私的桌面工時記錄工具，內建 AI 報告生成功能。"
 
 msgid "AI"
 msgstr "AI"
 
+msgid "AI Generated"
+msgstr "AI 生成"
+
+msgid "AI Result"
+msgstr "AI 結果"
+
+msgid "API Base URL"
+msgstr "API 地址"
+
+msgid "API Key"
+msgstr "API 金鑰"
+
 msgid "About"
-msgstr "About"
+msgstr "關於"
+
+msgid "Add"
+msgstr "新增"
 
 msgid "Analytics"
-msgstr "Analytics"
+msgstr "分析"
 
 msgid "Annual"
-msgstr "Annual"
+msgstr "年度"
 
 msgid "Appearance"
-msgstr "Appearance"
+msgstr "外觀"
 
 msgid "Append"
-msgstr "Append"
+msgstr "追加"
 
 msgid "Apply"
-msgstr "Apply"
+msgstr "套用"
 
 msgid "Apr"
-msgstr "Apr"
+msgstr "4月"
 
 msgid "April"
-msgstr "April"
+msgstr "4月"
 
 msgid "Aug"
-msgstr "Aug"
+msgstr "8月"
 
 msgid "August"
-msgstr "August"
+msgstr "8月"
 
 msgid "Author"
-msgstr "Author"
+msgstr "作者"
 
 msgid "Auto Record"
-msgstr "Auto Record"
+msgstr "自動記錄"
 
 msgid "Break (h)"
-msgstr "Break (h)"
+msgstr "休息 (h)"
 
 msgid "Break Timer"
-msgstr "Break Timer"
+msgstr "休息計時"
 
 msgid "Break done"
-msgstr "Break done"
+msgstr "已休息"
 
 msgid "Break hours cannot be negative."
-msgstr "Break hours cannot be negative."
+msgstr "休息時數不可為負值。"
+
+msgid "Break time must be less than the total shift duration."
+msgstr "休息時間必須小於總班次時長。"
 
 msgid "Built-in"
-msgstr "Built-in"
+msgstr "內建"
 
 msgid "CSV file is empty."
-msgstr "CSV file is empty."
+msgstr "CSV 檔案為空。"
 
 msgid "CTO"
-msgstr "CTO"
+msgstr "補休"
 
 msgid "Calendar Sync"
-msgstr "Calendar Sync"
+msgstr "日曆同步"
+
+msgid "Calendar data already exists.\n\nReplace — clear all previous calendar events before import.\nAppend — keep existing events and add new ones."
+msgstr "行事曆資料已存在。\n\n替換 — 匯入前先清除既有行事曆事件。\n追加 — 保留既有事件並新增新事件。"
 
 msgid "Calendar events cleared."
-msgstr "Calendar events cleared."
+msgstr "日曆事件已清除。"
 
 msgid "Calendar events:"
-msgstr "Calendar events:"
+msgstr "日曆事件："
 
 msgid "Cancel"
-msgstr "Cancel"
+msgstr "取消"
 
 msgid "Check for Updates"
-msgstr "Check for Updates"
+msgstr "檢查更新"
 
 msgid "Checking for updates…"
-msgstr "Checking for updates…"
+msgstr "正在檢查更新…"
 
 msgid "Choose a model to download"
-msgstr "Choose a model to download"
+msgstr "選擇要下載的模型"
 
 msgid "Clear Calendar Events"
-msgstr "Clear Calendar Events"
+msgstr "清除日曆事件"
 
 msgid "Clock"
-msgstr "Clock"
+msgstr "打卡"
 
 msgid "Close"
-msgstr "Close"
+msgstr "關閉"
 
 msgid "Confirm"
-msgstr "Confirm"
+msgstr "確認"
 
 msgid "Continue"
-msgstr "Continue"
+msgstr "繼續累加"
+
+msgid "Copied!"
+msgstr "已複製！"
+
+msgid "Copy"
+msgstr "複製"
 
 msgid "Could not check for updates: {}"
-msgstr "Could not check for updates: {}"
+msgstr "檢查更新失敗：{}"
 
 msgid "Create Custom Template"
-msgstr "Create Custom Template"
+msgstr "建立自訂模板"
 
 msgid "Custom"
-msgstr "Custom"
+msgstr "自訂"
 
 msgid "Daily"
-msgstr "Daily"
+msgstr "日報"
 
 msgid "Daily avg"
-msgstr "Daily avg"
+msgstr "日均工時"
 
 msgid "Data"
-msgstr "Data"
+msgstr "資料"
 
 msgid "Dec"
-msgstr "Dec"
+msgstr "12月"
 
 msgid "December"
-msgstr "December"
+msgstr "12月"
 
 msgid "Default break (h)"
-msgstr "Default break (h)"
+msgstr "預設休息 (h)"
 
 msgid "Delete"
-msgstr "Delete"
+msgstr "刪除"
 
 msgid "Delete Model"
-msgstr "Delete Model"
+msgstr "刪除模型"
 
 msgid "Delete this entry?"
-msgstr "Delete this entry?"
+msgstr "確定刪除此紀錄？"
 
 msgid "Delete this model file? This cannot be undone."
-msgstr "Delete this model file? This cannot be undone."
+msgstr "確定刪除此模型檔案？此操作無法撤銷。"
 
 msgid "Delete this template?"
-msgstr "Delete this template?"
+msgstr "確定刪除此模板？"
 
 msgid "Discard"
-msgstr "Discard"
+msgstr "不儲存"
 
 msgid "Done"
-msgstr "Done"
+msgstr "完成"
 
 msgid "Download"
-msgstr "Download"
+msgstr "下載"
+
+msgid "Download .md"
+msgstr "下載 .md"
 
 msgid "Download Local Model"
-msgstr "Download Local Model"
+msgstr "下載本地模型"
+
+msgid "Downloading…  You may cancel at any time; the download will resume from where it left off."
+msgstr "下載中… 可隨時取消；下次會從中斷位置續傳。"
 
 msgid "Enable local model"
-msgstr "Enable local model"
+msgstr "啟用本地模型"
 
 msgid "End"
-msgstr "End"
+msgstr "下班"
+
+msgid "End now"
+msgstr "現在下班"
 
 msgid "End time (opt.)"
-msgstr "End time (opt.)"
+msgstr "結束時間（可選）"
 
 msgid "Ended"
-msgstr "Ended"
+msgstr "已打卡"
+
+msgid "Error"
+msgstr "錯誤"
 
 msgid "Expand notes"
-msgstr "Expand notes"
+msgstr "展開備註"
 
 msgid "Export"
-msgstr "Export"
+msgstr "匯出"
 
 msgid "Export .ics"
-msgstr "Export .ics"
+msgstr "匯出 .ics"
 
 msgid "Export CSV"
-msgstr "Export CSV"
+msgstr "匯出 CSV"
 
 msgid "Exported {} events."
-msgstr "Exported {} events."
+msgstr "匯出了 {} 個事件。"
 
 msgid "External Model"
-msgstr "External Model"
+msgstr "外部模型"
 
 msgid "Feature Overview"
-msgstr "Feature Overview"
+msgstr "功能介紹"
 
 msgid "Features"
-msgstr "Features"
+msgstr "功能介紹"
 
 msgid "Feb"
-msgstr "Feb"
+msgstr "2月"
 
 msgid "February"
-msgstr "February"
+msgstr "2月"
 
 msgid "Fri"
-msgstr "Fri"
+msgstr "週五"
 
 msgid "General"
-msgstr "General"
+msgstr "一般"
 
 msgid "GitHub"
 msgstr "GitHub"
@@ -235,499 +263,748 @@ msgid "HH:MM"
 msgstr "HH:MM"
 
 msgid "Hint / extra instructions (optional)"
-msgstr "Hint / extra instructions (optional)"
+msgstr "補充說明（可選）"
 
 msgid "Import .gguf"
-msgstr "Import .gguf"
+msgstr "匯入 .gguf"
 
 msgid "Import .ics"
-msgstr "Import .ics"
+msgstr "匯入 .ics"
 
 msgid "Import CSV"
-msgstr "Import CSV"
+msgstr "匯入 CSV"
 
 msgid "Import Result"
-msgstr "Import Result"
+msgstr "匯入結果"
 
 msgid "Import your .ics file to let AI read your meetings when generating reports."
-msgstr "Import your .ics file to let AI read your meetings when generating reports."
+msgstr "匯入 .ics 檔案後，AI 可參考您的行程自動生成報告。"
 
 msgid "Imported {} calendar events."
-msgstr "Imported {} calendar events."
+msgstr "已匯入 {} 個日曆事件。"
 
 msgid "Imported {} records."
-msgstr "Imported {} records."
+msgstr "匯入完成：{} 筆記錄。"
 
 msgid "Insert"
-msgstr "Insert"
+msgstr "插入"
 
 msgid "Insert Quick Log"
-msgstr "Insert Quick Log"
+msgstr "插入快速記錄"
 
 msgid "Integrity check failed — file may be corrupted"
-msgstr "Integrity check failed — file may be corrupted"
+msgstr "完整性校驗失敗 — 檔案可能已損毀"
 
 msgid "Integrity failed"
-msgstr "Integrity failed"
+msgstr "完整性檢查失敗"
+
+msgid "Invalid time range. The shift must be within {max_hours} hours (overnight is supported)."
+msgstr "時間範圍無效。班次必須在 {max_hours} 小時內（支援跨夜）。"
 
 msgid "Jan"
-msgstr "Jan"
+msgstr "1月"
 
 msgid "January"
-msgstr "January"
+msgstr "1月"
 
 msgid "Jul"
-msgstr "Jul"
+msgstr "7月"
 
 msgid "July"
-msgstr "July"
+msgstr "7月"
 
 msgid "Jun"
-msgstr "Jun"
+msgstr "6月"
 
 msgid "June"
-msgstr "June"
+msgstr "6月"
 
 msgid "Leave days"
-msgstr "Leave days"
+msgstr "假期天數"
 
 msgid "License"
-msgstr "License"
+msgstr "授權條款"
 
 msgid "Local Model"
-msgstr "Local Model"
+msgstr "本地模型"
 
 msgid "Local model"
-msgstr "Local model"
+msgstr "本地模型"
+
+msgid "Local model failed and no external API key / URL / model name is configured.\nPlease configure an external model in Settings → AI."
+msgstr "本地模型失敗，且未設定外部 API Key / URL / 模型名稱。\n請到 設定 → AI 設定外部模型。"
+
+msgid "Local model is disabled."
+msgstr "本地模型已停用。"
 
 msgid "Manual Input"
-msgstr "Manual Input"
+msgstr "手動輸入"
 
 msgid "Mar"
-msgstr "Mar"
+msgstr "3月"
 
 msgid "March"
-msgstr "March"
+msgstr "3月"
 
 msgid "May"
-msgstr "May"
+msgstr "5月"
 
 msgid "Missing columns: {}"
-msgstr "Missing columns: {}"
+msgstr "CSV 缺少欄位：{}"
+
+msgid "Model"
+msgstr "模型"
 
 msgid "Mon"
-msgstr "Mon"
+msgstr "週一"
 
 msgid "Monthly"
-msgstr "Monthly"
+msgstr "月度"
 
 msgid "Monthly Report"
-msgstr "Monthly Report"
+msgstr "月報"
 
 msgid "Monthly Work Report  {year}/{month:02d}"
-msgstr "Monthly Work Report  {year}/{month:02d}"
+msgstr "{year}年{month:02d}月 工作報告"
 
 msgid "Monthly target (h)"
-msgstr "Monthly target (h)"
+msgstr "月度目標工時 (h)"
 
 msgid "Monthly total"
-msgstr "Monthly total"
+msgstr "當月總工時"
 
 msgid "New Template"
-msgstr "New Template"
+msgstr "新增模板"
 
 msgid "Next month"
-msgstr "Next month"
+msgstr "下個月"
 
 msgid "Night"
-msgstr "Night"
+msgstr "夜班"
 
 msgid "No"
-msgstr "No"
+msgstr "否"
 
 msgid "No data"
-msgstr "No data"
+msgstr "無資料"
 
 msgid "No entries yet today."
-msgstr "No entries yet today."
+msgstr "今日尚無記錄。"
 
 msgid "No events found."
-msgstr "No events found."
+msgstr "找不到事件。"
 
 msgid "No external model configured"
-msgstr "No external model configured"
+msgstr "未配置外部模型"
 
 msgid "No notes recorded for this period."
-msgstr "No notes recorded for this period."
+msgstr "本期間沒有備註記錄。"
 
 msgid "No templates available for this type."
-msgstr "No templates available for this type."
+msgstr "此類型沒有可用模板。"
 
 msgid "Normal: {normal}\nRemote: {remote}\nBusiness: {biz}"
-msgstr "Normal: {normal}\nRemote: {remote}\nBusiness: {biz}"
+msgstr "正常：{normal}\n居家：{remote}\n出差：{biz}"
 
 msgid "Not downloaded"
-msgstr "Not downloaded"
+msgstr "未下載"
 
 msgid "Notes"
-msgstr "Notes"
+msgstr "備註"
 
 msgid "Notes reminder dot"
-msgstr "Notes reminder dot"
+msgstr "備註提醒圓點"
 
 msgid "Nov"
-msgstr "Nov"
+msgstr "11月"
 
 msgid "November"
-msgstr "November"
+msgstr "11月"
 
 msgid "OK"
-msgstr "OK"
+msgstr "確定"
 
 msgid "Oct"
-msgstr "Oct"
+msgstr "10月"
 
 msgid "October"
-msgstr "October"
+msgstr "10月"
 
 msgid "On break"
-msgstr "On break"
+msgstr "休息中"
+
+msgid "Only one model can be active at a time.  Delete the current model before switching."
+msgstr "同一時間只能啟用一個模型。切換前請先刪除目前模型。"
 
 msgid "Open"
-msgstr "Open"
+msgstr "打開"
+
+msgid "Original"
+msgstr "原始內容"
 
 msgid "Overnight"
-msgstr "Overnight"
+msgstr "跨天"
 
 msgid "Overtime"
-msgstr "Overtime"
+msgstr "加班合計"
 
 msgid "Overwrite existing data?"
-msgstr "Overwrite existing data?"
+msgstr "覆蓋已有資料？"
 
 msgid "PDF requires QtPrintSupport. Saving PNG."
-msgstr "PDF requires QtPrintSupport. Saving PNG."
+msgstr "PDF需要QtPrintSupport。已儲存為PNG。"
 
 msgid "PTO"
-msgstr "PTO"
+msgstr "休假"
 
 msgid "Paid: {paid}\nComp: {comp}\nSick: {sick}"
-msgstr "Paid: {paid}\nComp: {comp}\nSick: {sick}"
+msgstr "特休：{paid}\n補休：{comp}\n病假：{sick}"
 
 msgid "Please set your API key in Settings → AI."
-msgstr "Please set your API key in Settings → AI."
+msgstr "請先在設定→AI 中填入 API Key。"
 
 msgid "Previous month"
-msgstr "Previous month"
+msgstr "上個月"
 
 msgid "Public holidays"
-msgstr "Public holidays"
+msgstr "顯示法定節假日"
 
 msgid "Quarterly"
-msgstr "Quarterly"
+msgstr "季度"
 
 msgid "Quick Log"
-msgstr "Quick Log"
+msgstr "快速記錄"
 
 msgid "Quick logs appear in daily notes and AI reports."
-msgstr "Quick logs appear in daily notes and AI reports."
+msgstr "快速記錄會在 AI 生成日報/週報時自動引用。"
 
 msgid "Quit"
-msgstr "Quit"
+msgstr "關閉"
 
 msgid "Ready"
-msgstr "Ready"
+msgstr "已就緒"
+
+msgid "Regenerate"
+msgstr "重新生成"
 
 msgid "Replace"
-msgstr "Replace"
+msgstr "替換"
 
 msgid "Report"
-msgstr "Report"
+msgstr "報告"
 
 msgid "Restart"
-msgstr "Restart"
+msgstr "重新開始"
 
 msgid "Retry"
-msgstr "Retry"
+msgstr "重試"
 
 msgid "Sat"
-msgstr "Sat"
+msgstr "週六"
 
 msgid "Save"
-msgstr "Save"
+msgstr "儲存"
 
 msgid "Save Changes"
-msgstr "Save Changes"
+msgstr "儲存修改"
 
 msgid "Save changes to this template?"
-msgstr "Save changes to this template?"
+msgstr "儲存此模板的修改？"
 
 msgid "Saved: {}"
-msgstr "Saved: {}"
+msgstr "已儲存：{}"
 
 msgid "Select / Change"
-msgstr "Select / Change"
+msgstr "選擇 / 更換"
 
 msgid "Sep"
-msgstr "Sep"
+msgstr "9月"
 
 msgid "September"
-msgstr "September"
+msgstr "9月"
 
 msgid "Settings"
-msgstr "Settings"
+msgstr "設定"
+
+msgid "Show overnight indicator"
+msgstr "顯示跨天指示器"
 
 msgid "Sick"
-msgstr "Sick"
+msgstr "病假"
 
 msgid "Standard hours (h)"
-msgstr "Standard hours (h)"
+msgstr "標準工時 (h)"
 
 msgid "Start"
-msgstr "Start"
+msgstr "上班"
+
+msgid "Start now"
+msgstr "現在上班"
 
 msgid "Start week on Monday"
-msgstr "Start week on Monday"
+msgstr "一週從週一開始"
 
 msgid "Started"
-msgstr "Started"
+msgstr "已打卡"
 
 msgid "Summary: {days} work days, {total}h total, {ot}h overtime."
-msgstr "Summary: {days} work days, {total}h total, {ot}h overtime."
+msgstr "摘要：出勤{days}天，合計{total}h，加班{ot}h。"
 
 msgid "Sun"
-msgstr "Sun"
+msgstr "週日"
 
 msgid "Switch Model"
-msgstr "Switch Model"
+msgstr "切換模型"
 
 msgid "Template name"
-msgstr "Template name"
+msgstr "模板名稱"
 
 msgid "Template saved."
-msgstr "Template saved."
+msgstr "模板已儲存。"
 
 msgid "Templates"
-msgstr "Templates"
+msgstr "模板"
 
 msgid "Test"
-msgstr "Test"
+msgstr "測試"
 
 msgid "Testing…"
-msgstr "Testing…"
+msgstr "測試中…"
 
 msgid "This model is already downloaded and ready."
-msgstr "This model is already downloaded and ready."
+msgstr "此模型已下載完畢，可直接使用。"
 
 msgid "Thu"
-msgstr "Thu"
+msgstr "週四"
 
 msgid "Time"
-msgstr "Time"
+msgstr "時間"
 
 msgid "Today"
-msgstr "Today"
+msgstr "今天"
 
 msgid "Today's entries:"
-msgstr "Today's entries:"
+msgstr "今日記錄："
 
 msgid "Total"
-msgstr "Total"
+msgstr "週合計"
 
 msgid "Trip"
-msgstr "Trip"
+msgstr "外出"
 
 msgid "Tue"
-msgstr "Tue"
+msgstr "週二"
 
 msgid "Type"
-msgstr "Type"
+msgstr "類型"
 
 msgid "Unsaved changes — save before switching?"
-msgstr "Unsaved changes — save before switching?"
+msgstr "有未儲存的變更，切換前是否儲存？"
 
 msgid "Version"
-msgstr "Version"
+msgstr "版本"
 
 msgid "WFH"
-msgstr "WFH"
+msgstr "遠端"
 
 msgid "Wed"
-msgstr "Wed"
+msgstr "週三"
 
 msgid "Weekly"
-msgstr "Weekly"
+msgstr "週報"
 
 msgid "Weekly Report"
-msgstr "Weekly Report"
+msgstr "週報"
 
 msgid "Weekly Work Report  {start} – {end}"
-msgstr "Weekly Work Report  {start} – {end}"
+msgstr "週工作報告  {start} – {end}"
 
 msgid "What are you doing?"
-msgstr "What are you doing?"
+msgstr "正在做什麼？"
+
+msgid "When enabled, text processing uses the local model first — no data is sent to external services."
+msgstr "啟用後，文字處理將優先使用本地模型，無需上傳資料至外部服務。"
 
 msgid "Work Log"
-msgstr "Work Log"
+msgstr "工作記錄"
 
 msgid "Work Logger"
-msgstr "Work Logger"
+msgstr "工時記錄"
 
 msgid "Work Logger is a flexible desktop app for tracking work hours, notes, and reports.\n\nWhat you can do:\n- Switch between Manual Input and Auto Record depending on how you like to log time.\n- Record start time, end time, and break time for each day.\n- Save work type and notes together with the time record.\n- Use Quick Log for lightweight task entries during the day.\n- Keep notes for future dates even when exact work hours are not decided yet.\n- Generate daily, weekly, and monthly reports from saved data.\n- Use AI-compatible providers to turn notes into polished summaries.\n- Review monthly trends with charts, averages, overtime, and monthly targets.\n- Import calendar events and display public holidays.\n- Customize language, theme, AI settings, and reminder behavior.\n\nRecommended workflow:\n1. Pick Manual Input if you usually type times yourself.\n2. Pick Auto Record if you prefer start/end/break buttons.\n3. Add Notes or Quick Log entries as work happens.\n4. Save the day record when finished.\n5. Open Reports or AI tools when you need a summary.\n\nHelpful details:\n- Holiday names can be shown automatically on the calendar.\n- A small reminder dot can appear on days that only have notes.\n- Built-in and custom templates can be used in notes and reports."
-msgstr "Work Logger is a flexible desktop app for tracking work hours, notes, and reports.\n\nWhat you can do:\n- Switch between Manual Input and Auto Record depending on how you like to log time.\n- Record start time, end time, and break time for each day.\n- Save work type and notes together with the time record.\n- Use Quick Log for lightweight task entries during the day.\n- Keep notes for future dates even when exact work hours are not decided yet.\n- Generate daily, weekly, and monthly reports from saved data.\n- Use AI-compatible providers to turn notes into polished summaries.\n- Review monthly trends with charts, averages, overtime, and monthly targets.\n- Import calendar events and display public holidays.\n- Customize language, theme, AI settings, and reminder behavior.\n\nRecommended workflow:\n1. Pick Manual Input if you usually type times yourself.\n2. Pick Auto Record if you prefer start/end/break buttons.\n3. Add Notes or Quick Log entries as work happens.\n4. Save the day record when finished.\n5. Open Reports or AI tools when you need a summary.\n\nHelpful details:\n- Holiday names can be shown automatically on the calendar.\n- A small reminder dot can appear on days that only have notes.\n- Built-in and custom templates can be used in notes and reports."
+msgstr "Work Logger 是一款可靈活記錄工時、備註與報告的桌面應用程式。\n\n你可以用它來：\n- 在「手動輸入」與「自動記錄」兩種模式之間切換\n- 依日期保存開始、結束與休息時間\n- 將工作類型與備註一起保存\n- 用 Quick Log 快速補充當天的工作內容\n- 先為未來日期記下備註，之後再補時間\n- 產生日報、週報與月報\n- 透過相容 AI 服務把記錄整理成自然語言摘要\n- 在圖表中查看總工時、平均工時、加班與月度目標\n- 匯入行事曆事件並顯示法定節假日\n- 自訂語言、主題、AI 設定與提醒顯示方式\n\n建議使用流程：\n1. 如果習慣自行輸入時間，就使用手動輸入模式\n2. 如果習慣打卡，就使用自動記錄模式\n3. 工作過程中隨時補充備註或 Quick Log\n4. 完成當天工作後儲存記錄\n5. 需要整理時再打開報告或 AI 生成功能\n\n補充說明：\n- 日曆可自動顯示節假日名稱\n- 只有備註、沒有完整時間的日期可顯示提醒圓點\n- Notes 與 Reports 都可搭配內建或自訂模板使用"
 
 msgid "Work Report"
-msgstr "Work Report"
+msgstr "工作報告"
 
 msgid "Work Time Analytics"
-msgstr "Work Time Analytics"
+msgstr "工時分析"
 
 msgid "Work days"
-msgstr "Work days"
+msgstr "出勤天數"
 
 msgid "Work type"
-msgstr "Work type"
+msgstr "出勤類型"
 
 msgid "Yes"
-msgstr "Yes"
+msgstr "是"
 
 msgid "You already logged {hours}h of break time. What do you want to do?"
-msgstr "You already logged {hours}h of break time. What do you want to do?"
+msgstr "已經記錄了 {hours}h 的休息時間。要怎麼處理？"
 
 msgid "You are on the latest version"
-msgstr "You are on the latest version"
+msgstr "目前已是最新版本"
 
 msgid "gpt-4o-mini | claude-haiku-4-5-20251001"
-msgstr "gpt-4o-mini | claude-haiku-4-5-20251001"
+msgstr "支援 Anthropic 與 OpenAI 相容介面，例如 ChatGPT、Claude、Gemini、DeepSeek、Doubao、Qwen。"
 
 msgid "h"
 msgstr "h"
 
 msgid "https://api.openai.com/v1 | https://api.anthropic.com"
-msgstr "https://api.openai.com/v1 | https://api.anthropic.com"
+msgstr "gpt-4o-mini | claude-haiku-4-5-20251001"
 
 msgid "sk-… / sk-ant-…"
-msgstr "sk-… / sk-ant-…"
+msgstr "https://api.openai.com/v1 | https://api.anthropic.com"
 
 msgid "v{0} available!"
-msgstr "v{0} available!"
+msgstr "有新版本可用：v{0}"
 
 msgid "{0:.0f} / {1:.0f} MB"
 msgstr "{0:.0f} / {1:.0f} MB"
 
 msgid "{date}  ({dow})  {h}h  [{wt}]"
-msgstr "{date}  ({dow})  {h}h  [{wt}]"
+msgstr "{date}（{dow}）{h}h  [{wt}]"
 
 msgid "▶ Break"
-msgstr "▶ Break"
+msgstr "▶ 開始休息"
 
 msgid "⚙  Settings"
-msgstr "⚙  Settings"
-
-msgid "✓  Connected"
-msgstr "✓  Connected"
-
-msgid "✓  Integrity verified"
-msgstr "✓  Integrity verified"
-
-msgid "✓  Model imported"
-msgstr "✓  Model imported"
-
-msgid "✗  {}"
-msgstr "✗  {}"
-
-msgid "✨ AI Assist"
-msgstr "✨ AI Assist"
-
-msgid "✨ AI Generate"
-msgstr "✨ AI Generate"
-
-msgid "🌍  Language"
-msgstr "🌍  Language"
-
-msgid "🌙  Dark mode"
-msgstr "🌙  Dark mode"
-
-msgid "📅 Import Calendar (.ics)"
-msgstr "📅 Import Calendar (.ics)"
-
-msgid "📋 Templates"
-msgstr "📋 Templates"
-
-msgid "A different model is already downloaded.  It will be deleted before downloading the new one.  Continue?"
-msgstr "A different model is already downloaded.  It will be deleted before downloading the new one.  Continue?"
-
-msgid "AI Generated"
-msgstr "AI Generated"
-
-msgid "AI Result"
-msgstr "AI Result"
-
-msgid "API Base URL"
-msgstr "API Base URL"
-
-msgid "API Key"
-msgstr "API Key"
-
-msgid "Add"
-msgstr "Add"
-
-msgid "Break time must be less than the total shift duration."
-msgstr "Break time must be less than the total shift duration."
-
-msgid "Calendar data already exists.\n\nReplace — clear all previous calendar events before import.\nAppend — keep existing events and add new ones."
-msgstr "Calendar data already exists.\n\nReplace — clear all previous calendar events before import.\nAppend — keep existing events and add new ones."
-
-msgid "Copied!"
-msgstr "Copied!"
-
-msgid "Copy"
-msgstr "Copy"
-
-msgid "Download .md"
-msgstr "Download .md"
-
-msgid "Downloading…  You may cancel at any time; the download will resume from where it left off."
-msgstr "Downloading…  You may cancel at any time; the download will resume from where it left off."
-
-msgid "End now"
-msgstr "End now"
-
-msgid "Error"
-msgstr "Error"
-
-msgid "Invalid time range. The shift must be within {max_hours} hours (overnight is supported)."
-msgstr "Invalid time range. The shift must be within {max_hours} hours (overnight is supported)."
-
-msgid "Local model failed and no external API key / URL / model name is configured.\nPlease configure an external model in Settings → AI."
-msgstr "Local model failed and no external API key / URL / model name is configured.\nPlease configure an external model in Settings → AI."
-
-msgid "Local model is disabled."
-msgstr "Local model is disabled."
-
-msgid "Model"
-msgstr "Model"
-
-msgid "Only one model can be active at a time.  Delete the current model before switching."
-msgstr "Only one model can be active at a time.  Delete the current model before switching."
-
-msgid "Original"
-msgstr "Original"
-
-msgid "Regenerate"
-msgstr "Regenerate"
-
-msgid "Show overnight indicator"
-msgstr "Show overnight indicator"
-
-msgid "Start now"
-msgstr "Start now"
-
-msgid "When enabled, text processing uses the local model first — no data is sent to external services."
-msgstr "When enabled, text processing uses the local model first — no data is sent to external services."
+msgstr "⚙  設定"
 
 msgid "⚡ Quick Log"
-msgstr "⚡ Quick Log"
+msgstr "⚡ 快速記錄"
+
+msgid "✓  Connected"
+msgstr "✓  連線成功"
+
+msgid "✓  Integrity verified"
+msgstr "✓  完整性校驗通過"
+
+msgid "✓  Model imported"
+msgstr "✓  模型匯入成功"
+
+msgid "✗  {}"
+msgstr "API Key 未設定。"
+
+msgid "✨ AI Assist"
+msgstr "✨ AI 輔助"
+
+msgid "✨ AI Generate"
+msgstr "✨ AI 生成"
+
+msgid "🌍  Language"
+msgstr "🌍  語言"
+
+msgid "🌙  Dark mode"
+msgstr "🌙  深色模式"
 
 msgid "🎨  Theme"
-msgstr "🎨  Theme"
+msgstr "🎨  主題"
+
+msgid "📅 Import Calendar (.ics)"
+msgstr "📅 匯入日曆 (.ics)"
+
+msgid "📋 Templates"
+msgstr "📋 模板"
+
+msgid "days"
+msgstr "天"
+
+msgid "key"
+msgstr "密钥"
+
+msgid "overnight_badge"
+msgstr "夜班"
+
+msgid "tpl_no_templates"
+msgstr "沒有可用模板。"
+
+msgid "tpl_saved"
+msgstr "模板已儲存。"
+
+msgid "Not set"
+msgstr "未設定"
+
+msgid "Original Content"
+msgstr "修改前內容"
+
+msgid "■ End"
+msgstr "■ 結束休息"
+
+msgid "Break: {}m"
+msgstr "休息中: {}分鐘"
+
+msgid "Describe your work, or leave blank for AI generation"
+msgstr "描述今天的工作內容，或留空自動生成"
+
+msgid "Normal"
+msgstr "一般出勤"
+
+msgid "Remote work"
+msgstr "遠端辦公"
+
+msgid "Business trip"
+msgstr "外出"
+
+msgid "Paid leave"
+msgstr "休假"
+
+msgid "Comp leave"
+msgstr "補休"
+
+msgid "Sick leave"
+msgstr "病假"
+
+msgid "No calendar events found for this period."
+msgstr "此期間沒有日曆事件。"
+
+msgid "Enable tray icon"
+msgstr "啟用系統匣常駐"
+
+msgid "Enable menu bar icon"
+msgstr "啟用選單列常駐"
+
+msgid "Only one model can be active at a time. To switch models, delete the current one first."
+msgstr "同一時間只能有一個活躍模型。切換模型前需先刪除當前模型。"
+
+msgid "A different model is already downloaded. It will be deleted before the new one downloads. Continue?"
+msgstr "已有其他模型下載完畢，下載新模型前將自動刪除。是否繼續？"
+
+msgid "Balanced (Q4_K_M)"
+msgstr "均衡版 (Q4_K_M)"
+
+msgid "Quantized 4-bit model — good balance of speed and quality."
+msgstr "4位量化模型 — 速度與品質兼顧。"
+
+msgid "✓ Recommended for most users"
+msgstr "✓ 推薦大多數用戶使用"
+
+msgid "Lightweight (Q2_K)"
+msgstr "輕量版 (Q2_K)"
+
+msgid "Highly compressed 2-bit model — smallest file, fastest."
+msgstr "高度壓縮的2位模型 — 檔案最小，速度最快。"
+
+msgid "✓ Best for low-RAM machines"
+msgstr "✓ 適合低記憶體裝置"
+
+msgid "High Quality (Q8_0)"
+msgstr "高品質版 (Q8_0)"
+
+msgid "8-bit quantized model — highest quality output."
+msgstr "8位量化模型 — 輸出品質最佳。"
+
+msgid "✓ Best quality, requires more RAM"
+msgstr "✓ 品質最好，需要更多記憶體"
+
+msgid "Manage / Switch"
+msgstr "管理 / 切換"
+
+msgid "Checking dependencies…"
+msgstr "正在檢查依賴包…"
+
+msgid "The local model will be downloaded once and cached for offline use.\nYou may cancel at any time; an interrupted download will resume next time."
+msgstr "本地模型下載一次後即可離線使用。\n隨時可取消，中斷的下載下次將自動續傳。"
+
+msgid "Re-download"
+msgstr "重新下載"
+
+msgid "Starting download…"
+msgstr "正在開始下載…"
+
+msgid "Verifying integrity…"
+msgstr "正在校驗完整性…"
+
+msgid "✓  Download complete"
+msgstr "✓  下載完成"
+
+msgid "Download failed"
+msgstr "下載失敗"
+
+msgid "Download cancelled"
+msgstr "下載已取消"
+
+msgid "Connection timed out"
+msgstr "連線逾時"
+
+msgid "Disk full — free some space and retry"
+msgstr "磁碟空間不足 — 請釋放空間後重試"
+
+msgid "Loading local model…"
+msgstr "正在載入本地模型…"
+
+msgid "Local model loaded ✓"
+msgstr "本地模型已載入 ✓"
+
+msgid "Starting generation…"
+msgstr "正在開始生成…"
+
+msgid "Local model failed to load"
+msgstr "本地模型載入失敗"
+
+msgid "Local model not downloaded — go to Settings → AI"
+msgstr "本地模型未下載 — 請前往設定 → AI 下載"
+
+msgid "llama-cpp-python not installed — run: pip install llama-cpp-python"
+msgstr "未安裝 llama-cpp-python — 請執行: pip install llama-cpp-python"
+
+msgid "Local model unavailable — using external model instead"
+msgstr "本地模型不可用 — 已使用外部模型"
+
+msgid "Update check timed out"
+msgstr "檢查更新超時"
+
+msgid "✨  AI Generate"
+msgstr "✨  AI 生成"
+
+msgid "Generating…"
+msgstr "生成中…"
+
+msgid "AI error: {}"
+msgstr "AI 錯誤：{}"
+
+msgid "AI Report Generation"
+msgstr "AI 報告生成"
+
+msgid "Additional instructions (optional)"
+msgstr "補充要求（可選）"
+
+msgid "Supports Anthropic and OpenAI-compatible APIs. Examples: ChatGPT, Claude, Gemini, DeepSeek, Doubao, Qwen."
+msgstr "支援 Anthropic 與 OpenAI 相容介面，例如 ChatGPT、Claude、Gemini、DeepSeek、Doubao、Qwen。"
+
+msgid "Initializing AI request..."
+msgstr "正在初始化 AI 請求..."
+
+msgid "AI Generated Result"
+msgstr "AI 生成結果"
+
+msgid "AI Generated Content"
+msgstr "AI 生成內容"
+
+msgid "Local model failed and no external API key / URL / model name is configured. Please configure an external model in Settings → AI."
+msgstr "本地模型失败，且未配置外部 API Key / URL / 模型名称。请在设置 → AI 中配置外部模型。"
+
+msgid "API Key is not set."
+msgstr "API Key 未設定。"
+
+msgid "Please enter your API Key in Settings → AI."
+msgstr "請在 設定 → AI 中輸入 API Key。"
+
+msgid "API Base URL is not set."
+msgstr "未設定 API Base URL。"
+
+msgid "Please enter the API Base URL in Settings → AI."
+msgstr "請在 設定 → AI 中輸入 API Base URL。"
+
+msgid "Model name is not set."
+msgstr "未設定模型名稱。"
+
+msgid "Please enter a model name in Settings → AI."
+msgstr "請在 設定 → AI 中輸入模型名稱。"
+
+msgid "⚠️ Request exceeded 30 seconds, processing may take a while. Please continue waiting..."
+msgstr "⚠️ 請求超過 30 秒，處理可能需要更久，請繼續等待..."
+
+msgid "✓ Request successful."
+msgstr "✓ 請求成功。"
+
+msgid "Preparing your AI request..."
+msgstr "正在準備 AI 請求..."
+
+msgid "Preparing request for {model}..."
+msgstr "正在為 {model} 準備請求..."
+
+msgid "Contacting AI provider for {model}..."
+msgstr "正在連接 AI 供應商（{model}）..."
+
+msgid "Waiting for AI response..."
+msgstr "正在等待 AI 回應..."
+
+msgid "Processing AI response..."
+msgstr "正在處理 AI 回應..."
+
+msgid "Done."
+msgstr "完成。"
+
+msgid "Error:"
+msgstr "錯誤："
+
+msgid "Template"
+msgstr "模板"
+
+msgid "Insert Template"
+msgstr "插入模板"
+
+msgid "Use Template"
+msgstr "使用模板"
+
+msgid "[Custom]"
+msgstr "[自訂]"
+
+msgid "Edit Content"
+msgstr "編輯內容"
+
+msgid "Edit"
+msgstr "編輯"
+
+msgid "Entry saved."
+msgstr "已儲存。"
+
+msgid "Please enter a description."
+msgstr "請輸入描述內容。"
+
+msgid "Downloading local model..."
+msgstr "正在下載本地模型..."
+
+msgid "Generating with local model..."
+msgstr "正在使用本地模型生成..."
+
+msgid "Installing local model dependencies..."
+msgstr "正在安裝本地模型相依套件..."
+
+msgid "Loading local model..."
+msgstr "正在載入本地模型..."
+
+msgid "Local model loaded."
+msgstr "本地模型已載入。"
+
+msgid "Local model not downloaded - go to Settings -> AI"
+msgstr "本地模型尚未下載 - 請前往 設定 -> AI"
+
+msgid "Local model unavailable - using external model instead"
+msgstr "本地模型不可用，改用外部模型"
+
+msgid "Local model unavailable - using external model instead."
+msgstr "本地模型不可用，改用外部模型。"
+
+msgid "Model download completed."
+msgstr "模型下載完成。"
+
+msgid "Model hash verified."
+msgstr "模型雜湊已驗證。"
+
+msgid "Verifying local model file..."
+msgstr "正在驗證本地模型檔案..."
+
+msgid "When enabled, text processing uses the local model first - no data is sent to external services."
+msgstr "啟用後，文字處理會優先使用本地模型，不會將資料傳送到外部服務。"
+
+msgid "llama-cpp-python not installed - run: pip install llama-cpp-python"
+msgstr "未安裝 llama-cpp-python - 請執行: pip install llama-cpp-python"
+
+msgid "New version available: v{0}"
+msgstr "發現新版本：v{0}"
+
+msgid "Local model is inactive"
+msgstr "Local model is inactive"

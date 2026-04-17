@@ -1,6 +1,7 @@
 from __future__ import annotations
 import sys
 import threading
+from typing import Any
 
 from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QHBoxLayout, QFormLayout, QTabWidget,
@@ -11,15 +12,19 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont
 
-from utils.i18n import _, msg, LANG_KEYS, LANG_NAMES
+from utils.i18n import _, msg, LANG_NAMES
 from config.constants import APP_VERSION, APP_AUTHOR, GITHUB_URL, GPL_URL
 from config.themes import (
     THEMES, THEME_KEYS, THEME_NAMES,
     switch_off_color, local_model_download_blocked_qss, status_label_qss,
 )
-from utils.formatters import render_status_text
+from utils.formatters import parse_status
 from ui.widgets import SwitchButton
 from .common import _div, _localize_msgbox_buttons
+
+ThemeColors = tuple[str, str, str, str, str]
+ThemePalette = dict[bool, ThemeColors]
+ThemeMap = dict[str, ThemePalette]
 
 
 class SettingsDialog(QDialog):
@@ -30,6 +35,7 @@ class SettingsDialog(QDialog):
         self.setMinimumSize(450, 500)
         self.resize(450, 590)
         self.setModal(True)
+        self.setAttribute(Qt.WA_AlwaysShowToolTips, True)
 
         lv = QVBoxLayout(self)
         tabs = QTabWidget()
@@ -45,8 +51,8 @@ class SettingsDialog(QDialog):
 
         self._lang_cb = QComboBox()
         self._lang_cb.setFixedWidth(FW)
-        for k in LANG_KEYS:
-            self._lang_cb.addItem(LANG_NAMES[k], k)
+        for lang_code, lang_name in LANG_NAMES.items():
+            self._lang_cb.addItem(lang_name, lang_code)
         idx = self._lang_cb.findData(app_ref.lang)
         if idx >= 0:
             self._lang_cb.setCurrentIndex(idx)
@@ -209,18 +215,25 @@ class SettingsDialog(QDialog):
 
         self._ai_key = _ai_line(_("sk-… / sk-ant-…"))
         self._ai_key.setEchoMode(QLineEdit.Password)
-        self._ai_key.setText(app_ref.services.get_secret("ai_api_key"))
+        self._ai_key.setText("")
         gfl.addRow(_("API Key"), self._ai_key)
 
         self._ai_url = _ai_line(
             _("https://api.openai.com/v1 | https://api.anthropic.com"))
-        self._ai_url.setText(app_ref.services.get_setting("ai_base_url", ""))
+        self._ai_url.setText("")
         gfl.addRow(_("API Base URL"), self._ai_url)
 
         self._ai_model = _ai_line(
             _("gpt-4o-mini | claude-haiku-4-5-20251001"))
-        self._ai_model.setText(app_ref.services.get_setting("ai_model", ""))
+        self._ai_model.setText("")
         gfl.addRow(_("Model"), self._ai_model)
+
+        def _load_ai_fields_lazily() -> None:
+            self._ai_key.setText(app_ref.services.get_secret("ai_api_key"))
+            self._ai_url.setText(app_ref.services.get_setting("ai_base_url", ""))
+            self._ai_model.setText(app_ref.services.get_setting("ai_model", ""))
+
+        QTimer.singleShot(0, _load_ai_fields_lazily)
 
         ext_test_row = QHBoxLayout()
         ext_test_row.setSpacing(8)
@@ -253,8 +266,8 @@ class SettingsDialog(QDialog):
                 (mdl, "ai_err_model_missing",   "ai_err_model_missing_detail"),
             ]:
                 if not val:
-                    short = msg(key_miss, key_miss)
-                    detail = msg(key_miss_d, key_miss_d)
+                    short = msg(key_miss)
+                    detail = msg(key_miss_d)
                     self._ai_test_lbl.setText(_("✗  {}").format(short))
                     self._ai_test_lbl.setStyleSheet(status_label_qss("error"))
                     QMessageBox.warning(self, _("Settings"), detail)
@@ -297,8 +310,12 @@ class SettingsDialog(QDialog):
                     mb.setDetailedText(detail)
                     mb.exec()
 
-            def _on_st(msg):
-                text = render_status_text(msg[app_ref.lang])
+            def _on_st(raw_msg: str):
+                key, kw = parse_status(raw_msg)
+                if key:
+                    text = msg(key, **kw)
+                else:
+                    text = kw.get("raw", raw_msg)
                 QTimer.singleShot(0, lambda: self._ai_test_lbl.setText(text))
 
             from services.ai_service import AIWorker as _AIW
@@ -364,32 +381,13 @@ class SettingsDialog(QDialog):
         aiv.addWidget(grp_local)
 
         # ── Local model status refresh ────────────────────────────────────
-        def _refresh_local_status() -> None:
-            try:
-                from services.local_model_service import (
-                    verify_model_file, get_active_entry_id,
-                    load_catalog, get_models_dir, localize_field, LocalModelService,
-                )
-                mdir = get_models_dir()
-                entry_id = get_active_entry_id(mdir)
-                ready = verify_model_file(mdir, entry_id)
-                present = LocalModelService.get().is_model_present()
-                catalog = load_catalog(mdir)
-                cat = next((c for c in catalog
-                            if c.get("id") == entry_id),
-                           catalog[0] if catalog else {})
-                # Use inline label from catalog (no i18n key indirection)
-                lbl_text = localize_field(
-                    cat, "label", app_ref.lang) or cat.get("label", "")
-            except Exception:
-                ready = False
-                present = False
-                lbl_text = ""
+        def _apply_local_status(ready: bool, present: bool, lbl_text: str) -> None:
             enabled = self._local_enabled_sw.isChecked()
             if ready:
-                status = "✓  " + _("Ready")
+                ready_text = _("Ready")
+                status = "✓  " + ready_text
                 if lbl_text:
-                    status = f"✓  {lbl_text}  —  {_("Ready")}"
+                    status = f"✓  {lbl_text}  —  {ready_text}"
                 self._local_status_lbl.setText(status)
                 self._local_status_lbl.setStyleSheet(
                     f"color:{_acc};font-weight:600;")
@@ -403,11 +401,11 @@ class SettingsDialog(QDialog):
                     _("Download"))
             if not present and not enabled:
                 self._local_dl_blocked = True
-                self._local_dl_btn.setEnabled(True)
+                self._local_dl_btn.setEnabled(False)
                 self._local_dl_btn.setToolTip(
                     msg(
-                        "settings_ai_local_model_disabled_tooltip",
-                        "Local model is disabled.",
+                        "local_model_inactive",
+                        "Local model is inactive",
                     )
                 )
                 if app_ref.dark:
@@ -422,7 +420,49 @@ class SettingsDialog(QDialog):
                 self._local_dl_btn.setToolTip("")
                 self._local_dl_btn.setStyleSheet("")
 
-        _refresh_local_status()
+        def _refresh_local_status() -> None:
+            self._local_status_lbl.setText(
+                msg(
+                    "local_model_verifying",
+                    "Verifying local model file...",
+                )
+            )
+            self._local_status_lbl.setStyleSheet("")
+            self._local_dl_btn.setEnabled(False)
+
+            def _worker() -> None:
+                try:
+                    from services.local_model_service import (
+                        verify_model_file, get_active_entry_id,
+                        load_catalog, get_models_dir, localize_field, LocalModelService,
+                    )
+                    mdir = get_models_dir()
+                    entry_id = get_active_entry_id(mdir)
+                    ready = verify_model_file(mdir, entry_id)
+                    present = LocalModelService.get().is_model_present()
+                    catalog = load_catalog(mdir)
+                    cat = next((c for c in catalog
+                                if c.get("id") == entry_id),
+                               catalog[0] if catalog else {})
+                    # Use inline label from catalog (no i18n key indirection)
+                    lbl_text = localize_field(
+                        cat, "label", app_ref.lang) or cat.get("label", "")
+                except Exception:
+                    ready = False
+                    present = False
+                    lbl_text = ""
+
+                QTimer.singleShot(0, lambda: _apply_local_status(ready, present, lbl_text))
+
+            threading.Thread(target=_worker, daemon=True).start()
+
+        self._local_status_loaded = False
+
+        def _ensure_local_status_loaded() -> None:
+            if self._local_status_loaded:
+                return
+            self._local_status_loaded = True
+            _refresh_local_status()
 
         def _on_local_toggle(checked: bool):
             app_ref.services.set_setting(
@@ -438,14 +478,27 @@ class SettingsDialog(QDialog):
 
         self._local_enabled_sw.toggled.connect(_on_local_toggle)
 
-        def _open_model_management():
+        def _open_model_management() -> None:
             """Open the unified Model Management dialog."""
-            if self._local_dl_blocked:
+            if self._local_dl_blocked or not self._local_dl_btn.isEnabled():
                 return
             from ui.dialogs.local_model_dialogs import LocalDownloadDialog
-            theme_colors = THEMES.get(app_ref.themeHEMES["blue"])
+            themes_raw: Any = getattr(app_ref, "themes", None)
+            themes_map: ThemeMap = themes_raw if isinstance(themes_raw, dict) else THEMES
+
+            theme_raw: Any = getattr(app_ref, "theme", "blue")
+            theme_name = theme_raw if isinstance(theme_raw, str) else "blue"
+            theme_colors_raw = themes_map.get(theme_name) or themes_map.get("blue")
+            theme_colors: ThemePalette = (
+                theme_colors_raw if isinstance(theme_colors_raw, dict) else THEMES["blue"]
+            )
+
+            dark_mode = bool(getattr(app_ref, "dark", False))
+            fallback_colors = THEMES["blue"][False]
             accent = theme_colors.get(
-                app_ref.dark, theme_colors.get(False, ("",)))[0]
+                dark_mode,
+                theme_colors.get(False, fallback_colors),
+            )[0]
             dlg = LocalDownloadDialog(
                 self, app_ref.lang,
                 accent_color=accent,
@@ -461,7 +514,11 @@ class SettingsDialog(QDialog):
         self._local_dl_btn.clicked.connect(_open_model_management)
 
         aiv.addStretch()
-        tabs.addTab(ai_scroll, _("AI"))
+        ai_tab_index = tabs.addTab(ai_scroll, _("AI"))
+        tabs.currentChanged.connect(
+            lambda idx: _ensure_local_status_loaded() if idx == ai_tab_index else None
+        )
+        QTimer.singleShot(0, lambda: _ensure_local_status_loaded() if tabs.currentIndex() == ai_tab_index else None)
 
         data_w = QWidget()
         dv = QVBoxLayout(data_w)
@@ -616,7 +673,7 @@ Helpful details:
     def _check_update(self):
         self._check_upd_btn.setEnabled(False)
         self._upd_lbl.setText(_("Checking for updates…"))
-        self._app.services.check_update_async(t, self._upd_done)
+        self._app.services.check_update_async(_, self._upd_done)
 
     def _upd_done(self, msg: str):
         self._upd_lbl.setText(msg)

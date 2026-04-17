@@ -21,3 +21,9 @@ jobs:
         run: python scripts/i18n_compile.py
       - name: Check i18n consistency
         run: python scripts/i18n_check.py
+      - name: Install locale traversal test deps
+        run: python -m pip install PySide6 tzlocal holidays
+      - name: Run locale traversal regression test
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python -m unittest tests.test_language_traversal_ci

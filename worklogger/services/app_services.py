@@ -1,5 +1,6 @@
 from __future__ import annotations
 import threading
+import re
 from dataclasses import dataclass
 from datetime import date, timedelta
 from calendar import monthrange
@@ -15,6 +16,7 @@ from services.calendar_service import parse_ics_rich
 from services import report_service
 from services.key_store import get_secret, set_secret
 from stores.app_store import AppState
+from utils.i18n import _
 
 
 class _UpdateBridge(QObject):
@@ -112,7 +114,7 @@ class AppServices:
 
     def check_update_async(
         self,
-        t: dict,
+        translator: Callable[[str], str],
         on_result: Callable[[str], None],
     ) -> None:
         """Check for a newer release in a background thread."""
@@ -131,12 +133,33 @@ class AppServices:
         bridge.done.connect(_deliver)
 
         def _fetch():
-            msg = self._check_update_sync(t)
+            msg = self._check_update_sync(translator)
             bridge.done.emit(msg)
 
         threading.Thread(target=_fetch, daemon=True).start()
 
-    def _check_update_sync(self, t: dict) -> str:
+    @staticmethod
+    def _parse_semver(version: str) -> tuple[int, int, int] | None:
+        """Parse a semantic version into (major, minor, patch)."""
+        m = re.search(r"(\d+)(?:\.(\d+))?(?:\.(\d+))?", (version or "").strip())
+        if not m:
+            return None
+        major = int(m.group(1))
+        minor = int(m.group(2) or 0)
+        patch = int(m.group(3) or 0)
+        return (major, minor, patch)
+
+    @classmethod
+    def _is_remote_newer(cls, latest: str, current: str) -> bool:
+        """Return True only when remote semantic version is strictly newer."""
+        latest_v = cls._parse_semver(latest)
+        current_v = cls._parse_semver(current)
+        if latest_v is None or current_v is None:
+            return False
+        return latest_v > current_v
+
+    def _check_update_sync(self, translator: Callable[[str], str]) -> str:
+        _tr = translator if callable(translator) else _
         req = urllib.request.Request(
             GITHUB_RELEASES_API,
             headers={"User-Agent": "WorkLogger/" + APP_VERSION},
@@ -144,25 +167,25 @@ class AppServices:
         try:
             with urllib.request.urlopen(req, timeout=8) as r:
                 data = _json.loads(r.read())
-            latest = data.get("tag_name", "").lstrip("v")
-            if latest and latest != APP_VERSION:
-                avail_tpl = _("v{0} available!")
+            latest = data.get("tag_name", "").lstrip("vV").strip()
+            if latest and self._is_remote_newer(latest, APP_VERSION):
+                avail_tpl = _tr("New version available: v{0}")
                 try:
                     return avail_tpl.format(latest)
                 except Exception:
-                    return f"v{latest} available!"
-            return _("You are on the latest version")
+                    return avail_tpl
+            return _tr("You are on the latest version")
         except Exception as exc:
             err = str(exc)[:120]
-            template = _("Could not check for updates: {}")
+            template = _tr("Could not check for updates: {0}")
             try:
                 return template.format(err)
             except Exception:
-                return f"Update check failed: {err}"
+                return template
 
     def load_settings(self) -> AppState:
         return AppState(
-            lang=self.get_setting("lang", "en"),
+            lang=self.get_setting("lang", "en_US"),
             theme=self.get_setting("theme", "blue"),
             dark=self.get_setting("dark", "0") == "1",
             work_hours=float(self.get_setting("work_hours", "8.0")),

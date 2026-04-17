@@ -9,21 +9,20 @@ import threading
 from functools import lru_cache
 from pathlib import Path
 
-LANG_KEYS = ["en", "ja", "zh", "zh_tw", "ko"]
 LANG_NAMES = {
-    "en": "English",
-    "ja": "日本語",
-    "ko": "한국어",
-    "zh": "简体中文",
-    "zh_tw": "繁體中文",
+    "en_US": "English",
+    "ja_JP": "日本語",
+    "ko_KR": "한국어",
+    "zh_CN": "简体中文",
+    "zh_TW": "繁體中文",
 }
 
 LOCALE_CODE_MAP = {
-    "en": "en_US",
-    "ja": "ja_JP",
-    "ko": "ko_KR",
-    "zh": "zh_CN",
-    "zh_tw": "zh_TW",
+    "en_US": "en_US",
+    "ja_JP": "ja_JP",
+    "ko_KR": "ko_KR",
+    "zh_CN": "zh_CN",
+    "zh_TW": "zh_TW",
 }
 
 DOMAIN = "messages"
@@ -47,6 +46,7 @@ MSG_DEFAULTS = {
     "ai_result_title": "AI Generated Result",
     "ai_success": "✓ Request successful.",
     "ai_timeout_warning": "⚠️ Request exceeded 30 seconds, processing may take a while. Please continue waiting...",
+    "ai_assist.local_model_not_running": "Local model unavailable - using external model instead.",
     "ai_assist_local_model_not_running": "Local model unavailable - using external model instead.",
     "apply": "Apply",
     "btn_cancel": "Cancel",
@@ -59,8 +59,16 @@ MSG_DEFAULTS = {
     "local_model_hint": "When enabled, text processing uses the local model first - no data is sent to external services.",
     "local_model_import_error": "llama-cpp-python not installed - run: pip install llama-cpp-python",
     "local_model_load_fail": "Local model failed to load",
+    "local_model_installing_deps": "Installing local model dependencies...",
     "local_model_loading": "Loading local model...",
+    "local_model_loaded": "Local model loaded.",
+    "local_model_generating": "Generating with local model...",
+    "local_model_downloading": "Downloading local model...",
+    "local_model_verifying": "Verifying local model file...",
+    "local_model_hash_ok": "Model hash verified.",
+    "local_model_download_ok": "Model download completed.",
     "local_model_not_downloaded": "Local model not downloaded - go to Settings -> AI",
+    "local_model_inactive": "Local model is inactive",
     "local_model_switch_confirm": "A different model is already downloaded. It will be deleted before the new one downloads. Continue?",
     "original_content": "Original Content",
     "quick_log_add": "Add",
@@ -81,24 +89,44 @@ MSG_DEFAULTS = {
 }
 
 _lang_state = threading.local()
-_lang_state.current = "en"
+_lang_state.current = "en_US"
 
 
 def _normalize_lang(lang: str | None) -> str:
-    if lang in LANG_KEYS:
-        return lang
     if not lang:
-        return "en"
-    low = lang.lower()
+        return "en_US"
+    compact = str(lang).strip()
+    if compact in LANG_NAMES:
+        return compact
+    aliases = {
+        "en": "en_US",
+        "ja": "ja_JP",
+        "ko": "ko_KR",
+        "zh": "zh_CN",
+        "zh_tw": "zh_TW",
+        "zh-hant": "zh_TW",
+        "zh_hant": "zh_TW",
+        "zh-cn": "zh_CN",
+        "zh_cn": "zh_CN",
+        "zh-tw": "zh_TW",
+        "ja-jp": "ja_JP",
+        "ko-kr": "ko_KR",
+        "en-us": "en_US",
+    }
+    low = compact.lower().replace(".", "_")
+    if low in aliases:
+        return aliases[low]
     if low.startswith("zh_tw") or low.startswith("zh-hant"):
-        return "zh_tw"
+        return "zh_TW"
     if low.startswith("zh"):
-        return "zh"
+        return "zh_CN"
     if low.startswith("ja"):
-        return "ja"
+        return "ja_JP"
     if low.startswith("ko"):
-        return "ko"
-    return "en"
+        return "ko_KR"
+    if low.startswith("en"):
+        return "en_US"
+    return "en_US"
 
 
 def _default_lang() -> str:
@@ -110,7 +138,7 @@ def _default_lang() -> str:
 
 
 def _apply_locale_env(lang: str) -> None:
-    locale_code = LOCALE_CODE_MAP.get(lang, LOCALE_CODE_MAP["en"])
+    locale_code = LOCALE_CODE_MAP.get(lang, LOCALE_CODE_MAP["en_US"])
     os.environ["LANGUAGE"] = locale_code
     os.environ["LANG"] = f"{locale_code}.UTF-8"
     os.environ["LC_ALL"] = f"{locale_code}.UTF-8"
@@ -118,7 +146,7 @@ def _apply_locale_env(lang: str) -> None:
 
 @lru_cache(maxsize=16)
 def _load_translation(lang: str) -> gettext.NullTranslations:
-    locale_code = LOCALE_CODE_MAP.get(lang, LOCALE_CODE_MAP["en"])
+    locale_code = LOCALE_CODE_MAP.get(lang, LOCALE_CODE_MAP["en_US"])
     try:
         return gettext.translation(
             DOMAIN,

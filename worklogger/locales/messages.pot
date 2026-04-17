@@ -3,9 +3,6 @@ msgstr ""
 "Project-Id-Version: WorkLogger\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-msgid ""
-msgstr ""
-
 msgid "\n\nSkipped {} rows:\n{}"
 msgstr ""
 
@@ -21,6 +18,9 @@ msgstr ""
 msgid "A different model is already downloaded.  It will be deleted before downloading the new one.  Continue?"
 msgstr ""
 
+msgid "A different model is already downloaded. It will be deleted before the new one downloads. Continue?"
+msgstr ""
+
 msgid "A privacy-first desktop work-hours tracker with AI-powered reporting."
 msgstr ""
 
@@ -30,13 +30,25 @@ msgstr ""
 msgid "AI Generated"
 msgstr ""
 
+msgid "AI Generated Content"
+msgstr ""
+
+msgid "AI Generated Result"
+msgstr ""
+
 msgid "AI Result"
 msgstr ""
 
 msgid "API Base URL"
 msgstr ""
 
+msgid "API Base URL is not set."
+msgstr ""
+
 msgid "API Key"
+msgstr ""
+
+msgid "API Key is not set."
 msgstr ""
 
 msgid "About"
@@ -96,6 +108,9 @@ msgstr ""
 msgid "Built-in"
 msgstr ""
 
+msgid "Business trip"
+msgstr ""
+
 msgid "CSV file is empty."
 msgstr ""
 
@@ -135,6 +150,9 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
+msgid "Comp leave"
+msgstr ""
+
 msgid "Confirm"
 msgstr ""
 
@@ -145,9 +163,6 @@ msgid "Copied!"
 msgstr ""
 
 msgid "Copy"
-msgstr ""
-
-msgid "Could not check for updates: {}"
 msgstr ""
 
 msgid "Create Custom Template"
@@ -189,9 +204,6 @@ msgstr ""
 msgid "Delete this template?"
 msgstr ""
 
-msgid "Discard"
-msgstr ""
-
 msgid "Done"
 msgstr ""
 
@@ -204,10 +216,19 @@ msgstr ""
 msgid "Download Local Model"
 msgstr ""
 
+msgid "Downloading local model..."
+msgstr ""
+
 msgid "Downloading…  You may cancel at any time; the download will resume from where it left off."
 msgstr ""
 
 msgid "Enable local model"
+msgstr ""
+
+msgid "Enable menu bar icon"
+msgstr ""
+
+msgid "Enable tray icon"
 msgstr ""
 
 msgid "End"
@@ -261,6 +282,9 @@ msgstr ""
 msgid "General"
 msgstr ""
 
+msgid "Generating with local model..."
+msgstr ""
+
 msgid "GitHub"
 msgstr ""
 
@@ -291,10 +315,16 @@ msgstr ""
 msgid "Imported {} records."
 msgstr ""
 
+msgid "Initializing AI request..."
+msgstr ""
+
 msgid "Insert"
 msgstr ""
 
 msgid "Insert Quick Log"
+msgstr ""
+
+msgid "Installing local model dependencies..."
 msgstr ""
 
 msgid "Integrity check failed — file may be corrupted"
@@ -330,6 +360,9 @@ msgstr ""
 msgid "License"
 msgstr ""
 
+msgid "Loading local model..."
+msgstr ""
+
 msgid "Local Model"
 msgstr ""
 
@@ -339,7 +372,28 @@ msgstr ""
 msgid "Local model failed and no external API key / URL / model name is configured.\nPlease configure an external model in Settings → AI."
 msgstr ""
 
+msgid "Local model failed and no external API key / URL / model name is configured. Please configure an external model in Settings → AI."
+msgstr ""
+
+msgid "Local model failed to load"
+msgstr ""
+
 msgid "Local model is disabled."
+msgstr ""
+
+msgid "Local model is inactive"
+msgstr ""
+
+msgid "Local model loaded."
+msgstr ""
+
+msgid "Local model not downloaded - go to Settings -> AI"
+msgstr ""
+
+msgid "Local model unavailable - using external model instead"
+msgstr ""
+
+msgid "Local model unavailable - using external model instead."
 msgstr ""
 
 msgid "Manual Input"
@@ -358,6 +412,15 @@ msgid "Missing columns: {}"
 msgstr ""
 
 msgid "Model"
+msgstr ""
+
+msgid "Model download completed."
+msgstr ""
+
+msgid "Model hash verified."
+msgstr ""
+
+msgid "Model name is not set."
 msgstr ""
 
 msgid "Mon"
@@ -387,9 +450,6 @@ msgstr ""
 msgid "Night"
 msgstr ""
 
-msgid "No"
-msgstr ""
-
 msgid "No data"
 msgstr ""
 
@@ -406,6 +466,9 @@ msgid "No notes recorded for this period."
 msgstr ""
 
 msgid "No templates available for this type."
+msgstr ""
+
+msgid "Normal"
 msgstr ""
 
 msgid "Normal: {normal}\nRemote: {remote}\nBusiness: {biz}"
@@ -447,6 +510,9 @@ msgstr ""
 msgid "Original"
 msgstr ""
 
+msgid "Original Content"
+msgstr ""
+
 msgid "Overnight"
 msgstr ""
 
@@ -462,7 +528,19 @@ msgstr ""
 msgid "PTO"
 msgstr ""
 
+msgid "Paid leave"
+msgstr ""
+
 msgid "Paid: {paid}\nComp: {comp}\nSick: {sick}"
+msgstr ""
+
+msgid "Please enter a model name in Settings → AI."
+msgstr ""
+
+msgid "Please enter the API Base URL in Settings → AI."
+msgstr ""
+
+msgid "Please enter your API Key in Settings → AI."
 msgstr ""
 
 msgid "Please set your API key in Settings → AI."
@@ -490,6 +568,9 @@ msgid "Ready"
 msgstr ""
 
 msgid "Regenerate"
+msgstr ""
+
+msgid "Remote work"
 msgstr ""
 
 msgid "Replace"
@@ -535,6 +616,9 @@ msgid "Show overnight indicator"
 msgstr ""
 
 msgid "Sick"
+msgstr ""
+
+msgid "Sick leave"
 msgstr ""
 
 msgid "Standard hours (h)"
@@ -606,6 +690,9 @@ msgstr ""
 msgid "Unsaved changes — save before switching?"
 msgstr ""
 
+msgid "Verifying local model file..."
+msgstr ""
+
 msgid "Version"
 msgstr ""
 
@@ -625,6 +712,9 @@ msgid "Weekly Work Report  {start} – {end}"
 msgstr ""
 
 msgid "What are you doing?"
+msgstr ""
+
+msgid "When enabled, text processing uses the local model first - no data is sent to external services."
 msgstr ""
 
 msgid "When enabled, text processing uses the local model first — no data is sent to external services."
@@ -651,13 +741,7 @@ msgstr ""
 msgid "Work type"
 msgstr ""
 
-msgid "Yes"
-msgstr ""
-
 msgid "You already logged {hours}h of break time. What do you want to do?"
-msgstr ""
-
-msgid "You are on the latest version"
 msgstr ""
 
 msgid "gpt-4o-mini | claude-haiku-4-5-20251001"
@@ -669,10 +753,10 @@ msgstr ""
 msgid "https://api.openai.com/v1 | https://api.anthropic.com"
 msgstr ""
 
-msgid "sk-… / sk-ant-…"
+msgid "llama-cpp-python not installed - run: pip install llama-cpp-python"
 msgstr ""
 
-msgid "v{0} available!"
+msgid "sk-… / sk-ant-…"
 msgstr ""
 
 msgid "{0:.0f} / {1:.0f} MB"
@@ -687,6 +771,9 @@ msgstr ""
 msgid "⚙  Settings"
 msgstr ""
 
+msgid "⚠️ Request exceeded 30 seconds, processing may take a while. Please continue waiting..."
+msgstr ""
+
 msgid "⚡ Quick Log"
 msgstr ""
 
@@ -697,6 +784,9 @@ msgid "✓  Integrity verified"
 msgstr ""
 
 msgid "✓  Model imported"
+msgstr ""
+
+msgid "✓ Request successful."
 msgstr ""
 
 msgid "✗  {}"

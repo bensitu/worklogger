@@ -197,7 +197,7 @@ class TemplatePickerDialog(QDialog):
         box.setStandardButtons(
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         box.setDefaultButton(QMessageBox.StandardButton.Yes)
-        _localize_msgbox_buttons(box, t)
+        _localize_msgbox_buttons(box, _)
         if box.exec() != QMessageBox.Yes:
             return
         import os
@@ -235,7 +235,7 @@ class TemplatePickerDialog(QDialog):
         box.setStandardButtons(
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         box.setDefaultButton(QMessageBox.StandardButton.No)
-        _localize_msgbox_buttons(box, t)
+        _localize_msgbox_buttons(box, _)
         if box.exec() != QMessageBox.Yes:
             return
         delete_custom_template(data["filename"])

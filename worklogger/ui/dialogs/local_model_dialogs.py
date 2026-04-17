@@ -87,8 +87,8 @@ class LocalDownloadDialog(QDialog):
 
         self._stack = QStackedWidget()
         root.addWidget(self._stack, 1)
-        self._stack.addWidget(self._build_select_page(t_dict))
-        self._stack.addWidget(self._build_download_page(t_dict))
+        self._stack.addWidget(self._build_select_page(_))
+        self._stack.addWidget(self._build_download_page(_))
 
         self._bridge.progress.connect(self._on_progress)
         self._bridge.status.connect(self._on_status)
@@ -99,7 +99,7 @@ class LocalDownloadDialog(QDialog):
 
     # ── Page 0: model selection ─────────────────────────────────────────────
 
-    def _build_select_page(self, t: dict) -> QWidget:
+    def _build_select_page(self, _: dict) -> QWidget:
         from services.local_model_service import (
             ensure_catalog, load_catalog, get_active_entry_id,
             localize_field, get_models_dir,
@@ -148,7 +148,7 @@ class LocalDownloadDialog(QDialog):
         lang = self._lang
         for entry in catalog:
             eid = entry.get("id", "")
-            card = self._build_model_card(entry, t, lang)
+            card = self._build_model_card(entry, _, lang)
             self._card_widgets[eid] = card
             self._radio_group.addButton(card["radio"])
             cards_l.addWidget(card["frame"])
@@ -513,7 +513,7 @@ class LocalDownloadDialog(QDialog):
         self._last_status_key = key
         if key in ("download_dialog_model_hash_ok", "download_model_status_ready"):
             return   # these appear as part of the done message; skip log noise
-        text = msg(key, key)
+        text = msg(key)
         if text:
             self._log_append(text)
 
@@ -532,7 +532,7 @@ class LocalDownloadDialog(QDialog):
         LocalModelService.reset()
 
     def _on_error(self, message: str) -> None:
-        display = msg(message, message)
+        display = msg(message)
         self._log_append(
             f"\n[{_("Integrity check failed — file may be corrupted")}] {display}")
         self._retry_btn.show()
@@ -548,7 +548,7 @@ class LocalDownloadDialog(QDialog):
         Files matching a known catalog entry use that entry's canonical name.
         Unknown files create a new catalog+manifest entry under their own name.
         """
-        path, _ = QFileDialog.getOpenFileName(
+        path, _dialog_filter = QFileDialog.getOpenFileName(
             self,
             _("Import .gguf"),
             "",
@@ -557,12 +557,10 @@ class LocalDownloadDialog(QDialog):
         if not path:
             return
         try:
-            from services.local_model_service import (
-                LocalModelService, get_active_entry_id,
-            )
+            from services.local_model_service import LocalModelService
             svc = LocalModelService.get()
             # "__new__" forces catalog-lookup-by-filename / create-new behaviour
-            dest = svc.import_gguf(path, "__new__")
+            svc.import_gguf(path, "__new__")
             LocalModelService.reset()
             self._refresh_card_states()
             # Rebuild cards to show any newly added catalog entry

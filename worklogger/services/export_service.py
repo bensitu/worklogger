@@ -143,7 +143,7 @@ def render_pdf(
     from PySide6.QtGui import (QPainter, QPageLayout, QPageSize,
                                QFont, QColor, QPen, QBrush)
     from PySide6.QtCore import Qt
-    from utils.i18n import _, msg
+    from utils.i18n import _
     from config.themes import THEMES
     from ui.widgets import BarChart
     acc = THEMES[ctx.theme][False][0]
@@ -210,5 +210,5 @@ def render_pdf(
     painter.drawLine(int(pw*0.03), cursor_y, int(pw*0.97), cursor_y)
     cursor_y += pt(10)
 
-    detail_fn(painter, pw, ph, pt, t, cursor_y, ctx)
+    detail_fn(painter, pw, ph, pt, _, cursor_y, ctx)
     painter.end()

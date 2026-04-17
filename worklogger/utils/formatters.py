@@ -1,7 +1,17 @@
 from __future__ import annotations
 import json
 
-def format_quick_logs(logs: list[dict], lang: str = "en", mode: str = "summary") -> str:
+_SUPPORTED_LANGS = {"en_US", "ja_JP", "ko_KR", "zh_CN", "zh_TW"}
+
+
+def _canonical_lang(lang: str) -> str:
+    if lang in _SUPPORTED_LANGS:
+        return lang
+    return "en_US"
+
+
+def format_quick_logs(logs: list[dict], lang: str = "en_US", mode: str = "summary") -> str:
+    lang = _canonical_lang(lang)
     if not logs:
         return ""
     if mode == "daily":
@@ -24,13 +34,13 @@ def format_quick_logs(logs: list[dict], lang: str = "en", mode: str = "summary")
             return items[0]
         if len(items) == 2:
             sep = {
-                "ja": "と",
-                "zh": "和",
-                "zh_tw": "和",
-                "ko": "와",
+                "ja_JP": "と",
+                "zh_CN": "和",
+                "zh_TW": "和",
+                "ko_KR": "와",
             }.get(lang, " and ")
-            return f"{items[0]}{sep}{items[1]}" if lang in {"ja", "zh", "zh_tw", "ko"} else f"{items[0]} and {items[1]}"
-        if lang in {"ja", "zh", "zh_tw", "ko"}:
+            return f"{items[0]}{sep}{items[1]}" if lang in {"ja_JP", "zh_CN", "zh_TW", "ko_KR"} else f"{items[0]} and {items[1]}"
+        if lang in {"ja_JP", "zh_CN", "zh_TW", "ko_KR"}:
             return "、".join(items[:-1]) + "、" + items[-1]
         return ", ".join(items[:-1]) + f", and {items[-1]}"
 
@@ -54,35 +64,35 @@ def format_quick_logs(logs: list[dict], lang: str = "en", mode: str = "summary")
         summary = _join_items(shown)
         if extra > 0:
             more = {
-                "ja": f"ほか{extra}件",
-                "zh": f"等{extra}项",
-                "zh_tw": f"等{extra}項",
-                "ko": f"외 {extra}건",
+                "ja_JP": f"ほか{extra}件",
+                "zh_CN": f"等{extra}项",
+                "zh_TW": f"等{extra}項",
+                "ko_KR": f"외 {extra}건",
             }.get(lang, f"{extra} more")
-            summary = f"{summary}、{more}" if lang in {"ja", "zh", "zh_tw"} else (
-                f"{summary}, {more}" if lang == "ko" else f"{summary}, and {more}"
+            summary = f"{summary}、{more}" if lang in {"ja_JP", "zh_CN", "zh_TW"} else (
+                f"{summary}, {more}" if lang == "ko_KR" else f"{summary}, and {more}"
             )
         if not summary:
             summary = {
-                "ja": "作業記録",
-                "zh": "工作记录",
-                "zh_tw": "工作記錄",
-                "ko": "작업 기록",
+                "ja_JP": "作業記録",
+                "zh_CN": "工作记录",
+                "zh_TW": "工作記錄",
+                "ko_KR": "작업 기록",
             }.get(lang, "work updates")
         times_text = " / ".join(times[:3])
-        if lang == "ja":
+        if lang == "ja_JP":
             line = f"- {d}: {summary}に対応。"
             if times_text:
                 line += f" 記録時刻: {times_text}。"
-        elif lang == "zh":
+        elif lang == "zh_CN":
             line = f"- {d}：主要处理了{summary}。"
             if times_text:
                 line += f" 记录时间：{times_text}。"
-        elif lang == "zh_tw":
+        elif lang == "zh_TW":
             line = f"- {d}：主要處理了{summary}。"
             if times_text:
                 line += f" 記錄時間：{times_text}。"
-        elif lang == "ko":
+        elif lang == "ko_KR":
             line = f"- {d}: {summary} 작업을 진행했습니다."
             if times_text:
                 line += f" 기록 시간: {times_text}."
@@ -156,13 +166,13 @@ def parse_status(msg: str) -> tuple[str | None, dict]:
         "local_model_hash_ok":         "local_model_hash_ok",
         "local_model_download_ok":     "local_model_download_ok",
     }
-    for en, key in mapping.items():
-        if "{model}" in en:
-            prefix = en.split("{model}")[0]
+    for source_text, key in mapping.items():
+        if "{model}" in source_text:
+            prefix = source_text.split("{model}")[0]
             if msg.startswith(prefix):
                 model_part = msg[len(prefix):].split("...")[0].strip()
                 return key, {"model": model_part}
-        elif msg.startswith(en):
+        elif msg.startswith(source_text):
             return key, {}
     return None, {"raw": msg}
 

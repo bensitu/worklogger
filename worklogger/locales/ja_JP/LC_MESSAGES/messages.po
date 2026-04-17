@@ -1,25 +1,11 @@
-
-
-msgid "days"
-msgstr "days"
-
-msgid "key"
-msgstr "key"
-
-msgid "overnight_badge"
-msgstr "overnight_badge"
-
-msgid "tpl_no_templates"
-msgstr "tpl_no_templates"
-
-msgid "tpl_saved"
-msgstr "tpl_saved"
+msgid ""
+msgstr "Language: ja_JP\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
 
 msgid "\n\nSkipped {} rows:\n{}"
-msgstr "\n\nSkipped {} rows:\n{}"
+msgstr "\n\n{}行をスキップしました：\n{}"
 
 msgid " days"
-msgstr " days"
+msgstr "日"
 
 msgid "+"
 msgstr "+"
@@ -27,206 +13,248 @@ msgstr "+"
 msgid "1.0"
 msgstr "1.0"
 
+msgid "A different model is already downloaded.  It will be deleted before downloading the new one.  Continue?"
+msgstr "別のモデルが既にダウンロードされています。新しいモデルをダウンロードする前に削除されます。続行しますか？"
+
 msgid "A privacy-first desktop work-hours tracker with AI-powered reporting."
-msgstr "A privacy-first desktop work-hours tracker with AI-powered reporting."
+msgstr "AI レポート機能付きのプライバシー重視デスクトップ工時記録アプリ。"
 
 msgid "AI"
 msgstr "AI"
 
+msgid "AI Generated"
+msgstr "AI生成"
+
+msgid "AI Result"
+msgstr "AI結果"
+
+msgid "API Base URL"
+msgstr "API ベース URL"
+
+msgid "API Key"
+msgstr "APIキー"
+
 msgid "About"
-msgstr "About"
+msgstr "情報"
+
+msgid "Add"
+msgstr "追加"
 
 msgid "Analytics"
-msgstr "Analytics"
+msgstr "分析"
 
 msgid "Annual"
-msgstr "Annual"
+msgstr "年次"
 
 msgid "Appearance"
-msgstr "Appearance"
+msgstr "外観"
 
 msgid "Append"
-msgstr "Append"
+msgstr "追記"
 
 msgid "Apply"
-msgstr "Apply"
+msgstr "適用"
 
 msgid "Apr"
-msgstr "Apr"
+msgstr "4月"
 
 msgid "April"
-msgstr "April"
+msgstr "4月"
 
 msgid "Aug"
-msgstr "Aug"
+msgstr "8月"
 
 msgid "August"
-msgstr "August"
+msgstr "8月"
 
 msgid "Author"
-msgstr "Author"
+msgstr "作者"
 
 msgid "Auto Record"
-msgstr "Auto Record"
+msgstr "自動記録"
 
 msgid "Break (h)"
-msgstr "Break (h)"
+msgstr "休憩 (h)"
 
 msgid "Break Timer"
-msgstr "Break Timer"
+msgstr "休憩タイマー"
 
 msgid "Break done"
-msgstr "Break done"
+msgstr "休憩済み"
 
 msgid "Break hours cannot be negative."
-msgstr "Break hours cannot be negative."
+msgstr "休憩時間をマイナスにはできません。"
+
+msgid "Break time must be less than the total shift duration."
+msgstr "休憩時間は勤務時間より短くする必要があります。"
 
 msgid "Built-in"
-msgstr "Built-in"
+msgstr "デフォルト"
 
 msgid "CSV file is empty."
-msgstr "CSV file is empty."
+msgstr "CSV ファイルが空です。"
 
 msgid "CTO"
-msgstr "CTO"
+msgstr "代休"
 
 msgid "Calendar Sync"
-msgstr "Calendar Sync"
+msgstr "カレンダー同期"
+
+msgid "Calendar data already exists.\n\nReplace — clear all previous calendar events before import.\nAppend — keep existing events and add new ones."
+msgstr "カレンダーデータは既に存在します。\n\n置換 — 取り込み前に既存の予定をすべて削除します。\n追記 — 既存の予定を残して新しい予定を追加します。"
 
 msgid "Calendar events cleared."
-msgstr "Calendar events cleared."
+msgstr "カレンダーイベントを削除しました。"
 
 msgid "Calendar events:"
-msgstr "Calendar events:"
+msgstr "カレンダーイベント："
 
 msgid "Cancel"
-msgstr "Cancel"
+msgstr "キャンセル"
 
 msgid "Check for Updates"
-msgstr "Check for Updates"
+msgstr "アップデートを確認"
 
 msgid "Checking for updates…"
-msgstr "Checking for updates…"
+msgstr "更新を確認しています…"
 
 msgid "Choose a model to download"
-msgstr "Choose a model to download"
+msgstr "ダウンロードするモデルを選択"
 
 msgid "Clear Calendar Events"
-msgstr "Clear Calendar Events"
+msgstr "カレンダーイベントを削除"
 
 msgid "Clock"
-msgstr "Clock"
+msgstr "打刻"
 
 msgid "Close"
-msgstr "Close"
+msgstr "閉じる"
 
 msgid "Confirm"
-msgstr "Confirm"
+msgstr "確認"
 
 msgid "Continue"
-msgstr "Continue"
+msgstr "続けて計測"
+
+msgid "Copied!"
+msgstr "コピーしました！"
+
+msgid "Copy"
+msgstr "コピー"
 
 msgid "Could not check for updates: {}"
-msgstr "Could not check for updates: {}"
+msgstr "アップデート確認に失敗しました：{}"
 
 msgid "Create Custom Template"
-msgstr "Create Custom Template"
+msgstr "カスタムテンプレートを作成"
 
 msgid "Custom"
-msgstr "Custom"
+msgstr "カスタム"
 
 msgid "Daily"
-msgstr "Daily"
+msgstr "日報"
 
 msgid "Daily avg"
-msgstr "Daily avg"
+msgstr "日平均"
 
 msgid "Data"
-msgstr "Data"
+msgstr "データ"
 
 msgid "Dec"
-msgstr "Dec"
+msgstr "12月"
 
 msgid "December"
-msgstr "December"
+msgstr "12月"
 
 msgid "Default break (h)"
-msgstr "Default break (h)"
+msgstr "デフォルト休憩 (h)"
 
 msgid "Delete"
-msgstr "Delete"
+msgstr "削除"
 
 msgid "Delete Model"
-msgstr "Delete Model"
+msgstr "モデルを削除"
 
 msgid "Delete this entry?"
-msgstr "Delete this entry?"
+msgstr "このエントリを削除しますか？"
 
 msgid "Delete this model file? This cannot be undone."
-msgstr "Delete this model file? This cannot be undone."
+msgstr "このモデルファイルを削除しますか？この操作は元に戻せません。"
 
 msgid "Delete this template?"
-msgstr "Delete this template?"
+msgstr "このテンプレートを削除しますか？"
 
 msgid "Discard"
-msgstr "Discard"
+msgstr "破棄"
 
 msgid "Done"
-msgstr "Done"
+msgstr "完了"
 
 msgid "Download"
-msgstr "Download"
+msgstr "ダウンロード"
+
+msgid "Download .md"
+msgstr ".md でダウンロード"
 
 msgid "Download Local Model"
-msgstr "Download Local Model"
+msgstr "ローカルモデルをダウンロード"
+
+msgid "Downloading…  You may cancel at any time; the download will resume from where it left off."
+msgstr "ダウンロード中… いつでもキャンセルできます。次回は中断位置から再開します。"
 
 msgid "Enable local model"
-msgstr "Enable local model"
+msgstr "ローカルモデルを有効にする"
 
 msgid "End"
-msgstr "End"
+msgstr "退勤"
+
+msgid "End now"
+msgstr "今すぐ退勤"
 
 msgid "End time (opt.)"
-msgstr "End time (opt.)"
+msgstr "終了時刻（任意）"
 
 msgid "Ended"
-msgstr "Ended"
+msgstr "打刻済み"
+
+msgid "Error"
+msgstr "エラー"
 
 msgid "Expand notes"
-msgstr "Expand notes"
+msgstr "メモを拡大"
 
 msgid "Export"
-msgstr "Export"
+msgstr "エクスポート"
 
 msgid "Export .ics"
-msgstr "Export .ics"
+msgstr "ICS 書出"
 
 msgid "Export CSV"
-msgstr "Export CSV"
+msgstr "CSV 出力"
 
 msgid "Exported {} events."
-msgstr "Exported {} events."
+msgstr "{} 件エクスポートしました。"
 
 msgid "External Model"
-msgstr "External Model"
+msgstr "外部モデル"
 
 msgid "Feature Overview"
-msgstr "Feature Overview"
+msgstr "機能紹介"
 
 msgid "Features"
-msgstr "Features"
+msgstr "機能紹介"
 
 msgid "Feb"
-msgstr "Feb"
+msgstr "2月"
 
 msgid "February"
-msgstr "February"
+msgstr "2月"
 
 msgid "Fri"
-msgstr "Fri"
+msgstr "金"
 
 msgid "General"
-msgstr "General"
+msgstr "全般"
 
 msgid "GitHub"
 msgstr "GitHub"
@@ -235,499 +263,748 @@ msgid "HH:MM"
 msgstr "HH:MM"
 
 msgid "Hint / extra instructions (optional)"
-msgstr "Hint / extra instructions (optional)"
+msgstr "補足・追加指示（任意）"
 
 msgid "Import .gguf"
-msgstr "Import .gguf"
+msgstr ".gguf をインポート"
 
 msgid "Import .ics"
-msgstr "Import .ics"
+msgstr "ICS 取込"
 
 msgid "Import CSV"
-msgstr "Import CSV"
+msgstr "CSV 読込"
 
 msgid "Import Result"
-msgstr "Import Result"
+msgstr "インポート結果"
 
 msgid "Import your .ics file to let AI read your meetings when generating reports."
-msgstr "Import your .ics file to let AI read your meetings when generating reports."
+msgstr ".ics ファイルを取り込むと、AI がスケジュールを参照してレポートを生成できます。"
 
 msgid "Imported {} calendar events."
-msgstr "Imported {} calendar events."
+msgstr "{} 件のカレンダーイベントを取り込みました。"
 
 msgid "Imported {} records."
-msgstr "Imported {} records."
+msgstr "{} 件インポートしました。"
 
 msgid "Insert"
-msgstr "Insert"
+msgstr "挿入"
 
 msgid "Insert Quick Log"
-msgstr "Insert Quick Log"
+msgstr "クイック記録を挿入"
 
 msgid "Integrity check failed — file may be corrupted"
-msgstr "Integrity check failed — file may be corrupted"
+msgstr "整合性チェック失敗 — ファイルが破損している可能性があります"
 
 msgid "Integrity failed"
-msgstr "Integrity failed"
+msgstr "整合性チェックに失敗しました"
+
+msgid "Invalid time range. The shift must be within {max_hours} hours (overnight is supported)."
+msgstr "無効な時間範囲です。勤務は {max_hours} 時間以内である必要があります（夜勤対応）。"
 
 msgid "Jan"
-msgstr "Jan"
+msgstr "1月"
 
 msgid "January"
-msgstr "January"
+msgstr "1月"
 
 msgid "Jul"
-msgstr "Jul"
+msgstr "7月"
 
 msgid "July"
-msgstr "July"
+msgstr "7月"
 
 msgid "Jun"
-msgstr "Jun"
+msgstr "6月"
 
 msgid "June"
-msgstr "June"
+msgstr "6月"
 
 msgid "Leave days"
-msgstr "Leave days"
+msgstr "休暇日数"
 
 msgid "License"
-msgstr "License"
+msgstr "ライセンス"
 
 msgid "Local Model"
-msgstr "Local Model"
+msgstr "ローカルモデル"
 
 msgid "Local model"
-msgstr "Local model"
+msgstr "ローカルモデル"
+
+msgid "Local model failed and no external API key / URL / model name is configured.\nPlease configure an external model in Settings → AI."
+msgstr "ローカルモデルが失敗し、外部APIキー / URL / モデル名が未設定です。\n設定 → AI で外部モデルを設定してください。"
+
+msgid "Local model is disabled."
+msgstr "ローカルモデルは無効です。"
 
 msgid "Manual Input"
-msgstr "Manual Input"
+msgstr "手入力"
 
 msgid "Mar"
-msgstr "Mar"
+msgstr "3月"
 
 msgid "March"
-msgstr "March"
+msgstr "3月"
 
 msgid "May"
-msgstr "May"
+msgstr "5月"
 
 msgid "Missing columns: {}"
-msgstr "Missing columns: {}"
+msgstr "不足している列：{}"
+
+msgid "Model"
+msgstr "モデル"
 
 msgid "Mon"
-msgstr "Mon"
+msgstr "月"
 
 msgid "Monthly"
-msgstr "Monthly"
+msgstr "月次"
 
 msgid "Monthly Report"
-msgstr "Monthly Report"
+msgstr "月次レポート"
 
 msgid "Monthly Work Report  {year}/{month:02d}"
-msgstr "Monthly Work Report  {year}/{month:02d}"
+msgstr "月次勤務レポート  {year}年{month:02d}月"
 
 msgid "Monthly target (h)"
-msgstr "Monthly target (h)"
+msgstr "月間目標時間 (h)"
 
 msgid "Monthly total"
-msgstr "Monthly total"
+msgstr "月間合計"
 
 msgid "New Template"
-msgstr "New Template"
+msgstr "新規テンプレート"
 
 msgid "Next month"
-msgstr "Next month"
+msgstr "次の月"
 
 msgid "Night"
-msgstr "Night"
+msgstr "夜勤"
 
 msgid "No"
-msgstr "No"
+msgstr "いいえ"
 
 msgid "No data"
-msgstr "No data"
+msgstr "データなし"
 
 msgid "No entries yet today."
-msgstr "No entries yet today."
+msgstr "本日の記録はありません。"
 
 msgid "No events found."
-msgstr "No events found."
+msgstr "イベントが見つかりません。"
 
 msgid "No external model configured"
-msgstr "No external model configured"
+msgstr "外部モデルが設定されていません"
 
 msgid "No notes recorded for this period."
-msgstr "No notes recorded for this period."
+msgstr "この期間のメモはありません。"
 
 msgid "No templates available for this type."
-msgstr "No templates available for this type."
+msgstr "このタイプのテンプレートがありません。"
 
 msgid "Normal: {normal}\nRemote: {remote}\nBusiness: {biz}"
-msgstr "Normal: {normal}\nRemote: {remote}\nBusiness: {biz}"
+msgstr "通常：{normal}\n在宅：{remote}\n出張：{biz}"
 
 msgid "Not downloaded"
-msgstr "Not downloaded"
+msgstr "未ダウンロード"
 
 msgid "Notes"
-msgstr "Notes"
+msgstr "メモ"
 
 msgid "Notes reminder dot"
-msgstr "Notes reminder dot"
+msgstr "メモ通知ドット"
 
 msgid "Nov"
-msgstr "Nov"
+msgstr "11月"
 
 msgid "November"
-msgstr "November"
+msgstr "11月"
 
 msgid "OK"
 msgstr "OK"
 
 msgid "Oct"
-msgstr "Oct"
+msgstr "10月"
 
 msgid "October"
-msgstr "October"
+msgstr "10月"
 
 msgid "On break"
-msgstr "On break"
+msgstr "休憩中"
+
+msgid "Only one model can be active at a time.  Delete the current model before switching."
+msgstr "同時に有効化できるモデルは1つだけです。切り替える前に現在のモデルを削除してください。"
 
 msgid "Open"
-msgstr "Open"
+msgstr "開く"
+
+msgid "Original"
+msgstr "原文"
 
 msgid "Overnight"
-msgstr "Overnight"
+msgstr "跨日"
 
 msgid "Overtime"
-msgstr "Overtime"
+msgstr "残業時間"
 
 msgid "Overwrite existing data?"
-msgstr "Overwrite existing data?"
+msgstr "既存データを上書きしますか？"
 
 msgid "PDF requires QtPrintSupport. Saving PNG."
-msgstr "PDF requires QtPrintSupport. Saving PNG."
+msgstr "PDFにはQtPrintSupportが必要です。PNGとして保存します。"
 
 msgid "PTO"
-msgstr "PTO"
+msgstr "有休"
 
 msgid "Paid: {paid}\nComp: {comp}\nSick: {sick}"
-msgstr "Paid: {paid}\nComp: {comp}\nSick: {sick}"
+msgstr "有給：{paid}\n代休：{comp}\n病欠：{sick}"
 
 msgid "Please set your API key in Settings → AI."
-msgstr "Please set your API key in Settings → AI."
+msgstr "設定→AI で API キーを設定してください。"
 
 msgid "Previous month"
-msgstr "Previous month"
+msgstr "前の月"
 
 msgid "Public holidays"
-msgstr "Public holidays"
+msgstr "祝日を表示"
 
 msgid "Quarterly"
-msgstr "Quarterly"
+msgstr "四半期"
 
 msgid "Quick Log"
-msgstr "Quick Log"
+msgstr "クイック記録"
 
 msgid "Quick logs appear in daily notes and AI reports."
-msgstr "Quick logs appear in daily notes and AI reports."
+msgstr "クイック記録は日報・週報の AI 生成に反映されます。"
 
 msgid "Quit"
-msgstr "Quit"
+msgstr "終了"
 
 msgid "Ready"
-msgstr "Ready"
+msgstr "準備完了"
+
+msgid "Regenerate"
+msgstr "再生成"
 
 msgid "Replace"
-msgstr "Replace"
+msgstr "置換"
 
 msgid "Report"
-msgstr "Report"
+msgstr "レポート"
 
 msgid "Restart"
-msgstr "Restart"
+msgstr "やり直す"
 
 msgid "Retry"
-msgstr "Retry"
+msgstr "再試行"
 
 msgid "Sat"
-msgstr "Sat"
+msgstr "土"
 
 msgid "Save"
-msgstr "Save"
+msgstr "保存"
 
 msgid "Save Changes"
-msgstr "Save Changes"
+msgstr "変更を保存"
 
 msgid "Save changes to this template?"
-msgstr "Save changes to this template?"
+msgstr "このテンプレートへの変更を保存しますか？"
 
 msgid "Saved: {}"
-msgstr "Saved: {}"
+msgstr "保存しました：{}"
 
 msgid "Select / Change"
-msgstr "Select / Change"
+msgstr "選択 / 変更"
 
 msgid "Sep"
-msgstr "Sep"
+msgstr "9月"
 
 msgid "September"
-msgstr "September"
+msgstr "9月"
 
 msgid "Settings"
-msgstr "Settings"
+msgstr "設定"
+
+msgid "Show overnight indicator"
+msgstr "跨日インジケータを表示"
 
 msgid "Sick"
-msgstr "Sick"
+msgstr "病休"
 
 msgid "Standard hours (h)"
-msgstr "Standard hours (h)"
+msgstr "標準勤務時間 (h)"
 
 msgid "Start"
-msgstr "Start"
+msgstr "出勤"
+
+msgid "Start now"
+msgstr "今すぐ出勤"
 
 msgid "Start week on Monday"
-msgstr "Start week on Monday"
+msgstr "週の開始を月曜日にする"
 
 msgid "Started"
-msgstr "Started"
+msgstr "打刻済み"
 
 msgid "Summary: {days} work days, {total}h total, {ot}h overtime."
-msgstr "Summary: {days} work days, {total}h total, {ot}h overtime."
+msgstr "サマリー：{days}日出勤、合計{total}h、残業{ot}h。"
 
 msgid "Sun"
-msgstr "Sun"
+msgstr "日"
 
 msgid "Switch Model"
-msgstr "Switch Model"
+msgstr "モデルの切り替え"
 
 msgid "Template name"
-msgstr "Template name"
+msgstr "テンプレート名"
 
 msgid "Template saved."
-msgstr "Template saved."
+msgstr "テンプレートを保存しました。"
 
 msgid "Templates"
-msgstr "Templates"
+msgstr "テンプレート"
 
 msgid "Test"
-msgstr "Test"
+msgstr "テスト"
 
 msgid "Testing…"
-msgstr "Testing…"
+msgstr "テスト中…"
 
 msgid "This model is already downloaded and ready."
-msgstr "This model is already downloaded and ready."
+msgstr "このモデルは既にダウンロード済みです。"
 
 msgid "Thu"
-msgstr "Thu"
+msgstr "木"
 
 msgid "Time"
-msgstr "Time"
+msgstr "時刻"
 
 msgid "Today"
-msgstr "Today"
+msgstr "今日"
 
 msgid "Today's entries:"
-msgstr "Today's entries:"
+msgstr "本日の記録："
 
 msgid "Total"
-msgstr "Total"
+msgstr "週計"
 
 msgid "Trip"
-msgstr "Trip"
+msgstr "出張"
 
 msgid "Tue"
-msgstr "Tue"
+msgstr "火"
 
 msgid "Type"
-msgstr "Type"
+msgstr "種別"
 
 msgid "Unsaved changes — save before switching?"
-msgstr "Unsaved changes — save before switching?"
+msgstr "未保存の変更があります。切り替える前に保存しますか？"
 
 msgid "Version"
-msgstr "Version"
+msgstr "バージョン"
 
 msgid "WFH"
-msgstr "WFH"
+msgstr "在宅"
 
 msgid "Wed"
-msgstr "Wed"
+msgstr "水"
 
 msgid "Weekly"
-msgstr "Weekly"
+msgstr "週報"
 
 msgid "Weekly Report"
-msgstr "Weekly Report"
+msgstr "週次レポート"
 
 msgid "Weekly Work Report  {start} – {end}"
-msgstr "Weekly Work Report  {start} – {end}"
+msgstr "週次勤務レポート  {start} – {end}"
 
 msgid "What are you doing?"
-msgstr "What are you doing?"
+msgstr "今何をしていますか？"
+
+msgid "When enabled, text processing uses the local model first — no data is sent to external services."
+msgstr "有効にすると、テキスト処理はまずローカルモデルを使用し、外部サービスにデータを送信しません。"
 
 msgid "Work Log"
-msgstr "Work Log"
+msgstr "作業記録"
 
 msgid "Work Logger"
-msgstr "Work Logger"
+msgstr "ワークロガー"
 
 msgid "Work Logger is a flexible desktop app for tracking work hours, notes, and reports.\n\nWhat you can do:\n- Switch between Manual Input and Auto Record depending on how you like to log time.\n- Record start time, end time, and break time for each day.\n- Save work type and notes together with the time record.\n- Use Quick Log for lightweight task entries during the day.\n- Keep notes for future dates even when exact work hours are not decided yet.\n- Generate daily, weekly, and monthly reports from saved data.\n- Use AI-compatible providers to turn notes into polished summaries.\n- Review monthly trends with charts, averages, overtime, and monthly targets.\n- Import calendar events and display public holidays.\n- Customize language, theme, AI settings, and reminder behavior.\n\nRecommended workflow:\n1. Pick Manual Input if you usually type times yourself.\n2. Pick Auto Record if you prefer start/end/break buttons.\n3. Add Notes or Quick Log entries as work happens.\n4. Save the day record when finished.\n5. Open Reports or AI tools when you need a summary.\n\nHelpful details:\n- Holiday names can be shown automatically on the calendar.\n- A small reminder dot can appear on days that only have notes.\n- Built-in and custom templates can be used in notes and reports."
-msgstr "Work Logger is a flexible desktop app for tracking work hours, notes, and reports.\n\nWhat you can do:\n- Switch between Manual Input and Auto Record depending on how you like to log time.\n- Record start time, end time, and break time for each day.\n- Save work type and notes together with the time record.\n- Use Quick Log for lightweight task entries during the day.\n- Keep notes for future dates even when exact work hours are not decided yet.\n- Generate daily, weekly, and monthly reports from saved data.\n- Use AI-compatible providers to turn notes into polished summaries.\n- Review monthly trends with charts, averages, overtime, and monthly targets.\n- Import calendar events and display public holidays.\n- Customize language, theme, AI settings, and reminder behavior.\n\nRecommended workflow:\n1. Pick Manual Input if you usually type times yourself.\n2. Pick Auto Record if you prefer start/end/break buttons.\n3. Add Notes or Quick Log entries as work happens.\n4. Save the day record when finished.\n5. Open Reports or AI tools when you need a summary.\n\nHelpful details:\n- Holiday names can be shown automatically on the calendar.\n- A small reminder dot can appear on days that only have notes.\n- Built-in and custom templates can be used in notes and reports."
+msgstr "Work Logger は、勤務時間・メモ・レポートを柔軟に管理できるデスクトップアプリです。\n\nできること:\n- 手入力モードと自動記録モードを使い分けられる\n- 開始・終了・休憩時間を日ごとに記録できる\n- 勤怠種別とメモを一緒に保存できる\n- Quick Log で作業内容を手軽に追記できる\n- 将来の日付にも、時間未定のメモだけ先に残せる\n- 日報・週報・月報を作成できる\n- AI 互換サービスを使って自然な要約を生成できる\n- 月間推移、平均、残業、目標時間をグラフで確認できる\n- カレンダー取込や祝日表示に対応している\n- 言語、テーマ、AI 設定、通知表示を調整できる\n\nおすすめの使い方:\n1. 時刻を入力したい場合は手入力モードを使う\n2. ボタンで打刻したい場合は自動記録モードを使う\n3. 作業中にメモや Quick Log を追加する\n4. 1日の終わりに記録を保存する\n5. 必要なときにレポートや AI 生成を使う\n\n補足:\n- カレンダーには祝日名を自動表示できます\n- メモだけ保存した日には通知ドットを表示できます\n- 内蔵テンプレートとカスタムテンプレートの両方を使えます"
 
 msgid "Work Report"
-msgstr "Work Report"
+msgstr "勤務レポート"
 
 msgid "Work Time Analytics"
-msgstr "Work Time Analytics"
+msgstr "勤務時間分析"
 
 msgid "Work days"
-msgstr "Work days"
+msgstr "出勤日数"
 
 msgid "Work type"
-msgstr "Work type"
+msgstr "勤務区分"
 
 msgid "Yes"
-msgstr "Yes"
+msgstr "はい"
 
 msgid "You already logged {hours}h of break time. What do you want to do?"
-msgstr "You already logged {hours}h of break time. What do you want to do?"
+msgstr "すでに {hours}h の休憩を記録しています。どうしますか？"
 
 msgid "You are on the latest version"
-msgstr "You are on the latest version"
+msgstr "現在のバージョンは最新です"
 
 msgid "gpt-4o-mini | claude-haiku-4-5-20251001"
-msgstr "gpt-4o-mini | claude-haiku-4-5-20251001"
+msgstr "Anthropic と OpenAI 互換 API に対応しています。例: ChatGPT、Claude、Gemini、DeepSeek、Doubao、Qwen。"
 
 msgid "h"
 msgstr "h"
 
 msgid "https://api.openai.com/v1 | https://api.anthropic.com"
-msgstr "https://api.openai.com/v1 | https://api.anthropic.com"
+msgstr "gpt-4o-mini | claude-haiku-4-5-20251001"
 
 msgid "sk-… / sk-ant-…"
-msgstr "sk-… / sk-ant-…"
+msgstr "https://api.openai.com/v1 | https://api.anthropic.com"
 
 msgid "v{0} available!"
-msgstr "v{0} available!"
+msgstr "v{0} が利用可能です！"
 
 msgid "{0:.0f} / {1:.0f} MB"
 msgstr "{0:.0f} / {1:.0f} MB"
 
 msgid "{date}  ({dow})  {h}h  [{wt}]"
-msgstr "{date}  ({dow})  {h}h  [{wt}]"
+msgstr "{date}（{dow}）{h}h  [{wt}]"
 
 msgid "▶ Break"
-msgstr "▶ Break"
+msgstr "▶ 休憩開始"
 
 msgid "⚙  Settings"
-msgstr "⚙  Settings"
-
-msgid "✓  Connected"
-msgstr "✓  Connected"
-
-msgid "✓  Integrity verified"
-msgstr "✓  Integrity verified"
-
-msgid "✓  Model imported"
-msgstr "✓  Model imported"
-
-msgid "✗  {}"
-msgstr "✗  {}"
-
-msgid "✨ AI Assist"
-msgstr "✨ AI Assist"
-
-msgid "✨ AI Generate"
-msgstr "✨ AI Generate"
-
-msgid "🌍  Language"
-msgstr "🌍  Language"
-
-msgid "🌙  Dark mode"
-msgstr "🌙  Dark mode"
-
-msgid "📅 Import Calendar (.ics)"
-msgstr "📅 Import Calendar (.ics)"
-
-msgid "📋 Templates"
-msgstr "📋 Templates"
-
-msgid "A different model is already downloaded.  It will be deleted before downloading the new one.  Continue?"
-msgstr "A different model is already downloaded.  It will be deleted before downloading the new one.  Continue?"
-
-msgid "AI Generated"
-msgstr "AI Generated"
-
-msgid "AI Result"
-msgstr "AI Result"
-
-msgid "API Base URL"
-msgstr "API Base URL"
-
-msgid "API Key"
-msgstr "API Key"
-
-msgid "Add"
-msgstr "Add"
-
-msgid "Break time must be less than the total shift duration."
-msgstr "Break time must be less than the total shift duration."
-
-msgid "Calendar data already exists.\n\nReplace — clear all previous calendar events before import.\nAppend — keep existing events and add new ones."
-msgstr "Calendar data already exists.\n\nReplace — clear all previous calendar events before import.\nAppend — keep existing events and add new ones."
-
-msgid "Copied!"
-msgstr "Copied!"
-
-msgid "Copy"
-msgstr "Copy"
-
-msgid "Download .md"
-msgstr "Download .md"
-
-msgid "Downloading…  You may cancel at any time; the download will resume from where it left off."
-msgstr "Downloading…  You may cancel at any time; the download will resume from where it left off."
-
-msgid "End now"
-msgstr "End now"
-
-msgid "Error"
-msgstr "Error"
-
-msgid "Invalid time range. The shift must be within {max_hours} hours (overnight is supported)."
-msgstr "Invalid time range. The shift must be within {max_hours} hours (overnight is supported)."
-
-msgid "Local model failed and no external API key / URL / model name is configured.\nPlease configure an external model in Settings → AI."
-msgstr "Local model failed and no external API key / URL / model name is configured.\nPlease configure an external model in Settings → AI."
-
-msgid "Local model is disabled."
-msgstr "Local model is disabled."
-
-msgid "Model"
-msgstr "Model"
-
-msgid "Only one model can be active at a time.  Delete the current model before switching."
-msgstr "Only one model can be active at a time.  Delete the current model before switching."
-
-msgid "Original"
-msgstr "Original"
-
-msgid "Regenerate"
-msgstr "Regenerate"
-
-msgid "Show overnight indicator"
-msgstr "Show overnight indicator"
-
-msgid "Start now"
-msgstr "Start now"
-
-msgid "When enabled, text processing uses the local model first — no data is sent to external services."
-msgstr "When enabled, text processing uses the local model first — no data is sent to external services."
+msgstr "⚙  設定"
 
 msgid "⚡ Quick Log"
-msgstr "⚡ Quick Log"
+msgstr "⚡ クイック記録"
+
+msgid "✓  Connected"
+msgstr "✓  接続成功"
+
+msgid "✓  Integrity verified"
+msgstr "✓  整合性検証完了"
+
+msgid "✓  Model imported"
+msgstr "✓  モデルをインポートしました"
+
+msgid "✗  {}"
+msgstr "API キーが設定されていません。"
+
+msgid "✨ AI Assist"
+msgstr "✨ AI アシスト"
+
+msgid "✨ AI Generate"
+msgstr "✨ AI 生成"
+
+msgid "🌍  Language"
+msgstr "🌍  言語"
+
+msgid "🌙  Dark mode"
+msgstr "🌙  ダークモード"
 
 msgid "🎨  Theme"
-msgstr "🎨  Theme"
+msgstr "🎨  テーマ"
+
+msgid "📅 Import Calendar (.ics)"
+msgstr "📅 カレンダーを取り込む (.ics)"
+
+msgid "📋 Templates"
+msgstr "📋 テンプレート"
+
+msgid "days"
+msgstr "日"
+
+msgid "key"
+msgstr "key"
+
+msgid "overnight_badge"
+msgstr "夜勤"
+
+msgid "tpl_no_templates"
+msgstr "利用可能なテンプレートがありません。"
+
+msgid "tpl_saved"
+msgstr "テンプレートを保存しました。"
+
+msgid "Not set"
+msgstr "未設定"
+
+msgid "Original Content"
+msgstr "変更前の内容"
+
+msgid "■ End"
+msgstr "■ 休憩終了"
+
+msgid "Break: {}m"
+msgstr "休憩中: {}分"
+
+msgid "Describe your work, or leave blank for AI generation"
+msgstr "今日の作業内容を入力、または空欄で自動生成"
+
+msgid "Normal"
+msgstr "通常勤務"
+
+msgid "Remote work"
+msgstr "在宅勤務"
+
+msgid "Business trip"
+msgstr "出張"
+
+msgid "Paid leave"
+msgstr "有給休暇"
+
+msgid "Comp leave"
+msgstr "代休"
+
+msgid "Sick leave"
+msgstr "病気休暇"
+
+msgid "No calendar events found for this period."
+msgstr "この期間のカレンダーイベントがありません。"
+
+msgid "Enable tray icon"
+msgstr "トレイ常駐を有効化"
+
+msgid "Enable menu bar icon"
+msgstr "メニューバー常駐を有効化"
+
+msgid "Only one model can be active at a time. To switch models, delete the current one first."
+msgstr "アクティブなモデルは一度に1つのみです。切り替えるには現在のモデルを削除してください。"
+
+msgid "A different model is already downloaded. It will be deleted before the new one downloads. Continue?"
+msgstr "別のモデルがダウンロード済みです。新しいモデルをダウンロードする前に削除されます。続行しますか？"
+
+msgid "Balanced (Q4_K_M)"
+msgstr "バランス型 (Q4_K_M)"
+
+msgid "Quantized 4-bit model — good balance of speed and quality."
+msgstr "4ビット量子化モデル — 速度と品質のバランスが良い。"
+
+msgid "✓ Recommended for most users"
+msgstr "✓ ほとんどのユーザーにおすすめ"
+
+msgid "Lightweight (Q2_K)"
+msgstr "軽量型 (Q2_K)"
+
+msgid "Highly compressed 2-bit model — smallest file, fastest."
+msgstr "高圧縮2ビットモデル — 最小ファイルサイズ、最速。"
+
+msgid "✓ Best for low-RAM machines"
+msgstr "✓ 低RAMマシンに最適"
+
+msgid "High Quality (Q8_0)"
+msgstr "高品質型 (Q8_0)"
+
+msgid "8-bit quantized model — highest quality output."
+msgstr "8ビット量子化モデル — 最高品質の出力。"
+
+msgid "✓ Best quality, requires more RAM"
+msgstr "✓ 最高品質、より多くのRAMが必要"
+
+msgid "Manage / Switch"
+msgstr "管理 / 切り替え"
+
+msgid "Checking dependencies…"
+msgstr "依存パッケージを確認中…"
+
+msgid "The local model will be downloaded once and cached for offline use.\nYou may cancel at any time; an interrupted download will resume next time."
+msgstr "ローカルモデルは一度だけダウンロードされ、オフラインで使用できます。\nいつでもキャンセルでき、中断したダウンロードは次回再開されます。"
+
+msgid "Re-download"
+msgstr "再ダウンロード"
+
+msgid "Starting download…"
+msgstr "ダウンロードを開始しています…"
+
+msgid "Verifying integrity…"
+msgstr "整合性を検証中…"
+
+msgid "✓  Download complete"
+msgstr "✓  ダウンロード完了"
+
+msgid "Download failed"
+msgstr "ダウンロード失敗"
+
+msgid "Download cancelled"
+msgstr "ダウンロードをキャンセルしました"
+
+msgid "Connection timed out"
+msgstr "接続タイムアウト"
+
+msgid "Disk full — free some space and retry"
+msgstr "ディスク容量不足 — 空き容量を確保して再試行してください"
+
+msgid "Loading local model…"
+msgstr "ローカルモデルを読み込み中…"
+
+msgid "Local model loaded ✓"
+msgstr "ローカルモデルを読み込みました ✓"
+
+msgid "Starting generation…"
+msgstr "生成を開始しています…"
+
+msgid "Local model failed to load"
+msgstr "ローカルモデルの読み込みに失敗しました"
+
+msgid "Local model not downloaded — go to Settings → AI"
+msgstr "ローカルモデル未ダウンロード — 設定 → AI でダウンロードしてください"
+
+msgid "llama-cpp-python not installed — run: pip install llama-cpp-python"
+msgstr "llama-cpp-python がインストールされていません — pip install llama-cpp-python を実行してください"
+
+msgid "Local model unavailable — using external model instead"
+msgstr "ローカルモデルを使用できないため、外部モデルを使用しました"
+
+msgid "Update check timed out"
+msgstr "アップデート確認がタイムアウトしました"
+
+msgid "✨  AI Generate"
+msgstr "✨  AI 生成"
+
+msgid "Generating…"
+msgstr "生成中…"
+
+msgid "AI error: {}"
+msgstr "AI エラー: {}"
+
+msgid "AI Report Generation"
+msgstr "AI レポート生成"
+
+msgid "Additional instructions (optional)"
+msgstr "追加指示（任意）"
+
+msgid "Supports Anthropic and OpenAI-compatible APIs. Examples: ChatGPT, Claude, Gemini, DeepSeek, Doubao, Qwen."
+msgstr "Anthropic と OpenAI 互換 API に対応しています。例: ChatGPT、Claude、Gemini、DeepSeek、Doubao、Qwen。"
+
+msgid "Initializing AI request..."
+msgstr "AIリクエストを初期化しています..."
+
+msgid "AI Generated Result"
+msgstr "AI生成結果"
+
+msgid "AI Generated Content"
+msgstr "AI生成内容"
+
+msgid "Local model failed and no external API key / URL / model name is configured. Please configure an external model in Settings → AI."
+msgstr "ローカルモデルが失敗し、外部APIキー / URL / モデル名が設定されていません。設定 → AI で外部モデルを設定してください。"
+
+msgid "API Key is not set."
+msgstr "API キーが設定されていません。"
+
+msgid "Please enter your API Key in Settings → AI."
+msgstr "設定 → AI で API キーを入力してください。"
+
+msgid "API Base URL is not set."
+msgstr "API ベース URL が設定されていません。"
+
+msgid "Please enter the API Base URL in Settings → AI."
+msgstr "設定 → AI で API ベース URL を入力してください。"
+
+msgid "Model name is not set."
+msgstr "モデル名が設定されていません。"
+
+msgid "Please enter a model name in Settings → AI."
+msgstr "設定 → AI でモデル名を入力してください。"
+
+msgid "⚠️ Request exceeded 30 seconds, processing may take a while. Please continue waiting..."
+msgstr "⚠️ 30秒を超えました。処理に時間がかかる場合があります。引き続きお待ちください..."
+
+msgid "✓ Request successful."
+msgstr "✓ リクエスト成功。"
+
+msgid "Preparing your AI request..."
+msgstr "AIリクエストを準備しています..."
+
+msgid "Preparing request for {model}..."
+msgstr "{model} 用のリクエストを準備しています..."
+
+msgid "Contacting AI provider for {model}..."
+msgstr "{model} に接続しています..."
+
+msgid "Waiting for AI response..."
+msgstr "AI の応答を待っています..."
+
+msgid "Processing AI response..."
+msgstr "AI 応答を処理しています..."
+
+msgid "Done."
+msgstr "完了。"
+
+msgid "Error:"
+msgstr "エラー："
+
+msgid "Template"
+msgstr "テンプレート"
+
+msgid "Insert Template"
+msgstr "テンプレ挿入"
+
+msgid "Use Template"
+msgstr "テンプレを使用"
+
+msgid "[Custom]"
+msgstr "[カスタム]"
+
+msgid "Edit Content"
+msgstr "内容を編集"
+
+msgid "Edit"
+msgstr "編集"
+
+msgid "Entry saved."
+msgstr "保存しました。"
+
+msgid "Please enter a description."
+msgstr "内容を入力してください。"
+
+msgid "Downloading local model..."
+msgstr "ローカルモデルをダウンロード中..."
+
+msgid "Generating with local model..."
+msgstr "ローカルモデルで生成中..."
+
+msgid "Installing local model dependencies..."
+msgstr "ローカルモデル依存関係をインストール中..."
+
+msgid "Loading local model..."
+msgstr "ローカルモデルを読み込み中..."
+
+msgid "Local model loaded."
+msgstr "ローカルモデルを読み込みました。"
+
+msgid "Local model not downloaded - go to Settings -> AI"
+msgstr "ローカルモデルは未ダウンロードです - 設定 -> AI を開いてください"
+
+msgid "Local model unavailable - using external model instead"
+msgstr "ローカルモデルは利用できないため外部モデルを使用します"
+
+msgid "Local model unavailable - using external model instead."
+msgstr "ローカルモデルは利用できないため外部モデルを使用します。"
+
+msgid "Model download completed."
+msgstr "モデルのダウンロードが完了しました。"
+
+msgid "Model hash verified."
+msgstr "モデルのハッシュを検証しました。"
+
+msgid "Verifying local model file..."
+msgstr "ローカルモデルファイルを検証中..."
+
+msgid "When enabled, text processing uses the local model first - no data is sent to external services."
+msgstr "有効時はテキスト処理でまずローカルモデルを使用し、外部サービスにデータは送信されません。"
+
+msgid "llama-cpp-python not installed - run: pip install llama-cpp-python"
+msgstr "llama-cpp-python が未インストールです - 実行: pip install llama-cpp-python"
+
+msgid "New version available: v{0}"
+msgstr "新しいバージョン v{0} が利用可能です"
+
+msgid "Local model is inactive"
+msgstr "Local model is inactive"

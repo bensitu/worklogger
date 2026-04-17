@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import struct
 from pathlib import Path
 
@@ -11,27 +12,36 @@ LANGS = ["en_US", "zh_CN", "zh_TW", "ja_JP", "ko_KR"]
 
 def _parse_po(po_text: str) -> dict[str, str]:
     pairs: dict[str, str] = {}
-    msgid = None
-    msgstr = None
-    mode = None
-    for raw in po_text.splitlines():
-        line = raw.strip()
-        if line.startswith("msgid "):
-            msgid = line[7:-1]
-            msgstr = None
-            mode = "id"
-        elif line.startswith("msgstr "):
-            msgstr = line[8:-1]
-            mode = "str"
-            if msgid is not None:
-                pairs[msgid] = msgstr
-        elif line.startswith('"') and line.endswith('"'):
-            frag = line[1:-1]
-            if mode == "id" and msgid is not None:
-                msgid += frag
-            elif mode == "str" and msgid is not None:
-                pairs[msgid] = pairs.get(msgid, "") + frag
-    pairs.pop("", None)
+    lines = po_text.splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+        if not line.startswith("msgid "):
+            i += 1
+            continue
+
+        msgid = ast.literal_eval(line[6:].strip())
+        i += 1
+        while i < len(lines) and lines[i].strip().startswith('"'):
+            msgid += ast.literal_eval(lines[i].strip())
+            i += 1
+
+        msgstr = ""
+        if i < len(lines) and lines[i].strip().startswith("msgstr "):
+            msgstr = ast.literal_eval(lines[i].strip()[7:].strip())
+            i += 1
+            while i < len(lines) and lines[i].strip().startswith('"'):
+                msgstr += ast.literal_eval(lines[i].strip())
+                i += 1
+
+        pairs[msgid] = msgstr
+
+    header = pairs.get("", "")
+    if not header:
+        pairs[""] = "Content-Type: text/plain; charset=UTF-8\\n"
+    elif "charset=" not in header.lower():
+        suffix = "" if header.endswith("\n") else "\n"
+        pairs[""] = header + suffix + "Content-Type: text/plain; charset=UTF-8\\n"
     return pairs
 
 

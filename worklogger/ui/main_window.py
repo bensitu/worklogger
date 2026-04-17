@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QTimer, Slot, QEvent
 from PySide6.QtGui import QColor, QPainter, QAction
 
-from utils.i18n import _, msg, LANG_KEYS, LANG_NAMES, set_language
+from utils.i18n import _, msg, LANG_NAMES, set_language
 from config.themes import make_qss, cell_pool, THEMES, THEME_KEYS, WT_BORDER_ACCENT
 from config.themes import CALENDAR_STYLE
 from config.constants import WORK_TYPE_KEYS, LEAVE_TYPES, MAX_SHIFT_HOURS
@@ -30,16 +30,19 @@ from utils.icon import make_icon
 
 STYLE_PRIO = ["weekend", "today", "holiday", "selected"]
 REQUIRED_COLS = {"date", "start", "end", "break", "note"}
+ThemeColors = tuple[str, str, str, str, str]
+ThemePalette = dict[bool, ThemeColors]
+ThemeMap = dict[str, ThemePalette]
 
 
-def _localize_msgbox_buttons(box: QMessageBox, t: dict) -> QMessageBox:
+def _localize_msgbox_buttons(box: QMessageBox, translator) -> QMessageBox:
     """Apply translated labels to common standard message box buttons."""
     mapping = {
-        QMessageBox.StandardButton.Yes: _("Yes"),
-        QMessageBox.StandardButton.No: _("No"),
-        QMessageBox.StandardButton.Save: _("Save"),
-        QMessageBox.StandardButton.Discard: _("Discard"),
-        QMessageBox.StandardButton.Cancel: _("Cancel"),
+        QMessageBox.StandardButton.Yes: translator("Yes"),
+        QMessageBox.StandardButton.No: translator("No"),
+        QMessageBox.StandardButton.Save: translator("Save"),
+        QMessageBox.StandardButton.Discard: translator("Discard"),
+        QMessageBox.StandardButton.Cancel: translator("Cancel"),
     }
     for button, label in mapping.items():
         btn = box.button(button)
@@ -95,6 +98,7 @@ class App(QWidget):
     def __init__(self):
         super().__init__()
         self.services = AppServices()
+        self.themes: ThemeMap = {name: dict(palette) for name, palette in THEMES.items()}
         self.today = date.today()
         self.current = self.today.replace(day=1)
         self.selected = self.today
@@ -120,11 +124,11 @@ class App(QWidget):
         # ── AppStore: single source of truth for all settings state ──────
         # All code that previously read self.lang / self.theme / self.dark /
         # self.work_hours should use self._state.<field> instead.
-        saved_lang = self.services.get_setting("lang", "en")
+        saved_lang = self.services.get_setting("lang", "en_US")
         saved_theme = self.services.get_setting("theme", "blue")
         _def_break = self._safe_float_setting("default_break", 1.0)
         self.store = AppStore(AppState(
-            lang=saved_lang if saved_lang in LANG_KEYS else "en",
+            lang=saved_lang if saved_lang in LANG_NAMES else "en_US",
             theme=saved_theme if saved_theme in THEME_KEYS else "blue",
             dark=self.services.get_setting("dark", "0") == "1",
             work_hours=self._safe_float_setting("work_hours", 8.0),
@@ -621,10 +625,16 @@ class App(QWidget):
         cur_wt = self.wt_combo.currentData() or "normal"
         self.wt_combo.blockSignals(True)
         self.wt_combo.clear()
-        wk = {"normal": "wt_normal", "remote": "wt_remote", "business_trip": "wt_business",
-              "paid_leave": "wt_paid", "comp_leave": "wt_comp", "sick_leave": "wt_sick"}
+        wk = {
+            "normal": _("Normal"),
+            "remote": _("Remote work"),
+            "business_trip": _("Business trip"),
+            "paid_leave": _("Paid leave"),
+            "comp_leave": _("Comp leave"),
+            "sick_leave": _("Sick leave"),
+        }
         for key in WORK_TYPE_KEYS:
-            self.wt_combo.addItem(msg(wk[key], key), key)
+            self.wt_combo.addItem(wk.get(key, key), key)
         idx = self.wt_combo.findData(cur_wt)
         if idx >= 0:
             self.wt_combo.setCurrentIndex(idx)
@@ -767,7 +777,7 @@ class App(QWidget):
         continue_btn = box.addButton(
             _("Continue"), QMessageBox.ButtonRole.ActionRole)
         cancel_btn = box.addButton(QMessageBox.StandardButton.Cancel)
-        _localize_msgbox_buttons(box, t)
+        _localize_msgbox_buttons(box, _)
         box.setDefaultButton(continue_btn)
         box.exec()
         clicked = box.clickedButton()
@@ -875,7 +885,7 @@ class App(QWidget):
                 lines.append(f"{h:.1f}{_("h")}")
             if ot > 0:
                 lines.append(f"{_("+")}{ot:.1f}{_("h")}")
-            abbr = {'normal': _(""), 'remote': _("WFH"), 'business_trip': _("Trip"), 'paid_leave': _("PTO"), 'comp_leave': _("CTO"), 'sick_leave': _("Sick")}.get(wt, "")
+            abbr = {'normal': "", 'remote': _("WFH"), 'business_trip': _("Trip"), 'paid_leave': _("PTO"), 'comp_leave': _("CTO"), 'sick_leave': _("Sick")}.get(wt, "")
             if abbr:
                 lines.append(abbr)
             btn = CalendarDayButton("\n".join(lines))
@@ -1089,7 +1099,7 @@ class App(QWidget):
                 QMessageBox.StandardButton.Cancel
             )
             box.setDefaultButton(QMessageBox.StandardButton.Save)
-            _localize_msgbox_buttons(box, t)
+            _localize_msgbox_buttons(box, _)
             ans = box.exec()
             if ans == QMessageBox.Save:
                 self.save()
@@ -1182,7 +1192,7 @@ class App(QWidget):
 
     def _export_csv(self):
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        path, _ = QFileDialog.getSaveFileName(
+        path, _selected_filter = QFileDialog.getSaveFileName(
             self, _("Export CSV"), f"worklog_{ts}.csv", "CSV (*.csv)")
         if not path:
             return
@@ -1195,7 +1205,7 @@ class App(QWidget):
             QMessageBox.critical(self, _("Export CSV"), str(exc))
 
     def _import_csv(self):
-        path, _ = QFileDialog.getOpenFileName(
+        path, _selected_filter = QFileDialog.getOpenFileName(
             self, _("Import CSV"), "", "CSV (*.csv)")
         if not path:
             return
@@ -1206,7 +1216,7 @@ class App(QWidget):
         box.setStandardButtons(
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         box.setDefaultButton(QMessageBox.StandardButton.No)
-        _localize_msgbox_buttons(box, t)
+        _localize_msgbox_buttons(box, _)
         if box.exec() != QMessageBox.Yes:
             return
         try:
@@ -1232,7 +1242,7 @@ class App(QWidget):
         self.render()
 
     def _import_ics(self):
-        path, _ = QFileDialog.getOpenFileName(
+        path, _selected_filter = QFileDialog.getOpenFileName(
             self, _("Import .ics"), "", "iCalendar (*.ics)")
         if not path:
             return
@@ -1262,7 +1272,7 @@ class App(QWidget):
                     _("Append"),
                     QMessageBox.ButtonRole.AcceptRole)
                 cancel_btn = box.addButton(QMessageBox.StandardButton.Cancel)
-                _localize_msgbox_buttons(box, t)
+                _localize_msgbox_buttons(box, _)
                 box.setDefaultButton(append_btn)
                 box.exec()
                 clicked = box.clickedButton()
@@ -1302,7 +1312,7 @@ class App(QWidget):
 
     def _export_ics(self):
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        path, _ = QFileDialog.getSaveFileName(
+        path, _selected_filter = QFileDialog.getSaveFileName(
             self, _("Export .ics"), f"worklog_{ts}.ics", "iCalendar (*.ics)")
         if not path:
             return

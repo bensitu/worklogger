@@ -15,13 +15,13 @@ def _div() -> QFrame:
     return f
 
 
-def _localize_msgbox_buttons(box: QMessageBox, t: dict) -> QMessageBox:
+def _localize_msgbox_buttons(box: QMessageBox, translator) -> QMessageBox:
     mapping = {
-        QMessageBox.StandardButton.Yes: _("Yes"),
-        QMessageBox.StandardButton.No: _("No"),
-        QMessageBox.StandardButton.Save: _("Save"),
-        QMessageBox.StandardButton.Discard: _("Discard"),
-        QMessageBox.StandardButton.Cancel: _("Cancel"),
+        QMessageBox.StandardButton.Yes: translator("Yes"),
+        QMessageBox.StandardButton.No: translator("No"),
+        QMessageBox.StandardButton.Save: translator("Save"),
+        QMessageBox.StandardButton.Discard: translator("Discard"),
+        QMessageBox.StandardButton.Cancel: translator("Cancel"),
     }
     for button, label in mapping.items():
         btn = box.button(button)
@@ -34,7 +34,7 @@ def _get_ai_params(app, secondary: bool = False):
     return app.services.resolve_ai_params(secondary=secondary)
 
 
-def _format_quick_logs(logs: list[dict], lang: str = "en", mode: str = "summary") -> str:
+def _format_quick_logs(logs: list[dict], lang: str = "en_US", mode: str = "summary") -> str:
     return format_quick_logs(logs, lang, mode)
 
 

@@ -5,7 +5,7 @@ from typing import Callable
 
 @dataclass(frozen=True)
 class AppState:
-    lang: str = "en"
+    lang: str = "en_US"
     theme: str = "blue"
     dark: bool = False
     work_hours: float = 8.0

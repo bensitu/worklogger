@@ -30,6 +30,8 @@ _LOCAL_FAIL_KEYS = frozenset({
     "local_model_load_fail",
     "local_model_not_downloaded",
     "local_model_import_error",
+    "ai_assist.local_model_not_running",
+    "ai_assist_local_model_not_running",
 })
 
 
@@ -61,7 +63,7 @@ class AIProgressDialog(QDialog):
         self._timeout_timer.timeout.connect(self._on_timeout)
 
     def append(self, text_key: str, **kwargs):
-        text = msg(text_key, text_key)
+        text = msg(text_key)
         try:
             text = text.format(**kwargs)
         except Exception:
@@ -72,7 +74,7 @@ class AIProgressDialog(QDialog):
         QApplication.processEvents()
 
     def set_error(self, short_key: str, detail: str):
-        short = msg(short_key, short_key)
+        short = msg(short_key)
         self.append(f"\n[ERROR] {short}")
         if detail:
             self.log.append(detail)
@@ -106,16 +108,40 @@ class AIProgressDialog(QDialog):
         """
         dlg       = cls(parent, lang, title)
         use_local = (api_key == LOCAL_MODEL_SENTINEL)
-
-        dlg.append("local_model_loading" if use_local else "ai_init")
         local_enabled = False
+        local_ready = False
+        local_not_running_logged = False
         if services is not None:
             try:
+                from services.local_model_service import should_use_local_model
                 local_enabled = services.get_setting("local_model_enabled", "0") == "1"
+                local_ready = should_use_local_model(services)
             except Exception:
                 local_enabled = False
-        if not use_local and not local_enabled:
-            dlg.append("ai_assist_local_model_not_running")
+                local_ready = False
+
+        def _cloud_params() -> tuple[str, str, str]:
+            if services is None:
+                return "", "", ""
+            try:
+                return (
+                    services.get_secret("ai_api_key") or "",
+                    services.get_setting("ai_base_url", "") or "",
+                    services.get_setting("ai_model", "") or "",
+                )
+            except Exception:
+                return "", "", ""
+
+        if use_local and not local_ready:
+            dlg.append("ai_assist.local_model_not_running")
+            local_not_running_logged = True
+            ext_key, ext_url, ext_mdl = _cloud_params()
+            if ext_key and ext_url and ext_mdl:
+                api_key, base_url, model = ext_key, ext_url, ext_mdl
+                use_local = False
+        dlg.append("local_model_loading" if use_local else "ai_init")
+        if not use_local and (not local_enabled or not local_ready) and not local_not_running_logged:
+            dlg.append("ai_assist.local_model_not_running")
         dlg._timeout_timer.start(30000)
 
         def on_status(msg_en: str):
@@ -145,22 +171,15 @@ class AIProgressDialog(QDialog):
             if short in _LOCAL_FAIL_KEYS:
                 # ── Automatic fallback to external model ──────────────────
                 # 1. Surface the local-model failure message in the log.
-                friendly_local = msg(short, short)
+                friendly_local = msg(short)
                 dlg.log.append(f"[{_("Local model")}] "
                                f"{friendly_local}")
                 # 2. Announce fallback attempt.
-                dlg.append("ai_assist_local_model_not_running")
+                dlg.append("ai_assist.local_model_not_running")
                 dlg.append("local_model_fallback_toast")
 
                 # 3. Fetch external model params.
-                ext_key = ext_url = ext_mdl = ""
-                if services is not None:
-                    try:
-                        ext_key = services.get_secret("ai_api_key") or ""
-                        ext_url = services.get_setting("ai_base_url", "") or ""
-                        ext_mdl = services.get_setting("ai_model",    "") or ""
-                    except Exception:
-                        pass
+                ext_key, ext_url, ext_mdl = _cloud_params()
 
                 if ext_key and ext_url and ext_mdl:
                     # 4a. External model is configured — start worker.

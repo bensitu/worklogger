@@ -1,19 +1,5 @@
-
-
-msgid "days"
-msgstr "days"
-
-msgid "key"
-msgstr "key"
-
-msgid "overnight_badge"
-msgstr "overnight_badge"
-
-msgid "tpl_no_templates"
-msgstr "tpl_no_templates"
-
-msgid "tpl_saved"
-msgstr "tpl_saved"
+msgid ""
+msgstr "Language: en_US\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
 
 msgid "\n\nSkipped {} rows:\n{}"
 msgstr "\n\nSkipped {} rows:\n{}"
@@ -27,14 +13,32 @@ msgstr "+"
 msgid "1.0"
 msgstr "1.0"
 
+msgid "A different model is already downloaded.  It will be deleted before downloading the new one.  Continue?"
+msgstr "A different model is already downloaded.  It will be deleted before downloading the new one.  Continue?"
+
 msgid "A privacy-first desktop work-hours tracker with AI-powered reporting."
 msgstr "A privacy-first desktop work-hours tracker with AI-powered reporting."
 
 msgid "AI"
 msgstr "AI"
 
+msgid "AI Generated"
+msgstr "AI Generated"
+
+msgid "AI Result"
+msgstr "AI Result"
+
+msgid "API Base URL"
+msgstr "API Base URL"
+
+msgid "API Key"
+msgstr "API Key"
+
 msgid "About"
 msgstr "About"
+
+msgid "Add"
+msgstr "Add"
 
 msgid "Analytics"
 msgstr "Analytics"
@@ -81,6 +85,9 @@ msgstr "Break done"
 msgid "Break hours cannot be negative."
 msgstr "Break hours cannot be negative."
 
+msgid "Break time must be less than the total shift duration."
+msgstr "Break time must be less than the total shift duration."
+
 msgid "Built-in"
 msgstr "Built-in"
 
@@ -92,6 +99,9 @@ msgstr "CTO"
 
 msgid "Calendar Sync"
 msgstr "Calendar Sync"
+
+msgid "Calendar data already exists.\n\nReplace — clear all previous calendar events before import.\nAppend — keep existing events and add new ones."
+msgstr "Calendar data already exists.\n\nReplace — clear all previous calendar events before import.\nAppend — keep existing events and add new ones."
 
 msgid "Calendar events cleared."
 msgstr "Calendar events cleared."
@@ -125,6 +135,12 @@ msgstr "Confirm"
 
 msgid "Continue"
 msgstr "Continue"
+
+msgid "Copied!"
+msgstr "Copied!"
+
+msgid "Copy"
+msgstr "Copy"
 
 msgid "Could not check for updates: {}"
 msgstr "Could not check for updates: {}"
@@ -177,8 +193,14 @@ msgstr "Done"
 msgid "Download"
 msgstr "Download"
 
+msgid "Download .md"
+msgstr "Download .md"
+
 msgid "Download Local Model"
 msgstr "Download Local Model"
+
+msgid "Downloading…  You may cancel at any time; the download will resume from where it left off."
+msgstr "Downloading…  You may cancel at any time; the download will resume from where it left off."
 
 msgid "Enable local model"
 msgstr "Enable local model"
@@ -186,11 +208,17 @@ msgstr "Enable local model"
 msgid "End"
 msgstr "End"
 
+msgid "End now"
+msgstr "End now"
+
 msgid "End time (opt.)"
 msgstr "End time (opt.)"
 
 msgid "Ended"
 msgstr "Ended"
+
+msgid "Error"
+msgstr "Error"
 
 msgid "Expand notes"
 msgstr "Expand notes"
@@ -270,6 +298,9 @@ msgstr "Integrity check failed — file may be corrupted"
 msgid "Integrity failed"
 msgstr "Integrity failed"
 
+msgid "Invalid time range. The shift must be within {max_hours} hours (overnight is supported)."
+msgstr "Invalid time range. The shift must be within {max_hours} hours (overnight is supported)."
+
 msgid "Jan"
 msgstr "Jan"
 
@@ -300,6 +331,12 @@ msgstr "Local Model"
 msgid "Local model"
 msgstr "Local model"
 
+msgid "Local model failed and no external API key / URL / model name is configured.\nPlease configure an external model in Settings → AI."
+msgstr "Local model failed and no external API key / URL / model name is configured.\nPlease configure an external model in Settings → AI."
+
+msgid "Local model is disabled."
+msgstr "Local model is disabled."
+
 msgid "Manual Input"
 msgstr "Manual Input"
 
@@ -314,6 +351,9 @@ msgstr "May"
 
 msgid "Missing columns: {}"
 msgstr "Missing columns: {}"
+
+msgid "Model"
+msgstr "Model"
 
 msgid "Mon"
 msgstr "Mon"
@@ -393,8 +433,14 @@ msgstr "October"
 msgid "On break"
 msgstr "On break"
 
+msgid "Only one model can be active at a time.  Delete the current model before switching."
+msgstr "Only one model can be active at a time.  Delete the current model before switching."
+
 msgid "Open"
 msgstr "Open"
+
+msgid "Original"
+msgstr "Original"
 
 msgid "Overnight"
 msgstr "Overnight"
@@ -438,6 +484,9 @@ msgstr "Quit"
 msgid "Ready"
 msgstr "Ready"
 
+msgid "Regenerate"
+msgstr "Regenerate"
+
 msgid "Replace"
 msgstr "Replace"
 
@@ -477,6 +526,9 @@ msgstr "September"
 msgid "Settings"
 msgstr "Settings"
 
+msgid "Show overnight indicator"
+msgstr "Show overnight indicator"
+
 msgid "Sick"
 msgstr "Sick"
 
@@ -485,6 +537,9 @@ msgstr "Standard hours (h)"
 
 msgid "Start"
 msgstr "Start"
+
+msgid "Start now"
+msgstr "Start now"
 
 msgid "Start week on Monday"
 msgstr "Start week on Monday"
@@ -567,6 +622,9 @@ msgstr "Weekly Work Report  {start} – {end}"
 msgid "What are you doing?"
 msgstr "What are you doing?"
 
+msgid "When enabled, text processing uses the local model first — no data is sent to external services."
+msgstr "When enabled, text processing uses the local model first — no data is sent to external services."
+
 msgid "Work Log"
 msgstr "Work Log"
 
@@ -624,6 +682,9 @@ msgstr "▶ Break"
 msgid "⚙  Settings"
 msgstr "⚙  Settings"
 
+msgid "⚡ Quick Log"
+msgstr "⚡ Quick Log"
+
 msgid "✓  Connected"
 msgstr "✓  Connected"
 
@@ -648,86 +709,302 @@ msgstr "🌍  Language"
 msgid "🌙  Dark mode"
 msgstr "🌙  Dark mode"
 
+msgid "🎨  Theme"
+msgstr "🎨  Theme"
+
 msgid "📅 Import Calendar (.ics)"
 msgstr "📅 Import Calendar (.ics)"
 
 msgid "📋 Templates"
 msgstr "📋 Templates"
 
-msgid "A different model is already downloaded.  It will be deleted before downloading the new one.  Continue?"
-msgstr "A different model is already downloaded.  It will be deleted before downloading the new one.  Continue?"
+msgid "days"
+msgstr "days"
 
-msgid "AI Generated"
-msgstr "AI Generated"
+msgid "key"
+msgstr "key"
 
-msgid "AI Result"
-msgstr "AI Result"
+msgid "overnight_badge"
+msgstr "overnight_badge"
 
-msgid "API Base URL"
-msgstr "API Base URL"
+msgid "tpl_no_templates"
+msgstr "tpl_no_templates"
 
-msgid "API Key"
-msgstr "API Key"
+msgid "tpl_saved"
+msgstr "tpl_saved"
 
-msgid "Add"
-msgstr "Add"
+msgid "Not set"
+msgstr "Not set"
 
-msgid "Break time must be less than the total shift duration."
-msgstr "Break time must be less than the total shift duration."
+msgid "Original Content"
+msgstr "Original Content"
 
-msgid "Calendar data already exists.\n\nReplace — clear all previous calendar events before import.\nAppend — keep existing events and add new ones."
-msgstr "Calendar data already exists.\n\nReplace — clear all previous calendar events before import.\nAppend — keep existing events and add new ones."
+msgid "■ End"
+msgstr "■ End"
 
-msgid "Copied!"
-msgstr "Copied!"
+msgid "Break: {}m"
+msgstr "Break: {}m"
 
-msgid "Copy"
-msgstr "Copy"
+msgid "Describe your work, or leave blank for AI generation"
+msgstr "Describe your work, or leave blank for AI generation"
 
-msgid "Download .md"
-msgstr "Download .md"
+msgid "Normal"
+msgstr "Normal"
 
-msgid "Downloading…  You may cancel at any time; the download will resume from where it left off."
-msgstr "Downloading…  You may cancel at any time; the download will resume from where it left off."
+msgid "Remote work"
+msgstr "Remote work"
 
-msgid "End now"
-msgstr "End now"
+msgid "Business trip"
+msgstr "Business trip"
 
-msgid "Error"
-msgstr "Error"
+msgid "Paid leave"
+msgstr "Paid leave"
 
-msgid "Invalid time range. The shift must be within {max_hours} hours (overnight is supported)."
-msgstr "Invalid time range. The shift must be within {max_hours} hours (overnight is supported)."
+msgid "Comp leave"
+msgstr "Comp leave"
 
-msgid "Local model failed and no external API key / URL / model name is configured.\nPlease configure an external model in Settings → AI."
-msgstr "Local model failed and no external API key / URL / model name is configured.\nPlease configure an external model in Settings → AI."
+msgid "Sick leave"
+msgstr "Sick leave"
 
-msgid "Local model is disabled."
-msgstr "Local model is disabled."
+msgid "No calendar events found for this period."
+msgstr "No calendar events found for this period."
 
-msgid "Model"
-msgstr "Model"
+msgid "Enable tray icon"
+msgstr "Enable tray icon"
 
-msgid "Only one model can be active at a time.  Delete the current model before switching."
-msgstr "Only one model can be active at a time.  Delete the current model before switching."
+msgid "Enable menu bar icon"
+msgstr "Enable menu bar icon"
 
-msgid "Original"
-msgstr "Original"
+msgid "Only one model can be active at a time. To switch models, delete the current one first."
+msgstr "Only one model can be active at a time. To switch models, delete the current one first."
 
-msgid "Regenerate"
-msgstr "Regenerate"
+msgid "A different model is already downloaded. It will be deleted before the new one downloads. Continue?"
+msgstr "A different model is already downloaded. It will be deleted before the new one downloads. Continue?"
 
-msgid "Show overnight indicator"
-msgstr "Show overnight indicator"
+msgid "Balanced (Q4_K_M)"
+msgstr "Balanced (Q4_K_M)"
 
-msgid "Start now"
-msgstr "Start now"
+msgid "Quantized 4-bit model — good balance of speed and quality."
+msgstr "Quantized 4-bit model — good balance of speed and quality."
 
-msgid "When enabled, text processing uses the local model first — no data is sent to external services."
-msgstr "When enabled, text processing uses the local model first — no data is sent to external services."
+msgid "✓ Recommended for most users"
+msgstr "✓ Recommended for most users"
 
-msgid "⚡ Quick Log"
-msgstr "⚡ Quick Log"
+msgid "Lightweight (Q2_K)"
+msgstr "Lightweight (Q2_K)"
 
-msgid "🎨  Theme"
-msgstr "🎨  Theme"
+msgid "Highly compressed 2-bit model — smallest file, fastest."
+msgstr "Highly compressed 2-bit model — smallest file, fastest."
+
+msgid "✓ Best for low-RAM machines"
+msgstr "✓ Best for low-RAM machines"
+
+msgid "High Quality (Q8_0)"
+msgstr "High Quality (Q8_0)"
+
+msgid "8-bit quantized model — highest quality output."
+msgstr "8-bit quantized model — highest quality output."
+
+msgid "✓ Best quality, requires more RAM"
+msgstr "✓ Best quality, requires more RAM"
+
+msgid "Manage / Switch"
+msgstr "Manage / Switch"
+
+msgid "Checking dependencies…"
+msgstr "Checking dependencies…"
+
+msgid "The local model will be downloaded once and cached for offline use.\nYou may cancel at any time; an interrupted download will resume next time."
+msgstr "The local model will be downloaded once and cached for offline use.\nYou may cancel at any time; an interrupted download will resume next time."
+
+msgid "Re-download"
+msgstr "Re-download"
+
+msgid "Starting download…"
+msgstr "Starting download…"
+
+msgid "Verifying integrity…"
+msgstr "Verifying integrity…"
+
+msgid "✓  Download complete"
+msgstr "✓  Download complete"
+
+msgid "Download failed"
+msgstr "Download failed"
+
+msgid "Download cancelled"
+msgstr "Download cancelled"
+
+msgid "Connection timed out"
+msgstr "Connection timed out"
+
+msgid "Disk full — free some space and retry"
+msgstr "Disk full — free some space and retry"
+
+msgid "Loading local model…"
+msgstr "Loading local model…"
+
+msgid "Local model loaded ✓"
+msgstr "Local model loaded ✓"
+
+msgid "Starting generation…"
+msgstr "Starting generation…"
+
+msgid "Local model failed to load"
+msgstr "Local model failed to load"
+
+msgid "Local model not downloaded — go to Settings → AI"
+msgstr "Local model not downloaded — go to Settings → AI"
+
+msgid "llama-cpp-python not installed — run: pip install llama-cpp-python"
+msgstr "llama-cpp-python not installed — run: pip install llama-cpp-python"
+
+msgid "Local model unavailable — using external model instead"
+msgstr "Local model unavailable — using external model instead"
+
+msgid "Update check timed out"
+msgstr "Update check timed out"
+
+msgid "✨  AI Generate"
+msgstr "✨  AI Generate"
+
+msgid "Generating…"
+msgstr "Generating…"
+
+msgid "AI error: {}"
+msgstr "AI error: {}"
+
+msgid "AI Report Generation"
+msgstr "AI Report Generation"
+
+msgid "Additional instructions (optional)"
+msgstr "Additional instructions (optional)"
+
+msgid "Supports Anthropic and OpenAI-compatible APIs. Examples: ChatGPT, Claude, Gemini, DeepSeek, Doubao, Qwen."
+msgstr "Supports Anthropic and OpenAI-compatible APIs. Examples: ChatGPT, Claude, Gemini, DeepSeek, Doubao, Qwen."
+
+msgid "Initializing AI request..."
+msgstr "Initializing AI request..."
+
+msgid "AI Generated Result"
+msgstr "AI Generated Result"
+
+msgid "AI Generated Content"
+msgstr "AI Generated Content"
+
+msgid "Local model failed and no external API key / URL / model name is configured. Please configure an external model in Settings → AI."
+msgstr "Local model failed and no external API key / URL / model name is configured. Please configure an external model in Settings → AI."
+
+msgid "API Key is not set."
+msgstr "API Key is not set."
+
+msgid "Please enter your API Key in Settings → AI."
+msgstr "Please enter your API Key in Settings → AI."
+
+msgid "API Base URL is not set."
+msgstr "API Base URL is not set."
+
+msgid "Please enter the API Base URL in Settings → AI."
+msgstr "Please enter the API Base URL in Settings → AI."
+
+msgid "Model name is not set."
+msgstr "Model name is not set."
+
+msgid "Please enter a model name in Settings → AI."
+msgstr "Please enter a model name in Settings → AI."
+
+msgid "⚠️ Request exceeded 30 seconds, processing may take a while. Please continue waiting..."
+msgstr "⚠️ Request exceeded 30 seconds, processing may take a while. Please continue waiting..."
+
+msgid "✓ Request successful."
+msgstr "✓ Request successful."
+
+msgid "Preparing your AI request..."
+msgstr "Preparing your AI request..."
+
+msgid "Preparing request for {model}..."
+msgstr "Preparing request for {model}..."
+
+msgid "Contacting AI provider for {model}..."
+msgstr "Contacting AI provider for {model}..."
+
+msgid "Waiting for AI response..."
+msgstr "Waiting for AI response..."
+
+msgid "Processing AI response..."
+msgstr "Processing AI response..."
+
+msgid "Done."
+msgstr "Done."
+
+msgid "Error:"
+msgstr "Error:"
+
+msgid "Template"
+msgstr "Template"
+
+msgid "Insert Template"
+msgstr "Insert Template"
+
+msgid "Use Template"
+msgstr "Use Template"
+
+msgid "[Custom]"
+msgstr "[Custom]"
+
+msgid "Edit Content"
+msgstr "Edit Content"
+
+msgid "Edit"
+msgstr "Edit"
+
+msgid "Entry saved."
+msgstr "Entry saved."
+
+msgid "Please enter a description."
+msgstr "Please enter a description."
+
+msgid "Downloading local model..."
+msgstr "Downloading local model..."
+
+msgid "Generating with local model..."
+msgstr "Generating with local model..."
+
+msgid "Installing local model dependencies..."
+msgstr "Installing local model dependencies..."
+
+msgid "Loading local model..."
+msgstr "Loading local model..."
+
+msgid "Local model loaded."
+msgstr "Local model loaded."
+
+msgid "Local model not downloaded - go to Settings -> AI"
+msgstr "Local model not downloaded - go to Settings -> AI"
+
+msgid "Local model unavailable - using external model instead"
+msgstr "Local model unavailable - using external model instead"
+
+msgid "Local model unavailable - using external model instead."
+msgstr "Local model unavailable - using external model instead."
+
+msgid "Model download completed."
+msgstr "Model download completed."
+
+msgid "Model hash verified."
+msgstr "Model hash verified."
+
+msgid "Verifying local model file..."
+msgstr "Verifying local model file..."
+
+msgid "When enabled, text processing uses the local model first - no data is sent to external services."
+msgstr "When enabled, text processing uses the local model first - no data is sent to external services."
+
+msgid "llama-cpp-python not installed - run: pip install llama-cpp-python"
+msgstr "llama-cpp-python not installed - run: pip install llama-cpp-python"
+
+msgid "New version available: v{0}"
+msgstr "New version available: v{0}"
+
+msgid "Local model is inactive"
+msgstr "Local model is inactive"

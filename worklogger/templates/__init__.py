@@ -8,16 +8,16 @@ import shutil
 import time
 
 LANG_FOLDER_MAP: dict[str, str] = {
-    "en":    "en",
-    "ja":    "ja",
-    "zh":    "zh_cn",
-    "zh_tw": "zh_tw",
-    "ko":    "ko",
+    "en_US": "en_US",
+    "ja_JP": "ja_JP",
+    "zh_CN": "zh_CN",
+    "zh_TW": "zh_TW",
+    "ko_KR": "ko_KR",
 }
 
 
 def _templates_dir() -> str:
-    """Return the directory that directly contains en/, ja/, zh_cn/ etc.
+    """Return the directory that directly contains template language folders.
 
     Dev:     <project>/worklogger/templates/  (this file's directory)
     Frozen:  _MEIPASS/templates/
@@ -83,14 +83,14 @@ def get_template(lang: str, type_key: str) -> str:
     Falls back to English if the lang-specific file is missing or empty.
     """
     tdir   = _templates_dir()
-    folder = LANG_FOLDER_MAP.get(lang, "en")
+    folder = LANG_FOLDER_MAP.get(lang, "en_US")
     path   = os.path.join(tdir, folder, type_key, "default.md")
     if os.path.isfile(path):
         content = _read(path)
         if content:
             return content
     # Content loading can still fall back to English.
-    en_path = os.path.join(tdir, "en", type_key, "default.md")
+    en_path = os.path.join(tdir, "en_US", type_key, "default.md")
     if os.path.isfile(en_path):
         return _read(en_path)
     return ""
@@ -105,7 +105,7 @@ def list_builtin_template_types(lang: str) -> list[str]:
     types should not appear when another language is selected.
     """
     tdir = _templates_dir()
-    folder = LANG_FOLDER_MAP.get(lang, "en")
+    folder = LANG_FOLDER_MAP.get(lang, "en_US")
     found: set[str] = set()
     base_dir = os.path.join(tdir, folder)
     if not os.path.isdir(base_dir):

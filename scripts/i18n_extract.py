@@ -69,7 +69,8 @@ def _esc_po(s: str) -> str:
 
 def build_pot() -> None:
     msg_defaults = _load_msg_defaults()
-    keys: set[str] = set()
+    # Always include runtime fallback strings from MSG_DEFAULTS.
+    keys: set[str] = {v for v in msg_defaults.values() if isinstance(v, str)}
     for fp in _iter_py_files():
         keys |= _collect_strings(fp.read_text(encoding="utf-8"), msg_defaults)
     lines = [

@@ -172,7 +172,7 @@ def load_catalog(models_dir: Optional[Path] = None) -> list:
     Generic i18n fallback
     ~~~~~~~~~~~~~~~~~~~~~
     Entries that omit language keys for ``desc`` / ``pros`` fall back to the
-    ``"en"`` value (or the raw string if that is also absent).  This means
+    ``"en_US"`` value (or the raw string if that is also absent).  This means
     user-added models without translations still render gracefully.
     """
     if models_dir is None:
@@ -210,8 +210,8 @@ def load_catalog(models_dir: Optional[Path] = None) -> list:
             "size_mb": 1850,
             "ram_gb":  3,
             "default": True,
-            "desc":    {"en": "4-bit quantized — balanced speed and quality."},
-            "pros":    {"en": "✓ Recommended for most users"},
+            "desc":    {"en_US": "4-bit quantized — balanced speed and quality."},
+            "pros":    {"en_US": "✓ Recommended for most users"},
         }
     ]
 
@@ -233,14 +233,26 @@ def get_catalog_entry(entry_id: str,
 def localize_field(entry: dict, field: str, lang: str) -> str:
     """Extract a localised string from a catalog entry's dict field.
 
-    Resolution order: ``entry[field][lang]`` → ``entry[field]["en"]``
-    → ``entry[field]`` (if str) → ``""``.
+    Resolution order: ``entry[field][lang]`` → ``entry[field]["en_US"]``
+    → first available value → ``entry[field]`` (if str) → ``""``.
 
     This provides the generic i18n fallback required by spec §4.
     """
     value = entry.get(field, "")
     if isinstance(value, dict):
-        return value.get(lang) or value.get("en") or next(iter(value.values()), "")
+        lang_key = str(lang or "")
+        order_map = {
+            "en_US": ("en_US",),
+            "ja_JP": ("ja_JP",),
+            "ko_KR": ("ko_KR",),
+            "zh_CN": ("zh_CN",),
+            "zh_TW": ("zh_TW",),
+        }
+        for key in order_map.get(lang_key, (lang_key,)):
+            val = value.get(key)
+            if val:
+                return str(val)
+        return value.get("en_US") or next(iter(value.values()), "")
     return str(value) if value else ""
 
 
@@ -693,7 +705,7 @@ class LocalModelService:
 
     # -- lazy provider -------------------------------------------------------
 
-    def load_provider(self) -> LLMProvider:
+    def load_provider(self, services=None) -> LLMProvider:
         """Return loaded provider; raises on failure.
 
         This is the *only* place the Llama instance is created.  It is
@@ -701,6 +713,8 @@ class LocalModelService:
         requested (lazy loading).
         """
         with self._load_lock:
+            if services is not None and not is_local_model_enabled(services):
+                raise RuntimeError("ai_assist.local_model_not_running")
             if self._provider and self._provider.is_available():
                 return self._provider
             manifest = load_manifest(self._models_dir)
@@ -734,11 +748,12 @@ class LocalModelService:
 
     def generate(self, messages: list,
                  temperature: float = 0.3,
-                 max_tokens: int = 1024) -> str:
+                 max_tokens: int = 1024,
+                 services=None) -> str:
         """Load provider lazily, run inference, return stripped reply."""
         if not messages:
             raise ValueError("messages must not be empty.")
-        provider = self.load_provider()
+        provider = self.load_provider(services=services)
         return provider.generate(messages,
                                   temperature=temperature,
                                   max_tokens=max_tokens)
@@ -810,8 +825,8 @@ class LocalModelService:
                 "ram_gb":  0,
                 "n_ctx":   8192,
                 "default": False,
-                "desc":    {"en": f"Manually imported: {src_filename}"},
-                "pros":    {"en": "✓ Custom model"},
+                "desc":    {"en_US": f"Manually imported: {src_filename}"},
+                "pros":    {"en_US": "✓ Custom model"},
             }
             catalog.append(new_cat_entry)
             _save_catalog(catalog, self._models_dir)
@@ -868,9 +883,19 @@ def should_use_local_model(services) -> bool:
     if services is None:
         return False
     try:
-        if services.get_setting("local_model_enabled", "0") != "1":
+        if not is_local_model_enabled(services):
             return False
         return verify_model_file()
+    except Exception:
+        return False
+
+
+def is_local_model_enabled(services) -> bool:
+    """Return True when the local model global switch is enabled."""
+    if services is None:
+        return False
+    try:
+        return str(services.get_setting("local_model_enabled", "0")) == "1"
     except Exception:
         return False
 

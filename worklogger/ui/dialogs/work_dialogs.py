@@ -305,7 +305,7 @@ class ReportDialog(QDialog):
         else:
             y, m = app.current.year, app.current.month
             from calendar import monthrange
-            _, last = monthrange(y, m)
+            _first_weekday, last = monthrange(y, m)
             cal_evs = app.services.get_calendar_events_for_range(
                 f"{y}-{m:02d}-01", f"{y}-{m:02d}-{last:02d}")
             quick_logs = app.services.quick_logs_for_range(
@@ -384,7 +384,7 @@ class ReportDialog(QDialog):
         ts = dt.now().strftime("%Y%m%d_%H%M%S")
         label = "weekly" if idx == 0 else "monthly"
         defn = f"report_{label}_{ts}.md"
-        path, _ = QFileDialog.getSaveFileName(
+        path, _dialog_filter = QFileDialog.getSaveFileName(
             self, msg("report_download"), defn, "Markdown (*.md)")
         if not path:
             return
@@ -472,6 +472,14 @@ class ChartDialog(QDialog):
         wk_map = {"normal": "wt_normal", "remote": "wt_remote",
                   "business_trip": "wt_business", "paid_leave": "wt_paid",
                   "comp_leave": "wt_comp", "sick_leave": "wt_sick"}
+        wk_fallback = {
+            "wt_normal": "Normal",
+            "wt_remote": "Remote work",
+            "wt_business": "Business trip",
+            "wt_paid": "Paid leave",
+            "wt_comp": "Comp leave",
+            "wt_sick": "Sick leave",
+        }
         for rec in sorted(app.services.month_records(f"{y}-{m:02d}"),
                           key=lambda r: r.date):
             h = calc_hours(rec.start, rec.end, rec.break_hours) if rec.has_times else 0.0
@@ -485,7 +493,10 @@ class ChartDialog(QDialog):
                          "start": rec.start or "—",
                          "end": (rec.end or "—") + overnight_suffix if rec.end else "—",
                          "h": h, "ot": ot,
-                         "wt": msg(wk_map.get(wt, "wt_normal"), wt),
+                         "wt": msg(
+                             wk_map.get(wt, "wt_normal"),
+                             wk_fallback.get(wk_map.get(wt, "wt_normal"), wt),
+                         ),
                          "note": rec.safe_note()})
         return rows
 
@@ -496,7 +507,7 @@ class ChartDialog(QDialog):
         for q in range(1, 5):
             tot = ot = wd = ld = 0.0
             for m in range((q-1)*3+1, q*3+1):
-                a, b, c, d, _ = self._month_stats(y, m)
+                a, b, c, d, _avg = self._month_stats(y, m)
                 tot += a
                 ot += b
                 wd += c
@@ -529,10 +540,10 @@ class ChartDialog(QDialog):
         return f"worklog_{sfx}_{ts}.pdf"
 
     def _export_csv(self):
-        data, _ = self._current()
+        data, _chart_widget = self._current()
         app = self._app
         ts = dt.now().strftime("%Y%m%d_%H%M%S")
-        path, _ = QFileDialog.getSaveFileName(
+        path, _dialog_filter = QFileDialog.getSaveFileName(
             self, _("Export") + " CSV", f"chart_{ts}.csv", "CSV (*.csv)")
         if not path:
             return
@@ -550,12 +561,12 @@ class ChartDialog(QDialog):
         except ImportError:
             QMessageBox.warning(self, _("Export"),
                                 _("PDF requires QtPrintSupport. Saving PNG."))
-            path, _ = QFileDialog.getSaveFileName(
+            path, _dialog_filter = QFileDialog.getSaveFileName(
                 self, "PNG", "chart.png", "PNG(*.png)")
             if path:
                 chart_widget.grab().save(path)
             return
-        path, _ = QFileDialog.getSaveFileName(
+        path, _dialog_filter = QFileDialog.getSaveFileName(
             self, _("Export") + " PDF", self._default_pdf_name(), "PDF (*.pdf)")
         if not path:
             return
@@ -646,7 +657,7 @@ class ChartDialog(QDialog):
                     f"+{row['ot']:.1f}" if row["ot"] > 0 else "—",
                     row["wt"], row["note"][:30]]
             x = 0
-            for val, (_, frac) in zip(vals, hdrs):
+            for val, (_label, frac) in zip(vals, hdrs):
                 cw = pw*frac
                 p.drawText(QRectF(x+pt(2), top, cw-pt(4), rh2),
                            Qt.AlignVCenter | Qt.AlignLeft, str(val))
@@ -698,7 +709,7 @@ class ChartDialog(QDialog):
                     f"{row['ot']:.1f}{_("h")}", f"{row['avg']:.1f}{_("h")}",
                     f"{row['wd']}{_(" days")}", f"{row['ld']}{_(" days")}"]
             x = 0
-            for val, (_, frac) in zip(vals, hdrs):
+            for val, (_label, frac) in zip(vals, hdrs):
                 cw = pw*frac
                 p.drawText(QRectF(x+pt(3), top, cw-pt(6), rh2),
                            Qt.AlignVCenter | Qt.AlignLeft, str(val))
@@ -770,7 +781,7 @@ class ChartDialog(QDialog):
             vals = [row["m"], f"{row['total']:.1f}{_("h")}", f"{row['ot']:.1f}{_("h")}",
                     f"{row['avg']:.1f}{_("h")}", f"{row['wd']}{_(" days")}", f"{row['ld']}{_(" days")}"]
             x = 0
-            for val, (_, frac) in zip(vals, hdrs):
+            for val, (_label, frac) in zip(vals, hdrs):
                 cw = pw*frac
                 p.drawText(QRectF(x+pt(3), top, cw-pt(6), rh2),
                            Qt.AlignVCenter | Qt.AlignLeft, str(val))
@@ -1051,7 +1062,7 @@ class QuickLogDialog(QDialog):
         if entry_id is not None:
             if event.type() == QEvent.Enter:
                 self._hovered_row_id = entry_id
-                self._set_delete_visible(entry_idrue)
+                self._set_delete_visible(entry_id, True)
                 self._sync_row_styles()
             elif event.type() == QEvent.Leave:
                 QTimer.singleShot(
@@ -1129,7 +1140,7 @@ class QuickLogDialog(QDialog):
         box.setStandardButtons(
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         box.setDefaultButton(QMessageBox.StandardButton.No)
-        _localize_msgbox_buttons(box, t)
+        _localize_msgbox_buttons(box, _)
         if box.exec() != QMessageBox.Yes:
             return
         self._app.services.delete_quick_log(log_id)
