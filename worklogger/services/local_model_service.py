@@ -27,7 +27,7 @@ import sys
 import threading
 import time
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 # ---------------------------------------------------------------------------
 # Public sentinel
@@ -253,7 +253,8 @@ def localize_field(entry: dict, field: str, lang: str) -> str:
             val = value.get(key)
             if val:
                 return str(val)
-        return value.get("en_US") or next(iter(value.values()), "")
+        fallback = value.get("en_US") or next(iter(value.values()), "")
+        return str(fallback) if fallback else ""
     return str(value) if value else ""
 
 
@@ -680,7 +681,7 @@ class LlamaCppProvider(LLMProvider):
         self._n_ctx        = max(512, int(n_ctx))
         self._n_threads    = max(1, int(n_threads))
         self._n_gpu_layers = max(0, int(n_gpu_layers))
-        self._llama        = None
+        self._llama: Any   = None
         self._lock         = threading.Lock()
 
     def is_available(self) -> bool:

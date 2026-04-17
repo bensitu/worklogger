@@ -69,6 +69,8 @@ MSG_DEFAULTS = {
     "local_model_download_ok": "Model download completed.",
     "local_model_not_downloaded": "Local model not downloaded - go to Settings -> AI",
     "local_model_inactive": "Local model is inactive",
+    "local_model_state_active": "Active",
+    "local_model_state_inactive": "Inactive",
     "local_model_verify_timeout": "Local model verification timed out.",
     "local_model_verify_cancelled": "Local model verification was cancelled.",
     "local_model_verify_permission_denied": "Permission denied while verifying local model file.",

@@ -526,7 +526,7 @@ msgstr "9월"
 msgid "Settings"
 msgstr "설정"
 
-msgid "Show overnight indicator"
+msgid "Overnight indicator"
 msgstr "익일 표시기 보기"
 
 msgid "Sick"
@@ -1008,3 +1008,24 @@ msgstr "새 버전 v{0}을 사용할 수 있습니다"
 
 msgid "Local model is inactive"
 msgstr "Local model is inactive"
+
+msgid "Local model verification failed. Please re-download or switch model."
+msgstr "Local model verification failed. Please re-download or switch model."
+
+msgid "Local model verification timed out."
+msgstr "Local model verification timed out."
+
+msgid "Local model verification was cancelled."
+msgstr "Local model verification was cancelled."
+
+msgid "Permission denied while verifying local model file."
+msgstr "Permission denied while verifying local model file."
+
+msgid "Active"
+msgstr "활성"
+
+msgid "Downloaded"
+msgstr "Downloaded"
+
+msgid "Inactive"
+msgstr "비활성"

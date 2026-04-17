@@ -54,6 +54,9 @@ msgstr ""
 msgid "About"
 msgstr ""
 
+msgid "Active"
+msgstr ""
+
 msgid "Add"
 msgstr ""
 
@@ -216,6 +219,9 @@ msgstr ""
 msgid "Download Local Model"
 msgstr ""
 
+msgid "Downloaded"
+msgstr ""
+
 msgid "Downloading local model..."
 msgstr ""
 
@@ -315,6 +321,9 @@ msgstr ""
 msgid "Imported {} records."
 msgstr ""
 
+msgid "Inactive"
+msgstr ""
+
 msgid "Initializing AI request..."
 msgstr ""
 
@@ -394,6 +403,15 @@ msgid "Local model unavailable - using external model instead"
 msgstr ""
 
 msgid "Local model unavailable - using external model instead."
+msgstr ""
+
+msgid "Local model verification failed. Please re-download or switch model."
+msgstr ""
+
+msgid "Local model verification timed out."
+msgstr ""
+
+msgid "Local model verification was cancelled."
 msgstr ""
 
 msgid "Manual Input"
@@ -534,6 +552,9 @@ msgstr ""
 msgid "Paid: {paid}\nComp: {comp}\nSick: {sick}"
 msgstr ""
 
+msgid "Permission denied while verifying local model file."
+msgstr ""
+
 msgid "Please enter a model name in Settings → AI."
 msgstr ""
 
@@ -612,7 +633,7 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-msgid "Show overnight indicator"
+msgid "Overnight indicator"
 msgstr ""
 
 msgid "Sick"

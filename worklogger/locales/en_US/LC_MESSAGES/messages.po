@@ -526,8 +526,8 @@ msgstr "September"
 msgid "Settings"
 msgstr "Settings"
 
-msgid "Show overnight indicator"
-msgstr "Show overnight indicator"
+msgid "Overnight indicator"
+msgstr "Overnight indicator"
 
 msgid "Sick"
 msgstr "Sick"
@@ -1008,3 +1008,24 @@ msgstr "New version available: v{0}"
 
 msgid "Local model is inactive"
 msgstr "Local model is inactive"
+
+msgid "Local model verification failed. Please re-download or switch model."
+msgstr "Local model verification failed. Please re-download or switch model."
+
+msgid "Local model verification timed out."
+msgstr "Local model verification timed out."
+
+msgid "Local model verification was cancelled."
+msgstr "Local model verification was cancelled."
+
+msgid "Permission denied while verifying local model file."
+msgstr "Permission denied while verifying local model file."
+
+msgid "Active"
+msgstr "Active"
+
+msgid "Downloaded"
+msgstr "Downloaded"
+
+msgid "Inactive"
+msgstr "Inactive"

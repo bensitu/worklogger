@@ -455,10 +455,10 @@ msgid "PDF requires QtPrintSupport. Saving PNG."
 msgstr "PDF需要QtPrintSupport。已保存为PNG。"
 
 msgid "PTO"
-msgstr "年假"
+msgstr "休假"
 
 msgid "Paid: {paid}\nComp: {comp}\nSick: {sick}"
-msgstr "年假：{paid}\n补休：{comp}\n病假：{sick}"
+msgstr "休假：{paid}\n补休：{comp}\n病假：{sick}"
 
 msgid "Please set your API key in Settings → AI."
 msgstr "请先在设置→AI 中填入 API Key。"
@@ -526,7 +526,7 @@ msgstr "九月"
 msgid "Settings"
 msgstr "设置"
 
-msgid "Show overnight indicator"
+msgid "Overnight indicator"
 msgstr "显示跨天指示器"
 
 msgid "Sick"
@@ -752,16 +752,16 @@ msgid "Normal"
 msgstr "正常出勤"
 
 msgid "Remote work"
-msgstr "远程办公"
+msgstr "居家办公"
 
 msgid "Business trip"
-msgstr "外出"
+msgstr "出差"
 
 msgid "Paid leave"
 msgstr "休假"
 
 msgid "Comp leave"
-msgstr "调休"
+msgstr "补休"
 
 msgid "Sick leave"
 msgstr "病假"
@@ -1008,3 +1008,24 @@ msgstr "发现新版本：v{0}"
 
 msgid "Local model is inactive"
 msgstr "Local model is inactive"
+
+msgid "Local model verification failed. Please re-download or switch model."
+msgstr "Local model verification failed. Please re-download or switch model."
+
+msgid "Local model verification timed out."
+msgstr "Local model verification timed out."
+
+msgid "Local model verification was cancelled."
+msgstr "Local model verification was cancelled."
+
+msgid "Permission denied while verifying local model file."
+msgstr "Permission denied while verifying local model file."
+
+msgid "Active"
+msgstr "已激活"
+
+msgid "Downloaded"
+msgstr "Downloaded"
+
+msgid "Inactive"
+msgstr "未激活"

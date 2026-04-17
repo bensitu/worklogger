@@ -16,7 +16,7 @@ it wires callbacks to the controller only at the moment the user clicks
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 from PySide6.QtCore import Qt, Signal, QObject, QTimer
 from PySide6.QtWidgets import (
@@ -69,11 +69,13 @@ class LocalDownloadDialog(QDialog):
 
     def __init__(self, parent, lang: str,
                  accent_color: str = "#4f8ef7",
-                 dark: bool = False) -> None:
+                 dark: bool = False,
+                 on_model_changed: Optional[Callable[[str, str], None]] = None) -> None:
         super().__init__(parent)
         self._lang = lang
         self._accent_color = accent_color
         self._dark = dark
+        self._on_model_changed = on_model_changed
         self._bridge = _Bridge(self)
         self._sel_id: Optional[str] = None
         self.setWindowTitle(_("Download Local Model"))
@@ -320,14 +322,82 @@ class LocalDownloadDialog(QDialog):
             LocalModelService.get().delete_model(entry_id)
             LocalModelService.reset()
             self._refresh_card_states()
+            if callable(self._on_model_changed):
+                try:
+                    self._on_model_changed("deleted", entry_id)
+                except Exception:
+                    pass
         except Exception as exc:
             QMessageBox.warning(self, msg(
                 "settings_title", "Error"), str(exc))
 
+    def _verify_failure_text(self, reason: str) -> str:
+        mapping = {
+            "timeout": msg(
+                "local_model_verify_timeout",
+                "Local model verification timed out.",
+            ),
+            "cancelled": msg(
+                "local_model_verify_cancelled",
+                "Local model verification was cancelled.",
+            ),
+            "permission_denied": msg(
+                "local_model_verify_permission_denied",
+                "Permission denied while verifying local model file.",
+            ),
+            "hash_mismatch": msg(
+                "local_model_verify_failed",
+                "Local model verification failed. Please re-download or switch model.",
+            ),
+            "io_error": msg(
+                "local_model_verify_failed",
+                "Local model verification failed. Please re-download or switch model.",
+            ),
+            "manifest_error": msg(
+                "local_model_verify_failed",
+                "Local model verification failed. Please re-download or switch model.",
+            ),
+        }
+        return mapping.get(
+            reason,
+            msg(
+                "local_model_verify_failed",
+                "Local model verification failed. Please re-download or switch model.",
+            ),
+        )
+
+    def _verify_selected_before_close(self, models_dir: Path, entry_id: str) -> bool:
+        from services.local_model_service import verify_model_file_with_reason
+        ok, reason = verify_model_file_with_reason(
+            models_dir,
+            entry_id,
+            timeout_s=5.0,
+            retries=1,
+        )
+        if ok:
+            return True
+        QMessageBox.warning(
+            self,
+            _("Download Local Model"),
+            self._verify_failure_text(reason),
+        )
+        return False
+
+    def _finish_after_download(self) -> None:
+        from services.local_model_service import get_active_entry_id, get_models_dir
+        mdir = get_models_dir()
+        entry_id = self._sel_id or get_active_entry_id(mdir)
+        if not entry_id:
+            self.accept()
+            return
+        if not self._verify_selected_before_close(mdir, entry_id):
+            return
+        self.accept()
+
     def _on_select_next(self) -> None:
         """Validate selection, handle conflict, start download."""
         from services.local_model_service import (
-            load_catalog, verify_model_file, get_active_entry_id,
+            verify_model_file, get_active_entry_id,
             load_manifest, get_entry, get_models_dir, set_active_entry,
         )
         # Which radio is checked?
@@ -348,14 +418,20 @@ class LocalDownloadDialog(QDialog):
 
         # Already downloaded and verified?
         if path.exists() and path.stat().st_size > 0:
-            if verify_model_file(mdir, sel_id):
+            if self._verify_selected_before_close(mdir, sel_id):
+                set_active_entry(sel_id, mdir)
+                if callable(self._on_model_changed):
+                    try:
+                        self._on_model_changed("selected", sel_id)
+                    except Exception:
+                        pass
                 QMessageBox.information(
                     self,
                     _("Download Local Model"),
                     _("This model is already downloaded and ready."),
                 )
                 self.accept()
-                return
+            return
 
         # Conflict: a *different* verified model exists
         active_id = get_active_entry_id(mdir)
@@ -523,13 +599,18 @@ class LocalDownloadDialog(QDialog):
         self._log_append(
             _("✓  Integrity verified"))
         self._retry_btn.hide()
-        # ── Button becomes "Done / 完成" ──
+        # Update the primary action button to finish the dialog.
         self._action_btn.setText(_("Done"))
         self._action_btn.clicked.disconnect()
-        self._action_btn.clicked.connect(self.accept)
+        self._action_btn.clicked.connect(self._finish_after_download)
         # Reset singleton so next inference picks up the new file.
         from services.local_model_service import LocalModelService
         LocalModelService.reset()
+        if callable(self._on_model_changed):
+            try:
+                self._on_model_changed("downloaded", str(self._sel_id or ""))
+            except Exception:
+                pass
 
     def _on_error(self, message: str) -> None:
         display = msg(message)
@@ -560,11 +641,16 @@ class LocalDownloadDialog(QDialog):
             from services.local_model_service import LocalModelService
             svc = LocalModelService.get()
             # "__new__" forces catalog-lookup-by-filename / create-new behaviour
-            svc.import_gguf(path, "__new__")
+            imported = svc.import_gguf(path, "__new__")
             LocalModelService.reset()
             self._refresh_card_states()
             # Rebuild cards to show any newly added catalog entry
             self._rebuild_cards_if_needed()
+            if callable(self._on_model_changed):
+                try:
+                    self._on_model_changed("imported", imported.name)
+                except Exception:
+                    pass
             QMessageBox.information(
                 self,
                 _("Download Local Model"),

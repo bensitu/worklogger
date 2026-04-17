@@ -458,7 +458,7 @@ msgid "PTO"
 msgstr "有休"
 
 msgid "Paid: {paid}\nComp: {comp}\nSick: {sick}"
-msgstr "有給：{paid}\n代休：{comp}\n病欠：{sick}"
+msgstr "有給：{paid}\n代休：{comp}\n病休：{sick}"
 
 msgid "Please set your API key in Settings → AI."
 msgstr "設定→AI で API キーを設定してください。"
@@ -526,7 +526,7 @@ msgstr "9月"
 msgid "Settings"
 msgstr "設定"
 
-msgid "Show overnight indicator"
+msgid "Overnight indicator"
 msgstr "跨日インジケータを表示"
 
 msgid "Sick"
@@ -1008,3 +1008,24 @@ msgstr "新しいバージョン v{0} が利用可能です"
 
 msgid "Local model is inactive"
 msgstr "Local model is inactive"
+
+msgid "Local model verification failed. Please re-download or switch model."
+msgstr "Local model verification failed. Please re-download or switch model."
+
+msgid "Local model verification timed out."
+msgstr "Local model verification timed out."
+
+msgid "Local model verification was cancelled."
+msgstr "Local model verification was cancelled."
+
+msgid "Permission denied while verifying local model file."
+msgstr "Permission denied while verifying local model file."
+
+msgid "Active"
+msgstr "有効"
+
+msgid "Downloaded"
+msgstr "Downloaded"
+
+msgid "Inactive"
+msgstr "無効"

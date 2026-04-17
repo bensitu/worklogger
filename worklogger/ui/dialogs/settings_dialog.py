@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QFrame, QFileDialog,
 )
 from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QFont
 
 from utils.i18n import _, msg, LANG_NAMES, get_translator
@@ -27,7 +28,15 @@ ThemePalette = dict[bool, ThemeColors]
 ThemeMap = dict[str, ThemePalette]
 
 
+class _LocalVerifyBridge(QObject):
+    progress = Signal(int, int)
+    done = Signal(int, bool, bool, str, str)
+
+
 class SettingsDialog(QDialog):
+    _session_local_verify_done = False
+    _session_local_verify_cache: dict[str, tuple[bool, str]] = {}
+
     def __init__(self, app_ref, parent=None):
         super().__init__(parent)
         self._app = app_ref
@@ -146,7 +155,7 @@ class SettingsDialog(QDialog):
         ov.addWidget(self._show_overnight_indicator)
         ov.addStretch()
         gf.addRow(
-            _("Show overnight indicator"),
+            _("Overnight indicator"),
             overnight_wrap,
         )
 
@@ -384,6 +393,8 @@ class SettingsDialog(QDialog):
 
         self._local_verify_cancel_event: threading.Event | None = None
         self._local_verify_seq = 0
+        self._local_pending_entry_id = ""
+        self._local_verify_bridge = _LocalVerifyBridge(self)
 
         # Single "Model Management" button (opens unified dialog)
         btn_row_w = QWidget()
@@ -434,16 +445,20 @@ class SettingsDialog(QDialog):
             present: bool,
             lbl_text: str,
             verify_reason: str = "",
+            verification_known: bool = True,
         ) -> None:
             enabled = self._local_enabled_sw.isChecked()
             self._local_verify_bar.setVisible(False)
             self._local_verify_cancel_btn.setVisible(False)
             self._local_verify_cancel_btn.setEnabled(False)
-            if ready:
+            if verification_known and ready and present:
                 ready_text = _("Ready")
+                activity_text = _("Active") if enabled else _("Inactive")
                 status = "✓  " + ready_text
                 if lbl_text:
-                    status = f"✓  {lbl_text}  —  {ready_text}"
+                    status = f"✓  {lbl_text}  —  {ready_text} · {activity_text}"
+                else:
+                    status = f"✓  {ready_text} · {activity_text}"
                 self._local_status_lbl.setText(status)
                 self._local_status_lbl.setStyleSheet(
                     f"color:{_acc};font-weight:600;")
@@ -451,15 +466,20 @@ class SettingsDialog(QDialog):
                     _("Select / Change"))
             else:
                 reason_text = _verify_reason_text(verify_reason)
-                if reason_text and present:
+                if verification_known and reason_text and present:
                     self._local_status_lbl.setText(reason_text)
+                elif present:
+                    if lbl_text:
+                        self._local_status_lbl.setText(lbl_text)
+                    else:
+                        self._local_status_lbl.setText(_("Downloaded"))
                 else:
                     self._local_status_lbl.setText(
                         _("Not downloaded"))
                 self._local_status_lbl.setStyleSheet("")
                 self._local_dl_btn.setText(
                     _("Select / Change") if present else _("Download"))
-            if not present and not enabled:
+            if not enabled:
                 self._local_dl_blocked = True
                 self._local_dl_btn.setEnabled(False)
                 self._local_dl_btn.setToolTip(
@@ -480,12 +500,108 @@ class SettingsDialog(QDialog):
                 self._local_dl_btn.setToolTip("")
                 self._local_dl_btn.setStyleSheet("")
 
+        def _invalidate_local_verify_cache(entry_id: str = "") -> None:
+            if entry_id:
+                SettingsDialog._session_local_verify_cache.pop(entry_id, None)
+            else:
+                SettingsDialog._session_local_verify_cache.clear()
+
+        def _local_status_snapshot() -> tuple[bool, str, str, bool]:
+            try:
+                from services.local_model_service import (
+                    get_active_entry_id,
+                    get_entry,
+                    load_catalog,
+                    load_manifest,
+                    get_models_dir,
+                    localize_field,
+                    LocalModelService,
+                )
+                mdir = get_models_dir()
+                entry_id = str(get_active_entry_id(mdir) or "")
+                present = bool(LocalModelService.get().is_model_present())
+                manifest = load_manifest(mdir)
+                manifest_entry = get_entry(manifest, entry_id or "local")
+                has_expected_sha = bool(
+                    str(manifest_entry.get("sha256", "")).strip()
+                )
+                catalog = load_catalog(mdir)
+                cat = next(
+                    (c for c in catalog if c.get("id") == entry_id),
+                    catalog[0] if catalog else {},
+                )
+                lbl_text = localize_field(cat, "label", app_ref.lang) or cat.get("label", "")
+                ready_hint = present and has_expected_sha
+                return present, entry_id, str(lbl_text), bool(ready_hint)
+            except Exception:
+                return False, "", "", False
+
         def _cancel_local_verify() -> None:
             if self._local_verify_cancel_event is not None:
                 self._local_verify_cancel_event.set()
             self._local_verify_cancel_btn.setEnabled(False)
 
-        def _refresh_local_status() -> None:
+        def _on_local_verify_progress(seq: int, percent: int) -> None:
+            if seq != self._local_verify_seq:
+                return
+            self._local_verify_bar.setValue(max(0, min(100, int(percent))))
+
+        def _on_local_verify_done(
+            seq: int,
+            ready: bool,
+            present: bool,
+            lbl_text: str,
+            verify_reason: str,
+        ) -> None:
+            if seq != self._local_verify_seq:
+                return
+            entry_id = self._local_pending_entry_id
+            if entry_id:
+                SettingsDialog._session_local_verify_cache[entry_id] = (
+                    bool(ready),
+                    str(verify_reason),
+                )
+            SettingsDialog._session_local_verify_done = True
+            _apply_local_status(ready, present, lbl_text, verify_reason)
+
+        self._local_verify_bridge.progress.connect(_on_local_verify_progress)
+        self._local_verify_bridge.done.connect(_on_local_verify_done)
+
+        def _refresh_local_status(
+            force_verify: bool = False,
+            allow_initial_verify: bool = True,
+            ignore_cache: bool = False,
+        ) -> None:
+            present, entry_id, lbl_text, ready_hint = _local_status_snapshot()
+            self._local_pending_entry_id = entry_id
+            enabled = self._local_enabled_sw.isChecked()
+            should_verify = enabled and (
+                force_verify
+                or (allow_initial_verify and not SettingsDialog._session_local_verify_done)
+            )
+            cached = None if ignore_cache else SettingsDialog._session_local_verify_cache.get(entry_id, None)
+            if not should_verify:
+                if not present:
+                    _invalidate_local_verify_cache(entry_id)
+                if cached is not None:
+                    ready_cached, reason_cached = cached
+                    _apply_local_status(
+                        bool(ready_cached) and present,
+                        present,
+                        lbl_text,
+                        reason_cached,
+                        verification_known=True,
+                    )
+                else:
+                    _apply_local_status(
+                        bool(ready_hint),
+                        present,
+                        lbl_text,
+                        "",
+                        verification_known=bool(ready_hint),
+                    )
+                return
+
             self._local_verify_seq += 1
             verify_seq = self._local_verify_seq
             if self._local_verify_cancel_event is not None:
@@ -510,54 +626,35 @@ class SettingsDialog(QDialog):
                 try:
                     from services.local_model_service import (
                         verify_model_file_with_reason,
-                        get_active_entry_id,
-                        load_catalog,
                         get_models_dir,
-                        localize_field,
                         LocalModelService,
                     )
 
                     def _progress(percent: int) -> None:
-                        QTimer.singleShot(
-                            0,
-                            lambda p=percent: (
-                                self._local_verify_bar.setValue(p)
-                                if verify_seq == self._local_verify_seq else None
-                            ),
-                        )
+                        self._local_verify_bridge.progress.emit(verify_seq, int(percent))
 
                     mdir = get_models_dir()
-                    entry_id = get_active_entry_id(mdir)
+                    active_id = entry_id
                     ready, verify_reason = verify_model_file_with_reason(
                         mdir,
-                        entry_id,
+                        active_id,
                         timeout_s=5.0,
                         retries=1,
                         progress_cb=_progress,
                         cancel_event=cancel_event,
                     )
                     present = LocalModelService.get().is_model_present()
-                    catalog = load_catalog(mdir)
-                    cat = next((c for c in catalog
-                                if c.get("id") == entry_id),
-                               catalog[0] if catalog else {})
-                    # Use inline label from catalog (no i18n key indirection)
-                    lbl_text = localize_field(
-                        cat, "label", app_ref.lang) or cat.get("label", "")
                 except Exception:
                     ready = False
-                    present = False
+                    present = bool(present)
                     verify_reason = "io_error"
-                    lbl_text = ""
 
-                QTimer.singleShot(
-                    0,
-                    lambda: _apply_local_status(
-                        ready,
-                        present,
-                        lbl_text,
-                        verify_reason if verify_seq == self._local_verify_seq else "",
-                    ) if verify_seq == self._local_verify_seq else None,
+                self._local_verify_bridge.done.emit(
+                    verify_seq,
+                    bool(ready),
+                    bool(present),
+                    str(lbl_text),
+                    str(verify_reason),
                 )
 
             threading.Thread(target=_worker, daemon=True).start()
@@ -580,7 +677,8 @@ class SettingsDialog(QDialog):
                     LocalModelService.reset()
                 except Exception:
                     pass
-            _refresh_local_status()
+                _invalidate_local_verify_cache()
+            _refresh_local_status(force_verify=False, allow_initial_verify=False)
 
         self._local_enabled_sw.toggled.connect(_on_local_toggle)
         self._local_verify_cancel_btn.clicked.connect(_cancel_local_verify)
@@ -606,17 +704,40 @@ class SettingsDialog(QDialog):
                 dark_mode,
                 theme_colors.get(False, fallback_colors),
             )[0]
+
+            def _on_model_changed(event_name: str, entry_id: str) -> None:
+                del event_name
+                _invalidate_local_verify_cache(entry_id)
+                QTimer.singleShot(
+                    0,
+                    lambda: _refresh_local_status(
+                        force_verify=False,
+                        allow_initial_verify=False,
+                        ignore_cache=True,
+                    ),
+                )
+
             dlg = LocalDownloadDialog(
                 self, app_ref.lang,
                 accent_color=accent,
                 dark=app_ref.dark,
+                on_model_changed=_on_model_changed,
             )
-            dlg.exec()
-            from services.local_model_service import LocalModelService
+            from services.local_model_service import (
+                get_active_entry_id,
+                get_models_dir,
+                LocalModelService,
+            )
+            before_id = str(get_active_entry_id(get_models_dir()) or "")
+            result = dlg.exec()
+            after_id = str(get_active_entry_id(get_models_dir()) or "")
             LocalModelService.reset()
             from services.download_controller import DownloadController
             DownloadController.reset()
-            _refresh_local_status()
+            changed = result == QDialog.Accepted and before_id != after_id
+            if changed:
+                _invalidate_local_verify_cache(after_id)
+            _refresh_local_status(force_verify=changed, ignore_cache=True)
 
         self._local_dl_btn.clicked.connect(_open_model_management)
 

@@ -53,6 +53,7 @@ tests/
 
 # Local models and data files
 worklogger/models/*.gguf
+worklogger/models/*.gguf.tmp
 worklogger/models/*.json
 worklogger/models/*.lock
 !worklogger/models/catalog.json
