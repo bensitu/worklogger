@@ -1,11 +1,16 @@
 from __future__ import annotations
+import os
+from pathlib import Path
+import sys
 import threading
 import re
 from dataclasses import dataclass
 from datetime import date, timedelta
 from calendar import monthrange
 from typing import Callable, Iterable
+import ssl
 import urllib.request
+import urllib.error
 import json as _json
 from PySide6.QtCore import QObject, Signal
 
@@ -158,14 +163,58 @@ class AppServices:
             return False
         return latest_v > current_v
 
+    @staticmethod
+    def _certifi_cafile_candidates() -> list[Path]:
+        candidates: list[Path] = []
+        try:
+            import importlib
+            certifi = importlib.import_module("certifi")
+            where = getattr(certifi, "where", lambda: None)()
+            if where:
+                candidates.append(Path(where))
+        except Exception:
+            pass
+
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            candidates.append(Path(meipass) / "certifi" / "cacert.pem")
+
+        try:
+            exe_dir = Path(sys.executable).resolve().parent
+            candidates.append(exe_dir / "certifi" / "cacert.pem")
+            candidates.append(exe_dir.parent / "Resources" / "certifi" / "cacert.pem")
+        except Exception:
+            pass
+
+        deduped: list[Path] = []
+        seen: set[str] = set()
+        for path in candidates:
+            key = os.path.normcase(str(path.resolve(strict=False)))
+            if key in seen:
+                continue
+            seen.add(key)
+            deduped.append(path)
+        return deduped
+
+    @classmethod
+    def _build_update_ssl_context(cls) -> ssl.SSLContext:
+        for cafile in cls._certifi_cafile_candidates():
+            try:
+                if cafile.is_file():
+                    return ssl.create_default_context(cafile=str(cafile))
+            except Exception:
+                continue
+        return ssl.create_default_context()
+
     def _check_update_sync(self, translator: Callable[[str], str]) -> str:
         _tr = translator if callable(translator) else _
         req = urllib.request.Request(
             GITHUB_RELEASES_API,
             headers={"User-Agent": "WorkLogger/" + APP_VERSION},
         )
+        context = self._build_update_ssl_context()
         try:
-            with urllib.request.urlopen(req, timeout=8) as r:
+            with urllib.request.urlopen(req, timeout=8, context=context) as r:
                 data = _json.loads(r.read())
             latest = data.get("tag_name", "").lstrip("vV").strip()
             if latest and self._is_remote_newer(latest, APP_VERSION):
@@ -175,6 +224,19 @@ class AppServices:
                 except Exception:
                     return avail_tpl
             return _tr("You are on the latest version")
+        except urllib.error.URLError as exc:
+            reason = getattr(exc, "reason", exc)
+            if isinstance(reason, ssl.SSLCertVerificationError) or "CERTIFICATE_VERIFY_FAILED" in str(reason):
+                return _tr(
+                    "Could not verify the update server certificate. "
+                    "Please check your network trust settings and try again."
+                )
+            err = str(exc)[:120]
+            template = _tr("Could not check for updates: {0}")
+            try:
+                return template.format(err)
+            except Exception:
+                return template
         except Exception as exc:
             err = str(exc)[:120]
             template = _tr("Could not check for updates: {0}")

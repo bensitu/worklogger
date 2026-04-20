@@ -166,7 +166,9 @@ def _frozen_root_candidates() -> list[Path]:
         roots.append(Path(meipass))
     if getattr(sys, "frozen", False):
         try:
-            roots.append(Path(sys.executable).resolve().parent)
+            exe_dir = Path(sys.executable).resolve().parent
+            roots.append(exe_dir)
+            roots.append(exe_dir.parent / "Resources")
         except Exception:
             pass
     return roots

@@ -14,8 +14,42 @@ Packaging strategy
 
 import sys
 import os
+import subprocess
+import importlib.util
+from pathlib import Path
+import certifi
 
 block_cipher = None
+ROOT_DIR = Path(globals().get("SPECPATH", os.getcwd())).resolve()
+LOCALES_DIR = ROOT_DIR / "worklogger" / "locales"
+I18N_COMPILE_SCRIPT = ROOT_DIR / "scripts" / "i18n_compile.py"
+I18N_LANGS = ("en_US", "ja_JP", "ko_KR", "zh_CN", "zh_TW")
+
+
+def _ensure_i18n_catalogs() -> None:
+    subprocess.run([sys.executable, str(I18N_COMPILE_SCRIPT)], check=True)
+    missing: list[str] = []
+    for lang in I18N_LANGS:
+        mo_path = LOCALES_DIR / lang / "LC_MESSAGES" / "messages.mo"
+        if not mo_path.is_file():
+            missing.append(str(mo_path))
+    if missing:
+        raise RuntimeError(
+            "Missing compiled gettext catalogs:\n" + "\n".join(missing)
+        )
+
+
+_ensure_i18n_catalogs()
+
+
+def _certifi_cacert_data_entry() -> tuple[str, str]:
+    cert_path = Path(certifi.where()).resolve()
+    if not cert_path.is_file():
+        raise RuntimeError(f"certifi bundle not found: {cert_path}")
+    return (str(cert_path), "certifi")
+
+
+CERTIFI_CACERT_DATA = _certifi_cacert_data_entry()
 
 
 # ---------------------------------------------------------------------------
@@ -47,6 +81,13 @@ def _collect_submodules(pkg: str):
         return []
 
 
+def _module_exists(name: str) -> bool:
+    try:
+        return importlib.util.find_spec(name) is not None
+    except Exception:
+        return False
+
+
 # Collect llama_cpp (large; includes native .so/.dll and Metal shaders)
 _llama_data, _llama_bins = _collect("llama_cpp")
 
@@ -59,6 +100,21 @@ _llama_hidden      = _collect_submodules("llama_cpp")
 _httpx_hidden      = _collect_submodules("httpx")
 _portalocker_hidden = _collect_submodules("portalocker")
 
+_optional_hidden = [
+    pkg for pkg in (
+        "llama_cpp",
+        "httpx",
+        "portalocker",
+        "numpy",
+        "httpcore",
+        "anyio",
+        "sniffio",
+        "certifi",
+        "h11",
+    )
+    if _module_exists(pkg)
+]
+
 
 a = Analysis(
     ["worklogger/main.py"],
@@ -69,6 +125,8 @@ a = Analysis(
         ("worklogger/assets",                               "assets"),
         # i18n translation catalogs
         ("worklogger/locales",                              "locales"),
+        # TLS CA bundle used by urllib-based update check
+        CERTIFI_CACERT_DATA,
         # Built-in report templates
         ("worklogger/templates/en_US",                          "templates/en_US"),
         ("worklogger/templates/ja_JP",                          "templates/ja_JP"),
@@ -90,23 +148,8 @@ a = Analysis(
         "services.dep_installer",
         "services.download_controller",
         "services.local_model_service",
-        # Bundled runtime deps
-        "llama_cpp",
-        "httpx",
-        "httpx._client",
-        "httpx._transports",
-        "httpx._transports.default",
-        "portalocker",
-        "portalocker.utils",
-        "portalocker.exceptions",
-        "numpy",
-        # httpx back-end
-        "httpcore",
-        "anyio",
-        "sniffio",
-        "certifi",
-        "h11",
-    ] + _llama_hidden + _httpx_hidden + _portalocker_hidden,
+        # Optional runtime deps (included when present in the build venv)
+    ] + _optional_hidden + _llama_hidden + _httpx_hidden + _portalocker_hidden,
     hookspath=[],
     runtime_hooks=[],
     excludes=[
@@ -125,9 +168,8 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
+    [],
+    exclude_binaries=True,
     name="WorkLogger",
     debug=False,
     bootloader_ignore_signals=False,
@@ -138,15 +180,25 @@ exe = EXE(
 )
 
 # macOS .app bundle
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    strip=False,
+    upx=True,
+    name="WorkLogger",
+)
+
 if sys.platform == "darwin":
     app = BUNDLE(
-        exe,
+        coll,
         name="WorkLogger.app",
         icon="worklogger/assets/worklogger.icns",
         bundle_identifier="dev.worklogger.app.v1",
         info_plist={
             "NSHighResolutionCapable": True,
-            "CFBundleShortVersionString": "2.2.0",
-            "CFBundleVersion": "6",
+            "CFBundleShortVersionString": "2.2.1",
+            "CFBundleVersion": "7",
         },
     )
