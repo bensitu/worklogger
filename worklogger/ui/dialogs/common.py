@@ -4,7 +4,7 @@ from calendar import monthrange
 
 from PySide6.QtWidgets import QMessageBox, QFrame
 
-from config.i18n import T
+from utils.i18n import _, msg
 from utils.formatters import format_quick_logs, format_cal_events
 from utils.template_engine import render_template
 
@@ -15,13 +15,13 @@ def _div() -> QFrame:
     return f
 
 
-def _localize_msgbox_buttons(box: QMessageBox, t: dict) -> QMessageBox:
+def _localize_msgbox_buttons(box: QMessageBox, translator) -> QMessageBox:
     mapping = {
-        QMessageBox.StandardButton.Yes: t.get("btn_yes", "Yes"),
-        QMessageBox.StandardButton.No: t.get("btn_no", "No"),
-        QMessageBox.StandardButton.Save: t.get("save", "Save"),
-        QMessageBox.StandardButton.Discard: t.get("btn_discard", "Discard"),
-        QMessageBox.StandardButton.Cancel: t.get("btn_cancel", "Cancel"),
+        QMessageBox.StandardButton.Yes: translator("Yes"),
+        QMessageBox.StandardButton.No: translator("No"),
+        QMessageBox.StandardButton.Save: translator("Save"),
+        QMessageBox.StandardButton.Discard: translator("Discard"),
+        QMessageBox.StandardButton.Cancel: translator("Cancel"),
     }
     for button, label in mapping.items():
         btn = box.button(button)
@@ -34,7 +34,7 @@ def _get_ai_params(app, secondary: bool = False):
     return app.services.resolve_ai_params(secondary=secondary)
 
 
-def _format_quick_logs(logs: list[dict], lang: str = "en", mode: str = "summary") -> str:
+def _format_quick_logs(logs: list[dict], lang: str = "en_US", mode: str = "summary") -> str:
     return format_quick_logs(logs, lang, mode)
 
 
@@ -48,8 +48,7 @@ def _append_quick_logs_block(base_text: str, app, type_key: str) -> str:
     logs = _quick_logs_for_type(app, type_key)
     if not logs:
         return base_text
-    t = T[app.lang]
-    title = t.get("quick_log_insert_title", "Quick Log Entries")
+    title = _("Work Log")
     fmt_mode = "daily" if type_key == "daily" else "summary"
     block = _format_quick_logs(logs, app.lang, fmt_mode)
     if not block:

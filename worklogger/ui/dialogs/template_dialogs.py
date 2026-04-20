@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 
-from config.i18n import T
+from utils.i18n import _, msg
 from templates import (
     get_template, list_builtin_template_types, list_custom_templates,
     save_custom_template, delete_custom_template,
@@ -21,8 +21,7 @@ class TemplatePickerDialog(QDialog):
         self._app = app_ref
         self._lang = app_ref.lang
         self._type = type_key
-        t = T[self._lang]
-        self.setWindowTitle(t["tpl_picker_title"])
+        self.setWindowTitle(_("Templates"))
         self.setMinimumSize(640, 480)
         self.resize(720, 540)
 
@@ -46,10 +45,10 @@ class TemplatePickerDialog(QDialog):
         lft.addWidget(self._list)
 
         lft_btns = QHBoxLayout()
-        self._del_btn = QPushButton(t["tpl_delete"])
+        self._del_btn = QPushButton(_("Delete"))
         self._del_btn.setEnabled(False)
         self._del_btn.clicked.connect(self._delete_selected)
-        new_btn = QPushButton(f"+ {t['tpl_create']}")
+        new_btn = QPushButton(f"+ {_("New Template")}")
         new_btn.clicked.connect(self._create_new)
         lft_btns.addWidget(new_btn)
         lft_btns.addWidget(self._del_btn)
@@ -69,7 +68,7 @@ class TemplatePickerDialog(QDialog):
 
         rgt_btns = QHBoxLayout()
         self._save_changes_btn = QPushButton(
-            t.get("tpl_save_changes", "Save Changes"))
+            _("Save Changes"))
         self._save_changes_btn.setFixedWidth(150)
         self._save_changes_btn.setEnabled(False)
         self._save_changes_btn.clicked.connect(self._save_changes)
@@ -85,10 +84,10 @@ class TemplatePickerDialog(QDialog):
 
         bot = QHBoxLayout()
         bot.setSpacing(6)
-        insert_btn = QPushButton(t["tpl_insert_selected"])
+        insert_btn = QPushButton(_("Insert"))
         insert_btn.setObjectName("primary_btn")
         insert_btn.clicked.connect(self._insert)
-        cancel_btn = QPushButton(t["btn_close"])
+        cancel_btn = QPushButton(_("Close"))
         cancel_btn.clicked.connect(self.reject)
         bot.addStretch()
         bot.addWidget(cancel_btn)
@@ -98,7 +97,6 @@ class TemplatePickerDialog(QDialog):
         self._populate()
 
     def _populate(self):
-        t = T[self._lang]
         lang = self._lang
         self._list.clear()
         self._items: list[dict] = []
@@ -119,7 +117,7 @@ class TemplatePickerDialog(QDialog):
                 continue
             label_name = "default" if builtin_type == self._type else builtin_type
             item = QListWidgetItem(
-                f"[{t['tpl_builtin_section']}]  {label_name}")
+                f"[{_("Built-in")}]  {label_name}")
             item.setData(Qt.UserRole, {
                 "kind": "builtin",
                 "content": content,
@@ -134,7 +132,7 @@ class TemplatePickerDialog(QDialog):
             })
 
         for tpl in list_custom_templates(self._type):
-            label = f"[{t['tpl_custom_section']}]  {tpl['name']}"
+            label = f"[{_("Custom")}]  {tpl['name']}"
             item = QListWidgetItem(label)
             item.setData(Qt.UserRole, {"kind": "custom",
                                        "content": tpl.get("content", ""),
@@ -145,7 +143,7 @@ class TemplatePickerDialog(QDialog):
                                 "filename": tpl["filename"]})
 
         if self._list.count() == 0:
-            placeholder = QListWidgetItem(T[self._lang]["tpl_no_templates"])
+            placeholder = QListWidgetItem(_("No templates available for this type."))
             placeholder.setFlags(Qt.NoItemFlags)
             self._list.addItem(placeholder)
         else:
@@ -192,16 +190,14 @@ class TemplatePickerDialog(QDialog):
     def _save_changes(self):
         if not self._editing_filename:
             return
-        t = T[self._lang]
         box = QMessageBox(self)
         box.setIcon(QMessageBox.Icon.Question)
-        box.setWindowTitle(t["tpl_picker_title"])
-        box.setText(t.get("tpl_save_changes_confirm",
-                    "Save changes to this template?"))
+        box.setWindowTitle(_("Templates"))
+        box.setText(_("Save changes to this template?"))
         box.setStandardButtons(
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         box.setDefaultButton(QMessageBox.StandardButton.Yes)
-        _localize_msgbox_buttons(box, t)
+        _localize_msgbox_buttons(box, _)
         if box.exec() != QMessageBox.Yes:
             return
         import os
@@ -226,7 +222,6 @@ class TemplatePickerDialog(QDialog):
                 item.setData(Qt.UserRole, d)
 
     def _delete_selected(self):
-        t = T[self._lang]
         item = self._list.currentItem()
         if not item:
             return
@@ -235,12 +230,12 @@ class TemplatePickerDialog(QDialog):
             return
         box = QMessageBox(self)
         box.setIcon(QMessageBox.Icon.Question)
-        box.setWindowTitle(t["tpl_picker_title"])
-        box.setText(t["tpl_delete_confirm"])
+        box.setWindowTitle(_("Templates"))
+        box.setText(_("Delete this template?"))
         box.setStandardButtons(
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         box.setDefaultButton(QMessageBox.StandardButton.No)
-        _localize_msgbox_buttons(box, t)
+        _localize_msgbox_buttons(box, _)
         if box.exec() != QMessageBox.Yes:
             return
         delete_custom_template(data["filename"])
@@ -281,8 +276,7 @@ class CreateTemplateDialog(QDialog):
     def __init__(self, lang: str, default_type: str = "daily",
                  prefill_content: str = "", parent=None):
         super().__init__(parent)
-        t = T[lang]
-        self.setWindowTitle(t["tpl_create_title"])
+        self.setWindowTitle(_("Create Custom Template"))
         self.setMinimumSize(520, 440)
         self.resize(580, 520)
 
@@ -294,18 +288,18 @@ class CreateTemplateDialog(QDialog):
         form.setSpacing(8)
 
         self._name = QLineEdit()
-        self._name.setPlaceholderText(t["tpl_name"])
-        form.addRow(t["tpl_name"], self._name)
+        self._name.setPlaceholderText(_("Template name"))
+        form.addRow(_("Template name"), self._name)
 
         self._type_cb = QComboBox()
-        for k, label in [("daily",   t["tpl_daily"]),
-                         ("weekly",  t["tpl_weekly"]),
-                         ("monthly", t["tpl_monthly"])]:
+        for k, label in [("daily",   _("Daily")),
+                         ("weekly",  _("Weekly")),
+                         ("monthly", _("Monthly"))]:
             self._type_cb.addItem(label, k)
         idx = self._type_cb.findData(default_type)
         if idx >= 0:
             self._type_cb.setCurrentIndex(idx)
-        form.addRow(t["tpl_type"], self._type_cb)
+        form.addRow(_("Type"), self._type_cb)
 
         lv.addLayout(form)
 
@@ -316,8 +310,8 @@ class CreateTemplateDialog(QDialog):
 
         btns = QDialogButtonBox(QDialogButtonBox.Save |
                                 QDialogButtonBox.Cancel)
-        btns.button(QDialogButtonBox.Save).setText(t["tpl_save"])
-        btns.button(QDialogButtonBox.Cancel).setText(t["btn_close"])
+        btns.button(QDialogButtonBox.Save).setText(_("Save"))
+        btns.button(QDialogButtonBox.Cancel).setText(_("Close"))
         btns.accepted.connect(self._save)
         btns.rejected.connect(self.reject)
         lv.addWidget(btns)
@@ -332,5 +326,5 @@ class CreateTemplateDialog(QDialog):
             return
         self.saved_filename = save_custom_template(
             name, self._type_cb.currentData(), self._editor.toPlainText())
-        QMessageBox.information(self, name, T[self._lang]["tpl_saved"])
+        QMessageBox.information(self, name, _("Template saved."))
         self.accept()

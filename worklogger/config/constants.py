@@ -2,10 +2,10 @@
 
 import sys
 
-APP_VERSION = "2.0.0"
+APP_VERSION = "2.2.0"
 APP_NAME = "Work Logger"
 APP_AUTHOR = "Ben Situ"
-APP_ID = "dev.worklogger.app.v1"
+APP_ID = "dev.worklogger.app.v2"
 GITHUB_URL = "https://github.com/bensitu/worklogger"
 GITHUB_RELEASES_API = (
     "https://api.github.com/repos/bensitu/worklogger/releases/latest"
@@ -14,6 +14,7 @@ GPL_URL = "https://www.gnu.org/licenses/gpl-3.0.html"
 LICENSE_SPDX = "GPL-3.0-or-later"
 
 DB_FILENAME = "worklog.db"
+MAX_SHIFT_HOURS = 16.0
 
 WORK_TYPE_KEYS = [
     "normal", "remote", "business_trip",

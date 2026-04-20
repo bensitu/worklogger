@@ -397,20 +397,25 @@ class LocalModelWorker:
             svc = LocalModelService.get(services)
             # load_provider() triggers lazy load (may take several seconds).
             # Auto-installs llama-cpp-python on first call if needed.
-            svc.load_provider()
+            svc.load_provider(services=services)
             _status("local_model_loaded")
             _status("local_model_generating")   # "Starting generation…"
             text = svc.generate(messages, temperature=temperature,
-                                max_tokens=max_tokens)
+                                max_tokens=max_tokens, services=services)
             _status("ai_status_done")
             invoker.done_signal.emit(text)
 
-        except (MemoryError, RuntimeError) as exc:
+        except MemoryError as exc:
             invoker.error_signal.emit("local_model_load_fail", str(exc))
         except FileNotFoundError as exc:
             invoker.error_signal.emit("local_model_not_downloaded", str(exc))
         except ImportError as exc:
             invoker.error_signal.emit("local_model_import_error", str(exc))
+        except RuntimeError as exc:
+            if str(exc) == "ai_assist.local_model_not_running":
+                invoker.error_signal.emit("ai_assist.local_model_not_running", "")
+            else:
+                invoker.error_signal.emit("local_model_load_fail", str(exc))
         except Exception as exc:
             invoker.error_signal.emit(
                 f"Local model error: {type(exc).__name__}", str(exc))

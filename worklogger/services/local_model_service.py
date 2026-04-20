@@ -25,8 +25,9 @@ import re
 import shutil
 import sys
 import threading
+import time
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 # ---------------------------------------------------------------------------
 # Public sentinel
@@ -172,7 +173,7 @@ def load_catalog(models_dir: Optional[Path] = None) -> list:
     Generic i18n fallback
     ~~~~~~~~~~~~~~~~~~~~~
     Entries that omit language keys for ``desc`` / ``pros`` fall back to the
-    ``"en"`` value (or the raw string if that is also absent).  This means
+    ``"en_US"`` value (or the raw string if that is also absent).  This means
     user-added models without translations still render gracefully.
     """
     if models_dir is None:
@@ -210,8 +211,8 @@ def load_catalog(models_dir: Optional[Path] = None) -> list:
             "size_mb": 1850,
             "ram_gb":  3,
             "default": True,
-            "desc":    {"en": "4-bit quantized — balanced speed and quality."},
-            "pros":    {"en": "✓ Recommended for most users"},
+            "desc":    {"en_US": "4-bit quantized — balanced speed and quality."},
+            "pros":    {"en_US": "✓ Recommended for most users"},
         }
     ]
 
@@ -233,14 +234,27 @@ def get_catalog_entry(entry_id: str,
 def localize_field(entry: dict, field: str, lang: str) -> str:
     """Extract a localised string from a catalog entry's dict field.
 
-    Resolution order: ``entry[field][lang]`` → ``entry[field]["en"]``
-    → ``entry[field]`` (if str) → ``""``.
+    Resolution order: ``entry[field][lang]`` → ``entry[field]["en_US"]``
+    → first available value → ``entry[field]`` (if str) → ``""``.
 
     This provides the generic i18n fallback required by spec §4.
     """
     value = entry.get(field, "")
     if isinstance(value, dict):
-        return value.get(lang) or value.get("en") or next(iter(value.values()), "")
+        lang_key = str(lang or "")
+        order_map = {
+            "en_US": ("en_US",),
+            "ja_JP": ("ja_JP",),
+            "ko_KR": ("ko_KR",),
+            "zh_CN": ("zh_CN",),
+            "zh_TW": ("zh_TW",),
+        }
+        for key in order_map.get(lang_key, (lang_key,)):
+            val = value.get(key)
+            if val:
+                return str(val)
+        fallback = value.get("en_US") or next(iter(value.values()), "")
+        return str(fallback) if fallback else ""
     return str(value) if value else ""
 
 
@@ -461,31 +475,144 @@ def delete_model_file(entry_id: str,
 # SHA-256 utilities
 # ---------------------------------------------------------------------------
 
+def _sha256_of_file_detailed(
+    path: Path,
+    *,
+    progress_cb: Optional[Callable[[int], None]] = None,
+    cancel_event: Optional[threading.Event] = None,
+    timeout_s: Optional[float] = None,
+) -> tuple[str, str]:
+    """Return ``(digest, status)`` while supporting timeout/cancel/progress.
+
+    Status values:
+    - ``"ok"``
+    - ``"missing"``
+    - ``"permission_denied"``
+    - ``"io_error"``
+    - ``"timeout"``
+    - ``"cancelled"``
+    """
+    if not path:
+        return "", "missing"
+    try:
+        p = Path(path)
+        if not p.exists() or not p.is_file():
+            return "", "missing"
+        total = max(0, int(p.stat().st_size))
+    except (OSError, ValueError):
+        return "", "missing"
+
+    h = hashlib.sha256()
+    start_ts = time.monotonic()
+    processed = 0
+
+    try:
+        with open(p, "rb") as fh:
+            for chunk in iter(lambda: fh.read(1 << 20), b""):
+                if cancel_event is not None and cancel_event.is_set():
+                    return "", "cancelled"
+                if timeout_s is not None and timeout_s > 0:
+                    if (time.monotonic() - start_ts) > timeout_s:
+                        return "", "timeout"
+                h.update(chunk)
+                processed += len(chunk)
+                if progress_cb is not None and total > 0:
+                    try:
+                        progress_cb(min(99, int((processed * 100) / total)))
+                    except Exception:
+                        pass
+    except PermissionError:
+        return "", "permission_denied"
+    except OSError:
+        return "", "io_error"
+
+    if progress_cb is not None:
+        try:
+            progress_cb(100)
+        except Exception:
+            pass
+    return h.hexdigest().lower(), "ok"
+
+
 def sha256_of_file(path: Path) -> str:
     """Return lower-case hex SHA-256 of *path*.
 
     Returns empty string on any I/O error rather than raising.
     """
-    if not path:
-        return ""
+    digest, status = _sha256_of_file_detailed(path)
+    return digest if status == "ok" else ""
+
+
+def verify_model_file_with_reason(
+    models_dir: Optional[Path] = None,
+    entry_id: str = "local",
+    *,
+    timeout_s: Optional[float] = None,
+    retries: int = 0,
+    progress_cb: Optional[Callable[[int], None]] = None,
+    cancel_event: Optional[threading.Event] = None,
+) -> tuple[bool, str]:
+    """Verify model presence/hash and return ``(ok, reason)``.
+
+    Reasons include:
+    ``ok``, ``unverified``, ``missing``, ``empty``, ``hash_mismatch``,
+    ``timeout``, ``cancelled``, ``permission_denied``, ``io_error``,
+    ``manifest_error``.
+    """
+    if not isinstance(entry_id, str) or not entry_id:
+        entry_id = "local"
+    if models_dir is None:
+        models_dir = get_models_dir()
+
     try:
-        p = Path(path)
-        if not p.exists() or not p.is_file():
-            return ""
-    except (OSError, ValueError):
-        return ""
-    h = hashlib.sha256()
-    try:
-        with open(p, "rb") as fh:
-            for chunk in iter(lambda: fh.read(1 << 20), b""):
-                h.update(chunk)
-    except OSError:
-        return ""
-    return h.hexdigest().lower()
+        manifest = load_manifest(models_dir)
+        entry = get_entry(manifest, entry_id)
+        filename = entry.get("file", "")
+        if not filename:
+            return False, "missing"
+        path = models_dir / filename
+        if not path.exists():
+            return False, "missing"
+        if path.stat().st_size == 0:
+            return False, "empty"
+        expected = entry.get("sha256", "").strip().lower()
+        if not expected:
+            if progress_cb is not None:
+                try:
+                    progress_cb(100)
+                except Exception:
+                    pass
+            return True, "unverified"
+    except Exception:
+        return False, "manifest_error"
+
+    attempts = max(1, int(retries) + 1)
+    last_reason = "io_error"
+    for _ in range(attempts):
+        digest, status = _sha256_of_file_detailed(
+            path,
+            progress_cb=progress_cb,
+            cancel_event=cancel_event,
+            timeout_s=timeout_s,
+        )
+        if status == "ok":
+            if digest == expected:
+                return True, "ok"
+            return False, "hash_mismatch"
+        if status in {"timeout", "io_error"}:
+            last_reason = status
+            continue
+        return False, status
+    return False, last_reason
 
 
 def verify_model_file(models_dir: Optional[Path] = None,
-                      entry_id: str = "local") -> bool:
+                      entry_id: str = "local",
+                      *,
+                      timeout_s: Optional[float] = None,
+                      retries: int = 0,
+                      progress_cb: Optional[Callable[[int], None]] = None,
+                      cancel_event: Optional[threading.Event] = None) -> bool:
     # Ensure entry_id is a non-empty string
     if not isinstance(entry_id, str) or not entry_id:
         entry_id = "local"
@@ -494,23 +621,15 @@ def verify_model_file(models_dir: Optional[Path] = None,
     A missing sha256 in the manifest (e.g. manual import) returns True so
     user-imported files are usable without requiring a network verify round.
     """
-    if models_dir is None:
-        models_dir = get_models_dir()
-    try:
-        manifest = load_manifest(models_dir)
-        entry    = get_entry(manifest, entry_id)
-        filename = entry.get("file", "")
-        if not filename:
-            return False
-        path = models_dir / filename
-        if not path.exists() or path.stat().st_size == 0:
-            return False
-        expected = entry.get("sha256", "").strip().lower()
-        if not expected:
-            return True  # present but unverified — allow manual imports
-        return sha256_of_file(path) == expected
-    except Exception:
-        return False
+    ok, _ = verify_model_file_with_reason(
+        models_dir=models_dir,
+        entry_id=entry_id,
+        timeout_s=timeout_s,
+        retries=retries,
+        progress_cb=progress_cb,
+        cancel_event=cancel_event,
+    )
+    return ok
 
 
 # ---------------------------------------------------------------------------
@@ -562,7 +681,7 @@ class LlamaCppProvider(LLMProvider):
         self._n_ctx        = max(512, int(n_ctx))
         self._n_threads    = max(1, int(n_threads))
         self._n_gpu_layers = max(0, int(n_gpu_layers))
-        self._llama        = None
+        self._llama: Any   = None
         self._lock         = threading.Lock()
 
     def is_available(self) -> bool:
@@ -693,7 +812,7 @@ class LocalModelService:
 
     # -- lazy provider -------------------------------------------------------
 
-    def load_provider(self) -> LLMProvider:
+    def load_provider(self, services=None) -> LLMProvider:
         """Return loaded provider; raises on failure.
 
         This is the *only* place the Llama instance is created.  It is
@@ -701,6 +820,8 @@ class LocalModelService:
         requested (lazy loading).
         """
         with self._load_lock:
+            if services is not None and not is_local_model_enabled(services):
+                raise RuntimeError("ai_assist.local_model_not_running")
             if self._provider and self._provider.is_available():
                 return self._provider
             manifest = load_manifest(self._models_dir)
@@ -734,11 +855,12 @@ class LocalModelService:
 
     def generate(self, messages: list,
                  temperature: float = 0.3,
-                 max_tokens: int = 1024) -> str:
+                 max_tokens: int = 1024,
+                 services=None) -> str:
         """Load provider lazily, run inference, return stripped reply."""
         if not messages:
             raise ValueError("messages must not be empty.")
-        provider = self.load_provider()
+        provider = self.load_provider(services=services)
         return provider.generate(messages,
                                   temperature=temperature,
                                   max_tokens=max_tokens)
@@ -810,8 +932,8 @@ class LocalModelService:
                 "ram_gb":  0,
                 "n_ctx":   8192,
                 "default": False,
-                "desc":    {"en": f"Manually imported: {src_filename}"},
-                "pros":    {"en": "✓ Custom model"},
+                "desc":    {"en_US": f"Manually imported: {src_filename}"},
+                "pros":    {"en_US": "✓ Custom model"},
             }
             catalog.append(new_cat_entry)
             _save_catalog(catalog, self._models_dir)
@@ -868,9 +990,19 @@ def should_use_local_model(services) -> bool:
     if services is None:
         return False
     try:
-        if services.get_setting("local_model_enabled", "0") != "1":
+        if not is_local_model_enabled(services):
             return False
         return verify_model_file()
+    except Exception:
+        return False
+
+
+def is_local_model_enabled(services) -> bool:
+    """Return True when the local model global switch is enabled."""
+    if services is None:
+        return False
+    try:
+        return str(services.get_setting("local_model_enabled", "0")) == "1"
     except Exception:
         return False
 

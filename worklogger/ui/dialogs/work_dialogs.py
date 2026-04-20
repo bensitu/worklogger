@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QTimer, QSize, QEvent
 from PySide6.QtGui import QFont
 
-from config.i18n import T
+from utils.i18n import _, msg
 from config.themes import THEMES
 from config.constants import WORK_TYPE_KEYS, LEAVE_TYPES
 from core.time_calc import calc_hours
@@ -27,8 +27,7 @@ class NoteEditorDialog(QDialog):
     def __init__(self, app_ref, parent=None):
         super().__init__(parent)
         self._app = app_ref
-        t = T[app_ref.lang]
-        self.setWindowTitle(t["note_dlg_title"])
+        self.setWindowTitle(_("Notes"))
         self.setMinimumSize(600, 460)
         self.resize(700, 560)
 
@@ -36,7 +35,7 @@ class NoteEditorDialog(QDialog):
         lv.setSpacing(8)
 
         d = app_ref.selected
-        dow = T[app_ref.lang]["days"][(d.weekday() + 1) % 7]
+        dow = [_("Sun"), _("Mon"), _("Tue"), _("Wed"), _("Thu"), _("Fri"), _("Sat")][(d.weekday() + 1) % 7]
         banner = QLabel(f"{d.year}/{d.month:02d}/{d.day:02d}  {dow}")
         banner.setObjectName("date_banner")
         banner.setAlignment(Qt.AlignCenter)
@@ -44,7 +43,7 @@ class NoteEditorDialog(QDialog):
 
         cal_events = app_ref.services.get_calendar_events_for_date(d.isoformat())
         if cal_events:
-            cal_lbl = QLabel(t["cal_events_context"] + "  " +
+            cal_lbl = QLabel(_("Calendar events:") + "  " +
                              " / ".join(e["summary"] for e in cal_events[:4]))
             cal_lbl.setObjectName("muted")
             cal_lbl.setWordWrap(True)
@@ -57,26 +56,26 @@ class NoteEditorDialog(QDialog):
 
         toolbar = QHBoxLayout()
         toolbar.setSpacing(6)
-        tpl_btn = QPushButton(t["tpl_btn"])
+        tpl_btn = QPushButton(_("📋 Templates"))
         tpl_btn.clicked.connect(self._open_template_picker)
         toolbar.addWidget(tpl_btn)
-        ql_btn = QPushButton(t.get("quick_log_insert_btn", "Insert Quick Log"))
+        ql_btn = QPushButton(_("Insert Quick Log"))
         ql_btn.clicked.connect(self._insert_quick_logs)
         toolbar.addWidget(ql_btn)
         toolbar.addStretch()
         lv.addLayout(toolbar)
 
         self._hint = QLineEdit()
-        self._hint.setPlaceholderText(t["ai_btn_hint"])
+        self._hint.setPlaceholderText(_("Hint / extra instructions (optional)"))
         lv.addWidget(self._hint)
 
         bot = QHBoxLayout()
         bot.setSpacing(6)
-        self._ai_btn = QPushButton(t["ai_btn"])
-        self._copy_btn = QPushButton(t["report_copy"])
-        apply_btn = QPushButton(t["note_apply"])
+        self._ai_btn = QPushButton(msg("ai_btn"))
+        self._copy_btn = QPushButton(msg("report_copy"))
+        apply_btn = QPushButton(_("Apply"))
         apply_btn.setObjectName("primary_btn")
-        cancel_btn = QPushButton(t["btn_close"])
+        cancel_btn = QPushButton(_("Close"))
 
         self._ai_btn.clicked.connect(self._ai_smart)
         self._copy_btn.clicked.connect(self._copy)
@@ -100,12 +99,11 @@ class NoteEditorDialog(QDialog):
             self._editor.setPlainText(dlg.chosen_content)
 
     def _insert_quick_logs(self):
-        t = T[self._app.lang]
         logs = self._app.services.quick_logs_for_date(
             self._app.selected.isoformat())
         if not logs:
             QMessageBox.information(
-                self, t["note_dlg_title"], t["quick_log_no_entries"]
+                self, _("Notes"), _("No entries yet today.")
             )
             return
         block = _append_quick_logs_block("", self._app, "daily")
@@ -115,11 +113,10 @@ class NoteEditorDialog(QDialog):
 
     def _ai_smart(self):
         app = self._app
-        t = T[app.lang]
         api_key, base_url, model = _get_ai_params(app, secondary=False)
         if not api_key:
             QMessageBox.warning(
-                self, t["note_dlg_title"], t["report_ai_key_missing"])
+                self, _("Notes"), _("Please set your API key in Settings → AI."))
             return
 
         d = app.selected
@@ -175,7 +172,7 @@ class NoteEditorDialog(QDialog):
                         result_dlg.generated_edit.toPlainText())
 
             AIProgressDialog.run(
-                self, app.lang, t["note_ai_btn"],
+                self, app.lang, _("✨ AI Assist"),
                 api_key, base_url, model, msgs,
                 on_success=on_success,
                 services=app.services,
@@ -184,11 +181,10 @@ class NoteEditorDialog(QDialog):
         do_ai()
 
     def _copy(self):
-        t = T[self._app.lang]
         QApplication.clipboard().setText(self._editor.toPlainText())
-        self._copy_btn.setText(t["report_copied"])
+        self._copy_btn.setText(msg("report_copied"))
         QTimer.singleShot(
-            2000, lambda: self._copy_btn.setText(t["report_copy"]))
+            2000, lambda: self._copy_btn.setText(msg("report_copy")))
 
     def _apply_and_close(self):
         self._app.note_in.setPlainText(self._editor.toPlainText())
@@ -199,8 +195,7 @@ class ReportDialog(QDialog):
     def __init__(self, app_ref, parent=None):
         super().__init__(parent)
         self._app = app_ref
-        t = T[app_ref.lang]
-        self.setWindowTitle(t["report_title"])
+        self.setWindowTitle(_("Work Report"))
         self.setMinimumSize(700, 520)
         self.resize(780, 620)
 
@@ -216,28 +211,28 @@ class ReportDialog(QDialog):
             wl = QVBoxLayout(w)
             wl.setContentsMargins(6, 6, 6, 6)
             wl.addWidget(editor)
-            self._tabs.addTab(w, t[key])
+            self._tabs.addTab(w, msg(key))
 
         lv.addWidget(self._tabs, 1)
 
         toolbar = QHBoxLayout()
         toolbar.setSpacing(6)
-        tpl_btn = QPushButton(t["tpl_btn"])
+        tpl_btn = QPushButton(_("📋 Templates"))
         tpl_btn.clicked.connect(self._open_template_picker)
         toolbar.addWidget(tpl_btn)
         toolbar.addStretch()
         lv.addLayout(toolbar)
 
         self._hint = QLineEdit()
-        self._hint.setPlaceholderText(t["ai_btn_hint"])
+        self._hint.setPlaceholderText(_("Hint / extra instructions (optional)"))
         lv.addWidget(self._hint)
 
         bot = QHBoxLayout()
         bot.setSpacing(6)
-        self._ai_btn = QPushButton(t["ai_btn"])
-        self._cp_btn = QPushButton(t["report_copy"])
-        self._dl_btn = QPushButton(t["report_download"])
-        close_btn = QPushButton(t["btn_close"])
+        self._ai_btn = QPushButton(msg("ai_btn"))
+        self._cp_btn = QPushButton(msg("report_copy"))
+        self._dl_btn = QPushButton(msg("report_download"))
+        close_btn = QPushButton(_("Close"))
         close_btn.setObjectName("primary_btn")
 
         self._ai_btn.clicked.connect(self._ai_smart)
@@ -288,18 +283,17 @@ class ReportDialog(QDialog):
 
     def _ai_smart(self):
         app = self._app
-        t = T[app.lang]
         api_key, base_url, model = _get_ai_params(app, secondary=True)
         if not api_key:
-            QMessageBox.warning(self, t["report_title"],
-                                t["report_ai_key_missing"])
+            QMessageBox.warning(self, _("Work Report"),
+                                _("Please set your API key in Settings → AI."))
             return
 
         import datetime as _dt
         idx = self._tabs.currentIndex()
         existing = self._current_editor().toPlainText().strip()
         hint = self._hint.text().strip()
-        period = t["report_weekly"] if idx == 0 else t["report_monthly"]
+        period = _("Weekly Report") if idx == 0 else _("Monthly Report")
 
         if idx == 0:
             monday = app.selected - _dt.timedelta(days=app.selected.weekday())
@@ -311,7 +305,7 @@ class ReportDialog(QDialog):
         else:
             y, m = app.current.year, app.current.month
             from calendar import monthrange
-            _, last = monthrange(y, m)
+            _first_weekday, last = monthrange(y, m)
             cal_evs = app.services.get_calendar_events_for_range(
                 f"{y}-{m:02d}-01", f"{y}-{m:02d}-{last:02d}")
             quick_logs = app.services.quick_logs_for_range(
@@ -371,7 +365,7 @@ class ReportDialog(QDialog):
                     self._current_editor().setPlainText(result_dlg.generated_edit.toPlainText())
 
             AIProgressDialog.run(
-                self, app.lang, t["report_ai_gen"],
+                self, app.lang, _("✨ AI Generate"),
                 api_key, base_url, model, msgs,
                 on_success=on_success,
                 services=app.services,
@@ -380,34 +374,31 @@ class ReportDialog(QDialog):
         do_ai()
 
     def _copy(self):
-        t = T[self._app.lang]
         QApplication.clipboard().setText(self._current_editor().toPlainText())
-        self._cp_btn.setText(t["report_copied"])
-        QTimer.singleShot(2000, lambda: self._cp_btn.setText(t["report_copy"]))
+        self._cp_btn.setText(msg("report_copied"))
+        QTimer.singleShot(2000, lambda: self._cp_btn.setText(msg("report_copy")))
 
     def _download(self):
         app = self._app
-        t = T[app.lang]
         idx = self._tabs.currentIndex()
         ts = dt.now().strftime("%Y%m%d_%H%M%S")
         label = "weekly" if idx == 0 else "monthly"
         defn = f"report_{label}_{ts}.md"
-        path, _ = QFileDialog.getSaveFileName(
-            self, t["report_download"], defn, "Markdown (*.md)")
+        path, _dialog_filter = QFileDialog.getSaveFileName(
+            self, msg("report_download"), defn, "Markdown (*.md)")
         if not path:
             return
         with open(path, "w", encoding="utf-8") as f:
             f.write(self._current_editor().toPlainText())
         QMessageBox.information(
-            self, t["btn_ok"], t["export_saved"].format(path))
+            self, _("OK"), _("Saved: {}").format(path))
 
 
 class ChartDialog(QDialog):
     def __init__(self, app_ref, parent=None):
         super().__init__(parent)
         self._app = app_ref
-        t = T[app_ref.lang]
-        self.setWindowTitle(t["chart_title"])
+        self.setWindowTitle(_("Work Time Analytics"))
         self.setMinimumSize(560, 440)
         self.resize(640, 520)
 
@@ -421,17 +412,17 @@ class ChartDialog(QDialog):
         self._datas:  list[list] = []
 
         specs = [
-            (t["tab_monthly"],   self._monthly_data(),   mt / 4.3),
-            (t["tab_quarterly"], self._quarterly_data(), mt * 3),
-            (t["tab_annual"],    self._annual_data(),    mt),
+            (_("Monthly"),   self._monthly_data(),   mt / 4.3),
+            (_("Quarterly"), self._quarterly_data(), mt * 3),
+            (_("Annual"),    self._annual_data(),    mt),
         ]
         for name, data, ref in specs:
             w = QWidget()
             wl = QVBoxLayout(w)
             wl.setContentsMargins(8, 8, 8, 8)
             chart = BarChart(data, ref=ref, dark=app_ref.dark,
-                             accent=acc, unit=t["h_unit"],
-                             no_data=t["no_data"])
+                             accent=acc, unit=_("h"),
+                             no_data=_("No data"))
             wl.addWidget(chart)
             self._tabs_w.addTab(w, name)
             self._charts.append(chart)
@@ -443,7 +434,7 @@ class ChartDialog(QDialog):
         bot.setSpacing(8)
         csv_btn = QPushButton("⬇  CSV")
         pdf_btn = QPushButton("⬇  PDF")
-        close_btn = QPushButton(t["btn_close"])
+        close_btn = QPushButton(_("Close"))
         close_btn.setObjectName("primary_btn")
         csv_btn.clicked.connect(self._export_csv)
         pdf_btn.clicked.connect(self._export_pdf)
@@ -471,28 +462,41 @@ class ChartDialog(QDialog):
 
     def _annual_data(self):
         app = self._app
-        t = T[app.lang]
         y = app.current.year
-        return analytics_service.annual_hours(app.services.month_records, y, t["month_short"])
+        return analytics_service.annual_hours(app.services.month_records, y, [_("Jan"), _("Feb"), _("Mar"), _("Apr"), _("May"), _("Jun"), _("Jul"), _("Aug"), _("Sep"), _("Oct"), _("Nov"), _("Dec")])
 
     def _monthly_detail(self):
         app = self._app
-        t = T[app.lang]
         y, m = app.current.year, app.current.month
         rows = []
         wk_map = {"normal": "wt_normal", "remote": "wt_remote",
                   "business_trip": "wt_business", "paid_leave": "wt_paid",
                   "comp_leave": "wt_comp", "sick_leave": "wt_sick"}
+        wk_fallback = {
+            "wt_normal": "Normal",
+            "wt_remote": "Remote work",
+            "wt_business": "Business trip",
+            "wt_paid": "Paid leave",
+            "wt_comp": "Comp leave",
+            "wt_sick": "Sick leave",
+        }
         for rec in sorted(app.services.month_records(f"{y}-{m:02d}"),
                           key=lambda r: r.date):
             h = calc_hours(rec.start, rec.end, rec.break_hours) if rec.has_times else 0.0
             ot = max(h - app.work_hours, 0)
             wt = rec.safe_work_type()
+            overnight_suffix = (
+                f" ({_("Night")})"
+                if rec.is_overnight and rec.end else ""
+            )
             rows.append({"date": rec.date,
                          "start": rec.start or "—",
-                         "end": rec.end or "—",
+                         "end": (rec.end or "—") + overnight_suffix if rec.end else "—",
                          "h": h, "ot": ot,
-                         "wt": t.get(wk_map.get(wt, "wt_normal"), wt),
+                         "wt": msg(
+                             wk_map.get(wt, "wt_normal"),
+                             wk_fallback.get(wk_map.get(wt, "wt_normal"), wt),
+                         ),
                          "note": rec.safe_note()})
         return rows
 
@@ -503,7 +507,7 @@ class ChartDialog(QDialog):
         for q in range(1, 5):
             tot = ot = wd = ld = 0.0
             for m in range((q-1)*3+1, q*3+1):
-                a, b, c, d, _ = self._month_stats(y, m)
+                a, b, c, d, _avg = self._month_stats(y, m)
                 tot += a
                 ot += b
                 wd += c
@@ -515,12 +519,11 @@ class ChartDialog(QDialog):
 
     def _annual_detail(self):
         app = self._app
-        t = T[app.lang]
         y = app.current.year
         rows = []
         for m in range(1, 13):
             total, ot, wd, ld, avg = self._month_stats(y, m)
-            rows.append({"m": t["month_short"][m-1], "total": total,
+            rows.append({"m": [_("Jan"), _("Feb"), _("Mar"), _("Apr"), _("May"), _("Jun"), _("Jul"), _("Aug"), _("Sep"), _("Oct"), _("Nov"), _("Dec")][m-1], "total": total,
                          "ot": ot, "wd": wd, "ld": ld, "avg": avg})
         return rows
 
@@ -537,36 +540,34 @@ class ChartDialog(QDialog):
         return f"worklog_{sfx}_{ts}.pdf"
 
     def _export_csv(self):
-        data, _ = self._current()
+        data, _chart_widget = self._current()
         app = self._app
-        t = T[app.lang]
         ts = dt.now().strftime("%Y%m%d_%H%M%S")
-        path, _ = QFileDialog.getSaveFileName(
-            self, t["export_title"] + " CSV", f"chart_{ts}.csv", "CSV (*.csv)")
+        path, _dialog_filter = QFileDialog.getSaveFileName(
+            self, _("Export") + " CSV", f"chart_{ts}.csv", "CSV (*.csv)")
         if not path:
             return
         with open(path, "w", newline="", encoding="utf-8") as f:
             w = csv.writer(f)
-            w.writerow(["period", f"hours ({t['h_unit']})"])
+            w.writerow(["period", f"hours ({_("h")})"])
             w.writerows(data)
-        QMessageBox.information(self, "Export", t["export_saved"].format(path))
+        QMessageBox.information(self, "Export", _("Saved: {}").format(path))
 
     def _export_pdf(self):
         data, chart_widget = self._current()
         app = self._app
-        t = T[app.lang]
         try:
             from PySide6.QtPrintSupport import QPrinter
         except ImportError:
-            QMessageBox.warning(self, t["export_title"],
-                                t["pdf_requires_print_support"])
-            path, _ = QFileDialog.getSaveFileName(
+            QMessageBox.warning(self, _("Export"),
+                                _("PDF requires QtPrintSupport. Saving PNG."))
+            path, _dialog_filter = QFileDialog.getSaveFileName(
                 self, "PNG", "chart.png", "PNG(*.png)")
             if path:
                 chart_widget.grab().save(path)
             return
-        path, _ = QFileDialog.getSaveFileName(
-            self, t["export_title"] + " PDF", self._default_pdf_name(), "PDF (*.pdf)")
+        path, _dialog_filter = QFileDialog.getSaveFileName(
+            self, _("Export") + " PDF", self._default_pdf_name(), "PDF (*.pdf)")
         if not path:
             return
         idx = self._tabs_w.currentIndex()
@@ -586,9 +587,9 @@ class ChartDialog(QDialog):
         try:
             render_pdf(path, idx, tab, chart_widget, data, detail_fns[idx], ctx)
             QMessageBox.information(
-                self, t["export_title"], t["export_saved"].format(path))
+                self, _("Export"), _("Saved: {}").format(path))
         except Exception as exc:
-            QMessageBox.critical(self, t["export_title"], str(exc))
+            QMessageBox.critical(self, _("Export"), str(exc))
 
     def _pdf_monthly(self, p, pw, ph, pt, t, top, ctx):
         from PySide6.QtCore import QRectF
@@ -599,11 +600,11 @@ class ChartDialog(QDialog):
             return
         total, ot, wd, ld, avg = self._month_stats(
             ctx.year, ctx.month)
-        cols = [(t["stat_total"], f"{total:.1f}{t['h_unit']}"),
-                (t["stat_ot"],    f"{ot:.1f}{t['h_unit']}"),
-                (t["stat_avg"],   f"{avg:.1f}{t['h_unit']}"),
-                (t["stat_days"],  f"{int(wd)}{t['d_unit']}"),
-                (t["stat_leave"], f"{int(ld)}{t['d_unit']}")]
+        cols = [(_("Monthly total"), f"{total:.1f}{_("h")}"),
+                (_("Overtime"),    f"{ot:.1f}{_("h")}"),
+                (_("Daily avg"),   f"{avg:.1f}{_("h")}"),
+                (_("Work days"),  f"{int(wd)}{_(" days")}"),
+                (_("Leave days"), f"{int(ld)}{_(" days")}")]
         box_h = pt(34)
         cw2 = pw / len(cols)
         p.setBrush(QBrush(QColor("#f0f4ff")))
@@ -623,8 +624,8 @@ class ChartDialog(QDialog):
             p.setPen(QColor("#1e2035"))
             p.drawText(QRectF(cx, top+pt(16), cw2, pt(14)), Qt.AlignCenter, v)
         top += box_h + pt(6)
-        hdrs = [("Date", 0.13), (t["start"], 0.10), (t["end"], 0.10),
-                (t["h_unit"], 0.09), ("OT", 0.09), (t["wt_label"], 0.16), (t["note"], 0.33)]
+        hdrs = [("Date", 0.13), (_("Start"), 0.10), (_("End"), 0.10),
+                (_("h"), 0.09), ("OT", 0.09), (_("Work type"), 0.16), (_("Notes"), 0.33)]
         rh = pt(16)
         p.setBrush(QBrush(QColor("#dde6f8")))
         p.setPen(Qt.NoPen)
@@ -656,7 +657,7 @@ class ChartDialog(QDialog):
                     f"+{row['ot']:.1f}" if row["ot"] > 0 else "—",
                     row["wt"], row["note"][:30]]
             x = 0
-            for val, (_, frac) in zip(vals, hdrs):
+            for val, (_label, frac) in zip(vals, hdrs):
                 cw = pw*frac
                 p.drawText(QRectF(x+pt(2), top, cw-pt(4), rh2),
                            Qt.AlignVCenter | Qt.AlignLeft, str(val))
@@ -676,8 +677,8 @@ class ChartDialog(QDialog):
         from PySide6.QtGui import QColor, QBrush, QFont
         from PySide6.QtCore import Qt
         rows = self._quarterly_detail()
-        hdrs = [("Quarter", 0.15), (t["stat_total"], 0.17), (t["stat_ot"], 0.17),
-                (t["stat_avg"], 0.17), (t["stat_days"], 0.17), (t["stat_leave"], 0.17)]
+        hdrs = [("Quarter", 0.15), (_("Monthly total"), 0.17), (_("Overtime"), 0.17),
+                (_("Daily avg"), 0.17), (_("Work days"), 0.17), (_("Leave days"), 0.17)]
         rh = pt(16)
         p.setBrush(QBrush(QColor("#dde6f8")))
         p.setPen(Qt.NoPen)
@@ -704,11 +705,11 @@ class ChartDialog(QDialog):
             p.drawRect(QRectF(0, top, pw, rh2))
             p.setFont(fr)
             p.setPen(QColor("#1e2035"))
-            vals = [row["q"], f"{row['total']:.1f}{t['h_unit']}",
-                    f"{row['ot']:.1f}{t['h_unit']}", f"{row['avg']:.1f}{t['h_unit']}",
-                    f"{row['wd']}{t['d_unit']}", f"{row['ld']}{t['d_unit']}"]
+            vals = [row["q"], f"{row['total']:.1f}{_("h")}",
+                    f"{row['ot']:.1f}{_("h")}", f"{row['avg']:.1f}{_("h")}",
+                    f"{row['wd']}{_(" days")}", f"{row['ld']}{_(" days")}"]
             x = 0
-            for val, (_, frac) in zip(vals, hdrs):
+            for val, (_label, frac) in zip(vals, hdrs):
                 cw = pw*frac
                 p.drawText(QRectF(x+pt(3), top, cw-pt(6), rh2),
                            Qt.AlignVCenter | Qt.AlignLeft, str(val))
@@ -725,10 +726,10 @@ class ChartDialog(QDialog):
         wd = sum(x[2] for x in s)
         ld = sum(x[3] for x in s)
         avg = total/wd if wd else 0.0
-        cols = [(t["stat_total"], f"{total:.1f}{t['h_unit']}"), (t["stat_ot"], f"{ot:.1f}{t['h_unit']}"),
-                (t["stat_avg"], f"{avg:.1f}{t['h_unit']}"), (
-                    t["stat_days"], f"{int(wd)}{t['d_unit']}"),
-                (t["stat_leave"], f"{int(ld)}{t['d_unit']}")]
+        cols = [(_("Monthly total"), f"{total:.1f}{_("h")}"), (_("Overtime"), f"{ot:.1f}{_("h")}"),
+                (_("Daily avg"), f"{avg:.1f}{_("h")}"), (
+                    _("Work days"), f"{int(wd)}{_(" days")}"),
+                (_("Leave days"), f"{int(ld)}{_(" days")}")]
         box_h = pt(34)
         cw2 = pw/len(cols)
         p.setBrush(QBrush(QColor("#f0f4ff")))
@@ -749,8 +750,8 @@ class ChartDialog(QDialog):
             p.drawText(QRectF(cx, top+pt(16), cw2, pt(14)), Qt.AlignCenter, v)
         top += box_h+pt(6)
         rows = self._annual_detail()
-        hdrs = [("Month", 0.12), (t["stat_total"], 0.17), (t["stat_ot"], 0.17),
-                (t["stat_avg"], 0.17), (t["stat_days"], 0.17), (t["stat_leave"], 0.20)]
+        hdrs = [("Month", 0.12), (_("Monthly total"), 0.17), (_("Overtime"), 0.17),
+                (_("Daily avg"), 0.17), (_("Work days"), 0.17), (_("Leave days"), 0.20)]
         rh = pt(16)
         p.setBrush(QBrush(QColor("#dde6f8")))
         p.setPen(Qt.NoPen)
@@ -777,10 +778,10 @@ class ChartDialog(QDialog):
             p.drawRect(QRectF(0, top, pw, rh2))
             p.setFont(fr)
             p.setPen(QColor("#1e2035" if row["total"] > 0 else "#9090a8"))
-            vals = [row["m"], f"{row['total']:.1f}{t['h_unit']}", f"{row['ot']:.1f}{t['h_unit']}",
-                    f"{row['avg']:.1f}{t['h_unit']}", f"{row['wd']}{t['d_unit']}", f"{row['ld']}{t['d_unit']}"]
+            vals = [row["m"], f"{row['total']:.1f}{_("h")}", f"{row['ot']:.1f}{_("h")}",
+                    f"{row['avg']:.1f}{_("h")}", f"{row['wd']}{_(" days")}", f"{row['ld']}{_(" days")}"]
             x = 0
-            for val, (_, frac) in zip(vals, hdrs):
+            for val, (_label, frac) in zip(vals, hdrs):
                 cw = pw*frac
                 p.drawText(QRectF(x+pt(3), top, cw-pt(6), rh2),
                            Qt.AlignVCenter | Qt.AlignLeft, str(val))
@@ -792,8 +793,7 @@ class QuickLogDialog(QDialog):
     def __init__(self, app_ref, parent=None):
         super().__init__(parent)
         self._app = app_ref
-        t = T[app_ref.lang]
-        self.setWindowTitle(t["quick_log_title"])
+        self.setWindowTitle(_("Quick Log"))
         self.setMinimumSize(500, 400)
         self.resize(640, 440)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
@@ -810,7 +810,7 @@ class QuickLogDialog(QDialog):
         outer.setContentsMargins(10, 8, 10, 8)
 
         d = app_ref.selected
-        dow = T[app_ref.lang]["days"][(d.weekday() + 1) % 7]
+        dow = [_("Sun"), _("Mon"), _("Tue"), _("Wed"), _("Thu"), _("Fri"), _("Sat")][(d.weekday() + 1) % 7]
         banner = QLabel(f"{d.year}/{d.month:02d}/{d.day:02d}  {dow}")
         banner.setObjectName("date_banner")
         banner.setAlignment(Qt.AlignCenter)
@@ -825,7 +825,7 @@ class QuickLogDialog(QDialog):
         lft.setContentsMargins(3, 0, 3, 0)
         lft.setSpacing(4)
 
-        lbl = QLabel(t["quick_log_today"])
+        lbl = QLabel(_("Today's entries:"))
         lbl.setObjectName("muted")
         lft.addWidget(lbl)
 
@@ -848,7 +848,7 @@ class QuickLogDialog(QDialog):
         rgt.setContentsMargins(4, 0, 0, 0)
         rgt.setSpacing(8)
 
-        time_lbl = QLabel(t["quick_log_time"])
+        time_lbl = QLabel(_("Time"))
         time_lbl.setObjectName("muted")
         rgt.addWidget(time_lbl)
 
@@ -856,7 +856,7 @@ class QuickLogDialog(QDialog):
 
         time_row = QHBoxLayout()
         time_row.setSpacing(4)
-        self._clk_start_btn = QPushButton(t["clock"])
+        self._clk_start_btn = QPushButton(_("Clock"))
         self._clk_start_btn.setObjectName("clock_btn")
         self._clk_start_btn.setFixedWidth(50)
         self._clk_start_btn.clicked.connect(
@@ -872,12 +872,12 @@ class QuickLogDialog(QDialog):
         arrow.setAlignment(Qt.AlignCenter)
 
         self._end_in = QLineEdit()
-        self._end_in.setPlaceholderText(t["quick_log_end_time"])
+        self._end_in.setPlaceholderText(_("End time (opt.)"))
         self._end_in.setFixedWidth(85)
         self._end_in.editingFinished.connect(
             lambda: self._normalise_time(self._end_in))
 
-        self._clk_end_btn = QPushButton(t["clock"])
+        self._clk_end_btn = QPushButton(_("Clock"))
         self._clk_end_btn.setObjectName("clock_btn")
         self._clk_end_btn.setFixedWidth(50)
         self._clk_end_btn.clicked.connect(
@@ -891,21 +891,21 @@ class QuickLogDialog(QDialog):
         time_row.addStretch()
         rgt.addLayout(time_row)
 
-        desc_lbl = QLabel(t["quick_log_desc"])
+        desc_lbl = QLabel(_("What are you doing?"))
         desc_lbl.setObjectName("muted")
         rgt.addWidget(desc_lbl)
 
         self._desc_in = QLineEdit()
-        self._desc_in.setPlaceholderText(t["quick_log_desc"])
+        self._desc_in.setPlaceholderText(_("What are you doing?"))
         self._desc_in.returnPressed.connect(self._add_entry)
         rgt.addWidget(self._desc_in)
 
         btn_row = QHBoxLayout()
         btn_row.setSpacing(6)
-        self._add_btn = QPushButton(t["quick_log_add"])
+        self._add_btn = QPushButton(msg("quick_log_add"))
         self._add_btn.setObjectName("primary_btn")
         self._add_btn.clicked.connect(self._add_entry)
-        self._cancel_edit_btn = QPushButton(t["btn_close"])
+        self._cancel_edit_btn = QPushButton(_("Close"))
         self._cancel_edit_btn.setVisible(False)
         self._cancel_edit_btn.clicked.connect(self._cancel_edit)
         btn_row.addStretch()
@@ -922,10 +922,10 @@ class QuickLogDialog(QDialog):
         outer.addWidget(splitter, 1)
 
         bot = QHBoxLayout()
-        hint_lbl = QLabel(t["quick_log_hint"])
+        hint_lbl = QLabel(_("Quick logs appear in daily notes and AI reports."))
         hint_lbl.setObjectName("muted")
         hint_lbl.setWordWrap(True)
-        close_btn = QPushButton(t["btn_close"])
+        close_btn = QPushButton(_("Close"))
         close_btn.clicked.connect(self.accept)
         bot.addWidget(hint_lbl, 1)
         bot.addWidget(close_btn)
@@ -952,10 +952,9 @@ class QuickLogDialog(QDialog):
         self._list.setUpdatesEnabled(False)
         self._list.clear()
         entries = self._app.services.quick_logs_for_date(d_str)
-        t = T[self._app.lang]
         hover_color = THEMES[self._app.theme][self._app.dark][1]
         if not entries:
-            placeholder = QListWidgetItem(t["quick_log_no_entries"])
+            placeholder = QListWidgetItem(_("No entries yet today."))
             placeholder.setFlags(Qt.NoItemFlags)
             self._list.addItem(placeholder)
         else:
@@ -990,7 +989,7 @@ class QuickLogDialog(QDialog):
                     "QPushButton:hover{color:#ff0000; background:transparent;}"
                 )
                 x_btn.setFixedSize(18, 18)
-                x_btn.setToolTip(t["quick_log_delete"])
+                x_btn.setToolTip(msg("quick_log_delete"))
                 x_btn.setCursor(Qt.PointingHandCursor)
                 x_btn.setVisible(False)
                 x_btn.clicked.connect(
@@ -1086,13 +1085,12 @@ class QuickLogDialog(QDialog):
         self._sync_row_styles()
 
     def _do_load(self, entry):
-        t = T[self._app.lang]
         self._editing_id = entry["id"]
         self._time_in.setText(entry["time"])
         self._end_in.setText(entry.get("end_time", "") or "")
         self._desc_in.setText(entry["description"])
         self._desc_in.setFocus()
-        self._add_btn.setText(t["tpl_save"])
+        self._add_btn.setText(_("Save"))
         self._cancel_edit_btn.setVisible(True)
         for i in range(self._list.count()):
             item = self._list.item(i)
@@ -1101,19 +1099,17 @@ class QuickLogDialog(QDialog):
                 break
 
     def _cancel_edit(self):
-        t = T[self._app.lang]
         self._editing_id = None
         from datetime import datetime as _dt
         self._time_in.setText(_dt.now().strftime("%H:%M"))
         self._end_in.clear()
         self._desc_in.clear()
-        self._add_btn.setText(t["quick_log_add"])
+        self._add_btn.setText(msg("quick_log_add"))
         self._cancel_edit_btn.setVisible(False)
         self._list.clearSelection()
         self._sync_row_styles()
 
     def _add_entry(self):
-        t = T[self._app.lang]
         desc = self._desc_in.text().strip()
         if not desc:
             self._desc_in.setFocus()
@@ -1137,15 +1133,14 @@ class QuickLogDialog(QDialog):
         self._refresh_list()
 
     def _delete_one(self, log_id: int):
-        t = T[self._app.lang]
         box = QMessageBox(self)
         box.setIcon(QMessageBox.Icon.Question)
-        box.setWindowTitle(t["quick_log_title"])
-        box.setText(t["quick_log_delete_confirm"])
+        box.setWindowTitle(_("Quick Log"))
+        box.setText(_("Delete this entry?"))
         box.setStandardButtons(
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         box.setDefaultButton(QMessageBox.StandardButton.No)
-        _localize_msgbox_buttons(box, t)
+        _localize_msgbox_buttons(box, _)
         if box.exec() != QMessageBox.Yes:
             return
         self._app.services.delete_quick_log(log_id)

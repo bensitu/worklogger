@@ -67,15 +67,17 @@ a = Analysis(
     datas=[
         # Application assets
         ("worklogger/assets",                               "assets"),
+        # i18n translation catalogs
+        ("worklogger/locales",                              "locales"),
         # Built-in report templates
-        ("worklogger/templates/en",                         "templates/en"),
-        ("worklogger/templates/ja",                         "templates/ja"),
-        ("worklogger/templates/zh_cn",                      "templates/zh_cn"),
-        ("worklogger/templates/zh_tw",                      "templates/zh_tw"),
-        ("worklogger/templates/ko",                         "templates/ko"),
+        ("worklogger/templates/en_US",                          "templates/en_US"),
+        ("worklogger/templates/ja_JP",                          "templates/ja_JP"),
+        ("worklogger/templates/zh_CN",                          "templates/zh_cn"),
+        ("worklogger/templates/zh_TW",                          "templates/zh_tw"),
+        ("worklogger/templates/ko_KR",                          "templates/ko_KR"),
         ("worklogger/templates/custom/Sample_1000000000000.json",
                                                             "templates/custom"),
-        # Local model catalog (model list; no GGUF file bundled)
+        # Local model catalog
         ("worklogger/models/catalog.json",                  "models"),
     ] + _llama_data + _httpx_data + _portalocker_data,
     hiddenimports=[
@@ -97,7 +99,6 @@ a = Analysis(
         "portalocker",
         "portalocker.utils",
         "portalocker.exceptions",
-        # Needed by llama_cpp import; keep explicit to avoid accidental pruning
         "numpy",
         # httpx back-end
         "httpcore",
@@ -145,7 +146,7 @@ if sys.platform == "darwin":
         bundle_identifier="dev.worklogger.app.v1",
         info_plist={
             "NSHighResolutionCapable": True,
-            "CFBundleShortVersionString": "2.0.0",
-            "CFBundleVersion": "4",
+            "CFBundleShortVersionString": "2.2.0",
+            "CFBundleVersion": "6",
         },
     )

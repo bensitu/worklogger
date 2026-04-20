@@ -46,12 +46,14 @@ worklogger/templates/custom/*.json
 !worklogger/templates/custom/Sample_1000000000000.json
 dist/templates/custom/*.json
 !dist/templates/custom/Sample_1000000000000.json
+worklogger/locales/*/LC_MESSAGES/*.mo
 
 # Do not commit unit tests
 tests/
 
 # Local models and data files
 worklogger/models/*.gguf
+worklogger/models/*.gguf.tmp
 worklogger/models/*.json
 worklogger/models/*.lock
 !worklogger/models/catalog.json
@@ -59,3 +61,4 @@ worklogger/models/*.lock
 # macOS and Windows release artifacts are generated in dist/
 *.exe
 *.dmg
+*.app

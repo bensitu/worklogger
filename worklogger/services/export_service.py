@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime, date
 from typing import TYPE_CHECKING
 
-from core.time_calc import calc_hours
+from core.time_calc import calc_hours, shift_datetimes
 
 if TYPE_CHECKING:
     from data.db import DB
@@ -43,7 +43,9 @@ def export_csv(path: str, rows: list) -> None:
     with open(path, "w", newline="", encoding="utf-8-sig") as f:
         w = csv.writer(f)
         w.writerow(["date", "start", "end", "break", "note", "work_type"])
-        w.writerows(rows)
+        for r in rows:
+            # Keep export schema stable even if internal record gains fields.
+            w.writerow(list(r)[:6])
 
 
 def import_csv(path: str, db: "DB", required_cols: set,
@@ -100,14 +102,15 @@ def build_ics(rows: list) -> str:
     for r in rows:
         if not r.has_times:
             continue
-        d = r.date.replace("-", "")
         h = calc_hours(r.start, r.end, r.break_hours)
         note = r.safe_note().replace("\\n", " ").replace(",", "\\,")
         summary = f"Work {h:.1f}h" + (f" — {note[:60]}" if note else "")
-        sh, sm = r.start.split(":")
-        eh, em = r.end.split(":")
-        dtstart = f"{d}T{int(sh):02d}{int(sm):02d}00"
-        dtend   = f"{d}T{int(eh):02d}{int(em):02d}00"
+        dt_pair = shift_datetimes(r.date, r.start, r.end)
+        if not dt_pair:
+            continue
+        start_dt, end_dt = dt_pair
+        dtstart = start_dt.strftime("%Y%m%dT%H%M%S")
+        dtend = end_dt.strftime("%Y%m%dT%H%M%S")
         lines += [
             "BEGIN:VEVENT",
             f"DTSTART:{dtstart}", f"DTEND:{dtend}",
@@ -140,11 +143,9 @@ def render_pdf(
     from PySide6.QtGui import (QPainter, QPageLayout, QPageSize,
                                QFont, QColor, QPen, QBrush)
     from PySide6.QtCore import Qt
-    from config.i18n import T
+    from utils.i18n import _
     from config.themes import THEMES
     from ui.widgets import BarChart
-
-    t = T[ctx.lang]
     acc = THEMES[ctx.theme][False][0]
 
     printer = QPrinter(QPrinter.HighResolution)
@@ -170,7 +171,7 @@ def render_pdf(
     painter.setPen(QColor("#1e2035"))
     th = pt(30)
     painter.drawText(QRectF(0, 0, pw, th),
-                     Qt.AlignHCenter | Qt.AlignVCenter, t["chart_title"])
+                     Qt.AlignHCenter | Qt.AlignVCenter, _("Work Time Analytics"))
     f2 = QFont("sans-serif")
     f2.setPixelSize(pt(10))
     painter.setFont(f2)
@@ -189,7 +190,7 @@ def render_pdf(
     mt = ctx.monthly_target
     refs = [mt / 4.3, mt * 3, mt]
     tmp = BarChart(data, ref=refs[tab_index], dark=False, accent=acc,
-                   unit=t["h_unit"], no_data=t["no_data"])
+                   unit=_("h"), no_data=_("No data"))
     tmp.resize(chart_widget.size())
     src_px = tmp.grab()
     tmp.deleteLater()
@@ -209,5 +210,5 @@ def render_pdf(
     painter.drawLine(int(pw*0.03), cursor_y, int(pw*0.97), cursor_y)
     cursor_y += pt(10)
 
-    detail_fn(painter, pw, ph, pt, t, cursor_y, ctx)
+    detail_fn(painter, pw, ph, pt, _, cursor_y, ctx)
     painter.end()

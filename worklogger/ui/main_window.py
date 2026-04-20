@@ -14,10 +14,11 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QTimer, Slot, QEvent
 from PySide6.QtGui import QColor, QPainter, QAction
 
-from config.i18n import T, LANG_KEYS, LANG_NAMES
+from utils.i18n import _, msg, LANG_NAMES, set_language
 from config.themes import make_qss, cell_pool, THEMES, THEME_KEYS, WT_BORDER_ACCENT
-from config.constants import WORK_TYPE_KEYS, LEAVE_TYPES
-from core.time_calc import calc_hours, detect_country
+from config.themes import CALENDAR_STYLE
+from config.constants import WORK_TYPE_KEYS, LEAVE_TYPES, MAX_SHIFT_HOURS
+from core.time_calc import calc_hours, calc_shift_span_hours, is_overnight_shift, detect_country
 from core.validator import parse_time
 from services.app_services import AppServices
 from stores.app_store import AppStore, AppState
@@ -29,16 +30,19 @@ from utils.icon import make_icon
 
 STYLE_PRIO = ["weekend", "today", "holiday", "selected"]
 REQUIRED_COLS = {"date", "start", "end", "break", "note"}
+ThemeColors = tuple[str, str, str, str, str]
+ThemePalette = dict[bool, ThemeColors]
+ThemeMap = dict[str, ThemePalette]
 
 
-def _localize_msgbox_buttons(box: QMessageBox, t: dict) -> QMessageBox:
+def _localize_msgbox_buttons(box: QMessageBox, translator) -> QMessageBox:
     """Apply translated labels to common standard message box buttons."""
     mapping = {
-        QMessageBox.StandardButton.Yes: t.get("btn_yes", "Yes"),
-        QMessageBox.StandardButton.No: t.get("btn_no", "No"),
-        QMessageBox.StandardButton.Save: t.get("save", "Save"),
-        QMessageBox.StandardButton.Discard: t.get("btn_discard", "Discard"),
-        QMessageBox.StandardButton.Cancel: t.get("btn_cancel", "Cancel"),
+        QMessageBox.StandardButton.Yes: translator("Yes"),
+        QMessageBox.StandardButton.No: translator("No"),
+        QMessageBox.StandardButton.Save: translator("Save"),
+        QMessageBox.StandardButton.Discard: translator("Discard"),
+        QMessageBox.StandardButton.Cancel: translator("Cancel"),
     }
     for button, label in mapping.items():
         btn = box.button(button)
@@ -53,22 +57,40 @@ class CalendarDayButton(QPushButton):
     def __init__(self, text: str = "", parent=None):
         super().__init__(text, parent)
         self._show_note_marker = False
-        self._marker_color = "#4f8ef7"
+        self._marker_color = CALENDAR_STYLE["note_marker_default"]
+        self._show_overnight_marker = False
+        self._overnight_marker_color = CALENDAR_STYLE["overnight_marker_default"]
 
     def set_note_marker(self, visible: bool, color: str) -> None:
         self._show_note_marker = visible
         self._marker_color = color
         self.update()
 
+    def set_overnight_marker(self, visible: bool, color: str) -> None:
+        self._show_overnight_marker = visible
+        self._overnight_marker_color = color
+        self.update()
+
     def paintEvent(self, event):
         super().paintEvent(event)
-        if not self._show_note_marker:
-            return
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
-        p.setPen(Qt.NoPen)
-        p.setBrush(QColor(self._marker_color))
-        p.drawEllipse(7, 7, 7, 7)
+        if self._show_note_marker:
+            p.setPen(Qt.NoPen)
+            p.setBrush(QColor(self._marker_color))
+            p.drawEllipse(7, 7, 7, 7)
+        if self._show_overnight_marker:
+            p.setPen(QColor(self._overnight_marker_color))
+            icon_size = int(CALENDAR_STYLE["overnight_icon_size"])
+            icon_margin = int(CALENDAR_STYLE["overnight_icon_margin"])
+            x = self.width() - icon_size - icon_margin
+            y = icon_margin
+            p.drawText(
+                x, y,
+                icon_size, icon_size,
+                Qt.AlignCenter,
+                str(CALENDAR_STYLE["overnight_icon"]),
+            )
         p.end()
 
 
@@ -76,15 +98,12 @@ class App(QWidget):
     def __init__(self):
         super().__init__()
         self.services = AppServices()
+        self.themes: ThemeMap = {name: dict(palette) for name, palette in THEMES.items()}
         self.today = date.today()
         self.current = self.today.replace(day=1)
         self.selected = self.today
 
-        saved_lang = self.services.get_setting("lang",  "en")
-        saved_theme = self.services.get_setting("theme", "blue")
-        self.lang = saved_lang if saved_lang in LANG_KEYS else "en"
-        self.theme = saved_theme if saved_theme in THEME_KEYS else "blue"
-        self.dark = self.services.get_setting("dark", "0") == "1"
+        # ── One-time defaults migration ──────────────────────────────────
         if self.services.get_setting("work_hours") is None:
             self.services.set_setting("work_hours", "8.0")
         legacy_default_break = self.services.get_setting("default_lunch")
@@ -92,14 +111,37 @@ class App(QWidget):
             self.services.set_setting("default_break", legacy_default_break or "1.0")
         if self.services.get_setting("monthly_target") is None:
             self.services.set_setting("monthly_target", str(round(8.0 * 21, 1)))
-        self.work_hours = self._safe_float_setting("work_hours", 8.0)
         if self.services.get_setting("show_holidays") is None:
             self.services.set_setting("show_holidays", "1")
         if self.services.get_setting("show_note_markers") is None:
             self.services.set_setting("show_note_markers", "1")
+        if self.services.get_setting("show_overnight_indicator") is None:
+            self.services.set_setting("show_overnight_indicator", "1")
         residency_key = self._residency_setting_key()
         if residency_key and self.services.get_setting(residency_key) is None:
             self.services.set_setting(residency_key, "0")
+
+        # ── AppStore: single source of truth for all settings state ──────
+        # All code that previously read self.lang / self.theme / self.dark /
+        # self.work_hours should use self._state.<field> instead.
+        saved_lang = self.services.get_setting("lang", "en_US")
+        saved_theme = self.services.get_setting("theme", "blue")
+        _def_break = self._safe_float_setting("default_break", 1.0)
+        self.store = AppStore(AppState(
+            lang=saved_lang if saved_lang in LANG_NAMES else "en_US",
+            theme=saved_theme if saved_theme in THEME_KEYS else "blue",
+            dark=self.services.get_setting("dark", "0") == "1",
+            work_hours=self._safe_float_setting("work_hours", 8.0),
+            default_break=_def_break,
+            monthly_target=self._safe_float_setting("monthly_target",
+                                                      self._safe_float_setting("work_hours", 8.0) * 21),
+            show_holidays=self.services.get_setting("show_holidays", "1") == "1",
+            show_note_markers=self.services.get_setting("show_note_markers", "1") == "1",
+            show_overnight_indicator=self.services.get_setting("show_overnight_indicator", "1") == "1",
+            week_start_monday=self.services.get_setting("week_start_monday", "0") == "1",
+            time_input_mode=self.services.get_setting("time_input_mode", "manual"),
+        ))
+        set_language(self._state.lang)
 
         self.holidays: dict = {}
         self._country = detect_country()
@@ -107,26 +149,13 @@ class App(QWidget):
         self._week_totals: list[QLabel] = []
         self._break_start: datetime | None = None
         self._break_timer: QTimer | None = None
-        self._active_time_tab = self.services.get_setting(
-            "time_input_mode", "manual")
+        self._active_time_tab = self._state.time_input_mode
         self._auto_start_time = ""
         self._auto_end_time = ""
-        self._auto_break_hours = self._safe_float_setting("default_break", 1.0)
+        self._auto_break_hours = _def_break
         self._auto_break_recorded = False
         self._tray_icon: QSystemTrayIcon | None = None
         self._tray_quit_requested = False
-        self.store = AppStore(AppState(
-            lang=self.lang,
-            theme=self.theme,
-            dark=self.dark,
-            work_hours=self.work_hours,
-            default_break=self._auto_break_hours,
-            monthly_target=self._safe_float_setting("monthly_target", self.work_hours * 21),
-            show_holidays=self.services.get_setting("show_holidays", "1") == "1",
-            show_note_markers=self.services.get_setting("show_note_markers", "1") == "1",
-            week_start_monday=self.services.get_setting("week_start_monday", "0") == "1",
-            time_input_mode=self._active_time_tab,
-        ))
 
         self._build_ui()
         self._setup_residency_icon()
@@ -136,6 +165,16 @@ class App(QWidget):
         self.render()
 
         QTimer.singleShot(0, self._load_holidays)
+
+    def _safe_float_setting(self, key: str, default: float) -> float:
+        """Read a float setting with a safe fallback for missing/bad values."""
+        try:
+            raw = self.services.get_setting(key, str(default))
+            if raw is None:
+                return default
+            return float(raw)
+        except (TypeError, ValueError):
+            return default
 
     def _load_holidays(self):
         """Load holiday data in a background thread to avoid blocking UI.
@@ -415,12 +454,53 @@ class App(QWidget):
         f.setObjectName("divider")
         return f
 
-    def _safe_float_setting(self, key: str, default: float) -> float:
-        """Read a float setting with a safe fallback for malformed values."""
-        try:
-            return float(self.services.get_setting(key, str(default)))
-        except (TypeError, ValueError):
-            return default
+    @property
+    def _state(self):
+        """Single source of truth for all persisted settings.
+
+        Replaces the former ``self.lang`` / ``self.theme`` / ``self.dark`` /
+        ``self.work_hours`` instance variables.  Always read settings through
+        here; write via ``self.store.patch()``.
+        """
+        return self.store.state
+
+    # ── Compatibility shims ──────────────────────────────────────────────
+    # SettingsDialog still writes ``app.lang = …`` / ``app.dark = …`` etc.
+    # These properties route those assignments through AppStore so the store
+    # remains the single source of truth.
+
+    @property
+    def lang(self) -> str:
+        return self._state.lang
+
+    @lang.setter
+    def lang(self, value: str) -> None:
+        set_language(value)
+        self.store.patch(lang=value)
+
+    @property
+    def theme(self) -> str:
+        return self._state.theme
+
+    @theme.setter
+    def theme(self, value: str) -> None:
+        self.store.patch(theme=value)
+
+    @property
+    def dark(self) -> bool:
+        return self._state.dark
+
+    @dark.setter
+    def dark(self, value: bool) -> None:
+        self.store.patch(dark=value)
+
+    @property
+    def work_hours(self) -> float:
+        return self._state.work_hours
+
+    @work_hours.setter
+    def work_hours(self, value: float) -> None:
+        self.store.patch(work_hours=value)
 
     def _residency_setting_key(self) -> str | None:
         if sys.platform == "win32":
@@ -466,11 +546,10 @@ class App(QWidget):
         QApplication.instance().setQuitOnLastWindowClosed(not enabled)
         if not self._tray_icon:
             return
-        t = T[self.lang]
-        self._tray_open_action.setText(t["tray_open"])
-        self._tray_quick_log_action.setText(t["tray_quick_log"])
-        self._tray_quit_action.setText(t["tray_quit"])
-        self._tray_icon.setToolTip(t["app_title"])
+        self._tray_open_action.setText(_("Open"))
+        self._tray_quick_log_action.setText(_("Quick Log"))
+        self._tray_quit_action.setText(_("Quit"))
+        self._tray_icon.setToolTip(_("Work Logger"))
         if enabled:
             self._tray_icon.show()
         else:
@@ -499,56 +578,63 @@ class App(QWidget):
         QApplication.instance().setStyleSheet(make_qss(self.dark, self.theme))
 
     def apply_lang(self):
-        t = T[self.lang]
-        self.setWindowTitle(t["app_title"])
-        self.time_tabs.setTabText(0, t.get("time_manual_tab", "Manual Input"))
-        self.time_tabs.setTabText(1, t.get("time_auto_tab", "Auto Record"))
-        self.manual_lbl_start.setText(t["start"])
-        self.manual_lbl_end.setText(t["end"])
-        self.manual_lbl_break.setText(t["break_h"])
+        self.setWindowTitle(_("Work Logger"))
+        self.time_tabs.setTabText(0, _("Manual Input"))
+        self.time_tabs.setTabText(1, _("Auto Record"))
+        self.manual_lbl_start.setText(_("Start"))
+        self.manual_lbl_end.setText(_("End"))
+        self.manual_lbl_break.setText(_("Break (h)"))
         self.manual_start_in.setPlaceholderText(
-            t.get("time_placeholder_start", "HH:MM"))
+            _("HH:MM"))
         self.manual_end_in.setPlaceholderText(
-            t.get("time_placeholder_end", "HH:MM"))
+            _("HH:MM"))
         self.manual_break_in.setPlaceholderText(
-            t.get("time_placeholder_break", "1.0"))
-        self.auto_lbl_start.setText(t["start"])
-        self.auto_lbl_end.setText(t["end"])
-        self.auto_lbl_break.setText(t["break_h"])
-        self.lbl_wt.setText(t["wt_label"])
-        self.lbl_note.setText(t["note"])
-        self.clock_in_btn.setText(t.get("start_now", t["start"]))
-        self.clock_out_btn.setText(t.get("end_now", t["end"]))
-        self.save_btn.setText(t["save"])
-        self.settings_btn.setText(t["btn_settings"])
-        self.report_btn.setText(t["btn_report"])
-        self.chart_btn.setText(t["btn_chart"])
-        self.quick_log_btn.setText(t["quick_log_btn"])
-        self.today_btn.setToolTip(t["today_tip"])
-        self.note_expand_btn.setToolTip(t["note_expand_tip"])
+            _("1.0"))
+        self.auto_lbl_start.setText(_("Start"))
+        self.auto_lbl_end.setText(_("End"))
+        self.auto_lbl_break.setText(_("Break (h)"))
+        self.lbl_wt.setText(_("Work type"))
+        self.lbl_note.setText(_("Notes"))
+        self.clock_in_btn.setText(msg("start_now", _("Start")))
+        self.clock_out_btn.setText(msg("end_now", _("End")))
+        self.save_btn.setText(_("Save"))
+        self.settings_btn.setText(_("⚙  Settings"))
+        self.report_btn.setText(_("Report"))
+        self.chart_btn.setText(_("Analytics"))
+        self.quick_log_btn.setText(_("⚡ Quick Log"))
+        self.prev_btn.setToolTip(_("Previous month"))
+        self.next_btn.setToolTip(_("Next month"))
+        self.today_btn.setToolTip(_("Today"))
+        self.note_expand_btn.setToolTip(_("Expand notes"))
         # Respect user preference for week start (Sunday vs Monday)
         week_start_monday = self.services.get_setting("week_start_monday", "0") == "1"
-        days_list = list(t["days"])
+        days_list = list([_("Sun"), _("Mon"), _("Tue"), _("Wed"), _("Thu"), _("Fri"), _("Sat")])
         if week_start_monday:
             # rotate so Monday is first
             days_list = days_list[1:] + days_list[:1]
         for i, lbl in enumerate(self.week_day_lbls):
             lbl.setText(days_list[i])
-        self.week_col_hdr.setText(t["week_col"])
-        self.sk_total.setText(t["stat_total"])
-        self.sk_ot.setText(t["stat_ot"])
-        self.sk_avg.setText(t["stat_avg"])
-        self.sk_days.setText(t["stat_days"])
-        self.sk_leave.setText(t["stat_leave"])
+        self.week_col_hdr.setText(_("Total"))
+        self.sk_total.setText(_("Monthly total"))
+        self.sk_ot.setText(_("Overtime"))
+        self.sk_avg.setText(_("Daily avg"))
+        self.sk_days.setText(_("Work days"))
+        self.sk_leave.setText(_("Leave days"))
         self._refresh_auto_time_labels()
         self._update_residency_state()
         cur_wt = self.wt_combo.currentData() or "normal"
         self.wt_combo.blockSignals(True)
         self.wt_combo.clear()
-        wk = {"normal": "wt_normal", "remote": "wt_remote", "business_trip": "wt_business",
-              "paid_leave": "wt_paid", "comp_leave": "wt_comp", "sick_leave": "wt_sick"}
+        wk = {
+            "normal": _("Normal"),
+            "remote": _("Remote work"),
+            "business_trip": _("Business trip"),
+            "paid_leave": _("Paid leave"),
+            "comp_leave": _("Comp leave"),
+            "sick_leave": _("Sick leave"),
+        }
         for key in WORK_TYPE_KEYS:
-            self.wt_combo.addItem(t[wk[key]], key)
+            self.wt_combo.addItem(wk.get(key, key), key)
         idx = self.wt_combo.findData(cur_wt)
         if idx >= 0:
             self.wt_combo.setCurrentIndex(idx)
@@ -560,10 +646,21 @@ class App(QWidget):
         # Map weekday name according to week-start preference
         week_start_monday = self.services.get_setting("week_start_monday", "0") == "1"
         if week_start_monday:
-            dow = T[self.lang]["days"][d.weekday()]
+            dow = [_("Sun"), _("Mon"), _("Tue"), _("Wed"), _("Thu"), _("Fri"), _("Sat")][d.weekday()]
         else:
-            dow = T[self.lang]["days"][(d.weekday() + 1) % 7]
-        self.date_banner.setText(f"{d.year}/{d.month:02d}/{d.day:02d}  {dow}")
+            dow = [_("Sun"), _("Mon"), _("Tue"), _("Wed"), _("Thu"), _("Fri"), _("Sat")][(d.weekday() + 1) % 7]
+        overnight = False
+        rec = self.services.get_record(d.isoformat())
+        if rec and rec.is_overnight:
+            overnight = True
+        else:
+            s_txt, e_txt, break_val = self._active_time_values()
+            s = parse_time(s_txt) if s_txt else None
+            e = parse_time(e_txt) if e_txt else None
+            if s and e and is_overnight_shift(s, e):
+                overnight = True
+        marker = f"  {_("Overnight")}" if overnight else ""
+        self.date_banner.setText(f"{d.year}/{d.month:02d}/{d.day:02d}  {dow}{marker}")
 
     def _time_mode(self) -> str:
         return "auto" if self.time_tabs.currentIndex() == 1 else "manual"
@@ -602,22 +699,21 @@ class App(QWidget):
         self._refresh_auto_time_labels()
 
     def _refresh_auto_time_labels(self):
-        t = T[self.lang]
         self.clock_in_btn.setText(
-            f"{t.get('start_done', 'Started')}\n{self._auto_start_time}"
-            if self._auto_start_time else t.get("start_now", t["start"])
+            f"{_("Started")}\n{self._auto_start_time}"
+            if self._auto_start_time else msg("start_now", _("Start"))
         )
         self.clock_out_btn.setText(
-            f"{t.get('end_done', 'Ended')}\n{self._auto_end_time}"
-            if self._auto_end_time else t.get("end_now", t["end"])
+            f"{_("Ended")}\n{self._auto_end_time}"
+            if self._auto_end_time else msg("end_now", _("End"))
         )
         if self._break_start is None:
             if self._auto_break_recorded:
                 self.break_btn.setText(
-                    f"{t.get('break_done', 'Break')}\n{self._auto_break_hours:.1f}{t['h_unit']}"
+                    f"{_("Break done")}\n{self._auto_break_hours:.1f}{_("h")}"
                 )
             else:
-                self.break_btn.setText(t["break_start"])
+                self.break_btn.setText(_("▶ Break"))
 
     def _active_time_values(self) -> tuple[str, str, float]:
         if self._time_mode() == "auto":
@@ -671,18 +767,17 @@ class App(QWidget):
         self._tick_break()
 
     def _ask_break_restart_mode(self) -> str:
-        t = T[self.lang]
         box = QMessageBox(self)
         box.setIcon(QMessageBox.Icon.Question)
-        box.setWindowTitle(t["break_resume_title"])
-        box.setText(t["break_resume_msg"].format(
+        box.setWindowTitle(_("Break Timer"))
+        box.setText(_("You already logged {hours}h of break time. What do you want to do?").format(
             hours=f"{self._auto_break_hours:.1f}"))
         restart_btn = box.addButton(
-            t["break_restart"], QMessageBox.ButtonRole.AcceptRole)
+            _("Restart"), QMessageBox.ButtonRole.AcceptRole)
         continue_btn = box.addButton(
-            t["break_continue"], QMessageBox.ButtonRole.ActionRole)
+            _("Continue"), QMessageBox.ButtonRole.ActionRole)
         cancel_btn = box.addButton(QMessageBox.StandardButton.Cancel)
-        _localize_msgbox_buttons(box, t)
+        _localize_msgbox_buttons(box, _)
         box.setDefaultButton(continue_btn)
         box.exec()
         clicked = box.clickedButton()
@@ -705,11 +800,10 @@ class App(QWidget):
         self._refresh_auto_time_labels()
 
     def _tick_break(self):
-        t = T[self.lang]
         if self._break_start is None:
             return
         mins = (datetime.now() - self._break_start).seconds // 60
-        self.break_btn.setText(f"{t.get('break_active', 'On break')}\n{mins}m")
+        self.break_btn.setText(f"{_("On break")}\n{mins}m")
         self._auto_break_hours = mins / 60
         color = "#ffaa44" if self.dark else "#e07800"
         self.break_btn.setStyleSheet(
@@ -733,8 +827,7 @@ class App(QWidget):
         self._week_totals = []
 
         y, m = self.current.year, self.current.month
-        t = T[self.lang]
-        self.month_title.setText(f"{y}  {t['months'][m-1]}")
+        self.month_title.setText(f"{y}  {[_("January"), _("February"), _("March"), _("April"), _("May"), _("June"), _("July"), _("August"), _("September"), _("October"), _("November"), _("December")][m-1]}")
         raw_first, days = monthrange(y, m)
         week_start_monday = self.store.state.week_start_monday
         first = raw_first if week_start_monday else (raw_first + 1) % 7
@@ -753,6 +846,7 @@ class App(QWidget):
         weekly: dict[int, float] = {}
         hover_border = THEMES[self.theme][self.dark][1]
         show_note_markers = self.store.state.show_note_markers
+        show_overnight_indicator = self.store.state.show_overnight_indicator
 
         for d in range(1, days + 1):
             dt = date(y, m, d)
@@ -788,13 +882,12 @@ class App(QWidget):
             if dt in self.holidays:
                 lines.append(self.holidays[dt])
             if h > 0:
-                lines.append(f"{h:.1f}{t['h_unit']}")
+                lines.append(f"{h:.1f}{_("h")}")
             if ot > 0:
-                lines.append(f"{t['ot_prefix']}{ot:.1f}{t['h_unit']}")
-            abbr = t["wt_abbr"].get(wt, "")
+                lines.append(f"{_("+")}{ot:.1f}{_("h")}")
+            abbr = {'normal': "", 'remote': _("WFH"), 'business_trip': _("Trip"), 'paid_leave': _("PTO"), 'comp_leave': _("CTO"), 'sick_leave': _("Sick")}.get(wt, "")
             if abbr:
                 lines.append(abbr)
-
             btn = CalendarDayButton("\n".join(lines))
             btn.setMinimumHeight(86)
             btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -815,6 +908,9 @@ class App(QWidget):
                     f"QPushButton:hover{{border:2px solid {hover_border};}}")
             show_pending_note = show_note_markers and has_pending_note
             btn.set_note_marker(show_pending_note, hover_border)
+            overnight_marker = show_overnight_indicator and bool(rec and rec.is_overnight)
+            marker_color = CALENDAR_STYLE["overnight_marker_by_mode"][bool(self.dark)]
+            btn.set_overnight_marker(overnight_marker, marker_color)
             if show_pending_note:
                 btn.setToolTip(note_text[:200])
             else:
@@ -826,7 +922,7 @@ class App(QWidget):
         max_row = (days + first - 1) // 7
         for r in range(max_row + 1):
             wh = weekly.get(r, 0.0)
-            lbl = QLabel(f"{wh:.1f}{t['h_unit']}" if wh > 0 else "—")
+            lbl = QLabel(f"{wh:.1f}{_("h")}" if wh > 0 else "—")
             lbl.setObjectName("week_total_lbl")
             lbl.setAlignment(Qt.AlignCenter)
             self.grid.addWidget(lbl, r + 1, 7)
@@ -834,20 +930,20 @@ class App(QWidget):
 
         leave_total = sum(leave_counts.values())
         avg_h = total_h / workdays if workdays else 0.0
-        self.sv_total.setText(f"{total_h:.1f}{t['h_unit']}")
-        self.sv_ot.setText(f"{total_ot:.1f}{t['h_unit']}")
-        self.sv_avg.setText(f"{avg_h:.1f}{t['h_unit']}")
-        self.sv_days.setText(f"{workdays}{t['d_unit']}")
-        self.sv_leave.setText(f"{leave_total}{t['d_unit']}")
+        self.sv_total.setText(f"{total_h:.1f}{_("h")}")
+        self.sv_ot.setText(f"{total_ot:.1f}{_("h")}")
+        self.sv_avg.setText(f"{avg_h:.1f}{_("h")}")
+        self.sv_days.setText(f"{workdays}{_(" days")}")
+        self.sv_leave.setText(f"{leave_total}{_(" days")}")
 
-        self.sv_leave.setToolTip(t["leave_tooltip"].format(
-            paid=f"{leave_counts['paid_leave']}{t['d_unit']}",
-            comp=f"{leave_counts['comp_leave']}{t['d_unit']}",
-            sick=f"{leave_counts['sick_leave']}{t['d_unit']}"))
-        self.sv_days.setToolTip(t["days_tooltip"].format(
-            normal=f"{day_counts['normal']}{t['d_unit']}",
-            remote=f"{day_counts['remote']}{t['d_unit']}",
-            biz=f"{day_counts['business_trip']}{t['d_unit']}"))
+        self.sv_leave.setToolTip(_("Paid: {paid}\nComp: {comp}\nSick: {sick}").format(
+            paid=f"{leave_counts['paid_leave']}{_(" days")}",
+            comp=f"{leave_counts['comp_leave']}{_(" days")}",
+            sick=f"{leave_counts['sick_leave']}{_(" days")}"))
+        self.sv_days.setToolTip(_("Normal: {normal}\nRemote: {remote}\nBusiness: {biz}").format(
+            normal=f"{day_counts['normal']}{_(" days")}",
+            remote=f"{day_counts['remote']}{_(" days")}",
+            biz=f"{day_counts['business_trip']}{_(" days")}"))
 
     def load(self):
         rec = self.services.get_record(self.selected.isoformat())
@@ -932,6 +1028,39 @@ class App(QWidget):
             return
         elif self._time_mode() == "manual":
             self.manual_end_in.setStyleSheet("")
+        if l < 0:
+            QMessageBox.warning(
+                self,
+                _("Confirm"),
+                _("Break hours cannot be negative."),
+            )
+            return
+        if s and e:
+            max_shift = float(self.services.get_setting("max_shift_hours", str(MAX_SHIFT_HOURS)) or MAX_SHIFT_HOURS)
+            span_h = calc_shift_span_hours(s, e, max_shift_hours=max_shift)
+            if span_h is None:
+                if self._time_mode() == "manual":
+                    self.manual_end_in.setStyleSheet(
+                        "QLineEdit{border:2px solid #e03333;}")
+                QMessageBox.warning(
+                    self,
+                    _("Confirm"),
+                    msg(
+                        "shift_span_invalid",
+                        "Invalid time range. The shift must be within {max_hours} hours (overnight is supported).",
+                    ).format(max_hours=int(max_shift)),
+                )
+                return
+            if l >= span_h:
+                QMessageBox.warning(
+                    self,
+                    _("Confirm"),
+                    msg(
+                        "break_too_long",
+                        "Break time must be less than the total shift duration.",
+                    ),
+                )
+                return
         wt = self.wt_combo.currentData() or "normal"
         if self._time_mode() == "manual":
             if s:
@@ -950,25 +1079,27 @@ class App(QWidget):
             self.manual_start_in.setText(s or "")
             self.manual_end_in.setText(e or "")
             self.manual_break_in.setText(str(l))
-        self.services.save_record(self.selected.isoformat(), s, e, l,
-                     self.note_in.toPlainText(), wt)
+        overnight = 1 if (s and e and is_overnight_shift(s, e)) else 0
+        self.services.save_record(
+            self.selected.isoformat(), s, e, l,
+            self.note_in.toPlainText(), wt, overnight=overnight,
+        )
         self._refresh_auto_time_labels()
         self.render()
 
     def select(self, d: date):
-        t = T[self.lang]
         if d != self.selected and self._is_dirty():
             box = QMessageBox(self)
             box.setIcon(QMessageBox.Icon.Question)
-            box.setWindowTitle(t["confirm_title"])
-            box.setText(t["unsaved_msg"])
+            box.setWindowTitle(_("Confirm"))
+            box.setText(_("Unsaved changes — save before switching?"))
             box.setStandardButtons(
                 QMessageBox.StandardButton.Save |
                 QMessageBox.StandardButton.Discard |
                 QMessageBox.StandardButton.Cancel
             )
             box.setDefaultButton(QMessageBox.StandardButton.Save)
-            _localize_msgbox_buttons(box, t)
+            _localize_msgbox_buttons(box, _)
             ans = box.exec()
             if ans == QMessageBox.Save:
                 self.save()
@@ -1060,31 +1191,32 @@ class App(QWidget):
         NoteEditorDialog(self, self).exec()
 
     def _export_csv(self):
-        t = T[self.lang]
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        path, _ = QFileDialog.getSaveFileName(
-            self, t["export_csv"], f"worklog_{ts}.csv", "CSV (*.csv)")
+        path, _selected_filter = QFileDialog.getSaveFileName(
+            self, _("Export CSV"), f"worklog_{ts}.csv", "CSV (*.csv)")
         if not path:
             return
-        data = self.services.all_records()
-        self.services.export_csv_file(path, data)
-        QMessageBox.information(self, t["export_csv"],
-                                t["export_saved"].format(path))
+        try:
+            data = self.services.all_records()
+            self.services.export_csv_file(path, data)
+            QMessageBox.information(self, _("Export CSV"),
+                                    _("Saved: {}").format(path))
+        except OSError as exc:
+            QMessageBox.critical(self, _("Export CSV"), str(exc))
 
     def _import_csv(self):
-        t = T[self.lang]
-        path, _ = QFileDialog.getOpenFileName(
-            self, t["import_csv"], "", "CSV (*.csv)")
+        path, _selected_filter = QFileDialog.getOpenFileName(
+            self, _("Import CSV"), "", "CSV (*.csv)")
         if not path:
             return
         box = QMessageBox(self)
         box.setIcon(QMessageBox.Icon.Question)
-        box.setWindowTitle(t["confirm_title"])
-        box.setText(t["confirm_msg"])
+        box.setWindowTitle(_("Confirm"))
+        box.setText(_("Overwrite existing data?"))
         box.setStandardButtons(
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         box.setDefaultButton(QMessageBox.StandardButton.No)
-        _localize_msgbox_buttons(box, t)
+        _localize_msgbox_buttons(box, _)
         if box.exec() != QMessageBox.Yes:
             return
         try:
@@ -1096,30 +1228,29 @@ class App(QWidget):
             msg = str(exc)
             if msg == "empty":
                 QMessageBox.warning(
-                    self, t["import_result"], t["import_empty"])
+                    self, _("Import Result"), _("CSV file is empty."))
             elif msg.startswith("missing:"):
-                QMessageBox.warning(self, t["import_result"],
-                                    t["import_bad"].format(msg[8:]))
+                QMessageBox.warning(self, _("Import Result"),
+                                    _("Missing columns: {}").format(msg[8:]))
             else:
-                QMessageBox.critical(self, t["import_result"], msg)
+                QMessageBox.critical(self, _("Import Result"), msg)
             return
-        msg = t["import_ok"].format(n)
+        msg = _("Imported {} records.").format(n)
         if errors:
-            msg += t["import_skip"].format(len(errors), "\n".join(errors[:10]))
-        QMessageBox.information(self, t["import_result"], msg)
+            msg += _("\n\nSkipped {} rows:\n{}").format(len(errors), "\n".join(errors[:10]))
+        QMessageBox.information(self, _("Import Result"), msg)
         self.render()
 
     def _import_ics(self):
-        t = T[self.lang]
-        path, _ = QFileDialog.getOpenFileName(
-            self, t["ics_import"], "", "iCalendar (*.ics)")
+        path, _selected_filter = QFileDialog.getOpenFileName(
+            self, _("Import .ics"), "", "iCalendar (*.ics)")
         if not path:
             return
         try:
             rich_events = self.services.parse_calendar_file(path)
             if not rich_events:
-                QMessageBox.information(self, t["ics_import"],
-                                        t.get("ics_empty", "No events found."))
+                QMessageBox.information(self, _("Import .ics"),
+                                        _("No events found."))
                 return
 
             # Ask whether to replace or append when calendar data already exists.
@@ -1128,20 +1259,20 @@ class App(QWidget):
             if existing_count > 0:
                 box = QMessageBox(self)
                 box.setIcon(QMessageBox.Icon.Question)
-                box.setWindowTitle(t["ics_import"])
-                box.setText(t.get(
+                box.setWindowTitle(_("Import .ics"))
+                box.setText(msg(
                     "ics_overwrite_confirm",
                     "Calendar data already exists.\n\n"
                     "Replace — clear all previous calendar events before import.\n"
                     "Append — keep existing events and add new ones."))
                 replace_btn = box.addButton(
-                    t.get("ics_replace_btn", "Replace"),
+                    _("Replace"),
                     QMessageBox.ButtonRole.DestructiveRole)
                 append_btn = box.addButton(
-                    t.get("ics_append_btn", "Append"),
+                    _("Append"),
                     QMessageBox.ButtonRole.AcceptRole)
                 cancel_btn = box.addButton(QMessageBox.StandardButton.Cancel)
-                _localize_msgbox_buttons(box, t)
+                _localize_msgbox_buttons(box, _)
                 box.setDefaultButton(append_btn)
                 box.exec()
                 clicked = box.clickedButton()
@@ -1173,17 +1304,16 @@ class App(QWidget):
                     self.services.save_record(d_str, None, None, 1.0, summary, "normal")
                 imported += 1
             QMessageBox.information(
-                self, t["ics_import"],
-                t.get("cal_imported", t["ics_import_ok"]).format(saved))
+                self, _("Import .ics"),
+                msg("cal_imported", _("Imported {} calendar events.")).format(saved))
             self.render()
         except Exception as ex:
-            QMessageBox.critical(self, t["ics_import"], str(ex))
+            QMessageBox.critical(self, _("Import .ics"), str(ex))
 
     def _export_ics(self):
-        t = T[self.lang]
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        path, _ = QFileDialog.getSaveFileName(
-            self, t["ics_export"], f"worklog_{ts}.ics", "iCalendar (*.ics)")
+        path, _selected_filter = QFileDialog.getSaveFileName(
+            self, _("Export .ics"), f"worklog_{ts}.ics", "iCalendar (*.ics)")
         if not path:
             return
         try:
@@ -1191,18 +1321,17 @@ class App(QWidget):
             content = self.services.export_month_ics(self.current.strftime("%Y-%m"))
             with open(path, "w", encoding="utf-8") as f:
                 f.write(content)
-            QMessageBox.information(self, t["ics_export"],
-                                    t["ics_export_ok"].format(len(data)))
+            QMessageBox.information(self, _("Export .ics"),
+                                    _("Exported {} events.").format(len(data)))
         except Exception as ex:
-            QMessageBox.critical(self, t["ics_export"], str(ex))
+            QMessageBox.critical(self, _("Export .ics"), str(ex))
 
     def open_quick_log(self):
         QuickLogDialog(self, self).exec()
 
     def _clear_calendar(self):
-        t = T[self.lang]
         self.services.clear_calendar_events()
-        QMessageBox.information(self, t["cal_section"], t["cal_cleared"])
+        QMessageBox.information(self, _("Calendar Sync"), _("Calendar events cleared."))
 
     def closeEvent(self, e):
         if self._tray_quit_requested:

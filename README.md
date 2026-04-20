@@ -66,12 +66,35 @@ WorkLogger_build.bat
 
 Both scripts use `worklogger.spec`. The generated executable and packaged artifacts are expected in `dist/`. If you create a macOS App, place the final `.app` file in `dist/` as well.
 
+## i18n Workflow
+
+WorkLogger uses gettext catalogs under `worklogger/locales`.
+
+- Template extraction (`messages.pot`):
+```bash
+python scripts/i18n_extract.py
+```
+- Sync language catalogs (`messages.po`):
+```bash
+python scripts/i18n_sync.py
+```
+- Compile binary catalogs (`messages.mo`):
+```bash
+python scripts/i18n_compile.py
+```
+- CI/local validation:
+```bash
+python scripts/i18n_check.py
+```
+
+`messages.mo` files are generated artifacts and ignored by git. Missing translations automatically fall back to English at runtime.
+
 ## Project Layout
 
 ```text
 worklogger/
   assets/        Application icons
-  config/        Constants, themes, translations
+  config/        Constants and themes
   core/          Time parsing and calculation logic
   data/          SQLite persistence layer
   models/        Local models
@@ -79,7 +102,7 @@ worklogger/
   stores/        Setting, state
   templates/     Built-in and custom report templates
   ui/            Main window, dialogs, and widgets
-  utils/         Shared helpers
+  utils/         Shared helpers (including i18n runtime)
 docs/
   images/        README and documentation images
 dist/            Local build output directory

@@ -65,6 +65,57 @@ WT_BORDER_ACCENT = {
     },
 }
 
+# Centralized style registry for recently introduced UI visual rules.
+CALENDAR_STYLE = {
+    "note_marker_default": "#4f8ef7",
+    "overnight_marker_default": "#5f5f5f",
+    "overnight_marker_by_mode": {
+        True: "#f0f4ff",   # dark mode
+        False: "#4f5b66",  # light mode
+    },
+    "overnight_icon": "🌙",
+    "overnight_icon_size": 12,
+    "overnight_icon_margin": 4,
+}
+
+SWITCH_STYLE = {
+    "off_color_by_mode": {
+        True: "#505470",
+        False: "#b0b8cc",
+    },
+}
+
+STATUS_STYLE = {
+    "error_color": "#e03333",
+    "strong_weight": 600,
+}
+
+
+def switch_off_color(dark: bool) -> str:
+    return SWITCH_STYLE["off_color_by_mode"][bool(dark)]
+
+
+def local_model_download_blocked_qss(dark: bool) -> str:
+    if dark:
+        return (
+            "QPushButton{color:#8e94a7;background:#2a2e3a;border:1px solid #3a3f52;}"
+            "QPushButton:hover{color:#8e94a7;background:#2a2e3a;border:1px solid #3a3f52;}"
+        )
+    return (
+        "QPushButton{color:#8a8f9c;background:#d9dbe0;border:1px solid #c3c7d1;}"
+        "QPushButton:hover{color:#8a8f9c;background:#d9dbe0;border:1px solid #c3c7d1;}"
+    )
+
+
+def status_label_qss(kind: str, accent: str | None = None) -> str:
+    weight = STATUS_STYLE["strong_weight"]
+    if kind == "error":
+        return f"color:{STATUS_STYLE['error_color']};font-weight:{weight};"
+    if kind == "success":
+        color = accent or "#4f8ef7"
+        return f"color:{color};font-weight:{weight};"
+    return ""
+
 
 def make_qss(dark: bool, theme: str = "blue") -> str:
     """Generate full application QSS stylesheet."""
@@ -192,4 +243,3 @@ def progress_bar_qss(accent: str, dark: bool = False) -> str:
         "QProgressBar::chunk{{"
             "background:{acc};border-radius:4px;}}"
     ).format(txt=txt, acc=accent)
-
