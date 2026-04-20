@@ -67,12 +67,14 @@ a = Analysis(
     datas=[
         # Application assets
         ("worklogger/assets",                               "assets"),
+        # i18n translation catalogs
+        ("worklogger/locales",                              "locales"),
         # Built-in report templates
-        ("worklogger/templates/en",                         "templates/en"),
-        ("worklogger/templates/ja",                         "templates/ja"),
-        ("worklogger/templates/zh_cn",                      "templates/zh_cn"),
-        ("worklogger/templates/zh_tw",                      "templates/zh_tw"),
-        ("worklogger/templates/ko",                         "templates/ko"),
+        ("worklogger/templates/en_US",                          "templates/en_US"),
+        ("worklogger/templates/ja_JP",                          "templates/ja_JP"),
+        ("worklogger/templates/zh_CN",                          "templates/zh_cn"),
+        ("worklogger/templates/zh_TW",                          "templates/zh_tw"),
+        ("worklogger/templates/ko_KR",                          "templates/ko_KR"),
         ("worklogger/templates/custom/Sample_1000000000000.json",
                                                             "templates/custom"),
         # Local model catalog
@@ -144,7 +146,7 @@ if sys.platform == "darwin":
         bundle_identifier="dev.worklogger.app.v1",
         info_plist={
             "NSHighResolutionCapable": True,
-            "CFBundleShortVersionString": "2.1.0",
-            "CFBundleVersion": "5",
+            "CFBundleShortVersionString": "2.2.0",
+            "CFBundleVersion": "6",
         },
     )

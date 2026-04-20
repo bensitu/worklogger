@@ -2,10 +2,10 @@
 
 import sys
 
-APP_VERSION = "2.1.0"
+APP_VERSION = "2.2.0"
 APP_NAME = "Work Logger"
 APP_AUTHOR = "Ben Situ"
-APP_ID = "dev.worklogger.app.v1"
+APP_ID = "dev.worklogger.app.v2"
 GITHUB_URL = "https://github.com/bensitu/worklogger"
 GITHUB_RELEASES_API = (
     "https://api.github.com/repos/bensitu/worklogger/releases/latest"

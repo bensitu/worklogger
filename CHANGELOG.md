@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-04-18
+
+### Added
+- Local model status now presents explicit `Ready · Active/Inactive` state labels with gettext-based localization across supported languages.
+- UI coverage for local-model status switching and language-aware rendering was expanded.
+
+### Changed
+- Local model downloader/verifier flow was hardened with timeout/retry handling, better failure recovery, and clearer status transitions.
+- Local model global switch behavior was tightened so related actions are consistently blocked when the local runtime is disabled.
+
+### Fixed
+- Fixed stale local-model state after delete operations in model-management flow; UI now refreshes to non-downloaded state immediately.
+- Fixed repeated verification triggers on settings reopen/select flow and reduced redundant verification checks.
+- Fixed language-mismatch display issues for status labels in Settings → AI → Local model.
+
+
 ## [2.1.0] - 2026-04-16
 
 ### Added
@@ -22,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - toggling off unloads local provider immediately and persists disabled state.
 - AI Assist progress log now reports local-model-not-running state and continues with cloud fallback when available.
 - Calendar cell text keeps concise layout while overnight status is surfaced via icon marker.
+
 
 ## [2.0.1] - 2026-04-14
 
