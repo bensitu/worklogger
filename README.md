@@ -9,18 +9,16 @@ WorkLogger is a privacy-first desktop app for tracking work hours, notes, quick 
 
 ## Highlights
 
-- Desktop-first workflow built with PySide6
-- An on-device AI-driven report generation system
-- Manual Input and Auto Record modes for different logging styles
-- Daily tracking with start, end, break, notes, and work type
-- Quick Log support for detailed daily activity capture
-- Notes-only reminders for future plans or unscheduled work
-- Daily, weekly, and monthly reports with built-in and custom templates
-- Theme, language, holiday, and reminder display controls
-- Windows tray icon and macOS menu bar residency options
-- Calendar import, public holiday display, and analytics with monthly targets
-- Local SQLite storage with no cloud dependency by default
-- Compatible with Anthropic and OpenAI-compatible AI APIs
+- Desktop-first PySide6 application with local SQLite storage
+- Flexible time tracking with Manual Input and Auto Record modes
+- Overnight-shift-aware calculations with work type and leave classification
+- AI-assisted note and report generation with external API providers and local model fallback
+- Built-in local model management (download, resume, verify, switch, import `.gguf`)
+- Template-driven daily/weekly/monthly writing with custom template support
+- Calendar + Quick Log context integration for richer reports
+- Monthly/quarterly/annual analytics with CSV and PDF export
+- Multi-language UI (English, Japanese, Korean, Simplified Chinese, Traditional Chinese)
+- Cross-platform desktop behavior (Windows tray icon, macOS menu bar icon)
 
 ## Download
 
@@ -92,11 +90,16 @@ python scripts/i18n/i18n_check.py
 ## Project Layout
 
 ```text
+WorkLogger_build.bat          Windows build entrypoint
+WorkLogger_build.sh           macOS universal build entrypoint
+worklogger.spec               Shared PyInstaller specification
+scripts/                      Build helpers and i18n automation scripts
 worklogger/
   assets/        Application icons
   config/        Constants and themes
   core/          Time parsing and calculation logic
   data/          SQLite persistence layer
+  locales/       gettext catalogs (.po/.mo)
   models/        Local models
   services/      AI, export, and calendar services
   stores/        Setting, state
@@ -114,15 +117,18 @@ WorkLogger stores data in a local SQLite database named `worklog.db`. In package
 
 ## Current Features
 
-- Manual Input tab for typing start, end, and break values directly
-- Auto Record tab for one-click start, end, and break tracking
-- Break resume prompt with restart or continue options
-- Notes editor with template insertion and quick-log insertion
-- Quick Log list for lightweight daily activity capture
-- Windows tray residency and macOS menu bar residency settings
-- Built-in and custom templates, plus shipped custom-template sample JSON
-- AI settings for primary and secondary providers
-- About page with update check and a multilingual feature overview dialog
+- Calendar-centered daily workflow with per-day totals, overtime, holidays, note markers, and overnight indicators
+- Manual Input and Auto Record tabs for start/end/break capture with input validation and unsaved-change protection
+- Work types: normal, remote, business trip, paid leave, comp leave, and sick leave
+- Quick Log editor with start/end time support, inline edit/delete, and report/note integration
+- Note editor with template insertion, Quick Log insertion, and AI rewrite assistance
+- Weekly and monthly report generation with template picker, AI enhancement/regeneration, copy, and Markdown export
+- Analytics dialog with monthly/quarterly/annual charts and export to CSV/PDF
+- Data portability: CSV import/export, `.ics` calendar import/export, and calendar event merge into notes/reports
+- AI provider settings with connectivity test, primary/secondary provider routing, and status-rich progress dialogs
+- Local model controls: enable/disable switch, model selection, resumable download, hash verification, deletion, and `.gguf` import
+- Secure API key handling via OS keychain with encrypted local fallback
+- Appearance and behavior controls for theme, dark mode, language, week start, holiday display, note reminders, and residency icon mode
 
 ## Contributing
 
