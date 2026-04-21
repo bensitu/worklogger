@@ -28,7 +28,7 @@ def make_icon() -> QIcon:
     else:
         candidates = ["worklogger.ico", "workLogger.ico"]
 
-    # Also search legacy location (root dir) for backwards compat
+    # Also search root-level locations used by older packaging layouts.
     legacy_dirs = []
     if getattr(sys, "frozen", False):
         legacy_dirs = [os.path.dirname(sys.executable)]
@@ -36,7 +36,7 @@ def make_icon() -> QIcon:
         legacy_dirs = [os.path.dirname(
             os.path.dirname(os.path.abspath(__file__)))]
 
-    # Also try _MEIPASS root directly (if assets/ wasn't bundled)
+    # Also try _MEIPASS root directly when assets/ was not bundled.
     extra_dirs = []
     if getattr(sys, "frozen", False):
         extra_dirs = [getattr(sys, "_MEIPASS", "")]

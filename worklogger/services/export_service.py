@@ -1,11 +1,10 @@
 """Export and import services: CSV, ICS, PDF.
 
-``parse_ics`` (the minimal single-field parser) was removed; all callers
-should use ``calendar_service.parse_ics_rich`` which returns full event
-data including time info.
+Calendar parsing is delegated to ``calendar_service.parse_ics_rich`` so
+event time information is preserved consistently across imports.
 
-``render_pdf`` now accepts ``PdfContext`` instead of the raw ``App``
-widget, so the service layer has zero dependency on UI objects.
+``render_pdf`` accepts a ``PdfContext`` data object to keep this service
+layer independent from UI widget classes.
 """
 
 from __future__ import annotations

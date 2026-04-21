@@ -209,7 +209,7 @@ class SettingsDialog(QDialog):
         _acc = THEMES[app_ref.theme][app_ref.dark][0]
         _off = switch_off_color(app_ref.dark)
 
-        # ── External Model group (ex-Primary AI) ──────────────────────────
+        # External model connection settings.
         grp_ext = QGroupBox(_("External Model"))
         gfl = QFormLayout(grp_ext)
         gfl.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
@@ -252,7 +252,7 @@ class SettingsDialog(QDialog):
         self._ai_test_lbl = QLabel()
         self._ai_test_lbl.setObjectName("muted")
         self._ai_test_lbl.setWordWrap(True)
-        self._ai_test_lbl.setMaximumWidth(FW - 88)  # stay within form width
+        self._ai_test_lbl.setMaximumWidth(FW - 88)
         ext_test_row.addWidget(self._ai_test_btn)
         ext_test_row.addWidget(self._ai_test_lbl, 1)
         ext_test_row.setStretch(1, 1)
@@ -333,13 +333,12 @@ class SettingsDialog(QDialog):
         self._ai_test_btn.clicked.connect(_run_ext_test)
         aiv.addWidget(grp_ext)
 
-        # ── Local Model group ─────────────────────────────────────────────
+        # Local model controls.
         grp_local = QGroupBox(_("Local Model"))
         lfl = QVBoxLayout(grp_local)
         lfl.setSpacing(10)
         lfl.setContentsMargins(10, 10, 10, 10)
 
-        # Toggle row: [label]  [switch]
         toggle_row = QWidget()
         tr_lyt = QHBoxLayout(toggle_row)
         tr_lyt.setContentsMargins(0, 0, 0, 0)
@@ -360,7 +359,6 @@ class SettingsDialog(QDialog):
         tr_lyt.addWidget(self._local_enabled_sw)
         lfl.addWidget(toggle_row)
 
-        # Secondary description line
         lbl_effect = QLabel(msg(
             "local_model_hint",
             "When enabled, text processing uses the local model first "
@@ -370,7 +368,6 @@ class SettingsDialog(QDialog):
         lbl_effect.setObjectName("muted")
         lfl.addWidget(lbl_effect)
 
-        # Status label
         self._local_status_lbl = QLabel()
         self._local_status_lbl.setObjectName("muted")
         lfl.addWidget(self._local_status_lbl)
@@ -396,7 +393,7 @@ class SettingsDialog(QDialog):
         self._local_pending_entry_id = ""
         self._local_verify_bridge = _LocalVerifyBridge(self)
 
-        # Single "Model Management" button (opens unified dialog)
+        # Single entry point for download/import/manage actions.
         btn_row_w = QWidget()
         btn_row_l = QHBoxLayout(btn_row_w)
         btn_row_l.setContentsMargins(0, 0, 0, 0)
@@ -410,7 +407,7 @@ class SettingsDialog(QDialog):
         lfl.addWidget(btn_row_w)
         aiv.addWidget(grp_local)
 
-        # ── Local model status refresh ────────────────────────────────────
+        # Local model status refresh and verification flow.
         def _verify_reason_text(reason: str) -> str:
             mapping = {
                 "timeout": msg(

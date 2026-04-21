@@ -29,15 +29,11 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-# ---------------------------------------------------------------------------
-# Public sentinel
-# ---------------------------------------------------------------------------
+# Public sentinel.
 
 LOCAL_MODEL_SENTINEL: str = "__local__"
 
-# ---------------------------------------------------------------------------
-# Path helpers
-# ---------------------------------------------------------------------------
+# Path helpers.
 
 LOCK_FILENAME:     str = ".download.lock"
 MANIFEST_FILENAME: str = "manifest.json"
@@ -95,9 +91,7 @@ def get_models_dir() -> Path:
     return _app_root() / "models"
 
 
-# ---------------------------------------------------------------------------
-# Thinking-tag stripper
-# ---------------------------------------------------------------------------
+# Thinking-tag stripper.
 
 def _strip_thinking(text: str) -> str:
     """Remove ``<think>…</think>`` / ``<thinking>…</thinking>`` blocks.
@@ -111,9 +105,7 @@ def _strip_thinking(text: str) -> str:
     return cleaned.strip()
 
 
-# ---------------------------------------------------------------------------
-# Catalog loader
-# ---------------------------------------------------------------------------
+# Catalog loader.
 
 def _bundled_catalog_path() -> Optional[Path]:
     """Return the path to catalog.json inside the PyInstaller bundle, or None."""
@@ -142,7 +134,7 @@ def ensure_catalog(models_dir: Optional[Path] = None) -> None:
         models_dir = get_models_dir()
     dest = models_dir / CATALOG_FILENAME
     if dest.exists():
-        return   # already present — nothing to do
+        return
     # Try to copy from the bundle.
     bundled = _bundled_catalog_path()
     if bundled is not None:
@@ -224,7 +216,6 @@ def get_catalog_entry(entry_id: str,
     for e in catalog:
         if e.get("id") == entry_id:
             return e
-    # Fall back to default entry
     for e in catalog:
         if e.get("default"):
             return e
@@ -271,9 +262,7 @@ MODEL_FILENAME: str = _default_entry().get("file", "model.gguf")
 MODEL_URL:      str = _default_entry().get("url",  "")
 
 
-# ---------------------------------------------------------------------------
-# Manifest helpers
-# ---------------------------------------------------------------------------
+# Manifest helpers.
 
 def _save_catalog(catalog: list, models_dir: Path) -> None:
     """Persist an updated catalog to catalog.json (atomic write)."""
@@ -413,7 +402,7 @@ def set_active_entry(entry_id: str,
     """
     if models_dir is None:
         models_dir = get_models_dir()
-    manifest = load_manifest(models_dir)   # already synced with catalog
+    manifest = load_manifest(models_dir)
     found = False
     for e in manifest:
         e["active"] = (e.get("id") == entry_id)
@@ -471,9 +460,7 @@ def delete_model_file(entry_id: str,
     update_sha256_in_manifest("", models_dir, entry_id)
 
 
-# ---------------------------------------------------------------------------
-# SHA-256 utilities
-# ---------------------------------------------------------------------------
+# SHA-256 utilities.
 
 def _sha256_of_file_detailed(
     path: Path,
@@ -613,7 +600,6 @@ def verify_model_file(models_dir: Optional[Path] = None,
                       retries: int = 0,
                       progress_cb: Optional[Callable[[int], None]] = None,
                       cancel_event: Optional[threading.Event] = None) -> bool:
-    # Ensure entry_id is a non-empty string
     if not isinstance(entry_id, str) or not entry_id:
         entry_id = "local"
     """Return True when the model file exists and SHA-256 matches manifest.
@@ -632,9 +618,7 @@ def verify_model_file(models_dir: Optional[Path] = None,
     return ok
 
 
-# ---------------------------------------------------------------------------
-# LLMProvider — abstract interface
-# ---------------------------------------------------------------------------
+# LLMProvider abstract interface.
 
 class LLMProvider(abc.ABC):
     """Minimal interface every local inference backend must implement.
@@ -662,9 +646,7 @@ class LLMProvider(abc.ABC):
         """Run inference; return assistant reply as plain string."""
 
 
-# ---------------------------------------------------------------------------
-# LlamaCppProvider
-# ---------------------------------------------------------------------------
+# LlamaCppProvider.
 
 class LlamaCppProvider(LLMProvider):
     """llama-cpp-python backend — lazy, thread-safe, ChatML prompt format.
@@ -756,9 +738,7 @@ class LlamaCppProvider(LLMProvider):
             return _strip_thinking(raw)
 
 
-# ---------------------------------------------------------------------------
-# LocalModelService — orchestrates provider lifecycle
-# ---------------------------------------------------------------------------
+# LocalModelService orchestration.
 
 class LocalModelService:
     """Process singleton: lazy provider load, thread-safe, one instance."""
@@ -771,7 +751,7 @@ class LocalModelService:
         self._provider: Optional[LLMProvider] = None
         self._load_lock  = threading.Lock()
 
-    # -- singleton -----------------------------------------------------------
+    # Singleton lifecycle.
 
     @classmethod
     def get(cls, _services=None) -> "LocalModelService":
@@ -791,7 +771,7 @@ class LocalModelService:
                     pass
             cls._instance = None
 
-    # -- status --------------------------------------------------------------
+    # Status helpers.
 
     def is_model_ready(self) -> bool:
         """True when the active model file exists and SHA-256 matches."""
@@ -810,7 +790,7 @@ class LocalModelService:
         except Exception:
             return False
 
-    # -- lazy provider -------------------------------------------------------
+    # Lazy provider loading.
 
     def load_provider(self, services=None) -> LLMProvider:
         """Return loaded provider; raises on failure.
@@ -851,7 +831,7 @@ class LocalModelService:
         with self._load_lock:
             return self._provider is not None and self._provider.is_available()
 
-    # -- inference -----------------------------------------------------------
+    # Inference.
 
     def generate(self, messages: list,
                  temperature: float = 0.3,
@@ -865,7 +845,7 @@ class LocalModelService:
                                   temperature=temperature,
                                   max_tokens=max_tokens)
 
-    # -- file management -----------------------------------------------------
+    # File management.
 
     def import_gguf(self, source_path: str,
                     entry_id: str = "local") -> Path:
@@ -977,9 +957,7 @@ class LocalModelService:
         self.unload_provider()
 
 
-# ---------------------------------------------------------------------------
-# Decision function
-# ---------------------------------------------------------------------------
+# Decision helpers.
 
 def should_use_local_model(services) -> bool:
     """Return True when local model is enabled AND file passes SHA-256.
@@ -1007,9 +985,7 @@ def is_local_model_enabled(services) -> bool:
         return False
 
 
-# ---------------------------------------------------------------------------
-# Legacy DownloadManager shim — delegates to DownloadController
-# ---------------------------------------------------------------------------
+# Backward-compatible DownloadManager shim delegating to DownloadController.
 
 class DownloadManager:
     """Thin shim: redirects to DownloadController for backward compatibility."""

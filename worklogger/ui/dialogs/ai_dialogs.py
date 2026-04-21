@@ -169,20 +169,17 @@ class AIProgressDialog(QDialog):
         def on_error(short: str, detail: str):
             dlg._timeout_timer.stop()
             if short in _LOCAL_FAIL_KEYS:
-                # ── Automatic fallback to external model ──────────────────
-                # 1. Surface the local-model failure message in the log.
+                # Local inference failed. Show the reason, then try cloud fallback.
                 friendly_local = msg(short)
                 dlg.log.append(f"[{_("Local model")}] "
                                f"{friendly_local}")
-                # 2. Announce fallback attempt.
                 dlg.append("ai_assist.local_model_not_running")
                 dlg.append("local_model_fallback_toast")
 
-                # 3. Fetch external model params.
                 ext_key, ext_url, ext_mdl = _cloud_params()
 
                 if ext_key and ext_url and ext_mdl:
-                    # 4a. External model is configured — start worker.
+                    # External model is configured; continue with AIWorker.
                     dlg.append("ai_init")
                     dlg._timeout_timer.start(30000)
                     dlg._worker = AIWorker(
@@ -191,7 +188,7 @@ class AIProgressDialog(QDialog):
                         on_status=on_status,
                     )
                 else:
-                    # 4b. No external model configured — explain clearly.
+                    # No external fallback is configured; stop with actionable guidance.
                     dlg._timeout_timer.stop()
                     dlg.log.append("")
                     dlg.set_error(
@@ -212,7 +209,7 @@ class AIProgressDialog(QDialog):
             dlg.set_error(short, detail)
             dlg.cancel_btn.setEnabled(True)
 
-        # max_tokens for local: use n_ctx-aware value from catalog if available
+        # Local token budget is catalog-aware when model metadata provides n_ctx/max_tokens.
         local_max_tokens = 4096
         if services is not None:
             try:
@@ -221,7 +218,7 @@ class AIProgressDialog(QDialog):
                 )
                 eid   = get_active_entry_id()
                 cat   = get_catalog_entry(eid)
-                # Use catalog max_tokens if set, else n_ctx - overhead
+                # Prefer catalog max_tokens; otherwise derive from n_ctx with headroom.
                 n_ctx = int(cat.get("n_ctx", 32768))
                 local_max_tokens = int(
                     cat.get("max_tokens", min(n_ctx - 512, 8192))

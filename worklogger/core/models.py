@@ -35,9 +35,7 @@ class WorkRecord(NamedTuple):
     work_type: str = "normal"
     overnight: int = 0
 
-    # ------------------------------------------------------------------
-    # Computed helpers (pure, no side-effects)
-    # ------------------------------------------------------------------
+    # Computed helpers (pure, no side effects).
 
     @property
     def has_times(self) -> bool:

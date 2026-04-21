@@ -25,9 +25,7 @@ import threading
 _lock = threading.Lock()
 
 
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
+# Public API.
 
 def ensure(*packages: str) -> None:
     """Ensure every listed package is importable.
@@ -70,9 +68,7 @@ def is_available(import_name: str) -> bool:
     return _is_importable(import_name)
 
 
-# ---------------------------------------------------------------------------
-# Internals
-# ---------------------------------------------------------------------------
+# Internals.
 
 def _spec_to_import_name(spec: str) -> str:
     """``"httpx>=0.27.0"`` → ``"httpx"``;

@@ -103,7 +103,7 @@ class App(QWidget):
         self.current = self.today.replace(day=1)
         self.selected = self.today
 
-        # ── One-time defaults migration ──────────────────────────────────
+        # Ensure missing settings get safe defaults on first run or upgrade.
         if self.services.get_setting("work_hours") is None:
             self.services.set_setting("work_hours", "8.0")
         legacy_default_break = self.services.get_setting("default_lunch")
@@ -121,7 +121,7 @@ class App(QWidget):
         if residency_key and self.services.get_setting(residency_key) is None:
             self.services.set_setting(residency_key, "0")
 
-        # ── AppStore: single source of truth for all settings state ──────
+        # AppStore is the single source of truth for persisted settings.
         # All code that previously read self.lang / self.theme / self.dark /
         # self.work_hours should use self._state.<field> instead.
         saved_lang = self.services.get_setting("lang", "en_US")
@@ -464,7 +464,7 @@ class App(QWidget):
         """
         return self.store.state
 
-    # ── Compatibility shims ──────────────────────────────────────────────
+    # Compatibility shims for callers that still assign app.* settings directly.
     # SettingsDialog still writes ``app.lang = …`` / ``app.dark = …`` etc.
     # These properties route those assignments through AppStore so the store
     # remains the single source of truth.
@@ -606,11 +606,9 @@ class App(QWidget):
         self.next_btn.setToolTip(_("Next month"))
         self.today_btn.setToolTip(_("Today"))
         self.note_expand_btn.setToolTip(_("Expand notes"))
-        # Respect user preference for week start (Sunday vs Monday)
         week_start_monday = self.services.get_setting("week_start_monday", "0") == "1"
         days_list = list([_("Sun"), _("Mon"), _("Tue"), _("Wed"), _("Thu"), _("Fri"), _("Sat")])
         if week_start_monday:
-            # rotate so Monday is first
             days_list = days_list[1:] + days_list[:1]
         for i, lbl in enumerate(self.week_day_lbls):
             lbl.setText(days_list[i])
@@ -643,7 +641,6 @@ class App(QWidget):
 
     def _update_banner(self):
         d = self.selected
-        # Map weekday name according to week-start preference
         week_start_monday = self.services.get_setting("week_start_monday", "0") == "1"
         if week_start_monday:
             dow = [_("Sun"), _("Mon"), _("Tue"), _("Wed"), _("Thu"), _("Fri"), _("Sat")][d.weekday()]
@@ -832,7 +829,7 @@ class App(QWidget):
         week_start_monday = self.store.state.week_start_monday
         first = raw_first if week_start_monday else (raw_first + 1) % 7
 
-        # ── ONE query for the whole month (was N+1) ──────────────────────
+        # Load all month records once and reuse them per calendar cell.
         recs: dict[str, object] = {
             r.date: r
             for r in self.services.month_records(f"{y}-{m:02d}")
@@ -852,7 +849,7 @@ class App(QWidget):
             dt = date(y, m, d)
             row = (d + first - 1) // 7
             col = (d + first - 1) % 7
-            rec = recs.get(dt.isoformat())   # O(1) dict lookup — no DB call
+            rec = recs.get(dt.isoformat())
             h = ot = 0.0
             wt = "normal"
             note_text = ""

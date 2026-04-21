@@ -65,7 +65,7 @@ WT_BORDER_ACCENT = {
     },
 }
 
-# Centralized style registry for recently introduced UI visual rules.
+# Centralized style values for calendar markers and status indicators.
 CALENDAR_STYLE = {
     "note_marker_default": "#4f8ef7",
     "overnight_marker_default": "#5f5f5f",

@@ -39,7 +39,7 @@ _log = logging.getLogger(__name__)
 # legacy rows written by earlier versions of the app.
 _ENC_PREFIX = "enc1:"
 
-# ── Machine-key derivation ────────────────────────────────────────────────
+# Machine-key derivation.
 
 def _machine_key() -> bytes:
     """Derive a stable 32-byte key from this machine's hardware identifiers.
@@ -64,7 +64,7 @@ def _fernet():
         return None
 
 
-# ── Keyring helpers ───────────────────────────────────────────────────────
+# Keyring helpers.
 
 def _keyring_service() -> str:
     try:
@@ -99,7 +99,7 @@ def _keyring_delete(name: str) -> None:
         pass
 
 
-# ── Public API ────────────────────────────────────────────────────────────
+# Public API.
 
 def get_secret(db: "DB", name: str) -> str:
     """Return the secret for *name*, decrypting if necessary."""

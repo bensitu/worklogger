@@ -155,9 +155,7 @@ def parse_status(msg: str) -> tuple[str | None, dict]:
         "Processing AI response...": "ai_status_parse",
         "Done.": "ai_status_done",
         "Error: ": "ai_status_error",
-        # Local model lifecycle keys (emitted as JSON payload by LocalModelWorker)
-        # Listed here as a documentary fallback — they are normally already
-        # decoded via the JSON payload path above.
+        # Local-model lifecycle keys kept as a fallback for plain-text status paths.
         "local_model_loading":         "local_model_loading",
         "local_model_loaded":          "local_model_loaded",
         "local_model_generating":      "local_model_generating",

@@ -16,9 +16,7 @@ from typing import Callable, Optional
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication
 
-# ---------------------------------------------------------------------------
-# Helper to safely invoke callbacks on main thread
-# ---------------------------------------------------------------------------
+# Thread-safe callback bridge helpers.
 
 
 class _CallbackInvoker(QObject):
@@ -52,9 +50,7 @@ class _CallbackInvoker(QObject):
 _test_invokers: list[_CallbackInvoker] = []
 
 
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
+# Internal helpers.
 
 def _sanitize_header(value: str) -> str:
     return ''.join(c for c in value if 32 <= ord(c) <= 126)
@@ -186,9 +182,7 @@ def _classify(exc: Exception, api_key: str, base_url: str, model: str) -> tuple[
     return f"Unexpected error: {type(exc).__name__}", str(exc)
 
 
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
+# Public API.
 
 class AIWorker:
     def __init__(
@@ -202,7 +196,7 @@ class AIWorker:
         max_tokens: int = 2048,
         on_status: Optional[Callable[[str], None]] = None,
     ):
-        # Store invoker as instance variable to prevent garbage collection
+        # Keep the invoker alive for the lifetime of the worker thread.
         self.invoker = _CallbackInvoker(on_done, on_error, on_status)
         self.thread = threading.Thread(
             target=self._run,
@@ -212,7 +206,7 @@ class AIWorker:
         self.thread.start()
 
     def _run(self, api_key, base_url, model, messages, max_tokens):
-        invoker = self.invoker  # local reference
+        invoker = self.invoker
 
         def _status_key(key: str, **kwargs):
             try:
@@ -311,7 +305,7 @@ class AIWorker:
                 req = _build_request(url, is_anthropic, api_key, model,
                                      [{"role": "user", "content": "Reply with exactly one word: OK"}],
                                      16)
-                # quick host resolve/connect
+                # Fast socket check before the HTTP test request.
                 parsed = urllib.parse.urlparse(base_url)
                 host = parsed.hostname
                 port = parsed.port or (443 if parsed.scheme == "https" else 80)
@@ -323,7 +317,7 @@ class AIWorker:
                     raise urllib.error.URLError(
                         f"Network connect failed: {sock_exc}") from sock_exc
 
-                # Short POST and read
+                # Keep test latency low with a short request timeout.
                 with urllib.request.urlopen(req, timeout=8) as resp:
                     _s_key("ai_status_wait")
                     buf = resp.read()
@@ -347,9 +341,7 @@ class AIWorker:
 
 
 
-# ---------------------------------------------------------------------------
-# LocalModelWorker — same callback contract as AIWorker
-# ---------------------------------------------------------------------------
+# LocalModelWorker with the same callback contract as AIWorker.
 
 class LocalModelWorker:
     """Drop-in replacement for :class:`AIWorker` using on-device inference.
@@ -392,14 +384,12 @@ class LocalModelWorker:
 
         try:
             from services.local_model_service import LocalModelService
-            # NOTE: ai_dialogs already shows "local_model_loading" before
-            # starting this worker — do NOT emit it again here.
+            # The dialog already emits "local_model_loading" before worker start.
             svc = LocalModelService.get(services)
-            # load_provider() triggers lazy load (may take several seconds).
-            # Auto-installs llama-cpp-python on first call if needed.
+            # load_provider() performs lazy loading and may install dependencies.
             svc.load_provider(services=services)
             _status("local_model_loaded")
-            _status("local_model_generating")   # "Starting generation…"
+            _status("local_model_generating")
             text = svc.generate(messages, temperature=temperature,
                                 max_tokens=max_tokens, services=services)
             _status("ai_status_done")

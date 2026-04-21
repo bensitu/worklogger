@@ -130,9 +130,7 @@ class DB:
         self.conn.execute(_CREATE_QUICK_LOGS)
         self.conn.commit()
 
-    # ------------------------------------------------------------------
-    # Read operations (no lock needed — SQLite reads are safe concurrent)
-    # ------------------------------------------------------------------
+    # Read operations (no lock needed; SQLite reads are safe to run concurrently).
 
     def get(self, d: str) -> WorkRecord | None:
         """Return the worklog record for *d* ("YYYY-MM-DD"), or None."""
@@ -164,9 +162,7 @@ class DB:
         row = c.fetchone()
         return row[0] if row else default
 
-    # ------------------------------------------------------------------
-    # Write operations — all acquire _write_lock
-    # ------------------------------------------------------------------
+    # Write operations (all acquire _write_lock).
 
     def save(self, d, s, e, l, n, wt="normal", overnight: int | None = None) -> None:
         ovn = int(overnight) if overnight is not None else (
@@ -253,9 +249,7 @@ class DB:
             self.conn.execute("DELETE FROM quick_logs WHERE id=?", (log_id,))
             self.conn.commit()
 
-    # ------------------------------------------------------------------
-    # Read-only calendar / quick-log queries
-    # ------------------------------------------------------------------
+    # Read-only calendar and quick-log queries.
 
     def get_calendar_events_for_date(self, d: str) -> list:
         c = self.conn.cursor()

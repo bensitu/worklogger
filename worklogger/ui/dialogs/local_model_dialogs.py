@@ -31,9 +31,7 @@ from utils.i18n import _, msg
 from config.themes import progress_bar_qss
 
 
-# ---------------------------------------------------------------------------
-# Cross-thread bridge
-# ---------------------------------------------------------------------------
+# Cross-thread bridge.
 
 class _Bridge(QObject):
     """Qt-signal bridge for DownloadController callbacks → main thread.
@@ -49,9 +47,7 @@ class _Bridge(QObject):
     error = Signal(str)        # error message / i18n key
 
 
-# ---------------------------------------------------------------------------
-# LocalDownloadDialog — two-page flow
-# ---------------------------------------------------------------------------
+# LocalDownloadDialog two-page flow.
 
 class LocalDownloadDialog(QDialog):
     """Two-page modal: model selection (Page 0) → download progress (Page 1).
@@ -99,14 +95,12 @@ class LocalDownloadDialog(QDialog):
 
         self._show_page(self.PAGE_SELECT)
 
-    # ── Page 0: model selection ─────────────────────────────────────────────
-
     def _build_select_page(self, _: dict) -> QWidget:
         from services.local_model_service import (
             ensure_catalog, load_catalog, get_active_entry_id,
             localize_field, get_models_dir,
         )
-        # Ensure catalog.json exists in user models dir (critical on first frozen run)
+        # Ensure catalog.json exists in the writable models directory.
         try:
             ensure_catalog(get_models_dir())
         except Exception:
@@ -180,7 +174,7 @@ class LocalDownloadDialog(QDialog):
         self._sel_next_btn.clicked.connect(self._on_select_next)
         self._sel_import_btn.clicked.connect(self._import_gguf_from_selection)
 
-        # Pre-select active / default
+        # Preselect active entry, then fallback to first card.
         for eid, card in self._card_widgets.items():
             if eid == active_id:
                 card["radio"].setChecked(True)
@@ -207,7 +201,6 @@ class LocalDownloadDialog(QDialog):
         fl.setSpacing(4)
         fl.setContentsMargins(10, 8, 10, 8)
 
-        # Top row: radio + label + size
         top_row = QHBoxLayout()
         radio = QRadioButton()
         lbl_name = QLabel(f"<b>{label}</b>")
@@ -219,7 +212,6 @@ class LocalDownloadDialog(QDialog):
         top_row.addStretch()
         fl.addLayout(top_row)
 
-        # HuggingFace repo link (if present)
         hf_repo = entry.get("hf_repo", "")
         if hf_repo:
             hf_url = f"https://huggingface.co/{hf_repo}"
@@ -239,7 +231,6 @@ class LocalDownloadDialog(QDialog):
             p.setWordWrap(True)
             fl.addWidget(p)
 
-        # Status + delete row
         bot_row = QHBoxLayout()
         status_lbl = QLabel()
         status_lbl.setObjectName("muted")
@@ -277,7 +268,7 @@ class LocalDownloadDialog(QDialog):
             catalog  = load_catalog(mdir)
             ok_col   = "#2ecc71"
         except Exception:
-            return   # can't refresh without service layer
+            return
 
         for entry in catalog:
             eid  = entry.get("id", "")
@@ -400,7 +391,6 @@ class LocalDownloadDialog(QDialog):
             verify_model_file, get_active_entry_id,
             load_manifest, get_entry, get_models_dir, set_active_entry,
         )
-        # Which radio is checked?
         checked = self._radio_group.checkedButton()
         sel_id = None
         for eid, card in self._card_widgets.items():
@@ -416,7 +406,6 @@ class LocalDownloadDialog(QDialog):
         entry = get_entry(manifest, sel_id)
         path = mdir / entry.get("file", "")
 
-        # Already downloaded and verified?
         if path.exists() and path.stat().st_size > 0:
             if self._verify_selected_before_close(mdir, sel_id):
                 set_active_entry(sel_id, mdir)
@@ -433,7 +422,7 @@ class LocalDownloadDialog(QDialog):
                 self.accept()
             return
 
-        # Conflict: a *different* verified model exists
+        # Guard against keeping two verified models at once.
         active_id = get_active_entry_id(mdir)
         if active_id != sel_id and verify_model_file(mdir, active_id):
             reply = QMessageBox.question(
@@ -459,8 +448,6 @@ class LocalDownloadDialog(QDialog):
         set_active_entry(sel_id, mdir)
         self._show_page(self.PAGE_DOWNLOAD)
         self._start_download()
-
-    # ── Page 1: download progress ────────────────────────────────────────────
 
     def _build_download_page(self, t: dict) -> QWidget:
         page = QWidget()
@@ -513,8 +500,6 @@ class LocalDownloadDialog(QDialog):
 
         return page
 
-    # ── Download control ─────────────────────────────────────────────────────
-
     def _start_download(self) -> None:
         from services.local_model_service import load_catalog
         eid = self._sel_id or ""
@@ -530,12 +515,11 @@ class LocalDownloadDialog(QDialog):
         self._action_btn.clicked.connect(self._cancel)
         self._progress.setValue(0)
         self._progress.setFormat("0%")
-        self._last_status_key = ""           # dedup guard
+        self._last_status_key = ""
 
-        bridge = self._bridge  # captured for the callbacks
+        bridge = self._bridge
 
-        # Callbacks emit Qt signals directly — queued connection handles
-        # cross-thread delivery to the main event loop.
+        # Emit bridge signals directly; Qt queues cross-thread delivery.
         from services.download_controller import DownloadController
         DownloadController.get().start(
             entry_id=eid,
@@ -557,12 +541,10 @@ class LocalDownloadDialog(QDialog):
         self._action_btn.clicked.connect(self._cancel)
         self._progress.setValue(0)
         self._progress.setFormat("0%")
-        # Reset controller so a fresh download can start
+        # Reset controller state before starting a fresh retry.
         from services.download_controller import DownloadController
         DownloadController.reset()
         self._start_download()
-
-    # ── Signal slots (main thread) ───────────────────────────────────────────
 
     def _on_progress(self, downloaded: object, total: object) -> None:
         try:
@@ -583,12 +565,12 @@ class LocalDownloadDialog(QDialog):
                 self._progress.setFormat(f"{pct}%")
 
     def _on_status(self, key: str) -> None:
-        # Deduplicate: skip if same key received consecutively
+        # Skip repeated statuses to keep the log readable.
         if getattr(self, "_last_status_key", "") == key:
             return
         self._last_status_key = key
         if key in ("download_dialog_model_hash_ok", "download_model_status_ready"):
-            return   # these appear as part of the done message; skip log noise
+            return
         text = msg(key)
         if text:
             self._log_append(text)
@@ -599,11 +581,10 @@ class LocalDownloadDialog(QDialog):
         self._log_append(
             _("✓  Integrity verified"))
         self._retry_btn.hide()
-        # Update the primary action button to finish the dialog.
         self._action_btn.setText(_("Done"))
         self._action_btn.clicked.disconnect()
         self._action_btn.clicked.connect(self._finish_after_download)
-        # Reset singleton so next inference picks up the new file.
+        # Ensure next inference picks up the newly downloaded model file.
         from services.local_model_service import LocalModelService
         LocalModelService.reset()
         if callable(self._on_model_changed):
@@ -620,8 +601,6 @@ class LocalDownloadDialog(QDialog):
         self._action_btn.setText(_("Close"))
         self._action_btn.clicked.disconnect()
         self._action_btn.clicked.connect(self.reject)
-
-    # ── Import from selection page ───────────────────────────────────────────
 
     def _import_gguf_from_selection(self) -> None:
         """Let user import a .gguf file from disk.
@@ -640,11 +619,11 @@ class LocalDownloadDialog(QDialog):
         try:
             from services.local_model_service import LocalModelService
             svc = LocalModelService.get()
-            # "__new__" forces catalog-lookup-by-filename / create-new behaviour
+            # "__new__" always routes through filename matching or new-entry creation.
             imported = svc.import_gguf(path, "__new__")
             LocalModelService.reset()
             self._refresh_card_states()
-            # Rebuild cards to show any newly added catalog entry
+            # New custom entries can add cards that were not present at dialog open.
             self._rebuild_cards_if_needed()
             if callable(self._on_model_changed):
                 try:
@@ -666,11 +645,8 @@ class LocalDownloadDialog(QDialog):
         current_ids = set(self._card_widgets.keys())
         catalog_ids = {e.get("id") for e in load_catalog()}
         if catalog_ids - current_ids:
-            # New entries exist — close and let the caller re-open to rebuild.
-            # (Full in-place rebuild is complex; a simple close is sufficient.)
+            # Close so the caller can reopen with a fully rebuilt card list.
             self.accept()
-
-    # ── Helpers ──────────────────────────────────────────────────────────────
 
     def _show_page(self, index: int) -> None:
         self._stack.setCurrentIndex(index)

@@ -210,7 +210,10 @@ resolve_built_bundle() {
   [ -n "$app_bundle" ] || fail "No ${APP_NAME}.app found under $dist_dir"
   local main_exe="$app_bundle/Contents/MacOS/${APP_NAME}"
   [ -f "$main_exe" ] || fail "Missing main executable: $main_exe"
-  verify_single_arch_executable "$main_exe" "$target_arch"
+  # Keep stdout clean for command substitution callers.
+  # `verify_single_arch_executable` emits diagnostic logs via `log()`,
+  # so redirect them to stderr to avoid contaminating the returned path.
+  verify_single_arch_executable "$main_exe" "$target_arch" >&2
   printf '%s\n' "$app_bundle"
 }
 

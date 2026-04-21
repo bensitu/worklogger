@@ -10,7 +10,7 @@ class SwitchButton(QWidget):
 
     toggled = Signal(bool)
 
-    _W, _H = 42, 24  # track dimensions
+    _W, _H = 42, 24
 
     def __init__(self, checked: bool = False,
                  color_on:  str = "#4f8ef7",
@@ -20,7 +20,6 @@ class SwitchButton(QWidget):
         self._checked = checked
         self._color_on = QColor(color_on)
         self._color_off = QColor(color_off)
-        # thumb x-offset: 0 = left (off), _W-_H = right (on)
         self._travel = float(self._W - self._H)
         self._pos = self._travel if checked else 0.0
         self._anim_timer = QTimer(self)
@@ -30,7 +29,6 @@ class SwitchButton(QWidget):
         self.setCursor(Qt.PointingHandCursor)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
-    # ── public API (compatible with QCheckBox) ──────────────────────────────
     def isChecked(self) -> bool:
         return self._checked
 
@@ -41,13 +39,11 @@ class SwitchButton(QWidget):
         self._anim_timer.start()
         self.toggled.emit(val)
 
-    # ── interaction ─────────────────────────────────────────────────────────
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.setChecked(not self._checked)
         super().mousePressEvent(event)
 
-    # ── animation ───────────────────────────────────────────────────────────
     def _tick(self):
         target = self._travel if self._checked else 0.0
         diff = target - self._pos
@@ -58,13 +54,12 @@ class SwitchButton(QWidget):
             self._pos += diff * 0.30
         self.update()
 
-    # ── painting ─────────────────────────────────────────────────────────────
     def paintEvent(self, _):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
         w, h = self._W, self._H
 
-        # blend track color on/off as thumb slides
+        # Blend track color between off/on states during the thumb animation.
         t = max(0.0, min(1.0, self._pos / self._travel)
                 ) if self._travel else (1.0 if self._checked else 0.0)
         on, off = self._color_on, self._color_off
@@ -77,7 +72,6 @@ class SwitchButton(QWidget):
         p.setBrush(QBrush(track_c))
         p.drawRoundedRect(QRectF(0, 0, w, h), h / 2, h / 2)
 
-        # white thumb
         pad = 3
         td = h - pad * 2
         tx = self._pos + pad

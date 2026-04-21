@@ -75,7 +75,7 @@ def _seed_packaged_custom_templates(target_dir: str) -> None:
         pass
 
 
-# Public alias used by dialogs.py.
+# Module-level path used by dialogs and template-management flows.
 CUSTOM_DIR = _custom_dir()
 
 def get_template(lang: str, type_key: str) -> str:

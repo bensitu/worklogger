@@ -280,7 +280,7 @@ class AppServices:
     def load_settings_snapshot(self) -> AppState:
         return self.load_settings()
 
-    # ── Secret (API key) helpers ─────────────────────────────────────────
+    # Secret (API key) helpers.
     # API keys are sensitive credentials.  These methods route through
     # key_store which tries the OS keychain first, then Fernet-encrypted DB.
 
