@@ -4,7 +4,7 @@ import ast
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "worklogger"
 OUT = SRC / "locales" / "messages.pot"
 I18N_RUNTIME = SRC / "utils" / "i18n.py"

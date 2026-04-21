@@ -14,10 +14,10 @@ jobs:
         with:
           python-version: "3.11"
       - name: Extract POT
-        run: python scripts/i18n_extract.py
+        run: python scripts/i18n/i18n_extract.py
       - name: Sync PO
-        run: python scripts/i18n_sync.py
+        run: python scripts/i18n/i18n_sync.py
       - name: Compile MO
-        run: python scripts/i18n_compile.py
+        run: python scripts/i18n/i18n_compile.py
       - name: Check i18n consistency
-        run: python scripts/i18n_check.py
+        run: python scripts/i18n/i18n_check.py

@@ -72,19 +72,19 @@ WorkLogger uses gettext catalogs under `worklogger/locales`.
 
 - Template extraction (`messages.pot`):
 ```bash
-python scripts/i18n_extract.py
+python scripts/i18n/i18n_extract.py
 ```
 - Sync language catalogs (`messages.po`):
 ```bash
-python scripts/i18n_sync.py
+python scripts/i18n/i18n_sync.py
 ```
 - Compile binary catalogs (`messages.mo`):
 ```bash
-python scripts/i18n_compile.py
+python scripts/i18n/i18n_compile.py
 ```
 - CI/local validation:
 ```bash
-python scripts/i18n_check.py
+python scripts/i18n/i18n_check.py
 ```
 
 `messages.mo` files are generated artifacts and ignored by git. Missing translations automatically fall back to English at runtime.

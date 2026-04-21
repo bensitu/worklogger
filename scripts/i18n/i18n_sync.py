@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 LOCALES = ROOT / "worklogger" / "locales"
 POT = LOCALES / "messages.pot"
 LANGS = ["en_US", "zh_CN", "zh_TW", "ja_JP", "ko_KR"]

@@ -13,6 +13,8 @@ venv_x86/
 venv_arm/
 env/
 .venv/
+.venv_build/
+.venv_build_*/
 
 # PyInstaller
 
@@ -22,6 +24,8 @@ build_arm/
 dist/
 dist_x86/
 dist_arm/
+!scripts/build/
+!scripts/build/worklogger_build_windows.ps1
 
 # Logs
 
