@@ -232,8 +232,8 @@ if PLATFORM == "darwin":
         bundle_identifier="dev.worklogger.app.v1",
         info_plist={
             "NSHighResolutionCapable": True,
-            "CFBundleShortVersionString": "2.2.1",
-            "CFBundleVersion": "7",
+            "CFBundleShortVersionString": "2.2.2",
+            "CFBundleVersion": "8",
         },
     )
 elif PLATFORM == "win32":

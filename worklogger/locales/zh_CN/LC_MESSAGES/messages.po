@@ -701,7 +701,7 @@ msgid "✨ AI Assist"
 msgstr "✨ AI 辅助"
 
 msgid "✨ AI Generate"
-msgstr "✨ AI Generate"
+msgstr "✨ AI 生成"
 
 msgid "🌍  Language"
 msgstr "🌍  语言"
@@ -980,13 +980,13 @@ msgid "Local model loaded."
 msgstr "本地模型已加载。"
 
 msgid "Local model not downloaded - go to Settings -> AI"
-msgstr "Local model not downloaded - go to Settings -> AI"
+msgstr "本地模型未下载 - 请前往 设置 -> AI"
 
 msgid "Local model unavailable - using external model instead"
-msgstr "Local model unavailable - using external model instead"
+msgstr "本地模型不可用，改用外部模型"
 
 msgid "Local model unavailable - using external model instead."
-msgstr "Local model unavailable - using external model instead."
+msgstr "本地模型不可用，改用外部模型。"
 
 msgid "Model download completed."
 msgstr "模型下载完成。"
@@ -998,28 +998,28 @@ msgid "Verifying local model file..."
 msgstr "正在校验本地模型文件..."
 
 msgid "When enabled, text processing uses the local model first - no data is sent to external services."
-msgstr "When enabled, text processing uses the local model first - no data is sent to external services."
+msgstr "启用后，文本处理会优先使用本地模型，不会将数据发送到外部服务。"
 
 msgid "llama-cpp-python not installed - run: pip install llama-cpp-python"
-msgstr "llama-cpp-python not installed - run: pip install llama-cpp-python"
+msgstr "未安装 llama-cpp-python - 请运行: pip install llama-cpp-python"
 
 msgid "New version available: v{0}"
 msgstr "发现新版本：v{0}"
 
 msgid "Local model is inactive"
-msgstr "Local model is inactive"
+msgstr "本地模型处于未激活状态。"
 
 msgid "Local model verification failed. Please re-download or switch model."
-msgstr "Local model verification failed. Please re-download or switch model."
+msgstr "本地模型校验失败。请重新下载或切换模型。"
 
 msgid "Local model verification timed out."
-msgstr "Local model verification timed out."
+msgstr "本地模型校验超时。"
 
 msgid "Local model verification was cancelled."
-msgstr "Local model verification was cancelled."
+msgstr "本地模型校验已取消。"
 
 msgid "Permission denied while verifying local model file."
-msgstr "Permission denied while verifying local model file."
+msgstr "校验本地模型文件时权限被拒绝。"
 
 msgid "Active"
 msgstr "已激活"

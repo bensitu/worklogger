@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.2] - 2026-04-22
+
+### Changed
+
+- Windows build now installs `llama-cpp-python` from the prebuilt CPU wheel index with explicit pip timeout/retry controls, avoiding local source compilation on machines without MSVC/NMake toolchains.
+- Local-model runtime dependency installation was split from general requirements in the Windows build flow so packaging remains deterministic while still bundling local inference support into the executable.
+
+### Fixed
+
+- Fixed a localization issue with the fallback state in external model handover messages, ensuring that AI-related messages are parsed via gettext in all supported language environments.
+- Fixed remaining untranslated local-model status/error strings in non-English locale catalogs, including verification timeout/cancel/failure and permission-denied messages.
+- Fixed locale catalog consistency so all five built-in languages (`en_US`, `ja_JP`, `ko_KR`, `zh_CN`, `zh_TW`) pass gettext extraction/sync/compile/check validation.
+
 ## [2.2.1] - 2026-04-21
 
 ### Changed

@@ -137,7 +137,6 @@ bootstrap_build_env() {
   local venv_dir="$2"
   local venv_python="$venv_dir/bin/python"
   local requirements_file="$SCRIPT_DIR/requirements.txt"
-  local filtered_requirements="$SCRIPT_DIR/.tmp_requirements_build_${target_arch}.txt"
 
   if [ ! -x "$venv_python" ]; then
     log "RUN  : Create venv (${target_arch}) at $venv_dir"
@@ -154,29 +153,8 @@ bootstrap_build_env() {
   retry 3 5 "Install build dependencies (${target_arch})" \
     run_arch "$target_arch" "$venv_python" -m pip install --no-compile --no-cache-dir pyinstaller pillow certifi
   if [ -f "$requirements_file" ]; then
-    local excluded_reqs=()
-    : > "$filtered_requirements"
-    while IFS= read -r line || [ -n "$line" ]; do
-      local trimmed="${line#"${line%%[![:space:]]*}"}"
-      if [[ "$trimmed" == llama-cpp-python* ]]; then
-        excluded_reqs+=("$trimmed")
-        continue
-      fi
-      printf '%s\n' "$line" >> "$filtered_requirements"
-    done < "$requirements_file"
-
-    [ -s "$filtered_requirements" ] || fail "No build-safe requirements remain after filtering optional native packages."
-
-    if [ "${#excluded_reqs[@]}" -gt 0 ]; then
-      local excluded_joined
-      excluded_joined="$(IFS=', '; echo "${excluded_reqs[*]}")"
-      log "WARN : Excluding optional native package(s) from build bootstrap (${target_arch}): ${excluded_joined}"
-      log "WARN : Local-model runtime can still install llama-cpp-python on demand."
-    fi
-
-    retry 3 5 "Install application requirements (${target_arch}, build-safe subset)" \
-      run_arch "$target_arch" "$venv_python" -m pip install --no-compile --no-cache-dir -r "$filtered_requirements"
-    safe_remove_path "$filtered_requirements"
+    retry 3 5 "Install application requirements (${target_arch}, including local-model runtime)" \
+      run_arch "$target_arch" "$venv_python" -m pip install --no-compile --no-cache-dir -r "$requirements_file"
   fi
 
   run_arch "$target_arch" "$venv_python" -c 'import importlib.util, sys; req = ["PySide6", "holidays", "httpx", "httpcore", "anyio", "portalocker"]; miss = [m for m in req if importlib.util.find_spec(m) is None]; print("dependency_check=", "ok" if not miss else ",".join(miss)); sys.exit(1 if miss else 0)' \

@@ -1007,19 +1007,19 @@ msgid "New version available: v{0}"
 msgstr "새 버전 v{0}을 사용할 수 있습니다"
 
 msgid "Local model is inactive"
-msgstr "Local model is inactive"
+msgstr "로컬 모델이 비활성 상태입니다"
 
 msgid "Local model verification failed. Please re-download or switch model."
-msgstr "Local model verification failed. Please re-download or switch model."
+msgstr "로컬 모델 검증에 실패했습니다. 다시 다운로드하거나 모델을 전환해 주세요."
 
 msgid "Local model verification timed out."
-msgstr "Local model verification timed out."
+msgstr "로컬 모델 검증이 시간 초과되었습니다."
 
 msgid "Local model verification was cancelled."
-msgstr "Local model verification was cancelled."
+msgstr "로컬 모델 검증이 취소되었습니다."
 
 msgid "Permission denied while verifying local model file."
-msgstr "Permission denied while verifying local model file."
+msgstr "로컬 모델 파일을 검증하는 중 권한이 거부되었습니다."
 
 msgid "Active"
 msgstr "활성"
