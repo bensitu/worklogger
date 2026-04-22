@@ -12,6 +12,8 @@ BUILD_X86="$SCRIPT_DIR/build_x86"
 BUILD_ARM="$SCRIPT_DIR/build_arm"
 OUT_DIST="$SCRIPT_DIR/dist"
 OUT_APP="$OUT_DIST/${APP_NAME}.app"
+OUT_ZIP="$OUT_DIST/${APP_NAME}.app.zip"
+CODESIGN_IDENTITY="${CODESIGN_IDENTITY:--}"
 VENV_X86="$SCRIPT_DIR/venv_x86"
 VENV_ARM="$SCRIPT_DIR/venv_arm"
 I18N_COMPILE_SCRIPT="$SCRIPT_DIR/scripts/i18n/i18n_compile.py"
@@ -248,6 +250,40 @@ validate_final_artifact() {
   fi
 }
 
+package_release_zip() {
+  [ -d "$OUT_APP" ] || fail "Cannot package missing app bundle: $OUT_APP"
+  mkdir -p "$OUT_DIST"
+  safe_remove_path "$OUT_ZIP"
+
+  log "RUN  : Package macOS release zip (preserve symlinks/permissions)"
+  ditto -c -k --sequesterRsrc --keepParent "$OUT_APP" "$OUT_ZIP"
+  [ -f "$OUT_ZIP" ] || fail "Release zip was not created: $OUT_ZIP"
+  log "OK   : Package macOS release zip"
+}
+
+resign_merged_bundle() {
+  [ -d "$OUT_APP" ] || fail "Cannot sign missing app bundle: $OUT_APP"
+
+  log "RUN  : Re-sign merged app bundle (identity: $CODESIGN_IDENTITY)"
+  if [ "$CODESIGN_IDENTITY" = "-" ]; then
+    # Ad-hoc signature keeps bundle integrity after lipo merge.
+    codesign --force --deep --sign - "$OUT_APP"
+  else
+    # Developer ID signature for distribution (requires local cert).
+    codesign --force --deep --options runtime --timestamp --sign "$CODESIGN_IDENTITY" "$OUT_APP"
+  fi
+  log "OK   : Re-sign merged app bundle"
+}
+
+verify_codesign_integrity() {
+  [ -d "$OUT_APP" ] || fail "Cannot verify missing app bundle: $OUT_APP"
+
+  log "RUN  : Verify code signature integrity"
+  codesign --verify --deep --strict --verbose=1 "$OUT_APP" \
+    || fail "Code signature verification failed for $OUT_APP"
+  log "OK   : Verify code signature integrity"
+}
+
 log "============================================================"
 log "WorkLogger macOS universal build started"
 log "Project root : $SCRIPT_DIR"
@@ -285,6 +321,8 @@ ARM_MAIN="$ARM_APP/Contents/MacOS/${APP_NAME}"
 log "Step 3/3: Merge into universal app"
 merge_universal_bundle "$X86_APP" "$ARM_APP"
 validate_final_artifact
+resign_merged_bundle
+verify_codesign_integrity
 
 MAIN_EXEC="$OUT_APP/Contents/MacOS/${APP_NAME}"
 log "x86 executable   : $(file "$X86_MAIN")"
@@ -294,6 +332,17 @@ log "merged lipo info : $(lipo -info "$MAIN_EXEC")"
 
 cleanup_temporary_dirs
 
+package_release_zip
+
 log "SUCCESS: Universal app created at: $OUT_APP"
+log "SUCCESS: Release zip created at: $OUT_ZIP"
 log "SUCCESS: Detailed log saved to: $LOG_FILE"
-log "SUCCESS: Next steps for distribution are codesign and notarization."
+log "SUCCESS: Upload the generated .app.zip to GitHub Releases (do not upload the .app directory directly)."
+if [ "$CODESIGN_IDENTITY" = "-" ]; then
+  log "SUCCESS: Bundle integrity is valid with ad-hoc signing."
+  log "SUCCESS: For Gatekeeper-friendly public distribution, re-run with CODESIGN_IDENTITY='Developer ID Application: ...' and notarize."
+  log "SUCCESS: Without Developer ID, users can run: xattr -dr com.apple.quarantine /Applications/${APP_NAME}.app"
+else
+  log "SUCCESS: Developer ID signing applied (identity: $CODESIGN_IDENTITY)."
+  log "SUCCESS: Next step for trusted distribution is notarization + stapling."
+fi
