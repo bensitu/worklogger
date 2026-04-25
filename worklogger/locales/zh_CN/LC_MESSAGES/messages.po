@@ -1029,3 +1029,78 @@ msgstr "Downloaded"
 
 msgid "Inactive"
 msgstr "未激活"
+
+msgid "Custom theme color"
+msgstr "自定义主题颜色"
+
+msgid "Choose custom color"
+msgstr "选择自定义颜色"
+
+msgid "Selected color"
+msgstr "已选颜色"
+
+msgid "🔵 Blue"
+msgstr "🔵 蓝色"
+
+msgid "🌸 Pink"
+msgstr "🌸 粉色"
+
+msgid "🌿 Green"
+msgstr "🌿 绿色"
+
+msgid "🟣 Purple"
+msgstr "🟣 紫色"
+
+msgid "Minimal mode"
+msgstr "极简模式"
+
+msgid "Restart required to apply minimal mode."
+msgstr "需要重启以应用极简模式。"
+
+msgid "Default"
+msgstr "默认"
+
+msgid "Invoice"
+msgstr "发票"
+
+msgid "Timesheet"
+msgstr "工时表"
+
+msgid "Average"
+msgstr "平均"
+
+msgid "Bar"
+msgstr "柱状"
+
+msgid "Line"
+msgstr "折线"
+
+msgid "Show leave"
+msgstr "显示休假"
+
+msgid "Work hours"
+msgstr "工作时长"
+
+msgid "Leave"
+msgstr "休假"
+
+msgid "Leave Hours"
+msgstr "休假时长"
+
+msgid "Open color picker"
+msgstr "打开颜色选择器"
+
+msgid "Restart Required"
+msgstr "需要重启"
+
+msgid "Minimal mode toggle will take effect after restarting the application."
+msgstr "极简模式切换将在重启应用后生效。"
+
+msgid "Period"
+msgstr "周期"
+
+msgid "Chart:"
+msgstr "图表："
+
+msgid "Metric:"
+msgstr "指标："

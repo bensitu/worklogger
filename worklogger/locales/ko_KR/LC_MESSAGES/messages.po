@@ -1029,3 +1029,78 @@ msgstr "Downloaded"
 
 msgid "Inactive"
 msgstr "비활성"
+
+msgid "Custom theme color"
+msgstr "사용자 정의 테마 색상"
+
+msgid "Choose custom color"
+msgstr "사용자 정의 색상 선택"
+
+msgid "Selected color"
+msgstr "선택한 색상"
+
+msgid "🔵 Blue"
+msgstr "🔵 파란색"
+
+msgid "🌸 Pink"
+msgstr "🌸 분홍색"
+
+msgid "🌿 Green"
+msgstr "🌿 초록색"
+
+msgid "🟣 Purple"
+msgstr "🟣 보라색"
+
+msgid "Minimal mode"
+msgstr "미니멀 모드"
+
+msgid "Restart required to apply minimal mode."
+msgstr "미니멀 모드를 적용하려면 다시 시작해야 합니다."
+
+msgid "Default"
+msgstr "기본"
+
+msgid "Invoice"
+msgstr "청구서"
+
+msgid "Timesheet"
+msgstr "근무표"
+
+msgid "Average"
+msgstr "평균"
+
+msgid "Bar"
+msgstr "막대"
+
+msgid "Line"
+msgstr "선"
+
+msgid "Show leave"
+msgstr "휴가 표시"
+
+msgid "Work hours"
+msgstr "근무 시간"
+
+msgid "Leave"
+msgstr "휴가"
+
+msgid "Leave Hours"
+msgstr "휴가 시간"
+
+msgid "Open color picker"
+msgstr "색상 선택기 열기"
+
+msgid "Restart Required"
+msgstr "다시 시작 필요"
+
+msgid "Minimal mode toggle will take effect after restarting the application."
+msgstr "미니멀 모드 전환은 애플리케이션을 다시 시작한 후 적용됩니다."
+
+msgid "Period"
+msgstr "기간"
+
+msgid "Chart:"
+msgstr "차트:"
+
+msgid "Metric:"
+msgstr "지표:"

@@ -93,6 +93,12 @@ msgstr ""
 msgid "Auto Record"
 msgstr ""
 
+msgid "Average"
+msgstr ""
+
+msgid "Bar"
+msgstr ""
+
 msgid "Break (h)"
 msgstr ""
 
@@ -135,6 +141,9 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
+msgid "Chart:"
+msgstr ""
+
 msgid "Check for Updates"
 msgstr ""
 
@@ -142,6 +151,9 @@ msgid "Checking for updates…"
 msgstr ""
 
 msgid "Choose a model to download"
+msgstr ""
+
+msgid "Choose custom color"
 msgstr ""
 
 msgid "Clear Calendar Events"
@@ -174,6 +186,9 @@ msgstr ""
 msgid "Custom"
 msgstr ""
 
+msgid "Custom theme color"
+msgstr ""
+
 msgid "Daily"
 msgstr ""
 
@@ -187,6 +202,9 @@ msgid "Dec"
 msgstr ""
 
 msgid "December"
+msgstr ""
+
+msgid "Default"
 msgstr ""
 
 msgid "Default break (h)"
@@ -345,6 +363,9 @@ msgstr ""
 msgid "Invalid time range. The shift must be within {max_hours} hours (overnight is supported)."
 msgstr ""
 
+msgid "Invoice"
+msgstr ""
+
 msgid "Jan"
 msgstr ""
 
@@ -363,10 +384,19 @@ msgstr ""
 msgid "June"
 msgstr ""
 
+msgid "Leave"
+msgstr ""
+
+msgid "Leave Hours"
+msgstr ""
+
 msgid "Leave days"
 msgstr ""
 
 msgid "License"
+msgstr ""
+
+msgid "Line"
 msgstr ""
 
 msgid "Loading local model..."
@@ -424,6 +454,15 @@ msgid "March"
 msgstr ""
 
 msgid "May"
+msgstr ""
+
+msgid "Metric:"
+msgstr ""
+
+msgid "Minimal mode"
+msgstr ""
+
+msgid "Minimal mode toggle will take effect after restarting the application."
 msgstr ""
 
 msgid "Missing columns: {}"
@@ -525,6 +564,9 @@ msgstr ""
 msgid "Open"
 msgstr ""
 
+msgid "Open color picker"
+msgstr ""
+
 msgid "Original"
 msgstr ""
 
@@ -532,6 +574,9 @@ msgid "Original Content"
 msgstr ""
 
 msgid "Overnight"
+msgstr ""
+
+msgid "Overnight indicator"
 msgstr ""
 
 msgid "Overtime"
@@ -550,6 +595,9 @@ msgid "Paid leave"
 msgstr ""
 
 msgid "Paid: {paid}\nComp: {comp}\nSick: {sick}"
+msgstr ""
+
+msgid "Period"
 msgstr ""
 
 msgid "Permission denied while verifying local model file."
@@ -603,6 +651,12 @@ msgstr ""
 msgid "Restart"
 msgstr ""
 
+msgid "Restart Required"
+msgstr ""
+
+msgid "Restart required to apply minimal mode."
+msgstr ""
+
 msgid "Retry"
 msgstr ""
 
@@ -624,6 +678,9 @@ msgstr ""
 msgid "Select / Change"
 msgstr ""
 
+msgid "Selected color"
+msgstr ""
+
 msgid "Sep"
 msgstr ""
 
@@ -633,7 +690,7 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-msgid "Overnight indicator"
+msgid "Show leave"
 msgstr ""
 
 msgid "Sick"
@@ -688,6 +745,9 @@ msgid "Thu"
 msgstr ""
 
 msgid "Time"
+msgstr ""
+
+msgid "Timesheet"
 msgstr ""
 
 msgid "Today"
@@ -757,6 +817,9 @@ msgid "Work Time Analytics"
 msgstr ""
 
 msgid "Work days"
+msgstr ""
+
+msgid "Work hours"
 msgstr ""
 
 msgid "Work type"

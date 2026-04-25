@@ -10,6 +10,7 @@ from utils.i18n import _, msg
 from templates import (
     get_template, list_builtin_template_types, list_custom_templates,
     save_custom_template, delete_custom_template,
+    TEMPLATE_DISPLAY_NAME,
 )
 from .common import _localize_msgbox_buttons, _render_template_with_context
 
@@ -116,8 +117,9 @@ class TemplatePickerDialog(QDialog):
             if not content:
                 continue
             label_name = "default" if builtin_type == self._type else builtin_type
+            display_key = TEMPLATE_DISPLAY_NAME.get(label_name, label_name)
             item = QListWidgetItem(
-                f"[{_("Built-in")}]  {label_name}")
+                f"[{_("Built-in")}]  {msg(display_key)}")
             item.setData(Qt.UserRole, {
                 "kind": "builtin",
                 "content": content,

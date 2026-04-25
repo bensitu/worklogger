@@ -13,6 +13,7 @@ if sys.platform == "win32":
 
 from PySide6.QtWidgets import QApplication
 
+from services.app_services import AppServices
 from utils.icon import make_icon
 from ui.main_window import App
 
@@ -40,7 +41,9 @@ def main():
     app.setStyle("Fusion")
     icon = make_icon()
     app.setWindowIcon(icon)
-    w = App()
+    services = AppServices()
+    initial_lang = services.resolve_initial_language()
+    w = App(services=services, initial_lang=initial_lang)
     w.setWindowIcon(icon)
     w.show()
     sys.exit(app.exec())

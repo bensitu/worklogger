@@ -1,21 +1,25 @@
 from __future__ import annotations
-import csv
 from datetime import datetime as dt, date
 
 from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
     QLineEdit, QTextEdit, QTabWidget, QFileDialog, QMessageBox, QListWidget, QListWidgetItem,
-    QSplitter, QSizePolicy, QApplication,
+    QSplitter, QSizePolicy, QApplication, QButtonGroup, QCheckBox, QRadioButton,
 )
 from PySide6.QtCore import Qt, QTimer, QSize, QEvent
 from PySide6.QtGui import QFont
 
 from utils.i18n import _, msg
-from config.themes import THEMES
-from config.constants import WORK_TYPE_KEYS, LEAVE_TYPES
+from config.themes import theme_colors
+from config.constants import (
+    ANALYTICS_SHOW_LEAVES_SETTING_KEY,
+    MONTHLY_TARGET_SETTING_KEY,
+    WORK_TYPE_KEYS,
+    LEAVE_TYPES,
+)
 from core.time_calc import calc_hours
 from services import analytics_service
-from ui.widgets import BarChart
+from ui.widgets import ComboChart
 from .ai_dialogs import AIProgressDialog, AIResultDialog
 from .template_dialogs import TemplatePickerDialog
 from .common import (
@@ -403,30 +407,95 @@ class ChartDialog(QDialog):
         self.resize(640, 520)
 
         lv = QVBoxLayout(self)
-        acc = THEMES[app_ref.theme][app_ref.dark][0]
-        mt = app_ref._safe_float_setting("monthly_target",
+        acc = theme_colors(app_ref.theme, app_ref.dark)[0]
+        mt = app_ref._safe_float_setting(MONTHLY_TARGET_SETTING_KEY,
                                          app_ref.work_hours * 21)
 
-        self._tabs_w = QTabWidget()
-        self._charts: list[BarChart] = []
-        self._datas:  list[list] = []
+        controls = QVBoxLayout()
+        controls.setSpacing(6)
+        metric_row = QHBoxLayout()
+        metric_row.setSpacing(10)
+        view_row = QHBoxLayout()
+        view_row.setSpacing(10)
+        self._metric = "hours"
+        self._chart_mode = "bar"
+        self._hours_radio = QRadioButton(msg("analytics_work_hours"))
+        self._avg_radio = QRadioButton(msg("analytics_average"))
+        self._hours_radio.setChecked(True)
+        self._metric_group = QButtonGroup(self)
+        self._metric_group.addButton(self._hours_radio)
+        self._metric_group.addButton(self._avg_radio)
+        self._hours_radio.toggled.connect(
+            lambda checked: checked and self._set_metric("hours"))
+        self._avg_radio.toggled.connect(
+            lambda checked: checked and self._set_metric("average"))
+        self._bar_radio = QRadioButton(msg("analytics_bar"))
+        self._line_radio = QRadioButton(msg("analytics_line"))
+        self._bar_radio.setChecked(True)
+        self._view_group = QButtonGroup(self)
+        self._view_group.addButton(self._bar_radio)
+        self._view_group.addButton(self._line_radio)
+        self._bar_radio.toggled.connect(
+            lambda checked: checked and self._set_chart_mode("bar"))
+        self._line_radio.toggled.connect(
+            lambda checked: checked and self._set_chart_mode("line"))
+        self._leave_cb = QCheckBox(msg("analytics_show_leave"))
+        self._leave_cb.setChecked(
+            str(app_ref.services.get_setting(
+                ANALYTICS_SHOW_LEAVES_SETTING_KEY, "0"
+            )) == "1"
+        )
+        self._leave_cb.toggled.connect(self._toggle_leave_markers)
+        metric_label = QLabel(msg("analytics_metric_label"))
+        chart_label = QLabel(msg("analytics_chart_label"))
+        for label in (metric_label, chart_label):
+            label.setObjectName("muted")
+            label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            label.setMinimumWidth(58)
+        metric_row.addWidget(metric_label)
+        metric_row.addWidget(self._hours_radio)
+        metric_row.addWidget(self._avg_radio)
+        metric_row.addStretch()
+        view_row.addWidget(chart_label)
+        view_row.addWidget(self._bar_radio)
+        view_row.addWidget(self._line_radio)
+        view_row.addSpacing(12)
+        view_row.addWidget(self._leave_cb)
+        view_row.addStretch()
+        controls.addLayout(metric_row)
+        controls.addLayout(view_row)
+        lv.addLayout(controls)
 
-        specs = [
-            (_("Monthly"),   self._monthly_data(),   mt / 4.3),
-            (_("Quarterly"), self._quarterly_data(), mt * 3),
-            (_("Annual"),    self._annual_data(),    mt),
-        ]
-        for name, data, ref in specs:
+        self._tabs_w = QTabWidget()
+        self._charts: list[ComboChart] = []
+        self._bundles: list[analytics_service.ChartDataBundle] = []
+
+        specs = self._chart_specs()
+        for name, bundle, ref in specs:
             w = QWidget()
             wl = QVBoxLayout(w)
             wl.setContentsMargins(8, 8, 8, 8)
-            chart = BarChart(data, ref=ref, dark=app_ref.dark,
-                             accent=acc, unit=_("h"),
-                             no_data=_("No data"))
+            chart = ComboChart(
+                bundle.bar_data,
+                ref=ref,
+                dark=app_ref.dark,
+                accent=acc,
+                line_items=bundle.line_data,
+                line_ref=ref,
+                leave_indices=bundle.leave_indices,
+                mode=self._chart_mode,
+                show_leave_markers=self._leave_cb.isChecked(),
+                unit=_("h"),
+                no_data=_("No data"),
+                bar_label=self._metric_label(),
+                line_label=self._metric_label(),
+                leave_label=msg("analytics_leave"),
+            )
+            self._sync_dashed_leave_line(chart, bundle)
             wl.addWidget(chart)
             self._tabs_w.addTab(w, name)
             self._charts.append(chart)
-            self._datas.append(data)
+            self._bundles.append(bundle)
 
         lv.addWidget(self._tabs_w, 1)
 
@@ -453,17 +522,96 @@ class ChartDialog(QDialog):
     def _monthly_data(self):
         app = self._app
         y, m = app.current.year, app.current.month
-        return analytics_service.monthly_chart_data(app.services.get_record, y, m)
+        from calendar import monthrange
+        last_day = monthrange(y, m)[1]
+        return analytics_service.monthly_chart_data_v3(
+            date(y, m, 1),
+            date(y, m, last_day),
+            self._metric,
+            self._leave_cb.isChecked(),
+            record_getter=app.services.get_record,
+            standard_hours=app.work_hours,
+        )
+
+    def _set_chart_mode(self, mode: str) -> None:
+        self._chart_mode = mode
+        for chart in self._charts:
+            chart.set_mode(mode)
+
+    def _toggle_leave_markers(self, enabled: bool) -> None:
+        self._app.services.set_setting(
+            ANALYTICS_SHOW_LEAVES_SETTING_KEY,
+            "1" if enabled else "0",
+        )
+        self._refresh_chart_data()
+        for chart in self._charts:
+            chart.set_show_leave_markers(enabled)
+
+    def _metric_label(self) -> str:
+        return msg("analytics_average") if self._metric == "average" else msg("analytics_work_hours")
+
+    def _set_metric(self, metric: str) -> None:
+        if metric == self._metric:
+            return
+        self._metric = metric
+        self._refresh_chart_data()
+
+    def _chart_specs(self):
+        app = self._app
+        mt = app._safe_float_setting(MONTHLY_TARGET_SETTING_KEY, app.work_hours * 21)
+        if self._metric == "average":
+            refs = (app.work_hours, app.work_hours * 5, app.work_hours)
+        else:
+            refs = (mt / 4.3, mt * 3, mt)
+        return [
+            (_("Monthly"), self._monthly_data(), refs[0]),
+            (_("Quarterly"), self._quarterly_data(), refs[1]),
+            (_("Annual"), self._annual_data(), refs[2]),
+        ]
+
+    def _sync_dashed_leave_line(self, chart: ComboChart, bundle) -> None:
+        chart.clear_dashed_lines()
+        if self._leave_cb.isChecked():
+            chart.add_dashed_line(
+                bundle.leave_line_data,
+                "#d94a4a",
+                Qt.DashLine,
+                msg("analytics_leave"),
+            )
+
+    def _refresh_chart_data(self) -> None:
+        specs = self._chart_specs()
+        self._bundles = []
+        for idx, (_name, bundle, ref) in enumerate(specs):
+            chart = self._charts[idx]
+            chart.set_reference(ref)
+            chart.set_series_labels(self._metric_label(), self._metric_label())
+            chart.set_data(bundle.bar_data, bundle.line_data, bundle.leave_indices)
+            self._sync_dashed_leave_line(chart, bundle)
+            self._bundles.append(bundle)
 
     def _quarterly_data(self):
         app = self._app
         y = app.current.year
-        return analytics_service.quarter_hours(app.services.month_records, y)
+        return analytics_service.quarterly_chart_data_v3(
+            app.services.month_records,
+            y,
+            self._metric,
+            self._leave_cb.isChecked(),
+            standard_hours=app.work_hours,
+        )
 
     def _annual_data(self):
         app = self._app
         y = app.current.year
-        return analytics_service.annual_hours(app.services.month_records, y, [_("Jan"), _("Feb"), _("Mar"), _("Apr"), _("May"), _("Jun"), _("Jul"), _("Aug"), _("Sep"), _("Oct"), _("Nov"), _("Dec")])
+        return analytics_service.annual_chart_data_v3(
+            app.services.month_records,
+            y,
+            [_("Jan"), _("Feb"), _("Mar"), _("Apr"), _("May"), _("Jun"), _("Jul"), _("Aug"), _("Sep"), _("Oct"), _("Nov"), _("Dec")],
+            self._metric,
+            self._leave_cb.isChecked(),
+            standard_hours=app.work_hours,
+        )
 
     def _monthly_detail(self):
         app = self._app
@@ -529,7 +677,7 @@ class ChartDialog(QDialog):
 
     def _current(self):
         i = self._tabs_w.currentIndex()
-        return self._datas[i], self._charts[i]
+        return self._bundles[i], self._charts[i]
 
     def _default_pdf_name(self):
         app = self._app
@@ -540,21 +688,25 @@ class ChartDialog(QDialog):
         return f"worklog_{sfx}_{ts}.pdf"
 
     def _export_csv(self):
-        data, _chart_widget = self._current()
+        bundle, _chart_widget = self._current()
         app = self._app
         ts = dt.now().strftime("%Y%m%d_%H%M%S")
         path, _dialog_filter = QFileDialog.getSaveFileName(
             self, _("Export") + " CSV", f"chart_{ts}.csv", "CSV (*.csv)")
         if not path:
             return
-        with open(path, "w", newline="", encoding="utf-8") as f:
-            w = csv.writer(f)
-            w.writerow(["period", f"hours ({_("h")})"])
-            w.writerows(data)
+        unit = _("h")
+        analytics_service.export_chart_csv(
+            path,
+            bundle,
+            msg("period"),
+            f"{self._metric_label()} ({unit})",
+            f"{msg('analytics_leave_hours')} ({unit})",
+        )
         QMessageBox.information(self, "Export", _("Saved: {}").format(path))
 
     def _export_pdf(self):
-        data, chart_widget = self._current()
+        bundle, chart_widget = self._current()
         app = self._app
         try:
             from PySide6.QtPrintSupport import QPrinter
@@ -582,10 +734,10 @@ class ChartDialog(QDialog):
             month=app.current.month,
             work_hours=app.work_hours,
             monthly_target=app._safe_float_setting(
-                "monthly_target", app.work_hours * 21),
+                MONTHLY_TARGET_SETTING_KEY, app.work_hours * 21),
         )
         try:
-            render_pdf(path, idx, tab, chart_widget, data, detail_fns[idx], ctx)
+            render_pdf(path, idx, tab, chart_widget, bundle.bar_data, detail_fns[idx], ctx)
             QMessageBox.information(
                 self, _("Export"), _("Saved: {}").format(path))
         except Exception as exc:
@@ -952,7 +1104,7 @@ class QuickLogDialog(QDialog):
         self._list.setUpdatesEnabled(False)
         self._list.clear()
         entries = self._app.services.quick_logs_for_date(d_str)
-        hover_color = THEMES[self._app.theme][self._app.dark][1]
+        hover_color = theme_colors(self._app.theme, self._app.dark)[1]
         if not entries:
             placeholder = QListWidgetItem(_("No entries yet today."))
             placeholder.setFlags(Qt.NoItemFlags)
@@ -1022,9 +1174,10 @@ class QuickLogDialog(QDialog):
         self._sync_row_styles()
 
     def _sync_row_styles(self):
-        acc = THEMES[self._app.theme][self._app.dark][0]
-        acc_dim = THEMES[self._app.theme][self._app.dark][2]
-        hov = THEMES[self._app.theme][self._app.dark][3]
+        acc, _acc_hov, acc_dim, hov, _stat_bd = theme_colors(
+            self._app.theme,
+            self._app.dark,
+        )
         txt = "#c8cde8" if self._app.dark else "#1e2035"
         selected = self._list.currentItem()
         for i in range(self._list.count()):

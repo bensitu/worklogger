@@ -7,17 +7,36 @@ from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QHBoxLayout, QFormLayout, QTabWidget,
     QPushButton, QLabel, QLineEdit, QTextEdit, QScrollArea, QMessageBox,
     QDoubleSpinBox, QGroupBox, QDialogButtonBox, QComboBox, QProgressBar,
-    QFrame, QFileDialog,
+    QFrame, QFileDialog, QStyle,
 )
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QTimer, QSize
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QFont
 
 from utils.i18n import _, msg, LANG_NAMES, get_translator
-from config.constants import APP_VERSION, APP_AUTHOR, GITHUB_URL, GPL_URL
+from config.constants import (
+    APP_AUTHOR,
+    APP_VERSION,
+    CUSTOM_THEME_SETTING_KEY,
+    DARK_MODE_SETTING_KEY,
+    DEFAULT_BREAK_SETTING_KEY,
+    GITHUB_URL,
+    GPL_URL,
+    LANG_SETTING_KEY,
+    LOCAL_MODEL_ENABLED_SETTING_KEY,
+    MINIMAL_MODE_SETTING_KEY,
+    MONTHLY_TARGET_SETTING_KEY,
+    SHOW_HOLIDAYS_SETTING_KEY,
+    SHOW_NOTE_MARKERS_SETTING_KEY,
+    SHOW_OVERNIGHT_INDICATOR_SETTING_KEY,
+    THEME_SETTING_KEY,
+    WEEK_START_MONDAY_SETTING_KEY,
+    WORK_HOURS_SETTING_KEY,
+)
 from config.themes import (
-    THEMES, THEME_KEYS, THEME_NAMES,
-    switch_off_color, local_model_download_blocked_qss, status_label_qss,
+    DEFAULT_CUSTOM_COLOR, THEMES, THEME_KEYS, THEME_NAMES,
+    normalize_hex_color, set_custom_theme, switch_off_color,
+    local_model_download_blocked_qss, status_label_qss, theme_colors,
 )
 from utils.formatters import parse_status
 from ui.widgets import SwitchButton
@@ -67,7 +86,7 @@ class SettingsDialog(QDialog):
             self._lang_cb.setCurrentIndex(idx)
         af.addRow(_("🌍  Language").lstrip("🌍 "), self._lang_cb)
 
-        _acc = THEMES[app_ref.theme][app_ref.dark][0]
+        _acc = theme_colors(app_ref.theme, app_ref.dark)[0]
         _off_col = switch_off_color(app_ref.dark)
         dark_wrap = QWidget()
         dh = QHBoxLayout(dark_wrap)
@@ -81,11 +100,51 @@ class SettingsDialog(QDialog):
         self._theme_cb = QComboBox()
         self._theme_cb.setFixedWidth(FW)
         for k in THEME_KEYS:
-            self._theme_cb.addItem(THEME_NAMES[k], k)
+            self._theme_cb.addItem(_(THEME_NAMES[k]), k)
         idx2 = self._theme_cb.findData(app_ref.theme)
         if idx2 >= 0:
             self._theme_cb.setCurrentIndex(idx2)
-        af.addRow(_("🎨  Theme").lstrip("🎨 "), self._theme_cb)
+        self._custom_color = normalize_hex_color(
+            app_ref.services.get_setting(
+                CUSTOM_THEME_SETTING_KEY,
+                app_ref.store.state.custom_color or DEFAULT_CUSTOM_COLOR,
+            )
+        )
+        theme_wrap = QWidget()
+        theme_l = QHBoxLayout(theme_wrap)
+        theme_l.setContentsMargins(0, 0, 0, 0)
+        theme_l.setSpacing(8)
+        theme_l.addWidget(self._theme_cb)
+        self._custom_color_btn = QPushButton()
+        self._custom_color_btn.setFixedSize(32, 28)
+        self._custom_color_btn.setText("")
+        self._custom_color_btn.setIcon(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_CommandLink)
+        )
+        self._custom_color_btn.setIconSize(QSize(18, 18))
+        self._custom_color_btn.setToolTip(msg("open_color_picker"))
+        self._custom_color_btn.clicked.connect(self._open_custom_color_dialog)
+        theme_l.addWidget(self._custom_color_btn)
+        theme_l.addStretch()
+        self._theme_cb.currentIndexChanged.connect(self._sync_custom_theme_controls)
+        af.addRow(_("🎨  Theme").lstrip("🎨 "), theme_wrap)
+        self._sync_custom_theme_controls()
+
+        minimal_wrap = QWidget()
+        mh = QHBoxLayout(minimal_wrap)
+        mh.setContentsMargins(0, 0, 0, 0)
+        self._minimal_mode = SwitchButton(
+            checked=app_ref.services.get_setting(
+                MINIMAL_MODE_SETTING_KEY,
+                "0",
+            ) == "1",
+            color_on=_acc,
+            color_off=_off_col,
+        )
+        self._minimal_mode.toggled.connect(self._on_minimal_mode_toggled)
+        mh.addWidget(self._minimal_mode)
+        mh.addStretch()
+        af.addRow(msg("minimal_mode"), minimal_wrap)
         tabs.addTab(app_w, _("Appearance"))
 
         gen_w = QWidget()
@@ -106,7 +165,7 @@ class SettingsDialog(QDialog):
         self._dl.setFixedWidth(FW)
         self._dl.setRange(0.0, 4.0)
         self._dl.setSingleStep(0.5)
-        self._dl.setValue(app_ref._safe_float_setting("default_break", 1.0))
+        self._dl.setValue(app_ref._safe_float_setting(DEFAULT_BREAK_SETTING_KEY, 1.0))
         gf.addRow(_("Default break (h)"), self._dl)
 
         self._mt = QDoubleSpinBox()
@@ -114,11 +173,11 @@ class SettingsDialog(QDialog):
         self._mt.setRange(0.0, 400.0)
         self._mt.setSingleStep(8.0)
         self._mt.setValue(app_ref._safe_float_setting(
-            "monthly_target", round(app_ref.work_hours * 21, 1)))
+            MONTHLY_TARGET_SETTING_KEY, round(app_ref.work_hours * 21, 1)))
         gf.addRow(_("Monthly target (h)"), self._mt)
 
         _show_hol_on = app_ref.services.get_setting(
-            "show_holidays", "1") == "1"
+            SHOW_HOLIDAYS_SETTING_KEY, "1") == "1"
         show_hol_wrap = QWidget()
         sh = QHBoxLayout(show_hol_wrap)
         sh.setContentsMargins(0, 0, 0, 0)
@@ -129,7 +188,7 @@ class SettingsDialog(QDialog):
         gf.addRow(_("Public holidays"), show_hol_wrap)
 
         _show_note_markers_on = app_ref.services.get_setting(
-            "show_note_markers", "1") == "1"
+            SHOW_NOTE_MARKERS_SETTING_KEY, "1") == "1"
         show_note_markers_wrap = QWidget()
         sn = QHBoxLayout(show_note_markers_wrap)
         sn.setContentsMargins(0, 0, 0, 0)
@@ -143,7 +202,7 @@ class SettingsDialog(QDialog):
         gf.addRow(_("Notes reminder dot"), show_note_markers_wrap)
 
         _show_overnight_on = app_ref.services.get_setting(
-            "show_overnight_indicator", "1") == "1"
+            SHOW_OVERNIGHT_INDICATOR_SETTING_KEY, "1") == "1"
         overnight_wrap = QWidget()
         ov = QHBoxLayout(overnight_wrap)
         ov.setContentsMargins(0, 0, 0, 0)
@@ -160,7 +219,7 @@ class SettingsDialog(QDialog):
         )
 
         _week_start_on = app_ref.services.get_setting(
-            "week_start_monday", "0") == "1"
+            WEEK_START_MONDAY_SETTING_KEY, "0") == "1"
         week_start_wrap = QWidget()
         ws = QHBoxLayout(week_start_wrap)
         ws.setContentsMargins(0, 0, 0, 0)
@@ -206,7 +265,7 @@ class SettingsDialog(QDialog):
         aiv.setContentsMargins(14, 14, 14, 14)
         aiv.setSpacing(12)
 
-        _acc = THEMES[app_ref.theme][app_ref.dark][0]
+        _acc = theme_colors(app_ref.theme, app_ref.dark)[0]
         _off = switch_off_color(app_ref.dark)
 
         # External model connection settings.
@@ -346,7 +405,7 @@ class SettingsDialog(QDialog):
 
         self._local_enabled_sw = SwitchButton(
             checked=app_ref.services.get_setting(
-                "local_model_enabled", "0") == "1",
+                LOCAL_MODEL_ENABLED_SETTING_KEY, "0") == "1",
             color_on=_acc, color_off=_off,
         )
         lbl_enable = QLabel(
@@ -666,7 +725,7 @@ class SettingsDialog(QDialog):
 
         def _on_local_toggle(checked: bool):
             app_ref.services.set_setting(
-                "local_model_enabled", "1" if checked else "0")
+                LOCAL_MODEL_ENABLED_SETTING_KEY, "1" if checked else "0")
             if not checked:
                 try:
                     from services.local_model_service import LocalModelService
@@ -845,6 +904,55 @@ class SettingsDialog(QDialog):
         btns.rejected.connect(self.reject)
         lv.addWidget(btns)
 
+    def _sync_custom_theme_controls(self, *_args) -> None:
+        is_custom = self._theme_cb.currentData() == "custom"
+        self._custom_color_btn.setVisible(is_custom)
+        self._custom_color_btn.setEnabled(is_custom)
+        self._custom_color_btn.setStyleSheet(
+            "QPushButton{"
+            f"background:{self._custom_color};"
+            "border:1px solid #80889a;"
+            "border-radius:8px;"
+            "}"
+            "QPushButton:hover{border:1px solid #ffffff;}"
+        )
+
+    def _apply_custom_color(self, hex_color: str) -> None:
+        app = self._app
+        state = app.services.set_custom_theme(hex_color)
+        self._custom_color = state.custom_color or DEFAULT_CUSTOM_COLOR
+        set_custom_theme(self._custom_color)
+        app.themes["custom"] = dict(THEMES["custom"])
+        self._theme_cb.blockSignals(True)
+        try:
+            idx = self._theme_cb.findData("custom")
+            if idx >= 0:
+                self._theme_cb.setCurrentIndex(idx)
+        finally:
+            self._theme_cb.blockSignals(False)
+        app.store.patch(theme="custom", custom_color=self._custom_color)
+        app.apply_theme()
+        app.render()
+        self._sync_custom_theme_controls()
+
+    def _open_custom_color_dialog(self) -> None:
+        from .color_picker_dialog import ColorPickerDialog
+
+        dlg = ColorPickerDialog(self._custom_color, self)
+        dlg.color_selected.connect(self._apply_custom_color)
+        dlg.exec()
+
+    def _on_minimal_mode_toggled(self, enabled: bool) -> None:
+        app = self._app
+        app.store.patch(minimal_mode=enabled)
+        app.services.set_setting(MINIMAL_MODE_SETTING_KEY, "1" if enabled else "0")
+        QMessageBox.information(
+            self,
+            msg("restart_required"),
+            msg("minimal_mode_toggle_restart"),
+        )
+        self.accept()
+
     def _show_feature_intro(self):
         dlg = QDialog(self)
         dlg.setWindowTitle(_("Feature Overview"))
@@ -908,32 +1016,32 @@ Helpful details:
     def _apply(self):
         app = self._app
         app.work_hours = self._wh.value()
-        app.services.set_setting("work_hours", str(app.work_hours))
-        app.services.set_setting("default_break", str(self._dl.value()))
-        app.services.set_setting("monthly_target", str(self._mt.value()))
+        app.services.set_setting(WORK_HOURS_SETTING_KEY, str(app.work_hours))
+        app.services.set_setting(DEFAULT_BREAK_SETTING_KEY, str(self._dl.value()))
+        app.services.set_setting(MONTHLY_TARGET_SETTING_KEY, str(self._mt.value()))
         app.services.set_secret("ai_api_key", self._ai_key.text().strip())
         app.services.set_setting("ai_base_url", self._ai_url.text().strip())
         app.services.set_setting("ai_model", self._ai_model.text().strip())
         app.services.set_setting(
-            "local_model_enabled",
+            LOCAL_MODEL_ENABLED_SETTING_KEY,
             "1" if self._local_enabled_sw.isChecked() else "0"
         )
 
         new_show_hol = self._show_holidays.isChecked()
-        old_show_hol = app.services.get_setting("show_holidays", "1") == "1"
-        app.services.set_setting("show_holidays", "1" if new_show_hol else "0")
+        old_show_hol = app.services.get_setting(SHOW_HOLIDAYS_SETTING_KEY, "1") == "1"
+        app.services.set_setting(SHOW_HOLIDAYS_SETTING_KEY, "1" if new_show_hol else "0")
         holidays_changed = new_show_hol != old_show_hol
         new_show_note_markers = self._show_note_markers.isChecked()
         old_show_note_markers = app.services.get_setting(
-            "show_note_markers", "1") == "1"
-        app.services.set_setting("show_note_markers",
+            SHOW_NOTE_MARKERS_SETTING_KEY, "1") == "1"
+        app.services.set_setting(SHOW_NOTE_MARKERS_SETTING_KEY,
                                  "1" if new_show_note_markers else "0")
         note_markers_changed = new_show_note_markers != old_show_note_markers
         new_show_overnight_indicator = self._show_overnight_indicator.isChecked()
         old_show_overnight_indicator = app.services.get_setting(
-            "show_overnight_indicator", "1") == "1"
+            SHOW_OVERNIGHT_INDICATOR_SETTING_KEY, "1") == "1"
         app.services.set_setting(
-            "show_overnight_indicator",
+            SHOW_OVERNIGHT_INDICATOR_SETTING_KEY,
             "1" if new_show_overnight_indicator else "0",
         )
         overnight_indicator_changed = (
@@ -942,10 +1050,11 @@ Helpful details:
         new_week_start = self._week_start_monday.isChecked(
         ) if hasattr(self, '_week_start_monday') else False
         old_week_start = app.services.get_setting(
-            "week_start_monday", "0") == "1"
+            WEEK_START_MONDAY_SETTING_KEY, "0") == "1"
         app.services.set_setting(
-            "week_start_monday", "1" if new_week_start else "0")
+            WEEK_START_MONDAY_SETTING_KEY, "1" if new_week_start else "0")
         week_start_changed = new_week_start != old_week_start
+        new_minimal_mode = app.store.state.minimal_mode
         residency_changed = False
         if self._residency_key and self._residency_switch is not None:
             new_residency = self._residency_switch.isChecked()
@@ -964,12 +1073,19 @@ Helpful details:
         app.lang = new_lang
         app.dark = new_dark
         app.theme = new_theme
-        app.services.set_setting("lang", new_lang)
-        app.services.set_setting("dark", "1" if new_dark else "0")
-        app.services.set_setting("theme", new_theme)
+        app.services.set_setting(LANG_SETTING_KEY, new_lang)
+        app.services.set_setting(DARK_MODE_SETTING_KEY, "1" if new_dark else "0")
+        if new_theme == "custom":
+            state = app.services.set_custom_theme(self._custom_color)
+            self._custom_color = state.custom_color or DEFAULT_CUSTOM_COLOR
+            set_custom_theme(self._custom_color)
+            app.themes["custom"] = dict(THEMES["custom"])
+        else:
+            app.services.set_setting(THEME_SETTING_KEY, new_theme)
         app.store.patch(
             lang=new_lang,
             theme=new_theme,
+            custom_color=self._custom_color,
             dark=new_dark,
             work_hours=app.work_hours,
             default_break=float(self._dl.value()),
@@ -979,6 +1095,7 @@ Helpful details:
             show_overnight_indicator=new_show_overnight_indicator,
             week_start_monday=new_week_start,
             time_input_mode=app._active_time_tab,
+            minimal_mode=new_minimal_mode,
         )
         if dark_changed or theme_changed:
             app.apply_theme()
@@ -986,7 +1103,7 @@ Helpful details:
             app.apply_lang()
         if residency_changed or lang_changed:
             app._update_residency_state()
-        if holidays_changed:
+        if holidays_changed and not app.store.state.minimal_mode:
             if new_show_hol:
                 app._load_holidays()
             else:

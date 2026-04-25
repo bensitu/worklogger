@@ -143,9 +143,6 @@ def render_pdf(
                                QFont, QColor, QPen, QBrush)
     from PySide6.QtCore import Qt
     from utils.i18n import _
-    from config.themes import THEMES
-    from ui.widgets import BarChart
-    acc = THEMES[ctx.theme][False][0]
 
     printer = QPrinter(QPrinter.HighResolution)
     printer.setOutputFormat(QPrinter.PdfFormat)
@@ -186,13 +183,7 @@ def render_pdf(
     painter.drawLine(int(pw*0.03), sep_y, int(pw*0.97), sep_y)
     cursor_y = sep_y + pt(6)
 
-    mt = ctx.monthly_target
-    refs = [mt / 4.3, mt * 3, mt]
-    tmp = BarChart(data, ref=refs[tab_index], dark=False, accent=acc,
-                   unit=_("h"), no_data=_("No data"))
-    tmp.resize(chart_widget.size())
-    src_px = tmp.grab()
-    tmp.deleteLater()
+    src_px = chart_widget.grab()
     tw = pw
     th_img = int(src_px.height() * pw / src_px.width())
     if th_img > int(ph * 0.38):

@@ -15,6 +15,15 @@ LANG_FOLDER_MAP: dict[str, str] = {
     "ko_KR": "ko_KR",
 }
 
+TEMPLATE_DISPLAY_NAME: dict[str, str] = {
+    "default": "template_default",
+    "daily": "template_daily",
+    "weekly": "template_weekly",
+    "monthly": "template_monthly",
+    "invoice": "template_invoice",
+    "timesheet": "template_timesheet",
+}
+
 
 def _templates_dir() -> str:
     """Return the directory that directly contains template language folders.

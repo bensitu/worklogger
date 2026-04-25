@@ -7,6 +7,7 @@ from typing import Callable
 class AppState:
     lang: str = "en_US"
     theme: str = "blue"
+    custom_color: str | None = None
     dark: bool = False
     work_hours: float = 8.0
     default_break: float = 1.0
@@ -16,6 +17,7 @@ class AppState:
     show_overnight_indicator: bool = True
     week_start_monday: bool = False
     time_input_mode: str = "manual"
+    minimal_mode: bool = False
 
 
 class AppStore:

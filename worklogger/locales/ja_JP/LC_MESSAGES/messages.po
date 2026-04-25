@@ -1029,3 +1029,78 @@ msgstr "Downloaded"
 
 msgid "Inactive"
 msgstr "無効"
+
+msgid "Custom theme color"
+msgstr "カスタムテーマカラー"
+
+msgid "Choose custom color"
+msgstr "カスタムカラーを選択"
+
+msgid "Selected color"
+msgstr "選択中の色"
+
+msgid "🔵 Blue"
+msgstr "🔵 ブルー"
+
+msgid "🌸 Pink"
+msgstr "🌸 ピンク"
+
+msgid "🌿 Green"
+msgstr "🌿 グリーン"
+
+msgid "🟣 Purple"
+msgstr "🟣 パープル"
+
+msgid "Minimal mode"
+msgstr "ミニマルモード"
+
+msgid "Restart required to apply minimal mode."
+msgstr "ミニマルモードを適用するには再起動が必要です。"
+
+msgid "Default"
+msgstr "デフォルト"
+
+msgid "Invoice"
+msgstr "請求書"
+
+msgid "Timesheet"
+msgstr "タイムシート"
+
+msgid "Average"
+msgstr "平均"
+
+msgid "Bar"
+msgstr "棒グラフ"
+
+msgid "Line"
+msgstr "折れ線"
+
+msgid "Show leave"
+msgstr "休暇を表示"
+
+msgid "Work hours"
+msgstr "勤務時間"
+
+msgid "Leave"
+msgstr "休暇"
+
+msgid "Leave Hours"
+msgstr "休暇時間"
+
+msgid "Open color picker"
+msgstr "カラーピッカーを開く"
+
+msgid "Restart Required"
+msgstr "再起動が必要です"
+
+msgid "Minimal mode toggle will take effect after restarting the application."
+msgstr "ミニマルモードの切り替えはアプリケーションの再起動後に有効になります。"
+
+msgid "Period"
+msgstr "期間"
+
+msgid "Chart:"
+msgstr "グラフ："
+
+msgid "Metric:"
+msgstr "指標："

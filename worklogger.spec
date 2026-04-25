@@ -21,6 +21,7 @@ import certifi
 block_cipher = None
 
 APP_NAME = "WorkLogger"
+APP_VERSION = "3.0.0"
 PLATFORM = sys.platform
 ROOT_DIR = Path(globals().get("SPECPATH", os.getcwd())).resolve()
 WORKLOGGER_DIR = ROOT_DIR / "worklogger"
@@ -232,8 +233,8 @@ if PLATFORM == "darwin":
         bundle_identifier="dev.worklogger.app.v1",
         info_plist={
             "NSHighResolutionCapable": True,
-            "CFBundleShortVersionString": "2.2.1",
-            "CFBundleVersion": "7",
+            "CFBundleShortVersionString": APP_VERSION,
+            "CFBundleVersion": "8",
         },
     )
 elif PLATFORM == "win32":

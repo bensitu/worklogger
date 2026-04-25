@@ -2,7 +2,7 @@
 
 import sys
 
-APP_VERSION = "2.2.1"
+APP_VERSION = "3.0.0"
 APP_NAME = "Work Logger"
 APP_AUTHOR = "Ben Situ"
 APP_ID = "dev.worklogger.app.v1"
@@ -15,6 +15,28 @@ LICENSE_SPDX = "GPL-3.0-or-later"
 
 DB_FILENAME = "worklog.db"
 MAX_SHIFT_HOURS = 16.0
+
+LANG_SETTING_KEY = "lang"
+THEME_SETTING_KEY = "theme"
+DARK_MODE_SETTING_KEY = "dark"
+WORK_HOURS_SETTING_KEY = "work_hours"
+DEFAULT_BREAK_SETTING_KEY = "default_break"
+LEGACY_DEFAULT_BREAK_SETTING_KEY = "default_lunch"
+MONTHLY_TARGET_SETTING_KEY = "monthly_target"
+SHOW_HOLIDAYS_SETTING_KEY = "show_holidays"
+SHOW_NOTE_MARKERS_SETTING_KEY = "show_note_markers"
+SHOW_OVERNIGHT_INDICATOR_SETTING_KEY = "show_overnight_indicator"
+WEEK_START_MONDAY_SETTING_KEY = "week_start_monday"
+TIME_INPUT_MODE_SETTING_KEY = "time_input_mode"
+MAX_SHIFT_HOURS_SETTING_KEY = "max_shift_hours"
+LOCAL_MODEL_ENABLED_SETTING_KEY = "local_model_enabled"
+
+CUSTOM_THEME_SETTING_KEY = "custom_theme_color"
+MINIMAL_MODE_SETTING_KEY = "minimal_mode"
+ANALYTICS_SHOW_LEAVES_SETTING_KEY = "analytics_show_leaves"
+REMEMBER_TOKEN_KEY = "remember_token"
+BACKUP_REMINDER_DAYS = 30
+LAST_BACKUP_KEY = "last_backup_timestamp"
 
 WORK_TYPE_KEYS = [
     "normal", "remote", "business_trip",

@@ -51,9 +51,19 @@ MSG_DEFAULTS = {
     "ai_assist.local_model_not_running": "Local model unavailable - using external model instead.",
     "ai_assist_local_model_not_running": "Local model unavailable - using external model instead.",
     "apply": "Apply",
+    "analytics_average": "Average",
+    "analytics_bar": "Bar",
+    "analytics_chart_label": "Chart:",
+    "analytics_line": "Line",
+    "analytics_leave_hours": "Leave Hours",
+    "analytics_metric_label": "Metric:",
+    "analytics_show_leave": "Show leave",
+    "analytics_work_hours": "Work hours",
     "btn_cancel": "Cancel",
     "btn_regenerate": "Regenerate",
     "cal_imported": "Imported {} calendar events.",
+    "choose_custom_color": "Choose custom color",
+    "custom_theme_color": "Custom theme color",
     "enable_menu_bar": "Enable menu bar icon",
     "enable_tray": "Enable tray icon",
     "end_now": "End now",
@@ -68,6 +78,7 @@ MSG_DEFAULTS = {
     "local_model_downloading": "Downloading local model...",
     "local_model_verifying": "Verifying local model file...",
     "local_model_hash_ok": "Model hash verified.",
+    "analytics_leave": "Leave",
     "local_model_download_ok": "Model download completed.",
     "local_model_not_downloaded": "Local model not downloaded - go to Settings -> AI",
     "local_model_inactive": "Local model is inactive",
@@ -78,7 +89,12 @@ MSG_DEFAULTS = {
     "local_model_verify_permission_denied": "Permission denied while verifying local model file.",
     "local_model_verify_failed": "Local model verification failed. Please re-download or switch model.",
     "local_model_switch_confirm": "A different model is already downloaded. It will be deleted before the new one downloads. Continue?",
+    "minimal_mode": "Minimal mode",
+    "minimal_mode_restart_required": "Restart required to apply minimal mode.",
+    "minimal_mode_toggle_restart": "Minimal mode toggle will take effect after restarting the application.",
+    "open_color_picker": "Open color picker",
     "original_content": "Original Content",
+    "period": "Period",
     "quick_log_add": "Add",
     "quick_log_delete": "Delete",
     "report_copy": "Copy",
@@ -86,8 +102,16 @@ MSG_DEFAULTS = {
     "report_download": "Download .md",
     "report_monthly": "Monthly Report",
     "report_weekly": "Weekly Report",
+    "restart_required": "Restart Required",
     "settings_ai_local_model_disabled_tooltip": "Local model is disabled.",
+    "selected_color": "Selected color",
     "start_now": "Start now",
+    "template_daily": "Daily",
+    "template_default": "Default",
+    "template_invoice": "Invoice",
+    "template_monthly": "Monthly",
+    "template_timesheet": "Timesheet",
+    "template_weekly": "Weekly",
     "wt_business": "Business trip",
     "wt_comp": "Comp leave",
     "wt_normal": "Normal",
@@ -137,12 +161,30 @@ def _normalize_lang(lang: str | None) -> str:
     return "en_US"
 
 
-def _default_lang() -> str:
+def detect_system_language() -> str | None:
     try:
-        loc = locale.getlocale()[0] or locale.getdefaultlocale()[0]  # type: ignore[index]
+        loc = locale.getdefaultlocale()[0]  # type: ignore[index]
     except Exception:
-        loc = None
-    return _normalize_lang(loc)
+        return None
+    if not loc:
+        return None
+
+    low = str(loc).strip().replace("-", "_").split(".", 1)[0].lower()
+    if low.startswith(("zh_tw", "zh_hant", "zh_hk", "zh_mo")):
+        return "zh_TW"
+    if low.startswith("zh"):
+        return "zh_CN"
+    if low.startswith("ja"):
+        return "ja_JP"
+    if low.startswith("ko"):
+        return "ko_KR"
+    if low.startswith("en"):
+        return "en_US"
+    return None
+
+
+def _default_lang() -> str:
+    return detect_system_language() or "en_US"
 
 
 def _messages_catalog_path(locales_dir: Path, locale_code: str) -> Path:

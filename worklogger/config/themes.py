@@ -1,12 +1,21 @@
 """Theme colors, cell palettes, and work-type accent colors."""
 
-THEME_KEYS = ["blue", "pink", "green", "purple"]
+from __future__ import annotations
+
+import re
+
+
+THEME_KEYS = ["blue", "pink", "green", "purple", "custom"]
 THEME_NAMES = {
     "blue":   "🔵 Blue",
     "pink":   "🌸 Pink",
     "green":  "🌿 Green",
     "purple": "🟣 Purple",
+    "custom": "Custom",
 }
+
+DEFAULT_CUSTOM_COLOR = "#4f8ef7"
+_HEX_RE = re.compile(r"^#?[0-9a-fA-F]{6}$")
 
 # THEMES[theme][dark] = (accent, hover, dim, stat_background, stat_border)
 THEMES = {
@@ -29,9 +38,83 @@ THEMES = {
 }
 
 
+def normalize_hex_color(accent_hex: str | None) -> str:
+    """Return a normalized #RRGGBB color, falling back to the default accent."""
+    raw = str(accent_hex or "").strip()
+    if not _HEX_RE.match(raw):
+        return DEFAULT_CUSTOM_COLOR
+    if not raw.startswith("#"):
+        raw = "#" + raw
+    return raw.lower()
+
+
+def _hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
+    color = normalize_hex_color(hex_color).lstrip("#")
+    return int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16)
+
+
+def _rgb_to_hex(rgb: tuple[int, int, int]) -> str:
+    r, g, b = (max(0, min(255, int(v))) for v in rgb)
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+def _mix(hex_color: str, other: str, amount: float) -> str:
+    r1, g1, b1 = _hex_to_rgb(hex_color)
+    r2, g2, b2 = _hex_to_rgb(other)
+    t = max(0.0, min(1.0, amount))
+    return _rgb_to_hex((
+        round(r1 + (r2 - r1) * t),
+        round(g1 + (g2 - g1) * t),
+        round(b1 + (b2 - b1) * t),
+    ))
+
+
+def _scale(hex_color: str, factor: float) -> str:
+    r, g, b = _hex_to_rgb(hex_color)
+    return _rgb_to_hex((round(r * factor), round(g * factor), round(b * factor)))
+
+
+def _custom_palette(accent_hex: str) -> dict[bool, tuple[str, str, str, str, str]]:
+    accent = normalize_hex_color(accent_hex)
+    return {
+        False: (
+            accent,
+            _scale(accent, 0.82),
+            _mix(accent, "#ffffff", 0.86),
+            _mix(accent, "#ffffff", 0.93),
+            _mix(accent, "#ffffff", 0.66),
+        ),
+        True: (
+            _mix(accent, "#ffffff", 0.12),
+            accent,
+            _mix(accent, "#000000", 0.68),
+            _mix(accent, "#000000", 0.78),
+            _mix(accent, "#000000", 0.52),
+        ),
+    }
+
+
+def set_custom_theme(accent_hex: str) -> str:
+    """Inject the runtime custom theme and return the normalized accent."""
+    normalized = normalize_hex_color(accent_hex)
+    THEMES["custom"] = _custom_palette(normalized)
+    return normalized
+
+
+def theme_colors(theme: str, dark: bool) -> tuple[str, str, str, str, str]:
+    """Return theme colors with a safe fallback for unknown keys."""
+    if theme == "custom" and "custom" not in THEMES:
+        set_custom_theme(DEFAULT_CUSTOM_COLOR)
+    palette = THEMES.get(theme) or THEMES["blue"]
+    return palette[bool(dark)]
+
+
+set_custom_theme(DEFAULT_CUSTOM_COLOR)
+
+
 def cell_pool(dark: bool, theme: str) -> dict:
     """Return cell color dict for the given dark/theme combo."""
-    acc = THEMES[theme][dark][0]
+    acc = theme_colors(theme, dark)[0]
     if dark:
         return {
             "default":  ("#1e2030", "#c0c8e0", "#2d2f4a", "1"),
@@ -119,7 +202,7 @@ def status_label_qss(kind: str, accent: str | None = None) -> str:
 
 def make_qss(dark: bool, theme: str = "blue") -> str:
     """Generate full application QSS stylesheet."""
-    acc, acc_hov, acc_dim, stat_bg, stat_bd = THEMES[theme][dark]
+    acc, acc_hov, acc_dim, stat_bg, stat_bd = theme_colors(theme, dark)
     if dark:
         bg, surf, bdr = "#13141d", "#1c1d2b", "#2d2f48"
         txt, txt2 = "#c8cde8", "#8890b8"

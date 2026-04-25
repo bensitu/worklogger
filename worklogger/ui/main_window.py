@@ -15,9 +15,37 @@ from PySide6.QtCore import Qt, QTimer, Slot, QEvent
 from PySide6.QtGui import QColor, QPainter, QAction
 
 from utils.i18n import _, msg, LANG_NAMES, set_language
-from config.themes import make_qss, cell_pool, THEMES, THEME_KEYS, WT_BORDER_ACCENT
+from config.themes import (
+    DEFAULT_CUSTOM_COLOR,
+    THEMES,
+    THEME_KEYS,
+    WT_BORDER_ACCENT,
+    cell_pool,
+    make_qss,
+    set_custom_theme,
+    theme_colors,
+)
 from config.themes import CALENDAR_STYLE
-from config.constants import WORK_TYPE_KEYS, LEAVE_TYPES, MAX_SHIFT_HOURS
+from config.constants import (
+    CUSTOM_THEME_SETTING_KEY,
+    DARK_MODE_SETTING_KEY,
+    DEFAULT_BREAK_SETTING_KEY,
+    LEGACY_DEFAULT_BREAK_SETTING_KEY,
+    LANG_SETTING_KEY,
+    LEAVE_TYPES,
+    MAX_SHIFT_HOURS,
+    MAX_SHIFT_HOURS_SETTING_KEY,
+    MINIMAL_MODE_SETTING_KEY,
+    MONTHLY_TARGET_SETTING_KEY,
+    SHOW_HOLIDAYS_SETTING_KEY,
+    SHOW_NOTE_MARKERS_SETTING_KEY,
+    SHOW_OVERNIGHT_INDICATOR_SETTING_KEY,
+    THEME_SETTING_KEY,
+    TIME_INPUT_MODE_SETTING_KEY,
+    WEEK_START_MONDAY_SETTING_KEY,
+    WORK_HOURS_SETTING_KEY,
+    WORK_TYPE_KEYS,
+)
 from core.time_calc import calc_hours, calc_shift_span_hours, is_overnight_shift, detect_country
 from core.validator import parse_time
 from services.app_services import AppServices
@@ -95,28 +123,31 @@ class CalendarDayButton(QPushButton):
 
 
 class App(QWidget):
-    def __init__(self):
+    def __init__(self, services: AppServices | None = None, initial_lang: str | None = None):
         super().__init__()
-        self.services = AppServices()
+        self.services = services or AppServices()
+        custom_color = set_custom_theme(
+            self.services.get_setting(CUSTOM_THEME_SETTING_KEY, DEFAULT_CUSTOM_COLOR)
+        )
         self.themes: ThemeMap = {name: dict(palette) for name, palette in THEMES.items()}
         self.today = date.today()
         self.current = self.today.replace(day=1)
         self.selected = self.today
 
         # Ensure missing settings get safe defaults on first run or upgrade.
-        if self.services.get_setting("work_hours") is None:
-            self.services.set_setting("work_hours", "8.0")
-        legacy_default_break = self.services.get_setting("default_lunch")
-        if self.services.get_setting("default_break") is None:
-            self.services.set_setting("default_break", legacy_default_break or "1.0")
-        if self.services.get_setting("monthly_target") is None:
-            self.services.set_setting("monthly_target", str(round(8.0 * 21, 1)))
-        if self.services.get_setting("show_holidays") is None:
-            self.services.set_setting("show_holidays", "1")
-        if self.services.get_setting("show_note_markers") is None:
-            self.services.set_setting("show_note_markers", "1")
-        if self.services.get_setting("show_overnight_indicator") is None:
-            self.services.set_setting("show_overnight_indicator", "1")
+        if self.services.get_setting(WORK_HOURS_SETTING_KEY) is None:
+            self.services.set_setting(WORK_HOURS_SETTING_KEY, "8.0")
+        legacy_default_break = self.services.get_setting(LEGACY_DEFAULT_BREAK_SETTING_KEY)
+        if self.services.get_setting(DEFAULT_BREAK_SETTING_KEY) is None:
+            self.services.set_setting(DEFAULT_BREAK_SETTING_KEY, legacy_default_break or "1.0")
+        if self.services.get_setting(MONTHLY_TARGET_SETTING_KEY) is None:
+            self.services.set_setting(MONTHLY_TARGET_SETTING_KEY, str(round(8.0 * 21, 1)))
+        if self.services.get_setting(SHOW_HOLIDAYS_SETTING_KEY) is None:
+            self.services.set_setting(SHOW_HOLIDAYS_SETTING_KEY, "1")
+        if self.services.get_setting(SHOW_NOTE_MARKERS_SETTING_KEY) is None:
+            self.services.set_setting(SHOW_NOTE_MARKERS_SETTING_KEY, "1")
+        if self.services.get_setting(SHOW_OVERNIGHT_INDICATOR_SETTING_KEY) is None:
+            self.services.set_setting(SHOW_OVERNIGHT_INDICATOR_SETTING_KEY, "1")
         residency_key = self._residency_setting_key()
         if residency_key and self.services.get_setting(residency_key) is None:
             self.services.set_setting(residency_key, "0")
@@ -124,22 +155,26 @@ class App(QWidget):
         # AppStore is the single source of truth for persisted settings.
         # All code that previously read self.lang / self.theme / self.dark /
         # self.work_hours should use self._state.<field> instead.
-        saved_lang = self.services.get_setting("lang", "en_US")
-        saved_theme = self.services.get_setting("theme", "blue")
-        _def_break = self._safe_float_setting("default_break", 1.0)
+        saved_lang = initial_lang or self.services.get_setting(LANG_SETTING_KEY, "en_US")
+        saved_theme = self.services.get_setting(THEME_SETTING_KEY, "blue")
+        _def_break = self._safe_float_setting(DEFAULT_BREAK_SETTING_KEY, 1.0)
         self.store = AppStore(AppState(
             lang=saved_lang if saved_lang in LANG_NAMES else "en_US",
             theme=saved_theme if saved_theme in THEME_KEYS else "blue",
-            dark=self.services.get_setting("dark", "0") == "1",
-            work_hours=self._safe_float_setting("work_hours", 8.0),
+            custom_color=custom_color,
+            dark=self.services.get_setting(DARK_MODE_SETTING_KEY, "0") == "1",
+            work_hours=self._safe_float_setting(WORK_HOURS_SETTING_KEY, 8.0),
             default_break=_def_break,
-            monthly_target=self._safe_float_setting("monthly_target",
-                                                      self._safe_float_setting("work_hours", 8.0) * 21),
-            show_holidays=self.services.get_setting("show_holidays", "1") == "1",
-            show_note_markers=self.services.get_setting("show_note_markers", "1") == "1",
-            show_overnight_indicator=self.services.get_setting("show_overnight_indicator", "1") == "1",
-            week_start_monday=self.services.get_setting("week_start_monday", "0") == "1",
-            time_input_mode=self.services.get_setting("time_input_mode", "manual"),
+            monthly_target=self._safe_float_setting(
+                MONTHLY_TARGET_SETTING_KEY,
+                self._safe_float_setting(WORK_HOURS_SETTING_KEY, 8.0) * 21,
+            ),
+            show_holidays=self.services.get_setting(SHOW_HOLIDAYS_SETTING_KEY, "1") == "1",
+            show_note_markers=self.services.get_setting(SHOW_NOTE_MARKERS_SETTING_KEY, "1") == "1",
+            show_overnight_indicator=self.services.get_setting(SHOW_OVERNIGHT_INDICATOR_SETTING_KEY, "1") == "1",
+            week_start_monday=self.services.get_setting(WEEK_START_MONDAY_SETTING_KEY, "0") == "1",
+            time_input_mode=self.services.get_setting(TIME_INPUT_MODE_SETTING_KEY, "manual"),
+            minimal_mode=self.services.get_setting(MINIMAL_MODE_SETTING_KEY, "0") == "1",
         ))
         set_language(self._state.lang)
 
@@ -164,7 +199,8 @@ class App(QWidget):
         self.load()
         self.render()
 
-        QTimer.singleShot(0, self._load_holidays)
+        if not self._state.minimal_mode:
+            QTimer.singleShot(0, self._load_holidays)
 
     def _safe_float_setting(self, key: str, default: float) -> float:
         """Read a float setting with a safe fallback for missing/bad values."""
@@ -180,7 +216,10 @@ class App(QWidget):
         """Load holiday data in a background thread to avoid blocking UI.
         Uses a QTimer on the main thread to safely marshal the result back.
         """
-        if self.services.get_setting("show_holidays", "1") == "0":
+        if (
+            self.store.state.minimal_mode
+            or self.services.get_setting(SHOW_HOLIDAYS_SETTING_KEY, "1") == "0"
+        ):
             self.holidays = {}
             return
 
@@ -217,6 +256,7 @@ class App(QWidget):
         root.setSpacing(0)
 
         left = QWidget()
+        self._calendar_panel = left
         lv = QVBoxLayout(left)
         lv.setContentsMargins(14, 14, 14, 10)
         lv.setSpacing(6)
@@ -262,6 +302,7 @@ class App(QWidget):
         lv.addStretch(1)
 
         sidebar = QFrame()
+        self._sidebar = sidebar
         sidebar.setObjectName("sidebar")
         sidebar.setFixedWidth(326)
         sv = QVBoxLayout(sidebar)
@@ -384,9 +425,11 @@ class App(QWidget):
         self.quick_log_btn.setObjectName("action_btn")
         self.quick_log_btn.setMinimumHeight(36)
         sv.addWidget(self.quick_log_btn)
-        sv.addWidget(self._div())
+        self._stats_divider = self._div()
+        sv.addWidget(self._stats_divider)
 
         stat_card = QFrame()
+        self._stats_card = stat_card
         stat_card.setObjectName("stat_card")
         sc = QVBoxLayout(stat_card)
         sc.setContentsMargins(12, 10, 12, 10)
@@ -419,7 +462,10 @@ class App(QWidget):
         self.settings_btn.setObjectName("action_btn")
         sv.addWidget(self.settings_btn)
 
-        act_row = QHBoxLayout()
+        analytics_row = QWidget()
+        self._analytics_row = analytics_row
+        act_row = QHBoxLayout(analytics_row)
+        act_row.setContentsMargins(0, 0, 0, 0)
         act_row.setSpacing(6)
         self.report_btn = QPushButton()
         self.report_btn.setObjectName("action_btn")
@@ -427,11 +473,12 @@ class App(QWidget):
         self.chart_btn.setObjectName("action_btn")
         act_row.addWidget(self.report_btn)
         act_row.addWidget(self.chart_btn)
-        sv.addLayout(act_row)
+        sv.addWidget(analytics_row)
         sv.addStretch()
 
         root.addWidget(left, 1)
         root.addWidget(sidebar)
+        self._apply_minimal_mode_layout()
 
         self.prev_btn.clicked.connect(self.prev_m)
         self.next_btn.clicked.connect(self.next_m)
@@ -453,6 +500,26 @@ class App(QWidget):
         f = QFrame()
         f.setObjectName("divider")
         return f
+
+    def _apply_minimal_mode_layout(self) -> None:
+        minimal = self.store.state.minimal_mode
+        self._calendar_panel.setVisible(not minimal)
+        self._stats_divider.setVisible(not minimal)
+        self._stats_card.setVisible(not minimal)
+        self._analytics_row.setVisible(not minimal)
+        if minimal:
+            self._fit_minimal_window()
+        else:
+            self.setMinimumSize(900, 580)
+
+    def _fit_minimal_window(self) -> None:
+        self._sidebar.adjustSize()
+        hint = self._sidebar.sizeHint()
+        width = max(340, hint.width() + 18)
+        height = max(420, hint.height() + 18)
+        self.setMinimumSize(width, height)
+        self.resize(width, height)
+        self.adjustSize()
 
     @property
     def _state(self):
@@ -606,7 +673,7 @@ class App(QWidget):
         self.next_btn.setToolTip(_("Next month"))
         self.today_btn.setToolTip(_("Today"))
         self.note_expand_btn.setToolTip(_("Expand notes"))
-        week_start_monday = self.services.get_setting("week_start_monday", "0") == "1"
+        week_start_monday = self.services.get_setting(WEEK_START_MONDAY_SETTING_KEY, "0") == "1"
         days_list = list([_("Sun"), _("Mon"), _("Tue"), _("Wed"), _("Thu"), _("Fri"), _("Sat")])
         if week_start_monday:
             days_list = days_list[1:] + days_list[:1]
@@ -641,7 +708,7 @@ class App(QWidget):
 
     def _update_banner(self):
         d = self.selected
-        week_start_monday = self.services.get_setting("week_start_monday", "0") == "1"
+        week_start_monday = self.services.get_setting(WEEK_START_MONDAY_SETTING_KEY, "0") == "1"
         if week_start_monday:
             dow = [_("Sun"), _("Mon"), _("Tue"), _("Wed"), _("Thu"), _("Fri"), _("Sat")][d.weekday()]
         else:
@@ -664,7 +731,7 @@ class App(QWidget):
 
     def _on_time_tab_changed(self, index: int):
         self._active_time_tab = "auto" if index == 1 else "manual"
-        self.services.set_setting("time_input_mode", self._active_time_tab)
+        self.services.set_setting(TIME_INPUT_MODE_SETTING_KEY, self._active_time_tab)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -683,7 +750,7 @@ class App(QWidget):
     def eventFilter(self, obj, event):
         if obj is self.break_btn and event.type() == QEvent.Type.MouseButtonDblClick:
             self._set_quick_break_hour(
-                self._safe_float_setting("default_break", 1.0))
+                self._safe_float_setting(DEFAULT_BREAK_SETTING_KEY, 1.0))
             return True
         return super().eventFilter(obj, event)
 
@@ -723,9 +790,9 @@ class App(QWidget):
             break_txt = self.manual_break_in.text().strip()
             try:
                 break_val = float(break_txt) if break_txt else self._safe_float_setting(
-                    "default_break", 1.0)
+                    DEFAULT_BREAK_SETTING_KEY, 1.0)
             except (TypeError, ValueError):
-                break_val = self._safe_float_setting("default_break", 1.0)
+                break_val = self._safe_float_setting(DEFAULT_BREAK_SETTING_KEY, 1.0)
         return start_txt, end_txt, break_val
 
     def _toggle_break(self):
@@ -822,6 +889,8 @@ class App(QWidget):
             w.deleteLater()
         self._day_btns = []
         self._week_totals = []
+        if self.store.state.minimal_mode:
+            return
 
         y, m = self.current.year, self.current.month
         self.month_title.setText(f"{y}  {[_("January"), _("February"), _("March"), _("April"), _("May"), _("June"), _("July"), _("August"), _("September"), _("October"), _("November"), _("December")][m-1]}")
@@ -841,7 +910,7 @@ class App(QWidget):
             "paid_leave", "comp_leave", "sick_leave")}
         day_counts = {k: 0 for k in ("normal", "remote", "business_trip")}
         weekly: dict[int, float] = {}
-        hover_border = THEMES[self.theme][self.dark][1]
+        hover_border = theme_colors(self.theme, self.dark)[1]
         show_note_markers = self.store.state.show_note_markers
         show_overnight_indicator = self.store.state.show_overnight_indicator
 
@@ -944,7 +1013,7 @@ class App(QWidget):
 
     def load(self):
         rec = self.services.get_record(self.selected.isoformat())
-        def_break = self._safe_float_setting("default_break", 1.0)
+        def_break = self._safe_float_setting(DEFAULT_BREAK_SETTING_KEY, 1.0)
         if rec:
             start_val = rec.start or ""
             end_val   = rec.end or ""
@@ -981,7 +1050,7 @@ class App(QWidget):
 
     def _is_dirty(self) -> bool:
         rec = self.services.get_record(self.selected.isoformat())
-        dl = self._safe_float_setting("default_break", 1.0)
+        dl = self._safe_float_setting(DEFAULT_BREAK_SETTING_KEY, 1.0)
         holiday_note = str(self.holidays.get(self.selected, "")).strip()
 
         s_txt, e_txt, l_cur = self._active_time_values()
@@ -1033,7 +1102,12 @@ class App(QWidget):
             )
             return
         if s and e:
-            max_shift = float(self.services.get_setting("max_shift_hours", str(MAX_SHIFT_HOURS)) or MAX_SHIFT_HOURS)
+            max_shift = float(
+                self.services.get_setting(
+                    MAX_SHIFT_HOURS_SETTING_KEY,
+                    str(MAX_SHIFT_HOURS),
+                ) or MAX_SHIFT_HOURS
+            )
             span_h = calc_shift_span_hours(s, e, max_shift_hours=max_shift)
             if span_h is None:
                 if self._time_mode() == "manual":
@@ -1179,9 +1253,13 @@ class App(QWidget):
         dlg.exec()
 
     def open_report(self):
+        if self.store.state.minimal_mode:
+            return
         ReportDialog(self, self).exec()
 
     def open_chart(self):
+        if self.store.state.minimal_mode:
+            return
         ChartDialog(self, self).exec()
 
     def open_note_editor(self):
@@ -1219,7 +1297,7 @@ class App(QWidget):
         try:
             n, errors = self.services.import_csv_file(
                 path, REQUIRED_COLS,
-                default_break=self._safe_float_setting("default_break", 1.0),
+                default_break=self._safe_float_setting(DEFAULT_BREAK_SETTING_KEY, 1.0),
             )
         except ValueError as exc:
             msg = str(exc)

@@ -1029,3 +1029,78 @@ msgstr "Downloaded"
 
 msgid "Inactive"
 msgstr "Inactive"
+
+msgid "Custom theme color"
+msgstr "Custom theme color"
+
+msgid "Choose custom color"
+msgstr "Choose custom color"
+
+msgid "Selected color"
+msgstr "Selected color"
+
+msgid "🔵 Blue"
+msgstr "🔵 Blue"
+
+msgid "🌸 Pink"
+msgstr "🌸 Pink"
+
+msgid "🌿 Green"
+msgstr "🌿 Green"
+
+msgid "🟣 Purple"
+msgstr "🟣 Purple"
+
+msgid "Minimal mode"
+msgstr "Minimal mode"
+
+msgid "Restart required to apply minimal mode."
+msgstr "Restart required to apply minimal mode."
+
+msgid "Default"
+msgstr "Default"
+
+msgid "Invoice"
+msgstr "Invoice"
+
+msgid "Timesheet"
+msgstr "Timesheet"
+
+msgid "Average"
+msgstr "Average"
+
+msgid "Bar"
+msgstr "Bar"
+
+msgid "Line"
+msgstr "Line"
+
+msgid "Show leave"
+msgstr "Show leave"
+
+msgid "Work hours"
+msgstr "Work hours"
+
+msgid "Leave"
+msgstr "Leave"
+
+msgid "Leave Hours"
+msgstr "Leave Hours"
+
+msgid "Open color picker"
+msgstr "Open color picker"
+
+msgid "Restart Required"
+msgstr "Restart Required"
+
+msgid "Minimal mode toggle will take effect after restarting the application."
+msgstr "Minimal mode toggle will take effect after restarting the application."
+
+msgid "Period"
+msgstr "Period"
+
+msgid "Chart:"
+msgstr "Chart:"
+
+msgid "Metric:"
+msgstr "Metric:"

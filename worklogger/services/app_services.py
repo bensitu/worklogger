@@ -14,14 +14,31 @@ import urllib.error
 import json as _json
 from PySide6.QtCore import QObject, Signal
 
-from config.constants import APP_VERSION, GITHUB_RELEASES_API
+from config.constants import (
+    APP_VERSION,
+    CUSTOM_THEME_SETTING_KEY,
+    DARK_MODE_SETTING_KEY,
+    DEFAULT_BREAK_SETTING_KEY,
+    GITHUB_RELEASES_API,
+    LANG_SETTING_KEY,
+    MINIMAL_MODE_SETTING_KEY,
+    MONTHLY_TARGET_SETTING_KEY,
+    SHOW_HOLIDAYS_SETTING_KEY,
+    SHOW_NOTE_MARKERS_SETTING_KEY,
+    SHOW_OVERNIGHT_INDICATOR_SETTING_KEY,
+    THEME_SETTING_KEY,
+    TIME_INPUT_MODE_SETTING_KEY,
+    WEEK_START_MONDAY_SETTING_KEY,
+    WORK_HOURS_SETTING_KEY,
+)
+from config.themes import DEFAULT_CUSTOM_COLOR, set_custom_theme
 from data.db import DB
 from services.export_service import export_csv, import_csv, build_ics
 from services.calendar_service import parse_ics_rich
 from services import report_service
 from services.key_store import get_secret, set_secret
 from stores.app_store import AppState
-from utils.i18n import _
+from utils.i18n import _, detect_system_language
 
 
 class _UpdateBridge(QObject):
@@ -45,6 +62,17 @@ class AppServices:
 
     def set_setting(self, key: str, value) -> None:
         self.db.set_setting(key, value)
+
+    def resolve_initial_language(self) -> str:
+        saved = self.get_setting(LANG_SETTING_KEY)
+        if saved:
+            return str(saved)
+
+        detected = detect_system_language()
+        if detected is not None:
+            self.set_setting(LANG_SETTING_KEY, detected)
+            return detected
+        return "en_US"
 
     def get_record(self, day: str):
         return self.db.get(day)
@@ -246,36 +274,53 @@ class AppServices:
                 return template
 
     def load_settings(self) -> AppState:
+        custom_color = set_custom_theme(
+            self.get_setting(CUSTOM_THEME_SETTING_KEY, DEFAULT_CUSTOM_COLOR)
+        )
         return AppState(
-            lang=self.get_setting("lang", "en_US"),
-            theme=self.get_setting("theme", "blue"),
-            dark=self.get_setting("dark", "0") == "1",
-            work_hours=float(self.get_setting("work_hours", "8.0")),
-            default_break=float(self.get_setting("default_break", "1.0")),
-            monthly_target=float(self.get_setting("monthly_target", "168.0")),
-            show_holidays=self.get_setting("show_holidays", "1") == "1",
-            show_note_markers=self.get_setting("show_note_markers", "1") == "1",
-            show_overnight_indicator=self.get_setting("show_overnight_indicator", "1") == "1",
-            week_start_monday=self.get_setting("week_start_monday", "0") == "1",
-            time_input_mode=self.get_setting("time_input_mode", "manual"),
+            lang=self.get_setting(LANG_SETTING_KEY, "en_US"),
+            theme=self.get_setting(THEME_SETTING_KEY, "blue"),
+            custom_color=custom_color,
+            dark=self.get_setting(DARK_MODE_SETTING_KEY, "0") == "1",
+            work_hours=float(self.get_setting(WORK_HOURS_SETTING_KEY, "8.0")),
+            default_break=float(self.get_setting(DEFAULT_BREAK_SETTING_KEY, "1.0")),
+            monthly_target=float(self.get_setting(MONTHLY_TARGET_SETTING_KEY, "168.0")),
+            show_holidays=self.get_setting(SHOW_HOLIDAYS_SETTING_KEY, "1") == "1",
+            show_note_markers=self.get_setting(SHOW_NOTE_MARKERS_SETTING_KEY, "1") == "1",
+            show_overnight_indicator=self.get_setting(SHOW_OVERNIGHT_INDICATOR_SETTING_KEY, "1") == "1",
+            week_start_monday=self.get_setting(WEEK_START_MONDAY_SETTING_KEY, "0") == "1",
+            time_input_mode=self.get_setting(TIME_INPUT_MODE_SETTING_KEY, "manual"),
+            minimal_mode=self.get_setting(MINIMAL_MODE_SETTING_KEY, "0") == "1",
         )
 
     def save_settings(self, state: AppState) -> None:
         mapping: dict[str, str] = {
-            "lang": state.lang,
-            "theme": state.theme,
-            "dark": "1" if state.dark else "0",
-            "work_hours": str(state.work_hours),
-            "default_break": str(state.default_break),
-            "monthly_target": str(state.monthly_target),
-            "show_holidays": "1" if state.show_holidays else "0",
-            "show_note_markers": "1" if state.show_note_markers else "0",
-            "show_overnight_indicator": "1" if state.show_overnight_indicator else "0",
-            "week_start_monday": "1" if state.week_start_monday else "0",
-            "time_input_mode": state.time_input_mode,
+            LANG_SETTING_KEY: state.lang,
+            THEME_SETTING_KEY: state.theme,
+            CUSTOM_THEME_SETTING_KEY: state.custom_color or DEFAULT_CUSTOM_COLOR,
+            DARK_MODE_SETTING_KEY: "1" if state.dark else "0",
+            WORK_HOURS_SETTING_KEY: str(state.work_hours),
+            DEFAULT_BREAK_SETTING_KEY: str(state.default_break),
+            MONTHLY_TARGET_SETTING_KEY: str(state.monthly_target),
+            SHOW_HOLIDAYS_SETTING_KEY: "1" if state.show_holidays else "0",
+            SHOW_NOTE_MARKERS_SETTING_KEY: "1" if state.show_note_markers else "0",
+            SHOW_OVERNIGHT_INDICATOR_SETTING_KEY: "1" if state.show_overnight_indicator else "0",
+            WEEK_START_MONDAY_SETTING_KEY: "1" if state.week_start_monday else "0",
+            TIME_INPUT_MODE_SETTING_KEY: state.time_input_mode,
+            MINIMAL_MODE_SETTING_KEY: "1" if state.minimal_mode else "0",
         }
         for key, value in mapping.items():
             self.db.set_setting(key, value)
+
+    def set_custom_theme(self, accent_hex: str) -> AppState:
+        normalized = set_custom_theme(accent_hex)
+        self.db.set_setting(CUSTOM_THEME_SETTING_KEY, normalized)
+        self.db.set_setting(THEME_SETTING_KEY, "custom")
+        return self.load_settings()
+
+    def toggle_minimal_mode(self, enabled: bool) -> AppState:
+        self.db.set_setting(MINIMAL_MODE_SETTING_KEY, "1" if enabled else "0")
+        return self.load_settings()
 
     def load_settings_snapshot(self) -> AppState:
         return self.load_settings()
