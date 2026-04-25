@@ -59,6 +59,7 @@ def generate_weekly(
     lang: str,
     *,
     user_id: int,
+    save_to_db: bool = False,
 ) -> str:
     monday = selected - _dt.timedelta(days=selected.weekday())
     sunday = monday + _dt.timedelta(days=6)
@@ -80,7 +81,16 @@ def generate_weekly(
         lines.append(_("No notes recorded for this period."))
     lines += ["", _("Summary: {days} work days, {total}h total, {ot}h overtime.").format(
         days=int(days), total=f"{total:.1f}", ot=f"{ot_total:.1f}")]
-    return "\n".join(lines)
+    content = "\n".join(lines)
+    if save_to_db:
+        db.save_report(
+            "weekly",
+            monday.isoformat(),
+            sunday.isoformat(),
+            content,
+            user_id=user_id,
+        )
+    return content
 
 
 def generate_monthly(
@@ -91,6 +101,7 @@ def generate_monthly(
     lang: str,
     *,
     user_id: int,
+    save_to_db: bool = False,
 ) -> str:
     header = _("Monthly Work Report  {year}/{month:02d}").format(year=year, month=month)
     lines = [f"# {header}", ""]
@@ -111,4 +122,13 @@ def generate_monthly(
         lines.append(_("No notes recorded for this period."))
     lines += ["", _("Summary: {days} work days, {total}h total, {ot}h overtime.").format(
         days=int(n_days), total=f"{total:.1f}", ot=f"{ot_total:.1f}")]
-    return "\n".join(lines)
+    content = "\n".join(lines)
+    if save_to_db:
+        db.save_report(
+            "monthly",
+            f"{year}-{month:02d}-01",
+            f"{year}-{month:02d}-{days:02d}",
+            content,
+            user_id=user_id,
+        )
+    return content

@@ -22,6 +22,7 @@ from config.constants import (
     DEFAULT_BREAK_SETTING_KEY,
     GITHUB_URL,
     GPL_URL,
+    BACKUP_REMINDER_DAYS,
     LANG_SETTING_KEY,
     LOCAL_MODEL_ENABLED_SETTING_KEY,
     MINIMAL_MODE_SETTING_KEY,
@@ -820,6 +821,32 @@ class SettingsDialog(QDialog):
         self._export_csv_btn = QPushButton(_("Export CSV"))
         self._import_csv_btn = QPushButton(_("Import CSV"))
 
+        backup_grp = QGroupBox(_("Database Backup"))
+        bv = QVBoxLayout(backup_grp)
+        bv.setSpacing(6)
+        bv.setContentsMargins(10, 10, 10, 10)
+        self._backup_reminder_lbl = QLabel(
+            _("You haven't backed up in {days} days. Please back up your data.").format(
+                days=BACKUP_REMINDER_DAYS,
+            )
+        )
+        self._backup_reminder_lbl.setWordWrap(True)
+        self._backup_reminder_lbl.setObjectName("muted")
+        try:
+            self._backup_reminder_lbl.setVisible(
+                bool(app_ref.services.should_remind_backup())
+            )
+        except Exception:
+            self._backup_reminder_lbl.setVisible(False)
+        self._backup_db_btn = QPushButton(_("Backup Data"))
+        self._restore_db_btn = QPushButton(_("Restore Data"))
+        backup_actions = QHBoxLayout()
+        backup_actions.setSpacing(8)
+        backup_actions.addWidget(self._backup_db_btn)
+        backup_actions.addWidget(self._restore_db_btn)
+        bv.addWidget(self._backup_reminder_lbl)
+        bv.addLayout(backup_actions)
+
         cal_grp = QGroupBox(_("Calendar Sync"))
         cv = QVBoxLayout(cal_grp)
         cv.setSpacing(6)
@@ -837,6 +864,7 @@ class SettingsDialog(QDialog):
 
         for b in (self._export_csv_btn, self._import_csv_btn):
             dv.addWidget(b)
+        dv.addWidget(backup_grp)
         dv.addWidget(cal_grp)
         dv.addStretch()
         tabs.addTab(data_w, _("Data"))

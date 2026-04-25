@@ -1179,3 +1179,69 @@ msgstr "로그아웃하시겠습니까?"
 
 msgid "Log out"
 msgstr "로그아웃"
+
+msgid "Backup Data"
+msgstr "데이터 백업"
+
+msgid "Backup destination must be different from the active database."
+msgstr "백업 대상은 현재 데이터베이스와 달라야 합니다."
+
+msgid "Backup saved: {}"
+msgstr "백업 저장됨: {}"
+
+msgid "Data restored successfully."
+msgstr "데이터가 성공적으로 복원되었습니다."
+
+msgid "Database Backup"
+msgstr "데이터베이스 백업"
+
+msgid "Restore Data"
+msgstr "데이터 복원"
+
+msgid "Restore failed."
+msgstr "복원에 실패했습니다."
+
+msgid "Restore will replace the current database file. Continue?"
+msgstr "복원하면 현재 데이터베이스 파일이 바뀝니다. 계속하시겠습니까?"
+
+msgid "The selected backup database appears to be corrupted."
+msgstr "선택한 백업 데이터베이스가 손상된 것 같습니다."
+
+msgid "The selected backup does not contain the current account."
+msgstr "선택한 백업에 현재 계정이 포함되어 있지 않습니다."
+
+msgid "The selected backup does not contain user account data."
+msgstr "선택한 백업에 사용자 계정 데이터가 포함되어 있지 않습니다."
+
+msgid "The selected file does not exist."
+msgstr "선택한 파일이 존재하지 않습니다."
+
+msgid "You haven't backed up in {days} days. Please back up your data."
+msgstr "{days}일 동안 백업하지 않았습니다. 데이터를 백업해 주세요."
+
+msgid "SQLite Database (*.db)"
+msgstr "SQLite 데이터베이스 (*.db)"
+
+msgid "Delete Report"
+msgstr "보고서 삭제"
+
+msgid "Delete this saved report?"
+msgstr "이 저장된 보고서를 삭제하시겠습니까?"
+
+msgid "History"
+msgstr "기록"
+
+msgid "Markdown (*.md)"
+msgstr "Markdown (*.md)"
+
+msgid "No saved reports."
+msgstr "저장된 보고서가 없습니다."
+
+msgid "Report content is empty."
+msgstr "보고서 내용이 비어 있습니다."
+
+msgid "Report deleted."
+msgstr "보고서가 삭제되었습니다."
+
+msgid "Report saved."
+msgstr "보고서가 저장되었습니다."

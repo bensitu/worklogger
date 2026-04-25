@@ -1261,6 +1261,8 @@ class App(QWidget):
         self._settings_dialog = dlg
         dlg._export_csv_btn.clicked.connect(self._export_csv)
         dlg._import_csv_btn.clicked.connect(self._import_csv)
+        dlg._backup_db_btn.clicked.connect(self._backup_database)
+        dlg._restore_db_btn.clicked.connect(self._restore_database)
         dlg._ics_import_btn.clicked.connect(self._import_ics)
         dlg._ics_export_btn.clicked.connect(self._export_ics)
         dlg._ics_clear_btn.clicked.connect(self._clear_calendar)
@@ -1286,6 +1288,10 @@ class App(QWidget):
             self.close()
             QApplication.instance().quit()
             return
+        self._reload_current_user_state()
+        self.show()
+
+    def _reload_current_user_state(self) -> None:
         state = self.services.load_settings()
         self.store.patch(
             lang=state.lang,
@@ -1310,7 +1316,6 @@ class App(QWidget):
         self.apply_lang()
         self.load()
         self.render()
-        self.show()
 
     def open_report(self):
         if self.store.state.minimal_mode:
@@ -1338,6 +1343,77 @@ class App(QWidget):
                                     _("Saved: {}").format(path))
         except OSError as exc:
             QMessageBox.critical(self, _("Export CSV"), str(exc))
+
+    def _data_transfer_error_message(self, exc: Exception) -> str:
+        if isinstance(exc, FileNotFoundError):
+            return _("The selected file does not exist.")
+        if isinstance(exc, ValueError):
+            return {
+                "backup_same_path": _(
+                    "Backup destination must be different from the active database."
+                ),
+                "restore_integrity_failed": _(
+                    "The selected backup database appears to be corrupted."
+                ),
+                "restore_missing_users": _(
+                    "The selected backup does not contain user account data."
+                ),
+                "restore_user_mismatch": _(
+                    "The selected backup does not contain the current account."
+                ),
+            }.get(str(exc), str(exc))
+        return str(exc)
+
+    def _backup_database(self):
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        path, _selected_filter = QFileDialog.getSaveFileName(
+            self,
+            _("Backup Data"),
+            f"worklog_backup_{ts}.db",
+            _("SQLite Database (*.db)"),
+        )
+        if not path:
+            return
+        try:
+            self.services.backup_database(path)
+            dlg = getattr(self, "_settings_dialog", None)
+            if dlg is not None and hasattr(dlg, "_backup_reminder_lbl"):
+                dlg._backup_reminder_lbl.setVisible(False)
+            QMessageBox.information(
+                self, _("Backup Data"), _("Backup saved: {}").format(path))
+        except Exception as exc:
+            QMessageBox.critical(
+                self, _("Backup Data"), self._data_transfer_error_message(exc))
+
+    def _restore_database(self):
+        path, _selected_filter = QFileDialog.getOpenFileName(
+            self, _("Restore Data"), "", _("SQLite Database (*.db)"))
+        if not path:
+            return
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Icon.Warning)
+        box.setWindowTitle(_("Restore Data"))
+        box.setText(_("Restore will replace the current database file. Continue?"))
+        box.setStandardButtons(
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        box.setDefaultButton(QMessageBox.StandardButton.No)
+        _localize_msgbox_buttons(box, _)
+        if box.exec() != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            if not self.services.restore_database(path):
+                QMessageBox.critical(
+                    self, _("Restore Data"), _("Restore failed."))
+                return
+            dlg = getattr(self, "_settings_dialog", None)
+            if dlg is not None:
+                dlg.close()
+            self._reload_current_user_state()
+            QMessageBox.information(
+                self, _("Restore Data"), _("Data restored successfully."))
+        except Exception as exc:
+            QMessageBox.critical(
+                self, _("Restore Data"), self._data_transfer_error_message(exc))
 
     def _import_csv(self):
         path, _selected_filter = QFileDialog.getOpenFileName(

@@ -1179,3 +1179,69 @@ msgstr "確定要登出嗎？"
 
 msgid "Log out"
 msgstr "登出"
+
+msgid "Backup Data"
+msgstr "備份資料"
+
+msgid "Backup destination must be different from the active database."
+msgstr "備份目標必須與目前資料庫不同。"
+
+msgid "Backup saved: {}"
+msgstr "備份已儲存：{}"
+
+msgid "Data restored successfully."
+msgstr "資料已成功還原。"
+
+msgid "Database Backup"
+msgstr "資料庫備份"
+
+msgid "Restore Data"
+msgstr "還原資料"
+
+msgid "Restore failed."
+msgstr "還原失敗。"
+
+msgid "Restore will replace the current database file. Continue?"
+msgstr "還原操作將取代目前資料庫檔案。是否繼續？"
+
+msgid "The selected backup database appears to be corrupted."
+msgstr "所選備份資料庫可能已損毀。"
+
+msgid "The selected backup does not contain the current account."
+msgstr "所選備份不包含目前帳號。"
+
+msgid "The selected backup does not contain user account data."
+msgstr "所選備份不包含使用者帳號資料。"
+
+msgid "The selected file does not exist."
+msgstr "所選檔案不存在。"
+
+msgid "You haven't backed up in {days} days. Please back up your data."
+msgstr "你已經 {days} 天沒有備份。請備份你的資料。"
+
+msgid "SQLite Database (*.db)"
+msgstr "SQLite 資料庫 (*.db)"
+
+msgid "Delete Report"
+msgstr "刪除報告"
+
+msgid "Delete this saved report?"
+msgstr "刪除這份已儲存的報告？"
+
+msgid "History"
+msgstr "歷史"
+
+msgid "Markdown (*.md)"
+msgstr "Markdown (*.md)"
+
+msgid "No saved reports."
+msgstr "沒有已儲存的報告。"
+
+msgid "Report content is empty."
+msgstr "報告內容為空。"
+
+msgid "Report deleted."
+msgstr "報告已刪除。"
+
+msgid "Report saved."
+msgstr "報告已儲存。"

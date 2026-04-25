@@ -1,12 +1,13 @@
 from __future__ import annotations
 import os
 from pathlib import Path
+import shutil
 import sys
 import threading
 import re
 import secrets
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from calendar import monthrange
 from typing import Callable, Iterable
 import ssl
@@ -18,6 +19,7 @@ from PySide6.QtCore import QObject, Signal
 
 from config.constants import (
     APP_VERSION,
+    BACKUP_REMINDER_DAYS,
     CUSTOM_THEME_SETTING_KEY,
     DARK_MODE_SETTING_KEY,
     DEFAULT_BREAK_SETTING_KEY,
@@ -25,6 +27,7 @@ from config.constants import (
     FORCE_PASSWORD_CHANGE_SETTING_KEY,
     GITHUB_RELEASES_API,
     LANG_SETTING_KEY,
+    LAST_BACKUP_KEY,
     MINIMAL_MODE_SETTING_KEY,
     MONTHLY_TARGET_SETTING_KEY,
     SHOW_HOLIDAYS_SETTING_KEY,
@@ -279,16 +282,145 @@ class AppServices:
         rows = self.month_records(ym)
         return build_ics(rows)
 
-    def generate_weekly_report(self, selected: date, work_hours: float, lang: str) -> str:
+    def should_remind_backup(self) -> bool:
+        self._require_user_id()
+        raw = self.get_setting(LAST_BACKUP_KEY, "")
+        if not raw:
+            return True
+        try:
+            last = datetime.fromisoformat(str(raw))
+        except ValueError:
+            return True
+        return datetime.now() - last >= timedelta(days=BACKUP_REMINDER_DAYS)
+
+    def backup_database(self, dest_path: str) -> bool:
+        self._require_user_id()
+        dest = Path(dest_path)
+        src = Path(self.db.path)
+        if src.resolve(strict=False) == dest.resolve(strict=False):
+            raise ValueError("backup_same_path")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        previous_backup = self.get_setting(LAST_BACKUP_KEY, None)
+        self.set_setting(LAST_BACKUP_KEY, datetime.now().isoformat(timespec="seconds"))
+        try:
+            self.db.conn.commit()
+            shutil.copy2(src, dest)
+        except Exception:
+            self.set_setting(
+                LAST_BACKUP_KEY,
+                "" if previous_backup is None else previous_backup,
+            )
+            raise
+        return True
+
+    def validate_restore_database(self, src_path: str) -> bool:
+        self._require_user_id()
+        src = Path(src_path)
+        if not src.is_file():
+            raise FileNotFoundError(src_path)
+        uri = src.resolve().as_uri() + "?mode=ro"
+        username = self.current_username
+        with sqlite3.connect(uri, uri=True) as conn:
+            integrity = conn.execute("PRAGMA integrity_check").fetchone()
+            if not integrity or integrity[0] != "ok":
+                raise ValueError("restore_integrity_failed")
+            users_exists = conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='users'"
+            ).fetchone()
+            if not users_exists:
+                raise ValueError("restore_missing_users")
+            if username:
+                row = conn.execute(
+                    "SELECT id FROM users WHERE username=?",
+                    (username,),
+                ).fetchone()
+                if row is None:
+                    raise ValueError("restore_user_mismatch")
+        return True
+
+    def restore_database(self, src_path: str) -> bool:
+        self.validate_restore_database(src_path)
+        username = self.current_username
+        target = Path(self.db.path)
+        source = Path(src_path)
+        if target.resolve(strict=False) == source.resolve(strict=False):
+            return True
+        try:
+            self.db.conn.close()
+        except Exception:
+            pass
+        try:
+            shutil.copy2(source, target)
+        finally:
+            self.db = DB(str(target))
+            self.auth = AuthService(self.db)
+        if username:
+            user = self.db.get_user_by_username(username)
+            if user:
+                self.set_current_user(int(user["id"]), user["username"])
+                return True
+        self.clear_current_user()
+        return False
+
+    def _validate_report_type(self, report_type: str) -> str:
+        if report_type not in {"weekly", "monthly"}:
+            raise ValueError("invalid_report_type")
+        return report_type
+
+    def save_report(
+        self,
+        report_type: str,
+        period_start: str,
+        period_end: str,
+        content: str,
+    ) -> int:
+        self._validate_report_type(report_type)
+        if not content.strip():
+            raise ValueError("empty_report")
+        return self.db.save_report(
+            report_type,
+            period_start,
+            period_end,
+            content,
+            user_id=self._require_user_id(),
+        )
+
+    def get_reports_by_type(self, report_type: str) -> list[dict]:
+        self._validate_report_type(report_type)
+        return self.db.get_reports_by_type(
+            report_type,
+            user_id=self._require_user_id(),
+        )
+
+    def delete_report(self, report_id: int) -> None:
+        self.db.delete_report(report_id, user_id=self._require_user_id())
+
+    def generate_weekly_report(
+        self,
+        selected: date,
+        work_hours: float,
+        lang: str,
+        *,
+        save_to_db: bool = False,
+    ) -> str:
         return report_service.generate_weekly(
             selected,
             self.db,
             work_hours,
             lang,
             user_id=self._require_user_id(),
+            save_to_db=save_to_db,
         )
 
-    def generate_monthly_report(self, year: int, month: int, work_hours: float, lang: str) -> str:
+    def generate_monthly_report(
+        self,
+        year: int,
+        month: int,
+        work_hours: float,
+        lang: str,
+        *,
+        save_to_db: bool = False,
+    ) -> str:
         return report_service.generate_monthly(
             year,
             month,
@@ -296,6 +428,7 @@ class AppServices:
             work_hours,
             lang,
             user_id=self._require_user_id(),
+            save_to_db=save_to_db,
         )
 
     def check_update_async(

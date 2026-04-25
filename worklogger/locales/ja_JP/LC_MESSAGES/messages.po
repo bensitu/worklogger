@@ -1179,3 +1179,69 @@ msgstr "ログアウトしますか？"
 
 msgid "Log out"
 msgstr "ログアウト"
+
+msgid "Backup Data"
+msgstr "データをバックアップ"
+
+msgid "Backup destination must be different from the active database."
+msgstr "バックアップ先は現在のデータベースと別の場所にしてください。"
+
+msgid "Backup saved: {}"
+msgstr "バックアップを保存しました: {}"
+
+msgid "Data restored successfully."
+msgstr "データを復元しました。"
+
+msgid "Database Backup"
+msgstr "データベースバックアップ"
+
+msgid "Restore Data"
+msgstr "データを復元"
+
+msgid "Restore failed."
+msgstr "復元に失敗しました。"
+
+msgid "Restore will replace the current database file. Continue?"
+msgstr "復元すると現在のデータベースファイルが置き換えられます。続行しますか?"
+
+msgid "The selected backup database appears to be corrupted."
+msgstr "選択したバックアップデータベースは破損している可能性があります。"
+
+msgid "The selected backup does not contain the current account."
+msgstr "選択したバックアップには現在のアカウントが含まれていません。"
+
+msgid "The selected backup does not contain user account data."
+msgstr "選択したバックアップにはユーザーアカウントデータが含まれていません。"
+
+msgid "The selected file does not exist."
+msgstr "選択したファイルは存在しません。"
+
+msgid "You haven't backed up in {days} days. Please back up your data."
+msgstr "{days} 日間バックアップされていません。データをバックアップしてください。"
+
+msgid "SQLite Database (*.db)"
+msgstr "SQLite データベース (*.db)"
+
+msgid "Delete Report"
+msgstr "レポートを削除"
+
+msgid "Delete this saved report?"
+msgstr "この保存済みレポートを削除しますか?"
+
+msgid "History"
+msgstr "履歴"
+
+msgid "Markdown (*.md)"
+msgstr "Markdown (*.md)"
+
+msgid "No saved reports."
+msgstr "保存済みレポートはありません。"
+
+msgid "Report content is empty."
+msgstr "レポート本文が空です。"
+
+msgid "Report deleted."
+msgstr "レポートを削除しました。"
+
+msgid "Report saved."
+msgstr "レポートを保存しました。"

@@ -1,5 +1,6 @@
 from __future__ import annotations
-from datetime import datetime as dt, date
+from calendar import monthrange
+from datetime import datetime as dt, date, timedelta
 
 from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
@@ -217,7 +218,35 @@ class ReportDialog(QDialog):
             wl.addWidget(editor)
             self._tabs.addTab(w, msg(key))
 
-        lv.addWidget(self._tabs, 1)
+        history_w = QWidget()
+        history_l = QVBoxLayout(history_w)
+        history_l.setContentsMargins(8, 6, 6, 6)
+        history_l.setSpacing(6)
+        history_lbl = QLabel(_("History"))
+        history_lbl.setObjectName("muted")
+        self._history_list = QListWidget()
+        self._history_list.setMinimumWidth(220)
+        self._history_empty = QLabel(_("No saved reports."))
+        self._history_empty.setObjectName("muted")
+        self._history_empty.setWordWrap(True)
+        self._delete_history_btn = QPushButton(_("Delete"))
+        self._delete_history_btn.setEnabled(False)
+        self._history_list.itemClicked.connect(self._load_history_item)
+        self._history_list.currentItemChanged.connect(self._on_history_changed)
+        self._delete_history_btn.clicked.connect(self._delete_history_report)
+        history_l.addWidget(history_lbl)
+        history_l.addWidget(self._history_list, 1)
+        history_l.addWidget(self._history_empty)
+        history_l.addWidget(self._delete_history_btn)
+
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+        splitter.addWidget(self._tabs)
+        splitter.addWidget(history_w)
+        splitter.setStretchFactor(0, 3)
+        splitter.setStretchFactor(1, 1)
+        splitter.setSizes([560, 220])
+        lv.addWidget(splitter, 1)
+        self._tabs.currentChanged.connect(lambda _idx: self._refresh_history())
 
         toolbar = QHBoxLayout()
         toolbar.setSpacing(6)
@@ -236,23 +265,27 @@ class ReportDialog(QDialog):
         self._ai_btn = QPushButton(msg("ai_btn"))
         self._cp_btn = QPushButton(msg("report_copy"))
         self._dl_btn = QPushButton(msg("report_download"))
+        self._save_btn = QPushButton(_("Save"))
         close_btn = QPushButton(_("Close"))
         close_btn.setObjectName("primary_btn")
 
         self._ai_btn.clicked.connect(self._ai_smart)
         self._cp_btn.clicked.connect(self._copy)
         self._dl_btn.clicked.connect(self._download)
+        self._save_btn.clicked.connect(self._save_current_report)
         close_btn.clicked.connect(self.accept)
 
         bot.addWidget(self._ai_btn)
         bot.addSpacing(8)
         bot.addWidget(self._cp_btn)
         bot.addWidget(self._dl_btn)
+        bot.addWidget(self._save_btn)
         bot.addStretch()
         bot.addWidget(close_btn)
         lv.addLayout(bot)
 
         self._fill()
+        self._refresh_history()
 
     def _make_editor(self) -> QTextEdit:
         e = QTextEdit()
@@ -265,6 +298,84 @@ class ReportDialog(QDialog):
 
     def _current_type(self) -> str:
         return "weekly" if self._tabs.currentIndex() == 0 else "monthly"
+
+    def _current_period(self) -> tuple[str, str]:
+        app = self._app
+        if self._current_type() == "weekly":
+            monday = app.selected - timedelta(days=app.selected.weekday())
+            sunday = monday + timedelta(days=6)
+            return monday.isoformat(), sunday.isoformat()
+        year, month = app.current.year, app.current.month
+        _first_weekday, last_day = monthrange(year, month)
+        return f"{year}-{month:02d}-01", f"{year}-{month:02d}-{last_day:02d}"
+
+    def _format_history_item(self, report: dict) -> str:
+        created = str(report.get("created_at", ""))
+        start = str(report.get("period_start", ""))
+        end = str(report.get("period_end", ""))
+        return f"{created}  {start} ~ {end}"
+
+    def _refresh_history(self):
+        self._history_list.clear()
+        self._delete_history_btn.setEnabled(False)
+        reports = self._app.services.get_reports_by_type(self._current_type())
+        self._history_empty.setVisible(not reports)
+        for report in reports:
+            item = QListWidgetItem(self._format_history_item(report))
+            item.setData(Qt.ItemDataRole.UserRole, report)
+            self._history_list.addItem(item)
+
+    def _on_history_changed(self, current, _previous):
+        report = current.data(Qt.ItemDataRole.UserRole) if current else None
+        self._delete_history_btn.setEnabled(bool(report))
+
+    def _load_history_item(self, item: QListWidgetItem):
+        report = item.data(Qt.ItemDataRole.UserRole)
+        if not report:
+            return
+        self._current_editor().setPlainText(str(report.get("content", "")))
+
+    def _save_current_report(self):
+        content = self._current_editor().toPlainText()
+        try:
+            start, end = self._current_period()
+            self._app.services.save_report(
+                self._current_type(),
+                start,
+                end,
+                content,
+            )
+        except ValueError as exc:
+            text = (
+                _("Report content is empty.")
+                if str(exc) == "empty_report" else str(exc)
+            )
+            QMessageBox.warning(self, _("Work Report"), text)
+            return
+        except Exception as exc:
+            QMessageBox.critical(self, _("Work Report"), str(exc))
+            return
+        self._refresh_history()
+        QMessageBox.information(self, _("Work Report"), _("Report saved."))
+
+    def _delete_history_report(self):
+        item = self._history_list.currentItem()
+        report = item.data(Qt.ItemDataRole.UserRole) if item else None
+        if not report:
+            return
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Icon.Question)
+        box.setWindowTitle(_("Delete Report"))
+        box.setText(_("Delete this saved report?"))
+        box.setStandardButtons(
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        box.setDefaultButton(QMessageBox.StandardButton.No)
+        _localize_msgbox_buttons(box, _)
+        if box.exec() != QMessageBox.StandardButton.Yes:
+            return
+        self._app.services.delete_report(int(report["id"]))
+        self._refresh_history()
+        QMessageBox.information(self, _("Delete Report"), _("Report deleted."))
 
     def _fill(self):
         app = self._app
@@ -389,7 +500,7 @@ class ReportDialog(QDialog):
         label = "weekly" if idx == 0 else "monthly"
         defn = f"report_{label}_{ts}.md"
         path, _dialog_filter = QFileDialog.getSaveFileName(
-            self, msg("report_download"), defn, "Markdown (*.md)")
+            self, msg("report_download"), defn, _("Markdown (*.md)"))
         if not path:
             return
         with open(path, "w", encoding="utf-8") as f:

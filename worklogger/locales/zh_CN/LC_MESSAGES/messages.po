@@ -1179,3 +1179,69 @@ msgstr "确定要注销吗？"
 
 msgid "Log out"
 msgstr "注销"
+
+msgid "Backup Data"
+msgstr "备份数据"
+
+msgid "Backup destination must be different from the active database."
+msgstr "备份目标必须与当前数据库不同。"
+
+msgid "Backup saved: {}"
+msgstr "备份已保存：{}"
+
+msgid "Data restored successfully."
+msgstr "数据已成功恢复。"
+
+msgid "Database Backup"
+msgstr "数据库备份"
+
+msgid "Restore Data"
+msgstr "恢复数据"
+
+msgid "Restore failed."
+msgstr "恢复失败。"
+
+msgid "Restore will replace the current database file. Continue?"
+msgstr "恢复操作将替换当前数据库文件。是否继续？"
+
+msgid "The selected backup database appears to be corrupted."
+msgstr "所选备份数据库可能已损坏。"
+
+msgid "The selected backup does not contain the current account."
+msgstr "所选备份不包含当前账号。"
+
+msgid "The selected backup does not contain user account data."
+msgstr "所选备份不包含用户账号数据。"
+
+msgid "The selected file does not exist."
+msgstr "所选文件不存在。"
+
+msgid "You haven't backed up in {days} days. Please back up your data."
+msgstr "你已经 {days} 天没有备份。请备份你的数据。"
+
+msgid "SQLite Database (*.db)"
+msgstr "SQLite 数据库 (*.db)"
+
+msgid "Delete Report"
+msgstr "删除报告"
+
+msgid "Delete this saved report?"
+msgstr "删除这份已保存的报告？"
+
+msgid "History"
+msgstr "历史"
+
+msgid "Markdown (*.md)"
+msgstr "Markdown (*.md)"
+
+msgid "No saved reports."
+msgstr "没有已保存的报告。"
+
+msgid "Report content is empty."
+msgstr "报告内容为空。"
+
+msgid "Report deleted."
+msgstr "报告已删除。"
+
+msgid "Report saved."
+msgstr "报告已保存。"

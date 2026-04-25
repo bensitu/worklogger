@@ -1179,3 +1179,69 @@ msgstr "Are you sure you want to log out?"
 
 msgid "Log out"
 msgstr "Log out"
+
+msgid "Backup Data"
+msgstr "Backup Data"
+
+msgid "Backup destination must be different from the active database."
+msgstr "Backup destination must be different from the active database."
+
+msgid "Backup saved: {}"
+msgstr "Backup saved: {}"
+
+msgid "Data restored successfully."
+msgstr "Data restored successfully."
+
+msgid "Database Backup"
+msgstr "Database Backup"
+
+msgid "Restore Data"
+msgstr "Restore Data"
+
+msgid "Restore failed."
+msgstr "Restore failed."
+
+msgid "Restore will replace the current database file. Continue?"
+msgstr "Restore will replace the current database file. Continue?"
+
+msgid "The selected backup database appears to be corrupted."
+msgstr "The selected backup database appears to be corrupted."
+
+msgid "The selected backup does not contain the current account."
+msgstr "The selected backup does not contain the current account."
+
+msgid "The selected backup does not contain user account data."
+msgstr "The selected backup does not contain user account data."
+
+msgid "The selected file does not exist."
+msgstr "The selected file does not exist."
+
+msgid "You haven't backed up in {days} days. Please back up your data."
+msgstr "You haven't backed up in {days} days. Please back up your data."
+
+msgid "SQLite Database (*.db)"
+msgstr "SQLite Database (*.db)"
+
+msgid "Delete Report"
+msgstr "Delete Report"
+
+msgid "Delete this saved report?"
+msgstr "Delete this saved report?"
+
+msgid "History"
+msgstr "History"
+
+msgid "Markdown (*.md)"
+msgstr "Markdown (*.md)"
+
+msgid "No saved reports."
+msgstr "No saved reports."
+
+msgid "Report content is empty."
+msgstr "Report content is empty."
+
+msgid "Report deleted."
+msgstr "Report deleted."
+
+msgid "Report saved."
+msgstr "Report saved."

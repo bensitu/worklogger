@@ -84,6 +84,16 @@ _CREATE_CALENDAR = """CREATE TABLE IF NOT EXISTS calendar_events(
     source_file TEXT DEFAULT ''
 )"""
 
+_CREATE_REPORTS = """CREATE TABLE IF NOT EXISTS reports(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type TEXT NOT NULL,
+    period_start TEXT NOT NULL,
+    period_end TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+)"""
+
 
 class DB:
     def __init__(self, path: str | None = None):
@@ -138,6 +148,7 @@ class DB:
             self._migrate_settings_table(fallback_user_id)
             self._migrate_quick_logs_table(fallback_user_id)
             self._migrate_calendar_table(fallback_user_id)
+            self._migrate_reports_table(fallback_user_id)
 
             if created_admin_id is not None:
                 self.conn.execute(
@@ -153,6 +164,10 @@ class DB:
             )
             self.conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_calendar_user_date ON calendar_events(user_id,date)"
+            )
+            self.conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_reports_user_type_created "
+                "ON reports(user_id,type,created_at DESC)"
             )
             self.conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_users_remember_token ON users(remember_token)"
@@ -185,7 +200,13 @@ class DB:
         )
         return any(
             self._row_count(table) > 0
-            for table in ("worklog", "settings", "quick_logs", "calendar_events")
+            for table in (
+                "worklog",
+                "settings",
+                "quick_logs",
+                "calendar_events",
+                "reports",
+            )
             if self._table_exists(table) and "user_id" not in self._columns(table)
         ) or worklog_legacy
 
@@ -318,6 +339,32 @@ class DB:
             )
         self.conn.execute(f"DROP TABLE {legacy}")
 
+    def _migrate_reports_table(self, fallback_user_id: int | None) -> None:
+        if not self._table_exists("reports"):
+            self.conn.execute(_CREATE_REPORTS)
+            return
+        cols = self._columns("reports")
+        if "user_id" in cols:
+            self.conn.execute(_CREATE_REPORTS)
+            return
+
+        legacy = self._legacy_name("reports")
+        self.conn.execute(f"ALTER TABLE reports RENAME TO {legacy}")
+        self.conn.execute(_CREATE_REPORTS)
+        legacy_cols = self._columns(legacy)
+        required = {"type", "period_start", "period_end", "content"}
+        if fallback_user_id is not None and required <= legacy_cols:
+            id_expr = self._col_expr(legacy_cols, "id", "NULL")
+            created_expr = self._col_expr(legacy_cols, "created_at", "datetime('now')")
+            self.conn.execute(
+                "INSERT INTO reports"
+                "(id,user_id,type,period_start,period_end,content,created_at) "
+                f"SELECT {id_expr}, ?, type, period_start, period_end, content, "
+                f"{created_expr} FROM {legacy}",
+                (fallback_user_id,),
+            )
+        self.conn.execute(f"DROP TABLE {legacy}")
+
     @staticmethod
     def _password_hash(password: str, salt_hex: str) -> str:
         salt = bytes.fromhex(salt_hex)
@@ -422,6 +469,17 @@ class DB:
     def _user_row(row) -> dict:
         return dict(id=int(row[0]), username=row[1], created_at=row[2])
 
+    @staticmethod
+    def _report_row(row) -> dict:
+        return {
+            "id": int(row[0]),
+            "type": row[1],
+            "period_start": row[2],
+            "period_end": row[3],
+            "content": row[4],
+            "created_at": row[5],
+        }
+
     # Read operations.
 
     def get(self, d: str, *, user_id: int) -> WorkRecord | None:
@@ -492,6 +550,42 @@ class DB:
             self.conn.execute(
                 "INSERT OR REPLACE INTO settings(user_id,key,value) VALUES(?,?,?)",
                 (user_id, key, str(value)),
+            )
+            self.conn.commit()
+
+    def save_report(
+        self,
+        report_type: str,
+        period_start: str,
+        period_end: str,
+        content: str,
+        *,
+        user_id: int,
+    ) -> int:
+        with self._write_lock:
+            cur = self.conn.execute(
+                "INSERT INTO reports"
+                "(user_id,type,period_start,period_end,content,created_at) "
+                "VALUES(?,?,?,?,?,datetime('now'))",
+                (user_id, report_type, period_start, period_end, content),
+            )
+            self.conn.commit()
+            return int(cur.lastrowid)
+
+    def get_reports_by_type(self, report_type: str, *, user_id: int) -> list[dict]:
+        rows = self.conn.execute(
+            "SELECT id,type,period_start,period_end,content,created_at "
+            "FROM reports WHERE user_id=? AND type=? "
+            "ORDER BY created_at DESC, id DESC",
+            (user_id, report_type),
+        ).fetchall()
+        return [self._report_row(row) for row in rows]
+
+    def delete_report(self, report_id: int, *, user_id: int) -> None:
+        with self._write_lock:
+            self.conn.execute(
+                "DELETE FROM reports WHERE id=? AND user_id=?",
+                (report_id, user_id),
             )
             self.conn.commit()
 
