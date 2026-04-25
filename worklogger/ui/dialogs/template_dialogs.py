@@ -116,8 +116,7 @@ class TemplatePickerDialog(QDialog):
             content = get_template(lang, builtin_type)
             if not content:
                 continue
-            label_name = "default" if builtin_type == self._type else builtin_type
-            display_key = TEMPLATE_DISPLAY_NAME.get(label_name, label_name)
+            display_key = TEMPLATE_DISPLAY_NAME.get(builtin_type, builtin_type)
             item = QListWidgetItem(
                 f"[{_("Built-in")}]  {msg(display_key)}")
             item.setData(Qt.UserRole, {
