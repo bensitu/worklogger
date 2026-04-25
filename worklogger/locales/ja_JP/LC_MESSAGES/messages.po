@@ -1245,3 +1245,6 @@ msgstr "レポートを削除しました。"
 
 msgid "Report saved."
 msgstr "レポートを保存しました。"
+
+msgid "Reports have unsaved changes. Save before closing?"
+msgstr "レポートに未保存の変更があります。閉じる前に保存しますか?"

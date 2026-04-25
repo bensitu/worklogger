@@ -1245,3 +1245,6 @@ msgstr "Report deleted."
 
 msgid "Report saved."
 msgstr "Report saved."
+
+msgid "Reports have unsaved changes. Save before closing?"
+msgstr "Reports have unsaved changes. Save before closing?"

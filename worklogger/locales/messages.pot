@@ -243,16 +243,10 @@ msgstr ""
 msgid "Delete Model"
 msgstr ""
 
-msgid "Delete Report"
-msgstr ""
-
 msgid "Delete this entry?"
 msgstr ""
 
 msgid "Delete this model file? This cannot be undone."
-msgstr ""
-
-msgid "Delete this saved report?"
 msgstr ""
 
 msgid "Delete this template?"
@@ -349,9 +343,6 @@ msgid "HH:MM"
 msgstr ""
 
 msgid "Hint / extra instructions (optional)"
-msgstr ""
-
-msgid "History"
 msgstr ""
 
 msgid "Import .gguf"
@@ -576,9 +567,6 @@ msgstr ""
 msgid "No notes recorded for this period."
 msgstr ""
 
-msgid "No saved reports."
-msgstr ""
-
 msgid "No templates available for this type."
 msgstr ""
 
@@ -741,10 +729,10 @@ msgstr ""
 msgid "Report content is empty."
 msgstr ""
 
-msgid "Report deleted."
+msgid "Report saved."
 msgstr ""
 
-msgid "Report saved."
+msgid "Reports have unsaved changes. Save before closing?"
 msgstr ""
 
 msgid "Restart"

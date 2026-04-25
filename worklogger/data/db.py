@@ -563,6 +563,21 @@ class DB:
         user_id: int,
     ) -> int:
         with self._write_lock:
+            existing = self.conn.execute(
+                "SELECT id FROM reports "
+                "WHERE user_id=? AND type=? AND period_start=? AND period_end=? "
+                "ORDER BY id DESC LIMIT 1",
+                (user_id, report_type, period_start, period_end),
+            ).fetchone()
+            if existing:
+                report_id = int(existing[0])
+                self.conn.execute(
+                    "UPDATE reports SET content=?, created_at=datetime('now') "
+                    "WHERE id=? AND user_id=?",
+                    (content, report_id, user_id),
+                )
+                self.conn.commit()
+                return report_id
             cur = self.conn.execute(
                 "INSERT INTO reports"
                 "(user_id,type,period_start,period_end,content,created_at) "
@@ -571,6 +586,23 @@ class DB:
             )
             self.conn.commit()
             return int(cur.lastrowid)
+
+    def get_report_for_period(
+        self,
+        report_type: str,
+        period_start: str,
+        period_end: str,
+        *,
+        user_id: int,
+    ) -> dict | None:
+        row = self.conn.execute(
+            "SELECT id,type,period_start,period_end,content,created_at "
+            "FROM reports "
+            "WHERE user_id=? AND type=? AND period_start=? AND period_end=? "
+            "ORDER BY id DESC LIMIT 1",
+            (user_id, report_type, period_start, period_end),
+        ).fetchone()
+        return self._report_row(row) if row else None
 
     def get_reports_by_type(self, report_type: str, *, user_id: int) -> list[dict]:
         rows = self.conn.execute(

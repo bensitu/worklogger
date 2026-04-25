@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-04-26
+
+### Added
+
+- Added localized built-in template display names for daily, weekly, and monthly report templates.
+- Added custom theme color support with persistent accent storage and an OK/Cancel color picker.
+- Added minimal mode, which hides secondary panels and report/analytics controls after restart for a focused workflow.
+- Added first-run system language detection for English, Japanese, Korean, Simplified Chinese, and Traditional Chinese.
+- Added enhanced analytics controls for Work hours/Average metrics, Bar/Line chart modes, remembered Show leaves preference, leave overlays, and leave hours in exports.
+- Added account management with registration, login, logout, password changes, remember-me auto-login, and encrypted remember-token storage.
+- Added strict per-user data isolation for work logs, quick logs, calendar events, reports, and settings.
+- Added Settings -> Data database backup/restore with a 30-day backup reminder and current-account restore validation.
+- Added weekly/monthly report persistence so saved reports reload automatically for the selected calendar week or month.
+
+### Changed
+
+- Report save now updates the current week or month instead of creating a separate visible history list.
+- Report dialogs now prompt to save unsaved weekly/monthly edits before closing.
+- Analytics and report data preparation were moved behind service-layer APIs so UI code does not compute or query persistent data directly.
+- Settings now includes an Account tab for current-user display, password changes, and logout.
+- Existing single-user databases are migrated into a default `admin` account during upgrade.
+
+### Fixed
+
+- Fixed custom color picker behavior so theme changes apply only after OK, while Cancel/close leaves the active theme unchanged.
+- Fixed the custom-theme palette control to use an icon button with localized tooltip text.
+- Fixed remember-token storage to require encrypted storage instead of silently falling back to plain text when `cryptography` is unavailable.
+- Fixed backup timestamp handling so restoring a freshly created backup does not re-trigger the 30-day backup reminder.
+- Fixed analytics i18n coverage for new Metric/Chart labels and related chart controls.
+
+## [2.2.2] - 2026-04-22
+
+### Changed
+
+- Windows build now installs `llama-cpp-python` from the prebuilt CPU wheel index with explicit pip timeout/retry controls, avoiding local source compilation on machines without MSVC/NMake toolchains.
+- Local-model runtime dependency installation was split from general requirements in the Windows build flow so packaging remains deterministic while still bundling local inference support into the executable.
+
+### Fixed
+
+- Fixed a localization issue with the fallback state in external model handover messages, ensuring that AI-related messages are parsed via gettext in all supported language environments.
+- Fixed remaining untranslated local-model status/error strings in non-English locale catalogs, including verification timeout/cancel/failure and permission-denied messages.
+- Fixed locale catalog consistency so all five built-in languages (`en_US`, `ja_JP`, `ko_KR`, `zh_CN`, `zh_TW`) pass gettext extraction/sync/compile/check validation.
+
 ## [2.2.1] - 2026-04-21
 
 ### Changed

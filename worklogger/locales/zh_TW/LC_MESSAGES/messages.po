@@ -1245,3 +1245,6 @@ msgstr "報告已刪除。"
 
 msgid "Report saved."
 msgstr "報告已儲存。"
+
+msgid "Reports have unsaved changes. Save before closing?"
+msgstr "報告有未儲存的修改。關閉前要儲存嗎？"

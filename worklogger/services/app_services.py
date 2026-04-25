@@ -392,6 +392,20 @@ class AppServices:
             user_id=self._require_user_id(),
         )
 
+    def get_report_for_period(
+        self,
+        report_type: str,
+        period_start: str,
+        period_end: str,
+    ) -> dict | None:
+        self._validate_report_type(report_type)
+        return self.db.get_report_for_period(
+            report_type,
+            period_start,
+            period_end,
+            user_id=self._require_user_id(),
+        )
+
     def delete_report(self, report_id: int) -> None:
         self.db.delete_report(report_id, user_id=self._require_user_id())
 
