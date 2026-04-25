@@ -1171,8 +1171,8 @@ msgstr "사용자 이름은 필수입니다."
 msgid "Username or password is incorrect."
 msgstr "사용자 이름 또는 비밀번호가 올바르지 않습니다."
 
-msgid "Account"
-msgstr "계정"
+msgid "Current user"
+msgstr "현재 사용자"
 
 msgid "Are you sure you want to log out?"
 msgstr "로그아웃하시겠습니까?"
@@ -1248,3 +1248,12 @@ msgstr "보고서가 저장되었습니다."
 
 msgid "Reports have unsaved changes. Save before closing?"
 msgstr "보고서에 저장되지 않은 변경 사항이 있습니다. 닫기 전에 저장하시겠습니까?"
+
+msgid "Remember-token encryption requires the 'cryptography' package. Please install it via pip install cryptography."
+msgstr "remember token 암호화에는 'cryptography' 패키지가 필요합니다. pip install cryptography로 설치하세요."
+
+msgid "Account"
+msgstr "계정"
+
+msgid "Your password has not been changed in {days} days. Please update it regularly."
+msgstr "비밀번호가 {days}일 동안 변경되지 않았습니다. 정기적으로 업데이트하세요."

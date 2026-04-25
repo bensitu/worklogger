@@ -7,11 +7,11 @@ from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QHBoxLayout, QFormLayout, QTabWidget,
     QPushButton, QLabel, QLineEdit, QTextEdit, QScrollArea, QMessageBox,
     QDoubleSpinBox, QGroupBox, QDialogButtonBox, QComboBox, QProgressBar,
-    QFrame, QFileDialog, QStyle,
+    QFrame, QFileDialog,
 )
 from PySide6.QtCore import Qt, QTimer, QSize
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPen, QPixmap, QFont
 
 from utils.i18n import _, msg, LANG_NAMES, get_translator
 from config.constants import (
@@ -27,6 +27,7 @@ from config.constants import (
     LOCAL_MODEL_ENABLED_SETTING_KEY,
     MINIMAL_MODE_SETTING_KEY,
     MONTHLY_TARGET_SETTING_KEY,
+    PASSWORD_CHANGE_REMINDER_DAYS,
     SHOW_HOLIDAYS_SETTING_KEY,
     SHOW_NOTE_MARKERS_SETTING_KEY,
     SHOW_OVERNIGHT_INDICATOR_SETTING_KEY,
@@ -49,6 +50,29 @@ ThemePalette = dict[bool, ThemeColors]
 ThemeMap = dict[str, ThemePalette]
 
 
+def _palette_icon() -> QIcon:
+    pix = QPixmap(24, 24)
+    pix.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pix)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+    painter.setPen(QPen(QColor("#44515f"), 1.3))
+    painter.setBrush(QBrush(QColor("#f7d99b")))
+    painter.drawEllipse(2, 3, 19, 17)
+    painter.setPen(Qt.PenStyle.NoPen)
+    for color, x, y in (
+        ("#ef4444", 7, 8),
+        ("#f59e0b", 12, 7),
+        ("#22c55e", 8, 13),
+        ("#3b82f6", 14, 13),
+    ):
+        painter.setBrush(QBrush(QColor(color)))
+        painter.drawEllipse(x, y, 4, 4)
+    painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Clear)
+    painter.drawEllipse(16, 6, 5, 5)
+    painter.end()
+    return QIcon(pix)
+
+
 class _LocalVerifyBridge(QObject):
     progress = Signal(int, int)
     done = Signal(int, bool, bool, str, str)
@@ -63,8 +87,8 @@ class SettingsDialog(QDialog):
         super().__init__(parent)
         self._app = app_ref
         self.setWindowTitle(_("Settings"))
-        self.setMinimumSize(450, 500)
-        self.resize(450, 590)
+        self.setMinimumSize(470, 500)
+        self.resize(470, 590)
         self.setModal(True)
         self.setAttribute(Qt.WA_AlwaysShowToolTips, True)
 
@@ -127,11 +151,9 @@ class SettingsDialog(QDialog):
         self._custom_color_btn = QPushButton()
         self._custom_color_btn.setFixedSize(32, 28)
         self._custom_color_btn.setText("")
-        self._custom_color_btn.setIcon(
-            self.style().standardIcon(QStyle.StandardPixmap.SP_CommandLink)
-        )
+        self._custom_color_btn.setIcon(_palette_icon())
         self._custom_color_btn.setIconSize(QSize(18, 18))
-        self._custom_color_btn.setToolTip(msg("open_color_picker"))
+        self._custom_color_btn.setToolTip(_("Open color picker"))
         self._custom_color_btn.clicked.connect(self._open_custom_color_dialog)
         theme_l.addWidget(self._custom_color_btn)
         theme_l.addStretch()
@@ -874,18 +896,21 @@ class SettingsDialog(QDialog):
         account_v.setContentsMargins(14, 14, 14, 14)
         account_v.setSpacing(8)
         username = getattr(app_ref.services, "current_username", None) or ""
-        account_lbl = QLabel(f"{_("Account")}: {username}")
+        account_lbl = QLabel("{}: {}".format(_("Current user"), username))
         account_lbl.setObjectName("muted")
         account_v.addWidget(account_lbl)
+        self._password_reminder_lbl = QLabel(
+            _("Your password has not been changed in {days} days. Please update it regularly.").format(
+                days=PASSWORD_CHANGE_REMINDER_DAYS,
+            )
+        )
+        self._password_reminder_lbl.setWordWrap(True)
+        self._password_reminder_lbl.setObjectName("muted")
+        account_v.addWidget(self._password_reminder_lbl)
+        self._refresh_password_reminder()
         change_password_btn = QPushButton(_("Change Password"))
         logout_btn = QPushButton(_("Log out"))
-        change_password_btn.clicked.connect(
-            lambda: ChangePasswordDialog(
-                app_ref.services.auth,
-                current_user_id=app_ref.services.current_user_id,
-                parent=self,
-            ).exec()
-        )
+        change_password_btn.clicked.connect(self._open_change_password_dialog)
         logout_btn.clicked.connect(self._confirm_logout)
         account_v.addWidget(change_password_btn)
         account_v.addWidget(logout_btn)
@@ -906,7 +931,7 @@ class SettingsDialog(QDialog):
         name_lbl.setAlignment(Qt.AlignCenter)
         abv.addWidget(name_lbl)
 
-        ver_lbl = QLabel(f"{_("Version")}  {APP_VERSION}")
+        ver_lbl = QLabel("{}  {}".format(_("Version"), APP_VERSION))
         ver_lbl.setAlignment(Qt.AlignCenter)
         ver_lbl.setObjectName("muted")
         abv.addWidget(ver_lbl)
@@ -1024,6 +1049,22 @@ class SettingsDialog(QDialog):
         _localize_msgbox_buttons(box, _)
         if box.exec() == QMessageBox.StandardButton.Yes:
             self.logout_requested.emit()
+
+    def _open_change_password_dialog(self) -> None:
+        dlg = ChangePasswordDialog(
+            self._app.services.auth,
+            current_user_id=self._app.services.current_user_id,
+            parent=self,
+        )
+        if dlg.exec() == QDialog.Accepted:
+            self._refresh_password_reminder()
+
+    def _refresh_password_reminder(self) -> None:
+        try:
+            visible = bool(self._app.services.password_change_due())
+        except Exception:
+            visible = False
+        self._password_reminder_lbl.setVisible(visible)
 
     def _show_feature_intro(self):
         dlg = QDialog(self)

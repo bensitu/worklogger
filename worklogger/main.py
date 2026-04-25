@@ -15,7 +15,11 @@ from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
 
 from config.constants import FORCE_PASSWORD_CHANGE_SETTING_KEY
 from services.app_services import AppServices
-from services.session_store import clear_remember_token, load_remember_token
+from services.session_store import (
+    clear_remember_token,
+    load_remember_session,
+    save_remember_token,
+)
 from utils.icon import make_icon
 from ui.main_window import App
 from ui.dialogs import ChangePasswordDialog, LoginDialog, RegisterDialog
@@ -61,13 +65,25 @@ def main():
 
 def authenticate(services: AppServices | None = None) -> int | None:
     services = services or AppServices()
-    token = load_remember_token()
-    if token:
-        user_id = services.auth.login_with_token(token)
+    remember_session = load_remember_session()
+    if remember_session and remember_session.token:
+        user_id = services.auth.login_with_token(remember_session.token)
         if user_id is not None:
             services.set_current_user(user_id)
+            if (
+                not remember_session.username
+                and services.current_username
+                and remember_session.token
+            ):
+                try:
+                    save_remember_token(
+                        services.current_username,
+                        remember_session.token,
+                    )
+                except Exception:
+                    pass
             return user_id
-        clear_remember_token()
+        clear_remember_token(remember_session.username or None)
 
     if services.db.user_count() == 0:
         QMessageBox.information(

@@ -2,6 +2,7 @@ PySide6
 tzlocal
 holidays
 cryptography
+keyring
 
 # ── local model inference ──
 # CPU-only wheel (no CUDA build required for basic usage).

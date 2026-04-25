@@ -1171,8 +1171,8 @@ msgstr "使用者名稱不能為空。"
 msgid "Username or password is incorrect."
 msgstr "使用者名稱或密碼不正確。"
 
-msgid "Account"
-msgstr "帳號"
+msgid "Current user"
+msgstr "當前使用者"
 
 msgid "Are you sure you want to log out?"
 msgstr "確定要登出嗎？"
@@ -1248,3 +1248,12 @@ msgstr "報告已儲存。"
 
 msgid "Reports have unsaved changes. Save before closing?"
 msgstr "報告有未儲存的修改。關閉前要儲存嗎？"
+
+msgid "Remember-token encryption requires the 'cryptography' package. Please install it via pip install cryptography."
+msgstr "記住令牌加密需要安裝 'cryptography' 套件。請透過 pip install cryptography 安裝。"
+
+msgid "Account"
+msgstr "帳號"
+
+msgid "Your password has not been changed in {days} days. Please update it regularly."
+msgstr "你的密碼已超過 {days} 天未修改。請定期更新密碼。"

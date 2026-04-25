@@ -192,6 +192,9 @@ msgstr ""
 msgid "Confirm Password"
 msgstr ""
 
+msgid "Contacting AI provider for {model}..."
+msgstr ""
+
 msgid "Continue"
 msgstr ""
 
@@ -202,6 +205,9 @@ msgid "Copy"
 msgstr ""
 
 msgid "Create Custom Template"
+msgstr ""
+
+msgid "Current user"
 msgstr ""
 
 msgid "Custom"
@@ -636,9 +642,6 @@ msgstr ""
 msgid "Overnight indicator"
 msgstr ""
 
-msgid "Overnight indicator"
-msgstr ""
-
 msgid "Overtime"
 msgstr ""
 
@@ -733,6 +736,9 @@ msgid "Registration successful. Please log in."
 msgstr ""
 
 msgid "Remember me"
+msgstr ""
+
+msgid "Remember-token encryption requires the 'cryptography' package. Please install it via pip install cryptography."
 msgstr ""
 
 msgid "Remote work"
@@ -976,6 +982,9 @@ msgid "You already logged {hours}h of break time. What do you want to do?"
 msgstr ""
 
 msgid "You haven't backed up in {days} days. Please back up your data."
+msgstr ""
+
+msgid "Your password has not been changed in {days} days. Please update it regularly."
 msgstr ""
 
 msgid "gpt-4o-mini | claude-haiku-4-5-20251001"

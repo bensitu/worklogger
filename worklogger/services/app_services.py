@@ -30,6 +30,7 @@ from config.constants import (
     LAST_BACKUP_KEY,
     MINIMAL_MODE_SETTING_KEY,
     MONTHLY_TARGET_SETTING_KEY,
+    PASSWORD_CHANGE_REMINDER_DAYS,
     SHOW_HOLIDAYS_SETTING_KEY,
     SHOW_NOTE_MARKERS_SETTING_KEY,
     SHOW_OVERNIGHT_INDICATOR_SETTING_KEY,
@@ -44,7 +45,11 @@ from services.export_service import export_csv, import_csv, build_ics
 from services.calendar_service import parse_ics_rich
 from services import report_service
 from services.key_store import get_secret, set_secret
-from services.session_store import clear_remember_token, save_remember_token
+from services.session_store import (
+    clear_active_remember_user,
+    clear_remember_token,
+    save_remember_token,
+)
 from stores.app_store import AppState
 from utils.i18n import _, detect_system_language
 
@@ -76,13 +81,14 @@ class AuthService:
             token = secrets.token_urlsafe(32)
             self.db.set_remember_token(user_id, token)
             try:
-                save_remember_token(token)
+                save_remember_token(username, token)
             except Exception:
                 self.db.set_remember_token(user_id, None)
                 raise
         else:
             self.db.set_remember_token(user_id, None)
-            clear_remember_token()
+            clear_remember_token(username)
+            clear_active_remember_user()
         return user_id
 
     def login_with_token(self, token: str) -> int | None:
@@ -114,8 +120,11 @@ class AuthService:
 
     def logout(self, user_id: int | None = None) -> None:
         if user_id is not None:
+            user = self.db.get_user(user_id)
             self.db.set_remember_token(user_id, None)
-        clear_remember_token()
+            clear_remember_token(user["username"] if user else None)
+        else:
+            clear_remember_token()
 
 
 class AppServices:
@@ -153,6 +162,19 @@ class AppServices:
             self.auth.logout(self.current_user_id)
         self.current_user_id = None
         self.current_username = None
+
+    def password_change_due(self) -> bool:
+        user = self.db.get_user(self._require_user_id())
+        if not user:
+            return False
+        raw = user.get("password_changed_at") or user.get("created_at") or ""
+        try:
+            changed_at = datetime.fromisoformat(str(raw))
+        except ValueError:
+            return True
+        return datetime.now() - changed_at >= timedelta(
+            days=PASSWORD_CHANGE_REMINDER_DAYS,
+        )
 
     def ensure_default_user_session(self) -> None:
         if self.current_user_id is not None:

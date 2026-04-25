@@ -39,7 +39,8 @@ _CREATE_USERS = """CREATE TABLE IF NOT EXISTS users(
     password_hash TEXT NOT NULL,
     salt TEXT NOT NULL,
     remember_token TEXT,
-    created_at TEXT DEFAULT (datetime('now'))
+    created_at TEXT DEFAULT (datetime('now')),
+    password_changed_at TEXT DEFAULT (datetime('now'))
 )"""
 
 _CREATE_WORKLOG = """CREATE TABLE IF NOT EXISTS worklog(
@@ -135,6 +136,7 @@ class DB:
             self.conn.execute("PRAGMA foreign_keys=OFF")
             legacy_data_exists = self._legacy_data_exists()
             self.conn.execute(_CREATE_USERS)
+            self._migrate_users_table()
             fallback_user_id = self._first_user_id_unlocked()
             created_admin_id: int | None = None
             if fallback_user_id is None and legacy_data_exists:
@@ -174,6 +176,15 @@ class DB:
             )
             self.conn.commit()
             self.conn.execute("PRAGMA foreign_keys=ON")
+
+    def _migrate_users_table(self) -> None:
+        cols = self._columns("users")
+        if "password_changed_at" not in cols:
+            self.conn.execute("ALTER TABLE users ADD COLUMN password_changed_at TEXT")
+        self.conn.execute(
+            "UPDATE users SET password_changed_at=COALESCE(created_at, datetime('now')) "
+            "WHERE password_changed_at IS NULL OR password_changed_at=''"
+        )
 
     def _table_exists(self, name: str) -> bool:
         row = self.conn.execute(
@@ -384,7 +395,8 @@ class DB:
         salt = secrets.token_hex(16)
         password_hash = self._password_hash(password, salt)
         cur = self.conn.execute(
-            "INSERT INTO users(username,password_hash,salt) VALUES(?,?,?)",
+            "INSERT INTO users(username,password_hash,salt,password_changed_at) "
+            "VALUES(?,?,?,datetime('now'))",
             (username, password_hash, salt),
         )
         return int(cur.lastrowid)
@@ -419,7 +431,8 @@ class DB:
         password_hash = self._password_hash(new_pw, salt)
         with self._write_lock:
             self.conn.execute(
-                "UPDATE users SET password_hash=?, salt=? WHERE id=?",
+                "UPDATE users SET password_hash=?, salt=?, password_changed_at=datetime('now') "
+                "WHERE id=?",
                 (password_hash, salt, user_id),
             )
             self.conn.commit()
@@ -437,28 +450,31 @@ class DB:
         if not token:
             return None
         row = self.conn.execute(
-            "SELECT id,username,created_at FROM users WHERE remember_token=?",
+            "SELECT id,username,created_at,password_changed_at "
+            "FROM users WHERE remember_token=?",
             (token,),
         ).fetchone()
         return self._user_row(row) if row else None
 
     def get_user_by_username(self, username: str) -> dict | None:
         row = self.conn.execute(
-            "SELECT id,username,created_at FROM users WHERE username=?",
+            "SELECT id,username,created_at,password_changed_at "
+            "FROM users WHERE username=?",
             (username.strip(),),
         ).fetchone()
         return self._user_row(row) if row else None
 
     def get_user(self, user_id: int) -> dict | None:
         row = self.conn.execute(
-            "SELECT id,username,created_at FROM users WHERE id=?",
+            "SELECT id,username,created_at,password_changed_at FROM users WHERE id=?",
             (user_id,),
         ).fetchone()
         return self._user_row(row) if row else None
 
     def first_user(self) -> dict | None:
         row = self.conn.execute(
-            "SELECT id,username,created_at FROM users ORDER BY id LIMIT 1"
+            "SELECT id,username,created_at,password_changed_at "
+            "FROM users ORDER BY id LIMIT 1"
         ).fetchone()
         return self._user_row(row) if row else None
 
@@ -467,7 +483,13 @@ class DB:
 
     @staticmethod
     def _user_row(row) -> dict:
-        return dict(id=int(row[0]), username=row[1], created_at=row[2])
+        password_changed_at = row[3] if len(row) > 3 else row[2]
+        return dict(
+            id=int(row[0]),
+            username=row[1],
+            created_at=row[2],
+            password_changed_at=password_changed_at,
+        )
 
     @staticmethod
     def _report_row(row) -> dict:

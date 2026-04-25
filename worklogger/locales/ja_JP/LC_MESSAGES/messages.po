@@ -1171,8 +1171,8 @@ msgstr "ユーザー名は必須です。"
 msgid "Username or password is incorrect."
 msgstr "ユーザー名またはパスワードが正しくありません。"
 
-msgid "Account"
-msgstr "アカウント"
+msgid "Current user"
+msgstr "現在のユーザー名"
 
 msgid "Are you sure you want to log out?"
 msgstr "ログアウトしますか？"
@@ -1248,3 +1248,12 @@ msgstr "レポートを保存しました。"
 
 msgid "Reports have unsaved changes. Save before closing?"
 msgstr "レポートに未保存の変更があります。閉じる前に保存しますか?"
+
+msgid "Remember-token encryption requires the 'cryptography' package. Please install it via pip install cryptography."
+msgstr "Remember-token の暗号化には 'cryptography' パッケージが必要です。pip install cryptography でインストールしてください。"
+
+msgid "Account"
+msgstr "アカウント"
+
+msgid "Your password has not been changed in {days} days. Please update it regularly."
+msgstr "パスワードは {days} 日間変更されていません。定期的に更新してください。"

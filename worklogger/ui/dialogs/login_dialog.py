@@ -88,10 +88,16 @@ class LoginDialog(QDialog):
                 remember=self._remember.isChecked(),
             )
         except ImportError as exc:
+            message = str(exc)
+            if "cryptography" in message:
+                message = _(
+                    "Remember-token encryption requires the 'cryptography' package. "
+                    "Please install it via pip install cryptography."
+                )
             QMessageBox.warning(
                 self,
                 _("Login failed"),
-                str(exc),
+                message,
             )
             return
         except ValueError:
