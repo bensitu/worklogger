@@ -126,6 +126,8 @@ class App(QWidget):
     def __init__(self, services: AppServices | None = None, initial_lang: str | None = None):
         super().__init__()
         self.services = services or AppServices()
+        if services is None:
+            self.services.ensure_default_user_session()
         custom_color = set_custom_theme(
             self.services.get_setting(CUSTOM_THEME_SETTING_KEY, DEFAULT_CUSTOM_COLOR)
         )
@@ -175,6 +177,8 @@ class App(QWidget):
             week_start_monday=self.services.get_setting(WEEK_START_MONDAY_SETTING_KEY, "0") == "1",
             time_input_mode=self.services.get_setting(TIME_INPUT_MODE_SETTING_KEY, "manual"),
             minimal_mode=self.services.get_setting(MINIMAL_MODE_SETTING_KEY, "0") == "1",
+            current_user_id=self.services.current_user_id,
+            current_username=self.services.current_username,
         ))
         set_language(self._state.lang)
 

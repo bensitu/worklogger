@@ -1104,3 +1104,69 @@ msgstr "Chart:"
 
 msgid "Metric:"
 msgstr "Metric:"
+
+msgid "Change Password"
+msgstr "Change Password"
+
+msgid "Confirm Password"
+msgstr "Confirm Password"
+
+msgid "Login"
+msgstr "Login"
+
+msgid "Login failed"
+msgstr "Login failed"
+
+msgid "New Password"
+msgstr "New Password"
+
+msgid "No accounts found. Please create an administrator account."
+msgstr "No accounts found. Please create an administrator account."
+
+msgid "Old Password"
+msgstr "Old Password"
+
+msgid "Old password is incorrect."
+msgstr "Old password is incorrect."
+
+msgid "Password"
+msgstr "Password"
+
+msgid "Password changed successfully."
+msgstr "Password changed successfully."
+
+msgid "Password must be at least 6 characters."
+msgstr "Password must be at least 6 characters."
+
+msgid "Passwords do not match."
+msgstr "Passwords do not match."
+
+msgid "Please enter username and password."
+msgstr "Please enter username and password."
+
+msgid "Register"
+msgstr "Register"
+
+msgid "Registration failed."
+msgstr "Registration failed."
+
+msgid "Registration successful. Please log in."
+msgstr "Registration successful. Please log in."
+
+msgid "Remember me"
+msgstr "Remember me"
+
+msgid "The default administrator password must be changed before continuing."
+msgstr "The default administrator password must be changed before continuing."
+
+msgid "Username"
+msgstr "Username"
+
+msgid "Username already exists."
+msgstr "Username already exists."
+
+msgid "Username is required."
+msgstr "Username is required."
+
+msgid "Username or password is incorrect."
+msgstr "Username or password is incorrect."

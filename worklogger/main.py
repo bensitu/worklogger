@@ -11,11 +11,15 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
 
+from config.constants import FORCE_PASSWORD_CHANGE_SETTING_KEY
 from services.app_services import AppServices
+from services.session_store import clear_remember_token, load_remember_token
 from utils.icon import make_icon
 from ui.main_window import App
+from ui.dialogs import ChangePasswordDialog, LoginDialog, RegisterDialog
+from utils.i18n import _
 
 
 def _bootstrap() -> None:
@@ -42,11 +46,74 @@ def main():
     icon = make_icon()
     app.setWindowIcon(icon)
     services = AppServices()
+
+    if not _authenticate(services):
+        sys.exit(0)
+    if not _force_password_change_if_needed(services):
+        sys.exit(0)
+
     initial_lang = services.resolve_initial_language()
     w = App(services=services, initial_lang=initial_lang)
     w.setWindowIcon(icon)
     w.show()
     sys.exit(app.exec())
+
+
+def _authenticate(services: AppServices) -> bool:
+    token = load_remember_token()
+    if token:
+        user_id = services.auth.login_with_token(token)
+        if user_id is not None:
+            services.set_current_user(user_id)
+            return True
+        clear_remember_token()
+
+    if services.db.user_count() == 0:
+        QMessageBox.information(
+            None,
+            _("Register"),
+            _("No accounts found. Please create an administrator account."),
+        )
+        register = RegisterDialog(services.auth)
+        if register.exec() != QDialog.Accepted:
+            return False
+
+    login = LoginDialog(services)
+
+    def _open_register() -> None:
+        dlg = RegisterDialog(services.auth, login)
+        if dlg.exec() == QDialog.Accepted and dlg.username:
+            login.set_username(dlg.username)
+
+    def _open_change_password() -> None:
+        dlg = ChangePasswordDialog(
+            services.auth,
+            username=login.current_username(),
+            parent=login,
+        )
+        dlg.exec()
+
+    login.register_requested.connect(_open_register)
+    login.change_password_requested.connect(_open_change_password)
+    if login.exec() != QDialog.Accepted or login.user_id is None:
+        return False
+    services.set_current_user(login.user_id, login.username)
+    return True
+
+
+def _force_password_change_if_needed(services: AppServices) -> bool:
+    if services.get_setting(FORCE_PASSWORD_CHANGE_SETTING_KEY, "0") != "1":
+        return True
+    QMessageBox.information(
+        None,
+        _("Change Password"),
+        _("The default administrator password must be changed before continuing."),
+    )
+    dlg = ChangePasswordDialog(
+        services.auth,
+        current_user_id=services.current_user_id,
+    )
+    return dlg.exec() == QDialog.Accepted
 
 
 if __name__ == "__main__":

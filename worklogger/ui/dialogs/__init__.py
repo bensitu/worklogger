@@ -4,6 +4,9 @@ from .template_dialogs import TemplatePickerDialog, CreateTemplateDialog
 from .ai_dialogs import AIProgressDialog, AIResultDialog
 from .local_model_dialogs import LocalDownloadDialog
 from .color_picker_dialog import ColorPickerDialog
+from .login_dialog import LoginDialog
+from .register_dialog import RegisterDialog
+from .change_password_dialog import ChangePasswordDialog
 
 __all__ = [
     "SettingsDialog",
@@ -17,4 +20,7 @@ __all__ = [
     "AIResultDialog",
     "LocalDownloadDialog",
     "ColorPickerDialog",
+    "LoginDialog",
+    "RegisterDialog",
+    "ChangePasswordDialog",
 ]

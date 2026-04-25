@@ -1104,3 +1104,69 @@ msgstr "グラフ："
 
 msgid "Metric:"
 msgstr "指標："
+
+msgid "Change Password"
+msgstr "パスワード変更"
+
+msgid "Confirm Password"
+msgstr "パスワード確認"
+
+msgid "Login"
+msgstr "ログイン"
+
+msgid "Login failed"
+msgstr "ログイン失敗"
+
+msgid "New Password"
+msgstr "新しいパスワード"
+
+msgid "No accounts found. Please create an administrator account."
+msgstr "アカウントがありません。管理者アカウントを作成してください。"
+
+msgid "Old Password"
+msgstr "現在のパスワード"
+
+msgid "Old password is incorrect."
+msgstr "現在のパスワードが正しくありません。"
+
+msgid "Password"
+msgstr "パスワード"
+
+msgid "Password changed successfully."
+msgstr "パスワードを変更しました。"
+
+msgid "Password must be at least 6 characters."
+msgstr "パスワードは6文字以上にしてください。"
+
+msgid "Passwords do not match."
+msgstr "パスワードが一致しません。"
+
+msgid "Please enter username and password."
+msgstr "ユーザー名とパスワードを入力してください。"
+
+msgid "Register"
+msgstr "登録"
+
+msgid "Registration failed."
+msgstr "登録に失敗しました。"
+
+msgid "Registration successful. Please log in."
+msgstr "登録が完了しました。ログインしてください。"
+
+msgid "Remember me"
+msgstr "ログイン状態を保持"
+
+msgid "The default administrator password must be changed before continuing."
+msgstr "既定の管理者パスワードを変更してから続行してください。"
+
+msgid "Username"
+msgstr "ユーザー名"
+
+msgid "Username already exists."
+msgstr "このユーザー名は既に存在します。"
+
+msgid "Username is required."
+msgstr "ユーザー名は必須です。"
+
+msgid "Username or password is incorrect."
+msgstr "ユーザー名またはパスワードが正しくありません。"

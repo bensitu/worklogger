@@ -18,6 +18,11 @@ class AppState:
     week_start_monday: bool = False
     time_input_mode: str = "manual"
     minimal_mode: bool = False
+    current_user_id: int | None = None
+    current_username: str | None = None
+
+    def is_logged_in(self) -> bool:
+        return self.current_user_id is not None
 
 
 class AppStore:

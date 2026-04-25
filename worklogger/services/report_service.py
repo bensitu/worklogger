@@ -57,6 +57,8 @@ def generate_weekly(
     db: "DB",
     work_hours: float,
     lang: str,
+    *,
+    user_id: int,
 ) -> str:
     monday = selected - _dt.timedelta(days=selected.weekday())
     sunday = monday + _dt.timedelta(days=6)
@@ -66,7 +68,7 @@ def generate_weekly(
     total = ot_total = days = 0.0
     for i in range(7):
         dt = monday + _dt.timedelta(days=i)
-        rec = db.get(dt.isoformat())
+        rec = db.get(dt.isoformat(), user_id=user_id)
         line, h, ot = _fmt_entry(dt, rec, work_hours, lang)
         if line:
             lines.append(line)
@@ -87,12 +89,14 @@ def generate_monthly(
     db: "DB",
     work_hours: float,
     lang: str,
+    *,
+    user_id: int,
 ) -> str:
     header = _("Monthly Work Report  {year}/{month:02d}").format(year=year, month=month)
     lines = [f"# {header}", ""]
     _first_weekday, days = monthrange(year, month)
     total = ot_total = n_days = 0.0
-    recs = {r[0]: r for r in db.month(f"{year}-{month:02d}")}
+    recs = {r[0]: r for r in db.month(f"{year}-{month:02d}", user_id=user_id)}
     for d in range(1, days + 1):
         dt = _dt.date(year, month, d)
         rec = recs.get(dt.isoformat())

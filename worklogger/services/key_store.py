@@ -13,9 +13,9 @@ Priority order
 
 Public API
 ----------
-``get_secret(db, name)``        → str | None
-``set_secret(db, name, value)`` → None
-``delete_secret(db, name)``     → None
+``get_secret(db, name, user_id)``        → str | None
+``set_secret(db, name, value, user_id)`` → None
+``delete_secret(db, name, user_id)``     → None
 
 ``name`` is an application-level key, e.g. ``"ai_api_key"``.
 The actual keychain service name is ``APP_ID`` from constants.
@@ -74,42 +74,46 @@ def _keyring_service() -> str:
         return "dev.worklogger.app.v1"
 
 
-def _keyring_get(name: str) -> str | None:
+def _scoped_name(name: str, user_id: int) -> str:
+    return f"user:{user_id}:{name}"
+
+
+def _keyring_get(name: str, user_id: int) -> str | None:
     try:
         import keyring
-        return keyring.get_password(_keyring_service(), name)
+        return keyring.get_password(_keyring_service(), _scoped_name(name, user_id))
     except Exception:
         return None
 
 
-def _keyring_set(name: str, value: str) -> bool:
+def _keyring_set(name: str, value: str, user_id: int) -> bool:
     try:
         import keyring
-        keyring.set_password(_keyring_service(), name, value)
+        keyring.set_password(_keyring_service(), _scoped_name(name, user_id), value)
         return True
     except Exception:
         return False
 
 
-def _keyring_delete(name: str) -> None:
+def _keyring_delete(name: str, user_id: int) -> None:
     try:
         import keyring
-        keyring.delete_password(_keyring_service(), name)
+        keyring.delete_password(_keyring_service(), _scoped_name(name, user_id))
     except Exception:
         pass
 
 
 # Public API.
 
-def get_secret(db: "DB", name: str) -> str:
+def get_secret(db: "DB", name: str, user_id: int) -> str:
     """Return the secret for *name*, decrypting if necessary."""
     # 1. Try OS keychain first.
-    val = _keyring_get(name)
+    val = _keyring_get(name, user_id)
     if val is not None:
         return val
 
     # 2. Fall back to encrypted DB value.
-    raw = db.get_setting(name, "")
+    raw = db.get_setting(name, "", user_id=user_id)
     if not raw:
         return ""
     if raw.startswith(_ENC_PREFIX):
@@ -127,33 +131,33 @@ def get_secret(db: "DB", name: str) -> str:
     return raw
 
 
-def set_secret(db: "DB", name: str, value: str) -> None:
+def set_secret(db: "DB", name: str, value: str, user_id: int) -> None:
     """Persist *value* for *name* as securely as the environment allows."""
     if not value:
-        delete_secret(db, name)
+        delete_secret(db, name, user_id)
         return
 
     # 1. Try OS keychain.
-    if _keyring_set(name, value):
+    if _keyring_set(name, value, user_id):
         # Remove any leftover DB entry so there is no stale plaintext copy.
-        db.set_setting(name, "")
+        db.set_setting(name, "", user_id=user_id)
         return
 
     # 2. Fernet-encrypted DB storage.
     f = _fernet()
     if f:
         ciphertext = f.encrypt(value.encode()).decode()
-        db.set_setting(name, _ENC_PREFIX + ciphertext)
+        db.set_setting(name, _ENC_PREFIX + ciphertext, user_id=user_id)
         return
 
     # 3. Last resort: plain-text (degraded mode — log a warning).
     _log.warning(
         "Storing %s as plain text: neither keyring nor cryptography is available", name
     )
-    db.set_setting(name, value)
+    db.set_setting(name, value, user_id=user_id)
 
 
-def delete_secret(db: "DB", name: str) -> None:
+def delete_secret(db: "DB", name: str, user_id: int) -> None:
     """Remove *name* from both the keychain and the DB."""
-    _keyring_delete(name)
-    db.set_setting(name, "")
+    _keyring_delete(name, user_id)
+    db.set_setting(name, "", user_id=user_id)

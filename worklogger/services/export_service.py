@@ -48,7 +48,9 @@ def export_csv(path: str, rows: list) -> None:
 
 
 def import_csv(path: str, db: "DB", required_cols: set,
-               default_break: float = 1.0) -> tuple[int, list[str]]:
+               default_break: float = 1.0,
+               *,
+               user_id: int) -> tuple[int, list[str]]:
     """Returns (imported_count, error_list)."""
     from config.constants import WORK_TYPE_KEYS
     errors: list[str] = []
@@ -84,8 +86,13 @@ def import_csv(path: str, db: "DB", required_cols: set,
                 datetime.strptime(s, "%H:%M")
             if e:
                 datetime.strptime(e, "%H:%M")
-            db.save(d, s or None, e or None, float(
-                b) if b else default_break, n, wt)
+            db.save(
+                d, s or None, e or None,
+                float(b) if b else default_break,
+                n,
+                wt,
+                user_id=user_id,
+            )
             imported += 1
         except Exception as ex:
             errors.append(f"Row {i}: {ex}")

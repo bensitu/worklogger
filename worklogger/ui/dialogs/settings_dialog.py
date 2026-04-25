@@ -104,10 +104,16 @@ class SettingsDialog(QDialog):
         idx2 = self._theme_cb.findData(app_ref.theme)
         if idx2 >= 0:
             self._theme_cb.setCurrentIndex(idx2)
+        state = getattr(getattr(app_ref, "store", None), "state", None)
+        fallback_custom_color = getattr(
+            state,
+            "custom_color",
+            DEFAULT_CUSTOM_COLOR,
+        ) or DEFAULT_CUSTOM_COLOR
         self._custom_color = normalize_hex_color(
             app_ref.services.get_setting(
                 CUSTOM_THEME_SETTING_KEY,
-                app_ref.store.state.custom_color or DEFAULT_CUSTOM_COLOR,
+                fallback_custom_color,
             )
         )
         theme_wrap = QWidget()

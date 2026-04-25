@@ -35,6 +35,8 @@ CUSTOM_THEME_SETTING_KEY = "custom_theme_color"
 MINIMAL_MODE_SETTING_KEY = "minimal_mode"
 ANALYTICS_SHOW_LEAVES_SETTING_KEY = "analytics_show_leaves"
 REMEMBER_TOKEN_KEY = "remember_token"
+DEFAULT_ADMIN_USER = "admin"
+FORCE_PASSWORD_CHANGE_SETTING_KEY = "force_password_change"
 BACKUP_REMINDER_DAYS = 30
 LAST_BACKUP_KEY = "last_backup_timestamp"
 

@@ -141,6 +141,9 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
+msgid "Change Password"
+msgstr ""
+
 msgid "Chart:"
 msgstr ""
 
@@ -169,6 +172,9 @@ msgid "Comp leave"
 msgstr ""
 
 msgid "Confirm"
+msgstr ""
+
+msgid "Confirm Password"
 msgstr ""
 
 msgid "Continue"
@@ -444,6 +450,12 @@ msgstr ""
 msgid "Local model verification was cancelled."
 msgstr ""
 
+msgid "Login"
+msgstr ""
+
+msgid "Login failed"
+msgstr ""
+
 msgid "Manual Input"
 msgstr ""
 
@@ -498,6 +510,9 @@ msgstr ""
 msgid "Monthly total"
 msgstr ""
 
+msgid "New Password"
+msgstr ""
+
 msgid "New Template"
 msgstr ""
 
@@ -505,6 +520,9 @@ msgid "Next month"
 msgstr ""
 
 msgid "Night"
+msgstr ""
+
+msgid "No accounts found. Please create an administrator account."
 msgstr ""
 
 msgid "No data"
@@ -555,6 +573,12 @@ msgstr ""
 msgid "October"
 msgstr ""
 
+msgid "Old Password"
+msgstr ""
+
+msgid "Old password is incorrect."
+msgstr ""
+
 msgid "On break"
 msgstr ""
 
@@ -597,6 +621,18 @@ msgstr ""
 msgid "Paid: {paid}\nComp: {comp}\nSick: {sick}"
 msgstr ""
 
+msgid "Password"
+msgstr ""
+
+msgid "Password changed successfully."
+msgstr ""
+
+msgid "Password must be at least 6 characters."
+msgstr ""
+
+msgid "Passwords do not match."
+msgstr ""
+
 msgid "Period"
 msgstr ""
 
@@ -607,6 +643,9 @@ msgid "Please enter a model name in Settings → AI."
 msgstr ""
 
 msgid "Please enter the API Base URL in Settings → AI."
+msgstr ""
+
+msgid "Please enter username and password."
 msgstr ""
 
 msgid "Please enter your API Key in Settings → AI."
@@ -637,6 +676,18 @@ msgid "Ready"
 msgstr ""
 
 msgid "Regenerate"
+msgstr ""
+
+msgid "Register"
+msgstr ""
+
+msgid "Registration failed."
+msgstr ""
+
+msgid "Registration successful. Please log in."
+msgstr ""
+
+msgid "Remember me"
 msgstr ""
 
 msgid "Remote work"
@@ -738,6 +789,9 @@ msgstr ""
 msgid "Testing…"
 msgstr ""
 
+msgid "The default administrator password must be changed before continuing."
+msgstr ""
+
 msgid "This model is already downloaded and ready."
 msgstr ""
 
@@ -769,6 +823,18 @@ msgid "Type"
 msgstr ""
 
 msgid "Unsaved changes — save before switching?"
+msgstr ""
+
+msgid "Username"
+msgstr ""
+
+msgid "Username already exists."
+msgstr ""
+
+msgid "Username is required."
+msgstr ""
+
+msgid "Username or password is incorrect."
 msgstr ""
 
 msgid "Verifying local model file..."

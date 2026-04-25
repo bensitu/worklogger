@@ -1104,3 +1104,69 @@ msgstr "圖表："
 
 msgid "Metric:"
 msgstr "指標："
+
+msgid "Change Password"
+msgstr "修改密碼"
+
+msgid "Confirm Password"
+msgstr "確認密碼"
+
+msgid "Login"
+msgstr "登入"
+
+msgid "Login failed"
+msgstr "登入失敗"
+
+msgid "New Password"
+msgstr "新密碼"
+
+msgid "No accounts found. Please create an administrator account."
+msgstr "找不到帳號。請建立管理員帳號。"
+
+msgid "Old Password"
+msgstr "舊密碼"
+
+msgid "Old password is incorrect."
+msgstr "舊密碼不正確。"
+
+msgid "Password"
+msgstr "密碼"
+
+msgid "Password changed successfully."
+msgstr "密碼修改成功。"
+
+msgid "Password must be at least 6 characters."
+msgstr "密碼至少需要 6 個字元。"
+
+msgid "Passwords do not match."
+msgstr "兩次輸入的密碼不一致。"
+
+msgid "Please enter username and password."
+msgstr "請輸入使用者名稱和密碼。"
+
+msgid "Register"
+msgstr "註冊"
+
+msgid "Registration failed."
+msgstr "註冊失敗。"
+
+msgid "Registration successful. Please log in."
+msgstr "註冊成功。請登入。"
+
+msgid "Remember me"
+msgstr "記住我"
+
+msgid "The default administrator password must be changed before continuing."
+msgstr "預設管理員密碼必須修改後才能繼續。"
+
+msgid "Username"
+msgstr "使用者名稱"
+
+msgid "Username already exists."
+msgstr "使用者名稱已存在。"
+
+msgid "Username is required."
+msgstr "使用者名稱不能為空。"
+
+msgid "Username or password is incorrect."
+msgstr "使用者名稱或密碼不正確。"

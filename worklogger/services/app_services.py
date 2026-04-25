@@ -4,11 +4,13 @@ from pathlib import Path
 import sys
 import threading
 import re
+import secrets
 from dataclasses import dataclass
 from datetime import date, timedelta
 from calendar import monthrange
 from typing import Callable, Iterable
 import ssl
+import sqlite3
 import urllib.request
 import urllib.error
 import json as _json
@@ -19,6 +21,8 @@ from config.constants import (
     CUSTOM_THEME_SETTING_KEY,
     DARK_MODE_SETTING_KEY,
     DEFAULT_BREAK_SETTING_KEY,
+    DEFAULT_ADMIN_USER,
+    FORCE_PASSWORD_CHANGE_SETTING_KEY,
     GITHUB_RELEASES_API,
     LANG_SETTING_KEY,
     MINIMAL_MODE_SETTING_KEY,
@@ -37,12 +41,74 @@ from services.export_service import export_csv, import_csv, build_ics
 from services.calendar_service import parse_ics_rich
 from services import report_service
 from services.key_store import get_secret, set_secret
+from services.session_store import clear_remember_token, save_remember_token
 from stores.app_store import AppState
 from utils.i18n import _, detect_system_language
 
 
 class _UpdateBridge(QObject):
     done = Signal(str)
+
+
+class AuthService:
+    def __init__(self, db: DB):
+        self.db = db
+
+    def register(self, username: str, password: str) -> int:
+        username = username.strip()
+        if not username:
+            raise ValueError("username_required")
+        if len(password) < 6:
+            raise ValueError("password_too_short")
+        try:
+            return self.db.create_user(username, password)
+        except sqlite3.IntegrityError as exc:
+            raise ValueError("username_exists") from exc
+
+    def login(self, username: str, password: str, remember: bool = False) -> int:
+        user_id = self.db.verify_user(username, password)
+        if user_id is None:
+            raise ValueError("invalid_credentials")
+        if remember:
+            token = secrets.token_urlsafe(32)
+            self.db.set_remember_token(user_id, token)
+            save_remember_token(token)
+        else:
+            self.db.set_remember_token(user_id, None)
+            clear_remember_token()
+        return user_id
+
+    def login_with_token(self, token: str) -> int | None:
+        user = self.db.get_user_by_token(token)
+        return int(user["id"]) if user else None
+
+    def change_password(self, user_id: int, old_pw: str, new_pw: str) -> bool:
+        if len(new_pw) < 6:
+            raise ValueError("password_too_short")
+        changed = self.db.change_password(user_id, old_pw, new_pw)
+        if changed:
+            self.db.set_setting(
+                FORCE_PASSWORD_CHANGE_SETTING_KEY,
+                "0",
+                user_id=user_id,
+            )
+        return changed
+
+    def change_password_for_username(
+        self,
+        username: str,
+        old_pw: str,
+        new_pw: str,
+    ) -> bool:
+        user_id = self.db.verify_user(username, old_pw)
+        if user_id is None:
+            return False
+        return self.change_password(user_id, old_pw, new_pw)
+
+    def logout(self, user_id: int | None = None) -> None:
+        if user_id is not None:
+            self.db.set_remember_token(user_id, None)
+        clear_remember_token()
 
 
 class AppServices:
@@ -53,15 +119,47 @@ class AppServices:
     delegated to specialised service modules.
     """
 
-    def __init__(self, db: DB | None = None):
+    def __init__(self, db: DB | None = None, current_user_id: int | None = None):
         self.db = db or DB()
+        self.auth = AuthService(self.db)
+        self.current_user_id: int | None = current_user_id
+        self.current_username: str | None = None
+        if current_user_id is not None and hasattr(self.db, "get_user"):
+            user = self.db.get_user(current_user_id)
+            self.current_username = user["username"] if user else None
         self._update_bridges: list[_UpdateBridge] = []
 
+    def set_current_user(self, user_id: int, username: str | None = None) -> None:
+        self.current_user_id = int(user_id)
+        if username is None:
+            user = self.db.get_user(self.current_user_id)
+            username = user["username"] if user else None
+        self.current_username = username
+
+    def clear_current_user(self) -> None:
+        self.current_user_id = None
+        self.current_username = None
+
+    def ensure_default_user_session(self) -> None:
+        if self.current_user_id is not None:
+            return
+        if self.db.user_count() == 0:
+            user_id = self.db.create_user(DEFAULT_ADMIN_USER, DEFAULT_ADMIN_USER)
+        else:
+            user = self.db.first_user()
+            user_id = int(user["id"])
+        self.set_current_user(user_id)
+
+    def _require_user_id(self) -> int:
+        if self.current_user_id is None:
+            raise RuntimeError("login_required")
+        return self.current_user_id
+
     def get_setting(self, key: str, default=None):
-        return self.db.get_setting(key, default)
+        return self.db.get_setting(key, default, user_id=self._require_user_id())
 
     def set_setting(self, key: str, value) -> None:
-        self.db.set_setting(key, value)
+        self.db.set_setting(key, value, user_id=self._require_user_id())
 
     def resolve_initial_language(self) -> str:
         saved = self.get_setting(LANG_SETTING_KEY)
@@ -75,31 +173,47 @@ class AppServices:
         return "en_US"
 
     def get_record(self, day: str):
-        return self.db.get(day)
+        return self.db.get(day, user_id=self._require_user_id())
 
     def save_record(self, day, start, end, break_hours, note, work_type="normal", overnight: int | None = None) -> None:
-        self.db.save(day, start, end, break_hours, note, work_type, overnight=overnight)
+        self.db.save(
+            day, start, end, break_hours, note, work_type,
+            overnight=overnight,
+            user_id=self._require_user_id(),
+        )
 
     def month_records(self, ym: str):
-        return self.db.month(ym)
+        return self.db.month(ym, user_id=self._require_user_id())
 
     def all_records(self):
-        return self.db.all_records()
+        return self.db.all_records(user_id=self._require_user_id())
 
     def add_quick_log(self, date_str: str, time_str: str, desc: str, end_time: str = "") -> int:
-        return self.db.add_quick_log(date_str, time_str, desc, end_time)
+        return self.db.add_quick_log(
+            date_str, time_str, desc, end_time,
+            user_id=self._require_user_id(),
+        )
 
     def update_quick_log(self, log_id: int, description: str, time_str: str = "", end_time: str = "") -> None:
-        self.db.update_quick_log(log_id, description, time_str, end_time)
+        self.db.update_quick_log(
+            log_id, description, time_str, end_time,
+            user_id=self._require_user_id(),
+        )
 
     def delete_quick_log(self, log_id: int) -> None:
-        self.db.delete_quick_log(log_id)
+        self.db.delete_quick_log(log_id, user_id=self._require_user_id())
 
     def quick_logs_for_date(self, date_str: str) -> list[dict]:
-        return self.db.get_quick_logs_for_date(date_str)
+        return self.db.get_quick_logs_for_date(
+            date_str,
+            user_id=self._require_user_id(),
+        )
 
     def quick_logs_for_range(self, start_d: str, end_d: str) -> list[dict]:
-        return self.db.get_quick_logs_for_range(start_d, end_d)
+        return self.db.get_quick_logs_for_range(
+            start_d, end_d,
+            user_id=self._require_user_id(),
+        )
 
     def quick_logs_for_type(self, selected: date, current: date, type_key: str) -> list[dict]:
         if type_key == "weekly":
@@ -115,22 +229,37 @@ class AppServices:
         return self.quick_logs_for_date(selected.isoformat())
 
     def get_calendar_events_for_date(self, day: str) -> list[dict]:
-        return self.db.get_calendar_events_for_date(day)
+        return self.db.get_calendar_events_for_date(
+            day,
+            user_id=self._require_user_id(),
+        )
 
     def get_calendar_events_for_range(self, start_d: str, end_d: str) -> list[dict]:
-        return self.db.get_calendar_events_for_range(start_d, end_d)
+        return self.db.get_calendar_events_for_range(
+            start_d, end_d,
+            user_id=self._require_user_id(),
+        )
 
     def clear_calendar_events(self) -> None:
-        self.db.clear_calendar_events()
+        self.db.clear_calendar_events(user_id=self._require_user_id())
 
     def save_calendar_events(self, events: list, source_file: str = "") -> int:
-        return self.db.save_calendar_events(events, source_file)
+        return self.db.save_calendar_events(
+            events, source_file,
+            user_id=self._require_user_id(),
+        )
 
     def parse_calendar_file(self, path: str) -> list[dict]:
         return parse_ics_rich(path)
 
     def import_csv_file(self, path: str, required_cols: set, default_break: float = 1.0) -> tuple[int, list[str]]:
-        return import_csv(path, self.db, required_cols, default_break=default_break)
+        return import_csv(
+            path,
+            self.db,
+            required_cols,
+            default_break=default_break,
+            user_id=self._require_user_id(),
+        )
 
     def export_csv_file(self, path: str, rows: Iterable) -> None:
         export_csv(path, list(rows))
@@ -140,10 +269,23 @@ class AppServices:
         return build_ics(rows)
 
     def generate_weekly_report(self, selected: date, work_hours: float, lang: str) -> str:
-        return report_service.generate_weekly(selected, self.db, work_hours, lang)
+        return report_service.generate_weekly(
+            selected,
+            self.db,
+            work_hours,
+            lang,
+            user_id=self._require_user_id(),
+        )
 
     def generate_monthly_report(self, year: int, month: int, work_hours: float, lang: str) -> str:
-        return report_service.generate_monthly(year, month, self.db, work_hours, lang)
+        return report_service.generate_monthly(
+            year,
+            month,
+            self.db,
+            work_hours,
+            lang,
+            user_id=self._require_user_id(),
+        )
 
     def check_update_async(
         self,
@@ -291,6 +433,8 @@ class AppServices:
             week_start_monday=self.get_setting(WEEK_START_MONDAY_SETTING_KEY, "0") == "1",
             time_input_mode=self.get_setting(TIME_INPUT_MODE_SETTING_KEY, "manual"),
             minimal_mode=self.get_setting(MINIMAL_MODE_SETTING_KEY, "0") == "1",
+            current_user_id=self.current_user_id,
+            current_username=self.current_username,
         )
 
     def save_settings(self, state: AppState) -> None:
@@ -310,16 +454,16 @@ class AppServices:
             MINIMAL_MODE_SETTING_KEY: "1" if state.minimal_mode else "0",
         }
         for key, value in mapping.items():
-            self.db.set_setting(key, value)
+            self.set_setting(key, value)
 
     def set_custom_theme(self, accent_hex: str) -> AppState:
         normalized = set_custom_theme(accent_hex)
-        self.db.set_setting(CUSTOM_THEME_SETTING_KEY, normalized)
-        self.db.set_setting(THEME_SETTING_KEY, "custom")
+        self.set_setting(CUSTOM_THEME_SETTING_KEY, normalized)
+        self.set_setting(THEME_SETTING_KEY, "custom")
         return self.load_settings()
 
     def toggle_minimal_mode(self, enabled: bool) -> AppState:
-        self.db.set_setting(MINIMAL_MODE_SETTING_KEY, "1" if enabled else "0")
+        self.set_setting(MINIMAL_MODE_SETTING_KEY, "1" if enabled else "0")
         return self.load_settings()
 
     def load_settings_snapshot(self) -> AppState:
@@ -333,11 +477,11 @@ class AppServices:
 
     def get_secret(self, name: str) -> str:
         """Return secret *name*, decrypting if stored via key_store."""
-        return get_secret(self.db, name)
+        return get_secret(self.db, name, self._require_user_id())
 
     def set_secret(self, name: str, value: str) -> None:
         """Store secret *name* as securely as the environment allows."""
-        set_secret(self.db, name, value)
+        set_secret(self.db, name, value, self._require_user_id())
 
     def resolve_ai_params(self, secondary: bool = False) -> tuple:
         from services.local_model_service import should_use_local_model
