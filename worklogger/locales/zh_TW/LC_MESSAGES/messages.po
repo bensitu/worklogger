@@ -1170,3 +1170,12 @@ msgstr "使用者名稱不能為空。"
 
 msgid "Username or password is incorrect."
 msgstr "使用者名稱或密碼不正確。"
+
+msgid "Account"
+msgstr "帳號"
+
+msgid "Are you sure you want to log out?"
+msgstr "確定要登出嗎？"
+
+msgid "Log out"
+msgstr "登出"

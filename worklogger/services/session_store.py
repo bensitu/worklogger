@@ -14,6 +14,10 @@ from data.db import DB_PATH
 
 _log = logging.getLogger(__name__)
 _ENC_PREFIX = "enc1:"
+_MISSING_CRYPTOGRAPHY_MESSAGE = (
+    "Remember-token encryption requires the 'cryptography' package. "
+    "Please install it via pip install cryptography."
+)
 
 
 def _token_path() -> Path:
@@ -99,8 +103,7 @@ def save_remember_token(token: str) -> None:
     if fernet:
         payload = _ENC_PREFIX + fernet.encrypt(token.encode("utf-8")).decode("utf-8")
     else:
-        _log.warning("Storing remember token as plain text fallback")
-        payload = token
+        raise ImportError(_MISSING_CRYPTOGRAPHY_MESSAGE)
     path.write_text(payload, encoding="utf-8")
 
 

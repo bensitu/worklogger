@@ -1170,3 +1170,12 @@ msgstr "사용자 이름은 필수입니다."
 
 msgid "Username or password is incorrect."
 msgstr "사용자 이름 또는 비밀번호가 올바르지 않습니다."
+
+msgid "Account"
+msgstr "계정"
+
+msgid "Are you sure you want to log out?"
+msgstr "로그아웃하시겠습니까?"
+
+msgid "Log out"
+msgstr "로그아웃"

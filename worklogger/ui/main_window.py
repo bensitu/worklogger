@@ -188,6 +188,7 @@ class App(QWidget):
         self._week_totals: list[QLabel] = []
         self._break_start: datetime | None = None
         self._break_timer: QTimer | None = None
+        self._settings_dialog: SettingsDialog | None = None
         self._active_time_tab = self._state.time_input_mode
         self._auto_start_time = ""
         self._auto_end_time = ""
@@ -572,6 +573,14 @@ class App(QWidget):
     @work_hours.setter
     def work_hours(self, value: float) -> None:
         self.store.patch(work_hours=value)
+
+    @property
+    def current_user_id(self) -> int | None:
+        return self.services.current_user_id
+
+    @property
+    def current_username(self) -> str | None:
+        return self.services.current_username
 
     def _residency_setting_key(self) -> str | None:
         if sys.platform == "win32":
@@ -1249,12 +1258,59 @@ class App(QWidget):
 
     def open_settings(self):
         dlg = SettingsDialog(self, self)
+        self._settings_dialog = dlg
         dlg._export_csv_btn.clicked.connect(self._export_csv)
         dlg._import_csv_btn.clicked.connect(self._import_csv)
         dlg._ics_import_btn.clicked.connect(self._import_ics)
         dlg._ics_export_btn.clicked.connect(self._export_ics)
         dlg._ics_clear_btn.clicked.connect(self._clear_calendar)
-        dlg.exec()
+        dlg.logout_requested.connect(self._on_logout)
+        try:
+            dlg.exec()
+        finally:
+            if getattr(self, "_settings_dialog", None) is dlg:
+                self._settings_dialog = None
+
+    def _on_logout(self) -> None:
+        dlg = getattr(self, "_settings_dialog", None)
+        if dlg is not None:
+            dlg.close()
+        self.services.logout()
+        QTimer.singleShot(50, self._restart_to_login)
+
+    def _restart_to_login(self) -> None:
+        self.hide()
+        from main import authenticate
+        if authenticate(self.services) is None:
+            self._tray_quit_requested = True
+            self.close()
+            QApplication.instance().quit()
+            return
+        state = self.services.load_settings()
+        self.store.patch(
+            lang=state.lang,
+            theme=state.theme,
+            custom_color=state.custom_color,
+            dark=state.dark,
+            work_hours=state.work_hours,
+            default_break=state.default_break,
+            monthly_target=state.monthly_target,
+            show_holidays=state.show_holidays,
+            show_note_markers=state.show_note_markers,
+            show_overnight_indicator=state.show_overnight_indicator,
+            week_start_monday=state.week_start_monday,
+            time_input_mode=state.time_input_mode,
+            minimal_mode=state.minimal_mode,
+            current_user_id=self.services.current_user_id,
+            current_username=self.services.current_username,
+        )
+        self._active_time_tab = self._state.time_input_mode
+        set_language(self._state.lang)
+        self.apply_theme()
+        self.apply_lang()
+        self.load()
+        self.render()
+        self.show()
 
     def open_report(self):
         if self.store.state.minimal_mode:

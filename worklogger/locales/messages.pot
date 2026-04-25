@@ -54,6 +54,9 @@ msgstr ""
 msgid "About"
 msgstr ""
 
+msgid "Account"
+msgstr ""
+
 msgid "Active"
 msgstr ""
 
@@ -79,6 +82,9 @@ msgid "Apr"
 msgstr ""
 
 msgid "April"
+msgstr ""
+
+msgid "Are you sure you want to log out?"
 msgstr ""
 
 msgid "Aug"
@@ -448,6 +454,9 @@ msgid "Local model verification timed out."
 msgstr ""
 
 msgid "Local model verification was cancelled."
+msgstr ""
+
+msgid "Log out"
 msgstr ""
 
 msgid "Login"

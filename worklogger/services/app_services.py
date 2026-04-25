@@ -72,7 +72,11 @@ class AuthService:
         if remember:
             token = secrets.token_urlsafe(32)
             self.db.set_remember_token(user_id, token)
-            save_remember_token(token)
+            try:
+                save_remember_token(token)
+            except Exception:
+                self.db.set_remember_token(user_id, None)
+                raise
         else:
             self.db.set_remember_token(user_id, None)
             clear_remember_token()
@@ -137,6 +141,13 @@ class AppServices:
         self.current_username = username
 
     def clear_current_user(self) -> None:
+        self.current_user_id = None
+        self.current_username = None
+
+    def logout(self) -> None:
+        """Log out the current user and clear session state."""
+        if self.current_user_id is not None:
+            self.auth.logout(self.current_user_id)
         self.current_user_id = None
         self.current_username = None
 

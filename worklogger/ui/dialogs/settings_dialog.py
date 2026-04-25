@@ -41,6 +41,7 @@ from config.themes import (
 from utils.formatters import parse_status
 from ui.widgets import SwitchButton
 from .common import _div, _localize_msgbox_buttons
+from .change_password_dialog import ChangePasswordDialog
 
 ThemeColors = tuple[str, str, str, str, str]
 ThemePalette = dict[bool, ThemeColors]
@@ -55,6 +56,7 @@ class _LocalVerifyBridge(QObject):
 class SettingsDialog(QDialog):
     _session_local_verify_done = False
     _session_local_verify_cache: dict[str, tuple[bool, str]] = {}
+    logout_requested = Signal()
 
     def __init__(self, app_ref, parent=None):
         super().__init__(parent)
@@ -839,6 +841,29 @@ class SettingsDialog(QDialog):
         dv.addStretch()
         tabs.addTab(data_w, _("Data"))
 
+        account_w = QWidget()
+        account_v = QVBoxLayout(account_w)
+        account_v.setContentsMargins(14, 14, 14, 14)
+        account_v.setSpacing(8)
+        username = getattr(app_ref.services, "current_username", None) or ""
+        account_lbl = QLabel(f"{_("Account")}: {username}")
+        account_lbl.setObjectName("muted")
+        account_v.addWidget(account_lbl)
+        change_password_btn = QPushButton(_("Change Password"))
+        logout_btn = QPushButton(_("Log out"))
+        change_password_btn.clicked.connect(
+            lambda: ChangePasswordDialog(
+                app_ref.services.auth,
+                current_user_id=app_ref.services.current_user_id,
+                parent=self,
+            ).exec()
+        )
+        logout_btn.clicked.connect(self._confirm_logout)
+        account_v.addWidget(change_password_btn)
+        account_v.addWidget(logout_btn)
+        account_v.addStretch()
+        tabs.addTab(account_w, _("Account"))
+
         about_w = QWidget()
         abv = QVBoxLayout(about_w)
         abv.setContentsMargins(24, 24, 24, 24)
@@ -958,6 +983,19 @@ class SettingsDialog(QDialog):
             msg("minimal_mode_toggle_restart"),
         )
         self.accept()
+
+    def _confirm_logout(self) -> None:
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Icon.Question)
+        box.setWindowTitle(_("Log out"))
+        box.setText(_("Are you sure you want to log out?"))
+        box.setStandardButtons(
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        box.setDefaultButton(QMessageBox.StandardButton.No)
+        _localize_msgbox_buttons(box, _)
+        if box.exec() == QMessageBox.StandardButton.Yes:
+            self.logout_requested.emit()
 
     def _show_feature_intro(self):
         dlg = QDialog(self)

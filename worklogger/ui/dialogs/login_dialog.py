@@ -87,6 +87,13 @@ class LoginDialog(QDialog):
                 password,
                 remember=self._remember.isChecked(),
             )
+        except ImportError as exc:
+            QMessageBox.warning(
+                self,
+                _("Login failed"),
+                str(exc),
+            )
+            return
         except ValueError:
             QMessageBox.warning(
                 self,

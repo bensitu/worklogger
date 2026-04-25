@@ -47,7 +47,7 @@ def main():
     app.setWindowIcon(icon)
     services = AppServices()
 
-    if not _authenticate(services):
+    if authenticate(services) is None:
         sys.exit(0)
     if not _force_password_change_if_needed(services):
         sys.exit(0)
@@ -59,13 +59,14 @@ def main():
     sys.exit(app.exec())
 
 
-def _authenticate(services: AppServices) -> bool:
+def authenticate(services: AppServices | None = None) -> int | None:
+    services = services or AppServices()
     token = load_remember_token()
     if token:
         user_id = services.auth.login_with_token(token)
         if user_id is not None:
             services.set_current_user(user_id)
-            return True
+            return user_id
         clear_remember_token()
 
     if services.db.user_count() == 0:
@@ -76,7 +77,7 @@ def _authenticate(services: AppServices) -> bool:
         )
         register = RegisterDialog(services.auth)
         if register.exec() != QDialog.Accepted:
-            return False
+            return None
 
     login = LoginDialog(services)
 
@@ -96,9 +97,9 @@ def _authenticate(services: AppServices) -> bool:
     login.register_requested.connect(_open_register)
     login.change_password_requested.connect(_open_change_password)
     if login.exec() != QDialog.Accepted or login.user_id is None:
-        return False
+        return None
     services.set_current_user(login.user_id, login.username)
-    return True
+    return login.user_id
 
 
 def _force_password_change_if_needed(services: AppServices) -> bool:
