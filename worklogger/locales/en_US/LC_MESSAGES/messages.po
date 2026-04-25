@@ -1257,3 +1257,99 @@ msgstr "Account"
 
 msgid "Your password has not been changed in {days} days. Please update it regularly."
 msgstr "Your password has not been changed in {days} days. Please update it regularly."
+
+msgid "Administrator"
+msgstr "Administrator"
+
+msgid "Administrator Password"
+msgstr "Administrator Password"
+
+msgid "Administrator password is incorrect."
+msgstr "Administrator password is incorrect."
+
+msgid "Administrator privileges are required."
+msgstr "Administrator privileges are required."
+
+msgid "At least one administrator account is required."
+msgstr "At least one administrator account is required."
+
+msgid "Confirm Administrator Password"
+msgstr "Confirm Administrator Password"
+
+msgid "Copy and safely store this recovery key now. If it is lost, only an administrator can reset your password."
+msgstr "Copy and safely store this recovery key now. If it is lost, only an administrator can reset your password."
+
+msgid "Forgot Password?"
+msgstr "Forgot Password?"
+
+msgid "Grant Admin"
+msgstr "Grant Admin"
+
+msgid "I have saved this recovery key safely."
+msgstr "I have saved this recovery key safely."
+
+msgid "Manage Users"
+msgstr "Manage Users"
+
+msgid "Operation failed."
+msgstr "Operation failed."
+
+msgid "Password Changed"
+msgstr "Password Changed"
+
+msgid "Password reset successfully."
+msgstr "Password reset successfully."
+
+msgid "Password reset successfully. Please log in with the new password."
+msgstr "Password reset successfully. Please log in with the new password."
+
+msgid "Please confirm that you have saved the recovery key."
+msgstr "Please confirm that you have saved the recovery key."
+
+msgid "Please enter administrator password."
+msgstr "Please enter administrator password."
+
+msgid "Please enter username and recovery key."
+msgstr "Please enter username and recovery key."
+
+msgid "Recovery Key"
+msgstr "Recovery Key"
+
+msgid "Recovery key is incorrect. Contact an administrator to reset your password."
+msgstr "Recovery key is incorrect. Contact an administrator to reset your password."
+
+msgid "Recovery key saved."
+msgstr "Recovery key saved."
+
+msgid "Refresh"
+msgstr "Refresh"
+
+msgid "Reset Password"
+msgstr "Reset Password"
+
+msgid "Reset User Password"
+msgstr "Reset User Password"
+
+msgid "Revoke Admin"
+msgstr "Revoke Admin"
+
+msgid "Role"
+msgstr "Role"
+
+msgid "Save Recovery Key"
+msgstr "Save Recovery Key"
+
+msgid "Sign out remembered sessions"
+msgstr "Sign out remembered sessions"
+
+msgid "Text Files (*.txt)"
+msgstr "Text Files (*.txt)"
+
+msgid "User"
+msgstr "User"
+
+msgid "User not found."
+msgstr "User not found."
+
+msgid "Could not save recovery key."
+msgstr "Could not save recovery key."

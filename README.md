@@ -140,9 +140,21 @@ WorkLogger stores data in a local SQLite database named `worklog.db`. In package
 
 On upgrade from older single-user versions, existing local data is migrated to a default `admin` account so it remains accessible after the new login flow is enabled. User-created custom templates and local app settings are also stored locally.
 
+### Administrator Recovery
+
+New accounts receive a recovery key during registration. Store it outside the application; it can reset that account's password without network access. Administrators can also reset ordinary user passwords from Settings > Account > Manage Users.
+
+If every administrator loses access and no recovery key is available, technical support can reset a local administrator password with:
+
+```bash
+python scripts/reset_admin.py --db path/to/worklog.db --username admin --password admin
+```
+
+The reset account is marked as an administrator and must change the password on next login.
+
 ## Current Features
 
-- Account management with register/login/logout, password change, remember-me auto-login, and encrypted remember-token storage
+- Account management with register/login/logout, password change, recovery-key password reset, administrator user management, remember-me auto-login, and encrypted remember-token storage
 - Per-user isolation for work logs, quick logs, calendar events, reports, and settings
 - Calendar-centered daily workflow with per-day totals, overtime, holidays, note markers, and overnight indicators
 - Manual Input and Auto Record tabs for start/end/break capture with input validation and unsaved-change protection

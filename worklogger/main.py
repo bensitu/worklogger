@@ -22,7 +22,12 @@ from services.session_store import (
 )
 from utils.icon import make_icon
 from ui.main_window import App
-from ui.dialogs import ChangePasswordDialog, LoginDialog, RegisterDialog
+from ui.dialogs import (
+    ChangePasswordDialog,
+    LoginDialog,
+    RegisterDialog,
+    ResetPasswordDialog,
+)
 from utils.i18n import _
 
 
@@ -110,8 +115,17 @@ def authenticate(services: AppServices | None = None) -> int | None:
         )
         dlg.exec()
 
+    def _open_reset_password() -> None:
+        dlg = ResetPasswordDialog(
+            services.auth,
+            username=login.current_username(),
+            parent=login,
+        )
+        dlg.exec()
+
     login.register_requested.connect(_open_register)
     login.change_password_requested.connect(_open_change_password)
+    login.reset_password_requested.connect(_open_reset_password)
     if login.exec() != QDialog.Accepted or login.user_id is None:
         return None
     services.set_current_user(login.user_id, login.username)

@@ -19,6 +19,7 @@ from utils.i18n import _
 class LoginDialog(QDialog):
     register_requested = Signal()
     change_password_requested = Signal()
+    reset_password_requested = Signal()
 
     def __init__(self, services, parent=None):
         super().__init__(parent)
@@ -51,10 +52,12 @@ class LoginDialog(QDialog):
         row = QHBoxLayout()
         self._register_btn = QPushButton(_("Register"))
         self._change_btn = QPushButton(_("Change Password"))
+        self._reset_btn = QPushButton(_("Forgot Password?"))
         self._login_btn = QPushButton(_("Login"))
         self._login_btn.setObjectName("primary_btn")
         row.addWidget(self._register_btn)
         row.addWidget(self._change_btn)
+        row.addWidget(self._reset_btn)
         row.addStretch()
         row.addWidget(self._login_btn)
         root.addLayout(row)
@@ -62,6 +65,7 @@ class LoginDialog(QDialog):
         self._login_btn.clicked.connect(self._login)
         self._register_btn.clicked.connect(self.register_requested.emit)
         self._change_btn.clicked.connect(self.change_password_requested.emit)
+        self._reset_btn.clicked.connect(self.reset_password_requested.emit)
         self._password.returnPressed.connect(self._login)
 
     def set_username(self, username: str) -> None:

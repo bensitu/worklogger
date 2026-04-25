@@ -1257,3 +1257,99 @@ msgstr "계정"
 
 msgid "Your password has not been changed in {days} days. Please update it regularly."
 msgstr "비밀번호가 {days}일 동안 변경되지 않았습니다. 정기적으로 업데이트하세요."
+
+msgid "Administrator"
+msgstr "관리자"
+
+msgid "Administrator Password"
+msgstr "관리자 비밀번호"
+
+msgid "Administrator password is incorrect."
+msgstr "관리자 비밀번호가 올바르지 않습니다."
+
+msgid "Administrator privileges are required."
+msgstr "관리자 권한이 필요합니다."
+
+msgid "At least one administrator account is required."
+msgstr "최소 하나의 관리자 계정이 필요합니다."
+
+msgid "Confirm Administrator Password"
+msgstr "관리자 비밀번호 확인"
+
+msgid "Copy and safely store this recovery key now. If it is lost, only an administrator can reset your password."
+msgstr "이 복구 키를 지금 복사해 안전하게 보관하세요. 잃어버리면 관리자만 비밀번호를 재설정할 수 있습니다."
+
+msgid "Forgot Password?"
+msgstr "비밀번호를 잊으셨나요?"
+
+msgid "Grant Admin"
+msgstr "관리자 권한 부여"
+
+msgid "I have saved this recovery key safely."
+msgstr "이 복구 키를 안전하게 저장했습니다."
+
+msgid "Manage Users"
+msgstr "사용자 관리"
+
+msgid "Operation failed."
+msgstr "작업에 실패했습니다."
+
+msgid "Password Changed"
+msgstr "비밀번호 변경 시간"
+
+msgid "Password reset successfully."
+msgstr "비밀번호가 재설정되었습니다."
+
+msgid "Password reset successfully. Please log in with the new password."
+msgstr "비밀번호가 재설정되었습니다. 새 비밀번호로 로그인하세요."
+
+msgid "Please confirm that you have saved the recovery key."
+msgstr "복구 키를 저장했는지 확인해 주세요."
+
+msgid "Please enter administrator password."
+msgstr "관리자 비밀번호를 입력하세요."
+
+msgid "Please enter username and recovery key."
+msgstr "사용자 이름과 복구 키를 입력하세요."
+
+msgid "Recovery Key"
+msgstr "복구 키"
+
+msgid "Recovery key is incorrect. Contact an administrator to reset your password."
+msgstr "복구 키가 올바르지 않습니다. 관리자에게 비밀번호 재설정을 요청하세요."
+
+msgid "Recovery key saved."
+msgstr "복구 키가 저장되었습니다."
+
+msgid "Refresh"
+msgstr "새로 고침"
+
+msgid "Reset Password"
+msgstr "비밀번호 재설정"
+
+msgid "Reset User Password"
+msgstr "사용자 비밀번호 재설정"
+
+msgid "Revoke Admin"
+msgstr "관리자 권한 취소"
+
+msgid "Role"
+msgstr "역할"
+
+msgid "Save Recovery Key"
+msgstr "복구 키 저장"
+
+msgid "Sign out remembered sessions"
+msgstr "기억된 세션 로그아웃"
+
+msgid "Text Files (*.txt)"
+msgstr "텍스트 파일 (*.txt)"
+
+msgid "User"
+msgstr "사용자"
+
+msgid "User not found."
+msgstr "사용자를 찾을 수 없습니다."
+
+msgid "Could not save recovery key."
+msgstr "복구 키를 저장할 수 없습니다."

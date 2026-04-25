@@ -1257,3 +1257,99 @@ msgstr "アカウント"
 
 msgid "Your password has not been changed in {days} days. Please update it regularly."
 msgstr "パスワードは {days} 日間変更されていません。定期的に更新してください。"
+
+msgid "Administrator"
+msgstr "管理者"
+
+msgid "Administrator Password"
+msgstr "管理者パスワード"
+
+msgid "Administrator password is incorrect."
+msgstr "管理者パスワードが正しくありません。"
+
+msgid "Administrator privileges are required."
+msgstr "管理者権限が必要です。"
+
+msgid "At least one administrator account is required."
+msgstr "少なくとも 1 つの管理者アカウントが必要です。"
+
+msgid "Confirm Administrator Password"
+msgstr "管理者パスワードの確認"
+
+msgid "Copy and safely store this recovery key now. If it is lost, only an administrator can reset your password."
+msgstr "このリカバリーキーを今すぐコピーして安全に保管してください。紛失すると、管理者だけがパスワードをリセットできます。"
+
+msgid "Forgot Password?"
+msgstr "パスワードを忘れた場合"
+
+msgid "Grant Admin"
+msgstr "管理者にする"
+
+msgid "I have saved this recovery key safely."
+msgstr "このリカバリーキーを安全に保存しました。"
+
+msgid "Manage Users"
+msgstr "ユーザー管理"
+
+msgid "Operation failed."
+msgstr "操作に失敗しました。"
+
+msgid "Password Changed"
+msgstr "パスワード変更日時"
+
+msgid "Password reset successfully."
+msgstr "パスワードをリセットしました。"
+
+msgid "Password reset successfully. Please log in with the new password."
+msgstr "パスワードをリセットしました。新しいパスワードでログインしてください。"
+
+msgid "Please confirm that you have saved the recovery key."
+msgstr "リカバリーキーを保存したことを確認してください。"
+
+msgid "Please enter administrator password."
+msgstr "管理者パスワードを入力してください。"
+
+msgid "Please enter username and recovery key."
+msgstr "ユーザー名とリカバリーキーを入力してください。"
+
+msgid "Recovery Key"
+msgstr "リカバリーキー"
+
+msgid "Recovery key is incorrect. Contact an administrator to reset your password."
+msgstr "リカバリーキーが正しくありません。管理者にパスワードリセットを依頼してください。"
+
+msgid "Recovery key saved."
+msgstr "リカバリーキーを保存しました。"
+
+msgid "Refresh"
+msgstr "更新"
+
+msgid "Reset Password"
+msgstr "パスワードをリセット"
+
+msgid "Reset User Password"
+msgstr "ユーザーパスワードをリセット"
+
+msgid "Revoke Admin"
+msgstr "管理者を解除"
+
+msgid "Role"
+msgstr "権限"
+
+msgid "Save Recovery Key"
+msgstr "リカバリーキーを保存"
+
+msgid "Sign out remembered sessions"
+msgstr "保存済みセッションをログアウト"
+
+msgid "Text Files (*.txt)"
+msgstr "テキストファイル (*.txt)"
+
+msgid "User"
+msgstr "ユーザー"
+
+msgid "User not found."
+msgstr "ユーザーが見つかりません。"
+
+msgid "Could not save recovery key."
+msgstr "リカバリーキーを保存できませんでした。"

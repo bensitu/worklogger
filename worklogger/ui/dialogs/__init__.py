@@ -7,6 +7,8 @@ from .color_picker_dialog import ColorPickerDialog
 from .login_dialog import LoginDialog
 from .register_dialog import RegisterDialog
 from .change_password_dialog import ChangePasswordDialog
+from .reset_password_dialog import ResetPasswordDialog
+from .user_management_dialog import UserManagementDialog
 
 __all__ = [
     "SettingsDialog",
@@ -23,4 +25,6 @@ __all__ = [
     "LoginDialog",
     "RegisterDialog",
     "ChangePasswordDialog",
+    "ResetPasswordDialog",
+    "UserManagementDialog",
 ]

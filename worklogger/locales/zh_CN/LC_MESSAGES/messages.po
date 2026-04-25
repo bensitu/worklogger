@@ -1257,3 +1257,99 @@ msgstr "账号"
 
 msgid "Your password has not been changed in {days} days. Please update it regularly."
 msgstr "你的密码已超过 {days} 天未修改。请定期更新密码。"
+
+msgid "Administrator"
+msgstr "管理员"
+
+msgid "Administrator Password"
+msgstr "管理员密码"
+
+msgid "Administrator password is incorrect."
+msgstr "管理员密码不正确。"
+
+msgid "Administrator privileges are required."
+msgstr "需要管理员权限。"
+
+msgid "At least one administrator account is required."
+msgstr "至少需要保留一个管理员账号。"
+
+msgid "Confirm Administrator Password"
+msgstr "确认管理员密码"
+
+msgid "Copy and safely store this recovery key now. If it is lost, only an administrator can reset your password."
+msgstr "请立即复制并安全保存此恢复密钥。如果丢失，只能由管理员重置你的密码。"
+
+msgid "Forgot Password?"
+msgstr "忘记密码？"
+
+msgid "Grant Admin"
+msgstr "授予管理员"
+
+msgid "I have saved this recovery key safely."
+msgstr "我已安全保存此恢复密钥。"
+
+msgid "Manage Users"
+msgstr "管理用户"
+
+msgid "Operation failed."
+msgstr "操作失败。"
+
+msgid "Password Changed"
+msgstr "密码修改时间"
+
+msgid "Password reset successfully."
+msgstr "密码已重置。"
+
+msgid "Password reset successfully. Please log in with the new password."
+msgstr "密码重置成功。请使用新密码登录。"
+
+msgid "Please confirm that you have saved the recovery key."
+msgstr "请确认你已保存恢复密钥。"
+
+msgid "Please enter administrator password."
+msgstr "请输入管理员密码。"
+
+msgid "Please enter username and recovery key."
+msgstr "请输入用户名和恢复密钥。"
+
+msgid "Recovery Key"
+msgstr "恢复密钥"
+
+msgid "Recovery key is incorrect. Contact an administrator to reset your password."
+msgstr "恢复密钥不正确。请联系管理员重置密码。"
+
+msgid "Recovery key saved."
+msgstr "恢复密钥已保存。"
+
+msgid "Refresh"
+msgstr "刷新"
+
+msgid "Reset Password"
+msgstr "重置密码"
+
+msgid "Reset User Password"
+msgstr "重置用户密码"
+
+msgid "Revoke Admin"
+msgstr "撤销管理员"
+
+msgid "Role"
+msgstr "角色"
+
+msgid "Save Recovery Key"
+msgstr "保存恢复密钥"
+
+msgid "Sign out remembered sessions"
+msgstr "注销已记住的会话"
+
+msgid "Text Files (*.txt)"
+msgstr "文本文件 (*.txt)"
+
+msgid "User"
+msgstr "用户"
+
+msgid "User not found."
+msgstr "未找到用户。"
+
+msgid "Could not save recovery key."
+msgstr "无法保存恢复密钥。"

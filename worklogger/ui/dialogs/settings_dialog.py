@@ -44,6 +44,7 @@ from utils.formatters import parse_status
 from ui.widgets import SwitchButton
 from .common import _div, _localize_msgbox_buttons
 from .change_password_dialog import ChangePasswordDialog
+from .user_management_dialog import UserManagementDialog
 
 ThemeColors = tuple[str, str, str, str, str]
 ThemePalette = dict[bool, ThemeColors]
@@ -913,6 +914,14 @@ class SettingsDialog(QDialog):
         change_password_btn.clicked.connect(self._open_change_password_dialog)
         logout_btn.clicked.connect(self._confirm_logout)
         account_v.addWidget(change_password_btn)
+        try:
+            is_admin = bool(app_ref.services.current_user_is_admin())
+        except Exception:
+            is_admin = False
+        if is_admin:
+            manage_users_btn = QPushButton(_("Manage Users"))
+            manage_users_btn.clicked.connect(self._open_user_management_dialog)
+            account_v.addWidget(manage_users_btn)
         account_v.addWidget(logout_btn)
         account_v.addStretch()
         tabs.addTab(account_w, _("Account"))
@@ -1065,6 +1074,9 @@ class SettingsDialog(QDialog):
         except Exception:
             visible = False
         self._password_reminder_lbl.setVisible(visible)
+
+    def _open_user_management_dialog(self) -> None:
+        UserManagementDialog(self._app.services, self).exec()
 
     def _show_feature_intro(self):
         dlg = QDialog(self)

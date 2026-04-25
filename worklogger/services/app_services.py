@@ -62,14 +62,30 @@ class AuthService:
     def __init__(self, db: DB):
         self.db = db
 
-    def register(self, username: str, password: str) -> int:
+    @staticmethod
+    def generate_recovery_key() -> str:
+        return secrets.token_hex(16)
+
+    def register(
+        self,
+        username: str,
+        password: str,
+        recovery_key: str | None = None,
+    ) -> int:
         username = username.strip()
         if not username:
             raise ValueError("username_required")
         if len(password) < 6:
             raise ValueError("password_too_short")
+        recovery_key = recovery_key.strip() if recovery_key else None
+        is_first_user = self.db.user_count() == 0
         try:
-            return self.db.create_user(username, password)
+            return self.db.create_user(
+                username,
+                password,
+                recovery_key=recovery_key,
+                is_admin=is_first_user,
+            )
         except sqlite3.IntegrityError as exc:
             raise ValueError("username_exists") from exc
 
@@ -94,6 +110,28 @@ class AuthService:
     def login_with_token(self, token: str) -> int | None:
         user = self.db.get_user_by_token(token)
         return int(user["id"]) if user else None
+
+    def reset_password_with_recovery(
+        self,
+        username: str,
+        recovery_key: str,
+        new_pw: str,
+    ) -> bool:
+        if len(new_pw) < 6:
+            raise ValueError("password_too_short")
+        user_id = self.db.verify_recovery_key(username, recovery_key)
+        if user_id is None:
+            return False
+        changed = self.db.reset_password(user_id, new_pw)
+        if changed:
+            self.db.set_setting(
+                FORCE_PASSWORD_CHANGE_SETTING_KEY,
+                "0",
+                user_id=user_id,
+            )
+            user = self.db.get_user(user_id)
+            clear_remember_token(user["username"] if user else username)
+        return changed
 
     def change_password(self, user_id: int, old_pw: str, new_pw: str) -> bool:
         if len(new_pw) < 6:
@@ -125,6 +163,58 @@ class AuthService:
             clear_remember_token(user["username"] if user else None)
         else:
             clear_remember_token()
+
+    def is_admin(self, user_id: int) -> bool:
+        return self.db.is_admin(user_id)
+
+    def list_users_for_admin(self, admin_user_id: int) -> list[dict]:
+        if not self.db.is_admin(admin_user_id):
+            raise PermissionError("admin_required")
+        return self.db.list_users()
+
+    def admin_reset_password(
+        self,
+        admin_user_id: int,
+        admin_password: str,
+        target_user_id: int,
+        new_pw: str,
+        *,
+        clear_remember: bool = True,
+    ) -> bool:
+        if len(new_pw) < 6:
+            raise ValueError("password_too_short")
+        if not self.db.is_admin(admin_user_id):
+            raise PermissionError("admin_required")
+        if not self.db.verify_user_id(admin_user_id, admin_password):
+            raise ValueError("admin_password_incorrect")
+        target = self.db.get_user(target_user_id)
+        if not target:
+            return False
+        changed = self.db.reset_password(target_user_id, new_pw)
+        if changed:
+            self.db.set_setting(
+                FORCE_PASSWORD_CHANGE_SETTING_KEY,
+                "1",
+                user_id=target_user_id,
+            )
+            if clear_remember:
+                clear_remember_token(target["username"])
+        return changed
+
+    def set_user_admin(
+        self,
+        admin_user_id: int,
+        admin_password: str,
+        target_user_id: int,
+        enabled: bool,
+    ) -> bool:
+        if not self.db.is_admin(admin_user_id):
+            raise PermissionError("admin_required")
+        if not self.db.verify_user_id(admin_user_id, admin_password):
+            raise ValueError("admin_password_incorrect")
+        if not enabled and self.db.is_admin(target_user_id) and self.db.admin_count() <= 1:
+            raise ValueError("last_admin")
+        return self.db.set_admin(target_user_id, enabled)
 
 
 class AppServices:
@@ -176,11 +266,50 @@ class AppServices:
             days=PASSWORD_CHANGE_REMINDER_DAYS,
         )
 
+    def current_user_is_admin(self) -> bool:
+        return self.auth.is_admin(self._require_user_id())
+
+    def list_users_for_management(self) -> list[dict]:
+        return self.auth.list_users_for_admin(self._require_user_id())
+
+    def admin_reset_password(
+        self,
+        admin_password: str,
+        target_user_id: int,
+        new_password: str,
+        *,
+        clear_remember: bool = True,
+    ) -> bool:
+        return self.auth.admin_reset_password(
+            self._require_user_id(),
+            admin_password,
+            target_user_id,
+            new_password,
+            clear_remember=clear_remember,
+        )
+
+    def set_user_admin(
+        self,
+        admin_password: str,
+        target_user_id: int,
+        enabled: bool,
+    ) -> bool:
+        return self.auth.set_user_admin(
+            self._require_user_id(),
+            admin_password,
+            target_user_id,
+            enabled,
+        )
+
     def ensure_default_user_session(self) -> None:
         if self.current_user_id is not None:
             return
         if self.db.user_count() == 0:
-            user_id = self.db.create_user(DEFAULT_ADMIN_USER, DEFAULT_ADMIN_USER)
+            user_id = self.db.create_user(
+                DEFAULT_ADMIN_USER,
+                DEFAULT_ADMIN_USER,
+                is_admin=True,
+            )
         else:
             user = self.db.first_user()
             user_id = int(user["id"])

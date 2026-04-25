@@ -1257,3 +1257,99 @@ msgstr "帳號"
 
 msgid "Your password has not been changed in {days} days. Please update it regularly."
 msgstr "你的密碼已超過 {days} 天未修改。請定期更新密碼。"
+
+msgid "Administrator"
+msgstr "管理員"
+
+msgid "Administrator Password"
+msgstr "管理員密碼"
+
+msgid "Administrator password is incorrect."
+msgstr "管理員密碼不正確。"
+
+msgid "Administrator privileges are required."
+msgstr "需要管理員權限。"
+
+msgid "At least one administrator account is required."
+msgstr "至少需要保留一個管理員帳號。"
+
+msgid "Confirm Administrator Password"
+msgstr "確認管理員密碼"
+
+msgid "Copy and safely store this recovery key now. If it is lost, only an administrator can reset your password."
+msgstr "請立即複製並安全保存此恢復密鑰。如果遺失，只能由管理員重設你的密碼。"
+
+msgid "Forgot Password?"
+msgstr "忘記密碼？"
+
+msgid "Grant Admin"
+msgstr "授予管理員"
+
+msgid "I have saved this recovery key safely."
+msgstr "我已安全保存此恢復密鑰。"
+
+msgid "Manage Users"
+msgstr "管理使用者"
+
+msgid "Operation failed."
+msgstr "操作失敗。"
+
+msgid "Password Changed"
+msgstr "密碼修改時間"
+
+msgid "Password reset successfully."
+msgstr "密碼已重設。"
+
+msgid "Password reset successfully. Please log in with the new password."
+msgstr "密碼重設成功。請使用新密碼登入。"
+
+msgid "Please confirm that you have saved the recovery key."
+msgstr "請確認你已保存恢復密鑰。"
+
+msgid "Please enter administrator password."
+msgstr "請輸入管理員密碼。"
+
+msgid "Please enter username and recovery key."
+msgstr "請輸入使用者名稱和恢復密鑰。"
+
+msgid "Recovery Key"
+msgstr "恢復密鑰"
+
+msgid "Recovery key is incorrect. Contact an administrator to reset your password."
+msgstr "恢復密鑰不正確。請聯絡管理員重設密碼。"
+
+msgid "Recovery key saved."
+msgstr "恢復密鑰已保存。"
+
+msgid "Refresh"
+msgstr "重新整理"
+
+msgid "Reset Password"
+msgstr "重設密碼"
+
+msgid "Reset User Password"
+msgstr "重設使用者密碼"
+
+msgid "Revoke Admin"
+msgstr "撤銷管理員"
+
+msgid "Role"
+msgstr "角色"
+
+msgid "Save Recovery Key"
+msgstr "保存恢復密鑰"
+
+msgid "Sign out remembered sessions"
+msgstr "登出已記住的工作階段"
+
+msgid "Text Files (*.txt)"
+msgstr "文字檔案 (*.txt)"
+
+msgid "User"
+msgstr "使用者"
+
+msgid "User not found."
+msgstr "找不到使用者。"
+
+msgid "Could not save recovery key."
+msgstr "無法保存恢復密鑰。"

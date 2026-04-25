@@ -63,6 +63,18 @@ msgstr ""
 msgid "Add"
 msgstr ""
 
+msgid "Administrator"
+msgstr ""
+
+msgid "Administrator Password"
+msgstr ""
+
+msgid "Administrator password is incorrect."
+msgstr ""
+
+msgid "Administrator privileges are required."
+msgstr ""
+
 msgid "Analytics"
 msgstr ""
 
@@ -85,6 +97,9 @@ msgid "April"
 msgstr ""
 
 msgid "Are you sure you want to log out?"
+msgstr ""
+
+msgid "At least one administrator account is required."
 msgstr ""
 
 msgid "Aug"
@@ -189,6 +204,9 @@ msgstr ""
 msgid "Confirm"
 msgstr ""
 
+msgid "Confirm Administrator Password"
+msgstr ""
+
 msgid "Confirm Password"
 msgstr ""
 
@@ -202,6 +220,12 @@ msgid "Copied!"
 msgstr ""
 
 msgid "Copy"
+msgstr ""
+
+msgid "Copy and safely store this recovery key now. If it is lost, only an administrator can reset your password."
+msgstr ""
+
+msgid "Could not save recovery key."
 msgstr ""
 
 msgid "Create Custom Template"
@@ -339,6 +363,9 @@ msgstr ""
 msgid "February"
 msgstr ""
 
+msgid "Forgot Password?"
+msgstr ""
+
 msgid "Fri"
 msgstr ""
 
@@ -351,10 +378,16 @@ msgstr ""
 msgid "GitHub"
 msgstr ""
 
+msgid "Grant Admin"
+msgstr ""
+
 msgid "HH:MM"
 msgstr ""
 
 msgid "Hint / extra instructions (optional)"
+msgstr ""
+
+msgid "I have saved this recovery key safely."
 msgstr ""
 
 msgid "Import .gguf"
@@ -492,6 +525,9 @@ msgstr ""
 msgid "Login failed"
 msgstr ""
 
+msgid "Manage Users"
+msgstr ""
+
 msgid "Manual Input"
 msgstr ""
 
@@ -559,6 +595,9 @@ msgid "Next month"
 msgstr ""
 
 msgid "Night"
+msgstr ""
+
+msgid "No"
 msgstr ""
 
 msgid "No accounts found. Please create an administrator account."
@@ -630,6 +669,9 @@ msgstr ""
 msgid "Open color picker"
 msgstr ""
 
+msgid "Operation failed."
+msgstr ""
+
 msgid "Original"
 msgstr ""
 
@@ -663,10 +705,19 @@ msgstr ""
 msgid "Password"
 msgstr ""
 
+msgid "Password Changed"
+msgstr ""
+
 msgid "Password changed successfully."
 msgstr ""
 
 msgid "Password must be at least 6 characters."
+msgstr ""
+
+msgid "Password reset successfully."
+msgstr ""
+
+msgid "Password reset successfully. Please log in with the new password."
 msgstr ""
 
 msgid "Passwords do not match."
@@ -678,13 +729,22 @@ msgstr ""
 msgid "Permission denied while verifying local model file."
 msgstr ""
 
+msgid "Please confirm that you have saved the recovery key."
+msgstr ""
+
 msgid "Please enter a model name in Settings → AI."
+msgstr ""
+
+msgid "Please enter administrator password."
 msgstr ""
 
 msgid "Please enter the API Base URL in Settings → AI."
 msgstr ""
 
 msgid "Please enter username and password."
+msgstr ""
+
+msgid "Please enter username and recovery key."
 msgstr ""
 
 msgid "Please enter your API Key in Settings → AI."
@@ -723,6 +783,18 @@ msgstr ""
 msgid "Ready"
 msgstr ""
 
+msgid "Recovery Key"
+msgstr ""
+
+msgid "Recovery key is incorrect. Contact an administrator to reset your password."
+msgstr ""
+
+msgid "Recovery key saved."
+msgstr ""
+
+msgid "Refresh"
+msgstr ""
+
 msgid "Regenerate"
 msgstr ""
 
@@ -759,6 +831,12 @@ msgstr ""
 msgid "Reports have unsaved changes. Save before closing?"
 msgstr ""
 
+msgid "Reset Password"
+msgstr ""
+
+msgid "Reset User Password"
+msgstr ""
+
 msgid "Restart"
 msgstr ""
 
@@ -780,6 +858,12 @@ msgstr ""
 msgid "Retry"
 msgstr ""
 
+msgid "Revoke Admin"
+msgstr ""
+
+msgid "Role"
+msgstr ""
+
 msgid "SQLite Database (*.db)"
 msgstr ""
 
@@ -790,6 +874,9 @@ msgid "Save"
 msgstr ""
 
 msgid "Save Changes"
+msgstr ""
+
+msgid "Save Recovery Key"
 msgstr ""
 
 msgid "Save changes to this template?"
@@ -820,6 +907,9 @@ msgid "Sick"
 msgstr ""
 
 msgid "Sick leave"
+msgstr ""
+
+msgid "Sign out remembered sessions"
 msgstr ""
 
 msgid "Standard hours (h)"
@@ -859,6 +949,9 @@ msgid "Test"
 msgstr ""
 
 msgid "Testing…"
+msgstr ""
+
+msgid "Text Files (*.txt)"
 msgstr ""
 
 msgid "The default administrator password must be changed before continuing."
@@ -907,6 +1000,12 @@ msgid "Type"
 msgstr ""
 
 msgid "Unsaved changes — save before switching?"
+msgstr ""
+
+msgid "User"
+msgstr ""
+
+msgid "User not found."
 msgstr ""
 
 msgid "Username"
@@ -976,6 +1075,9 @@ msgid "Work hours"
 msgstr ""
 
 msgid "Work type"
+msgstr ""
+
+msgid "Yes"
 msgstr ""
 
 msgid "You already logged {hours}h of break time. What do you want to do?"

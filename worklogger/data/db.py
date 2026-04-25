@@ -38,6 +38,9 @@ _CREATE_USERS = """CREATE TABLE IF NOT EXISTS users(
     username TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     salt TEXT NOT NULL,
+    recovery_key_hash TEXT,
+    recovery_salt TEXT,
+    is_admin INTEGER DEFAULT 0,
     remember_token TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     password_changed_at TEXT DEFAULT (datetime('now'))
@@ -143,6 +146,7 @@ class DB:
                 created_admin_id = self._create_user_unlocked(
                     DEFAULT_ADMIN_USER,
                     DEFAULT_ADMIN_USER,
+                    is_admin=True,
                 )
                 fallback_user_id = created_admin_id
 
@@ -181,10 +185,27 @@ class DB:
         cols = self._columns("users")
         if "password_changed_at" not in cols:
             self.conn.execute("ALTER TABLE users ADD COLUMN password_changed_at TEXT")
+        if "recovery_key_hash" not in cols:
+            self.conn.execute("ALTER TABLE users ADD COLUMN recovery_key_hash TEXT")
+        if "recovery_salt" not in cols:
+            self.conn.execute("ALTER TABLE users ADD COLUMN recovery_salt TEXT")
+        if "is_admin" not in cols:
+            self.conn.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0")
         self.conn.execute(
             "UPDATE users SET password_changed_at=COALESCE(created_at, datetime('now')) "
             "WHERE password_changed_at IS NULL OR password_changed_at=''"
         )
+        user_count = int(self.conn.execute("SELECT COUNT(*) FROM users").fetchone()[0])
+        admin_count = int(
+            self.conn.execute(
+                "SELECT COUNT(*) FROM users WHERE COALESCE(is_admin,0)=1"
+            ).fetchone()[0]
+        )
+        if user_count > 0 and admin_count == 0:
+            self.conn.execute(
+                "UPDATE users SET is_admin=1 "
+                "WHERE id=(SELECT id FROM users ORDER BY id LIMIT 1)"
+            )
 
     def _table_exists(self, name: str) -> bool:
         row = self.conn.execute(
@@ -386,7 +407,14 @@ class DB:
             _PBKDF2_ITERATIONS,
         ).hex()
 
-    def _create_user_unlocked(self, username: str, password: str) -> int:
+    def _create_user_unlocked(
+        self,
+        username: str,
+        password: str,
+        *,
+        recovery_key: str | None = None,
+        is_admin: bool = False,
+    ) -> int:
         username = username.strip()
         if not username:
             raise ValueError("username_required")
@@ -394,16 +422,41 @@ class DB:
             raise ValueError("password_required")
         salt = secrets.token_hex(16)
         password_hash = self._password_hash(password, salt)
+        recovery_salt = secrets.token_hex(16) if recovery_key else None
+        recovery_key_hash = (
+            self._password_hash(recovery_key, recovery_salt)
+            if recovery_key and recovery_salt else None
+        )
         cur = self.conn.execute(
-            "INSERT INTO users(username,password_hash,salt,password_changed_at) "
-            "VALUES(?,?,?,datetime('now'))",
-            (username, password_hash, salt),
+            "INSERT INTO users"
+            "(username,password_hash,salt,recovery_key_hash,recovery_salt,is_admin,password_changed_at) "
+            "VALUES(?,?,?,?,?,?,datetime('now'))",
+            (
+                username,
+                password_hash,
+                salt,
+                recovery_key_hash,
+                recovery_salt,
+                1 if is_admin else 0,
+            ),
         )
         return int(cur.lastrowid)
 
-    def create_user(self, username: str, password: str) -> int:
+    def create_user(
+        self,
+        username: str,
+        password: str,
+        *,
+        recovery_key: str | None = None,
+        is_admin: bool = False,
+    ) -> int:
         with self._write_lock:
-            user_id = self._create_user_unlocked(username, password)
+            user_id = self._create_user_unlocked(
+                username,
+                password,
+                recovery_key=recovery_key,
+                is_admin=is_admin,
+            )
             self.conn.commit()
             return user_id
 
@@ -415,6 +468,26 @@ class DB:
         if not row:
             return None
         expected = self._password_hash(password, row[2])
+        return int(row[0]) if hmac.compare_digest(expected, row[1]) else None
+
+    def verify_user_id(self, user_id: int, password: str) -> bool:
+        row = self.conn.execute(
+            "SELECT password_hash,salt FROM users WHERE id=?",
+            (user_id,),
+        ).fetchone()
+        if not row:
+            return False
+        expected = self._password_hash(password, row[1])
+        return hmac.compare_digest(expected, row[0])
+
+    def verify_recovery_key(self, username: str, recovery_key: str) -> int | None:
+        row = self.conn.execute(
+            "SELECT id,recovery_key_hash,recovery_salt FROM users WHERE username=?",
+            (username.strip(),),
+        ).fetchone()
+        if not row or not row[1] or not row[2]:
+            return None
+        expected = self._password_hash(recovery_key.strip(), row[2])
         return int(row[0]) if hmac.compare_digest(expected, row[1]) else None
 
     def change_password(self, user_id: int, old_pw: str, new_pw: str) -> bool:
@@ -438,6 +511,45 @@ class DB:
             self.conn.commit()
         return True
 
+    def reset_password(self, user_id: int, new_pw: str) -> bool:
+        if not self.get_user(user_id):
+            return False
+        salt = secrets.token_hex(16)
+        password_hash = self._password_hash(new_pw, salt)
+        with self._write_lock:
+            self.conn.execute(
+                "UPDATE users SET password_hash=?, salt=?, remember_token=NULL, "
+                "password_changed_at=datetime('now') WHERE id=?",
+                (password_hash, salt, user_id),
+            )
+            self.conn.commit()
+        return True
+
+    def is_admin(self, user_id: int) -> bool:
+        row = self.conn.execute(
+            "SELECT COALESCE(is_admin,0) FROM users WHERE id=?",
+            (user_id,),
+        ).fetchone()
+        return bool(row and int(row[0]) == 1)
+
+    def admin_count(self) -> int:
+        return int(
+            self.conn.execute(
+                "SELECT COUNT(*) FROM users WHERE COALESCE(is_admin,0)=1"
+            ).fetchone()[0]
+        )
+
+    def set_admin(self, user_id: int, enabled: bool) -> bool:
+        if not self.get_user(user_id):
+            return False
+        with self._write_lock:
+            self.conn.execute(
+                "UPDATE users SET is_admin=? WHERE id=?",
+                (1 if enabled else 0, user_id),
+            )
+            self.conn.commit()
+        return True
+
     def set_remember_token(self, user_id: int, token: str | None) -> None:
         with self._write_lock:
             self.conn.execute(
@@ -450,7 +562,7 @@ class DB:
         if not token:
             return None
         row = self.conn.execute(
-            "SELECT id,username,created_at,password_changed_at "
+            "SELECT id,username,created_at,password_changed_at,is_admin,recovery_key_hash "
             "FROM users WHERE remember_token=?",
             (token,),
         ).fetchone()
@@ -458,7 +570,7 @@ class DB:
 
     def get_user_by_username(self, username: str) -> dict | None:
         row = self.conn.execute(
-            "SELECT id,username,created_at,password_changed_at "
+            "SELECT id,username,created_at,password_changed_at,is_admin,recovery_key_hash "
             "FROM users WHERE username=?",
             (username.strip(),),
         ).fetchone()
@@ -466,14 +578,15 @@ class DB:
 
     def get_user(self, user_id: int) -> dict | None:
         row = self.conn.execute(
-            "SELECT id,username,created_at,password_changed_at FROM users WHERE id=?",
+            "SELECT id,username,created_at,password_changed_at,is_admin,recovery_key_hash "
+            "FROM users WHERE id=?",
             (user_id,),
         ).fetchone()
         return self._user_row(row) if row else None
 
     def first_user(self) -> dict | None:
         row = self.conn.execute(
-            "SELECT id,username,created_at,password_changed_at "
+            "SELECT id,username,created_at,password_changed_at,is_admin,recovery_key_hash "
             "FROM users ORDER BY id LIMIT 1"
         ).fetchone()
         return self._user_row(row) if row else None
@@ -481,14 +594,25 @@ class DB:
     def user_count(self) -> int:
         return int(self.conn.execute("SELECT COUNT(*) FROM users").fetchone()[0])
 
+    def list_users(self) -> list[dict]:
+        rows = self.conn.execute(
+            "SELECT id,username,created_at,password_changed_at,is_admin,recovery_key_hash "
+            "FROM users ORDER BY username COLLATE NOCASE"
+        ).fetchall()
+        return [self._user_row(row) for row in rows]
+
     @staticmethod
     def _user_row(row) -> dict:
         password_changed_at = row[3] if len(row) > 3 else row[2]
+        is_admin = bool(row[4]) if len(row) > 4 else False
+        has_recovery_key = bool(row[5]) if len(row) > 5 else False
         return dict(
             id=int(row[0]),
             username=row[1],
             created_at=row[2],
             password_changed_at=password_changed_at,
+            is_admin=is_admin,
+            has_recovery_key=has_recovery_key,
         )
 
     @staticmethod
