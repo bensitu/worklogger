@@ -255,6 +255,9 @@ msgstr ""
 msgid "Done"
 msgstr ""
 
+msgid "Done."
+msgstr ""
+
 msgid "Download"
 msgstr ""
 
@@ -295,6 +298,9 @@ msgid "Ended"
 msgstr ""
 
 msgid "Error"
+msgstr ""
+
+msgid "Error:"
 msgstr ""
 
 msgid "Expand notes"
@@ -630,6 +636,9 @@ msgstr ""
 msgid "Overnight indicator"
 msgstr ""
 
+msgid "Overnight indicator"
+msgstr ""
+
 msgid "Overtime"
 msgstr ""
 
@@ -681,7 +690,16 @@ msgstr ""
 msgid "Please set your API key in Settings → AI."
 msgstr ""
 
+msgid "Preparing request for {model}..."
+msgstr ""
+
+msgid "Preparing your AI request..."
+msgstr ""
+
 msgid "Previous month"
+msgstr ""
+
+msgid "Processing AI response..."
 msgstr ""
 
 msgid "Public holidays"
@@ -904,6 +922,9 @@ msgid "Version"
 msgstr ""
 
 msgid "WFH"
+msgstr ""
+
+msgid "Waiting for AI response..."
 msgstr ""
 
 msgid "Wed"

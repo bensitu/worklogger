@@ -215,36 +215,44 @@ try {
     Write-Log "OK   : Using build virtual environment: $VenvDir"
     Write-Log "OK   : Build Python executable: $BuildPython"
 
-    Invoke-ExternalWithRetry -Description "Upgrade pip/setuptools/wheel" -FilePath $BuildPython -Arguments @("-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel")
-    Invoke-ExternalWithRetry -Description "Install packaging dependencies (PyInstaller, certifi)" -FilePath $BuildPython -Arguments @("-m", "pip", "install", "--no-cache-dir", "pyinstaller", "certifi")
+    Invoke-ExternalWithRetry -Description "Upgrade pip/setuptools/wheel" -FilePath $BuildPython -Arguments @("-m", "pip", "install", "--timeout", "60", "--retries", "2", "--upgrade", "pip", "setuptools", "wheel")
+    Invoke-ExternalWithRetry -Description "Install packaging dependencies (PyInstaller, certifi)" -FilePath $BuildPython -Arguments @("-m", "pip", "install", "--no-cache-dir", "--timeout", "60", "--retries", "2", "pyinstaller", "certifi")
 
     $requirementsFile = Join-Path $ProjectRoot "requirements.txt"
     if (Test-Path -LiteralPath $requirementsFile -PathType Leaf) {
         $filteredRequirementsFile = Join-Path $ProjectRoot ".tmp_requirements_build_$Timestamp.txt"
-        $excludedRequirements = New-Object System.Collections.Generic.List[string]
         $filteredLines = New-Object System.Collections.Generic.List[string]
+        $llamaRequirement = "llama-cpp-python>=0.2.90"
         foreach ($line in Get-Content -LiteralPath $requirementsFile) {
             $trimmed = $line.Trim()
             if ($trimmed -match '^\s*llama-cpp-python(\b|[<>=!~])') {
-                [void]$excludedRequirements.Add($trimmed)
+                $llamaRequirement = $trimmed
                 continue
             }
             [void]$filteredLines.Add($line)
         }
         if ($filteredLines.Count -eq 0) {
-            throw "No build-safe requirements remain after filtering optional native packages."
+            throw "No requirements remain after excluding llama-cpp-python from the general dependency install."
         }
         $filteredLines | Set-Content -LiteralPath $filteredRequirementsFile -Encoding utf8
-        if ($excludedRequirements.Count -gt 0) {
-            Write-Log "WARN : Excluding optional native package(s) from build bootstrap: $($excludedRequirements -join ', ')"
-            Write-Log "WARN : Local-model runtime can still install llama-cpp-python on demand."
-        }
         try {
-            Invoke-ExternalWithRetry -Description "Install application dependencies (build-safe subset)" -FilePath $BuildPython -Arguments @("-m", "pip", "install", "--no-cache-dir", "-r", $filteredRequirementsFile)
+            Invoke-ExternalWithRetry -Description "Install application dependencies (excluding local-model runtime)" -FilePath $BuildPython -Arguments @("-m", "pip", "install", "--no-cache-dir", "--timeout", "60", "--retries", "2", "-r", $filteredRequirementsFile)
         }
         finally {
             Remove-PathIfExists -Path $filteredRequirementsFile
         }
+
+        # Install local-model runtime from prebuilt CPU wheels to avoid source build on machines without MSVC/nmake.
+        Invoke-ExternalWithRetry -Description "Install llama-cpp-python prebuilt CPU wheel" -FilePath $BuildPython -Arguments @(
+            "-m", "pip", "install",
+            "--no-cache-dir",
+            "--timeout", "60",
+            "--retries", "2",
+            "--prefer-binary",
+            "--only-binary", "llama-cpp-python",
+            "--extra-index-url", "https://abetlen.github.io/llama-cpp-python/whl/cpu",
+            $llamaRequirement
+        )
     }
     else {
         Write-Log "WARN : requirements.txt not found. Skipping dependency installation."
@@ -314,4 +322,3 @@ catch {
     Write-Log "FAILED : Detailed log saved to $script:LogFile"
     exit 1
 }
-

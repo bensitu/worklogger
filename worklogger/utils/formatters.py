@@ -149,12 +149,16 @@ def parse_status(msg: str) -> tuple[str | None, dict]:
 
     mapping = {
         "Preparing AI request...": "ai_status_start",
+        "Preparing your AI request...": "ai_status_start",
         "Preparing request for model {model}...": "ai_status_build",
+        "Preparing request for {model}...": "ai_status_build",
         "Connecting to model {model}...": "ai_status_connect",
+        "Contacting AI provider for {model}...": "ai_status_connect",
         "Waiting for AI response...": "ai_status_wait",
         "Processing AI response...": "ai_status_parse",
         "Done.": "ai_status_done",
         "Error: ": "ai_status_error",
+        "Error:": "ai_status_error",
         # Local-model lifecycle keys kept as a fallback for plain-text status paths.
         "local_model_loading":         "local_model_loading",
         "local_model_loaded":          "local_model_loaded",

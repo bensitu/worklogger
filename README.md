@@ -29,7 +29,7 @@ WorkLogger is a privacy-first desktop app for tracking work hours, notes, quick 
 Release packages are published through GitHub Releases:
 
 - Windows: `WorkLogger.exe`
-- macOS: `WorkLogger.app`
+- macOS: `WorkLogger.app.zip`
 
 Build outputs are generated into the `dist/` directory.
 
@@ -67,24 +67,43 @@ WorkLogger_build.bat
 ```
 
 Both scripts use `worklogger.spec`. The generated executable and packaged artifacts are expected in `dist/`. If you create a macOS App, place the final `.app` file in `dist/` as well.
+`WorkLogger_build.sh` re-signs the merged universal app before zipping. By default it uses ad-hoc signing (`CODESIGN_IDENTITY=-`) for integrity.
+
+### macOS install note (no Apple Developer ID)
+
+If the app is not Developer ID signed + notarized, macOS Gatekeeper may show "Apple cannot verify".
+Users can still install by removing the quarantine flag after copying the app:
+
+```bash
+mv ~/Downloads/WorkLogger.app /Applications/WorkLogger.app
+xattr -dr com.apple.quarantine /Applications/WorkLogger.app
+open /Applications/WorkLogger.app
+```
 
 ## i18n Workflow
 
 WorkLogger uses gettext catalogs under `worklogger/locales`.
 
 - Template extraction (`messages.pot`):
+
 ```bash
 python scripts/i18n/i18n_extract.py
 ```
+
 - Sync language catalogs (`messages.po`):
+
 ```bash
 python scripts/i18n/i18n_sync.py
 ```
+
 - Compile binary catalogs (`messages.mo`):
+
 ```bash
 python scripts/i18n/i18n_compile.py
 ```
+
 - CI/local validation:
+
 ```bash
 python scripts/i18n/i18n_check.py
 ```

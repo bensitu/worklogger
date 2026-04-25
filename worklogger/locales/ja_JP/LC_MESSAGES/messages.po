@@ -1007,19 +1007,19 @@ msgid "New version available: v{0}"
 msgstr "新しいバージョン v{0} が利用可能です"
 
 msgid "Local model is inactive"
-msgstr "Local model is inactive"
+msgstr "ローカルモデルは非アクティブです"
 
 msgid "Local model verification failed. Please re-download or switch model."
-msgstr "Local model verification failed. Please re-download or switch model."
+msgstr "ローカルモデルの検証に失敗しました。再ダウンロードするか、モデルを切り替えてください。"
 
 msgid "Local model verification timed out."
-msgstr "Local model verification timed out."
+msgstr "ローカルモデルの検証がタイムアウトしました。"
 
 msgid "Local model verification was cancelled."
-msgstr "Local model verification was cancelled."
+msgstr "ローカルモデルの検証はキャンセルされました。"
 
 msgid "Permission denied while verifying local model file."
-msgstr "Permission denied while verifying local model file."
+msgstr "ローカルモデルファイルの検証中にアクセスが拒否されました。"
 
 msgid "Active"
 msgstr "有効"

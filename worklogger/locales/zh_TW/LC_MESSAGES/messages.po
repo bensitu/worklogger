@@ -1007,19 +1007,19 @@ msgid "New version available: v{0}"
 msgstr "發現新版本：v{0}"
 
 msgid "Local model is inactive"
-msgstr "Local model is inactive"
+msgstr "本地模型處於未啟用狀態。"
 
 msgid "Local model verification failed. Please re-download or switch model."
-msgstr "Local model verification failed. Please re-download or switch model."
+msgstr "本地模型驗證失敗。請重新下載或切換模型。"
 
 msgid "Local model verification timed out."
-msgstr "Local model verification timed out."
+msgstr "本地模型驗證逾時。"
 
 msgid "Local model verification was cancelled."
-msgstr "Local model verification was cancelled."
+msgstr "本地模型驗證已取消。"
 
 msgid "Permission denied while verifying local model file."
-msgstr "Permission denied while verifying local model file."
+msgstr "驗證本地模型檔案時權限遭拒。"
 
 msgid "Active"
 msgstr "已啟用"
