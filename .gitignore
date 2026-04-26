@@ -44,6 +44,7 @@ Thumbs.db
 # Local data and user-generated files
 
 worklog.db
+worklogger.log
 *.db
 *.bak_*
 worklogger/templates/custom/*.json

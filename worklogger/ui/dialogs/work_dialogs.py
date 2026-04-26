@@ -20,6 +20,7 @@ from config.constants import (
 )
 from core.time_calc import calc_hours
 from services import analytics_service
+from services.export_service import pdf_colors
 from ui.widgets import ComboChart
 from .ai_dialogs import AIProgressDialog, AIResultDialog
 from .template_dialogs import TemplatePickerDialog
@@ -856,6 +857,7 @@ class ChartDialog(QDialog):
         from PySide6.QtCore import QRectF
         from PySide6.QtGui import QColor, QBrush, QFont
         from PySide6.QtCore import Qt
+        colors = pdf_colors(ctx)
         rows = self._monthly_detail()
         if not rows:
             return
@@ -868,7 +870,7 @@ class ChartDialog(QDialog):
                 (_("Leave days"), f"{int(ld)}{_(" days")}")]
         box_h = pt(34)
         cw2 = pw / len(cols)
-        p.setBrush(QBrush(QColor("#f0f4ff")))
+        p.setBrush(QBrush(QColor(colors.panel_bg)))
         p.setPen(Qt.NoPen)
         p.drawRoundedRect(QRectF(0, top, pw, box_h), pt(6), pt(6))
         for i, (k, v) in enumerate(cols):
@@ -876,26 +878,26 @@ class ChartDialog(QDialog):
             fk = QFont("sans-serif")
             fk.setPixelSize(pt(8))
             p.setFont(fk)
-            p.setPen(QColor("#606888"))
+            p.setPen(QColor(colors.muted))
             p.drawText(QRectF(cx, top+pt(4), cw2, pt(12)), Qt.AlignCenter, k)
             fv = QFont("sans-serif")
             fv.setPixelSize(pt(11))
             fv.setBold(True)
             p.setFont(fv)
-            p.setPen(QColor("#1e2035"))
+            p.setPen(QColor(colors.text))
             p.drawText(QRectF(cx, top+pt(16), cw2, pt(14)), Qt.AlignCenter, v)
         top += box_h + pt(6)
         hdrs = [("Date", 0.13), (_("Start"), 0.10), (_("End"), 0.10),
                 (_("h"), 0.09), ("OT", 0.09), (_("Work type"), 0.16), (_("Notes"), 0.33)]
         rh = pt(16)
-        p.setBrush(QBrush(QColor("#dde6f8")))
+        p.setBrush(QBrush(QColor(colors.panel_header_bg)))
         p.setPen(Qt.NoPen)
         p.drawRect(QRectF(0, top, pw, rh))
         fh = QFont("sans-serif")
         fh.setPixelSize(pt(8))
         fh.setBold(True)
         p.setFont(fh)
-        p.setPen(QColor("#1e2035"))
+        p.setPen(QColor(colors.text))
         x = 0
         for lbl, frac in hdrs:
             cw = pw*frac
@@ -906,13 +908,13 @@ class ChartDialog(QDialog):
         fr = QFont("sans-serif")
         fr.setPixelSize(pt(7))
         for i, row in enumerate(rows):
-            bg = QColor("#f7f9ff") if i % 2 == 0 else QColor("#ffffff")
+            bg = QColor(colors.row_alt_bg if i % 2 == 0 else colors.row_bg)
             p.setBrush(QBrush(bg))
             p.setPen(Qt.NoPen)
             rh2 = pt(13)
             p.drawRect(QRectF(0, top, pw, rh2))
             p.setFont(fr)
-            p.setPen(QColor("#1e2035"))
+            p.setPen(QColor(colors.text))
             vals = [row["date"], row["start"], row["end"],
                     f"{row['h']:.1f}" if row["h"] else "—",
                     f"+{row['ot']:.1f}" if row["ot"] > 0 else "—",
@@ -928,7 +930,7 @@ class ChartDialog(QDialog):
                 fi = QFont("sans-serif")
                 fi.setPixelSize(pt(8))
                 p.setFont(fi)
-                p.setPen(QColor("#9090a8"))
+                p.setPen(QColor(colors.disabled))
                 p.drawText(QRectF(0, top+pt(4), pw, pt(12)), Qt.AlignCenter,
                            f"… {len(rows)-i-1} more rows")
                 break
@@ -937,18 +939,19 @@ class ChartDialog(QDialog):
         from PySide6.QtCore import QRectF
         from PySide6.QtGui import QColor, QBrush, QFont
         from PySide6.QtCore import Qt
+        colors = pdf_colors(ctx)
         rows = self._quarterly_detail()
         hdrs = [("Quarter", 0.15), (_("Monthly total"), 0.17), (_("Overtime"), 0.17),
                 (_("Daily avg"), 0.17), (_("Work days"), 0.17), (_("Leave days"), 0.17)]
         rh = pt(16)
-        p.setBrush(QBrush(QColor("#dde6f8")))
+        p.setBrush(QBrush(QColor(colors.panel_header_bg)))
         p.setPen(Qt.NoPen)
         p.drawRect(QRectF(0, top, pw, rh))
         fh = QFont("sans-serif")
         fh.setPixelSize(pt(8))
         fh.setBold(True)
         p.setFont(fh)
-        p.setPen(QColor("#1e2035"))
+        p.setPen(QColor(colors.text))
         x = 0
         for lbl, frac in hdrs:
             cw = pw*frac
@@ -959,13 +962,13 @@ class ChartDialog(QDialog):
         fr = QFont("sans-serif")
         fr.setPixelSize(pt(9))
         for i, row in enumerate(rows):
-            bg = QColor("#f7f9ff") if i % 2 == 0 else QColor("#ffffff")
+            bg = QColor(colors.row_alt_bg if i % 2 == 0 else colors.row_bg)
             p.setBrush(QBrush(bg))
             p.setPen(Qt.NoPen)
             rh2 = pt(20)
             p.drawRect(QRectF(0, top, pw, rh2))
             p.setFont(fr)
-            p.setPen(QColor("#1e2035"))
+            p.setPen(QColor(colors.text))
             vals = [row["q"], f"{row['total']:.1f}{_("h")}",
                     f"{row['ot']:.1f}{_("h")}", f"{row['avg']:.1f}{_("h")}",
                     f"{row['wd']}{_(" days")}", f"{row['ld']}{_(" days")}"]
@@ -981,6 +984,7 @@ class ChartDialog(QDialog):
         from PySide6.QtCore import QRectF
         from PySide6.QtGui import QColor, QBrush, QFont
         from PySide6.QtCore import Qt
+        colors = pdf_colors(ctx)
         s = [self._month_stats(ctx.year, m) for m in range(1, 13)]
         total = sum(x[0] for x in s)
         ot = sum(x[1] for x in s)
@@ -993,7 +997,7 @@ class ChartDialog(QDialog):
                 (_("Leave days"), f"{int(ld)}{_(" days")}")]
         box_h = pt(34)
         cw2 = pw/len(cols)
-        p.setBrush(QBrush(QColor("#f0f4ff")))
+        p.setBrush(QBrush(QColor(colors.panel_bg)))
         p.setPen(Qt.NoPen)
         p.drawRoundedRect(QRectF(0, top, pw, box_h), pt(6), pt(6))
         for i, (k, v) in enumerate(cols):
@@ -1001,27 +1005,27 @@ class ChartDialog(QDialog):
             fk = QFont("sans-serif")
             fk.setPixelSize(pt(8))
             p.setFont(fk)
-            p.setPen(QColor("#606888"))
+            p.setPen(QColor(colors.muted))
             p.drawText(QRectF(cx, top+pt(4), cw2, pt(12)), Qt.AlignCenter, k)
             fv = QFont("sans-serif")
             fv.setPixelSize(pt(11))
             fv.setBold(True)
             p.setFont(fv)
-            p.setPen(QColor("#1e2035"))
+            p.setPen(QColor(colors.text))
             p.drawText(QRectF(cx, top+pt(16), cw2, pt(14)), Qt.AlignCenter, v)
         top += box_h+pt(6)
         rows = self._annual_detail()
         hdrs = [("Month", 0.12), (_("Monthly total"), 0.17), (_("Overtime"), 0.17),
                 (_("Daily avg"), 0.17), (_("Work days"), 0.17), (_("Leave days"), 0.20)]
         rh = pt(16)
-        p.setBrush(QBrush(QColor("#dde6f8")))
+        p.setBrush(QBrush(QColor(colors.panel_header_bg)))
         p.setPen(Qt.NoPen)
         p.drawRect(QRectF(0, top, pw, rh))
         fh = QFont("sans-serif")
         fh.setPixelSize(pt(8))
         fh.setBold(True)
         p.setFont(fh)
-        p.setPen(QColor("#1e2035"))
+        p.setPen(QColor(colors.text))
         x = 0
         for lbl, frac in hdrs:
             cw = pw*frac
@@ -1032,13 +1036,13 @@ class ChartDialog(QDialog):
         fr = QFont("sans-serif")
         fr.setPixelSize(pt(8))
         for i, row in enumerate(rows):
-            bg = QColor("#f7f9ff") if i % 2 == 0 else QColor("#ffffff")
+            bg = QColor(colors.row_alt_bg if i % 2 == 0 else colors.row_bg)
             p.setBrush(QBrush(bg))
             p.setPen(Qt.NoPen)
             rh2 = pt(17)
             p.drawRect(QRectF(0, top, pw, rh2))
             p.setFont(fr)
-            p.setPen(QColor("#1e2035" if row["total"] > 0 else "#9090a8"))
+            p.setPen(QColor(colors.text if row["total"] > 0 else colors.disabled))
             vals = [row["m"], f"{row['total']:.1f}{_("h")}", f"{row['ot']:.1f}{_("h")}",
                     f"{row['avg']:.1f}{_("h")}", f"{row['wd']}{_(" days")}", f"{row['ld']}{_(" days")}"]
             x = 0

@@ -202,10 +202,12 @@ class DownloadController:
             models_dir.mkdir(parents=True, exist_ok=True)
             manifest = lms.load_manifest(models_dir)
             entry = lms.get_entry(manifest, entry_id)
-            filename = entry.get("file", lms.MODEL_FILENAME)
-            url = entry.get("url", lms.MODEL_URL)
-            model_path = models_dir / filename
-            temp_path = models_dir / (filename + ".tmp")
+            filename = lms.validate_model_filename(
+                entry.get("file", lms.MODEL_FILENAME)
+            )
+            url = lms.validate_model_url(entry.get("url", lms.MODEL_URL))
+            model_path = lms.resolve_model_path(models_dir, filename)
+            temp_path = lms.resolve_model_path(models_dir, filename + ".tmp")
             lock_path = models_dir / lms.LOCK_FILENAME
 
             try:

@@ -8,11 +8,8 @@ file so remember-me keeps working in restricted environments.
 from __future__ import annotations
 
 import base64
-import hashlib
 import json
 import logging
-import platform
-import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional, Tuple
@@ -29,6 +26,7 @@ from config.constants import (
     REMEMBER_TOKEN_KEY,
 )
 from data.db import DB_PATH
+from utils.crypto import machine_key
 
 _log = logging.getLogger(__name__)
 
@@ -49,16 +47,11 @@ def _token_path() -> Path:
     return Path(DB_PATH).with_name(REMEMBER_FALLBACK_FILENAME)
 
 
-def _machine_key() -> bytes:
-    seed = f"{platform.node()}|{uuid.getnode()}".encode("utf-8")
-    return hashlib.sha256(seed).digest()
-
-
 def _fernet():
     try:
         from cryptography.fernet import Fernet
 
-        return Fernet(base64.urlsafe_b64encode(_machine_key()))
+        return Fernet(base64.urlsafe_b64encode(machine_key()))
     except Exception as exc:
         _log.warning("Fernet unavailable for remember token storage: %s", exc)
         return None

@@ -24,14 +24,13 @@ The actual keychain service name is ``APP_ID`` from constants.
 from __future__ import annotations
 
 import base64
-import hashlib
 import logging
-import platform
-import uuid
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from data.db import DB
+
+from utils.crypto import machine_key
 
 _log = logging.getLogger(__name__)
 
@@ -39,25 +38,11 @@ _log = logging.getLogger(__name__)
 # legacy rows written by earlier versions of the app.
 _ENC_PREFIX = "enc1:"
 
-# Machine-key derivation.
-
-def _machine_key() -> bytes:
-    """Derive a stable 32-byte key from this machine's hardware identifiers.
-
-    Uses hostname + MAC address so the key is consistent across restarts but
-    useless on other machines.  Not a substitute for a proper HSM, but raises
-    the bar significantly above plain-text storage.
-    """
-    parts = [platform.node(), str(uuid.getnode())]
-    seed = "|".join(parts).encode("utf-8")
-    return hashlib.sha256(seed).digest()
-
-
 def _fernet():
     """Return a ``Fernet`` instance keyed to this machine, or None."""
     try:
         from cryptography.fernet import Fernet
-        key = base64.urlsafe_b64encode(_machine_key())
+        key = base64.urlsafe_b64encode(machine_key())
         return Fernet(key)
     except Exception as exc:
         _log.warning("Fernet unavailable: %s", exc)

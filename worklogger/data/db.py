@@ -11,12 +11,13 @@ import sqlite3
 import sys
 import threading
 import time
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from config.constants import (
     DB_FILENAME,
     DEFAULT_ADMIN_USER,
     FORCE_PASSWORD_CHANGE_SETTING_KEY,
+    REMEMBER_TOKEN_LIFETIME_DAYS,
 )
 from core.models import WorkRecord
 from core.time_calc import is_overnight_shift
@@ -31,7 +32,8 @@ def get_db_path() -> str:
 
 
 DB_PATH = get_db_path()
-_PBKDF2_ITERATIONS = 100_000
+_PBKDF2_ITERATIONS = 600_000
+_PBKDF2_LEGACY_ITERATIONS = (100_000,)
 _WORKLOG_TABLE_NAMES = ("worklog", "worklogs", "work_log")
 
 _CREATE_USERS = """CREATE TABLE IF NOT EXISTS users(
@@ -43,6 +45,7 @@ _CREATE_USERS = """CREATE TABLE IF NOT EXISTS users(
     recovery_salt TEXT,
     is_admin INTEGER DEFAULT 0,
     remember_token TEXT,
+    remember_token_expires_at TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     password_changed_at TEXT DEFAULT (datetime('now')),
     recovery_key_created_at TEXT
@@ -114,6 +117,9 @@ class DB:
     def _open_connection(path: str) -> sqlite3.Connection:
         try:
             conn = sqlite3.connect(path, timeout=5, check_same_thread=False)
+            conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute("PRAGMA synchronous=NORMAL")
+            conn.execute("PRAGMA busy_timeout=5000")
             conn.execute("PRAGMA foreign_keys=ON")
             r = conn.execute("PRAGMA integrity_check").fetchone()
             if r and r[0] != "ok":
@@ -128,6 +134,9 @@ class DB:
                 pass
             try:
                 conn = sqlite3.connect(path, timeout=5, check_same_thread=False)
+                conn.execute("PRAGMA journal_mode=WAL")
+                conn.execute("PRAGMA synchronous=NORMAL")
+                conn.execute("PRAGMA busy_timeout=5000")
                 conn.execute("PRAGMA foreign_keys=ON")
                 return conn
             except sqlite3.DatabaseError:
@@ -197,6 +206,15 @@ class DB:
             self.conn.execute(
                 "ALTER TABLE users ADD COLUMN recovery_key_created_at TEXT"
             )
+        if "remember_token_expires_at" not in cols:
+            self.conn.execute(
+                "ALTER TABLE users ADD COLUMN remember_token_expires_at TEXT"
+            )
+        self.conn.execute(
+            "UPDATE users SET remember_token_expires_at=datetime('now', '+30 days') "
+            "WHERE remember_token IS NOT NULL "
+            "AND (remember_token_expires_at IS NULL OR remember_token_expires_at='')"
+        )
         self.conn.execute(
             "UPDATE users SET password_changed_at=COALESCE(created_at, datetime('now')) "
             "WHERE password_changed_at IS NULL OR password_changed_at=''"
@@ -409,14 +427,80 @@ class DB:
         self.conn.execute(f"DROP TABLE {legacy}")
 
     @staticmethod
-    def _password_hash(password: str, salt_hex: str) -> str:
+    def _password_hash_with_iterations(
+        password: str,
+        salt_hex: str,
+        iterations: int,
+    ) -> str:
         salt = bytes.fromhex(salt_hex)
         return hashlib.pbkdf2_hmac(
             "sha256",
             password.encode("utf-8"),
             salt,
-            _PBKDF2_ITERATIONS,
+            iterations,
         ).hex()
+
+    @classmethod
+    def _password_hash(cls, password: str, salt_hex: str) -> str:
+        return cls._password_hash_with_iterations(
+            password,
+            salt_hex,
+            _PBKDF2_ITERATIONS,
+        )
+
+    @classmethod
+    def _password_hash_matches(
+        cls,
+        password: str,
+        salt_hex: str,
+        stored_hash: str,
+    ) -> tuple[bool, bool]:
+        current = cls._password_hash(password, salt_hex)
+        if hmac.compare_digest(current, stored_hash):
+            return True, False
+        for iterations in _PBKDF2_LEGACY_ITERATIONS:
+            legacy = cls._password_hash_with_iterations(
+                password,
+                salt_hex,
+                iterations,
+            )
+            if hmac.compare_digest(legacy, stored_hash):
+                return True, True
+        return False, False
+
+    def _upgrade_password_hash(
+        self,
+        user_id: int,
+        password: str,
+        old_hash: str,
+        old_salt: str,
+    ) -> None:
+        salt = secrets.token_hex(16)
+        password_hash = self._password_hash(password, salt)
+        with self._write_lock:
+            self.conn.execute(
+                "UPDATE users SET password_hash=?, salt=? "
+                "WHERE id=? AND password_hash=? AND salt=?",
+                (password_hash, salt, user_id, old_hash, old_salt),
+            )
+            self.conn.commit()
+
+    def _upgrade_recovery_key_hash(
+        self,
+        user_id: int,
+        recovery_key: str,
+        old_hash: str,
+        old_salt: str,
+    ) -> None:
+        salt = secrets.token_hex(16)
+        key_hash = self._password_hash(recovery_key, salt)
+        with self._write_lock:
+            self.conn.execute(
+                "UPDATE users SET recovery_key_hash=?, recovery_salt=? "
+                "WHERE id=? AND recovery_key_hash=? AND recovery_salt=?",
+                (key_hash, salt, user_id, old_hash, old_salt),
+            )
+            self.conn.commit()
 
     @staticmethod
     def _clean_username(username: str) -> str:
@@ -494,8 +578,17 @@ class DB:
         ).fetchone()
         if not row:
             return None
-        expected = self._password_hash(password, row[2])
-        return int(row[0]) if hmac.compare_digest(expected, row[1]) else None
+        matched, needs_upgrade = self._password_hash_matches(
+            password,
+            row[2],
+            row[1],
+        )
+        if not matched:
+            return None
+        user_id = int(row[0])
+        if needs_upgrade:
+            self._upgrade_password_hash(user_id, password, row[1], row[2])
+        return user_id
 
     def verify_user_id(self, user_id: int, password: str) -> bool:
         row = self.conn.execute(
@@ -504,8 +597,14 @@ class DB:
         ).fetchone()
         if not row:
             return False
-        expected = self._password_hash(password, row[1])
-        return hmac.compare_digest(expected, row[0])
+        matched, needs_upgrade = self._password_hash_matches(
+            password,
+            row[1],
+            row[0],
+        )
+        if matched and needs_upgrade:
+            self._upgrade_password_hash(user_id, password, row[0], row[1])
+        return matched
 
     def verify_recovery_key(self, username: str, recovery_key: str) -> int | None:
         try:
@@ -518,8 +617,18 @@ class DB:
         ).fetchone()
         if not row or not row[1] or not row[2]:
             return None
-        expected = self._password_hash(recovery_key.strip(), row[2])
-        return int(row[0]) if hmac.compare_digest(expected, row[1]) else None
+        cleaned_key = recovery_key.strip()
+        matched, needs_upgrade = self._password_hash_matches(
+            cleaned_key,
+            row[2],
+            row[1],
+        )
+        if not matched:
+            return None
+        user_id = int(row[0])
+        if needs_upgrade:
+            self._upgrade_recovery_key_hash(user_id, cleaned_key, row[1], row[2])
+        return user_id
 
     def regenerate_recovery_key(self, username: str) -> str:
         username = self._clean_username(username)
@@ -549,14 +658,15 @@ class DB:
         ).fetchone()
         if not row:
             return False
-        expected = self._password_hash(old_pw, row[1])
-        if not hmac.compare_digest(expected, row[0]):
+        matched, _needs_upgrade = self._password_hash_matches(old_pw, row[1], row[0])
+        if not matched:
             return False
         salt = secrets.token_hex(16)
         password_hash = self._password_hash(new_pw, salt)
         with self._write_lock:
             self.conn.execute(
-                "UPDATE users SET password_hash=?, salt=?, password_changed_at=datetime('now') "
+                "UPDATE users SET password_hash=?, salt=?, remember_token=NULL, "
+                "remember_token_expires_at=NULL, password_changed_at=datetime('now') "
                 "WHERE id=?",
                 (password_hash, salt, user_id),
             )
@@ -571,7 +681,8 @@ class DB:
         with self._write_lock:
             self.conn.execute(
                 "UPDATE users SET password_hash=?, salt=?, remember_token=NULL, "
-                "password_changed_at=datetime('now') WHERE id=?",
+                "remember_token_expires_at=NULL, password_changed_at=datetime('now') "
+                "WHERE id=?",
                 (password_hash, salt, user_id),
             )
             self.conn.commit()
@@ -603,10 +714,16 @@ class DB:
         return True
 
     def set_remember_token(self, user_id: int, token: str | None) -> None:
+        expires_at = None
+        if token:
+            expires_at = (
+                datetime.now() + timedelta(days=REMEMBER_TOKEN_LIFETIME_DAYS)
+            ).isoformat(timespec="seconds")
         with self._write_lock:
             self.conn.execute(
-                "UPDATE users SET remember_token=? WHERE id=?",
-                (token or None, user_id),
+                "UPDATE users SET remember_token=?, remember_token_expires_at=? "
+                "WHERE id=?",
+                (token or None, expires_at, user_id),
             )
             self.conn.commit()
 
@@ -615,11 +732,24 @@ class DB:
             return None
         row = self.conn.execute(
             "SELECT id,username,created_at,password_changed_at,is_admin,"
-            "recovery_key_hash,recovery_key_created_at "
+            "recovery_key_hash,recovery_key_created_at,remember_token_expires_at "
             "FROM users WHERE remember_token=?",
             (token,),
         ).fetchone()
+        if row and self._remember_token_is_expired(row[7]):
+            self.set_remember_token(int(row[0]), None)
+            return None
         return self._user_row(row) if row else None
+
+    @staticmethod
+    def _remember_token_is_expired(raw_expires_at) -> bool:
+        if not raw_expires_at:
+            return True
+        try:
+            expires_at = datetime.fromisoformat(str(raw_expires_at))
+        except ValueError:
+            return True
+        return datetime.now() >= expires_at
 
     def get_user_by_username(self, username: str) -> dict | None:
         try:

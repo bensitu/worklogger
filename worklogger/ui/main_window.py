@@ -56,6 +56,7 @@ from ui.dialogs import (
     SettingsDialog, NoteEditorDialog, ReportDialog, ChartDialog,
     QuickLogDialog,
 )
+from ui.dialogs.common import _localize_msgbox_buttons
 from utils.icon import make_icon
 
 STYLE_PRIO = ["weekend", "today", "holiday", "selected"]
@@ -63,22 +64,6 @@ REQUIRED_COLS = {"date", "start", "end", "break", "note"}
 ThemeColors = tuple[str, str, str, str, str]
 ThemePalette = dict[bool, ThemeColors]
 ThemeMap = dict[str, ThemePalette]
-
-
-def _localize_msgbox_buttons(box: QMessageBox, translator) -> QMessageBox:
-    """Apply translated labels to common standard message box buttons."""
-    mapping = {
-        QMessageBox.StandardButton.Yes: translator("Yes"),
-        QMessageBox.StandardButton.No: translator("No"),
-        QMessageBox.StandardButton.Save: translator("Save"),
-        QMessageBox.StandardButton.Discard: translator("Discard"),
-        QMessageBox.StandardButton.Cancel: translator("Cancel"),
-    }
-    for button, label in mapping.items():
-        btn = box.button(button)
-        if btn:
-            btn.setText(label)
-    return box
 
 
 class CalendarDayButton(QPushButton):
@@ -185,6 +170,7 @@ class App(QWidget):
         set_language(self._state.lang)
 
         self.holidays: dict = {}
+        self._holidays_pending: dict = {}
         self._country = detect_country()
         self._day_btns:    list[QPushButton] = []
         self._week_totals: list[QLabel] = []
@@ -246,7 +232,6 @@ class App(QWidget):
             QMetaObject.invokeMethod(self, "_apply_holidays",
                                      _Qt.ConnectionType.QueuedConnection)
 
-        self._holidays_pending: dict = {}
         threading.Thread(target=_fetch, daemon=True).start()
 
     @Slot()
@@ -1523,6 +1508,7 @@ class App(QWidget):
         if errors:
             msg += _("\n\nSkipped {} rows:\n{}").format(len(errors), "\n".join(errors[:10]))
         QMessageBox.information(self, _("Import Result"), msg)
+        self._date_range_cache = None
         self.render()
 
     def _import_ics(self):

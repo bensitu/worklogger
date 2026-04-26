@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from config.constants import PASSWORD_MIN_LENGTH
 from utils.i18n import _
 
 
@@ -115,11 +116,11 @@ class RegisterDialog(QDialog):
         if not username:
             QMessageBox.warning(self, _("Register"), _("Username is required."))
             return
-        if len(password) < 6:
+        if len(password) < PASSWORD_MIN_LENGTH:
             QMessageBox.warning(
                 self,
                 _("Register"),
-                _("Password must be at least 6 characters."),
+                _("Password must be at least 8 characters."),
             )
             return
         if password != confirm:

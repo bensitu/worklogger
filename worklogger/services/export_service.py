@@ -11,7 +11,7 @@ from __future__ import annotations
 import csv
 import re
 from dataclasses import dataclass
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from typing import TYPE_CHECKING
 
 from core.time_calc import calc_hours, shift_datetimes
@@ -34,6 +34,55 @@ class PdfContext:
     month: int
     work_hours: float
     monthly_target: float
+
+
+@dataclass(frozen=True)
+class PdfColors:
+    page_bg: str
+    text: str
+    muted: str
+    separator: str
+    panel_bg: str
+    panel_header_bg: str
+    row_bg: str
+    row_alt_bg: str
+    disabled: str
+    accent: str
+
+
+def pdf_colors(ctx: "PdfContext") -> PdfColors:
+    """Return theme-aware PDF colors."""
+    from config.themes import theme_colors
+
+    accent, _hover, accent_dim, stat_bg, stat_border = theme_colors(
+        ctx.theme,
+        ctx.dark,
+    )
+    if ctx.dark:
+        return PdfColors(
+            page_bg="#151722",
+            text="#eef2ff",
+            muted="#a8b0ce",
+            separator=stat_border,
+            panel_bg=stat_bg,
+            panel_header_bg=stat_border,
+            row_bg="#161923",
+            row_alt_bg="#1d2030",
+            disabled="#707894",
+            accent=accent,
+        )
+    return PdfColors(
+        page_bg="#ffffff",
+        text="#1e2035",
+        muted="#606888",
+        separator=stat_border,
+        panel_bg=stat_bg,
+        panel_header_bg=accent_dim,
+        row_bg="#ffffff",
+        row_alt_bg="#f7f9ff",
+        disabled="#9090a8",
+        accent=accent,
+    )
 
 
 def export_csv(path: str, rows: list) -> None:
@@ -99,18 +148,47 @@ def import_csv(path: str, db: "DB", required_cols: set,
     return imported, errors
 
 
+def _escape_ics_text(value: str) -> str:
+    text = str(value or "")
+    text = text.replace("\\", "\\\\")
+    text = text.replace(";", "\\;")
+    text = text.replace(",", "\\,")
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    return text.replace("\n", "\\n")
+
+
+def _fold_ics_line(line: str) -> list[str]:
+    folded: list[str] = []
+    current = ""
+    current_len = 0
+    for char in line:
+        char_len = len(char.encode("utf-8"))
+        if current and current_len + char_len > 75:
+            folded.append(current)
+            current = " " + char
+            current_len = 1 + char_len
+        else:
+            current += char
+            current_len += char_len
+    if current:
+        folded.append(current)
+    return folded or [""]
+
+
 def build_ics(rows: list) -> str:
     """Build minimal iCalendar string from worklog rows."""
     lines = [
         "BEGIN:VCALENDAR", "VERSION:2.0",
         "PRODID:-//WorkLogger//WorkLogger//EN", "CALSCALE:GREGORIAN",
     ]
-    for r in rows:
+    dtstamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    for idx, r in enumerate(rows, 1):
         if not r.has_times:
             continue
         h = calc_hours(r.start, r.end, r.break_hours)
-        note = r.safe_note().replace("\\n", " ").replace(",", "\\,")
-        summary = f"Work {h:.1f}h" + (f" — {note[:60]}" if note else "")
+        note = r.safe_note()
+        summary_note = re.sub(r"[\r\n]+", " ", note).strip()
+        summary = f"Work {h:.1f}h" + (f" — {summary_note[:60]}" if summary_note else "")
         dt_pair = shift_datetimes(r.date, r.start, r.end)
         if not dt_pair:
             continue
@@ -119,12 +197,18 @@ def build_ics(rows: list) -> str:
         dtend = end_dt.strftime("%Y%m%dT%H%M%S")
         lines += [
             "BEGIN:VEVENT",
+            f"UID:worklogger-{r.date}-{dtstart}-{idx}@worklogger",
+            f"DTSTAMP:{dtstamp}",
             f"DTSTART:{dtstart}", f"DTEND:{dtend}",
-            f"SUMMARY:{summary}", f"DESCRIPTION:{note[:500]}",
+            f"SUMMARY:{_escape_ics_text(summary)}",
+            f"DESCRIPTION:{_escape_ics_text(note[:500])}",
             "END:VEVENT",
         ]
     lines.append("END:VCALENDAR")
-    return "\r\n".join(lines) + "\r\n"
+    folded_lines: list[str] = []
+    for line in lines:
+        folded_lines.extend(_fold_ics_line(line))
+    return "\r\n".join(folded_lines) + "\r\n"
 
 
 def render_pdf(
@@ -166,19 +250,21 @@ def render_pdf(
     pw, ph = int(pr.width()), int(pr.height())
     dpi = printer.resolution()
     def pt(n): return int(n * dpi / 72)
+    colors = pdf_colors(ctx)
+    painter.fillRect(QRectF(0, 0, pw, ph), QColor(colors.page_bg))
 
     f = QFont("sans-serif")
     f.setPixelSize(pt(20))
     f.setBold(True)
     painter.setFont(f)
-    painter.setPen(QColor("#1e2035"))
+    painter.setPen(QColor(colors.text))
     th = pt(30)
     painter.drawText(QRectF(0, 0, pw, th),
                      Qt.AlignHCenter | Qt.AlignVCenter, _("Work Time Analytics"))
     f2 = QFont("sans-serif")
     f2.setPixelSize(pt(10))
     painter.setFont(f2)
-    painter.setPen(QColor("#606888"))
+    painter.setPen(QColor(colors.muted))
     y, m = ctx.year, ctx.month
     sub = (f"{tab_name}  —  {y}/{m:02d}" if tab_index == 0
            else f"{tab_name}  —  {y}")
@@ -186,7 +272,7 @@ def render_pdf(
     painter.drawText(QRectF(0, th, pw, sh),
                      Qt.AlignHCenter | Qt.AlignVCenter, sub)
     sep_y = th + sh + pt(4)
-    painter.setPen(QPen(QColor("#d0d8e8"), pt(1)))
+    painter.setPen(QPen(QColor(colors.separator), pt(1)))
     painter.drawLine(int(pw*0.03), sep_y, int(pw*0.97), sep_y)
     cursor_y = sep_y + pt(6)
 
@@ -203,7 +289,7 @@ def render_pdf(
                        QRectF(scaled.rect()))
     cursor_y += th_img + pt(8)
 
-    painter.setPen(QPen(QColor("#d0d8e8"), pt(1)))
+    painter.setPen(QPen(QColor(colors.separator), pt(1)))
     painter.drawLine(int(pw*0.03), cursor_y, int(pw*0.97), cursor_y)
     cursor_y += pt(10)
 

@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from config.constants import PASSWORD_MIN_LENGTH
 from utils.i18n import _
 
 
@@ -63,11 +64,11 @@ class ChangePasswordDialog(QDialog):
         old_pw = self._old.text()
         new_pw = self._new.text()
         confirm = self._confirm.text()
-        if len(new_pw) < 6:
+        if len(new_pw) < PASSWORD_MIN_LENGTH:
             QMessageBox.warning(
                 self,
                 _("Change Password"),
-                _("Password must be at least 6 characters."),
+                _("Password must be at least 8 characters."),
             )
             return
         if new_pw != confirm:
@@ -102,7 +103,7 @@ class ChangePasswordDialog(QDialog):
             QMessageBox.warning(
                 self,
                 _("Change Password"),
-                _("Password must be at least 6 characters."),
+                _("Password must be at least 8 characters."),
             )
             return
         if not changed:

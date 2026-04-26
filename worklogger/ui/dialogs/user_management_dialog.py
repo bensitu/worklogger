@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 )
 
 from config.themes import cell_pool, theme_colors
+from config.constants import PASSWORD_MIN_LENGTH
 from utils.i18n import _
 from .common import _localize_msgbox_buttons
 
@@ -119,11 +120,11 @@ class _AdminResetPasswordDialog(QDialog):
                 _("Please enter administrator password."),
             )
             return
-        if len(new_password) < 6:
+        if len(new_password) < PASSWORD_MIN_LENGTH:
             QMessageBox.warning(
                 self,
                 _("Reset User Password"),
-                _("Password must be at least 6 characters."),
+                _("Password must be at least 8 characters."),
             )
             return
         if new_password != confirm:
@@ -531,7 +532,7 @@ class UserManagementDialog(QDialog):
         elif code == "last_admin":
             text = _("At least one administrator account is required.")
         elif code == "password_too_short":
-            text = _("Password must be at least 6 characters.")
+            text = _("Password must be at least 8 characters.")
         elif code == "username_required":
             text = _("Username is required.")
         elif code == "user_not_found":

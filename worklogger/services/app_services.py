@@ -30,6 +30,7 @@ from config.constants import (
     LAST_BACKUP_KEY,
     MINIMAL_MODE_SETTING_KEY,
     MONTHLY_TARGET_SETTING_KEY,
+    PASSWORD_MIN_LENGTH,
     PASSWORD_CHANGE_REMINDER_DAYS,
     SHOW_HOLIDAYS_SETTING_KEY,
     SHOW_NOTE_MARKERS_SETTING_KEY,
@@ -75,7 +76,7 @@ class AuthService:
         username = username.strip()
         if not username:
             raise ValueError("username_required")
-        if len(password) < 6:
+        if len(password) < PASSWORD_MIN_LENGTH:
             raise ValueError("password_too_short")
         recovery_key = recovery_key.strip() if recovery_key else None
         is_first_user = self.db.user_count() == 0
@@ -117,7 +118,7 @@ class AuthService:
         recovery_key: str,
         new_pw: str,
     ) -> bool:
-        if len(new_pw) < 6:
+        if len(new_pw) < PASSWORD_MIN_LENGTH:
             raise ValueError("password_too_short")
         user_id = self.db.verify_recovery_key(username, recovery_key)
         if user_id is None:
@@ -134,7 +135,7 @@ class AuthService:
         return changed
 
     def change_password(self, user_id: int, old_pw: str, new_pw: str) -> bool:
-        if len(new_pw) < 6:
+        if len(new_pw) < PASSWORD_MIN_LENGTH:
             raise ValueError("password_too_short")
         changed = self.db.change_password(user_id, old_pw, new_pw)
         if changed:
@@ -143,6 +144,8 @@ class AuthService:
                 "0",
                 user_id=user_id,
             )
+            user = self.db.get_user(user_id)
+            clear_remember_token(user["username"] if user else None)
         return changed
 
     def change_password_for_username(
@@ -181,7 +184,7 @@ class AuthService:
         *,
         clear_remember: bool = True,
     ) -> bool:
-        if len(new_pw) < 6:
+        if len(new_pw) < PASSWORD_MIN_LENGTH:
             raise ValueError("password_too_short")
         if not self.db.is_admin(admin_user_id):
             raise PermissionError("admin_required")
@@ -327,6 +330,11 @@ class AppServices:
                 DEFAULT_ADMIN_USER,
                 DEFAULT_ADMIN_USER,
                 is_admin=True,
+            )
+            self.db.set_setting(
+                FORCE_PASSWORD_CHANGE_SETTING_KEY,
+                "1",
+                user_id=user_id,
             )
         else:
             user = self.db.first_user()
@@ -484,17 +492,9 @@ class AppServices:
         if src.resolve(strict=False) == dest.resolve(strict=False):
             raise ValueError("backup_same_path")
         dest.parent.mkdir(parents=True, exist_ok=True)
-        previous_backup = self.get_setting(LAST_BACKUP_KEY, None)
+        self.db.conn.commit()
+        shutil.copy2(src, dest)
         self.set_setting(LAST_BACKUP_KEY, datetime.now().isoformat(timespec="seconds"))
-        try:
-            self.db.conn.commit()
-            shutil.copy2(src, dest)
-        except Exception:
-            self.set_setting(
-                LAST_BACKUP_KEY,
-                "" if previous_backup is None else previous_backup,
-            )
-            raise
         return True
 
     def validate_restore_database(self, src_path: str) -> bool:

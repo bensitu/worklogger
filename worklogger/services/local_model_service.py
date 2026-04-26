@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import abc
 import hashlib
+import ipaddress
 import json
 import os
 import re
@@ -26,7 +27,8 @@ import shutil
 import sys
 import threading
 import time
-from pathlib import Path
+import urllib.parse
+from pathlib import Path, PureWindowsPath
 from typing import Any, Callable, Optional
 
 # Public sentinel.
@@ -89,6 +91,73 @@ def _app_root() -> Path:
 def get_models_dir() -> Path:
     """Return ``<app_root>/models/`` — always sibling of ``templates/``."""
     return _app_root() / "models"
+
+
+def validate_model_filename(filename: str) -> str:
+    """Return a safe single-file model name or raise ``ValueError``."""
+    name = str(filename or "").strip()
+    win_path = PureWindowsPath(name)
+    if (
+        not name
+        or "/" in name
+        or "\\" in name
+        or ":" in name
+        or any(ord(ch) < 32 for ch in name)
+        or name in {".", ".."}
+        or ".." in Path(name).parts
+        or Path(name).is_absolute()
+        or win_path.is_absolute()
+        or win_path.drive
+    ):
+        raise ValueError(f"Unsafe model filename: {filename}")
+    return name
+
+
+def resolve_model_path(models_dir: Path, filename: str) -> Path:
+    """Resolve *filename* under *models_dir* and reject traversal attempts."""
+    safe_name = validate_model_filename(filename)
+    base = Path(models_dir).resolve(strict=False)
+    resolved = (base / safe_name).resolve(strict=False)
+    try:
+        common = os.path.commonpath([
+            os.path.normcase(str(base)),
+            os.path.normcase(str(resolved)),
+        ])
+    except ValueError as exc:
+        raise ValueError(f"Unsafe model filename: {filename}") from exc
+    if common != os.path.normcase(str(base)):
+        raise ValueError(f"Unsafe model filename: {filename}")
+    return resolved
+
+
+def validate_model_url(url: str) -> str:
+    """Return a safe HTTPS model URL or raise ``ValueError``."""
+    raw = str(url or "").strip()
+    parsed = urllib.parse.urlparse(raw)
+    if parsed.scheme.lower() != "https" or not parsed.hostname:
+        raise ValueError(f"Unsafe model URL: {url}")
+    host = parsed.hostname.strip().lower().rstrip(".")
+    if host == "localhost" or host.endswith(".localhost"):
+        raise ValueError(f"Unsafe model URL host: {parsed.hostname}")
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        if re.fullmatch(r"[0-9.]+", host) or re.fullmatch(
+            r"(0x[0-9a-f]+)(\.(0x[0-9a-f]+))*",
+            host,
+        ):
+            raise ValueError(f"Unsafe model URL host: {parsed.hostname}")
+        return raw
+    if (
+        ip.is_private
+        or ip.is_loopback
+        or ip.is_link_local
+        or ip.is_multicast
+        or ip.is_reserved
+        or ip.is_unspecified
+    ):
+        raise ValueError(f"Unsafe model URL host: {parsed.hostname}")
+    return raw
 
 
 # Thinking-tag stripper.
@@ -451,7 +520,7 @@ def delete_model_file(entry_id: str,
         models_dir = get_models_dir()
     manifest = load_manifest(models_dir)
     entry    = get_entry(manifest, entry_id)
-    path     = models_dir / entry.get("file", "")
+    path     = resolve_model_path(models_dir, entry.get("file", ""))
     if path and path.exists():
         try:
             path.unlink()
@@ -557,7 +626,7 @@ def verify_model_file_with_reason(
         filename = entry.get("file", "")
         if not filename:
             return False, "missing"
-        path = models_dir / filename
+        path = resolve_model_path(models_dir, filename)
         if not path.exists():
             return False, "missing"
         if path.stat().st_size == 0:
@@ -785,7 +854,7 @@ class LocalModelService:
         try:
             manifest = load_manifest(self._models_dir)
             entry    = get_entry(manifest, "local")
-            path     = self._models_dir / entry.get("file", "")
+            path     = resolve_model_path(self._models_dir, entry.get("file", ""))
             return bool(path) and path.exists() and path.stat().st_size > 0
         except Exception:
             return False
@@ -806,7 +875,10 @@ class LocalModelService:
                 return self._provider
             manifest = load_manifest(self._models_dir)
             entry    = get_entry(manifest, "local")
-            path     = self._models_dir / entry.get("file", MODEL_FILENAME)
+            path     = resolve_model_path(
+                self._models_dir,
+                entry.get("file", MODEL_FILENAME),
+            )
             if not path or not path.exists():
                 raise FileNotFoundError(
                     f"Model file not found: {path}\n"
@@ -895,11 +967,12 @@ class LocalModelService:
 
         if matched is not None:
             # Known catalog model — use its canonical filename.
-            dest = self._models_dir / matched["file"]
+            dest = resolve_model_path(self._models_dir, matched["file"])
             target_id = matched["id"]
         else:
             # Unknown model — keep original filename and create a custom entry.
-            dest      = self._models_dir / src_filename
+            src_filename = validate_model_filename(src_filename)
+            dest      = resolve_model_path(self._models_dir, src_filename)
             target_id = f"custom_{src_p.stem}"
             # Add to catalog.json so future loads recognise it.
             new_cat_entry = {

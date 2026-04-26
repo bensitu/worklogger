@@ -47,13 +47,35 @@ class _CallbackInvoker(QObject):
 
 # Keep references to short-lived test invokers so they are not garbage-collected
 # while the background test thread is running. Entries are removed on done/error.
+MAX_RESPONSE_BYTES = 4 * 1024 * 1024
 _test_invokers: list[_CallbackInvoker] = []
+_test_invokers_lock = threading.Lock()
 
 
 # Internal helpers.
 
 def _sanitize_header(value: str) -> str:
     return ''.join(c for c in value if 32 <= ord(c) <= 126)
+
+
+def _read_limited_response(resp) -> bytes:
+    body = resp.read(MAX_RESPONSE_BYTES + 1)
+    if len(body) > MAX_RESPONSE_BYTES:
+        raise ValueError("AI response too large (> 4MB)")
+    return body
+
+
+def _retain_test_invoker(invoker: _CallbackInvoker) -> None:
+    with _test_invokers_lock:
+        _test_invokers.append(invoker)
+
+
+def _release_test_invoker(invoker: _CallbackInvoker) -> None:
+    with _test_invokers_lock:
+        try:
+            _test_invokers.remove(invoker)
+        except ValueError:
+            pass
 
 
 def _resolve_endpoint(base_url: str) -> tuple[str, bool]:
@@ -110,7 +132,7 @@ def _extract_text(data: dict, is_anthropic: bool) -> str:
 
 def _read_api_error(exc: urllib.error.HTTPError) -> str:
     try:
-        body = exc.read().decode("utf-8", errors="replace")
+        body = _read_limited_response(exc).decode("utf-8", errors="replace")
         obj = json.loads(body)
         msg = (obj.get("error") or {}).get("message", "")
         if not msg:
@@ -223,7 +245,8 @@ class AIWorker:
             _status_key("ai_status_connect", model=model)
             with urllib.request.urlopen(req, timeout=60) as resp:
                 _status_key("ai_status_wait")
-                data = json.loads(resp.read())
+                body = _read_limited_response(resp)
+                data = json.loads(body) if body else {}
             _status_key("ai_status_parse")
             text = _extract_text(data, is_anthropic)
             _status_key("ai_status_done")
@@ -247,22 +270,14 @@ class AIWorker:
         invoker = _CallbackInvoker(on_done, on_error, on_status)
         # Retain the invoker until the test completes to avoid it being
         # garbage-collected while background thread runs and signals are used.
-        _test_invokers.append(invoker)
+        _retain_test_invoker(invoker)
         # Remove invoker when done or error to allow GC.
 
         def _cleanup_on_done(_text: str):
-            try:
-                if invoker in _test_invokers:
-                    _test_invokers.remove(invoker)
-            except Exception:
-                pass
+            _release_test_invoker(invoker)
 
         def _cleanup_on_err(_short: str, _detail: str):
-            try:
-                if invoker in _test_invokers:
-                    _test_invokers.remove(invoker)
-            except Exception:
-                pass
+            _release_test_invoker(invoker)
 
         invoker.done_signal.connect(_cleanup_on_done)
         invoker.error_signal.connect(_cleanup_on_err)
@@ -320,7 +335,7 @@ class AIWorker:
                 # Keep test latency low with a short request timeout.
                 with urllib.request.urlopen(req, timeout=8) as resp:
                     _s_key("ai_status_wait")
-                    buf = resp.read()
+                    buf = _read_limited_response(resp)
                     data = json.loads(buf) if buf else {}
                 _s_key("ai_status_parse")
                 text = _extract_text(data, is_anthropic)
