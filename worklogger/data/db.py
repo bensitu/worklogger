@@ -11,6 +11,7 @@ import sqlite3
 import sys
 import threading
 import time
+from datetime import date, datetime
 
 from config.constants import (
     DB_FILENAME,
@@ -43,7 +44,8 @@ _CREATE_USERS = """CREATE TABLE IF NOT EXISTS users(
     is_admin INTEGER DEFAULT 0,
     remember_token TEXT,
     created_at TEXT DEFAULT (datetime('now')),
-    password_changed_at TEXT DEFAULT (datetime('now'))
+    password_changed_at TEXT DEFAULT (datetime('now')),
+    recovery_key_created_at TEXT
 )"""
 
 _CREATE_WORKLOG = """CREATE TABLE IF NOT EXISTS worklog(
@@ -191,9 +193,18 @@ class DB:
             self.conn.execute("ALTER TABLE users ADD COLUMN recovery_salt TEXT")
         if "is_admin" not in cols:
             self.conn.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0")
+        if "recovery_key_created_at" not in cols:
+            self.conn.execute(
+                "ALTER TABLE users ADD COLUMN recovery_key_created_at TEXT"
+            )
         self.conn.execute(
             "UPDATE users SET password_changed_at=COALESCE(created_at, datetime('now')) "
             "WHERE password_changed_at IS NULL OR password_changed_at=''"
+        )
+        self.conn.execute(
+            "UPDATE users SET recovery_key_created_at=COALESCE(created_at, datetime('now')) "
+            "WHERE recovery_key_hash IS NOT NULL "
+            "AND (recovery_key_created_at IS NULL OR recovery_key_created_at='')"
         )
         user_count = int(self.conn.execute("SELECT COUNT(*) FROM users").fetchone()[0])
         admin_count = int(
@@ -407,6 +418,15 @@ class DB:
             _PBKDF2_ITERATIONS,
         ).hex()
 
+    @staticmethod
+    def _clean_username(username: str) -> str:
+        if not isinstance(username, str):
+            raise TypeError("username_must_be_string")
+        username = username.strip()
+        if not username:
+            raise ValueError("username_required")
+        return username
+
     def _create_user_unlocked(
         self,
         username: str,
@@ -415,9 +435,7 @@ class DB:
         recovery_key: str | None = None,
         is_admin: bool = False,
     ) -> int:
-        username = username.strip()
-        if not username:
-            raise ValueError("username_required")
+        username = self._clean_username(username)
         if not password:
             raise ValueError("password_required")
         salt = secrets.token_hex(16)
@@ -427,10 +445,12 @@ class DB:
             self._password_hash(recovery_key, recovery_salt)
             if recovery_key and recovery_salt else None
         )
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         cur = self.conn.execute(
             "INSERT INTO users"
-            "(username,password_hash,salt,recovery_key_hash,recovery_salt,is_admin,password_changed_at) "
-            "VALUES(?,?,?,?,?,?,datetime('now'))",
+            "(username,password_hash,salt,recovery_key_hash,recovery_salt,is_admin,"
+            "created_at,password_changed_at,recovery_key_created_at) "
+            "VALUES(?,?,?,?,?,?,?,?,?)",
             (
                 username,
                 password_hash,
@@ -438,6 +458,9 @@ class DB:
                 recovery_key_hash,
                 recovery_salt,
                 1 if is_admin else 0,
+                now,
+                now,
+                now if recovery_key_hash else None,
             ),
         )
         return int(cur.lastrowid)
@@ -461,9 +484,13 @@ class DB:
             return user_id
 
     def verify_user(self, username: str, password: str) -> int | None:
+        try:
+            username = self._clean_username(username)
+        except (TypeError, ValueError):
+            return None
         row = self.conn.execute(
             "SELECT id,password_hash,salt FROM users WHERE username=?",
-            (username.strip(),),
+            (username,),
         ).fetchone()
         if not row:
             return None
@@ -481,14 +508,39 @@ class DB:
         return hmac.compare_digest(expected, row[0])
 
     def verify_recovery_key(self, username: str, recovery_key: str) -> int | None:
+        try:
+            username = self._clean_username(username)
+        except (TypeError, ValueError):
+            return None
         row = self.conn.execute(
             "SELECT id,recovery_key_hash,recovery_salt FROM users WHERE username=?",
-            (username.strip(),),
+            (username,),
         ).fetchone()
         if not row or not row[1] or not row[2]:
             return None
         expected = self._password_hash(recovery_key.strip(), row[2])
         return int(row[0]) if hmac.compare_digest(expected, row[1]) else None
+
+    def regenerate_recovery_key(self, username: str) -> str:
+        username = self._clean_username(username)
+        if self.get_user_by_username(username) is None:
+            raise ValueError("user_not_found")
+        recovery_key = secrets.token_hex(16)
+        recovery_salt = secrets.token_hex(16)
+        recovery_key_hash = self._password_hash(recovery_key, recovery_salt)
+        with self._write_lock:
+            self.conn.execute(
+                "UPDATE users SET recovery_key_hash=?, recovery_salt=?, "
+                "recovery_key_created_at=? WHERE username=?",
+                (
+                    recovery_key_hash,
+                    recovery_salt,
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    username,
+                ),
+            )
+            self.conn.commit()
+        return recovery_key
 
     def change_password(self, user_id: int, old_pw: str, new_pw: str) -> bool:
         row = self.conn.execute(
@@ -562,23 +614,30 @@ class DB:
         if not token:
             return None
         row = self.conn.execute(
-            "SELECT id,username,created_at,password_changed_at,is_admin,recovery_key_hash "
+            "SELECT id,username,created_at,password_changed_at,is_admin,"
+            "recovery_key_hash,recovery_key_created_at "
             "FROM users WHERE remember_token=?",
             (token,),
         ).fetchone()
         return self._user_row(row) if row else None
 
     def get_user_by_username(self, username: str) -> dict | None:
+        try:
+            username = self._clean_username(username)
+        except (TypeError, ValueError):
+            return None
         row = self.conn.execute(
-            "SELECT id,username,created_at,password_changed_at,is_admin,recovery_key_hash "
+            "SELECT id,username,created_at,password_changed_at,is_admin,"
+            "recovery_key_hash,recovery_key_created_at "
             "FROM users WHERE username=?",
-            (username.strip(),),
+            (username,),
         ).fetchone()
         return self._user_row(row) if row else None
 
     def get_user(self, user_id: int) -> dict | None:
         row = self.conn.execute(
-            "SELECT id,username,created_at,password_changed_at,is_admin,recovery_key_hash "
+            "SELECT id,username,created_at,password_changed_at,is_admin,"
+            "recovery_key_hash,recovery_key_created_at "
             "FROM users WHERE id=?",
             (user_id,),
         ).fetchone()
@@ -586,7 +645,8 @@ class DB:
 
     def first_user(self) -> dict | None:
         row = self.conn.execute(
-            "SELECT id,username,created_at,password_changed_at,is_admin,recovery_key_hash "
+            "SELECT id,username,created_at,password_changed_at,is_admin,"
+            "recovery_key_hash,recovery_key_created_at "
             "FROM users ORDER BY id LIMIT 1"
         ).fetchone()
         return self._user_row(row) if row else None
@@ -596,7 +656,8 @@ class DB:
 
     def list_users(self) -> list[dict]:
         rows = self.conn.execute(
-            "SELECT id,username,created_at,password_changed_at,is_admin,recovery_key_hash "
+            "SELECT id,username,created_at,password_changed_at,is_admin,"
+            "recovery_key_hash,recovery_key_created_at "
             "FROM users ORDER BY username COLLATE NOCASE"
         ).fetchall()
         return [self._user_row(row) for row in rows]
@@ -606,6 +667,7 @@ class DB:
         password_changed_at = row[3] if len(row) > 3 else row[2]
         is_admin = bool(row[4]) if len(row) > 4 else False
         has_recovery_key = bool(row[5]) if len(row) > 5 else False
+        recovery_key_created_at = row[6] if len(row) > 6 else ""
         return dict(
             id=int(row[0]),
             username=row[1],
@@ -613,6 +675,7 @@ class DB:
             password_changed_at=password_changed_at,
             is_admin=is_admin,
             has_recovery_key=has_recovery_key,
+            recovery_key_created_at=recovery_key_created_at,
         )
 
     @staticmethod
@@ -655,6 +718,22 @@ class DB:
             (user_id,),
         )
         return [WorkRecord(*r) for r in c.fetchall()]
+
+    def get_data_date_range(self, *, user_id: int) -> tuple[date | None, date | None]:
+        row = self.conn.execute(
+            "SELECT MIN(d), MAX(d) FROM worklog WHERE user_id=? AND d IS NOT NULL AND d<>''",
+            (user_id,),
+        ).fetchone()
+        if not row or row[0] is None or row[1] is None:
+            return None, None
+
+        def _parse(raw) -> date | None:
+            try:
+                return date.fromisoformat(str(raw))
+            except (TypeError, ValueError):
+                return None
+
+        return _parse(row[0]), _parse(row[1])
 
     def get_setting(self, key: str, default=None, *, user_id: int):
         c = self.conn.cursor()

@@ -1353,3 +1353,69 @@ msgstr "找不到使用者。"
 
 msgid "Could not save recovery key."
 msgstr "無法保存恢復密鑰。"
+
+msgid "#"
+msgstr "#"
+
+msgid "A new recovery key was generated. Share it with the user now; it cannot be shown again later."
+msgstr "已產生新的恢復密鑰。請立即告知使用者；之後將無法再次顯示。"
+
+msgid "Actions"
+msgstr "操作"
+
+msgid "Are you sure you want to regenerate the recovery key? The old key will stop working immediately."
+msgstr "確定要重新產生恢復密鑰嗎？舊密鑰將立即失效。"
+
+msgid "CSV Data Management"
+msgstr "CSV 資料管理"
+
+msgid "Created"
+msgstr "建立日期"
+
+msgid "Import or export worklog records as CSV files for backup, migration, or spreadsheet analysis."
+msgstr "匯入或匯出工作記錄 CSV 檔案，用於備份、移轉或試算表分析。"
+
+msgid "Next day"
+msgstr "下一日"
+
+msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
+msgstr "支援 OpenAI 相容格式的模型，包括 ChatGPT、Claude、Qwen 和 DeepSeek。"
+
+msgid "Previous day"
+msgstr "上一日"
+
+msgid "Recovery Key Created"
+msgstr "恢復密鑰產生日期"
+
+msgid "Recovery Key Regenerated"
+msgstr "恢復密鑰已重新產生"
+
+msgid "Regenerate Recovery Key"
+msgstr "重新產生恢復密鑰"
+
+msgid "Review accounts, reset passwords, and manage recovery keys."
+msgstr "檢視帳戶、重設密碼並管理恢復密鑰。"
+
+msgid "Work Logger v3.0.0 focuses on secure personal work tracking with flexible reporting.\n\nHighlights:\n- Multi-user account system with isolated worklogs, reminders, reports, and settings.\n- Secure password hashing, recovery keys, administrator resets, and remember-me storage.\n- Custom themes, dark mode, and minimal mode for focused daily logging.\n- Enhanced analytics with bar/line charts, averages, overtime, targets, and leave markers.\n- Weekly and monthly reports that save automatically for the selected calendar period.\n- Database backup and restore, CSV import/export, and calendar import/export.\n- AI-assisted reporting with local model support and OpenAI-compatible external providers.\n- Multilingual UI for English, Japanese, Korean, Simplified Chinese, and Traditional Chinese."
+msgstr "Work Logger v3.0.0 專注於安全的個人工時追蹤與彈性報告。\n\n亮點：\n- 多使用者帳戶系統，工作記錄、提醒、報告和設定完全隔離。\n- 安全密碼雜湊、恢復密鑰、管理員重設和記住我儲存。\n- 自訂主題、深色模式和專注每日記錄的極簡模式。\n- 增強分析圖表，支援長條圖、折線圖、平均值、加班、目標和休假標記。\n- 週報和月報會依所選日曆週期自動儲存。\n- 資料庫備份與恢復、CSV 匯入匯出、日曆匯入匯出。\n- AI 輔助報告，支援本機模型和 OpenAI 相容外部模型。\n- 支援英文、日文、韓文、簡體中文和繁體中文。"
+
+msgid "Regenerate Key"
+msgstr "重新產生密鑰"
+
+msgid "Sample Template"
+msgstr "範例範本"
+
+msgid "Work Logger is a privacy-first desktop app for recording work time, notes, quick logs, calendar context, and recurring reports without sending your data to a cloud service by default.\n\nDaily logging:\n- Enter start, end, break, work type, and notes for each date.\n- Use Auto Record buttons for start, end, and break checkpoints.\n- Capture lightweight task details with Quick Log and merge them into reports.\n- Navigate by calendar, month, week, or minimal-mode day controls.\n\nAccounts and security:\n- Multiple local users are supported, and each user's worklogs, settings, reports, reminders, and backups are isolated.\n- Passwords and recovery keys are stored as secure hashes.\n- Administrators can reset user passwords and regenerate recovery keys when needed.\n- Remember-me login uses the operating system credential manager when available.\n\nReports and templates:\n- Generate daily notes, weekly reports, and monthly reports from saved data.\n- Weekly and monthly reports are tied to the selected calendar period and can be saved for later editing.\n- Built-in and custom templates help standardize recurring note and report formats.\n\nAnalytics and exports:\n- Review work hours, averages, overtime, targets, leave markers, and trend charts.\n- Export chart data to CSV and charts to PDF.\n- Import/export worklogs as CSV and calendar events as ICS.\n- Back up and restore the local database with reminders for stale backups.\n\nCustomization and AI:\n- Switch languages, themes, custom accent colors, dark mode, and minimal mode.\n- Use local-model assistance when configured, or connect to OpenAI-compatible external providers such as ChatGPT, Claude, Qwen, and DeepSeek.\n- Supported UI languages include English, Japanese, Korean, Simplified Chinese, and Traditional Chinese."
+msgstr "Work Logger 是一款以隱私優先為核心的桌面應用程式，用於記錄工時、筆記、快速日誌、日曆脈絡和週期性報告。預設情況下，你的資料不會傳送到雲端服務。\n\n日常記錄：\n- 為每個日期記錄開始時間、結束時間、休息時間、工作類型和備註。\n- 使用自動記錄按鈕快速登記開始、結束和休息節點。\n- 用 Quick Log 捕捉輕量任務細節，並合併到報告中。\n- 可透過日曆、月份、週視圖或極簡模式日期按鈕切換記錄。\n\n帳戶與安全：\n- 支援多個本機使用者，每個使用者的工作記錄、設定、報告、提醒和備份互相隔離。\n- 密碼和恢復密鑰均以安全雜湊方式儲存。\n- 管理員可在需要時重設使用者密碼並重新產生恢復密鑰。\n- 「記住我」登入優先使用作業系統憑據管理器。\n\n報告與範本：\n- 可根據已儲存資料產生日報、週報和月報。\n- 週報和月報會關聯到目前選擇的日曆週期，並可儲存後繼續編輯。\n- 內建範本和自訂範本可協助統一常用筆記和報告格式。\n\n分析與匯出：\n- 檢視工時、平均值、加班、目標、休假標記和趨勢圖表。\n- 將圖表資料匯出為 CSV，將圖表匯出為 PDF。\n- 支援工作記錄 CSV 匯入/匯出，以及日曆 ICS 匯入/匯出。\n- 支援本機資料庫備份與恢復，並在備份過期時提醒。\n\n自訂與 AI：\n- 可切換語言、主題、自訂強調色、深色模式和極簡模式。\n- 設定後可使用本機模型輔助，也可連接 ChatGPT、Claude、Qwen、DeepSeek 等 OpenAI 相容外部模型。\n- 支援英文、日文、韓文、簡體中文和繁體中文介面。"
+
+msgid "Save As"
+msgstr "另存為"
+
+msgid "Generated At"
+msgstr "產生日期"
+
+msgid "Note"
+msgstr "注意"
+
+msgid "This recovery key can be used to reset the user's password if it is forgotten. Store it securely and share it only with the account owner. Anyone with this key may reset the password until a new key is generated."
+msgstr "此恢復密鑰可在使用者忘記密碼時用於重設該使用者密碼。請妥善保管，並僅分享給帳戶本人。在產生新密鑰之前，任何持有此密鑰的人都可能重設該帳戶密碼。"

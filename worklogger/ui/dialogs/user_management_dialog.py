@@ -1,20 +1,31 @@
 from __future__ import annotations
 
+from functools import partial
+from datetime import datetime
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QApplication,
     QCheckBox,
     QDialog,
+    QFileDialog,
     QFormLayout,
     QHBoxLayout,
+    QHeaderView,
+    QLabel,
     QLineEdit,
     QMessageBox,
     QPushButton,
+    QSizePolicy,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
+    QWidget,
 )
 
+from config.themes import cell_pool, theme_colors
 from utils.i18n import _
+from .common import _localize_msgbox_buttons
 
 
 class _AdminPasswordDialog(QDialog):
@@ -129,42 +140,125 @@ class _AdminResetPasswordDialog(QDialog):
 
 
 class UserManagementDialog(QDialog):
-    def __init__(self, services, parent=None):
+    def __init__(
+        self,
+        services,
+        *,
+        theme_name: str = "blue",
+        dark: bool = False,
+        parent=None,
+    ):
         super().__init__(parent)
         self._services = services
         self._users: list[dict] = []
+        self._theme_name = theme_name
+        self._dark = bool(dark)
 
         self.setWindowTitle(_("Manage Users"))
-        self.setMinimumSize(560, 360)
+        self.setMinimumSize(1100, 460)
+        self.resize(1175, 520)
 
         root = QVBoxLayout(self)
-        self._table = QTableWidget(0, 4)
+        root.setContentsMargins(16, 16, 16, 16)
+        root.setSpacing(10)
+
+        title = QLabel(_("Manage Users"))
+        title.setStyleSheet("font-size: 16px; font-weight: 700;")
+        subtitle = QLabel(
+            _("Review accounts, reset passwords, and manage recovery keys.")
+        )
+        subtitle.setWordWrap(True)
+        subtitle.setObjectName("muted")
+        root.addWidget(title)
+        root.addWidget(subtitle)
+
+        self._table = QTableWidget(0, 8)
         self._table.setHorizontalHeaderLabels(
-            [_("Username"), _("Role"), _("Recovery Key"), _("Password Changed")]
+            [
+                _("#"),
+                _("Username"),
+                _("Role"),
+                _("Recovery Key"),
+                _("Created"),
+                _("Password Changed"),
+                _("Recovery Key Created"),
+                _("Actions"),
+            ]
         )
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self._table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self._table.verticalHeader().setVisible(False)
+        self._table.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        header = self._table.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(7, QHeaderView.ResizeMode.Fixed)
+        self._table.setColumnWidth(7, 400)
         root.addWidget(self._table, 1)
 
-        row = QHBoxLayout()
-        self._reset_btn = QPushButton(_("Reset Password"))
-        self._admin_btn = QPushButton(_("Grant Admin"))
-        refresh_btn = QPushButton(_("Refresh"))
+        footer = QHBoxLayout()
+        self._refresh_btn = QPushButton(_("Refresh"))
         close_btn = QPushButton(_("Close"))
-        row.addWidget(self._reset_btn)
-        row.addWidget(self._admin_btn)
-        row.addStretch()
-        row.addWidget(refresh_btn)
-        row.addWidget(close_btn)
-        root.addLayout(row)
+        footer.addStretch()
+        footer.addWidget(self._refresh_btn)
+        footer.addWidget(close_btn)
+        root.addLayout(footer)
 
-        self._table.itemSelectionChanged.connect(self._sync_buttons)
-        self._reset_btn.clicked.connect(self._reset_password)
-        self._admin_btn.clicked.connect(self._toggle_admin)
-        refresh_btn.clicked.connect(self._refresh)
+        self._refresh_btn.clicked.connect(self._refresh)
         close_btn.clicked.connect(self.accept)
+        self._apply_theme_styles()
         self._refresh()
+
+    def _apply_theme_styles(self) -> None:
+        acc, acc_hov, acc_dim, _stat_bg, stat_bd = theme_colors(
+            self._theme_name,
+            self._dark,
+        )
+        pool = cell_pool(self._dark, self._theme_name)
+        cell_bg, cell_txt, cell_border, _width = pool["default"]
+        surface = "#1c1d2b" if self._dark else "#ffffff"
+        muted = "#8890b8" if self._dark else "#606888"
+        self._table.setStyleSheet(
+            "QTableWidget{"
+            f"background:{surface};"
+            f"color:{cell_txt};"
+            f"gridline-color:{cell_border};"
+            f"border:1px solid {stat_bd};"
+            "border-radius:8px;"
+            "}"
+            "QHeaderView::section{"
+            f"background:{acc_dim};"
+            f"color:{cell_txt};"
+            f"border:0px;border-bottom:1px solid {stat_bd};"
+            "padding:7px 8px;font-weight:700;"
+            "}"
+            "QTableWidget::item{"
+            f"background:{cell_bg};"
+            "padding:4px 6px;"
+            "}"
+            "QTableWidget::item:selected{"
+            f"background:{acc};"
+            "color:white;"
+            "}"
+        )
+        button_qss = (
+            "QPushButton{"
+            f"background:{surface};"
+            f"color:{cell_txt};"
+            f"border:1px solid {stat_bd};"
+            "border-radius:7px;"
+            "padding:5px 8px;"
+            "}"
+            f"QPushButton:hover{{border-color:{acc};color:{acc};}}"
+            f"QPushButton:disabled{{color:{muted};border-color:{stat_bd};}}"
+            "QPushButton#primary_btn{"
+            f"background:{acc};"
+            "color:white;"
+            "border:none;"
+            "}"
+            f"QPushButton#primary_btn:hover{{background:{acc_hov};color:white;}}"
+        )
+        self.setStyleSheet(self.styleSheet() + button_qss)
 
     def _refresh(self) -> None:
         try:
@@ -180,39 +274,76 @@ class UserManagementDialog(QDialog):
         self._table.setRowCount(len(self._users))
         for row, user in enumerate(self._users):
             values = [
-                user["username"],
+                str(row + 1),
+                user.get("username", ""),
                 _("Administrator") if user.get("is_admin") else _("User"),
                 _("Yes") if user.get("has_recovery_key") else _("No"),
-                str(user.get("password_changed_at") or ""),
+                self._format_timestamp(user.get("created_at")),
+                self._format_timestamp(user.get("password_changed_at")),
+                self._format_timestamp(user.get("recovery_key_created_at")),
             ]
             for col, value in enumerate(values):
                 item = QTableWidgetItem(value)
+                if col == 0:
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 item.setData(Qt.ItemDataRole.UserRole, int(user["id"]))
                 self._table.setItem(row, col, item)
+            self._table.setCellWidget(row, 7, self._actions_widget(user))
+            self._table.setRowHeight(row, 48)
         self._table.resizeColumnsToContents()
-        self._sync_buttons()
+        self._table.horizontalHeader().setSectionResizeMode(
+            7,
+            QHeaderView.ResizeMode.Fixed,
+        )
+        self._table.setColumnWidth(7, 400)
 
-    def _selected_user(self) -> dict | None:
-        row = self._table.currentRow()
-        if row < 0 or row >= len(self._users):
-            return None
-        return self._users[row]
+    @staticmethod
+    def _format_timestamp(raw) -> str:
+        text = str(raw or "").strip()
+        if not text:
+            return ""
+        normalized = text.replace("T", " ")
+        for fmt, width in (("%Y-%m-%d %H:%M:%S", 19), ("%Y-%m-%d %H:%M", 16)):
+            try:
+                return datetime.strptime(normalized[:width], fmt).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                )
+            except ValueError:
+                continue
+        return normalized
 
-    def _sync_buttons(self) -> None:
-        user = self._selected_user()
-        has_user = user is not None
-        self._reset_btn.setEnabled(has_user)
-        self._admin_btn.setEnabled(has_user)
-        if user and user.get("is_admin"):
-            self._admin_btn.setText(_("Revoke Admin"))
-        else:
-            self._admin_btn.setText(_("Grant Admin"))
+    def _actions_widget(self, user: dict) -> QWidget:
+        wrap = QWidget()
+        layout = QHBoxLayout(wrap)
+        layout.setContentsMargins(4, 3, 4, 3)
+        layout.setSpacing(6)
 
-    def _reset_password(self) -> None:
-        user = self._selected_user()
-        if not user:
-            return
-        dlg = _AdminResetPasswordDialog(user["username"], self)
+        reset_btn = QPushButton(_("Reset Password"))
+        admin_btn = QPushButton(
+            _("Revoke Admin") if user.get("is_admin") else _("Grant Admin")
+        )
+        regen_btn = QPushButton(_("Regenerate Key"))
+        reset_btn.setObjectName("primary_btn")
+        regen_btn.setEnabled(not bool(user.get("is_admin")))
+        reset_btn.setMinimumWidth(120)
+        admin_btn.setMinimumWidth(110)
+        regen_btn.setMinimumWidth(135)
+        for button in (reset_btn, admin_btn, regen_btn):
+            button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        regen_btn.setToolTip(_("Regenerate Recovery Key"))
+
+        reset_btn.clicked.connect(partial(self._reset_password, user))
+        admin_btn.clicked.connect(partial(self._toggle_admin, user))
+        regen_btn.clicked.connect(partial(self._regenerate_recovery_key, user))
+
+        layout.addWidget(reset_btn)
+        layout.addWidget(admin_btn)
+        layout.addWidget(regen_btn)
+        layout.addStretch()
+        return wrap
+
+    def _reset_password(self, user: dict) -> None:
+        dlg = _AdminResetPasswordDialog(user.get("username", ""), self)
         if dlg.exec() != QDialog.Accepted:
             return
         try:
@@ -246,10 +377,7 @@ class UserManagementDialog(QDialog):
         )
         self._refresh()
 
-    def _toggle_admin(self) -> None:
-        user = self._selected_user()
-        if not user:
-            return
+    def _toggle_admin(self, user: dict) -> None:
         enable = not bool(user.get("is_admin"))
         dlg = _AdminPasswordDialog(self)
         if dlg.exec() != QDialog.Accepted:
@@ -279,6 +407,124 @@ class UserManagementDialog(QDialog):
             return
         self._refresh()
 
+    def _regenerate_recovery_key(self, user: dict) -> None:
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Icon.Question)
+        box.setWindowTitle(_("Regenerate Recovery Key"))
+        box.setText(
+            _(
+                "Are you sure you want to regenerate the recovery key? "
+                "The old key will stop working immediately."
+            )
+        )
+        box.setStandardButtons(
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        box.setDefaultButton(QMessageBox.StandardButton.No)
+        _localize_msgbox_buttons(box, _)
+        if box.exec() != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            key = self._services.regenerate_recovery_key(
+                str(user.get("username", "")),
+            )
+        except ValueError as exc:
+            self._show_admin_error(str(exc))
+            return
+        except PermissionError:
+            QMessageBox.warning(
+                self,
+                _("Manage Users"),
+                _("Administrator privileges are required."),
+            )
+            return
+        self._show_recovery_key(str(user.get("username", "")), key)
+        self._refresh()
+
+    def _show_recovery_key(self, username: str, recovery_key: str) -> None:
+        dlg = QDialog(self)
+        dlg.setWindowTitle(_("Recovery Key Regenerated"))
+        dlg.setMinimumWidth(460)
+        generated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        note_text = _(
+            "This recovery key can be used to reset the user's password if it is forgotten. "
+            "Store it securely and share it only with the account owner. "
+            "Anyone with this key may reset the password until a new key is generated."
+        )
+        root = QVBoxLayout(dlg)
+        info = QLabel(
+            _(
+                "A new recovery key was generated. Share it with the user now; "
+                "it cannot be shown again later."
+            )
+        )
+        info.setWordWrap(True)
+        root.addWidget(info)
+        form = QFormLayout()
+        username_edit = QLineEdit(username)
+        username_edit.setReadOnly(True)
+        key_edit = QLineEdit(recovery_key)
+        key_edit.setReadOnly(True)
+        form.addRow(_("Username"), username_edit)
+        generated_edit = QLineEdit(generated_at)
+        generated_edit.setReadOnly(True)
+        form.addRow(_("Generated At"), generated_edit)
+        form.addRow(_("Recovery Key"), key_edit)
+        root.addLayout(form)
+
+        status_lbl = QLabel("")
+        status_lbl.setObjectName("muted")
+        root.addWidget(status_lbl)
+
+        row = QHBoxLayout()
+        copy_btn = QPushButton(_("Copy"))
+        save_as_btn = QPushButton(_("Save As"))
+        ok_btn = QPushButton(_("OK"))
+        ok_btn.setObjectName("primary_btn")
+        row.addStretch()
+        row.addWidget(copy_btn)
+        row.addWidget(save_as_btn)
+        row.addWidget(ok_btn)
+        root.addLayout(row)
+
+        def _copy_key() -> None:
+            QApplication.clipboard().setText(recovery_key)
+            status_lbl.setText(_("Copied!"))
+
+        def _save_key() -> None:
+            safe_username = "".join(
+                ch if ch.isalnum() or ch in "-_" else "_"
+                for ch in username
+            ) or "user"
+            path, _dialog_filter = QFileDialog.getSaveFileName(
+                dlg,
+                _("Save Recovery Key"),
+                f"worklogger-recovery-key-{safe_username}.txt",
+                _("Text Files (*.txt)"),
+            )
+            if not path:
+                return
+            try:
+                with open(path, "w", encoding="utf-8") as fh:
+                    fh.write(f"{_('Username')}: {username}\n")
+                    fh.write(f"{_('Generated At')}: {generated_at}\n")
+                    fh.write(f"{_('Recovery Key')}: {recovery_key}\n")
+                    fh.write("\n")
+                    fh.write(f"{_('Note')}: {note_text}\n")
+            except OSError:
+                QMessageBox.warning(
+                    dlg,
+                    _("Recovery Key Regenerated"),
+                    _("Could not save recovery key."),
+                )
+                return
+            status_lbl.setText(_("Recovery key saved."))
+
+        copy_btn.clicked.connect(_copy_key)
+        save_as_btn.clicked.connect(_save_key)
+        ok_btn.clicked.connect(dlg.accept)
+        dlg.exec()
+
     def _show_admin_error(self, code: str) -> None:
         if code == "admin_password_incorrect":
             text = _("Administrator password is incorrect.")
@@ -286,6 +532,10 @@ class UserManagementDialog(QDialog):
             text = _("At least one administrator account is required.")
         elif code == "password_too_short":
             text = _("Password must be at least 6 characters.")
+        elif code == "username_required":
+            text = _("Username is required.")
+        elif code == "user_not_found":
+            text = _("User not found.")
         else:
             text = _("Operation failed.")
         QMessageBox.warning(self, _("Manage Users"), text)

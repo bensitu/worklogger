@@ -1353,3 +1353,69 @@ msgstr "사용자를 찾을 수 없습니다."
 
 msgid "Could not save recovery key."
 msgstr "복구 키를 저장할 수 없습니다."
+
+msgid "#"
+msgstr "#"
+
+msgid "A new recovery key was generated. Share it with the user now; it cannot be shown again later."
+msgstr "새 복구 키가 생성되었습니다. 지금 사용자에게 전달하세요. 나중에 다시 표시할 수 없습니다."
+
+msgid "Actions"
+msgstr "작업"
+
+msgid "Are you sure you want to regenerate the recovery key? The old key will stop working immediately."
+msgstr "복구 키를 다시 생성하시겠습니까? 기존 키는 즉시 무효화됩니다."
+
+msgid "CSV Data Management"
+msgstr "CSV 데이터 관리"
+
+msgid "Created"
+msgstr "생성일"
+
+msgid "Import or export worklog records as CSV files for backup, migration, or spreadsheet analysis."
+msgstr "백업, 이전 또는 스프레드시트 분석을 위해 작업 기록을 CSV 파일로 가져오거나 내보냅니다."
+
+msgid "Next day"
+msgstr "다음 날"
+
+msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
+msgstr "ChatGPT, Claude, Qwen, DeepSeek 등 OpenAI 호환 모델을 지원합니다."
+
+msgid "Previous day"
+msgstr "이전 날"
+
+msgid "Recovery Key Created"
+msgstr "복구 키 생성일"
+
+msgid "Recovery Key Regenerated"
+msgstr "복구 키가 다시 생성되었습니다"
+
+msgid "Regenerate Recovery Key"
+msgstr "복구 키 재생성"
+
+msgid "Review accounts, reset passwords, and manage recovery keys."
+msgstr "계정을 검토하고 비밀번호를 재설정하며 복구 키를 관리합니다."
+
+msgid "Work Logger v3.0.0 focuses on secure personal work tracking with flexible reporting.\n\nHighlights:\n- Multi-user account system with isolated worklogs, reminders, reports, and settings.\n- Secure password hashing, recovery keys, administrator resets, and remember-me storage.\n- Custom themes, dark mode, and minimal mode for focused daily logging.\n- Enhanced analytics with bar/line charts, averages, overtime, targets, and leave markers.\n- Weekly and monthly reports that save automatically for the selected calendar period.\n- Database backup and restore, CSV import/export, and calendar import/export.\n- AI-assisted reporting with local model support and OpenAI-compatible external providers.\n- Multilingual UI for English, Japanese, Korean, Simplified Chinese, and Traditional Chinese."
+msgstr "Work Logger v3.0.0은 안전한 개인 근무 시간 추적과 유연한 보고에 중점을 둡니다.\n\n주요 기능:\n- 다중 사용자 계정 시스템으로 작업 기록, 알림, 보고서, 설정을 완전히 분리합니다.\n- 안전한 비밀번호 해시, 복구 키, 관리자 재설정, 기억된 로그인 저장을 지원합니다.\n- 사용자 지정 테마, 다크 모드, 일일 기록에 집중하는 미니멀 모드를 제공합니다.\n- 막대/선 차트, 평균, 초과 근무, 목표, 휴가 표시가 포함된 향상된 분석을 제공합니다.\n- 선택한 달력 기간의 주간/월간 보고서를 자동 저장합니다.\n- 데이터베이스 백업 및 복원, CSV 가져오기/내보내기, 캘린더 가져오기/내보내기를 지원합니다.\n- 로컬 모델과 OpenAI 호환 외부 제공자를 사용하는 AI 보고서 작성을 지원합니다.\n- 영어, 일본어, 한국어, 간체 중국어, 번체 중국어 UI를 지원합니다."
+
+msgid "Regenerate Key"
+msgstr "키 재생성"
+
+msgid "Sample Template"
+msgstr "샘플 템플릿"
+
+msgid "Work Logger is a privacy-first desktop app for recording work time, notes, quick logs, calendar context, and recurring reports without sending your data to a cloud service by default.\n\nDaily logging:\n- Enter start, end, break, work type, and notes for each date.\n- Use Auto Record buttons for start, end, and break checkpoints.\n- Capture lightweight task details with Quick Log and merge them into reports.\n- Navigate by calendar, month, week, or minimal-mode day controls.\n\nAccounts and security:\n- Multiple local users are supported, and each user's worklogs, settings, reports, reminders, and backups are isolated.\n- Passwords and recovery keys are stored as secure hashes.\n- Administrators can reset user passwords and regenerate recovery keys when needed.\n- Remember-me login uses the operating system credential manager when available.\n\nReports and templates:\n- Generate daily notes, weekly reports, and monthly reports from saved data.\n- Weekly and monthly reports are tied to the selected calendar period and can be saved for later editing.\n- Built-in and custom templates help standardize recurring note and report formats.\n\nAnalytics and exports:\n- Review work hours, averages, overtime, targets, leave markers, and trend charts.\n- Export chart data to CSV and charts to PDF.\n- Import/export worklogs as CSV and calendar events as ICS.\n- Back up and restore the local database with reminders for stale backups.\n\nCustomization and AI:\n- Switch languages, themes, custom accent colors, dark mode, and minimal mode.\n- Use local-model assistance when configured, or connect to OpenAI-compatible external providers such as ChatGPT, Claude, Qwen, and DeepSeek.\n- Supported UI languages include English, Japanese, Korean, Simplified Chinese, and Traditional Chinese."
+msgstr "Work Logger는 근무 시간, 메모, 빠른 로그, 캘린더 맥락, 반복 보고서를 기록하는 개인정보 우선 데스크톱 앱입니다. 기본적으로 데이터를 클라우드 서비스로 보내지 않습니다.\n\n일일 기록:\n- 날짜별로 시작 시간, 종료 시간, 휴식 시간, 작업 유형, 메모를 기록합니다.\n- 자동 기록 버튼으로 시작, 종료, 휴식 체크포인트를 빠르게 입력합니다.\n- Quick Log로 가벼운 작업 세부 정보를 남기고 보고서에 합칠 수 있습니다.\n- 캘린더, 월, 주 또는 미니멀 모드의 날짜 버튼으로 기록을 이동합니다.\n\n계정과 보안:\n- 여러 로컬 사용자를 지원하며 각 사용자의 작업 기록, 설정, 보고서, 알림, 백업을 분리합니다.\n- 비밀번호와 복구 키는 안전한 해시로 저장됩니다.\n- 관리자는 필요할 때 사용자 비밀번호를 재설정하고 복구 키를 다시 생성할 수 있습니다.\n- 기억된 로그인은 가능한 경우 운영체제 자격 증명 관리자를 우선 사용합니다.\n\n보고서와 템플릿:\n- 저장된 데이터에서 일일 메모, 주간 보고서, 월간 보고서를 생성합니다.\n- 주간/월간 보고서는 선택한 캘린더 기간과 연결되며 저장 후 다시 편집할 수 있습니다.\n- 기본 제공 템플릿과 사용자 지정 템플릿으로 반복되는 메모와 보고서 형식을 표준화합니다.\n\n분석과 내보내기:\n- 근무 시간, 평균, 초과 근무, 목표, 휴가 표시, 추세 차트를 확인합니다.\n- 차트 데이터를 CSV로, 차트를 PDF로 내보낼 수 있습니다.\n- 작업 기록 CSV 가져오기/내보내기와 캘린더 ICS 가져오기/내보내기를 지원합니다.\n- 로컬 데이터베이스 백업과 복원을 지원하고 오래된 백업을 알려줍니다.\n\n사용자 지정과 AI:\n- 언어, 테마, 사용자 지정 강조색, 다크 모드, 미니멀 모드를 전환할 수 있습니다.\n- 설정된 로컬 모델 보조 기능을 사용하거나 ChatGPT, Claude, Qwen, DeepSeek 같은 OpenAI 호환 외부 제공자에 연결할 수 있습니다.\n- 영어, 일본어, 한국어, 간체 중국어, 번체 중국어 UI를 지원합니다."
+
+msgid "Save As"
+msgstr "다른 이름으로 저장"
+
+msgid "Generated At"
+msgstr "생성일"
+
+msgid "Note"
+msgstr "주의"
+
+msgid "This recovery key can be used to reset the user's password if it is forgotten. Store it securely and share it only with the account owner. Anyone with this key may reset the password until a new key is generated."
+msgstr "이 복구 키는 사용자가 비밀번호를 잊었을 때 해당 사용자의 비밀번호를 재설정하는 데 사용할 수 있습니다. 안전하게 보관하고 계정 소유자에게만 공유하세요. 새 키가 생성되기 전까지 이 키를 가진 사람은 비밀번호를 재설정할 수 있습니다."

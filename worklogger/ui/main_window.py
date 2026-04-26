@@ -35,6 +35,8 @@ from config.constants import (
     LEAVE_TYPES,
     MAX_SHIFT_HOURS,
     MAX_SHIFT_HOURS_SETTING_KEY,
+    MINIMAL_DATE_NAV_BUTTON_SIZE,
+    MINIMAL_DATE_NAV_FEEDBACK_MS,
     MINIMAL_MODE_SETTING_KEY,
     MONTHLY_TARGET_SETTING_KEY,
     SHOW_HOLIDAYS_SETTING_KEY,
@@ -196,6 +198,7 @@ class App(QWidget):
         self._auto_break_recorded = False
         self._tray_icon: QSystemTrayIcon | None = None
         self._tray_quit_requested = False
+        self._date_range_cache: tuple[date | None, date | None] | None = None
 
         self._build_ui()
         self._setup_residency_icon()
@@ -314,10 +317,30 @@ class App(QWidget):
         sv.setContentsMargins(16, 16, 16, 14)
         sv.setSpacing(8)
 
+        date_nav = QHBoxLayout()
+        date_nav.setContentsMargins(0, 0, 0, 0)
+        date_nav.setSpacing(6)
+        self._minimal_prev_day_btn = QPushButton("◀")
+        self._minimal_prev_day_btn.setObjectName("date_nav_btn")
+        self._minimal_prev_day_btn.setFixedSize(
+            MINIMAL_DATE_NAV_BUTTON_SIZE,
+            MINIMAL_DATE_NAV_BUTTON_SIZE,
+        )
+        self._minimal_prev_day_btn.setToolTip(msg("previous_day"))
         self.date_banner = QLabel()
         self.date_banner.setObjectName("date_banner")
         self.date_banner.setAlignment(Qt.AlignCenter)
-        sv.addWidget(self.date_banner)
+        self._minimal_next_day_btn = QPushButton("▶")
+        self._minimal_next_day_btn.setObjectName("date_nav_btn")
+        self._minimal_next_day_btn.setFixedSize(
+            MINIMAL_DATE_NAV_BUTTON_SIZE,
+            MINIMAL_DATE_NAV_BUTTON_SIZE,
+        )
+        self._minimal_next_day_btn.setToolTip(msg("next_day"))
+        date_nav.addWidget(self._minimal_prev_day_btn)
+        date_nav.addWidget(self.date_banner, 1)
+        date_nav.addWidget(self._minimal_next_day_btn)
+        sv.addLayout(date_nav)
         sv.addSpacing(8)
 
         self.time_tabs = QTabWidget()
@@ -488,6 +511,8 @@ class App(QWidget):
         self.prev_btn.clicked.connect(self.prev_m)
         self.next_btn.clicked.connect(self.next_m)
         self.today_btn.clicked.connect(self.go_today)
+        self._minimal_prev_day_btn.clicked.connect(lambda: self._shift_minimal_day(-1))
+        self._minimal_next_day_btn.clicked.connect(lambda: self._shift_minimal_day(1))
         self.save_btn.clicked.connect(self.save)
         self.clock_in_btn.clicked.connect(
             lambda: self._set_auto_time("start"))
@@ -512,6 +537,9 @@ class App(QWidget):
         self._stats_divider.setVisible(not minimal)
         self._stats_card.setVisible(not minimal)
         self._analytics_row.setVisible(not minimal)
+        self._minimal_prev_day_btn.setVisible(minimal)
+        self._minimal_next_day_btn.setVisible(minimal)
+        self._update_minimal_date_nav()
         if minimal:
             self._fit_minimal_window()
         else:
@@ -521,7 +549,7 @@ class App(QWidget):
         self._sidebar.adjustSize()
         hint = self._sidebar.sizeHint()
         width = max(340, hint.width() + 18)
-        height = max(420, hint.height() + 18)
+        height = max(450, hint.height() + 28)
         self.setMinimumSize(width, height)
         self.resize(width, height)
         self.adjustSize()
@@ -685,6 +713,8 @@ class App(QWidget):
         self.prev_btn.setToolTip(_("Previous month"))
         self.next_btn.setToolTip(_("Next month"))
         self.today_btn.setToolTip(_("Today"))
+        self._minimal_prev_day_btn.setToolTip(msg("previous_day"))
+        self._minimal_next_day_btn.setToolTip(msg("next_day"))
         self.note_expand_btn.setToolTip(_("Expand notes"))
         week_start_monday = self.services.get_setting(WEEK_START_MONDAY_SETTING_KEY, "0") == "1"
         days_list = list([_("Sun"), _("Mon"), _("Tue"), _("Wed"), _("Thu"), _("Fri"), _("Sat")])
@@ -738,6 +768,48 @@ class App(QWidget):
                 overnight = True
         marker = f"  {_("Overnight")}" if overnight else ""
         self.date_banner.setText(f"{d.year}/{d.month:02d}/{d.day:02d}  {dow}{marker}")
+        self._update_minimal_date_nav()
+
+    def _data_date_range(self) -> tuple[date, date]:
+        if self._date_range_cache is None:
+            try:
+                self._date_range_cache = self.services.get_data_date_range()
+            except Exception:
+                self._date_range_cache = (None, None)
+        start_d, end_d = self._date_range_cache
+        return start_d or self.selected, end_d or self.selected
+
+    def _update_minimal_date_nav(self) -> None:
+        if not hasattr(self, "_minimal_prev_day_btn"):
+            return
+        if not self.store.state.minimal_mode:
+            return
+        start_d, end_d = self._data_date_range()
+        self._minimal_prev_day_btn.setEnabled(self.selected > start_d)
+        self._minimal_next_day_btn.setEnabled(self.selected < end_d)
+
+    def _flash_date_nav_button(self, button: QPushButton) -> None:
+        button.setDown(True)
+        button.setEnabled(False)
+        QTimer.singleShot(MINIMAL_DATE_NAV_FEEDBACK_MS, lambda: self._restore_date_nav_button(button))
+
+    def _restore_date_nav_button(self, button: QPushButton) -> None:
+        button.setDown(False)
+        self._update_minimal_date_nav()
+
+    def _shift_minimal_day(self, days: int) -> None:
+        button = self._minimal_next_day_btn if days > 0 else self._minimal_prev_day_btn
+        self._flash_date_nav_button(button)
+        start_d, end_d = self._data_date_range()
+        target = self.selected + timedelta(days=days)
+        if target < start_d:
+            target = start_d
+        elif target > end_d:
+            target = end_d
+        if target == self.selected:
+            return
+        self.current = target.replace(day=1)
+        self.select(target)
 
     def _time_mode(self) -> str:
         return "auto" if self.time_tabs.currentIndex() == 1 else "manual"
@@ -1168,6 +1240,7 @@ class App(QWidget):
             self.selected.isoformat(), s, e, l,
             self.note_in.toPlainText(), wt, overnight=overnight,
         )
+        self._date_range_cache = None
         self._refresh_auto_time_labels()
         self.render()
 

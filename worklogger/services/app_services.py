@@ -216,6 +216,18 @@ class AuthService:
             raise ValueError("last_admin")
         return self.db.set_admin(target_user_id, enabled)
 
+    def regenerate_recovery_key(
+        self,
+        admin_user_id: int,
+        target_username: str,
+    ) -> str:
+        if not self.db.is_admin(admin_user_id):
+            raise PermissionError("admin_required")
+        target_username = target_username.strip()
+        if not target_username:
+            raise ValueError("username_required")
+        return self.db.regenerate_recovery_key(target_username)
+
 
 class AppServices:
     """Aggregate service layer.
@@ -301,6 +313,12 @@ class AppServices:
             enabled,
         )
 
+    def regenerate_recovery_key(self, target_username: str) -> str:
+        return self.auth.regenerate_recovery_key(
+            self._require_user_id(),
+            target_username,
+        )
+
     def ensure_default_user_session(self) -> None:
         if self.current_user_id is not None:
             return
@@ -320,6 +338,15 @@ class AppServices:
             raise RuntimeError("login_required")
         return self.current_user_id
 
+    @staticmethod
+    def _require_text(value: str, field_name: str) -> str:
+        if not isinstance(value, str):
+            raise TypeError(f"{field_name}_must_be_string")
+        value = value.strip()
+        if not value:
+            raise ValueError(f"{field_name}_required")
+        return value
+
     def get_setting(self, key: str, default=None):
         return self.db.get_setting(key, default, user_id=self._require_user_id())
 
@@ -338,9 +365,11 @@ class AppServices:
         return "en_US"
 
     def get_record(self, day: str):
+        day = self._require_text(day, "day")
         return self.db.get(day, user_id=self._require_user_id())
 
     def save_record(self, day, start, end, break_hours, note, work_type="normal", overnight: int | None = None) -> None:
+        day = self._require_text(day, "day")
         self.db.save(
             day, start, end, break_hours, note, work_type,
             overnight=overnight,
@@ -348,10 +377,14 @@ class AppServices:
         )
 
     def month_records(self, ym: str):
+        ym = self._require_text(ym, "month")
         return self.db.month(ym, user_id=self._require_user_id())
 
     def all_records(self):
         return self.db.all_records(user_id=self._require_user_id())
+
+    def get_data_date_range(self) -> tuple[date | None, date | None]:
+        return self.db.get_data_date_range(user_id=self._require_user_id())
 
     def add_quick_log(self, date_str: str, time_str: str, desc: str, end_time: str = "") -> int:
         return self.db.add_quick_log(

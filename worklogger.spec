@@ -129,14 +129,31 @@ CATALOG_JSON = _require_file(MODELS_DIR / "catalog.json", "model catalog")
 _llama_data, _llama_bins = _collect("llama_cpp") if _module_exists("llama_cpp") else ([], [])
 _httpx_data, _httpx_bins = _collect("httpx") if _module_exists("httpx") else ([], [])
 _portalocker_data, _portalocker_bins = _collect("portalocker") if _module_exists("portalocker") else ([], [])
+_keyring_data, _keyring_bins = _collect("keyring") if _module_exists("keyring") else ([], [])
+_cryptography_data, _cryptography_bins = _collect("cryptography") if _module_exists("cryptography") else ([], [])
+_matplotlib_data, _matplotlib_bins = _collect("matplotlib") if _module_exists("matplotlib") else ([], [])
+_reportlab_data, _reportlab_bins = _collect("reportlab") if _module_exists("reportlab") else ([], [])
+_pil_data, _pil_bins = _collect("PIL") if _module_exists("PIL") else ([], [])
 
 _llama_hidden = _collect_submodules("llama_cpp") if _module_exists("llama_cpp") else []
 _httpx_hidden = _collect_submodules("httpx") if _module_exists("httpx") else []
 _portalocker_hidden = _collect_submodules("portalocker") if _module_exists("portalocker") else []
+_keyring_hidden = _collect_submodules("keyring") if _module_exists("keyring") else []
 
 _optional_hidden = [
     pkg
     for pkg in (
+        "keyring",
+        "keyring.backends",
+        "keyring.backends.Windows",
+        "keyring.backends.macOS",
+        "keyring.backends.SecretService",
+        "cryptography",
+        "cryptography.fernet",
+        "matplotlib",
+        "reportlab",
+        "PIL",
+        "PIL.Image",
         "llama_cpp",
         "httpx",
         "portalocker",
@@ -153,10 +170,19 @@ _optional_hidden = [
 a = Analysis(
     [str(WORKLOGGER_DIR / "main.py")],
     pathex=[str(ROOT_DIR), str(WORKLOGGER_DIR)],
-    binaries=_llama_bins + _httpx_bins + _portalocker_bins,
+    binaries=(
+        _llama_bins
+        + _httpx_bins
+        + _portalocker_bins
+        + _keyring_bins
+        + _cryptography_bins
+        + _matplotlib_bins
+        + _reportlab_bins
+        + _pil_bins
+    ),
     datas=[
         (str(ASSETS_DIR), "assets"),
-        (str(LOCALES_DIR), "locales"),
+        ("worklogger/locales",                              "locales"),
         CERTIFI_CACERT_DATA,
         (str(TEMPLATE_EN_US_DIR), "templates/en_US"),
         (str(TEMPLATE_JA_JP_DIR), "templates/ja_JP"),
@@ -168,7 +194,12 @@ a = Analysis(
     ]
     + _llama_data
     + _httpx_data
-    + _portalocker_data,
+    + _portalocker_data
+    + _keyring_data
+    + _cryptography_data
+    + _matplotlib_data
+    + _reportlab_data
+    + _pil_data,
     hiddenimports=[
         "sqlite3",
         "holidays",
@@ -182,7 +213,8 @@ a = Analysis(
     + _optional_hidden
     + _llama_hidden
     + _httpx_hidden
-    + _portalocker_hidden,
+    + _portalocker_hidden
+    + _keyring_hidden,
     hookspath=[],
     runtime_hooks=[],
     excludes=[
@@ -190,7 +222,6 @@ a = Analysis(
         "tensorflow",
         "jax",
         "pandas",
-        "matplotlib",
         "scipy",
         "sklearn",
     ],

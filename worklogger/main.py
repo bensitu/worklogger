@@ -21,6 +21,7 @@ from services.session_store import (
     save_remember_token,
 )
 from utils.icon import make_icon
+from utils.logging_config import configure_logging
 from ui.main_window import App
 from ui.dialogs import (
     ChangePasswordDialog,
@@ -38,6 +39,10 @@ def _bootstrap() -> None:
     Errors are silently swallowed — bootstrap failures must never prevent
     the app from launching.
     """
+    try:
+        configure_logging()
+    except Exception:
+        pass
     try:
         # Ensure catalog.json is present in the user's models directory.
         # On a frozen (PyInstaller) first run the file lives only inside

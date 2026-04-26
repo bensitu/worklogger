@@ -33,6 +33,7 @@ LOCALES_DIR = _DEV_LOCALES_DIR
 # Canonical key -> English fallback msgid.
 MSG_DEFAULTS = {
     "ai_btn": "✨ AI Assist",
+    "ai_ext_model_description": "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek.",
     "ai_err_api_key_missing": "API Key is not set.",
     "ai_err_api_key_missing_detail": "Please enter your API Key in Settings → AI.",
     "ai_err_baseurl_missing": "API Base URL is not set.",
@@ -70,10 +71,41 @@ MSG_DEFAULTS = {
     "btn_regenerate": "Regenerate",
     "cal_imported": "Imported {} calendar events.",
     "choose_custom_color": "Choose custom color",
+    "csv_data_management": "CSV Data Management",
+    "csv_description": "Import or export worklog records as CSV files for backup, migration, or spreadsheet analysis.",
     "custom_theme_color": "Custom theme color",
     "enable_menu_bar": "Enable menu bar icon",
     "enable_tray": "Enable tray icon",
     "end_now": "End now",
+    "features_overview_v3": """Work Logger is a privacy-first desktop app for recording work time, notes, quick logs, calendar context, and recurring reports without sending your data to a cloud service by default.
+
+Daily logging:
+- Enter start, end, break, work type, and notes for each date.
+- Use Auto Record buttons for start, end, and break checkpoints.
+- Capture lightweight task details with Quick Log and merge them into reports.
+- Navigate by calendar, month, week, or minimal-mode day controls.
+
+Accounts and security:
+- Multiple local users are supported, and each user's worklogs, settings, reports, reminders, and backups are isolated.
+- Passwords and recovery keys are stored as secure hashes.
+- Administrators can reset user passwords and regenerate recovery keys when needed.
+- Remember-me login uses the operating system credential manager when available.
+
+Reports and templates:
+- Generate daily notes, weekly reports, and monthly reports from saved data.
+- Weekly and monthly reports are tied to the selected calendar period and can be saved for later editing.
+- Built-in and custom templates help standardize recurring note and report formats.
+
+Analytics and exports:
+- Review work hours, averages, overtime, targets, leave markers, and trend charts.
+- Export chart data to CSV and charts to PDF.
+- Import/export worklogs as CSV and calendar events as ICS.
+- Back up and restore the local database with reminders for stale backups.
+
+Customization and AI:
+- Switch languages, themes, custom accent colors, dark mode, and minimal mode.
+- Use local-model assistance when configured, or connect to OpenAI-compatible external providers such as ChatGPT, Claude, Qwen, and DeepSeek.
+- Supported UI languages include English, Japanese, Korean, Simplified Chinese, and Traditional Chinese.""",
     "local_model_fallback_toast": "Local model unavailable - using external model instead",
     "local_model_hint": "When enabled, text processing uses the local model first - no data is sent to external services.",
     "local_model_import_error": "llama-cpp-python not installed - run: pip install llama-cpp-python",
@@ -102,6 +134,8 @@ MSG_DEFAULTS = {
     "open_color_picker": "Open color picker",
     "original_content": "Original Content",
     "period": "Period",
+    "previous_day": "Previous day",
+    "next_day": "Next day",
     "quick_log_add": "Add",
     "quick_log_delete": "Delete",
     "report_copy": "Copy",
@@ -117,6 +151,7 @@ MSG_DEFAULTS = {
     "template_default": "Default",
     "template_invoice": "Invoice",
     "template_monthly": "Monthly",
+    "template_sample": "Sample Template",
     "template_timesheet": "Timesheet",
     "template_weekly": "Weekly",
     "wt_business": "Business trip",

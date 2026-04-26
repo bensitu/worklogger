@@ -306,6 +306,10 @@ class SettingsDialog(QDialog):
         gfl.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         gfl.setSpacing(8)
         gfl.setContentsMargins(10, 10, 10, 10)
+        ai_ext_desc = QLabel(msg("ai_ext_model_description"))
+        ai_ext_desc.setWordWrap(True)
+        ai_ext_desc.setObjectName("muted")
+        gfl.addRow(ai_ext_desc)
 
         def _ai_line(placeholder=""):
             le = QLineEdit()
@@ -843,6 +847,19 @@ class SettingsDialog(QDialog):
 
         self._export_csv_btn = QPushButton(_("Export CSV"))
         self._import_csv_btn = QPushButton(_("Import CSV"))
+        csv_grp = QGroupBox(msg("csv_data_management"))
+        csv_v = QVBoxLayout(csv_grp)
+        csv_v.setSpacing(6)
+        csv_v.setContentsMargins(10, 10, 10, 10)
+        csv_desc = QLabel(msg("csv_description"))
+        csv_desc.setWordWrap(True)
+        csv_desc.setObjectName("muted")
+        csv_actions = QHBoxLayout()
+        csv_actions.setSpacing(8)
+        csv_actions.addWidget(self._export_csv_btn)
+        csv_actions.addWidget(self._import_csv_btn)
+        csv_v.addWidget(csv_desc)
+        csv_v.addLayout(csv_actions)
 
         backup_grp = QGroupBox(_("Database Backup"))
         bv = QVBoxLayout(backup_grp)
@@ -885,8 +902,7 @@ class SettingsDialog(QDialog):
         cv.addWidget(self._ics_export_btn)
         cv.addWidget(self._ics_clear_btn)
 
-        for b in (self._export_csv_btn, self._import_csv_btn):
-            dv.addWidget(b)
+        dv.addWidget(csv_grp)
         dv.addWidget(backup_grp)
         dv.addWidget(cal_grp)
         dv.addStretch()
@@ -897,9 +913,28 @@ class SettingsDialog(QDialog):
         account_v.setContentsMargins(14, 14, 14, 14)
         account_v.setSpacing(8)
         username = getattr(app_ref.services, "current_username", None) or ""
+        try:
+            is_admin = bool(app_ref.services.current_user_is_admin())
+        except Exception:
+            is_admin = False
+        account_row = QWidget()
+        account_row_l = QHBoxLayout(account_row)
+        account_row_l.setContentsMargins(0, 0, 0, 0)
+        account_row_l.setSpacing(8)
         account_lbl = QLabel("{}: {}".format(_("Current user"), username))
-        account_lbl.setObjectName("muted")
-        account_v.addWidget(account_lbl)
+        role_lbl = QLabel(
+            "{}: {}".format(
+                _("Role"),
+                _("Administrator") if is_admin else _("User"),
+            )
+        )
+        account_header_qss = "font-weight: bold; font-size: 14px;"
+        account_lbl.setStyleSheet(account_header_qss)
+        role_lbl.setStyleSheet(account_header_qss)
+        role_lbl.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        account_row_l.addWidget(account_lbl, 1)
+        account_row_l.addWidget(role_lbl, 1)
+        account_v.addWidget(account_row)
         self._password_reminder_lbl = QLabel(
             _("Your password has not been changed in {days} days. Please update it regularly.").format(
                 days=PASSWORD_CHANGE_REMINDER_DAYS,
@@ -914,10 +949,6 @@ class SettingsDialog(QDialog):
         change_password_btn.clicked.connect(self._open_change_password_dialog)
         logout_btn.clicked.connect(self._confirm_logout)
         account_v.addWidget(change_password_btn)
-        try:
-            is_admin = bool(app_ref.services.current_user_is_admin())
-        except Exception:
-            is_admin = False
         if is_admin:
             manage_users_btn = QPushButton(_("Manage Users"))
             manage_users_btn.clicked.connect(self._open_user_management_dialog)
@@ -1076,7 +1107,12 @@ class SettingsDialog(QDialog):
         self._password_reminder_lbl.setVisible(visible)
 
     def _open_user_management_dialog(self) -> None:
-        UserManagementDialog(self._app.services, self).exec()
+        UserManagementDialog(
+            self._app.services,
+            theme_name=self._app.theme,
+            dark=self._app.dark,
+            parent=self,
+        ).exec()
 
     def _show_feature_intro(self):
         dlg = QDialog(self)
@@ -1090,35 +1126,7 @@ class SettingsDialog(QDialog):
 
         intro = QTextEdit()
         intro.setReadOnly(True)
-        intro.setPlainText(
-            _(
-                """Work Logger is a flexible desktop app for tracking work hours, notes, and reports.
-
-What you can do:
-- Switch between Manual Input and Auto Record depending on how you like to log time.
-- Record start time, end time, and break time for each day.
-- Save work type and notes together with the time record.
-- Use Quick Log for lightweight task entries during the day.
-- Keep notes for future dates even when exact work hours are not decided yet.
-- Generate daily, weekly, and monthly reports from saved data.
-- Use AI-compatible providers to turn notes into polished summaries.
-- Review monthly trends with charts, averages, overtime, and monthly targets.
-- Import calendar events and display public holidays.
-- Customize language, theme, AI settings, and reminder behavior.
-
-Recommended workflow:
-1. Pick Manual Input if you usually type times yourself.
-2. Pick Auto Record if you prefer start/end/break buttons.
-3. Add Notes or Quick Log entries as work happens.
-4. Save the day record when finished.
-5. Open Reports or AI tools when you need a summary.
-
-Helpful details:
-- Holiday names can be shown automatically on the calendar.
-- A small reminder dot can appear on days that only have notes.
-- Built-in and custom templates can be used in notes and reports."""
-            )
-        )
+        intro.setPlainText(msg("features_overview_v3"))
         lv.addWidget(intro, 1)
 
         btns = QDialogButtonBox(QDialogButtonBox.Ok)

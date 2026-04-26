@@ -628,12 +628,17 @@ class ChartDialog(QDialog):
         y, m = app.current.year, app.current.month
         from calendar import monthrange
         last_day = monthrange(y, m)[1]
+        records_by_day = {
+            record.date: record
+            for record in app.services.month_records(f"{y}-{m:02d}")
+        }
         return analytics_service.monthly_chart_data_v3(
             date(y, m, 1),
             date(y, m, last_day),
             self._metric,
             self._leave_cb.isChecked(),
-            record_getter=app.services.get_record,
+            # One monthly query avoids per-day SQL calls during chart refresh.
+            record_getter=records_by_day.get,
             standard_hours=app.work_hours,
         )
 

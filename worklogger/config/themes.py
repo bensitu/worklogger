@@ -248,6 +248,10 @@ QToolTip{{background-color:{tip_bg};color:{txt};border:1px solid {tip_bdr};
 QPushButton#nav_btn{{background:transparent;border:none;color:{txt2};
   font-size:17px;padding:2px 10px;border-radius:6px;}}
 QPushButton#nav_btn:hover{{background:{hov};color:{acc};}}
+QPushButton#date_nav_btn{{background:transparent;border:none;color:{txt2};
+  font-size:18px;padding:0px;border-radius:6px;}}
+QPushButton#date_nav_btn:hover{{background:{hov};color:{acc};}}
+QPushButton#date_nav_btn:disabled{{color:{dis_t2};background:transparent;}}
 QTabWidget::pane{{border:1px solid {bdr};border-radius:8px;background:{surf};}}
 QTabBar::tab{{background:{btn};border:1px solid {btn_bd};padding:6px 16px;
   border-top-left-radius:6px;border-top-right-radius:6px;color:{txt2};}}

@@ -14,6 +14,7 @@ GPL_URL = "https://www.gnu.org/licenses/gpl-3.0.html"
 LICENSE_SPDX = "GPL-3.0-or-later"
 
 DB_FILENAME = "worklog.db"
+LOG_FILENAME = "worklogger.log"
 MAX_SHIFT_HOURS = 16.0
 
 LANG_SETTING_KEY = "lang"
@@ -33,6 +34,8 @@ LOCAL_MODEL_ENABLED_SETTING_KEY = "local_model_enabled"
 
 CUSTOM_THEME_SETTING_KEY = "custom_theme_color"
 MINIMAL_MODE_SETTING_KEY = "minimal_mode"
+MINIMAL_DATE_NAV_BUTTON_SIZE = 34
+MINIMAL_DATE_NAV_FEEDBACK_MS = 120
 ANALYTICS_SHOW_LEAVES_SETTING_KEY = "analytics_show_leaves"
 REMEMBER_TOKEN_KEY = "remember_token"
 REMEMBER_SERVICE_NAME = "WorkLogger"

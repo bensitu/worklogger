@@ -159,7 +159,7 @@ bootstrap_build_env() {
       run_arch "$target_arch" "$venv_python" -m pip install --no-compile --no-cache-dir -r "$requirements_file"
   fi
 
-  run_arch "$target_arch" "$venv_python" -c 'import importlib.util, sys; req = ["PySide6", "holidays", "httpx", "httpcore", "anyio", "portalocker"]; miss = [m for m in req if importlib.util.find_spec(m) is None]; print("dependency_check=", "ok" if not miss else ",".join(miss)); sys.exit(1 if miss else 0)' \
+  run_arch "$target_arch" "$venv_python" -c 'import importlib.util, sys; req = ["PySide6", "holidays", "httpx", "httpcore", "anyio", "portalocker", "keyring", "cryptography"]; miss = [m for m in req if importlib.util.find_spec(m) is None]; print("dependency_check=", "ok" if not miss else ",".join(miss)); sys.exit(1 if miss else 0)' \
     || fail "Dependency verification failed for ${target_arch} build venv."
 }
 

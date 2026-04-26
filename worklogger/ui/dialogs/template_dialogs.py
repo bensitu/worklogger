@@ -15,6 +15,12 @@ from templates import (
 from .common import _localize_msgbox_buttons, _render_template_with_context
 
 
+def _localized_custom_template_name(name: str) -> str:
+    if str(name).strip() == "Sample Template":
+        return msg("template_sample")
+    return name
+
+
 class TemplatePickerDialog(QDialog):
     def __init__(self, app_ref, type_key: str = "daily",
                  current_content: str = "", parent=None):
@@ -133,7 +139,7 @@ class TemplatePickerDialog(QDialog):
             })
 
         for tpl in list_custom_templates(self._type):
-            label = f"[{_("Custom")}]  {tpl['name']}"
+            label = f"[{_("Custom")}]  {_localized_custom_template_name(tpl['name'])}"
             item = QListWidgetItem(label)
             item.setData(Qt.UserRole, {"kind": "custom",
                                        "content": tpl.get("content", ""),

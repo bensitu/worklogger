@@ -258,6 +258,11 @@ try {
         Write-Log "WARN : requirements.txt not found. Skipping dependency installation."
     }
 
+    Invoke-External -Description "Verify packaged dependency set" -FilePath $BuildPython -Arguments @(
+        "-c",
+        "import importlib.util, sys; req=['PySide6','holidays','keyring','cryptography','httpx','httpcore','anyio','portalocker']; miss=[m for m in req if importlib.util.find_spec(m) is None]; print('dependency_check=', 'ok' if not miss else ','.join(miss)); sys.exit(1 if miss else 0)"
+    )
+
     Invoke-External -Description "Compile gettext catalogs (.po -> .mo)" -FilePath $BuildPython -Arguments @($I18NCompileScript)
 
     if (-not (Test-Path -LiteralPath $DistDir -PathType Container)) {
