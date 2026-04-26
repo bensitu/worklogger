@@ -52,6 +52,8 @@ worklogger/templates/custom/*.json
 dist/templates/custom/*.json
 !dist/templates/custom/Sample_1000000000000.json
 worklogger/locales/*/LC_MESSAGES/*.mo
+worklog.db-shm
+worklog.db-wal
 
 # Do not commit unit tests
 tests/

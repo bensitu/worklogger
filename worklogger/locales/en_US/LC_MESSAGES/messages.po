@@ -145,6 +145,9 @@ msgstr "Copy"
 msgid "Could not check for updates: {}"
 msgstr "Could not check for updates: {}"
 
+msgid "temporarily unavailable"
+msgstr "temporarily unavailable"
+
 msgid "Create Custom Template"
 msgstr "Create Custom Template"
 

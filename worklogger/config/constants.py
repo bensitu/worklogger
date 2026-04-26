@@ -1,7 +1,5 @@
 """Application-wide constants — single source of truth."""
 
-import sys
-
 APP_VERSION = "3.0.0"
 APP_NAME = "Work Logger"
 APP_AUTHOR = "Ben Situ"
@@ -10,6 +8,12 @@ GITHUB_URL = "https://github.com/bensitu/worklogger"
 GITHUB_RELEASES_API = (
     "https://api.github.com/repos/bensitu/worklogger/releases/latest"
 )
+UPDATE_CHECK_TIMEOUT_SECONDS = 8
+UPDATE_CHECK_RETRY_ATTEMPTS = 2
+UPDATE_CHECK_RETRY_BACKOFF_SECONDS = 0.25
+UPDATE_CHECK_CIRCUIT_FAILURES = 3
+UPDATE_CHECK_CIRCUIT_COOLDOWN_SECONDS = 300
+UPDATE_RESPONSE_MAX_BYTES = 512 * 1024
 GPL_URL = "https://www.gnu.org/licenses/gpl-3.0.html"
 LICENSE_SPDX = "GPL-3.0-or-later"
 

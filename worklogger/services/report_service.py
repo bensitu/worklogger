@@ -6,7 +6,6 @@ from calendar import monthrange
 from typing import TYPE_CHECKING
 
 from core.time_calc import calc_hours
-from config.constants import LEAVE_TYPES
 from utils.i18n import _, msg
 
 if TYPE_CHECKING:

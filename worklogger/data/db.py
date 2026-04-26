@@ -244,14 +244,16 @@ class DB:
         return row is not None
 
     def _columns(self, table: str) -> set[str]:
+        table_sql = self._quote_identifier(table)
         if not self._table_exists(table):
             return set()
-        return {row[1] for row in self.conn.execute(f"PRAGMA table_info({table})")}
+        return {row[1] for row in self.conn.execute(f"PRAGMA table_info({table_sql})")}
 
     def _row_count(self, table: str) -> int:
+        table_sql = self._quote_identifier(table)
         if not self._table_exists(table):
             return 0
-        return int(self.conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0])
+        return int(self.conn.execute(f"SELECT COUNT(*) FROM {table_sql}").fetchone()[0])
 
     def _legacy_data_exists(self) -> bool:
         worklog_legacy = any(
@@ -278,16 +280,31 @@ class DB:
         return int(row[0]) if row else None
 
     @staticmethod
-    def _col_expr(cols: set[str], name: str, default_sql: str) -> str:
-        return f'"{name}"' if name in cols else default_sql
+    def _quote_identifier(name: str) -> str:
+        if (
+            not isinstance(name, str)
+            or not name
+            or not (name[0].isalpha() or name[0] == "_")
+            or any(not (ch.isalnum() or ch == "_") for ch in name)
+        ):
+            raise ValueError(f"invalid_sql_identifier:{name}")
+        return f'"{name}"'
+
+    @classmethod
+    def _col_expr(cls, cols: set[str], name: str, default_sql: str) -> str:
+        return cls._quote_identifier(name) if name in cols else default_sql
 
     def _legacy_name(self, table: str) -> str:
+        self._quote_identifier(table)
         return f"{table}_legacy_{int(time.time() * 1000)}"
 
     def _migrate_worklog_table(self, fallback_user_id: int | None) -> None:
         for variant in _WORKLOG_TABLE_NAMES[1:]:
             if not self._table_exists("worklog") and self._table_exists(variant):
-                self.conn.execute(f"ALTER TABLE {variant} RENAME TO worklog")
+                self.conn.execute(
+                    f"ALTER TABLE {self._quote_identifier(variant)} "
+                    f"RENAME TO {self._quote_identifier('worklog')}"
+                )
                 break
         if not self._table_exists("worklog"):
             self.conn.execute(_CREATE_WORKLOG)
@@ -298,7 +315,10 @@ class DB:
             return
 
         legacy = self._legacy_name("worklog")
-        self.conn.execute(f"ALTER TABLE worklog RENAME TO {legacy}")
+        legacy_sql = self._quote_identifier(legacy)
+        self.conn.execute(
+            f"ALTER TABLE {self._quote_identifier('worklog')} RENAME TO {legacy_sql}"
+        )
         self.conn.execute(_CREATE_WORKLOG)
         legacy_cols = self._columns(legacy)
         if fallback_user_id is not None and "d" in legacy_cols:
@@ -316,10 +336,10 @@ class DB:
                 "INSERT OR REPLACE INTO worklog"
                 "(user_id,d,start,end,break,note,work_type,overnight) "
                 f"SELECT ?, d, {start_expr}, {end_expr}, {break_expr}, "
-                f"{note_expr}, {work_type_expr}, {overnight_expr} FROM {legacy}",
+                f"{note_expr}, {work_type_expr}, {overnight_expr} FROM {legacy_sql}",
                 (fallback_user_id,),
             )
-        self.conn.execute(f"DROP TABLE {legacy}")
+        self.conn.execute(f"DROP TABLE {legacy_sql}")
 
     def _migrate_settings_table(self, fallback_user_id: int | None) -> None:
         if not self._table_exists("settings"):
@@ -331,17 +351,20 @@ class DB:
             return
 
         legacy = self._legacy_name("settings")
-        self.conn.execute(f"ALTER TABLE settings RENAME TO {legacy}")
+        legacy_sql = self._quote_identifier(legacy)
+        self.conn.execute(
+            f"ALTER TABLE {self._quote_identifier('settings')} RENAME TO {legacy_sql}"
+        )
         self.conn.execute(_CREATE_SETTINGS)
         legacy_cols = self._columns(legacy)
         if fallback_user_id is not None and "key" in legacy_cols:
             value_expr = self._col_expr(legacy_cols, "value", "''")
             self.conn.execute(
                 "INSERT OR REPLACE INTO settings(user_id,key,value) "
-                f"SELECT ?, key, {value_expr} FROM {legacy}",
+                f"SELECT ?, key, {value_expr} FROM {legacy_sql}",
                 (fallback_user_id,),
             )
-        self.conn.execute(f"DROP TABLE {legacy}")
+        self.conn.execute(f"DROP TABLE {legacy_sql}")
 
     def _migrate_quick_logs_table(self, fallback_user_id: int | None) -> None:
         if not self._table_exists("quick_logs"):
@@ -353,7 +376,10 @@ class DB:
             return
 
         legacy = self._legacy_name("quick_logs")
-        self.conn.execute(f"ALTER TABLE quick_logs RENAME TO {legacy}")
+        legacy_sql = self._quote_identifier(legacy)
+        self.conn.execute(
+            f"ALTER TABLE {self._quote_identifier('quick_logs')} RENAME TO {legacy_sql}"
+        )
         self.conn.execute(_CREATE_QUICK_LOGS)
         legacy_cols = self._columns(legacy)
         if fallback_user_id is not None and {"date", "time", "description"} <= legacy_cols:
@@ -364,10 +390,10 @@ class DB:
                 "INSERT INTO quick_logs"
                 "(id,user_id,date,time,end_time,description,created_at) "
                 f"SELECT {id_expr}, ?, date, time, {end_expr}, description, "
-                f"{created_expr} FROM {legacy}",
+                f"{created_expr} FROM {legacy_sql}",
                 (fallback_user_id,),
             )
-        self.conn.execute(f"DROP TABLE {legacy}")
+        self.conn.execute(f"DROP TABLE {legacy_sql}")
 
     def _migrate_calendar_table(self, fallback_user_id: int | None) -> None:
         if not self._table_exists("calendar_events"):
@@ -379,7 +405,11 @@ class DB:
             return
 
         legacy = self._legacy_name("calendar_events")
-        self.conn.execute(f"ALTER TABLE calendar_events RENAME TO {legacy}")
+        legacy_sql = self._quote_identifier(legacy)
+        self.conn.execute(
+            f"ALTER TABLE {self._quote_identifier('calendar_events')} "
+            f"RENAME TO {legacy_sql}"
+        )
         self.conn.execute(_CREATE_CALENDAR)
         legacy_cols = self._columns(legacy)
         if fallback_user_id is not None and {"date", "summary"} <= legacy_cols:
@@ -395,10 +425,10 @@ class DB:
                 "(id,user_id,date,start_time,end_time,summary,description,location,all_day,source_file) "
                 f"SELECT {id_expr}, ?, date, {start_expr}, {end_expr}, summary, "
                 f"{description_expr}, {location_expr}, {all_day_expr}, {source_expr} "
-                f"FROM {legacy}",
+                f"FROM {legacy_sql}",
                 (fallback_user_id,),
             )
-        self.conn.execute(f"DROP TABLE {legacy}")
+        self.conn.execute(f"DROP TABLE {legacy_sql}")
 
     def _migrate_reports_table(self, fallback_user_id: int | None) -> None:
         if not self._table_exists("reports"):
@@ -410,7 +440,10 @@ class DB:
             return
 
         legacy = self._legacy_name("reports")
-        self.conn.execute(f"ALTER TABLE reports RENAME TO {legacy}")
+        legacy_sql = self._quote_identifier(legacy)
+        self.conn.execute(
+            f"ALTER TABLE {self._quote_identifier('reports')} RENAME TO {legacy_sql}"
+        )
         self.conn.execute(_CREATE_REPORTS)
         legacy_cols = self._columns(legacy)
         required = {"type", "period_start", "period_end", "content"}
@@ -421,10 +454,10 @@ class DB:
                 "INSERT INTO reports"
                 "(id,user_id,type,period_start,period_end,content,created_at) "
                 f"SELECT {id_expr}, ?, type, period_start, period_end, content, "
-                f"{created_expr} FROM {legacy}",
+                f"{created_expr} FROM {legacy_sql}",
                 (fallback_user_id,),
             )
-        self.conn.execute(f"DROP TABLE {legacy}")
+        self.conn.execute(f"DROP TABLE {legacy_sql}")
 
     @staticmethod
     def _password_hash_with_iterations(

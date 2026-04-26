@@ -145,6 +145,9 @@ msgstr "複製"
 msgid "Could not check for updates: {}"
 msgstr "檢查更新失敗：{}"
 
+msgid "temporarily unavailable"
+msgstr "暫時無法使用"
+
 msgid "Create Custom Template"
 msgstr "建立自訂模板"
 

@@ -145,6 +145,9 @@ msgstr "복사"
 msgid "Could not check for updates: {}"
 msgstr "업데이트 확인 실패: {}"
 
+msgid "temporarily unavailable"
+msgstr "일시적으로 사용할 수 없음"
+
 msgid "Create Custom Template"
 msgstr "사용자 정의 템플릿 만들기"
 

@@ -22,8 +22,7 @@ def _localized_custom_template_name(name: str) -> str:
 
 
 class TemplatePickerDialog(QDialog):
-    def __init__(self, app_ref, type_key: str = "daily",
-                 current_content: str = "", parent=None):
+    def __init__(self, app_ref, type_key: str = "daily", parent=None):
         super().__init__(parent)
         self._app = app_ref
         self._lang = app_ref.lang

@@ -85,7 +85,7 @@ class RegisterDialog(QDialog):
         QApplication.clipboard().setText(self.recovery_key)
 
     def _export_recovery_key(self) -> None:
-        path, _ = QFileDialog.getSaveFileName(
+        path, _selected_filter = QFileDialog.getSaveFileName(
             self,
             _("Save Recovery Key"),
             "worklogger-recovery-key.txt",

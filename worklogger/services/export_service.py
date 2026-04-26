@@ -11,7 +11,7 @@ from __future__ import annotations
 import csv
 import re
 from dataclasses import dataclass
-from datetime import datetime, date, timezone
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 from core.time_calc import calc_hours, shift_datetimes
@@ -231,7 +231,7 @@ def render_pdf(
     from PySide6.QtPrintSupport import QPrinter
     from PySide6.QtCore import QMarginsF, QRectF
     from PySide6.QtGui import (QPainter, QPageLayout, QPageSize,
-                               QFont, QColor, QPen, QBrush)
+                               QFont, QColor, QPen)
     from PySide6.QtCore import Qt
     from utils.i18n import _
 

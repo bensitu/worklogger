@@ -4,7 +4,7 @@ from calendar import monthrange
 
 from PySide6.QtWidgets import QMessageBox, QFrame
 
-from utils.i18n import _, msg
+from utils.i18n import _
 from utils.formatters import format_quick_logs, format_cal_events
 from utils.template_engine import render_template
 

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 import os
 from pathlib import Path
 import shutil
@@ -6,7 +7,7 @@ import sys
 import threading
 import re
 import secrets
-from dataclasses import dataclass
+import time
 from datetime import date, datetime, timedelta
 from calendar import monthrange
 from typing import Callable, Iterable
@@ -37,6 +38,12 @@ from config.constants import (
     SHOW_OVERNIGHT_INDICATOR_SETTING_KEY,
     THEME_SETTING_KEY,
     TIME_INPUT_MODE_SETTING_KEY,
+    UPDATE_CHECK_CIRCUIT_COOLDOWN_SECONDS,
+    UPDATE_CHECK_CIRCUIT_FAILURES,
+    UPDATE_CHECK_RETRY_ATTEMPTS,
+    UPDATE_CHECK_RETRY_BACKOFF_SECONDS,
+    UPDATE_CHECK_TIMEOUT_SECONDS,
+    UPDATE_RESPONSE_MAX_BYTES,
     WEEK_START_MONDAY_SETTING_KEY,
     WORK_HOURS_SETTING_KEY,
 )
@@ -53,6 +60,8 @@ from services.session_store import (
 )
 from stores.app_store import AppState
 from utils.i18n import _, detect_system_language
+
+_log = logging.getLogger(__name__)
 
 
 class _UpdateBridge(QObject):
@@ -239,12 +248,16 @@ class AppServices:
     ``DB`` directly. Heavy-lifting (report gen, CSV/ICS, AI calls) is
     delegated to specialised service modules.
     """
+    _update_ssl_context: ssl.SSLContext | None = None
+    _update_ssl_context_lock = threading.Lock()
 
     def __init__(self, db: DB | None = None, current_user_id: int | None = None):
         self.db = db or DB()
         self.auth = AuthService(self.db)
         self.current_user_id: int | None = current_user_id
         self.current_username: str | None = None
+        self._update_failures = 0
+        self._update_circuit_open_until = 0.0
         if current_user_id is not None and hasattr(self.db, "get_user"):
             user = self.db.get_user(current_user_id)
             self.current_username = user["username"] if user else None
@@ -710,24 +723,68 @@ class AppServices:
 
     @classmethod
     def _build_update_ssl_context(cls) -> ssl.SSLContext:
-        for cafile in cls._certifi_cafile_candidates():
-            try:
-                if cafile.is_file():
-                    return ssl.create_default_context(cafile=str(cafile))
-            except Exception:
-                continue
-        return ssl.create_default_context()
+        with cls._update_ssl_context_lock:
+            if cls._update_ssl_context is not None:
+                return cls._update_ssl_context
+            for cafile in cls._certifi_cafile_candidates():
+                try:
+                    if cafile.is_file():
+                        cls._update_ssl_context = ssl.create_default_context(
+                            cafile=str(cafile)
+                        )
+                        return cls._update_ssl_context
+                except Exception:
+                    continue
+            cls._update_ssl_context = ssl.create_default_context()
+            return cls._update_ssl_context
 
     def _check_update_sync(self, translator: Callable[[str], str]) -> str:
         _tr = translator if callable(translator) else _
+        if time.monotonic() < self._update_circuit_open_until:
+            template = _tr("Could not check for updates: {}")
+            try:
+                return template.format(_tr("temporarily unavailable"))
+            except Exception:
+                return template
         req = urllib.request.Request(
             GITHUB_RELEASES_API,
             headers={"User-Agent": "WorkLogger/" + APP_VERSION},
         )
         context = self._build_update_ssl_context()
+        last_exc: Exception | None = None
         try:
-            with urllib.request.urlopen(req, timeout=8, context=context) as r:
-                data = _json.loads(r.read())
+            for attempt in range(max(1, UPDATE_CHECK_RETRY_ATTEMPTS)):
+                try:
+                    with urllib.request.urlopen(
+                        req,
+                        timeout=UPDATE_CHECK_TIMEOUT_SECONDS,
+                        context=context,
+                    ) as r:
+                        raw = r.read(UPDATE_RESPONSE_MAX_BYTES + 1)
+                    if len(raw) > UPDATE_RESPONSE_MAX_BYTES:
+                        raise ValueError("update_response_too_large")
+                    data = _json.loads(raw)
+                    self._update_failures = 0
+                    self._update_circuit_open_until = 0.0
+                    break
+                except urllib.error.URLError as exc:
+                    last_exc = exc
+                    reason = getattr(exc, "reason", exc)
+                    if (
+                        isinstance(reason, ssl.SSLCertVerificationError)
+                        or "CERTIFICATE_VERIFY_FAILED" in str(reason)
+                    ):
+                        raise
+                    if attempt + 1 >= max(1, UPDATE_CHECK_RETRY_ATTEMPTS):
+                        raise
+                    time.sleep(UPDATE_CHECK_RETRY_BACKOFF_SECONDS * (attempt + 1))
+                except Exception as exc:
+                    last_exc = exc
+                    if attempt + 1 >= max(1, UPDATE_CHECK_RETRY_ATTEMPTS):
+                        raise
+                    time.sleep(UPDATE_CHECK_RETRY_BACKOFF_SECONDS * (attempt + 1))
+            else:
+                raise last_exc or RuntimeError("update_check_failed")
             latest = data.get("tag_name", "").lstrip("vV").strip()
             if latest and self._is_remote_newer(latest, APP_VERSION):
                 avail_tpl = _tr("New version available: v{0}")
@@ -737,6 +794,7 @@ class AppServices:
                     return avail_tpl
             return _tr("You are on the latest version")
         except urllib.error.URLError as exc:
+            self._record_update_failure(exc)
             reason = getattr(exc, "reason", exc)
             if isinstance(reason, ssl.SSLCertVerificationError) or "CERTIFICATE_VERIFY_FAILED" in str(reason):
                 return _tr(
@@ -744,18 +802,30 @@ class AppServices:
                     "Please check your network trust settings and try again."
                 )
             err = str(exc)[:120]
-            template = _tr("Could not check for updates: {0}")
+            template = _tr("Could not check for updates: {}")
             try:
                 return template.format(err)
             except Exception:
                 return template
         except Exception as exc:
+            self._record_update_failure(exc)
             err = str(exc)[:120]
-            template = _tr("Could not check for updates: {0}")
+            template = _tr("Could not check for updates: {}")
             try:
                 return template.format(err)
             except Exception:
                 return template
+
+    def _record_update_failure(self, exc: Exception) -> None:
+        self._update_failures += 1
+        _log.info("Update check failed (%s/%s): %s",
+                  self._update_failures,
+                  UPDATE_CHECK_CIRCUIT_FAILURES,
+                  exc)
+        if self._update_failures >= UPDATE_CHECK_CIRCUIT_FAILURES:
+            self._update_circuit_open_until = (
+                time.monotonic() + UPDATE_CHECK_CIRCUIT_COOLDOWN_SECONDS
+            )
 
     def load_settings(self) -> AppState:
         custom_color = set_custom_theme(

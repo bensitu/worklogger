@@ -5,16 +5,11 @@ import json
 import threading
 import socket
 import urllib.parse
-import time
 import urllib.request
 import urllib.error
-import traceback
-import os
-from datetime import datetime
 from typing import Callable, Optional
 
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QApplication
 
 # Thread-safe callback bridge helpers.
 

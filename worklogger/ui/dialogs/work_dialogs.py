@@ -15,8 +15,6 @@ from config.themes import theme_colors
 from config.constants import (
     ANALYTICS_SHOW_LEAVES_SETTING_KEY,
     MONTHLY_TARGET_SETTING_KEY,
-    WORK_TYPE_KEYS,
-    LEAVE_TYPES,
 )
 from core.time_calc import calc_hours
 from services import analytics_service
@@ -98,7 +96,6 @@ class NoteEditorDialog(QDialog):
     def _open_template_picker(self):
         dlg = TemplatePickerDialog(
             self._app, "daily",
-            current_content=self._editor.toPlainText(),
             parent=self,
         )
         if dlg.exec() == QDialog.Accepted and dlg.chosen_content:
@@ -385,7 +382,6 @@ class ReportDialog(QDialog):
     def _open_template_picker(self):
         dlg = TemplatePickerDialog(
             self._app, self._current_type(),
-            current_content=self._current_editor().toPlainText(),
             parent=self,
         )
         if dlg.exec() == QDialog.Accepted and dlg.chosen_content:
@@ -431,22 +427,22 @@ class ReportDialog(QDialog):
 
         if existing:
             system = (
-                f"You are a professional work-report editor. "
+                "You are a professional work-report editor. "
                 f"The user has a draft {period}. "
-                f"Improve its clarity, structure, and completeness. "
-                f"If calendar events are provided, incorporate any missing "
-                f"meetings or tasks. Keep the same language and Markdown format. "
-                f"Do not invent facts."
+                "Improve its clarity, structure, and completeness. "
+                "If calendar events are provided, incorporate any missing "
+                "meetings or tasks. Keep the same language and Markdown format. "
+                "Do not invent facts."
                 + (f" Extra: {hint}" if hint else "")
             )
             user_content = f"=== Draft Report ===\n{existing}{cal_block}"
         else:
             system = (
-                f"You are a professional work-report writer. "
+                "You are a professional work-report writer. "
                 f"Generate a clean {period} using the raw work log data"
                 + (" and calendar events provided" if cal_evs else "")
                 + ". Write in the same language as the work log data. "
-                f"Use Markdown. Do not invent facts."
+                "Use Markdown. Do not invent facts."
                 + (f" Extra: {hint}" if hint else "")
             )
             if idx == 0:
@@ -488,7 +484,6 @@ class ReportDialog(QDialog):
         QTimer.singleShot(2000, lambda: self._cp_btn.setText(msg("report_copy")))
 
     def _download(self):
-        app = self._app
         idx = self._tabs.currentIndex()
         ts = dt.now().strftime("%Y%m%d_%H%M%S")
         label = "weekly" if idx == 0 else "monthly"
@@ -513,8 +508,6 @@ class ChartDialog(QDialog):
 
         lv = QVBoxLayout(self)
         acc = theme_colors(app_ref.theme, app_ref.dark)[0]
-        mt = app_ref._safe_float_setting(MONTHLY_TARGET_SETTING_KEY,
-                                         app_ref.work_hours * 21)
 
         controls = QVBoxLayout()
         controls.setSpacing(6)
@@ -799,7 +792,6 @@ class ChartDialog(QDialog):
 
     def _export_csv(self):
         bundle, _chart_widget = self._current()
-        app = self._app
         ts = dt.now().strftime("%Y%m%d_%H%M%S")
         path, _dialog_filter = QFileDialog.getSaveFileName(
             self, _("Export") + " CSV", f"chart_{ts}.csv", "CSV (*.csv)")
@@ -819,7 +811,7 @@ class ChartDialog(QDialog):
         bundle, chart_widget = self._current()
         app = self._app
         try:
-            from PySide6.QtPrintSupport import QPrinter
+            __import__("PySide6.QtPrintSupport")
         except ImportError:
             QMessageBox.warning(self, _("Export"),
                                 _("PDF requires QtPrintSupport. Saving PNG."))

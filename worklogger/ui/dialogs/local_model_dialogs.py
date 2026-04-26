@@ -18,7 +18,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable, Optional
 
-from PySide6.QtCore import Qt, Signal, QObject, QTimer
+from PySide6.QtCore import Signal, QObject
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QProgressBar,
     QPushButton, QTextEdit, QMessageBox, QFileDialog,
@@ -98,7 +98,7 @@ class LocalDownloadDialog(QDialog):
     def _build_select_page(self, _: dict) -> QWidget:
         from services.local_model_service import (
             ensure_catalog, load_catalog, get_active_entry_id,
-            localize_field, get_models_dir,
+            get_models_dir,
         )
         # Ensure catalog.json exists in the writable models directory.
         try:

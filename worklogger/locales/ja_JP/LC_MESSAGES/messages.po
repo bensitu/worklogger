@@ -145,6 +145,9 @@ msgstr "コピー"
 msgid "Could not check for updates: {}"
 msgstr "アップデート確認に失敗しました：{}"
 
+msgid "temporarily unavailable"
+msgstr "一時的に利用できません"
+
 msgid "Create Custom Template"
 msgstr "カスタムテンプレートを作成"
 
