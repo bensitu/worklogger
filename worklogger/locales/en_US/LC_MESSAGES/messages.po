@@ -1422,3 +1422,9 @@ msgstr "Note"
 
 msgid "This recovery key can be used to reset the user's password if it is forgotten. Store it securely and share it only with the account owner. Anyone with this key may reset the password until a new key is generated."
 msgstr "This recovery key can be used to reset the user's password if it is forgotten. Store it securely and share it only with the account owner. Anyone with this key may reset the password until a new key is generated."
+
+msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
+msgstr "Back up your database regularly to protect your local work logs, reports, settings, and account data."
+
+msgid "Password must be at least 8 characters."
+msgstr "Password must be at least 8 characters."

@@ -11,7 +11,17 @@ from PySide6.QtCore import Qt, QTimer, QSize, QEvent
 from PySide6.QtGui import QFont
 
 from utils.i18n import _, msg
-from config.themes import theme_colors
+from config.themes import (
+    ANALYTICS_LEAVE_LINE_COLOR,
+    label_color_qss,
+    line_edit_error_qss,
+    quick_log_delete_button_qss,
+    quick_log_label_hover_qss,
+    quick_log_list_qss,
+    quick_log_row_qss,
+    quick_log_text_color,
+    theme_colors,
+)
 from config.constants import (
     ANALYTICS_SHOW_LEAVES_SETTING_KEY,
     MONTHLY_TARGET_SETTING_KEY,
@@ -677,7 +687,7 @@ class ChartDialog(QDialog):
         if self._leave_cb.isChecked():
             chart.add_dashed_line(
                 bundle.leave_line_data,
-                "#d94a4a",
+                ANALYTICS_LEAVE_LINE_COLOR,
                 Qt.DashLine,
                 msg("analytics_leave"),
             )
@@ -1091,11 +1101,7 @@ class QuickLogDialog(QDialog):
         self._list.setAlternatingRowColors(False)
         self._list.setSpacing(0)
         self._list.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self._list.setStyleSheet(
-            "QListWidget#quick_log_list::item{padding:2px 4px; margin:0px; border:none;}"
-            "QListWidget#quick_log_list::item:selected{background:transparent; border:none;}"
-            "QListWidget#quick_log_list::item:hover{background:transparent;}"
-        )
+        self._list.setStyleSheet(quick_log_list_qss())
         self._list.itemClicked.connect(self._load_for_edit)
         self._list.currentItemChanged.connect(self._on_list_current_changed)
         lft.addWidget(self._list, 1)
@@ -1201,7 +1207,7 @@ class QuickLogDialog(QDialog):
             field.setText(parsed)
             field.setStyleSheet("")
         else:
-            field.setStyleSheet("QLineEdit{border:2px solid #e03333;}")
+            field.setStyleSheet(line_edit_error_qss())
 
     def _refresh_list(self):
         d_str = self._app.selected.isoformat()
@@ -1233,18 +1239,12 @@ class QuickLogDialog(QDialog):
                     QSizePolicy.Expanding, QSizePolicy.Preferred)
                 text_lbl.setCursor(Qt.PointingHandCursor)
                 text_lbl.setToolTip(full_text)
-                text_lbl.setStyleSheet(
-                    f"QLabel:hover{{color:{hover_color};}}"
-                )
+                text_lbl.setStyleSheet(quick_log_label_hover_qss(hover_color))
                 text_lbl.mousePressEvent = lambda e, it=item, ent=entry: self._activate_row(
                     it, ent)
                 row_l.addWidget(text_lbl, 1)
                 x_btn = QPushButton("✕")
-                x_btn.setStyleSheet(
-                    "QPushButton{color:#e03333; font-weight:bold; border:none; "
-                    "margin:0px; padding:0px; background:transparent;}"
-                    "QPushButton:hover{color:#ff0000; background:transparent;}"
-                )
+                x_btn.setStyleSheet(quick_log_delete_button_qss())
                 x_btn.setFixedSize(18, 18)
                 x_btn.setToolTip(msg("quick_log_delete"))
                 x_btn.setCursor(Qt.PointingHandCursor)
@@ -1283,7 +1283,7 @@ class QuickLogDialog(QDialog):
             self._app.theme,
             self._app.dark,
         )
-        txt = "#c8cde8" if self._app.dark else "#1e2035"
+        txt = quick_log_text_color(self._app.dark)
         selected = self._list.currentItem()
         for i in range(self._list.count()):
             item = self._list.item(i)
@@ -1298,20 +1298,32 @@ class QuickLogDialog(QDialog):
             is_hovered = entry["id"] == self._hovered_row_id
             if is_selected:
                 row_w.setStyleSheet(
-                    f"QWidget#quick_log_row{{background:{acc_dim};"
-                    f"border:1px solid {acc};border-radius:6px;}}"
+                    quick_log_row_qss(
+                        "selected",
+                        accent=acc,
+                        accent_dim=acc_dim,
+                        hover=hov,
+                    )
                 )
-                text_lbl.setStyleSheet(f"QLabel{{color:{txt};}}")
+                text_lbl.setStyleSheet(label_color_qss(txt))
             elif is_hovered:
                 row_w.setStyleSheet(
-                    f"QWidget#quick_log_row{{background:{hov};border:1px solid transparent;"
-                    "border-radius:6px;}"
+                    quick_log_row_qss(
+                        "hover",
+                        accent=acc,
+                        accent_dim=acc_dim,
+                        hover=hov,
+                    )
                 )
                 text_lbl.setStyleSheet("")
             else:
                 row_w.setStyleSheet(
-                    "QWidget#quick_log_row{background:transparent;border:1px solid transparent;"
-                    "border-radius:6px;}"
+                    quick_log_row_qss(
+                        "default",
+                        accent=acc,
+                        accent_dim=acc_dim,
+                        hover=hov,
+                    )
                 )
                 text_lbl.setStyleSheet("")
 
@@ -1371,7 +1383,7 @@ class QuickLogDialog(QDialog):
         desc = self._desc_in.text().strip()
         if not desc:
             self._desc_in.setFocus()
-            self._desc_in.setStyleSheet("QLineEdit{border:2px solid #e03333;}")
+            self._desc_in.setStyleSheet(line_edit_error_qss())
             QTimer.singleShot(1500,
                               lambda: self._desc_in.setStyleSheet(""))
             return

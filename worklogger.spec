@@ -26,12 +26,20 @@ PLATFORM = sys.platform
 ROOT_DIR = Path(globals().get("SPECPATH", os.getcwd())).resolve()
 WORKLOGGER_DIR = ROOT_DIR / "worklogger"
 ASSETS_DIR = WORKLOGGER_DIR / "assets"
+FONTS_DIR = ASSETS_DIR / "fonts"
 TEMPLATES_DIR = WORKLOGGER_DIR / "templates"
 LOCALES_DIR = WORKLOGGER_DIR / "locales"
 MODELS_DIR = WORKLOGGER_DIR / "models"
 I18N_COMPILE_SCRIPT = ROOT_DIR / "scripts" / "i18n" / "i18n_compile.py"
 I18N_LANGS = ("en_US", "ja_JP", "ko_KR", "zh_CN", "zh_TW")
 UPX_ENABLED = True
+
+if str(WORKLOGGER_DIR) not in sys.path:
+    sys.path.insert(0, str(WORKLOGGER_DIR))
+
+from config.constants import LANGUAGE_FONT_FILES
+
+REQUIRED_FONT_FILES = tuple(dict.fromkeys(LANGUAGE_FONT_FILES.values()))
 
 
 def _require_file(path: Path, label: str) -> Path:
@@ -59,6 +67,11 @@ def _ensure_i18n_catalogs() -> None:
             missing.append(str(mo_path))
     if missing:
         raise RuntimeError("Missing compiled gettext catalogs:\n" + "\n".join(missing))
+
+
+def _ensure_font_assets() -> None:
+    for font_file in REQUIRED_FONT_FILES:
+        _require_file(FONTS_DIR / font_file, f"font asset {font_file}")
 
 
 def _certifi_cacert_data_entry() -> tuple[str, str]:
@@ -102,6 +115,7 @@ def _module_exists(name: str) -> bool:
 
 
 _ensure_i18n_catalogs()
+_ensure_font_assets()
 
 CERTIFI_CACERT_DATA = _certifi_cacert_data_entry()
 ICON_ICO = _require_file(ASSETS_DIR / "worklogger.ico", "Windows icon") if PLATFORM == "win32" else None

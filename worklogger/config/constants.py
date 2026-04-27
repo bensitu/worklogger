@@ -17,6 +17,23 @@ UPDATE_RESPONSE_MAX_BYTES = 512 * 1024
 GPL_URL = "https://www.gnu.org/licenses/gpl-3.0.html"
 LICENSE_SPDX = "GPL-3.0-or-later"
 
+ASSETS_DIR_NAME = "assets"
+FONTS_DIR_NAME = "fonts"
+FONT_EN = "NotoSans-Regular.otf"
+FONT_JA = "NotoSansJP-Regular.otf"
+FONT_KO = "NotoSansKR-Regular.otf"
+FONT_ZH_CN = "NotoSansSC-Regular.otf"
+FONT_ZH_TW = "NotoSansTC-Regular.otf"
+LANGUAGE_FONT_FILES = {
+    "en_US": FONT_EN,
+    "ja_JP": FONT_JA,
+    "ko_KR": FONT_KO,
+    "zh_CN": FONT_ZH_CN,
+    "zh_TW": FONT_ZH_TW,
+}
+DEFAULT_LANGUAGE_FONT = FONT_EN
+DEFAULT_UI_FONT_POINT_SIZE = 10
+
 DB_FILENAME = "worklog.db"
 LOG_FILENAME = "worklogger.log"
 MAX_SHIFT_HOURS = 16.0

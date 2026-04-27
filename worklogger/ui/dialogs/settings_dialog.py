@@ -35,9 +35,10 @@ from config.constants import (
     WORK_HOURS_SETTING_KEY,
 )
 from config.themes import (
-    DEFAULT_CUSTOM_COLOR, THEMES, THEME_KEYS, THEME_NAMES,
+    DEFAULT_CUSTOM_COLOR, PALETTE_ICON_STYLE, THEMES, THEME_KEYS, THEME_NAMES,
     normalize_hex_color, set_custom_theme, switch_off_color,
-    local_model_download_blocked_qss, status_label_qss, theme_colors,
+    custom_color_button_qss, local_model_download_blocked_qss,
+    settings_account_header_qss, status_label_qss, theme_colors,
 )
 from utils.formatters import parse_status
 from ui.widgets import SwitchButton
@@ -55,16 +56,11 @@ def _palette_icon() -> QIcon:
     pix.fill(Qt.GlobalColor.transparent)
     painter = QPainter(pix)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-    painter.setPen(QPen(QColor("#44515f"), 1.3))
-    painter.setBrush(QBrush(QColor("#f7d99b")))
+    painter.setPen(QPen(QColor(PALETTE_ICON_STYLE["outline"]), 1.3))
+    painter.setBrush(QBrush(QColor(PALETTE_ICON_STYLE["body"])))
     painter.drawEllipse(2, 3, 19, 17)
     painter.setPen(Qt.PenStyle.NoPen)
-    for color, x, y in (
-        ("#ef4444", 7, 8),
-        ("#f59e0b", 12, 7),
-        ("#22c55e", 8, 13),
-        ("#3b82f6", 14, 13),
-    ):
+    for color, x, y in PALETTE_ICON_STYLE["dots"]:
         painter.setBrush(QBrush(QColor(color)))
         painter.drawEllipse(x, y, 4, 4)
     painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Clear)
@@ -113,17 +109,6 @@ class SettingsDialog(QDialog):
             self._lang_cb.setCurrentIndex(idx)
         af.addRow(_("🌍  Language").lstrip("🌍 "), self._lang_cb)
 
-        _acc = theme_colors(app_ref.theme, app_ref.dark)[0]
-        _off_col = switch_off_color(app_ref.dark)
-        dark_wrap = QWidget()
-        dh = QHBoxLayout(dark_wrap)
-        dh.setContentsMargins(0, 0, 0, 0)
-        self._dark = SwitchButton(checked=app_ref.dark,
-                                  color_on=_acc, color_off=_off_col)
-        dh.addWidget(self._dark)
-        dh.addStretch()
-        af.addRow(_("🌙  Dark mode").lstrip("🌙☀ "), dark_wrap)
-
         self._theme_cb = QComboBox()
         self._theme_cb.setFixedWidth(FW)
         for k in THEME_KEYS:
@@ -160,6 +145,17 @@ class SettingsDialog(QDialog):
         self._theme_cb.currentIndexChanged.connect(self._sync_custom_theme_controls)
         af.addRow(_("🎨  Theme").lstrip("🎨 "), theme_wrap)
         self._sync_custom_theme_controls()
+
+        _acc = theme_colors(app_ref.theme, app_ref.dark)[0]
+        _off_col = switch_off_color(app_ref.dark)
+        dark_wrap = QWidget()
+        dh = QHBoxLayout(dark_wrap)
+        dh.setContentsMargins(0, 0, 0, 0)
+        self._dark = SwitchButton(checked=app_ref.dark,
+                                  color_on=_acc, color_off=_off_col)
+        dh.addWidget(self._dark)
+        dh.addStretch()
+        af.addRow(_("🌙  Dark mode").lstrip("🌙☀ "), dark_wrap)
 
         minimal_wrap = QWidget()
         mh = QHBoxLayout(minimal_wrap)
@@ -552,7 +548,7 @@ class SettingsDialog(QDialog):
                     status = f"✓  {ready_text} · {activity_text}"
                 self._local_status_lbl.setText(status)
                 self._local_status_lbl.setStyleSheet(
-                    f"color:{_acc};font-weight:600;")
+                    status_label_qss("success", _acc))
                 self._local_dl_btn.setText(
                     _("Select / Change"))
             else:
@@ -860,14 +856,23 @@ class SettingsDialog(QDialog):
         csv_v.addWidget(csv_desc)
         csv_v.addLayout(csv_actions)
 
-        backup_grp = QGroupBox(_("Database Backup"))
+        backup_grp = QGroupBox(msg("settings_database_backup"))
         bv = QVBoxLayout(backup_grp)
         bv.setSpacing(6)
         bv.setContentsMargins(10, 10, 10, 10)
+        backup_hint = QLabel(msg("backup_description"))
+        backup_hint.setWordWrap(True)
+        backup_hint.setObjectName("muted")
+        bv.addWidget(backup_hint)
+        self._backup_db_btn = QPushButton(msg("backup_data"))
+        self._restore_db_btn = QPushButton(msg("restore_data"))
+        backup_actions = QHBoxLayout()
+        backup_actions.setSpacing(8)
+        backup_actions.addWidget(self._backup_db_btn)
+        backup_actions.addWidget(self._restore_db_btn)
+        bv.addLayout(backup_actions)
         self._backup_reminder_lbl = QLabel(
-            _("You haven't backed up in {days} days. Please back up your data.").format(
-                days=BACKUP_REMINDER_DAYS,
-            )
+            msg("backup_reminder", days=BACKUP_REMINDER_DAYS)
         )
         self._backup_reminder_lbl.setWordWrap(True)
         self._backup_reminder_lbl.setObjectName("muted")
@@ -877,14 +882,7 @@ class SettingsDialog(QDialog):
             )
         except Exception:
             self._backup_reminder_lbl.setVisible(False)
-        self._backup_db_btn = QPushButton(_("Backup Data"))
-        self._restore_db_btn = QPushButton(_("Restore Data"))
-        backup_actions = QHBoxLayout()
-        backup_actions.setSpacing(8)
-        backup_actions.addWidget(self._backup_db_btn)
-        backup_actions.addWidget(self._restore_db_btn)
         bv.addWidget(self._backup_reminder_lbl)
-        bv.addLayout(backup_actions)
 
         cal_grp = QGroupBox(_("Calendar Sync"))
         cv = QVBoxLayout(cal_grp)
@@ -909,7 +907,7 @@ class SettingsDialog(QDialog):
 
         account_w = QWidget()
         account_v = QVBoxLayout(account_w)
-        account_v.setContentsMargins(14, 14, 14, 14)
+        account_v.setContentsMargins(10, 10, 10, 10)
         account_v.setSpacing(8)
         username = getattr(app_ref.services, "current_username", None) or ""
         try:
@@ -918,7 +916,7 @@ class SettingsDialog(QDialog):
             is_admin = False
         account_row = QWidget()
         account_row_l = QHBoxLayout(account_row)
-        account_row_l.setContentsMargins(0, 0, 0, 0)
+        account_row_l.setContentsMargins(5, 0, 5, 0)
         account_row_l.setSpacing(8)
         account_lbl = QLabel("{}: {}".format(_("Current user"), username))
         role_lbl = QLabel(
@@ -927,7 +925,7 @@ class SettingsDialog(QDialog):
                 _("Administrator") if is_admin else _("User"),
             )
         )
-        account_header_qss = "font-weight: bold; font-size: 14px;"
+        account_header_qss = settings_account_header_qss()
         account_lbl.setStyleSheet(account_header_qss)
         role_lbl.setStyleSheet(account_header_qss)
         role_lbl.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
@@ -1032,12 +1030,7 @@ class SettingsDialog(QDialog):
         self._custom_color_btn.setVisible(is_custom)
         self._custom_color_btn.setEnabled(is_custom)
         self._custom_color_btn.setStyleSheet(
-            "QPushButton{"
-            f"background:{self._custom_color};"
-            "border:1px solid #80889a;"
-            "border-radius:8px;"
-            "}"
-            "QPushButton:hover{border:1px solid #ffffff;}"
+            custom_color_button_qss(self._custom_color)
         )
 
     def _apply_custom_color(self, hex_color: str) -> None:

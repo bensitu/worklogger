@@ -20,6 +20,7 @@ from services.session_store import (
     load_remember_session,
     save_remember_token,
 )
+from services.language_manager import get_language_manager
 from utils.icon import make_icon
 from utils.logging_config import configure_logging
 from ui.main_window import App
@@ -29,7 +30,7 @@ from ui.dialogs import (
     RegisterDialog,
     ResetPasswordDialog,
 )
-from utils.i18n import _
+from utils.i18n import _, get_language
 
 
 def _bootstrap() -> None:
@@ -57,6 +58,7 @@ def main():
     _bootstrap()
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
+    get_language_manager().apply(get_language())
     icon = make_icon()
     app.setWindowIcon(icon)
     services = AppServices()
@@ -67,6 +69,7 @@ def main():
         sys.exit(0)
 
     initial_lang = services.resolve_initial_language()
+    get_language_manager().apply(initial_lang)
     w = App(services=services, initial_lang=initial_lang)
     w.setWindowIcon(icon)
     w.show()

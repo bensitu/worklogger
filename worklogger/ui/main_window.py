@@ -14,13 +14,16 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QTimer, Slot, QEvent
 from PySide6.QtGui import QColor, QPainter, QAction
 
-from utils.i18n import _, msg, LANG_NAMES, set_language
+from utils.i18n import _, msg, LANG_NAMES
 from config.themes import (
     DEFAULT_CUSTOM_COLOR,
     THEMES,
     THEME_KEYS,
     WT_BORDER_ACCENT,
+    auto_break_active_qss,
+    calendar_cell_qss,
     cell_pool,
+    line_edit_error_qss,
     make_qss,
     set_custom_theme,
     theme_colors,
@@ -50,6 +53,7 @@ from config.constants import (
 from core.time_calc import calc_hours, calc_shift_span_hours, is_overnight_shift, detect_country
 from core.validator import parse_time
 from services.app_services import AppServices
+from services.language_manager import get_language_manager
 from stores.app_store import AppStore, AppState
 from ui.dialogs import (
     SettingsDialog, NoteEditorDialog, ReportDialog, ChartDialog,
@@ -112,6 +116,7 @@ class App(QWidget):
     def __init__(self, services: AppServices | None = None, initial_lang: str | None = None):
         super().__init__()
         self.services = services or AppServices()
+        self.language_manager = get_language_manager()
         if services is None:
             self.services.ensure_default_user_session()
         custom_color = set_custom_theme(
@@ -166,7 +171,7 @@ class App(QWidget):
             current_user_id=self.services.current_user_id,
             current_username=self.services.current_username,
         ))
-        set_language(self._state.lang)
+        self.language_manager.apply(self._state.lang)
 
         self.holidays: dict = {}
         self._holidays_pending: dict = {}
@@ -390,7 +395,7 @@ class App(QWidget):
             setattr(self, label_attr, lbl)
             btn = QPushButton()
             btn.setObjectName("clock_btn")
-            btn.setMinimumSize(64, 70)
+            btn.setMinimumSize(64, 64)
             btn.setMaximumHeight(80)
             setattr(self, btn_attr, btn)
             col.addWidget(lbl)
@@ -559,8 +564,8 @@ class App(QWidget):
 
     @lang.setter
     def lang(self, value: str) -> None:
-        set_language(value)
-        self.store.patch(lang=value)
+        result = self.language_manager.apply(value)
+        self.store.patch(lang=result.language)
 
     @property
     def theme(self) -> str:
@@ -938,9 +943,7 @@ class App(QWidget):
         mins = (datetime.now() - self._break_start).seconds // 60
         self.break_btn.setText(f"{_("On break")}\n{mins}m")
         self._auto_break_hours = mins / 60
-        color = "#ffaa44" if self.dark else "#e07800"
-        self.break_btn.setStyleSheet(
-            f"QPushButton{{color:{color};border-color:{color};}}")
+        self.break_btn.setStyleSheet(auto_break_active_qss(self.dark))
 
     def _cell_style(self, dt: date):
         pool = cell_pool(self.dark, self.theme)
@@ -1017,9 +1020,9 @@ class App(QWidget):
             if dt in self.holidays:
                 lines.append(self.holidays[dt])
             if h > 0:
-                lines.append(f"{h:.1f}{_("h")}")
+                lines.append(f"{h:.1f}{_('h')}")
             if ot > 0:
-                lines.append(f"{_("+")}{ot:.1f}{_("h")}")
+                lines.append(f"{_('+')}{ot:.1f}{_('h')}")
             abbr = {'normal': "", 'remote': _("WFH"), 'business_trip': _("Trip"), 'paid_leave': _("PTO"), 'comp_leave': _("CTO"), 'sick_leave': _("Sick")}.get(wt, "")
             if abbr:
                 lines.append(abbr)
@@ -1028,19 +1031,9 @@ class App(QWidget):
             btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             bg, fg, bdr_c, bdr_w = self._cell_style(dt)
             wt_acc = WT_BORDER_ACCENT[self.dark].get(wt)
-            if wt_acc:
-                btn.setStyleSheet(
-                    f"QPushButton{{background-color:{bg};color:{fg};"
-                    f"border:2px solid {bdr_c};border-left:4px solid {wt_acc};"
-                    f"border-radius:6px;font-size:11px;text-align:center;padding:2px;}}"
-                    f"QPushButton:hover{{border:2px solid {hover_border};"
-                    f"border-left:4px solid {wt_acc};}}")
-            else:
-                btn.setStyleSheet(
-                    f"QPushButton{{background-color:{bg};color:{fg};"
-                    f"border:2px solid {bdr_c};border-radius:6px;"
-                    f"font-size:11px;text-align:center;padding:2px;}}"
-                    f"QPushButton:hover{{border:2px solid {hover_border};}}")
+            btn.setStyleSheet(
+                calendar_cell_qss(bg, fg, bdr_c, hover_border, wt_acc)
+            )
             show_pending_note = show_note_markers and has_pending_note
             btn.set_note_marker(show_pending_note, hover_border)
             overnight_marker = show_overnight_indicator and bool(rec and rec.is_overnight)
@@ -1151,15 +1144,13 @@ class App(QWidget):
         e = parse_time(e_txt) if e_txt else None
         if s_txt and not s:
             if self._time_mode() == "manual":
-                self.manual_start_in.setStyleSheet(
-                    "QLineEdit{border:2px solid #e03333;}")
+                self.manual_start_in.setStyleSheet(line_edit_error_qss())
             return
         elif self._time_mode() == "manual":
             self.manual_start_in.setStyleSheet("")
         if e_txt and not e:
             if self._time_mode() == "manual":
-                self.manual_end_in.setStyleSheet(
-                    "QLineEdit{border:2px solid #e03333;}")
+                self.manual_end_in.setStyleSheet(line_edit_error_qss())
             return
         elif self._time_mode() == "manual":
             self.manual_end_in.setStyleSheet("")
@@ -1180,8 +1171,7 @@ class App(QWidget):
             span_h = calc_shift_span_hours(s, e, max_shift_hours=max_shift)
             if span_h is None:
                 if self._time_mode() == "manual":
-                    self.manual_end_in.setStyleSheet(
-                        "QLineEdit{border:2px solid #e03333;}")
+                    self.manual_end_in.setStyleSheet(line_edit_error_qss())
                 QMessageBox.warning(
                     self,
                     _("Confirm"),
@@ -1368,7 +1358,7 @@ class App(QWidget):
             current_username=self.services.current_username,
         )
         self._active_time_tab = self._state.time_input_mode
-        set_language(self._state.lang)
+        self.language_manager.apply(self._state.lang)
         self.apply_theme()
         self.apply_lang()
         self.load()

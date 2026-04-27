@@ -10,7 +10,17 @@ from PySide6.QtGui import (
     QBrush, QColor, QFont, QFontMetrics, QImage, QPainter, QPen,
 )
 
-from config.themes import normalize_hex_color
+from config.themes import (
+    COLOR_WIDGET_DEFAULT_COLOR,
+    COLOR_WHEEL_BORDER_COLOR,
+    COLOR_WHEEL_MARKER_INNER_COLOR,
+    COLOR_WHEEL_MARKER_OUTER_COLOR,
+    COMBO_CHART_DOT_BORDER_COLOR,
+    SWITCH_THUMB_COLOR,
+    combo_chart_palette,
+    normalize_hex_color,
+    switch_default_colors,
+)
 
 
 class SwitchButton(QWidget):
@@ -20,14 +30,18 @@ class SwitchButton(QWidget):
 
     _W, _H = 42, 24
 
-    def __init__(self, checked: bool = False,
-                 color_on:  str = "#4f8ef7",
-                 color_off: str = "#b0b8cc",
-                 parent=None):
+    def __init__(
+        self,
+        checked: bool = False,
+        color_on: str | None = None,
+        color_off: str | None = None,
+        parent=None,
+    ):
         super().__init__(parent)
+        default_on, default_off = switch_default_colors()
         self._checked = checked
-        self._color_on = QColor(color_on)
-        self._color_off = QColor(color_off)
+        self._color_on = QColor(color_on or default_on)
+        self._color_off = QColor(color_off or default_off)
         self._travel = float(self._W - self._H)
         self._pos = self._travel if checked else 0.0
         self._anim_timer = QTimer(self)
@@ -83,7 +97,7 @@ class SwitchButton(QWidget):
         pad = 3
         td = h - pad * 2
         tx = self._pos + pad
-        p.setBrush(QBrush(QColor("#ffffff")))
+        p.setBrush(QBrush(QColor(SWITCH_THUMB_COLOR)))
         p.drawEllipse(QRectF(tx, pad, td, td))
         p.end()
 
@@ -93,7 +107,7 @@ class ColorCircle(QWidget):
 
     selected_color_changed = Signal(str)
 
-    def __init__(self, color: str = "#4f8ef7", parent=None):
+    def __init__(self, color: str = COLOR_WIDGET_DEFAULT_COLOR, parent=None):
         super().__init__(parent)
         self._hue = 0.0
         self._sat = 0.0
@@ -179,7 +193,7 @@ class ColorCircle(QWidget):
         rect = self._wheel_rect()
         size = max(20, int(rect.width()))
         p.drawImage(rect, self._wheel_image(size))
-        p.setPen(QPen(QColor("#80889a"), 1))
+        p.setPen(QPen(QColor(COLOR_WHEEL_BORDER_COLOR), 1))
         p.setBrush(Qt.NoBrush)
         p.drawEllipse(rect)
 
@@ -191,10 +205,10 @@ class ColorCircle(QWidget):
             center.y() - math.sin(angle) * self._sat * radius,
         )
         marker_rect = QRectF(marker.x() - 6, marker.y() - 6, 12, 12)
-        p.setPen(QPen(QColor("#ffffff"), 2))
+        p.setPen(QPen(QColor(COLOR_WHEEL_MARKER_OUTER_COLOR), 2))
         p.setBrush(QBrush(QColor(self.color())))
         p.drawEllipse(marker_rect)
-        p.setPen(QPen(QColor("#202436"), 1))
+        p.setPen(QPen(QColor(COLOR_WHEEL_MARKER_INNER_COLOR), 1))
         p.setBrush(Qt.NoBrush)
         p.drawEllipse(marker_rect)
         p.end()
@@ -205,7 +219,7 @@ class ColorPickerSliders(QWidget):
 
     selected_color_changed = Signal(str)
 
-    def __init__(self, color: str = "#4f8ef7", parent=None):
+    def __init__(self, color: str = COLOR_WIDGET_DEFAULT_COLOR, parent=None):
         super().__init__(parent)
         self._updating = False
         layout = QGridLayout(self)
@@ -306,25 +320,18 @@ class ComboChart(QWidget):
         self._bar_label = bar_label
         self._line_label = line_label
         self._leave_label = leave_label
-        self._c_line = "#5fd0cf" if dark else "#168f96"
-        self._c_leave = "#f0a33a"
+        palette = combo_chart_palette(dark)
+        self._c_line = palette["line"]
+        self._c_leave = palette["leave"]
         self._dashed_lines: list[tuple[list[float | None], QColor, Qt.PenStyle, str]] = []
         self.setMinimumHeight(240)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        if dark:
-            self._c_txt = "#c8cde8"
-            self._c_mut = "#8890b8"
-            self._c_grid = "#2a2d48"
-            self._c_ref = "#555580"
-            self._c_ot = "#ff8585"
-            self._c_ref_bg = "#1c2035"
-        else:
-            self._c_txt = "#1e2035"
-            self._c_mut = "#7080a8"
-            self._c_grid = "#e0e4f0"
-            self._c_ref = "#b0b8cc"
-            self._c_ot = "#e03333"
-            self._c_ref_bg = "#f4f7ff"
+        self._c_txt = palette["text"]
+        self._c_mut = palette["muted"]
+        self._c_grid = palette["grid"]
+        self._c_ref = palette["reference"]
+        self._c_ot = palette["overtime"]
+        self._c_ref_bg = palette["reference_background"]
 
     def set_mode(self, mode: str) -> None:
         if mode not in {"bar", "line", "combo"} or mode == self._mode:
@@ -550,7 +557,7 @@ class ComboChart(QWidget):
             for i in range(1, len(points)):
                 p.drawLine(points[i - 1], points[i])
             p.setBrush(QBrush(QColor(self._c_line)))
-            p.setPen(QPen(QColor("#ffffff"), 1))
+            p.setPen(QPen(QColor(COMBO_CHART_DOT_BORDER_COLOR), 1))
             for point in points:
                 p.drawEllipse(QRectF(point.x() - 3.5, point.y() - 3.5, 7, 7))
 

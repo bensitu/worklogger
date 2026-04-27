@@ -28,7 +28,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QFont
 
 from utils.i18n import _, msg
-from config.themes import progress_bar_qss
+from config.themes import DEFAULT_CUSTOM_COLOR, LOCAL_MODEL_READY_COLOR, progress_bar_qss, status_label_qss
 
 
 # Cross-thread bridge.
@@ -64,7 +64,7 @@ class LocalDownloadDialog(QDialog):
     PAGE_DOWNLOAD = 1
 
     def __init__(self, parent, lang: str,
-                 accent_color: str = "#4f8ef7",
+                 accent_color: str = DEFAULT_CUSTOM_COLOR,
                  dark: bool = False,
                  on_model_changed: Optional[Callable[[str, str], None]] = None) -> None:
         super().__init__(parent)
@@ -258,6 +258,7 @@ class LocalDownloadDialog(QDialog):
         Never raises: all service calls are guarded so a catalog/manifest
         error only results in 'Not downloaded' state for affected cards.
         """
+        ok_col = LOCAL_MODEL_READY_COLOR
         try:
             from services.local_model_service import (
                 load_catalog, verify_model_file, load_manifest,
@@ -266,7 +267,6 @@ class LocalDownloadDialog(QDialog):
             mdir     = get_models_dir()
             manifest = load_manifest(mdir)
             catalog  = load_catalog(mdir)
-            ok_col   = "#2ecc71"
         except Exception:
             return
 
@@ -284,11 +284,11 @@ class LocalDownloadDialog(QDialog):
                         card["status_lbl"].setText(
                             "✓  " + _("Ready"))
                         card["status_lbl"].setStyleSheet(
-                            f"color:{ok_col};font-weight:600;")
+                            status_label_qss("success", ok_col))
                     else:
                         card["status_lbl"].setText(
                             _("Integrity failed"))
-                        card["status_lbl"].setStyleSheet("color:#e03333;")
+                        card["status_lbl"].setStyleSheet(status_label_qss("error"))
                     card["delete_btn"].show()
                 else:
                     raise ValueError("not present")

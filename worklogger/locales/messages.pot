@@ -129,6 +129,9 @@ msgstr ""
 msgid "Average"
 msgstr ""
 
+msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
+msgstr ""
+
 msgid "Backup Data"
 msgstr ""
 
@@ -744,7 +747,7 @@ msgstr ""
 msgid "Password changed successfully."
 msgstr ""
 
-msgid "Password must be at least 6 characters."
+msgid "Password must be at least 8 characters."
 msgstr ""
 
 msgid "Password reset successfully."

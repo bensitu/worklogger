@@ -1422,3 +1422,9 @@ msgstr "注意"
 
 msgid "This recovery key can be used to reset the user's password if it is forgotten. Store it securely and share it only with the account owner. Anyone with this key may reset the password until a new key is generated."
 msgstr "此恢復密鑰可在使用者忘記密碼時用於重設該使用者密碼。請妥善保管，並僅分享給帳戶本人。在產生新密鑰之前，任何持有此密鑰的人都可能重設該帳戶密碼。"
+
+msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
+msgstr "請定期備份資料庫，以保護本機工作記錄、報告、設定和帳號資料。"
+
+msgid "Password must be at least 8 characters."
+msgstr "Password must be at least 8 characters."

@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from config.themes import cell_pool, theme_colors
+from config.themes import dialog_title_qss, user_dialog_button_qss, user_table_qss
 from config.constants import PASSWORD_MIN_LENGTH
 from utils.i18n import _
 from .common import _localize_msgbox_buttons
@@ -164,7 +164,7 @@ class UserManagementDialog(QDialog):
         root.setSpacing(10)
 
         title = QLabel(_("Manage Users"))
-        title.setStyleSheet("font-size: 16px; font-weight: 700;")
+        title.setStyleSheet(dialog_title_qss())
         subtitle = QLabel(
             _("Review accounts, reset passwords, and manage recovery keys.")
         )
@@ -211,55 +211,11 @@ class UserManagementDialog(QDialog):
         self._refresh()
 
     def _apply_theme_styles(self) -> None:
-        acc, acc_hov, acc_dim, _stat_bg, stat_bd = theme_colors(
-            self._theme_name,
-            self._dark,
+        self._table.setStyleSheet(user_table_qss(self._dark, self._theme_name))
+        self.setStyleSheet(
+            self.styleSheet()
+            + user_dialog_button_qss(self._dark, self._theme_name)
         )
-        pool = cell_pool(self._dark, self._theme_name)
-        cell_bg, cell_txt, cell_border, _width = pool["default"]
-        surface = "#1c1d2b" if self._dark else "#ffffff"
-        muted = "#8890b8" if self._dark else "#606888"
-        self._table.setStyleSheet(
-            "QTableWidget{"
-            f"background:{surface};"
-            f"color:{cell_txt};"
-            f"gridline-color:{cell_border};"
-            f"border:1px solid {stat_bd};"
-            "border-radius:8px;"
-            "}"
-            "QHeaderView::section{"
-            f"background:{acc_dim};"
-            f"color:{cell_txt};"
-            f"border:0px;border-bottom:1px solid {stat_bd};"
-            "padding:7px 8px;font-weight:700;"
-            "}"
-            "QTableWidget::item{"
-            f"background:{cell_bg};"
-            "padding:4px 6px;"
-            "}"
-            "QTableWidget::item:selected{"
-            f"background:{acc};"
-            "color:white;"
-            "}"
-        )
-        button_qss = (
-            "QPushButton{"
-            f"background:{surface};"
-            f"color:{cell_txt};"
-            f"border:1px solid {stat_bd};"
-            "border-radius:7px;"
-            "padding:5px 8px;"
-            "}"
-            f"QPushButton:hover{{border-color:{acc};color:{acc};}}"
-            f"QPushButton:disabled{{color:{muted};border-color:{stat_bd};}}"
-            "QPushButton#primary_btn{"
-            f"background:{acc};"
-            "color:white;"
-            "border:none;"
-            "}"
-            f"QPushButton#primary_btn:hover{{background:{acc_hov};color:white;}}"
-        )
-        self.setStyleSheet(self.styleSheet() + button_qss)
 
     def _refresh(self) -> None:
         try:
