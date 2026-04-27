@@ -132,7 +132,10 @@ def resolve_model_path(models_dir: Path, filename: str) -> Path:
 
 def validate_model_url(url: str) -> str:
     """Return a safe HTTPS model URL or raise ``ValueError``."""
-    raw = str(url or "").strip()
+    candidate = str(url or "")
+    if any(ord(ch) < 32 or ord(ch) == 127 for ch in candidate):
+        raise ValueError(f"URL contains control characters: {url!r}")
+    raw = candidate.strip()
     parsed = urllib.parse.urlparse(raw)
     if parsed.scheme.lower() != "https" or not parsed.hostname:
         raise ValueError(f"Unsafe model URL: {url}")

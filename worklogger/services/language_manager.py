@@ -5,6 +5,7 @@ import threading
 from dataclasses import dataclass
 from pathlib import Path
 
+from PySide6.QtCore import QEvent
 from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import QApplication
 
@@ -88,7 +89,6 @@ class LanguageManager:
         families = [font_family]
         if fallback_family and fallback_family != font_family:
             families.append(fallback_family)
-            QFont.insertSubstitution(font_family, fallback_family)
         if families and hasattr(font, "setFamilies"):
             font.setFamilies(families)
         if current.pointSizeF() > 0:
@@ -98,8 +98,8 @@ class LanguageManager:
         else:
             font.setPointSize(DEFAULT_UI_FONT_POINT_SIZE)
         app.setFont(font)
-        for widget in app.allWidgets():
-            widget.setFont(font)
+        for window in app.topLevelWidgets():
+            QApplication.sendEvent(window, QEvent(QEvent.Type.FontChange))
 
 
 _language_manager: LanguageManager | None = None

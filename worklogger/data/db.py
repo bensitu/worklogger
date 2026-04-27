@@ -8,10 +8,11 @@ import os
 import secrets
 import shutil
 import sqlite3
+import stat
 import sys
 import threading
 import time
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from config.constants import (
     DB_FILENAME,
@@ -34,6 +35,8 @@ def get_db_path() -> str:
 DB_PATH = get_db_path()
 _PBKDF2_ITERATIONS = 600_000
 _PBKDF2_LEGACY_ITERATIONS = (100_000,)
+_DUMMY_PASSWORD_SALT = "00" * 16
+_DUMMY_PASSWORD_HASH = "00" * 32
 _WORKLOG_TABLE_NAMES = ("worklog", "worklogs", "work_log")
 
 _CREATE_USERS = """CREATE TABLE IF NOT EXISTS users(
@@ -117,10 +120,12 @@ class DB:
     def _open_connection(path: str) -> sqlite3.Connection:
         try:
             conn = sqlite3.connect(path, timeout=5, check_same_thread=False)
+            DB._secure_database_files(path)
             conn.execute("PRAGMA journal_mode=WAL")
             conn.execute("PRAGMA synchronous=NORMAL")
             conn.execute("PRAGMA busy_timeout=5000")
             conn.execute("PRAGMA foreign_keys=ON")
+            DB._secure_database_files(path)
             r = conn.execute("PRAGMA integrity_check").fetchone()
             if r and r[0] != "ok":
                 raise sqlite3.DatabaseError(f"Integrity check failed: {r[0]}")
@@ -134,15 +139,28 @@ class DB:
                 pass
             try:
                 conn = sqlite3.connect(path, timeout=5, check_same_thread=False)
+                DB._secure_database_files(path)
                 conn.execute("PRAGMA journal_mode=WAL")
                 conn.execute("PRAGMA synchronous=NORMAL")
                 conn.execute("PRAGMA busy_timeout=5000")
                 conn.execute("PRAGMA foreign_keys=ON")
+                DB._secure_database_files(path)
                 return conn
             except sqlite3.DatabaseError:
                 raise sqlite3.DatabaseError(
                     f"Cannot recover database at {path} after error: {exc}"
                 ) from exc
+
+    @staticmethod
+    def _secure_database_files(path: str) -> None:
+        if not path or path == ":memory:":
+            return
+        for candidate in (path, path + "-wal", path + "-shm"):
+            try:
+                if os.path.exists(candidate):
+                    os.chmod(candidate, stat.S_IRUSR | stat.S_IWUSR)
+            except OSError:
+                pass
 
     def _migrate(self) -> None:
         """Create current tables and migrate legacy single-user data."""
@@ -281,6 +299,7 @@ class DB:
 
     @staticmethod
     def _quote_identifier(name: str) -> str:
+        """Quote an internal SQL identifier, not user-provided content."""
         if (
             not isinstance(name, str)
             or not name
@@ -610,6 +629,11 @@ class DB:
             (username,),
         ).fetchone()
         if not row:
+            self._password_hash_matches(
+                password,
+                _DUMMY_PASSWORD_SALT,
+                _DUMMY_PASSWORD_HASH,
+            )
             return None
         matched, needs_upgrade = self._password_hash_matches(
             password,
@@ -750,7 +774,8 @@ class DB:
         expires_at = None
         if token:
             expires_at = (
-                datetime.now() + timedelta(days=REMEMBER_TOKEN_LIFETIME_DAYS)
+                datetime.now(timezone.utc)
+                + timedelta(days=REMEMBER_TOKEN_LIFETIME_DAYS)
             ).isoformat(timespec="seconds")
         with self._write_lock:
             self.conn.execute(
@@ -782,7 +807,9 @@ class DB:
             expires_at = datetime.fromisoformat(str(raw_expires_at))
         except ValueError:
             return True
-        return datetime.now() >= expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        return datetime.now(timezone.utc) >= expires_at
 
     def get_user_by_username(self, username: str) -> dict | None:
         try:
