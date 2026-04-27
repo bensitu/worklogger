@@ -224,7 +224,7 @@ class AuthService:
             raise PermissionError("admin_required")
         if not self.db.verify_user_id(admin_user_id, admin_password):
             raise ValueError("admin_password_incorrect")
-        if not enabled and self.db.is_admin(target_user_id) and self.db.admin_count() <= 1:
+        if not enabled and self.db.is_admin(target_user_id) and self.db.admin_count() == 1:
             raise ValueError("last_admin")
         return self.db.set_admin(target_user_id, enabled)
 

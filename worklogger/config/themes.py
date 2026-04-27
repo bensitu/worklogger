@@ -151,6 +151,9 @@ WT_BORDER_ACCENT = {
 # Centralized style values for calendar markers and status indicators.
 CALENDAR_STYLE = {
     "note_marker_default": "#4f8ef7",
+    "work_type_marker_width": 5,
+    "work_type_marker_margin": 3,
+    "work_type_marker_radius": 3,
     "overnight_marker_default": "#5f5f5f",
     "overnight_marker_by_mode": {
         True: "#f0f4ff",   # dark mode
@@ -265,25 +268,13 @@ def calendar_cell_qss(
     fg: str,
     border: str,
     hover_border: str,
-    work_type_accent: str | None = None,
 ) -> str:
-    left_border = (
-        f"border-left:4px solid {work_type_accent};"
-        if work_type_accent
-        else ""
-    )
-    hover_left_border = (
-        f"border-left:4px solid {work_type_accent};"
-        if work_type_accent
-        else ""
-    )
     return (
         "QPushButton{"
         f"background-color:{bg};color:{fg};border:2px solid {border};"
-        f"{left_border}border-radius:6px;font-size:11px;"
+        "border-radius:6px;font-size:11px;"
         "text-align:center;padding:2px;}"
-        f"QPushButton:hover{{border:2px solid {hover_border};"
-        f"{hover_left_border}}}"
+        f"QPushButton:hover{{border:2px solid {hover_border};}}"
     )
 
 

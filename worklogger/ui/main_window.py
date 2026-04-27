@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QGridLayout, QPushButton, QLabel, QLineEdit, QTextEdit, QTabWidget,
     QFileDialog, QMessageBox, QComboBox, QSizePolicy, QSystemTrayIcon, QMenu,
 )
-from PySide6.QtCore import Qt, QTimer, Slot, QEvent
+from PySide6.QtCore import QRectF, Qt, QTimer, Slot, QEvent
 from PySide6.QtGui import QColor, QPainter, QAction
 
 from utils.i18n import _, msg, LANG_NAMES
@@ -70,18 +70,23 @@ ThemeMap = dict[str, ThemePalette]
 
 
 class CalendarDayButton(QPushButton):
-    """Calendar cell button with an optional note marker in the top-left corner."""
+    """Calendar cell button with optional painted calendar markers."""
 
     def __init__(self, text: str = "", parent=None):
         super().__init__(text, parent)
         self._show_note_marker = False
         self._marker_color = CALENDAR_STYLE["note_marker_default"]
+        self._work_type_marker_color: str | None = None
         self._show_overnight_marker = False
         self._overnight_marker_color = CALENDAR_STYLE["overnight_marker_default"]
 
     def set_note_marker(self, visible: bool, color: str) -> None:
         self._show_note_marker = visible
         self._marker_color = color
+        self.update()
+
+    def set_work_type_marker(self, color: str | None) -> None:
+        self._work_type_marker_color = color
         self.update()
 
     def set_overnight_marker(self, visible: bool, color: str) -> None:
@@ -93,6 +98,19 @@ class CalendarDayButton(QPushButton):
         super().paintEvent(event)
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
+        if self._work_type_marker_color:
+            margin = float(CALENDAR_STYLE["work_type_marker_margin"])
+            width = float(CALENDAR_STYLE["work_type_marker_width"])
+            radius = float(CALENDAR_STYLE["work_type_marker_radius"])
+            rect = QRectF(
+                margin,
+                margin,
+                width,
+                max(0.0, self.height() - margin * 2),
+            )
+            p.setPen(Qt.NoPen)
+            p.setBrush(QColor(self._work_type_marker_color))
+            p.drawRoundedRect(rect, radius, radius)
         if self._show_note_marker:
             p.setPen(Qt.NoPen)
             p.setBrush(QColor(self._marker_color))
@@ -1032,8 +1050,9 @@ class App(QWidget):
             bg, fg, bdr_c, bdr_w = self._cell_style(dt)
             wt_acc = WT_BORDER_ACCENT[self.dark].get(wt)
             btn.setStyleSheet(
-                calendar_cell_qss(bg, fg, bdr_c, hover_border, wt_acc)
+                calendar_cell_qss(bg, fg, bdr_c, hover_border)
             )
+            btn.set_work_type_marker(wt_acc)
             show_pending_note = show_note_markers and has_pending_note
             btn.set_note_marker(show_pending_note, hover_border)
             overnight_marker = show_overnight_indicator and bool(rec and rec.is_overnight)

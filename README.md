@@ -146,8 +146,9 @@ New accounts receive a recovery key during registration. Store it outside the ap
 
 If every administrator loses access and no recovery key is available, technical support can reset a local administrator password with:
 
-```bash
-python scripts/reset_admin.py --db path/to/worklog.db --username admin --password admin
+```powershell
+$env:WORKLOGGER_RESET_PASSWORD = "new-password"
+python scripts/admin/reset_admin.py --db path/to/worklog.db --username admin --no-prompt
 ```
 
 The reset account is marked as an administrator and must change the password on next login.
