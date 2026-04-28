@@ -230,15 +230,21 @@ def _normalize_lang(lang: str | None) -> str:
     return "en_US"
 
 
-def detect_system_language() -> str | None:
-    try:
-        loc = locale.getdefaultlocale()[0]  # type: ignore[index]
-    except Exception:
+def _supported_lang_from_locale_name(locale_name: str | None) -> str | None:
+    if not locale_name:
         return None
-    if not loc:
+    low = str(locale_name).strip().replace("-", "_").split(".", 1)[0].lower()
+    if not low or low in {"c", "posix"}:
         return None
-
-    low = str(loc).strip().replace("-", "_").split(".", 1)[0].lower()
+    canonical = {
+        "en_us": "en_US",
+        "ja_jp": "ja_JP",
+        "ko_kr": "ko_KR",
+        "zh_cn": "zh_CN",
+        "zh_tw": "zh_TW",
+    }.get(low)
+    if canonical:
+        return canonical
     if low.startswith(("zh_tw", "zh_hant", "zh_hk", "zh_mo")):
         return "zh_TW"
     if low.startswith("zh"):
@@ -249,6 +255,34 @@ def detect_system_language() -> str | None:
         return "ko_KR"
     if low.startswith("en"):
         return "en_US"
+    return None
+
+
+def detect_system_language() -> str | None:
+    try:
+        from PySide6.QtCore import QLocale
+        qt_locale = QLocale.system().name()
+        detected = _supported_lang_from_locale_name(qt_locale)
+        if detected:
+            return detected
+    except Exception:
+        pass
+
+    try:
+        loc = locale.getlocale()[0]
+    except Exception:
+        loc = None
+
+    candidates = [loc] if loc else []
+    for env_var in ("LC_ALL", "LC_MESSAGES", "LANGUAGE", "LANG"):
+        raw = os.environ.get(env_var, "")
+        if raw and raw not in {"C", "POSIX"}:
+            candidates.append(raw.split(":", 1)[0])
+
+    for candidate in candidates:
+        detected = _supported_lang_from_locale_name(str(candidate).split(".", 1)[0])
+        if detected:
+            return detected
     return None
 
 

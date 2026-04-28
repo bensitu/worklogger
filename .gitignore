@@ -56,6 +56,10 @@ worklog.db-shm
 worklog.db-wal
 
 # Do not commit unit tests
+tests/_artifacts/
+tests/_tmp_export.csv
+tests/_tmp_*.csv
+tests/_tmp_*.db
 tests/
 
 # Local models and data files

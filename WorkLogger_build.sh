@@ -237,6 +237,29 @@ cleanup_temporary_dirs() {
   log "OK   : Cleanup temporary architecture build directories"
 }
 
+cleanup_source_cache_artifacts() {
+  log "RUN  : Cleanup Python cache and test artifacts before packaging"
+  find "$SCRIPT_DIR" \
+    \( -path "$SCRIPT_DIR/.git" -o \
+       -path "$VENV_X86" -o \
+       -path "$VENV_ARM" -o \
+       -path "$SCRIPT_DIR/.venv" -o \
+       -path "$SCRIPT_DIR/.venv_build" \) -prune -o \
+    -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+  find "$SCRIPT_DIR" \
+    \( -path "$SCRIPT_DIR/.git" -o \
+       -path "$VENV_X86" -o \
+       -path "$VENV_ARM" -o \
+       -path "$SCRIPT_DIR/.venv" -o \
+       -path "$SCRIPT_DIR/.venv_build" \) -prune -o \
+    -type f \( -name "*.pyc" -o -name "*.pyo" \) -delete 2>/dev/null || true
+  safe_remove_path "$SCRIPT_DIR/tests/_artifacts"
+  find "$SCRIPT_DIR/tests" -maxdepth 1 -type f \
+    \( -name "_tmp_export.csv" -o -name "_tmp_*.csv" -o -name "_tmp_*.db" \) \
+    -delete 2>/dev/null || true
+  log "OK   : Cleanup Python cache and test artifacts before packaging"
+}
+
 validate_final_artifact() {
   local main_exec="$OUT_APP/Contents/MacOS/${APP_NAME}"
   [ -d "$OUT_APP" ] || fail "Final app bundle is missing: $OUT_APP"
@@ -299,6 +322,8 @@ export PIP_DISABLE_PIP_VERSION_CHECK=1
 export PIP_NO_INPUT=1
 
 verify_prerequisites
+
+cleanup_source_cache_artifacts
 
 log "RUN  : Compile gettext catalogs (.po -> .mo)"
 "$PYTHON_BIN" "$I18N_COMPILE_SCRIPT"

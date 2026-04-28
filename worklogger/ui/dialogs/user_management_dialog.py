@@ -79,6 +79,12 @@ class _AdminResetPasswordDialog(QDialog):
         self.setWindowTitle(_("Reset User Password"))
         self.setMinimumWidth(400)
         root = QVBoxLayout(self)
+
+        hint = QLabel(msg("change_password_recovery_key_warning"))
+        hint.setWordWrap(True)
+        hint.setObjectName("muted")
+        root.addWidget(hint)
+
         form = QFormLayout()
         user = QLineEdit(username)
         user.setReadOnly(True)

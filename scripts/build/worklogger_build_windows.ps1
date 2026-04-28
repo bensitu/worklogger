@@ -156,6 +156,52 @@ function Remove-PathIfExists {
     }
 }
 
+function Test-IsGeneratedCleanupExcluded {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+    $resolved = [System.IO.Path]::GetFullPath($Path)
+    $excludedRoots = @(
+        (Join-Path $ProjectRoot ".git"),
+        (Join-Path $ProjectRoot ".venv"),
+        (Join-Path $ProjectRoot ".venv_build"),
+        (Join-Path $ProjectRoot "venv"),
+        (Join-Path $ProjectRoot "venv_x86"),
+        (Join-Path $ProjectRoot "venv_arm")
+    ) | ForEach-Object { [System.IO.Path]::GetFullPath($_).TrimEnd("\", "/") }
+    foreach ($root in $excludedRoots) {
+        $prefix = "$root\"
+        if ($resolved -eq $root -or $resolved.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+            return $true
+        }
+    }
+    return $false
+}
+
+function Remove-GeneratedSourceArtifacts {
+    Write-Log "RUN  : Cleanup Python cache and test artifacts before packaging"
+    Get-ChildItem -LiteralPath $ProjectRoot -Recurse -Force -Directory -Filter "__pycache__" -ErrorAction SilentlyContinue |
+        Where-Object { -not (Test-IsGeneratedCleanupExcluded -Path $_.FullName) } |
+        ForEach-Object { Remove-PathIfExists -Path $_.FullName }
+
+    Get-ChildItem -LiteralPath $ProjectRoot -Recurse -Force -File -ErrorAction SilentlyContinue |
+        Where-Object {
+            (-not (Test-IsGeneratedCleanupExcluded -Path $_.FullName)) -and
+            ($_.Name -like "*.pyc" -or $_.Name -like "*.pyo")
+        } |
+        ForEach-Object { Remove-PathIfExists -Path $_.FullName }
+
+    Remove-PathIfExists -Path (Join-Path $ProjectRoot "tests\_artifacts")
+    $testsDir = Join-Path $ProjectRoot "tests"
+    if (Test-Path -LiteralPath $testsDir -PathType Container) {
+        Get-ChildItem -LiteralPath $testsDir -Force -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -eq "_tmp_export.csv" -or $_.Name -like "_tmp_*.csv" -or $_.Name -like "_tmp_*.db" } |
+            ForEach-Object { Remove-PathIfExists -Path $_.FullName }
+    }
+    Write-Log "OK   : Cleanup Python cache and test artifacts before packaging"
+}
+
 try {
     Write-Log "============================================================"
     Write-Log "WorkLogger Windows onefile build started"
@@ -181,6 +227,8 @@ try {
     $env:PIP_NO_INPUT = "1"
     $env:PYTHONDONTWRITEBYTECODE = "1"
     $env:PYTHONUTF8 = "1"
+
+    Remove-GeneratedSourceArtifacts
 
     Invoke-External -Description "Validate host Python" -FilePath $pythonCmd -Arguments @("--version")
 

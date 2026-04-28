@@ -295,6 +295,7 @@ class AppServices:
             user = self.db.get_user(current_user_id)
             self.current_username = user["username"] if user else None
         self._update_bridges: list[_UpdateBridge] = []
+        self._update_bridges_lock = threading.Lock()
 
     def set_current_user(self, user_id: int, username: str | None = None) -> None:
         self.current_user_id = int(user_id)
@@ -410,6 +411,15 @@ class AppServices:
         if not value:
             raise ValueError(f"{field_name}_required")
         return value
+
+    @staticmethod
+    def _safe_float(value, default: float) -> float:
+        try:
+            if value is None:
+                return default
+            return float(value)
+        except (TypeError, ValueError):
+            return default
 
     def get_setting(self, key: str, default=None):
         return self.db.get_setting(key, default, user_id=self._require_user_id())
@@ -587,15 +597,40 @@ class AppServices:
         source = Path(src_path)
         if target.resolve(strict=False) == source.resolve(strict=False):
             return True
+        tmp = target.with_name(f"{target.name}.tmp_restore")
         try:
-            self.db.conn.close()
-        except Exception:
+            tmp.unlink(missing_ok=True)
+        except OSError:
             pass
+        copied = False
         try:
-            shutil.copy2(source, target)
-        finally:
-            self.db = DB(str(target))
-            self.auth = AuthService(self.db)
+            shutil.copy2(source, tmp)
+            copied = True
+            try:
+                self.db.conn.close()
+            except Exception:
+                pass
+            for sidecar in (
+                Path(str(target) + "-wal"),
+                Path(str(target) + "-shm"),
+            ):
+                try:
+                    sidecar.unlink(missing_ok=True)
+                except OSError:
+                    pass
+            os.replace(tmp, target)
+        except Exception:
+            try:
+                tmp.unlink(missing_ok=True)
+            except OSError:
+                pass
+            if copied:
+                self.db = DB(str(target))
+                self.auth = AuthService(self.db)
+            raise
+
+        self.db = DB(str(target))
+        self.auth = AuthService(self.db)
         if username:
             user = self.db.get_user_by_username(username)
             if user:
@@ -694,16 +729,18 @@ class AppServices:
     ) -> None:
         """Check for a newer release in a background thread."""
         bridge = _UpdateBridge()
-        self._update_bridges.append(bridge)
+        with self._update_bridges_lock:
+            self._update_bridges.append(bridge)
 
         def _deliver(msg: str) -> None:
             try:
                 on_result(msg)
             finally:
-                try:
-                    self._update_bridges.remove(bridge)
-                except ValueError:
-                    pass
+                with self._update_bridges_lock:
+                    try:
+                        self._update_bridges.remove(bridge)
+                    except ValueError:
+                        pass
 
         bridge.done.connect(_deliver)
 
@@ -881,9 +918,18 @@ class AppServices:
             theme=self.get_setting(THEME_SETTING_KEY, "blue"),
             custom_color=custom_color,
             dark=self.get_setting(DARK_MODE_SETTING_KEY, "0") == "1",
-            work_hours=float(self.get_setting(WORK_HOURS_SETTING_KEY, "8.0")),
-            default_break=float(self.get_setting(DEFAULT_BREAK_SETTING_KEY, "1.0")),
-            monthly_target=float(self.get_setting(MONTHLY_TARGET_SETTING_KEY, "168.0")),
+            work_hours=self._safe_float(
+                self.get_setting(WORK_HOURS_SETTING_KEY, "8.0"),
+                8.0,
+            ),
+            default_break=self._safe_float(
+                self.get_setting(DEFAULT_BREAK_SETTING_KEY, "1.0"),
+                1.0,
+            ),
+            monthly_target=self._safe_float(
+                self.get_setting(MONTHLY_TARGET_SETTING_KEY, "168.0"),
+                168.0,
+            ),
             show_holidays=self.get_setting(SHOW_HOLIDAYS_SETTING_KEY, "1") == "1",
             show_note_markers=self.get_setting(SHOW_NOTE_MARKERS_SETTING_KEY, "1") == "1",
             show_overnight_indicator=self.get_setting(SHOW_OVERNIGHT_INDICATOR_SETTING_KEY, "1") == "1",
