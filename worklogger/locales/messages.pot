@@ -78,6 +78,9 @@ msgstr ""
 msgid "Administrator Password"
 msgstr ""
 
+msgid "Administrator accounts cannot be deleted."
+msgstr ""
+
 msgid "Administrator password is incorrect."
 msgstr ""
 
@@ -192,6 +195,9 @@ msgstr ""
 msgid "Change Password"
 msgstr ""
 
+msgid "Changing your password will generate a new recovery key. Your new password must be at least 8 characters."
+msgstr ""
+
 msgid "Chart:"
 msgstr ""
 
@@ -294,6 +300,9 @@ msgstr ""
 msgid "Delete Model"
 msgstr ""
 
+msgid "Delete User"
+msgstr ""
+
 msgid "Delete this entry?"
 msgstr ""
 
@@ -346,6 +355,9 @@ msgid "End time (opt.)"
 msgstr ""
 
 msgid "Ended"
+msgstr ""
+
+msgid "Enter administrator password to delete {username}."
 msgstr ""
 
 msgid "Error"
@@ -600,6 +612,9 @@ msgstr ""
 msgid "Monthly"
 msgstr ""
 
+msgid "Monthly Analytics"
+msgstr ""
+
 msgid "Monthly Report"
 msgstr ""
 
@@ -744,16 +759,13 @@ msgstr ""
 msgid "Password Changed"
 msgstr ""
 
-msgid "Password changed successfully."
+msgid "Password changed successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
 msgstr ""
 
 msgid "Password must be at least 8 characters."
 msgstr ""
 
-msgid "Password reset successfully."
-msgstr ""
-
-msgid "Password reset successfully. Please log in with the new password."
+msgid "Password reset successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
 msgstr ""
 
 msgid "Passwords do not match."
@@ -1032,6 +1044,9 @@ msgstr ""
 msgid "This model is already downloaded and ready."
 msgstr ""
 
+msgid "This operation will permanently delete this user's data, including work records, notes, reports, and settings."
+msgstr ""
+
 msgid "This recovery key can be used to reset the user's password if it is forgotten. Store it securely and share it only with the account owner. Anyone with this key may reset the password until a new key is generated."
 msgstr ""
 
@@ -1066,6 +1081,9 @@ msgid "Unsaved changes — save before switching?"
 msgstr ""
 
 msgid "User"
+msgstr ""
+
+msgid "User deleted successfully."
 msgstr ""
 
 msgid "User not found."

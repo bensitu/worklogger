@@ -1,7 +1,36 @@
 from __future__ import annotations
+from datetime import datetime, timezone
 import json
 
 _SUPPORTED_LANGS = {"en_US", "ja_JP", "ko_KR", "zh_CN", "zh_TW"}
+
+
+def parse_utc_timestamp(utc_iso_string: str) -> datetime | None:
+    text = str(utc_iso_string or "").strip()
+    if not text:
+        return None
+    normalized = text.replace("Z", "+00:00")
+    try:
+        value = datetime.fromisoformat(normalized)
+    except ValueError:
+        for fmt, width in (("%Y-%m-%d %H:%M:%S", 19), ("%Y-%m-%d %H:%M", 16)):
+            try:
+                value = datetime.strptime(normalized[:width], fmt)
+                break
+            except ValueError:
+                continue
+        else:
+            return None
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+def format_timestamp_for_display(utc_iso_string: str) -> str:
+    value = parse_utc_timestamp(utc_iso_string)
+    if value is None:
+        return ""
+    return value.astimezone().strftime("%Y-%m-%d %H:%M")
 
 
 def _canonical_lang(lang: str) -> str:

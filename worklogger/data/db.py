@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import logging
 import os
 import secrets
 import shutil
@@ -38,6 +39,25 @@ _PBKDF2_LEGACY_ITERATIONS = (100_000,)
 _DUMMY_PASSWORD_SALT = "00" * 16
 _DUMMY_PASSWORD_HASH = "00" * 32
 _WORKLOG_TABLE_NAMES = ("worklog", "worklogs", "work_log")
+_USER_OWNED_TABLES = (
+    "worklog",
+    "settings",
+    "quick_logs",
+    "calendar_events",
+    "reports",
+)
+_USER_OWNED_TABLE_LOG_LABELS = {
+    "worklog": "Work Log Records",
+    "settings": "Settings",
+    "quick_logs": "Quick Logs",
+    "calendar_events": "Calendar Events",
+    "reports": "Reports",
+}
+_log = logging.getLogger(__name__)
+
+
+def _utc_now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 _CREATE_USERS = """CREATE TABLE IF NOT EXISTS users(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -581,7 +601,7 @@ class DB:
             self._password_hash(recovery_key, recovery_salt)
             if recovery_key and recovery_salt else None
         )
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        now = _utc_now_iso()
         cur = self.conn.execute(
             "INSERT INTO users"
             "(username,password_hash,salt,recovery_key_hash,recovery_salt,is_admin,"
@@ -663,6 +683,11 @@ class DB:
             self._upgrade_password_hash(user_id, password, row[0], row[1])
         return matched
 
+    def check_admin_password(self, admin_user_id: int, password: str) -> bool:
+        if not self.is_admin(admin_user_id):
+            return False
+        return self.verify_user_id(admin_user_id, password)
+
     def verify_recovery_key(self, username: str, recovery_key: str) -> int | None:
         try:
             username = self._clean_username(username)
@@ -687,26 +712,35 @@ class DB:
             self._upgrade_recovery_key_hash(user_id, cleaned_key, row[1], row[2])
         return user_id
 
-    def regenerate_recovery_key(self, username: str) -> str:
-        username = self._clean_username(username)
-        if self.get_user_by_username(username) is None:
+    @staticmethod
+    def _new_recovery_key_material() -> tuple[str, str]:
+        return secrets.token_hex(16), secrets.token_hex(16)
+
+    def regenerate_recovery_key_for_user_id(self, user_id: int) -> str:
+        if self.get_user(user_id) is None:
             raise ValueError("user_not_found")
-        recovery_key = secrets.token_hex(16)
-        recovery_salt = secrets.token_hex(16)
+        recovery_key, recovery_salt = self._new_recovery_key_material()
         recovery_key_hash = self._password_hash(recovery_key, recovery_salt)
         with self._write_lock:
             self.conn.execute(
                 "UPDATE users SET recovery_key_hash=?, recovery_salt=?, "
-                "recovery_key_created_at=? WHERE username=?",
+                "recovery_key_created_at=? WHERE id=?",
                 (
                     recovery_key_hash,
                     recovery_salt,
-                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    username,
+                    _utc_now_iso(),
+                    user_id,
                 ),
             )
             self.conn.commit()
         return recovery_key
+
+    def regenerate_recovery_key(self, username: str) -> str:
+        username = self._clean_username(username)
+        user = self.get_user_by_username(username)
+        if user is None:
+            raise ValueError("user_not_found")
+        return self.regenerate_recovery_key_for_user_id(int(user["id"]))
 
     def change_password(self, user_id: int, old_pw: str, new_pw: str) -> bool:
         row = self.conn.execute(
@@ -723,12 +757,51 @@ class DB:
         with self._write_lock:
             self.conn.execute(
                 "UPDATE users SET password_hash=?, salt=?, remember_token=NULL, "
-                "remember_token_expires_at=NULL, password_changed_at=datetime('now') "
+                "remember_token_expires_at=NULL, password_changed_at=? "
                 "WHERE id=?",
-                (password_hash, salt, user_id),
+                (password_hash, salt, _utc_now_iso(), user_id),
             )
             self.conn.commit()
         return True
+
+    def change_password_and_regenerate_recovery_key(
+        self,
+        user_id: int,
+        old_pw: str,
+        new_pw: str,
+    ) -> str | None:
+        row = self.conn.execute(
+            "SELECT password_hash,salt FROM users WHERE id=?",
+            (user_id,),
+        ).fetchone()
+        if not row:
+            return None
+        matched, _needs_upgrade = self._password_hash_matches(old_pw, row[1], row[0])
+        if not matched:
+            return None
+        password_salt = secrets.token_hex(16)
+        password_hash = self._password_hash(new_pw, password_salt)
+        recovery_key, recovery_salt = self._new_recovery_key_material()
+        recovery_key_hash = self._password_hash(recovery_key, recovery_salt)
+        now = _utc_now_iso()
+        with self._write_lock:
+            cur = self.conn.execute(
+                "UPDATE users SET password_hash=?, salt=?, remember_token=NULL, "
+                "remember_token_expires_at=NULL, password_changed_at=?, "
+                "recovery_key_hash=?, recovery_salt=?, recovery_key_created_at=? "
+                "WHERE id=?",
+                (
+                    password_hash,
+                    password_salt,
+                    now,
+                    recovery_key_hash,
+                    recovery_salt,
+                    now,
+                    user_id,
+                ),
+            )
+            self.conn.commit()
+        return recovery_key if cur.rowcount else None
 
     def reset_password(self, user_id: int, new_pw: str) -> bool:
         if not self.get_user(user_id):
@@ -738,12 +811,43 @@ class DB:
         with self._write_lock:
             self.conn.execute(
                 "UPDATE users SET password_hash=?, salt=?, remember_token=NULL, "
-                "remember_token_expires_at=NULL, password_changed_at=datetime('now') "
+                "remember_token_expires_at=NULL, password_changed_at=? "
                 "WHERE id=?",
-                (password_hash, salt, user_id),
+                (password_hash, salt, _utc_now_iso(), user_id),
             )
             self.conn.commit()
         return True
+
+    def reset_password_and_regenerate_recovery_key(
+        self,
+        user_id: int,
+        new_pw: str,
+    ) -> str | None:
+        if not self.get_user(user_id):
+            return None
+        password_salt = secrets.token_hex(16)
+        password_hash = self._password_hash(new_pw, password_salt)
+        recovery_key, recovery_salt = self._new_recovery_key_material()
+        recovery_key_hash = self._password_hash(recovery_key, recovery_salt)
+        now = _utc_now_iso()
+        with self._write_lock:
+            cur = self.conn.execute(
+                "UPDATE users SET password_hash=?, salt=?, remember_token=NULL, "
+                "remember_token_expires_at=NULL, password_changed_at=?, "
+                "recovery_key_hash=?, recovery_salt=?, recovery_key_created_at=? "
+                "WHERE id=?",
+                (
+                    password_hash,
+                    password_salt,
+                    now,
+                    recovery_key_hash,
+                    recovery_salt,
+                    now,
+                    user_id,
+                ),
+            )
+            self.conn.commit()
+        return recovery_key if cur.rowcount else None
 
     def is_admin(self, user_id: int) -> bool:
         row = self.conn.execute(
@@ -769,6 +873,67 @@ class DB:
             )
             self.conn.commit()
         return True
+
+    def delete_user(self, target_username: str, *, admin_username: str = "") -> bool:
+        target_username = self._clean_username(target_username)
+        with self._write_lock:
+            try:
+                row = self.conn.execute(
+                    "SELECT id,username,created_at,password_changed_at,is_admin,"
+                    "recovery_key_hash,recovery_key_created_at "
+                    "FROM users WHERE username=?",
+                    (target_username,),
+                ).fetchone()
+                if row is None:
+                    return False
+                target = self._user_row(row)
+                target_user_id = int(target["id"])
+                if bool(target["is_admin"]):
+                    raise ValueError("cannot_delete_admin")
+                related_counts = {
+                    table_name: int(
+                        self.conn.execute(
+                            f"SELECT COUNT(*) FROM {table_name} WHERE user_id=?",
+                            (target_user_id,),
+                        ).fetchone()[0]
+                    )
+                    for table_name in _USER_OWNED_TABLES
+                }
+                for table_name in _USER_OWNED_TABLES:
+                    self.conn.execute(
+                        f"DELETE FROM {table_name} WHERE user_id=?",
+                        (target_user_id,),
+                    )
+                cur = self.conn.execute(
+                    "DELETE FROM users WHERE id=? AND COALESCE(is_admin,0)=0",
+                    (target_user_id,),
+                )
+                if cur.rowcount == 0:
+                    self.conn.rollback()
+                    return False
+                self.conn.commit()
+                counts_text = ", ".join(
+                    f"{_USER_OWNED_TABLE_LOG_LABELS.get(table_name, table_name)}={count}"
+                    for table_name, count in related_counts.items()
+                )
+                _log.info(
+                    "Deleted user account: Administrator=%s; Deleted User ID=%s; "
+                    "Deleted Username=%s; Account Created At=%s; "
+                    "Password Changed At=%s; Recovery Key Created At=%s; "
+                    "Recovery Key Present=%s; Deleted Related Records={%s}",
+                    str(admin_username or ""),
+                    target_user_id,
+                    target["username"],
+                    target.get("created_at", ""),
+                    target.get("password_changed_at", ""),
+                    target.get("recovery_key_created_at", ""),
+                    "Yes" if bool(target.get("has_recovery_key")) else "No",
+                    counts_text,
+                )
+                return True
+            except Exception:
+                self.conn.rollback()
+                raise
 
     def set_remember_token(self, user_id: int, token: str | None) -> None:
         expires_at = None
@@ -987,17 +1152,17 @@ class DB:
             if existing:
                 report_id = int(existing[0])
                 self.conn.execute(
-                    "UPDATE reports SET content=?, created_at=datetime('now') "
+                    "UPDATE reports SET content=?, created_at=? "
                     "WHERE id=? AND user_id=?",
-                    (content, report_id, user_id),
+                    (content, _utc_now_iso(), report_id, user_id),
                 )
                 self.conn.commit()
                 return report_id
             cur = self.conn.execute(
                 "INSERT INTO reports"
                 "(user_id,type,period_start,period_end,content,created_at) "
-                "VALUES(?,?,?,?,?,datetime('now'))",
-                (user_id, report_type, period_start, period_end, content),
+                "VALUES(?,?,?,?,?,?)",
+                (user_id, report_type, period_start, period_end, content, _utc_now_iso()),
             )
             self.conn.commit()
             return int(cur.lastrowid)
@@ -1070,13 +1235,12 @@ class DB:
 
     def add_quick_log(self, date_str: str, time_str: str,
                       description: str, end_time: str = "", *, user_id: int) -> int:
-        from datetime import datetime as _dt
         with self._write_lock:
             cur = self.conn.execute(
                 "INSERT INTO quick_logs (user_id, date, time, end_time, description, created_at) "
                 "VALUES (?,?,?,?,?,?)",
                 (user_id, date_str, time_str, end_time, description,
-                 _dt.now().strftime("%Y-%m-%dT%H:%M:%S")),
+                 _utc_now_iso()),
             )
             self.conn.commit()
             return int(cur.lastrowid)

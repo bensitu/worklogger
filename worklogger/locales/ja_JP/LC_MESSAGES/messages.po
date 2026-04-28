@@ -365,7 +365,7 @@ msgid "Monthly"
 msgstr "月次"
 
 msgid "Monthly Report"
-msgstr "月次レポート"
+msgstr "月報"
 
 msgid "Monthly Work Report  {year}/{month:02d}"
 msgstr "月次勤務レポート  {year}年{month:02d}月"
@@ -1428,3 +1428,30 @@ msgstr "ローカルの勤務記録、レポート、設定、アカウントデ
 
 msgid "Password must be at least 8 characters."
 msgstr "Password must be at least 8 characters."
+
+msgid "Administrator accounts cannot be deleted."
+msgstr "管理者アカウントは削除できません。"
+
+msgid "Delete User"
+msgstr "ユーザーを削除"
+
+msgid "Enter administrator password to delete {username}."
+msgstr "{username} を削除するには管理者パスワードを入力してください。"
+
+msgid "Monthly Analytics"
+msgstr "月次分析"
+
+msgid "Password reset successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+msgstr "パスワードをリセットしました。新しいリカバリーキーが生成されました。今すぐコピーして保存してください。古いリカバリーキーは使用できません。"
+
+msgid "This operation will permanently delete this user's data, including work records, notes, reports, and settings."
+msgstr "この操作により、このユーザーの作業記録、メモ、レポート、設定を含むすべてのデータが完全に削除されます。"
+
+msgid "User deleted successfully."
+msgstr "ユーザーを削除しました。"
+
+msgid "Password changed successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+msgstr "パスワードを変更しました。新しいリカバリーキーが生成されました。今すぐコピーして保存してください。古いリカバリーキーは使用できません。"
+
+msgid "Changing your password will generate a new recovery key. Your new password must be at least 8 characters."
+msgstr "パスワードを変更すると新しいリカバリーキーが生成されます。新しいパスワードは8文字以上にしてください。"

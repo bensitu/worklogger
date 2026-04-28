@@ -677,7 +677,7 @@ class ChartDialog(QDialog):
         else:
             refs = (mt / 4.3, mt * 3, mt)
         return [
-            (_("Monthly"), self._monthly_data(), refs[0]),
+            (msg("analytics_monthly"), self._monthly_data(), refs[0]),
             (_("Quarterly"), self._quarterly_data(), refs[1]),
             (_("Annual"), self._annual_data(), refs[2]),
         ]

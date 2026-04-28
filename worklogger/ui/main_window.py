@@ -114,7 +114,16 @@ class CalendarDayButton(QPushButton):
         if self._show_note_marker:
             p.setPen(Qt.NoPen)
             p.setBrush(QColor(self._marker_color))
-            p.drawEllipse(7, 7, 7, 7)
+            note_size = int(CALENDAR_STYLE["note_marker_size"])
+            note_y = int(CALENDAR_STYLE["note_marker_margin"])
+            note_x = int(CALENDAR_STYLE["note_marker_margin"])
+            if self._work_type_marker_color:
+                note_x = int(
+                    float(CALENDAR_STYLE["work_type_marker_margin"])
+                    + float(CALENDAR_STYLE["work_type_marker_width"])
+                    + float(CALENDAR_STYLE["note_marker_work_type_gap"])
+                )
+            p.drawEllipse(note_x, note_y, note_size, note_size)
         if self._show_overnight_marker:
             p.setPen(QColor(self._overnight_marker_color))
             icon_size = int(CALENDAR_STYLE["overnight_icon_size"])

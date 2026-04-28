@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
 )
 
 from config.constants import PASSWORD_MIN_LENGTH
-from utils.i18n import _
+from utils.i18n import _, msg
 
 
 class ResetPasswordDialog(QDialog):
@@ -77,7 +77,7 @@ class ResetPasswordDialog(QDialog):
             )
             return
         try:
-            changed = self._auth.reset_password_with_recovery(
+            new_recovery_key = self._auth.reset_password_with_recovery(
                 username,
                 recovery_key,
                 new_pw,
@@ -89,7 +89,7 @@ class ResetPasswordDialog(QDialog):
                 _("Password must be at least 8 characters."),
             )
             return
-        if not changed:
+        if not new_recovery_key:
             QMessageBox.warning(
                 self,
                 _("Reset Password"),
@@ -101,6 +101,7 @@ class ResetPasswordDialog(QDialog):
         QMessageBox.information(
             self,
             _("Reset Password"),
-            _("Password reset successfully. Please log in with the new password."),
+            f"{msg('new_recovery_key_after_reset')}\n\n"
+            f"{_('Recovery Key')}: {new_recovery_key}",
         )
         self.accept()

@@ -65,18 +65,32 @@ MSG_DEFAULTS = {
     "analytics_line": "Line",
     "analytics_leave_hours": "Leave Hours",
     "analytics_metric_label": "Metric:",
+    "analytics_monthly": "Monthly Analytics",
     "analytics_show_leave": "Show leave",
     "analytics_work_hours": "Work hours",
+    "admin_password_incorrect": "Administrator password is incorrect.",
     "backup_data": "Backup Data",
     "backup_description": "Back up your database regularly to protect your local work logs, reports, settings, and account data.",
     "backup_reminder": "You haven't backed up in {days} days. Please back up your data.",
     "btn_cancel": "Cancel",
     "btn_regenerate": "Regenerate",
     "cal_imported": "Imported {} calendar events.",
+    "cannot_delete_admin": "Administrator accounts cannot be deleted.",
     "choose_custom_color": "Choose custom color",
+    "change_password_recovery_key_warning": (
+        "Changing your password will generate a new recovery key. "
+        "Your new password must be at least 8 characters."
+    ),
+    "confirm_admin_password_to_delete_user": "Enter administrator password to delete {username}.",
     "csv_data_management": "CSV Data Management",
     "csv_description": "Import or export worklog records as CSV files for backup, migration, or spreadsheet analysis.",
     "custom_theme_color": "Custom theme color",
+    "delete_user": "Delete User",
+    "delete_user_success": "User deleted successfully.",
+    "delete_user_warning": (
+        "This operation will permanently delete this user's data, including "
+        "work records, notes, reports, and settings."
+    ),
     "enable_menu_bar": "Enable menu bar icon",
     "enable_tray": "Enable tray icon",
     "end_now": "End now",
@@ -139,6 +153,14 @@ Customization and AI:
     "period": "Period",
     "previous_day": "Previous day",
     "next_day": "Next day",
+    "new_recovery_key_after_password_change": (
+        "Password changed successfully. A new recovery key was generated. "
+        "Copy and save it now; the old recovery key no longer works."
+    ),
+    "new_recovery_key_after_reset": (
+        "Password reset successfully. A new recovery key was generated. "
+        "Copy and save it now; the old recovery key no longer works."
+    ),
     "quick_log_add": "Add",
     "quick_log_delete": "Delete",
     "report_copy": "Copy",

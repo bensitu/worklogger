@@ -1428,3 +1428,30 @@ msgstr "Back up your database regularly to protect your local work logs, reports
 
 msgid "Password must be at least 8 characters."
 msgstr "Password must be at least 8 characters."
+
+msgid "Administrator accounts cannot be deleted."
+msgstr "Administrator accounts cannot be deleted."
+
+msgid "Delete User"
+msgstr "Delete User"
+
+msgid "Enter administrator password to delete {username}."
+msgstr "Enter administrator password to delete {username}."
+
+msgid "Monthly Analytics"
+msgstr "Monthly Analytics"
+
+msgid "Password reset successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+msgstr "Password reset successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+
+msgid "This operation will permanently delete this user's data, including work records, notes, reports, and settings."
+msgstr "This operation will permanently delete this user's data, including work records, notes, reports, and settings."
+
+msgid "User deleted successfully."
+msgstr "User deleted successfully."
+
+msgid "Password changed successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+msgstr "Password changed successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+
+msgid "Changing your password will generate a new recovery key. Your new password must be at least 8 characters."
+msgstr "Changing your password will generate a new recovery key. Your new password must be at least 8 characters."

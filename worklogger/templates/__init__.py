@@ -19,7 +19,7 @@ TEMPLATE_DISPLAY_NAME: dict[str, str] = {
     "default": "template_default",
     "daily": "template_daily",
     "weekly": "template_weekly",
-    "monthly": "template_monthly",
+    "monthly": "report_monthly",
     "invoice": "template_invoice",
     "timesheet": "template_timesheet",
 }

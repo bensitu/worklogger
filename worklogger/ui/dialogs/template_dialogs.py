@@ -300,7 +300,7 @@ class CreateTemplateDialog(QDialog):
         self._type_cb = QComboBox()
         for k, label in [("daily",   _("Daily")),
                          ("weekly",  _("Weekly")),
-                         ("monthly", _("Monthly"))]:
+                         ("monthly", msg("report_monthly"))]:
             self._type_cb.addItem(label, k)
         idx = self._type_cb.findData(default_type)
         if idx >= 0:

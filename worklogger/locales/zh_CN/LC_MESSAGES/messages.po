@@ -362,7 +362,7 @@ msgid "Mon"
 msgstr "周一"
 
 msgid "Monthly"
-msgstr "月度"
+msgstr "月报"
 
 msgid "Monthly Report"
 msgstr "月报"
@@ -1178,10 +1178,10 @@ msgid "Current user"
 msgstr "当前用户"
 
 msgid "Are you sure you want to log out?"
-msgstr "确定要注销吗？"
+msgstr "确定要退出登录吗？"
 
 msgid "Log out"
-msgstr "注销"
+msgstr "退出登录"
 
 msgid "Backup Data"
 msgstr "备份数据"
@@ -1428,3 +1428,30 @@ msgstr "请定期备份数据库，以保护本地工作记录、报告、设置
 
 msgid "Password must be at least 8 characters."
 msgstr "Password must be at least 8 characters."
+
+msgid "Administrator accounts cannot be deleted."
+msgstr "不能删除管理员账户。"
+
+msgid "Delete User"
+msgstr "删除用户"
+
+msgid "Enter administrator password to delete {username}."
+msgstr "请输入管理员密码以删除 {username}。"
+
+msgid "Monthly Analytics"
+msgstr "月度"
+
+msgid "Password reset successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+msgstr "密码已重置。已生成新的恢复密钥。请立即复制并保存；旧恢复密钥将不再可用。"
+
+msgid "This operation will permanently delete this user's data, including work records, notes, reports, and settings."
+msgstr "此操作将永久删除该用户的所有数据，包括工作记录、笔记、报告和设置。"
+
+msgid "User deleted successfully."
+msgstr "用户已删除。"
+
+msgid "Password changed successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+msgstr "密码已修改。已生成新的恢复密钥。请立即复制并保存；旧恢复密钥将不再可用。"
+
+msgid "Changing your password will generate a new recovery key. Your new password must be at least 8 characters."
+msgstr "修改密码后将重新生成恢复密钥。新密码长度至少为 8 位。"

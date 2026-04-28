@@ -362,7 +362,7 @@ msgid "Mon"
 msgstr "週一"
 
 msgid "Monthly"
-msgstr "月度"
+msgstr "月報"
 
 msgid "Monthly Report"
 msgstr "月報"
@@ -1428,3 +1428,30 @@ msgstr "請定期備份資料庫，以保護本機工作記錄、報告、設定
 
 msgid "Password must be at least 8 characters."
 msgstr "Password must be at least 8 characters."
+
+msgid "Administrator accounts cannot be deleted."
+msgstr "不能刪除管理員帳戶。"
+
+msgid "Delete User"
+msgstr "刪除使用者"
+
+msgid "Enter administrator password to delete {username}."
+msgstr "請輸入管理員密碼以刪除 {username}。"
+
+msgid "Monthly Analytics"
+msgstr "月度"
+
+msgid "Password reset successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+msgstr "密碼已重設。已產生新的恢復密鑰。請立即複製並保存；舊恢復密鑰將不再可用。"
+
+msgid "This operation will permanently delete this user's data, including work records, notes, reports, and settings."
+msgstr "此操作將永久刪除該使用者的所有資料，包括工作記錄、筆記、報告和設定。"
+
+msgid "User deleted successfully."
+msgstr "使用者已刪除。"
+
+msgid "Password changed successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+msgstr "密碼已修改。已產生新的恢復密鑰。請立即複製並保存；舊恢復密鑰將不再可用。"
+
+msgid "Changing your password will generate a new recovery key. Your new password must be at least 8 characters."
+msgstr "修改密碼後將重新產生恢復密鑰。新密碼長度至少為 8 位。"

@@ -8,7 +8,7 @@ import threading
 import re
 import secrets
 import time
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from calendar import monthrange
 from typing import Callable, Iterable
 import ssl
@@ -60,6 +60,7 @@ from services.session_store import (
 )
 from stores.app_store import AppState
 from utils.i18n import _, detect_system_language
+from utils.formatters import parse_utc_timestamp
 
 _log = logging.getLogger(__name__)
 
@@ -126,46 +127,55 @@ class AuthService:
         username: str,
         recovery_key: str,
         new_pw: str,
-    ) -> bool:
+    ) -> str | None:
         if len(new_pw) < PASSWORD_MIN_LENGTH:
             raise ValueError("password_too_short")
         user_id = self.db.verify_recovery_key(username, recovery_key)
         if user_id is None:
-            return False
-        changed = self.db.reset_password(user_id, new_pw)
-        if changed:
-            self.db.set_setting(
-                FORCE_PASSWORD_CHANGE_SETTING_KEY,
-                "0",
-                user_id=user_id,
-            )
-            user = self.db.get_user(user_id)
-            clear_remember_token(user["username"] if user else username)
-        return changed
+            return None
+        new_recovery_key = self.db.reset_password_and_regenerate_recovery_key(
+            user_id,
+            new_pw,
+        )
+        if new_recovery_key is None:
+            return None
+        self.db.set_setting(
+            FORCE_PASSWORD_CHANGE_SETTING_KEY,
+            "0",
+            user_id=user_id,
+        )
+        user = self.db.get_user(user_id)
+        clear_remember_token(user["username"] if user else username)
+        return new_recovery_key
 
-    def change_password(self, user_id: int, old_pw: str, new_pw: str) -> bool:
+    def change_password(self, user_id: int, old_pw: str, new_pw: str) -> str | None:
         if len(new_pw) < PASSWORD_MIN_LENGTH:
             raise ValueError("password_too_short")
-        changed = self.db.change_password(user_id, old_pw, new_pw)
-        if changed:
-            self.db.set_setting(
-                FORCE_PASSWORD_CHANGE_SETTING_KEY,
-                "0",
-                user_id=user_id,
-            )
-            user = self.db.get_user(user_id)
-            clear_remember_token(user["username"] if user else None)
-        return changed
+        new_recovery_key = self.db.change_password_and_regenerate_recovery_key(
+            user_id,
+            old_pw,
+            new_pw,
+        )
+        if new_recovery_key is None:
+            return None
+        self.db.set_setting(
+            FORCE_PASSWORD_CHANGE_SETTING_KEY,
+            "0",
+            user_id=user_id,
+        )
+        user = self.db.get_user(user_id)
+        clear_remember_token(user["username"] if user else None)
+        return new_recovery_key
 
     def change_password_for_username(
         self,
         username: str,
         old_pw: str,
         new_pw: str,
-    ) -> bool:
+    ) -> str | None:
         user_id = self.db.verify_user(username, old_pw)
         if user_id is None:
-            return False
+            return None
         return self.change_password(user_id, old_pw, new_pw)
 
     def logout(self, user_id: int | None = None) -> None:
@@ -192,7 +202,7 @@ class AuthService:
         new_pw: str,
         *,
         clear_remember: bool = True,
-    ) -> bool:
+    ) -> str | None:
         if len(new_pw) < PASSWORD_MIN_LENGTH:
             raise ValueError("password_too_short")
         if not self.db.is_admin(admin_user_id):
@@ -201,17 +211,21 @@ class AuthService:
             raise ValueError("admin_password_incorrect")
         target = self.db.get_user(target_user_id)
         if not target:
-            return False
-        changed = self.db.reset_password(target_user_id, new_pw)
-        if changed:
-            self.db.set_setting(
-                FORCE_PASSWORD_CHANGE_SETTING_KEY,
-                "1",
-                user_id=target_user_id,
-            )
-            if clear_remember:
-                clear_remember_token(target["username"])
-        return changed
+            return None
+        new_recovery_key = self.db.reset_password_and_regenerate_recovery_key(
+            target_user_id,
+            new_pw,
+        )
+        if new_recovery_key is None:
+            return None
+        self.db.set_setting(
+            FORCE_PASSWORD_CHANGE_SETTING_KEY,
+            "1",
+            user_id=target_user_id,
+        )
+        if clear_remember:
+            clear_remember_token(target["username"])
+        return new_recovery_key
 
     def set_user_admin(
         self,
@@ -227,6 +241,25 @@ class AuthService:
         if not enabled and self.db.is_admin(target_user_id) and self.db.admin_count() == 1:
             raise ValueError("last_admin")
         return self.db.set_admin(target_user_id, enabled)
+
+    def delete_user_by_admin(
+        self,
+        admin_user_id: int,
+        admin_password: str,
+        target_username: str,
+    ) -> bool:
+        if not self.db.is_admin(admin_user_id):
+            raise PermissionError("admin_required")
+        if not self.db.check_admin_password(admin_user_id, admin_password):
+            raise ValueError("admin_password_incorrect")
+        target_username = target_username.strip()
+        if not target_username:
+            raise ValueError("username_required")
+        admin = self.db.get_user(admin_user_id)
+        return self.db.delete_user(
+            target_username,
+            admin_username=admin["username"] if admin else "",
+        )
 
     def regenerate_recovery_key(
         self,
@@ -286,11 +319,10 @@ class AppServices:
         if not user:
             return False
         raw = user.get("password_changed_at") or user.get("created_at") or ""
-        try:
-            changed_at = datetime.fromisoformat(str(raw))
-        except ValueError:
+        changed_at = parse_utc_timestamp(str(raw))
+        if changed_at is None:
             return True
-        return datetime.now() - changed_at >= timedelta(
+        return datetime.now(timezone.utc) - changed_at >= timedelta(
             days=PASSWORD_CHANGE_REMINDER_DAYS,
         )
 
@@ -307,7 +339,7 @@ class AppServices:
         new_password: str,
         *,
         clear_remember: bool = True,
-    ) -> bool:
+    ) -> str | None:
         return self.auth.admin_reset_password(
             self._require_user_id(),
             admin_password,
@@ -327,6 +359,17 @@ class AppServices:
             admin_password,
             target_user_id,
             enabled,
+        )
+
+    def delete_user_by_admin(
+        self,
+        admin_password: str,
+        target_username: str,
+    ) -> bool:
+        return self.auth.delete_user_by_admin(
+            self._require_user_id(),
+            admin_password,
+            target_username,
         )
 
     def regenerate_recovery_key(self, target_username: str) -> str:
@@ -492,11 +535,10 @@ class AppServices:
         raw = self.get_setting(LAST_BACKUP_KEY, "")
         if not raw:
             return True
-        try:
-            last = datetime.fromisoformat(str(raw))
-        except ValueError:
+        last = parse_utc_timestamp(str(raw))
+        if last is None:
             return True
-        return datetime.now() - last >= timedelta(days=BACKUP_REMINDER_DAYS)
+        return datetime.now(timezone.utc) - last >= timedelta(days=BACKUP_REMINDER_DAYS)
 
     def backup_database(self, dest_path: str) -> bool:
         self._require_user_id()
@@ -507,7 +549,10 @@ class AppServices:
         dest.parent.mkdir(parents=True, exist_ok=True)
         self.db.conn.commit()
         shutil.copy2(src, dest)
-        self.set_setting(LAST_BACKUP_KEY, datetime.now().isoformat(timespec="seconds"))
+        self.set_setting(
+            LAST_BACKUP_KEY,
+            datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        )
         return True
 
     def validate_restore_database(self, src_path: str) -> bool:
@@ -889,6 +934,10 @@ class AppServices:
 
     def get_secret(self, name: str) -> str:
         """Return secret *name*, decrypting if stored via key_store."""
+        if not isinstance(self.db, DB):
+            return str(
+                self.db.get_setting(name, "", user_id=self._require_user_id()) or ""
+            )
         return get_secret(self.db, name, self._require_user_id())
 
     def set_secret(self, name: str, value: str) -> None:

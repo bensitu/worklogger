@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from PySide6.QtWidgets import (
+    QApplication,
     QDialog,
+    QFileDialog,
     QFormLayout,
     QHBoxLayout,
+    QLabel,
     QLineEdit,
     QMessageBox,
     QPushButton,
@@ -11,7 +16,8 @@ from PySide6.QtWidgets import (
 )
 
 from config.constants import PASSWORD_MIN_LENGTH
-from utils.i18n import _
+from utils.formatters import format_timestamp_for_display
+from utils.i18n import _, msg
 
 
 class ChangePasswordDialog(QDialog):
@@ -30,6 +36,11 @@ class ChangePasswordDialog(QDialog):
         self.setMinimumWidth(380)
 
         root = QVBoxLayout(self)
+        hint = QLabel(msg("change_password_recovery_key_warning"))
+        hint.setWordWrap(True)
+        hint.setObjectName("muted")
+        root.addWidget(hint)
+
         form = QFormLayout()
         self._username = QLineEdit()
         self._username.setText(username)
@@ -80,7 +91,7 @@ class ChangePasswordDialog(QDialog):
             return
         try:
             if self._current_user_id is not None:
-                changed = self._auth.change_password(
+                new_recovery_key = self._auth.change_password(
                     self._current_user_id,
                     old_pw,
                     new_pw,
@@ -94,7 +105,7 @@ class ChangePasswordDialog(QDialog):
                         _("Username is required."),
                     )
                     return
-                changed = self._auth.change_password_for_username(
+                new_recovery_key = self._auth.change_password_for_username(
                     username,
                     old_pw,
                     new_pw,
@@ -106,16 +117,83 @@ class ChangePasswordDialog(QDialog):
                 _("Password must be at least 8 characters."),
             )
             return
-        if not changed:
+        if not new_recovery_key:
             QMessageBox.warning(
                 self,
                 _("Change Password"),
                 _("Old password is incorrect."),
             )
             return
-        QMessageBox.information(
-            self,
-            _("Change Password"),
-            _("Password changed successfully."),
-        )
+        self._show_recovery_key(str(new_recovery_key))
         self.accept()
+
+    def _show_recovery_key(self, recovery_key: str) -> None:
+        dlg = QDialog(self)
+        dlg.setWindowTitle(_("Change Password"))
+        dlg.setMinimumWidth(500)
+        generated_at = format_timestamp_for_display(
+            datetime.now(timezone.utc).isoformat(timespec="seconds")
+        )
+
+        root = QVBoxLayout(dlg)
+        info = QLabel(msg("new_recovery_key_after_password_change"))
+        info.setWordWrap(True)
+        root.addWidget(info)
+
+        form = QFormLayout()
+        generated_edit = QLineEdit(generated_at)
+        generated_edit.setReadOnly(True)
+        key_edit = QLineEdit(recovery_key)
+        key_edit.setReadOnly(True)
+        form.addRow(_("Generated At"), generated_edit)
+        form.addRow(_("Recovery Key"), key_edit)
+        root.addLayout(form)
+
+        status_lbl = QLabel("")
+        status_lbl.setObjectName("muted")
+        root.addWidget(status_lbl)
+
+        row = QHBoxLayout()
+        copy_btn = QPushButton(_("Copy"))
+        save_as_btn = QPushButton(_("Save As"))
+        ok_btn = QPushButton(_("OK"))
+        ok_btn.setObjectName("primary_btn")
+        row.addStretch()
+        row.addWidget(copy_btn)
+        row.addWidget(save_as_btn)
+        row.addWidget(ok_btn)
+        root.addLayout(row)
+
+        def _copy_key() -> None:
+            QApplication.clipboard().setText(recovery_key)
+            status_lbl.setText(_("Copied!"))
+
+        def _save_key() -> None:
+            path, _dialog_filter = QFileDialog.getSaveFileName(
+                dlg,
+                _("Save Recovery Key"),
+                "worklogger-recovery-key.txt",
+                _("Text Files (*.txt)"),
+            )
+            if not path:
+                return
+            try:
+                with open(path, "w", encoding="utf-8") as fh:
+                    fh.write(f"{_('Generated At')}: {generated_at}\n")
+                    fh.write(f"{_('Recovery Key')}: {recovery_key}\n")
+                    fh.write("\n")
+                    fh.write(msg("new_recovery_key_after_password_change"))
+                    fh.write("\n")
+            except OSError:
+                QMessageBox.warning(
+                    dlg,
+                    _("Change Password"),
+                    _("Could not save recovery key."),
+                )
+                return
+            status_lbl.setText(_("Recovery key saved."))
+
+        copy_btn.clicked.connect(_copy_key)
+        save_as_btn.clicked.connect(_save_key)
+        ok_btn.clicked.connect(dlg.accept)
+        dlg.exec()

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import partial
-from datetime import datetime
+from datetime import datetime, timezone
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -25,7 +25,8 @@ from PySide6.QtWidgets import (
 
 from config.themes import dialog_title_qss, user_dialog_button_qss, user_table_qss
 from config.constants import PASSWORD_MIN_LENGTH
-from utils.i18n import _
+from utils.formatters import format_timestamp_for_display
+from utils.i18n import _, msg
 from .common import _localize_msgbox_buttons
 
 
@@ -140,6 +141,56 @@ class _AdminResetPasswordDialog(QDialog):
         self.accept()
 
 
+class _DeleteUserDialog(QDialog):
+    def __init__(self, username: str, parent=None):
+        super().__init__(parent)
+        self.admin_password = ""
+
+        self.setWindowTitle(msg("delete_user"))
+        self.setMinimumWidth(440)
+        root = QVBoxLayout(self)
+
+        warning = QLabel(msg("delete_user_warning"))
+        warning.setWordWrap(True)
+        root.addWidget(warning)
+
+        detail = QLabel(
+            msg("confirm_admin_password_to_delete_user", username=username)
+        )
+        detail.setWordWrap(True)
+        root.addWidget(detail)
+
+        form = QFormLayout()
+        self._password = QLineEdit()
+        self._password.setEchoMode(QLineEdit.EchoMode.Password)
+        form.addRow(_("Administrator Password"), self._password)
+        root.addLayout(form)
+
+        row = QHBoxLayout()
+        cancel_btn = QPushButton(_("Cancel"))
+        delete_btn = QPushButton(msg("delete_user"))
+        delete_btn.setObjectName("danger_btn")
+        row.addStretch()
+        row.addWidget(cancel_btn)
+        row.addWidget(delete_btn)
+        root.addLayout(row)
+
+        cancel_btn.clicked.connect(self.reject)
+        delete_btn.clicked.connect(self._accept)
+        self._password.returnPressed.connect(self._accept)
+
+    def _accept(self) -> None:
+        self.admin_password = self._password.text()
+        if not self.admin_password:
+            QMessageBox.warning(
+                self,
+                msg("delete_user"),
+                _("Please enter administrator password."),
+            )
+            return
+        self.accept()
+
+
 class UserManagementDialog(QDialog):
     def __init__(
         self,
@@ -194,7 +245,7 @@ class UserManagementDialog(QDialog):
         header = self._table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(7, QHeaderView.ResizeMode.Fixed)
-        self._table.setColumnWidth(7, 400)
+        self._table.setColumnWidth(7, 520)
         root.addWidget(self._table, 1)
 
         footer = QHBoxLayout()
@@ -252,22 +303,11 @@ class UserManagementDialog(QDialog):
             7,
             QHeaderView.ResizeMode.Fixed,
         )
-        self._table.setColumnWidth(7, 400)
+        self._table.setColumnWidth(7, 520)
 
     @staticmethod
     def _format_timestamp(raw) -> str:
-        text = str(raw or "").strip()
-        if not text:
-            return ""
-        normalized = text.replace("T", " ")
-        for fmt, width in (("%Y-%m-%d %H:%M:%S", 19), ("%Y-%m-%d %H:%M", 16)):
-            try:
-                return datetime.strptime(normalized[:width], fmt).strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                )
-            except ValueError:
-                continue
-        return normalized
+        return format_timestamp_for_display(str(raw or ""))
 
     def _actions_widget(self, user: dict) -> QWidget:
         wrap = QWidget()
@@ -280,22 +320,28 @@ class UserManagementDialog(QDialog):
             _("Revoke Admin") if user.get("is_admin") else _("Grant Admin")
         )
         regen_btn = QPushButton(_("Regenerate Key"))
+        delete_btn = QPushButton(msg("delete_user"))
         reset_btn.setObjectName("primary_btn")
+        delete_btn.setObjectName("danger_btn")
         regen_btn.setEnabled(not bool(user.get("is_admin")))
         reset_btn.setMinimumWidth(120)
         admin_btn.setMinimumWidth(110)
         regen_btn.setMinimumWidth(135)
-        for button in (reset_btn, admin_btn, regen_btn):
+        delete_btn.setMinimumWidth(95)
+        for button in (reset_btn, admin_btn, regen_btn, delete_btn):
             button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         regen_btn.setToolTip(_("Regenerate Recovery Key"))
 
         reset_btn.clicked.connect(partial(self._reset_password, user))
         admin_btn.clicked.connect(partial(self._toggle_admin, user))
         regen_btn.clicked.connect(partial(self._regenerate_recovery_key, user))
+        delete_btn.clicked.connect(partial(self._delete_user, user))
 
         layout.addWidget(reset_btn)
         layout.addWidget(admin_btn)
         layout.addWidget(regen_btn)
+        if not bool(user.get("is_admin")):
+            layout.addWidget(delete_btn)
         layout.addStretch()
         return wrap
 
@@ -304,7 +350,7 @@ class UserManagementDialog(QDialog):
         if dlg.exec() != QDialog.Accepted:
             return
         try:
-            changed = self._services.admin_reset_password(
+            new_recovery_key = self._services.admin_reset_password(
                 dlg.admin_password,
                 int(user["id"]),
                 dlg.new_password,
@@ -320,18 +366,14 @@ class UserManagementDialog(QDialog):
                 _("Administrator privileges are required."),
             )
             return
-        if not changed:
+        if not new_recovery_key:
             QMessageBox.warning(
                 self,
                 _("Manage Users"),
                 _("User not found."),
             )
             return
-        QMessageBox.information(
-            self,
-            _("Manage Users"),
-            _("Password reset successfully."),
-        )
+        self._show_recovery_key(str(user.get("username", "")), new_recovery_key)
         self._refresh()
 
     def _toggle_admin(self, user: dict) -> None:
@@ -398,11 +440,47 @@ class UserManagementDialog(QDialog):
         self._show_recovery_key(str(user.get("username", "")), key)
         self._refresh()
 
+    def _delete_user(self, user: dict) -> None:
+        username = str(user.get("username", ""))
+        dlg = _DeleteUserDialog(username, self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        try:
+            deleted = self._services.delete_user_by_admin(
+                dlg.admin_password,
+                username,
+            )
+        except ValueError as exc:
+            self._show_admin_error(str(exc))
+            return
+        except PermissionError:
+            QMessageBox.warning(
+                self,
+                _("Manage Users"),
+                _("Administrator privileges are required."),
+            )
+            return
+        if not deleted:
+            QMessageBox.warning(
+                self,
+                _("Manage Users"),
+                _("User not found."),
+            )
+            return
+        QMessageBox.information(
+            self,
+            _("Manage Users"),
+            msg("delete_user_success"),
+        )
+        self._refresh()
+
     def _show_recovery_key(self, username: str, recovery_key: str) -> None:
         dlg = QDialog(self)
         dlg.setWindowTitle(_("Recovery Key Regenerated"))
         dlg.setMinimumWidth(460)
-        generated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        generated_at = format_timestamp_for_display(
+            datetime.now(timezone.utc).isoformat(timespec="seconds")
+        )
         note_text = _(
             "This recovery key can be used to reset the user's password if it is forgotten. "
             "Store it securely and share it only with the account owner. "
@@ -484,7 +562,9 @@ class UserManagementDialog(QDialog):
 
     def _show_admin_error(self, code: str) -> None:
         if code == "admin_password_incorrect":
-            text = _("Administrator password is incorrect.")
+            text = msg("admin_password_incorrect")
+        elif code == "cannot_delete_admin":
+            text = msg("cannot_delete_admin")
         elif code == "last_admin":
             text = _("At least one administrator account is required.")
         elif code == "password_too_short":

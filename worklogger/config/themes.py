@@ -151,6 +151,9 @@ WT_BORDER_ACCENT = {
 # Centralized style values for calendar markers and status indicators.
 CALENDAR_STYLE = {
     "note_marker_default": "#4f8ef7",
+    "note_marker_margin": 7,
+    "note_marker_size": 7,
+    "note_marker_work_type_gap": 6,
     "work_type_marker_width": 5,
     "work_type_marker_margin": 3,
     "work_type_marker_radius": 3,
@@ -339,6 +342,8 @@ def user_dialog_button_qss(dark: bool, theme: str) -> str:
     _cell_bg, cell_txt, _cell_border, _width = pool["default"]
     surface = "#1c1d2b" if dark else "#ffffff"
     muted = "#8890b8" if dark else "#606888"
+    danger = "#ff6666" if dark else "#cc3333"
+    danger_hover = "#ff8080" if dark else "#aa2222"
     return (
         "QPushButton{"
         f"background:{surface};color:{cell_txt};border:1px solid {stat_bd};"
@@ -350,6 +355,10 @@ def user_dialog_button_qss(dark: bool, theme: str) -> str:
         f"background:{acc};color:white;border:none;"
         "}"
         f"QPushButton#primary_btn:hover{{background:{acc_hov};color:white;}}"
+        "QPushButton#danger_btn{"
+        f"background:{danger};color:white;border:none;"
+        "}"
+        f"QPushButton#danger_btn:hover{{background:{danger_hover};color:white;}}"
     )
 
 
