@@ -591,6 +591,7 @@ class ChartDialog(QDialog):
                 line_items=bundle.line_data,
                 line_ref=ref,
                 leave_indices=bundle.leave_indices,
+                leave_items=bundle.leave_hours_data,
                 mode=self._chart_mode,
                 show_leave_markers=self._leave_cb.isChecked(),
                 unit=_("h"),
@@ -699,7 +700,12 @@ class ChartDialog(QDialog):
             chart = self._charts[idx]
             chart.set_reference(ref)
             chart.set_series_labels(self._metric_label(), self._metric_label())
-            chart.set_data(bundle.bar_data, bundle.line_data, bundle.leave_indices)
+            chart.set_data(
+                bundle.bar_data,
+                bundle.line_data,
+                bundle.leave_indices,
+                bundle.leave_hours_data,
+            )
             self._sync_dashed_leave_line(chart, bundle)
             self._bundles.append(bundle)
 
@@ -743,9 +749,9 @@ class ChartDialog(QDialog):
         }
         for rec in sorted(app.services.month_records(f"{y}-{m:02d}"),
                           key=lambda r: r.date):
-            h = calc_hours(rec.start, rec.end, rec.break_hours) if rec.has_times else 0.0
-            ot = max(h - app.work_hours, 0)
             wt = rec.safe_work_type()
+            h = calc_hours(rec.start, rec.end, rec.break_hours) if rec.has_times else 0.0
+            ot = 0.0 if rec.is_leave else max(h - app.work_hours, 0)
             overnight_suffix = (
                 f" ({_("Night")})"
                 if rec.is_overnight and rec.end else ""

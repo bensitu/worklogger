@@ -1455,3 +1455,48 @@ msgstr "密码已修改。已生成新的恢复密钥。请立即复制并保存
 
 msgid "Changing your password will generate a new recovery key. Your new password must be at least 8 characters."
 msgstr "修改密码后将重新生成恢复密钥。新密码长度至少为 8 位。"
+
+msgid "Could not load the latest model catalog. Check your network and try again."
+msgstr "Could not load the latest model catalog. Check your network and try again."
+
+msgid "Could not save initial password."
+msgstr "Could not save initial password."
+
+msgid "Create User"
+msgstr "Create User"
+
+msgid "In Use"
+msgstr "In Use"
+
+msgid "Initial Password"
+msgstr "Initial Password"
+
+msgid "Initial password saved."
+msgstr "Initial password saved."
+
+msgid "Loading latest model catalog..."
+msgstr "Loading latest model catalog..."
+
+msgid "Password change failed."
+msgstr "Password change failed."
+
+msgid "Save Initial Password"
+msgstr "Save Initial Password"
+
+msgid "The initial password is generated automatically. The user must change it at first login."
+msgstr "The initial password is generated automatically. The user must change it at first login."
+
+msgid "The user must change this password at first login."
+msgstr "The user must change this password at first login."
+
+msgid "This account must change its password before continuing."
+msgstr "This account must change its password before continuing."
+
+msgid "Unused"
+msgstr "Unused"
+
+msgid "Used"
+msgstr "Used"
+
+msgid "User created successfully. Share this initial password now; it cannot be shown again later."
+msgstr "User created successfully. Share this initial password now; it cannot be shown again later."

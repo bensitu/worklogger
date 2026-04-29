@@ -26,6 +26,7 @@ from config.constants import (
     DEFAULT_BREAK_SETTING_KEY,
     DEFAULT_ADMIN_USER,
     FORCE_PASSWORD_CHANGE_SETTING_KEY,
+    GENERATED_PASSWORD_TOKEN_BYTES,
     GITHUB_RELEASES_API,
     LANG_SETTING_KEY,
     LAST_BACKUP_KEY,
@@ -77,6 +78,10 @@ class AuthService:
     def generate_recovery_key() -> str:
         return secrets.token_hex(16)
 
+    @staticmethod
+    def generate_initial_password() -> str:
+        return secrets.token_urlsafe(GENERATED_PASSWORD_TOKEN_BYTES)
+
     def register(
         self,
         username: str,
@@ -104,6 +109,7 @@ class AuthService:
         user_id = self.db.verify_user(username, password)
         if user_id is None:
             raise ValueError("invalid_credentials")
+        self.db.mark_user_login(user_id)
         if remember:
             token = secrets.token_urlsafe(32)
             self.db.set_remember_token(user_id, token)
@@ -120,7 +126,29 @@ class AuthService:
 
     def login_with_token(self, token: str) -> int | None:
         user = self.db.get_user_by_token(token)
-        return int(user["id"]) if user else None
+        if not user:
+            return None
+        user_id = int(user["id"])
+        self.db.mark_user_login(user_id)
+        return user_id
+
+    def force_change_password(self, user_id: int, new_pw: str) -> str | None:
+        if len(new_pw) < PASSWORD_MIN_LENGTH:
+            raise ValueError("password_too_short")
+        new_recovery_key = self.db.reset_password_and_regenerate_recovery_key(
+            user_id,
+            new_pw,
+        )
+        if new_recovery_key is None:
+            return None
+        self.db.set_setting(
+            FORCE_PASSWORD_CHANGE_SETTING_KEY,
+            "0",
+            user_id=user_id,
+        )
+        user = self.db.get_user(user_id)
+        clear_remember_token(user["username"] if user else None)
+        return new_recovery_key
 
     def reset_password_with_recovery(
         self,
@@ -227,6 +255,34 @@ class AuthService:
             clear_remember_token(target["username"])
         return new_recovery_key
 
+    def admin_create_user(
+        self,
+        admin_user_id: int,
+        admin_password: str,
+        username: str,
+        initial_password: str | None = None,
+    ) -> tuple[int, str]:
+        if not self.db.is_admin(admin_user_id):
+            raise PermissionError("admin_required")
+        if not self.db.verify_user_id(admin_user_id, admin_password):
+            raise ValueError("admin_password_incorrect")
+        username = username.strip()
+        if not username:
+            raise ValueError("username_required")
+        password = initial_password or self.generate_initial_password()
+        if len(password) < PASSWORD_MIN_LENGTH:
+            raise ValueError("password_too_short")
+        try:
+            user_id = self.db.create_user(username, password, is_admin=False)
+        except sqlite3.IntegrityError as exc:
+            raise ValueError("username_exists") from exc
+        self.db.set_setting(
+            FORCE_PASSWORD_CHANGE_SETTING_KEY,
+            "1",
+            user_id=user_id,
+        )
+        return user_id, password
+
     def set_user_admin(
         self,
         admin_user_id: int,
@@ -332,6 +388,22 @@ class AppServices:
 
     def list_users_for_management(self) -> list[dict]:
         return self.auth.list_users_for_admin(self._require_user_id())
+
+    def generate_initial_password(self) -> str:
+        return self.auth.generate_initial_password()
+
+    def create_user_by_admin(
+        self,
+        admin_password: str,
+        username: str,
+        initial_password: str | None = None,
+    ) -> tuple[int, str]:
+        return self.auth.admin_create_user(
+            self._require_user_id(),
+            admin_password,
+            username,
+            initial_password,
+        )
 
     def admin_reset_password(
         self,

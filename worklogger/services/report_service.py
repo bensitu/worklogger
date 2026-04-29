@@ -33,6 +33,17 @@ def _wt_label(wt: str) -> str:
 def _fmt_entry(dt: _dt.date, rec, work_hours: float,
                lang: str) -> tuple[str | None, float, float]:
     dow = [_("Sun"), _("Mon"), _("Tue"), _("Wed"), _("Thu"), _("Fri"), _("Sat")][(dt.weekday() + 1) % 7]
+    if rec and rec.is_leave:
+        h = calc_hours(rec.start, rec.end, rec.break_hours) if rec.has_times else 0.0
+        hours = f"  {h:.1f}h" if h > 0 else ""
+        overnight = f"  [{_("Night")}]" if rec.is_overnight and rec.has_times else ""
+        note = f"\n  → {rec.note}" if rec.note else ""
+        return (
+            f"{dt.isoformat()}（{dow}）{hours} [{_wt_label(rec.safe_work_type())}]"
+            f"{overnight}{note}",
+            0.0,
+            0.0,
+        )
     if rec and rec.has_times:
         h = calc_hours(rec.start, rec.end, rec.break_hours)
         ot = max(h - work_hours, 0)
@@ -44,10 +55,6 @@ def _fmt_entry(dt: _dt.date, rec, work_hours: float,
             date=dt.isoformat(), dow=dow,
             h=f"{h:.1f}", wt=_wt_label(wt))
         return line + overnight + ots + note, h, ot
-    elif rec and rec.is_leave:
-        note = f"\n  → {rec.note}" if rec.note else ""
-        return (f"{dt.isoformat()}（{dow}）[{_wt_label(rec.safe_work_type())}]{note}",
-                0.0, 0.0)
     return None, 0.0, 0.0
 
 

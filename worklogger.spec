@@ -4,7 +4,10 @@
 Packaging strategy
 ------------------
 * GGUF model files are not bundled; they are downloaded on demand.
-* catalog.json is bundled and copied to the user models directory on first run.
+* catalog.json is bundled as an offline fallback and copied to the user models
+  directory on first run.
+* model_catalog.json is kept at the repository root for GitHub-hosted dynamic
+  catalog updates.
 * Build targets are explicit by platform:
   - macOS: .app bundle (COLLECT + BUNDLE)
   - Windows/other: onefile executable
@@ -138,6 +141,10 @@ TEMPLATE_CUSTOM_SAMPLE = _require_file(
     "custom template sample",
 )
 CATALOG_JSON = _require_file(MODELS_DIR / "catalog.json", "model catalog")
+REMOTE_MODEL_CATALOG_JSON = _require_file(
+    ROOT_DIR / "model_catalog.json",
+    "remote model catalog",
+)
 
 # Optional package collections.
 _llama_data, _llama_bins = _collect("llama_cpp") if _module_exists("llama_cpp") else ([], [])
@@ -205,6 +212,7 @@ a = Analysis(
         (str(TEMPLATE_KO_KR_DIR), "templates/ko_KR"),
         (str(TEMPLATE_CUSTOM_SAMPLE), "templates/custom"),
         (str(CATALOG_JSON), "models"),
+        (str(REMOTE_MODEL_CATALOG_JSON), "."),
     ]
     + _llama_data
     + _httpx_data

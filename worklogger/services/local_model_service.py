@@ -28,8 +28,16 @@ import sys
 import threading
 import time
 import urllib.parse
+import urllib.request
 from pathlib import Path, PureWindowsPath
 from typing import Any, Callable, Optional
+
+from config.constants import (
+    APP_VERSION,
+    MODEL_CATALOG_FETCH_TIMEOUT_SECONDS,
+    MODEL_CATALOG_REMOTE_URL,
+    MODEL_CATALOG_RESPONSE_MAX_BYTES,
+)
 
 # Public sentinel.
 
@@ -163,6 +171,48 @@ def validate_model_url(url: str) -> str:
     return raw
 
 
+def validate_catalog_data(data: Any, *, require_url: bool = True) -> list[dict]:
+    """Return validated catalog entries or raise ``ValueError``."""
+    if not isinstance(data, list) or not data:
+        raise ValueError("model_catalog_invalid")
+
+    seen: set[str] = set()
+    valid: list[dict] = []
+    for raw_entry in data:
+        if not isinstance(raw_entry, dict):
+            raise ValueError("model_catalog_invalid")
+        entry = dict(raw_entry)
+        entry_id = str(entry.get("id", "")).strip()
+        if not entry_id or entry_id in seen:
+            raise ValueError("model_catalog_invalid")
+        if any(ord(ch) < 32 or ch in {"/", "\\"} for ch in entry_id):
+            raise ValueError("model_catalog_invalid")
+        seen.add(entry_id)
+
+        entry["id"] = entry_id
+        entry["file"] = validate_model_filename(str(entry.get("file", "")))
+        raw_url = str(entry.get("url", "")).strip()
+        if require_url or raw_url:
+            entry["url"] = validate_model_url(raw_url)
+        else:
+            entry["url"] = ""
+
+        sha256 = str(entry.get("sha256", "")).strip().lower()
+        if sha256 and not re.fullmatch(r"[0-9a-f]{64}", sha256):
+            raise ValueError("model_catalog_invalid")
+        entry["sha256"] = sha256
+        for field in ("size_mb", "ram_gb", "n_ctx", "max_tokens"):
+            if field not in entry or entry[field] in ("", None):
+                continue
+            try:
+                if float(entry[field]) < 0:
+                    raise ValueError
+            except (TypeError, ValueError) as exc:
+                raise ValueError("model_catalog_invalid") from exc
+        valid.append(entry)
+    return valid
+
+
 # Thinking-tag stripper.
 
 def _strip_thinking(text: str) -> str:
@@ -228,6 +278,50 @@ def ensure_catalog(models_dir: Optional[Path] = None) -> None:
     # If still not present, load_catalog() will use the hardcoded fallback.
 
 
+def refresh_catalog_from_remote(
+    models_dir: Optional[Path] = None,
+    *,
+    url: str = MODEL_CATALOG_REMOTE_URL,
+) -> list[dict]:
+    """Fetch the latest GitHub model catalog and persist it locally."""
+    if models_dir is None:
+        models_dir = get_models_dir()
+    request = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": f"WorkLogger/{APP_VERSION}",
+            "Accept": "application/json",
+        },
+    )
+    with urllib.request.urlopen(
+        request,
+        timeout=MODEL_CATALOG_FETCH_TIMEOUT_SECONDS,
+    ) as response:
+        raw = response.read(MODEL_CATALOG_RESPONSE_MAX_BYTES + 1)
+    if len(raw) > MODEL_CATALOG_RESPONSE_MAX_BYTES:
+        raise ValueError("model_catalog_too_large")
+    try:
+        remote_catalog = validate_catalog_data(
+            json.loads(raw.decode("utf-8")),
+            require_url=True,
+        )
+    except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+        raise ValueError("model_catalog_invalid") from exc
+
+    remote_ids = {entry["id"] for entry in remote_catalog}
+    preserved_custom = [
+        entry for entry in load_catalog(models_dir)
+        if entry.get("id") not in remote_ids and not str(entry.get("url", "")).strip()
+    ]
+    merged = remote_catalog + preserved_custom
+    _save_catalog(merged, models_dir)
+    try:
+        load_manifest(models_dir)
+    except Exception:
+        pass
+    return merged
+
+
 def load_catalog(models_dir: Optional[Path] = None) -> list:
     """Load catalog.json; fall back to a minimal built-in default if absent.
 
@@ -247,17 +341,9 @@ def load_catalog(models_dir: Optional[Path] = None) -> list:
         try:
             with open(path, encoding="utf-8") as fh:
                 data = json.load(fh)
-            if isinstance(data, list) and data:
-                # Filter out malformed entries missing required keys
-                valid = [
-                    e for e in data
-                    if isinstance(e, dict)
-                    and e.get("id")
-                    and e.get("file")
-                    and e.get("url")
-                ]
-                if valid:
-                    return valid
+            valid = validate_catalog_data(data, require_url=False)
+            if valid:
+                return valid
         except (OSError, json.JSONDecodeError, ValueError, KeyError, TypeError):
             pass
     # Built-in minimal fallback (one model) so the app works even if

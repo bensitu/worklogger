@@ -183,7 +183,7 @@ def build_ics(rows: list) -> str:
     ]
     dtstamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     for idx, r in enumerate(rows, 1):
-        if not r.has_times:
+        if not r.has_times or r.is_leave:
             continue
         h = calc_hours(r.start, r.end, r.break_hours)
         note = r.safe_note()

@@ -2,6 +2,7 @@ from __future__ import annotations
 import csv
 from dataclasses import dataclass
 from datetime import date, timedelta
+from config.constants import DEFAULT_LEAVE_HOURS
 from core.time_calc import calc_hours
 
 
@@ -19,14 +20,15 @@ def month_stats(month_rows: list, work_hours: float):
     total = ot = 0.0
     wd = ld = 0
     for r in month_rows:
+        if r.is_leave:
+            ld += 1
+            continue
         if r.has_times:
             h = calc_hours(r.start, r.end, r.break_hours)
             if h > 0:
                 total += h
                 ot += max(h - work_hours, 0)
                 wd += 1
-        if r.is_leave:
-            ld += 1
     return total, ot, wd, ld, total / wd if wd else 0.0
 
 
@@ -38,7 +40,7 @@ def monthly_chart_data(record_getter, y: int, m: int):
     for d in range(1, days + 1):
         row = (d + first - 1) // 7
         rec = record_getter(date(y, m, d).isoformat())
-        if rec and rec.has_times:
+        if rec and rec.has_times and not rec.is_leave:
             weekly[row] = weekly.get(row, 0.0) + calc_hours(rec.start, rec.end, rec.break_hours)
     max_r = (days + first - 1) // 7
     return [(f"W{r+1}", weekly.get(r, 0.0)) for r in range(max_r + 1)]
@@ -54,7 +56,7 @@ def monthly_chart_data_v2(record_getter, y: int, m: int) -> tuple[list, list, se
     for d in range(1, days + 1):
         row = (d + first - 1) // 7
         rec = record_getter(date(y, m, d).isoformat())
-        if rec and rec.has_times:
+        if rec and rec.has_times and not rec.is_leave:
             weekly[row] = weekly.get(row, 0.0) + calc_hours(rec.start, rec.end, rec.break_hours)
             work_days[row] = work_days.get(row, 0) + 1
         if rec and rec.is_leave:
@@ -68,17 +70,25 @@ def monthly_chart_data_v2(record_getter, y: int, m: int) -> tuple[list, list, se
     return bar_data, line_data, leave_indices
 
 
-def _record_hours(rec) -> float:
+def _raw_record_hours(rec) -> float:
     if rec and rec.has_times:
         return calc_hours(rec.start, rec.end, rec.break_hours)
     return 0.0
 
 
+def _work_hours(rec) -> float:
+    if rec and rec.is_leave:
+        return 0.0
+    return _raw_record_hours(rec)
+
+
 def _leave_hours(rec, standard_hours: float) -> float:
     if not rec or not rec.is_leave:
         return 0.0
-    hours = _record_hours(rec)
-    return hours if hours > 0 else float(standard_hours)
+    hours = _raw_record_hours(rec)
+    if hours > 0:
+        return hours
+    return max(float(standard_hours or DEFAULT_LEAVE_HOURS), 0.0)
 
 
 def _metric_value(total_hours: float, unit_count: int, metric: str) -> float:
@@ -101,7 +111,7 @@ def _bundle(
     ]
     leave_indices = {i for i, hours in enumerate(leave_hours) if include_leaves and hours > 0}
     leave_line_data = [
-        0.0 if include_leaves and hours > 0 else None
+        hours if include_leaves and hours > 0 else None
         for hours in leave_hours
     ]
     data = list(zip(labels, values))
@@ -120,7 +130,7 @@ def monthly_chart_data_v3(
     metric: str,
     include_leaves: bool,
     record_getter,
-    standard_hours: float = 8.0,
+    standard_hours: float = DEFAULT_LEAVE_HOURS,
 ) -> ChartDataBundle:
     if end < start:
         return ChartDataBundle([], [], set(), [], [])
@@ -137,7 +147,7 @@ def monthly_chart_data_v3(
         row = (cur.day + first - 1) // 7
         if 0 <= row < len(labels):
             rec = record_getter(cur.isoformat())
-            hours = _record_hours(rec)
+            hours = _work_hours(rec)
             if hours > 0:
                 totals[row] += hours
                 unit_counts[row] += 1
@@ -151,7 +161,7 @@ def quarterly_chart_data_v3(
     y: int,
     metric: str,
     include_leaves: bool,
-    standard_hours: float = 8.0,
+    standard_hours: float = DEFAULT_LEAVE_HOURS,
 ) -> ChartDataBundle:
     labels = [f"Q{q}" for q in range(1, 5)]
     totals = [0.0 for _label in labels]
@@ -160,7 +170,7 @@ def quarterly_chart_data_v3(
     for month in range(1, 13):
         q_idx = (month - 1) // 3
         for rec in month_records_getter(f"{y}-{month:02d}"):
-            hours = _record_hours(rec)
+            hours = _work_hours(rec)
             if hours > 0:
                 totals[q_idx] += hours
                 d = date.fromisoformat(rec.date)
@@ -177,7 +187,7 @@ def annual_chart_data_v3(
     month_short: list[str],
     metric: str,
     include_leaves: bool,
-    standard_hours: float = 8.0,
+    standard_hours: float = DEFAULT_LEAVE_HOURS,
 ) -> ChartDataBundle:
     labels = [month_short[m - 1] for m in range(1, 13)]
     totals = [0.0 for _label in labels]
@@ -186,7 +196,7 @@ def annual_chart_data_v3(
     for month in range(1, 13):
         idx = month - 1
         for rec in month_records_getter(f"{y}-{month:02d}"):
-            hours = _record_hours(rec)
+            hours = _work_hours(rec)
             if hours > 0:
                 totals[idx] += hours
                 unit_counts[idx] += 1
@@ -212,7 +222,7 @@ def export_chart_csv(
 def quarter_hours(month_records_getter, y: int):
     return [(f"Q{q}", sum(
         sum(calc_hours(r.start, r.end, r.break_hours)
-            for r in month_records_getter(f"{y}-{m:02d}") if r.has_times)
+            for r in month_records_getter(f"{y}-{m:02d}") if r.has_times and not r.is_leave)
         for m in range((q - 1) * 3 + 1, q * 3 + 1)))
         for q in range(1, 5)]
 
@@ -220,5 +230,5 @@ def quarter_hours(month_records_getter, y: int):
 def annual_hours(month_records_getter, y: int, month_short: list[str]):
     return [(month_short[m - 1],
              sum(calc_hours(r.start, r.end, r.break_hours)
-                 for r in month_records_getter(f"{y}-{m:02d}") if r.has_times))
+                 for r in month_records_getter(f"{y}-{m:02d}") if r.has_times and not r.is_leave))
             for m in range(1, 13)]

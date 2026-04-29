@@ -146,11 +146,12 @@ def _force_password_change_if_needed(services: AppServices) -> bool:
     QMessageBox.information(
         None,
         _("Change Password"),
-        _("The default administrator password must be changed before continuing."),
+        _("This account must change its password before continuing."),
     )
     dlg = ChangePasswordDialog(
         services.auth,
         current_user_id=services.current_user_id,
+        require_old_password=False,
     )
     return dlg.exec() == QDialog.Accepted
 

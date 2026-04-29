@@ -71,7 +71,8 @@ _CREATE_USERS = """CREATE TABLE IF NOT EXISTS users(
     remember_token_expires_at TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     password_changed_at TEXT DEFAULT (datetime('now')),
-    recovery_key_created_at TEXT
+    recovery_key_created_at TEXT,
+    last_login_at TEXT
 )"""
 
 _CREATE_WORKLOG = """CREATE TABLE IF NOT EXISTS worklog(
@@ -248,6 +249,8 @@ class DB:
             self.conn.execute(
                 "ALTER TABLE users ADD COLUMN remember_token_expires_at TEXT"
             )
+        if "last_login_at" not in cols:
+            self.conn.execute("ALTER TABLE users ADD COLUMN last_login_at TEXT")
         self.conn.execute(
             "UPDATE users SET remember_token_expires_at=datetime('now', '+30 days') "
             "WHERE remember_token IS NOT NULL "
@@ -605,8 +608,8 @@ class DB:
         cur = self.conn.execute(
             "INSERT INTO users"
             "(username,password_hash,salt,recovery_key_hash,recovery_salt,is_admin,"
-            "created_at,password_changed_at,recovery_key_created_at) "
-            "VALUES(?,?,?,?,?,?,?,?,?)",
+            "created_at,password_changed_at,recovery_key_created_at,last_login_at) "
+            "VALUES(?,?,?,?,?,?,?,?,?,?)",
             (
                 username,
                 password_hash,
@@ -617,6 +620,7 @@ class DB:
                 now,
                 now,
                 now if recovery_key_hash else None,
+                None,
             ),
         )
         return int(cur.lastrowid)
@@ -687,6 +691,14 @@ class DB:
         if not self.is_admin(admin_user_id):
             return False
         return self.verify_user_id(admin_user_id, password)
+
+    def mark_user_login(self, user_id: int) -> None:
+        with self._write_lock:
+            self.conn.execute(
+                "UPDATE users SET last_login_at=? WHERE id=?",
+                (_utc_now_iso(), user_id),
+            )
+            self.conn.commit()
 
     def verify_recovery_key(self, username: str, recovery_key: str) -> int | None:
         try:
@@ -880,7 +892,7 @@ class DB:
             try:
                 row = self.conn.execute(
                     "SELECT id,username,created_at,password_changed_at,is_admin,"
-                    "recovery_key_hash,recovery_key_created_at "
+                    "recovery_key_hash,recovery_key_created_at,last_login_at "
                     "FROM users WHERE username=?",
                     (target_username,),
                 ).fetchone()
@@ -955,11 +967,12 @@ class DB:
             return None
         row = self.conn.execute(
             "SELECT id,username,created_at,password_changed_at,is_admin,"
-            "recovery_key_hash,recovery_key_created_at,remember_token_expires_at "
+            "recovery_key_hash,recovery_key_created_at,last_login_at,"
+            "remember_token_expires_at "
             "FROM users WHERE remember_token=?",
             (token,),
         ).fetchone()
-        if row and self._remember_token_is_expired(row[7]):
+        if row and self._remember_token_is_expired(row[8]):
             self.set_remember_token(int(row[0]), None)
             return None
         return self._user_row(row) if row else None
@@ -983,7 +996,7 @@ class DB:
             return None
         row = self.conn.execute(
             "SELECT id,username,created_at,password_changed_at,is_admin,"
-            "recovery_key_hash,recovery_key_created_at "
+            "recovery_key_hash,recovery_key_created_at,last_login_at "
             "FROM users WHERE username=?",
             (username,),
         ).fetchone()
@@ -992,7 +1005,7 @@ class DB:
     def get_user(self, user_id: int) -> dict | None:
         row = self.conn.execute(
             "SELECT id,username,created_at,password_changed_at,is_admin,"
-            "recovery_key_hash,recovery_key_created_at "
+            "recovery_key_hash,recovery_key_created_at,last_login_at "
             "FROM users WHERE id=?",
             (user_id,),
         ).fetchone()
@@ -1001,7 +1014,7 @@ class DB:
     def first_user(self) -> dict | None:
         row = self.conn.execute(
             "SELECT id,username,created_at,password_changed_at,is_admin,"
-            "recovery_key_hash,recovery_key_created_at "
+            "recovery_key_hash,recovery_key_created_at,last_login_at "
             "FROM users ORDER BY id LIMIT 1"
         ).fetchone()
         return self._user_row(row) if row else None
@@ -1012,7 +1025,7 @@ class DB:
     def list_users(self) -> list[dict]:
         rows = self.conn.execute(
             "SELECT id,username,created_at,password_changed_at,is_admin,"
-            "recovery_key_hash,recovery_key_created_at "
+            "recovery_key_hash,recovery_key_created_at,last_login_at "
             "FROM users ORDER BY username COLLATE NOCASE"
         ).fetchall()
         return [self._user_row(row) for row in rows]
@@ -1023,6 +1036,7 @@ class DB:
         is_admin = bool(row[4]) if len(row) > 4 else False
         has_recovery_key = bool(row[5]) if len(row) > 5 else False
         recovery_key_created_at = row[6] if len(row) > 6 else ""
+        last_login_at = row[7] if len(row) > 7 else ""
         return dict(
             id=int(row[0]),
             username=row[1],
@@ -1031,6 +1045,8 @@ class DB:
             is_admin=is_admin,
             has_recovery_key=has_recovery_key,
             recovery_key_created_at=recovery_key_created_at,
+            last_login_at=last_login_at,
+            is_used=bool(last_login_at),
         )
 
     @staticmethod

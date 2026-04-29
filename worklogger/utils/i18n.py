@@ -145,6 +145,8 @@ Customization and AI:
     "local_model_verify_permission_denied": "Permission denied while verifying local model file.",
     "local_model_verify_failed": "Local model verification failed. Please re-download or switch model.",
     "local_model_switch_confirm": "A different model is already downloaded. It will be deleted before the new one downloads. Continue?",
+    "local_model_catalog_loading": "Loading latest model catalog...",
+    "local_model_catalog_load_failed": "Could not load the latest model catalog. Check your network and try again.",
     "minimal_mode": "Minimal mode",
     "minimal_mode_restart_required": "Restart required to apply minimal mode.",
     "minimal_mode_toggle_restart": "Minimal mode toggle will take effect after restarting the application.",

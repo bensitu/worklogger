@@ -297,6 +297,7 @@ class ComboChart(QWidget):
         line_items: list | None = None,
         line_ref: float | None = None,
         leave_indices: set[int] | None = None,
+        leave_items: list | None = None,
         mode: str = "bar",
         show_leave_markers: bool = False,
         unit: str = "h",
@@ -312,6 +313,7 @@ class ComboChart(QWidget):
         self._ref = ref
         self._line_ref = ref if line_ref is None else line_ref
         self._leave_indices = set(leave_indices or set())
+        self._leave_items = list(leave_items or [])
         self._mode = mode if mode in {"bar", "line", "combo"} else "bar"
         self._show_leave_markers = show_leave_markers
         self._unit = unit
@@ -350,10 +352,13 @@ class ComboChart(QWidget):
         bar_items: list,
         line_items: list | None = None,
         leave_indices: set[int] | None = None,
+        leave_items: list | None = None,
     ) -> None:
         self._bar_items = list(bar_items)
         self._line_items = list(line_items if line_items is not None else bar_items)
         self._leave_indices = set(leave_indices or set())
+        if leave_items is not None:
+            self._leave_items = list(leave_items)
         self.update()
 
     def set_reference(self, ref: float, line_ref: float | None = None) -> None:
@@ -391,6 +396,12 @@ class ComboChart(QWidget):
         values: list[float] = []
         if self._mode in {"bar", "combo"}:
             values.extend(float(value) for _label, value in self._bar_items)
+            if self._show_leave_markers:
+                values.extend(
+                    float(value)
+                    for _label, value in self._leave_items
+                    if value is not None
+                )
         if self._mode in {"line", "combo"}:
             values.extend(float(value) for _label, value in self._line_items)
             for y_data, _color, _style, _label in self._dashed_lines:
@@ -462,6 +473,14 @@ class ComboChart(QWidget):
             )
         p.restore()
 
+    def _leave_value_at(self, index: int) -> float:
+        if index < 0 or index >= len(self._leave_items):
+            return 0.0
+        try:
+            return max(float(self._leave_items[index][1]), 0.0)
+        except (TypeError, ValueError, IndexError):
+            return 0.0
+
     def paintEvent(self, _):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
@@ -515,21 +534,6 @@ class ComboChart(QWidget):
             p.setPen(QColor(self._c_ref))
             p.drawText(QRectF(label_x, label_y, label_w, label_h), Qt.AlignCenter, ref_text)
 
-        if self._show_leave_markers and self._mode in {"bar", "combo"} and self._leave_indices:
-            leave_color = QColor(self._c_leave)
-            leave_color.setAlpha(150)
-            marker_h = ch * 0.82
-            for i in sorted(self._leave_indices):
-                if i < 0 or i >= n:
-                    continue
-                x = ml + i * slot_w + (slot_w - bar_w) / 2
-                y = mt + ch - marker_h
-                p.setPen(QPen(leave_color, 1.8, Qt.DashLine))
-                p.setBrush(Qt.NoBrush)
-                rect = QRectF(x, y, bar_w, marker_h)
-                p.drawRoundedRect(rect, 3, 3)
-                self._draw_hatch(p, rect, leave_color)
-
         if self._mode in {"bar", "combo"}:
             for i, (_label, val) in enumerate(self._bar_items):
                 bh = (min(val, max_v) / max_v) * ch
@@ -546,6 +550,24 @@ class ComboChart(QWidget):
                     vs = f"{val:.1f}"
                     fm = QFontMetrics(p.font())
                     p.drawText(int(x + bar_w / 2 - fm.horizontalAdvance(vs) / 2), int(y) - 3, vs)
+
+        if self._show_leave_markers and self._mode in {"bar", "combo"} and self._leave_indices:
+            leave_color = QColor(self._c_leave)
+            leave_color.setAlpha(155)
+            for i in sorted(self._leave_indices):
+                if i < 0 or i >= n:
+                    continue
+                leave_value = self._leave_value_at(i)
+                if leave_value <= 0:
+                    continue
+                marker_h = (min(leave_value, max_v) / max_v) * ch
+                x = ml + i * slot_w + (slot_w - bar_w) / 2
+                y = mt + ch - marker_h
+                p.setPen(QPen(leave_color, 1.8, Qt.DashLine))
+                p.setBrush(Qt.NoBrush)
+                rect = QRectF(x, y, bar_w, marker_h)
+                p.drawRoundedRect(rect, 3, 3)
+                self._draw_hatch(p, rect, leave_color)
 
         if self._mode in {"line", "combo"}:
             points: list[QPointF] = []

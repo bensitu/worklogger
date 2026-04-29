@@ -215,7 +215,6 @@ class App(QWidget):
         self._auto_break_recorded = False
         self._tray_icon: QSystemTrayIcon | None = None
         self._tray_quit_requested = False
-        self._date_range_cache: tuple[date | None, date | None] | None = None
 
         self._build_ui()
         self._setup_residency_icon()
@@ -786,23 +785,13 @@ class App(QWidget):
         self.date_banner.setText(f"{d.year}/{d.month:02d}/{d.day:02d}  {dow}{marker}")
         self._update_minimal_date_nav()
 
-    def _data_date_range(self) -> tuple[date, date]:
-        if self._date_range_cache is None:
-            try:
-                self._date_range_cache = self.services.get_data_date_range()
-            except Exception:
-                self._date_range_cache = (None, None)
-        start_d, end_d = self._date_range_cache
-        return start_d or self.selected, end_d or self.selected
-
     def _update_minimal_date_nav(self) -> None:
         if not hasattr(self, "_minimal_prev_day_btn"):
             return
         if not self.store.state.minimal_mode:
             return
-        start_d, end_d = self._data_date_range()
-        self._minimal_prev_day_btn.setEnabled(self.selected > start_d)
-        self._minimal_next_day_btn.setEnabled(self.selected < end_d)
+        self._minimal_prev_day_btn.setEnabled(self.selected > date.min)
+        self._minimal_next_day_btn.setEnabled(self.selected < date.max)
 
     def _flash_date_nav_button(self, button: QPushButton) -> None:
         button.setDown(True)
@@ -816,12 +805,11 @@ class App(QWidget):
     def _shift_minimal_day(self, days: int) -> None:
         button = self._minimal_next_day_btn if days > 0 else self._minimal_prev_day_btn
         self._flash_date_nav_button(button)
-        start_d, end_d = self._data_date_range()
-        target = self.selected + timedelta(days=days)
-        if target < start_d:
-            target = start_d
-        elif target > end_d:
-            target = end_d
+        try:
+            target = self.selected + timedelta(days=days)
+        except OverflowError:
+            self._update_minimal_date_nav()
+            return
         if target == self.selected:
             return
         self.current = target.replace(day=1)
@@ -1030,10 +1018,10 @@ class App(QWidget):
                     and not rec.has_times
                     and note_text != holiday_note
                 )
-                h = calc_hours(rec.start, rec.end, rec.break_hours)
-                ot = max(h - self.work_hours, 0)
                 wt = rec.safe_work_type()
-                if h > 0:
+                h = calc_hours(rec.start, rec.end, rec.break_hours) if rec.has_times else 0.0
+                ot = 0.0 if rec.is_leave else max(h - self.work_hours, 0)
+                if h > 0 and not rec.is_leave:
                     total_h += h
                     total_ot += ot
                     workdays += 1
@@ -1242,7 +1230,6 @@ class App(QWidget):
             self.selected.isoformat(), s, e, l,
             self.note_in.toPlainText(), wt, overnight=overnight,
         )
-        self._date_range_cache = None
         self._refresh_auto_time_labels()
         self.render()
 
@@ -1525,7 +1512,6 @@ class App(QWidget):
         if errors:
             msg += _("\n\nSkipped {} rows:\n{}").format(len(errors), "\n".join(errors[:10]))
         QMessageBox.information(self, _("Import Result"), msg)
-        self._date_range_cache = None
         self.render()
 
     def _import_ics(self):

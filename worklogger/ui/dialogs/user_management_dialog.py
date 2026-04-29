@@ -24,7 +24,14 @@ from PySide6.QtWidgets import (
 )
 
 from config.themes import dialog_title_qss, user_dialog_button_qss, user_table_qss
-from config.constants import PASSWORD_MIN_LENGTH
+from config.constants import (
+    PASSWORD_MIN_LENGTH,
+    USER_INITIAL_PASSWORD_FILENAME_PREFIX,
+    USER_MANAGEMENT_ACTION_COLUMN,
+    USER_MANAGEMENT_ACTION_COLUMN_WIDTH,
+    USER_MANAGEMENT_COLUMN_COUNT,
+    USER_MANAGEMENT_ROW_HEIGHT,
+)
 from utils.formatters import format_timestamp_for_display
 from utils.i18n import _, msg
 from .common import _localize_msgbox_buttons
@@ -147,6 +154,94 @@ class _AdminResetPasswordDialog(QDialog):
         self.accept()
 
 
+class _CreateUserDialog(QDialog):
+    def __init__(self, services, parent=None):
+        super().__init__(parent)
+        self._services = services
+        self.username = ""
+        self.admin_password = ""
+        self.initial_password = self._generate_password()
+
+        self.setWindowTitle(_("Create User"))
+        self.setMinimumWidth(440)
+        root = QVBoxLayout(self)
+
+        hint = QLabel(
+            _(
+                "The initial password is generated automatically. "
+                "The user must change it at first login."
+            )
+        )
+        hint.setWordWrap(True)
+        hint.setObjectName("muted")
+        root.addWidget(hint)
+
+        form = QFormLayout()
+        self._username = QLineEdit()
+        self._initial_password = QLineEdit(self.initial_password)
+        self._initial_password.setReadOnly(True)
+        self._admin_password = QLineEdit()
+        self._admin_password.setEchoMode(QLineEdit.EchoMode.Password)
+        form.addRow(_("Username"), self._username)
+        form.addRow(_("Initial Password"), self._initial_password)
+        form.addRow(_("Administrator Password"), self._admin_password)
+        root.addLayout(form)
+
+        row = QHBoxLayout()
+        regenerate_btn = QPushButton(_("Regenerate"))
+        cancel_btn = QPushButton(_("Cancel"))
+        create_btn = QPushButton(_("Create User"))
+        create_btn.setObjectName("primary_btn")
+        row.addWidget(regenerate_btn)
+        row.addStretch()
+        row.addWidget(cancel_btn)
+        row.addWidget(create_btn)
+        root.addLayout(row)
+
+        regenerate_btn.clicked.connect(self._regenerate_password)
+        cancel_btn.clicked.connect(self.reject)
+        create_btn.clicked.connect(self._accept)
+        self._admin_password.returnPressed.connect(self._accept)
+
+    def _generate_password(self) -> str:
+        try:
+            return self._services.generate_initial_password()
+        except Exception:
+            return ""
+
+    def _regenerate_password(self) -> None:
+        self.initial_password = self._generate_password()
+        self._initial_password.setText(self.initial_password)
+
+    def _accept(self) -> None:
+        username = self._username.text().strip()
+        admin_password = self._admin_password.text()
+        if not username:
+            QMessageBox.warning(
+                self,
+                _("Create User"),
+                _("Username is required."),
+            )
+            return
+        if len(self.initial_password) < PASSWORD_MIN_LENGTH:
+            QMessageBox.warning(
+                self,
+                _("Create User"),
+                _("Password must be at least 8 characters."),
+            )
+            return
+        if not admin_password:
+            QMessageBox.warning(
+                self,
+                _("Create User"),
+                _("Please enter administrator password."),
+            )
+            return
+        self.username = username
+        self.admin_password = admin_password
+        self.accept()
+
+
 class _DeleteUserDialog(QDialog):
     def __init__(self, username: str, parent=None):
         super().__init__(parent)
@@ -230,12 +325,13 @@ class UserManagementDialog(QDialog):
         root.addWidget(title)
         root.addWidget(subtitle)
 
-        self._table = QTableWidget(0, 8)
+        self._table = QTableWidget(0, USER_MANAGEMENT_COLUMN_COUNT)
         self._table.setHorizontalHeaderLabels(
             [
                 _("#"),
                 _("Username"),
                 _("Role"),
+                _("In Use"),
                 _("Recovery Key"),
                 _("Created"),
                 _("Password Changed"),
@@ -250,18 +346,28 @@ class UserManagementDialog(QDialog):
         self._table.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         header = self._table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(7, QHeaderView.ResizeMode.Fixed)
-        self._table.setColumnWidth(7, 520)
+        header.setSectionResizeMode(
+            USER_MANAGEMENT_ACTION_COLUMN,
+            QHeaderView.ResizeMode.Fixed,
+        )
+        self._table.setColumnWidth(
+            USER_MANAGEMENT_ACTION_COLUMN,
+            USER_MANAGEMENT_ACTION_COLUMN_WIDTH,
+        )
         root.addWidget(self._table, 1)
 
         footer = QHBoxLayout()
+        self._create_btn = QPushButton(_("Create User"))
         self._refresh_btn = QPushButton(_("Refresh"))
         close_btn = QPushButton(_("Close"))
+        self._create_btn.setObjectName("primary_btn")
+        footer.addWidget(self._create_btn)
         footer.addStretch()
         footer.addWidget(self._refresh_btn)
         footer.addWidget(close_btn)
         root.addLayout(footer)
 
+        self._create_btn.clicked.connect(self._create_user)
         self._refresh_btn.clicked.connect(self._refresh)
         close_btn.clicked.connect(self.accept)
         self._apply_theme_styles()
@@ -291,6 +397,7 @@ class UserManagementDialog(QDialog):
                 str(row + 1),
                 user.get("username", ""),
                 _("Administrator") if user.get("is_admin") else _("User"),
+                _("Used") if user.get("is_used") else _("Unused"),
                 _("Yes") if user.get("has_recovery_key") else _("No"),
                 self._format_timestamp(user.get("created_at")),
                 self._format_timestamp(user.get("password_changed_at")),
@@ -302,14 +409,21 @@ class UserManagementDialog(QDialog):
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 item.setData(Qt.ItemDataRole.UserRole, int(user["id"]))
                 self._table.setItem(row, col, item)
-            self._table.setCellWidget(row, 7, self._actions_widget(user))
-            self._table.setRowHeight(row, 48)
+            self._table.setCellWidget(
+                row,
+                USER_MANAGEMENT_ACTION_COLUMN,
+                self._actions_widget(user),
+            )
+            self._table.setRowHeight(row, USER_MANAGEMENT_ROW_HEIGHT)
         self._table.resizeColumnsToContents()
         self._table.horizontalHeader().setSectionResizeMode(
-            7,
+            USER_MANAGEMENT_ACTION_COLUMN,
             QHeaderView.ResizeMode.Fixed,
         )
-        self._table.setColumnWidth(7, 520)
+        self._table.setColumnWidth(
+            USER_MANAGEMENT_ACTION_COLUMN,
+            USER_MANAGEMENT_ACTION_COLUMN_WIDTH,
+        )
 
     @staticmethod
     def _format_timestamp(raw) -> str:
@@ -350,6 +464,112 @@ class UserManagementDialog(QDialog):
             layout.addWidget(delete_btn)
         layout.addStretch()
         return wrap
+
+    def _create_user(self) -> None:
+        dlg = _CreateUserDialog(self._services, self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        try:
+            _user_id, initial_password = self._services.create_user_by_admin(
+                dlg.admin_password,
+                dlg.username,
+                dlg.initial_password,
+            )
+        except ValueError as exc:
+            self._show_admin_error(str(exc))
+            return
+        except PermissionError:
+            QMessageBox.warning(
+                self,
+                _("Manage Users"),
+                _("Administrator privileges are required."),
+            )
+            return
+        self._show_initial_password(dlg.username, initial_password)
+        self._refresh()
+
+    def _show_initial_password(self, username: str, initial_password: str) -> None:
+        dlg = QDialog(self)
+        dlg.setWindowTitle(_("Create User"))
+        dlg.setMinimumWidth(460)
+        root = QVBoxLayout(dlg)
+
+        info = QLabel(
+            _(
+                "User created successfully. Share this initial password now; "
+                "it cannot be shown again later."
+            )
+        )
+        info.setWordWrap(True)
+        root.addWidget(info)
+
+        form = QFormLayout()
+        username_edit = QLineEdit(username)
+        username_edit.setReadOnly(True)
+        password_edit = QLineEdit(initial_password)
+        password_edit.setReadOnly(True)
+        form.addRow(_("Username"), username_edit)
+        form.addRow(_("Initial Password"), password_edit)
+        root.addLayout(form)
+
+        note = QLabel(
+            _("The user must change this password at first login.")
+        )
+        note.setWordWrap(True)
+        note.setObjectName("muted")
+        root.addWidget(note)
+
+        status_lbl = QLabel("")
+        status_lbl.setObjectName("muted")
+        root.addWidget(status_lbl)
+
+        row = QHBoxLayout()
+        copy_btn = QPushButton(_("Copy"))
+        save_as_btn = QPushButton(_("Save As"))
+        ok_btn = QPushButton(_("OK"))
+        ok_btn.setObjectName("primary_btn")
+        row.addStretch()
+        row.addWidget(copy_btn)
+        row.addWidget(save_as_btn)
+        row.addWidget(ok_btn)
+        root.addLayout(row)
+
+        def _copy_password() -> None:
+            QApplication.clipboard().setText(initial_password)
+            status_lbl.setText(_("Copied!"))
+
+        def _save_password() -> None:
+            safe_username = "".join(
+                ch if ch.isalnum() or ch in "-_" else "_"
+                for ch in username
+            ) or "user"
+            path, _dialog_filter = QFileDialog.getSaveFileName(
+                dlg,
+                _("Save Initial Password"),
+                f"{USER_INITIAL_PASSWORD_FILENAME_PREFIX}-{safe_username}.txt",
+                _("Text Files (*.txt)"),
+            )
+            if not path:
+                return
+            try:
+                with open(path, "w", encoding="utf-8") as fh:
+                    fh.write(f"{_('Username')}: {username}\n")
+                    fh.write(f"{_('Initial Password')}: {initial_password}\n")
+                    fh.write("\n")
+                    fh.write(f"{_('Note')}: {_('The user must change this password at first login.')}\n")
+            except OSError:
+                QMessageBox.warning(
+                    dlg,
+                    _("Create User"),
+                    _("Could not save initial password."),
+                )
+                return
+            status_lbl.setText(_("Initial password saved."))
+
+        copy_btn.clicked.connect(_copy_password)
+        save_as_btn.clicked.connect(_save_password)
+        ok_btn.clicked.connect(dlg.accept)
+        dlg.exec()
 
     def _reset_password(self, user: dict) -> None:
         dlg = _AdminResetPasswordDialog(user.get("username", ""), self)
@@ -577,6 +797,8 @@ class UserManagementDialog(QDialog):
             text = _("Password must be at least 8 characters.")
         elif code == "username_required":
             text = _("Username is required.")
+        elif code == "username_exists":
+            text = _("Username already exists.")
         elif code == "user_not_found":
             text = _("User not found.")
         else:

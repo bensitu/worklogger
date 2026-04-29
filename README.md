@@ -14,11 +14,11 @@ WorkLogger is a privacy-first desktop app for tracking work hours, notes, quick 
 - Flexible time tracking with Manual Input and Auto Record modes
 - Overnight-shift-aware calculations with work type and leave classification
 - AI-assisted note and report generation with external API providers and local model fallback
-- Built-in local model management (download, resume, verify, switch, import `.gguf`)
+- Built-in local model management with a GitHub-hosted dynamic catalog, download, resume, verify, switch, and `.gguf` import
 - Template-driven daily/weekly/monthly writing with custom template support
 - Persistent weekly/monthly reports that reload by selected calendar week or month
 - Calendar + Quick Log context integration for richer reports
-- Monthly/quarterly/annual analytics with work-hours/average metrics, leave overlays, CSV export, and PDF export
+- Monthly/quarterly/annual analytics with work-hours/average metrics, actual-hours leave overlays, CSV export, and PDF export
 - Database backup/restore with a 30-day backup reminder
 - Custom accent colors, dark mode, and restart-aware minimal mode
 - Multi-language UI (English, Japanese, Korean, Simplified Chinese, Traditional Chinese)
@@ -142,7 +142,7 @@ On upgrade from older single-user versions, existing local data is migrated to a
 
 ### Administrator Recovery
 
-New accounts receive a recovery key during registration. Store it outside the application; it can reset that account's password without network access. Administrators can also reset ordinary user passwords from Settings > Account > Manage Users.
+New accounts receive a recovery key during registration. Store it outside the application; it can reset that account's password without network access. Administrators can also create ordinary users from Settings > Account > Manage Users. Administrator-created users receive a generated initial password, are marked unused until first login, and must set a new password before continuing; that first password change generates their recovery key.
 
 If every administrator loses access and no recovery key is available, technical support can reset a local administrator password with:
 
@@ -155,7 +155,7 @@ The reset account is marked as an administrator and must change the password on 
 
 ## Current Features
 
-- Account management with register/login/logout, password change, recovery-key password reset, administrator user management, remember-me auto-login, and encrypted remember-token storage
+- Account management with register/login/logout, password change, recovery-key password reset, administrator user management, administrator-created users, remember-me auto-login, and encrypted remember-token storage
 - Per-user isolation for work logs, quick logs, calendar events, reports, and settings
 - Calendar-centered daily workflow with per-day totals, overtime, holidays, note markers, and overnight indicators
 - Manual Input and Auto Record tabs for start/end/break capture with input validation and unsaved-change protection
@@ -163,10 +163,10 @@ The reset account is marked as an administrator and must change the password on 
 - Quick Log editor with start/end time support, inline edit/delete, and report/note integration
 - Note editor with template insertion, Quick Log insertion, and AI rewrite assistance
 - Weekly and monthly report generation with template picker, AI enhancement/regeneration, save/reload by selected period, unsaved-change prompts, copy, and Markdown export
-- Analytics dialog with monthly/quarterly/annual charts, Work hours/Average metric switching, Bar/Line views, leave overlays, and export to CSV/PDF
+- Analytics dialog with monthly/quarterly/annual charts, Work hours/Average metric switching, Bar/Line views, actual-hours leave overlays, and export to CSV/PDF
 - Data portability: CSV import/export, database backup/restore, `.ics` calendar import/export, and calendar event merge into notes/reports
 - AI provider settings with connectivity test, primary/secondary provider routing, and status-rich progress dialogs
-- Local model controls: enable/disable switch, model selection, resumable download, hash verification, deletion, and `.gguf` import
+- Local model controls: enable/disable switch, dynamically refreshed model selection from `model_catalog.json` on GitHub, resumable download, hash verification, deletion, and `.gguf` import
 - Secure API key handling via OS keychain with encrypted local fallback
 - Appearance and behavior controls for preset/custom theme, dark mode, language, minimal mode, week start, holiday display, note reminders, and residency icon mode
 - First-run system language detection for English, Japanese, Korean, Simplified Chinese, and Traditional Chinese

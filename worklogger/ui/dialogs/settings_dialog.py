@@ -74,6 +74,10 @@ class _LocalVerifyBridge(QObject):
     done = Signal(int, bool, bool, str, str)
 
 
+class _CatalogRefreshBridge(QObject):
+    done = Signal(bool, str)
+
+
 class SettingsDialog(QDialog):
     _session_local_verify_done = False
     _session_local_verify_cache: dict[str, tuple[bool, str]] = {}
@@ -482,6 +486,7 @@ class SettingsDialog(QDialog):
         self._local_verify_seq = 0
         self._local_pending_entry_id = ""
         self._local_verify_bridge = _LocalVerifyBridge(self)
+        self._catalog_refresh_bridge = _CatalogRefreshBridge(self)
 
         # Single entry point for download/import/manage actions.
         btn_row_w = QWidget()
@@ -770,10 +775,7 @@ class SettingsDialog(QDialog):
         self._local_enabled_sw.toggled.connect(_on_local_toggle)
         self._local_verify_cancel_btn.clicked.connect(_cancel_local_verify)
 
-        def _open_model_management() -> None:
-            """Open the unified Model Management dialog."""
-            if self._local_dl_blocked or not self._local_dl_btn.isEnabled():
-                return
+        def _launch_model_management_dialog() -> None:
             from ui.dialogs.local_model_dialogs import LocalDownloadDialog
             themes_raw: Any = getattr(app_ref, "themes", None)
             themes_map: ThemeMap = themes_raw if isinstance(themes_raw, dict) else THEMES
@@ -825,6 +827,59 @@ class SettingsDialog(QDialog):
             if changed:
                 _invalidate_local_verify_cache(after_id)
             _refresh_local_status(force_verify=changed, ignore_cache=True)
+
+        def _on_catalog_refresh_done(ok: bool, detail: str) -> None:
+            del detail
+            self._local_dl_btn.setEnabled(True)
+            self._local_dl_btn.setToolTip("")
+            if ok:
+                _launch_model_management_dialog()
+                return
+            _refresh_local_status(
+                force_verify=False,
+                allow_initial_verify=False,
+                ignore_cache=True,
+            )
+            QMessageBox.warning(
+                self,
+                _("Download Local Model"),
+                msg(
+                    "local_model_catalog_load_failed",
+                    "Could not load the latest model catalog. Check your network and try again.",
+                ),
+            )
+
+        self._catalog_refresh_bridge.done.connect(_on_catalog_refresh_done)
+
+        def _open_model_management() -> None:
+            """Refresh the remote catalog before opening model management."""
+            if self._local_dl_blocked or not self._local_dl_btn.isEnabled():
+                return
+            self._local_status_lbl.setText(
+                msg(
+                    "local_model_catalog_loading",
+                    "Loading latest model catalog...",
+                )
+            )
+            self._local_status_lbl.setStyleSheet("")
+            self._local_dl_btn.setEnabled(False)
+            self._local_dl_btn.setToolTip(
+                msg(
+                    "local_model_catalog_loading",
+                    "Loading latest model catalog...",
+                )
+            )
+
+            def _worker() -> None:
+                try:
+                    from services.local_model_service import refresh_catalog_from_remote
+                    refresh_catalog_from_remote()
+                except Exception as exc:
+                    self._catalog_refresh_bridge.done.emit(False, str(exc))
+                    return
+                self._catalog_refresh_bridge.done.emit(True, "")
+
+            threading.Thread(target=_worker, daemon=True).start()
 
         self._local_dl_btn.clicked.connect(_open_model_management)
 

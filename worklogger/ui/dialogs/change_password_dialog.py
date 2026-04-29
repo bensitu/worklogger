@@ -27,11 +27,13 @@ class ChangePasswordDialog(QDialog):
         *,
         current_user_id: int | None = None,
         username: str = "",
+        require_old_password: bool = True,
         parent=None,
     ):
         super().__init__(parent)
         self._auth = auth_service
         self._current_user_id = current_user_id
+        self._require_old_password = bool(require_old_password)
         self.setWindowTitle(_("Change Password"))
         self.setMinimumWidth(380)
 
@@ -53,7 +55,8 @@ class ChangePasswordDialog(QDialog):
             edit.setEchoMode(QLineEdit.EchoMode.Password)
         if current_user_id is None:
             form.addRow(_("Username"), self._username)
-        form.addRow(_("Old Password"), self._old)
+        if self._require_old_password:
+            form.addRow(_("Old Password"), self._old)
         form.addRow(_("New Password"), self._new)
         form.addRow(_("Confirm Password"), self._confirm)
         root.addLayout(form)
@@ -90,7 +93,12 @@ class ChangePasswordDialog(QDialog):
             )
             return
         try:
-            if self._current_user_id is not None:
+            if self._current_user_id is not None and not self._require_old_password:
+                new_recovery_key = self._auth.force_change_password(
+                    self._current_user_id,
+                    new_pw,
+                )
+            elif self._current_user_id is not None:
                 new_recovery_key = self._auth.change_password(
                     self._current_user_id,
                     old_pw,
@@ -118,10 +126,15 @@ class ChangePasswordDialog(QDialog):
             )
             return
         if not new_recovery_key:
+            warning = (
+                _("Old password is incorrect.")
+                if self._require_old_password
+                else _("Password change failed.")
+            )
             QMessageBox.warning(
                 self,
                 _("Change Password"),
-                _("Old password is incorrect."),
+                warning,
             )
             return
         self._show_recovery_key(str(new_recovery_key))
