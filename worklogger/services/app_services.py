@@ -109,7 +109,6 @@ class AuthService:
         user_id = self.db.verify_user(username, password)
         if user_id is None:
             raise ValueError("invalid_credentials")
-        self.db.mark_user_login(user_id)
         if remember:
             token = secrets.token_urlsafe(32)
             self.db.set_remember_token(user_id, token)
@@ -129,7 +128,6 @@ class AuthService:
         if not user:
             return None
         user_id = int(user["id"])
-        self.db.mark_user_login(user_id)
         return user_id
 
     def force_change_password(self, user_id: int, new_pw: str) -> str | None:
@@ -363,6 +361,9 @@ class AppServices:
     def clear_current_user(self) -> None:
         self.current_user_id = None
         self.current_username = None
+
+    def mark_current_user_used(self) -> None:
+        self.db.mark_user_login(self._require_user_id())
 
     def logout(self) -> None:
         """Log out the current user and clear session state."""

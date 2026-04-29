@@ -1344,14 +1344,20 @@ class App(QWidget):
 
     def _restart_to_login(self) -> None:
         self.hide()
-        from main import authenticate
+        from main import authenticate, _force_password_change_if_needed
         if authenticate(self.services) is None:
+            self._tray_quit_requested = True
+            self.close()
+            QApplication.instance().quit()
+            return
+        if not _force_password_change_if_needed(self.services):
             self._tray_quit_requested = True
             self.close()
             QApplication.instance().quit()
             return
         self._reload_current_user_state()
         self.show()
+        QTimer.singleShot(0, self.services.mark_current_user_used)
 
     def _reload_current_user_state(self) -> None:
         state = self.services.load_settings()

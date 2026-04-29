@@ -1457,46 +1457,46 @@ msgid "Changing your password will generate a new recovery key. Your new passwor
 msgstr "修改密碼後將重新產生恢復密鑰。新密碼長度至少為 8 位。"
 
 msgid "Could not load the latest model catalog. Check your network and try again."
-msgstr "Could not load the latest model catalog. Check your network and try again."
+msgstr "無法載入最新模型清單。請檢查網路後重試。"
 
 msgid "Could not save initial password."
-msgstr "Could not save initial password."
+msgstr "無法儲存初始密碼。"
 
 msgid "Create User"
-msgstr "Create User"
+msgstr "建立使用者"
 
 msgid "In Use"
-msgstr "In Use"
+msgstr "使用狀態"
 
 msgid "Initial Password"
-msgstr "Initial Password"
+msgstr "初始密碼"
 
 msgid "Initial password saved."
-msgstr "Initial password saved."
+msgstr "初始密碼已儲存。"
 
 msgid "Loading latest model catalog..."
-msgstr "Loading latest model catalog..."
+msgstr "正在載入最新模型清單..."
 
 msgid "Password change failed."
-msgstr "Password change failed."
+msgstr "密碼變更失敗。"
 
 msgid "Save Initial Password"
-msgstr "Save Initial Password"
+msgstr "儲存初始密碼"
 
 msgid "The initial password is generated automatically. The user must change it at first login."
-msgstr "The initial password is generated automatically. The user must change it at first login."
+msgstr "初始密碼會自動產生。使用者首次登入時必須變更該密碼。"
 
 msgid "The user must change this password at first login."
-msgstr "The user must change this password at first login."
+msgstr "使用者首次登入時必須變更此密碼。"
 
 msgid "This account must change its password before continuing."
-msgstr "This account must change its password before continuing."
+msgstr "此帳戶必須先變更密碼才能繼續。"
 
 msgid "Unused"
-msgstr "Unused"
+msgstr "未使用"
 
 msgid "Used"
-msgstr "Used"
+msgstr "已使用"
 
 msgid "User created successfully. Share this initial password now; it cannot be shown again later."
-msgstr "User created successfully. Share this initial password now; it cannot be shown again later."
+msgstr "使用者已建立成功。請立即分享此初始密碼；之後將無法再次顯示。"

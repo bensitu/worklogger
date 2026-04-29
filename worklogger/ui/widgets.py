@@ -10,6 +10,13 @@ from PySide6.QtGui import (
     QBrush, QColor, QFont, QFontMetrics, QImage, QPainter, QPen,
 )
 
+from config.constants import (
+    COMBO_CHART_VALUE_LABEL_GAP,
+    COMBO_CHART_VALUE_LABEL_LIGHTNESS_THRESHOLD,
+    COMBO_CHART_VALUE_LABEL_PADDING_X,
+    COMBO_CHART_VALUE_LABEL_PADDING_Y,
+    COMBO_CHART_VALUE_LABEL_RADIUS,
+)
 from config.themes import (
     COLOR_WIDGET_DEFAULT_COLOR,
     COLOR_WHEEL_BORDER_COLOR,
@@ -397,11 +404,10 @@ class ComboChart(QWidget):
         if self._mode in {"bar", "combo"}:
             values.extend(float(value) for _label, value in self._bar_items)
             if self._show_leave_markers:
-                values.extend(
-                    float(value)
-                    for _label, value in self._leave_items
-                    if value is not None
-                )
+                for index in self._leave_indices:
+                    leave_value = self._leave_value_at(index)
+                    if leave_value > 0:
+                        values.append(self._bar_value_at(index) + leave_value)
         if self._mode in {"line", "combo"}:
             values.extend(float(value) for _label, value in self._line_items)
             for y_data, _color, _style, _label in self._dashed_lines:
@@ -473,6 +479,57 @@ class ComboChart(QWidget):
             )
         p.restore()
 
+    def _value_label_rect(
+        self,
+        fm: QFontMetrics,
+        text: str,
+        center_x: float,
+        top_y: float,
+        left: float,
+        right: float,
+    ) -> QRectF:
+        label_w = fm.horizontalAdvance(text) + COMBO_CHART_VALUE_LABEL_PADDING_X * 2
+        label_h = fm.height() + COMBO_CHART_VALUE_LABEL_PADDING_Y * 2
+        label_x = center_x - label_w / 2
+        if label_w <= right - left:
+            label_x = max(left, min(label_x, right - label_w))
+        else:
+            label_x = left
+        return QRectF(label_x, top_y, label_w, label_h)
+
+    def _draw_value_label(
+        self,
+        p: QPainter,
+        rect: QRectF,
+        text: str,
+        color: QColor,
+        fill: QColor | None = None,
+        border: QColor | None = None,
+    ) -> None:
+        if fill is not None:
+            p.setBrush(QBrush(fill))
+            p.setPen(QPen(border or fill, 1))
+            p.drawRoundedRect(
+                rect,
+                COMBO_CHART_VALUE_LABEL_RADIUS,
+                COMBO_CHART_VALUE_LABEL_RADIUS,
+            )
+        p.setPen(color)
+        p.drawText(rect, Qt.AlignCenter, text)
+
+    def _bar_label_color(self, bar_color: QColor, inside_bar: bool) -> QColor:
+        if inside_bar and bar_color.lightness() <= COMBO_CHART_VALUE_LABEL_LIGHTNESS_THRESHOLD:
+            return QColor(COMBO_CHART_DOT_BORDER_COLOR)
+        return QColor(self._c_txt)
+
+    def _bar_value_at(self, index: int) -> float:
+        if index < 0 or index >= len(self._bar_items):
+            return 0.0
+        try:
+            return max(float(self._bar_items[index][1]), 0.0)
+        except (TypeError, ValueError, IndexError):
+            return 0.0
+
     def _leave_value_at(self, index: int) -> float:
         if index < 0 or index >= len(self._leave_items):
             return 0.0
@@ -534,6 +591,15 @@ class ComboChart(QWidget):
             p.setPen(QColor(self._c_ref))
             p.drawText(QRectF(label_x, label_y, label_w, label_h), Qt.AlignCenter, ref_text)
 
+        value_font = QFont("sans-serif", 8)
+        p.setFont(value_font)
+        value_fm = QFontMetrics(value_font)
+        label_h = value_fm.height() + COMBO_CHART_VALUE_LABEL_PADDING_Y * 2
+        chart_left = ml
+        chart_right = ml + cw
+        bar_value_labels: list[tuple[QRectF, str, QColor]] = []
+        bar_value_label_rects: dict[int, QRectF] = {}
+        leave_value_labels: list[tuple[QRectF, str, QColor]] = []
         if self._mode in {"bar", "combo"}:
             for i, (_label, val) in enumerate(self._bar_items):
                 bh = (min(val, max_v) / max_v) * ch
@@ -545,29 +611,96 @@ class ComboChart(QWidget):
                 if bh > 0:
                     p.drawRoundedRect(QRectF(x, y, bar_w, bh), 3, 3)
                 if val > 0:
-                    p.setPen(QColor(self._c_txt))
-                    p.setFont(QFont("sans-serif", 8))
-                    vs = f"{val:.1f}"
-                    fm = QFontMetrics(p.font())
-                    p.drawText(int(x + bar_w / 2 - fm.horizontalAdvance(vs) / 2), int(y) - 3, vs)
+                    has_stacked_leave = (
+                        self._show_leave_markers
+                        and i in self._leave_indices
+                        and self._leave_value_at(i) > 0
+                    )
+                    if has_stacked_leave:
+                        label_y = y + max(
+                            COMBO_CHART_VALUE_LABEL_PADDING_Y,
+                            (bh - label_h) / 2,
+                        )
+                        label_y = min(label_y, mt + ch - label_h)
+                    else:
+                        label_y = y - label_h - COMBO_CHART_VALUE_LABEL_GAP
+                    label_y = max(mt, label_y)
+                    text = f"{float(val):.1f}"
+                    rect = self._value_label_rect(
+                        value_fm,
+                        text,
+                        x + bar_w / 2,
+                        label_y,
+                        chart_left,
+                        chart_right,
+                    )
+                    bar_value_label_rects[i] = rect
+                    bar_value_labels.append(
+                        (rect, text, self._bar_label_color(c, has_stacked_leave))
+                    )
 
         if self._show_leave_markers and self._mode in {"bar", "combo"} and self._leave_indices:
             leave_color = QColor(self._c_leave)
             leave_color.setAlpha(155)
+            leave_text_color = QColor(self._c_txt)
             for i in sorted(self._leave_indices):
                 if i < 0 or i >= n:
                     continue
                 leave_value = self._leave_value_at(i)
                 if leave_value <= 0:
                     continue
-                marker_h = (min(leave_value, max_v) / max_v) * ch
+                work_value = self._bar_value_at(i)
+                combined_value = work_value + leave_value
+                bottom_y = (
+                    self._point_y(work_value, max_v, mt, ch)
+                    if work_value > 0
+                    else mt + ch
+                )
+                top_y = self._point_y(combined_value, max_v, mt, ch)
+                marker_h = max(1.0, bottom_y - top_y)
                 x = ml + i * slot_w + (slot_w - bar_w) / 2
-                y = mt + ch - marker_h
                 p.setPen(QPen(leave_color, 1.8, Qt.DashLine))
                 p.setBrush(Qt.NoBrush)
-                rect = QRectF(x, y, bar_w, marker_h)
+                rect = QRectF(x, top_y, bar_w, marker_h)
                 p.drawRoundedRect(rect, 3, 3)
                 self._draw_hatch(p, rect, leave_color)
+                label_text = f"{leave_value:.1f}"
+                if marker_h >= label_h + COMBO_CHART_VALUE_LABEL_GAP:
+                    label_y = top_y + (marker_h - label_h) / 2
+                else:
+                    label_y = top_y - label_h - COMBO_CHART_VALUE_LABEL_GAP
+                max_y_above_work = bottom_y - label_h - COMBO_CHART_VALUE_LABEL_GAP
+                if max_y_above_work >= mt:
+                    label_y = min(label_y, max_y_above_work)
+                label_y = max(mt, min(label_y, mt + ch - label_h))
+                label_rect = self._value_label_rect(
+                    value_fm,
+                    label_text,
+                    x + bar_w / 2,
+                    label_y,
+                    chart_left,
+                    chart_right,
+                )
+                work_rect = bar_value_label_rects.get(i)
+                if work_rect is not None and label_rect.intersects(work_rect):
+                    candidate_y = work_rect.top() - label_rect.height() - COMBO_CHART_VALUE_LABEL_GAP
+                    if candidate_y >= mt:
+                        label_rect.moveTop(candidate_y)
+                    else:
+                        right_x = x + bar_w + COMBO_CHART_VALUE_LABEL_GAP
+                        left_x = x - label_rect.width() - COMBO_CHART_VALUE_LABEL_GAP
+                        if right_x + label_rect.width() <= chart_right:
+                            label_rect.moveLeft(right_x)
+                        elif left_x >= chart_left:
+                            label_rect.moveLeft(left_x)
+                leave_value_labels.append((label_rect, label_text, leave_text_color))
+
+        p.setFont(value_font)
+        for rect, text, text_color in leave_value_labels:
+            self._draw_value_label(p, rect, text, text_color)
+
+        for rect, text, color in bar_value_labels:
+            self._draw_value_label(p, rect, text, color)
 
         if self._mode in {"line", "combo"}:
             points: list[QPointF] = []

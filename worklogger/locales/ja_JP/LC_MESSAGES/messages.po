@@ -1457,46 +1457,46 @@ msgid "Changing your password will generate a new recovery key. Your new passwor
 msgstr "パスワードを変更すると新しいリカバリーキーが生成されます。新しいパスワードは8文字以上にしてください。"
 
 msgid "Could not load the latest model catalog. Check your network and try again."
-msgstr "Could not load the latest model catalog. Check your network and try again."
+msgstr "最新のモデル一覧を読み込めませんでした。ネットワークを確認して、もう一度お試しください。"
 
 msgid "Could not save initial password."
-msgstr "Could not save initial password."
+msgstr "初期パスワードを保存できませんでした。"
 
 msgid "Create User"
-msgstr "Create User"
+msgstr "ユーザーを作成"
 
 msgid "In Use"
-msgstr "In Use"
+msgstr "使用状況"
 
 msgid "Initial Password"
-msgstr "Initial Password"
+msgstr "初期パスワード"
 
 msgid "Initial password saved."
-msgstr "Initial password saved."
+msgstr "初期パスワードを保存しました。"
 
 msgid "Loading latest model catalog..."
-msgstr "Loading latest model catalog..."
+msgstr "最新のモデル一覧を読み込んでいます..."
 
 msgid "Password change failed."
-msgstr "Password change failed."
+msgstr "パスワードの変更に失敗しました。"
 
 msgid "Save Initial Password"
-msgstr "Save Initial Password"
+msgstr "初期パスワードを保存"
 
 msgid "The initial password is generated automatically. The user must change it at first login."
-msgstr "The initial password is generated automatically. The user must change it at first login."
+msgstr "初期パスワードは自動生成されます。ユーザーは初回ログイン時に変更する必要があります。"
 
 msgid "The user must change this password at first login."
-msgstr "The user must change this password at first login."
+msgstr "ユーザーは初回ログイン時にこのパスワードを変更する必要があります。"
 
 msgid "This account must change its password before continuing."
-msgstr "This account must change its password before continuing."
+msgstr "続行する前に、このアカウントのパスワードを変更する必要があります。"
 
 msgid "Unused"
-msgstr "Unused"
+msgstr "未使用"
 
 msgid "Used"
-msgstr "Used"
+msgstr "使用済み"
 
 msgid "User created successfully. Share this initial password now; it cannot be shown again later."
-msgstr "User created successfully. Share this initial password now; it cannot be shown again later."
+msgstr "ユーザーを作成しました。この初期パスワードは後で再表示できないため、今すぐ共有してください。"

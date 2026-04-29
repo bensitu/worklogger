@@ -11,6 +11,7 @@ if sys.platform == "win32":
     except Exception:
         pass
 
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
 
 from config.constants import FORCE_PASSWORD_CHANGE_SETTING_KEY
@@ -73,6 +74,7 @@ def main():
     w = App(services=services, initial_lang=initial_lang)
     w.setWindowIcon(icon)
     w.show()
+    QTimer.singleShot(0, services.mark_current_user_used)
     sys.exit(app.exec())
 
 
