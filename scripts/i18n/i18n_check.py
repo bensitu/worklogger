@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import re
+import ast
 from pathlib import Path
 
 
@@ -11,25 +11,50 @@ LANGS = ["en_US", "zh_CN", "zh_TW", "ja_JP", "ko_KR"]
 
 
 def _ids(path: Path) -> set[str]:
-    text = path.read_text(encoding="utf-8")
     out = set()
-    for ln in text.splitlines():
-        m = re.match(r'^msgid "(.*)"$', ln)
-        if m and m.group(1):
-            out.add(m.group(1))
+    lines = path.read_text(encoding="utf-8").splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+        if not line.startswith("msgid "):
+            i += 1
+            continue
+        msgid = ast.literal_eval(line[6:].strip())
+        i += 1
+        while i < len(lines) and lines[i].strip().startswith('"'):
+            msgid += ast.literal_eval(lines[i].strip())
+            i += 1
+        if msgid:
+            out.add(msgid)
     return out
 
 
 def _untranslated_ratio(po: Path) -> float:
-    text = po.read_text(encoding="utf-8")
     total = done = 0
-    lines = text.splitlines()
-    for i, ln in enumerate(lines):
-        if re.match(r'^msgid ".+"$', ln):
-            total += 1
-            nxt = lines[i + 1] if i + 1 < len(lines) else ""
-            if re.match(r'^msgstr ".+"$', nxt):
-                done += 1
+    lines = po.read_text(encoding="utf-8").splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+        if not line.startswith("msgid "):
+            i += 1
+            continue
+        msgid = ast.literal_eval(line[6:].strip())
+        i += 1
+        while i < len(lines) and lines[i].strip().startswith('"'):
+            msgid += ast.literal_eval(lines[i].strip())
+            i += 1
+        if not msgid:
+            continue
+        total += 1
+        msgstr = ""
+        if i < len(lines) and lines[i].strip().startswith("msgstr "):
+            msgstr = ast.literal_eval(lines[i].strip()[7:].strip())
+            i += 1
+            while i < len(lines) and lines[i].strip().startswith('"'):
+                msgstr += ast.literal_eval(lines[i].strip())
+                i += 1
+        if msgstr:
+            done += 1
     return (done / total) if total else 1.0
 
 

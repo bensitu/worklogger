@@ -797,7 +797,7 @@ class AppServices:
 
     def check_update_async(
         self,
-        translator: Callable[[str], str],
+        gettext: Callable[[str], str],
         on_result: Callable[[str], None],
     ) -> None:
         """Check for a newer release in a background thread."""
@@ -818,7 +818,7 @@ class AppServices:
         bridge.done.connect(_deliver)
 
         def _fetch():
-            msg = self._check_update_sync(translator)
+            msg = self._check_update_sync(gettext)
             bridge.done.emit(msg)
 
         threading.Thread(target=_fetch, daemon=True).start()
@@ -893,12 +893,12 @@ class AppServices:
             cls._update_ssl_context = ssl.create_default_context()
             return cls._update_ssl_context
 
-    def _check_update_sync(self, translator: Callable[[str], str]) -> str:
-        _tr = translator if callable(translator) else _
+    def _check_update_sync(self, gettext: Callable[[str], str]) -> str:
+        gettext = gettext if callable(gettext) else _
         if time.monotonic() < self._update_circuit_open_until:
-            template = _tr("Could not check for updates: {}")
+            template = gettext("Could not check for updates: {}")
             try:
-                return template.format(_tr("temporarily unavailable"))
+                return template.format(gettext("temporarily unavailable"))
             except Exception:
                 return template
         req = urllib.request.Request(
@@ -942,22 +942,22 @@ class AppServices:
                 raise last_exc or RuntimeError("update_check_failed")
             latest = data.get("tag_name", "").lstrip("vV").strip()
             if latest and self._is_remote_newer(latest, APP_VERSION):
-                avail_tpl = _tr("New version available: v{0}")
+                avail_tpl = gettext("New version available: v{0}")
                 try:
                     return avail_tpl.format(latest)
                 except Exception:
                     return avail_tpl
-            return _tr("You are on the latest version")
+            return gettext("You are on the latest version")
         except urllib.error.URLError as exc:
             self._record_update_failure(exc)
             reason = getattr(exc, "reason", exc)
             if isinstance(reason, ssl.SSLCertVerificationError) or "CERTIFICATE_VERIFY_FAILED" in str(reason):
-                return _tr(
+                return gettext(
                     "Could not verify the update server certificate. "
                     "Please check your network trust settings and try again."
                 )
             err = str(exc)[:120]
-            template = _tr("Could not check for updates: {}")
+            template = gettext("Could not check for updates: {}")
             try:
                 return template.format(err)
             except Exception:
@@ -965,7 +965,7 @@ class AppServices:
         except Exception as exc:
             self._record_update_failure(exc)
             err = str(exc)[:120]
-            template = _tr("Could not check for updates: {}")
+            template = gettext("Could not check for updates: {}")
             try:
                 return template.format(err)
             except Exception:

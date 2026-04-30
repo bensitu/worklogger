@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import re
 from pathlib import Path
 
@@ -12,11 +13,18 @@ LANGS = ["en_US", "zh_CN", "zh_TW", "ja_JP", "ko_KR"]
 
 def _parse_msgids(text: str) -> list[str]:
     out: list[str] = []
-    for line in text.splitlines():
-        m = re.match(r'^msgid "(.*)"$', line)
-        if not m:
+    lines = text.splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+        if not line.startswith("msgid "):
+            i += 1
             continue
-        msgid = m.group(1)
+        msgid = ast.literal_eval(line[6:].strip())
+        i += 1
+        while i < len(lines) and lines[i].strip().startswith('"'):
+            msgid += ast.literal_eval(lines[i].strip())
+            i += 1
         if msgid:
             out.append(msgid)
     return out

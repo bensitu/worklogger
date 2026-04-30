@@ -55,6 +55,10 @@ class LoginDialog(QDialog):
         self._reset_btn = QPushButton(_("Forgot Password?"))
         self._login_btn = QPushButton(_("Login"))
         self._login_btn.setObjectName("primary_btn")
+        self._login_btn.setDefault(True)
+        for button in (self._register_btn, self._change_btn, self._reset_btn):
+            button.setAutoDefault(False)
+            button.setDefault(False)
         row.addWidget(self._register_btn)
         row.addWidget(self._change_btn)
         row.addWidget(self._reset_btn)
@@ -67,6 +71,7 @@ class LoginDialog(QDialog):
         self._change_btn.clicked.connect(self.change_password_requested.emit)
         self._reset_btn.clicked.connect(self.reset_password_requested.emit)
         self._password.returnPressed.connect(self._login)
+        self._username.setFocus()
 
     def set_username(self, username: str) -> None:
         self._username.setText(username)
