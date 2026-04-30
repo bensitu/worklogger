@@ -448,6 +448,7 @@ QWidget{{background-color:{bg};color:{txt};font-size:13px;
   font-family:-apple-system,"Segoe UI","Noto Sans",sans-serif;}}
 QDialog{{background-color:{surf};}}
 QFrame#sidebar{{background-color:{surf};border-left:1px solid {bdr};}}
+QWidget#transparent_container{{background:transparent;border:none;}}
 QLabel{{background:transparent;color:{txt};}}
 QLabel#muted{{color:{txt2};font-size:11px;font-weight:600;}}
 QLabel#time_value{{background:{btn};border:1px solid {btn_bd};border-radius:6px;

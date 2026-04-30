@@ -87,8 +87,8 @@ class SettingsDialog(QDialog):
         super().__init__(parent)
         self._app = app_ref
         self.setWindowTitle(_("Settings"))
-        self.setMinimumSize(470, 500)
-        self.resize(470, 590)
+        self.setMinimumSize(480, 500)
+        self.resize(480, 590)
         self.setModal(True)
         self.setAttribute(Qt.WA_AlwaysShowToolTips, True)
 
@@ -1213,28 +1213,17 @@ class SettingsDialog(QDialog):
         app.services.set_setting(SHOW_HOLIDAYS_SETTING_KEY, "1" if new_show_hol else "0")
         holidays_changed = new_show_hol != old_show_hol
         new_show_note_markers = self._show_note_markers.isChecked()
-        old_show_note_markers = app.services.get_setting(
-            SHOW_NOTE_MARKERS_SETTING_KEY, "1") == "1"
         app.services.set_setting(SHOW_NOTE_MARKERS_SETTING_KEY,
                                  "1" if new_show_note_markers else "0")
-        note_markers_changed = new_show_note_markers != old_show_note_markers
         new_show_overnight_indicator = self._show_overnight_indicator.isChecked()
-        old_show_overnight_indicator = app.services.get_setting(
-            SHOW_OVERNIGHT_INDICATOR_SETTING_KEY, "1") == "1"
         app.services.set_setting(
             SHOW_OVERNIGHT_INDICATOR_SETTING_KEY,
             "1" if new_show_overnight_indicator else "0",
         )
-        overnight_indicator_changed = (
-            new_show_overnight_indicator != old_show_overnight_indicator
-        )
         new_week_start = self._week_start_monday.isChecked(
         ) if hasattr(self, '_week_start_monday') else False
-        old_week_start = app.services.get_setting(
-            WEEK_START_MONDAY_SETTING_KEY, "0") == "1"
         app.services.set_setting(
             WEEK_START_MONDAY_SETTING_KEY, "1" if new_week_start else "0")
-        week_start_changed = new_week_start != old_week_start
         new_minimal_mode = app.store.state.minimal_mode
         residency_changed = False
         if self._residency_key and self._residency_switch is not None:
@@ -1289,11 +1278,5 @@ class SettingsDialog(QDialog):
                 app._load_holidays()
             else:
                 app.holidays = {}
-        if note_markers_changed:
-            app.render()
-        if overnight_indicator_changed:
-            app.render()
-        if week_start_changed:
-            app.render()
         app.render()
         self.accept()

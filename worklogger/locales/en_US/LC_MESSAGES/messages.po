@@ -1389,3 +1389,13 @@ msgstr "📅 Import Calendar (.ics)"
 
 msgid "📋 Templates"
 msgstr "📋 Templates"
+
+msgid "HEX"
+msgstr "HEX"
+
+msgid "  {size} MB  ·  RAM ≥ {ram} GB"
+msgstr "  {size} MB  ·  RAM ≥ {ram} GB"
+
+msgid "✓  Ready"
+msgstr "✓  Ready"
+

@@ -76,10 +76,6 @@ def calc_hours(start: str, end: str, break_hours: float | None) -> float:
         return 0.0
 
 
-def calc_overtime(hours: float, standard: float) -> float:
-    return max(hours - standard, 0.0)
-
-
 def detect_country() -> str:
     """Detect ISO country code from local timezone (lazy import)."""
     from config.constants import TZ_COUNTRY

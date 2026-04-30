@@ -222,7 +222,9 @@ class LocalDownloadDialog(QDialog):
         top_row = QHBoxLayout()
         radio = QRadioButton()
         lbl_name = QLabel(f"<b>{label}</b>")
-        lbl_size = QLabel(f"  {size} MB  ·  RAM ≥ {ram} GB")
+        lbl_size = QLabel(
+            _("  {size} MB  ·  RAM ≥ {ram} GB").format(size=size, ram=ram)
+        )
         lbl_size.setObjectName("muted")
         top_row.addWidget(radio)
         top_row.addWidget(lbl_name)
@@ -299,8 +301,7 @@ class LocalDownloadDialog(QDialog):
                 path  = mdir / fname if fname else None
                 if path and path.exists() and path.stat().st_size > 0:
                     if verify_model_file(mdir, eid):
-                        card["status_lbl"].setText(
-                            "✓  " + _("Ready"))
+                        card["status_lbl"].setText(_("✓  Ready"))
                         card["status_lbl"].setStyleSheet(
                             status_label_qss("success", ok_col))
                     else:

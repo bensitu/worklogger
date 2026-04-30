@@ -21,10 +21,6 @@ class AppState:
     current_user_id: int | None = None
     current_username: str | None = None
 
-    def is_logged_in(self) -> bool:
-        return self.current_user_id is not None
-
-
 class AppStore:
     def __init__(self, initial: AppState | None = None):
         self._state = initial or AppState()

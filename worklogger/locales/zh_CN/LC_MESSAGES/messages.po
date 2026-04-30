@@ -1389,3 +1389,13 @@ msgstr "📅 导入日历 (.ics)"
 
 msgid "📋 Templates"
 msgstr "📋 模板"
+
+msgid "HEX"
+msgstr "HEX"
+
+msgid "  {size} MB  ·  RAM ≥ {ram} GB"
+msgstr "  {size} MB  ·  RAM ≥ {ram} GB"
+
+msgid "✓  Ready"
+msgstr "✓  已就绪"
+

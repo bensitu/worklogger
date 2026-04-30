@@ -1001,13 +1001,6 @@ class LocalModelService:
 
     # Status helpers.
 
-    def is_model_ready(self) -> bool:
-        """True when the active model file exists and SHA-256 matches."""
-        try:
-            return verify_model_file(self._models_dir)
-        except Exception:
-            return False
-
     def is_model_present(self) -> bool:
         """True when any GGUF file exists (regardless of SHA-256 state)."""
         try:
@@ -1057,10 +1050,6 @@ class LocalModelService:
             if self._provider:
                 self._provider.unload()
                 self._provider = None
-
-    def is_provider_loaded(self) -> bool:
-        with self._load_lock:
-            return self._provider is not None and self._provider.is_available()
 
     # Inference.
 
@@ -1175,20 +1164,6 @@ class LocalModelService:
         self.unload_provider()
         delete_model_file(entry_id, self._models_dir)
 
-    def switch_model(self, new_entry_id: str) -> None:
-        """Switch active model; raises FileExistsError if current is verified."""
-        current_id = get_active_entry_id(self._models_dir)
-        if current_id == new_entry_id:
-            return
-        if self.is_model_ready():
-            raise FileExistsError(
-                f"Model '{current_id}' is already downloaded.  "
-                "Delete it before switching to another model."
-            )
-        set_active_entry(new_entry_id, self._models_dir)
-        self.unload_provider()
-
-
 # Decision helpers.
 
 def should_use_local_model(services) -> bool:
@@ -1216,55 +1191,3 @@ def is_local_model_enabled(services) -> bool:
     except Exception:
         return False
 
-
-# Backward-compatible DownloadManager shim delegating to DownloadController.
-
-class DownloadManager:
-    """Thin shim: redirects to DownloadController for backward compatibility."""
-
-    _instance: Optional["DownloadManager"] = None
-    _lock:     threading.Lock = threading.Lock()
-
-    @classmethod
-    def get(cls, _models_dir=None) -> "DownloadManager":
-        with cls._lock:
-            if cls._instance is None:
-                cls._instance = cls()
-            return cls._instance
-
-    @classmethod
-    def reset(cls) -> None:
-        from services.download_controller import DownloadController
-        DownloadController.reset()
-        with cls._lock:
-            cls._instance = None
-
-    @property
-    def is_running(self) -> bool:
-        from services.download_controller import DownloadController
-        return DownloadController.get().is_running
-
-    def get_progress(self) -> tuple:
-        from services.download_controller import DownloadController
-        return DownloadController.get().get_progress()
-
-    def download_model(
-        self,
-        progress_cb=None,
-        status_cb=None,
-        done_cb=None,
-        error_cb=None,
-        entry_id: str = "local",
-    ) -> None:
-        from services.download_controller import DownloadController
-        DownloadController.get().start(
-            entry_id=entry_id,
-            progress_cb=progress_cb,
-            status_cb=status_cb,
-            done_cb=done_cb,
-            error_cb=error_cb,
-        )
-
-    def cancel(self) -> None:
-        from services.download_controller import DownloadController
-        DownloadController.get().cancel()

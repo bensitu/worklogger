@@ -52,10 +52,6 @@ class WorkRecord(NamedTuple):
         """Return work_type, falling back to 'normal' for NULL / empty rows."""
         return self.work_type or "normal"
 
-    def safe_break(self, default: float = 0.0) -> float:
-        """Return break_hours, falling back to *default* for NULL rows."""
-        return float(self.break_hours) if self.break_hours is not None else default
-
     def safe_note(self) -> str:
         """Return note string, never None."""
         return self.note or ""

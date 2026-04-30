@@ -32,20 +32,6 @@ def month_stats(month_rows: list, work_hours: float):
     return total, ot, wd, ld, total / wd if wd else 0.0
 
 
-def monthly_chart_data(record_getter, y: int, m: int):
-    from calendar import monthrange
-    first, days = monthrange(y, m)
-    first = (first + 1) % 7
-    weekly: dict[int, float] = {}
-    for d in range(1, days + 1):
-        row = (d + first - 1) // 7
-        rec = record_getter(date(y, m, d).isoformat())
-        if rec and rec.has_times and not rec.is_leave:
-            weekly[row] = weekly.get(row, 0.0) + calc_hours(rec.start, rec.end, rec.break_hours)
-    max_r = (days + first - 1) // 7
-    return [(f"W{r+1}", weekly.get(r, 0.0)) for r in range(max_r + 1)]
-
-
 def monthly_chart_data_v2(record_getter, y: int, m: int) -> tuple[list, list, set[int]]:
     from calendar import monthrange
     first, days = monthrange(y, m)
@@ -102,6 +88,7 @@ def _bundle(
     totals: list[float],
     unit_counts: list[int],
     leave_hours: list[float],
+    leave_unit_counts: list[int],
     metric: str,
     include_leaves: bool,
 ) -> ChartDataBundle:
@@ -109,10 +96,14 @@ def _bundle(
         _metric_value(total, units, metric)
         for total, units in zip(totals, unit_counts)
     ]
-    leave_indices = {i for i, hours in enumerate(leave_hours) if include_leaves and hours > 0}
+    leave_values = [
+        _metric_value(total, units, metric)
+        for total, units in zip(leave_hours, leave_unit_counts)
+    ]
+    leave_indices = {i for i, hours in enumerate(leave_values) if include_leaves and hours > 0}
     leave_line_data = [
         hours if include_leaves and hours > 0 else None
-        for hours in leave_hours
+        for hours in leave_values
     ]
     data = list(zip(labels, values))
     return ChartDataBundle(
@@ -120,7 +111,7 @@ def _bundle(
         line_data=data,
         leave_indices=leave_indices,
         leave_line_data=leave_line_data,
-        leave_hours_data=list(zip(labels, leave_hours)),
+        leave_hours_data=list(zip(labels, leave_values)),
     )
 
 
@@ -142,6 +133,7 @@ def monthly_chart_data_v3(
     totals = [0.0 for _label in labels]
     unit_counts = [0 for _label in labels]
     leave_hours = [0.0 for _label in labels]
+    leave_unit_counts = [0 for _label in labels]
     cur = start
     while cur <= end:
         row = (cur.day + first - 1) // 7
@@ -151,9 +143,12 @@ def monthly_chart_data_v3(
             if hours > 0:
                 totals[row] += hours
                 unit_counts[row] += 1
-            leave_hours[row] += _leave_hours(rec, standard_hours)
+            leave_value = _leave_hours(rec, standard_hours)
+            if leave_value > 0:
+                leave_hours[row] += leave_value
+                leave_unit_counts[row] += 1
         cur += timedelta(days=1)
-    return _bundle(labels, totals, unit_counts, leave_hours, metric, include_leaves)
+    return _bundle(labels, totals, unit_counts, leave_hours, leave_unit_counts, metric, include_leaves)
 
 
 def quarterly_chart_data_v3(
@@ -167,6 +162,7 @@ def quarterly_chart_data_v3(
     totals = [0.0 for _label in labels]
     unit_sets: list[set[tuple[int, int]]] = [set() for _label in labels]
     leave_hours = [0.0 for _label in labels]
+    leave_unit_sets: list[set[tuple[int, int]]] = [set() for _label in labels]
     for month in range(1, 13):
         q_idx = (month - 1) // 3
         for rec in month_records_getter(f"{y}-{month:02d}"):
@@ -176,9 +172,15 @@ def quarterly_chart_data_v3(
                 d = date.fromisoformat(rec.date)
                 iso = d.isocalendar()
                 unit_sets[q_idx].add((iso.year, iso.week))
-            leave_hours[q_idx] += _leave_hours(rec, standard_hours)
+            leave_value = _leave_hours(rec, standard_hours)
+            if leave_value > 0:
+                leave_hours[q_idx] += leave_value
+                d = date.fromisoformat(rec.date)
+                iso = d.isocalendar()
+                leave_unit_sets[q_idx].add((iso.year, iso.week))
     unit_counts = [len(units) for units in unit_sets]
-    return _bundle(labels, totals, unit_counts, leave_hours, metric, include_leaves)
+    leave_unit_counts = [len(units) for units in leave_unit_sets]
+    return _bundle(labels, totals, unit_counts, leave_hours, leave_unit_counts, metric, include_leaves)
 
 
 def annual_chart_data_v3(
@@ -193,6 +195,7 @@ def annual_chart_data_v3(
     totals = [0.0 for _label in labels]
     unit_counts = [0 for _label in labels]
     leave_hours = [0.0 for _label in labels]
+    leave_unit_counts = [0 for _label in labels]
     for month in range(1, 13):
         idx = month - 1
         for rec in month_records_getter(f"{y}-{month:02d}"):
@@ -200,8 +203,11 @@ def annual_chart_data_v3(
             if hours > 0:
                 totals[idx] += hours
                 unit_counts[idx] += 1
-            leave_hours[idx] += _leave_hours(rec, standard_hours)
-    return _bundle(labels, totals, unit_counts, leave_hours, metric, include_leaves)
+            leave_value = _leave_hours(rec, standard_hours)
+            if leave_value > 0:
+                leave_hours[idx] += leave_value
+                leave_unit_counts[idx] += 1
+    return _bundle(labels, totals, unit_counts, leave_hours, leave_unit_counts, metric, include_leaves)
 
 
 def export_chart_csv(
@@ -217,18 +223,3 @@ def export_chart_csv(
         leave_by_label = dict(bundle.leave_hours_data)
         for label, value in bundle.bar_data:
             writer.writerow([label, f"{value:.2f}", f"{leave_by_label.get(label, 0.0):.2f}"])
-
-
-def quarter_hours(month_records_getter, y: int):
-    return [(f"Q{q}", sum(
-        sum(calc_hours(r.start, r.end, r.break_hours)
-            for r in month_records_getter(f"{y}-{m:02d}") if r.has_times and not r.is_leave)
-        for m in range((q - 1) * 3 + 1, q * 3 + 1)))
-        for q in range(1, 5)]
-
-
-def annual_hours(month_records_getter, y: int, month_short: list[str]):
-    return [(month_short[m - 1],
-             sum(calc_hours(r.start, r.end, r.break_hours)
-                 for r in month_records_getter(f"{y}-{m:02d}") if r.has_times and not r.is_leave))
-            for m in range(1, 13)]

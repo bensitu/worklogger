@@ -1,6 +1,7 @@
 from __future__ import annotations
 from calendar import monthrange
 from datetime import datetime as dt, date, timedelta
+from html import escape
 
 from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
@@ -288,9 +289,6 @@ class ReportDialog(QDialog):
         year, month = app.selected.year, app.selected.month
         _first_weekday, last_day = monthrange(year, month)
         return f"{year}-{month:02d}-01", f"{year}-{month:02d}-{last_day:02d}"
-
-    def _current_period(self) -> tuple[str, str]:
-        return self._period_for_type(self._current_type())
 
     def _editor_for_type(self, report_type: str) -> QTextEdit:
         return self._week_edit if report_type == "weekly" else self._month_edit
@@ -821,7 +819,7 @@ class ChartDialog(QDialog):
             f"{self._metric_label()} ({unit})",
             f"{msg('analytics_leave_hours')} ({unit})",
         )
-        QMessageBox.information(self, "Export", _("Saved: {}").format(path))
+        QMessageBox.information(self, _("Export"), _("Saved: {}").format(path))
 
     def _export_pdf(self):
         bundle, chart_widget = self._current()
@@ -1241,10 +1239,11 @@ class QuickLogDialog(QDialog):
                 row_l.setContentsMargins(5, 0, 4, 0)
                 row_l.setSpacing(4)
                 text_lbl = QLabel(full_text)
+                text_lbl.setTextFormat(Qt.PlainText)
                 text_lbl.setSizePolicy(
                     QSizePolicy.Expanding, QSizePolicy.Preferred)
                 text_lbl.setCursor(Qt.PointingHandCursor)
-                text_lbl.setToolTip(full_text)
+                text_lbl.setToolTip(escape(full_text, quote=True))
                 text_lbl.setStyleSheet(quick_log_label_hover_qss(hover_color))
                 text_lbl.mousePressEvent = lambda e, it=item, ent=entry: self._activate_row(
                     it, ent)

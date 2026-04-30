@@ -815,21 +815,6 @@ class DB:
             self.conn.commit()
         return recovery_key if cur.rowcount else None
 
-    def reset_password(self, user_id: int, new_pw: str) -> bool:
-        if not self.get_user(user_id):
-            return False
-        salt = secrets.token_hex(16)
-        password_hash = self._password_hash(new_pw, salt)
-        with self._write_lock:
-            self.conn.execute(
-                "UPDATE users SET password_hash=?, salt=?, remember_token=NULL, "
-                "remember_token_expires_at=NULL, password_changed_at=? "
-                "WHERE id=?",
-                (password_hash, salt, _utc_now_iso(), user_id),
-            )
-            self.conn.commit()
-        return True
-
     def reset_password_and_regenerate_recovery_key(
         self,
         user_id: int,
@@ -1076,10 +1061,12 @@ class DB:
 
     def month(self, ym: str, *, user_id: int) -> list[WorkRecord]:
         c = self.conn.cursor()
+        start_d = f"{ym}-01"
+        end_d = f"{ym}-31"
         c.execute(
             "SELECT d,start,end,break,note,work_type,overnight "
-            "FROM worklog WHERE user_id=? AND d LIKE ? ORDER BY d",
-            (user_id, ym + "%"),
+            "FROM worklog WHERE user_id=? AND d BETWEEN ? AND ? ORDER BY d",
+            (user_id, start_d, end_d),
         )
         return [WorkRecord(*r) for r in c.fetchall()]
 

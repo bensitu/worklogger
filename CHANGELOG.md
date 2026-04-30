@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Improved data and service resilience with streamed CSV import processing, more efficient monthly SQLite range queries, stricter authentication input validation, and retry/backoff handling for external AI requests.
 - Leave, comp leave, and sick leave entries no longer contribute to work totals, overtime, work-day counts, reports, or exported work calendar events.
 - Analytics leave overlays now use actual leave hours instead of filling remaining target time or using a fixed-height marker.
 - First-login forced password changes generate a recovery key without requiring the old or initial password.
@@ -25,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed the Analytics Average metric so leave overlays in both Bar and Line charts use averaged leave hours instead of total leave hours.
 - Fixed analytics display when a week has both full-day leave and enough work hours to reach or exceed the weekly target.
 - Fixed leave records with explicit start/end times over 8 hours being treated as overtime and attendance.
 - Fixed the issue where the “Previous/Next” date buttons were unresponsive when the selected date did not have valid start and end times.

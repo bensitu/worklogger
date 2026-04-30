@@ -1,7 +1,6 @@
 """Application-wide constants — single source of truth."""
 
 APP_VERSION = "3.1.0"
-APP_NAME = "Work Logger"
 APP_AUTHOR = "Ben Situ"
 APP_ID = "dev.worklogger.app.v1"
 GITHUB_URL = "https://github.com/bensitu/worklogger"
@@ -25,7 +24,6 @@ UPDATE_CHECK_CIRCUIT_FAILURES = 3
 UPDATE_CHECK_CIRCUIT_COOLDOWN_SECONDS = 300
 UPDATE_RESPONSE_MAX_BYTES = 512 * 1024
 GPL_URL = "https://www.gnu.org/licenses/gpl-3.0.html"
-LICENSE_SPDX = "GPL-3.0-or-later"
 
 ASSETS_DIR_NAME = "assets"
 FONTS_DIR_NAME = "fonts"
@@ -77,8 +75,6 @@ COMBO_CHART_VALUE_LABEL_LIGHTNESS_THRESHOLD = 160
 REMEMBER_TOKEN_KEY = "remember_token"
 REMEMBER_SERVICE_NAME = "WorkLogger"
 REMEMBER_ACTIVE_USER_KEY = "__active_user__"
-REMEMBER_STORE_KEYRING = "keyring"
-REMEMBER_STORE_FERNET_FILE = "fernet_file"
 REMEMBER_FALLBACK_FILENAME = ".worklogger_remember"
 REMEMBER_FILE_PREFIX_V1 = "enc1:"
 REMEMBER_FILE_PREFIX_V2 = "enc2:"

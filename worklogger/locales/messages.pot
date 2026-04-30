@@ -1343,3 +1343,13 @@ msgstr ""
 
 msgid "📋 Templates"
 msgstr ""
+
+msgid "HEX"
+msgstr ""
+
+msgid "  {size} MB  ·  RAM ≥ {ram} GB"
+msgstr ""
+
+msgid "✓  Ready"
+msgstr ""
+

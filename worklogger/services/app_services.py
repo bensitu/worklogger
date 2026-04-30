@@ -75,6 +75,25 @@ class AuthService:
         self.db = db
 
     @staticmethod
+    def _require_username(username: str) -> str:
+        if not isinstance(username, str):
+            raise TypeError("username_must_be_string")
+        username = username.strip()
+        if not username:
+            raise ValueError("username_required")
+        return username
+
+    @staticmethod
+    def _require_password(password: str, field_name: str = "password") -> str:
+        if not isinstance(password, str):
+            raise TypeError(f"{field_name}_must_be_string")
+        if not password:
+            raise ValueError(f"{field_name}_required")
+        if len(password) < PASSWORD_MIN_LENGTH:
+            raise ValueError("password_too_short")
+        return password
+
+    @staticmethod
     def generate_recovery_key() -> str:
         return secrets.token_hex(16)
 
@@ -88,12 +107,12 @@ class AuthService:
         password: str,
         recovery_key: str | None = None,
     ) -> int:
-        username = username.strip()
-        if not username:
-            raise ValueError("username_required")
-        if len(password) < PASSWORD_MIN_LENGTH:
-            raise ValueError("password_too_short")
-        recovery_key = recovery_key.strip() if recovery_key else None
+        username = self._require_username(username)
+        password = self._require_password(password)
+        if recovery_key is not None:
+            if not isinstance(recovery_key, str):
+                raise TypeError("recovery_key_must_be_string")
+            recovery_key = recovery_key.strip() or None
         is_first_user = self.db.user_count() == 0
         try:
             return self.db.create_user(
@@ -106,6 +125,11 @@ class AuthService:
             raise ValueError("username_exists") from exc
 
     def login(self, username: str, password: str, remember: bool = False) -> int:
+        username = self._require_username(username)
+        if not isinstance(password, str):
+            raise TypeError("password_must_be_string")
+        if not password:
+            raise ValueError("password_required")
         user_id = self.db.verify_user(username, password)
         if user_id is None:
             raise ValueError("invalid_credentials")
@@ -124,6 +148,8 @@ class AuthService:
         return user_id
 
     def login_with_token(self, token: str) -> int | None:
+        if not isinstance(token, str) or not token:
+            return None
         user = self.db.get_user_by_token(token)
         if not user:
             return None
@@ -131,8 +157,7 @@ class AuthService:
         return user_id
 
     def force_change_password(self, user_id: int, new_pw: str) -> str | None:
-        if len(new_pw) < PASSWORD_MIN_LENGTH:
-            raise ValueError("password_too_short")
+        new_pw = self._require_password(new_pw, "new_password")
         new_recovery_key = self.db.reset_password_and_regenerate_recovery_key(
             user_id,
             new_pw,
@@ -154,8 +179,10 @@ class AuthService:
         recovery_key: str,
         new_pw: str,
     ) -> str | None:
-        if len(new_pw) < PASSWORD_MIN_LENGTH:
-            raise ValueError("password_too_short")
+        username = self._require_username(username)
+        if not isinstance(recovery_key, str) or not recovery_key.strip():
+            raise ValueError("recovery_key_required")
+        new_pw = self._require_password(new_pw, "new_password")
         user_id = self.db.verify_recovery_key(username, recovery_key)
         if user_id is None:
             return None
@@ -175,8 +202,9 @@ class AuthService:
         return new_recovery_key
 
     def change_password(self, user_id: int, old_pw: str, new_pw: str) -> str | None:
-        if len(new_pw) < PASSWORD_MIN_LENGTH:
-            raise ValueError("password_too_short")
+        if not isinstance(old_pw, str) or not old_pw:
+            raise ValueError("old_password_required")
+        new_pw = self._require_password(new_pw, "new_password")
         new_recovery_key = self.db.change_password_and_regenerate_recovery_key(
             user_id,
             old_pw,
@@ -199,6 +227,9 @@ class AuthService:
         old_pw: str,
         new_pw: str,
     ) -> str | None:
+        username = self._require_username(username)
+        if not isinstance(old_pw, str) or not old_pw:
+            raise ValueError("old_password_required")
         user_id = self.db.verify_user(username, old_pw)
         if user_id is None:
             return None
@@ -229,8 +260,9 @@ class AuthService:
         *,
         clear_remember: bool = True,
     ) -> str | None:
-        if len(new_pw) < PASSWORD_MIN_LENGTH:
-            raise ValueError("password_too_short")
+        if not isinstance(admin_password, str) or not admin_password:
+            raise ValueError("admin_password_required")
+        new_pw = self._require_password(new_pw, "new_password")
         if not self.db.is_admin(admin_user_id):
             raise PermissionError("admin_required")
         if not self.db.verify_user_id(admin_user_id, admin_password):
@@ -262,14 +294,13 @@ class AuthService:
     ) -> tuple[int, str]:
         if not self.db.is_admin(admin_user_id):
             raise PermissionError("admin_required")
+        if not isinstance(admin_password, str) or not admin_password:
+            raise ValueError("admin_password_required")
         if not self.db.verify_user_id(admin_user_id, admin_password):
             raise ValueError("admin_password_incorrect")
-        username = username.strip()
-        if not username:
-            raise ValueError("username_required")
+        username = self._require_username(username)
         password = initial_password or self.generate_initial_password()
-        if len(password) < PASSWORD_MIN_LENGTH:
-            raise ValueError("password_too_short")
+        password = self._require_password(password, "initial_password")
         try:
             user_id = self.db.create_user(username, password, is_admin=False)
         except sqlite3.IntegrityError as exc:
@@ -290,6 +321,8 @@ class AuthService:
     ) -> bool:
         if not self.db.is_admin(admin_user_id):
             raise PermissionError("admin_required")
+        if not isinstance(admin_password, str) or not admin_password:
+            raise ValueError("admin_password_required")
         if not self.db.verify_user_id(admin_user_id, admin_password):
             raise ValueError("admin_password_incorrect")
         if not enabled and self.db.is_admin(target_user_id) and self.db.admin_count() == 1:
@@ -304,11 +337,11 @@ class AuthService:
     ) -> bool:
         if not self.db.is_admin(admin_user_id):
             raise PermissionError("admin_required")
+        if not isinstance(admin_password, str) or not admin_password:
+            raise ValueError("admin_password_required")
         if not self.db.check_admin_password(admin_user_id, admin_password):
             raise ValueError("admin_password_incorrect")
-        target_username = target_username.strip()
-        if not target_username:
-            raise ValueError("username_required")
+        target_username = self._require_username(target_username)
         admin = self.db.get_user(admin_user_id)
         return self.db.delete_user(
             target_username,
@@ -322,9 +355,7 @@ class AuthService:
     ) -> str:
         if not self.db.is_admin(admin_user_id):
             raise PermissionError("admin_required")
-        target_username = target_username.strip()
-        if not target_username:
-            raise ValueError("username_required")
+        target_username = self._require_username(target_username)
         return self.db.regenerate_recovery_key(target_username)
 
 
@@ -1013,36 +1044,10 @@ class AppServices:
             current_username=self.current_username,
         )
 
-    def save_settings(self, state: AppState) -> None:
-        mapping: dict[str, str] = {
-            LANG_SETTING_KEY: state.lang,
-            THEME_SETTING_KEY: state.theme,
-            CUSTOM_THEME_SETTING_KEY: state.custom_color or DEFAULT_CUSTOM_COLOR,
-            DARK_MODE_SETTING_KEY: "1" if state.dark else "0",
-            WORK_HOURS_SETTING_KEY: str(state.work_hours),
-            DEFAULT_BREAK_SETTING_KEY: str(state.default_break),
-            MONTHLY_TARGET_SETTING_KEY: str(state.monthly_target),
-            SHOW_HOLIDAYS_SETTING_KEY: "1" if state.show_holidays else "0",
-            SHOW_NOTE_MARKERS_SETTING_KEY: "1" if state.show_note_markers else "0",
-            SHOW_OVERNIGHT_INDICATOR_SETTING_KEY: "1" if state.show_overnight_indicator else "0",
-            WEEK_START_MONDAY_SETTING_KEY: "1" if state.week_start_monday else "0",
-            TIME_INPUT_MODE_SETTING_KEY: state.time_input_mode,
-            MINIMAL_MODE_SETTING_KEY: "1" if state.minimal_mode else "0",
-        }
-        for key, value in mapping.items():
-            self.set_setting(key, value)
-
     def set_custom_theme(self, accent_hex: str) -> AppState:
         normalized = set_custom_theme(accent_hex)
         self.set_setting(CUSTOM_THEME_SETTING_KEY, normalized)
         self.set_setting(THEME_SETTING_KEY, "custom")
-        return self.load_settings()
-
-    def toggle_minimal_mode(self, enabled: bool) -> AppState:
-        self.set_setting(MINIMAL_MODE_SETTING_KEY, "1" if enabled else "0")
-        return self.load_settings()
-
-    def load_settings_snapshot(self) -> AppState:
         return self.load_settings()
 
     # Secret (API key) helpers.

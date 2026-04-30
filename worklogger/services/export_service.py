@@ -104,47 +104,49 @@ def import_csv(path: str, db: "DB", required_cols: set,
     from config.constants import WORK_TYPE_KEYS
     errors: list[str] = []
     imported = 0
-    # Accept both plain UTF-8 and UTF-8 with BOM.
-    with open(path, encoding="utf-8-sig") as f:
-        rows = list(csv.reader(f))
-    if not rows:
-        raise ValueError("empty")
-    raw_header = [h.strip().lower() for h in rows[0]]
-    header = set(raw_header)
-    normalized = {"break" if h == "lunch" else h for h in header}
-    missing = required_cols - normalized
-    if missing:
-        raise ValueError(f"missing:{','.join(missing)}")
-    idx_map = {name: i for i, name in enumerate(raw_header)}
-    break_idx = idx_map.get("break", idx_map.get("lunch"))
-    for i, row in enumerate(rows[1:], 2):
-        try:
-            if len(row) < 5:
-                raise ValueError(f"only {len(row)} columns")
-            d = row[idx_map["date"]]
-            s = row[idx_map["start"]]
-            e = row[idx_map["end"]]
-            b = row[break_idx] if break_idx is not None and break_idx < len(
-                row) else ""
-            n = row[idx_map["note"]]
-            wt_idx = idx_map.get("work_type")
-            wt = row[wt_idx] if wt_idx is not None and wt_idx < len(
-                row) and row[wt_idx] in WORK_TYPE_KEYS else "normal"
-            datetime.strptime(d, "%Y-%m-%d")
-            if s:
-                datetime.strptime(s, "%H:%M")
-            if e:
-                datetime.strptime(e, "%H:%M")
-            db.save(
-                d, s or None, e or None,
-                float(b) if b else default_break,
-                n,
-                wt,
-                user_id=user_id,
-            )
-            imported += 1
-        except Exception as ex:
-            errors.append(f"Row {i}: {ex}")
+    # Accept both plain UTF-8 and UTF-8 with BOM, and stream rows to avoid
+    # loading large imports entirely into memory.
+    with open(path, encoding="utf-8-sig", newline="") as f:
+        reader = csv.reader(f)
+        first_row = next(reader, None)
+        if not first_row:
+            raise ValueError("empty")
+        raw_header = [h.strip().lower() for h in first_row]
+        header = set(raw_header)
+        normalized = {"break" if h == "lunch" else h for h in header}
+        missing = required_cols - normalized
+        if missing:
+            raise ValueError(f"missing:{','.join(missing)}")
+        idx_map = {name: i for i, name in enumerate(raw_header)}
+        break_idx = idx_map.get("break", idx_map.get("lunch"))
+        for i, row in enumerate(reader, 2):
+            try:
+                if len(row) < 5:
+                    raise ValueError(f"only {len(row)} columns")
+                d = row[idx_map["date"]]
+                s = row[idx_map["start"]]
+                e = row[idx_map["end"]]
+                b = row[break_idx] if break_idx is not None and break_idx < len(
+                    row) else ""
+                n = row[idx_map["note"]]
+                wt_idx = idx_map.get("work_type")
+                wt = row[wt_idx] if wt_idx is not None and wt_idx < len(
+                    row) and row[wt_idx] in WORK_TYPE_KEYS else "normal"
+                datetime.strptime(d, "%Y-%m-%d")
+                if s:
+                    datetime.strptime(s, "%H:%M")
+                if e:
+                    datetime.strptime(e, "%H:%M")
+                db.save(
+                    d, s or None, e or None,
+                    float(b) if b else default_break,
+                    n,
+                    wt,
+                    user_id=user_id,
+                )
+                imported += 1
+            except Exception as ex:
+                errors.append(f"Row {i}: {ex}")
     return imported, errors
 
 

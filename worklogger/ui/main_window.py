@@ -3,6 +3,7 @@
 from __future__ import annotations
 import sys
 import threading
+from html import escape
 from datetime import datetime, date, timedelta
 from calendar import monthrange
 
@@ -270,7 +271,7 @@ class App(QWidget):
         self.render()
 
     def _build_ui(self):
-        self.setWindowTitle("Work Logger")
+        self.setWindowTitle(_("Work Logger"))
         self.resize(1100, 700)
         self.setMinimumSize(900, 580)
 
@@ -506,6 +507,7 @@ class App(QWidget):
         sv.addWidget(self.settings_btn)
 
         analytics_row = QWidget()
+        analytics_row.setObjectName("transparent_container")
         self._analytics_row = analytics_row
         act_row = QHBoxLayout(analytics_row)
         act_row.setContentsMargins(0, 0, 0, 0)
@@ -1044,7 +1046,7 @@ class App(QWidget):
             btn = CalendarDayButton("\n".join(lines))
             btn.setMinimumHeight(86)
             btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-            bg, fg, bdr_c, bdr_w = self._cell_style(dt)
+            bg, fg, bdr_c, _bdr_w = self._cell_style(dt)
             wt_acc = WT_BORDER_ACCENT[self.dark].get(wt)
             btn.setStyleSheet(
                 calendar_cell_qss(bg, fg, bdr_c, hover_border)
@@ -1056,7 +1058,7 @@ class App(QWidget):
             marker_color = CALENDAR_STYLE["overnight_marker_by_mode"][bool(self.dark)]
             btn.set_overnight_marker(overnight_marker, marker_color)
             if show_pending_note:
-                btn.setToolTip(note_text[:200])
+                btn.setToolTip(escape(note_text[:200], quote=True))
             else:
                 btn.setToolTip("")
             btn.clicked.connect(lambda _, x=dt: self.select(x))

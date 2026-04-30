@@ -8,8 +8,6 @@ Public API
 ``DownloadController.get()``     — process singleton
 ``ctrl.start(entry_id, ...)``   — begin / resume download
 ``ctrl.cancel()``               — stop after current chunk
-``ctrl.is_running``             — True while download in progress
-``ctrl.get_progress()``         — (downloaded_bytes, total_bytes)
 """
 
 from __future__ import annotations
@@ -58,15 +56,6 @@ class DownloadController:
     def reset(cls) -> None:
         with cls._class_lock:
             cls._instance = None
-
-    @property
-    def is_running(self) -> bool:
-        with self._lock:
-            return self._thread is not None and self._thread.is_alive()
-
-    def get_progress(self) -> tuple[int, int]:
-        with self._lock:
-            return self._downloaded, self._total
 
     def start(
         self,

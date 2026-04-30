@@ -84,8 +84,8 @@ def _seed_packaged_custom_templates(target_dir: str) -> None:
         pass
 
 
-# Module-level path used by dialogs and template-management flows.
-CUSTOM_DIR = _custom_dir()
+# Ensure the writable custom template directory is available at import time.
+_custom_dir()
 
 def get_template(lang: str, type_key: str) -> str:
     """Load the default built-in template for *lang* / *type_key*.
@@ -167,15 +167,6 @@ def save_custom_template(name: str, type_key: str, content: str) -> str:
     with open(os.path.join(cdir, fname), "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     return fname
-
-
-def get_custom_template_content(filename: str) -> str:
-    try:
-        raw  = _read(os.path.join(_custom_dir(), filename))
-        data = json.loads(raw)
-        return data.get("content", "")
-    except Exception:
-        return ""
 
 
 def delete_custom_template(filename: str) -> None:

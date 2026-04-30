@@ -28,6 +28,7 @@ from config.themes import (
     normalize_hex_color,
     switch_default_colors,
 )
+from utils.i18n import _
 
 
 class SwitchButton(QWidget):
@@ -249,7 +250,7 @@ class ColorPickerSliders(QWidget):
             layout.addWidget(slider, row, 1)
             layout.addWidget(value_label, row, 2)
 
-        layout.addWidget(QLabel("HEX"), 3, 0)
+        layout.addWidget(QLabel(_("HEX")), 3, 0)
         self._hex = QLineEdit()
         self._hex.setMaxLength(7)
         self._hex.editingFinished.connect(self._from_hex)
@@ -751,20 +752,3 @@ class ComboChart(QWidget):
             p.drawText(int(x - tw / 2), h - mb + fm2.ascent() + 3, label)
         p.end()
 
-
-class BarChart(ComboChart):
-    """Backward-compatible bar-only chart wrapper."""
-
-    def __init__(self, items: list, ref: float, dark: bool,
-                 accent: str, unit: str = "h",
-                 no_data: str = "No data", parent=None):
-        super().__init__(
-            items,
-            ref=ref,
-            dark=dark,
-            accent=accent,
-            mode="bar",
-            unit=unit,
-            no_data=no_data,
-            parent=parent,
-        )

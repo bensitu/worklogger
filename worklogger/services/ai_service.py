@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import threading
 import socket
+import time
 import urllib.parse
 import urllib.request
 import urllib.error
@@ -49,6 +50,7 @@ class _CallbackInvoker(QObject):
 # Keep references to short-lived test invokers so they are not garbage-collected
 # while the background test thread is running. Entries are removed on done/error.
 MAX_RESPONSE_BYTES = 4 * 1024 * 1024
+AI_REQUEST_RETRY_DELAYS = (0.5, 1.0)
 _test_invokers: list[_CallbackInvoker] = []
 _test_invokers_lock = threading.Lock()
 
@@ -64,6 +66,39 @@ def _read_limited_response(resp) -> bytes:
     if len(body) > MAX_RESPONSE_BYTES:
         raise ValueError("AI response too large (> 4MB)")
     return body
+
+
+def _is_retryable_http_error(exc: urllib.error.HTTPError) -> bool:
+    return exc.code == 429 or 500 <= exc.code <= 599
+
+
+def _read_json_with_retries(
+    req: urllib.request.Request,
+    *,
+    timeout: float,
+    is_cancelled: Callable[[], bool],
+    on_wait: Callable[[], None],
+) -> dict:
+    attempts = len(AI_REQUEST_RETRY_DELAYS) + 1
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                on_wait()
+                body = _read_limited_response(resp)
+                return json.loads(body) if body else {}
+        except urllib.error.HTTPError as exc:
+            if not _is_retryable_http_error(exc) or attempt >= attempts - 1:
+                raise
+            if is_cancelled():
+                raise
+            time.sleep(AI_REQUEST_RETRY_DELAYS[attempt])
+        except (urllib.error.URLError, TimeoutError):
+            if attempt >= attempts - 1:
+                raise
+            if is_cancelled():
+                raise
+            time.sleep(AI_REQUEST_RETRY_DELAYS[attempt])
+    return {}
 
 
 def _retain_test_invoker(invoker: _CallbackInvoker) -> None:
@@ -254,10 +289,12 @@ class AIWorker:
             req = _build_request(url, is_anthropic, api_key,
                                  model, messages, max_tokens)
             _status_key("ai_status_connect", model=model)
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                _status_key("ai_status_wait")
-                body = _read_limited_response(resp)
-                data = json.loads(body) if body else {}
+            data = _read_json_with_retries(
+                req,
+                timeout=60,
+                is_cancelled=self._cancelled.is_set,
+                on_wait=lambda: _status_key("ai_status_wait"),
+            )
             if self._cancelled.is_set():
                 return
             _status_key("ai_status_parse")

@@ -21,8 +21,6 @@ from config.constants import (
     REMEMBER_FILE_PREFIX_V1,
     REMEMBER_FILE_PREFIX_V2,
     REMEMBER_SERVICE_NAME,
-    REMEMBER_STORE_FERNET_FILE,
-    REMEMBER_STORE_KEYRING,
     REMEMBER_TOKEN_KEY,
 )
 from data.db import DB_PATH
@@ -40,7 +38,6 @@ MISSING_CRYPTOGRAPHY_MESSAGE = (
 class RememberSession:
     username: str
     token: str
-    backend: str
 
 
 def _token_path() -> Path:
@@ -246,9 +243,9 @@ def _cleanup_file_after_keyring_save(username: str) -> None:
 def _load_from_file() -> Optional[RememberSession]:
     active, tokens = _read_file_store()
     if active and tokens.get(active):
-        return RememberSession(active, tokens[active], REMEMBER_STORE_FERNET_FILE)
+        return RememberSession(active, tokens[active])
     if "" in tokens:
-        return RememberSession("", tokens[""], REMEMBER_STORE_FERNET_FILE)
+        return RememberSession("", tokens[""])
     return None
 
 
@@ -257,19 +254,14 @@ def load_remember_session() -> Optional[RememberSession]:
     if active_username:
         token = _keyring_get(active_username)
         if token:
-            return RememberSession(active_username, token, REMEMBER_STORE_KEYRING)
+            return RememberSession(active_username, token)
         _keyring_delete(REMEMBER_ACTIVE_USER_KEY)
 
     legacy_token = _legacy_keyring_get()
     if legacy_token:
-        return RememberSession("", legacy_token, REMEMBER_STORE_KEYRING)
+        return RememberSession("", legacy_token)
 
     return _load_from_file()
-
-
-def load_remember_token() -> str:
-    session = load_remember_session()
-    return session.token if session else ""
 
 
 def save_remember_token(username: str, token: str) -> None:

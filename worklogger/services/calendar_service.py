@@ -1,8 +1,11 @@
 """Calendar service: ICS parsing with time info for AI context generation."""
 
 from __future__ import annotations
+import logging
 import re
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
+
+_log = logging.getLogger(__name__)
 
 
 def parse_ics_rich(filepath: str) -> list[dict]:
@@ -20,7 +23,8 @@ def parse_ics_rich(filepath: str) -> list[dict]:
     try:
         with open(filepath, "r", encoding="utf-8", errors="replace") as f:
             raw = f.read()
-    except Exception:
+    except OSError as exc:
+        _log.warning("Failed to read ICS file %s: %s", filepath, exc)
         return []
 
     # RFC 5545 allows folded continuation lines in .ics files.
@@ -91,34 +95,3 @@ def _unescape(v: str) -> str:
              .replace("\\;", ";")
              .replace("\\\\", "\\"))
 
-
-def get_day_events(events: list[dict], target: date) -> list[dict]:
-    return [e for e in events if e["date"] == target]
-
-
-def get_week_events(events: list[dict], monday: date) -> list[dict]:
-    sunday = monday + timedelta(days=6)
-    return [e for e in events if monday <= e["date"] <= sunday]
-
-
-def get_month_events(events: list[dict], year: int, month: int) -> list[dict]:
-    return [e for e in events if e["date"].year == year and e["date"].month == month]
-
-
-def format_events_for_ai(events: list[dict]) -> str:
-    """Render events as a plain-text bullet list suitable for AI context."""
-    if not events:
-        return "(none)"
-    lines: list[str] = []
-    for ev in sorted(events, key=lambda e: (e["date"], e["start"] or datetime.min)):
-        parts: list[str] = []
-        if ev["start"]:
-            t = ev["start"].strftime("%H:%M")
-            if ev["end"]:
-                t += f"–{ev['end'].strftime('%H:%M')}"
-            parts.append(t)
-        parts.append(ev["summary"])
-        if ev["location"]:
-            parts.append(f"[{ev['location']}]")
-        lines.append("- " + "  ".join(parts))
-    return "\n".join(lines)

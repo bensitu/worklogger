@@ -1389,3 +1389,13 @@ msgstr "📅 カレンダーを取り込む (.ics)"
 
 msgid "📋 Templates"
 msgstr "📋 テンプレート"
+
+msgid "HEX"
+msgstr "HEX"
+
+msgid "  {size} MB  ·  RAM ≥ {ram} GB"
+msgstr "  {size} MB  ·  RAM {ram} GB以上"
+
+msgid "✓  Ready"
+msgstr "✓  準備完了"
+

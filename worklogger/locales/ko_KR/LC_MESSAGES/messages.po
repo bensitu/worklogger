@@ -1389,3 +1389,13 @@ msgstr "📅 캘린더 가져오기 (.ics)"
 
 msgid "📋 Templates"
 msgstr "📋 템플릿"
+
+msgid "HEX"
+msgstr "HEX"
+
+msgid "  {size} MB  ·  RAM ≥ {ram} GB"
+msgstr "  {size} MB  ·  RAM {ram} GB 이상"
+
+msgid "✓  Ready"
+msgstr "✓  준비 완료"
+

@@ -34,6 +34,7 @@ class ColorPickerDialog(QDialog):
         outer.addWidget(self._sliders)
 
         preview_row = QWidget()
+        preview_row.setObjectName("transparent_container")
         preview_l = QHBoxLayout(preview_row)
         preview_l.setContentsMargins(0, 0, 0, 0)
         preview_l.setSpacing(8)

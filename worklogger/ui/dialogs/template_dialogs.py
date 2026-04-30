@@ -323,14 +323,13 @@ class CreateTemplateDialog(QDialog):
         lv.addWidget(btns)
 
         self._lang = lang
-        self.saved_filename: str = ""
 
     def _save(self):
         name = self._name.text().strip()
         if not name:
             self._name.setFocus()
             return
-        self.saved_filename = save_custom_template(
+        save_custom_template(
             name, self._type_cb.currentData(), self._editor.toPlainText())
         QMessageBox.information(self, name, _("Template saved."))
         self.accept()
