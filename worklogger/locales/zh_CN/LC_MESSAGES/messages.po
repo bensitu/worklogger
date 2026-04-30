@@ -1,11 +1,25 @@
 msgid ""
-msgstr "Language: zh_CN\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+msgstr ""
+"Language: zh_CN\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 
-msgid "\n\nSkipped {} rows:\n{}"
-msgstr "\n\n跳过 {} 行：\n{}"
+msgid ""
+"\n"
+"\n"
+"Skipped {} rows:\n"
+"{}"
+msgstr ""
+"\n"
+"\n"
+"跳过 {} 行：\n"
+"{}"
 
 msgid " days"
 msgstr "天"
+
+msgid "#"
+msgstr "#"
 
 msgid "+"
 msgstr "+"
@@ -16,8 +30,44 @@ msgstr "1.0"
 msgid "A different model is already downloaded.  It will be deleted before downloading the new one.  Continue?"
 msgstr "已有其他模型下载完毕，下载新模型前将自动删除。是否继续？"
 
+msgid "A different model is already downloaded. It will be deleted before the new one downloads. Continue?"
+msgstr "已有其他模型下载完毕，下载新模型前将自动删除。是否继续？"
+
+msgid "A new recovery key was generated. Share it with the user now; it cannot be shown again later."
+msgstr "已生成新的恢复密钥。请立即告知用户；之后将无法再次显示。"
+
 msgid "A privacy-first desktop work-hours tracker with AI-powered reporting."
 msgstr "注重隐私的桌面工时记录工具，内置 AI 报告生成功能。"
+
+msgid "About"
+msgstr "关于"
+
+msgid "Account"
+msgstr "账号"
+
+msgid "Actions"
+msgstr "操作"
+
+msgid "Active"
+msgstr "已激活"
+
+msgid "Add"
+msgstr "添加"
+
+msgid "Administrator"
+msgstr "管理员"
+
+msgid "Administrator accounts cannot be deleted."
+msgstr "不能删除管理员账户。"
+
+msgid "Administrator Password"
+msgstr "管理员密码"
+
+msgid "Administrator password is incorrect."
+msgstr "管理员密码不正确。"
+
+msgid "Administrator privileges are required."
+msgstr "需要管理员权限。"
 
 msgid "AI"
 msgstr "AI"
@@ -25,26 +75,32 @@ msgstr "AI"
 msgid "AI Generated"
 msgstr "AI 生成内容"
 
-msgid "AI Result"
+msgid "AI Generated Content"
+msgstr "AI 生成内容"
+
+msgid "AI Generated Result"
 msgstr "AI 生成结果"
 
-msgid "API Base URL"
-msgstr "API 地址"
-
-msgid "API Key"
-msgstr "API 密钥"
-
-msgid "About"
-msgstr "关于"
-
-msgid "Add"
-msgstr "添加"
+msgid "AI Result"
+msgstr "AI 生成结果"
 
 msgid "Analytics"
 msgstr "分析"
 
 msgid "Annual"
 msgstr "年度"
+
+msgid "API Base URL"
+msgstr "API 地址"
+
+msgid "API Base URL is not set."
+msgstr "未设置 API Base URL。"
+
+msgid "API Key"
+msgstr "API 密钥"
+
+msgid "API Key is not set."
+msgstr "未设置 API Key。"
 
 msgid "Appearance"
 msgstr "外观"
@@ -61,6 +117,15 @@ msgstr "四月"
 msgid "April"
 msgstr "四月"
 
+msgid "Are you sure you want to log out?"
+msgstr "确定要退出登录吗？"
+
+msgid "Are you sure you want to regenerate the recovery key? The old key will stop working immediately."
+msgstr "确定要重新生成恢复密钥吗？旧密钥将立即失效。"
+
+msgid "At least one administrator account is required."
+msgstr "至少需要保留一个管理员账号。"
+
 msgid "Aug"
 msgstr "八月"
 
@@ -73,11 +138,26 @@ msgstr "作者"
 msgid "Auto Record"
 msgstr "自动记录"
 
+msgid "Average"
+msgstr "平均"
+
+msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
+msgstr "请定期备份数据库，以保护本地工作记录、报告、设置和账号数据。"
+
+msgid "Backup Data"
+msgstr "备份数据"
+
+msgid "Backup destination must be different from the active database."
+msgstr "备份目标必须与当前数据库不同。"
+
+msgid "Backup saved: {}"
+msgstr "备份已保存：{}"
+
+msgid "Bar"
+msgstr "柱状"
+
 msgid "Break (h)"
 msgstr "休息 (h)"
-
-msgid "Break Timer"
-msgstr "休息计时"
 
 msgid "Break done"
 msgstr "已休息"
@@ -88,20 +168,25 @@ msgstr "休息时间不能为负。"
 msgid "Break time must be less than the total shift duration."
 msgstr "休息时间必须小于总班时。"
 
+msgid "Break Timer"
+msgstr "休息计时"
+
 msgid "Built-in"
 msgstr "内置"
 
-msgid "CSV file is empty."
-msgstr "CSV 文件为空。"
+msgid "Business trip"
+msgstr "出差"
 
-msgid "CTO"
-msgstr "补休"
-
-msgid "Calendar Sync"
-msgstr "日历同步"
-
-msgid "Calendar data already exists.\n\nReplace — clear all previous calendar events before import.\nAppend — keep existing events and add new ones."
-msgstr "日历数据已存在。\n\n替换 — 导入前清除所有之前的日历事件。\n追加 — 保留现有事件并添加新事件。"
+msgid ""
+"Calendar data already exists.\n"
+"\n"
+"Replace — clear all previous calendar events before import.\n"
+"Append — keep existing events and add new ones."
+msgstr ""
+"日历数据已存在。\n"
+"\n"
+"替换 — 导入前清除所有之前的日历事件。\n"
+"追加 — 保留现有事件并添加新事件。"
 
 msgid "Calendar events cleared."
 msgstr "日历事件已清除。"
@@ -109,8 +194,20 @@ msgstr "日历事件已清除。"
 msgid "Calendar events:"
 msgstr "日历事件："
 
+msgid "Calendar Sync"
+msgstr "日历同步"
+
 msgid "Cancel"
 msgstr "取消"
+
+msgid "Change Password"
+msgstr "修改密码"
+
+msgid "Changing your password will generate a new recovery key. Your new password must be at least 8 characters."
+msgstr "修改密码后将重新生成恢复密钥。新密码长度至少为 8 位。"
+
+msgid "Chart:"
+msgstr "图表："
 
 msgid "Check for Updates"
 msgstr "检查更新"
@@ -121,6 +218,9 @@ msgstr "正在检查更新…"
 msgid "Choose a model to download"
 msgstr "选择要下载的模型"
 
+msgid "Choose custom color"
+msgstr "选择自定义颜色"
+
 msgid "Clear Calendar Events"
 msgstr "清除日历事件"
 
@@ -130,8 +230,20 @@ msgstr "打卡"
 msgid "Close"
 msgstr "关闭"
 
+msgid "Comp leave"
+msgstr "补休"
+
 msgid "Confirm"
 msgstr "确认"
+
+msgid "Confirm Administrator Password"
+msgstr "确认管理员密码"
+
+msgid "Confirm Password"
+msgstr "确认密码"
+
+msgid "Contacting AI provider for {model}..."
+msgstr "正在连接 AI 提供方（{model}）..."
 
 msgid "Continue"
 msgstr "继续累加"
@@ -142,17 +254,50 @@ msgstr "已复制！"
 msgid "Copy"
 msgstr "复制"
 
+msgid "Copy and safely store this recovery key now. If it is lost, only an administrator can reset your password."
+msgstr "请立即复制并安全保存此恢复密钥。如果丢失，只能由管理员重置你的密码。"
+
 msgid "Could not check for updates: {}"
 msgstr "检查更新失败：{}"
 
-msgid "temporarily unavailable"
-msgstr "暂时不可用"
+msgid "Could not load the latest model catalog. Check your network and try again."
+msgstr "无法加载最新模型列表。请检查网络后重试。"
+
+msgid "Could not save initial password."
+msgstr "无法保存初始密码。"
+
+msgid "Could not save recovery key."
+msgstr "无法保存恢复密钥。"
+
+msgid "Could not verify the update server certificate. Please check your network trust settings and try again."
+msgstr "无法验证更新服务器证书。请检查网络信任设置后重试。"
 
 msgid "Create Custom Template"
 msgstr "创建自定义模板"
 
+msgid "Create User"
+msgstr "创建用户"
+
+msgid "Created"
+msgstr "创建日期"
+
+msgid "CSV Data Management"
+msgstr "CSV 数据管理"
+
+msgid "CSV file is empty."
+msgstr "CSV 文件为空。"
+
+msgid "CTO"
+msgstr "补休"
+
+msgid "Current user"
+msgstr "当前用户"
+
 msgid "Custom"
 msgstr "自定义"
+
+msgid "Custom theme color"
+msgstr "自定义主题颜色"
 
 msgid "Daily"
 msgstr "日报"
@@ -163,11 +308,20 @@ msgstr "日均工时"
 msgid "Data"
 msgstr "数据"
 
+msgid "Data restored successfully."
+msgstr "数据已成功恢复。"
+
+msgid "Database Backup"
+msgstr "数据库备份"
+
 msgid "Dec"
 msgstr "十二月"
 
 msgid "December"
 msgstr "十二月"
+
+msgid "Default"
+msgstr "默认"
 
 msgid "Default break (h)"
 msgstr "默认休息 (h)"
@@ -187,11 +341,14 @@ msgstr "确定删除此模型文件？此操作不可撤销。"
 msgid "Delete this template?"
 msgstr "确定删除该模板？"
 
-msgid "Discard"
-msgstr "不保存"
+msgid "Delete User"
+msgstr "删除用户"
 
 msgid "Done"
 msgstr "完成"
+
+msgid "Done."
+msgstr "完成。"
 
 msgid "Download"
 msgstr "下载"
@@ -202,11 +359,23 @@ msgstr "下载 .md"
 msgid "Download Local Model"
 msgstr "下载本地模型"
 
+msgid "Downloaded"
+msgstr "Downloaded"
+
+msgid "Downloading local model..."
+msgstr "正在下载本地模型..."
+
 msgid "Downloading…  You may cancel at any time; the download will resume from where it left off."
 msgstr "下载中…  您可以在任何时间取消下载；下载将从上次中断的地方继续。"
 
 msgid "Enable local model"
 msgstr "启用本地模型"
+
+msgid "Enable menu bar icon"
+msgstr "启用菜单栏常驻"
+
+msgid "Enable tray icon"
+msgstr "启用托盘常驻"
 
 msgid "End"
 msgstr "结束"
@@ -220,8 +389,14 @@ msgstr "结束时间（可选）"
 msgid "Ended"
 msgstr "已打卡"
 
+msgid "Enter administrator password to delete {username}."
+msgstr "请输入管理员密码以删除 {username}。"
+
 msgid "Error"
 msgstr "错误"
+
+msgid "Error:"
+msgstr "错误："
 
 msgid "Expand notes"
 msgstr "展开备注"
@@ -253,20 +428,44 @@ msgstr "二月"
 msgid "February"
 msgstr "二月"
 
+msgid "Forgot Password?"
+msgstr "忘记密码？"
+
 msgid "Fri"
 msgstr "周五"
 
 msgid "General"
 msgstr "常规"
 
+msgid "Generated At"
+msgstr "生成日期"
+
+msgid "Generating with local model..."
+msgstr "正在使用本地模型生成..."
+
 msgid "GitHub"
 msgstr "GitHub"
+
+msgid "gpt-4o-mini | claude-haiku-4-5-20251001"
+msgstr "gpt-4o-mini | claude-haiku-4-5-20251001"
+
+msgid "Grant Admin"
+msgstr "授予管理员"
+
+msgid "h"
+msgstr "h"
 
 msgid "HH:MM"
 msgstr "HH:MM"
 
 msgid "Hint / extra instructions (optional)"
 msgstr "补充说明（可选）"
+
+msgid "https://api.openai.com/v1 | https://api.anthropic.com"
+msgstr "https://api.openai.com/v1 | https://api.anthropic.com"
+
+msgid "I have saved this recovery key safely."
+msgstr "我已安全保存此恢复密钥。"
 
 msgid "Import .gguf"
 msgstr "导入 .gguf"
@@ -276,6 +475,9 @@ msgstr "导入 .ics"
 
 msgid "Import CSV"
 msgstr "导入 CSV"
+
+msgid "Import or export worklog records as CSV files for backup, migration, or spreadsheet analysis."
+msgstr "导入或导出工作日志 CSV 文件，用于备份、迁移或电子表格分析。"
 
 msgid "Import Result"
 msgstr "导入结果"
@@ -289,11 +491,29 @@ msgstr "已导入 {} 个日历事件。"
 msgid "Imported {} records."
 msgstr "导入完成：{} 条记录。"
 
+msgid "In Use"
+msgstr "使用状态"
+
+msgid "Inactive"
+msgstr "未激活"
+
+msgid "Initial Password"
+msgstr "初始密码"
+
+msgid "Initial password saved."
+msgstr "初始密码已保存。"
+
+msgid "Initializing AI request..."
+msgstr "正在初始化 AI 请求..."
+
 msgid "Insert"
 msgstr "插入"
 
 msgid "Insert Quick Log"
 msgstr "插入快速记录"
+
+msgid "Installing local model dependencies..."
+msgstr "正在安装本地模型依赖..."
 
 msgid "Integrity check failed — file may be corrupted"
 msgstr "完整性校验失败 — 文件可能已损坏"
@@ -303,6 +523,9 @@ msgstr "完整性检查失败"
 
 msgid "Invalid time range. The shift must be within {max_hours} hours (overnight is supported)."
 msgstr "无效时间范围。班次时长必须在 {max_hours} 小时内（支持夜班）。"
+
+msgid "Invoice"
+msgstr "发票"
 
 msgid "Jan"
 msgstr "一月"
@@ -322,11 +545,29 @@ msgstr "六月"
 msgid "June"
 msgstr "六月"
 
+msgid "Leave"
+msgstr "休假"
+
 msgid "Leave days"
 msgstr "假期天数"
 
+msgid "Leave Hours"
+msgstr "休假时长"
+
 msgid "License"
 msgstr "开源协议"
+
+msgid "Line"
+msgstr "折线"
+
+msgid "llama-cpp-python not installed - run: pip install llama-cpp-python"
+msgstr "未安装 llama-cpp-python - 请运行: pip install llama-cpp-python"
+
+msgid "Loading latest model catalog..."
+msgstr "正在加载最新模型列表..."
+
+msgid "Loading local model..."
+msgstr "正在加载本地模型..."
 
 msgid "Local Model"
 msgstr "本地模型"
@@ -334,11 +575,57 @@ msgstr "本地模型"
 msgid "Local model"
 msgstr "本地模型"
 
-msgid "Local model failed and no external API key / URL / model name is configured.\nPlease configure an external model in Settings → AI."
-msgstr "本地模型失败，未配置外部 API 密钥、URL 或模型名称。\n请在设置 → AI 中配置外部模型。"
+msgid ""
+"Local model failed and no external API key / URL / model name is configured.\n"
+"Please configure an external model in Settings → AI."
+msgstr ""
+"本地模型失败，未配置外部 API 密钥、URL 或模型名称。\n"
+"请在设置 → AI 中配置外部模型。"
+
+msgid "Local model failed and no external API key / URL / model name is configured. Please configure an external model in Settings → AI."
+msgstr "本地模型失敗，且未設定外部 API Key / URL / 模型名稱。請在設定 → AI 中設定外部模型。"
+
+msgid "Local model failed to load"
+msgstr "本地模型加载失败"
 
 msgid "Local model is disabled."
 msgstr "本地模型已禁用。"
+
+msgid "Local model is inactive"
+msgstr "本地模型处于未激活状态。"
+
+msgid "Local model loaded."
+msgstr "本地模型已加载。"
+
+msgid "Local model not downloaded - go to Settings -> AI"
+msgstr "本地模型未下载 - 请前往 设置 -> AI"
+
+msgid "Local model unavailable - using external model instead"
+msgstr "本地模型不可用，改用外部模型"
+
+msgid "Local model unavailable - using external model instead."
+msgstr "本地模型不可用，改用外部模型。"
+
+msgid "Local model verification failed. Please re-download or switch model."
+msgstr "本地模型校验失败。请重新下载或切换模型。"
+
+msgid "Local model verification timed out."
+msgstr "本地模型校验超时。"
+
+msgid "Local model verification was cancelled."
+msgstr "本地模型校验已取消。"
+
+msgid "Log out"
+msgstr "退出登录"
+
+msgid "Login"
+msgstr "登录"
+
+msgid "Login failed"
+msgstr "登录失败"
+
+msgid "Manage Users"
+msgstr "管理用户"
 
 msgid "Manual Input"
 msgstr "手动输入"
@@ -349,8 +636,20 @@ msgstr "三月"
 msgid "March"
 msgstr "三月"
 
+msgid "Markdown (*.md)"
+msgstr "Markdown (*.md)"
+
 msgid "May"
 msgstr "五月"
+
+msgid "Metric:"
+msgstr "指标："
+
+msgid "Minimal mode"
+msgstr "极简模式"
+
+msgid "Minimal mode toggle will take effect after restarting the application."
+msgstr "极简模式切换将在重启应用后生效。"
 
 msgid "Missing columns: {}"
 msgstr "CSV 缺少列：{}"
@@ -358,17 +657,26 @@ msgstr "CSV 缺少列：{}"
 msgid "Model"
 msgstr "模型"
 
+msgid "Model download completed."
+msgstr "模型下载完成。"
+
+msgid "Model hash verified."
+msgstr "模型哈希校验通过。"
+
+msgid "Model name is not set."
+msgstr "未设置模型名称。"
+
 msgid "Mon"
 msgstr "周一"
 
 msgid "Monthly"
 msgstr "月报"
 
+msgid "Monthly Analytics"
+msgstr "月度"
+
 msgid "Monthly Report"
 msgstr "月报"
-
-msgid "Monthly Work Report  {year}/{month:02d}"
-msgstr "{year}年{month:02d}月 工作报告"
 
 msgid "Monthly target (h)"
 msgstr "月度目标工时 (h)"
@@ -376,8 +684,20 @@ msgstr "月度目标工时 (h)"
 msgid "Monthly total"
 msgstr "当月总工时"
 
+msgid "Monthly Work Report  {year}/{month:02d}"
+msgstr "{year}年{month:02d}月 工作报告"
+
+msgid "New Password"
+msgstr "新密码"
+
 msgid "New Template"
 msgstr "新建模板"
+
+msgid "New version available: v{0}"
+msgstr "发现新版本：v{0}"
+
+msgid "Next day"
+msgstr "下一日"
 
 msgid "Next month"
 msgstr "下月"
@@ -388,8 +708,14 @@ msgstr "夜班"
 msgid "No"
 msgstr "否"
 
+msgid "No accounts found. Please create an administrator account."
+msgstr "未找到账号。请创建管理员账号。"
+
 msgid "No data"
 msgstr "暂无数据"
+
+msgid "No downloadable models are available. You can still import a local .gguf file."
+msgstr "当前没有可下载的模型。你仍然可以导入本地 .gguf 文件。"
 
 msgid "No entries yet today."
 msgstr "今天暂无记录。"
@@ -406,11 +732,23 @@ msgstr "本期间没有备注记录。"
 msgid "No templates available for this type."
 msgstr "该类型暂无模板。"
 
-msgid "Normal: {normal}\nRemote: {remote}\nBusiness: {biz}"
-msgstr "正常：{normal}\n居家：{remote}\n出差：{biz}"
+msgid "Normal"
+msgstr "正常出勤"
+
+msgid ""
+"Normal: {normal}\n"
+"Remote: {remote}\n"
+"Business: {biz}"
+msgstr ""
+"正常：{normal}\n"
+"居家：{remote}\n"
+"出差：{biz}"
 
 msgid "Not downloaded"
 msgstr "未下载"
+
+msgid "Note"
+msgstr "注意"
 
 msgid "Notes"
 msgstr "备注"
@@ -424,14 +762,20 @@ msgstr "十一月"
 msgid "November"
 msgstr "十一月"
 
-msgid "OK"
-msgstr "确定"
-
 msgid "Oct"
 msgstr "十月"
 
 msgid "October"
 msgstr "十月"
+
+msgid "OK"
+msgstr "确定"
+
+msgid "Old Password"
+msgstr "旧密码"
+
+msgid "Old password is incorrect."
+msgstr "旧密码不正确。"
 
 msgid "On break"
 msgstr "休息中"
@@ -442,11 +786,26 @@ msgstr "同一时间只能有一个活跃模型。切换模型前需先删除当
 msgid "Open"
 msgstr "打开"
 
+msgid "Open color picker"
+msgstr "打开颜色选择器"
+
+msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
+msgstr "支持 OpenAI 兼容格式的模型，包括 ChatGPT、Claude、Qwen 和 DeepSeek。"
+
+msgid "Operation failed."
+msgstr "操作失败。"
+
 msgid "Original"
 msgstr "原始"
 
+msgid "Original Content"
+msgstr "修改前内容"
+
 msgid "Overnight"
 msgstr "跨天"
+
+msgid "Overnight indicator"
+msgstr "显示跨天指示器"
 
 msgid "Overtime"
 msgstr "加班合计"
@@ -454,20 +813,89 @@ msgstr "加班合计"
 msgid "Overwrite existing data?"
 msgstr "覆盖已有数据？"
 
+msgid "Paid leave"
+msgstr "休假"
+
+msgid ""
+"Paid: {paid}\n"
+"Comp: {comp}\n"
+"Sick: {sick}"
+msgstr ""
+"休假：{paid}\n"
+"补休：{comp}\n"
+"病假：{sick}"
+
+msgid "Password"
+msgstr "密码"
+
+msgid "Password change failed."
+msgstr "密码更改失败。"
+
+msgid "Password Changed"
+msgstr "密码修改时间"
+
+msgid "Password changed successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+msgstr "密码已修改。已生成新的恢复密钥。请立即复制并保存；旧恢复密钥将不再可用。"
+
+msgid "Password must be at least 8 characters."
+msgstr "Password must be at least 8 characters."
+
+msgid "Password reset successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+msgstr "密码已重置。已生成新的恢复密钥。请立即复制并保存；旧恢复密钥将不再可用。"
+
+msgid "Passwords do not match."
+msgstr "两次输入的密码不一致。"
+
 msgid "PDF requires QtPrintSupport. Saving PNG."
 msgstr "PDF需要QtPrintSupport。已保存为PNG。"
 
-msgid "PTO"
-msgstr "休假"
+msgid "Period"
+msgstr "周期"
 
-msgid "Paid: {paid}\nComp: {comp}\nSick: {sick}"
-msgstr "休假：{paid}\n补休：{comp}\n病假：{sick}"
+msgid "Permission denied while verifying local model file."
+msgstr "校验本地模型文件时权限被拒绝。"
+
+msgid "Please confirm that you have saved the recovery key."
+msgstr "请确认你已保存恢复密钥。"
+
+msgid "Please enter a model name in Settings → AI."
+msgstr "请在 设置 → AI 中输入模型名称。"
+
+msgid "Please enter administrator password."
+msgstr "请输入管理员密码。"
+
+msgid "Please enter the API Base URL in Settings → AI."
+msgstr "请在 设置 → AI 中输入 API Base URL。"
+
+msgid "Please enter username and password."
+msgstr "请输入用户名和密码。"
+
+msgid "Please enter username and recovery key."
+msgstr "请输入用户名和恢复密钥。"
+
+msgid "Please enter your API Key in Settings → AI."
+msgstr "请在 设置 → AI 中输入 API Key。"
 
 msgid "Please set your API key in Settings → AI."
 msgstr "请先在设置→AI 中填入 API Key。"
 
+msgid "Preparing request for {model}..."
+msgstr "正在为 {model} 准备请求..."
+
+msgid "Preparing your AI request..."
+msgstr "正在准备 AI 请求..."
+
+msgid "Previous day"
+msgstr "上一日"
+
 msgid "Previous month"
 msgstr "上月"
+
+msgid "Processing AI response..."
+msgstr "正在处理 AI 响应..."
+
+msgid "PTO"
+msgstr "休假"
 
 msgid "Public holidays"
 msgstr "显示法定节假日"
@@ -487,8 +915,50 @@ msgstr "关闭"
 msgid "Ready"
 msgstr "已就绪"
 
+msgid "Recovery Key"
+msgstr "恢复密钥"
+
+msgid "Recovery Key Created"
+msgstr "恢复密钥生成日期"
+
+msgid "Recovery key is incorrect. Contact an administrator to reset your password."
+msgstr "恢复密钥不正确。请联系管理员重置密码。"
+
+msgid "Recovery Key Regenerated"
+msgstr "恢复密钥已重新生成"
+
+msgid "Recovery key saved."
+msgstr "恢复密钥已保存。"
+
+msgid "Refresh"
+msgstr "刷新"
+
 msgid "Regenerate"
 msgstr "重新生成"
+
+msgid "Regenerate Key"
+msgstr "重新生成密钥"
+
+msgid "Regenerate Recovery Key"
+msgstr "重新生成恢复密钥"
+
+msgid "Register"
+msgstr "注册"
+
+msgid "Registration failed."
+msgstr "注册失败。"
+
+msgid "Registration successful. Please log in."
+msgstr "注册成功。请登录。"
+
+msgid "Remember me"
+msgstr "记住我"
+
+msgid "Remember-token encryption requires the 'cryptography' package. Please install it via pip install cryptography."
+msgstr "记住令牌加密需要安装 'cryptography' 包。请通过 pip install cryptography 安装。"
+
+msgid "Remote work"
+msgstr "居家办公"
 
 msgid "Replace"
 msgstr "替换"
@@ -496,11 +966,53 @@ msgstr "替换"
 msgid "Report"
 msgstr "报告"
 
+msgid "Report content is empty."
+msgstr "报告内容为空。"
+
+msgid "Report saved."
+msgstr "报告已保存。"
+
+msgid "Reports have unsaved changes. Save before closing?"
+msgstr "报告有未保存的修改。关闭前保存吗？"
+
+msgid "Reset Password"
+msgstr "重置密码"
+
+msgid "Reset User Password"
+msgstr "重置用户密码"
+
 msgid "Restart"
 msgstr "重新开始"
 
+msgid "Restart Required"
+msgstr "需要重启"
+
+msgid "Restart required to apply minimal mode."
+msgstr "需要重启以应用极简模式。"
+
+msgid "Restore Data"
+msgstr "恢复数据"
+
+msgid "Restore failed."
+msgstr "恢复失败。"
+
+msgid "Restore will replace the current database file. Continue?"
+msgstr "恢复操作将替换当前数据库文件。是否继续？"
+
 msgid "Retry"
 msgstr "重试"
+
+msgid "Review accounts, reset passwords, and manage recovery keys."
+msgstr "查看账户、重置密码并管理恢复密钥。"
+
+msgid "Revoke Admin"
+msgstr "撤销管理员"
+
+msgid "Role"
+msgstr "角色"
+
+msgid "Sample Template"
+msgstr "示例模板"
 
 msgid "Sat"
 msgstr "周六"
@@ -508,17 +1020,29 @@ msgstr "周六"
 msgid "Save"
 msgstr "保存"
 
+msgid "Save As"
+msgstr "保存为"
+
 msgid "Save Changes"
 msgstr "保存修改"
 
 msgid "Save changes to this template?"
 msgstr "保存对该模板的修改？"
 
+msgid "Save Initial Password"
+msgstr "保存初始密码"
+
+msgid "Save Recovery Key"
+msgstr "保存恢复密钥"
+
 msgid "Saved: {}"
 msgstr "已保存：{}"
 
 msgid "Select / Change"
 msgstr "选择 / 更换"
+
+msgid "Selected color"
+msgstr "已选颜色"
 
 msgid "Sep"
 msgstr "九月"
@@ -529,11 +1053,23 @@ msgstr "九月"
 msgid "Settings"
 msgstr "设置"
 
-msgid "Overnight indicator"
-msgstr "显示跨天指示器"
+msgid "Show leave"
+msgstr "显示休假"
 
 msgid "Sick"
 msgstr "病假"
+
+msgid "Sick leave"
+msgstr "病假"
+
+msgid "Sign out remembered sessions"
+msgstr "注销已记住的会话"
+
+msgid "sk-… / sk-ant-…"
+msgstr "sk-… / sk-ant-…"
+
+msgid "SQLite Database (*.db)"
+msgstr "SQLite 数据库 (*.db)"
 
 msgid "Standard hours (h)"
 msgstr "标准工时 (h)"
@@ -568,20 +1104,56 @@ msgstr "模板已保存。"
 msgid "Templates"
 msgstr "模板"
 
+msgid "temporarily unavailable"
+msgstr "暂时不可用"
+
 msgid "Test"
 msgstr "测试"
 
 msgid "Testing…"
 msgstr "测试中…"
 
+msgid "Text Files (*.txt)"
+msgstr "文本文件 (*.txt)"
+
+msgid "The initial password is generated automatically. The user must change it at first login."
+msgstr "初始密码会自动生成。用户首次登录时必须更改该密码。"
+
+msgid "The selected backup database appears to be corrupted."
+msgstr "所选备份数据库可能已损坏。"
+
+msgid "The selected backup does not contain the current account."
+msgstr "所选备份不包含当前账号。"
+
+msgid "The selected backup does not contain user account data."
+msgstr "所选备份不包含用户账号数据。"
+
+msgid "The selected file does not exist."
+msgstr "所选文件不存在。"
+
+msgid "The user must change this password at first login."
+msgstr "用户首次登录时必须更改此密码。"
+
+msgid "This account must change its password before continuing."
+msgstr "此账户必须先更改密码才能继续。"
+
 msgid "This model is already downloaded and ready."
 msgstr "该模型已下载完毕，可直接使用。"
+
+msgid "This operation will permanently delete this user's data, including work records, notes, reports, and settings."
+msgstr "此操作将永久删除该用户的所有数据，包括工作记录、笔记、报告和设置。"
+
+msgid "This recovery key can be used to reset the user's password if it is forgotten. Store it securely and share it only with the account owner. Anyone with this key may reset the password until a new key is generated."
+msgstr "此恢复密钥可在用户忘记密码时用于重置该用户密码。请妥善保管，并仅分享给账户本人。在生成新密钥之前，任何持有此密钥的人都可能重置该账户密码。"
 
 msgid "Thu"
 msgstr "周四"
 
 msgid "Time"
 msgstr "时间"
+
+msgid "Timesheet"
+msgstr "工时表"
 
 msgid "Today"
 msgstr "今天"
@@ -604,11 +1176,44 @@ msgstr "类型"
 msgid "Unsaved changes — save before switching?"
 msgstr "有未保存的更改，切换前是否保存？"
 
+msgid "Unused"
+msgstr "未使用"
+
+msgid "Used"
+msgstr "已使用"
+
+msgid "User"
+msgstr "用户"
+
+msgid "User created successfully. Share this initial password now; it cannot be shown again later."
+msgstr "用户已创建成功。请立即分享此初始密码；之后将无法再次显示。"
+
+msgid "User deleted successfully."
+msgstr "用户已删除。"
+
+msgid "User not found."
+msgstr "未找到用户。"
+
+msgid "Username"
+msgstr "用户名"
+
+msgid "Username already exists."
+msgstr "用户名已存在。"
+
+msgid "Username is required."
+msgstr "用户名不能为空。"
+
+msgid "Username or password is incorrect."
+msgstr "用户名或密码不正确。"
+
+msgid "Verifying local model file..."
+msgstr "正在校验本地模型文件..."
+
 msgid "Version"
 msgstr "版本"
 
-msgid "WFH"
-msgstr "居家"
+msgid "Waiting for AI response..."
+msgstr "正在等待 AI 响应..."
 
 msgid "Wed"
 msgstr "周三"
@@ -622,11 +1227,23 @@ msgstr "周报"
 msgid "Weekly Work Report  {start} – {end}"
 msgstr "周工作报告  {start} – {end}"
 
+msgid "WFH"
+msgstr "居家"
+
 msgid "What are you doing?"
 msgstr "正在做什么？"
 
+msgid "When enabled, text processing uses the local model first - no data is sent to external services."
+msgstr "启用后，文本处理会优先使用本地模型，不会将数据发送到外部服务。"
+
 msgid "When enabled, text processing uses the local model first — no data is sent to external services."
 msgstr "启用后，文本处理将优先使用本地模型，无需上传数据到外部服务。"
+
+msgid "Work days"
+msgstr "出勤天数"
+
+msgid "Work hours"
+msgstr "工作时长"
 
 msgid "Work Log"
 msgstr "工作记录"
@@ -634,17 +1251,72 @@ msgstr "工作记录"
 msgid "Work Logger"
 msgstr "工时记录"
 
-msgid "Work Logger is a flexible desktop app for tracking work hours, notes, and reports.\n\nWhat you can do:\n- Switch between Manual Input and Auto Record depending on how you like to log time.\n- Record start time, end time, and break time for each day.\n- Save work type and notes together with the time record.\n- Use Quick Log for lightweight task entries during the day.\n- Keep notes for future dates even when exact work hours are not decided yet.\n- Generate daily, weekly, and monthly reports from saved data.\n- Use AI-compatible providers to turn notes into polished summaries.\n- Review monthly trends with charts, averages, overtime, and monthly targets.\n- Import calendar events and display public holidays.\n- Customize language, theme, AI settings, and reminder behavior.\n\nRecommended workflow:\n1. Pick Manual Input if you usually type times yourself.\n2. Pick Auto Record if you prefer start/end/break buttons.\n3. Add Notes or Quick Log entries as work happens.\n4. Save the day record when finished.\n5. Open Reports or AI tools when you need a summary.\n\nHelpful details:\n- Holiday names can be shown automatically on the calendar.\n- A small reminder dot can appear on days that only have notes.\n- Built-in and custom templates can be used in notes and reports."
-msgstr "Work Logger 是一款可灵活记录工时、备注和报告的桌面应用。\n\n你可以用它来：\n- 在“手动输入”和“自动记录”两种模式之间切换\n- 按天保存开始、结束和休息时间\n- 将工作类型与备注一起保存\n- 用 Quick Log 快速补充当天任务记录\n- 对未来日期先记录备注，之后再补时间\n- 生成日报、周报和月报\n- 通过兼容的 AI 服务把记录整理成自然语言总结\n- 在图表中查看总工时、平均工时、加班和月度目标\n- 导入日历事件并显示法定节假日\n- 自定义语言、主题、AI 设置和提醒显示方式\n\n推荐使用流程：\n1. 如果习惯自己填时间，就使用手动输入模式\n2. 如果习惯打卡，就使用自动记录模式\n3. 工作过程中随时补充备注或 Quick Log\n4. 结束当天工作后保存记录\n5. 需要整理时再打开报告或 AI 生成\n\n补充说明：\n- 日历可以自动显示节假日名称\n- 只有备注、没有完整时间的日期，可以显示提醒圆点\n- Notes 和 Reports 都可以结合内置或自定义模板使用"
+msgid ""
+"Work Logger is a privacy-first desktop app for recording work time, notes, quick logs, calendar context, and recurring reports without sending your data to a cloud service by default.\n"
+"\n"
+"Daily logging:\n"
+"- Enter start, end, break, work type, and notes for each date.\n"
+"- Use Auto Record buttons for start, end, and break checkpoints.\n"
+"- Capture lightweight task details with Quick Log and merge them into reports.\n"
+"- Navigate by calendar, month, week, or minimal-mode day controls.\n"
+"\n"
+"Accounts and security:\n"
+"- Multiple local users are supported, and each user's worklogs, settings, reports, reminders, and backups are isolated.\n"
+"- Passwords and recovery keys are stored as secure hashes.\n"
+"- Administrators can reset user passwords and regenerate recovery keys when needed.\n"
+"- Remember-me login uses the operating system credential manager when available.\n"
+"\n"
+"Reports and templates:\n"
+"- Generate daily notes, weekly reports, and monthly reports from saved data.\n"
+"- Weekly and monthly reports are tied to the selected calendar period and can be saved for later editing.\n"
+"- Built-in and custom templates help standardize recurring note and report formats.\n"
+"\n"
+"Analytics and exports:\n"
+"- Review work hours, averages, overtime, targets, leave markers, and trend charts.\n"
+"- Export chart data to CSV and charts to PDF.\n"
+"- Import/export worklogs as CSV and calendar events as ICS.\n"
+"- Back up and restore the local database with reminders for stale backups.\n"
+"\n"
+"Customization and AI:\n"
+"- Switch languages, themes, custom accent colors, dark mode, and minimal mode.\n"
+"- Use local-model assistance when configured, or connect to OpenAI-compatible external providers such as ChatGPT, Claude, Qwen, and DeepSeek.\n"
+"- Supported UI languages include English, Japanese, Korean, Simplified Chinese, and Traditional Chinese."
+msgstr ""
+"Work Logger 是一款以隐私优先为核心的桌面应用，用于记录工时、笔记、快速日志、日历上下文和周期性报告。默认情况下，你的数据不会发送到云端服务。\n"
+"\n"
+"日常记录：\n"
+"- 为每个日期记录开始时间、结束时间、休息时间、工作类型和备注。\n"
+"- 使用自动记录按钮快速登记开始、结束和休息节点。\n"
+"- 用 Quick Log 捕捉轻量任务细节，并合并到报告中。\n"
+"- 可通过日历、月份、周视图或极简模式日期按钮切换记录。\n"
+"\n"
+"账户与安全：\n"
+"- 支持多个本地用户，每个用户的工作记录、设置、报告、提醒和备份互相隔离。\n"
+"- 密码和恢复密钥均以安全哈希方式存储。\n"
+"- 管理员可在需要时重置用户密码并重新生成恢复密钥。\n"
+"- “记住我”登录优先使用操作系统凭据管理器。\n"
+"\n"
+"报告与模板：\n"
+"- 可根据已保存数据生成日报、周报和月报。\n"
+"- 周报和月报会关联到当前选择的日历周期，并可保存后继续编辑。\n"
+"- 内置模板和自定义模板可帮助统一常用笔记和报告格式。\n"
+"\n"
+"分析与导出：\n"
+"- 查看工时、平均值、加班、目标、休假标记和趋势图表。\n"
+"- 将图表数据导出为 CSV，将图表导出为 PDF。\n"
+"- 支持工作记录 CSV 导入/导出，以及日历 ICS 导入/导出。\n"
+"- 支持本地数据库备份与恢复，并在备份过期时提醒。\n"
+"\n"
+"自定义与 AI：\n"
+"- 可切换语言、主题、自定义强调色、深色模式和极简模式。\n"
+"- 配置后可使用本地模型辅助，也可连接 ChatGPT、Claude、Qwen、DeepSeek 等 OpenAI 兼容外部模型。\n"
+"- 支持英语、日语、韩语、简体中文和繁体中文界面。"
 
 msgid "Work Report"
 msgstr "工作报告"
 
 msgid "Work Time Analytics"
 msgstr "工时分析"
-
-msgid "Work days"
-msgstr "出勤天数"
 
 msgid "Work type"
 msgstr "出勤类型"
@@ -658,20 +1330,11 @@ msgstr "已经记录了 {hours}h 的休息时间。要如何处理？"
 msgid "You are on the latest version"
 msgstr "当前已是最新版本"
 
-msgid "gpt-4o-mini | claude-haiku-4-5-20251001"
-msgstr "gpt-4o-mini | claude-haiku-4-5-20251001"
+msgid "You haven't backed up in {days} days. Please back up your data."
+msgstr "你已经 {days} 天没有备份。请备份你的数据。"
 
-msgid "h"
-msgstr "h"
-
-msgid "https://api.openai.com/v1 | https://api.anthropic.com"
-msgstr "https://api.openai.com/v1 | https://api.anthropic.com"
-
-msgid "sk-… / sk-ant-…"
-msgstr "sk-… / sk-ant-…"
-
-msgid "v{0} available!"
-msgstr "可用新版本：v{0}"
+msgid "Your password has not been changed in {days} days. Please update it regularly."
+msgstr "你的密码已超过 {days} 天未修改。请定期更新密码。"
 
 msgid "{0:.0f} / {1:.0f} MB"
 msgstr "{0:.0f} / {1:.0f} MB"
@@ -685,6 +1348,9 @@ msgstr "▶ 开始休息"
 msgid "⚙  Settings"
 msgstr "⚙  设置"
 
+msgid "⚠️ Request exceeded 30 seconds, processing may take a while. Please continue waiting..."
+msgstr "⚠️ 请求超过 30 秒，处理可能需要一些时间，请继续等待..."
+
 msgid "⚡ Quick Log"
 msgstr "⚡ 快速记录"
 
@@ -696,6 +1362,9 @@ msgstr "✓  完整性校验通过"
 
 msgid "✓  Model imported"
 msgstr "✓  模型导入成功"
+
+msgid "✓ Request successful."
+msgstr "✓ 请求成功。"
 
 msgid "✗  {}"
 msgstr "✗  {}"
@@ -720,783 +1389,3 @@ msgstr "📅 导入日历 (.ics)"
 
 msgid "📋 Templates"
 msgstr "📋 模板"
-
-msgid "days"
-msgstr "日"
-
-msgid "key"
-msgstr "密钥"
-
-msgid "overnight_badge"
-msgstr "跨天徽章"
-
-msgid "tpl_no_templates"
-msgstr "没有模板"
-
-msgid "tpl_saved"
-msgstr "模板保存"
-
-msgid "Not set"
-msgstr "未设置"
-
-msgid "Original Content"
-msgstr "修改前内容"
-
-msgid "■ End"
-msgstr "■ 结束休息"
-
-msgid "Break: {}m"
-msgstr "休息中: {}分钟"
-
-msgid "Describe your work, or leave blank for AI generation"
-msgstr "描述今天的工作内容，或留空自动生成"
-
-msgid "Normal"
-msgstr "正常出勤"
-
-msgid "Remote work"
-msgstr "居家办公"
-
-msgid "Business trip"
-msgstr "出差"
-
-msgid "Paid leave"
-msgstr "休假"
-
-msgid "Comp leave"
-msgstr "补休"
-
-msgid "Sick leave"
-msgstr "病假"
-
-msgid "No calendar events found for this period."
-msgstr "该时段内没有日历事件。"
-
-msgid "Enable tray icon"
-msgstr "启用托盘常驻"
-
-msgid "Enable menu bar icon"
-msgstr "启用菜单栏常驻"
-
-msgid "Only one model can be active at a time. To switch models, delete the current one first."
-msgstr "同一时间只能有一个活跃模型。切换模型前需先删除当前模型。"
-
-msgid "A different model is already downloaded. It will be deleted before the new one downloads. Continue?"
-msgstr "已有其他模型下载完毕，下载新模型前将自动删除。是否继续？"
-
-msgid "Balanced (Q4_K_M)"
-msgstr "均衡版 (Q4_K_M)"
-
-msgid "Quantized 4-bit model — good balance of speed and quality."
-msgstr "4位量化模型 — 速度与质量兼顾。"
-
-msgid "✓ Recommended for most users"
-msgstr "✓ 推荐大多数用户使用"
-
-msgid "Lightweight (Q2_K)"
-msgstr "轻量版 (Q2_K)"
-
-msgid "Highly compressed 2-bit model — smallest file, fastest."
-msgstr "高度压缩的2位模型 — 文件最小，速度最快。"
-
-msgid "✓ Best for low-RAM machines"
-msgstr "✓ 适合低内存设备"
-
-msgid "High Quality (Q8_0)"
-msgstr "高质量版 (Q8_0)"
-
-msgid "8-bit quantized model — highest quality output."
-msgstr "8位量化模型 — 输出质量最佳。"
-
-msgid "✓ Best quality, requires more RAM"
-msgstr "✓ 质量最好，需要更多内存"
-
-msgid "Manage / Switch"
-msgstr "管理 / 切换"
-
-msgid "Checking dependencies…"
-msgstr "正在检查依赖包…"
-
-msgid "The local model will be downloaded once and cached for offline use.\nYou may cancel at any time; an interrupted download will resume next time."
-msgstr "本地模型下载一次后即可离线使用。\n随时可以取消，中断的下载下次将自动续传。"
-
-msgid "Re-download"
-msgstr "重新下载"
-
-msgid "Starting download…"
-msgstr "正在开始下载…"
-
-msgid "Verifying integrity…"
-msgstr "正在校验完整性…"
-
-msgid "✓  Download complete"
-msgstr "✓  下载完成"
-
-msgid "Download failed"
-msgstr "下载失败"
-
-msgid "Download cancelled"
-msgstr "下载已取消"
-
-msgid "Connection timed out"
-msgstr "连接超时"
-
-msgid "Disk full — free some space and retry"
-msgstr "磁盘空间不足 — 请释放空间后重试"
-
-msgid "Loading local model…"
-msgstr "正在加载本地模型…"
-
-msgid "Local model loaded ✓"
-msgstr "本地模型已加载 ✓"
-
-msgid "Starting generation…"
-msgstr "正在开始生成…"
-
-msgid "Local model failed to load"
-msgstr "本地模型加载失败"
-
-msgid "Local model not downloaded — go to Settings → AI"
-msgstr "本地模型未下载 — 请前往设置 → AI 下载"
-
-msgid "llama-cpp-python not installed — run: pip install llama-cpp-python"
-msgstr "未安装 llama-cpp-python — 请运行: pip install llama-cpp-python"
-
-msgid "Local model unavailable — using external model instead"
-msgstr "本地模型不可用 — 已使用外部模型"
-
-msgid "Update check timed out"
-msgstr "检查更新超时"
-
-msgid "✨  AI Generate"
-msgstr "✨  AI 生成"
-
-msgid "Generating…"
-msgstr "生成中…"
-
-msgid "AI error: {}"
-msgstr "AI 错误：{}"
-
-msgid "AI Report Generation"
-msgstr "AI 报告生成"
-
-msgid "Additional instructions (optional)"
-msgstr "补充要求（可选）"
-
-msgid "Supports Anthropic and OpenAI-compatible APIs. Examples: ChatGPT, Claude, Gemini, DeepSeek, Doubao, Qwen."
-msgstr "支持 Anthropic 和 OpenAI 兼容接口，例如 ChatGPT、Claude、Gemini、DeepSeek、Doubao、Qwen。"
-
-msgid "Initializing AI request..."
-msgstr "正在初始化 AI 请求..."
-
-msgid "AI Generated Result"
-msgstr "AI 生成结果"
-
-msgid "AI Generated Content"
-msgstr "AI 生成内容"
-
-msgid "Local model failed and no external API key / URL / model name is configured. Please configure an external model in Settings → AI."
-msgstr "本地模型失敗，且未設定外部 API Key / URL / 模型名稱。請在設定 → AI 中設定外部模型。"
-
-msgid "API Key is not set."
-msgstr "未设置 API Key。"
-
-msgid "Please enter your API Key in Settings → AI."
-msgstr "请在 设置 → AI 中输入 API Key。"
-
-msgid "API Base URL is not set."
-msgstr "未设置 API Base URL。"
-
-msgid "Please enter the API Base URL in Settings → AI."
-msgstr "请在 设置 → AI 中输入 API Base URL。"
-
-msgid "Model name is not set."
-msgstr "未设置模型名称。"
-
-msgid "Please enter a model name in Settings → AI."
-msgstr "请在 设置 → AI 中输入模型名称。"
-
-msgid "⚠️ Request exceeded 30 seconds, processing may take a while. Please continue waiting..."
-msgstr "⚠️ 请求超过 30 秒，处理可能需要一些时间，请继续等待..."
-
-msgid "✓ Request successful."
-msgstr "✓ 请求成功。"
-
-msgid "Preparing your AI request..."
-msgstr "正在准备 AI 请求..."
-
-msgid "Preparing request for {model}..."
-msgstr "正在为 {model} 准备请求..."
-
-msgid "Contacting AI provider for {model}..."
-msgstr "正在连接 AI 提供方（{model}）..."
-
-msgid "Waiting for AI response..."
-msgstr "正在等待 AI 响应..."
-
-msgid "Processing AI response..."
-msgstr "正在处理 AI 响应..."
-
-msgid "Done."
-msgstr "完成。"
-
-msgid "Error:"
-msgstr "错误："
-
-msgid "Template"
-msgstr "模板"
-
-msgid "Insert Template"
-msgstr "插入模板"
-
-msgid "Use Template"
-msgstr "使用模板"
-
-msgid "[Custom]"
-msgstr "[自定义]"
-
-msgid "Edit Content"
-msgstr "编辑内容"
-
-msgid "Edit"
-msgstr "编辑"
-
-msgid "Entry saved."
-msgstr "已保存。"
-
-msgid "Please enter a description."
-msgstr "请输入描述内容。"
-
-msgid "Downloading local model..."
-msgstr "正在下载本地模型..."
-
-msgid "Generating with local model..."
-msgstr "正在使用本地模型生成..."
-
-msgid "Installing local model dependencies..."
-msgstr "正在安装本地模型依赖..."
-
-msgid "Loading local model..."
-msgstr "正在加载本地模型..."
-
-msgid "Local model loaded."
-msgstr "本地模型已加载。"
-
-msgid "Local model not downloaded - go to Settings -> AI"
-msgstr "本地模型未下载 - 请前往 设置 -> AI"
-
-msgid "Local model unavailable - using external model instead"
-msgstr "本地模型不可用，改用外部模型"
-
-msgid "Local model unavailable - using external model instead."
-msgstr "本地模型不可用，改用外部模型。"
-
-msgid "Model download completed."
-msgstr "模型下载完成。"
-
-msgid "Model hash verified."
-msgstr "模型哈希校验通过。"
-
-msgid "Verifying local model file..."
-msgstr "正在校验本地模型文件..."
-
-msgid "When enabled, text processing uses the local model first - no data is sent to external services."
-msgstr "启用后，文本处理会优先使用本地模型，不会将数据发送到外部服务。"
-
-msgid "llama-cpp-python not installed - run: pip install llama-cpp-python"
-msgstr "未安装 llama-cpp-python - 请运行: pip install llama-cpp-python"
-
-msgid "New version available: v{0}"
-msgstr "发现新版本：v{0}"
-
-msgid "Local model is inactive"
-msgstr "本地模型处于未激活状态。"
-
-msgid "Local model verification failed. Please re-download or switch model."
-msgstr "本地模型校验失败。请重新下载或切换模型。"
-
-msgid "Local model verification timed out."
-msgstr "本地模型校验超时。"
-
-msgid "Local model verification was cancelled."
-msgstr "本地模型校验已取消。"
-
-msgid "Permission denied while verifying local model file."
-msgstr "校验本地模型文件时权限被拒绝。"
-
-msgid "Active"
-msgstr "已激活"
-
-msgid "Downloaded"
-msgstr "Downloaded"
-
-msgid "Inactive"
-msgstr "未激活"
-
-msgid "Custom theme color"
-msgstr "自定义主题颜色"
-
-msgid "Choose custom color"
-msgstr "选择自定义颜色"
-
-msgid "Selected color"
-msgstr "已选颜色"
-
-msgid "🔵 Blue"
-msgstr "🔵 蓝色"
-
-msgid "🌸 Pink"
-msgstr "🌸 粉色"
-
-msgid "🌿 Green"
-msgstr "🌿 绿色"
-
-msgid "🟣 Purple"
-msgstr "🟣 紫色"
-
-msgid "Minimal mode"
-msgstr "极简模式"
-
-msgid "Restart required to apply minimal mode."
-msgstr "需要重启以应用极简模式。"
-
-msgid "Default"
-msgstr "默认"
-
-msgid "Invoice"
-msgstr "发票"
-
-msgid "Timesheet"
-msgstr "工时表"
-
-msgid "Average"
-msgstr "平均"
-
-msgid "Bar"
-msgstr "柱状"
-
-msgid "Line"
-msgstr "折线"
-
-msgid "Show leave"
-msgstr "显示休假"
-
-msgid "Work hours"
-msgstr "工作时长"
-
-msgid "Leave"
-msgstr "休假"
-
-msgid "Leave Hours"
-msgstr "休假时长"
-
-msgid "Open color picker"
-msgstr "打开颜色选择器"
-
-msgid "Restart Required"
-msgstr "需要重启"
-
-msgid "Minimal mode toggle will take effect after restarting the application."
-msgstr "极简模式切换将在重启应用后生效。"
-
-msgid "Period"
-msgstr "周期"
-
-msgid "Chart:"
-msgstr "图表："
-
-msgid "Metric:"
-msgstr "指标："
-
-msgid "Change Password"
-msgstr "修改密码"
-
-msgid "Confirm Password"
-msgstr "确认密码"
-
-msgid "Login"
-msgstr "登录"
-
-msgid "Login failed"
-msgstr "登录失败"
-
-msgid "New Password"
-msgstr "新密码"
-
-msgid "No accounts found. Please create an administrator account."
-msgstr "未找到账号。请创建管理员账号。"
-
-msgid "Old Password"
-msgstr "旧密码"
-
-msgid "Old password is incorrect."
-msgstr "旧密码不正确。"
-
-msgid "Password"
-msgstr "密码"
-
-msgid "Password changed successfully."
-msgstr "密码修改成功。"
-
-msgid "Password must be at least 6 characters."
-msgstr "密码至少需要 6 个字符。"
-
-msgid "Passwords do not match."
-msgstr "两次输入的密码不一致。"
-
-msgid "Please enter username and password."
-msgstr "请输入用户名和密码。"
-
-msgid "Register"
-msgstr "注册"
-
-msgid "Registration failed."
-msgstr "注册失败。"
-
-msgid "Registration successful. Please log in."
-msgstr "注册成功。请登录。"
-
-msgid "Remember me"
-msgstr "记住我"
-
-msgid "The default administrator password must be changed before continuing."
-msgstr "默认管理员密码必须修改后才能继续。"
-
-msgid "Username"
-msgstr "用户名"
-
-msgid "Username already exists."
-msgstr "用户名已存在。"
-
-msgid "Username is required."
-msgstr "用户名不能为空。"
-
-msgid "Username or password is incorrect."
-msgstr "用户名或密码不正确。"
-
-msgid "Current user"
-msgstr "当前用户"
-
-msgid "Are you sure you want to log out?"
-msgstr "确定要退出登录吗？"
-
-msgid "Log out"
-msgstr "退出登录"
-
-msgid "Backup Data"
-msgstr "备份数据"
-
-msgid "Backup destination must be different from the active database."
-msgstr "备份目标必须与当前数据库不同。"
-
-msgid "Backup saved: {}"
-msgstr "备份已保存：{}"
-
-msgid "Data restored successfully."
-msgstr "数据已成功恢复。"
-
-msgid "Database Backup"
-msgstr "数据库备份"
-
-msgid "Restore Data"
-msgstr "恢复数据"
-
-msgid "Restore failed."
-msgstr "恢复失败。"
-
-msgid "Restore will replace the current database file. Continue?"
-msgstr "恢复操作将替换当前数据库文件。是否继续？"
-
-msgid "The selected backup database appears to be corrupted."
-msgstr "所选备份数据库可能已损坏。"
-
-msgid "The selected backup does not contain the current account."
-msgstr "所选备份不包含当前账号。"
-
-msgid "The selected backup does not contain user account data."
-msgstr "所选备份不包含用户账号数据。"
-
-msgid "The selected file does not exist."
-msgstr "所选文件不存在。"
-
-msgid "You haven't backed up in {days} days. Please back up your data."
-msgstr "你已经 {days} 天没有备份。请备份你的数据。"
-
-msgid "SQLite Database (*.db)"
-msgstr "SQLite 数据库 (*.db)"
-
-msgid "Delete Report"
-msgstr "删除报告"
-
-msgid "Delete this saved report?"
-msgstr "删除这份已保存的报告？"
-
-msgid "History"
-msgstr "历史"
-
-msgid "Markdown (*.md)"
-msgstr "Markdown (*.md)"
-
-msgid "No saved reports."
-msgstr "没有已保存的报告。"
-
-msgid "Report content is empty."
-msgstr "报告内容为空。"
-
-msgid "Report deleted."
-msgstr "报告已删除。"
-
-msgid "Report saved."
-msgstr "报告已保存。"
-
-msgid "Reports have unsaved changes. Save before closing?"
-msgstr "报告有未保存的修改。关闭前保存吗？"
-
-msgid "Remember-token encryption requires the 'cryptography' package. Please install it via pip install cryptography."
-msgstr "记住令牌加密需要安装 'cryptography' 包。请通过 pip install cryptography 安装。"
-
-msgid "Account"
-msgstr "账号"
-
-msgid "Your password has not been changed in {days} days. Please update it regularly."
-msgstr "你的密码已超过 {days} 天未修改。请定期更新密码。"
-
-msgid "Administrator"
-msgstr "管理员"
-
-msgid "Administrator Password"
-msgstr "管理员密码"
-
-msgid "Administrator password is incorrect."
-msgstr "管理员密码不正确。"
-
-msgid "Administrator privileges are required."
-msgstr "需要管理员权限。"
-
-msgid "At least one administrator account is required."
-msgstr "至少需要保留一个管理员账号。"
-
-msgid "Confirm Administrator Password"
-msgstr "确认管理员密码"
-
-msgid "Copy and safely store this recovery key now. If it is lost, only an administrator can reset your password."
-msgstr "请立即复制并安全保存此恢复密钥。如果丢失，只能由管理员重置你的密码。"
-
-msgid "Forgot Password?"
-msgstr "忘记密码？"
-
-msgid "Grant Admin"
-msgstr "授予管理员"
-
-msgid "I have saved this recovery key safely."
-msgstr "我已安全保存此恢复密钥。"
-
-msgid "Manage Users"
-msgstr "管理用户"
-
-msgid "Operation failed."
-msgstr "操作失败。"
-
-msgid "Password Changed"
-msgstr "密码修改时间"
-
-msgid "Password reset successfully."
-msgstr "密码已重置。"
-
-msgid "Password reset successfully. Please log in with the new password."
-msgstr "密码重置成功。请使用新密码登录。"
-
-msgid "Please confirm that you have saved the recovery key."
-msgstr "请确认你已保存恢复密钥。"
-
-msgid "Please enter administrator password."
-msgstr "请输入管理员密码。"
-
-msgid "Please enter username and recovery key."
-msgstr "请输入用户名和恢复密钥。"
-
-msgid "Recovery Key"
-msgstr "恢复密钥"
-
-msgid "Recovery key is incorrect. Contact an administrator to reset your password."
-msgstr "恢复密钥不正确。请联系管理员重置密码。"
-
-msgid "Recovery key saved."
-msgstr "恢复密钥已保存。"
-
-msgid "Refresh"
-msgstr "刷新"
-
-msgid "Reset Password"
-msgstr "重置密码"
-
-msgid "Reset User Password"
-msgstr "重置用户密码"
-
-msgid "Revoke Admin"
-msgstr "撤销管理员"
-
-msgid "Role"
-msgstr "角色"
-
-msgid "Save Recovery Key"
-msgstr "保存恢复密钥"
-
-msgid "Sign out remembered sessions"
-msgstr "注销已记住的会话"
-
-msgid "Text Files (*.txt)"
-msgstr "文本文件 (*.txt)"
-
-msgid "User"
-msgstr "用户"
-
-msgid "User not found."
-msgstr "未找到用户。"
-
-msgid "Could not save recovery key."
-msgstr "无法保存恢复密钥。"
-
-msgid "#"
-msgstr "#"
-
-msgid "A new recovery key was generated. Share it with the user now; it cannot be shown again later."
-msgstr "已生成新的恢复密钥。请立即告知用户；之后将无法再次显示。"
-
-msgid "Actions"
-msgstr "操作"
-
-msgid "Are you sure you want to regenerate the recovery key? The old key will stop working immediately."
-msgstr "确定要重新生成恢复密钥吗？旧密钥将立即失效。"
-
-msgid "CSV Data Management"
-msgstr "CSV 数据管理"
-
-msgid "Created"
-msgstr "创建日期"
-
-msgid "Import or export worklog records as CSV files for backup, migration, or spreadsheet analysis."
-msgstr "导入或导出工作日志 CSV 文件，用于备份、迁移或电子表格分析。"
-
-msgid "Next day"
-msgstr "下一日"
-
-msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
-msgstr "支持 OpenAI 兼容格式的模型，包括 ChatGPT、Claude、Qwen 和 DeepSeek。"
-
-msgid "Previous day"
-msgstr "上一日"
-
-msgid "Recovery Key Created"
-msgstr "恢复密钥生成日期"
-
-msgid "Recovery Key Regenerated"
-msgstr "恢复密钥已重新生成"
-
-msgid "Regenerate Recovery Key"
-msgstr "重新生成恢复密钥"
-
-msgid "Review accounts, reset passwords, and manage recovery keys."
-msgstr "查看账户、重置密码并管理恢复密钥。"
-
-msgid "Work Logger v3.0.0 focuses on secure personal work tracking with flexible reporting.\n\nHighlights:\n- Multi-user account system with isolated worklogs, reminders, reports, and settings.\n- Secure password hashing, recovery keys, administrator resets, and remember-me storage.\n- Custom themes, dark mode, and minimal mode for focused daily logging.\n- Enhanced analytics with bar/line charts, averages, overtime, targets, and leave markers.\n- Weekly and monthly reports that save automatically for the selected calendar period.\n- Database backup and restore, CSV import/export, and calendar import/export.\n- AI-assisted reporting with local model support and OpenAI-compatible external providers.\n- Multilingual UI for English, Japanese, Korean, Simplified Chinese, and Traditional Chinese."
-msgstr "Work Logger v3.0.0 专注于安全的个人工时记录与灵活报告。\n\n亮点：\n- 多用户账户系统，工作记录、提醒、报告和设置完全隔离。\n- 安全密码哈希、恢复密钥、管理员重置和记住我存储。\n- 自定义主题、深色模式和专注每日记录的极简模式。\n- 增强分析图表，支持柱状图、折线图、平均值、加班、目标和休假标记。\n- 周报和月报会按所选日历周期自动保存。\n- 数据库备份与恢复、CSV 导入导出、日历导入导出。\n- AI 辅助报告，支持本地模型和 OpenAI 兼容外部模型。\n- 支持英语、日语、韩语、简体中文和繁体中文。"
-
-msgid "Regenerate Key"
-msgstr "重新生成密钥"
-
-msgid "Sample Template"
-msgstr "示例模板"
-
-msgid "Work Logger is a privacy-first desktop app for recording work time, notes, quick logs, calendar context, and recurring reports without sending your data to a cloud service by default.\n\nDaily logging:\n- Enter start, end, break, work type, and notes for each date.\n- Use Auto Record buttons for start, end, and break checkpoints.\n- Capture lightweight task details with Quick Log and merge them into reports.\n- Navigate by calendar, month, week, or minimal-mode day controls.\n\nAccounts and security:\n- Multiple local users are supported, and each user's worklogs, settings, reports, reminders, and backups are isolated.\n- Passwords and recovery keys are stored as secure hashes.\n- Administrators can reset user passwords and regenerate recovery keys when needed.\n- Remember-me login uses the operating system credential manager when available.\n\nReports and templates:\n- Generate daily notes, weekly reports, and monthly reports from saved data.\n- Weekly and monthly reports are tied to the selected calendar period and can be saved for later editing.\n- Built-in and custom templates help standardize recurring note and report formats.\n\nAnalytics and exports:\n- Review work hours, averages, overtime, targets, leave markers, and trend charts.\n- Export chart data to CSV and charts to PDF.\n- Import/export worklogs as CSV and calendar events as ICS.\n- Back up and restore the local database with reminders for stale backups.\n\nCustomization and AI:\n- Switch languages, themes, custom accent colors, dark mode, and minimal mode.\n- Use local-model assistance when configured, or connect to OpenAI-compatible external providers such as ChatGPT, Claude, Qwen, and DeepSeek.\n- Supported UI languages include English, Japanese, Korean, Simplified Chinese, and Traditional Chinese."
-msgstr "Work Logger 是一款以隐私优先为核心的桌面应用，用于记录工时、笔记、快速日志、日历上下文和周期性报告。默认情况下，你的数据不会发送到云端服务。\n\n日常记录：\n- 为每个日期记录开始时间、结束时间、休息时间、工作类型和备注。\n- 使用自动记录按钮快速登记开始、结束和休息节点。\n- 用 Quick Log 捕捉轻量任务细节，并合并到报告中。\n- 可通过日历、月份、周视图或极简模式日期按钮切换记录。\n\n账户与安全：\n- 支持多个本地用户，每个用户的工作记录、设置、报告、提醒和备份互相隔离。\n- 密码和恢复密钥均以安全哈希方式存储。\n- 管理员可在需要时重置用户密码并重新生成恢复密钥。\n- “记住我”登录优先使用操作系统凭据管理器。\n\n报告与模板：\n- 可根据已保存数据生成日报、周报和月报。\n- 周报和月报会关联到当前选择的日历周期，并可保存后继续编辑。\n- 内置模板和自定义模板可帮助统一常用笔记和报告格式。\n\n分析与导出：\n- 查看工时、平均值、加班、目标、休假标记和趋势图表。\n- 将图表数据导出为 CSV，将图表导出为 PDF。\n- 支持工作记录 CSV 导入/导出，以及日历 ICS 导入/导出。\n- 支持本地数据库备份与恢复，并在备份过期时提醒。\n\n自定义与 AI：\n- 可切换语言、主题、自定义强调色、深色模式和极简模式。\n- 配置后可使用本地模型辅助，也可连接 ChatGPT、Claude、Qwen、DeepSeek 等 OpenAI 兼容外部模型。\n- 支持英语、日语、韩语、简体中文和繁体中文界面。"
-
-msgid "Save As"
-msgstr "保存为"
-
-msgid "Generated At"
-msgstr "生成日期"
-
-msgid "Note"
-msgstr "注意"
-
-msgid "This recovery key can be used to reset the user's password if it is forgotten. Store it securely and share it only with the account owner. Anyone with this key may reset the password until a new key is generated."
-msgstr "此恢复密钥可在用户忘记密码时用于重置该用户密码。请妥善保管，并仅分享给账户本人。在生成新密钥之前，任何持有此密钥的人都可能重置该账户密码。"
-
-msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
-msgstr "请定期备份数据库，以保护本地工作记录、报告、设置和账号数据。"
-
-msgid "Password must be at least 8 characters."
-msgstr "Password must be at least 8 characters."
-
-msgid "Administrator accounts cannot be deleted."
-msgstr "不能删除管理员账户。"
-
-msgid "Delete User"
-msgstr "删除用户"
-
-msgid "Enter administrator password to delete {username}."
-msgstr "请输入管理员密码以删除 {username}。"
-
-msgid "Monthly Analytics"
-msgstr "月度"
-
-msgid "Password reset successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
-msgstr "密码已重置。已生成新的恢复密钥。请立即复制并保存；旧恢复密钥将不再可用。"
-
-msgid "This operation will permanently delete this user's data, including work records, notes, reports, and settings."
-msgstr "此操作将永久删除该用户的所有数据，包括工作记录、笔记、报告和设置。"
-
-msgid "User deleted successfully."
-msgstr "用户已删除。"
-
-msgid "Password changed successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
-msgstr "密码已修改。已生成新的恢复密钥。请立即复制并保存；旧恢复密钥将不再可用。"
-
-msgid "Changing your password will generate a new recovery key. Your new password must be at least 8 characters."
-msgstr "修改密码后将重新生成恢复密钥。新密码长度至少为 8 位。"
-
-msgid "Could not load the latest model catalog. Check your network and try again."
-msgstr "无法加载最新模型列表。请检查网络后重试。"
-
-msgid "Could not save initial password."
-msgstr "无法保存初始密码。"
-
-msgid "Create User"
-msgstr "创建用户"
-
-msgid "In Use"
-msgstr "使用状态"
-
-msgid "Initial Password"
-msgstr "初始密码"
-
-msgid "Initial password saved."
-msgstr "初始密码已保存。"
-
-msgid "Loading latest model catalog..."
-msgstr "正在加载最新模型列表..."
-
-msgid "Password change failed."
-msgstr "密码更改失败。"
-
-msgid "Save Initial Password"
-msgstr "保存初始密码"
-
-msgid "The initial password is generated automatically. The user must change it at first login."
-msgstr "初始密码会自动生成。用户首次登录时必须更改该密码。"
-
-msgid "The user must change this password at first login."
-msgstr "用户首次登录时必须更改此密码。"
-
-msgid "This account must change its password before continuing."
-msgstr "此账户必须先更改密码才能继续。"
-
-msgid "Unused"
-msgstr "未使用"
-
-msgid "Used"
-msgstr "已使用"
-
-msgid "User created successfully. Share this initial password now; it cannot be shown again later."
-msgstr "用户已创建成功。请立即分享此初始密码；之后将无法再次显示。"

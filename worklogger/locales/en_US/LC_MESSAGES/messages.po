@@ -1,11 +1,25 @@
 msgid ""
-msgstr "Language: en_US\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+msgstr ""
+"Language: en_US\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 
-msgid "\n\nSkipped {} rows:\n{}"
-msgstr "\n\nSkipped {} rows:\n{}"
+msgid ""
+"\n"
+"\n"
+"Skipped {} rows:\n"
+"{}"
+msgstr ""
+"\n"
+"\n"
+"Skipped {} rows:\n"
+"{}"
 
 msgid " days"
 msgstr " days"
+
+msgid "#"
+msgstr "#"
 
 msgid "+"
 msgstr "+"
@@ -16,8 +30,44 @@ msgstr "1.0"
 msgid "A different model is already downloaded.  It will be deleted before downloading the new one.  Continue?"
 msgstr "A different model is already downloaded.  It will be deleted before downloading the new one.  Continue?"
 
+msgid "A different model is already downloaded. It will be deleted before the new one downloads. Continue?"
+msgstr "A different model is already downloaded. It will be deleted before the new one downloads. Continue?"
+
+msgid "A new recovery key was generated. Share it with the user now; it cannot be shown again later."
+msgstr "A new recovery key was generated. Share it with the user now; it cannot be shown again later."
+
 msgid "A privacy-first desktop work-hours tracker with AI-powered reporting."
 msgstr "A privacy-first desktop work-hours tracker with AI-powered reporting."
+
+msgid "About"
+msgstr "About"
+
+msgid "Account"
+msgstr "Account"
+
+msgid "Actions"
+msgstr "Actions"
+
+msgid "Active"
+msgstr "Active"
+
+msgid "Add"
+msgstr "Add"
+
+msgid "Administrator"
+msgstr "Administrator"
+
+msgid "Administrator accounts cannot be deleted."
+msgstr "Administrator accounts cannot be deleted."
+
+msgid "Administrator Password"
+msgstr "Administrator Password"
+
+msgid "Administrator password is incorrect."
+msgstr "Administrator password is incorrect."
+
+msgid "Administrator privileges are required."
+msgstr "Administrator privileges are required."
 
 msgid "AI"
 msgstr "AI"
@@ -25,26 +75,32 @@ msgstr "AI"
 msgid "AI Generated"
 msgstr "AI Generated"
 
+msgid "AI Generated Content"
+msgstr "AI Generated Content"
+
+msgid "AI Generated Result"
+msgstr "AI Generated Result"
+
 msgid "AI Result"
 msgstr "AI Result"
-
-msgid "API Base URL"
-msgstr "API Base URL"
-
-msgid "API Key"
-msgstr "API Key"
-
-msgid "About"
-msgstr "About"
-
-msgid "Add"
-msgstr "Add"
 
 msgid "Analytics"
 msgstr "Analytics"
 
 msgid "Annual"
 msgstr "Annual"
+
+msgid "API Base URL"
+msgstr "API Base URL"
+
+msgid "API Base URL is not set."
+msgstr "API Base URL is not set."
+
+msgid "API Key"
+msgstr "API Key"
+
+msgid "API Key is not set."
+msgstr "API Key is not set."
 
 msgid "Appearance"
 msgstr "Appearance"
@@ -61,6 +117,15 @@ msgstr "Apr"
 msgid "April"
 msgstr "April"
 
+msgid "Are you sure you want to log out?"
+msgstr "Are you sure you want to log out?"
+
+msgid "Are you sure you want to regenerate the recovery key? The old key will stop working immediately."
+msgstr "Are you sure you want to regenerate the recovery key? The old key will stop working immediately."
+
+msgid "At least one administrator account is required."
+msgstr "At least one administrator account is required."
+
 msgid "Aug"
 msgstr "Aug"
 
@@ -73,11 +138,26 @@ msgstr "Author"
 msgid "Auto Record"
 msgstr "Auto Record"
 
+msgid "Average"
+msgstr "Average"
+
+msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
+msgstr "Back up your database regularly to protect your local work logs, reports, settings, and account data."
+
+msgid "Backup Data"
+msgstr "Backup Data"
+
+msgid "Backup destination must be different from the active database."
+msgstr "Backup destination must be different from the active database."
+
+msgid "Backup saved: {}"
+msgstr "Backup saved: {}"
+
+msgid "Bar"
+msgstr "Bar"
+
 msgid "Break (h)"
 msgstr "Break (h)"
-
-msgid "Break Timer"
-msgstr "Break Timer"
 
 msgid "Break done"
 msgstr "Break done"
@@ -88,20 +168,25 @@ msgstr "Break hours cannot be negative."
 msgid "Break time must be less than the total shift duration."
 msgstr "Break time must be less than the total shift duration."
 
+msgid "Break Timer"
+msgstr "Break Timer"
+
 msgid "Built-in"
 msgstr "Built-in"
 
-msgid "CSV file is empty."
-msgstr "CSV file is empty."
+msgid "Business trip"
+msgstr "Business trip"
 
-msgid "CTO"
-msgstr "CTO"
-
-msgid "Calendar Sync"
-msgstr "Calendar Sync"
-
-msgid "Calendar data already exists.\n\nReplace — clear all previous calendar events before import.\nAppend — keep existing events and add new ones."
-msgstr "Calendar data already exists.\n\nReplace — clear all previous calendar events before import.\nAppend — keep existing events and add new ones."
+msgid ""
+"Calendar data already exists.\n"
+"\n"
+"Replace — clear all previous calendar events before import.\n"
+"Append — keep existing events and add new ones."
+msgstr ""
+"Calendar data already exists.\n"
+"\n"
+"Replace — clear all previous calendar events before import.\n"
+"Append — keep existing events and add new ones."
 
 msgid "Calendar events cleared."
 msgstr "Calendar events cleared."
@@ -109,8 +194,20 @@ msgstr "Calendar events cleared."
 msgid "Calendar events:"
 msgstr "Calendar events:"
 
+msgid "Calendar Sync"
+msgstr "Calendar Sync"
+
 msgid "Cancel"
 msgstr "Cancel"
+
+msgid "Change Password"
+msgstr "Change Password"
+
+msgid "Changing your password will generate a new recovery key. Your new password must be at least 8 characters."
+msgstr "Changing your password will generate a new recovery key. Your new password must be at least 8 characters."
+
+msgid "Chart:"
+msgstr "Chart:"
 
 msgid "Check for Updates"
 msgstr "Check for Updates"
@@ -121,6 +218,9 @@ msgstr "Checking for updates…"
 msgid "Choose a model to download"
 msgstr "Choose a model to download"
 
+msgid "Choose custom color"
+msgstr "Choose custom color"
+
 msgid "Clear Calendar Events"
 msgstr "Clear Calendar Events"
 
@@ -130,8 +230,20 @@ msgstr "Clock"
 msgid "Close"
 msgstr "Close"
 
+msgid "Comp leave"
+msgstr "Comp leave"
+
 msgid "Confirm"
 msgstr "Confirm"
+
+msgid "Confirm Administrator Password"
+msgstr "Confirm Administrator Password"
+
+msgid "Confirm Password"
+msgstr "Confirm Password"
+
+msgid "Contacting AI provider for {model}..."
+msgstr "Contacting AI provider for {model}..."
 
 msgid "Continue"
 msgstr "Continue"
@@ -142,17 +254,50 @@ msgstr "Copied!"
 msgid "Copy"
 msgstr "Copy"
 
+msgid "Copy and safely store this recovery key now. If it is lost, only an administrator can reset your password."
+msgstr "Copy and safely store this recovery key now. If it is lost, only an administrator can reset your password."
+
 msgid "Could not check for updates: {}"
 msgstr "Could not check for updates: {}"
 
-msgid "temporarily unavailable"
-msgstr "temporarily unavailable"
+msgid "Could not load the latest model catalog. Check your network and try again."
+msgstr "Could not load the latest model catalog. Check your network and try again."
+
+msgid "Could not save initial password."
+msgstr "Could not save initial password."
+
+msgid "Could not save recovery key."
+msgstr "Could not save recovery key."
+
+msgid "Could not verify the update server certificate. Please check your network trust settings and try again."
+msgstr "Could not verify the update server certificate. Please check your network trust settings and try again."
 
 msgid "Create Custom Template"
 msgstr "Create Custom Template"
 
+msgid "Create User"
+msgstr "Create User"
+
+msgid "Created"
+msgstr "Created"
+
+msgid "CSV Data Management"
+msgstr "CSV Data Management"
+
+msgid "CSV file is empty."
+msgstr "CSV file is empty."
+
+msgid "CTO"
+msgstr "CTO"
+
+msgid "Current user"
+msgstr "Current user"
+
 msgid "Custom"
 msgstr "Custom"
+
+msgid "Custom theme color"
+msgstr "Custom theme color"
 
 msgid "Daily"
 msgstr "Daily"
@@ -163,11 +308,20 @@ msgstr "Daily avg"
 msgid "Data"
 msgstr "Data"
 
+msgid "Data restored successfully."
+msgstr "Data restored successfully."
+
+msgid "Database Backup"
+msgstr "Database Backup"
+
 msgid "Dec"
 msgstr "Dec"
 
 msgid "December"
 msgstr "December"
+
+msgid "Default"
+msgstr "Default"
 
 msgid "Default break (h)"
 msgstr "Default break (h)"
@@ -187,11 +341,14 @@ msgstr "Delete this model file? This cannot be undone."
 msgid "Delete this template?"
 msgstr "Delete this template?"
 
-msgid "Discard"
-msgstr "Discard"
+msgid "Delete User"
+msgstr "Delete User"
 
 msgid "Done"
 msgstr "Done"
+
+msgid "Done."
+msgstr "Done."
 
 msgid "Download"
 msgstr "Download"
@@ -202,11 +359,23 @@ msgstr "Download .md"
 msgid "Download Local Model"
 msgstr "Download Local Model"
 
+msgid "Downloaded"
+msgstr "Downloaded"
+
+msgid "Downloading local model..."
+msgstr "Downloading local model..."
+
 msgid "Downloading…  You may cancel at any time; the download will resume from where it left off."
 msgstr "Downloading…  You may cancel at any time; the download will resume from where it left off."
 
 msgid "Enable local model"
 msgstr "Enable local model"
+
+msgid "Enable menu bar icon"
+msgstr "Enable menu bar icon"
+
+msgid "Enable tray icon"
+msgstr "Enable tray icon"
 
 msgid "End"
 msgstr "End"
@@ -220,8 +389,14 @@ msgstr "End time (opt.)"
 msgid "Ended"
 msgstr "Ended"
 
+msgid "Enter administrator password to delete {username}."
+msgstr "Enter administrator password to delete {username}."
+
 msgid "Error"
 msgstr "Error"
+
+msgid "Error:"
+msgstr "Error:"
 
 msgid "Expand notes"
 msgstr "Expand notes"
@@ -253,20 +428,44 @@ msgstr "Feb"
 msgid "February"
 msgstr "February"
 
+msgid "Forgot Password?"
+msgstr "Forgot Password?"
+
 msgid "Fri"
 msgstr "Fri"
 
 msgid "General"
 msgstr "General"
 
+msgid "Generated At"
+msgstr "Generated At"
+
+msgid "Generating with local model..."
+msgstr "Generating with local model..."
+
 msgid "GitHub"
 msgstr "GitHub"
+
+msgid "gpt-4o-mini | claude-haiku-4-5-20251001"
+msgstr "gpt-4o-mini | claude-haiku-4-5-20251001"
+
+msgid "Grant Admin"
+msgstr "Grant Admin"
+
+msgid "h"
+msgstr "h"
 
 msgid "HH:MM"
 msgstr "HH:MM"
 
 msgid "Hint / extra instructions (optional)"
 msgstr "Hint / extra instructions (optional)"
+
+msgid "https://api.openai.com/v1 | https://api.anthropic.com"
+msgstr "https://api.openai.com/v1 | https://api.anthropic.com"
+
+msgid "I have saved this recovery key safely."
+msgstr "I have saved this recovery key safely."
 
 msgid "Import .gguf"
 msgstr "Import .gguf"
@@ -276,6 +475,9 @@ msgstr "Import .ics"
 
 msgid "Import CSV"
 msgstr "Import CSV"
+
+msgid "Import or export worklog records as CSV files for backup, migration, or spreadsheet analysis."
+msgstr "Import or export worklog records as CSV files for backup, migration, or spreadsheet analysis."
 
 msgid "Import Result"
 msgstr "Import Result"
@@ -289,11 +491,29 @@ msgstr "Imported {} calendar events."
 msgid "Imported {} records."
 msgstr "Imported {} records."
 
+msgid "In Use"
+msgstr "In Use"
+
+msgid "Inactive"
+msgstr "Inactive"
+
+msgid "Initial Password"
+msgstr "Initial Password"
+
+msgid "Initial password saved."
+msgstr "Initial password saved."
+
+msgid "Initializing AI request..."
+msgstr "Initializing AI request..."
+
 msgid "Insert"
 msgstr "Insert"
 
 msgid "Insert Quick Log"
 msgstr "Insert Quick Log"
+
+msgid "Installing local model dependencies..."
+msgstr "Installing local model dependencies..."
 
 msgid "Integrity check failed — file may be corrupted"
 msgstr "Integrity check failed — file may be corrupted"
@@ -303,6 +523,9 @@ msgstr "Integrity failed"
 
 msgid "Invalid time range. The shift must be within {max_hours} hours (overnight is supported)."
 msgstr "Invalid time range. The shift must be within {max_hours} hours (overnight is supported)."
+
+msgid "Invoice"
+msgstr "Invoice"
 
 msgid "Jan"
 msgstr "Jan"
@@ -322,11 +545,29 @@ msgstr "Jun"
 msgid "June"
 msgstr "June"
 
+msgid "Leave"
+msgstr "Leave"
+
 msgid "Leave days"
 msgstr "Leave days"
 
+msgid "Leave Hours"
+msgstr "Leave Hours"
+
 msgid "License"
 msgstr "License"
+
+msgid "Line"
+msgstr "Line"
+
+msgid "llama-cpp-python not installed - run: pip install llama-cpp-python"
+msgstr "llama-cpp-python not installed - run: pip install llama-cpp-python"
+
+msgid "Loading latest model catalog..."
+msgstr "Loading latest model catalog..."
+
+msgid "Loading local model..."
+msgstr "Loading local model..."
 
 msgid "Local Model"
 msgstr "Local Model"
@@ -334,11 +575,57 @@ msgstr "Local Model"
 msgid "Local model"
 msgstr "Local model"
 
-msgid "Local model failed and no external API key / URL / model name is configured.\nPlease configure an external model in Settings → AI."
-msgstr "Local model failed and no external API key / URL / model name is configured.\nPlease configure an external model in Settings → AI."
+msgid ""
+"Local model failed and no external API key / URL / model name is configured.\n"
+"Please configure an external model in Settings → AI."
+msgstr ""
+"Local model failed and no external API key / URL / model name is configured.\n"
+"Please configure an external model in Settings → AI."
+
+msgid "Local model failed and no external API key / URL / model name is configured. Please configure an external model in Settings → AI."
+msgstr "Local model failed and no external API key / URL / model name is configured. Please configure an external model in Settings → AI."
+
+msgid "Local model failed to load"
+msgstr "Local model failed to load"
 
 msgid "Local model is disabled."
 msgstr "Local model is disabled."
+
+msgid "Local model is inactive"
+msgstr "Local model is inactive"
+
+msgid "Local model loaded."
+msgstr "Local model loaded."
+
+msgid "Local model not downloaded - go to Settings -> AI"
+msgstr "Local model not downloaded - go to Settings -> AI"
+
+msgid "Local model unavailable - using external model instead"
+msgstr "Local model unavailable - using external model instead"
+
+msgid "Local model unavailable - using external model instead."
+msgstr "Local model unavailable - using external model instead."
+
+msgid "Local model verification failed. Please re-download or switch model."
+msgstr "Local model verification failed. Please re-download or switch model."
+
+msgid "Local model verification timed out."
+msgstr "Local model verification timed out."
+
+msgid "Local model verification was cancelled."
+msgstr "Local model verification was cancelled."
+
+msgid "Log out"
+msgstr "Log out"
+
+msgid "Login"
+msgstr "Login"
+
+msgid "Login failed"
+msgstr "Login failed"
+
+msgid "Manage Users"
+msgstr "Manage Users"
 
 msgid "Manual Input"
 msgstr "Manual Input"
@@ -349,8 +636,20 @@ msgstr "Mar"
 msgid "March"
 msgstr "March"
 
+msgid "Markdown (*.md)"
+msgstr "Markdown (*.md)"
+
 msgid "May"
 msgstr "May"
+
+msgid "Metric:"
+msgstr "Metric:"
+
+msgid "Minimal mode"
+msgstr "Minimal mode"
+
+msgid "Minimal mode toggle will take effect after restarting the application."
+msgstr "Minimal mode toggle will take effect after restarting the application."
 
 msgid "Missing columns: {}"
 msgstr "Missing columns: {}"
@@ -358,17 +657,26 @@ msgstr "Missing columns: {}"
 msgid "Model"
 msgstr "Model"
 
+msgid "Model download completed."
+msgstr "Model download completed."
+
+msgid "Model hash verified."
+msgstr "Model hash verified."
+
+msgid "Model name is not set."
+msgstr "Model name is not set."
+
 msgid "Mon"
 msgstr "Mon"
 
 msgid "Monthly"
 msgstr "Monthly"
 
+msgid "Monthly Analytics"
+msgstr "Monthly Analytics"
+
 msgid "Monthly Report"
 msgstr "Monthly Report"
-
-msgid "Monthly Work Report  {year}/{month:02d}"
-msgstr "Monthly Work Report  {year}/{month:02d}"
 
 msgid "Monthly target (h)"
 msgstr "Monthly target (h)"
@@ -376,8 +684,20 @@ msgstr "Monthly target (h)"
 msgid "Monthly total"
 msgstr "Monthly total"
 
+msgid "Monthly Work Report  {year}/{month:02d}"
+msgstr "Monthly Work Report  {year}/{month:02d}"
+
+msgid "New Password"
+msgstr "New Password"
+
 msgid "New Template"
 msgstr "New Template"
+
+msgid "New version available: v{0}"
+msgstr "New version available: v{0}"
+
+msgid "Next day"
+msgstr "Next day"
 
 msgid "Next month"
 msgstr "Next month"
@@ -388,8 +708,14 @@ msgstr "Night"
 msgid "No"
 msgstr "No"
 
+msgid "No accounts found. Please create an administrator account."
+msgstr "No accounts found. Please create an administrator account."
+
 msgid "No data"
 msgstr "No data"
+
+msgid "No downloadable models are available. You can still import a local .gguf file."
+msgstr "No downloadable models are available. You can still import a local .gguf file."
 
 msgid "No entries yet today."
 msgstr "No entries yet today."
@@ -406,11 +732,23 @@ msgstr "No notes recorded for this period."
 msgid "No templates available for this type."
 msgstr "No templates available for this type."
 
-msgid "Normal: {normal}\nRemote: {remote}\nBusiness: {biz}"
-msgstr "Normal: {normal}\nRemote: {remote}\nBusiness: {biz}"
+msgid "Normal"
+msgstr "Normal"
+
+msgid ""
+"Normal: {normal}\n"
+"Remote: {remote}\n"
+"Business: {biz}"
+msgstr ""
+"Normal: {normal}\n"
+"Remote: {remote}\n"
+"Business: {biz}"
 
 msgid "Not downloaded"
 msgstr "Not downloaded"
+
+msgid "Note"
+msgstr "Note"
 
 msgid "Notes"
 msgstr "Notes"
@@ -424,14 +762,20 @@ msgstr "Nov"
 msgid "November"
 msgstr "November"
 
-msgid "OK"
-msgstr "OK"
-
 msgid "Oct"
 msgstr "Oct"
 
 msgid "October"
 msgstr "October"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Old Password"
+msgstr "Old Password"
+
+msgid "Old password is incorrect."
+msgstr "Old password is incorrect."
 
 msgid "On break"
 msgstr "On break"
@@ -442,11 +786,26 @@ msgstr "Only one model can be active at a time.  Delete the current model before
 msgid "Open"
 msgstr "Open"
 
+msgid "Open color picker"
+msgstr "Open color picker"
+
+msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
+msgstr "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
+
+msgid "Operation failed."
+msgstr "Operation failed."
+
 msgid "Original"
 msgstr "Original"
 
+msgid "Original Content"
+msgstr "Original Content"
+
 msgid "Overnight"
 msgstr "Overnight"
+
+msgid "Overnight indicator"
+msgstr "Overnight indicator"
 
 msgid "Overtime"
 msgstr "Overtime"
@@ -454,20 +813,89 @@ msgstr "Overtime"
 msgid "Overwrite existing data?"
 msgstr "Overwrite existing data?"
 
+msgid "Paid leave"
+msgstr "Paid leave"
+
+msgid ""
+"Paid: {paid}\n"
+"Comp: {comp}\n"
+"Sick: {sick}"
+msgstr ""
+"Paid: {paid}\n"
+"Comp: {comp}\n"
+"Sick: {sick}"
+
+msgid "Password"
+msgstr "Password"
+
+msgid "Password change failed."
+msgstr "Password change failed."
+
+msgid "Password Changed"
+msgstr "Password Changed"
+
+msgid "Password changed successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+msgstr "Password changed successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+
+msgid "Password must be at least 8 characters."
+msgstr "Password must be at least 8 characters."
+
+msgid "Password reset successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+msgstr "Password reset successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+
+msgid "Passwords do not match."
+msgstr "Passwords do not match."
+
 msgid "PDF requires QtPrintSupport. Saving PNG."
 msgstr "PDF requires QtPrintSupport. Saving PNG."
 
-msgid "PTO"
-msgstr "PTO"
+msgid "Period"
+msgstr "Period"
 
-msgid "Paid: {paid}\nComp: {comp}\nSick: {sick}"
-msgstr "Paid: {paid}\nComp: {comp}\nSick: {sick}"
+msgid "Permission denied while verifying local model file."
+msgstr "Permission denied while verifying local model file."
+
+msgid "Please confirm that you have saved the recovery key."
+msgstr "Please confirm that you have saved the recovery key."
+
+msgid "Please enter a model name in Settings → AI."
+msgstr "Please enter a model name in Settings → AI."
+
+msgid "Please enter administrator password."
+msgstr "Please enter administrator password."
+
+msgid "Please enter the API Base URL in Settings → AI."
+msgstr "Please enter the API Base URL in Settings → AI."
+
+msgid "Please enter username and password."
+msgstr "Please enter username and password."
+
+msgid "Please enter username and recovery key."
+msgstr "Please enter username and recovery key."
+
+msgid "Please enter your API Key in Settings → AI."
+msgstr "Please enter your API Key in Settings → AI."
 
 msgid "Please set your API key in Settings → AI."
 msgstr "Please set your API key in Settings → AI."
 
+msgid "Preparing request for {model}..."
+msgstr "Preparing request for {model}..."
+
+msgid "Preparing your AI request..."
+msgstr "Preparing your AI request..."
+
+msgid "Previous day"
+msgstr "Previous day"
+
 msgid "Previous month"
 msgstr "Previous month"
+
+msgid "Processing AI response..."
+msgstr "Processing AI response..."
+
+msgid "PTO"
+msgstr "PTO"
 
 msgid "Public holidays"
 msgstr "Public holidays"
@@ -487,8 +915,50 @@ msgstr "Quit"
 msgid "Ready"
 msgstr "Ready"
 
+msgid "Recovery Key"
+msgstr "Recovery Key"
+
+msgid "Recovery Key Created"
+msgstr "Recovery Key Created"
+
+msgid "Recovery key is incorrect. Contact an administrator to reset your password."
+msgstr "Recovery key is incorrect. Contact an administrator to reset your password."
+
+msgid "Recovery Key Regenerated"
+msgstr "Recovery Key Regenerated"
+
+msgid "Recovery key saved."
+msgstr "Recovery key saved."
+
+msgid "Refresh"
+msgstr "Refresh"
+
 msgid "Regenerate"
 msgstr "Regenerate"
+
+msgid "Regenerate Key"
+msgstr "Regenerate Key"
+
+msgid "Regenerate Recovery Key"
+msgstr "Regenerate Recovery Key"
+
+msgid "Register"
+msgstr "Register"
+
+msgid "Registration failed."
+msgstr "Registration failed."
+
+msgid "Registration successful. Please log in."
+msgstr "Registration successful. Please log in."
+
+msgid "Remember me"
+msgstr "Remember me"
+
+msgid "Remember-token encryption requires the 'cryptography' package. Please install it via pip install cryptography."
+msgstr "Remember-token encryption requires the 'cryptography' package. Please install it via pip install cryptography."
+
+msgid "Remote work"
+msgstr "Remote work"
 
 msgid "Replace"
 msgstr "Replace"
@@ -496,11 +966,53 @@ msgstr "Replace"
 msgid "Report"
 msgstr "Report"
 
+msgid "Report content is empty."
+msgstr "Report content is empty."
+
+msgid "Report saved."
+msgstr "Report saved."
+
+msgid "Reports have unsaved changes. Save before closing?"
+msgstr "Reports have unsaved changes. Save before closing?"
+
+msgid "Reset Password"
+msgstr "Reset Password"
+
+msgid "Reset User Password"
+msgstr "Reset User Password"
+
 msgid "Restart"
 msgstr "Restart"
 
+msgid "Restart Required"
+msgstr "Restart Required"
+
+msgid "Restart required to apply minimal mode."
+msgstr "Restart required to apply minimal mode."
+
+msgid "Restore Data"
+msgstr "Restore Data"
+
+msgid "Restore failed."
+msgstr "Restore failed."
+
+msgid "Restore will replace the current database file. Continue?"
+msgstr "Restore will replace the current database file. Continue?"
+
 msgid "Retry"
 msgstr "Retry"
+
+msgid "Review accounts, reset passwords, and manage recovery keys."
+msgstr "Review accounts, reset passwords, and manage recovery keys."
+
+msgid "Revoke Admin"
+msgstr "Revoke Admin"
+
+msgid "Role"
+msgstr "Role"
+
+msgid "Sample Template"
+msgstr "Sample Template"
 
 msgid "Sat"
 msgstr "Sat"
@@ -508,17 +1020,29 @@ msgstr "Sat"
 msgid "Save"
 msgstr "Save"
 
+msgid "Save As"
+msgstr "Save As"
+
 msgid "Save Changes"
 msgstr "Save Changes"
 
 msgid "Save changes to this template?"
 msgstr "Save changes to this template?"
 
+msgid "Save Initial Password"
+msgstr "Save Initial Password"
+
+msgid "Save Recovery Key"
+msgstr "Save Recovery Key"
+
 msgid "Saved: {}"
 msgstr "Saved: {}"
 
 msgid "Select / Change"
 msgstr "Select / Change"
+
+msgid "Selected color"
+msgstr "Selected color"
 
 msgid "Sep"
 msgstr "Sep"
@@ -529,11 +1053,23 @@ msgstr "September"
 msgid "Settings"
 msgstr "Settings"
 
-msgid "Overnight indicator"
-msgstr "Overnight indicator"
+msgid "Show leave"
+msgstr "Show leave"
 
 msgid "Sick"
 msgstr "Sick"
+
+msgid "Sick leave"
+msgstr "Sick leave"
+
+msgid "Sign out remembered sessions"
+msgstr "Sign out remembered sessions"
+
+msgid "sk-… / sk-ant-…"
+msgstr "sk-… / sk-ant-…"
+
+msgid "SQLite Database (*.db)"
+msgstr "SQLite Database (*.db)"
 
 msgid "Standard hours (h)"
 msgstr "Standard hours (h)"
@@ -568,20 +1104,56 @@ msgstr "Template saved."
 msgid "Templates"
 msgstr "Templates"
 
+msgid "temporarily unavailable"
+msgstr "temporarily unavailable"
+
 msgid "Test"
 msgstr "Test"
 
 msgid "Testing…"
 msgstr "Testing…"
 
+msgid "Text Files (*.txt)"
+msgstr "Text Files (*.txt)"
+
+msgid "The initial password is generated automatically. The user must change it at first login."
+msgstr "The initial password is generated automatically. The user must change it at first login."
+
+msgid "The selected backup database appears to be corrupted."
+msgstr "The selected backup database appears to be corrupted."
+
+msgid "The selected backup does not contain the current account."
+msgstr "The selected backup does not contain the current account."
+
+msgid "The selected backup does not contain user account data."
+msgstr "The selected backup does not contain user account data."
+
+msgid "The selected file does not exist."
+msgstr "The selected file does not exist."
+
+msgid "The user must change this password at first login."
+msgstr "The user must change this password at first login."
+
+msgid "This account must change its password before continuing."
+msgstr "This account must change its password before continuing."
+
 msgid "This model is already downloaded and ready."
 msgstr "This model is already downloaded and ready."
+
+msgid "This operation will permanently delete this user's data, including work records, notes, reports, and settings."
+msgstr "This operation will permanently delete this user's data, including work records, notes, reports, and settings."
+
+msgid "This recovery key can be used to reset the user's password if it is forgotten. Store it securely and share it only with the account owner. Anyone with this key may reset the password until a new key is generated."
+msgstr "This recovery key can be used to reset the user's password if it is forgotten. Store it securely and share it only with the account owner. Anyone with this key may reset the password until a new key is generated."
 
 msgid "Thu"
 msgstr "Thu"
 
 msgid "Time"
 msgstr "Time"
+
+msgid "Timesheet"
+msgstr "Timesheet"
 
 msgid "Today"
 msgstr "Today"
@@ -604,11 +1176,44 @@ msgstr "Type"
 msgid "Unsaved changes — save before switching?"
 msgstr "Unsaved changes — save before switching?"
 
+msgid "Unused"
+msgstr "Unused"
+
+msgid "Used"
+msgstr "Used"
+
+msgid "User"
+msgstr "User"
+
+msgid "User created successfully. Share this initial password now; it cannot be shown again later."
+msgstr "User created successfully. Share this initial password now; it cannot be shown again later."
+
+msgid "User deleted successfully."
+msgstr "User deleted successfully."
+
+msgid "User not found."
+msgstr "User not found."
+
+msgid "Username"
+msgstr "Username"
+
+msgid "Username already exists."
+msgstr "Username already exists."
+
+msgid "Username is required."
+msgstr "Username is required."
+
+msgid "Username or password is incorrect."
+msgstr "Username or password is incorrect."
+
+msgid "Verifying local model file..."
+msgstr "Verifying local model file..."
+
 msgid "Version"
 msgstr "Version"
 
-msgid "WFH"
-msgstr "WFH"
+msgid "Waiting for AI response..."
+msgstr "Waiting for AI response..."
 
 msgid "Wed"
 msgstr "Wed"
@@ -622,11 +1227,23 @@ msgstr "Weekly Report"
 msgid "Weekly Work Report  {start} – {end}"
 msgstr "Weekly Work Report  {start} – {end}"
 
+msgid "WFH"
+msgstr "WFH"
+
 msgid "What are you doing?"
 msgstr "What are you doing?"
 
+msgid "When enabled, text processing uses the local model first - no data is sent to external services."
+msgstr "When enabled, text processing uses the local model first - no data is sent to external services."
+
 msgid "When enabled, text processing uses the local model first — no data is sent to external services."
 msgstr "When enabled, text processing uses the local model first — no data is sent to external services."
+
+msgid "Work days"
+msgstr "Work days"
+
+msgid "Work hours"
+msgstr "Work hours"
 
 msgid "Work Log"
 msgstr "Work Log"
@@ -634,17 +1251,72 @@ msgstr "Work Log"
 msgid "Work Logger"
 msgstr "Work Logger"
 
-msgid "Work Logger is a flexible desktop app for tracking work hours, notes, and reports.\n\nWhat you can do:\n- Switch between Manual Input and Auto Record depending on how you like to log time.\n- Record start time, end time, and break time for each day.\n- Save work type and notes together with the time record.\n- Use Quick Log for lightweight task entries during the day.\n- Keep notes for future dates even when exact work hours are not decided yet.\n- Generate daily, weekly, and monthly reports from saved data.\n- Use AI-compatible providers to turn notes into polished summaries.\n- Review monthly trends with charts, averages, overtime, and monthly targets.\n- Import calendar events and display public holidays.\n- Customize language, theme, AI settings, and reminder behavior.\n\nRecommended workflow:\n1. Pick Manual Input if you usually type times yourself.\n2. Pick Auto Record if you prefer start/end/break buttons.\n3. Add Notes or Quick Log entries as work happens.\n4. Save the day record when finished.\n5. Open Reports or AI tools when you need a summary.\n\nHelpful details:\n- Holiday names can be shown automatically on the calendar.\n- A small reminder dot can appear on days that only have notes.\n- Built-in and custom templates can be used in notes and reports."
-msgstr "Work Logger is a flexible desktop app for tracking work hours, notes, and reports.\n\nWhat you can do:\n- Switch between Manual Input and Auto Record depending on how you like to log time.\n- Record start time, end time, and break time for each day.\n- Save work type and notes together with the time record.\n- Use Quick Log for lightweight task entries during the day.\n- Keep notes for future dates even when exact work hours are not decided yet.\n- Generate daily, weekly, and monthly reports from saved data.\n- Use AI-compatible providers to turn notes into polished summaries.\n- Review monthly trends with charts, averages, overtime, and monthly targets.\n- Import calendar events and display public holidays.\n- Customize language, theme, AI settings, and reminder behavior.\n\nRecommended workflow:\n1. Pick Manual Input if you usually type times yourself.\n2. Pick Auto Record if you prefer start/end/break buttons.\n3. Add Notes or Quick Log entries as work happens.\n4. Save the day record when finished.\n5. Open Reports or AI tools when you need a summary.\n\nHelpful details:\n- Holiday names can be shown automatically on the calendar.\n- A small reminder dot can appear on days that only have notes.\n- Built-in and custom templates can be used in notes and reports."
+msgid ""
+"Work Logger is a privacy-first desktop app for recording work time, notes, quick logs, calendar context, and recurring reports without sending your data to a cloud service by default.\n"
+"\n"
+"Daily logging:\n"
+"- Enter start, end, break, work type, and notes for each date.\n"
+"- Use Auto Record buttons for start, end, and break checkpoints.\n"
+"- Capture lightweight task details with Quick Log and merge them into reports.\n"
+"- Navigate by calendar, month, week, or minimal-mode day controls.\n"
+"\n"
+"Accounts and security:\n"
+"- Multiple local users are supported, and each user's worklogs, settings, reports, reminders, and backups are isolated.\n"
+"- Passwords and recovery keys are stored as secure hashes.\n"
+"- Administrators can reset user passwords and regenerate recovery keys when needed.\n"
+"- Remember-me login uses the operating system credential manager when available.\n"
+"\n"
+"Reports and templates:\n"
+"- Generate daily notes, weekly reports, and monthly reports from saved data.\n"
+"- Weekly and monthly reports are tied to the selected calendar period and can be saved for later editing.\n"
+"- Built-in and custom templates help standardize recurring note and report formats.\n"
+"\n"
+"Analytics and exports:\n"
+"- Review work hours, averages, overtime, targets, leave markers, and trend charts.\n"
+"- Export chart data to CSV and charts to PDF.\n"
+"- Import/export worklogs as CSV and calendar events as ICS.\n"
+"- Back up and restore the local database with reminders for stale backups.\n"
+"\n"
+"Customization and AI:\n"
+"- Switch languages, themes, custom accent colors, dark mode, and minimal mode.\n"
+"- Use local-model assistance when configured, or connect to OpenAI-compatible external providers such as ChatGPT, Claude, Qwen, and DeepSeek.\n"
+"- Supported UI languages include English, Japanese, Korean, Simplified Chinese, and Traditional Chinese."
+msgstr ""
+"Work Logger is a privacy-first desktop app for recording work time, notes, quick logs, calendar context, and recurring reports without sending your data to a cloud service by default.\n"
+"\n"
+"Daily logging:\n"
+"- Enter start, end, break, work type, and notes for each date.\n"
+"- Use Auto Record buttons for start, end, and break checkpoints.\n"
+"- Capture lightweight task details with Quick Log and merge them into reports.\n"
+"- Navigate by calendar, month, week, or minimal-mode day controls.\n"
+"\n"
+"Accounts and security:\n"
+"- Multiple local users are supported, and each user's worklogs, settings, reports, reminders, and backups are isolated.\n"
+"- Passwords and recovery keys are stored as secure hashes.\n"
+"- Administrators can reset user passwords and regenerate recovery keys when needed.\n"
+"- Remember-me login uses the operating system credential manager when available.\n"
+"\n"
+"Reports and templates:\n"
+"- Generate daily notes, weekly reports, and monthly reports from saved data.\n"
+"- Weekly and monthly reports are tied to the selected calendar period and can be saved for later editing.\n"
+"- Built-in and custom templates help standardize recurring note and report formats.\n"
+"\n"
+"Analytics and exports:\n"
+"- Review work hours, averages, overtime, targets, leave markers, and trend charts.\n"
+"- Export chart data to CSV and charts to PDF.\n"
+"- Import/export worklogs as CSV and calendar events as ICS.\n"
+"- Back up and restore the local database with reminders for stale backups.\n"
+"\n"
+"Customization and AI:\n"
+"- Switch languages, themes, custom accent colors, dark mode, and minimal mode.\n"
+"- Use local-model assistance when configured, or connect to OpenAI-compatible external providers such as ChatGPT, Claude, Qwen, and DeepSeek.\n"
+"- Supported UI languages include English, Japanese, Korean, Simplified Chinese, and Traditional Chinese."
 
 msgid "Work Report"
 msgstr "Work Report"
 
 msgid "Work Time Analytics"
 msgstr "Work Time Analytics"
-
-msgid "Work days"
-msgstr "Work days"
 
 msgid "Work type"
 msgstr "Work type"
@@ -658,20 +1330,11 @@ msgstr "You already logged {hours}h of break time. What do you want to do?"
 msgid "You are on the latest version"
 msgstr "You are on the latest version"
 
-msgid "gpt-4o-mini | claude-haiku-4-5-20251001"
-msgstr "gpt-4o-mini | claude-haiku-4-5-20251001"
+msgid "You haven't backed up in {days} days. Please back up your data."
+msgstr "You haven't backed up in {days} days. Please back up your data."
 
-msgid "h"
-msgstr "h"
-
-msgid "https://api.openai.com/v1 | https://api.anthropic.com"
-msgstr "https://api.openai.com/v1 | https://api.anthropic.com"
-
-msgid "sk-… / sk-ant-…"
-msgstr "sk-… / sk-ant-…"
-
-msgid "v{0} available!"
-msgstr "v{0} available!"
+msgid "Your password has not been changed in {days} days. Please update it regularly."
+msgstr "Your password has not been changed in {days} days. Please update it regularly."
 
 msgid "{0:.0f} / {1:.0f} MB"
 msgstr "{0:.0f} / {1:.0f} MB"
@@ -685,6 +1348,9 @@ msgstr "▶ Break"
 msgid "⚙  Settings"
 msgstr "⚙  Settings"
 
+msgid "⚠️ Request exceeded 30 seconds, processing may take a while. Please continue waiting..."
+msgstr "⚠️ Request exceeded 30 seconds, processing may take a while. Please continue waiting..."
+
 msgid "⚡ Quick Log"
 msgstr "⚡ Quick Log"
 
@@ -696,6 +1362,9 @@ msgstr "✓  Integrity verified"
 
 msgid "✓  Model imported"
 msgstr "✓  Model imported"
+
+msgid "✓ Request successful."
+msgstr "✓ Request successful."
 
 msgid "✗  {}"
 msgstr "✗  {}"
@@ -720,783 +1389,3 @@ msgstr "📅 Import Calendar (.ics)"
 
 msgid "📋 Templates"
 msgstr "📋 Templates"
-
-msgid "days"
-msgstr "days"
-
-msgid "key"
-msgstr "key"
-
-msgid "overnight_badge"
-msgstr "overnight_badge"
-
-msgid "tpl_no_templates"
-msgstr "tpl_no_templates"
-
-msgid "tpl_saved"
-msgstr "tpl_saved"
-
-msgid "Not set"
-msgstr "Not set"
-
-msgid "Original Content"
-msgstr "Original Content"
-
-msgid "■ End"
-msgstr "■ End"
-
-msgid "Break: {}m"
-msgstr "Break: {}m"
-
-msgid "Describe your work, or leave blank for AI generation"
-msgstr "Describe your work, or leave blank for AI generation"
-
-msgid "Normal"
-msgstr "Normal"
-
-msgid "Remote work"
-msgstr "Remote work"
-
-msgid "Business trip"
-msgstr "Business trip"
-
-msgid "Paid leave"
-msgstr "Paid leave"
-
-msgid "Comp leave"
-msgstr "Comp leave"
-
-msgid "Sick leave"
-msgstr "Sick leave"
-
-msgid "No calendar events found for this period."
-msgstr "No calendar events found for this period."
-
-msgid "Enable tray icon"
-msgstr "Enable tray icon"
-
-msgid "Enable menu bar icon"
-msgstr "Enable menu bar icon"
-
-msgid "Only one model can be active at a time. To switch models, delete the current one first."
-msgstr "Only one model can be active at a time. To switch models, delete the current one first."
-
-msgid "A different model is already downloaded. It will be deleted before the new one downloads. Continue?"
-msgstr "A different model is already downloaded. It will be deleted before the new one downloads. Continue?"
-
-msgid "Balanced (Q4_K_M)"
-msgstr "Balanced (Q4_K_M)"
-
-msgid "Quantized 4-bit model — good balance of speed and quality."
-msgstr "Quantized 4-bit model — good balance of speed and quality."
-
-msgid "✓ Recommended for most users"
-msgstr "✓ Recommended for most users"
-
-msgid "Lightweight (Q2_K)"
-msgstr "Lightweight (Q2_K)"
-
-msgid "Highly compressed 2-bit model — smallest file, fastest."
-msgstr "Highly compressed 2-bit model — smallest file, fastest."
-
-msgid "✓ Best for low-RAM machines"
-msgstr "✓ Best for low-RAM machines"
-
-msgid "High Quality (Q8_0)"
-msgstr "High Quality (Q8_0)"
-
-msgid "8-bit quantized model — highest quality output."
-msgstr "8-bit quantized model — highest quality output."
-
-msgid "✓ Best quality, requires more RAM"
-msgstr "✓ Best quality, requires more RAM"
-
-msgid "Manage / Switch"
-msgstr "Manage / Switch"
-
-msgid "Checking dependencies…"
-msgstr "Checking dependencies…"
-
-msgid "The local model will be downloaded once and cached for offline use.\nYou may cancel at any time; an interrupted download will resume next time."
-msgstr "The local model will be downloaded once and cached for offline use.\nYou may cancel at any time; an interrupted download will resume next time."
-
-msgid "Re-download"
-msgstr "Re-download"
-
-msgid "Starting download…"
-msgstr "Starting download…"
-
-msgid "Verifying integrity…"
-msgstr "Verifying integrity…"
-
-msgid "✓  Download complete"
-msgstr "✓  Download complete"
-
-msgid "Download failed"
-msgstr "Download failed"
-
-msgid "Download cancelled"
-msgstr "Download cancelled"
-
-msgid "Connection timed out"
-msgstr "Connection timed out"
-
-msgid "Disk full — free some space and retry"
-msgstr "Disk full — free some space and retry"
-
-msgid "Loading local model…"
-msgstr "Loading local model…"
-
-msgid "Local model loaded ✓"
-msgstr "Local model loaded ✓"
-
-msgid "Starting generation…"
-msgstr "Starting generation…"
-
-msgid "Local model failed to load"
-msgstr "Local model failed to load"
-
-msgid "Local model not downloaded — go to Settings → AI"
-msgstr "Local model not downloaded — go to Settings → AI"
-
-msgid "llama-cpp-python not installed — run: pip install llama-cpp-python"
-msgstr "llama-cpp-python not installed — run: pip install llama-cpp-python"
-
-msgid "Local model unavailable — using external model instead"
-msgstr "Local model unavailable — using external model instead"
-
-msgid "Update check timed out"
-msgstr "Update check timed out"
-
-msgid "✨  AI Generate"
-msgstr "✨  AI Generate"
-
-msgid "Generating…"
-msgstr "Generating…"
-
-msgid "AI error: {}"
-msgstr "AI error: {}"
-
-msgid "AI Report Generation"
-msgstr "AI Report Generation"
-
-msgid "Additional instructions (optional)"
-msgstr "Additional instructions (optional)"
-
-msgid "Supports Anthropic and OpenAI-compatible APIs. Examples: ChatGPT, Claude, Gemini, DeepSeek, Doubao, Qwen."
-msgstr "Supports Anthropic and OpenAI-compatible APIs. Examples: ChatGPT, Claude, Gemini, DeepSeek, Doubao, Qwen."
-
-msgid "Initializing AI request..."
-msgstr "Initializing AI request..."
-
-msgid "AI Generated Result"
-msgstr "AI Generated Result"
-
-msgid "AI Generated Content"
-msgstr "AI Generated Content"
-
-msgid "Local model failed and no external API key / URL / model name is configured. Please configure an external model in Settings → AI."
-msgstr "Local model failed and no external API key / URL / model name is configured. Please configure an external model in Settings → AI."
-
-msgid "API Key is not set."
-msgstr "API Key is not set."
-
-msgid "Please enter your API Key in Settings → AI."
-msgstr "Please enter your API Key in Settings → AI."
-
-msgid "API Base URL is not set."
-msgstr "API Base URL is not set."
-
-msgid "Please enter the API Base URL in Settings → AI."
-msgstr "Please enter the API Base URL in Settings → AI."
-
-msgid "Model name is not set."
-msgstr "Model name is not set."
-
-msgid "Please enter a model name in Settings → AI."
-msgstr "Please enter a model name in Settings → AI."
-
-msgid "⚠️ Request exceeded 30 seconds, processing may take a while. Please continue waiting..."
-msgstr "⚠️ Request exceeded 30 seconds, processing may take a while. Please continue waiting..."
-
-msgid "✓ Request successful."
-msgstr "✓ Request successful."
-
-msgid "Preparing your AI request..."
-msgstr "Preparing your AI request..."
-
-msgid "Preparing request for {model}..."
-msgstr "Preparing request for {model}..."
-
-msgid "Contacting AI provider for {model}..."
-msgstr "Contacting AI provider for {model}..."
-
-msgid "Waiting for AI response..."
-msgstr "Waiting for AI response..."
-
-msgid "Processing AI response..."
-msgstr "Processing AI response..."
-
-msgid "Done."
-msgstr "Done."
-
-msgid "Error:"
-msgstr "Error:"
-
-msgid "Template"
-msgstr "Template"
-
-msgid "Insert Template"
-msgstr "Insert Template"
-
-msgid "Use Template"
-msgstr "Use Template"
-
-msgid "[Custom]"
-msgstr "[Custom]"
-
-msgid "Edit Content"
-msgstr "Edit Content"
-
-msgid "Edit"
-msgstr "Edit"
-
-msgid "Entry saved."
-msgstr "Entry saved."
-
-msgid "Please enter a description."
-msgstr "Please enter a description."
-
-msgid "Downloading local model..."
-msgstr "Downloading local model..."
-
-msgid "Generating with local model..."
-msgstr "Generating with local model..."
-
-msgid "Installing local model dependencies..."
-msgstr "Installing local model dependencies..."
-
-msgid "Loading local model..."
-msgstr "Loading local model..."
-
-msgid "Local model loaded."
-msgstr "Local model loaded."
-
-msgid "Local model not downloaded - go to Settings -> AI"
-msgstr "Local model not downloaded - go to Settings -> AI"
-
-msgid "Local model unavailable - using external model instead"
-msgstr "Local model unavailable - using external model instead"
-
-msgid "Local model unavailable - using external model instead."
-msgstr "Local model unavailable - using external model instead."
-
-msgid "Model download completed."
-msgstr "Model download completed."
-
-msgid "Model hash verified."
-msgstr "Model hash verified."
-
-msgid "Verifying local model file..."
-msgstr "Verifying local model file..."
-
-msgid "When enabled, text processing uses the local model first - no data is sent to external services."
-msgstr "When enabled, text processing uses the local model first - no data is sent to external services."
-
-msgid "llama-cpp-python not installed - run: pip install llama-cpp-python"
-msgstr "llama-cpp-python not installed - run: pip install llama-cpp-python"
-
-msgid "New version available: v{0}"
-msgstr "New version available: v{0}"
-
-msgid "Local model is inactive"
-msgstr "Local model is inactive"
-
-msgid "Local model verification failed. Please re-download or switch model."
-msgstr "Local model verification failed. Please re-download or switch model."
-
-msgid "Local model verification timed out."
-msgstr "Local model verification timed out."
-
-msgid "Local model verification was cancelled."
-msgstr "Local model verification was cancelled."
-
-msgid "Permission denied while verifying local model file."
-msgstr "Permission denied while verifying local model file."
-
-msgid "Active"
-msgstr "Active"
-
-msgid "Downloaded"
-msgstr "Downloaded"
-
-msgid "Inactive"
-msgstr "Inactive"
-
-msgid "Custom theme color"
-msgstr "Custom theme color"
-
-msgid "Choose custom color"
-msgstr "Choose custom color"
-
-msgid "Selected color"
-msgstr "Selected color"
-
-msgid "🔵 Blue"
-msgstr "🔵 Blue"
-
-msgid "🌸 Pink"
-msgstr "🌸 Pink"
-
-msgid "🌿 Green"
-msgstr "🌿 Green"
-
-msgid "🟣 Purple"
-msgstr "🟣 Purple"
-
-msgid "Minimal mode"
-msgstr "Minimal mode"
-
-msgid "Restart required to apply minimal mode."
-msgstr "Restart required to apply minimal mode."
-
-msgid "Default"
-msgstr "Default"
-
-msgid "Invoice"
-msgstr "Invoice"
-
-msgid "Timesheet"
-msgstr "Timesheet"
-
-msgid "Average"
-msgstr "Average"
-
-msgid "Bar"
-msgstr "Bar"
-
-msgid "Line"
-msgstr "Line"
-
-msgid "Show leave"
-msgstr "Show leave"
-
-msgid "Work hours"
-msgstr "Work hours"
-
-msgid "Leave"
-msgstr "Leave"
-
-msgid "Leave Hours"
-msgstr "Leave Hours"
-
-msgid "Open color picker"
-msgstr "Open color picker"
-
-msgid "Restart Required"
-msgstr "Restart Required"
-
-msgid "Minimal mode toggle will take effect after restarting the application."
-msgstr "Minimal mode toggle will take effect after restarting the application."
-
-msgid "Period"
-msgstr "Period"
-
-msgid "Chart:"
-msgstr "Chart:"
-
-msgid "Metric:"
-msgstr "Metric:"
-
-msgid "Change Password"
-msgstr "Change Password"
-
-msgid "Confirm Password"
-msgstr "Confirm Password"
-
-msgid "Login"
-msgstr "Login"
-
-msgid "Login failed"
-msgstr "Login failed"
-
-msgid "New Password"
-msgstr "New Password"
-
-msgid "No accounts found. Please create an administrator account."
-msgstr "No accounts found. Please create an administrator account."
-
-msgid "Old Password"
-msgstr "Old Password"
-
-msgid "Old password is incorrect."
-msgstr "Old password is incorrect."
-
-msgid "Password"
-msgstr "Password"
-
-msgid "Password changed successfully."
-msgstr "Password changed successfully."
-
-msgid "Password must be at least 6 characters."
-msgstr "Password must be at least 6 characters."
-
-msgid "Passwords do not match."
-msgstr "Passwords do not match."
-
-msgid "Please enter username and password."
-msgstr "Please enter username and password."
-
-msgid "Register"
-msgstr "Register"
-
-msgid "Registration failed."
-msgstr "Registration failed."
-
-msgid "Registration successful. Please log in."
-msgstr "Registration successful. Please log in."
-
-msgid "Remember me"
-msgstr "Remember me"
-
-msgid "The default administrator password must be changed before continuing."
-msgstr "The default administrator password must be changed before continuing."
-
-msgid "Username"
-msgstr "Username"
-
-msgid "Username already exists."
-msgstr "Username already exists."
-
-msgid "Username is required."
-msgstr "Username is required."
-
-msgid "Username or password is incorrect."
-msgstr "Username or password is incorrect."
-
-msgid "Current user"
-msgstr "Current user"
-
-msgid "Are you sure you want to log out?"
-msgstr "Are you sure you want to log out?"
-
-msgid "Log out"
-msgstr "Log out"
-
-msgid "Backup Data"
-msgstr "Backup Data"
-
-msgid "Backup destination must be different from the active database."
-msgstr "Backup destination must be different from the active database."
-
-msgid "Backup saved: {}"
-msgstr "Backup saved: {}"
-
-msgid "Data restored successfully."
-msgstr "Data restored successfully."
-
-msgid "Database Backup"
-msgstr "Database Backup"
-
-msgid "Restore Data"
-msgstr "Restore Data"
-
-msgid "Restore failed."
-msgstr "Restore failed."
-
-msgid "Restore will replace the current database file. Continue?"
-msgstr "Restore will replace the current database file. Continue?"
-
-msgid "The selected backup database appears to be corrupted."
-msgstr "The selected backup database appears to be corrupted."
-
-msgid "The selected backup does not contain the current account."
-msgstr "The selected backup does not contain the current account."
-
-msgid "The selected backup does not contain user account data."
-msgstr "The selected backup does not contain user account data."
-
-msgid "The selected file does not exist."
-msgstr "The selected file does not exist."
-
-msgid "You haven't backed up in {days} days. Please back up your data."
-msgstr "You haven't backed up in {days} days. Please back up your data."
-
-msgid "SQLite Database (*.db)"
-msgstr "SQLite Database (*.db)"
-
-msgid "Delete Report"
-msgstr "Delete Report"
-
-msgid "Delete this saved report?"
-msgstr "Delete this saved report?"
-
-msgid "History"
-msgstr "History"
-
-msgid "Markdown (*.md)"
-msgstr "Markdown (*.md)"
-
-msgid "No saved reports."
-msgstr "No saved reports."
-
-msgid "Report content is empty."
-msgstr "Report content is empty."
-
-msgid "Report deleted."
-msgstr "Report deleted."
-
-msgid "Report saved."
-msgstr "Report saved."
-
-msgid "Reports have unsaved changes. Save before closing?"
-msgstr "Reports have unsaved changes. Save before closing?"
-
-msgid "Remember-token encryption requires the 'cryptography' package. Please install it via pip install cryptography."
-msgstr "Remember-token encryption requires the 'cryptography' package. Please install it via pip install cryptography."
-
-msgid "Account"
-msgstr "Account"
-
-msgid "Your password has not been changed in {days} days. Please update it regularly."
-msgstr "Your password has not been changed in {days} days. Please update it regularly."
-
-msgid "Administrator"
-msgstr "Administrator"
-
-msgid "Administrator Password"
-msgstr "Administrator Password"
-
-msgid "Administrator password is incorrect."
-msgstr "Administrator password is incorrect."
-
-msgid "Administrator privileges are required."
-msgstr "Administrator privileges are required."
-
-msgid "At least one administrator account is required."
-msgstr "At least one administrator account is required."
-
-msgid "Confirm Administrator Password"
-msgstr "Confirm Administrator Password"
-
-msgid "Copy and safely store this recovery key now. If it is lost, only an administrator can reset your password."
-msgstr "Copy and safely store this recovery key now. If it is lost, only an administrator can reset your password."
-
-msgid "Forgot Password?"
-msgstr "Forgot Password?"
-
-msgid "Grant Admin"
-msgstr "Grant Admin"
-
-msgid "I have saved this recovery key safely."
-msgstr "I have saved this recovery key safely."
-
-msgid "Manage Users"
-msgstr "Manage Users"
-
-msgid "Operation failed."
-msgstr "Operation failed."
-
-msgid "Password Changed"
-msgstr "Password Changed"
-
-msgid "Password reset successfully."
-msgstr "Password reset successfully."
-
-msgid "Password reset successfully. Please log in with the new password."
-msgstr "Password reset successfully. Please log in with the new password."
-
-msgid "Please confirm that you have saved the recovery key."
-msgstr "Please confirm that you have saved the recovery key."
-
-msgid "Please enter administrator password."
-msgstr "Please enter administrator password."
-
-msgid "Please enter username and recovery key."
-msgstr "Please enter username and recovery key."
-
-msgid "Recovery Key"
-msgstr "Recovery Key"
-
-msgid "Recovery key is incorrect. Contact an administrator to reset your password."
-msgstr "Recovery key is incorrect. Contact an administrator to reset your password."
-
-msgid "Recovery key saved."
-msgstr "Recovery key saved."
-
-msgid "Refresh"
-msgstr "Refresh"
-
-msgid "Reset Password"
-msgstr "Reset Password"
-
-msgid "Reset User Password"
-msgstr "Reset User Password"
-
-msgid "Revoke Admin"
-msgstr "Revoke Admin"
-
-msgid "Role"
-msgstr "Role"
-
-msgid "Save Recovery Key"
-msgstr "Save Recovery Key"
-
-msgid "Sign out remembered sessions"
-msgstr "Sign out remembered sessions"
-
-msgid "Text Files (*.txt)"
-msgstr "Text Files (*.txt)"
-
-msgid "User"
-msgstr "User"
-
-msgid "User not found."
-msgstr "User not found."
-
-msgid "Could not save recovery key."
-msgstr "Could not save recovery key."
-
-msgid "#"
-msgstr "#"
-
-msgid "A new recovery key was generated. Share it with the user now; it cannot be shown again later."
-msgstr "A new recovery key was generated. Share it with the user now; it cannot be shown again later."
-
-msgid "Actions"
-msgstr "Actions"
-
-msgid "Are you sure you want to regenerate the recovery key? The old key will stop working immediately."
-msgstr "Are you sure you want to regenerate the recovery key? The old key will stop working immediately."
-
-msgid "CSV Data Management"
-msgstr "CSV Data Management"
-
-msgid "Created"
-msgstr "Created"
-
-msgid "Import or export worklog records as CSV files for backup, migration, or spreadsheet analysis."
-msgstr "Import or export worklog records as CSV files for backup, migration, or spreadsheet analysis."
-
-msgid "Next day"
-msgstr "Next day"
-
-msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
-msgstr "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
-
-msgid "Previous day"
-msgstr "Previous day"
-
-msgid "Recovery Key Created"
-msgstr "Recovery Key Created"
-
-msgid "Recovery Key Regenerated"
-msgstr "Recovery Key Regenerated"
-
-msgid "Regenerate Recovery Key"
-msgstr "Regenerate Recovery Key"
-
-msgid "Review accounts, reset passwords, and manage recovery keys."
-msgstr "Review accounts, reset passwords, and manage recovery keys."
-
-msgid "Work Logger v3.0.0 focuses on secure personal work tracking with flexible reporting.\n\nHighlights:\n- Multi-user account system with isolated worklogs, reminders, reports, and settings.\n- Secure password hashing, recovery keys, administrator resets, and remember-me storage.\n- Custom themes, dark mode, and minimal mode for focused daily logging.\n- Enhanced analytics with bar/line charts, averages, overtime, targets, and leave markers.\n- Weekly and monthly reports that save automatically for the selected calendar period.\n- Database backup and restore, CSV import/export, and calendar import/export.\n- AI-assisted reporting with local model support and OpenAI-compatible external providers.\n- Multilingual UI for English, Japanese, Korean, Simplified Chinese, and Traditional Chinese."
-msgstr "Work Logger v3.0.0 focuses on secure personal work tracking with flexible reporting.\n\nHighlights:\n- Multi-user account system with isolated worklogs, reminders, reports, and settings.\n- Secure password hashing, recovery keys, administrator resets, and remember-me storage.\n- Custom themes, dark mode, and minimal mode for focused daily logging.\n- Enhanced analytics with bar/line charts, averages, overtime, targets, and leave markers.\n- Weekly and monthly reports that save automatically for the selected calendar period.\n- Database backup and restore, CSV import/export, and calendar import/export.\n- AI-assisted reporting with local model support and OpenAI-compatible external providers.\n- Multilingual UI for English, Japanese, Korean, Simplified Chinese, and Traditional Chinese."
-
-msgid "Regenerate Key"
-msgstr "Regenerate Key"
-
-msgid "Sample Template"
-msgstr "Sample Template"
-
-msgid "Work Logger is a privacy-first desktop app for recording work time, notes, quick logs, calendar context, and recurring reports without sending your data to a cloud service by default.\n\nDaily logging:\n- Enter start, end, break, work type, and notes for each date.\n- Use Auto Record buttons for start, end, and break checkpoints.\n- Capture lightweight task details with Quick Log and merge them into reports.\n- Navigate by calendar, month, week, or minimal-mode day controls.\n\nAccounts and security:\n- Multiple local users are supported, and each user's worklogs, settings, reports, reminders, and backups are isolated.\n- Passwords and recovery keys are stored as secure hashes.\n- Administrators can reset user passwords and regenerate recovery keys when needed.\n- Remember-me login uses the operating system credential manager when available.\n\nReports and templates:\n- Generate daily notes, weekly reports, and monthly reports from saved data.\n- Weekly and monthly reports are tied to the selected calendar period and can be saved for later editing.\n- Built-in and custom templates help standardize recurring note and report formats.\n\nAnalytics and exports:\n- Review work hours, averages, overtime, targets, leave markers, and trend charts.\n- Export chart data to CSV and charts to PDF.\n- Import/export worklogs as CSV and calendar events as ICS.\n- Back up and restore the local database with reminders for stale backups.\n\nCustomization and AI:\n- Switch languages, themes, custom accent colors, dark mode, and minimal mode.\n- Use local-model assistance when configured, or connect to OpenAI-compatible external providers such as ChatGPT, Claude, Qwen, and DeepSeek.\n- Supported UI languages include English, Japanese, Korean, Simplified Chinese, and Traditional Chinese."
-msgstr "Work Logger is a privacy-first desktop app for recording work time, notes, quick logs, calendar context, and recurring reports without sending your data to a cloud service by default.\n\nDaily logging:\n- Enter start, end, break, work type, and notes for each date.\n- Use Auto Record buttons for start, end, and break checkpoints.\n- Capture lightweight task details with Quick Log and merge them into reports.\n- Navigate by calendar, month, week, or minimal-mode day controls.\n\nAccounts and security:\n- Multiple local users are supported, and each user's worklogs, settings, reports, reminders, and backups are isolated.\n- Passwords and recovery keys are stored as secure hashes.\n- Administrators can reset user passwords and regenerate recovery keys when needed.\n- Remember-me login uses the operating system credential manager when available.\n\nReports and templates:\n- Generate daily notes, weekly reports, and monthly reports from saved data.\n- Weekly and monthly reports are tied to the selected calendar period and can be saved for later editing.\n- Built-in and custom templates help standardize recurring note and report formats.\n\nAnalytics and exports:\n- Review work hours, averages, overtime, targets, leave markers, and trend charts.\n- Export chart data to CSV and charts to PDF.\n- Import/export worklogs as CSV and calendar events as ICS.\n- Back up and restore the local database with reminders for stale backups.\n\nCustomization and AI:\n- Switch languages, themes, custom accent colors, dark mode, and minimal mode.\n- Use local-model assistance when configured, or connect to OpenAI-compatible external providers such as ChatGPT, Claude, Qwen, and DeepSeek.\n- Supported UI languages include English, Japanese, Korean, Simplified Chinese, and Traditional Chinese."
-
-msgid "Save As"
-msgstr "Save As"
-
-msgid "Generated At"
-msgstr "Generated At"
-
-msgid "Note"
-msgstr "Note"
-
-msgid "This recovery key can be used to reset the user's password if it is forgotten. Store it securely and share it only with the account owner. Anyone with this key may reset the password until a new key is generated."
-msgstr "This recovery key can be used to reset the user's password if it is forgotten. Store it securely and share it only with the account owner. Anyone with this key may reset the password until a new key is generated."
-
-msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
-msgstr "Back up your database regularly to protect your local work logs, reports, settings, and account data."
-
-msgid "Password must be at least 8 characters."
-msgstr "Password must be at least 8 characters."
-
-msgid "Administrator accounts cannot be deleted."
-msgstr "Administrator accounts cannot be deleted."
-
-msgid "Delete User"
-msgstr "Delete User"
-
-msgid "Enter administrator password to delete {username}."
-msgstr "Enter administrator password to delete {username}."
-
-msgid "Monthly Analytics"
-msgstr "Monthly Analytics"
-
-msgid "Password reset successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
-msgstr "Password reset successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
-
-msgid "This operation will permanently delete this user's data, including work records, notes, reports, and settings."
-msgstr "This operation will permanently delete this user's data, including work records, notes, reports, and settings."
-
-msgid "User deleted successfully."
-msgstr "User deleted successfully."
-
-msgid "Password changed successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
-msgstr "Password changed successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
-
-msgid "Changing your password will generate a new recovery key. Your new password must be at least 8 characters."
-msgstr "Changing your password will generate a new recovery key. Your new password must be at least 8 characters."
-
-msgid "Could not load the latest model catalog. Check your network and try again."
-msgstr "Could not load the latest model catalog. Check your network and try again."
-
-msgid "Could not save initial password."
-msgstr "Could not save initial password."
-
-msgid "Create User"
-msgstr "Create User"
-
-msgid "In Use"
-msgstr "In Use"
-
-msgid "Initial Password"
-msgstr "Initial Password"
-
-msgid "Initial password saved."
-msgstr "Initial password saved."
-
-msgid "Loading latest model catalog..."
-msgstr "Loading latest model catalog..."
-
-msgid "Password change failed."
-msgstr "Password change failed."
-
-msgid "Save Initial Password"
-msgstr "Save Initial Password"
-
-msgid "The initial password is generated automatically. The user must change it at first login."
-msgstr "The initial password is generated automatically. The user must change it at first login."
-
-msgid "The user must change this password at first login."
-msgstr "The user must change this password at first login."
-
-msgid "This account must change its password before continuing."
-msgstr "This account must change its password before continuing."
-
-msgid "Unused"
-msgstr "Unused"
-
-msgid "Used"
-msgstr "Used"
-
-msgid "User created successfully. Share this initial password now; it cannot be shown again later."
-msgstr "User created successfully. Share this initial password now; it cannot be shown again later."

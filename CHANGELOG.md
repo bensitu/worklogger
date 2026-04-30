@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.1.0] - 2026-04-30
+## [3.1.0] - 2026-05-01
 
 ### Added
 
@@ -20,12 +20,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Analytics leave overlays now use actual leave hours instead of filling remaining target time or using a fixed-height marker.
 - First-login forced password changes generate a recovery key without requiring the old or initial password.
 - PyInstaller packaging now validates and includes the repository-root remote model catalog file alongside the offline fallback catalog.
+- Local model download management now opens an import-only dialog when remote catalog refresh fails, and disables Download when the selected model is already downloaded or no downloadable model is available.
+- Gettext POT/PO catalogs are sorted by msgid, matched across all built-in languages, and verified obsolete entries have been removed.
 
 ### Fixed
 
 - Fixed analytics display when a week has both full-day leave and enough work hours to reach or exceed the weekly target.
 - Fixed leave records with explicit start/end times over 8 hours being treated as overtime and attendance.
 - Fixed the issue where the “Previous/Next” date buttons were unresponsive when the selected date did not have valid start and end times.
+- Fixed AI Assist cancellation while a local model is loading so worker callbacks detach from closed dialogs and Qt timers are stopped on the UI thread.
 
 ## [3.0.0] - 2026-04-26
 

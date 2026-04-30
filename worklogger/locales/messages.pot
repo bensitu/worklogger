@@ -3,7 +3,11 @@ msgstr ""
 "Project-Id-Version: WorkLogger\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-msgid "\n\nSkipped {} rows:\n{}"
+msgid ""
+"\n"
+"\n"
+"Skipped {} rows:\n"
+"{}"
 msgstr ""
 
 msgid " days"
@@ -30,33 +34,6 @@ msgstr ""
 msgid "A privacy-first desktop work-hours tracker with AI-powered reporting."
 msgstr ""
 
-msgid "AI"
-msgstr ""
-
-msgid "AI Generated"
-msgstr ""
-
-msgid "AI Generated Content"
-msgstr ""
-
-msgid "AI Generated Result"
-msgstr ""
-
-msgid "AI Result"
-msgstr ""
-
-msgid "API Base URL"
-msgstr ""
-
-msgid "API Base URL is not set."
-msgstr ""
-
-msgid "API Key"
-msgstr ""
-
-msgid "API Key is not set."
-msgstr ""
-
 msgid "About"
 msgstr ""
 
@@ -75,10 +52,10 @@ msgstr ""
 msgid "Administrator"
 msgstr ""
 
-msgid "Administrator Password"
+msgid "Administrator accounts cannot be deleted."
 msgstr ""
 
-msgid "Administrator accounts cannot be deleted."
+msgid "Administrator Password"
 msgstr ""
 
 msgid "Administrator password is incorrect."
@@ -87,10 +64,37 @@ msgstr ""
 msgid "Administrator privileges are required."
 msgstr ""
 
+msgid "AI"
+msgstr ""
+
+msgid "AI Generated"
+msgstr ""
+
+msgid "AI Generated Content"
+msgstr ""
+
+msgid "AI Generated Result"
+msgstr ""
+
+msgid "AI Result"
+msgstr ""
+
 msgid "Analytics"
 msgstr ""
 
 msgid "Annual"
+msgstr ""
+
+msgid "API Base URL"
+msgstr ""
+
+msgid "API Base URL is not set."
+msgstr ""
+
+msgid "API Key"
+msgstr ""
+
+msgid "API Key is not set."
 msgstr ""
 
 msgid "Appearance"
@@ -150,9 +154,6 @@ msgstr ""
 msgid "Break (h)"
 msgstr ""
 
-msgid "Break Timer"
-msgstr ""
-
 msgid "Break done"
 msgstr ""
 
@@ -162,31 +163,29 @@ msgstr ""
 msgid "Break time must be less than the total shift duration."
 msgstr ""
 
+msgid "Break Timer"
+msgstr ""
+
 msgid "Built-in"
 msgstr ""
 
 msgid "Business trip"
 msgstr ""
 
-msgid "CSV Data Management"
-msgstr ""
-
-msgid "CSV file is empty."
-msgstr ""
-
-msgid "CTO"
-msgstr ""
-
-msgid "Calendar Sync"
-msgstr ""
-
-msgid "Calendar data already exists.\n\nReplace — clear all previous calendar events before import.\nAppend — keep existing events and add new ones."
+msgid ""
+"Calendar data already exists.\n"
+"\n"
+"Replace — clear all previous calendar events before import.\n"
+"Append — keep existing events and add new ones."
 msgstr ""
 
 msgid "Calendar events cleared."
 msgstr ""
 
 msgid "Calendar events:"
+msgstr ""
+
+msgid "Calendar Sync"
 msgstr ""
 
 msgid "Cancel"
@@ -249,6 +248,9 @@ msgstr ""
 msgid "Copy and safely store this recovery key now. If it is lost, only an administrator can reset your password."
 msgstr ""
 
+msgid "Could not check for updates: {}"
+msgstr ""
+
 msgid "Could not load the latest model catalog. Check your network and try again."
 msgstr ""
 
@@ -258,6 +260,9 @@ msgstr ""
 msgid "Could not save recovery key."
 msgstr ""
 
+msgid "Could not verify the update server certificate. Please check your network trust settings and try again."
+msgstr ""
+
 msgid "Create Custom Template"
 msgstr ""
 
@@ -265,6 +270,15 @@ msgid "Create User"
 msgstr ""
 
 msgid "Created"
+msgstr ""
+
+msgid "CSV Data Management"
+msgstr ""
+
+msgid "CSV file is empty."
+msgstr ""
+
+msgid "CTO"
 msgstr ""
 
 msgid "Current user"
@@ -309,9 +323,6 @@ msgstr ""
 msgid "Delete Model"
 msgstr ""
 
-msgid "Delete User"
-msgstr ""
-
 msgid "Delete this entry?"
 msgstr ""
 
@@ -319,6 +330,9 @@ msgid "Delete this model file? This cannot be undone."
 msgstr ""
 
 msgid "Delete this template?"
+msgstr ""
+
+msgid "Delete User"
 msgstr ""
 
 msgid "Done"
@@ -423,13 +437,22 @@ msgstr ""
 msgid "GitHub"
 msgstr ""
 
+msgid "gpt-4o-mini | claude-haiku-4-5-20251001"
+msgstr ""
+
 msgid "Grant Admin"
+msgstr ""
+
+msgid "h"
 msgstr ""
 
 msgid "HH:MM"
 msgstr ""
 
 msgid "Hint / extra instructions (optional)"
+msgstr ""
+
+msgid "https://api.openai.com/v1 | https://api.anthropic.com"
 msgstr ""
 
 msgid "I have saved this recovery key safely."
@@ -444,10 +467,10 @@ msgstr ""
 msgid "Import CSV"
 msgstr ""
 
-msgid "Import Result"
+msgid "Import or export worklog records as CSV files for backup, migration, or spreadsheet analysis."
 msgstr ""
 
-msgid "Import or export worklog records as CSV files for backup, migration, or spreadsheet analysis."
+msgid "Import Result"
 msgstr ""
 
 msgid "Import your .ics file to let AI read your meetings when generating reports."
@@ -516,16 +539,19 @@ msgstr ""
 msgid "Leave"
 msgstr ""
 
-msgid "Leave Hours"
+msgid "Leave days"
 msgstr ""
 
-msgid "Leave days"
+msgid "Leave Hours"
 msgstr ""
 
 msgid "License"
 msgstr ""
 
 msgid "Line"
+msgstr ""
+
+msgid "llama-cpp-python not installed - run: pip install llama-cpp-python"
 msgstr ""
 
 msgid "Loading latest model catalog..."
@@ -540,7 +566,9 @@ msgstr ""
 msgid "Local model"
 msgstr ""
 
-msgid "Local model failed and no external API key / URL / model name is configured.\nPlease configure an external model in Settings → AI."
+msgid ""
+"Local model failed and no external API key / URL / model name is configured.\n"
+"Please configure an external model in Settings → AI."
 msgstr ""
 
 msgid "Local model failed and no external API key / URL / model name is configured. Please configure an external model in Settings → AI."
@@ -639,19 +667,22 @@ msgstr ""
 msgid "Monthly Report"
 msgstr ""
 
-msgid "Monthly Work Report  {year}/{month:02d}"
-msgstr ""
-
 msgid "Monthly target (h)"
 msgstr ""
 
 msgid "Monthly total"
 msgstr ""
 
+msgid "Monthly Work Report  {year}/{month:02d}"
+msgstr ""
+
 msgid "New Password"
 msgstr ""
 
 msgid "New Template"
+msgstr ""
+
+msgid "New version available: v{0}"
 msgstr ""
 
 msgid "Next day"
@@ -672,6 +703,9 @@ msgstr ""
 msgid "No data"
 msgstr ""
 
+msgid "No downloadable models are available. You can still import a local .gguf file."
+msgstr ""
+
 msgid "No entries yet today."
 msgstr ""
 
@@ -690,7 +724,10 @@ msgstr ""
 msgid "Normal"
 msgstr ""
 
-msgid "Normal: {normal}\nRemote: {remote}\nBusiness: {biz}"
+msgid ""
+"Normal: {normal}\n"
+"Remote: {remote}\n"
+"Business: {biz}"
 msgstr ""
 
 msgid "Not downloaded"
@@ -711,13 +748,13 @@ msgstr ""
 msgid "November"
 msgstr ""
 
-msgid "OK"
-msgstr ""
-
 msgid "Oct"
 msgstr ""
 
 msgid "October"
+msgstr ""
+
+msgid "OK"
 msgstr ""
 
 msgid "Old Password"
@@ -762,25 +799,22 @@ msgstr ""
 msgid "Overwrite existing data?"
 msgstr ""
 
-msgid "PDF requires QtPrintSupport. Saving PNG."
-msgstr ""
-
-msgid "PTO"
-msgstr ""
-
 msgid "Paid leave"
 msgstr ""
 
-msgid "Paid: {paid}\nComp: {comp}\nSick: {sick}"
+msgid ""
+"Paid: {paid}\n"
+"Comp: {comp}\n"
+"Sick: {sick}"
 msgstr ""
 
 msgid "Password"
 msgstr ""
 
-msgid "Password Changed"
+msgid "Password change failed."
 msgstr ""
 
-msgid "Password change failed."
+msgid "Password Changed"
 msgstr ""
 
 msgid "Password changed successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
@@ -793,6 +827,9 @@ msgid "Password reset successfully. A new recovery key was generated. Copy and s
 msgstr ""
 
 msgid "Passwords do not match."
+msgstr ""
+
+msgid "PDF requires QtPrintSupport. Saving PNG."
 msgstr ""
 
 msgid "Period"
@@ -840,6 +877,9 @@ msgstr ""
 msgid "Processing AI response..."
 msgstr ""
 
+msgid "PTO"
+msgstr ""
+
 msgid "Public holidays"
 msgstr ""
 
@@ -864,10 +904,10 @@ msgstr ""
 msgid "Recovery Key Created"
 msgstr ""
 
-msgid "Recovery Key Regenerated"
+msgid "Recovery key is incorrect. Contact an administrator to reset your password."
 msgstr ""
 
-msgid "Recovery key is incorrect. Contact an administrator to reset your password."
+msgid "Recovery Key Regenerated"
 msgstr ""
 
 msgid "Recovery key saved."
@@ -954,9 +994,6 @@ msgstr ""
 msgid "Role"
 msgstr ""
 
-msgid "SQLite Database (*.db)"
-msgstr ""
-
 msgid "Sample Template"
 msgstr ""
 
@@ -972,13 +1009,13 @@ msgstr ""
 msgid "Save Changes"
 msgstr ""
 
+msgid "Save changes to this template?"
+msgstr ""
+
 msgid "Save Initial Password"
 msgstr ""
 
 msgid "Save Recovery Key"
-msgstr ""
-
-msgid "Save changes to this template?"
 msgstr ""
 
 msgid "Saved: {}"
@@ -1009,6 +1046,12 @@ msgid "Sick leave"
 msgstr ""
 
 msgid "Sign out remembered sessions"
+msgstr ""
+
+msgid "sk-… / sk-ant-…"
+msgstr ""
+
+msgid "SQLite Database (*.db)"
 msgstr ""
 
 msgid "Standard hours (h)"
@@ -1042,6 +1085,9 @@ msgid "Template saved."
 msgstr ""
 
 msgid "Templates"
+msgstr ""
+
+msgid "temporarily unavailable"
 msgstr ""
 
 msgid "Test"
@@ -1149,9 +1195,6 @@ msgstr ""
 msgid "Version"
 msgstr ""
 
-msgid "WFH"
-msgstr ""
-
 msgid "Waiting for AI response..."
 msgstr ""
 
@@ -1167,6 +1210,9 @@ msgstr ""
 msgid "Weekly Work Report  {start} – {end}"
 msgstr ""
 
+msgid "WFH"
+msgstr ""
+
 msgid "What are you doing?"
 msgstr ""
 
@@ -1176,25 +1222,54 @@ msgstr ""
 msgid "When enabled, text processing uses the local model first — no data is sent to external services."
 msgstr ""
 
+msgid "Work days"
+msgstr ""
+
+msgid "Work hours"
+msgstr ""
+
 msgid "Work Log"
 msgstr ""
 
 msgid "Work Logger"
 msgstr ""
 
-msgid "Work Logger is a privacy-first desktop app for recording work time, notes, quick logs, calendar context, and recurring reports without sending your data to a cloud service by default.\n\nDaily logging:\n- Enter start, end, break, work type, and notes for each date.\n- Use Auto Record buttons for start, end, and break checkpoints.\n- Capture lightweight task details with Quick Log and merge them into reports.\n- Navigate by calendar, month, week, or minimal-mode day controls.\n\nAccounts and security:\n- Multiple local users are supported, and each user's worklogs, settings, reports, reminders, and backups are isolated.\n- Passwords and recovery keys are stored as secure hashes.\n- Administrators can reset user passwords and regenerate recovery keys when needed.\n- Remember-me login uses the operating system credential manager when available.\n\nReports and templates:\n- Generate daily notes, weekly reports, and monthly reports from saved data.\n- Weekly and monthly reports are tied to the selected calendar period and can be saved for later editing.\n- Built-in and custom templates help standardize recurring note and report formats.\n\nAnalytics and exports:\n- Review work hours, averages, overtime, targets, leave markers, and trend charts.\n- Export chart data to CSV and charts to PDF.\n- Import/export worklogs as CSV and calendar events as ICS.\n- Back up and restore the local database with reminders for stale backups.\n\nCustomization and AI:\n- Switch languages, themes, custom accent colors, dark mode, and minimal mode.\n- Use local-model assistance when configured, or connect to OpenAI-compatible external providers such as ChatGPT, Claude, Qwen, and DeepSeek.\n- Supported UI languages include English, Japanese, Korean, Simplified Chinese, and Traditional Chinese."
+msgid ""
+"Work Logger is a privacy-first desktop app for recording work time, notes, quick logs, calendar context, and recurring reports without sending your data to a cloud service by default.\n"
+"\n"
+"Daily logging:\n"
+"- Enter start, end, break, work type, and notes for each date.\n"
+"- Use Auto Record buttons for start, end, and break checkpoints.\n"
+"- Capture lightweight task details with Quick Log and merge them into reports.\n"
+"- Navigate by calendar, month, week, or minimal-mode day controls.\n"
+"\n"
+"Accounts and security:\n"
+"- Multiple local users are supported, and each user's worklogs, settings, reports, reminders, and backups are isolated.\n"
+"- Passwords and recovery keys are stored as secure hashes.\n"
+"- Administrators can reset user passwords and regenerate recovery keys when needed.\n"
+"- Remember-me login uses the operating system credential manager when available.\n"
+"\n"
+"Reports and templates:\n"
+"- Generate daily notes, weekly reports, and monthly reports from saved data.\n"
+"- Weekly and monthly reports are tied to the selected calendar period and can be saved for later editing.\n"
+"- Built-in and custom templates help standardize recurring note and report formats.\n"
+"\n"
+"Analytics and exports:\n"
+"- Review work hours, averages, overtime, targets, leave markers, and trend charts.\n"
+"- Export chart data to CSV and charts to PDF.\n"
+"- Import/export worklogs as CSV and calendar events as ICS.\n"
+"- Back up and restore the local database with reminders for stale backups.\n"
+"\n"
+"Customization and AI:\n"
+"- Switch languages, themes, custom accent colors, dark mode, and minimal mode.\n"
+"- Use local-model assistance when configured, or connect to OpenAI-compatible external providers such as ChatGPT, Claude, Qwen, and DeepSeek.\n"
+"- Supported UI languages include English, Japanese, Korean, Simplified Chinese, and Traditional Chinese."
 msgstr ""
 
 msgid "Work Report"
 msgstr ""
 
 msgid "Work Time Analytics"
-msgstr ""
-
-msgid "Work days"
-msgstr ""
-
-msgid "Work hours"
 msgstr ""
 
 msgid "Work type"
@@ -1206,25 +1281,13 @@ msgstr ""
 msgid "You already logged {hours}h of break time. What do you want to do?"
 msgstr ""
 
+msgid "You are on the latest version"
+msgstr ""
+
 msgid "You haven't backed up in {days} days. Please back up your data."
 msgstr ""
 
 msgid "Your password has not been changed in {days} days. Please update it regularly."
-msgstr ""
-
-msgid "gpt-4o-mini | claude-haiku-4-5-20251001"
-msgstr ""
-
-msgid "h"
-msgstr ""
-
-msgid "https://api.openai.com/v1 | https://api.anthropic.com"
-msgstr ""
-
-msgid "llama-cpp-python not installed - run: pip install llama-cpp-python"
-msgstr ""
-
-msgid "sk-… / sk-ant-…"
 msgstr ""
 
 msgid "{0:.0f} / {1:.0f} MB"

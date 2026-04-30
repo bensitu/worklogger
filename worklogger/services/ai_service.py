@@ -29,6 +29,12 @@ class _CallbackInvoker(QObject):
         self.error_signal.connect(self._on_error)
         self.status_signal.connect(self._on_status)
 
+    def detach_callbacks(self) -> None:
+        """Drop callback references after the UI no longer wants updates."""
+        self.on_done = lambda _text: None
+        self.on_error = lambda _short, _detail: None
+        self.on_status = None
+
     def _on_done(self, text):
         self.on_done(text)
 
@@ -215,6 +221,7 @@ class AIWorker:
     ):
         # Keep the invoker alive for the lifetime of the worker thread.
         self.invoker = _CallbackInvoker(on_done, on_error, on_status)
+        self._cancelled = threading.Event()
         self.thread = threading.Thread(
             target=self._run,
             args=(api_key, base_url, model, messages, max_tokens),
@@ -222,16 +229,25 @@ class AIWorker:
         )
         self.thread.start()
 
+    def cancel(self) -> None:
+        """Stop delivering callbacks to a dialog that has been closed."""
+        self._cancelled.set()
+        self.invoker.detach_callbacks()
+
     def _run(self, api_key, base_url, model, messages, max_tokens):
         invoker = self.invoker
 
         def _status_key(key: str, **kwargs):
+            if self._cancelled.is_set():
+                return
             try:
                 invoker.status_signal.emit(json.dumps({"key": key, **kwargs}))
             except Exception:
                 pass
 
         try:
+            if self._cancelled.is_set():
+                return
             _status_key("ai_status_start")
             url, is_anthropic = _resolve_endpoint(base_url)
             _status_key("ai_status_build", model=model)
@@ -242,11 +258,17 @@ class AIWorker:
                 _status_key("ai_status_wait")
                 body = _read_limited_response(resp)
                 data = json.loads(body) if body else {}
+            if self._cancelled.is_set():
+                return
             _status_key("ai_status_parse")
             text = _extract_text(data, is_anthropic)
+            if self._cancelled.is_set():
+                return
             _status_key("ai_status_done")
             invoker.done_signal.emit(text)
         except Exception as exc:
+            if self._cancelled.is_set():
+                return
             short, detail = _classify(exc, api_key, base_url, model)
             _status_key("ai_status_error", raw=short)
             invoker.error_signal.emit(short, detail)
@@ -376,6 +398,7 @@ class LocalModelWorker:
         on_status: Optional[Callable[[str], None]] = None,
     ) -> None:
         self.invoker = _CallbackInvoker(on_done, on_error, on_status)
+        self._cancelled = threading.Event()
         self.thread  = threading.Thread(
             target=self._run,
             args=(messages, services, max_tokens, temperature),
@@ -383,39 +406,62 @@ class LocalModelWorker:
         )
         self.thread.start()
 
+    def cancel(self) -> None:
+        """Stop delivering callbacks to a dialog that has been closed."""
+        self._cancelled.set()
+        self.invoker.detach_callbacks()
+
     def _run(self, messages, services, max_tokens, temperature):
         invoker = self.invoker
 
         def _status(key: str) -> None:
+            if self._cancelled.is_set():
+                return
             try:
                 invoker.status_signal.emit(json.dumps({"key": key}))
             except Exception:
                 pass
 
         try:
+            if self._cancelled.is_set():
+                return
             from services.local_model_service import LocalModelService
             # The dialog already emits "local_model_loading" before worker start.
             svc = LocalModelService.get(services)
             # load_provider() performs lazy loading and may install dependencies.
             svc.load_provider(services=services)
+            if self._cancelled.is_set():
+                return
             _status("local_model_loaded")
             _status("local_model_generating")
             text = svc.generate(messages, temperature=temperature,
                                 max_tokens=max_tokens, services=services)
+            if self._cancelled.is_set():
+                return
             _status("ai_status_done")
             invoker.done_signal.emit(text)
 
         except MemoryError as exc:
+            if self._cancelled.is_set():
+                return
             invoker.error_signal.emit("local_model_load_fail", str(exc))
         except FileNotFoundError as exc:
+            if self._cancelled.is_set():
+                return
             invoker.error_signal.emit("local_model_not_downloaded", str(exc))
         except ImportError as exc:
+            if self._cancelled.is_set():
+                return
             invoker.error_signal.emit("local_model_import_error", str(exc))
         except RuntimeError as exc:
+            if self._cancelled.is_set():
+                return
             if str(exc) == "ai_assist.local_model_not_running":
                 invoker.error_signal.emit("ai_assist.local_model_not_running", "")
             else:
                 invoker.error_signal.emit("local_model_load_fail", str(exc))
         except Exception as exc:
+            if self._cancelled.is_set():
+                return
             invoker.error_signal.emit(
                 f"Local model error: {type(exc).__name__}", str(exc))

@@ -775,7 +775,9 @@ class SettingsDialog(QDialog):
         self._local_enabled_sw.toggled.connect(_on_local_toggle)
         self._local_verify_cancel_btn.clicked.connect(_cancel_local_verify)
 
-        def _launch_model_management_dialog() -> None:
+        def _launch_model_management_dialog(
+            catalog_override: list[dict] | None = None,
+        ) -> None:
             from ui.dialogs.local_model_dialogs import LocalDownloadDialog
             themes_raw: Any = getattr(app_ref, "themes", None)
             themes_map: ThemeMap = themes_raw if isinstance(themes_raw, dict) else THEMES
@@ -811,6 +813,7 @@ class SettingsDialog(QDialog):
                 accent_color=accent,
                 dark=app_ref.dark,
                 on_model_changed=_on_model_changed,
+                catalog_override=catalog_override,
             )
             from services.local_model_service import (
                 get_active_entry_id,
@@ -835,11 +838,6 @@ class SettingsDialog(QDialog):
             if ok:
                 _launch_model_management_dialog()
                 return
-            _refresh_local_status(
-                force_verify=False,
-                allow_initial_verify=False,
-                ignore_cache=True,
-            )
             QMessageBox.warning(
                 self,
                 _("Download Local Model"),
@@ -848,6 +846,7 @@ class SettingsDialog(QDialog):
                     "Could not load the latest model catalog. Check your network and try again.",
                 ),
             )
+            _launch_model_management_dialog(catalog_override=[])
 
         self._catalog_refresh_bridge.done.connect(_on_catalog_refresh_done)
 

@@ -18,7 +18,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable, Optional
 
-from PySide6.QtCore import Signal, QObject
+from PySide6.QtCore import Qt, Signal, QObject
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QProgressBar,
     QPushButton, QTextEdit, QMessageBox, QFileDialog,
@@ -66,12 +66,14 @@ class LocalDownloadDialog(QDialog):
     def __init__(self, parent, lang: str,
                  accent_color: str = DEFAULT_CUSTOM_COLOR,
                  dark: bool = False,
-                 on_model_changed: Optional[Callable[[str, str], None]] = None) -> None:
+                 on_model_changed: Optional[Callable[[str, str], None]] = None,
+                 catalog_override: Optional[list[dict]] = None) -> None:
         super().__init__(parent)
         self._lang = lang
         self._accent_color = accent_color
         self._dark = dark
         self._on_model_changed = on_model_changed
+        self._catalog_override = catalog_override
         self._bridge = _Bridge(self)
         self._sel_id: Optional[str] = None
         self.setWindowTitle(_("Download Local Model"))
@@ -105,7 +107,7 @@ class LocalDownloadDialog(QDialog):
             ensure_catalog(get_models_dir())
         except Exception:
             pass
-        catalog   = load_catalog()
+        catalog   = self._catalog_override if self._catalog_override is not None else load_catalog()
         active_id = get_active_entry_id()
 
         page = QWidget()
@@ -149,6 +151,18 @@ class LocalDownloadDialog(QDialog):
             self._radio_group.addButton(card["radio"])
             cards_l.addWidget(card["frame"])
 
+        if not catalog:
+            empty_lbl = QLabel(
+                msg(
+                    "local_model_no_downloadable_models",
+                    "No downloadable models are available. You can still import a local .gguf file.",
+                )
+            )
+            empty_lbl.setWordWrap(True)
+            empty_lbl.setObjectName("muted")
+            empty_lbl.setAlignment(Qt.AlignCenter)
+            cards_l.addWidget(empty_lbl, 1)
+
         cards_l.addStretch()
         scroll.setWidget(cards_w)
         lyt.addWidget(scroll, 1)
@@ -173,6 +187,9 @@ class LocalDownloadDialog(QDialog):
         self._sel_cancel_btn.clicked.connect(self.reject)
         self._sel_next_btn.clicked.connect(self._on_select_next)
         self._sel_import_btn.clicked.connect(self._import_gguf_from_selection)
+        self._radio_group.buttonToggled.connect(
+            lambda _button, _checked: self._sync_select_next_button()
+        )
 
         # Preselect active entry, then fallback to first card.
         for eid, card in self._card_widgets.items():
@@ -181,6 +198,7 @@ class LocalDownloadDialog(QDialog):
                 break
         if not self._radio_group.checkedButton() and self._card_widgets:
             list(self._card_widgets.values())[0]["radio"].setChecked(True)
+        self._sync_select_next_button()
 
         return page
 
@@ -297,6 +315,47 @@ class LocalDownloadDialog(QDialog):
                     _("Not downloaded"))
                 card["status_lbl"].setStyleSheet("")
                 card["delete_btn"].hide()
+        self._sync_select_next_button()
+
+    def _selected_entry_id(self) -> str | None:
+        checked = self._radio_group.checkedButton()
+        if checked is None:
+            return None
+        for eid, card in self._card_widgets.items():
+            if card["radio"] is checked:
+                return eid
+        return None
+
+    def _is_entry_downloaded(self, entry_id: str) -> bool:
+        try:
+            from services.local_model_service import (
+                get_entry, get_models_dir, load_manifest,
+            )
+            mdir = get_models_dir()
+            entry = get_entry(load_manifest(mdir), entry_id)
+            filename = str(entry.get("file", "")).strip()
+            path = mdir / filename if filename else None
+            return bool(path) and path.exists() and path.stat().st_size > 0
+        except Exception:
+            return False
+
+    def _sync_select_next_button(self) -> None:
+        if not hasattr(self, "_sel_next_btn"):
+            return
+        entry_id = self._selected_entry_id()
+        enabled = bool(entry_id) and not self._is_entry_downloaded(entry_id)
+        self._sel_next_btn.setEnabled(enabled)
+        if enabled:
+            self._sel_next_btn.setToolTip("")
+        elif not entry_id:
+            self._sel_next_btn.setToolTip(
+                msg(
+                    "local_model_no_downloadable_models",
+                    "No downloadable models are available. You can still import a local .gguf file.",
+                )
+            )
+        else:
+            self._sel_next_btn.setToolTip(_("This model is already downloaded and ready."))
 
     def _delete_model(self, entry_id: str) -> None:
         reply = QMessageBox.question(
@@ -391,12 +450,7 @@ class LocalDownloadDialog(QDialog):
             verify_model_file, get_active_entry_id,
             load_manifest, get_entry, get_models_dir, set_active_entry,
         )
-        checked = self._radio_group.checkedButton()
-        sel_id = None
-        for eid, card in self._card_widgets.items():
-            if card["radio"] is checked:
-                sel_id = eid
-                break
+        sel_id = self._selected_entry_id()
         if sel_id is None:
             return
         self._sel_id = sel_id

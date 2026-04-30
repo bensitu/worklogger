@@ -46,7 +46,7 @@ def _collect_strings(text: str, msg_defaults: dict[str, str]) -> set[str]:
             continue
         fn = node.func
         name = fn.id if isinstance(fn, ast.Name) else None
-        if name in {"_", "gettext"}:
+        if name in {"_", "gettext", "_tr"}:
             if node.args and isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str):
                 out.add(node.args[0].value)
         elif name == "ngettext":

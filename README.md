@@ -75,9 +75,14 @@ If the app is not Developer ID signed + notarized, macOS Gatekeeper may show "Ap
 Users can still install by removing the quarantine flag after copying the app:
 
 ```bash
-mv ~/Downloads/WorkLogger.app /Applications/WorkLogger.app
-xattr -dr com.apple.quarantine /Applications/WorkLogger.app
-open /Applications/WorkLogger.app
+pkill -x WorkLogger 2>/dev/null || true
+
+sudo rm -rf "/Applications/WorkLogger.app"
+sudo mv "$HOME/Downloads/WorkLogger.app" "/Applications/WorkLogger.app"
+
+sudo xattr -dr com.apple.quarantine "/Applications/WorkLogger.app"
+
+open "/Applications/WorkLogger.app"
 ```
 
 ## i18n Workflow

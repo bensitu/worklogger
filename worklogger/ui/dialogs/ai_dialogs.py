@@ -87,6 +87,14 @@ class AIProgressDialog(QDialog):
 
     def reject(self):
         self._cancelled = True
+        self._timeout_timer.stop()
+        worker = self._worker
+        if worker is not None and hasattr(worker, "cancel"):
+            try:
+                worker.cancel()
+            except Exception:
+                pass
+        self._worker = None
         super().reject()
 
     @classmethod
