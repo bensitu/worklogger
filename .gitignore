@@ -67,9 +67,11 @@ worklogger/models/*.gguf
 worklogger/models/*.gguf.tmp
 worklogger/models/*.json
 worklogger/models/*.lock
-!worklogger/models/catalog.json
 
 # macOS and Windows release artifacts are generated in dist/
 *.exe
 *.dmg
 *.app
+worklogger/models/catalog.json
+worklogger/models/catalog.json
+worklogger/models/catalog.json

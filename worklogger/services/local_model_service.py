@@ -27,6 +27,7 @@ import shutil
 import sys
 import threading
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path, PureWindowsPath
@@ -34,7 +35,10 @@ from typing import Any, Callable, Optional
 
 from config.constants import (
     APP_VERSION,
+    MODEL_CATALOG_FETCH_RETRY_ATTEMPTS,
+    MODEL_CATALOG_FETCH_RETRY_BACKOFF_SECONDS,
     MODEL_CATALOG_FETCH_TIMEOUT_SECONDS,
+    MODEL_CATALOG_LOCAL_PRESERVED_KEY,
     MODEL_CATALOG_REMOTE_URL,
     MODEL_CATALOG_RESPONSE_MAX_BYTES,
 )
@@ -278,10 +282,56 @@ def ensure_catalog(models_dir: Optional[Path] = None) -> None:
     # If still not present, load_catalog() will use the hardcoded fallback.
 
 
+def _model_file_exists(models_dir: Path, filename: str) -> bool:
+    try:
+        path = resolve_model_path(models_dir, filename)
+        return bool(path) and path.exists() and path.stat().st_size > 0
+    except (OSError, ValueError):
+        return False
+
+
+def _downloaded_manifest_ids(models_dir: Path) -> set[str]:
+    try:
+        manifest = load_manifest(models_dir)
+    except Exception:
+        return set()
+    downloaded: set[str] = set()
+    for entry in manifest:
+        entry_id = str(entry.get("id", "")).strip()
+        filename = str(entry.get("file", "")).strip()
+        if entry_id and filename and _model_file_exists(models_dir, filename):
+            downloaded.add(entry_id)
+    return downloaded
+
+
+def _prune_missing_preserved_catalog_entries(models_dir: Path) -> None:
+    try:
+        catalog = load_catalog(models_dir)
+    except Exception:
+        return
+    kept = []
+    changed = False
+    for entry in catalog:
+        if not entry.get(MODEL_CATALOG_LOCAL_PRESERVED_KEY):
+            kept.append(entry)
+            continue
+        if _model_file_exists(models_dir, str(entry.get("file", ""))):
+            kept.append(entry)
+        else:
+            changed = True
+    if not changed:
+        return
+    if kept:
+        _save_catalog(kept, models_dir)
+    else:
+        (models_dir / CATALOG_FILENAME).unlink(missing_ok=True)
+
+
 def refresh_catalog_from_remote(
     models_dir: Optional[Path] = None,
     *,
     url: str = MODEL_CATALOG_REMOTE_URL,
+    ssl_context: Any = None,
 ) -> list[dict]:
     """Fetch the latest GitHub model catalog and persist it locally."""
     if models_dir is None:
@@ -293,11 +343,20 @@ def refresh_catalog_from_remote(
             "Accept": "application/json",
         },
     )
-    with urllib.request.urlopen(
-        request,
-        timeout=MODEL_CATALOG_FETCH_TIMEOUT_SECONDS,
-    ) as response:
-        raw = response.read(MODEL_CATALOG_RESPONSE_MAX_BYTES + 1)
+    raw = b""
+    for attempt in range(max(1, MODEL_CATALOG_FETCH_RETRY_ATTEMPTS)):
+        try:
+            with urllib.request.urlopen(
+                request,
+                timeout=MODEL_CATALOG_FETCH_TIMEOUT_SECONDS,
+                context=ssl_context,
+            ) as response:
+                raw = response.read(MODEL_CATALOG_RESPONSE_MAX_BYTES + 1)
+            break
+        except urllib.error.URLError:
+            if attempt + 1 >= max(1, MODEL_CATALOG_FETCH_RETRY_ATTEMPTS):
+                raise
+            time.sleep(MODEL_CATALOG_FETCH_RETRY_BACKOFF_SECONDS * (attempt + 1))
     if len(raw) > MODEL_CATALOG_RESPONSE_MAX_BYTES:
         raise ValueError("model_catalog_too_large")
     try:
@@ -305,14 +364,24 @@ def refresh_catalog_from_remote(
             json.loads(raw.decode("utf-8")),
             require_url=True,
         )
+        for entry in remote_catalog:
+            entry.pop(MODEL_CATALOG_LOCAL_PRESERVED_KEY, None)
     except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
         raise ValueError("model_catalog_invalid") from exc
 
     remote_ids = {entry["id"] for entry in remote_catalog}
-    preserved_custom = [
-        entry for entry in load_catalog(models_dir)
-        if entry.get("id") not in remote_ids and not str(entry.get("url", "")).strip()
-    ]
+    downloaded_ids = _downloaded_manifest_ids(models_dir)
+    preserved_custom = []
+    for entry in load_catalog(models_dir):
+        entry_id = str(entry.get("id", "")).strip()
+        if not entry_id or entry_id in remote_ids:
+            continue
+        if not str(entry.get("url", "")).strip():
+            preserved_custom.append(entry)
+        elif entry_id in downloaded_ids:
+            preserved_entry = dict(entry)
+            preserved_entry[MODEL_CATALOG_LOCAL_PRESERVED_KEY] = True
+            preserved_custom.append(preserved_entry)
     merged = remote_catalog + preserved_custom
     _save_catalog(merged, models_dir)
     try:
@@ -616,6 +685,7 @@ def delete_model_file(entry_id: str,
         except OSError:
             pass
     update_sha256_in_manifest("", models_dir, entry_id)
+    _prune_missing_preserved_catalog_entries(models_dir)
 
 
 # SHA-256 utilities.

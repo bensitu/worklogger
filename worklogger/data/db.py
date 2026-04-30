@@ -905,15 +905,17 @@ class DB:
                 related_counts = {
                     table_name: int(
                         self.conn.execute(
-                            f"SELECT COUNT(*) FROM {table_name} WHERE user_id=?",
+                            "SELECT COUNT(*) FROM "
+                            f"{self._quote_identifier(table_name)} WHERE user_id=?",
                             (target_user_id,),
                         ).fetchone()[0]
                     )
                     for table_name in _USER_OWNED_TABLES
                 }
                 for table_name in _USER_OWNED_TABLES:
+                    table_sql = self._quote_identifier(table_name)
                     self.conn.execute(
-                        f"DELETE FROM {table_name} WHERE user_id=?",
+                        f"DELETE FROM {table_sql} WHERE user_id=?",
                         (target_user_id,),
                     )
                 cur = self.conn.execute(

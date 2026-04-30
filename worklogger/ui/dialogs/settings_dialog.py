@@ -873,7 +873,9 @@ class SettingsDialog(QDialog):
             def _worker() -> None:
                 try:
                     from services.local_model_service import refresh_catalog_from_remote
-                    refresh_catalog_from_remote()
+                    refresh_catalog_from_remote(
+                        ssl_context=self._app.services._build_update_ssl_context()
+                    )
                 except Exception as exc:
                     self._catalog_refresh_bridge.done.emit(False, str(exc))
                     return
