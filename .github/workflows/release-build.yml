@@ -25,11 +25,11 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
         id: setup-python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -69,7 +69,7 @@ jobs:
           Get-ChildItem -LiteralPath release -File | Select-Object Name, Length
 
       - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: WorkLogger-Windows-${{ env.RELEASE_VERSION }}
           path: release/WorkLogger.exe
@@ -81,7 +81,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rosetta
         run: |
@@ -93,14 +93,14 @@ jobs:
 
       - name: Set up Python arm64
         id: setup-python-arm64
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           architecture: arm64
 
       - name: Set up Python x64
         id: setup-python-x64
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           architecture: x64
@@ -152,7 +152,7 @@ jobs:
           find release -maxdepth 1 -type f -print -exec ls -lh {} \;
 
       - name: Upload macOS artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: WorkLogger-macOS-${{ env.RELEASE_VERSION }}
           path: release/*
@@ -164,11 +164,11 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
         id: setup-python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -232,7 +232,7 @@ jobs:
           find release -maxdepth 1 -type f -print -exec ls -lh {} \;
 
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: WorkLogger-Linux-${{ env.RELEASE_VERSION }}
           path: release/WorkLogger.tar.gz
@@ -248,10 +248,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: release-artifacts
           merge-multiple: true
