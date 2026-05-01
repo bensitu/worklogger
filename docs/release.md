@@ -38,10 +38,30 @@ Enter the same release tag in the `version` input.
 - Linux: `WorkLogger.tar.gz`
 - macOS DMG: `WorkLogger.dmg`, if a future build script creates one
 
+Release asset filenames are intentionally stable and do not include the version or platform name. GitHub artifact names may include platform and tag metadata during the workflow, but the files attached to the draft release should keep the names above.
+
+## Local build scripts
+
+Each platform uses the root build script for that platform:
+
+- Windows: `WorkLogger_build_windows.bat`
+- macOS: `WorkLogger_build_macOS.sh`
+- Linux: `WorkLogger_build_linux.sh`
+
+All three scripts use the shared `worklogger.spec`. Linux local builds produce `dist/WorkLogger`; the release workflow wraps that executable into `WorkLogger.tar.gz`.
+
 ## macOS signing note
 
 The current workflow uses ad-hoc signing for bundle integrity only. Unsigned or non-notarized macOS builds can still trigger Gatekeeper warnings. Developer ID signing, notarization, and stapling should be handled as a separate release hardening task.
 
 ## Linux compatibility note
 
-The Linux archive contains a PyInstaller onefile executable built on the current GitHub-hosted Ubuntu runner. It should be tested on the target Linux distributions before publishing the draft release.
+The Linux archive contains a PyInstaller onefile executable built on the current GitHub-hosted Ubuntu runner. It is intended for desktop Linux environments with the Qt/X11 runtime libraries required by PySide6. It should be tested on the target Linux distributions before publishing the draft release.
+
+Manual Linux smoke test after downloading a release asset:
+
+```bash
+tar -xzf WorkLogger.tar.gz
+chmod +x WorkLogger
+./WorkLogger
+```

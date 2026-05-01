@@ -22,7 +22,7 @@ WorkLogger is a privacy-first desktop app for tracking work hours, notes, quick 
 - Database backup/restore with a 30-day backup reminder
 - Custom accent colors, dark mode, and restart-aware minimal mode
 - Multi-language UI (English, Japanese, Korean, Simplified Chinese, Traditional Chinese)
-- Cross-platform desktop behavior (Windows tray icon, macOS menu bar icon)
+- Cross-platform desktop packaging for Windows, macOS, and Linux
 
 ## Download
 
@@ -34,6 +34,19 @@ Release packages are published through GitHub Releases:
 
 Build outputs are generated into the `dist/` directory.
 For the tag-based release process, see [docs/release.md](docs/release.md).
+
+### Linux install note
+
+The Linux release archive contains a PyInstaller onefile executable named `WorkLogger`.
+Extract it, ensure it is executable, and launch it from a desktop session:
+
+```bash
+tar -xzf WorkLogger.tar.gz
+chmod +x WorkLogger
+./WorkLogger
+```
+
+The release build targets the current GitHub-hosted Ubuntu runner. Test it on the Linux distributions you plan to support before publishing a release.
 
 ## Run From Source
 
@@ -76,6 +89,9 @@ WorkLogger_build_windows.bat
 
 All build scripts use `worklogger.spec`. The generated executable and packaged artifacts are expected in `dist/`. If you create a macOS App, place the final `.app` file in `dist/` as well.
 `WorkLogger_build_macOS.sh` re-signs the merged universal app before zipping. By default it uses ad-hoc signing (`CODESIGN_IDENTITY=-`) for integrity.
+`WorkLogger_build_linux.sh` creates `dist/WorkLogger`; the GitHub Actions release workflow packages that executable as `WorkLogger.tar.gz`.
+
+Linux builds require Python 3.10+, PyInstaller, and the desktop runtime libraries needed by PySide6/Qt. The release workflow installs the required Ubuntu packages before running the Linux build script.
 
 ### macOS install note (no Apple Developer ID)
 

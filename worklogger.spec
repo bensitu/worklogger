@@ -4,13 +4,11 @@
 Packaging strategy
 ------------------
 * GGUF model files are not bundled; they are downloaded on demand.
-* catalog.json is bundled as an offline fallback and copied to the user models
-  directory on first run.
-* model_catalog.json is kept at the repository root for GitHub-hosted dynamic
-  catalog updates.
+* model_catalog.json is a GitHub-hosted remote catalog and is not bundled.
 * Build targets are explicit by platform:
   - macOS: .app bundle (COLLECT + BUNDLE)
-  - Windows/other: onefile executable
+  - Windows: onefile executable
+  - Linux: onefile executable
 """
 
 import importlib.util
@@ -32,7 +30,6 @@ ASSETS_DIR = WORKLOGGER_DIR / "assets"
 FONTS_DIR = ASSETS_DIR / "fonts"
 TEMPLATES_DIR = WORKLOGGER_DIR / "templates"
 LOCALES_DIR = WORKLOGGER_DIR / "locales"
-MODELS_DIR = WORKLOGGER_DIR / "models"
 I18N_COMPILE_SCRIPT = ROOT_DIR / "scripts" / "i18n" / "i18n_compile.py"
 I18N_LANGS = ("en_US", "ja_JP", "ko_KR", "zh_CN", "zh_TW")
 UPX_ENABLED = True
@@ -140,12 +137,6 @@ TEMPLATE_CUSTOM_SAMPLE = _require_file(
     TEMPLATES_DIR / "custom" / "Sample_1000000000000.json",
     "custom template sample",
 )
-CATALOG_JSON = _require_file(MODELS_DIR / "catalog.json", "model catalog")
-REMOTE_MODEL_CATALOG_JSON = _require_file(
-    ROOT_DIR / "model_catalog.json",
-    "remote model catalog",
-)
-
 # Optional package collections.
 _llama_data, _llama_bins = _collect("llama_cpp") if _module_exists("llama_cpp") else ([], [])
 _httpx_data, _httpx_bins = _collect("httpx") if _module_exists("httpx") else ([], [])
@@ -211,8 +202,6 @@ a = Analysis(
         (str(TEMPLATE_ZH_TW_DIR), "templates/zh_TW"),
         (str(TEMPLATE_KO_KR_DIR), "templates/ko_KR"),
         (str(TEMPLATE_CUSTOM_SAMPLE), "templates/custom"),
-        (str(CATALOG_JSON), "models"),
-        (str(REMOTE_MODEL_CATALOG_JSON), "."),
     ]
     + _llama_data
     + _httpx_data

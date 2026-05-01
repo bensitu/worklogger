@@ -102,7 +102,7 @@ class LocalDownloadDialog(QDialog):
             ensure_catalog, load_catalog, get_active_entry_id,
             get_models_dir,
         )
-        # Ensure catalog.json exists in the writable models directory.
+        # Ensure the writable models directory exists before import/download.
         try:
             ensure_catalog(get_models_dir())
         except Exception:

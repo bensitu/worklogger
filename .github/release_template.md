@@ -18,6 +18,18 @@ xattr -dr com.apple.quarantine /Applications/WorkLogger.app
 open /Applications/WorkLogger.app
 ```
 
+## Linux Install Note
+
+The Linux archive contains a onefile executable:
+
+```bash
+tar -xzf WorkLogger.tar.gz
+chmod +x WorkLogger
+./WorkLogger
+```
+
+Test the Linux asset on the target distributions before publishing the release.
+
 ## Downloads
 
 - macOS: `WorkLogger.app.zip`

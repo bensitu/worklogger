@@ -2,8 +2,9 @@
 
 Architecture
 ------------
-- **catalog.json** (``<app_root>/models/catalog.json``) is the sole source of
-  model metadata.  Add / modify entries there; no Python changes required.
+- **model_catalog.json** is fetched from GitHub when the model download UI is
+  opened; it is not packaged with the app.
+- **catalog.json** in the runtime models directory is the writable cache.
 - **manifest.json** records download state (active entry, sha256 per file).
 - **LLMProvider** is an ABC; ``LlamaCppProvider`` is the default backend.
   Future backends (Ollama, ONNX) subclass it without touching callers.
@@ -231,55 +232,19 @@ def _strip_thinking(text: str) -> str:
     return cleaned.strip()
 
 
-# Catalog loader.
-
-def _bundled_catalog_path() -> Optional[Path]:
-    """Return the path to catalog.json inside the PyInstaller bundle, or None."""
-    meipass = getattr(sys, "_MEIPASS", None)
-    if meipass:
-        candidate = Path(meipass) / "models" / CATALOG_FILENAME
-        if candidate.exists():
-            return candidate
-    return None
-
-
 def ensure_catalog(models_dir: Optional[Path] = None) -> None:
-    """Guarantee that catalog.json exists in the user's models directory.
+    """Ensure the writable models directory exists.
 
-    On a frozen (PyInstaller) first run the file only exists inside
-    ``sys._MEIPASS`` (the temp extraction folder).  This function copies it
-    to ``models_dir`` so it persists between launches and can be edited by
-    the user.
-
-    On source / dev runs the file is already in ``worklogger/models/`` and
-    nothing happens.
-
-    Always safe to call multiple times (idempotent).
+    The remote catalog is fetched by ``refresh_catalog_from_remote()`` when the
+    model download UI opens. This function intentionally does not seed or copy
+    ``model_catalog.json`` into runtime state.
     """
     if models_dir is None:
         models_dir = get_models_dir()
-    dest = models_dir / CATALOG_FILENAME
-    if dest.exists():
-        return
-    # Try to copy from the bundle.
-    bundled = _bundled_catalog_path()
-    if bundled is not None:
-        try:
-            models_dir.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(str(bundled), str(dest))
-            return
-        except OSError:
-            pass
-    # Source run: catalog lives next to this file's package root.
-    # (worklogger/models/catalog.json relative to _app_root())
-    candidate = _app_root() / "models" / CATALOG_FILENAME
-    if candidate.exists() and candidate != dest:
-        try:
-            models_dir.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(str(candidate), str(dest))
-        except OSError:
-            pass
-    # If still not present, load_catalog() will use the hardcoded fallback.
+    try:
+        models_dir.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
 
 
 def _model_file_exists(models_dir: Path, filename: str) -> bool:
@@ -570,7 +535,7 @@ def load_manifest(models_dir: Optional[Path] = None) -> list:
     """
     if models_dir is None:
         models_dir = get_models_dir()
-    # Guarantee catalog.json exists in models_dir before reading manifest.
+    # Use a writable local catalog cache when one has already been refreshed.
     ensure_catalog(models_dir)
     path = models_dir / MANIFEST_FILENAME
     if path.exists():
@@ -1190,4 +1155,3 @@ def is_local_model_enabled(services) -> bool:
         return str(services.get_setting("local_model_enabled", "0")) == "1"
     except Exception:
         return False
-
