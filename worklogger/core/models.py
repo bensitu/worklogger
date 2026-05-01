@@ -9,6 +9,8 @@ use plain attribute access.
 from __future__ import annotations
 from typing import NamedTuple
 
+from config.constants import LEAVE_TYPES
+
 
 class WorkRecord(NamedTuple):
     """One row from the ``worklog`` table.
@@ -45,7 +47,6 @@ class WorkRecord(NamedTuple):
     @property
     def is_leave(self) -> bool:
         """True when work_type is one of the leave categories."""
-        from config.constants import LEAVE_TYPES
         return self.safe_work_type() in LEAVE_TYPES
 
     def safe_work_type(self) -> str:

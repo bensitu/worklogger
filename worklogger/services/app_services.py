@@ -74,6 +74,10 @@ class AuthService:
     def __init__(self, db: DB):
         self.db = db
 
+    def _admin_username_for_log(self, admin_user_id: int) -> str:
+        admin = self.db.get_user(admin_user_id)
+        return str(admin["username"]) if admin else ""
+
     @staticmethod
     def _require_username(username: str) -> str:
         if not isinstance(username, str):
@@ -283,6 +287,13 @@ class AuthService:
         )
         if clear_remember:
             clear_remember_token(target["username"])
+        _log.info(
+            "Admin password reset: Admin=%s (ID=%s); Target User=%s (ID=%s)",
+            self._admin_username_for_log(admin_user_id),
+            admin_user_id,
+            target["username"],
+            target_user_id,
+        )
         return new_recovery_key
 
     def admin_create_user(
@@ -310,6 +321,13 @@ class AuthService:
             "1",
             user_id=user_id,
         )
+        _log.info(
+            "Admin user creation: Admin=%s (ID=%s); New User=%s (ID=%s)",
+            self._admin_username_for_log(admin_user_id),
+            admin_user_id,
+            username,
+            user_id,
+        )
         return user_id, password
 
     def set_user_admin(
@@ -327,7 +345,18 @@ class AuthService:
             raise ValueError("admin_password_incorrect")
         if not enabled and self.db.is_admin(target_user_id) and self.db.admin_count() == 1:
             raise ValueError("last_admin")
-        return self.db.set_admin(target_user_id, enabled)
+        target = self.db.get_user(target_user_id)
+        updated = self.db.set_admin(target_user_id, enabled)
+        if updated:
+            _log.info(
+                "Admin privilege change: Admin=%s (ID=%s); Target User=%s (ID=%s); Enabled=%s",
+                self._admin_username_for_log(admin_user_id),
+                admin_user_id,
+                target["username"] if target else "",
+                target_user_id,
+                bool(enabled),
+            )
+        return updated
 
     def delete_user_by_admin(
         self,
@@ -392,6 +421,15 @@ class AppServices:
     def clear_current_user(self) -> None:
         self.current_user_id = None
         self.current_username = None
+
+    def _restore_current_user_session(self, username: str | None) -> bool:
+        if username:
+            user = self.db.get_user_by_username(username)
+            if user:
+                self.set_current_user(int(user["id"]), user["username"])
+                return True
+        self.clear_current_user()
+        return False
 
     def mark_current_user_used(self) -> None:
         self.db.mark_user_login(self._require_user_id())
@@ -702,16 +740,18 @@ class AppServices:
         if target.resolve(strict=False) == source.resolve(strict=False):
             return True
         tmp = target.with_name(f"{target.name}.tmp_restore")
+        backup = target.with_name(f"{target.name}.pre_restore")
         try:
             tmp.unlink(missing_ok=True)
+            backup.unlink(missing_ok=True)
         except OSError:
             pass
-        copied = False
+        old_connection_closed = False
         try:
             shutil.copy2(source, tmp)
-            copied = True
             try:
                 self.db.conn.close()
+                old_connection_closed = True
             except Exception:
                 pass
             for sidecar in (
@@ -722,26 +762,47 @@ class AppServices:
                     sidecar.unlink(missing_ok=True)
                 except OSError:
                     pass
+            if target.exists():
+                os.replace(target, backup)
             os.replace(tmp, target)
+            try:
+                new_db = DB(str(target))
+                new_auth = AuthService(new_db)
+            except Exception:
+                _log.exception("Restored database could not be opened; rolling back")
+                try:
+                    if backup.exists():
+                        os.replace(backup, target)
+                    self.db = DB(str(target))
+                    self.auth = AuthService(self.db)
+                    self._restore_current_user_session(username)
+                    old_connection_closed = False
+                except Exception:
+                    _log.exception("Failed to reopen the previous database after rollback")
+                raise
         except Exception:
             try:
                 tmp.unlink(missing_ok=True)
             except OSError:
                 pass
-            if copied:
-                self.db = DB(str(target))
-                self.auth = AuthService(self.db)
+            if not target.exists() and backup.exists():
+                os.replace(backup, target)
+            if old_connection_closed:
+                try:
+                    self.db = DB(str(target))
+                    self.auth = AuthService(self.db)
+                    self._restore_current_user_session(username)
+                except Exception:
+                    _log.exception("Failed to reopen the active database after restore failure")
             raise
 
-        self.db = DB(str(target))
-        self.auth = AuthService(self.db)
-        if username:
-            user = self.db.get_user_by_username(username)
-            if user:
-                self.set_current_user(int(user["id"]), user["username"])
-                return True
-        self.clear_current_user()
-        return False
+        self.db = new_db
+        self.auth = new_auth
+        try:
+            backup.unlink(missing_ok=True)
+        except OSError:
+            pass
+        return self._restore_current_user_session(username)
 
     def _validate_report_type(self, report_type: str) -> str:
         if report_type not in {"weekly", "monthly"}:

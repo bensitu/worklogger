@@ -709,9 +709,14 @@ class DB:
             "SELECT id,recovery_key_hash,recovery_salt FROM users WHERE username=?",
             (username,),
         ).fetchone()
+        cleaned_key = recovery_key.strip() if isinstance(recovery_key, str) else ""
         if not row or not row[1] or not row[2]:
+            self._password_hash_matches(
+                cleaned_key,
+                _DUMMY_PASSWORD_SALT,
+                _DUMMY_PASSWORD_HASH,
+            )
             return None
-        cleaned_key = recovery_key.strip()
         matched, needs_upgrade = self._password_hash_matches(
             cleaned_key,
             row[2],

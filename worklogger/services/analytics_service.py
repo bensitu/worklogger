@@ -32,30 +32,6 @@ def month_stats(month_rows: list, work_hours: float):
     return total, ot, wd, ld, total / wd if wd else 0.0
 
 
-def monthly_chart_data_v2(record_getter, y: int, m: int) -> tuple[list, list, set[int]]:
-    from calendar import monthrange
-    first, days = monthrange(y, m)
-    first = (first + 1) % 7
-    weekly: dict[int, float] = {}
-    work_days: dict[int, int] = {}
-    leave_indices: set[int] = set()
-    for d in range(1, days + 1):
-        row = (d + first - 1) // 7
-        rec = record_getter(date(y, m, d).isoformat())
-        if rec and rec.has_times and not rec.is_leave:
-            weekly[row] = weekly.get(row, 0.0) + calc_hours(rec.start, rec.end, rec.break_hours)
-            work_days[row] = work_days.get(row, 0) + 1
-        if rec and rec.is_leave:
-            leave_indices.add(row)
-    max_r = (days + first - 1) // 7
-    bar_data = [(f"W{r+1}", weekly.get(r, 0.0)) for r in range(max_r + 1)]
-    line_data = [
-        (f"W{r+1}", weekly.get(r, 0.0) / work_days[r] if work_days.get(r) else 0.0)
-        for r in range(max_r + 1)
-    ]
-    return bar_data, line_data, leave_indices
-
-
 def _raw_record_hours(rec) -> float:
     if rec and rec.has_times:
         return calc_hours(rec.start, rec.end, rec.break_hours)
