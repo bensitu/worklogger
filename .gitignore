@@ -26,6 +26,7 @@ dist_x86/
 dist_arm/
 !scripts/build/
 !scripts/build/worklogger_build_windows.ps1
+release/
 
 # Logs
 
@@ -69,7 +70,8 @@ worklogger/models/*.json
 worklogger/models/*.lock
 worklogger/models/catalog.json
 
-# macOS and Windows release artifacts are generated in dist/
+# Release artifacts are generated in dist
 *.exe
 *.dmg
 *.app
+*.tar.gz

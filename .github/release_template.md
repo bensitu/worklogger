@@ -22,3 +22,4 @@ open /Applications/WorkLogger.app
 
 - macOS: `WorkLogger.app.zip`
 - Windows: `WorkLogger.exe`
+- Linux: `WorkLogger.tar.gz`

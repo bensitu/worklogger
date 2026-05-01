@@ -1,0 +1,274 @@
+name: Build and Release WorkLogger
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version tag, e.g. vX.Y.Z"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  PYTHON_VERSION: "3.11"
+  RELEASE_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || github.event.inputs.version }}
+
+jobs:
+  build-windows:
+    name: Build Windows exe
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Validate release version
+        shell: pwsh
+        run: |
+          if ($env:RELEASE_VERSION -notmatch '^v\d+\.\d+\.\d+([.-][0-9A-Za-z.-]+)?$') {
+            throw "Release version must match vX.Y.Z. Got: $env:RELEASE_VERSION"
+          }
+
+      - name: Build Windows app
+        shell: cmd
+        env:
+          PYTHON_BIN: ${{ steps.setup-python.outputs.python-path }}
+        run: WorkLogger_build_windows.bat
+
+      - name: Prepare Windows artifact
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path release | Out-Null
+
+          $source = "dist\WorkLogger.exe"
+          if (!(Test-Path -LiteralPath $source -PathType Leaf)) {
+            if (Test-Path -LiteralPath "dist") {
+              Get-ChildItem -LiteralPath "dist" -Recurse -Force | Select-Object FullName, Length
+            }
+            throw "Expected artifact was not found: $source"
+          }
+
+          $artifact = Get-Item -LiteralPath $source
+          if ($artifact.Length -le 0) {
+            throw "Artifact is empty: $source"
+          }
+
+          $target = "release\WorkLogger.exe"
+          Copy-Item -LiteralPath $source -Destination $target -Force
+          Get-ChildItem -LiteralPath release -File | Select-Object Name, Length
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WorkLogger-Windows-${{ env.RELEASE_VERSION }}
+          path: release/WorkLogger.exe
+          if-no-files-found: error
+
+  build-macos:
+    name: Build macOS app
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rosetta
+        run: |
+          if [ "$(uname -m)" = "arm64" ]; then
+            sudo softwareupdate --install-rosetta --agree-to-license || true
+          else
+            echo "Rosetta is only required on Apple Silicon runners."
+          fi
+
+      - name: Set up Python arm64
+        id: setup-python-arm64
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          architecture: arm64
+
+      - name: Set up Python x64
+        id: setup-python-x64
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          architecture: x64
+
+      - name: Validate release version and Python architectures
+        env:
+          PYTHON_BIN_ARM64: ${{ steps.setup-python-arm64.outputs.python-path }}
+          PYTHON_BIN_X86_64: ${{ steps.setup-python-x64.outputs.python-path }}
+        run: |
+          if [[ ! "$RELEASE_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Release version must match vX.Y.Z. Got: $RELEASE_VERSION"
+            exit 1
+          fi
+
+          arch -arm64 "$PYTHON_BIN_ARM64" -c 'import platform, sys; print("arm64 python:", sys.executable, platform.machine())'
+          arch -x86_64 "$PYTHON_BIN_X86_64" -c 'import platform, sys; print("x86_64 python:", sys.executable, platform.machine())'
+
+      - name: Make build script executable
+        run: chmod +x ./WorkLogger_build_macOS.sh
+
+      - name: Build macOS app
+        env:
+          CODESIGN_IDENTITY: "-"
+          PYTHON_BIN: ${{ steps.setup-python-arm64.outputs.python-path }}
+          PYTHON_BIN_ARM64: ${{ steps.setup-python-arm64.outputs.python-path }}
+          PYTHON_BIN_X86_64: ${{ steps.setup-python-x64.outputs.python-path }}
+        run: ./WorkLogger_build_macOS.sh
+
+      - name: Prepare macOS artifact
+        run: |
+          mkdir -p release
+
+          if [ ! -d "dist/WorkLogger.app" ]; then
+            echo "Expected app bundle was not found: dist/WorkLogger.app"
+            find dist -maxdepth 4 -print 2>/dev/null || true
+            exit 1
+          fi
+
+          if [ -f "dist/WorkLogger.app.zip" ]; then
+            cp "dist/WorkLogger.app.zip" "release/WorkLogger.app.zip"
+          else
+            ditto -c -k --sequesterRsrc --keepParent "dist/WorkLogger.app" "release/WorkLogger.app.zip"
+          fi
+
+          if [ -f "dist/WorkLogger.dmg" ]; then
+            cp "dist/WorkLogger.dmg" "release/WorkLogger.dmg"
+          fi
+
+          find release -maxdepth 1 -type f -print -exec ls -lh {} \;
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WorkLogger-macOS-${{ env.RELEASE_VERSION }}
+          path: release/*
+          if-no-files-found: error
+
+  build-linux:
+    name: Build Linux binary
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Linux build prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            binutils \
+            file \
+            libdbus-1-3 \
+            libegl1 \
+            libfontconfig1 \
+            libfreetype6 \
+            libgl1 \
+            libglib2.0-0 \
+            libx11-xcb1 \
+            libxcb1 \
+            libxcb-cursor0 \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-randr0 \
+            libxcb-render0 \
+            libxcb-render-util0 \
+            libxcb-shape0 \
+            libxcb-shm0 \
+            libxcb-xfixes0 \
+            libxcb-xinerama0 \
+            libxcb-xkb1 \
+            libxkbcommon-x11-0 \
+            libxrender1
+
+      - name: Validate release version
+        run: |
+          if [[ ! "$RELEASE_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Release version must match vX.Y.Z. Got: $RELEASE_VERSION"
+            exit 1
+          fi
+
+      - name: Make Linux build script executable
+        run: chmod +x ./WorkLogger_build_linux.sh
+
+      - name: Build Linux app
+        env:
+          PYTHON_BIN: ${{ steps.setup-python.outputs.python-path }}
+        run: ./WorkLogger_build_linux.sh
+
+      - name: Prepare Linux artifact
+        run: |
+          mkdir -p release
+
+          if [ ! -f "dist/WorkLogger" ]; then
+            echo "Expected Linux executable was not found: dist/WorkLogger"
+            find dist -maxdepth 4 -print 2>/dev/null || true
+            exit 1
+          fi
+
+          chmod +x dist/WorkLogger
+          tar -C dist -czf release/WorkLogger.tar.gz WorkLogger
+          tar -tzf release/WorkLogger.tar.gz
+          find release -maxdepth 1 -type f -print -exec ls -lh {} \;
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WorkLogger-Linux-${{ env.RELEASE_VERSION }}
+          path: release/WorkLogger.tar.gz
+          if-no-files-found: error
+
+  release:
+    name: Create GitHub Release
+    needs:
+      - build-windows
+      - build-macos
+      - build-linux
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: Show release files
+        run: |
+          find release-artifacts -maxdepth 2 -type f -print -exec ls -lh {} \;
+
+      - name: Create or update draft GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_VERSION }}
+          name: WorkLogger ${{ env.RELEASE_VERSION }}
+          target_commitish: ${{ github.sha }}
+          files: release-artifacts/*
+          draft: true
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          overwrite_files: true
+          make_latest: false

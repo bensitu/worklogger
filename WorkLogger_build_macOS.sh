@@ -19,6 +19,8 @@ VENV_ARM="$SCRIPT_DIR/venv_arm"
 I18N_COMPILE_SCRIPT="$SCRIPT_DIR/scripts/i18n/i18n_compile.py"
 I18N_LANGS=(en_US ja_JP ko_KR zh_CN zh_TW)
 PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || true)}"
+PYTHON_BIN_X86_64="${PYTHON_BIN_X86_64:-$PYTHON_BIN}"
+PYTHON_BIN_ARM64="${PYTHON_BIN_ARM64:-$PYTHON_BIN}"
 LOG_DIR="$SCRIPT_DIR/build_logs"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 LOG_FILE="$LOG_DIR/build_macos_${TIMESTAMP}.log"
@@ -34,6 +36,15 @@ log() {
 fail() {
   printf '[WorkLogger build][ERROR] %s\n' "$*" >&2
   exit 1
+}
+
+python_bin_for_arch() {
+  local target_arch="$1"
+  case "$target_arch" in
+    x86_64) printf '%s\n' "$PYTHON_BIN_X86_64" ;;
+    arm64) printf '%s\n' "$PYTHON_BIN_ARM64" ;;
+    *) fail "Unsupported macOS target architecture: $target_arch" ;;
+  esac
 }
 
 assert_path_in_project() {
@@ -100,9 +111,11 @@ print_python_identity() {
 }
 
 verify_prerequisites() {
-  [ "$(uname -s)" = "Darwin" ] || fail "WorkLogger_build.sh only supports macOS."
-  [ -n "$PYTHON_BIN" ] || fail "python3 was not found. Install Python 3.10+ or set PYTHON_BIN."
-  [ -x "$PYTHON_BIN" ] || fail "Python executable is not runnable: $PYTHON_BIN"
+  [ "$(uname -s)" = "Darwin" ] || fail "WorkLogger_build_macOS.sh only supports macOS."
+  [ -n "$PYTHON_BIN_ARM64" ] || fail "arm64 Python was not found. Install Python 3.10+ or set PYTHON_BIN_ARM64."
+  [ -n "$PYTHON_BIN_X86_64" ] || fail "x86_64 Python was not found. Install Python 3.10+ or set PYTHON_BIN_X86_64."
+  [ -x "$PYTHON_BIN_ARM64" ] || fail "arm64 Python executable is not runnable: $PYTHON_BIN_ARM64"
+  [ -x "$PYTHON_BIN_X86_64" ] || fail "x86_64 Python executable is not runnable: $PYTHON_BIN_X86_64"
   [ -f "$SPEC" ] || fail "Spec file not found: $SPEC"
   [ -f "$I18N_COMPILE_SCRIPT" ] || fail "i18n compile script not found: $I18N_COMPILE_SCRIPT"
 
@@ -112,9 +125,9 @@ verify_prerequisites() {
   require_cmd file
   require_cmd find
 
-  log "Checking Python interpreter architecture support: $PYTHON_BIN"
-  run_arch x86_64 "$PYTHON_BIN" -c 'import platform; raise SystemExit(0 if platform.machine()=="x86_64" else 1)' || fail "Python cannot run in x86_64 mode. Install Rosetta-compatible Python."
-  run_arch arm64 "$PYTHON_BIN" -c 'import platform; raise SystemExit(0 if platform.machine()=="arm64" else 1)' || fail "Python cannot run in arm64 mode."
+  log "Checking Python interpreter architecture support: arm64=$PYTHON_BIN_ARM64 x86_64=$PYTHON_BIN_X86_64"
+  run_arch x86_64 "$PYTHON_BIN_X86_64" -c 'import platform, sys; raise SystemExit(0 if sys.version_info >= (3, 10) and platform.machine()=="x86_64" else 1)' || fail "Python cannot run in x86_64 mode with Python 3.10+. Install Rosetta-compatible Python or set PYTHON_BIN_X86_64."
+  run_arch arm64 "$PYTHON_BIN_ARM64" -c 'import platform, sys; raise SystemExit(0 if sys.version_info >= (3, 10) and platform.machine()=="arm64" else 1)' || fail "Python cannot run in arm64 mode with Python 3.10+. Install arm64 Python or set PYTHON_BIN_ARM64."
 }
 
 find_app_bundle() {
@@ -139,10 +152,12 @@ bootstrap_build_env() {
   local venv_dir="$2"
   local venv_python="$venv_dir/bin/python"
   local requirements_file="$SCRIPT_DIR/requirements.txt"
+  local source_python
+  source_python="$(python_bin_for_arch "$target_arch")"
 
   if [ ! -x "$venv_python" ]; then
     log "RUN  : Create venv (${target_arch}) at $venv_dir"
-    run_arch "$target_arch" "$PYTHON_BIN" -m venv "$venv_dir"
+    run_arch "$target_arch" "$source_python" -m venv "$venv_dir"
     log "OK   : Create venv (${target_arch})"
   else
     log "OK   : Reusing venv (${target_arch}) at $venv_dir"
@@ -313,6 +328,8 @@ log "Project root : $SCRIPT_DIR"
 log "Spec file    : $SPEC"
 log "Log file     : $LOG_FILE"
 log "Target app   : $OUT_APP"
+log "Python arm64 : $PYTHON_BIN_ARM64"
+log "Python x86_64: $PYTHON_BIN_X86_64"
 log "============================================================"
 
 export LANG=en_US.UTF-8
@@ -326,7 +343,7 @@ verify_prerequisites
 cleanup_source_cache_artifacts
 
 log "RUN  : Compile gettext catalogs (.po -> .mo)"
-"$PYTHON_BIN" "$I18N_COMPILE_SCRIPT"
+run_arch arm64 "$PYTHON_BIN_ARM64" "$I18N_COMPILE_SCRIPT"
 for lang in "${I18N_LANGS[@]}"; do
   mo_path="$SCRIPT_DIR/worklogger/locales/${lang}/LC_MESSAGES/messages.mo"
   [ -f "$mo_path" ] || fail "Missing compiled catalog: $mo_path"

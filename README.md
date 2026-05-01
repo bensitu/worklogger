@@ -30,8 +30,10 @@ Release packages are published through GitHub Releases:
 
 - Windows: `WorkLogger.exe`
 - macOS: `WorkLogger.app.zip`
+- Linux: `WorkLogger.tar.gz`
 
 Build outputs are generated into the `dist/` directory.
+For the tag-based release process, see [docs/release.md](docs/release.md).
 
 ## Run From Source
 
@@ -57,17 +59,23 @@ python -m worklogger.main
 ### Windows
 
 ```powershell
-WorkLogger_build.bat
+WorkLogger_build_windows.bat
 ```
 
-### macOS / Linux
+### macOS
 
 ```bash
-./WorkLogger_build.sh
+./WorkLogger_build_macOS.sh
 ```
 
-Both scripts use `worklogger.spec`. The generated executable and packaged artifacts are expected in `dist/`. If you create a macOS App, place the final `.app` file in `dist/` as well.
-`WorkLogger_build.sh` re-signs the merged universal app before zipping. By default it uses ad-hoc signing (`CODESIGN_IDENTITY=-`) for integrity.
+### Linux
+
+```bash
+./WorkLogger_build_linux.sh
+```
+
+All build scripts use `worklogger.spec`. The generated executable and packaged artifacts are expected in `dist/`. If you create a macOS App, place the final `.app` file in `dist/` as well.
+`WorkLogger_build_macOS.sh` re-signs the merged universal app before zipping. By default it uses ad-hoc signing (`CODESIGN_IDENTITY=-`) for integrity.
 
 ### macOS install note (no Apple Developer ID)
 
@@ -118,8 +126,9 @@ python scripts/i18n/i18n_check.py
 ## Project Layout
 
 ```text
-WorkLogger_build.bat          Windows build entrypoint
-WorkLogger_build.sh           macOS universal build entrypoint
+WorkLogger_build_windows.bat  Windows build entrypoint
+WorkLogger_build_macOS.sh     macOS universal build entrypoint
+WorkLogger_build_linux.sh     Linux build entrypoint
 worklogger.spec               Shared PyInstaller specification
 scripts/                      Build helpers and i18n automation scripts
 worklogger/
