@@ -32,6 +32,8 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements.txt
 
       - name: Validate release version
         shell: pwsh
@@ -97,6 +99,8 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           architecture: arm64
+          cache: pip
+          cache-dependency-path: requirements.txt
 
       - name: Set up Python x64
         id: setup-python-x64
@@ -104,6 +108,8 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           architecture: x64
+          cache: pip
+          cache-dependency-path: requirements.txt
 
       - name: Validate release version and Python architectures
         env:
@@ -171,6 +177,8 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements.txt
 
       - name: Install Linux build prerequisites
         run: |

@@ -25,12 +25,16 @@ LOG_DIR="$SCRIPT_DIR/build_logs"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 LOG_FILE="$LOG_DIR/build_macos_${TIMESTAMP}.log"
 TEMP_DIRS=("$DIST_X86" "$DIST_ARM" "$BUILD_X86" "$BUILD_ARM")
+BUILD_START_EPOCH="$(date +%s)"
 
 mkdir -p "$LOG_DIR"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 log() {
-  printf '[WorkLogger build] %s\n' "$*"
+  local now elapsed
+  now="$(date '+%Y-%m-%d %H:%M:%S')"
+  elapsed="$(($(date +%s) - BUILD_START_EPOCH))"
+  printf '[WorkLogger build][%s][+%ss] %s\n' "$now" "$elapsed" "$*"
 }
 
 fail() {
@@ -98,6 +102,49 @@ retry() {
   done
 }
 
+run_for_debug() {
+  local desc="$1"
+  shift
+  log "DEBUG: ${desc}"
+  "$@" || log "WARN : Debug command failed: ${desc}"
+}
+
+run_with_heartbeat() {
+  local desc="$1"
+  local interval_seconds="$2"
+  shift 2
+  local started pid rc elapsed child_pids next_heartbeat
+
+  started="$(date +%s)"
+  next_heartbeat="$interval_seconds"
+  "$@" &
+  pid=$!
+
+  while kill -0 "$pid" 2>/dev/null; do
+    sleep 2 || true
+    elapsed="$(($(date +%s) - started))"
+    if kill -0 "$pid" 2>/dev/null; then
+      if [ "$elapsed" -ge "$next_heartbeat" ]; then
+        log "DEBUG: ${desc} still running after ${elapsed}s (pid=${pid})"
+        ps -o pid,ppid,etime,command -p "$pid" 2>/dev/null || true
+        child_pids="$(pgrep -P "$pid" 2>/dev/null | paste -sd, - || true)"
+        if [ -n "$child_pids" ]; then
+          ps -o pid,ppid,etime,command -p "$child_pids" 2>/dev/null || true
+        fi
+        next_heartbeat="$((next_heartbeat + interval_seconds))"
+      fi
+    fi
+  done
+
+  set +e
+  wait "$pid"
+  rc=$?
+  set -e
+  elapsed="$(($(date +%s) - started))"
+  log "DEBUG: ${desc} finished after ${elapsed}s (exit=${rc})"
+  return "$rc"
+}
+
 run_arch() {
   local target_arch="$1"
   shift
@@ -108,6 +155,112 @@ print_python_identity() {
   local target_arch="$1"
   local python_exe="$2"
   run_arch "$target_arch" "$python_exe" -c 'import platform, sys; print(f"python={sys.executable}"); print(f"machine={platform.machine()}"); print(f"version={sys.version.split()[0]}")'
+}
+
+print_packaging_debug() {
+  local target_arch="$1"
+  local python_exe="$2"
+
+  log "DEBUG: Python packaging environment (${target_arch})"
+  run_arch "$target_arch" "$python_exe" - <<'PY'
+import os
+import platform
+import sys
+import sysconfig
+
+print(f"sys.executable={sys.executable}")
+print(f"sys.version={sys.version.split()[0]}")
+print(f"platform.machine={platform.machine()}")
+print(f"platform.platform={platform.platform()}")
+print(f"macosx_deployment_target={sysconfig.get_config_var('MACOSX_DEPLOYMENT_TARGET')}")
+print(f"platform_tag={sysconfig.get_platform()}")
+print(f"base_prefix={sys.base_prefix}")
+print(f"prefix={sys.prefix}")
+print(f"CMAKE_BUILD_PARALLEL_LEVEL={os.environ.get('CMAKE_BUILD_PARALLEL_LEVEL', '')}")
+try:
+    from packaging import tags
+    head = []
+    for index, tag in enumerate(tags.sys_tags()):
+        if index >= 12:
+            break
+        head.append(str(tag))
+    print(f"compatible_tags_head={','.join(head)}")
+except Exception as exc:
+    print(f"compatible_tags_head_error={exc!r}")
+PY
+  run_arch "$target_arch" "$python_exe" -m pip --version || true
+}
+
+probe_llama_binary_wheel() {
+  local target_arch="$1"
+  local python_exe="$2"
+  local label="$3"
+  local llama_requirement="$4"
+  shift 4
+  local probe_dir="$SCRIPT_DIR/.tmp_llama_probe_${target_arch}_${label}_${TIMESTAMP}"
+
+  safe_remove_path "$probe_dir"
+  mkdir -p "$probe_dir"
+  log "DEBUG: Probe llama-cpp-python binary wheel (${target_arch}, ${label}): $llama_requirement"
+  if run_arch "$target_arch" "$python_exe" -m pip download \
+    --no-deps \
+    --no-cache-dir \
+    --only-binary llama-cpp-python \
+    -d "$probe_dir" \
+    "$@" \
+    "$llama_requirement"; then
+    find "$probe_dir" -maxdepth 1 -type f -name "*.whl" -exec basename {} \;
+  else
+    log "WARN : No compatible llama-cpp-python binary wheel found (${target_arch}, ${label}); pip may build from source."
+  fi
+  safe_remove_path "$probe_dir"
+}
+
+print_llama_install_debug() {
+  local target_arch="$1"
+  local python_exe="$2"
+  local venv_dir="$3"
+
+  log "DEBUG: Installed llama-cpp-python metadata (${target_arch})"
+  run_arch "$target_arch" "$python_exe" -m pip show llama-cpp-python || true
+  run_arch "$target_arch" "$python_exe" - <<'PY' || true
+import importlib.util
+
+spec = importlib.util.find_spec("llama_cpp")
+print(f"llama_cpp_importable={spec is not None}")
+if spec is not None:
+    print(f"llama_cpp_origin={spec.origin}")
+PY
+  find "$venv_dir" -path "*llama_cpp*" -type f \( -name "*.so" -o -name "*.dylib" \) -print -exec file {} \; 2>/dev/null || true
+}
+
+package_version_for_arch() {
+  local target_arch="$1"
+  local python_exe="$2"
+  local package_name="$3"
+
+  run_arch "$target_arch" "$python_exe" - "$package_name" <<'PY'
+import sys
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    print(version(sys.argv[1]))
+except PackageNotFoundError:
+    print("")
+PY
+}
+
+verify_llama_version_match() {
+  local x86_version arm_version
+  x86_version="$(package_version_for_arch x86_64 "$VENV_X86/bin/python" "llama-cpp-python")"
+  arm_version="$(package_version_for_arch arm64 "$VENV_ARM/bin/python" "llama-cpp-python")"
+
+  log "DEBUG: llama-cpp-python version check: x86_64=${x86_version:-missing} arm64=${arm_version:-missing}"
+  [ -n "$x86_version" ] || fail "llama-cpp-python is missing from the x86_64 build environment."
+  [ -n "$arm_version" ] || fail "llama-cpp-python is missing from the arm64 build environment."
+  if [ "$x86_version" != "$arm_version" ]; then
+    fail "Refusing to merge universal app with mismatched llama-cpp-python versions: x86_64=${x86_version}, arm64=${arm_version}."
+  fi
 }
 
 verify_prerequisites() {
@@ -152,6 +305,9 @@ bootstrap_build_env() {
   local venv_dir="$2"
   local venv_python="$venv_dir/bin/python"
   local requirements_file="$SCRIPT_DIR/requirements.txt"
+  local filtered_requirements_file="$SCRIPT_DIR/.tmp_requirements_macos_${target_arch}_${TIMESTAMP}.txt"
+  local llama_requirement_file="$SCRIPT_DIR/.tmp_llama_requirement_macos_${target_arch}_${TIMESTAMP}.txt"
+  local llama_requirement="llama-cpp-python>=0.2.90"
   local source_python
   source_python="$(python_bin_for_arch "$target_arch")"
 
@@ -164,17 +320,44 @@ bootstrap_build_env() {
   fi
 
   print_python_identity "$target_arch" "$venv_python"
+  print_packaging_debug "$target_arch" "$venv_python"
 
   retry 3 5 "Upgrade pip/setuptools/wheel (${target_arch})" \
     run_arch "$target_arch" "$venv_python" -m pip install --no-compile --upgrade pip setuptools wheel
   retry 3 5 "Install build dependencies (${target_arch})" \
     run_arch "$target_arch" "$venv_python" -m pip install --no-compile --no-cache-dir pyinstaller pillow certifi
   if [ -f "$requirements_file" ]; then
-    retry 3 5 "Install application requirements (${target_arch}, including local-model runtime)" \
-      run_arch "$target_arch" "$venv_python" -m pip install --no-compile --no-cache-dir -r "$requirements_file"
+    awk '
+      /^[[:space:]]*llama-cpp-python([[:space:]]|[<>=!~]|$)/ {
+        print > "/dev/stderr"
+        next
+      }
+      { print }
+    ' "$requirements_file" 2>"$llama_requirement_file" >"$filtered_requirements_file"
+
+    if [ -s "$llama_requirement_file" ]; then
+      llama_requirement="$(head -n 1 "$llama_requirement_file" | xargs)"
+    fi
+    safe_remove_path "$llama_requirement_file"
+
+    log "DEBUG: Local-model runtime requirement (${target_arch}): $llama_requirement"
+    probe_llama_binary_wheel "$target_arch" "$venv_python" "pypi" "$llama_requirement"
+    probe_llama_binary_wheel "$target_arch" "$venv_python" "cpu_index" "$llama_requirement" --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
+
+    retry 3 5 "Install application requirements (${target_arch}, excluding local-model runtime)" \
+      run_arch "$target_arch" "$venv_python" -m pip install --no-compile --no-cache-dir -r "$filtered_requirements_file"
+    safe_remove_path "$filtered_requirements_file"
+
+    # Install separately so CI logs show whether llama-cpp-python is using a wheel or building from source.
+    # Do not use --no-cache-dir here; source builds are expensive and should populate pip's wheel cache.
+    log "DEBUG: Installing llama-cpp-python separately (${target_arch}); source builds can take a long time on GitHub macOS runners."
+    retry 1 5 "Install local-model runtime (${target_arch})" \
+      run_with_heartbeat "Install local-model runtime (${target_arch})" 120 \
+      run_arch "$target_arch" "$venv_python" -m pip install --verbose --no-compile "$llama_requirement"
+    print_llama_install_debug "$target_arch" "$venv_python" "$venv_dir"
   fi
 
-  run_arch "$target_arch" "$venv_python" -c 'import importlib.util, sys; req = ["PySide6", "holidays", "httpx", "httpcore", "anyio", "portalocker", "keyring", "cryptography"]; miss = [m for m in req if importlib.util.find_spec(m) is None]; print("dependency_check=", "ok" if not miss else ",".join(miss)); sys.exit(1 if miss else 0)' \
+  run_arch "$target_arch" "$venv_python" -c 'import importlib.util, sys; req = ["PySide6", "holidays", "httpx", "httpcore", "anyio", "portalocker", "keyring", "cryptography", "llama_cpp"]; miss = [m for m in req if importlib.util.find_spec(m) is None]; print("dependency_check=", "ok" if not miss else ",".join(miss)); sys.exit(1 if miss else 0)' \
     || fail "Dependency verification failed for ${target_arch} build venv."
 }
 
@@ -337,6 +520,14 @@ export LC_ALL=en_US.UTF-8
 export PYTHONUTF8=1
 export PIP_DISABLE_PIP_VERSION_CHECK=1
 export PIP_NO_INPUT=1
+export CMAKE_BUILD_PARALLEL_LEVEL="${CMAKE_BUILD_PARALLEL_LEVEL:-$(sysctl -n hw.logicalcpu 2>/dev/null || printf '2')}"
+
+run_for_debug "macOS version" sw_vers
+run_for_debug "Kernel and machine" uname -a
+run_for_debug "Xcode version" xcodebuild -version
+run_for_debug "clang version" clang --version
+run_for_debug "CMake version" cmake --version
+run_for_debug "Ninja version" ninja --version
 
 verify_prerequisites
 
@@ -359,6 +550,8 @@ log "Step 2/3: Build arm64 (native)"
 build_for_arch "arm64" "$DIST_ARM" "$BUILD_ARM" "$VENV_ARM"
 ARM_APP="$(resolve_built_bundle "$DIST_ARM" "arm64")"
 ARM_MAIN="$ARM_APP/Contents/MacOS/${APP_NAME}"
+
+verify_llama_version_match
 
 log "Step 3/3: Merge into universal app"
 merge_universal_bundle "$X86_APP" "$ARM_APP"
