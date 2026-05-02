@@ -88,11 +88,14 @@ retry() {
   local attempt=1
   while true; do
     log "RUN  : ${desc} (attempt ${attempt}/${max_attempts})"
-    if "$@"; then
+    set +e
+    "$@"
+    local rc=$?
+    set -e
+    if [ "$rc" -eq 0 ]; then
       log "OK   : ${desc}"
       return 0
     fi
-    local rc=$?
     if [ "$attempt" -ge "$max_attempts" ]; then
       fail "${desc} failed after ${attempt} attempts (exit=${rc})."
     fi
@@ -234,6 +237,31 @@ PY
   find "$venv_dir" -path "*llama_cpp*" -type f \( -name "*.so" -o -name "*.dylib" \) -print -exec file {} \; 2>/dev/null || true
 }
 
+llama_cmake_args_for_arch() {
+  local target_arch="$1"
+  local base_args="${CMAKE_ARGS:-}"
+  local package_args="-DLLAMA_OPENSSL=OFF -DLLAMA_CURL=OFF -DLLAMA_BUILD_SERVER=OFF -DCMAKE_OSX_ARCHITECTURES=${target_arch}"
+
+  if [ -n "$base_args" ]; then
+    printf '%s %s\n' "$base_args" "$package_args"
+  else
+    printf '%s\n' "$package_args"
+  fi
+}
+
+install_llama_runtime() {
+  local target_arch="$1"
+  local python_exe="$2"
+  local llama_requirement="$3"
+  local llama_cmake_args
+
+  llama_cmake_args="$(llama_cmake_args_for_arch "$target_arch")"
+  log "DEBUG: llama-cpp-python CMAKE_ARGS (${target_arch}): ${llama_cmake_args}"
+  CMAKE_ARGS="$llama_cmake_args" \
+    ARCHFLAGS="-arch ${target_arch}" \
+    run_arch "$target_arch" "$python_exe" -m pip install --verbose --no-compile "$llama_requirement"
+}
+
 package_version_for_arch() {
   local target_arch="$1"
   local python_exe="$2"
@@ -320,10 +348,10 @@ bootstrap_build_env() {
   fi
 
   print_python_identity "$target_arch" "$venv_python"
-  print_packaging_debug "$target_arch" "$venv_python"
 
   retry 3 5 "Upgrade pip/setuptools/wheel (${target_arch})" \
     run_arch "$target_arch" "$venv_python" -m pip install --no-compile --upgrade pip setuptools wheel
+  print_packaging_debug "$target_arch" "$venv_python"
   retry 3 5 "Install build dependencies (${target_arch})" \
     run_arch "$target_arch" "$venv_python" -m pip install --no-compile --no-cache-dir pyinstaller pillow certifi
   if [ -f "$requirements_file" ]; then
@@ -353,7 +381,7 @@ bootstrap_build_env() {
     log "DEBUG: Installing llama-cpp-python separately (${target_arch}); source builds can take a long time on GitHub macOS runners."
     retry 1 5 "Install local-model runtime (${target_arch})" \
       run_with_heartbeat "Install local-model runtime (${target_arch})" 120 \
-      run_arch "$target_arch" "$venv_python" -m pip install --verbose --no-compile "$llama_requirement"
+      install_llama_runtime "$target_arch" "$venv_python" "$llama_requirement"
     print_llama_install_debug "$target_arch" "$venv_python" "$venv_dir"
   fi
 
