@@ -114,6 +114,23 @@ def _module_exists(name: str) -> bool:
         return False
 
 
+def _keyring_hiddenimports() -> list[str]:
+    candidates = ["keyring", "keyring.backends", "keyring.backends.null"]
+    if PLATFORM == "win32":
+        candidates.append("keyring.backends.Windows")
+    elif PLATFORM == "darwin":
+        candidates.append("keyring.backends.macOS")
+    elif PLATFORM.startswith("linux"):
+        candidates.extend(
+            (
+                "keyring.backends.SecretService",
+                "keyring.backends.chainer",
+                "keyring.backends.libsecret",
+            )
+        )
+    return [pkg for pkg in candidates if _module_exists(pkg)]
+
+
 _ensure_i18n_catalogs()
 _ensure_font_assets()
 
@@ -150,16 +167,11 @@ _pil_data, _pil_bins = _collect("PIL") if _module_exists("PIL") else ([], [])
 _llama_hidden = _collect_submodules("llama_cpp") if _module_exists("llama_cpp") else []
 _httpx_hidden = _collect_submodules("httpx") if _module_exists("httpx") else []
 _portalocker_hidden = _collect_submodules("portalocker") if _module_exists("portalocker") else []
-_keyring_hidden = _collect_submodules("keyring") if _module_exists("keyring") else []
+_keyring_hidden = _keyring_hiddenimports() if _module_exists("keyring") else []
 
 _optional_hidden = [
     pkg
     for pkg in (
-        "keyring",
-        "keyring.backends",
-        "keyring.backends.Windows",
-        "keyring.backends.macOS",
-        "keyring.backends.SecretService",
         "cryptography",
         "cryptography.fernet",
         "matplotlib",

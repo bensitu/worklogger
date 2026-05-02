@@ -52,11 +52,14 @@ retry() {
   local attempt=1
   while true; do
     log "RUN  : ${desc} (attempt ${attempt}/${max_attempts})"
-    if "$@"; then
+    set +e
+    "$@"
+    local rc=$?
+    set -e
+    if [ "$rc" -eq 0 ]; then
       log "OK   : ${desc}"
       return 0
     fi
-    local rc=$?
     if [ "$attempt" -ge "$max_attempts" ]; then
       fail "${desc} failed after ${attempt} attempts (exit=${rc})."
     fi
@@ -64,6 +67,47 @@ retry() {
     sleep "$delay_seconds"
     attempt=$((attempt + 1))
   done
+}
+
+llama_cmake_args() {
+  local base_args="${CMAKE_ARGS:-}"
+  local package_args="-DLLAMA_OPENSSL=OFF -DLLAMA_CURL=OFF -DLLAMA_BUILD_SERVER=OFF -DGGML_CCACHE=OFF"
+
+  if [ -n "$base_args" ]; then
+    printf '%s %s\n' "$base_args" "$package_args"
+  else
+    printf '%s\n' "$package_args"
+  fi
+}
+
+install_llama_runtime() {
+  local llama_requirement="$1"
+  local build_args
+  build_args="$(llama_cmake_args)"
+
+  log "DEBUG: llama-cpp-python CMAKE_ARGS: ${build_args}"
+  CMAKE_ARGS="$build_args" \
+    "$VENV_PYTHON" -m pip install \
+      --timeout 60 \
+      --retries 2 \
+      --verbose \
+      --no-compile \
+      --no-binary llama-cpp-python \
+      "$llama_requirement"
+}
+
+print_llama_install_debug() {
+  log "DEBUG: Installed llama-cpp-python metadata"
+  "$VENV_PYTHON" -m pip show llama-cpp-python || true
+  "$VENV_PYTHON" - <<'PY' || true
+import importlib.util
+
+spec = importlib.util.find_spec("llama_cpp")
+print(f"llama_cpp_importable={spec is not None}")
+if spec is not None:
+    print(f"llama_cpp_origin={spec.origin}")
+PY
+  find "$VENV_DIR" -path "*llama_cpp*" -type f -name "*.so" -print -exec file {} \; -exec ldd {} \; 2>/dev/null || true
 }
 
 verify_prerequisites() {
@@ -132,20 +176,14 @@ install_dependencies() {
       "$VENV_PYTHON" -m pip install --no-cache-dir --timeout 60 --retries 2 -r "$filtered_requirements_file"
     safe_remove_path "$filtered_requirements_file"
 
-    retry 3 5 "Install llama-cpp-python prebuilt CPU wheel" \
-      "$VENV_PYTHON" -m pip install \
-        --no-cache-dir \
-        --timeout 60 \
-        --retries 2 \
-        --prefer-binary \
-        --only-binary llama-cpp-python \
-        --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu \
-        "$llama_requirement"
+    retry 1 5 "Install llama-cpp-python from source for Linux glibc" \
+      install_llama_runtime "$llama_requirement"
+    print_llama_install_debug
   else
     log "WARN : requirements.txt not found. Skipping application dependency installation."
   fi
 
-  "$VENV_PYTHON" -c 'import importlib.util, sys; req=["PySide6","holidays","keyring","cryptography","httpx","httpcore","anyio","portalocker"]; miss=[m for m in req if importlib.util.find_spec(m) is None]; print("dependency_check=", "ok" if not miss else ",".join(miss)); sys.exit(1 if miss else 0)'
+  "$VENV_PYTHON" -c 'import importlib.util, sys; req=["PySide6","holidays","keyring","cryptography","httpx","httpcore","anyio","portalocker","llama_cpp"]; miss=[m for m in req if importlib.util.find_spec(m) is None]; print("dependency_check=", "ok" if not miss else ",".join(miss)); sys.exit(1 if miss else 0)'
 }
 
 log "============================================================"
@@ -161,6 +199,7 @@ export LC_ALL=en_US.UTF-8
 export PYTHONUTF8=1
 export PIP_DISABLE_PIP_VERSION_CHECK=1
 export PIP_NO_INPUT=1
+export CMAKE_BUILD_PARALLEL_LEVEL="${CMAKE_BUILD_PARALLEL_LEVEL:-$(nproc 2>/dev/null || printf '2')}"
 
 verify_prerequisites
 cleanup_source_cache_artifacts

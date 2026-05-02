@@ -193,6 +193,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             binutils \
+            build-essential \
+            cmake \
             file \
             libdbus-1-3 \
             libegl1 \
@@ -215,7 +217,8 @@ jobs:
             libxcb-xinerama0 \
             libxcb-xkb1 \
             libxkbcommon-x11-0 \
-            libxrender1
+            libxrender1 \
+            ninja-build
 
       - name: Validate release version
         run: |
@@ -266,6 +269,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Ensure release tag exists
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch --force --tags origin
+
+          if git rev-parse -q --verify "refs/tags/${RELEASE_VERSION}" >/dev/null; then
+            tag_sha="$(git rev-list -n 1 "${RELEASE_VERSION}")"
+            if [ "$tag_sha" != "$GITHUB_SHA" ]; then
+              echo "Release tag ${RELEASE_VERSION} already points to ${tag_sha}, not ${GITHUB_SHA}."
+              exit 1
+            fi
+            echo "Release tag ${RELEASE_VERSION} already exists at ${GITHUB_SHA}."
+          else
+            git tag "${RELEASE_VERSION}" "${GITHUB_SHA}"
+            git push origin "refs/tags/${RELEASE_VERSION}"
+          fi
+
       - name: Download build artifacts
         uses: actions/download-artifact@v7
         with:
@@ -277,7 +301,7 @@ jobs:
           find release-artifacts -maxdepth 2 -type f -print -exec ls -lh {} \;
 
       - name: Create or update draft GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.RELEASE_VERSION }}
           name: WorkLogger ${{ env.RELEASE_VERSION }}

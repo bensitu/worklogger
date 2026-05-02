@@ -240,7 +240,7 @@ PY
 llama_cmake_args_for_arch() {
   local target_arch="$1"
   local base_args="${CMAKE_ARGS:-}"
-  local package_args="-DLLAMA_OPENSSL=OFF -DLLAMA_CURL=OFF -DLLAMA_BUILD_SERVER=OFF -DCMAKE_OSX_ARCHITECTURES=${target_arch}"
+  local package_args="-DLLAMA_OPENSSL=OFF -DLLAMA_CURL=OFF -DLLAMA_BUILD_SERVER=OFF -DGGML_CCACHE=OFF -DCMAKE_OSX_ARCHITECTURES=${target_arch}"
 
   if [ -n "$base_args" ]; then
     printf '%s %s\n' "$base_args" "$package_args"
