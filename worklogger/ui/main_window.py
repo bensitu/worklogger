@@ -58,7 +58,7 @@ from services.language_manager import get_language_manager
 from stores.app_store import AppStore, AppState
 from ui.dialogs import (
     SettingsDialog, NoteEditorDialog, ReportDialog, ChartDialog,
-    QuickLogDialog, AiChatDialog,
+    QuickLogDialog,
 )
 from ui.dialogs.common import _localize_msgbox_buttons
 from utils.icon import make_icon
@@ -514,12 +514,9 @@ class App(QWidget):
         act_row.setSpacing(6)
         self.report_btn = QPushButton()
         self.report_btn.setObjectName("action_btn")
-        self.ai_chat_btn = QPushButton()
-        self.ai_chat_btn.setObjectName("action_btn")
         self.chart_btn = QPushButton()
         self.chart_btn.setObjectName("action_btn")
         act_row.addWidget(self.report_btn)
-        act_row.addWidget(self.ai_chat_btn)
         act_row.addWidget(self.chart_btn)
         sv.addWidget(analytics_row)
         sv.addStretch()
@@ -543,7 +540,6 @@ class App(QWidget):
         self.note_expand_btn.clicked.connect(self.open_note_editor)
         self.settings_btn.clicked.connect(self.open_settings)
         self.report_btn.clicked.connect(self.open_report)
-        self.ai_chat_btn.clicked.connect(self.open_ai_chat)
         self.chart_btn.clicked.connect(self.open_chart)
         self.quick_log_btn.clicked.connect(self.open_quick_log)
 
@@ -729,7 +725,6 @@ class App(QWidget):
         self.save_btn.setText(_("Save"))
         self.settings_btn.setText(_("⚙  Settings"))
         self.report_btn.setText(_("Report"))
-        self.ai_chat_btn.setText(_("AI Chat"))
         self.chart_btn.setText(_("Analytics"))
         self.quick_log_btn.setText(_("⚡ Quick Log"))
         self.prev_btn.setToolTip(_("Previous month"))
@@ -1396,11 +1391,6 @@ class App(QWidget):
         if self.store.state.minimal_mode:
             return
         ReportDialog(self, self).exec()
-
-    def open_ai_chat(self):
-        if self.store.state.minimal_mode:
-            return
-        AiChatDialog(self, self).exec()
 
     def open_chart(self):
         if self.store.state.minimal_mode:

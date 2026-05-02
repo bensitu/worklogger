@@ -25,51 +25,18 @@ from config.themes import (
     theme_colors,
 )
 from config.constants import (
-    AI_INCLUDE_CALENDAR_TITLES_SETTING_KEY,
-    AI_INCLUDE_NOTES_SETTING_KEY,
-    AI_INCLUDE_QUICK_LOG_DETAILS_SETTING_KEY,
-    AI_PRIVACY_MODE_SETTING_KEY,
     ANALYTICS_SHOW_LEAVES_SETTING_KEY,
     MONTHLY_TARGET_SETTING_KEY,
 )
 from core.time_calc import calc_hours
 from services import analytics_service
-from services.ai_context_service import AiContextService
 from services.export_service import pdf_colors
-from services.local_model_service import LOCAL_MODEL_SENTINEL
 from ui.widgets import ComboChart, SwitchButton
-from .ai_dialogs import AIProgressDialog, AIResultDialog
+from .ai_assist_launcher import AiAssistLaunchConfig, launch_ai_assist
 from .template_dialogs import TemplatePickerDialog
 from .common import (
-    _append_quick_logs_block, _format_cal_events, _format_quick_logs, _get_ai_params, _localize_msgbox_buttons,
+    _append_quick_logs_block, _localize_msgbox_buttons,
 )
-
-
-def _ai_policy_allows(parent, app, api_key: str, title: str) -> bool:
-    mode = app.services.get_setting(AI_PRIVACY_MODE_SETTING_KEY, "local_only")
-    if mode == "disabled":
-        QMessageBox.warning(parent, title, _("AI is disabled by policy."))
-        return False
-    if mode == "local_only" and api_key != LOCAL_MODEL_SENTINEL:
-        QMessageBox.warning(
-            parent,
-            title,
-            _("Local model is not available. Enable or download a local model in Settings -> AI."),
-        )
-        return False
-    return True
-
-
-def _calendar_events_for_ai(events: list[dict], *, include_titles: bool) -> str:
-    if include_titles:
-        return _format_cal_events(events)
-    lines = []
-    for event in events:
-        start = event.get("start_time") or ""
-        end = event.get("end_time") or ""
-        span = f"{start}-{end}".strip("-") or _("all day")
-        lines.append(f"- {event.get('date', '')} {span}: {_('Title hidden')}")
-    return "\n".join(lines)
 
 
 class NoteEditorDialog(QDialog):
@@ -130,6 +97,8 @@ class NoteEditorDialog(QDialog):
         self._copy_btn.clicked.connect(self._copy)
         apply_btn.clicked.connect(self._apply_and_close)
         cancel_btn.clicked.connect(self.reject)
+        self._editor.textChanged.connect(self._sync_ai_button)
+        self._hint.textChanged.connect(lambda _text: self._sync_ai_button())
 
         bot.addWidget(self._ai_btn)
         bot.addWidget(self._copy_btn)
@@ -137,6 +106,12 @@ class NoteEditorDialog(QDialog):
         bot.addWidget(cancel_btn)
         bot.addWidget(apply_btn)
         lv.addLayout(bot)
+        self._sync_ai_button()
+
+    def _sync_ai_button(self) -> None:
+        has_source = bool(self._editor.toPlainText().strip())
+        has_hint = bool(self._hint.text().strip())
+        self._ai_btn.setEnabled(has_source or has_hint)
 
     def _open_template_picker(self):
         dlg = TemplatePickerDialog(
@@ -161,88 +136,20 @@ class NoteEditorDialog(QDialog):
 
     def _ai_smart(self):
         app = self._app
-        api_key, base_url, model = _get_ai_params(app, secondary=False)
-        if not _ai_policy_allows(self, app, api_key, _("Notes")):
-            return
-        if not api_key:
-            QMessageBox.warning(
-                self, _("Notes"), _("Please set your API key in Settings → AI."))
-            return
-
         d = app.selected
-        rec = app.services.get_record(d.isoformat())
-        h = calc_hours(rec.start, rec.end, rec.break_hours) if rec and rec.has_times else 0.0
-        wt = rec.safe_work_type() if rec else "normal"
-        existing = self._editor.toPlainText().strip()
-        hint = self._hint.text().strip()
-        cal_evs = app.services.get_calendar_events_for_date(d.isoformat())
-        quick_logs = app.services.quick_logs_for_date(d.isoformat())
-        include_calendar_titles = app.services.get_setting(
-            AI_INCLUDE_CALENDAR_TITLES_SETTING_KEY,
-            "0",
-        ) == "1"
-        include_quick_logs = app.services.get_setting(
-            AI_INCLUDE_QUICK_LOG_DETAILS_SETTING_KEY,
-            "1",
-        ) == "1"
-        cal_block = ""
-        if cal_evs:
-            cal_block += (
-                "\nCalendar events:\n"
-                + _calendar_events_for_ai(
-                    cal_evs,
-                    include_titles=include_calendar_titles,
-                )
-            )
-        if quick_logs and include_quick_logs:
-            cal_block += f"\nQuick log entries:\n{_format_quick_logs(quick_logs, app.lang, 'daily')}"
-
-        if existing:
-            system = (
-                "You are a professional editor. The user already has draft notes "
-                "for their daily work log. Improve and expand them using the "
-                "calendar events and work data provided. Keep the same language "
-                "and format. Do not remove information already written."
-                + (f" Extra: {hint}" if hint else "")
-            )
-            user_content = (
-                f"Date: {d.isoformat()}, Hours: {h:.1f}h, Work type: {wt}"
-                f"{cal_block}\n\nExisting notes:\n{existing}"
-            )
-        else:
-            system = (
-                "You are a professional writing a concise daily work log entry. "
-                "Generate clear, factual bullet-point notes based on the provided "
-                "work data and calendar events. Keep it under 200 words."
-                + (f" Extra: {hint}" if hint else "")
-            )
-            user_content = (
-                f"Date: {d.isoformat()}, Hours: {h:.1f}h, Work type: {wt}"
-                f"{cal_block}"
-                + (f"\nHint: {hint}" if hint else "")
-            )
-
-        msgs = [{"role": "user", "content": f"[System: {system}]\n\n{user_content}"}]
-
-        def do_ai():
-            def on_success(generated_text: str):
-                def on_regenerate():
-                    do_ai()
-                result_dlg = AIResultDialog(
-                    self, app.lang, existing, generated_text, on_regenerate
-                )
-                if result_dlg.exec() == QDialog.Accepted:
-                    self._editor.setPlainText(
-                        result_dlg.generated_edit.toPlainText())
-
-            AIProgressDialog.run(
-                self, app.lang, _("✨ AI Assist"),
-                api_key, base_url, model, msgs,
-                on_success=on_success,
-                services=app.services,
-            )
-
-        do_ai()
+        launch_ai_assist(
+            self,
+            app,
+            AiAssistLaunchConfig(
+                period_type="daily",
+                period_label=_("Daily Notes") + f" - {d.isoformat()}",
+                existing_text=self._editor.toPlainText().strip(),
+                hint=self._hint.text().strip(),
+                apply_button_text=_("Apply to Notes"),
+                use_secondary_ai=False,
+            ),
+            lambda text: self._editor.setPlainText(text),
+        )
 
     def _copy(self):
         QApplication.clipboard().setText(self._editor.toPlainText())
@@ -306,6 +213,10 @@ class ReportDialog(QDialog):
         self._dl_btn.clicked.connect(self._download)
         self._save_btn.clicked.connect(self._save_current_report)
         close_btn.clicked.connect(self._close_with_dirty_check)
+        self._tabs.currentChanged.connect(lambda _idx: self._sync_ai_button())
+        self._week_edit.textChanged.connect(self._sync_ai_button)
+        self._month_edit.textChanged.connect(self._sync_ai_button)
+        self._hint.textChanged.connect(lambda _text: self._sync_ai_button())
 
         bot.addWidget(self._ai_btn)
         bot.addSpacing(8)
@@ -317,6 +228,7 @@ class ReportDialog(QDialog):
         lv.addLayout(bot)
 
         self._fill()
+        self._sync_ai_button()
 
     def _make_editor(self) -> QTextEdit:
         e = QTextEdit()
@@ -329,6 +241,11 @@ class ReportDialog(QDialog):
 
     def _current_type(self) -> str:
         return "weekly" if self._tabs.currentIndex() == 0 else "monthly"
+
+    def _sync_ai_button(self) -> None:
+        has_source = bool(self._current_editor().toPlainText().strip())
+        has_hint = bool(self._hint.text().strip())
+        self._ai_btn.setEnabled(has_source or has_hint)
 
     def _period_for_type(self, report_type: str) -> tuple[str, str]:
         app = self._app
@@ -447,125 +364,22 @@ class ReportDialog(QDialog):
 
     def _ai_smart(self):
         app = self._app
-        api_key, base_url, model = _get_ai_params(app, secondary=True)
-        if not _ai_policy_allows(self, app, api_key, _("Work Report")):
-            return
-        if not api_key:
-            QMessageBox.warning(self, _("Work Report"),
-                                _("Please set your API key in Settings → AI."))
-            return
-
-        import datetime as _dt
         idx = self._tabs.currentIndex()
-        existing = self._current_editor().toPlainText().strip()
-        hint = self._hint.text().strip()
-        period = _("Weekly Report") if idx == 0 else _("Monthly Report")
-        include_notes = app.services.get_setting(
-            AI_INCLUDE_NOTES_SETTING_KEY,
-            "0",
-        ) == "1"
-        include_calendar_titles = app.services.get_setting(
-            AI_INCLUDE_CALENDAR_TITLES_SETTING_KEY,
-            "0",
-        ) == "1"
-        include_quick_logs = app.services.get_setting(
-            AI_INCLUDE_QUICK_LOG_DETAILS_SETTING_KEY,
-            "1",
-        ) == "1"
-
-        if idx == 0:
-            monday = app.selected - _dt.timedelta(days=app.selected.weekday())
-            sunday = monday + _dt.timedelta(days=6)
-            cal_evs = app.services.get_calendar_events_for_range(
-                monday.isoformat(), sunday.isoformat())
-            quick_logs = app.services.quick_logs_for_range(
-                monday.isoformat(), sunday.isoformat())
-        else:
-            y, m = app.selected.year, app.selected.month
-            _first_weekday, last = monthrange(y, m)
-            cal_evs = app.services.get_calendar_events_for_range(
-                f"{y}-{m:02d}-01", f"{y}-{m:02d}-{last:02d}")
-            quick_logs = app.services.quick_logs_for_range(
-                f"{y}-{m:02d}-01", f"{y}-{m:02d}-{last:02d}")
-
-        cal_block = ""
-        if cal_evs:
-            cal_block += (
-                "\n\n=== Calendar Events ===\n"
-                + _calendar_events_for_ai(
-                    cal_evs,
-                    include_titles=include_calendar_titles,
-                )
-            )
-        if quick_logs and include_quick_logs:
-            cal_block += (
-                f"\n\n=== Quick Log Entries (recorded tasks) ===\n"
-                f"{_format_quick_logs(quick_logs, app.lang, 'summary')}"
-            )
-
-        if existing:
-            system = (
-                "You are a professional work-report editor. "
-                f"The user has a draft {period}. "
-                "Improve its clarity, structure, and completeness. "
-                "If calendar events are provided, incorporate any missing "
-                "meetings or tasks. Keep the same language and Markdown format. "
-                "Do not invent facts."
-                + (f" Extra: {hint}" if hint else "")
-            )
-            user_content = f"=== Draft Report ===\n{existing}{cal_block}"
-        else:
-            system = (
-                "You are a professional work-report writer. "
-                f"Generate a clean {period} using the raw work log data"
-                + (" and calendar events provided" if cal_evs else "")
-                + ". Write in the same language as the work log data. "
-                "Use Markdown. Do not invent facts."
-                + (f" Extra: {hint}" if hint else "")
-            )
-            context_builder = AiContextService(app.services)
-            if idx == 0:
-                raw_log = context_builder.build_weekly_context(
-                    app.selected,
-                    include_notes=include_notes,
-                    include_calendar=True,
-                    include_calendar_titles=include_calendar_titles,
-                    include_quick_log_details=include_quick_logs,
-                )
-            else:
-                raw_log = context_builder.build_monthly_context(
-                    app.selected.year,
-                    app.selected.month,
-                    include_notes=include_notes,
-                    include_calendar=True,
-                    include_calendar_titles=include_calendar_titles,
-                    include_quick_log_details=include_quick_logs,
-                )
-            user_content = f"=== Work Log ===\n{raw_log}"
-
-        msgs = [{"role": "user",
-                 "content": f"[System: {system}]\n\n{user_content}"}]
-
-        def do_ai():
-            existing = self._current_editor().toPlainText().strip()
-
-            def on_success(generated_text: str):
-                def on_regenerate():
-                    do_ai()
-                result_dlg = AIResultDialog(
-                    self, app.lang, existing, generated_text, on_regenerate
-                )
-                if result_dlg.exec() == QDialog.Accepted:
-                    self._current_editor().setPlainText(result_dlg.generated_edit.toPlainText())
-
-            AIProgressDialog.run(
-                self, app.lang, _("✨ AI Generate"),
-                api_key, base_url, model, msgs,
-                on_success=on_success,
-                services=app.services,
-            )
-
-        do_ai()
+        period_type = "weekly" if idx == 0 else "monthly"
+        period_label = _("Weekly Report") if idx == 0 else _("Monthly Report")
+        launch_ai_assist(
+            self,
+            app,
+            AiAssistLaunchConfig(
+                period_type=period_type,
+                period_label=period_label,
+                existing_text=self._current_editor().toPlainText().strip(),
+                hint=self._hint.text().strip(),
+                apply_button_text=_("Apply to Report"),
+                use_secondary_ai=True,
+            ),
+            lambda text: self._current_editor().setPlainText(text),
+        )
 
     def _copy(self):
         QApplication.clipboard().setText(self._current_editor().toPlainText())
@@ -694,13 +508,16 @@ class ChartDialog(QDialog):
         bot.setSpacing(8)
         csv_btn = QPushButton("⬇  CSV")
         pdf_btn = QPushButton("⬇  PDF")
+        ai_pdf_btn = QPushButton(_("✨ AI PDF"))
         close_btn = QPushButton(_("Close"))
         close_btn.setObjectName("primary_btn")
         csv_btn.clicked.connect(self._export_csv)
         pdf_btn.clicked.connect(self._export_pdf)
+        ai_pdf_btn.clicked.connect(self._export_pdf_with_ai)
         close_btn.clicked.connect(self.accept)
         bot.addWidget(csv_btn)
         bot.addWidget(pdf_btn)
+        bot.addWidget(ai_pdf_btn)
         bot.addStretch()
         bot.addWidget(close_btn)
         lv.addLayout(bot)
@@ -808,11 +625,17 @@ class ChartDialog(QDialog):
         return analytics_service.annual_chart_data_v3(
             app.services.month_records,
             y,
-            [_("Jan"), _("Feb"), _("Mar"), _("Apr"), _("May"), _("Jun"), _("Jul"), _("Aug"), _("Sep"), _("Oct"), _("Nov"), _("Dec")],
+            self._month_labels(),
             self._metric,
             self._leave_cb.isChecked(),
             standard_hours=app.work_hours,
         )
+
+    def _month_labels(self) -> list[str]:
+        return [
+            _("Jan"), _("Feb"), _("Mar"), _("Apr"), _("May"), _("Jun"),
+            _("Jul"), _("Aug"), _("Sep"), _("Oct"), _("Nov"), _("Dec"),
+        ]
 
     def _monthly_detail(self):
         app = self._app
@@ -870,9 +693,10 @@ class ChartDialog(QDialog):
         app = self._app
         y = app.current.year
         rows = []
+        labels = self._month_labels()
         for m in range(1, 13):
             total, ot, wd, ld, avg = self._month_stats(y, m)
-            rows.append({"m": [_("Jan"), _("Feb"), _("Mar"), _("Apr"), _("May"), _("Jun"), _("Jul"), _("Aug"), _("Sep"), _("Oct"), _("Nov"), _("Dec")][m-1], "total": total,
+            rows.append({"m": labels[m-1], "total": total,
                          "ot": ot, "wd": wd, "ld": ld, "avg": avg})
         return rows
 
@@ -905,7 +729,44 @@ class ChartDialog(QDialog):
         )
         QMessageBox.information(self, _("Export"), _("Saved: {}").format(path))
 
-    def _export_pdf(self):
+    def _analytics_launch_kwargs(self) -> dict:
+        app = self._app
+        idx = self._tabs_w.currentIndex()
+        current_bundle, _chart_widget = self._current()
+        return {
+            "year": app.current.year,
+            "month": app.current.month,
+            "metric": self._metric_label(),
+            "chart_mode": msg("analytics_line") if self._chart_mode == "line" else msg("analytics_bar"),
+            "include_leave": self._leave_cb.isChecked(),
+            "monthly_bundle": self._bundles[0] if len(self._bundles) > 0 else None,
+            "quarterly_bundle": self._bundles[1] if len(self._bundles) > 1 else None,
+            "annual_bundle": self._bundles[2] if len(self._bundles) > 2 else None,
+            "current_bundle": current_bundle,
+            "current_tab_index": idx,
+            "work_hours": app.work_hours,
+            "monthly_target": app._safe_float_setting(
+                MONTHLY_TARGET_SETTING_KEY,
+                app.work_hours * 21,
+            ),
+            "month_labels": self._month_labels(),
+        }
+
+    def _export_pdf_with_ai(self) -> None:
+        launch_ai_assist(
+            self,
+            self._app,
+            AiAssistLaunchConfig(
+                period_type="analytics",
+                period_label=_("Analytics AI PDF"),
+                apply_button_text=_("Use for PDF"),
+                use_secondary_ai=True,
+                analytics_kwargs=self._analytics_launch_kwargs(),
+            ),
+            lambda text: self._export_pdf(ai_narrative=text),
+        )
+
+    def _export_pdf(self, ai_narrative: str | None = None):
         bundle, chart_widget = self._current()
         app = self._app
         try:
@@ -937,7 +798,16 @@ class ChartDialog(QDialog):
                 MONTHLY_TARGET_SETTING_KEY, app.work_hours * 21),
         )
         try:
-            render_pdf(path, idx, tab, chart_widget, bundle.bar_data, detail_fns[idx], ctx)
+            render_pdf(
+                path,
+                idx,
+                tab,
+                chart_widget,
+                bundle.bar_data,
+                detail_fns[idx],
+                ctx,
+                ai_narrative=ai_narrative,
+            )
             QMessageBox.information(
                 self, _("Export"), _("Saved: {}").format(path))
         except Exception as exc:

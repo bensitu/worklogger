@@ -459,7 +459,7 @@ msgid "HH:MM"
 msgstr "HH:MM"
 
 msgid "Hint / extra instructions (optional)"
-msgstr "보충 지시사항 (선택)"
+msgstr "AI보조 보충 지시사항 (선택)"
 
 msgid "https://api.openai.com/v1 | https://api.anthropic.com"
 msgstr "gpt-4o-mini | claude-haiku-4-5-20251001"
@@ -1548,3 +1548,69 @@ msgstr "계속하려면 현재 비밀번호를 입력하세요."
 
 msgid "Password is incorrect."
 msgstr "비밀번호가 올바르지 않습니다."
+
+msgid "AI Assist"
+msgstr "AI Assist"
+
+msgid "AI Summary"
+msgstr "AI 요약"
+
+msgid "Analytics AI PDF"
+msgstr "분석 AI PDF"
+
+msgid "Apply to Notes"
+msgstr "메모에 적용"
+
+msgid "Apply to Report"
+msgstr "보고서에 적용"
+
+msgid "Clear this conversation?"
+msgstr "이 대화를 지우시겠습니까?"
+
+msgid "Ctrl+Enter to send"
+msgstr "Ctrl+Enter로 보내기"
+
+msgid "Daily Notes"
+msgstr "생성 일일 메모"
+
+msgid "Error: {detail}"
+msgstr "오류: {detail}"
+
+msgid "Follow up on this result..."
+msgstr "이 결과에 대해 추가로 요청하세요..."
+
+msgid "Google sign-in is not configured."
+msgstr "Google 로그인이 설정되어 있지 않습니다."
+
+msgid "Include calendar event titles"
+msgstr "캘린더 일정 제목 포함"
+
+msgid "Runtime: External API"
+msgstr "실행 방식: 외부 API"
+
+msgid "Runtime: Local model"
+msgstr "실행 방식: 로컬 모델"
+
+msgid "Selected context may be sent to the configured external AI provider."
+msgstr "선택한 컨텍스트가 설정된 외부 AI 제공업체로 전송될 수 있습니다."
+
+msgid "Use for PDF"
+msgstr "PDF에 사용"
+
+msgid "✨ AI Assist - {}"
+msgstr "✨ AI 지원 - {}"
+
+msgid "✨ AI PDF"
+msgstr "✨ AI PDF"
+
+msgid "Extra instructions:"
+msgstr "추가 지시:"
+
+msgid "Request: {period}"
+msgstr "요청: {period}"
+
+msgid "Source: existing draft and selected WorkLogger context"
+msgstr "출처: 기존 초안 및 선정된 옵션의 맥락"
+
+msgid "Source: selected WorkLogger context"
+msgstr "출처: 선정된 옵션의 맥락"

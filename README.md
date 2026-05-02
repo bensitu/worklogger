@@ -1,7 +1,7 @@
 # WorkLogger
 
 ![License](https://img.shields.io/badge/license-GPLv3-blue)
-![Python](https://img.shields.io/badge/python-3.9+-green)
+![Python](https://img.shields.io/badge/python-3.10+-green)
 
 WorkLogger is a privacy-first desktop app for tracking work hours, notes, quick logs, reminders, and AI-assisted reports in multiple languages.
 
@@ -14,8 +14,8 @@ WorkLogger is a privacy-first desktop app for tracking work hours, notes, quick 
 - Flexible time tracking with Manual Input and Auto Record modes
 - Overnight-shift-aware calculations with work type and leave classification
 - AI-assisted note and report generation with external API providers and local model fallback
-- Multi-turn AI chat with day/week/month WorkLogger context and privacy controls
-- Optional Google/Microsoft OAuth sign-in using system-browser OIDC + PKCE
+- Multi-turn AI Assist for daily notes, weekly reports, monthly reports, and analytics PDF narratives
+- Optional Google sign-in using system-browser OIDC + PKCE and Firebase Identity Toolkit
 - Built-in local model management with a GitHub-hosted dynamic catalog, download, resume, verify, switch, and `.gguf` import
 - Template-driven daily/weekly/monthly writing with custom template support
 - Persistent weekly/monthly reports that reload by selected calendar week or month
@@ -69,24 +69,43 @@ pip install -r requirements.txt
 python -m worklogger.main
 ```
 
-### Optional OAuth sign-in
+### Optional Google Sign-In
 
-Google and Microsoft sign-in are disabled unless a desktop OAuth client ID is provided through environment variables. Local username/password login continues to work without these settings.
+Google sign-in is disabled unless both Google OAuth and Firebase Web API settings are provided. Local username/password login continues to work without these settings.
 
-```bash
-WORKLOGGER_OAUTH_LOGIN_ENABLED=1
-WORKLOGGER_GOOGLE_CLIENT_ID=your-google-desktop-client-id
-WORKLOGGER_MICROSOFT_CLIENT_ID=your-microsoft-public-client-id
+The recommended local development path is to copy `worklogger/config/identity.local.example.json` to `worklogger/config/identity.local.json` and fill in deployment-specific values.
+
+```json
+{
+  "identity_enabled": true,
+  "google_login_enabled": true,
+  "google_client_id": "YOUR_GOOGLE_OAUTH_CLIENT_ID.apps.googleusercontent.com",
+  "firebase": {
+    "apiKey": "YOUR_FIREBASE_WEB_API_KEY",
+    "authDomain": "your-project.firebaseapp.com",
+    "projectId": "your-project"
+  }
+}
 ```
 
-Provider-specific switches are also supported:
+Configuration lookup order:
+
+1. `WORKLOGGER_IDENTITY_CONFIG` pointing to a JSON file
+2. `%APPDATA%\WorkLogger\identity.local.json` on Windows, or `~/.config/worklogger/identity.local.json` on other platforms
+3. `worklogger/config/identity.local.json` in source builds, or `config/identity.local.json` next to a packaged executable
+
+Environment variables are also supported and take precedence over JSON files:
 
 ```bash
+WORKLOGGER_IDENTITY_ENABLED=1
 WORKLOGGER_GOOGLE_LOGIN_ENABLED=1
-WORKLOGGER_MICROSOFT_LOGIN_ENABLED=1
+WORKLOGGER_GOOGLE_CLIENT_ID=your-google-oauth-client-id.apps.googleusercontent.com
+WORKLOGGER_FIREBASE_API_KEY=your-firebase-web-api-key
+WORKLOGGER_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+WORKLOGGER_FIREBASE_PROJECT_ID=your-project
 ```
 
-OAuth is used only for sign-in. WorkLogger stores provider, OIDC subject, email, and display name in SQLite, but does not store OAuth access tokens, refresh tokens, ID tokens, authorization codes, or PKCE verifiers.
+Google sign-in needs a Google OAuth client ID in addition to Firebase configuration. Firebase `appId` is not the OAuth client ID. OAuth is used only for sign-in and account linking. WorkLogger stores provider, broker issuer, subject, email, and display name in SQLite, but does not store OAuth access tokens, refresh tokens, ID tokens, authorization codes, or PKCE verifiers.
 
 ## Build
 
@@ -170,7 +189,7 @@ worklogger.spec               Shared PyInstaller specification
 scripts/                      Build helpers and i18n automation scripts
 worklogger/
   assets/        Application icons
-  config/        Constants and themes
+  config/        Constants, themes, and identity configuration JSON
   core/          Time parsing and calculation logic
   data/          SQLite persistence layer
   locales/       gettext catalogs (.po/.mo)
@@ -213,12 +232,12 @@ The reset account is marked as an administrator and must change the password on 
 - Work types: normal, remote, business trip, paid leave, comp leave, and sick leave
 - Quick Log editor with start/end time support, inline edit/delete, and report/note integration
 - Note editor with template insertion, Quick Log insertion, and AI rewrite assistance
-- Weekly and monthly report generation with template picker, AI enhancement/regeneration, save/reload by selected period, unsaved-change prompts, copy, and Markdown export
-- AI Chat dialog with bounded multi-turn history, selected-period context, and controls for excluding notes, calendar titles, or quick-log details
-- Optional Google/Microsoft OAuth sign-in and account linking with local password login preserved
+- Weekly and monthly report generation with template picker, AI Assist multi-turn refinement, save/reload by selected period, unsaved-change prompts, copy, and Markdown export
+- AI Assist dialog with bounded multi-turn history, selected-period context, Apply actions, Close-driven request cancellation, and switches for including notes, calendar events, calendar event titles, or quick-log details
+- Optional Google/Firebase sign-in and account linking with local password login preserved
 - Analytics dialog with monthly/quarterly/annual charts, Work hours/Average metric switching, Bar/Line views, actual-hours leave overlays, and export to CSV/PDF
 - Data portability: CSV import/export, database backup/restore, `.ics` calendar import/export, and calendar event merge into notes/reports
-- AI provider settings with connectivity test, primary/secondary provider routing, and status-rich progress dialogs
+- AI provider settings with connectivity test, primary/secondary provider routing, local-model fallback, and status-rich AI Assist request feedback
 - Local model controls: enable/disable switch, dynamically refreshed model selection from `model_catalog.json` on GitHub, resumable download, hash verification, deletion, and `.gguf` import
 - Secure API key handling via OS keychain with encrypted local fallback
 - Appearance and behavior controls for preset/custom theme, dark mode, language, minimal mode, week start, holiday display, note reminders, and residency icon mode

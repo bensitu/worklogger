@@ -5,26 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.2.0] - 2026-05-02
+## [3.2.0] - 2026-05-05
 
 ### Added
 
-- Added an AI Chat dialog with bounded multi-turn conversation history, day/week/month WorkLogger context, and privacy controls for notes, calendar titles, and quick-log details.
-- Added an AI context service that builds compact Markdown context through AppServices while preserving per-user data isolation.
-- Added optional Google and Microsoft OAuth/OIDC sign-in using system-browser Authorization Code Flow with PKCE and localhost callback handling.
-- Added OAuth identity linking/unlinking in Settings -> Account, backed by a new `oauth_identities` table keyed by `(provider, subject)`.
-- Added AI privacy policy settings for local-only, remote-allowed, or disabled AI behavior.
+- Added a workflow-scoped AI Assist multi-turn dialog for daily notes, weekly reports, monthly reports, and analytics PDF narratives.
+- Added bounded AI conversation history with compact WorkLogger Markdown context and per-request switches for notes, calendar events, calendar event titles, and quick-log details.
+- Added an AI context service that builds daily, weekly, monthly, and analytics context through AppServices while preserving per-user data isolation.
+- Added Google sign-in and account linking through system-browser OIDC Authorization Code Flow with PKCE, localhost callback handling, and Firebase Identity Toolkit brokering.
+- Added login-time identity configuration from environment variables or local JSON files, including `WORKLOGGER_IDENTITY_CONFIG`, `%APPDATA%\WorkLogger\identity.local.json`, and `worklogger/config/identity.local.json`.
+- Added `worklogger/config/identity.local.example.json` as a safe template for Google OAuth and Firebase Web API configuration.
 
 ### Changed
 
-- Updated AI-assisted report generation to use privacy-aware WorkLogger context when generating new report content.
-- Existing AI assist entry points now respect the AI privacy mode before using remote providers.
-- Updated application and bundle metadata to version 3.2.0.
+- Updated AI-assisted daily note, weekly report, monthly report, and analytics PDF generation to open the AI Assist multi-turn dialog first and perform the initial request inside that dialog.
+- Replaced the old first-request AI progress window for AI Assist workflows with in-dialog status updates and Close-driven cancellation.
+
+### Fixed
+
+- Fixed AI Assist cancellation so Close cancels local or remote generation, detaches worker callbacks immediately, and prevents canceled local-model loads from continuing into generation.
 
 ### Security
 
 - OAuth access, refresh, ID tokens, authorization codes, and PKCE verifiers are not stored in SQLite and are not logged.
-- OAuth-created users are normal non-admin users, and existing username/password and remember-token login flows remain available.
+- Google/Firebase-created users are normal non-admin users, and existing username/password and remember-token login flows remain available.
 
 ## [3.1.0] - 2026-05-01
 

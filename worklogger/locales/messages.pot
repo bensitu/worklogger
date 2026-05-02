@@ -36,7 +36,7 @@ msgstr ""
 msgid "AI"
 msgstr ""
 
-msgid "AI Chat"
+msgid "AI Assist"
 msgstr ""
 
 msgid "AI Generated"
@@ -48,19 +48,10 @@ msgstr ""
 msgid "AI Generated Result"
 msgstr ""
 
-msgid "AI Privacy"
-msgstr ""
-
 msgid "AI Result"
 msgstr ""
 
-msgid "AI disabled"
-msgstr ""
-
-msgid "AI is disabled by policy."
-msgstr ""
-
-msgid "AI mode"
+msgid "AI Summary"
 msgstr ""
 
 msgid "API Base URL"
@@ -108,6 +99,9 @@ msgstr ""
 msgid "Analytics"
 msgstr ""
 
+msgid "Analytics AI PDF"
+msgstr ""
+
 msgid "Annual"
 msgstr ""
 
@@ -120,6 +114,12 @@ msgstr ""
 msgid "Apply"
 msgstr ""
 
+msgid "Apply to Notes"
+msgstr ""
+
+msgid "Apply to Report"
+msgstr ""
+
 msgid "Apr"
 msgstr ""
 
@@ -130,12 +130,6 @@ msgid "Are you sure you want to log out?"
 msgstr ""
 
 msgid "Are you sure you want to regenerate the recovery key? The old key will stop working immediately."
-msgstr ""
-
-msgid "Ask about the selected work context..."
-msgstr ""
-
-msgid "Assistant"
 msgstr ""
 
 msgid "At least one administrator account is required."
@@ -219,9 +213,6 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-msgid "Cancel request"
-msgstr ""
-
 msgid "Cannot unlink the only login method."
 msgstr ""
 
@@ -252,6 +243,9 @@ msgstr ""
 msgid "Clear conversation"
 msgstr ""
 
+msgid "Clear this conversation?"
+msgstr ""
+
 msgid "Clock"
 msgstr ""
 
@@ -271,9 +265,6 @@ msgid "Confirm Password"
 msgstr ""
 
 msgid "Contacting AI provider for {model}..."
-msgstr ""
-
-msgid "Context"
 msgstr ""
 
 msgid "Continue"
@@ -318,16 +309,10 @@ msgstr ""
 msgid "Created"
 msgstr ""
 
-msgid "Current day"
-msgstr ""
-
-msgid "Current month"
+msgid "Ctrl+Enter to send"
 msgstr ""
 
 msgid "Current user"
-msgstr ""
-
-msgid "Current week"
 msgstr ""
 
 msgid "Custom"
@@ -337,6 +322,9 @@ msgid "Custom theme color"
 msgstr ""
 
 msgid "Daily"
+msgstr ""
+
+msgid "Daily Notes"
 msgstr ""
 
 msgid "Daily avg"
@@ -438,7 +426,7 @@ msgstr ""
 msgid "Error:"
 msgstr ""
 
-msgid "Error: {}"
+msgid "Error: {detail}"
 msgstr ""
 
 msgid "Expand notes"
@@ -459,6 +447,9 @@ msgstr ""
 msgid "External Model"
 msgstr ""
 
+msgid "Extra instructions:"
+msgstr ""
+
 msgid "Feature Overview"
 msgstr ""
 
@@ -469,6 +460,9 @@ msgid "Feb"
 msgstr ""
 
 msgid "February"
+msgstr ""
+
+msgid "Follow up on this result..."
 msgstr ""
 
 msgid "Forgot Password?"
@@ -487,6 +481,9 @@ msgid "Generating with local model..."
 msgstr ""
 
 msgid "GitHub"
+msgstr ""
+
+msgid "Google sign-in is not configured."
 msgstr ""
 
 msgid "Grant Admin"
@@ -534,25 +531,16 @@ msgstr ""
 msgid "Inactive"
 msgstr ""
 
+msgid "Include calendar event titles"
+msgstr ""
+
 msgid "Include calendar events"
-msgstr ""
-
-msgid "Include calendar titles"
-msgstr ""
-
-msgid "Include calendar titles by default"
 msgstr ""
 
 msgid "Include notes"
 msgstr ""
 
-msgid "Include notes by default"
-msgstr ""
-
 msgid "Include quick log details"
-msgstr ""
-
-msgid "Include quick log details by default"
 msgstr ""
 
 msgid "Initial Password"
@@ -636,9 +624,6 @@ msgstr ""
 msgid "Loading local model..."
 msgstr ""
 
-msgid "Local AI only"
-msgstr ""
-
 msgid "Local Model"
 msgstr ""
 
@@ -658,9 +643,6 @@ msgid "Local model is disabled."
 msgstr ""
 
 msgid "Local model is inactive"
-msgstr ""
-
-msgid "Local model is not available. Enable or download a local model in Settings -> AI."
 msgstr ""
 
 msgid "Local model loaded."
@@ -831,9 +813,6 @@ msgstr ""
 msgid "November"
 msgstr ""
 
-msgid "OAuth provider is not configured."
-msgstr ""
-
 msgid "OK"
 msgstr ""
 
@@ -954,9 +933,6 @@ msgstr ""
 msgid "Please enter your API Key in Settings → AI."
 msgstr ""
 
-msgid "Please set your API key in Settings → AI."
-msgstr ""
-
 msgid "Preparing request for {model}..."
 msgstr ""
 
@@ -1032,9 +1008,6 @@ msgstr ""
 msgid "Remember-token encryption requires the 'cryptography' package. Please install it via pip install cryptography."
 msgstr ""
 
-msgid "Remote AI allowed"
-msgstr ""
-
 msgid "Remote work"
 msgstr ""
 
@@ -1054,6 +1027,9 @@ msgid "Reports have unsaved changes. Save before closing?"
 msgstr ""
 
 msgid "Request canceled."
+msgstr ""
+
+msgid "Request: {period}"
 msgstr ""
 
 msgid "Reset Password"
@@ -1092,6 +1068,12 @@ msgstr ""
 msgid "Role"
 msgstr ""
 
+msgid "Runtime: External API"
+msgstr ""
+
+msgid "Runtime: Local model"
+msgstr ""
+
 msgid "SQLite Database (*.db)"
 msgstr ""
 
@@ -1126,6 +1108,9 @@ msgid "Select / Change"
 msgstr ""
 
 msgid "Selected color"
+msgstr ""
+
+msgid "Selected context may be sent to the configured external AI provider."
 msgstr ""
 
 msgid "Send"
@@ -1165,6 +1150,12 @@ msgid "Sign-in canceled."
 msgstr ""
 
 msgid "Sign-in completed."
+msgstr ""
+
+msgid "Source: existing draft and selected WorkLogger context"
+msgstr ""
+
+msgid "Source: selected WorkLogger context"
 msgstr ""
 
 msgid "Standard hours (h)"
@@ -1248,9 +1239,6 @@ msgstr ""
 msgid "Timesheet"
 msgstr ""
 
-msgid "Title hidden"
-msgstr ""
-
 msgid "Today"
 msgstr ""
 
@@ -1276,6 +1264,9 @@ msgid "Unsaved changes — save before switching?"
 msgstr ""
 
 msgid "Unused"
+msgstr ""
+
+msgid "Use for PDF"
 msgstr ""
 
 msgid "Used"
@@ -1380,9 +1371,6 @@ msgstr ""
 msgid "Your password has not been changed in {days} days. Please update it regularly."
 msgstr ""
 
-msgid "all day"
-msgstr ""
-
 msgid "gpt-4o-mini | claude-haiku-4-5-20251001"
 msgstr ""
 
@@ -1440,7 +1428,10 @@ msgstr ""
 msgid "✨ AI Assist"
 msgstr ""
 
-msgid "✨ AI Generate"
+msgid "✨ AI Assist - {}"
+msgstr ""
+
+msgid "✨ AI PDF"
 msgstr ""
 
 msgid "🌍  Language"

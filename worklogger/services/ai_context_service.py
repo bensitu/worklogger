@@ -18,9 +18,9 @@ class AiContextService:
         self,
         selected_date: date,
         *,
-        include_notes: bool = True,
+        include_notes: bool = False,
         include_calendar: bool = True,
-        include_calendar_titles: bool | None = None,
+        include_calendar_titles: bool = False,
         include_quick_log_details: bool = True,
     ) -> str:
         day = selected_date.isoformat()
@@ -37,9 +37,9 @@ class AiContextService:
         self,
         selected_date: date,
         *,
-        include_notes: bool = True,
+        include_notes: bool = False,
         include_calendar: bool = True,
-        include_calendar_titles: bool | None = None,
+        include_calendar_titles: bool = False,
         include_quick_log_details: bool = True,
     ) -> str:
         start = selected_date - timedelta(days=selected_date.weekday())
@@ -58,9 +58,9 @@ class AiContextService:
         year: int,
         month: int,
         *,
-        include_notes: bool = True,
+        include_notes: bool = False,
         include_calendar: bool = True,
-        include_calendar_titles: bool | None = None,
+        include_calendar_titles: bool = False,
         include_quick_log_details: bool = True,
     ) -> str:
         _first_weekday, last_day = monthrange(year, month)
@@ -73,6 +73,69 @@ class AiContextService:
             include_quick_log_details=include_quick_log_details,
         )
 
+    def build_analytics_context(
+        self,
+        *,
+        year: int,
+        month: int,
+        metric: str,
+        chart_mode: str,
+        include_leave: bool,
+        monthly_bundle=None,
+        quarterly_bundle=None,
+        annual_bundle=None,
+        current_bundle=None,
+        current_tab_index: int | None = None,
+        work_hours: float | None = None,
+        monthly_target: float | None = None,
+        month_labels: list[str] | None = None,
+    ) -> str:
+        lines: list[str] = [
+            "# WorkLogger Analytics Context",
+            "",
+            "## Selection",
+            f"- Year: {year}",
+            f"- Month: {month:02d}",
+            f"- Metric: {metric}",
+            f"- Chart mode: {chart_mode}",
+            f"- Current tab index: {current_tab_index if current_tab_index is not None else 'unknown'}",
+        ]
+        if work_hours is not None:
+            lines.append(f"- Standard work hours: {work_hours:.1f}")
+        if monthly_target is not None:
+            lines.append(f"- Monthly target hours: {monthly_target:.1f}")
+        lines.append(f"- Leave markers included: {'yes' if include_leave else 'no'}")
+        lines.append("")
+
+        bundle_sections = (
+            ("Monthly chart data", monthly_bundle),
+            ("Quarterly chart data", quarterly_bundle),
+            ("Annual chart data", annual_bundle),
+        )
+        for title, bundle in bundle_sections:
+            if bundle is None:
+                continue
+            lines.extend(self._analytics_bundle_block(title, bundle, include_leave))
+
+        if current_bundle is not None:
+            lines.extend(self._analytics_bundle_block(
+                "Current visible chart data",
+                current_bundle,
+                include_leave,
+            ))
+        if month_labels:
+            lines.extend(["## Month labels", ", ".join(map(str, month_labels)), ""])
+        lines.extend([
+            "## Rules",
+            "- Summarize only the provided analytics data.",
+            "- Do not invent missing periods, hours, or explanations.",
+            "- Mention uncertainty when the data is sparse.",
+        ])
+        return "\n".join(lines).strip() + "\n"
+
+    def estimate_tokens(self, context: str) -> int:
+        return max(1, (len(context or "") + 2) // 3)
+
     def _build_context(
         self,
         start_day: str,
@@ -80,10 +143,9 @@ class AiContextService:
         *,
         include_notes: bool,
         include_calendar: bool,
-        include_calendar_titles: bool | None,
+        include_calendar_titles: bool,
         include_quick_log_details: bool,
     ) -> str:
-        calendar_titles = include_calendar if include_calendar_titles is None else include_calendar_titles
         lines: list[str] = [
             "# WorkLogger Context",
             "",
@@ -100,7 +162,7 @@ class AiContextService:
         if include_calendar:
             lines.extend(self._calendar_block(
                 self._services.get_calendar_events_for_range(start_day, end_day),
-                include_titles=calendar_titles,
+                include_titles=include_calendar_titles,
             ))
         else:
             lines.extend(["## Calendar Events", "Calendar details excluded.", ""])
@@ -195,6 +257,45 @@ class AiContextService:
         lines.append("")
         return lines
 
+    def _analytics_bundle_block(self, title: str, bundle, include_leave: bool) -> list[str]:
+        bar_data = list(getattr(bundle, "bar_data", []) or [])
+        line_data = list(getattr(bundle, "line_data", []) or [])
+        leave_hours = list(getattr(bundle, "leave_hours_data", []) or [])
+        reference = getattr(bundle, "reference_line", None)
+        labels = [str(item[0]) for item in bar_data if isinstance(item, tuple) and item]
+        if not labels:
+            labels = [str(item[0]) for item in line_data if isinstance(item, tuple) and item]
+        rows = max(len(labels), len(bar_data), len(line_data), len(leave_hours))
+        lines = [f"## {title}"]
+        if reference is not None:
+            try:
+                lines.append(f"Reference line: {float(reference):.2f}")
+            except Exception:
+                lines.append(f"Reference line: {reference}")
+        if rows == 0:
+            return [*lines, "No chart data.", ""]
+        header = "| Label | Bar value | Line value |"
+        sep = "|---|---:|---:|"
+        if include_leave:
+            header = "| Label | Bar value | Line value | Leave hours |"
+            sep = "|---|---:|---:|---:|"
+        lines.extend([header, sep])
+        for index in range(rows):
+            label = labels[index] if index < len(labels) else str(index + 1)
+            bar = self._series_value(bar_data, index)
+            line = self._series_value(line_data, index)
+            values = [
+                self._cell(label),
+                self._number_cell(bar),
+                self._number_cell(line),
+            ]
+            if include_leave:
+                leave = self._series_value(leave_hours, index)
+                values.append(self._number_cell(leave))
+            lines.append("| " + " | ".join(values) + " |")
+        lines.append("")
+        return lines
+
     @staticmethod
     def _plain(value) -> str:
         return str(value or "").replace("\r", " ").replace("\n", " ").strip()
@@ -202,6 +303,26 @@ class AiContextService:
     @classmethod
     def _cell(cls, value) -> str:
         return cls._plain(value).replace("|", "\\|")
+
+    @classmethod
+    def _number_cell(cls, value) -> str:
+        if value == "":
+            return ""
+        if isinstance(value, tuple) and len(value) >= 2:
+            value = value[1]
+        try:
+            return f"{float(value):.2f}"
+        except Exception:
+            return cls._cell(value)
+
+    @staticmethod
+    def _series_value(series: list, index: int):
+        if index >= len(series):
+            return ""
+        item = series[index]
+        if isinstance(item, tuple) and len(item) >= 2:
+            return item[1]
+        return item
 
     @staticmethod
     def _record_date(record) -> str:

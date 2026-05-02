@@ -62,6 +62,11 @@ class SwitchButton(QWidget):
     def isChecked(self) -> bool:
         return self._checked
 
+    def setEnabled(self, enabled: bool) -> None:
+        super().setEnabled(enabled)
+        self.setCursor(Qt.PointingHandCursor if enabled else Qt.ArrowCursor)
+        self.update()
+
     def setChecked(self, val: bool) -> None:
         if val == self._checked:
             return
@@ -70,6 +75,9 @@ class SwitchButton(QWidget):
         self.toggled.emit(val)
 
     def mousePressEvent(self, event):
+        if not self.isEnabled():
+            event.ignore()
+            return
         if event.button() == Qt.LeftButton:
             self.setChecked(not self._checked)
         super().mousePressEvent(event)
@@ -98,14 +106,26 @@ class SwitchButton(QWidget):
             int(off.green() + (on.green() - off.green()) * t),
             int(off.blue() + (on.blue() - off.blue()) * t),
         )
+        thumb_c = QColor(SWITCH_THUMB_COLOR)
+        border_c = None
+        if not self.isEnabled():
+            dark = self.palette().window().color().lightness() < 128
+            track_c = QColor("#4c5363" if dark else "#d9dfef")
+            thumb_c = QColor("#8d94a3" if dark else "#f5f7fb")
+            border_c = QColor("#626a7d" if dark else "#aab1c5")
         p.setPen(Qt.NoPen)
         p.setBrush(QBrush(track_c))
         p.drawRoundedRect(QRectF(0, 0, w, h), h / 2, h / 2)
+        if border_c is not None:
+            p.setPen(QPen(border_c, 1))
+            p.setBrush(Qt.NoBrush)
+            p.drawRoundedRect(QRectF(0.5, 0.5, w - 1, h - 1), h / 2, h / 2)
+            p.setPen(Qt.NoPen)
 
         pad = 3
         td = h - pad * 2
         tx = self._pos + pad
-        p.setBrush(QBrush(QColor(SWITCH_THUMB_COLOR)))
+        p.setBrush(QBrush(thumb_c))
         p.drawEllipse(QRectF(tx, pad, td, td))
         p.end()
 
@@ -751,4 +771,3 @@ class ComboChart(QWidget):
             tw = fm2.horizontalAdvance(label)
             p.drawText(int(x - tw / 2), h - mb + fm2.ascent() + 3, label)
         p.end()
-

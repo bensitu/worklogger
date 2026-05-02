@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from typing import Callable
+
+from PySide6.QtCore import QEvent, Qt, QTimer
 from PySide6.QtWidgets import (
-    QComboBox,
     QDialog,
     QHBoxLayout,
     QLabel,
@@ -12,15 +14,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from config.constants import (
-    AI_INCLUDE_CALENDAR_TITLES_SETTING_KEY,
-    AI_INCLUDE_NOTES_SETTING_KEY,
-    AI_INCLUDE_QUICK_LOG_DETAILS_SETTING_KEY,
-    AI_PRIVACY_MODE_SETTING_KEY,
-)
 from config.themes import switch_off_color, theme_colors
 from services.ai_chat_session import AiChatSession
-from services.ai_context_service import AiContextService
 from services.ai_service import AIWorker, LocalModelWorker
 from services.local_model_service import LOCAL_MODEL_SENTINEL
 from ui.widgets import SwitchButton
@@ -29,175 +24,254 @@ from utils.i18n import _, msg
 
 
 class AiChatDialog(QDialog):
-    def __init__(self, app_ref, parent=None):
+    """Workflow-scoped AI refinement dialog."""
+
+    def __init__(
+        self,
+        parent,
+        app_ref,
+        session: AiChatSession,
+        period_label: str,
+        context_builder: Callable[..., str],
+        on_apply: Callable[[str], None],
+        api_key: str,
+        base_url: str,
+        model: str,
+        token_budget: int | None = None,
+        initial_user_message: str = "",
+        initial_display_message: str = "",
+        initial_assistant_message: str = "",
+        apply_button_text: str | None = None,
+        mode: str = "generic",
+        auto_start_initial: bool = False,
+    ):
         super().__init__(parent)
         self._app = app_ref
-        self._context_service = AiContextService(app_ref.services)
-        self._session = AiChatSession(
-            self._system_prompt(),
-            max_messages=20,
-        )
+        self._session = session
+        self._period_label = period_label
+        self._context_builder = context_builder
+        self._on_apply = on_apply
+        self._api_key = api_key
+        self._base_url = base_url
+        self._model = model
+        self._token_budget = token_budget
+        self._mode = mode
         self._worker = None
+        self._busy = False
         self._pending_user_message = ""
+        self._request_serial = 0
+        self._latest_successful_text = session.last_assistant_message() or ""
 
-        self.setWindowTitle(_("AI Chat"))
+        self.setWindowTitle(_("✨ AI Assist"))
         self.setMinimumSize(720, 560)
-        self.resize(820, 640)
+        self.resize(860, 660)
 
         root = QVBoxLayout(self)
         root.setSpacing(8)
 
-        controls = QHBoxLayout()
-        controls.setSpacing(8)
-        self._period = QComboBox()
-        self._period.addItem(_("Current day"), "day")
-        self._period.addItem(_("Current week"), "week")
-        self._period.addItem(_("Current month"), "month")
-        controls.addWidget(QLabel(_("Context")))
-        controls.addWidget(self._period)
+        header = QLabel(_("✨ AI Assist - {}").format(period_label))
+        header.setObjectName("section_title")
+        header.setWordWrap(True)
+        root.addWidget(header)
 
-        self._privacy = QComboBox()
-        self._privacy.addItem(_("Local AI only"), "local_only")
-        self._privacy.addItem(_("Remote AI allowed"), "remote_allowed")
-        self._privacy.addItem(_("AI disabled"), "disabled")
-        saved_privacy = app_ref.services.get_setting(
-            AI_PRIVACY_MODE_SETTING_KEY,
-            "local_only",
-        )
-        privacy_idx = self._privacy.findData(saved_privacy)
-        if privacy_idx >= 0:
-            self._privacy.setCurrentIndex(privacy_idx)
-        controls.addWidget(QLabel(_("AI mode")))
-        controls.addWidget(self._privacy)
-        controls.addStretch()
-        root.addLayout(controls)
+        runtime_text = _("Runtime: Local model") if api_key == LOCAL_MODEL_SENTINEL else _("Runtime: External API")
+        self._runtime_label = QLabel(runtime_text)
+        self._runtime_label.setWordWrap(True)
+        root.addWidget(self._runtime_label)
 
-        flags = QHBoxLayout()
-        flags.setSpacing(8)
-        switch_on = theme_colors(app_ref.theme, app_ref.dark)[0]
-        switch_off = switch_off_color(app_ref.dark)
-
-        def _switch_with_label(text: str, checked: bool) -> tuple[SwitchButton, QWidget]:
-            wrap = QWidget()
-            layout = QHBoxLayout(wrap)
-            layout.setContentsMargins(0, 0, 0, 0)
-            layout.setSpacing(6)
-            switch = SwitchButton(
-                checked=checked,
-                color_on=switch_on,
-                color_off=switch_off,
+        if api_key != LOCAL_MODEL_SENTINEL:
+            privacy = QLabel(
+                _(
+                    "Selected context may be sent to the configured external AI provider."
+                )
             )
-            label = QLabel(text)
-            label.setBuddy(switch)
-            layout.addWidget(switch)
-            layout.addWidget(label)
-            return switch, wrap
+            privacy.setObjectName("muted")
+            privacy.setWordWrap(True)
+            root.addWidget(privacy)
 
-        self._include_notes, include_notes_row = _switch_with_label(
+        options = QHBoxLayout()
+        options.setSpacing(10)
+        switch_on = theme_colors(
+            getattr(app_ref, "theme", "blue"),
+            bool(getattr(app_ref, "dark", False)),
+        )[0]
+        switch_off = switch_off_color(bool(getattr(app_ref, "dark", False)))
+        self._include_notes, notes_row = self._switch_with_label(
             _("Include notes"),
-            app_ref.services.get_setting(
-                AI_INCLUDE_NOTES_SETTING_KEY,
-                "0",
-            ) == "1"
+            True,
+            switch_on,
+            switch_off,
         )
-        self._include_calendar, include_calendar_row = _switch_with_label(
+        self._include_calendar, calendar_row = self._switch_with_label(
             _("Include calendar events"),
             True,
+            switch_on,
+            switch_off,
         )
-        self._include_calendar_titles, include_calendar_titles_row = _switch_with_label(
-            _("Include calendar titles"),
-            app_ref.services.get_setting(
-                AI_INCLUDE_CALENDAR_TITLES_SETTING_KEY,
-                "0",
-            ) == "1"
+        self._include_calendar_titles, titles_row = self._switch_with_label(
+            _("Include calendar event titles"),
+            True,
+            switch_on,
+            switch_off,
         )
-        self._include_quick_logs, include_quick_logs_row = _switch_with_label(
+        self._include_quick_logs, quick_row = self._switch_with_label(
             _("Include quick log details"),
-            app_ref.services.get_setting(
-                AI_INCLUDE_QUICK_LOG_DETAILS_SETTING_KEY,
-                "1",
-            ) == "1"
+            True,
+            switch_on,
+            switch_off,
         )
-        for widget in (
-            include_notes_row,
-            include_calendar_row,
-            include_calendar_titles_row,
-            include_quick_logs_row,
-        ):
-            flags.addWidget(widget)
-        flags.addStretch()
-        root.addLayout(flags)
+        for row in (notes_row, calendar_row, titles_row, quick_row):
+            options.addWidget(row)
+        options.addStretch()
+        root.addLayout(options)
 
         self._history = QTextEdit()
         self._history.setReadOnly(True)
         root.addWidget(self._history, 1)
-
-        self._input = QTextEdit()
-        self._input.setPlaceholderText(_("Ask about the selected work context..."))
-        self._input.setFixedHeight(92)
-        root.addWidget(self._input)
 
         self._status = QLabel(_("Ready"))
         self._status.setObjectName("muted")
         self._status.setWordWrap(True)
         root.addWidget(self._status)
 
+        self._input = QTextEdit()
+        self._input.setPlaceholderText(_("Follow up on this result..."))
+        self._input.setFixedHeight(92)
+        self._input.installEventFilter(self)
+        root.addWidget(self._input)
+
+        hint = QLabel(_("Ctrl+Enter to send"))
+        hint.setObjectName("muted")
+        root.addWidget(hint)
+
         buttons = QHBoxLayout()
         self._clear_btn = QPushButton(_("Clear conversation"))
-        self._cancel_btn = QPushButton(_("Cancel request"))
-        self._send_btn = QPushButton(_("Send"))
-        self._send_btn.setObjectName("primary_btn")
+        self._apply_btn = QPushButton(apply_button_text or _("Apply"))
         self._close_btn = QPushButton(_("Close"))
+        self._send_btn = QPushButton(_("Send"))
+        self._apply_btn.setObjectName("primary_btn")
+        self._send_btn.setObjectName("primary_btn")
         buttons.addWidget(self._clear_btn)
-        buttons.addWidget(self._cancel_btn)
         buttons.addStretch()
+        buttons.addWidget(self._apply_btn)
         buttons.addWidget(self._close_btn)
         buttons.addWidget(self._send_btn)
         root.addLayout(buttons)
 
-        self._send_btn.clicked.connect(self._send)
         self._clear_btn.clicked.connect(self._clear)
-        self._cancel_btn.clicked.connect(self._cancel_worker)
+        self._apply_btn.clicked.connect(self._apply_latest)
         self._close_btn.clicked.connect(self.reject)
-        self._cancel_btn.setEnabled(False)
+        self._send_btn.clicked.connect(self._send)
+        self._sync_buttons()
+        if initial_user_message and auto_start_initial and not initial_assistant_message:
+            QTimer.singleShot(
+                0,
+                lambda: self._start_request(
+                    initial_display_message or self._period_label,
+                    initial_user_message,
+                ),
+            )
+        elif initial_user_message or initial_assistant_message:
+            self.prefill_first_turn(initial_user_message, initial_assistant_message)
+
+    @staticmethod
+    def _switch_with_label(
+        text: str,
+        checked: bool,
+        color_on: str,
+        color_off: str,
+    ) -> tuple[SwitchButton, QWidget]:
+        wrap = QWidget()
+        wrap.setObjectName("transparent_container")
+        wrap.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        wrap.setStyleSheet(
+            "QWidget#transparent_container{background:transparent;"
+            "background-color:transparent;border:none;}"
+            "QWidget#transparent_container QLabel#ai_switch_label{"
+            "background:transparent;background-color:transparent;"
+            "border:none;padding:0px;}"
+        )
+        layout = QHBoxLayout(wrap)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(6)
+        switch = SwitchButton(
+            checked=checked,
+            color_on=color_on,
+            color_off=color_off,
+        )
+        label = QLabel(text)
+        label.setObjectName("ai_switch_label")
+        label.setBuddy(switch)
+        label.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        layout.addWidget(switch)
+        layout.addWidget(label)
+        return switch, wrap
+
+    def prefill_first_turn(self, user_text: str, assistant_text: str) -> None:
+        if user_text:
+            self._append_message(_("You"), user_text)
+        if assistant_text:
+            text = assistant_text.strip() or _("No response.")
+            self._latest_successful_text = text
+            self._append_message(_("AI"), text)
+        self._sync_buttons()
+
+    def eventFilter(self, obj, event):
+        if obj is self._input and event.type() == QEvent.Type.KeyPress:
+            if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+                if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+                    self._send()
+                    return True
+        return super().eventFilter(obj, event)
 
     def reject(self):
         self._cancel_worker()
         super().reject()
 
-    def _system_prompt(self) -> str:
-        return (
-            "You are WorkLogger's assistant. Use only the provided WorkLogger "
-            "context and conversation history. Do not invent work items, notes, "
-            "calendar events, times, or reports. If information is missing, say "
-            "that it is missing. Keep local AI and remote AI privacy boundaries clear."
-        )
+    def closeEvent(self, event):
+        self._cancel_worker()
+        event.accept()
+
+    def _sync_buttons(self) -> None:
+        self._apply_btn.setEnabled((not self._busy) and bool(self._latest_successful_text))
 
     def _set_busy(self, busy: bool) -> None:
+        self._busy = busy
         enabled = not busy
         for widget in (
-            self._period,
-            self._privacy,
             self._include_notes,
             self._include_calendar,
             self._include_calendar_titles,
             self._include_quick_logs,
             self._input,
             self._clear_btn,
-            self._close_btn,
             self._send_btn,
         ):
             widget.setEnabled(enabled)
-        self._cancel_btn.setEnabled(busy)
+        self._close_btn.setEnabled(True)
+        self._sync_buttons()
 
     def _clear(self) -> None:
-        self._session.clear()
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Icon.Question)
+        box.setWindowTitle(_("AI Assist"))
+        box.setText(_("Clear this conversation?"))
+        box.setStandardButtons(
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        box.setDefaultButton(QMessageBox.StandardButton.No)
+        if box.exec() != QMessageBox.StandardButton.Yes:
+            return
+        self._session.reset()
         self._history.clear()
+        self._latest_successful_text = ""
         self._status.setText(_("Conversation cleared."))
+        self._sync_buttons()
 
     def _cancel_worker(self) -> None:
         worker = self._worker
-        was_busy = self._cancel_btn.isEnabled()
+        was_busy = self._busy
+        self._request_serial += 1
         if worker is not None and hasattr(worker, "cancel"):
             try:
                 worker.cancel()
@@ -205,61 +279,78 @@ class AiChatDialog(QDialog):
                 pass
         self._worker = None
         self._pending_user_message = ""
-        self._set_busy(False)
         if was_busy:
             self._status.setText(_("Request canceled."))
+        self._set_busy(False)
+
+    def _apply_latest(self) -> None:
+        text = self._latest_successful_text
+        if not text:
+            return
+        try:
+            self._on_apply(text)
+        except Exception as exc:
+            QMessageBox.critical(self, _("AI Assist"), str(exc))
+            return
+        self.accept()
 
     def _send(self) -> None:
         user_text = self._input.toPlainText().strip()
         if not user_text:
             return
-        privacy_mode = self._privacy.currentData()
-        if privacy_mode == "disabled":
-            QMessageBox.warning(self, _("AI Chat"), _("AI is disabled by policy."))
-            return
-        api_key, base_url, model = self._app.services.resolve_ai_params(secondary=False)
-        if privacy_mode == "local_only" and api_key != LOCAL_MODEL_SENTINEL:
+        if self._api_key != LOCAL_MODEL_SENTINEL and (
+            not self._api_key or not self._base_url or not self._model
+        ):
             QMessageBox.warning(
                 self,
-                _("AI Chat"),
-                _("Local model is not available. Enable or download a local model in Settings -> AI."),
-            )
-            return
-        if api_key != LOCAL_MODEL_SENTINEL and (not api_key or not base_url or not model):
-            QMessageBox.warning(
-                self,
-                _("AI Chat"),
+                _("AI Assist"),
                 _("Please configure an AI provider in Settings -> AI."),
             )
             return
 
-        self._persist_privacy_settings()
-        self._set_busy(True)
         self._status.setText(_("Building context..."))
         try:
             context = self._build_context()
         except Exception as exc:
             self._set_busy(False)
-            QMessageBox.critical(self, _("AI Chat"), str(exc))
+            QMessageBox.critical(self, _("AI Assist"), str(exc))
             return
 
         payload = (
             f"{context}\n\n"
-            f"## User Request\n{user_text}\n\n"
-            "Answer using the context above and the prior conversation."
+            f"## Follow-up request\n{user_text}\n\n"
+            "Revise or answer using the current WorkLogger context and prior conversation."
         )
-        token_budget = self._prompt_token_budget(api_key)
-        self._session.set_token_budget(token_budget)
+        self._start_request(user_text, payload)
+
+    def _start_request(self, display_user_text: str, payload: str) -> None:
+        if self._busy:
+            return
+        if self._api_key != LOCAL_MODEL_SENTINEL and (
+            not self._api_key or not self._base_url or not self._model
+        ):
+            QMessageBox.warning(
+                self,
+                _("AI Assist"),
+                _("Please configure an AI provider in Settings -> AI."),
+            )
+            return
+
+        self._set_busy(True)
         messages = self._session.get_messages(
             additional_messages=[{"role": "user", "content": payload}],
-            token_budget=token_budget,
+            token_budget=self._token_budget,
         )
-        self._append_message(_("You"), user_text)
-        self._input.clear()
         self._pending_user_message = payload
+        self._input.clear()
+        self._append_message(_("You"), display_user_text)
         self._status.setText(_("Sending request..."))
+        self._request_serial += 1
+        request_id = self._request_serial
 
         def on_status(raw: str) -> None:
+            if request_id != self._request_serial:
+                return
             key, kwargs = parse_status(raw)
             if key:
                 self._status.setText(msg(key, **kwargs))
@@ -267,25 +358,32 @@ class AiChatDialog(QDialog):
                 self._status.setText(kwargs.get("raw", raw))
 
         def on_done(text: str) -> None:
+            if request_id != self._request_serial:
+                return
             text = text.strip() or _("No response.")
-            self._session.add_user_message(self._pending_user_message)
+            pending = self._pending_user_message
+            if pending:
+                self._session.add_user_message(pending)
             self._session.add_assistant_message(text)
             self._pending_user_message = ""
-            self._append_message(_("Assistant"), text)
+            self._latest_successful_text = text
+            self._append_message(_("AI"), text)
             self._status.setText(_("Done"))
             self._worker = None
             self._set_busy(False)
 
         def on_error(short: str, detail: str) -> None:
+            if request_id != self._request_serial:
+                return
             self._pending_user_message = ""
             friendly = msg(short, short)
             if detail:
                 friendly = f"{friendly}\n{detail}"
-            self._status.setText(_("Error: {}").format(friendly))
+            self._status.setText(_("Error: {detail}").format(detail=friendly))
             self._worker = None
             self._set_busy(False)
 
-        if api_key == LOCAL_MODEL_SENTINEL:
+        if self._api_key == LOCAL_MODEL_SENTINEL:
             self._worker = LocalModelWorker(
                 messages,
                 on_done,
@@ -297,9 +395,9 @@ class AiChatDialog(QDialog):
             )
         else:
             self._worker = AIWorker(
-                api_key,
-                base_url,
-                model,
+                self._api_key,
+                self._base_url,
+                self._model,
                 messages,
                 on_done,
                 on_error,
@@ -308,78 +406,29 @@ class AiChatDialog(QDialog):
             )
 
     def _build_context(self) -> str:
-        period = self._period.currentData()
-        include_notes = self._include_notes.isChecked()
-        include_calendar = self._include_calendar.isChecked()
-        include_calendar_titles = self._include_calendar_titles.isChecked()
-        include_quick_logs = self._include_quick_logs.isChecked()
-        selected = self._app.selected
-        if period == "week":
-            return self._context_service.build_weekly_context(
-                selected,
-                include_notes=include_notes,
-                include_calendar=include_calendar,
-                include_calendar_titles=include_calendar_titles,
-                include_quick_log_details=include_quick_logs,
-            )
-        if period == "month":
-            return self._context_service.build_monthly_context(
-                selected.year,
-                selected.month,
-                include_notes=include_notes,
-                include_calendar=include_calendar,
-                include_calendar_titles=include_calendar_titles,
-                include_quick_log_details=include_quick_logs,
-            )
-        return self._context_service.build_daily_context(
-            selected,
-            include_notes=include_notes,
-            include_calendar=include_calendar,
-            include_calendar_titles=include_calendar_titles,
-            include_quick_log_details=include_quick_logs,
-        )
-
-    def _persist_privacy_settings(self) -> None:
-        services = self._app.services
-        services.set_setting(AI_PRIVACY_MODE_SETTING_KEY, self._privacy.currentData())
-        services.set_setting(
-            AI_INCLUDE_NOTES_SETTING_KEY,
-            "1" if self._include_notes.isChecked() else "0",
-        )
-        services.set_setting(
-            AI_INCLUDE_CALENDAR_TITLES_SETTING_KEY,
-            "1" if self._include_calendar_titles.isChecked() else "0",
-        )
-        services.set_setting(
-            AI_INCLUDE_QUICK_LOG_DETAILS_SETTING_KEY,
-            "1" if self._include_quick_logs.isChecked() else "0",
-        )
-
-    def _prompt_token_budget(self, api_key: str) -> int | None:
-        if api_key != LOCAL_MODEL_SENTINEL:
-            return None
-        n_ctx = 4096
-        max_tokens = 1024
+        kwargs = {
+            "include_notes": self._include_notes.isChecked(),
+            "include_calendar": self._include_calendar.isChecked(),
+            "include_calendar_titles": self._include_calendar_titles.isChecked(),
+            "include_quick_log_details": self._include_quick_logs.isChecked(),
+        }
         try:
-            from services.local_model_service import (
-                get_active_entry_id,
-                get_catalog_entry,
-            )
-            entry = get_catalog_entry(get_active_entry_id())
-            n_ctx = int(entry.get("n_ctx", n_ctx))
-            max_tokens = int(entry.get("max_tokens", max_tokens))
-        except Exception:
-            pass
-        return max(512, n_ctx - max_tokens - 256)
+            return self._context_builder(**kwargs)
+        except TypeError:
+            return self._context_builder()
 
     def _append_message(self, sender: str, content: str) -> None:
-        safe_sender = sender.replace("<", "&lt;").replace(">", "&gt;")
-        safe_content = (
-            content.replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace("\n", "<br>")
-        )
-        self._history.append(f"<b>{safe_sender}</b><br>{safe_content}<br>")
+        safe_sender = self._escape(sender)
+        safe_content = self._escape(content).replace("\n", "<br>")
+        self._history.append(f"<b>[{safe_sender}]</b><br>{safe_content}<br>")
         scroll = self._history.verticalScrollBar()
         scroll.setValue(scroll.maximum())
+
+    @staticmethod
+    def _escape(value: str) -> str:
+        return (
+            str(value)
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+        )

@@ -1,6 +1,7 @@
 """AI progress and result dialogs.
 
-``AIProgressDialog.run()`` is the single dispatch point for all AI requests.
+``AIProgressDialog.run()`` is the legacy progress dispatch path for direct
+AI requests.
 It inspects ``api_key`` against ``LOCAL_MODEL_SENTINEL``:
 
 * sentinel  → ``LocalModelWorker`` (on-device inference, no network)
@@ -85,7 +86,7 @@ class AIProgressDialog(QDialog):
         self.append("ai_timeout_warning")
         self._timeout_timer.start(60000)
 
-    def reject(self):
+    def _cancel_worker(self) -> None:
         self._cancelled = True
         self._timeout_timer.stop()
         worker = self._worker
@@ -95,7 +96,14 @@ class AIProgressDialog(QDialog):
             except Exception:
                 pass
         self._worker = None
+
+    def reject(self):
+        self._cancel_worker()
         super().reject()
+
+    def closeEvent(self, event):
+        self._cancel_worker()
+        event.accept()
 
     @classmethod
     def run(cls, parent, lang: str, title: str,

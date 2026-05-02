@@ -48,6 +48,23 @@ class AiChatSession:
             messages = self._trim_messages_to_budget(messages, int(budget))
         return messages
 
+    def get_messages_within_budget(self, available_tokens: int) -> list[dict[str, str]]:
+        return self.get_messages(token_budget=available_tokens)
+
+    def message_count(self) -> int:
+        with self._lock:
+            return len(self._messages)
+
+    def last_assistant_message(self) -> str | None:
+        with self._lock:
+            for message in reversed(self._messages):
+                if message.get("role") == "assistant":
+                    return message.get("content", "")
+        return None
+
+    def reset(self) -> None:
+        self.clear()
+
     def clear(self) -> None:
         with self._lock:
             self._messages = [dict(self._system_message)]

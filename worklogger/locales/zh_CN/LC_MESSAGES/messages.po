@@ -459,7 +459,7 @@ msgid "HH:MM"
 msgstr "HH:MM"
 
 msgid "Hint / extra instructions (optional)"
-msgstr "补充说明（可选）"
+msgstr "AI辅助补充说明（可选）"
 
 msgid "https://api.openai.com/v1 | https://api.anthropic.com"
 msgstr "https://api.openai.com/v1 | https://api.anthropic.com"
@@ -1548,3 +1548,69 @@ msgstr "请输入当前密码以继续。"
 
 msgid "Password is incorrect."
 msgstr "密码不正确。"
+
+msgid "AI Assist"
+msgstr "AI Assist"
+
+msgid "AI Summary"
+msgstr "AI 摘要"
+
+msgid "Analytics AI PDF"
+msgstr "分析 AI PDF"
+
+msgid "Apply to Notes"
+msgstr "应用到备注"
+
+msgid "Apply to Report"
+msgstr "应用到报告"
+
+msgid "Clear this conversation?"
+msgstr "要清空此对话吗？"
+
+msgid "Ctrl+Enter to send"
+msgstr "按 Ctrl+Enter 发送"
+
+msgid "Daily Notes"
+msgstr "生成每日备注"
+
+msgid "Error: {detail}"
+msgstr "错误：{detail}"
+
+msgid "Follow up on this result..."
+msgstr "继续追问或要求修改此结果..."
+
+msgid "Google sign-in is not configured."
+msgstr "尚未配置 Google 登录。"
+
+msgid "Include calendar event titles"
+msgstr "包含日历事件标题"
+
+msgid "Runtime: External API"
+msgstr "运行方式：外部 API"
+
+msgid "Runtime: Local model"
+msgstr "运行方式：本地模型"
+
+msgid "Selected context may be sent to the configured external AI provider."
+msgstr "所选上下文可能会发送到已配置的外部 AI 提供商。"
+
+msgid "Use for PDF"
+msgstr "用于 PDF"
+
+msgid "✨ AI Assist - {}"
+msgstr "✨ AI 助手 - {}"
+
+msgid "✨ AI PDF"
+msgstr "✨ AI PDF"
+
+msgid "Extra instructions:"
+msgstr "补充说明："
+
+msgid "Request: {period}"
+msgstr "请求：{period}"
+
+msgid "Source: existing draft and selected WorkLogger context"
+msgstr "来源：现有草稿和已选择的选项的上下文"
+
+msgid "Source: selected WorkLogger context"
+msgstr "来源：已选择的选项的上下文"

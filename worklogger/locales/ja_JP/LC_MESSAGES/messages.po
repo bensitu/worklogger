@@ -459,7 +459,7 @@ msgid "HH:MM"
 msgstr "HH:MM"
 
 msgid "Hint / extra instructions (optional)"
-msgstr "補足・追加指示（任意）"
+msgstr "AIアシスト補足・追加指示（任意）"
 
 msgid "https://api.openai.com/v1 | https://api.anthropic.com"
 msgstr "gpt-4o-mini | claude-haiku-4-5-20251001"
@@ -1548,3 +1548,69 @@ msgstr "続行するには現在のパスワードを入力してください。
 
 msgid "Password is incorrect."
 msgstr "パスワードが正しくありません。"
+
+msgid "AI Assist"
+msgstr "AI Assist"
+
+msgid "AI Summary"
+msgstr "AI 要約"
+
+msgid "Analytics AI PDF"
+msgstr "分析 AI PDF"
+
+msgid "Apply to Notes"
+msgstr "メモに適用"
+
+msgid "Apply to Report"
+msgstr "レポートに適用"
+
+msgid "Clear this conversation?"
+msgstr "この会話をクリアしますか？"
+
+msgid "Ctrl+Enter to send"
+msgstr "Ctrl+Enter で送信"
+
+msgid "Daily Notes"
+msgstr "日次メモ作成"
+
+msgid "Error: {detail}"
+msgstr "エラー：{detail}"
+
+msgid "Follow up on this result..."
+msgstr "この結果について追加依頼する..."
+
+msgid "Google sign-in is not configured."
+msgstr "Google ログインが設定されていません。"
+
+msgid "Include calendar event titles"
+msgstr "カレンダー予定のタイトルを含める"
+
+msgid "Runtime: External API"
+msgstr "実行方法：外部 API"
+
+msgid "Runtime: Local model"
+msgstr "実行方法：ローカルモデル"
+
+msgid "Selected context may be sent to the configured external AI provider."
+msgstr "選択したコンテキストは、設定済みの外部 AI プロバイダーへ送信される場合があります。"
+
+msgid "Use for PDF"
+msgstr "PDF に使用"
+
+msgid "✨ AI Assist - {}"
+msgstr "✨ AI アシスト - {}"
+
+msgid "✨ AI PDF"
+msgstr "✨ AI PDF"
+
+msgid "Extra instructions:"
+msgstr "補足指示："
+
+msgid "Request: {period}"
+msgstr "依頼：{period}"
+
+msgid "Source: existing draft and selected WorkLogger context"
+msgstr "参照元：既存の下書きおよび選定された選択肢コンテキスト"
+
+msgid "Source: selected WorkLogger context"
+msgstr "参照元：選定された選択肢コンテキスト"
