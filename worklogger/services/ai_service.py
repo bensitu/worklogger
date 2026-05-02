@@ -272,8 +272,14 @@ class AIWorker:
     def _run(self, api_key, base_url, model, messages, max_tokens):
         invoker = self.invoker
 
+        def _cancelled() -> bool:
+            if not self._cancelled.is_set():
+                return False
+            invoker.detach_callbacks()
+            return True
+
         def _status_key(key: str, **kwargs):
-            if self._cancelled.is_set():
+            if _cancelled():
                 return
             try:
                 invoker.status_signal.emit(json.dumps({"key": key, **kwargs}))
@@ -281,7 +287,7 @@ class AIWorker:
                 pass
 
         try:
-            if self._cancelled.is_set():
+            if _cancelled():
                 return
             _status_key("ai_status_start")
             url, is_anthropic = _resolve_endpoint(base_url)
@@ -295,16 +301,16 @@ class AIWorker:
                 is_cancelled=self._cancelled.is_set,
                 on_wait=lambda: _status_key("ai_status_wait"),
             )
-            if self._cancelled.is_set():
+            if _cancelled():
                 return
             _status_key("ai_status_parse")
             text = _extract_text(data, is_anthropic)
-            if self._cancelled.is_set():
+            if _cancelled():
                 return
             _status_key("ai_status_done")
             invoker.done_signal.emit(text)
         except Exception as exc:
-            if self._cancelled.is_set():
+            if _cancelled():
                 return
             short, detail = _classify(exc, api_key, base_url, model)
             _status_key("ai_status_error", raw=short)
@@ -451,8 +457,14 @@ class LocalModelWorker:
     def _run(self, messages, services, max_tokens, temperature):
         invoker = self.invoker
 
+        def _cancelled() -> bool:
+            if not self._cancelled.is_set():
+                return False
+            invoker.detach_callbacks()
+            return True
+
         def _status(key: str) -> None:
-            if self._cancelled.is_set():
+            if _cancelled():
                 return
             try:
                 invoker.status_signal.emit(json.dumps({"key": key}))
@@ -460,45 +472,47 @@ class LocalModelWorker:
                 pass
 
         try:
-            if self._cancelled.is_set():
+            if _cancelled():
                 return
             from services.local_model_service import LocalModelService
             # The dialog already emits "local_model_loading" before worker start.
             svc = LocalModelService.get(services)
             # load_provider() performs lazy loading and may install dependencies.
             svc.load_provider(services=services)
-            if self._cancelled.is_set():
+            if _cancelled():
                 return
             _status("local_model_loaded")
+            if _cancelled():
+                return
             _status("local_model_generating")
             text = svc.generate(messages, temperature=temperature,
                                 max_tokens=max_tokens, services=services)
-            if self._cancelled.is_set():
+            if _cancelled():
                 return
             _status("ai_status_done")
             invoker.done_signal.emit(text)
 
         except MemoryError as exc:
-            if self._cancelled.is_set():
+            if _cancelled():
                 return
             invoker.error_signal.emit("local_model_load_fail", str(exc))
         except FileNotFoundError as exc:
-            if self._cancelled.is_set():
+            if _cancelled():
                 return
             invoker.error_signal.emit("local_model_not_downloaded", str(exc))
         except ImportError as exc:
-            if self._cancelled.is_set():
+            if _cancelled():
                 return
             invoker.error_signal.emit("local_model_import_error", str(exc))
         except RuntimeError as exc:
-            if self._cancelled.is_set():
+            if _cancelled():
                 return
             if str(exc) == "ai_assist.local_model_not_running":
                 invoker.error_signal.emit("ai_assist.local_model_not_running", "")
             else:
                 invoker.error_signal.emit("local_model_load_fail", str(exc))
         except Exception as exc:
-            if self._cancelled.is_set():
+            if _cancelled():
                 return
             invoker.error_signal.emit(
                 f"Local model error: {type(exc).__name__}", str(exc))

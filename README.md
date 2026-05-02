@@ -14,6 +14,8 @@ WorkLogger is a privacy-first desktop app for tracking work hours, notes, quick 
 - Flexible time tracking with Manual Input and Auto Record modes
 - Overnight-shift-aware calculations with work type and leave classification
 - AI-assisted note and report generation with external API providers and local model fallback
+- Multi-turn AI chat with day/week/month WorkLogger context and privacy controls
+- Optional Google/Microsoft OAuth sign-in using system-browser OIDC + PKCE
 - Built-in local model management with a GitHub-hosted dynamic catalog, download, resume, verify, switch, and `.gguf` import
 - Template-driven daily/weekly/monthly writing with custom template support
 - Persistent weekly/monthly reports that reload by selected calendar week or month
@@ -66,6 +68,25 @@ pip install -r requirements.txt
 ```bash
 python -m worklogger.main
 ```
+
+### Optional OAuth sign-in
+
+Google and Microsoft sign-in are disabled unless a desktop OAuth client ID is provided through environment variables. Local username/password login continues to work without these settings.
+
+```bash
+WORKLOGGER_OAUTH_LOGIN_ENABLED=1
+WORKLOGGER_GOOGLE_CLIENT_ID=your-google-desktop-client-id
+WORKLOGGER_MICROSOFT_CLIENT_ID=your-microsoft-public-client-id
+```
+
+Provider-specific switches are also supported:
+
+```bash
+WORKLOGGER_GOOGLE_LOGIN_ENABLED=1
+WORKLOGGER_MICROSOFT_LOGIN_ENABLED=1
+```
+
+OAuth is used only for sign-in. WorkLogger stores provider, OIDC subject, email, and display name in SQLite, but does not store OAuth access tokens, refresh tokens, ID tokens, authorization codes, or PKCE verifiers.
 
 ## Build
 
@@ -193,6 +214,8 @@ The reset account is marked as an administrator and must change the password on 
 - Quick Log editor with start/end time support, inline edit/delete, and report/note integration
 - Note editor with template insertion, Quick Log insertion, and AI rewrite assistance
 - Weekly and monthly report generation with template picker, AI enhancement/regeneration, save/reload by selected period, unsaved-change prompts, copy, and Markdown export
+- AI Chat dialog with bounded multi-turn history, selected-period context, and controls for excluding notes, calendar titles, or quick-log details
+- Optional Google/Microsoft OAuth sign-in and account linking with local password login preserved
 - Analytics dialog with monthly/quarterly/annual charts, Work hours/Average metric switching, Bar/Line views, actual-hours leave overlays, and export to CSV/PDF
 - Data portability: CSV import/export, database backup/restore, `.ics` calendar import/export, and calendar event merge into notes/reports
 - AI provider settings with connectivity test, primary/secondary provider routing, and status-rich progress dialogs

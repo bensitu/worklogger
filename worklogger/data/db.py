@@ -45,6 +45,7 @@ _USER_OWNED_TABLES = (
     "quick_logs",
     "calendar_events",
     "reports",
+    "oauth_identities",
 )
 _USER_OWNED_TABLE_LOG_LABELS = {
     "worklog": "Work Log Records",
@@ -52,6 +53,7 @@ _USER_OWNED_TABLE_LOG_LABELS = {
     "quick_logs": "Quick Logs",
     "calendar_events": "Calendar Events",
     "reports": "Reports",
+    "oauth_identities": "OAuth Identities",
 }
 _log = logging.getLogger(__name__)
 
@@ -125,6 +127,18 @@ _CREATE_REPORTS = """CREATE TABLE IF NOT EXISTS reports(
     period_end TEXT NOT NULL,
     content TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
+)"""
+
+_CREATE_OAUTH_IDENTITIES = """CREATE TABLE IF NOT EXISTS oauth_identities(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    provider TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    email TEXT,
+    display_name TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    UNIQUE(provider, subject)
 )"""
 
 
@@ -205,6 +219,7 @@ class DB:
             self._migrate_quick_logs_table(fallback_user_id)
             self._migrate_calendar_table(fallback_user_id)
             self._migrate_reports_table(fallback_user_id)
+            self.conn.execute(_CREATE_OAUTH_IDENTITIES)
 
             if created_admin_id is not None:
                 self.conn.execute(
@@ -227,6 +242,10 @@ class DB:
             )
             self.conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_users_remember_token ON users(remember_token)"
+            )
+            self.conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_oauth_identities_user "
+                "ON oauth_identities(user_id)"
             )
             self.conn.commit()
             self.conn.execute("PRAGMA foreign_keys=ON")
@@ -1022,6 +1041,13 @@ class DB:
         ).fetchall()
         return [self._user_row(row) for row in rows]
 
+    def user_has_local_password(self, user_id: int) -> bool:
+        row = self.conn.execute(
+            "SELECT password_hash FROM users WHERE id=?",
+            (user_id,),
+        ).fetchone()
+        return bool(row and row[0])
+
     @staticmethod
     def _user_row(row) -> dict:
         password_changed_at = row[3] if len(row) > 3 else row[2]
@@ -1210,6 +1236,85 @@ class DB:
                 (report_id, user_id),
             )
             self.conn.commit()
+
+    def get_oauth_identity(self, provider: str, subject: str) -> dict | None:
+        row = self.conn.execute(
+            "SELECT id,user_id,provider,subject,email,display_name,created_at,updated_at "
+            "FROM oauth_identities WHERE provider=? AND subject=?",
+            (provider, subject),
+        ).fetchone()
+        return self._oauth_identity_row(row) if row else None
+
+    def list_oauth_identities(self, user_id: int) -> list[dict]:
+        rows = self.conn.execute(
+            "SELECT id,user_id,provider,subject,email,display_name,created_at,updated_at "
+            "FROM oauth_identities WHERE user_id=? ORDER BY provider, id",
+            (user_id,),
+        ).fetchall()
+        return [self._oauth_identity_row(row) for row in rows]
+
+    def create_oauth_identity(
+        self,
+        user_id: int,
+        provider: str,
+        subject: str,
+        email: str | None,
+        display_name: str | None,
+    ) -> int:
+        now = _utc_now_iso()
+        with self._write_lock:
+            cur = self.conn.execute(
+                "INSERT INTO oauth_identities"
+                "(user_id,provider,subject,email,display_name,created_at,updated_at) "
+                "VALUES(?,?,?,?,?,?,?)",
+                (
+                    user_id,
+                    provider,
+                    subject,
+                    email,
+                    display_name,
+                    now,
+                    now,
+                ),
+            )
+            self.conn.commit()
+            return int(cur.lastrowid)
+
+    def update_oauth_identity_metadata(
+        self,
+        identity_id: int,
+        *,
+        email: str | None,
+        display_name: str | None,
+    ) -> None:
+        with self._write_lock:
+            self.conn.execute(
+                "UPDATE oauth_identities SET email=?, display_name=?, updated_at=? "
+                "WHERE id=?",
+                (email, display_name, _utc_now_iso(), identity_id),
+            )
+            self.conn.commit()
+
+    def delete_oauth_identity(self, user_id: int, identity_id: int) -> None:
+        with self._write_lock:
+            self.conn.execute(
+                "DELETE FROM oauth_identities WHERE user_id=? AND id=?",
+                (user_id, identity_id),
+            )
+            self.conn.commit()
+
+    @staticmethod
+    def _oauth_identity_row(row) -> dict:
+        return {
+            "id": int(row[0]),
+            "user_id": int(row[1]),
+            "provider": row[2],
+            "subject": row[3],
+            "email": row[4],
+            "display_name": row[5],
+            "created_at": row[6],
+            "updated_at": row[7],
+        }
 
     def save_calendar_events(self, events: list, source_file: str = "", *, user_id: int) -> int:
         count = 0

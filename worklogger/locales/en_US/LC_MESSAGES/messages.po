@@ -1399,3 +1399,152 @@ msgstr "  {size} MB  ·  RAM ≥ {ram} GB"
 msgid "✓  Ready"
 msgstr "✓  Ready"
 
+msgid "AI Chat"
+msgstr "AI Chat"
+
+msgid "AI Privacy"
+msgstr "AI Privacy"
+
+msgid "AI disabled"
+msgstr "AI disabled"
+
+msgid "AI is disabled by policy."
+msgstr "AI is disabled by policy."
+
+msgid "AI mode"
+msgstr "AI mode"
+
+msgid "Ask about the selected work context..."
+msgstr "Ask about the selected work context..."
+
+msgid "Assistant"
+msgstr "Assistant"
+
+msgid "Building context..."
+msgstr "Building context..."
+
+msgid "Cancel request"
+msgstr "Cancel request"
+
+msgid "Cannot unlink the only login method."
+msgstr "Cannot unlink the only login method."
+
+msgid "Clear conversation"
+msgstr "Clear conversation"
+
+msgid "Context"
+msgstr "Context"
+
+msgid "Conversation cleared."
+msgstr "Conversation cleared."
+
+msgid "Could not complete sign-in."
+msgstr "Could not complete sign-in."
+
+msgid "Current day"
+msgstr "Current day"
+
+msgid "Current month"
+msgstr "Current month"
+
+msgid "Current week"
+msgstr "Current week"
+
+msgid "Error: {}"
+msgstr "Error: {}"
+
+msgid "Include calendar events"
+msgstr "Include calendar events"
+
+msgid "Include calendar titles"
+msgstr "Include calendar titles"
+
+msgid "Include calendar titles by default"
+msgstr "Include calendar titles by default"
+
+msgid "Include notes"
+msgstr "Include notes"
+
+msgid "Include notes by default"
+msgstr "Include notes by default"
+
+msgid "Include quick log details"
+msgstr "Include quick log details"
+
+msgid "Include quick log details by default"
+msgstr "Include quick log details by default"
+
+msgid "Link Google"
+msgstr "Link Google"
+
+msgid "Link Microsoft"
+msgstr "Link Microsoft"
+
+msgid "Linked account removed."
+msgstr "Linked account removed."
+
+msgid "Linked accounts"
+msgstr "Linked accounts"
+
+msgid "Local AI only"
+msgstr "Local AI only"
+
+msgid "Local model is not available. Enable or download a local model in Settings -> AI."
+msgstr "Local model is not available. Enable or download a local model in Settings -> AI."
+
+msgid "No linked accounts."
+msgstr "No linked accounts."
+
+msgid "OAuth provider is not configured."
+msgstr "OAuth provider is not configured."
+
+msgid "Opening browser..."
+msgstr "Opening browser..."
+
+msgid "Please configure an AI provider in Settings -> AI."
+msgstr "Please configure an AI provider in Settings -> AI."
+
+msgid "Remote AI allowed"
+msgstr "Remote AI allowed"
+
+msgid "Send"
+msgstr "Send"
+
+msgid "Sending request..."
+msgstr "Sending request..."
+
+msgid "Sign in with Google"
+msgstr "Sign in with Google"
+
+msgid "Sign in with Microsoft"
+msgstr "Sign in with Microsoft"
+
+msgid "Sign-in canceled."
+msgstr "Sign-in canceled."
+
+msgid "Sign-in completed."
+msgstr "Sign-in completed."
+
+msgid "Title hidden"
+msgstr "Title hidden"
+
+msgid "Unlink"
+msgstr "Unlink"
+
+msgid "You"
+msgstr "You"
+
+msgid "all day"
+msgstr "all day"
+
+msgid "No response."
+msgstr "No response."
+
+msgid "Request canceled."
+msgstr "Request canceled."
+
+msgid "Enter your current password to continue."
+msgstr "Enter your current password to continue."
+
+msgid "Password is incorrect."
+msgstr "Password is incorrect."

@@ -3,6 +3,7 @@ tzlocal
 holidays
 cryptography
 keyring
+PyJWT>=2.8.0
 
 # ── local model inference ──
 # CPU-only wheel (no CUDA build required for basic usage).

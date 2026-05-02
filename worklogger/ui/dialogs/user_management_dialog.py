@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication,
-    QCheckBox,
     QDialog,
     QFileDialog,
     QFormLayout,
@@ -34,6 +33,7 @@ from config.constants import (
 )
 from utils.formatters import format_timestamp_for_display
 from utils.i18n import _, msg
+from ui.widgets import SwitchButton
 from .common import _localize_msgbox_buttons
 
 
@@ -106,9 +106,15 @@ class _AdminResetPasswordDialog(QDialog):
         form.addRow(_("Confirm Password"), self._confirm)
         root.addLayout(form)
 
-        self._clear_remember = QCheckBox(_("Sign out remembered sessions"))
-        self._clear_remember.setChecked(True)
-        root.addWidget(self._clear_remember)
+        clear_row = QWidget()
+        clear_layout = QHBoxLayout(clear_row)
+        clear_layout.setContentsMargins(0, 0, 0, 0)
+        clear_layout.setSpacing(8)
+        self._clear_remember = SwitchButton(checked=True)
+        clear_layout.addWidget(self._clear_remember)
+        clear_layout.addWidget(QLabel(_("Sign out remembered sessions")))
+        clear_layout.addStretch()
+        root.addWidget(clear_row)
 
         row = QHBoxLayout()
         cancel_btn = QPushButton(_("Cancel"))

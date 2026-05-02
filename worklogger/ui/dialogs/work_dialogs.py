@@ -6,7 +6,7 @@ from html import escape
 from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
     QLineEdit, QTextEdit, QTabWidget, QFileDialog, QMessageBox, QListWidget, QListWidgetItem,
-    QSplitter, QSizePolicy, QApplication, QButtonGroup, QCheckBox, QRadioButton,
+    QSplitter, QSizePolicy, QApplication, QButtonGroup, QRadioButton,
 )
 from PySide6.QtCore import Qt, QTimer, QSize, QEvent
 from PySide6.QtGui import QFont
@@ -21,21 +21,55 @@ from config.themes import (
     quick_log_list_qss,
     quick_log_row_qss,
     quick_log_text_color,
+    switch_off_color,
     theme_colors,
 )
 from config.constants import (
+    AI_INCLUDE_CALENDAR_TITLES_SETTING_KEY,
+    AI_INCLUDE_NOTES_SETTING_KEY,
+    AI_INCLUDE_QUICK_LOG_DETAILS_SETTING_KEY,
+    AI_PRIVACY_MODE_SETTING_KEY,
     ANALYTICS_SHOW_LEAVES_SETTING_KEY,
     MONTHLY_TARGET_SETTING_KEY,
 )
 from core.time_calc import calc_hours
 from services import analytics_service
+from services.ai_context_service import AiContextService
 from services.export_service import pdf_colors
-from ui.widgets import ComboChart
+from services.local_model_service import LOCAL_MODEL_SENTINEL
+from ui.widgets import ComboChart, SwitchButton
 from .ai_dialogs import AIProgressDialog, AIResultDialog
 from .template_dialogs import TemplatePickerDialog
 from .common import (
     _append_quick_logs_block, _format_cal_events, _format_quick_logs, _get_ai_params, _localize_msgbox_buttons,
 )
+
+
+def _ai_policy_allows(parent, app, api_key: str, title: str) -> bool:
+    mode = app.services.get_setting(AI_PRIVACY_MODE_SETTING_KEY, "local_only")
+    if mode == "disabled":
+        QMessageBox.warning(parent, title, _("AI is disabled by policy."))
+        return False
+    if mode == "local_only" and api_key != LOCAL_MODEL_SENTINEL:
+        QMessageBox.warning(
+            parent,
+            title,
+            _("Local model is not available. Enable or download a local model in Settings -> AI."),
+        )
+        return False
+    return True
+
+
+def _calendar_events_for_ai(events: list[dict], *, include_titles: bool) -> str:
+    if include_titles:
+        return _format_cal_events(events)
+    lines = []
+    for event in events:
+        start = event.get("start_time") or ""
+        end = event.get("end_time") or ""
+        span = f"{start}-{end}".strip("-") or _("all day")
+        lines.append(f"- {event.get('date', '')} {span}: {_('Title hidden')}")
+    return "\n".join(lines)
 
 
 class NoteEditorDialog(QDialog):
@@ -128,6 +162,8 @@ class NoteEditorDialog(QDialog):
     def _ai_smart(self):
         app = self._app
         api_key, base_url, model = _get_ai_params(app, secondary=False)
+        if not _ai_policy_allows(self, app, api_key, _("Notes")):
+            return
         if not api_key:
             QMessageBox.warning(
                 self, _("Notes"), _("Please set your API key in Settings → AI."))
@@ -141,10 +177,24 @@ class NoteEditorDialog(QDialog):
         hint = self._hint.text().strip()
         cal_evs = app.services.get_calendar_events_for_date(d.isoformat())
         quick_logs = app.services.quick_logs_for_date(d.isoformat())
+        include_calendar_titles = app.services.get_setting(
+            AI_INCLUDE_CALENDAR_TITLES_SETTING_KEY,
+            "0",
+        ) == "1"
+        include_quick_logs = app.services.get_setting(
+            AI_INCLUDE_QUICK_LOG_DETAILS_SETTING_KEY,
+            "1",
+        ) == "1"
         cal_block = ""
         if cal_evs:
-            cal_block += f"\nCalendar events:\n{_format_cal_events(cal_evs)}"
-        if quick_logs:
+            cal_block += (
+                "\nCalendar events:\n"
+                + _calendar_events_for_ai(
+                    cal_evs,
+                    include_titles=include_calendar_titles,
+                )
+            )
+        if quick_logs and include_quick_logs:
             cal_block += f"\nQuick log entries:\n{_format_quick_logs(quick_logs, app.lang, 'daily')}"
 
         if existing:
@@ -398,6 +448,8 @@ class ReportDialog(QDialog):
     def _ai_smart(self):
         app = self._app
         api_key, base_url, model = _get_ai_params(app, secondary=True)
+        if not _ai_policy_allows(self, app, api_key, _("Work Report")):
+            return
         if not api_key:
             QMessageBox.warning(self, _("Work Report"),
                                 _("Please set your API key in Settings → AI."))
@@ -408,6 +460,18 @@ class ReportDialog(QDialog):
         existing = self._current_editor().toPlainText().strip()
         hint = self._hint.text().strip()
         period = _("Weekly Report") if idx == 0 else _("Monthly Report")
+        include_notes = app.services.get_setting(
+            AI_INCLUDE_NOTES_SETTING_KEY,
+            "0",
+        ) == "1"
+        include_calendar_titles = app.services.get_setting(
+            AI_INCLUDE_CALENDAR_TITLES_SETTING_KEY,
+            "0",
+        ) == "1"
+        include_quick_logs = app.services.get_setting(
+            AI_INCLUDE_QUICK_LOG_DETAILS_SETTING_KEY,
+            "1",
+        ) == "1"
 
         if idx == 0:
             monday = app.selected - _dt.timedelta(days=app.selected.weekday())
@@ -426,8 +490,14 @@ class ReportDialog(QDialog):
 
         cal_block = ""
         if cal_evs:
-            cal_block += f"\n\n=== Calendar Events ===\n{_format_cal_events(cal_evs)}"
-        if quick_logs:
+            cal_block += (
+                "\n\n=== Calendar Events ===\n"
+                + _calendar_events_for_ai(
+                    cal_evs,
+                    include_titles=include_calendar_titles,
+                )
+            )
+        if quick_logs and include_quick_logs:
             cal_block += (
                 f"\n\n=== Quick Log Entries (recorded tasks) ===\n"
                 f"{_format_quick_logs(quick_logs, app.lang, 'summary')}"
@@ -453,14 +523,25 @@ class ReportDialog(QDialog):
                 "Use Markdown. Do not invent facts."
                 + (f" Extra: {hint}" if hint else "")
             )
+            context_builder = AiContextService(app.services)
             if idx == 0:
-                raw_log = app.services.generate_weekly_report(
-                    app.selected, app.work_hours, app.lang)
+                raw_log = context_builder.build_weekly_context(
+                    app.selected,
+                    include_notes=include_notes,
+                    include_calendar=True,
+                    include_calendar_titles=include_calendar_titles,
+                    include_quick_log_details=include_quick_logs,
+                )
             else:
-                raw_log = app.services.generate_monthly_report(
-                    app.selected.year, app.selected.month,
-                    app.work_hours, app.lang)
-            user_content = f"=== Work Log ===\n{raw_log}{cal_block}"
+                raw_log = context_builder.build_monthly_context(
+                    app.selected.year,
+                    app.selected.month,
+                    include_notes=include_notes,
+                    include_calendar=True,
+                    include_calendar_titles=include_calendar_titles,
+                    include_quick_log_details=include_quick_logs,
+                )
+            user_content = f"=== Work Log ===\n{raw_log}"
 
         msgs = [{"role": "user",
                  "content": f"[System: {system}]\n\n{user_content}"}]
@@ -545,16 +626,18 @@ class ChartDialog(QDialog):
             lambda checked: checked and self._set_chart_mode("bar"))
         self._line_radio.toggled.connect(
             lambda checked: checked and self._set_chart_mode("line"))
-        self._leave_cb = QCheckBox(msg("analytics_show_leave"))
-        self._leave_cb.setChecked(
-            str(app_ref.services.get_setting(
-                ANALYTICS_SHOW_LEAVES_SETTING_KEY, "0"
-            )) == "1"
+        self._leave_cb = SwitchButton(
+            checked=str(app_ref.services.get_setting(
+                ANALYTICS_SHOW_LEAVES_SETTING_KEY, "0",
+            )) == "1",
+            color_on=theme_colors(app_ref.theme, app_ref.dark)[0],
+            color_off=switch_off_color(app_ref.dark),
         )
         self._leave_cb.toggled.connect(self._toggle_leave_markers)
         metric_label = QLabel(msg("analytics_metric_label"))
         chart_label = QLabel(msg("analytics_chart_label"))
-        for label in (metric_label, chart_label):
+        leave_label = QLabel(msg("analytics_show_leave"))
+        for label in (metric_label, chart_label, leave_label):
             label.setObjectName("muted")
             label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
             label.setMinimumWidth(58)
@@ -566,6 +649,7 @@ class ChartDialog(QDialog):
         view_row.addWidget(self._bar_radio)
         view_row.addWidget(self._line_radio)
         view_row.addSpacing(12)
+        view_row.addWidget(leave_label)
         view_row.addWidget(self._leave_cb)
         view_row.addStretch()
         controls.addLayout(metric_row)

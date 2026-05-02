@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QHBoxLayout, QFormLayout, QTabWidget,
     QPushButton, QLabel, QLineEdit, QTextEdit, QScrollArea, QMessageBox,
     QDoubleSpinBox, QGroupBox, QDialogButtonBox, QComboBox, QProgressBar,
+    QInputDialog,
 )
 from PySide6.QtCore import Qt, QTimer, QSize
 from PySide6.QtCore import QObject, Signal
@@ -16,6 +17,10 @@ from utils.i18n import _, msg, LANG_NAMES, get_translator
 from config.constants import (
     APP_AUTHOR,
     APP_VERSION,
+    AI_INCLUDE_CALENDAR_TITLES_SETTING_KEY,
+    AI_INCLUDE_NOTES_SETTING_KEY,
+    AI_INCLUDE_QUICK_LOG_DETAILS_SETTING_KEY,
+    AI_PRIVACY_MODE_SETTING_KEY,
     CUSTOM_THEME_SETTING_KEY,
     DARK_MODE_SETTING_KEY,
     DEFAULT_BREAK_SETTING_KEY,
@@ -501,6 +506,63 @@ class SettingsDialog(QDialog):
         btn_row_l.addStretch()
         lfl.addWidget(btn_row_w)
         aiv.addWidget(grp_local)
+
+        grp_privacy = QGroupBox(_("AI Privacy"))
+        pfl = QFormLayout(grp_privacy)
+        pfl.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        pfl.setSpacing(8)
+        pfl.setContentsMargins(10, 10, 10, 10)
+        self._ai_privacy_mode = QComboBox()
+        self._ai_privacy_mode.setFixedWidth(FW)
+        self._ai_privacy_mode.addItem(_("Local AI only"), "local_only")
+        self._ai_privacy_mode.addItem(_("Remote AI allowed"), "remote_allowed")
+        self._ai_privacy_mode.addItem(_("AI disabled"), "disabled")
+        saved_privacy_mode = app_ref.services.get_setting(
+            AI_PRIVACY_MODE_SETTING_KEY,
+            "local_only",
+        )
+        privacy_idx = self._ai_privacy_mode.findData(saved_privacy_mode)
+        if privacy_idx >= 0:
+            self._ai_privacy_mode.setCurrentIndex(privacy_idx)
+        pfl.addRow(_("AI mode"), self._ai_privacy_mode)
+
+        def _privacy_switch_row(text: str, checked: bool) -> SwitchButton:
+            wrap = QWidget()
+            layout = QHBoxLayout(wrap)
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.setSpacing(8)
+            switch = SwitchButton(
+                checked=checked,
+                color_on=_acc,
+                color_off=_off,
+            )
+            layout.addWidget(switch)
+            layout.addStretch()
+            pfl.addRow(text, wrap)
+            return switch
+
+        self._ai_include_notes = _privacy_switch_row(
+            _("Include notes by default"),
+            app_ref.services.get_setting(
+                AI_INCLUDE_NOTES_SETTING_KEY,
+                "0",
+            ) == "1",
+        )
+        self._ai_include_calendar_titles = _privacy_switch_row(
+            _("Include calendar titles by default"),
+            app_ref.services.get_setting(
+                AI_INCLUDE_CALENDAR_TITLES_SETTING_KEY,
+                "0",
+            ) == "1",
+        )
+        self._ai_include_quick_logs = _privacy_switch_row(
+            _("Include quick log details by default"),
+            app_ref.services.get_setting(
+                AI_INCLUDE_QUICK_LOG_DETAILS_SETTING_KEY,
+                "1",
+            ) == "1",
+        )
+        aiv.addWidget(grp_privacy)
 
         # Local model status refresh and verification flow.
         def _verify_reason_text(reason: str) -> str:
@@ -997,6 +1059,25 @@ class SettingsDialog(QDialog):
         self._password_reminder_lbl.setObjectName("muted")
         account_v.addWidget(self._password_reminder_lbl)
         self._refresh_password_reminder()
+        linked_grp = QGroupBox(_("Linked accounts"))
+        linked_v = QVBoxLayout(linked_grp)
+        linked_v.setSpacing(6)
+        self._linked_accounts_v = linked_v
+        self._linked_account_widgets: list[QWidget] = []
+        self._linked_accounts_status = QLabel("")
+        self._linked_accounts_status.setObjectName("muted")
+        linked_v.addWidget(self._linked_accounts_status)
+        link_row = QHBoxLayout()
+        self._link_google_btn = QPushButton(_("Link Google"))
+        self._link_microsoft_btn = QPushButton(_("Link Microsoft"))
+        self._link_google_btn.clicked.connect(lambda: self._link_oauth("google"))
+        self._link_microsoft_btn.clicked.connect(lambda: self._link_oauth("microsoft"))
+        link_row.addWidget(self._link_google_btn)
+        link_row.addWidget(self._link_microsoft_btn)
+        link_row.addStretch()
+        linked_v.addLayout(link_row)
+        account_v.addWidget(linked_grp)
+        self._refresh_oauth_accounts()
         change_password_btn = QPushButton(_("Change Password"))
         logout_btn = QPushButton(_("Log out"))
         change_password_btn.clicked.connect(self._open_change_password_dialog)
@@ -1162,6 +1243,113 @@ class SettingsDialog(QDialog):
             parent=self,
         ).exec()
 
+    def _refresh_oauth_accounts(self) -> None:
+        for widget in self._linked_account_widgets:
+            self._linked_accounts_v.removeWidget(widget)
+            widget.deleteLater()
+        self._linked_account_widgets.clear()
+        for button, provider in (
+            (self._link_google_btn, "google"),
+            (self._link_microsoft_btn, "microsoft"),
+        ):
+            configured = False
+            try:
+                configured = self._app.services.oauth_provider_configured(provider)
+            except Exception:
+                configured = False
+            button.setEnabled(configured)
+            button.setToolTip("" if configured else _("OAuth provider is not configured."))
+        try:
+            identities = self._app.services.list_oauth_identities()
+        except Exception:
+            identities = []
+        if not identities:
+            label = QLabel(_("No linked accounts."))
+            label.setObjectName("muted")
+            self._linked_accounts_v.insertWidget(1, label)
+            self._linked_account_widgets.append(label)
+            return
+        for identity in identities:
+            row = QWidget()
+            row_l = QHBoxLayout(row)
+            row_l.setContentsMargins(0, 0, 0, 0)
+            provider = str(identity.get("provider", "")).title()
+            email = identity.get("email") or identity.get("display_name") or ""
+            row_l.addWidget(QLabel(f"{provider}: {email}"), 1)
+            unlink_btn = QPushButton(_("Unlink"))
+            unlink_btn.clicked.connect(
+                lambda _checked=False, iid=int(identity["id"]): self._unlink_oauth(iid)
+            )
+            row_l.addWidget(unlink_btn)
+            self._linked_accounts_v.insertWidget(
+                1 + len(self._linked_account_widgets),
+                row,
+            )
+            self._linked_account_widgets.append(row)
+
+    def _link_oauth(self, provider: str) -> None:
+        if not self._app.services.oauth_provider_configured(provider):
+            QMessageBox.warning(
+                self,
+                _("Linked accounts"),
+                _("OAuth provider is not configured."),
+            )
+            return
+        password = self._confirm_current_password()
+        if password is None:
+            return
+        self._linked_accounts_status.setText(_("Opening browser..."))
+        try:
+            self._app.services.link_oauth_provider(provider, password)
+        except ValueError as exc:
+            text = (
+                _("Password is incorrect.")
+                if str(exc) == "password_incorrect"
+                else str(exc)
+            )
+            self._linked_accounts_status.setText("")
+            QMessageBox.warning(self, _("Linked accounts"), text)
+            return
+        except Exception:
+            self._linked_accounts_status.setText(_("Could not complete sign-in."))
+            QMessageBox.warning(
+                self,
+                _("Linked accounts"),
+                _("Could not complete sign-in."),
+            )
+            return
+        self._linked_accounts_status.setText(_("Sign-in completed."))
+        self._refresh_oauth_accounts()
+
+    def _unlink_oauth(self, identity_id: int) -> None:
+        password = self._confirm_current_password()
+        if password is None:
+            return
+        try:
+            self._app.services.unlink_oauth_identity(identity_id, password)
+        except ValueError as exc:
+            if str(exc) == "cannot_unlink_only_login_method":
+                text = _("Cannot unlink the only login method.")
+            elif str(exc) == "password_incorrect":
+                text = _("Password is incorrect.")
+            else:
+                text = str(exc)
+            QMessageBox.warning(self, _("Linked accounts"), text)
+            return
+        self._linked_accounts_status.setText(_("Linked account removed."))
+        self._refresh_oauth_accounts()
+
+    def _confirm_current_password(self) -> str | None:
+        password, ok = QInputDialog.getText(
+            self,
+            _("Linked accounts"),
+            _("Enter your current password to continue."),
+            QLineEdit.EchoMode.Password,
+        )
+        if not ok:
+            return None
+        return password
+
     def _show_feature_intro(self):
         dlg = QDialog(self)
         dlg.setWindowTitle(_("Feature Overview"))
@@ -1206,6 +1394,22 @@ class SettingsDialog(QDialog):
         app.services.set_setting(
             LOCAL_MODEL_ENABLED_SETTING_KEY,
             "1" if self._local_enabled_sw.isChecked() else "0"
+        )
+        app.services.set_setting(
+            AI_PRIVACY_MODE_SETTING_KEY,
+            self._ai_privacy_mode.currentData(),
+        )
+        app.services.set_setting(
+            AI_INCLUDE_NOTES_SETTING_KEY,
+            "1" if self._ai_include_notes.isChecked() else "0",
+        )
+        app.services.set_setting(
+            AI_INCLUDE_CALENDAR_TITLES_SETTING_KEY,
+            "1" if self._ai_include_calendar_titles.isChecked() else "0",
+        )
+        app.services.set_setting(
+            AI_INCLUDE_QUICK_LOG_DETAILS_SETTING_KEY,
+            "1" if self._ai_include_quick_logs.isChecked() else "0",
         )
 
         new_show_hol = self._show_holidays.isChecked()

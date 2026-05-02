@@ -360,7 +360,7 @@ msgid "Download Local Model"
 msgstr "로컬 모델 다운로드"
 
 msgid "Downloaded"
-msgstr "Downloaded"
+msgstr "다운로드됨"
 
 msgid "Downloading local model..."
 msgstr "로컬 모델을 다운로드하는 중..."
@@ -637,7 +637,7 @@ msgid "March"
 msgstr "3월"
 
 msgid "Markdown (*.md)"
-msgstr "Markdown (*.md)"
+msgstr "Markdown 파일 (*.md)"
 
 msgid "May"
 msgstr "5월"
@@ -838,7 +838,7 @@ msgid "Password changed successfully. A new recovery key was generated. Copy and
 msgstr "비밀번호가 변경되었습니다. 새 복구 키가 생성되었습니다. 지금 복사하여 저장하세요. 이전 복구 키는 더 이상 작동하지 않습니다."
 
 msgid "Password must be at least 8 characters."
-msgstr "Password must be at least 8 characters."
+msgstr "비밀번호는 8자 이상이어야 합니다."
 
 msgid "Password reset successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
 msgstr "비밀번호가 재설정되었습니다. 새 복구 키가 생성되었습니다. 지금 복사하여 저장하세요. 이전 복구 키는 더 이상 작동하지 않습니다."
@@ -1391,11 +1391,160 @@ msgid "📋 Templates"
 msgstr "📋 템플릿"
 
 msgid "HEX"
-msgstr "HEX"
+msgstr "16진수"
 
 msgid "  {size} MB  ·  RAM ≥ {ram} GB"
-msgstr "  {size} MB  ·  RAM {ram} GB 이상"
+msgstr "  {size} MB  ·  RAM ≥ {ram} GB"
 
 msgid "✓  Ready"
 msgstr "✓  준비 완료"
 
+msgid "AI Chat"
+msgstr "AI 채팅"
+
+msgid "AI Privacy"
+msgstr "AI 개인정보 보호"
+
+msgid "AI disabled"
+msgstr "AI 비활성화됨"
+
+msgid "AI is disabled by policy."
+msgstr "정책에 따라 AI가 비활성화되어 있습니다."
+
+msgid "AI mode"
+msgstr "AI 모드"
+
+msgid "Ask about the selected work context..."
+msgstr "선택한 업무 컨텍스트에 대해 질문..."
+
+msgid "Assistant"
+msgstr "어시스턴트"
+
+msgid "Building context..."
+msgstr "컨텍스트를 구성하는 중..."
+
+msgid "Cancel request"
+msgstr "요청 취소"
+
+msgid "Cannot unlink the only login method."
+msgstr "유일한 로그인 방법은 연결 해제할 수 없습니다."
+
+msgid "Clear conversation"
+msgstr "대화 지우기"
+
+msgid "Context"
+msgstr "컨텍스트"
+
+msgid "Conversation cleared."
+msgstr "대화를 지웠습니다."
+
+msgid "Could not complete sign-in."
+msgstr "로그인을 완료할 수 없습니다."
+
+msgid "Current day"
+msgstr "오늘"
+
+msgid "Current month"
+msgstr "이번 달"
+
+msgid "Current week"
+msgstr "이번 주"
+
+msgid "Error: {}"
+msgstr "오류: {}"
+
+msgid "Include calendar events"
+msgstr "캘린더 일정 포함"
+
+msgid "Include calendar titles"
+msgstr "캘린더 제목 포함"
+
+msgid "Include calendar titles by default"
+msgstr "기본적으로 캘린더 제목 포함"
+
+msgid "Include notes"
+msgstr "메모 포함"
+
+msgid "Include notes by default"
+msgstr "기본적으로 메모 포함"
+
+msgid "Include quick log details"
+msgstr "빠른 기록 세부 정보 포함"
+
+msgid "Include quick log details by default"
+msgstr "기본적으로 빠른 기록 세부 정보 포함"
+
+msgid "Link Google"
+msgstr "Google 연결"
+
+msgid "Link Microsoft"
+msgstr "Microsoft 연결"
+
+msgid "Linked account removed."
+msgstr "연결된 계정을 제거했습니다."
+
+msgid "Linked accounts"
+msgstr "연결된 계정"
+
+msgid "Local AI only"
+msgstr "로컬 AI만 사용"
+
+msgid "Local model is not available. Enable or download a local model in Settings -> AI."
+msgstr "로컬 모델을 사용할 수 없습니다. 설정 -> AI에서 로컬 모델을 활성화하거나 다운로드하세요."
+
+msgid "No linked accounts."
+msgstr "연결된 계정이 없습니다."
+
+msgid "OAuth provider is not configured."
+msgstr "OAuth 공급자가 구성되어 있지 않습니다."
+
+msgid "Opening browser..."
+msgstr "브라우저를 여는 중..."
+
+msgid "Please configure an AI provider in Settings -> AI."
+msgstr "설정 -> AI에서 AI 공급자를 구성하세요."
+
+msgid "Remote AI allowed"
+msgstr "원격 AI 허용"
+
+msgid "Send"
+msgstr "보내기"
+
+msgid "Sending request..."
+msgstr "요청을 보내는 중..."
+
+msgid "Sign in with Google"
+msgstr "Google로 로그인"
+
+msgid "Sign in with Microsoft"
+msgstr "Microsoft로 로그인"
+
+msgid "Sign-in canceled."
+msgstr "로그인이 취소되었습니다."
+
+msgid "Sign-in completed."
+msgstr "로그인이 완료되었습니다."
+
+msgid "Title hidden"
+msgstr "제목 숨김"
+
+msgid "Unlink"
+msgstr "연결 해제"
+
+msgid "You"
+msgstr "사용자"
+
+msgid "all day"
+msgstr "종일"
+
+msgid "No response."
+msgstr "응답이 없습니다."
+
+msgid "Request canceled."
+msgstr "요청이 취소되었습니다."
+
+msgid "Enter your current password to continue."
+msgstr "계속하려면 현재 비밀번호를 입력하세요."
+
+msgid "Password is incorrect."
+msgstr "비밀번호가 올바르지 않습니다."

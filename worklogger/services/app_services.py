@@ -54,6 +54,7 @@ from services.export_service import export_csv, import_csv, build_ics
 from services.calendar_service import parse_ics_rich
 from services import report_service
 from services.key_store import get_secret, set_secret
+from services.oauth_service import OAuthService
 from services.session_store import (
     clear_active_remember_user,
     clear_remember_token,
@@ -105,6 +106,26 @@ class AuthService:
     def generate_initial_password() -> str:
         return secrets.token_urlsafe(GENERATED_PASSWORD_TOKEN_BYTES)
 
+    def _apply_remember_login(
+        self,
+        user_id: int,
+        username: str,
+        *,
+        remember: bool,
+    ) -> None:
+        if remember:
+            token = secrets.token_urlsafe(32)
+            self.db.set_remember_token(user_id, token)
+            try:
+                save_remember_token(username, token)
+            except Exception:
+                self.db.set_remember_token(user_id, None)
+                raise
+        else:
+            self.db.set_remember_token(user_id, None)
+            clear_remember_token(username)
+            clear_active_remember_user()
+
     def register(
         self,
         username: str,
@@ -137,19 +158,158 @@ class AuthService:
         user_id = self.db.verify_user(username, password)
         if user_id is None:
             raise ValueError("invalid_credentials")
-        if remember:
-            token = secrets.token_urlsafe(32)
-            self.db.set_remember_token(user_id, token)
-            try:
-                save_remember_token(username, token)
-            except Exception:
-                self.db.set_remember_token(user_id, None)
-                raise
-        else:
-            self.db.set_remember_token(user_id, None)
-            clear_remember_token(username)
-            clear_active_remember_user()
+        self._apply_remember_login(user_id, username, remember=remember)
         return user_id
+
+    @staticmethod
+    def _require_oauth_subject(subject: str) -> str:
+        if not isinstance(subject, str):
+            raise TypeError("oauth_subject_must_be_string")
+        subject = subject.strip()
+        if not subject:
+            raise ValueError("oauth_subject_required")
+        return subject
+
+    @staticmethod
+    def _oauth_username_base(
+        provider: str,
+        email: str | None,
+        display_name: str | None,
+    ) -> str:
+        raw = (email or "").split("@", 1)[0] or display_name or provider
+        cleaned = "".join(
+            ch.lower() if ch.isalnum() else "_"
+            for ch in raw.strip()
+        ).strip("_")
+        return cleaned or provider
+
+    def _unique_oauth_username(
+        self,
+        provider: str,
+        email: str | None,
+        display_name: str | None,
+    ) -> str:
+        base = self._oauth_username_base(provider, email, display_name)
+        candidate = base
+        suffix = 1
+        while self.db.get_user_by_username(candidate):
+            suffix += 1
+            candidate = f"{base}_{suffix}"
+        return candidate
+
+    def login_with_oauth_identity(
+        self,
+        provider: str,
+        subject: str,
+        email: str | None = None,
+        display_name: str | None = None,
+        remember: bool = False,
+        current_user_id: int | None = None,
+    ) -> int:
+        provider = OAuthService.normalize_provider(provider)
+        subject = self._require_oauth_subject(subject)
+        email = email.strip() if isinstance(email, str) and email.strip() else None
+        display_name = (
+            display_name.strip()
+            if isinstance(display_name, str) and display_name.strip()
+            else None
+        )
+        existing = self.db.get_oauth_identity(provider, subject)
+        if existing:
+            user_id = int(existing["user_id"])
+            user = self.db.get_user(user_id)
+            if not user:
+                raise ValueError("oauth_user_not_found")
+            if email != existing.get("email") or display_name != existing.get("display_name"):
+                self.db.update_oauth_identity_metadata(
+                    int(existing["id"]),
+                    email=email,
+                    display_name=display_name,
+                )
+            self._apply_remember_login(user_id, str(user["username"]), remember=remember)
+            _log.info("OAUTH_LOGIN_SUCCESS provider=%s user_id=%s", provider, user_id)
+            return user_id
+
+        if current_user_id is not None:
+            user = self.db.get_user(current_user_id)
+            if not user:
+                raise ValueError("user_not_found")
+            self.db.create_oauth_identity(
+                int(current_user_id),
+                provider,
+                subject,
+                email,
+                display_name,
+            )
+            self._apply_remember_login(
+                int(current_user_id),
+                str(user["username"]),
+                remember=remember,
+            )
+            _log.info(
+                "OAUTH_IDENTITY_LINKED provider=%s user_id=%s",
+                provider,
+                current_user_id,
+            )
+            _log.info(
+                "OAUTH_LOGIN_SUCCESS provider=%s user_id=%s",
+                provider,
+                current_user_id,
+            )
+            return int(current_user_id)
+
+        username = self._unique_oauth_username(provider, email, display_name)
+        password = secrets.token_urlsafe(48)
+        user_id = self.db.create_user(username, password, is_admin=False)
+        self.db.create_oauth_identity(user_id, provider, subject, email, display_name)
+        self._apply_remember_login(user_id, username, remember=remember)
+        _log.info("OAUTH_LOGIN_SUCCESS provider=%s user_id=%s", provider, user_id)
+        return user_id
+
+    def link_oauth_identity(
+        self,
+        user_id: int,
+        provider: str,
+        subject: str,
+        email: str | None = None,
+        display_name: str | None = None,
+    ) -> int:
+        provider = OAuthService.normalize_provider(provider)
+        subject = self._require_oauth_subject(subject)
+        existing = self.db.get_oauth_identity(provider, subject)
+        if existing:
+            if int(existing["user_id"]) != int(user_id):
+                raise ValueError("oauth_identity_already_linked")
+            self.db.update_oauth_identity_metadata(
+                int(existing["id"]),
+                email=email,
+                display_name=display_name,
+            )
+            return int(existing["id"])
+        identity_id = self.db.create_oauth_identity(
+            int(user_id),
+            provider,
+            subject,
+            email,
+            display_name,
+        )
+        _log.info("OAUTH_IDENTITY_LINKED provider=%s user_id=%s", provider, user_id)
+        return identity_id
+
+    def unlink_oauth_identity(self, user_id: int, identity_id: int) -> None:
+        identities = self.db.list_oauth_identities(user_id)
+        if (
+            len(identities) <= 1
+            and not self.db.user_has_local_password(user_id)
+        ):
+            raise ValueError("cannot_unlink_only_login_method")
+        provider = ""
+        for identity in identities:
+            if int(identity["id"]) == int(identity_id):
+                provider = str(identity["provider"])
+                break
+        self.db.delete_oauth_identity(user_id, identity_id)
+        _log.info("OAUTH_IDENTITY_UNLINKED provider=%s user_id=%s", provider, user_id)
 
     def login_with_token(self, token: str) -> int | None:
         if not isinstance(token, str) or not token:
@@ -401,6 +561,7 @@ class AppServices:
     def __init__(self, db: DB | None = None, current_user_id: int | None = None):
         self.db = db or DB()
         self.auth = AuthService(self.db)
+        self.oauth = OAuthService()
         self.current_user_id: int | None = current_user_id
         self.current_username: str | None = None
         self._update_failures = 0
@@ -798,11 +959,55 @@ class AppServices:
 
         self.db = new_db
         self.auth = new_auth
+        self.oauth = OAuthService()
         try:
             backup.unlink(missing_ok=True)
         except OSError:
             pass
         return self._restore_current_user_session(username)
+
+    def oauth_provider_configured(self, provider: str) -> bool:
+        return self.oauth.provider_from_environment(provider) is not None
+
+    def login_with_oauth_provider(self, provider: str, *, remember: bool = False) -> int:
+        try:
+            identity = self.oauth.authenticate(provider)
+            user_id = self.auth.login_with_oauth_identity(
+                identity.provider,
+                identity.subject,
+                identity.email,
+                identity.display_name,
+                remember=remember,
+            )
+        except Exception:
+            _log.info("OAUTH_LOGIN_FAILED provider=%s", provider)
+            raise
+        self.set_current_user(user_id)
+        return user_id
+
+    def _verify_current_user_password(self, password: str) -> None:
+        if not isinstance(password, str) or not password:
+            raise ValueError("password_required")
+        if not self.db.verify_user_id(self._require_user_id(), password):
+            raise ValueError("password_incorrect")
+
+    def link_oauth_provider(self, provider: str, current_password: str) -> int:
+        self._verify_current_user_password(current_password)
+        identity = self.oauth.authenticate(provider)
+        return self.auth.link_oauth_identity(
+            self._require_user_id(),
+            identity.provider,
+            identity.subject,
+            identity.email,
+            identity.display_name,
+        )
+
+    def list_oauth_identities(self) -> list[dict]:
+        return self.db.list_oauth_identities(self._require_user_id())
+
+    def unlink_oauth_identity(self, identity_id: int, current_password: str) -> None:
+        self._verify_current_user_password(current_password)
+        self.auth.unlink_oauth_identity(self._require_user_id(), identity_id)
 
     def _validate_report_type(self, report_type: str) -> str:
         if report_type not in {"weekly", "monthly"}:

@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2026-05-02
+
+### Added
+
+- Added an AI Chat dialog with bounded multi-turn conversation history, day/week/month WorkLogger context, and privacy controls for notes, calendar titles, and quick-log details.
+- Added an AI context service that builds compact Markdown context through AppServices while preserving per-user data isolation.
+- Added optional Google and Microsoft OAuth/OIDC sign-in using system-browser Authorization Code Flow with PKCE and localhost callback handling.
+- Added OAuth identity linking/unlinking in Settings -> Account, backed by a new `oauth_identities` table keyed by `(provider, subject)`.
+- Added AI privacy policy settings for local-only, remote-allowed, or disabled AI behavior.
+
+### Changed
+
+- Updated AI-assisted report generation to use privacy-aware WorkLogger context when generating new report content.
+- Existing AI assist entry points now respect the AI privacy mode before using remote providers.
+- Updated application and bundle metadata to version 3.2.0.
+
+### Security
+
+- OAuth access, refresh, ID tokens, authorization codes, and PKCE verifiers are not stored in SQLite and are not logged.
+- OAuth-created users are normal non-admin users, and existing username/password and remember-token login flows remain available.
+
 ## [3.1.0] - 2026-05-01
 
 ### Added

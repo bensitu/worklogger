@@ -360,7 +360,7 @@ msgid "Download Local Model"
 msgstr "下載本地模型"
 
 msgid "Downloaded"
-msgstr "Downloaded"
+msgstr "已下載"
 
 msgid "Downloading local model..."
 msgstr "正在下載本地模型..."
@@ -637,7 +637,7 @@ msgid "March"
 msgstr "3月"
 
 msgid "Markdown (*.md)"
-msgstr "Markdown (*.md)"
+msgstr "Markdown 檔案 (*.md)"
 
 msgid "May"
 msgstr "5月"
@@ -838,7 +838,7 @@ msgid "Password changed successfully. A new recovery key was generated. Copy and
 msgstr "密碼已修改。已產生新的恢復密鑰。請立即複製並保存；舊恢復密鑰將不再可用。"
 
 msgid "Password must be at least 8 characters."
-msgstr "Password must be at least 8 characters."
+msgstr "密碼至少需要 8 個字元。"
 
 msgid "Password reset successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
 msgstr "密碼已重設。已產生新的恢復密鑰。請立即複製並保存；舊恢復密鑰將不再可用。"
@@ -1391,11 +1391,160 @@ msgid "📋 Templates"
 msgstr "📋 模板"
 
 msgid "HEX"
-msgstr "HEX"
+msgstr "十六進位"
 
 msgid "  {size} MB  ·  RAM ≥ {ram} GB"
-msgstr "  {size} MB  ·  RAM ≥ {ram} GB"
+msgstr "  {size} MB  ·  記憶體 ≥ {ram} GB"
 
 msgid "✓  Ready"
 msgstr "✓  已就緒"
 
+msgid "AI Chat"
+msgstr "AI 聊天"
+
+msgid "AI Privacy"
+msgstr "AI 隱私"
+
+msgid "AI disabled"
+msgstr "AI 已停用"
+
+msgid "AI is disabled by policy."
+msgstr "AI 已被策略停用。"
+
+msgid "AI mode"
+msgstr "AI 模式"
+
+msgid "Ask about the selected work context..."
+msgstr "詢問所選工作內容..."
+
+msgid "Assistant"
+msgstr "助理"
+
+msgid "Building context..."
+msgstr "正在建立內容..."
+
+msgid "Cancel request"
+msgstr "取消請求"
+
+msgid "Cannot unlink the only login method."
+msgstr "無法解除唯一登入方式的連結。"
+
+msgid "Clear conversation"
+msgstr "清除對話"
+
+msgid "Context"
+msgstr "內容"
+
+msgid "Conversation cleared."
+msgstr "對話已清除。"
+
+msgid "Could not complete sign-in."
+msgstr "無法完成登入。"
+
+msgid "Current day"
+msgstr "當天"
+
+msgid "Current month"
+msgstr "本月"
+
+msgid "Current week"
+msgstr "本週"
+
+msgid "Error: {}"
+msgstr "錯誤：{}"
+
+msgid "Include calendar events"
+msgstr "包含行事曆事件"
+
+msgid "Include calendar titles"
+msgstr "包含行事曆標題"
+
+msgid "Include calendar titles by default"
+msgstr "預設包含行事曆標題"
+
+msgid "Include notes"
+msgstr "包含備註"
+
+msgid "Include notes by default"
+msgstr "預設包含備註"
+
+msgid "Include quick log details"
+msgstr "包含快速記錄詳細資料"
+
+msgid "Include quick log details by default"
+msgstr "預設包含快速記錄詳細資料"
+
+msgid "Link Google"
+msgstr "連結 Google"
+
+msgid "Link Microsoft"
+msgstr "連結 Microsoft"
+
+msgid "Linked account removed."
+msgstr "已移除連結帳號。"
+
+msgid "Linked accounts"
+msgstr "連結帳號"
+
+msgid "Local AI only"
+msgstr "僅本機 AI"
+
+msgid "Local model is not available. Enable or download a local model in Settings -> AI."
+msgstr "本機模型無法使用。請在「設定 -> AI」啟用或下載本機模型。"
+
+msgid "No linked accounts."
+msgstr "沒有連結帳號。"
+
+msgid "OAuth provider is not configured."
+msgstr "尚未設定 OAuth 提供者。"
+
+msgid "Opening browser..."
+msgstr "正在開啟瀏覽器..."
+
+msgid "Please configure an AI provider in Settings -> AI."
+msgstr "請在「設定 -> AI」設定 AI 提供者。"
+
+msgid "Remote AI allowed"
+msgstr "允許遠端 AI"
+
+msgid "Send"
+msgstr "傳送"
+
+msgid "Sending request..."
+msgstr "正在傳送請求..."
+
+msgid "Sign in with Google"
+msgstr "使用 Google 登入"
+
+msgid "Sign in with Microsoft"
+msgstr "使用 Microsoft 登入"
+
+msgid "Sign-in canceled."
+msgstr "登入已取消。"
+
+msgid "Sign-in completed."
+msgstr "登入已完成。"
+
+msgid "Title hidden"
+msgstr "標題已隱藏"
+
+msgid "Unlink"
+msgstr "解除連結"
+
+msgid "You"
+msgstr "你"
+
+msgid "all day"
+msgstr "全天"
+
+msgid "No response."
+msgstr "沒有回應。"
+
+msgid "Request canceled."
+msgstr "請求已取消。"
+
+msgid "Enter your current password to continue."
+msgstr "請輸入目前密碼以繼續。"
+
+msgid "Password is incorrect."
+msgstr "密碼不正確。"
