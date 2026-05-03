@@ -48,6 +48,8 @@ worklog.db
 worklogger.log
 *.db
 *.bak_*
+worklogger/config/identity.local.json
+worklogger/config/identity.*.local.json
 worklogger/templates/custom/*.json
 !worklogger/templates/custom/Sample_1000000000000.json
 dist/templates/custom/*.json
