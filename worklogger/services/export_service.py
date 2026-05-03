@@ -221,6 +221,7 @@ def render_pdf(
     data: list,
     detail_fn,
     ctx: "PdfContext",
+    ai_narrative: str | None = None,
 ) -> None:
     """Render a full PDF report for the given analytics tab.
 
@@ -233,7 +234,7 @@ def render_pdf(
     from PySide6.QtPrintSupport import QPrinter
     from PySide6.QtCore import QMarginsF, QRectF
     from PySide6.QtGui import (QPainter, QPageLayout, QPageSize,
-                               QFont, QColor, QPen)
+                               QFont, QColor, QPen, QBrush, QTextDocument)
     from PySide6.QtCore import Qt
     from utils.i18n import _
 
@@ -290,6 +291,46 @@ def render_pdf(
     painter.drawPixmap(QRectF(cx, cursor_y, tw, th_img), scaled,
                        QRectF(scaled.rect()))
     cursor_y += th_img + pt(8)
+
+    narrative = str(ai_narrative or "").strip()
+    if narrative:
+        doc = QTextDocument()
+        body_font = QFont("sans-serif")
+        body_font.setPixelSize(pt(9))
+        doc.setDefaultFont(body_font)
+        doc.setPlainText(narrative)
+        doc.setTextWidth(pw * 0.86)
+        content_h = int(doc.size().height())
+        box_h = min(content_h + pt(34), ph - cursor_y - pt(54))
+        if box_h < pt(72):
+            printer.newPage()
+            painter.fillRect(QRectF(0, 0, pw, ph), QColor(colors.page_bg))
+            cursor_y = pt(20)
+            box_h = min(content_h + pt(34), ph - cursor_y - pt(54))
+        x = int(pw * 0.05)
+        w = int(pw * 0.90)
+        painter.setPen(QPen(QColor(colors.separator), pt(1)))
+        painter.setBrush(QBrush(QColor(colors.panel_bg)))
+        painter.drawRoundedRect(QRectF(x, cursor_y, w, box_h), pt(5), pt(5))
+        title_font = QFont("sans-serif")
+        title_font.setPixelSize(pt(10))
+        title_font.setBold(True)
+        painter.setFont(title_font)
+        painter.setPen(QColor(colors.text))
+        painter.drawText(
+            QRectF(x + pt(10), cursor_y + pt(8), w - pt(20), pt(14)),
+            Qt.AlignLeft | Qt.AlignVCenter,
+            _("AI Summary"),
+        )
+        painter.save()
+        painter.translate(x + pt(10), cursor_y + pt(26))
+        painter.setPen(QColor(colors.text))
+        doc.drawContents(
+            painter,
+            QRectF(0, 0, w - pt(20), max(0, box_h - pt(32))),
+        )
+        painter.restore()
+        cursor_y += box_h + pt(10)
 
     painter.setPen(QPen(QColor(colors.separator), pt(1)))
     painter.drawLine(int(pw*0.03), cursor_y, int(pw*0.97), cursor_y)

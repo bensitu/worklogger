@@ -360,7 +360,7 @@ msgid "Download Local Model"
 msgstr "下载本地模型"
 
 msgid "Downloaded"
-msgstr "Downloaded"
+msgstr "已下载"
 
 msgid "Downloading local model..."
 msgstr "正在下载本地模型..."
@@ -459,7 +459,7 @@ msgid "HH:MM"
 msgstr "HH:MM"
 
 msgid "Hint / extra instructions (optional)"
-msgstr "补充说明（可选）"
+msgstr "AI辅助补充说明（可选）"
 
 msgid "https://api.openai.com/v1 | https://api.anthropic.com"
 msgstr "https://api.openai.com/v1 | https://api.anthropic.com"
@@ -637,7 +637,7 @@ msgid "March"
 msgstr "三月"
 
 msgid "Markdown (*.md)"
-msgstr "Markdown (*.md)"
+msgstr "Markdown 文件 (*.md)"
 
 msgid "May"
 msgstr "五月"
@@ -838,7 +838,7 @@ msgid "Password changed successfully. A new recovery key was generated. Copy and
 msgstr "密码已修改。已生成新的恢复密钥。请立即复制并保存；旧恢复密钥将不再可用。"
 
 msgid "Password must be at least 8 characters."
-msgstr "Password must be at least 8 characters."
+msgstr "密码必须至少包含 8 个字符。"
 
 msgid "Password reset successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
 msgstr "密码已重置。已生成新的恢复密钥。请立即复制并保存；旧恢复密钥将不再可用。"
@@ -1391,11 +1391,229 @@ msgid "📋 Templates"
 msgstr "📋 模板"
 
 msgid "HEX"
-msgstr "HEX"
+msgstr "十六进制"
 
 msgid "  {size} MB  ·  RAM ≥ {ram} GB"
-msgstr "  {size} MB  ·  RAM ≥ {ram} GB"
+msgstr "  {size} MB  ·  内存 ≥ {ram} GB"
 
 msgid "✓  Ready"
 msgstr "✓  已就绪"
 
+msgid "AI Chat"
+msgstr "AI 聊天"
+
+msgid "AI Privacy"
+msgstr "AI 隐私"
+
+msgid "AI disabled"
+msgstr "AI 已禁用"
+
+msgid "AI is disabled by policy."
+msgstr "AI 已被策略禁用。"
+
+msgid "AI mode"
+msgstr "AI 模式"
+
+msgid "Ask about the selected work context..."
+msgstr "询问所选工作上下文..."
+
+msgid "Assistant"
+msgstr "助手"
+
+msgid "Building context..."
+msgstr "正在构建上下文..."
+
+msgid "Cancel request"
+msgstr "取消请求"
+
+msgid "Cannot unlink the only login method."
+msgstr "不能解除唯一的登录方式绑定。"
+
+msgid "Clear conversation"
+msgstr "清空对话"
+
+msgid "Context"
+msgstr "上下文"
+
+msgid "Conversation cleared."
+msgstr "对话已清空。"
+
+msgid "Could not complete sign-in."
+msgstr "无法完成登录。"
+
+msgid "Current day"
+msgstr "当天"
+
+msgid "Current month"
+msgstr "本月"
+
+msgid "Current week"
+msgstr "本周"
+
+msgid "Error: {}"
+msgstr "错误：{}"
+
+msgid "Include calendar events"
+msgstr "包含日历事件"
+
+msgid "Include calendar titles"
+msgstr "包含日历标题"
+
+msgid "Include calendar titles by default"
+msgstr "默认包含日历标题"
+
+msgid "Include notes"
+msgstr "包含备注"
+
+msgid "Include notes by default"
+msgstr "默认包含备注"
+
+msgid "Include quick log details"
+msgstr "包含快速日志详情"
+
+msgid "Include quick log details by default"
+msgstr "默认包含快速日志详情"
+
+msgid "Link Google"
+msgstr "绑定 Google"
+
+msgid "Link Microsoft"
+msgstr "绑定 Microsoft"
+
+msgid "Linked account removed."
+msgstr "已移除绑定账号。"
+
+msgid "Linked accounts"
+msgstr "绑定账号"
+
+msgid "Local AI only"
+msgstr "仅本地 AI"
+
+msgid "Local model is not available. Enable or download a local model in Settings -> AI."
+msgstr "本地模型不可用。请在“设置 -> AI”中启用或下载本地模型。"
+
+msgid "No linked accounts."
+msgstr "没有绑定账号。"
+
+msgid "OAuth provider is not configured."
+msgstr "OAuth 提供商未配置。"
+
+msgid "Opening browser..."
+msgstr "正在打开浏览器..."
+
+msgid "Please configure an AI provider in Settings -> AI."
+msgstr "请在“设置 -> AI”中配置 AI 提供商。"
+
+msgid "Remote AI allowed"
+msgstr "允许远程 AI"
+
+msgid "Send"
+msgstr "发送"
+
+msgid "Sending request..."
+msgstr "正在发送请求..."
+
+msgid "Sign in with Google"
+msgstr "使用 Google 登录"
+
+msgid "Sign in with Microsoft"
+msgstr "使用 Microsoft 登录"
+
+msgid "Sign-in canceled."
+msgstr "登录已取消。"
+
+msgid "Sign-in completed."
+msgstr "登录已完成。"
+
+msgid "Title hidden"
+msgstr "标题已隐藏"
+
+msgid "Unlink"
+msgstr "解除绑定"
+
+msgid "You"
+msgstr "你"
+
+msgid "all day"
+msgstr "全天"
+
+msgid "No response."
+msgstr "没有响应。"
+
+msgid "Request canceled."
+msgstr "请求已取消。"
+
+msgid "Enter your current password to continue."
+msgstr "请输入当前密码以继续。"
+
+msgid "Password is incorrect."
+msgstr "密码不正确。"
+
+msgid "AI Assist"
+msgstr "AI Assist"
+
+msgid "AI Summary"
+msgstr "AI 摘要"
+
+msgid "Analytics AI PDF"
+msgstr "分析 AI PDF"
+
+msgid "Apply to Notes"
+msgstr "应用到备注"
+
+msgid "Apply to Report"
+msgstr "应用到报告"
+
+msgid "Clear this conversation?"
+msgstr "要清空此对话吗？"
+
+msgid "Ctrl+Enter to send"
+msgstr "按 Ctrl+Enter 发送"
+
+msgid "Daily Notes"
+msgstr "生成每日备注"
+
+msgid "Error: {detail}"
+msgstr "错误：{detail}"
+
+msgid "Follow up on this result..."
+msgstr "继续追问或要求修改此结果..."
+
+msgid "Google sign-in is not configured."
+msgstr "尚未配置 Google 登录。"
+
+msgid "Include calendar event titles"
+msgstr "包含日历事件标题"
+
+msgid "Runtime: External API"
+msgstr "运行方式：外部 API"
+
+msgid "Runtime: Local model"
+msgstr "运行方式：本地模型"
+
+msgid "Selected context may be sent to the configured external AI provider."
+msgstr "所选上下文可能会发送到已配置的外部 AI 提供商。"
+
+msgid "Use for PDF"
+msgstr "用于 PDF"
+
+msgid "✨ AI Assist - {}"
+msgstr "✨ AI 助手 - {}"
+
+msgid "✨ AI PDF"
+msgstr "✨ AI PDF"
+
+msgid "Extra instructions:"
+msgstr "补充说明："
+
+msgid "Request: {period}"
+msgstr "请求：{period}"
+
+msgid "Source: existing draft and selected WorkLogger context"
+msgstr "来源：现有草稿和已选择的选项的上下文"
+
+msgid "Source: selected WorkLogger context"
+msgstr "来源：已选择的选项的上下文"
+
+msgid "Details: {detail}"
+msgstr "详细信息：{detail}"

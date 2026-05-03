@@ -360,7 +360,7 @@ msgid "Download Local Model"
 msgstr "ローカルモデルをダウンロード"
 
 msgid "Downloaded"
-msgstr "Downloaded"
+msgstr "ダウンロード済み"
 
 msgid "Downloading local model..."
 msgstr "ローカルモデルをダウンロード中..."
@@ -459,7 +459,7 @@ msgid "HH:MM"
 msgstr "HH:MM"
 
 msgid "Hint / extra instructions (optional)"
-msgstr "補足・追加指示（任意）"
+msgstr "AIアシスト補足・追加指示（任意）"
 
 msgid "https://api.openai.com/v1 | https://api.anthropic.com"
 msgstr "gpt-4o-mini | claude-haiku-4-5-20251001"
@@ -637,7 +637,7 @@ msgid "March"
 msgstr "3月"
 
 msgid "Markdown (*.md)"
-msgstr "Markdown (*.md)"
+msgstr "Markdownファイル (*.md)"
 
 msgid "May"
 msgstr "5月"
@@ -838,7 +838,7 @@ msgid "Password changed successfully. A new recovery key was generated. Copy and
 msgstr "パスワードを変更しました。新しいリカバリーキーが生成されました。今すぐコピーして保存してください。古いリカバリーキーは使用できません。"
 
 msgid "Password must be at least 8 characters."
-msgstr "Password must be at least 8 characters."
+msgstr "パスワードは8文字以上にしてください。"
 
 msgid "Password reset successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
 msgstr "パスワードをリセットしました。新しいリカバリーキーが生成されました。今すぐコピーして保存してください。古いリカバリーキーは使用できません。"
@@ -1391,11 +1391,229 @@ msgid "📋 Templates"
 msgstr "📋 テンプレート"
 
 msgid "HEX"
-msgstr "HEX"
+msgstr "16進"
 
 msgid "  {size} MB  ·  RAM ≥ {ram} GB"
-msgstr "  {size} MB  ·  RAM {ram} GB以上"
+msgstr "  {size} MB  ·  RAM ≥ {ram} GB"
 
 msgid "✓  Ready"
 msgstr "✓  準備完了"
 
+msgid "AI Chat"
+msgstr "AIチャット"
+
+msgid "AI Privacy"
+msgstr "AIプライバシー"
+
+msgid "AI disabled"
+msgstr "AIは無効です"
+
+msgid "AI is disabled by policy."
+msgstr "ポリシーによりAIは無効です。"
+
+msgid "AI mode"
+msgstr "AIモード"
+
+msgid "Ask about the selected work context..."
+msgstr "選択した作業コンテキストについて質問..."
+
+msgid "Assistant"
+msgstr "アシスタント"
+
+msgid "Building context..."
+msgstr "コンテキストを作成中..."
+
+msgid "Cancel request"
+msgstr "リクエストをキャンセル"
+
+msgid "Cannot unlink the only login method."
+msgstr "唯一のログイン方法は連携解除できません。"
+
+msgid "Clear conversation"
+msgstr "会話を消去"
+
+msgid "Context"
+msgstr "コンテキスト"
+
+msgid "Conversation cleared."
+msgstr "会話を消去しました。"
+
+msgid "Could not complete sign-in."
+msgstr "サインインを完了できませんでした。"
+
+msgid "Current day"
+msgstr "当日"
+
+msgid "Current month"
+msgstr "今月"
+
+msgid "Current week"
+msgstr "今週"
+
+msgid "Error: {}"
+msgstr "エラー: {}"
+
+msgid "Include calendar events"
+msgstr "カレンダー予定を含める"
+
+msgid "Include calendar titles"
+msgstr "カレンダー件名を含める"
+
+msgid "Include calendar titles by default"
+msgstr "既定でカレンダー件名を含める"
+
+msgid "Include notes"
+msgstr "メモを含める"
+
+msgid "Include notes by default"
+msgstr "既定でメモを含める"
+
+msgid "Include quick log details"
+msgstr "クイックログ詳細を含める"
+
+msgid "Include quick log details by default"
+msgstr "既定でクイックログ詳細を含める"
+
+msgid "Link Google"
+msgstr "Googleを連携"
+
+msgid "Link Microsoft"
+msgstr "Microsoftを連携"
+
+msgid "Linked account removed."
+msgstr "連携アカウントを削除しました。"
+
+msgid "Linked accounts"
+msgstr "連携アカウント"
+
+msgid "Local AI only"
+msgstr "ローカルAIのみ"
+
+msgid "Local model is not available. Enable or download a local model in Settings -> AI."
+msgstr "ローカルモデルを使用できません。「設定 -> AI」でローカルモデルを有効化またはダウンロードしてください。"
+
+msgid "No linked accounts."
+msgstr "連携アカウントはありません。"
+
+msgid "OAuth provider is not configured."
+msgstr "OAuthプロバイダーが設定されていません。"
+
+msgid "Opening browser..."
+msgstr "ブラウザーを開いています..."
+
+msgid "Please configure an AI provider in Settings -> AI."
+msgstr "「設定 -> AI」でAIプロバイダーを設定してください。"
+
+msgid "Remote AI allowed"
+msgstr "リモートAIを許可"
+
+msgid "Send"
+msgstr "送信"
+
+msgid "Sending request..."
+msgstr "リクエストを送信中..."
+
+msgid "Sign in with Google"
+msgstr "Googleでサインイン"
+
+msgid "Sign in with Microsoft"
+msgstr "Microsoftでサインイン"
+
+msgid "Sign-in canceled."
+msgstr "サインインをキャンセルしました。"
+
+msgid "Sign-in completed."
+msgstr "サインインが完了しました。"
+
+msgid "Title hidden"
+msgstr "件名は非表示です"
+
+msgid "Unlink"
+msgstr "連携解除"
+
+msgid "You"
+msgstr "あなた"
+
+msgid "all day"
+msgstr "終日"
+
+msgid "No response."
+msgstr "応答がありません。"
+
+msgid "Request canceled."
+msgstr "リクエストをキャンセルしました。"
+
+msgid "Enter your current password to continue."
+msgstr "続行するには現在のパスワードを入力してください。"
+
+msgid "Password is incorrect."
+msgstr "パスワードが正しくありません。"
+
+msgid "AI Assist"
+msgstr "AI Assist"
+
+msgid "AI Summary"
+msgstr "AI 要約"
+
+msgid "Analytics AI PDF"
+msgstr "分析 AI PDF"
+
+msgid "Apply to Notes"
+msgstr "メモに適用"
+
+msgid "Apply to Report"
+msgstr "レポートに適用"
+
+msgid "Clear this conversation?"
+msgstr "この会話をクリアしますか？"
+
+msgid "Ctrl+Enter to send"
+msgstr "Ctrl+Enter で送信"
+
+msgid "Daily Notes"
+msgstr "日次メモ作成"
+
+msgid "Error: {detail}"
+msgstr "エラー：{detail}"
+
+msgid "Follow up on this result..."
+msgstr "この結果について追加依頼する..."
+
+msgid "Google sign-in is not configured."
+msgstr "Google ログインが設定されていません。"
+
+msgid "Include calendar event titles"
+msgstr "カレンダー予定のタイトルを含める"
+
+msgid "Runtime: External API"
+msgstr "実行方法：外部 API"
+
+msgid "Runtime: Local model"
+msgstr "実行方法：ローカルモデル"
+
+msgid "Selected context may be sent to the configured external AI provider."
+msgstr "選択したコンテキストは、設定済みの外部 AI プロバイダーへ送信される場合があります。"
+
+msgid "Use for PDF"
+msgstr "PDF に使用"
+
+msgid "✨ AI Assist - {}"
+msgstr "✨ AI アシスト - {}"
+
+msgid "✨ AI PDF"
+msgstr "✨ AI PDF"
+
+msgid "Extra instructions:"
+msgstr "補足指示："
+
+msgid "Request: {period}"
+msgstr "依頼：{period}"
+
+msgid "Source: existing draft and selected WorkLogger context"
+msgstr "参照元：既存の下書きおよび選定された選択肢コンテキスト"
+
+msgid "Source: selected WorkLogger context"
+msgstr "参照元：選定された選択肢コンテキスト"
+
+msgid "Details: {detail}"
+msgstr "詳細：{detail}"

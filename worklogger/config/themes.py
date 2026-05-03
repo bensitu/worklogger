@@ -536,6 +536,8 @@ QDialogButtonBox QPushButton{{min-width:72px;}}
 QDialogButtonBox QPushButton:disabled{{color:{dis_txt};}}
 QProgressBar{{text-align:center;color:{txt};}}
 QProgressBar::chunk{{background:{acc};border-radius:3px;}}
+QRadioButton{{border-radius:8px;padding:2px 7px;}}
+
 """
 
 def progress_bar_qss(accent: str, dark: bool = False) -> str:

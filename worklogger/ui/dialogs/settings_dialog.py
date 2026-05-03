@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QHBoxLayout, QFormLayout, QTabWidget,
     QPushButton, QLabel, QLineEdit, QTextEdit, QScrollArea, QMessageBox,
     QDoubleSpinBox, QGroupBox, QDialogButtonBox, QComboBox, QProgressBar,
+    QInputDialog,
 )
 from PySide6.QtCore import Qt, QTimer, QSize
 from PySide6.QtCore import QObject, Signal
@@ -49,6 +50,17 @@ from .user_management_dialog import UserManagementDialog
 ThemeColors = tuple[str, str, str, str, str]
 ThemePalette = dict[bool, ThemeColors]
 ThemeMap = dict[str, ThemePalette]
+
+
+def _identity_error_message(error: str) -> str:
+    if error in {"identity_provider_not_configured", "identity_provider_unavailable"}:
+        return _("Google sign-in is not configured.")
+    if error == "identity_callback_timeout":
+        return _("Sign-in canceled.")
+    base = _("Could not complete sign-in.")
+    if error:
+        return base + "\n" + _("Details: {detail}").format(detail=error)
+    return base
 
 
 def _palette_icon() -> QIcon:
@@ -997,6 +1009,26 @@ class SettingsDialog(QDialog):
         self._password_reminder_lbl.setObjectName("muted")
         account_v.addWidget(self._password_reminder_lbl)
         self._refresh_password_reminder()
+        linked_grp = QGroupBox(_("Linked accounts"))
+        linked_v = QVBoxLayout(linked_grp)
+        linked_v.setSpacing(6)
+        self._linked_accounts_v = linked_v
+        self._linked_account_widgets: list[QWidget] = []
+        self._linked_accounts_status = QLabel("")
+        self._linked_accounts_status.setObjectName("muted")
+        linked_v.addWidget(self._linked_accounts_status)
+        link_row = QHBoxLayout()
+        self._link_google_btn = QPushButton(_("Link Google"))
+        self._link_microsoft_btn = QPushButton(_("Link Microsoft"))
+        self._link_google_btn.clicked.connect(lambda: self._link_identity("google"))
+        self._link_microsoft_btn.clicked.connect(lambda: self._link_identity("microsoft"))
+        link_row.addWidget(self._link_google_btn)
+        link_row.addWidget(self._link_microsoft_btn)
+        self._link_microsoft_btn.setVisible(False)
+        link_row.addStretch()
+        linked_v.addLayout(link_row)
+        account_v.addWidget(linked_grp)
+        self._refresh_identity_accounts()
         change_password_btn = QPushButton(_("Change Password"))
         logout_btn = QPushButton(_("Log out"))
         change_password_btn.clicked.connect(self._open_change_password_dialog)
@@ -1161,6 +1193,114 @@ class SettingsDialog(QDialog):
             dark=self._app.dark,
             parent=self,
         ).exec()
+
+    def _refresh_identity_accounts(self) -> None:
+        for widget in self._linked_account_widgets:
+            self._linked_accounts_v.removeWidget(widget)
+            widget.deleteLater()
+        self._linked_account_widgets.clear()
+        for button, provider in (
+            (self._link_google_btn, "google"),
+            (self._link_microsoft_btn, "microsoft"),
+        ):
+            configured = False
+            try:
+                configured = self._app.services.identity_provider_available(provider)
+            except Exception:
+                configured = False
+            button.setEnabled(configured)
+            button.setToolTip("" if configured else _("Google sign-in is not configured."))
+        try:
+            identities = self._app.services.list_linked_identities()
+        except Exception:
+            identities = []
+        if not identities:
+            label = QLabel(_("No linked accounts."))
+            label.setObjectName("muted")
+            self._linked_accounts_v.insertWidget(1, label)
+            self._linked_account_widgets.append(label)
+            return
+        for identity in identities:
+            row = QWidget()
+            row_l = QHBoxLayout(row)
+            row_l.setContentsMargins(0, 0, 0, 0)
+            provider = str(identity.get("provider", "")).title()
+            email = identity.get("email") or identity.get("display_name") or ""
+            row_l.addWidget(QLabel(f"{provider}: {email}"), 1)
+            unlink_btn = QPushButton(_("Unlink"))
+            unlink_btn.clicked.connect(
+                lambda _checked=False, iid=int(identity["id"]): self._unlink_identity(iid)
+            )
+            row_l.addWidget(unlink_btn)
+            self._linked_accounts_v.insertWidget(
+                1 + len(self._linked_account_widgets),
+                row,
+            )
+            self._linked_account_widgets.append(row)
+
+    def _link_identity(self, provider: str) -> None:
+        if not self._app.services.identity_provider_available(provider):
+            QMessageBox.warning(
+                self,
+                _("Linked accounts"),
+                _("Google sign-in is not configured."),
+            )
+            return
+        password = self._confirm_current_password()
+        if password is None:
+            return
+        self._linked_accounts_status.setText(_("Opening browser..."))
+        try:
+            self._app.services.link_identity_provider(provider, password)
+        except ValueError as exc:
+            text = (
+                _("Password is incorrect.")
+                if str(exc) == "password_incorrect"
+                else str(exc)
+            )
+            self._linked_accounts_status.setText("")
+            QMessageBox.warning(self, _("Linked accounts"), text)
+            return
+        except Exception as exc:
+            text = _identity_error_message(str(exc))
+            self._linked_accounts_status.setText(text)
+            QMessageBox.warning(
+                self,
+                _("Linked accounts"),
+                text,
+            )
+            return
+        self._linked_accounts_status.setText(_("Sign-in completed."))
+        self._refresh_identity_accounts()
+
+    def _unlink_identity(self, identity_id: int) -> None:
+        password = self._confirm_current_password()
+        if password is None:
+            return
+        try:
+            self._app.services.unlink_identity(identity_id, password)
+        except ValueError as exc:
+            if str(exc) == "cannot_unlink_only_login_method":
+                text = _("Cannot unlink the only login method.")
+            elif str(exc) == "password_incorrect":
+                text = _("Password is incorrect.")
+            else:
+                text = str(exc)
+            QMessageBox.warning(self, _("Linked accounts"), text)
+            return
+        self._linked_accounts_status.setText(_("Linked account removed."))
+        self._refresh_identity_accounts()
+
+    def _confirm_current_password(self) -> str | None:
+        password, ok = QInputDialog.getText(
+            self,
+            _("Linked accounts"),
+            _("Enter your current password to continue."),
+            QLineEdit.EchoMode.Password,
+        )
+        if not ok:
+            return None
+        return password
 
     def _show_feature_intro(self):
         dlg = QDialog(self)

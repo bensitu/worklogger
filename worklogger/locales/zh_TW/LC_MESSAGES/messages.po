@@ -357,19 +357,19 @@ msgid "Download .md"
 msgstr "下載 .md"
 
 msgid "Download Local Model"
-msgstr "下載本地模型"
+msgstr "下載本機模型"
 
 msgid "Downloaded"
-msgstr "Downloaded"
+msgstr "已下載"
 
 msgid "Downloading local model..."
-msgstr "正在下載本地模型..."
+msgstr "正在下載本機模型..."
 
 msgid "Downloading…  You may cancel at any time; the download will resume from where it left off."
 msgstr "下載中… 可隨時取消；下次會從中斷位置續傳。"
 
 msgid "Enable local model"
-msgstr "啟用本地模型"
+msgstr "啟用本機模型"
 
 msgid "Enable menu bar icon"
 msgstr "啟用選單列常駐"
@@ -441,7 +441,7 @@ msgid "Generated At"
 msgstr "產生日期"
 
 msgid "Generating with local model..."
-msgstr "正在使用本地模型生成..."
+msgstr "正在使用本機模型生成..."
 
 msgid "GitHub"
 msgstr "GitHub"
@@ -459,7 +459,7 @@ msgid "HH:MM"
 msgstr "HH:MM"
 
 msgid "Hint / extra instructions (optional)"
-msgstr "補充說明（可選）"
+msgstr "AI輔助補充說明（可選）"
 
 msgid "https://api.openai.com/v1 | https://api.anthropic.com"
 msgstr "gpt-4o-mini | claude-haiku-4-5-20251001"
@@ -513,7 +513,7 @@ msgid "Insert Quick Log"
 msgstr "插入快速記錄"
 
 msgid "Installing local model dependencies..."
-msgstr "正在安裝本地模型相依套件..."
+msgstr "正在安裝本機模型相依套件..."
 
 msgid "Integrity check failed — file may be corrupted"
 msgstr "完整性校驗失敗 — 檔案可能已損毀"
@@ -567,53 +567,53 @@ msgid "Loading latest model catalog..."
 msgstr "正在載入最新模型清單..."
 
 msgid "Loading local model..."
-msgstr "正在載入本地模型..."
+msgstr "正在載入本機模型..."
 
 msgid "Local Model"
-msgstr "本地模型"
+msgstr "本機模型"
 
 msgid "Local model"
-msgstr "本地模型"
+msgstr "本機模型"
 
 msgid ""
 "Local model failed and no external API key / URL / model name is configured.\n"
 "Please configure an external model in Settings → AI."
 msgstr ""
-"本地模型失敗，且未設定外部 API Key / URL / 模型名稱。\n"
+"本機模型失敗，且未設定外部 API Key / URL / 模型名稱。\n"
 "請到 設定 → AI 設定外部模型。"
 
 msgid "Local model failed and no external API key / URL / model name is configured. Please configure an external model in Settings → AI."
-msgstr "本地模型失败，且未配置外部 API Key / URL / 模型名称。请在设置 → AI 中配置外部模型。"
+msgstr "本地模型失敗，且未設定外部 API Key / URL / 模型名稱。請到 設定 → AI 設定外部模型。"
 
 msgid "Local model failed to load"
-msgstr "本地模型載入失敗"
+msgstr "本機模型載入失敗"
 
 msgid "Local model is disabled."
-msgstr "本地模型已停用。"
+msgstr "本機模型已停用。"
 
 msgid "Local model is inactive"
-msgstr "本地模型處於未啟用狀態。"
+msgstr "本機模型處於未啟用狀態。"
 
 msgid "Local model loaded."
-msgstr "本地模型已載入。"
+msgstr "本機模型已載入。"
 
 msgid "Local model not downloaded - go to Settings -> AI"
-msgstr "本地模型尚未下載 - 請前往 設定 -> AI"
+msgstr "本機模型尚未下載 - 請前往 設定 -> AI"
 
 msgid "Local model unavailable - using external model instead"
-msgstr "本地模型不可用，改用外部模型"
+msgstr "本機模型不可用，改用外部模型"
 
 msgid "Local model unavailable - using external model instead."
-msgstr "本地模型不可用，改用外部模型。"
+msgstr "本機模型不可用，改用外部模型。"
 
 msgid "Local model verification failed. Please re-download or switch model."
-msgstr "本地模型驗證失敗。請重新下載或切換模型。"
+msgstr "本機模型驗證失敗。請重新下載或切換模型。"
 
 msgid "Local model verification timed out."
-msgstr "本地模型驗證逾時。"
+msgstr "本機模型驗證逾時。"
 
 msgid "Local model verification was cancelled."
-msgstr "本地模型驗證已取消。"
+msgstr "本機模型驗證已取消。"
 
 msgid "Log out"
 msgstr "登出"
@@ -637,7 +637,7 @@ msgid "March"
 msgstr "3月"
 
 msgid "Markdown (*.md)"
-msgstr "Markdown (*.md)"
+msgstr "Markdown 檔案 (*.md)"
 
 msgid "May"
 msgstr "5月"
@@ -838,7 +838,7 @@ msgid "Password changed successfully. A new recovery key was generated. Copy and
 msgstr "密碼已修改。已產生新的恢復密鑰。請立即複製並保存；舊恢復密鑰將不再可用。"
 
 msgid "Password must be at least 8 characters."
-msgstr "Password must be at least 8 characters."
+msgstr "密碼至少需要 8 個字元。"
 
 msgid "Password reset successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
 msgstr "密碼已重設。已產生新的恢復密鑰。請立即複製並保存；舊恢復密鑰將不再可用。"
@@ -853,7 +853,7 @@ msgid "Period"
 msgstr "週期"
 
 msgid "Permission denied while verifying local model file."
-msgstr "驗證本地模型檔案時權限遭拒。"
+msgstr "驗證本機模型檔案時權限遭拒。"
 
 msgid "Please confirm that you have saved the recovery key."
 msgstr "請確認你已保存恢復密鑰。"
@@ -1207,7 +1207,7 @@ msgid "Username or password is incorrect."
 msgstr "使用者名稱或密碼不正確。"
 
 msgid "Verifying local model file..."
-msgstr "正在驗證本地模型檔案..."
+msgstr "正在驗證本機模型檔案..."
 
 msgid "Version"
 msgstr "版本"
@@ -1234,10 +1234,10 @@ msgid "What are you doing?"
 msgstr "正在做什麼？"
 
 msgid "When enabled, text processing uses the local model first - no data is sent to external services."
-msgstr "啟用後，文字處理會優先使用本地模型，不會將資料傳送到外部服務。"
+msgstr "啟用後，文字處理會優先使用本機模型，不會將資料傳送到外部服務。"
 
 msgid "When enabled, text processing uses the local model first — no data is sent to external services."
-msgstr "啟用後，文字處理將優先使用本地模型，無需上傳資料至外部服務。"
+msgstr "啟用後，文字處理將優先使用本機模型，無需上傳資料至外部服務。"
 
 msgid "Work days"
 msgstr "出勤天數"
@@ -1391,11 +1391,229 @@ msgid "📋 Templates"
 msgstr "📋 模板"
 
 msgid "HEX"
-msgstr "HEX"
+msgstr "十六進位"
 
 msgid "  {size} MB  ·  RAM ≥ {ram} GB"
-msgstr "  {size} MB  ·  RAM ≥ {ram} GB"
+msgstr "  {size} MB  ·  記憶體 ≥ {ram} GB"
 
 msgid "✓  Ready"
 msgstr "✓  已就緒"
 
+msgid "AI Chat"
+msgstr "AI 聊天"
+
+msgid "AI Privacy"
+msgstr "AI 隱私"
+
+msgid "AI disabled"
+msgstr "AI 已停用"
+
+msgid "AI is disabled by policy."
+msgstr "AI 已被策略停用。"
+
+msgid "AI mode"
+msgstr "AI 模式"
+
+msgid "Ask about the selected work context..."
+msgstr "詢問所選工作內容..."
+
+msgid "Assistant"
+msgstr "助理"
+
+msgid "Building context..."
+msgstr "正在建立內容..."
+
+msgid "Cancel request"
+msgstr "取消請求"
+
+msgid "Cannot unlink the only login method."
+msgstr "無法解除唯一登入方式的連結。"
+
+msgid "Clear conversation"
+msgstr "清除對話"
+
+msgid "Context"
+msgstr "內容"
+
+msgid "Conversation cleared."
+msgstr "對話已清除。"
+
+msgid "Could not complete sign-in."
+msgstr "無法完成登入。"
+
+msgid "Current day"
+msgstr "當天"
+
+msgid "Current month"
+msgstr "本月"
+
+msgid "Current week"
+msgstr "本週"
+
+msgid "Error: {}"
+msgstr "錯誤：{}"
+
+msgid "Include calendar events"
+msgstr "包含行事曆事件"
+
+msgid "Include calendar titles"
+msgstr "包含行事曆標題"
+
+msgid "Include calendar titles by default"
+msgstr "預設包含行事曆標題"
+
+msgid "Include notes"
+msgstr "包含備註"
+
+msgid "Include notes by default"
+msgstr "預設包含備註"
+
+msgid "Include quick log details"
+msgstr "包含快速記錄詳細資料"
+
+msgid "Include quick log details by default"
+msgstr "預設包含快速記錄詳細資料"
+
+msgid "Link Google"
+msgstr "連結 Google"
+
+msgid "Link Microsoft"
+msgstr "連結 Microsoft"
+
+msgid "Linked account removed."
+msgstr "已移除連結帳號。"
+
+msgid "Linked accounts"
+msgstr "連結帳號"
+
+msgid "Local AI only"
+msgstr "僅本機 AI"
+
+msgid "Local model is not available. Enable or download a local model in Settings -> AI."
+msgstr "本機模型無法使用。請在「設定 -> AI」啟用或下載本機模型。"
+
+msgid "No linked accounts."
+msgstr "沒有連結帳號。"
+
+msgid "OAuth provider is not configured."
+msgstr "尚未設定 OAuth 提供者。"
+
+msgid "Opening browser..."
+msgstr "正在開啟瀏覽器..."
+
+msgid "Please configure an AI provider in Settings -> AI."
+msgstr "請在「設定 -> AI」設定 AI 提供者。"
+
+msgid "Remote AI allowed"
+msgstr "允許遠端 AI"
+
+msgid "Send"
+msgstr "傳送"
+
+msgid "Sending request..."
+msgstr "正在傳送請求..."
+
+msgid "Sign in with Google"
+msgstr "使用 Google 登入"
+
+msgid "Sign in with Microsoft"
+msgstr "使用 Microsoft 登入"
+
+msgid "Sign-in canceled."
+msgstr "登入已取消。"
+
+msgid "Sign-in completed."
+msgstr "登入已完成。"
+
+msgid "Title hidden"
+msgstr "標題已隱藏"
+
+msgid "Unlink"
+msgstr "解除連結"
+
+msgid "You"
+msgstr "你"
+
+msgid "all day"
+msgstr "全天"
+
+msgid "No response."
+msgstr "沒有回應。"
+
+msgid "Request canceled."
+msgstr "請求已取消。"
+
+msgid "Enter your current password to continue."
+msgstr "請輸入目前密碼以繼續。"
+
+msgid "Password is incorrect."
+msgstr "密碼不正確。"
+
+msgid "AI Assist"
+msgstr "AI Assist"
+
+msgid "AI Summary"
+msgstr "AI 摘要"
+
+msgid "Analytics AI PDF"
+msgstr "分析 AI PDF"
+
+msgid "Apply to Notes"
+msgstr "套用到備註"
+
+msgid "Apply to Report"
+msgstr "套用到報告"
+
+msgid "Clear this conversation?"
+msgstr "要清除此對話嗎？"
+
+msgid "Ctrl+Enter to send"
+msgstr "按 Ctrl+Enter 傳送"
+
+msgid "Daily Notes"
+msgstr "生成每日備註"
+
+msgid "Error: {detail}"
+msgstr "錯誤：{detail}"
+
+msgid "Follow up on this result..."
+msgstr "繼續追問或要求修改此結果..."
+
+msgid "Google sign-in is not configured."
+msgstr "尚未設定 Google 登入。"
+
+msgid "Include calendar event titles"
+msgstr "包含行事曆事件標題"
+
+msgid "Runtime: External API"
+msgstr "執行方式：外部 API"
+
+msgid "Runtime: Local model"
+msgstr "執行方式：本機模型"
+
+msgid "Selected context may be sent to the configured external AI provider."
+msgstr "所選內容可能會傳送至已設定的外部 AI 提供者。"
+
+msgid "Use for PDF"
+msgstr "用於 PDF"
+
+msgid "✨ AI Assist - {}"
+msgstr "✨ AI 助手 - {}"
+
+msgid "✨ AI PDF"
+msgstr "✨ AI PDF"
+
+msgid "Extra instructions:"
+msgstr "補充說明："
+
+msgid "Request: {period}"
+msgstr "請求：{period}"
+
+msgid "Source: existing draft and selected WorkLogger context"
+msgstr "來源：既有草稿和已選取的選項的語境"
+
+msgid "Source: selected WorkLogger context"
+msgstr "來源：已選取的選項的語境"
+
+msgid "Details: {detail}"
+msgstr "詳細資訊：{detail}"

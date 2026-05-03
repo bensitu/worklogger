@@ -1,0 +1,10 @@
+{
+  "identity_enabled": true,
+  "google_login_enabled": true,
+  "google_client_id": "472219581178-epg1b9ic13jrps1d3d3ls8fka19m5eiq.apps.googleusercontent.com",
+  "firebase": {
+    "apiKey": "AIzaSyCCkdKFeGBUMyXVPz78qq3MsZeLb9JGOZk",
+    "authDomain": "worklogger-2026.firebaseapp.com",
+    "projectId": "worklogger-2026"
+  }
+}

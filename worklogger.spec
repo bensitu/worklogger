@@ -22,7 +22,7 @@ import certifi
 block_cipher = None
 
 APP_NAME = "WorkLogger"
-APP_VERSION = "3.1.0"
+APP_VERSION = "3.2.0"
 PLATFORM = sys.platform
 ROOT_DIR = Path(globals().get("SPECPATH", os.getcwd())).resolve()
 WORKLOGGER_DIR = ROOT_DIR / "worklogger"
@@ -174,6 +174,8 @@ _optional_hidden = [
     for pkg in (
         "cryptography",
         "cryptography.fernet",
+        "jwt",
+        "jwt.algorithms",
         "matplotlib",
         "reportlab",
         "PIL",

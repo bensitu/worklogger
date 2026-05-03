@@ -45,6 +45,8 @@ _USER_OWNED_TABLES = (
     "quick_logs",
     "calendar_events",
     "reports",
+    "external_identities",
+    "oauth_identities",
 )
 _USER_OWNED_TABLE_LOG_LABELS = {
     "worklog": "Work Log Records",
@@ -52,6 +54,8 @@ _USER_OWNED_TABLE_LOG_LABELS = {
     "quick_logs": "Quick Logs",
     "calendar_events": "Calendar Events",
     "reports": "Reports",
+    "external_identities": "External Identities",
+    "oauth_identities": "OAuth Identities",
 }
 _log = logging.getLogger(__name__)
 
@@ -125,6 +129,37 @@ _CREATE_REPORTS = """CREATE TABLE IF NOT EXISTS reports(
     period_end TEXT NOT NULL,
     content TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
+)"""
+
+_CREATE_OAUTH_IDENTITIES = """CREATE TABLE IF NOT EXISTS oauth_identities(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    provider TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    email TEXT,
+    display_name TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    UNIQUE(provider, subject)
+)"""
+
+_CREATE_EXTERNAL_IDENTITIES = """CREATE TABLE IF NOT EXISTS external_identities(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    provider TEXT NOT NULL,
+    broker TEXT NOT NULL,
+    issuer TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    email TEXT,
+    display_name TEXT,
+    avatar_url TEXT,
+    federated_subject TEXT,
+    raw_provider TEXT,
+    metadata_json TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    last_login_at TEXT,
+    UNIQUE(broker, issuer, provider, subject)
 )"""
 
 
@@ -205,6 +240,9 @@ class DB:
             self._migrate_quick_logs_table(fallback_user_id)
             self._migrate_calendar_table(fallback_user_id)
             self._migrate_reports_table(fallback_user_id)
+            self.conn.execute(_CREATE_OAUTH_IDENTITIES)
+            self.conn.execute(_CREATE_EXTERNAL_IDENTITIES)
+            self._migrate_oauth_identities_to_external_unlocked()
 
             if created_admin_id is not None:
                 self.conn.execute(
@@ -228,8 +266,33 @@ class DB:
             self.conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_users_remember_token ON users(remember_token)"
             )
+            self.conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_oauth_identities_user "
+                "ON oauth_identities(user_id)"
+            )
+            self.conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_external_identities_user "
+                "ON external_identities(user_id)"
+            )
+            self.conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_external_identities_lookup "
+                "ON external_identities(broker, issuer, provider, subject)"
+            )
             self.conn.commit()
             self.conn.execute("PRAGMA foreign_keys=ON")
+
+    def _migrate_oauth_identities_to_external_unlocked(self) -> None:
+        if not self._table_exists("oauth_identities"):
+            return
+        self.conn.execute(
+            "INSERT OR IGNORE INTO external_identities"
+            "(user_id,provider,broker,issuer,subject,email,display_name,"
+            "avatar_url,federated_subject,raw_provider,metadata_json,"
+            "created_at,updated_at,last_login_at) "
+            "SELECT user_id,provider,'direct_oidc',provider,subject,email,"
+            "display_name,NULL,subject,provider,NULL,created_at,updated_at,NULL "
+            "FROM oauth_identities"
+        )
 
     def _migrate_users_table(self) -> None:
         cols = self._columns("users")
@@ -1022,6 +1085,13 @@ class DB:
         ).fetchall()
         return [self._user_row(row) for row in rows]
 
+    def user_has_local_password(self, user_id: int) -> bool:
+        row = self.conn.execute(
+            "SELECT password_hash FROM users WHERE id=?",
+            (user_id,),
+        ).fetchone()
+        return bool(row and row[0])
+
     @staticmethod
     def _user_row(row) -> dict:
         password_changed_at = row[3] if len(row) > 3 else row[2]
@@ -1210,6 +1280,195 @@ class DB:
                 (report_id, user_id),
             )
             self.conn.commit()
+
+    def get_external_identity(
+        self,
+        broker: str,
+        issuer: str,
+        provider: str,
+        subject: str,
+    ) -> dict | None:
+        row = self.conn.execute(
+            "SELECT id,user_id,provider,broker,issuer,subject,email,display_name,"
+            "avatar_url,federated_subject,raw_provider,metadata_json,"
+            "created_at,updated_at,last_login_at "
+            "FROM external_identities "
+            "WHERE broker=? AND issuer=? AND provider=? AND subject=?",
+            (broker, issuer, provider, subject),
+        ).fetchone()
+        return self._external_identity_row(row) if row else None
+
+    def list_external_identities(self, user_id: int) -> list[dict]:
+        rows = self.conn.execute(
+            "SELECT id,user_id,provider,broker,issuer,subject,email,display_name,"
+            "avatar_url,federated_subject,raw_provider,metadata_json,"
+            "created_at,updated_at,last_login_at "
+            "FROM external_identities WHERE user_id=? ORDER BY provider, broker, id",
+            (user_id,),
+        ).fetchall()
+        return [self._external_identity_row(row) for row in rows]
+
+    def create_external_identity(self, user_id: int, identity) -> int:
+        now = _utc_now_iso()
+        with self._write_lock:
+            cur = self.conn.execute(
+                "INSERT INTO external_identities"
+                "(user_id,provider,broker,issuer,subject,email,display_name,"
+                "avatar_url,federated_subject,raw_provider,metadata_json,"
+                "created_at,updated_at,last_login_at) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (
+                    user_id,
+                    identity.provider,
+                    identity.broker,
+                    identity.issuer,
+                    identity.subject,
+                    identity.email,
+                    identity.display_name,
+                    identity.avatar_url,
+                    identity.federated_subject,
+                    identity.raw_provider,
+                    None,
+                    now,
+                    now,
+                    now,
+                ),
+            )
+            self.conn.commit()
+            return int(cur.lastrowid)
+
+    def update_external_identity_metadata(
+        self,
+        identity_id: int,
+        *,
+        email: str | None,
+        display_name: str | None,
+        avatar_url: str | None = None,
+        federated_subject: str | None = None,
+        raw_provider: str | None = None,
+    ) -> None:
+        with self._write_lock:
+            self.conn.execute(
+                "UPDATE external_identities SET email=?, display_name=?, "
+                "avatar_url=?, federated_subject=?, raw_provider=?, updated_at=? "
+                "WHERE id=?",
+                (
+                    email,
+                    display_name,
+                    avatar_url,
+                    federated_subject,
+                    raw_provider,
+                    _utc_now_iso(),
+                    identity_id,
+                ),
+            )
+            self.conn.commit()
+
+    def mark_external_identity_login(self, identity_id: int) -> None:
+        now = _utc_now_iso()
+        with self._write_lock:
+            self.conn.execute(
+                "UPDATE external_identities SET last_login_at=?, updated_at=? WHERE id=?",
+                (now, now, identity_id),
+            )
+            self.conn.commit()
+
+    def delete_external_identity(self, user_id: int, identity_id: int) -> None:
+        with self._write_lock:
+            self.conn.execute(
+                "DELETE FROM external_identities WHERE user_id=? AND id=?",
+                (user_id, identity_id),
+            )
+            self.conn.commit()
+
+    @staticmethod
+    def _external_identity_row(row) -> dict:
+        return {
+            "id": int(row[0]),
+            "user_id": int(row[1]),
+            "provider": row[2],
+            "broker": row[3],
+            "issuer": row[4],
+            "subject": row[5],
+            "email": row[6],
+            "display_name": row[7],
+            "avatar_url": row[8],
+            "federated_subject": row[9],
+            "raw_provider": row[10],
+            "metadata_json": row[11],
+            "created_at": row[12],
+            "updated_at": row[13],
+            "last_login_at": row[14],
+        }
+
+    def get_oauth_identity(self, provider: str, subject: str) -> dict | None:
+        identity = self.get_external_identity(
+            "direct_oidc",
+            provider,
+            provider,
+            subject,
+        )
+        return self._oauth_identity_from_external(identity) if identity else None
+
+    def list_oauth_identities(self, user_id: int) -> list[dict]:
+        return [
+            self._oauth_identity_from_external(identity)
+            for identity in self.list_external_identities(user_id)
+            if identity.get("broker") == "direct_oidc"
+        ]
+
+    def create_oauth_identity(
+        self,
+        user_id: int,
+        provider: str,
+        subject: str,
+        email: str | None,
+        display_name: str | None,
+    ) -> int:
+        from services.identity.models import ExternalIdentity
+
+        return self.create_external_identity(
+            user_id,
+            ExternalIdentity(
+                provider=provider,
+                broker="direct_oidc",
+                issuer=provider,
+                subject=subject,
+                email=email,
+                display_name=display_name,
+                federated_subject=subject,
+                raw_provider=provider,
+            ),
+        )
+
+    def update_oauth_identity_metadata(
+        self,
+        identity_id: int,
+        *,
+        email: str | None,
+        display_name: str | None,
+    ) -> None:
+        self.update_external_identity_metadata(
+            identity_id,
+            email=email,
+            display_name=display_name,
+        )
+
+    def delete_oauth_identity(self, user_id: int, identity_id: int) -> None:
+        self.delete_external_identity(user_id, identity_id)
+
+    @staticmethod
+    def _oauth_identity_from_external(identity: dict) -> dict:
+        return {
+            "id": int(identity["id"]),
+            "user_id": int(identity["user_id"]),
+            "provider": identity["provider"],
+            "subject": identity["subject"],
+            "email": identity.get("email"),
+            "display_name": identity.get("display_name"),
+            "created_at": identity.get("created_at"),
+            "updated_at": identity.get("updated_at"),
+        }
 
     def save_calendar_events(self, events: list, source_file: str = "", *, user_id: int) -> int:
         count = 0
