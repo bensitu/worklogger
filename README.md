@@ -94,6 +94,12 @@ Configuration lookup order:
 2. `%APPDATA%\WorkLogger\identity.local.json` on Windows, or `~/.config/worklogger/identity.local.json` on other platforms
 3. `worklogger/config/identity.local.json` in source builds, or `config/identity.local.json` next to a packaged executable
 
+For packaged releases, the user-level file in step 2 is the safest location because it works without modifying the app bundle or release artifact. Portable app-local placement is also supported:
+
+- Windows: `config\identity.local.json` next to `WorkLogger.exe`
+- macOS: `WorkLogger.app/Contents/MacOS/config/identity.local.json`
+- Linux: `config/identity.local.json` next to the `WorkLogger` executable extracted from `WorkLogger.tar.gz`
+
 Environment variables are also supported and take precedence over JSON files:
 
 ```bash

@@ -6,6 +6,7 @@ from . import config as identity_config
 from .brokers.firebase import FirebaseIdentityBroker
 from .callback_server import LoopbackCallbackServer
 from .errors import (
+    IdentityBrokerError,
     IdentityCallbackTimeout,
     IdentityFlowCancelled,
     IdentityProviderNotConfigured,
@@ -87,12 +88,32 @@ class ExternalIdentityService:
             redirect_uri=redirect_uri,
             code_verifier=verifier,
         )
-        provider.validate_id_token(tokens.id_token, nonce=nonce)
-        auth_result = FirebaseIdentityBroker().sign_in_with_google_id_token(
-            tokens.id_token,
-            config=firebase_config,
+        claims = provider.validate_id_token(tokens.id_token, nonce=nonce)
+        try:
+            auth_result = FirebaseIdentityBroker().sign_in_with_google_id_token(
+                tokens.id_token,
+                config=firebase_config,
+            )
+            return auth_result.identity
+        except IdentityBrokerError:
+            return self._google_oidc_identity(claims)
+
+    @staticmethod
+    def _google_oidc_identity(claims: dict) -> ExternalIdentity:
+        subject = str(claims.get("sub") or "").strip()
+        if not subject:
+            raise IdentityFlowCancelled("identity_subject_missing")
+        return ExternalIdentity(
+            provider="google",
+            broker="direct_oidc",
+            issuer=str(claims.get("iss") or "https://accounts.google.com"),
+            subject=subject,
+            email=claims.get("email"),
+            display_name=claims.get("name"),
+            avatar_url=claims.get("picture"),
+            federated_subject=subject,
+            raw_provider="google.com",
         )
-        return auth_result.identity
 
     def authenticate_direct_oidc(
         self,

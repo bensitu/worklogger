@@ -29,6 +29,17 @@ def _image_asset_path(filename: str):
     return None
 
 
+def _identity_error_message(error: str) -> str:
+    if error in {"identity_provider_not_configured", "identity_provider_unavailable"}:
+        return _("Google sign-in is not configured.")
+    if error == "identity_callback_timeout":
+        return _("Sign-in canceled.")
+    base = _("Could not complete sign-in.")
+    if error:
+        return base + "\n" + _("Details: {detail}").format(detail=error)
+    return base
+
+
 class _IdentityLoginBridge(QObject):
     done = Signal(bool, int, str, str)
 
@@ -216,10 +227,5 @@ class LoginDialog(QDialog):
             self._status.setText(_("Sign-in completed."))
             self.accept()
             return
-        if error in {"identity_provider_not_configured", "identity_provider_unavailable"}:
-            self._status.setText(_("Google sign-in is not configured."))
-        elif error == "identity_callback_timeout":
-            self._status.setText(_("Sign-in canceled."))
-        else:
-            self._status.setText(_("Could not complete sign-in."))
+        self._status.setText(_identity_error_message(error))
         QMessageBox.warning(self, _("Login failed"), self._status.text())

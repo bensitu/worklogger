@@ -1614,3 +1614,6 @@ msgstr "출처: 기존 초안 및 선정된 옵션의 맥락"
 
 msgid "Source: selected WorkLogger context"
 msgstr "출처: 선정된 옵션의 맥락"
+
+msgid "Details: {detail}"
+msgstr "세부 정보: {detail}"

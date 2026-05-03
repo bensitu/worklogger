@@ -440,6 +440,13 @@ class ChartDialog(QDialog):
             lambda checked: checked and self._set_chart_mode("bar"))
         self._line_radio.toggled.connect(
             lambda checked: checked and self._set_chart_mode("line"))
+        for radio in (
+            self._hours_radio,
+            self._avg_radio,
+            self._bar_radio,
+            self._line_radio,
+        ):
+            radio.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self._leave_cb = SwitchButton(
             checked=str(app_ref.services.get_setting(
                 ANALYTICS_SHOW_LEAVES_SETTING_KEY, "0",

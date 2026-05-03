@@ -52,6 +52,17 @@ ThemePalette = dict[bool, ThemeColors]
 ThemeMap = dict[str, ThemePalette]
 
 
+def _identity_error_message(error: str) -> str:
+    if error in {"identity_provider_not_configured", "identity_provider_unavailable"}:
+        return _("Google sign-in is not configured.")
+    if error == "identity_callback_timeout":
+        return _("Sign-in canceled.")
+    base = _("Could not complete sign-in.")
+    if error:
+        return base + "\n" + _("Details: {detail}").format(detail=error)
+    return base
+
+
 def _palette_icon() -> QIcon:
     pix = QPixmap(24, 24)
     pix.fill(Qt.GlobalColor.transparent)
@@ -1250,12 +1261,13 @@ class SettingsDialog(QDialog):
             self._linked_accounts_status.setText("")
             QMessageBox.warning(self, _("Linked accounts"), text)
             return
-        except Exception:
-            self._linked_accounts_status.setText(_("Could not complete sign-in."))
+        except Exception as exc:
+            text = _identity_error_message(str(exc))
+            self._linked_accounts_status.setText(text)
             QMessageBox.warning(
                 self,
                 _("Linked accounts"),
-                _("Could not complete sign-in."),
+                text,
             )
             return
         self._linked_accounts_status.setText(_("Sign-in completed."))

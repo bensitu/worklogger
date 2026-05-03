@@ -1069,7 +1069,7 @@ class AppServices:
                 remember=remember,
             )
         except Exception:
-            _log.info("IDENTITY_LOGIN_FAILED provider=%s", provider)
+            _log.info("IDENTITY_LOGIN_FAILED provider=%s", provider, exc_info=True)
             raise
         self.set_current_user(user_id)
         return user_id

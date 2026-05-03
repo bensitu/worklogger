@@ -1614,3 +1614,6 @@ msgstr "Source: The current draft and the context of the selected options"
 
 msgid "Source: selected WorkLogger context"
 msgstr "Source: Context of the selected options"
+
+msgid "Details: {detail}"
+msgstr "Details: {detail}"

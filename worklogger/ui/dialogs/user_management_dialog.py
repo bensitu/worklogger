@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from functools import partial
 from datetime import datetime, timezone
+from turtle import color
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -437,6 +438,13 @@ class UserManagementDialog(QDialog):
 
     def _actions_widget(self, user: dict) -> QWidget:
         wrap = QWidget()
+        wrap.setObjectName("transparent_container")
+        wrap.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        wrap.setStyleSheet(
+            "QWidget#transparent_container{"
+            "background:transparent;background-color:transparent;border:none;"
+            "}"
+        )
         layout = QHBoxLayout(wrap)
         layout.setContentsMargins(4, 3, 4, 3)
         layout.setSpacing(6)
@@ -514,6 +522,7 @@ class UserManagementDialog(QDialog):
         username_edit.setReadOnly(True)
         password_edit = QLineEdit(initial_password)
         password_edit.setReadOnly(True)
+        password_edit.setStyleSheet("color:#cccccc;")
         form.addRow(_("Username"), username_edit)
         form.addRow(_("Initial Password"), password_edit)
         root.addLayout(form)

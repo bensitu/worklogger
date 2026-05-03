@@ -1614,3 +1614,6 @@ msgstr "参照元：既存の下書きおよび選定された選択肢コンテ
 
 msgid "Source: selected WorkLogger context"
 msgstr "参照元：選定された選択肢コンテキスト"
+
+msgid "Details: {detail}"
+msgstr "詳細：{detail}"

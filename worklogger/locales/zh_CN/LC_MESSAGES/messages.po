@@ -1614,3 +1614,6 @@ msgstr "来源：现有草稿和已选择的选项的上下文"
 
 msgid "Source: selected WorkLogger context"
 msgstr "来源：已选择的选项的上下文"
+
+msgid "Details: {detail}"
+msgstr "详细信息：{detail}"

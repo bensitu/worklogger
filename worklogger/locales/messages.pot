@@ -369,6 +369,9 @@ msgstr ""
 msgid "Delete this template?"
 msgstr ""
 
+msgid "Details: {detail}"
+msgstr ""
+
 msgid "Done"
 msgstr ""
 
