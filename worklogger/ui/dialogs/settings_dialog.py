@@ -622,10 +622,19 @@ class SettingsDialog(QDialog):
                     LocalModelService,
                 )
                 mdir = get_models_dir()
-                entry_id = str(get_active_entry_id(mdir) or "")
-                present = bool(LocalModelService.get().is_model_present())
+                entry_id = str(get_active_entry_id(mdir, services=app_ref.services) or "")
+                local_service = LocalModelService.get()
+                try:
+                    present = bool(local_service.is_model_present(app_ref.services))
+                except TypeError:
+                    present = bool(local_service.is_model_present())
                 manifest = load_manifest(mdir)
-                manifest_entry = get_entry(manifest, entry_id or "local")
+                manifest_entry = get_entry(
+                    manifest,
+                    entry_id or "local",
+                    services=app_ref.services,
+                    models_dir=mdir,
+                )
                 has_expected_sha = bool(
                     str(manifest_entry.get("sha256", "")).strip()
                 )
@@ -634,7 +643,10 @@ class SettingsDialog(QDialog):
                     (c for c in catalog if c.get("id") == entry_id),
                     catalog[0] if catalog else {},
                 )
-                lbl_text = localize_field(cat, "label", app_ref.lang) or cat.get("label", "")
+                lbl_text = (
+                    localize_field(cat, "display_name", app_ref.lang)
+                    or cat.get("display_name", "")
+                )
                 ready_hint = present and has_expected_sha
                 return present, entry_id, str(lbl_text), bool(ready_hint)
             except Exception:
@@ -746,11 +758,16 @@ class SettingsDialog(QDialog):
                         retries=1,
                         progress_cb=_progress,
                         cancel_event=cancel_event,
+                        services=app_ref.services,
                     )
-                    present = LocalModelService.get().is_model_present()
+                    local_service = LocalModelService.get()
+                    try:
+                        present = local_service.is_model_present(app_ref.services)
+                    except TypeError:
+                        present = local_service.is_model_present()
                 except Exception:
                     ready = False
-                    present = bool(present)
+                    present = False
                     verify_reason = "io_error"
 
                 self._local_verify_bridge.done.emit(
@@ -826,15 +843,16 @@ class SettingsDialog(QDialog):
                 dark=app_ref.dark,
                 on_model_changed=_on_model_changed,
                 catalog_override=catalog_override,
+                services=app_ref.services,
             )
             from services.local_model_service import (
                 get_active_entry_id,
                 get_models_dir,
                 LocalModelService,
             )
-            before_id = str(get_active_entry_id(get_models_dir()) or "")
+            before_id = str(get_active_entry_id(get_models_dir(), services=app_ref.services) or "")
             result = dlg.exec()
-            after_id = str(get_active_entry_id(get_models_dir()) or "")
+            after_id = str(get_active_entry_id(get_models_dir(), services=app_ref.services) or "")
             LocalModelService.reset()
             from services.download_controller import DownloadController
             DownloadController.reset()

@@ -21,12 +21,6 @@ msgstr ""
 msgid "1.0"
 msgstr ""
 
-msgid "A different model is already downloaded.  It will be deleted before downloading the new one.  Continue?"
-msgstr ""
-
-msgid "A different model is already downloaded. It will be deleted before the new one downloads. Continue?"
-msgstr ""
-
 msgid "A new recovery key was generated. Share it with the user now; it cannot be shown again later."
 msgstr ""
 
@@ -396,6 +390,9 @@ msgstr ""
 msgid "Downloading…  You may cancel at any time; the download will resume from where it left off."
 msgstr ""
 
+msgid "Each user can select one active local model. Downloaded GGUF files are shared across users."
+msgstr ""
+
 msgid "Enable local model"
 msgstr ""
 
@@ -433,6 +430,9 @@ msgid "Error: {detail}"
 msgstr ""
 
 msgid "Expand notes"
+msgstr ""
+
+msgid "Experimental"
 msgstr ""
 
 msgid "Export"
@@ -564,7 +564,7 @@ msgstr ""
 msgid "Installing local model dependencies..."
 msgstr ""
 
-msgid "Integrity check failed — file may be corrupted"
+msgid "Integrity check failed - file may be corrupted"
 msgstr ""
 
 msgid "Integrity failed"
@@ -834,9 +834,6 @@ msgstr ""
 msgid "On break"
 msgstr ""
 
-msgid "Only one model can be active at a time.  Delete the current model before switching."
-msgstr ""
-
 msgid "Open"
 msgstr ""
 
@@ -940,6 +937,9 @@ msgid "Preparing request for {model}..."
 msgstr ""
 
 msgid "Preparing your AI request..."
+msgstr ""
+
+msgid "Preserved local model"
 msgstr ""
 
 msgid "Previous day"
@@ -1107,6 +1107,9 @@ msgstr ""
 msgid "Saved: {}"
 msgstr ""
 
+msgid "Select"
+msgstr ""
+
 msgid "Select / Change"
 msgstr ""
 
@@ -1182,7 +1185,7 @@ msgstr ""
 msgid "Sun"
 msgstr ""
 
-msgid "Switch Model"
+msgid "Switch only the current user's active model. Shared model files are kept unless you delete them."
 msgstr ""
 
 msgid "Template name"
@@ -1225,6 +1228,12 @@ msgid "This account must change its password before continuing."
 msgstr ""
 
 msgid "This model is already downloaded and ready."
+msgstr ""
+
+msgid "This model is already selected and ready."
+msgstr ""
+
+msgid "This model is used by another user and cannot be deleted."
 msgstr ""
 
 msgid "This operation will permanently delete this user's data, including work records, notes, reports, and settings."
@@ -1273,6 +1282,9 @@ msgid "Use for PDF"
 msgstr ""
 
 msgid "Used"
+msgstr ""
+
+msgid "Used by another user"
 msgstr ""
 
 msgid "User"
@@ -1417,9 +1429,6 @@ msgid "✓  Integrity verified"
 msgstr ""
 
 msgid "✓  Model imported"
-msgstr ""
-
-msgid "✓  Ready"
 msgstr ""
 
 msgid "✓ Request successful."

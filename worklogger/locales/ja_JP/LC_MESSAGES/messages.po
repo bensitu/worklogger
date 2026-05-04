@@ -1617,3 +1617,30 @@ msgstr "参照元：選定された選択肢コンテキスト"
 
 msgid "Details: {detail}"
 msgstr "詳細：{detail}"
+
+msgid "Each user can select one active local model. Downloaded GGUF files are shared across users."
+msgstr "各ユーザーは有効なローカルモデルを 1 つ選択できます。ダウンロード済みの GGUF ファイルはユーザー間で共有されます。"
+
+msgid "Experimental"
+msgstr "実験的"
+
+msgid "Integrity check failed - file may be corrupted"
+msgstr "整合性チェックに失敗しました - ファイルが破損している可能性があります"
+
+msgid "Preserved local model"
+msgstr "保持されたローカルモデル"
+
+msgid "Select"
+msgstr "選択"
+
+msgid "Switch only the current user's active model. Shared model files are kept unless you delete them."
+msgstr "現在のユーザーの有効モデルだけを切り替えます。共有モデルファイルは削除しない限り保持されます。"
+
+msgid "This model is already selected and ready."
+msgstr "このモデルはすでに選択され、使用できます。"
+
+msgid "This model is used by another user and cannot be deleted."
+msgstr "このモデルは別のユーザーが使用しているため削除できません。"
+
+msgid "Used by another user"
+msgstr "別のユーザーが使用中"

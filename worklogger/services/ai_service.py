@@ -437,7 +437,7 @@ class LocalModelWorker:
         on_error:  Callable[[str, str], None],
         services=None,
         max_tokens:  int   = 1024,
-        temperature: float = 0.3,
+        temperature: float = 0.7,
         on_status: Optional[Callable[[str], None]] = None,
     ) -> None:
         self.invoker = _CallbackInvoker(on_done, on_error, on_status)

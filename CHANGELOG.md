@@ -5,7 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.2.0] - 2026-05-05
+## [3.3.0] - 2026-05-06
+
+### Changed
+
+- Standardized the GitHub-hosted local model catalog to the new object format with `default_model_id`, `models`, `display_name`, `filename`, `download_url`, `repo_id`, `estimated_size_mb`, `context_length`, and localized `description` fields.
+- Replaced the local model catalog with five remote GGUF entries: Qwen3-4B-Instruct-2507, Qwen3-8B, Phi-4-mini-instruct, Qwen2.5-7B-Instruct, and experimental Qwen3.5-4B.
+- Local GGUF files are now shared globally across users while each user's active local model selection is stored separately by `user_id`.
+- Local model switching now reuses an already downloaded shared GGUF file instead of downloading a duplicate copy for another user.
+- Local model inference now maps `context_length` and `max_output_tokens` from catalog metadata and uses Qwen3 `/no_think` prompting by default while retaining thinking-tag stripping.
+
+### Fixed
+
+- Preserved downloaded or imported local models that disappear from a refreshed remote catalog until their shared GGUF file is deleted.
+- Blocked deletion of shared GGUF files that are still selected by another user.
+- Updated local model management UI labels, status badges, and gettext catalogs for experimental, local, preserved, shared-use, and selected-ready states.
+
+## [3.2.0] - 2026-05-04
 
 ### Added
 

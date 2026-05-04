@@ -1617,3 +1617,30 @@ msgstr "来源：已选择的选项的上下文"
 
 msgid "Details: {detail}"
 msgstr "详细信息：{detail}"
+
+msgid "Each user can select one active local model. Downloaded GGUF files are shared across users."
+msgstr "每个用户都可以选择一个活动的本地模型。已下载的 GGUF 文件会在用户之间共享。"
+
+msgid "Experimental"
+msgstr "实验性"
+
+msgid "Integrity check failed - file may be corrupted"
+msgstr "完整性检查失败 - 文件可能已损坏"
+
+msgid "Preserved local model"
+msgstr "保留的本地模型"
+
+msgid "Select"
+msgstr "选择"
+
+msgid "Switch only the current user's active model. Shared model files are kept unless you delete them."
+msgstr "仅切换当前用户的活动模型。共享模型文件会保留，除非你手动删除它们。"
+
+msgid "This model is already selected and ready."
+msgstr "此模型已被选中并可用。"
+
+msgid "This model is used by another user and cannot be deleted."
+msgstr "此模型正被其他用户使用，无法删除。"
+
+msgid "Used by another user"
+msgstr "被其他用户使用"

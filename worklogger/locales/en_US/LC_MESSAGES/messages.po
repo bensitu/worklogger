@@ -1617,3 +1617,30 @@ msgstr "Source: Context of the selected options"
 
 msgid "Details: {detail}"
 msgstr "Details: {detail}"
+
+msgid "Each user can select one active local model. Downloaded GGUF files are shared across users."
+msgstr "Each user can select one active local model. Downloaded GGUF files are shared across users."
+
+msgid "Experimental"
+msgstr "Experimental"
+
+msgid "Integrity check failed - file may be corrupted"
+msgstr "Integrity check failed - file may be corrupted"
+
+msgid "Preserved local model"
+msgstr "Preserved local model"
+
+msgid "Select"
+msgstr "Select"
+
+msgid "Switch only the current user's active model. Shared model files are kept unless you delete them."
+msgstr "Switch only the current user's active model. Shared model files are kept unless you delete them."
+
+msgid "This model is already selected and ready."
+msgstr "This model is already selected and ready."
+
+msgid "This model is used by another user and cannot be deleted."
+msgstr "This model is used by another user and cannot be deleted."
+
+msgid "Used by another user"
+msgstr "Used by another user"

@@ -1617,3 +1617,30 @@ msgstr "來源：已選取的選項的語境"
 
 msgid "Details: {detail}"
 msgstr "詳細資訊：{detail}"
+
+msgid "Each user can select one active local model. Downloaded GGUF files are shared across users."
+msgstr "每位使用者都可以選擇一個作用中的本機模型。已下載的 GGUF 檔案會在使用者之間共用。"
+
+msgid "Experimental"
+msgstr "實驗性"
+
+msgid "Integrity check failed - file may be corrupted"
+msgstr "完整性檢查失敗 - 檔案可能已損毀"
+
+msgid "Preserved local model"
+msgstr "保留的本機模型"
+
+msgid "Select"
+msgstr "選擇"
+
+msgid "Switch only the current user's active model. Shared model files are kept unless you delete them."
+msgstr "只切換目前使用者的作用中模型。共用模型檔案會保留，除非你手動刪除。"
+
+msgid "This model is already selected and ready."
+msgstr "此模型已選取且可使用。"
+
+msgid "This model is used by another user and cannot be deleted."
+msgstr "此模型正由其他使用者使用，無法刪除。"
+
+msgid "Used by another user"
+msgstr "由其他使用者使用"

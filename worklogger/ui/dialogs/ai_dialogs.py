@@ -232,12 +232,12 @@ class AIProgressDialog(QDialog):
                 from services.local_model_service import (
                     get_active_entry_id, get_catalog_entry,
                 )
-                eid   = get_active_entry_id()
+                eid   = get_active_entry_id(services=services)
                 cat   = get_catalog_entry(eid)
-                # Prefer catalog max_tokens; otherwise derive from n_ctx with headroom.
-                n_ctx = int(cat.get("n_ctx", 32768))
+                # Prefer catalog max_output_tokens; otherwise derive from context_length with headroom.
+                n_ctx = int(cat.get("context_length", 32768))
                 local_max_tokens = int(
-                    cat.get("max_tokens", min(n_ctx - 512, 8192))
+                    cat.get("max_output_tokens", min(n_ctx - 512, 8192))
                 )
             except Exception:
                 pass
@@ -247,7 +247,7 @@ class AIProgressDialog(QDialog):
                 messages, on_done, on_error,
                 services=services,
                 max_tokens=local_max_tokens,
-                temperature=0.3,
+                temperature=0.7,
                 on_status=on_status,
             )
         else:

@@ -112,4 +112,4 @@ def ensure_download_deps() -> None:
 
 def ensure_inference_deps() -> None:
     """Ensure llama-cpp-python is available for local inference."""
-    ensure("llama-cpp-python>=0.2.90")
+    ensure("llama-cpp-python>=0.3.19")

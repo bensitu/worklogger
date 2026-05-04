@@ -142,7 +142,7 @@ cleanup_source_cache_artifacts() {
 install_dependencies() {
   local requirements_file="$SCRIPT_DIR/requirements.txt"
   local filtered_requirements_file="$SCRIPT_DIR/.tmp_requirements_linux_${TIMESTAMP}.txt"
-  local llama_requirement="llama-cpp-python>=0.2.90"
+  local llama_requirement="llama-cpp-python>=0.3.19"
 
   if [ ! -x "$VENV_PYTHON" ]; then
     log "RUN  : Create build virtual environment at $VENV_DIR"

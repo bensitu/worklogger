@@ -390,7 +390,7 @@ class AiChatDialog(QDialog):
                 on_error,
                 services=self._app.services,
                 max_tokens=4096,
-                temperature=0.3,
+                temperature=0.7,
                 on_status=on_status,
             )
         else:

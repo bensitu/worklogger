@@ -16,7 +16,7 @@ WorkLogger is a privacy-first desktop app for tracking work hours, notes, quick 
 - AI-assisted note and report generation with external API providers and local model fallback
 - Multi-turn AI Assist for daily notes, weekly reports, monthly reports, and analytics PDF narratives
 - Optional Google sign-in using system-browser OIDC + PKCE and Firebase Identity Toolkit
-- Built-in local model management with a GitHub-hosted dynamic catalog, download, resume, verify, switch, and `.gguf` import
+- Built-in local model management with a GitHub-hosted dynamic catalog, shared GGUF storage, per-user active model selection, download/resume/verify/delete, and `.gguf` import
 - Template-driven daily/weekly/monthly writing with custom template support
 - Persistent weekly/monthly reports that reload by selected calendar week or month
 - Calendar + Quick Log context integration for richer reports
@@ -244,7 +244,7 @@ The reset account is marked as an administrator and must change the password on 
 - Analytics dialog with monthly/quarterly/annual charts, Work hours/Average metric switching, Bar/Line views, actual-hours leave overlays, and export to CSV/PDF
 - Data portability: CSV import/export, database backup/restore, `.ics` calendar import/export, and calendar event merge into notes/reports
 - AI provider settings with connectivity test, primary/secondary provider routing, local-model fallback, and status-rich AI Assist request feedback
-- Local model controls: enable/disable switch, dynamically refreshed model selection from `model_catalog.json` on GitHub, resumable download, hash verification, deletion, and `.gguf` import
+- Local model controls: enable/disable switch, dynamically refreshed model selection from GitHub root `model_catalog.json`, runtime cache at `models/catalog.json`, shared GGUF files, per-user active selection, resumable download, hash verification, safe deletion, and `.gguf` import
 - Secure API key handling via OS keychain with encrypted local fallback
 - Appearance and behavior controls for preset/custom theme, dark mode, language, minimal mode, week start, holiday display, note reminders, and residency icon mode
 - First-run system language detection for English, Japanese, Korean, Simplified Chinese, and Traditional Chinese

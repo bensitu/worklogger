@@ -30,10 +30,10 @@ def get_local_chat_token_budget(services) -> int | None:
     try:
         from services.local_model_service import get_active_entry_id, get_catalog_entry
 
-        entry_id = get_active_entry_id()
+        entry_id = get_active_entry_id(services=services)
         entry = get_catalog_entry(entry_id)
-        n_ctx = int(entry.get("n_ctx", 0) or 0)
-        max_tokens = int(entry.get("max_tokens", 0) or 0)
+        n_ctx = int(entry.get("context_length", 0) or 0)
+        max_tokens = int(entry.get("max_output_tokens", 0) or 0)
         if n_ctx > 0:
             output_headroom = max(max_tokens or 2048, 1024)
             return max(1024, n_ctx - output_headroom - 256)
