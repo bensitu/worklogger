@@ -1,137 +1,135 @@
-[
-  {
-    "id": "qwen25_3b_q4",
-    "label": "Qwen2.5-3B  Q4_K_M",
-    "file": "Qwen2.5-3B-Instruct-Q4_K_M.gguf",
-    "url": "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf",
-    "sha256": "626b4a6678b86442240e33df819e00132d3ba7dddfe1cdc4fbb18e0a9615c62d",
-    "size_mb": 1930,
-    "ram_gb": 4,
-    "n_ctx": 32768,
-    "max_tokens": 8192,
-    "default": true,
-    "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
-    "desc": {
-      "en_US": "Qwen2.5-3B 4-bit - strong multilingual, recommended for most users.",
-      "zh_CN": "Qwen2.5-3B 4位量化 - 多语言能力强，适合大多数用户。",
-      "zh_TW": "Qwen2.5-3B 4位量化 - 多語言能力強，適合大多數用戶。",
-      "ja_JP": "Qwen2.5-3B 4ビット量子化 - 多言語対応、ほとんどのユーザーに推奨。",
-      "ko_KR": "Qwen2.5-3B 4비트 양자화 - 다국어 지원, 대부분의 사용자에게 권장."
+{
+  "default_model_id": "qwen3_4b_instruct_2507_q4",
+  "models": [
+    {
+      "id": "qwen3_4b_instruct_2507_q4",
+      "display_name": "Qwen3-4B-Instruct-2507 Q4_K_M",
+      "provider": "huggingface",
+      "repo_type": "model",
+      "repo_id": "bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF",
+      "revision": "main",
+      "filename": "Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+      "file_format": "gguf",
+      "quantization": "Q4_K_M",
+      "download_url": "https://huggingface.co/bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+      "sha256": "2fde00ce69dd4899c70d020845e2638353015bba0fdf161b3eb965f2bca4464e",
+      "estimated_size_mb": 2600,
+      "min_ram_gb": 6,
+      "context_length": 32768,
+      "max_output_tokens": 8192,
+      "license": "apache-2.0",
+      "status": "stable",
+      "description": {
+        "en_US": "Qwen3-4B 4-bit - balanced default model for multilingual text generation and polishing. Best default choice, strong instruction following, and clean non-thinking style.",
+        "zh_CN": "Qwen3-4B 4-bit - 多语言文本生成与润色的默认均衡模型。最佳默认选择，指令遵循强，输出干净，不偏思考模式。",
+        "zh_TW": "Qwen3-4B 4-bit - 多語言文本生成與潤飾的預設均衡模型。最佳預設選擇，指令遵循強，輸出乾淨，不偏思考模式。",
+        "ja_JP": "Qwen3-4B 4-bit - 多言語の文章生成・推敲に適した標準バランスモデル。標準モデルに最適で、指示追従が強く、思考モード寄りではない自然な出力です。",
+        "ko_KR": "Qwen3-4B 4-bit - 다국어 텍스트 생성과 다듬기에 적합한 기본 균형형 모델입니다. 기본 모델로 최적이며, 지시 이행 능력이 우수하고 사고 모드에 치우치지 않은 깔끔한 출력이 특징입니다."
+      }
     },
-    "pros": {
-      "en_US": "Best multilingual support - Chinese / Japanese / Korean",
-      "zh_CN": "最佳多语言支持 - 中文/日文/韩文",
-      "zh_TW": "最佳多語言支援 - 中文/日文/韓文",
-      "ja_JP": "最高の多言語対応 - 日本語 / 中国語 / 韓国語",
-      "ko_KR": "최고 다국어 지원 - 한국어/중국어/일본어"
-    }
-  },
-  {
-    "id": "qwen3_4b",
-    "label": "Qwen3-4B",
-    "file": "Qwen3-4B-Q4_K_M.gguf",
-    "url": "https://huggingface.co/Qwen/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Q4_K_M.gguf",
-    "sha256": "7485fe6f11af29433bc51cab58009521f205840f5b4ae3a32fa7f92e8534fdf5",
-    "size_mb": 2600,
-    "ram_gb": 5,
-    "n_ctx": 40960,
-    "max_tokens": 8192,
-    "default": false,
-    "hf_repo": "Qwen/Qwen3-4B-GGUF",
-    "desc": {
-      "en_US": "Qwen3-4B Q4_K_M - latest Qwen3 generation with thinking mode.",
-      "zh_CN": "Qwen3-4B Q4_K_M - 最新一代 Qwen3，支持思考模式。",
-      "zh_TW": "Qwen3-4B Q4_K_M - 最新一代 Qwen3，支援思考模式。",
-      "ja_JP": "Qwen3-4B Q4_K_M - 最新Qwen3世代、思考モード対応。",
-      "ko_KR": "Qwen3-4B Q4_K_M - 최신 Qwen3 세대, 사고 모드 지원."
+    {
+      "id": "qwen3_8b_q4",
+      "display_name": "Qwen3-8B Q4_K_M",
+      "provider": "huggingface",
+      "repo_type": "model",
+      "repo_id": "unsloth/Qwen3-8B-GGUF",
+      "revision": "main",
+      "filename": "Qwen3-8B-Q4_K_M.gguf",
+      "file_format": "gguf",
+      "quantization": "Q4_K_M",
+      "download_url": "https://huggingface.co/unsloth/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf",
+      "sha256": "120307ba529eb2439d6c430d94104dabd578497bc7bfe7e322b5d9933b449bd4",
+      "estimated_size_mb": 5000,
+      "min_ram_gb": 10,
+      "context_length": 32768,
+      "max_output_tokens": 8192,
+      "license": "apache-2.0",
+      "status": "stable",
+      "description": {
+        "en_US": "Qwen3-8B 4-bit - larger multilingual Qwen3 model with stronger reasoning and writing quality. Use it when you can spare more RAM and want higher output quality.",
+        "zh_CN": "Qwen3-8B 4-bit - 更大的多语言 Qwen3 模型，推理与写作质量更强。适合内存充足且希望获得更高输出质量的场景。",
+        "zh_TW": "Qwen3-8B 4-bit - 較大的多語言 Qwen3 模型，推理與寫作品質更強。適合記憶體充足且需要更高輸出品質的情境。",
+        "ja_JP": "Qwen3-8B 4-bit - より大きな多言語 Qwen3 モデルで、推論力と文章品質が高めです。十分なメモリがあり、出力品質を重視する場合に適しています。",
+        "ko_KR": "Qwen3-8B 4-bit - 더 큰 다국어 Qwen3 모델로 추론과 글쓰기 품질이 더 강합니다. 메모리에 여유가 있고 더 높은 출력 품질이 필요할 때 적합합니다."
+      }
     },
-    "pros": {
-      "en_US": "Latest Qwen3 - Thinking mode - Strong reasoning",
-      "zh_CN": "最新 Qwen3 - 思考模式 - 推理能力强",
-      "zh_TW": "最新 Qwen3 - 思考模式 - 推理能力強",
-      "ja_JP": "最新Qwen3 - 思考モード - 高い推論能力",
-      "ko_KR": "최신 Qwen3 - 사고 모드 - 강한 추론력"
-    }
-  },
-  {
-    "id": "smallthinker_q4",
-    "label": "SmallThinker-3B  Q4_K_M",
-    "file": "SmallThinker-3B-Preview-Q4_K_M.gguf",
-    "url": "https://huggingface.co/bartowski/SmallThinker-3B-Preview-GGUF/resolve/main/SmallThinker-3B-Preview-Q4_K_M.gguf",
-    "sha256": "ac04f82a09ee6a2748437c3bb774b638a54099dc7d5d6ef7549893fae22ab055",
-    "size_mb": 1850,
-    "ram_gb": 4,
-    "n_ctx": 32768,
-    "max_tokens": 8192,
-    "default": false,
-    "hf_repo": "bartowski/SmallThinker-3B-Preview-GGUF",
-    "desc": {
-      "en_US": "SmallThinker-3B 4-bit - balanced speed and quality.",
-      "zh_CN": "SmallThinker-3B 4位量化 - 速度与质量均衡。",
-      "zh_TW": "SmallThinker-3B 4位量化 - 速度與品質均衡。",
-      "ja_JP": "SmallThinker-3B 4ビット量子化 - 速度と品質のバランス。",
-      "ko_KR": "SmallThinker-3B 4비트 양자화 - 속도와 품질 균형."
+    {
+      "id": "phi4_mini_instruct_q4",
+      "display_name": "Phi-4-mini-instruct Q4_K_M",
+      "provider": "huggingface",
+      "repo_type": "model",
+      "repo_id": "unsloth/Phi-4-mini-instruct-GGUF",
+      "revision": "main",
+      "filename": "Phi-4-mini-instruct-Q4_K_M.gguf",
+      "file_format": "gguf",
+      "quantization": "Q4_K_M",
+      "download_url": "https://huggingface.co/unsloth/Phi-4-mini-instruct-GGUF/resolve/main/Phi-4-mini-instruct-Q4_K_M.gguf",
+      "sha256": "88c00229914083cd112853aab84ed51b87bdf6b9ce42f532d8c85c7c63b1730a",
+      "estimated_size_mb": 2500,
+      "min_ram_gb": 6,
+      "context_length": 32768,
+      "max_output_tokens": 4096,
+      "license": "mit",
+      "status": "stable",
+      "description": {
+        "en_US": "Phi-4 mini instruct 4-bit - compact instruction model with good English, coding, and reasoning behavior. Useful when you want a smaller non-Qwen option.",
+        "zh_CN": "Phi-4 mini instruct 4-bit - 小型指令模型，英文、代码与推理表现较好。适合作为较小的非 Qwen 选择。",
+        "zh_TW": "Phi-4 mini instruct 4-bit - 小型指令模型，英文、程式碼與推理表現較好。適合作為較小的非 Qwen 選擇。",
+        "ja_JP": "Phi-4 mini instruct 4-bit - 英語、コード、推論に強い小型の指示モデルです。小さめの非 Qwen 選択肢が必要な場合に適しています。",
+        "ko_KR": "Phi-4 mini instruct 4-bit - 영어, 코드, 추론 성능이 좋은 소형 지시 모델입니다. 더 작은 비 Qwen 선택지가 필요할 때 유용합니다."
+      }
     },
-    "pros": {
-      "en_US": "Good balance - Thinking mode supported",
-      "zh_CN": "均衡表现 - 支持思考模式",
-      "zh_TW": "均衡表現 - 支援思考模式",
-      "ja_JP": "バランスが良い - 思考モード対応",
-      "ko_KR": "균형 잡힌 성능 - 사고 모드 지원"
-    }
-  },
-  {
-    "id": "smallthinker_q2",
-    "label": "SmallThinker-3B  Q2_K",
-    "file": "SmallThinker-3B-Preview-Q2_K.gguf",
-    "url": "https://huggingface.co/bartowski/SmallThinker-3B-Preview-GGUF/resolve/main/SmallThinker-3B-Preview-Q2_K.gguf",
-    "sha256": "67fcbcda34acd843063f04f7a973a12c5fde85010fe7893638e6fe9806722076",
-    "size_mb": 1090,
-    "ram_gb": 2,
-    "n_ctx": 32768,
-    "max_tokens": 8192,
-    "default": false,
-    "hf_repo": "bartowski/SmallThinker-3B-Preview-GGUF",
-    "desc": {
-      "en_US": "SmallThinker-3B 2-bit - smallest file, fastest inference.",
-      "zh_CN": "SmallThinker-3B 2位量化 - 文件最小，推理最快。",
-      "zh_TW": "SmallThinker-3B 2位量化 - 檔案最小，推理最快。",
-      "ja_JP": "SmallThinker-3B 2ビット量子化 - 最小ファイル、最速推理。",
-      "ko_KR": "SmallThinker-3B 2비트 양자화 - 최소 파일, 최속 추론."
+    {
+      "id": "qwen25_7b_instruct_q4",
+      "display_name": "Qwen2.5-7B-Instruct Q4_K_M",
+      "provider": "huggingface",
+      "repo_type": "model",
+      "repo_id": "lmstudio-community/Qwen2.5-7B-Instruct-GGUF",
+      "revision": "main",
+      "filename": "Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+      "file_format": "gguf",
+      "quantization": "Q4_K_M",
+      "download_url": "https://huggingface.co/lmstudio-community/Qwen2.5-7B-Instruct-GGUF/resolve/main/Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+      "sha256": "3e357ab3eda2c442f25c0080bb8998eedc05fd16ce1728eacff9ccc5c3d240c6",
+      "estimated_size_mb": 4700,
+      "min_ram_gb": 9,
+      "context_length": 32768,
+      "max_output_tokens": 8192,
+      "license": "apache-2.0",
+      "status": "stable",
+      "description": {
+        "en_US": "Qwen2.5-7B Instruct 4-bit - mature multilingual instruct model with stable non-thinking output. A conservative choice for users who prefer Qwen2.5 behavior.",
+        "zh_CN": "Qwen2.5-7B Instruct 4-bit - 成熟的多语言指令模型，非思考模式输出稳定。适合偏好 Qwen2.5 行为的保守选择。",
+        "zh_TW": "Qwen2.5-7B Instruct 4-bit - 成熟的多語言指令模型，非思考模式輸出穩定。適合偏好 Qwen2.5 行為的保守選擇。",
+        "ja_JP": "Qwen2.5-7B Instruct 4-bit - 安定した非思考系出力が得られる成熟した多言語指示モデルです。Qwen2.5 の挙動を好む場合の保守的な選択肢です。",
+        "ko_KR": "Qwen2.5-7B Instruct 4-bit - 안정적인 비사고형 출력을 제공하는 성숙한 다국어 지시 모델입니다. Qwen2.5 동작을 선호하는 사용자에게 보수적인 선택지입니다."
+      }
     },
-    "pros": {
-      "en_US": "Minimum RAM requirement (>=2 GB)",
-      "zh_CN": "内存需求最低（>=2 GB）",
-      "zh_TW": "記憶體需求最低（>=2 GB）",
-      "ja_JP": "最小RAM要件（>=2 GB）",
-      "ko_KR": "최소 RAM 요구사항 (>=2 GB)"
+    {
+      "id": "qwen35_4b_q4",
+      "display_name": "Qwen3.5-4B Q4_K_M",
+      "provider": "huggingface",
+      "repo_type": "model",
+      "repo_id": "unsloth/Qwen3.5-4B-GGUF",
+      "revision": "main",
+      "filename": "Qwen3.5-4B-Q4_K_M.gguf",
+      "file_format": "gguf",
+      "quantization": "Q4_K_M",
+      "download_url": "https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/main/Qwen3.5-4B-Q4_K_M.gguf",
+      "sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
+      "estimated_size_mb": 2700,
+      "min_ram_gb": 7,
+      "context_length": 32768,
+      "max_output_tokens": 8192,
+      "license": "apache-2.0",
+      "status": "experimental",
+      "description": {
+        "en_US": "Qwen3.5-4B 4-bit - experimental newer Qwen model for users who want to try the latest local generation behavior. Expect catalog or prompt tuning changes over time.",
+        "zh_CN": "Qwen3.5-4B 4-bit - 实验性新版 Qwen 模型，适合想尝试最新本地生成行为的用户。后续可能继续调整目录与提示词。",
+        "zh_TW": "Qwen3.5-4B 4-bit - 實驗性新版 Qwen 模型，適合想嘗試最新本地生成行為的使用者。後續可能繼續調整目錄與提示詞。",
+        "ja_JP": "Qwen3.5-4B 4-bit - 最新のローカル生成挙動を試したいユーザー向けの実験的な新しい Qwen モデルです。今後カタログやプロンプト調整が入る可能性があります。",
+        "ko_KR": "Qwen3.5-4B 4-bit - 최신 로컬 생성 동작을 시험하려는 사용자를 위한 실험적인 신규 Qwen 모델입니다. 앞으로 카탈로그나 프롬프트 조정이 있을 수 있습니다."
+      }
     }
-  },
-  {
-    "id": "llama32_3b_q4",
-    "label": "Llama-3.2-3B  Q4_K_M",
-    "file": "Llama-3.2-3B-Instruct-Q4_K_M.gguf",
-    "url": "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
-    "sha256": "6c1a2b41161032677be168d354123594c0e6e67d2b9227c84f296ad037c728ff",
-    "size_mb": 2020,
-    "ram_gb": 4,
-    "n_ctx": 131072,
-    "max_tokens": 8192,
-    "default": false,
-    "hf_repo": "bartowski/Llama-3.2-3B-Instruct-GGUF",
-    "desc": {
-      "en_US": "Llama 3.2-3B 4-bit - Meta's latest compact instruct model.",
-      "zh_CN": "Llama 3.2-3B 4位量化 - Meta 最新小型指令模型。",
-      "zh_TW": "Llama 3.2-3B 4位量化 - Meta 最新小型指令模型。",
-      "ja_JP": "Llama 3.2-3B 4ビット量子化 - Metaの最新コンパクト指示モデル。",
-      "ko_KR": "Llama 3.2-3B 4비트 양자화 - Meta 최신 소형 지시 모델."
-    },
-    "pros": {
-      "en_US": "Long context (128 K) - Strong English capability",
-      "zh_CN": "长上下文（128 K）- 英文能力强",
-      "zh_TW": "長上下文（128 K）- 英文能力強",
-      "ja_JP": "長コンテキスト（128 K）- 英語が高性能",
-      "ko_KR": "긴 컨텍스트 (128 K) - 강한 영어 능력"
-    }
-  }
-]
+  ]
+}
