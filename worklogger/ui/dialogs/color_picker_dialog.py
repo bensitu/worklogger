@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
     QDialog, QDialogButtonBox, QHBoxLayout, QLabel, QVBoxLayout, QWidget,
 )
 
-from config.themes import color_preview_qss, normalize_hex_color
+from config.themes import apply_widget_qss, color_preview_qss, normalize_hex_color
 from ui.widgets import ColorCircle, ColorPickerSliders
 from utils.i18n import _, msg
 
@@ -85,6 +85,6 @@ class ColorPickerDialog(QDialog):
         if source != "sliders":
             self._sliders.set_color(normalized)
         self._preview.setText(normalized.upper())
-        self._preview.setStyleSheet(color_preview_qss(normalized))
+        apply_widget_qss(self._preview, color_preview_qss(normalized))
         if emit:
             self.selected_color_changed.emit(normalized)

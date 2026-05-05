@@ -1179,6 +1179,14 @@ class DB:
         row = c.fetchone()
         return row[0] if row else default
 
+    def list_user_ids_by_setting(self, key: str, value: str) -> list[int]:
+        c = self.conn.cursor()
+        c.execute(
+            "SELECT user_id FROM settings WHERE key=? AND value=? ORDER BY user_id",
+            (key, str(value)),
+        )
+        return [int(row[0]) for row in c.fetchall()]
+
     # Write operations.
 
     def save(

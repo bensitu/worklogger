@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from functools import partial
 from datetime import datetime, timezone
-from turtle import color
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -23,7 +22,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from config.themes import dialog_title_qss, user_dialog_button_qss, user_table_qss
+from config.themes import (
+    apply_widget_qss,
+    dialog_title_qss,
+    initial_password_value_qss,
+    transparent_container_qss,
+    user_dialog_button_qss,
+    user_table_qss,
+)
 from config.constants import (
     PASSWORD_MIN_LENGTH,
     USER_INITIAL_PASSWORD_FILENAME_PREFIX,
@@ -323,7 +329,7 @@ class UserManagementDialog(QDialog):
         root.setSpacing(10)
 
         title = QLabel(_("Manage Users"))
-        title.setStyleSheet(dialog_title_qss())
+        apply_widget_qss(title, dialog_title_qss())
         subtitle = QLabel(
             _("Review accounts, reset passwords, and manage recovery keys.")
         )
@@ -381,10 +387,13 @@ class UserManagementDialog(QDialog):
         self._refresh()
 
     def _apply_theme_styles(self) -> None:
-        self._table.setStyleSheet(user_table_qss(self._dark, self._theme_name))
-        self.setStyleSheet(
-            self.styleSheet()
-            + user_dialog_button_qss(self._dark, self._theme_name)
+        apply_widget_qss(
+            self._table,
+            user_table_qss(self._dark, self._theme_name),
+        )
+        apply_widget_qss(
+            self,
+            user_dialog_button_qss(self._dark, self._theme_name),
         )
 
     def _refresh(self) -> None:
@@ -440,11 +449,7 @@ class UserManagementDialog(QDialog):
         wrap = QWidget()
         wrap.setObjectName("transparent_container")
         wrap.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
-        wrap.setStyleSheet(
-            "QWidget#transparent_container{"
-            "background:transparent;background-color:transparent;border:none;"
-            "}"
-        )
+        apply_widget_qss(wrap, transparent_container_qss())
         layout = QHBoxLayout(wrap)
         layout.setContentsMargins(4, 3, 4, 3)
         layout.setSpacing(6)
@@ -522,7 +527,7 @@ class UserManagementDialog(QDialog):
         username_edit.setReadOnly(True)
         password_edit = QLineEdit(initial_password)
         password_edit.setReadOnly(True)
-        password_edit.setStyleSheet("color:#cccccc;")
+        apply_widget_qss(password_edit, initial_password_value_qss())
         form.addRow(_("Username"), username_edit)
         form.addRow(_("Initial Password"), password_edit)
         root.addLayout(form)

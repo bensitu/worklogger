@@ -270,7 +270,7 @@ try {
     if (Test-Path -LiteralPath $requirementsFile -PathType Leaf) {
         $filteredRequirementsFile = Join-Path $ProjectRoot ".tmp_requirements_build_$Timestamp.txt"
         $filteredLines = New-Object System.Collections.Generic.List[string]
-        $llamaRequirement = "llama-cpp-python>=0.2.90"
+        $llamaRequirement = "llama-cpp-python>=0.3.19"
         foreach ($line in Get-Content -LiteralPath $requirementsFile) {
             $trimmed = $line.Trim()
             if ($trimmed -match '^\s*llama-cpp-python(\b|[<>=!~])') {

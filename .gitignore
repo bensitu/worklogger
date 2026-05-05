@@ -64,7 +64,6 @@ tests/_artifacts/
 tests/_tmp_export.csv
 tests/_tmp_*.csv
 tests/_tmp_*.db
-tests/
 
 # Local models and data files
 worklogger/models/*.gguf

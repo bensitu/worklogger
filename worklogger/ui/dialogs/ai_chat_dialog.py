@@ -14,9 +14,15 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from config.themes import switch_off_color, theme_colors
+from config.themes import (
+    ai_switch_container_qss,
+    apply_widget_qss,
+    switch_off_color,
+    theme_colors,
+)
+from services.ai_assist_service import build_followup_payload
 from services.ai_chat_session import AiChatSession
-from services.ai_service import AIWorker, LocalModelWorker
+from services.ai_service import AiChatRequestController
 from services.local_model_service import LOCAL_MODEL_SENTINEL
 from ui.widgets import SwitchButton
 from utils.formatters import parse_status
@@ -56,11 +62,15 @@ class AiChatDialog(QDialog):
         self._model = model
         self._token_budget = token_budget
         self._mode = mode
-        self._worker = None
         self._busy = False
-        self._pending_user_message = ""
-        self._request_serial = 0
-        self._latest_successful_text = session.last_assistant_message() or ""
+        self._controller = AiChatRequestController(
+            session=session,
+            services=app_ref.services,
+            api_key=api_key,
+            base_url=base_url,
+            model=model,
+            token_budget=token_budget,
+        )
 
         self.setWindowTitle(_("✨ AI Assist"))
         self.setMinimumSize(720, 560)
@@ -184,13 +194,7 @@ class AiChatDialog(QDialog):
         wrap = QWidget()
         wrap.setObjectName("transparent_container")
         wrap.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
-        wrap.setStyleSheet(
-            "QWidget#transparent_container{background:transparent;"
-            "background-color:transparent;border:none;}"
-            "QWidget#transparent_container QLabel#ai_switch_label{"
-            "background:transparent;background-color:transparent;"
-            "border:none;padding:0px;}"
-        )
+        apply_widget_qss(wrap, ai_switch_container_qss())
         layout = QHBoxLayout(wrap)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
@@ -212,7 +216,7 @@ class AiChatDialog(QDialog):
             self._append_message(_("You"), user_text)
         if assistant_text:
             text = assistant_text.strip() or _("No response.")
-            self._latest_successful_text = text
+            self._controller.set_latest_successful_text(text)
             self._append_message(_("AI"), text)
         self._sync_buttons()
 
@@ -233,7 +237,9 @@ class AiChatDialog(QDialog):
         event.accept()
 
     def _sync_buttons(self) -> None:
-        self._apply_btn.setEnabled((not self._busy) and bool(self._latest_successful_text))
+        self._apply_btn.setEnabled(
+            (not self._busy) and bool(self._controller.latest_successful_text)
+        )
 
     def _set_busy(self, busy: bool) -> None:
         self._busy = busy
@@ -262,29 +268,20 @@ class AiChatDialog(QDialog):
         box.setDefaultButton(QMessageBox.StandardButton.No)
         if box.exec() != QMessageBox.StandardButton.Yes:
             return
-        self._session.reset()
+        self._controller.reset()
         self._history.clear()
-        self._latest_successful_text = ""
         self._status.setText(_("Conversation cleared."))
         self._sync_buttons()
 
     def _cancel_worker(self) -> None:
-        worker = self._worker
         was_busy = self._busy
-        self._request_serial += 1
-        if worker is not None and hasattr(worker, "cancel"):
-            try:
-                worker.cancel()
-            except Exception:
-                pass
-        self._worker = None
-        self._pending_user_message = ""
+        self._controller.cancel()
         if was_busy:
             self._status.setText(_("Request canceled."))
         self._set_busy(False)
 
     def _apply_latest(self) -> None:
-        text = self._latest_successful_text
+        text = self._controller.latest_successful_text
         if not text:
             return
         try:
@@ -298,13 +295,14 @@ class AiChatDialog(QDialog):
         user_text = self._input.toPlainText().strip()
         if not user_text:
             return
-        if self._api_key != LOCAL_MODEL_SENTINEL and (
-            not self._api_key or not self._base_url or not self._model
-        ):
+        if not self._controller.is_configured:
             QMessageBox.warning(
                 self,
                 _("AI Assist"),
-                _("Please configure an AI provider in Settings -> AI."),
+                _(
+                    "Please enable a local model in Settings -> AI, or configure "
+                    "an external AI provider with API key, base URL, and model name."
+                ),
             )
             return
 
@@ -316,41 +314,29 @@ class AiChatDialog(QDialog):
             QMessageBox.critical(self, _("AI Assist"), str(exc))
             return
 
-        payload = (
-            f"{context}\n\n"
-            f"## Follow-up request\n{user_text}\n\n"
-            "Revise or answer using the current WorkLogger context and prior conversation."
-        )
+        payload = build_followup_payload(context, user_text)
         self._start_request(user_text, payload)
 
     def _start_request(self, display_user_text: str, payload: str) -> None:
         if self._busy:
             return
-        if self._api_key != LOCAL_MODEL_SENTINEL and (
-            not self._api_key or not self._base_url or not self._model
-        ):
+        if not self._controller.is_configured:
             QMessageBox.warning(
                 self,
                 _("AI Assist"),
-                _("Please configure an AI provider in Settings -> AI."),
+                _(
+                    "Please enable a local model in Settings -> AI, or configure "
+                    "an external AI provider with API key, base URL, and model name."
+                ),
             )
             return
 
         self._set_busy(True)
-        messages = self._session.get_messages(
-            additional_messages=[{"role": "user", "content": payload}],
-            token_budget=self._token_budget,
-        )
-        self._pending_user_message = payload
         self._input.clear()
         self._append_message(_("You"), display_user_text)
         self._status.setText(_("Sending request..."))
-        self._request_serial += 1
-        request_id = self._request_serial
 
         def on_status(raw: str) -> None:
-            if request_id != self._request_serial:
-                return
             key, kwargs = parse_status(raw)
             if key:
                 self._status.setText(msg(key, **kwargs))
@@ -358,52 +344,28 @@ class AiChatDialog(QDialog):
                 self._status.setText(kwargs.get("raw", raw))
 
         def on_done(text: str) -> None:
-            if request_id != self._request_serial:
-                return
             text = text.strip() or _("No response.")
-            pending = self._pending_user_message
-            if pending:
-                self._session.add_user_message(pending)
-            self._session.add_assistant_message(text)
-            self._pending_user_message = ""
-            self._latest_successful_text = text
             self._append_message(_("AI"), text)
             self._status.setText(_("Done"))
-            self._worker = None
             self._set_busy(False)
 
         def on_error(short: str, detail: str) -> None:
-            if request_id != self._request_serial:
-                return
-            self._pending_user_message = ""
             friendly = msg(short, short)
             if detail:
                 friendly = f"{friendly}\n{detail}"
             self._status.setText(_("Error: {detail}").format(detail=friendly))
-            self._worker = None
             self._set_busy(False)
 
-        if self._api_key == LOCAL_MODEL_SENTINEL:
-            self._worker = LocalModelWorker(
-                messages,
-                on_done,
-                on_error,
-                services=self._app.services,
-                max_tokens=4096,
-                temperature=0.3,
+        try:
+            self._controller.submit(
+                payload,
                 on_status=on_status,
+                on_done=on_done,
+                on_error=on_error,
             )
-        else:
-            self._worker = AIWorker(
-                self._api_key,
-                self._base_url,
-                self._model,
-                messages,
-                on_done,
-                on_error,
-                max_tokens=2048,
-                on_status=on_status,
-            )
+        except Exception as exc:
+            self._status.setText(_("Error: {detail}").format(detail=str(exc)))
+            self._set_busy(False)
 
     def _build_context(self) -> str:
         kwargs = {

@@ -1617,3 +1617,33 @@ msgstr "출처: 선정된 옵션의 맥락"
 
 msgid "Details: {detail}"
 msgstr "세부 정보: {detail}"
+
+msgid "Each user can select one active local model. Downloaded GGUF files are shared across users."
+msgstr "각 사용자는 활성 로컬 모델을 하나 선택할 수 있습니다. 다운로드된 GGUF 파일은 사용자 간에 공유됩니다."
+
+msgid "Experimental"
+msgstr "실험적"
+
+msgid "Integrity check failed - file may be corrupted"
+msgstr "무결성 검사 실패 - 파일이 손상되었을 수 있습니다"
+
+msgid "Preserved local model"
+msgstr "보존된 로컬 모델"
+
+msgid "Select"
+msgstr "선택"
+
+msgid "Switch only the current user's active model. Shared model files are kept unless you delete them."
+msgstr "현재 사용자의 활성 모델만 전환합니다. 공유 모델 파일은 사용자가 삭제하지 않는 한 유지됩니다."
+
+msgid "This model is already selected and ready."
+msgstr "이 모델은 이미 선택되어 사용할 준비가 되었습니다."
+
+msgid "This model is used by another user and cannot be deleted."
+msgstr "이 모델은 다른 사용자가 사용 중이므로 삭제할 수 없습니다."
+
+msgid "Used by another user"
+msgstr "다른 사용자가 사용 중"
+
+msgid "Please enable a local model in Settings -> AI, or configure an external AI provider with API key, base URL, and model name."
+msgstr "설정 -> AI에서 로컬 모델을 활성화하거나 외부 AI 제공자의 API 키, Base URL, 모델 이름을 설정하세요."

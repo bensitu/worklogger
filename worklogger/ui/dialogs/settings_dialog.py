@@ -37,7 +37,7 @@ from config.constants import (
 )
 from config.themes import (
     DEFAULT_CUSTOM_COLOR, PALETTE_ICON_STYLE, THEMES, THEME_KEYS, THEME_NAMES,
-    normalize_hex_color, set_custom_theme, switch_off_color,
+    apply_widget_qss, clear_widget_qss, normalize_hex_color, set_custom_theme, switch_off_color,
     custom_color_button_qss, local_model_download_blocked_qss,
     settings_account_header_qss, status_label_qss, theme_colors,
 )
@@ -384,18 +384,20 @@ class SettingsDialog(QDialog):
                     short = msg(key_miss)
                     detail = msg(key_miss_d)
                     self._ai_test_lbl.setText(_("✗  {}").format(short))
-                    self._ai_test_lbl.setStyleSheet(status_label_qss("error"))
+                    apply_widget_qss(
+                        self._ai_test_lbl, status_label_qss("error"))
                     QMessageBox.warning(self, _("Settings"), detail)
                     return
 
             self._ai_test_btn.setEnabled(False)
-            self._ai_test_lbl.setStyleSheet("")
+            clear_widget_qss(self._ai_test_lbl)
             self._ai_test_lbl.setText(_("Testing…"))
             _restore()
 
             def _on_to():
                 self._ai_test_lbl.setText(_("✗  {}").format("Timeout"))
-                self._ai_test_lbl.setStyleSheet(status_label_qss("error"))
+                apply_widget_qss(
+                    self._ai_test_lbl, status_label_qss("error"))
                 self._ai_test_btn.setEnabled(True)
             _timer = threading.Timer(
                 10.0, lambda: QTimer.singleShot(0, _on_to))
@@ -407,8 +409,10 @@ class SettingsDialog(QDialog):
                 except Exception:
                     pass
                 self._ai_test_lbl.setText(_("✓  Connected"))
-                self._ai_test_lbl.setStyleSheet(
-                    status_label_qss("success", _acc))
+                apply_widget_qss(
+                    self._ai_test_lbl,
+                    status_label_qss("success", _acc),
+                )
                 self._ai_test_btn.setEnabled(True)
 
             def _err(short, detail):
@@ -417,7 +421,8 @@ class SettingsDialog(QDialog):
                 except Exception:
                     pass
                 self._ai_test_lbl.setText(_("✗  {}").format(short))
-                self._ai_test_lbl.setStyleSheet(status_label_qss("error"))
+                apply_widget_qss(
+                    self._ai_test_lbl, status_label_qss("error"))
                 self._ai_test_btn.setEnabled(True)
                 if detail:
                     mb = QMessageBox(QMessageBox.Warning, _("Settings"),
@@ -433,8 +438,14 @@ class SettingsDialog(QDialog):
                     text = kw.get("raw", raw_msg)
                 QTimer.singleShot(0, lambda: self._ai_test_lbl.setText(text))
 
-            from services.ai_service import AIWorker as _AIW
-            _AIW.test(ak, bu, mdl, _ok, _err, on_status=_on_st)
+            app_ref.services.test_ai_connection(
+                ak,
+                bu,
+                mdl,
+                _ok,
+                _err,
+                on_status=_on_st,
+            )
 
         self._ai_test_btn.clicked.connect(_run_ext_test)
         aiv.addWidget(grp_ext)
@@ -564,8 +575,10 @@ class SettingsDialog(QDialog):
                 else:
                     status = f"✓  {ready_text} · {activity_text}"
                 self._local_status_lbl.setText(status)
-                self._local_status_lbl.setStyleSheet(
-                    status_label_qss("success", _acc))
+                apply_widget_qss(
+                    self._local_status_lbl,
+                    status_label_qss("success", _acc),
+                )
                 self._local_dl_btn.setText(
                     _("Select / Change"))
             else:
@@ -580,7 +593,7 @@ class SettingsDialog(QDialog):
                 else:
                     self._local_status_lbl.setText(
                         _("Not downloaded"))
-                self._local_status_lbl.setStyleSheet("")
+                clear_widget_qss(self._local_status_lbl)
                 self._local_dl_btn.setText(
                     _("Select / Change") if present else _("Download"))
             if not enabled:
@@ -593,16 +606,20 @@ class SettingsDialog(QDialog):
                     )
                 )
                 if app_ref.dark:
-                    self._local_dl_btn.setStyleSheet(
-                        local_model_download_blocked_qss(True))
+                    apply_widget_qss(
+                        self._local_dl_btn,
+                        local_model_download_blocked_qss(True),
+                    )
                 else:
-                    self._local_dl_btn.setStyleSheet(
-                        local_model_download_blocked_qss(False))
+                    apply_widget_qss(
+                        self._local_dl_btn,
+                        local_model_download_blocked_qss(False),
+                    )
             else:
                 self._local_dl_blocked = False
                 self._local_dl_btn.setEnabled(True)
                 self._local_dl_btn.setToolTip("")
-                self._local_dl_btn.setStyleSheet("")
+                clear_widget_qss(self._local_dl_btn)
 
         def _invalidate_local_verify_cache(entry_id: str = "") -> None:
             if entry_id:
@@ -622,10 +639,19 @@ class SettingsDialog(QDialog):
                     LocalModelService,
                 )
                 mdir = get_models_dir()
-                entry_id = str(get_active_entry_id(mdir) or "")
-                present = bool(LocalModelService.get().is_model_present())
+                entry_id = str(get_active_entry_id(mdir, services=app_ref.services) or "")
+                local_service = LocalModelService.get()
+                try:
+                    present = bool(local_service.is_model_present(app_ref.services))
+                except TypeError:
+                    present = bool(local_service.is_model_present())
                 manifest = load_manifest(mdir)
-                manifest_entry = get_entry(manifest, entry_id or "local")
+                manifest_entry = get_entry(
+                    manifest,
+                    entry_id or "local",
+                    services=app_ref.services,
+                    models_dir=mdir,
+                )
                 has_expected_sha = bool(
                     str(manifest_entry.get("sha256", "")).strip()
                 )
@@ -634,7 +660,10 @@ class SettingsDialog(QDialog):
                     (c for c in catalog if c.get("id") == entry_id),
                     catalog[0] if catalog else {},
                 )
-                lbl_text = localize_field(cat, "label", app_ref.lang) or cat.get("label", "")
+                lbl_text = (
+                    localize_field(cat, "display_name", app_ref.lang)
+                    or cat.get("display_name", "")
+                )
                 ready_hint = present and has_expected_sha
                 return present, entry_id, str(lbl_text), bool(ready_hint)
             except Exception:
@@ -723,7 +752,7 @@ class SettingsDialog(QDialog):
                     "Verifying local model file...",
                 )
             )
-            self._local_status_lbl.setStyleSheet("")
+            clear_widget_qss(self._local_status_lbl)
             self._local_dl_btn.setEnabled(False)
 
             def _worker() -> None:
@@ -746,11 +775,16 @@ class SettingsDialog(QDialog):
                         retries=1,
                         progress_cb=_progress,
                         cancel_event=cancel_event,
+                        services=app_ref.services,
                     )
-                    present = LocalModelService.get().is_model_present()
+                    local_service = LocalModelService.get()
+                    try:
+                        present = local_service.is_model_present(app_ref.services)
+                    except TypeError:
+                        present = local_service.is_model_present()
                 except Exception:
                     ready = False
-                    present = bool(present)
+                    present = False
                     verify_reason = "io_error"
 
                 self._local_verify_bridge.done.emit(
@@ -826,15 +860,16 @@ class SettingsDialog(QDialog):
                 dark=app_ref.dark,
                 on_model_changed=_on_model_changed,
                 catalog_override=catalog_override,
+                services=app_ref.services,
             )
             from services.local_model_service import (
                 get_active_entry_id,
                 get_models_dir,
                 LocalModelService,
             )
-            before_id = str(get_active_entry_id(get_models_dir()) or "")
+            before_id = str(get_active_entry_id(get_models_dir(), services=app_ref.services) or "")
             result = dlg.exec()
-            after_id = str(get_active_entry_id(get_models_dir()) or "")
+            after_id = str(get_active_entry_id(get_models_dir(), services=app_ref.services) or "")
             LocalModelService.reset()
             from services.download_controller import DownloadController
             DownloadController.reset()
@@ -872,7 +907,7 @@ class SettingsDialog(QDialog):
                     "Loading latest model catalog...",
                 )
             )
-            self._local_status_lbl.setStyleSheet("")
+            clear_widget_qss(self._local_status_lbl)
             self._local_dl_btn.setEnabled(False)
             self._local_dl_btn.setToolTip(
                 msg(
@@ -994,8 +1029,8 @@ class SettingsDialog(QDialog):
             )
         )
         account_header_qss = settings_account_header_qss()
-        account_lbl.setStyleSheet(account_header_qss)
-        role_lbl.setStyleSheet(account_header_qss)
+        apply_widget_qss(account_lbl, account_header_qss)
+        apply_widget_qss(role_lbl, account_header_qss)
         role_lbl.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         account_row_l.addWidget(account_lbl, 1)
         account_row_l.addWidget(role_lbl, 1)
@@ -1117,8 +1152,9 @@ class SettingsDialog(QDialog):
         is_custom = self._theme_cb.currentData() == "custom"
         self._custom_color_btn.setVisible(is_custom)
         self._custom_color_btn.setEnabled(is_custom)
-        self._custom_color_btn.setStyleSheet(
-            custom_color_button_qss(self._custom_color)
+        apply_widget_qss(
+            self._custom_color_btn,
+            custom_color_button_qss(self._custom_color),
         )
 
     def _apply_custom_color(self, hex_color: str) -> None:

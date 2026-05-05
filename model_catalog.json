@@ -15,7 +15,7 @@
       "sha256": "2fde00ce69dd4899c70d020845e2638353015bba0fdf161b3eb965f2bca4464e",
       "estimated_size_mb": 2600,
       "min_ram_gb": 6,
-      "context_length": 32768,
+      "context_length": 262144,
       "max_output_tokens": 8192,
       "license": "apache-2.0",
       "status": "stable",
@@ -41,7 +41,7 @@
       "sha256": "120307ba529eb2439d6c430d94104dabd578497bc7bfe7e322b5d9933b449bd4",
       "estimated_size_mb": 5000,
       "min_ram_gb": 10,
-      "context_length": 32768,
+      "context_length": 40960,
       "max_output_tokens": 8192,
       "license": "apache-2.0",
       "status": "stable",
@@ -67,16 +67,16 @@
       "sha256": "88c00229914083cd112853aab84ed51b87bdf6b9ce42f532d8c85c7c63b1730a",
       "estimated_size_mb": 2500,
       "min_ram_gb": 6,
-      "context_length": 32768,
+      "context_length": 131072,
       "max_output_tokens": 4096,
       "license": "mit",
       "status": "stable",
       "description": {
-        "en_US": "Phi-4 mini instruct 4-bit - compact instruction model with good English, coding, and reasoning behavior. Useful when you want a smaller non-Qwen option.",
-        "zh_CN": "Phi-4 mini instruct 4-bit - 小型指令模型，英文、代码与推理表现较好。适合作为较小的非 Qwen 选择。",
-        "zh_TW": "Phi-4 mini instruct 4-bit - 小型指令模型，英文、程式碼與推理表現較好。適合作為較小的非 Qwen 選擇。",
-        "ja_JP": "Phi-4 mini instruct 4-bit - 英語、コード、推論に強い小型の指示モデルです。小さめの非 Qwen 選択肢が必要な場合に適しています。",
-        "ko_KR": "Phi-4 mini instruct 4-bit - 영어, 코드, 추론 성능이 좋은 소형 지시 모델입니다. 더 작은 비 Qwen 선택지가 필요할 때 유용합니다."
+        "en_US": "Phi-4 mini instruct 4-bit - compact instruction model with good multilingual behavior, coding, and reasoning behavior. Useful when you want a smaller non-Qwen option.",
+        "zh_CN": "Phi-4 mini instruct 4-bit - 小型指令模型，多语言、代码与推理表现较好。适合作为较小的非 Qwen 选择。",
+        "zh_TW": "Phi-4 mini instruct 4-bit - 小型指令模型，多語言、程式碼與推理表現較好。適合作為較小的非 Qwen 選擇。",
+        "ja_JP": "Phi-4 mini instruct 4-bit - 多言語、コード、推論に強い小型の指示モデルです。小さめの非 Qwen 選択肢が必要な場合に適しています。",
+        "ko_KR": "Phi-4 mini instruct 4-bit - 다국어, 코드, 추론 성능이 좋은 소형 지시 모델입니다. 더 작은 비 Qwen 선택지가 필요할 때 유용합니다."
       }
     },
     {
@@ -119,16 +119,16 @@
       "sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
       "estimated_size_mb": 2700,
       "min_ram_gb": 7,
-      "context_length": 32768,
+      "context_length": 262144,
       "max_output_tokens": 8192,
       "license": "apache-2.0",
       "status": "experimental",
       "description": {
-        "en_US": "Qwen3.5-4B 4-bit - experimental newer Qwen model for users who want to try the latest local generation behavior. Expect catalog or prompt tuning changes over time.",
-        "zh_CN": "Qwen3.5-4B 4-bit - 实验性新版 Qwen 模型，适合想尝试最新本地生成行为的用户。后续可能继续调整目录与提示词。",
-        "zh_TW": "Qwen3.5-4B 4-bit - 實驗性新版 Qwen 模型，適合想嘗試最新本地生成行為的使用者。後續可能繼續調整目錄與提示詞。",
-        "ja_JP": "Qwen3.5-4B 4-bit - 最新のローカル生成挙動を試したいユーザー向けの実験的な新しい Qwen モデルです。今後カタログやプロンプト調整が入る可能性があります。",
-        "ko_KR": "Qwen3.5-4B 4-bit - 최신 로컬 생성 동작을 시험하려는 사용자를 위한 실험적인 신규 Qwen 모델입니다. 앞으로 카탈로그나 프롬프트 조정이 있을 수 있습니다."
+        "en_US": "Qwen3.5-4B 4-bit - experimental newer Qwen3.5 model for users who want to try the latest local generation behavior. Expect catalog or prompt tuning changes over time.",
+        "zh_CN": "Qwen3.5-4B 4-bit - 实验性新版 Qwen3.5 模型，适合想尝试最新本地生成行为的用户。后续可能继续调整目录与提示词。",
+        "zh_TW": "Qwen3.5-4B 4-bit - 實驗性新版 Qwen3.5 模型，適合想嘗試最新本地生成行為的使用者。後續可能繼續調整目錄與提示詞。",
+        "ja_JP": "Qwen3.5-4B 4-bit - 最新のローカル生成挙動を試したいユーザー向けの実験的な新しい Qwen3.5 モデルです。今後カタログやプロンプト調整が入る可能性があります。",
+        "ko_KR": "Qwen3.5-4B 4-bit - 최신 로컬 생성 동작을 시험하려는 사용자를 위한 실험적인 신규 Qwen3.5 모델입니다. 앞으로 카탈로그나 프롬프트 조정이 있을 수 있습니다."
       }
     }
   ]

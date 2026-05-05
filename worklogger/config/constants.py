@@ -1,6 +1,6 @@
 """Application-wide constants — single source of truth."""
 
-APP_VERSION = "3.2.0"
+APP_VERSION = "3.3.0"
 APP_AUTHOR = "Ben Situ"
 APP_ID = "dev.worklogger.app.v1"
 GITHUB_URL = "https://github.com/bensitu/worklogger"
@@ -8,6 +8,7 @@ GITHUB_RELEASES_API = (
     "https://api.github.com/repos/bensitu/worklogger/releases/latest"
 )
 MODEL_CATALOG_REMOTE_FILENAME = "model_catalog.json"
+CATALOG_FILENAME = "catalog.json"
 MODEL_CATALOG_REMOTE_URL = (
     "https://raw.githubusercontent.com/bensitu/worklogger/main/"
     + MODEL_CATALOG_REMOTE_FILENAME
@@ -61,6 +62,7 @@ WEEK_START_MONDAY_SETTING_KEY = "week_start_monday"
 TIME_INPUT_MODE_SETTING_KEY = "time_input_mode"
 MAX_SHIFT_HOURS_SETTING_KEY = "max_shift_hours"
 LOCAL_MODEL_ENABLED_SETTING_KEY = "local_model_enabled"
+LOCAL_MODEL_ACTIVE_ID_SETTING_KEY = "local_model_active_id"
 AI_PRIVACY_MODE_SETTING_KEY = "ai_privacy_mode"
 AI_INCLUDE_NOTES_SETTING_KEY = "ai_context_include_notes"
 AI_INCLUDE_CALENDAR_TITLES_SETTING_KEY = "ai_context_include_calendar_titles"

@@ -28,7 +28,14 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QFont
 
 from utils.i18n import _, msg
-from config.themes import DEFAULT_CUSTOM_COLOR, LOCAL_MODEL_READY_COLOR, progress_bar_qss, status_label_qss
+from config.themes import (
+    DEFAULT_CUSTOM_COLOR,
+    LOCAL_MODEL_READY_COLOR,
+    apply_widget_qss,
+    clear_widget_qss,
+    progress_bar_qss,
+    status_label_qss,
+)
 
 
 # Cross-thread bridge.
@@ -67,13 +74,15 @@ class LocalDownloadDialog(QDialog):
                  accent_color: str = DEFAULT_CUSTOM_COLOR,
                  dark: bool = False,
                  on_model_changed: Optional[Callable[[str, str], None]] = None,
-                 catalog_override: Optional[list[dict]] = None) -> None:
+                 catalog_override: Optional[list[dict]] = None,
+                 services=None) -> None:
         super().__init__(parent)
         self._lang = lang
         self._accent_color = accent_color
         self._dark = dark
         self._on_model_changed = on_model_changed
         self._catalog_override = catalog_override
+        self._services = services
         self._bridge = _Bridge(self)
         self._sel_id: Optional[str] = None
         self.setWindowTitle(_("Download Local Model"))
@@ -108,7 +117,7 @@ class LocalDownloadDialog(QDialog):
         except Exception:
             pass
         catalog   = self._catalog_override if self._catalog_override is not None else load_catalog()
-        active_id = get_active_entry_id()
+        active_id = get_active_entry_id(services=self._services)
 
         page = QWidget()
         lyt = QVBoxLayout(page)
@@ -124,8 +133,7 @@ class LocalDownloadDialog(QDialog):
 
         hint = QLabel(msg(
             "local_model_select_hint",
-            "Only one model can be active at a time.  "
-            "Delete the current model before switching.",
+            "Each user can select one active local model. Downloaded GGUF files are shared across users.",
         ))
         hint.setWordWrap(True)
         hint.setObjectName("muted")
@@ -207,11 +215,11 @@ class LocalDownloadDialog(QDialog):
         from services.local_model_service import localize_field
 
         eid = entry.get("id", "")
-        label = entry.get("label", eid.upper())
-        size = entry.get("size_mb", 0)
-        ram = entry.get("ram_gb", 0)
-        desc = localize_field(entry, "desc", lang)
-        pros = localize_field(entry, "pros", lang)
+        label = entry.get("display_name", eid.upper())
+        size = entry.get("estimated_size_mb", 0)
+        ram = entry.get("min_ram_gb", 0)
+        desc = localize_field(entry, "description", lang)
+        status = str(entry.get("status", "")).strip()
 
         frame = QGroupBox()
         frame.setObjectName("ai_model_card")
@@ -232,7 +240,13 @@ class LocalDownloadDialog(QDialog):
         top_row.addStretch()
         fl.addLayout(top_row)
 
-        hf_repo = entry.get("hf_repo", "")
+        status_text = self._status_badge_text(status)
+        if status_text:
+            status_badge = QLabel(status_text)
+            status_badge.setObjectName("muted")
+            fl.addWidget(status_badge)
+
+        hf_repo = entry.get("repo_id", "")
         if hf_repo:
             hf_url = f"https://huggingface.co/{hf_repo}"
             hf_lbl = QLabel(f'<a href="{hf_url}">{hf_repo}</a>')
@@ -245,11 +259,6 @@ class LocalDownloadDialog(QDialog):
             d.setWordWrap(True)
             d.setObjectName("muted")
             fl.addWidget(d)
-
-        if pros:
-            p = QLabel(pros)
-            p.setWordWrap(True)
-            fl.addWidget(p)
 
         bot_row = QHBoxLayout()
         status_lbl = QLabel()
@@ -272,6 +281,15 @@ class LocalDownloadDialog(QDialog):
             "delete_btn": delete_btn,
         }
 
+    @staticmethod
+    def _status_badge_text(status: str) -> str:
+        mapping = {
+            "experimental": _("Experimental"),
+            "local": _("Local model"),
+            "preserved": _("Preserved local model"),
+        }
+        return mapping.get(status, "")
+
     def _refresh_card_states(self) -> None:
         """Refresh all card status labels and delete-button visibility.
 
@@ -282,11 +300,14 @@ class LocalDownloadDialog(QDialog):
         try:
             from services.local_model_service import (
                 load_catalog, verify_model_file, load_manifest,
-                get_models_dir, get_entry,
+                get_models_dir, get_entry, get_active_entry_id,
+                list_users_using_model,
             )
             mdir     = get_models_dir()
             manifest = load_manifest(mdir)
             catalog  = load_catalog(mdir)
+            active_id = get_active_entry_id(mdir, services=self._services)
+            current_user_id = int(getattr(self._services, "current_user_id", 0) or 0)
         except Exception:
             return
 
@@ -296,25 +317,33 @@ class LocalDownloadDialog(QDialog):
             if not card:
                 continue
             try:
-                me    = get_entry(manifest, eid)
-                fname = (me.get("file") or "").strip()
+                me    = get_entry(manifest, eid, services=self._services, models_dir=mdir)
+                fname = (me.get("filename") or "").strip()
                 path  = mdir / fname if fname else None
                 if path and path.exists() and path.stat().st_size > 0:
                     if verify_model_file(mdir, eid):
-                        card["status_lbl"].setText(_("✓  Ready"))
-                        card["status_lbl"].setStyleSheet(
-                            status_label_qss("success", ok_col))
+                        state = _("Active") if eid == active_id else _("Ready")
+                        users = set(list_users_using_model(self._services, eid))
+                        if users - {current_user_id}:
+                            used_text = _("Used by another user")
+                            state = f"{state} · {used_text}"
+                        card["status_lbl"].setText(f"✓  {state}")
+                        apply_widget_qss(
+                            card["status_lbl"],
+                            status_label_qss("success", ok_col),
+                        )
                     else:
                         card["status_lbl"].setText(
                             _("Integrity failed"))
-                        card["status_lbl"].setStyleSheet(status_label_qss("error"))
+                        apply_widget_qss(
+                            card["status_lbl"], status_label_qss("error"))
                     card["delete_btn"].show()
                 else:
                     raise ValueError("not present")
             except Exception:
                 card["status_lbl"].setText(
                     _("Not downloaded"))
-                card["status_lbl"].setStyleSheet("")
+                clear_widget_qss(card["status_lbl"])
                 card["delete_btn"].hide()
         self._sync_select_next_button()
 
@@ -333,8 +362,8 @@ class LocalDownloadDialog(QDialog):
                 get_entry, get_models_dir, load_manifest,
             )
             mdir = get_models_dir()
-            entry = get_entry(load_manifest(mdir), entry_id)
-            filename = str(entry.get("file", "")).strip()
+            entry = get_entry(load_manifest(mdir), entry_id, services=self._services, models_dir=mdir)
+            filename = str(entry.get("filename", "")).strip()
             path = mdir / filename if filename else None
             return bool(path) and path.exists() and path.stat().st_size > 0
         except Exception:
@@ -344,8 +373,16 @@ class LocalDownloadDialog(QDialog):
         if not hasattr(self, "_sel_next_btn"):
             return
         entry_id = self._selected_entry_id()
-        enabled = bool(entry_id) and not self._is_entry_downloaded(entry_id)
+        active_id = ""
+        try:
+            from services.local_model_service import get_active_entry_id
+            active_id = get_active_entry_id(services=self._services)
+        except Exception:
+            active_id = ""
+        downloaded = bool(entry_id) and self._is_entry_downloaded(str(entry_id))
+        enabled = bool(entry_id) and not (downloaded and entry_id == active_id)
         self._sel_next_btn.setEnabled(enabled)
+        self._sel_next_btn.setText(_("Select") if downloaded else _("Download"))
         if enabled:
             self._sel_next_btn.setToolTip("")
         elif not entry_id:
@@ -356,9 +393,23 @@ class LocalDownloadDialog(QDialog):
                 )
             )
         else:
-            self._sel_next_btn.setToolTip(_("This model is already downloaded and ready."))
+            self._sel_next_btn.setToolTip(_("This model is already selected and ready."))
 
     def _delete_model(self, entry_id: str) -> None:
+        try:
+            from services.local_model_service import list_users_using_model
+            current_user_id = int(getattr(self._services, "current_user_id", 0) or 0)
+            users = set(list_users_using_model(self._services, entry_id))
+            if users - {current_user_id}:
+                QMessageBox.warning(
+                    self,
+                    _("Delete Model"),
+                    _("This model is used by another user and cannot be deleted."),
+                )
+                return
+        except Exception:
+            pass
+
         reply = QMessageBox.question(
             self,
             _("Delete Model"),
@@ -369,8 +420,15 @@ class LocalDownloadDialog(QDialog):
         if reply != QMessageBox.Yes:
             return
         try:
-            from services.local_model_service import LocalModelService
-            LocalModelService.get().delete_model(entry_id)
+            from services.local_model_service import (
+                LocalModelService,
+                clear_active_model_id_for_user,
+                get_active_entry_id,
+            )
+            active_id = get_active_entry_id(services=self._services)
+            if active_id == entry_id:
+                clear_active_model_id_for_user(self._services)
+            LocalModelService.get().delete_model(entry_id, services=self._services)
             LocalModelService.reset()
             self._refresh_card_states()
             if callable(self._on_model_changed):
@@ -424,6 +482,7 @@ class LocalDownloadDialog(QDialog):
             entry_id,
             timeout_s=5.0,
             retries=1,
+            services=self._services,
         )
         if ok:
             return True
@@ -437,7 +496,7 @@ class LocalDownloadDialog(QDialog):
     def _finish_after_download(self) -> None:
         from services.local_model_service import get_active_entry_id, get_models_dir
         mdir = get_models_dir()
-        entry_id = self._sel_id or get_active_entry_id(mdir)
+        entry_id = self._sel_id or get_active_entry_id(mdir, services=self._services)
         if not entry_id:
             self.accept()
             return
@@ -448,7 +507,6 @@ class LocalDownloadDialog(QDialog):
     def _on_select_next(self) -> None:
         """Validate selection, handle conflict, start download."""
         from services.local_model_service import (
-            verify_model_file, get_active_entry_id,
             load_manifest, get_entry, get_models_dir, set_active_entry,
         )
         sel_id = self._selected_entry_id()
@@ -458,12 +516,12 @@ class LocalDownloadDialog(QDialog):
 
         mdir = get_models_dir()
         manifest = load_manifest(mdir)
-        entry = get_entry(manifest, sel_id)
-        path = mdir / entry.get("file", "")
+        entry = get_entry(manifest, sel_id, services=self._services, models_dir=mdir)
+        path = mdir / entry.get("filename", "")
 
         if path.exists() and path.stat().st_size > 0:
             if self._verify_selected_before_close(mdir, sel_id):
-                set_active_entry(sel_id, mdir)
+                set_active_entry(sel_id, mdir, services=self._services)
                 if callable(self._on_model_changed):
                     try:
                         self._on_model_changed("selected", sel_id)
@@ -477,30 +535,6 @@ class LocalDownloadDialog(QDialog):
                 self.accept()
             return
 
-        # Guard against keeping two verified models at once.
-        active_id = get_active_entry_id(mdir)
-        if active_id != sel_id and verify_model_file(mdir, active_id):
-            reply = QMessageBox.question(
-                self,
-                _("Switch Model"),
-                msg("local_model_switch_confirm",
-                      "A different model is already downloaded.  "
-                      "It will be deleted before downloading the new one.  Continue?"),
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No,
-            )
-            if reply != QMessageBox.Yes:
-                return
-            try:
-                from services.local_model_service import LocalModelService
-                LocalModelService.get().delete_model(active_id)
-                LocalModelService.reset()
-            except Exception as exc:
-                QMessageBox.warning(self, msg(
-                    "settings_title", "Error"), str(exc))
-                return
-
-        set_active_entry(sel_id, mdir)
         self._show_page(self.PAGE_DOWNLOAD)
         self._start_download()
 
@@ -530,8 +564,9 @@ class LocalDownloadDialog(QDialog):
         self._progress.setValue(0)
         self._progress.setTextVisible(True)
         self._progress.setFormat("%p%")
-        self._progress.setStyleSheet(
-            progress_bar_qss(self._accent_color, self._dark)
+        apply_widget_qss(
+            self._progress,
+            progress_bar_qss(self._accent_color, self._dark),
         )
         lyt.addWidget(self._progress)
 
@@ -561,7 +596,7 @@ class LocalDownloadDialog(QDialog):
         cat = load_catalog()
         entry = next((e for e in cat if e.get("id") == eid),
                      cat[0] if cat else {})
-        label = entry.get("label", eid.upper())
+        label = entry.get("display_name", eid.upper())
 
         self._dl_model_lbl.setText(label)
         self._retry_btn.hide()
@@ -640,7 +675,12 @@ class LocalDownloadDialog(QDialog):
         self._action_btn.clicked.disconnect()
         self._action_btn.clicked.connect(self._finish_after_download)
         # Ensure next inference picks up the newly downloaded model file.
-        from services.local_model_service import LocalModelService
+        from services.local_model_service import LocalModelService, set_active_entry, get_models_dir
+        try:
+            if self._sel_id:
+                set_active_entry(self._sel_id, get_models_dir(), services=self._services)
+        except Exception:
+            pass
         LocalModelService.reset()
         if callable(self._on_model_changed):
             try:
@@ -650,8 +690,9 @@ class LocalDownloadDialog(QDialog):
 
     def _on_error(self, message: str) -> None:
         display = msg(message)
+        error_title = _("Integrity check failed - file may be corrupted")
         self._log_append(
-            f"\n[{_("Integrity check failed — file may be corrupted")}] {display}")
+            f"\n[{error_title}] {display}")
         self._retry_btn.show()
         self._action_btn.setText(_("Close"))
         self._action_btn.clicked.disconnect()
@@ -675,7 +716,7 @@ class LocalDownloadDialog(QDialog):
             from services.local_model_service import LocalModelService
             svc = LocalModelService.get()
             # "__new__" always routes through filename matching or new-entry creation.
-            imported = svc.import_gguf(path, "__new__")
+            imported = svc.import_gguf(path, "__new__", services=self._services)
             LocalModelService.reset()
             self._refresh_card_states()
             # New custom entries can add cards that were not present at dialog open.

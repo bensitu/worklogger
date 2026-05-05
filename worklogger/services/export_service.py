@@ -10,7 +10,7 @@ layer independent from UI widget classes.
 from __future__ import annotations
 import csv
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
@@ -50,27 +50,32 @@ class PdfColors:
     accent: str
 
 
+@dataclass(frozen=True)
+class PdfMetric:
+    label: str
+    value: str
+
+
+@dataclass(frozen=True)
+class PdfDetailSection:
+    summary: list[PdfMetric] = field(default_factory=list)
+    headers: list[tuple[str, float]] = field(default_factory=list)
+    rows: list[list[str]] = field(default_factory=list)
+    disabled_rows: set[int] = field(default_factory=set)
+
+
 def pdf_colors(ctx: "PdfContext") -> PdfColors:
-    """Return theme-aware PDF colors."""
+    """Return print-safe PDF colors.
+
+    PDF exports intentionally keep a light page even when the app is in dark
+    mode. That keeps exported text readable in PDF viewers and on paper.
+    """
     from config.themes import theme_colors
 
     accent, _hover, accent_dim, stat_bg, stat_border = theme_colors(
         ctx.theme,
-        ctx.dark,
+        False,
     )
-    if ctx.dark:
-        return PdfColors(
-            page_bg="#151722",
-            text="#eef2ff",
-            muted="#a8b0ce",
-            separator=stat_border,
-            panel_bg=stat_bg,
-            panel_header_bg=stat_border,
-            row_bg="#161923",
-            row_alt_bg="#1d2030",
-            disabled="#707894",
-            accent=accent,
-        )
     return PdfColors(
         page_bg="#ffffff",
         text="#1e2035",
@@ -217,9 +222,8 @@ def render_pdf(
     path: str,
     tab_index: int,
     tab_name: str,
-    chart_widget,
-    data: list,
-    detail_fn,
+    chart_pixmap,
+    detail: PdfDetailSection,
     ctx: "PdfContext",
     ai_narrative: str | None = None,
 ) -> None:
@@ -233,8 +237,16 @@ def render_pdf(
     """
     from PySide6.QtPrintSupport import QPrinter
     from PySide6.QtCore import QMarginsF, QRectF
-    from PySide6.QtGui import (QPainter, QPageLayout, QPageSize,
-                               QFont, QColor, QPen, QBrush, QTextDocument)
+    from PySide6.QtGui import (
+        QBrush,
+        QColor,
+        QFont,
+        QFontMetrics,
+        QPageLayout,
+        QPageSize,
+        QPainter,
+        QPen,
+    )
     from PySide6.QtCore import Qt
     from utils.i18n import _
 
@@ -254,7 +266,21 @@ def render_pdf(
     dpi = printer.resolution()
     def pt(n): return int(n * dpi / 72)
     colors = pdf_colors(ctx)
-    painter.fillRect(QRectF(0, 0, pw, ph), QColor(colors.page_bg))
+
+    def fill_page() -> None:
+        painter.fillRect(QRectF(0, 0, pw, ph), QColor(colors.page_bg))
+
+    def new_page() -> None:
+        printer.newPage()
+        fill_page()
+
+    def ensure_space(cursor: int, required: int, *, top_margin: int = 0) -> int:
+        if cursor + required <= ph - pt(18):
+            return cursor
+        new_page()
+        return top_margin or pt(18)
+
+    fill_page()
 
     f = QFont("sans-serif")
     f.setPixelSize(pt(20))
@@ -279,7 +305,7 @@ def render_pdf(
     painter.drawLine(int(pw*0.03), sep_y, int(pw*0.97), sep_y)
     cursor_y = sep_y + pt(6)
 
-    src_px = chart_widget.grab()
+    src_px = chart_pixmap
     tw = pw
     th_img = int(src_px.height() * pw / src_px.width())
     if th_img > int(ph * 0.38):
@@ -294,47 +320,233 @@ def render_pdf(
 
     narrative = str(ai_narrative or "").strip()
     if narrative:
-        doc = QTextDocument()
-        body_font = QFont("sans-serif")
-        body_font.setPixelSize(pt(9))
-        doc.setDefaultFont(body_font)
-        doc.setPlainText(narrative)
-        doc.setTextWidth(pw * 0.86)
-        content_h = int(doc.size().height())
-        box_h = min(content_h + pt(34), ph - cursor_y - pt(54))
-        if box_h < pt(72):
-            printer.newPage()
-            painter.fillRect(QRectF(0, 0, pw, ph), QColor(colors.page_bg))
-            cursor_y = pt(20)
-            box_h = min(content_h + pt(34), ph - cursor_y - pt(54))
-        x = int(pw * 0.05)
-        w = int(pw * 0.90)
-        painter.setPen(QPen(QColor(colors.separator), pt(1)))
-        painter.setBrush(QBrush(QColor(colors.panel_bg)))
-        painter.drawRoundedRect(QRectF(x, cursor_y, w, box_h), pt(5), pt(5))
-        title_font = QFont("sans-serif")
-        title_font.setPixelSize(pt(10))
-        title_font.setBold(True)
-        painter.setFont(title_font)
-        painter.setPen(QColor(colors.text))
-        painter.drawText(
-            QRectF(x + pt(10), cursor_y + pt(8), w - pt(20), pt(14)),
-            Qt.AlignLeft | Qt.AlignVCenter,
+        cursor_y = _draw_ai_narrative(
+            painter,
+            narrative,
+            cursor_y,
+            pw,
+            ph,
+            pt,
+            colors,
+            ensure_space,
+            new_page,
             _("AI Summary"),
         )
-        painter.save()
-        painter.translate(x + pt(10), cursor_y + pt(26))
-        painter.setPen(QColor(colors.text))
-        doc.drawContents(
-            painter,
-            QRectF(0, 0, w - pt(20), max(0, box_h - pt(32))),
-        )
-        painter.restore()
-        cursor_y += box_h + pt(10)
 
+    cursor_y = ensure_space(cursor_y, pt(14))
     painter.setPen(QPen(QColor(colors.separator), pt(1)))
     painter.drawLine(int(pw*0.03), cursor_y, int(pw*0.97), cursor_y)
     cursor_y += pt(10)
 
-    detail_fn(painter, pw, ph, pt, _, cursor_y, ctx)
+    _draw_detail_section(
+        painter,
+        detail,
+        cursor_y,
+        pw,
+        ph,
+        pt,
+        colors,
+        ensure_space,
+        new_page,
+    )
     painter.end()
+
+
+def _wrap_text(text: str, metrics, max_width: int) -> list[str]:
+    lines: list[str] = []
+    for paragraph in str(text or "").splitlines():
+        if not paragraph.strip():
+            lines.append("")
+            continue
+        words = paragraph.split(" ")
+        current = ""
+        for word in words:
+            candidate = word if not current else f"{current} {word}"
+            if metrics.horizontalAdvance(candidate) <= max_width:
+                current = candidate
+                continue
+            if current:
+                lines.append(current)
+                current = ""
+            if metrics.horizontalAdvance(word) <= max_width:
+                current = word
+                continue
+            chunk = ""
+            for char in word:
+                candidate = chunk + char
+                if metrics.horizontalAdvance(candidate) <= max_width:
+                    chunk = candidate
+                else:
+                    if chunk:
+                        lines.append(chunk)
+                    chunk = char
+            current = chunk
+        if current:
+            lines.append(current)
+    return lines
+
+
+def _draw_ai_narrative(
+    painter,
+    narrative: str,
+    cursor_y: int,
+    pw: int,
+    ph: int,
+    pt,
+    colors: PdfColors,
+    ensure_space,
+    new_page,
+    title: str,
+) -> int:
+    from PySide6.QtCore import QRectF, Qt
+    from PySide6.QtGui import QColor, QFont, QFontMetrics, QPen, QBrush
+
+    x = int(pw * 0.05)
+    w = int(pw * 0.90)
+    body_font = QFont("sans-serif")
+    body_font.setPixelSize(pt(9))
+    metrics = QFontMetrics(body_font)
+    line_h = max(metrics.height() + pt(2), pt(12))
+    lines = _wrap_text(narrative, metrics, w - pt(20))
+    idx = 0
+    first_block = True
+    while idx < len(lines):
+        title_h = pt(18) if first_block else pt(0)
+        cursor_y = ensure_space(cursor_y, title_h + line_h + pt(18))
+        available = max(line_h, ph - cursor_y - pt(24) - title_h)
+        capacity = max(1, available // line_h)
+        block_lines = lines[idx:idx + capacity]
+        box_h = title_h + len(block_lines) * line_h + pt(18)
+        painter.setPen(QPen(QColor(colors.separator), pt(1)))
+        painter.setBrush(QBrush(QColor(colors.panel_bg)))
+        painter.drawRoundedRect(QRectF(x, cursor_y, w, box_h), pt(5), pt(5))
+        top = cursor_y + pt(8)
+        if first_block:
+            title_font = QFont("sans-serif")
+            title_font.setPixelSize(pt(10))
+            title_font.setBold(True)
+            painter.setFont(title_font)
+            painter.setPen(QColor(colors.text))
+            painter.drawText(
+                QRectF(x + pt(10), top, w - pt(20), pt(14)),
+                Qt.AlignLeft | Qt.AlignVCenter,
+                title,
+            )
+            top += title_h
+        painter.setFont(body_font)
+        painter.setPen(QColor(colors.text))
+        for line in block_lines:
+            painter.drawText(
+                QRectF(x + pt(10), top, w - pt(20), line_h),
+                Qt.AlignLeft | Qt.AlignVCenter,
+                line,
+            )
+            top += line_h
+        cursor_y += box_h + pt(10)
+        idx += len(block_lines)
+        first_block = False
+        if idx < len(lines):
+            new_page()
+            cursor_y = pt(18)
+    return cursor_y
+
+
+def _draw_detail_section(
+    painter,
+    detail: PdfDetailSection,
+    cursor_y: int,
+    pw: int,
+    ph: int,
+    pt,
+    colors: PdfColors,
+    ensure_space,
+    new_page,
+) -> int:
+    from PySide6.QtCore import QRectF, Qt
+    from PySide6.QtGui import QColor, QFont, QFontMetrics, QPen, QBrush
+
+    if detail.summary:
+        cursor_y = ensure_space(cursor_y, pt(40))
+        box_h = pt(34)
+        cw = pw / max(1, len(detail.summary))
+        painter.setBrush(QBrush(QColor(colors.panel_bg)))
+        painter.setPen(Qt.NoPen)
+        painter.drawRoundedRect(QRectF(0, cursor_y, pw, box_h), pt(6), pt(6))
+        for i, metric in enumerate(detail.summary):
+            cx = i * cw
+            label_font = QFont("sans-serif")
+            label_font.setPixelSize(pt(8))
+            painter.setFont(label_font)
+            painter.setPen(QColor(colors.muted))
+            painter.drawText(
+                QRectF(cx, cursor_y + pt(4), cw, pt(12)),
+                Qt.AlignCenter,
+                metric.label,
+            )
+            value_font = QFont("sans-serif")
+            value_font.setPixelSize(pt(11))
+            value_font.setBold(True)
+            painter.setFont(value_font)
+            painter.setPen(QColor(colors.text))
+            painter.drawText(
+                QRectF(cx, cursor_y + pt(16), cw, pt(14)),
+                Qt.AlignCenter,
+                metric.value,
+            )
+        cursor_y += box_h + pt(6)
+
+    if not detail.headers:
+        return cursor_y
+
+    header_h = pt(16)
+    row_h = pt(15)
+    header_font = QFont("sans-serif")
+    header_font.setPixelSize(pt(8))
+    header_font.setBold(True)
+    row_font = QFont("sans-serif")
+    row_font.setPixelSize(pt(8))
+    row_metrics = QFontMetrics(row_font)
+
+    def draw_header(y_pos: int) -> int:
+        painter.setBrush(QBrush(QColor(colors.panel_header_bg)))
+        painter.setPen(Qt.NoPen)
+        painter.drawRect(QRectF(0, y_pos, pw, header_h))
+        painter.setFont(header_font)
+        painter.setPen(QColor(colors.text))
+        x = 0
+        for label, frac in detail.headers:
+            cw = pw * frac
+            painter.drawText(
+                QRectF(x + pt(2), y_pos, cw - pt(4), header_h),
+                Qt.AlignVCenter | Qt.AlignLeft,
+                label,
+            )
+            x += cw
+        return y_pos + header_h
+
+    cursor_y = ensure_space(cursor_y, header_h + row_h)
+    cursor_y = draw_header(cursor_y)
+    for row_idx, row in enumerate(detail.rows):
+        if cursor_y + row_h > ph - pt(18):
+            new_page()
+            cursor_y = draw_header(pt(18))
+        bg = QColor(colors.row_alt_bg if row_idx % 2 == 0 else colors.row_bg)
+        painter.setBrush(QBrush(bg))
+        painter.setPen(Qt.NoPen)
+        painter.drawRect(QRectF(0, cursor_y, pw, row_h))
+        painter.setFont(row_font)
+        painter.setPen(
+            QColor(colors.disabled if row_idx in detail.disabled_rows else colors.text)
+        )
+        x = 0
+        for value, (_label, frac) in zip(row, detail.headers):
+            cw = pw * frac
+            text = row_metrics.elidedText(str(value), Qt.ElideRight, int(cw - pt(6)))
+            painter.drawText(
+                QRectF(x + pt(3), cursor_y, cw - pt(6), row_h),
+                Qt.AlignVCenter | Qt.AlignLeft,
+                text,
+            )
+            x += cw
+        cursor_y += row_h
+    return cursor_y

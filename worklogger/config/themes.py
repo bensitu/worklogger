@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
 
 THEME_KEYS = ["blue", "pink", "green", "purple", "custom"]
@@ -243,6 +244,16 @@ def local_model_download_blocked_qss(dark: bool) -> str:
     )
 
 
+def apply_widget_qss(widget: Any, qss: str) -> None:
+    """Apply a component stylesheet through the centralized theme module."""
+    widget.setStyleSheet(qss)
+
+
+def clear_widget_qss(widget: Any) -> None:
+    """Clear a component stylesheet through the centralized theme module."""
+    widget.setStyleSheet("")
+
+
 def status_label_qss(kind: str, accent: str | None = None) -> str:
     weight = STATUS_STYLE["strong_weight"]
     if kind == "error":
@@ -310,6 +321,28 @@ def settings_account_header_qss() -> str:
 
 def dialog_title_qss() -> str:
     return "font-size:16px;font-weight:700;"
+
+
+def transparent_container_qss() -> str:
+    return (
+        "QWidget#transparent_container{"
+        "background:transparent;background-color:transparent;border:none;"
+        "}"
+    )
+
+
+def ai_switch_container_qss() -> str:
+    return (
+        "QWidget#transparent_container{background:transparent;"
+        "background-color:transparent;border:none;}"
+        "QWidget#transparent_container QLabel#ai_switch_label{"
+        "background:transparent;background-color:transparent;"
+        "border:none;padding:0px;}"
+    )
+
+
+def initial_password_value_qss() -> str:
+    return "color:#cccccc;"
 
 
 def user_table_qss(dark: bool, theme: str) -> str:
@@ -539,6 +572,12 @@ QProgressBar::chunk{{background:{acc};border-radius:3px;}}
 QRadioButton{{border-radius:8px;padding:2px 7px;}}
 
 """
+
+
+def apply_application_theme(application: Any, dark: bool, theme: str = "blue") -> None:
+    """Apply the generated application stylesheet through the theme module."""
+    application.setStyleSheet(make_qss(dark, theme))
+
 
 def progress_bar_qss(accent: str, dark: bool = False) -> str:
     """Return a QProgressBar stylesheet string matching the active theme.

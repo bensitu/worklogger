@@ -1,7 +1,6 @@
 from .settings_dialog import SettingsDialog
 from .work_dialogs import NoteEditorDialog, ReportDialog, ChartDialog, QuickLogDialog
 from .template_dialogs import TemplatePickerDialog, CreateTemplateDialog
-from .ai_dialogs import AIProgressDialog, AIResultDialog
 from .ai_chat_dialog import AiChatDialog
 from .local_model_dialogs import LocalDownloadDialog
 from .color_picker_dialog import ColorPickerDialog
@@ -19,8 +18,6 @@ __all__ = [
     "QuickLogDialog",
     "TemplatePickerDialog",
     "CreateTemplateDialog",
-    "AIProgressDialog",
-    "AIResultDialog",
     "AiChatDialog",
     "LocalDownloadDialog",
     "ColorPickerDialog",

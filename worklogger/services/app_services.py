@@ -819,6 +819,31 @@ class AppServices:
     def set_setting(self, key: str, value) -> None:
         self.db.set_setting(key, value, user_id=self._require_user_id())
 
+    def get_active_local_model_id(self) -> str:
+        from services.local_model_service import get_active_model_id_for_user
+
+        return get_active_model_id_for_user(self, self._require_user_id())
+
+    def set_active_local_model_id(self, model_id: str) -> None:
+        from services.local_model_service import set_active_model_id_for_user
+
+        set_active_model_id_for_user(self, model_id, self._require_user_id())
+
+    def clear_active_local_model_id(self) -> None:
+        from services.local_model_service import clear_active_model_id_for_user
+
+        clear_active_model_id_for_user(self, self._require_user_id())
+
+    def list_user_ids_using_model(self, model_id: str) -> list[int]:
+        from config.constants import LOCAL_MODEL_ACTIVE_ID_SETTING_KEY
+
+        if hasattr(self.db, "list_user_ids_by_setting"):
+            return self.db.list_user_ids_by_setting(
+                LOCAL_MODEL_ACTIVE_ID_SETTING_KEY,
+                str(model_id),
+            )
+        return []
+
     def resolve_initial_language(self) -> str:
         saved = self.get_setting(LANG_SETTING_KEY)
         if saved:
@@ -1451,3 +1476,24 @@ class AppServices:
             url = self.get_setting("ai_base_url", "")
             mdl = self.get_setting("ai_model", "")
         return key, url, mdl
+
+    def test_ai_connection(
+        self,
+        api_key: str,
+        base_url: str,
+        model: str,
+        on_done,
+        on_error,
+        on_status=None,
+    ) -> None:
+        """Run the AI provider connectivity check outside the UI layer."""
+        from services.ai_service import AIWorker
+
+        AIWorker.test(
+            api_key,
+            base_url,
+            model,
+            on_done,
+            on_error,
+            on_status=on_status,
+        )

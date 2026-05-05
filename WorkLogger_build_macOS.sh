@@ -335,7 +335,7 @@ bootstrap_build_env() {
   local requirements_file="$SCRIPT_DIR/requirements.txt"
   local filtered_requirements_file="$SCRIPT_DIR/.tmp_requirements_macos_${target_arch}_${TIMESTAMP}.txt"
   local llama_requirement_file="$SCRIPT_DIR/.tmp_llama_requirement_macos_${target_arch}_${TIMESTAMP}.txt"
-  local llama_requirement="llama-cpp-python>=0.2.90"
+  local llama_requirement="llama-cpp-python>=0.3.19"
   local source_python
   source_python="$(python_bin_for_arch "$target_arch")"
 
