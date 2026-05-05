@@ -1644,3 +1644,6 @@ msgstr "此模型正被其他用户使用，无法删除。"
 
 msgid "Used by another user"
 msgstr "被其他用户使用"
+
+msgid "Please enable a local model in Settings -> AI, or configure an external AI provider with API key, base URL, and model name."
+msgstr "请在设置 -> AI 中启用本地模型，或者配置外部 AI 提供方的 API Key、Base URL 和模型名称。"

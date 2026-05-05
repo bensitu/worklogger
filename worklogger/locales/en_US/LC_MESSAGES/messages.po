@@ -1644,3 +1644,6 @@ msgstr "This model is used by another user and cannot be deleted."
 
 msgid "Used by another user"
 msgstr "Used by another user"
+
+msgid "Please enable a local model in Settings -> AI, or configure an external AI provider with API key, base URL, and model name."
+msgstr "Please enable a local model in Settings -> AI, or configure an external AI provider with API key, base URL, and model name."

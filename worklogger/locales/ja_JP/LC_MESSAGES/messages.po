@@ -1644,3 +1644,6 @@ msgstr "このモデルは別のユーザーが使用しているため削除で
 
 msgid "Used by another user"
 msgstr "別のユーザーが使用中"
+
+msgid "Please enable a local model in Settings -> AI, or configure an external AI provider with API key, base URL, and model name."
+msgstr "設定 -> AI でローカルモデルを有効にするか、外部 AI プロバイダーの API キー、ベース URL、モデル名を設定してください。"

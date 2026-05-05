@@ -1476,3 +1476,24 @@ class AppServices:
             url = self.get_setting("ai_base_url", "")
             mdl = self.get_setting("ai_model", "")
         return key, url, mdl
+
+    def test_ai_connection(
+        self,
+        api_key: str,
+        base_url: str,
+        model: str,
+        on_done,
+        on_error,
+        on_status=None,
+    ) -> None:
+        """Run the AI provider connectivity check outside the UI layer."""
+        from services.ai_service import AIWorker
+
+        AIWorker.test(
+            api_key,
+            base_url,
+            model,
+            on_done,
+            on_error,
+            on_status=on_status,
+        )

@@ -124,11 +124,11 @@
       "license": "apache-2.0",
       "status": "experimental",
       "description": {
-        "en_US": "Qwen3.5-4B 4-bit - experimental newer Qwen model for users who want to try the latest local generation behavior. Expect catalog or prompt tuning changes over time.",
-        "zh_CN": "Qwen3.5-4B 4-bit - 实验性新版 Qwen 模型，适合想尝试最新本地生成行为的用户。后续可能继续调整目录与提示词。",
-        "zh_TW": "Qwen3.5-4B 4-bit - 實驗性新版 Qwen 模型，適合想嘗試最新本地生成行為的使用者。後續可能繼續調整目錄與提示詞。",
-        "ja_JP": "Qwen3.5-4B 4-bit - 最新のローカル生成挙動を試したいユーザー向けの実験的な新しい Qwen モデルです。今後カタログやプロンプト調整が入る可能性があります。",
-        "ko_KR": "Qwen3.5-4B 4-bit - 최신 로컬 생성 동작을 시험하려는 사용자를 위한 실험적인 신규 Qwen 모델입니다. 앞으로 카탈로그나 프롬프트 조정이 있을 수 있습니다."
+        "en_US": "Qwen3.5-4B 4-bit - experimental newer Qwen3.5 model for users who want to try the latest local generation behavior. Expect catalog or prompt tuning changes over time.",
+        "zh_CN": "Qwen3.5-4B 4-bit - 实验性新版 Qwen3.5 模型，适合想尝试最新本地生成行为的用户。后续可能继续调整目录与提示词。",
+        "zh_TW": "Qwen3.5-4B 4-bit - 實驗性新版 Qwen3.5 模型，適合想嘗試最新本地生成行為的使用者。後續可能繼續調整目錄與提示詞。",
+        "ja_JP": "Qwen3.5-4B 4-bit - 最新のローカル生成挙動を試したいユーザー向けの実験的な新しい Qwen3.5 モデルです。今後カタログやプロンプト調整が入る可能性があります。",
+        "ko_KR": "Qwen3.5-4B 4-bit - 최신 로컬 생성 동작을 시험하려는 사용자를 위한 실험적인 신규 Qwen3.5 모델입니다. 앞으로 카탈로그나 프롬프트 조정이 있을 수 있습니다."
       }
     }
   ]

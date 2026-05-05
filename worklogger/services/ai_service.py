@@ -421,8 +421,8 @@ class AIWorker:
 class LocalModelWorker:
     """Drop-in replacement for :class:`AIWorker` using on-device inference.
 
-    Shares the same *on_done* / *on_error* / *on_status* callback contract so
-    :class:`~ui.dialogs.ai_dialogs.AIProgressDialog` works unchanged.
+    Shares the same *on_done* / *on_error* / *on_status* callback contract used
+    by the multi-turn AI chat dialog.
 
     Fallback error keys (emitted via *on_error*):
     * ``"local_model_load_fail"``      — OOM / llama.cpp runtime error
@@ -516,3 +516,135 @@ class LocalModelWorker:
                 return
             invoker.error_signal.emit(
                 f"Local model error: {type(exc).__name__}", str(exc))
+
+
+class AiChatRequestController:
+    """Own chat request execution and session mutation for AI assist dialogs."""
+
+    def __init__(
+        self,
+        *,
+        session,
+        services,
+        api_key: str,
+        base_url: str,
+        model: str,
+        token_budget: int | None = None,
+        local_max_tokens: int = 4096,
+        cloud_max_tokens: int = 2048,
+    ) -> None:
+        self._session = session
+        self._services = services
+        self._api_key = api_key
+        self._base_url = base_url
+        self._model = model
+        self._token_budget = token_budget
+        self._local_max_tokens = int(local_max_tokens)
+        self._cloud_max_tokens = int(cloud_max_tokens)
+        self._worker = None
+        self._request_serial = 0
+        self._pending_user_message = ""
+        self._latest_successful_text = session.last_assistant_message() or ""
+
+    @property
+    def latest_successful_text(self) -> str:
+        return self._latest_successful_text
+
+    @property
+    def is_configured(self) -> bool:
+        from services.local_model_service import LOCAL_MODEL_SENTINEL
+
+        return self._api_key == LOCAL_MODEL_SENTINEL or bool(
+            self._api_key and self._base_url and self._model
+        )
+
+    def reset(self) -> None:
+        self.cancel()
+        self._session.reset()
+        self._latest_successful_text = ""
+
+    def set_latest_successful_text(self, text: str) -> None:
+        self._latest_successful_text = str(text or "").strip()
+
+    def cancel(self) -> bool:
+        worker = self._worker
+        was_active = worker is not None
+        self._request_serial += 1
+        if worker is not None and hasattr(worker, "cancel"):
+            try:
+                worker.cancel()
+            except Exception:
+                pass
+        self._worker = None
+        self._pending_user_message = ""
+        return was_active
+
+    def submit(
+        self,
+        payload: str,
+        *,
+        on_status: Callable[[str], None],
+        on_done: Callable[[str], None],
+        on_error: Callable[[str, str], None],
+    ) -> None:
+        from services.local_model_service import LOCAL_MODEL_SENTINEL
+
+        if not self.is_configured:
+            raise ValueError("ai_provider_not_configured")
+
+        messages = self._session.get_messages(
+            additional_messages=[{"role": "user", "content": payload}],
+            token_budget=self._token_budget,
+        )
+        self._pending_user_message = payload
+        self._request_serial += 1
+        request_id = self._request_serial
+
+        def _current() -> bool:
+            return request_id == self._request_serial
+
+        def _on_status(raw: str) -> None:
+            if _current():
+                on_status(raw)
+
+        def _on_done(text: str) -> None:
+            if not _current():
+                return
+            normalized = str(text or "").strip()
+            pending = self._pending_user_message
+            if pending:
+                self._session.add_user_message(pending)
+            self._session.add_assistant_message(normalized or "No response.")
+            self._pending_user_message = ""
+            self._latest_successful_text = normalized
+            self._worker = None
+            on_done(normalized)
+
+        def _on_error(short: str, detail: str) -> None:
+            if not _current():
+                return
+            self._pending_user_message = ""
+            self._worker = None
+            on_error(short, detail)
+
+        if self._api_key == LOCAL_MODEL_SENTINEL:
+            self._worker = LocalModelWorker(
+                messages,
+                _on_done,
+                _on_error,
+                services=self._services,
+                max_tokens=self._local_max_tokens,
+                temperature=0.7,
+                on_status=_on_status,
+            )
+        else:
+            self._worker = AIWorker(
+                self._api_key,
+                self._base_url,
+                self._model,
+                messages,
+                _on_done,
+                _on_error,
+                max_tokens=self._cloud_max_tokens,
+                on_status=_on_status,
+            )

@@ -28,7 +28,14 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QFont
 
 from utils.i18n import _, msg
-from config.themes import DEFAULT_CUSTOM_COLOR, LOCAL_MODEL_READY_COLOR, progress_bar_qss, status_label_qss
+from config.themes import (
+    DEFAULT_CUSTOM_COLOR,
+    LOCAL_MODEL_READY_COLOR,
+    apply_widget_qss,
+    clear_widget_qss,
+    progress_bar_qss,
+    status_label_qss,
+)
 
 
 # Cross-thread bridge.
@@ -321,19 +328,22 @@ class LocalDownloadDialog(QDialog):
                             used_text = _("Used by another user")
                             state = f"{state} · {used_text}"
                         card["status_lbl"].setText(f"✓  {state}")
-                        card["status_lbl"].setStyleSheet(
-                            status_label_qss("success", ok_col))
+                        apply_widget_qss(
+                            card["status_lbl"],
+                            status_label_qss("success", ok_col),
+                        )
                     else:
                         card["status_lbl"].setText(
                             _("Integrity failed"))
-                        card["status_lbl"].setStyleSheet(status_label_qss("error"))
+                        apply_widget_qss(
+                            card["status_lbl"], status_label_qss("error"))
                     card["delete_btn"].show()
                 else:
                     raise ValueError("not present")
             except Exception:
                 card["status_lbl"].setText(
                     _("Not downloaded"))
-                card["status_lbl"].setStyleSheet("")
+                clear_widget_qss(card["status_lbl"])
                 card["delete_btn"].hide()
         self._sync_select_next_button()
 
@@ -554,8 +564,9 @@ class LocalDownloadDialog(QDialog):
         self._progress.setValue(0)
         self._progress.setTextVisible(True)
         self._progress.setFormat("%p%")
-        self._progress.setStyleSheet(
-            progress_bar_qss(self._accent_color, self._dark)
+        apply_widget_qss(
+            self._progress,
+            progress_bar_qss(self._accent_color, self._dark),
         )
         lyt.addWidget(self._progress)
 

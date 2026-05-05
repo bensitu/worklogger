@@ -33,16 +33,10 @@ msgstr ""
 msgid "AI Assist"
 msgstr ""
 
-msgid "AI Generated"
-msgstr ""
-
 msgid "AI Generated Content"
 msgstr ""
 
 msgid "AI Generated Result"
-msgstr ""
-
-msgid "AI Result"
 msgstr ""
 
 msgid "AI Summary"
@@ -633,9 +627,6 @@ msgstr ""
 msgid "Local model"
 msgstr ""
 
-msgid "Local model failed and no external API key / URL / model name is configured.\nPlease configure an external model in Settings → AI."
-msgstr ""
-
 msgid "Local model failed and no external API key / URL / model name is configured. Please configure an external model in Settings → AI."
 msgstr ""
 
@@ -777,9 +768,6 @@ msgstr ""
 msgid "No events found."
 msgstr ""
 
-msgid "No external model configured"
-msgstr ""
-
 msgid "No linked accounts."
 msgstr ""
 
@@ -849,9 +837,6 @@ msgstr ""
 msgid "Operation failed."
 msgstr ""
 
-msgid "Original"
-msgstr ""
-
 msgid "Original Content"
 msgstr ""
 
@@ -909,10 +894,10 @@ msgstr ""
 msgid "Permission denied while verifying local model file."
 msgstr ""
 
-msgid "Please configure an AI provider in Settings -> AI."
+msgid "Please confirm that you have saved the recovery key."
 msgstr ""
 
-msgid "Please confirm that you have saved the recovery key."
+msgid "Please enable a local model in Settings -> AI, or configure an external AI provider with API key, base URL, and model name."
 msgstr ""
 
 msgid "Please enter a model name in Settings → AI."

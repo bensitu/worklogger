@@ -14,6 +14,8 @@ from PySide6.QtGui import QFont
 from utils.i18n import _, msg
 from config.themes import (
     ANALYTICS_LEAVE_LINE_COLOR,
+    apply_widget_qss,
+    clear_widget_qss,
     label_color_qss,
     line_edit_error_qss,
     quick_log_delete_button_qss,
@@ -30,7 +32,7 @@ from config.constants import (
 )
 from core.time_calc import calc_hours
 from services import analytics_service
-from services.export_service import pdf_colors
+from services.export_service import PdfDetailSection, PdfMetric
 from ui.widgets import ComboChart, SwitchButton
 from .ai_assist_launcher import AiAssistLaunchConfig, launch_ai_assist
 from .template_dialogs import TemplatePickerDialog
@@ -792,7 +794,6 @@ class ChartDialog(QDialog):
             return
         idx = self._tabs_w.currentIndex()
         tab = self._tabs_w.tabText(idx)
-        detail_fns = [self._pdf_monthly, self._pdf_quarterly, self._pdf_annual]
         from services.export_service import render_pdf, PdfContext
         ctx = PdfContext(
             lang=app.lang,
@@ -809,9 +810,8 @@ class ChartDialog(QDialog):
                 path,
                 idx,
                 tab,
-                chart_widget,
-                bundle.bar_data,
-                detail_fns[idx],
+                chart_widget.grab(),
+                self._pdf_detail_section(idx),
                 ctx,
                 ai_narrative=ai_narrative,
             )
@@ -820,205 +820,105 @@ class ChartDialog(QDialog):
         except Exception as exc:
             QMessageBox.critical(self, _("Export"), str(exc))
 
-    def _pdf_monthly(self, p, pw, ph, pt, t, top, ctx):
-        from PySide6.QtCore import QRectF
-        from PySide6.QtGui import QColor, QBrush, QFont
-        from PySide6.QtCore import Qt
-        colors = pdf_colors(ctx)
+    def _pdf_detail_section(self, idx: int) -> PdfDetailSection:
+        if idx == 0:
+            return self._pdf_monthly_detail_section()
+        if idx == 1:
+            return self._pdf_quarterly_detail_section()
+        return self._pdf_annual_detail_section()
+
+    def _pdf_monthly_detail_section(self) -> PdfDetailSection:
         rows = self._monthly_detail()
         if not rows:
-            return
+            return PdfDetailSection()
         total, ot, wd, ld, avg = self._month_stats(
-            ctx.year, ctx.month)
-        cols = [(_("Monthly total"), f"{total:.1f}{_("h")}"),
-                (_("Overtime"),    f"{ot:.1f}{_("h")}"),
-                (_("Daily avg"),   f"{avg:.1f}{_("h")}"),
-                (_("Work days"),  f"{int(wd)}{_(" days")}"),
-                (_("Leave days"), f"{int(ld)}{_(" days")}")]
-        box_h = pt(34)
-        cw2 = pw / len(cols)
-        p.setBrush(QBrush(QColor(colors.panel_bg)))
-        p.setPen(Qt.NoPen)
-        p.drawRoundedRect(QRectF(0, top, pw, box_h), pt(6), pt(6))
-        for i, (k, v) in enumerate(cols):
-            cx = i * cw2
-            fk = QFont("sans-serif")
-            fk.setPixelSize(pt(8))
-            p.setFont(fk)
-            p.setPen(QColor(colors.muted))
-            p.drawText(QRectF(cx, top+pt(4), cw2, pt(12)), Qt.AlignCenter, k)
-            fv = QFont("sans-serif")
-            fv.setPixelSize(pt(11))
-            fv.setBold(True)
-            p.setFont(fv)
-            p.setPen(QColor(colors.text))
-            p.drawText(QRectF(cx, top+pt(16), cw2, pt(14)), Qt.AlignCenter, v)
-        top += box_h + pt(6)
-        hdrs = [("Date", 0.13), (_("Start"), 0.10), (_("End"), 0.10),
-                (_("h"), 0.09), ("OT", 0.09), (_("Work type"), 0.16), (_("Notes"), 0.33)]
-        rh = pt(16)
-        p.setBrush(QBrush(QColor(colors.panel_header_bg)))
-        p.setPen(Qt.NoPen)
-        p.drawRect(QRectF(0, top, pw, rh))
-        fh = QFont("sans-serif")
-        fh.setPixelSize(pt(8))
-        fh.setBold(True)
-        p.setFont(fh)
-        p.setPen(QColor(colors.text))
-        x = 0
-        for lbl, frac in hdrs:
-            cw = pw*frac
-            p.drawText(QRectF(x+pt(2), top, cw-pt(4), rh),
-                       Qt.AlignVCenter | Qt.AlignLeft, lbl)
-            x += cw
-        top += rh
-        fr = QFont("sans-serif")
-        fr.setPixelSize(pt(7))
-        for i, row in enumerate(rows):
-            bg = QColor(colors.row_alt_bg if i % 2 == 0 else colors.row_bg)
-            p.setBrush(QBrush(bg))
-            p.setPen(Qt.NoPen)
-            rh2 = pt(13)
-            p.drawRect(QRectF(0, top, pw, rh2))
-            p.setFont(fr)
-            p.setPen(QColor(colors.text))
-            vals = [row["date"], row["start"], row["end"],
+            self._app.current.year, self._app.current.month)
+        return PdfDetailSection(
+            summary=[
+                PdfMetric(_("Monthly total"), f"{total:.1f}{_("h")}"),
+                PdfMetric(_("Overtime"), f"{ot:.1f}{_("h")}"),
+                PdfMetric(_("Daily avg"), f"{avg:.1f}{_("h")}"),
+                PdfMetric(_("Work days"), f"{int(wd)}{_(" days")}"),
+                PdfMetric(_("Leave days"), f"{int(ld)}{_(" days")}"),
+            ],
+            headers=[
+                ("Date", 0.13), (_("Start"), 0.10), (_("End"), 0.10),
+                (_("h"), 0.09), ("OT", 0.09), (_("Work type"), 0.16),
+                (_("Notes"), 0.33),
+            ],
+            rows=[
+                [
+                    row["date"],
+                    row["start"],
+                    row["end"],
                     f"{row['h']:.1f}" if row["h"] else "—",
                     f"+{row['ot']:.1f}" if row["ot"] > 0 else "—",
-                    row["wt"], row["note"][:30]]
-            x = 0
-            for val, (_label, frac) in zip(vals, hdrs):
-                cw = pw*frac
-                p.drawText(QRectF(x+pt(2), top, cw-pt(4), rh2),
-                           Qt.AlignVCenter | Qt.AlignLeft, str(val))
-                x += cw
-            top += rh2
-            if top > ph - pt(24):
-                fi = QFont("sans-serif")
-                fi.setPixelSize(pt(8))
-                p.setFont(fi)
-                p.setPen(QColor(colors.disabled))
-                p.drawText(QRectF(0, top+pt(4), pw, pt(12)), Qt.AlignCenter,
-                           f"… {len(rows)-i-1} more rows")
-                break
+                    row["wt"],
+                    row["note"],
+                ]
+                for row in rows
+            ],
+        )
 
-    def _pdf_quarterly(self, p, pw, ph, pt, t, top, ctx):
-        from PySide6.QtCore import QRectF
-        from PySide6.QtGui import QColor, QBrush, QFont
-        from PySide6.QtCore import Qt
-        colors = pdf_colors(ctx)
-        rows = self._quarterly_detail()
-        hdrs = [("Quarter", 0.15), (_("Monthly total"), 0.17), (_("Overtime"), 0.17),
-                (_("Daily avg"), 0.17), (_("Work days"), 0.17), (_("Leave days"), 0.17)]
-        rh = pt(16)
-        p.setBrush(QBrush(QColor(colors.panel_header_bg)))
-        p.setPen(Qt.NoPen)
-        p.drawRect(QRectF(0, top, pw, rh))
-        fh = QFont("sans-serif")
-        fh.setPixelSize(pt(8))
-        fh.setBold(True)
-        p.setFont(fh)
-        p.setPen(QColor(colors.text))
-        x = 0
-        for lbl, frac in hdrs:
-            cw = pw*frac
-            p.drawText(QRectF(x+pt(2), top, cw-pt(4), rh),
-                       Qt.AlignVCenter | Qt.AlignLeft, lbl)
-            x += cw
-        top += rh
-        fr = QFont("sans-serif")
-        fr.setPixelSize(pt(9))
-        for i, row in enumerate(rows):
-            bg = QColor(colors.row_alt_bg if i % 2 == 0 else colors.row_bg)
-            p.setBrush(QBrush(bg))
-            p.setPen(Qt.NoPen)
-            rh2 = pt(20)
-            p.drawRect(QRectF(0, top, pw, rh2))
-            p.setFont(fr)
-            p.setPen(QColor(colors.text))
-            vals = [row["q"], f"{row['total']:.1f}{_("h")}",
-                    f"{row['ot']:.1f}{_("h")}", f"{row['avg']:.1f}{_("h")}",
-                    f"{row['wd']}{_(" days")}", f"{row['ld']}{_(" days")}"]
-            x = 0
-            for val, (_label, frac) in zip(vals, hdrs):
-                cw = pw*frac
-                p.drawText(QRectF(x+pt(3), top, cw-pt(6), rh2),
-                           Qt.AlignVCenter | Qt.AlignLeft, str(val))
-                x += cw
-            top += rh2
+    def _pdf_quarterly_detail_section(self) -> PdfDetailSection:
+        return PdfDetailSection(
+            headers=[
+                ("Quarter", 0.15), (_("Monthly total"), 0.17),
+                (_("Overtime"), 0.17), (_("Daily avg"), 0.17),
+                (_("Work days"), 0.17), (_("Leave days"), 0.17),
+            ],
+            rows=[
+                [
+                    row["q"],
+                    f"{row['total']:.1f}{_("h")}",
+                    f"{row['ot']:.1f}{_("h")}",
+                    f"{row['avg']:.1f}{_("h")}",
+                    f"{row['wd']}{_(" days")}",
+                    f"{row['ld']}{_(" days")}",
+                ]
+                for row in self._quarterly_detail()
+            ],
+        )
 
-    def _pdf_annual(self, p, pw, ph, pt, t, top, ctx):
-        from PySide6.QtCore import QRectF
-        from PySide6.QtGui import QColor, QBrush, QFont
-        from PySide6.QtCore import Qt
-        colors = pdf_colors(ctx)
-        s = [self._month_stats(ctx.year, m) for m in range(1, 13)]
+    def _pdf_annual_detail_section(self) -> PdfDetailSection:
+        app = self._app
+        y = app.current.year
+        s = [self._month_stats(y, m) for m in range(1, 13)]
         total = sum(x[0] for x in s)
         ot = sum(x[1] for x in s)
         wd = sum(x[2] for x in s)
         ld = sum(x[3] for x in s)
         avg = total/wd if wd else 0.0
-        cols = [(_("Monthly total"), f"{total:.1f}{_("h")}"), (_("Overtime"), f"{ot:.1f}{_("h")}"),
-                (_("Daily avg"), f"{avg:.1f}{_("h")}"), (
-                    _("Work days"), f"{int(wd)}{_(" days")}"),
-                (_("Leave days"), f"{int(ld)}{_(" days")}")]
-        box_h = pt(34)
-        cw2 = pw/len(cols)
-        p.setBrush(QBrush(QColor(colors.panel_bg)))
-        p.setPen(Qt.NoPen)
-        p.drawRoundedRect(QRectF(0, top, pw, box_h), pt(6), pt(6))
-        for i, (k, v) in enumerate(cols):
-            cx = i*cw2
-            fk = QFont("sans-serif")
-            fk.setPixelSize(pt(8))
-            p.setFont(fk)
-            p.setPen(QColor(colors.muted))
-            p.drawText(QRectF(cx, top+pt(4), cw2, pt(12)), Qt.AlignCenter, k)
-            fv = QFont("sans-serif")
-            fv.setPixelSize(pt(11))
-            fv.setBold(True)
-            p.setFont(fv)
-            p.setPen(QColor(colors.text))
-            p.drawText(QRectF(cx, top+pt(16), cw2, pt(14)), Qt.AlignCenter, v)
-        top += box_h+pt(6)
         rows = self._annual_detail()
-        hdrs = [("Month", 0.12), (_("Monthly total"), 0.17), (_("Overtime"), 0.17),
-                (_("Daily avg"), 0.17), (_("Work days"), 0.17), (_("Leave days"), 0.20)]
-        rh = pt(16)
-        p.setBrush(QBrush(QColor(colors.panel_header_bg)))
-        p.setPen(Qt.NoPen)
-        p.drawRect(QRectF(0, top, pw, rh))
-        fh = QFont("sans-serif")
-        fh.setPixelSize(pt(8))
-        fh.setBold(True)
-        p.setFont(fh)
-        p.setPen(QColor(colors.text))
-        x = 0
-        for lbl, frac in hdrs:
-            cw = pw*frac
-            p.drawText(QRectF(x+pt(2), top, cw-pt(4), rh),
-                       Qt.AlignVCenter | Qt.AlignLeft, lbl)
-            x += cw
-        top += rh
-        fr = QFont("sans-serif")
-        fr.setPixelSize(pt(8))
-        for i, row in enumerate(rows):
-            bg = QColor(colors.row_alt_bg if i % 2 == 0 else colors.row_bg)
-            p.setBrush(QBrush(bg))
-            p.setPen(Qt.NoPen)
-            rh2 = pt(17)
-            p.drawRect(QRectF(0, top, pw, rh2))
-            p.setFont(fr)
-            p.setPen(QColor(colors.text if row["total"] > 0 else colors.disabled))
-            vals = [row["m"], f"{row['total']:.1f}{_("h")}", f"{row['ot']:.1f}{_("h")}",
-                    f"{row['avg']:.1f}{_("h")}", f"{row['wd']}{_(" days")}", f"{row['ld']}{_(" days")}"]
-            x = 0
-            for val, (_label, frac) in zip(vals, hdrs):
-                cw = pw*frac
-                p.drawText(QRectF(x+pt(3), top, cw-pt(6), rh2),
-                           Qt.AlignVCenter | Qt.AlignLeft, str(val))
-                x += cw
-            top += rh2
+        return PdfDetailSection(
+            summary=[
+                PdfMetric(_("Monthly total"), f"{total:.1f}{_("h")}"),
+                PdfMetric(_("Overtime"), f"{ot:.1f}{_("h")}"),
+                PdfMetric(_("Daily avg"), f"{avg:.1f}{_("h")}"),
+                PdfMetric(_("Work days"), f"{int(wd)}{_(" days")}"),
+                PdfMetric(_("Leave days"), f"{int(ld)}{_(" days")}"),
+            ],
+            headers=[
+                ("Month", 0.12), (_("Monthly total"), 0.17),
+                (_("Overtime"), 0.17), (_("Daily avg"), 0.17),
+                (_("Work days"), 0.17), (_("Leave days"), 0.20),
+            ],
+            rows=[
+                [
+                    row["m"],
+                    f"{row['total']:.1f}{_("h")}",
+                    f"{row['ot']:.1f}{_("h")}",
+                    f"{row['avg']:.1f}{_("h")}",
+                    f"{row['wd']}{_(" days")}",
+                    f"{row['ld']}{_(" days")}",
+                ]
+                for row in rows
+            ],
+            disabled_rows={
+                idx for idx, row in enumerate(rows)
+                if row["total"] <= 0
+            },
+        )
 
 
 class QuickLogDialog(QDialog):
@@ -1066,7 +966,7 @@ class QuickLogDialog(QDialog):
         self._list.setAlternatingRowColors(False)
         self._list.setSpacing(0)
         self._list.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self._list.setStyleSheet(quick_log_list_qss())
+        apply_widget_qss(self._list, quick_log_list_qss())
         self._list.itemClicked.connect(self._load_for_edit)
         self._list.currentItemChanged.connect(self._on_list_current_changed)
         lft.addWidget(self._list, 1)
@@ -1165,14 +1065,14 @@ class QuickLogDialog(QDialog):
     def _normalise_time(self, field: QLineEdit):
         raw = field.text().strip()
         if not raw:
-            field.setStyleSheet("")
+            clear_widget_qss(field)
             return
         parsed = self._parse_time(raw)
         if parsed:
             field.setText(parsed)
-            field.setStyleSheet("")
+            clear_widget_qss(field)
         else:
-            field.setStyleSheet(line_edit_error_qss())
+            apply_widget_qss(field, line_edit_error_qss())
 
     def _refresh_list(self):
         d_str = self._app.selected.isoformat()
@@ -1205,12 +1105,15 @@ class QuickLogDialog(QDialog):
                     QSizePolicy.Expanding, QSizePolicy.Preferred)
                 text_lbl.setCursor(Qt.PointingHandCursor)
                 text_lbl.setToolTip(escape(full_text, quote=True))
-                text_lbl.setStyleSheet(quick_log_label_hover_qss(hover_color))
+                apply_widget_qss(
+                    text_lbl,
+                    quick_log_label_hover_qss(hover_color),
+                )
                 text_lbl.mousePressEvent = lambda e, it=item, ent=entry: self._activate_row(
                     it, ent)
                 row_l.addWidget(text_lbl, 1)
                 x_btn = QPushButton("✕")
-                x_btn.setStyleSheet(quick_log_delete_button_qss())
+                apply_widget_qss(x_btn, quick_log_delete_button_qss())
                 x_btn.setFixedSize(18, 18)
                 x_btn.setToolTip(msg("quick_log_delete"))
                 x_btn.setCursor(Qt.PointingHandCursor)
@@ -1263,35 +1166,38 @@ class QuickLogDialog(QDialog):
             is_selected = item is selected
             is_hovered = entry["id"] == self._hovered_row_id
             if is_selected:
-                row_w.setStyleSheet(
+                apply_widget_qss(
+                    row_w,
                     quick_log_row_qss(
                         "selected",
                         accent=acc,
                         accent_dim=acc_dim,
                         hover=hov,
-                    )
+                    ),
                 )
-                text_lbl.setStyleSheet(label_color_qss(txt))
+                apply_widget_qss(text_lbl, label_color_qss(txt))
             elif is_hovered:
-                row_w.setStyleSheet(
+                apply_widget_qss(
+                    row_w,
                     quick_log_row_qss(
                         "hover",
                         accent=acc,
                         accent_dim=acc_dim,
                         hover=hov,
-                    )
+                    ),
                 )
-                text_lbl.setStyleSheet("")
+                clear_widget_qss(text_lbl)
             else:
-                row_w.setStyleSheet(
+                apply_widget_qss(
+                    row_w,
                     quick_log_row_qss(
                         "default",
                         accent=acc,
                         accent_dim=acc_dim,
                         hover=hov,
-                    )
+                    ),
                 )
-                text_lbl.setStyleSheet("")
+                clear_widget_qss(text_lbl)
 
     def eventFilter(self, obj, event):
         entry_id = obj.property("quick_log_id")
@@ -1349,9 +1255,9 @@ class QuickLogDialog(QDialog):
         desc = self._desc_in.text().strip()
         if not desc:
             self._desc_in.setFocus()
-            self._desc_in.setStyleSheet(line_edit_error_qss())
+            apply_widget_qss(self._desc_in, line_edit_error_qss())
             QTimer.singleShot(1500,
-                              lambda: self._desc_in.setStyleSheet(""))
+                              lambda: clear_widget_qss(self._desc_in))
             return
         raw_start = self._time_in.text().strip()
         raw_end = self._end_in.text().strip()

@@ -21,11 +21,13 @@ from config.themes import (
     THEMES,
     THEME_KEYS,
     WT_BORDER_ACCENT,
+    apply_application_theme,
+    apply_widget_qss,
     auto_break_active_qss,
     calendar_cell_qss,
     cell_pool,
+    clear_widget_qss,
     line_edit_error_qss,
-    make_qss,
     set_custom_theme,
     theme_colors,
 )
@@ -700,7 +702,7 @@ class App(QWidget):
             self._restore_from_tray()
 
     def apply_theme(self):
-        QApplication.instance().setStyleSheet(make_qss(self.dark, self.theme))
+        apply_application_theme(QApplication.instance(), self.dark, self.theme)
 
     def apply_lang(self):
         self.setWindowTitle(_("Work Logger"))
@@ -835,7 +837,7 @@ class App(QWidget):
         for i in range(bar.count()):
             bar.setTabButton(i, bar.ButtonPosition.LeftSide, None)
             bar.setTabButton(i, bar.ButtonPosition.RightSide, None)
-            bar.setStyleSheet("")
+            clear_widget_qss(bar)
         bar.setExpanding(True)
 
     def eventFilter(self, obj, event):
@@ -907,7 +909,7 @@ class App(QWidget):
             self._auto_break_recorded = True
             self._break_start = None
             self._break_timer = None
-            self.break_btn.setStyleSheet("")
+            clear_widget_qss(self.break_btn)
             self._refresh_auto_time_labels()
 
     def _start_break_timer(self, resume: bool):
@@ -951,7 +953,7 @@ class App(QWidget):
         self._break_timer = None
         self._auto_break_hours = hours
         self._auto_break_recorded = True
-        self.break_btn.setStyleSheet("")
+        clear_widget_qss(self.break_btn)
         self._refresh_auto_time_labels()
 
     def _tick_break(self):
@@ -960,7 +962,7 @@ class App(QWidget):
         mins = (datetime.now() - self._break_start).seconds // 60
         self.break_btn.setText(f"{_("On break")}\n{mins}m")
         self._auto_break_hours = mins / 60
-        self.break_btn.setStyleSheet(auto_break_active_qss(self.dark))
+        apply_widget_qss(self.break_btn, auto_break_active_qss(self.dark))
 
     def _cell_style(self, dt: date):
         pool = cell_pool(self.dark, self.theme)
@@ -1048,8 +1050,9 @@ class App(QWidget):
             btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             bg, fg, bdr_c, _bdr_w = self._cell_style(dt)
             wt_acc = WT_BORDER_ACCENT[self.dark].get(wt)
-            btn.setStyleSheet(
-                calendar_cell_qss(bg, fg, bdr_c, hover_border)
+            apply_widget_qss(
+                btn,
+                calendar_cell_qss(bg, fg, bdr_c, hover_border),
             )
             btn.set_work_type_marker(wt_acc)
             show_pending_note = show_note_markers and has_pending_note
@@ -1162,16 +1165,16 @@ class App(QWidget):
         e = parse_time(e_txt) if e_txt else None
         if s_txt and not s:
             if self._time_mode() == "manual":
-                self.manual_start_in.setStyleSheet(line_edit_error_qss())
+                apply_widget_qss(self.manual_start_in, line_edit_error_qss())
             return
         elif self._time_mode() == "manual":
-            self.manual_start_in.setStyleSheet("")
+            clear_widget_qss(self.manual_start_in)
         if e_txt and not e:
             if self._time_mode() == "manual":
-                self.manual_end_in.setStyleSheet(line_edit_error_qss())
+                apply_widget_qss(self.manual_end_in, line_edit_error_qss())
             return
         elif self._time_mode() == "manual":
-            self.manual_end_in.setStyleSheet("")
+            clear_widget_qss(self.manual_end_in)
         if l < 0:
             QMessageBox.warning(
                 self,
@@ -1189,7 +1192,7 @@ class App(QWidget):
             span_h = calc_shift_span_hours(s, e, max_shift_hours=max_shift)
             if span_h is None:
                 if self._time_mode() == "manual":
-                    self.manual_end_in.setStyleSheet(line_edit_error_qss())
+                    apply_widget_qss(self.manual_end_in, line_edit_error_qss())
                 QMessageBox.warning(
                     self,
                     _("Confirm"),
