@@ -99,7 +99,8 @@ class OAuthService:
                 audience=config.client_id,
                 issuer=issuer,
                 nonce=nonce,
-                verify_signature=False,
+                jwks_uri=config.jwks_uri,
+                verify_signature=True,
             )
         except IdentityStateMismatch as exc:
             raise OAuthError(str(exc)) from exc

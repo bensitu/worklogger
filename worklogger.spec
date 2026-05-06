@@ -22,7 +22,7 @@ import certifi
 block_cipher = None
 
 APP_NAME = "WorkLogger"
-APP_VERSION = "3.3.0"
+APP_VERSION = "3.3.1"
 PLATFORM = sys.platform
 ROOT_DIR = Path(globals().get("SPECPATH", os.getcwd())).resolve()
 WORKLOGGER_DIR = ROOT_DIR / "worklogger"

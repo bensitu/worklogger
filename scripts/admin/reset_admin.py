@@ -67,14 +67,21 @@ def main() -> int:
             )
         else:
             user_id = int(user["id"])
-            if not db.reset_password(user_id, password):
+            new_recovery_key = db.reset_password_and_regenerate_recovery_key(
+                user_id,
+                password,
+            )
+            if new_recovery_key is None:
                 raise RuntimeError("Failed to reset password")
             db.set_admin(user_id, True)
+        if user is None:
+            new_recovery_key = db.regenerate_recovery_key_for_user_id(user_id)
         db.set_setting(FORCE_PASSWORD_CHANGE_SETTING_KEY, "1", user_id=user_id)
         print(
             f"Reset administrator '{args.username}'. "
             "Password change will be required at next login."
         )
+        print(f"New recovery key: {new_recovery_key}")
         return 0
     finally:
         db.conn.close()

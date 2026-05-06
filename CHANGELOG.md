@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.1] - 2026-05-08
+
+### Added
+
+- Added a safe `worklogger/config/identity.local.json.example` template without real OAuth or Firebase credentials.
+
+### Changed
+
+- Recovery keys now use a grouped 192-bit format for stronger entropy and easier transcription.
+- Source-run optional dependency installation now requires explicit `WORKLOGGER_ALLOW_AUTO_PIP_INSTALL=1` opt-in.
+
+### Fixed
+
+- Fixed the administrator reset script to use the current password reset flow and print the regenerated recovery key.
+- Limited retained corrupt-database backup files to the most recent three backups.
+- Explicitly enabled TLS certificate verification in local model downloads.
+
+### Security
+
+- Legacy OAuth ID token validation now requires JWKS-backed JWT signature verification.
+- Remember-me tokens are stored as SHA-256 digests in SQLite, with migration for legacy plaintext rows.
+- Local encrypted fallback storage now uses a persistent random machine key while retaining legacy-key migration.
+- Password login failures are audit logged and temporarily locked after repeated failures.
+
 ## [3.3.0] - 2026-05-06
 
 ### Changed

@@ -69,12 +69,15 @@ class ResetAdminScriptTests(unittest.TestCase):
         )
 
         self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("New recovery key:", result.stdout)
+        recovery_key = result.stdout.strip().split("New recovery key:", 1)[1].strip()
         db = DB(path)
         self.addCleanup(db.conn.close)
-        self.assertIsNotNone(db.verify_user("admin", "secret123"))
+        user_id = db.verify_user("admin", "secret123")
+        self.assertIsNotNone(user_id)
         self.assertIsNone(db.verify_user("admin", "admin"))
+        self.assertEqual(db.verify_recovery_key("admin", recovery_key), user_id)
 
 
 if __name__ == "__main__":
     unittest.main()
-

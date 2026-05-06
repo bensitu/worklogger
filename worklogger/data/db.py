@@ -16,9 +16,13 @@ import time
 from datetime import date, datetime, timedelta, timezone
 
 from config.constants import (
+    DB_CORRUPT_BACKUP_RETENTION,
     DB_FILENAME,
     DEFAULT_ADMIN_USER,
     FORCE_PASSWORD_CHANGE_SETTING_KEY,
+    RECOVERY_KEY_BYTES,
+    RECOVERY_KEY_GROUP_SIZE,
+    REMEMBER_TOKEN_HASH_PREFIX,
     REMEMBER_TOKEN_LIFETIME_DAYS,
 )
 from core.models import WorkRecord
@@ -162,6 +166,13 @@ _CREATE_EXTERNAL_IDENTITIES = """CREATE TABLE IF NOT EXISTS external_identities(
     UNIQUE(broker, issuer, provider, subject)
 )"""
 
+_CREATE_LOGIN_ATTEMPTS = """CREATE TABLE IF NOT EXISTS login_attempts(
+    username TEXT PRIMARY KEY,
+    failed_count INTEGER NOT NULL DEFAULT 0,
+    locked_until TEXT,
+    last_failed_at TEXT
+)"""
+
 
 class DB:
     def __init__(self, path: str | None = None):
@@ -191,6 +202,7 @@ class DB:
             try:
                 if os.path.exists(path):
                     shutil.move(path, backup)
+                    DB._prune_database_backups(path)
             except Exception:
                 pass
             try:
@@ -206,6 +218,34 @@ class DB:
                 raise sqlite3.DatabaseError(
                     f"Cannot recover database at {path} after error: {exc}"
                 ) from exc
+
+    @staticmethod
+    def _prune_database_backups(
+        path: str,
+        keep: int = DB_CORRUPT_BACKUP_RETENTION,
+    ) -> None:
+        if not path or path == ":memory:" or keep < 1:
+            return
+        directory = os.path.dirname(os.path.abspath(path)) or "."
+        prefix = os.path.basename(path) + ".bak_"
+        try:
+            backups = [
+                os.path.join(directory, name)
+                for name in os.listdir(directory)
+                if name.startswith(prefix)
+                and os.path.isfile(os.path.join(directory, name))
+            ]
+        except OSError:
+            return
+        backups.sort(
+            key=lambda item: (os.path.getmtime(item), item),
+            reverse=True,
+        )
+        for old_backup in backups[keep:]:
+            try:
+                os.remove(old_backup)
+            except OSError:
+                pass
 
     @staticmethod
     def _secure_database_files(path: str) -> None:
@@ -242,6 +282,7 @@ class DB:
             self._migrate_reports_table(fallback_user_id)
             self.conn.execute(_CREATE_OAUTH_IDENTITIES)
             self.conn.execute(_CREATE_EXTERNAL_IDENTITIES)
+            self.conn.execute(_CREATE_LOGIN_ATTEMPTS)
             self._migrate_oauth_identities_to_external_unlocked()
 
             if created_admin_id is not None:
@@ -278,6 +319,7 @@ class DB:
                 "CREATE INDEX IF NOT EXISTS idx_external_identities_lookup "
                 "ON external_identities(broker, issuer, provider, subject)"
             )
+            self._migrate_remember_tokens_unlocked()
             self.conn.commit()
             self.conn.execute("PRAGMA foreign_keys=ON")
 
@@ -338,6 +380,20 @@ class DB:
             self.conn.execute(
                 "UPDATE users SET is_admin=1 "
                 "WHERE id=(SELECT id FROM users ORDER BY id LIMIT 1)"
+            )
+
+    def _migrate_remember_tokens_unlocked(self) -> None:
+        rows = self.conn.execute(
+            "SELECT id, remember_token FROM users "
+            "WHERE remember_token IS NOT NULL AND remember_token<>''"
+        ).fetchall()
+        for user_id, token in rows:
+            token = str(token or "")
+            if token.startswith(REMEMBER_TOKEN_HASH_PREFIX):
+                continue
+            self.conn.execute(
+                "UPDATE users SET remember_token=? WHERE id=?",
+                (self._remember_token_storage_value(token), int(user_id)),
             )
 
     def _table_exists(self, name: str) -> bool:
@@ -734,6 +790,71 @@ class DB:
             self._upgrade_password_hash(user_id, password, row[1], row[2])
         return user_id
 
+    def login_lockout_until(self, username: str) -> datetime | None:
+        try:
+            username = self._clean_username(username)
+        except (TypeError, ValueError):
+            return None
+        row = self.conn.execute(
+            "SELECT locked_until FROM login_attempts WHERE username=?",
+            (username,),
+        ).fetchone()
+        if not row or not row[0]:
+            return None
+        try:
+            locked_until = datetime.fromisoformat(str(row[0]))
+        except ValueError:
+            return None
+        if locked_until.tzinfo is None:
+            locked_until = locked_until.replace(tzinfo=timezone.utc)
+        if locked_until <= datetime.now(timezone.utc):
+            self.clear_login_failures(username)
+            return None
+        return locked_until
+
+    def record_login_failure(
+        self,
+        username: str,
+        *,
+        threshold: int,
+        lockout_seconds: int,
+    ) -> tuple[int, datetime | None]:
+        username = self._clean_username(username)
+        now = _utc_now_iso()
+        with self._write_lock:
+            row = self.conn.execute(
+                "SELECT failed_count FROM login_attempts WHERE username=?",
+                (username,),
+            ).fetchone()
+            failed_count = int(row[0]) + 1 if row else 1
+            locked_until: datetime | None = None
+            locked_until_raw = None
+            if failed_count >= max(1, threshold):
+                locked_until = datetime.now(timezone.utc) + timedelta(
+                    seconds=max(1, lockout_seconds)
+                )
+                locked_until_raw = locked_until.isoformat(timespec="seconds")
+            self.conn.execute(
+                "INSERT OR REPLACE INTO login_attempts"
+                "(username,failed_count,locked_until,last_failed_at) "
+                "VALUES(?,?,?,?)",
+                (username, failed_count, locked_until_raw, now),
+            )
+            self.conn.commit()
+        return failed_count, locked_until
+
+    def clear_login_failures(self, username: str) -> None:
+        try:
+            username = self._clean_username(username)
+        except (TypeError, ValueError):
+            return
+        with self._write_lock:
+            self.conn.execute(
+                "DELETE FROM login_attempts WHERE username=?",
+                (username,),
+            )
+            self.conn.commit()
+
     def verify_user_id(self, user_id: int, password: str) -> bool:
         row = self.conn.execute(
             "SELECT password_hash,salt FROM users WHERE id=?",
@@ -793,8 +914,17 @@ class DB:
         return user_id
 
     @staticmethod
+    def generate_recovery_key() -> str:
+        raw = secrets.token_hex(RECOVERY_KEY_BYTES)
+        group_size = max(1, int(RECOVERY_KEY_GROUP_SIZE))
+        return "-".join(
+            raw[index:index + group_size]
+            for index in range(0, len(raw), group_size)
+        )
+
+    @staticmethod
     def _new_recovery_key_material() -> tuple[str, str]:
-        return secrets.token_hex(16), secrets.token_hex(16)
+        return DB.generate_recovery_key(), secrets.token_hex(16)
 
     def regenerate_recovery_key_for_user_id(self, user_id: int) -> str:
         if self.get_user(user_id) is None:
@@ -1004,7 +1134,9 @@ class DB:
 
     def set_remember_token(self, user_id: int, token: str | None) -> None:
         expires_at = None
+        stored_token = None
         if token:
+            stored_token = self._remember_token_storage_value(token)
             expires_at = (
                 datetime.now(timezone.utc)
                 + timedelta(days=REMEMBER_TOKEN_LIFETIME_DAYS)
@@ -1013,24 +1145,31 @@ class DB:
             self.conn.execute(
                 "UPDATE users SET remember_token=?, remember_token_expires_at=? "
                 "WHERE id=?",
-                (token or None, expires_at, user_id),
+                (stored_token, expires_at, user_id),
             )
             self.conn.commit()
 
     def get_user_by_token(self, token: str) -> dict | None:
         if not token:
             return None
+        stored_token = self._remember_token_storage_value(token)
         row = self.conn.execute(
             "SELECT id,username,created_at,password_changed_at,is_admin,"
             "recovery_key_hash,recovery_key_created_at,last_login_at,"
             "remember_token_expires_at "
             "FROM users WHERE remember_token=?",
-            (token,),
+            (stored_token,),
         ).fetchone()
         if row and self._remember_token_is_expired(row[8]):
             self.set_remember_token(int(row[0]), None)
             return None
         return self._user_row(row) if row else None
+
+    @staticmethod
+    def _remember_token_storage_value(token: str) -> str:
+        return REMEMBER_TOKEN_HASH_PREFIX + hashlib.sha256(
+            token.encode("utf-8")
+        ).hexdigest()
 
     @staticmethod
     def _remember_token_is_expired(raw_expires_at) -> bool:

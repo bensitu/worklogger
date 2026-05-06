@@ -30,6 +30,8 @@ from config.constants import (
     GITHUB_RELEASES_API,
     LANG_SETTING_KEY,
     LAST_BACKUP_KEY,
+    LOGIN_FAILURE_LOCK_THRESHOLD,
+    LOGIN_LOCKOUT_SECONDS,
     MINIMAL_MODE_SETTING_KEY,
     MONTHLY_TARGET_SETTING_KEY,
     PASSWORD_MIN_LENGTH,
@@ -101,7 +103,7 @@ class AuthService:
 
     @staticmethod
     def generate_recovery_key() -> str:
-        return secrets.token_hex(16)
+        return DB.generate_recovery_key()
 
     @staticmethod
     def generate_initial_password() -> str:
@@ -156,9 +158,36 @@ class AuthService:
             raise TypeError("password_must_be_string")
         if not password:
             raise ValueError("password_required")
+        locked_until = self.db.login_lockout_until(username)
+        if locked_until is not None:
+            _log.warning(
+                "Login blocked for username=%s until=%s",
+                username,
+                locked_until.isoformat(timespec="seconds"),
+            )
+            raise ValueError("invalid_credentials")
         user_id = self.db.verify_user(username, password)
         if user_id is None:
+            failed_count, lockout_until = self.db.record_login_failure(
+                username,
+                threshold=LOGIN_FAILURE_LOCK_THRESHOLD,
+                lockout_seconds=LOGIN_LOCKOUT_SECONDS,
+            )
+            if lockout_until is None:
+                _log.warning(
+                    "Login failed for username=%s failed_count=%s",
+                    username,
+                    failed_count,
+                )
+            else:
+                _log.warning(
+                    "Login failed for username=%s failed_count=%s locked_until=%s",
+                    username,
+                    failed_count,
+                    lockout_until.isoformat(timespec="seconds"),
+                )
             raise ValueError("invalid_credentials")
+        self.db.clear_login_failures(username)
         self._apply_remember_login(user_id, username, remember=remember)
         return user_id
 
