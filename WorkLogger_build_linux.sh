@@ -12,6 +12,7 @@ VENV_DIR="$SCRIPT_DIR/.venv_build_linux"
 VENV_PYTHON="$VENV_DIR/bin/python"
 I18N_COMPILE_SCRIPT="$SCRIPT_DIR/scripts/i18n/i18n_compile.py"
 LOG_DIR="$SCRIPT_DIR/build_logs"
+WARN_FILE="$LOG_DIR/warn-worklogger.txt"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 LOG_FILE="$LOG_DIR/build_linux_${TIMESTAMP}.log"
 PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || true)}"
@@ -186,6 +187,47 @@ install_dependencies() {
   "$VENV_PYTHON" -c 'import importlib.util, sys; req=["PySide6","holidays","keyring","cryptography","httpx","httpcore","anyio","portalocker","llama_cpp"]; miss=[m for m in req if importlib.util.find_spec(m) is None]; print("dependency_check=", "ok" if not miss else ",".join(miss)); sys.exit(1 if miss else 0)'
 }
 
+verify_internal_imports() {
+  log "RUN  : Verify required internal imports"
+  "$VENV_PYTHON" - "$SCRIPT_DIR" <<'PY'
+import importlib
+import sys
+from pathlib import Path
+
+project = Path(sys.argv[1])
+sys.path.insert(0, str(project / "worklogger"))
+required = [
+    "services.app_services",
+    "services.report_service",
+    "services.export_service",
+    "services.calendar_service",
+]
+failures = []
+for module_name in required:
+    try:
+        importlib.import_module(module_name)
+    except Exception as exc:
+        failures.append(f"{module_name}: {type(exc).__name__}: {exc}")
+if failures:
+    print("internal_import_check=failed")
+    print("\n".join(failures))
+    raise SystemExit(1)
+print("internal_import_check=ok")
+PY
+  log "OK   : Verify required internal imports"
+}
+
+inspect_warning_file() {
+  if [ -f "$WARN_FILE" ]; then
+    if grep -Eq "services\.report_service|No module named 'services\.report_service'" "$WARN_FILE"; then
+      fail "PyInstaller warning log contains a required internal service import failure: $WARN_FILE"
+    fi
+    log "OK   : PyInstaller warning file checked: $WARN_FILE"
+  else
+    log "OK   : PyInstaller warning log has no actionable warnings."
+  fi
+}
+
 log "============================================================"
 log "WorkLogger Linux onefile build started"
 log "Project root : $SCRIPT_DIR"
@@ -204,6 +246,7 @@ export CMAKE_BUILD_PARALLEL_LEVEL="${CMAKE_BUILD_PARALLEL_LEVEL:-$(nproc 2>/dev/
 verify_prerequisites
 cleanup_source_cache_artifacts
 install_dependencies
+verify_internal_imports
 
 log "RUN  : Compile gettext catalogs (.po -> .mo)"
 "$VENV_PYTHON" "$I18N_COMPILE_SCRIPT"
@@ -218,13 +261,21 @@ log "OK   : Cleanup previous Linux build artifacts"
 log "RUN  : PyInstaller build"
 "$VENV_PYTHON" -m PyInstaller "$SPEC" --clean --noconfirm --distpath "$DIST_DIR" --workpath "$BUILD_DIR"
 log "OK   : PyInstaller build"
+inspect_warning_file
 
 [ -f "$TARGET_BIN" ] || fail "Expected artifact missing: $TARGET_BIN"
 [ -s "$TARGET_BIN" ] || fail "Artifact size is zero bytes: $TARGET_BIN"
 chmod +x "$TARGET_BIN"
 
+log "RUN  : Smoke-test packaged executable imports"
+"$TARGET_BIN" --smoke-import
+log "OK   : Smoke-test packaged executable imports"
+
 if command -v file >/dev/null 2>&1; then
   file "$TARGET_BIN"
+fi
+if command -v sha256sum >/dev/null 2>&1; then
+  sha256sum "$TARGET_BIN"
 fi
 
 safe_remove_path "$BUILD_DIR"

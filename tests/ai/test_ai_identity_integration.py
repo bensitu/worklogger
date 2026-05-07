@@ -193,6 +193,34 @@ class AIIdentityIntegrationTests(unittest.TestCase):
             user_id,
         )
 
+    def test_external_identity_login_clears_password_failures(self):
+        services = self._services()
+        identity = ExternalIdentity(
+            provider="google",
+            broker="firebase",
+            issuer="firebase",
+            subject="firebase-local-id",
+            email="alice@example.com",
+        )
+        services.db.create_external_identity(services.current_user_id, identity)
+        services.db.record_login_failure(
+            "alice",
+            threshold=1,
+            lockout_seconds=30,
+        )
+
+        self.assertEqual(
+            services.auth.login_with_external_identity(identity),
+            services.current_user_id,
+        )
+
+        self.assertIsNone(
+            services.db.conn.execute(
+                "SELECT 1 FROM login_attempts WHERE username=?",
+                ("alice",),
+            ).fetchone()
+        )
+
     def test_identity_provider_availability_requires_google_and_firebase_config(self):
         env = {
             "WORKLOGGER_IDENTITY_ENABLED": "1",
@@ -257,4 +285,3 @@ class AIIdentityIntegrationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

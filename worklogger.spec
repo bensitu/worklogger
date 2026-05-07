@@ -22,7 +22,7 @@ import certifi
 block_cipher = None
 
 APP_NAME = "WorkLogger"
-APP_VERSION = "3.3.1"
+APP_VERSION = "3.3.2"
 PLATFORM = sys.platform
 ROOT_DIR = Path(globals().get("SPECPATH", os.getcwd())).resolve()
 WORKLOGGER_DIR = ROOT_DIR / "worklogger"
@@ -39,6 +39,31 @@ UPX_ENABLED = True
 
 if str(WORKLOGGER_DIR) not in sys.path:
     sys.path.insert(0, str(WORKLOGGER_DIR))
+
+REQUIRED_INTERNAL_MODULES = (
+    "services.app_services",
+    "services.report_service",
+    "services.export_service",
+    "services.calendar_service",
+)
+
+
+def _ensure_required_internal_modules() -> None:
+    missing = [
+        module_name
+        for module_name in REQUIRED_INTERNAL_MODULES
+        if importlib.util.find_spec(module_name) is None
+    ]
+    if missing:
+        raise RuntimeError(
+            "Missing required internal modules: "
+            + ", ".join(missing)
+            + "\nPython path:\n"
+            + "\n".join(str(path_entry) for path_entry in sys.path)
+        )
+
+
+_ensure_required_internal_modules()
 
 from config.constants import LANGUAGE_FONT_FILES
 
@@ -423,6 +448,28 @@ _optional_hidden = [
     if _module_exists(pkg)
 ]
 
+_required_hiddenimports = [
+    "sqlite3",
+    "holidays",
+    "holidays.countries",
+    "tzlocal",
+    "PySide6.QtPrintSupport",
+    "services.dep_installer",
+    "services.download_controller",
+    "services.local_model_service",
+] + list(REQUIRED_INTERNAL_MODULES)
+_hiddenimports = list(
+    dict.fromkeys(
+        _required_hiddenimports
+        + _core_hidden
+        + _optional_hidden
+        + _llama_hidden
+        + _httpx_hidden
+        + _portalocker_hidden
+        + _keyring_hidden
+    )
+)
+
 a = Analysis(
     [str(WORKLOGGER_DIR / "main.py")],
     pathex=[str(ROOT_DIR), str(WORKLOGGER_DIR)],
@@ -455,23 +502,7 @@ a = Analysis(
     + _matplotlib_data
     + _reportlab_data
     + _pil_data,
-    hiddenimports=[
-        "sqlite3",
-        "holidays",
-        "holidays.countries",
-        "tzlocal",
-        "PySide6.QtPrintSupport",
-        "services.dep_installer",
-        "services.download_controller",
-        "services.local_model_service",
-        "services.report_service",
-    ]
-    + _core_hidden
-    + _optional_hidden
-    + _llama_hidden
-    + _httpx_hidden
-    + _portalocker_hidden
-    + _keyring_hidden,
+    hiddenimports=_hiddenimports,
     hookspath=[str(HOOKS_DIR)],
     runtime_hooks=[],
     excludes=[

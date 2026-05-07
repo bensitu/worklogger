@@ -13,6 +13,7 @@ import stat
 import sys
 import threading
 import time
+from collections.abc import Iterable
 from datetime import date, datetime, timedelta, timezone
 
 from config.constants import (
@@ -20,6 +21,7 @@ from config.constants import (
     DB_FILENAME,
     DEFAULT_ADMIN_USER,
     FORCE_PASSWORD_CHANGE_SETTING_KEY,
+    LOGIN_ATTEMPT_RETENTION_DAYS,
     RECOVERY_KEY_BYTES,
     RECOVERY_KEY_GROUP_SIZE,
     REMEMBER_TOKEN_HASH_PREFIX,
@@ -284,6 +286,9 @@ class DB:
             self.conn.execute(_CREATE_EXTERNAL_IDENTITIES)
             self.conn.execute(_CREATE_LOGIN_ATTEMPTS)
             self._migrate_oauth_identities_to_external_unlocked()
+            self._prune_stale_login_attempts_unlocked(
+                LOGIN_ATTEMPT_RETENTION_DAYS
+            )
 
             if created_admin_id is not None:
                 self.conn.execute(
@@ -808,9 +813,36 @@ class DB:
         if locked_until.tzinfo is None:
             locked_until = locked_until.replace(tzinfo=timezone.utc)
         if locked_until <= datetime.now(timezone.utc):
-            self.clear_login_failures(username)
+            self._clear_expired_login_lockout(username)
             return None
         return locked_until
+
+    @staticmethod
+    def _lockout_seconds_for_failure_count(
+        failed_count: int,
+        *,
+        threshold: int,
+        lockout_seconds: int,
+        lockout_schedule: Iterable[tuple[int, int]] | None,
+    ) -> int | None:
+        if lockout_schedule is None:
+            if failed_count >= max(1, threshold):
+                return max(1, lockout_seconds)
+            return None
+
+        selected_seconds: int | None = None
+        normalized: list[tuple[int, int]] = []
+        for attempt_threshold, seconds in lockout_schedule:
+            attempt_threshold = int(attempt_threshold)
+            seconds = int(seconds)
+            if attempt_threshold >= 1 and seconds >= 1:
+                normalized.append((attempt_threshold, seconds))
+        for attempt_threshold, seconds in sorted(normalized):
+            if failed_count >= attempt_threshold:
+                selected_seconds = seconds
+            else:
+                break
+        return selected_seconds
 
     def record_login_failure(
         self,
@@ -818,6 +850,7 @@ class DB:
         *,
         threshold: int,
         lockout_seconds: int,
+        lockout_schedule: Iterable[tuple[int, int]] | None = None,
     ) -> tuple[int, datetime | None]:
         username = self._clean_username(username)
         now = _utc_now_iso()
@@ -829,9 +862,15 @@ class DB:
             failed_count = int(row[0]) + 1 if row else 1
             locked_until: datetime | None = None
             locked_until_raw = None
-            if failed_count >= max(1, threshold):
+            lockout_duration = self._lockout_seconds_for_failure_count(
+                failed_count,
+                threshold=threshold,
+                lockout_seconds=lockout_seconds,
+                lockout_schedule=lockout_schedule,
+            )
+            if lockout_duration is not None:
                 locked_until = datetime.now(timezone.utc) + timedelta(
-                    seconds=max(1, lockout_seconds)
+                    seconds=lockout_duration
                 )
                 locked_until_raw = locked_until.isoformat(timespec="seconds")
             self.conn.execute(
@@ -842,6 +881,14 @@ class DB:
             )
             self.conn.commit()
         return failed_count, locked_until
+
+    def _clear_expired_login_lockout(self, username: str) -> None:
+        with self._write_lock:
+            self.conn.execute(
+                "UPDATE login_attempts SET locked_until=NULL WHERE username=?",
+                (username,),
+            )
+            self.conn.commit()
 
     def clear_login_failures(self, username: str) -> None:
         try:
@@ -854,6 +901,30 @@ class DB:
                 (username,),
             )
             self.conn.commit()
+
+    def _prune_stale_login_attempts_unlocked(
+        self,
+        older_than_days: int = LOGIN_ATTEMPT_RETENTION_DAYS,
+    ) -> int:
+        cutoff = (
+            datetime.now(timezone.utc)
+            - timedelta(days=max(1, int(older_than_days)))
+        ).isoformat(timespec="seconds")
+        cur = self.conn.execute(
+            "DELETE FROM login_attempts "
+            "WHERE last_failed_at IS NULL OR last_failed_at < ?",
+            (cutoff,),
+        )
+        return int(cur.rowcount)
+
+    def prune_stale_login_attempts(
+        self,
+        older_than_days: int = LOGIN_ATTEMPT_RETENTION_DAYS,
+    ) -> int:
+        with self._write_lock:
+            deleted = self._prune_stale_login_attempts_unlocked(older_than_days)
+            self.conn.commit()
+            return deleted
 
     def verify_user_id(self, user_id: int, password: str) -> bool:
         row = self.conn.execute(

@@ -1,5 +1,6 @@
 """WorkLogger — entry point."""
 
+import importlib
 import sys
 
 # Windows needs the AppUserModelID before QApplication for the taskbar icon.
@@ -33,6 +34,36 @@ from ui.dialogs import (
 )
 from utils.i18n import _, get_language
 
+_SMOKE_IMPORT_MODULES = (
+    "services.app_services",
+    "services.report_service",
+    "services.export_service",
+    "services.calendar_service",
+)
+
+
+def _safe_stdout(message: str) -> None:
+    stream = getattr(sys, "stdout", None)
+    if stream is None:
+        return
+    print(message)
+
+
+def _smoke_import_check() -> int:
+    failures: list[str] = []
+    for module_name in _SMOKE_IMPORT_MODULES:
+        try:
+            importlib.import_module(module_name)
+        except Exception as exc:
+            failures.append(f"{module_name}: {type(exc).__name__}: {exc}")
+    if failures:
+        _safe_stdout("SMOKE IMPORT FAILED")
+        for failure in failures:
+            _safe_stdout(failure)
+        return 1
+    _safe_stdout("SMOKE IMPORT OK")
+    return 0
+
 
 def _bootstrap() -> None:
     """Run one-time setup tasks before the Qt app starts.
@@ -56,6 +87,9 @@ def _bootstrap() -> None:
 
 
 def main():
+    if "--smoke-import" in sys.argv:
+        sys.exit(_smoke_import_check())
+
     _bootstrap()
     app = QApplication(sys.argv)
     app.setStyle("Fusion")

@@ -293,6 +293,71 @@ verify_llama_version_match() {
   fi
 }
 
+verify_internal_imports() {
+  local target_arch="$1"
+  local python_exe="$2"
+
+  log "RUN  : Verify required internal imports (${target_arch})"
+  run_arch "$target_arch" "$python_exe" - "$SCRIPT_DIR" <<'PY'
+import importlib
+import sys
+from pathlib import Path
+
+project = Path(sys.argv[1])
+sys.path.insert(0, str(project / "worklogger"))
+required = [
+    "services.app_services",
+    "services.report_service",
+    "services.export_service",
+    "services.calendar_service",
+]
+failures = []
+for module_name in required:
+    try:
+        importlib.import_module(module_name)
+    except Exception as exc:
+        failures.append(f"{module_name}: {type(exc).__name__}: {exc}")
+if failures:
+    print("internal_import_check=failed")
+    print("\n".join(failures))
+    raise SystemExit(1)
+print("internal_import_check=ok")
+PY
+  log "OK   : Verify required internal imports (${target_arch})"
+}
+
+warning_file_for_arch() {
+  local target_arch="$1"
+  case "$target_arch" in
+    x86_64) printf '%s\n' "$LOG_DIR/warn-worklogger-x86_64.txt" ;;
+    arm64) printf '%s\n' "$LOG_DIR/warn-worklogger-arm64.txt" ;;
+    *) printf '%s\n' "$LOG_DIR/warn-worklogger.txt" ;;
+  esac
+}
+
+inspect_warning_file() {
+  local target_arch="$1"
+  local warn_file
+  warn_file="$(warning_file_for_arch "$target_arch")"
+  if [ -f "$warn_file" ]; then
+    if grep -Eq "services\.report_service|No module named 'services\.report_service'" "$warn_file"; then
+      fail "PyInstaller warning log contains a required internal service import failure: $warn_file"
+    fi
+    log "OK   : PyInstaller warning file checked (${target_arch}): $warn_file"
+  else
+    log "OK   : PyInstaller warning log has no actionable warnings (${target_arch})."
+  fi
+}
+
+smoke_test_app() {
+  local main_exec="$1"
+  local target_arch="$2"
+  [ -f "$main_exec" ] || fail "Cannot smoke-test missing executable: $main_exec"
+  log "RUN  : Smoke-test packaged executable imports (${target_arch})"
+  run_arch "$target_arch" "$main_exec" --smoke-import
+  log "OK   : Smoke-test packaged executable imports (${target_arch})"
+}
+
 verify_prerequisites() {
   [ "$(uname -s)" = "Darwin" ] || fail "WorkLogger_build_macOS.sh only supports macOS."
   [ -n "$PYTHON_BIN_ARM64" ] || fail "arm64 Python was not found. Install Python 3.10+ or set PYTHON_BIN_ARM64."
@@ -389,6 +454,7 @@ bootstrap_build_env() {
 
   run_arch "$target_arch" "$venv_python" -c 'import importlib.util, sys; req = ["PySide6", "holidays", "httpx", "httpcore", "anyio", "portalocker", "keyring", "cryptography", "llama_cpp"]; miss = [m for m in req if importlib.util.find_spec(m) is None]; print("dependency_check=", "ok" if not miss else ",".join(miss)); sys.exit(1 if miss else 0)' \
     || fail "Dependency verification failed for ${target_arch} build venv."
+  verify_internal_imports "$target_arch" "$venv_python"
 }
 
 build_for_arch() {
@@ -408,6 +474,7 @@ build_for_arch() {
   log "RUN  : PyInstaller build (${target_arch})"
   run_arch "$target_arch" "$venv_python" -m PyInstaller "$SPEC" --clean --noconfirm --distpath "$dist_dir" --workpath "$work_dir"
   log "OK   : PyInstaller build (${target_arch})"
+  inspect_warning_file "$target_arch"
 }
 
 resolve_built_bundle() {
@@ -575,11 +642,13 @@ log "Step 1/3: Build x86_64 (Rosetta)"
 build_for_arch "x86_64" "$DIST_X86" "$BUILD_X86" "$VENV_X86"
 X86_APP="$(resolve_built_bundle "$DIST_X86" "x86_64")"
 X86_MAIN="$X86_APP/Contents/MacOS/${APP_NAME}"
+smoke_test_app "$X86_MAIN" "x86_64"
 
 log "Step 2/3: Build arm64 (native)"
 build_for_arch "arm64" "$DIST_ARM" "$BUILD_ARM" "$VENV_ARM"
 ARM_APP="$(resolve_built_bundle "$DIST_ARM" "arm64")"
 ARM_MAIN="$ARM_APP/Contents/MacOS/${APP_NAME}"
+smoke_test_app "$ARM_MAIN" "arm64"
 
 verify_llama_version_match
 
@@ -590,6 +659,8 @@ resign_merged_bundle
 verify_codesign_integrity
 
 MAIN_EXEC="$OUT_APP/Contents/MacOS/${APP_NAME}"
+smoke_test_app "$MAIN_EXEC" "arm64"
+smoke_test_app "$MAIN_EXEC" "x86_64"
 log "x86 executable   : $(file "$X86_MAIN")"
 log "arm executable   : $(file "$ARM_MAIN")"
 log "merged executable: $(file "$MAIN_EXEC")"

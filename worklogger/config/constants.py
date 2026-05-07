@@ -1,6 +1,6 @@
 """Application-wide constants — single source of truth."""
 
-APP_VERSION = "3.3.1"
+APP_VERSION = "3.3.2"
 APP_AUTHOR = "Ben Situ"
 APP_ID = "dev.worklogger.app.v1"
 GITHUB_URL = "https://github.com/bensitu/worklogger"
@@ -100,6 +100,13 @@ REMEMBER_TOKEN_LIFETIME_DAYS = 30
 REMEMBER_TOKEN_HASH_PREFIX = "sha256:"
 LOGIN_FAILURE_LOCK_THRESHOLD = 5
 LOGIN_LOCKOUT_SECONDS = 30
+LOGIN_LOCKOUT_SCHEDULE = (
+    (5, 30),
+    (10, 300),
+    (15, 1800),
+    (20, 86400),
+)
+LOGIN_ATTEMPT_RETENTION_DAYS = 7
 DB_CORRUPT_BACKUP_RETENTION = 3
 RECOVERY_KEY_BYTES = 24
 RECOVERY_KEY_GROUP_SIZE = 8

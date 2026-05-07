@@ -31,6 +31,7 @@ from config.constants import (
     GITHUB_RELEASES_API,
     LANG_SETTING_KEY,
     LAST_BACKUP_KEY,
+    LOGIN_LOCKOUT_SCHEDULE,
     LOGIN_FAILURE_LOCK_THRESHOLD,
     LOGIN_LOCKOUT_SECONDS,
     MINIMAL_MODE_SETTING_KEY,
@@ -173,6 +174,7 @@ class AuthService:
                 username,
                 threshold=LOGIN_FAILURE_LOCK_THRESHOLD,
                 lockout_seconds=LOGIN_LOCKOUT_SECONDS,
+                lockout_schedule=LOGIN_LOCKOUT_SCHEDULE,
             )
             if lockout_until is None:
                 _log.warning(
@@ -283,7 +285,9 @@ class AuthService:
                 raise ValueError("identity_user_not_found")
             self._update_external_identity_if_needed(existing, identity)
             self.db.mark_external_identity_login(int(existing["id"]))
-            self._apply_remember_login(user_id, str(user["username"]), remember=remember)
+            username = str(user["username"])
+            self.db.clear_login_failures(username)
+            self._apply_remember_login(user_id, username, remember=remember)
             _log.info(
                 "IDENTITY_LOGIN_SUCCESS provider=%s broker=%s user_id=%s",
                 identity.provider,
@@ -297,9 +301,11 @@ class AuthService:
             if not user:
                 raise ValueError("user_not_found")
             self.db.create_external_identity(int(current_user_id), identity)
+            username = str(user["username"])
+            self.db.clear_login_failures(username)
             self._apply_remember_login(
                 int(current_user_id),
-                str(user["username"]),
+                username,
                 remember=remember,
             )
             _log.info(
@@ -318,6 +324,7 @@ class AuthService:
         password = secrets.token_urlsafe(48)
         user_id = self.db.create_user(username, password, is_admin=False)
         self.db.create_external_identity(user_id, identity)
+        self.db.clear_login_failures(username)
         self._apply_remember_login(user_id, username, remember=remember)
         _log.info(
             "IDENTITY_LOGIN_SUCCESS provider=%s broker=%s user_id=%s",

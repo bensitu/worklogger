@@ -22,6 +22,7 @@ $I18NCompileScript = Join-Path $ProjectRoot "scripts\i18n\i18n_compile.py"
 $TargetExe = Join-Path $DistDir "$AppName.exe"
 $OnedirOutput = Join-Path $DistDir $AppName
 $LogDir = Join-Path $ProjectRoot "build_logs"
+$WarnFile = Join-Path $LogDir "warn-worklogger.txt"
 $Timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $script:LogFile = Join-Path $LogDir "build_windows_$Timestamp.log"
 $BuildPython = $null
@@ -376,6 +377,36 @@ try {
         "import importlib.util, sys; req=['PySide6','holidays','keyring','cryptography','httpx','httpcore','anyio','portalocker']; miss=[m for m in req if importlib.util.find_spec(m) is None]; print('dependency_check=', 'ok' if not miss else ','.join(miss)); sys.exit(1 if miss else 0)"
     )
 
+    $env:WORKLOGGER_PROJECT_ROOT = $ProjectRoot
+    $internalImportCheck = @'
+import importlib
+import os
+import sys
+from pathlib import Path
+
+project = Path(os.environ["WORKLOGGER_PROJECT_ROOT"])
+app_root = project / "worklogger"
+sys.path.insert(0, str(app_root))
+required = [
+    "services.app_services",
+    "services.report_service",
+    "services.export_service",
+    "services.calendar_service",
+]
+failures = []
+for module_name in required:
+    try:
+        importlib.import_module(module_name)
+    except Exception as exc:
+        failures.append(f"{module_name}: {type(exc).__name__}: {exc}")
+if failures:
+    print("internal_import_check=failed")
+    print("\n".join(failures))
+    sys.exit(1)
+print("internal_import_check=ok")
+'@
+    Invoke-External -Description "Verify required internal imports" -FilePath $BuildPython -Arguments @("-c", $internalImportCheck)
+
     Invoke-External -Description "Compile gettext catalogs (.po -> .mo)" -FilePath $BuildPython -Arguments @($I18NCompileScript)
 
     if (-not (Test-Path -LiteralPath $DistDir -PathType Container)) {
@@ -400,6 +431,17 @@ try {
         $BuildDir
     )
 
+    if (Test-Path -LiteralPath $WarnFile -PathType Leaf) {
+        $warningText = Get-Content -LiteralPath $WarnFile -Raw -Encoding utf8
+        if ($warningText -match "services\.report_service" -or $warningText -match "No module named 'services\.report_service'") {
+            throw "PyInstaller warning log contains a required internal service import failure: $WarnFile"
+        }
+        Write-Log "OK   : PyInstaller warning file checked: $WarnFile"
+    }
+    else {
+        Write-Log "OK   : PyInstaller warning log has no actionable warnings."
+    }
+
     if (-not (Test-Path -LiteralPath $TargetExe -PathType Leaf)) {
         throw "Expected artifact missing: $TargetExe"
     }
@@ -423,6 +465,13 @@ try {
     if ($read -ne 2 -or $header[0] -ne 0x4D -or $header[1] -ne 0x5A) {
         throw "Artifact type validation failed: expected PE/MZ executable."
     }
+
+    $artifactHash = Get-FileHash -LiteralPath $TargetExe -Algorithm SHA256
+    Write-Log "OK   : Artifact path: $($artifact.FullName)"
+    Write-Log "OK   : Artifact last write time UTC: $($artifact.LastWriteTimeUtc.ToString('o'))"
+    Write-Log "OK   : Artifact SHA256: $($artifactHash.Hash)"
+
+    Invoke-External -Description "Smoke-test packaged executable imports" -FilePath $TargetExe -Arguments @("--smoke-import")
 
     if (Test-Path -LiteralPath $BuildDir -PathType Container) {
         Write-Log "RUN  : Cleanup build work directory after success"
