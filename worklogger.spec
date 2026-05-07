@@ -144,44 +144,65 @@ def _configure_pyinstaller_warning_log() -> None:
     """Write PyInstaller missing-module warnings outside the transient build directory."""
     from PyInstaller.building import build_main as _pyi_build_main
     from PyInstaller.config import CONF
+    from PyInstaller.depend import utils as _pyi_depend_utils
+
+    _original_include_library = _pyi_depend_utils.include_library
+
+    def _include_library(libname: str) -> bool:
+        windows_system_libs = {"user32", "user32.dll"}
+        if PLATFORM != "win32" and str(libname).lower() in windows_system_libs:
+            return False
+        return _original_include_library(libname)
+
+    _pyi_depend_utils.include_library = _include_library
 
     ignored_names = {
         "_dummy_thread",
         "_frozen_importlib",
         "_frozen_importlib_external",
         "_manylinux",
+        "_overlapped",
         "_posixshmem",
         "_posixsubprocess",
         "_pytest",
         "_scproxy",
         "_typeshed",
+        "_winapi",
+        "_wmi",
         "_winreg",
         "annotationlib",
         "asyncio.DefaultEventLoopPolicy",
         "cStringIO",
         "cffi._pycparser",
+        "collections.abc",
         "collections.Callable",
         "dateutil.tz.tzfile",
+        "defusedxml",
         "dummy_thread",
         "fcntl",
         "grp",
         "importlib_resources",
         "java",
         "java.lang",
+        "msvcrt",
         "multiprocessing.AuthenticationError",
         "multiprocessing.BufferTooShort",
         "multiprocessing.TimeoutError",
         "multiprocessing.get_context",
         "multiprocessing.get_start_method",
         "multiprocessing.set_start_method",
+        "nt",
+        "olefile",
         "posix",
         "pwd",
+        "pywintypes",
         "pyimod02_importers",
         "readline",
         "resource",
         "setuptools._distutils.msvc9compiler",
         "six.moves",
         "six.moves.range",
+        "six.moves.winreg",
         "sitecustomize",
         "StringIO",
         "termios",
@@ -189,6 +210,15 @@ def _configure_pyinstaller_warning_log() -> None:
         "trove_classifiers",
         "usercustomize",
         "vms_lib",
+        "win32con",
+        "win32cred",
+        "win32ctypes",
+        "win32evtlog",
+        "win32evtlogutil",
+        "win32file",
+        "win32pdh",
+        "winerror",
+        "winreg",
     }
     ignored_prefixes = (
         "dbus",

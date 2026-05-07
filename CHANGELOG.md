@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Moved PyInstaller missing-module warning output to `build_logs`, keeping only actionable warnings and suppressing warning files when none remain.
 - Fixed Windows build logging so PyInstaller stderr progress output is captured without being treated as a failed command.
 - Aligned the macOS bundle build number with the application version.
+- Reduced macOS build log noise from optional diagnostic tools, llama-cpp-python wheel probes, Windows-only module scans, and Windows ctypes library probes.
 
 ### Security
 

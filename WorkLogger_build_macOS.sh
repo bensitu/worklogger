@@ -109,7 +109,7 @@ run_for_debug() {
   local desc="$1"
   shift
   log "DEBUG: ${desc}"
-  "$@" || log "WARN : Debug command failed: ${desc}"
+  "$@" || log "DEBUG: Optional debug command unavailable: ${desc}"
 }
 
 run_with_heartbeat() {
@@ -201,9 +201,11 @@ probe_llama_binary_wheel() {
   local llama_requirement="$4"
   shift 4
   local probe_dir="$SCRIPT_DIR/.tmp_llama_probe_${target_arch}_${label}_${TIMESTAMP}"
+  local probe_log
 
   safe_remove_path "$probe_dir"
   mkdir -p "$probe_dir"
+  probe_log="$probe_dir/pip_download.log"
   log "DEBUG: Probe llama-cpp-python binary wheel (${target_arch}, ${label}): $llama_requirement"
   if run_arch "$target_arch" "$python_exe" -m pip download \
     --no-deps \
@@ -211,10 +213,10 @@ probe_llama_binary_wheel() {
     --only-binary llama-cpp-python \
     -d "$probe_dir" \
     "$@" \
-    "$llama_requirement"; then
+    "$llama_requirement" >"$probe_log" 2>&1; then
     find "$probe_dir" -maxdepth 1 -type f -name "*.whl" -exec basename {} \;
   else
-    log "WARN : No compatible llama-cpp-python binary wheel found (${target_arch}, ${label}); pip may build from source."
+    log "DEBUG: No compatible llama-cpp-python binary wheel found (${target_arch}, ${label})."
   fi
   safe_remove_path "$probe_dir"
 }
