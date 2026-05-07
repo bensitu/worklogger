@@ -831,13 +831,15 @@ class ChartDialog(QDialog):
             return PdfDetailSection()
         total, ot, wd, ld, avg = self._month_stats(
             self._app.current.year, self._app.current.month)
+        hour_label = _("h")
+        days_label = _(" days")
         return PdfDetailSection(
             summary=[
-                PdfMetric(_("Monthly total"), f"{total:.1f}{_("h")}"),
-                PdfMetric(_("Overtime"), f"{ot:.1f}{_("h")}"),
-                PdfMetric(_("Daily avg"), f"{avg:.1f}{_("h")}"),
-                PdfMetric(_("Work days"), f"{int(wd)}{_(" days")}"),
-                PdfMetric(_("Leave days"), f"{int(ld)}{_(" days")}"),
+                PdfMetric(_("Monthly total"), f"{total:.1f}{hour_label}"),
+                PdfMetric(_("Overtime"), f"{ot:.1f}{hour_label}"),
+                PdfMetric(_("Daily avg"), f"{avg:.1f}{hour_label}"),
+                PdfMetric(_("Work days"), f"{int(wd)}{days_label}"),
+                PdfMetric(_("Leave days"), f"{int(ld)}{days_label}"),
             ],
             headers=[
                 ("Date", 0.13), (_("Start"), 0.10), (_("End"), 0.10),
@@ -859,6 +861,8 @@ class ChartDialog(QDialog):
         )
 
     def _pdf_quarterly_detail_section(self) -> PdfDetailSection:
+        hour_label = _("h")
+        days_label = _(" days")
         return PdfDetailSection(
             headers=[
                 ("Quarter", 0.15), (_("Monthly total"), 0.17),
@@ -868,11 +872,11 @@ class ChartDialog(QDialog):
             rows=[
                 [
                     row["q"],
-                    f"{row['total']:.1f}{_("h")}",
-                    f"{row['ot']:.1f}{_("h")}",
-                    f"{row['avg']:.1f}{_("h")}",
-                    f"{row['wd']}{_(" days")}",
-                    f"{row['ld']}{_(" days")}",
+                    f"{row['total']:.1f}{hour_label}",
+                    f"{row['ot']:.1f}{hour_label}",
+                    f"{row['avg']:.1f}{hour_label}",
+                    f"{row['wd']}{days_label}",
+                    f"{row['ld']}{days_label}",
                 ]
                 for row in self._quarterly_detail()
             ],
@@ -888,13 +892,15 @@ class ChartDialog(QDialog):
         ld = sum(x[3] for x in s)
         avg = total/wd if wd else 0.0
         rows = self._annual_detail()
+        hour_label = _("h")
+        days_label = _(" days")
         return PdfDetailSection(
             summary=[
-                PdfMetric(_("Monthly total"), f"{total:.1f}{_("h")}"),
-                PdfMetric(_("Overtime"), f"{ot:.1f}{_("h")}"),
-                PdfMetric(_("Daily avg"), f"{avg:.1f}{_("h")}"),
-                PdfMetric(_("Work days"), f"{int(wd)}{_(" days")}"),
-                PdfMetric(_("Leave days"), f"{int(ld)}{_(" days")}"),
+                PdfMetric(_("Monthly total"), f"{total:.1f}{hour_label}"),
+                PdfMetric(_("Overtime"), f"{ot:.1f}{hour_label}"),
+                PdfMetric(_("Daily avg"), f"{avg:.1f}{hour_label}"),
+                PdfMetric(_("Work days"), f"{int(wd)}{days_label}"),
+                PdfMetric(_("Leave days"), f"{int(ld)}{days_label}"),
             ],
             headers=[
                 ("Month", 0.12), (_("Monthly total"), 0.17),
@@ -904,11 +910,11 @@ class ChartDialog(QDialog):
             rows=[
                 [
                     row["m"],
-                    f"{row['total']:.1f}{_("h")}",
-                    f"{row['ot']:.1f}{_("h")}",
-                    f"{row['avg']:.1f}{_("h")}",
-                    f"{row['wd']}{_(" days")}",
-                    f"{row['ld']}{_(" days")}",
+                    f"{row['total']:.1f}{hour_label}",
+                    f"{row['ot']:.1f}{hour_label}",
+                    f"{row['avg']:.1f}{hour_label}",
+                    f"{row['wd']}{days_label}",
+                    f"{row['ld']}{days_label}",
                 ]
                 for row in rows
             ],
