@@ -326,14 +326,14 @@ def _configure_pyinstaller_warning_log() -> None:
 
     def _warning_file_for_build() -> Path:
         workpath = Path(CONF.get("workpath", ""))
-        build_root = workpath.parent.name
         arch_suffix_by_build_dir = {
             "build_x86": "x86_64",
             "build_arm": "arm64",
         }
-        suffix = arch_suffix_by_build_dir.get(build_root)
-        if suffix:
-            return BUILD_LOGS_DIR / f"warn-worklogger-{suffix}.txt"
+        for build_root in (workpath.name, workpath.parent.name):
+            suffix = arch_suffix_by_build_dir.get(build_root)
+            if suffix:
+                return BUILD_LOGS_DIR / f"warn-worklogger-{suffix}.txt"
         return WARN_FILE
 
     BUILD_LOGS_DIR.mkdir(parents=True, exist_ok=True)

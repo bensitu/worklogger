@@ -43,6 +43,10 @@ jobs:
           if ($env:RELEASE_VERSION -notmatch '^v\d+\.\d+\.\d+([.-][0-9A-Za-z.-]+)?$') {
             throw "Release version must match vX.Y.Z. Got: $env:RELEASE_VERSION"
           }
+          $appVersion = python -c "import pathlib, re; text = pathlib.Path('worklogger/config/constants.py').read_text(encoding='utf-8'); print(re.search(r'APP_VERSION\s*=\s*`"([^`"]+)`"', text).group(1))"
+          if ($env:RELEASE_VERSION -ne "v$appVersion") {
+            throw "Release version $env:RELEASE_VERSION does not match APP_VERSION v$appVersion."
+          }
 
       - name: Build Windows app
         shell: cmd
@@ -70,6 +74,11 @@ jobs:
 
           $target = "release\WorkLogger.exe"
           Copy-Item -LiteralPath $source -Destination $target -Force
+          & $target --smoke-import
+          if ($LASTEXITCODE -ne 0) {
+            throw "Uploaded Windows artifact failed --smoke-import."
+          }
+          Get-FileHash -LiteralPath $target -Algorithm SHA256 | Format-List
           Get-ChildItem -LiteralPath release -File | Select-Object Name, Length
 
       - name: Upload Windows artifact
@@ -126,6 +135,18 @@ jobs:
             echo "Release version must match vX.Y.Z. Got: $RELEASE_VERSION"
             exit 1
           fi
+          app_version="$(python - <<'PY'
+          import pathlib
+          import re
+
+          text = pathlib.Path("worklogger/config/constants.py").read_text(encoding="utf-8")
+          print(re.search(r'APP_VERSION\s*=\s*"([^"]+)"', text).group(1))
+          PY
+          )"
+          if [ "$RELEASE_VERSION" != "v${app_version}" ]; then
+            echo "Release version ${RELEASE_VERSION} does not match APP_VERSION v${app_version}."
+            exit 1
+          fi
 
           arch -arm64 "$PYTHON_BIN_ARM64" -c 'import platform, sys; print("arm64 python:", sys.executable, platform.machine())'
           arch -x86_64 "$PYTHON_BIN_X86_64" -c 'import platform, sys; print("x86_64 python:", sys.executable, platform.machine())'
@@ -161,6 +182,18 @@ jobs:
             cp "dist/WorkLogger.dmg" "release/WorkLogger.dmg"
           fi
 
+          verify_dir="$(mktemp -d)"
+          trap 'rm -rf "$verify_dir"' EXIT
+          ditto -x -k "release/WorkLogger.app.zip" "$verify_dir"
+          verify_exec="$verify_dir/WorkLogger.app/Contents/MacOS/WorkLogger"
+          if [ ! -f "$verify_exec" ]; then
+            echo "Expected executable was not found in release zip: $verify_exec"
+            find "$verify_dir" -maxdepth 5 -print
+            exit 1
+          fi
+          arch -arm64 "$verify_exec" --smoke-import
+          arch -x86_64 "$verify_exec" --smoke-import
+          shasum -a 256 "release/WorkLogger.app.zip"
           find release -maxdepth 1 -type f -print -exec ls -lh {} \;
 
       - name: Upload macOS artifact
@@ -226,6 +259,18 @@ jobs:
             echo "Release version must match vX.Y.Z. Got: $RELEASE_VERSION"
             exit 1
           fi
+          app_version="$(python - <<'PY'
+          import pathlib
+          import re
+
+          text = pathlib.Path("worklogger/config/constants.py").read_text(encoding="utf-8")
+          print(re.search(r'APP_VERSION\s*=\s*"([^"]+)"', text).group(1))
+          PY
+          )"
+          if [ "$RELEASE_VERSION" != "v${app_version}" ]; then
+            echo "Release version ${RELEASE_VERSION} does not match APP_VERSION v${app_version}."
+            exit 1
+          fi
 
       - name: Make Linux build script executable
         run: chmod +x ./WorkLogger_build_linux.sh
@@ -248,6 +293,12 @@ jobs:
           chmod +x dist/WorkLogger
           tar -C dist -czf release/WorkLogger.tar.gz WorkLogger
           tar -tzf release/WorkLogger.tar.gz
+          verify_dir="$(mktemp -d)"
+          trap 'rm -rf "$verify_dir"' EXIT
+          tar -xzf release/WorkLogger.tar.gz -C "$verify_dir"
+          chmod +x "$verify_dir/WorkLogger"
+          "$verify_dir/WorkLogger" --smoke-import
+          sha256sum release/WorkLogger.tar.gz
           find release -maxdepth 1 -type f -print -exec ls -lh {} \;
 
       - name: Upload Linux artifact
@@ -298,6 +349,9 @@ jobs:
 
       - name: Show release files
         run: |
+          test -f release-artifacts/WorkLogger.exe
+          test -f release-artifacts/WorkLogger.app.zip
+          test -f release-artifacts/WorkLogger.tar.gz
           find release-artifacts -maxdepth 2 -type f -print -exec ls -lh {} \;
 
       - name: Create or update draft GitHub Release
