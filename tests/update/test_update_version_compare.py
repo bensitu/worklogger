@@ -1,6 +1,7 @@
 import urllib.error
 import json
 import os
+import ssl
 import sys
 import unittest
 from unittest.mock import patch
@@ -12,6 +13,7 @@ if APP_ROOT not in sys.path:
     sys.path.insert(0, APP_ROOT)
 
 from services.app_services import AppServices
+import services.report_service as report_service
 from utils.i18n import get_translator
 
 
@@ -40,6 +42,10 @@ class _FakeDB:
 
 
 class UpdateVersionCompareTests(unittest.TestCase):
+    def test_report_service_and_app_services_imports_succeed(self):
+        self.assertTrue(callable(report_service.generate_weekly))
+        self.assertTrue(AppServices)
+
     def test_semver_remote_greater(self):
         self.assertTrue(AppServices._is_remote_newer("2.0.0", "1.9.9"))
 
@@ -101,7 +107,8 @@ class UpdateVersionCompareTests(unittest.TestCase):
             return_value=_FakeResponse(b"{" + (b"x" * (512 * 1024 + 1))),
         ):
             msg = svc._check_update_sync(lambda s: s)
-        self.assertIn("Could not check for updates:", msg)
+        self.assertIn("Could not check for updates", msg)
+        self.assertNotIn("update_response_too_large", msg)
 
     def test_update_check_opens_circuit_after_repeated_failures(self):
         svc = AppServices(db=_FakeDB(), current_user_id=1)
@@ -109,16 +116,36 @@ class UpdateVersionCompareTests(unittest.TestCase):
              patch("services.app_services.time.sleep", return_value=None):
             for _ in range(3):
                 self.assertIn(
-                    "Could not check for updates:",
+                    "Could not check for updates",
                     svc._check_update_sync(lambda s: s),
                 )
 
         with patch("urllib.request.urlopen") as mocked:
             self.assertIn(
-                "Could not check for updates:",
+                "Could not check for updates",
                 svc._check_update_sync(lambda s: s),
             )
         mocked.assert_not_called()
+
+    def test_update_check_hides_raw_network_errors(self):
+        cases = (
+            ssl.SSLError("[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred"),
+            urllib.error.URLError("proxy tunnel failed"),
+            TimeoutError("timed out"),
+            json.JSONDecodeError("bad json", "{", 0),
+        )
+        for exc in cases:
+            svc = AppServices(db=_FakeDB(), current_user_id=1)
+            with self.subTest(exc=type(exc).__name__), \
+                 patch("urllib.request.urlopen", side_effect=exc), \
+                 patch("services.app_services.time.sleep", return_value=None):
+                msg = svc._check_update_sync(lambda s: s)
+
+            self.assertIn("Could not check for updates", msg)
+            self.assertIn("network connection", msg)
+            self.assertNotIn("UNEXPECTED_EOF", msg)
+            self.assertNotIn("proxy tunnel failed", msg)
+            self.assertNotIn("bad json", msg)
 
     def test_no_hardcoded_japanese_latest_version_literal(self):
         target = "現在のバージョンは最新です"
@@ -134,4 +161,3 @@ class UpdateVersionCompareTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

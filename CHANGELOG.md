@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added a safe `worklogger/config/identity.local.json.example` template without real OAuth or Firebase credentials.
+- Added `certifi` as an explicit dependency for packaged update-check TLS verification.
 
 ### Changed
 
@@ -21,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the administrator reset script to use the current password reset flow and print the regenerated recovery key.
 - Limited retained corrupt-database backup files to the most recent three backups.
 - Explicitly enabled TLS certificate verification in local model downloads.
+- Fixed service-layer imports and PyInstaller hidden imports so packaged builds include report services and core app modules reliably.
+- Fixed update checks to return a friendly network/proxy/VPN error without exposing raw SSL, proxy, or JSON parse details.
+- Fixed PyInstaller's stale `pycparser.lextab` and `pycparser.yacctab` hidden-import warnings for current pycparser releases.
+- Moved PyInstaller missing-module warning output to `build_logs`, keeping only actionable warnings and suppressing warning files when none remain.
+- Fixed Windows build logging so PyInstaller stderr progress output is captured without being treated as a failed command.
+- Aligned the macOS bundle build number with the application version.
 
 ### Security
 
