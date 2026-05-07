@@ -54,7 +54,7 @@ class TemplatePickerDialog(QDialog):
         self._del_btn = QPushButton(_("Delete"))
         self._del_btn.setEnabled(False)
         self._del_btn.clicked.connect(self._delete_selected)
-        new_btn = QPushButton(f"+ {_("New Template")}")
+        new_btn = QPushButton("+ " + _("New Template"))
         new_btn.clicked.connect(self._create_new)
         lft_btns.addWidget(new_btn)
         lft_btns.addWidget(self._del_btn)
@@ -122,8 +122,9 @@ class TemplatePickerDialog(QDialog):
             if not content:
                 continue
             display_key = TEMPLATE_DISPLAY_NAME.get(builtin_type, builtin_type)
+            builtin_label = _("Built-in")
             item = QListWidgetItem(
-                f"[{_("Built-in")}]  {msg(display_key)}")
+                f"[{builtin_label}]  {msg(display_key)}")
             item.setData(Qt.UserRole, {
                 "kind": "builtin",
                 "content": content,
@@ -138,7 +139,8 @@ class TemplatePickerDialog(QDialog):
             })
 
         for tpl in list_custom_templates(self._type):
-            label = f"[{_("Custom")}]  {_localized_custom_template_name(tpl['name'])}"
+            custom_label = _("Custom")
+            label = f"[{custom_label}]  {_localized_custom_template_name(tpl['name'])}"
             item = QListWidgetItem(label)
             item.setData(Qt.UserRole, {"kind": "custom",
                                        "content": tpl.get("content", ""),

@@ -36,7 +36,8 @@ def _fmt_entry(dt: _dt.date, rec, work_hours: float,
     if rec and rec.is_leave:
         h = calc_hours(rec.start, rec.end, rec.break_hours) if rec.has_times else 0.0
         hours = f"  {h:.1f}h" if h > 0 else ""
-        overnight = f"  [{_("Night")}]" if rec.is_overnight and rec.has_times else ""
+        night_label = _("Night")
+        overnight = f"  [{night_label}]" if rec.is_overnight and rec.has_times else ""
         note = f"\n  → {rec.note}" if rec.note else ""
         return (
             f"{dt.isoformat()}（{dow}）{hours} [{_wt_label(rec.safe_work_type())}]"
@@ -48,7 +49,8 @@ def _fmt_entry(dt: _dt.date, rec, work_hours: float,
         h = calc_hours(rec.start, rec.end, rec.break_hours)
         ot = max(h - work_hours, 0)
         wt = rec.safe_work_type()
-        overnight = f"  [{_("Night")}]" if rec.is_overnight else ""
+        night_label = _("Night")
+        overnight = f"  [{night_label}]" if rec.is_overnight else ""
         ots = f"  OT+{ot:.1f}h" if ot > 0 else ""
         note = f"\n  → {rec.note}" if rec.note else ""
         line = _("{date}  ({dow})  {h}h  [{wt}]").format(

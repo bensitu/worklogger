@@ -666,10 +666,8 @@ class ChartDialog(QDialog):
             wt = rec.safe_work_type()
             h = calc_hours(rec.start, rec.end, rec.break_hours) if rec.has_times else 0.0
             ot = 0.0 if rec.is_leave else max(h - app.work_hours, 0)
-            overnight_suffix = (
-                f" ({_("Night")})"
-                if rec.is_overnight and rec.end else ""
-            )
+            night_label = _("Night")
+            overnight_suffix = f" ({night_label})" if rec.is_overnight and rec.end else ""
             rows.append({"date": rec.date,
                          "start": rec.start or "—",
                          "end": (rec.end or "—") + overnight_suffix if rec.end else "—",
@@ -833,13 +831,15 @@ class ChartDialog(QDialog):
             return PdfDetailSection()
         total, ot, wd, ld, avg = self._month_stats(
             self._app.current.year, self._app.current.month)
+        hour_label = _("h")
+        days_label = _(" days")
         return PdfDetailSection(
             summary=[
-                PdfMetric(_("Monthly total"), f"{total:.1f}{_("h")}"),
-                PdfMetric(_("Overtime"), f"{ot:.1f}{_("h")}"),
-                PdfMetric(_("Daily avg"), f"{avg:.1f}{_("h")}"),
-                PdfMetric(_("Work days"), f"{int(wd)}{_(" days")}"),
-                PdfMetric(_("Leave days"), f"{int(ld)}{_(" days")}"),
+                PdfMetric(_("Monthly total"), f"{total:.1f}{hour_label}"),
+                PdfMetric(_("Overtime"), f"{ot:.1f}{hour_label}"),
+                PdfMetric(_("Daily avg"), f"{avg:.1f}{hour_label}"),
+                PdfMetric(_("Work days"), f"{int(wd)}{days_label}"),
+                PdfMetric(_("Leave days"), f"{int(ld)}{days_label}"),
             ],
             headers=[
                 ("Date", 0.13), (_("Start"), 0.10), (_("End"), 0.10),
@@ -861,6 +861,8 @@ class ChartDialog(QDialog):
         )
 
     def _pdf_quarterly_detail_section(self) -> PdfDetailSection:
+        hour_label = _("h")
+        days_label = _(" days")
         return PdfDetailSection(
             headers=[
                 ("Quarter", 0.15), (_("Monthly total"), 0.17),
@@ -870,11 +872,11 @@ class ChartDialog(QDialog):
             rows=[
                 [
                     row["q"],
-                    f"{row['total']:.1f}{_("h")}",
-                    f"{row['ot']:.1f}{_("h")}",
-                    f"{row['avg']:.1f}{_("h")}",
-                    f"{row['wd']}{_(" days")}",
-                    f"{row['ld']}{_(" days")}",
+                    f"{row['total']:.1f}{hour_label}",
+                    f"{row['ot']:.1f}{hour_label}",
+                    f"{row['avg']:.1f}{hour_label}",
+                    f"{row['wd']}{days_label}",
+                    f"{row['ld']}{days_label}",
                 ]
                 for row in self._quarterly_detail()
             ],
@@ -890,13 +892,15 @@ class ChartDialog(QDialog):
         ld = sum(x[3] for x in s)
         avg = total/wd if wd else 0.0
         rows = self._annual_detail()
+        hour_label = _("h")
+        days_label = _(" days")
         return PdfDetailSection(
             summary=[
-                PdfMetric(_("Monthly total"), f"{total:.1f}{_("h")}"),
-                PdfMetric(_("Overtime"), f"{ot:.1f}{_("h")}"),
-                PdfMetric(_("Daily avg"), f"{avg:.1f}{_("h")}"),
-                PdfMetric(_("Work days"), f"{int(wd)}{_(" days")}"),
-                PdfMetric(_("Leave days"), f"{int(ld)}{_(" days")}"),
+                PdfMetric(_("Monthly total"), f"{total:.1f}{hour_label}"),
+                PdfMetric(_("Overtime"), f"{ot:.1f}{hour_label}"),
+                PdfMetric(_("Daily avg"), f"{avg:.1f}{hour_label}"),
+                PdfMetric(_("Work days"), f"{int(wd)}{days_label}"),
+                PdfMetric(_("Leave days"), f"{int(ld)}{days_label}"),
             ],
             headers=[
                 ("Month", 0.12), (_("Monthly total"), 0.17),
@@ -906,11 +910,11 @@ class ChartDialog(QDialog):
             rows=[
                 [
                     row["m"],
-                    f"{row['total']:.1f}{_("h")}",
-                    f"{row['ot']:.1f}{_("h")}",
-                    f"{row['avg']:.1f}{_("h")}",
-                    f"{row['wd']}{_(" days")}",
-                    f"{row['ld']}{_(" days")}",
+                    f"{row['total']:.1f}{hour_label}",
+                    f"{row['ot']:.1f}{hour_label}",
+                    f"{row['avg']:.1f}{hour_label}",
+                    f"{row['wd']}{days_label}",
+                    f"{row['ld']}{days_label}",
                 ]
                 for row in rows
             ],

@@ -785,7 +785,8 @@ class App(QWidget):
             e = parse_time(e_txt) if e_txt else None
             if s and e and is_overnight_shift(s, e):
                 overnight = True
-        marker = f"  {_("Overnight")}" if overnight else ""
+        overnight_label = _("Overnight")
+        marker = f"  {overnight_label}" if overnight else ""
         self.date_banner.setText(f"{d.year}/{d.month:02d}/{d.day:02d}  {dow}{marker}")
         self._update_minimal_date_nav()
 
@@ -856,18 +857,22 @@ class App(QWidget):
         self._refresh_auto_time_labels()
 
     def _refresh_auto_time_labels(self):
+        started_label = _("Started")
+        ended_label = _("Ended")
+        break_done_label = _("Break done")
+        hour_label = _("h")
         self.clock_in_btn.setText(
-            f"{_("Started")}\n{self._auto_start_time}"
+            f"{started_label}\n{self._auto_start_time}"
             if self._auto_start_time else msg("start_now", _("Start"))
         )
         self.clock_out_btn.setText(
-            f"{_("Ended")}\n{self._auto_end_time}"
+            f"{ended_label}\n{self._auto_end_time}"
             if self._auto_end_time else msg("end_now", _("End"))
         )
         if self._break_start is None:
             if self._auto_break_recorded:
                 self.break_btn.setText(
-                    f"{_("Break done")}\n{self._auto_break_hours:.1f}{_("h")}"
+                    f"{break_done_label}\n{self._auto_break_hours:.1f}{hour_label}"
                 )
             else:
                 self.break_btn.setText(_("▶ Break"))
@@ -960,7 +965,8 @@ class App(QWidget):
         if self._break_start is None:
             return
         mins = (datetime.now() - self._break_start).seconds // 60
-        self.break_btn.setText(f"{_("On break")}\n{mins}m")
+        on_break_label = _("On break")
+        self.break_btn.setText(f"{on_break_label}\n{mins}m")
         self._auto_break_hours = mins / 60
         apply_widget_qss(self.break_btn, auto_break_active_qss(self.dark))
 
@@ -984,7 +990,11 @@ class App(QWidget):
             return
 
         y, m = self.current.year, self.current.month
-        self.month_title.setText(f"{y}  {[_("January"), _("February"), _("March"), _("April"), _("May"), _("June"), _("July"), _("August"), _("September"), _("October"), _("November"), _("December")][m-1]}")
+        month_names = [
+            _("January"), _("February"), _("March"), _("April"), _("May"), _("June"),
+            _("July"), _("August"), _("September"), _("October"), _("November"), _("December"),
+        ]
+        self.month_title.setText(f"{y}  {month_names[m - 1]}")
         raw_first, days = monthrange(y, m)
         week_start_monday = self.store.state.week_start_monday
         first = raw_first if week_start_monday else (raw_first + 1) % 7
@@ -1004,6 +1014,9 @@ class App(QWidget):
         hover_border = theme_colors(self.theme, self.dark)[1]
         show_note_markers = self.store.state.show_note_markers
         show_overnight_indicator = self.store.state.show_overnight_indicator
+        hour_label = _("h")
+        plus_label = _("+")
+        days_label = _(" days")
 
         for d in range(1, days + 1):
             dt = date(y, m, d)
@@ -1039,9 +1052,9 @@ class App(QWidget):
             if dt in self.holidays:
                 lines.append(self.holidays[dt])
             if h > 0:
-                lines.append(f"{h:.1f}{_('h')}")
+                lines.append(f"{h:.1f}{hour_label}")
             if ot > 0:
-                lines.append(f"{_('+')}{ot:.1f}{_('h')}")
+                lines.append(f"{plus_label}{ot:.1f}{hour_label}")
             abbr = {'normal': "", 'remote': _("WFH"), 'business_trip': _("Trip"), 'paid_leave': _("PTO"), 'comp_leave': _("CTO"), 'sick_leave': _("Sick")}.get(wt, "")
             if abbr:
                 lines.append(abbr)
@@ -1071,7 +1084,7 @@ class App(QWidget):
         max_row = (days + first - 1) // 7
         for r in range(max_row + 1):
             wh = weekly.get(r, 0.0)
-            lbl = QLabel(f"{wh:.1f}{_("h")}" if wh > 0 else "—")
+            lbl = QLabel(f"{wh:.1f}{hour_label}" if wh > 0 else "—")
             lbl.setObjectName("week_total_lbl")
             lbl.setAlignment(Qt.AlignCenter)
             self.grid.addWidget(lbl, r + 1, 7)
@@ -1079,20 +1092,20 @@ class App(QWidget):
 
         leave_total = sum(leave_counts.values())
         avg_h = total_h / workdays if workdays else 0.0
-        self.sv_total.setText(f"{total_h:.1f}{_("h")}")
-        self.sv_ot.setText(f"{total_ot:.1f}{_("h")}")
-        self.sv_avg.setText(f"{avg_h:.1f}{_("h")}")
-        self.sv_days.setText(f"{workdays}{_(" days")}")
-        self.sv_leave.setText(f"{leave_total}{_(" days")}")
+        self.sv_total.setText(f"{total_h:.1f}{hour_label}")
+        self.sv_ot.setText(f"{total_ot:.1f}{hour_label}")
+        self.sv_avg.setText(f"{avg_h:.1f}{hour_label}")
+        self.sv_days.setText(f"{workdays}{days_label}")
+        self.sv_leave.setText(f"{leave_total}{days_label}")
 
         self.sv_leave.setToolTip(_("Paid: {paid}\nComp: {comp}\nSick: {sick}").format(
-            paid=f"{leave_counts['paid_leave']}{_(" days")}",
-            comp=f"{leave_counts['comp_leave']}{_(" days")}",
-            sick=f"{leave_counts['sick_leave']}{_(" days")}"))
+            paid=f"{leave_counts['paid_leave']}{days_label}",
+            comp=f"{leave_counts['comp_leave']}{days_label}",
+            sick=f"{leave_counts['sick_leave']}{days_label}"))
         self.sv_days.setToolTip(_("Normal: {normal}\nRemote: {remote}\nBusiness: {biz}").format(
-            normal=f"{day_counts['normal']}{_(" days")}",
-            remote=f"{day_counts['remote']}{_(" days")}",
-            biz=f"{day_counts['business_trip']}{_(" days")}"))
+            normal=f"{day_counts['normal']}{days_label}",
+            remote=f"{day_counts['remote']}{days_label}",
+            biz=f"{day_counts['business_trip']}{days_label}"))
 
     def load(self):
         rec = self.services.get_record(self.selected.isoformat())
