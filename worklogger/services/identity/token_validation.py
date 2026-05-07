@@ -29,6 +29,8 @@ def decode_jwt_claims(token: str) -> dict:
     decode_jwt_header(token)
     if jwt is not None:
         try:
+            # Claims are decoded without trust only so the verified path can
+            # inspect standard fields before enforcing the final validation.
             return dict(jwt.decode(token, options={"verify_signature": False, "verify_aud": False}))
         except Exception as exc:
             raise IdentityTokenInvalid("identity_id_token_invalid") from exc

@@ -3,6 +3,7 @@ import logging
 import os
 from pathlib import Path
 import shutil
+import socket
 import sys
 import threading
 import re
@@ -30,6 +31,8 @@ from config.constants import (
     GITHUB_RELEASES_API,
     LANG_SETTING_KEY,
     LAST_BACKUP_KEY,
+    LOGIN_FAILURE_LOCK_THRESHOLD,
+    LOGIN_LOCKOUT_SECONDS,
     MINIMAL_MODE_SETTING_KEY,
     MONTHLY_TARGET_SETTING_KEY,
     PASSWORD_MIN_LENGTH,
@@ -52,7 +55,7 @@ from config.themes import DEFAULT_CUSTOM_COLOR, set_custom_theme
 from data.db import DB
 from services.export_service import export_csv, import_csv, build_ics
 from services.calendar_service import parse_ics_rich
-from services import report_service
+import services.report_service as report_service
 from services.key_store import get_secret, set_secret
 from services.identity import ExternalIdentity, ExternalIdentityService
 from services.identity import config as identity_config
@@ -101,7 +104,7 @@ class AuthService:
 
     @staticmethod
     def generate_recovery_key() -> str:
-        return secrets.token_hex(16)
+        return DB.generate_recovery_key()
 
     @staticmethod
     def generate_initial_password() -> str:
@@ -156,9 +159,36 @@ class AuthService:
             raise TypeError("password_must_be_string")
         if not password:
             raise ValueError("password_required")
+        locked_until = self.db.login_lockout_until(username)
+        if locked_until is not None:
+            _log.warning(
+                "Login blocked for username=%s until=%s",
+                username,
+                locked_until.isoformat(timespec="seconds"),
+            )
+            raise ValueError("invalid_credentials")
         user_id = self.db.verify_user(username, password)
         if user_id is None:
+            failed_count, lockout_until = self.db.record_login_failure(
+                username,
+                threshold=LOGIN_FAILURE_LOCK_THRESHOLD,
+                lockout_seconds=LOGIN_LOCKOUT_SECONDS,
+            )
+            if lockout_until is None:
+                _log.warning(
+                    "Login failed for username=%s failed_count=%s",
+                    username,
+                    failed_count,
+                )
+            else:
+                _log.warning(
+                    "Login failed for username=%s failed_count=%s locked_until=%s",
+                    username,
+                    failed_count,
+                    lockout_until.isoformat(timespec="seconds"),
+                )
             raise ValueError("invalid_credentials")
+        self.db.clear_login_failures(username)
         self._apply_remember_login(user_id, username, remember=remember)
         return user_id
 
@@ -1269,20 +1299,29 @@ class AppServices:
         return latest_v > current_v
 
     @staticmethod
-    def _certifi_cafile_candidates() -> list[Path]:
+    def _friendly_update_error(gettext: Callable[[str], str]) -> str:
+        return gettext(
+            "Could not check for updates. Please check your network connection, "
+            "proxy, VPN, or try again later."
+        )
+
+    @staticmethod
+    def _certifi_cafile() -> str | None:
         candidates: list[Path] = []
         try:
             import importlib
             certifi = importlib.import_module("certifi")
-            where = getattr(certifi, "where", lambda: None)()
-            if where:
-                candidates.append(Path(where))
         except Exception:
-            pass
+            certifi = None
 
         meipass = getattr(sys, "_MEIPASS", None)
         if meipass:
             candidates.append(Path(meipass) / "certifi" / "cacert.pem")
+
+        if certifi is not None:
+            where = getattr(certifi, "where", lambda: None)()
+            if where:
+                candidates.append(Path(where))
 
         try:
             exe_dir = Path(sys.executable).resolve().parent
@@ -1298,25 +1337,37 @@ class AppServices:
             if key in seen:
                 continue
             seen.add(key)
-            deduped.append(path)
-        return deduped
+            if path.is_file():
+                return str(path)
+        return None
 
     @classmethod
     def _build_update_ssl_context(cls) -> ssl.SSLContext:
         with cls._update_ssl_context_lock:
             if cls._update_ssl_context is not None:
                 return cls._update_ssl_context
-            for cafile in cls._certifi_cafile_candidates():
-                try:
-                    if cafile.is_file():
-                        cls._update_ssl_context = ssl.create_default_context(
-                            cafile=str(cafile)
-                        )
-                        return cls._update_ssl_context
-                except Exception:
-                    continue
-            cls._update_ssl_context = ssl.create_default_context()
+            cafile = cls._certifi_cafile()
+            cls._update_ssl_context = (
+                ssl.create_default_context(cafile=cafile)
+                if cafile else ssl.create_default_context()
+            )
             return cls._update_ssl_context
+
+    @staticmethod
+    def _is_update_network_error(exc: Exception) -> bool:
+        return isinstance(
+            exc,
+            (
+                ssl.SSLError,
+                urllib.error.URLError,
+                socket.timeout,
+                TimeoutError,
+                OSError,
+                _json.JSONDecodeError,
+                UnicodeDecodeError,
+                ValueError,
+            ),
+        )
 
     def _check_update_sync(self, gettext: Callable[[str], str]) -> str:
         gettext = gettext if callable(gettext) else _
@@ -1328,80 +1379,51 @@ class AppServices:
                 return template
         req = urllib.request.Request(
             GITHUB_RELEASES_API,
-            headers={"User-Agent": "WorkLogger/" + APP_VERSION},
+            headers={
+                "User-Agent": "WorkLogger-Updater/" + APP_VERSION,
+                "Accept": "application/vnd.github+json",
+            },
         )
         context = self._build_update_ssl_context()
         last_exc: Exception | None = None
-        try:
-            for attempt in range(max(1, UPDATE_CHECK_RETRY_ATTEMPTS)):
-                try:
-                    with urllib.request.urlopen(
-                        req,
-                        timeout=UPDATE_CHECK_TIMEOUT_SECONDS,
-                        context=context,
-                    ) as r:
-                        raw = r.read(UPDATE_RESPONSE_MAX_BYTES + 1)
-                    if len(raw) > UPDATE_RESPONSE_MAX_BYTES:
-                        raise ValueError("update_response_too_large")
-                    data = _json.loads(raw)
-                    self._update_failures = 0
-                    self._update_circuit_open_until = 0.0
+        for attempt in range(max(1, UPDATE_CHECK_RETRY_ATTEMPTS)):
+            try:
+                with urllib.request.urlopen(
+                    req,
+                    timeout=UPDATE_CHECK_TIMEOUT_SECONDS,
+                    context=context,
+                ) as r:
+                    raw = r.read(UPDATE_RESPONSE_MAX_BYTES + 1)
+                if len(raw) > UPDATE_RESPONSE_MAX_BYTES:
+                    raise ValueError("update_response_too_large")
+                data = _json.loads(raw)
+                self._update_failures = 0
+                self._update_circuit_open_until = 0.0
+                latest = data.get("tag_name", "").lstrip("vV").strip()
+                if latest and self._is_remote_newer(latest, APP_VERSION):
+                    avail_tpl = gettext("New version available: v{0}")
+                    try:
+                        return avail_tpl.format(latest)
+                    except Exception:
+                        return avail_tpl
+                return gettext("You are on the latest version")
+            except Exception as exc:
+                if not self._is_update_network_error(exc):
+                    raise
+                last_exc = exc
+                if attempt + 1 >= max(1, UPDATE_CHECK_RETRY_ATTEMPTS):
                     break
-                except urllib.error.URLError as exc:
-                    last_exc = exc
-                    reason = getattr(exc, "reason", exc)
-                    if (
-                        isinstance(reason, ssl.SSLCertVerificationError)
-                        or "CERTIFICATE_VERIFY_FAILED" in str(reason)
-                    ):
-                        raise
-                    if attempt + 1 >= max(1, UPDATE_CHECK_RETRY_ATTEMPTS):
-                        raise
-                    time.sleep(UPDATE_CHECK_RETRY_BACKOFF_SECONDS * (attempt + 1))
-                except Exception as exc:
-                    last_exc = exc
-                    if attempt + 1 >= max(1, UPDATE_CHECK_RETRY_ATTEMPTS):
-                        raise
-                    time.sleep(UPDATE_CHECK_RETRY_BACKOFF_SECONDS * (attempt + 1))
-            else:
-                raise last_exc or RuntimeError("update_check_failed")
-            latest = data.get("tag_name", "").lstrip("vV").strip()
-            if latest and self._is_remote_newer(latest, APP_VERSION):
-                avail_tpl = gettext("New version available: v{0}")
-                try:
-                    return avail_tpl.format(latest)
-                except Exception:
-                    return avail_tpl
-            return gettext("You are on the latest version")
-        except urllib.error.URLError as exc:
-            self._record_update_failure(exc)
-            reason = getattr(exc, "reason", exc)
-            if isinstance(reason, ssl.SSLCertVerificationError) or "CERTIFICATE_VERIFY_FAILED" in str(reason):
-                return gettext(
-                    "Could not verify the update server certificate. "
-                    "Please check your network trust settings and try again."
-                )
-            err = str(exc)[:120]
-            template = gettext("Could not check for updates: {}")
-            try:
-                return template.format(err)
-            except Exception:
-                return template
-        except Exception as exc:
-            self._record_update_failure(exc)
-            err = str(exc)[:120]
-            template = gettext("Could not check for updates: {}")
-            try:
-                return template.format(err)
-            except Exception:
-                return template
+                time.sleep(UPDATE_CHECK_RETRY_BACKOFF_SECONDS * (attempt + 1))
+        self._record_update_failure(last_exc or RuntimeError("update_check_failed"))
+        return self._friendly_update_error(gettext)
 
     def _record_update_failure(self, exc: Exception) -> None:
         self._update_failures += 1
-        _log.info("Update check failed (%s/%s): %s",
-                  self._update_failures,
-                  UPDATE_CHECK_CIRCUIT_FAILURES,
-                  exc)
+        _log.warning(
+            "Update check failed: %s",
+            exc,
+            exc_info=(type(exc), exc, exc.__traceback__),
+        )
         if self._update_failures >= UPDATE_CHECK_CIRCUIT_FAILURES:
             self._update_circuit_open_until = (
                 time.monotonic() + UPDATE_CHECK_CIRCUIT_COOLDOWN_SECONDS

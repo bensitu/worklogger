@@ -59,7 +59,7 @@ class _FakeTimeoutException(Exception):
     pass
 
 
-def _make_fake_httpx(plans: list[object]):
+def _make_fake_httpx(plans: list[object], calls: list[dict] | None = None):
     queue = list(plans)
 
     class _Timeout:
@@ -67,6 +67,8 @@ def _make_fake_httpx(plans: list[object]):
             pass
 
     def _stream(*_args, **_kwargs):
+        if calls is not None:
+            calls.append(dict(_kwargs))
         if not queue:
             raise RuntimeError("No more fake httpx stream plans")
         plan = queue.pop(0)
@@ -101,11 +103,13 @@ class DownloadControllerResilienceTests(unittest.TestCase):
         temp_path.write_bytes(b"stale")
         expected_sha = hashlib.sha256(b"abc").hexdigest()
 
+        stream_calls: list[dict] = []
         fake_httpx = _make_fake_httpx(
             [
                 _FakeResponse(416, chunks=[], headers={"content-length": "0"}),
                 _FakeResponse(200, chunks=[b"abc"], headers={"content-length": "3"}),
-            ]
+            ],
+            calls=stream_calls,
         )
         fake_portalocker = SimpleNamespace(Lock=_FakeLock)
 
@@ -144,6 +148,8 @@ class DownloadControllerResilienceTests(unittest.TestCase):
         self.assertEqual(len(errors), 0)
         self.assertEqual(done.call_count, 1)
         self.assertEqual(mock_update.call_count, 1)
+        self.assertTrue(stream_calls)
+        self.assertTrue(all(call.get("verify") is True for call in stream_calls))
 
     def test_timeout_retries_then_cleanup_tmp_and_retry_once(self):
         models_dir = self._temp_models_dir("case_timeout_cleanup")
@@ -234,4 +240,3 @@ class DownloadControllerResilienceTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

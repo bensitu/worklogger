@@ -24,7 +24,7 @@ from config.constants import (
     REMEMBER_TOKEN_KEY,
 )
 from data.db import DB_PATH
-from utils.crypto import machine_key
+from utils.crypto import legacy_machine_key, machine_key
 
 _log = logging.getLogger(__name__)
 
@@ -44,11 +44,12 @@ def _token_path() -> Path:
     return Path(DB_PATH).with_name(REMEMBER_FALLBACK_FILENAME)
 
 
-def _fernet():
+def _fernet(key: bytes | None = None):
     try:
         from cryptography.fernet import Fernet
 
-        return Fernet(base64.urlsafe_b64encode(machine_key()))
+        raw_key = key if key is not None else machine_key()
+        return Fernet(base64.urlsafe_b64encode(raw_key))
     except Exception as exc:
         _log.warning("Fernet unavailable for remember token storage: %s", exc)
         return None
@@ -104,13 +105,28 @@ def _legacy_keyring_delete() -> None:
 
 def _decrypt_file_payload(raw: str) -> Optional[str]:
     fernet = _fernet()
-    if not fernet:
-        return None
+    if fernet:
+        try:
+            return fernet.decrypt(raw.encode("utf-8")).decode("utf-8")
+        except Exception:
+            pass
+    legacy_key = legacy_machine_key()
+    if _key_differs_from_current(legacy_key):
+        legacy = _fernet(legacy_key)
+        if legacy:
+            try:
+                return legacy.decrypt(raw.encode("utf-8")).decode("utf-8")
+            except Exception:
+                pass
+    _log.warning("Failed to decrypt remember-token file")
+    return None
+
+
+def _key_differs_from_current(key: bytes) -> bool:
     try:
-        return fernet.decrypt(raw.encode("utf-8")).decode("utf-8")
-    except Exception as exc:
-        _log.warning("Failed to decrypt remember-token file: %s", exc)
-        return None
+        return key != machine_key()
+    except Exception:
+        return True
 
 
 def _read_file_store() -> Tuple[str, Dict[str, str]]:

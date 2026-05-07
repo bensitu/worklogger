@@ -67,6 +67,45 @@ function Format-CommandLine {
         }) -join " "
 }
 
+function ConvertTo-ProcessArgument {
+    param(
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [string]$Argument
+    )
+    if ($Argument.Length -eq 0) {
+        return '""'
+    }
+    if ($Argument -notmatch '[\s"]') {
+        return $Argument
+    }
+    $builder = [System.Text.StringBuilder]::new()
+    [void]$builder.Append('"')
+    $backslashes = 0
+    foreach ($char in $Argument.ToCharArray()) {
+        if ($char -eq [char]'\') {
+            $backslashes += 1
+            continue
+        }
+        if ($char -eq [char]'"') {
+            [void]$builder.Append('\' * (($backslashes * 2) + 1))
+            [void]$builder.Append('"')
+            $backslashes = 0
+            continue
+        }
+        if ($backslashes -gt 0) {
+            [void]$builder.Append('\' * $backslashes)
+            $backslashes = 0
+        }
+        [void]$builder.Append($char)
+    }
+    if ($backslashes -gt 0) {
+        [void]$builder.Append('\' * ($backslashes * 2))
+    }
+    [void]$builder.Append('"')
+    return $builder.ToString()
+}
+
 function Invoke-External {
     param(
         [Parameter(Mandatory = $true)]
@@ -81,8 +120,34 @@ function Invoke-External {
     Write-Log "RUN  : $Description"
     Write-Log "CMD  : $cmdLine"
 
-    & $FilePath @Arguments 2>&1 | Tee-Object -FilePath $script:LogFile -Append | Out-Host
-    $exitCode = $LASTEXITCODE
+    $processTempId = [System.Guid]::NewGuid().ToString("N")
+    $stdoutFile = Join-Path $LogDir "process_${processTempId}.stdout.log"
+    $stderrFile = Join-Path $LogDir "process_${processTempId}.stderr.log"
+    $argumentLine = ($Arguments | ForEach-Object { ConvertTo-ProcessArgument -Argument $_ }) -join " "
+    try {
+        # PyInstaller writes normal progress messages to stderr; the process
+        # exit code is the authoritative success/failure signal.
+        $process = Start-Process `
+            -FilePath $FilePath `
+            -ArgumentList $argumentLine `
+            -Wait `
+            -PassThru `
+            -NoNewWindow `
+            -RedirectStandardOutput $stdoutFile `
+            -RedirectStandardError $stderrFile
+        foreach ($outputFile in @($stdoutFile, $stderrFile)) {
+            if (Test-Path -LiteralPath $outputFile -PathType Leaf) {
+                Get-Content -LiteralPath $outputFile | ForEach-Object {
+                    Write-Host $_
+                    Add-Content -LiteralPath $script:LogFile -Value $_ -Encoding utf8
+                }
+            }
+        }
+        $exitCode = $process.ExitCode
+    }
+    finally {
+        Remove-Item -LiteralPath $stdoutFile, $stderrFile -Force -ErrorAction SilentlyContinue
+    }
     if ($exitCode -ne 0) {
         throw "$Description failed with exit code $exitCode."
     }

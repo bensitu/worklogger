@@ -15,7 +15,10 @@ APP_ROOT = os.path.join(PROJECT_ROOT, "worklogger")
 if APP_ROOT not in sys.path:
     sys.path.insert(0, APP_ROOT)
 
-from config.constants import FORCE_PASSWORD_CHANGE_SETTING_KEY
+from config.constants import (
+    FORCE_PASSWORD_CHANGE_SETTING_KEY,
+    REMEMBER_TOKEN_HASH_PREFIX,
+)
 from data.db import DB, _DUMMY_PASSWORD_HASH, _DUMMY_PASSWORD_SALT
 from services.app_services import AppServices
 from services.oauth_service import OAuthError, OAuthService
@@ -82,11 +85,40 @@ class AuthServiceTests(unittest.TestCase):
             )
         self.assertTrue(saved)
         self.assertEqual(saved[0][0], "alice")
+        stored = services.db.conn.execute(
+            "SELECT remember_token FROM users WHERE id=?",
+            (user_id,),
+        ).fetchone()[0]
+        self.assertNotEqual(stored, saved[0][1])
+        self.assertTrue(stored.startswith(REMEMBER_TOKEN_HASH_PREFIX))
         self.assertEqual(services.auth.login_with_token(saved[0][1]), user_id)
         self.assertFalse(services.db.get_user(user_id)["is_used"])
         services.set_current_user(user_id)
         services.mark_current_user_used()
         self.assertTrue(services.db.get_user(user_id)["is_used"])
+
+    def test_plaintext_remember_token_is_migrated_on_db_open(self):
+        db = self._db()
+        user_id = db.create_user("alice", "secret123")
+        db.conn.execute(
+            "UPDATE users SET remember_token=?, remember_token_expires_at=? "
+            "WHERE id=?",
+            ("legacy-token", "2999-01-01T00:00:00+00:00", user_id),
+        )
+        db.conn.commit()
+        path = db.path
+        db.conn.close()
+
+        reopened = DB(path)
+        self.addCleanup(reopened.conn.close)
+
+        stored = reopened.conn.execute(
+            "SELECT remember_token FROM users WHERE id=?",
+            (user_id,),
+        ).fetchone()[0]
+        self.assertTrue(stored.startswith(REMEMBER_TOKEN_HASH_PREFIX))
+        self.assertNotEqual(stored, "legacy-token")
+        self.assertEqual(reopened.get_user_by_token("legacy-token")["id"], user_id)
 
     def test_legacy_pbkdf2_password_login_upgrades_hash(self):
         db = self._db()
@@ -172,6 +204,38 @@ class AuthServiceTests(unittest.TestCase):
         self.assertEqual(expires_at.tzinfo, timezone.utc)
         self.assertFalse(services.db._remember_token_is_expired(row[0]))
 
+    def test_failed_logins_are_audit_logged_and_temporarily_locked(self):
+        services = AppServices(db=self._db())
+        user_id = services.auth.register("alice", "secret123")
+
+        with patch("services.app_services.LOGIN_FAILURE_LOCK_THRESHOLD", 2), \
+             patch("services.app_services.LOGIN_LOCKOUT_SECONDS", 30), \
+             self.assertLogs("services.app_services", level="WARNING") as logs:
+            with self.assertRaises(ValueError):
+                services.auth.login("alice", "wrong-pass")
+            with self.assertRaises(ValueError):
+                services.auth.login("alice", "wrong-pass")
+            with self.assertRaises(ValueError):
+                services.auth.login("alice", "secret123")
+
+        log_text = "\n".join(logs.output)
+        self.assertIn("Login failed for username=alice", log_text)
+        self.assertIn("Login blocked for username=alice", log_text)
+
+        services.db.conn.execute(
+            "UPDATE login_attempts SET locked_until=? WHERE username=?",
+            ("2000-01-01T00:00:00+00:00", "alice"),
+        )
+        services.db.conn.commit()
+
+        self.assertEqual(services.auth.login("alice", "secret123"), user_id)
+        self.assertIsNone(
+            services.db.conn.execute(
+                "SELECT 1 FROM login_attempts WHERE username=?",
+                ("alice",),
+            ).fetchone()
+        )
+
     def test_format_timestamp_for_display_converts_from_utc(self):
         raw = "2026-04-28T00:00:00+00:00"
         expected = (
@@ -217,6 +281,7 @@ class AuthServiceTests(unittest.TestCase):
         new_key = services.regenerate_recovery_key("alice")
 
         self.assertNotEqual(new_key, "oldkey1234567890")
+        self.assertRegex(new_key, r"^[0-9a-f]{8}(-[0-9a-f]{8}){5}$")
         self.assertEqual(
             services.db.verify_recovery_key("alice", new_key),
             user_id,
@@ -512,7 +577,28 @@ class AuthServiceTests(unittest.TestCase):
             "exp": int(time.time()) + 3600,
         })
 
-        claims = OAuthService.validate_id_token(token, config=config, nonce="nonce")
+        expected_claims = {
+            "iss": "https://accounts.google.com",
+            "aud": "client-id",
+            "sub": "subject-1",
+            "email": "alice@example.com",
+            "name": "Alice",
+            "nonce": "nonce",
+            "exp": int(time.time()) + 3600,
+        }
+        with patch(
+            "services.oauth_service.validate_oidc_id_token",
+            return_value=expected_claims,
+        ) as validate:
+            claims = OAuthService.validate_id_token(token, config=config, nonce="nonce")
+        validate.assert_called_once_with(
+            token,
+            audience="client-id",
+            issuer=("https://accounts.google.com", "accounts.google.com"),
+            nonce="nonce",
+            jwks_uri=config.jwks_uri,
+            verify_signature=True,
+        )
         identity = OAuthService.identity_from_claims("google", claims)
 
         self.assertEqual(identity.provider, "google")
@@ -520,7 +606,28 @@ class AuthServiceTests(unittest.TestCase):
         self.assertEqual(identity.email, "alice@example.com")
         self.assertEqual(identity.display_name, "Alice")
 
+    def test_oauth_id_token_validation_requires_signature_configuration(self):
+        config = OAuthService.default_config("google", "client-id")
+        config = type(config)(
+            provider=config.provider,
+            client_id=config.client_id,
+            authorization_endpoint=config.authorization_endpoint,
+            token_endpoint=config.token_endpoint,
+            issuer=config.issuer,
+            jwks_uri="",
+            scopes=config.scopes,
+        )
+        token = _unsigned_test_jwt({
+            "iss": "https://accounts.google.com",
+            "aud": "client-id",
+            "sub": "subject-1",
+            "nonce": "nonce",
+            "exp": int(time.time()) + 3600,
+        })
+
+        with self.assertRaises(OAuthError):
+            OAuthService.validate_id_token(token, config=config, nonce="nonce")
+
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.1] - 2026-05-08
+
+### Added
+
+- Added a safe `worklogger/config/identity.local.json.example` template without real OAuth or Firebase credentials.
+- Added `certifi` as an explicit dependency for packaged update-check TLS verification.
+
+### Changed
+
+- Recovery keys now use a grouped 192-bit format for stronger entropy and easier transcription.
+- Source-run optional dependency installation now requires explicit `WORKLOGGER_ALLOW_AUTO_PIP_INSTALL=1` opt-in.
+
+### Fixed
+
+- Fixed the administrator reset script to use the current password reset flow and print the regenerated recovery key.
+- Limited retained corrupt-database backup files to the most recent three backups.
+- Explicitly enabled TLS certificate verification in local model downloads.
+- Fixed service-layer imports and PyInstaller hidden imports so packaged builds include report services and core app modules reliably.
+- Fixed update checks to return a friendly network/proxy/VPN error without exposing raw SSL, proxy, or JSON parse details.
+- Fixed PyInstaller's stale `pycparser.lextab` and `pycparser.yacctab` hidden-import warnings for current pycparser releases.
+- Moved PyInstaller missing-module warning output to `build_logs`, keeping only actionable warnings and suppressing warning files when none remain.
+- Fixed Windows build logging so PyInstaller stderr progress output is captured without being treated as a failed command.
+- Aligned the macOS bundle build number with the application version.
+- Reduced macOS build log noise from optional diagnostic tools, llama-cpp-python wheel probes, Windows-only module scans, and Windows ctypes library probes.
+
+### Security
+
+- Legacy OAuth ID token validation now requires JWKS-backed JWT signature verification.
+- Remember-me tokens are stored as SHA-256 digests in SQLite, with migration for legacy plaintext rows.
+- Local encrypted fallback storage now uses a persistent random machine key while retaining legacy-key migration.
+- Password login failures are audit logged and temporarily locked after repeated failures.
+
 ## [3.3.0] - 2026-05-06
 
 ### Changed

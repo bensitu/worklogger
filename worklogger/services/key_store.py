@@ -5,9 +5,8 @@ Priority order
 1. OS keychain via the ``keyring`` library (macOS Keychain, Windows Credential
    Manager, Linux Secret Service / KWallet).  Zero additional dependencies on
    frozen builds that already bundle keyring.
-2. Fernet-encrypted value stored in the ``settings`` table.  The symmetric key
-   is derived from stable machine identifiers (hostname + MAC address) so the
-   ciphertext is useless outside this machine without the key.
+2. Fernet-encrypted value stored in the ``settings`` table. The symmetric key
+   is a random machine key kept in the OS keychain or in a 0600 fallback file.
 3. Plain-text fallback for legacy rows or environments where neither backend
    is available — read-only; new writes always use encryption.
 
@@ -30,7 +29,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from data.db import DB
 
-from utils.crypto import machine_key
+from utils.crypto import legacy_machine_key, machine_key
 
 _log = logging.getLogger(__name__)
 
@@ -38,15 +37,41 @@ _log = logging.getLogger(__name__)
 # legacy rows written by earlier versions of the app.
 _ENC_PREFIX = "enc1:"
 
-def _fernet():
+def _fernet(key: bytes | None = None):
     """Return a ``Fernet`` instance keyed to this machine, or None."""
     try:
         from cryptography.fernet import Fernet
-        key = base64.urlsafe_b64encode(machine_key())
-        return Fernet(key)
+        raw_key = key if key is not None else machine_key()
+        return Fernet(base64.urlsafe_b64encode(raw_key))
     except Exception as exc:
         _log.warning("Fernet unavailable: %s", exc)
         return None
+
+
+def _decrypt_encrypted_value(raw: str) -> tuple[str, bool]:
+    payload = raw[len(_ENC_PREFIX):].encode()
+    current = _fernet()
+    if current:
+        try:
+            return current.decrypt(payload).decode(), False
+        except Exception:
+            pass
+    legacy_key = legacy_machine_key()
+    if _key_differs_from_current(legacy_key):
+        legacy = _fernet(legacy_key)
+        if legacy:
+            try:
+                return legacy.decrypt(payload).decode(), True
+            except Exception:
+                pass
+    return "", False
+
+
+def _key_differs_from_current(key: bytes) -> bool:
+    try:
+        return key != machine_key()
+    except Exception:
+        return True
 
 
 # Keyring helpers.
@@ -102,13 +127,18 @@ def get_secret(db: "DB", name: str, user_id: int) -> str:
     if not raw:
         return ""
     if raw.startswith(_ENC_PREFIX):
+        value, used_legacy_key = _decrypt_encrypted_value(raw)
+        if value:
+            if used_legacy_key:
+                try:
+                    set_secret(db, name, value, user_id)
+                except Exception as exc:
+                    _log.warning("Failed to migrate %s to the new machine key: %s", name, exc)
+            return value
         f = _fernet()
         if f:
-            try:
-                return f.decrypt(raw[len(_ENC_PREFIX):].encode()).decode()
-            except Exception as exc:
-                _log.warning("Failed to decrypt %s: %s", name, exc)
-                return ""
+            _log.warning("Failed to decrypt %s", name)
+            return ""
         # Fernet unavailable — return empty rather than expose ciphertext
         _log.warning("Cannot decrypt %s: cryptography not available", name)
         return ""

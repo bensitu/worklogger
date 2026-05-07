@@ -3,6 +3,7 @@ tzlocal
 holidays
 cryptography
 keyring
+certifi
 PyJWT>=2.8.0
 
 # ── local model inference ──

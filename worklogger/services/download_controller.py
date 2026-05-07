@@ -252,6 +252,7 @@ class DownloadController:
                             url,
                             headers=headers,
                             follow_redirects=True,
+                            verify=True,
                             timeout=httpx.Timeout(
                                 connect=20.0,
                                 read=120.0,

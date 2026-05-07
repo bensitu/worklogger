@@ -22,7 +22,7 @@ import certifi
 block_cipher = None
 
 APP_NAME = "WorkLogger"
-APP_VERSION = "3.3.0"
+APP_VERSION = "3.3.1"
 PLATFORM = sys.platform
 ROOT_DIR = Path(globals().get("SPECPATH", os.getcwd())).resolve()
 WORKLOGGER_DIR = ROOT_DIR / "worklogger"
@@ -32,6 +32,9 @@ TEMPLATES_DIR = WORKLOGGER_DIR / "templates"
 LOCALES_DIR = WORKLOGGER_DIR / "locales"
 I18N_COMPILE_SCRIPT = ROOT_DIR / "scripts" / "i18n" / "i18n_compile.py"
 I18N_LANGS = ("en_US", "ja_JP", "ko_KR", "zh_CN", "zh_TW")
+HOOKS_DIR = ROOT_DIR / "scripts" / "build" / "pyinstaller_hooks"
+BUILD_LOGS_DIR = ROOT_DIR / "build_logs"
+WARN_FILE = BUILD_LOGS_DIR / "warn-worklogger.txt"
 UPX_ENABLED = True
 
 if str(WORKLOGGER_DIR) not in sys.path:
@@ -98,11 +101,17 @@ def _collect(pkg: str):
         return [], []
 
 
-def _collect_submodules(pkg: str):
+def _collect_submodules(pkg: str, exclude_prefixes: tuple[str, ...] = ()):
     try:
         from PyInstaller.utils.hooks import collect_submodules
 
-        return collect_submodules(pkg)
+        return collect_submodules(
+            pkg,
+            filter=lambda name: not any(
+                name == prefix or name.startswith(prefix + ".")
+                for prefix in exclude_prefixes
+            ),
+        )
     except Exception:
         return []
 
@@ -131,6 +140,218 @@ def _keyring_hiddenimports() -> list[str]:
     return [pkg for pkg in candidates if _module_exists(pkg)]
 
 
+def _configure_pyinstaller_warning_log() -> None:
+    """Write PyInstaller missing-module warnings outside the transient build directory."""
+    from PyInstaller.building import build_main as _pyi_build_main
+    from PyInstaller.config import CONF
+    from PyInstaller.depend import utils as _pyi_depend_utils
+
+    _original_include_library = _pyi_depend_utils.include_library
+
+    def _include_library(libname: str) -> bool:
+        windows_system_libs = {"user32", "user32.dll"}
+        if PLATFORM != "win32" and str(libname).lower() in windows_system_libs:
+            return False
+        return _original_include_library(libname)
+
+    _pyi_depend_utils.include_library = _include_library
+
+    ignored_names = {
+        "_dummy_thread",
+        "_frozen_importlib",
+        "_frozen_importlib_external",
+        "_manylinux",
+        "_overlapped",
+        "_posixshmem",
+        "_posixsubprocess",
+        "_pytest",
+        "_scproxy",
+        "_typeshed",
+        "_winapi",
+        "_wmi",
+        "_winreg",
+        "annotationlib",
+        "asyncio.DefaultEventLoopPolicy",
+        "cStringIO",
+        "cffi._pycparser",
+        "collections.abc",
+        "collections.Callable",
+        "dateutil.tz.tzfile",
+        "defusedxml",
+        "dummy_thread",
+        "fcntl",
+        "grp",
+        "importlib_resources",
+        "java",
+        "java.lang",
+        "msvcrt",
+        "multiprocessing.AuthenticationError",
+        "multiprocessing.BufferTooShort",
+        "multiprocessing.TimeoutError",
+        "multiprocessing.get_context",
+        "multiprocessing.get_start_method",
+        "multiprocessing.set_start_method",
+        "nt",
+        "olefile",
+        "posix",
+        "pwd",
+        "pywintypes",
+        "pyimod02_importers",
+        "readline",
+        "resource",
+        "setuptools._distutils.msvc9compiler",
+        "six.moves",
+        "six.moves.range",
+        "six.moves.winreg",
+        "sitecustomize",
+        "StringIO",
+        "termios",
+        "thread",
+        "trove_classifiers",
+        "usercustomize",
+        "vms_lib",
+        "win32con",
+        "win32cred",
+        "win32ctypes",
+        "win32evtlog",
+        "win32evtlogutil",
+        "win32file",
+        "win32pdh",
+        "winerror",
+        "winreg",
+    }
+    ignored_prefixes = (
+        "dbus",
+        "django",
+        "fastapi",
+        "gi",
+        "h2",
+        "huggingface_hub",
+        "_typeshed",
+        "numpy._core.",
+        "numpy._distributor_init_local",
+        "numpy.random.RandomState",
+        "numpy_distutils",
+        "pygments",
+        "rich",
+        "secretstorage",
+        "starlette",
+        "starlette_context",
+        "trio",
+        "win32ctypes.core._",
+    )
+    ignored_optional_packages = {
+        "bcrypt",
+        "brotli",
+        "brotlicffi",
+        "charset_normalizer",
+        "click",
+        "exceptiongroup",
+        "importlib_resources",
+        "openai",
+        "outcome",
+        "psutil",
+        "pydantic",
+        "pydantic_settings",
+        "redis",
+        "requests",
+        "sniffio",
+        "socksio",
+        "sse_starlette",
+        "threadpoolctl",
+        "transformers",
+        "uvicorn",
+        "uvloop",
+        "winloop",
+        "yaml",
+        "zstandard",
+    }
+    app_importer_prefixes = ("config", "core", "data", "main", "services", "stores", "ui", "utils")
+
+    def _normalize_missing_name(name: str) -> str:
+        return str(name).strip("'\"")
+
+    def _has_app_importer(importers) -> bool:
+        for importer, _dep_info in importers:
+            root = str(importer).split(".", 1)[0]
+            if root in app_importer_prefixes:
+                return True
+        return False
+
+    def _matches_ignored_prefix(name: str) -> bool:
+        for prefix in ignored_prefixes:
+            if name == prefix:
+                return True
+            if prefix.endswith((".", "_")):
+                if name.startswith(prefix):
+                    return True
+            elif name.startswith(prefix + "."):
+                return True
+        return False
+
+    def _is_ignored_missing(name: str, status: str, importers) -> bool:
+        normalized = _normalize_missing_name(name)
+        if status == "excluded" or normalized in ignored_names:
+            return True
+        if _matches_ignored_prefix(normalized):
+            return True
+        if normalized in ignored_optional_packages and not _has_app_importer(importers):
+            return True
+        return False
+
+    def _warning_file_for_build() -> Path:
+        workpath = Path(CONF.get("workpath", ""))
+        build_root = workpath.parent.name
+        arch_suffix_by_build_dir = {
+            "build_x86": "x86_64",
+            "build_arm": "arm64",
+        }
+        suffix = arch_suffix_by_build_dir.get(build_root)
+        if suffix:
+            return BUILD_LOGS_DIR / f"warn-worklogger-{suffix}.txt"
+        return WARN_FILE
+
+    BUILD_LOGS_DIR.mkdir(parents=True, exist_ok=True)
+    CONF["warnfile"] = str(_warning_file_for_build())
+
+    def _write_warnings(self):
+        def dependency_description(name, dep_info):
+            if not dep_info or dep_info == "direct":
+                imptype = 0
+            else:
+                imptype = dep_info.conditional + 2 * dep_info.function + 4 * dep_info.tryexcept
+            return "%s (%s)" % (name, _pyi_build_main.IMPORT_TYPES[imptype])
+
+        miss_toc = []
+        for (name, path, status) in self.graph.make_missing_toc():
+            importers = self.graph.get_importers(name)
+            if not _is_ignored_missing(name, status, importers):
+                miss_toc.append((name, path, status, importers))
+        warnfile = Path(CONF["warnfile"])
+        if not miss_toc:
+            if warnfile.exists():
+                warnfile.unlink()
+            _pyi_build_main.logger.info("No Warnings found; warn-worklogger.txt was not generated.")
+            return
+
+        warnfile.parent.mkdir(parents=True, exist_ok=True)
+        with open(warnfile, "w", encoding="utf-8") as wf:
+            wf.write(_pyi_build_main.WARNFILE_HEADER)
+            for (name, _path, status, importers) in miss_toc:
+                print(
+                    status,
+                    "module named",
+                    name,
+                    "- imported by",
+                    ", ".join(dependency_description(importer, data) for importer, data in importers),
+                    file=wf,
+                )
+        _pyi_build_main.logger.info("Warnings written to %s", warnfile)
+
+    _pyi_build_main.Analysis._write_warnings = _write_warnings
+
+
+_configure_pyinstaller_warning_log()
 _ensure_i18n_catalogs()
 _ensure_font_assets()
 
@@ -164,10 +385,19 @@ _matplotlib_data, _matplotlib_bins = _collect("matplotlib") if _module_exists("m
 _reportlab_data, _reportlab_bins = _collect("reportlab") if _module_exists("reportlab") else ([], [])
 _pil_data, _pil_bins = _collect("PIL") if _module_exists("PIL") else ([], [])
 
-_llama_hidden = _collect_submodules("llama_cpp") if _module_exists("llama_cpp") else []
-_httpx_hidden = _collect_submodules("httpx") if _module_exists("httpx") else []
-_portalocker_hidden = _collect_submodules("portalocker") if _module_exists("portalocker") else []
+_llama_hidden = (
+    _collect_submodules("llama_cpp", exclude_prefixes=("llama_cpp.server",))
+    if _module_exists("llama_cpp") else []
+)
+_httpx_hidden = []
+_portalocker_hidden = (
+    _collect_submodules("portalocker", exclude_prefixes=("portalocker.redis",))
+    if _module_exists("portalocker") else []
+)
 _keyring_hidden = _keyring_hiddenimports() if _module_exists("keyring") else []
+_core_hidden = []
+for _pkg in ("services", "config", "data", "ui", "utils", "stores", "core"):
+    _core_hidden += _collect_submodules(_pkg)
 
 _optional_hidden = [
     pkg
@@ -234,13 +464,15 @@ a = Analysis(
         "services.dep_installer",
         "services.download_controller",
         "services.local_model_service",
+        "services.report_service",
     ]
+    + _core_hidden
     + _optional_hidden
     + _llama_hidden
     + _httpx_hidden
     + _portalocker_hidden
     + _keyring_hidden,
-    hookspath=[],
+    hookspath=[str(HOOKS_DIR)],
     runtime_hooks=[],
     excludes=[
         "torch",
@@ -290,7 +522,7 @@ if PLATFORM == "darwin":
         info_plist={
             "NSHighResolutionCapable": True,
             "CFBundleShortVersionString": APP_VERSION,
-            "CFBundleVersion": "9",
+            "CFBundleVersion": APP_VERSION,
         },
     )
 elif PLATFORM == "win32":

@@ -216,7 +216,7 @@ def _validate_description(entry: dict, *, remote: bool) -> None:
 
 
 def validate_catalog_data(data: Any, *, require_url: bool = True) -> dict:
-    """Return a validated catalog object using the v3.3.0 field names."""
+    """Return a validated catalog object using the new field names."""
     if not isinstance(data, dict):
         raise ValueError("model_catalog_invalid")
     default_model_id = str(data.get("default_model_id", "")).strip()

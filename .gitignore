@@ -19,6 +19,7 @@ env/
 # PyInstaller
 
 build/
+build_logs/
 build_x86/
 build_arm/
 dist/

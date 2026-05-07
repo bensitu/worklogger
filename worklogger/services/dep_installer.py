@@ -9,8 +9,9 @@ clear ImportError with instructions for the end-user.
 
 Source / development runs
 --------------------------
-Packages not yet installed are installed via ``pip`` on first use so
-developers and testers never need to run a separate setup step.
+Packages not yet installed raise a clear ``ImportError`` by default. Developers
+may opt in to first-use installation by setting
+``WORKLOGGER_ALLOW_AUTO_PIP_INSTALL=1``.
 
 Thread-safety: all public functions acquire a module-level lock.
 """
@@ -19,6 +20,7 @@ from __future__ import annotations
 
 import importlib
 import importlib.util
+import os
 import sys
 import threading
 
@@ -52,10 +54,15 @@ def ensure(*packages: str) -> None:
                     f"{spec} (package should be bundled — "
                     "please re-install WorkLogger)"
                 )
-            else:
+            elif _auto_pip_install_enabled():
                 ok, err = _pip_install(spec)
                 if not ok:
                     failures.append(f"{spec}: {err}")
+            else:
+                failures.append(
+                    f"{spec} (install from requirements.txt or set "
+                    "WORKLOGGER_ALLOW_AUTO_PIP_INSTALL=1 to allow automatic pip install)"
+                )
         if failures:
             raise ImportError(
                 "Required packages are not available:\n"
@@ -86,6 +93,11 @@ def _is_importable(import_name: str) -> bool:
         return importlib.util.find_spec(import_name) is not None
     except (ModuleNotFoundError, ValueError):
         return False
+
+
+def _auto_pip_install_enabled() -> bool:
+    raw = os.environ.get("WORKLOGGER_ALLOW_AUTO_PIP_INSTALL", "")
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _pip_install(spec: str) -> tuple:
