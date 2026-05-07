@@ -666,10 +666,8 @@ class ChartDialog(QDialog):
             wt = rec.safe_work_type()
             h = calc_hours(rec.start, rec.end, rec.break_hours) if rec.has_times else 0.0
             ot = 0.0 if rec.is_leave else max(h - app.work_hours, 0)
-            overnight_suffix = (
-                f" ({_("Night")})"
-                if rec.is_overnight and rec.end else ""
-            )
+            night_label = _("Night")
+            overnight_suffix = f" ({night_label})" if rec.is_overnight and rec.end else ""
             rows.append({"date": rec.date,
                          "start": rec.start or "—",
                          "end": (rec.end or "—") + overnight_suffix if rec.end else "—",
