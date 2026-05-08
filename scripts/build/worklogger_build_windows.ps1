@@ -268,6 +268,113 @@ function Remove-GeneratedSourceArtifacts {
     Write-Log "OK   : Cleanup Python cache and test artifacts before packaging"
 }
 
+function Get-PythonBuildIdentity {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$PythonExe,
+        [Parameter(Mandatory = $true)]
+        [string]$Label
+    )
+
+    $identityScript = @'
+import json
+import platform
+import struct
+import sys
+import sysconfig
+
+print(json.dumps({
+    "executable": sys.executable,
+    "version": sys.version.split()[0],
+    "major": sys.version_info.major,
+    "minor": sys.version_info.minor,
+    "abi_tag": f"cp{sys.version_info.major}{sys.version_info.minor}",
+    "bits": struct.calcsize("P") * 8,
+    "machine": platform.machine(),
+    "platform": sysconfig.get_platform(),
+}))
+'@
+    $output = & $PythonExe -c $identityScript 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Log "WARN : Failed to inspect $Label. Output: $($output -join ' ')"
+        return $null
+    }
+    try {
+        return ($output | Select-Object -Last 1 | ConvertFrom-Json)
+    }
+    catch {
+        Write-Log "WARN : Failed to parse $Label identity. Output: $($output -join ' ')"
+        return $null
+    }
+}
+
+function Test-BuildVenvMatchesHost {
+    param(
+        [Parameter(Mandatory = $true)]
+        $HostIdentity
+    )
+
+    if (-not (Test-Path -LiteralPath $VenvPython -PathType Leaf)) {
+        return $true
+    }
+
+    $venvIdentity = Get-PythonBuildIdentity -PythonExe $VenvPython -Label "existing build virtual environment"
+    if ($null -eq $venvIdentity) {
+        Write-Log "WARN : Existing build virtual environment cannot be inspected. Recreating it."
+        return $false
+    }
+
+    $sameRuntime = (
+        [int]$venvIdentity.major -eq [int]$HostIdentity.major -and
+        [int]$venvIdentity.minor -eq [int]$HostIdentity.minor -and
+        [int]$venvIdentity.bits -eq [int]$HostIdentity.bits -and
+        [string]$venvIdentity.platform -eq [string]$HostIdentity.platform
+    )
+    if ($sameRuntime) {
+        Write-Log "OK   : Existing build virtual environment matches host Python $($HostIdentity.version) ($($HostIdentity.platform))."
+        return $true
+    }
+
+    Write-Log "WARN : Existing build virtual environment Python does not match host Python. Recreating it."
+    Write-Log "WARN : Host Python: version=$($HostIdentity.version) platform=$($HostIdentity.platform) bits=$($HostIdentity.bits) exe=$($HostIdentity.executable)"
+    Write-Log "WARN : Venv Python: version=$($venvIdentity.version) platform=$($venvIdentity.platform) bits=$($venvIdentity.bits) exe=$($venvIdentity.executable)"
+    return $false
+}
+
+function Test-BuildVenvAbiCompatible {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ExpectedAbiTag
+    )
+
+    if (-not (Test-Path -LiteralPath $VenvPython -PathType Leaf)) {
+        return $true
+    }
+
+    $sitePackages = Join-Path $VenvDir "Lib\site-packages"
+    if (-not (Test-Path -LiteralPath $sitePackages -PathType Container)) {
+        return $true
+    }
+
+    $wrongAbiFiles = @(
+        Get-ChildItem -LiteralPath $sitePackages -Recurse -Force -File -Filter "*.pyd" -ErrorAction SilentlyContinue |
+            Where-Object {
+                $_.Name -match '\.cp\d{2,3}[a-z]*-' -and
+                $_.Name -notmatch "\.$ExpectedAbiTag[a-z]*-"
+            } |
+            Select-Object -First 8
+    )
+    if ($wrongAbiFiles.Count -eq 0) {
+        return $true
+    }
+
+    Write-Log "WARN : Existing build virtual environment contains extension modules for a different Python ABI. Expected $ExpectedAbiTag."
+    foreach ($file in $wrongAbiFiles) {
+        Write-Log "WARN : Incompatible extension module: $($file.FullName)"
+    }
+    return $false
+}
+
 try {
     Write-Log "============================================================"
     Write-Log "WorkLogger Windows onefile build started"
@@ -297,6 +404,11 @@ try {
     Remove-GeneratedSourceArtifacts
 
     Invoke-External -Description "Validate host Python" -FilePath $pythonCmd -Arguments @("--version")
+    $hostPythonIdentity = Get-PythonBuildIdentity -PythonExe $pythonCmd -Label "host Python"
+    if ($null -eq $hostPythonIdentity) {
+        throw "Unable to inspect host Python identity."
+    }
+    Write-Log "OK   : Host Python: version=$($hostPythonIdentity.version) platform=$($hostPythonIdentity.platform) bits=$($hostPythonIdentity.bits) exe=$($hostPythonIdentity.executable)"
 
     $needVenvRebuild = $false
     if (-not (Test-Path -LiteralPath $VenvPython -PathType Leaf)) {
@@ -308,12 +420,18 @@ try {
         }
         $needVenvRebuild = $true
     }
+    if (-not $needVenvRebuild -and -not (Test-BuildVenvMatchesHost -HostIdentity $hostPythonIdentity)) {
+        $needVenvRebuild = $true
+    }
+    if (-not $needVenvRebuild -and -not (Test-BuildVenvAbiCompatible -ExpectedAbiTag $hostPythonIdentity.abi_tag)) {
+        $needVenvRebuild = $true
+    }
 
     if ($needVenvRebuild) {
         if (Test-Path -LiteralPath $VenvDir) {
-            Write-Log "RUN  : Remove broken/incomplete virtual environment"
+            Write-Log "RUN  : Remove broken/incompatible virtual environment"
             Remove-PathIfExists -Path $VenvDir
-            Write-Log "OK   : Remove broken/incomplete virtual environment"
+            Write-Log "OK   : Remove broken/incompatible virtual environment"
         }
         Invoke-External -Description "Create build virtual environment" -FilePath $pythonCmd -Arguments @("-m", "venv", $VenvDir)
     }
@@ -372,10 +490,39 @@ try {
         Write-Log "WARN : requirements.txt not found. Skipping dependency installation."
     }
 
-    Invoke-External -Description "Verify packaged dependency set" -FilePath $BuildPython -Arguments @(
-        "-c",
-        "import importlib.util, sys; req=['PySide6','holidays','keyring','cryptography','httpx','httpcore','anyio','portalocker']; miss=[m for m in req if importlib.util.find_spec(m) is None]; print('dependency_check=', 'ok' if not miss else ','.join(miss)); sys.exit(1 if miss else 0)"
-    )
+    $dependencyImportCheck = @'
+import importlib
+import sys
+
+required = [
+    "PySide6",
+    "holidays",
+    "keyring",
+    "cryptography",
+    "cryptography.hazmat.backends.openssl.backend",
+    "httpx",
+    "httpcore",
+    "anyio",
+    "portalocker",
+    "_cffi_backend",
+    "numpy",
+    "llama_cpp",
+    "pywintypes",
+    "win32api",
+]
+failures = []
+for module_name in required:
+    try:
+        importlib.import_module(module_name)
+    except Exception as exc:
+        failures.append(f"{module_name}: {type(exc).__name__}: {exc}")
+if failures:
+    print("dependency_import_check=failed")
+    print("\n".join(failures))
+    sys.exit(1)
+print("dependency_import_check=ok")
+'@
+    Invoke-External -Description "Verify packaged dependency imports" -FilePath $BuildPython -Arguments @("-c", $dependencyImportCheck)
 
     $env:WORKLOGGER_PROJECT_ROOT = $ProjectRoot
     $internalImportCheck = @'

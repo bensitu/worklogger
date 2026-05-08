@@ -160,6 +160,168 @@ print_python_identity() {
   run_arch "$target_arch" "$python_exe" -c 'import platform, sys; print(f"python={sys.executable}"); print(f"machine={platform.machine()}"); print(f"version={sys.version.split()[0]}")'
 }
 
+python_identity_json_for_arch() {
+  local target_arch="$1"
+  local python_exe="$2"
+
+  run_arch "$target_arch" "$python_exe" - <<'PY'
+import json
+import platform
+import struct
+import sys
+import sysconfig
+
+print(json.dumps({
+    "executable": sys.executable,
+    "version": sys.version.split()[0],
+    "major": sys.version_info.major,
+    "minor": sys.version_info.minor,
+    "abi_tag": f"cp{sys.version_info.major}{sys.version_info.minor}",
+    "bits": struct.calcsize("P") * 8,
+    "machine": platform.machine(),
+    "platform": sysconfig.get_platform(),
+}))
+PY
+}
+
+json_field_for_arch() {
+  local target_arch="$1"
+  local python_exe="$2"
+  local json_value="$3"
+  local field_name="$4"
+
+  JSON_VALUE="$json_value" run_arch "$target_arch" "$python_exe" -c 'import json, os, sys; print(json.loads(os.environ["JSON_VALUE"])[sys.argv[1]])' "$field_name"
+}
+
+format_python_identity_for_arch() {
+  local target_arch="$1"
+  local python_exe="$2"
+  local json_value="$3"
+
+  JSON_VALUE="$json_value" run_arch "$target_arch" "$python_exe" - <<'PY'
+import json
+import os
+
+data = json.loads(os.environ["JSON_VALUE"])
+print(
+    f"version={data['version']} platform={data['platform']} "
+    f"bits={data['bits']} machine={data['machine']} exe={data['executable']}"
+)
+PY
+}
+
+venv_matches_host_python_for_arch() {
+  local target_arch="$1"
+  local source_python="$2"
+  local venv_python="$3"
+  local host_json="$4"
+  local venv_json
+
+  if ! venv_json="$(python_identity_json_for_arch "$target_arch" "$venv_python" 2>&1)"; then
+    log "WARN : Existing venv cannot be inspected (${target_arch}). Recreating it. Output: $venv_json"
+    return 1
+  fi
+  if HOST_JSON="$host_json" VENV_JSON="$venv_json" run_arch "$target_arch" "$source_python" - <<'PY'
+import json
+import os
+import sys
+
+host = json.loads(os.environ["HOST_JSON"])
+venv = json.loads(os.environ["VENV_JSON"])
+keys = ("major", "minor", "bits", "machine", "platform")
+raise SystemExit(0 if all(host[key] == venv[key] for key in keys) else 1)
+PY
+  then
+    log "OK   : Existing venv matches host Python (${target_arch}): $(format_python_identity_for_arch "$target_arch" "$source_python" "$host_json")"
+    return 0
+  fi
+
+  log "WARN : Existing venv Python does not match host Python (${target_arch}). Recreating it."
+  log "WARN : Host Python (${target_arch}): $(format_python_identity_for_arch "$target_arch" "$source_python" "$host_json")"
+  log "WARN : Venv Python (${target_arch}): $(format_python_identity_for_arch "$target_arch" "$source_python" "$venv_json")"
+  return 1
+}
+
+venv_abi_compatible_for_arch() {
+  local target_arch="$1"
+  local source_python="$2"
+  local venv_dir="$3"
+  local expected_abi="$4"
+  local output
+
+  if output="$(EXPECTED_ABI="$expected_abi" VENV_DIR="$venv_dir" run_arch "$target_arch" "$source_python" - <<'PY'
+from pathlib import Path
+import os
+import re
+
+expected = os.environ["EXPECTED_ABI"]
+root = Path(os.environ["VENV_DIR"])
+wrong = []
+for path in root.rglob("*"):
+    if path.suffix.lower() not in {".so", ".pyd"}:
+        continue
+    name = path.name
+    tags = []
+    match = re.search(r"\.cp(\d{2,3})", name)
+    if match:
+        tags.append("cp" + match.group(1))
+    match = re.search(r"\.cpython-(\d{2,3})", name)
+    if match:
+        tags.append("cp" + match.group(1))
+    if tags and expected not in tags:
+        wrong.append(str(path))
+        if len(wrong) >= 8:
+            break
+if wrong:
+    print("\n".join(wrong))
+    raise SystemExit(1)
+PY
+  )"; then
+    return 0
+  fi
+
+  log "WARN : Existing venv contains extension modules for a different Python ABI (${target_arch}). Expected $expected_abi."
+  while IFS= read -r line; do
+    [ -n "$line" ] && log "WARN : Incompatible extension module (${target_arch}): $line"
+  done <<<"$output"
+  return 1
+}
+
+ensure_build_venv_for_arch() {
+  local target_arch="$1"
+  local source_python="$2"
+  local venv_dir="$3"
+  local venv_python="$4"
+  local host_json expected_abi needs_rebuild=0
+
+  if ! host_json="$(python_identity_json_for_arch "$target_arch" "$source_python" 2>&1)"; then
+    fail "Unable to inspect host Python (${target_arch}). Output: $host_json"
+  fi
+  expected_abi="$(json_field_for_arch "$target_arch" "$source_python" "$host_json" abi_tag)"
+  log "OK   : Host Python (${target_arch}): $(format_python_identity_for_arch "$target_arch" "$source_python" "$host_json")"
+
+  if [ ! -x "$venv_python" ]; then
+    needs_rebuild=1
+  elif ! venv_matches_host_python_for_arch "$target_arch" "$source_python" "$venv_python" "$host_json"; then
+    needs_rebuild=1
+  elif ! venv_abi_compatible_for_arch "$target_arch" "$source_python" "$venv_dir" "$expected_abi"; then
+    needs_rebuild=1
+  fi
+
+  if [ "$needs_rebuild" -eq 1 ]; then
+    if [ -e "$venv_dir" ]; then
+      log "RUN  : Remove broken/incompatible venv (${target_arch}) at $venv_dir"
+      safe_remove_path "$venv_dir"
+      log "OK   : Remove broken/incompatible venv (${target_arch})"
+    fi
+    log "RUN  : Create venv (${target_arch}) at $venv_dir"
+    run_arch "$target_arch" "$source_python" -m venv "$venv_dir"
+    log "OK   : Create venv (${target_arch})"
+  else
+    log "OK   : Reusing venv (${target_arch}) at $venv_dir"
+  fi
+}
+
 print_packaging_debug() {
   local target_arch="$1"
   local python_exe="$2"
@@ -406,13 +568,7 @@ bootstrap_build_env() {
   local source_python
   source_python="$(python_bin_for_arch "$target_arch")"
 
-  if [ ! -x "$venv_python" ]; then
-    log "RUN  : Create venv (${target_arch}) at $venv_dir"
-    run_arch "$target_arch" "$source_python" -m venv "$venv_dir"
-    log "OK   : Create venv (${target_arch})"
-  else
-    log "OK   : Reusing venv (${target_arch}) at $venv_dir"
-  fi
+  ensure_build_venv_for_arch "$target_arch" "$source_python" "$venv_dir" "$venv_python"
 
   print_python_identity "$target_arch" "$venv_python"
 
@@ -452,8 +608,38 @@ bootstrap_build_env() {
     print_llama_install_debug "$target_arch" "$venv_python" "$venv_dir"
   fi
 
-  run_arch "$target_arch" "$venv_python" -c 'import importlib.util, sys; req = ["PySide6", "holidays", "httpx", "httpcore", "anyio", "portalocker", "keyring", "cryptography", "llama_cpp"]; miss = [m for m in req if importlib.util.find_spec(m) is None]; print("dependency_check=", "ok" if not miss else ",".join(miss)); sys.exit(1 if miss else 0)' \
-    || fail "Dependency verification failed for ${target_arch} build venv."
+  if ! run_arch "$target_arch" "$venv_python" - <<'PY'
+import importlib
+
+required = [
+    "PySide6",
+    "holidays",
+    "httpx",
+    "httpcore",
+    "anyio",
+    "portalocker",
+    "keyring",
+    "cryptography",
+    "cryptography.hazmat.backends.openssl.backend",
+    "_cffi_backend",
+    "numpy",
+    "llama_cpp",
+]
+failures = []
+for module_name in required:
+    try:
+        importlib.import_module(module_name)
+    except Exception as exc:
+        failures.append(f"{module_name}: {type(exc).__name__}: {exc}")
+if failures:
+    print("dependency_import_check=failed")
+    print("\n".join(failures))
+    raise SystemExit(1)
+print("dependency_import_check=ok")
+PY
+  then
+    fail "Dependency import verification failed for ${target_arch} build venv."
+  fi
   verify_internal_imports "$target_arch" "$venv_python"
 }
 

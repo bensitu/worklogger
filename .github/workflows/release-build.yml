@@ -36,6 +36,7 @@ jobs:
           cache-dependency-path: |
             requirements.txt
             WorkLogger_build_windows.bat
+            scripts/build/worklogger_build_windows.ps1
 
       - name: Validate release version
         shell: pwsh

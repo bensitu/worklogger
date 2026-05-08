@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.3.2] - 2026-05-09
+## [3.3.2] - 2026-05-08
 
 ### Added
 
@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Password login lockouts now escalate across repeated failures and stale login-attempt rows are pruned after seven days.
 - Platform build scripts now verify required service imports, check PyInstaller warnings for missing report services, and smoke-test packaged imports.
+- PyInstaller warning filtering now suppresses known optional Jython and setuptools-distutils probes.
+- Platform build scripts now rebuild stale build virtual environments when compiled extensions belong to a different Python ABI.
 - Windows builds now log artifact path, timestamp, and SHA-256.
 
 ### Fixed
