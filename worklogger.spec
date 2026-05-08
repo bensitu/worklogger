@@ -439,6 +439,8 @@ _optional_hidden = [
         "reportlab",
         "PIL",
         "PIL.Image",
+        "PIL.ImageFont",
+        "PIL._imagingft",
         "llama_cpp",
         "httpx",
         "portalocker",

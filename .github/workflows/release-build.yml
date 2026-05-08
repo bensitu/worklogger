@@ -161,6 +161,16 @@ jobs:
           PYTHON_BIN: ${{ steps.setup-python-arm64.outputs.python-path }}
           PYTHON_BIN_ARM64: ${{ steps.setup-python-arm64.outputs.python-path }}
           PYTHON_BIN_X86_64: ${{ steps.setup-python-x64.outputs.python-path }}
+          LLAMA_CPP_ARM64_WHEEL_INDEX_URL: https://abetlen.github.io/llama-cpp-python/whl/metal
+          LLAMA_CPP_X86_64_WHEEL_INDEX_URL: https://abetlen.github.io/llama-cpp-python/whl/cpu
+          LLAMA_CPP_REQUIREMENT_ARM64: "llama-cpp-python>=0.3.19"
+          LLAMA_CPP_REQUIREMENT_X86_64: "llama-cpp-python==0.3.2"
+          LLAMA_CPP_FORCE_REINSTALL: "1"
+          LLAMA_CPP_ONLY_BINARY: "1"
+          LLAMA_CPP_NO_CACHE: "1"
+          LLAMA_CPP_ALLOW_SOURCE_BUILD: "0"
+          LLAMA_CPP_ALLOW_VERSION_MISMATCH: "1"
+          LLAMA_CPP_ALLOW_ARCH_SPECIFIC_LLAMA_LIBS: "1"
         run: ./WorkLogger_build_macOS.sh
 
       - name: Prepare macOS artifact
@@ -172,6 +182,9 @@ jobs:
             find dist -maxdepth 4 -print 2>/dev/null || true
             exit 1
           fi
+
+          lipo -info "dist/WorkLogger.app/Contents/MacOS/WorkLogger"
+          find "dist/WorkLogger.app" -type f \( -name '*.so' -o -name '*.dylib' \) -print -exec file {} \;
 
           if [ -f "dist/WorkLogger.app.zip" ]; then
             cp "dist/WorkLogger.app.zip" "release/WorkLogger.app.zip"
@@ -194,6 +207,8 @@ jobs:
           fi
           arch -arm64 "$verify_exec" --smoke-import
           arch -x86_64 "$verify_exec" --smoke-import
+          arch -arm64 "$verify_exec" --smoke-local-model-runtime
+          arch -x86_64 "$verify_exec" --smoke-local-model-runtime
           shasum -a 256 "release/WorkLogger.app.zip"
           find release -maxdepth 1 -type f -print -exec ls -lh {} \;
 

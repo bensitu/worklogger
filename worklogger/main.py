@@ -65,6 +65,62 @@ def _smoke_import_check() -> int:
     return 0
 
 
+def _smoke_local_model_runtime_check() -> int:
+    """Verify the packaged llama-cpp-python native binding can load."""
+    try:
+        from services.local_model_service import is_local_model_runtime_supported
+
+        if not is_local_model_runtime_supported():
+            _safe_stdout("SMOKE LOCAL MODEL RUNTIME SKIPPED")
+            _safe_stdout("reason=local_model_runtime_unsupported_on_arch")
+            return 0
+    except Exception:
+        pass
+
+    try:
+        from pathlib import Path
+
+        import llama_cpp
+        from llama_cpp import Llama  # noqa: F401
+
+        binding = importlib.import_module("llama_cpp.llama_cpp")
+        package_dir = Path(llama_cpp.__file__).resolve().parent
+        search_roots = [package_dir]
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            search_roots.append(Path(meipass).resolve() / "llama_cpp")
+        if getattr(sys, "frozen", False):
+            contents_dir = Path(sys.executable).resolve().parents[1]
+            search_roots.append(contents_dir / "Frameworks" / "llama_cpp")
+            search_roots.append(contents_dir / "Resources" / "llama_cpp")
+        native_files = sorted({
+            path
+            for root in search_roots
+            if root.exists()
+            for pattern in ("*.so", "*.dylib", "*.pyd")
+            for path in root.rglob(pattern)
+        })
+        if not native_files:
+            raise RuntimeError(
+                "No llama_cpp native libraries found under: "
+                + ", ".join(str(root) for root in search_roots)
+            )
+    except Exception as exc:
+        _safe_stdout("SMOKE LOCAL MODEL RUNTIME FAILED")
+        _safe_stdout(f"{type(exc).__name__}: {exc}")
+        return 1
+
+    _safe_stdout("SMOKE LOCAL MODEL RUNTIME OK")
+    _safe_stdout(f"llama_cpp_module={llama_cpp.__file__}")
+    _safe_stdout(f"llama_cpp_binding={getattr(binding, '__file__', '')}")
+    _safe_stdout(
+        f"llama_backend_init_available={hasattr(binding, 'llama_backend_init')}"
+    )
+    for path in native_files:
+        _safe_stdout(f"llama_native={path}")
+    return 0
+
+
 def _bootstrap() -> None:
     """Run one-time setup tasks before the Qt app starts.
 
@@ -89,6 +145,8 @@ def _bootstrap() -> None:
 def main():
     if "--smoke-import" in sys.argv:
         sys.exit(_smoke_import_check())
+    if "--smoke-local-model-runtime" in sys.argv:
+        sys.exit(_smoke_local_model_runtime_check())
 
     _bootstrap()
     app = QApplication(sys.argv)
