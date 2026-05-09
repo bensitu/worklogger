@@ -75,8 +75,25 @@ jobs:
 
           $target = "release\WorkLogger.exe"
           Copy-Item -LiteralPath $source -Destination $target -Force
-          & $target --smoke-import
-          if ($LASTEXITCODE -ne 0) {
+
+          $targetPath = (Resolve-Path -LiteralPath $target).Path
+          $stdout = Join-Path $env:RUNNER_TEMP "worklogger-upload-smoke.stdout.log"
+          $stderr = Join-Path $env:RUNNER_TEMP "worklogger-upload-smoke.stderr.log"
+          Remove-Item -LiteralPath $stdout, $stderr -Force -ErrorAction SilentlyContinue
+          $process = Start-Process `
+            -FilePath $targetPath `
+            -ArgumentList "--smoke-import" `
+            -Wait `
+            -PassThru `
+            -NoNewWindow `
+            -RedirectStandardOutput $stdout `
+            -RedirectStandardError $stderr
+          foreach ($logFile in @($stdout, $stderr)) {
+            if (Test-Path -LiteralPath $logFile -PathType Leaf) {
+              Get-Content -LiteralPath $logFile
+            }
+          }
+          if ($process.ExitCode -ne 0) {
             throw "Uploaded Windows artifact failed --smoke-import."
           }
           Get-FileHash -LiteralPath $target -Algorithm SHA256 | Format-List
