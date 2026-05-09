@@ -40,7 +40,13 @@ def machine_key() -> bytes:
     key = secrets.token_bytes(_KEY_BYTES)
     if _store_keyring_key(key):
         return key
-    _store_file_key(key)
+    try:
+        _store_file_key(key)
+    except OSError:
+        _log.warning(
+            "Machine key fallback could not be persisted; using an ephemeral "
+            "key for this session."
+        )
     return key
 
 

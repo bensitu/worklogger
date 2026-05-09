@@ -6,7 +6,7 @@ import sys
 import tempfile
 import unittest
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 
@@ -210,6 +210,7 @@ class AuthServiceTests(unittest.TestCase):
 
         with patch("services.app_services.LOGIN_FAILURE_LOCK_THRESHOLD", 2), \
              patch("services.app_services.LOGIN_LOCKOUT_SECONDS", 30), \
+             patch("services.app_services.LOGIN_LOCKOUT_SCHEDULE", ((2, 30),)), \
              self.assertLogs("services.app_services", level="WARNING") as logs:
             with self.assertRaises(ValueError):
                 services.auth.login("alice", "wrong-pass")
@@ -233,6 +234,86 @@ class AuthServiceTests(unittest.TestCase):
             services.db.conn.execute(
                 "SELECT 1 FROM login_attempts WHERE username=?",
                 ("alice",),
+            ).fetchone()
+        )
+
+    def test_login_lockout_schedule_preserves_failure_count_after_expiry(self):
+        db = self._db()
+        schedule = ((5, 30), (10, 300))
+
+        locked_until = None
+        for _ in range(5):
+            failed_count, locked_until = db.record_login_failure(
+                "alice",
+                threshold=5,
+                lockout_seconds=30,
+                lockout_schedule=schedule,
+            )
+
+        self.assertEqual(failed_count, 5)
+        self.assertIsNotNone(locked_until)
+        db.conn.execute(
+            "UPDATE login_attempts SET locked_until=? WHERE username=?",
+            ("2000-01-01T00:00:00+00:00", "alice"),
+        )
+        db.conn.commit()
+
+        self.assertIsNone(db.login_lockout_until("alice"))
+        row = db.conn.execute(
+            "SELECT failed_count, locked_until FROM login_attempts WHERE username=?",
+            ("alice",),
+        ).fetchone()
+        self.assertEqual(row[0], 5)
+        self.assertIsNone(row[1])
+
+        for _ in range(5):
+            failed_count, locked_until = db.record_login_failure(
+                "alice",
+                threshold=5,
+                lockout_seconds=30,
+                lockout_schedule=schedule,
+            )
+
+        self.assertEqual(failed_count, 10)
+        self.assertIsNotNone(locked_until)
+        self.assertGreater(
+            (locked_until - datetime.now(timezone.utc)).total_seconds(),
+            250,
+        )
+
+    def test_stale_login_attempts_are_pruned_on_db_open(self):
+        db = self._db()
+        old_at = (
+            datetime.now(timezone.utc) - timedelta(days=8)
+        ).isoformat(timespec="seconds")
+        fresh_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        db.conn.execute(
+            "INSERT INTO login_attempts"
+            "(username,failed_count,locked_until,last_failed_at) VALUES(?,?,?,?)",
+            ("old", 3, None, old_at),
+        )
+        db.conn.execute(
+            "INSERT INTO login_attempts"
+            "(username,failed_count,locked_until,last_failed_at) VALUES(?,?,?,?)",
+            ("fresh", 1, None, fresh_at),
+        )
+        db.conn.commit()
+        path = db.path
+        db.conn.close()
+
+        reopened = DB(path)
+        self.addCleanup(reopened.conn.close)
+
+        self.assertIsNone(
+            reopened.conn.execute(
+                "SELECT 1 FROM login_attempts WHERE username=?",
+                ("old",),
+            ).fetchone()
+        )
+        self.assertIsNotNone(
+            reopened.conn.execute(
+                "SELECT 1 FROM login_attempts WHERE username=?",
+                ("fresh",),
             ).fetchone()
         )
 

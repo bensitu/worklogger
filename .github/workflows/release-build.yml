@@ -36,12 +36,17 @@ jobs:
           cache-dependency-path: |
             requirements.txt
             WorkLogger_build_windows.bat
+            scripts/build/worklogger_build_windows.ps1
 
       - name: Validate release version
         shell: pwsh
         run: |
           if ($env:RELEASE_VERSION -notmatch '^v\d+\.\d+\.\d+([.-][0-9A-Za-z.-]+)?$') {
             throw "Release version must match vX.Y.Z. Got: $env:RELEASE_VERSION"
+          }
+          $appVersion = python -c "import pathlib, re; text = pathlib.Path('worklogger/config/constants.py').read_text(encoding='utf-8'); print(re.search(r'APP_VERSION\s*=\s*`"([^`"]+)`"', text).group(1))"
+          if ($env:RELEASE_VERSION -ne "v$appVersion") {
+            throw "Release version $env:RELEASE_VERSION does not match APP_VERSION v$appVersion."
           }
 
       - name: Build Windows app
@@ -70,6 +75,11 @@ jobs:
 
           $target = "release\WorkLogger.exe"
           Copy-Item -LiteralPath $source -Destination $target -Force
+          & $target --smoke-import
+          if ($LASTEXITCODE -ne 0) {
+            throw "Uploaded Windows artifact failed --smoke-import."
+          }
+          Get-FileHash -LiteralPath $target -Algorithm SHA256 | Format-List
           Get-ChildItem -LiteralPath release -File | Select-Object Name, Length
 
       - name: Upload Windows artifact
@@ -126,6 +136,18 @@ jobs:
             echo "Release version must match vX.Y.Z. Got: $RELEASE_VERSION"
             exit 1
           fi
+          app_version="$(python - <<'PY'
+          import pathlib
+          import re
+
+          text = pathlib.Path("worklogger/config/constants.py").read_text(encoding="utf-8")
+          print(re.search(r'APP_VERSION\s*=\s*"([^"]+)"', text).group(1))
+          PY
+          )"
+          if [ "$RELEASE_VERSION" != "v${app_version}" ]; then
+            echo "Release version ${RELEASE_VERSION} does not match APP_VERSION v${app_version}."
+            exit 1
+          fi
 
           arch -arm64 "$PYTHON_BIN_ARM64" -c 'import platform, sys; print("arm64 python:", sys.executable, platform.machine())'
           arch -x86_64 "$PYTHON_BIN_X86_64" -c 'import platform, sys; print("x86_64 python:", sys.executable, platform.machine())'
@@ -139,6 +161,16 @@ jobs:
           PYTHON_BIN: ${{ steps.setup-python-arm64.outputs.python-path }}
           PYTHON_BIN_ARM64: ${{ steps.setup-python-arm64.outputs.python-path }}
           PYTHON_BIN_X86_64: ${{ steps.setup-python-x64.outputs.python-path }}
+          LLAMA_CPP_ARM64_WHEEL_INDEX_URL: https://abetlen.github.io/llama-cpp-python/whl/metal
+          LLAMA_CPP_X86_64_WHEEL_INDEX_URL: https://abetlen.github.io/llama-cpp-python/whl/cpu
+          LLAMA_CPP_REQUIREMENT_ARM64: "llama-cpp-python>=0.3.19"
+          LLAMA_CPP_REQUIREMENT_X86_64: "llama-cpp-python==0.3.2"
+          LLAMA_CPP_FORCE_REINSTALL: "1"
+          LLAMA_CPP_ONLY_BINARY: "1"
+          LLAMA_CPP_NO_CACHE: "1"
+          LLAMA_CPP_ALLOW_SOURCE_BUILD: "0"
+          LLAMA_CPP_ALLOW_VERSION_MISMATCH: "1"
+          LLAMA_CPP_ALLOW_ARCH_SPECIFIC_LLAMA_LIBS: "1"
         run: ./WorkLogger_build_macOS.sh
 
       - name: Prepare macOS artifact
@@ -151,6 +183,9 @@ jobs:
             exit 1
           fi
 
+          lipo -info "dist/WorkLogger.app/Contents/MacOS/WorkLogger"
+          find "dist/WorkLogger.app" -type f \( -name '*.so' -o -name '*.dylib' \) -print -exec file {} \;
+
           if [ -f "dist/WorkLogger.app.zip" ]; then
             cp "dist/WorkLogger.app.zip" "release/WorkLogger.app.zip"
           else
@@ -161,6 +196,20 @@ jobs:
             cp "dist/WorkLogger.dmg" "release/WorkLogger.dmg"
           fi
 
+          verify_dir="$(mktemp -d)"
+          trap 'rm -rf "$verify_dir"' EXIT
+          ditto -x -k "release/WorkLogger.app.zip" "$verify_dir"
+          verify_exec="$verify_dir/WorkLogger.app/Contents/MacOS/WorkLogger"
+          if [ ! -f "$verify_exec" ]; then
+            echo "Expected executable was not found in release zip: $verify_exec"
+            find "$verify_dir" -maxdepth 5 -print
+            exit 1
+          fi
+          arch -arm64 "$verify_exec" --smoke-import
+          arch -x86_64 "$verify_exec" --smoke-import
+          arch -arm64 "$verify_exec" --smoke-local-model-runtime
+          arch -x86_64 "$verify_exec" --smoke-local-model-runtime
+          shasum -a 256 "release/WorkLogger.app.zip"
           find release -maxdepth 1 -type f -print -exec ls -lh {} \;
 
       - name: Upload macOS artifact
@@ -226,6 +275,18 @@ jobs:
             echo "Release version must match vX.Y.Z. Got: $RELEASE_VERSION"
             exit 1
           fi
+          app_version="$(python - <<'PY'
+          import pathlib
+          import re
+
+          text = pathlib.Path("worklogger/config/constants.py").read_text(encoding="utf-8")
+          print(re.search(r'APP_VERSION\s*=\s*"([^"]+)"', text).group(1))
+          PY
+          )"
+          if [ "$RELEASE_VERSION" != "v${app_version}" ]; then
+            echo "Release version ${RELEASE_VERSION} does not match APP_VERSION v${app_version}."
+            exit 1
+          fi
 
       - name: Make Linux build script executable
         run: chmod +x ./WorkLogger_build_linux.sh
@@ -248,6 +309,12 @@ jobs:
           chmod +x dist/WorkLogger
           tar -C dist -czf release/WorkLogger.tar.gz WorkLogger
           tar -tzf release/WorkLogger.tar.gz
+          verify_dir="$(mktemp -d)"
+          trap 'rm -rf "$verify_dir"' EXIT
+          tar -xzf release/WorkLogger.tar.gz -C "$verify_dir"
+          chmod +x "$verify_dir/WorkLogger"
+          "$verify_dir/WorkLogger" --smoke-import
+          sha256sum release/WorkLogger.tar.gz
           find release -maxdepth 1 -type f -print -exec ls -lh {} \;
 
       - name: Upload Linux artifact
@@ -298,6 +365,9 @@ jobs:
 
       - name: Show release files
         run: |
+          test -f release-artifacts/WorkLogger.exe
+          test -f release-artifacts/WorkLogger.app.zip
+          test -f release-artifacts/WorkLogger.tar.gz
           find release-artifacts -maxdepth 2 -type f -print -exec ls -lh {} \;
 
       - name: Create or update draft GitHub Release

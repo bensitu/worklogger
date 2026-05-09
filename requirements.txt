@@ -6,9 +6,11 @@ keyring
 certifi
 PyJWT>=2.8.0
 
-# ── local model inference ──
-# CPU-only wheel (no CUDA build required for basic usage).
-# For GPU acceleration install the appropriate CUDA/Metal variant manually:
+# -- local model inference --
+# The macOS release script installs this separately per architecture:
+#   arm64  -> Metal wheel
+#   x86_64 -> CPU wheel
+# For GPU acceleration in development, install the appropriate CUDA/Metal variant manually:
 #   pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu121
 # For Apple Silicon (M1/M2) install the appropriate Metal variant manually:
 #   pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/metal

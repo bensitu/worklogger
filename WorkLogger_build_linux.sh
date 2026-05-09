@@ -12,6 +12,7 @@ VENV_DIR="$SCRIPT_DIR/.venv_build_linux"
 VENV_PYTHON="$VENV_DIR/bin/python"
 I18N_COMPILE_SCRIPT="$SCRIPT_DIR/scripts/i18n/i18n_compile.py"
 LOG_DIR="$SCRIPT_DIR/build_logs"
+WARN_FILE="$LOG_DIR/warn-worklogger.txt"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 LOG_FILE="$LOG_DIR/build_linux_${TIMESTAMP}.log"
 PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || true)}"
@@ -67,6 +68,151 @@ retry() {
     sleep "$delay_seconds"
     attempt=$((attempt + 1))
   done
+}
+
+python_identity_json() {
+  local python_exe="$1"
+  "$python_exe" - <<'PY'
+import json
+import platform
+import struct
+import sys
+import sysconfig
+
+print(json.dumps({
+    "executable": sys.executable,
+    "version": sys.version.split()[0],
+    "major": sys.version_info.major,
+    "minor": sys.version_info.minor,
+    "abi_tag": f"cp{sys.version_info.major}{sys.version_info.minor}",
+    "bits": struct.calcsize("P") * 8,
+    "machine": platform.machine(),
+    "platform": sysconfig.get_platform(),
+}))
+PY
+}
+
+json_field() {
+  local json_value="$1"
+  local field_name="$2"
+  JSON_VALUE="$json_value" "$PYTHON_BIN" -c 'import json, os, sys; print(json.loads(os.environ["JSON_VALUE"])[sys.argv[1]])' "$field_name"
+}
+
+format_python_identity() {
+  local json_value="$1"
+  JSON_VALUE="$json_value" "$PYTHON_BIN" - <<'PY'
+import json
+import os
+
+data = json.loads(os.environ["JSON_VALUE"])
+print(
+    f"version={data['version']} platform={data['platform']} "
+    f"bits={data['bits']} exe={data['executable']}"
+)
+PY
+}
+
+venv_matches_host_python() {
+  local host_json="$1"
+  local venv_json
+
+  if ! venv_json="$(python_identity_json "$VENV_PYTHON" 2>&1)"; then
+    log "WARN : Existing build virtual environment cannot be inspected. Recreating it. Output: $venv_json"
+    return 1
+  fi
+  if HOST_JSON="$host_json" VENV_JSON="$venv_json" "$PYTHON_BIN" - <<'PY'
+import json
+import os
+import sys
+
+host = json.loads(os.environ["HOST_JSON"])
+venv = json.loads(os.environ["VENV_JSON"])
+keys = ("major", "minor", "bits", "platform")
+raise SystemExit(0 if all(host[key] == venv[key] for key in keys) else 1)
+PY
+  then
+    log "OK   : Existing build virtual environment matches host Python ($(format_python_identity "$host_json"))."
+    return 0
+  fi
+
+  log "WARN : Existing build virtual environment Python does not match host Python. Recreating it."
+  log "WARN : Host Python: $(format_python_identity "$host_json")"
+  log "WARN : Venv Python: $(format_python_identity "$venv_json")"
+  return 1
+}
+
+venv_abi_compatible() {
+  local expected_abi="$1"
+  local output
+
+  if output="$(EXPECTED_ABI="$expected_abi" VENV_DIR="$VENV_DIR" "$PYTHON_BIN" - <<'PY'
+from pathlib import Path
+import os
+import re
+import sys
+
+expected = os.environ["EXPECTED_ABI"]
+root = Path(os.environ["VENV_DIR"])
+wrong = []
+for path in root.rglob("*"):
+    if path.suffix.lower() not in {".so", ".pyd"}:
+        continue
+    name = path.name
+    tags = []
+    match = re.search(r"\.cp(\d{2,3})", name)
+    if match:
+        tags.append("cp" + match.group(1))
+    match = re.search(r"\.cpython-(\d{2,3})", name)
+    if match:
+        tags.append("cp" + match.group(1))
+    if tags and expected not in tags:
+        wrong.append(str(path))
+        if len(wrong) >= 8:
+            break
+if wrong:
+    print("\n".join(wrong))
+    raise SystemExit(1)
+PY
+  )"; then
+    return 0
+  fi
+
+  log "WARN : Existing build virtual environment contains extension modules for a different Python ABI. Expected $expected_abi."
+  while IFS= read -r line; do
+    [ -n "$line" ] && log "WARN : Incompatible extension module: $line"
+  done <<<"$output"
+  return 1
+}
+
+ensure_build_venv() {
+  local host_json expected_abi needs_rebuild=0
+
+  if ! host_json="$(python_identity_json "$PYTHON_BIN" 2>&1)"; then
+    fail "Unable to inspect host Python. Output: $host_json"
+  fi
+  expected_abi="$(json_field "$host_json" abi_tag)"
+  log "OK   : Host Python: $(format_python_identity "$host_json")"
+
+  if [ ! -x "$VENV_PYTHON" ]; then
+    needs_rebuild=1
+  elif ! venv_matches_host_python "$host_json"; then
+    needs_rebuild=1
+  elif ! venv_abi_compatible "$expected_abi"; then
+    needs_rebuild=1
+  fi
+
+  if [ "$needs_rebuild" -eq 1 ]; then
+    if [ -e "$VENV_DIR" ]; then
+      log "RUN  : Remove broken/incompatible virtual environment at $VENV_DIR"
+      safe_remove_path "$VENV_DIR"
+      log "OK   : Remove broken/incompatible virtual environment"
+    fi
+    log "RUN  : Create build virtual environment at $VENV_DIR"
+    "$PYTHON_BIN" -m venv "$VENV_DIR"
+    log "OK   : Create build virtual environment"
+  else
+    log "OK   : Reusing build virtual environment at $VENV_DIR"
+  fi
 }
 
 llama_cmake_args() {
@@ -144,13 +290,7 @@ install_dependencies() {
   local filtered_requirements_file="$SCRIPT_DIR/.tmp_requirements_linux_${TIMESTAMP}.txt"
   local llama_requirement="llama-cpp-python>=0.3.19"
 
-  if [ ! -x "$VENV_PYTHON" ]; then
-    log "RUN  : Create build virtual environment at $VENV_DIR"
-    "$PYTHON_BIN" -m venv "$VENV_DIR"
-    log "OK   : Create build virtual environment"
-  else
-    log "OK   : Reusing build virtual environment at $VENV_DIR"
-  fi
+  ensure_build_venv
 
   retry 3 5 "Upgrade pip/setuptools/wheel" \
     "$VENV_PYTHON" -m pip install --timeout 60 --retries 2 --upgrade pip setuptools wheel
@@ -183,7 +323,77 @@ install_dependencies() {
     log "WARN : requirements.txt not found. Skipping application dependency installation."
   fi
 
-  "$VENV_PYTHON" -c 'import importlib.util, sys; req=["PySide6","holidays","keyring","cryptography","httpx","httpcore","anyio","portalocker","llama_cpp"]; miss=[m for m in req if importlib.util.find_spec(m) is None]; print("dependency_check=", "ok" if not miss else ",".join(miss)); sys.exit(1 if miss else 0)'
+  "$VENV_PYTHON" - <<'PY'
+import importlib
+import sys
+
+required = [
+    "PySide6",
+    "holidays",
+    "keyring",
+    "cryptography",
+    "cryptography.hazmat.backends.openssl.backend",
+    "httpx",
+    "httpcore",
+    "anyio",
+    "portalocker",
+    "_cffi_backend",
+    "numpy",
+    "llama_cpp",
+]
+failures = []
+for module_name in required:
+    try:
+        importlib.import_module(module_name)
+    except Exception as exc:
+        failures.append(f"{module_name}: {type(exc).__name__}: {exc}")
+if failures:
+    print("dependency_import_check=failed")
+    print("\n".join(failures))
+    raise SystemExit(1)
+print("dependency_import_check=ok")
+PY
+}
+
+verify_internal_imports() {
+  log "RUN  : Verify required internal imports"
+  "$VENV_PYTHON" - "$SCRIPT_DIR" <<'PY'
+import importlib
+import sys
+from pathlib import Path
+
+project = Path(sys.argv[1])
+sys.path.insert(0, str(project / "worklogger"))
+required = [
+    "services.app_services",
+    "services.report_service",
+    "services.export_service",
+    "services.calendar_service",
+]
+failures = []
+for module_name in required:
+    try:
+        importlib.import_module(module_name)
+    except Exception as exc:
+        failures.append(f"{module_name}: {type(exc).__name__}: {exc}")
+if failures:
+    print("internal_import_check=failed")
+    print("\n".join(failures))
+    raise SystemExit(1)
+print("internal_import_check=ok")
+PY
+  log "OK   : Verify required internal imports"
+}
+
+inspect_warning_file() {
+  if [ -f "$WARN_FILE" ]; then
+    if grep -Eq "services\.report_service|No module named 'services\.report_service'" "$WARN_FILE"; then
+      fail "PyInstaller warning log contains a required internal service import failure: $WARN_FILE"
+    fi
+    log "OK   : PyInstaller warning file checked: $WARN_FILE"
+  else
+    log "OK   : PyInstaller warning log has no actionable warnings."
+  fi
 }
 
 log "============================================================"
@@ -204,6 +414,7 @@ export CMAKE_BUILD_PARALLEL_LEVEL="${CMAKE_BUILD_PARALLEL_LEVEL:-$(nproc 2>/dev/
 verify_prerequisites
 cleanup_source_cache_artifacts
 install_dependencies
+verify_internal_imports
 
 log "RUN  : Compile gettext catalogs (.po -> .mo)"
 "$VENV_PYTHON" "$I18N_COMPILE_SCRIPT"
@@ -218,13 +429,21 @@ log "OK   : Cleanup previous Linux build artifacts"
 log "RUN  : PyInstaller build"
 "$VENV_PYTHON" -m PyInstaller "$SPEC" --clean --noconfirm --distpath "$DIST_DIR" --workpath "$BUILD_DIR"
 log "OK   : PyInstaller build"
+inspect_warning_file
 
 [ -f "$TARGET_BIN" ] || fail "Expected artifact missing: $TARGET_BIN"
 [ -s "$TARGET_BIN" ] || fail "Artifact size is zero bytes: $TARGET_BIN"
 chmod +x "$TARGET_BIN"
 
+log "RUN  : Smoke-test packaged executable imports"
+"$TARGET_BIN" --smoke-import
+log "OK   : Smoke-test packaged executable imports"
+
 if command -v file >/dev/null 2>&1; then
   file "$TARGET_BIN"
+fi
+if command -v sha256sum >/dev/null 2>&1; then
+  sha256sum "$TARGET_BIN"
 fi
 
 safe_remove_path "$BUILD_DIR"

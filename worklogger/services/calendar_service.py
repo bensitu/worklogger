@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 import logging
+import os
 import re
 from datetime import datetime, date
 
 _log = logging.getLogger(__name__)
+_ICS_MAX_BYTES = 10 * 1024 * 1024
 
 
 def parse_ics_rich(filepath: str) -> list[dict]:
@@ -21,6 +23,14 @@ def parse_ics_rich(filepath: str) -> list[dict]:
       ``all_day``     – bool
     """
     try:
+        size = os.path.getsize(filepath)
+        if size > _ICS_MAX_BYTES:
+            _log.warning(
+                "Skipping ICS file %s because it is larger than %s bytes",
+                filepath,
+                _ICS_MAX_BYTES,
+            )
+            return []
         with open(filepath, "r", encoding="utf-8", errors="replace") as f:
             raw = f.read()
     except OSError as exc:
@@ -94,4 +104,3 @@ def _unescape(v: str) -> str:
              .replace("\\,", ",")
              .replace("\\;", ";")
              .replace("\\\\", "\\"))
-

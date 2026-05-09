@@ -13,6 +13,7 @@ import hashlib
 import ipaddress
 import json
 import os
+import platform
 import re
 import shutil
 import sys
@@ -64,6 +65,11 @@ _THINKING_RE = re.compile(
 )
 _ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 _SHA_RE = re.compile(r"^[0-9a-f]{64}$")
+
+
+def is_local_model_runtime_supported() -> bool:
+    """Return False for macOS x86_64 transitional builds."""
+    return not (sys.platform == "darwin" and platform.machine() == "x86_64")
 
 
 def _app_root() -> Path:
@@ -1118,6 +1124,8 @@ class LlamaCppProvider(LLMProvider):
         with self._lock:
             if self._llama is not None:
                 return
+            if not is_local_model_runtime_supported():
+                raise RuntimeError("ai_assist.local_model_not_running")
             from services.dep_installer import ensure_inference_deps
 
             ensure_inference_deps()
@@ -1277,6 +1285,8 @@ class LocalModelService:
     def load_provider(self, services=None) -> LLMProvider:
         """Load llama-cpp-python only when inference is requested."""
         with self._load_lock:
+            if not is_local_model_runtime_supported():
+                raise RuntimeError("ai_assist.local_model_not_running")
             if services is not None and not is_local_model_enabled(services):
                 raise RuntimeError("ai_assist.local_model_not_running")
             active_id = get_active_entry_id(
@@ -1435,6 +1445,8 @@ def should_use_local_model(services) -> bool:
 def is_local_model_enabled(services) -> bool:
     """Return True when the current user's local-model switch is enabled."""
     if services is None:
+        return False
+    if not is_local_model_runtime_supported():
         return False
     try:
         return str(services.get_setting(LOCAL_MODEL_ENABLED_SETTING_KEY, "0")) == "1"
