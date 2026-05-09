@@ -13,16 +13,20 @@ venv_x86/
 venv_arm/
 env/
 .venv/
+.venv-*/
+.venv_*/
 .venv_build/
 .venv_build_*/
 
 # PyInstaller
 
 build/
+build_*/
 build_logs/
 build_x86/
 build_arm/
 dist/
+dist_*/
 dist_x86/
 dist_arm/
 !scripts/build/
@@ -77,4 +81,6 @@ worklogger/models/catalog.json
 *.exe
 *.dmg
 *.app
+*.app/
+*.zip
 *.tar.gz
