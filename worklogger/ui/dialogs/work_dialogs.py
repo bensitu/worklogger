@@ -515,8 +515,8 @@ class ChartDialog(QDialog):
 
         bot = QHBoxLayout()
         bot.setSpacing(8)
-        csv_btn = QPushButton("⬇  CSV")
-        pdf_btn = QPushButton("⬇  PDF")
+        csv_btn = QPushButton(_("⬇  CSV"))
+        pdf_btn = QPushButton(_("⬇  PDF"))
         ai_pdf_btn = QPushButton(_("✨ AI PDF"))
         close_btn = QPushButton(_("Close"))
         close_btn.setObjectName("primary_btn")
@@ -691,7 +691,7 @@ class ChartDialog(QDialog):
                 ot += b
                 wd += c
                 ld += d
-            rows.append({"q": f"Q{q}", "total": tot, "ot": ot,
+            rows.append({"q": _("Q{quarter}").format(quarter=q), "total": tot, "ot": ot,
                          "wd": int(wd), "ld": int(ld),
                          "avg": tot/wd if wd else 0.0})
         return rows
@@ -723,7 +723,7 @@ class ChartDialog(QDialog):
         bundle, _chart_widget = self._current()
         ts = dt.now().strftime("%Y%m%d_%H%M%S")
         path, _dialog_filter = QFileDialog.getSaveFileName(
-            self, _("Export") + " CSV", f"chart_{ts}.csv", "CSV (*.csv)")
+            self, _("Export CSV"), f"chart_{ts}.csv", _("CSV (*.csv)"))
         if not path:
             return
         unit = _("h")
@@ -774,7 +774,7 @@ class ChartDialog(QDialog):
         )
 
     def _export_pdf(self, ai_narrative: str | None = None):
-        bundle, chart_widget = self._current()
+        _, chart_widget = self._current()
         app = self._app
         try:
             __import__("PySide6.QtPrintSupport")
@@ -782,12 +782,12 @@ class ChartDialog(QDialog):
             QMessageBox.warning(self, _("Export"),
                                 _("PDF requires QtPrintSupport. Saving PNG."))
             path, _dialog_filter = QFileDialog.getSaveFileName(
-                self, "PNG", "chart.png", "PNG(*.png)")
+                self, _("Export PNG"), "chart.png", _("PNG (*.png)"))
             if path:
                 chart_widget.grab().save(path)
             return
         path, _dialog_filter = QFileDialog.getSaveFileName(
-            self, _("Export") + " PDF", self._default_pdf_name(), "PDF (*.pdf)")
+            self, _("Export PDF"), self._default_pdf_name(), _("PDF (*.pdf)"))
         if not path:
             return
         idx = self._tabs_w.currentIndex()
@@ -842,8 +842,8 @@ class ChartDialog(QDialog):
                 PdfMetric(_("Leave days"), f"{int(ld)}{days_label}"),
             ],
             headers=[
-                ("Date", 0.13), (_("Start"), 0.10), (_("End"), 0.10),
-                (_("h"), 0.09), ("OT", 0.09), (_("Work type"), 0.16),
+                (_("Date"), 0.13), (_("Start"), 0.10), (_("End"), 0.10),
+                (_("h"), 0.09), (_("OT"), 0.09), (_("Work type"), 0.16),
                 (_("Notes"), 0.33),
             ],
             rows=[
@@ -865,7 +865,7 @@ class ChartDialog(QDialog):
         days_label = _(" days")
         return PdfDetailSection(
             headers=[
-                ("Quarter", 0.15), (_("Monthly total"), 0.17),
+                (_("Quarter"), 0.15), (_("Monthly total"), 0.17),
                 (_("Overtime"), 0.17), (_("Daily avg"), 0.17),
                 (_("Work days"), 0.17), (_("Leave days"), 0.17),
             ],
@@ -903,7 +903,7 @@ class ChartDialog(QDialog):
                 PdfMetric(_("Leave days"), f"{int(ld)}{days_label}"),
             ],
             headers=[
-                ("Month", 0.12), (_("Monthly total"), 0.17),
+                (_("Month"), 0.12), (_("Monthly total"), 0.17),
                 (_("Overtime"), 0.17), (_("Daily avg"), 0.17),
                 (_("Work days"), 0.17), (_("Leave days"), 0.20),
             ],

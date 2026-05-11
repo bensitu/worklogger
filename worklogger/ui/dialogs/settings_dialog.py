@@ -893,7 +893,12 @@ class SettingsDialog(QDialog):
                     "Could not load the latest model catalog. Check your network and try again.",
                 ),
             )
-            _launch_model_management_dialog(catalog_override=[])
+            try:
+                from services.local_model_service import load_cached_catalog
+                cached_catalog = load_cached_catalog()
+            except Exception:
+                cached_catalog = []
+            _launch_model_management_dialog(catalog_override=cached_catalog)
 
         self._catalog_refresh_bridge.done.connect(_on_catalog_refresh_done)
 

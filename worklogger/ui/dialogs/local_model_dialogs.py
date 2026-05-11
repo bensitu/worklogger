@@ -347,6 +347,41 @@ class LocalDownloadDialog(QDialog):
                 card["delete_btn"].hide()
         self._sync_select_next_button()
 
+    def _remove_cards_missing_from_catalog(self) -> bool:
+        """Remove card widgets for local entries pruned from the catalog."""
+        try:
+            from services.local_model_service import load_catalog
+            catalog_ids = {
+                str(entry.get("id", "")).strip()
+                for entry in load_catalog()
+                if str(entry.get("id", "")).strip()
+            }
+        except Exception:
+            return False
+
+        selected_id = self._selected_entry_id()
+        removed_selected = False
+        changed = False
+        for eid in list(self._card_widgets.keys()):
+            if eid in catalog_ids:
+                continue
+            card = self._card_widgets.pop(eid)
+            radio = card.get("radio")
+            if radio is not None:
+                self._radio_group.removeButton(radio)
+            frame = card.get("frame")
+            if frame is not None:
+                frame.hide()
+                frame.setParent(None)
+                frame.deleteLater()
+            removed_selected = removed_selected or eid == selected_id
+            changed = True
+
+        if removed_selected and self._card_widgets:
+            first_card = next(iter(self._card_widgets.values()))
+            first_card["radio"].setChecked(True)
+        return changed
+
     def _selected_entry_id(self) -> str | None:
         checked = self._radio_group.checkedButton()
         if checked is None:
@@ -430,6 +465,7 @@ class LocalDownloadDialog(QDialog):
                 clear_active_model_id_for_user(self._services)
             LocalModelService.get().delete_model(entry_id, services=self._services)
             LocalModelService.reset()
+            self._remove_cards_missing_from_catalog()
             self._refresh_card_states()
             if callable(self._on_model_changed):
                 try:
@@ -708,7 +744,7 @@ class LocalDownloadDialog(QDialog):
             self,
             _("Import .gguf"),
             "",
-            "GGUF files (*.gguf);;All files (*)",
+            _("GGUF files (*.gguf);;All files (*)"),
         )
         if not path:
             return

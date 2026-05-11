@@ -5,7 +5,7 @@ from calendar import monthrange
 from PySide6.QtWidgets import QMessageBox, QFrame
 
 from utils.i18n import _
-from utils.formatters import format_quick_logs, format_cal_events
+from utils.formatters import format_quick_logs
 from utils.template_engine import render_template
 
 
@@ -28,10 +28,6 @@ def _localize_msgbox_buttons(box: QMessageBox, translator) -> QMessageBox:
         if btn:
             btn.setText(label)
     return box
-
-
-def _get_ai_params(app, secondary: bool = False):
-    return app.services.resolve_ai_params(secondary=secondary)
 
 
 def _format_quick_logs(logs: list[dict], lang: str = "en_US", mode: str = "summary") -> str:
@@ -62,10 +58,6 @@ def _render_template_with_context(app, type_key: str, raw_tpl: str) -> str:
     ctx = _build_template_data(app, type_key)
     rendered = render_template(raw_tpl, ctx)
     return _append_quick_logs_block(rendered, app, type_key)
-
-
-def _format_cal_events(events: list[dict]) -> str:
-    return format_cal_events(events)
 
 
 def _build_template_data(app, type_key: str) -> dict:

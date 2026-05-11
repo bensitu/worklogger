@@ -290,9 +290,10 @@ class SettingsLocalVerificationUITests(unittest.TestCase):
             self.assertNotIn("Ready", dlg._local_status_lbl.text())
             dlg.close()
 
-    def test_catalog_refresh_failure_opens_empty_import_only_dialog(self):
+    def test_catalog_refresh_failure_opens_cached_catalog_when_available(self):
         app_ref = _FakeApp()
         launched = {}
+        cached_catalog = [{"id": "cached", "display_name": "Cached"}]
 
         class _FakeMgmtDialog:
             def __init__(self, *_args, catalog_override=None, **_kwargs):
@@ -305,6 +306,7 @@ class SettingsLocalVerificationUITests(unittest.TestCase):
         with patch("services.local_model_service.verify_model_file_with_reason", return_value=(False, "missing")), \
              patch("services.local_model_service.get_active_entry_id", return_value=""), \
              patch("services.local_model_service.load_catalog", return_value=[]), \
+             patch("services.local_model_service.load_cached_catalog", return_value=cached_catalog), \
              patch("services.local_model_service.get_models_dir", return_value=self._models_dir), \
              patch("services.local_model_service.localize_field", return_value=""), \
              patch("services.local_model_service.refresh_catalog_from_remote", side_effect=OSError("network")), \
@@ -326,7 +328,7 @@ class SettingsLocalVerificationUITests(unittest.TestCase):
                 QTest.qWait(20)
 
             self.assertTrue(launched.get("created"))
-            self.assertEqual(launched.get("catalog_override"), [])
+            self.assertEqual(launched.get("catalog_override"), cached_catalog)
             dlg.close()
 
     def test_timeout_recovers_ui_within_10_seconds(self):
@@ -392,4 +394,3 @@ class SettingsLocalVerificationUITests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

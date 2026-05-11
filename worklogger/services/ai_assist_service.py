@@ -94,12 +94,17 @@ def build_ai_assist_request(
 def get_local_chat_token_budget(services) -> int | None:
     """Return a conservative local-model prompt budget when catalog data exists."""
     try:
-        from services.local_model_service import get_active_entry_id, get_catalog_entry
+        from services.local_model_service import (
+            get_active_entry_id,
+            get_catalog_entry,
+            runtime_context_length_for_entry,
+            runtime_max_output_tokens_for_entry,
+        )
 
         entry_id = get_active_entry_id(services=services)
         entry = get_catalog_entry(entry_id)
-        n_ctx = int(entry.get("context_length", 0) or 0)
-        max_tokens = int(entry.get("max_output_tokens", 0) or 0)
+        n_ctx = runtime_context_length_for_entry(entry)
+        max_tokens = runtime_max_output_tokens_for_entry(entry)
         if n_ctx > 0:
             output_headroom = max(max_tokens or 2048, 1024)
             return max(1024, n_ctx - output_headroom - 256)

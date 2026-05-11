@@ -177,6 +177,9 @@ msgstr ""
 msgid "Business trip"
 msgstr ""
 
+msgid "CSV (*.csv)"
+msgstr ""
+
 msgid "CSV Data Management"
 msgstr ""
 
@@ -270,6 +273,9 @@ msgstr ""
 msgid "Copy and safely store this recovery key now. If it is lost, only an administrator can reset your password."
 msgstr ""
 
+msgid "Could not check for updates. Please check your network connection, proxy, VPN, or try again later."
+msgstr ""
+
 msgid "Could not check for updates: {}"
 msgstr ""
 
@@ -283,9 +289,6 @@ msgid "Could not save initial password."
 msgstr ""
 
 msgid "Could not save recovery key."
-msgstr ""
-
-msgid "Could not verify the update server certificate. Please check your network trust settings and try again."
 msgstr ""
 
 msgid "Create Custom Template"
@@ -325,6 +328,9 @@ msgid "Data restored successfully."
 msgstr ""
 
 msgid "Database Backup"
+msgstr ""
+
+msgid "Date"
 msgstr ""
 
 msgid "Dec"
@@ -438,6 +444,12 @@ msgstr ""
 msgid "Export CSV"
 msgstr ""
 
+msgid "Export PDF"
+msgstr ""
+
+msgid "Export PNG"
+msgstr ""
+
 msgid "Exported {} events."
 msgstr ""
 
@@ -466,6 +478,9 @@ msgid "Forgot Password?"
 msgstr ""
 
 msgid "Fri"
+msgstr ""
+
+msgid "GGUF files (*.gguf);;All files (*)"
 msgstr ""
 
 msgid "General"
@@ -714,6 +729,9 @@ msgstr ""
 msgid "Mon"
 msgstr ""
 
+msgid "Month"
+msgstr ""
+
 msgid "Monthly"
 msgstr ""
 
@@ -807,6 +825,9 @@ msgstr ""
 msgid "OK"
 msgstr ""
 
+msgid "OT"
+msgstr ""
+
 msgid "Oct"
 msgstr ""
 
@@ -852,7 +873,13 @@ msgstr ""
 msgid "Overwrite existing data?"
 msgstr ""
 
+msgid "PDF (*.pdf)"
+msgstr ""
+
 msgid "PDF requires QtPrintSupport. Saving PNG."
+msgstr ""
+
+msgid "PNG (*.png)"
 msgstr ""
 
 msgid "PTO"
@@ -939,6 +966,9 @@ msgstr ""
 msgid "Public holidays"
 msgstr ""
 
+msgid "Quarter"
+msgstr ""
+
 msgid "Quarterly"
 msgstr ""
 
@@ -949,6 +979,9 @@ msgid "Quick logs appear in daily notes and AI reports."
 msgstr ""
 
 msgid "Quit"
+msgstr ""
+
+msgid "Q{quarter}"
 msgstr ""
 
 msgid "Ready"
@@ -1380,7 +1413,13 @@ msgstr ""
 msgid "https://api.openai.com/v1 | https://api.anthropic.com"
 msgstr ""
 
+msgid "iCalendar (*.ics)"
+msgstr ""
+
 msgid "llama-cpp-python not installed - run: pip install llama-cpp-python"
+msgstr ""
+
+msgid "m"
 msgstr ""
 
 msgid "sk-… / sk-ant-…"
@@ -1429,6 +1468,12 @@ msgid "✨ AI Assist - {}"
 msgstr ""
 
 msgid "✨ AI PDF"
+msgstr ""
+
+msgid "⬇  CSV"
+msgstr ""
+
+msgid "⬇  PDF"
 msgstr ""
 
 msgid "🌍  Language"

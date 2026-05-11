@@ -1647,3 +1647,51 @@ msgstr "다른 사용자가 사용 중"
 
 msgid "Please enable a local model in Settings -> AI, or configure an external AI provider with API key, base URL, and model name."
 msgstr "설정 -> AI에서 로컬 모델을 활성화하거나 외부 AI 제공자의 API 키, Base URL, 모델 이름을 설정하세요."
+
+msgid "CSV (*.csv)"
+msgstr "CSV (*.csv)"
+
+msgid "Could not check for updates. Please check your network connection, proxy, VPN, or try again later."
+msgstr "업데이트를 확인할 수 없습니다. 네트워크 연결, 프록시, VPN을 확인하거나 나중에 다시 시도하세요."
+
+msgid "Date"
+msgstr "날짜"
+
+msgid "Export PDF"
+msgstr "PDF 내보내기"
+
+msgid "Export PNG"
+msgstr "PNG 내보내기"
+
+msgid "GGUF files (*.gguf);;All files (*)"
+msgstr "GGUF 파일 (*.gguf);;모든 파일 (*)"
+
+msgid "Month"
+msgstr "월"
+
+msgid "OT"
+msgstr "초과근무"
+
+msgid "PDF (*.pdf)"
+msgstr "PDF (*.pdf)"
+
+msgid "PNG (*.png)"
+msgstr "PNG (*.png)"
+
+msgid "Quarter"
+msgstr "분기"
+
+msgid "Q{quarter}"
+msgstr "{quarter}분기"
+
+msgid "iCalendar (*.ics)"
+msgstr "iCalendar (*.ics)"
+
+msgid "m"
+msgstr "분"
+
+msgid "⬇  CSV"
+msgstr "⬇  CSV"
+
+msgid "⬇  PDF"
+msgstr "⬇  PDF"

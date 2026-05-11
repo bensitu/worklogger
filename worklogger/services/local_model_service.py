@@ -12,10 +12,12 @@ import abc
 import hashlib
 import ipaddress
 import json
+import math
 import os
 import platform
 import re
 import shutil
+import struct
 import sys
 import threading
 import time
@@ -57,14 +59,55 @@ MODEL_URL = (
 
 _N_CTX = 8192
 _N_THREADS = max(1, (os.cpu_count() or 4) // 2)
+_DEFAULT_IMPORTED_CONTEXT_LENGTH = 8192
+_DEFAULT_IMPORTED_MAX_OUTPUT_TOKENS = 2048
+_MAX_RUNTIME_CONTEXT_LENGTH = 8192
+_GGUF_MAX_METADATA_ITEMS = 2048
+_GGUF_MAX_KEY_BYTES = 4096
+_GGUF_MAX_STRING_BYTES = 16 * 1024 * 1024
+_GGUF_MAX_ARRAY_ITEMS = 1_000_000
 _THINKING_RE = re.compile(
     r"(<\|begin_of_thought\|>.*?<\|end_of_thought\|>"
     r"|<think>.*?</think>"
     r"|<thinking>.*?</thinking>)",
     re.DOTALL | re.IGNORECASE,
 )
+_THINKING_PREFIX_RE = re.compile(
+    r"^\s*(?:#{1,6}\s*)?(?:thinking process|thought process|reasoning|analysis)\s*:?",
+    re.IGNORECASE,
+)
+_THINKING_END_RE = re.compile(
+    r"(?:</\s*(?:think|thinking)\s*>|<\|end_of_thought\|>)",
+    re.IGNORECASE,
+)
+_THINKING_MARKER_RE = re.compile(
+    r"(?:</?\s*(?:think|thinking)\s*>|<\|begin_of_thought\|>|<\|end_of_thought\|>)",
+    re.IGNORECASE,
+)
+_FINAL_PREFIX_RE = re.compile(
+    r"^\s*(?:final answer|final output|answer)\s*:\s*",
+    re.IGNORECASE,
+)
 _ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 _SHA_RE = re.compile(r"^[0-9a-f]{64}$")
+_NO_THINK_DIRECTIVE = "/no_think"
+_NO_THINK_OUTPUT_RULE = (
+    "Do not output hidden reasoning, analysis, thinking process, or <think> "
+    "blocks. Return only the final answer."
+)
+_GGUF_SCALAR_FORMATS = {
+    0: "<B",
+    1: "<b",
+    2: "<H",
+    3: "<h",
+    4: "<I",
+    5: "<i",
+    6: "<f",
+    7: "<?",
+    10: "<Q",
+    11: "<q",
+    12: "<d",
+}
 
 
 def is_local_model_runtime_supported() -> bool:
@@ -164,10 +207,6 @@ def validate_model_url(url: str) -> str:
     ):
         raise ValueError(f"Unsafe model URL host: {parsed.hostname}")
     return raw
-
-
-def _is_remote_entry(entry: dict) -> bool:
-    return bool(str(entry.get("download_url", "")).strip())
 
 
 def _require_text(entry: dict, field: str) -> str:
@@ -311,7 +350,13 @@ def validate_catalog_data(data: Any, *, require_url: bool = True) -> dict:
 
 def _strip_thinking(text: str) -> str:
     """Remove reasoning blocks before returning text to the UI."""
-    cleaned = _THINKING_RE.sub("", text)
+    cleaned = _THINKING_RE.sub("", str(text or ""))
+    if _THINKING_PREFIX_RE.match(cleaned):
+        end_match = _THINKING_END_RE.search(cleaned)
+        if end_match:
+            cleaned = cleaned[end_match.end():]
+    cleaned = _THINKING_MARKER_RE.sub("", cleaned)
+    cleaned = _FINAL_PREFIX_RE.sub("", cleaned)
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
     return cleaned.strip()
 
@@ -450,6 +495,16 @@ def load_catalog_data(models_dir: Optional[Path] = None) -> dict:
 def load_catalog(models_dir: Optional[Path] = None) -> list[dict]:
     """Return catalog model entries only."""
     return list(load_catalog_data(models_dir).get("models", []))
+
+
+def load_cached_catalog(models_dir: Optional[Path] = None) -> list[dict]:
+    """Return persisted catalog entries without the built-in fallback."""
+    models_dir = models_dir or get_models_dir()
+    try:
+        data = _read_catalog_file(models_dir / CATALOG_FILENAME, fallback=False)
+    except (OSError, json.JSONDecodeError, ValueError, TypeError):
+        return []
+    return list(data.get("models", []))
 
 
 def get_default_model_id(models_dir: Optional[Path] = None) -> str:
@@ -745,12 +800,6 @@ def update_sha256_in_manifest(
         _write_manifest(manifest, models_dir)
 
 
-def is_model_available(model_id: str, models_dir: Optional[Path] = None) -> bool:
-    """Return True when the shared GGUF exists and passes integrity rules."""
-    models_dir = models_dir or get_models_dir()
-    return verify_model_file(models_dir, model_id)
-
-
 def delete_model_file(
     entry_id: str,
     models_dir: Optional[Path] = None,
@@ -776,23 +825,6 @@ def delete_model_file(
             pass
     update_sha256_in_manifest("", models_dir, str(entry.get("id", entry_id)))
     _prune_missing_local_catalog_entries(models_dir)
-
-
-def delete_model_if_unused(
-    model_id: str,
-    current_user_id: int,
-    services,
-    models_dir: Optional[Path] = None,
-) -> bool:
-    """Delete a shared model only when no other user references it."""
-    users = set(list_users_using_model(services, model_id))
-    others = {uid for uid in users if uid != int(current_user_id)}
-    if others:
-        return False
-    if int(current_user_id) in users:
-        clear_active_model_id_for_user(services, int(current_user_id))
-    delete_model_file(model_id, models_dir, services=services, user_id=current_user_id)
-    return True
 
 
 def _prune_missing_local_catalog_entries(models_dir: Path) -> None:
@@ -1037,6 +1069,195 @@ def _all_locale_description(text: str) -> dict[str, str]:
     return {locale: text for locale in SUPPORTED_CATALOG_LOCALES}
 
 
+def _read_exact(fh, size: int) -> bytes:
+    data = fh.read(size)
+    if len(data) != size:
+        raise ValueError("gguf_truncated")
+    return data
+
+
+def _read_u32(fh) -> int:
+    return struct.unpack("<I", _read_exact(fh, 4))[0]
+
+
+def _read_u64(fh) -> int:
+    return struct.unpack("<Q", _read_exact(fh, 8))[0]
+
+
+def _read_gguf_string(fh, *, max_bytes: int) -> str:
+    size = _read_u64(fh)
+    if size > max_bytes:
+        raise ValueError("gguf_string_too_large")
+    return _read_exact(fh, int(size)).decode("utf-8", errors="replace")
+
+
+def _skip_bytes(fh, size: int) -> None:
+    if size < 0:
+        raise ValueError("gguf_invalid_size")
+    fh.seek(int(size), os.SEEK_CUR)
+
+
+def _skip_gguf_value(fh, value_type: int, *, depth: int = 0) -> None:
+    if value_type in _GGUF_SCALAR_FORMATS:
+        _skip_bytes(fh, struct.calcsize(_GGUF_SCALAR_FORMATS[value_type]))
+        return
+    if value_type == 8:
+        size = _read_u64(fh)
+        if size > _GGUF_MAX_STRING_BYTES:
+            raise ValueError("gguf_string_too_large")
+        _skip_bytes(fh, int(size))
+        return
+    if value_type == 9 and depth < 2:
+        item_type = _read_u32(fh)
+        item_count = _read_u64(fh)
+        if item_count > _GGUF_MAX_ARRAY_ITEMS:
+            raise ValueError("gguf_array_too_large")
+        if item_type in _GGUF_SCALAR_FORMATS:
+            _skip_bytes(
+                fh,
+                int(item_count) * struct.calcsize(_GGUF_SCALAR_FORMATS[item_type]),
+            )
+            return
+        for _ in range(int(item_count)):
+            _skip_gguf_value(fh, item_type, depth=depth + 1)
+        return
+    raise ValueError("gguf_unknown_value_type")
+
+
+def _read_gguf_value(fh, value_type: int) -> Any:
+    if value_type in _GGUF_SCALAR_FORMATS:
+        return struct.unpack(
+            _GGUF_SCALAR_FORMATS[value_type],
+            _read_exact(fh, struct.calcsize(_GGUF_SCALAR_FORMATS[value_type])),
+        )[0]
+    if value_type == 8:
+        return _read_gguf_string(fh, max_bytes=_GGUF_MAX_STRING_BYTES)
+    _skip_gguf_value(fh, value_type)
+    return None
+
+
+def _is_context_length_metadata_key(key: str) -> bool:
+    normalized = str(key or "").strip().lower()
+    if not normalized:
+        return False
+    leaf = normalized.rsplit(".", 1)[-1]
+    return leaf in {"context_length", "n_ctx_train", "max_position_embeddings"}
+
+
+def _is_max_output_tokens_metadata_key(key: str) -> bool:
+    normalized = str(key or "").strip().lower()
+    if not normalized:
+        return False
+    leaf = normalized.rsplit(".", 1)[-1]
+    return leaf in {"max_output_tokens", "max_tokens", "max_new_tokens", "n_predict"}
+
+
+def _is_min_ram_metadata_key(key: str) -> bool:
+    normalized = str(key or "").strip().lower()
+    if not normalized:
+        return False
+    leaf = normalized.rsplit(".", 1)[-1]
+    return leaf in {"min_ram_gb", "required_ram_gb", "recommended_ram_gb"}
+
+
+def _coerce_positive_int(value: Any) -> int | None:
+    try:
+        coerced = int(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return coerced if coerced > 0 else None
+
+
+def _coerce_positive_float(value: Any) -> float | None:
+    try:
+        coerced = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return coerced if coerced > 0 else None
+
+
+def runtime_context_length_for_entry(entry: dict) -> int:
+    """Return the safe llama.cpp runtime context for a catalog entry."""
+    runtime_context = _coerce_positive_int(entry.get("runtime_context_length"))
+    model_context = _coerce_positive_int(entry.get("context_length")) or _N_CTX
+    requested = runtime_context or model_context
+    return max(512, min(requested, _MAX_RUNTIME_CONTEXT_LENGTH))
+
+
+def runtime_max_output_tokens_for_entry(entry: dict) -> int:
+    """Return a generation cap that fits within the runtime context."""
+    runtime_context = runtime_context_length_for_entry(entry)
+    requested = (
+        _coerce_positive_int(entry.get("runtime_max_output_tokens"))
+        or _coerce_positive_int(entry.get("max_output_tokens"))
+        or _DEFAULT_IMPORTED_MAX_OUTPUT_TOKENS
+    )
+    return max(1, min(requested, max(1, runtime_context // 2)))
+
+
+def _infer_imported_max_output_tokens(context_length: int | None) -> int:
+    context = _coerce_positive_int(context_length)
+    if context is None:
+        return _DEFAULT_IMPORTED_MAX_OUTPUT_TOKENS
+    if context <= 2048:
+        return max(256, context // 4)
+    return min(8192, max(1024, context // 4))
+
+
+def _infer_imported_min_ram_gb(path: Path, context_length: int | None) -> int:
+    try:
+        model_gib = max(0.0, Path(path).stat().st_size / (1024 ** 3))
+    except OSError:
+        model_gib = 0.0
+    context = _coerce_positive_int(context_length) or _DEFAULT_IMPORTED_CONTEXT_LENGTH
+    context_overhead = 0.0
+    if context > _DEFAULT_IMPORTED_CONTEXT_LENGTH:
+        context_overhead = min(
+            4.0,
+            ((context - _DEFAULT_IMPORTED_CONTEXT_LENGTH) / 65536.0) * 0.5,
+        )
+    return max(1, int(math.ceil((model_gib * 2.0) + context_overhead)))
+
+
+def _read_gguf_model_profile(path: Path) -> tuple[int, int, int]:
+    """Return ``(context_length, max_output_tokens, min_ram_gb)`` for an import."""
+    context_length: int | None = None
+    max_output_tokens: int | None = None
+    min_ram_gb: int | None = None
+    try:
+        with open(path, "rb") as fh:
+            if _read_exact(fh, 4) != b"GGUF":
+                raise ValueError("gguf_invalid_magic")
+            version = _read_u32(fh)
+            if version not in {2, 3}:
+                raise ValueError("gguf_unsupported_version")
+            _read_u64(fh)  # tensor_count
+            metadata_count = _read_u64(fh)
+            if metadata_count > _GGUF_MAX_METADATA_ITEMS:
+                metadata_count = _GGUF_MAX_METADATA_ITEMS
+            for _ in range(int(metadata_count)):
+                key = _read_gguf_string(fh, max_bytes=_GGUF_MAX_KEY_BYTES)
+                value_type = _read_u32(fh)
+                value = _read_gguf_value(fh, value_type)
+                if _is_context_length_metadata_key(key):
+                    context_length = _coerce_positive_int(value)
+                    if context_length is not None:
+                        break
+                if _is_max_output_tokens_metadata_key(key):
+                    max_output_tokens = _coerce_positive_int(value)
+                if _is_min_ram_metadata_key(key):
+                    ram = _coerce_positive_float(value)
+                    min_ram_gb = int(math.ceil(ram)) if ram is not None else None
+    except Exception:
+        context_length = None
+        max_output_tokens = None
+        min_ram_gb = None
+    context = context_length or _DEFAULT_IMPORTED_CONTEXT_LENGTH
+    output_tokens = max_output_tokens or _infer_imported_max_output_tokens(context)
+    ram_gb = min_ram_gb or _infer_imported_min_ram_gb(path, context)
+    return context, min(output_tokens, max(1, context)), ram_gb
+
+
 def _unique_destination(models_dir: Path, src_filename: str, src_sha: str) -> Path:
     safe_name = validate_model_filename(src_filename)
     dest = resolve_model_path(models_dir, safe_name)
@@ -1056,17 +1277,39 @@ def _uses_qwen3_non_thinking(model_id: str, entry: dict) -> bool:
     return ("qwen3" in source or "qwen35" in str(model_id).lower()) and "qwen2.5" not in source
 
 
+def _append_once(content: str, addition: str) -> str:
+    content = str(content or "").strip()
+    addition = str(addition or "").strip()
+    if not addition or addition in content:
+        return content
+    return (content + "\n\n" + addition).strip() if content else addition
+
+
 def _messages_with_no_think(messages: list[dict], model_id: str, entry: dict) -> list[dict]:
     copied = [dict(msg) for msg in messages if isinstance(msg, dict)]
     if not _uses_qwen3_non_thinking(model_id, entry):
         return copied
+    system_seen = False
     for msg in copied:
         if msg.get("role") == "system":
+            system_seen = True
             content = str(msg.get("content", "")).strip()
-            if "/no_think" not in content:
-                msg["content"] = (content + "\n\n/no_think").strip()
-            return copied
-    return [{"role": "system", "content": "/no_think"}, *copied]
+            content = _append_once(content, _NO_THINK_DIRECTIVE)
+            msg["content"] = _append_once(content, _NO_THINK_OUTPUT_RULE)
+            break
+    if not system_seen:
+        copied.insert(
+            0,
+            {
+                "role": "system",
+                "content": f"{_NO_THINK_DIRECTIVE}\n{_NO_THINK_OUTPUT_RULE}",
+            },
+        )
+    for msg in reversed(copied):
+        if msg.get("role") == "user":
+            msg["content"] = _append_once(msg.get("content", ""), _NO_THINK_DIRECTIVE)
+            break
+    return copied
 
 
 class LLMProvider(abc.ABC):
@@ -1111,6 +1354,9 @@ class LlamaCppProvider(LLMProvider):
         self._model_id = str(model_id or "")
         self._catalog_entry = dict(catalog_entry or {})
         self._n_ctx = max(512, int(n_ctx))
+        self._max_output_tokens = runtime_max_output_tokens_for_entry(
+            {**self._catalog_entry, "runtime_context_length": self._n_ctx}
+        )
         self._n_threads = max(1, int(n_threads))
         self._n_gpu_layers = max(0, int(n_gpu_layers))
         self._llama: Any = None
@@ -1210,6 +1456,7 @@ class LlamaCppProvider(LLMProvider):
                 raise RuntimeError("Provider not loaded - call load() first.")
             if not isinstance(messages, (list, tuple)) or not messages:
                 raise ValueError("messages must be a non-empty list.")
+            safe_max_tokens = max(1, min(int(max_tokens), self._max_output_tokens))
             prepared = _messages_with_no_think(
                 list(messages),
                 self._model_id,
@@ -1220,12 +1467,12 @@ class LlamaCppProvider(LLMProvider):
                     raw = self._generate_chat_completion(
                         prepared,
                         temperature=temperature,
-                        max_tokens=max_tokens,
+                        max_tokens=safe_max_tokens,
                     )
                 else:
                     result = self._llama(
                         self._prompt_from_messages(prepared),
-                        max_tokens=max(1, int(max_tokens)),
+                        max_tokens=safe_max_tokens,
                         temperature=float(temperature),
                         top_p=0.8,
                         top_k=20,
@@ -1318,7 +1565,7 @@ class LocalModelService:
                     "Please download it in Settings -> AI."
                 )
             cat_entry = get_catalog_entry(active_id, self._models_dir)
-            n_ctx = int(cat_entry.get("context_length", _N_CTX))
+            n_ctx = runtime_context_length_for_entry(cat_entry)
             provider = LlamaCppProvider(
                 path,
                 model_id=active_id,
@@ -1365,6 +1612,11 @@ class LocalModelService:
         self._models_dir.mkdir(parents=True, exist_ok=True)
 
         src_sha = sha256_of_file(src_p)
+        (
+            imported_context_length,
+            imported_max_output_tokens,
+            imported_min_ram_gb,
+        ) = _read_gguf_model_profile(src_p)
         catalog_data = load_catalog_data(self._models_dir)
         catalog = list(catalog_data.get("models", []))
         src_filename = validate_model_filename(src_p.name)
@@ -1380,6 +1632,12 @@ class LocalModelService:
         if matched is not None and str(matched.get("filename", "")).strip():
             dest = _unique_destination(self._models_dir, str(matched["filename"]), src_sha)
             target_id = str(matched["id"])
+            if str(matched.get("status", "")).strip() in {"local", "preserved"}:
+                matched["context_length"] = imported_context_length
+                matched["max_output_tokens"] = imported_max_output_tokens
+                matched["min_ram_gb"] = imported_min_ram_gb
+                catalog_data["models"] = catalog
+                _save_catalog_data(catalog_data, self._models_dir)
         else:
             dest = _unique_destination(self._models_dir, src_filename, src_sha)
             target_id = _safe_custom_id(dest.stem, src_sha)
@@ -1397,9 +1655,9 @@ class LocalModelService:
                 "download_url": "",
                 "sha256": src_sha,
                 "estimated_size_mb": max(1, int(src_p.stat().st_size / 1_048_576)),
-                "min_ram_gb": 0,
-                "context_length": 8192,
-                "max_output_tokens": 2048,
+                "min_ram_gb": imported_min_ram_gb,
+                "context_length": imported_context_length,
+                "max_output_tokens": imported_max_output_tokens,
                 "license": "custom",
                 "status": "local",
                 "description": _all_locale_description(f"Local model: {dest.name}"),

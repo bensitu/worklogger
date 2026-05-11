@@ -133,21 +133,6 @@ def format_quick_logs(logs: list[dict], lang: str = "en_US", mode: str = "summar
     return "\n".join(lines)
 
 
-def format_cal_events(events: list[dict]) -> str:
-    if not events:
-        return ""
-    lines = []
-    for ev in events:
-        t_str = ""
-        if ev.get("start_time"):
-            t_str = ev["start_time"]
-            if ev.get("end_time"):
-                t_str += f"–{ev['end_time']}"
-            t_str += "  "
-        loc = f"  [{ev['location']}]" if ev.get("location") else ""
-        lines.append(f"- {t_str}{ev['summary']}{loc}")
-    return "\n".join(lines)
-
 def _decode_status_payload(msg: str) -> dict | None:
     candidate = msg
     for _ in range(2):

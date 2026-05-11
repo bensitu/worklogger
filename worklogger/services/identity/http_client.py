@@ -58,19 +58,6 @@ def post_json(
     )
 
 
-def get_json(
-    url: str,
-    *,
-    timeout: float = 15,
-    error_cls: Type[IdentityError] = IdentityTokenExchangeFailed,
-) -> dict:
-    return _request_json(
-        urllib.request.Request(url, headers={"User-Agent": USER_AGENT}),
-        timeout=timeout,
-        error_cls=error_cls,
-    )
-
-
 def _request_json(
     request: urllib.request.Request,
     *,

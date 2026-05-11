@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.3] - 2026-05-11
+
+### Fixed
+
+- Settings -> AI now falls back to the persisted local model catalog when the remote catalog refresh fails, keeping cached downloaded/imported model entries manageable offline.
+- Local Qwen3/Qwen3.5 generation now strips leaked thinking output more defensively and sends stronger no-thinking instructions for imported Qwen3-family GGUF models.
+- Imported GGUF models now read context metadata from the file when available and derive safer max-output token and minimum-RAM values instead of showing fixed defaults.
+- User-visible export, file-picker, analytics PDF, and timer labels now route through gettext catalogs.
+- Deleting a pruned local/imported model now removes its card from the local-model selection list immediately.
+- Local GGUF inference now caps the runtime llama.cpp context to a safe default while keeping the model's metadata context length, preventing high-context imports from failing to create `llama_context`.
+
 ## [3.3.2] - 2026-05-08
 
 ### Added

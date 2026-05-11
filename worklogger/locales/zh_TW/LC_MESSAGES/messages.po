@@ -1647,3 +1647,51 @@ msgstr "由其他使用者使用"
 
 msgid "Please enable a local model in Settings -> AI, or configure an external AI provider with API key, base URL, and model name."
 msgstr "請在設定 -> AI 中啟用本地模型，或設定外部 AI 提供者的 API Key、Base URL 和模型名稱。"
+
+msgid "CSV (*.csv)"
+msgstr "CSV (*.csv)"
+
+msgid "Could not check for updates. Please check your network connection, proxy, VPN, or try again later."
+msgstr "無法檢查更新。請檢查網路連線、代理、VPN，或稍後再試。"
+
+msgid "Date"
+msgstr "日期"
+
+msgid "Export PDF"
+msgstr "匯出 PDF"
+
+msgid "Export PNG"
+msgstr "匯出 PNG"
+
+msgid "GGUF files (*.gguf);;All files (*)"
+msgstr "GGUF 檔案 (*.gguf);;所有檔案 (*)"
+
+msgid "Month"
+msgstr "月"
+
+msgid "OT"
+msgstr "加班"
+
+msgid "PDF (*.pdf)"
+msgstr "PDF (*.pdf)"
+
+msgid "PNG (*.png)"
+msgstr "PNG (*.png)"
+
+msgid "Quarter"
+msgstr "季度"
+
+msgid "Q{quarter}"
+msgstr "第{quarter}季度"
+
+msgid "iCalendar (*.ics)"
+msgstr "iCalendar (*.ics)"
+
+msgid "m"
+msgstr "分"
+
+msgid "⬇  CSV"
+msgstr "⬇  CSV"
+
+msgid "⬇  PDF"
+msgstr "⬇  PDF"

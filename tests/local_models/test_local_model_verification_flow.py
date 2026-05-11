@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import shutil
+import struct
 import sys
 import threading
 import time
@@ -20,12 +21,18 @@ if APP_ROOT not in sys.path:
 import services.local_model_service as local_model_service
 
 from services.local_model_service import (
+    _messages_with_no_think,
+    _read_gguf_model_profile,
     _sha256_of_file_detailed,
+    _strip_thinking,
     delete_model_file,
     ensure_catalog,
+    load_cached_catalog,
     load_catalog,
     refresh_catalog_from_remote,
     resolve_model_path,
+    runtime_context_length_for_entry,
+    runtime_max_output_tokens_for_entry,
     validate_model_url,
     verify_model_file_with_reason,
 )
@@ -136,6 +143,28 @@ class LocalModelVerificationFlowTests(unittest.TestCase):
     def _catalog_object(self, *entries: dict) -> dict:
         return {"default_model_id": entries[0]["id"], "models": list(entries)}
 
+    def _write_minimal_gguf(self, path: Path, metadata: list[tuple[str, int, object]]) -> None:
+        with path.open("wb") as fh:
+            fh.write(b"GGUF")
+            fh.write(struct.pack("<I", 3))
+            fh.write(struct.pack("<Q", 0))
+            fh.write(struct.pack("<Q", len(metadata)))
+            for key, value_type, value in metadata:
+                key_bytes = key.encode("utf-8")
+                fh.write(struct.pack("<Q", len(key_bytes)))
+                fh.write(key_bytes)
+                fh.write(struct.pack("<I", value_type))
+                if value_type == 4:
+                    fh.write(struct.pack("<I", int(value)))
+                elif value_type == 6:
+                    fh.write(struct.pack("<f", float(value)))
+                elif value_type == 8:
+                    value_bytes = str(value).encode("utf-8")
+                    fh.write(struct.pack("<Q", len(value_bytes)))
+                    fh.write(value_bytes)
+                else:
+                    raise AssertionError(f"Unsupported test GGUF value type: {value_type}")
+
     def test_verify_returns_missing_for_absent_file(self):
         root = self._temp_root()
         try:
@@ -227,6 +256,213 @@ class LocalModelVerificationFlowTests(unittest.TestCase):
             self.assertTrue(digest)
             self.assertTrue(seen)
             self.assertGreaterEqual(max(seen), 100)
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_strip_thinking_removes_tagged_reasoning(self):
+        raw = "<think>\ninternal reasoning\n</think>\n\nFinal Answer: 2026-05-06 振替休日，无工作任务。"
+        self.assertEqual(
+            _strip_thinking(raw),
+            "2026-05-06 振替休日，无工作任务。",
+        )
+
+    def test_strip_thinking_removes_orphan_qwen_reasoning_prefix(self):
+        raw = (
+            "Thinking Process:\n"
+            "1. Analyze the request.\n"
+            "2. Draft final text.\n"
+            "</think>\n\n"
+            "2026-05-06 振替休日，无工作任务。"
+        )
+        self.assertEqual(
+            _strip_thinking(raw),
+            "2026-05-06 振替休日，无工作任务。",
+        )
+
+    def test_qwen3_imported_model_gets_no_think_instructions(self):
+        messages = [
+            {"role": "system", "content": "Return only the final answer."},
+            {"role": "user", "content": "Generate a daily note."},
+        ]
+        prepared = _messages_with_no_think(
+            messages,
+            "custom_qwen3_5_uncensored_hauhaucs_aggressive_abcd1234",
+            {
+                "display_name": "Qwen3.5-4B-Uncensored-HauhauCS-Aggressive",
+                "filename": "Qwen3.5-4B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf",
+            },
+        )
+
+        self.assertIn("/no_think", prepared[0]["content"])
+        self.assertIn("Do not output hidden reasoning", prepared[0]["content"])
+        self.assertIn("/no_think", prepared[-1]["content"])
+
+    def test_read_gguf_model_profile_uses_context_metadata(self):
+        root = self._temp_root()
+        try:
+            model = root / "qwen3.gguf"
+            self._write_minimal_gguf(
+                model,
+                [
+                    ("general.architecture", 8, "qwen3"),
+                    ("qwen3.context_length", 4, 262144),
+                ],
+            )
+
+            context_length, max_output_tokens, min_ram_gb = _read_gguf_model_profile(model)
+
+            self.assertEqual(context_length, 262144)
+            self.assertEqual(max_output_tokens, 8192)
+            self.assertGreaterEqual(min_ram_gb, 1)
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_runtime_context_caps_large_catalog_context(self):
+        entry = {"context_length": 262144, "max_output_tokens": 8192}
+
+        self.assertEqual(runtime_context_length_for_entry(entry), 8192)
+        self.assertEqual(runtime_max_output_tokens_for_entry(entry), 4096)
+
+    def test_runtime_output_cap_tracks_smaller_context(self):
+        entry = {"context_length": 4096, "max_output_tokens": 8192}
+
+        self.assertEqual(runtime_context_length_for_entry(entry), 4096)
+        self.assertEqual(runtime_max_output_tokens_for_entry(entry), 2048)
+
+    def test_load_provider_uses_safe_runtime_context_cap(self):
+        root = self._temp_root()
+        try:
+            (root / "demo.gguf").write_bytes(b"model")
+            entry = self._catalog_entry("demo", "demo.gguf", status="local")
+            entry["context_length"] = 262144
+            entry["max_output_tokens"] = 8192
+            (root / "catalog.json").write_text(
+                json.dumps(self._catalog_object(entry), ensure_ascii=False),
+                encoding="utf-8",
+            )
+            (root / "manifest.json").write_text(
+                json.dumps(
+                    [
+                        {
+                            "id": "demo",
+                            "filename": "demo.gguf",
+                            "download_url": "",
+                            "sha256": "",
+                            "available": True,
+                            "active": True,
+                        }
+                    ],
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+
+            with patch.object(local_model_service, "LlamaCppProvider") as provider_cls:
+                provider_cls.return_value.is_available.return_value = True
+                local_model_service.LocalModelService(root).load_provider()
+
+            self.assertEqual(provider_cls.call_args.kwargs["n_ctx"], 8192)
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_llama_provider_clamps_generation_tokens_to_runtime_context(self):
+        seen = {}
+
+        class _FakeLlama:
+            def create_chat_completion(self, **kwargs):
+                seen.update(kwargs)
+                return {"choices": [{"message": {"content": "ok"}}]}
+
+        provider = local_model_service.LlamaCppProvider(
+            Path("demo.gguf"),
+            model_id="demo",
+            catalog_entry={"context_length": 262144, "max_output_tokens": 8192},
+            n_ctx=8192,
+        )
+        provider._llama = _FakeLlama()
+
+        self.assertEqual(
+            provider.generate([{"role": "user", "content": "hello"}], max_tokens=8192),
+            "ok",
+        )
+        self.assertEqual(seen["max_tokens"], 4096)
+
+    def test_read_gguf_model_profile_uses_optional_max_output_metadata(self):
+        root = self._temp_root()
+        try:
+            model = root / "custom_limits.gguf"
+            self._write_minimal_gguf(
+                model,
+                [
+                    ("general.max_output_tokens", 4, 4096),
+                    ("llama.context_length", 4, 32768),
+                ],
+            )
+
+            context_length, max_output_tokens, min_ram_gb = _read_gguf_model_profile(model)
+
+            self.assertEqual(context_length, 32768)
+            self.assertEqual(max_output_tokens, 4096)
+            self.assertGreaterEqual(min_ram_gb, 1)
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_read_gguf_model_profile_uses_optional_min_ram_metadata(self):
+        root = self._temp_root()
+        try:
+            model = root / "custom_ram.gguf"
+            self._write_minimal_gguf(
+                model,
+                [
+                    ("general.min_ram_gb", 6, 7.2),
+                    ("llama.context_length", 4, 32768),
+                ],
+            )
+
+            context_length, max_output_tokens, min_ram_gb = _read_gguf_model_profile(model)
+
+            self.assertEqual(context_length, 32768)
+            self.assertEqual(max_output_tokens, 8192)
+            self.assertEqual(min_ram_gb, 8)
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_read_gguf_model_profile_falls_back_for_invalid_file(self):
+        root = self._temp_root()
+        try:
+            model = root / "not_gguf.gguf"
+            model.write_bytes(b"not a gguf file")
+
+            context_length, max_output_tokens, min_ram_gb = _read_gguf_model_profile(model)
+
+            self.assertEqual(context_length, 8192)
+            self.assertEqual(max_output_tokens, 2048)
+            self.assertEqual(min_ram_gb, 1)
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_import_gguf_persists_context_metadata_for_custom_model(self):
+        root = self._temp_root()
+        try:
+            source_dir = root / "source"
+            models_dir = root / "models"
+            source_dir.mkdir()
+            source = source_dir / "Qwen3.5-custom-Q4_K_M.gguf"
+            self._write_minimal_gguf(
+                source,
+                [
+                    ("general.architecture", 8, "qwen3"),
+                    ("qwen3.context_length", 4, 262144),
+                ],
+            )
+
+            imported = local_model_service.LocalModelService(models_dir).import_gguf(str(source))
+            catalog = load_catalog(models_dir)
+            custom_entry = next(entry for entry in catalog if entry.get("filename") == imported.name)
+
+            self.assertEqual(custom_entry["context_length"], 262144)
+            self.assertEqual(custom_entry["max_output_tokens"], 8192)
+            self.assertGreaterEqual(custom_entry["min_ram_gb"], 1)
         finally:
             shutil.rmtree(root, ignore_errors=True)
 
@@ -371,6 +607,31 @@ class LocalModelVerificationFlowTests(unittest.TestCase):
         finally:
             shutil.rmtree(root, ignore_errors=True)
 
+    def test_load_cached_catalog_does_not_use_built_in_fallback(self):
+        root = self._temp_root()
+        try:
+            self.assertEqual(load_cached_catalog(root), [])
+
+            cached = self._catalog_object(
+                self._catalog_entry(
+                    "cached",
+                    "cached.gguf",
+                    download_url="https://huggingface.co/demo/cached/resolve/main/cached.gguf",
+                    sha256="0" * 64,
+                )
+            )
+            (root / "catalog.json").write_text(
+                json.dumps(cached, ensure_ascii=False),
+                encoding="utf-8",
+            )
+
+            self.assertEqual(
+                [entry["id"] for entry in load_cached_catalog(root)],
+                ["cached"],
+            )
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
     def test_refresh_catalog_preserves_downloaded_removed_remote_until_delete(self):
         root = self._temp_root()
         try:
@@ -470,4 +731,3 @@ class LocalModelVerificationFlowTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

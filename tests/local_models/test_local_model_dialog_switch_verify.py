@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -196,7 +196,61 @@ class LocalModelDialogSwitchVerifyTests(unittest.TestCase):
         finally:
             shutil.rmtree(models_dir, ignore_errors=True)
 
+    def test_delete_pruned_local_model_removes_card_from_list(self):
+        base = Path(PROJECT_ROOT) / "tests" / "_artifacts" / "switch_verify_cases"
+        base.mkdir(parents=True, exist_ok=True)
+        models_dir = base / "case_delete_pruned"
+        shutil.rmtree(models_dir, ignore_errors=True)
+        models_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            (models_dir / "demo.gguf").write_bytes(b"model")
+            catalog = [
+                {
+                    "id": "demo",
+                    "display_name": "Demo",
+                    "description": {"en_US": ""},
+                    "estimated_size_mb": 1,
+                    "min_ram_gb": 1,
+                    "filename": "demo.gguf",
+                    "status": "local",
+                }
+            ]
+            manifest = [{"id": "demo", "filename": "demo.gguf", "active": True}]
+            catalog_state = {"models": list(catalog)}
+
+            def _delete_model(_entry_id, **_kwargs):
+                catalog_state["models"] = []
+
+            with patch("services.local_model_service.ensure_catalog", return_value=None), \
+                 patch("services.local_model_service.load_catalog", side_effect=lambda *_args, **_kwargs: list(catalog_state["models"])), \
+                 patch("services.local_model_service.get_active_entry_id", return_value="demo"), \
+                 patch("services.local_model_service.localize_field", side_effect=_localize_field), \
+                 patch("services.local_model_service.get_models_dir", return_value=models_dir), \
+                 patch("services.local_model_service.load_manifest", return_value=manifest), \
+                 patch("services.local_model_service.get_entry", return_value=manifest[0]), \
+                 patch("services.local_model_service.verify_model_file", return_value=True), \
+                 patch("services.local_model_service.list_users_using_model", return_value=[]), \
+                 patch("services.local_model_service.clear_active_model_id_for_user"), \
+                 patch("services.local_model_service.LocalModelService.get") as mock_service_get, \
+                 patch("services.local_model_service.LocalModelService.reset"), \
+                 patch("PySide6.QtWidgets.QMessageBox.question", return_value=QMessageBox.Yes):
+                mock_service_get.return_value.delete_model.side_effect = _delete_model
+
+                dlg = LocalDownloadDialog(None, "en_US")
+                dlg.show()
+                QApplication.processEvents()
+                self.assertIn("demo", dlg._card_widgets)
+
+                dlg._delete_model("demo")
+                QApplication.processEvents()
+
+                self.assertNotIn("demo", dlg._card_widgets)
+                self.assertIsNone(dlg._selected_entry_id())
+                self.assertFalse(dlg._sel_next_btn.isEnabled())
+                dlg.close()
+        finally:
+            shutil.rmtree(models_dir, ignore_errors=True)
+
 
 if __name__ == "__main__":
     unittest.main()
-

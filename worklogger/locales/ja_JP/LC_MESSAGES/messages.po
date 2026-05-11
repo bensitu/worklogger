@@ -1647,3 +1647,51 @@ msgstr "別のユーザーが使用中"
 
 msgid "Please enable a local model in Settings -> AI, or configure an external AI provider with API key, base URL, and model name."
 msgstr "設定 -> AI でローカルモデルを有効にするか、外部 AI プロバイダーの API キー、ベース URL、モデル名を設定してください。"
+
+msgid "CSV (*.csv)"
+msgstr "CSV (*.csv)"
+
+msgid "Could not check for updates. Please check your network connection, proxy, VPN, or try again later."
+msgstr "更新を確認できませんでした。ネットワーク接続、プロキシ、VPN を確認するか、後でもう一度お試しください。"
+
+msgid "Date"
+msgstr "日付"
+
+msgid "Export PDF"
+msgstr "PDF をエクスポート"
+
+msgid "Export PNG"
+msgstr "PNG をエクスポート"
+
+msgid "GGUF files (*.gguf);;All files (*)"
+msgstr "GGUF ファイル (*.gguf);;すべてのファイル (*)"
+
+msgid "Month"
+msgstr "月"
+
+msgid "OT"
+msgstr "残業"
+
+msgid "PDF (*.pdf)"
+msgstr "PDF (*.pdf)"
+
+msgid "PNG (*.png)"
+msgstr "PNG (*.png)"
+
+msgid "Quarter"
+msgstr "四半期"
+
+msgid "Q{quarter}"
+msgstr "第{quarter}四半期"
+
+msgid "iCalendar (*.ics)"
+msgstr "iCalendar (*.ics)"
+
+msgid "m"
+msgstr "分"
+
+msgid "⬇  CSV"
+msgstr "⬇  CSV"
+
+msgid "⬇  PDF"
+msgstr "⬇  PDF"

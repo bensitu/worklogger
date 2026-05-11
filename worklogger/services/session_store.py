@@ -298,7 +298,7 @@ def save_remember_token(username: str, token: str) -> None:
 
 def clear_active_remember_user() -> None:
     _keyring_delete(REMEMBER_ACTIVE_USER_KEY)
-    active, tokens = _read_file_store()
+    _, tokens = _read_file_store()
     if tokens:
         _safe_write_file_store("", tokens)
     else:

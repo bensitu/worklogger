@@ -1337,7 +1337,6 @@ class AppServices:
         except Exception:
             pass
 
-        deduped: list[Path] = []
         seen: set[str] = set()
         for path in candidates:
             key = os.path.normcase(str(path.resolve(strict=False)))

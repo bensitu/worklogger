@@ -1,6 +1,6 @@
 """Application-wide constants — single source of truth."""
 
-APP_VERSION = "3.3.2"
+APP_VERSION = "3.3.3"
 APP_AUTHOR = "Ben Situ"
 APP_ID = "dev.worklogger.app.v1"
 GITHUB_URL = "https://github.com/bensitu/worklogger"

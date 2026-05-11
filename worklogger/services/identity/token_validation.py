@@ -81,16 +81,6 @@ def fetch_jwks_key(token: str, jwks_uri: str):
         raise IdentityTokenInvalid("identity_jwks_key_not_found") from exc
 
 
-def verify_jwt_signature(token: str, *, jwks_uri: str, audience: str, issuer: str) -> dict:
-    return validate_oidc_id_token(
-        token,
-        audience=audience,
-        issuer=issuer,
-        jwks_uri=jwks_uri,
-        verify_signature=True,
-    )
-
-
 def _validate_claims(
     claims: dict,
     *,

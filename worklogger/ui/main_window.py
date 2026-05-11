@@ -780,7 +780,7 @@ class App(QWidget):
         if rec and rec.is_overnight:
             overnight = True
         else:
-            s_txt, e_txt, break_val = self._active_time_values()
+            s_txt, e_txt, _break_hours = self._active_time_values()
             s = parse_time(s_txt) if s_txt else None
             e = parse_time(e_txt) if e_txt else None
             if s and e and is_overnight_shift(s, e):
@@ -966,7 +966,8 @@ class App(QWidget):
             return
         mins = (datetime.now() - self._break_start).seconds // 60
         on_break_label = _("On break")
-        self.break_btn.setText(f"{on_break_label}\n{mins}m")
+        minute_label = _("m")
+        self.break_btn.setText(f"{on_break_label}\n{mins}{minute_label}")
         self._auto_break_hours = mins / 60
         apply_widget_qss(self.break_btn, auto_break_active_qss(self.dark))
 
@@ -1419,7 +1420,7 @@ class App(QWidget):
     def _export_csv(self):
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         path, _selected_filter = QFileDialog.getSaveFileName(
-            self, _("Export CSV"), f"worklog_{ts}.csv", "CSV (*.csv)")
+            self, _("Export CSV"), f"worklog_{ts}.csv", _("CSV (*.csv)"))
         if not path:
             return
         try:
@@ -1503,7 +1504,7 @@ class App(QWidget):
 
     def _import_csv(self):
         path, _selected_filter = QFileDialog.getOpenFileName(
-            self, _("Import CSV"), "", "CSV (*.csv)")
+            self, _("Import CSV"), "", _("CSV (*.csv)"))
         if not path:
             return
         box = QMessageBox(self)
@@ -1540,7 +1541,7 @@ class App(QWidget):
 
     def _import_ics(self):
         path, _selected_filter = QFileDialog.getOpenFileName(
-            self, _("Import .ics"), "", "iCalendar (*.ics)")
+            self, _("Import .ics"), "", _("iCalendar (*.ics)"))
         if not path:
             return
         try:
@@ -1579,7 +1580,6 @@ class App(QWidget):
                     self.services.clear_calendar_events()
 
             saved = self.services.save_calendar_events(rich_events, source_file=path)
-            imported = 0
             for ev in rich_events:
                 d_obj = ev.get("date")
                 summary = ev.get("summary", "")
@@ -1599,7 +1599,6 @@ class App(QWidget):
                             merged, rec.safe_work_type())
                 else:
                     self.services.save_record(d_str, None, None, 1.0, summary, "normal")
-                imported += 1
             QMessageBox.information(
                 self, _("Import .ics"),
                 msg("cal_imported", _("Imported {} calendar events.")).format(saved))
@@ -1610,7 +1609,7 @@ class App(QWidget):
     def _export_ics(self):
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         path, _selected_filter = QFileDialog.getSaveFileName(
-            self, _("Export .ics"), f"worklog_{ts}.ics", "iCalendar (*.ics)")
+            self, _("Export .ics"), f"worklog_{ts}.ics", _("iCalendar (*.ics)"))
         if not path:
             return
         try:

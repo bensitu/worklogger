@@ -1647,3 +1647,51 @@ msgstr "Used by another user"
 
 msgid "Please enable a local model in Settings -> AI, or configure an external AI provider with API key, base URL, and model name."
 msgstr "Please enable a local model in Settings -> AI, or configure an external AI provider with API key, base URL, and model name."
+
+msgid "CSV (*.csv)"
+msgstr "CSV (*.csv)"
+
+msgid "Could not check for updates. Please check your network connection, proxy, VPN, or try again later."
+msgstr "Could not check for updates. Please check your network connection, proxy, VPN, or try again later."
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Export PDF"
+msgstr "Export PDF"
+
+msgid "Export PNG"
+msgstr "Export PNG"
+
+msgid "GGUF files (*.gguf);;All files (*)"
+msgstr "GGUF files (*.gguf);;All files (*)"
+
+msgid "Month"
+msgstr "Month"
+
+msgid "OT"
+msgstr "OT"
+
+msgid "PDF (*.pdf)"
+msgstr "PDF (*.pdf)"
+
+msgid "PNG (*.png)"
+msgstr "PNG (*.png)"
+
+msgid "Quarter"
+msgstr "Quarter"
+
+msgid "Q{quarter}"
+msgstr "Q{quarter}"
+
+msgid "iCalendar (*.ics)"
+msgstr "iCalendar (*.ics)"
+
+msgid "m"
+msgstr "m"
+
+msgid "⬇  CSV"
+msgstr "⬇  CSV"
+
+msgid "⬇  PDF"
+msgstr "⬇  PDF"
