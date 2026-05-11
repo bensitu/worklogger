@@ -329,6 +329,15 @@ class LocalModelVerificationFlowTests(unittest.TestCase):
         self.assertEqual(runtime_context_length_for_entry(entry), 4096)
         self.assertEqual(runtime_max_output_tokens_for_entry(entry), 2048)
 
+    def test_llama_context_capacity_warning_is_filtered(self):
+        warning = (
+            "llama_context: n_ctx_seq (8192) < n_ctx_train (262144) -- "
+            "the full capacity of the model will not be utilized\n"
+        )
+
+        self.assertTrue(local_model_service._should_suppress_llama_log(warning))
+        self.assertFalse(local_model_service._should_suppress_llama_log("llama_model_load: failed"))
+
     def test_load_provider_uses_safe_runtime_context_cap(self):
         root = self._temp_root()
         try:

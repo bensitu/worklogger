@@ -9,6 +9,7 @@ stored per user through the settings service.
 from __future__ import annotations
 
 import abc
+import ctypes
 import hashlib
 import ipaddress
 import json
@@ -95,6 +96,12 @@ _NO_THINK_OUTPUT_RULE = (
     "Do not output hidden reasoning, analysis, thinking process, or <think> "
     "blocks. Return only the final answer."
 )
+_LLAMA_CONTEXT_CAPACITY_WARNING_RE = re.compile(
+    r"llama_context:\s+n_ctx_seq\s+\(\d+\)\s+<\s+n_ctx_train\s+\(\d+\)"
+    r"\s+--\s+the full capacity of the model will not be utilized",
+    re.IGNORECASE,
+)
+_LLAMA_LOG_CALLBACK_REF: Any = None
 _GGUF_SCALAR_FORMATS = {
     0: "<B",
     1: "<b",
@@ -113,6 +120,45 @@ _GGUF_SCALAR_FORMATS = {
 def is_local_model_runtime_supported() -> bool:
     """Return False for macOS x86_64 transitional builds."""
     return not (sys.platform == "darwin" and platform.machine() == "x86_64")
+
+
+def _llama_verbose_enabled() -> bool:
+    return os.environ.get("WORKLOGGER_LLAMA_VERBOSE", "0") == "1"
+
+
+def _should_suppress_llama_log(text: str) -> bool:
+    return bool(_LLAMA_CONTEXT_CAPACITY_WARNING_RE.search(str(text or "")))
+
+
+def _configure_llama_logging(verbose: bool) -> None:
+    """Filter llama.cpp's benign runtime-context warning by default."""
+    global _LLAMA_LOG_CALLBACK_REF
+    try:
+        import llama_cpp._logger as llama_logger  # type: ignore[import]
+        import llama_cpp.llama_cpp as llama_lib  # type: ignore[import]
+
+        if verbose:
+            llama_lib.llama_log_set(llama_logger.llama_log_callback, ctypes.c_void_p(0))
+            llama_logger.set_verbose(True)
+            return
+
+        llama_logger.set_verbose(False)
+
+        @llama_lib.llama_log_callback
+        def _filtered_llama_log(level: int, text: bytes, _user_data: ctypes.c_void_p) -> None:
+            try:
+                decoded = text.decode("utf-8", errors="replace")
+            except Exception:
+                decoded = str(text or "")
+            if _should_suppress_llama_log(decoded):
+                return
+            if int(level) >= 3:
+                print(decoded, end="", flush=True, file=sys.stderr)
+
+        _LLAMA_LOG_CALLBACK_REF = _filtered_llama_log
+        llama_lib.llama_log_set(_filtered_llama_log, ctypes.c_void_p(0))
+    except Exception:
+        pass
 
 
 def _app_root() -> Path:
@@ -1382,6 +1428,8 @@ class LlamaCppProvider(LLMProvider):
                     "llama-cpp-python could not be loaded after auto-install. "
                     "Please install it manually: pip install llama-cpp-python"
                 ) from exc
+            verbose = _llama_verbose_enabled()
+            _configure_llama_logging(verbose)
             if not self._model_path.exists():
                 raise FileNotFoundError(f"Model file not found: {self._model_path}")
             try:
@@ -1390,7 +1438,7 @@ class LlamaCppProvider(LLMProvider):
                     n_ctx=self._n_ctx,
                     n_threads=self._n_threads,
                     n_gpu_layers=self._n_gpu_layers,
-                    verbose=os.environ.get("WORKLOGGER_LLAMA_VERBOSE", "0") == "1",
+                    verbose=verbose,
                 )
             except MemoryError:
                 raise
