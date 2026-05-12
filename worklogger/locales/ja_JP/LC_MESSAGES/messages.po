@@ -1,0 +1,1697 @@
+msgid ""
+msgstr ""
+"Language: ja_JP\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid ""
+"\n"
+"\n"
+"Skipped {} rows:\n"
+"{}"
+msgstr ""
+"\n"
+"\n"
+"{}行をスキップしました：\n"
+"{}"
+
+msgid " days"
+msgstr "日"
+
+msgid "#"
+msgstr "#"
+
+msgid "+"
+msgstr "+"
+
+msgid "1.0"
+msgstr "1.0"
+
+msgid "A different model is already downloaded.  It will be deleted before downloading the new one.  Continue?"
+msgstr "別のモデルが既にダウンロードされています。新しいモデルをダウンロードする前に削除されます。続行しますか？"
+
+msgid "A different model is already downloaded. It will be deleted before the new one downloads. Continue?"
+msgstr "別のモデルがダウンロード済みです。新しいモデルをダウンロードする前に削除されます。続行しますか？"
+
+msgid "A new recovery key was generated. Share it with the user now; it cannot be shown again later."
+msgstr "新しいリカバリーキーを生成しました。今すぐユーザーに共有してください。後から再表示できません。"
+
+msgid "A privacy-first desktop work-hours tracker with AI-powered reporting."
+msgstr "AI レポート機能付きのプライバシー重視デスクトップ工時記録アプリ。"
+
+msgid "About"
+msgstr "情報"
+
+msgid "Account"
+msgstr "アカウント"
+
+msgid "Actions"
+msgstr "操作"
+
+msgid "Active"
+msgstr "有効"
+
+msgid "Add"
+msgstr "追加"
+
+msgid "Administrator"
+msgstr "管理者"
+
+msgid "Administrator accounts cannot be deleted."
+msgstr "管理者アカウントは削除できません。"
+
+msgid "Administrator Password"
+msgstr "管理者パスワード"
+
+msgid "Administrator password is incorrect."
+msgstr "管理者パスワードが正しくありません。"
+
+msgid "Administrator privileges are required."
+msgstr "管理者権限が必要です。"
+
+msgid "AI"
+msgstr "AI"
+
+msgid "AI Generated"
+msgstr "AI生成"
+
+msgid "AI Generated Content"
+msgstr "AI生成内容"
+
+msgid "AI Generated Result"
+msgstr "AI生成結果"
+
+msgid "AI Result"
+msgstr "AI結果"
+
+msgid "Analytics"
+msgstr "分析"
+
+msgid "Annual"
+msgstr "年次"
+
+msgid "API Base URL"
+msgstr "API ベース URL"
+
+msgid "API Base URL is not set."
+msgstr "API ベース URL が設定されていません。"
+
+msgid "API Key"
+msgstr "APIキー"
+
+msgid "API Key is not set."
+msgstr "API キーが設定されていません。"
+
+msgid "Appearance"
+msgstr "外観"
+
+msgid "Append"
+msgstr "追記"
+
+msgid "Apply"
+msgstr "適用"
+
+msgid "Apr"
+msgstr "4月"
+
+msgid "April"
+msgstr "4月"
+
+msgid "Are you sure you want to log out?"
+msgstr "ログアウトしますか？"
+
+msgid "Are you sure you want to regenerate the recovery key? The old key will stop working immediately."
+msgstr "リカバリーキーを再生成しますか？古いキーは直ちに無効になります。"
+
+msgid "At least one administrator account is required."
+msgstr "少なくとも 1 つの管理者アカウントが必要です。"
+
+msgid "Aug"
+msgstr "8月"
+
+msgid "August"
+msgstr "8月"
+
+msgid "Author"
+msgstr "作者"
+
+msgid "Auto Record"
+msgstr "自動記録"
+
+msgid "Average"
+msgstr "平均"
+
+msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
+msgstr "ローカルの勤務記録、レポート、設定、アカウントデータを守るため、データベースを定期的にバックアップしてください。"
+
+msgid "Backup Data"
+msgstr "データをバックアップ"
+
+msgid "Backup destination must be different from the active database."
+msgstr "バックアップ先は現在のデータベースと別の場所にしてください。"
+
+msgid "Backup saved: {}"
+msgstr "バックアップを保存しました: {}"
+
+msgid "Bar"
+msgstr "棒グラフ"
+
+msgid "Break (h)"
+msgstr "休憩 (h)"
+
+msgid "Break done"
+msgstr "休憩済み"
+
+msgid "Break hours cannot be negative."
+msgstr "休憩時間をマイナスにはできません。"
+
+msgid "Break time must be less than the total shift duration."
+msgstr "休憩時間は勤務時間より短くする必要があります。"
+
+msgid "Break Timer"
+msgstr "休憩タイマー"
+
+msgid "Built-in"
+msgstr "デフォルト"
+
+msgid "Business trip"
+msgstr "出張"
+
+msgid ""
+"Calendar data already exists.\n"
+"\n"
+"Replace — clear all previous calendar events before import.\n"
+"Append — keep existing events and add new ones."
+msgstr ""
+"カレンダーデータは既に存在します。\n"
+"\n"
+"置換 — 取り込み前に既存の予定をすべて削除します。\n"
+"追記 — 既存の予定を残して新しい予定を追加します。"
+
+msgid "Calendar events cleared."
+msgstr "カレンダーイベントを削除しました。"
+
+msgid "Calendar events:"
+msgstr "カレンダーイベント："
+
+msgid "Calendar Sync"
+msgstr "カレンダー同期"
+
+msgid "Cancel"
+msgstr "キャンセル"
+
+msgid "Change Password"
+msgstr "パスワード変更"
+
+msgid "Changing your password will generate a new recovery key. Your new password must be at least 8 characters."
+msgstr "パスワードを変更すると新しいリカバリーキーが生成されます。新しいパスワードは8文字以上にしてください。"
+
+msgid "Chart:"
+msgstr "グラフ："
+
+msgid "Check for Updates"
+msgstr "アップデートを確認"
+
+msgid "Checking for updates…"
+msgstr "更新を確認しています…"
+
+msgid "Choose a model to download"
+msgstr "ダウンロードするモデルを選択"
+
+msgid "Choose custom color"
+msgstr "カスタムカラーを選択"
+
+msgid "Clear Calendar Events"
+msgstr "カレンダーイベントを削除"
+
+msgid "Clock"
+msgstr "打刻"
+
+msgid "Close"
+msgstr "閉じる"
+
+msgid "Comp leave"
+msgstr "代休"
+
+msgid "Confirm"
+msgstr "確認"
+
+msgid "Confirm Administrator Password"
+msgstr "管理者パスワードの確認"
+
+msgid "Confirm Password"
+msgstr "パスワード確認"
+
+msgid "Contacting AI provider for {model}..."
+msgstr "{model} に接続しています..."
+
+msgid "Continue"
+msgstr "続けて計測"
+
+msgid "Copied!"
+msgstr "コピーしました！"
+
+msgid "Copy"
+msgstr "コピー"
+
+msgid "Copy and safely store this recovery key now. If it is lost, only an administrator can reset your password."
+msgstr "このリカバリーキーを今すぐコピーして安全に保管してください。紛失すると、管理者だけがパスワードをリセットできます。"
+
+msgid "Could not check for updates: {}"
+msgstr "アップデート確認に失敗しました：{}"
+
+msgid "Could not load the latest model catalog. Check your network and try again."
+msgstr "最新のモデル一覧を読み込めませんでした。ネットワークを確認して、もう一度お試しください。"
+
+msgid "Could not save initial password."
+msgstr "初期パスワードを保存できませんでした。"
+
+msgid "Could not save recovery key."
+msgstr "リカバリーキーを保存できませんでした。"
+
+msgid "Could not verify the update server certificate. Please check your network trust settings and try again."
+msgstr "更新サーバーの証明書を検証できませんでした。ネットワークの信頼設定を確認してから再試行してください。"
+
+msgid "Create Custom Template"
+msgstr "カスタムテンプレートを作成"
+
+msgid "Create User"
+msgstr "ユーザーを作成"
+
+msgid "Created"
+msgstr "作成日"
+
+msgid "CSV Data Management"
+msgstr "CSV データ管理"
+
+msgid "CSV file is empty."
+msgstr "CSV ファイルが空です。"
+
+msgid "CTO"
+msgstr "代休"
+
+msgid "Current user"
+msgstr "現在のユーザー名"
+
+msgid "Custom"
+msgstr "カスタム"
+
+msgid "Custom theme color"
+msgstr "カスタムテーマカラー"
+
+msgid "Daily"
+msgstr "日報"
+
+msgid "Daily avg"
+msgstr "日平均"
+
+msgid "Data"
+msgstr "データ"
+
+msgid "Data restored successfully."
+msgstr "データを復元しました。"
+
+msgid "Database Backup"
+msgstr "データベースバックアップ"
+
+msgid "Dec"
+msgstr "12月"
+
+msgid "December"
+msgstr "12月"
+
+msgid "Default"
+msgstr "デフォルト"
+
+msgid "Default break (h)"
+msgstr "デフォルト休憩 (h)"
+
+msgid "Delete"
+msgstr "削除"
+
+msgid "Delete Model"
+msgstr "モデルを削除"
+
+msgid "Delete this entry?"
+msgstr "このエントリを削除しますか？"
+
+msgid "Delete this model file? This cannot be undone."
+msgstr "このモデルファイルを削除しますか？この操作は元に戻せません。"
+
+msgid "Delete this template?"
+msgstr "このテンプレートを削除しますか？"
+
+msgid "Delete User"
+msgstr "ユーザーを削除"
+
+msgid "Done"
+msgstr "完了"
+
+msgid "Done."
+msgstr "完了。"
+
+msgid "Download"
+msgstr "ダウンロード"
+
+msgid "Download .md"
+msgstr ".md でダウンロード"
+
+msgid "Download Local Model"
+msgstr "ローカルモデルをダウンロード"
+
+msgid "Downloaded"
+msgstr "ダウンロード済み"
+
+msgid "Downloading local model..."
+msgstr "ローカルモデルをダウンロード中..."
+
+msgid "Downloading…  You may cancel at any time; the download will resume from where it left off."
+msgstr "ダウンロード中… いつでもキャンセルできます。次回は中断位置から再開します。"
+
+msgid "Enable local model"
+msgstr "ローカルモデルを有効にする"
+
+msgid "Enable menu bar icon"
+msgstr "メニューバー常駐を有効化"
+
+msgid "Enable tray icon"
+msgstr "トレイ常駐を有効化"
+
+msgid "End"
+msgstr "退勤"
+
+msgid "End now"
+msgstr "今すぐ退勤"
+
+msgid "End time (opt.)"
+msgstr "終了時刻（任意）"
+
+msgid "Ended"
+msgstr "打刻済み"
+
+msgid "Enter administrator password to delete {username}."
+msgstr "{username} を削除するには管理者パスワードを入力してください。"
+
+msgid "Error"
+msgstr "エラー"
+
+msgid "Error:"
+msgstr "エラー："
+
+msgid "Expand notes"
+msgstr "メモを拡大"
+
+msgid "Export"
+msgstr "エクスポート"
+
+msgid "Export .ics"
+msgstr "ICS 書出"
+
+msgid "Export CSV"
+msgstr "CSV 出力"
+
+msgid "Exported {} events."
+msgstr "{} 件エクスポートしました。"
+
+msgid "External Model"
+msgstr "外部モデル"
+
+msgid "Feature Overview"
+msgstr "機能紹介"
+
+msgid "Features"
+msgstr "機能紹介"
+
+msgid "Feb"
+msgstr "2月"
+
+msgid "February"
+msgstr "2月"
+
+msgid "Forgot Password?"
+msgstr "パスワードを忘れた場合"
+
+msgid "Fri"
+msgstr "金"
+
+msgid "General"
+msgstr "全般"
+
+msgid "Generated At"
+msgstr "生成日時"
+
+msgid "Generating with local model..."
+msgstr "ローカルモデルで生成中..."
+
+msgid "GitHub"
+msgstr "GitHub"
+
+msgid "gpt-4o-mini | claude-haiku-4-5-20251001"
+msgstr "Anthropic と OpenAI 互換 API に対応しています。例: ChatGPT、Claude、Gemini、DeepSeek、Doubao、Qwen。"
+
+msgid "Grant Admin"
+msgstr "管理者にする"
+
+msgid "h"
+msgstr "h"
+
+msgid "HH:MM"
+msgstr "HH:MM"
+
+msgid "Hint / extra instructions (optional)"
+msgstr "AIアシスト補足・追加指示（任意）"
+
+msgid "https://api.openai.com/v1 | https://api.anthropic.com"
+msgstr "gpt-4o-mini | claude-haiku-4-5-20251001"
+
+msgid "I have saved this recovery key safely."
+msgstr "このリカバリーキーを安全に保存しました。"
+
+msgid "Import .gguf"
+msgstr ".gguf をインポート"
+
+msgid "Import .ics"
+msgstr "ICS 取込"
+
+msgid "Import CSV"
+msgstr "CSV 読込"
+
+msgid "Import or export worklog records as CSV files for backup, migration, or spreadsheet analysis."
+msgstr "バックアップ、移行、表計算での分析のために、作業ログを CSV としてインポートまたはエクスポートします。"
+
+msgid "Import Result"
+msgstr "インポート結果"
+
+msgid "Import your .ics file to let AI read your meetings when generating reports."
+msgstr ".ics ファイルを取り込むと、AI がスケジュールを参照してレポートを生成できます。"
+
+msgid "Imported {} calendar events."
+msgstr "{} 件のカレンダーイベントを取り込みました。"
+
+msgid "Imported {} records."
+msgstr "{} 件インポートしました。"
+
+msgid "In Use"
+msgstr "使用状況"
+
+msgid "Inactive"
+msgstr "無効"
+
+msgid "Initial Password"
+msgstr "初期パスワード"
+
+msgid "Initial password saved."
+msgstr "初期パスワードを保存しました。"
+
+msgid "Initializing AI request..."
+msgstr "AIリクエストを初期化しています..."
+
+msgid "Insert"
+msgstr "挿入"
+
+msgid "Insert Quick Log"
+msgstr "クイック記録を挿入"
+
+msgid "Installing local model dependencies..."
+msgstr "ローカルモデル依存関係をインストール中..."
+
+msgid "Integrity check failed — file may be corrupted"
+msgstr "整合性チェック失敗 — ファイルが破損している可能性があります"
+
+msgid "Integrity failed"
+msgstr "整合性チェックに失敗しました"
+
+msgid "Invalid time range. The shift must be within {max_hours} hours (overnight is supported)."
+msgstr "無効な時間範囲です。勤務は {max_hours} 時間以内である必要があります（夜勤対応）。"
+
+msgid "Invoice"
+msgstr "請求書"
+
+msgid "Jan"
+msgstr "1月"
+
+msgid "January"
+msgstr "1月"
+
+msgid "Jul"
+msgstr "7月"
+
+msgid "July"
+msgstr "7月"
+
+msgid "Jun"
+msgstr "6月"
+
+msgid "June"
+msgstr "6月"
+
+msgid "Leave"
+msgstr "休暇"
+
+msgid "Leave days"
+msgstr "休暇日数"
+
+msgid "Leave Hours"
+msgstr "休暇時間"
+
+msgid "License"
+msgstr "ライセンス"
+
+msgid "Line"
+msgstr "折れ線"
+
+msgid "llama-cpp-python not installed - run: pip install llama-cpp-python"
+msgstr "llama-cpp-python が未インストールです - 実行: pip install llama-cpp-python"
+
+msgid "Loading latest model catalog..."
+msgstr "最新のモデル一覧を読み込んでいます..."
+
+msgid "Loading local model..."
+msgstr "ローカルモデルを読み込み中..."
+
+msgid "Local Model"
+msgstr "ローカルモデル"
+
+msgid "Local model"
+msgstr "ローカルモデル"
+
+msgid ""
+"Local model failed and no external API key / URL / model name is configured.\n"
+"Please configure an external model in Settings → AI."
+msgstr ""
+"ローカルモデルが失敗し、外部APIキー / URL / モデル名が未設定です。\n"
+"設定 → AI で外部モデルを設定してください。"
+
+msgid "Local model failed and no external API key / URL / model name is configured. Please configure an external model in Settings → AI."
+msgstr "ローカルモデルが失敗し、外部APIキー / URL / モデル名が設定されていません。設定 → AI で外部モデルを設定してください。"
+
+msgid "Local model failed to load"
+msgstr "ローカルモデルの読み込みに失敗しました"
+
+msgid "Local model is disabled."
+msgstr "ローカルモデルは無効です。"
+
+msgid "Local model is inactive"
+msgstr "ローカルモデルは非アクティブです"
+
+msgid "Local model loaded."
+msgstr "ローカルモデルを読み込みました。"
+
+msgid "Local model not downloaded - go to Settings -> AI"
+msgstr "ローカルモデルは未ダウンロードです - 設定 -> AI を開いてください"
+
+msgid "Local model unavailable - using external model instead"
+msgstr "ローカルモデルは利用できないため外部モデルを使用します"
+
+msgid "Local model unavailable - using external model instead."
+msgstr "ローカルモデルは利用できないため外部モデルを使用します。"
+
+msgid "Local model verification failed. Please re-download or switch model."
+msgstr "ローカルモデルの検証に失敗しました。再ダウンロードするか、モデルを切り替えてください。"
+
+msgid "Local model verification timed out."
+msgstr "ローカルモデルの検証がタイムアウトしました。"
+
+msgid "Local model verification was cancelled."
+msgstr "ローカルモデルの検証はキャンセルされました。"
+
+msgid "Log out"
+msgstr "ログアウト"
+
+msgid "Login"
+msgstr "ログイン"
+
+msgid "Login failed"
+msgstr "ログイン失敗"
+
+msgid "Manage Users"
+msgstr "ユーザー管理"
+
+msgid "Manual Input"
+msgstr "手入力"
+
+msgid "Mar"
+msgstr "3月"
+
+msgid "March"
+msgstr "3月"
+
+msgid "Markdown (*.md)"
+msgstr "Markdownファイル (*.md)"
+
+msgid "May"
+msgstr "5月"
+
+msgid "Metric:"
+msgstr "指標："
+
+msgid "Minimal mode"
+msgstr "ミニマルモード"
+
+msgid "Minimal mode toggle will take effect after restarting the application."
+msgstr "ミニマルモードの切り替えはアプリケーションの再起動後に有効になります。"
+
+msgid "Missing columns: {}"
+msgstr "不足している列：{}"
+
+msgid "Model"
+msgstr "モデル"
+
+msgid "Model download completed."
+msgstr "モデルのダウンロードが完了しました。"
+
+msgid "Model hash verified."
+msgstr "モデルのハッシュを検証しました。"
+
+msgid "Model name is not set."
+msgstr "モデル名が設定されていません。"
+
+msgid "Mon"
+msgstr "月"
+
+msgid "Monthly"
+msgstr "月次"
+
+msgid "Monthly Analytics"
+msgstr "月次分析"
+
+msgid "Monthly Report"
+msgstr "月報"
+
+msgid "Monthly target (h)"
+msgstr "月間目標時間 (h)"
+
+msgid "Monthly total"
+msgstr "月間合計"
+
+msgid "Monthly Work Report  {year}/{month:02d}"
+msgstr "月次勤務レポート  {year}年{month:02d}月"
+
+msgid "New Password"
+msgstr "新しいパスワード"
+
+msgid "New Template"
+msgstr "新規テンプレート"
+
+msgid "New version available: v{0}"
+msgstr "新しいバージョン v{0} が利用可能です"
+
+msgid "Next day"
+msgstr "翌日"
+
+msgid "Next month"
+msgstr "次の月"
+
+msgid "Night"
+msgstr "夜勤"
+
+msgid "No"
+msgstr "いいえ"
+
+msgid "No accounts found. Please create an administrator account."
+msgstr "アカウントがありません。管理者アカウントを作成してください。"
+
+msgid "No data"
+msgstr "データなし"
+
+msgid "No downloadable models are available. You can still import a local .gguf file."
+msgstr "ダウンロード可能なモデルはありません。ローカルの .gguf ファイルは引き続きインポートできます。"
+
+msgid "No entries yet today."
+msgstr "本日の記録はありません。"
+
+msgid "No events found."
+msgstr "イベントが見つかりません。"
+
+msgid "No external model configured"
+msgstr "外部モデルが設定されていません"
+
+msgid "No notes recorded for this period."
+msgstr "この期間のメモはありません。"
+
+msgid "No templates available for this type."
+msgstr "このタイプのテンプレートがありません。"
+
+msgid "Normal"
+msgstr "通常勤務"
+
+msgid ""
+"Normal: {normal}\n"
+"Remote: {remote}\n"
+"Business: {biz}"
+msgstr ""
+"通常：{normal}\n"
+"在宅：{remote}\n"
+"出張：{biz}"
+
+msgid "Not downloaded"
+msgstr "未ダウンロード"
+
+msgid "Note"
+msgstr "注意"
+
+msgid "Notes"
+msgstr "メモ"
+
+msgid "Notes reminder dot"
+msgstr "メモ通知ドット"
+
+msgid "Nov"
+msgstr "11月"
+
+msgid "November"
+msgstr "11月"
+
+msgid "Oct"
+msgstr "10月"
+
+msgid "October"
+msgstr "10月"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Old Password"
+msgstr "現在のパスワード"
+
+msgid "Old password is incorrect."
+msgstr "現在のパスワードが正しくありません。"
+
+msgid "On break"
+msgstr "休憩中"
+
+msgid "Only one model can be active at a time.  Delete the current model before switching."
+msgstr "同時に有効化できるモデルは1つだけです。切り替える前に現在のモデルを削除してください。"
+
+msgid "Open"
+msgstr "開く"
+
+msgid "Open color picker"
+msgstr "カラーピッカーを開く"
+
+msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
+msgstr "ChatGPT、Claude、Qwen、DeepSeek などの OpenAI 互換モデルに対応しています。"
+
+msgid "Operation failed."
+msgstr "操作に失敗しました。"
+
+msgid "Original"
+msgstr "原文"
+
+msgid "Original Content"
+msgstr "変更前の内容"
+
+msgid "Overnight"
+msgstr "跨日"
+
+msgid "Overnight indicator"
+msgstr "跨日インジケータを表示"
+
+msgid "Overtime"
+msgstr "残業時間"
+
+msgid "Overwrite existing data?"
+msgstr "既存データを上書きしますか？"
+
+msgid "Paid leave"
+msgstr "有給休暇"
+
+msgid ""
+"Paid: {paid}\n"
+"Comp: {comp}\n"
+"Sick: {sick}"
+msgstr ""
+"有給：{paid}\n"
+"代休：{comp}\n"
+"病休：{sick}"
+
+msgid "Password"
+msgstr "パスワード"
+
+msgid "Password change failed."
+msgstr "パスワードの変更に失敗しました。"
+
+msgid "Password Changed"
+msgstr "パスワード変更日時"
+
+msgid "Password changed successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+msgstr "パスワードを変更しました。新しいリカバリーキーが生成されました。今すぐコピーして保存してください。古いリカバリーキーは使用できません。"
+
+msgid "Password must be at least 8 characters."
+msgstr "パスワードは8文字以上にしてください。"
+
+msgid "Password reset successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+msgstr "パスワードをリセットしました。新しいリカバリーキーが生成されました。今すぐコピーして保存してください。古いリカバリーキーは使用できません。"
+
+msgid "Passwords do not match."
+msgstr "パスワードが一致しません。"
+
+msgid "PDF requires QtPrintSupport. Saving PNG."
+msgstr "PDFにはQtPrintSupportが必要です。PNGとして保存します。"
+
+msgid "Period"
+msgstr "期間"
+
+msgid "Permission denied while verifying local model file."
+msgstr "ローカルモデルファイルの検証中にアクセスが拒否されました。"
+
+msgid "Please confirm that you have saved the recovery key."
+msgstr "リカバリーキーを保存したことを確認してください。"
+
+msgid "Please enter a model name in Settings → AI."
+msgstr "設定 → AI でモデル名を入力してください。"
+
+msgid "Please enter administrator password."
+msgstr "管理者パスワードを入力してください。"
+
+msgid "Please enter the API Base URL in Settings → AI."
+msgstr "設定 → AI で API ベース URL を入力してください。"
+
+msgid "Please enter username and password."
+msgstr "ユーザー名とパスワードを入力してください。"
+
+msgid "Please enter username and recovery key."
+msgstr "ユーザー名とリカバリーキーを入力してください。"
+
+msgid "Please enter your API Key in Settings → AI."
+msgstr "設定 → AI で API キーを入力してください。"
+
+msgid "Please set your API key in Settings → AI."
+msgstr "設定→AI で API キーを設定してください。"
+
+msgid "Preparing request for {model}..."
+msgstr "{model} 用のリクエストを準備しています..."
+
+msgid "Preparing your AI request..."
+msgstr "AIリクエストを準備しています..."
+
+msgid "Previous day"
+msgstr "前日"
+
+msgid "Previous month"
+msgstr "前の月"
+
+msgid "Processing AI response..."
+msgstr "AI 応答を処理しています..."
+
+msgid "PTO"
+msgstr "有休"
+
+msgid "Public holidays"
+msgstr "祝日を表示"
+
+msgid "Quarterly"
+msgstr "四半期"
+
+msgid "Quick Log"
+msgstr "クイック記録"
+
+msgid "Quick logs appear in daily notes and AI reports."
+msgstr "クイック記録は日報・週報の AI 生成に反映されます。"
+
+msgid "Quit"
+msgstr "終了"
+
+msgid "Ready"
+msgstr "準備完了"
+
+msgid "Recovery Key"
+msgstr "リカバリーキー"
+
+msgid "Recovery Key Created"
+msgstr "リカバリーキー作成日"
+
+msgid "Recovery key is incorrect. Contact an administrator to reset your password."
+msgstr "リカバリーキーが正しくありません。管理者にパスワードリセットを依頼してください。"
+
+msgid "Recovery Key Regenerated"
+msgstr "リカバリーキーを再生成しました"
+
+msgid "Recovery key saved."
+msgstr "リカバリーキーを保存しました。"
+
+msgid "Refresh"
+msgstr "更新"
+
+msgid "Regenerate"
+msgstr "再生成"
+
+msgid "Regenerate Key"
+msgstr "キーを再生成"
+
+msgid "Regenerate Recovery Key"
+msgstr "リカバリーキーを再生成"
+
+msgid "Register"
+msgstr "登録"
+
+msgid "Registration failed."
+msgstr "登録に失敗しました。"
+
+msgid "Registration successful. Please log in."
+msgstr "登録が完了しました。ログインしてください。"
+
+msgid "Remember me"
+msgstr "ログイン状態を保持"
+
+msgid "Remember-token encryption requires the 'cryptography' package. Please install it via pip install cryptography."
+msgstr "Remember-token の暗号化には 'cryptography' パッケージが必要です。pip install cryptography でインストールしてください。"
+
+msgid "Remote work"
+msgstr "在宅勤務"
+
+msgid "Replace"
+msgstr "置換"
+
+msgid "Report"
+msgstr "レポート"
+
+msgid "Report content is empty."
+msgstr "レポート本文が空です。"
+
+msgid "Report saved."
+msgstr "レポートを保存しました。"
+
+msgid "Reports have unsaved changes. Save before closing?"
+msgstr "レポートに未保存の変更があります。閉じる前に保存しますか?"
+
+msgid "Reset Password"
+msgstr "パスワードをリセット"
+
+msgid "Reset User Password"
+msgstr "ユーザーパスワードをリセット"
+
+msgid "Restart"
+msgstr "やり直す"
+
+msgid "Restart Required"
+msgstr "再起動が必要です"
+
+msgid "Restart required to apply minimal mode."
+msgstr "ミニマルモードを適用するには再起動が必要です。"
+
+msgid "Restore Data"
+msgstr "データを復元"
+
+msgid "Restore failed."
+msgstr "復元に失敗しました。"
+
+msgid "Restore will replace the current database file. Continue?"
+msgstr "復元すると現在のデータベースファイルが置き換えられます。続行しますか?"
+
+msgid "Retry"
+msgstr "再試行"
+
+msgid "Review accounts, reset passwords, and manage recovery keys."
+msgstr "アカウントを確認し、パスワードのリセットとリカバリーキーの管理を行います。"
+
+msgid "Revoke Admin"
+msgstr "管理者を解除"
+
+msgid "Role"
+msgstr "権限"
+
+msgid "Sample Template"
+msgstr "サンプルテンプレート"
+
+msgid "Sat"
+msgstr "土"
+
+msgid "Save"
+msgstr "保存"
+
+msgid "Save As"
+msgstr "名前を付けて保存"
+
+msgid "Save Changes"
+msgstr "変更を保存"
+
+msgid "Save changes to this template?"
+msgstr "このテンプレートへの変更を保存しますか？"
+
+msgid "Save Initial Password"
+msgstr "初期パスワードを保存"
+
+msgid "Save Recovery Key"
+msgstr "リカバリーキーを保存"
+
+msgid "Saved: {}"
+msgstr "保存しました：{}"
+
+msgid "Select / Change"
+msgstr "選択 / 変更"
+
+msgid "Selected color"
+msgstr "選択中の色"
+
+msgid "Sep"
+msgstr "9月"
+
+msgid "September"
+msgstr "9月"
+
+msgid "Settings"
+msgstr "設定"
+
+msgid "Show leave"
+msgstr "休暇を表示"
+
+msgid "Sick"
+msgstr "病休"
+
+msgid "Sick leave"
+msgstr "病気休暇"
+
+msgid "Sign out remembered sessions"
+msgstr "保存済みセッションをログアウト"
+
+msgid "sk-… / sk-ant-…"
+msgstr "https://api.openai.com/v1 | https://api.anthropic.com"
+
+msgid "SQLite Database (*.db)"
+msgstr "SQLite データベース (*.db)"
+
+msgid "Standard hours (h)"
+msgstr "標準勤務時間 (h)"
+
+msgid "Start"
+msgstr "出勤"
+
+msgid "Start now"
+msgstr "今すぐ出勤"
+
+msgid "Start week on Monday"
+msgstr "週の開始を月曜日にする"
+
+msgid "Started"
+msgstr "打刻済み"
+
+msgid "Summary: {days} work days, {total}h total, {ot}h overtime."
+msgstr "サマリー：{days}日出勤、合計{total}h、残業{ot}h。"
+
+msgid "Sun"
+msgstr "日"
+
+msgid "Switch Model"
+msgstr "モデルの切り替え"
+
+msgid "Template name"
+msgstr "テンプレート名"
+
+msgid "Template saved."
+msgstr "テンプレートを保存しました。"
+
+msgid "Templates"
+msgstr "テンプレート"
+
+msgid "temporarily unavailable"
+msgstr "一時的に利用できません"
+
+msgid "Test"
+msgstr "テスト"
+
+msgid "Testing…"
+msgstr "テスト中…"
+
+msgid "Text Files (*.txt)"
+msgstr "テキストファイル (*.txt)"
+
+msgid "The initial password is generated automatically. The user must change it at first login."
+msgstr "初期パスワードは自動生成されます。ユーザーは初回ログイン時に変更する必要があります。"
+
+msgid "The selected backup database appears to be corrupted."
+msgstr "選択したバックアップデータベースは破損している可能性があります。"
+
+msgid "The selected backup does not contain the current account."
+msgstr "選択したバックアップには現在のアカウントが含まれていません。"
+
+msgid "The selected backup does not contain user account data."
+msgstr "選択したバックアップにはユーザーアカウントデータが含まれていません。"
+
+msgid "The selected file does not exist."
+msgstr "選択したファイルは存在しません。"
+
+msgid "The user must change this password at first login."
+msgstr "ユーザーは初回ログイン時にこのパスワードを変更する必要があります。"
+
+msgid "This account must change its password before continuing."
+msgstr "続行する前に、このアカウントのパスワードを変更する必要があります。"
+
+msgid "This model is already downloaded and ready."
+msgstr "このモデルは既にダウンロード済みです。"
+
+msgid "This operation will permanently delete this user's data, including work records, notes, reports, and settings."
+msgstr "この操作により、このユーザーの作業記録、メモ、レポート、設定を含むすべてのデータが完全に削除されます。"
+
+msgid "This recovery key can be used to reset the user's password if it is forgotten. Store it securely and share it only with the account owner. Anyone with this key may reset the password until a new key is generated."
+msgstr "このリカバリーキーは、ユーザーがパスワードを忘れた場合にパスワードをリセットするために使用できます。安全に保管し、アカウント本人にのみ共有してください。新しいキーが生成されるまで、このキーを持つ人はパスワードをリセットできる可能性があります。"
+
+msgid "Thu"
+msgstr "木"
+
+msgid "Time"
+msgstr "時刻"
+
+msgid "Timesheet"
+msgstr "タイムシート"
+
+msgid "Today"
+msgstr "今日"
+
+msgid "Today's entries:"
+msgstr "本日の記録："
+
+msgid "Total"
+msgstr "週計"
+
+msgid "Trip"
+msgstr "出張"
+
+msgid "Tue"
+msgstr "火"
+
+msgid "Type"
+msgstr "種別"
+
+msgid "Unsaved changes — save before switching?"
+msgstr "未保存の変更があります。切り替える前に保存しますか？"
+
+msgid "Unused"
+msgstr "未使用"
+
+msgid "Used"
+msgstr "使用済み"
+
+msgid "User"
+msgstr "ユーザー"
+
+msgid "User created successfully. Share this initial password now; it cannot be shown again later."
+msgstr "ユーザーを作成しました。この初期パスワードは後で再表示できないため、今すぐ共有してください。"
+
+msgid "User deleted successfully."
+msgstr "ユーザーを削除しました。"
+
+msgid "User not found."
+msgstr "ユーザーが見つかりません。"
+
+msgid "Username"
+msgstr "ユーザー名"
+
+msgid "Username already exists."
+msgstr "このユーザー名は既に存在します。"
+
+msgid "Username is required."
+msgstr "ユーザー名は必須です。"
+
+msgid "Username or password is incorrect."
+msgstr "ユーザー名またはパスワードが正しくありません。"
+
+msgid "Verifying local model file..."
+msgstr "ローカルモデルファイルを検証中..."
+
+msgid "Version"
+msgstr "バージョン"
+
+msgid "Waiting for AI response..."
+msgstr "AI の応答を待っています..."
+
+msgid "Wed"
+msgstr "水"
+
+msgid "Weekly"
+msgstr "週報"
+
+msgid "Weekly Report"
+msgstr "週次レポート"
+
+msgid "Weekly Work Report  {start} – {end}"
+msgstr "週次勤務レポート  {start} – {end}"
+
+msgid "WFH"
+msgstr "在宅"
+
+msgid "What are you doing?"
+msgstr "今何をしていますか？"
+
+msgid "When enabled, text processing uses the local model first - no data is sent to external services."
+msgstr "有効時はテキスト処理でまずローカルモデルを使用し、外部サービスにデータは送信されません。"
+
+msgid "When enabled, text processing uses the local model first — no data is sent to external services."
+msgstr "有効にすると、テキスト処理はまずローカルモデルを使用し、外部サービスにデータを送信しません。"
+
+msgid "Work days"
+msgstr "出勤日数"
+
+msgid "Work hours"
+msgstr "勤務時間"
+
+msgid "Work Log"
+msgstr "作業記録"
+
+msgid "Work Logger"
+msgstr "ワークロガー"
+
+msgid ""
+"Work Logger is a privacy-first desktop app for recording work time, notes, quick logs, calendar context, and recurring reports without sending your data to a cloud service by default.\n"
+"\n"
+"Daily logging:\n"
+"- Enter start, end, break, work type, and notes for each date.\n"
+"- Use Auto Record buttons for start, end, and break checkpoints.\n"
+"- Capture lightweight task details with Quick Log and merge them into reports.\n"
+"- Navigate by calendar, month, week, or minimal-mode day controls.\n"
+"\n"
+"Accounts and security:\n"
+"- Multiple local users are supported, and each user's worklogs, settings, reports, reminders, and backups are isolated.\n"
+"- Passwords and recovery keys are stored as secure hashes.\n"
+"- Administrators can reset user passwords and regenerate recovery keys when needed.\n"
+"- Remember-me login uses the operating system credential manager when available.\n"
+"\n"
+"Reports and templates:\n"
+"- Generate daily notes, weekly reports, and monthly reports from saved data.\n"
+"- Weekly and monthly reports are tied to the selected calendar period and can be saved for later editing.\n"
+"- Built-in and custom templates help standardize recurring note and report formats.\n"
+"\n"
+"Analytics and exports:\n"
+"- Review work hours, averages, overtime, targets, leave markers, and trend charts.\n"
+"- Export chart data to CSV and charts to PDF.\n"
+"- Import/export worklogs as CSV and calendar events as ICS.\n"
+"- Back up and restore the local database with reminders for stale backups.\n"
+"\n"
+"Customization and AI:\n"
+"- Switch languages, themes, custom accent colors, dark mode, and minimal mode.\n"
+"- Use local-model assistance when configured, or connect to OpenAI-compatible external providers such as ChatGPT, Claude, Qwen, and DeepSeek.\n"
+"- Supported UI languages include English, Japanese, Korean, Simplified Chinese, and Traditional Chinese."
+msgstr ""
+"Work Logger は、勤務時間、メモ、クイックログ、カレンダー情報、定期レポートを記録する、プライバシー優先のデスクトップアプリです。既定ではデータをクラウドサービスへ送信しません。\n"
+"\n"
+"日々の記録：\n"
+"- 日付ごとに開始時刻、終了時刻、休憩時間、作業種別、メモを記録できます。\n"
+"- 自動記録ボタンで開始、終了、休憩のチェックポイントを素早く入力できます。\n"
+"- Quick Log で軽量な作業メモを残し、レポートへ統合できます。\n"
+"- カレンダー、月、週、ミニマルモードの日付ボタンで記録を移動できます。\n"
+"\n"
+"アカウントとセキュリティ：\n"
+"- 複数のローカルユーザーをサポートし、勤務記録、設定、レポート、リマインダー、バックアップをユーザーごとに分離します。\n"
+"- パスワードとリカバリーキーは安全なハッシュとして保存されます。\n"
+"- 管理者は必要に応じてユーザーのパスワードをリセットし、リカバリーキーを再生成できます。\n"
+"- 記憶済みログインは、利用可能な場合に OS の資格情報マネージャーを優先します。\n"
+"\n"
+"レポートとテンプレート：\n"
+"- 保存済みデータから日次メモ、週報、月報を生成できます。\n"
+"- 週報と月報は選択中のカレンダー期間に紐づき、保存して後から編集できます。\n"
+"- 組み込みテンプレートとカスタムテンプレートで、定型的なメモやレポート形式を標準化できます。\n"
+"\n"
+"分析とエクスポート：\n"
+"- 勤務時間、平均、残業、目標、休暇マーカー、トレンドチャートを確認できます。\n"
+"- グラフデータを CSV に、グラフを PDF にエクスポートできます。\n"
+"- 勤務記録の CSV インポート/エクスポート、カレンダー ICS のインポート/エクスポートに対応します。\n"
+"- ローカルデータベースのバックアップと復元に対応し、古いバックアップを通知します。\n"
+"\n"
+"カスタマイズと AI：\n"
+"- 言語、テーマ、カスタムアクセントカラー、ダークモード、ミニマルモードを切り替えられます。\n"
+"- 設定済みのローカルモデル支援、または ChatGPT、Claude、Qwen、DeepSeek などの OpenAI 互換外部プロバイダーを利用できます。\n"
+"- 英語、日本語、韓国語、簡体字中国語、繁体字中国語の UI に対応しています。"
+
+msgid "Work Report"
+msgstr "勤務レポート"
+
+msgid "Work Time Analytics"
+msgstr "勤務時間分析"
+
+msgid "Work type"
+msgstr "勤務区分"
+
+msgid "Yes"
+msgstr "はい"
+
+msgid "You already logged {hours}h of break time. What do you want to do?"
+msgstr "すでに {hours}h の休憩を記録しています。どうしますか？"
+
+msgid "You are on the latest version"
+msgstr "現在のバージョンは最新です"
+
+msgid "You haven't backed up in {days} days. Please back up your data."
+msgstr "{days} 日間バックアップされていません。データをバックアップしてください。"
+
+msgid "Your password has not been changed in {days} days. Please update it regularly."
+msgstr "パスワードは {days} 日間変更されていません。定期的に更新してください。"
+
+msgid "{0:.0f} / {1:.0f} MB"
+msgstr "{0:.0f} / {1:.0f} MB"
+
+msgid "{date}  ({dow})  {h}h  [{wt}]"
+msgstr "{date}（{dow}）{h}h  [{wt}]"
+
+msgid "▶ Break"
+msgstr "▶ 休憩開始"
+
+msgid "⚙  Settings"
+msgstr "⚙  設定"
+
+msgid "⚠️ Request exceeded 30 seconds, processing may take a while. Please continue waiting..."
+msgstr "⚠️ 30秒を超えました。処理に時間がかかる場合があります。引き続きお待ちください..."
+
+msgid "⚡ Quick Log"
+msgstr "⚡ クイック記録"
+
+msgid "✓  Connected"
+msgstr "✓  接続成功"
+
+msgid "✓  Integrity verified"
+msgstr "✓  整合性検証完了"
+
+msgid "✓  Model imported"
+msgstr "✓  モデルをインポートしました"
+
+msgid "✓ Request successful."
+msgstr "✓ リクエスト成功。"
+
+msgid "✗  {}"
+msgstr "API キーが設定されていません。"
+
+msgid "✨ AI Assist"
+msgstr "✨ AI アシスト"
+
+msgid "✨ AI Generate"
+msgstr "✨ AI 生成"
+
+msgid "🌍  Language"
+msgstr "🌍  言語"
+
+msgid "🌙  Dark mode"
+msgstr "🌙  ダークモード"
+
+msgid "🎨  Theme"
+msgstr "🎨  テーマ"
+
+msgid "📅 Import Calendar (.ics)"
+msgstr "📅 カレンダーを取り込む (.ics)"
+
+msgid "📋 Templates"
+msgstr "📋 テンプレート"
+
+msgid "HEX"
+msgstr "16進"
+
+msgid "  {size} MB  ·  RAM ≥ {ram} GB"
+msgstr "  {size} MB  ·  RAM ≥ {ram} GB"
+
+msgid "✓  Ready"
+msgstr "✓  準備完了"
+
+msgid "AI Chat"
+msgstr "AIチャット"
+
+msgid "AI Privacy"
+msgstr "AIプライバシー"
+
+msgid "AI disabled"
+msgstr "AIは無効です"
+
+msgid "AI is disabled by policy."
+msgstr "ポリシーによりAIは無効です。"
+
+msgid "AI mode"
+msgstr "AIモード"
+
+msgid "Ask about the selected work context..."
+msgstr "選択した作業コンテキストについて質問..."
+
+msgid "Assistant"
+msgstr "アシスタント"
+
+msgid "Building context..."
+msgstr "コンテキストを作成中..."
+
+msgid "Cancel request"
+msgstr "リクエストをキャンセル"
+
+msgid "Cannot unlink the only login method."
+msgstr "唯一のログイン方法は連携解除できません。"
+
+msgid "Clear conversation"
+msgstr "会話を消去"
+
+msgid "Context"
+msgstr "コンテキスト"
+
+msgid "Conversation cleared."
+msgstr "会話を消去しました。"
+
+msgid "Could not complete sign-in."
+msgstr "サインインを完了できませんでした。"
+
+msgid "Current day"
+msgstr "当日"
+
+msgid "Current month"
+msgstr "今月"
+
+msgid "Current week"
+msgstr "今週"
+
+msgid "Error: {}"
+msgstr "エラー: {}"
+
+msgid "Include calendar events"
+msgstr "カレンダー予定を含める"
+
+msgid "Include calendar titles"
+msgstr "カレンダー件名を含める"
+
+msgid "Include calendar titles by default"
+msgstr "既定でカレンダー件名を含める"
+
+msgid "Include notes"
+msgstr "メモを含める"
+
+msgid "Include notes by default"
+msgstr "既定でメモを含める"
+
+msgid "Include quick log details"
+msgstr "クイックログ詳細を含める"
+
+msgid "Include quick log details by default"
+msgstr "既定でクイックログ詳細を含める"
+
+msgid "Link Google"
+msgstr "Googleを連携"
+
+msgid "Link Microsoft"
+msgstr "Microsoftを連携"
+
+msgid "Linked account removed."
+msgstr "連携アカウントを削除しました。"
+
+msgid "Linked accounts"
+msgstr "連携アカウント"
+
+msgid "Local AI only"
+msgstr "ローカルAIのみ"
+
+msgid "Local model is not available. Enable or download a local model in Settings -> AI."
+msgstr "ローカルモデルを使用できません。「設定 -> AI」でローカルモデルを有効化またはダウンロードしてください。"
+
+msgid "No linked accounts."
+msgstr "連携アカウントはありません。"
+
+msgid "OAuth provider is not configured."
+msgstr "OAuthプロバイダーが設定されていません。"
+
+msgid "Opening browser..."
+msgstr "ブラウザーを開いています..."
+
+msgid "Please configure an AI provider in Settings -> AI."
+msgstr "「設定 -> AI」でAIプロバイダーを設定してください。"
+
+msgid "Remote AI allowed"
+msgstr "リモートAIを許可"
+
+msgid "Send"
+msgstr "送信"
+
+msgid "Sending request..."
+msgstr "リクエストを送信中..."
+
+msgid "Sign in with Google"
+msgstr "Googleでサインイン"
+
+msgid "Sign in with Microsoft"
+msgstr "Microsoftでサインイン"
+
+msgid "Sign-in canceled."
+msgstr "サインインをキャンセルしました。"
+
+msgid "Sign-in completed."
+msgstr "サインインが完了しました。"
+
+msgid "Title hidden"
+msgstr "件名は非表示です"
+
+msgid "Unlink"
+msgstr "連携解除"
+
+msgid "You"
+msgstr "あなた"
+
+msgid "all day"
+msgstr "終日"
+
+msgid "No response."
+msgstr "応答がありません。"
+
+msgid "Request canceled."
+msgstr "リクエストをキャンセルしました。"
+
+msgid "Enter your current password to continue."
+msgstr "続行するには現在のパスワードを入力してください。"
+
+msgid "Password is incorrect."
+msgstr "パスワードが正しくありません。"
+
+msgid "AI Assist"
+msgstr "AI Assist"
+
+msgid "AI Summary"
+msgstr "AI 要約"
+
+msgid "Analytics AI PDF"
+msgstr "分析 AI PDF"
+
+msgid "Apply to Notes"
+msgstr "メモに適用"
+
+msgid "Apply to Report"
+msgstr "レポートに適用"
+
+msgid "Clear this conversation?"
+msgstr "この会話をクリアしますか？"
+
+msgid "Ctrl+Enter to send"
+msgstr "Ctrl+Enter で送信"
+
+msgid "Daily Notes"
+msgstr "日次メモ作成"
+
+msgid "Error: {detail}"
+msgstr "エラー：{detail}"
+
+msgid "Follow up on this result..."
+msgstr "この結果について追加依頼する..."
+
+msgid "Google sign-in is not configured."
+msgstr "Google ログインが設定されていません。"
+
+msgid "Include calendar event titles"
+msgstr "カレンダー予定のタイトルを含める"
+
+msgid "Runtime: External API"
+msgstr "実行方法：外部 API"
+
+msgid "Runtime: Local model"
+msgstr "実行方法：ローカルモデル"
+
+msgid "Selected context may be sent to the configured external AI provider."
+msgstr "選択したコンテキストは、設定済みの外部 AI プロバイダーへ送信される場合があります。"
+
+msgid "Use for PDF"
+msgstr "PDF に使用"
+
+msgid "✨ AI Assist - {}"
+msgstr "✨ AI アシスト - {}"
+
+msgid "✨ AI PDF"
+msgstr "✨ AI PDF"
+
+msgid "Extra instructions:"
+msgstr "補足指示："
+
+msgid "Request: {period}"
+msgstr "依頼：{period}"
+
+msgid "Source: existing draft and selected WorkLogger context"
+msgstr "参照元：既存の下書きおよび選定された選択肢コンテキスト"
+
+msgid "Source: selected WorkLogger context"
+msgstr "参照元：選定された選択肢コンテキスト"
+
+msgid "Details: {detail}"
+msgstr "詳細：{detail}"
+
+msgid "Each user can select one active local model. Downloaded GGUF files are shared across users."
+msgstr "各ユーザーは有効なローカルモデルを 1 つ選択できます。ダウンロード済みの GGUF ファイルはユーザー間で共有されます。"
+
+msgid "Experimental"
+msgstr "実験的"
+
+msgid "Integrity check failed - file may be corrupted"
+msgstr "整合性チェックに失敗しました - ファイルが破損している可能性があります"
+
+msgid "Preserved local model"
+msgstr "保持されたローカルモデル"
+
+msgid "Select"
+msgstr "選択"
+
+msgid "Switch only the current user's active model. Shared model files are kept unless you delete them."
+msgstr "現在のユーザーの有効モデルだけを切り替えます。共有モデルファイルは削除しない限り保持されます。"
+
+msgid "This model is already selected and ready."
+msgstr "このモデルはすでに選択され、使用できます。"
+
+msgid "This model is used by another user and cannot be deleted."
+msgstr "このモデルは別のユーザーが使用しているため削除できません。"
+
+msgid "Used by another user"
+msgstr "別のユーザーが使用中"
+
+msgid "Please enable a local model in Settings -> AI, or configure an external AI provider with API key, base URL, and model name."
+msgstr "設定 -> AI でローカルモデルを有効にするか、外部 AI プロバイダーの API キー、ベース URL、モデル名を設定してください。"
+
+msgid "CSV (*.csv)"
+msgstr "CSV (*.csv)"
+
+msgid "Could not check for updates. Please check your network connection, proxy, VPN, or try again later."
+msgstr "更新を確認できませんでした。ネットワーク接続、プロキシ、VPN を確認するか、後でもう一度お試しください。"
+
+msgid "Date"
+msgstr "日付"
+
+msgid "Export PDF"
+msgstr "PDF をエクスポート"
+
+msgid "Export PNG"
+msgstr "PNG をエクスポート"
+
+msgid "GGUF files (*.gguf);;All files (*)"
+msgstr "GGUF ファイル (*.gguf);;すべてのファイル (*)"
+
+msgid "Month"
+msgstr "月"
+
+msgid "OT"
+msgstr "残業"
+
+msgid "PDF (*.pdf)"
+msgstr "PDF (*.pdf)"
+
+msgid "PNG (*.png)"
+msgstr "PNG (*.png)"
+
+msgid "Quarter"
+msgstr "四半期"
+
+msgid "Q{quarter}"
+msgstr "第{quarter}四半期"
+
+msgid "iCalendar (*.ics)"
+msgstr "iCalendar (*.ics)"
+
+msgid "m"
+msgstr "分"
+
+msgid "⬇  CSV"
+msgstr "⬇  CSV"
+
+msgid "⬇  PDF"
+msgstr "⬇  PDF"

@@ -1,0 +1,6 @@
+{
+  "name": "Sample Template",
+  "type": "daily",
+  "content": "# Template Sample / テンプレート例 / 模板示例 / 模板範例 / 템플릿 예시\n\n> Edit this file to create your own custom template.\n> このファイルを編集して自分用テンプレートを作成できます。\n> 你可以编辑这个文件来制作自己的自定义模板。\n> 你可以編輯這個檔案來製作自己的自訂模板。\n> 이 파일을 수정해서 나만의 사용자 템플릿을 만들 수 있습니다.\n\n## Supported placeholders / 使用できる変数 / 可用占位符 / 可用佔位符 / 사용 가능한 변수\n- `{{date}}`\n- `{{year}}`\n- `{{month}}`\n- `{{date_range}}`\n- `{{task_list}}`\n- `{{total_hours}}`\n- `{{overtime_hours}}`\n- `{{issues}}`\n- `{{next_plan}}`\n\n## Example / 例\n### Work Summary\n{{task_list}}\n\n### Hours\n- Total: {{total_hours}}h\n- Overtime: {{overtime_hours}}h\n\n### Issues\n{{issues}}\n\n### Next Plan\n{{next_plan}}\n",
+  "created": 1000000000000
+}

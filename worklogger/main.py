@@ -1,0 +1,254 @@
+"""WorkLogger — entry point."""
+
+import importlib
+import sys
+
+# Windows needs the AppUserModelID before QApplication for the taskbar icon.
+if sys.platform == "win32":
+    try:
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+            "dev.worklogger.app.v1")
+    except Exception:
+        pass
+
+from PySide6.QtCore import QTimer
+from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
+
+from config.constants import FORCE_PASSWORD_CHANGE_SETTING_KEY
+from services.app_services import AppServices
+from services.session_store import (
+    clear_remember_token,
+    load_remember_session,
+    save_remember_token,
+)
+from services.language_manager import get_language_manager
+from utils.icon import make_icon
+from utils.logging_config import configure_logging
+from ui.main_window import App
+from ui.dialogs import (
+    ChangePasswordDialog,
+    LoginDialog,
+    RegisterDialog,
+    ResetPasswordDialog,
+)
+from utils.i18n import _, get_language
+
+_SMOKE_IMPORT_MODULES = (
+    "services.app_services",
+    "services.report_service",
+    "services.export_service",
+    "services.calendar_service",
+)
+
+
+def _safe_stdout(message: str) -> None:
+    stream = getattr(sys, "stdout", None)
+    if stream is None:
+        return
+    print(message)
+
+
+def _smoke_import_check() -> int:
+    failures: list[str] = []
+    for module_name in _SMOKE_IMPORT_MODULES:
+        try:
+            importlib.import_module(module_name)
+        except Exception as exc:
+            failures.append(f"{module_name}: {type(exc).__name__}: {exc}")
+    if failures:
+        _safe_stdout("SMOKE IMPORT FAILED")
+        for failure in failures:
+            _safe_stdout(failure)
+        return 1
+    _safe_stdout("SMOKE IMPORT OK")
+    return 0
+
+
+def _smoke_local_model_runtime_check() -> int:
+    """Verify the packaged llama-cpp-python native binding can load."""
+    try:
+        from services.local_model_service import is_local_model_runtime_supported
+
+        if not is_local_model_runtime_supported():
+            _safe_stdout("SMOKE LOCAL MODEL RUNTIME SKIPPED")
+            _safe_stdout("reason=local_model_runtime_unsupported_on_arch")
+            return 0
+    except Exception:
+        pass
+
+    try:
+        from pathlib import Path
+
+        import llama_cpp
+        from llama_cpp import Llama  # noqa: F401
+
+        binding = importlib.import_module("llama_cpp.llama_cpp")
+        package_dir = Path(llama_cpp.__file__).resolve().parent
+        search_roots = [package_dir]
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            search_roots.append(Path(meipass).resolve() / "llama_cpp")
+        if getattr(sys, "frozen", False):
+            contents_dir = Path(sys.executable).resolve().parents[1]
+            search_roots.append(contents_dir / "Frameworks" / "llama_cpp")
+            search_roots.append(contents_dir / "Resources" / "llama_cpp")
+        native_files = sorted({
+            path
+            for root in search_roots
+            if root.exists()
+            for pattern in ("*.so", "*.dylib", "*.pyd")
+            for path in root.rglob(pattern)
+        })
+        if not native_files:
+            raise RuntimeError(
+                "No llama_cpp native libraries found under: "
+                + ", ".join(str(root) for root in search_roots)
+            )
+    except Exception as exc:
+        _safe_stdout("SMOKE LOCAL MODEL RUNTIME FAILED")
+        _safe_stdout(f"{type(exc).__name__}: {exc}")
+        return 1
+
+    _safe_stdout("SMOKE LOCAL MODEL RUNTIME OK")
+    _safe_stdout(f"llama_cpp_module={llama_cpp.__file__}")
+    _safe_stdout(f"llama_cpp_binding={getattr(binding, '__file__', '')}")
+    _safe_stdout(
+        f"llama_backend_init_available={hasattr(binding, 'llama_backend_init')}"
+    )
+    for path in native_files:
+        _safe_stdout(f"llama_native={path}")
+    return 0
+
+
+def _bootstrap() -> None:
+    """Run one-time setup tasks before the Qt app starts.
+
+    Called once at process start, before ``QApplication`` is created.
+    Errors are silently swallowed — bootstrap failures must never prevent
+    the app from launching.
+    """
+    try:
+        configure_logging()
+    except Exception:
+        pass
+    try:
+        # Ensure catalog.json is present in the user's models directory.
+        # On a frozen (PyInstaller) first run the file lives only inside
+        # sys._MEIPASS and must be copied out to the persistent location.
+        from services.local_model_service import ensure_catalog
+        ensure_catalog()
+    except Exception:
+        pass
+
+
+def main():
+    if "--smoke-import" in sys.argv:
+        sys.exit(_smoke_import_check())
+    if "--smoke-local-model-runtime" in sys.argv:
+        sys.exit(_smoke_local_model_runtime_check())
+
+    _bootstrap()
+    app = QApplication(sys.argv)
+    app.setStyle("Fusion")
+    get_language_manager().apply(get_language())
+    icon = make_icon()
+    app.setWindowIcon(icon)
+    services = AppServices()
+
+    if authenticate(services) is None:
+        sys.exit(0)
+    if not _force_password_change_if_needed(services):
+        sys.exit(0)
+
+    initial_lang = services.resolve_initial_language()
+    get_language_manager().apply(initial_lang)
+    w = App(services=services, initial_lang=initial_lang)
+    w.setWindowIcon(icon)
+    w.show()
+    QTimer.singleShot(0, services.mark_current_user_used)
+    sys.exit(app.exec())
+
+
+def authenticate(services: AppServices | None = None) -> int | None:
+    services = services or AppServices()
+    remember_session = load_remember_session()
+    if remember_session and remember_session.token:
+        user_id = services.auth.login_with_token(remember_session.token)
+        if user_id is not None:
+            services.set_current_user(user_id)
+            if (
+                not remember_session.username
+                and services.current_username
+                and remember_session.token
+            ):
+                try:
+                    save_remember_token(
+                        services.current_username,
+                        remember_session.token,
+                    )
+                except Exception:
+                    pass
+            return user_id
+        clear_remember_token(remember_session.username or None)
+
+    if services.db.user_count() == 0:
+        QMessageBox.information(
+            None,
+            _("Register"),
+            _("No accounts found. Please create an administrator account."),
+        )
+        register = RegisterDialog(services.auth)
+        if register.exec() != QDialog.Accepted:
+            return None
+
+    login = LoginDialog(services)
+
+    def _open_register() -> None:
+        dlg = RegisterDialog(services.auth, login)
+        if dlg.exec() == QDialog.Accepted and dlg.username:
+            login.set_username(dlg.username)
+
+    def _open_change_password() -> None:
+        dlg = ChangePasswordDialog(
+            services.auth,
+            username=login.current_username(),
+            parent=login,
+        )
+        dlg.exec()
+
+    def _open_reset_password() -> None:
+        dlg = ResetPasswordDialog(
+            services.auth,
+            username=login.current_username(),
+            parent=login,
+        )
+        dlg.exec()
+
+    login.register_requested.connect(_open_register)
+    login.change_password_requested.connect(_open_change_password)
+    login.reset_password_requested.connect(_open_reset_password)
+    if login.exec() != QDialog.Accepted or login.user_id is None:
+        return None
+    services.set_current_user(login.user_id, login.username)
+    return login.user_id
+
+
+def _force_password_change_if_needed(services: AppServices) -> bool:
+    if services.get_setting(FORCE_PASSWORD_CHANGE_SETTING_KEY, "0") != "1":
+        return True
+    QMessageBox.information(
+        None,
+        _("Change Password"),
+        _("This account must change its password before continuing."),
+    )
+    dlg = ChangePasswordDialog(
+        services.auth,
+        current_user_id=services.current_user_id,
+        require_old_password=False,
+    )
+    return dlg.exec() == QDialog.Accepted
+
+
+if __name__ == "__main__":
+    main()

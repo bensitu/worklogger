@@ -1,0 +1,1697 @@
+msgid ""
+msgstr ""
+"Language: ko_KR\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid ""
+"\n"
+"\n"
+"Skipped {} rows:\n"
+"{}"
+msgstr ""
+"\n"
+"\n"
+"{}행을 건너뜠습니다:\n"
+"{}"
+
+msgid " days"
+msgstr "일"
+
+msgid "#"
+msgstr "#"
+
+msgid "+"
+msgstr "+"
+
+msgid "1.0"
+msgstr "1.0"
+
+msgid "A different model is already downloaded.  It will be deleted before downloading the new one.  Continue?"
+msgstr "다른 모델이 이미 다운로드되어 있습니다. 새 모델을 다운로드하기 전에 삭제됩니다. 계속하시겠습니까?"
+
+msgid "A different model is already downloaded. It will be deleted before the new one downloads. Continue?"
+msgstr "다른 모델이 이미 다운로드되어 있습니다. 새 모델을 다운로드하기 전에 삭제됩니다. 계속하시겠습니까?"
+
+msgid "A new recovery key was generated. Share it with the user now; it cannot be shown again later."
+msgstr "새 복구 키가 생성되었습니다. 지금 사용자에게 전달하세요. 나중에 다시 표시할 수 없습니다."
+
+msgid "A privacy-first desktop work-hours tracker with AI-powered reporting."
+msgstr "AI 보고서 생성 기능을 갖춘 개인정보 보호 데스크탑 근무 시간 추적 앱."
+
+msgid "About"
+msgstr "정보"
+
+msgid "Account"
+msgstr "계정"
+
+msgid "Actions"
+msgstr "작업"
+
+msgid "Active"
+msgstr "활성"
+
+msgid "Add"
+msgstr "추가"
+
+msgid "Administrator"
+msgstr "관리자"
+
+msgid "Administrator accounts cannot be deleted."
+msgstr "관리자 계정은 삭제할 수 없습니다."
+
+msgid "Administrator Password"
+msgstr "관리자 비밀번호"
+
+msgid "Administrator password is incorrect."
+msgstr "관리자 비밀번호가 올바르지 않습니다."
+
+msgid "Administrator privileges are required."
+msgstr "관리자 권한이 필요합니다."
+
+msgid "AI"
+msgstr "AI"
+
+msgid "AI Generated"
+msgstr "AI 생성"
+
+msgid "AI Generated Content"
+msgstr "AI 생성 내용"
+
+msgid "AI Generated Result"
+msgstr "AI 생성 결과"
+
+msgid "AI Result"
+msgstr "AI 결과"
+
+msgid "Analytics"
+msgstr "분석"
+
+msgid "Annual"
+msgstr "연간"
+
+msgid "API Base URL"
+msgstr "API 주소"
+
+msgid "API Base URL is not set."
+msgstr "API Base URL이 설정되지 않았습니다."
+
+msgid "API Key"
+msgstr "API 키"
+
+msgid "API Key is not set."
+msgstr "API Key가 설정되지 않았습니다."
+
+msgid "Appearance"
+msgstr "외관"
+
+msgid "Append"
+msgstr "추가"
+
+msgid "Apply"
+msgstr "적용"
+
+msgid "Apr"
+msgstr "4월"
+
+msgid "April"
+msgstr "4월"
+
+msgid "Are you sure you want to log out?"
+msgstr "로그아웃하시겠습니까?"
+
+msgid "Are you sure you want to regenerate the recovery key? The old key will stop working immediately."
+msgstr "복구 키를 다시 생성하시겠습니까? 기존 키는 즉시 무효화됩니다."
+
+msgid "At least one administrator account is required."
+msgstr "최소 하나의 관리자 계정이 필요합니다."
+
+msgid "Aug"
+msgstr "8월"
+
+msgid "August"
+msgstr "8월"
+
+msgid "Author"
+msgstr "제작자"
+
+msgid "Auto Record"
+msgstr "자동 기록"
+
+msgid "Average"
+msgstr "평균"
+
+msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
+msgstr "로컬 작업 기록, 보고서, 설정, 계정 데이터를 보호하려면 데이터베이스를 정기적으로 백업하세요."
+
+msgid "Backup Data"
+msgstr "데이터 백업"
+
+msgid "Backup destination must be different from the active database."
+msgstr "백업 대상은 현재 데이터베이스와 달라야 합니다."
+
+msgid "Backup saved: {}"
+msgstr "백업 저장됨: {}"
+
+msgid "Bar"
+msgstr "막대"
+
+msgid "Break (h)"
+msgstr "휴식 (h)"
+
+msgid "Break done"
+msgstr "휴식 완료"
+
+msgid "Break hours cannot be negative."
+msgstr "휴게 시간은 음수가 될 수 없습니다."
+
+msgid "Break time must be less than the total shift duration."
+msgstr "휴게 시간은 총 근무 시간보다 짧아야 합니다."
+
+msgid "Break Timer"
+msgstr "휴식 타이머"
+
+msgid "Built-in"
+msgstr "기본 제공"
+
+msgid "Business trip"
+msgstr "출장"
+
+msgid ""
+"Calendar data already exists.\n"
+"\n"
+"Replace — clear all previous calendar events before import.\n"
+"Append — keep existing events and add new ones."
+msgstr ""
+"캘린더 데이터가 이미 존재합니다.\n"
+"\n"
+"교체 — 가져오기 전에 기존 일정을 모두 삭제합니다.\n"
+"추가 — 기존 일정을 유지하고 새 일정을 추가합니다."
+
+msgid "Calendar events cleared."
+msgstr "캘린더 이벤트가 삭제되었습니다."
+
+msgid "Calendar events:"
+msgstr "캘린더 이벤트:"
+
+msgid "Calendar Sync"
+msgstr "캘린더 동기화"
+
+msgid "Cancel"
+msgstr "취소"
+
+msgid "Change Password"
+msgstr "비밀번호 변경"
+
+msgid "Changing your password will generate a new recovery key. Your new password must be at least 8 characters."
+msgstr "비밀번호를 변경하면 새 복구 키가 생성됩니다. 새 비밀번호는 최소 8자 이상이어야 합니다."
+
+msgid "Chart:"
+msgstr "차트:"
+
+msgid "Check for Updates"
+msgstr "업데이트 확인"
+
+msgid "Checking for updates…"
+msgstr "업데이트를 확인하는 중…"
+
+msgid "Choose a model to download"
+msgstr "다운로드할 모델 선택"
+
+msgid "Choose custom color"
+msgstr "사용자 정의 색상 선택"
+
+msgid "Clear Calendar Events"
+msgstr "캘린더 이벤트 삭제"
+
+msgid "Clock"
+msgstr "기록"
+
+msgid "Close"
+msgstr "닫기"
+
+msgid "Comp leave"
+msgstr "대체 휴가"
+
+msgid "Confirm"
+msgstr "확인"
+
+msgid "Confirm Administrator Password"
+msgstr "관리자 비밀번호 확인"
+
+msgid "Confirm Password"
+msgstr "비밀번호 확인"
+
+msgid "Contacting AI provider for {model}..."
+msgstr "{model}에 연결 중입니다..."
+
+msgid "Continue"
+msgstr "이어 누적"
+
+msgid "Copied!"
+msgstr "복사됨!"
+
+msgid "Copy"
+msgstr "복사"
+
+msgid "Copy and safely store this recovery key now. If it is lost, only an administrator can reset your password."
+msgstr "이 복구 키를 지금 복사해 안전하게 보관하세요. 잃어버리면 관리자만 비밀번호를 재설정할 수 있습니다."
+
+msgid "Could not check for updates: {}"
+msgstr "업데이트 확인 실패: {}"
+
+msgid "Could not load the latest model catalog. Check your network and try again."
+msgstr "최신 모델 목록을 불러올 수 없습니다. 네트워크를 확인한 후 다시 시도하세요."
+
+msgid "Could not save initial password."
+msgstr "초기 비밀번호를 저장할 수 없습니다."
+
+msgid "Could not save recovery key."
+msgstr "복구 키를 저장할 수 없습니다."
+
+msgid "Could not verify the update server certificate. Please check your network trust settings and try again."
+msgstr "업데이트 서버 인증서를 확인할 수 없습니다. 네트워크 신뢰 설정을 확인한 후 다시 시도하세요."
+
+msgid "Create Custom Template"
+msgstr "사용자 정의 템플릿 만들기"
+
+msgid "Create User"
+msgstr "사용자 만들기"
+
+msgid "Created"
+msgstr "생성일"
+
+msgid "CSV Data Management"
+msgstr "CSV 데이터 관리"
+
+msgid "CSV file is empty."
+msgstr "CSV 파일이 비어 있습니다."
+
+msgid "CTO"
+msgstr "대휴"
+
+msgid "Current user"
+msgstr "현재 사용자"
+
+msgid "Custom"
+msgstr "사용자 정의"
+
+msgid "Custom theme color"
+msgstr "사용자 정의 테마 색상"
+
+msgid "Daily"
+msgstr "일일"
+
+msgid "Daily avg"
+msgstr "일 평균"
+
+msgid "Data"
+msgstr "데이터"
+
+msgid "Data restored successfully."
+msgstr "데이터가 성공적으로 복원되었습니다."
+
+msgid "Database Backup"
+msgstr "데이터베이스 백업"
+
+msgid "Dec"
+msgstr "12월"
+
+msgid "December"
+msgstr "12월"
+
+msgid "Default"
+msgstr "기본"
+
+msgid "Default break (h)"
+msgstr "기본 휴식 시간 (h)"
+
+msgid "Delete"
+msgstr "삭제"
+
+msgid "Delete Model"
+msgstr "모델 삭제"
+
+msgid "Delete this entry?"
+msgstr "이 항목을 삭제하시겠습니까?"
+
+msgid "Delete this model file? This cannot be undone."
+msgstr "이 모델 파일을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+
+msgid "Delete this template?"
+msgstr "이 템플릿을 삭제하시겠습니까?"
+
+msgid "Delete User"
+msgstr "사용자 삭제"
+
+msgid "Done"
+msgstr "완료"
+
+msgid "Done."
+msgstr "완료."
+
+msgid "Download"
+msgstr "다운로드"
+
+msgid "Download .md"
+msgstr ".md 다운로드"
+
+msgid "Download Local Model"
+msgstr "로컬 모델 다운로드"
+
+msgid "Downloaded"
+msgstr "다운로드됨"
+
+msgid "Downloading local model..."
+msgstr "로컬 모델을 다운로드하는 중..."
+
+msgid "Downloading…  You may cancel at any time; the download will resume from where it left off."
+msgstr "다운로드 중… 언제든 취소할 수 있으며 다음에 중단 지점부터 다시 시작됩니다."
+
+msgid "Enable local model"
+msgstr "로컬 모델 활성화"
+
+msgid "Enable menu bar icon"
+msgstr "메뉴 막대 아이콘 사용"
+
+msgid "Enable tray icon"
+msgstr "트레이 아이콘 사용"
+
+msgid "End"
+msgstr "퇴근"
+
+msgid "End now"
+msgstr "지금 퇴근"
+
+msgid "End time (opt.)"
+msgstr "종료 시간 (선택)"
+
+msgid "Ended"
+msgstr "기록됨"
+
+msgid "Enter administrator password to delete {username}."
+msgstr "{username} 사용자를 삭제하려면 관리자 비밀번호를 입력하세요."
+
+msgid "Error"
+msgstr "오류"
+
+msgid "Error:"
+msgstr "오류:"
+
+msgid "Expand notes"
+msgstr "메모 확장"
+
+msgid "Export"
+msgstr "내보내기"
+
+msgid "Export .ics"
+msgstr ".ics 내보내기"
+
+msgid "Export CSV"
+msgstr "CSV 내보내기"
+
+msgid "Exported {} events."
+msgstr "{} 개 내보냈습니다."
+
+msgid "External Model"
+msgstr "외부 모델"
+
+msgid "Feature Overview"
+msgstr "기능 소개"
+
+msgid "Features"
+msgstr "기능 소개"
+
+msgid "Feb"
+msgstr "2월"
+
+msgid "February"
+msgstr "2월"
+
+msgid "Forgot Password?"
+msgstr "비밀번호를 잊으셨나요?"
+
+msgid "Fri"
+msgstr "금"
+
+msgid "General"
+msgstr "일반"
+
+msgid "Generated At"
+msgstr "생성일"
+
+msgid "Generating with local model..."
+msgstr "로컬 모델로 생성 중..."
+
+msgid "GitHub"
+msgstr "GitHub"
+
+msgid "gpt-4o-mini | claude-haiku-4-5-20251001"
+msgstr "Anthropic 및 OpenAI 호환 API를 지원합니다. 예: ChatGPT, Claude, Gemini, DeepSeek, Doubao, Qwen."
+
+msgid "Grant Admin"
+msgstr "관리자 권한 부여"
+
+msgid "h"
+msgstr "h"
+
+msgid "HH:MM"
+msgstr "HH:MM"
+
+msgid "Hint / extra instructions (optional)"
+msgstr "AI보조 보충 지시사항 (선택)"
+
+msgid "https://api.openai.com/v1 | https://api.anthropic.com"
+msgstr "gpt-4o-mini | claude-haiku-4-5-20251001"
+
+msgid "I have saved this recovery key safely."
+msgstr "이 복구 키를 안전하게 저장했습니다."
+
+msgid "Import .gguf"
+msgstr ".gguf 가져오기"
+
+msgid "Import .ics"
+msgstr ".ics 가져오기"
+
+msgid "Import CSV"
+msgstr "CSV 가져오기"
+
+msgid "Import or export worklog records as CSV files for backup, migration, or spreadsheet analysis."
+msgstr "백업, 이전 또는 스프레드시트 분석을 위해 작업 기록을 CSV 파일로 가져오거나 내보냅니다."
+
+msgid "Import Result"
+msgstr "가져오기 결과"
+
+msgid "Import your .ics file to let AI read your meetings when generating reports."
+msgstr ".ics 파일을 가져오면 AI가 일정을 참조하여 보고서를 자동 생성합니다."
+
+msgid "Imported {} calendar events."
+msgstr "{} 개의 캘린더 이벤트를 가져왔습니다."
+
+msgid "Imported {} records."
+msgstr "{} 건 가져왔습니다."
+
+msgid "In Use"
+msgstr "사용 상태"
+
+msgid "Inactive"
+msgstr "비활성"
+
+msgid "Initial Password"
+msgstr "초기 비밀번호"
+
+msgid "Initial password saved."
+msgstr "초기 비밀번호가 저장되었습니다."
+
+msgid "Initializing AI request..."
+msgstr "AI 요청을 초기화하는 중..."
+
+msgid "Insert"
+msgstr "삽입"
+
+msgid "Insert Quick Log"
+msgstr "빠른 기록 삽입"
+
+msgid "Installing local model dependencies..."
+msgstr "로컬 모델 의존성을 설치하는 중..."
+
+msgid "Integrity check failed — file may be corrupted"
+msgstr "무결성 검사 실패 — 파일이 손상되었을 수 있습니다"
+
+msgid "Integrity failed"
+msgstr "무결성 검사에 실패했습니다"
+
+msgid "Invalid time range. The shift must be within {max_hours} hours (overnight is supported)."
+msgstr "잘못된 시간 범위입니다. 근무는 {max_hours}시간 이내여야 합니다(야간 근무 지원)."
+
+msgid "Invoice"
+msgstr "청구서"
+
+msgid "Jan"
+msgstr "1월"
+
+msgid "January"
+msgstr "1월"
+
+msgid "Jul"
+msgstr "7월"
+
+msgid "July"
+msgstr "7월"
+
+msgid "Jun"
+msgstr "6월"
+
+msgid "June"
+msgstr "6월"
+
+msgid "Leave"
+msgstr "휴가"
+
+msgid "Leave days"
+msgstr "휴가일수"
+
+msgid "Leave Hours"
+msgstr "휴가 시간"
+
+msgid "License"
+msgstr "라이선스"
+
+msgid "Line"
+msgstr "선"
+
+msgid "llama-cpp-python not installed - run: pip install llama-cpp-python"
+msgstr "llama-cpp-python이 설치되어 있지 않습니다 - 실행: pip install llama-cpp-python"
+
+msgid "Loading latest model catalog..."
+msgstr "최신 모델 목록을 불러오는 중..."
+
+msgid "Loading local model..."
+msgstr "로컬 모델을 불러오는 중..."
+
+msgid "Local Model"
+msgstr "로컬 모델"
+
+msgid "Local model"
+msgstr "로컬 모델"
+
+msgid ""
+"Local model failed and no external API key / URL / model name is configured.\n"
+"Please configure an external model in Settings → AI."
+msgstr ""
+"로컬 모델이 실패했고 외부 API 키 / URL / 모델명이 설정되지 않았습니다.\n"
+"설정 → AI에서 외부 모델을 설정하세요."
+
+msgid "Local model failed and no external API key / URL / model name is configured. Please configure an external model in Settings → AI."
+msgstr "로컬 모델 실패 및 외부 API 키 / URL / 모델명 미설정. 설정 → AI에서 외부 모델을 설정하세요."
+
+msgid "Local model failed to load"
+msgstr "로컬 모델 로드 실패"
+
+msgid "Local model is disabled."
+msgstr "로컬 모델이 비활성화되어 있습니다."
+
+msgid "Local model is inactive"
+msgstr "로컬 모델이 비활성 상태입니다"
+
+msgid "Local model loaded."
+msgstr "로컬 모델을 불러왔습니다."
+
+msgid "Local model not downloaded - go to Settings -> AI"
+msgstr "로컬 모델이 다운로드되지 않았습니다 - 설정 -> AI로 이동하세요"
+
+msgid "Local model unavailable - using external model instead"
+msgstr "로컬 모델을 사용할 수 없어 외부 모델을 대신 사용합니다"
+
+msgid "Local model unavailable - using external model instead."
+msgstr "로컬 모델을 사용할 수 없어 외부 모델을 대신 사용합니다."
+
+msgid "Local model verification failed. Please re-download or switch model."
+msgstr "로컬 모델 검증에 실패했습니다. 다시 다운로드하거나 모델을 전환해 주세요."
+
+msgid "Local model verification timed out."
+msgstr "로컬 모델 검증이 시간 초과되었습니다."
+
+msgid "Local model verification was cancelled."
+msgstr "로컬 모델 검증이 취소되었습니다."
+
+msgid "Log out"
+msgstr "로그아웃"
+
+msgid "Login"
+msgstr "로그인"
+
+msgid "Login failed"
+msgstr "로그인 실패"
+
+msgid "Manage Users"
+msgstr "사용자 관리"
+
+msgid "Manual Input"
+msgstr "직접 입력"
+
+msgid "Mar"
+msgstr "3월"
+
+msgid "March"
+msgstr "3월"
+
+msgid "Markdown (*.md)"
+msgstr "Markdown 파일 (*.md)"
+
+msgid "May"
+msgstr "5월"
+
+msgid "Metric:"
+msgstr "지표:"
+
+msgid "Minimal mode"
+msgstr "미니멀 모드"
+
+msgid "Minimal mode toggle will take effect after restarting the application."
+msgstr "미니멀 모드 전환은 애플리케이션을 다시 시작한 후 적용됩니다."
+
+msgid "Missing columns: {}"
+msgstr "열 누락: {}"
+
+msgid "Model"
+msgstr "모델"
+
+msgid "Model download completed."
+msgstr "모델 다운로드가 완료되었습니다."
+
+msgid "Model hash verified."
+msgstr "모델 해시 검증이 완료되었습니다."
+
+msgid "Model name is not set."
+msgstr "모델 이름이 설정되지 않았습니다."
+
+msgid "Mon"
+msgstr "월"
+
+msgid "Monthly"
+msgstr "월간"
+
+msgid "Monthly Analytics"
+msgstr "월간 분석"
+
+msgid "Monthly Report"
+msgstr "월간 보고서"
+
+msgid "Monthly target (h)"
+msgstr "월간 목표 시간 (h)"
+
+msgid "Monthly total"
+msgstr "월간 합계"
+
+msgid "Monthly Work Report  {year}/{month:02d}"
+msgstr "{year}년 {month:02d}월 업무 보고서"
+
+msgid "New Password"
+msgstr "새 비밀번호"
+
+msgid "New Template"
+msgstr "새 템플릿"
+
+msgid "New version available: v{0}"
+msgstr "새 버전 v{0}을 사용할 수 있습니다"
+
+msgid "Next day"
+msgstr "다음 날"
+
+msgid "Next month"
+msgstr "다음 달"
+
+msgid "Night"
+msgstr "야간"
+
+msgid "No"
+msgstr "아니오"
+
+msgid "No accounts found. Please create an administrator account."
+msgstr "계정이 없습니다. 관리자 계정을 만들어 주세요."
+
+msgid "No data"
+msgstr "데이터 없음"
+
+msgid "No downloadable models are available. You can still import a local .gguf file."
+msgstr "다운로드할 수 있는 모델이 없습니다. 로컬 .gguf 파일은 계속 가져올 수 있습니다."
+
+msgid "No entries yet today."
+msgstr "오늘 기록이 없습니다."
+
+msgid "No events found."
+msgstr "이벤트를 찾을 수 없습니다."
+
+msgid "No external model configured"
+msgstr "외부 모델이 설정되지 않았습니다"
+
+msgid "No notes recorded for this period."
+msgstr "이 기간에 메모가 없습니다."
+
+msgid "No templates available for this type."
+msgstr "이 유형의 템플릿이 없습니다."
+
+msgid "Normal"
+msgstr "일반 근무"
+
+msgid ""
+"Normal: {normal}\n"
+"Remote: {remote}\n"
+"Business: {biz}"
+msgstr ""
+"정상：{normal}\n"
+"재택：{remote}\n"
+"출장：{biz}"
+
+msgid "Not downloaded"
+msgstr "미다운로드"
+
+msgid "Note"
+msgstr "주의"
+
+msgid "Notes"
+msgstr "메모"
+
+msgid "Notes reminder dot"
+msgstr "메모 알림 점"
+
+msgid "Nov"
+msgstr "11월"
+
+msgid "November"
+msgstr "11월"
+
+msgid "Oct"
+msgstr "10월"
+
+msgid "October"
+msgstr "10월"
+
+msgid "OK"
+msgstr "확인"
+
+msgid "Old Password"
+msgstr "기존 비밀번호"
+
+msgid "Old password is incorrect."
+msgstr "기존 비밀번호가 올바르지 않습니다."
+
+msgid "On break"
+msgstr "휴식 중"
+
+msgid "Only one model can be active at a time.  Delete the current model before switching."
+msgstr "한 번에 하나의 모델만 활성화할 수 있습니다. 전환 전에 현재 모델을 삭제하세요."
+
+msgid "Open"
+msgstr "열기"
+
+msgid "Open color picker"
+msgstr "색상 선택기 열기"
+
+msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
+msgstr "ChatGPT, Claude, Qwen, DeepSeek 등 OpenAI 호환 모델을 지원합니다."
+
+msgid "Operation failed."
+msgstr "작업에 실패했습니다."
+
+msgid "Original"
+msgstr "원문"
+
+msgid "Original Content"
+msgstr "수정 전 내용"
+
+msgid "Overnight"
+msgstr "익일"
+
+msgid "Overnight indicator"
+msgstr "익일 표시기 보기"
+
+msgid "Overtime"
+msgstr "초과 근무"
+
+msgid "Overwrite existing data?"
+msgstr "기존 데이터를 덮어쓸까요?"
+
+msgid "Paid leave"
+msgstr "유급 휴가"
+
+msgid ""
+"Paid: {paid}\n"
+"Comp: {comp}\n"
+"Sick: {sick}"
+msgstr ""
+"연차：{paid}\n"
+"대휴：{comp}\n"
+"병가：{sick}"
+
+msgid "Password"
+msgstr "비밀번호"
+
+msgid "Password change failed."
+msgstr "비밀번호 변경에 실패했습니다."
+
+msgid "Password Changed"
+msgstr "비밀번호 변경 시간"
+
+msgid "Password changed successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+msgstr "비밀번호가 변경되었습니다. 새 복구 키가 생성되었습니다. 지금 복사하여 저장하세요. 이전 복구 키는 더 이상 작동하지 않습니다."
+
+msgid "Password must be at least 8 characters."
+msgstr "비밀번호는 8자 이상이어야 합니다."
+
+msgid "Password reset successfully. A new recovery key was generated. Copy and save it now; the old recovery key no longer works."
+msgstr "비밀번호가 재설정되었습니다. 새 복구 키가 생성되었습니다. 지금 복사하여 저장하세요. 이전 복구 키는 더 이상 작동하지 않습니다."
+
+msgid "Passwords do not match."
+msgstr "비밀번호가 일치하지 않습니다."
+
+msgid "PDF requires QtPrintSupport. Saving PNG."
+msgstr "PDF에는 QtPrintSupport가 필요합니다. PNG로 저장합니다."
+
+msgid "Period"
+msgstr "기간"
+
+msgid "Permission denied while verifying local model file."
+msgstr "로컬 모델 파일을 검증하는 중 권한이 거부되었습니다."
+
+msgid "Please confirm that you have saved the recovery key."
+msgstr "복구 키를 저장했는지 확인해 주세요."
+
+msgid "Please enter a model name in Settings → AI."
+msgstr "설정 → AI 에 모델 이름을 입력하세요."
+
+msgid "Please enter administrator password."
+msgstr "관리자 비밀번호를 입력하세요."
+
+msgid "Please enter the API Base URL in Settings → AI."
+msgstr "설정 → AI 에 API Base URL을 입력하세요."
+
+msgid "Please enter username and password."
+msgstr "사용자 이름과 비밀번호를 입력하세요."
+
+msgid "Please enter username and recovery key."
+msgstr "사용자 이름과 복구 키를 입력하세요."
+
+msgid "Please enter your API Key in Settings → AI."
+msgstr "설정 → AI 에 API Key를 입력하세요."
+
+msgid "Please set your API key in Settings → AI."
+msgstr "설정→AI 에서 API Key를 입력하세요."
+
+msgid "Preparing request for {model}..."
+msgstr "{model} 모델에 대한 요청을 준비 중입니다..."
+
+msgid "Preparing your AI request..."
+msgstr "AI 요청을 준비하고 있습니다..."
+
+msgid "Previous day"
+msgstr "이전 날"
+
+msgid "Previous month"
+msgstr "이전 달"
+
+msgid "Processing AI response..."
+msgstr "AI 응답을 처리하는 중입니다..."
+
+msgid "PTO"
+msgstr "유급"
+
+msgid "Public holidays"
+msgstr "공휴일 표시"
+
+msgid "Quarterly"
+msgstr "분기별"
+
+msgid "Quick Log"
+msgstr "빠른 기록"
+
+msgid "Quick logs appear in daily notes and AI reports."
+msgstr "빠른 기록은 AI 보고서 생성 시 자동으로 참조됩니다."
+
+msgid "Quit"
+msgstr "종료"
+
+msgid "Ready"
+msgstr "준비 완료"
+
+msgid "Recovery Key"
+msgstr "복구 키"
+
+msgid "Recovery Key Created"
+msgstr "복구 키 생성일"
+
+msgid "Recovery key is incorrect. Contact an administrator to reset your password."
+msgstr "복구 키가 올바르지 않습니다. 관리자에게 비밀번호 재설정을 요청하세요."
+
+msgid "Recovery Key Regenerated"
+msgstr "복구 키가 다시 생성되었습니다"
+
+msgid "Recovery key saved."
+msgstr "복구 키가 저장되었습니다."
+
+msgid "Refresh"
+msgstr "새로 고침"
+
+msgid "Regenerate"
+msgstr "다시 생성"
+
+msgid "Regenerate Key"
+msgstr "키 재생성"
+
+msgid "Regenerate Recovery Key"
+msgstr "복구 키 재생성"
+
+msgid "Register"
+msgstr "등록"
+
+msgid "Registration failed."
+msgstr "등록에 실패했습니다."
+
+msgid "Registration successful. Please log in."
+msgstr "등록이 완료되었습니다. 로그인해 주세요."
+
+msgid "Remember me"
+msgstr "로그인 상태 기억"
+
+msgid "Remember-token encryption requires the 'cryptography' package. Please install it via pip install cryptography."
+msgstr "remember token 암호화에는 'cryptography' 패키지가 필요합니다. pip install cryptography로 설치하세요."
+
+msgid "Remote work"
+msgstr "원격 근무"
+
+msgid "Replace"
+msgstr "교체"
+
+msgid "Report"
+msgstr "보고서"
+
+msgid "Report content is empty."
+msgstr "보고서 내용이 비어 있습니다."
+
+msgid "Report saved."
+msgstr "보고서가 저장되었습니다."
+
+msgid "Reports have unsaved changes. Save before closing?"
+msgstr "보고서에 저장되지 않은 변경 사항이 있습니다. 닫기 전에 저장하시겠습니까?"
+
+msgid "Reset Password"
+msgstr "비밀번호 재설정"
+
+msgid "Reset User Password"
+msgstr "사용자 비밀번호 재설정"
+
+msgid "Restart"
+msgstr "다시 시작"
+
+msgid "Restart Required"
+msgstr "다시 시작 필요"
+
+msgid "Restart required to apply minimal mode."
+msgstr "미니멀 모드를 적용하려면 다시 시작해야 합니다."
+
+msgid "Restore Data"
+msgstr "데이터 복원"
+
+msgid "Restore failed."
+msgstr "복원에 실패했습니다."
+
+msgid "Restore will replace the current database file. Continue?"
+msgstr "복원하면 현재 데이터베이스 파일이 바뀝니다. 계속하시겠습니까?"
+
+msgid "Retry"
+msgstr "다시 시도"
+
+msgid "Review accounts, reset passwords, and manage recovery keys."
+msgstr "계정을 검토하고 비밀번호를 재설정하며 복구 키를 관리합니다."
+
+msgid "Revoke Admin"
+msgstr "관리자 권한 취소"
+
+msgid "Role"
+msgstr "역할"
+
+msgid "Sample Template"
+msgstr "샘플 템플릿"
+
+msgid "Sat"
+msgstr "토"
+
+msgid "Save"
+msgstr "저장"
+
+msgid "Save As"
+msgstr "다른 이름으로 저장"
+
+msgid "Save Changes"
+msgstr "변경 저장"
+
+msgid "Save changes to this template?"
+msgstr "이 템플릿의 변경사항을 저장하시겠습니까?"
+
+msgid "Save Initial Password"
+msgstr "초기 비밀번호 저장"
+
+msgid "Save Recovery Key"
+msgstr "복구 키 저장"
+
+msgid "Saved: {}"
+msgstr "저장됨: {}"
+
+msgid "Select / Change"
+msgstr "선택 / 변경"
+
+msgid "Selected color"
+msgstr "선택한 색상"
+
+msgid "Sep"
+msgstr "9월"
+
+msgid "September"
+msgstr "9월"
+
+msgid "Settings"
+msgstr "설정"
+
+msgid "Show leave"
+msgstr "휴가 표시"
+
+msgid "Sick"
+msgstr "병가"
+
+msgid "Sick leave"
+msgstr "병가"
+
+msgid "Sign out remembered sessions"
+msgstr "기억된 세션 로그아웃"
+
+msgid "sk-… / sk-ant-…"
+msgstr "https://api.openai.com/v1 | https://api.anthropic.com"
+
+msgid "SQLite Database (*.db)"
+msgstr "SQLite 데이터베이스 (*.db)"
+
+msgid "Standard hours (h)"
+msgstr "기준 근무 시간 (h)"
+
+msgid "Start"
+msgstr "출근"
+
+msgid "Start now"
+msgstr "지금 출근"
+
+msgid "Start week on Monday"
+msgstr "주 시작을 월요일로 설정"
+
+msgid "Started"
+msgstr "기록됨"
+
+msgid "Summary: {days} work days, {total}h total, {ot}h overtime."
+msgstr "요약: 근무 {days}일, 합계 {total}h, 초과근무 {ot}h."
+
+msgid "Sun"
+msgstr "일"
+
+msgid "Switch Model"
+msgstr "모델 전환"
+
+msgid "Template name"
+msgstr "템플릿 이름"
+
+msgid "Template saved."
+msgstr "템플릿이 저장되었습니다."
+
+msgid "Templates"
+msgstr "템플릿"
+
+msgid "temporarily unavailable"
+msgstr "일시적으로 사용할 수 없음"
+
+msgid "Test"
+msgstr "테스트"
+
+msgid "Testing…"
+msgstr "테스트 중…"
+
+msgid "Text Files (*.txt)"
+msgstr "텍스트 파일 (*.txt)"
+
+msgid "The initial password is generated automatically. The user must change it at first login."
+msgstr "초기 비밀번호는 자동으로 생성됩니다. 사용자는 첫 로그인 시 반드시 변경해야 합니다."
+
+msgid "The selected backup database appears to be corrupted."
+msgstr "선택한 백업 데이터베이스가 손상된 것 같습니다."
+
+msgid "The selected backup does not contain the current account."
+msgstr "선택한 백업에 현재 계정이 포함되어 있지 않습니다."
+
+msgid "The selected backup does not contain user account data."
+msgstr "선택한 백업에 사용자 계정 데이터가 포함되어 있지 않습니다."
+
+msgid "The selected file does not exist."
+msgstr "선택한 파일이 존재하지 않습니다."
+
+msgid "The user must change this password at first login."
+msgstr "사용자는 첫 로그인 시 이 비밀번호를 반드시 변경해야 합니다."
+
+msgid "This account must change its password before continuing."
+msgstr "계속하려면 이 계정의 비밀번호를 먼저 변경해야 합니다."
+
+msgid "This model is already downloaded and ready."
+msgstr "이 모델은 이미 다운로드되어 사용 준비가 되었습니다."
+
+msgid "This operation will permanently delete this user's data, including work records, notes, reports, and settings."
+msgstr "이 작업은 이 사용자의 작업 기록, 메모, 보고서, 설정을 포함한 모든 데이터를 영구적으로 삭제합니다."
+
+msgid "This recovery key can be used to reset the user's password if it is forgotten. Store it securely and share it only with the account owner. Anyone with this key may reset the password until a new key is generated."
+msgstr "이 복구 키는 사용자가 비밀번호를 잊었을 때 해당 사용자의 비밀번호를 재설정하는 데 사용할 수 있습니다. 안전하게 보관하고 계정 소유자에게만 공유하세요. 새 키가 생성되기 전까지 이 키를 가진 사람은 비밀번호를 재설정할 수 있습니다."
+
+msgid "Thu"
+msgstr "목"
+
+msgid "Time"
+msgstr "시간"
+
+msgid "Timesheet"
+msgstr "근무표"
+
+msgid "Today"
+msgstr "오늘"
+
+msgid "Today's entries:"
+msgstr "오늘의 기록:"
+
+msgid "Total"
+msgstr "주합계"
+
+msgid "Trip"
+msgstr "출장"
+
+msgid "Tue"
+msgstr "화"
+
+msgid "Type"
+msgstr "유형"
+
+msgid "Unsaved changes — save before switching?"
+msgstr "저장되지 않은 변경사항이 있습니다. 전환하기 전에 저장할까요?"
+
+msgid "Unused"
+msgstr "미사용"
+
+msgid "Used"
+msgstr "사용됨"
+
+msgid "User"
+msgstr "사용자"
+
+msgid "User created successfully. Share this initial password now; it cannot be shown again later."
+msgstr "사용자가 생성되었습니다. 이 초기 비밀번호는 나중에 다시 표시할 수 없으므로 지금 공유하세요."
+
+msgid "User deleted successfully."
+msgstr "사용자가 삭제되었습니다."
+
+msgid "User not found."
+msgstr "사용자를 찾을 수 없습니다."
+
+msgid "Username"
+msgstr "사용자 이름"
+
+msgid "Username already exists."
+msgstr "사용자 이름이 이미 존재합니다."
+
+msgid "Username is required."
+msgstr "사용자 이름은 필수입니다."
+
+msgid "Username or password is incorrect."
+msgstr "사용자 이름 또는 비밀번호가 올바르지 않습니다."
+
+msgid "Verifying local model file..."
+msgstr "로컬 모델 파일을 검증하는 중..."
+
+msgid "Version"
+msgstr "버전"
+
+msgid "Waiting for AI response..."
+msgstr "AI 응답을 기다리는 중입니다..."
+
+msgid "Wed"
+msgstr "수"
+
+msgid "Weekly"
+msgstr "주간"
+
+msgid "Weekly Report"
+msgstr "주간 보고서"
+
+msgid "Weekly Work Report  {start} – {end}"
+msgstr "주간 업무 보고서  {start} – {end}"
+
+msgid "WFH"
+msgstr "재택"
+
+msgid "What are you doing?"
+msgstr "지금 무엇을 하고 있나요?"
+
+msgid "When enabled, text processing uses the local model first - no data is sent to external services."
+msgstr "활성화하면 텍스트 처리는 먼저 로컬 모델을 사용하며 외부 서비스로 데이터가 전송되지 않습니다."
+
+msgid "When enabled, text processing uses the local model first — no data is sent to external services."
+msgstr "활성화하면 텍스트 처리 시 로컬 모델을 우선 사용하며 외부 서비스로 데이터를 전송하지 않습니다."
+
+msgid "Work days"
+msgstr "근무일수"
+
+msgid "Work hours"
+msgstr "근무 시간"
+
+msgid "Work Log"
+msgstr "작업 기록"
+
+msgid "Work Logger"
+msgstr "근무 기록"
+
+msgid ""
+"Work Logger is a privacy-first desktop app for recording work time, notes, quick logs, calendar context, and recurring reports without sending your data to a cloud service by default.\n"
+"\n"
+"Daily logging:\n"
+"- Enter start, end, break, work type, and notes for each date.\n"
+"- Use Auto Record buttons for start, end, and break checkpoints.\n"
+"- Capture lightweight task details with Quick Log and merge them into reports.\n"
+"- Navigate by calendar, month, week, or minimal-mode day controls.\n"
+"\n"
+"Accounts and security:\n"
+"- Multiple local users are supported, and each user's worklogs, settings, reports, reminders, and backups are isolated.\n"
+"- Passwords and recovery keys are stored as secure hashes.\n"
+"- Administrators can reset user passwords and regenerate recovery keys when needed.\n"
+"- Remember-me login uses the operating system credential manager when available.\n"
+"\n"
+"Reports and templates:\n"
+"- Generate daily notes, weekly reports, and monthly reports from saved data.\n"
+"- Weekly and monthly reports are tied to the selected calendar period and can be saved for later editing.\n"
+"- Built-in and custom templates help standardize recurring note and report formats.\n"
+"\n"
+"Analytics and exports:\n"
+"- Review work hours, averages, overtime, targets, leave markers, and trend charts.\n"
+"- Export chart data to CSV and charts to PDF.\n"
+"- Import/export worklogs as CSV and calendar events as ICS.\n"
+"- Back up and restore the local database with reminders for stale backups.\n"
+"\n"
+"Customization and AI:\n"
+"- Switch languages, themes, custom accent colors, dark mode, and minimal mode.\n"
+"- Use local-model assistance when configured, or connect to OpenAI-compatible external providers such as ChatGPT, Claude, Qwen, and DeepSeek.\n"
+"- Supported UI languages include English, Japanese, Korean, Simplified Chinese, and Traditional Chinese."
+msgstr ""
+"Work Logger는 근무 시간, 메모, 빠른 로그, 캘린더 맥락, 반복 보고서를 기록하는 개인정보 우선 데스크톱 앱입니다. 기본적으로 데이터를 클라우드 서비스로 보내지 않습니다.\n"
+"\n"
+"일일 기록:\n"
+"- 날짜별로 시작 시간, 종료 시간, 휴식 시간, 작업 유형, 메모를 기록합니다.\n"
+"- 자동 기록 버튼으로 시작, 종료, 휴식 체크포인트를 빠르게 입력합니다.\n"
+"- Quick Log로 가벼운 작업 세부 정보를 남기고 보고서에 합칠 수 있습니다.\n"
+"- 캘린더, 월, 주 또는 미니멀 모드의 날짜 버튼으로 기록을 이동합니다.\n"
+"\n"
+"계정과 보안:\n"
+"- 여러 로컬 사용자를 지원하며 각 사용자의 작업 기록, 설정, 보고서, 알림, 백업을 분리합니다.\n"
+"- 비밀번호와 복구 키는 안전한 해시로 저장됩니다.\n"
+"- 관리자는 필요할 때 사용자 비밀번호를 재설정하고 복구 키를 다시 생성할 수 있습니다.\n"
+"- 기억된 로그인은 가능한 경우 운영체제 자격 증명 관리자를 우선 사용합니다.\n"
+"\n"
+"보고서와 템플릿:\n"
+"- 저장된 데이터에서 일일 메모, 주간 보고서, 월간 보고서를 생성합니다.\n"
+"- 주간/월간 보고서는 선택한 캘린더 기간과 연결되며 저장 후 다시 편집할 수 있습니다.\n"
+"- 기본 제공 템플릿과 사용자 지정 템플릿으로 반복되는 메모와 보고서 형식을 표준화합니다.\n"
+"\n"
+"분석과 내보내기:\n"
+"- 근무 시간, 평균, 초과 근무, 목표, 휴가 표시, 추세 차트를 확인합니다.\n"
+"- 차트 데이터를 CSV로, 차트를 PDF로 내보낼 수 있습니다.\n"
+"- 작업 기록 CSV 가져오기/내보내기와 캘린더 ICS 가져오기/내보내기를 지원합니다.\n"
+"- 로컬 데이터베이스 백업과 복원을 지원하고 오래된 백업을 알려줍니다.\n"
+"\n"
+"사용자 지정과 AI:\n"
+"- 언어, 테마, 사용자 지정 강조색, 다크 모드, 미니멀 모드를 전환할 수 있습니다.\n"
+"- 설정된 로컬 모델 보조 기능을 사용하거나 ChatGPT, Claude, Qwen, DeepSeek 같은 OpenAI 호환 외부 제공자에 연결할 수 있습니다.\n"
+"- 영어, 일본어, 한국어, 간체 중국어, 번체 중국어 UI를 지원합니다."
+
+msgid "Work Report"
+msgstr "업무 보고서"
+
+msgid "Work Time Analytics"
+msgstr "근무 시간 분석"
+
+msgid "Work type"
+msgstr "근무 유형"
+
+msgid "Yes"
+msgstr "예"
+
+msgid "You already logged {hours}h of break time. What do you want to do?"
+msgstr "이미 {hours}h의 휴식 시간이 기록되어 있습니다. 어떻게 할까요?"
+
+msgid "You are on the latest version"
+msgstr "현재 최신 버전을 사용 중입니다"
+
+msgid "You haven't backed up in {days} days. Please back up your data."
+msgstr "{days}일 동안 백업하지 않았습니다. 데이터를 백업해 주세요."
+
+msgid "Your password has not been changed in {days} days. Please update it regularly."
+msgstr "비밀번호가 {days}일 동안 변경되지 않았습니다. 정기적으로 업데이트하세요."
+
+msgid "{0:.0f} / {1:.0f} MB"
+msgstr "{0:.0f} / {1:.0f} MB"
+
+msgid "{date}  ({dow})  {h}h  [{wt}]"
+msgstr "{date}（{dow}）{h}h  [{wt}]"
+
+msgid "▶ Break"
+msgstr "▶ 휴식 시작"
+
+msgid "⚙  Settings"
+msgstr "⚙  설정"
+
+msgid "⚠️ Request exceeded 30 seconds, processing may take a while. Please continue waiting..."
+msgstr "⚠️ 요청이 30초를 초과했습니다. 처리에 시간이 걸릴 수 있습니다. 계속 기다려 주세요..."
+
+msgid "⚡ Quick Log"
+msgstr "⚡ 빠른 기록"
+
+msgid "✓  Connected"
+msgstr "✓  연결 성공"
+
+msgid "✓  Integrity verified"
+msgstr "✓  무결성 검증 완료"
+
+msgid "✓  Model imported"
+msgstr "✓  모델 가져오기 완료"
+
+msgid "✓ Request successful."
+msgstr "✓ 요청 성공."
+
+msgid "✗  {}"
+msgstr "API Key가 설정되지 않았습니다."
+
+msgid "✨ AI Assist"
+msgstr "✨ AI 보조"
+
+msgid "✨ AI Generate"
+msgstr "✨ AI 생성"
+
+msgid "🌍  Language"
+msgstr "🌍  언어"
+
+msgid "🌙  Dark mode"
+msgstr "🌙  다크 모드"
+
+msgid "🎨  Theme"
+msgstr "🎨  테마"
+
+msgid "📅 Import Calendar (.ics)"
+msgstr "📅 캘린더 가져오기 (.ics)"
+
+msgid "📋 Templates"
+msgstr "📋 템플릿"
+
+msgid "HEX"
+msgstr "16진수"
+
+msgid "  {size} MB  ·  RAM ≥ {ram} GB"
+msgstr "  {size} MB  ·  RAM ≥ {ram} GB"
+
+msgid "✓  Ready"
+msgstr "✓  준비 완료"
+
+msgid "AI Chat"
+msgstr "AI 채팅"
+
+msgid "AI Privacy"
+msgstr "AI 개인정보 보호"
+
+msgid "AI disabled"
+msgstr "AI 비활성화됨"
+
+msgid "AI is disabled by policy."
+msgstr "정책에 따라 AI가 비활성화되어 있습니다."
+
+msgid "AI mode"
+msgstr "AI 모드"
+
+msgid "Ask about the selected work context..."
+msgstr "선택한 업무 컨텍스트에 대해 질문..."
+
+msgid "Assistant"
+msgstr "어시스턴트"
+
+msgid "Building context..."
+msgstr "컨텍스트를 구성하는 중..."
+
+msgid "Cancel request"
+msgstr "요청 취소"
+
+msgid "Cannot unlink the only login method."
+msgstr "유일한 로그인 방법은 연결 해제할 수 없습니다."
+
+msgid "Clear conversation"
+msgstr "대화 지우기"
+
+msgid "Context"
+msgstr "컨텍스트"
+
+msgid "Conversation cleared."
+msgstr "대화를 지웠습니다."
+
+msgid "Could not complete sign-in."
+msgstr "로그인을 완료할 수 없습니다."
+
+msgid "Current day"
+msgstr "오늘"
+
+msgid "Current month"
+msgstr "이번 달"
+
+msgid "Current week"
+msgstr "이번 주"
+
+msgid "Error: {}"
+msgstr "오류: {}"
+
+msgid "Include calendar events"
+msgstr "캘린더 일정 포함"
+
+msgid "Include calendar titles"
+msgstr "캘린더 제목 포함"
+
+msgid "Include calendar titles by default"
+msgstr "기본적으로 캘린더 제목 포함"
+
+msgid "Include notes"
+msgstr "메모 포함"
+
+msgid "Include notes by default"
+msgstr "기본적으로 메모 포함"
+
+msgid "Include quick log details"
+msgstr "빠른 기록 세부 정보 포함"
+
+msgid "Include quick log details by default"
+msgstr "기본적으로 빠른 기록 세부 정보 포함"
+
+msgid "Link Google"
+msgstr "Google 연결"
+
+msgid "Link Microsoft"
+msgstr "Microsoft 연결"
+
+msgid "Linked account removed."
+msgstr "연결된 계정을 제거했습니다."
+
+msgid "Linked accounts"
+msgstr "연결된 계정"
+
+msgid "Local AI only"
+msgstr "로컬 AI만 사용"
+
+msgid "Local model is not available. Enable or download a local model in Settings -> AI."
+msgstr "로컬 모델을 사용할 수 없습니다. 설정 -> AI에서 로컬 모델을 활성화하거나 다운로드하세요."
+
+msgid "No linked accounts."
+msgstr "연결된 계정이 없습니다."
+
+msgid "OAuth provider is not configured."
+msgstr "OAuth 공급자가 구성되어 있지 않습니다."
+
+msgid "Opening browser..."
+msgstr "브라우저를 여는 중..."
+
+msgid "Please configure an AI provider in Settings -> AI."
+msgstr "설정 -> AI에서 AI 공급자를 구성하세요."
+
+msgid "Remote AI allowed"
+msgstr "원격 AI 허용"
+
+msgid "Send"
+msgstr "보내기"
+
+msgid "Sending request..."
+msgstr "요청을 보내는 중..."
+
+msgid "Sign in with Google"
+msgstr "Google로 로그인"
+
+msgid "Sign in with Microsoft"
+msgstr "Microsoft로 로그인"
+
+msgid "Sign-in canceled."
+msgstr "로그인이 취소되었습니다."
+
+msgid "Sign-in completed."
+msgstr "로그인이 완료되었습니다."
+
+msgid "Title hidden"
+msgstr "제목 숨김"
+
+msgid "Unlink"
+msgstr "연결 해제"
+
+msgid "You"
+msgstr "사용자"
+
+msgid "all day"
+msgstr "종일"
+
+msgid "No response."
+msgstr "응답이 없습니다."
+
+msgid "Request canceled."
+msgstr "요청이 취소되었습니다."
+
+msgid "Enter your current password to continue."
+msgstr "계속하려면 현재 비밀번호를 입력하세요."
+
+msgid "Password is incorrect."
+msgstr "비밀번호가 올바르지 않습니다."
+
+msgid "AI Assist"
+msgstr "AI Assist"
+
+msgid "AI Summary"
+msgstr "AI 요약"
+
+msgid "Analytics AI PDF"
+msgstr "분석 AI PDF"
+
+msgid "Apply to Notes"
+msgstr "메모에 적용"
+
+msgid "Apply to Report"
+msgstr "보고서에 적용"
+
+msgid "Clear this conversation?"
+msgstr "이 대화를 지우시겠습니까?"
+
+msgid "Ctrl+Enter to send"
+msgstr "Ctrl+Enter로 보내기"
+
+msgid "Daily Notes"
+msgstr "생성 일일 메모"
+
+msgid "Error: {detail}"
+msgstr "오류: {detail}"
+
+msgid "Follow up on this result..."
+msgstr "이 결과에 대해 추가로 요청하세요..."
+
+msgid "Google sign-in is not configured."
+msgstr "Google 로그인이 설정되어 있지 않습니다."
+
+msgid "Include calendar event titles"
+msgstr "캘린더 일정 제목 포함"
+
+msgid "Runtime: External API"
+msgstr "실행 방식: 외부 API"
+
+msgid "Runtime: Local model"
+msgstr "실행 방식: 로컬 모델"
+
+msgid "Selected context may be sent to the configured external AI provider."
+msgstr "선택한 컨텍스트가 설정된 외부 AI 제공업체로 전송될 수 있습니다."
+
+msgid "Use for PDF"
+msgstr "PDF에 사용"
+
+msgid "✨ AI Assist - {}"
+msgstr "✨ AI 지원 - {}"
+
+msgid "✨ AI PDF"
+msgstr "✨ AI PDF"
+
+msgid "Extra instructions:"
+msgstr "추가 지시:"
+
+msgid "Request: {period}"
+msgstr "요청: {period}"
+
+msgid "Source: existing draft and selected WorkLogger context"
+msgstr "출처: 기존 초안 및 선정된 옵션의 맥락"
+
+msgid "Source: selected WorkLogger context"
+msgstr "출처: 선정된 옵션의 맥락"
+
+msgid "Details: {detail}"
+msgstr "세부 정보: {detail}"
+
+msgid "Each user can select one active local model. Downloaded GGUF files are shared across users."
+msgstr "각 사용자는 활성 로컬 모델을 하나 선택할 수 있습니다. 다운로드된 GGUF 파일은 사용자 간에 공유됩니다."
+
+msgid "Experimental"
+msgstr "실험적"
+
+msgid "Integrity check failed - file may be corrupted"
+msgstr "무결성 검사 실패 - 파일이 손상되었을 수 있습니다"
+
+msgid "Preserved local model"
+msgstr "보존된 로컬 모델"
+
+msgid "Select"
+msgstr "선택"
+
+msgid "Switch only the current user's active model. Shared model files are kept unless you delete them."
+msgstr "현재 사용자의 활성 모델만 전환합니다. 공유 모델 파일은 사용자가 삭제하지 않는 한 유지됩니다."
+
+msgid "This model is already selected and ready."
+msgstr "이 모델은 이미 선택되어 사용할 준비가 되었습니다."
+
+msgid "This model is used by another user and cannot be deleted."
+msgstr "이 모델은 다른 사용자가 사용 중이므로 삭제할 수 없습니다."
+
+msgid "Used by another user"
+msgstr "다른 사용자가 사용 중"
+
+msgid "Please enable a local model in Settings -> AI, or configure an external AI provider with API key, base URL, and model name."
+msgstr "설정 -> AI에서 로컬 모델을 활성화하거나 외부 AI 제공자의 API 키, Base URL, 모델 이름을 설정하세요."
+
+msgid "CSV (*.csv)"
+msgstr "CSV (*.csv)"
+
+msgid "Could not check for updates. Please check your network connection, proxy, VPN, or try again later."
+msgstr "업데이트를 확인할 수 없습니다. 네트워크 연결, 프록시, VPN을 확인하거나 나중에 다시 시도하세요."
+
+msgid "Date"
+msgstr "날짜"
+
+msgid "Export PDF"
+msgstr "PDF 내보내기"
+
+msgid "Export PNG"
+msgstr "PNG 내보내기"
+
+msgid "GGUF files (*.gguf);;All files (*)"
+msgstr "GGUF 파일 (*.gguf);;모든 파일 (*)"
+
+msgid "Month"
+msgstr "월"
+
+msgid "OT"
+msgstr "초과근무"
+
+msgid "PDF (*.pdf)"
+msgstr "PDF (*.pdf)"
+
+msgid "PNG (*.png)"
+msgstr "PNG (*.png)"
+
+msgid "Quarter"
+msgstr "분기"
+
+msgid "Q{quarter}"
+msgstr "{quarter}분기"
+
+msgid "iCalendar (*.ics)"
+msgstr "iCalendar (*.ics)"
+
+msgid "m"
+msgstr "분"
+
+msgid "⬇  CSV"
+msgstr "⬇  CSV"
+
+msgid "⬇  PDF"
+msgstr "⬇  PDF"

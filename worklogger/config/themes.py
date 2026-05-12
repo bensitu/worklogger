@@ -1,0 +1,595 @@
+"""Theme colors, cell palettes, and work-type accent colors."""
+
+from __future__ import annotations
+
+import re
+from typing import Any
+
+
+THEME_KEYS = ["blue", "pink", "green", "purple", "custom"]
+THEME_NAMES = {
+    "blue":   "🔵 Blue",
+    "pink":   "🌸 Pink",
+    "green":  "🌿 Green",
+    "purple": "🟣 Purple",
+    "custom": "Custom",
+}
+
+DEFAULT_CUSTOM_COLOR = "#4f8ef7"
+_HEX_RE = re.compile(r"^#?[0-9a-fA-F]{6}$")
+
+# THEMES[theme][dark] = (accent, hover, dim, stat_background, stat_border)
+THEMES = {
+    "blue": {
+        False: ("#4f8ef7", "#3070d8", "#e8f0fe", "#eef2ff", "#cdd5f0"),
+        True:  ("#5a9ff5", "#3d87e8", "#1a3058", "#1a1e3a", "#2d3360"),
+    },
+    "pink": {
+        False: ("#e05888", "#c03868", "#fce8f0", "#fff0f7", "#f0c8dc"),
+        True:  ("#f07aaa", "#d85888", "#3a1028", "#2a1020", "#501838"),
+    },
+    "green": {
+        False: ("#2daa7a", "#1a8a58", "#e0f5ec", "#edfaf4", "#bce8d4"),
+        True:  ("#3dcc8a", "#2aaa68", "#0e3028", "#0a2820", "#1a5040"),
+    },
+    "purple": {
+        False: ("#7c55d6", "#5c38b8", "#ede8ff", "#f2efff", "#cfc8f0"),
+        True:  ("#9a78f0", "#7c55d6", "#261852", "#1a1038", "#3a2868"),
+    },
+}
+
+
+def normalize_hex_color(accent_hex: str | None) -> str:
+    """Return a normalized #RRGGBB color, falling back to the default accent."""
+    raw = str(accent_hex or "").strip()
+    if not _HEX_RE.match(raw):
+        return DEFAULT_CUSTOM_COLOR
+    if not raw.startswith("#"):
+        raw = "#" + raw
+    return raw.lower()
+
+
+def _hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
+    color = normalize_hex_color(hex_color).lstrip("#")
+    return int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16)
+
+
+def _rgb_to_hex(rgb: tuple[int, int, int]) -> str:
+    r, g, b = (max(0, min(255, int(v))) for v in rgb)
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+def _mix(hex_color: str, other: str, amount: float) -> str:
+    r1, g1, b1 = _hex_to_rgb(hex_color)
+    r2, g2, b2 = _hex_to_rgb(other)
+    t = max(0.0, min(1.0, amount))
+    return _rgb_to_hex((
+        round(r1 + (r2 - r1) * t),
+        round(g1 + (g2 - g1) * t),
+        round(b1 + (b2 - b1) * t),
+    ))
+
+
+def _scale(hex_color: str, factor: float) -> str:
+    r, g, b = _hex_to_rgb(hex_color)
+    return _rgb_to_hex((round(r * factor), round(g * factor), round(b * factor)))
+
+
+def _custom_palette(accent_hex: str) -> dict[bool, tuple[str, str, str, str, str]]:
+    accent = normalize_hex_color(accent_hex)
+    return {
+        False: (
+            accent,
+            _scale(accent, 0.82),
+            _mix(accent, "#ffffff", 0.86),
+            _mix(accent, "#ffffff", 0.93),
+            _mix(accent, "#ffffff", 0.66),
+        ),
+        True: (
+            _mix(accent, "#ffffff", 0.12),
+            accent,
+            _mix(accent, "#000000", 0.68),
+            _mix(accent, "#000000", 0.78),
+            _mix(accent, "#000000", 0.52),
+        ),
+    }
+
+
+def set_custom_theme(accent_hex: str) -> str:
+    """Inject the runtime custom theme and return the normalized accent."""
+    normalized = normalize_hex_color(accent_hex)
+    THEMES["custom"] = _custom_palette(normalized)
+    return normalized
+
+
+def theme_colors(theme: str, dark: bool) -> tuple[str, str, str, str, str]:
+    """Return theme colors with a safe fallback for unknown keys."""
+    if theme == "custom" and "custom" not in THEMES:
+        set_custom_theme(DEFAULT_CUSTOM_COLOR)
+    palette = THEMES.get(theme) or THEMES["blue"]
+    return palette[bool(dark)]
+
+
+set_custom_theme(DEFAULT_CUSTOM_COLOR)
+
+
+def cell_pool(dark: bool, theme: str) -> dict:
+    """Return cell color dict for the given dark/theme combo."""
+    acc = theme_colors(theme, dark)[0]
+    if dark:
+        return {
+            "default":  ("#1e2030", "#c0c8e0", "#2d2f4a", "1"),
+            "today":    ("#2e2a00", "#ffd855", "#aa9500", "2"),
+            "weekend":  ("#0c1d3c", "#5aafff", "#1a3a6a", "1"),
+            "holiday":  ("#3c0d0d", "#ff7777", "#802020", "1"),
+            "selected": (acc,      "#ffffff", acc,     "2"),
+        }
+    return {
+        "default":  ("#ffffff", "#1e2035", "#dde1ee", "1"),
+        "today":    ("#fffce0", "#8a6800", "#e0c800", "2"),
+        "weekend":  ("#eef3ff", "#1e5cc4", "#b8cfff", "1"),
+        "holiday":  ("#fff0f0", "#cc2222", "#ffaaaa", "1"),
+        "selected": (acc,      "#ffffff", acc,     "2"),
+    }
+
+
+STYLE_PRIO = ["weekend", "today", "holiday", "selected"]
+
+# Per-work-type accent color for calendar cells. None disables the stripe.
+WT_BORDER_ACCENT = {
+    True: {
+        "normal": None, "remote": None,
+        "business_trip": "#ffaa44", "paid_leave": "#66cc66",
+        "comp_leave": "#bb88ff", "sick_leave": "#ff6666",
+    },
+    False: {
+        "normal": None, "remote": None,
+        "business_trip": "#e07800", "paid_leave": "#2a9a2a",
+        "comp_leave": "#8844cc", "sick_leave": "#cc3333",
+    },
+}
+
+# Centralized style values for calendar markers and status indicators.
+CALENDAR_STYLE = {
+    "note_marker_default": "#4f8ef7",
+    "note_marker_margin": 7,
+    "note_marker_size": 7,
+    "note_marker_work_type_gap": 6,
+    "work_type_marker_width": 5,
+    "work_type_marker_margin": 3,
+    "work_type_marker_radius": 3,
+    "overnight_marker_default": "#5f5f5f",
+    "overnight_marker_by_mode": {
+        True: "#f0f4ff",   # dark mode
+        False: "#4f5b66",  # light mode
+    },
+    "overnight_icon": "🌙",
+    "overnight_icon_size": 12,
+    "overnight_icon_margin": 4,
+}
+
+SWITCH_STYLE = {
+    "off_color_by_mode": {
+        True: "#505470",
+        False: "#b0b8cc",
+    },
+}
+
+STATUS_STYLE = {
+    "error_color": "#e03333",
+    "strong_weight": 600,
+}
+
+LOCAL_MODEL_READY_COLOR = "#2ecc71"
+ANALYTICS_LEAVE_LINE_COLOR = "#d94a4a"
+PALETTE_ICON_STYLE = {
+    "outline": "#44515f",
+    "body": "#f7d99b",
+    "dots": (
+        ("#ef4444", 7, 8),
+        ("#f59e0b", 12, 7),
+        ("#22c55e", 8, 13),
+        ("#3b82f6", 14, 13),
+    ),
+}
+SWITCH_THUMB_COLOR = "#ffffff"
+COLOR_WIDGET_DEFAULT_COLOR = DEFAULT_CUSTOM_COLOR
+COLOR_WHEEL_BORDER_COLOR = "#80889a"
+COLOR_WHEEL_MARKER_OUTER_COLOR = "#ffffff"
+COLOR_WHEEL_MARKER_INNER_COLOR = "#202436"
+COMBO_CHART_DOT_BORDER_COLOR = "#ffffff"
+
+
+def switch_off_color(dark: bool) -> str:
+    return SWITCH_STYLE["off_color_by_mode"][bool(dark)]
+
+
+def switch_default_colors() -> tuple[str, str]:
+    return DEFAULT_CUSTOM_COLOR, switch_off_color(False)
+
+
+def combo_chart_palette(dark: bool) -> dict[str, str]:
+    if dark:
+        return {
+            "line": "#5fd0cf",
+            "leave": "#f0a33a",
+            "text": "#c8cde8",
+            "muted": "#8890b8",
+            "grid": "#2a2d48",
+            "reference": "#555580",
+            "overtime": "#ff8585",
+            "reference_background": "#1c2035",
+        }
+    return {
+        "line": "#168f96",
+        "leave": "#f0a33a",
+        "text": "#1e2035",
+        "muted": "#7080a8",
+        "grid": "#e0e4f0",
+        "reference": "#b0b8cc",
+        "overtime": "#e03333",
+        "reference_background": "#f4f7ff",
+    }
+
+
+def local_model_download_blocked_qss(dark: bool) -> str:
+    if dark:
+        return (
+            "QPushButton{color:#8e94a7;background:#2a2e3a;border:1px solid #3a3f52;}"
+            "QPushButton:hover{color:#8e94a7;background:#2a2e3a;border:1px solid #3a3f52;}"
+        )
+    return (
+        "QPushButton{color:#8a8f9c;background:#d9dbe0;border:1px solid #c3c7d1;}"
+        "QPushButton:hover{color:#8a8f9c;background:#d9dbe0;border:1px solid #c3c7d1;}"
+    )
+
+
+def apply_widget_qss(widget: Any, qss: str) -> None:
+    """Apply a component stylesheet through the centralized theme module."""
+    widget.setStyleSheet(qss)
+
+
+def clear_widget_qss(widget: Any) -> None:
+    """Clear a component stylesheet through the centralized theme module."""
+    widget.setStyleSheet("")
+
+
+def status_label_qss(kind: str, accent: str | None = None) -> str:
+    weight = STATUS_STYLE["strong_weight"]
+    if kind == "error":
+        return f"color:{STATUS_STYLE['error_color']};font-weight:{weight};"
+    if kind == "success":
+        color = accent or "#4f8ef7"
+        return f"color:{color};font-weight:{weight};"
+    return ""
+
+
+def label_color_qss(color: str) -> str:
+    return f"QLabel{{color:{color};}}"
+
+
+def line_edit_error_qss() -> str:
+    return f"QLineEdit{{border:2px solid {STATUS_STYLE['error_color']};}}"
+
+
+def auto_break_active_qss(dark: bool) -> str:
+    color = "#ffaa44" if dark else "#e07800"
+    return f"QPushButton{{color:{color};border-color:{color};}}"
+
+
+def calendar_cell_qss(
+    bg: str,
+    fg: str,
+    border: str,
+    hover_border: str,
+) -> str:
+    return (
+        "QPushButton{"
+        f"background-color:{bg};color:{fg};border:2px solid {border};"
+        "border-radius:6px;font-size:11px;"
+        "text-align:center;padding:2px;}"
+        f"QPushButton:hover{{border:2px solid {hover_border};}}"
+    )
+
+
+def color_preview_qss(color: str) -> str:
+    return (
+        "QLabel{"
+        f"background:{normalize_hex_color(color)};"
+        "border:1px solid #80889a;"
+        "border-radius:6px;"
+        "font-weight:600;"
+        "color:#ffffff;"
+        "}"
+    )
+
+
+def custom_color_button_qss(color: str) -> str:
+    return (
+        "QPushButton{"
+        f"background:{normalize_hex_color(color)};"
+        "border:1px solid #80889a;"
+        "border-radius:8px;"
+        "}"
+        "QPushButton:hover{border:1px solid #ffffff;}"
+    )
+
+
+def settings_account_header_qss() -> str:
+    return "font-weight:bold;font-size:13px;"
+
+
+def dialog_title_qss() -> str:
+    return "font-size:16px;font-weight:700;"
+
+
+def transparent_container_qss() -> str:
+    return (
+        "QWidget#transparent_container{"
+        "background:transparent;background-color:transparent;border:none;"
+        "}"
+    )
+
+
+def ai_switch_container_qss() -> str:
+    return (
+        "QWidget#transparent_container{background:transparent;"
+        "background-color:transparent;border:none;}"
+        "QWidget#transparent_container QLabel#ai_switch_label{"
+        "background:transparent;background-color:transparent;"
+        "border:none;padding:0px;}"
+    )
+
+
+def initial_password_value_qss() -> str:
+    return "color:#cccccc;"
+
+
+def user_table_qss(dark: bool, theme: str) -> str:
+    acc, _acc_hov, acc_dim, _stat_bg, stat_bd = theme_colors(theme, dark)
+    pool = cell_pool(dark, theme)
+    cell_bg, cell_txt, cell_border, _width = pool["default"]
+    surface = "#1c1d2b" if dark else "#ffffff"
+    return (
+        "QTableWidget{"
+        f"background:{surface};color:{cell_txt};gridline-color:{cell_border};"
+        f"border:1px solid {stat_bd};border-radius:8px;"
+        "}"
+        "QHeaderView::section{"
+        f"background:{acc_dim};color:{cell_txt};"
+        f"border:0px;border-bottom:1px solid {stat_bd};"
+        "padding:7px 8px;font-weight:700;"
+        "}"
+        "QTableWidget::item{"
+        f"background:{cell_bg};padding:4px 6px;"
+        "}"
+        "QTableWidget::item:selected{"
+        f"background:{acc};color:white;"
+        "}"
+    )
+
+
+def user_dialog_button_qss(dark: bool, theme: str) -> str:
+    acc, acc_hov, _acc_dim, _stat_bg, stat_bd = theme_colors(theme, dark)
+    pool = cell_pool(dark, theme)
+    _cell_bg, cell_txt, _cell_border, _width = pool["default"]
+    surface = "#1c1d2b" if dark else "#ffffff"
+    muted = "#8890b8" if dark else "#606888"
+    danger = "#ff6666" if dark else "#cc3333"
+    danger_hover = "#ff8080" if dark else "#aa2222"
+    return (
+        "QPushButton{"
+        f"background:{surface};color:{cell_txt};border:1px solid {stat_bd};"
+        "border-radius:7px;padding:5px 8px;"
+        "}"
+        f"QPushButton:hover{{border-color:{acc};color:{acc};}}"
+        f"QPushButton:disabled{{color:{muted};border-color:{stat_bd};}}"
+        "QPushButton#primary_btn{"
+        f"background:{acc};color:white;border:none;"
+        "}"
+        f"QPushButton#primary_btn:hover{{background:{acc_hov};color:white;}}"
+        "QPushButton#danger_btn{"
+        f"background:{danger};color:white;border:none;"
+        "}"
+        f"QPushButton#danger_btn:hover{{background:{danger_hover};color:white;}}"
+    )
+
+
+def quick_log_list_qss() -> str:
+    return (
+        "QListWidget#quick_log_list::item{"
+        "padding:2px 4px;margin:0px;border:none;"
+        "}"
+        "QListWidget#quick_log_list::item:selected{"
+        "background:transparent;border:none;"
+        "}"
+        "QListWidget#quick_log_list::item:hover{background:transparent;}"
+    )
+
+
+def quick_log_label_hover_qss(color: str) -> str:
+    return f"QLabel:hover{{color:{color};}}"
+
+
+def quick_log_delete_button_qss() -> str:
+    err = STATUS_STYLE["error_color"]
+    return (
+        "QPushButton{"
+        f"color:{err};font-weight:bold;border:none;margin:0px;padding:0px;"
+        "background:transparent;"
+        "}"
+        "QPushButton:hover{color:#ff0000;background:transparent;}"
+    )
+
+
+def quick_log_text_color(dark: bool) -> str:
+    return "#c8cde8" if dark else "#1e2035"
+
+
+def quick_log_row_qss(
+    state: str,
+    *,
+    accent: str,
+    accent_dim: str,
+    hover: str,
+) -> str:
+    if state == "selected":
+        return (
+            "QWidget#quick_log_row{"
+            f"background:{accent_dim};border:1px solid {accent};"
+            "border-radius:6px;"
+            "}"
+        )
+    if state == "hover":
+        return (
+            "QWidget#quick_log_row{"
+            f"background:{hover};border:1px solid transparent;"
+            "border-radius:6px;"
+            "}"
+        )
+    return (
+        "QWidget#quick_log_row{"
+        "background:transparent;border:1px solid transparent;border-radius:6px;"
+        "}"
+    )
+
+
+def make_qss(dark: bool, theme: str = "blue") -> str:
+    """Generate full application QSS stylesheet."""
+    acc, acc_hov, acc_dim, stat_bg, stat_bd = theme_colors(theme, dark)
+    if dark:
+        bg, surf, bdr = "#13141d", "#1c1d2b", "#2d2f48"
+        txt, txt2 = "#c8cde8", "#8890b8"
+        inp_bg, inp_bd = "#181928", "#33365a"
+        btn, btn_bd, hov = "#232438", "#333558", "#2c2e50"
+        dis_bg, dis_bd = "#1b1c2a", "#2a2c44"
+        dis_txt, dis_t2 = "#6f7699", "#5c627d"
+        ot = "#ff8585"
+        tip_bg, tip_bdr = "#252640", "#3d3f60"
+    else:
+        bg, surf, bdr = "#f0f2f7", "#ffffff", "#dde1ee"
+        txt, txt2 = "#1e2035", "#606888"
+        inp_bg, inp_bd = "#ffffff", "#d0d5e8"
+        btn, btn_bd, hov = "#f4f5fa", "#dde1ee", "#e8ecf8"
+        dis_bg, dis_bd = "#eef1f7", "#d9dfef"
+        dis_txt, dis_t2 = "#9aa3bb", "#aab1c5"
+        ot = "#cc2222"
+        tip_bg, tip_bdr = "#ffffff", "#c8d0e8"
+
+    return f"""
+QWidget{{background-color:{bg};color:{txt};font-size:13px;
+  font-family:-apple-system,"Segoe UI","Noto Sans",sans-serif;}}
+QDialog{{background-color:{surf};}}
+QFrame#sidebar{{background-color:{surf};border-left:1px solid {bdr};}}
+QWidget#transparent_container{{background:transparent;border:none;}}
+QLabel{{background:transparent;color:{txt};}}
+QLabel#muted{{color:{txt2};font-size:11px;font-weight:600;}}
+QLabel#time_value{{background:{btn};border:1px solid {btn_bd};border-radius:6px;
+  padding:3px 8px;color:{txt};font-weight:600;}}
+QLabel#month_title{{font-size:17px;font-weight:bold;color:{txt};}}
+QLabel#date_banner{{font-size:19px;font-weight:bold;color:{txt};}}
+QLabel#week_lbl{{color:{txt2};font-size:11px;background:transparent;}}
+QLabel#week_total_lbl{{color:{txt2};font-size:10px;background:transparent;}}
+QLabel#stat_val_leave{{color:{txt};font-size:13px;font-weight:bold;
+  border-bottom:1px dotted {txt2};}}
+QFrame#stat_card{{background-color:{stat_bg};border:1px solid {stat_bd};border-radius:12px;}}
+QFrame#stat_card QLabel{{background:transparent;}}
+QLabel#stat_key{{color:{txt2};font-size:11px;}}
+QLabel#stat_val{{color:{txt};font-size:13px;font-weight:bold;}}
+QLabel#stat_val_ot{{color:{ot};font-size:13px;font-weight:bold;}}
+QFrame#divider{{background:{bdr};max-height:1px;min-height:1px;border:none;}}
+QToolTip{{background-color:{tip_bg};color:{txt};border:1px solid {tip_bdr};
+  padding:5px 8px;border-radius:6px;font-size:12px;}}
+QPushButton#nav_btn{{background:transparent;border:none;color:{txt2};
+  font-size:17px;padding:2px 10px;border-radius:6px;}}
+QPushButton#nav_btn:hover{{background:{hov};color:{acc};}}
+QPushButton#date_nav_btn{{background:transparent;border:none;color:{txt2};
+  font-size:18px;padding:0px;border-radius:6px;}}
+QPushButton#date_nav_btn:hover{{background:{hov};color:{acc};}}
+QPushButton#date_nav_btn:disabled{{color:{dis_t2};background:transparent;}}
+QTabWidget::pane{{border:1px solid {bdr};border-radius:8px;background:{surf};}}
+QTabBar::tab{{background:{btn};border:1px solid {btn_bd};padding:6px 16px;
+  border-top-left-radius:6px;border-top-right-radius:6px;color:{txt2};}}
+QTabBar::tab:selected{{background:{surf};color:{txt};border-bottom:none;}}
+QTabBar::tab:hover{{background:{hov};color:{txt};}}
+
+QTabWidget#time_tabs::pane{{border:1px solid {bdr};border-radius:12px;background:{surf};
+  margin-top:5px;top:0px;}}
+QTabWidget#time_tabs{{background:transparent;border:none;}}
+QTabWidget#time_tabs QTabBar{{alignment:center;}}
+QTabWidget#time_tabs QTabBar::tab{{background:transparent;
+  min-width:124px;padding:6px 0px;border-radius:0px;margin:0;color:{txt2};}}
+QTabWidget#time_tabs QTabBar::tab:selected{{background:{acc_dim};border-top:2px solid {acc};
+  color:{txt};}}
+QTabWidget#time_tabs QTabBar::tab:hover{{background:{hov};border-top:2px solid {acc};
+  color:{txt};}}
+QWidget#time_tab_panel{{background:{surf};border:none;}}
+QListWidget{{background:{surf};border:1px solid {bdr};border-radius:10px;
+  outline:none;padding:4px;}}
+QListWidget::item{{border-radius:8px;padding:6px 8px;margin:2px 0;}}
+QListWidget::item:selected{{background:{acc_dim};color:{txt};border:1px solid {acc};}}
+QListWidget::item:hover{{background:{hov};}}
+QComboBox{{background:{btn};border:1px solid {btn_bd};border-radius:6px;
+  padding:4px 8px;color:{txt};font-size:12px;}}
+QComboBox::drop-down{{border:none;width:20px;}}
+QComboBox QAbstractItemView{{background:{surf};border:1px solid {bdr};color:{txt};
+  font-size:12px;selection-background-color:{acc};selection-color:#ffffff;outline:none;}}
+QDoubleSpinBox{{background:{inp_bg};border:1px solid {inp_bd};
+  border-radius:8px;padding:5px 8px;color:{txt};}}
+QDoubleSpinBox::up-button,QDoubleSpinBox::down-button{{width:18px;}}
+QCheckBox{{color:{txt};spacing:8px;}}
+QCheckBox::indicator{{width:16px;height:16px;border:1px solid {btn_bd};
+  border-radius:4px;background:{btn};}}
+QCheckBox::indicator:checked{{background:{acc};border-color:{acc};}}
+QPushButton{{background:{btn};border:1px solid {btn_bd};border-radius:8px;
+  padding:7px 14px;color:{txt};}}
+QPushButton:hover{{background:{hov};border-color:{acc};}}
+QPushButton:pressed{{background:{acc_dim};}}
+QPushButton:disabled{{background:{dis_bg};border:1px solid {dis_bd};color:{dis_txt};}}
+QPushButton#primary_btn{{background:{acc};color:#ffffff;border:none;
+  font-weight:600;border-radius:8px;padding:8px 14px;}}
+QPushButton#primary_btn:hover{{background:{acc_hov};color:#ffffff;border:none;}}
+QPushButton#primary_btn:pressed{{background:{acc_dim};color:{txt};border:1px solid {btn_bd};}}
+QPushButton#primary_btn:disabled{{background:{acc_dim};border:none;color:{dis_t2};}}
+QPushButton#clock_btn{{background:{acc_dim};border:1px solid {acc};
+  border-radius:6px;color:{acc};padding:5px 10px;font-size:12px;
+  font-weight:600;min-width:52px;}}
+QPushButton#clock_btn:hover{{background:{acc};color:#ffffff;}}
+QPushButton#clock_btn:disabled{{background:{dis_bg};border-color:{dis_bd};color:{dis_txt};}}
+QPushButton#action_btn{{background:{btn};border:1px solid {btn_bd};
+  border-radius:8px;padding:7px 10px;color:{txt2};font-size:12px;}}
+QPushButton#action_btn:hover{{background:{hov};border-color:{acc};color:{txt};}}
+QPushButton#action_btn:disabled{{background:{dis_bg};border-color:{dis_bd};color:{dis_txt};}}
+QLineEdit,QTextEdit,QPlainTextEdit{{background:{inp_bg};border:1px solid {inp_bd};
+  border-radius:8px;padding:4px 8px;color:{txt};}}
+QTabWidget#time_tabs QLineEdit{{min-height:15px;padding:5px 10px;line-height:18px;font-size:13px;}}
+QLineEdit::placeholder,QTextEdit::placeholder,QPlainTextEdit::placeholder{{color:{txt2};}}
+QLineEdit:focus,QTextEdit:focus,QPlainTextEdit:focus{{border-color:{acc};}}
+QDialogButtonBox QPushButton{{min-width:72px;}}
+QDialogButtonBox QPushButton:disabled{{color:{dis_txt};}}
+QProgressBar{{text-align:center;color:{txt};}}
+QProgressBar::chunk{{background:{acc};border-radius:3px;}}
+QRadioButton{{border-radius:8px;padding:2px 7px;}}
+
+"""
+
+
+def apply_application_theme(application: Any, dark: bool, theme: str = "blue") -> None:
+    """Apply the generated application stylesheet through the theme module."""
+    application.setStyleSheet(make_qss(dark, theme))
+
+
+def progress_bar_qss(accent: str, dark: bool = False) -> str:
+    """Return a QProgressBar stylesheet string matching the active theme.
+
+    Used by ``LocalDownloadDialog`` so the progress-bar chunk colour
+    always reflects the current accent colour without inline hard-coding.
+    """
+    txt = "#e8e8e8" if dark else "#333333"
+    return (
+        "QProgressBar{{"
+            "text-align:center;color:{txt};border-radius:4px;"
+            "background:#d0d0d0;min-height:14px;}}"
+        "QProgressBar::chunk{{"
+            "background:{acc};border-radius:4px;}}"
+    ).format(txt=txt, acc=accent)
