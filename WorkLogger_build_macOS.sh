@@ -24,7 +24,8 @@ PYTHON_BIN_ARM64="${PYTHON_BIN_ARM64:-$PYTHON_BIN}"
 LLAMA_CPP_ARM64_WHEEL_INDEX_URL="${LLAMA_CPP_ARM64_WHEEL_INDEX_URL:-https://abetlen.github.io/llama-cpp-python/whl/metal}"
 LLAMA_CPP_X86_64_WHEEL_INDEX_URL="${LLAMA_CPP_X86_64_WHEEL_INDEX_URL:-https://abetlen.github.io/llama-cpp-python/whl/cpu}"
 LLAMA_CPP_REQUIREMENT="${LLAMA_CPP_REQUIREMENT:-}"
-LLAMA_CPP_REQUIREMENT_ARM64="${LLAMA_CPP_REQUIREMENT_ARM64:-${LLAMA_CPP_REQUIREMENT:-llama-cpp-python>=0.3.19}}"
+# The 0.3.23 Metal arm64 wheel currently has a corrupt zip member.
+LLAMA_CPP_REQUIREMENT_ARM64="${LLAMA_CPP_REQUIREMENT_ARM64:-${LLAMA_CPP_REQUIREMENT:-llama-cpp-python>=0.3.22,!=0.3.23}}"
 LLAMA_CPP_REQUIREMENT_X86_64="${LLAMA_CPP_REQUIREMENT_X86_64:-${LLAMA_CPP_REQUIREMENT:-llama-cpp-python==0.3.2}}"
 LLAMA_CPP_FORCE_REINSTALL="${LLAMA_CPP_FORCE_REINSTALL:-1}"
 LLAMA_CPP_ONLY_BINARY="${LLAMA_CPP_ONLY_BINARY:-1}"
@@ -32,6 +33,7 @@ LLAMA_CPP_NO_CACHE="${LLAMA_CPP_NO_CACHE:-1}"
 LLAMA_CPP_ALLOW_SOURCE_BUILD="${LLAMA_CPP_ALLOW_SOURCE_BUILD:-0}"
 LLAMA_CPP_ALLOW_VERSION_MISMATCH="${LLAMA_CPP_ALLOW_VERSION_MISMATCH:-1}"
 LLAMA_CPP_ALLOW_ARCH_SPECIFIC_LLAMA_LIBS="${LLAMA_CPP_ALLOW_ARCH_SPECIFIC_LLAMA_LIBS:-1}"
+LLAMA_CPP_INSTALL_RETRIES="${LLAMA_CPP_INSTALL_RETRIES:-3}"
 LOG_DIR="$SCRIPT_DIR/build_logs"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 LOG_FILE="$LOG_DIR/build_macos_${TIMESTAMP}.log"
@@ -165,7 +167,10 @@ run_with_heartbeat() {
 
   started="$(date +%s)"
   next_heartbeat="$interval_seconds"
-  "$@" &
+  (
+    set -euo pipefail
+    "$@"
+  ) &
   pid=$!
 
   while kill -0 "$pid" 2>/dev/null; do
@@ -454,6 +459,63 @@ PY
   find "$venv_dir" -path "*llama_cpp*" -type f \( -name "*.so" -o -name "*.dylib" \) -print -exec file {} \; 2>/dev/null || true
 }
 
+verify_wheel_integrity() {
+  local target_arch="$1"
+  local python_exe="$2"
+  local wheel_path="$3"
+
+  log "RUN  : Verify llama-cpp-python wheel integrity (${target_arch}): $(basename "$wheel_path")"
+  if run_arch "$target_arch" "$python_exe" - "$wheel_path" <<'PY'
+from pathlib import Path
+import sys
+import zipfile
+
+wheel = Path(sys.argv[1])
+try:
+    with zipfile.ZipFile(wheel) as wheel_file:
+        bad_member = wheel_file.testzip()
+except zipfile.BadZipFile as exc:
+    print(f"wheel_integrity=bad_zip: {exc}")
+    raise SystemExit(1)
+
+if bad_member:
+    print(f"wheel_integrity=bad_member: {bad_member}")
+    raise SystemExit(1)
+
+print("wheel_integrity=ok")
+PY
+  then
+    log "OK   : Verify llama-cpp-python wheel integrity (${target_arch})"
+    return 0
+  fi
+
+  log "WARN : llama-cpp-python wheel failed integrity check (${target_arch}): $(basename "$wheel_path")"
+  return 1
+}
+
+install_llama_python_dependencies() {
+  local target_arch="$1"
+  local python_exe="$2"
+  local dependency_args
+
+  dependency_args=(install --verbose --no-compile)
+  if is_enabled "$LLAMA_CPP_NO_CACHE"; then
+    dependency_args+=(--no-cache-dir)
+  fi
+  dependency_args+=(
+    "typing-extensions>=4.5.0"
+    "numpy>=1.20.0"
+    "diskcache>=5.6.1"
+    "jinja2>=2.11.3"
+  )
+
+  log "DEBUG: llama-cpp-python dependency pip command (${target_arch}): ${python_exe} -m pip ${dependency_args[*]}"
+  if ! run_arch "$target_arch" "$python_exe" -m pip "${dependency_args[@]}"; then
+    log "WARN : llama-cpp-python Python dependency install failed (${target_arch})."
+    return 1
+  fi
+}
+
 probe_llama_runtime_for_arch() {
   local target_arch="$1"
   local python_exe="$2"
@@ -539,9 +601,12 @@ install_llama_runtime() {
     log "DEBUG: llama-cpp-python CMAKE_ARGS (${target_arch}): ${llama_cmake_args}"
     log "DEBUG: llama-cpp-python wheel index (${target_arch}): ${llama_index_url}"
     log "DEBUG: llama-cpp-python pip command (${target_arch}): ${python_exe} -m pip ${pip_args[*]}"
-    CMAKE_ARGS="$llama_cmake_args" \
+    if ! CMAKE_ARGS="$llama_cmake_args" \
       ARCHFLAGS="-arch ${target_arch}" \
-      run_arch "$target_arch" "$python_exe" -m pip "${pip_args[@]}"
+      run_arch "$target_arch" "$python_exe" -m pip "${pip_args[@]}"; then
+      log "WARN : llama-cpp-python source install failed (${target_arch})."
+      return 1
+    fi
     return 0
   fi
 
@@ -565,8 +630,16 @@ install_llama_runtime() {
   wheel_path="$(find "$wheel_dir" -maxdepth 1 -type f -name "*.whl" | head -n 1)"
   [ -n "$wheel_path" ] || fail "No llama-cpp-python wheel was downloaded for ${target_arch} from ${llama_index_url}."
   log "DEBUG: llama-cpp-python selected wheel (${target_arch}): $(basename "$wheel_path")"
+  if ! verify_wheel_integrity "$target_arch" "$python_exe" "$wheel_path"; then
+    safe_remove_path "$wheel_dir"
+    return 1
+  fi
+  if ! install_llama_python_dependencies "$target_arch" "$python_exe"; then
+    safe_remove_path "$wheel_dir"
+    return 1
+  fi
 
-  pip_args=(install --verbose --no-compile)
+  pip_args=(install --verbose --no-compile --no-deps)
   if is_enabled "$LLAMA_CPP_NO_CACHE"; then
     pip_args+=(--no-cache-dir)
   fi
@@ -576,7 +649,11 @@ install_llama_runtime() {
   pip_args+=("$wheel_path")
 
   log "DEBUG: llama-cpp-python pip command (${target_arch}): ${python_exe} -m pip ${pip_args[*]}"
-  run_arch "$target_arch" "$python_exe" -m pip "${pip_args[@]}"
+  if ! run_arch "$target_arch" "$python_exe" -m pip "${pip_args[@]}"; then
+    log "WARN : llama-cpp-python wheel install failed (${target_arch}): $(basename "$wheel_path")"
+    safe_remove_path "$wheel_dir"
+    return 1
+  fi
   safe_remove_path "$wheel_dir"
 }
 
@@ -710,6 +787,10 @@ verify_prerequisites() {
   if ! is_enabled "$LLAMA_CPP_ALLOW_SOURCE_BUILD" && ! is_enabled "$LLAMA_CPP_ONLY_BINARY"; then
     fail "Source builds are disabled by default; set LLAMA_CPP_ALLOW_SOURCE_BUILD=1 before disabling LLAMA_CPP_ONLY_BINARY."
   fi
+  case "$LLAMA_CPP_INSTALL_RETRIES" in
+    "" | *[!0-9]*) fail "LLAMA_CPP_INSTALL_RETRIES must be a positive integer." ;;
+  esac
+  [ "$LLAMA_CPP_INSTALL_RETRIES" -ge 1 ] || fail "LLAMA_CPP_INSTALL_RETRIES must be at least 1."
 }
 
 find_app_bundle() {
@@ -782,7 +863,7 @@ bootstrap_build_env() {
 
     # Install separately so CI logs show the selected architecture-specific wheel source.
     log "DEBUG: Installing llama-cpp-python separately (${target_arch}); release builds require binary wheels unless LLAMA_CPP_ALLOW_SOURCE_BUILD=1."
-    retry 1 5 "Install local-model runtime (${target_arch})" \
+    retry "$LLAMA_CPP_INSTALL_RETRIES" 5 "Install local-model runtime (${target_arch})" \
       run_with_heartbeat "Install local-model runtime (${target_arch})" 120 \
       install_llama_runtime "$target_arch" "$venv_python" "$llama_requirement"
     print_llama_install_debug "$target_arch" "$venv_python" "$venv_dir"
@@ -1109,6 +1190,7 @@ log "llama requirement arm64 : $LLAMA_CPP_REQUIREMENT_ARM64"
 log "llama requirement x86_64: $LLAMA_CPP_REQUIREMENT_X86_64"
 log "llama binary-only       : $LLAMA_CPP_ONLY_BINARY (allow_source=$LLAMA_CPP_ALLOW_SOURCE_BUILD)"
 log "llama mismatch allowed  : $LLAMA_CPP_ALLOW_VERSION_MISMATCH (arch_specific_libs=$LLAMA_CPP_ALLOW_ARCH_SPECIFIC_LLAMA_LIBS)"
+log "llama install retries   : $LLAMA_CPP_INSTALL_RETRIES"
 log "============================================================"
 
 export LANG=en_US.UTF-8

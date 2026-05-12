@@ -180,7 +180,8 @@ jobs:
           PYTHON_BIN_X86_64: ${{ steps.setup-python-x64.outputs.python-path }}
           LLAMA_CPP_ARM64_WHEEL_INDEX_URL: https://abetlen.github.io/llama-cpp-python/whl/metal
           LLAMA_CPP_X86_64_WHEEL_INDEX_URL: https://abetlen.github.io/llama-cpp-python/whl/cpu
-          LLAMA_CPP_REQUIREMENT_ARM64: "llama-cpp-python>=0.3.19"
+          # 0.3.23 Metal arm64 wheel has a corrupt zip member.
+          LLAMA_CPP_REQUIREMENT_ARM64: "llama-cpp-python>=0.3.22,!=0.3.23"
           LLAMA_CPP_REQUIREMENT_X86_64: "llama-cpp-python==0.3.2"
           LLAMA_CPP_FORCE_REINSTALL: "1"
           LLAMA_CPP_ONLY_BINARY: "1"
