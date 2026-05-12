@@ -1,1 +1,0 @@
-"""WorkLogger test package."""
