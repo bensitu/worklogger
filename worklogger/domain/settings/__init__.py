@@ -1,0 +1,2 @@
+"""Settings domain contracts."""
+

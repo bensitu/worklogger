@@ -1,0 +1,2 @@
+"""Calendar domain contracts."""
+

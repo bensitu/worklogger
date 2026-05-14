@@ -1,0 +1,709 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: WorkLogger 4.0.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+
+msgid "+"
+msgstr ""
+
+msgid "+15m break"
+msgstr ""
+
+msgid "AI"
+msgstr ""
+
+msgid "AI Assist"
+msgstr ""
+
+msgid "About"
+msgstr ""
+
+msgid "Account"
+msgstr ""
+
+msgid "Active"
+msgstr ""
+
+msgid "Add"
+msgstr ""
+
+msgid "Admin"
+msgstr ""
+
+msgid "Analytics"
+msgstr ""
+
+msgid "Annual"
+msgstr ""
+
+msgid "Appearance"
+msgstr ""
+
+msgid "Append"
+msgstr ""
+
+msgid "Apply template"
+msgstr ""
+
+msgid "Ask about your work logs"
+msgstr ""
+
+msgid "Assistant"
+msgstr ""
+
+msgid "Author: {author}"
+msgstr ""
+
+msgid "Auto Record"
+msgstr ""
+
+msgid "Average"
+msgstr ""
+
+msgid "Back to login"
+msgstr ""
+
+msgid "Backup Data"
+msgstr ""
+
+msgid "Backup cancelled"
+msgstr ""
+
+msgid "Backup saved: {path}"
+msgstr ""
+
+msgid "Bar"
+msgstr ""
+
+msgid "Blue"
+msgstr ""
+
+msgid "Break"
+msgstr ""
+
+msgid "Break (h)"
+msgstr ""
+
+msgid "Break timer running"
+msgstr ""
+
+msgid "Business trip"
+msgstr ""
+
+msgid "CSV (*.csv)"
+msgstr ""
+
+msgid "CSV files (*.csv)"
+msgstr ""
+
+msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
+msgstr ""
+
+msgid "Calendar events: {events}"
+msgstr ""
+
+msgid "Change password"
+msgstr ""
+
+msgid "Check for updates"
+msgstr ""
+
+msgid "Close"
+msgstr ""
+
+msgid "Comp leave"
+msgstr ""
+
+msgid "Confirm password"
+msgstr ""
+
+msgid "Continue"
+msgstr ""
+
+msgid "Copied"
+msgstr ""
+
+msgid "Copy Markdown"
+msgstr ""
+
+msgid "Create account"
+msgstr ""
+
+msgid "Create user"
+msgstr ""
+
+msgid "Current password"
+msgstr ""
+
+msgid "Custom"
+msgstr ""
+
+msgid "DESKTOP START FAILED"
+msgstr ""
+
+msgid "Daily Report"
+msgstr ""
+
+msgid "Dark mode"
+msgstr ""
+
+msgid "Data"
+msgstr ""
+
+msgid "Data restored successfully."
+msgstr ""
+
+msgid "Default break (h)"
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "Delete user"
+msgstr ""
+
+msgid "Description"
+msgstr ""
+
+msgid "Discard changes?"
+msgstr ""
+
+msgid "Download"
+msgstr ""
+
+msgid "Enable local models"
+msgstr ""
+
+msgid "Enable menu bar"
+msgstr ""
+
+msgid "Enable tray"
+msgstr ""
+
+msgid "End"
+msgstr ""
+
+msgid "Ended"
+msgstr ""
+
+msgid "Export .ics"
+msgstr ""
+
+msgid "Export CSV"
+msgstr ""
+
+msgid "Export Markdown"
+msgstr ""
+
+msgid "Export PDF"
+msgstr ""
+
+msgid "Export cancelled"
+msgstr ""
+
+msgid "Exported CSV"
+msgstr ""
+
+msgid "Exported Markdown"
+msgstr ""
+
+msgid "Exported PDF"
+msgstr ""
+
+msgid "Exported {count} events."
+msgstr ""
+
+msgid "Exported {count} records."
+msgstr ""
+
+msgid "Fri"
+msgstr ""
+
+msgid "GGUF Model (*.gguf)"
+msgstr ""
+
+msgid "General"
+msgstr ""
+
+msgid "Green"
+msgstr ""
+
+msgid "Import .gguf"
+msgstr ""
+
+msgid "Import .ics"
+msgstr ""
+
+msgid "Import CSV"
+msgstr ""
+
+msgid "Import cancelled"
+msgstr ""
+
+msgid "Imported {count} calendar events."
+msgstr ""
+
+msgid "Imported {count} records."
+msgstr ""
+
+msgid "Include calendar"
+msgstr ""
+
+msgid "Include notes"
+msgstr ""
+
+msgid "Include quick logs"
+msgstr ""
+
+msgid "Insert Quick Log"
+msgstr ""
+
+msgid "Leave"
+msgstr ""
+
+msgid "Leave days"
+msgstr ""
+
+msgid "Line"
+msgstr ""
+
+msgid "Link"
+msgstr ""
+
+msgid "Linked identities"
+msgstr ""
+
+msgid "Local Models"
+msgstr ""
+
+msgid "Login"
+msgstr ""
+
+msgid "Logout"
+msgstr ""
+
+msgid "Logout requested"
+msgstr ""
+
+msgid "Manage downloaded and imported GGUF models."
+msgstr ""
+
+msgid "Manage models"
+msgstr ""
+
+msgid "Manage users"
+msgstr ""
+
+msgid "Manual Input"
+msgstr ""
+
+msgid "Markdown files (*.md)"
+msgstr ""
+
+msgid "Minimal mode"
+msgstr ""
+
+msgid "Model verified."
+msgstr ""
+
+msgid "Mon"
+msgstr ""
+
+msgid "Month"
+msgstr ""
+
+msgid "Monthly"
+msgstr ""
+
+msgid "Monthly Report"
+msgstr ""
+
+msgid "Monthly target"
+msgstr ""
+
+msgid "Monthly target (h)"
+msgstr ""
+
+msgid "New password"
+msgstr ""
+
+msgid "New recovery key"
+msgstr ""
+
+msgid "Next day"
+msgstr ""
+
+msgid "Next month"
+msgstr ""
+
+msgid "No arguments start the desktop application."
+msgstr ""
+
+msgid "No data"
+msgstr ""
+
+msgid "No events found."
+msgstr ""
+
+msgid "Normal"
+msgstr ""
+
+msgid "Not configured"
+msgstr ""
+
+msgid "Not downloaded"
+msgstr ""
+
+msgid "Not required"
+msgstr ""
+
+msgid "Notes"
+msgstr ""
+
+msgid "Notes reminder dot"
+msgstr ""
+
+msgid "On break"
+msgstr ""
+
+msgid "Open"
+msgstr ""
+
+msgid "Overnight"
+msgstr ""
+
+msgid "Overnight indicator"
+msgstr ""
+
+msgid "Overtime"
+msgstr ""
+
+msgid "PDF files (*.pdf)"
+msgstr ""
+
+msgid "Paid leave"
+msgstr ""
+
+msgid "Password"
+msgstr ""
+
+msgid "Password change"
+msgstr ""
+
+msgid "Password change required."
+msgstr ""
+
+msgid "Password changed successfully."
+msgstr ""
+
+msgid "Password reset."
+msgstr ""
+
+msgid "Pink"
+msgstr ""
+
+msgid "Previous day"
+msgstr ""
+
+msgid "Previous month"
+msgstr ""
+
+msgid "Public holidays"
+msgstr ""
+
+msgid "Purple"
+msgstr ""
+
+msgid "Quarterly"
+msgstr ""
+
+msgid "Quick Log"
+msgstr ""
+
+msgid "Quick Log added."
+msgstr ""
+
+msgid "Quick Log deleted."
+msgstr ""
+
+msgid "Quick Log updated."
+msgstr ""
+
+msgid "Quit"
+msgstr ""
+
+msgid "RUNTIME SMOKE FAILED"
+msgstr ""
+
+msgid "RUNTIME SMOKE OK"
+msgstr ""
+
+msgid "Ready"
+msgstr ""
+
+msgid "Recovery key"
+msgstr ""
+
+msgid "Refresh"
+msgstr ""
+
+msgid "Remember me"
+msgstr ""
+
+msgid "Remote"
+msgstr ""
+
+msgid "Replace"
+msgstr ""
+
+msgid "Report saved."
+msgstr ""
+
+msgid "Reports"
+msgstr ""
+
+msgid "Require password change"
+msgstr ""
+
+msgid "Required"
+msgstr ""
+
+msgid "Reset password"
+msgstr ""
+
+msgid "Reset selected user password"
+msgstr ""
+
+msgid "Reset template"
+msgstr ""
+
+msgid "Restore Data"
+msgstr ""
+
+msgid "Restore cancelled"
+msgstr ""
+
+msgid "Restore validation passed."
+msgstr ""
+
+msgid "Restore will replace the current database file. Continue?"
+msgstr ""
+
+msgid "Rewrite"
+msgstr ""
+
+msgid "Rewritten"
+msgstr ""
+
+msgid "Role"
+msgstr ""
+
+msgid "SMOKE IMPORT FAILED"
+msgstr ""
+
+msgid "SMOKE IMPORT OK"
+msgstr ""
+
+msgid "SQLite Database (*.db)"
+msgstr ""
+
+msgid "Sat"
+msgstr ""
+
+msgid "Save"
+msgstr ""
+
+msgid "Save template"
+msgstr ""
+
+msgid "Save this recovery key before continuing."
+msgstr ""
+
+msgid "Save this recovery key before returning to login."
+msgstr ""
+
+msgid "Saved"
+msgstr ""
+
+msgid "Select"
+msgstr ""
+
+msgid "Select a model first."
+msgstr ""
+
+msgid "Select a provider first."
+msgstr ""
+
+msgid "Select a user."
+msgstr ""
+
+msgid "Select an identity first."
+msgstr ""
+
+msgid "Selected day: {day}"
+msgstr ""
+
+msgid "Send"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Show leaves"
+msgstr ""
+
+msgid "Sick leave"
+msgstr ""
+
+msgid "Signed in: {username}"
+msgstr ""
+
+msgid "Standard hours (h)"
+msgstr ""
+
+msgid "Start"
+msgstr ""
+
+msgid "Start break"
+msgstr ""
+
+msgid "Start week on Monday"
+msgstr ""
+
+msgid "Started"
+msgstr ""
+
+msgid "Sun"
+msgstr ""
+
+msgid "Template reset."
+msgstr ""
+
+msgid "Template saved."
+msgstr ""
+
+msgid "Theme"
+msgstr ""
+
+msgid "Thu"
+msgstr ""
+
+msgid "Today"
+msgstr ""
+
+msgid "Toggle password change"
+msgstr ""
+
+msgid "Total"
+msgstr ""
+
+msgid "Total hours"
+msgstr ""
+
+msgid "Total: {hours:.1f}h"
+msgstr ""
+
+msgid "Tue"
+msgstr ""
+
+msgid "Unknown error"
+msgstr ""
+
+msgid "Unlink"
+msgstr ""
+
+msgid "Unsaved changes"
+msgstr ""
+
+msgid "Update"
+msgstr ""
+
+msgid "Update available: {version}"
+msgstr ""
+
+msgid "Update check is not configured."
+msgstr ""
+
+msgid "User"
+msgstr ""
+
+msgid "User created."
+msgstr ""
+
+msgid "User deleted."
+msgstr ""
+
+msgid "User updated."
+msgstr ""
+
+msgid "Username"
+msgstr ""
+
+msgid "Verify"
+msgstr ""
+
+msgid "Version {version}"
+msgstr ""
+
+msgid "Wed"
+msgstr ""
+
+msgid "Weekly Report"
+msgstr ""
+
+msgid "Work Report"
+msgstr ""
+
+msgid "Work days"
+msgstr ""
+
+msgid "Work hours"
+msgstr ""
+
+msgid "Work type"
+msgstr ""
+
+msgid "WorkLogger"
+msgstr ""
+
+msgid "WorkLogger command line"
+msgstr ""
+
+msgid "Worked"
+msgstr ""
+
+msgid "Year"
+msgstr ""
+
+msgid "You"
+msgstr ""
+
+msgid "You are using the latest version."
+msgstr ""
+
+msgid "You have unsaved note changes. Discard them?"
+msgstr ""
+
+msgid "You have unsaved report changes. Discard them?"
+msgstr ""
+
+msgid "You have unsaved work log changes. Discard them?"
+msgstr ""
+
+msgid "h"
+msgstr ""
+
+msgid "iCalendar (*.ics)"
+msgstr ""
+
+msgid "m"
+msgstr ""
+
+msgid "{count} event"
+msgstr ""
+
+msgid "{count} events"
+msgstr ""

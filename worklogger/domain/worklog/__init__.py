@@ -1,0 +1,2 @@
+"""Work log domain contracts."""
+

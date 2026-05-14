@@ -1,0 +1,2 @@
+"""WorkLogger application package."""
+

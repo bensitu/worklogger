@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+# Virtual environments
+venv/
+venv_x86/
+venv_arm/
+env/
+.venv/
+.venv-*/
+.venv_*/
+.venv_build/
+.venv_build_*/
+# PyInstaller and build outputs
+build/
+build_*/
+build_logs/
+build_x86/
+build_arm/
+dist/
+dist_*/
+dist_x86/
+dist_arm/
+release/
+*.exe
+*.dmg
+*.app
+*.app/
+*.zip
+*.tar.gz
+# Logs
+*.log
+# OS and IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+# Local data and user-generated files
+worklog.db
+worklogger.log
+*.db
+*.bak_*
+worklog.db-shm
+worklog.db-wal
+worklogger/config/*.json
+worklogger/config/identity.local.json
+worklogger/config/identity.*.local.json
+worklogger/templates/custom/*.json
+!worklogger/templates/custom/Sample_1000000000000.json
+dist/templates/custom/*.json
+!dist/templates/custom/Sample_1000000000000.json
+worklogger/locales/*/LC_MESSAGES/*.mo
+# Generated test artifacts only. Real tests must remain trackable.
+tests/_artifacts/
+tests/_tmp_export.csv
+tests/_tmp_*.csv
+tests/_tmp_*.db
+# Local models and runtime model metadata
+worklogger/models/*.gguf
+worklogger/models/*.gguf.tmp
+worklogger/models/*.json
+worklogger/models/*.lock
+worklogger/models/catalog.json
+# Documentation
+docs/refactor/*.md

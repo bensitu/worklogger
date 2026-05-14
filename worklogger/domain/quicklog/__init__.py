@@ -1,0 +1,2 @@
+"""Quick log domain contracts."""
+
