@@ -52,11 +52,11 @@ class AiAssistDialog(QDialog):
         self.context_label = QLabel(
             _("Selected day: {day}").format(day=self._selected_day.isoformat())
         )
-        self.context_label.setObjectName("muted")
+        self.context_label.setObjectName("selected_day_context_label")
         root.addWidget(self.context_label)
 
         self.transcript = QTextEdit()
-        self.transcript.setObjectName("ai_transcript")
+        self.transcript.setObjectName("ai_transcript_text_edit")
         self.transcript.setReadOnly(True)
         root.addWidget(self.transcript, 1)
 

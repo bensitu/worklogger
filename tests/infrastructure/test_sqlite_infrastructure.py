@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 from datetime import date
 from pathlib import Path
 import tempfile
@@ -437,7 +438,11 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         )
         self.assertTrue(store.set_secret("ai_api_key", "super-secret").ok)
         stored = settings.get(user_id, "secret:ai_api_key") or ""
-        settings.set(user_id, "secret:ai_api_key", stored[:-1] + "A")
+        prefix = "enc1:"
+        payload = bytearray(base64.urlsafe_b64decode(stored[len(prefix) :].encode("ascii")))
+        payload[-1] ^= 0x01
+        tampered = prefix + base64.urlsafe_b64encode(bytes(payload)).decode("ascii")
+        settings.set(user_id, "secret:ai_api_key", tampered)
 
         result = store.get_secret("ai_api_key")
 

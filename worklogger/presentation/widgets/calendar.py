@@ -104,7 +104,7 @@ class CalendarView(QWidget):
         layout.setSpacing(6)
 
         self.month_title = QLabel("")
-        self.month_title.setObjectName("month_title")
+        self.month_title.setObjectName("month_title_label")
         self.month_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.month_title)
 

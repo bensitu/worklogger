@@ -114,7 +114,7 @@ class UserManagementDialog(QDialog):
         root.addWidget(self._build_reset_box())
 
         self.recovery_key_caption = QLabel(_("Recovery key"))
-        self.recovery_key_caption.setObjectName("muted")
+        self.recovery_key_caption.setObjectName("recovery_key_caption_label")
         self.recovery_key_label = QLabel("")
         self.recovery_key_label.setObjectName("recovery_key_label")
         self.recovery_key_label.setWordWrap(True)
@@ -127,7 +127,8 @@ class UserManagementDialog(QDialog):
         self.status_label = QLabel("")
         self.status_label.setObjectName("user_management_status_label")
         self.close_button = QPushButton(_("Close"))
-        self.close_button.setObjectName("primary_btn")
+        self.close_button.setObjectName("close_user_management_button")
+        self.close_button.setProperty("variant", "primary")
         bottom.addWidget(self.status_label, 1)
         bottom.addWidget(self.close_button)
         root.addLayout(bottom)
@@ -148,9 +149,10 @@ class UserManagementDialog(QDialog):
         self.create_confirm_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.create_admin_switch = SwitchButton()
         self.create_force_switch = SwitchButton()
-        self.create_force_switch.setChecked(True)
+        self.create_force_switch.set_checked(True)
         self.create_user_button = QPushButton(_("Create user"))
-        self.create_user_button.setObjectName("primary_btn")
+        self.create_user_button.setObjectName("create_user_button")
+        self.create_user_button.setProperty("variant", "primary")
         form.addRow(_("Username"), self.username_input)
         form.addRow(_("Password"), self.create_password_input)
         form.addRow(_("Confirm password"), self.create_confirm_input)
@@ -167,7 +169,7 @@ class UserManagementDialog(QDialog):
         self.reset_confirm_input = QLineEdit()
         self.reset_confirm_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.reset_force_switch = SwitchButton()
-        self.reset_force_switch.setChecked(True)
+        self.reset_force_switch.set_checked(True)
         form.addRow(_("New password"), self.reset_password_input)
         form.addRow(_("Confirm password"), self.reset_confirm_input)
         form.addRow(_("Require password change"), _switch_row(self.reset_force_switch))
@@ -178,8 +180,8 @@ class UserManagementDialog(QDialog):
             username=self.username_input.text(),
             password=self.create_password_input.text(),
             password_confirm=self.create_confirm_input.text(),
-            is_admin=self.create_admin_switch.isChecked(),
-            must_change_password=self.create_force_switch.isChecked(),
+            is_admin=self.create_admin_switch.is_checked(),
+            must_change_password=self.create_force_switch.is_checked(),
         )
         if not result.ok or result.value is None:
             self._set_error(result.error)
@@ -200,7 +202,7 @@ class UserManagementDialog(QDialog):
             target_user_id=user_id,
             new_password=self.reset_password_input.text(),
             password_confirm=self.reset_confirm_input.text(),
-            must_change_password=self.reset_force_switch.isChecked(),
+            must_change_password=self.reset_force_switch.is_checked(),
         )
         if not result.ok or result.value is None:
             self._set_error(result.error)

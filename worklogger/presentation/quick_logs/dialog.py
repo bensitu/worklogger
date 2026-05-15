@@ -71,11 +71,11 @@ class QuickLogDialog(QDialog):
         root.setSpacing(10)
 
         self.date_label = QLabel("")
-        self.date_label.setObjectName("dialog_title")
+        self.date_label.setObjectName("quick_log_date_label")
         root.addWidget(self.date_label)
 
         self.list_widget = QListWidget()
-        self.list_widget.setObjectName("quick_log_list")
+        self.list_widget.setObjectName("quick_log_list_widget")
         root.addWidget(self.list_widget, 1)
 
         form = QFormLayout()
@@ -195,4 +195,3 @@ def _time_range(start_time: str | None, end_time: str | None) -> str:
     if start and end:
         return f"{start}-{end}"
     return start or end
-

@@ -88,22 +88,22 @@ class SettingsDialog(QDialog):
         try:
             theme_index = self.theme_combo.findData(state.theme)
             self.theme_combo.setCurrentIndex(theme_index if theme_index >= 0 else 0)
-            self.dark_switch.setChecked(state.dark_mode)
-            self.minimal_switch.setChecked(state.minimal_mode)
-            self.ai_enabled_switch.setChecked(state.ai_assist_enabled)
-            self.ai_notes_switch.setChecked(state.ai_privacy_include_notes)
-            self.ai_calendar_switch.setChecked(state.ai_privacy_include_calendar)
-            self.ai_quick_logs_switch.setChecked(state.ai_privacy_include_quick_logs)
-            self.local_model_enabled_switch.setChecked(state.local_model_enabled)
+            self.dark_switch.set_checked(state.dark_mode)
+            self.minimal_switch.set_checked(state.minimal_mode)
+            self.ai_enabled_switch.set_checked(state.ai_assist_enabled)
+            self.ai_notes_switch.set_checked(state.ai_privacy_include_notes)
+            self.ai_calendar_switch.set_checked(state.ai_privacy_include_calendar)
+            self.ai_quick_logs_switch.set_checked(state.ai_privacy_include_quick_logs)
+            self.local_model_enabled_switch.set_checked(state.local_model_enabled)
             self.standard_hours_input.setValue(state.standard_work_hours)
             self.default_break_input.setValue(state.default_break_hours)
             self.monthly_target_input.setValue(state.monthly_target_hours)
-            self.holidays_switch.setChecked(state.show_holidays)
-            self.note_markers_switch.setChecked(state.show_note_markers)
-            self.overnight_switch.setChecked(state.show_overnight_indicator)
-            self.week_start_switch.setChecked(state.week_start_monday)
+            self.holidays_switch.set_checked(state.show_holidays)
+            self.note_markers_switch.set_checked(state.show_note_markers)
+            self.overnight_switch.set_checked(state.show_overnight_indicator)
+            self.week_start_switch.set_checked(state.week_start_monday)
             if self.residency_switch is not None:
-                self.residency_switch.setChecked(
+                self.residency_switch.set_checked(
                     state.enable_tray
                     if self._residency_key == ENABLE_TRAY_SETTING_KEY
                     else state.enable_menu_bar
@@ -130,7 +130,8 @@ class SettingsDialog(QDialog):
         self.status_label = QLabel("")
         self.status_label.setObjectName("settings_status_label")
         self.close_button = QPushButton(_("Close"))
-        self.close_button.setObjectName("primary_btn")
+        self.close_button.setObjectName("close_settings_button")
+        self.close_button.setProperty("variant", "primary")
         self.close_button.clicked.connect(self.accept)
         bottom.addWidget(self.status_label, 1)
         bottom.addWidget(self.close_button)
@@ -308,7 +309,7 @@ class SettingsDialog(QDialog):
         layout.addWidget(row)
 
         self.local_model_status_label = QLabel(_("Manage downloaded and imported GGUF models."))
-        self.local_model_status_label.setObjectName("muted")
+        self.local_model_status_label.setObjectName("local_model_status_label")
         self.local_model_status_label.setWordWrap(True)
         self.manage_local_models_button = QPushButton(_("Manage models"))
         self.manage_local_models_button.clicked.connect(
@@ -326,11 +327,11 @@ class SettingsDialog(QDialog):
         layout.setSpacing(8)
 
         self.about_name_label = QLabel(APP_NAME)
-        self.about_name_label.setObjectName("dialog_title")
+        self.about_name_label.setObjectName("about_name_label")
         self.about_version_label = QLabel(_("Version {version}").format(version=APP_VERSION))
         self.about_author_label = QLabel(_("Author: {author}").format(author=APP_AUTHOR))
         self.about_url_label = QLabel(GITHUB_URL)
-        self.about_url_label.setObjectName("muted")
+        self.about_url_label.setObjectName("about_url_label")
         self.check_updates_button = QPushButton(_("Check for updates"))
         self.check_updates_button.clicked.connect(self.update_check_requested.emit)
         layout.addWidget(self.about_name_label)
@@ -348,7 +349,8 @@ class SettingsDialog(QDialog):
         layout.setSpacing(10)
 
         self.change_password_button = QPushButton(_("Change password"))
-        self.change_password_button.setObjectName("primary_btn")
+        self.change_password_button.setObjectName("change_password_button")
+        self.change_password_button.setProperty("variant", "primary")
         self.change_password_button.clicked.connect(self.change_password_requested.emit)
         self.manage_users_button = QPushButton(_("Manage users"))
         self.manage_users_button.clicked.connect(self.manage_users_requested.emit)

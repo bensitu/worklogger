@@ -67,12 +67,12 @@ class SettingsPresentationTests(unittest.TestCase):
         toggles: list[bool] = []
         switch.toggled.connect(toggles.append)
 
-        switch.setChecked(True)
-        switch.setChecked(True)
-        switch.setChecked(False)
+        switch.set_checked(True)
+        switch.set_checked(True)
+        switch.set_checked(False)
 
         self.assertEqual(toggles, [True, False])
-        self.assertFalse(switch.isChecked())
+        self.assertFalse(switch.is_checked())
 
     def test_settings_viewmodel_loads_defaults_and_persists_changes(self) -> None:
         repository = MemorySettingsRepository()
@@ -114,14 +114,14 @@ class SettingsPresentationTests(unittest.TestCase):
 
         self.assertTrue(dialog.refresh())
         self.assertEqual(dialog.theme_combo.currentData(), "pink")
-        self.assertTrue(dialog.dark_switch.isChecked())
+        self.assertTrue(dialog.dark_switch.is_checked())
         self.assertEqual(dialog.standard_hours_input.value(), 7.5)
 
         dialog.theme_combo.setCurrentIndex(dialog.theme_combo.findData("green"))
-        dialog.dark_switch.setChecked(False)
+        dialog.dark_switch.set_checked(False)
         dialog.standard_hours_input.setValue(8.5)
         if dialog.residency_switch is not None:
-            dialog.residency_switch.setChecked(True)
+            dialog.residency_switch.set_checked(True)
             residency_key = (
                 ENABLE_TRAY_SETTING_KEY
                 if sys.platform.startswith("win")
@@ -172,9 +172,9 @@ class SettingsPresentationTests(unittest.TestCase):
         self.assertIn("Local Models", tab_labels)
         self.assertIn("About", tab_labels)
 
-        dialog.ai_enabled_switch.setChecked(False)
-        dialog.ai_calendar_switch.setChecked(False)
-        dialog.local_model_enabled_switch.setChecked(False)
+        dialog.ai_enabled_switch.set_checked(False)
+        dialog.ai_calendar_switch.set_checked(False)
+        dialog.local_model_enabled_switch.set_checked(False)
 
         self.assertEqual(repository.values[(1, AI_ASSIST_ENABLED_SETTING_KEY)], "0")
         self.assertEqual(

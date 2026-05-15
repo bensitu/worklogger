@@ -82,16 +82,16 @@ class NoteEditorDialog(QDialog):
         root.setSpacing(10)
 
         self.date_label = QLabel("")
-        self.date_label.setObjectName("dialog_title")
+        self.date_label.setObjectName("note_date_label")
         root.addWidget(self.date_label)
 
         self.calendar_label = QLabel("")
-        self.calendar_label.setObjectName("muted")
+        self.calendar_label.setObjectName("note_calendar_events_label")
         self.calendar_label.setWordWrap(True)
         root.addWidget(self.calendar_label)
 
         self.editor = QTextEdit()
-        self.editor.setObjectName("note_editor")
+        self.editor.setObjectName("note_text_edit")
         root.addWidget(self.editor, 1)
 
         tools = QHBoxLayout()
@@ -119,7 +119,8 @@ class NoteEditorDialog(QDialog):
         bottom = QHBoxLayout()
         self.status_label = QLabel("")
         self.save_button = QPushButton(_("Save"))
-        self.save_button.setObjectName("primary_btn")
+        self.save_button.setObjectName("save_note_button")
+        self.save_button.setProperty("variant", "primary")
         self.close_button = QPushButton(_("Close"))
         bottom.addWidget(self.status_label, 1)
         bottom.addWidget(self.close_button)

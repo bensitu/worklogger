@@ -128,7 +128,7 @@ class AnalyticsPresentationTests(unittest.TestCase):
         chart.set_data(state.value.bundle, mode="bar")
         chart.set_data(state.value.bundle, mode="line")
 
-        self.assertEqual(chart.objectName(), "combo_chart")
+        self.assertEqual(chart.objectName(), "combo_chart_widget")
 
 
 if __name__ == "__main__":

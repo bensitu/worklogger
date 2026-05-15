@@ -104,7 +104,7 @@ class AnalyticsDialog(QDialog):
         root.addLayout(controls)
 
         self.summary_label = QLabel("")
-        self.summary_label.setObjectName("muted")
+        self.summary_label.setObjectName("analytics_summary_label")
         root.addWidget(self.summary_label)
 
         self.chart = ComboChart()
@@ -173,4 +173,3 @@ class AnalyticsDialog(QDialog):
     def _set_error(self, error: AppError | None) -> None:
         self._last_error = error
         self.status_label.setText(error.message if error is not None else _("Unknown error"))
-

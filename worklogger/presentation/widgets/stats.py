@@ -12,12 +12,12 @@ from worklogger.presentation.viewmodels.stats import StatsPanelState
 class StatsPanel(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setObjectName("stats_panel")
+        self.setObjectName("stats_panel_widget")
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
         card = QFrame()
-        card.setObjectName("stat_card")
+        card.setObjectName("stat_card_frame")
         grid = QGridLayout(card)
         grid.setContentsMargins(10, 8, 10, 8)
         grid.setHorizontalSpacing(12)
@@ -35,16 +35,16 @@ class StatsPanel(QWidget):
         )
         for index, (key, label_text) in enumerate(rows):
             key_label = QLabel(label_text)
-            key_label.setObjectName("stat_key")
+            key_label.setObjectName("stat_key_label")
             value_label = QLabel("")
-            value_label.setObjectName("stat_val")
+            value_label.setObjectName("stat_value_label")
             value_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             self._values[key] = value_label
             grid.addWidget(key_label, index, 0)
             grid.addWidget(value_label, index, 1)
 
         self.progress = QProgressBar()
-        self.progress.setObjectName("target_progress")
+        self.progress.setObjectName("target_progress_bar")
         self.progress.setRange(0, 100)
         self.progress.setTextVisible(True)
         grid.addWidget(self.progress, len(rows), 0, 1, 2)

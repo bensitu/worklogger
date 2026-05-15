@@ -75,7 +75,11 @@ from worklogger.app.use_cases.work_logs import (
 )
 from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandler
 from worklogger.app.use_cases.updates import CheckForUpdatesHandler
-from worklogger.config.constants import MINIMAL_MODE_SETTING_KEY
+from worklogger.config.constants import (
+    GITHUB_LATEST_RELEASE_API_URL,
+    MINIMAL_MODE_SETTING_KEY,
+)
+from worklogger.domain.auth.repositories import AuthCredentialRepository
 from worklogger.domain.auth.models import User
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
@@ -121,6 +125,7 @@ from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
 from worklogger.presentation.ai import AiAssistWorkflowController
 from worklogger.presentation.analytics import AnalyticsWorkflowController
 from worklogger.presentation.auth import AuthController, AuthSession
+from worklogger.presentation.auth.controller import RememberSessionStore
 from worklogger.presentation.identity import IdentityWorkflowController
 from worklogger.presentation.local_models import LocalModelsWorkflowController
 from worklogger.presentation.notes import NotesWorkflowController
@@ -171,6 +176,7 @@ class DesktopRuntime:
     connection_factory: SQLiteConnectionFactory
     user: User
     database_path: Path
+    remember_session_store: RememberSessionStore
     auth_session: AuthSession | None = None
 
 
@@ -180,6 +186,14 @@ class DesktopAuthenticator(Protocol):
 
 
 AuthControllerFactory = Callable[[AuthViewModel], DesktopAuthenticator]
+
+
+class RuntimeAuthRepository(AuthCredentialRepository, Protocol):
+    def get_by_username(self, username: str) -> User | None:
+        ...
+
+
+_remember_session_store_instance: RememberSessionStore | None = None
 
 
 def build_desktop_runtime(
@@ -198,6 +212,7 @@ def build_desktop_runtime(
             )
         application = _application(argv)
         auth_view_model = _auth_view_model(auth_repository, connection_factory)
+        remember_session_store = _remember_session_store()
         return _build_runtime_for_user(
             application=application,
             connection_factory=connection_factory,
@@ -206,7 +221,7 @@ def build_desktop_runtime(
             config=config,
             auth_repository=auth_repository,
             auth_view_model=auth_view_model,
-            remember_session_store=FileRememberTokenSessionStore(),
+            remember_session_store=remember_session_store,
         )
     except Exception as exc:
         return Result.failure(
@@ -229,7 +244,7 @@ def build_authenticated_desktop_runtime(
         database_path, connection_factory, auth_repository = _prepare_database(config)
         application = _application(argv)
         auth_view_model = _auth_view_model(auth_repository, connection_factory)
-        remember_session_store = FileRememberTokenSessionStore()
+        remember_session_store = _remember_session_store()
         authenticator = (
             auth_controller_factory(auth_view_model)
             if auth_controller_factory is not None
@@ -271,6 +286,13 @@ def _application(argv: Sequence[str] | None) -> QApplication:
     return QApplication(list(argv or []))
 
 
+def _remember_session_store() -> RememberSessionStore:
+    global _remember_session_store_instance
+    if _remember_session_store_instance is None:
+        _remember_session_store_instance = FileRememberTokenSessionStore()
+    return _remember_session_store_instance
+
+
 def _password_hasher(iterations: int | None) -> PBKDF2PasswordHasher:
     if iterations is None:
         return PBKDF2PasswordHasher()
@@ -279,7 +301,7 @@ def _password_hasher(iterations: int | None) -> PBKDF2PasswordHasher:
 
 def _prepare_database(
     config: DesktopRuntimeConfig,
-) -> tuple[Path, SQLiteConnectionFactory, SQLiteAuthRepository]:
+) -> tuple[Path, SQLiteConnectionFactory, RuntimeAuthRepository]:
     database_path = Path(config.database_path) if config.database_path else default_database_path()
     connection_factory = SQLiteConnectionFactory(database_path)
     MigrationRunner(connection_factory).run_pending()
@@ -291,7 +313,7 @@ def _prepare_database(
 
 
 def _auth_view_model(
-    auth_repository: SQLiteAuthRepository,
+    auth_repository: AuthCredentialRepository,
     connection_factory: SQLiteConnectionFactory,
 ) -> AuthViewModel:
     return AuthViewModel(
@@ -307,6 +329,33 @@ def _auth_view_model(
     )
 
 
+@dataclass(frozen=True)
+class RuntimeRepositories:
+    work_logs: SQLiteWorkLogRepository
+    calendar_events: SQLiteCalendarEventRepository
+    daily_notes: SQLiteDailyNoteRepository
+    identities: SQLiteIdentityRepository
+    quick_logs: SQLiteQuickLogRepository
+    reports: SQLiteReportRepository
+    report_templates: SQLiteReportTemplateRepository
+    settings: SQLiteSettingsRepository
+
+
+@dataclass(frozen=True)
+class RuntimeHandlers:
+    templates: UserTemplateProvider
+    markdown_exporter: MarkdownExporter
+    rewrite_handler: RewriteTextHandler
+    ai_chat_handler: AiChatHandler
+    save_template_handler: SaveReportTemplateHandler
+    reset_template_handler: ResetReportTemplateHandler
+    settings_get_handler: GetSettingHandler
+    settings_set_handler: SetSettingHandler
+    month_records_handler: GetMonthRecordsHandler
+    holiday_provider: PythonHolidaysProvider
+    holiday_country: str
+
+
 def _build_runtime_for_user(
     *,
     application: QApplication,
@@ -314,256 +363,455 @@ def _build_runtime_for_user(
     database_path: Path,
     user: User,
     config: DesktopRuntimeConfig,
-    auth_repository: SQLiteAuthRepository | None = None,
+    auth_repository: RuntimeAuthRepository | None = None,
     auth_session: AuthSession | None = None,
     auth_view_model: AuthViewModel | None = None,
-    remember_session_store: FileRememberTokenSessionStore | None = None,
+    remember_session_store: RememberSessionStore | None = None,
 ) -> Result[DesktopRuntime]:
-    work_logs = SQLiteWorkLogRepository(connection_factory)
-    calendar_events = SQLiteCalendarEventRepository(connection_factory)
-    daily_notes = SQLiteDailyNoteRepository(connection_factory)
-    identities = SQLiteIdentityRepository(connection_factory)
-    quick_logs = SQLiteQuickLogRepository(connection_factory)
-    reports = SQLiteReportRepository(connection_factory)
-    report_templates = SQLiteReportTemplateRepository(connection_factory)
-    templates = UserTemplateProvider(report_templates, BuiltInTemplateProvider())
-    markdown_exporter = MarkdownExporter()
-    rewrite_handler = RewriteTextHandler()
-    ai_chat_handler = AiChatHandler()
-    save_template_handler = SaveReportTemplateHandler(report_templates)
-    reset_template_handler = ResetReportTemplateHandler(report_templates)
-    holiday_provider = PythonHolidaysProvider()
-    holiday_country = detect_country()
-    settings_repository = SQLiteSettingsRepository(connection_factory)
-    local_model_store = JsonLocalModelStore(database_path.parent / "models")
-    identity_providers = (
-        DisabledIdentityProvider("google", "Google"),
-        DisabledIdentityProvider("microsoft", "Microsoft"),
+    repositories = _runtime_repositories(connection_factory)
+    handlers = _runtime_handlers(repositories)
+    remember_store = remember_session_store or _remember_session_store()
+    worklog_entry_view_model = _build_worklog_entry_view_model(user, repositories)
+    settings_workflow = _build_settings_workflow(
+        user=user,
+        database_path=database_path,
+        connection_factory=connection_factory,
+        repositories=repositories,
+        handlers=handlers,
+        auth_repository=auth_repository,
+        auth_view_model=auth_view_model,
+        remember_session_store=remember_store,
     )
-    settings_get_handler = GetSettingHandler(settings_repository)
-    settings_set_handler = SetSettingHandler(settings_repository)
-    month_records_handler = GetMonthRecordsHandler(work_logs)
-    worklog_entry_view_model = WorkLogEntryViewModel(
+    residency_controller = _build_residency_controller(user, handlers)
+    window_config = _window_config_for_user(config.window, user)
+
+    if _minimal_mode_enabled(connection_factory, user, config):
+        return _runtime_result(
+            application=application,
+            window=_build_minimal_view(
+                worklog_entry_view_model=worklog_entry_view_model,
+                window_config=window_config,
+                settings_workflow=settings_workflow,
+                residency_controller=residency_controller,
+            ),
+            connection_factory=connection_factory,
+            database_path=database_path,
+            user=user,
+            remember_session_store=remember_store,
+            auth_session=auth_session,
+        )
+
+    return _runtime_result(
+        application=application,
+        window=_build_app_window(
+            user=user,
+            repositories=repositories,
+            handlers=handlers,
+            worklog_entry_view_model=worklog_entry_view_model,
+            window_config=window_config,
+            settings_workflow=settings_workflow,
+            residency_controller=residency_controller,
+        ),
+        connection_factory=connection_factory,
+        database_path=database_path,
+        user=user,
+        remember_session_store=remember_store,
+        auth_session=auth_session,
+    )
+
+
+def _runtime_repositories(
+    connection_factory: SQLiteConnectionFactory,
+) -> RuntimeRepositories:
+    return RuntimeRepositories(
+        work_logs=SQLiteWorkLogRepository(connection_factory),
+        calendar_events=SQLiteCalendarEventRepository(connection_factory),
+        daily_notes=SQLiteDailyNoteRepository(connection_factory),
+        identities=SQLiteIdentityRepository(connection_factory),
+        quick_logs=SQLiteQuickLogRepository(connection_factory),
+        reports=SQLiteReportRepository(connection_factory),
+        report_templates=SQLiteReportTemplateRepository(connection_factory),
+        settings=SQLiteSettingsRepository(connection_factory),
+    )
+
+
+def _runtime_handlers(repositories: RuntimeRepositories) -> RuntimeHandlers:
+    return RuntimeHandlers(
+        templates=UserTemplateProvider(
+            repositories.report_templates,
+            BuiltInTemplateProvider(),
+        ),
+        markdown_exporter=MarkdownExporter(),
+        rewrite_handler=RewriteTextHandler(),
+        ai_chat_handler=AiChatHandler(),
+        save_template_handler=SaveReportTemplateHandler(repositories.report_templates),
+        reset_template_handler=ResetReportTemplateHandler(repositories.report_templates),
+        settings_get_handler=GetSettingHandler(repositories.settings),
+        settings_set_handler=SetSettingHandler(repositories.settings),
+        month_records_handler=GetMonthRecordsHandler(repositories.work_logs),
+        holiday_provider=PythonHolidaysProvider(),
+        holiday_country=detect_country(),
+    )
+
+
+def _build_worklog_entry_view_model(
+    user: User,
+    repositories: RuntimeRepositories,
+) -> WorkLogEntryViewModel:
+    return WorkLogEntryViewModel(
         user_id=user.id,
-        get_handler=GetWorkLogHandler(work_logs),
-        save_handler=SaveWorkLogHandler(work_logs),
+        get_handler=GetWorkLogHandler(repositories.work_logs),
+        save_handler=SaveWorkLogHandler(repositories.work_logs),
     )
-    quick_logs_workflow = QuickLogsWorkflowController(
+
+
+def _build_quick_logs_workflow(
+    user: User,
+    repositories: RuntimeRepositories,
+) -> QuickLogsWorkflowController:
+    return QuickLogsWorkflowController(
         QuickLogEditorViewModel(
             user_id=user.id,
-            add_handler=AddQuickLogHandler(quick_logs),
-            update_handler=UpdateQuickLogHandler(quick_logs),
-            delete_handler=DeleteQuickLogHandler(quick_logs),
-            get_day_handler=GetQuickLogsForDayHandler(quick_logs),
+            add_handler=AddQuickLogHandler(repositories.quick_logs),
+            update_handler=UpdateQuickLogHandler(repositories.quick_logs),
+            delete_handler=DeleteQuickLogHandler(repositories.quick_logs),
+            get_day_handler=GetQuickLogsForDayHandler(repositories.quick_logs),
         )
     )
-    analytics_workflow = AnalyticsWorkflowController(
+
+
+def _build_analytics_workflow(
+    user: User,
+    repositories: RuntimeRepositories,
+) -> AnalyticsWorkflowController:
+    return AnalyticsWorkflowController(
         AnalyticsViewModel(
             user_id=user.id,
-            bundle_handler=GetAnalyticsBundleHandler(work_logs),
+            bundle_handler=GetAnalyticsBundleHandler(repositories.work_logs),
             csv_exporter=AnalyticsCsvExporter(),
             pdf_exporter=AnalyticsPdfExporter(),
         )
     )
-    ai_assist_workflow = AiAssistWorkflowController(
+
+
+def _build_ai_workflow(
+    user: User,
+    repositories: RuntimeRepositories,
+    handlers: RuntimeHandlers,
+) -> AiAssistWorkflowController:
+    return AiAssistWorkflowController(
         AiAssistViewModel(
             user_id=user.id,
-            chat_handler=ai_chat_handler,
+            chat_handler=handlers.ai_chat_handler,
             context_handler=BuildAiContextHandler(
-                work_logs_handler=GetAllWorkLogsHandler(work_logs),
-                note_handler=GetDailyNoteHandler(daily_notes),
-                quick_logs_handler=GetQuickLogsForRangeHandler(quick_logs),
-                calendar_events_handler=GetCalendarEventsForRangeHandler(calendar_events),
-                settings_handler=settings_get_handler,
+                work_logs_handler=GetAllWorkLogsHandler(repositories.work_logs),
+                note_handler=GetDailyNoteHandler(repositories.daily_notes),
+                quick_logs_handler=GetQuickLogsForRangeHandler(repositories.quick_logs),
+                calendar_events_handler=GetCalendarEventsForRangeHandler(
+                    repositories.calendar_events
+                ),
+                settings_handler=handlers.settings_get_handler,
             ),
         )
     )
-    notes_workflow = NotesWorkflowController(
+
+
+def _build_notes_workflow(
+    user: User,
+    repositories: RuntimeRepositories,
+    handlers: RuntimeHandlers,
+) -> NotesWorkflowController:
+    return NotesWorkflowController(
         NoteEditorViewModel(
             user_id=user.id,
-            get_note_handler=GetDailyNoteHandler(daily_notes),
-            save_note_handler=SaveDailyNoteHandler(daily_notes),
-            quick_logs_handler=GetQuickLogsForDayHandler(quick_logs),
-            calendar_events_handler=GetCalendarEventsForDayHandler(calendar_events),
-            templates=templates,
-            save_template_handler=save_template_handler,
-            reset_template_handler=reset_template_handler,
-            markdown_exporter=markdown_exporter,
-            rewrite_handler=rewrite_handler,
+            get_note_handler=GetDailyNoteHandler(repositories.daily_notes),
+            save_note_handler=SaveDailyNoteHandler(repositories.daily_notes),
+            quick_logs_handler=GetQuickLogsForDayHandler(repositories.quick_logs),
+            calendar_events_handler=GetCalendarEventsForDayHandler(
+                repositories.calendar_events
+            ),
+            templates=handlers.templates,
+            save_template_handler=handlers.save_template_handler,
+            reset_template_handler=handlers.reset_template_handler,
+            markdown_exporter=handlers.markdown_exporter,
+            rewrite_handler=handlers.rewrite_handler,
         )
     )
-    reports_workflow = ReportsWorkflowController(
+
+
+def _build_reports_workflow(
+    user: User,
+    repositories: RuntimeRepositories,
+    handlers: RuntimeHandlers,
+) -> ReportsWorkflowController:
+    return ReportsWorkflowController(
         ReportEditorViewModel(
             user_id=user.id,
             generate_handler=GenerateReportHandler(
-                work_logs=work_logs,
-                quick_logs=quick_logs,
-                calendar_events=calendar_events,
-                templates=templates,
+                work_logs=repositories.work_logs,
+                quick_logs=repositories.quick_logs,
+                calendar_events=repositories.calendar_events,
+                templates=handlers.templates,
             ),
-            get_report_handler=GetReportForPeriodHandler(reports),
-            save_report_handler=SaveReportHandler(reports),
-            save_template_handler=save_template_handler,
-            reset_template_handler=reset_template_handler,
-            markdown_exporter=markdown_exporter,
-            rewrite_handler=rewrite_handler,
+            get_report_handler=GetReportForPeriodHandler(repositories.reports),
+            save_report_handler=SaveReportHandler(repositories.reports),
+            save_template_handler=handlers.save_template_handler,
+            reset_template_handler=handlers.reset_template_handler,
+            markdown_exporter=handlers.markdown_exporter,
+            rewrite_handler=handlers.rewrite_handler,
         )
     )
-    settings_workflow = None
-    if auth_view_model is not None:
-        user_management_view_model = None
-        if auth_repository is not None:
-            user_management_view_model = UserManagementViewModel(
-                requesting_user_id=user.id,
-                list_users_handler=ListUsersHandler(auth_repository),
-                create_user_handler=CreateManagedUserHandler(auth_repository),
-                reset_password_handler=AdminResetPasswordHandler(auth_repository),
-                set_password_change_required_handler=SetPasswordChangeRequiredHandler(
-                    auth_repository
-                ),
-                delete_user_handler=DeleteManagedUserHandler(auth_repository),
-            )
-        local_models_workflow = LocalModelsWorkflowController(
-            LocalModelManagerViewModel(
-                user_id=user.id,
-                list_handler=ListLocalModelsHandler(
-                    store=local_model_store,
-                    settings=settings_repository,
-                ),
-                refresh_handler=RefreshLocalModelCatalogHandler(local_model_store),
-                import_handler=ImportLocalModelHandler(
-                    store=local_model_store,
-                    settings=settings_repository,
-                ),
-                download_handler=DownloadLocalModelHandler(
-                    store=local_model_store,
-                    settings=settings_repository,
-                ),
-                verify_handler=VerifyLocalModelHandler(local_model_store),
-                select_handler=SelectLocalModelHandler(
-                    store=local_model_store,
-                    settings=settings_repository,
-                ),
-                delete_handler=DeleteLocalModelHandler(
-                    store=local_model_store,
-                    settings=settings_repository,
-                    usage_reader=settings_repository,
-                ),
-            )
-        )
-        identity_workflow = IdentityWorkflowController(
-            IdentityManagementViewModel(
-                user_id=user.id,
-                list_handler=ListLinkedIdentitiesHandler(identities),
-                providers_handler=GetIdentityProvidersHandler(identity_providers),
-                link_handler=LinkIdentityHandler(
-                    repository=identities,
-                    providers=identity_providers,
-                ),
-                unlink_handler=UnlinkIdentityHandler(identities),
-            )
-        )
-        settings_workflow = SettingsWorkflowController(
-            settings_view_model=SettingsViewModel(
-                user_id=user.id,
-                get_handler=settings_get_handler,
-                set_handler=settings_set_handler,
-            ),
-            auth_view_model=auth_view_model,
+
+
+def _build_settings_workflow(
+    *,
+    user: User,
+    database_path: Path,
+    connection_factory: SQLiteConnectionFactory,
+    repositories: RuntimeRepositories,
+    handlers: RuntimeHandlers,
+    auth_repository: RuntimeAuthRepository | None,
+    auth_view_model: AuthViewModel | None,
+    remember_session_store: RememberSessionStore,
+) -> SettingsWorkflowController | None:
+    if auth_view_model is None:
+        return None
+    return SettingsWorkflowController(
+        settings_view_model=SettingsViewModel(
+            user_id=user.id,
+            get_handler=handlers.settings_get_handler,
+            set_handler=handlers.settings_set_handler,
+        ),
+        auth_view_model=auth_view_model,
+        user=user,
+        data_management_view_model=_build_data_management_view_model(
             user=user,
-            data_management_view_model=DataManagementViewModel(
-                user_id=user.id,
-                work_logs_handler=GetAllWorkLogsHandler(work_logs),
-                backup_service=SQLiteBackupService(
-                    connection_factory,
-                    expected_username=user.username,
-                ),
-                csv_exporter=WorkLogCsvExporter(),
-                ics_exporter=WorkLogIcsExporter(),
-                csv_import_handler=ImportWorkLogsCsvHandler(
-                    importer=WorkLogCsvImporter(),
-                    repository=work_logs,
-                ),
-                calendar_events_handler=GetCalendarEventsForRangeHandler(calendar_events),
-                ics_import_handler=ImportCalendarEventsHandler(
-                    calendar_events,
-                    IcsCalendarImporter(),
-                ),
+            connection_factory=connection_factory,
+            repositories=repositories,
+        ),
+        update_check_handler=CheckForUpdatesHandler(
+            GitHubReleaseUpdateChecker(api_url=GITHUB_LATEST_RELEASE_API_URL)
+        ),
+        identity_workflow=_build_identity_workflow(user, repositories),
+        local_models_workflow=_build_local_models_workflow(
+            user=user,
+            database_path=database_path,
+            repositories=repositories,
+        ),
+        user_management_view_model=_build_user_management_view_model(
+            user,
+            auth_repository,
+        ),
+        remember_session_store=remember_session_store,
+    )
+
+
+def _build_data_management_view_model(
+    *,
+    user: User,
+    connection_factory: SQLiteConnectionFactory,
+    repositories: RuntimeRepositories,
+) -> DataManagementViewModel:
+    return DataManagementViewModel(
+        user_id=user.id,
+        work_logs_handler=GetAllWorkLogsHandler(repositories.work_logs),
+        backup_service=SQLiteBackupService(
+            connection_factory,
+            expected_username=user.username,
+        ),
+        csv_exporter=WorkLogCsvExporter(),
+        ics_exporter=WorkLogIcsExporter(),
+        csv_import_handler=ImportWorkLogsCsvHandler(
+            importer=WorkLogCsvImporter(),
+            repository=repositories.work_logs,
+        ),
+        calendar_events_handler=GetCalendarEventsForRangeHandler(
+            repositories.calendar_events
+        ),
+        ics_import_handler=ImportCalendarEventsHandler(
+            repositories.calendar_events,
+            IcsCalendarImporter(),
+        ),
+    )
+
+
+def _build_user_management_view_model(
+    user: User,
+    auth_repository: RuntimeAuthRepository | None,
+) -> UserManagementViewModel | None:
+    if auth_repository is None:
+        return None
+    return UserManagementViewModel(
+        requesting_user_id=user.id,
+        list_users_handler=ListUsersHandler(auth_repository),
+        create_user_handler=CreateManagedUserHandler(auth_repository),
+        reset_password_handler=AdminResetPasswordHandler(auth_repository),
+        set_password_change_required_handler=SetPasswordChangeRequiredHandler(
+            auth_repository
+        ),
+        delete_user_handler=DeleteManagedUserHandler(auth_repository),
+    )
+
+
+def _build_local_models_workflow(
+    *,
+    user: User,
+    database_path: Path,
+    repositories: RuntimeRepositories,
+) -> LocalModelsWorkflowController:
+    local_model_store = JsonLocalModelStore(database_path.parent / "models")
+    return LocalModelsWorkflowController(
+        LocalModelManagerViewModel(
+            user_id=user.id,
+            list_handler=ListLocalModelsHandler(
+                store=local_model_store,
+                settings=repositories.settings,
             ),
-            update_check_handler=CheckForUpdatesHandler(
-                GitHubReleaseUpdateChecker(
-                    api_url="https://api.github.com/repos/bensitu/worklogger/releases/latest",
-                )
+            refresh_handler=RefreshLocalModelCatalogHandler(local_model_store),
+            import_handler=ImportLocalModelHandler(
+                store=local_model_store,
+                settings=repositories.settings,
             ),
-            identity_workflow=identity_workflow,
-            local_models_workflow=local_models_workflow,
-            user_management_view_model=user_management_view_model,
-            remember_session_store=remember_session_store,
+            download_handler=DownloadLocalModelHandler(
+                store=local_model_store,
+                settings=repositories.settings,
+            ),
+            verify_handler=VerifyLocalModelHandler(local_model_store),
+            select_handler=SelectLocalModelHandler(
+                store=local_model_store,
+                settings=repositories.settings,
+            ),
+            delete_handler=DeleteLocalModelHandler(
+                store=local_model_store,
+                settings=repositories.settings,
+                usage_reader=repositories.settings,
+            ),
         )
-    residency_controller = QtResidencyController(
+    )
+
+
+def _build_identity_workflow(
+    user: User,
+    repositories: RuntimeRepositories,
+) -> IdentityWorkflowController:
+    identity_providers = _identity_providers()
+    return IdentityWorkflowController(
+        IdentityManagementViewModel(
+            user_id=user.id,
+            list_handler=ListLinkedIdentitiesHandler(repositories.identities),
+            providers_handler=GetIdentityProvidersHandler(identity_providers),
+            link_handler=LinkIdentityHandler(
+                repository=repositories.identities,
+                providers=identity_providers,
+            ),
+            unlink_handler=UnlinkIdentityHandler(repositories.identities),
+        )
+    )
+
+
+def _identity_providers() -> tuple[DisabledIdentityProvider, ...]:
+    return (
+        DisabledIdentityProvider("google", "Google"),
+        DisabledIdentityProvider("microsoft", "Microsoft"),
+    )
+
+
+def _build_residency_controller(
+    user: User,
+    handlers: RuntimeHandlers,
+) -> QtResidencyController:
+    return QtResidencyController(
         ResidencyViewModel(
             user_id=user.id,
-            get_handler=settings_get_handler,
-            set_handler=settings_set_handler,
+            get_handler=handlers.settings_get_handler,
+            set_handler=handlers.settings_set_handler,
         )
     )
 
-    window_config = config.window
-    if not window_config.account_name:
-        window_config = replace(window_config, account_name=user.username)
 
-    if _minimal_mode_enabled(connection_factory, user, config):
-        minimal_window = MinimalView(
-            worklog_entry_view_model=worklog_entry_view_model,
-            config=MinimalViewConfig(
-                selected_day=window_config.selected_day,
-                today=window_config.today,
-                account_name=window_config.account_name,
-                confirm_discard_changes=window_config.confirm_discard_changes,
-            ),
-            settings_workflow=settings_workflow,
-            residency_controller=residency_controller,
-        )
-        return Result.success(
-            DesktopRuntime(
-                application=application,
-                window=minimal_window,
-                connection_factory=connection_factory,
-                user=user,
-                database_path=database_path,
-                auth_session=auth_session,
-            )
-        )
+def _window_config_for_user(
+    window_config: AppWindowConfig,
+    user: User,
+) -> AppWindowConfig:
+    if window_config.account_name:
+        return window_config
+    return replace(window_config, account_name=user.username)
 
-    app_window = AppWindow(
+
+def _build_minimal_view(
+    *,
+    worklog_entry_view_model: WorkLogEntryViewModel,
+    window_config: AppWindowConfig,
+    settings_workflow: SettingsWorkflowController | None,
+    residency_controller: QtResidencyController,
+) -> MinimalView:
+    return MinimalView(
+        worklog_entry_view_model=worklog_entry_view_model,
+        config=MinimalViewConfig(
+            selected_day=window_config.selected_day,
+            today=window_config.today,
+            account_name=window_config.account_name,
+            confirm_discard_changes=window_config.confirm_discard_changes,
+        ),
+        settings_workflow=settings_workflow,
+        residency_controller=residency_controller,
+    )
+
+
+def _build_app_window(
+    *,
+    user: User,
+    repositories: RuntimeRepositories,
+    handlers: RuntimeHandlers,
+    worklog_entry_view_model: WorkLogEntryViewModel,
+    window_config: AppWindowConfig,
+    settings_workflow: SettingsWorkflowController | None,
+    residency_controller: QtResidencyController,
+) -> AppWindow:
+    return AppWindow(
         calendar_view_model=CalendarViewModel(
             user_id=user.id,
-            month_records_handler=month_records_handler,
-            calendar_events_handler=GetCalendarEventsForRangeHandler(calendar_events),
-            holidays_handler=GetHolidaysForRangeHandler(holiday_provider),
-            holiday_country=holiday_country,
+            month_records_handler=handlers.month_records_handler,
+            calendar_events_handler=GetCalendarEventsForRangeHandler(
+                repositories.calendar_events
+            ),
+            holidays_handler=GetHolidaysForRangeHandler(handlers.holiday_provider),
+            holiday_country=handlers.holiday_country,
         ),
         worklog_entry_view_model=worklog_entry_view_model,
         stats_panel_view_model=StatsPanelViewModel(
             user_id=user.id,
-            month_records_handler=month_records_handler,
+            month_records_handler=handlers.month_records_handler,
         ),
         config=window_config,
         settings_workflow=settings_workflow,
-        quick_logs_workflow=quick_logs_workflow,
-        analytics_workflow=analytics_workflow,
-        ai_assist_workflow=ai_assist_workflow,
-        notes_workflow=notes_workflow,
-        reports_workflow=reports_workflow,
+        quick_logs_workflow=_build_quick_logs_workflow(user, repositories),
+        analytics_workflow=_build_analytics_workflow(user, repositories),
+        ai_assist_workflow=_build_ai_workflow(user, repositories, handlers),
+        notes_workflow=_build_notes_workflow(user, repositories, handlers),
+        reports_workflow=_build_reports_workflow(user, repositories, handlers),
         residency_controller=residency_controller,
     )
+
+
+def _runtime_result(
+    *,
+    application: QApplication,
+    window: AppWindow | MinimalView,
+    connection_factory: SQLiteConnectionFactory,
+    database_path: Path,
+    user: User,
+    remember_session_store: RememberSessionStore,
+    auth_session: AuthSession | None,
+) -> Result[DesktopRuntime]:
     return Result.success(
         DesktopRuntime(
             application=application,
-            window=app_window,
+            window=window,
             connection_factory=connection_factory,
             user=user,
             database_path=database_path,
+            remember_session_store=remember_session_store,
             auth_session=auth_session,
         )
     )
@@ -581,7 +829,7 @@ def _minimal_mode_enabled(
 
 
 def _resolve_runtime_user(
-    auth_repository: SQLiteAuthRepository,
+    auth_repository: RuntimeAuthRepository,
     config: DesktopRuntimeConfig,
 ) -> Result[User]:
     if config.user_id is not None:
@@ -608,7 +856,7 @@ def _resolve_runtime_user(
 
 
 def _available_bootstrap_username(
-    auth_repository: SQLiteAuthRepository,
+    auth_repository: RuntimeAuthRepository,
     username: str,
 ) -> str:
     base = str(username or "local").strip() or "local"

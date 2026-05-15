@@ -50,7 +50,7 @@ class WorkLogEntryPanel(QWidget):
         auto_record_view_model: AutoRecordViewModel | None = None,
     ) -> None:
         super().__init__(parent)
-        self.setObjectName("worklog_entry_panel")
+        self.setObjectName("worklog_entry_panel_widget")
         self._form: WorkLogEntryForm | None = None
         self._updating = False
         self._auto_record_view_model = auto_record_view_model or AutoRecordViewModel()
@@ -73,17 +73,17 @@ class WorkLogEntryPanel(QWidget):
         self.time_tabs.addTab(manual_tab, _("Manual Input"))
 
         self.start_input = QLineEdit()
-        self.start_input.setObjectName("start_input")
+        self.start_input.setObjectName("start_time_line_edit")
         self.start_input.textChanged.connect(self._emit_draft_changed)
         form.addRow(_("Start"), self.start_input)
 
         self.end_input = QLineEdit()
-        self.end_input.setObjectName("end_input")
+        self.end_input.setObjectName("end_time_line_edit")
         self.end_input.textChanged.connect(self._emit_draft_changed)
         form.addRow(_("End"), self.end_input)
 
         self.break_input = QDoubleSpinBox()
-        self.break_input.setObjectName("break_input")
+        self.break_input.setObjectName("break_hours_double_spin_box")
         self.break_input.setRange(0.0, 24.0)
         self.break_input.setSingleStep(0.25)
         self.break_input.setDecimals(2)
@@ -98,7 +98,7 @@ class WorkLogEntryPanel(QWidget):
         form.addRow(_("Work type"), self.work_type_combo)
 
         self.note_input = QTextEdit()
-        self.note_input.setObjectName("note_input")
+        self.note_input.setObjectName("note_text_edit")
         self.note_input.setFixedHeight(88)
         self.note_input.textChanged.connect(self._emit_draft_changed)
         form.addRow(_("Notes"), self.note_input)
@@ -138,7 +138,7 @@ class WorkLogEntryPanel(QWidget):
 
         status_row = QHBoxLayout()
         self.hours_label = QLabel("")
-        self.hours_label.setObjectName("hours_label")
+        self.hours_label.setObjectName("worklog_hours_label")
         self.status_label = QLabel("")
         self.status_label.setObjectName("entry_status_label")
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
@@ -152,7 +152,8 @@ class WorkLogEntryPanel(QWidget):
         root.addWidget(self.error_label)
 
         self.save_button = QPushButton(_("Save"))
-        self.save_button.setObjectName("primary_btn")
+        self.save_button.setObjectName("save_worklog_button")
+        self.save_button.setProperty("variant", "primary")
         self.save_button.clicked.connect(self._emit_save_requested)
         root.addWidget(self.save_button)
 

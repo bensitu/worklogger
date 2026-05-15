@@ -68,7 +68,7 @@ class IdentityDialog(QDialog):
         root.setSpacing(10)
 
         self.identity_list = QListWidget()
-        self.identity_list.setObjectName("identity_list")
+        self.identity_list.setObjectName("identity_list_widget")
         root.addWidget(self.identity_list, 1)
 
         link_row = QHBoxLayout()

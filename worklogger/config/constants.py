@@ -99,3 +99,4 @@ TZ_COUNTRY = {
 SECRET_SETTING_PREFIX = "secret:"
 MACHINE_KEY_FILENAME = ".worklogger_machine_key"
 KEYRING_SERVICE_NAME = "WorkLogger"
+GITHUB_LATEST_RELEASE_API_URL = "https://api.github.com/repos/bensitu/worklogger/releases/latest"

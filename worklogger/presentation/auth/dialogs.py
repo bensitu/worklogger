@@ -81,17 +81,17 @@ class LoginDialog(QDialog):
         root.setSpacing(10)
 
         title = QLabel(_("Login"))
-        title.setObjectName("dialog_title")
+        title.setObjectName("login_title_label")
         root.addWidget(title)
 
         form = QFormLayout()
         root.addLayout(form)
         self.username_input = QLineEdit()
-        self.username_input.setObjectName("username_input")
+        self.username_input.setObjectName("username_line_edit")
         form.addRow(_("Username"), self.username_input)
 
         self.password_input = QLineEdit()
-        self.password_input.setObjectName("password_input")
+        self.password_input.setObjectName("password_line_edit")
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
         form.addRow(_("Password"), self.password_input)
 
@@ -107,7 +107,8 @@ class LoginDialog(QDialog):
         self.register_button = QPushButton(_("Create account"))
         self.reset_password_button = QPushButton(_("Reset password"))
         self.login_button = QPushButton(_("Login"))
-        self.login_button.setObjectName("primary_btn")
+        self.login_button.setObjectName("login_button")
+        self.login_button.setProperty("variant", "primary")
         buttons.addWidget(self.register_button)
         buttons.addWidget(self.reset_password_button)
         buttons.addStretch(1)
@@ -166,22 +167,22 @@ class RegisterDialog(QDialog):
         root.setSpacing(10)
 
         title = QLabel(_("Create account"))
-        title.setObjectName("dialog_title")
+        title.setObjectName("register_title_label")
         root.addWidget(title)
 
         form = QFormLayout()
         root.addLayout(form)
         self.username_input = QLineEdit()
-        self.username_input.setObjectName("username_input")
+        self.username_input.setObjectName("username_line_edit")
         form.addRow(_("Username"), self.username_input)
 
         self.password_input = QLineEdit()
-        self.password_input.setObjectName("password_input")
+        self.password_input.setObjectName("password_line_edit")
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
         form.addRow(_("Password"), self.password_input)
 
         self.confirm_input = QLineEdit()
-        self.confirm_input.setObjectName("confirm_input")
+        self.confirm_input.setObjectName("confirm_password_line_edit")
         self.confirm_input.setEchoMode(QLineEdit.EchoMode.Password)
         form.addRow(_("Confirm password"), self.confirm_input)
 
@@ -191,7 +192,7 @@ class RegisterDialog(QDialog):
         root.addWidget(self.status_label)
 
         self.recovery_key_caption = QLabel(_("Recovery key"))
-        self.recovery_key_caption.setObjectName("muted")
+        self.recovery_key_caption.setObjectName("recovery_key_caption_label")
         self.recovery_key_label = QLabel("")
         self.recovery_key_label.setObjectName("recovery_key_label")
         self.recovery_key_label.setWordWrap(True)
@@ -203,7 +204,8 @@ class RegisterDialog(QDialog):
         buttons = QHBoxLayout()
         self.login_button = QPushButton(_("Back to login"))
         self.register_button = QPushButton(_("Create account"))
-        self.register_button.setObjectName("primary_btn")
+        self.register_button.setObjectName("register_button")
+        self.register_button.setProperty("variant", "primary")
         buttons.addWidget(self.login_button)
         buttons.addStretch(1)
         buttons.addWidget(self.register_button)
@@ -268,26 +270,26 @@ class ResetPasswordDialog(QDialog):
         root.setSpacing(10)
 
         title = QLabel(_("Reset password"))
-        title.setObjectName("dialog_title")
+        title.setObjectName("reset_password_title_label")
         root.addWidget(title)
 
         form = QFormLayout()
         root.addLayout(form)
         self.username_input = QLineEdit()
-        self.username_input.setObjectName("username_input")
+        self.username_input.setObjectName("username_line_edit")
         form.addRow(_("Username"), self.username_input)
 
         self.recovery_key_input = QLineEdit()
-        self.recovery_key_input.setObjectName("recovery_key_input")
+        self.recovery_key_input.setObjectName("recovery_key_line_edit")
         form.addRow(_("Recovery key"), self.recovery_key_input)
 
         self.password_input = QLineEdit()
-        self.password_input.setObjectName("new_password_input")
+        self.password_input.setObjectName("new_password_line_edit")
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
         form.addRow(_("New password"), self.password_input)
 
         self.confirm_input = QLineEdit()
-        self.confirm_input.setObjectName("confirm_input")
+        self.confirm_input.setObjectName("confirm_password_line_edit")
         self.confirm_input.setEchoMode(QLineEdit.EchoMode.Password)
         form.addRow(_("Confirm password"), self.confirm_input)
 
@@ -297,7 +299,7 @@ class ResetPasswordDialog(QDialog):
         root.addWidget(self.status_label)
 
         self.recovery_key_caption = QLabel(_("New recovery key"))
-        self.recovery_key_caption.setObjectName("muted")
+        self.recovery_key_caption.setObjectName("new_recovery_key_caption_label")
         self.recovery_key_result_label = QLabel("")
         self.recovery_key_result_label.setObjectName("recovery_key_label")
         self.recovery_key_result_label.setWordWrap(True)
@@ -309,7 +311,8 @@ class ResetPasswordDialog(QDialog):
         buttons = QHBoxLayout()
         self.login_button = QPushButton(_("Back to login"))
         self.reset_button = QPushButton(_("Reset password"))
-        self.reset_button.setObjectName("primary_btn")
+        self.reset_button.setObjectName("reset_password_button")
+        self.reset_button.setProperty("variant", "primary")
         buttons.addWidget(self.login_button)
         buttons.addStretch(1)
         buttons.addWidget(self.reset_button)
@@ -369,23 +372,23 @@ class ChangePasswordDialog(QDialog):
         root.setSpacing(10)
 
         title = QLabel(_("Change password"))
-        title.setObjectName("dialog_title")
+        title.setObjectName("change_password_title_label")
         root.addWidget(title)
 
         form = QFormLayout()
         root.addLayout(form)
         self.current_password_input = QLineEdit()
-        self.current_password_input.setObjectName("current_password_input")
+        self.current_password_input.setObjectName("current_password_line_edit")
         self.current_password_input.setEchoMode(QLineEdit.EchoMode.Password)
         form.addRow(_("Current password"), self.current_password_input)
 
         self.password_input = QLineEdit()
-        self.password_input.setObjectName("new_password_input")
+        self.password_input.setObjectName("new_password_line_edit")
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
         form.addRow(_("New password"), self.password_input)
 
         self.confirm_input = QLineEdit()
-        self.confirm_input.setObjectName("confirm_input")
+        self.confirm_input.setObjectName("confirm_password_line_edit")
         self.confirm_input.setEchoMode(QLineEdit.EchoMode.Password)
         form.addRow(_("Confirm password"), self.confirm_input)
 
@@ -395,7 +398,7 @@ class ChangePasswordDialog(QDialog):
         root.addWidget(self.status_label)
 
         self.recovery_key_caption = QLabel(_("New recovery key"))
-        self.recovery_key_caption.setObjectName("muted")
+        self.recovery_key_caption.setObjectName("new_recovery_key_caption_label")
         self.recovery_key_label = QLabel("")
         self.recovery_key_label.setObjectName("recovery_key_label")
         self.recovery_key_label.setWordWrap(True)
@@ -406,7 +409,8 @@ class ChangePasswordDialog(QDialog):
 
         buttons = QHBoxLayout()
         self.change_button = QPushButton(_("Change password"))
-        self.change_button.setObjectName("primary_btn")
+        self.change_button.setObjectName("change_password_button")
+        self.change_button.setProperty("variant", "primary")
         buttons.addStretch(1)
         buttons.addWidget(self.change_button)
         root.addLayout(buttons)

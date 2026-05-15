@@ -105,7 +105,8 @@ class ReportDialog(QDialog):
         bottom = QHBoxLayout()
         self.status_label = QLabel("")
         self.save_button = QPushButton(_("Save"))
-        self.save_button.setObjectName("primary_btn")
+        self.save_button.setObjectName("save_report_button")
+        self.save_button.setProperty("variant", "primary")
         self.close_button = QPushButton(_("Close"))
         bottom.addWidget(self.status_label, 1)
         bottom.addWidget(self.close_button)
@@ -122,7 +123,7 @@ class ReportDialog(QDialog):
 
     def _editor(self) -> QTextEdit:
         editor = QTextEdit()
-        editor.setObjectName("report_editor")
+        editor.setObjectName("report_text_edit")
         return editor
 
     def _editors(self) -> dict[str, QTextEdit]:

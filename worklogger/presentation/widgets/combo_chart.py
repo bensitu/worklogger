@@ -15,7 +15,7 @@ class ComboChart(QWidget):
         super().__init__(parent)
         self._bundle = ChartDataBundle((), (), frozenset(), (), ())
         self._mode = "bar"
-        self.setObjectName("combo_chart")
+        self.setObjectName("combo_chart_widget")
         self.setMinimumHeight(220)
 
     def set_data(self, bundle: ChartDataBundle, *, mode: str = "bar") -> None:

@@ -120,12 +120,12 @@ class MinimalView(QWidget):
         self.date_label = QLabel("")
         self.date_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.account_label = QLabel("")
-        self.account_label.setObjectName("account_label")
+        self.account_label.setObjectName("minimal_account_label")
         self.settings_button = QPushButton(_("Settings"))
-        self.settings_button.setObjectName("nav_btn")
+        self.settings_button.setObjectName("minimal_settings_button")
         self.settings_button.setToolTip(_("Settings"))
         self.logout_button = QPushButton(_("Logout"))
-        self.logout_button.setObjectName("nav_btn")
+        self.logout_button.setObjectName("minimal_logout_button")
         self.logout_button.setToolTip(_("Logout"))
         nav.addWidget(self.previous_button)
         nav.addWidget(self.today_button)
@@ -146,7 +146,7 @@ class MinimalView(QWidget):
         root.addWidget(self.entry_panel)
 
         self.status_label = QLabel("")
-        self.status_label.setObjectName("status_label")
+        self.status_label.setObjectName("minimal_status_label")
         root.addWidget(self.status_label)
 
     def _connect_signals(self) -> None:

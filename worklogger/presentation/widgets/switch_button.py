@@ -29,16 +29,19 @@ class SwitchButton(QWidget):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
-    def isChecked(self) -> bool:
+    def is_checked(self) -> bool:
         return self._checked
 
-    def setChecked(self, checked: bool) -> None:
+    def set_checked(self, checked: bool) -> None:
         checked = bool(checked)
         if checked == self._checked:
             return
         self._checked = checked
         self.toggled.emit(self._checked)
         self.update()
+
+    isChecked = is_checked
+    setChecked = set_checked
 
     def setEnabled(self, enabled: bool) -> None:
         super().setEnabled(enabled)
@@ -55,7 +58,7 @@ class SwitchButton(QWidget):
                 event.ignore()
             return
         if getattr(event, "button", lambda: None)() == Qt.MouseButton.LeftButton:
-            self.setChecked(not self._checked)
+            self.set_checked(not self._checked)
         super().mousePressEvent(event)
 
     def paintEvent(self, _event: object) -> None:

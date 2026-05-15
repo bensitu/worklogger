@@ -218,7 +218,6 @@ def run_desktop(args: Sequence[str]) -> int:
         DesktopRuntimeConfig,
         build_authenticated_desktop_runtime,
     )
-    from worklogger.infrastructure.security import FileRememberTokenSessionStore
 
     exit_code = 0
     while True:
@@ -237,7 +236,7 @@ def run_desktop(args: Sequence[str]) -> int:
         def request_logout() -> None:
             nonlocal logged_out
             logged_out = True
-            FileRememberTokenSessionStore().clear_token()
+            runtime.value.remember_session_store.clear_token()
             runtime.value.window.close()
             runtime.value.application.quit()
 

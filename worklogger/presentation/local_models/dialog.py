@@ -99,7 +99,7 @@ class LocalModelsDialog(QDialog):
         root.setSpacing(10)
 
         self.model_list = QListWidget()
-        self.model_list.setObjectName("local_model_list")
+        self.model_list.setObjectName("local_model_list_widget")
         root.addWidget(self.model_list, 1)
 
         actions = QHBoxLayout()

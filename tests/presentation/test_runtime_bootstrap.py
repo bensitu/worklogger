@@ -15,7 +15,10 @@ from worklogger.bootstrap import (
     build_authenticated_desktop_runtime,
     build_desktop_runtime,
 )
-from worklogger.config.constants import MINIMAL_MODE_SETTING_KEY
+from worklogger.config.constants import (
+    GITHUB_LATEST_RELEASE_API_URL,
+    MINIMAL_MODE_SETTING_KEY,
+)
 from worklogger.domain.shared.errors import CancellationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkType
@@ -175,6 +178,60 @@ class RuntimeBootstrapTests(unittest.TestCase):
             assert runtime.value.auth_session is not None
             self.assertTrue(runtime.value.auth_session.recovery_key)
             self.assertTrue(runtime.value.window.refresh())
+            runtime.value.window.close()
+
+    def test_runtime_builders_share_remember_session_store_instance(self) -> None:
+        with tempfile.TemporaryDirectory() as first_directory:
+            first = build_desktop_runtime(
+                DesktopRuntimeConfig(
+                    database_path=Path(first_directory) / "worklog.db",
+                    create_user_if_empty=True,
+                    password_iterations=1_000,
+                ),
+                argv=[],
+            )
+            self.assertTrue(first.ok, first.error)
+            assert first.value is not None
+
+            with tempfile.TemporaryDirectory() as second_directory:
+                second = build_authenticated_desktop_runtime(
+                    DesktopRuntimeConfig(
+                        database_path=Path(second_directory) / "worklog.db",
+                        password_iterations=1_000,
+                    ),
+                    argv=[],
+                    auth_controller_factory=AutoRegisterAuthenticator,
+                )
+                self.assertTrue(second.ok, second.error)
+                assert second.value is not None
+
+                self.assertIs(
+                    first.value.remember_session_store,
+                    second.value.remember_session_store,
+                )
+                self.assertIs(
+                    getattr(second.value.window, "_settings_workflow")._remember_session_store,
+                    second.value.remember_session_store,
+                )
+                second.value.window.close()
+            first.value.window.close()
+
+    def test_update_checker_url_comes_from_constants(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = build_authenticated_desktop_runtime(
+                DesktopRuntimeConfig(
+                    database_path=Path(directory) / "worklog.db",
+                    password_iterations=1_000,
+                ),
+                argv=[],
+                auth_controller_factory=AutoRegisterAuthenticator,
+            )
+
+            self.assertTrue(runtime.ok, runtime.error)
+            assert runtime.value is not None
+            settings_workflow = getattr(runtime.value.window, "_settings_workflow")
+            checker = settings_workflow._update_check_handler._checker
+            self.assertEqual(checker._api_url, GITHUB_LATEST_RELEASE_API_URL)
             runtime.value.window.close()
 
     def test_authenticated_runtime_stops_when_auth_is_cancelled(self) -> None:
