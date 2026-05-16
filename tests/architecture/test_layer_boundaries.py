@@ -195,6 +195,23 @@ class LayerBoundaryTests(unittest.TestCase):
                     offenders.append(f"{path.relative_to(PROJECT_ROOT)}:{node.lineno}: {object_name}")
         self.assertEqual(offenders, [])
 
+    def test_stylesheets_are_applied_only_at_application_boundary(self) -> None:
+        offenders: list[str] = []
+        for path in _python_files(PACKAGE_ROOT / "presentation"):
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            for node in ast.walk(tree):
+                if not (
+                    isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Attribute)
+                    and node.func.attr == "setStyleSheet"
+                ):
+                    continue
+                target = node.func.value
+                if isinstance(target, ast.Name) and target.id == "application":
+                    continue
+                offenders.append(f"{path.relative_to(PROJECT_ROOT)}:{node.lineno}")
+        self.assertEqual(offenders, [])
+
 
 if __name__ == "__main__":
     unittest.main()

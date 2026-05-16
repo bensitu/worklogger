@@ -27,7 +27,7 @@ class SQLiteConnectionFactory:
         corrupt_backup_retention: int = DB_CORRUPT_BACKUP_RETENTION,
     ) -> None:
         self.database_path = str(database_path)
-        self.busy_timeout_ms = int(busy_timeout_ms)
+        self.busy_timeout_ms = max(0, int(busy_timeout_ms))
         self.recover_corrupt = bool(recover_corrupt)
         self.corrupt_backup_retention = int(corrupt_backup_retention)
         self.write_lock = RLock()
@@ -51,11 +51,11 @@ class SQLiteConnectionFactory:
             self.database_path,
             detect_types=sqlite3.PARSE_DECLTYPES,
             isolation_level=None,
+            timeout=self.busy_timeout_ms / 1000,
         )
         connection.row_factory = sqlite3.Row
         try:
             connection.execute("PRAGMA foreign_keys=ON")
-            connection.execute(f"PRAGMA busy_timeout={self.busy_timeout_ms}")
             if self.database_path != ":memory:":
                 connection.execute("PRAGMA journal_mode=WAL")
                 connection.execute("PRAGMA synchronous=NORMAL")

@@ -24,6 +24,7 @@ from worklogger.domain.local_model.models import (
     LocalModelListItem,
 )
 from worklogger.domain.shared.result import Result
+from worklogger.presentation.job_runner import ImmediateJobRunner
 from worklogger.presentation.local_models import LocalModelsDialog
 from worklogger.presentation.viewmodels import LocalModelManagerViewModel
 
@@ -107,6 +108,30 @@ class LocalModelsPresentationTests(unittest.TestCase):
         self.assertEqual(handlers.selected, ["model-a"])
         self.assertEqual(handlers.imported, ["demo.gguf"])
         self.assertIn("Model imported.", dialog.status_label.text())
+
+    def test_dialog_can_run_long_actions_through_job_runner(self) -> None:
+        handlers = FakeLocalModelHandlers()
+        view_model = LocalModelManagerViewModel(
+            user_id=1,
+            list_handler=handlers,
+            refresh_handler=handlers,
+            import_handler=handlers,
+            download_handler=handlers,
+            verify_handler=handlers,
+            select_handler=handlers,
+            delete_handler=handlers,
+        )
+        dialog = LocalModelsDialog(view_model, job_runner=ImmediateJobRunner())
+
+        self.assertTrue(dialog.refresh())
+        dialog.model_list.setCurrentRow(0)
+        self.assertTrue(dialog.refresh_catalog())
+        dialog.model_list.setCurrentRow(0)
+        self.assertTrue(dialog.download_selected())
+        dialog.model_list.setCurrentRow(0)
+        self.assertTrue(dialog.verify_selected())
+
+        self.assertIn("Model verified.", dialog.status_label.text())
 
 
 if __name__ == "__main__":

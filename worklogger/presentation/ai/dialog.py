@@ -15,8 +15,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from worklogger.app.job_runner import JobHandle, JobRunner
 from worklogger.domain.shared.errors import AppError
 from worklogger.infrastructure.i18n import _
+from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import AiAssistViewModel, AiChatState
 
 
@@ -26,12 +28,15 @@ class AiAssistDialog(QDialog):
         view_model: AiAssistViewModel,
         selected_day: date,
         parent: QWidget | None = None,
+        job_runner: JobRunner | None = None,
     ) -> None:
         super().__init__(parent)
         self._view_model = view_model
         self._selected_day = selected_day
         self._state = view_model.initial_state()
         self._last_error: AppError | None = None
+        self._job_runner = job_runner
+        self._pending_handle: JobHandle[object] | None = None
         self.setObjectName("ai_assist_dialog")
         self.setWindowTitle(_("AI Assist"))
         self._build_ui()
@@ -80,7 +85,32 @@ class AiAssistDialog(QDialog):
         self.close_button.clicked.connect(self.accept)
 
     def send_current_message(self) -> bool:
+        if self._pending_handle is not None:
+            self.status_label.setText(_("Please wait for the current request."))
+            return False
         message = self.message_input.text()
+        if self._job_runner is not None:
+            state = self._state
+            selected_day = self._selected_day
+            self._set_busy(True)
+            self.status_label.setText(_("Sending..."))
+            self._pending_handle = JobHandle(
+                job_id="ai_chat_pending",
+                cancel=lambda: None,
+            )
+            handle = self._job_runner.submit(
+                "ai_chat",
+                lambda _token: self._view_model.send(
+                    state,
+                    message,
+                    selected_day=selected_day,
+                    period_type="daily",
+                ),
+                on_complete=self._complete_send,
+            )
+            if self._pending_handle is not None:
+                self._pending_handle = handle
+            return True
         result = self._view_model.send(
             self._state,
             message,
@@ -96,6 +126,21 @@ class AiAssistDialog(QDialog):
         self.status_label.setText(_("Ready"))
         return True
 
+    def _complete_send(self, result: object) -> None:
+        self._pending_handle = None
+        self._set_busy(False)
+        if not getattr(result, "ok", False) or getattr(result, "value", None) is None:
+            self._set_error(getattr(result, "error", None))
+            return
+        self._state = result.value
+        self.message_input.clear()
+        self._render_history()
+        self.status_label.setText(_("Ready"))
+
+    def _set_busy(self, busy: bool) -> None:
+        self.send_button.setEnabled(not busy)
+        self.message_input.setEnabled(not busy)
+
     def _render_history(self) -> None:
         lines: list[str] = []
         for item in self._state.history:
@@ -105,4 +150,4 @@ class AiAssistDialog(QDialog):
 
     def _set_error(self, error: AppError | None) -> None:
         self._last_error = error
-        self.status_label.setText(error.message if error is not None else _("Unknown error"))
+        self.status_label.setText(display_error_message(error))

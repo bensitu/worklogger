@@ -1,0 +1,48 @@
+QWidget {
+  font-size: 13px;
+  font-family: -apple-system, "Segoe UI", "Noto Sans", sans-serif;
+}
+
+QFrame#stat_card_frame {
+  background-color: {{ stat_background }};
+  border: 1px solid {{ stat_border }};
+  border-radius: 12px;
+}
+
+QPushButton {
+  background: {{ button_background }};
+  border: 1px solid {{ border }};
+  color: {{ text }};
+  border-radius: 8px;
+  padding: 7px 14px;
+}
+
+QPushButton:hover {
+  background: {{ button_hover }};
+  border-color: {{ accent }};
+}
+
+QPushButton:disabled {
+  color: {{ disabled_text }};
+}
+
+QPushButton[variant="primary"] {
+  background: {{ accent }};
+  color: #ffffff;
+  border: none;
+  font-weight: 600;
+}
+
+QPushButton[variant="primary"]:hover {
+  background: {{ hover }};
+}
+
+QLineEdit,
+QTextEdit,
+QPlainTextEdit {
+  background: {{ input_background }};
+  border: 1px solid {{ input_border }};
+  color: {{ text }};
+  border-radius: 8px;
+  padding: 4px 8px;
+}

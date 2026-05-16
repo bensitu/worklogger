@@ -13,6 +13,7 @@ from worklogger.app.queries.ai_queries import BuildAiContextQuery
 from worklogger.app.use_cases.ai import AiChatResult, AiContextResult
 from worklogger.domain.shared.result import Result
 from worklogger.presentation.ai import AiAssistDialog
+from worklogger.presentation.job_runner import ImmediateJobRunner
 from worklogger.presentation.viewmodels import AiAssistViewModel
 
 
@@ -72,6 +73,24 @@ class AiAssistPresentationTests(unittest.TestCase):
 
         self.assertEqual(context.queries[0].selected_day, date(2026, 5, 4))
         self.assertEqual(chat.commands[0].context, "built context")
+        self.assertIn("Assistant: reply", dialog.transcript.toPlainText())
+
+    def test_dialog_can_send_through_job_runner(self) -> None:
+        chat = FakeChatHandler()
+        context = FakeContextHandler()
+        dialog = AiAssistDialog(
+            AiAssistViewModel(
+                user_id=1,
+                chat_handler=chat,
+                context_handler=context,
+            ),
+            date(2026, 5, 4),
+            job_runner=ImmediateJobRunner(),
+        )
+
+        dialog.message_input.setText("Summarize")
+        self.assertTrue(dialog.send_current_message())
+
         self.assertIn("Assistant: reply", dialog.transcript.toPlainText())
 
 

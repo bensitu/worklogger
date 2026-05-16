@@ -10,12 +10,14 @@ from typing import Protocol
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QWidget
 
 from worklogger.__about__ import APP_VERSION
+from worklogger.app.job_runner import JobHandle, JobRunner
 from worklogger.app.queries.update_queries import CheckForUpdatesQuery
 from worklogger.app.use_cases.updates import CheckForUpdatesHandler, UpdateCheckResult
 from worklogger.domain.auth.models import User
 from worklogger.domain.shared.errors import AppError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
+from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.auth.dialogs import ChangePasswordDialog, ChangePasswordDraft
 from worklogger.presentation.auth.controller import (
     ChangePasswordDialogFactory,
@@ -68,6 +70,7 @@ class SettingsWorkflowController:
         user: User,
         data_management_view_model: DataManagementViewModel,
         update_check_handler: CheckForUpdatesHandler | None = None,
+        job_runner: JobRunner | None = None,
         identity_workflow: IdentityWorkflow | None = None,
         local_models_workflow: LocalModelsWorkflow | None = None,
         user_management_view_model: UserManagementViewModel | None = None,
@@ -92,6 +95,9 @@ class SettingsWorkflowController:
         self._user = user
         self._data_management_view_model = data_management_view_model
         self._update_check_handler = update_check_handler
+        self._job_runner = job_runner
+        self._update_check_handle: JobHandle[object] | None = None
+        self._data_job_handle: JobHandle[object] | None = None
         self._identity_workflow = identity_workflow
         self._local_models_workflow = local_models_workflow
         self._user_management_view_model = user_management_view_model
@@ -201,11 +207,12 @@ class SettingsWorkflowController:
         if path is None:
             _set_status(dialog, _("Backup cancelled"))
             return False
-        return self._handle_data_result(
+        return self._run_data_job(
             dialog,
             _("Backup Data"),
-            self._data_management_view_model.backup_database(path),
+            lambda: self._data_management_view_model.backup_database(path),
             lambda state: _("Backup saved: {path}").format(path=state.path),
+            _("Backing up data..."),
         )
 
     def _restore_database(self, dialog: SettingsDialog) -> bool:
@@ -224,13 +231,14 @@ class SettingsWorkflowController:
         if not self._restore_confirmation(dialog):
             _set_status(dialog, _("Restore cancelled"))
             return False
-        restored = self._handle_data_result(
+        restored = self._run_data_job(
             dialog,
             _("Restore Data"),
-            self._data_management_view_model.restore_database(path),
+            lambda: self._data_management_view_model.restore_database(path),
             lambda _state: _("Data restored successfully."),
+            _("Restoring data..."),
         )
-        if restored and self._reload_after_restore is not None:
+        if restored and self._job_runner is None and self._reload_after_restore is not None:
             self._reload_after_restore()
         return restored
 
@@ -239,13 +247,14 @@ class SettingsWorkflowController:
         if path is None:
             _set_status(dialog, _("Export cancelled"))
             return False
-        return self._handle_data_result(
+        return self._run_data_job(
             dialog,
             _("Export CSV"),
-            self._data_management_view_model.export_csv(path),
+            lambda: self._data_management_view_model.export_csv(path),
             lambda state: _("Exported {count} records.").format(
                 count=state.record_count
             ),
+            _("Exporting CSV..."),
         )
 
     def _import_csv(self, dialog: SettingsDialog) -> bool:
@@ -253,13 +262,14 @@ class SettingsWorkflowController:
         if path is None:
             _set_status(dialog, _("Import cancelled"))
             return False
-        return self._handle_data_result(
+        return self._run_data_job(
             dialog,
             _("Import CSV"),
-            self._data_management_view_model.import_csv(path),
+            lambda: self._data_management_view_model.import_csv(path),
             lambda state: _("Imported {count} records.").format(
                 count=state.record_count
             ),
+            _("Importing CSV..."),
         )
 
     def _export_ics(self, dialog: SettingsDialog) -> bool:
@@ -267,13 +277,14 @@ class SettingsWorkflowController:
         if path is None:
             _set_status(dialog, _("Export cancelled"))
             return False
-        return self._handle_data_result(
+        return self._run_data_job(
             dialog,
             _("Export .ics"),
-            self._data_management_view_model.export_ics(path),
+            lambda: self._data_management_view_model.export_ics(path),
             lambda state: _("Exported {count} events.").format(
                 count=state.record_count
             ),
+            _("Exporting .ics..."),
         )
 
     def _import_ics(self, dialog: SettingsDialog) -> bool:
@@ -296,10 +307,10 @@ class SettingsWorkflowController:
                 _set_status(dialog, _("Import cancelled"))
                 return False
             replace_existing = bool(choice)
-        return self._handle_data_result(
+        return self._run_data_job(
             dialog,
             _("Import .ics"),
-            self._data_management_view_model.import_ics(
+            lambda: self._data_management_view_model.import_ics(
                 path,
                 replace_existing=replace_existing,
             ),
@@ -310,13 +321,44 @@ class SettingsWorkflowController:
                     count=state.record_count
                 )
             ),
+            _("Importing .ics..."),
         )
 
     def _check_updates(self, dialog: SettingsDialog) -> bool:
         if self._update_check_handler is None:
             _set_status(dialog, _("Update check is not configured."))
             return False
+        if self._job_runner is not None:
+            if self._update_check_handle is not None:
+                _set_status(dialog, _("Please wait for the current update check."))
+                return False
+            _set_status(dialog, _("Checking for updates..."))
+            if hasattr(dialog, "check_updates_button"):
+                dialog.check_updates_button.setEnabled(False)
+            self._update_check_handle = JobHandle(
+                job_id="check_updates_pending",
+                cancel=lambda: None,
+            )
+            handle = self._job_runner.submit(
+                "check_updates",
+                lambda _token: self._update_check_handler.handle(
+                    CheckForUpdatesQuery(APP_VERSION)
+                ),
+                on_complete=lambda result: self._complete_update_check(dialog, result),
+            )
+            if self._update_check_handle is not None:
+                self._update_check_handle = handle
+            return True
         result = self._update_check_handler.handle(CheckForUpdatesQuery(APP_VERSION))
+        return self._handle_update_result(dialog, result)
+
+    def _complete_update_check(self, dialog: SettingsDialog, result: object) -> None:
+        self._update_check_handle = None
+        if hasattr(dialog, "check_updates_button"):
+            dialog.check_updates_button.setEnabled(True)
+        self._handle_update_result(dialog, result)
+
+    def _handle_update_result(self, dialog: SettingsDialog, result: object) -> bool:
         if not result.ok or result.value is None:
             message = _error_message(result.error)
             _set_status(dialog, message)
@@ -344,13 +386,61 @@ class SettingsWorkflowController:
         self._notify_success(dialog, title, message)
         return True
 
+    def _run_data_job(
+        self,
+        dialog: SettingsDialog,
+        title: str,
+        job: Callable[[], Result[DataManagementActionState]],
+        success_message: Callable[[DataManagementActionState], str],
+        busy_message: str,
+    ) -> bool:
+        if self._job_runner is None:
+            return self._handle_data_result(dialog, title, job(), success_message)
+        if self._data_job_handle is not None:
+            _set_status(dialog, _("Please wait for the current data operation."))
+            return False
+        _set_status(dialog, busy_message)
+        self._data_job_handle = JobHandle(
+            job_id="data_management_pending",
+            cancel=lambda: None,
+        )
+        handle = self._job_runner.submit(
+            "data_management",
+            lambda _token: job(),
+            on_complete=lambda result: self._complete_data_job(
+                dialog,
+                title,
+                result,
+                success_message,
+            ),
+        )
+        if self._data_job_handle is not None:
+            self._data_job_handle = handle
+        return True
+
+    def _complete_data_job(
+        self,
+        dialog: SettingsDialog,
+        title: str,
+        result: object,
+        success_message: Callable[[DataManagementActionState], str],
+    ) -> None:
+        self._data_job_handle = None
+        completed = self._handle_data_result(dialog, title, result, success_message)
+        if (
+            completed
+            and title == _("Restore Data")
+            and self._reload_after_restore is not None
+        ):
+            self._reload_after_restore()
+
 
 def _set_status(dialog: SettingsDialog, message: str) -> None:
     dialog.status_label.setText(message)
 
 
 def _error_message(error: AppError | None) -> str:
-    return error.message if error is not None else _("Unknown error")
+    return display_error_message(error)
 
 
 def _update_message(result: UpdateCheckResult) -> str:

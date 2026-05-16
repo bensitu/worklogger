@@ -6,11 +6,13 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from datetime import date
 from pathlib import Path
+import logging
 import secrets
 from typing import Protocol
 
 from PySide6.QtWidgets import QApplication
 
+from worklogger.app.job_runner import JobRunner
 from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler
 from worklogger.app.use_cases.ai import (
     AiChatHandler,
@@ -103,6 +105,7 @@ from worklogger.infrastructure.export import (
     WorkLogIcsExporter,
 )
 from worklogger.infrastructure.identity import DisabledIdentityProvider
+from worklogger.infrastructure.logging import setup_logging
 from worklogger.infrastructure.local_model import JsonLocalModelStore
 from worklogger.infrastructure.repositories import (
     SQLiteAuthRepository,
@@ -127,6 +130,7 @@ from worklogger.presentation.analytics import AnalyticsWorkflowController
 from worklogger.presentation.auth import AuthController, AuthSession
 from worklogger.presentation.auth.controller import RememberSessionStore
 from worklogger.presentation.identity import IdentityWorkflowController
+from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.presentation.local_models import LocalModelsWorkflowController
 from worklogger.presentation.notes import NotesWorkflowController
 from worklogger.presentation.quick_logs import QuickLogsWorkflowController
@@ -157,6 +161,8 @@ from worklogger.presentation.viewmodels import (
     WorkLogEntryViewModel,
 )
 
+LOGGER = logging.getLogger(__name__)
+
 
 @dataclass(frozen=True)
 class DesktopRuntimeConfig:
@@ -177,6 +183,7 @@ class DesktopRuntime:
     user: User
     database_path: Path
     remember_session_store: RememberSessionStore
+    job_runner: JobRunner | None = None
     auth_session: AuthSession | None = None
 
 
@@ -203,6 +210,8 @@ def build_desktop_runtime(
 ) -> Result[DesktopRuntime]:
     config = config or DesktopRuntimeConfig()
     try:
+        setup_logging()
+        LOGGER.info("desktop_runtime_build_started")
         database_path, connection_factory, auth_repository = _prepare_database(config)
         user_result = _resolve_runtime_user(auth_repository, config)
         if not user_result.ok or user_result.value is None:
@@ -211,6 +220,7 @@ def build_desktop_runtime(
                 or ValidationError("runtime_user_required", "runtime_user_required")
             )
         application = _application(argv)
+        job_runner = QtJobRunner(application)
         auth_view_model = _auth_view_model(auth_repository, connection_factory)
         remember_session_store = _remember_session_store()
         return _build_runtime_for_user(
@@ -222,8 +232,10 @@ def build_desktop_runtime(
             auth_repository=auth_repository,
             auth_view_model=auth_view_model,
             remember_session_store=remember_session_store,
+            job_runner=job_runner,
         )
     except Exception as exc:
+        LOGGER.exception("desktop_runtime_failed")
         return Result.failure(
             InfrastructureError(
                 "desktop_runtime_failed",
@@ -241,8 +253,11 @@ def build_authenticated_desktop_runtime(
 ) -> Result[DesktopRuntime]:
     config = config or DesktopRuntimeConfig()
     try:
+        setup_logging()
+        LOGGER.info("authenticated_desktop_runtime_build_started")
         database_path, connection_factory, auth_repository = _prepare_database(config)
         application = _application(argv)
+        job_runner = QtJobRunner(application)
         auth_view_model = _auth_view_model(auth_repository, connection_factory)
         remember_session_store = _remember_session_store()
         authenticator = (
@@ -268,8 +283,10 @@ def build_authenticated_desktop_runtime(
             auth_session=auth_result.value,
             auth_view_model=auth_view_model,
             remember_session_store=remember_session_store,
+            job_runner=job_runner,
         )
     except Exception as exc:
+        LOGGER.exception("desktop_runtime_failed")
         return Result.failure(
             InfrastructureError(
                 "desktop_runtime_failed",
@@ -367,6 +384,7 @@ def _build_runtime_for_user(
     auth_session: AuthSession | None = None,
     auth_view_model: AuthViewModel | None = None,
     remember_session_store: RememberSessionStore | None = None,
+    job_runner: JobRunner | None = None,
 ) -> Result[DesktopRuntime]:
     repositories = _runtime_repositories(connection_factory)
     handlers = _runtime_handlers(repositories)
@@ -381,6 +399,7 @@ def _build_runtime_for_user(
         auth_repository=auth_repository,
         auth_view_model=auth_view_model,
         remember_session_store=remember_store,
+        job_runner=job_runner,
     )
     residency_controller = _build_residency_controller(user, handlers)
     window_config = _window_config_for_user(config.window, user)
@@ -393,12 +412,14 @@ def _build_runtime_for_user(
                 window_config=window_config,
                 settings_workflow=settings_workflow,
                 residency_controller=residency_controller,
+                job_runner=job_runner,
             ),
             connection_factory=connection_factory,
             database_path=database_path,
             user=user,
             remember_session_store=remember_store,
             auth_session=auth_session,
+            job_runner=job_runner,
         )
 
     return _runtime_result(
@@ -411,12 +432,14 @@ def _build_runtime_for_user(
             window_config=window_config,
             settings_workflow=settings_workflow,
             residency_controller=residency_controller,
+            job_runner=job_runner,
         ),
         connection_factory=connection_factory,
         database_path=database_path,
         user=user,
         remember_session_store=remember_store,
         auth_session=auth_session,
+        job_runner=job_runner,
     )
 
 
@@ -498,6 +521,7 @@ def _build_ai_workflow(
     user: User,
     repositories: RuntimeRepositories,
     handlers: RuntimeHandlers,
+    job_runner: JobRunner | None,
 ) -> AiAssistWorkflowController:
     return AiAssistWorkflowController(
         AiAssistViewModel(
@@ -512,7 +536,8 @@ def _build_ai_workflow(
                 ),
                 settings_handler=handlers.settings_get_handler,
             ),
-        )
+        ),
+        job_runner=job_runner,
     )
 
 
@@ -573,6 +598,7 @@ def _build_settings_workflow(
     auth_repository: RuntimeAuthRepository | None,
     auth_view_model: AuthViewModel | None,
     remember_session_store: RememberSessionStore,
+    job_runner: JobRunner | None,
 ) -> SettingsWorkflowController | None:
     if auth_view_model is None:
         return None
@@ -592,11 +618,13 @@ def _build_settings_workflow(
         update_check_handler=CheckForUpdatesHandler(
             GitHubReleaseUpdateChecker(api_url=GITHUB_LATEST_RELEASE_API_URL)
         ),
+        job_runner=job_runner,
         identity_workflow=_build_identity_workflow(user, repositories),
         local_models_workflow=_build_local_models_workflow(
             user=user,
             database_path=database_path,
             repositories=repositories,
+            job_runner=job_runner,
         ),
         user_management_view_model=_build_user_management_view_model(
             user,
@@ -658,6 +686,7 @@ def _build_local_models_workflow(
     user: User,
     database_path: Path,
     repositories: RuntimeRepositories,
+    job_runner: JobRunner | None,
 ) -> LocalModelsWorkflowController:
     local_model_store = JsonLocalModelStore(database_path.parent / "models")
     return LocalModelsWorkflowController(
@@ -686,7 +715,8 @@ def _build_local_models_workflow(
                 settings=repositories.settings,
                 usage_reader=repositories.settings,
             ),
-        )
+        ),
+        job_runner=job_runner,
     )
 
 
@@ -744,6 +774,7 @@ def _build_minimal_view(
     window_config: AppWindowConfig,
     settings_workflow: SettingsWorkflowController | None,
     residency_controller: QtResidencyController,
+    job_runner: JobRunner | None,
 ) -> MinimalView:
     return MinimalView(
         worklog_entry_view_model=worklog_entry_view_model,
@@ -767,6 +798,7 @@ def _build_app_window(
     window_config: AppWindowConfig,
     settings_workflow: SettingsWorkflowController | None,
     residency_controller: QtResidencyController,
+    job_runner: JobRunner | None,
 ) -> AppWindow:
     return AppWindow(
         calendar_view_model=CalendarViewModel(
@@ -787,7 +819,12 @@ def _build_app_window(
         settings_workflow=settings_workflow,
         quick_logs_workflow=_build_quick_logs_workflow(user, repositories),
         analytics_workflow=_build_analytics_workflow(user, repositories),
-        ai_assist_workflow=_build_ai_workflow(user, repositories, handlers),
+        ai_assist_workflow=_build_ai_workflow(
+            user,
+            repositories,
+            handlers,
+            job_runner,
+        ),
         notes_workflow=_build_notes_workflow(user, repositories, handlers),
         reports_workflow=_build_reports_workflow(user, repositories, handlers),
         residency_controller=residency_controller,
@@ -803,6 +840,7 @@ def _runtime_result(
     user: User,
     remember_session_store: RememberSessionStore,
     auth_session: AuthSession | None,
+    job_runner: JobRunner | None,
 ) -> Result[DesktopRuntime]:
     return Result.success(
         DesktopRuntime(
@@ -812,6 +850,7 @@ def _runtime_result(
             user=user,
             database_path=database_path,
             remember_session_store=remember_session_store,
+            job_runner=job_runner,
             auth_session=auth_session,
         )
     )

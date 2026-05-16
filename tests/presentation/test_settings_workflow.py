@@ -12,6 +12,7 @@ from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandl
 from worklogger.app.use_cases.updates import UpdateCheckResult
 from worklogger.domain.auth.models import User
 from worklogger.domain.shared.result import Result
+from worklogger.presentation.job_runner import ImmediateJobRunner
 from worklogger.presentation.auth import ChangePasswordDialog
 from worklogger.presentation.settings import SettingsWorkflowController
 from worklogger.presentation.viewmodels import (
@@ -288,6 +289,35 @@ class SettingsWorkflowTests(unittest.TestCase):
             ],
         )
         self.assertEqual(dialog.status_label.text(), "Data restored successfully.")
+
+    def test_settings_workflow_runs_data_and_update_actions_through_job_runner(self) -> None:
+        data = FakeDataManagementViewModel()
+        updates = FakeUpdateCheckHandler()
+        notifications: list[tuple[str, str]] = []
+        controller = SettingsWorkflowController(
+            settings_view_model=_settings_view_model(MemorySettingsRepository()),
+            auth_view_model=FakeAuthViewModel(),
+            user=User(id=1, username="alice", is_admin=True),
+            data_management_view_model=data,
+            update_check_handler=updates,
+            job_runner=ImmediateJobRunner(),
+            backup_destination_provider=lambda _parent: Path("backup.db"),
+            notify_success=lambda _parent, title, message: notifications.append((title, message)),
+            notify_error=lambda _parent, title, message: notifications.append((title, message)),
+        )
+        dialog = controller.create_dialog()
+
+        dialog.backup_button.click()
+        dialog.check_updates_button.click()
+
+        self.assertEqual(data.calls, [("backup", Path("backup.db"))])
+        self.assertEqual(
+            notifications,
+            [
+                ("Backup Data", "Backup saved: backup.db"),
+                ("Check for updates", "Update available: 4.0.1"),
+            ],
+        )
 
     def test_settings_workflow_cancels_restore_before_adapter_call(self) -> None:
         data = FakeDataManagementViewModel()

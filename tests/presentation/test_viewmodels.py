@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from datetime import date
+from pathlib import Path
 import unittest
+
+from PySide6.QtGui import QPalette
 
 from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
 from worklogger.app.queries.calendar_queries import GetCalendarEventsForRangeQuery
@@ -348,6 +351,8 @@ class PresentationViewModelTests(unittest.TestCase):
         palette = engine.palette("custom", custom_color="#123456")
         self.assertEqual(palette.accent, "#123456")
         self.assertIn("#123456", engine.application_stylesheet("custom", custom_color="#123456"))
+        qt_palette = engine.qt_palette("custom", custom_color="#123456")
+        self.assertEqual(qt_palette.color(QPalette.ColorRole.Highlight).name(), "#123456")
 
         style = engine.calendar_cell_style({"weekend", "holiday", "selected"})
         self.assertEqual(style.key, "selected")
@@ -356,6 +361,19 @@ class PresentationViewModelTests(unittest.TestCase):
             engine.work_type_marker_color(WorkType.BUSINESS_TRIP),
             "#e07800",
         )
+
+    def test_theme_engine_loads_named_qss_templates(self) -> None:
+        engine = ThemeEngine()
+        qss_root = Path("worklogger/presentation/theme/qss")
+
+        for theme in ("blue", "pink", "green", "purple", "custom"):
+            for mode in ("light", "dark"):
+                self.assertTrue((qss_root / f"{theme}_{mode}.qss").exists())
+
+        stylesheet = engine.application_stylesheet("custom", custom_color="#123456")
+        self.assertIn("#123456", stylesheet)
+        self.assertIn("QPushButton[variant=\"primary\"]", stylesheet)
+        self.assertNotIn("{{", stylesheet)
 
 
 if __name__ == "__main__":

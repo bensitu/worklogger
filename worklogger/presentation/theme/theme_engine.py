@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 import re
+
+from PySide6.QtGui import QColor, QPalette
 
 from worklogger.domain.worklog.models import WorkType
 
@@ -11,6 +14,7 @@ DEFAULT_CUSTOM_COLOR = "#4f8ef7"
 THEME_KEYS = ("blue", "pink", "green", "purple", "custom")
 STYLE_PRIORITY = ("weekend", "today", "holiday", "selected")
 _HEX_RE = re.compile(r"^#?[0-9a-fA-F]{6}$")
+_QSS_ROOT = Path(__file__).with_name("qss")
 
 _THEMES: dict[str, dict[bool, tuple[str, str, str, str, str]]] = {
     "blue": {
@@ -178,40 +182,63 @@ class ThemeEngine:
         custom_color: str | None = None,
     ) -> str:
         palette = self.palette(theme, dark=dark, custom_color=custom_color)
-        button_background = "#232438" if dark else "#f4f5fa"
-        button_hover = "#2c2e50" if dark else "#e8ecf8"
-        disabled_text = "#6f7699" if dark else "#9aa3bb"
-        return (
-            "QWidget{"
-            f"background-color:{palette.background};"
-            f"color:{palette.text};"
-            "font-size:13px;"
-            "font-family:-apple-system,\"Segoe UI\",\"Noto Sans\",sans-serif;"
-            "}"
-            "QFrame#stat_card_frame{"
-            f"background-color:{palette.stat_background};"
-            f"border:1px solid {palette.stat_border};"
-            "border-radius:12px;"
-            "}"
-            "QPushButton{"
-            f"background:{button_background};"
-            f"border:1px solid {palette.border};"
-            f"color:{palette.text};"
-            "border-radius:8px;padding:7px 14px;"
-            "}"
-            f"QPushButton:hover{{background:{button_hover};border-color:{palette.accent};}}"
-            f"QPushButton:disabled{{color:{disabled_text};}}"
-            "QPushButton[variant=\"primary\"]{"
-            f"background:{palette.accent};color:#ffffff;border:none;font-weight:600;"
-            "}"
-            f"QPushButton[variant=\"primary\"]:hover{{background:{palette.hover};}}"
-            "QLineEdit,QTextEdit,QPlainTextEdit{"
-            f"background:{palette.input_background};"
-            f"border:1px solid {palette.input_border};"
-            f"color:{palette.text};"
-            "border-radius:8px;padding:4px 8px;"
-            "}"
+        mode = "dark" if palette.dark else "light"
+        template = _read_qss_template(palette.theme, mode)
+        return _render_qss(
+            template,
+            {
+                "accent": palette.accent,
+                "background": palette.background,
+                "border": palette.border,
+                "button_background": "#232438" if palette.dark else "#f4f5fa",
+                "button_hover": "#2c2e50" if palette.dark else "#e8ecf8",
+                "disabled_text": "#6f7699" if palette.dark else "#9aa3bb",
+                "hover": palette.hover,
+                "input_background": palette.input_background,
+                "input_border": palette.input_border,
+                "stat_background": palette.stat_background,
+                "stat_border": palette.stat_border,
+                "text": palette.text,
+            },
         )
+
+    def qt_palette(
+        self,
+        theme: str = "blue",
+        *,
+        dark: bool = False,
+        custom_color: str | None = None,
+    ) -> QPalette:
+        palette = self.palette(theme, dark=dark, custom_color=custom_color)
+        qt_palette = QPalette()
+        button_background = "#232438" if palette.dark else "#f4f5fa"
+        disabled_text = "#6f7699" if palette.dark else "#9aa3bb"
+
+        _set_palette_color(qt_palette, QPalette.ColorRole.Window, palette.background)
+        _set_palette_color(qt_palette, QPalette.ColorRole.WindowText, palette.text)
+        _set_palette_color(qt_palette, QPalette.ColorRole.Base, palette.input_background)
+        _set_palette_color(qt_palette, QPalette.ColorRole.AlternateBase, palette.surface)
+        _set_palette_color(qt_palette, QPalette.ColorRole.Text, palette.text)
+        _set_palette_color(qt_palette, QPalette.ColorRole.Button, button_background)
+        _set_palette_color(qt_palette, QPalette.ColorRole.ButtonText, palette.text)
+        _set_palette_color(qt_palette, QPalette.ColorRole.Highlight, palette.accent)
+        _set_palette_color(qt_palette, QPalette.ColorRole.HighlightedText, "#ffffff")
+        qt_palette.setColor(
+            QPalette.ColorGroup.Disabled,
+            QPalette.ColorRole.WindowText,
+            QColor(disabled_text),
+        )
+        qt_palette.setColor(
+            QPalette.ColorGroup.Disabled,
+            QPalette.ColorRole.Text,
+            QColor(disabled_text),
+        )
+        qt_palette.setColor(
+            QPalette.ColorGroup.Disabled,
+            QPalette.ColorRole.ButtonText,
+            QColor(disabled_text),
+        )
+        return qt_palette
 
 
 def normalize_hex_color(accent_hex: str | None) -> str:
@@ -236,6 +263,24 @@ def _theme_colors(
     if theme == "custom":
         return _custom_palette(custom_color or DEFAULT_CUSTOM_COLOR)[bool(dark)]
     return _THEMES.get(theme, _THEMES["blue"])[bool(dark)]
+
+
+def _read_qss_template(theme: str, mode: str) -> str:
+    path = _QSS_ROOT / f"{theme}_{mode}.qss"
+    if not path.exists():
+        path = _QSS_ROOT / f"blue_{mode}.qss"
+    return path.read_text(encoding="utf-8")
+
+
+def _render_qss(template: str, replacements: dict[str, str]) -> str:
+    rendered = template
+    for key, value in replacements.items():
+        rendered = rendered.replace("{{ " + key + " }}", value)
+    return rendered
+
+
+def _set_palette_color(qt_palette: QPalette, role: QPalette.ColorRole, color: str) -> None:
+    qt_palette.setColor(role, QColor(color))
 
 
 def _custom_palette(accent_hex: str) -> dict[bool, tuple[str, str, str, str, str]]:

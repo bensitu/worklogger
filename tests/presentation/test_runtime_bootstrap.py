@@ -80,6 +80,13 @@ class RuntimeBootstrapTests(unittest.TestCase):
             assert runtime.value is not None
             self.assertEqual(runtime.value.user.username, "local")
             self.assertEqual(runtime.value.window.account_label.text(), "Signed in: local")
+            self.assertIsNotNone(runtime.value.job_runner)
+            settings_workflow = getattr(runtime.value.window, "_settings_workflow")
+            ai_workflow = getattr(runtime.value.window, "_ai_assist_workflow")
+            local_models_workflow = getattr(settings_workflow, "_local_models_workflow")
+            self.assertIs(settings_workflow._job_runner, runtime.value.job_runner)
+            self.assertIs(ai_workflow._job_runner, runtime.value.job_runner)
+            self.assertIs(local_models_workflow._job_runner, runtime.value.job_runner)
             self.assertTrue(database_path.exists())
             self.assertTrue(runtime.value.window.refresh())
 

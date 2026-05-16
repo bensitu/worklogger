@@ -12,6 +12,7 @@ from worklogger.domain.auth.models import User
 from worklogger.domain.shared.errors import AppError, CancellationError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
+from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.auth.dialogs import (
     ChangePasswordDialog,
     ChangePasswordDraft,
@@ -288,4 +289,4 @@ class AuthController:
 
 
 def _error_message(error: AppError | None) -> str:
-    return error.message if error is not None else _("Unknown error")
+    return display_error_message(error)

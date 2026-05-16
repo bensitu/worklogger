@@ -10,6 +10,7 @@ from typing import Protocol
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
+    QApplication,
     QHBoxLayout,
     QLabel,
     QMainWindow,
@@ -22,6 +23,7 @@ from PySide6.QtWidgets import (
 
 from worklogger.domain.shared.errors import AppError
 from worklogger.infrastructure.i18n import _
+from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.settings import SettingsWorkflow
 from worklogger.presentation.shell.residency import QtResidencyController
 from worklogger.presentation.theme import ThemeEngine
@@ -148,7 +150,17 @@ class AppWindow(QMainWindow):
         return self._entry_dirty
 
     def apply_theme(self) -> None:
-        self.setStyleSheet(
+        application = QApplication.instance()
+        if application is None:
+            return
+        application.setPalette(
+            self._theme_engine.qt_palette(
+                self._config.theme,
+                dark=self._config.dark,
+                custom_color=self._config.custom_color,
+            )
+        )
+        application.setStyleSheet(
             self._theme_engine.application_stylesheet(
                 self._config.theme,
                 dark=self._config.dark,
@@ -406,7 +418,7 @@ class AppWindow(QMainWindow):
 
     def _set_error(self, error: AppError | None) -> None:
         self._last_error = error
-        self._set_status(error.message if error else _("Unknown error"))
+        self._set_status(display_error_message(error))
 
     def _set_status(self, message: str) -> None:
         self.status_label.setText(message)

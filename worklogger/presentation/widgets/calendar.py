@@ -43,19 +43,44 @@ class CalendarDayButton(QPushButton):
         self._cell = cell
         self.setText("\n".join(cell.text_lines))
         self.setToolTip(_tooltip_for_cell(cell))
-        self.setStyleSheet(_calendar_cell_qss(cell))
         self.setProperty("day", cell.day.isoformat())
         self.setProperty("in_month", cell.in_month)
         self.setProperty("style_key", cell.style.key)
         self.update()
 
+    def enterEvent(self, event: object) -> None:
+        self.update()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event: object) -> None:
+        self.update()
+        super().leaveEvent(event)
+
     def paintEvent(self, event: object) -> None:
-        super().paintEvent(event)
         cell = self._cell
         if cell is None:
+            super().paintEvent(event)
             return
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        border_color = cell.style.hover_border if self.underMouse() else cell.style.border
+        border_width = 2 if self.underMouse() else cell.style.border_width
+        foreground = cell.style.foreground if cell.in_month else "#8a8f9c"
+        rect = QRectF(1, 1, self.width() - 2, self.height() - 2)
+        painter.setPen(QPen(QColor(border_color), border_width))
+        painter.setBrush(QColor(cell.style.background))
+        painter.drawRoundedRect(rect, 6, 6)
+
+        font = painter.font()
+        font.setPixelSize(11)
+        painter.setFont(font)
+        painter.setPen(QColor(foreground))
+        painter.drawText(
+            QRectF(8, 8, self.width() - 16, self.height() - 16),
+            Qt.AlignmentFlag.AlignCenter,
+            self.text(),
+        )
 
         if cell.work_type_marker_color:
             painter.setPen(Qt.PenStyle.NoPen)
@@ -158,28 +183,6 @@ class CalendarView(QWidget):
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.grid.addWidget(label, week_index + 1, 7)
             self._week_total_labels.append(label)
-
-
-def _calendar_cell_qss(cell: CalendarDayCell) -> str:
-    border_width = cell.style.border_width
-    if not cell.in_month:
-        foreground = "#8a8f9c"
-    else:
-        foreground = cell.style.foreground
-    return (
-        "QPushButton#calendar_day_button{"
-        f"background-color:{cell.style.background};"
-        f"color:{foreground};"
-        f"border:{border_width}px solid {cell.style.border};"
-        "border-radius:6px;"
-        "font-size:11px;"
-        "text-align:center;"
-        "padding:2px;"
-        "}"
-        "QPushButton#calendar_day_button:hover{"
-        f"border:2px solid {cell.style.hover_border};"
-        "}"
-    )
 
 
 def _tooltip_for_cell(cell: CalendarDayCell) -> str:

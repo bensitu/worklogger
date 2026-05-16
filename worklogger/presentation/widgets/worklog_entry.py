@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 
 from worklogger.domain.worklog.models import WorkType
 from worklogger.infrastructure.i18n import _
+from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels.auto_record import (
     AutoRecordState,
     AutoRecordViewModel,
@@ -238,14 +239,14 @@ class WorkLogEntryPanel(QWidget):
         )
         result = self._auto_record_view_model.start()
         if not result.ok or result.value is None:
-            self.auto_status_label.setText(result.error.message if result.error else _("Unknown error"))
+            self.auto_status_label.setText(display_error_message(result.error))
             return
         self._apply_auto_state(result.value)
 
     def _auto_clock_out(self) -> None:
         result = self._auto_record_view_model.finish()
         if not result.ok or result.value is None:
-            self.auto_status_label.setText(result.error.message if result.error else _("Unknown error"))
+            self.auto_status_label.setText(display_error_message(result.error))
             return
         draft = self._draft_from_auto_values(
             start_time=result.value.start_time,
@@ -267,14 +268,14 @@ class WorkLogEntryPanel(QWidget):
         else:
             result = self._auto_record_view_model.restart_break()
         if not result.ok or result.value is None:
-            self.auto_status_label.setText(result.error.message if result.error else _("Unknown error"))
+            self.auto_status_label.setText(display_error_message(result.error))
             return
         self._apply_auto_state(result.value)
 
     def _auto_quick_break(self, minutes: int) -> None:
         result = self._auto_record_view_model.add_quick_break(minutes)
         if not result.ok or result.value is None:
-            self.auto_status_label.setText(result.error.message if result.error else _("Unknown error"))
+            self.auto_status_label.setText(display_error_message(result.error))
             return
         self._apply_auto_state(result.value)
 

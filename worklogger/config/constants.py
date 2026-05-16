@@ -100,3 +100,7 @@ SECRET_SETTING_PREFIX = "secret:"
 MACHINE_KEY_FILENAME = ".worklogger_machine_key"
 KEYRING_SERVICE_NAME = "WorkLogger"
 GITHUB_LATEST_RELEASE_API_URL = "https://api.github.com/repos/bensitu/worklogger/releases/latest"
+LOG_BACKUP_COUNT = 5
+LOG_FILENAME = "worklogger.log"
+LOG_FORMAT = "%(asctime)s %(name)s %(levelname)s %(message)s"
+LOG_MAX_BYTES = 1_000_000

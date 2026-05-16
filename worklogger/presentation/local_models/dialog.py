@@ -16,8 +16,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from worklogger.app.job_runner import JobHandle, JobRunner
 from worklogger.domain.shared.errors import AppError
 from worklogger.infrastructure.i18n import _
+from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import (
     LocalModelManagerState,
     LocalModelManagerViewModel,
@@ -29,11 +31,14 @@ class LocalModelsDialog(QDialog):
         self,
         view_model: LocalModelManagerViewModel,
         parent: QWidget | None = None,
+        job_runner: JobRunner | None = None,
     ) -> None:
         super().__init__(parent)
         self._view_model = view_model
         self._state: LocalModelManagerState | None = None
         self._last_error: AppError | None = None
+        self._job_runner = job_runner
+        self._pending_handle: JobHandle[object] | None = None
         self.setObjectName("local_models_dialog")
         self.setWindowTitle(_("Local Models"))
         self._build_ui()
@@ -50,6 +55,12 @@ class LocalModelsDialog(QDialog):
         return self._set_state_result(self._view_model.load())
 
     def refresh_catalog(self) -> bool:
+        if self._job_runner is not None:
+            return self._run_state_job(
+                "local_model_refresh",
+                self._view_model.refresh_catalog,
+                _("Refreshing catalog..."),
+            )
         return self._set_state_result(self._view_model.refresh_catalog())
 
     def import_model(self, source: Path | str | None = None) -> bool:
@@ -57,6 +68,12 @@ class LocalModelsDialog(QDialog):
         if source is None:
             self.status_label.setText(_("Import cancelled"))
             return False
+        if self._job_runner is not None:
+            return self._run_state_job(
+                "local_model_import",
+                lambda: self._view_model.import_model(source),
+                _("Importing model..."),
+            )
         return self._set_state_result(self._view_model.import_model(source))
 
     def download_selected(self) -> bool:
@@ -64,6 +81,12 @@ class LocalModelsDialog(QDialog):
         if not model_id:
             self.status_label.setText(_("Select a model first."))
             return False
+        if self._job_runner is not None:
+            return self._run_state_job(
+                "local_model_download",
+                lambda: self._view_model.download_model(model_id),
+                _("Downloading model..."),
+            )
         return self._set_state_result(self._view_model.download_model(model_id))
 
     def verify_selected(self) -> bool:
@@ -71,12 +94,18 @@ class LocalModelsDialog(QDialog):
         if not model_id:
             self.status_label.setText(_("Select a model first."))
             return False
+        if self._job_runner is not None:
+            return self._run_result_job(
+                "local_model_verify",
+                lambda: self._view_model.verify_model(model_id),
+                self._complete_verify,
+                _("Verifying model..."),
+            )
         result = self._view_model.verify_model(model_id)
         if not result.ok or result.value is None:
             self._set_error(result.error)
             return False
-        message = _("Model verified.") if result.value.verified else result.value.reason
-        self.status_label.setText(message)
+        self._show_verify_result(result.value)
         return result.value.verified
 
     def select_current(self) -> bool:
@@ -144,6 +173,68 @@ class LocalModelsDialog(QDialog):
         self.status_label.setText(self._state.message or _("Ready"))
         return True
 
+    def _run_state_job(
+        self,
+        name: str,
+        job: object,
+        busy_message: str,
+    ) -> bool:
+        return self._run_result_job(name, job, self._complete_state_job, busy_message)
+
+    def _run_result_job(
+        self,
+        name: str,
+        job: object,
+        callback: object,
+        busy_message: str,
+    ) -> bool:
+        if self._pending_handle is not None:
+            self.status_label.setText(_("Please wait for the current operation."))
+            return False
+        assert self._job_runner is not None
+        self._set_busy(True)
+        self.status_label.setText(busy_message)
+        self._pending_handle = JobHandle(
+            job_id=f"{name}_pending",
+            cancel=lambda: None,
+        )
+        handle = self._job_runner.submit(
+            name,
+            lambda _token: job(),
+            on_complete=callback,
+        )
+        if self._pending_handle is not None:
+            self._pending_handle = handle
+        return True
+
+    def _complete_state_job(self, result: object) -> None:
+        self._pending_handle = None
+        self._set_busy(False)
+        self._set_state_result(result)
+
+    def _complete_verify(self, result: object) -> None:
+        self._pending_handle = None
+        self._set_busy(False)
+        if not getattr(result, "ok", False) or getattr(result, "value", None) is None:
+            self._set_error(getattr(result, "error", None))
+            return
+        self._show_verify_result(result.value)
+
+    def _show_verify_result(self, status: object) -> None:
+        message = _("Model verified.") if status.verified else status.reason
+        self.status_label.setText(message)
+
+    def _set_busy(self, busy: bool) -> None:
+        for button in (
+            self.refresh_button,
+            self.import_button,
+            self.download_button,
+            self.verify_button,
+            self.select_button,
+            self.delete_button,
+        ):
+            button.setEnabled(not busy)
+
     def _render(self) -> None:
         self.model_list.clear()
         if self._state is None:
@@ -181,4 +272,4 @@ class LocalModelsDialog(QDialog):
 
     def _set_error(self, error: AppError | None) -> None:
         self._last_error = error
-        self.status_label.setText(error.message if error is not None else _("Unknown error"))
+        self.status_label.setText(display_error_message(error))

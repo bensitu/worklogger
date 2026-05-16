@@ -66,6 +66,9 @@ msgstr "Average"
 msgid "Back to login"
 msgstr "Back to login"
 
+msgid "Backing up data..."
+msgstr "Backing up data..."
+
 msgid "Backup Data"
 msgstr "Backup Data"
 
@@ -110,6 +113,9 @@ msgstr "Change password"
 
 msgid "Check for updates"
 msgstr "Check for updates"
+
+msgid "Checking for updates..."
+msgstr "Checking for updates..."
 
 msgid "Close"
 msgstr "Close"
@@ -174,6 +180,9 @@ msgstr "Discard changes?"
 msgid "Download"
 msgstr "Download"
 
+msgid "Downloading model..."
+msgstr "Downloading model..."
+
 msgid "Enable local models"
 msgstr "Enable local models"
 
@@ -219,6 +228,12 @@ msgstr "Exported {count} events."
 msgid "Exported {count} records."
 msgstr "Exported {count} records."
 
+msgid "Exporting .ics..."
+msgstr "Exporting .ics..."
+
+msgid "Exporting CSV..."
+msgstr "Exporting CSV..."
+
 msgid "Fri"
 msgstr "Fri"
 
@@ -248,6 +263,15 @@ msgstr "Imported {count} calendar events."
 
 msgid "Imported {count} records."
 msgstr "Imported {count} records."
+
+msgid "Importing .ics..."
+msgstr "Importing .ics..."
+
+msgid "Importing CSV..."
+msgstr "Importing CSV..."
+
+msgid "Importing model..."
+msgstr "Importing model..."
 
 msgid "Include calendar"
 msgstr "Include calendar"
@@ -405,6 +429,18 @@ msgstr "Password reset."
 msgid "Pink"
 msgstr "Pink"
 
+msgid "Please wait for the current data operation."
+msgstr "Please wait for the current data operation."
+
+msgid "Please wait for the current operation."
+msgstr "Please wait for the current operation."
+
+msgid "Please wait for the current request."
+msgstr "Please wait for the current request."
+
+msgid "Please wait for the current update check."
+msgstr "Please wait for the current update check."
+
 msgid "Previous day"
 msgstr "Previous day"
 
@@ -450,6 +486,9 @@ msgstr "Recovery key"
 msgid "Refresh"
 msgstr "Refresh"
 
+msgid "Refreshing catalog..."
+msgstr "Refreshing catalog..."
+
 msgid "Remember me"
 msgstr "Remember me"
 
@@ -491,6 +530,9 @@ msgstr "Restore validation passed."
 
 msgid "Restore will replace the current database file. Continue?"
 msgstr "Restore will replace the current database file. Continue?"
+
+msgid "Restoring data..."
+msgstr "Restoring data..."
 
 msgid "Rewrite"
 msgstr "Rewrite"
@@ -548,6 +590,9 @@ msgstr "Selected day: {day}"
 
 msgid "Send"
 msgstr "Send"
+
+msgid "Sending..."
+msgstr "Sending..."
 
 msgid "Settings"
 msgstr "Settings"
@@ -644,6 +689,9 @@ msgstr "Username"
 
 msgid "Verify"
 msgstr "Verify"
+
+msgid "Verifying model..."
+msgstr "Verifying model..."
 
 msgid "Version {version}"
 msgstr "Version {version}"

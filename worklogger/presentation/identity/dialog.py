@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 
 from worklogger.domain.shared.errors import AppError
 from worklogger.infrastructure.i18n import _
+from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import (
     IdentityManagementState,
     IdentityManagementViewModel,
@@ -122,4 +123,4 @@ class IdentityDialog(QDialog):
 
     def _set_error(self, error: AppError | None) -> None:
         self._last_error = error
-        self.status_label.setText(error.message if error is not None else _("Unknown error"))
+        self.status_label.setText(display_error_message(error))

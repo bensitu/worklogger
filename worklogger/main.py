@@ -105,15 +105,18 @@ SMOKE_IMPORT_MODULES = (
     "worklogger.infrastructure.identity.providers",
     "worklogger.infrastructure.local_model",
     "worklogger.infrastructure.local_model.store",
+    "worklogger.infrastructure.logging",
     "worklogger.presentation.ai",
     "worklogger.presentation.ai.controller",
     "worklogger.presentation.ai.dialog",
     "worklogger.presentation.analytics",
     "worklogger.presentation.analytics.controller",
     "worklogger.presentation.analytics.dialog",
+    "worklogger.presentation.errors",
     "worklogger.presentation.identity",
     "worklogger.presentation.identity.controller",
     "worklogger.presentation.identity.dialog",
+    "worklogger.presentation.job_runner",
     "worklogger.presentation.local_models",
     "worklogger.presentation.local_models.controller",
     "worklogger.presentation.local_models.dialog",
@@ -200,14 +203,14 @@ def smoke_runtime_check() -> int:
         if not runtime.ok or runtime.value is None:
             _safe_stdout(_("RUNTIME SMOKE FAILED"))
             if runtime.error:
-                _safe_stdout(runtime.error.message)
+                _safe_stdout(_(runtime.error.message))
             return 1
         refreshed = runtime.value.window.refresh()
         runtime.value.window.close()
         if not refreshed:
             _safe_stdout(_("RUNTIME SMOKE FAILED"))
             if runtime.value.window.last_error:
-                _safe_stdout(runtime.value.window.last_error.message)
+                _safe_stdout(_(runtime.value.window.last_error.message))
             return 1
     _safe_stdout(_("RUNTIME SMOKE OK"))
     return 0
@@ -228,7 +231,7 @@ def run_desktop(args: Sequence[str]) -> int:
         if not runtime.ok or runtime.value is None:
             _safe_stdout(_("DESKTOP START FAILED"))
             if runtime.error:
-                _safe_stdout(runtime.error.message)
+                _safe_stdout(_(runtime.error.message))
             return 1
 
         logged_out = False

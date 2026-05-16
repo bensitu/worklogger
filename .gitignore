@@ -66,4 +66,3 @@ worklogger/models/*.lock
 worklogger/models/catalog.json
 # Documentation
 docs/refactor/*.md
-docs/*.md
