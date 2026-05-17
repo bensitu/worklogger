@@ -34,6 +34,7 @@ from worklogger.presentation.viewmodels.quick_logs import (
 from worklogger.presentation.viewmodels.reports import (
     ReportEditorState,
     ReportEditorViewModel,
+    ReportHistoryItem,
 )
 from worklogger.presentation.viewmodels.settings import SettingsState, SettingsViewModel
 from worklogger.presentation.viewmodels.stats import StatsPanelState, StatsPanelViewModel
@@ -73,6 +74,7 @@ __all__ = [
     "QuickLogEditorViewModel",
     "ReportEditorState",
     "ReportEditorViewModel",
+    "ReportHistoryItem",
     "SettingsState",
     "SettingsViewModel",
     "StatsPanelState",

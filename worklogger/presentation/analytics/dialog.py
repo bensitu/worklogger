@@ -23,6 +23,7 @@ from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import AnalyticsState, AnalyticsViewModel
 from worklogger.presentation.widgets import ComboChart
+from worklogger.presentation.widgets.assets import apply_window_icon
 
 
 class AnalyticsDialog(QDialog):
@@ -39,6 +40,7 @@ class AnalyticsDialog(QDialog):
         self._last_error: AppError | None = None
         self.setObjectName("analytics_dialog")
         self.setWindowTitle(_("Analytics"))
+        apply_window_icon(self)
         self._build_ui()
 
     @property

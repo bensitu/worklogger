@@ -33,6 +33,10 @@ class ReportsWorkflowController:
         self._view_model = view_model
         self._dialog_factory = dialog_factory or ReportDialog
 
+    @property
+    def view_model(self) -> ReportEditorViewModel:
+        return self._view_model
+
     def open(self, day: date, parent: QWidget | None = None) -> ReportDialog:
         dialog = self._dialog_factory(self._view_model, day, parent)
         dialog.refresh()

@@ -9,13 +9,31 @@ msgstr ""
 msgid "+"
 msgstr ""
 
+msgid "+ Add Entry"
+msgstr ""
+
 msgid "+15m break"
+msgstr ""
+
+msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr ""
 
 msgid "AI"
 msgstr ""
 
 msgid "AI Assist"
+msgstr ""
+
+msgid "AI Assist Hint / extra instructions (optional)"
+msgstr ""
+
+msgid "AI Privacy"
+msgstr ""
+
+msgid "API Base URL"
+msgstr ""
+
+msgid "API Key"
 msgstr ""
 
 msgid "About"
@@ -30,10 +48,16 @@ msgstr ""
 msgid "Add"
 msgstr ""
 
+msgid "Address"
+msgstr ""
+
 msgid "Admin"
 msgstr ""
 
 msgid "Analytics"
+msgstr ""
+
+msgid "Analytics is not configured."
 msgstr ""
 
 msgid "Annual"
@@ -54,7 +78,13 @@ msgstr ""
 msgid "Assistant"
 msgstr ""
 
-msgid "Author: {author}"
+msgid "Attendance Days"
+msgstr ""
+
+msgid "Authentication information (optional)"
+msgstr ""
+
+msgid "Author"
 msgstr ""
 
 msgid "Auto Record"
@@ -63,7 +93,13 @@ msgstr ""
 msgid "Average"
 msgstr ""
 
+msgid "Average Work Hours"
+msgstr ""
+
 msgid "Back to login"
+msgstr ""
+
+msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
 msgstr ""
 
 msgid "Backing up data..."
@@ -96,10 +132,22 @@ msgstr ""
 msgid "Business trip"
 msgstr ""
 
+msgid "CSV"
+msgstr ""
+
 msgid "CSV (*.csv)"
 msgstr ""
 
+msgid "CSV Data Management"
+msgstr ""
+
 msgid "CSV files (*.csv)"
+msgstr ""
+
+msgid "Calendar"
+msgstr ""
+
+msgid "Calendar Data"
 msgstr ""
 
 msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
@@ -111,10 +159,19 @@ msgstr ""
 msgid "Change password"
 msgstr ""
 
+msgid "Changing password will reset the recovery key."
+msgstr ""
+
 msgid "Check for updates"
 msgstr ""
 
 msgid "Checking for updates..."
+msgstr ""
+
+msgid "Choose custom color"
+msgstr ""
+
+msgid "Clear Calendar Events"
 msgstr ""
 
 msgid "Close"
@@ -132,6 +189,9 @@ msgstr ""
 msgid "Copied"
 msgstr ""
 
+msgid "Copy"
+msgstr ""
+
 msgid "Copy Markdown"
 msgstr ""
 
@@ -141,13 +201,22 @@ msgstr ""
 msgid "Create user"
 msgstr ""
 
+msgid "Current ID"
+msgstr ""
+
 msgid "Current password"
+msgstr ""
+
+msgid "Current user"
 msgstr ""
 
 msgid "Custom"
 msgstr ""
 
 msgid "DESKTOP START FAILED"
+msgstr ""
+
+msgid "Daily Average"
 msgstr ""
 
 msgid "Daily Report"
@@ -160,6 +229,9 @@ msgid "Data"
 msgstr ""
 
 msgid "Data restored successfully."
+msgstr ""
+
+msgid "Database Backup"
 msgstr ""
 
 msgid "Default break (h)"
@@ -177,25 +249,40 @@ msgstr ""
 msgid "Discard changes?"
 msgstr ""
 
+msgid "Domain"
+msgstr ""
+
 msgid "Download"
 msgstr ""
 
 msgid "Downloading model..."
 msgstr ""
 
-msgid "Enable local models"
+msgid "Enable local model"
 msgstr ""
 
 msgid "Enable menu bar"
 msgstr ""
 
-msgid "Enable tray"
+msgid "Enable tray icon"
 msgstr ""
 
 msgid "End"
 msgstr ""
 
 msgid "Ended"
+msgstr ""
+
+msgid "English"
+msgstr ""
+
+msgid "Enter your ID"
+msgstr ""
+
+msgid "Enter your password"
+msgstr ""
+
+msgid "Export"
 msgstr ""
 
 msgid "Export .ics"
@@ -208,6 +295,9 @@ msgid "Export Markdown"
 msgstr ""
 
 msgid "Export PDF"
+msgstr ""
+
+msgid "Export Reports"
 msgstr ""
 
 msgid "Export cancelled"
@@ -234,16 +324,37 @@ msgstr ""
 msgid "Exporting CSV..."
 msgstr ""
 
+msgid "External Model"
+msgstr ""
+
+msgid "External model testing is not configured."
+msgstr ""
+
+msgid "Forgot Password?"
+msgstr ""
+
 msgid "Fri"
 msgstr ""
 
 msgid "GGUF Model (*.gguf)"
 msgstr ""
 
+msgid "GNU GPLv3"
+msgstr ""
+
 msgid "General"
 msgstr ""
 
+msgid "GitHub"
+msgstr ""
+
 msgid "Green"
+msgstr ""
+
+msgid "Hide"
+msgstr ""
+
+msgid "ID"
 msgstr ""
 
 msgid "Import .gguf"
@@ -255,7 +366,16 @@ msgstr ""
 msgid "Import CSV"
 msgstr ""
 
+msgid "Import Calendar (.ics)"
+msgstr ""
+
 msgid "Import cancelled"
+msgstr ""
+
+msgid "Import or export worklog records as CSV files for backup, migration, or spreadsheet analysis."
+msgstr ""
+
+msgid "Import your .ics file to let AI read your meetings when generating reports."
 msgstr ""
 
 msgid "Imported {count} calendar events."
@@ -285,10 +405,25 @@ msgstr ""
 msgid "Insert Quick Log"
 msgstr ""
 
+msgid "Japanese"
+msgstr ""
+
+msgid "Korean"
+msgstr ""
+
+msgid "Language"
+msgstr ""
+
 msgid "Leave"
 msgstr ""
 
 msgid "Leave days"
+msgstr ""
+
+msgid "License"
+msgstr ""
+
+msgid "Light mode"
 msgstr ""
 
 msgid "Line"
@@ -300,7 +435,16 @@ msgstr ""
 msgid "Linked identities"
 msgstr ""
 
+msgid "Local Model"
+msgstr ""
+
 msgid "Local Models"
+msgstr ""
+
+msgid "Local user"
+msgstr ""
+
+msgid "Log Out"
 msgstr ""
 
 msgid "Login"
@@ -327,7 +471,10 @@ msgstr ""
 msgid "Markdown files (*.md)"
 msgstr ""
 
-msgid "Minimal mode"
+msgid "Mode"
+msgstr ""
+
+msgid "Model"
 msgstr ""
 
 msgid "Model verified."
@@ -342,6 +489,9 @@ msgstr ""
 msgid "Monthly"
 msgstr ""
 
+msgid "Monthly Hours"
+msgstr ""
+
 msgid "Monthly Report"
 msgstr ""
 
@@ -349,6 +499,12 @@ msgid "Monthly target"
 msgstr ""
 
 msgid "Monthly target (h)"
+msgstr ""
+
+msgid "Network"
+msgstr ""
+
+msgid "Network proxy settings are saved now; applying them to HTTP requests is a follow-up item."
 msgstr ""
 
 msgid "New password"
@@ -372,6 +528,12 @@ msgstr ""
 msgid "No events found."
 msgstr ""
 
+msgid "No records for the selected day."
+msgstr ""
+
+msgid "No saved reports"
+msgstr ""
+
 msgid "Normal"
 msgstr ""
 
@@ -387,13 +549,13 @@ msgstr ""
 msgid "Notes"
 msgstr ""
 
-msgid "Notes reminder dot"
-msgstr ""
-
 msgid "On break"
 msgstr ""
 
 msgid "Open"
+msgstr ""
+
+msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
 msgstr ""
 
 msgid "Overnight"
@@ -405,10 +567,19 @@ msgstr ""
 msgid "Overtime"
 msgstr ""
 
+msgid "Overtime Hours"
+msgstr ""
+
+msgid "PDF"
+msgstr ""
+
 msgid "PDF files (*.pdf)"
 msgstr ""
 
 msgid "Paid leave"
+msgstr ""
+
+msgid "Palette"
 msgstr ""
 
 msgid "Password"
@@ -439,6 +610,9 @@ msgid "Please wait for the current request."
 msgstr ""
 
 msgid "Please wait for the current update check."
+msgstr ""
+
+msgid "Port"
 msgstr ""
 
 msgid "Previous day"
@@ -489,6 +663,9 @@ msgstr ""
 msgid "Refreshing catalog..."
 msgstr ""
 
+msgid "Register"
+msgstr ""
+
 msgid "Remember me"
 msgstr ""
 
@@ -498,10 +675,19 @@ msgstr ""
 msgid "Replace"
 msgstr ""
 
+msgid "Report"
+msgstr ""
+
+msgid "Report History"
+msgstr ""
+
 msgid "Report saved."
 msgstr ""
 
 msgid "Reports"
+msgstr ""
+
+msgid "Reports are not configured."
 msgstr ""
 
 msgid "Require password change"
@@ -517,6 +703,9 @@ msgid "Reset selected user password"
 msgstr ""
 
 msgid "Reset template"
+msgstr ""
+
+msgid "Rest Days"
 msgstr ""
 
 msgid "Restore Data"
@@ -558,6 +747,9 @@ msgstr ""
 msgid "Save"
 msgstr ""
 
+msgid "Save Report"
+msgstr ""
+
 msgid "Save template"
 msgstr ""
 
@@ -568,6 +760,12 @@ msgid "Save this recovery key before returning to login."
 msgstr ""
 
 msgid "Saved"
+msgstr ""
+
+msgid "Schedule / Records"
+msgstr ""
+
+msgid "Search reports..."
 msgstr ""
 
 msgid "Select"
@@ -597,13 +795,31 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
+msgid "Settings are not configured."
+msgstr ""
+
+msgid "Show"
+msgstr ""
+
 msgid "Show leaves"
 msgstr ""
 
 msgid "Sick leave"
 msgstr ""
 
+msgid "Sign in to your account"
+msgstr ""
+
+msgid "Sign in with Google"
+msgstr ""
+
+msgid "Sign in with Microsoft"
+msgstr ""
+
 msgid "Signed in: {username}"
+msgstr ""
+
+msgid "Simplified Chinese"
 msgstr ""
 
 msgid "Standard hours (h)"
@@ -621,6 +837,9 @@ msgstr ""
 msgid "Started"
 msgstr ""
 
+msgid "Stored securely in a future update"
+msgstr ""
+
 msgid "Sun"
 msgstr ""
 
@@ -630,10 +849,19 @@ msgstr ""
 msgid "Template saved."
 msgstr ""
 
+msgid "Templates"
+msgstr ""
+
+msgid "Test"
+msgstr ""
+
 msgid "Theme"
 msgstr ""
 
 msgid "Thu"
+msgstr ""
+
+msgid "Tip: Click AI Assist to generate a draft based on your time logs."
 msgstr ""
 
 msgid "Today"
@@ -649,6 +877,9 @@ msgid "Total hours"
 msgstr ""
 
 msgid "Total: {hours:.1f}h"
+msgstr ""
+
+msgid "Traditional Chinese"
 msgstr ""
 
 msgid "Tue"
@@ -670,6 +901,9 @@ msgid "Update available: {version}"
 msgstr ""
 
 msgid "Update check is not configured."
+msgstr ""
+
+msgid "Use a web proxy for this application."
 msgstr ""
 
 msgid "User"
@@ -696,10 +930,25 @@ msgstr ""
 msgid "Version {version}"
 msgstr ""
 
+msgid "Web proxy"
+msgstr ""
+
 msgid "Wed"
 msgstr ""
 
 msgid "Weekly Report"
+msgstr ""
+
+msgid "Welcome!"
+msgstr ""
+
+msgid "When enabled, text processing uses the local model first; no data is sent to external services."
+msgstr ""
+
+msgid "Work Hours Trend"
+msgstr ""
+
+msgid "Work Mode Breakdown"
 msgstr ""
 
 msgid "Work Report"
@@ -741,13 +990,31 @@ msgstr ""
 msgid "You have unsaved work log changes. Discard them?"
 msgstr ""
 
+msgid "You haven't backed up in 30 days. Please back up your data."
+msgstr ""
+
 msgid "h"
 msgstr ""
 
 msgid "iCalendar (*.ics)"
 msgstr ""
 
+msgid "leave days"
+msgstr ""
+
 msgid "m"
+msgstr ""
+
+msgid "of monthly goal"
+msgstr ""
+
+msgid "or"
+msgstr ""
+
+msgid "tracked days"
+msgstr ""
+
+msgid "vs previous period"
 msgstr ""
 
 msgid "{count} event"

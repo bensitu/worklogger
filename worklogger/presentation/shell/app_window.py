@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QPushButton,
-    QSplitter,
+    QStackedWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -25,8 +25,14 @@ from worklogger.domain.shared.errors import AppError
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.settings import SettingsWorkflow
+from worklogger.presentation.shell.pages import (
+    AnalyticsPage,
+    CalendarPage,
+    ReportsPage,
+    SettingsPage,
+)
 from worklogger.presentation.shell.residency import QtResidencyController
-from worklogger.presentation.theme import ThemeEngine
+from worklogger.presentation.theme import ThemeEngine, install_bundled_fonts
 from worklogger.presentation.viewmodels import (
     CalendarDisplayOptions,
     CalendarViewModel,
@@ -35,10 +41,12 @@ from worklogger.presentation.viewmodels import (
 )
 from worklogger.presentation.widgets import (
     CalendarView,
+    SidebarWidget,
     StatsPanel,
     WorkLogEntryDraft,
     WorkLogEntryPanel,
 )
+from worklogger.presentation.widgets.assets import apply_window_icon
 
 
 class NotesWorkflow(Protocol):
@@ -78,6 +86,7 @@ class AppWindowConfig:
     calendar_options: CalendarDisplayOptions = CalendarDisplayOptions()
     holidays: Mapping[date, str] | None = None
     account_name: str | None = None
+    account_role: str = "Admin"
     confirm_discard_changes: Callable[[], bool] | None = None
 
 
@@ -123,6 +132,7 @@ class AppWindow(QMainWindow):
 
         self.setObjectName("app_window")
         self.setWindowTitle(_("WorkLogger"))
+        apply_window_icon(self)
         self._build_ui()
         self._connect_signals()
         self.apply_theme()
@@ -153,6 +163,7 @@ class AppWindow(QMainWindow):
         application = QApplication.instance()
         if application is None:
             return
+        install_bundled_fonts()
         application.setPalette(
             self._theme_engine.qt_palette(
                 self._config.theme,
@@ -205,116 +216,122 @@ class AppWindow(QMainWindow):
         return self.refresh()
 
     def _build_ui(self) -> None:
+        self.resize(1100, 700)
+        self.setMinimumSize(880, 580)
         central = QWidget()
         central.setObjectName("app_window_central_widget")
-        root = QVBoxLayout(central)
-        root.setContentsMargins(14, 14, 14, 14)
-        root.setSpacing(10)
+        root = QHBoxLayout(central)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(0)
         self.setCentralWidget(central)
 
-        nav = QHBoxLayout()
-        self.previous_month_button = QPushButton("<<")
-        self.previous_month_button.setObjectName("previous_month_button")
-        self.previous_month_button.setToolTip(_("Previous month"))
-        self.today_button = QPushButton(_("Today"))
-        self.today_button.setObjectName("today_button")
-        self.next_month_button = QPushButton(">>")
-        self.next_month_button.setObjectName("next_month_button")
-        self.next_month_button.setToolTip(_("Next month"))
+        self.sidebar = SidebarWidget(
+            account_name=self._config.account_name or "",
+            role=self._config.account_role,
+        )
+        root.addWidget(self.sidebar)
+
+        main = QWidget()
+        main.setObjectName("app_main_content_widget")
+        main_layout = QVBoxLayout(main)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+        root.addWidget(main, 1)
+
+        self.page_stack = QStackedWidget()
+        self.page_stack.setObjectName("app_page_stack_widget")
+        main_layout.addWidget(self.page_stack, 1)
+
+        self.calendar_view = CalendarView()
+        self.entry_panel = WorkLogEntryPanel()
+        self.stats_panel = StatsPanel()
+        self.calendar_page = CalendarPage(
+            calendar_view=self.calendar_view,
+            entry_panel=self.entry_panel,
+            stats_panel=self.stats_panel,
+        )
+        self.analytics_page = AnalyticsPage(
+            getattr(self._analytics_workflow, "view_model", None),
+            self._selected_day,
+        )
+        self.reports_page = ReportsPage(
+            getattr(self._reports_workflow, "view_model", None),
+            self._selected_day,
+        )
+        self.settings_page = SettingsPage(
+            self._settings_workflow
+            if hasattr(self._settings_workflow, "create_dialog")
+            else None
+        )
+
+        self._page_routes = {
+            "calendar": self.page_stack.addWidget(self.calendar_page),
+            "analytics": self.page_stack.addWidget(self.analytics_page),
+            "reports": self.page_stack.addWidget(self.reports_page),
+            "settings": self.page_stack.addWidget(self.settings_page),
+        }
+
+        self.previous_month_button = self.calendar_page.previous_month_button
+        self.today_button = self.calendar_page.today_button
+        self.next_month_button = self.calendar_page.next_month_button
         self.account_label = QLabel(self._account_text())
         self.account_label.setObjectName("account_label")
         self.quick_logs_button = QPushButton(_("Quick Log"))
         self.quick_logs_button.setObjectName("quick_logs_button")
         self.quick_logs_button.setToolTip(_("Quick Log"))
+        self.quick_logs_button.setProperty("variant", "ghost")
         self.notes_button = QPushButton(_("Notes"))
         self.notes_button.setObjectName("notes_button")
         self.notes_button.setToolTip(_("Notes"))
-        self.reports_button = QPushButton(_("Reports"))
-        self.reports_button.setObjectName("reports_button")
-        self.reports_button.setToolTip(_("Reports"))
-        self.analytics_button = QPushButton(_("Analytics"))
-        self.analytics_button.setObjectName("analytics_button")
-        self.analytics_button.setToolTip(_("Analytics"))
+        self.notes_button.setProperty("variant", "ghost")
+        self.reports_button = self.sidebar._buttons["reports"]
+        self.analytics_button = self.sidebar._buttons["analytics"]
         self.ai_assist_button = QPushButton(_("AI Assist"))
         self.ai_assist_button.setObjectName("ai_assist_button")
         self.ai_assist_button.setToolTip(_("AI Assist"))
-        self.settings_button = QPushButton(_("Settings"))
-        self.settings_button.setObjectName("settings_button")
-        self.settings_button.setToolTip(_("Settings"))
+        self.ai_assist_button.setProperty("variant", "ghost")
+        self.settings_button = self.sidebar.settings_button
         self.logout_button = QPushButton(_("Logout"))
         self.logout_button.setObjectName("logout_button")
         self.logout_button.setToolTip(_("Logout"))
+        self.logout_button.setProperty("variant", "ghost")
         self.status_label = QLabel("")
         self.status_label.setObjectName("app_status_label")
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        nav.addWidget(self.previous_month_button)
-        nav.addWidget(self.today_button)
-        nav.addWidget(self.next_month_button)
-        nav.addStretch(1)
-        if self._config.account_name:
-            nav.addWidget(self.account_label)
-            nav.addWidget(self.quick_logs_button)
-            nav.addWidget(self.notes_button)
-            nav.addWidget(self.reports_button)
-            nav.addWidget(self.analytics_button)
-            nav.addWidget(self.ai_assist_button)
-            nav.addWidget(self.settings_button)
-            nav.addWidget(self.logout_button)
-        else:
-            self.account_label.setVisible(False)
-            self.quick_logs_button.setVisible(False)
-            self.notes_button.setVisible(False)
-            self.reports_button.setVisible(False)
-            self.analytics_button.setVisible(False)
-            self.ai_assist_button.setVisible(False)
-            self.settings_button.setVisible(False)
-            self.logout_button.setVisible(False)
+
+        header = self.calendar_page.header_layout
+        insert_index = max(0, header.count() - 2)
+        header.insertWidget(insert_index, self.quick_logs_button)
+        header.insertWidget(insert_index + 1, self.notes_button)
+        header.insertWidget(insert_index + 2, self.ai_assist_button)
+
+        sidebar_layout = self.sidebar.layout()
+        if sidebar_layout is not None:
+            sidebar_layout.insertWidget(max(0, sidebar_layout.count() - 1), self.logout_button)
+
+        self.account_label.setVisible(False)
         if self._quick_logs_workflow is None:
             self.quick_logs_button.setVisible(False)
         if self._notes_workflow is None:
             self.notes_button.setVisible(False)
-        if self._reports_workflow is None:
-            self.reports_button.setVisible(False)
-        if self._analytics_workflow is None:
-            self.analytics_button.setVisible(False)
         if self._ai_assist_workflow is None:
             self.ai_assist_button.setVisible(False)
-        if self._settings_workflow is None:
-            self.settings_button.setVisible(False)
-        nav.addWidget(self.status_label)
-        root.addLayout(nav)
-
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-        splitter.setObjectName("main_splitter")
-        root.addWidget(splitter, 1)
-
-        self.calendar_view = CalendarView()
-        splitter.addWidget(self.calendar_view)
-
-        right = QWidget()
-        right.setObjectName("right_panel_widget")
-        right_layout = QVBoxLayout(right)
-        right_layout.setContentsMargins(10, 0, 0, 0)
-        right_layout.setSpacing(10)
-        self.stats_panel = StatsPanel()
-        self.entry_panel = WorkLogEntryPanel()
-        right_layout.addWidget(self.stats_panel)
-        right_layout.addWidget(self.entry_panel, 1)
-        splitter.addWidget(right)
-        splitter.setStretchFactor(0, 3)
-        splitter.setStretchFactor(1, 2)
+        if not self._config.account_name:
+            self.logout_button.setVisible(False)
+        main_layout.addWidget(self.status_label)
 
     def _connect_signals(self) -> None:
-        self.previous_month_button.clicked.connect(self.previous_month)
-        self.today_button.clicked.connect(self.go_today)
-        self.next_month_button.clicked.connect(self.next_month)
+        self.sidebar.route_changed.connect(self._switch_route)
+        self.calendar_page.previous_month_requested.connect(self.previous_month)
+        self.calendar_page.today_requested.connect(self.go_today)
+        self.calendar_page.next_month_requested.connect(self.next_month)
         self.quick_logs_button.clicked.connect(self.open_quick_logs)
         self.notes_button.clicked.connect(self.open_notes)
-        self.reports_button.clicked.connect(self.open_reports)
-        self.analytics_button.clicked.connect(self.open_analytics)
         self.ai_assist_button.clicked.connect(self.open_ai_assist)
-        self.settings_button.clicked.connect(self.open_settings)
         self.logout_button.clicked.connect(self._request_logout)
+        embedded_settings = getattr(self.settings_page, "embedded_settings", None)
+        if embedded_settings is not None and hasattr(embedded_settings, "logout_requested"):
+            embedded_settings.logout_requested.connect(self._request_logout)
         self.calendar_view.day_selected.connect(self.select_day)
         self.entry_panel.draft_changed.connect(self._preview_entry_draft)
         self.entry_panel.save_requested.connect(self._save_entry_draft)
@@ -339,6 +356,9 @@ class AppWindow(QMainWindow):
             self._set_error(result.error)
             return False
         self.calendar_view.set_state(result.value)
+        self.calendar_page.set_month_title(
+            date(result.value.year, result.value.month, 1).strftime("%B %Y")
+        )
         return True
 
     def _refresh_entry(self) -> bool:
@@ -351,6 +371,7 @@ class AppWindow(QMainWindow):
             return False
         self.entry_panel.set_form(result.value)
         self._entry_dirty = result.value.dirty
+        self.calendar_page.set_record_summary(_record_summary(result.value))
         return True
 
     def _refresh_stats(self) -> bool:
@@ -436,6 +457,9 @@ class AppWindow(QMainWindow):
     def open_settings(self) -> bool:
         if self._settings_workflow is None:
             return False
+        if hasattr(self._settings_workflow, "create_dialog"):
+            self._switch_route("settings")
+            return True
         self._settings_workflow.open(self)
         self.refresh()
         if self._residency_controller is not None:
@@ -459,6 +483,9 @@ class AppWindow(QMainWindow):
     def open_reports(self) -> bool:
         if self._reports_workflow is None:
             return False
+        if getattr(self._reports_workflow, "view_model", None) is not None:
+            self._switch_route("reports")
+            return True
         self._reports_workflow.open(self._selected_day, self)
         self.refresh()
         return True
@@ -466,6 +493,9 @@ class AppWindow(QMainWindow):
     def open_analytics(self) -> bool:
         if self._analytics_workflow is None:
             return False
+        if getattr(self._analytics_workflow, "view_model", None) is not None:
+            self._switch_route("analytics")
+            return True
         self._analytics_workflow.open(self._selected_day, self)
         self.refresh()
         return True
@@ -475,6 +505,39 @@ class AppWindow(QMainWindow):
             return False
         self._ai_assist_workflow.open(self._selected_day, self)
         self.refresh()
+        return True
+
+    def _switch_route(self, route: str) -> bool:
+        normalized = str(route or "calendar").strip().lower()
+        if normalized == "analytics" and getattr(self._analytics_workflow, "view_model", None) is None:
+            opened = self.open_analytics()
+            self.sidebar.set_active_route("calendar")
+            return opened
+        if normalized == "reports" and getattr(self._reports_workflow, "view_model", None) is None:
+            opened = self.open_reports()
+            self.sidebar.set_active_route("calendar")
+            return opened
+        if normalized == "settings" and not hasattr(self._settings_workflow, "create_dialog"):
+            opened = self.open_settings()
+            self.sidebar.set_active_route("calendar")
+            return opened
+        if normalized != "calendar" and not self._confirm_discard_changes_if_needed():
+            self.sidebar.set_active_route("calendar")
+            return False
+        index = self._page_routes.get(normalized)
+        if index is None:
+            return False
+        self.page_stack.setCurrentIndex(index)
+        self.sidebar.set_active_route(normalized)
+        if normalized == "analytics":
+            self.analytics_page.refresh(self._selected_day)
+        elif normalized == "reports":
+            self.reports_page.refresh(self._selected_day)
+        elif normalized == "settings":
+            self.settings_page.refresh()
+            if self._residency_controller is not None:
+                self._residency_controller.refresh()
+        self._set_status(_("Ready"))
         return True
 
     def closeEvent(self, event: QCloseEvent) -> None:
@@ -541,3 +604,32 @@ def _add_months(first_day: date, months: int) -> date:
     year = first_day.year + month_index // 12
     month = month_index % 12 + 1
     return date(year, month, 1)
+
+
+def _record_summary(form: object) -> tuple[str, ...]:
+    worked_hours = float(getattr(form, "worked_hours", 0.0) or 0.0)
+    note = str(getattr(form, "note", "") or "").strip()
+    work_type = _work_type_label(str(getattr(form, "work_type", "") or ""))
+    start_time = getattr(form, "start_time", None)
+    end_time = getattr(form, "end_time", None)
+    lines: list[str] = []
+    if start_time or end_time or worked_hours > 0:
+        time_text = f"{start_time or '--:--'} - {end_time or '--:--'}"
+        lines.append(f"{time_text}  {worked_hours:.1f}{_('h')}")
+    if lines and work_type:
+        lines.append(work_type)
+    if note:
+        lines.append(note)
+    return tuple(lines)
+
+
+def _work_type_label(work_type: str) -> str:
+    labels = {
+        "normal": _("Normal"),
+        "remote": _("Remote"),
+        "business_trip": _("Business trip"),
+        "paid_leave": _("Paid leave"),
+        "comp_leave": _("Comp leave"),
+        "sick_leave": _("Sick leave"),
+    }
+    return labels.get(work_type, "")

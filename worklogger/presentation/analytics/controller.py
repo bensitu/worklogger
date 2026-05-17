@@ -26,9 +26,12 @@ class AnalyticsWorkflowController:
         self._view_model = view_model
         self._dialog_factory = dialog_factory or AnalyticsDialog
 
+    @property
+    def view_model(self) -> AnalyticsViewModel:
+        return self._view_model
+
     def open(self, day: date, parent: QWidget | None = None) -> AnalyticsDialog:
         dialog = self._dialog_factory(self._view_model, day, parent)
         dialog.refresh()
         dialog.exec()
         return dialog
-

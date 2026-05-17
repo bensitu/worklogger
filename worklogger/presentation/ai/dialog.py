@@ -20,6 +20,7 @@ from worklogger.domain.shared.errors import AppError
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import AiAssistViewModel, AiChatState
+from worklogger.presentation.widgets.assets import apply_window_icon
 
 
 class AiAssistDialog(QDialog):
@@ -39,6 +40,7 @@ class AiAssistDialog(QDialog):
         self._pending_handle: JobHandle[object] | None = None
         self.setObjectName("ai_assist_dialog")
         self.setWindowTitle(_("AI Assist"))
+        apply_window_icon(self)
         self._build_ui()
 
     @property

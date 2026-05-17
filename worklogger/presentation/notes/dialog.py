@@ -25,6 +25,7 @@ from worklogger.domain.shared.errors import AppError
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import NoteEditorState, NoteEditorViewModel
+from worklogger.presentation.widgets.assets import apply_window_icon
 
 
 class NoteEditorDialog(QDialog):
@@ -46,6 +47,7 @@ class NoteEditorDialog(QDialog):
         self._saved_content = ""
         self.setObjectName("note_editor_dialog")
         self.setWindowTitle(_("Notes"))
+        apply_window_icon(self)
         self._build_ui()
 
     @property

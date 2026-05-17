@@ -14,11 +14,16 @@ from worklogger.app.commands.report_commands import (
     SaveReportCommand,
     SaveReportTemplateCommand,
 )
-from worklogger.app.queries.report_queries import GetReportForPeriodQuery
+from worklogger.app.queries.report_queries import GetReportForPeriodQuery, ListReportsQuery
 from worklogger.app.use_cases.ai import RewriteTextResult
 from worklogger.app.use_cases.reports import GeneratedReport
 from worklogger.domain.reporting.models import Report
-from worklogger.domain.reporting.periods import daily_period, monthly_period, weekly_period
+from worklogger.domain.reporting.periods import (
+    daily_period,
+    monthly_period,
+    normalize_report_type,
+    weekly_period,
+)
 from worklogger.domain.reporting.templates import ReportTemplate
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
@@ -31,6 +36,11 @@ class GenerateReportHandlerProtocol(Protocol):
 
 class GetReportForPeriodHandlerProtocol(Protocol):
     def handle(self, query: GetReportForPeriodQuery) -> Result[Report | None]:
+        ...
+
+
+class ListReportsHandlerProtocol(Protocol):
+    def handle(self, query: ListReportsQuery) -> Result[tuple[Report, ...]]:
         ...
 
 
@@ -69,6 +79,17 @@ class ReportEditorState:
     saved: bool = False
 
 
+@dataclass(frozen=True)
+class ReportHistoryItem:
+    report_id: int | None
+    user_id: int
+    report_type: str
+    period_start: date
+    period_end: date
+    content: str
+    saved: bool = True
+
+
 class ReportEditorViewModel:
     def __init__(
         self,
@@ -81,6 +102,7 @@ class ReportEditorViewModel:
         reset_template_handler: ResetTemplateHandlerProtocol,
         markdown_exporter: MarkdownExportServiceProtocol,
         rewrite_handler: RewriteTextHandlerProtocol,
+        list_reports_handler: ListReportsHandlerProtocol | None = None,
         language: str = "en_US",
         standard_work_hours: float = 8.0,
     ) -> None:
@@ -92,6 +114,7 @@ class ReportEditorViewModel:
         self._reset_template_handler = reset_template_handler
         self._markdown_exporter = markdown_exporter
         self._rewrite_handler = rewrite_handler
+        self._list_reports_handler = list_reports_handler
         self._language = language
         self._standard_work_hours = standard_work_hours
 
@@ -188,6 +211,33 @@ class ReportEditorViewModel:
 
     def export_markdown(self, destination: Path, content: str) -> Result[Path]:
         return self._markdown_exporter.export_markdown(destination, content)
+
+    def list_history(self, report_type: str) -> Result[tuple[ReportHistoryItem, ...]]:
+        if self._list_reports_handler is None:
+            return Result.success(())
+        try:
+            normalized = normalize_report_type(report_type)
+        except (TypeError, ValueError) as exc:
+            return Result.failure(ValidationError(str(exc), str(exc)))
+        result = self._list_reports_handler.handle(
+            ListReportsQuery(self._user_id, normalized)
+        )
+        if not result.ok or result.value is None:
+            return Result.failure(result.error or _validation("report_history_failed"))
+        return Result.success(
+            tuple(
+                ReportHistoryItem(
+                    report_id=report.id,
+                    user_id=report.user_id,
+                    report_type=report.report_type,
+                    period_start=report.period_start,
+                    period_end=report.period_end,
+                    content=report.content,
+                    saved=True,
+                )
+                for report in result.value
+            )
+        )
 
     def rewrite(self, state: ReportEditorState, content: str) -> Result[str]:
         result = self._rewrite_handler.handle(

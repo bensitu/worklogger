@@ -17,9 +17,18 @@ from worklogger.config.constants import (
     DEFAULT_BREAK_HOURS_SETTING_KEY,
     ENABLE_MENU_BAR_SETTING_KEY,
     ENABLE_TRAY_SETTING_KEY,
+    EXTERNAL_MODEL_BASE_URL_SETTING_KEY,
+    EXTERNAL_MODEL_NAME_SETTING_KEY,
+    LANGUAGE_SETTING_KEY,
     LOCAL_MODEL_ENABLED_SETTING_KEY,
     MINIMAL_MODE_SETTING_KEY,
     MONTHLY_TARGET_HOURS_SETTING_KEY,
+    NETWORK_PROXY_ADDRESS_SETTING_KEY,
+    NETWORK_PROXY_DOMAIN_SETTING_KEY,
+    NETWORK_PROXY_ENABLED_SETTING_KEY,
+    NETWORK_PROXY_PASSWORD_SETTING_KEY,
+    NETWORK_PROXY_PORT_SETTING_KEY,
+    NETWORK_PROXY_USERNAME_SETTING_KEY,
     SHOW_HOLIDAYS_SETTING_KEY,
     SHOW_NOTE_MARKERS_SETTING_KEY,
     SHOW_OVERNIGHT_INDICATOR_SETTING_KEY,
@@ -29,6 +38,7 @@ from worklogger.config.constants import (
 )
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
+from worklogger.infrastructure.i18n import normalize_language
 from worklogger.presentation.theme import DEFAULT_CUSTOM_COLOR, THEME_KEYS, normalize_hex_color
 
 
@@ -47,10 +57,13 @@ class SettingsState:
     theme: str
     custom_color: str
     dark_mode: bool
+    language: str
     ai_assist_enabled: bool
     ai_privacy_include_notes: bool
     ai_privacy_include_calendar: bool
     ai_privacy_include_quick_logs: bool
+    external_model_base_url: str
+    external_model_name: str
     minimal_mode: bool
     local_model_enabled: bool
     standard_work_hours: float
@@ -62,6 +75,12 @@ class SettingsState:
     week_start_monday: bool
     enable_tray: bool
     enable_menu_bar: bool
+    network_proxy_enabled: bool
+    network_proxy_address: str
+    network_proxy_port: str
+    network_proxy_username: str
+    network_proxy_password: str
+    network_proxy_domain: str
 
 
 class SettingsViewModel:
@@ -90,6 +109,7 @@ class SettingsViewModel:
                 theme=_theme(values[THEME_SETTING_KEY]),
                 custom_color=normalize_hex_color(values[CUSTOM_THEME_COLOR_SETTING_KEY]),
                 dark_mode=_bool(values[DARK_MODE_SETTING_KEY], False),
+                language=normalize_language(values[LANGUAGE_SETTING_KEY]),
                 ai_assist_enabled=_bool(values[AI_ASSIST_ENABLED_SETTING_KEY], True),
                 ai_privacy_include_notes=_bool(
                     values[AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY],
@@ -102,6 +122,14 @@ class SettingsViewModel:
                 ai_privacy_include_quick_logs=_bool(
                     values[AI_PRIVACY_INCLUDE_QUICK_LOGS_SETTING_KEY],
                     True,
+                ),
+                external_model_base_url=_text(
+                    values[EXTERNAL_MODEL_BASE_URL_SETTING_KEY],
+                    "https://api.openai.com/v1",
+                ),
+                external_model_name=_text(
+                    values[EXTERNAL_MODEL_NAME_SETTING_KEY],
+                    "gpt-4o-mini",
                 ),
                 minimal_mode=_bool(values[MINIMAL_MODE_SETTING_KEY], False),
                 local_model_enabled=_bool(values[LOCAL_MODEL_ENABLED_SETTING_KEY], True),
@@ -132,6 +160,15 @@ class SettingsViewModel:
                 week_start_monday=_bool(values[WEEK_START_MONDAY_SETTING_KEY], False),
                 enable_tray=_bool(values[ENABLE_TRAY_SETTING_KEY], False),
                 enable_menu_bar=_bool(values[ENABLE_MENU_BAR_SETTING_KEY], False),
+                network_proxy_enabled=_bool(
+                    values[NETWORK_PROXY_ENABLED_SETTING_KEY],
+                    False,
+                ),
+                network_proxy_address=_text(values[NETWORK_PROXY_ADDRESS_SETTING_KEY], ""),
+                network_proxy_port=_text(values[NETWORK_PROXY_PORT_SETTING_KEY], "0"),
+                network_proxy_username=_text(values[NETWORK_PROXY_USERNAME_SETTING_KEY], ""),
+                network_proxy_password=_text(values[NETWORK_PROXY_PASSWORD_SETTING_KEY], ""),
+                network_proxy_domain=_text(values[NETWORK_PROXY_DOMAIN_SETTING_KEY], ""),
             )
         )
 
@@ -140,6 +177,9 @@ class SettingsViewModel:
 
     def set_custom_color(self, color: str) -> Result[None]:
         return self._set(CUSTOM_THEME_COLOR_SETTING_KEY, normalize_hex_color(color))
+
+    def set_language(self, language: str) -> Result[None]:
+        return self._set(LANGUAGE_SETTING_KEY, normalize_language(language))
 
     def set_bool(self, key: str, enabled: bool) -> Result[None]:
         if key not in _BOOLEAN_KEYS:
@@ -153,6 +193,14 @@ class SettingsViewModel:
         minimum, maximum = limits
         numeric = _number(str(value), value, minimum=minimum, maximum=maximum)
         return self._set(key, _format_number(numeric))
+
+    def set_text(self, key: str, value: str) -> Result[None]:
+        if key not in _TEXT_KEYS:
+            return Result.failure(ValidationError("unknown_text_setting", "unknown_text_setting"))
+        cleaned = str(value or "").strip()
+        if key == NETWORK_PROXY_PORT_SETTING_KEY:
+            cleaned = _proxy_port(cleaned)
+        return self._set(key, cleaned)
 
     def _set(self, key: str, value: str) -> Result[None]:
         result = self._set_handler.handle(
@@ -173,10 +221,13 @@ _DEFAULTS = {
     THEME_SETTING_KEY: "blue",
     CUSTOM_THEME_COLOR_SETTING_KEY: DEFAULT_CUSTOM_COLOR,
     DARK_MODE_SETTING_KEY: "0",
+    LANGUAGE_SETTING_KEY: "en_US",
     AI_ASSIST_ENABLED_SETTING_KEY: "1",
     AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY: "1",
     AI_PRIVACY_INCLUDE_CALENDAR_SETTING_KEY: "1",
     AI_PRIVACY_INCLUDE_QUICK_LOGS_SETTING_KEY: "1",
+    EXTERNAL_MODEL_BASE_URL_SETTING_KEY: "https://api.openai.com/v1",
+    EXTERNAL_MODEL_NAME_SETTING_KEY: "gpt-4o-mini",
     MINIMAL_MODE_SETTING_KEY: "0",
     LOCAL_MODEL_ENABLED_SETTING_KEY: "1",
     STANDARD_WORK_HOURS_SETTING_KEY: "8.0",
@@ -188,6 +239,12 @@ _DEFAULTS = {
     WEEK_START_MONDAY_SETTING_KEY: "0",
     ENABLE_TRAY_SETTING_KEY: "0",
     ENABLE_MENU_BAR_SETTING_KEY: "0",
+    NETWORK_PROXY_ENABLED_SETTING_KEY: "0",
+    NETWORK_PROXY_ADDRESS_SETTING_KEY: "",
+    NETWORK_PROXY_PORT_SETTING_KEY: "0",
+    NETWORK_PROXY_USERNAME_SETTING_KEY: "",
+    NETWORK_PROXY_PASSWORD_SETTING_KEY: "",
+    NETWORK_PROXY_DOMAIN_SETTING_KEY: "",
 }
 
 _BOOLEAN_KEYS = frozenset(
@@ -205,6 +262,19 @@ _BOOLEAN_KEYS = frozenset(
         WEEK_START_MONDAY_SETTING_KEY,
         ENABLE_TRAY_SETTING_KEY,
         ENABLE_MENU_BAR_SETTING_KEY,
+        NETWORK_PROXY_ENABLED_SETTING_KEY,
+    }
+)
+
+_TEXT_KEYS = frozenset(
+    {
+        EXTERNAL_MODEL_BASE_URL_SETTING_KEY,
+        EXTERNAL_MODEL_NAME_SETTING_KEY,
+        NETWORK_PROXY_ADDRESS_SETTING_KEY,
+        NETWORK_PROXY_PORT_SETTING_KEY,
+        NETWORK_PROXY_USERNAME_SETTING_KEY,
+        NETWORK_PROXY_PASSWORD_SETTING_KEY,
+        NETWORK_PROXY_DOMAIN_SETTING_KEY,
     }
 )
 
@@ -235,6 +305,11 @@ def _number(
     return max(minimum, min(maximum, numeric))
 
 
+def _text(value: str | None, default: str) -> str:
+    text = str(value if value is not None else default).strip()
+    return text
+
+
 def _theme(value: str | None) -> str:
     theme = str(value or "blue").strip().lower()
     return theme if theme in THEME_KEYS else "blue"
@@ -242,3 +317,11 @@ def _theme(value: str | None) -> str:
 
 def _format_number(value: float) -> str:
     return f"{float(value):.2f}".rstrip("0").rstrip(".")
+
+
+def _proxy_port(value: str) -> str:
+    try:
+        port = int(str(value or "0").strip())
+    except (TypeError, ValueError):
+        port = 0
+    return str(max(0, min(65535, port)))

@@ -13,8 +13,12 @@ from worklogger.presentation.viewmodels import AutoRecordViewModel
 from worklogger.presentation.viewmodels.calendar import CalendarDayCell, CalendarMonthViewState
 from worklogger.presentation.viewmodels.stats import StatsPanelState
 from worklogger.presentation.viewmodels.worklog_entry import WorkLogEntryForm
+from worklogger.presentation.widgets.assets import application_icon_path
 from worklogger.presentation.widgets import (
     CalendarView,
+    SegmentedControl,
+    SettingsNav,
+    SidebarWidget,
     StatsPanel,
     WorkLogEntryDraft,
     WorkLogEntryPanel,
@@ -244,6 +248,47 @@ class QtWidgetTests(unittest.TestCase):
         self.assertEqual(panel.value_text("work_days"), "2")
         self.assertEqual(panel.value_text("leave_days"), "1")
         self.assertEqual(panel.progress.value(), 45)
+
+    def test_sidebar_segmented_control_and_settings_nav_track_active_state(self) -> None:
+        sidebar = SidebarWidget(account_name="alice")
+        routes: list[str] = []
+        sidebar.route_changed.connect(routes.append)
+
+        sidebar._buttons["analytics"].click()
+
+        self.assertEqual(routes, ["analytics"])
+        self.assertEqual(sidebar.active_route, "analytics")
+        self.assertTrue(sidebar._buttons["analytics"].property("active"))
+
+        segmented = SegmentedControl((("monthly", "Monthly"), ("annual", "Annual")))
+        values: list[str] = []
+        segmented.value_changed.connect(values.append)
+
+        segmented.set_value("annual")
+
+        self.assertEqual(values, ["annual"])
+        self.assertEqual(segmented.value, "annual")
+
+        settings_nav = SettingsNav((("appearance", "Appearance"), ("about", "About")))
+        categories: list[str] = []
+        settings_nav.category_changed.connect(categories.append)
+
+        settings_nav.set_category("about")
+
+        self.assertEqual(categories, ["about"])
+        self.assertEqual(settings_nav.category, "about")
+
+    def test_application_icon_path_uses_platform_specific_assets(self) -> None:
+        windows_icon = application_icon_path("win32")
+        macos_icon = application_icon_path("darwin")
+        linux_icon = application_icon_path("linux")
+
+        self.assertEqual(windows_icon.name, "worklogger.ico")
+        self.assertEqual(macos_icon.name, "worklogger.icns")
+        self.assertEqual(linux_icon.name, "worklogger.webp")
+        self.assertTrue(windows_icon.exists())
+        self.assertTrue(macos_icon.exists())
+        self.assertTrue(linux_icon.exists())
 
 
 if __name__ == "__main__":

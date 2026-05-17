@@ -4,20 +4,26 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QAction, QIcon, QPainter, QPen, QPixmap, QResizeEvent
 from PySide6.QtWidgets import (
-    QCheckBox,
     QDialog,
+    QApplication,
     QFormLayout,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QPushButton,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
 
 from worklogger.infrastructure.i18n import _
+from worklogger.presentation.theme import ThemeEngine, install_bundled_fonts
+from worklogger.presentation.widgets.assets import apply_window_icon, asset_path, pixmap_asset
+from worklogger.presentation.widgets import SwitchButton
 
 
 @dataclass(frozen=True)
@@ -56,8 +62,14 @@ class LoginDialog(QDialog):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        self.hero_frame: QFrame | None = None
+        self.form_frame: QFrame | None = None
         self.setObjectName("login_dialog")
         self.setWindowTitle(_("Login"))
+        apply_window_icon(self)
+        self.setFixedSize(880, 580)
+        install_bundled_fonts()
+        self._apply_default_theme()
         self._build_ui()
 
     def draft(self) -> LoginDraft:
@@ -74,50 +86,198 @@ class LoginDialog(QDialog):
         self.login_button.setEnabled(not busy)
         self.register_button.setEnabled(not busy)
         self.reset_password_button.setEnabled(not busy)
+        self.google_login_button.setEnabled(False)
+        self.microsoft_login_button.setEnabled(False)
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self._sync_column_widths()
 
     def _build_ui(self) -> None:
-        root = QVBoxLayout(self)
-        root.setContentsMargins(16, 16, 16, 16)
-        root.setSpacing(10)
+        root = QHBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(0)
 
-        title = QLabel(_("Login"))
+        hero_frame = QFrame()
+        self.hero_frame = hero_frame
+        hero_frame.setObjectName("login_hero_frame")
+        hero_frame.setMinimumWidth(0)
+        hero_frame.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Expanding)
+        hero_layout = QVBoxLayout(hero_frame)
+        hero_layout.setContentsMargins(0, 0, 0, 0)
+        self.hero_image_label = QLabel("")
+        self.hero_image_label.setObjectName("login_hero_label")
+        self.hero_image_label.setMinimumSize(0, 0)
+        self.hero_image_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Ignored)
+        hero = pixmap_asset("images/worklogger_login_image.webp")
+        if not hero.isNull():
+            self.hero_image_label.setPixmap(hero)
+            self.hero_image_label.setScaledContents(True)
+        hero_layout.addWidget(self.hero_image_label)
+        root.addWidget(hero_frame, 1)
+
+        form_frame = QFrame()
+        self.form_frame = form_frame
+        form_frame.setObjectName("login_form_frame")
+        form_frame.setMinimumWidth(0)
+        form_frame.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Expanding)
+        form_root = QVBoxLayout(form_frame)
+        form_root.setContentsMargins(68, 44, 68, 28)
+        form_root.setSpacing(10)
+        root.addWidget(form_frame, 1)
+
+        title = QLabel(_("Welcome!"))
         title.setObjectName("login_title_label")
-        root.addWidget(title)
+        title.setProperty("role", "title")
+        form_root.addWidget(title)
 
-        form = QFormLayout()
-        root.addLayout(form)
+        subtitle = QLabel(_("Sign in to your account"))
+        subtitle.setObjectName("login_subtitle_label")
+        subtitle.setProperty("role", "subtitle")
+        form_root.addWidget(subtitle)
+
+        form_root.addSpacing(6)
+
+        username_label = QLabel(_("ID"))
+        username_label.setObjectName("login_username_label")
+        form_root.addWidget(username_label)
         self.username_input = QLineEdit()
         self.username_input.setObjectName("username_line_edit")
-        form.addRow(_("Username"), self.username_input)
+        self.username_input.setPlaceholderText(_("Enter your ID"))
+        self.username_input.setMinimumHeight(36)
+        form_root.addWidget(self.username_input)
 
+        password_label = QLabel(_("Password"))
+        password_label.setObjectName("login_password_label")
+        form_root.addWidget(password_label)
         self.password_input = QLineEdit()
         self.password_input.setObjectName("password_line_edit")
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
-        form.addRow(_("Password"), self.password_input)
+        self.password_input.setPlaceholderText(_("Enter your password"))
+        self.password_input.setMinimumHeight(36)
+        self.password_visibility_action: QAction = self.password_input.addAction(
+            _visibility_icon(False),
+            QLineEdit.ActionPosition.TrailingPosition,
+        )
+        self.password_visibility_action.setToolTip(_("Show"))
+        self.password_visibility_action.triggered.connect(self._toggle_password_visibility)
+        form_root.addWidget(self.password_input)
 
-        self.remember_check = QCheckBox(_("Remember me"))
-        root.addWidget(self.remember_check)
+        remember_row = QHBoxLayout()
+        remember_row.setContentsMargins(0, 0, 0, 0)
+        remember_label = QLabel(_("Remember me"))
+        remember_label.setObjectName("remember_me_label")
+        self.remember_check = SwitchButton()
+        remember_row.addWidget(remember_label)
+        remember_row.addStretch(1)
+        remember_row.addWidget(self.remember_check)
+        form_root.addLayout(remember_row)
 
         self.status_label = QLabel("")
         self.status_label.setObjectName("auth_status_label")
         self.status_label.setWordWrap(True)
-        root.addWidget(self.status_label)
+        form_root.addWidget(self.status_label)
 
-        buttons = QHBoxLayout()
-        self.register_button = QPushButton(_("Create account"))
-        self.reset_password_button = QPushButton(_("Reset password"))
         self.login_button = QPushButton(_("Login"))
         self.login_button.setObjectName("login_button")
         self.login_button.setProperty("variant", "primary")
-        buttons.addWidget(self.register_button)
-        buttons.addWidget(self.reset_password_button)
-        buttons.addStretch(1)
-        buttons.addWidget(self.login_button)
-        root.addLayout(buttons)
+        self.login_button.setDefault(True)
+        self.login_button.setAutoDefault(True)
+        form_root.addWidget(self.login_button)
 
+        secondary_buttons = QHBoxLayout()
+        secondary_buttons.setContentsMargins(0, 0, 0, 0)
+        self.register_button = QPushButton(_("Register"))
+        self.register_button.setObjectName("register_account_button")
+        self.register_button.setProperty("variant", "outline")
+        self.reset_password_button = QPushButton(_("Forgot Password?"))
+        self.reset_password_button.setObjectName("reset_password_button")
+        self.reset_password_button.setProperty("variant", "ghost")
+        self.register_button.setAutoDefault(False)
+        self.reset_password_button.setAutoDefault(False)
+        secondary_buttons.addWidget(self.register_button)
+        secondary_buttons.addStretch(1)
+        secondary_buttons.addWidget(self.reset_password_button)
+        form_root.addLayout(secondary_buttons)
+
+        divider = QLabel(_("or"))
+        divider.setObjectName("login_divider_label")
+        divider.setProperty("role", "secondary")
+        divider.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        form_root.addWidget(divider)
+
+        self.google_login_button = QPushButton(_("Sign in with Google"))
+        self.google_login_button.setObjectName("google_login_button")
+        google_icon = QIcon(str(asset_path("images/google.svg")))
+        if not google_icon.isNull():
+            self.google_login_button.setIcon(google_icon)
+        self.google_login_button.setEnabled(False)
+        form_root.addWidget(self.google_login_button)
+
+        self.microsoft_login_button = QPushButton(_("Sign in with Microsoft"))
+        self.microsoft_login_button.setObjectName("microsoft_login_button")
+        microsoft_icon = QIcon(str(asset_path("images/microsoft.svg")))
+        if not microsoft_icon.isNull():
+            self.microsoft_login_button.setIcon(microsoft_icon)
+        self.microsoft_login_button.setEnabled(False)
+        form_root.addWidget(self.microsoft_login_button)
+        form_root.addStretch(1)
+
+        self._set_login_control_heights()
+        self._sync_column_widths()
         self.login_button.clicked.connect(lambda: self.login_submitted.emit(self.draft()))
         self.register_button.clicked.connect(self.register_requested.emit)
         self.reset_password_button.clicked.connect(self.reset_password_requested.emit)
+
+    def _toggle_password_visibility(self) -> None:
+        was_visible = self.password_input.echoMode() == QLineEdit.EchoMode.Normal
+        is_visible = not was_visible
+        self.password_input.setEchoMode(
+            QLineEdit.EchoMode.Normal if is_visible else QLineEdit.EchoMode.Password
+        )
+        self.password_visibility_action.setIcon(_visibility_icon(is_visible))
+        self.password_visibility_action.setToolTip(_("Hide") if is_visible else _("Show"))
+
+    def _set_login_control_heights(self) -> None:
+        for button in (
+            self.login_button,
+            self.register_button,
+            self.reset_password_button,
+            self.google_login_button,
+            self.microsoft_login_button,
+        ):
+            button.setMinimumHeight(36)
+
+    def _sync_column_widths(self) -> None:
+        if self.hero_frame is None or self.form_frame is None:
+            return
+        left_width = self.width() // 2
+        self.hero_frame.setFixedWidth(left_width)
+        self.form_frame.setFixedWidth(self.width() - left_width)
+
+    def _apply_default_theme(self) -> None:
+        application = QApplication.instance()
+        if application is None:
+            return
+        engine = ThemeEngine()
+        application.setPalette(engine.qt_palette())
+        application.setStyleSheet(engine.application_stylesheet())
+
+
+def _visibility_icon(password_visible: bool) -> QIcon:
+    pixmap = QPixmap(20, 20)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    pen = QPen(Qt.GlobalColor.gray)
+    pen.setWidthF(1.8)
+    painter.setPen(pen)
+    painter.drawEllipse(3, 6, 14, 8)
+    painter.drawEllipse(8, 9, 4, 4)
+    if password_visible:
+        painter.drawLine(4, 16, 16, 4)
+    painter.end()
+    return QIcon(pixmap)
 
 
 class RegisterDialog(QDialog):
@@ -130,6 +290,7 @@ class RegisterDialog(QDialog):
         self._registration_complete = False
         self.setObjectName("register_dialog")
         self.setWindowTitle(_("Create account"))
+        apply_window_icon(self)
         self._build_ui()
 
     def draft(self) -> RegisterDraft:
@@ -231,6 +392,7 @@ class ResetPasswordDialog(QDialog):
         self._reset_complete = False
         self.setObjectName("reset_password_dialog")
         self.setWindowTitle(_("Reset password"))
+        apply_window_icon(self)
         self._build_ui()
 
     def draft(self) -> ResetPasswordDraft:
@@ -337,6 +499,7 @@ class ChangePasswordDialog(QDialog):
         self._change_complete = False
         self.setObjectName("change_password_dialog")
         self.setWindowTitle(_("Change password"))
+        apply_window_icon(self)
         self._build_ui()
 
     def draft(self) -> ChangePasswordDraft:

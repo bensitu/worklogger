@@ -21,6 +21,7 @@ from worklogger.presentation.viewmodels import (
     IdentityManagementState,
     IdentityManagementViewModel,
 )
+from worklogger.presentation.widgets.assets import apply_window_icon
 
 
 class IdentityDialog(QDialog):
@@ -35,6 +36,7 @@ class IdentityDialog(QDialog):
         self._last_error: AppError | None = None
         self.setObjectName("identity_dialog")
         self.setWindowTitle(_("Linked identities"))
+        apply_window_icon(self)
         self._build_ui()
 
     @property

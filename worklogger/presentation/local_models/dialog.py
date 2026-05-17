@@ -24,6 +24,7 @@ from worklogger.presentation.viewmodels import (
     LocalModelManagerState,
     LocalModelManagerViewModel,
 )
+from worklogger.presentation.widgets.assets import apply_window_icon
 
 
 class LocalModelsDialog(QDialog):
@@ -41,6 +42,7 @@ class LocalModelsDialog(QDialog):
         self._pending_handle: JobHandle[object] | None = None
         self.setObjectName("local_models_dialog")
         self.setWindowTitle(_("Local Models"))
+        apply_window_icon(self)
         self._build_ui()
 
     @property

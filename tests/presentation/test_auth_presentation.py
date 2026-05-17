@@ -7,7 +7,9 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtWidgets import QApplication, QDialog, QWidget
+from PySide6.QtCore import Qt
+from PySide6.QtTest import QTest
+from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QWidget
 
 from worklogger.app.use_cases.auth import (
     ChangePasswordHandler,
@@ -242,6 +244,33 @@ class AuthPresentationTests(unittest.TestCase):
         self.assertEqual(reset_requested, [True])
         dialog.set_error("invalid_credentials")
         self.assertEqual(dialog.status_label.text(), "invalid_credentials")
+
+    def test_login_dialog_submits_with_return_key_and_uses_equal_columns(self) -> None:
+        dialog = LoginDialog()
+        logins: list[LoginDraft] = []
+        dialog.login_submitted.connect(logins.append)
+        dialog.show()
+        QApplication.processEvents()
+
+        dialog.username_input.setText("alice")
+        dialog.password_input.setText("secret123")
+        dialog.password_input.setFocus()
+        QTest.keyClick(dialog.password_input, Qt.Key.Key_Return)
+
+        self.assertEqual(logins, [LoginDraft("alice", "secret123", False)])
+        self.assertEqual(dialog.hero_frame.width(), dialog.form_frame.width())
+        self.assertEqual(dialog.login_button.text(), "Login")
+        dialog.close()
+
+    def test_login_dialog_password_visibility_uses_embedded_action(self) -> None:
+        dialog = LoginDialog()
+
+        self.assertEqual(len(dialog.password_input.actions()), 1)
+        self.assertEqual(dialog.password_input.echoMode(), QLineEdit.EchoMode.Password)
+
+        dialog.password_visibility_action.trigger()
+
+        self.assertEqual(dialog.password_input.echoMode(), QLineEdit.EchoMode.Normal)
 
     def test_register_dialog_emits_register_draft_and_shows_recovery_key(self) -> None:
         dialog = RegisterDialog()

@@ -22,6 +22,7 @@ from worklogger.domain.shared.errors import AppError, ValidationError
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import QuickLogEditorState, QuickLogEditorViewModel
+from worklogger.presentation.widgets.assets import apply_window_icon
 
 
 class QuickLogDialog(QDialog):
@@ -38,6 +39,7 @@ class QuickLogDialog(QDialog):
         self._last_error: AppError | None = None
         self.setObjectName("quick_log_dialog")
         self.setWindowTitle(_("Quick Log"))
+        apply_window_icon(self)
         self._build_ui()
 
     @property

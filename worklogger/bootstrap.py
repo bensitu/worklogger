@@ -65,6 +65,7 @@ from worklogger.app.use_cases.quick_logs import (
 from worklogger.app.use_cases.reports import (
     GenerateReportHandler,
     GetReportForPeriodHandler,
+    ListReportsHandler,
     ResetReportTemplateHandler,
     SaveReportHandler,
     SaveReportTemplateHandler,
@@ -144,6 +145,7 @@ from worklogger.presentation.shell import (
     QtResidencyController,
     ResidencyViewModel,
 )
+from worklogger.presentation.theme import install_bundled_fonts
 from worklogger.presentation.viewmodels import (
     AuthViewModel,
     AiAssistViewModel,
@@ -160,6 +162,7 @@ from worklogger.presentation.viewmodels import (
     UserManagementViewModel,
     WorkLogEntryViewModel,
 )
+from worklogger.presentation.widgets.assets import apply_application_icon
 
 LOGGER = logging.getLogger(__name__)
 
@@ -299,8 +302,13 @@ def build_authenticated_desktop_runtime(
 def _application(argv: Sequence[str] | None) -> QApplication:
     existing = QApplication.instance()
     if existing is not None:
+        install_bundled_fonts()
+        apply_application_icon()
         return existing
-    return QApplication(list(argv or []))
+    application = QApplication(list(argv or []))
+    install_bundled_fonts()
+    apply_application_icon()
+    return application
 
 
 def _remember_session_store() -> RememberSessionStore:
@@ -579,6 +587,7 @@ def _build_reports_workflow(
                 templates=handlers.templates,
             ),
             get_report_handler=GetReportForPeriodHandler(repositories.reports),
+            list_reports_handler=ListReportsHandler(repositories.reports),
             save_report_handler=SaveReportHandler(repositories.reports),
             save_template_handler=handlers.save_template_handler,
             reset_template_handler=handlers.reset_template_handler,

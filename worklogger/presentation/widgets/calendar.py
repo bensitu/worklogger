@@ -72,15 +72,37 @@ class CalendarDayButton(QPushButton):
         painter.setBrush(QColor(cell.style.background))
         painter.drawRoundedRect(rect, 6, 6)
 
+        lines = list(cell.text_lines)
         font = painter.font()
-        font.setPixelSize(11)
+        font.setPixelSize(12)
+        font.setBold(cell.is_selected)
         painter.setFont(font)
         painter.setPen(QColor(foreground))
-        painter.drawText(
-            QRectF(8, 8, self.width() - 16, self.height() - 16),
-            Qt.AlignmentFlag.AlignCenter,
-            self.text(),
-        )
+        if lines:
+            painter.drawText(
+                QRectF(10, 8, self.width() - 20, 18),
+                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                lines[0],
+            )
+        if cell.holiday_name:
+            holiday_font = painter.font()
+            holiday_font.setPixelSize(9)
+            painter.setFont(holiday_font)
+            painter.setPen(QColor("#ef4444" if not cell.is_selected else "#ffffff"))
+            painter.drawText(
+                QRectF(10, 24, self.width() - 20, 14),
+                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                cell.holiday_name,
+            )
+        painter.setFont(font)
+        painter.setPen(QColor(foreground))
+        metric_lines = lines[-2:] if len(lines) >= 2 else ()
+        for index, line in enumerate(metric_lines):
+            painter.drawText(
+                QRectF(8, 38 + index * 18, self.width() - 16, 18),
+                Qt.AlignmentFlag.AlignCenter,
+                line,
+            )
 
         if cell.work_type_marker_color:
             painter.setPen(Qt.PenStyle.NoPen)

@@ -24,6 +24,7 @@ from worklogger.presentation.settings import SettingsWorkflow
 from worklogger.presentation.shell.residency import QtResidencyController
 from worklogger.presentation.viewmodels import WorkLogEntryViewModel
 from worklogger.presentation.widgets import WorkLogEntryDraft, WorkLogEntryPanel
+from worklogger.presentation.widgets.assets import apply_window_icon
 
 
 @dataclass(frozen=True)
@@ -58,6 +59,7 @@ class MinimalView(QWidget):
 
         self.setObjectName("minimal_view")
         self.setWindowTitle(_("WorkLogger"))
+        apply_window_icon(self)
         self._build_ui()
         self._connect_signals()
         if self._residency_controller is not None:

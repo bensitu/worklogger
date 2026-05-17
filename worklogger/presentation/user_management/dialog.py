@@ -28,6 +28,7 @@ from worklogger.presentation.viewmodels import (
     UserManagementViewModel,
 )
 from worklogger.presentation.widgets import SwitchButton
+from worklogger.presentation.widgets.assets import apply_window_icon
 
 
 class UserManagementDialog(QDialog):
@@ -42,6 +43,7 @@ class UserManagementDialog(QDialog):
         self._last_error: AppError | None = None
         self.setObjectName("user_management_dialog")
         self.setWindowTitle(_("Manage users"))
+        apply_window_icon(self)
         self._build_ui()
 
     @property

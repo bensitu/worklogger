@@ -26,6 +26,7 @@ from worklogger.domain.shared.errors import AppError, ValidationError
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import ReportEditorState, ReportEditorViewModel
+from worklogger.presentation.widgets.assets import apply_window_icon
 
 
 class ReportDialog(QDialog):
@@ -47,6 +48,7 @@ class ReportDialog(QDialog):
         self._last_error: AppError | None = None
         self.setObjectName("report_dialog")
         self.setWindowTitle(_("Work Report"))
+        apply_window_icon(self)
         self._build_ui()
 
     @property

@@ -127,6 +127,12 @@ class SettingsWorkflowController:
 
     def create_dialog(self, parent: QWidget | None = None) -> SettingsDialog:
         dialog = self._dialog_factory(self._settings_view_model, parent)
+        if hasattr(dialog, "set_account"):
+            dialog.set_account(self._user)
+        if hasattr(dialog, "set_manage_users_available"):
+            dialog.set_manage_users_available(
+                self._user_management_view_model is not None and self._user.is_admin
+            )
         dialog.change_password_requested.connect(
             lambda: self._change_password(dialog)
         )

@@ -81,11 +81,20 @@ class ColorPalette:
     stat_border: str
     background: str
     surface: str
+    surface_alt: str
+    card: str
+    card_hover: str
     border: str
+    border_strong: str
     text: str
     muted_text: str
     input_background: str
     input_border: str
+    sidebar_background: str
+    sidebar_active_background: str
+    danger: str
+    success: str
+    warning: str
 
 
 @dataclass(frozen=True)
@@ -110,13 +119,21 @@ class ThemeEngine:
         colors = _theme_colors(theme_key, dark, custom_color)
         accent, hover, accent_dim, stat_background, stat_border = colors
         if dark:
-            background, surface, border = "#13141d", "#1c1d2b", "#2d2f48"
+            background, surface, surface_alt = "#111827", "#182033", "#202a42"
+            card, card_hover = "#1b2438", "#22304b"
+            border, border_strong = "#303b56", "#4b5a78"
             text, muted = "#c8cde8", "#8890b8"
             input_background, input_border = "#181928", "#33365a"
+            sidebar_background, sidebar_active = "#141d2d", "#172f58"
+            danger, success, warning = "#ff6b6b", "#45c97a", "#ffb84d"
         else:
-            background, surface, border = "#f0f2f7", "#ffffff", "#dde1ee"
+            background, surface, surface_alt = "#f5f7fb", "#ffffff", "#f8fafc"
+            card, card_hover = "#ffffff", "#f3f7ff"
+            border, border_strong = "#dce3ef", "#c7d0df"
             text, muted = "#1e2035", "#606888"
             input_background, input_border = "#ffffff", "#d0d5e8"
+            sidebar_background, sidebar_active = "#ffffff", "#eaf2ff"
+            danger, success, warning = "#ef4444", "#16a34a", "#f59e0b"
         return ColorPalette(
             theme=theme_key,
             dark=bool(dark),
@@ -127,11 +144,20 @@ class ThemeEngine:
             stat_border=stat_border,
             background=background,
             surface=surface,
+            surface_alt=surface_alt,
+            card=card,
+            card_hover=card_hover,
             border=border,
+            border_strong=border_strong,
             text=text,
             muted_text=muted,
             input_background=input_background,
             input_border=input_border,
+            sidebar_background=sidebar_background,
+            sidebar_active_background=sidebar_active,
+            danger=danger,
+            success=success,
+            warning=warning,
         )
 
     def calendar_cell_style(
@@ -188,17 +214,29 @@ class ThemeEngine:
             template,
             {
                 "accent": palette.accent,
+                "accent_dim": palette.accent_dim,
                 "background": palette.background,
                 "border": palette.border,
+                "border_strong": palette.border_strong,
                 "button_background": "#232438" if palette.dark else "#f4f5fa",
                 "button_hover": "#2c2e50" if palette.dark else "#e8ecf8",
+                "card": palette.card,
+                "card_hover": palette.card_hover,
+                "danger": palette.danger,
                 "disabled_text": "#6f7699" if palette.dark else "#9aa3bb",
                 "hover": palette.hover,
                 "input_background": palette.input_background,
                 "input_border": palette.input_border,
+                "muted_text": palette.muted_text,
+                "sidebar_active_background": palette.sidebar_active_background,
+                "sidebar_background": palette.sidebar_background,
                 "stat_background": palette.stat_background,
                 "stat_border": palette.stat_border,
+                "success": palette.success,
+                "surface": palette.surface,
+                "surface_alt": palette.surface_alt,
                 "text": palette.text,
+                "warning": palette.warning,
             },
         )
 
@@ -266,9 +304,7 @@ def _theme_colors(
 
 
 def _read_qss_template(theme: str, mode: str) -> str:
-    path = _QSS_ROOT / f"{theme}_{mode}.qss"
-    if not path.exists():
-        path = _QSS_ROOT / f"blue_{mode}.qss"
+    path = _QSS_ROOT / f"blue_{mode}.qss"
     return path.read_text(encoding="utf-8")
 
 
