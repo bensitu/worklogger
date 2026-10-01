@@ -6,7 +6,7 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QDialog
 
 from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandler
 from worklogger.config.constants import (
@@ -23,7 +23,7 @@ from worklogger.config.constants import (
     STANDARD_WORK_HOURS_SETTING_KEY,
     THEME_SETTING_KEY,
 )
-from worklogger.presentation.settings import SettingsDialog
+from worklogger.presentation.settings import SettingsDialog, SettingsPage
 from worklogger.presentation.viewmodels import SettingsViewModel
 from worklogger.presentation.widgets import SwitchButton
 
@@ -167,10 +167,8 @@ class SettingsPresentationTests(unittest.TestCase):
         dialog = SettingsDialog(_view_model(repository))
 
         self.assertTrue(dialog.refresh())
-        tab_labels = [dialog.tabs.tabText(index) for index in range(dialog.tabs.count())]
-        self.assertIn("AI", tab_labels)
-        self.assertIn("Local Models", tab_labels)
-        self.assertIn("About", tab_labels)
+        self.assertIsInstance(dialog.page, SettingsPage)
+        self.assertEqual(set(dialog.page._category_pages), {"appearance", "general", "ai", "data", "network", "account", "about"})
 
         dialog.ai_enabled_switch.set_checked(False)
         dialog.ai_calendar_switch.set_checked(False)
@@ -184,6 +182,39 @@ class SettingsPresentationTests(unittest.TestCase):
         self.assertEqual(repository.values[(1, LOCAL_MODEL_ENABLED_SETTING_KEY)], "0")
         self.assertEqual(dialog.about_name_label.text(), "WorkLogger")
         self.assertIn("4.0.0", dialog.about_version_label.text())
+
+
+    def test_settings_page_is_native_widget_and_switches_categories(self) -> None:
+        page = SettingsPage(_view_model(MemorySettingsRepository()))
+
+        self.assertNotIsInstance(page, QDialog)
+        self.assertFalse(hasattr(page, "tabs"))
+        self.assertFalse(hasattr(page, "close_button"))
+        self.assertTrue(page.refresh())
+
+        page.category_nav.set_category("network")
+
+        self.assertEqual(page.category_nav.category, "network")
+        self.assertEqual(page.category_stack.currentIndex(), page._category_pages["network"])
+
+    def test_settings_page_emits_data_account_and_about_actions(self) -> None:
+        page = SettingsPage(_view_model(MemorySettingsRepository()))
+        emitted: list[str] = []
+        page.export_csv_requested.connect(lambda: emitted.append("csv"))
+        page.import_csv_requested.connect(lambda: emitted.append("import_csv"))
+        page.change_password_requested.connect(lambda: emitted.append("password"))
+        page.manage_identities_requested.connect(lambda: emitted.append("identities"))
+        page.update_check_requested.connect(lambda: emitted.append("updates"))
+
+        page.export_csv_button.click()
+        page.import_csv_button.click()
+        page.change_password_button.click()
+        page.manage_identities_button.click()
+        page.check_updates_button.click()
+
+        self.assertEqual(emitted, ["csv", "import_csv", "password", "identities", "updates"])
+        self.assertEqual(page.about_name_label.text(), "WorkLogger")
+        self.assertIn("4.0.0", page.about_version_label.text())
 
     def test_settings_dialog_renders_offscreen(self) -> None:
         dialog = SettingsDialog(_view_model(MemorySettingsRepository()))

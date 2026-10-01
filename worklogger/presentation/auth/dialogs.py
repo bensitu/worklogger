@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QAction, QIcon, QPainter, QPen, QPixmap, QResizeEvent
+from PySide6.QtGui import QAction, QIcon, QResizeEvent
 from PySide6.QtWidgets import (
     QDialog,
     QApplication,
@@ -20,10 +20,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from worklogger.__about__ import APP_NAME
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.theme import ThemeEngine, install_bundled_fonts
 from worklogger.presentation.widgets.assets import apply_window_icon, asset_path, pixmap_asset
 from worklogger.presentation.widgets import SwitchButton
+from worklogger.presentation.widgets.icons import ui_icon
 
 
 @dataclass(frozen=True)
@@ -65,7 +67,7 @@ class LoginDialog(QDialog):
         self.hero_frame: QFrame | None = None
         self.form_frame: QFrame | None = None
         self.setObjectName("login_dialog")
-        self.setWindowTitle(_("Login"))
+        self.setWindowTitle(APP_NAME)
         apply_window_icon(self)
         self.setFixedSize(880, 580)
         install_bundled_fonts()
@@ -144,6 +146,10 @@ class LoginDialog(QDialog):
         self.username_input = QLineEdit()
         self.username_input.setObjectName("username_line_edit")
         self.username_input.setPlaceholderText(_("Enter your ID"))
+        self.username_icon_action: QAction = self.username_input.addAction(
+            ui_icon("user-round"),
+            QLineEdit.ActionPosition.LeadingPosition,
+        )
         self.username_input.setMinimumHeight(36)
         form_root.addWidget(self.username_input)
 
@@ -154,6 +160,10 @@ class LoginDialog(QDialog):
         self.password_input.setObjectName("password_line_edit")
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.password_input.setPlaceholderText(_("Enter your password"))
+        self.password_lock_action: QAction = self.password_input.addAction(
+            ui_icon("lock-keyhole"),
+            QLineEdit.ActionPosition.LeadingPosition,
+        )
         self.password_input.setMinimumHeight(36)
         self.password_visibility_action: QAction = self.password_input.addAction(
             _visibility_icon(False),
@@ -200,11 +210,23 @@ class LoginDialog(QDialog):
         secondary_buttons.addWidget(self.reset_password_button)
         form_root.addLayout(secondary_buttons)
 
+        divider_row = QHBoxLayout()
+        divider_row.setContentsMargins(0, 0, 0, 0)
+        divider_row.setSpacing(10)
+        left_rule = QFrame()
+        left_rule.setObjectName("login_divider_left_frame")
+        left_rule.setFrameShape(QFrame.Shape.HLine)
+        right_rule = QFrame()
+        right_rule.setObjectName("login_divider_right_frame")
+        right_rule.setFrameShape(QFrame.Shape.HLine)
         divider = QLabel(_("or"))
         divider.setObjectName("login_divider_label")
         divider.setProperty("role", "secondary")
         divider.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        form_root.addWidget(divider)
+        divider_row.addWidget(left_rule, 1)
+        divider_row.addWidget(divider)
+        divider_row.addWidget(right_rule, 1)
+        form_root.addLayout(divider_row)
 
         self.google_login_button = QPushButton(_("Sign in with Google"))
         self.google_login_button.setObjectName("google_login_button")
@@ -265,20 +287,7 @@ class LoginDialog(QDialog):
 
 
 def _visibility_icon(password_visible: bool) -> QIcon:
-    pixmap = QPixmap(20, 20)
-    pixmap.fill(Qt.GlobalColor.transparent)
-    painter = QPainter(pixmap)
-    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    pen = QPen(Qt.GlobalColor.gray)
-    pen.setWidthF(1.8)
-    painter.setPen(pen)
-    painter.drawEllipse(3, 6, 14, 8)
-    painter.drawEllipse(8, 9, 4, 4)
-    if password_visible:
-        painter.drawLine(4, 16, 16, 4)
-    painter.end()
-    return QIcon(pixmap)
-
+    return ui_icon("eye-off" if password_visible else "eye")
 
 class RegisterDialog(QDialog):
     register_submitted = Signal(object)

@@ -6,14 +6,16 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication
 
 from worklogger.presentation.theme import ThemeEngine
+from worklogger.presentation.theme.fonts import _application_font
 from worklogger.presentation.viewmodels import AutoRecordViewModel
 from worklogger.presentation.viewmodels.calendar import CalendarDayCell, CalendarMonthViewState
 from worklogger.presentation.viewmodels.stats import StatsPanelState
 from worklogger.presentation.viewmodels.worklog_entry import WorkLogEntryForm
-from worklogger.presentation.widgets.assets import application_icon_path
+from worklogger.presentation.widgets.assets import application_icon_path, asset_path
 from worklogger.presentation.widgets import (
     CalendarView,
     SegmentedControl,
@@ -83,6 +85,15 @@ class QtWidgetTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls._app = _app()
+
+    def test_application_font_never_keeps_invalid_point_size(self) -> None:
+        base_font = QFont("Sans Serif")
+        base_font.setPixelSize(14)
+
+        font = _application_font("Noto Sans", base_font)
+
+        self.assertEqual(font.family(), "Noto Sans")
+        self.assertGreater(font.pointSize(), 0)
 
     def test_calendar_view_binds_cells_and_emits_selected_day(self) -> None:
         view = CalendarView()
@@ -289,6 +300,11 @@ class QtWidgetTests(unittest.TestCase):
         self.assertTrue(windows_icon.exists())
         self.assertTrue(macos_icon.exists())
         self.assertTrue(linux_icon.exists())
+        self.assertTrue(asset_path("icons/worklogger.webp").exists())
+        self.assertTrue(asset_path("images/avatar.webp").exists())
+        self.assertTrue(asset_path("images/avatar.webp").exists())
+        self.assertTrue(asset_path("images/worklogger_login_image.webp").exists())
+        self.assertTrue(asset_path("images/worklogger_login_image.webp").exists())
 
 
 if __name__ == "__main__":

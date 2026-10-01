@@ -7,7 +7,7 @@ from datetime import date, timedelta
 from collections.abc import Callable, Iterable, Sequence
 
 from worklogger.config.constants import DEFAULT_LEAVE_HOURS
-from worklogger.domain.analytics.models import ChartDataBundle, MonthStats
+from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBundle, MonthStats
 from worklogger.domain.worklog.models import WorkLog
 
 
@@ -31,6 +31,75 @@ def month_stats(month_rows: Iterable[WorkLog], standard_work_hours: float) -> Mo
         work_days=work_days,
         leave_days=leave_days,
         average_hours=total / work_days if work_days else 0.0,
+    )
+
+
+def analytics_period(year: int, month: int, scope: str) -> tuple[date, date]:
+    date(year, month, 1)
+    if scope == "monthly":
+        start_month, end_month = month, month
+    elif scope == "quarterly":
+        start_month = ((month - 1) // 3) * 3 + 1
+        end_month = start_month + 2
+    elif scope == "annual":
+        start_month, end_month = 1, 12
+    else:
+        raise ValueError("analytics_scope_invalid")
+    return date(year, start_month, 1), date(year, end_month, monthrange(year, end_month)[1])
+
+
+def dashboard_data(
+    records: Sequence[WorkLog],
+    *,
+    year: int,
+    month: int,
+    scope: str,
+    standard_hours: float,
+    monthly_target: float,
+) -> AnalyticsDashboard:
+    start, end = analytics_period(year, month, scope)
+    month_count = end.month - start.month + 1
+    previous_end = start - timedelta(days=1)
+    previous_index = start.year * 12 + start.month - 1 - month_count
+    previous_start = date(previous_index // 12, previous_index % 12 + 1, 1)
+    current = tuple(row for row in records if start <= row.day <= end)
+    previous = tuple(row for row in records if previous_start <= row.day <= previous_end)
+    stats = month_stats(current, standard_hours)
+
+    if scope == "monthly":
+        by_day = {row.day: row for row in current}
+        trend = monthly_chart_data(start, end, "hours", True, by_day.get, standard_leave_hours=standard_hours)
+        average = monthly_chart_data(start, end, "average", True, by_day.get, standard_leave_hours=standard_hours)
+    else:
+        labels, totals, counts, leaves, leave_counts = [], [], [], [], []
+        for selected_month in range(start.month, end.month + 1):
+            rows = tuple(row for row in current if row.day.month == selected_month)
+            summary = month_stats(rows, standard_hours)
+            labels.append(f"{selected_month:02d}")
+            totals.append(summary.total_hours)
+            counts.append(summary.work_days)
+            leaves.append(sum(row.leave_hours(standard_hours=standard_hours) for row in rows))
+            leave_counts.append(summary.leave_days)
+        trend = _bundle(labels, totals, counts, leaves, leave_counts, "hours", True)
+        average = _bundle(labels, totals, counts, leaves, leave_counts, "average", True)
+
+    modes: dict[str, float] = {}
+    for row in current:
+        key = "leave" if row.is_leave else row.work_type.value
+        hours = row.leave_hours(standard_hours=standard_hours) if row.is_leave else row.worked_hours()
+        if hours > 0:
+            modes[key] = modes.get(key, 0.0) + hours
+
+    daily = []
+    last_month_index = end.year * 12 + end.month - 1
+    for index in range(last_month_index - 5, last_month_index + 1):
+        selected_year, selected_month = index // 12, index % 12 + 1
+        rows = tuple(row for row in records if row.day.year == selected_year and row.day.month == selected_month)
+        daily.append((f"{selected_month:02d}", month_stats(rows, standard_hours).average_hours))
+    return AnalyticsDashboard(
+        start, end, stats, month_stats(previous, standard_hours), monthly_target * month_count,
+        (end - start).days + 1, (previous_end - previous_start).days + 1,
+        trend, average, tuple(modes.items()), ChartDataBundle(tuple(daily), tuple(daily), frozenset(), (), ()),
     )
 
 

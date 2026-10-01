@@ -16,7 +16,7 @@ from worklogger.app.commands.report_commands import (
 )
 from worklogger.app.queries.report_queries import GetReportForPeriodQuery, ListReportsQuery
 from worklogger.app.use_cases.ai import RewriteTextResult
-from worklogger.app.use_cases.reports import GeneratedReport
+from worklogger.app.use_cases.reports import GeneratedReport, TemplateProvider
 from worklogger.domain.reporting.models import Report
 from worklogger.domain.reporting.periods import (
     daily_period,
@@ -105,6 +105,7 @@ class ReportEditorViewModel:
         list_reports_handler: ListReportsHandlerProtocol | None = None,
         language: str = "en_US",
         standard_work_hours: float = 8.0,
+        templates: TemplateProvider | None = None,
     ) -> None:
         self._user_id = user_id
         self._generate_handler = generate_handler
@@ -117,6 +118,25 @@ class ReportEditorViewModel:
         self._list_reports_handler = list_reports_handler
         self._language = language
         self._standard_work_hours = standard_work_hours
+        self._templates = templates
+
+    @property
+    def rewrite_available(self) -> bool:
+        return bool(getattr(self._rewrite_handler, "available", True))
+
+    def load_template(self, report_type: str) -> Result[str]:
+        if self._templates is None:
+            return Result.failure(_validation("template_not_configured"))
+        return self._templates.get_template(self._language, report_type, self._user_id)
+
+    def generate_draft(self, state: ReportEditorState) -> Result[str]:
+        result = self._generate_handler.handle(GenerateReportCommand(
+            self._user_id, state.report_type, state.period_start, state.period_end,
+            self._language, self._standard_work_hours,
+        ))
+        if not result.ok or result.value is None:
+            return Result.failure(result.error or _validation("report_generate_failed"))
+        return Result.success(result.value.content)
 
     def load(self, report_type: str, selected_day: date) -> Result[ReportEditorState]:
         try:
@@ -239,13 +259,14 @@ class ReportEditorViewModel:
             )
         )
 
-    def rewrite(self, state: ReportEditorState, content: str) -> Result[str]:
+    def rewrite(self, state: ReportEditorState, content: str, instructions: str = "") -> Result[str]:
         result = self._rewrite_handler.handle(
             RewriteTextCommand(
                 user_id=self._user_id,
                 content=content,
                 context=f"{state.report_type}_report",
                 language=self._language,
+                instructions=instructions,
             )
         )
         if not result.ok or result.value is None:

@@ -27,6 +27,94 @@ from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import ReportEditorState, ReportEditorViewModel
 from worklogger.presentation.widgets.assets import apply_window_icon
+from worklogger.presentation.widgets.icons import set_button_icon
+
+
+class ReportTemplateDialog(QDialog):
+    apply_requested = Signal()
+
+    def __init__(self, view_model: ReportEditorViewModel, report_type: str, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._view_model = view_model
+        self._report_type = report_type
+        self._saved_template = ""
+        self.setObjectName("report_template_dialog")
+        self.setWindowTitle(_("Templates"))
+        apply_window_icon(self)
+        self.resize(620, 480)
+        layout = QVBoxLayout(self)
+        self.editor = QTextEdit()
+        self.editor.setObjectName("template_text_edit")
+        self.editor.textChanged.connect(self._update_actions)
+        layout.addWidget(self.editor, 1)
+        self.status_label = QLabel("")
+        self.status_label.setWordWrap(True)
+        layout.addWidget(self.status_label)
+        row = QHBoxLayout()
+        self.reset_button = QPushButton(_("Reset template"))
+        self.reset_button.clicked.connect(self.reset_template)
+        set_button_icon(self.reset_button, "rotate-ccw")
+        self.save_button = QPushButton(_("Save template"))
+        self.save_button.clicked.connect(self.save_template)
+        set_button_icon(self.save_button, "save")
+        self.apply_button = QPushButton(_("Apply template"))
+        self.apply_button.clicked.connect(self.apply_template)
+        self.apply_button.setProperty("variant", "primary")
+        for button in (self.reset_button, self.save_button, self.apply_button):
+            row.addWidget(button)
+        layout.addLayout(row)
+
+    def refresh(self) -> bool:
+        result = self._view_model.load_template(self._report_type)
+        if not result.ok or result.value is None:
+            self.status_label.setText(display_error_message(result.error))
+            return False
+        self._saved_template = result.value
+        self.editor.setPlainText(result.value)
+        self._update_actions()
+        return True
+
+    def save_template(self) -> bool:
+        result = self._view_model.save_template(self._report_type, self.editor.toPlainText())
+        if not result.ok:
+            self.status_label.setText(display_error_message(result.error))
+            return False
+        self._saved_template = self.editor.toPlainText()
+        self._update_actions()
+        self.status_label.setText(_("Template saved."))
+        return True
+
+    def reset_template(self) -> bool:
+        if QMessageBox.question(self, _("Reset template"), _("Reset this template to its default?"), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
+            return False
+        result = self._view_model.reset_template(self._report_type)
+        if not result.ok:
+            self.status_label.setText(display_error_message(result.error))
+            return False
+        return self.refresh()
+
+    def apply_template(self) -> None:
+        if self.editor.toPlainText() != self._saved_template:
+            return
+        self.apply_requested.emit()
+        self.accept()
+
+    def _update_actions(self) -> None:
+        if hasattr(self, "apply_button"):
+            self.apply_button.setEnabled(bool(self.editor.toPlainText().strip()) and self.editor.toPlainText() == self._saved_template)
+
+    def _confirm_close(self) -> bool:
+        return self.editor.toPlainText() == self._saved_template or QMessageBox.question(self, _("Discard changes?"), _("You have unsaved template changes. Discard them?"), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes
+
+    def reject(self) -> None:
+        if self._confirm_close():
+            super().reject()
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        if self._confirm_close():
+            event.accept()
+        else:
+            event.ignore()
 
 
 class ReportDialog(QDialog):

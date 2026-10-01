@@ -27,6 +27,9 @@ msgstr "AI Assist"
 msgid "AI Assist Hint / extra instructions (optional)"
 msgstr "AI Assist Hint / extra instructions (optional)"
 
+msgid "AI Assist is not configured."
+msgstr "AI Assist is not configured."
+
 msgid "AI Privacy"
 msgstr "AI Privacy"
 
@@ -45,14 +48,23 @@ msgstr "Account"
 msgid "Active"
 msgstr "Active"
 
+msgid "Active local model: {model}"
+msgstr "Active local model: {model}"
+
 msgid "Add"
 msgstr "Add"
+
+msgid "Add Entry"
+msgstr "Add Entry"
 
 msgid "Address"
 msgstr "Address"
 
 msgid "Admin"
 msgstr "Admin"
+
+msgid "All day"
+msgstr "All day"
 
 msgid "Analytics"
 msgstr "Analytics"
@@ -72,6 +84,9 @@ msgstr "Append"
 msgid "Apply template"
 msgstr "Apply template"
 
+msgid "April"
+msgstr "April"
+
 msgid "Ask about your work logs"
 msgstr "Ask about your work logs"
 
@@ -80,6 +95,9 @@ msgstr "Assistant"
 
 msgid "Attendance Days"
 msgstr "Attendance Days"
+
+msgid "August"
+msgstr "August"
 
 msgid "Authentication information (optional)"
 msgstr "Authentication information (optional)"
@@ -98,6 +116,9 @@ msgstr "Average Work Hours"
 
 msgid "Back to login"
 msgstr "Back to login"
+
+msgid "Back up regularly to protect your data."
+msgstr "Back up regularly to protect your data."
 
 msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
 msgstr "Back up your database regularly to protect your local work logs, reports, settings, and account data."
@@ -174,6 +195,9 @@ msgstr "Choose custom color"
 msgid "Clear Calendar Events"
 msgstr "Clear Calendar Events"
 
+msgid "Clearing calendar events is not supported yet."
+msgstr "Clearing calendar events is not supported yet."
+
 msgid "Close"
 msgstr "Close"
 
@@ -233,6 +257,9 @@ msgstr "Data restored successfully."
 
 msgid "Database Backup"
 msgstr "Database Backup"
+
+msgid "December"
+msgstr "December"
 
 msgid "Default break (h)"
 msgstr "Default break (h)"
@@ -330,6 +357,9 @@ msgstr "External Model"
 msgid "External model testing is not configured."
 msgstr "External model testing is not configured."
 
+msgid "February"
+msgstr "February"
+
 msgid "Forgot Password?"
 msgstr "Forgot Password?"
 
@@ -356,6 +386,9 @@ msgstr "Hide"
 
 msgid "ID"
 msgstr "ID"
+
+msgid "Identity management is not configured."
+msgstr "Identity management is not configured."
 
 msgid "Import .gguf"
 msgstr "Import .gguf"
@@ -405,8 +438,17 @@ msgstr "Include quick logs"
 msgid "Insert Quick Log"
 msgstr "Insert Quick Log"
 
+msgid "January"
+msgstr "January"
+
 msgid "Japanese"
 msgstr "Japanese"
+
+msgid "July"
+msgstr "July"
+
+msgid "June"
+msgstr "June"
 
 msgid "Korean"
 msgstr "Korean"
@@ -441,6 +483,9 @@ msgstr "Local Model"
 msgid "Local Models"
 msgstr "Local Models"
 
+msgid "Local model management is not configured."
+msgstr "Local model management is not configured."
+
 msgid "Local user"
 msgstr "Local user"
 
@@ -468,8 +513,14 @@ msgstr "Manage users"
 msgid "Manual Input"
 msgstr "Manual Input"
 
+msgid "March"
+msgstr "March"
+
 msgid "Markdown files (*.md)"
 msgstr "Markdown files (*.md)"
+
+msgid "May"
+msgstr "May"
 
 msgid "Mode"
 msgstr "Mode"
@@ -501,6 +552,9 @@ msgstr "Monthly target"
 msgid "Monthly target (h)"
 msgstr "Monthly target (h)"
 
+msgid "More actions"
+msgstr "More actions"
+
 msgid "Network"
 msgstr "Network"
 
@@ -519,6 +573,9 @@ msgstr "Next day"
 msgid "Next month"
 msgstr "Next month"
 
+msgid "Next period"
+msgstr "Next period"
+
 msgid "No arguments start the desktop application."
 msgstr "No arguments start the desktop application."
 
@@ -527,6 +584,9 @@ msgstr "No data"
 
 msgid "No events found."
 msgstr "No events found."
+
+msgid "No local model selected."
+msgstr "No local model selected."
 
 msgid "No records for the selected day."
 msgstr "No records for the selected day."
@@ -548,6 +608,12 @@ msgstr "Not required"
 
 msgid "Notes"
 msgstr "Notes"
+
+msgid "November"
+msgstr "November"
+
+msgid "October"
+msgstr "October"
 
 msgid "On break"
 msgstr "On break"
@@ -621,6 +687,9 @@ msgstr "Previous day"
 msgid "Previous month"
 msgstr "Previous month"
 
+msgid "Previous period"
+msgstr "Previous period"
+
 msgid "Public holidays"
 msgstr "Public holidays"
 
@@ -644,6 +713,9 @@ msgstr "Quick Log updated."
 
 msgid "Quit"
 msgstr "Quit"
+
+msgid "Q{quarter} {year}"
+msgstr "Q{quarter} {year}"
 
 msgid "RUNTIME SMOKE FAILED"
 msgstr "RUNTIME SMOKE FAILED"
@@ -705,6 +777,9 @@ msgstr "Reset selected user password"
 msgid "Reset template"
 msgstr "Reset template"
 
+msgid "Reset this template to its default?"
+msgstr "Reset this template to its default?"
+
 msgid "Rest Days"
 msgstr "Rest Days"
 
@@ -725,6 +800,9 @@ msgstr "Restoring data..."
 
 msgid "Rewrite"
 msgstr "Rewrite"
+
+msgid "Rewriting report..."
+msgstr "Rewriting report..."
 
 msgid "Rewritten"
 msgstr "Rewritten"
@@ -762,6 +840,9 @@ msgstr "Save this recovery key before returning to login."
 msgid "Saved"
 msgstr "Saved"
 
+msgid "Saved. Language changes apply after restarting."
+msgstr "Saved. Language changes apply after restarting."
+
 msgid "Schedule / Records"
 msgstr "Schedule / Records"
 
@@ -791,6 +872,9 @@ msgstr "Send"
 
 msgid "Sending..."
 msgstr "Sending..."
+
+msgid "September"
+msgstr "September"
 
 msgid "Settings"
 msgstr "Settings"
@@ -921,6 +1005,9 @@ msgstr "User updated."
 msgid "Username"
 msgstr "Username"
 
+msgid "Validating backup..."
+msgstr "Validating backup..."
+
 msgid "Verify"
 msgstr "Verify"
 
@@ -987,11 +1074,11 @@ msgstr "You have unsaved note changes. Discard them?"
 msgid "You have unsaved report changes. Discard them?"
 msgstr "You have unsaved report changes. Discard them?"
 
+msgid "You have unsaved template changes. Discard them?"
+msgstr "You have unsaved template changes. Discard them?"
+
 msgid "You have unsaved work log changes. Discard them?"
 msgstr "You have unsaved work log changes. Discard them?"
-
-msgid "You haven't backed up in 30 days. Please back up your data."
-msgstr "You haven't backed up in 30 days. Please back up your data."
 
 msgid "h"
 msgstr "h"
@@ -999,26 +1086,29 @@ msgstr "h"
 msgid "iCalendar (*.ics)"
 msgstr "iCalendar (*.ics)"
 
-msgid "leave days"
-msgstr "leave days"
-
 msgid "m"
 msgstr "m"
 
-msgid "of monthly goal"
-msgstr "of monthly goal"
+msgid "of {hours:.1f}h goal"
+msgstr "of {hours:.1f}h goal"
 
 msgid "or"
 msgstr "or"
 
-msgid "tracked days"
-msgstr "tracked days"
+msgid "{change:+.1f}h vs previous period"
+msgstr "{change:+.1f}h vs previous period"
 
-msgid "vs previous period"
-msgstr "vs previous period"
+msgid "{change:+d} days vs previous period"
+msgstr "{change:+d} days vs previous period"
 
 msgid "{count} event"
 msgstr "{count} event"
 
 msgid "{count} events"
 msgstr "{count} events"
+
+msgid "{mode}: {hours:.1f}h ({percent:.0f}%)"
+msgstr "{mode}: {hours:.1f}h ({percent:.0f}%)"
+
+msgid "{month} {year}"
+msgstr "{month} {year}"

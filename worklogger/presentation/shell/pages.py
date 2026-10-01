@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from calendar import monthrange
+from collections.abc import Callable
 from datetime import date, timedelta
 from pathlib import Path
-from typing import Protocol
-
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QApplication,
@@ -16,13 +15,20 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMessageBox,
     QPushButton,
     QTextEdit,
+    QScrollArea,
+    QMenu,
     QVBoxLayout,
     QWidget,
 )
 
 from worklogger.domain.shared.errors import AppError, ValidationError
+from worklogger.domain.analytics.models import AnalyticsDashboard
+from worklogger.app.job_runner import JobRunner
+from worklogger.presentation.job_runner import QtJobRunner
+from worklogger.presentation.reporting.dialog import ReportTemplateDialog
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import (
@@ -45,11 +51,8 @@ from worklogger.presentation.widgets import (
     StatsPanel,
     WorkLogEntryPanel,
 )
-
-
-class SettingsWorkflowWithDialog(Protocol):
-    def create_dialog(self, parent: QWidget | None = None) -> QWidget:
-        ...
+from worklogger.presentation.widgets.combo_chart import DonutChart
+from worklogger.presentation.widgets.icons import set_button_icon
 
 
 class CalendarPage(QWidget):
@@ -71,7 +74,6 @@ class CalendarPage(QWidget):
         self.entry_panel = entry_panel
         self.stats_panel = stats_panel
         self._build_ui()
-        self.entry_panel.time_tabs.tabBar().setVisible(False)
 
     def set_month_title(self, title: str) -> None:
         self.month_title_label.setText(title)
@@ -110,6 +112,8 @@ class CalendarPage(QWidget):
         self.previous_month_button.setObjectName("previous_month_button")
         self.previous_month_button.setProperty("variant", "ghost")
         self.previous_month_button.setToolTip(_("Previous month"))
+        set_button_icon(self.previous_month_button, "chevron-left")
+        self.previous_month_button.setText("")
         self.previous_month_button.clicked.connect(self.previous_month_requested.emit)
         self.month_title_label = QLabel("")
         self.month_title_label.setObjectName("calendar_month_title_label")
@@ -119,6 +123,8 @@ class CalendarPage(QWidget):
         self.next_month_button.setObjectName("next_month_button")
         self.next_month_button.setProperty("variant", "ghost")
         self.next_month_button.setToolTip(_("Next month"))
+        set_button_icon(self.next_month_button, "chevron-right")
+        self.next_month_button.setText("")
         self.next_month_button.clicked.connect(self.next_month_requested.emit)
         self.today_button = QPushButton(_("Today"))
         self.today_button.setObjectName("today_button")
@@ -126,7 +132,9 @@ class CalendarPage(QWidget):
         self.add_entry_button = QPushButton(_("+ Add Entry"))
         self.add_entry_button.setObjectName("add_entry_button")
         self.add_entry_button.setProperty("variant", "primary")
-        self.add_entry_button.clicked.connect(self.entry_panel.setFocus)
+        self.add_entry_button.setText(_("Add Entry"))
+        set_button_icon(self.add_entry_button, "plus")
+        self.add_entry_button.clicked.connect(self.entry_panel.start_input.setFocus)
         header.addWidget(self.previous_month_button)
         header.addStretch(1)
         header.addWidget(self.month_title_label)
@@ -143,8 +151,12 @@ class CalendarPage(QWidget):
         self.calendar_view.month_title.setVisible(False)
         content.addWidget(self.calendar_view, 1)
 
+        right_scroll = QScrollArea()
+        right_scroll.setObjectName("calendar_details_scroll_widget")
+        right_scroll.setWidgetResizable(True)
+        right_scroll.setFixedWidth(270)
         right = CardFrame(object_name="calendar_right_panel_frame")
-        right.setFixedWidth(260)
+        right_scroll.setWidget(right)
         self.stats_panel.setVisible(False)
         right.content_layout.addWidget(self.entry_panel)
         right.content_layout.addWidget(self.stats_panel)
@@ -157,7 +169,7 @@ class CalendarPage(QWidget):
         self.records_layout.setContentsMargins(0, 0, 0, 0)
         self.records_layout.setSpacing(8)
         right.content_layout.addWidget(self.records_widget, 1)
-        content.addWidget(right)
+        content.addWidget(right_scroll)
 
 
 class AnalyticsPage(QWidget):
@@ -172,6 +184,7 @@ class AnalyticsPage(QWidget):
         self._view_model = view_model
         self._selected_day = selected_day
         self._state: AnalyticsState | None = None
+        self._dashboard: AnalyticsDashboard | None = None
         self._last_error: AppError | None = None
         self._build_ui()
 
@@ -182,22 +195,22 @@ class AnalyticsPage(QWidget):
     def refresh(self, selected_day: date | None = None) -> bool:
         if selected_day is not None:
             self._selected_day = selected_day
+            self._populate_periods()
         if self._view_model is None:
             self.status_label.setText(_("Analytics is not configured."))
             return False
-        result = self._view_model.load(
+        scope = self.scope_control.value or "monthly"
+        result = self._view_model.load_dashboard(
             year=self._selected_day.year,
             month=self._selected_day.month,
-            scope=self.scope_control.value or "monthly",
-            metric="hours",
-            chart_mode="bar",
-            include_leaves=True,
+            scope=scope,
         )
         if not result.ok or result.value is None:
             self._last_error = result.error
             self.status_label.setText(display_error_message(result.error))
             return False
-        self._state = result.value
+        self._dashboard = result.value
+        self._state = AnalyticsState(self._view_model.user_id, self._selected_day.year, self._selected_day.month, scope, "hours", "bar", True, result.value.trend)
         self._set_state(result.value)
         self.status_label.setText(_("Ready"))
         return True
@@ -243,11 +256,12 @@ class AnalyticsPage(QWidget):
                 ("annual", _("Annual")),
             )
         )
-        self.scope_control.value_changed.connect(lambda _value: self.refresh())
+        self.scope_control.value_changed.connect(self._scope_changed)
         header.actions_layout.addWidget(self.scope_control)
         self.period_combo = QComboBox()
         self.period_combo.setObjectName("analytics_period_combo")
-        self.period_combo.addItem(self._selected_day.strftime("%B %Y"))
+        self.period_combo.currentIndexChanged.connect(self._period_changed)
+        self._populate_periods()
         header.actions_layout.addWidget(self.period_combo)
         self.export_button = ExportMenuButton(
             _("Export"),
@@ -257,6 +271,16 @@ class AnalyticsPage(QWidget):
         header.actions_layout.addWidget(self.export_button)
         root.addWidget(header)
 
+        scroll = QScrollArea()
+        scroll.setObjectName("analytics_scroll_widget")
+        scroll.setWidgetResizable(True)
+        body = QWidget()
+        body.setObjectName("analytics_content_widget")
+        body_layout = QVBoxLayout(body)
+        body_layout.setContentsMargins(0, 0, 0, 0)
+        body_layout.setSpacing(12)
+        scroll.setWidget(body)
+        root.addWidget(scroll, 1)
         summary_grid = QGridLayout()
         summary_grid.setHorizontalSpacing(12)
         summary_grid.setVerticalSpacing(12)
@@ -269,6 +293,7 @@ class AnalyticsPage(QWidget):
         self.overtime_caption_label = QLabel("")
         self.overtime_caption_label.setObjectName("overtime_caption_label")
         self.overtime_caption_label.setProperty("role", "secondary")
+        self.overtime_caption_label.setWordWrap(True)
         self.overtime_card.content_layout.addWidget(self.overtime_title_label)
         self.overtime_card.content_layout.addWidget(self.overtime_value_label)
         self.overtime_card.content_layout.addWidget(self.overtime_caption_label)
@@ -278,58 +303,87 @@ class AnalyticsPage(QWidget):
         summary_grid.addWidget(self.overtime_card, 0, 1)
         summary_grid.addWidget(self.attendance_card, 0, 2)
         summary_grid.addWidget(self.rest_card, 0, 3)
-        root.addLayout(summary_grid)
+        for column in range(4):
+            summary_grid.setColumnStretch(column, 1)
+        body_layout.addLayout(summary_grid)
 
         charts = QGridLayout()
         charts.setHorizontalSpacing(12)
         charts.setVerticalSpacing(12)
         self.trend_chart = self._chart_card(_("Work Hours Trend"))
         self.average_chart = self._chart_card(_("Average Work Hours"))
-        self.breakdown_chart = self._chart_card(_("Work Mode Breakdown"))
+        self.breakdown_chart = self._chart_card(_("Work Mode Breakdown"), donut=True)
         self.daily_average_chart = self._chart_card(_("Daily Average"))
         charts.addWidget(self.trend_chart, 0, 0)
         charts.addWidget(self.average_chart, 0, 1)
         charts.addWidget(self.breakdown_chart, 1, 0)
         charts.addWidget(self.daily_average_chart, 1, 1)
-        root.addLayout(charts, 1)
+        body_layout.addLayout(charts, 1)
+        self._summary_grid = summary_grid
 
         self.status_label = QLabel("")
         self.status_label.setObjectName("analytics_status_label")
         self.status_label.setProperty("role", "secondary")
         root.addWidget(self.status_label)
 
-    def _chart_card(self, title: str) -> CardFrame:
+    def _chart_card(self, title: str, *, donut: bool = False) -> CardFrame:
         card = CardFrame(object_name="analytics_chart_frame")
         label = QLabel(title)
         label.setObjectName("analytics_chart_title_label")
-        chart = ComboChart()
+        chart = DonutChart() if donut else ComboChart()
         card.chart = chart
         card.content_layout.addWidget(label)
         card.content_layout.addWidget(chart, 1)
         return card
 
-    def _set_state(self, state: AnalyticsState) -> None:
-        total = sum(value for _label, value in state.bundle.bar_data)
-        overtime = max(total - 168.0, 0.0)
-        days = len([value for _label, value in state.bundle.bar_data if value > 0])
-        leave_days = len(state.bundle.leave_indices)
-        progress = total / 168.0 if total > 0 else 0.0
+    def _set_state(self, state: AnalyticsDashboard) -> None:
+        total = state.stats.total_hours
+        progress = total / state.target_hours if state.target_hours > 0 else 0.0
+        self.monthly_hours_card.title_label.setText(_("Monthly Hours") if self.scope_control.value == "monthly" else _("Total hours"))
         self.monthly_hours_card.set_value(
             f"{total:.1f}{_('h')}",
-            _("of monthly goal"),
+            _("of {hours:.1f}h goal").format(hours=state.target_hours),
             progress,
         )
-        self.overtime_value_label.setText(f"{overtime:.1f}{_('h')}")
-        self.overtime_caption_label.setText(_("vs previous period"))
-        self.attendance_card.set_value(f"{days}", _("tracked days"), min(days, 12), 12)
-        self.rest_card.set_value(f"{leave_days}", _("leave days"), min(leave_days, 12), 12)
-        for card in (
-            self.trend_chart,
-            self.average_chart,
-            self.breakdown_chart,
-            self.daily_average_chart,
-        ):
-            card.chart.set_data(state.bundle, mode="bar")
+        self.overtime_value_label.setText(f"{state.stats.overtime_hours:.1f}{_('h')}")
+        self.overtime_caption_label.setText(_("{change:+.1f}h vs previous period").format(change=state.stats.overtime_hours - state.previous_stats.overtime_hours))
+        days = state.stats.work_days
+        rest = state.total_days - days
+        self.attendance_card.set_value(f"{days} / {state.total_days}", _("{change:+d} days vs previous period").format(change=days - state.previous_stats.work_days), days, state.total_days)
+        self.rest_card.set_value(str(rest), _("{change:+d} days vs previous period").format(change=rest - (state.previous_total_days - state.previous_stats.work_days)), rest, state.total_days)
+        self.trend_chart.chart.set_data(state.trend, mode="bar")
+        self.average_chart.chart.set_data(state.average, mode="bar", average=True)
+        self.breakdown_chart.chart.set_segments(tuple((_work_mode_label(key), value) for key, value in state.work_modes))
+        self.daily_average_chart.chart.set_data(state.daily_average_trend, mode="line")
+
+    def _populate_periods(self) -> None:
+        scope = self.scope_control.value or "monthly"
+        selected = self._selected_day.replace(day=1)
+        self.period_combo.blockSignals(True)
+        self.period_combo.clear()
+        if scope == "annual":
+            values = [date(year, 1, 1) for year in range(selected.year + 1, selected.year - 10, -1)]
+        else:
+            step = 3 if scope == "quarterly" else 1
+            if step == 3:
+                selected = selected.replace(month=((selected.month - 1) // 3) * 3 + 1)
+            values = [add_months(selected, offset * step) for offset in range(1, -36, -1)]
+        for value in values:
+            label = str(value.year) if scope == "annual" else (_("Q{quarter} {year}").format(quarter=(value.month - 1) // 3 + 1, year=value.year) if scope == "quarterly" else _month_label(value))
+            self.period_combo.addItem(label, value)
+        target = selected.replace(month=1) if scope == "annual" else selected
+        self.period_combo.setCurrentIndex(values.index(target))
+        self.period_combo.blockSignals(False)
+
+    def _scope_changed(self, _scope: str) -> None:
+        self._populate_periods()
+        self.refresh()
+
+    def _period_changed(self, index: int) -> None:
+        value = self.period_combo.itemData(index)
+        if isinstance(value, date):
+            self._selected_day = value
+            self.refresh()
 
     def _choose_export_path(self, kind: str) -> None:
         if kind == "csv":
@@ -358,6 +412,9 @@ class ReportsPage(QWidget):
         view_model: ReportEditorViewModel | None,
         selected_day: date,
         parent: QWidget | None = None,
+        *,
+        confirm_discard: Callable[[], bool] | None = None,
+        job_runner: JobRunner | None = None,
     ) -> None:
         super().__init__(parent)
         self.setObjectName("reports_page_widget")
@@ -366,6 +423,10 @@ class ReportsPage(QWidget):
         self._states: dict[str, ReportEditorState] = {}
         self._saved_content: dict[str, str] = {}
         self._last_error: AppError | None = None
+        self._rendered_type = "daily"
+        self._confirm_discard = confirm_discard
+        self._job_runner = job_runner or QtJobRunner(self)
+        self._rewrite_busy = False
         self._build_ui()
 
     @property
@@ -374,10 +435,32 @@ class ReportsPage(QWidget):
 
     @property
     def has_unsaved_changes(self) -> bool:
-        current = self._current_type()
-        return self.editor.toPlainText() != self._saved_content.get(current, "")
+        return self.editor.toPlainText() != self._saved_content.get(self._rendered_type, "")
+
+    def confirm_leave(self) -> bool:
+        if self._rewrite_busy:
+            self.status_label.setText(_("Please wait for the current request."))
+            return False
+        if not self.has_unsaved_changes:
+            return True
+        confirmed = (
+            self._confirm_discard()
+            if self._confirm_discard is not None
+            else QMessageBox.question(
+                self,
+                _("Discard changes?"),
+                _("You have unsaved report changes. Discard them?"),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            ) == QMessageBox.StandardButton.Yes
+        )
+        if confirmed:
+            self.editor.setPlainText(self._saved_content.get(self._rendered_type, ""))
+        return bool(confirmed)
 
     def refresh(self, selected_day: date | None = None) -> bool:
+        if not self.confirm_leave():
+            return False
         if selected_day is not None:
             self._selected_day = selected_day
         if self._view_model is None:
@@ -424,7 +507,7 @@ class ReportsPage(QWidget):
                 ("monthly", _("Monthly Report")),
             )
         )
-        self.report_type_control.value_changed.connect(lambda _value: self._render_current())
+        self.report_type_control.value_changed.connect(self._change_report_type)
         root.addWidget(self.report_type_control)
 
         content = QHBoxLayout()
@@ -439,9 +522,17 @@ class ReportsPage(QWidget):
         self.previous_period_button = QPushButton("<")
         self.previous_period_button.setObjectName("previous_report_period_button")
         self.previous_period_button.setProperty("variant", "ghost")
+        self.previous_period_button.clicked.connect(lambda: self._shift_period(-1))
+        self.previous_period_button.setToolTip(_("Previous period"))
+        set_button_icon(self.previous_period_button, "chevron-left")
+        self.previous_period_button.setText("")
         self.next_period_button = QPushButton(">")
         self.next_period_button.setObjectName("next_report_period_button")
         self.next_period_button.setProperty("variant", "ghost")
+        self.next_period_button.clicked.connect(lambda: self._shift_period(1))
+        self.next_period_button.setToolTip(_("Next period"))
+        set_button_icon(self.next_period_button, "chevron-right")
+        self.next_period_button.setText("")
         period_row.addWidget(self.period_title_label, 1)
         period_row.addWidget(self.previous_period_button)
         period_row.addWidget(self.next_period_button)
@@ -453,7 +544,8 @@ class ReportsPage(QWidget):
         self.templates_button = QPushButton(_("Templates"))
         self.templates_button.setObjectName("templates_button")
         self.templates_button.setProperty("variant", "outline")
-        self.templates_button.clicked.connect(self._save_template_current)
+        self.templates_button.clicked.connect(self._open_templates)
+        set_button_icon(self.templates_button, "file-text", accent=True)
         report_row.addWidget(report_title, 1)
         report_row.addWidget(self.templates_button)
         editor_card.content_layout.addLayout(report_row)
@@ -472,9 +564,14 @@ class ReportsPage(QWidget):
         self.ai_assist_button.setObjectName("report_ai_assist_button")
         self.ai_assist_button.setProperty("variant", "outline")
         self.ai_assist_button.clicked.connect(self._rewrite_current)
+        set_button_icon(self.ai_assist_button, "sparkles", accent=True)
+        if self._view_model is None or not getattr(self._view_model, "rewrite_available", True):
+            self.ai_assist_button.setEnabled(False)
+            self.ai_assist_button.setToolTip(_("AI Assist is not configured."))
         self.tip_label = QLabel(_("Tip: Click AI Assist to generate a draft based on your time logs."))
         self.tip_label.setObjectName("report_tip_label")
         self.tip_label.setProperty("role", "secondary")
+        self.tip_label.setWordWrap(True)
         ai_row.addWidget(self.ai_assist_button)
         ai_row.addWidget(self.tip_label, 1)
         editor_card.content_layout.addLayout(ai_row)
@@ -483,10 +580,12 @@ class ReportsPage(QWidget):
         self.copy_button = QPushButton(_("Copy"))
         self.copy_button.setObjectName("copy_report_button")
         self.copy_button.clicked.connect(self.copy_markdown)
+        set_button_icon(self.copy_button, "copy")
         self.save_button = QPushButton(_("Save Report"))
         self.save_button.setObjectName("save_report_button")
         self.save_button.setProperty("variant", "primary")
         self.save_button.clicked.connect(self._save_current)
+        set_button_icon(self.save_button, "save")
         bottom.addWidget(self.copy_button)
         bottom.addStretch(1)
         bottom.addWidget(self.save_button)
@@ -506,11 +605,45 @@ class ReportsPage(QWidget):
     def _current_type(self) -> str:
         return self.report_type_control.value or "daily"
 
+    def _change_report_type(self, report_type: str) -> None:
+        if not self.confirm_leave():
+            self.report_type_control.set_value(self._rendered_type, emit=False)
+            return
+        self._render_current()
+
+    def _shift_period(self, direction: int) -> None:
+        state = self._states.get(self._current_type())
+        day = state.period_start if state is not None else self._selected_day
+        self.refresh(shift_period(day, self._current_type(), direction))
+
+    def _open_templates(self) -> None:
+        if self._view_model is None or self._rewrite_busy:
+            return
+        dialog = ReportTemplateDialog(self._view_model, self._current_type(), self)
+        dialog.apply_requested.connect(self._apply_template)
+        if dialog.refresh():
+            dialog.exec()
+        else:
+            self.status_label.setText(dialog.status_label.text())
+
+    def _apply_template(self) -> None:
+        if self._view_model is None or not self.confirm_leave():
+            return
+        state = self._states.get(self._current_type())
+        if state is None:
+            return
+        result = self._view_model.generate_draft(state)
+        if result.ok and result.value is not None:
+            self.editor.setPlainText(result.value)
+        else:
+            self._set_error(result.error)
+
     def _render_current(self) -> None:
         report_type = self._current_type()
         state = self._states.get(report_type)
         if state is None:
             return
+        self._rendered_type = report_type
         self.period_title_label.setText(_period_label(state))
         self.editor.setPlainText(state.content)
         self.history_panel.set_selected_period(state.period_start, state.period_end)
@@ -543,13 +676,30 @@ class ReportsPage(QWidget):
         self.status_label.setText(_("Template saved."))
 
     def _rewrite_current(self) -> None:
-        if self._view_model is None:
+        if self._view_model is None or self._rewrite_busy:
             return
         state = self._states.get(self._current_type())
         if state is None:
             self._set_error(ValidationError("report_not_loaded", "report_not_loaded"))
             return
-        result = self._view_model.rewrite(state, self.editor.toPlainText())
+        content = self.editor.toPlainText()
+        instructions = self.ai_hint_line_edit.text()
+        self._set_rewrite_busy(True)
+        self.status_label.setText(_("Rewriting report..."))
+        self._job_runner.submit(
+            "rewrite_report", lambda _token: self._view_model.rewrite(state, content, instructions),
+            on_complete=self._complete_rewrite,
+        )
+
+    def _set_rewrite_busy(self, busy: bool) -> None:
+        self._rewrite_busy = busy
+        self.editor.setReadOnly(busy)
+        for widget in (self.report_type_control, self.previous_period_button, self.next_period_button, self.templates_button, self.ai_hint_line_edit, self.save_button, self.history_panel):
+            widget.setEnabled(not busy)
+        self.ai_assist_button.setEnabled(not busy and bool(getattr(self._view_model, "rewrite_available", True)))
+
+    def _complete_rewrite(self, result: object) -> None:
+        self._set_rewrite_busy(False)
         if not result.ok or result.value is None:
             self._set_error(result.error)
             return
@@ -579,7 +729,7 @@ class ReportsPage(QWidget):
         )
 
     def _select_history_item(self, item: ReportHistoryDisplayItem) -> None:
-        if not self._view_model:
+        if not self._view_model or not self.confirm_leave():
             return
         state = ReportEditorState(
             user_id=item.user_id,
@@ -591,6 +741,10 @@ class ReportsPage(QWidget):
         )
         self._states[item.report_type] = state
         self._saved_content[item.report_type] = state.content
+        self._rendered_type = item.report_type
+        self._selected_day = item.period_start
+        self.report_type_control.set_value(item.report_type, emit=False)
+        self.history_panel.set_selected_period(item.period_start, item.period_end)
         self.editor.setPlainText(state.content)
         self.period_title_label.setText(_period_label(state))
 
@@ -611,42 +765,34 @@ class ReportsPage(QWidget):
         self.status_label.setText(display_error_message(error))
 
 
-class SettingsPage(QWidget):
-    def __init__(
-        self,
-        workflow: SettingsWorkflowWithDialog | None,
-        parent: QWidget | None = None,
-    ) -> None:
+class SettingsPlaceholderPage(QWidget):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setObjectName("settings_page_widget")
-        self._workflow = workflow
-        self.embedded_settings: QWidget | None = None
+        self.setObjectName("settings_placeholder_page_widget")
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        if workflow is None or not hasattr(workflow, "create_dialog"):
-            placeholder = QLabel(_("Settings are not configured."))
-            placeholder.setObjectName("settings_placeholder_label")
-            placeholder.setProperty("role", "secondary")
-            placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            layout.addWidget(placeholder, 1)
-            return
-        self.embedded_settings = workflow.create_dialog(self)
-        self.embedded_settings.setWindowFlags(Qt.WindowType.Widget)
-        if hasattr(self.embedded_settings, "close_button"):
-            self.embedded_settings.close_button.setVisible(False)
-        layout.addWidget(self.embedded_settings)
-        self.embedded_settings.show()
+        placeholder = QLabel(_("Settings are not configured."))
+        placeholder.setObjectName("settings_placeholder_label")
+        placeholder.setProperty("role", "secondary")
+        placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(placeholder, 1)
 
     def refresh(self) -> bool:
-        if self.embedded_settings is None or not hasattr(self.embedded_settings, "refresh"):
-            return False
-        return bool(self.embedded_settings.refresh())
+        return False
 
 
 def _period_label(state: ReportEditorState) -> str:
     if state.period_start == state.period_end:
         return state.period_start.strftime("%B %-d, %Y") if _supports_dash_day() else state.period_start.strftime("%B %d, %Y")
     return _period_range_label(state.period_start, state.period_end)
+
+
+def _month_label(day: date) -> str:
+    return _("{month} {year}").format(month=(_("January"), _("February"), _("March"), _("April"), _("May"), _("June"), _("July"), _("August"), _("September"), _("October"), _("November"), _("December"))[day.month - 1], year=day.year)
+
+
+def _work_mode_label(key: str) -> str:
+    return {"normal": _("Normal"), "remote": _("Remote"), "business_trip": _("Business trip"), "leave": _("Leave")}.get(key, key)
 
 
 def _period_range_label(start: date, end: date) -> str:

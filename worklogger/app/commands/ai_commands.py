@@ -12,6 +12,7 @@ class RewriteTextCommand:
     content: str
     context: str = "note"
     language: str = "en_US"
+    instructions: str = ""
 
 
 @dataclass(frozen=True)

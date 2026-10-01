@@ -14,3 +14,11 @@ class GetAnalyticsBundleQuery:
     include_leaves: bool
     scope: str = "monthly"
     standard_leave_hours: float = 8.0
+
+
+@dataclass(frozen=True)
+class GetAnalyticsDashboardQuery:
+    user_id: int
+    year: int
+    month: int
+    scope: str = "monthly"

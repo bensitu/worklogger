@@ -64,6 +64,9 @@ class WorkLogEntryViewModel:
         self._loaded: dict[date, WorkLog | None] = {}
         self._holiday_notes: dict[date, str] = {}
 
+    def set_default_break_hours(self, hours: float) -> None:
+        self._default_break_hours = max(0.0, min(float(hours), 4.0))
+
     def load(
         self,
         day: date,

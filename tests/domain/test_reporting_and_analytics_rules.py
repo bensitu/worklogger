@@ -5,6 +5,8 @@ import unittest
 
 from worklogger.domain.analytics.rules import (
     annual_chart_data,
+    dashboard_data,
+    analytics_period,
     month_stats,
     monthly_chart_data,
     quarterly_chart_data,
@@ -38,6 +40,38 @@ def _record(
 
 
 class ReportingAndAnalyticsRuleTests(unittest.TestCase):
+    def test_dashboard_uses_real_days_targets_modes_and_comparison(self) -> None:
+        records = (
+            _record(date(2026, 3, 6), "09:00", "17:00", 1.0, WorkType.NORMAL),
+            _record(date(2026, 4, 6), "09:00", "19:00", 1.0, WorkType.NORMAL),
+            _record(date(2026, 4, 7), "09:00", "18:00", 1.0, WorkType.REMOTE),
+            _record(date(2026, 4, 8), None, None, 0.0, WorkType.PAID_LEAVE),
+        )
+        data = dashboard_data(records, year=2026, month=4, scope="monthly", standard_hours=7.5, monthly_target=120)
+        self.assertEqual(data.total_days, 30)
+        self.assertEqual(data.previous_total_days, 31)
+        self.assertEqual(data.stats.work_days, 2)
+        self.assertEqual(data.stats.total_hours, 17)
+        self.assertEqual(data.stats.overtime_hours, 2)
+        self.assertEqual(data.previous_stats.total_hours, 7)
+        self.assertEqual(data.target_hours, 120)
+        self.assertEqual(dict(data.work_modes), {"normal": 9, "remote": 8, "leave": 7.5})
+        self.assertNotEqual(data.trend.bar_data, data.average.bar_data)
+        self.assertEqual(data.daily_average_trend.bar_data[-1], ("04", 8.5))
+
+    def test_dashboard_quarter_and_year_boundaries(self) -> None:
+        self.assertEqual(analytics_period(2024, 2, "monthly"), (date(2024, 2, 1), date(2024, 2, 29)))
+        data = dashboard_data((), year=2026, month=5, scope="quarterly", standard_hours=8, monthly_target=160)
+        self.assertEqual((data.period_start, data.period_end), (date(2026, 4, 1), date(2026, 6, 30)))
+        self.assertEqual(data.target_hours, 480)
+        self.assertEqual(len(data.trend.bar_data), 3)
+        data = dashboard_data((), year=2026, month=1, scope="annual", standard_hours=8, monthly_target=160)
+        self.assertEqual(data.target_hours, 1920)
+        self.assertEqual(data.previous_total_days, 365)
+        self.assertEqual(len(data.trend.bar_data), 12)
+        with self.assertRaises(ValueError):
+            analytics_period(2026, 1, "invalid")
+
     def test_report_periods_match_baseline_week_and_month_boundaries(self) -> None:
         weekly = weekly_period(date(2026, 4, 22))
         self.assertEqual(weekly.start, date(2026, 4, 20))

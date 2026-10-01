@@ -7,8 +7,9 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from PySide6.QtCore import Signal
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QWidget
 
 from worklogger.app.queries.work_log_queries import GetMonthRecordsQuery
 from worklogger.app.use_cases.calendar import GetCalendarEventsForRangeHandler
@@ -273,6 +274,51 @@ class AppWindowTests(unittest.TestCase):
         self.assertEqual(workflow.opened, [window])
         self.assertEqual(window.status_label.text(), "Ready")
 
+
+    def test_app_window_uses_native_settings_page_when_available(self) -> None:
+        class FakeSettingsPage(QWidget):
+            logout_requested = Signal()
+
+            def __init__(self) -> None:
+                super().__init__()
+                self.refreshes = 0
+
+            def refresh(self) -> bool:
+                self.refreshes += 1
+                return True
+
+        class FakeSettingsWorkflow:
+            def __init__(self) -> None:
+                self.created: list[tuple[object, FakeSettingsPage]] = []
+                self.opened: list[object] = []
+
+            def create_page(self, parent=None):
+                page = FakeSettingsPage()
+                self.created.append((parent, page))
+                return page
+
+            def open(self, parent=None):
+                self.opened.append(parent)
+                return None
+
+        workflow = FakeSettingsWorkflow()
+        window = _window(
+            MemoryWorkLogRepository(),
+            account_name="alice",
+            settings_workflow=workflow,
+        )
+        logouts: list[bool] = []
+        window.logout_requested.connect(lambda: logouts.append(True))
+
+        window.settings_button.click()
+        workflow.created[0][1].logout_requested.emit()
+
+        self.assertEqual(workflow.created[0][0], window)
+        self.assertIs(window.page_stack.currentWidget(), workflow.created[0][1])
+        self.assertEqual(workflow.opened, [])
+        self.assertEqual(workflow.created[0][1].refreshes, 1)
+        self.assertEqual(logouts, [True])
+
     def test_app_window_opens_secondary_workflows_when_available(self) -> None:
         class FakeDayWorkflow:
             def __init__(self) -> None:
@@ -297,15 +343,15 @@ class AppWindowTests(unittest.TestCase):
             reports_workflow=reports,
         )
 
-        self.assertFalse(window.quick_logs_button.isHidden())
+        self.assertFalse(window.more_actions_button.isHidden())
         self.assertFalse(window.analytics_button.isHidden())
-        self.assertFalse(window.ai_assist_button.isHidden())
-        self.assertFalse(window.notes_button.isHidden())
         self.assertFalse(window.reports_button.isHidden())
-        window.quick_logs_button.click()
+        actions = window.more_actions_button.menu().actions()
+        self.assertEqual([action.text() for action in actions], ["Quick Log", "Notes", "AI Assist"])
+        actions[0].trigger()
         window.analytics_button.click()
-        window.ai_assist_button.click()
-        window.notes_button.click()
+        actions[2].trigger()
+        actions[1].trigger()
         window.reports_button.click()
 
         self.assertEqual(quick_logs.opened, [(date(2026, 4, 20), window)])

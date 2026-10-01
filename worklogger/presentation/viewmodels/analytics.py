@@ -6,14 +6,19 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
-from worklogger.app.queries.analytics_queries import GetAnalyticsBundleQuery
-from worklogger.domain.analytics.models import ChartDataBundle
+from worklogger.app.queries.analytics_queries import GetAnalyticsBundleQuery, GetAnalyticsDashboardQuery
+from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBundle
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 
 
 class AnalyticsBundleHandlerProtocol(Protocol):
     def handle(self, query: GetAnalyticsBundleQuery) -> Result[ChartDataBundle]:
+        ...
+
+
+class AnalyticsDashboardHandlerProtocol(Protocol):
+    def handle(self, query: GetAnalyticsDashboardQuery) -> Result[AnalyticsDashboard]:
         ...
 
 
@@ -54,12 +59,23 @@ class AnalyticsViewModel:
         csv_exporter: AnalyticsCsvExporterProtocol,
         pdf_exporter: AnalyticsPdfExporterProtocol,
         standard_leave_hours: float = 8.0,
+        dashboard_handler: AnalyticsDashboardHandlerProtocol | None = None,
     ) -> None:
         self._user_id = user_id
         self._bundle_handler = bundle_handler
         self._csv_exporter = csv_exporter
         self._pdf_exporter = pdf_exporter
         self._standard_leave_hours = standard_leave_hours
+        self._dashboard_handler = dashboard_handler
+
+    @property
+    def user_id(self) -> int:
+        return self._user_id
+
+    def load_dashboard(self, *, year: int, month: int, scope: str) -> Result[AnalyticsDashboard]:
+        if self._dashboard_handler is None:
+            return Result.failure(_validation("analytics_load_failed"))
+        return self._dashboard_handler.handle(GetAnalyticsDashboardQuery(self._user_id, year, month, scope))
 
     def load(
         self,

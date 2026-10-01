@@ -32,6 +32,21 @@ def install_bundled_fonts() -> None:
                 families = QFontDatabase.applicationFontFamilies(font_id)
                 primary_family = families[0] if families else ""
         if primary_family:
-            application.setFont(QFont(primary_family, 10))
+            application.setFont(_application_font(primary_family, application.font()))
         _INSTALLED = True
+
+
+def _application_font(family: str, base_font: QFont) -> QFont:
+    font = QFont(base_font)
+    font.setFamily(family)
+    point_size = font.pointSize()
+    if point_size > 0:
+        font.setPointSize(point_size)
+        return font
+    point_size_f = font.pointSizeF()
+    if point_size_f > 0:
+        font.setPointSizeF(point_size_f)
+        return font
+    font.setPointSize(10)
+    return font
 

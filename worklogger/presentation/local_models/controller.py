@@ -29,6 +29,10 @@ class LocalModelsWorkflowController:
         self._job_runner = job_runner
         self._dialog_factory = dialog_factory
 
+    @property
+    def view_model(self) -> LocalModelManagerViewModel:
+        return self._view_model
+
     def open(self, parent: QWidget | None = None) -> LocalModelsDialog:
         if self._dialog_factory is None:
             dialog = LocalModelsDialog(

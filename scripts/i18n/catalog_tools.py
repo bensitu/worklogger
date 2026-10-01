@@ -126,7 +126,7 @@ def write_po(language: str, messages: set[str], locales_root: Path = LOCALES_ROO
 
 def compile_po_to_mo(po_path: Path, mo_path: Path | None = None) -> Path:
     mo_path = mo_path or po_path.with_suffix(".mo")
-    entries = read_po_entries(po_path)
+    entries = {key: value for key, value in read_po_entries(po_path).items() if not key or value}
     keys = sorted(entries)
     ids = b""
     strings = b""

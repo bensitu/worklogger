@@ -45,6 +45,13 @@ QFrame#login_hero_frame {
   background: #111827;
 }
 
+QFrame#login_divider_left_frame,
+QFrame#login_divider_right_frame {
+  color: {{ border }};
+  background: {{ border }};
+  max-height: 1px;
+}
+
 QFrame#settings_navigation_frame {
   background: {{ surface }};
   border: 1px solid {{ border }};
@@ -196,6 +203,43 @@ QDoubleSpinBox:focus {
 QComboBox::drop-down {
   border: none;
   width: 26px;
+}
+
+QComboBox::down-arrow {
+  image: url("{{ icons_root }}/chevron-down.svg");
+  width: 14px;
+  height: 14px;
+}
+
+QDoubleSpinBox::up-button, QSpinBox::up-button {
+  subcontrol-origin: border;
+  subcontrol-position: top right;
+  width: 22px;
+  border: none;
+}
+
+QDoubleSpinBox::down-button, QSpinBox::down-button {
+  subcontrol-origin: border;
+  subcontrol-position: bottom right;
+  width: 22px;
+  border: none;
+}
+
+QDoubleSpinBox::up-arrow, QSpinBox::up-arrow {
+  image: url("{{ icons_root }}/chevron-up.svg");
+  width: 12px;
+  height: 12px;
+}
+
+QDoubleSpinBox::down-arrow, QSpinBox::down-arrow {
+  image: url("{{ icons_root }}/chevron-down.svg");
+  width: 12px;
+  height: 12px;
+}
+
+QWidget#worklog_entry_panel_widget QTabBar::tab {
+  padding: 8px 6px;
+  font-size: 12px;
 }
 
 QMenu {

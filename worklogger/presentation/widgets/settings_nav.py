@@ -8,6 +8,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QFrame, QVBoxLayout, QPushButton, QWidget
 
 from worklogger.presentation.widgets._style import refresh_style
+from worklogger.presentation.widgets.icons import set_button_icon
 
 
 class SettingsNav(QFrame):
@@ -29,6 +30,9 @@ class SettingsNav(QFrame):
             button = QPushButton(label)
             button.setObjectName(f"settings_{key}_button")
             button.setProperty("settings_nav_item", True)
+            icon_name = {"appearance": "palette", "general": "settings", "ai": "sparkles", "data": "database", "network": "globe", "account": "user-round", "about": "info"}.get(key)
+            if icon_name:
+                set_button_icon(button, icon_name)
             button.setCursor(Qt.CursorShape.PointingHandCursor)
             button.clicked.connect(lambda _checked=False, item_key=key: self.set_category(item_key))
             self._buttons[str(key)] = button

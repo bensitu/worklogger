@@ -42,6 +42,14 @@ class GettextFoundationTests(unittest.TestCase):
         self.assertEqual(set_language("unknown"), "en_US")
         self.assertEqual(available_languages(), tuple(LANGUAGES))
 
+    def test_untranslated_catalog_entries_never_hide_ui_text(self) -> None:
+        for language in LANGUAGES:
+            with self.subTest(language=language):
+                set_language(language)
+                self.assertTrue(_("Welcome!"))
+                self.assertTrue(_("Settings"))
+                self.assertTrue(ngettext("{count} event", "{count} events", 2))
+
     def test_no_msg_api_or_msg_defaults_in_production_code(self) -> None:
         offenders: list[str] = []
         for path in SOURCE_ROOT.rglob("*.py"):

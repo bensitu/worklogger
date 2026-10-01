@@ -9,6 +9,7 @@ from worklogger.__about__ import APP_NAME
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets._style import refresh_style
 from worklogger.presentation.widgets.assets import pixmap_asset
+from worklogger.presentation.widgets.icons import set_button_icon
 
 
 class SidebarWidget(QFrame):
@@ -78,6 +79,7 @@ class SidebarWidget(QFrame):
         self.profile_name_label = QLabel("")
         self.profile_name_label.setObjectName("sidebar_name_label")
         self.profile_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.profile_name_label.setWordWrap(True)
         layout.addWidget(self.profile_name_label)
 
         self.profile_role_label = QLabel("")
@@ -104,6 +106,7 @@ class SidebarWidget(QFrame):
         button = QPushButton(label)
         button.setObjectName(f"navigation_{route}_button")
         button.setProperty("nav_item", True)
+        set_button_icon(button, {"calendar": "calendar-days", "analytics": "chart-no-axes-column", "reports": "notebook-text", "settings": "settings"}[route])
         button.setCursor(Qt.CursorShape.PointingHandCursor)
         button.clicked.connect(lambda _checked=False, key=route: self._emit_route(key))
         self._buttons[route] = button

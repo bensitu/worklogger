@@ -7,6 +7,7 @@ from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from worklogger.presentation.widgets.card import CardFrame
+from worklogger.presentation.widgets.combo_chart import chart_palette
 
 
 class DonutGauge(QWidget):
@@ -24,11 +25,12 @@ class DonutGauge(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         rect = QRectF(8, 8, self.width() - 16, self.height() - 16)
-        painter.setPen(QPen(QColor("#dce3ef"), 8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+        colors = chart_palette(self)
+        painter.setPen(QPen(QColor(colors.border), 8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
         painter.drawArc(rect, 0, 360 * 16)
-        painter.setPen(QPen(QColor("#1a73e8"), 8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+        painter.setPen(QPen(QColor(colors.accent), 8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
         painter.drawArc(rect, 90 * 16, -int(360 * 16 * self._progress))
-        painter.setPen(QColor("#111827"))
+        painter.setPen(QColor(colors.text))
         painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, f"{round(self._progress * 100)}%")
         painter.end()
 
@@ -43,6 +45,7 @@ class DonutProgressCard(CardFrame):
         self.caption_label = QLabel("")
         self.caption_label.setObjectName("donut_caption_label")
         self.caption_label.setProperty("role", "secondary")
+        self.caption_label.setWordWrap(True)
         self.gauge = DonutGauge()
 
         row = QHBoxLayout()
@@ -73,6 +76,7 @@ class DotProgressCard(CardFrame):
         self.caption_label = QLabel("")
         self.caption_label.setObjectName("dot_caption_label")
         self.caption_label.setProperty("role", "secondary")
+        self.caption_label.setWordWrap(True)
         self.dots_widget = _DotsWidget(color=color)
         self.content_layout.addWidget(self.title_label)
         self.content_layout.addWidget(self.value_label)
@@ -102,11 +106,14 @@ class _DotsWidget(QWidget):
     def paintEvent(self, _event: object) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        spacing = 10
-        radius = 4
-        for index in range(self._total):
+        visible = min(self._total, 26)
+        filled = round(self._filled / self._total * visible)
+        spacing = min(10.0, self.width() / visible)
+        radius = min(4.0, spacing * 0.36)
+        colors = chart_palette(self)
+        for index in range(visible):
             painter.setPen(Qt.PenStyle.NoPen)
-            painter.setBrush(self._color if index < self._filled else QColor("#d0d7e2"))
-            painter.drawEllipse(index * spacing, 4, radius * 2, radius * 2)
+            painter.setBrush(self._color if index < filled else QColor(colors.border_strong))
+            painter.drawEllipse(QRectF(index * spacing, 4, radius * 2, radius * 2))
         painter.end()
 

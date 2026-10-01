@@ -24,6 +24,7 @@ from worklogger.presentation.auth.controller import (
     RememberSessionStore,
 )
 from worklogger.presentation.settings.dialog import SettingsDialog
+from worklogger.presentation.settings.page import SettingsPage
 from worklogger.presentation.user_management import UserManagementDialog
 from worklogger.presentation.viewmodels import (
     AuthViewModel,
@@ -35,6 +36,7 @@ from worklogger.presentation.viewmodels import (
 
 
 SettingsDialogFactory = Callable[[SettingsViewModel, QWidget | None], SettingsDialog]
+SettingsPageFactory = Callable[[SettingsViewModel, QWidget | None], SettingsPage]
 UserManagementDialogFactory = Callable[
     [UserManagementViewModel, QWidget | None],
     UserManagementDialog,
@@ -76,6 +78,7 @@ class SettingsWorkflowController:
         user_management_view_model: UserManagementViewModel | None = None,
         remember_session_store: RememberSessionStore | None = None,
         dialog_factory: SettingsDialogFactory | None = None,
+        page_factory: SettingsPageFactory | None = None,
         change_password_dialog_factory: ChangePasswordDialogFactory | None = None,
         user_management_dialog_factory: UserManagementDialogFactory | None = None,
         backup_destination_provider: PathProvider | None = None,
@@ -98,11 +101,13 @@ class SettingsWorkflowController:
         self._job_runner = job_runner
         self._update_check_handle: JobHandle[object] | None = None
         self._data_job_handle: JobHandle[object] | None = None
+        self._restore_validation_handle: JobHandle[object] | None = None
         self._identity_workflow = identity_workflow
         self._local_models_workflow = local_models_workflow
         self._user_management_view_model = user_management_view_model
         self._remember_session_store = remember_session_store
         self._dialog_factory = dialog_factory or SettingsDialog
+        self._page_factory = page_factory or SettingsPage
         self._change_password_dialog_factory = (
             change_password_dialog_factory or ChangePasswordDialog
         )
@@ -127,34 +132,75 @@ class SettingsWorkflowController:
 
     def create_dialog(self, parent: QWidget | None = None) -> SettingsDialog:
         dialog = self._dialog_factory(self._settings_view_model, parent)
-        if hasattr(dialog, "set_account"):
-            dialog.set_account(self._user)
-        if hasattr(dialog, "set_manage_users_available"):
-            dialog.set_manage_users_available(
-                self._user_management_view_model is not None and self._user.is_admin
-            )
-        dialog.change_password_requested.connect(
-            lambda: self._change_password(dialog)
-        )
-        if self._user_management_view_model is not None:
-            dialog.manage_users_requested.connect(lambda: self._manage_users(dialog))
-        if self._identity_workflow is not None:
-            dialog.manage_identities_requested.connect(
-                lambda: self._identity_workflow.open(dialog)
-            )
-        dialog.backup_requested.connect(lambda: self._backup_database(dialog))
-        dialog.restore_requested.connect(lambda: self._restore_database(dialog))
-        dialog.export_csv_requested.connect(lambda: self._export_csv(dialog))
-        dialog.import_csv_requested.connect(lambda: self._import_csv(dialog))
-        dialog.import_ics_requested.connect(lambda: self._import_ics(dialog))
-        dialog.export_ics_requested.connect(lambda: self._export_ics(dialog))
-        dialog.update_check_requested.connect(lambda: self._check_updates(dialog))
-        if self._local_models_workflow is not None:
-            dialog.manage_local_models_requested.connect(
-                lambda: self._local_models_workflow.open(dialog)
-            )
+        self._bind_surface(dialog)
         dialog.refresh()
         return dialog
+
+    def create_page(self, parent: QWidget | None = None) -> SettingsPage:
+        page = self._page_factory(self._settings_view_model, parent)
+        self._bind_surface(page)
+        page.refresh()
+        return page
+
+    def _bind_surface(self, surface: QWidget) -> None:
+        if hasattr(surface, "set_account"):
+            surface.set_account(self._user)
+        if hasattr(surface, "set_manage_users_available"):
+            surface.set_manage_users_available(
+                self._user_management_view_model is not None and self._user.is_admin
+            )
+        surface.change_password_requested.connect(
+            lambda: self._change_password(surface)
+        )
+        if self._user_management_view_model is not None:
+            surface.manage_users_requested.connect(lambda: self._manage_users(surface))
+        if self._identity_workflow is not None:
+            surface.manage_identities_requested.connect(
+                lambda: self._identity_workflow.open(surface)
+            )
+        elif hasattr(surface, "manage_identities_button"):
+            surface.manage_identities_button.setEnabled(False)
+            surface.manage_identities_button.setToolTip(_("Identity management is not configured."))
+        surface.backup_requested.connect(lambda: self._backup_database(surface))
+        surface.restore_requested.connect(lambda: self._restore_database(surface))
+        surface.export_csv_requested.connect(lambda: self._export_csv(surface))
+        surface.import_csv_requested.connect(lambda: self._import_csv(surface))
+        surface.import_ics_requested.connect(lambda: self._import_ics(surface))
+        surface.export_ics_requested.connect(lambda: self._export_ics(surface))
+        surface.update_check_requested.connect(lambda: self._check_updates(surface))
+        if self._local_models_workflow is not None:
+            surface.manage_local_models_requested.connect(
+                lambda: self._open_local_models(surface)
+            )
+            self._refresh_local_models_status(surface)
+        elif hasattr(surface, "manage_local_models_button"):
+            surface.manage_local_models_button.setEnabled(False)
+            surface.manage_local_models_button.setToolTip(_("Local model management is not configured."))
+
+    def _open_local_models(self, surface: QWidget) -> None:
+        self._local_models_workflow.open(surface)
+        self._refresh_local_models_status(surface)
+
+    def _refresh_local_models_status(self, surface: QWidget) -> None:
+        view_model = getattr(self._local_models_workflow, "view_model", None)
+        label = getattr(surface, "local_model_status_label", None)
+        if view_model is None or label is None:
+            return
+
+        def complete(result: object) -> None:
+            if not result.ok or result.value is None:
+                label.setText(_error_message(result.error))
+                return
+            inventory = result.value.inventory
+            label.setText(
+                _("Active local model: {model}").format(model=inventory.active_model_id)
+                if inventory.active_model_id else _("No local model selected.")
+            )
+
+        if self._job_runner is None:
+            complete(view_model.load())
+        else:
+            self._job_runner.submit("local_model_status", lambda _token: view_model.load(), on_complete=complete)
 
     def open(self, parent: QWidget | None = None) -> SettingsDialog:
         dialog = self.create_dialog(parent)
@@ -208,7 +254,7 @@ class SettingsWorkflowController:
         dialog.exec()
         return dialog
 
-    def _backup_database(self, dialog: SettingsDialog) -> bool:
+    def _backup_database(self, dialog: QWidget) -> bool:
         path = self._backup_destination_provider(dialog)
         if path is None:
             _set_status(dialog, _("Backup cancelled"))
@@ -221,12 +267,29 @@ class SettingsWorkflowController:
             _("Backing up data..."),
         )
 
-    def _restore_database(self, dialog: SettingsDialog) -> bool:
+    def _restore_database(self, dialog: QWidget) -> bool:
+        if self._data_job_handle is not None or self._restore_validation_handle is not None:
+            _set_status(dialog, _("Please wait for the current data operation."))
+            return False
         path = self._restore_source_provider(dialog)
         if path is None:
             _set_status(dialog, _("Restore cancelled"))
             return False
-        validation = self._data_management_view_model.validate_restore_database(path)
+        if self._job_runner is not None:
+            _set_status(dialog, _("Validating backup..."))
+            self._restore_validation_handle = JobHandle(job_id="restore_validate_pending", cancel=lambda: None)
+            handle = self._job_runner.submit(
+                "restore_validate",
+                lambda _token: self._data_management_view_model.validate_restore_database(path),
+                on_complete=lambda result: self._restore_validated(dialog, path, result),
+            )
+            if self._restore_validation_handle is not None:
+                self._restore_validation_handle = handle
+            return True
+        return self._restore_validated(dialog, path, self._data_management_view_model.validate_restore_database(path))
+
+    def _restore_validated(self, dialog: QWidget, path: Path, validation: object) -> bool:
+        self._restore_validation_handle = None
         if not validation.ok:
             return self._handle_data_result(
                 dialog,
@@ -248,7 +311,7 @@ class SettingsWorkflowController:
             self._reload_after_restore()
         return restored
 
-    def _export_csv(self, dialog: SettingsDialog) -> bool:
+    def _export_csv(self, dialog: QWidget) -> bool:
         path = self._csv_destination_provider(dialog)
         if path is None:
             _set_status(dialog, _("Export cancelled"))
@@ -263,7 +326,7 @@ class SettingsWorkflowController:
             _("Exporting CSV..."),
         )
 
-    def _import_csv(self, dialog: SettingsDialog) -> bool:
+    def _import_csv(self, dialog: QWidget) -> bool:
         path = self._csv_source_provider(dialog)
         if path is None:
             _set_status(dialog, _("Import cancelled"))
@@ -278,7 +341,7 @@ class SettingsWorkflowController:
             _("Importing CSV..."),
         )
 
-    def _export_ics(self, dialog: SettingsDialog) -> bool:
+    def _export_ics(self, dialog: QWidget) -> bool:
         path = self._ics_destination_provider(dialog)
         if path is None:
             _set_status(dialog, _("Export cancelled"))
@@ -293,7 +356,7 @@ class SettingsWorkflowController:
             _("Exporting .ics..."),
         )
 
-    def _import_ics(self, dialog: SettingsDialog) -> bool:
+    def _import_ics(self, dialog: QWidget) -> bool:
         path = self._ics_source_provider(dialog)
         if path is None:
             _set_status(dialog, _("Import cancelled"))
@@ -330,7 +393,7 @@ class SettingsWorkflowController:
             _("Importing .ics..."),
         )
 
-    def _check_updates(self, dialog: SettingsDialog) -> bool:
+    def _check_updates(self, dialog: QWidget) -> bool:
         if self._update_check_handler is None:
             _set_status(dialog, _("Update check is not configured."))
             return False
@@ -358,13 +421,13 @@ class SettingsWorkflowController:
         result = self._update_check_handler.handle(CheckForUpdatesQuery(APP_VERSION))
         return self._handle_update_result(dialog, result)
 
-    def _complete_update_check(self, dialog: SettingsDialog, result: object) -> None:
+    def _complete_update_check(self, dialog: QWidget, result: object) -> None:
         self._update_check_handle = None
         if hasattr(dialog, "check_updates_button"):
             dialog.check_updates_button.setEnabled(True)
         self._handle_update_result(dialog, result)
 
-    def _handle_update_result(self, dialog: SettingsDialog, result: object) -> bool:
+    def _handle_update_result(self, dialog: QWidget, result: object) -> bool:
         if not result.ok or result.value is None:
             message = _error_message(result.error)
             _set_status(dialog, message)
@@ -377,7 +440,7 @@ class SettingsWorkflowController:
 
     def _handle_data_result(
         self,
-        dialog: SettingsDialog,
+        dialog: QWidget,
         title: str,
         result: Result[DataManagementActionState],
         success_message: Callable[[DataManagementActionState], str],
@@ -394,7 +457,7 @@ class SettingsWorkflowController:
 
     def _run_data_job(
         self,
-        dialog: SettingsDialog,
+        dialog: QWidget,
         title: str,
         job: Callable[[], Result[DataManagementActionState]],
         success_message: Callable[[DataManagementActionState], str],
@@ -402,7 +465,7 @@ class SettingsWorkflowController:
     ) -> bool:
         if self._job_runner is None:
             return self._handle_data_result(dialog, title, job(), success_message)
-        if self._data_job_handle is not None:
+        if self._data_job_handle is not None or self._restore_validation_handle is not None:
             _set_status(dialog, _("Please wait for the current data operation."))
             return False
         _set_status(dialog, busy_message)
@@ -426,7 +489,7 @@ class SettingsWorkflowController:
 
     def _complete_data_job(
         self,
-        dialog: SettingsDialog,
+        dialog: QWidget,
         title: str,
         result: object,
         success_message: Callable[[DataManagementActionState], str],
@@ -441,7 +504,7 @@ class SettingsWorkflowController:
             self._reload_after_restore()
 
 
-def _set_status(dialog: SettingsDialog, message: str) -> None:
+def _set_status(dialog: QWidget, message: str) -> None:
     dialog.status_label.setText(message)
 
 

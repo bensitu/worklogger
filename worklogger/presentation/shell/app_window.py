@@ -6,6 +6,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from datetime import date
 from typing import Protocol
+from worklogger.app.job_runner import JobRunner
 
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QCloseEvent
@@ -15,7 +16,9 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QMessageBox,
+    QMenu,
     QPushButton,
+    QToolButton,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -29,7 +32,7 @@ from worklogger.presentation.shell.pages import (
     AnalyticsPage,
     CalendarPage,
     ReportsPage,
-    SettingsPage,
+    SettingsPlaceholderPage,
 )
 from worklogger.presentation.shell.residency import QtResidencyController
 from worklogger.presentation.theme import ThemeEngine, install_bundled_fonts
@@ -38,6 +41,7 @@ from worklogger.presentation.viewmodels import (
     CalendarViewModel,
     StatsPanelViewModel,
     WorkLogEntryViewModel,
+    SettingsState,
 )
 from worklogger.presentation.widgets import (
     CalendarView,
@@ -47,6 +51,7 @@ from worklogger.presentation.widgets import (
     WorkLogEntryPanel,
 )
 from worklogger.presentation.widgets.assets import apply_window_icon
+from worklogger.presentation.widgets.icons import set_button_icon
 
 
 class NotesWorkflow(Protocol):
@@ -108,6 +113,7 @@ class AppWindow(QMainWindow):
         reports_workflow: ReportsWorkflow | None = None,
         residency_controller: QtResidencyController | None = None,
         theme_engine: ThemeEngine | None = None,
+        job_runner: JobRunner | None = None,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -123,6 +129,7 @@ class AppWindow(QMainWindow):
         self._reports_workflow = reports_workflow
         self._residency_controller = residency_controller
         self._theme_engine = theme_engine or ThemeEngine()
+        self._job_runner = job_runner
         self._today = self._config.today or date.today()
         self._selected_day = self._config.selected_day or self._today
         self._current_month = self._selected_day.replace(day=1)
@@ -157,7 +164,7 @@ class AppWindow(QMainWindow):
 
     @property
     def has_unsaved_changes(self) -> bool:
-        return self._entry_dirty
+        return self._entry_dirty or self.reports_page.has_unsaved_changes
 
     def apply_theme(self) -> None:
         application = QApplication.instance()
@@ -178,6 +185,27 @@ class AppWindow(QMainWindow):
                 custom_color=self._config.custom_color,
             )
         )
+
+    def apply_settings(self, state: SettingsState) -> None:
+        self._config = replace(
+            self._config, theme=state.theme, dark=state.dark_mode,
+            custom_color=state.custom_color, standard_work_hours=state.standard_work_hours,
+            monthly_target_hours=state.monthly_target_hours,
+            calendar_options=replace(
+                self._config.calendar_options, show_holidays=state.show_holidays,
+                show_note_markers=state.show_note_markers,
+                show_overnight_indicator=state.show_overnight_indicator,
+                week_start_monday=state.week_start_monday,
+            ),
+        )
+        self._worklog_entry_view_model.set_default_break_hours(state.default_break_hours)
+        self.apply_theme()
+        self._refresh_calendar()
+        self._refresh_stats()
+        if not self._entry_dirty:
+            self._refresh_entry()
+        if self._residency_controller is not None:
+            self._residency_controller.refresh()
 
     def refresh(self) -> bool:
         self._last_error = None
@@ -257,12 +285,13 @@ class AppWindow(QMainWindow):
         self.reports_page = ReportsPage(
             getattr(self._reports_workflow, "view_model", None),
             self._selected_day,
+            job_runner=self._job_runner,
+            confirm_discard=self._config.confirm_discard_changes,
         )
-        self.settings_page = SettingsPage(
-            self._settings_workflow
-            if hasattr(self._settings_workflow, "create_dialog")
-            else None
-        )
+        if hasattr(self._settings_workflow, "create_page"):
+            self.settings_page = self._settings_workflow.create_page(self)
+        else:
+            self.settings_page = SettingsPlaceholderPage()
 
         self._page_routes = {
             "calendar": self.page_stack.addWidget(self.calendar_page),
@@ -299,11 +328,25 @@ class AppWindow(QMainWindow):
         self.status_label.setObjectName("app_status_label")
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
 
-        header = self.calendar_page.header_layout
-        insert_index = max(0, header.count() - 2)
-        header.insertWidget(insert_index, self.quick_logs_button)
-        header.insertWidget(insert_index + 1, self.notes_button)
-        header.insertWidget(insert_index + 2, self.ai_assist_button)
+        actions = QMenu(self)
+        for button, workflow in (
+            (self.quick_logs_button, self._quick_logs_workflow),
+            (self.notes_button, self._notes_workflow),
+            (self.ai_assist_button, self._ai_assist_workflow),
+        ):
+            button.hide()
+            if workflow is not None:
+                actions.addAction(button.text(), button.click)
+        self.more_actions_button = QToolButton()
+        self.more_actions_button.setObjectName("calendar_more_actions_button")
+        self.more_actions_button.setToolTip(_("More actions"))
+        self.more_actions_button.setAccessibleName(_("More actions"))
+        set_button_icon(self.more_actions_button, "notebook-text")
+        self.more_actions_button.setMenu(actions)
+        self.more_actions_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        self.more_actions_button.setVisible(not actions.isEmpty())
+        self.calendar_page.header_layout.addWidget(self.more_actions_button)
+        set_button_icon(self.logout_button, "log-out")
 
         sidebar_layout = self.sidebar.layout()
         if sidebar_layout is not None:
@@ -329,9 +372,10 @@ class AppWindow(QMainWindow):
         self.notes_button.clicked.connect(self.open_notes)
         self.ai_assist_button.clicked.connect(self.open_ai_assist)
         self.logout_button.clicked.connect(self._request_logout)
-        embedded_settings = getattr(self.settings_page, "embedded_settings", None)
-        if embedded_settings is not None and hasattr(embedded_settings, "logout_requested"):
-            embedded_settings.logout_requested.connect(self._request_logout)
+        if hasattr(self.settings_page, "logout_requested"):
+            self.settings_page.logout_requested.connect(self._request_logout)
+        if hasattr(self.settings_page, "settings_changed"):
+            self.settings_page.settings_changed.connect(self.apply_settings)
         self.calendar_view.day_selected.connect(self.select_day)
         self.entry_panel.draft_changed.connect(self._preview_entry_draft)
         self.entry_panel.save_requested.connect(self._save_entry_draft)
@@ -371,7 +415,15 @@ class AppWindow(QMainWindow):
             return False
         self.entry_panel.set_form(result.value)
         self._entry_dirty = result.value.dirty
-        self.calendar_page.set_record_summary(_record_summary(result.value))
+        events = self._calendar_view_model.events_for_day(self._selected_day)
+        if not events.ok:
+            self._set_error(events.error)
+            return False
+        lines = list(_record_summary(result.value))
+        for event in sorted(events.value or (), key=lambda value: (value.start_time or "", value.summary)):
+            time_text = _("All day") if event.all_day else f"{event.start_time or '--:--'} - {event.end_time or '--:--'}"
+            lines.append(f"{time_text}\n{event.summary}")
+        self.calendar_page.set_record_summary(tuple(lines))
         return True
 
     def _refresh_stats(self) -> bool:
@@ -428,6 +480,7 @@ class AppWindow(QMainWindow):
             return
         self.entry_panel.set_form(saved.value)
         self._entry_dirty = saved.value.dirty
+        self._refresh_entry()
         self._refresh_calendar()
         self._refresh_stats()
         self._set_status(_("Saved"))
@@ -457,9 +510,10 @@ class AppWindow(QMainWindow):
     def open_settings(self) -> bool:
         if self._settings_workflow is None:
             return False
-        if hasattr(self._settings_workflow, "create_dialog"):
-            self._switch_route("settings")
-            return True
+        if hasattr(self._settings_workflow, "create_page"):
+            return self._switch_route("settings")
+        if not self._confirm_discard_changes_if_needed():
+            return False
         self._settings_workflow.open(self)
         self.refresh()
         if self._residency_controller is not None:
@@ -469,12 +523,16 @@ class AppWindow(QMainWindow):
     def open_notes(self) -> bool:
         if self._notes_workflow is None:
             return False
+        if not self._confirm_discard_changes_if_needed():
+            return False
         self._notes_workflow.open(self._selected_day, self)
         self.refresh()
         return True
 
     def open_quick_logs(self) -> bool:
         if self._quick_logs_workflow is None:
+            return False
+        if not self._confirm_discard_changes_if_needed():
             return False
         self._quick_logs_workflow.open(self._selected_day, self)
         self.refresh()
@@ -484,8 +542,9 @@ class AppWindow(QMainWindow):
         if self._reports_workflow is None:
             return False
         if getattr(self._reports_workflow, "view_model", None) is not None:
-            self._switch_route("reports")
-            return True
+            return self._switch_route("reports")
+        if not self._confirm_discard_changes_if_needed():
+            return False
         self._reports_workflow.open(self._selected_day, self)
         self.refresh()
         return True
@@ -494,14 +553,17 @@ class AppWindow(QMainWindow):
         if self._analytics_workflow is None:
             return False
         if getattr(self._analytics_workflow, "view_model", None) is not None:
-            self._switch_route("analytics")
-            return True
+            return self._switch_route("analytics")
+        if not self._confirm_discard_changes_if_needed():
+            return False
         self._analytics_workflow.open(self._selected_day, self)
         self.refresh()
         return True
 
     def open_ai_assist(self) -> bool:
         if self._ai_assist_workflow is None:
+            return False
+        if not self._confirm_discard_changes_if_needed():
             return False
         self._ai_assist_workflow.open(self._selected_day, self)
         self.refresh()
@@ -517,12 +579,13 @@ class AppWindow(QMainWindow):
             opened = self.open_reports()
             self.sidebar.set_active_route("calendar")
             return opened
-        if normalized == "settings" and not hasattr(self._settings_workflow, "create_dialog"):
+        if normalized == "settings" and not hasattr(self._settings_workflow, "create_page"):
             opened = self.open_settings()
             self.sidebar.set_active_route("calendar")
             return opened
-        if normalized != "calendar" and not self._confirm_discard_changes_if_needed():
-            self.sidebar.set_active_route("calendar")
+        if not self._confirm_discard_changes_if_needed():
+            current = next(key for key, value in self._page_routes.items() if value == self.page_stack.currentIndex())
+            self.sidebar.set_active_route(current)
             return False
         index = self._page_routes.get(normalized)
         if index is None:
@@ -576,6 +639,9 @@ class AppWindow(QMainWindow):
         self.close()
 
     def _confirm_discard_changes_if_needed(self) -> bool:
+        if not self.reports_page.confirm_leave():
+            self._set_status(_("Unsaved changes"))
+            return False
         if not self._entry_dirty:
             return True
         if self._config.confirm_discard_changes is not None:
@@ -616,7 +682,7 @@ def _record_summary(form: object) -> tuple[str, ...]:
     if start_time or end_time or worked_hours > 0:
         time_text = f"{start_time or '--:--'} - {end_time or '--:--'}"
         lines.append(f"{time_text}  {worked_hours:.1f}{_('h')}")
-    if lines and work_type:
+    if work_type and (lines or bool(getattr(form, "is_leave", False))):
         lines.append(work_type)
     if note:
         lines.append(note)

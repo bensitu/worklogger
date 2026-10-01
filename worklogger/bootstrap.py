@@ -13,7 +13,7 @@ from typing import Protocol
 from PySide6.QtWidgets import QApplication
 
 from worklogger.app.job_runner import JobRunner
-from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler
+from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler, GetAnalyticsDashboardHandler
 from worklogger.app.use_cases.ai import (
     AiChatHandler,
     BuildAiContextHandler,
@@ -411,6 +411,28 @@ def _build_runtime_for_user(
     )
     residency_controller = _build_residency_controller(user, handlers)
     window_config = _window_config_for_user(config.window, user)
+    settings = SettingsViewModel(
+        user_id=user.id, get_handler=handlers.settings_get_handler,
+        set_handler=handlers.settings_set_handler,
+    ).load()
+    if not settings.ok or settings.value is None:
+        return Result.failure(settings.error)
+    from worklogger.infrastructure.i18n import set_language
+
+    state = settings.value
+    set_language(state.language)
+    worklog_entry_view_model.set_default_break_hours(state.default_break_hours)
+    window_config = replace(
+        window_config, theme=state.theme, dark=state.dark_mode,
+        custom_color=state.custom_color, standard_work_hours=state.standard_work_hours,
+        monthly_target_hours=state.monthly_target_hours,
+        calendar_options=replace(
+            window_config.calendar_options, show_holidays=state.show_holidays,
+            show_note_markers=state.show_note_markers,
+            show_overnight_indicator=state.show_overnight_indicator,
+            week_start_monday=state.week_start_monday,
+        ),
+    )
 
     if _minimal_mode_enabled(connection_factory, user, config):
         return _runtime_result(
@@ -519,6 +541,7 @@ def _build_analytics_workflow(
         AnalyticsViewModel(
             user_id=user.id,
             bundle_handler=GetAnalyticsBundleHandler(repositories.work_logs),
+            dashboard_handler=GetAnalyticsDashboardHandler(repositories.work_logs, repositories.settings),
             csv_exporter=AnalyticsCsvExporter(),
             pdf_exporter=AnalyticsPdfExporter(),
         )
@@ -588,6 +611,7 @@ def _build_reports_workflow(
             ),
             get_report_handler=GetReportForPeriodHandler(repositories.reports),
             list_reports_handler=ListReportsHandler(repositories.reports),
+            templates=handlers.templates,
             save_report_handler=SaveReportHandler(repositories.reports),
             save_template_handler=handlers.save_template_handler,
             reset_template_handler=handlers.reset_template_handler,
@@ -837,6 +861,7 @@ def _build_app_window(
         notes_workflow=_build_notes_workflow(user, repositories, handlers),
         reports_workflow=_build_reports_workflow(user, repositories, handlers),
         residency_controller=residency_controller,
+        job_runner=job_runner,
     )
 
 

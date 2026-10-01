@@ -78,6 +78,10 @@ class AiContextResult:
 
 
 class RewriteTextHandler:
+    @property
+    def available(self) -> bool:
+        return self._gateway is not None
+
     def __init__(
         self,
         gateway: AIGateway | None = None,
@@ -113,6 +117,7 @@ class RewriteTextHandler:
                         content=content,
                         context=command.context,
                         language=command.language,
+                        instructions=command.instructions,
                     ),
                     model=self._model,
                     timeout_seconds=self._timeout_seconds,
@@ -141,6 +146,7 @@ def _rewrite_messages(
     content: str,
     context: str,
     language: str,
+    instructions: str = "",
 ) -> tuple[dict[str, str], ...]:
     normalized_context = str(context or "note").strip() or "note"
     normalized_language = str(language or "en_US").strip() or "en_US"
@@ -157,6 +163,7 @@ def _rewrite_messages(
             "content": (
                 f"Context: {normalized_context}\n"
                 f"Language: {normalized_language}\n\n"
+                f"Additional instructions: {instructions.strip()}\n\n"
                 f"{content}"
             ),
         },

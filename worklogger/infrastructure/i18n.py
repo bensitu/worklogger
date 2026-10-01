@@ -80,12 +80,12 @@ def available_languages() -> tuple[str, ...]:
 
 def _(message: str) -> str:
     with _lock:
-        return _translation.gettext(message)
+        return _translation.gettext(message) or message
 
 
 def ngettext(singular: str, plural: str, n: int) -> str:
     with _lock:
-        return _translation.ngettext(singular, plural, n)
+        return _translation.ngettext(singular, plural, n) or (singular if n == 1 else plural)
 
 
 set_language(os.environ.get("WORKLOGGER_LANG"))

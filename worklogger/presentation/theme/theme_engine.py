@@ -12,7 +12,7 @@ from worklogger.domain.worklog.models import WorkType
 
 DEFAULT_CUSTOM_COLOR = "#4f8ef7"
 THEME_KEYS = ("blue", "pink", "green", "purple", "custom")
-STYLE_PRIORITY = ("weekend", "today", "holiday", "selected")
+STYLE_PRIORITY = ("weekend", "holiday", "today", "selected")
 _HEX_RE = re.compile(r"^#?[0-9a-fA-F]{6}$")
 _QSS_ROOT = Path(__file__).with_name("qss")
 
@@ -237,6 +237,7 @@ class ThemeEngine:
                 "surface_alt": palette.surface_alt,
                 "text": palette.text,
                 "warning": palette.warning,
+                "icons_root": (Path(__file__).resolve().parents[2] / "assets" / "icons" / "ui").as_posix(),
             },
         )
 
@@ -261,6 +262,7 @@ class ThemeEngine:
         _set_palette_color(qt_palette, QPalette.ColorRole.ButtonText, palette.text)
         _set_palette_color(qt_palette, QPalette.ColorRole.Highlight, palette.accent)
         _set_palette_color(qt_palette, QPalette.ColorRole.HighlightedText, "#ffffff")
+        _set_palette_color(qt_palette, QPalette.ColorRole.Link, palette.accent)
         qt_palette.setColor(
             QPalette.ColorGroup.Disabled,
             QPalette.ColorRole.WindowText,

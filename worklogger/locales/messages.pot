@@ -26,6 +26,9 @@ msgstr ""
 msgid "AI Assist Hint / extra instructions (optional)"
 msgstr ""
 
+msgid "AI Assist is not configured."
+msgstr ""
+
 msgid "AI Privacy"
 msgstr ""
 
@@ -44,13 +47,22 @@ msgstr ""
 msgid "Active"
 msgstr ""
 
+msgid "Active local model: {model}"
+msgstr ""
+
 msgid "Add"
+msgstr ""
+
+msgid "Add Entry"
 msgstr ""
 
 msgid "Address"
 msgstr ""
 
 msgid "Admin"
+msgstr ""
+
+msgid "All day"
 msgstr ""
 
 msgid "Analytics"
@@ -71,6 +83,9 @@ msgstr ""
 msgid "Apply template"
 msgstr ""
 
+msgid "April"
+msgstr ""
+
 msgid "Ask about your work logs"
 msgstr ""
 
@@ -78,6 +93,9 @@ msgid "Assistant"
 msgstr ""
 
 msgid "Attendance Days"
+msgstr ""
+
+msgid "August"
 msgstr ""
 
 msgid "Authentication information (optional)"
@@ -96,6 +114,9 @@ msgid "Average Work Hours"
 msgstr ""
 
 msgid "Back to login"
+msgstr ""
+
+msgid "Back up regularly to protect your data."
 msgstr ""
 
 msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
@@ -173,6 +194,9 @@ msgstr ""
 msgid "Clear Calendar Events"
 msgstr ""
 
+msgid "Clearing calendar events is not supported yet."
+msgstr ""
+
 msgid "Close"
 msgstr ""
 
@@ -231,6 +255,9 @@ msgid "Data restored successfully."
 msgstr ""
 
 msgid "Database Backup"
+msgstr ""
+
+msgid "December"
 msgstr ""
 
 msgid "Default break (h)"
@@ -329,6 +356,9 @@ msgstr ""
 msgid "External model testing is not configured."
 msgstr ""
 
+msgid "February"
+msgstr ""
+
 msgid "Forgot Password?"
 msgstr ""
 
@@ -354,6 +384,9 @@ msgid "Hide"
 msgstr ""
 
 msgid "ID"
+msgstr ""
+
+msgid "Identity management is not configured."
 msgstr ""
 
 msgid "Import .gguf"
@@ -404,7 +437,16 @@ msgstr ""
 msgid "Insert Quick Log"
 msgstr ""
 
+msgid "January"
+msgstr ""
+
 msgid "Japanese"
+msgstr ""
+
+msgid "July"
+msgstr ""
+
+msgid "June"
 msgstr ""
 
 msgid "Korean"
@@ -440,6 +482,9 @@ msgstr ""
 msgid "Local Models"
 msgstr ""
 
+msgid "Local model management is not configured."
+msgstr ""
+
 msgid "Local user"
 msgstr ""
 
@@ -467,7 +512,13 @@ msgstr ""
 msgid "Manual Input"
 msgstr ""
 
+msgid "March"
+msgstr ""
+
 msgid "Markdown files (*.md)"
+msgstr ""
+
+msgid "May"
 msgstr ""
 
 msgid "Mode"
@@ -500,6 +551,9 @@ msgstr ""
 msgid "Monthly target (h)"
 msgstr ""
 
+msgid "More actions"
+msgstr ""
+
 msgid "Network"
 msgstr ""
 
@@ -518,6 +572,9 @@ msgstr ""
 msgid "Next month"
 msgstr ""
 
+msgid "Next period"
+msgstr ""
+
 msgid "No arguments start the desktop application."
 msgstr ""
 
@@ -525,6 +582,9 @@ msgid "No data"
 msgstr ""
 
 msgid "No events found."
+msgstr ""
+
+msgid "No local model selected."
 msgstr ""
 
 msgid "No records for the selected day."
@@ -546,6 +606,12 @@ msgid "Not required"
 msgstr ""
 
 msgid "Notes"
+msgstr ""
+
+msgid "November"
+msgstr ""
+
+msgid "October"
 msgstr ""
 
 msgid "On break"
@@ -620,6 +686,9 @@ msgstr ""
 msgid "Previous month"
 msgstr ""
 
+msgid "Previous period"
+msgstr ""
+
 msgid "Public holidays"
 msgstr ""
 
@@ -642,6 +711,9 @@ msgid "Quick Log updated."
 msgstr ""
 
 msgid "Quit"
+msgstr ""
+
+msgid "Q{quarter} {year}"
 msgstr ""
 
 msgid "RUNTIME SMOKE FAILED"
@@ -704,6 +776,9 @@ msgstr ""
 msgid "Reset template"
 msgstr ""
 
+msgid "Reset this template to its default?"
+msgstr ""
+
 msgid "Rest Days"
 msgstr ""
 
@@ -723,6 +798,9 @@ msgid "Restoring data..."
 msgstr ""
 
 msgid "Rewrite"
+msgstr ""
+
+msgid "Rewriting report..."
 msgstr ""
 
 msgid "Rewritten"
@@ -761,6 +839,9 @@ msgstr ""
 msgid "Saved"
 msgstr ""
 
+msgid "Saved. Language changes apply after restarting."
+msgstr ""
+
 msgid "Schedule / Records"
 msgstr ""
 
@@ -789,6 +870,9 @@ msgid "Send"
 msgstr ""
 
 msgid "Sending..."
+msgstr ""
+
+msgid "September"
 msgstr ""
 
 msgid "Settings"
@@ -920,6 +1004,9 @@ msgstr ""
 msgid "Username"
 msgstr ""
 
+msgid "Validating backup..."
+msgstr ""
+
 msgid "Verify"
 msgstr ""
 
@@ -986,10 +1073,10 @@ msgstr ""
 msgid "You have unsaved report changes. Discard them?"
 msgstr ""
 
-msgid "You have unsaved work log changes. Discard them?"
+msgid "You have unsaved template changes. Discard them?"
 msgstr ""
 
-msgid "You haven't backed up in 30 days. Please back up your data."
+msgid "You have unsaved work log changes. Discard them?"
 msgstr ""
 
 msgid "h"
@@ -998,26 +1085,29 @@ msgstr ""
 msgid "iCalendar (*.ics)"
 msgstr ""
 
-msgid "leave days"
-msgstr ""
-
 msgid "m"
 msgstr ""
 
-msgid "of monthly goal"
+msgid "of {hours:.1f}h goal"
 msgstr ""
 
 msgid "or"
 msgstr ""
 
-msgid "tracked days"
+msgid "{change:+.1f}h vs previous period"
 msgstr ""
 
-msgid "vs previous period"
+msgid "{change:+d} days vs previous period"
 msgstr ""
 
 msgid "{count} event"
 msgstr ""
 
 msgid "{count} events"
+msgstr ""
+
+msgid "{mode}: {hours:.1f}h ({percent:.0f}%)"
+msgstr ""
+
+msgid "{month} {year}"
 msgstr ""

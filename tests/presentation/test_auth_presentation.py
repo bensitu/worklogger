@@ -9,8 +9,9 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QWidget
+from PySide6.QtWidgets import QApplication, QDialog, QFrame, QLineEdit, QWidget
 
+from worklogger.__about__ import APP_NAME
 from worklogger.app.use_cases.auth import (
     ChangePasswordHandler,
     GetAuthBootstrapStateHandler,
@@ -33,6 +34,7 @@ from worklogger.presentation.auth import (
     ResetPasswordDraft,
 )
 from worklogger.presentation.viewmodels import AuthViewModel
+from worklogger.presentation.widgets.assets import asset_path
 
 
 def _app() -> QApplication:
@@ -260,12 +262,24 @@ class AuthPresentationTests(unittest.TestCase):
         self.assertEqual(logins, [LoginDraft("alice", "secret123", False)])
         self.assertEqual(dialog.hero_frame.width(), dialog.form_frame.width())
         self.assertEqual(dialog.login_button.text(), "Login")
+        self.assertEqual(dialog.windowTitle(), APP_NAME)
         dialog.close()
+
+    def test_login_dialog_uses_icons_divider_and_runtime_asset_fallbacks(self) -> None:
+        dialog = LoginDialog()
+
+        self.assertEqual(len(dialog.username_input.actions()), 1)
+        self.assertEqual(len(dialog.password_input.actions()), 2)
+        self.assertIsNotNone(dialog.findChild(QFrame, "login_divider_left_frame"))
+        self.assertIsNotNone(dialog.findChild(QFrame, "login_divider_right_frame"))
+        self.assertTrue(asset_path("images/worklogger_login_image.webp").exists())
+        self.assertTrue(asset_path("images/worklogger_login_image.webp").exists())
+        self.assertFalse(dialog.google_login_button.isEnabled())
+        self.assertFalse(dialog.microsoft_login_button.isEnabled())
 
     def test_login_dialog_password_visibility_uses_embedded_action(self) -> None:
         dialog = LoginDialog()
 
-        self.assertEqual(len(dialog.password_input.actions()), 1)
         self.assertEqual(dialog.password_input.echoMode(), QLineEdit.EchoMode.Password)
 
         dialog.password_visibility_action.trigger()

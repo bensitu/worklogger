@@ -5,13 +5,17 @@ from __future__ import annotations
 from calendar import monthrange
 from datetime import date
 
-from worklogger.app.queries.analytics_queries import GetAnalyticsBundleQuery
-from worklogger.domain.analytics.models import ChartDataBundle
+from worklogger.app.queries.analytics_queries import GetAnalyticsBundleQuery, GetAnalyticsDashboardQuery
+from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBundle
 from worklogger.domain.analytics.rules import (
     annual_chart_data,
     monthly_chart_data,
     quarterly_chart_data,
+    dashboard_data,
 )
+from worklogger.config.constants import MONTHLY_TARGET_HOURS_SETTING_KEY, STANDARD_WORK_HOURS_SETTING_KEY
+from worklogger.domain.settings.repositories import SettingsRepository
+from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
@@ -78,3 +82,30 @@ class GetAnalyticsBundleHandler:
 
     def _month_records(self, user_id: int, year: int, month: int) -> tuple[WorkLog, ...]:
         return self._repository.list_for_month(user_id, year, month)
+
+
+class GetAnalyticsDashboardHandler:
+    def __init__(self, repository: WorkLogRepository, settings: SettingsRepository | None = None) -> None:
+        self._repository = repository
+        self._settings = settings
+
+    def handle(self, query: GetAnalyticsDashboardQuery) -> Result[AnalyticsDashboard]:
+        try:
+            standard = self._number(query.user_id, STANDARD_WORK_HOURS_SETTING_KEY, 8.0, 1.0, 24.0)
+            target = self._number(query.user_id, MONTHLY_TARGET_HOURS_SETTING_KEY, 168.0, 0.0, 400.0)
+            value = dashboard_data(
+                self._repository.list_all(query.user_id), year=query.year, month=query.month,
+                scope=query.scope, standard_hours=standard, monthly_target=target,
+            )
+        except (TypeError, ValueError) as exc:
+            return Result.failure(ValidationError(str(exc), str(exc)))
+        except Exception:
+            return Result.failure(InfrastructureError("analytics_load_failed", "analytics_load_failed"))
+        return Result.success(value)
+
+    def _number(self, user_id: int, key: str, default: float, minimum: float, maximum: float) -> float:
+        value = self._settings.get(user_id, key, str(default)) if self._settings is not None else default
+        try:
+            return max(minimum, min(maximum, float(value)))
+        except (TypeError, ValueError):
+            return default

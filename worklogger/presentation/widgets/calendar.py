@@ -31,7 +31,7 @@ class CalendarDayButton(QPushButton):
         super().__init__(parent)
         self._cell: CalendarDayCell | None = None
         self.setObjectName("calendar_day_button")
-        self.setMinimumHeight(86)
+        self.setMinimumHeight(72)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
@@ -80,7 +80,7 @@ class CalendarDayButton(QPushButton):
         painter.setPen(QColor(foreground))
         if lines:
             painter.drawText(
-                QRectF(10, 8, self.width() - 20, 18),
+                QRectF(10, 8, self.width() - (30 if cell.event_count else 20), 18),
                 Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                 lines[0],
             )
@@ -97,9 +97,11 @@ class CalendarDayButton(QPushButton):
         painter.setFont(font)
         painter.setPen(QColor(foreground))
         metric_lines = lines[-2:] if len(lines) >= 2 else ()
+        metric_top = max(38 if cell.holiday_name else 28, self.height() - 34)
         for index, line in enumerate(metric_lines):
+            metric_width = self.width() - 16
             painter.drawText(
-                QRectF(8, 38 + index * 18, self.width() - 16, 18),
+                QRectF(8, metric_top + index * 14, metric_width, 14),
                 Qt.AlignmentFlag.AlignCenter,
                 line,
             )
@@ -112,8 +114,7 @@ class CalendarDayButton(QPushButton):
         if cell.has_note_marker:
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QColor(cell.style.hover_border))
-            note_x = 15 if cell.work_type_marker_color else 7
-            painter.drawEllipse(note_x, 7, 7, 7)
+            painter.drawEllipse(self.width() - 8, 2, 5, 5)
 
         if cell.show_overnight_marker:
             painter.setPen(QPen(QColor(cell.style.foreground), 1))
@@ -124,7 +125,7 @@ class CalendarDayButton(QPushButton):
             )
 
         if cell.event_count > 0:
-            badge = QRectF(self.width() - 24, self.height() - 20, 18, 14)
+            badge = QRectF(self.width() - 22, 8, 18, 14)
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QColor(cell.style.hover_border))
             painter.drawRoundedRect(badge, 6, 6)

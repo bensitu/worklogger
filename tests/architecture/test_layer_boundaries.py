@@ -138,7 +138,7 @@ class LayerBoundaryTests(unittest.TestCase):
             parent = path.parent.name
             if parent in {"shell", "theme", "viewmodels", "widgets"} or path.name == "__init__.py":
                 continue
-            if path.name not in {"controller.py", "dialog.py", "dialogs.py"}:
+            if path.name not in {"controller.py", "dialog.py", "dialogs.py", "page.py"}:
                 offenders.append(str(path.relative_to(PROJECT_ROOT)))
         self.assertEqual(offenders, [])
 

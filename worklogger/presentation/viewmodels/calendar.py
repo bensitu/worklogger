@@ -102,6 +102,9 @@ class CalendarViewModel:
         self._holiday_country = str(holiday_country or "US").strip().upper() or "US"
         self._theme_engine = theme_engine or ThemeEngine()
 
+    def events_for_day(self, day: date) -> Result[tuple[CalendarEvent, ...]]:
+        return self._events_for_range(day, day)
+
     def build_month(
         self,
         *,

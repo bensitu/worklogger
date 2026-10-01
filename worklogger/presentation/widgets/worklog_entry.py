@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDoubleSpinBox,
     QFormLayout,
+    QGridLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -28,6 +29,7 @@ from worklogger.presentation.viewmodels.auto_record import (
     AutoRecordViewModel,
 )
 from worklogger.presentation.viewmodels.worklog_entry import WorkLogEntryForm
+from worklogger.presentation.widgets.icons import set_button_icon
 
 
 @dataclass(frozen=True)
@@ -70,6 +72,8 @@ class WorkLogEntryPanel(QWidget):
         form = QFormLayout()
         form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft)
         form.setFormAlignment(Qt.AlignmentFlag.AlignTop)
+        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
         manual_layout.addLayout(form)
         self.time_tabs.addTab(manual_tab, _("Manual Input"))
 
@@ -108,7 +112,7 @@ class WorkLogEntryPanel(QWidget):
         auto_layout = QVBoxLayout(self.auto_tab)
         auto_layout.setContentsMargins(0, 0, 0, 0)
         auto_layout.setSpacing(8)
-        auto_buttons = QHBoxLayout()
+        auto_buttons = QGridLayout()
         auto_buttons.setSpacing(8)
         self.clock_in_button = QPushButton(_("Start"))
         self.clock_in_button.setObjectName("auto_clock_in_button")
@@ -118,10 +122,10 @@ class WorkLogEntryPanel(QWidget):
         self.break_button.setObjectName("auto_break_button")
         self.quick_break_button = QPushButton(_("+15m break"))
         self.quick_break_button.setObjectName("auto_quick_break_button")
-        auto_buttons.addWidget(self.clock_in_button)
-        auto_buttons.addWidget(self.clock_out_button)
-        auto_buttons.addWidget(self.break_button)
-        auto_buttons.addWidget(self.quick_break_button)
+        auto_buttons.addWidget(self.clock_in_button, 0, 0)
+        auto_buttons.addWidget(self.clock_out_button, 0, 1)
+        auto_buttons.addWidget(self.break_button, 1, 0)
+        auto_buttons.addWidget(self.quick_break_button, 1, 1)
         auto_layout.addLayout(auto_buttons)
         self.auto_status_label = QLabel("")
         self.auto_status_label.setObjectName("auto_status_label")
@@ -155,6 +159,7 @@ class WorkLogEntryPanel(QWidget):
         self.save_button = QPushButton(_("Save"))
         self.save_button.setObjectName("save_worklog_button")
         self.save_button.setProperty("variant", "primary")
+        set_button_icon(self.save_button, "save")
         self.save_button.clicked.connect(self._emit_save_requested)
         root.addWidget(self.save_button)
 

@@ -16,7 +16,9 @@ def asset_path(relative_path: str | Path) -> Path:
     return ASSETS_ROOT / Path(relative_path)
 
 
-def pixmap_asset(relative_path: str | Path) -> QPixmap:
+def pixmap_asset(
+    relative_path: str | Path,
+) -> QPixmap:
     return QPixmap(str(asset_path(relative_path)))
 
 
