@@ -126,6 +126,7 @@ from worklogger.infrastructure.security import (
 )
 from worklogger.infrastructure.templates import BuiltInTemplateProvider, UserTemplateProvider
 from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
+from worklogger.infrastructure.i18n import get_language, set_language
 from worklogger.presentation.ai import AiAssistWorkflowController
 from worklogger.presentation.analytics import AnalyticsWorkflowController
 from worklogger.presentation.auth import AuthController, AuthSession
@@ -416,9 +417,7 @@ def _build_runtime_for_user(
         set_handler=handlers.settings_set_handler,
     ).load()
     if not settings.ok or settings.value is None:
-        return Result.failure(settings.error)
-    from worklogger.infrastructure.i18n import set_language
-
+        return Result.failure(settings.error or InfrastructureError("settings_load_failed", "settings_load_failed"))
     state = settings.value
     set_language(state.language)
     worklog_entry_view_model.set_default_break_hours(state.default_break_hours)
@@ -558,6 +557,7 @@ def _build_ai_workflow(
         AiAssistViewModel(
             user_id=user.id,
             chat_handler=handlers.ai_chat_handler,
+            language=get_language(),
             context_handler=BuildAiContextHandler(
                 work_logs_handler=GetAllWorkLogsHandler(repositories.work_logs),
                 note_handler=GetDailyNoteHandler(repositories.daily_notes),
@@ -580,6 +580,7 @@ def _build_notes_workflow(
     return NotesWorkflowController(
         NoteEditorViewModel(
             user_id=user.id,
+            language=get_language(),
             get_note_handler=GetDailyNoteHandler(repositories.daily_notes),
             save_note_handler=SaveDailyNoteHandler(repositories.daily_notes),
             quick_logs_handler=GetQuickLogsForDayHandler(repositories.quick_logs),
@@ -603,6 +604,7 @@ def _build_reports_workflow(
     return ReportsWorkflowController(
         ReportEditorViewModel(
             user_id=user.id,
+            language=get_language(),
             generate_handler=GenerateReportHandler(
                 work_logs=repositories.work_logs,
                 quick_logs=repositories.quick_logs,
@@ -796,9 +798,10 @@ def _window_config_for_user(
     window_config: AppWindowConfig,
     user: User,
 ) -> AppWindowConfig:
-    if window_config.account_name:
-        return window_config
-    return replace(window_config, account_name=user.username)
+    return replace(
+        window_config, account_name=window_config.account_name or user.username,
+        account_role="Admin" if user.is_admin else "User",
+    )
 
 
 def _build_minimal_view(

@@ -30,3 +30,17 @@ class SettingsDialog(QDialog):
         if page is not None:
             return getattr(page, name)
         raise AttributeError(name)
+
+    def accept(self) -> None:
+        if not self.page.is_busy:
+            super().accept()
+
+    def reject(self) -> None:
+        if not self.page.is_busy:
+            super().reject()
+
+    def closeEvent(self, event) -> None:
+        if self.page.is_busy:
+            event.ignore()
+        else:
+            super().closeEvent(event)

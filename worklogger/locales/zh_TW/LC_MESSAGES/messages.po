@@ -4,1111 +4,1115 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: zh_TW\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
 msgid "+"
-msgstr ""
+msgstr "+"
 
 msgid "+ Add Entry"
-msgstr ""
+msgstr "+ 新增記錄"
 
 msgid "+15m break"
-msgstr ""
+msgstr "+15分鐘休息"
 
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
-msgstr ""
+msgstr "注重隱私的桌面工時記錄工具，支援 AI 報表。"
 
 msgid "AI"
-msgstr ""
+msgstr "AI"
 
 msgid "AI Assist"
-msgstr ""
+msgstr "AI 助手"
 
 msgid "AI Assist Hint / extra instructions (optional)"
-msgstr ""
+msgstr "AI 提示 / 額外要求（選填）"
 
 msgid "AI Assist is not configured."
-msgstr ""
+msgstr "AI 助手尚未設定。"
 
 msgid "AI Privacy"
-msgstr ""
+msgstr "AI 隱私"
 
 msgid "API Base URL"
-msgstr ""
+msgstr "API 基本網址"
 
 msgid "API Key"
-msgstr ""
+msgstr "API 金鑰"
 
 msgid "About"
-msgstr ""
+msgstr "關於"
 
 msgid "Account"
-msgstr ""
+msgstr "帳戶"
 
 msgid "Active"
-msgstr ""
+msgstr "已啟用"
 
 msgid "Active local model: {model}"
-msgstr ""
+msgstr "目前本機模型：{model}"
 
 msgid "Add"
-msgstr ""
+msgstr "新增"
 
 msgid "Add Entry"
-msgstr ""
+msgstr "新增記錄"
 
 msgid "Address"
-msgstr ""
+msgstr "位址"
 
 msgid "Admin"
-msgstr ""
+msgstr "管理員"
 
 msgid "All day"
-msgstr ""
+msgstr "全天"
 
 msgid "Analytics"
-msgstr ""
+msgstr "統計分析"
 
 msgid "Analytics is not configured."
-msgstr ""
+msgstr "統計分析尚未設定。"
 
 msgid "Annual"
-msgstr ""
+msgstr "年度"
 
 msgid "Appearance"
-msgstr ""
+msgstr "外觀"
 
 msgid "Append"
-msgstr ""
+msgstr "附加"
 
 msgid "Apply template"
-msgstr ""
+msgstr "套用範本"
 
 msgid "April"
-msgstr ""
+msgstr "4月"
 
 msgid "Ask about your work logs"
-msgstr ""
+msgstr "詢問您的工作記錄"
 
 msgid "Assistant"
-msgstr ""
+msgstr "助手"
 
 msgid "Attendance Days"
-msgstr ""
+msgstr "出勤天數"
 
 msgid "August"
-msgstr ""
+msgstr "8月"
 
 msgid "Authentication information (optional)"
-msgstr ""
+msgstr "驗證資訊（選填）"
 
 msgid "Author"
-msgstr ""
+msgstr "作者"
 
 msgid "Auto Record"
-msgstr ""
+msgstr "自動記錄"
 
 msgid "Average"
-msgstr ""
+msgstr "平均值"
 
 msgid "Average Work Hours"
-msgstr ""
+msgstr "平均工時"
 
 msgid "Back to login"
-msgstr ""
+msgstr "返回登入"
 
 msgid "Back up regularly to protect your data."
-msgstr ""
+msgstr "請定期備份，保護您的資料。"
 
 msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
-msgstr ""
+msgstr "定期備份資料庫，保護本機工作記錄、報表、設定及帳戶資料。"
 
 msgid "Backing up data..."
-msgstr ""
+msgstr "正在備份資料..."
 
 msgid "Backup Data"
-msgstr ""
+msgstr "備份資料"
 
 msgid "Backup cancelled"
-msgstr ""
+msgstr "已取消備份"
 
 msgid "Backup saved: {path}"
-msgstr ""
+msgstr "備份已儲存：{path}"
 
 msgid "Bar"
-msgstr ""
+msgstr "長條圖"
 
 msgid "Blue"
-msgstr ""
+msgstr "藍色"
 
 msgid "Break"
-msgstr ""
+msgstr "休息"
 
 msgid "Break (h)"
-msgstr ""
+msgstr "休息（小時）"
 
 msgid "Break timer running"
-msgstr ""
+msgstr "休息計時中"
 
 msgid "Business trip"
-msgstr ""
+msgstr "出差"
 
 msgid "CSV"
-msgstr ""
+msgstr "CSV"
 
 msgid "CSV (*.csv)"
-msgstr ""
+msgstr "CSV (*.csv)"
 
 msgid "CSV Data Management"
-msgstr ""
+msgstr "CSV 資料管理"
 
 msgid "CSV files (*.csv)"
-msgstr ""
+msgstr "CSV files (*.csv)"
 
 msgid "Calendar"
-msgstr ""
+msgstr "行事曆"
 
 msgid "Calendar Data"
-msgstr ""
+msgstr "行事曆資料"
 
 msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
-msgstr ""
+msgstr "已有行事曆資料。\n\n取代會在匯入前清除原有事件。\n附加會保留原有事件並新增匯入的事件。"
 
 msgid "Calendar events: {events}"
-msgstr ""
+msgstr "行事曆事件：{events}"
 
 msgid "Change password"
-msgstr ""
+msgstr "變更密碼"
 
 msgid "Changing password will reset the recovery key."
-msgstr ""
+msgstr "變更密碼會重設復原金鑰。"
 
 msgid "Check for updates"
-msgstr ""
+msgstr "檢查更新"
 
 msgid "Checking for updates..."
-msgstr ""
+msgstr "正在檢查更新..."
 
 msgid "Choose custom color"
-msgstr ""
+msgstr "選擇自訂色彩"
 
 msgid "Clear Calendar Events"
-msgstr ""
+msgstr "清除行事曆事件"
 
 msgid "Clearing calendar events is not supported yet."
-msgstr ""
+msgstr "尚不支援清除行事曆事件。"
 
 msgid "Close"
-msgstr ""
+msgstr "關閉"
 
 msgid "Comp leave"
-msgstr ""
+msgstr "補休"
 
 msgid "Confirm password"
-msgstr ""
+msgstr "確認密碼"
 
 msgid "Continue"
-msgstr ""
+msgstr "繼續"
 
 msgid "Copied"
-msgstr ""
+msgstr "已複製"
 
 msgid "Copy"
-msgstr ""
+msgstr "複製"
 
 msgid "Copy Markdown"
-msgstr ""
+msgstr "複製 Markdown"
 
 msgid "Create account"
-msgstr ""
+msgstr "建立帳戶"
 
 msgid "Create user"
-msgstr ""
+msgstr "建立使用者"
 
 msgid "Current ID"
-msgstr ""
+msgstr "目前 ID"
 
 msgid "Current password"
-msgstr ""
+msgstr "目前密碼"
 
 msgid "Current user"
-msgstr ""
+msgstr "目前使用者"
 
 msgid "Custom"
-msgstr ""
+msgstr "自訂"
 
 msgid "DESKTOP START FAILED"
-msgstr ""
+msgstr "桌面應用程式啟動失敗"
 
 msgid "Daily Average"
-msgstr ""
+msgstr "每日平均工時"
 
 msgid "Daily Report"
-msgstr ""
+msgstr "日報"
 
 msgid "Dark mode"
-msgstr ""
+msgstr "深色模式"
 
 msgid "Data"
-msgstr ""
+msgstr "資料"
 
 msgid "Data restored successfully."
-msgstr ""
+msgstr "資料還原成功。"
 
 msgid "Database Backup"
-msgstr ""
+msgstr "資料庫備份"
 
 msgid "December"
-msgstr ""
+msgstr "12月"
 
 msgid "Default break (h)"
-msgstr ""
+msgstr "預設休息（小時）"
 
 msgid "Delete"
-msgstr ""
+msgstr "刪除"
 
 msgid "Delete user"
-msgstr ""
+msgstr "刪除使用者"
 
 msgid "Description"
-msgstr ""
+msgstr "說明"
 
 msgid "Discard changes?"
-msgstr ""
+msgstr "捨棄變更？"
 
 msgid "Domain"
-msgstr ""
+msgstr "網域"
 
 msgid "Download"
-msgstr ""
+msgstr "下載"
 
 msgid "Downloading model..."
-msgstr ""
+msgstr "正在下載模型..."
 
 msgid "Enable local model"
-msgstr ""
+msgstr "啟用本機模型"
 
 msgid "Enable menu bar"
-msgstr ""
+msgstr "啟用選單列圖示"
 
 msgid "Enable tray icon"
-msgstr ""
+msgstr "啟用系統匣圖示"
 
 msgid "End"
-msgstr ""
+msgstr "結束"
 
 msgid "Ended"
-msgstr ""
+msgstr "已結束"
 
 msgid "English"
-msgstr ""
+msgstr "英語"
 
 msgid "Enter your ID"
-msgstr ""
+msgstr "輸入您的 ID"
 
 msgid "Enter your password"
-msgstr ""
+msgstr "輸入您的密碼"
 
 msgid "Export"
-msgstr ""
+msgstr "匯出"
 
 msgid "Export .ics"
-msgstr ""
+msgstr "匯出 .ics"
 
 msgid "Export CSV"
-msgstr ""
+msgstr "匯出 CSV"
 
 msgid "Export Markdown"
-msgstr ""
+msgstr "匯出 Markdown"
 
 msgid "Export PDF"
-msgstr ""
+msgstr "匯出 PDF"
 
 msgid "Export Reports"
-msgstr ""
+msgstr "匯出報表"
 
 msgid "Export cancelled"
-msgstr ""
+msgstr "已取消匯出"
 
 msgid "Exported CSV"
-msgstr ""
+msgstr "已匯出 CSV"
 
 msgid "Exported Markdown"
-msgstr ""
+msgstr "已匯出 Markdown"
 
 msgid "Exported PDF"
-msgstr ""
+msgstr "已匯出 PDF"
 
 msgid "Exported {count} events."
-msgstr ""
+msgstr "已匯出 {count} 個事件。"
 
 msgid "Exported {count} records."
-msgstr ""
+msgstr "已匯出 {count} 筆記錄。"
 
 msgid "Exporting .ics..."
-msgstr ""
+msgstr "正在匯出 .ics..."
 
 msgid "Exporting CSV..."
-msgstr ""
+msgstr "正在匯出 CSV..."
 
 msgid "External Model"
-msgstr ""
+msgstr "外部模型"
 
 msgid "External model testing is not configured."
-msgstr ""
+msgstr "外部模型測試尚未設定。"
 
 msgid "February"
-msgstr ""
+msgstr "2月"
 
 msgid "Forgot Password?"
-msgstr ""
+msgstr "忘記密碼？"
 
 msgid "Fri"
-msgstr ""
+msgstr "五"
 
 msgid "GGUF Model (*.gguf)"
-msgstr ""
+msgstr "GGUF Model (*.gguf)"
 
 msgid "GNU GPLv3"
-msgstr ""
+msgstr "GNU GPLv3"
 
 msgid "General"
-msgstr ""
+msgstr "一般"
 
 msgid "GitHub"
-msgstr ""
+msgstr "GitHub"
 
 msgid "Green"
-msgstr ""
+msgstr "綠色"
 
 msgid "Hide"
-msgstr ""
+msgstr "隱藏"
 
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 msgid "Identity management is not configured."
-msgstr ""
+msgstr "身分管理尚未設定。"
 
 msgid "Import .gguf"
-msgstr ""
+msgstr "匯入 .gguf"
 
 msgid "Import .ics"
-msgstr ""
+msgstr "匯入 .ics"
 
 msgid "Import CSV"
-msgstr ""
+msgstr "匯入 CSV"
 
 msgid "Import Calendar (.ics)"
-msgstr ""
+msgstr "匯入行事曆（.ics）"
 
 msgid "Import cancelled"
-msgstr ""
+msgstr "已取消匯入"
 
 msgid "Import or export worklog records as CSV files for backup, migration, or spreadsheet analysis."
-msgstr ""
+msgstr "將工作記錄匯入或匯出為 CSV 檔案，用於備份、移轉或試算表分析。"
 
 msgid "Import your .ics file to let AI read your meetings when generating reports."
-msgstr ""
+msgstr "匯入 .ics 檔案，讓 AI 產生報表時參考您的會議。"
 
 msgid "Imported {count} calendar events."
-msgstr ""
+msgstr "已匯入 {count} 個行事曆事件。"
 
 msgid "Imported {count} records."
-msgstr ""
+msgstr "已匯入 {count} 筆記錄。"
 
 msgid "Importing .ics..."
-msgstr ""
+msgstr "正在匯入 .ics..."
 
 msgid "Importing CSV..."
-msgstr ""
+msgstr "正在匯入 CSV..."
 
 msgid "Importing model..."
-msgstr ""
+msgstr "正在匯入模型..."
 
 msgid "Include calendar"
-msgstr ""
+msgstr "包含行事曆"
 
 msgid "Include notes"
-msgstr ""
+msgstr "包含筆記"
 
 msgid "Include quick logs"
-msgstr ""
+msgstr "包含快速記錄"
 
 msgid "Insert Quick Log"
-msgstr ""
+msgstr "插入快速記錄"
 
 msgid "January"
-msgstr ""
+msgstr "1月"
 
 msgid "Japanese"
-msgstr ""
+msgstr "日語"
 
 msgid "July"
-msgstr ""
+msgstr "7月"
 
 msgid "June"
-msgstr ""
+msgstr "6月"
 
 msgid "Korean"
-msgstr ""
+msgstr "韓語"
 
 msgid "Language"
-msgstr ""
+msgstr "語言"
 
 msgid "Leave"
-msgstr ""
+msgstr "休假"
 
 msgid "Leave days"
-msgstr ""
+msgstr "休假天數"
 
 msgid "License"
-msgstr ""
+msgstr "授權條款"
 
 msgid "Light mode"
-msgstr ""
+msgstr "淺色模式"
 
 msgid "Line"
-msgstr ""
+msgstr "折線圖"
 
 msgid "Link"
-msgstr ""
+msgstr "連結"
 
 msgid "Linked identities"
-msgstr ""
+msgstr "連結的身分"
 
 msgid "Local Model"
-msgstr ""
+msgstr "本機模型"
 
 msgid "Local Models"
-msgstr ""
+msgstr "本機模型"
 
 msgid "Local model management is not configured."
-msgstr ""
+msgstr "本機模型管理尚未設定。"
 
 msgid "Local user"
-msgstr ""
+msgstr "本機使用者"
 
 msgid "Log Out"
-msgstr ""
+msgstr "登出"
 
 msgid "Login"
-msgstr ""
+msgstr "登入"
 
 msgid "Logout"
-msgstr ""
+msgstr "登出"
 
 msgid "Logout requested"
-msgstr ""
+msgstr "已要求登出"
 
 msgid "Manage downloaded and imported GGUF models."
-msgstr ""
+msgstr "管理已下載和匯入的 GGUF 模型。"
 
 msgid "Manage models"
-msgstr ""
+msgstr "管理模型"
 
 msgid "Manage users"
-msgstr ""
+msgstr "管理使用者"
 
 msgid "Manual Input"
-msgstr ""
+msgstr "手動輸入"
 
 msgid "March"
-msgstr ""
+msgstr "3月"
 
 msgid "Markdown files (*.md)"
-msgstr ""
+msgstr "Markdown files (*.md)"
 
 msgid "May"
-msgstr ""
+msgstr "5月"
 
 msgid "Mode"
-msgstr ""
+msgstr "模式"
 
 msgid "Model"
-msgstr ""
+msgstr "模型"
 
 msgid "Model verified."
-msgstr ""
+msgstr "模型驗證完成。"
 
 msgid "Mon"
-msgstr ""
+msgstr "一"
 
 msgid "Month"
-msgstr ""
+msgstr "月"
 
 msgid "Monthly"
-msgstr ""
+msgstr "每月"
 
 msgid "Monthly Hours"
-msgstr ""
+msgstr "每月工時"
 
 msgid "Monthly Report"
-msgstr ""
+msgstr "月報"
 
 msgid "Monthly target"
-msgstr ""
+msgstr "每月目標"
 
 msgid "Monthly target (h)"
-msgstr ""
+msgstr "每月目標（小時）"
 
 msgid "More actions"
-msgstr ""
+msgstr "更多操作"
 
 msgid "Network"
-msgstr ""
+msgstr "網路"
 
 msgid "Network proxy settings are saved now; applying them to HTTP requests is a follow-up item."
-msgstr ""
+msgstr "代理設定已儲存；套用至 HTTP 請求將於後續版本實作。"
 
 msgid "New password"
-msgstr ""
+msgstr "新密碼"
 
 msgid "New recovery key"
-msgstr ""
+msgstr "新的復原金鑰"
 
 msgid "Next day"
-msgstr ""
+msgstr "下一天"
 
 msgid "Next month"
-msgstr ""
+msgstr "下個月"
 
 msgid "Next period"
-msgstr ""
+msgstr "下一期間"
 
 msgid "No arguments start the desktop application."
-msgstr ""
+msgstr "不帶參數執行將啟動桌面應用程式。"
 
 msgid "No data"
-msgstr ""
+msgstr "尚無資料"
 
 msgid "No events found."
-msgstr ""
+msgstr "未找到事件。"
 
 msgid "No local model selected."
-msgstr ""
+msgstr "尚未選取本機模型。"
 
 msgid "No records for the selected day."
-msgstr ""
+msgstr "所選日期沒有記錄。"
 
 msgid "No saved reports"
-msgstr ""
+msgstr "尚無已儲存的報表"
 
 msgid "Normal"
-msgstr ""
+msgstr "一般"
 
 msgid "Not configured"
-msgstr ""
+msgstr "尚未設定"
 
 msgid "Not downloaded"
-msgstr ""
+msgstr "尚未下載"
 
 msgid "Not required"
-msgstr ""
+msgstr "不需要"
 
 msgid "Notes"
-msgstr ""
+msgstr "筆記"
 
 msgid "November"
-msgstr ""
+msgstr "11月"
 
 msgid "October"
-msgstr ""
+msgstr "10月"
 
 msgid "On break"
-msgstr ""
+msgstr "休息中"
 
 msgid "Open"
-msgstr ""
+msgstr "開啟"
 
 msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
-msgstr ""
+msgstr "支援 OpenAI 相容介面，可透過相容服務接入 ChatGPT、Claude、Qwen 和 DeepSeek 等模型。"
 
 msgid "Overnight"
-msgstr ""
+msgstr "跨日"
 
 msgid "Overnight indicator"
-msgstr ""
+msgstr "跨日標記"
 
 msgid "Overtime"
-msgstr ""
+msgstr "加班"
 
 msgid "Overtime Hours"
-msgstr ""
+msgstr "加班工時"
 
 msgid "PDF"
-msgstr ""
+msgstr "PDF"
 
 msgid "PDF files (*.pdf)"
-msgstr ""
+msgstr "PDF files (*.pdf)"
 
 msgid "Paid leave"
-msgstr ""
+msgstr "有薪休假"
 
 msgid "Palette"
-msgstr ""
+msgstr "調色盤"
 
 msgid "Password"
-msgstr ""
+msgstr "密碼"
 
 msgid "Password change"
-msgstr ""
+msgstr "密碼變更"
 
 msgid "Password change required."
-msgstr ""
+msgstr "需要變更密碼。"
 
 msgid "Password changed successfully."
-msgstr ""
+msgstr "密碼變更成功。"
 
 msgid "Password reset."
-msgstr ""
+msgstr "密碼已重設。"
 
 msgid "Pink"
-msgstr ""
+msgstr "粉紅色"
 
 msgid "Please wait for the current data operation."
-msgstr ""
+msgstr "請等待目前的資料操作完成。"
 
 msgid "Please wait for the current operation."
-msgstr ""
+msgstr "請等待目前的操作完成。"
 
 msgid "Please wait for the current request."
-msgstr ""
+msgstr "請等待目前的請求完成。"
 
 msgid "Please wait for the current update check."
-msgstr ""
+msgstr "請等待目前的更新檢查完成。"
 
 msgid "Port"
-msgstr ""
+msgstr "連接埠"
 
 msgid "Previous day"
-msgstr ""
+msgstr "前一天"
 
 msgid "Previous month"
-msgstr ""
+msgstr "上個月"
 
 msgid "Previous period"
-msgstr ""
+msgstr "上一期間"
 
 msgid "Public holidays"
-msgstr ""
+msgstr "國定假日"
 
 msgid "Purple"
-msgstr ""
+msgstr "紫色"
 
 msgid "Quarterly"
-msgstr ""
+msgstr "季度"
 
 msgid "Quick Log"
-msgstr ""
+msgstr "快速記錄"
 
 msgid "Quick Log added."
-msgstr ""
+msgstr "快速記錄已新增。"
 
 msgid "Quick Log deleted."
-msgstr ""
+msgstr "快速記錄已刪除。"
 
 msgid "Quick Log updated."
-msgstr ""
+msgstr "快速記錄已更新。"
 
 msgid "Quit"
-msgstr ""
+msgstr "結束"
 
 msgid "Q{quarter} {year}"
-msgstr ""
+msgstr "{year}年第{quarter}季"
 
 msgid "RUNTIME SMOKE FAILED"
-msgstr ""
+msgstr "執行階段檢查失敗"
 
 msgid "RUNTIME SMOKE OK"
-msgstr ""
+msgstr "執行階段檢查通過"
 
 msgid "Ready"
-msgstr ""
+msgstr "就緒"
 
 msgid "Recovery key"
-msgstr ""
+msgstr "復原金鑰"
 
 msgid "Refresh"
-msgstr ""
+msgstr "重新整理"
 
 msgid "Refreshing catalog..."
-msgstr ""
+msgstr "正在重新整理模型目錄..."
 
 msgid "Register"
-msgstr ""
+msgstr "註冊"
 
 msgid "Remember me"
-msgstr ""
+msgstr "記住我"
 
 msgid "Remote"
-msgstr ""
+msgstr "遠端工作"
 
 msgid "Replace"
-msgstr ""
+msgstr "取代"
 
 msgid "Report"
-msgstr ""
+msgstr "報表"
 
 msgid "Report History"
-msgstr ""
+msgstr "報表歷史"
 
 msgid "Report saved."
-msgstr ""
+msgstr "報表已儲存。"
 
 msgid "Reports"
-msgstr ""
+msgstr "報表"
 
 msgid "Reports are not configured."
-msgstr ""
+msgstr "報表尚未設定。"
 
 msgid "Require password change"
-msgstr ""
+msgstr "要求變更密碼"
 
 msgid "Required"
-msgstr ""
+msgstr "必要"
 
 msgid "Reset password"
-msgstr ""
+msgstr "重設密碼"
 
 msgid "Reset selected user password"
-msgstr ""
+msgstr "重設所選使用者的密碼"
 
 msgid "Reset template"
-msgstr ""
+msgstr "重設範本"
 
 msgid "Reset this template to its default?"
-msgstr ""
+msgstr "將此範本還原為預設內容？"
 
 msgid "Rest Days"
-msgstr ""
+msgstr "休息天數"
 
 msgid "Restore Data"
-msgstr ""
+msgstr "還原資料"
 
 msgid "Restore cancelled"
-msgstr ""
+msgstr "已取消還原"
 
 msgid "Restore validation passed."
-msgstr ""
+msgstr "還原驗證通過。"
 
 msgid "Restore will replace the current database file. Continue?"
-msgstr ""
+msgstr "還原會取代目前的資料庫檔案。繼續？"
 
 msgid "Restoring data..."
-msgstr ""
+msgstr "正在還原資料..."
 
 msgid "Rewrite"
-msgstr ""
+msgstr "改寫"
 
 msgid "Rewriting report..."
-msgstr ""
+msgstr "正在改寫報表..."
 
 msgid "Rewritten"
-msgstr ""
+msgstr "已改寫"
 
 msgid "Role"
-msgstr ""
+msgstr "角色"
 
 msgid "SMOKE IMPORT FAILED"
-msgstr ""
+msgstr "匯入檢查失敗"
 
 msgid "SMOKE IMPORT OK"
-msgstr ""
+msgstr "匯入檢查通過"
 
 msgid "SQLite Database (*.db)"
-msgstr ""
+msgstr "SQLite Database (*.db)"
 
 msgid "Sat"
-msgstr ""
+msgstr "六"
 
 msgid "Save"
-msgstr ""
+msgstr "儲存"
 
 msgid "Save Report"
-msgstr ""
+msgstr "儲存報表"
 
 msgid "Save template"
-msgstr ""
+msgstr "儲存範本"
 
 msgid "Save this recovery key before continuing."
-msgstr ""
+msgstr "繼續前請儲存此復原金鑰。"
 
 msgid "Save this recovery key before returning to login."
-msgstr ""
+msgstr "返回登入前請儲存此復原金鑰。"
 
 msgid "Saved"
-msgstr ""
+msgstr "已儲存"
 
 msgid "Saved. Language changes apply after restarting."
-msgstr ""
+msgstr "已儲存。重新啟動後語言設定生效。"
 
 msgid "Schedule / Records"
-msgstr ""
+msgstr "日程 / 記錄"
 
 msgid "Search reports..."
-msgstr ""
+msgstr "搜尋報表..."
 
 msgid "Select"
-msgstr ""
+msgstr "選取"
 
 msgid "Select a model first."
-msgstr ""
+msgstr "請先選取模型。"
 
 msgid "Select a provider first."
-msgstr ""
+msgstr "請先選取提供者。"
 
 msgid "Select a user."
-msgstr ""
+msgstr "請選取使用者。"
 
 msgid "Select an identity first."
-msgstr ""
+msgstr "請先選取身分。"
 
 msgid "Selected day: {day}"
-msgstr ""
+msgstr "所選日期：{day}"
 
 msgid "Send"
-msgstr ""
+msgstr "傳送"
 
 msgid "Sending..."
-msgstr ""
+msgstr "正在傳送..."
 
 msgid "September"
-msgstr ""
+msgstr "9月"
 
 msgid "Settings"
-msgstr ""
+msgstr "設定"
 
 msgid "Settings are not configured."
-msgstr ""
+msgstr "設定尚未完成。"
 
 msgid "Show"
-msgstr ""
+msgstr "顯示"
 
 msgid "Show leaves"
-msgstr ""
+msgstr "顯示休假"
 
 msgid "Sick leave"
-msgstr ""
+msgstr "病假"
 
 msgid "Sign in to your account"
-msgstr ""
+msgstr "登入您的帳戶"
 
 msgid "Sign in with Google"
-msgstr ""
+msgstr "使用 Google 登入"
 
 msgid "Sign in with Microsoft"
-msgstr ""
+msgstr "使用 Microsoft 登入"
 
 msgid "Signed in: {username}"
-msgstr ""
+msgstr "已登入：{username}"
 
 msgid "Simplified Chinese"
-msgstr ""
+msgstr "簡體中文"
 
 msgid "Standard hours (h)"
-msgstr ""
+msgstr "標準工時（小時）"
 
 msgid "Start"
-msgstr ""
+msgstr "開始"
 
 msgid "Start break"
-msgstr ""
+msgstr "開始休息"
 
 msgid "Start week on Monday"
-msgstr ""
+msgstr "每週從週一開始"
 
 msgid "Started"
-msgstr ""
+msgstr "已開始"
 
 msgid "Stored securely in a future update"
-msgstr ""
+msgstr "安全儲存將於後續版本提供"
 
 msgid "Sun"
-msgstr ""
+msgstr "日"
 
 msgid "Template reset."
-msgstr ""
+msgstr "範本已重設。"
 
 msgid "Template saved."
-msgstr ""
+msgstr "範本已儲存。"
 
 msgid "Templates"
-msgstr ""
+msgstr "範本"
 
 msgid "Test"
-msgstr ""
+msgstr "測試"
 
 msgid "Theme"
-msgstr ""
+msgstr "主題"
 
 msgid "Thu"
-msgstr ""
+msgstr "四"
 
 msgid "Tip: Click AI Assist to generate a draft based on your time logs."
-msgstr ""
+msgstr "提示：點擊 AI 助手，根據工時記錄產生草稿。"
 
 msgid "Today"
-msgstr ""
+msgstr "今天"
 
 msgid "Toggle password change"
-msgstr ""
+msgstr "切換密碼變更要求"
 
 msgid "Total"
-msgstr ""
+msgstr "總計"
 
 msgid "Total hours"
-msgstr ""
+msgstr "總工時"
 
 msgid "Total: {hours:.1f}h"
-msgstr ""
+msgstr "總計：{hours:.1f}h"
 
 msgid "Traditional Chinese"
-msgstr ""
+msgstr "繁體中文"
 
 msgid "Tue"
-msgstr ""
+msgstr "二"
 
 msgid "Unknown error"
-msgstr ""
+msgstr "未知錯誤"
 
 msgid "Unlink"
-msgstr ""
+msgstr "解除連結"
 
 msgid "Unsaved changes"
-msgstr ""
+msgstr "未儲存的變更"
 
 msgid "Update"
-msgstr ""
+msgstr "更新"
 
 msgid "Update available: {version}"
-msgstr ""
+msgstr "有可用更新：{version}"
 
 msgid "Update check is not configured."
-msgstr ""
+msgstr "更新檢查尚未設定。"
 
 msgid "Use a web proxy for this application."
-msgstr ""
+msgstr "為此應用程式使用網頁代理。"
 
 msgid "User"
-msgstr ""
+msgstr "使用者"
 
 msgid "User created."
-msgstr ""
+msgstr "使用者已建立。"
 
 msgid "User deleted."
-msgstr ""
+msgstr "使用者已刪除。"
 
 msgid "User updated."
-msgstr ""
+msgstr "使用者已更新。"
 
 msgid "Username"
-msgstr ""
+msgstr "使用者名稱"
 
 msgid "Validating backup..."
-msgstr ""
+msgstr "正在驗證備份..."
 
 msgid "Verify"
-msgstr ""
+msgstr "驗證"
 
 msgid "Verifying model..."
-msgstr ""
+msgstr "正在驗證模型..."
 
 msgid "Version {version}"
-msgstr ""
+msgstr "版本 {version}"
 
 msgid "Web proxy"
-msgstr ""
+msgstr "網頁代理"
 
 msgid "Wed"
-msgstr ""
+msgstr "三"
 
 msgid "Weekly Report"
-msgstr ""
+msgstr "週報"
 
 msgid "Welcome!"
-msgstr ""
+msgstr "歡迎！"
 
 msgid "When enabled, text processing uses the local model first; no data is sent to external services."
-msgstr ""
+msgstr "啟用後，文字處理優先使用本機模型，不向外部服務傳送資料。"
 
 msgid "Work Hours Trend"
-msgstr ""
+msgstr "工時趨勢"
 
 msgid "Work Mode Breakdown"
-msgstr ""
+msgstr "工作方式分布"
 
 msgid "Work Report"
-msgstr ""
+msgstr "工作報表"
 
 msgid "Work days"
-msgstr ""
+msgstr "工作天數"
 
 msgid "Work hours"
-msgstr ""
+msgstr "工時"
 
 msgid "Work type"
-msgstr ""
+msgstr "工作類型"
 
 msgid "WorkLogger"
-msgstr ""
+msgstr "WorkLogger"
 
 msgid "WorkLogger command line"
-msgstr ""
+msgstr "WorkLogger 命令列"
 
 msgid "Worked"
-msgstr ""
+msgstr "已工作"
 
 msgid "Year"
-msgstr ""
+msgstr "年"
 
 msgid "You"
-msgstr ""
+msgstr "您"
 
 msgid "You are using the latest version."
-msgstr ""
+msgstr "您正在使用最新版本。"
 
 msgid "You have unsaved note changes. Discard them?"
-msgstr ""
+msgstr "筆記有未儲存的變更。捨棄變更？"
 
 msgid "You have unsaved report changes. Discard them?"
-msgstr ""
+msgstr "報表有未儲存的變更。捨棄變更？"
 
 msgid "You have unsaved template changes. Discard them?"
-msgstr ""
+msgstr "範本有未儲存的變更。捨棄變更？"
 
 msgid "You have unsaved work log changes. Discard them?"
-msgstr ""
+msgstr "工作記錄有未儲存的變更。捨棄變更？"
 
 msgid "h"
-msgstr ""
+msgstr "h"
 
 msgid "iCalendar (*.ics)"
-msgstr ""
+msgstr "iCalendar (*.ics)"
 
 msgid "m"
-msgstr ""
+msgstr "m"
 
 msgid "of {hours:.1f}h goal"
-msgstr ""
+msgstr "目標 {hours:.1f}h"
 
 msgid "or"
-msgstr ""
+msgstr "或"
 
 msgid "{change:+.1f}h vs previous period"
-msgstr ""
+msgstr "較上期 {change:+.1f}h"
 
 msgid "{change:+d} days vs previous period"
-msgstr ""
+msgstr "較上期 {change:+d} 天"
 
 msgid "{count} event"
-msgstr ""
+msgstr "{count} 個事件"
 
 msgid "{count} events"
-msgstr ""
+msgstr "{count} 個事件"
 
 msgid "{mode}: {hours:.1f}h ({percent:.0f}%)"
-msgstr ""
+msgstr "{mode}：{hours:.1f}h（{percent:.0f}%）"
+
+msgid "{month} {day}, {year}"
+msgstr "{year}年{month}{day}日"
 
 msgid "{month} {year}"
-msgstr ""
+msgstr "{year}年{month}"

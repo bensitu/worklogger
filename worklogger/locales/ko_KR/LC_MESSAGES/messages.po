@@ -4,1111 +4,1115 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: ko_KR\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
 msgid "+"
-msgstr ""
+msgstr "+"
 
 msgid "+ Add Entry"
-msgstr ""
+msgstr "+ 기록 추가"
 
 msgid "+15m break"
-msgstr ""
+msgstr "휴식 15분 추가"
 
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
-msgstr ""
+msgstr "개인정보 보호를 우선하는 AI 보고서 지원 데스크톱 근무 기록 도구."
 
 msgid "AI"
-msgstr ""
+msgstr "AI"
 
 msgid "AI Assist"
-msgstr ""
+msgstr "AI 도우미"
 
 msgid "AI Assist Hint / extra instructions (optional)"
-msgstr ""
+msgstr "AI 힌트 / 추가 지시(선택 사항)"
 
 msgid "AI Assist is not configured."
-msgstr ""
+msgstr "AI 도우미가 설정되지 않았습니다."
 
 msgid "AI Privacy"
-msgstr ""
+msgstr "AI 개인정보 보호"
 
 msgid "API Base URL"
-msgstr ""
+msgstr "API 기본 URL"
 
 msgid "API Key"
-msgstr ""
+msgstr "API 키"
 
 msgid "About"
-msgstr ""
+msgstr "정보"
 
 msgid "Account"
-msgstr ""
+msgstr "계정"
 
 msgid "Active"
-msgstr ""
+msgstr "활성"
 
 msgid "Active local model: {model}"
-msgstr ""
+msgstr "사용 중인 로컬 모델: {model}"
 
 msgid "Add"
-msgstr ""
+msgstr "추가"
 
 msgid "Add Entry"
-msgstr ""
+msgstr "기록 추가"
 
 msgid "Address"
-msgstr ""
+msgstr "주소"
 
 msgid "Admin"
-msgstr ""
+msgstr "관리자"
 
 msgid "All day"
-msgstr ""
+msgstr "종일"
 
 msgid "Analytics"
-msgstr ""
+msgstr "분석"
 
 msgid "Analytics is not configured."
-msgstr ""
+msgstr "분석이 설정되지 않았습니다."
 
 msgid "Annual"
-msgstr ""
+msgstr "연간"
 
 msgid "Appearance"
-msgstr ""
+msgstr "모양"
 
 msgid "Append"
-msgstr ""
+msgstr "추가"
 
 msgid "Apply template"
-msgstr ""
+msgstr "템플릿 적용"
 
 msgid "April"
-msgstr ""
+msgstr "4월"
 
 msgid "Ask about your work logs"
-msgstr ""
+msgstr "근무 기록에 대해 질문"
 
 msgid "Assistant"
-msgstr ""
+msgstr "어시스턴트"
 
 msgid "Attendance Days"
-msgstr ""
+msgstr "출근 일수"
 
 msgid "August"
-msgstr ""
+msgstr "8월"
 
 msgid "Authentication information (optional)"
-msgstr ""
+msgstr "인증 정보(선택 사항)"
 
 msgid "Author"
-msgstr ""
+msgstr "작성자"
 
 msgid "Auto Record"
-msgstr ""
+msgstr "자동 기록"
 
 msgid "Average"
-msgstr ""
+msgstr "평균"
 
 msgid "Average Work Hours"
-msgstr ""
+msgstr "평균 근무 시간"
 
 msgid "Back to login"
-msgstr ""
+msgstr "로그인으로 돌아가기"
 
 msgid "Back up regularly to protect your data."
-msgstr ""
+msgstr "데이터 보호를 위해 정기적으로 백업하세요."
 
 msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
-msgstr ""
+msgstr "로컬 근무 기록, 보고서, 설정 및 계정 데이터를 보호하도록 데이터베이스를 정기적으로 백업하세요."
 
 msgid "Backing up data..."
-msgstr ""
+msgstr "데이터 백업 중..."
 
 msgid "Backup Data"
-msgstr ""
+msgstr "데이터 백업"
 
 msgid "Backup cancelled"
-msgstr ""
+msgstr "백업 취소됨"
 
 msgid "Backup saved: {path}"
-msgstr ""
+msgstr "백업 저장됨: {path}"
 
 msgid "Bar"
-msgstr ""
+msgstr "막대 그래프"
 
 msgid "Blue"
-msgstr ""
+msgstr "파랑"
 
 msgid "Break"
-msgstr ""
+msgstr "휴식"
 
 msgid "Break (h)"
-msgstr ""
+msgstr "휴식(시간)"
 
 msgid "Break timer running"
-msgstr ""
+msgstr "휴식 시간 측정 중"
 
 msgid "Business trip"
-msgstr ""
+msgstr "출장"
 
 msgid "CSV"
-msgstr ""
+msgstr "CSV"
 
 msgid "CSV (*.csv)"
-msgstr ""
+msgstr "CSV (*.csv)"
 
 msgid "CSV Data Management"
-msgstr ""
+msgstr "CSV 데이터 관리"
 
 msgid "CSV files (*.csv)"
-msgstr ""
+msgstr "CSV files (*.csv)"
 
 msgid "Calendar"
-msgstr ""
+msgstr "달력"
 
 msgid "Calendar Data"
-msgstr ""
+msgstr "달력 데이터"
 
 msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
-msgstr ""
+msgstr "달력 데이터가 이미 있습니다.\n\n바꾸기는 기존 일정을 지운 후 가져옵니다.\n추가는 기존 일정을 유지하고 가져온 일정을 추가합니다."
 
 msgid "Calendar events: {events}"
-msgstr ""
+msgstr "달력 일정: {events}"
 
 msgid "Change password"
-msgstr ""
+msgstr "비밀번호 변경"
 
 msgid "Changing password will reset the recovery key."
-msgstr ""
+msgstr "비밀번호를 변경하면 복구 키가 재설정됩니다."
 
 msgid "Check for updates"
-msgstr ""
+msgstr "업데이트 확인"
 
 msgid "Checking for updates..."
-msgstr ""
+msgstr "업데이트 확인 중..."
 
 msgid "Choose custom color"
-msgstr ""
+msgstr "사용자 지정 색상 선택"
 
 msgid "Clear Calendar Events"
-msgstr ""
+msgstr "달력 일정 지우기"
 
 msgid "Clearing calendar events is not supported yet."
-msgstr ""
+msgstr "달력 일정 지우기는 아직 지원되지 않습니다."
 
 msgid "Close"
-msgstr ""
+msgstr "닫기"
 
 msgid "Comp leave"
-msgstr ""
+msgstr "대체 휴가"
 
 msgid "Confirm password"
-msgstr ""
+msgstr "비밀번호 확인"
 
 msgid "Continue"
-msgstr ""
+msgstr "계속"
 
 msgid "Copied"
-msgstr ""
+msgstr "복사됨"
 
 msgid "Copy"
-msgstr ""
+msgstr "복사"
 
 msgid "Copy Markdown"
-msgstr ""
+msgstr "Markdown 복사"
 
 msgid "Create account"
-msgstr ""
+msgstr "계정 만들기"
 
 msgid "Create user"
-msgstr ""
+msgstr "사용자 만들기"
 
 msgid "Current ID"
-msgstr ""
+msgstr "현재 ID"
 
 msgid "Current password"
-msgstr ""
+msgstr "현재 비밀번호"
 
 msgid "Current user"
-msgstr ""
+msgstr "현재 사용자"
 
 msgid "Custom"
-msgstr ""
+msgstr "사용자 지정"
 
 msgid "DESKTOP START FAILED"
-msgstr ""
+msgstr "데스크톱 앱 시작 실패"
 
 msgid "Daily Average"
-msgstr ""
+msgstr "일평균"
 
 msgid "Daily Report"
-msgstr ""
+msgstr "일일 보고서"
 
 msgid "Dark mode"
-msgstr ""
+msgstr "다크 모드"
 
 msgid "Data"
-msgstr ""
+msgstr "데이터"
 
 msgid "Data restored successfully."
-msgstr ""
+msgstr "데이터가 복원되었습니다."
 
 msgid "Database Backup"
-msgstr ""
+msgstr "데이터베이스 백업"
 
 msgid "December"
-msgstr ""
+msgstr "12월"
 
 msgid "Default break (h)"
-msgstr ""
+msgstr "기본 휴식(시간)"
 
 msgid "Delete"
-msgstr ""
+msgstr "삭제"
 
 msgid "Delete user"
-msgstr ""
+msgstr "사용자 삭제"
 
 msgid "Description"
-msgstr ""
+msgstr "설명"
 
 msgid "Discard changes?"
-msgstr ""
+msgstr "변경 사항을 취소할까요?"
 
 msgid "Domain"
-msgstr ""
+msgstr "도메인"
 
 msgid "Download"
-msgstr ""
+msgstr "다운로드"
 
 msgid "Downloading model..."
-msgstr ""
+msgstr "모델 다운로드 중..."
 
 msgid "Enable local model"
-msgstr ""
+msgstr "로컬 모델 사용"
 
 msgid "Enable menu bar"
-msgstr ""
+msgstr "메뉴 막대 아이콘 사용"
 
 msgid "Enable tray icon"
-msgstr ""
+msgstr "트레이 아이콘 사용"
 
 msgid "End"
-msgstr ""
+msgstr "종료"
 
 msgid "Ended"
-msgstr ""
+msgstr "종료됨"
 
 msgid "English"
-msgstr ""
+msgstr "영어"
 
 msgid "Enter your ID"
-msgstr ""
+msgstr "ID 입력"
 
 msgid "Enter your password"
-msgstr ""
+msgstr "비밀번호 입력"
 
 msgid "Export"
-msgstr ""
+msgstr "내보내기"
 
 msgid "Export .ics"
-msgstr ""
+msgstr ".ics 내보내기"
 
 msgid "Export CSV"
-msgstr ""
+msgstr "CSV 내보내기"
 
 msgid "Export Markdown"
-msgstr ""
+msgstr "Markdown 내보내기"
 
 msgid "Export PDF"
-msgstr ""
+msgstr "PDF 내보내기"
 
 msgid "Export Reports"
-msgstr ""
+msgstr "보고서 내보내기"
 
 msgid "Export cancelled"
-msgstr ""
+msgstr "내보내기 취소됨"
 
 msgid "Exported CSV"
-msgstr ""
+msgstr "CSV 내보내기 완료"
 
 msgid "Exported Markdown"
-msgstr ""
+msgstr "Markdown 내보내기 완료"
 
 msgid "Exported PDF"
-msgstr ""
+msgstr "PDF 내보내기 완료"
 
 msgid "Exported {count} events."
-msgstr ""
+msgstr "일정 {count}개를 내보냈습니다."
 
 msgid "Exported {count} records."
-msgstr ""
+msgstr "기록 {count}개를 내보냈습니다."
 
 msgid "Exporting .ics..."
-msgstr ""
+msgstr ".ics 내보내는 중..."
 
 msgid "Exporting CSV..."
-msgstr ""
+msgstr "CSV 내보내는 중..."
 
 msgid "External Model"
-msgstr ""
+msgstr "외부 모델"
 
 msgid "External model testing is not configured."
-msgstr ""
+msgstr "외부 모델 테스트가 설정되지 않았습니다."
 
 msgid "February"
-msgstr ""
+msgstr "2월"
 
 msgid "Forgot Password?"
-msgstr ""
+msgstr "비밀번호를 잊으셨나요?"
 
 msgid "Fri"
-msgstr ""
+msgstr "금"
 
 msgid "GGUF Model (*.gguf)"
-msgstr ""
+msgstr "GGUF Model (*.gguf)"
 
 msgid "GNU GPLv3"
-msgstr ""
+msgstr "GNU GPLv3"
 
 msgid "General"
-msgstr ""
+msgstr "일반"
 
 msgid "GitHub"
-msgstr ""
+msgstr "GitHub"
 
 msgid "Green"
-msgstr ""
+msgstr "초록"
 
 msgid "Hide"
-msgstr ""
+msgstr "숨기기"
 
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 msgid "Identity management is not configured."
-msgstr ""
+msgstr "계정 연결 관리가 설정되지 않았습니다."
 
 msgid "Import .gguf"
-msgstr ""
+msgstr ".gguf 가져오기"
 
 msgid "Import .ics"
-msgstr ""
+msgstr ".ics 가져오기"
 
 msgid "Import CSV"
-msgstr ""
+msgstr "CSV 가져오기"
 
 msgid "Import Calendar (.ics)"
-msgstr ""
+msgstr "달력 가져오기(.ics)"
 
 msgid "Import cancelled"
-msgstr ""
+msgstr "가져오기 취소됨"
 
 msgid "Import or export worklog records as CSV files for backup, migration, or spreadsheet analysis."
-msgstr ""
+msgstr "백업, 이전 또는 스프레드시트 분석을 위해 근무 기록을 CSV 파일로 가져오거나 내보냅니다."
 
 msgid "Import your .ics file to let AI read your meetings when generating reports."
-msgstr ""
+msgstr ".ics 파일을 가져오면 AI가 보고서 생성 시 회의 정보를 참고할 수 있습니다."
 
 msgid "Imported {count} calendar events."
-msgstr ""
+msgstr "달력 일정 {count}개를 가져왔습니다."
 
 msgid "Imported {count} records."
-msgstr ""
+msgstr "기록 {count}개를 가져왔습니다."
 
 msgid "Importing .ics..."
-msgstr ""
+msgstr ".ics 가져오는 중..."
 
 msgid "Importing CSV..."
-msgstr ""
+msgstr "CSV 가져오는 중..."
 
 msgid "Importing model..."
-msgstr ""
+msgstr "모델 가져오는 중..."
 
 msgid "Include calendar"
-msgstr ""
+msgstr "달력 포함"
 
 msgid "Include notes"
-msgstr ""
+msgstr "메모 포함"
 
 msgid "Include quick logs"
-msgstr ""
+msgstr "빠른 기록 포함"
 
 msgid "Insert Quick Log"
-msgstr ""
+msgstr "빠른 기록 삽입"
 
 msgid "January"
-msgstr ""
+msgstr "1월"
 
 msgid "Japanese"
-msgstr ""
+msgstr "일본어"
 
 msgid "July"
-msgstr ""
+msgstr "7월"
 
 msgid "June"
-msgstr ""
+msgstr "6월"
 
 msgid "Korean"
-msgstr ""
+msgstr "한국어"
 
 msgid "Language"
-msgstr ""
+msgstr "언어"
 
 msgid "Leave"
-msgstr ""
+msgstr "휴가"
 
 msgid "Leave days"
-msgstr ""
+msgstr "휴가 일수"
 
 msgid "License"
-msgstr ""
+msgstr "라이선스"
 
 msgid "Light mode"
-msgstr ""
+msgstr "라이트 모드"
 
 msgid "Line"
-msgstr ""
+msgstr "꺾은선 그래프"
 
 msgid "Link"
-msgstr ""
+msgstr "연결"
 
 msgid "Linked identities"
-msgstr ""
+msgstr "연결된 계정"
 
 msgid "Local Model"
-msgstr ""
+msgstr "로컬 모델"
 
 msgid "Local Models"
-msgstr ""
+msgstr "로컬 모델"
 
 msgid "Local model management is not configured."
-msgstr ""
+msgstr "로컬 모델 관리가 설정되지 않았습니다."
 
 msgid "Local user"
-msgstr ""
+msgstr "로컬 사용자"
 
 msgid "Log Out"
-msgstr ""
+msgstr "로그아웃"
 
 msgid "Login"
-msgstr ""
+msgstr "로그인"
 
 msgid "Logout"
-msgstr ""
+msgstr "로그아웃"
 
 msgid "Logout requested"
-msgstr ""
+msgstr "로그아웃 요청됨"
 
 msgid "Manage downloaded and imported GGUF models."
-msgstr ""
+msgstr "다운로드하거나 가져온 GGUF 모델을 관리합니다."
 
 msgid "Manage models"
-msgstr ""
+msgstr "모델 관리"
 
 msgid "Manage users"
-msgstr ""
+msgstr "사용자 관리"
 
 msgid "Manual Input"
-msgstr ""
+msgstr "직접 입력"
 
 msgid "March"
-msgstr ""
+msgstr "3월"
 
 msgid "Markdown files (*.md)"
-msgstr ""
+msgstr "Markdown files (*.md)"
 
 msgid "May"
-msgstr ""
+msgstr "5월"
 
 msgid "Mode"
-msgstr ""
+msgstr "모드"
 
 msgid "Model"
-msgstr ""
+msgstr "모델"
 
 msgid "Model verified."
-msgstr ""
+msgstr "모델 검증 완료."
 
 msgid "Mon"
-msgstr ""
+msgstr "월"
 
 msgid "Month"
-msgstr ""
+msgstr "월"
 
 msgid "Monthly"
-msgstr ""
+msgstr "월간"
 
 msgid "Monthly Hours"
-msgstr ""
+msgstr "월간 근무 시간"
 
 msgid "Monthly Report"
-msgstr ""
+msgstr "월간 보고서"
 
 msgid "Monthly target"
-msgstr ""
+msgstr "월간 목표"
 
 msgid "Monthly target (h)"
-msgstr ""
+msgstr "월간 목표(시간)"
 
 msgid "More actions"
-msgstr ""
+msgstr "더 많은 작업"
 
 msgid "Network"
-msgstr ""
+msgstr "네트워크"
 
 msgid "Network proxy settings are saved now; applying them to HTTP requests is a follow-up item."
-msgstr ""
+msgstr "프록시 설정은 저장됩니다. HTTP 요청에 적용하는 기능은 추후 지원됩니다."
 
 msgid "New password"
-msgstr ""
+msgstr "새 비밀번호"
 
 msgid "New recovery key"
-msgstr ""
+msgstr "새 복구 키"
 
 msgid "Next day"
-msgstr ""
+msgstr "다음 날"
 
 msgid "Next month"
-msgstr ""
+msgstr "다음 달"
 
 msgid "Next period"
-msgstr ""
+msgstr "다음 기간"
 
 msgid "No arguments start the desktop application."
-msgstr ""
+msgstr "인수 없이 실행하면 데스크톱 앱이 시작됩니다."
 
 msgid "No data"
-msgstr ""
+msgstr "데이터 없음"
 
 msgid "No events found."
-msgstr ""
+msgstr "일정을 찾을 수 없습니다."
 
 msgid "No local model selected."
-msgstr ""
+msgstr "로컬 모델이 선택되지 않았습니다."
 
 msgid "No records for the selected day."
-msgstr ""
+msgstr "선택한 날짜에 기록이 없습니다."
 
 msgid "No saved reports"
-msgstr ""
+msgstr "저장된 보고서 없음"
 
 msgid "Normal"
-msgstr ""
+msgstr "일반"
 
 msgid "Not configured"
-msgstr ""
+msgstr "설정되지 않음"
 
 msgid "Not downloaded"
-msgstr ""
+msgstr "다운로드되지 않음"
 
 msgid "Not required"
-msgstr ""
+msgstr "필요 없음"
 
 msgid "Notes"
-msgstr ""
+msgstr "메모"
 
 msgid "November"
-msgstr ""
+msgstr "11월"
 
 msgid "October"
-msgstr ""
+msgstr "10월"
 
 msgid "On break"
-msgstr ""
+msgstr "휴식 중"
 
 msgid "Open"
-msgstr ""
+msgstr "열기"
 
 msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
-msgstr ""
+msgstr "OpenAI 호환 인터페이스를 지원하며 호환 서비스를 통해 ChatGPT, Claude, Qwen, DeepSeek 등을 사용할 수 있습니다."
 
 msgid "Overnight"
-msgstr ""
+msgstr "자정 넘김"
 
 msgid "Overnight indicator"
-msgstr ""
+msgstr "자정 넘김 표시"
 
 msgid "Overtime"
-msgstr ""
+msgstr "초과 근무"
 
 msgid "Overtime Hours"
-msgstr ""
+msgstr "초과 근무 시간"
 
 msgid "PDF"
-msgstr ""
+msgstr "PDF"
 
 msgid "PDF files (*.pdf)"
-msgstr ""
+msgstr "PDF files (*.pdf)"
 
 msgid "Paid leave"
-msgstr ""
+msgstr "유급 휴가"
 
 msgid "Palette"
-msgstr ""
+msgstr "색상표"
 
 msgid "Password"
-msgstr ""
+msgstr "비밀번호"
 
 msgid "Password change"
-msgstr ""
+msgstr "비밀번호 변경"
 
 msgid "Password change required."
-msgstr ""
+msgstr "비밀번호를 변경해야 합니다."
 
 msgid "Password changed successfully."
-msgstr ""
+msgstr "비밀번호가 변경되었습니다."
 
 msgid "Password reset."
-msgstr ""
+msgstr "비밀번호가 재설정되었습니다."
 
 msgid "Pink"
-msgstr ""
+msgstr "분홍"
 
 msgid "Please wait for the current data operation."
-msgstr ""
+msgstr "현재 데이터 작업이 완료될 때까지 기다려 주세요."
 
 msgid "Please wait for the current operation."
-msgstr ""
+msgstr "현재 작업이 완료될 때까지 기다려 주세요."
 
 msgid "Please wait for the current request."
-msgstr ""
+msgstr "현재 요청이 완료될 때까지 기다려 주세요."
 
 msgid "Please wait for the current update check."
-msgstr ""
+msgstr "현재 업데이트 확인이 완료될 때까지 기다려 주세요."
 
 msgid "Port"
-msgstr ""
+msgstr "포트"
 
 msgid "Previous day"
-msgstr ""
+msgstr "이전 날"
 
 msgid "Previous month"
-msgstr ""
+msgstr "이전 달"
 
 msgid "Previous period"
-msgstr ""
+msgstr "이전 기간"
 
 msgid "Public holidays"
-msgstr ""
+msgstr "공휴일"
 
 msgid "Purple"
-msgstr ""
+msgstr "보라"
 
 msgid "Quarterly"
-msgstr ""
+msgstr "분기"
 
 msgid "Quick Log"
-msgstr ""
+msgstr "빠른 기록"
 
 msgid "Quick Log added."
-msgstr ""
+msgstr "빠른 기록이 추가되었습니다."
 
 msgid "Quick Log deleted."
-msgstr ""
+msgstr "빠른 기록이 삭제되었습니다."
 
 msgid "Quick Log updated."
-msgstr ""
+msgstr "빠른 기록이 업데이트되었습니다."
 
 msgid "Quit"
-msgstr ""
+msgstr "종료"
 
 msgid "Q{quarter} {year}"
-msgstr ""
+msgstr "{year}년 {quarter}분기"
 
 msgid "RUNTIME SMOKE FAILED"
-msgstr ""
+msgstr "런타임 스모크 테스트 실패"
 
 msgid "RUNTIME SMOKE OK"
-msgstr ""
+msgstr "런타임 스모크 테스트 성공"
 
 msgid "Ready"
-msgstr ""
+msgstr "준비 완료"
 
 msgid "Recovery key"
-msgstr ""
+msgstr "복구 키"
 
 msgid "Refresh"
-msgstr ""
+msgstr "새로 고침"
 
 msgid "Refreshing catalog..."
-msgstr ""
+msgstr "모델 목록 새로 고치는 중..."
 
 msgid "Register"
-msgstr ""
+msgstr "가입"
 
 msgid "Remember me"
-msgstr ""
+msgstr "로그인 상태 유지"
 
 msgid "Remote"
-msgstr ""
+msgstr "원격 근무"
 
 msgid "Replace"
-msgstr ""
+msgstr "바꾸기"
 
 msgid "Report"
-msgstr ""
+msgstr "보고서"
 
 msgid "Report History"
-msgstr ""
+msgstr "보고서 기록"
 
 msgid "Report saved."
-msgstr ""
+msgstr "보고서가 저장되었습니다."
 
 msgid "Reports"
-msgstr ""
+msgstr "보고서"
 
 msgid "Reports are not configured."
-msgstr ""
+msgstr "보고서가 설정되지 않았습니다."
 
 msgid "Require password change"
-msgstr ""
+msgstr "비밀번호 변경 요구"
 
 msgid "Required"
-msgstr ""
+msgstr "필수"
 
 msgid "Reset password"
-msgstr ""
+msgstr "비밀번호 재설정"
 
 msgid "Reset selected user password"
-msgstr ""
+msgstr "선택한 사용자 비밀번호 재설정"
 
 msgid "Reset template"
-msgstr ""
+msgstr "템플릿 재설정"
 
 msgid "Reset this template to its default?"
-msgstr ""
+msgstr "이 템플릿을 기본 내용으로 되돌릴까요?"
 
 msgid "Rest Days"
-msgstr ""
+msgstr "휴무 일수"
 
 msgid "Restore Data"
-msgstr ""
+msgstr "데이터 복원"
 
 msgid "Restore cancelled"
-msgstr ""
+msgstr "복원 취소됨"
 
 msgid "Restore validation passed."
-msgstr ""
+msgstr "복원 검증을 통과했습니다."
 
 msgid "Restore will replace the current database file. Continue?"
-msgstr ""
+msgstr "복원하면 현재 데이터베이스 파일이 바뀝니다. 계속할까요?"
 
 msgid "Restoring data..."
-msgstr ""
+msgstr "데이터 복원 중..."
 
 msgid "Rewrite"
-msgstr ""
+msgstr "다시 작성"
 
 msgid "Rewriting report..."
-msgstr ""
+msgstr "보고서 다시 작성 중..."
 
 msgid "Rewritten"
-msgstr ""
+msgstr "다시 작성됨"
 
 msgid "Role"
-msgstr ""
+msgstr "역할"
 
 msgid "SMOKE IMPORT FAILED"
-msgstr ""
+msgstr "가져오기 스모크 테스트 실패"
 
 msgid "SMOKE IMPORT OK"
-msgstr ""
+msgstr "가져오기 스모크 테스트 성공"
 
 msgid "SQLite Database (*.db)"
-msgstr ""
+msgstr "SQLite Database (*.db)"
 
 msgid "Sat"
-msgstr ""
+msgstr "토"
 
 msgid "Save"
-msgstr ""
+msgstr "저장"
 
 msgid "Save Report"
-msgstr ""
+msgstr "보고서 저장"
 
 msgid "Save template"
-msgstr ""
+msgstr "템플릿 저장"
 
 msgid "Save this recovery key before continuing."
-msgstr ""
+msgstr "계속하기 전에 이 복구 키를 저장하세요."
 
 msgid "Save this recovery key before returning to login."
-msgstr ""
+msgstr "로그인으로 돌아가기 전에 이 복구 키를 저장하세요."
 
 msgid "Saved"
-msgstr ""
+msgstr "저장됨"
 
 msgid "Saved. Language changes apply after restarting."
-msgstr ""
+msgstr "저장되었습니다. 언어 변경은 다시 시작한 후 적용됩니다."
 
 msgid "Schedule / Records"
-msgstr ""
+msgstr "일정 / 기록"
 
 msgid "Search reports..."
-msgstr ""
+msgstr "보고서 검색..."
 
 msgid "Select"
-msgstr ""
+msgstr "선택"
 
 msgid "Select a model first."
-msgstr ""
+msgstr "먼저 모델을 선택하세요."
 
 msgid "Select a provider first."
-msgstr ""
+msgstr "먼저 제공자를 선택하세요."
 
 msgid "Select a user."
-msgstr ""
+msgstr "사용자를 선택하세요."
 
 msgid "Select an identity first."
-msgstr ""
+msgstr "먼저 연결된 계정을 선택하세요."
 
 msgid "Selected day: {day}"
-msgstr ""
+msgstr "선택한 날짜: {day}"
 
 msgid "Send"
-msgstr ""
+msgstr "보내기"
 
 msgid "Sending..."
-msgstr ""
+msgstr "보내는 중..."
 
 msgid "September"
-msgstr ""
+msgstr "9월"
 
 msgid "Settings"
-msgstr ""
+msgstr "설정"
 
 msgid "Settings are not configured."
-msgstr ""
+msgstr "설정 기능이 구성되지 않았습니다."
 
 msgid "Show"
-msgstr ""
+msgstr "표시"
 
 msgid "Show leaves"
-msgstr ""
+msgstr "휴가 표시"
 
 msgid "Sick leave"
-msgstr ""
+msgstr "병가"
 
 msgid "Sign in to your account"
-msgstr ""
+msgstr "계정에 로그인"
 
 msgid "Sign in with Google"
-msgstr ""
+msgstr "Google로 로그인"
 
 msgid "Sign in with Microsoft"
-msgstr ""
+msgstr "Microsoft로 로그인"
 
 msgid "Signed in: {username}"
-msgstr ""
+msgstr "로그인 중: {username}"
 
 msgid "Simplified Chinese"
-msgstr ""
+msgstr "중국어 간체"
 
 msgid "Standard hours (h)"
-msgstr ""
+msgstr "표준 근무 시간"
 
 msgid "Start"
-msgstr ""
+msgstr "시작"
 
 msgid "Start break"
-msgstr ""
+msgstr "휴식 시작"
 
 msgid "Start week on Monday"
-msgstr ""
+msgstr "월요일부터 한 주 시작"
 
 msgid "Started"
-msgstr ""
+msgstr "시작됨"
 
 msgid "Stored securely in a future update"
-msgstr ""
+msgstr "안전한 저장은 추후 지원됩니다"
 
 msgid "Sun"
-msgstr ""
+msgstr "일"
 
 msgid "Template reset."
-msgstr ""
+msgstr "템플릿이 재설정되었습니다."
 
 msgid "Template saved."
-msgstr ""
+msgstr "템플릿이 저장되었습니다."
 
 msgid "Templates"
-msgstr ""
+msgstr "템플릿"
 
 msgid "Test"
-msgstr ""
+msgstr "테스트"
 
 msgid "Theme"
-msgstr ""
+msgstr "테마"
 
 msgid "Thu"
-msgstr ""
+msgstr "목"
 
 msgid "Tip: Click AI Assist to generate a draft based on your time logs."
-msgstr ""
+msgstr "팁: AI 도우미를 클릭하면 근무 기록을 바탕으로 초안을 생성합니다."
 
 msgid "Today"
-msgstr ""
+msgstr "오늘"
 
 msgid "Toggle password change"
-msgstr ""
+msgstr "비밀번호 변경 요구 전환"
 
 msgid "Total"
-msgstr ""
+msgstr "합계"
 
 msgid "Total hours"
-msgstr ""
+msgstr "총 근무 시간"
 
 msgid "Total: {hours:.1f}h"
-msgstr ""
+msgstr "합계: {hours:.1f}h"
 
 msgid "Traditional Chinese"
-msgstr ""
+msgstr "중국어 번체"
 
 msgid "Tue"
-msgstr ""
+msgstr "화"
 
 msgid "Unknown error"
-msgstr ""
+msgstr "알 수 없는 오류"
 
 msgid "Unlink"
-msgstr ""
+msgstr "연결 해제"
 
 msgid "Unsaved changes"
-msgstr ""
+msgstr "저장되지 않은 변경 사항"
 
 msgid "Update"
-msgstr ""
+msgstr "업데이트"
 
 msgid "Update available: {version}"
-msgstr ""
+msgstr "업데이트 있음: {version}"
 
 msgid "Update check is not configured."
-msgstr ""
+msgstr "업데이트 확인이 설정되지 않았습니다."
 
 msgid "Use a web proxy for this application."
-msgstr ""
+msgstr "이 앱에 웹 프록시를 사용합니다."
 
 msgid "User"
-msgstr ""
+msgstr "사용자"
 
 msgid "User created."
-msgstr ""
+msgstr "사용자가 생성되었습니다."
 
 msgid "User deleted."
-msgstr ""
+msgstr "사용자가 삭제되었습니다."
 
 msgid "User updated."
-msgstr ""
+msgstr "사용자가 업데이트되었습니다."
 
 msgid "Username"
-msgstr ""
+msgstr "사용자 이름"
 
 msgid "Validating backup..."
-msgstr ""
+msgstr "백업 검증 중..."
 
 msgid "Verify"
-msgstr ""
+msgstr "검증"
 
 msgid "Verifying model..."
-msgstr ""
+msgstr "모델 검증 중..."
 
 msgid "Version {version}"
-msgstr ""
+msgstr "버전 {version}"
 
 msgid "Web proxy"
-msgstr ""
+msgstr "웹 프록시"
 
 msgid "Wed"
-msgstr ""
+msgstr "수"
 
 msgid "Weekly Report"
-msgstr ""
+msgstr "주간 보고서"
 
 msgid "Welcome!"
-msgstr ""
+msgstr "환영합니다!"
 
 msgid "When enabled, text processing uses the local model first; no data is sent to external services."
-msgstr ""
+msgstr "사용하면 텍스트 처리는 로컬 모델을 우선 사용하며 외부 서비스로 데이터를 보내지 않습니다."
 
 msgid "Work Hours Trend"
-msgstr ""
+msgstr "근무 시간 추이"
 
 msgid "Work Mode Breakdown"
-msgstr ""
+msgstr "근무 형태 분포"
 
 msgid "Work Report"
-msgstr ""
+msgstr "업무 보고서"
 
 msgid "Work days"
-msgstr ""
+msgstr "근무 일수"
 
 msgid "Work hours"
-msgstr ""
+msgstr "근무 시간"
 
 msgid "Work type"
-msgstr ""
+msgstr "근무 형태"
 
 msgid "WorkLogger"
-msgstr ""
+msgstr "WorkLogger"
 
 msgid "WorkLogger command line"
-msgstr ""
+msgstr "WorkLogger 명령줄"
 
 msgid "Worked"
-msgstr ""
+msgstr "근무 시간"
 
 msgid "Year"
-msgstr ""
+msgstr "년"
 
 msgid "You"
-msgstr ""
+msgstr "나"
 
 msgid "You are using the latest version."
-msgstr ""
+msgstr "최신 버전을 사용 중입니다."
 
 msgid "You have unsaved note changes. Discard them?"
-msgstr ""
+msgstr "저장되지 않은 메모 변경 사항이 있습니다. 취소할까요?"
 
 msgid "You have unsaved report changes. Discard them?"
-msgstr ""
+msgstr "저장되지 않은 보고서 변경 사항이 있습니다. 취소할까요?"
 
 msgid "You have unsaved template changes. Discard them?"
-msgstr ""
+msgstr "저장되지 않은 템플릿 변경 사항이 있습니다. 취소할까요?"
 
 msgid "You have unsaved work log changes. Discard them?"
-msgstr ""
+msgstr "저장되지 않은 근무 기록 변경 사항이 있습니다. 취소할까요?"
 
 msgid "h"
-msgstr ""
+msgstr "h"
 
 msgid "iCalendar (*.ics)"
-msgstr ""
+msgstr "iCalendar (*.ics)"
 
 msgid "m"
-msgstr ""
+msgstr "m"
 
 msgid "of {hours:.1f}h goal"
-msgstr ""
+msgstr "목표 {hours:.1f}h"
 
 msgid "or"
-msgstr ""
+msgstr "또는"
 
 msgid "{change:+.1f}h vs previous period"
-msgstr ""
+msgstr "이전 기간 대비 {change:+.1f}h"
 
 msgid "{change:+d} days vs previous period"
-msgstr ""
+msgstr "이전 기간 대비 {change:+d}일"
 
 msgid "{count} event"
-msgstr ""
+msgstr "일정 {count}개"
 
 msgid "{count} events"
-msgstr ""
+msgstr "일정 {count}개"
 
 msgid "{mode}: {hours:.1f}h ({percent:.0f}%)"
-msgstr ""
+msgstr "{mode}: {hours:.1f}h ({percent:.0f}%)"
+
+msgid "{month} {day}, {year}"
+msgstr "{year}년 {month} {day}일"
 
 msgid "{month} {year}"
-msgstr ""
+msgstr "{year}년 {month}"

@@ -124,6 +124,9 @@ class ReportEditorViewModel:
     def rewrite_available(self) -> bool:
         return bool(getattr(self._rewrite_handler, "available", True))
 
+    def set_standard_work_hours(self, hours: float) -> None:
+        self._standard_work_hours = max(1.0, min(float(hours), 24.0))
+
     def load_template(self, report_type: str) -> Result[str]:
         if self._templates is None:
             return Result.failure(_validation("template_not_configured"))

@@ -9,12 +9,12 @@ import unittest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import Qt, qInstallMessageHandler
-from PySide6.QtWidgets import QApplication, QLabel
+from PySide6.QtWidgets import QApplication, QLabel, QToolButton
 
 from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler, GetAnalyticsDashboardHandler
 from worklogger.domain.worklog.models import WorkLog, WorkType
 from worklogger.infrastructure.export import AnalyticsCsvExporter, AnalyticsPdfExporter
-from worklogger.infrastructure.i18n import set_language
+from worklogger.infrastructure.i18n import set_language, get_language, available_languages
 from worklogger.presentation.auth.dialogs import LoginDialog
 from worklogger.presentation.settings import SettingsPage
 from worklogger.presentation.viewmodels import AnalyticsViewModel
@@ -59,19 +59,25 @@ class UiLayoutTests(unittest.TestCase):
         if directory:
             target = Path(directory)
             target.mkdir(parents=True, exist_ok=True)
-            self.assertTrue(widget.grab().save(str(target / f"{name}.png")))
+            self.assertTrue(widget.grab().save(str(target / f"{get_language()}-{name}.png")))
 
     def test_login_assets_and_icons_render_without_invalid_fonts(self):
         warnings = []
         previous = qInstallMessageHandler(lambda kind, context, message: warnings.append(message))
         try:
-            dialog = LoginDialog()
-            dialog.show()
-            self.app.processEvents()
-            self.assertEqual(dialog.hero_frame.width(), dialog.form_frame.width())
-            self.assertFalse(dialog.hero_image_label.pixmap().isNull())
-            self.capture(dialog, "login")
-            dialog.close()
+            for language in available_languages():
+                set_language(language)
+                dialog = LoginDialog()
+                dialog.show()
+                self.app.processEvents()
+                self.assertEqual(dialog.hero_frame.width(), dialog.form_frame.width())
+                self.assertFalse(dialog.hero_image_label.pixmap().isNull())
+                for field in (dialog.username_input, dialog.password_input):
+                    for button in field.findChildren(QToolButton):
+                        self.assertTrue(field.rect().contains(button.geometry()), language)
+                        self.assertLessEqual(abs(button.geometry().center().y() - field.rect().center().y()), 1)
+                self.capture(dialog, "login")
+                dialog.close()
             for asset in (ASSETS_ROOT / "icons/ui").glob("*.svg"):
                 rendered = ui_icon(asset.stem).pixmap(20, 20).toImage()
                 self.assertTrue(any(rendered.pixelColor(x, y).alpha() > 0 for x in range(20) for y in range(20)), asset.name)
@@ -83,6 +89,12 @@ class UiLayoutTests(unittest.TestCase):
             qInstallMessageHandler(previous)
 
     def test_shell_routes_fit_supported_window_sizes_and_themes(self):
+        for language in available_languages():
+            with self.subTest(language=language):
+                set_language(language)
+                self.check_shell_routes()
+
+    def check_shell_routes(self):
         for dark in (False, True):
             window = sample_window()
             window._config = replace(window._config, dark=dark)

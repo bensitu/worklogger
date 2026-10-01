@@ -19,7 +19,6 @@ from PySide6.QtWidgets import (
     QPushButton,
     QTextEdit,
     QScrollArea,
-    QMenu,
     QVBoxLayout,
     QWidget,
 )
@@ -31,6 +30,7 @@ from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.presentation.reporting.dialog import ReportTemplateDialog
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
+from worklogger.presentation.date_labels import day_label, month_label
 from worklogger.presentation.viewmodels import (
     AnalyticsState,
     AnalyticsViewModel,
@@ -666,15 +666,6 @@ class ReportsPage(QWidget):
         self.status_label.setText(_("Report saved."))
         self._refresh_history()
 
-    def _save_template_current(self) -> None:
-        if self._view_model is None:
-            return
-        result = self._view_model.save_template(self._current_type(), self.editor.toPlainText())
-        if not result.ok:
-            self._set_error(result.error)
-            return
-        self.status_label.setText(_("Template saved."))
-
     def _rewrite_current(self) -> None:
         if self._view_model is None or self._rewrite_busy:
             return
@@ -783,12 +774,12 @@ class SettingsPlaceholderPage(QWidget):
 
 def _period_label(state: ReportEditorState) -> str:
     if state.period_start == state.period_end:
-        return state.period_start.strftime("%B %-d, %Y") if _supports_dash_day() else state.period_start.strftime("%B %d, %Y")
+        return day_label(state.period_start)
     return _period_range_label(state.period_start, state.period_end)
 
 
 def _month_label(day: date) -> str:
-    return _("{month} {year}").format(month=(_("January"), _("February"), _("March"), _("April"), _("May"), _("June"), _("July"), _("August"), _("September"), _("October"), _("November"), _("December"))[day.month - 1], year=day.year)
+    return month_label(day)
 
 
 def _work_mode_label(key: str) -> str:
@@ -796,17 +787,7 @@ def _work_mode_label(key: str) -> str:
 
 
 def _period_range_label(start: date, end: date) -> str:
-    if start.year == end.year and start.month == end.month:
-        return f"{start.strftime('%B')} {start.day} - {end.strftime('%B')} {end.day}, {end.year}"
-    return f"{start.strftime('%b')} {start.day} - {end.strftime('%b')} {end.day}, {end.year}"
-
-
-def _supports_dash_day() -> bool:
-    try:
-        date.today().strftime("%-d")
-    except ValueError:
-        return False
-    return True
+    return f"{day_label(start)} - {day_label(end)}"
 
 
 def add_months(first_day: date, months: int) -> date:

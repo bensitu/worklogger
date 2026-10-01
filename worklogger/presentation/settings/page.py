@@ -9,10 +9,8 @@ from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QColorDialog,
     QComboBox,
-    QDialog,
     QDoubleSpinBox,
     QFormLayout,
-    QFrame,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -20,7 +18,6 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QStackedWidget,
-    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -89,6 +86,7 @@ class SettingsPage(QWidget):
         self._view_model = view_model
         self._updating = False
         self._last_error: AppError | None = None
+        self._busy_jobs: set[str] = set()
         self._residency_key = _residency_setting_key()
         self._category_pages: dict[str, int] = {}
         self.setObjectName("settings_page_widget")
@@ -98,6 +96,17 @@ class SettingsPage(QWidget):
     @property
     def last_error(self) -> AppError | None:
         return self._last_error
+
+    @property
+    def is_busy(self) -> bool:
+        return bool(self._busy_jobs)
+
+    def set_busy(self, job: str, busy: bool) -> None:
+        if busy:
+            self._busy_jobs.add(job)
+        else:
+            self._busy_jobs.discard(job)
+        self.category_stack.setEnabled(not self.is_busy)
 
     def refresh(self) -> bool:
         result = self._view_model.load()

@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
 from worklogger.domain.shared.errors import AppError
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
+from worklogger.presentation.date_labels import month_label
 from worklogger.presentation.settings import SettingsWorkflow
 from worklogger.presentation.shell.pages import (
     AnalyticsPage,
@@ -127,6 +128,9 @@ class AppWindow(QMainWindow):
         self._ai_assist_workflow = ai_assist_workflow
         self._notes_workflow = notes_workflow
         self._reports_workflow = reports_workflow
+        reports_model = getattr(reports_workflow, "view_model", None)
+        if hasattr(reports_model, "set_standard_work_hours"):
+            reports_model.set_standard_work_hours(self._config.standard_work_hours)
         self._residency_controller = residency_controller
         self._theme_engine = theme_engine or ThemeEngine()
         self._job_runner = job_runner
@@ -199,6 +203,9 @@ class AppWindow(QMainWindow):
             ),
         )
         self._worklog_entry_view_model.set_default_break_hours(state.default_break_hours)
+        reports_model = getattr(self._reports_workflow, "view_model", None)
+        if hasattr(reports_model, "set_standard_work_hours"):
+            reports_model.set_standard_work_hours(state.standard_work_hours)
         self.apply_theme()
         self._refresh_calendar()
         self._refresh_stats()
@@ -401,7 +408,7 @@ class AppWindow(QMainWindow):
             return False
         self.calendar_view.set_state(result.value)
         self.calendar_page.set_month_title(
-            date(result.value.year, result.value.month, 1).strftime("%B %Y")
+            month_label(date(result.value.year, result.value.month, 1))
         )
         return True
 
@@ -639,16 +646,19 @@ class AppWindow(QMainWindow):
         self.close()
 
     def _confirm_discard_changes_if_needed(self) -> bool:
-        if not self.reports_page.confirm_leave():
-            self._set_status(_("Unsaved changes"))
+        if getattr(self.settings_page, "is_busy", False):
+            self._set_status(_("Please wait for the current operation."))
             return False
-        if not self._entry_dirty:
-            return True
-        if self._config.confirm_discard_changes is not None:
-            confirmed = bool(self._config.confirm_discard_changes())
-        else:
-            confirmed = self._ask_discard_changes()
-        if not confirmed:
+        if self._entry_dirty:
+            confirmed = (
+                bool(self._config.confirm_discard_changes())
+                if self._config.confirm_discard_changes is not None
+                else self._ask_discard_changes()
+            )
+            if not confirmed:
+                self._set_status(_("Unsaved changes"))
+                return False
+        if not self.reports_page.confirm_leave():
             self._set_status(_("Unsaved changes"))
             return False
         self._entry_dirty = False

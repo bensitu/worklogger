@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Protocol
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QWidget
+from shiboken6 import isValid
 
 from worklogger.__about__ import APP_VERSION
 from worklogger.app.job_runner import JobHandle, JobRunner
@@ -188,6 +189,8 @@ class SettingsWorkflowController:
             return
 
         def complete(result: object) -> None:
+            if not isValid(label):
+                return
             if not result.ok or result.value is None:
                 label.setText(_error_message(result.error))
                 return
@@ -277,6 +280,7 @@ class SettingsWorkflowController:
             return False
         if self._job_runner is not None:
             _set_status(dialog, _("Validating backup..."))
+            _set_busy(dialog, "data", True)
             self._restore_validation_handle = JobHandle(job_id="restore_validate_pending", cancel=lambda: None)
             handle = self._job_runner.submit(
                 "restore_validate",
@@ -290,6 +294,7 @@ class SettingsWorkflowController:
 
     def _restore_validated(self, dialog: QWidget, path: Path, validation: object) -> bool:
         self._restore_validation_handle = None
+        _set_busy(dialog, "data", False)
         if not validation.ok:
             return self._handle_data_result(
                 dialog,
@@ -402,6 +407,7 @@ class SettingsWorkflowController:
                 _set_status(dialog, _("Please wait for the current update check."))
                 return False
             _set_status(dialog, _("Checking for updates..."))
+            _set_busy(dialog, "update", True)
             if hasattr(dialog, "check_updates_button"):
                 dialog.check_updates_button.setEnabled(False)
             self._update_check_handle = JobHandle(
@@ -423,6 +429,7 @@ class SettingsWorkflowController:
 
     def _complete_update_check(self, dialog: QWidget, result: object) -> None:
         self._update_check_handle = None
+        _set_busy(dialog, "update", False)
         if hasattr(dialog, "check_updates_button"):
             dialog.check_updates_button.setEnabled(True)
         self._handle_update_result(dialog, result)
@@ -469,6 +476,7 @@ class SettingsWorkflowController:
             _set_status(dialog, _("Please wait for the current data operation."))
             return False
         _set_status(dialog, busy_message)
+        _set_busy(dialog, "data", True)
         self._data_job_handle = JobHandle(
             job_id="data_management_pending",
             cancel=lambda: None,
@@ -495,6 +503,7 @@ class SettingsWorkflowController:
         success_message: Callable[[DataManagementActionState], str],
     ) -> None:
         self._data_job_handle = None
+        _set_busy(dialog, "data", False)
         completed = self._handle_data_result(dialog, title, result, success_message)
         if (
             completed
@@ -506,6 +515,11 @@ class SettingsWorkflowController:
 
 def _set_status(dialog: QWidget, message: str) -> None:
     dialog.status_label.setText(message)
+
+
+def _set_busy(surface: QWidget, job: str, busy: bool) -> None:
+    if hasattr(surface, "set_busy"):
+        surface.set_busy(job, busy)
 
 
 def _error_message(error: AppError | None) -> str:

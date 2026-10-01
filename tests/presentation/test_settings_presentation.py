@@ -58,6 +58,22 @@ def _view_model(repository: MemorySettingsRepository) -> SettingsViewModel:
 
 
 class SettingsPresentationTests(unittest.TestCase):
+    def test_native_settings_expose_unavailable_features_and_busy_state(self) -> None:
+        page = SettingsPage(_view_model(MemorySettingsRepository()))
+        self.assertFalse(page.external_api_key_line_edit.isEnabled())
+        self.assertFalse(page.test_external_model_button.isEnabled())
+        self.assertTrue(page.external_model_status_label.text())
+        self.assertFalse(page.clear_calendar_events_button.isEnabled())
+        self.assertTrue(page.clear_calendar_events_button.toolTip())
+        page.set_busy("data", True)
+        page.set_busy("update", True)
+        page.set_busy("data", False)
+        self.assertTrue(page.is_busy)
+        self.assertFalse(page.category_stack.isEnabled())
+        page.set_busy("update", False)
+        self.assertFalse(page.is_busy)
+        self.assertTrue(page.category_stack.isEnabled())
+
     @classmethod
     def setUpClass(cls) -> None:
         cls._app = _app()

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
+from string import Formatter
 
 from catalog_tools import (
     LANGUAGES,
@@ -12,6 +13,7 @@ from catalog_tools import (
     SOURCE_ROOT,
     extract_source_messages,
     read_po_msgids,
+    read_po_entries,
 )
 
 
@@ -57,6 +59,18 @@ def main() -> int:
         path = LOCALES_ROOT / language / "LC_MESSAGES" / "messages.po"
         if read_po_msgids(path) != en_messages:
             errors.append(f"{language}/messages.po diverges from en_US msgids")
+        for message, translation in read_po_entries(path).items():
+            if not message:
+                continue
+            if not translation.strip():
+                errors.append(f"{language}: missing translation for {message!r}")
+                continue
+            try:
+                fields = lambda text: sorted((field, spec, conversion or "") for _, field, spec, conversion in Formatter().parse(text) if field is not None)
+                if fields(message) != fields(translation):
+                    errors.append(f"{language}: format fields differ for {message!r}")
+            except ValueError:
+                errors.append(f"{language}: invalid format string for {message!r}")
 
     offenders = _i18n_api_offenders()
     if offenders:

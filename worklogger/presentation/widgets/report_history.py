@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QLabel, QLineEdit, QPushButton, QScrollArea, QVBox
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets._style import refresh_style
 from worklogger.presentation.widgets.card import CardFrame
+from worklogger.presentation.date_labels import month_label
 
 
 @dataclass(frozen=True)
@@ -99,7 +100,7 @@ class ReportHistoryPanel(CardFrame):
 
         current_month = ""
         for index, item in enumerate(visible):
-            month = item.period_start.strftime("%B %Y")
+            month = month_label(item.period_start)
             if month != current_month:
                 current_month = month
                 heading = QLabel(month)

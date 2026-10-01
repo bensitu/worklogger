@@ -1109,5 +1109,8 @@ msgstr ""
 msgid "{mode}: {hours:.1f}h ({percent:.0f}%)"
 msgstr ""
 
+msgid "{month} {day}, {year}"
+msgstr ""
+
 msgid "{month} {year}"
 msgstr ""

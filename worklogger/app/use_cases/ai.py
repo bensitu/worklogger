@@ -184,6 +184,10 @@ class AiChatHandler:
         self._timeout_seconds = timeout_seconds
         self._max_history_messages = max(0, int(max_history_messages))
 
+    @property
+    def available(self) -> bool:
+        return self._gateway is not None
+
     def handle(
         self,
         command: SendAiChatMessageCommand,

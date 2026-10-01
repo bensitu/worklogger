@@ -3,6 +3,8 @@ from __future__ import annotations
 import ast
 import subprocess
 import sys
+import gettext
+import tempfile
 from pathlib import Path
 import unittest
 
@@ -13,6 +15,8 @@ from scripts.i18n.catalog_tools import (
     SOURCE_ROOT,
     extract_source_messages,
     read_po_msgids,
+    read_po_entries,
+    compile_po_to_mo,
 )
 from worklogger.infrastructure.i18n import (
     _,
@@ -27,6 +31,19 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 class GettextFoundationTests(unittest.TestCase):
+    def test_compiled_catalogs_translate_controls_and_plural_events(self) -> None:
+        expected = {"en_US": "Settings", "zh_CN": "设置", "zh_TW": "設定", "ja_JP": "設定", "ko_KR": "설정"}
+        with tempfile.TemporaryDirectory() as directory:
+            for language in LANGUAGES:
+                po_path = LOCALES_ROOT / language / "LC_MESSAGES" / "messages.po"
+                entries = read_po_entries(po_path)
+                self.assertTrue(all(value.strip() for key, value in entries.items() if key))
+                mo = compile_po_to_mo(po_path, Path(directory) / f"{language}.mo")
+                with mo.open("rb") as source:
+                    translation = gettext.GNUTranslations(source)
+                self.assertEqual(translation.gettext("Settings"), expected[language])
+                self.assertEqual(translation.ngettext("{count} event", "{count} events", 2), entries["{count} events"])
+
     def tearDown(self) -> None:
         set_language("en_US")
 

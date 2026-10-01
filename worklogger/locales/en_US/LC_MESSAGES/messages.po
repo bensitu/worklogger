@@ -4,6 +4,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: en_US\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 
 msgid "+"
@@ -1109,6 +1110,9 @@ msgstr "{count} events"
 
 msgid "{mode}: {hours:.1f}h ({percent:.0f}%)"
 msgstr "{mode}: {hours:.1f}h ({percent:.0f}%)"
+
+msgid "{month} {day}, {year}"
+msgstr "{month} {day}, {year}"
 
 msgid "{month} {year}"
 msgstr "{month} {year}"

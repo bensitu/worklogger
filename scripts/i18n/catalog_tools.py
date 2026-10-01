@@ -79,6 +79,20 @@ def extract_source_messages(source_root: Path = SOURCE_ROOT) -> set[str]:
     return messages
 
 
+def extract_plural_messages(source_root: Path = SOURCE_ROOT) -> set[tuple[str, str]]:
+    pairs: set[tuple[str, str]] = set()
+    for path in source_root.rglob("*.py"):
+        if "__pycache__" in path.parts:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "ngettext" and len(node.args) >= 2:
+                singular, plural = (_constant_string(value) for value in node.args[:2])
+                if singular and plural:
+                    pairs.add((singular, plural))
+    return pairs
+
+
 def _po_quote(value: str) -> str:
     return json.dumps(value, ensure_ascii=False)
 
@@ -112,6 +126,7 @@ def write_po(language: str, messages: set[str], locales_root: Path = LOCALES_ROO
         '"Content-Type: text/plain; charset=UTF-8\\n"',
         '"Content-Transfer-Encoding: 8bit\\n"',
         f'"Language: {language}\\n"',
+        '"Plural-Forms: nplurals=2; plural=(n != 1);\\n"' if language == "en_US" else '"Plural-Forms: nplurals=1; plural=0;\\n"',
         '"MIME-Version: 1.0\\n"',
         "",
     ]
@@ -127,6 +142,10 @@ def write_po(language: str, messages: set[str], locales_root: Path = LOCALES_ROO
 def compile_po_to_mo(po_path: Path, mo_path: Path | None = None) -> Path:
     mo_path = mo_path or po_path.with_suffix(".mo")
     entries = {key: value for key, value in read_po_entries(po_path).items() if not key or value}
+    single_form = "nplurals=1" in entries.get("", "")
+    for singular, plural in extract_plural_messages():
+        if singular in entries and plural in entries:
+            entries[singular + "\0" + plural] = entries[singular] if single_form else entries[singular] + "\0" + entries[plural]
     keys = sorted(entries)
     ids = b""
     strings = b""

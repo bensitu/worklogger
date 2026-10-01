@@ -43,6 +43,10 @@ class AiAssistViewModel:
         self._context_handler = context_handler
         self._language = language
 
+    @property
+    def available(self) -> bool:
+        return bool(getattr(self._chat_handler, "available", True))
+
     def initial_state(self) -> AiChatState:
         return AiChatState(user_id=self._user_id)
 

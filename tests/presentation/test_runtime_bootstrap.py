@@ -23,6 +23,7 @@ from worklogger.domain.shared.errors import CancellationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkType
 from worklogger.infrastructure.repositories import SQLiteSettingsRepository, SQLiteWorkLogRepository
+from worklogger.infrastructure.i18n import get_language, set_language
 from worklogger.main import main
 from worklogger.presentation.auth import AuthSession
 from worklogger.presentation.shell import AppWindowConfig, MinimalView
@@ -58,6 +59,42 @@ class CancellingAuthenticator:
 
 
 class RuntimeBootstrapTests(unittest.TestCase):
+    def test_saved_settings_apply_on_restart(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            config = DesktopRuntimeConfig(
+                database_path=Path(directory) / "worklog.db",
+                create_user_if_empty=True, password_iterations=1_000,
+            )
+            first = build_desktop_runtime(config, argv=[])
+            self.assertTrue(first.ok, first.error)
+            runtime = first.value
+            settings = SQLiteSettingsRepository(runtime.connection_factory)
+            for key, value in {
+                "language": "ja_JP", "dark_mode": "1", "standard_work_hours": "7.5",
+                "default_break_hours": "0.75", "monthly_target_hours": "150",
+                "show_holidays": "0", "week_start_monday": "1",
+            }.items():
+                settings.set(runtime.user.id, key, value)
+            runtime.window.close()
+            second = None
+            try:
+                second = build_desktop_runtime(config, argv=[])
+                self.assertTrue(second.ok, second.error)
+                window = second.value.window
+                self.assertEqual(get_language(), "ja_JP")
+                self.assertTrue(window._config.dark)
+                self.assertEqual(window._config.standard_work_hours, 7.5)
+                self.assertEqual(window._config.monthly_target_hours, 150)
+                self.assertFalse(window._config.calendar_options.show_holidays)
+                self.assertTrue(window._config.calendar_options.week_start_monday)
+                self.assertTrue(window.refresh())
+                self.assertEqual(window.entry_panel.break_input.value(), 0.75)
+                self.assertFalse(window._ai_assist_workflow._view_model.available)
+            finally:
+                if second is not None and second.value is not None:
+                    second.value.window.close()
+                set_language("en_US")
+
     def test_runtime_bootstrap_builds_sqlite_backed_app_window(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             database_path = Path(directory) / "worklog.db"

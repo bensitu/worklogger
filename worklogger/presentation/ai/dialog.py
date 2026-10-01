@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QDialog,
     QHBoxLayout,
@@ -85,8 +86,15 @@ class AiAssistDialog(QDialog):
         self.send_button.clicked.connect(self.send_current_message)
         self.message_input.returnPressed.connect(self.send_current_message)
         self.close_button.clicked.connect(self.accept)
+        self._set_busy(False)
+        if not self._view_model.available:
+            self.status_label.setText(_("AI Assist is not configured."))
+            self.send_button.setToolTip(_("AI Assist is not configured."))
 
     def send_current_message(self) -> bool:
+        if not self._view_model.available:
+            self.status_label.setText(_("AI Assist is not configured."))
+            return False
         if self._pending_handle is not None:
             self.status_label.setText(_("Please wait for the current request."))
             return False
@@ -140,8 +148,23 @@ class AiAssistDialog(QDialog):
         self.status_label.setText(_("Ready"))
 
     def _set_busy(self, busy: bool) -> None:
-        self.send_button.setEnabled(not busy)
-        self.message_input.setEnabled(not busy)
+        self.send_button.setEnabled(not busy and self._view_model.available)
+        self.message_input.setEnabled(not busy and self._view_model.available)
+        self.close_button.setEnabled(not busy)
+
+    def accept(self) -> None:
+        if self._pending_handle is None:
+            super().accept()
+
+    def reject(self) -> None:
+        if self._pending_handle is None:
+            super().reject()
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        if self._pending_handle is not None:
+            event.ignore()
+            return
+        super().closeEvent(event)
 
     def _render_history(self) -> None:
         lines: list[str] = []

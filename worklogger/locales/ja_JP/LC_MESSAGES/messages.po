@@ -4,1111 +4,1115 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: ja_JP\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
 msgid "+"
-msgstr ""
+msgstr "+"
 
 msgid "+ Add Entry"
-msgstr ""
+msgstr "+ 記録を追加"
 
 msgid "+15m break"
-msgstr ""
+msgstr "休憩を15分追加"
 
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
-msgstr ""
+msgstr "プライバシーを重視した、AIレポート対応のデスクトップ業務記録アプリ。"
 
 msgid "AI"
-msgstr ""
+msgstr "AI"
 
 msgid "AI Assist"
-msgstr ""
+msgstr "AIアシスト"
 
 msgid "AI Assist Hint / extra instructions (optional)"
-msgstr ""
+msgstr "AIへのヒント / 追加指示（任意）"
 
 msgid "AI Assist is not configured."
-msgstr ""
+msgstr "AIアシストは未設定です。"
 
 msgid "AI Privacy"
-msgstr ""
+msgstr "AIプライバシー"
 
 msgid "API Base URL"
-msgstr ""
+msgstr "APIベースURL"
 
 msgid "API Key"
-msgstr ""
+msgstr "APIキー"
 
 msgid "About"
-msgstr ""
+msgstr "このアプリについて"
 
 msgid "Account"
-msgstr ""
+msgstr "アカウント"
 
 msgid "Active"
-msgstr ""
+msgstr "有効"
 
 msgid "Active local model: {model}"
-msgstr ""
+msgstr "使用中のローカルモデル：{model}"
 
 msgid "Add"
-msgstr ""
+msgstr "追加"
 
 msgid "Add Entry"
-msgstr ""
+msgstr "記録を追加"
 
 msgid "Address"
-msgstr ""
+msgstr "アドレス"
 
 msgid "Admin"
-msgstr ""
+msgstr "管理者"
 
 msgid "All day"
-msgstr ""
+msgstr "終日"
 
 msgid "Analytics"
-msgstr ""
+msgstr "分析"
 
 msgid "Analytics is not configured."
-msgstr ""
+msgstr "分析は未設定です。"
 
 msgid "Annual"
-msgstr ""
+msgstr "年次"
 
 msgid "Appearance"
-msgstr ""
+msgstr "外観"
 
 msgid "Append"
-msgstr ""
+msgstr "追加"
 
 msgid "Apply template"
-msgstr ""
+msgstr "テンプレートを適用"
 
 msgid "April"
-msgstr ""
+msgstr "4月"
 
 msgid "Ask about your work logs"
-msgstr ""
+msgstr "業務記録について質問"
 
 msgid "Assistant"
-msgstr ""
+msgstr "アシスタント"
 
 msgid "Attendance Days"
-msgstr ""
+msgstr "出勤日数"
 
 msgid "August"
-msgstr ""
+msgstr "8月"
 
 msgid "Authentication information (optional)"
-msgstr ""
+msgstr "認証情報（任意）"
 
 msgid "Author"
-msgstr ""
+msgstr "作者"
 
 msgid "Auto Record"
-msgstr ""
+msgstr "自動記録"
 
 msgid "Average"
-msgstr ""
+msgstr "平均"
 
 msgid "Average Work Hours"
-msgstr ""
+msgstr "平均労働時間"
 
 msgid "Back to login"
-msgstr ""
+msgstr "ログインに戻る"
 
 msgid "Back up regularly to protect your data."
-msgstr ""
+msgstr "データを保護するため、定期的にバックアップしてください。"
 
 msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
-msgstr ""
+msgstr "業務記録、レポート、設定、アカウント情報を保護するため、データベースを定期的にバックアップしてください。"
 
 msgid "Backing up data..."
-msgstr ""
+msgstr "データをバックアップ中..."
 
 msgid "Backup Data"
-msgstr ""
+msgstr "データをバックアップ"
 
 msgid "Backup cancelled"
-msgstr ""
+msgstr "バックアップをキャンセルしました"
 
 msgid "Backup saved: {path}"
-msgstr ""
+msgstr "バックアップを保存しました：{path}"
 
 msgid "Bar"
-msgstr ""
+msgstr "棒グラフ"
 
 msgid "Blue"
-msgstr ""
+msgstr "青"
 
 msgid "Break"
-msgstr ""
+msgstr "休憩"
 
 msgid "Break (h)"
-msgstr ""
+msgstr "休憩（時間）"
 
 msgid "Break timer running"
-msgstr ""
+msgstr "休憩を計測中"
 
 msgid "Business trip"
-msgstr ""
+msgstr "出張"
 
 msgid "CSV"
-msgstr ""
+msgstr "CSV"
 
 msgid "CSV (*.csv)"
-msgstr ""
+msgstr "CSV (*.csv)"
 
 msgid "CSV Data Management"
-msgstr ""
+msgstr "CSVデータ管理"
 
 msgid "CSV files (*.csv)"
-msgstr ""
+msgstr "CSV files (*.csv)"
 
 msgid "Calendar"
-msgstr ""
+msgstr "カレンダー"
 
 msgid "Calendar Data"
-msgstr ""
+msgstr "カレンダーデータ"
 
 msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
-msgstr ""
+msgstr "カレンダーデータが既に存在します。\n\n置換は既存の予定を消去してからインポートします。\n追加は既存の予定を保持して新しい予定を追加します。"
 
 msgid "Calendar events: {events}"
-msgstr ""
+msgstr "カレンダーの予定：{events}"
 
 msgid "Change password"
-msgstr ""
+msgstr "パスワードを変更"
 
 msgid "Changing password will reset the recovery key."
-msgstr ""
+msgstr "パスワードを変更すると復旧キーがリセットされます。"
 
 msgid "Check for updates"
-msgstr ""
+msgstr "更新を確認"
 
 msgid "Checking for updates..."
-msgstr ""
+msgstr "更新を確認中..."
 
 msgid "Choose custom color"
-msgstr ""
+msgstr "カスタム色を選択"
 
 msgid "Clear Calendar Events"
-msgstr ""
+msgstr "カレンダーの予定を消去"
 
 msgid "Clearing calendar events is not supported yet."
-msgstr ""
+msgstr "カレンダーの予定の消去はまだ対応していません。"
 
 msgid "Close"
-msgstr ""
+msgstr "閉じる"
 
 msgid "Comp leave"
-msgstr ""
+msgstr "代休"
 
 msgid "Confirm password"
-msgstr ""
+msgstr "パスワードを確認"
 
 msgid "Continue"
-msgstr ""
+msgstr "続行"
 
 msgid "Copied"
-msgstr ""
+msgstr "コピーしました"
 
 msgid "Copy"
-msgstr ""
+msgstr "コピー"
 
 msgid "Copy Markdown"
-msgstr ""
+msgstr "Markdownをコピー"
 
 msgid "Create account"
-msgstr ""
+msgstr "アカウントを作成"
 
 msgid "Create user"
-msgstr ""
+msgstr "ユーザーを作成"
 
 msgid "Current ID"
-msgstr ""
+msgstr "現在のID"
 
 msgid "Current password"
-msgstr ""
+msgstr "現在のパスワード"
 
 msgid "Current user"
-msgstr ""
+msgstr "現在のユーザー"
 
 msgid "Custom"
-msgstr ""
+msgstr "カスタム"
 
 msgid "DESKTOP START FAILED"
-msgstr ""
+msgstr "デスクトップアプリの起動に失敗"
 
 msgid "Daily Average"
-msgstr ""
+msgstr "1日平均"
 
 msgid "Daily Report"
-msgstr ""
+msgstr "日報"
 
 msgid "Dark mode"
-msgstr ""
+msgstr "ダークモード"
 
 msgid "Data"
-msgstr ""
+msgstr "データ"
 
 msgid "Data restored successfully."
-msgstr ""
+msgstr "データを復元しました。"
 
 msgid "Database Backup"
-msgstr ""
+msgstr "データベースのバックアップ"
 
 msgid "December"
-msgstr ""
+msgstr "12月"
 
 msgid "Default break (h)"
-msgstr ""
+msgstr "既定の休憩（時間）"
 
 msgid "Delete"
-msgstr ""
+msgstr "削除"
 
 msgid "Delete user"
-msgstr ""
+msgstr "ユーザーを削除"
 
 msgid "Description"
-msgstr ""
+msgstr "説明"
 
 msgid "Discard changes?"
-msgstr ""
+msgstr "変更を破棄しますか？"
 
 msgid "Domain"
-msgstr ""
+msgstr "ドメイン"
 
 msgid "Download"
-msgstr ""
+msgstr "ダウンロード"
 
 msgid "Downloading model..."
-msgstr ""
+msgstr "モデルをダウンロード中..."
 
 msgid "Enable local model"
-msgstr ""
+msgstr "ローカルモデルを有効にする"
 
 msgid "Enable menu bar"
-msgstr ""
+msgstr "メニューバーアイコンを有効にする"
 
 msgid "Enable tray icon"
-msgstr ""
+msgstr "トレイアイコンを有効にする"
 
 msgid "End"
-msgstr ""
+msgstr "終了"
 
 msgid "Ended"
-msgstr ""
+msgstr "終了しました"
 
 msgid "English"
-msgstr ""
+msgstr "英語"
 
 msgid "Enter your ID"
-msgstr ""
+msgstr "IDを入力"
 
 msgid "Enter your password"
-msgstr ""
+msgstr "パスワードを入力"
 
 msgid "Export"
-msgstr ""
+msgstr "エクスポート"
 
 msgid "Export .ics"
-msgstr ""
+msgstr ".icsをエクスポート"
 
 msgid "Export CSV"
-msgstr ""
+msgstr "CSVをエクスポート"
 
 msgid "Export Markdown"
-msgstr ""
+msgstr "Markdownをエクスポート"
 
 msgid "Export PDF"
-msgstr ""
+msgstr "PDFをエクスポート"
 
 msgid "Export Reports"
-msgstr ""
+msgstr "レポートをエクスポート"
 
 msgid "Export cancelled"
-msgstr ""
+msgstr "エクスポートをキャンセルしました"
 
 msgid "Exported CSV"
-msgstr ""
+msgstr "CSVをエクスポートしました"
 
 msgid "Exported Markdown"
-msgstr ""
+msgstr "Markdownをエクスポートしました"
 
 msgid "Exported PDF"
-msgstr ""
+msgstr "PDFをエクスポートしました"
 
 msgid "Exported {count} events."
-msgstr ""
+msgstr "{count}件の予定をエクスポートしました。"
 
 msgid "Exported {count} records."
-msgstr ""
+msgstr "{count}件の記録をエクスポートしました。"
 
 msgid "Exporting .ics..."
-msgstr ""
+msgstr ".icsをエクスポート中..."
 
 msgid "Exporting CSV..."
-msgstr ""
+msgstr "CSVをエクスポート中..."
 
 msgid "External Model"
-msgstr ""
+msgstr "外部モデル"
 
 msgid "External model testing is not configured."
-msgstr ""
+msgstr "外部モデルのテストは未設定です。"
 
 msgid "February"
-msgstr ""
+msgstr "2月"
 
 msgid "Forgot Password?"
-msgstr ""
+msgstr "パスワードをお忘れですか？"
 
 msgid "Fri"
-msgstr ""
+msgstr "金"
 
 msgid "GGUF Model (*.gguf)"
-msgstr ""
+msgstr "GGUF Model (*.gguf)"
 
 msgid "GNU GPLv3"
-msgstr ""
+msgstr "GNU GPLv3"
 
 msgid "General"
-msgstr ""
+msgstr "一般"
 
 msgid "GitHub"
-msgstr ""
+msgstr "GitHub"
 
 msgid "Green"
-msgstr ""
+msgstr "緑"
 
 msgid "Hide"
-msgstr ""
+msgstr "非表示"
 
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 msgid "Identity management is not configured."
-msgstr ""
+msgstr "アカウント連携の管理は未設定です。"
 
 msgid "Import .gguf"
-msgstr ""
+msgstr ".ggufをインポート"
 
 msgid "Import .ics"
-msgstr ""
+msgstr ".icsをインポート"
 
 msgid "Import CSV"
-msgstr ""
+msgstr "CSVをインポート"
 
 msgid "Import Calendar (.ics)"
-msgstr ""
+msgstr "カレンダーをインポート（.ics）"
 
 msgid "Import cancelled"
-msgstr ""
+msgstr "インポートをキャンセルしました"
 
 msgid "Import or export worklog records as CSV files for backup, migration, or spreadsheet analysis."
-msgstr ""
+msgstr "業務記録をCSVでインポート・エクスポートして、バックアップ、移行、表計算での分析に利用できます。"
 
 msgid "Import your .ics file to let AI read your meetings when generating reports."
-msgstr ""
+msgstr ".icsファイルをインポートすると、AIがレポート作成時に会議情報を参照できます。"
 
 msgid "Imported {count} calendar events."
-msgstr ""
+msgstr "{count}件のカレンダーの予定をインポートしました。"
 
 msgid "Imported {count} records."
-msgstr ""
+msgstr "{count}件の記録をインポートしました。"
 
 msgid "Importing .ics..."
-msgstr ""
+msgstr ".icsをインポート中..."
 
 msgid "Importing CSV..."
-msgstr ""
+msgstr "CSVをインポート中..."
 
 msgid "Importing model..."
-msgstr ""
+msgstr "モデルをインポート中..."
 
 msgid "Include calendar"
-msgstr ""
+msgstr "カレンダーを含める"
 
 msgid "Include notes"
-msgstr ""
+msgstr "ノートを含める"
 
 msgid "Include quick logs"
-msgstr ""
+msgstr "クイックログを含める"
 
 msgid "Insert Quick Log"
-msgstr ""
+msgstr "クイックログを挿入"
 
 msgid "January"
-msgstr ""
+msgstr "1月"
 
 msgid "Japanese"
-msgstr ""
+msgstr "日本語"
 
 msgid "July"
-msgstr ""
+msgstr "7月"
 
 msgid "June"
-msgstr ""
+msgstr "6月"
 
 msgid "Korean"
-msgstr ""
+msgstr "韓国語"
 
 msgid "Language"
-msgstr ""
+msgstr "言語"
 
 msgid "Leave"
-msgstr ""
+msgstr "休暇"
 
 msgid "Leave days"
-msgstr ""
+msgstr "休暇日数"
 
 msgid "License"
-msgstr ""
+msgstr "ライセンス"
 
 msgid "Light mode"
-msgstr ""
+msgstr "ライトモード"
 
 msgid "Line"
-msgstr ""
+msgstr "折れ線グラフ"
 
 msgid "Link"
-msgstr ""
+msgstr "連携"
 
 msgid "Linked identities"
-msgstr ""
+msgstr "連携アカウント"
 
 msgid "Local Model"
-msgstr ""
+msgstr "ローカルモデル"
 
 msgid "Local Models"
-msgstr ""
+msgstr "ローカルモデル"
 
 msgid "Local model management is not configured."
-msgstr ""
+msgstr "ローカルモデルの管理は未設定です。"
 
 msgid "Local user"
-msgstr ""
+msgstr "ローカルユーザー"
 
 msgid "Log Out"
-msgstr ""
+msgstr "ログアウト"
 
 msgid "Login"
-msgstr ""
+msgstr "ログイン"
 
 msgid "Logout"
-msgstr ""
+msgstr "ログアウト"
 
 msgid "Logout requested"
-msgstr ""
+msgstr "ログアウトを要求しました"
 
 msgid "Manage downloaded and imported GGUF models."
-msgstr ""
+msgstr "ダウンロード・インポートしたGGUFモデルを管理します。"
 
 msgid "Manage models"
-msgstr ""
+msgstr "モデルを管理"
 
 msgid "Manage users"
-msgstr ""
+msgstr "ユーザーを管理"
 
 msgid "Manual Input"
-msgstr ""
+msgstr "手動入力"
 
 msgid "March"
-msgstr ""
+msgstr "3月"
 
 msgid "Markdown files (*.md)"
-msgstr ""
+msgstr "Markdown files (*.md)"
 
 msgid "May"
-msgstr ""
+msgstr "5月"
 
 msgid "Mode"
-msgstr ""
+msgstr "モード"
 
 msgid "Model"
-msgstr ""
+msgstr "モデル"
 
 msgid "Model verified."
-msgstr ""
+msgstr "モデルを検証しました。"
 
 msgid "Mon"
-msgstr ""
+msgstr "月"
 
 msgid "Month"
-msgstr ""
+msgstr "月"
 
 msgid "Monthly"
-msgstr ""
+msgstr "月次"
 
 msgid "Monthly Hours"
-msgstr ""
+msgstr "月間労働時間"
 
 msgid "Monthly Report"
-msgstr ""
+msgstr "月報"
 
 msgid "Monthly target"
-msgstr ""
+msgstr "月間目標"
 
 msgid "Monthly target (h)"
-msgstr ""
+msgstr "月間目標（時間）"
 
 msgid "More actions"
-msgstr ""
+msgstr "その他の操作"
 
 msgid "Network"
-msgstr ""
+msgstr "ネットワーク"
 
 msgid "Network proxy settings are saved now; applying them to HTTP requests is a follow-up item."
-msgstr ""
+msgstr "プロキシ設定は保存されます。HTTPリクエストへの適用は今後対応予定です。"
 
 msgid "New password"
-msgstr ""
+msgstr "新しいパスワード"
 
 msgid "New recovery key"
-msgstr ""
+msgstr "新しい復旧キー"
 
 msgid "Next day"
-msgstr ""
+msgstr "翌日"
 
 msgid "Next month"
-msgstr ""
+msgstr "翌月"
 
 msgid "Next period"
-msgstr ""
+msgstr "次の期間"
 
 msgid "No arguments start the desktop application."
-msgstr ""
+msgstr "引数を指定しない場合はデスクトップアプリを起動します。"
 
 msgid "No data"
-msgstr ""
+msgstr "データがありません"
 
 msgid "No events found."
-msgstr ""
+msgstr "予定が見つかりません。"
 
 msgid "No local model selected."
-msgstr ""
+msgstr "ローカルモデルは選択されていません。"
 
 msgid "No records for the selected day."
-msgstr ""
+msgstr "選択した日の記録はありません。"
 
 msgid "No saved reports"
-msgstr ""
+msgstr "保存済みレポートはありません"
 
 msgid "Normal"
-msgstr ""
+msgstr "通常"
 
 msgid "Not configured"
-msgstr ""
+msgstr "未設定"
 
 msgid "Not downloaded"
-msgstr ""
+msgstr "未ダウンロード"
 
 msgid "Not required"
-msgstr ""
+msgstr "不要"
 
 msgid "Notes"
-msgstr ""
+msgstr "ノート"
 
 msgid "November"
-msgstr ""
+msgstr "11月"
 
 msgid "October"
-msgstr ""
+msgstr "10月"
 
 msgid "On break"
-msgstr ""
+msgstr "休憩中"
 
 msgid "Open"
-msgstr ""
+msgstr "開く"
 
 msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
-msgstr ""
+msgstr "OpenAI互換インターフェースに対応し、互換サービス経由でChatGPT、Claude、Qwen、DeepSeekなどを利用できます。"
 
 msgid "Overnight"
-msgstr ""
+msgstr "日またぎ"
 
 msgid "Overnight indicator"
-msgstr ""
+msgstr "日またぎ表示"
 
 msgid "Overtime"
-msgstr ""
+msgstr "残業"
 
 msgid "Overtime Hours"
-msgstr ""
+msgstr "残業時間"
 
 msgid "PDF"
-msgstr ""
+msgstr "PDF"
 
 msgid "PDF files (*.pdf)"
-msgstr ""
+msgstr "PDF files (*.pdf)"
 
 msgid "Paid leave"
-msgstr ""
+msgstr "有給休暇"
 
 msgid "Palette"
-msgstr ""
+msgstr "パレット"
 
 msgid "Password"
-msgstr ""
+msgstr "パスワード"
 
 msgid "Password change"
-msgstr ""
+msgstr "パスワード変更"
 
 msgid "Password change required."
-msgstr ""
+msgstr "パスワードの変更が必要です。"
 
 msgid "Password changed successfully."
-msgstr ""
+msgstr "パスワードを変更しました。"
 
 msgid "Password reset."
-msgstr ""
+msgstr "パスワードをリセットしました。"
 
 msgid "Pink"
-msgstr ""
+msgstr "ピンク"
 
 msgid "Please wait for the current data operation."
-msgstr ""
+msgstr "現在のデータ操作が完了するまでお待ちください。"
 
 msgid "Please wait for the current operation."
-msgstr ""
+msgstr "現在の操作が完了するまでお待ちください。"
 
 msgid "Please wait for the current request."
-msgstr ""
+msgstr "現在のリクエストが完了するまでお待ちください。"
 
 msgid "Please wait for the current update check."
-msgstr ""
+msgstr "現在の更新確認が完了するまでお待ちください。"
 
 msgid "Port"
-msgstr ""
+msgstr "ポート"
 
 msgid "Previous day"
-msgstr ""
+msgstr "前日"
 
 msgid "Previous month"
-msgstr ""
+msgstr "前月"
 
 msgid "Previous period"
-msgstr ""
+msgstr "前の期間"
 
 msgid "Public holidays"
-msgstr ""
+msgstr "祝日"
 
 msgid "Purple"
-msgstr ""
+msgstr "紫"
 
 msgid "Quarterly"
-msgstr ""
+msgstr "四半期"
 
 msgid "Quick Log"
-msgstr ""
+msgstr "クイックログ"
 
 msgid "Quick Log added."
-msgstr ""
+msgstr "クイックログを追加しました。"
 
 msgid "Quick Log deleted."
-msgstr ""
+msgstr "クイックログを削除しました。"
 
 msgid "Quick Log updated."
-msgstr ""
+msgstr "クイックログを更新しました。"
 
 msgid "Quit"
-msgstr ""
+msgstr "終了"
 
 msgid "Q{quarter} {year}"
-msgstr ""
+msgstr "{year}年第{quarter}四半期"
 
 msgid "RUNTIME SMOKE FAILED"
-msgstr ""
+msgstr "ランタイムのスモークテストに失敗"
 
 msgid "RUNTIME SMOKE OK"
-msgstr ""
+msgstr "ランタイムのスモークテスト成功"
 
 msgid "Ready"
-msgstr ""
+msgstr "準備完了"
 
 msgid "Recovery key"
-msgstr ""
+msgstr "復旧キー"
 
 msgid "Refresh"
-msgstr ""
+msgstr "更新"
 
 msgid "Refreshing catalog..."
-msgstr ""
+msgstr "モデルカタログを更新中..."
 
 msgid "Register"
-msgstr ""
+msgstr "登録"
 
 msgid "Remember me"
-msgstr ""
+msgstr "ログイン状態を保持"
 
 msgid "Remote"
-msgstr ""
+msgstr "リモート"
 
 msgid "Replace"
-msgstr ""
+msgstr "置換"
 
 msgid "Report"
-msgstr ""
+msgstr "レポート"
 
 msgid "Report History"
-msgstr ""
+msgstr "レポート履歴"
 
 msgid "Report saved."
-msgstr ""
+msgstr "レポートを保存しました。"
 
 msgid "Reports"
-msgstr ""
+msgstr "レポート"
 
 msgid "Reports are not configured."
-msgstr ""
+msgstr "レポートは未設定です。"
 
 msgid "Require password change"
-msgstr ""
+msgstr "パスワード変更を要求"
 
 msgid "Required"
-msgstr ""
+msgstr "必須"
 
 msgid "Reset password"
-msgstr ""
+msgstr "パスワードをリセット"
 
 msgid "Reset selected user password"
-msgstr ""
+msgstr "選択したユーザーのパスワードをリセット"
 
 msgid "Reset template"
-msgstr ""
+msgstr "テンプレートをリセット"
 
 msgid "Reset this template to its default?"
-msgstr ""
+msgstr "このテンプレートを既定の内容に戻しますか？"
 
 msgid "Rest Days"
-msgstr ""
+msgstr "休日数"
 
 msgid "Restore Data"
-msgstr ""
+msgstr "データを復元"
 
 msgid "Restore cancelled"
-msgstr ""
+msgstr "復元をキャンセルしました"
 
 msgid "Restore validation passed."
-msgstr ""
+msgstr "復元前の検証に成功しました。"
 
 msgid "Restore will replace the current database file. Continue?"
-msgstr ""
+msgstr "復元すると現在のデータベースファイルが置き換わります。続行しますか？"
 
 msgid "Restoring data..."
-msgstr ""
+msgstr "データを復元中..."
 
 msgid "Rewrite"
-msgstr ""
+msgstr "書き直す"
 
 msgid "Rewriting report..."
-msgstr ""
+msgstr "レポートを書き直しています..."
 
 msgid "Rewritten"
-msgstr ""
+msgstr "書き直しました"
 
 msgid "Role"
-msgstr ""
+msgstr "権限"
 
 msgid "SMOKE IMPORT FAILED"
-msgstr ""
+msgstr "インポートのスモークテストに失敗"
 
 msgid "SMOKE IMPORT OK"
-msgstr ""
+msgstr "インポートのスモークテスト成功"
 
 msgid "SQLite Database (*.db)"
-msgstr ""
+msgstr "SQLite Database (*.db)"
 
 msgid "Sat"
-msgstr ""
+msgstr "土"
 
 msgid "Save"
-msgstr ""
+msgstr "保存"
 
 msgid "Save Report"
-msgstr ""
+msgstr "レポートを保存"
 
 msgid "Save template"
-msgstr ""
+msgstr "テンプレートを保存"
 
 msgid "Save this recovery key before continuing."
-msgstr ""
+msgstr "続行する前に、この復旧キーを保存してください。"
 
 msgid "Save this recovery key before returning to login."
-msgstr ""
+msgstr "ログインに戻る前に、この復旧キーを保存してください。"
 
 msgid "Saved"
-msgstr ""
+msgstr "保存しました"
 
 msgid "Saved. Language changes apply after restarting."
-msgstr ""
+msgstr "保存しました。言語設定は再起動後に適用されます。"
 
 msgid "Schedule / Records"
-msgstr ""
+msgstr "予定 / 記録"
 
 msgid "Search reports..."
-msgstr ""
+msgstr "レポートを検索..."
 
 msgid "Select"
-msgstr ""
+msgstr "選択"
 
 msgid "Select a model first."
-msgstr ""
+msgstr "先にモデルを選択してください。"
 
 msgid "Select a provider first."
-msgstr ""
+msgstr "先にプロバイダーを選択してください。"
 
 msgid "Select a user."
-msgstr ""
+msgstr "ユーザーを選択してください。"
 
 msgid "Select an identity first."
-msgstr ""
+msgstr "先に連携アカウントを選択してください。"
 
 msgid "Selected day: {day}"
-msgstr ""
+msgstr "選択日：{day}"
 
 msgid "Send"
-msgstr ""
+msgstr "送信"
 
 msgid "Sending..."
-msgstr ""
+msgstr "送信中..."
 
 msgid "September"
-msgstr ""
+msgstr "9月"
 
 msgid "Settings"
-msgstr ""
+msgstr "設定"
 
 msgid "Settings are not configured."
-msgstr ""
+msgstr "設定機能は未構成です。"
 
 msgid "Show"
-msgstr ""
+msgstr "表示"
 
 msgid "Show leaves"
-msgstr ""
+msgstr "休暇を表示"
 
 msgid "Sick leave"
-msgstr ""
+msgstr "病気休暇"
 
 msgid "Sign in to your account"
-msgstr ""
+msgstr "アカウントにログイン"
 
 msgid "Sign in with Google"
-msgstr ""
+msgstr "Googleでログイン"
 
 msgid "Sign in with Microsoft"
-msgstr ""
+msgstr "Microsoftでログイン"
 
 msgid "Signed in: {username}"
-msgstr ""
+msgstr "ログイン中：{username}"
 
 msgid "Simplified Chinese"
-msgstr ""
+msgstr "簡体字中国語"
 
 msgid "Standard hours (h)"
-msgstr ""
+msgstr "標準労働時間"
 
 msgid "Start"
-msgstr ""
+msgstr "開始"
 
 msgid "Start break"
-msgstr ""
+msgstr "休憩を開始"
 
 msgid "Start week on Monday"
-msgstr ""
+msgstr "月曜始まり"
 
 msgid "Started"
-msgstr ""
+msgstr "開始しました"
 
 msgid "Stored securely in a future update"
-msgstr ""
+msgstr "安全な保存は今後対応予定です"
 
 msgid "Sun"
-msgstr ""
+msgstr "日"
 
 msgid "Template reset."
-msgstr ""
+msgstr "テンプレートをリセットしました。"
 
 msgid "Template saved."
-msgstr ""
+msgstr "テンプレートを保存しました。"
 
 msgid "Templates"
-msgstr ""
+msgstr "テンプレート"
 
 msgid "Test"
-msgstr ""
+msgstr "テスト"
 
 msgid "Theme"
-msgstr ""
+msgstr "テーマ"
 
 msgid "Thu"
-msgstr ""
+msgstr "木"
 
 msgid "Tip: Click AI Assist to generate a draft based on your time logs."
-msgstr ""
+msgstr "ヒント：AIアシストをクリックすると、工時記録を基に下書きを作成します。"
 
 msgid "Today"
-msgstr ""
+msgstr "今日"
 
 msgid "Toggle password change"
-msgstr ""
+msgstr "パスワード変更要求を切り替え"
 
 msgid "Total"
-msgstr ""
+msgstr "合計"
 
 msgid "Total hours"
-msgstr ""
+msgstr "総労働時間"
 
 msgid "Total: {hours:.1f}h"
-msgstr ""
+msgstr "合計：{hours:.1f}h"
 
 msgid "Traditional Chinese"
-msgstr ""
+msgstr "繁体字中国語"
 
 msgid "Tue"
-msgstr ""
+msgstr "火"
 
 msgid "Unknown error"
-msgstr ""
+msgstr "不明なエラー"
 
 msgid "Unlink"
-msgstr ""
+msgstr "連携解除"
 
 msgid "Unsaved changes"
-msgstr ""
+msgstr "未保存の変更"
 
 msgid "Update"
-msgstr ""
+msgstr "更新"
 
 msgid "Update available: {version}"
-msgstr ""
+msgstr "更新があります：{version}"
 
 msgid "Update check is not configured."
-msgstr ""
+msgstr "更新確認は未設定です。"
 
 msgid "Use a web proxy for this application."
-msgstr ""
+msgstr "このアプリでWebプロキシを使用します。"
 
 msgid "User"
-msgstr ""
+msgstr "ユーザー"
 
 msgid "User created."
-msgstr ""
+msgstr "ユーザーを作成しました。"
 
 msgid "User deleted."
-msgstr ""
+msgstr "ユーザーを削除しました。"
 
 msgid "User updated."
-msgstr ""
+msgstr "ユーザーを更新しました。"
 
 msgid "Username"
-msgstr ""
+msgstr "ユーザー名"
 
 msgid "Validating backup..."
-msgstr ""
+msgstr "バックアップを検証中..."
 
 msgid "Verify"
-msgstr ""
+msgstr "検証"
 
 msgid "Verifying model..."
-msgstr ""
+msgstr "モデルを検証中..."
 
 msgid "Version {version}"
-msgstr ""
+msgstr "バージョン {version}"
 
 msgid "Web proxy"
-msgstr ""
+msgstr "Webプロキシ"
 
 msgid "Wed"
-msgstr ""
+msgstr "水"
 
 msgid "Weekly Report"
-msgstr ""
+msgstr "週報"
 
 msgid "Welcome!"
-msgstr ""
+msgstr "ようこそ！"
 
 msgid "When enabled, text processing uses the local model first; no data is sent to external services."
-msgstr ""
+msgstr "有効にすると、テキスト処理はローカルモデルを優先し、外部サービスにデータを送信しません。"
 
 msgid "Work Hours Trend"
-msgstr ""
+msgstr "労働時間の推移"
 
 msgid "Work Mode Breakdown"
-msgstr ""
+msgstr "勤務形態の内訳"
 
 msgid "Work Report"
-msgstr ""
+msgstr "業務レポート"
 
 msgid "Work days"
-msgstr ""
+msgstr "勤務日数"
 
 msgid "Work hours"
-msgstr ""
+msgstr "労働時間"
 
 msgid "Work type"
-msgstr ""
+msgstr "勤務形態"
 
 msgid "WorkLogger"
-msgstr ""
+msgstr "WorkLogger"
 
 msgid "WorkLogger command line"
-msgstr ""
+msgstr "WorkLoggerコマンドライン"
 
 msgid "Worked"
-msgstr ""
+msgstr "勤務時間"
 
 msgid "Year"
-msgstr ""
+msgstr "年"
 
 msgid "You"
-msgstr ""
+msgstr "あなた"
 
 msgid "You are using the latest version."
-msgstr ""
+msgstr "最新バージョンを使用しています。"
 
 msgid "You have unsaved note changes. Discard them?"
-msgstr ""
+msgstr "ノートに未保存の変更があります。破棄しますか？"
 
 msgid "You have unsaved report changes. Discard them?"
-msgstr ""
+msgstr "レポートに未保存の変更があります。破棄しますか？"
 
 msgid "You have unsaved template changes. Discard them?"
-msgstr ""
+msgstr "テンプレートに未保存の変更があります。破棄しますか？"
 
 msgid "You have unsaved work log changes. Discard them?"
-msgstr ""
+msgstr "業務記録に未保存の変更があります。破棄しますか？"
 
 msgid "h"
-msgstr ""
+msgstr "h"
 
 msgid "iCalendar (*.ics)"
-msgstr ""
+msgstr "iCalendar (*.ics)"
 
 msgid "m"
-msgstr ""
+msgstr "m"
 
 msgid "of {hours:.1f}h goal"
-msgstr ""
+msgstr "目標 {hours:.1f}h"
 
 msgid "or"
-msgstr ""
+msgstr "または"
 
 msgid "{change:+.1f}h vs previous period"
-msgstr ""
+msgstr "前期比 {change:+.1f}h"
 
 msgid "{change:+d} days vs previous period"
-msgstr ""
+msgstr "前期比 {change:+d} 日"
 
 msgid "{count} event"
-msgstr ""
+msgstr "予定 {count} 件"
 
 msgid "{count} events"
-msgstr ""
+msgstr "予定 {count} 件"
 
 msgid "{mode}: {hours:.1f}h ({percent:.0f}%)"
-msgstr ""
+msgstr "{mode}：{hours:.1f}h（{percent:.0f}%）"
+
+msgid "{month} {day}, {year}"
+msgstr "{year}年{month}{day}日"
 
 msgid "{month} {year}"
-msgstr ""
+msgstr "{year}年{month}"

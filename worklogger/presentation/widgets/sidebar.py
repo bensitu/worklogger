@@ -36,7 +36,7 @@ class SidebarWidget(QFrame):
     def set_profile(self, account_name: str, role: str = "Admin") -> None:
         name = str(account_name or "").strip() or _("Local user")
         self.profile_name_label.setText(name)
-        self.profile_role_label.setText(_("Admin") if role == "Admin" else role)
+        self.profile_role_label.setText(_("Admin") if role == "Admin" else _("User") if role == "User" else role)
         if self.profile_avatar_label.pixmap() is None:
             self.profile_avatar_label.setText(_initials(name))
 
