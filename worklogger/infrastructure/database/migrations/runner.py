@@ -11,6 +11,7 @@ from worklogger.infrastructure.database.connection import SQLiteConnectionFactor
 
 MIGRATION_MODULES = (
     "worklogger.infrastructure.database.migrations.migration_001_initial_schema",
+    "worklogger.infrastructure.database.migrations.migration_002_auth_columns",
 )
 
 
@@ -33,19 +34,24 @@ class MigrationRunner:
     def run_pending(self) -> tuple[int, ...]:
         migrations = self._discover_migrations()
         applied_now: list[int] = []
-        with self._connection_factory.transaction(write=True) as connection:
-            self._ensure_schema_migrations(connection)
-            applied = self._applied_versions(connection)
+        with self._connection_factory.write_lock:
             for migration in migrations:
-                if migration.version in applied:
-                    continue
-                migration.module.up(connection)
-                connection.execute(
-                    "INSERT INTO schema_migrations(version, description, applied_at) "
-                    "VALUES(?, ?, datetime('now'))",
-                    (migration.version, migration.description),
-                )
-                applied_now.append(migration.version)
+                prepare = getattr(migration.module, "prepare", None)
+                if prepare is not None:
+                    prepare(self._connection_factory)
+            with self._connection_factory.transaction(write=True) as connection:
+                self._ensure_schema_migrations(connection)
+                applied = self._applied_versions(connection)
+                for migration in migrations:
+                    if migration.version in applied:
+                        continue
+                    migration.module.up(connection)
+                    connection.execute(
+                        "INSERT INTO schema_migrations(version, description, applied_at) "
+                        "VALUES(?, ?, datetime('now'))",
+                        (migration.version, migration.description),
+                    )
+                    applied_now.append(migration.version)
         return tuple(applied_now)
 
     def _discover_migrations(self) -> tuple[Migration, ...]:

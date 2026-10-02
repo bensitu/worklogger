@@ -59,8 +59,8 @@ categories in five languages, two themes, and both supported window sizes.
 
 Verified on Windows on 2026-10-02:
 
-- `unittest`: 222 tests passed.
-- `pytest`: 222 tests and 35 subtests passed.
+- `unittest`: 230 tests passed.
+- `pytest`: 230 tests and 35 subtests passed.
 - Catalog consistency, nonempty translations and format fields passed.
 - Source and console-enabled Windows distribution passed all three smoke checks.
 - Screenshot review covered login, shell routes and settings categories. Login
@@ -86,6 +86,32 @@ to its database path and run `tests.presentation.test_calendar_layout`. This
 opens SQLite in read-only mode and copies records into in-memory fixtures; the
 test's save operations do not touch the original database. The imported test
 database's file hash was unchanged after verification.
+
+## Legacy Authentication Migration
+
+Schema version 2 repairs legacy `users.salt` databases before authentication.
+Before altering an existing authentication table, SQLite's backup API writes a
+standalone `worklog.db.bak_auth_<UTC timestamp>_<unique ID>` beside the database,
+including committed WAL data. Backup failure aborts the migration.
+
+The migration renames `salt` to `password_salt` and adds
+`must_change_password INTEGER NOT NULL DEFAULT 0` where missing. Existing hashes,
+salts, user IDs, administrator flags, recovery keys, sessions and business records
+are retained; passwords are not reset. Schema changes and the version record are
+transactional, and repeated startup does not repeat the migration or backup.
+Missing salt data fails migration instead of recreating credentials. Normal
+password verification can still upgrade an old PBKDF2 hash after a correct login.
+
+Regression checks cover migration, rollback, backup failure, committed WAL data,
+legacy hash verification, registration, password changes, recovery-key reset and
+an administrator login through the real login dialog into the desktop shell.
+An isolated snapshot of the existing database passed credential and all-business-
+table preservation, integrity, foreign-key and idempotency checks. The original
+database remained unchanged; the next normal startup performs its migration.
+
+The reported `QFont::setPointSize` warning was not reproduced in the login flow
+with either the offscreen or native Windows Qt backend (Python 3.11.9, PySide6
+6.11.0). No warning suppression or speculative font changes were introduced.
 
 ## Deliberate Limits
 

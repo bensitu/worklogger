@@ -10,6 +10,9 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from PySide6.QtCore import QTimer, qInstallMessageHandler
+
+from tests.infrastructure.test_auth_schema_migration import legacy_database
 from worklogger.bootstrap import (
     DesktopRuntimeConfig,
     build_authenticated_desktop_runtime,
@@ -25,7 +28,7 @@ from worklogger.domain.worklog.models import WorkType
 from worklogger.infrastructure.repositories import SQLiteSettingsRepository, SQLiteWorkLogRepository
 from worklogger.infrastructure.i18n import get_language, set_language
 from worklogger.main import main
-from worklogger.presentation.auth import AuthSession
+from worklogger.presentation.auth import AuthController, AuthSession, LoginDialog
 from worklogger.presentation.shell import AppWindowConfig, MinimalView
 from worklogger.presentation.viewmodels import AuthViewModel
 
@@ -59,6 +62,45 @@ class CancellingAuthenticator:
 
 
 class RuntimeBootstrapTests(unittest.TestCase):
+    def test_legacy_admin_logs_in_through_real_dialog_after_startup_migration(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "worklog.db"
+            _, _, admin_id = legacy_database(path)
+            messages: list[str] = []
+            dialogs: list[LoginDialog] = []
+
+            def login_dialog(parent):
+                dialog = LoginDialog(parent)
+                dialogs.append(dialog)
+                dialog.username_input.setText("admin")
+                dialog.password_input.setText("test-password")
+                QTimer.singleShot(0, dialog.login_button.click)
+                QTimer.singleShot(2_000, dialog, dialog.reject)
+                return dialog
+
+            previous = qInstallMessageHandler(lambda _kind, _context, message: messages.append(message))
+            runtime = None
+            try:
+                runtime = build_authenticated_desktop_runtime(
+                    DesktopRuntimeConfig(database_path=path, password_iterations=1_000),
+                    argv=[],
+                    auth_controller_factory=lambda view_model: AuthController(
+                        view_model, login_dialog_factory=login_dialog,
+                    ),
+                )
+                self.assertTrue(runtime.ok, runtime.error)
+                self.assertEqual(runtime.value.user.id, admin_id)
+                self.assertTrue(runtime.value.user.is_admin)
+                self.assertTrue(runtime.value.window.refresh())
+                self.assertFalse([message for message in messages if "QFont::setPointSize" in message])
+                self.assertEqual(len(list(path.parent.glob("worklog.db.bak_auth_*"))), 1)
+            finally:
+                if runtime is not None and runtime.value is not None:
+                    runtime.value.window.close()
+                for dialog in dialogs:
+                    dialog.deleteLater()
+                qInstallMessageHandler(previous)
+
     def test_saved_settings_apply_on_restart(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             config = DesktopRuntimeConfig(
