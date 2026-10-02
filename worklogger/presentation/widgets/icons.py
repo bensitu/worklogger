@@ -7,20 +7,21 @@ from xml.etree import ElementTree
 from PySide6.QtCore import QByteArray, QRect, QRectF, QSize, Qt
 from PySide6.QtGui import QGuiApplication, QIcon, QIconEngine, QPainter, QPalette, QPixmap
 from PySide6.QtSvg import QSvgRenderer
-from PySide6.QtWidgets import QAbstractButton
+from PySide6.QtWidgets import QAbstractButton, QWidget
 
 from worklogger.presentation.widgets.assets import asset_path
 
 
 class _PaletteIconEngine(QIconEngine):
-    def __init__(self, name: str, accent: bool = False, primary: bool = False) -> None:
+    def __init__(self, name: str, accent: bool = False, primary: bool = False, success: bool = False) -> None:
         super().__init__()
         self._name = name
         self._accent = accent
         self._primary = primary
+        self._success = success
 
     def clone(self) -> QIconEngine:
-        return _PaletteIconEngine(self._name, self._accent, self._primary)
+        return _PaletteIconEngine(self._name, self._accent, self._primary, self._success)
 
     def paint(self, painter: QPainter, rect: QRect, mode: QIcon.Mode, state: QIcon.State) -> None:
         palette = QGuiApplication.palette()
@@ -31,7 +32,10 @@ class _PaletteIconEngine(QIconEngine):
         if mode == QIcon.Mode.Disabled:
             role = QPalette.ColorRole.ButtonText
         tree = ElementTree.parse(asset_path(f"icons/ui/{self._name}.svg"))
-        tree.getroot().set("stroke", palette.color(group, role).name())
+        color = palette.color(group, role).name()
+        if self._success and mode != QIcon.Mode.Disabled:
+            color = "#45c97a" if palette.color(QPalette.ColorRole.Window).lightness() < 128 else "#16a34a"
+        tree.getroot().set("stroke", color)
         renderer = QSvgRenderer(QByteArray(ElementTree.tostring(tree.getroot())))
         renderer.render(painter, QRectF(rect))
 
@@ -44,8 +48,20 @@ class _PaletteIconEngine(QIconEngine):
         return pixmap
 
 
-def ui_icon(name: str, *, accent: bool = False, primary: bool = False) -> QIcon:
-    return QIcon(_PaletteIconEngine(name, accent, primary))
+def ui_icon(name: str, *, accent: bool = False, primary: bool = False, success: bool = False) -> QIcon:
+    return QIcon(_PaletteIconEngine(name, accent, primary, success))
+
+
+class IconLabel(QWidget):
+    def __init__(self, name: str, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._icon = ui_icon(name)
+        self.setFixedSize(22, 22)
+
+    def paintEvent(self, _event: object) -> None:
+        painter = QPainter(self)
+        self._icon.paint(painter, self.rect())
+        painter.end()
 
 
 def set_button_icon(button: QAbstractButton, name: str, *, accent: bool = False) -> None:

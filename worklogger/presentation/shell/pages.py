@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from calendar import monthrange
 from collections.abc import Callable
+from dataclasses import replace
 from datetime import date, timedelta
 from pathlib import Path
 from PySide6.QtCore import Qt, Signal
@@ -25,13 +26,13 @@ from PySide6.QtWidgets import (
 )
 
 from worklogger.domain.shared.errors import AppError, ValidationError
-from worklogger.domain.analytics.models import AnalyticsDashboard
+from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBundle
 from worklogger.app.job_runner import JobRunner
 from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.presentation.reporting.dialog import ReportTemplateDialog
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
-from worklogger.presentation.date_labels import day_label, month_label
+from worklogger.presentation.date_labels import month_label, month_name, period_range_label, duration_label
 from worklogger.presentation.viewmodels import (
     AnalyticsState,
     AnalyticsViewModel,
@@ -53,7 +54,7 @@ from worklogger.presentation.widgets import (
     WorkLogEntryPanel,
 )
 from worklogger.presentation.widgets.combo_chart import DonutChart
-from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.widgets.icons import IconLabel, set_button_icon
 
 
 class CalendarPage(QWidget):
@@ -276,7 +277,7 @@ class AnalyticsPage(QWidget):
         root.setContentsMargins(18, 18, 18, 18)
         root.setSpacing(14)
 
-        header = PageHeader(_("Analytics"))
+        header = QHBoxLayout()
         self.scope_control = SegmentedControl(
             (
                 ("monthly", _("Monthly")),
@@ -285,19 +286,20 @@ class AnalyticsPage(QWidget):
             )
         )
         self.scope_control.value_changed.connect(self._scope_changed)
-        header.actions_layout.addWidget(self.scope_control)
+        header.addWidget(self.scope_control)
+        header.addStretch(1)
         self.period_combo = QComboBox()
         self.period_combo.setObjectName("analytics_period_combo")
         self.period_combo.currentIndexChanged.connect(self._period_changed)
         self._populate_periods()
-        header.actions_layout.addWidget(self.period_combo)
+        header.addWidget(self.period_combo)
         self.export_button = ExportMenuButton(
             _("Export"),
             (("csv", _("CSV")), ("pdf", _("PDF"))),
         )
         self.export_button.export_requested.connect(self._choose_export_path)
-        header.actions_layout.addWidget(self.export_button)
-        root.addWidget(header)
+        header.addWidget(self.export_button)
+        root.addLayout(header)
 
         scroll = QScrollArea()
         scroll.setObjectName("analytics_scroll_widget")
@@ -316,8 +318,10 @@ class AnalyticsPage(QWidget):
         self.overtime_card = CardFrame(object_name="analytics_summary_card_frame")
         self.overtime_title_label = QLabel(_("Overtime Hours"))
         self.overtime_title_label.setObjectName("overtime_title_label")
+        self.overtime_title_label.setWordWrap(True)
         self.overtime_value_label = QLabel("")
         self.overtime_value_label.setObjectName("overtime_value_label")
+        self.overtime_value_label.setWordWrap(True)
         self.overtime_caption_label = QLabel("")
         self.overtime_caption_label.setObjectName("overtime_caption_label")
         self.overtime_caption_label.setProperty("role", "secondary")
@@ -342,6 +346,16 @@ class AnalyticsPage(QWidget):
         self.average_chart = self._chart_card(_("Average Work Hours"))
         self.breakdown_chart = self._chart_card(_("Work Mode Breakdown"), donut=True)
         self.daily_average_chart = self._chart_card(_("Daily Average"))
+        self.daily_average_value_label = QLabel("")
+        self.daily_average_value_label.setObjectName("daily_average_value_label")
+        self.daily_average_comparison_label = QLabel("")
+        self.daily_average_comparison_label.setObjectName("daily_average_comparison_label")
+        self.daily_average_comparison_label.setProperty("role", "secondary")
+        self.daily_average_comparison_label.setWordWrap(True)
+        average_row = QHBoxLayout()
+        average_row.addWidget(self.daily_average_value_label)
+        average_row.addWidget(self.daily_average_comparison_label, 1)
+        self.daily_average_chart.content_layout.insertLayout(1, average_row)
         charts.addWidget(self.trend_chart, 0, 0)
         charts.addWidget(self.average_chart, 0, 1)
         charts.addWidget(self.breakdown_chart, 1, 0)
@@ -354,6 +368,17 @@ class AnalyticsPage(QWidget):
         self.status_label.setProperty("role", "secondary")
         self.status_label.hide()
         root.addWidget(self.status_label)
+
+    def resizeEvent(self, event: object) -> None:
+        super().resizeEvent(event)
+        if not hasattr(self, "_summary_grid"):
+            return
+        columns = 4 if self.width() >= 850 else 2
+        cards = (self.monthly_hours_card, self.overtime_card, self.attendance_card, self.rest_card)
+        for index, card in enumerate(cards):
+            self._summary_grid.addWidget(card, index // columns, index % columns)
+        for column in range(4):
+            self._summary_grid.setColumnStretch(column, 1 if column < columns else 0)
 
     def _set_status(self, message: str, *, error: bool = False) -> None:
         self.status_label.setText(message)
@@ -377,20 +402,28 @@ class AnalyticsPage(QWidget):
         progress = total / state.target_hours if state.target_hours > 0 else 0.0
         self.monthly_hours_card.title_label.setText(_("Monthly Hours") if self.scope_control.value == "monthly" else _("Total hours"))
         self.monthly_hours_card.set_value(
-            f"{total:.1f}{_('h')}",
+            duration_label(total),
             _("of {hours:.1f}h goal").format(hours=state.target_hours),
             progress,
         )
-        self.overtime_value_label.setText(f"{state.stats.overtime_hours:.1f}{_('h')}")
+        self.overtime_value_label.setText(duration_label(state.stats.overtime_hours))
         self.overtime_caption_label.setText(_("{change:+.1f}h vs previous period").format(change=state.stats.overtime_hours - state.previous_stats.overtime_hours))
         days = state.stats.work_days
         rest = state.total_days - days
         self.attendance_card.set_value(f"{days} / {state.total_days}", _("{change:+d} days vs previous period").format(change=days - state.previous_stats.work_days), days, state.total_days)
         self.rest_card.set_value(str(rest), _("{change:+d} days vs previous period").format(change=rest - (state.previous_total_days - state.previous_stats.work_days)), rest, state.total_days)
-        self.trend_chart.chart.set_data(state.trend, mode="bar")
-        self.average_chart.chart.set_data(state.average, mode="bar", average=True)
-        self.breakdown_chart.chart.set_segments(tuple((_work_mode_label(key), value) for key, value in state.work_modes))
-        self.daily_average_chart.chart.set_data(state.daily_average_trend, mode="line")
+        monthly = self.scope_control.value == "monthly"
+        self.trend_chart.chart.set_data(state.trend if monthly else _month_chart_labels(state.trend), mode="bar")
+        self.average_chart.chart.set_data(state.average if monthly else _month_chart_labels(state.average), mode="bar", average=True)
+        mode_order = {"normal": 0, "remote": 1, "business_trip": 2, "leave": 3}
+        work_modes = sorted(state.work_modes, key=lambda item: mode_order.get(item[0], 4))
+        self.breakdown_chart.chart.set_segments(
+            tuple((_work_mode_label(key), value) for key, value in work_modes),
+            keys=tuple(key for key, _value in work_modes),
+        )
+        self.daily_average_value_label.setText(duration_label(state.stats.average_hours))
+        self.daily_average_comparison_label.setText(_("{change:+.1f}h vs previous period").format(change=state.stats.average_hours - state.previous_stats.average_hours))
+        self.daily_average_chart.chart.set_data(_month_chart_labels(state.daily_average_trend), mode="line", average=True)
 
     def _populate_periods(self) -> None:
         scope = self.scope_control.value or "monthly"
@@ -542,7 +575,7 @@ class ReportsPage(QWidget):
                 ("daily", _("Daily Report")),
                 ("weekly", _("Weekly Report")),
                 ("monthly", _("Monthly Report")),
-            )
+            ), tabs=True,
         )
         self.report_type_control.value_changed.connect(self._change_report_type)
         root.addWidget(self.report_type_control)
@@ -558,22 +591,30 @@ class ReportsPage(QWidget):
         self.period_title_label.setProperty("role", "title")
         self.previous_period_button = QPushButton("<")
         self.previous_period_button.setObjectName("previous_report_period_button")
-        self.previous_period_button.setProperty("variant", "ghost")
+        self.previous_period_button.setProperty("variant", "outline")
         self.previous_period_button.clicked.connect(lambda: self._shift_period(-1))
         self.previous_period_button.setToolTip(_("Previous period"))
         set_button_icon(self.previous_period_button, "chevron-left")
         self.previous_period_button.setText("")
         self.next_period_button = QPushButton(">")
         self.next_period_button.setObjectName("next_report_period_button")
-        self.next_period_button.setProperty("variant", "ghost")
+        self.next_period_button.setProperty("variant", "outline")
         self.next_period_button.clicked.connect(lambda: self._shift_period(1))
         self.next_period_button.setToolTip(_("Next period"))
         set_button_icon(self.next_period_button, "chevron-right")
         self.next_period_button.setText("")
+        period_row.addWidget(IconLabel("calendar-days"))
+        self.period_title_label.setWordWrap(True)
         period_row.addWidget(self.period_title_label, 1)
+        self.previous_period_button.setFixedWidth(34)
+        self.next_period_button.setFixedWidth(34)
         period_row.addWidget(self.previous_period_button)
         period_row.addWidget(self.next_period_button)
         editor_card.content_layout.addLayout(period_row)
+        divider = QFrame()
+        divider.setObjectName("report_period_separator_frame")
+        divider.setFixedHeight(1)
+        editor_card.content_layout.addWidget(divider)
 
         report_row = QHBoxLayout()
         report_title = QLabel(_("Report"))
@@ -818,9 +859,10 @@ class SettingsPlaceholderPage(QWidget):
 
 
 def _period_label(state: ReportEditorState) -> str:
-    if state.period_start == state.period_end:
-        return day_label(state.period_start)
-    return _period_range_label(state.period_start, state.period_end)
+    label = _period_range_label(state.period_start, state.period_end)
+    if state.report_type == "weekly":
+        label += " " + _("(Week {week})").format(week=state.period_start.isocalendar().week)
+    return label
 
 
 def _month_label(day: date) -> str:
@@ -832,7 +874,13 @@ def _work_mode_label(key: str) -> str:
 
 
 def _period_range_label(start: date, end: date) -> str:
-    return f"{day_label(start)} - {day_label(end)}"
+    return period_range_label(start, end)
+
+
+def _month_chart_labels(bundle: ChartDataBundle) -> ChartDataBundle:
+    def labels(values: tuple[tuple[str, float], ...]) -> tuple[tuple[str, float], ...]:
+        return tuple((month_name(date(2000, int(label), 1)), value) for label, value in values)
+    return replace(bundle, bar_data=labels(bundle.bar_data), line_data=labels(bundle.line_data), leave_hours_data=labels(bundle.leave_hours_data))
 
 
 def add_months(first_day: date, months: int) -> date:

@@ -78,9 +78,13 @@ def available_languages() -> tuple[str, ...]:
     return SUPPORTED_LANGUAGES
 
 
-def _(message: str) -> str:
+def _(message: str, *, language: str | None = None) -> str:
     with _lock:
-        return _translation.gettext(message) or message
+        translation = _translation if language is None else gettext.translation(
+            DOMAIN, localedir=str(locales_dir()),
+            languages=[normalize_language(language)], fallback=True,
+        )
+        return translation.gettext(message) or message
 
 
 def ngettext(singular: str, plural: str, n: int) -> str:

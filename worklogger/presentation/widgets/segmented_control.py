@@ -17,6 +17,8 @@ class SegmentedControl(QWidget):
         self,
         items: Iterable[tuple[str, str]],
         parent: QWidget | None = None,
+        *,
+        tabs: bool = False,
     ) -> None:
         super().__init__(parent)
         self.setObjectName("segmented_control_widget")
@@ -29,6 +31,8 @@ class SegmentedControl(QWidget):
             button = QPushButton(label)
             button.setObjectName(f"segment_{key}_button")
             button.setProperty("segment", True)
+            button.setProperty("page_tab", tabs)
+            button.setCheckable(True)
             button.setCursor(Qt.CursorShape.PointingHandCursor)
             button.clicked.connect(lambda _checked=False, item_key=key: self.set_value(item_key))
             self._buttons[str(key)] = button
@@ -47,7 +51,7 @@ class SegmentedControl(QWidget):
         changed = normalized != self._value
         self._value = normalized
         for key, button in self._buttons.items():
-            button.setProperty("checked", key == normalized)
+            button.setChecked(key == normalized)
             refresh_style(button)
         if changed and emit:
             self.value_changed.emit(normalized)

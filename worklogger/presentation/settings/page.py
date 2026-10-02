@@ -965,11 +965,11 @@ def _connect_text(line_edit: QLineEdit, callback: object) -> None:
 
 def _language_label(language: str) -> str:
     labels = {
-        "en_US": _("English"),
-        "ja_JP": _("Japanese"),
-        "ko_KR": _("Korean"),
-        "zh_CN": _("Simplified Chinese"),
-        "zh_TW": _("Traditional Chinese"),
+        "en_US": _("English", language="en_US"),
+        "ja_JP": _("Japanese", language="ja_JP"),
+        "ko_KR": _("Korean", language="ko_KR"),
+        "zh_CN": _("Simplified Chinese", language="zh_CN"),
+        "zh_TW": _("Traditional Chinese", language="zh_TW"),
     }
     return labels.get(language, language)
 

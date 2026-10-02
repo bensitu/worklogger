@@ -5,6 +5,9 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "MIME-Version: 1.0\n"
 
+msgid "(Week {week})"
+msgstr ""
+
 msgid "+"
 msgstr ""
 
@@ -1136,11 +1139,20 @@ msgstr ""
 msgid "{count} events"
 msgstr ""
 
-msgid "{mode}: {hours:.1f}h ({percent:.0f}%)"
+msgid "{duration} ({percent:.0f}%)"
+msgstr ""
+
+msgid "{hours}h {minutes}m"
 msgstr ""
 
 msgid "{month} {day}, {year}"
 msgstr ""
 
 msgid "{month} {year}"
+msgstr ""
+
+msgid "{start_month} {start_day} - {end_month} {end_day}, {year}"
+msgstr ""
+
+msgid "{start} - {end}"
 msgstr ""

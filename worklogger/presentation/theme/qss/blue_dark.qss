@@ -421,3 +421,81 @@ QTabBar::tab:selected {
   color: {{ accent }};
   border-bottom: 2px solid {{ accent }};
 }
+
+
+QLabel#calendar_month_title_label, QLabel#report_period_label {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+QPushButton[page_tab="true"] {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid {{ border }};
+  border-radius: 0;
+  padding: 10px 16px;
+  color: {{ muted_text }};
+}
+
+QPushButton[page_tab="true"][checked="true"] {
+  background: transparent;
+  color: {{ accent }};
+  border-bottom: 3px solid {{ accent }};
+  font-weight: 600;
+}
+
+QFrame#report_period_separator_frame {
+  background: {{ border }};
+  border: none;
+}
+
+QLabel#report_title_label, QLabel#report_history_title_label {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+QLabel#report_history_month_label, QLabel#analytics_chart_title_label,
+QLabel#donut_title_label, QLabel#dot_title_label, QLabel#overtime_title_label {
+  font-weight: 600;
+}
+
+QPushButton#report_history_item_button {
+  background: {{ surface }};
+  border: 1px solid {{ border }};
+  border-radius: 6px;
+  text-align: left;
+  padding: 10px 12px;
+}
+
+QPushButton#report_history_item_button[active="true"] {
+  background: {{ sidebar_active_background }};
+  border: 1px solid {{ accent }};
+  color: {{ accent }};
+}
+
+QPushButton#report_history_item_button:hover {
+  border-color: {{ accent }};
+}
+
+QLabel#donut_value_label, QLabel#dot_value_label, QLabel#overtime_value_label,
+QLabel#daily_average_value_label {
+  font-size: 21px;
+  font-weight: 600;
+}
+
+QLabel#donut_caption_label, QLabel#dot_caption_label, QLabel#overtime_caption_label,
+QLabel#daily_average_comparison_label {
+  font-size: 11px;
+}
+
+QToolButton#export_menu_button {
+  padding-right: 28px;
+}
+
+QToolButton#export_menu_button::menu-indicator {
+  subcontrol-origin: padding;
+  subcontrol-position: center right;
+  right: 8px;
+  width: 12px;
+  height: 12px;
+}

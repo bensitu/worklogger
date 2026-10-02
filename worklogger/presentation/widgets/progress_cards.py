@@ -15,7 +15,7 @@ class DonutGauge(QWidget):
         super().__init__(parent)
         self.setObjectName("donut_gauge_widget")
         self._progress = 0.0
-        self.setFixedSize(76, 76)
+        self.setFixedSize(64, 64)
 
     def set_progress(self, progress: float) -> None:
         self._progress = max(0.0, min(1.0, float(progress or 0.0)))
@@ -40,8 +40,10 @@ class DonutProgressCard(CardFrame):
         super().__init__(parent, object_name="donut_progress_card_frame")
         self.title_label = QLabel(title)
         self.title_label.setObjectName("donut_title_label")
+        self.title_label.setWordWrap(True)
         self.value_label = QLabel("")
         self.value_label.setObjectName("donut_value_label")
+        self.value_label.setWordWrap(True)
         self.caption_label = QLabel("")
         self.caption_label.setObjectName("donut_caption_label")
         self.caption_label.setProperty("role", "secondary")
@@ -71,6 +73,7 @@ class DotProgressCard(CardFrame):
         self._color = color
         self.title_label = QLabel(title)
         self.title_label.setObjectName("dot_title_label")
+        self.title_label.setWordWrap(True)
         self.value_label = QLabel("")
         self.value_label.setObjectName("dot_value_label")
         self.caption_label = QLabel("")

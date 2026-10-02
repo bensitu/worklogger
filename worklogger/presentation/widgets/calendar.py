@@ -102,9 +102,13 @@ class CalendarDayButton(QPushButton):
         painter.setFont(font)
         painter.setPen(QColor(foreground))
         metric_lines = lines[-2:] if len(lines) >= 2 else ()
-        metric_top = max(38 if cell.holiday_name else 28, self.height() - 34)
+        metric_top = max(38 if cell.holiday_name else 28, (self.height() - 28) / 2 + 6)
         for index, line in enumerate(metric_lines):
             metric_width = self.width() - 16
+            metric_font = painter.font()
+            while painter.fontMetrics().horizontalAdvance(line) > metric_width and metric_font.pixelSize() > 9:
+                metric_font.setPixelSize(metric_font.pixelSize() - 1)
+                painter.setFont(metric_font)
             painter.drawText(
                 QRectF(8, metric_top + index * 14, metric_width, 14),
                 Qt.AlignmentFlag.AlignCenter,
@@ -168,8 +172,23 @@ class CalendarView(QWidget):
 
     def set_month_only(self, enabled: bool) -> None:
         self._month_only = enabled
+        self.layout().setAlignment(self.grid_frame, Qt.AlignmentFlag.AlignTop if enabled else Qt.AlignmentFlag(0))
+        if not enabled:
+            self.grid_frame.setMaximumHeight(16777215)
         if self._state is not None:
             self.set_state(self._state)
+
+    def resizeEvent(self, event: object) -> None:
+        super().resizeEvent(event)
+        self._update_grid_height()
+
+    def _update_grid_height(self) -> None:
+        if not self._month_only or self._state is None:
+            return
+        weeks = max(index // 7 + 1 for index, cell in enumerate(self._state.cells) if cell.in_month)
+        cell_width = max(0, (self.width() - 6 * 6) / 7)
+        header_height = self.fontMetrics().height() + 8
+        self.grid_frame.setMaximumHeight(round(header_height + weeks * (max(72, cell_width * 1.08) + 6)))
 
     @property
     def state(self) -> CalendarMonthViewState | None:
@@ -222,6 +241,7 @@ class CalendarView(QWidget):
             self.grid.addWidget(label, week_index + 1, 7)
             label.setVisible(not self._month_only)
             self._week_total_labels.append(label)
+        self._update_grid_height()
 
 
 def _tooltip_for_cell(cell: CalendarDayCell) -> str:

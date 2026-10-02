@@ -6,13 +6,74 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QLabel, QLineEdit, QPushButton, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtCore import QRect, QSize, Qt, Signal
+from PySide6.QtGui import QAbstractTextDocumentLayout, QAction, QPainter, QPalette, QTextDocument
+from PySide6.QtWidgets import (
+    QLabel, QLayout, QLineEdit, QPushButton, QScrollArea, QSizePolicy,
+    QStyle, QStyleOptionButton, QVBoxLayout, QWidget,
+)
 
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets._style import refresh_style
 from worklogger.presentation.widgets.card import CardFrame
 from worklogger.presentation.date_labels import month_label
+from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
+
+
+class ReportHistoryButton(QPushButton):
+    def __init__(self, item: ReportHistoryDisplayItem) -> None:
+        super().__init__(_history_label(item))
+        self._saved = item.saved
+        self._document = QTextDocument(self)
+        self._document.setDocumentMargin(0)
+        self._document.setPlainText(self.text())
+        policy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        policy.setHeightForWidth(True)
+        self.setSizePolicy(policy)
+        self.setToolTip(self.text())
+        self.setAccessibleName(self.text() + (" " + _("Saved") if item.saved else ""))
+
+    def sizeHint(self) -> QSize:
+        return QSize(180, self.heightForWidth(180))
+
+    def minimumSizeHint(self) -> QSize:
+        return QSize(80, 60)
+
+    def hasHeightForWidth(self) -> bool:
+        return True
+
+    def heightForWidth(self, width: int) -> int:
+        # Layout probes must not reflow the document used for painting.
+        document = QTextDocument()
+        document.setDocumentMargin(0)
+        document.setDefaultFont(self.font())
+        document.setPlainText(self.text())
+        document.setTextWidth(max(1, width - (44 if self._saved else 24)))
+        return max(60, round(document.size().height()) + 20)
+
+    def resizeEvent(self, event: object) -> None:
+        super().resizeEvent(event)
+        self._document.setDefaultFont(self.font())
+        self._document.setTextWidth(max(1, self.width() - (44 if self._saved else 24)))
+        self.setMinimumHeight(self.heightForWidth(self.width()))
+
+    def paintEvent(self, _event: object) -> None:
+        painter = QPainter(self)
+        option = QStyleOptionButton()
+        self.initStyleOption(option)
+        option.text = ""
+        self.style().drawControl(QStyle.ControlElement.CE_PushButton, option, painter, self)
+        context = QAbstractTextDocumentLayout.PaintContext()
+        context.palette = self.palette()
+        if self.property("active"):
+            context.palette.setColor(QPalette.ColorRole.Text, self.palette().color(QPalette.ColorRole.Highlight))
+        painter.save()
+        painter.translate(12, (self.height() - self._document.size().height()) / 2)
+        self._document.documentLayout().draw(painter, context)
+        painter.restore()
+        if self._saved:
+            ui_icon("check", success=True).paint(painter, QRect(self.width() - 28, (self.height() - 20) // 2, 20, 20))
+        painter.end()
 
 
 @dataclass(frozen=True)
@@ -44,6 +105,10 @@ class ReportHistoryPanel(CardFrame):
         self.search_line_edit = QLineEdit()
         self.search_line_edit.setObjectName("report_search_line_edit")
         self.search_line_edit.setPlaceholderText(_("Search reports..."))
+        self.search_line_edit.addAction(
+            QAction(ui_icon("search"), _("Search reports..."), self.search_line_edit),
+            QLineEdit.ActionPosition.LeadingPosition,
+        )
         self.search_line_edit.textChanged.connect(self._render)
         self.content_layout.addWidget(self.search_line_edit)
 
@@ -55,12 +120,14 @@ class ReportHistoryPanel(CardFrame):
         self.scroll_layout = QVBoxLayout(self.scroll_widget)
         self.scroll_layout.setContentsMargins(0, 0, 0, 0)
         self.scroll_layout.setSpacing(8)
+        self.scroll_layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
         self.scroll_area.setWidget(self.scroll_widget)
         self.content_layout.addWidget(self.scroll_area, 1)
 
         self.export_button = QPushButton(_("Export Reports"))
         self.export_button.setObjectName("export_reports_button")
         self.export_button.setProperty("variant", "outline")
+        set_button_icon(self.export_button, "download", accent=True)
         self.export_button.clicked.connect(self.export_requested.emit)
         self.content_layout.addWidget(self.export_button)
 
@@ -106,13 +173,14 @@ class ReportHistoryPanel(CardFrame):
                 heading = QLabel(month)
                 heading.setObjectName("report_history_month_label")
                 self.scroll_layout.addWidget(heading)
-            button = QPushButton(_history_label(item))
+            button = ReportHistoryButton(item)
             button.setObjectName("report_history_item_button")
             button.setProperty("nav_item", True)
             key = hash((item.period_start, item.period_end))
             button.setProperty("history_key", key)
             button.setProperty("active", key == self._selected_key)
             button.setCursor(Qt.CursorShape.PointingHandCursor)
+            button.setMinimumHeight(button.heightForWidth(self.scroll_area.viewport().width()))
             button.clicked.connect(lambda _checked=False, selected=item: self.item_selected.emit(selected))
             self._buttons[index] = button
             self.scroll_layout.addWidget(button)
@@ -120,5 +188,7 @@ class ReportHistoryPanel(CardFrame):
 
 
 def _history_label(item: ReportHistoryDisplayItem) -> str:
-    marker = f"  {_('Saved')}" if item.saved else ""
-    return f"{item.label}{marker}"
+    label = item.label
+    if item.report_type == "weekly":
+        label += "\n" + _("(Week {week})").format(week=item.period_start.isocalendar().week)
+    return label

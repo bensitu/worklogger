@@ -7,6 +7,9 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
+msgid "(Week {week})"
+msgstr "({week}주차)"
+
 msgid "+"
 msgstr "+"
 
@@ -1138,11 +1141,20 @@ msgstr "일정 {count}개"
 msgid "{count} events"
 msgstr "일정 {count}개"
 
-msgid "{mode}: {hours:.1f}h ({percent:.0f}%)"
-msgstr "{mode}: {hours:.1f}h ({percent:.0f}%)"
+msgid "{duration} ({percent:.0f}%)"
+msgstr "{duration} ({percent:.0f}%)"
+
+msgid "{hours}h {minutes}m"
+msgstr "{hours}h {minutes}m"
 
 msgid "{month} {day}, {year}"
 msgstr "{year}년 {month} {day}일"
 
 msgid "{month} {year}"
 msgstr "{year}년 {month}"
+
+msgid "{start_month} {start_day} - {end_month} {end_day}, {year}"
+msgstr "{year}년 {start_month} {start_day}일 - {end_month} {end_day}일"
+
+msgid "{start} - {end}"
+msgstr "{start} - {end}"

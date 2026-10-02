@@ -29,6 +29,7 @@ from worklogger.config.constants import (
     NETWORK_PROXY_PORT_SETTING_KEY,
 )
 from worklogger.domain.auth.models import User
+from worklogger.infrastructure.i18n import available_languages, get_language, set_language
 from worklogger.presentation.settings import SettingsDialog, SettingsPage
 from worklogger.presentation.viewmodels import SettingsViewModel
 from worklogger.presentation.widgets import SwitchButton
@@ -64,6 +65,20 @@ def _view_model(repository: MemorySettingsRepository) -> SettingsViewModel:
 
 
 class SettingsPresentationTests(unittest.TestCase):
+    def test_language_options_always_use_native_labels_and_keep_language_codes(self):
+        expected = ("English", "日本語", "한국어", "简体中文", "繁體中文")
+        try:
+            for language in available_languages():
+                set_language(language)
+                page = SettingsPage(_view_model(MemorySettingsRepository()))
+                page.refresh()
+                self.assertEqual(tuple(page.language_combo.itemText(index) for index in range(5)), expected)
+                self.assertEqual(tuple(page.language_combo.itemData(index) for index in range(5)), available_languages())
+                self.assertEqual(get_language(), language)
+                page.close()
+        finally:
+            set_language("en_US")
+
     def test_appearance_fields_and_color_picker_use_current_color(self):
         model = _view_model(MemorySettingsRepository())
         model.set_custom_color("#123456")

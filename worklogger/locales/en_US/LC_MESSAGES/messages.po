@@ -7,6 +7,9 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 
+msgid "(Week {week})"
+msgstr "(Week {week})"
+
 msgid "+"
 msgstr "+"
 
@@ -1138,11 +1141,20 @@ msgstr "{count} event"
 msgid "{count} events"
 msgstr "{count} events"
 
-msgid "{mode}: {hours:.1f}h ({percent:.0f}%)"
-msgstr "{mode}: {hours:.1f}h ({percent:.0f}%)"
+msgid "{duration} ({percent:.0f}%)"
+msgstr "{duration} ({percent:.0f}%)"
+
+msgid "{hours}h {minutes}m"
+msgstr "{hours}h {minutes}m"
 
 msgid "{month} {day}, {year}"
 msgstr "{month} {day}, {year}"
 
 msgid "{month} {year}"
 msgstr "{month} {year}"
+
+msgid "{start_month} {start_day} - {end_month} {end_day}, {year}"
+msgstr "{start_month} {start_day} - {end_month} {end_day}, {year}"
+
+msgid "{start} - {end}"
+msgstr "{start} - {end}"

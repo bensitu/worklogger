@@ -31,6 +31,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 class GettextFoundationTests(unittest.TestCase):
+    def test_explicit_catalog_does_not_change_active_language(self) -> None:
+        set_language("zh_CN")
+        self.assertEqual(_("Japanese", language="ja_JP"), "日本語")
+        self.assertEqual(get_language(), "zh_CN")
+        self.assertEqual(_("Settings"), "设置")
+
     def test_compiled_catalogs_translate_controls_and_plural_events(self) -> None:
         expected = {"en_US": "Settings", "zh_CN": "设置", "zh_TW": "設定", "ja_JP": "設定", "ko_KR": "설정"}
         with tempfile.TemporaryDirectory() as directory:
