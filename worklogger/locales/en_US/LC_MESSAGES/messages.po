@@ -118,9 +118,6 @@ msgstr "Average Work Hours"
 msgid "Back to login"
 msgstr "Back to login"
 
-msgid "Back up regularly to protect your data."
-msgstr "Back up regularly to protect your data."
-
 msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
 msgstr "Back up your database regularly to protect your local work logs, reports, settings, and account data."
 
@@ -135,6 +132,9 @@ msgstr "Backup cancelled"
 
 msgid "Backup saved: {path}"
 msgstr "Backup saved: {path}"
+
+msgid "Backup succeeded, but its timestamp could not be saved."
+msgstr "Backup succeeded, but its timestamp could not be saved."
 
 msgid "Bar"
 msgstr "Bar"
@@ -304,6 +304,9 @@ msgstr "Ended"
 msgid "English"
 msgstr "English"
 
+msgid "Enter a port between 0 and 65535."
+msgstr "Enter a port between 0 and 65535."
+
 msgid "Enter your ID"
 msgstr "Enter your ID"
 
@@ -385,6 +388,9 @@ msgstr "Green"
 msgid "Hide"
 msgstr "Hide"
 
+msgid "Hide password"
+msgstr "Hide password"
+
 msgid "ID"
 msgstr "ID"
 
@@ -457,6 +463,9 @@ msgstr "Korean"
 msgid "Language"
 msgstr "Language"
 
+msgid "Last backup: {time}"
+msgstr "Last backup: {time}"
+
 msgid "Leave"
 msgstr "Leave"
 
@@ -478,14 +487,23 @@ msgstr "Link"
 msgid "Linked identities"
 msgstr "Linked identities"
 
+msgid "Loading models..."
+msgstr "Loading models..."
+
 msgid "Local Model"
 msgstr "Local Model"
 
 msgid "Local Models"
 msgstr "Local Models"
 
+msgid "Local model disabled."
+msgstr "Local model disabled."
+
 msgid "Local model management is not configured."
 msgstr "Local model management is not configured."
+
+msgid "Local model unavailable. Download, import and select a verified model."
+msgstr "Local model unavailable. Download, import and select a verified model."
 
 msgid "Local user"
 msgstr "Local user"
@@ -495,9 +513,6 @@ msgstr "Log Out"
 
 msgid "Login"
 msgstr "Login"
-
-msgid "Logout"
-msgstr "Logout"
 
 msgid "Logout requested"
 msgstr "Logout requested"
@@ -580,14 +595,17 @@ msgstr "Next period"
 msgid "No arguments start the desktop application."
 msgstr "No arguments start the desktop application."
 
+msgid "No backup in {days} days. Back up your data."
+msgstr "No backup in {days} days. Back up your data."
+
+msgid "No backup recorded. Back up your data."
+msgstr "No backup recorded. Back up your data."
+
 msgid "No data"
 msgstr "No data"
 
 msgid "No events found."
 msgstr "No events found."
-
-msgid "No local model selected."
-msgstr "No local model selected."
 
 msgid "No records for the selected day."
 msgstr "No records for the selected day."
@@ -660,6 +678,9 @@ msgstr "Password change required."
 
 msgid "Password changed successfully."
 msgstr "Password changed successfully."
+
+msgid "Password is stored in the system credential store."
+msgstr "Password is stored in the system credential store."
 
 msgid "Password reset."
 msgstr "Password reset."
@@ -850,6 +871,12 @@ msgstr "Schedule / Records"
 msgid "Search reports..."
 msgstr "Search reports..."
 
+msgid "Secure credential storage is unavailable."
+msgstr "Secure credential storage is unavailable."
+
+msgid "Secure credential storage is unavailable. Existing passwords are retained; new passwords cannot be saved."
+msgstr "Secure credential storage is unavailable. Existing passwords are retained; new passwords cannot be saved."
+
 msgid "Select"
 msgstr "Select"
 
@@ -888,6 +915,9 @@ msgstr "Show"
 
 msgid "Show leaves"
 msgstr "Show leaves"
+
+msgid "Show password"
+msgstr "Show password"
 
 msgid "Sick leave"
 msgstr "Sick leave"

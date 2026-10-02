@@ -73,6 +73,50 @@ class NoKeyringBackend:
         return None
 
 
+class SystemCredentialStore:
+    """Store credentials in the OS keyring without a plaintext fallback."""
+
+    def __init__(self, *, namespace: str, backend: KeyringBackend | None = None) -> None:
+        self._namespace = hashlib.sha256(namespace.encode("utf-8")).hexdigest()
+        self._backend = backend
+
+    def _keyring(self):
+        if self._backend is not None:
+            return self._backend
+        import keyring
+
+        backend = keyring.get_keyring()
+        candidates = getattr(backend, "backends", (backend,))
+        secure_modules = {
+            "keyring.backends.Windows", "keyring.backends.macOS",
+            "keyring.backends.SecretService", "keyring.backends.libsecret",
+        }
+        for candidate in candidates:
+            if type(candidate).__module__ in secure_modules and candidate.priority > 0:
+                return candidate
+        raise RuntimeError("credential_storage_unavailable")
+
+    def _name(self, name: str) -> str:
+        return f"{self._namespace}:{name}"
+
+    def get_secret(self, name: str) -> Result[str | None]:
+        try:
+            return Result.success(self._keyring().get_password(KEYRING_SERVICE_NAME, self._name(name)))
+        except Exception:
+            return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
+
+    def set_secret(self, name: str, value: str) -> Result[None]:
+        try:
+            backend = self._keyring()
+            if value:
+                backend.set_password(KEYRING_SERVICE_NAME, self._name(name), value)
+            elif backend.get_password(KEYRING_SERVICE_NAME, self._name(name)) is not None:
+                backend.delete_password(KEYRING_SERVICE_NAME, self._name(name))
+            return Result.success(None)
+        except Exception:
+            return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
+
+
 @dataclass(frozen=True)
 class FileMachineKeyProvider:
     path: Path

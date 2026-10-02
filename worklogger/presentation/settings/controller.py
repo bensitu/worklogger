@@ -177,6 +177,20 @@ class SettingsWorkflowController:
         elif hasattr(surface, "manage_local_models_button"):
             surface.manage_local_models_button.setEnabled(False)
             surface.manage_local_models_button.setToolTip(_("Local model management is not configured."))
+        for action, signal, button in (
+            ("open_for_import", "import_local_model_requested", "import_local_model_button"),
+            ("open_for_download", "download_local_model_requested", "download_local_model_button"),
+        ):
+            handler = getattr(self._local_models_workflow, action, None)
+            if handler is not None:
+                getattr(surface, signal).connect(lambda handler=handler: self._open_local_model_action(surface, handler))
+            else:
+                getattr(surface, button).setEnabled(False)
+                getattr(surface, button).setToolTip(_("Local model management is not configured."))
+
+    def _open_local_model_action(self, surface: QWidget, handler: Callable) -> None:
+        handler(surface)
+        self._refresh_local_models_status(surface)
 
     def _open_local_models(self, surface: QWidget) -> None:
         self._local_models_workflow.open(surface)
@@ -195,10 +209,10 @@ class SettingsWorkflowController:
                 label.setText(_error_message(result.error))
                 return
             inventory = result.value.inventory
-            label.setText(
-                _("Active local model: {model}").format(model=inventory.active_model_id)
-                if inventory.active_model_id else _("No local model selected.")
-            )
+            active = next((item for item in inventory.items if item.entry.id == inventory.active_model_id), None)
+            if hasattr(surface, "set_local_model_status"):
+                surface.set_local_model_status(ready=active is not None and active.verified,
+                                               name=active.entry.display_name if active is not None else "")
 
         if self._job_runner is None:
             complete(view_model.load())
@@ -400,13 +414,13 @@ class SettingsWorkflowController:
 
     def _check_updates(self, dialog: QWidget) -> bool:
         if self._update_check_handler is None:
-            _set_status(dialog, _("Update check is not configured."))
+            _set_status(dialog, _("Update check is not configured."), "update")
             return False
         if self._job_runner is not None:
             if self._update_check_handle is not None:
-                _set_status(dialog, _("Please wait for the current update check."))
+                _set_status(dialog, _("Please wait for the current update check."), "update")
                 return False
-            _set_status(dialog, _("Checking for updates..."))
+            _set_status(dialog, _("Checking for updates..."), "update")
             _set_busy(dialog, "update", True)
             if hasattr(dialog, "check_updates_button"):
                 dialog.check_updates_button.setEnabled(False)
@@ -437,11 +451,11 @@ class SettingsWorkflowController:
     def _handle_update_result(self, dialog: QWidget, result: object) -> bool:
         if not result.ok or result.value is None:
             message = _error_message(result.error)
-            _set_status(dialog, message)
+            _set_status(dialog, message, "update")
             self._notify_error(dialog, _("Check for updates"), message)
             return False
         message = _update_message(result.value)
-        _set_status(dialog, message)
+        _set_status(dialog, message, "update")
         self._notify_success(dialog, _("Check for updates"), message)
         return True
 
@@ -454,11 +468,19 @@ class SettingsWorkflowController:
     ) -> bool:
         if not result.ok or result.value is None:
             message = _error_message(result.error)
-            _set_status(dialog, message)
+            _set_status(dialog, message, "data")
             self._notify_error(dialog, title, message)
             return False
         message = success_message(result.value)
-        _set_status(dialog, message)
+        if title == _("Backup Data"):
+            recorded = self._settings_view_model.record_backup()
+            if recorded.ok:
+                loaded = self._settings_view_model.load()
+                if loaded.ok and loaded.value is not None and hasattr(dialog, "set_backup_time"):
+                    dialog.set_backup_time(loaded.value.last_backup_at)
+            else:
+                message += "\n" + _("Backup succeeded, but its timestamp could not be saved.")
+        _set_status(dialog, message, "data")
         self._notify_success(dialog, title, message)
         return True
 
@@ -475,7 +497,7 @@ class SettingsWorkflowController:
         if self._data_job_handle is not None or self._restore_validation_handle is not None:
             _set_status(dialog, _("Please wait for the current data operation."))
             return False
-        _set_status(dialog, busy_message)
+        _set_status(dialog, busy_message, "data")
         _set_busy(dialog, "data", True)
         self._data_job_handle = JobHandle(
             job_id="data_management_pending",
@@ -513,8 +535,13 @@ class SettingsWorkflowController:
             self._reload_after_restore()
 
 
-def _set_status(dialog: QWidget, message: str) -> None:
-    dialog.status_label.setText(message)
+def _set_status(dialog: QWidget, message: str, category: str | None = None) -> None:
+    if hasattr(dialog, "set_operation_status"):
+        if category is None:
+            category = "data"
+        dialog.set_operation_status(message, category)
+    else:
+        dialog.status_label.setText(message)
 
 
 def _set_busy(surface: QWidget, job: str, busy: bool) -> None:

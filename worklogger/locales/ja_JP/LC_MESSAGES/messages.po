@@ -118,9 +118,6 @@ msgstr "平均労働時間"
 msgid "Back to login"
 msgstr "ログインに戻る"
 
-msgid "Back up regularly to protect your data."
-msgstr "データを保護するため、定期的にバックアップしてください。"
-
 msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
 msgstr "業務記録、レポート、設定、アカウント情報を保護するため、データベースを定期的にバックアップしてください。"
 
@@ -135,6 +132,9 @@ msgstr "バックアップをキャンセルしました"
 
 msgid "Backup saved: {path}"
 msgstr "バックアップを保存しました：{path}"
+
+msgid "Backup succeeded, but its timestamp could not be saved."
+msgstr "バックアップは成功しましたが、日時を保存できませんでした。"
 
 msgid "Bar"
 msgstr "棒グラフ"
@@ -304,6 +304,9 @@ msgstr "終了しました"
 msgid "English"
 msgstr "英語"
 
+msgid "Enter a port between 0 and 65535."
+msgstr "0～65535のポート番号を入力してください。"
+
 msgid "Enter your ID"
 msgstr "IDを入力"
 
@@ -385,6 +388,9 @@ msgstr "緑"
 msgid "Hide"
 msgstr "非表示"
 
+msgid "Hide password"
+msgstr "パスワードを隠す"
+
 msgid "ID"
 msgstr "ID"
 
@@ -457,6 +463,9 @@ msgstr "韓国語"
 msgid "Language"
 msgstr "言語"
 
+msgid "Last backup: {time}"
+msgstr "最終バックアップ：{time}"
+
 msgid "Leave"
 msgstr "休暇"
 
@@ -478,14 +487,23 @@ msgstr "連携"
 msgid "Linked identities"
 msgstr "連携アカウント"
 
+msgid "Loading models..."
+msgstr "モデルを読み込み中..."
+
 msgid "Local Model"
 msgstr "ローカルモデル"
 
 msgid "Local Models"
 msgstr "ローカルモデル"
 
+msgid "Local model disabled."
+msgstr "ローカルモデルは無効です。"
+
 msgid "Local model management is not configured."
 msgstr "ローカルモデルの管理は未設定です。"
+
+msgid "Local model unavailable. Download, import and select a verified model."
+msgstr "ローカルモデルを利用できません。モデルをダウンロードまたはインポートし、検証済みのモデルを選択してください。"
 
 msgid "Local user"
 msgstr "ローカルユーザー"
@@ -495,9 +513,6 @@ msgstr "ログアウト"
 
 msgid "Login"
 msgstr "ログイン"
-
-msgid "Logout"
-msgstr "ログアウト"
 
 msgid "Logout requested"
 msgstr "ログアウトを要求しました"
@@ -580,14 +595,17 @@ msgstr "次の期間"
 msgid "No arguments start the desktop application."
 msgstr "引数を指定しない場合はデスクトップアプリを起動します。"
 
+msgid "No backup in {days} days. Back up your data."
+msgstr "{days}日間バックアップしていません。データをバックアップしてください。"
+
+msgid "No backup recorded. Back up your data."
+msgstr "バックアップの記録がありません。データをバックアップしてください。"
+
 msgid "No data"
 msgstr "データがありません"
 
 msgid "No events found."
 msgstr "予定が見つかりません。"
-
-msgid "No local model selected."
-msgstr "ローカルモデルは選択されていません。"
 
 msgid "No records for the selected day."
 msgstr "選択した日の記録はありません。"
@@ -660,6 +678,9 @@ msgstr "パスワードの変更が必要です。"
 
 msgid "Password changed successfully."
 msgstr "パスワードを変更しました。"
+
+msgid "Password is stored in the system credential store."
+msgstr "パスワードはシステムの資格情報ストアに保存されます。"
 
 msgid "Password reset."
 msgstr "パスワードをリセットしました。"
@@ -850,6 +871,12 @@ msgstr "予定 / 記録"
 msgid "Search reports..."
 msgstr "レポートを検索..."
 
+msgid "Secure credential storage is unavailable."
+msgstr "安全な資格情報ストアを利用できません。"
+
+msgid "Secure credential storage is unavailable. Existing passwords are retained; new passwords cannot be saved."
+msgstr "安全な資格情報ストアを利用できません。既存のパスワードは保持されますが、新しいパスワードは保存できません。"
+
 msgid "Select"
 msgstr "選択"
 
@@ -888,6 +915,9 @@ msgstr "表示"
 
 msgid "Show leaves"
 msgstr "休暇を表示"
+
+msgid "Show password"
+msgstr "パスワードを表示"
 
 msgid "Sick leave"
 msgstr "病気休暇"

@@ -118,9 +118,6 @@ msgstr "平均工時"
 msgid "Back to login"
 msgstr "返回登入"
 
-msgid "Back up regularly to protect your data."
-msgstr "請定期備份，保護您的資料。"
-
 msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
 msgstr "定期備份資料庫，保護本機工作記錄、報表、設定及帳戶資料。"
 
@@ -135,6 +132,9 @@ msgstr "已取消備份"
 
 msgid "Backup saved: {path}"
 msgstr "備份已儲存：{path}"
+
+msgid "Backup succeeded, but its timestamp could not be saved."
+msgstr "備份成功，但無法儲存備份時間。"
 
 msgid "Bar"
 msgstr "長條圖"
@@ -304,6 +304,9 @@ msgstr "已結束"
 msgid "English"
 msgstr "英語"
 
+msgid "Enter a port between 0 and 65535."
+msgstr "請輸入 0 到 65535 之間的連接埠號碼。"
+
 msgid "Enter your ID"
 msgstr "輸入您的 ID"
 
@@ -385,6 +388,9 @@ msgstr "綠色"
 msgid "Hide"
 msgstr "隱藏"
 
+msgid "Hide password"
+msgstr "隱藏密碼"
+
 msgid "ID"
 msgstr "ID"
 
@@ -457,6 +463,9 @@ msgstr "韓語"
 msgid "Language"
 msgstr "語言"
 
+msgid "Last backup: {time}"
+msgstr "最近備份：{time}"
+
 msgid "Leave"
 msgstr "休假"
 
@@ -478,14 +487,23 @@ msgstr "連結"
 msgid "Linked identities"
 msgstr "連結的身分"
 
+msgid "Loading models..."
+msgstr "正在載入模型..."
+
 msgid "Local Model"
 msgstr "本機模型"
 
 msgid "Local Models"
 msgstr "本機模型"
 
+msgid "Local model disabled."
+msgstr "本機模型已關閉。"
+
 msgid "Local model management is not configured."
 msgstr "本機模型管理尚未設定。"
+
+msgid "Local model unavailable. Download, import and select a verified model."
+msgstr "本機模型無法使用。請下載或匯入模型，並選擇已驗證的模型。"
 
 msgid "Local user"
 msgstr "本機使用者"
@@ -495,9 +513,6 @@ msgstr "登出"
 
 msgid "Login"
 msgstr "登入"
-
-msgid "Logout"
-msgstr "登出"
 
 msgid "Logout requested"
 msgstr "已要求登出"
@@ -580,14 +595,17 @@ msgstr "下一期間"
 msgid "No arguments start the desktop application."
 msgstr "不帶參數執行將啟動桌面應用程式。"
 
+msgid "No backup in {days} days. Back up your data."
+msgstr "已有 {days} 天未備份，請備份資料。"
+
+msgid "No backup recorded. Back up your data."
+msgstr "尚無備份記錄，請備份資料。"
+
 msgid "No data"
 msgstr "尚無資料"
 
 msgid "No events found."
 msgstr "未找到事件。"
-
-msgid "No local model selected."
-msgstr "尚未選取本機模型。"
 
 msgid "No records for the selected day."
 msgstr "所選日期沒有記錄。"
@@ -660,6 +678,9 @@ msgstr "需要變更密碼。"
 
 msgid "Password changed successfully."
 msgstr "密碼變更成功。"
+
+msgid "Password is stored in the system credential store."
+msgstr "密碼儲存於系統認證資料庫中。"
 
 msgid "Password reset."
 msgstr "密碼已重設。"
@@ -850,6 +871,12 @@ msgstr "日程 / 記錄"
 msgid "Search reports..."
 msgstr "搜尋報表..."
 
+msgid "Secure credential storage is unavailable."
+msgstr "安全認證資料庫無法使用。"
+
+msgid "Secure credential storage is unavailable. Existing passwords are retained; new passwords cannot be saved."
+msgstr "安全認證資料庫無法使用。已保留現有密碼，暫時無法儲存新密碼。"
+
 msgid "Select"
 msgstr "選取"
 
@@ -888,6 +915,9 @@ msgstr "顯示"
 
 msgid "Show leaves"
 msgstr "顯示休假"
+
+msgid "Show password"
+msgstr "顯示密碼"
 
 msgid "Sick leave"
 msgstr "病假"

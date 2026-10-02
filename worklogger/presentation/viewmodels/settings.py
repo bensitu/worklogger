@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Protocol
 
 from worklogger.app.commands.settings_commands import SetSettingCommand
@@ -20,6 +21,7 @@ from worklogger.config.constants import (
     EXTERNAL_MODEL_BASE_URL_SETTING_KEY,
     EXTERNAL_MODEL_NAME_SETTING_KEY,
     LANGUAGE_SETTING_KEY,
+    LAST_BACKUP_AT_SETTING_KEY,
     LOCAL_MODEL_ENABLED_SETTING_KEY,
     MINIMAL_MODE_SETTING_KEY,
     MONTHLY_TARGET_HOURS_SETTING_KEY,
@@ -36,8 +38,9 @@ from worklogger.config.constants import (
     THEME_SETTING_KEY,
     WEEK_START_MONDAY_SETTING_KEY,
 )
-from worklogger.domain.shared.errors import ValidationError
+from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
+from worklogger.app.use_cases.settings import ProxyPasswordSettings
 from worklogger.infrastructure.i18n import normalize_language
 from worklogger.presentation.theme import DEFAULT_CUSTOM_COLOR, THEME_KEYS, normalize_hex_color
 
@@ -81,6 +84,8 @@ class SettingsState:
     network_proxy_username: str
     network_proxy_password: str
     network_proxy_domain: str
+    proxy_password_available: bool = False
+    last_backup_at: str = ""
 
 
 class SettingsViewModel:
@@ -90,20 +95,25 @@ class SettingsViewModel:
         user_id: int,
         get_handler: SettingsGetHandler,
         set_handler: SettingsSetHandler,
+        proxy_password_settings: ProxyPasswordSettings | None = None,
     ) -> None:
         self._user_id = user_id
         self._get_handler = get_handler
         self._set_handler = set_handler
+        self._proxy_password_settings = proxy_password_settings
 
     def load(self) -> Result[SettingsState]:
         values: dict[str, str | None] = {}
         for key, default in _DEFAULTS.items():
+            if key == NETWORK_PROXY_PASSWORD_SETTING_KEY:
+                continue
             result = self._get_handler.handle(GetSettingQuery(self._user_id, key, default))
             if not result.ok:
                 return Result.failure(
                     result.error or ValidationError("settings_load_failed", "settings_load_failed")
                 )
             values[key] = result.value
+        password = self._proxy_password_settings.load() if self._proxy_password_settings is not None else None
         return Result.success(
             SettingsState(
                 theme=_theme(values[THEME_SETTING_KEY]),
@@ -167,8 +177,10 @@ class SettingsViewModel:
                 network_proxy_address=_text(values[NETWORK_PROXY_ADDRESS_SETTING_KEY], ""),
                 network_proxy_port=_text(values[NETWORK_PROXY_PORT_SETTING_KEY], "0"),
                 network_proxy_username=_text(values[NETWORK_PROXY_USERNAME_SETTING_KEY], ""),
-                network_proxy_password=_text(values[NETWORK_PROXY_PASSWORD_SETTING_KEY], ""),
+                network_proxy_password=str(password.value or "") if password is not None and password.ok else "",
                 network_proxy_domain=_text(values[NETWORK_PROXY_DOMAIN_SETTING_KEY], ""),
+                proxy_password_available=password is not None and password.ok,
+                last_backup_at=_text(values[LAST_BACKUP_AT_SETTING_KEY], ""),
             )
         )
 
@@ -197,10 +209,23 @@ class SettingsViewModel:
     def set_text(self, key: str, value: str) -> Result[None]:
         if key not in _TEXT_KEYS:
             return Result.failure(ValidationError("unknown_text_setting", "unknown_text_setting"))
+        if key == NETWORK_PROXY_PASSWORD_SETTING_KEY:
+            if self._proxy_password_settings is None:
+                return Result.failure(ValidationError("credential_storage_unavailable", "credential_storage_unavailable"))
+            return self._proxy_password_settings.save(str(value or ""))
         cleaned = str(value or "").strip()
         if key == NETWORK_PROXY_PORT_SETTING_KEY:
-            cleaned = _proxy_port(cleaned)
+            try:
+                cleaned = _proxy_port(cleaned)
+            except ValueError:
+                return Result.failure(ValidationError("invalid_proxy_port", "invalid_proxy_port"))
         return self._set(key, cleaned)
+
+    def record_backup(self) -> Result[None]:
+        try:
+            return self._set(LAST_BACKUP_AT_SETTING_KEY, datetime.now(timezone.utc).isoformat())
+        except Exception:
+            return Result.failure(InfrastructureError("backup_timestamp_failed", "backup_timestamp_failed"))
 
     def _set(self, key: str, value: str) -> Result[None]:
         result = self._set_handler.handle(
@@ -245,6 +270,7 @@ _DEFAULTS = {
     NETWORK_PROXY_USERNAME_SETTING_KEY: "",
     NETWORK_PROXY_PASSWORD_SETTING_KEY: "",
     NETWORK_PROXY_DOMAIN_SETTING_KEY: "",
+    LAST_BACKUP_AT_SETTING_KEY: "",
 }
 
 _BOOLEAN_KEYS = frozenset(
@@ -321,7 +347,9 @@ def _format_number(value: float) -> str:
 
 def _proxy_port(value: str) -> str:
     try:
-        port = int(str(value or "0").strip())
+        port = int(str(value).strip())
     except (TypeError, ValueError):
-        port = 0
-    return str(max(0, min(65535, port)))
+        raise ValueError("invalid_proxy_port") from None
+    if not 0 <= port <= 65535:
+        raise ValueError("invalid_proxy_port")
+    return str(port)

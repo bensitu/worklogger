@@ -29,6 +29,7 @@ from worklogger.infrastructure.repositories import SQLiteSettingsRepository, SQL
 from worklogger.infrastructure.i18n import get_language, set_language
 from worklogger.main import main
 from worklogger.presentation.auth import AuthController, AuthSession, LoginDialog
+from worklogger.presentation.settings import SettingsDialog
 from worklogger.presentation.shell import AppWindowConfig, MinimalView
 from worklogger.presentation.viewmodels import AuthViewModel
 
@@ -62,6 +63,36 @@ class CancellingAuthenticator:
 
 
 class RuntimeBootstrapTests(unittest.TestCase):
+    def test_minimal_mode_logout_remains_available_only_in_settings_account(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db",
+                                          create_user_if_empty=True, password_iterations=1_000)
+            first = build_desktop_runtime(config, argv=[])
+            self.assertTrue(first.ok, first.error)
+            SQLiteSettingsRepository(first.value.connection_factory).set(first.value.user.id, MINIMAL_MODE_SETTING_KEY, "1")
+            first.value.window.close()
+            second = build_desktop_runtime(config, argv=[])
+            self.assertTrue(second.ok, second.error)
+            window = second.value.window
+            requests = []
+            window.logout_requested.connect(lambda: requests.append(True))
+
+            def settings_dialog(model, parent):
+                dialog = SettingsDialog(model, parent)
+                dialog.category_nav.set_category("account")
+                QTimer.singleShot(0, dialog, dialog.logout_button.click)
+                QTimer.singleShot(2_000, dialog, dialog.reject)
+                return dialog
+
+            window._settings_workflow._dialog_factory = settings_dialog
+            try:
+                self.assertIsInstance(window, MinimalView)
+                self.assertFalse(hasattr(window, "logout_button"))
+                self.assertTrue(window.open_settings())
+                self.assertEqual(requests, [True])
+            finally:
+                window.close()
+
     def test_legacy_admin_logs_in_through_real_dialog_after_startup_migration(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "worklog.db"

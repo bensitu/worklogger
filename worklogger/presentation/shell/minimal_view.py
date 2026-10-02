@@ -127,9 +127,6 @@ class MinimalView(QWidget):
         self.settings_button = QPushButton(_("Settings"))
         self.settings_button.setObjectName("minimal_settings_button")
         self.settings_button.setToolTip(_("Settings"))
-        self.logout_button = QPushButton(_("Logout"))
-        self.logout_button.setObjectName("minimal_logout_button")
-        self.logout_button.setToolTip(_("Logout"))
         nav.addWidget(self.previous_button)
         nav.addWidget(self.today_button)
         nav.addWidget(self.next_button)
@@ -137,10 +134,8 @@ class MinimalView(QWidget):
         if self._config.account_name:
             nav.addWidget(self.account_label)
             nav.addWidget(self.settings_button)
-            nav.addWidget(self.logout_button)
         else:
             self.settings_button.setVisible(False)
-            self.logout_button.setVisible(False)
         if self._settings_workflow is None:
             self.settings_button.setVisible(False)
         root.addLayout(nav)
@@ -157,7 +152,6 @@ class MinimalView(QWidget):
         self.today_button.clicked.connect(self.go_today)
         self.next_button.clicked.connect(self.next_day)
         self.settings_button.clicked.connect(self.open_settings)
-        self.logout_button.clicked.connect(self._request_logout)
         self.entry_panel.draft_changed.connect(self._preview_entry_draft)
         self.entry_panel.save_requested.connect(self._save_entry_draft)
 
@@ -268,7 +262,28 @@ class MinimalView(QWidget):
     def open_settings(self) -> bool:
         if self._settings_workflow is None:
             return False
-        self._settings_workflow.open(self)
+        logged_out = False
+        if hasattr(self._settings_workflow, "create_dialog"):
+            dialog = self._settings_workflow.create_dialog(self)
+
+            def logout() -> None:
+                nonlocal logged_out
+                if self._confirm_discard_changes_if_needed():
+                    logged_out = True
+                    dialog.accept()
+                    self._set_status(_("Logout requested"))
+                    self.logout_requested.emit()
+
+            dialog.logout_requested.connect(logout)
+            try:
+                dialog.exec()
+            finally:
+                dialog.logout_requested.disconnect(logout)
+                dialog.deleteLater()
+        else:
+            self._settings_workflow.open(self)
+        if logged_out:
+            return True
         self.refresh()
         if self._residency_controller is not None:
             self._residency_controller.refresh()

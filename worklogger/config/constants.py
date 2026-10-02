@@ -61,6 +61,7 @@ NETWORK_PROXY_ADDRESS_SETTING_KEY = "network_proxy_address"
 NETWORK_PROXY_PORT_SETTING_KEY = "network_proxy_port"
 NETWORK_PROXY_USERNAME_SETTING_KEY = "network_proxy_username"
 NETWORK_PROXY_PASSWORD_SETTING_KEY = "network_proxy_password"
+LAST_BACKUP_AT_SETTING_KEY = "last_backup_at"
 NETWORK_PROXY_DOMAIN_SETTING_KEY = "network_proxy_domain"
 
 DB_FILENAME = "worklog.db"

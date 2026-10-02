@@ -2,16 +2,62 @@
 
 from __future__ import annotations
 
+from typing import Protocol
+
 from worklogger.app.commands.settings_commands import (
     SetActiveLocalModelCommand,
     SetSettingCommand,
 )
 from worklogger.app.event_bus import EventBus, SettingsChanged
 from worklogger.app.queries.settings_queries import GetSettingQuery
-from worklogger.config.constants import LOCAL_MODEL_ACTIVE_ID_SETTING_KEY
+from worklogger.config.constants import LOCAL_MODEL_ACTIVE_ID_SETTING_KEY, NETWORK_PROXY_PASSWORD_SETTING_KEY
 from worklogger.domain.settings.repositories import SettingsRepository
-from worklogger.domain.shared.errors import ValidationError
+from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
+
+
+class CredentialStore(Protocol):
+    def get_secret(self, name: str) -> Result[str | None]: ...
+    def set_secret(self, name: str, value: str) -> Result[None]: ...
+
+
+class ProxyPasswordSettings:
+    """Migrate a legacy password only after secure storage has succeeded."""
+
+    def __init__(self, repository: SettingsRepository, credentials: CredentialStore, *, user_id: int) -> None:
+        self._repository = repository
+        self._credentials = credentials
+        self._user_id = user_id
+        self._name = f"proxy_password:{user_id}"
+
+    def load(self) -> Result[str | None]:
+        try:
+            return self._load()
+        except Exception:
+            return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
+
+    def _load(self) -> Result[str | None]:
+        stored = self._credentials.get_secret(self._name)
+        if not stored.ok:
+            return stored
+        legacy = self._repository.get(self._user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY)
+        if legacy is not None:
+            if legacy and stored.value is None:
+                saved = self._credentials.set_secret(self._name, legacy)
+                if not saved.ok:
+                    return Result.failure(saved.error)
+                stored = Result.success(legacy)
+            self._repository.delete(self._user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY)
+        return stored
+
+    def save(self, password: str) -> Result[None]:
+        try:
+            result = self._credentials.set_secret(self._name, password)
+            if result.ok:
+                self._repository.delete(self._user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY)
+            return result
+        except Exception:
+            return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
 
 
 def _normalize_key(key: str) -> str:

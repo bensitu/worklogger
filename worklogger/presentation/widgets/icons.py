@@ -28,6 +28,8 @@ class _PaletteIconEngine(QIconEngine):
         if self._primary:
             role = QPalette.ColorRole.HighlightedText
         group = QPalette.ColorGroup.Disabled if mode == QIcon.Mode.Disabled else QPalette.ColorGroup.Active
+        if mode == QIcon.Mode.Disabled:
+            role = QPalette.ColorRole.ButtonText
         tree = ElementTree.parse(asset_path(f"icons/ui/{self._name}.svg"))
         tree.getroot().set("stroke", palette.color(group, role).name())
         renderer = QSvgRenderer(QByteArray(ElementTree.tostring(tree.getroot())))

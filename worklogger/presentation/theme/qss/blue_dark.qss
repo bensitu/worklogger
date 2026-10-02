@@ -2,6 +2,7 @@ QWidget {
   background: {{ background }};
   color: {{ text }};
   font-size: 13px;
+  font-weight: 400;
   font-family: "Noto Sans", "Segoe UI", sans-serif;
 }
 
@@ -207,6 +208,12 @@ QToolButton[variant="outline"] {
   font-weight: 600;
 }
 
+QPushButton[variant]:disabled, QToolButton[variant]:disabled {
+  color: {{ disabled_text }};
+  background: {{ surface_alt }};
+  border-color: {{ border }};
+}
+
 QPushButton[variant="danger"] {
   color: {{ danger }};
 }
@@ -357,6 +364,40 @@ QScrollBar:vertical {
 QScrollBar::handle:vertical {
   background: {{ border_strong }};
   border-radius: 4px;
+  min-height: 24px;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+  height: 0;
+  border: none;
+  background: transparent;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+  background: transparent;
+}
+
+QWidget#settings_page_widget, QWidget#settings_scroll_content_widget {
+  background: {{ surface }};
+}
+
+QWidget#settings_switch_row_widget, QWidget#settings_about_widget {
+  background: transparent;
+}
+
+QLabel#settings_section_title_label {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+QLineEdit#account_name_line_edit, QLineEdit#account_id_line_edit, QLineEdit#account_role_line_edit {
+  background: {{ surface_alt }};
+}
+
+QFrame#settings_separator_frame {
+  background: {{ border }};
+  border: none;
+  max-height: 1px;
 }
 
 QTabWidget::pane {

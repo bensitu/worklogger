@@ -92,6 +92,8 @@ from worklogger.infrastructure.database import (
     default_database_path,
 )
 from worklogger.infrastructure.backup import SQLiteBackupService
+from worklogger.infrastructure.security.key_store import SystemCredentialStore
+from worklogger.app.use_cases.settings import ProxyPasswordSettings
 from worklogger.infrastructure.calendar import (
     IcsCalendarImporter,
     PythonHolidaysProvider,
@@ -642,6 +644,11 @@ def _build_settings_workflow(
             user_id=user.id,
             get_handler=handlers.settings_get_handler,
             set_handler=handlers.settings_set_handler,
+            proxy_password_settings=ProxyPasswordSettings(
+                repositories.settings,
+                SystemCredentialStore(namespace=str(database_path.resolve())),
+                user_id=user.id,
+            ),
         ),
         auth_view_model=auth_view_model,
         user=user,

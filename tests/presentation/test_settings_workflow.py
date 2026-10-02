@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import os
 import unittest
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -12,6 +13,8 @@ from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandl
 from worklogger.app.use_cases.updates import UpdateCheckResult
 from worklogger.domain.auth.models import User
 from worklogger.domain.shared.result import Result
+from worklogger.domain.shared.errors import InfrastructureError
+from worklogger.config.constants import LAST_BACKUP_AT_SETTING_KEY
 from worklogger.presentation.job_runner import ImmediateJobRunner
 from worklogger.presentation.auth import ChangePasswordDialog
 from worklogger.presentation.settings import SettingsWorkflowController
@@ -199,6 +202,51 @@ def _settings_view_model(repository: MemorySettingsRepository) -> SettingsViewMo
 
 
 class SettingsWorkflowTests(unittest.TestCase):
+    def test_backup_timestamp_records_only_success_and_update_status_is_inline(self):
+        repository = MemorySettingsRepository()
+        data = FakeDataManagementViewModel()
+        controller = SettingsWorkflowController(
+            settings_view_model=_settings_view_model(repository), auth_view_model=FakeAuthViewModel(),
+            user=User(id=1, username="alice", is_admin=True), data_management_view_model=data,
+            update_check_handler=FakeUpdateCheckHandler(), job_runner=ImmediateJobRunner(),
+            backup_destination_provider=lambda _parent: Path("backup.db"),
+            notify_success=lambda *_args: None, notify_error=lambda *_args: None,
+        )
+        page = controller.create_page()
+        with patch.object(data, "backup_database", return_value=Result.failure(InfrastructureError("backup_failed", "backup_failed"))):
+            page.backup_button.click()
+        self.assertIsNone(repository.get(1, LAST_BACKUP_AT_SETTING_KEY))
+        page.backup_button.click()
+        self.assertTrue(repository.get(1, LAST_BACKUP_AT_SETTING_KEY))
+        self.assertIn("Last backup:", page.backup_status_label.text())
+        self.assertEqual(page.data_status_label.text(), "Backup saved: backup.db")
+        recorded_time = repository.get(1, LAST_BACKUP_AT_SETTING_KEY)
+        with patch.object(repository, "set", side_effect=RuntimeError("database_write_failed")):
+            page.backup_button.click()
+        self.assertEqual(repository.get(1, LAST_BACKUP_AT_SETTING_KEY), recorded_time)
+        self.assertIn("Backup succeeded, but its timestamp could not be saved.", page.data_status_label.text())
+        page.check_updates_button.click()
+        self.assertEqual(page.update_status_label.text(), "Update available: 4.0.1")
+        self.assertTrue(page.status_label.isHidden())
+
+    def test_direct_local_model_actions_reach_the_existing_workflow(self):
+        calls = []
+        workflow = type("LocalWorkflow", (), {
+            "open": lambda _self, parent: calls.append("manage"),
+            "open_for_import": lambda _self, parent: calls.append("import"),
+            "open_for_download": lambda _self, parent: calls.append("download"),
+        })()
+        controller = SettingsWorkflowController(
+            settings_view_model=_settings_view_model(MemorySettingsRepository()),
+            auth_view_model=FakeAuthViewModel(), user=User(id=1, username="alice"),
+            data_management_view_model=FakeDataManagementViewModel(), local_models_workflow=workflow,
+        )
+        page = controller.create_page()
+        page.download_local_model_button.click()
+        page.import_local_model_button.click()
+        page.manage_local_models_button.click()
+        self.assertEqual(calls, ["download", "import", "manage"])
+
     @classmethod
     def setUpClass(cls) -> None:
         cls._app = _app()

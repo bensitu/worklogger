@@ -9,10 +9,11 @@ import unittest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import Qt, qInstallMessageHandler
-from PySide6.QtWidgets import QApplication, QLabel, QToolButton
+from PySide6.QtWidgets import QApplication, QLabel, QToolButton, QPushButton
 
 from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler, GetAnalyticsDashboardHandler
 from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.auth.models import User
 from worklogger.infrastructure.export import AnalyticsCsvExporter, AnalyticsPdfExporter
 from worklogger.infrastructure.i18n import set_language, get_language, available_languages
 from worklogger.presentation.auth.dialogs import LoginDialog
@@ -28,6 +29,7 @@ from tests.presentation.test_shell_pages import ReportsViewModel
 class NativeSettingsWorkflow:
     def create_page(self, parent=None):
         page = SettingsPage(_view_model(MemorySettingsRepository()), parent)
+        page.set_account(User(id=1, username="sample.user", is_admin=True))
         page.refresh()
         return page
 
@@ -88,6 +90,21 @@ class UiLayoutTests(unittest.TestCase):
         finally:
             qInstallMessageHandler(previous)
 
+    def test_logout_exists_only_in_settings_account_and_keeps_shell_signal(self):
+        window = sample_window()
+        requests = []
+        window.logout_requested.connect(lambda: requests.append(True))
+        try:
+            self.assertFalse(window.sidebar.findChildren(QPushButton, "logout_button"))
+            self.assertFalse(hasattr(window, "logout_button"))
+            self.assertTrue(window._switch_route("settings"))
+            window.settings_page.category_nav.set_category("account")
+            window.settings_page.logout_button.click()
+            self.assertEqual(requests, [True])
+            self.assertTrue(window.status_label.isHidden())
+        finally:
+            window.close()
+
     def test_shell_routes_fit_supported_window_sizes_and_themes(self):
         for language in available_languages():
             with self.subTest(language=language):
@@ -95,6 +112,7 @@ class UiLayoutTests(unittest.TestCase):
                 self.check_shell_routes()
 
     def check_shell_routes(self):
+        language = get_language()
         for dark in (False, True):
             window = sample_window()
             window._config = replace(window._config, dark=dark)
@@ -112,9 +130,23 @@ class UiLayoutTests(unittest.TestCase):
                         self.assertEqual((window.width(), window.height()), (width, height), route)
                         self.capture(window, f"{route}-{'dark' if dark else 'light'}-{width}")
                         if route == "settings":
+                            for button in window.settings_page.category_nav._buttons.values():
+                                for line in button.text().splitlines():
+                                    self.assertLessEqual(button.fontMetrics().horizontalAdvance(line),
+                                                         button.width() - button.iconSize().width() - 28,
+                                                         (language, button.text(), width))
                             for category in window.settings_page._category_pages:
                                 window.settings_page.category_nav.set_category(category)
                                 self.app.processEvents()
+                                scroll = window.settings_page.category_stack.currentWidget()
+                                self.assertEqual(scroll.horizontalScrollBar().maximum(), 0, (language, category, width))
+                                for button in scroll.findChildren(QPushButton):
+                                    if not button.isVisible() or not button.text():
+                                        continue
+                                    required = button.fontMetrics().horizontalAdvance(button.text())
+                                    if not button.icon().isNull():
+                                        required += button.iconSize().width() + 4
+                                    self.assertLessEqual(required, button.width() - 16, (language, category, button.text(), width))
                                 self.capture(window, f"settings-{category}-{'dark' if dark else 'light'}-{width}")
                         elif route == "analytics":
                             self.assertTrue(window.analytics_page.period_combo.currentText())

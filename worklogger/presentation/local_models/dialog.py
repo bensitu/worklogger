@@ -25,6 +25,7 @@ from worklogger.presentation.viewmodels import (
     LocalModelManagerViewModel,
 )
 from worklogger.presentation.widgets.assets import apply_window_icon
+from worklogger.presentation.widgets.icons import set_button_icon
 
 
 class LocalModelsDialog(QDialog):
@@ -54,6 +55,8 @@ class LocalModelsDialog(QDialog):
         return self._state
 
     def refresh(self) -> bool:
+        if self._job_runner is not None:
+            return self._run_state_job("local_model_load", self._view_model.load, _("Loading models..."))
         return self._set_state_result(self._view_model.load())
 
     def refresh_catalog(self) -> bool:
@@ -115,6 +118,9 @@ class LocalModelsDialog(QDialog):
         if not model_id:
             self.status_label.setText(_("Select a model first."))
             return False
+        if self._job_runner is not None:
+            return self._run_state_job("local_model_select", lambda: self._view_model.select_model(model_id),
+                                       _("Please wait for the current operation."))
         return self._set_state_result(self._view_model.select_model(model_id))
 
     def delete_selected(self) -> bool:
@@ -122,6 +128,9 @@ class LocalModelsDialog(QDialog):
         if not model_id:
             self.status_label.setText(_("Select a model first."))
             return False
+        if self._job_runner is not None:
+            return self._run_state_job("local_model_delete", lambda: self._view_model.delete_model(model_id),
+                                       _("Please wait for the current operation."))
         return self._set_state_result(self._view_model.delete_model(model_id))
 
     def _build_ui(self) -> None:
@@ -165,6 +174,24 @@ class LocalModelsDialog(QDialog):
         self.select_button.clicked.connect(self.select_current)
         self.delete_button.clicked.connect(self.delete_selected)
         self.close_button.clicked.connect(self.accept)
+        for button, icon in ((self.refresh_button, "rotate-ccw"), (self.import_button, "upload"),
+                             (self.download_button, "download"), (self.verify_button, "info"),
+                             (self.select_button, "save"), (self.delete_button, "trash")):
+            set_button_icon(button, icon)
+
+    def accept(self) -> None:
+        if self._pending_handle is None:
+            super().accept()
+
+    def reject(self) -> None:
+        if self._pending_handle is None:
+            super().reject()
+
+    def closeEvent(self, event) -> None:
+        if self._pending_handle is not None:
+            event.ignore()
+        else:
+            super().closeEvent(event)
 
     def _set_state_result(self, result: object) -> bool:
         if not getattr(result, "ok", False) or getattr(result, "value", None) is None:
@@ -227,6 +254,7 @@ class LocalModelsDialog(QDialog):
         self.status_label.setText(message)
 
     def _set_busy(self, busy: bool) -> None:
+        self.close_button.setEnabled(not busy)
         for button in (
             self.refresh_button,
             self.import_button,

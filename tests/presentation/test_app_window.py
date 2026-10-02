@@ -245,9 +245,9 @@ class AppWindowTests(unittest.TestCase):
         window.logout_requested.connect(lambda: logouts.append(True))
 
         self.assertEqual(window.account_label.text(), "Signed in: alice")
-        self.assertFalse(window.logout_button.isHidden())
+        self.assertFalse(hasattr(window, "logout_button"))
 
-        window.logout_button.click()
+        window._request_logout()
 
         self.assertEqual(logouts, [True])
         self.assertEqual(window.status_label.text(), "Logout requested")
@@ -407,7 +407,7 @@ class AppWindowTests(unittest.TestCase):
         self.assertTrue(window.refresh())
 
         window.entry_panel.start_input.setText("0900")
-        window.logout_button.click()
+        window._request_logout()
 
         self.assertEqual(logouts, [])
         self.assertTrue(window.has_unsaved_changes)

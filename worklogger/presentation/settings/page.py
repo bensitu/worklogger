@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import sys
+from datetime import datetime, timezone
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QColorDialog,
+    QFrame,
     QComboBox,
     QDoubleSpinBox,
     QFormLayout,
@@ -59,7 +61,7 @@ from worklogger.presentation.theme import install_bundled_fonts
 from worklogger.presentation.viewmodels import SettingsState, SettingsViewModel
 from worklogger.presentation.widgets import CardFrame, SettingsNav, SwitchButton
 from worklogger.presentation.widgets.assets import pixmap_asset
-from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 
 
 class SettingsPage(QWidget):
@@ -72,6 +74,8 @@ class SettingsPage(QWidget):
     import_ics_requested = Signal()
     manage_identities_requested = Signal()
     manage_local_models_requested = Signal()
+    import_local_model_requested = Signal()
+    download_local_model_requested = Signal()
     manage_users_requested = Signal()
     logout_requested = Signal()
     restore_requested = Signal()
@@ -89,7 +93,11 @@ class SettingsPage(QWidget):
         self._busy_jobs: set[str] = set()
         self._residency_key = _residency_setting_key()
         self._category_pages: dict[str, int] = {}
+        self._custom_color = "#4f8ef7"
+        self._local_model_ready = False
+        self._local_model_name = ""
         self.setObjectName("settings_page_widget")
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         install_bundled_fonts()
         self._build_ui()
 
@@ -114,12 +122,13 @@ class SettingsPage(QWidget):
             self._set_error(result.error)
             return False
         self.set_state(result.value)
-        self.status_label.setText(_("Ready"))
+        self.status_label.clear()
+        self.status_label.hide()
         return True
 
     def set_account(self, user: User) -> None:
         self.current_user_name_line_edit.setText(user.username)
-        self.current_user_id_line_edit.setText(str(user.id))
+        self.current_user_id_line_edit.setText(user.username)
         self.current_user_role_line_edit.setText(_("Admin") if user.is_admin else _("User"))
         self.set_manage_users_available(user.is_admin)
 
@@ -134,6 +143,8 @@ class SettingsPage(QWidget):
             self.language_combo.setCurrentIndex(language_index if language_index >= 0 else 0)
             theme_index = self.theme_combo.findData(state.theme)
             self.theme_combo.setCurrentIndex(theme_index if theme_index >= 0 else 0)
+            self._custom_color = state.custom_color
+            self._update_color_swatch()
             mode_index = self.mode_combo.findData("dark" if state.dark_mode else "light")
             self.mode_combo.setCurrentIndex(mode_index if mode_index >= 0 else 0)
             self.dark_switch.set_checked(state.dark_mode)
@@ -145,6 +156,7 @@ class SettingsPage(QWidget):
             self.external_base_url_line_edit.setText(state.external_model_base_url)
             self.external_model_line_edit.setText(state.external_model_name)
             self.local_model_enabled_switch.set_checked(state.local_model_enabled)
+            self._update_local_model_status()
             self.standard_hours_input.setValue(state.standard_work_hours)
             self.default_break_input.setValue(state.default_break_hours)
             self.monthly_target_input.setValue(state.monthly_target_hours)
@@ -163,7 +175,14 @@ class SettingsPage(QWidget):
             self.proxy_port_line_edit.setText(state.network_proxy_port)
             self.proxy_username_line_edit.setText(state.network_proxy_username)
             self.proxy_password_line_edit.setText(state.network_proxy_password)
+            self.proxy_password_line_edit.setEnabled(state.proxy_password_available)
+            self.proxy_password_visibility_action.setEnabled(state.proxy_password_available)
+            self.proxy_credentials_status_label.setText(
+                _("Password is stored in the system credential store.") if state.proxy_password_available
+                else _("Secure credential storage is unavailable. Existing passwords are retained; new passwords cannot be saved.")
+            )
             self.proxy_domain_line_edit.setText(state.network_proxy_domain)
+            self.set_backup_time(state.last_backup_at)
         finally:
             self._updating = False
 
@@ -227,6 +246,7 @@ class SettingsPage(QWidget):
         form = card.form_layout
 
         self.language_combo = QComboBox()
+        self.language_combo.setFixedWidth(320)
         self.language_combo.setObjectName("language_combo")
         for language in available_languages():
             self.language_combo.addItem(_language_label(language), language)
@@ -238,6 +258,8 @@ class SettingsPage(QWidget):
         theme_layout.setContentsMargins(0, 0, 0, 0)
         theme_layout.setSpacing(10)
         self.theme_combo = QComboBox()
+        self.theme_combo.setFixedWidth(320)
+        theme_row.setFixedWidth(370)
         self.theme_combo.setObjectName("theme_combo")
         for key, label in (
             ("blue", _("Blue")),
@@ -249,6 +271,7 @@ class SettingsPage(QWidget):
             self.theme_combo.addItem(label, key)
         self.theme_combo.currentIndexChanged.connect(self._theme_changed)
         self.custom_color_button = QPushButton()
+        self.custom_color_button.setFixedSize(40, 40)
         self.custom_color_button.setToolTip(_("Palette"))
         self.custom_color_button.setAccessibleName(_("Palette"))
         set_button_icon(self.custom_color_button, "palette")
@@ -259,6 +282,7 @@ class SettingsPage(QWidget):
         form.addRow(_("Theme"), theme_row)
 
         self.mode_combo = QComboBox()
+        self.mode_combo.setFixedWidth(320)
         self.mode_combo.setObjectName("mode_combo")
         self.mode_combo.addItem(_("Light mode"), "light")
         self.mode_combo.addItem(_("Dark mode"), "dark")
@@ -406,13 +430,26 @@ class SettingsPage(QWidget):
             )
         )
         self.local_model_status_label = QLabel(_("Manage downloaded and imported GGUF models."))
+        self.local_model_status_label.setWordWrap(True)
         self.local_model_status_label.setObjectName("local_model_status_label")
         self.local_model_status_label.setProperty("role", "secondary")
         local.content_layout.addWidget(self.local_model_status_label)
         self.manage_local_models_button = QPushButton(_("Manage models"))
         self.manage_local_models_button.setObjectName("manage_local_models_button")
         self.manage_local_models_button.clicked.connect(self.manage_local_models_requested.emit)
-        local.content_layout.addWidget(self.manage_local_models_button, 0, Qt.AlignmentFlag.AlignLeft)
+        self.import_local_model_button = QPushButton(_("Import .gguf"))
+        self.import_local_model_button.setObjectName("import_local_model_button")
+        self.import_local_model_button.clicked.connect(self.import_local_model_requested.emit)
+        self.download_local_model_button = QPushButton(_("Download"))
+        self.download_local_model_button.setObjectName("download_local_model_button")
+        self.download_local_model_button.clicked.connect(self.download_local_model_requested.emit)
+        for button, icon in ((self.download_local_model_button, "download"),
+                             (self.import_local_model_button, "upload"),
+                             (self.manage_local_models_button, "settings")):
+            button.setProperty("variant", "outline")
+            set_button_icon(button, icon, accent=True)
+        _add_action_buttons(local, self.download_local_model_button, self.import_local_model_button,
+                            self.manage_local_models_button, columns=3)
         page.layout().addWidget(local)
 
         privacy = CardFrame(object_name="settings_content_frame")
@@ -455,7 +492,9 @@ class SettingsPage(QWidget):
         self.import_csv_button.setObjectName("import_csv_button")
         self.import_csv_button.setProperty("variant", "outline")
         self.import_csv_button.clicked.connect(self.import_csv_requested.emit)
-        _add_action_buttons(csv_card, self.export_csv_button, self.import_csv_button)
+        set_button_icon(self.export_csv_button, "upload", accent=True)
+        set_button_icon(self.import_csv_button, "download", accent=True)
+        _add_action_buttons(csv_card, self.export_csv_button, self.import_csv_button, columns=2)
         page.layout().addWidget(csv_card)
 
         backup_card = _action_card(
@@ -470,10 +509,16 @@ class SettingsPage(QWidget):
         self.restore_button.setObjectName("restore_button")
         self.restore_button.setProperty("variant", "outline")
         self.restore_button.clicked.connect(self.restore_requested.emit)
-        _add_action_buttons(backup_card, self.backup_button, self.restore_button)
-        backup_card.content_layout.addWidget(
-            _secondary_label(_("Back up regularly to protect your data."))
-        )
+        set_button_icon(self.backup_button, "database", accent=True)
+        set_button_icon(self.restore_button, "rotate-ccw", accent=True)
+        _add_action_buttons(backup_card, self.backup_button, self.restore_button, columns=2)
+        self.backup_status_label = _secondary_label(_("No backup recorded. Back up your data."))
+        self.backup_status_label.setObjectName("backup_status_label")
+        backup_card.content_layout.addWidget(self.backup_status_label)
+        self.data_status_label = _secondary_label("")
+        self.data_status_label.setObjectName("data_operation_status_label")
+        self.data_status_label.hide()
+        backup_card.content_layout.addWidget(self.data_status_label)
         page.layout().addWidget(backup_card)
 
         calendar_card = _action_card(
@@ -493,6 +538,10 @@ class SettingsPage(QWidget):
         self.clear_calendar_events_button.setProperty("variant", "outline")
         self.clear_calendar_events_button.setEnabled(False)
         self.clear_calendar_events_button.setToolTip(_("Clearing calendar events is not supported yet."))
+        for button, icon in ((self.import_ics_button, "calendar-days"),
+                             (self.export_ics_button, "upload"),
+                             (self.clear_calendar_events_button, "trash")):
+            set_button_icon(button, icon, accent=True)
         _add_action_buttons(
             calendar_card,
             self.import_ics_button,
@@ -519,11 +568,18 @@ class SettingsPage(QWidget):
         grid = QGridLayout()
         grid.setHorizontalSpacing(18)
         grid.setVerticalSpacing(10)
+        grid.setColumnStretch(0, 3)
+        grid.setColumnStretch(1, 1)
         self.proxy_address_line_edit = _text_line_edit("network_address_line_edit")
         self.proxy_port_line_edit = _text_line_edit("network_port_line_edit")
         self.proxy_username_line_edit = _text_line_edit("network_username_line_edit")
         self.proxy_password_line_edit = _text_line_edit("network_password_line_edit")
         self.proxy_password_line_edit.setEchoMode(QLineEdit.EchoMode.Password)
+        self.proxy_password_visibility_action = self.proxy_password_line_edit.addAction(
+            ui_icon("eye"), QLineEdit.ActionPosition.TrailingPosition,
+        )
+        self.proxy_password_visibility_action.setToolTip(_("Show password"))
+        self.proxy_password_visibility_action.triggered.connect(self._toggle_proxy_password)
         self.proxy_domain_line_edit = _text_line_edit("network_domain_line_edit")
         _connect_text(self.proxy_address_line_edit, lambda: self._set_text(NETWORK_PROXY_ADDRESS_SETTING_KEY, self.proxy_address_line_edit.text()))
         _connect_text(self.proxy_port_line_edit, lambda: self._set_text(NETWORK_PROXY_PORT_SETTING_KEY, self.proxy_port_line_edit.text()))
@@ -542,6 +598,9 @@ class SettingsPage(QWidget):
         grid.addWidget(QLabel(_("Domain")), 7, 0, 1, 2)
         grid.addWidget(self.proxy_domain_line_edit, 8, 0, 1, 2)
         card.content_layout.addLayout(grid)
+        self.proxy_credentials_status_label = _secondary_label("")
+        self.proxy_credentials_status_label.setObjectName("proxy_credentials_status_label")
+        card.content_layout.addWidget(self.proxy_credentials_status_label)
         page.layout().addWidget(card)
         page.layout().addStretch(1)
         return page
@@ -552,6 +611,8 @@ class SettingsPage(QWidget):
         form = QFormLayout()
         form.setSpacing(12)
         self.current_user_name_line_edit = _readonly_line_edit("account_name_line_edit")
+        form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows)
+        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         self.current_user_id_line_edit = _readonly_line_edit("account_id_line_edit")
         self.current_user_role_line_edit = _readonly_line_edit("account_role_line_edit")
         form.addRow(_("Current user"), self.current_user_name_line_edit)
@@ -582,13 +643,22 @@ class SettingsPage(QWidget):
             self.manage_identities_button,
         ):
             card.content_layout.addWidget(button)
+        for button, icon in ((self.change_password_button, "lock-keyhole"),
+                             (self.manage_users_button, "users"),
+                             (self.logout_button, "log-out"),
+                             (self.manage_identities_button, "link")):
+            set_button_icon(button, icon, accent=True)
         page.layout().addWidget(card)
         page.layout().addStretch(1)
         return page
 
     def _build_about_page(self) -> QWidget:
         page = self._scroll_page()
-        card = CardFrame(object_name="settings_content_frame")
+        card = QWidget()
+        card.setObjectName("settings_about_widget")
+        card.content_layout = QVBoxLayout(card)
+        card.content_layout.setContentsMargins(18, 20, 18, 20)
+        card.content_layout.setSpacing(16)
         card.content_layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         icon = QLabel("")
         icon.setObjectName("about_icon_label")
@@ -613,23 +683,39 @@ class SettingsPage(QWidget):
         card.content_layout.addWidget(self.about_name_label)
         card.content_layout.addWidget(self.about_version_label)
         card.content_layout.addWidget(about_brief)
-        details = QFormLayout()
+        card.content_layout.addWidget(_separator())
+        details = QGridLayout()
+        details.setHorizontalSpacing(24)
+        details.setVerticalSpacing(12)
+        details.setColumnStretch(1, 1)
         self.about_author_label = QLabel(APP_AUTHOR)
         self.about_author_label.setObjectName("about_author_label")
         self.about_license_label = QLabel(_("GNU GPLv3"))
         self.about_license_label.setObjectName("about_license_label")
-        self.about_url_label = QLabel(f'<a href="{GITHUB_URL}">{_("GitHub")}</a>')
+        self.about_url_label = QLabel(f'<a href="{GITHUB_URL}">{GITHUB_URL}</a>')
         self.about_url_label.setOpenExternalLinks(True)
+        self.about_url_label.setWordWrap(True)
         self.about_url_label.setObjectName("about_url_label")
-        details.addRow(_("Author"), self.about_author_label)
-        details.addRow(_("License"), self.about_license_label)
-        details.addRow(_("GitHub"), self.about_url_label)
+        for row, (label, widget) in enumerate((
+            (_("Author"), self.about_author_label), (_("License"), self.about_license_label),
+            (_("GitHub"), self.about_url_label),
+        )):
+            details.addWidget(QLabel(label), row, 0)
+            details.addWidget(widget, row, 1)
         card.content_layout.addLayout(details)
+        card.content_layout.addWidget(_separator())
         self.check_updates_button = QPushButton(_("Check for updates"))
         self.check_updates_button.setObjectName("check_updates_button")
         self.check_updates_button.setProperty("variant", "outline")
         self.check_updates_button.clicked.connect(self.update_check_requested.emit)
+        set_button_icon(self.check_updates_button, "rotate-ccw", accent=True)
         card.content_layout.addWidget(self.check_updates_button, 0, Qt.AlignmentFlag.AlignHCenter)
+        self.update_status_label = _secondary_label("")
+        self.update_status_label.setObjectName("update_status_label")
+        self.update_status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.update_status_label.hide()
+        card.content_layout.addWidget(self.update_status_label)
+        page.layout().addStretch(1)
         page.layout().addWidget(card)
         page.layout().addStretch(1)
         return page
@@ -659,10 +745,65 @@ class SettingsPage(QWidget):
         self._set_bool(DARK_MODE_SETTING_KEY, mode == "dark")
 
     def _choose_custom_color(self) -> None:
-        color = QColorDialog.getColor(QColor("#4f8ef7"), self, _("Choose custom color"))
+        color = QColorDialog.getColor(QColor(self._custom_color), self, _("Choose custom color"))
         if color.isValid():
-            self._handle_save_result(self._view_model.set_custom_color(color.name()))
-            self._handle_save_result(self._view_model.set_theme("custom"))
+            result = self._view_model.set_custom_color(color.name())
+            self._handle_save_result(result)
+            if result.ok:
+                self._handle_save_result(self._view_model.set_theme("custom"))
+
+    def _update_color_swatch(self) -> None:
+        pixmap = QPixmap(20, 20)
+        pixmap.fill(Qt.GlobalColor.transparent)
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(self._custom_color))
+        painter.drawRoundedRect(1, 1, 18, 18, 3, 3)
+        painter.end()
+        self.custom_color_button.setIcon(QIcon(pixmap))
+
+    def _toggle_proxy_password(self) -> None:
+        visible = self.proxy_password_line_edit.echoMode() == QLineEdit.EchoMode.Password
+        self.proxy_password_line_edit.setEchoMode(QLineEdit.EchoMode.Normal if visible else QLineEdit.EchoMode.Password)
+        self.proxy_password_visibility_action.setIcon(ui_icon("eye-off" if visible else "eye"))
+        self.proxy_password_visibility_action.setToolTip(_("Hide password") if visible else _("Show password"))
+
+    def set_local_model_status(self, *, ready: bool, name: str = "") -> None:
+        self._local_model_ready = ready
+        self._local_model_name = name
+        self._update_local_model_status()
+
+    def _update_local_model_status(self) -> None:
+        if not self.local_model_enabled_switch.is_checked():
+            text = _("Local model disabled.")
+        elif self._local_model_ready:
+            text = _("Active local model: {model}").format(model=self._local_model_name)
+        else:
+            text = _("Local model unavailable. Download, import and select a verified model.")
+        self.local_model_status_label.setText(text)
+
+    def set_backup_time(self, value: str) -> None:
+        try:
+            stamp = datetime.fromisoformat(value)
+            if stamp.tzinfo is None:
+                stamp = stamp.replace(tzinfo=timezone.utc)
+            days = max(0, (datetime.now(timezone.utc) - stamp).days)
+            text = _("Last backup: {time}").format(time=stamp.astimezone().strftime("%Y-%m-%d %H:%M"))
+            if days >= 30:
+                text += "\n" + _("No backup in {days} days. Back up your data.").format(days=days)
+        except (ValueError, TypeError):
+            text = _("No backup recorded. Back up your data.")
+        self.backup_status_label.setText(text)
+
+    def set_operation_status(self, message: str, category: str | None = None) -> None:
+        label = self.update_status_label if category == "update" else self.data_status_label if category == "data" else self.status_label
+        label.setText(message)
+        label.setVisible(bool(message))
+        # Keep the compatibility status value without showing a duplicate footer.
+        if label is not self.status_label:
+            self.status_label.setText(message)
+            self.status_label.hide()
 
     def _mark_external_test_unconfigured(self) -> None:
         self.external_model_status_label.setText(_("External model testing is not configured."))
@@ -693,11 +834,17 @@ class SettingsPage(QWidget):
             return
         self.set_state(loaded.value)
         self.settings_changed.emit(loaded.value)
-        self.status_label.setText(_("Saved"))
+        self.set_operation_status(_("Saved"))
 
     def _set_error(self, error: AppError | None) -> None:
         self._last_error = error
-        self.status_label.setText(display_error_message(error))
+        if error is not None and error.code == "invalid_proxy_port":
+            message = _("Enter a port between 0 and 65535.")
+        elif error is not None and error.code == "credential_storage_unavailable":
+            message = _("Secure credential storage is unavailable.")
+        else:
+            message = display_error_message(error)
+        self.set_operation_status(message)
 
 
 class _SettingsScrollPage(QScrollArea):
@@ -718,12 +865,11 @@ class _SettingsScrollPage(QScrollArea):
 
 def _card_with_form(title: str) -> CardFrame:
     card = CardFrame(object_name="settings_content_frame")
-    card.content_layout.addWidget(_section_title(title))
     form = QFormLayout()
     form.setContentsMargins(0, 0, 0, 0)
-    form.setSpacing(12)
+    form.setSpacing(8)
     form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
-    form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
+    form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows)
     card.content_layout.addLayout(form)
     card.form_layout = form
     return card
@@ -736,12 +882,13 @@ def _action_card(title: str, description: str) -> CardFrame:
     return card
 
 
-def _add_action_buttons(card: CardFrame, *buttons: QPushButton) -> None:
-    row = QVBoxLayout()
+def _add_action_buttons(card: CardFrame, *buttons: QPushButton, columns: int = 1) -> None:
+    row = QGridLayout()
     row.setContentsMargins(0, 0, 0, 0)
     row.setSpacing(12)
-    for button in buttons:
-        row.addWidget(button)
+    for index, button in enumerate(buttons):
+        row.addWidget(button, index // columns, index % columns)
+        row.setColumnStretch(index % columns, 1)
     card.content_layout.addLayout(row)
 
 
@@ -788,7 +935,7 @@ def _hours_input(minimum: float, maximum: float, step: float) -> QDoubleSpinBox:
     spin.setRange(minimum, maximum)
     spin.setSingleStep(step)
     spin.setMinimumWidth(120)
-    spin.setMaximumWidth(220)
+    spin.setFixedWidth(320)
     return spin
 
 
@@ -797,6 +944,13 @@ def _readonly_line_edit(object_name: str) -> QLineEdit:
     line_edit.setObjectName(object_name)
     line_edit.setReadOnly(True)
     return line_edit
+
+
+def _separator() -> QFrame:
+    line = QFrame()
+    line.setObjectName("settings_separator_frame")
+    line.setFrameShape(QFrame.Shape.HLine)
+    return line
 
 
 def _text_line_edit(object_name: str) -> QLineEdit:

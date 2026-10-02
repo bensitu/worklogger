@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from PySide6.QtCore import QTimer
 
 from PySide6.QtWidgets import QWidget
 
@@ -34,6 +35,15 @@ class LocalModelsWorkflowController:
         return self._view_model
 
     def open(self, parent: QWidget | None = None) -> LocalModelsDialog:
+        return self._open(parent)
+
+    def open_for_import(self, parent: QWidget | None = None) -> LocalModelsDialog:
+        return self._open(parent, action="import")
+
+    def open_for_download(self, parent: QWidget | None = None) -> LocalModelsDialog:
+        return self._open(parent, action="download")
+
+    def _open(self, parent: QWidget | None, *, action: str = "") -> LocalModelsDialog:
         if self._dialog_factory is None:
             dialog = LocalModelsDialog(
                 self._view_model,
@@ -42,6 +52,16 @@ class LocalModelsWorkflowController:
             )
         else:
             dialog = self._dialog_factory(self._view_model, parent)
-        dialog.refresh()
+        if action == "import":
+            def import_model() -> None:
+                if not dialog.import_model():
+                    dialog.refresh()
+
+            QTimer.singleShot(0, dialog, import_model)
+        elif action == "download":
+            dialog.download_button.setFocus()
+            QTimer.singleShot(0, dialog, dialog.refresh_catalog)
+        else:
+            dialog.refresh()
         dialog.exec()
         return dialog

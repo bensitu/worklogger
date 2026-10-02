@@ -116,9 +116,6 @@ msgstr ""
 msgid "Back to login"
 msgstr ""
 
-msgid "Back up regularly to protect your data."
-msgstr ""
-
 msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
 msgstr ""
 
@@ -132,6 +129,9 @@ msgid "Backup cancelled"
 msgstr ""
 
 msgid "Backup saved: {path}"
+msgstr ""
+
+msgid "Backup succeeded, but its timestamp could not be saved."
 msgstr ""
 
 msgid "Bar"
@@ -302,6 +302,9 @@ msgstr ""
 msgid "English"
 msgstr ""
 
+msgid "Enter a port between 0 and 65535."
+msgstr ""
+
 msgid "Enter your ID"
 msgstr ""
 
@@ -383,6 +386,9 @@ msgstr ""
 msgid "Hide"
 msgstr ""
 
+msgid "Hide password"
+msgstr ""
+
 msgid "ID"
 msgstr ""
 
@@ -455,6 +461,9 @@ msgstr ""
 msgid "Language"
 msgstr ""
 
+msgid "Last backup: {time}"
+msgstr ""
+
 msgid "Leave"
 msgstr ""
 
@@ -476,13 +485,22 @@ msgstr ""
 msgid "Linked identities"
 msgstr ""
 
+msgid "Loading models..."
+msgstr ""
+
 msgid "Local Model"
 msgstr ""
 
 msgid "Local Models"
 msgstr ""
 
+msgid "Local model disabled."
+msgstr ""
+
 msgid "Local model management is not configured."
+msgstr ""
+
+msgid "Local model unavailable. Download, import and select a verified model."
 msgstr ""
 
 msgid "Local user"
@@ -492,9 +510,6 @@ msgid "Log Out"
 msgstr ""
 
 msgid "Login"
-msgstr ""
-
-msgid "Logout"
 msgstr ""
 
 msgid "Logout requested"
@@ -578,13 +593,16 @@ msgstr ""
 msgid "No arguments start the desktop application."
 msgstr ""
 
+msgid "No backup in {days} days. Back up your data."
+msgstr ""
+
+msgid "No backup recorded. Back up your data."
+msgstr ""
+
 msgid "No data"
 msgstr ""
 
 msgid "No events found."
-msgstr ""
-
-msgid "No local model selected."
 msgstr ""
 
 msgid "No records for the selected day."
@@ -657,6 +675,9 @@ msgid "Password change required."
 msgstr ""
 
 msgid "Password changed successfully."
+msgstr ""
+
+msgid "Password is stored in the system credential store."
 msgstr ""
 
 msgid "Password reset."
@@ -848,6 +869,12 @@ msgstr ""
 msgid "Search reports..."
 msgstr ""
 
+msgid "Secure credential storage is unavailable."
+msgstr ""
+
+msgid "Secure credential storage is unavailable. Existing passwords are retained; new passwords cannot be saved."
+msgstr ""
+
 msgid "Select"
 msgstr ""
 
@@ -885,6 +912,9 @@ msgid "Show"
 msgstr ""
 
 msgid "Show leaves"
+msgstr ""
+
+msgid "Show password"
 msgstr ""
 
 msgid "Sick leave"

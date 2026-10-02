@@ -57,14 +57,64 @@ set `WORKLOGGER_SCREENSHOTS` to a test output directory before running
 data, never the user's database. The test exercises all routes and settings
 categories in five languages, two themes, and both supported window sizes.
 
-Verified on Windows on 2026-10-02:
+Verified on Windows on 2026-10-03:
 
-- `unittest`: 230 tests passed.
-- `pytest`: 230 tests and 35 subtests passed.
+- `unittest`: 250 tests passed.
+- `pytest`: 250 tests and 41 subtests passed.
 - Catalog consistency, nonempty translations and format fields passed.
 - Source and console-enabled Windows distribution passed all three smoke checks.
 - Screenshot review covered login, shell routes and settings categories. Login
   field icons also have automated containment and vertical alignment assertions.
+
+## Settings Refinement
+
+All seven settings categories were compared with the supplied prototypes.
+Appearance uses equally sized dropdowns and a live custom-color swatch. General
+uses vertically stacked labels and controls. Data uses paired CSV and backup
+actions, icons, and a reminder based on the actual last successful backup.
+Network uses wider address fields, strict port validation, and an inline password
+visibility icon. Account uses read-only fields and displays the login username
+as Current ID, not the internal SQLite primary key. About uses a centered,
+unframed layout with separators, the full repository link, and inline update
+status. Disabled controls and icons use the disabled palette.
+
+Logout exists only in Settings / Account, including the minimal-mode settings
+dialog. Existing unsaved-change confirmation and the application's logout signal
+are retained. The minimal-mode dialog disconnects its logout callback and releases
+the dialog after closing; logout does not refresh the old session's window.
+
+Download and import actions open the existing local-model workflow directly.
+Inventory verification, selection and deletion run through the background job
+runner; pending operations prevent unsafe dialog closure. Enabling local models
+does not falsely report availability when no verified model has been selected.
+
+Settings layout checks cover five languages, both themes, both supported window
+sizes and 150% scaling. Long navigation labels wrap without clipping, and all
+settings categories are checked for horizontal overflow and button-text fit.
+Screenshots also cover a real runtime with a temporary administrator database
+and an available Windows credential store. The user's business database is not
+used by these settings checks.
+
+### Stored Settings Migration
+
+No database schema change is required. The optional `last_backup_at` setting is
+written as a UTC ISO timestamp only after a successful backup. Older databases
+without it display "No backup recorded" rather than an invented backup age.
+
+Proxy passwords use an OS credential store through `keyring`, scoped by the
+resolved database path and user ID. Only supported OS backends are accepted;
+there is no plaintext fallback. Password whitespace is preserved. On settings
+load, an old SQLite password is removed only after secure storage succeeds or
+an existing secure credential is found. If secure storage or database cleanup
+fails, the operation reports failure and retains the existing data for retry.
+An unavailable credential store disables new password entry without preventing
+other settings from loading. Empty passwords remove the secure credential.
+
+OS credentials are not copied into database backups and do not automatically
+follow a database moved to a different path or machine. Previous backup files
+are not rewritten and may still contain legacy plaintext settings; protect
+those files accordingly. Successful Windows credential save/read/delete and
+failure-path regression checks were performed without modifying user credentials.
 
 ## Calendar Refinement
 

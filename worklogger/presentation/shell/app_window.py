@@ -327,10 +327,6 @@ class AppWindow(QMainWindow):
         self.ai_assist_button.setToolTip(_("AI Assist"))
         self.ai_assist_button.setProperty("variant", "ghost")
         self.settings_button = self.sidebar.settings_button
-        self.logout_button = QPushButton(_("Logout"))
-        self.logout_button.setObjectName("logout_button")
-        self.logout_button.setToolTip(_("Logout"))
-        self.logout_button.setProperty("variant", "ghost")
         self.status_label = QLabel("")
         self.status_label.setObjectName("app_status_label")
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
@@ -353,12 +349,6 @@ class AppWindow(QMainWindow):
         self.more_actions_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         self.more_actions_button.setVisible(not actions.isEmpty())
         self.calendar_page.header_layout.addWidget(self.more_actions_button)
-        set_button_icon(self.logout_button, "log-out")
-
-        sidebar_layout = self.sidebar.layout()
-        if sidebar_layout is not None:
-            sidebar_layout.insertWidget(max(0, sidebar_layout.count() - 1), self.logout_button)
-
         self.account_label.setVisible(False)
         if self._quick_logs_workflow is None:
             self.quick_logs_button.setVisible(False)
@@ -366,8 +356,6 @@ class AppWindow(QMainWindow):
             self.notes_button.setVisible(False)
         if self._ai_assist_workflow is None:
             self.ai_assist_button.setVisible(False)
-        if not self._config.account_name:
-            self.logout_button.setVisible(False)
         main_layout.addWidget(self.status_label)
 
     def _connect_signals(self) -> None:
@@ -378,7 +366,6 @@ class AppWindow(QMainWindow):
         self.quick_logs_button.clicked.connect(self.open_quick_logs)
         self.notes_button.clicked.connect(self.open_notes)
         self.ai_assist_button.clicked.connect(self.open_ai_assist)
-        self.logout_button.clicked.connect(self._request_logout)
         if hasattr(self.settings_page, "logout_requested"):
             self.settings_page.logout_requested.connect(self._request_logout)
         if hasattr(self.settings_page, "settings_changed"):
@@ -599,6 +586,7 @@ class AppWindow(QMainWindow):
         if index is None:
             return False
         self.page_stack.setCurrentIndex(index)
+        self.status_label.setVisible(normalized != "settings")
         self.sidebar.set_active_route(normalized)
         if normalized == "analytics":
             self.analytics_page.refresh(self._selected_day)

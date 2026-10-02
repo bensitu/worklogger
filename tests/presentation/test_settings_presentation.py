@@ -3,10 +3,14 @@ from __future__ import annotations
 import os
 import sys
 import unittest
+from datetime import datetime, timedelta, timezone
+from dataclasses import replace
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtWidgets import QApplication, QDialog
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import QApplication, QDialog, QLineEdit
 
 from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandler
 from worklogger.config.constants import (
@@ -22,7 +26,9 @@ from worklogger.config.constants import (
     SHOW_HOLIDAYS_SETTING_KEY,
     STANDARD_WORK_HOURS_SETTING_KEY,
     THEME_SETTING_KEY,
+    NETWORK_PROXY_PORT_SETTING_KEY,
 )
+from worklogger.domain.auth.models import User
 from worklogger.presentation.settings import SettingsDialog, SettingsPage
 from worklogger.presentation.viewmodels import SettingsViewModel
 from worklogger.presentation.widgets import SwitchButton
@@ -58,6 +64,81 @@ def _view_model(repository: MemorySettingsRepository) -> SettingsViewModel:
 
 
 class SettingsPresentationTests(unittest.TestCase):
+    def test_appearance_fields_and_color_picker_use_current_color(self):
+        model = _view_model(MemorySettingsRepository())
+        model.set_custom_color("#123456")
+        page = SettingsPage(model)
+        page.refresh()
+        self.assertEqual(page.language_combo.width(), page.theme_combo.width())
+        self.assertEqual(page.mode_combo.width(), page.theme_combo.width())
+        self.assertEqual(page.custom_color_button.icon().pixmap(20, 20).toImage().pixelColor(10, 10).name(), "#123456")
+        with patch("worklogger.presentation.settings.page.QColorDialog.getColor", return_value=QColor()) as choose:
+            page._choose_custom_color()
+            self.assertEqual(choose.call_args.args[0].name(), "#123456")
+
+    def test_account_uses_login_id_and_action_icons_and_admin_permissions(self):
+        page = SettingsPage(_view_model(MemorySettingsRepository()))
+        page.set_account(User(id=42, username="alice", is_admin=True))
+        self.assertEqual(page.current_user_id_line_edit.text(), "alice")
+        self.assertFalse(page.manage_users_button.isHidden())
+        for button in (page.change_password_button, page.manage_users_button, page.logout_button,
+                       page.manage_identities_button, page.export_csv_button, page.import_csv_button,
+                       page.backup_button, page.restore_button, page.import_ics_button, page.export_ics_button):
+            self.assertFalse(button.icon().isNull())
+        page.set_account(User(id=42, username="alice", is_admin=False))
+        self.assertTrue(page.manage_users_button.isHidden())
+        self.assertFalse(page.manage_users_button.isEnabled())
+
+    def test_invalid_port_keeps_saved_value_and_has_visible_error(self):
+        repository = MemorySettingsRepository()
+        page = SettingsPage(_view_model(repository))
+        page.refresh()
+        page.proxy_port_line_edit.setText("8080")
+        page.proxy_port_line_edit.editingFinished.emit()
+        page.proxy_port_line_edit.setText("70000")
+        page.proxy_port_line_edit.editingFinished.emit()
+        self.assertEqual(repository.get(1, NETWORK_PROXY_PORT_SETTING_KEY), "8080")
+        self.assertEqual(page.proxy_port_line_edit.text(), "70000")
+        self.assertEqual(page.status_label.text(), "Enter a port between 0 and 65535.")
+        self.assertFalse(page.status_label.isHidden())
+
+    def test_proxy_password_visibility_respects_storage_availability(self):
+        model = _view_model(MemorySettingsRepository())
+        page = SettingsPage(model)
+        page.refresh()
+        self.assertFalse(page.proxy_password_line_edit.isEnabled())
+        self.assertFalse(page.proxy_password_visibility_action.isEnabled())
+        page.set_state(replace(model.load().value, proxy_password_available=True,
+                               network_proxy_password=" synthetic password "))
+        self.assertEqual(page.proxy_password_line_edit.text(), " synthetic password ")
+        page.proxy_password_visibility_action.trigger()
+        self.assertEqual(page.proxy_password_line_edit.echoMode(), QLineEdit.EchoMode.Normal)
+        page.proxy_password_visibility_action.trigger()
+        self.assertEqual(page.proxy_password_line_edit.echoMode(), QLineEdit.EchoMode.Password)
+
+    def test_backup_and_update_feedback_is_inline_without_duplicate_footer(self):
+        page = SettingsPage(_view_model(MemorySettingsRepository()))
+        page.refresh()
+        self.assertTrue(page.status_label.isHidden())
+        page.set_backup_time((datetime.now(timezone.utc) - timedelta(days=45)).isoformat())
+        self.assertIn("45 days", page.backup_status_label.text())
+        page.set_operation_status("Checking for updates...", "update")
+        self.assertEqual(page.update_status_label.text(), "Checking for updates...")
+        self.assertFalse(page.update_status_label.isHidden())
+        self.assertTrue(page.status_label.isHidden())
+        page.set_operation_status("Backing up data...", "data")
+        self.assertEqual(page.data_status_label.text(), "Backing up data...")
+        self.assertFalse(page.data_status_label.isHidden())
+
+    def test_local_model_enabled_preference_does_not_claim_unavailable_model_is_ready(self):
+        page = SettingsPage(_view_model(MemorySettingsRepository()))
+        page.refresh()
+        self.assertIn("unavailable", page.local_model_status_label.text())
+        page.set_local_model_status(ready=True, name="Verified model")
+        self.assertIn("Verified model", page.local_model_status_label.text())
+        page.local_model_enabled_switch.set_checked(False)
+        self.assertEqual(page.local_model_status_label.text(), "Local model disabled.")
+
     def test_native_settings_expose_unavailable_features_and_busy_state(self) -> None:
         page = SettingsPage(_view_model(MemorySettingsRepository()))
         self.assertFalse(page.external_api_key_line_edit.isEnabled())
