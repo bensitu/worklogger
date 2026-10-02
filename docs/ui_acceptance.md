@@ -59,12 +59,33 @@ categories in five languages, two themes, and both supported window sizes.
 
 Verified on Windows on 2026-10-02:
 
-- `unittest`: 219 tests passed.
-- `pytest`: 219 tests and 15 subtests passed.
+- `unittest`: 222 tests passed.
+- `pytest`: 222 tests and 35 subtests passed.
 - Catalog consistency, nonempty translations and format fields passed.
 - Source and console-enabled Windows distribution passed all three smoke checks.
 - Screenshot review covered login, shell routes and settings categories. Login
   field icons also have automated containment and vertical alignment assertions.
+
+## Calendar Refinement
+
+The calendar follows `Prototype-calendar.png` with a seven-column month grid,
+blank adjacent-month positions, weekend headers, full-height work-type markers,
+and a moon icon for overnight entries. Event counts and overnight markers have
+separate positions. Weekly totals remain available in the view state and legacy
+widget mode but do not add an eighth column to the shell.
+
+The sidebar uses a circular avatar without a product label above it. The right
+panel uses vertically stacked fields, a collapsible notes editor, and separately
+scrollable schedule items. Notes, automatic recording, save and selected-day
+refresh remain available. Hidden input tabs no longer impose their minimum width
+on the active form.
+
+Calendar layout checks cover five languages, two themes, both window sizes and
+150% scaling. To check an imported May 2026 dataset, set `WORKLOGGER_QA_DATABASE`
+to its database path and run `tests.presentation.test_calendar_layout`. This
+opens SQLite in read-only mode and copies records into in-memory fixtures; the
+test's save operations do not touch the original database. The imported test
+database's file hash was unchanged after verification.
 
 ## Deliberate Limits
 

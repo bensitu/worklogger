@@ -15,7 +15,9 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QSizePolicy,
     QTabWidget,
+    QToolButton,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -29,7 +31,7 @@ from worklogger.presentation.viewmodels.auto_record import (
     AutoRecordViewModel,
 )
 from worklogger.presentation.viewmodels.worklog_entry import WorkLogEntryForm
-from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 
 
 @dataclass(frozen=True)
@@ -51,39 +53,52 @@ class WorkLogEntryPanel(QWidget):
         parent: QWidget | None = None,
         *,
         auto_record_view_model: AutoRecordViewModel | None = None,
+        compact: bool = False,
     ) -> None:
         super().__init__(parent)
         self.setObjectName("worklog_entry_panel_widget")
+        self.setProperty("compact", compact)
         self._form: WorkLogEntryForm | None = None
         self._updating = False
         self._auto_record_view_model = auto_record_view_model or AutoRecordViewModel()
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(8)
+        root.setSpacing(4 if compact else 8)
 
         self.time_tabs = QTabWidget()
         root.addWidget(self.time_tabs)
 
         manual_tab = QWidget()
+        manual_tab.setObjectName("worklog_manual_tab_widget")
         manual_layout = QVBoxLayout(manual_tab)
         manual_layout.setContentsMargins(0, 0, 0, 0)
-        manual_layout.setSpacing(8)
+        manual_layout.setSpacing(4 if compact else 8)
         form = QFormLayout()
         form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft)
         form.setFormAlignment(Qt.AlignmentFlag.AlignTop)
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
-        form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
+        form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows if compact else QFormLayout.RowWrapPolicy.WrapLongRows)
+        if compact:
+            form.setVerticalSpacing(2)
         manual_layout.addLayout(form)
         self.time_tabs.addTab(manual_tab, _("Manual Input"))
 
         self.start_input = QLineEdit()
         self.start_input.setObjectName("start_time_line_edit")
+        if compact:
+            action = self.start_input.addAction(ui_icon("clock"), QLineEdit.ActionPosition.TrailingPosition)
+            action.setToolTip(_("Start"))
+            action.triggered.connect(self.start_input.setFocus)
         self.start_input.textChanged.connect(self._emit_draft_changed)
         form.addRow(_("Start"), self.start_input)
 
         self.end_input = QLineEdit()
         self.end_input.setObjectName("end_time_line_edit")
+        if compact:
+            action = self.end_input.addAction(ui_icon("clock"), QLineEdit.ActionPosition.TrailingPosition)
+            action.setToolTip(_("End"))
+            action.triggered.connect(self.end_input.setFocus)
         self.end_input.textChanged.connect(self._emit_draft_changed)
         form.addRow(_("End"), self.end_input)
 
@@ -93,7 +108,9 @@ class WorkLogEntryPanel(QWidget):
         self.break_input.setSingleStep(0.25)
         self.break_input.setDecimals(2)
         self.break_input.valueChanged.connect(self._emit_draft_changed)
-        form.addRow(_("Break (h)"), self.break_input)
+        if compact:
+            self.break_input.setSuffix(" " + _("h"))
+        form.addRow(_("Break") if compact else _("Break (h)"), self.break_input)
 
         self.work_type_combo = QComboBox()
         self.work_type_combo.setObjectName("work_type_combo")
@@ -106,9 +123,27 @@ class WorkLogEntryPanel(QWidget):
         self.note_input.setObjectName("note_text_edit")
         self.note_input.setFixedHeight(88)
         self.note_input.textChanged.connect(self._emit_draft_changed)
-        form.addRow(_("Notes"), self.note_input)
+        self.note_toggle_button = QToolButton()
+        self.note_toggle_button.setObjectName("entry_notes_toggle_button")
+        self.note_toggle_button.setText(_("Notes"))
+        self.note_toggle_button.setToolTip(_("Notes"))
+        self.note_toggle_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.note_toggle_button.setCheckable(True)
+        self.note_toggle_button.setIcon(ui_icon("chevron-down"))
+        self.note_toggle_button.toggled.connect(self.note_input.setVisible)
+        self.note_toggle_button.toggled.connect(
+            lambda expanded: self.note_toggle_button.setIcon(ui_icon("chevron-up" if expanded else "chevron-down"))
+        )
+        if compact:
+            manual_layout.addWidget(self.note_toggle_button, 0, Qt.AlignmentFlag.AlignLeft)
+            manual_layout.addWidget(self.note_input)
+            self.note_input.hide()
+        else:
+            self.note_toggle_button.hide()
+            form.addRow(_("Notes"), self.note_input)
 
         self.auto_tab = QWidget()
+        self.auto_tab.setObjectName("worklog_auto_tab_widget")
         auto_layout = QVBoxLayout(self.auto_tab)
         auto_layout.setContentsMargins(0, 0, 0, 0)
         auto_layout.setSpacing(8)
@@ -132,6 +167,9 @@ class WorkLogEntryPanel(QWidget):
         auto_layout.addWidget(self.auto_status_label)
         auto_layout.addStretch(1)
         self.time_tabs.addTab(self.auto_tab, _("Auto Record"))
+        if compact:
+            self.time_tabs.currentChanged.connect(self._update_tab_size_policy)
+            self._update_tab_size_policy()
 
         self.auto_timer = QTimer(self)
         self.auto_timer.setInterval(60_000)
@@ -175,6 +213,16 @@ class WorkLogEntryPanel(QWidget):
             work_type=str(self.work_type_combo.currentData() or WorkType.NORMAL.value),
         )
 
+    def _update_tab_size_policy(self, *_args: object) -> None:
+        # Inactive pages must not impose their minimum form size on the current tab.
+        for index in range(self.time_tabs.count()):
+            page = self.time_tabs.widget(index)
+            policy = QSizePolicy.Policy.Preferred if index == self.time_tabs.currentIndex() else QSizePolicy.Policy.Ignored
+            page.setSizePolicy(policy, policy)
+            page.layout().invalidate()
+            page.updateGeometry()
+        self.time_tabs.updateGeometry()
+
     def set_form(self, form: WorkLogEntryForm) -> None:
         self._form = form
         self._updating = True
@@ -196,6 +244,7 @@ class WorkLogEntryPanel(QWidget):
         self.hours_label.setText(f"{_('Worked')}: {form.worked_hours:.1f}{_('h')}")
         self.status_label.setText(", ".join(flags) if flags else _("Ready"))
         self.error_label.setText(", ".join(form.errors))
+        self.error_label.setVisible(bool(form.errors))
         self.save_button.setEnabled(form.can_save)
         self._sync_auto_from_form(form)
 

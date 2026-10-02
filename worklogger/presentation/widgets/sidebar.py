@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QPainter, QPainterPath, QPixmap
 from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QVBoxLayout, QWidget
 
-from worklogger.__about__ import APP_NAME
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets._style import refresh_style
 from worklogger.presentation.widgets.assets import pixmap_asset
@@ -50,15 +50,10 @@ class SidebarWidget(QFrame):
             refresh_style(button)
 
     def _build_ui(self, *, account_name: str, role: str) -> None:
-        self.setFixedWidth(154)
+        self.setFixedWidth(140)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(14, 14, 14, 16)
         layout.setSpacing(12)
-
-        self.product_label = QLabel(APP_NAME)
-        self.product_label.setObjectName("sidebar_product_label")
-        self.product_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.product_label)
 
         self.profile_avatar_label = QLabel("")
         self.profile_avatar_label.setObjectName("sidebar_avatar_label")
@@ -66,14 +61,7 @@ class SidebarWidget(QFrame):
         self.profile_avatar_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         avatar = pixmap_asset("images/avatar.webp")
         if not avatar.isNull():
-            self.profile_avatar_label.setPixmap(
-                avatar.scaled(
-                    72,
-                    72,
-                    Qt.AspectRatioMode.KeepAspectRatioByExpanding,
-                    Qt.TransformationMode.SmoothTransformation,
-                )
-            )
+            self.profile_avatar_label.setPixmap(_round_avatar(avatar, 72))
         layout.addWidget(self.profile_avatar_label, 0, Qt.AlignmentFlag.AlignHCenter)
 
         self.profile_name_label = QLabel("")
@@ -122,3 +110,18 @@ def _initials(name: str) -> str:
     if not parts:
         return "WL"
     return "".join(part[:1].upper() for part in parts[:2])
+
+
+def _round_avatar(source: QPixmap, size: int) -> QPixmap:
+    scaled = source.scaled(size, size, Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                           Qt.TransformationMode.SmoothTransformation)
+    result = QPixmap(size, size)
+    result.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(result)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    clip = QPainterPath()
+    clip.addEllipse(0, 0, size, size)
+    painter.setClipPath(clip)
+    painter.drawPixmap((size - scaled.width()) // 2, (size - scaled.height()) // 2, scaled)
+    painter.end()
+    return result

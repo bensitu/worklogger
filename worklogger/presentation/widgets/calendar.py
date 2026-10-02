@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from datetime import date
 
-from PySide6.QtCore import QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QPainter, QPen
+from PySide6.QtCore import QRect, QRectF, Qt, Signal
+from PySide6.QtGui import QColor, QIcon, QPainter, QPen
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from worklogger.infrastructure.i18n import _
+from worklogger.presentation.widgets.icons import ui_icon
 from worklogger.presentation.viewmodels.calendar import (
     CalendarDayCell,
     CalendarMonthViewState,
@@ -79,6 +80,9 @@ class CalendarDayButton(QPushButton):
         painter.setFont(font)
         painter.setPen(QColor(foreground))
         if lines:
+            day_font = painter.font()
+            day_font.setPixelSize(14)
+            painter.setFont(day_font)
             painter.drawText(
                 QRectF(10, 8, self.width() - (30 if cell.event_count else 20), 18),
                 Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
@@ -89,10 +93,11 @@ class CalendarDayButton(QPushButton):
             holiday_font.setPixelSize(9)
             painter.setFont(holiday_font)
             painter.setPen(QColor("#ef4444" if not cell.is_selected else "#ffffff"))
+            holiday_width = self.width() - (32 if cell.event_count else 20)
             painter.drawText(
-                QRectF(10, 24, self.width() - 20, 14),
+                QRectF(10, 24, holiday_width, 14),
                 Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-                cell.holiday_name,
+                painter.fontMetrics().elidedText(cell.holiday_name, Qt.TextElideMode.ElideRight, int(holiday_width)),
             )
         painter.setFont(font)
         painter.setPen(QColor(foreground))
@@ -109,7 +114,7 @@ class CalendarDayButton(QPushButton):
         if cell.work_type_marker_color:
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QColor(cell.work_type_marker_color))
-            painter.drawRoundedRect(QRectF(4, 4, 5, 24), 3, 3)
+            painter.drawRoundedRect(QRectF(2, 4, 3, self.height() - 8), 1.5, 1.5)
 
         if cell.has_note_marker:
             painter.setPen(Qt.PenStyle.NoPen)
@@ -117,15 +122,11 @@ class CalendarDayButton(QPushButton):
             painter.drawEllipse(self.width() - 8, 2, 5, 5)
 
         if cell.show_overnight_marker:
-            painter.setPen(QPen(QColor(cell.style.foreground), 1))
-            painter.drawText(
-                QRectF(self.width() - 22, 5, 16, 14),
-                Qt.AlignmentFlag.AlignCenter,
-                "N",
-            )
+            icon = ui_icon("moon", primary=cell.is_selected)
+            icon.paint(painter, QRect(self.width() - 22, 8, 14, 14), Qt.AlignmentFlag.AlignCenter, QIcon.Mode.Normal)
 
         if cell.event_count > 0:
-            badge = QRectF(self.width() - 22, 8, 18, 14)
+            badge = QRectF(self.width() - 22, 25 if cell.show_overnight_marker else 8, 18, 14)
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QColor(cell.style.hover_border))
             painter.drawRoundedRect(badge, 6, 6)
@@ -146,6 +147,7 @@ class CalendarView(QWidget):
         self._state: CalendarMonthViewState | None = None
         self._buttons: list[CalendarDayButton] = []
         self._week_total_labels: list[QLabel] = []
+        self._month_only = False
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -162,7 +164,12 @@ class CalendarView(QWidget):
         self.grid.setContentsMargins(0, 0, 0, 0)
         self.grid.setHorizontalSpacing(6)
         self.grid.setVerticalSpacing(6)
-        layout.addWidget(self.grid_frame)
+        layout.addWidget(self.grid_frame, 1)
+
+    def set_month_only(self, enabled: bool) -> None:
+        self._month_only = enabled
+        if self._state is not None:
+            self.set_state(self._state)
 
     @property
     def state(self) -> CalendarMonthViewState | None:
@@ -180,16 +187,23 @@ class CalendarView(QWidget):
         _clear_layout(self.grid)
         self._buttons = []
         self._week_total_labels = []
+        visible_weeks = max(index // 7 + 1 for index, cell in enumerate(state.cells) if cell.in_month)
+        for column in range(8):
+            self.grid.setColumnStretch(column, 1 if column < 7 else 0)
+        for row in range(1, 7):
+            self.grid.setRowStretch(row, 1 if not self._month_only or row <= visible_weeks else 0)
 
         for column, header in enumerate(state.week_headers):
             label = QLabel(header)
             label.setObjectName("week_header_label")
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            label.setProperty("weekend", header in (_("Sat"), _("Sun")))
             self.grid.addWidget(label, 0, column)
         total_header = QLabel(_("Total"))
         total_header.setObjectName("week_header_label")
         total_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.grid.addWidget(total_header, 0, 7)
+        total_header.setVisible(not self._month_only)
 
         for index, cell in enumerate(state.cells):
             row = index // 7 + 1
@@ -198,6 +212,7 @@ class CalendarView(QWidget):
             button.set_cell(cell)
             button.clicked.connect(lambda _checked=False, day=cell.day: self.day_selected.emit(day))
             self.grid.addWidget(button, row, column)
+            button.setVisible(not self._month_only or cell.in_month)
             self._buttons.append(button)
 
         for week_index, total in enumerate(state.weekly_totals):
@@ -205,11 +220,14 @@ class CalendarView(QWidget):
             label.setObjectName("week_total_label")
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.grid.addWidget(label, week_index + 1, 7)
+            label.setVisible(not self._month_only)
             self._week_total_labels.append(label)
 
 
 def _tooltip_for_cell(cell: CalendarDayCell) -> str:
     details: list[str] = []
+    if cell.holiday_name:
+        details.append(cell.holiday_name)
     if cell.note_tooltip:
         details.append(cell.note_tooltip)
     if cell.event_count:

@@ -17,7 +17,6 @@ QWidget#app_window_central_widget {
 
 QFrame[card="true"],
 QFrame#stat_card_frame,
-QFrame#calendar_right_panel_frame,
 QFrame#report_editor_frame,
 QFrame#report_history_frame,
 QFrame#analytics_chart_frame,
@@ -35,6 +34,84 @@ QFrame[card="true"]:hover {
 QFrame#app_sidebar_frame {
   background: {{ sidebar_background }};
   border-right: 1px solid {{ border }};
+}
+
+QLabel#sidebar_avatar_label {
+  background: {{ surface_alt }};
+  border-radius: 36px;
+}
+
+QFrame#app_sidebar_frame QPushButton[nav_item="true"] {
+  padding: 10px 8px;
+  font-size: 12px;
+}
+
+QWidget#calendar_page_widget {
+  background: {{ surface }};
+}
+
+QFrame#calendar_grid_frame,
+QWidget#calendar_records_widget,
+QWidget#worklog_manual_tab_widget,
+QWidget#worklog_auto_tab_widget,
+QWidget#worklog_entry_panel_widget[compact="true"] QTabWidget,
+QWidget#worklog_entry_panel_widget[compact="true"] QStackedWidget {
+  background: {{ surface }};
+}
+
+QFrame#calendar_right_panel_frame {
+  background: {{ surface }};
+  border: none;
+  border-left: 1px solid {{ border }};
+}
+
+QLabel#schedule_records_label {
+  padding-top: 10px;
+  border-top: 1px solid {{ border }};
+}
+
+QFrame#calendar_record_frame {
+  background: {{ surface }};
+  border: 1px solid {{ border }};
+  border-radius: 4px;
+}
+
+QLabel#calendar_record_marker_label {
+  background: {{ accent }};
+  border-radius: 3px;
+}
+
+QLabel#week_header_label[weekend="true"] {
+  color: {{ accent }};
+}
+
+QWidget#worklog_entry_panel_widget[compact="true"] QLineEdit,
+QWidget#worklog_entry_panel_widget[compact="true"] QComboBox,
+QWidget#worklog_entry_panel_widget[compact="true"] QDoubleSpinBox,
+QWidget#worklog_entry_panel_widget[compact="true"] QPushButton {
+  min-height: 24px;
+  padding: 2px 8px;
+}
+
+QWidget#worklog_entry_panel_widget[compact="true"] QDoubleSpinBox QLineEdit {
+  min-height: 0;
+  padding: 0;
+  border: none;
+}
+
+QWidget#worklog_entry_panel_widget[compact="true"] QTabBar::tab {
+  padding: 4px 6px;
+}
+
+QWidget#worklog_entry_panel_widget[compact="true"] QTabWidget::pane {
+  border: none;
+}
+
+QToolButton#entry_notes_toggle_button {
+  background: transparent;
+  border: none;
+  min-height: 20px;
+  padding: 0;
 }
 
 QFrame#login_form_frame {

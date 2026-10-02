@@ -278,7 +278,7 @@ class AppWindow(QMainWindow):
         main_layout.addWidget(self.page_stack, 1)
 
         self.calendar_view = CalendarView()
-        self.entry_panel = WorkLogEntryPanel()
+        self.entry_panel = WorkLogEntryPanel(compact=True)
         self.stats_panel = StatsPanel()
         self.calendar_page = CalendarPage(
             calendar_view=self.calendar_view,
@@ -426,7 +426,8 @@ class AppWindow(QMainWindow):
         if not events.ok:
             self._set_error(events.error)
             return False
-        lines = list(_record_summary(result.value))
+        summary = _record_summary(result.value)
+        lines = ["\n".join(summary)] if summary else []
         for event in sorted(events.value or (), key=lambda value: (value.start_time or "", value.summary)):
             time_text = _("All day") if event.all_day else f"{event.start_time or '--:--'} - {event.end_time or '--:--'}"
             lines.append(f"{time_text}\n{event.summary}")

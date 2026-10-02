@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QComboBox,
     QGridLayout,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -70,6 +71,7 @@ class CalendarPage(QWidget):
     ) -> None:
         super().__init__(parent)
         self.setObjectName("calendar_page_widget")
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.calendar_view = calendar_view
         self.entry_panel = entry_panel
         self.stats_panel = stats_panel
@@ -94,10 +96,22 @@ class CalendarPage(QWidget):
             self.records_layout.addStretch(1)
             return
         for line in lines:
+            record = QFrame()
+            record.setObjectName("calendar_record_frame")
+            row = QHBoxLayout(record)
+            row.setContentsMargins(8, 8, 8, 8)
+            row.setSpacing(6)
+            marker = QLabel("")
+            marker.setObjectName("calendar_record_marker_label")
+            marker.setFixedSize(6, 6)
+            row.addWidget(marker, 0, Qt.AlignmentFlag.AlignTop)
             label = QLabel(line)
             label.setObjectName("calendar_record_label")
+            label.setTextFormat(Qt.TextFormat.PlainText)
+            label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
             label.setWordWrap(True)
-            self.records_layout.addWidget(label)
+            row.addWidget(label, 1)
+            self.records_layout.addWidget(record)
         self.records_layout.addStretch(1)
 
     def _build_ui(self) -> None:
@@ -149,27 +163,40 @@ class CalendarPage(QWidget):
         root.addLayout(content, 1)
 
         self.calendar_view.month_title.setVisible(False)
+        self.calendar_view.set_month_only(True)
         content.addWidget(self.calendar_view, 1)
 
-        right_scroll = QScrollArea()
-        right_scroll.setObjectName("calendar_details_scroll_widget")
-        right_scroll.setWidgetResizable(True)
-        right_scroll.setFixedWidth(270)
-        right = CardFrame(object_name="calendar_right_panel_frame")
-        right_scroll.setWidget(right)
+        self.details_scroll = QScrollArea()
+        self.details_scroll.setObjectName("calendar_details_scroll_widget")
+        self.details_scroll.setWidgetResizable(True)
+        self.details_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.details_scroll.setFixedWidth(236)
+        right = QFrame()
+        right.setObjectName("calendar_right_panel_frame")
+        right_layout = QVBoxLayout(right)
+        right_layout.setContentsMargins(12, 0, 0, 0)
+        right_layout.setSpacing(10)
+        self.details_scroll.setWidget(right)
         self.stats_panel.setVisible(False)
-        right.content_layout.addWidget(self.entry_panel)
-        right.content_layout.addWidget(self.stats_panel)
+        right_layout.addWidget(self.entry_panel)
+        right_layout.addWidget(self.stats_panel)
         separator = QLabel(_("Schedule / Records"))
         separator.setObjectName("schedule_records_label")
-        right.content_layout.addWidget(separator)
+        right_layout.addWidget(separator)
+        self.records_scroll = QScrollArea()
+        self.records_scroll.setObjectName("calendar_records_scroll_widget")
+        self.records_scroll.setWidgetResizable(True)
+        self.records_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.records_scroll.setMinimumHeight(96)
         self.records_widget = QWidget()
         self.records_widget.setObjectName("calendar_records_widget")
+        self.records_widget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.records_layout = QVBoxLayout(self.records_widget)
         self.records_layout.setContentsMargins(0, 0, 0, 0)
-        self.records_layout.setSpacing(8)
-        right.content_layout.addWidget(self.records_widget, 1)
-        content.addWidget(right_scroll)
+        self.records_layout.setSpacing(4)
+        self.records_scroll.setWidget(self.records_widget)
+        right_layout.addWidget(self.records_scroll, 1)
+        content.addWidget(self.details_scroll)
 
 
 class AnalyticsPage(QWidget):
