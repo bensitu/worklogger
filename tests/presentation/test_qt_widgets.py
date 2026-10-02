@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 import os
 import unittest
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -82,6 +83,18 @@ def _calendar_state() -> CalendarMonthViewState:
 
 
 class QtWidgetTests(unittest.TestCase):
+    def test_auto_record_failure_uses_dialog_and_idle_status_is_empty(self) -> None:
+        panel = WorkLogEntryPanel(compact=True)
+        panel._refresh_auto_state()
+        self.assertEqual(panel.auto_status_label.text(), "")
+        self.assertTrue(panel.auto_status_label.isHidden())
+        with patch("worklogger.presentation.widgets.worklog_entry.QMessageBox.warning") as notification:
+            panel._auto_clock_out()
+        notification.assert_called_once()
+        self.assertIs(notification.call_args.args[0], panel)
+        self.assertEqual(notification.call_args.args[1], "Auto Record")
+        self.assertEqual(panel.auto_status_label.text(), "")
+
     @classmethod
     def setUpClass(cls) -> None:
         cls._app = _app()

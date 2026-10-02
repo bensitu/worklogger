@@ -39,6 +39,10 @@ class ReportsViewModel:
 
 
 class ShellPagesTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.information = self.enterContext(patch.object(QMessageBox, "information"))
+        self.warning = self.enterContext(patch.object(QMessageBox, "warning"))
+
     def test_report_rewrite_uses_job_runner_instructions_and_protects_active_state(self) -> None:
         class ViewModel(ReportsViewModel):
             rewrite_available = True

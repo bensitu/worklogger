@@ -4,6 +4,7 @@ from collections.abc import Callable
 from datetime import date
 import os
 import unittest
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -173,6 +174,10 @@ def _window(
 
 
 class AppWindowTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.information = self.enterContext(patch("worklogger.presentation.shell.app_window.QMessageBox.information"))
+        self.warning = self.enterContext(patch("worklogger.presentation.shell.app_window.QMessageBox.warning"))
+
     @classmethod
     def setUpClass(cls) -> None:
         cls._app = _app()
@@ -184,7 +189,8 @@ class AppWindowTests(unittest.TestCase):
         self.assertEqual(window.selected_day, date(2026, 4, 20))
         self.assertEqual(window.current_month, date(2026, 4, 1))
         self.assertEqual(window.calendar_view.month_title.text(), "2026/04")
-        self.assertEqual(window.status_label.text(), "Ready")
+        self.assertEqual(window.status_label.text(), "")
+        self.assertTrue(window.status_label.isHidden())
         self.assertEqual(window.entry_panel.start_input.text(), "")
         self.assertFalse(window.entry_panel.save_button.isEnabled())
 
@@ -217,6 +223,8 @@ class AppWindowTests(unittest.TestCase):
         self.assertEqual(saved.end_time, "18:00")
         self.assertEqual(saved.note, "Focused work")
         self.assertEqual(window.status_label.text(), "Saved")
+        self.assertTrue(window.status_label.isHidden())
+        self.information.assert_called_once_with(window, "WorkLogger", "Saved")
         self.assertEqual(window.stats_panel.value_text("total_hours"), "8.0h")
         self.assertIn("8.0h", window.calendar_view.week_total_labels()[3].text())
         selected = next(
@@ -238,6 +246,8 @@ class AppWindowTests(unittest.TestCase):
         assert window.last_error is not None
         self.assertEqual(window.last_error.code, "month_failed")
         self.assertEqual(window.status_label.text(), "month_failed")
+        self.assertTrue(window.status_label.isHidden())
+        self.warning.assert_called_once_with(window, "WorkLogger", "month_failed")
 
     def test_app_window_exposes_account_label_and_logout_signal(self) -> None:
         window = _window(MemoryWorkLogRepository(), account_name="alice")
@@ -272,7 +282,8 @@ class AppWindowTests(unittest.TestCase):
         window.settings_button.click()
 
         self.assertEqual(workflow.opened, [window])
-        self.assertEqual(window.status_label.text(), "Ready")
+        self.assertEqual(window.status_label.text(), "")
+        self.assertTrue(window.status_label.isHidden())
 
 
     def test_app_window_uses_native_settings_page_when_available(self) -> None:

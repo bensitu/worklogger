@@ -208,6 +208,7 @@ class AnalyticsPage(QWidget):
     ) -> None:
         super().__init__(parent)
         self.setObjectName("analytics_page_widget")
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self._view_model = view_model
         self._selected_day = selected_day
         self._state: AnalyticsState | None = None
@@ -224,7 +225,7 @@ class AnalyticsPage(QWidget):
             self._selected_day = selected_day
             self._populate_periods()
         if self._view_model is None:
-            self.status_label.setText(_("Analytics is not configured."))
+            self._set_status(_("Analytics is not configured."), error=True)
             return False
         scope = self.scope_control.value or "monthly"
         result = self._view_model.load_dashboard(
@@ -234,12 +235,12 @@ class AnalyticsPage(QWidget):
         )
         if not result.ok or result.value is None:
             self._last_error = result.error
-            self.status_label.setText(display_error_message(result.error))
+            self._set_status(display_error_message(result.error), error=True)
             return False
         self._dashboard = result.value
         self._state = AnalyticsState(self._view_model.user_id, self._selected_day.year, self._selected_day.month, scope, "hours", "bar", True, result.value.trend)
         self._set_state(result.value)
-        self.status_label.setText(_("Ready"))
+        self._set_status("")
         return True
 
     def export_csv(self, destination: Path) -> bool:
@@ -251,9 +252,9 @@ class AnalyticsPage(QWidget):
         result = self._view_model.export_csv(destination, self._state)
         if not result.ok or result.value is None:
             self._last_error = result.error
-            self.status_label.setText(display_error_message(result.error))
+            self._set_status(display_error_message(result.error), error=True)
             return False
-        self.status_label.setText(_("Exported CSV"))
+        self._set_status(_("Exported CSV"))
         return True
 
     def export_pdf(self, destination: Path) -> bool:
@@ -265,9 +266,9 @@ class AnalyticsPage(QWidget):
         result = self._view_model.export_pdf(destination, self._state)
         if not result.ok or result.value is None:
             self._last_error = result.error
-            self.status_label.setText(display_error_message(result.error))
+            self._set_status(display_error_message(result.error), error=True)
             return False
-        self.status_label.setText(_("Exported PDF"))
+        self._set_status(_("Exported PDF"))
         return True
 
     def _build_ui(self) -> None:
@@ -351,7 +352,15 @@ class AnalyticsPage(QWidget):
         self.status_label = QLabel("")
         self.status_label.setObjectName("analytics_status_label")
         self.status_label.setProperty("role", "secondary")
+        self.status_label.hide()
         root.addWidget(self.status_label)
+
+    def _set_status(self, message: str, *, error: bool = False) -> None:
+        self.status_label.setText(message)
+        self.status_label.hide()
+        if message:
+            show = QMessageBox.warning if error else QMessageBox.information
+            show(self, _("Analytics"), message)
 
     def _chart_card(self, title: str, *, donut: bool = False) -> CardFrame:
         card = CardFrame(object_name="analytics_chart_frame")
@@ -445,6 +454,7 @@ class ReportsPage(QWidget):
     ) -> None:
         super().__init__(parent)
         self.setObjectName("reports_page_widget")
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self._view_model = view_model
         self._selected_day = selected_day
         self._states: dict[str, ReportEditorState] = {}
@@ -466,7 +476,7 @@ class ReportsPage(QWidget):
 
     def confirm_leave(self) -> bool:
         if self._rewrite_busy:
-            self.status_label.setText(_("Please wait for the current request."))
+            self._set_status(_("Please wait for the current request."))
             return False
         if not self.has_unsaved_changes:
             return True
@@ -491,7 +501,7 @@ class ReportsPage(QWidget):
         if selected_day is not None:
             self._selected_day = selected_day
         if self._view_model is None:
-            self.status_label.setText(_("Reports are not configured."))
+            self._set_status(_("Reports are not configured."), error=True)
             return False
         ok = True
         for report_type in ("daily", "weekly", "monthly"):
@@ -505,12 +515,12 @@ class ReportsPage(QWidget):
         self._render_current()
         self._refresh_history()
         if ok:
-            self.status_label.setText(_("Ready"))
+            self._set_status("")
         return ok
 
     def copy_markdown(self) -> None:
         QApplication.clipboard().setText(self.editor.toPlainText())
-        self.status_label.setText(_("Copied"))
+        self._set_status(_("Copied"))
 
     def export_markdown(self, destination: Path) -> bool:
         if self._view_model is None:
@@ -519,7 +529,7 @@ class ReportsPage(QWidget):
         if not result.ok or result.value is None:
             self._set_error(result.error)
             return False
-        self.status_label.setText(_("Exported Markdown"))
+        self._set_status(_("Exported Markdown"))
         return True
 
     def _build_ui(self) -> None:
@@ -627,7 +637,15 @@ class ReportsPage(QWidget):
         self.status_label = QLabel("")
         self.status_label.setObjectName("reports_status_label")
         self.status_label.setProperty("role", "secondary")
+        self.status_label.hide()
         root.addWidget(self.status_label)
+
+    def _set_status(self, message: str, *, notify: bool = True, error: bool = False) -> None:
+        self.status_label.setText(message)
+        self.status_label.hide()
+        if message and notify:
+            show = QMessageBox.warning if error else QMessageBox.information
+            show(self, _("Reports"), message)
 
     def _current_type(self) -> str:
         return self.report_type_control.value or "daily"
@@ -651,7 +669,7 @@ class ReportsPage(QWidget):
         if dialog.refresh():
             dialog.exec()
         else:
-            self.status_label.setText(dialog.status_label.text())
+            self._set_status(dialog.status_label.text(), error=True)
 
     def _apply_template(self) -> None:
         if self._view_model is None or not self.confirm_leave():
@@ -690,7 +708,7 @@ class ReportsPage(QWidget):
             return
         self._states[report_type] = result.value
         self._saved_content[report_type] = result.value.content
-        self.status_label.setText(_("Report saved."))
+        self._set_status(_("Report saved."))
         self._refresh_history()
 
     def _rewrite_current(self) -> None:
@@ -703,7 +721,7 @@ class ReportsPage(QWidget):
         content = self.editor.toPlainText()
         instructions = self.ai_hint_line_edit.text()
         self._set_rewrite_busy(True)
-        self.status_label.setText(_("Rewriting report..."))
+        self._set_status(_("Rewriting report..."), notify=False)
         self._job_runner.submit(
             "rewrite_report", lambda _token: self._view_model.rewrite(state, content, instructions),
             on_complete=self._complete_rewrite,
@@ -722,7 +740,7 @@ class ReportsPage(QWidget):
             self._set_error(result.error)
             return
         self.editor.setPlainText(result.value)
-        self.status_label.setText(_("Rewritten"))
+        self._set_status(_("Rewritten"))
 
     def _refresh_history(self) -> None:
         if self._view_model is None:
@@ -780,7 +798,7 @@ class ReportsPage(QWidget):
 
     def _set_error(self, error: AppError | None) -> None:
         self._last_error = error
-        self.status_label.setText(display_error_message(error))
+        self._set_status(display_error_message(error), error=True)
 
 
 class SettingsPlaceholderPage(QWidget):

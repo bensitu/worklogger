@@ -47,7 +47,13 @@ QFrame#app_sidebar_frame QPushButton[nav_item="true"] {
   font-size: 12px;
 }
 
-QWidget#calendar_page_widget {
+QWidget#app_main_content_widget,
+QStackedWidget#app_page_stack_widget,
+QWidget#calendar_page_widget,
+QWidget#analytics_page_widget,
+QWidget#analytics_content_widget,
+QWidget#reports_page_widget QWidget#report_history_content_widget,
+QWidget#reports_page_widget {
   background: {{ surface }};
 }
 

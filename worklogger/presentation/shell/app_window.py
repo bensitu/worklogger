@@ -139,6 +139,7 @@ class AppWindow(QMainWindow):
         self._current_month = self._selected_day.replace(day=1)
         self._holidays = dict(self._config.holidays or {})
         self._last_error: AppError | None = None
+        self._refreshing = False
         self._entry_dirty = False
 
         self.setObjectName("app_window")
@@ -216,12 +217,17 @@ class AppWindow(QMainWindow):
 
     def refresh(self) -> bool:
         self._last_error = None
-        calendar_ok = self._refresh_calendar()
-        entry_ok = self._refresh_entry()
-        stats_ok = self._refresh_stats()
+        self._refreshing = True
+        try:
+            calendar_ok = self._refresh_calendar()
+            entry_ok = self._refresh_entry()
+            stats_ok = self._refresh_stats()
+        finally:
+            self._refreshing = False
         if calendar_ok and entry_ok and stats_ok:
-            self._set_status(_("Ready"))
+            self._set_status("")
             return True
+        self._set_error(self._last_error)
         return False
 
     def select_day(self, day: date) -> bool:
@@ -330,6 +336,7 @@ class AppWindow(QMainWindow):
         self.status_label = QLabel("")
         self.status_label.setObjectName("app_status_label")
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.status_label.hide()
 
         actions = QMenu(self)
         for button, workflow in (
@@ -451,7 +458,7 @@ class AppWindow(QMainWindow):
         if result.value.errors:
             self._set_status(", ".join(result.value.errors))
         else:
-            self._set_status(_("Ready"))
+            self._set_status("")
 
     def _save_entry_draft(self, draft: WorkLogEntryDraft) -> None:
         preview = self._worklog_entry_view_model.preview(
@@ -467,7 +474,7 @@ class AppWindow(QMainWindow):
             return
         if preview.value.errors:
             self.entry_panel.set_form(preview.value)
-            self._set_status(", ".join(preview.value.errors))
+            self._set_status(", ".join(preview.value.errors), notify=True, error=True)
             return
         saved = self._worklog_entry_view_model.save(preview.value)
         if not saved.ok or saved.value is None:
@@ -478,7 +485,7 @@ class AppWindow(QMainWindow):
         self._refresh_entry()
         self._refresh_calendar()
         self._refresh_stats()
-        self._set_status(_("Saved"))
+        self._set_status(_("Saved"), notify=True)
 
     def _holiday_note_for_selected_day(self) -> str:
         if not self._config.calendar_options.show_holidays:
@@ -487,10 +494,14 @@ class AppWindow(QMainWindow):
 
     def _set_error(self, error: AppError | None) -> None:
         self._last_error = error
-        self._set_status(display_error_message(error))
+        self._set_status(display_error_message(error), notify=not self._refreshing, error=True)
 
-    def _set_status(self, message: str) -> None:
+    def _set_status(self, message: str, *, notify: bool = False, error: bool = False) -> None:
         self.status_label.setText(message)
+        self.status_label.hide()
+        if message and notify:
+            show = QMessageBox.warning if error else QMessageBox.information
+            show(self, _("WorkLogger"), message)
 
     def _account_text(self) -> str:
         account_name = str(self._config.account_name or "").strip()
@@ -586,7 +597,6 @@ class AppWindow(QMainWindow):
         if index is None:
             return False
         self.page_stack.setCurrentIndex(index)
-        self.status_label.setVisible(normalized != "settings")
         self.sidebar.set_active_route(normalized)
         if normalized == "analytics":
             self.analytics_page.refresh(self._selected_day)
@@ -596,7 +606,7 @@ class AppWindow(QMainWindow):
             self.settings_page.refresh()
             if self._residency_controller is not None:
                 self._residency_controller.refresh()
-        self._set_status(_("Ready"))
+        self._set_status("")
         return True
 
     def closeEvent(self, event: QCloseEvent) -> None:
@@ -636,7 +646,7 @@ class AppWindow(QMainWindow):
 
     def _confirm_discard_changes_if_needed(self) -> bool:
         if getattr(self.settings_page, "is_busy", False):
-            self._set_status(_("Please wait for the current operation."))
+            self._set_status(_("Please wait for the current operation."), notify=True)
             return False
         if self._entry_dirty:
             confirmed = (

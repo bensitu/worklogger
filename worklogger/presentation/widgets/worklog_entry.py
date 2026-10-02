@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMessageBox,
     QPushButton,
     QSizePolicy,
     QTabWidget,
@@ -242,7 +243,8 @@ class WorkLogEntryPanel(QWidget):
         if form.is_leave:
             flags.append(_("Leave"))
         self.hours_label.setText(f"{_('Worked')}: {form.worked_hours:.1f}{_('h')}")
-        self.status_label.setText(", ".join(flags) if flags else _("Ready"))
+        self.status_label.setText(", ".join(flags))
+        self.status_label.setVisible(bool(flags))
         self.error_label.setText(", ".join(form.errors))
         self.error_label.setVisible(bool(form.errors))
         self.save_button.setEnabled(form.can_save)
@@ -293,14 +295,14 @@ class WorkLogEntryPanel(QWidget):
         )
         result = self._auto_record_view_model.start()
         if not result.ok or result.value is None:
-            self.auto_status_label.setText(display_error_message(result.error))
+            QMessageBox.warning(self, _("Auto Record"), display_error_message(result.error))
             return
         self._apply_auto_state(result.value)
 
     def _auto_clock_out(self) -> None:
         result = self._auto_record_view_model.finish()
         if not result.ok or result.value is None:
-            self.auto_status_label.setText(display_error_message(result.error))
+            QMessageBox.warning(self, _("Auto Record"), display_error_message(result.error))
             return
         draft = self._draft_from_auto_values(
             start_time=result.value.start_time,
@@ -322,14 +324,14 @@ class WorkLogEntryPanel(QWidget):
         else:
             result = self._auto_record_view_model.restart_break()
         if not result.ok or result.value is None:
-            self.auto_status_label.setText(display_error_message(result.error))
+            QMessageBox.warning(self, _("Auto Record"), display_error_message(result.error))
             return
         self._apply_auto_state(result.value)
 
     def _auto_quick_break(self, minutes: int) -> None:
         result = self._auto_record_view_model.add_quick_break(minutes)
         if not result.ok or result.value is None:
-            self.auto_status_label.setText(display_error_message(result.error))
+            QMessageBox.warning(self, _("Auto Record"), display_error_message(result.error))
             return
         self._apply_auto_state(result.value)
 
@@ -380,6 +382,7 @@ class WorkLogEntryPanel(QWidget):
             minutes = int(round(state.break_hours * 60))
             self.break_button.setText(f"{_('On break')}\n{minutes}{_('m')}")
             self.auto_status_label.setText(_("Break timer running"))
+            self.auto_status_label.show()
             if not self.auto_timer.isActive():
                 self.auto_timer.start()
         else:
@@ -388,7 +391,8 @@ class WorkLogEntryPanel(QWidget):
                 if state.has_recorded_break
                 else _("Start break")
             )
-            self.auto_status_label.setText(_("Ready"))
+            self.auto_status_label.clear()
+            self.auto_status_label.hide()
             if self.auto_timer.isActive():
                 self.auto_timer.stop()
 

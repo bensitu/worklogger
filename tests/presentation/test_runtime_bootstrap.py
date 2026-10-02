@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -203,7 +204,9 @@ class RuntimeBootstrapTests(unittest.TestCase):
             runtime.value.window.entry_panel.start_input.setText("09:00")
             runtime.value.window.entry_panel.end_input.setText("18:00")
             runtime.value.window.entry_panel.note_input.setPlainText("SQLite backed")
-            runtime.value.window.entry_panel.save_button.click()
+            with patch("worklogger.presentation.shell.app_window.QMessageBox.information") as notification:
+                runtime.value.window.entry_panel.save_button.click()
+            notification.assert_called_once()
 
             saved = SQLiteWorkLogRepository(
                 runtime.value.connection_factory

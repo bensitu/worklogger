@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import sqlite3
 import unittest
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -102,7 +103,9 @@ class CalendarLayoutTests(unittest.TestCase):
             self.assertEqual(panel.note_input.toPlainText(), "Original note")
             panel.note_input.setPlainText("Updated note")
             panel.note_toggle_button.setChecked(False)
-            panel.save_button.click()
+            with patch("worklogger.presentation.shell.app_window.QMessageBox.information") as notification:
+                panel.save_button.click()
+            notification.assert_called_once()
             self.assertEqual(records.get_for_day(1, date(2026, 4, 20)).note, "Updated note")
             panel.time_tabs.setCurrentIndex(1)
             self.app.processEvents()
