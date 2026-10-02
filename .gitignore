@@ -65,4 +65,6 @@ worklogger/models/*.json
 worklogger/models/*.lock
 worklogger/models/catalog.json
 # Documentation
-docs/refactor/*.md
+/docs/WORKLOGGER_DEVELOPMENT_RULES.md
+/docs/ui_acceptance.md
+/docs/refactor/
