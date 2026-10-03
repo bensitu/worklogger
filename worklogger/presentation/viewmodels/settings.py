@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Protocol
@@ -96,15 +97,21 @@ class SettingsViewModel:
         get_handler: SettingsGetHandler,
         set_handler: SettingsSetHandler,
         proxy_password_settings: ProxyPasswordSettings | None = None,
+        default_language: str = "en_US",
+        save_login_language: Callable[[str], Result[None]] | None = None,
     ) -> None:
         self._user_id = user_id
         self._get_handler = get_handler
         self._set_handler = set_handler
         self._proxy_password_settings = proxy_password_settings
+        self._default_language = normalize_language(default_language)
+        self._save_login_language = save_login_language
 
     def load(self) -> Result[SettingsState]:
         values: dict[str, str | None] = {}
         for key, default in _DEFAULTS.items():
+            if key == LANGUAGE_SETTING_KEY:
+                default = self._default_language
             if key == NETWORK_PROXY_PASSWORD_SETTING_KEY:
                 continue
             result = self._get_handler.handle(GetSettingQuery(self._user_id, key, default))
@@ -191,7 +198,11 @@ class SettingsViewModel:
         return self._set(CUSTOM_THEME_COLOR_SETTING_KEY, normalize_hex_color(color))
 
     def set_language(self, language: str) -> Result[None]:
-        return self._set(LANGUAGE_SETTING_KEY, normalize_language(language))
+        normalized = normalize_language(language)
+        result = self._set(LANGUAGE_SETTING_KEY, normalized)
+        if result.ok and self._save_login_language is not None:
+            return self._save_login_language(normalized)
+        return result
 
     def set_bool(self, key: str, enabled: bool) -> Result[None]:
         if key not in _BOOLEAN_KEYS:

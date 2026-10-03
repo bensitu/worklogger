@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QTimer, qInstallMessageHandler
+from PySide6.QtCore import QSettings, QTimer, qInstallMessageHandler
 from PySide6.QtWidgets import QMessageBox
 
 from tests.infrastructure.test_auth_schema_migration import legacy_database
@@ -29,7 +29,8 @@ from worklogger.domain.shared.errors import CancellationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkType
 from worklogger.infrastructure.repositories import SQLiteSettingsRepository, SQLiteWorkLogRepository
-from worklogger.infrastructure.i18n import get_language, set_language
+from worklogger.infrastructure.i18n import _, get_language, set_language
+from worklogger.infrastructure.language_preferences import LanguagePreferences
 from worklogger.infrastructure.calendar import PythonHolidaysProvider
 from worklogger.main import main
 from worklogger.presentation.auth import AuthController, AuthSession, LoginDialog
@@ -67,6 +68,67 @@ class CancellingAuthenticator:
 
 
 class RuntimeBootstrapTests(unittest.TestCase):
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.preferences_path = Path(directory.name) / "preferences.ini"
+        self.preferences = self.new_preferences()
+        self.enterContext(patch("worklogger.bootstrap.LanguagePreferences", side_effect=self.new_preferences))
+        self.enterContext(patch.dict(os.environ, {"WORKLOGGER_LANG": ""}))
+        self.system_language = self.enterContext(patch(
+            "worklogger.infrastructure.language_preferences.detect_system_language", return_value="en_US"))
+        self.addCleanup(set_language, "en_US")
+
+    def new_preferences(self):
+        return LanguagePreferences(QSettings(str(self.preferences_path), QSettings.Format.IniFormat))
+
+    def test_first_login_is_translated_before_authentication(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for language in ("en_US", "ja_JP", "ko_KR", "zh_CN", "zh_TW"):
+                self.system_language.return_value = language
+
+                def authenticator(model):
+                    self.assertEqual(get_language(), language)
+                    dialog = LoginDialog()
+                    self.assertEqual(dialog.login_button.text(), _("Login", language=language))
+                    self.assertEqual(dialog.username_input.placeholderText(), _("Enter your ID", language=language))
+                    dialog.deleteLater()
+                    return CancellingAuthenticator(model)
+
+                result = build_authenticated_desktop_runtime(
+                    DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db", password_iterations=1_000),
+                    argv=[], auth_controller_factory=authenticator,
+                )
+                self.assertFalse(result.ok)
+                self.assertEqual(result.error.code, "auth_cancelled")
+                self.assertIsNone(self.preferences.load())
+
+    def test_first_account_inherits_language_and_manual_choice_reaches_next_login(self):
+        self.system_language.return_value = "ja_JP"
+        with tempfile.TemporaryDirectory() as directory:
+            config = DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db", password_iterations=1_000)
+            first = build_authenticated_desktop_runtime(config, argv=[], auth_controller_factory=AutoRegisterAuthenticator)
+            self.assertTrue(first.ok, first.error)
+            try:
+                self.assertEqual(get_language(), "ja_JP")
+                page = first.value.window.settings_page
+                self.assertEqual(page.language_combo.currentData(), "ja_JP")
+                self.assertIsNone(self.preferences.load())
+                page.language_combo.setCurrentIndex(page.language_combo.findData("en_US"))
+                self.assertEqual(self.preferences.load(), "en_US")
+                self.assertEqual(SQLiteSettingsRepository(first.value.connection_factory).get(first.value.user.id, "language"), "en_US")
+                self.assertEqual(get_language(), "ja_JP")
+            finally:
+                first.value.window.close()
+
+            def authenticator(model):
+                self.assertEqual(get_language(), "en_US")
+                return CancellingAuthenticator(model)
+
+            second = build_authenticated_desktop_runtime(config, argv=[], auth_controller_factory=authenticator)
+            self.assertFalse(second.ok)
+            self.assertEqual(second.error.code, "auth_cancelled")
+
     def test_public_holidays_load_toggle_and_survive_restart_in_real_runtime(self):
         expected = {holiday.day: holiday.name for holiday in PythonHolidaysProvider().list_for_range(
             "JP", date(2026, 5, 1), date(2026, 5, 31))}
@@ -217,6 +279,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 self.assertTrue(second.ok, second.error)
                 window = second.value.window
                 self.assertEqual(get_language(), "ja_JP")
+                self.assertEqual(self.preferences.load(), "ja_JP")
                 self.assertTrue(window._config.dark)
                 self.assertEqual(window._config.standard_work_hours, 7.5)
                 self.assertEqual(window._config.monthly_target_hours, 150)
@@ -267,7 +330,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             runtime.value.window.entry_panel.note_input.setPlainText("SQLite backed")
             with patch("worklogger.presentation.shell.app_window.QMessageBox.information") as notification:
                 runtime.value.window.entry_panel.save_button.click()
-            notification.assert_called_once()
+            notification.assert_not_called()
 
             saved = SQLiteWorkLogRepository(
                 runtime.value.connection_factory

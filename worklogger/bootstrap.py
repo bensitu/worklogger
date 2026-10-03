@@ -80,6 +80,7 @@ from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandl
 from worklogger.app.use_cases.updates import CheckForUpdatesHandler
 from worklogger.config.constants import (
     GITHUB_LATEST_RELEASE_API_URL,
+    LANGUAGE_SETTING_KEY,
     MINIMAL_MODE_SETTING_KEY,
 )
 from worklogger.domain.auth.repositories import AuthCredentialRepository
@@ -129,6 +130,7 @@ from worklogger.infrastructure.security import (
 from worklogger.infrastructure.templates import BuiltInTemplateProvider, UserTemplateProvider
 from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
 from worklogger.infrastructure.i18n import get_language, set_language
+from worklogger.infrastructure.language_preferences import LanguagePreferences, initialize_language
 from worklogger.presentation.ai import AiAssistWorkflowController
 from worklogger.presentation.analytics import AnalyticsWorkflowController
 from worklogger.presentation.auth import AuthController, AuthSession
@@ -226,6 +228,7 @@ def build_desktop_runtime(
                 or ValidationError("runtime_user_required", "runtime_user_required")
             )
         application = _application(argv)
+        initialize_language(LanguagePreferences())
         job_runner = QtJobRunner(application)
         auth_view_model = _auth_view_model(auth_repository, connection_factory)
         remember_session_store = _remember_session_store()
@@ -263,6 +266,7 @@ def build_authenticated_desktop_runtime(
         LOGGER.info("authenticated_desktop_runtime_build_started")
         database_path, connection_factory, auth_repository = _prepare_database(config)
         application = _application(argv)
+        initialize_language(LanguagePreferences())
         job_runner = QtJobRunner(application)
         auth_view_model = _auth_view_model(auth_repository, connection_factory)
         remember_session_store = _remember_session_store()
@@ -417,11 +421,15 @@ def _build_runtime_for_user(
     settings = SettingsViewModel(
         user_id=user.id, get_handler=handlers.settings_get_handler,
         set_handler=handlers.settings_set_handler,
+        default_language=get_language(),
     ).load()
     if not settings.ok or settings.value is None:
         return Result.failure(settings.error or InfrastructureError("settings_load_failed", "settings_load_failed"))
     state = settings.value
     set_language(state.language)
+    preferences = LanguagePreferences()
+    if preferences.load() is None and repositories.settings.get(user.id, LANGUAGE_SETTING_KEY):
+        preferences.save(state.language)
     worklog_entry_view_model.set_default_break_hours(state.default_break_hours)
     window_config = replace(
         window_config, theme=state.theme, dark=state.dark_mode,
@@ -644,6 +652,8 @@ def _build_settings_workflow(
             user_id=user.id,
             get_handler=handlers.settings_get_handler,
             set_handler=handlers.settings_set_handler,
+            default_language=get_language(),
+            save_login_language=LanguagePreferences().save,
             proxy_password_settings=ProxyPasswordSettings(
                 repositories.settings,
                 SystemCredentialStore(namespace=str(database_path.resolve())),

@@ -5,7 +5,7 @@ import sys
 import unittest
 from datetime import datetime, timedelta, timezone
 from dataclasses import replace
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -29,6 +29,8 @@ from worklogger.config.constants import (
     NETWORK_PROXY_PORT_SETTING_KEY,
 )
 from worklogger.domain.auth.models import User
+from worklogger.domain.shared.errors import InfrastructureError
+from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import available_languages, get_language, set_language
 from worklogger.presentation.settings import SettingsDialog, SettingsPage
 from worklogger.presentation.viewmodels import SettingsViewModel
@@ -65,6 +67,33 @@ def _view_model(repository: MemorySettingsRepository) -> SettingsViewModel:
 
 
 class SettingsPresentationTests(unittest.TestCase):
+    def test_unset_language_inherits_startup_but_explicit_english_wins(self):
+        repository = MemorySettingsRepository()
+        model = SettingsViewModel(
+            user_id=1, get_handler=GetSettingHandler(repository),
+            set_handler=SetSettingHandler(repository), default_language="zh_TW",
+        )
+        self.assertEqual(model.load().value.language, "zh_TW")
+        repository.set(1, "language", "en_US")
+        self.assertEqual(model.load().value.language, "en_US")
+
+    def test_login_preference_is_saved_only_after_successful_account_save(self):
+        repository = MemorySettingsRepository()
+        handler = Mock()
+        save_login = Mock(return_value=Result.success(None))
+        model = SettingsViewModel(
+            user_id=1, get_handler=GetSettingHandler(repository),
+            set_handler=handler, save_login_language=save_login,
+        )
+        handler.handle.return_value = Result.failure(InfrastructureError("settings_save_failed", "settings_save_failed"))
+        self.assertFalse(model.set_language("zh-HK").ok)
+        save_login.assert_not_called()
+        handler.handle.return_value = Result.success(None)
+        self.assertTrue(model.set_language("zh-HK").ok)
+        save_login.assert_called_once_with("zh_TW")
+        save_login.return_value = Result.failure(InfrastructureError("settings_save_failed", "settings_save_failed"))
+        self.assertFalse(model.set_language("ja-JP").ok)
+
     def test_language_options_always_use_native_labels_and_keep_language_codes(self):
         expected = ("English", "日本語", "한국어", "简体中文", "繁體中文")
         try:

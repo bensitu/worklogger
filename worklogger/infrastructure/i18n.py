@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import gettext
-import locale
 import os
 import sys
 import threading
 from pathlib import Path
+
+from PySide6.QtCore import QLocale
 
 DOMAIN = "messages"
 SUPPORTED_LANGUAGES = ("en_US", "ja_JP", "ko_KR", "zh_CN", "zh_TW")
@@ -33,24 +34,38 @@ def locales_dir() -> Path:
 
 
 def normalize_language(language: str | None) -> str:
+    return _match_language(language) or DEFAULT_LANGUAGE
+
+
+def _match_language(language: str | None) -> str | None:
     if not language:
-        return DEFAULT_LANGUAGE
-    normalized = language.replace("-", "_")
-    if normalized in SUPPORTED_LANGUAGES:
-        return normalized
-    prefix = normalized.split("_", 1)[0].lower()
+        return None
+    parts = language.strip().split(".", 1)[0].split("@", 1)[0].replace("-", "_").lower().split("_")
+    prefix = parts[0]
+    if prefix == "zh":
+        # Explicit script takes precedence over the territory.
+        if "hant" in parts:
+            return "zh_TW"
+        if "hans" in parts:
+            return "zh_CN"
+        return "zh_TW" if any(region in parts for region in ("tw", "hk", "mo")) else "zh_CN"
     for candidate in SUPPORTED_LANGUAGES:
         if candidate.lower().startswith(prefix + "_"):
             return candidate
-    return DEFAULT_LANGUAGE
+    return None
 
 
 def detect_system_language() -> str:
     try:
-        detected = locale.getlocale()[0] or locale.getdefaultlocale()[0]
+        system_locale = QLocale.system()
+        languages = system_locale.uiLanguages() or [system_locale.name()]
+        for language in languages:
+            matched = _match_language(language)
+            if matched is not None:
+                return matched
     except Exception:
-        detected = None
-    return normalize_language(detected)
+        pass
+    return DEFAULT_LANGUAGE
 
 
 def set_language(language: str | None) -> str:

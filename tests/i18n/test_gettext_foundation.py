@@ -7,6 +7,7 @@ import gettext
 import tempfile
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 from scripts.i18n.catalog_tools import (
     LANGUAGES,
@@ -21,8 +22,10 @@ from scripts.i18n.catalog_tools import (
 from worklogger.infrastructure.i18n import (
     _,
     available_languages,
+    detect_system_language,
     get_language,
     ngettext,
+    normalize_language,
     set_language,
 )
 
@@ -64,6 +67,38 @@ class GettextFoundationTests(unittest.TestCase):
         self.assertEqual(set_language("ja-JP"), "ja_JP")
         self.assertEqual(set_language("unknown"), "en_US")
         self.assertEqual(available_languages(), tuple(LANGUAGES))
+
+    def test_regional_and_script_language_matching(self) -> None:
+        cases = {
+            "en-GB": "en_US", "JA_jp.UTF-8": "ja_JP", "ko": "ko_KR",
+            "zh": "zh_CN", "zh-SG": "zh_CN", "zh-CN": "zh_CN",
+            "zh-TW": "zh_TW", "zh-HK": "zh_TW", "zh-MO": "zh_TW",
+            "zh-Hant": "zh_TW", "zh-Hans": "zh_CN",
+            "zh-Hant-CN": "zh_TW", "zh-Hans-HK": "zh_CN",
+            " ZH_hant_tw ": "zh_TW", "fr-FR": "en_US", "": "en_US",
+        }
+        for value, expected in cases.items():
+            with self.subTest(value=value):
+                self.assertEqual(normalize_language(value), expected)
+
+    def test_system_ui_preference_order_skips_unsupported_languages(self) -> None:
+        for languages, expected in (
+            (["fr-FR", "ja-JP", "en-US"], "ja_JP"),
+            (["zh-HK", "en-US"], "zh_TW"),
+            (["en-GB", "ja-JP"], "en_US"),
+            (["de-DE", "fr-FR"], "en_US"),
+        ):
+            with self.subTest(languages=languages), patch("worklogger.infrastructure.i18n.QLocale") as locale:
+                locale.system.return_value.uiLanguages.return_value = languages
+                self.assertEqual(detect_system_language(), expected)
+
+    def test_system_locale_name_fallback_and_detection_failure(self) -> None:
+        with patch("worklogger.infrastructure.i18n.QLocale") as locale:
+            locale.system.return_value.uiLanguages.return_value = []
+            locale.system.return_value.name.return_value = "ko_KR"
+            self.assertEqual(detect_system_language(), "ko_KR")
+            locale.system.side_effect = RuntimeError("unavailable")
+            self.assertEqual(detect_system_language(), "en_US")
 
     def test_untranslated_catalog_entries_never_hide_ui_text(self) -> None:
         for language in LANGUAGES:
