@@ -86,7 +86,7 @@ class RewriteTextHandler:
         self,
         gateway: AIGateway | None = None,
         *,
-        model: str = "rewrite-placeholder",
+        model: str = "default",
         timeout_seconds: float = 30.0,
     ) -> None:
         self._gateway = gateway
@@ -175,7 +175,7 @@ class AiChatHandler:
         self,
         gateway: AIGateway | None = None,
         *,
-        model: str = "chat-placeholder",
+        model: str = "default",
         timeout_seconds: float = 60.0,
         max_history_messages: int = 12,
     ) -> None:

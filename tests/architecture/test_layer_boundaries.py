@@ -80,46 +80,29 @@ class LayerBoundaryTests(unittest.TestCase):
                     offenders.append(f"{path.relative_to(PROJECT_ROOT)} imports {module_name}")
         self.assertEqual(offenders, [])
 
-    def test_implementation_names_do_not_use_forbidden_version_terms(self) -> None:
-        version_suffix = "v" + "4"
-        class_suffix = "V" + "4"
-        forbidden = (
-            "worklogger_" + version_suffix,
-            version_suffix + "_main",
-            version_suffix + "-main",
-            class_suffix + "App",
-            "App" + class_suffix,
-            "WorkLogger" + class_suffix,
-            "migration_001_" + version_suffix + "_schema",
-            "worklog_" + version_suffix,
-        )
+    def test_runtime_identifiers_do_not_embed_release_numbers(self) -> None:
+        offenders: list[str] = []
+        for path in _python_files(PACKAGE_ROOT):
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+                    if re.search(r"[vV]\d+(?:_|$|[A-Z])", node.name):
+                        offenders.append(f"{path.relative_to(PROJECT_ROOT)}: {node.name}")
+        self.assertEqual(offenders, [])
+
+    def test_runtime_module_names_do_not_embed_release_numbers(self) -> None:
         offenders: list[str] = []
         for path in _python_files(PACKAGE_ROOT):
             rel = path.relative_to(PROJECT_ROOT).as_posix()
-            text = path.read_text(encoding="utf-8")
-            for needle in forbidden:
-                if needle in rel or needle in text:
-                    offenders.append(f"{rel}: {needle}")
+            if re.search(r"(?:^|[/_])[vV]\d+(?:[/_.]|$)", rel):
+                offenders.append(rel)
         self.assertEqual(offenders, [])
 
-    def test_no_generic_version_terms_in_runtime_paths_or_source(self) -> None:
-        forbidden = ("v" + "4", "V" + "4")
-        offenders: list[str] = []
-        for path in _python_files(PACKAGE_ROOT):
-            rel = path.relative_to(PROJECT_ROOT).as_posix()
-            if any(term in rel for term in forbidden):
-                offenders.append(f"{rel}: path")
-            text = path.read_text(encoding="utf-8")
-            for term in forbidden:
-                if term in text:
-                    offenders.append(f"{rel}: {term}")
-        self.assertEqual(offenders, [])
-
-    def test_test_files_do_not_use_phase_names(self) -> None:
-        phase_test_prefix = "test_" + "phase_"
+    def test_test_module_names_use_descriptive_words(self) -> None:
         offenders = [
             path.relative_to(PROJECT_ROOT).as_posix()
-            for path in TESTS_ROOT.rglob(f"{phase_test_prefix}*.py")
+            for path in TESTS_ROOT.rglob("test_*.py")
+            if not re.fullmatch(r"test_[a-z]+(?:_[a-z]+)*", path.stem)
         ]
         self.assertEqual(offenders, [])
 

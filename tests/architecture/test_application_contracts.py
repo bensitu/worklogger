@@ -18,7 +18,7 @@ from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.repositories import WorkLogRepository
 
 
-class ArchitectureSkeletonTests(unittest.TestCase):
+class ApplicationContractTests(unittest.TestCase):
     def test_result_success_and_failure_contract(self) -> None:
         success = Result.success("ok")
         self.assertTrue(success.ok)
@@ -74,7 +74,7 @@ class ArchitectureSkeletonTests(unittest.TestCase):
         token.cancel()
         self.assertTrue(token.is_cancelled())
 
-    def test_feature_flags_default_policy_matches_skeleton_requirements(self) -> None:
+    def test_feature_flags_have_expected_defaults(self) -> None:
         flags = FeatureFlags()
         self.assertTrue(flags.is_enabled(FeatureFlag.AI))
         self.assertTrue(flags.is_enabled(FeatureFlag.LOCAL_MODELS))
@@ -117,7 +117,7 @@ class ArchitectureSkeletonTests(unittest.TestCase):
         )
         self.assertTrue(all(protocol.__name__ for protocol in protocols))
 
-    def test_skeleton_entry_point_smoke_imports(self) -> None:
+    def test_entry_point_smoke_imports(self) -> None:
         from worklogger.main import main
 
         self.assertEqual(main(["--smoke-import"]), 0)

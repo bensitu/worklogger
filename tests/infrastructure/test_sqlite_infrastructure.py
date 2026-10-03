@@ -43,8 +43,8 @@ from worklogger.infrastructure.database import (
 )
 from worklogger.infrastructure.database.paths import prune_corrupt_backups
 from worklogger.infrastructure.repositories import (
-    AuditEvent,
-    SQLiteAuditRepository,
+    ActivityEvent,
+    SQLiteActivityRepository,
     SQLiteAuthRepository,
     SQLiteCalendarEventRepository,
     SQLiteIdentityRepository,
@@ -84,7 +84,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         self.addCleanup(self._tempdir.cleanup)
         self.db_path = f"{self._tempdir.name}/worklog.db"
         self.factory = SQLiteConnectionFactory(self.db_path)
-        self.assertEqual(MigrationRunner(self.factory).run_pending(), (1, 2))
+        self.assertEqual(MigrationRunner(self.factory).run_pending(), (1, 2, 3))
 
     def auth_repository(self) -> SQLiteAuthRepository:
         return SQLiteAuthRepository(
@@ -117,13 +117,13 @@ class SQLiteInfrastructureTests(unittest.TestCase):
             self.assertIn("schema_migrations", tables)
             self.assertIn("users", tables)
             self.assertIn("worklog", tables)
-            self.assertIn("audit_events", tables)
+            self.assertIn("activity_events", tables)
             self.assertEqual(connection.execute("PRAGMA foreign_keys").fetchone()[0], 1)
 
         with SQLiteUnitOfWork(self.factory).transaction(write=False) as connection:
             self.assertEqual(
                 connection.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0],
-                2,
+                3,
             )
 
     def test_database_path_rules_for_source_and_frozen_modes(self) -> None:
@@ -144,7 +144,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         corrupt_path.write_bytes(b"not a sqlite database")
         factory = SQLiteConnectionFactory(corrupt_path, corrupt_backup_retention=2)
 
-        self.assertEqual(MigrationRunner(factory).run_pending(), (1, 2))
+        self.assertEqual(MigrationRunner(factory).run_pending(), (1, 2, 3))
 
         backups = sorted(corrupt_path.parent.glob("corrupt.db.bak_*"))
         self.assertEqual(len(backups), 1)
@@ -320,7 +320,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         )
         self.assertEqual(fetched_report.value, saved_report.value)
 
-    def test_calendar_identity_and_audit_repositories(self) -> None:
+    def test_calendar_identity_and_activity_repositories(self) -> None:
         auth = self.auth_repository()
         registered = RegisterUserHandler(auth).handle(RegisterUserCommand("alice", "secret123"))
         assert registered.value is not None
@@ -357,11 +357,11 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         identities.remove(user_id, identity.id)
         self.assertEqual(identities.list_for_user(user_id), ())
 
-        audit = SQLiteAuditRepository(self.factory)
-        audit.record(AuditEvent(user_id=user_id, event_type="login", details={"ok": True}))
+        activity = SQLiteActivityRepository(self.factory)
+        activity.record(ActivityEvent(user_id=user_id, event_type="login", details={"ok": True}))
         with self.factory.connection() as connection:
             row = connection.execute(
-                "SELECT event_type, details FROM audit_events WHERE user_id=?",
+                "SELECT event_type, details FROM activity_events WHERE user_id=?",
                 (user_id,),
             ).fetchone()
         self.assertEqual(row["event_type"], "login")

@@ -109,7 +109,7 @@ def up(connection: sqlite3.Connection) -> None:
             UNIQUE(provider, subject)
         );
 
-        CREATE TABLE IF NOT EXISTS audit_events(
+        CREATE TABLE IF NOT EXISTS activity_events(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
             event_type TEXT NOT NULL,
@@ -128,7 +128,7 @@ def up(connection: sqlite3.Connection) -> None:
         CREATE INDEX IF NOT EXISTS idx_users_remember_token ON users(remember_token);
         CREATE INDEX IF NOT EXISTS idx_external_identities_user
             ON external_identities(user_id);
-        CREATE INDEX IF NOT EXISTS idx_audit_events_user_created
-            ON audit_events(user_id, created_at);
+        CREATE INDEX IF NOT EXISTS idx_activity_events_user_created
+            ON activity_events(user_id, created_at);
         """
     )

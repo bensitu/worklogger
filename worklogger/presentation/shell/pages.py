@@ -847,17 +847,17 @@ class ReportsPage(QWidget):
         self._set_status(display_error_message(error), error=True)
 
 
-class SettingsPlaceholderPage(QWidget):
+class UnavailableSettingsPage(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setObjectName("settings_placeholder_page_widget")
+        self.setObjectName("settings_unavailable_page_widget")
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        placeholder = QLabel(_("Settings are not configured."))
-        placeholder.setObjectName("settings_placeholder_label")
-        placeholder.setProperty("role", "secondary")
-        placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(placeholder, 1)
+        message = QLabel(_("Settings are not configured."))
+        message.setObjectName("settings_unavailable_label")
+        message.setProperty("role", "secondary")
+        message.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(message, 1)
 
     def refresh(self) -> bool:
         return False

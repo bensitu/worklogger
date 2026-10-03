@@ -145,7 +145,7 @@ class LocalModelUseCaseTests(unittest.TestCase):
         self.assertTrue(result.ok)
         self.assertEqual(settings.get(1, LOCAL_MODEL_ACTIVE_ID_SETTING_KEY), "model-a")
 
-    def test_runtime_status_is_gated_by_local_model_switch(self) -> None:
+    def test_runtime_status_respects_local_model_switch(self) -> None:
         settings = MemorySettings()
         store = MemoryStore()
         settings.set(1, LOCAL_MODEL_ACTIVE_ID_SETTING_KEY, "model-a")

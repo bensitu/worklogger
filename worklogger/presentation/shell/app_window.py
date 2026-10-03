@@ -1,4 +1,4 @@
-"""Thin Qt shell window that composes Phase F presentation components."""
+"""Qt application window composing navigation and presentation workflows."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ from worklogger.presentation.shell.pages import (
     AnalyticsPage,
     CalendarPage,
     ReportsPage,
-    SettingsPlaceholderPage,
+    UnavailableSettingsPage,
 )
 from worklogger.presentation.shell.residency import QtResidencyController
 from worklogger.presentation.theme import ThemeEngine, install_bundled_fonts
@@ -303,7 +303,7 @@ class AppWindow(QMainWindow):
         if hasattr(self._settings_workflow, "create_page"):
             self.settings_page = self._settings_workflow.create_page(self)
         else:
-            self.settings_page = SettingsPlaceholderPage()
+            self.settings_page = UnavailableSettingsPage()
 
         self._page_routes = {
             "calendar": self.page_stack.addWidget(self.calendar_page),

@@ -4,6 +4,10 @@
 
 Security fixes are applied to the latest published version of WorkLogger.
 
+The version in source metadata may not yet correspond to a published release.
+See the [changelog](CHANGELOG.md) for current behavior and
+[security and privacy](docs/security.md) for storage and credential limitations.
+
 ## Reporting a Vulnerability
 
 Please do not open a public issue for security-sensitive reports.
@@ -16,3 +20,8 @@ Instead, contact the maintainer privately through GitHub and include:
 - Any suggested mitigation if available
 
 You can expect an initial response as soon as reasonably possible. After the issue is confirmed, fixes will be prepared and disclosed responsibly.
+
+Do not include live credentials, recovery keys, session files, personal databases,
+or unredacted logs in the initial report. Use synthetic records when possible.
+Provide the affected application, Python, Qt, and operating-system versions, and
+identify whether the problem occurs in a source run or a packaged application.

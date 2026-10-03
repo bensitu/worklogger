@@ -78,7 +78,7 @@ SMOKE_IMPORT_MODULES = (
     "worklogger.infrastructure.export.markdown",
     "worklogger.infrastructure.export.analytics",
     "worklogger.infrastructure.repositories.auth_sqlite",
-    "worklogger.infrastructure.repositories.audit_sqlite",
+    "worklogger.infrastructure.repositories.activity_sqlite",
     "worklogger.infrastructure.repositories.calendar_sqlite",
     "worklogger.infrastructure.repositories.note_sqlite",
     "worklogger.infrastructure.repositories.quicklog_sqlite",

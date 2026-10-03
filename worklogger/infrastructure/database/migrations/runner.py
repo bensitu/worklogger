@@ -12,6 +12,7 @@ from worklogger.infrastructure.database.connection import SQLiteConnectionFactor
 MIGRATION_MODULES = (
     "worklogger.infrastructure.database.migrations.migration_001_initial_schema",
     "worklogger.infrastructure.database.migrations.migration_002_auth_columns",
+    "worklogger.infrastructure.database.migrations.migration_003_activity_events",
 )
 
 

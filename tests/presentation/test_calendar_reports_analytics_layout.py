@@ -39,7 +39,7 @@ class WeeklyReports(ReportsViewModel):
                 date(2026, 4, 27), date(2026, 4, 20)), 1)))
 
 
-class PrototypeRefinementTests(unittest.TestCase):
+class CalendarReportsAnalyticsLayoutTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
