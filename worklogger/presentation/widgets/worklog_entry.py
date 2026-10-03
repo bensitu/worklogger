@@ -99,6 +99,7 @@ class WorkLogEntryPanel(QWidget):
         self.setProperty("compact", compact)
         self._form: WorkLogEntryForm | None = None
         self._updating = False
+        self._applying_auto_state = False
         self._auto_record_view_model = auto_record_view_model or AutoRecordViewModel()
 
         root = QVBoxLayout(self)
@@ -195,14 +196,20 @@ class WorkLogEntryPanel(QWidget):
         auto_layout.setSpacing(8)
         auto_buttons = QGridLayout()
         auto_buttons.setSpacing(8)
+        auto_buttons.setColumnStretch(0, 1)
+        auto_buttons.setColumnStretch(1, 1)
         self.clock_in_button = QPushButton(_("Start"))
         self.clock_in_button.setObjectName("auto_clock_in_button")
         self.clock_out_button = QPushButton(_("End"))
         self.clock_out_button.setObjectName("auto_clock_out_button")
         self.break_button = QPushButton(_("Start break"))
         self.break_button.setObjectName("auto_break_button")
-        self.quick_break_button = QPushButton(_("+15m break"))
+        self.quick_break_button = QPushButton(f"{_('Break')}\n+15{_('m')}")
         self.quick_break_button.setObjectName("auto_quick_break_button")
+        self.quick_break_button.setToolTip(_("+15m break"))
+        self.quick_break_button.setAccessibleName(_("+15m break"))
+        for button in (self.clock_in_button, self.clock_out_button, self.break_button, self.quick_break_button):
+            button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         auto_buttons.addWidget(self.clock_in_button, 0, 0)
         auto_buttons.addWidget(self.clock_out_button, 0, 1)
         auto_buttons.addWidget(self.break_button, 1, 0)
@@ -335,6 +342,8 @@ class WorkLogEntryPanel(QWidget):
             self.draft_changed.emit(draft)
 
     def _sync_auto_from_form(self, form: WorkLogEntryForm) -> None:
+        if self._applying_auto_state:
+            return
         self._auto_record_view_model.load_existing(
             day=form.day,
             start_time=form.start_time,
@@ -401,7 +410,12 @@ class WorkLogEntryPanel(QWidget):
             work_type=state.work_type,
         )
         if draft is not None:
-            self.apply_draft(draft)
+            # Previewing an auto-record update must not reset its active timer.
+            self._applying_auto_state = True
+            try:
+                self.apply_draft(draft)
+            finally:
+                self._applying_auto_state = False
         self._refresh_auto_state()
 
     def _draft_from_auto_values(

@@ -125,6 +125,12 @@ QWidget#worklog_entry_panel_widget[compact="true"] QTabBar::tab {
   padding: 4px 6px;
 }
 
+QWidget#worklog_entry_panel_widget QWidget#worklog_auto_tab_widget QPushButton {
+  min-height: 40px;
+  max-height: 40px;
+  padding: 6px 8px;
+}
+
 QWidget#worklog_entry_panel_widget[compact="true"] QTabWidget::pane {
   border: none;
 }

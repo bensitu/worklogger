@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import date
+from datetime import date, datetime
 import os
 import unittest
 from unittest.mock import patch
@@ -32,6 +32,7 @@ from worklogger.presentation.shell import (
     MinimalViewConfig,
 )
 from worklogger.presentation.viewmodels import (
+    AutoRecordViewModel,
     CalendarDisplayOptions,
     CalendarViewModel,
     StatsPanelViewModel,
@@ -280,6 +281,66 @@ class AppWindowTests(unittest.TestCase):
                         self.assertFalse(window.has_unsaved_changes)
                     finally:
                         window.close()
+
+    def test_auto_record_keeps_button_layout_and_break_timer_through_preview(self) -> None:
+        repository = MemoryWorkLogRepository()
+        current = datetime(2026, 4, 20, 9, 0)
+        window = _window(repository, confirm_discard_changes=lambda: True)
+        panel = window.entry_panel
+        panel._auto_record_view_model = AutoRecordViewModel(clock=lambda: current)
+        window.resize(880, 580)
+        window.show()
+        try:
+            self.assertTrue(window.refresh())
+            panel.time_tabs.setCurrentIndex(1)
+            buttons = (panel.clock_in_button, panel.clock_out_button, panel.break_button, panel.quick_break_button)
+            self._app.processEvents()
+            initial_rows = tuple((button.y(), button.height()) for button in buttons)
+
+            def check_layout():
+                self._app.processEvents()
+                self.assertEqual(tuple((button.y(), button.height()) for button in buttons), initial_rows)
+                self.assertEqual(len({button.height() for button in buttons}), 1)
+                self.assertEqual(buttons[0].y(), buttons[1].y())
+                self.assertEqual(buttons[2].y(), buttons[3].y())
+                self.assertLessEqual(abs(buttons[0].width() - buttons[1].width()), 1)
+                for button in buttons:
+                    self.assertTrue(panel.auto_tab.rect().contains(button.geometry()))
+                    for line in button.text().splitlines():
+                        self.assertLessEqual(button.fontMetrics().horizontalAdvance(line), button.width() - 18)
+                    self.assertLessEqual(len(button.text().splitlines()) * button.fontMetrics().height(), button.height() - 12)
+
+            check_layout()
+            panel.clock_in_button.click()
+            check_layout()
+            current = datetime(2026, 4, 20, 10, 0)
+            panel.break_button.click()
+            self.assertTrue(panel._auto_record_view_model.state().break_active)
+            self.assertTrue(panel.auto_timer.isActive())
+            check_layout()
+            current = datetime(2026, 4, 20, 10, 30)
+            panel._refresh_auto_state()
+            self.assertIn("90m", panel.break_button.text())
+            check_layout()
+            panel.break_button.click()
+            self.assertFalse(panel.auto_timer.isActive())
+            self.assertEqual(panel.break_input.value(), 1.5)
+            check_layout()
+            panel.quick_break_button.click()
+            self.assertEqual(panel.break_input.value(), 1.75)
+            check_layout()
+            current = datetime(2026, 4, 20, 18, 0)
+            panel.clock_out_button.click()
+            check_layout()
+            self.assertTrue(panel.save_button.isEnabled())
+            panel.save_button.click()
+            record = repository.get_for_day(1, date(2026, 4, 20))
+            self.assertEqual((record.start_time, record.end_time), ("09:00", "18:00"))
+            self.assertEqual(record.break_hours, 1.75)
+            self.assertEqual(record.worked_hours(), 7.25)
+            self.information.assert_not_called()
+        finally:
+            window.close()
 
     def test_manual_clock_selection_updates_preview_and_saves_record(self) -> None:
         repository = MemoryWorkLogRepository()
