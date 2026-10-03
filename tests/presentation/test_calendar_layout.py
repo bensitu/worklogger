@@ -20,8 +20,9 @@ from worklogger.domain.worklog.models import WorkLog, WorkType
 from worklogger.infrastructure.i18n import _, available_languages, set_language
 from worklogger.infrastructure.repositories import SQLiteCalendarEventRepository, SQLiteWorkLogRepository
 from worklogger.presentation.viewmodels import CalendarViewModel
+from worklogger.presentation.theme.fonts import install_bundled_fonts
 from worklogger.presentation.widgets.sidebar import SidebarWidget
-from worklogger.presentation.widgets.calendar import _holiday_lines
+from worklogger.presentation.widgets.calendar import CalendarDayButton, _holiday_lines
 from tests.presentation.test_app_window import MemoryCalendarRepository, MemoryWorkLogRepository, _window
 
 
@@ -80,6 +81,42 @@ class CalendarLayoutTests(unittest.TestCase):
 
     def tearDown(self):
         set_language("en_US")
+
+    def test_hour_rows_keep_identical_positions_with_or_without_holidays(self):
+        install_bundled_fonts()
+        records = MemoryWorkLogRepository()
+        day = date(2026, 5, 13)
+        records.save(WorkLog(1, day, "09:00", "20:00", 1.0))
+        model = CalendarViewModel(user_id=1, month_records_handler=GetMonthRecordsHandler(records))
+        names = ("", "Holiday", "International Workers Memorial Day", "国際労働者記念日の追加情報")
+        for dark in (False, True):
+            for selected in (False, True):
+                state = model.build_month(
+                    year=2026, month=5, selected_day=day if selected else date(2026, 5, 1),
+                    today=date(2026, 5, 1), holidays={}, dark=dark,
+                ).value
+                cell = next(cell for cell in state.cells if cell.day == day)
+                button = CalendarDayButton()
+                try:
+                    for width, height in ((90, 90), (120, 120), (160, 180)):
+                        button.resize(width, height)
+                        expected = None
+                        for name in names:
+                            with self.subTest(dark=dark, selected=selected, size=(width, height), name=name):
+                                button.set_cell(replace(cell, holiday_name=name, is_holiday=bool(name)))
+                                rendered = button.grab().toImage()
+                                scale = rendered.devicePixelRatio()
+                                hours = rendered.copy(round(8 * scale), round(54 * scale),
+                                                      round((width - 16) * scale), round((height - 58) * scale))
+                                if expected is None:
+                                    expected = hours
+                                    self.assertGreater(len({hours.pixel(x, y) for x in range(hours.width())
+                                                            for y in range(hours.height())}), 1)
+                                else:
+                                    self.assertEqual(hours, expected)
+                finally:
+                    button.close()
+                    button.deleteLater()
 
     def test_holiday_names_wrap_to_two_lines_and_keep_long_names_in_tooltips(self):
         font = QFont("Noto Sans")
