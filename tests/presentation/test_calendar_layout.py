@@ -24,6 +24,8 @@ from worklogger.presentation.viewmodels import CalendarViewModel
 from worklogger.presentation.theme.fonts import install_bundled_fonts
 from worklogger.presentation.widgets.sidebar import SidebarWidget
 from worklogger.presentation.widgets.calendar import CalendarDayButton, _holiday_lines
+from worklogger.presentation.widgets.record_summary import RecordSummaryLabel
+from worklogger.presentation.theme import ThemeEngine
 from tests.presentation.test_app_window import MemoryCalendarRepository, MemoryWorkLogRepository, _window
 
 
@@ -82,6 +84,34 @@ class CalendarLayoutTests(unittest.TestCase):
 
     def tearDown(self):
         set_language("en_US")
+
+    def test_record_markers_align_with_first_text_line_after_font_and_theme_changes(self):
+        stylesheet = self.app.styleSheet()
+        label = RecordSummaryLabel("09:00 - 20:00  10.0h\nRemote work")
+        try:
+            for dark in (False, True):
+                self.app.setStyleSheet(ThemeEngine().application_stylesheet(dark=dark))
+                for text in ("08:00 - 08:30", "09:00 - 20:00  10.0h\nRemote work", "09:00 - 20:00  10.0h\n" + "Long description " * 8):
+                    label.setText(text)
+                    for width in (180, 280):
+                        for size in (13, 18):
+                            font = label.font()
+                            font.setPixelSize(size)
+                            label.setFont(font)
+                            label.resize(width, label.heightForWidth(width))
+                            label.show()
+                            self.app.processEvents()
+                            center = label.marker.y() + label.marker.height() / 2
+                            self.assertLessEqual(abs(center - label.contentsRect().top() - label.fontMetrics().height() / 2), 0.5)
+                            self.assertLess(label.marker.geometry().right(), label.contentsRect().left())
+                            image = label.grab().toImage()
+                            scale = image.devicePixelRatio()
+                            self.assertEqual(image.pixelColor(round(3 * scale), round(center * scale)),
+                                             QColor(ThemeEngine().palette(dark=dark).accent))
+        finally:
+            label.close()
+            label.deleteLater()
+            self.app.setStyleSheet(stylesheet)
 
     def test_note_dot_has_inset_and_keeps_clear_of_other_markers(self):
         install_bundled_fonts()

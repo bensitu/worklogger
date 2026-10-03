@@ -7,6 +7,33 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
+msgid "&Add to Custom Colors"
+msgstr "사용자 지정 색에 추가(&A)"
+
+msgid "&Basic colors"
+msgstr "기본 색(&B)"
+
+msgid "&Custom colors"
+msgstr "사용자 지정 색(&C)"
+
+msgid "&Green:"
+msgstr "녹색(&G):"
+
+msgid "&HTML:"
+msgstr "HTML(&H):"
+
+msgid "&Pick Screen Color"
+msgstr "화면 색 선택(&P)"
+
+msgid "&Red:"
+msgstr "빨강(&R):"
+
+msgid "&Sat:"
+msgstr "채도(&S):"
+
+msgid "&Val:"
+msgstr "명도(&V):"
+
 msgid "(Week {week})"
 msgstr "({week}주차)"
 
@@ -21,6 +48,9 @@ msgstr "휴식 15분 추가"
 
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr "개인정보 보호를 우선하는 AI 보고서 지원 데스크톱 근무 기록 도구."
+
+msgid "A&lpha channel:"
+msgstr "알파 채널(&L):"
 
 msgid "AI"
 msgstr "AI"
@@ -142,6 +172,9 @@ msgstr "백업은 완료했지만 시간을 저장하지 못했습니다."
 msgid "Bar"
 msgstr "막대 그래프"
 
+msgid "Bl&ue:"
+msgstr "파랑(&U):"
+
 msgid "Blue"
 msgstr "파랑"
 
@@ -180,6 +213,9 @@ msgstr "달력 데이터가 이미 있습니다.\n\n바꾸기는 기존 일정�
 
 msgid "Calendar events: {events}"
 msgstr "달력 일정: {events}"
+
+msgid "Cancel"
+msgstr "취소"
 
 msgid "Change password"
 msgstr "비밀번호 변경"
@@ -237,6 +273,9 @@ msgstr "현재 비밀번호"
 
 msgid "Current user"
 msgstr "현재 사용자"
+
+msgid "Cursor at %1, %2\nPress ESC to cancel"
+msgstr "커서 위치: %1, %2\nESC 키를 눌러 취소"
 
 msgid "Custom"
 msgstr "사용자 지정"
@@ -393,6 +432,9 @@ msgstr "숨기기"
 
 msgid "Hide password"
 msgstr "비밀번호 숨기기"
+
+msgid "Hu&e:"
+msgstr "색상(&E):"
 
 msgid "ID"
 msgstr "ID"
@@ -633,6 +675,9 @@ msgstr "메모"
 
 msgid "November"
 msgstr "11월"
+
+msgid "OK"
+msgstr "확인"
 
 msgid "October"
 msgstr "10월"

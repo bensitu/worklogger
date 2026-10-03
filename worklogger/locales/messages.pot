@@ -5,6 +5,33 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "MIME-Version: 1.0\n"
 
+msgid "&Add to Custom Colors"
+msgstr ""
+
+msgid "&Basic colors"
+msgstr ""
+
+msgid "&Custom colors"
+msgstr ""
+
+msgid "&Green:"
+msgstr ""
+
+msgid "&HTML:"
+msgstr ""
+
+msgid "&Pick Screen Color"
+msgstr ""
+
+msgid "&Red:"
+msgstr ""
+
+msgid "&Sat:"
+msgstr ""
+
+msgid "&Val:"
+msgstr ""
+
 msgid "(Week {week})"
 msgstr ""
 
@@ -18,6 +45,9 @@ msgid "+15m break"
 msgstr ""
 
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
+msgstr ""
+
+msgid "A&lpha channel:"
 msgstr ""
 
 msgid "AI"
@@ -140,6 +170,9 @@ msgstr ""
 msgid "Bar"
 msgstr ""
 
+msgid "Bl&ue:"
+msgstr ""
+
 msgid "Blue"
 msgstr ""
 
@@ -177,6 +210,9 @@ msgid "Calendar data already exists.\n\nReplace clears previous calendar events 
 msgstr ""
 
 msgid "Calendar events: {events}"
+msgstr ""
+
+msgid "Cancel"
 msgstr ""
 
 msgid "Change password"
@@ -234,6 +270,9 @@ msgid "Current password"
 msgstr ""
 
 msgid "Current user"
+msgstr ""
+
+msgid "Cursor at %1, %2\nPress ESC to cancel"
 msgstr ""
 
 msgid "Custom"
@@ -390,6 +429,9 @@ msgid "Hide"
 msgstr ""
 
 msgid "Hide password"
+msgstr ""
+
+msgid "Hu&e:"
 msgstr ""
 
 msgid "ID"
@@ -630,6 +672,9 @@ msgid "Notes"
 msgstr ""
 
 msgid "November"
+msgstr ""
+
+msgid "OK"
 msgstr ""
 
 msgid "October"

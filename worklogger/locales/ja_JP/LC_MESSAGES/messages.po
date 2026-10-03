@@ -7,6 +7,33 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
+msgid "&Add to Custom Colors"
+msgstr "カスタムカラーに追加(&A)"
+
+msgid "&Basic colors"
+msgstr "基本色(&B)"
+
+msgid "&Custom colors"
+msgstr "カスタムカラー(&C)"
+
+msgid "&Green:"
+msgstr "緑(&G):"
+
+msgid "&HTML:"
+msgstr "HTML(&H):"
+
+msgid "&Pick Screen Color"
+msgstr "画面の色を取得(&P)"
+
+msgid "&Red:"
+msgstr "赤(&R):"
+
+msgid "&Sat:"
+msgstr "彩度(&S):"
+
+msgid "&Val:"
+msgstr "明度(&V):"
+
 msgid "(Week {week})"
 msgstr "（第{week}週）"
 
@@ -21,6 +48,9 @@ msgstr "休憩を15分追加"
 
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr "プライバシーを重視した、AIレポート対応のデスクトップ業務記録アプリ。"
+
+msgid "A&lpha channel:"
+msgstr "アルファ値(&L):"
 
 msgid "AI"
 msgstr "AI"
@@ -142,6 +172,9 @@ msgstr "バックアップは成功しましたが、日時を保存できませ
 msgid "Bar"
 msgstr "棒グラフ"
 
+msgid "Bl&ue:"
+msgstr "青(&U):"
+
 msgid "Blue"
 msgstr "青"
 
@@ -180,6 +213,9 @@ msgstr "カレンダーデータが既に存在します。\n\n置換は既存�
 
 msgid "Calendar events: {events}"
 msgstr "カレンダーの予定：{events}"
+
+msgid "Cancel"
+msgstr "キャンセル"
 
 msgid "Change password"
 msgstr "パスワードを変更"
@@ -237,6 +273,9 @@ msgstr "現在のパスワード"
 
 msgid "Current user"
 msgstr "現在のユーザー"
+
+msgid "Cursor at %1, %2\nPress ESC to cancel"
+msgstr "カーソル位置: %1, %2\nESC キーでキャンセル"
 
 msgid "Custom"
 msgstr "カスタム"
@@ -393,6 +432,9 @@ msgstr "非表示"
 
 msgid "Hide password"
 msgstr "パスワードを隠す"
+
+msgid "Hu&e:"
+msgstr "色相(&E):"
 
 msgid "ID"
 msgstr "ID"
@@ -633,6 +675,9 @@ msgstr "ノート"
 
 msgid "November"
 msgstr "11月"
+
+msgid "OK"
+msgstr "OK"
 
 msgid "October"
 msgstr "10月"

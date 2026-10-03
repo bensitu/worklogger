@@ -8,7 +8,6 @@ from datetime import datetime, timezone
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
-    QColorDialog,
     QFrame,
     QComboBox,
     QDoubleSpinBox,
@@ -61,6 +60,7 @@ from worklogger.presentation.theme import install_bundled_fonts
 from worklogger.presentation.viewmodels import SettingsState, SettingsViewModel
 from worklogger.presentation.widgets import CardFrame, SettingsNav, SwitchButton
 from worklogger.presentation.widgets.assets import pixmap_asset
+from worklogger.presentation.widgets.color_dialog import choose_custom_color
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 
 
@@ -143,6 +143,7 @@ class SettingsPage(QWidget):
             self.language_combo.setCurrentIndex(language_index if language_index >= 0 else 0)
             theme_index = self.theme_combo.findData(state.theme)
             self.theme_combo.setCurrentIndex(theme_index if theme_index >= 0 else 0)
+            self.custom_color_button.setVisible(self.theme_combo.currentData() == "custom")
             self._custom_color = state.custom_color
             self._update_color_swatch()
             mode_index = self.mode_combo.findData("dark" if state.dark_mode else "light")
@@ -254,6 +255,7 @@ class SettingsPage(QWidget):
         form.addRow(_("Language"), self.language_combo)
 
         theme_row = QWidget()
+        theme_row.setObjectName("settings_theme_row_widget")
         theme_layout = QHBoxLayout(theme_row)
         theme_layout.setContentsMargins(0, 0, 0, 0)
         theme_layout.setSpacing(10)
@@ -276,9 +278,11 @@ class SettingsPage(QWidget):
         self.custom_color_button.setAccessibleName(_("Palette"))
         set_button_icon(self.custom_color_button, "palette")
         self.custom_color_button.setObjectName("custom_color_button")
+        self.custom_color_button.hide()
         self.custom_color_button.clicked.connect(self._choose_custom_color)
         theme_layout.addWidget(self.theme_combo, 1)
         theme_layout.addWidget(self.custom_color_button)
+        theme_layout.addStretch()
         form.addRow(_("Theme"), theme_row)
 
         self.mode_combo = QComboBox()
@@ -733,6 +737,7 @@ class SettingsPage(QWidget):
             self.status_label.setText(_("Saved. Language changes apply after restarting."))
 
     def _theme_changed(self) -> None:
+        self.custom_color_button.setVisible(self.theme_combo.currentData() == "custom")
         if self._updating:
             return
         result = self._view_model.set_theme(str(self.theme_combo.currentData() or "blue"))
@@ -745,7 +750,7 @@ class SettingsPage(QWidget):
         self._set_bool(DARK_MODE_SETTING_KEY, mode == "dark")
 
     def _choose_custom_color(self) -> None:
-        color = QColorDialog.getColor(QColor(self._custom_color), self, _("Choose custom color"))
+        color = choose_custom_color(QColor(self._custom_color), self)
         if color.isValid():
             result = self._view_model.set_custom_color(color.name())
             self._handle_save_result(result)

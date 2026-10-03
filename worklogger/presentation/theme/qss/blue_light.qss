@@ -10,6 +10,10 @@ QLabel {
   background: transparent;
 }
 
+QWidget#settings_theme_row_widget {
+  background: transparent;
+}
+
 QDialog,
 QMainWindow,
 QWidget#app_window_central_widget {

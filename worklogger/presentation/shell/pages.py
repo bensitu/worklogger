@@ -55,6 +55,7 @@ from worklogger.presentation.widgets import (
 )
 from worklogger.presentation.widgets.combo_chart import DonutChart
 from worklogger.presentation.widgets.icons import IconLabel, set_button_icon
+from worklogger.presentation.widgets.record_summary import RecordSummaryLabel
 
 
 class CalendarPage(QWidget):
@@ -109,16 +110,7 @@ class CalendarPage(QWidget):
             row = QHBoxLayout(record)
             row.setContentsMargins(8, 8, 8, 8)
             row.setSpacing(6)
-            marker = QLabel("")
-            marker.setObjectName("calendar_record_marker_label")
-            marker.setFixedSize(6, 6)
-            row.addWidget(marker, 0, Qt.AlignmentFlag.AlignTop)
-            label = QLabel(line)
-            label.setObjectName("calendar_record_label")
-            label.setTextFormat(Qt.TextFormat.PlainText)
-            label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-            label.setWordWrap(True)
-            row.addWidget(label, 1)
+            row.addWidget(RecordSummaryLabel(line), 1)
             self.records_layout.addWidget(record)
         self.records_layout.addStretch(1)
 

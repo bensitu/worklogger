@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 import sys
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -9,8 +10,9 @@ from unittest.mock import Mock, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from PySide6.QtCore import QCoreApplication, QPoint, QTimer
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QApplication, QDialog, QLineEdit
+from PySide6.QtWidgets import QApplication, QColorDialog, QDialog, QLabel, QLineEdit, QPushButton
 
 from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandler
 from worklogger.config.constants import (
@@ -31,10 +33,12 @@ from worklogger.config.constants import (
 from worklogger.domain.auth.models import User
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
-from worklogger.infrastructure.i18n import available_languages, get_language, set_language
+from worklogger.infrastructure.i18n import _, available_languages, get_language, set_language
+from worklogger.presentation.theme import ThemeEngine, THEME_KEYS
 from worklogger.presentation.settings import SettingsDialog, SettingsPage
 from worklogger.presentation.viewmodels import SettingsViewModel
 from worklogger.presentation.widgets import SwitchButton
+from worklogger.presentation.widgets.color_dialog import _ColorDialogTranslator, choose_custom_color
 
 
 def _app() -> QApplication:
@@ -116,9 +120,119 @@ class SettingsPresentationTests(unittest.TestCase):
         self.assertEqual(page.language_combo.width(), page.theme_combo.width())
         self.assertEqual(page.mode_combo.width(), page.theme_combo.width())
         self.assertEqual(page.custom_color_button.icon().pixmap(20, 20).toImage().pixelColor(10, 10).name(), "#123456")
-        with patch("worklogger.presentation.settings.page.QColorDialog.getColor", return_value=QColor()) as choose:
+        with patch("worklogger.presentation.settings.page.choose_custom_color", return_value=QColor()) as choose:
             page._choose_custom_color()
             self.assertEqual(choose.call_args.args[0].name(), "#123456")
+
+    def test_palette_visibility_and_transparent_gap_across_themes(self):
+        model = _view_model(MemorySettingsRepository())
+        page = SettingsPage(model)
+        stylesheet = self._app.styleSheet()
+        try:
+            self.assertTrue(page.custom_color_button.isHidden())
+            page.refresh()
+            page.resize(960, 680)
+            page.show()
+            for dark in (False, True):
+                for theme in (*THEME_KEYS, "blue", "custom"):
+                    with self.subTest(dark=dark, theme=theme):
+                        self._app.setStyleSheet(ThemeEngine().application_stylesheet(theme, dark=dark))
+                        page.theme_combo.setCurrentIndex(page.theme_combo.findData(theme))
+                        self._app.processEvents()
+                        self.assertEqual(page.custom_color_button.isVisible(), theme == "custom")
+                        self.assertEqual(model.load().value.theme, theme)
+                        self.assertEqual(page.theme_combo.x(), 0)
+                        self.assertEqual(page.theme_combo.width(), page.language_combo.width())
+                        row = page.theme_combo.parentWidget()
+                        rendered = page.grab().toImage()
+                        scale = rendered.devicePixelRatio()
+                        gap = row.mapTo(page, QPoint(325, 20))
+                        beside = row.mapTo(page, QPoint(380, 20))
+                        color = rendered.pixelColor(round(gap.x() * scale), round(gap.y() * scale))
+                        self.assertEqual(color, rendered.pixelColor(round(beside.x() * scale), round(beside.y() * scale)))
+            page.set_state(replace(model.load().value, theme="green"))
+            self.assertTrue(page.custom_color_button.isHidden())
+            page.set_state(replace(model.load().value, theme="custom"))
+            self.assertFalse(page.custom_color_button.isHidden())
+            screenshots = os.environ.get("WORKLOGGER_SCREENSHOTS")
+            if screenshots:
+                Path(screenshots).mkdir(parents=True, exist_ok=True)
+                page.grab().save(str(Path(screenshots) / "settings-custom-theme.png"))
+        finally:
+            page.close()
+            page.deleteLater()
+            self._app.setStyleSheet(stylesheet)
+
+    def test_color_picker_uses_gettext_for_all_languages_and_cleans_up(self):
+        parent = SettingsPage(_view_model(MemorySettingsRepository()))
+        stylesheet = self._app.styleSheet()
+        language = get_language()
+        captured = []
+        try:
+            for language_code in available_languages():
+                set_language(language_code)
+                adapter = _ColorDialogTranslator()
+                for source, translated in adapter._colors.items():
+                    self.assertTrue(translated)
+                    if language_code != "en_US" and source != "Select Color":
+                        self.assertNotEqual(translated, source)
+                self.assertEqual(adapter.translate("UnrelatedDialog", "Cancel"), None)
+                self.assertIn("%1", adapter.translate("QColorDialog", "Cursor at %1, %2\nPress ESC to cancel"))
+                for dark in (False, True):
+                    self._app.setStyleSheet(ThemeEngine().application_stylesheet(dark=dark))
+                    before = QCoreApplication.translate("QPlatformTheme", "Cancel")
+
+                    def inspect_and_close():
+                        dialog = self._app.activeModalWidget()
+                        if not isinstance(dialog, QColorDialog):
+                            captured.append(None)
+                            return
+                        labels = {label.text() for label in dialog.findChildren(QLabel) if label.isVisible()}
+                        buttons = {button.text() for button in dialog.findChildren(QPushButton) if button.isVisible()}
+                        captured.append((dialog.testOption(QColorDialog.ColorDialogOption.DontUseNativeDialog),
+                                         dialog.windowTitle(), labels, buttons, dialog.currentColor().name()))
+                        screenshots = os.environ.get("WORKLOGGER_SCREENSHOTS")
+                        if screenshots:
+                            Path(screenshots).mkdir(parents=True, exist_ok=True)
+                            dialog.grab().save(str(Path(screenshots) / f"palette-{language_code}-{dark}.png"))
+                        if dark:
+                            dialog.setCurrentColor(QColor("#654321"))
+                            dialog.accept()
+                        else:
+                            dialog.reject()
+
+                    QTimer.singleShot(20, inspect_and_close)
+                    result = choose_custom_color(QColor("#123456"), parent)
+                    self.assertEqual(QCoreApplication.translate("QPlatformTheme", "Cancel"), before)
+                    native_disabled, title, labels, buttons, initial = captured[-1]
+                    self.assertTrue(native_disabled)
+                    self.assertEqual(title, _("Choose custom color"))
+                    self.assertEqual(initial, "#123456")
+                    self.assertTrue({_("Hu&e:"), _("&Sat:"), _("&Val:"), _("&Red:"), _("&Green:"),
+                                     _("Bl&ue:"), _("&HTML:"), _("&Basic colors"), _("&Custom colors")} <= labels)
+                    self.assertTrue({_("&Add to Custom Colors"), _("&Pick Screen Color"), _("OK"), _("Cancel")} <= buttons)
+                    self.assertEqual(result.name() if result.isValid() else None, "#654321" if dark else None)
+        finally:
+            parent.close()
+            parent.deleteLater()
+            set_language(language)
+            self._app.setStyleSheet(stylesheet)
+
+    def test_custom_color_save_and_cancel_preserve_theme_and_swatch(self):
+        model = _view_model(MemorySettingsRepository())
+        model.set_theme("custom")
+        page = SettingsPage(model)
+        page.refresh()
+        original = model.load().value.custom_color
+        with patch("worklogger.presentation.settings.page.choose_custom_color", return_value=QColor()):
+            page._choose_custom_color()
+        self.assertEqual(model.load().value.custom_color, original)
+        with patch("worklogger.presentation.settings.page.choose_custom_color", return_value=QColor("#654321")):
+            page._choose_custom_color()
+        self.assertEqual(model.load().value.custom_color, "#654321")
+        self.assertEqual(model.load().value.theme, "custom")
+        self.assertFalse(page.custom_color_button.isHidden())
+        self.assertEqual(page.custom_color_button.icon().pixmap(20, 20).toImage().pixelColor(10, 10).name(), "#654321")
 
     def test_account_uses_login_id_and_action_icons_and_admin_permissions(self):
         page = SettingsPage(_view_model(MemorySettingsRepository()))

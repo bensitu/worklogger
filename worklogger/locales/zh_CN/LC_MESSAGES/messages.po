@@ -7,6 +7,33 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
+msgid "&Add to Custom Colors"
+msgstr "添加到自定义颜色(&A)"
+
+msgid "&Basic colors"
+msgstr "基本颜色(&B)"
+
+msgid "&Custom colors"
+msgstr "自定义颜色(&C)"
+
+msgid "&Green:"
+msgstr "绿(&G)："
+
+msgid "&HTML:"
+msgstr "HTML(&H)："
+
+msgid "&Pick Screen Color"
+msgstr "选取屏幕颜色(&P)"
+
+msgid "&Red:"
+msgstr "红(&R)："
+
+msgid "&Sat:"
+msgstr "饱和度(&S)："
+
+msgid "&Val:"
+msgstr "明度(&V)："
+
 msgid "(Week {week})"
 msgstr "（第{week}周）"
 
@@ -21,6 +48,9 @@ msgstr "+15分钟休息"
 
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr "注重隐私的桌面工时记录工具，支持 AI 报表。"
+
+msgid "A&lpha channel:"
+msgstr "透明度(&L)："
 
 msgid "AI"
 msgstr "AI"
@@ -142,6 +172,9 @@ msgstr "备份成功，但无法保存备份时间。"
 msgid "Bar"
 msgstr "柱状图"
 
+msgid "Bl&ue:"
+msgstr "蓝(&U)："
+
 msgid "Blue"
 msgstr "蓝色"
 
@@ -180,6 +213,9 @@ msgstr "已存在日历数据。\n\n替换会在导入前清空原有事件。\n
 
 msgid "Calendar events: {events}"
 msgstr "日历事件：{events}"
+
+msgid "Cancel"
+msgstr "取消"
 
 msgid "Change password"
 msgstr "修改密码"
@@ -237,6 +273,9 @@ msgstr "当前密码"
 
 msgid "Current user"
 msgstr "当前用户"
+
+msgid "Cursor at %1, %2\nPress ESC to cancel"
+msgstr "光标位置：%1, %2\n按 ESC 取消"
 
 msgid "Custom"
 msgstr "自定义"
@@ -393,6 +432,9 @@ msgstr "隐藏"
 
 msgid "Hide password"
 msgstr "隐藏密码"
+
+msgid "Hu&e:"
+msgstr "色相(&E)："
 
 msgid "ID"
 msgstr "ID"
@@ -633,6 +675,9 @@ msgstr "笔记"
 
 msgid "November"
 msgstr "11月"
+
+msgid "OK"
+msgstr "确定"
 
 msgid "October"
 msgstr "10月"

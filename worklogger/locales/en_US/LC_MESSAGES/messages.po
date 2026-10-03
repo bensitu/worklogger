@@ -7,6 +7,33 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 
+msgid "&Add to Custom Colors"
+msgstr "&Add to Custom Colors"
+
+msgid "&Basic colors"
+msgstr "&Basic colors"
+
+msgid "&Custom colors"
+msgstr "&Custom colors"
+
+msgid "&Green:"
+msgstr "&Green:"
+
+msgid "&HTML:"
+msgstr "&HTML:"
+
+msgid "&Pick Screen Color"
+msgstr "&Pick Screen Color"
+
+msgid "&Red:"
+msgstr "&Red:"
+
+msgid "&Sat:"
+msgstr "&Sat:"
+
+msgid "&Val:"
+msgstr "&Val:"
+
 msgid "(Week {week})"
 msgstr "(Week {week})"
 
@@ -21,6 +48,9 @@ msgstr "+15m break"
 
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr "A privacy-first desktop work tracker with AI-powered reporting."
+
+msgid "A&lpha channel:"
+msgstr "A&lpha channel:"
 
 msgid "AI"
 msgstr "AI"
@@ -142,6 +172,9 @@ msgstr "Backup succeeded, but its timestamp could not be saved."
 msgid "Bar"
 msgstr "Bar"
 
+msgid "Bl&ue:"
+msgstr "Bl&ue:"
+
 msgid "Blue"
 msgstr "Blue"
 
@@ -180,6 +213,9 @@ msgstr "Calendar data already exists.\n\nReplace clears previous calendar events
 
 msgid "Calendar events: {events}"
 msgstr "Calendar events: {events}"
+
+msgid "Cancel"
+msgstr "Cancel"
 
 msgid "Change password"
 msgstr "Change password"
@@ -237,6 +273,9 @@ msgstr "Current password"
 
 msgid "Current user"
 msgstr "Current user"
+
+msgid "Cursor at %1, %2\nPress ESC to cancel"
+msgstr "Cursor at %1, %2\nPress ESC to cancel"
 
 msgid "Custom"
 msgstr "Custom"
@@ -393,6 +432,9 @@ msgstr "Hide"
 
 msgid "Hide password"
 msgstr "Hide password"
+
+msgid "Hu&e:"
+msgstr "Hu&e:"
 
 msgid "ID"
 msgstr "ID"
@@ -633,6 +675,9 @@ msgstr "Notes"
 
 msgid "November"
 msgstr "November"
+
+msgid "OK"
+msgstr "OK"
 
 msgid "October"
 msgstr "October"
