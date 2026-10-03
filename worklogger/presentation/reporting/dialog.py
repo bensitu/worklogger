@@ -13,7 +13,6 @@ from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
     QHBoxLayout,
-    QLabel,
     QMessageBox,
     QPushButton,
     QTabWidget,
@@ -27,6 +26,7 @@ from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import ReportEditorState, ReportEditorViewModel
 from worklogger.presentation.widgets.assets import apply_window_icon
+from worklogger.presentation.widgets.status_label import StatusLabel
 from worklogger.presentation.widgets.icons import set_button_icon
 
 
@@ -47,7 +47,7 @@ class ReportTemplateDialog(QDialog):
         self.editor.setObjectName("template_text_edit")
         self.editor.textChanged.connect(self._update_actions)
         layout.addWidget(self.editor, 1)
-        self.status_label = QLabel("")
+        self.status_label = StatusLabel()
         self.status_label.setWordWrap(True)
         layout.addWidget(self.status_label)
         row = QHBoxLayout()
@@ -72,6 +72,7 @@ class ReportTemplateDialog(QDialog):
         self._saved_template = result.value
         self.editor.setPlainText(result.value)
         self._update_actions()
+        self.status_label.clear()
         return True
 
     def save_template(self) -> bool:
@@ -162,7 +163,8 @@ class ReportDialog(QDialog):
             editor.setPlainText(result.value.content)
             self._saved_content[report_type] = result.value.content
         if ok:
-            self.status_label.setText(_("Ready"))
+            self._last_error = None
+            self.status_label.clear()
         return ok
 
     def _build_ui(self) -> None:
@@ -194,12 +196,13 @@ class ReportDialog(QDialog):
         root.addLayout(tools)
 
         bottom = QHBoxLayout()
-        self.status_label = QLabel("")
+        self.status_label = StatusLabel()
         self.save_button = QPushButton(_("Save"))
         self.save_button.setObjectName("save_report_button")
         self.save_button.setProperty("variant", "primary")
         self.close_button = QPushButton(_("Close"))
         bottom.addWidget(self.status_label, 1)
+        bottom.addStretch()
         bottom.addWidget(self.close_button)
         bottom.addWidget(self.save_button)
         root.addLayout(bottom)

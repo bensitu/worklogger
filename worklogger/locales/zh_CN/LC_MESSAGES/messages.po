@@ -748,9 +748,6 @@ msgstr "运行时检查失败"
 msgid "RUNTIME SMOKE OK"
 msgstr "运行时检查通过"
 
-msgid "Ready"
-msgstr "就绪"
-
 msgid "Recovery key"
 msgstr "恢复密钥"
 

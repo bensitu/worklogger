@@ -748,9 +748,6 @@ msgstr "런타임 스모크 테스트 실패"
 msgid "RUNTIME SMOKE OK"
 msgstr "런타임 스모크 테스트 성공"
 
-msgid "Ready"
-msgstr "준비 완료"
-
 msgid "Recovery key"
 msgstr "복구 키"
 

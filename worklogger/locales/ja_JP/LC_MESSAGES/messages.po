@@ -748,9 +748,6 @@ msgstr "ランタイムのスモークテストに失敗"
 msgid "RUNTIME SMOKE OK"
 msgstr "ランタイムのスモークテスト成功"
 
-msgid "Ready"
-msgstr "準備完了"
-
 msgid "Recovery key"
 msgstr "復旧キー"
 

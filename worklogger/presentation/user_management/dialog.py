@@ -29,6 +29,7 @@ from worklogger.presentation.viewmodels import (
 )
 from worklogger.presentation.widgets import SwitchButton
 from worklogger.presentation.widgets.assets import apply_window_icon
+from worklogger.presentation.widgets.status_label import StatusLabel
 
 
 class UserManagementDialog(QDialog):
@@ -56,7 +57,8 @@ class UserManagementDialog(QDialog):
             self._set_error(result.error)
             return False
         self.set_state(result.value)
-        self.status_label.setText(_("Ready"))
+        self._last_error = None
+        self.status_label.clear()
         return True
 
     def set_state(self, state: UserManagementState) -> None:
@@ -127,12 +129,13 @@ class UserManagementDialog(QDialog):
         root.addWidget(self.recovery_key_label)
 
         bottom = QHBoxLayout()
-        self.status_label = QLabel("")
+        self.status_label = StatusLabel()
         self.status_label.setObjectName("user_management_status_label")
         self.close_button = QPushButton(_("Close"))
         self.close_button.setObjectName("close_user_management_button")
         self.close_button.setProperty("variant", "primary")
         bottom.addWidget(self.status_label, 1)
+        bottom.addStretch()
         bottom.addWidget(self.close_button)
         root.addLayout(bottom)
 

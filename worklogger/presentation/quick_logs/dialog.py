@@ -23,6 +23,7 @@ from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import QuickLogEditorState, QuickLogEditorViewModel
 from worklogger.presentation.widgets.assets import apply_window_icon
+from worklogger.presentation.widgets.status_label import StatusLabel
 
 
 class QuickLogDialog(QDialog):
@@ -52,7 +53,8 @@ class QuickLogDialog(QDialog):
             self._set_error(result.error)
             return False
         self.set_state(result.value)
-        self.status_label.setText(_("Ready"))
+        self._last_error = None
+        self.status_label.clear()
         return True
 
     def set_state(self, state: QuickLogEditorState) -> None:
@@ -105,9 +107,10 @@ class QuickLogDialog(QDialog):
         root.addLayout(tools)
 
         bottom = QHBoxLayout()
-        self.status_label = QLabel("")
+        self.status_label = StatusLabel()
         self.close_button = QPushButton(_("Close"))
         bottom.addWidget(self.status_label, 1)
+        bottom.addStretch()
         bottom.addWidget(self.close_button)
         root.addLayout(bottom)
 

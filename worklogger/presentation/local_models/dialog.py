@@ -8,7 +8,6 @@ from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
     QHBoxLayout,
-    QLabel,
     QListWidget,
     QListWidgetItem,
     QPushButton,
@@ -25,6 +24,7 @@ from worklogger.presentation.viewmodels import (
     LocalModelManagerViewModel,
 )
 from worklogger.presentation.widgets.assets import apply_window_icon
+from worklogger.presentation.widgets.status_label import StatusLabel
 from worklogger.presentation.widgets.icons import set_button_icon
 
 
@@ -161,9 +161,10 @@ class LocalModelsDialog(QDialog):
         root.addLayout(actions)
 
         bottom = QHBoxLayout()
-        self.status_label = QLabel("")
+        self.status_label = StatusLabel()
         self.close_button = QPushButton(_("Close"))
         bottom.addWidget(self.status_label, 1)
+        bottom.addStretch()
         bottom.addWidget(self.close_button)
         root.addLayout(bottom)
 
@@ -199,7 +200,8 @@ class LocalModelsDialog(QDialog):
             return False
         self._state = result.value
         self._render()
-        self.status_label.setText(self._state.message or _("Ready"))
+        self._last_error = None
+        self.status_label.setText(self._state.message)
         return True
 
     def _run_state_job(
@@ -270,7 +272,7 @@ class LocalModelsDialog(QDialog):
         if self._state is None:
             return
         for item in self._state.inventory.items:
-            status = _("Ready") if item.verified else _("Not downloaded")
+            status = "" if item.verified else _("Not downloaded")
             active = _("Active") if item.active else ""
             label = " | ".join(
                 part

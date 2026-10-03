@@ -6,7 +6,6 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QHBoxLayout,
-    QLabel,
     QListWidget,
     QListWidgetItem,
     QPushButton,
@@ -22,6 +21,7 @@ from worklogger.presentation.viewmodels import (
     IdentityManagementViewModel,
 )
 from worklogger.presentation.widgets.assets import apply_window_icon
+from worklogger.presentation.widgets.status_label import StatusLabel
 
 
 class IdentityDialog(QDialog):
@@ -84,9 +84,10 @@ class IdentityDialog(QDialog):
         root.addLayout(link_row)
 
         bottom = QHBoxLayout()
-        self.status_label = QLabel("")
+        self.status_label = StatusLabel()
         self.close_button = QPushButton(_("Close"))
         bottom.addWidget(self.status_label, 1)
+        bottom.addStretch()
         bottom.addWidget(self.close_button)
         root.addLayout(bottom)
 
@@ -100,7 +101,8 @@ class IdentityDialog(QDialog):
             return False
         self._state = result.value
         self._render()
-        self.status_label.setText(self._state.message or _("Ready"))
+        self._last_error = None
+        self.status_label.setText(self._state.message)
         return True
 
     def _render(self) -> None:

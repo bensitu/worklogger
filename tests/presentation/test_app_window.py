@@ -714,15 +714,22 @@ class AppWindowTests(unittest.TestCase):
         self.assertEqual(view.date_label.text(), "2026-04-20")
         self.assertEqual(view.account_label.text(), "Signed in: alice")
 
+        self.assertTrue(view.status_label.isHidden())
+        view.entry_panel.start_input.setText("25:00")
+        self.assertTrue(view.status_label.text())
+        self.assertFalse(view.status_label.isHidden())
         view.entry_panel.start_input.setText("0900")
         view.entry_panel.end_input.setText("1800")
+        self.assertEqual(view.status_label.text(), "")
+        self.assertTrue(view.status_label.isHidden())
         view.entry_panel.save_button.click()
 
         saved = repository.get_for_day(1, date(2026, 4, 20))
         self.assertIsNotNone(saved)
         assert saved is not None
         self.assertEqual(saved.start_time, "09:00")
-        self.assertEqual(view.status_label.text(), "Saved")
+        self.assertEqual(view.status_label.text(), "")
+        self.assertTrue(view.status_label.isHidden())
 
         self.assertTrue(view.next_day())
         self.assertEqual(view.selected_day, date(2026, 4, 21))
@@ -757,7 +764,8 @@ class AppWindowTests(unittest.TestCase):
         view.settings_button.click()
 
         self.assertEqual(workflow.opened, [view])
-        self.assertEqual(view.status_label.text(), "Ready")
+        self.assertEqual(view.status_label.text(), "")
+        self.assertTrue(view.status_label.isHidden())
 
     def test_minimal_view_blocks_navigation_when_dirty_prompt_is_cancelled(self) -> None:
         view = MinimalView(

@@ -748,9 +748,6 @@ msgstr "RUNTIME SMOKE FAILED"
 msgid "RUNTIME SMOKE OK"
 msgstr "RUNTIME SMOKE OK"
 
-msgid "Ready"
-msgstr "Ready"
-
 msgid "Recovery key"
 msgstr "Recovery key"
 

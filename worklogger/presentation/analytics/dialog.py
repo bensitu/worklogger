@@ -24,6 +24,7 @@ from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import AnalyticsState, AnalyticsViewModel
 from worklogger.presentation.widgets import ComboChart
 from worklogger.presentation.widgets.assets import apply_window_icon
+from worklogger.presentation.widgets.status_label import StatusLabel
 
 
 class AnalyticsDialog(QDialog):
@@ -60,7 +61,8 @@ class AnalyticsDialog(QDialog):
             self._set_error(result.error)
             return False
         self.set_state(result.value)
-        self.status_label.setText(_("Ready"))
+        self._last_error = None
+        self.status_label.clear()
         return True
 
     def set_state(self, state: AnalyticsState) -> None:
@@ -118,11 +120,12 @@ class AnalyticsDialog(QDialog):
         self.export_csv_button = QPushButton(_("Export CSV"))
         self.export_pdf_button = QPushButton(_("Export PDF"))
         self.close_button = QPushButton(_("Close"))
-        self.status_label = QLabel("")
+        self.status_label = StatusLabel()
         tools.addWidget(self.refresh_button)
         tools.addWidget(self.export_csv_button)
         tools.addWidget(self.export_pdf_button)
         tools.addWidget(self.status_label, 1)
+        tools.addStretch()
         tools.addWidget(self.close_button)
         root.addLayout(tools)
 

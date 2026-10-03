@@ -748,9 +748,6 @@ msgstr "執行階段檢查失敗"
 msgid "RUNTIME SMOKE OK"
 msgstr "執行階段檢查通過"
 
-msgid "Ready"
-msgstr "就緒"
-
 msgid "Recovery key"
 msgstr "復原金鑰"
 

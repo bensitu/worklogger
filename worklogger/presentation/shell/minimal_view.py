@@ -25,6 +25,7 @@ from worklogger.presentation.shell.residency import QtResidencyController
 from worklogger.presentation.viewmodels import WorkLogEntryViewModel
 from worklogger.presentation.widgets import WorkLogEntryDraft, WorkLogEntryPanel
 from worklogger.presentation.widgets.assets import apply_window_icon
+from worklogger.presentation.widgets.status_label import StatusLabel
 
 
 @dataclass(frozen=True)
@@ -91,7 +92,7 @@ class MinimalView(QWidget):
             return False
         self.entry_panel.set_form(result.value)
         self._entry_dirty = result.value.dirty
-        self._set_status(_("Ready"))
+        self._set_status("")
         return True
 
     def previous_day(self) -> bool:
@@ -143,7 +144,7 @@ class MinimalView(QWidget):
         self.entry_panel = WorkLogEntryPanel()
         root.addWidget(self.entry_panel)
 
-        self.status_label = QLabel("")
+        self.status_label = StatusLabel()
         self.status_label.setObjectName("minimal_status_label")
         root.addWidget(self.status_label)
 
@@ -169,7 +170,8 @@ class MinimalView(QWidget):
             return
         self.entry_panel.set_preview_form(result.value)
         self._entry_dirty = result.value.dirty
-        self._set_status(", ".join(result.value.errors) if result.value.errors else _("Ready"))
+        self._last_error = None
+        self._set_status(", ".join(result.value.errors))
 
     def _save_entry_draft(self, draft: WorkLogEntryDraft) -> None:
         preview = self._worklog_entry_view_model.preview(
@@ -193,7 +195,8 @@ class MinimalView(QWidget):
             return
         self.entry_panel.set_form(saved.value)
         self._entry_dirty = saved.value.dirty
-        self._set_status(_("Saved"))
+        self._last_error = None
+        self._set_status("")
 
     def closeEvent(self, event: QCloseEvent) -> None:
         if not self._confirm_discard_changes_if_needed():

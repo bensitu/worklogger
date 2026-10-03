@@ -22,6 +22,7 @@ from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import AiAssistViewModel, AiChatState
 from worklogger.presentation.widgets.assets import apply_window_icon
+from worklogger.presentation.widgets.status_label import StatusLabel
 
 
 class AiAssistDialog(QDialog):
@@ -77,9 +78,10 @@ class AiAssistDialog(QDialog):
         root.addLayout(row)
 
         bottom = QHBoxLayout()
-        self.status_label = QLabel("")
+        self.status_label = StatusLabel()
         self.close_button = QPushButton(_("Close"))
         bottom.addWidget(self.status_label, 1)
+        bottom.addStretch()
         bottom.addWidget(self.close_button)
         root.addLayout(bottom)
 
@@ -133,7 +135,8 @@ class AiAssistDialog(QDialog):
         self._state = result.value
         self.message_input.clear()
         self._render_history()
-        self.status_label.setText(_("Ready"))
+        self._last_error = None
+        self.status_label.clear()
         return True
 
     def _complete_send(self, result: object) -> None:
@@ -145,7 +148,8 @@ class AiAssistDialog(QDialog):
         self._state = result.value
         self.message_input.clear()
         self._render_history()
-        self.status_label.setText(_("Ready"))
+        self._last_error = None
+        self.status_label.clear()
 
     def _set_busy(self, busy: bool) -> None:
         self.send_button.setEnabled(not busy and self._view_model.available)

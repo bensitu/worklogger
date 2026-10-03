@@ -746,9 +746,6 @@ msgstr ""
 msgid "RUNTIME SMOKE OK"
 msgstr ""
 
-msgid "Ready"
-msgstr ""
-
 msgid "Recovery key"
 msgstr ""
 
