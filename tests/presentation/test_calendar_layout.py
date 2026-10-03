@@ -9,8 +9,9 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QPoint, QTime
+from PySide6.QtCore import QPoint, QTime, Qt
 from PySide6.QtGui import QFont, QFontMetrics
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QDialog, QLabel
 
 from worklogger.app.use_cases.calendar import GetCalendarEventsForRangeHandler
@@ -106,8 +107,8 @@ class CalendarLayoutTests(unittest.TestCase):
                                 button.set_cell(replace(cell, holiday_name=name, is_holiday=bool(name)))
                                 rendered = button.grab().toImage()
                                 scale = rendered.devicePixelRatio()
-                                hours = rendered.copy(round(8 * scale), round(54 * scale),
-                                                      round((width - 16) * scale), round((height - 58) * scale))
+                                hours = rendered.copy(round(8 * scale), round(50 * scale),
+                                                      round((width - 16) * scale), round((height - 54) * scale))
                                 if expected is None:
                                     expected = hours
                                     self.assertGreater(len({hours.pixel(x, y) for x in range(hours.width())
@@ -117,6 +118,55 @@ class CalendarLayoutTests(unittest.TestCase):
                 finally:
                     button.close()
                     button.deleteLater()
+
+    def test_entry_mode_segments_fit_and_preserve_drafts_when_switched(self):
+        for language in available_languages():
+            set_language(language)
+            for dark in (False, True):
+                window = _window(MemoryWorkLogRepository(), confirm_discard_changes=lambda: True)
+                window._config = replace(window._config, dark=dark)
+                window.apply_theme()
+                window.refresh()
+                window.show()
+                try:
+                    panel = window.entry_panel
+                    panel.start_input.setText("09:15")
+                    panel.end_input.setText("18:30")
+                    draft = panel.current_draft()
+                    bar = panel.time_tabs.tabBar()
+                    for width in (880, 1100):
+                        with self.subTest(language=language, dark=dark, width=width):
+                            window.resize(width, 700)
+                            self.app.processEvents()
+                            self.assertEqual(bar.width(), panel.time_tabs.width())
+                            self.assertLessEqual(abs(bar.tabRect(0).width() - bar.tabRect(1).width()), 1)
+                            for index in range(2):
+                                self.assertLessEqual(bar.fontMetrics().horizontalAdvance(bar.tabText(index)),
+                                                     bar.tabRect(index).width() - 16)
+                            QTest.mouseClick(bar, Qt.MouseButton.LeftButton, pos=bar.tabRect(1).center())
+                            self.app.processEvents()
+                            self.assertEqual(panel.time_tabs.currentIndex(), 1)
+                            self.assertTrue(panel.clock_in_button.isVisible())
+                            self.assertEqual(panel.current_draft(), draft)
+                            rendered = bar.grab().toImage()
+                            scale = rendered.devicePixelRatio()
+                            colors = [rendered.pixelColor(round((bar.tabRect(i).left() + 10) * scale),
+                                                          round(10 * scale)) for i in range(2)]
+                            self.assertNotEqual(colors[0], colors[1])
+                            directory = os.environ.get("WORKLOGGER_SCREENSHOTS")
+                            if directory:
+                                target = Path(directory)
+                                target.mkdir(parents=True, exist_ok=True)
+                                self.assertTrue(window.grab().save(str(target / f"{language}-auto-mode-{dark}-{width}.png")))
+                            bar.setFocus()
+                            QTest.keyClick(bar, Qt.Key.Key_Left)
+                            self.app.processEvents()
+                            self.assertEqual(panel.time_tabs.currentIndex(), 0)
+                            self.assertTrue(panel.start_input.isVisible())
+                            self.assertEqual(panel.current_draft(), draft)
+                finally:
+                    window.close()
+                    window.deleteLater()
 
     def test_holiday_names_wrap_to_two_lines_and_keep_long_names_in_tooltips(self):
         font = QFont("Noto Sans")

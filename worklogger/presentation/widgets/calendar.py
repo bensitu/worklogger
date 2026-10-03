@@ -84,7 +84,7 @@ class CalendarDayButton(QPushButton):
             day_font.setPixelSize(14)
             painter.setFont(day_font)
             painter.drawText(
-                QRectF(10, 8, self.width() - (30 if cell.event_count else 20), 18),
+                QRectF(10, 6, self.width() - (30 if cell.event_count else 20), 18),
                 Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                 lines[0],
             )
@@ -96,7 +96,7 @@ class CalendarDayButton(QPushButton):
             holiday_width = self.width() - (32 if cell.event_count else 20)
             for index, line in enumerate(_holiday_lines(cell.holiday_name, holiday_font, int(holiday_width))):
                 painter.drawText(
-                    QRectF(10, 24 + index * 14, holiday_width, 14),
+                    QRectF(10, 22 + index * 14, holiday_width, 14),
                     Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                     line,
                 )
@@ -104,7 +104,7 @@ class CalendarDayButton(QPushButton):
         painter.setPen(QColor(foreground))
         metric_lines = lines[-2:] if len(lines) >= 2 else ()
         # Reserve two holiday lines in every cell so the hour rows stay aligned.
-        metric_top = max(56, (self.height() - 28) / 2 + 6)
+        metric_top = max(50, (self.height() - 28) / 2 - 4)
         for index, line in enumerate(metric_lines):
             metric_width = self.width() - 16
             metric_font = painter.font()

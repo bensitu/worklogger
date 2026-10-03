@@ -107,6 +107,11 @@ class WorkLogEntryPanel(QWidget):
         root.setSpacing(4 if compact else 8)
 
         self.time_tabs = QTabWidget()
+        self.time_tabs.setObjectName("worklog_mode_tab_widget")
+        self.time_tabs.setDocumentMode(True)
+        self.time_tabs.tabBar().setObjectName("worklog_mode_selector_widget")
+        self.time_tabs.tabBar().setExpanding(True)
+        self.time_tabs.tabBar().setDrawBase(False)
         root.addWidget(self.time_tabs)
 
         manual_tab = QWidget()
