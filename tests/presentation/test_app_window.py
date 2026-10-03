@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QTime, Qt, Signal
+from PySide6.QtCore import QTime, QTimer, Qt, Signal
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QDialog, QTimeEdit, QWidget
@@ -534,11 +534,23 @@ class AppWindowTests(unittest.TestCase):
             reports_workflow=reports,
         )
 
-        self.assertFalse(window.more_actions_button.isHidden())
+        self.assertFalse(hasattr(window, "more_actions_button"))
+        self.assertIsNone(window.findChild(QWidget, "calendar_more_actions_button"))
+        self.assertTrue(window.calendar_page.add_entry_button.isEnabled())
         self.assertFalse(window.analytics_button.isHidden())
         self.assertFalse(window.reports_button.isHidden())
-        actions = window.more_actions_button.menu().actions()
+        menu = window.calendar_page.add_entry_button.menu()
+        actions = menu.actions()
         self.assertEqual([action.text() for action in actions], ["Quick Log", "Notes", "AI Assist"])
+        opened = []
+        menu.aboutToShow.connect(lambda: opened.append(True))
+        menu.aboutToShow.connect(lambda: QTimer.singleShot(0, menu.close))
+        window.show()
+        self._app.processEvents()
+        QTest.mouseClick(window.calendar_page.add_entry_button, Qt.MouseButton.LeftButton)
+        self._app.processEvents()
+        self.assertEqual(opened, [True])
+        self.assertEqual(quick_logs.opened + notes.opened + ai_assist.opened, [])
         actions[0].trigger()
         window.analytics_button.click()
         actions[2].trigger()
@@ -550,6 +562,13 @@ class AppWindowTests(unittest.TestCase):
         self.assertEqual(ai_assist.opened, [(date(2026, 4, 20), window)])
         self.assertEqual(notes.opened, [(date(2026, 4, 20), window)])
         self.assertEqual(reports.opened, [(date(2026, 4, 20), window)])
+        window.close()
+
+    def test_add_entry_is_disabled_without_available_workflows(self) -> None:
+        window = _window(MemoryWorkLogRepository())
+        self.assertFalse(window.calendar_page.add_entry_button.isEnabled())
+        self.assertTrue(window.calendar_page.add_entry_button.menu().isEmpty())
+        window.close()
 
     def test_app_window_blocks_day_navigation_when_dirty_prompt_is_cancelled(self) -> None:
         window = _window(

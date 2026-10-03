@@ -156,7 +156,7 @@ class CalendarPage(QWidget):
         self.add_entry_button.setProperty("variant", "primary")
         self.add_entry_button.setText(_("Add Entry"))
         set_button_icon(self.add_entry_button, "plus")
-        self.add_entry_button.clicked.connect(self.entry_panel.start_input.setFocus)
+        self.add_entry_button.setToolTip(_("More actions"))
         header.addWidget(self.previous_month_button)
         header.addStretch(1)
         header.addWidget(self.month_title_label)

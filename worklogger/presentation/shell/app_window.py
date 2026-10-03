@@ -18,7 +18,6 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QMenu,
     QPushButton,
-    QToolButton,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -52,7 +51,6 @@ from worklogger.presentation.widgets import (
     WorkLogEntryPanel,
 )
 from worklogger.presentation.widgets.assets import apply_window_icon
-from worklogger.presentation.widgets.icons import set_button_icon
 
 
 class NotesWorkflow(Protocol):
@@ -348,15 +346,8 @@ class AppWindow(QMainWindow):
             button.hide()
             if workflow is not None:
                 actions.addAction(button.text(), button.click)
-        self.more_actions_button = QToolButton()
-        self.more_actions_button.setObjectName("calendar_more_actions_button")
-        self.more_actions_button.setToolTip(_("More actions"))
-        self.more_actions_button.setAccessibleName(_("More actions"))
-        set_button_icon(self.more_actions_button, "notebook-text")
-        self.more_actions_button.setMenu(actions)
-        self.more_actions_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
-        self.more_actions_button.setVisible(not actions.isEmpty())
-        self.calendar_page.header_layout.addWidget(self.more_actions_button)
+        self.calendar_page.add_entry_button.setMenu(actions)
+        self.calendar_page.add_entry_button.setEnabled(not actions.isEmpty())
         self.account_label.setVisible(False)
         if self._quick_logs_workflow is None:
             self.quick_logs_button.setVisible(False)
