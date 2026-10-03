@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 from PySide6.QtCore import QRect, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QIcon, QPainter, QPen
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPen, QTextLayout, QTextOption
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -32,8 +32,8 @@ class CalendarDayButton(QPushButton):
         super().__init__(parent)
         self._cell: CalendarDayCell | None = None
         self.setObjectName("calendar_day_button")
-        self.setMinimumHeight(72)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.setMinimumHeight(90)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Expanding)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     @property
@@ -94,15 +94,16 @@ class CalendarDayButton(QPushButton):
             painter.setFont(holiday_font)
             painter.setPen(QColor("#ef4444" if not cell.is_selected else "#ffffff"))
             holiday_width = self.width() - (32 if cell.event_count else 20)
-            painter.drawText(
-                QRectF(10, 24, holiday_width, 14),
-                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-                painter.fontMetrics().elidedText(cell.holiday_name, Qt.TextElideMode.ElideRight, int(holiday_width)),
-            )
+            for index, line in enumerate(_holiday_lines(cell.holiday_name, holiday_font, int(holiday_width))):
+                painter.drawText(
+                    QRectF(10, 24 + index * 14, holiday_width, 14),
+                    Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                    line,
+                )
         painter.setFont(font)
         painter.setPen(QColor(foreground))
         metric_lines = lines[-2:] if len(lines) >= 2 else ()
-        metric_top = max(38 if cell.holiday_name else 28, (self.height() - 28) / 2 + 6)
+        metric_top = max(56 if cell.holiday_name else 42, (self.height() - 28) / 2 + 6)
         for index, line in enumerate(metric_lines):
             metric_width = self.width() - 16
             metric_font = painter.font()
@@ -174,6 +175,7 @@ class CalendarView(QWidget):
         self._month_only = enabled
         self.layout().setAlignment(self.grid_frame, Qt.AlignmentFlag.AlignTop if enabled else Qt.AlignmentFlag(0))
         if not enabled:
+            self.grid_frame.setMinimumHeight(0)
             self.grid_frame.setMaximumHeight(16777215)
         if self._state is not None:
             self.set_state(self._state)
@@ -188,7 +190,7 @@ class CalendarView(QWidget):
         weeks = max(index // 7 + 1 for index, cell in enumerate(self._state.cells) if cell.in_month)
         cell_width = max(0, (self.width() - 6 * 6) / 7)
         header_height = self.fontMetrics().height() + 8
-        self.grid_frame.setMaximumHeight(round(header_height + weeks * (max(72, cell_width * 1.08) + 6)))
+        self.grid_frame.setFixedHeight(round(header_height + weeks * (max(90, cell_width) + 6)))
 
     @property
     def state(self) -> CalendarMonthViewState | None:
@@ -242,6 +244,27 @@ class CalendarView(QWidget):
             label.setVisible(not self._month_only)
             self._week_total_labels.append(label)
         self._update_grid_height()
+
+
+def _holiday_lines(text: str, font: QFont, width: int) -> tuple[str, ...]:
+    if not text:
+        return ()
+    layout = QTextLayout(text, font)
+    option = QTextOption()
+    option.setWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
+    layout.setTextOption(option)
+    layout.beginLayout()
+    lines: list[str] = []
+    for index in range(2):
+        line = layout.createLine()
+        if not line.isValid():
+            break
+        line.setLineWidth(max(1, width))
+        start = line.textStart()
+        value = text[start:start + line.textLength()].rstrip() if index == 0 else text[start:]
+        lines.append(QFontMetrics(font).elidedText(value, Qt.TextElideMode.ElideRight, max(1, width)))
+    layout.endLayout()
+    return tuple(lines)
 
 
 def _tooltip_for_cell(cell: CalendarDayCell) -> str:

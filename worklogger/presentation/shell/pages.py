@@ -7,7 +7,7 @@ from collections.abc import Callable
 from dataclasses import replace
 from datetime import date, timedelta
 from pathlib import Path
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -80,6 +80,13 @@ class CalendarPage(QWidget):
 
     def set_month_title(self, title: str) -> None:
         self.month_title_label.setText(title)
+        QTimer.singleShot(0, self, self._ensure_selected_day_visible)
+
+    def _ensure_selected_day_visible(self) -> None:
+        selected = next((button for button in self.calendar_view.day_buttons()
+                         if button.cell is not None and button.cell.is_selected and button.cell.in_month), None)
+        if selected is not None:
+            self.calendar_scroll.ensureWidgetVisible(selected, 0, 8)
 
     def set_record_summary(self, lines: tuple[str, ...]) -> None:
         while self.records_layout.count():
@@ -165,7 +172,13 @@ class CalendarPage(QWidget):
 
         self.calendar_view.month_title.setVisible(False)
         self.calendar_view.set_month_only(True)
-        content.addWidget(self.calendar_view, 1)
+        self.calendar_scroll = QScrollArea()
+        self.calendar_scroll.setObjectName("calendar_scroll_widget")
+        self.calendar_scroll.viewport().setObjectName("calendar_scroll_viewport_widget")
+        self.calendar_scroll.setWidgetResizable(True)
+        self.calendar_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.calendar_scroll.setWidget(self.calendar_view)
+        content.addWidget(self.calendar_scroll, 1)
 
         self.details_scroll = QScrollArea()
         self.details_scroll.setObjectName("calendar_details_scroll_widget")

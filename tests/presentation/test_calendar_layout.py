@@ -10,6 +10,7 @@ from unittest.mock import patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QPoint
+from PySide6.QtGui import QFont, QFontMetrics
 from PySide6.QtWidgets import QApplication, QLabel
 
 from worklogger.app.use_cases.calendar import GetCalendarEventsForRangeHandler
@@ -20,6 +21,7 @@ from worklogger.infrastructure.i18n import available_languages, set_language
 from worklogger.infrastructure.repositories import SQLiteCalendarEventRepository, SQLiteWorkLogRepository
 from worklogger.presentation.viewmodels import CalendarViewModel
 from worklogger.presentation.widgets.sidebar import SidebarWidget
+from worklogger.presentation.widgets.calendar import _holiday_lines
 from tests.presentation.test_app_window import MemoryCalendarRepository, MemoryWorkLogRepository, _window
 
 
@@ -79,6 +81,42 @@ class CalendarLayoutTests(unittest.TestCase):
     def tearDown(self):
         set_language("en_US")
 
+    def test_holiday_names_wrap_to_two_lines_and_keep_long_names_in_tooltips(self):
+        font = QFont("Noto Sans")
+        font.setPixelSize(9)
+        for text in ("International Workers Memorial Day", "国際労働者記念日の追加情報", "국제 노동자 기념일 추가 정보", "国际劳动者纪念日的附加说明"):
+            lines = _holiday_lines(text, font, 60)
+            self.assertEqual(len(lines), 2)
+            self.assertTrue(all(QFontMetrics(font).horizontalAdvance(line) <= 60 for line in lines))
+        self.assertEqual(_holiday_lines("", font, 60), ())
+
+    def test_last_day_is_accessible_without_shrinking_cells_or_right_panel(self):
+        records, _events, _selected = may_records()
+        window = _window(records)
+        window._current_month = date(2026, 5, 1)
+        window._selected_day = date(2026, 5, 1)
+        window._holidays = {date(2026, 5, 31): "International Workers Memorial Day"}
+        window.resize(880, 580)
+        window.show()
+        try:
+            self.assertTrue(window.refresh())
+            self.app.processEvents()
+            self.assertTrue(window.select_day(date(2026, 5, 31)))
+            self.app.processEvents()
+            scroll = window.calendar_page.calendar_scroll
+            self.assertGreater(scroll.verticalScrollBar().maximum(), 0)
+            self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)
+            selected = next(button for button in window.calendar_view.day_buttons() if button.cell.is_selected)
+            position = selected.mapTo(scroll.viewport(), QPoint())
+            self.assertGreaterEqual(position.y(), 0)
+            self.assertLessEqual(position.y() + selected.height(), scroll.viewport().height())
+            self.assertGreaterEqual(selected.height(), 90)
+            self.assertIn("International Workers Memorial Day", selected.toolTip())
+            self.assertEqual(window.calendar_page.details_scroll.verticalScrollBar().maximum(), 0)
+            self.assertEqual((window.width(), window.height()), (880, 580))
+        finally:
+            window.close()
+
     def test_sidebar_avatar_is_round_without_product_label(self):
         sidebar = SidebarWidget(account_name="Sample User")
         self.assertIsNone(sidebar.findChild(QLabel, "sidebar_product_label"))
@@ -128,6 +166,7 @@ class CalendarLayoutTests(unittest.TestCase):
                 window._selected_day = selected
                 window._current_month = date(2026, 5, 1)
                 window._today = date(2026, 5, 15)
+                window._holidays = {date(2026, 5, 21): "International Workers Memorial Day"}
                 window._calendar_view_model = CalendarViewModel(
                     user_id=1, month_records_handler=GetMonthRecordsHandler(records),
                     calendar_events_handler=GetCalendarEventsForRangeHandler(MemoryCalendarRepository(events)),
@@ -153,6 +192,8 @@ class CalendarLayoutTests(unittest.TestCase):
                             self.assertEqual(window.calendar_page.details_scroll.verticalScrollBar().maximum(), 0)
                             self.assertGreaterEqual(window.calendar_page.records_scroll.height(), 96)
                             self.assertEqual(sum(button.isVisible() for button in window.calendar_view.day_buttons()), 31)
+                            self.assertTrue(all(button.height() >= 90 for button in window.calendar_view.day_buttons() if button.isVisible()))
+                            self.assertEqual(window.calendar_page.calendar_scroll.horizontalScrollBar().maximum(), 0)
                             self.assertTrue(all(not label.isVisible() for label in window.calendar_view.week_total_labels()))
                             self.assertEqual(panel.current_draft().note, records.get_for_day(1, selected).note)
                             labels = window.calendar_page.records_widget.findChildren(QLabel, "calendar_record_label")

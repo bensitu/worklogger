@@ -58,6 +58,7 @@ QWidget#reports_page_widget {
 }
 
 QFrame#calendar_grid_frame,
+QWidget#calendar_scroll_viewport_widget,
 QWidget#calendar_records_widget,
 QWidget#worklog_manual_tab_widget,
 QWidget#worklog_auto_tab_widget,
@@ -70,6 +71,11 @@ QFrame#calendar_right_panel_frame {
   background: {{ surface }};
   border: none;
   border-left: 1px solid {{ border }};
+}
+
+QPushButton#calendar_day_button {
+  min-height: 90px;
+  padding: 0;
 }
 
 QLabel#schedule_records_label {
