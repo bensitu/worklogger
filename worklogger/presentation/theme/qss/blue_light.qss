@@ -112,6 +112,15 @@ QWidget#worklog_entry_panel_widget[compact="true"] QDoubleSpinBox QLineEdit {
   border: none;
 }
 
+QWidget#worklog_entry_panel_widget[compact="true"] QDoubleSpinBox#break_hours_double_spin_box {
+  padding-right: 50px;
+}
+
+QWidget#worklog_entry_panel_widget[compact="true"] QDoubleSpinBox#break_hours_double_spin_box::up-button,
+QWidget#worklog_entry_panel_widget[compact="true"] QDoubleSpinBox#break_hours_double_spin_box::down-button {
+  right: 24px;
+}
+
 QWidget#worklog_entry_panel_widget[compact="true"] QTabBar::tab {
   padding: 4px 6px;
 }

@@ -148,7 +148,14 @@ class WorkLogEntryPanel(QWidget):
         self.break_input.setDecimals(2)
         self.break_input.valueChanged.connect(self._emit_draft_changed)
         if compact:
-            self.break_input.setSuffix(" " + _("h"))
+            self.break_input.setAccessibleName(_("Break (h)"))
+            unit_layout = QHBoxLayout(self.break_input)
+            unit_layout.setContentsMargins(0, 0, 8, 0)
+            unit_layout.addStretch()
+            unit_label = QLabel(_("h"))
+            unit_label.setObjectName("break_hours_unit_label")
+            unit_label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+            unit_layout.addWidget(unit_label)
         form.addRow(_("Break") if compact else _("Break (h)"), self.break_input)
 
         self.work_type_combo = QComboBox()
