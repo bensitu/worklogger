@@ -10,7 +10,7 @@ from unittest.mock import patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QPoint, QTime, Qt
-from PySide6.QtGui import QFont, QFontMetrics
+from PySide6.QtGui import QColor, QFont, QFontMetrics
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QDialog, QLabel
 
@@ -82,6 +82,40 @@ class CalendarLayoutTests(unittest.TestCase):
 
     def tearDown(self):
         set_language("en_US")
+
+    def test_note_dot_has_inset_and_keeps_clear_of_other_markers(self):
+        install_bundled_fonts()
+        day = date(2026, 5, 13)
+        model = CalendarViewModel(user_id=1, month_records_handler=GetMonthRecordsHandler(MemoryWorkLogRepository()))
+        for dark in (False, True):
+            for selected in (False, True):
+                state = model.build_month(year=2026, month=5, selected_day=day if selected else date(2026, 5, 1),
+                                          today=date(2026, 5, 1), holidays={}, dark=dark).value
+                cell = next(cell for cell in state.cells if cell.day == day)
+                button = CalendarDayButton()
+                try:
+                    for width in (54, 90, 140):
+                        button.resize(width, 90)
+                        dot = None
+                        for overnight, count in ((False, 0), (False, 3), (True, 0), (True, 3)):
+                            with self.subTest(dark=dark, selected=selected, width=width, overnight=overnight, count=count):
+                                button.set_cell(replace(cell, has_note_marker=True, show_overnight_marker=overnight,
+                                                        event_count=count, holiday_name="Long holiday name"))
+                                rendered = button.grab().toImage()
+                                scale = rendered.devicePixelRatio()
+                                self.assertEqual(rendered.pixelColor(round((width - 10.5) * scale), round(10.5 * scale)),
+                                                 QColor(cell.style.hover_border))
+                                self.assertEqual(rendered.pixelColor(round((width - 10) * scale), round(4 * scale)),
+                                                 QColor(cell.style.background))
+                                area = rendered.copy(round((width - 16) * scale), round(5 * scale),
+                                                     round(12 * scale), round(12 * scale))
+                                if dot is None:
+                                    dot = area
+                                else:
+                                    self.assertEqual(area, dot)
+                finally:
+                    button.close()
+                    button.deleteLater()
 
     def test_hour_rows_keep_identical_positions_with_or_without_holidays(self):
         install_bundled_fonts()

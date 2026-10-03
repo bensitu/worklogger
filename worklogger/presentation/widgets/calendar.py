@@ -93,7 +93,7 @@ class CalendarDayButton(QPushButton):
             holiday_font.setPixelSize(11)
             painter.setFont(holiday_font)
             painter.setPen(QColor("#ef4444" if not cell.is_selected else "#ffffff"))
-            holiday_width = self.width() - (32 if cell.event_count else 20)
+            holiday_width = self.width() - (40 if cell.event_count else 36 if cell.show_overnight_marker else 20)
             for index, line in enumerate(_holiday_lines(cell.holiday_name, holiday_font, int(holiday_width))):
                 painter.drawText(
                     QRectF(10, 22 + index * 14, holiday_width, 14),
@@ -125,14 +125,15 @@ class CalendarDayButton(QPushButton):
         if cell.has_note_marker:
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QColor(cell.style.hover_border))
-            painter.drawEllipse(self.width() - 8, 2, 5, 5)
+            painter.drawEllipse(self.width() - 13, 8, 5, 5)
 
+        marker_top = 19 if cell.has_note_marker else 8
         if cell.show_overnight_marker:
             icon = ui_icon("moon", primary=cell.is_selected)
-            icon.paint(painter, QRect(self.width() - 22, 8, 14, 14), Qt.AlignmentFlag.AlignCenter, QIcon.Mode.Normal)
+            icon.paint(painter, QRect(self.width() - 22, marker_top, 14, 14), Qt.AlignmentFlag.AlignCenter, QIcon.Mode.Normal)
 
         if cell.event_count > 0:
-            badge = QRectF(self.width() - 22, 25 if cell.show_overnight_marker else 8, 18, 14)
+            badge = QRectF(self.width() - 26, marker_top + (17 if cell.show_overnight_marker else 0), 18, 14)
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QColor(cell.style.hover_border))
             painter.drawRoundedRect(badge, 6, 6)
