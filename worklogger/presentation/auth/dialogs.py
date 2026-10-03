@@ -26,6 +26,7 @@ from worklogger.presentation.theme import ThemeEngine, install_bundled_fonts
 from worklogger.presentation.widgets.assets import apply_window_icon, asset_path, pixmap_asset
 from worklogger.presentation.widgets import SwitchButton
 from worklogger.presentation.widgets.icons import ui_icon
+from worklogger.presentation.widgets.status_label import StatusLabel
 
 
 @dataclass(frozen=True)
@@ -140,9 +141,15 @@ class LoginDialog(QDialog):
 
         form_root.addSpacing(6)
 
+        credentials = QVBoxLayout()
+        credentials.setSpacing(16)
+        form_root.addLayout(credentials)
+        username_group = QVBoxLayout()
+        username_group.setSpacing(4)
+        credentials.addLayout(username_group)
         username_label = QLabel(_("ID"))
         username_label.setObjectName("login_username_label")
-        form_root.addWidget(username_label)
+        username_group.addWidget(username_label)
         self.username_input = QLineEdit()
         self.username_input.setObjectName("username_line_edit")
         self.username_input.setPlaceholderText(_("Enter your ID"))
@@ -151,11 +158,14 @@ class LoginDialog(QDialog):
             QLineEdit.ActionPosition.LeadingPosition,
         )
         self.username_input.setMinimumHeight(36)
-        form_root.addWidget(self.username_input)
+        username_group.addWidget(self.username_input)
 
+        password_group = QVBoxLayout()
+        password_group.setSpacing(4)
+        credentials.addLayout(password_group)
         password_label = QLabel(_("Password"))
         password_label.setObjectName("login_password_label")
-        form_root.addWidget(password_label)
+        password_group.addWidget(password_label)
         self.password_input = QLineEdit()
         self.password_input.setObjectName("password_line_edit")
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
@@ -171,7 +181,7 @@ class LoginDialog(QDialog):
         )
         self.password_visibility_action.setToolTip(_("Show"))
         self.password_visibility_action.triggered.connect(self._toggle_password_visibility)
-        form_root.addWidget(self.password_input)
+        password_group.addWidget(self.password_input)
 
         remember_row = QHBoxLayout()
         remember_row.setContentsMargins(0, 0, 0, 0)
@@ -183,7 +193,7 @@ class LoginDialog(QDialog):
         remember_row.addWidget(self.remember_check)
         form_root.addLayout(remember_row)
 
-        self.status_label = QLabel("")
+        self.status_label = StatusLabel()
         self.status_label.setObjectName("auth_status_label")
         self.status_label.setWordWrap(True)
         form_root.addWidget(self.status_label)

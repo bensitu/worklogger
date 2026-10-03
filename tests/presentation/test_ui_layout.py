@@ -94,6 +94,40 @@ class UiLayoutTests(unittest.TestCase):
         finally:
             qInstallMessageHandler(previous)
 
+    def test_login_labels_stay_with_fields_and_idle_feedback_does_not_add_space(self):
+        for language in available_languages():
+            with self.subTest(language=language):
+                set_language(language)
+                dialog = LoginDialog()
+                try:
+                    dialog.show()
+                    self.app.processEvents()
+                    username_label = dialog.findChild(QLabel, "login_username_label")
+                    password_label = dialog.findChild(QLabel, "login_password_label")
+                    for label, field in ((username_label, dialog.username_input),
+                                         (password_label, dialog.password_input)):
+                        self.assertEqual(field.y() - label.geometry().bottom() - 1, 4)
+                        self.assertEqual(label.x(), field.x())
+                    self.assertEqual(password_label.y() - dialog.username_input.geometry().bottom() - 1, 16)
+                    self.assertTrue(dialog.status_label.isHidden())
+                    remember_bottom = dialog.remember_check.geometry().bottom()
+                    self.assertEqual(dialog.login_button.y() - remember_bottom - 1, 10)
+                    idle_login_y = dialog.login_button.y()
+                    dialog.set_error("Invalid credentials. Please try again.")
+                    self.app.processEvents()
+                    self.assertTrue(dialog.status_label.isVisible())
+                    self.assertGreater(dialog.status_label.y(), dialog.remember_check.geometry().bottom())
+                    self.assertGreater(dialog.login_button.y(), dialog.status_label.geometry().bottom())
+                    self.assertTrue(dialog.form_frame.rect().contains(dialog.microsoft_login_button.geometry()))
+                    dialog.set_error("")
+                    self.app.processEvents()
+                    self.assertTrue(dialog.status_label.isHidden())
+                    self.assertEqual(dialog.login_button.y(), idle_login_y)
+                    self.capture(dialog, "login-spacing")
+                finally:
+                    dialog.close()
+                    dialog.deleteLater()
+
     def test_logout_exists_only_in_settings_account_and_keeps_shell_signal(self):
         window = sample_window()
         requests = []
