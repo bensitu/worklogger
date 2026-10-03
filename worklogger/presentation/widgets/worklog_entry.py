@@ -151,7 +151,7 @@ class WorkLogEntryPanel(QWidget):
         if compact:
             self.break_input.setAccessibleName(_("Break (h)"))
             unit_layout = QHBoxLayout(self.break_input)
-            unit_layout.setContentsMargins(0, 0, 8, 0)
+            unit_layout.setContentsMargins(0, 0, 30, 0)
             unit_layout.addStretch()
             unit_label = QLabel(_("h"))
             unit_label.setObjectName("break_hours_unit_label")
