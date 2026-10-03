@@ -12,6 +12,7 @@ from unittest.mock import patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QTimer, qInstallMessageHandler
+from PySide6.QtWidgets import QMessageBox
 
 from tests.infrastructure.test_auth_schema_migration import legacy_database
 from worklogger.bootstrap import (
@@ -22,12 +23,14 @@ from worklogger.bootstrap import (
 from worklogger.config.constants import (
     GITHUB_LATEST_RELEASE_API_URL,
     MINIMAL_MODE_SETTING_KEY,
+    SHOW_HOLIDAYS_SETTING_KEY,
 )
 from worklogger.domain.shared.errors import CancellationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkType
 from worklogger.infrastructure.repositories import SQLiteSettingsRepository, SQLiteWorkLogRepository
 from worklogger.infrastructure.i18n import get_language, set_language
+from worklogger.infrastructure.calendar import PythonHolidaysProvider
 from worklogger.main import main
 from worklogger.presentation.auth import AuthController, AuthSession, LoginDialog
 from worklogger.presentation.settings import SettingsDialog
@@ -64,6 +67,64 @@ class CancellingAuthenticator:
 
 
 class RuntimeBootstrapTests(unittest.TestCase):
+    def test_public_holidays_load_toggle_and_survive_restart_in_real_runtime(self):
+        expected = {holiday.day: holiday.name for holiday in PythonHolidaysProvider().list_for_range(
+            "JP", date(2026, 5, 1), date(2026, 5, 31))}
+        self.assertIn(date(2026, 5, 4), expected)
+        with tempfile.TemporaryDirectory() as directory, patch("worklogger.bootstrap.detect_country", return_value="JP"), patch.object(QMessageBox, "information"):
+            config = DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db",
+                create_user_if_empty=True, password_iterations=1_000,
+                window=AppWindowConfig(selected_day=date(2026, 5, 4), today=date(2026, 5, 15)))
+            result = build_desktop_runtime(config, argv=[])
+            self.assertTrue(result.ok, result.error)
+            runtime = result.value
+            window = runtime.window
+            settings = SQLiteSettingsRepository(runtime.connection_factory)
+
+            def displayed_holidays():
+                return {cell.day: cell.holiday_name for cell in window.calendar_view.state.cells
+                        if cell.in_month and cell.is_holiday}
+
+            try:
+                self.assertIsNone(window._holidays)
+                self.assertTrue(window.refresh())
+                self.assertEqual(displayed_holidays(), expected)
+                self.assertEqual(window.entry_panel.note_input.toPlainText(), expected[date(2026, 5, 4)])
+                self.assertFalse(window.has_unsaved_changes)
+                window.settings_page.holidays_switch.set_checked(False)
+                self.assertEqual(displayed_holidays(), {})
+                self.assertEqual(window.entry_panel.note_input.toPlainText(), "")
+                self.assertEqual(settings.get(runtime.user.id, SHOW_HOLIDAYS_SETTING_KEY), "0")
+                window.settings_page.holidays_switch.set_checked(True)
+                self.assertEqual(displayed_holidays(), expected)
+                self.assertEqual(settings.get(runtime.user.id, SHOW_HOLIDAYS_SETTING_KEY), "1")
+                window.entry_panel.note_input.setPlainText("Unsubmitted note")
+                self.assertTrue(window.has_unsaved_changes)
+                window.settings_page.holidays_switch.set_checked(False)
+                self.assertEqual(displayed_holidays(), {})
+                self.assertEqual(window.entry_panel.note_input.toPlainText(), "Unsubmitted note")
+                window.settings_page.holidays_switch.set_checked(True)
+                self.assertEqual(displayed_holidays(), expected)
+                self.assertEqual(window.entry_panel.note_input.toPlainText(), "Unsubmitted note")
+                window.entry_panel.note_input.setPlainText(expected[date(2026, 5, 4)])
+                self.assertFalse(window.has_unsaved_changes)
+                self.assertEqual(SQLiteWorkLogRepository(runtime.connection_factory).list_all(runtime.user.id), ())
+                self.assertTrue(window.previous_month())
+                self.assertIn(date(2026, 4, 29), displayed_holidays())
+                self.assertTrue(window.next_month())
+                self.assertEqual(displayed_holidays(), expected)
+            finally:
+                window.close()
+            restarted = build_desktop_runtime(config, argv=[])
+            self.assertTrue(restarted.ok, restarted.error)
+            window = restarted.value.window
+            try:
+                self.assertTrue(window.refresh())
+                self.assertTrue(window.settings_page.holidays_switch.is_checked())
+                self.assertEqual(displayed_holidays(), expected)
+            finally:
+                window.close()
+
     def test_minimal_mode_logout_remains_available_only_in_settings_account(self):
         with tempfile.TemporaryDirectory() as directory:
             config = DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db",

@@ -137,7 +137,8 @@ class AppWindow(QMainWindow):
         self._today = self._config.today or date.today()
         self._selected_day = self._config.selected_day or self._today
         self._current_month = self._selected_day.replace(day=1)
-        self._holidays = dict(self._config.holidays or {})
+        # None requests regional holidays; an explicit mapping overrides the provider.
+        self._holidays = None if self._config.holidays is None else dict(self._config.holidays)
         self._last_error: AppError | None = None
         self._refreshing = False
         self._entry_dirty = False
@@ -490,7 +491,12 @@ class AppWindow(QMainWindow):
     def _holiday_note_for_selected_day(self) -> str:
         if not self._config.calendar_options.show_holidays:
             return ""
-        return str(self._holidays.get(self._selected_day, "")).strip()
+        state = self.calendar_view.state
+        if state is not None:
+            for cell in state.cells:
+                if cell.day == self._selected_day:
+                    return cell.holiday_name
+        return str((self._holidays or {}).get(self._selected_day, "")).strip()
 
     def _set_error(self, error: AppError | None) -> None:
         self._last_error = error

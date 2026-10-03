@@ -33,6 +33,18 @@ class RecordingHolidaysHandler:
 
 
 class CalendarPresentationTests(unittest.TestCase):
+    def test_explicit_holiday_map_overrides_provider_even_when_empty(self) -> None:
+        holidays = RecordingHolidaysHandler()
+        model = CalendarViewModel(user_id=1, month_records_handler=EmptyMonthRecordsHandler(),
+                                  holidays_handler=holidays, holiday_country="JP")
+        for provided in ({}, {date(2026, 5, 1): "Custom holiday"}):
+            result = model.build_month(year=2026, month=5, selected_day=date(2026, 5, 1),
+                                       holidays=provided)
+            self.assertTrue(result.ok, result.error)
+            actual = {cell.day: cell.holiday_name for cell in result.value.cells if cell.is_holiday}
+            self.assertEqual(actual, provided)
+        self.assertEqual(holidays.queries, [])
+
     def test_calendar_viewmodel_loads_holidays_when_enabled(self) -> None:
         holidays = RecordingHolidaysHandler()
         view_model = CalendarViewModel(
