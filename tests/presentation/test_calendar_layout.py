@@ -178,7 +178,7 @@ class CalendarLayoutTests(unittest.TestCase):
             panel.note_toggle_button.setChecked(False)
             with patch("worklogger.presentation.shell.app_window.QMessageBox.information") as notification:
                 panel.save_button.click()
-            notification.assert_called_once()
+            notification.assert_not_called()
             self.assertEqual(records.get_for_day(1, date(2026, 4, 20)).note, "Updated note")
             panel.time_tabs.setCurrentIndex(1)
             self.app.processEvents()

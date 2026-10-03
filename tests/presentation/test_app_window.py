@@ -225,7 +225,7 @@ class AppWindowTests(unittest.TestCase):
         self.assertEqual(saved.note, "Focused work")
         self.assertEqual(window.status_label.text(), "Saved")
         self.assertTrue(window.status_label.isHidden())
-        self.information.assert_called_once_with(window, "WorkLogger", "Saved")
+        self.information.assert_not_called()
         self.assertEqual(window.stats_panel.value_text("total_hours"), "8.0h")
         self.assertIn("8.0h", window.calendar_view.week_total_labels()[3].text())
         selected = next(

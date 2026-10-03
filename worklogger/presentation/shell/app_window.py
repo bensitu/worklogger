@@ -486,7 +486,7 @@ class AppWindow(QMainWindow):
         self._refresh_entry()
         self._refresh_calendar()
         self._refresh_stats()
-        self._set_status(_("Saved"), notify=True)
+        self._set_status(_("Saved"))
 
     def _holiday_note_for_selected_day(self) -> str:
         if not self._config.calendar_options.show_holidays:
