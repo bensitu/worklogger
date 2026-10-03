@@ -111,7 +111,14 @@ class WorkLogEntryViewModel:
     ) -> Result[WorkLogEntryForm]:
         errors: tuple[str, ...] = ()
         normalized: WorkLog | None = None
+        parsed_start = parse_time(start_time)
+        parsed_end = parse_time(end_time)
         try:
+            if any(
+                str(raw or "").strip() and parsed is None
+                for raw, parsed in ((start_time, parsed_start), (end_time, parsed_end))
+            ):
+                raise ValueError("time_range_invalid")
             normalized = normalize_work_log(
                 WorkLog(
                     user_id=self._user_id,
@@ -126,11 +133,13 @@ class WorkLogEntryViewModel:
         except (TypeError, ValueError) as exc:
             errors = (str(exc),)
 
+        preview_start = normalized.start_time if normalized else parsed_start or start_time
+        preview_end = normalized.end_time if normalized else parsed_end or end_time
         form = _form_from_values(
             user_id=self._user_id,
             day=day,
-            start_time=normalized.start_time if normalized else parse_time(start_time),
-            end_time=normalized.end_time if normalized else parse_time(end_time),
+            start_time=preview_start,
+            end_time=preview_end,
             break_hours=float(break_hours or 0),
             note=str(note or ""),
             work_type=(
@@ -141,8 +150,8 @@ class WorkLogEntryViewModel:
             record=normalized,
             dirty=self._is_dirty(
                 day,
-                start_time=normalized.start_time if normalized else parse_time(start_time),
-                end_time=normalized.end_time if normalized else parse_time(end_time),
+                start_time=preview_start,
+                end_time=preview_end,
                 break_hours=float(break_hours or 0),
                 note=str(note or ""),
                 work_type=(

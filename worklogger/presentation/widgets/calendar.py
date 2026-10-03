@@ -90,7 +90,7 @@ class CalendarDayButton(QPushButton):
             )
         if cell.holiday_name:
             holiday_font = painter.font()
-            holiday_font.setPixelSize(9)
+            holiday_font.setPixelSize(11)
             painter.setFont(holiday_font)
             painter.setPen(QColor("#ef4444" if not cell.is_selected else "#ffffff"))
             holiday_width = self.width() - (32 if cell.event_count else 20)

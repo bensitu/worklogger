@@ -9,15 +9,15 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QPoint
+from PySide6.QtCore import QPoint, QTime
 from PySide6.QtGui import QFont, QFontMetrics
-from PySide6.QtWidgets import QApplication, QLabel
+from PySide6.QtWidgets import QApplication, QDialog, QLabel
 
 from worklogger.app.use_cases.calendar import GetCalendarEventsForRangeHandler
 from worklogger.app.use_cases.work_logs import GetMonthRecordsHandler
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.worklog.models import WorkLog, WorkType
-from worklogger.infrastructure.i18n import available_languages, set_language
+from worklogger.infrastructure.i18n import _, available_languages, set_language
 from worklogger.infrastructure.repositories import SQLiteCalendarEventRepository, SQLiteWorkLogRepository
 from worklogger.presentation.viewmodels import CalendarViewModel
 from worklogger.presentation.widgets.sidebar import SidebarWidget
@@ -83,7 +83,7 @@ class CalendarLayoutTests(unittest.TestCase):
 
     def test_holiday_names_wrap_to_two_lines_and_keep_long_names_in_tooltips(self):
         font = QFont("Noto Sans")
-        font.setPixelSize(9)
+        font.setPixelSize(11)
         for text in ("International Workers Memorial Day", "国際労働者記念日の追加情報", "국제 노동자 기념일 추가 정보", "国际劳动者纪念日的附加说明"):
             lines = _holiday_lines(text, font, 60)
             self.assertEqual(len(lines), 2)
@@ -125,6 +125,41 @@ class CalendarLayoutTests(unittest.TestCase):
             self.assertEqual(avatar.pixelColor(x, y).alpha(), 0)
         self.assertGreater(avatar.pixelColor(36, 36).alpha(), 0)
         sidebar.close()
+
+    def test_time_picker_fits_and_keeps_translations_and_cancel_behavior(self):
+        for language in available_languages():
+            set_language(language)
+            for dark in (False, True):
+                with self.subTest(language=language, dark=dark):
+                    window = _window(MemoryWorkLogRepository(), confirm_discard_changes=lambda: True)
+                    window._config = replace(window._config, dark=dark)
+                    window.apply_theme()
+                    window.resize(880, 580)
+                    window.show()
+                    try:
+                        self.assertTrue(window.refresh())
+                        panel = window.entry_panel
+                        panel.start_input.setText("0930")
+                        draft = panel.current_draft()
+                        panel.start_time_action.trigger()
+                        self.app.processEvents()
+                        dialog = next(child for child in panel.findChildren(QDialog) if child.isVisible())
+                        self.assertEqual(dialog.windowTitle(), _("Start"))
+                        self.assertEqual(dialog.select_button.text(), _("Select"))
+                        self.assertEqual(dialog.close_button.text(), _("Close"))
+                        self.assertEqual(dialog.time_input.time(), QTime(9, 30))
+                        for widget in (dialog.time_input, dialog.select_button, dialog.close_button):
+                            self.assertTrue(dialog.rect().contains(widget.geometry()))
+                            self.assertGreaterEqual(widget.height(), widget.fontMetrics().height() + 10)
+                        directory = os.environ.get("WORKLOGGER_SCREENSHOTS")
+                        if directory:
+                            target = Path(directory)
+                            target.mkdir(parents=True, exist_ok=True)
+                            self.assertTrue(dialog.grab().save(str(target / f"{language}-time-picker-{'dark' if dark else 'light'}.png")))
+                        dialog.close_button.click()
+                        self.assertEqual(panel.current_draft(), draft)
+                    finally:
+                        window.close()
 
     def test_compact_notes_and_auto_record_remain_available(self):
         records = MemoryWorkLogRepository()

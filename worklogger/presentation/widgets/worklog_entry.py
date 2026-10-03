@@ -5,9 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
-from PySide6.QtCore import QTimer, Qt, Signal
+from PySide6.QtCore import QTime, QTimer, Qt, Signal
 from PySide6.QtWidgets import (
     QComboBox,
+    QDialog,
     QDoubleSpinBox,
     QFormLayout,
     QGridLayout,
@@ -18,6 +19,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSizePolicy,
     QTabWidget,
+    QTimeEdit,
     QToolButton,
     QTextEdit,
     QVBoxLayout,
@@ -25,6 +27,7 @@ from PySide6.QtWidgets import (
 )
 
 from worklogger.domain.worklog.models import WorkType
+from worklogger.domain.worklog.rules import parse_time
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels.auto_record import (
@@ -32,6 +35,7 @@ from worklogger.presentation.viewmodels.auto_record import (
     AutoRecordViewModel,
 )
 from worklogger.presentation.viewmodels.worklog_entry import WorkLogEntryForm
+from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 
 
@@ -43,6 +47,40 @@ class WorkLogEntryDraft:
     break_hours: float
     note: str
     work_type: str
+
+
+class _TimePickerDialog(QDialog):
+    def __init__(self, title: str, initial_time: str, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.setObjectName("manual_time_picker_dialog")
+        self.setWindowTitle(title)
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        apply_window_icon(self)
+        root = QVBoxLayout(self)
+        root.setContentsMargins(16, 16, 16, 16)
+        root.setSpacing(12)
+        self.time_input = QTimeEdit()
+        self.time_input.setObjectName("manual_time_picker_widget")
+        self.time_input.setDisplayFormat("HH:mm")
+        self.time_input.setKeyboardTracking(False)
+        self.time_input.setTimeRange(QTime(0, 0), QTime(23, 59))
+        parsed = parse_time(initial_time)
+        self.time_input.setTime(QTime.fromString(parsed, "HH:mm") if parsed else QTime.currentTime())
+        root.addWidget(self.time_input)
+        buttons = QHBoxLayout()
+        buttons.addStretch()
+        self.close_button = QPushButton(_("Close"))
+        self.close_button.setObjectName("manual_time_picker_close_button")
+        self.close_button.clicked.connect(self.reject)
+        buttons.addWidget(self.close_button)
+        self.select_button = QPushButton(_("Select"))
+        self.select_button.setObjectName("manual_time_picker_select_button")
+        self.select_button.setProperty("variant", "primary")
+        self.select_button.setDefault(True)
+        self.select_button.clicked.connect(self.accept)
+        buttons.addWidget(self.select_button)
+        root.addLayout(buttons)
+        self.setMinimumWidth(260)
 
 
 class WorkLogEntryPanel(QWidget):
@@ -87,19 +125,19 @@ class WorkLogEntryPanel(QWidget):
 
         self.start_input = QLineEdit()
         self.start_input.setObjectName("start_time_line_edit")
-        if compact:
-            action = self.start_input.addAction(ui_icon("clock"), QLineEdit.ActionPosition.TrailingPosition)
-            action.setToolTip(_("Start"))
-            action.triggered.connect(self.start_input.setFocus)
+        self.start_time_action = self.start_input.addAction(ui_icon("clock"), QLineEdit.ActionPosition.TrailingPosition)
+        self.start_time_action.setText(_("Start"))
+        self.start_time_action.setToolTip(_("Start"))
+        self.start_time_action.triggered.connect(lambda: self._open_time_picker(self.start_input, _("Start")))
         self.start_input.textChanged.connect(self._emit_draft_changed)
         form.addRow(_("Start"), self.start_input)
 
         self.end_input = QLineEdit()
         self.end_input.setObjectName("end_time_line_edit")
-        if compact:
-            action = self.end_input.addAction(ui_icon("clock"), QLineEdit.ActionPosition.TrailingPosition)
-            action.setToolTip(_("End"))
-            action.triggered.connect(self.end_input.setFocus)
+        self.end_time_action = self.end_input.addAction(ui_icon("clock"), QLineEdit.ActionPosition.TrailingPosition)
+        self.end_time_action.setText(_("End"))
+        self.end_time_action.setToolTip(_("End"))
+        self.end_time_action.triggered.connect(lambda: self._open_time_picker(self.end_input, _("End")))
         self.end_input.textChanged.connect(self._emit_draft_changed)
         form.addRow(_("End"), self.end_input)
 
@@ -202,6 +240,13 @@ class WorkLogEntryPanel(QWidget):
         self.save_button.clicked.connect(self._emit_save_requested)
         root.addWidget(self.save_button)
 
+    def _open_time_picker(self, field: QLineEdit, title: str) -> None:
+        dialog = _TimePickerDialog(title, field.text(), self)
+        dialog.accepted.connect(lambda: field.setText(dialog.time_input.time().toString("HH:mm")))
+        dialog.open()
+        dialog.time_input.setFocus()
+        dialog.time_input.setSelectedSection(QTimeEdit.Section.HourSection)
+
     def current_draft(self) -> WorkLogEntryDraft | None:
         if self._form is None:
             return None
@@ -237,6 +282,11 @@ class WorkLogEntryPanel(QWidget):
         finally:
             self._updating = False
 
+        self.set_preview_form(form)
+
+    def set_preview_form(self, form: WorkLogEntryForm) -> None:
+        # Preview feedback must not rewrite a draft while the user is typing.
+        self._form = form
         flags = []
         if form.is_overnight:
             flags.append(_("Overnight"))

@@ -8,9 +8,10 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import QTime, Qt, Signal
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QApplication, QWidget
+from PySide6.QtTest import QTest
+from PySide6.QtWidgets import QApplication, QDialog, QTimeEdit, QWidget
 
 from worklogger.app.queries.work_log_queries import GetMonthRecordsQuery
 from worklogger.app.use_cases.calendar import GetCalendarEventsForRangeHandler
@@ -233,6 +234,124 @@ class AppWindowTests(unittest.TestCase):
             if button.cell and button.cell.day == date(2026, 4, 20)
         )
         self.assertIn("8.0h", selected.text())
+
+    def test_manual_time_typing_preserves_text_and_saves_normalized_times(self) -> None:
+        for minimal in (False, True):
+            for start, end, expected_start, expected_end in (
+                ("0930", "1830", "09:30", "18:30"),
+                ("09:30", "18:30", "09:30", "18:30"),
+                ("9", "18", "09:00", "18:00"),
+                ("2200", "0730", "22:00", "07:30"),
+            ):
+                with self.subTest(minimal=minimal, start=start):
+                    repository = MemoryWorkLogRepository()
+                    if minimal:
+                        window = MinimalView(
+                            worklog_entry_view_model=WorkLogEntryViewModel(
+                                user_id=1,
+                                get_handler=GetWorkLogHandler(repository),
+                                save_handler=SaveWorkLogHandler(repository),
+                            ),
+                            config=MinimalViewConfig(selected_day=date(2026, 4, 20)),
+                        )
+                    else:
+                        window = _window(repository)
+                    window.show()
+                    try:
+                        self.assertTrue(window.refresh())
+                        panel = window.entry_panel
+                        for field, text in ((panel.start_input, start), (panel.end_input, end)):
+                            field.setFocus()
+                            for index, character in enumerate(text, 1):
+                                QTest.keyClicks(field, character)
+                                self.assertEqual(field.text(), text[:index])
+                                self.assertEqual(field.cursorPosition(), index)
+                        panel.note_toggle_button.setChecked(True)
+                        panel.note_input.setFocus()
+                        QTest.keyClicks(panel.note_input, "Work note")
+                        self.assertEqual(panel.note_input.toPlainText(), "Work note")
+                        self.assertTrue(panel.save_button.isEnabled())
+                        self.assertTrue(window.has_unsaved_changes)
+                        panel.save_button.click()
+                        saved = repository.get_for_day(1, date(2026, 4, 20))
+                        self.assertEqual((saved.start_time, saved.end_time), (expected_start, expected_end))
+                        self.assertEqual(saved.note, "Work note")
+                        self.assertEqual((panel.start_input.text(), panel.end_input.text()), (expected_start, expected_end))
+                        self.assertFalse(window.has_unsaved_changes)
+                    finally:
+                        window.close()
+
+    def test_manual_clock_selection_updates_preview_and_saves_record(self) -> None:
+        repository = MemoryWorkLogRepository()
+        window = _window(repository, confirm_discard_changes=lambda: True)
+        window.show()
+        try:
+            self.assertTrue(window.refresh())
+            panel = window.entry_panel
+            for action, time in ((panel.start_time_action, QTime(9, 15)), (panel.end_time_action, QTime(18, 30))):
+                action.trigger()
+                self._app.processEvents()
+                dialog = next(child for child in panel.findChildren(QDialog) if child.isVisible())
+                dialog.time_input.setTime(QTime(0, 0))
+                dialog.time_input.setFocus()
+                dialog.time_input.setSelectedSection(QTimeEdit.Section.HourSection)
+                QTest.keyClicks(dialog.time_input, f"{time.hour():02d}")
+                dialog.time_input.setSelectedSection(QTimeEdit.Section.MinuteSection)
+                QTest.keyClicks(dialog.time_input, f"{time.minute():02d}")
+                QTest.keyClick(dialog.time_input, Qt.Key.Key_Return)
+                self._app.processEvents()
+                self.assertFalse(any(child.isVisible() for child in panel.findChildren(QDialog)))
+            self.assertEqual(panel.start_input.text(), "09:15")
+            self.assertEqual(panel.end_input.text(), "18:30")
+            self.assertAlmostEqual(panel._form.worked_hours, 8.25)
+            self.assertTrue(panel.save_button.isEnabled())
+            self.assertTrue(window.has_unsaved_changes)
+            panel.save_button.click()
+            record = repository.get_for_day(1, date(2026, 4, 20))
+            self.assertEqual((record.start_time, record.end_time), ("09:15", "18:30"))
+            self.assertFalse(window.has_unsaved_changes)
+        finally:
+            window.close()
+
+    def test_manual_time_editing_keeps_cursor_and_invalid_drafts(self) -> None:
+        repository = MemoryWorkLogRepository()
+        repository.save(WorkLog(1, date(2026, 4, 20), "09:00", "18:00", 1.0))
+        window = _window(repository, confirm_discard_changes=lambda: False)
+        window.show()
+        try:
+            self.assertTrue(window.refresh())
+            panel = window.entry_panel
+            panel.start_input.setFocus()
+            panel.start_input.setSelection(3, 2)
+            QTest.keyClicks(panel.start_input, "30")
+            self.assertEqual(panel.start_input.text(), "09:30")
+            self.assertEqual(panel.start_input.cursorPosition(), 5)
+            panel.start_input.setCursorPosition(2)
+            QTest.keyClick(panel.start_input, Qt.Key.Key_Backspace)
+            self.assertEqual(panel.start_input.text(), "0:30")
+            self.assertEqual(panel.start_input.cursorPosition(), 1)
+            QTest.keyClicks(panel.start_input, "9")
+            self.assertEqual(panel.start_input.text(), "09:30")
+            self.assertEqual(panel.start_input.cursorPosition(), 2)
+            for field, text in ((panel.start_input, "25:00"), (panel.end_input, "26:00")):
+                field.selectAll()
+                QTest.keyClicks(field, text)
+                self.assertEqual(field.text(), text)
+            self.assertFalse(panel.save_button.isEnabled())
+            self.assertTrue(window.has_unsaved_changes)
+            self.assertFalse(window.select_day(date(2026, 4, 21)))
+            panel._emit_save_requested()
+            self.assertEqual(panel.start_input.text(), "25:00")
+            self.assertEqual(panel.end_input.text(), "26:00")
+            self.assertEqual(repository.get_for_day(1, date(2026, 4, 20)).start_time, "09:00")
+            self.warning.assert_called_once()
+            self.assertEqual(panel._form.errors, ("time_range_invalid",))
+            panel.start_input.setText("09:30")
+            panel.end_input.setText("18:30")
+            self.assertTrue(panel.save_button.isEnabled())
+            panel.save_button.click()
+        finally:
+            window.close()
 
     def test_app_window_displays_handler_errors(self) -> None:
         window = _window(

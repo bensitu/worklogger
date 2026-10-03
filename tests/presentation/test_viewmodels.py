@@ -297,6 +297,25 @@ class PresentationViewModelTests(unittest.TestCase):
         self.assertFalse(invalid.value.can_save)
         self.assertEqual(invalid.value.errors, ("time_range_incomplete",))
 
+    def test_invalid_time_text_is_dirty_and_cannot_be_saved_as_empty(self) -> None:
+        view_model = WorkLogEntryViewModel(
+            user_id=1, get_handler=self.get_handler, save_handler=self.save_handler,
+        )
+        day = date(2026, 4, 20)
+        self.assertTrue(view_model.load(day).ok)
+        for start, end in (("25:00", "26:00"), ("09:99", None), (None, "invalid")):
+            with self.subTest(start=start, end=end):
+                form = view_model.preview(
+                    day, start_time=start, end_time=end, break_hours=1.0,
+                    note="", work_type=WorkType.NORMAL.value,
+                ).value
+                self.assertEqual((form.start_time, form.end_time), (start, end))
+                self.assertTrue(form.dirty)
+                self.assertFalse(form.can_save)
+                self.assertEqual(form.errors, ("time_range_invalid",))
+                self.assertFalse(view_model.save(form).ok)
+                self.assertIsNone(self.work_logs.get_for_day(1, day))
+
     def test_stats_panel_viewmodel_builds_month_summary(self) -> None:
         self.save_work_log(
             date(2026, 4, 20),

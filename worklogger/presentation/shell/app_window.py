@@ -454,7 +454,7 @@ class AppWindow(QMainWindow):
         if not result.ok or result.value is None:
             self._set_error(result.error)
             return
-        self.entry_panel.set_form(result.value)
+        self.entry_panel.set_preview_form(result.value)
         self._entry_dirty = result.value.dirty
         if result.value.errors:
             self._set_status(", ".join(result.value.errors))
@@ -474,7 +474,7 @@ class AppWindow(QMainWindow):
             self._set_error(preview.error)
             return
         if preview.value.errors:
-            self.entry_panel.set_form(preview.value)
+            self.entry_panel.set_preview_form(preview.value)
             self._set_status(", ".join(preview.value.errors), notify=True, error=True)
             return
         saved = self._worklog_entry_view_model.save(preview.value)

@@ -7,8 +7,10 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from PySide6.QtCore import QTime, Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QApplication
+from PySide6.QtTest import QTest
+from PySide6.QtWidgets import QApplication, QDialog, QToolButton
 
 from worklogger.presentation.theme import ThemeEngine
 from worklogger.presentation.theme.fonts import _application_font
@@ -197,6 +199,59 @@ class QtWidgetTests(unittest.TestCase):
 
         self.assertFalse(panel.save_button.isEnabled())
         self.assertEqual(panel.error_label.text(), "time_range_incomplete")
+
+    def test_manual_clock_buttons_select_times_or_cancel_without_changing_draft(self) -> None:
+        for compact in (False, True):
+            with self.subTest(compact=compact):
+                panel = WorkLogEntryPanel(compact=compact)
+                panel.set_form(WorkLogEntryForm(
+                    user_id=1, day=date(2026, 4, 20), start_time="0930", end_time="1830",
+                    break_hours=1.0, note="Keep note", work_type="normal", worked_hours=8.0,
+                    is_overnight=False, is_leave=False, dirty=False,
+                ))
+                drafts = []
+                panel.draft_changed.connect(drafts.append)
+                panel.show()
+                try:
+                    for field, title, initial, selected in (
+                        (panel.start_input, "Start", QTime(9, 30), QTime(0, 0)),
+                        (panel.end_input, "End", QTime(18, 30), QTime(23, 59)),
+                    ):
+                        clock = field.findChild(QToolButton)
+                        QTest.mouseClick(clock, Qt.MouseButton.LeftButton)
+                        self._app.processEvents()
+                        dialog = next(child for child in panel.findChildren(QDialog) if child.isVisible())
+                        self.assertEqual(dialog.windowTitle(), title)
+                        self.assertEqual(dialog.time_input.displayFormat(), "HH:mm")
+                        self.assertEqual(dialog.time_input.time(), initial)
+                        self.assertFalse(dialog.windowIcon().isNull())
+                        dialog.time_input.setTime(selected)
+                        before = field.text()
+                        QTest.keyClick(dialog, Qt.Key.Key_Escape)
+                        self._app.processEvents()
+                        self.assertEqual(field.text(), before)
+                        self.assertEqual(drafts, [])
+                        QTest.mouseClick(clock, Qt.MouseButton.LeftButton)
+                        self._app.processEvents()
+                        dialog = next(child for child in panel.findChildren(QDialog) if child.isVisible())
+                        dialog.time_input.setTime(selected)
+                        QTest.mouseClick(dialog.select_button, Qt.MouseButton.LeftButton)
+                        self._app.processEvents()
+                        self.assertEqual(field.text(), selected.toString("HH:mm"))
+                        self.assertEqual(len(drafts), 1)
+                        self.assertEqual(drafts[-1].note, "Keep note")
+                        drafts.clear()
+                    panel.start_input.setText("invalid")
+                    drafts.clear()
+                    panel.start_time_action.trigger()
+                    self._app.processEvents()
+                    dialog = next(child for child in panel.findChildren(QDialog) if child.isVisible())
+                    self.assertTrue(dialog.time_input.time().isValid())
+                    QTest.mouseClick(dialog.close_button, Qt.MouseButton.LeftButton)
+                    self.assertEqual(panel.start_input.text(), "invalid")
+                    self.assertEqual(drafts, [])
+                finally:
+                    panel.close()
 
     def test_worklog_entry_panel_auto_record_tab_applies_timer_values(self) -> None:
         current = datetime(2026, 4, 20, 9, 0)

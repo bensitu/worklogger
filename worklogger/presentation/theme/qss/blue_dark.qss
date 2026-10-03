@@ -273,6 +273,7 @@ QTextEdit,
 QPlainTextEdit,
 QComboBox,
 QSpinBox,
+QTimeEdit,
 QDoubleSpinBox {
   background: {{ input_background }};
   border: 1px solid {{ input_border }};
@@ -300,6 +301,7 @@ QTextEdit:focus,
 QPlainTextEdit:focus,
 QComboBox:focus,
 QSpinBox:focus,
+QTimeEdit:focus,
 QDoubleSpinBox:focus {
   border-color: {{ accent }};
 }
@@ -315,27 +317,27 @@ QComboBox::down-arrow {
   height: 14px;
 }
 
-QDoubleSpinBox::up-button, QSpinBox::up-button {
+QDoubleSpinBox::up-button, QSpinBox::up-button, QTimeEdit::up-button {
   subcontrol-origin: border;
   subcontrol-position: top right;
   width: 22px;
   border: none;
 }
 
-QDoubleSpinBox::down-button, QSpinBox::down-button {
+QDoubleSpinBox::down-button, QSpinBox::down-button, QTimeEdit::down-button {
   subcontrol-origin: border;
   subcontrol-position: bottom right;
   width: 22px;
   border: none;
 }
 
-QDoubleSpinBox::up-arrow, QSpinBox::up-arrow {
+QDoubleSpinBox::up-arrow, QSpinBox::up-arrow, QTimeEdit::up-arrow {
   image: url("{{ icons_root }}/chevron-up.svg");
   width: 12px;
   height: 12px;
 }
 
-QDoubleSpinBox::down-arrow, QSpinBox::down-arrow {
+QDoubleSpinBox::down-arrow, QSpinBox::down-arrow, QTimeEdit::down-arrow {
   image: url("{{ icons_root }}/chevron-down.svg");
   width: 12px;
   height: 12px;
