@@ -9,7 +9,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QDialog, QFrame, QLineEdit, QWidget
+from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QWidget
 
 from worklogger.__about__ import APP_NAME
 from worklogger.app.use_cases.auth import (
@@ -34,7 +34,6 @@ from worklogger.presentation.auth import (
     ResetPasswordDraft,
 )
 from worklogger.presentation.viewmodels import AuthViewModel
-from worklogger.presentation.widgets.assets import asset_path
 
 
 def _app() -> QApplication:
@@ -247,7 +246,7 @@ class AuthPresentationTests(unittest.TestCase):
         dialog.set_error("invalid_credentials")
         self.assertEqual(dialog.status_label.text(), "invalid_credentials")
 
-    def test_login_dialog_submits_with_return_key_and_uses_equal_columns(self) -> None:
+    def test_login_dialog_submits_with_return_key(self) -> None:
         dialog = LoginDialog()
         logins: list[LoginDraft] = []
         dialog.login_submitted.connect(logins.append)
@@ -260,20 +259,13 @@ class AuthPresentationTests(unittest.TestCase):
         QTest.keyClick(dialog.password_input, Qt.Key.Key_Return)
 
         self.assertEqual(logins, [LoginDraft("alice", "secret123", False)])
-        self.assertEqual(dialog.hero_frame.width(), dialog.form_frame.width())
         self.assertEqual(dialog.login_button.text(), "Login")
         self.assertEqual(dialog.windowTitle(), APP_NAME)
         dialog.close()
 
-    def test_login_dialog_uses_icons_divider_and_runtime_asset_fallbacks(self) -> None:
+    def test_external_login_is_unavailable_without_a_provider(self) -> None:
         dialog = LoginDialog()
-
-        self.assertEqual(len(dialog.username_input.actions()), 1)
-        self.assertEqual(len(dialog.password_input.actions()), 2)
-        self.assertIsNotNone(dialog.findChild(QFrame, "login_divider_left_frame"))
-        self.assertIsNotNone(dialog.findChild(QFrame, "login_divider_right_frame"))
-        self.assertTrue(asset_path("images/worklogger_login_image.webp").exists())
-        self.assertTrue(asset_path("images/worklogger_login_image.webp").exists())
+        self.addCleanup(dialog.deleteLater)
         self.assertFalse(dialog.google_login_button.isEnabled())
         self.assertFalse(dialog.microsoft_login_button.isEnabled())
 

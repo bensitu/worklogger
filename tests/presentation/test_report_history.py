@@ -8,8 +8,7 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import qInstallMessageHandler
-from PySide6.QtWidgets import QApplication, QMessageBox, QScrollArea
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 from tests.app.test_notes_and_reports_use_cases import (
     MemoryCalendarRepository, MemoryQuickLogRepository, MemoryTemplateProvider,
@@ -30,7 +29,7 @@ from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteR
 from worklogger.infrastructure.security import PBKDF2PasswordHasher
 from worklogger.presentation.reporting.dialog import ReportDialog
 from worklogger.presentation.shell.pages import ReportsPage
-from worklogger.presentation.theme import ThemeEngine, install_bundled_fonts
+from worklogger.presentation.theme import install_bundled_fonts
 from worklogger.presentation.viewmodels.reports import ReportEditorViewModel
 
 
@@ -231,44 +230,6 @@ class ReportHistoryTests(unittest.TestCase):
                 self.assertTrue(page.history_panel._buttons[0].property("active"))
                 page.history_panel.search_line_edit.clear()
                 self.assertEqual(sum(bool(button.property("active")) for button in page.history_panel._buttons.values()), 1)
-
-    def test_history_cards_fit_both_color_modes_and_narrow_layouts(self):
-        for report_type in ("daily", "weekly", "monthly"):
-            self.seed(report_type, "Original")
-            self.seed(report_type, "Another report")
-        warnings = []
-        previous_handler = qInstallMessageHandler(lambda kind, context, message: warnings.append(message))
-        original_stylesheet = self.app.styleSheet()
-        try:
-            for language in ("en_US", "ja_JP", "ko_KR", "zh_CN", "zh_TW"):
-                set_language(language)
-                page = self.page()
-                page.show()
-                for dark in (False, True):
-                    self.app.setStyleSheet(ThemeEngine().application_stylesheet("blue", dark=dark))
-                    page.setPalette(ThemeEngine().qt_palette("blue", dark=dark))
-                    for width in (740, 1040):
-                        page.resize(width, 620)
-                        for report_type in ("daily", "weekly", "monthly"):
-                            page.report_type_control.set_value(report_type)
-                            self.app.processEvents()
-                            buttons = tuple(page.history_panel._buttons.values())
-                            for button in buttons:
-                                self.assertLessEqual(button._document.size().height(), button.height() - 20)
-                            for first, second in zip(buttons, buttons[1:]):
-                                self.assertLess(first.geometry().bottom(), second.geometry().top())
-                            for scroll in page.findChildren(QScrollArea):
-                                self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)
-                            directory = os.environ.get("WORKLOGGER_SCREENSHOTS")
-                            if directory and language in ("en_US", "zh_CN") and width == 1040:
-                                target = Path(directory)
-                                target.mkdir(parents=True, exist_ok=True)
-                                self.assertTrue(page.grab().save(str(target / f"reports-{language}-{report_type}-{'dark' if dark else 'light'}.png")))
-                page.hide()
-            self.assertFalse([message for message in warnings if "QFont::" in message or "QPainter::" in message], warnings)
-        finally:
-            self.app.setStyleSheet(original_stylesheet)
-            qInstallMessageHandler(previous_handler)
 
 
 if __name__ == "__main__":

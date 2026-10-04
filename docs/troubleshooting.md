@@ -57,15 +57,17 @@ style before applying QSS. This covers business controls and Qt-generated
 dropdowns, including the non-native file dialog. Existing palettes, fonts, QSS,
 and native file dialogs are retained; macOS/Linux and other Windows base styles
 are unchanged. No Qt warning handler is installed by this compatibility logic.
-Verify with:
+When investigating a rendering problem, use the optional layout checks:
 
 ```sh
-python -m unittest tests.presentation.test_native_fonts tests.presentation.test_native_dropdowns -v
+python -m unittest tests.visual.shell_checks -v
 ```
 
-The login check isolates its database, preferences, and session storage;
-dropdown checks use memory-backed workflows and open each control first in a
-separate process.
+These checks use synthetic records and offscreen rendering. For a native font
+warning, also reproduce the affected control on the target OS in a fresh process
+with a temporary database and isolated preferences. Check startup, login, and the
+affected popup while collecting Qt messages. Such diagnostic reproductions are
+not part of routine test runs. See [testing](testing.md).
 
 Remove `QT_QPA_PLATFORM=offscreen` from an interactive shell if the application
 appears to run without a visible window. Check the system tray/menu bar when

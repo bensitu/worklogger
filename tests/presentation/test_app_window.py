@@ -282,56 +282,30 @@ class AppWindowTests(unittest.TestCase):
                     finally:
                         window.close()
 
-    def test_auto_record_keeps_button_layout_and_break_timer_through_preview(self) -> None:
+    def test_auto_record_keeps_break_timer_and_saves_elapsed_time(self) -> None:
         repository = MemoryWorkLogRepository()
         current = datetime(2026, 4, 20, 9, 0)
         window = _window(repository, confirm_discard_changes=lambda: True)
         panel = window.entry_panel
         panel._auto_record_view_model = AutoRecordViewModel(clock=lambda: current)
-        window.resize(880, 580)
-        window.show()
         try:
             self.assertTrue(window.refresh())
             panel.time_tabs.setCurrentIndex(1)
-            buttons = (panel.clock_in_button, panel.clock_out_button, panel.break_button, panel.quick_break_button)
-            self._app.processEvents()
-            initial_rows = tuple((button.y(), button.height()) for button in buttons)
-
-            def check_layout():
-                self._app.processEvents()
-                self.assertEqual(tuple((button.y(), button.height()) for button in buttons), initial_rows)
-                self.assertEqual(len({button.height() for button in buttons}), 1)
-                self.assertEqual(buttons[0].y(), buttons[1].y())
-                self.assertEqual(buttons[2].y(), buttons[3].y())
-                self.assertLessEqual(abs(buttons[0].width() - buttons[1].width()), 1)
-                for button in buttons:
-                    self.assertTrue(panel.auto_tab.rect().contains(button.geometry()))
-                    for line in button.text().splitlines():
-                        self.assertLessEqual(button.fontMetrics().horizontalAdvance(line), button.width() - 18)
-                    self.assertLessEqual(len(button.text().splitlines()) * button.fontMetrics().height(), button.height() - 12)
-
-            check_layout()
             panel.clock_in_button.click()
-            check_layout()
             current = datetime(2026, 4, 20, 10, 0)
             panel.break_button.click()
             self.assertTrue(panel._auto_record_view_model.state().break_active)
             self.assertTrue(panel.auto_timer.isActive())
-            check_layout()
             current = datetime(2026, 4, 20, 10, 30)
             panel._refresh_auto_state()
             self.assertIn("90m", panel.break_button.text())
-            check_layout()
             panel.break_button.click()
             self.assertFalse(panel.auto_timer.isActive())
             self.assertEqual(panel.break_input.value(), 1.5)
-            check_layout()
             panel.quick_break_button.click()
             self.assertEqual(panel.break_input.value(), 1.75)
-            check_layout()
             current = datetime(2026, 4, 20, 18, 0)
             panel.clock_out_button.click()
-            check_layout()
             self.assertTrue(panel.save_button.isEnabled())
             panel.save_button.click()
             record = repository.get_for_day(1, date(2026, 4, 20))
@@ -657,44 +631,6 @@ class AppWindowTests(unittest.TestCase):
 
         self.assertTrue(controller.attached)
         self.assertFalse(event.isAccepted())
-
-    def test_app_window_and_minimal_view_render_offscreen(self) -> None:
-        window = _window(MemoryWorkLogRepository(), account_name="alice")
-        self.assertTrue(window.refresh())
-        window.resize(1000, 700)
-        window.show()
-        self._app.processEvents()
-
-        window_pixmap = window.grab()
-
-        self.assertFalse(window_pixmap.isNull())
-        self.assertGreaterEqual(window_pixmap.width(), 900)
-        self.assertGreaterEqual(window_pixmap.height(), 580)
-        window.close()
-
-        view = MinimalView(
-            worklog_entry_view_model=WorkLogEntryViewModel(
-                user_id=1,
-                get_handler=GetWorkLogHandler(MemoryWorkLogRepository()),
-                save_handler=SaveWorkLogHandler(MemoryWorkLogRepository()),
-            ),
-            config=MinimalViewConfig(
-                selected_day=date(2026, 4, 20),
-                today=date(2026, 4, 13),
-                account_name="alice",
-            ),
-        )
-        self.assertTrue(view.refresh())
-        view.resize(420, 420)
-        view.show()
-        self._app.processEvents()
-
-        view_pixmap = view.grab()
-
-        self.assertFalse(view_pixmap.isNull())
-        self.assertGreaterEqual(view_pixmap.width(), 400)
-        self.assertGreaterEqual(view_pixmap.height(), 380)
-        view.close()
 
     def test_minimal_view_saves_entry_and_navigates_days(self) -> None:
         repository = MemoryWorkLogRepository()

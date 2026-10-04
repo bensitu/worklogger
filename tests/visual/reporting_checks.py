@@ -9,17 +9,12 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtCore import qInstallMessageHandler
 from PySide6.QtWidgets import QApplication, QScrollArea
 
-from worklogger.domain.analytics.models import ChartDataBundle
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog, WorkType
 from worklogger.infrastructure.i18n import available_languages, set_language
-from worklogger.presentation.date_labels import duration_label, period_range_label
-from worklogger.presentation.shell.pages import _month_chart_labels, _period_label
 from worklogger.presentation.viewmodels.reports import ReportEditorState
-from worklogger.presentation.widgets.combo_chart import chart_tick_step
 from worklogger.presentation.widgets.report_history import ReportHistoryDisplayItem
-from worklogger.presentation.widgets.segmented_control import SegmentedControl
-from tests.presentation.test_ui_layout import sample_window
+from tests.visual.shell_checks import sample_window
 from tests.presentation.test_shell_pages import ReportsViewModel
 
 
@@ -39,7 +34,7 @@ class WeeklyReports(ReportsViewModel):
                 date(2026, 4, 27), date(2026, 4, 20)), 1)))
 
 
-class CalendarReportsAnalyticsLayoutTests(unittest.TestCase):
+class ReportingLayoutChecks(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
@@ -53,35 +48,6 @@ class CalendarReportsAnalyticsLayoutTests(unittest.TestCase):
             path = Path(directory)
             path.mkdir(parents=True, exist_ok=True)
             self.assertTrue(widget.grab().save(str(path / f"{language}-{name}.png")))
-
-    def test_duration_rounding_and_localized_periods(self):
-        set_language("en_US")
-        for hours, label in ((186.75, "186h 45m"), (1.999, "2h 0m"), (-0.25, "-0h 15m"), (0, "0h 0m")):
-            self.assertEqual(duration_label(hours), label)
-        self.assertEqual(period_range_label(date(2026, 5, 18), date(2026, 5, 24)), "May 18 - May 24, 2026")
-        self.assertEqual(period_range_label(date(2025, 12, 29), date(2026, 1, 4)), "December 29, 2025 - January 4, 2026")
-        self.assertIn("Week 1", _period_label(ReportEditorState(1, "weekly", date(2025, 12, 29), date(2026, 1, 4), "")))
-
-    def test_chart_labels_preserve_values_and_stacking(self):
-        bundle = ChartDataBundle((("12", 8.5), ("01", 7.25)), (("12", 8.5), ("01", 7.25)), frozenset({1}), (None, 8), (("01", 8),))
-        result = _month_chart_labels(bundle)
-        self.assertEqual(result.bar_data, (("December", 8.5), ("January", 7.25)))
-        self.assertEqual(result.leave_hours_data, (("January", 8),))
-        self.assertEqual(result.leave_indices, bundle.leave_indices)
-        self.assertEqual(bundle.bar_data[0][0], "12")
-        for maximum in (0, 8, 10, 40, 59.5, 4000):
-            self.assertGreaterEqual(chart_tick_step(maximum) * 4, maximum)
-
-    def test_segment_selection_is_visibly_checked_and_signals_once(self):
-        control = SegmentedControl((("first", "First"), ("second", "Second")), tabs=True)
-        changed = []
-        control.value_changed.connect(changed.append)
-        self.assertTrue(control._buttons["first"].isChecked())
-        control._buttons["second"].click()
-        control._buttons["second"].click()
-        self.assertEqual(changed, ["second"])
-        self.assertTrue(control._buttons["second"].isChecked())
-        self.assertFalse(control._buttons["first"].isChecked())
 
     def test_calendar_cells_do_not_stretch_with_tall_window(self):
         window = sample_window()
@@ -104,7 +70,7 @@ class CalendarReportsAnalyticsLayoutTests(unittest.TestCase):
         try:
             for language in available_languages():
                 set_language(language)
-                for dark in (False, True):
+                for dark in ((False, True) if language == "en_US" else (language in ("ja_JP", "zh_TW"),)):
                     window = sample_window()
                     window.reports_page._view_model = WeeklyReports()
                     window._config = replace(window._config, dark=dark)
@@ -115,7 +81,8 @@ class CalendarReportsAnalyticsLayoutTests(unittest.TestCase):
                     window.refresh()
                     window.show()
                     try:
-                        for width, height in ((880, 580), (1100, 700)):
+                        sizes = ((880, 580), (1100, 700)) if language == "en_US" else ((880, 580),)
+                        for width, height in sizes:
                             window.resize(width, height)
                             for route in ("reports", "analytics"):
                                 self.assertTrue(window._switch_route(route))

@@ -1,124 +1,120 @@
 # Testing
 
+## Scope
+
+Keep tests that protect durable behavior: business rules, authorization, data
+integrity, compatibility, error recovery, and workflows across application layers.
+Use representative inputs and boundaries, and prefer observable results over
+private widget structure, exact painter calls, or fixed pixel offsets.
+
+Do not retain temporary diagnostic reproductions or duplicate checks for a single
+incident. A defect can justify a lasting regression test when it protects a
+general contract, such as preserving committed SQLite transactions or unsaved
+editor content. Consolidate that coverage into the relevant behavior tests.
+
+Run the smallest relevant tests first. Broaden coverage for shared behavior,
+persistent data, or platform compatibility changes. Do not repeat the complete
+suite or visual checks for every small change.
+
 ## Organization
 
-The suite uses Python's `unittest`. Test modules use in-memory fake repositories,
-temporary files/databases, injected clocks and HTTP clients, and Qt's offscreen
-platform. No live AI account or downloaded model is required for the standard suite.
+The suite uses Python's `unittest`, in-memory repositories, temporary files and
+databases, injected clocks and HTTP clients, and Qt's offscreen platform. It does
+not require a live AI account or downloaded model.
 
 | Directory | Coverage |
 | --- | --- |
 | `tests/domain/` | Time, work types, credentials, reports, analytics rules |
-| `tests/app/` | Handler behavior, authorization, imports, AI context, model selection |
-| `tests/infrastructure/` | SQLite, schema compatibility, backups, credentials, files, adapters |
-| `tests/presentation/` | View models, dialogs, controllers, jobs, layout, fonts, icons, workflows |
-| `tests/architecture/` | Dependency boundaries, names, application contracts, documentation |
-| `tests/i18n/` | Language normalization, gettext extraction and catalog consistency |
+| `tests/app/` | Handlers, authorization, imports, AI context, model selection |
+| `tests/infrastructure/` | SQLite, migrations, backups, credentials, adapters |
+| `tests/presentation/` | View models, signals, controllers, jobs, user workflows |
+| `tests/architecture/` | Dependency boundaries, application contracts, documentation |
+| `tests/i18n/` | Language normalization, gettext extraction, catalog consistency |
+| `tests/visual/` | Optional rendering and layout checks |
+
+Default discovery includes functional Qt tests but excludes the visual modules,
+whose filenames do not start with `test`. Functional Qt tests may instantiate
+widgets or process events; they do not perform screenshot or layout matrices.
+Catalog completeness is checked centrally rather than by repeating every
+workflow in every language.
 
 ## Commands
 
-Compile translations before tests that inspect localized text:
+Compile translations before tests that inspect localized text. Run the modules
+relevant to the change, for example:
 
 ```sh
 python scripts/i18n/i18n_compile.py
-python scripts/i18n/i18n_check.py
 python -m unittest tests.domain.test_worklog_rules -v
-python -m unittest tests.infrastructure.test_activity_schema_migration -v
+python -m unittest tests.infrastructure.test_data_portability_infrastructure -v
 python -m unittest tests.presentation.test_auth_presentation -v
-python -m unittest tests.presentation.test_desktop_exit tests.presentation.test_error_messages -v
-python -m unittest tests.presentation.test_native_fonts -v
-python -m unittest tests.presentation.test_native_dropdowns -v
+```
+
+When broader verification is needed:
+
+```sh
 python -m unittest discover -s tests -t . -v
 ```
 
-The native font check starts an isolated Windows subprocess with the `windows11`
-style before application initialization. It signs in through the login dialog,
-shows the main window, and opens Add Entry and export menus, input context menus,
-nested menus, available tray menus, and every settings category. It checks login
-languages and light/dark themes for Qt font warnings. It is skipped on other
-platforms; headless widget tests alone do not exercise Windows style drawing.
-Synthetic saved daily, weekly, and monthly reports also verify that sidebar and
-report-type changes do not show detached history widgets as independent windows.
+Qt state is process-global. If a combined run has order-dependent behavior, run
+the affected modules separately to diagnose it. Do not treat a failed or
+interrupted run as successful verification.
 
-`tests.presentation.test_report_history_widgets` checks repeated history
-rendering, empty results, searching, sidebar navigation, and deferred deletion.
-Replaced rows must remain hidden children of the history content until deleted.
+## Optional Visual Checks
 
-The native dropdown check starts each of the nine business combo boxes and both
-Qt file-dialog dropdowns in independent processes to avoid the Windows style's
-font-metric cache masking a failure. It opens and cancels each popup in five
-languages and light/dark themes and verifies that cancellation preserves the
-selection. Repeat with `QT_SCALE_FACTOR=1.5` to check additional display scaling;
-the native platform scale is multiplied by this factor.
-Run native GUI checks sequentially: competing native windows can dismiss each
-other's popups through focus changes. `WORKLOGGER_SCREENSHOTS` also enables
-dropdown popup captures.
-
-For explicit headless execution on PowerShell:
-
-```powershell
-$env:QT_QPA_PLATFORM = "offscreen"
-python -m unittest tests.presentation.test_ui_layout -v
-```
-
-For a POSIX shell:
+Run visual checks when changing layouts, themes, fonts, images, display scaling,
+localized UI text, or the Qt runtime, and when needed for a target-platform
+release. Use representative language, theme, and window-size combinations rather
+than repeating the full Cartesian product.
 
 ```sh
-QT_QPA_PLATFORM=offscreen python -m unittest tests.presentation.test_ui_layout -v
+python -m unittest tests.visual.shell_checks -v
+python -m unittest tests.visual.calendar_checks -v
+python -m unittest tests.visual.reporting_checks -v
 ```
 
-Qt state is process-global. Larger combined runs can become slower as widgets,
-styles, and queued events accumulate. When diagnosing order dependence, run the
-affected modules in separate processes as well as together. A failed or interrupted
-run is not a successful verification.
-
-## Visual Checks
-
-Layout tests cover all five languages, light/dark palettes, multiple window sizes,
-and important geometry relationships. To save screenshots at 150% scaling:
+To retain screenshots at additional scaling in PowerShell:
 
 ```powershell
 $env:QT_QPA_PLATFORM = "offscreen"
 $env:QT_SCALE_FACTOR = "1.5"
 $env:WORKLOGGER_SCREENSHOTS = Join-Path $env:TEMP "worklogger-screenshots"
-python -m unittest tests.presentation.test_ui_layout tests.presentation.test_calendar_layout -v
+python -m unittest tests.visual.shell_checks tests.visual.calendar_checks tests.visual.reporting_checks -v
 ```
 
-Inspect screenshots for text clipping, icon position, incorrect background fills,
-calendar indicators, and horizontal scrolling. Repeat at normal scaling and on
-real target systems. Offscreen rendering does not verify a native tray, OS color
-management, platform dialogs, window decorations, or a packaged application's
-interaction with the desktop.
+Inspect text clipping, icon positions, calendar indicators, summary charts,
+backgrounds, and scrolling. Offscreen rendering does not verify native dialogs,
+tray integration, desktop focus behavior, window decorations, or packaged startup.
+Check relevant native behavior on the target OS only when the change requires it.
+Run interactive checks sequentially to avoid competing windows affecting focus.
 
-The optional `WORKLOGGER_QA_DATABASE` calendar fixture opens a database read-only.
-It is not required; ordinary tests generate synthetic records. Do not attach
-screenshots from private records to public issues.
+Calendar checks use synthetic records by default. Optional
+`WORKLOGGER_QA_DATABASE` opens an existing database read-only. Do not publish
+screenshots containing private records.
 
-## Storage Compatibility Checks
+## Storage Compatibility
 
-The authentication and activity migration tests cover old names, preserved data,
-backup content, repeat execution, backup failure, and interrupted changes.
-Activity storage tests also check unversioned databases and conflicting populated
-tables. Run the backup/restore tests when modifying migrations, since restore
-invokes the migration runner.
+Keep coverage for old schema names, preserved data, repeat migrations, failures,
+and interrupted changes. Backup and restore tests must preserve committed data
+that remains in SQLite's WAL; an integrity check alone cannot establish that the
+latest records were copied. Run these tests when changing storage or migrations.
 
-Use temporary file databases for multi-connection SQLite tests. A fresh `:memory:`
-connection is a different database; it does not emulate the connection factory's
-file-backed persistence behavior.
+Use temporary file databases for multi-connection SQLite tests. Independent
+`:memory:` connections do not emulate file-backed persistence.
 
-## Documentation Checks
+## Documentation and Packaging
 
-Documentation tests check local links, required guides, Python example syntax,
-and the documented current table names. These complement manual review of behavior
-and commands; they do not certify every English statement or external URL.
+Documentation tests check local links, Python example syntax, and documented
+table names. Review descriptions and commands manually as well.
 
-## Build Verification
+For changes affecting translations or packaging, run the relevant checks:
 
 ```sh
+python scripts/i18n/i18n_check.py
 python scripts/build.py --check
 git diff --check
 ```
 
-A release verification also requires a target-platform build and artifact startup
-checks. See [packaging](packaging.md). Record skipped environments and known failures
-explicitly; never imply that a Windows result verifies macOS or Linux.
+Release verification requires a target-platform build and artifact startup checks.
+See [packaging](packaging.md). Record skipped environments and known failures;
+a Windows result does not verify macOS or Linux.

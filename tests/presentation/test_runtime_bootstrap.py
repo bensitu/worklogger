@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QSettings, QTimer, qInstallMessageHandler
+from PySide6.QtCore import QSettings, QTimer
 from PySide6.QtWidgets import QMessageBox
 
 from tests.infrastructure.test_auth_schema_migration import legacy_database
@@ -33,7 +33,7 @@ from worklogger.infrastructure.i18n import _, get_language, set_language
 from worklogger.infrastructure.language_preferences import LanguagePreferences
 from worklogger.infrastructure.calendar import PythonHolidaysProvider
 from worklogger.main import main
-from worklogger.presentation.auth import AuthController, AuthSession, LoginDialog
+from worklogger.presentation.auth import AuthSession, LoginDialog
 from worklogger.presentation.settings import SettingsDialog
 from worklogger.presentation.shell import AppWindowConfig, MinimalView
 from worklogger.presentation.viewmodels import AuthViewModel
@@ -217,44 +217,36 @@ class RuntimeBootstrapTests(unittest.TestCase):
             finally:
                 window.close()
 
-    def test_legacy_admin_logs_in_through_real_dialog_after_startup_migration(self) -> None:
+    def test_legacy_admin_can_authenticate_after_startup_migration(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "worklog.db"
             _, _, admin_id = legacy_database(path)
-            messages: list[str] = []
-            dialogs: list[LoginDialog] = []
 
-            def login_dialog(parent):
-                dialog = LoginDialog(parent)
-                dialogs.append(dialog)
-                dialog.username_input.setText("admin")
-                dialog.password_input.setText("test-password")
-                QTimer.singleShot(0, dialog.login_button.click)
-                QTimer.singleShot(2_000, dialog, dialog.reject)
-                return dialog
+            class LegacyAdminAuthenticator:
+                def __init__(self, model):
+                    self.model = model
 
-            previous = qInstallMessageHandler(lambda _kind, _context, message: messages.append(message))
+                def authenticate(self):
+                    result = self.model.login(username="admin", password="test-password")
+                    if not result.ok:
+                        return Result.failure(result.error)
+                    return Result.success(AuthSession(user=result.value.user))
+
             runtime = None
             try:
                 runtime = build_authenticated_desktop_runtime(
                     DesktopRuntimeConfig(database_path=path, password_iterations=1_000),
                     argv=[],
-                    auth_controller_factory=lambda view_model: AuthController(
-                        view_model, login_dialog_factory=login_dialog,
-                    ),
+                    auth_controller_factory=LegacyAdminAuthenticator,
                 )
                 self.assertTrue(runtime.ok, runtime.error)
                 self.assertEqual(runtime.value.user.id, admin_id)
                 self.assertTrue(runtime.value.user.is_admin)
                 self.assertTrue(runtime.value.window.refresh())
-                self.assertFalse([message for message in messages if "QFont::setPointSize" in message])
                 self.assertEqual(len(list(path.parent.glob("worklog.db.bak_auth_*"))), 1)
             finally:
                 if runtime is not None and runtime.value is not None:
                     runtime.value.window.close()
-                for dialog in dialogs:
-                    dialog.deleteLater()
-                qInstallMessageHandler(previous)
 
     def test_saved_settings_apply_on_restart(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

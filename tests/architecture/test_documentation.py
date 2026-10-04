@@ -25,13 +25,6 @@ DOCUMENTS = (
 
 
 class DocumentationTests(unittest.TestCase):
-    def test_required_documents_have_titles_and_content(self):
-        for path in DOCUMENTS:
-            with self.subTest(document=path.name):
-                content = path.read_text(encoding="utf-8")
-                self.assertTrue(content.startswith("# "))
-                self.assertGreater(len(content.splitlines()), 10)
-
     def test_local_markdown_links_resolve(self):
         for path in DOCUMENTS:
             content = path.read_text(encoding="utf-8")

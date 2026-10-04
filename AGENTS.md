@@ -36,6 +36,10 @@ Universal instructions for AI coding agents.
 
 - Run the smallest relevant check first.
 - Add or update tests when behavior changes, if the project has suitable tests.
+- Prefer durable behavior and integration coverage; avoid duplicate checks of implementation details.
+- Do not retain temporary diagnostic tests that only reproduce a single incident.
+- Keep visual, screenshot, and native GUI checks opt-in. Run them only when changes affect the interface or platform rendering.
+- Do not repeat the complete suite for every small change; match verification to the affected behavior and risk.
 - If a check cannot be run, explain why and state what was verified instead.
 
 ## Safety

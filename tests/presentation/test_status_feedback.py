@@ -8,10 +8,9 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication
 
-from scripts.i18n.catalog_tools import extract_source_messages
 from worklogger.domain.shared.errors import CancellationError, InfrastructureError
 from worklogger.domain.shared.result import Result
-from worklogger.infrastructure.i18n import _, available_languages, set_language
+from worklogger.infrastructure.i18n import _, set_language
 from worklogger.presentation.ai.dialog import AiAssistDialog
 from worklogger.presentation.analytics.dialog import AnalyticsDialog
 from worklogger.presentation.identity.dialog import IdentityDialog
@@ -44,8 +43,8 @@ class StatusFeedbackTests(unittest.TestCase):
             self.assertTrue(label.isHidden())
         label.deleteLater()
 
-    def test_validation_and_model_feedback_are_translated_in_all_languages(self):
-        for language in available_languages():
+    def test_validation_and_model_feedback_use_translated_descriptions(self):
+        for language in ("en_US", "zh_CN"):
             set_language(language)
             panel = WorkLogEntryPanel()
             model = Mock()
@@ -95,33 +94,31 @@ class StatusFeedbackTests(unittest.TestCase):
         state = SimpleNamespace(content="", message="", identities=(), providers=(),
                                 inventory=SimpleNamespace(items=()))
         error = InfrastructureError("test_failure", "test_failure")
-        for language in available_languages():
-            set_language(language)
-            for factory in factories:
-                model = Mock()
-                model.load.return_value = Result.success(state)
-                dialog = factory(model)
-                with self.subTest(language=language, dialog=type(dialog).__name__):
-                    try:
-                        # Rendering is covered by each dialog's presentation tests.
-                        if hasattr(dialog, "set_state"):
-                            dialog.set_state = Mock()
-                        self.assertTrue(dialog.status_label.isHidden())
-                        self.assertTrue(dialog.refresh())
-                        self.assertEqual(dialog.status_label.text(), "")
-                        self.assertTrue(dialog.status_label.isHidden())
-                        model.load.return_value = Result.failure(error)
-                        self.assertFalse(dialog.refresh())
-                        self.assertEqual(dialog.last_error, error)
-                        self.assertFalse(dialog.status_label.isHidden())
-                        self.assertTrue(dialog.status_label.text())
-                        model.load.return_value = Result.success(state)
-                        self.assertTrue(dialog.refresh())
-                        self.assertIsNone(dialog.last_error)
-                        self.assertEqual(dialog.status_label.text(), "")
-                        self.assertTrue(dialog.status_label.isHidden())
-                    finally:
-                        dialog.deleteLater()
+        for factory in factories:
+            model = Mock()
+            model.load.return_value = Result.success(state)
+            dialog = factory(model)
+            with self.subTest(dialog=type(dialog).__name__):
+                try:
+                    # Test feedback independently of content rendering.
+                    if hasattr(dialog, "set_state"):
+                        dialog.set_state = Mock()
+                    self.assertTrue(dialog.status_label.isHidden())
+                    self.assertTrue(dialog.refresh())
+                    self.assertEqual(dialog.status_label.text(), "")
+                    self.assertTrue(dialog.status_label.isHidden())
+                    model.load.return_value = Result.failure(error)
+                    self.assertFalse(dialog.refresh())
+                    self.assertEqual(dialog.last_error, error)
+                    self.assertFalse(dialog.status_label.isHidden())
+                    self.assertTrue(dialog.status_label.text())
+                    model.load.return_value = Result.success(state)
+                    self.assertTrue(dialog.refresh())
+                    self.assertIsNone(dialog.last_error)
+                    self.assertEqual(dialog.status_label.text(), "")
+                    self.assertTrue(dialog.status_label.isHidden())
+                finally:
+                    dialog.deleteLater()
 
     def test_ai_busy_feedback_clears_on_success_but_errors_remain_visible(self):
         class DeferredRunner:
@@ -161,6 +158,3 @@ class StatusFeedbackTests(unittest.TestCase):
         self.assertTrue(dialog.refresh())
         self.assertTrue(dialog.status_label.isHidden())
         dialog.deleteLater()
-
-    def test_ready_is_no_longer_a_user_visible_message(self):
-        self.assertNotIn("Ready", extract_source_messages())

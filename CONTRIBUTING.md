@@ -43,7 +43,14 @@ and clearly document any changed import or export behavior.
 
 ## Validation
 
-Run focused tests first, then the relevant broader test modules. Before submitting:
+Run the smallest relevant tests first. Maintain durable behavior and integration
+coverage rather than duplicating implementation details or retaining temporary
+diagnostic reproductions. Expand verification when shared behavior, persistence,
+or compatibility changes; the complete suite is not required for every small edit.
+
+The default suite excludes visual checks. Run the relevant optional checks for
+layout, theme, font, image, or Qt rendering changes. See [testing](docs/testing.md)
+for commands and limitations. Useful broader verification commands include:
 
 ```sh
 python scripts/i18n/i18n_check.py
