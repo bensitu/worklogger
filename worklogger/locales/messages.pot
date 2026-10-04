@@ -107,6 +107,9 @@ msgstr ""
 msgid "Annual"
 msgstr ""
 
+msgid "Annual Hours"
+msgstr ""
+
 msgid "Appearance"
 msgstr ""
 
@@ -767,6 +770,9 @@ msgstr ""
 msgid "Quarterly"
 msgstr ""
 
+msgid "Quarterly Hours"
+msgstr ""
+
 msgid "Quick Log"
 msgstr ""
 
@@ -1191,6 +1197,9 @@ msgid "{month} {day}, {year}"
 msgstr ""
 
 msgid "{month} {year}"
+msgstr ""
+
+msgid "{percent}%"
 msgstr ""
 
 msgid "{start_month} {start_day} - {end_month} {end_day}, {year}"

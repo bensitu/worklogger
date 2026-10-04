@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from math import isfinite
+
 from PySide6.QtCore import QRectF, Qt
-from PySide6.QtGui import QColor, QPainter, QPen
+from PySide6.QtGui import QColor, QFontMetricsF, QPainter, QPen
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
+from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets.card import CardFrame
 from worklogger.presentation.widgets.combo_chart import chart_palette
 
@@ -15,23 +18,47 @@ class DonutGauge(QWidget):
         super().__init__(parent)
         self.setObjectName("donut_gauge_widget")
         self._progress = 0.0
-        self.setFixedSize(64, 64)
+        self.setFixedSize(80, 80)
 
     def set_progress(self, progress: float) -> None:
-        self._progress = max(0.0, min(1.0, float(progress or 0.0)))
+        value = float(progress or 0.0)
+        self._progress = max(0.0, value) if isfinite(value) else 0.0
+        self.setAccessibleName(self.percentage_text)
+        self.setToolTip(self.percentage_text)
         self.update()
+
+    @property
+    def percentage_text(self) -> str:
+        return _("{percent}%").format(percent=round(self._progress * 100))
 
     def paintEvent(self, _event: object) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        rect = QRectF(8, 8, self.width() - 16, self.height() - 16)
+        rect = QRectF(16, 16, self.width() - 32, self.height() - 32)
         colors = chart_palette(self)
         painter.setPen(QPen(QColor(colors.border), 8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
         painter.drawArc(rect, 0, 360 * 16)
         painter.setPen(QPen(QColor(colors.accent), 8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-        painter.drawArc(rect, 90 * 16, -int(360 * 16 * self._progress))
+        painter.drawArc(rect, 90 * 16, -int(360 * 16 * min(self._progress, 1.0)))
+        if self._progress > 1.0:
+            outer = QRectF(5, 5, self.width() - 10, self.height() - 10)
+            painter.setPen(QPen(QColor(colors.border), 4, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            painter.drawArc(outer, 0, 360 * 16)
+            overflow_color = QColor(colors.warning)
+            accent_hue = QColor(colors.accent).hueF()
+            hue_distance = abs(accent_hue - overflow_color.hueF())
+            if accent_hue >= 0 and min(hue_distance, 1 - hue_distance) < 0.12:
+                overflow_color = QColor(colors.success)
+            painter.setPen(QPen(overflow_color, 4, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            painter.drawArc(outer, 90 * 16, -int(360 * 16 * min(self._progress - 1.0, 1.0)))
+        font = painter.font()
+        font.setPixelSize(13)
+        text = self.percentage_text
+        while QFontMetricsF(font).horizontalAdvance(text) > rect.width() - 12 and font.pixelSize() > 8:
+            font.setPixelSize(font.pixelSize() - 1)
+        painter.setFont(font)
         painter.setPen(QColor(colors.text))
-        painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, f"{round(self._progress * 100)}%")
+        painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, text)
         painter.end()
 
 

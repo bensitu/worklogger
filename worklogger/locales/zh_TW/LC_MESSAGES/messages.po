@@ -109,6 +109,9 @@ msgstr "統計分析尚未設定。"
 msgid "Annual"
 msgstr "年度"
 
+msgid "Annual Hours"
+msgstr "年度工時"
+
 msgid "Appearance"
 msgstr "外觀"
 
@@ -769,6 +772,9 @@ msgstr "紫色"
 msgid "Quarterly"
 msgstr "季度"
 
+msgid "Quarterly Hours"
+msgstr "季度工時"
+
 msgid "Quick Log"
 msgstr "快速記錄"
 
@@ -1194,6 +1200,9 @@ msgstr "{year}年{month}{day}日"
 
 msgid "{month} {year}"
 msgstr "{year}年{month}"
+
+msgid "{percent}%"
+msgstr "{percent}%"
 
 msgid "{start_month} {start_day} - {end_month} {end_day}, {year}"
 msgstr "{year}年{start_month}{start_day}日 - {end_month}{end_day}日"

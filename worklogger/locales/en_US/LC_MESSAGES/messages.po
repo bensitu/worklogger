@@ -109,6 +109,9 @@ msgstr "Analytics is not configured."
 msgid "Annual"
 msgstr "Annual"
 
+msgid "Annual Hours"
+msgstr "Annual Hours"
+
 msgid "Appearance"
 msgstr "Appearance"
 
@@ -769,6 +772,9 @@ msgstr "Purple"
 msgid "Quarterly"
 msgstr "Quarterly"
 
+msgid "Quarterly Hours"
+msgstr "Quarterly Hours"
+
 msgid "Quick Log"
 msgstr "Quick Log"
 
@@ -1194,6 +1200,9 @@ msgstr "{month} {day}, {year}"
 
 msgid "{month} {year}"
 msgstr "{month} {year}"
+
+msgid "{percent}%"
+msgstr "{percent}%"
 
 msgid "{start_month} {start_day} - {end_month} {end_day}, {year}"
 msgstr "{start_month} {start_day} - {end_month} {end_day}, {year}"

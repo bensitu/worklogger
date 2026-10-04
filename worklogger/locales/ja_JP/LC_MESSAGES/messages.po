@@ -109,6 +109,9 @@ msgstr "分析は未設定です。"
 msgid "Annual"
 msgstr "年次"
 
+msgid "Annual Hours"
+msgstr "年間労働時間"
+
 msgid "Appearance"
 msgstr "外観"
 
@@ -769,6 +772,9 @@ msgstr "紫"
 msgid "Quarterly"
 msgstr "四半期"
 
+msgid "Quarterly Hours"
+msgstr "四半期労働時間"
+
 msgid "Quick Log"
 msgstr "クイックログ"
 
@@ -1194,6 +1200,9 @@ msgstr "{year}年{month}{day}日"
 
 msgid "{month} {year}"
 msgstr "{year}年{month}"
+
+msgid "{percent}%"
+msgstr "{percent}%"
 
 msgid "{start_month} {start_day} - {end_month} {end_day}, {year}"
 msgstr "{year}年{start_month}{start_day}日 - {end_month}{end_day}日"

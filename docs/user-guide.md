@@ -93,6 +93,12 @@ dashboard displays worked hours, overtime, work days, averages, work types, and
 comparisons with the preceding period. Leave is represented separately. The
 configured monthly target is multiplied by the number of months in the period.
 
+The hours card is titled Monthly Hours, Quarterly Hours, or Annual Hours to match
+the selected period. Its percentage is not capped at 100%. The inner ring shows
+the first 100%, and a contrasting outer ring shows the next 100%. At 200% and above,
+both rings are full while the percentage continues to show the actual rounded
+value. A zero target displays 0% rather than an undefined ratio.
+
 CSV and PDF exports contain computed analytics. They are not database backups and
 the analytics CSV is not the same format as the work-log import CSV. PDF currently
 provides a single-page text summary, not the chart, and does not preserve all

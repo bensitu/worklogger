@@ -109,6 +109,9 @@ msgstr "분석이 설정되지 않았습니다."
 msgid "Annual"
 msgstr "연간"
 
+msgid "Annual Hours"
+msgstr "연간 근무 시간"
+
 msgid "Appearance"
 msgstr "모양"
 
@@ -769,6 +772,9 @@ msgstr "보라"
 msgid "Quarterly"
 msgstr "분기"
 
+msgid "Quarterly Hours"
+msgstr "분기 근무 시간"
+
 msgid "Quick Log"
 msgstr "빠른 기록"
 
@@ -1194,6 +1200,9 @@ msgstr "{year}년 {month} {day}일"
 
 msgid "{month} {year}"
 msgstr "{year}년 {month}"
+
+msgid "{percent}%"
+msgstr "{percent}%"
 
 msgid "{start_month} {start_day} - {end_month} {end_day}, {year}"
 msgstr "{year}년 {start_month} {start_day}일 - {end_month} {end_day}일"

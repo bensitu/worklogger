@@ -14,6 +14,8 @@ Application version: 4.0.0.
 
 ### Desktop Interface
 
+- Analytics hours cards use period-specific titles and display actual target
+  percentages, with a contrasting outer ring for hours above the target.
 - Calendar, Reports, Analytics, and Settings navigation in a shared desktop window.
 - Equal-width login columns, embedded password visibility control, grouped fields,
   and default keyboard submission.

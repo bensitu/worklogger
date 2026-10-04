@@ -405,7 +405,12 @@ class AnalyticsPage(QWidget):
     def _set_state(self, state: AnalyticsDashboard) -> None:
         total = state.stats.total_hours
         progress = total / state.target_hours if state.target_hours > 0 else 0.0
-        self.monthly_hours_card.title_label.setText(_("Monthly Hours") if self.scope_control.value == "monthly" else _("Total hours"))
+        titles = {
+            "monthly": _("Monthly Hours"),
+            "quarterly": _("Quarterly Hours"),
+            "annual": _("Annual Hours"),
+        }
+        self.monthly_hours_card.title_label.setText(titles.get(self.scope_control.value, titles["monthly"]))
         self.monthly_hours_card.set_value(
             duration_label(total),
             _("of {hours:.1f}h goal").format(hours=state.target_hours),
