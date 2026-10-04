@@ -25,8 +25,15 @@ python scripts/i18n/i18n_check.py
 python -m unittest tests.domain.test_worklog_rules -v
 python -m unittest tests.infrastructure.test_activity_schema_migration -v
 python -m unittest tests.presentation.test_auth_presentation -v
+python -m unittest tests.presentation.test_native_fonts -v
 python -m unittest discover -s tests -t . -v
 ```
+
+The native font check runs an isolated Windows subprocess using the `windows11`
+style. It signs in through the login dialog, shows the main window, opens the
+Add Entry and export menus, and checks login languages and light/dark themes for
+Qt font warnings. It is skipped on other platforms; headless widget tests alone
+do not exercise Windows style drawing.
 
 For explicit headless execution on PowerShell:
 

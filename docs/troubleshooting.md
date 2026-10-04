@@ -37,6 +37,15 @@ For font-size warnings or clipped text, record the Qt version, language, display
 scaling, and affected control. Compare against the verified environment and run
 the visual tests. Do not suppress Qt warnings instead of identifying their source.
 
+Qt 6.11.0's Windows 11 style assumes point-sized fonts when calculating menu
+button indicators. Pixel-sized QSS fonts can therefore produce
+`QFont::setPointSize: Point size <= 0 (-1)` when the main window first appears.
+On Windows, Add Entry and export menu buttons use Qt's Fusion base style while
+retaining the application stylesheet and menu behavior. Other controls retain
+their platform style. Verify this path with
+`python -m unittest tests.presentation.test_native_fonts -v`; the test uses a
+temporary database and isolated login preferences and session storage.
+
 Remove `QT_QPA_PLATFORM=offscreen` from an interactive shell if the application
 appears to run without a visible window. Check the system tray/menu bar when
 residency is enabled.
