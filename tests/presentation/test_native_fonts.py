@@ -18,10 +18,14 @@ def check_native_login_fonts() -> None:
     from PySide6.QtWidgets import QApplication, QLineEdit, QMenu, QPlainTextEdit, QSystemTrayIcon, QTextEdit
 
     from tests.infrastructure.test_auth_schema_migration import legacy_database
+    from tests.presentation.test_report_history_widgets import WindowShowObserver
     from worklogger.bootstrap import DesktopRuntimeConfig, build_authenticated_desktop_runtime
     from worklogger.domain.shared.result import Result
+    from worklogger.domain.reporting.models import Report
+    from worklogger.domain.reporting.periods import daily_period, weekly_period, monthly_period
     from worklogger.infrastructure.i18n import available_languages, set_language
     from worklogger.infrastructure.language_preferences import LanguagePreferences
+    from worklogger.infrastructure.repositories import SQLiteReportRepository
     from worklogger.presentation.auth import AuthController, LoginDialog
     from worklogger.presentation.widgets import ExportMenuButton
 
@@ -105,12 +109,29 @@ def check_native_login_fonts() -> None:
                     check_context_menus(dialog)
                     dialog.close()
                 set_language("en_US")
+                report_repository = SQLiteReportRepository(runtime.connection_factory)
+                day = window.selected_day
+                for period in (daily_period(day), weekly_period(day), monthly_period(day.year, day.month)):
+                    report_repository.save(Report(None, runtime.user.id, period.report_type,
+                                                  period.start, period.end, "Saved report"))
                 for dark in (False, True):
                     window._config = replace(window._config, dark=dark)
                     window.apply_theme()
                     for route in ("calendar", "reports", "analytics", "settings"):
-                        assert window._switch_route(route)
-                        process_events()
+                        observer = WindowShowObserver(window)
+                        if route == "reports":
+                            app.installEventFilter(observer)
+                        try:
+                            window.sidebar._buttons[route].click()
+                            process_events()
+                            if route == "reports":
+                                for report_type in ("daily", "weekly", "monthly"):
+                                    window.reports_page.report_type_control.set_value(report_type)
+                                    process_events()
+                                assert not observer.unexpected_windows, observer.unexpected_windows
+                        finally:
+                            if route == "reports":
+                                app.removeEventFilter(observer)
                         check_context_menus(window)
                         if route == "settings":
                             for category in window.settings_page._category_pages:

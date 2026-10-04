@@ -21,8 +21,8 @@ from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 
 
 class ReportHistoryButton(QPushButton):
-    def __init__(self, item: ReportHistoryDisplayItem) -> None:
-        super().__init__(_history_label(item))
+    def __init__(self, item: ReportHistoryDisplayItem, parent: QWidget | None = None) -> None:
+        super().__init__(_history_label(item), parent)
         self._saved = item.saved
         self._document = QTextDocument(self)
         self._document.setDocumentMargin(0)
@@ -148,7 +148,8 @@ class ReportHistoryPanel(CardFrame):
             item = self.scroll_layout.takeAt(0)
             widget = item.widget()
             if widget is not None:
-                widget.setParent(None)
+                # Keep ownership until deletion so queued show events cannot create windows.
+                widget.hide()
                 widget.deleteLater()
         self._buttons = {}
 
@@ -159,7 +160,7 @@ class ReportHistoryPanel(CardFrame):
             if not query or query in _history_label(item).lower()
         ]
         if not visible:
-            label = QLabel(_("No saved reports"))
+            label = QLabel(_("No saved reports"), self.scroll_widget)
             label.setObjectName("empty_report_history_label")
             label.setProperty("role", "secondary")
             self.scroll_layout.addWidget(label)
@@ -171,10 +172,10 @@ class ReportHistoryPanel(CardFrame):
             month = month_label(item.period_start)
             if month != current_month:
                 current_month = month
-                heading = QLabel(month)
+                heading = QLabel(month, self.scroll_widget)
                 heading.setObjectName("report_history_month_label")
                 self.scroll_layout.addWidget(heading)
-            button = ReportHistoryButton(item)
+            button = ReportHistoryButton(item, self.scroll_widget)
             button.setObjectName("report_history_item_button")
             button.setProperty("nav_item", True)
             button.setProperty("report_id", item.report_id)

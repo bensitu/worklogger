@@ -35,8 +35,13 @@ style before application initialization. It signs in through the login dialog,
 shows the main window, and opens Add Entry and export menus, input context menus,
 nested menus, available tray menus, and every settings category. It checks login
 languages and light/dark themes for Qt font warnings. It is skipped on other
-platforms; headless widget
-tests alone do not exercise Windows style drawing.
+platforms; headless widget tests alone do not exercise Windows style drawing.
+Synthetic saved daily, weekly, and monthly reports also verify that sidebar and
+report-type changes do not show detached history widgets as independent windows.
+
+`tests.presentation.test_report_history_widgets` checks repeated history
+rendering, empty results, searching, sidebar navigation, and deferred deletion.
+Replaced rows must remain hidden children of the history content until deleted.
 
 The native dropdown check starts each of the nine business combo boxes and both
 Qt file-dialog dropdowns in independent processes to avoid the Windows style's
