@@ -196,7 +196,8 @@ class UiLayoutTests(unittest.TestCase):
                         method = "export_csv"
                     with patch.object(model, method, create=True, return_value=Result.failure(ValidationError("export_failed", "export_failed"))):
                         self.assertFalse(getattr(page, method)(Path("qa-export")))
-                    warning.assert_called_with(page, "Reports" if route == "reports" else "Analytics", "export_failed")
+                    warning.assert_called_with(page, "Reports" if route == "reports" else "Analytics",
+                        "The operation could not be completed. Please try again.")
                     self.assertTrue(page.status_label.isHidden())
                     self.assertTrue(window.status_label.isHidden())
         finally:

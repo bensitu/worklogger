@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import os
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -13,11 +13,11 @@ from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandl
 from worklogger.app.use_cases.updates import UpdateCheckResult
 from worklogger.domain.auth.models import User
 from worklogger.domain.shared.result import Result
-from worklogger.domain.shared.errors import InfrastructureError
+from worklogger.domain.shared.errors import CancellationError, InfrastructureError
 from worklogger.config.constants import LAST_BACKUP_AT_SETTING_KEY
 from worklogger.presentation.job_runner import ImmediateJobRunner
 from worklogger.presentation.auth import ChangePasswordDialog
-from worklogger.presentation.settings import SettingsWorkflowController
+from worklogger.presentation.settings import SettingsDialog, SettingsWorkflowController
 from worklogger.presentation.viewmodels import (
     DataManagementActionState,
     SettingsViewModel,
@@ -202,6 +202,29 @@ def _settings_view_model(repository: MemorySettingsRepository) -> SettingsViewMo
 
 
 class SettingsWorkflowTests(unittest.TestCase):
+    def test_cancelled_data_and_update_jobs_do_not_notify_or_record_success(self):
+        repository = MemorySettingsRepository()
+        success, error, reload_data = Mock(), Mock(), Mock()
+        controller = SettingsWorkflowController(
+            settings_view_model=_settings_view_model(repository), auth_view_model=FakeAuthViewModel(),
+            user=User(id=1, username="alice", is_admin=True),
+            data_management_view_model=FakeDataManagementViewModel(),
+            notify_success=success, notify_error=error, reload_after_restore=reload_data,
+        )
+        dialog = SettingsDialog(_settings_view_model(repository))
+        cancelled = Result.failure(CancellationError("job_cancelled", "job_cancelled"))
+        try:
+            controller._complete_data_job(dialog, "Backup Data", cancelled, lambda _state: "Must not run")
+            controller._complete_data_job(dialog, "Restore Data", cancelled, lambda _state: "Must not run")
+            controller._complete_update_check(dialog, cancelled)
+            self.assertIsNone(repository.get(1, LAST_BACKUP_AT_SETTING_KEY))
+            self.assertEqual(dialog.status_label.text(), "Operation cancelled.")
+            success.assert_not_called()
+            error.assert_not_called()
+            reload_data.assert_not_called()
+        finally:
+            dialog.deleteLater()
+
     def test_backup_timestamp_records_only_success_and_update_status_is_inline(self):
         repository = MemorySettingsRepository()
         data = FakeDataManagementViewModel()

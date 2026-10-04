@@ -85,6 +85,9 @@ msgstr "활성"
 msgid "Active local model: {model}"
 msgstr "사용 중인 로컬 모델: {model}"
 
+msgid "Active model updated."
+msgstr "현재 모델이 업데이트되었습니다."
+
 msgid "Add"
 msgstr "추가"
 
@@ -96,6 +99,9 @@ msgstr "주소"
 
 msgid "Admin"
 msgstr "관리자"
+
+msgid "Administrator permission is required."
+msgstr "관리자 권한이 필요합니다."
 
 msgid "All day"
 msgstr "종일"
@@ -187,6 +193,9 @@ msgstr "휴식"
 msgid "Break (h)"
 msgstr "휴식(시간)"
 
+msgid "Break time must be nonnegative and shorter than the work period."
+msgstr "휴식 시간은 0 이상이고 근무 시간보다 짧아야 합니다."
+
 msgid "Break timer running"
 msgstr "휴식 시간 측정 중"
 
@@ -220,6 +229,9 @@ msgstr "달력 일정: {events}"
 msgid "Cancel"
 msgstr "취소"
 
+msgid "Catalog refreshed."
+msgstr "모델 카탈로그를 새로 고쳤습니다."
+
 msgid "Change password"
 msgstr "비밀번호 변경"
 
@@ -231,6 +243,9 @@ msgstr "업데이트 확인"
 
 msgid "Checking for updates..."
 msgstr "업데이트 확인 중..."
+
+msgid "Choose a backup destination different from the active database."
+msgstr "현재 데이터베이스와 다른 백업 위치를 선택하세요."
 
 msgid "Choose custom color"
 msgstr "사용자 지정 색상 선택"
@@ -355,11 +370,26 @@ msgstr "영어"
 msgid "Enter a port between 0 and 65535."
 msgstr "0에서 65535 사이의 포트 번호를 입력하세요."
 
+msgid "Enter a valid recovery key."
+msgstr "유효한 복구 키를 입력하세요."
+
+msgid "Enter content before continuing."
+msgstr "계속하기 전에 내용을 입력하세요."
+
+msgid "Enter valid start and end times in HH:mm format."
+msgstr "유효한 시작 및 종료 시간을 HH:mm 형식으로 입력하세요."
+
 msgid "Enter your ID"
 msgstr "ID 입력"
 
+msgid "Enter your ID."
+msgstr "ID를 입력하세요."
+
 msgid "Enter your password"
 msgstr "비밀번호 입력"
+
+msgid "Enter your password."
+msgstr "비밀번호를 입력하세요."
 
 msgid "Export"
 msgstr "내보내기"
@@ -445,8 +475,14 @@ msgstr "색상(&E):"
 msgid "ID"
 msgstr "ID"
 
+msgid "Identity linked."
+msgstr "ID가 연결되었습니다."
+
 msgid "Identity management is not configured."
 msgstr "계정 연결 관리가 설정되지 않았습니다."
+
+msgid "Identity unlinked."
+msgstr "ID 연결이 해제되었습니다."
 
 msgid "Import .gguf"
 msgstr ".gguf 가져오기"
@@ -595,6 +631,18 @@ msgstr "모드"
 msgid "Model"
 msgstr "모델"
 
+msgid "Model deleted."
+msgstr "모델이 삭제되었습니다."
+
+msgid "Model downloaded."
+msgstr "모델이 다운로드되었습니다."
+
+msgid "Model imported."
+msgstr "모델을 가져왔습니다."
+
+msgid "Model verification failed. Import or download a valid GGUF model."
+msgstr "모델 검증에 실패했습니다. 유효한 GGUF 모델을 가져오거나 다운로드하세요."
+
 msgid "Model verified."
 msgstr "모델 검증 완료."
 
@@ -697,6 +745,9 @@ msgstr "열기"
 msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
 msgstr "OpenAI 호환 인터페이스를 지원하며 호환 서비스를 통해 ChatGPT, Claude, Qwen, DeepSeek 등을 사용할 수 있습니다."
 
+msgid "Operation cancelled."
+msgstr "작업이 취소되었습니다."
+
 msgid "Overnight"
 msgstr "자정 넘김"
 
@@ -747,6 +798,9 @@ msgstr "비밀번호가 재설정되었습니다."
 
 msgid "Pink"
 msgstr "분홍"
+
+msgid "Please sign in to continue."
+msgstr "계속하려면 로그인하세요."
 
 msgid "Please wait for the current data operation."
 msgstr "현재 데이터 작업이 완료될 때까지 기다려 주세요."
@@ -810,6 +864,9 @@ msgstr "런타임 스모크 테스트 실패"
 
 msgid "RUNTIME SMOKE OK"
 msgstr "런타임 스모크 테스트 성공"
+
+msgid "Recording or a break is already active."
+msgstr "기록 또는 휴식이 이미 진행 중입니다."
 
 msgid "Recovery key"
 msgstr "복구 키"
@@ -955,8 +1012,14 @@ msgstr "먼저 모델을 선택하세요."
 msgid "Select a provider first."
 msgstr "먼저 제공자를 선택하세요."
 
+msgid "Select a quick log first."
+msgstr "먼저 빠른 기록을 선택하세요."
+
 msgid "Select a user."
 msgstr "사용자를 선택하세요."
+
+msgid "Select a valid date or date range."
+msgstr "유효한 날짜 또는 날짜 범위를 선택하세요."
 
 msgid "Select an identity first."
 msgstr "먼저 연결된 계정을 선택하세요."
@@ -1015,6 +1078,9 @@ msgstr "시작"
 msgid "Start break"
 msgstr "휴식 시작"
 
+msgid "Start recording or a break before continuing."
+msgstr "계속하기 전에 기록 또는 휴식을 시작하세요."
+
 msgid "Start week on Monday"
 msgstr "월요일부터 한 주 시작"
 
@@ -1039,11 +1105,41 @@ msgstr "템플릿"
 msgid "Test"
 msgstr "테스트"
 
+msgid "The ID or password is incorrect."
+msgstr "ID 또는 비밀번호가 올바르지 않습니다."
+
+msgid "The model returned no content. Please try again."
+msgstr "모델이 내용을 반환하지 않았습니다. 다시 시도하세요."
+
+msgid "The operation could not be completed. Please try again."
+msgstr "작업을 완료하지 못했습니다. 다시 시도하세요."
+
+msgid "The password must contain at least {length} characters."
+msgstr "비밀번호는 {length}자 이상이어야 합니다."
+
+msgid "The passwords do not match."
+msgstr "입력한 비밀번호가 일치하지 않습니다."
+
+msgid "The report has not loaded. Reload it before continuing."
+msgstr "보고서가 로드되지 않았습니다. 다시 불러온 후 계속하세요."
+
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr "저장된 보고서를 사용할 수 없습니다. 보고서를 다시 불러온 후 다시 시도하세요."
 
+msgid "The user account is no longer available."
+msgstr "이 사용자 계정은 더 이상 사용할 수 없습니다."
+
 msgid "Theme"
 msgstr "테마"
+
+msgid "This ID is already in use. Choose a different ID."
+msgstr "이 ID는 이미 사용 중입니다. 다른 ID를 선택하세요."
+
+msgid "This identity is already linked to an account."
+msgstr "이 ID는 이미 계정에 연결되어 있습니다."
+
+msgid "This model is in use by another user and cannot be deleted."
+msgstr "다른 사용자가 사용 중인 모델은 삭제할 수 없습니다."
 
 msgid "Thu"
 msgstr "목"
@@ -1072,8 +1168,50 @@ msgstr "중국어 번체"
 msgid "Tue"
 msgstr "화"
 
+msgid "Unable to back up the database. Check the destination and available disk space."
+msgstr "데이터베이스를 백업하지 못했습니다. 저장 위치와 디스크 여유 공간을 확인하세요."
+
+msgid "Unable to check for updates. Check your network connection and try again."
+msgstr "업데이트를 확인하지 못했습니다. 네트워크 연결을 확인하고 다시 시도하세요."
+
+msgid "Unable to complete the AI request. Check your model settings and try again."
+msgstr "AI 요청을 완료하지 못했습니다. 모델 설정을 확인하고 다시 시도하세요."
+
+msgid "Unable to export the file. Check the destination and write permissions."
+msgstr "파일을 내보내지 못했습니다. 저장 위치와 쓰기 권한을 확인하세요."
+
+msgid "Unable to import the file. Check its format and contents."
+msgstr "파일을 가져오지 못했습니다. 파일 형식과 내용을 확인하세요."
+
+msgid "Unable to load data. Please try again."
+msgstr "데이터를 불러오지 못했습니다. 다시 시도하세요."
+
+msgid "Unable to obtain the model. Check the source file or download connection."
+msgstr "모델을 가져오지 못했습니다. 원본 파일 또는 다운로드 연결을 확인하세요."
+
+msgid "Unable to read the model file. Check its access permissions."
+msgstr "모델 파일을 읽지 못했습니다. 접근 권한을 확인하세요."
+
+msgid "Unable to restore the database. Select a valid SQLite backup."
+msgstr "데이터베이스를 복원하지 못했습니다. 유효한 SQLite 백업을 선택하세요."
+
+msgid "Unable to save settings. Please try again."
+msgstr "설정을 저장하지 못했습니다. 다시 시도하세요."
+
 msgid "Unable to save the report. Your changes have been retained."
 msgstr "보고서를 저장할 수 없습니다. 편집 내용은 유지되었습니다."
+
+msgid "Unable to save the work log. Your changes have been retained."
+msgstr "작업 기록을 저장하지 못했습니다. 변경 내용은 유지되었습니다."
+
+msgid "Unable to sign in with this provider. Please try again."
+msgstr "이 제공업체로 로그인하지 못했습니다. 다시 시도하세요."
+
+msgid "Unable to start WorkLogger. Check the application log for details."
+msgstr "WorkLogger를 시작하지 못했습니다. 자세한 내용은 애플리케이션 로그를 확인하세요."
+
+msgid "Unable to update saved sign-in information."
+msgstr "저장된 로그인 정보를 업데이트하지 못했습니다."
 
 msgid "Unknown error"
 msgstr "알 수 없는 오류"
@@ -1174,6 +1312,9 @@ msgstr "나"
 msgid "You are using the latest version."
 msgstr "최신 버전을 사용 중입니다."
 
+msgid "You cannot delete your own account or the last administrator."
+msgstr "자신의 계정 또는 마지막 관리자 계정은 삭제할 수 없습니다."
+
 msgid "You have unsaved note changes. Discard them?"
 msgstr "저장되지 않은 메모 변경 사항이 있습니다. 취소할까요?"
 
@@ -1185,6 +1326,9 @@ msgstr "저장되지 않은 템플릿 변경 사항이 있습니다. 취소할�
 
 msgid "You have unsaved work log changes. Discard them?"
 msgstr "저장되지 않은 근무 기록 변경 사항이 있습니다. 취소할까요?"
+
+msgid "Your saved sign-in is invalid or expired. Please sign in again."
+msgstr "저장된 로그인이 유효하지 않거나 만료되었습니다. 다시 로그인하세요."
 
 msgid "h"
 msgstr "h"

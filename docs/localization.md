@@ -14,6 +14,11 @@ Supported catalogs are `en_US`, `ja_JP`, `ko_KR`, `zh_CN`, and `zh_TW` under
 literal English message as the extraction key. Format named values after
 translation rather than constructing a translated message dynamically.
 
+Error codes are diagnostic identifiers, not translation keys. The presentation
+helpers in `worklogger/presentation/errors.py` map them to literal English gettext
+messages. Unknown errors use a neutral fallback without exposing exception text.
+Validation previews use the same messages without logging every input change.
+
 ```python
 from worklogger.infrastructure.i18n import _
 

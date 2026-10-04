@@ -94,6 +94,8 @@ def available_languages() -> tuple[str, ...]:
 
 
 def _(message: str, *, language: str | None = None) -> str:
+    if not message:
+        return message
     with _lock:
         translation = _translation if language is None else gettext.translation(
             DOMAIN, localedir=str(locales_dir()),

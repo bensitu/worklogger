@@ -34,6 +34,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 class GettextFoundationTests(unittest.TestCase):
+    def test_empty_messages_remain_empty_instead_of_displaying_catalog_metadata(self):
+        for language in LANGUAGES:
+            set_language(language)
+            self.assertEqual(_(""), "")
+            self.assertEqual(_("", language=language), "")
+
     def test_explicit_catalog_does_not_change_active_language(self) -> None:
         set_language("zh_CN")
         self.assertEqual(_("Japanese", language="ja_JP"), "日本語")

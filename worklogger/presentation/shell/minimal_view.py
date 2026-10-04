@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 
 from worklogger.domain.shared.errors import AppError
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.errors import display_error_message
+from worklogger.presentation.errors import display_error_code, display_error_message
 from worklogger.presentation.settings import SettingsWorkflow
 from worklogger.presentation.shell.residency import QtResidencyController
 from worklogger.presentation.viewmodels import WorkLogEntryViewModel
@@ -171,7 +171,7 @@ class MinimalView(QWidget):
         self.entry_panel.set_preview_form(result.value)
         self._entry_dirty = result.value.dirty
         self._last_error = None
-        self._set_status(", ".join(result.value.errors))
+        self._set_status("\n".join(display_error_code(code) for code in result.value.errors))
 
     def _save_entry_draft(self, draft: WorkLogEntryDraft) -> None:
         preview = self._worklog_entry_view_model.preview(
@@ -187,7 +187,7 @@ class MinimalView(QWidget):
             return
         if preview.value.errors:
             self.entry_panel.set_preview_form(preview.value)
-            self._set_status(", ".join(preview.value.errors))
+            self._set_status("\n".join(display_error_code(code) for code in preview.value.errors))
             return
         saved = self._worklog_entry_view_model.save(preview.value)
         if not saved.ok or saved.value is None:

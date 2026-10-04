@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from worklogger.app.job_runner import JobHandle, JobRunner
-from worklogger.domain.shared.errors import AppError
+from worklogger.domain.shared.errors import AppError, CancellationError
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import AiAssistViewModel, AiChatState
@@ -178,5 +178,5 @@ class AiAssistDialog(QDialog):
         self.transcript.setPlainText("\n\n".join(lines))
 
     def _set_error(self, error: AppError | None) -> None:
-        self._last_error = error
+        self._last_error = None if isinstance(error, CancellationError) else error
         self.status_label.setText(display_error_message(error))

@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
 from worklogger.domain.worklog.models import WorkType
 from worklogger.domain.worklog.rules import parse_time
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.errors import display_error_message
+from worklogger.presentation.errors import display_error_code, display_error_message
 from worklogger.presentation.viewmodels.auto_record import (
     AutoRecordState,
     AutoRecordViewModel,
@@ -314,7 +314,7 @@ class WorkLogEntryPanel(QWidget):
         self.hours_label.setText(f"{_('Worked')}: {form.worked_hours:.1f}{_('h')}")
         self.status_label.setText(", ".join(flags))
         self.status_label.setVisible(bool(flags))
-        self.error_label.setText(", ".join(form.errors))
+        self.error_label.setText("\n".join(display_error_code(code) for code in form.errors))
         self.error_label.setVisible(bool(form.errors))
         self.save_button.setEnabled(form.can_save)
         self._sync_auto_from_form(form)

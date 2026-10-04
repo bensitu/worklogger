@@ -85,6 +85,9 @@ msgstr "Active"
 msgid "Active local model: {model}"
 msgstr "Active local model: {model}"
 
+msgid "Active model updated."
+msgstr "Active model updated."
+
 msgid "Add"
 msgstr "Add"
 
@@ -96,6 +99,9 @@ msgstr "Address"
 
 msgid "Admin"
 msgstr "Admin"
+
+msgid "Administrator permission is required."
+msgstr "Administrator permission is required."
 
 msgid "All day"
 msgstr "All day"
@@ -187,6 +193,9 @@ msgstr "Break"
 msgid "Break (h)"
 msgstr "Break (h)"
 
+msgid "Break time must be nonnegative and shorter than the work period."
+msgstr "Break time must be nonnegative and shorter than the work period."
+
 msgid "Break timer running"
 msgstr "Break timer running"
 
@@ -220,6 +229,9 @@ msgstr "Calendar events: {events}"
 msgid "Cancel"
 msgstr "Cancel"
 
+msgid "Catalog refreshed."
+msgstr "Catalog refreshed."
+
 msgid "Change password"
 msgstr "Change password"
 
@@ -231,6 +243,9 @@ msgstr "Check for updates"
 
 msgid "Checking for updates..."
 msgstr "Checking for updates..."
+
+msgid "Choose a backup destination different from the active database."
+msgstr "Choose a backup destination different from the active database."
 
 msgid "Choose custom color"
 msgstr "Choose custom color"
@@ -355,11 +370,26 @@ msgstr "English"
 msgid "Enter a port between 0 and 65535."
 msgstr "Enter a port between 0 and 65535."
 
+msgid "Enter a valid recovery key."
+msgstr "Enter a valid recovery key."
+
+msgid "Enter content before continuing."
+msgstr "Enter content before continuing."
+
+msgid "Enter valid start and end times in HH:mm format."
+msgstr "Enter valid start and end times in HH:mm format."
+
 msgid "Enter your ID"
 msgstr "Enter your ID"
 
+msgid "Enter your ID."
+msgstr "Enter your ID."
+
 msgid "Enter your password"
 msgstr "Enter your password"
+
+msgid "Enter your password."
+msgstr "Enter your password."
 
 msgid "Export"
 msgstr "Export"
@@ -445,8 +475,14 @@ msgstr "Hu&e:"
 msgid "ID"
 msgstr "ID"
 
+msgid "Identity linked."
+msgstr "Identity linked."
+
 msgid "Identity management is not configured."
 msgstr "Identity management is not configured."
+
+msgid "Identity unlinked."
+msgstr "Identity unlinked."
 
 msgid "Import .gguf"
 msgstr "Import .gguf"
@@ -595,6 +631,18 @@ msgstr "Mode"
 msgid "Model"
 msgstr "Model"
 
+msgid "Model deleted."
+msgstr "Model deleted."
+
+msgid "Model downloaded."
+msgstr "Model downloaded."
+
+msgid "Model imported."
+msgstr "Model imported."
+
+msgid "Model verification failed. Import or download a valid GGUF model."
+msgstr "Model verification failed. Import or download a valid GGUF model."
+
 msgid "Model verified."
 msgstr "Model verified."
 
@@ -697,6 +745,9 @@ msgstr "Open"
 msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
 msgstr "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
 
+msgid "Operation cancelled."
+msgstr "Operation cancelled."
+
 msgid "Overnight"
 msgstr "Overnight"
 
@@ -747,6 +798,9 @@ msgstr "Password reset."
 
 msgid "Pink"
 msgstr "Pink"
+
+msgid "Please sign in to continue."
+msgstr "Please sign in to continue."
 
 msgid "Please wait for the current data operation."
 msgstr "Please wait for the current data operation."
@@ -810,6 +864,9 @@ msgstr "RUNTIME SMOKE FAILED"
 
 msgid "RUNTIME SMOKE OK"
 msgstr "RUNTIME SMOKE OK"
+
+msgid "Recording or a break is already active."
+msgstr "Recording or a break is already active."
 
 msgid "Recovery key"
 msgstr "Recovery key"
@@ -955,8 +1012,14 @@ msgstr "Select a model first."
 msgid "Select a provider first."
 msgstr "Select a provider first."
 
+msgid "Select a quick log first."
+msgstr "Select a quick log first."
+
 msgid "Select a user."
 msgstr "Select a user."
+
+msgid "Select a valid date or date range."
+msgstr "Select a valid date or date range."
 
 msgid "Select an identity first."
 msgstr "Select an identity first."
@@ -1015,6 +1078,9 @@ msgstr "Start"
 msgid "Start break"
 msgstr "Start break"
 
+msgid "Start recording or a break before continuing."
+msgstr "Start recording or a break before continuing."
+
 msgid "Start week on Monday"
 msgstr "Start week on Monday"
 
@@ -1039,11 +1105,41 @@ msgstr "Templates"
 msgid "Test"
 msgstr "Test"
 
+msgid "The ID or password is incorrect."
+msgstr "The ID or password is incorrect."
+
+msgid "The model returned no content. Please try again."
+msgstr "The model returned no content. Please try again."
+
+msgid "The operation could not be completed. Please try again."
+msgstr "The operation could not be completed. Please try again."
+
+msgid "The password must contain at least {length} characters."
+msgstr "The password must contain at least {length} characters."
+
+msgid "The passwords do not match."
+msgstr "The passwords do not match."
+
+msgid "The report has not loaded. Reload it before continuing."
+msgstr "The report has not loaded. Reload it before continuing."
+
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr "The saved report is no longer available. Reload the reports and try again."
 
+msgid "The user account is no longer available."
+msgstr "The user account is no longer available."
+
 msgid "Theme"
 msgstr "Theme"
+
+msgid "This ID is already in use. Choose a different ID."
+msgstr "This ID is already in use. Choose a different ID."
+
+msgid "This identity is already linked to an account."
+msgstr "This identity is already linked to an account."
+
+msgid "This model is in use by another user and cannot be deleted."
+msgstr "This model is in use by another user and cannot be deleted."
 
 msgid "Thu"
 msgstr "Thu"
@@ -1072,8 +1168,50 @@ msgstr "Traditional Chinese"
 msgid "Tue"
 msgstr "Tue"
 
+msgid "Unable to back up the database. Check the destination and available disk space."
+msgstr "Unable to back up the database. Check the destination and available disk space."
+
+msgid "Unable to check for updates. Check your network connection and try again."
+msgstr "Unable to check for updates. Check your network connection and try again."
+
+msgid "Unable to complete the AI request. Check your model settings and try again."
+msgstr "Unable to complete the AI request. Check your model settings and try again."
+
+msgid "Unable to export the file. Check the destination and write permissions."
+msgstr "Unable to export the file. Check the destination and write permissions."
+
+msgid "Unable to import the file. Check its format and contents."
+msgstr "Unable to import the file. Check its format and contents."
+
+msgid "Unable to load data. Please try again."
+msgstr "Unable to load data. Please try again."
+
+msgid "Unable to obtain the model. Check the source file or download connection."
+msgstr "Unable to obtain the model. Check the source file or download connection."
+
+msgid "Unable to read the model file. Check its access permissions."
+msgstr "Unable to read the model file. Check its access permissions."
+
+msgid "Unable to restore the database. Select a valid SQLite backup."
+msgstr "Unable to restore the database. Select a valid SQLite backup."
+
+msgid "Unable to save settings. Please try again."
+msgstr "Unable to save settings. Please try again."
+
 msgid "Unable to save the report. Your changes have been retained."
 msgstr "Unable to save the report. Your changes have been retained."
+
+msgid "Unable to save the work log. Your changes have been retained."
+msgstr "Unable to save the work log. Your changes have been retained."
+
+msgid "Unable to sign in with this provider. Please try again."
+msgstr "Unable to sign in with this provider. Please try again."
+
+msgid "Unable to start WorkLogger. Check the application log for details."
+msgstr "Unable to start WorkLogger. Check the application log for details."
+
+msgid "Unable to update saved sign-in information."
+msgstr "Unable to update saved sign-in information."
 
 msgid "Unknown error"
 msgstr "Unknown error"
@@ -1174,6 +1312,9 @@ msgstr "You"
 msgid "You are using the latest version."
 msgstr "You are using the latest version."
 
+msgid "You cannot delete your own account or the last administrator."
+msgstr "You cannot delete your own account or the last administrator."
+
 msgid "You have unsaved note changes. Discard them?"
 msgstr "You have unsaved note changes. Discard them?"
 
@@ -1185,6 +1326,9 @@ msgstr "You have unsaved template changes. Discard them?"
 
 msgid "You have unsaved work log changes. Discard them?"
 msgstr "You have unsaved work log changes. Discard them?"
+
+msgid "Your saved sign-in is invalid or expired. Please sign in again."
+msgstr "Your saved sign-in is invalid or expired. Please sign in again."
 
 msgid "h"
 msgstr "h"

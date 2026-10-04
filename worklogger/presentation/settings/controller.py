@@ -15,7 +15,7 @@ from worklogger.app.job_runner import JobHandle, JobRunner
 from worklogger.app.queries.update_queries import CheckForUpdatesQuery
 from worklogger.app.use_cases.updates import CheckForUpdatesHandler, UpdateCheckResult
 from worklogger.domain.auth.models import User
-from worklogger.domain.shared.errors import AppError
+from worklogger.domain.shared.errors import AppError, CancellationError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
@@ -452,7 +452,8 @@ class SettingsWorkflowController:
         if not result.ok or result.value is None:
             message = _error_message(result.error)
             _set_status(dialog, message, "update")
-            self._notify_error(dialog, _("Check for updates"), message)
+            if not isinstance(result.error, CancellationError):
+                self._notify_error(dialog, _("Check for updates"), message)
             return False
         message = _update_message(result.value)
         _set_status(dialog, message, "update")
@@ -469,7 +470,8 @@ class SettingsWorkflowController:
         if not result.ok or result.value is None:
             message = _error_message(result.error)
             _set_status(dialog, message, "data")
-            self._notify_error(dialog, title, message)
+            if not isinstance(result.error, CancellationError):
+                self._notify_error(dialog, title, message)
             return False
         message = success_message(result.value)
         if title == _("Backup Data"):

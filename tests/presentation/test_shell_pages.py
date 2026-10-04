@@ -11,7 +11,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtWidgets import QApplication, QMessageBox, QLabel
 
 from worklogger.domain.shared.result import Result
-from worklogger.domain.shared.errors import ValidationError
+from worklogger.domain.shared.errors import CancellationError, ValidationError
 from worklogger.app.job_runner import JobHandle, CancellationToken
 from worklogger.presentation.reporting.dialog import ReportTemplateDialog
 from worklogger.presentation.job_runner import ImmediateJobRunner
@@ -42,6 +42,23 @@ class ShellPagesTests(unittest.TestCase):
     def setUp(self) -> None:
         self.information = self.enterContext(patch.object(QMessageBox, "information"))
         self.warning = self.enterContext(patch.object(QMessageBox, "warning"))
+
+    def test_cancelled_rewrite_preserves_draft_without_error_or_success_dialog(self):
+        page = ReportsPage(ReportsViewModel(), date(2026, 4, 20))
+        try:
+            self.assertTrue(page.refresh())
+            page.editor.setPlainText("Unsaved draft")
+            page._set_rewrite_busy(True)
+            page._complete_rewrite(Result.failure(CancellationError("ai_rewrite_cancelled", "ai_rewrite_cancelled")))
+            self.assertEqual(page.editor.toPlainText(), "Unsaved draft")
+            self.assertTrue(page.has_unsaved_changes)
+            self.assertFalse(page.editor.isReadOnly())
+            self.assertIsNone(page._last_error)
+            self.warning.assert_not_called()
+            self.information.assert_not_called()
+        finally:
+            page.editor.setPlainText("Original daily")
+            page.deleteLater()
 
     def test_report_rewrite_uses_job_runner_instructions_and_protects_active_state(self) -> None:
         class ViewModel(ReportsViewModel):

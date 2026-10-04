@@ -83,6 +83,9 @@ msgstr ""
 msgid "Active local model: {model}"
 msgstr ""
 
+msgid "Active model updated."
+msgstr ""
+
 msgid "Add"
 msgstr ""
 
@@ -93,6 +96,9 @@ msgid "Address"
 msgstr ""
 
 msgid "Admin"
+msgstr ""
+
+msgid "Administrator permission is required."
 msgstr ""
 
 msgid "All day"
@@ -185,6 +191,9 @@ msgstr ""
 msgid "Break (h)"
 msgstr ""
 
+msgid "Break time must be nonnegative and shorter than the work period."
+msgstr ""
+
 msgid "Break timer running"
 msgstr ""
 
@@ -218,6 +227,9 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
+msgid "Catalog refreshed."
+msgstr ""
+
 msgid "Change password"
 msgstr ""
 
@@ -228,6 +240,9 @@ msgid "Check for updates"
 msgstr ""
 
 msgid "Checking for updates..."
+msgstr ""
+
+msgid "Choose a backup destination different from the active database."
 msgstr ""
 
 msgid "Choose custom color"
@@ -353,10 +368,25 @@ msgstr ""
 msgid "Enter a port between 0 and 65535."
 msgstr ""
 
+msgid "Enter a valid recovery key."
+msgstr ""
+
+msgid "Enter content before continuing."
+msgstr ""
+
+msgid "Enter valid start and end times in HH:mm format."
+msgstr ""
+
 msgid "Enter your ID"
 msgstr ""
 
+msgid "Enter your ID."
+msgstr ""
+
 msgid "Enter your password"
+msgstr ""
+
+msgid "Enter your password."
 msgstr ""
 
 msgid "Export"
@@ -443,7 +473,13 @@ msgstr ""
 msgid "ID"
 msgstr ""
 
+msgid "Identity linked."
+msgstr ""
+
 msgid "Identity management is not configured."
+msgstr ""
+
+msgid "Identity unlinked."
 msgstr ""
 
 msgid "Import .gguf"
@@ -593,6 +629,18 @@ msgstr ""
 msgid "Model"
 msgstr ""
 
+msgid "Model deleted."
+msgstr ""
+
+msgid "Model downloaded."
+msgstr ""
+
+msgid "Model imported."
+msgstr ""
+
+msgid "Model verification failed. Import or download a valid GGUF model."
+msgstr ""
+
 msgid "Model verified."
 msgstr ""
 
@@ -695,6 +743,9 @@ msgstr ""
 msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
 msgstr ""
 
+msgid "Operation cancelled."
+msgstr ""
+
 msgid "Overnight"
 msgstr ""
 
@@ -744,6 +795,9 @@ msgid "Password reset."
 msgstr ""
 
 msgid "Pink"
+msgstr ""
+
+msgid "Please sign in to continue."
 msgstr ""
 
 msgid "Please wait for the current data operation."
@@ -807,6 +861,9 @@ msgid "RUNTIME SMOKE FAILED"
 msgstr ""
 
 msgid "RUNTIME SMOKE OK"
+msgstr ""
+
+msgid "Recording or a break is already active."
 msgstr ""
 
 msgid "Recovery key"
@@ -953,7 +1010,13 @@ msgstr ""
 msgid "Select a provider first."
 msgstr ""
 
+msgid "Select a quick log first."
+msgstr ""
+
 msgid "Select a user."
+msgstr ""
+
+msgid "Select a valid date or date range."
 msgstr ""
 
 msgid "Select an identity first."
@@ -1013,6 +1076,9 @@ msgstr ""
 msgid "Start break"
 msgstr ""
 
+msgid "Start recording or a break before continuing."
+msgstr ""
+
 msgid "Start week on Monday"
 msgstr ""
 
@@ -1037,10 +1103,40 @@ msgstr ""
 msgid "Test"
 msgstr ""
 
+msgid "The ID or password is incorrect."
+msgstr ""
+
+msgid "The model returned no content. Please try again."
+msgstr ""
+
+msgid "The operation could not be completed. Please try again."
+msgstr ""
+
+msgid "The password must contain at least {length} characters."
+msgstr ""
+
+msgid "The passwords do not match."
+msgstr ""
+
+msgid "The report has not loaded. Reload it before continuing."
+msgstr ""
+
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr ""
 
+msgid "The user account is no longer available."
+msgstr ""
+
 msgid "Theme"
+msgstr ""
+
+msgid "This ID is already in use. Choose a different ID."
+msgstr ""
+
+msgid "This identity is already linked to an account."
+msgstr ""
+
+msgid "This model is in use by another user and cannot be deleted."
 msgstr ""
 
 msgid "Thu"
@@ -1070,7 +1166,49 @@ msgstr ""
 msgid "Tue"
 msgstr ""
 
+msgid "Unable to back up the database. Check the destination and available disk space."
+msgstr ""
+
+msgid "Unable to check for updates. Check your network connection and try again."
+msgstr ""
+
+msgid "Unable to complete the AI request. Check your model settings and try again."
+msgstr ""
+
+msgid "Unable to export the file. Check the destination and write permissions."
+msgstr ""
+
+msgid "Unable to import the file. Check its format and contents."
+msgstr ""
+
+msgid "Unable to load data. Please try again."
+msgstr ""
+
+msgid "Unable to obtain the model. Check the source file or download connection."
+msgstr ""
+
+msgid "Unable to read the model file. Check its access permissions."
+msgstr ""
+
+msgid "Unable to restore the database. Select a valid SQLite backup."
+msgstr ""
+
+msgid "Unable to save settings. Please try again."
+msgstr ""
+
 msgid "Unable to save the report. Your changes have been retained."
+msgstr ""
+
+msgid "Unable to save the work log. Your changes have been retained."
+msgstr ""
+
+msgid "Unable to sign in with this provider. Please try again."
+msgstr ""
+
+msgid "Unable to start WorkLogger. Check the application log for details."
+msgstr ""
+
+msgid "Unable to update saved sign-in information."
 msgstr ""
 
 msgid "Unknown error"
@@ -1172,6 +1310,9 @@ msgstr ""
 msgid "You are using the latest version."
 msgstr ""
 
+msgid "You cannot delete your own account or the last administrator."
+msgstr ""
+
 msgid "You have unsaved note changes. Discard them?"
 msgstr ""
 
@@ -1182,6 +1323,9 @@ msgid "You have unsaved template changes. Discard them?"
 msgstr ""
 
 msgid "You have unsaved work log changes. Discard them?"
+msgstr ""
+
+msgid "Your saved sign-in is invalid or expired. Please sign in again."
 msgstr ""
 
 msgid "h"

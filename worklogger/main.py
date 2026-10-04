@@ -14,7 +14,9 @@ if __package__ in {None, ""}:
     if workspace_root not in sys.path:
         sys.path.insert(0, workspace_root)
 
+from worklogger.domain.shared.errors import CancellationError
 from worklogger.infrastructure.i18n import _
+from worklogger.presentation.errors import display_error_message
 
 DesktopRunner = Callable[[Sequence[str]], int]
 
@@ -203,14 +205,14 @@ def smoke_runtime_check() -> int:
         if not runtime.ok or runtime.value is None:
             _safe_stdout(_("RUNTIME SMOKE FAILED"))
             if runtime.error:
-                _safe_stdout(_(runtime.error.message))
+                _safe_stdout(display_error_message(runtime.error))
             return 1
         refreshed = runtime.value.window.refresh()
         runtime.value.window.close()
         if not refreshed:
             _safe_stdout(_("RUNTIME SMOKE FAILED"))
             if runtime.value.window.last_error:
-                _safe_stdout(_(runtime.value.window.last_error.message))
+                _safe_stdout(display_error_message(runtime.value.window.last_error))
             return 1
     _safe_stdout(_("RUNTIME SMOKE OK"))
     return 0
@@ -229,9 +231,11 @@ def run_desktop(args: Sequence[str]) -> int:
             argv=list(args),
         )
         if not runtime.ok or runtime.value is None:
+            if isinstance(runtime.error, CancellationError):
+                return 0
             _safe_stdout(_("DESKTOP START FAILED"))
             if runtime.error:
-                _safe_stdout(_(runtime.error.message))
+                _safe_stdout(display_error_message(runtime.error))
             return 1
 
         logged_out = False

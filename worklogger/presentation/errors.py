@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import logging
 
-from worklogger.domain.shared.errors import AppError
+from worklogger.config.constants import PASSWORD_MIN_LENGTH
+from worklogger.domain.shared.errors import AppError, CancellationError
 from worklogger.infrastructure.i18n import _
 
 LOGGER = logging.getLogger(__name__)
@@ -13,10 +14,108 @@ LOGGER = logging.getLogger(__name__)
 def display_error_message(error: AppError | None) -> str:
     """Return a translated message safe for direct UI display."""
 
+    if isinstance(error, CancellationError):
+        return _("Operation cancelled.")
     if error is not None and logging.getLogger().handlers:
         LOGGER.error("app_error_displayed", extra={"error_code": error.code})
-    if error is not None and error.code == "report_not_found":
-        return _("The saved report is no longer available. Reload the reports and try again.")
-    if error is not None and error.code == "report_save_failed":
-        return _("Unable to save the report. Your changes have been retained.")
-    return _(error.message) if error is not None else _("Unknown error")
+    return display_error_code(error.code) if error is not None else _("Unknown error")
+
+
+def display_error_code(code: str) -> str:
+    """Translate known error codes without displaying raw exception text or logging previews."""
+
+    match code:
+        case "report_not_found":
+            return _("The saved report is no longer available. Reload the reports and try again.")
+        case "report_save_failed":
+            return _("Unable to save the report. Your changes have been retained.")
+        case "desktop_runtime_failed" | "auth_state_failed":
+            return _("Unable to start WorkLogger. Check the application log for details.")
+        case "runtime_user_required" | "runtime_user_missing" | "auth_required":
+            return _("Please sign in to continue.")
+        case "invalid_credentials":
+            return _("The ID or password is incorrect.")
+        case "username_exists":
+            return _("This ID is already in use. Choose a different ID.")
+        case "username_required" | "username_must_be_string":
+            return _("Enter your ID.")
+        case "password_required" | "current_password_required" | "new_password_required":
+            return _("Enter your password.")
+        case "password_too_short":
+            return _("The password must contain at least {length} characters.").format(length=PASSWORD_MIN_LENGTH)
+        case "registration_password_mismatch" | "password_change_mismatch" | "password_reset_mismatch" | "managed_user_password_mismatch":
+            return _("The passwords do not match.")
+        case "invalid_recovery_key" | "recovery_key_required":
+            return _("Enter a valid recovery key.")
+        case "invalid_remember_token" | "remember_token_required":
+            return _("Your saved sign-in is invalid or expired. Please sign in again.")
+        case "remember_session_save_failed" | "remember_session_load_failed" | "remember_session_clear_failed" | "remember_login_unavailable":
+            return _("Unable to update saved sign-in information.")
+        case "admin_required":
+            return _("Administrator permission is required.")
+        case "cannot_delete_self" | "cannot_delete_last_admin":
+            return _("You cannot delete your own account or the last administrator.")
+        case "user_not_found" | "identity_user_missing":
+            return _("The user account is no longer available.")
+        case "credential_storage_unavailable":
+            return _("Secure credential storage is unavailable.")
+        case "invalid_proxy_port":
+            return _("Enter a port between 0 and 65535.")
+        case "time_range_invalid" | "time_range_incomplete" | "quick_log_time_range_invalid" | "start_time_required":
+            return _("Enter valid start and end times in HH:mm format.")
+        case "break_hours_negative" | "break_hours_too_long" | "auto_record_break_minutes_invalid":
+            return _("Break time must be nonnegative and shorter than the work period.")
+        case "date_range_invalid" | "date_required" | "month_required":
+            return _("Select a valid date or date range.")
+        case "report_not_loaded":
+            return _("The report has not loaded. Reload it before continuing.")
+        case "description_required" | "report_content_required" | "rewrite_content_required" | "template_content_required" | "ai_chat_message_required":
+            return _("Enter content before continuing.")
+        case "quick_log_not_selected":
+            return _("Select a quick log first.")
+        case "auto_record_already_active" | "auto_record_break_already_active":
+            return _("Recording or a break is already active.")
+        case "auto_record_not_started" | "auto_record_break_not_active":
+            return _("Start recording or a break before continuing.")
+        case "backup_same_path":
+            return _("Choose a backup destination different from the active database.")
+        case "backup_failed" | "backup_memory_database":
+            return _("Unable to back up the database. Check the destination and available disk space.")
+        case "restore_failed" | "restore_memory_database" | "restore_source_missing" | "restore_validation_failed":
+            return _("Unable to restore the database. Select a valid SQLite backup.")
+        case "csv_import_failed" | "ics_import_failed" | "ics_read_failed" | "ics_file_too_large" | "csv_import_unavailable" | "ics_import_unavailable":
+            return _("Unable to import the file. Check its format and contents.")
+        case "csv_export_failed" | "ics_export_failed" | "markdown_export_failed" | "analytics_csv_export_failed" | "analytics_pdf_export_failed":
+            return _("Unable to export the file. Check the destination and write permissions.")
+        case "update_check_failed":
+            return _("Unable to check for updates. Check your network connection and try again.")
+        case "settings_save_failed":
+            return _("Unable to save settings. Please try again.")
+        case "worklog_save_failed":
+            return _("Unable to save the work log. Your changes have been retained.")
+        case "settings_load_failed" | "worklog_load_failed" | "worklog_export_load_failed" | "calendar_load_failed" | "holiday_load_failed" | "analytics_load_failed" | "stats_load_failed" | "user_list_failed":
+            return _("Unable to load data. Please try again.")
+        case "ai_chat_not_configured" | "ai_rewrite_not_configured" | "ai_secondary_not_configured" | "ai_api_key_required":
+            return _("AI Assist is not configured.")
+        case "ai_chat_empty" | "ai_rewrite_empty" | "local_model_empty_response":
+            return _("The model returned no content. Please try again.")
+        case "ai_chat_failed" | "ai_rewrite_failed" | "ai_request_failed" | "ai_context_failed" | "local_model_generation_failed":
+            return _("Unable to complete the AI request. Check your model settings and try again.")
+        case "local_model_missing" | "local_model_file_missing" | "local_model_not_configured":
+            return _("Local model unavailable. Download, import and select a verified model.")
+        case "local_model_empty" | "local_model_file_empty" | "local_model_file_must_be_gguf" | "local_model_hash_mismatch" | "local_model_verify_failed":
+            return _("Model verification failed. Import or download a valid GGUF model.")
+        case "local_model_id_required":
+            return _("Select a model first.")
+        case "local_model_permission_denied":
+            return _("Unable to read the model file. Check its access permissions.")
+        case "local_model_download_failed" | "local_model_download_url_missing" | "local_model_import_failed":
+            return _("Unable to obtain the model. Check the source file or download connection.")
+        case "local_model_used_by_another_user":
+            return _("This model is in use by another user and cannot be deleted.")
+        case "identity_auth_failed" | "identity_login_failed" | "identity_nonce_mismatch" | "identity_subject_missing":
+            return _("Unable to sign in with this provider. Please try again.")
+        case "identity_already_linked":
+            return _("This identity is already linked to an account.")
+        case _:
+            return _("The operation could not be completed. Please try again.")

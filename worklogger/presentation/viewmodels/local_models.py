@@ -19,6 +19,7 @@ from worklogger.app.use_cases.local_models import LocalModelInventory
 from worklogger.domain.local_model.models import LocalModelEntry, LocalModelFileStatus
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
+from worklogger.infrastructure.i18n import _
 
 
 class LocalModelsListHandler(Protocol):
@@ -103,7 +104,7 @@ class LocalModelManagerViewModel:
             return Result.failure(
                 refreshed.error or ValidationError("local_model_refresh_failed", "local_model_refresh_failed")
             )
-        return _with_message(self.load(), "Catalog refreshed.")
+        return _with_message(self.load(), _("Catalog refreshed."))
 
     def import_model(self, source: Path | str) -> Result[LocalModelManagerState]:
         imported = self._import_handler.handle(
@@ -113,7 +114,7 @@ class LocalModelManagerViewModel:
             return Result.failure(
                 imported.error or ValidationError("local_model_import_failed", "local_model_import_failed")
             )
-        return _with_message(self.load(), "Model imported.")
+        return _with_message(self.load(), _("Model imported."))
 
     def download_model(self, model_id: str) -> Result[LocalModelManagerState]:
         downloaded = self._download_handler.handle(
@@ -123,7 +124,7 @@ class LocalModelManagerViewModel:
             return Result.failure(
                 downloaded.error or ValidationError("local_model_download_failed", "local_model_download_failed")
             )
-        return _with_message(self.load(), "Model downloaded.")
+        return _with_message(self.load(), _("Model downloaded."))
 
     def verify_model(self, model_id: str) -> Result[LocalModelFileStatus]:
         return self._verify_handler.handle(
@@ -138,7 +139,7 @@ class LocalModelManagerViewModel:
             return Result.failure(
                 selected.error or ValidationError("local_model_select_failed", "local_model_select_failed")
             )
-        return _with_message(self.load(), "Active model updated.")
+        return _with_message(self.load(), _("Active model updated."))
 
     def delete_model(self, model_id: str) -> Result[LocalModelManagerState]:
         deleted = self._delete_handler.handle(
@@ -148,7 +149,7 @@ class LocalModelManagerViewModel:
             return Result.failure(
                 deleted.error or ValidationError("local_model_delete_failed", "local_model_delete_failed")
             )
-        return _with_message(self.load(), "Model deleted.")
+        return _with_message(self.load(), _("Model deleted."))
 
 
 def _with_message(

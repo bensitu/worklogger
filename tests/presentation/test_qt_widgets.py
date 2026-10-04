@@ -198,7 +198,7 @@ class QtWidgetTests(unittest.TestCase):
         panel.set_form(form)
 
         self.assertFalse(panel.save_button.isEnabled())
-        self.assertEqual(panel.error_label.text(), "time_range_incomplete")
+        self.assertEqual(panel.error_label.text(), "Enter valid start and end times in HH:mm format.")
 
     def test_manual_clock_buttons_select_times_or_cancel_without_changing_draft(self) -> None:
         for compact in (False, True):

@@ -25,6 +25,7 @@ python scripts/i18n/i18n_check.py
 python -m unittest tests.domain.test_worklog_rules -v
 python -m unittest tests.infrastructure.test_activity_schema_migration -v
 python -m unittest tests.presentation.test_auth_presentation -v
+python -m unittest tests.presentation.test_desktop_exit tests.presentation.test_error_messages -v
 python -m unittest tests.presentation.test_native_fonts -v
 python -m unittest tests.presentation.test_native_dropdowns -v
 python -m unittest discover -s tests -t . -v

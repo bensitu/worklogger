@@ -85,6 +85,9 @@ msgstr "有効"
 msgid "Active local model: {model}"
 msgstr "使用中のローカルモデル：{model}"
 
+msgid "Active model updated."
+msgstr "使用中のモデルを更新しました。"
+
 msgid "Add"
 msgstr "追加"
 
@@ -96,6 +99,9 @@ msgstr "アドレス"
 
 msgid "Admin"
 msgstr "管理者"
+
+msgid "Administrator permission is required."
+msgstr "管理者権限が必要です。"
 
 msgid "All day"
 msgstr "終日"
@@ -187,6 +193,9 @@ msgstr "休憩"
 msgid "Break (h)"
 msgstr "休憩（時間）"
 
+msgid "Break time must be nonnegative and shorter than the work period."
+msgstr "休憩時間は0以上で、勤務時間より短くしてください。"
+
 msgid "Break timer running"
 msgstr "休憩を計測中"
 
@@ -220,6 +229,9 @@ msgstr "カレンダーの予定：{events}"
 msgid "Cancel"
 msgstr "キャンセル"
 
+msgid "Catalog refreshed."
+msgstr "モデルカタログを更新しました。"
+
 msgid "Change password"
 msgstr "パスワードを変更"
 
@@ -231,6 +243,9 @@ msgstr "更新を確認"
 
 msgid "Checking for updates..."
 msgstr "更新を確認中..."
+
+msgid "Choose a backup destination different from the active database."
+msgstr "使用中のデータベースとは異なるバックアップ先を選択してください。"
 
 msgid "Choose custom color"
 msgstr "カスタム色を選択"
@@ -355,11 +370,26 @@ msgstr "英語"
 msgid "Enter a port between 0 and 65535."
 msgstr "0～65535のポート番号を入力してください。"
 
+msgid "Enter a valid recovery key."
+msgstr "有効なリカバリーキーを入力してください。"
+
+msgid "Enter content before continuing."
+msgstr "続行する前に内容を入力してください。"
+
+msgid "Enter valid start and end times in HH:mm format."
+msgstr "開始時刻と終了時刻を HH:mm 形式で正しく入力してください。"
+
 msgid "Enter your ID"
 msgstr "IDを入力"
 
+msgid "Enter your ID."
+msgstr "IDを入力してください。"
+
 msgid "Enter your password"
 msgstr "パスワードを入力"
+
+msgid "Enter your password."
+msgstr "パスワードを入力してください。"
 
 msgid "Export"
 msgstr "エクスポート"
@@ -445,8 +475,14 @@ msgstr "色相(&E):"
 msgid "ID"
 msgstr "ID"
 
+msgid "Identity linked."
+msgstr "IDを連携しました。"
+
 msgid "Identity management is not configured."
 msgstr "アカウント連携の管理は未設定です。"
+
+msgid "Identity unlinked."
+msgstr "IDの連携を解除しました。"
 
 msgid "Import .gguf"
 msgstr ".ggufをインポート"
@@ -595,6 +631,18 @@ msgstr "モード"
 msgid "Model"
 msgstr "モデル"
 
+msgid "Model deleted."
+msgstr "モデルを削除しました。"
+
+msgid "Model downloaded."
+msgstr "モデルをダウンロードしました。"
+
+msgid "Model imported."
+msgstr "モデルをインポートしました。"
+
+msgid "Model verification failed. Import or download a valid GGUF model."
+msgstr "モデルの検証に失敗しました。有効なGGUFモデルをインポートまたはダウンロードしてください。"
+
 msgid "Model verified."
 msgstr "モデルを検証しました。"
 
@@ -697,6 +745,9 @@ msgstr "開く"
 msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
 msgstr "OpenAI互換インターフェースに対応し、互換サービス経由でChatGPT、Claude、Qwen、DeepSeekなどを利用できます。"
 
+msgid "Operation cancelled."
+msgstr "操作をキャンセルしました。"
+
 msgid "Overnight"
 msgstr "日またぎ"
 
@@ -747,6 +798,9 @@ msgstr "パスワードをリセットしました。"
 
 msgid "Pink"
 msgstr "ピンク"
+
+msgid "Please sign in to continue."
+msgstr "続行するにはログインしてください。"
 
 msgid "Please wait for the current data operation."
 msgstr "現在のデータ操作が完了するまでお待ちください。"
@@ -810,6 +864,9 @@ msgstr "ランタイムのスモークテストに失敗"
 
 msgid "RUNTIME SMOKE OK"
 msgstr "ランタイムのスモークテスト成功"
+
+msgid "Recording or a break is already active."
+msgstr "記録または休憩はすでに開始されています。"
 
 msgid "Recovery key"
 msgstr "復旧キー"
@@ -955,8 +1012,14 @@ msgstr "先にモデルを選択してください。"
 msgid "Select a provider first."
 msgstr "先にプロバイダーを選択してください。"
 
+msgid "Select a quick log first."
+msgstr "先にクイックログを選択してください。"
+
 msgid "Select a user."
 msgstr "ユーザーを選択してください。"
+
+msgid "Select a valid date or date range."
+msgstr "有効な日付または日付範囲を選択してください。"
 
 msgid "Select an identity first."
 msgstr "先に連携アカウントを選択してください。"
@@ -1015,6 +1078,9 @@ msgstr "開始"
 msgid "Start break"
 msgstr "休憩を開始"
 
+msgid "Start recording or a break before continuing."
+msgstr "続行する前に記録または休憩を開始してください。"
+
 msgid "Start week on Monday"
 msgstr "月曜始まり"
 
@@ -1039,11 +1105,41 @@ msgstr "テンプレート"
 msgid "Test"
 msgstr "テスト"
 
+msgid "The ID or password is incorrect."
+msgstr "IDまたはパスワードが正しくありません。"
+
+msgid "The model returned no content. Please try again."
+msgstr "モデルから内容が返されませんでした。もう一度お試しください。"
+
+msgid "The operation could not be completed. Please try again."
+msgstr "操作を完了できませんでした。もう一度お試しください。"
+
+msgid "The password must contain at least {length} characters."
+msgstr "パスワードは{length}文字以上で入力してください。"
+
+msgid "The passwords do not match."
+msgstr "入力したパスワードが一致しません。"
+
+msgid "The report has not loaded. Reload it before continuing."
+msgstr "レポートが読み込まれていません。再度読み込んでから続行してください。"
+
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr "保存済みレポートを利用できません。レポートを再読み込みして、もう一度お試しください。"
 
+msgid "The user account is no longer available."
+msgstr "このユーザーアカウントは利用できなくなりました。"
+
 msgid "Theme"
 msgstr "テーマ"
+
+msgid "This ID is already in use. Choose a different ID."
+msgstr "このIDはすでに使用されています。別のIDを選択してください。"
+
+msgid "This identity is already linked to an account."
+msgstr "このIDはすでにアカウントに連携されています。"
+
+msgid "This model is in use by another user and cannot be deleted."
+msgstr "このモデルは他のユーザーが使用しているため削除できません。"
 
 msgid "Thu"
 msgstr "木"
@@ -1072,8 +1168,50 @@ msgstr "繁体字中国語"
 msgid "Tue"
 msgstr "火"
 
+msgid "Unable to back up the database. Check the destination and available disk space."
+msgstr "データベースをバックアップできませんでした。保存先とディスクの空き容量を確認してください。"
+
+msgid "Unable to check for updates. Check your network connection and try again."
+msgstr "更新を確認できませんでした。ネットワーク接続を確認して再試行してください。"
+
+msgid "Unable to complete the AI request. Check your model settings and try again."
+msgstr "AIリクエストを完了できませんでした。モデル設定を確認して再試行してください。"
+
+msgid "Unable to export the file. Check the destination and write permissions."
+msgstr "ファイルをエクスポートできませんでした。保存先と書き込み権限を確認してください。"
+
+msgid "Unable to import the file. Check its format and contents."
+msgstr "ファイルをインポートできませんでした。形式と内容を確認してください。"
+
+msgid "Unable to load data. Please try again."
+msgstr "データを読み込めませんでした。もう一度お試しください。"
+
+msgid "Unable to obtain the model. Check the source file or download connection."
+msgstr "モデルを取得できませんでした。元のファイルまたはダウンロード接続を確認してください。"
+
+msgid "Unable to read the model file. Check its access permissions."
+msgstr "モデルファイルを読み込めませんでした。アクセス権限を確認してください。"
+
+msgid "Unable to restore the database. Select a valid SQLite backup."
+msgstr "データベースを復元できませんでした。有効なSQLiteバックアップを選択してください。"
+
+msgid "Unable to save settings. Please try again."
+msgstr "設定を保存できませんでした。もう一度お試しください。"
+
 msgid "Unable to save the report. Your changes have been retained."
 msgstr "レポートを保存できませんでした。編集内容は保持されています。"
+
+msgid "Unable to save the work log. Your changes have been retained."
+msgstr "作業記録を保存できませんでした。変更内容は保持されています。"
+
+msgid "Unable to sign in with this provider. Please try again."
+msgstr "このプロバイダーでログインできませんでした。もう一度お試しください。"
+
+msgid "Unable to start WorkLogger. Check the application log for details."
+msgstr "WorkLoggerを起動できませんでした。詳細はアプリケーションログを確認してください。"
+
+msgid "Unable to update saved sign-in information."
+msgstr "保存済みのログイン情報を更新できませんでした。"
 
 msgid "Unknown error"
 msgstr "不明なエラー"
@@ -1174,6 +1312,9 @@ msgstr "あなた"
 msgid "You are using the latest version."
 msgstr "最新バージョンを使用しています。"
 
+msgid "You cannot delete your own account or the last administrator."
+msgstr "自分のアカウントまたは最後の管理者アカウントは削除できません。"
+
 msgid "You have unsaved note changes. Discard them?"
 msgstr "ノートに未保存の変更があります。破棄しますか？"
 
@@ -1185,6 +1326,9 @@ msgstr "テンプレートに未保存の変更があります。破棄します
 
 msgid "You have unsaved work log changes. Discard them?"
 msgstr "業務記録に未保存の変更があります。破棄しますか？"
+
+msgid "Your saved sign-in is invalid or expired. Please sign in again."
+msgstr "保存済みのログイン情報が無効か、有効期限が切れています。再度ログインしてください。"
 
 msgid "h"
 msgstr "h"

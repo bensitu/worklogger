@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from worklogger.domain.shared.errors import AppError, ValidationError
+from worklogger.domain.shared.errors import AppError, CancellationError, ValidationError
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import ReportEditorState, ReportEditorViewModel
@@ -322,7 +322,7 @@ class ReportDialog(QDialog):
         self.status_label.setText(_("Rewritten"))
 
     def _set_error(self, error: AppError | None) -> None:
-        self._last_error = error
+        self._last_error = None if isinstance(error, CancellationError) else error
         self.status_label.setText(display_error_message(error))
 
     def reject(self) -> None:

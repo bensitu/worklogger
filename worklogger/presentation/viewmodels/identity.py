@@ -15,6 +15,7 @@ from worklogger.domain.auth.models import LinkedIdentity
 from worklogger.domain.identity.models import IdentityProviderStatus
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
+from worklogger.infrastructure.i18n import _
 
 
 class LinkedIdentitiesListHandler(Protocol):
@@ -86,7 +87,7 @@ class IdentityManagementViewModel:
             return Result.failure(
                 linked.error or ValidationError("identity_link_failed", "identity_link_failed")
             )
-        return _with_message(self.load(), "Identity linked.")
+        return _with_message(self.load(), _("Identity linked."))
 
     def unlink(self, identity_id: int) -> Result[IdentityManagementState]:
         unlinked = self._unlink_handler.handle(
@@ -96,7 +97,7 @@ class IdentityManagementViewModel:
             return Result.failure(
                 unlinked.error or ValidationError("identity_unlink_failed", "identity_unlink_failed")
             )
-        return _with_message(self.load(), "Identity unlinked.")
+        return _with_message(self.load(), _("Identity unlinked."))
 
 
 def _with_message(

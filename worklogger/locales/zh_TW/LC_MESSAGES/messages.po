@@ -85,6 +85,9 @@ msgstr "已啟用"
 msgid "Active local model: {model}"
 msgstr "目前本機模型：{model}"
 
+msgid "Active model updated."
+msgstr "目前模型已更新。"
+
 msgid "Add"
 msgstr "新增"
 
@@ -96,6 +99,9 @@ msgstr "位址"
 
 msgid "Admin"
 msgstr "管理員"
+
+msgid "Administrator permission is required."
+msgstr "需要管理員權限。"
 
 msgid "All day"
 msgstr "全天"
@@ -187,6 +193,9 @@ msgstr "休息"
 msgid "Break (h)"
 msgstr "休息（小時）"
 
+msgid "Break time must be nonnegative and shorter than the work period."
+msgstr "休息時間不能為負數，且必須短於工作時段。"
+
 msgid "Break timer running"
 msgstr "休息計時中"
 
@@ -220,6 +229,9 @@ msgstr "行事曆事件：{events}"
 msgid "Cancel"
 msgstr "取消"
 
+msgid "Catalog refreshed."
+msgstr "模型目錄已重新整理。"
+
 msgid "Change password"
 msgstr "變更密碼"
 
@@ -231,6 +243,9 @@ msgstr "檢查更新"
 
 msgid "Checking for updates..."
 msgstr "正在檢查更新..."
+
+msgid "Choose a backup destination different from the active database."
+msgstr "請選擇不同於目前資料庫的備份位置。"
 
 msgid "Choose custom color"
 msgstr "選擇自訂色彩"
@@ -355,11 +370,26 @@ msgstr "英語"
 msgid "Enter a port between 0 and 65535."
 msgstr "請輸入 0 到 65535 之間的連接埠號碼。"
 
+msgid "Enter a valid recovery key."
+msgstr "請輸入有效的復原金鑰。"
+
+msgid "Enter content before continuing."
+msgstr "請先輸入內容。"
+
+msgid "Enter valid start and end times in HH:mm format."
+msgstr "請以 HH:mm 格式輸入有效的開始和結束時間。"
+
 msgid "Enter your ID"
 msgstr "輸入您的 ID"
 
+msgid "Enter your ID."
+msgstr "請輸入 ID。"
+
 msgid "Enter your password"
 msgstr "輸入您的密碼"
+
+msgid "Enter your password."
+msgstr "請輸入密碼。"
 
 msgid "Export"
 msgstr "匯出"
@@ -445,8 +475,14 @@ msgstr "色相(&E)："
 msgid "ID"
 msgstr "ID"
 
+msgid "Identity linked."
+msgstr "身分已連結。"
+
 msgid "Identity management is not configured."
 msgstr "身分管理尚未設定。"
+
+msgid "Identity unlinked."
+msgstr "身分連結已解除。"
 
 msgid "Import .gguf"
 msgstr "匯入 .gguf"
@@ -595,6 +631,18 @@ msgstr "模式"
 msgid "Model"
 msgstr "模型"
 
+msgid "Model deleted."
+msgstr "模型已刪除。"
+
+msgid "Model downloaded."
+msgstr "模型已下載。"
+
+msgid "Model imported."
+msgstr "模型已匯入。"
+
+msgid "Model verification failed. Import or download a valid GGUF model."
+msgstr "模型驗證失敗。請匯入或下載有效的 GGUF 模型。"
+
 msgid "Model verified."
 msgstr "模型驗證完成。"
 
@@ -697,6 +745,9 @@ msgstr "開啟"
 msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
 msgstr "支援 OpenAI 相容介面，可透過相容服務接入 ChatGPT、Claude、Qwen 和 DeepSeek 等模型。"
 
+msgid "Operation cancelled."
+msgstr "操作已取消。"
+
 msgid "Overnight"
 msgstr "跨日"
 
@@ -747,6 +798,9 @@ msgstr "密碼已重設。"
 
 msgid "Pink"
 msgstr "粉紅色"
+
+msgid "Please sign in to continue."
+msgstr "請登入後繼續。"
 
 msgid "Please wait for the current data operation."
 msgstr "請等待目前的資料操作完成。"
@@ -810,6 +864,9 @@ msgstr "執行階段檢查失敗"
 
 msgid "RUNTIME SMOKE OK"
 msgstr "執行階段檢查通過"
+
+msgid "Recording or a break is already active."
+msgstr "記錄或休息已開始。"
 
 msgid "Recovery key"
 msgstr "復原金鑰"
@@ -955,8 +1012,14 @@ msgstr "請先選取模型。"
 msgid "Select a provider first."
 msgstr "請先選取提供者。"
 
+msgid "Select a quick log first."
+msgstr "請先選擇一筆快速記錄。"
+
 msgid "Select a user."
 msgstr "請選取使用者。"
+
+msgid "Select a valid date or date range."
+msgstr "請選擇有效的日期或日期範圍。"
 
 msgid "Select an identity first."
 msgstr "請先選取身分。"
@@ -1015,6 +1078,9 @@ msgstr "開始"
 msgid "Start break"
 msgstr "開始休息"
 
+msgid "Start recording or a break before continuing."
+msgstr "請先開始記錄或休息。"
+
 msgid "Start week on Monday"
 msgstr "每週從週一開始"
 
@@ -1039,11 +1105,41 @@ msgstr "範本"
 msgid "Test"
 msgstr "測試"
 
+msgid "The ID or password is incorrect."
+msgstr "ID 或密碼不正確。"
+
+msgid "The model returned no content. Please try again."
+msgstr "模型未傳回內容，請重試。"
+
+msgid "The operation could not be completed. Please try again."
+msgstr "無法完成操作，請重試。"
+
+msgid "The password must contain at least {length} characters."
+msgstr "密碼至少需要 {length} 個字元。"
+
+msgid "The passwords do not match."
+msgstr "兩次輸入的密碼不一致。"
+
+msgid "The report has not loaded. Reload it before continuing."
+msgstr "報表尚未載入，請重新載入後繼續。"
+
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr "已儲存的報表已無法使用。請重新載入報表後再試。"
 
+msgid "The user account is no longer available."
+msgstr "該使用者帳戶已無法使用。"
+
 msgid "Theme"
 msgstr "主題"
+
+msgid "This ID is already in use. Choose a different ID."
+msgstr "此 ID 已被使用，請選擇其他 ID。"
+
+msgid "This identity is already linked to an account."
+msgstr "此身分已連結至帳戶。"
+
+msgid "This model is in use by another user and cannot be deleted."
+msgstr "此模型正被其他使用者使用，無法刪除。"
 
 msgid "Thu"
 msgstr "四"
@@ -1072,8 +1168,50 @@ msgstr "繁體中文"
 msgid "Tue"
 msgstr "二"
 
+msgid "Unable to back up the database. Check the destination and available disk space."
+msgstr "無法備份資料庫，請檢查目標位置與可用磁碟空間。"
+
+msgid "Unable to check for updates. Check your network connection and try again."
+msgstr "無法檢查更新，請檢查網路連線後重試。"
+
+msgid "Unable to complete the AI request. Check your model settings and try again."
+msgstr "無法完成 AI 請求，請檢查模型設定後重試。"
+
+msgid "Unable to export the file. Check the destination and write permissions."
+msgstr "無法匯出檔案，請檢查目標位置與寫入權限。"
+
+msgid "Unable to import the file. Check its format and contents."
+msgstr "無法匯入檔案，請檢查檔案格式與內容。"
+
+msgid "Unable to load data. Please try again."
+msgstr "無法載入資料，請重試。"
+
+msgid "Unable to obtain the model. Check the source file or download connection."
+msgstr "無法取得模型，請檢查來源檔案或下載連線。"
+
+msgid "Unable to read the model file. Check its access permissions."
+msgstr "無法讀取模型檔案，請檢查存取權限。"
+
+msgid "Unable to restore the database. Select a valid SQLite backup."
+msgstr "無法復原資料庫，請選擇有效的 SQLite 備份。"
+
+msgid "Unable to save settings. Please try again."
+msgstr "無法儲存設定，請重試。"
+
 msgid "Unable to save the report. Your changes have been retained."
 msgstr "無法儲存報表，您的編輯內容已保留。"
+
+msgid "Unable to save the work log. Your changes have been retained."
+msgstr "無法儲存工作記錄，您的修改已保留。"
+
+msgid "Unable to sign in with this provider. Please try again."
+msgstr "無法透過此服務登入，請重試。"
+
+msgid "Unable to start WorkLogger. Check the application log for details."
+msgstr "無法啟動 WorkLogger，請查看應用程式日誌以了解詳情。"
+
+msgid "Unable to update saved sign-in information."
+msgstr "無法更新已儲存的登入資訊。"
 
 msgid "Unknown error"
 msgstr "未知錯誤"
@@ -1174,6 +1312,9 @@ msgstr "您"
 msgid "You are using the latest version."
 msgstr "您正在使用最新版本。"
 
+msgid "You cannot delete your own account or the last administrator."
+msgstr "不能刪除您自己的帳戶或最後一個管理員帳戶。"
+
 msgid "You have unsaved note changes. Discard them?"
 msgstr "筆記有未儲存的變更。捨棄變更？"
 
@@ -1185,6 +1326,9 @@ msgstr "範本有未儲存的變更。捨棄變更？"
 
 msgid "You have unsaved work log changes. Discard them?"
 msgstr "工作記錄有未儲存的變更。捨棄變更？"
+
+msgid "Your saved sign-in is invalid or expired. Please sign in again."
+msgstr "已儲存的登入無效或已過期，請重新登入。"
 
 msgid "h"
 msgstr "h"

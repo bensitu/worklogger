@@ -23,9 +23,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from worklogger.domain.shared.errors import AppError
+from worklogger.domain.shared.errors import AppError, CancellationError
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.errors import display_error_message
+from worklogger.presentation.errors import display_error_code, display_error_message
 from worklogger.presentation.date_labels import month_label
 from worklogger.presentation.settings import SettingsWorkflow
 from worklogger.presentation.shell.pages import (
@@ -449,7 +449,7 @@ class AppWindow(QMainWindow):
         self.entry_panel.set_preview_form(result.value)
         self._entry_dirty = result.value.dirty
         if result.value.errors:
-            self._set_status(", ".join(result.value.errors))
+            self._set_status("\n".join(display_error_code(code) for code in result.value.errors))
         else:
             self._set_status("")
 
@@ -467,7 +467,7 @@ class AppWindow(QMainWindow):
             return
         if preview.value.errors:
             self.entry_panel.set_preview_form(preview.value)
-            self._set_status(", ".join(preview.value.errors), notify=True, error=True)
+            self._set_status("\n".join(display_error_code(code) for code in preview.value.errors), notify=True, error=True)
             return
         saved = self._worklog_entry_view_model.save(preview.value)
         if not saved.ok or saved.value is None:
@@ -491,6 +491,10 @@ class AppWindow(QMainWindow):
         return str((self._holidays or {}).get(self._selected_day, "")).strip()
 
     def _set_error(self, error: AppError | None) -> None:
+        if isinstance(error, CancellationError):
+            self._last_error = None
+            self._set_status(display_error_message(error))
+            return
         self._last_error = error
         self._set_status(display_error_message(error), notify=not self._refreshing, error=True)
 

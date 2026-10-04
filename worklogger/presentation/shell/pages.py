@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from worklogger.domain.shared.errors import AppError, ValidationError
+from worklogger.domain.shared.errors import AppError, CancellationError, ValidationError
 from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBundle
 from worklogger.app.job_runner import JobRunner
 from worklogger.presentation.job_runner import QtJobRunner
@@ -880,6 +880,10 @@ class ReportsPage(QWidget):
             self.export_markdown(Path(path))
 
     def _set_error(self, error: AppError | None) -> None:
+        if isinstance(error, CancellationError):
+            self._last_error = None
+            self._set_status(display_error_message(error), notify=False)
+            return
         self._last_error = error
         self._set_status(display_error_message(error), error=True)
 

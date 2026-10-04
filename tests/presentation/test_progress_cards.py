@@ -44,6 +44,7 @@ class ProgressCardTests(unittest.TestCase):
             for accent in ("#4f8ef7", "#d97706"):
                 gauge = DonutGauge()
                 gauge.setPalette(ThemeEngine().qt_palette("custom", dark=dark, custom_color=accent))
+                gauge.ensurePolished()
                 colors = chart_palette(gauge)
                 for progress in (0.75, 1.0, 1.27, 2.0, 2.5):
                     gauge.set_progress(progress)
@@ -90,6 +91,7 @@ class ProgressCardTests(unittest.TestCase):
         gauge = DonutGauge()
         gauge.setPalette(ThemeEngine().qt_palette("blue"))
         gauge.set_progress(2)
+        gauge.ensurePolished()
         colors = chart_palette(gauge)
         image = gauge.grab().toImage().scaled(72, 72)
         inner = [x for x in range(36, 72) if image.pixelColor(x, 36).name() == colors.accent]

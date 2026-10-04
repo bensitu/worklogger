@@ -406,6 +406,7 @@ class AppWindowTests(unittest.TestCase):
             self.assertEqual(panel.end_input.text(), "26:00")
             self.assertEqual(repository.get_for_day(1, date(2026, 4, 20)).start_time, "09:00")
             self.warning.assert_called_once()
+            self.assertEqual(self.warning.call_args.args[2], "Enter valid start and end times in HH:mm format.")
             self.assertEqual(panel._form.errors, ("time_range_invalid",))
             panel.start_input.setText("09:30")
             panel.end_input.setText("18:30")
@@ -425,9 +426,9 @@ class AppWindowTests(unittest.TestCase):
         self.assertIsNotNone(window.last_error)
         assert window.last_error is not None
         self.assertEqual(window.last_error.code, "month_failed")
-        self.assertEqual(window.status_label.text(), "month_failed")
+        self.assertEqual(window.status_label.text(), "The operation could not be completed. Please try again.")
         self.assertTrue(window.status_label.isHidden())
-        self.warning.assert_called_once_with(window, "WorkLogger", "month_failed")
+        self.warning.assert_called_once_with(window, "WorkLogger", "The operation could not be completed. Please try again.")
 
     def test_app_window_exposes_account_label_and_logout_signal(self) -> None:
         window = _window(MemoryWorkLogRepository(), account_name="alice")

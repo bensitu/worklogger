@@ -15,6 +15,15 @@ or credentials to a public issue.
 
 ## Startup and Dependencies
 
+Closing the login, registration, or password-reset window without signing in is
+a normal cancellation. WorkLogger exits with code `0` and prints no startup
+failure. Closing the login window after logging out behaves the same way. Actual
+startup failures still return code `1` and display a translated error message.
+
+User-facing errors use translated descriptions rather than internal error codes
+or raw exception text. Logs retain diagnostic codes for troubleshooting. Cancelling
+an operation is not logged as an error and does not trigger an error dialog.
+
 If a module is missing, install dependencies using the same interpreter, preferably
 inside the documented virtual environment. `python -m pip` avoids selecting an
 unrelated pip executable. A separately installed Qt SDK does not change the Qt

@@ -16,9 +16,9 @@ from PySide6.QtWidgets import (
 )
 
 from worklogger.app.job_runner import JobHandle, JobRunner
-from worklogger.domain.shared.errors import AppError
+from worklogger.domain.shared.errors import AppError, CancellationError
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.errors import display_error_message
+from worklogger.presentation.errors import display_error_code, display_error_message
 from worklogger.presentation.viewmodels import (
     LocalModelManagerState,
     LocalModelManagerViewModel,
@@ -252,7 +252,7 @@ class LocalModelsDialog(QDialog):
         self._show_verify_result(result.value)
 
     def _show_verify_result(self, status: object) -> None:
-        message = _("Model verified.") if status.verified else status.reason
+        message = _("Model verified.") if status.verified else display_error_code(status.reason)
         self.status_label.setText(message)
 
     def _set_busy(self, busy: bool) -> None:
@@ -303,5 +303,5 @@ class LocalModelsDialog(QDialog):
         return Path(path) if path else None
 
     def _set_error(self, error: AppError | None) -> None:
-        self._last_error = error
+        self._last_error = None if isinstance(error, CancellationError) else error
         self.status_label.setText(display_error_message(error))

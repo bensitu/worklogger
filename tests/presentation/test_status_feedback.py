@@ -9,9 +9,9 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtWidgets import QApplication
 
 from scripts.i18n.catalog_tools import extract_source_messages
-from worklogger.domain.shared.errors import InfrastructureError
+from worklogger.domain.shared.errors import CancellationError, InfrastructureError
 from worklogger.domain.shared.result import Result
-from worklogger.infrastructure.i18n import available_languages, set_language
+from worklogger.infrastructure.i18n import _, available_languages, set_language
 from worklogger.presentation.ai.dialog import AiAssistDialog
 from worklogger.presentation.analytics.dialog import AnalyticsDialog
 from worklogger.presentation.identity.dialog import IdentityDialog
@@ -21,6 +21,8 @@ from worklogger.presentation.quick_logs.dialog import QuickLogDialog
 from worklogger.presentation.reporting.dialog import ReportDialog, ReportTemplateDialog
 from worklogger.presentation.user_management.dialog import UserManagementDialog
 from worklogger.presentation.widgets.status_label import StatusLabel
+from worklogger.presentation.widgets.worklog_entry import WorkLogEntryPanel
+from worklogger.presentation.viewmodels.worklog_entry import WorkLogEntryForm
 
 
 class StatusFeedbackTests(unittest.TestCase):
@@ -41,6 +43,43 @@ class StatusFeedbackTests(unittest.TestCase):
             self.assertEqual(label.text(), "")
             self.assertTrue(label.isHidden())
         label.deleteLater()
+
+    def test_validation_and_model_feedback_are_translated_in_all_languages(self):
+        for language in available_languages():
+            set_language(language)
+            panel = WorkLogEntryPanel()
+            model = Mock()
+            dialog = LocalModelsDialog(model)
+            try:
+                panel.set_form(WorkLogEntryForm(1, date(2026, 5, 4), "09:00", "invalid", 1.0,
+                    "", "normal", 0.0, False, False, True, ("time_range_invalid",)))
+                self.assertEqual(panel.error_label.text(), _("Enter valid start and end times in HH:mm format."))
+                state = SimpleNamespace(inventory=SimpleNamespace(items=()), message=_("Model imported."))
+                self.assertTrue(dialog._set_state_result(Result.success(state)))
+                self.assertEqual(dialog.status_label.text(), _("Model imported."))
+                if language != "en_US":
+                    self.assertNotEqual(dialog.status_label.text(), "Model imported.")
+                dialog._show_verify_result(SimpleNamespace(verified=False, reason="local_model_hash_mismatch"))
+                self.assertEqual(dialog.status_label.text(), _("Model verification failed. Import or download a valid GGUF model."))
+            finally:
+                panel.deleteLater()
+                dialog.deleteLater()
+
+    def test_cancelled_ai_request_keeps_input_and_recovers_controls(self):
+        model = Mock(available=True)
+        model.initial_state.return_value = SimpleNamespace(history=())
+        dialog = AiAssistDialog(model, date(2026, 5, 4))
+        try:
+            dialog.message_input.setText("Unsent question")
+            dialog._set_busy(True)
+            dialog._complete_send(Result.failure(CancellationError("job_cancelled", "job_cancelled")))
+            self.assertIsNone(dialog.last_error)
+            self.assertEqual(dialog.status_label.text(), "Operation cancelled.")
+            self.assertEqual(dialog.message_input.text(), "Unsent question")
+            self.assertTrue(dialog.send_button.isEnabled())
+            self.assertTrue(dialog.close_button.isEnabled())
+        finally:
+            dialog.deleteLater()
 
     def test_dialogs_clear_idle_status_after_load_and_error_recovery(self):
         day = date(2026, 5, 4)
