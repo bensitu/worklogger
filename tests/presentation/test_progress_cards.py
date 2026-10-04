@@ -3,13 +3,17 @@ from datetime import date
 import os
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtWidgets import QApplication, QHBoxLayout, QWidget
+from PySide6.QtCore import QPoint, qInstallMessageHandler
+from PySide6.QtGui import QFontMetricsF, QPainter
+from PySide6.QtWidgets import QApplication, QHBoxLayout, QScrollArea, QWidget
 
 from worklogger.infrastructure.i18n import set_language
 from worklogger.presentation.theme import ThemeEngine
+from worklogger.presentation.widgets import combo_chart
 from worklogger.presentation.widgets.combo_chart import chart_palette
 from worklogger.presentation.widgets.progress_cards import DonutGauge, DonutProgressCard
 from tests.presentation.test_ui_layout import sample_window
@@ -33,7 +37,7 @@ class ProgressCardTests(unittest.TestCase):
                 gauge.set_progress(progress)
                 self.assertEqual(gauge.percentage_text, expected)
                 self.assertEqual(gauge.accessibleName(), expected)
-                self.assertEqual(gauge.size().width(), 80)
+                self.assertEqual(gauge.size().width(), 72)
 
     def test_overflow_arc_is_visible_and_distinct_in_both_color_modes(self):
         for dark in (False, True):
@@ -81,6 +85,93 @@ class ProgressCardTests(unittest.TestCase):
                 window.close()
                 window.deleteLater()
                 self.app.processEvents()
+
+    def test_complete_rings_have_a_narrow_visible_gap(self):
+        gauge = DonutGauge()
+        gauge.setPalette(ThemeEngine().qt_palette("blue"))
+        gauge.set_progress(2)
+        colors = chart_palette(gauge)
+        image = gauge.grab().toImage().scaled(72, 72)
+        inner = [x for x in range(36, 72) if image.pixelColor(x, 36).name() == colors.accent]
+        outer = [x for x in range(36, 72) if image.pixelColor(x, 36).name() == colors.warning]
+        self.assertTrue(inner)
+        self.assertTrue(outer)
+        self.assertGreaterEqual(min(outer) - max(inner) - 1, 1)
+        self.assertLessEqual(min(outer) - max(inner) - 1, 3)
+
+    def test_work_mode_total_is_painted_on_one_line(self):
+        captured = []
+
+        class RecordingPainter(QPainter):
+            def drawText(self, *args):
+                captured.append((args[-1], QFontMetricsF(self.font()).horizontalAdvance(args[-1]), args[0].width()))
+                return super().drawText(*args)
+
+        chart = combo_chart.DonutChart()
+        chart.set_segments((("Normal", 2135.5),), keys=("normal",))
+        for width in (220, 440):
+            chart.resize(width, 180)
+            with patch.object(combo_chart, "QPainter", RecordingPainter):
+                chart.grab()
+            text, measured, available = captured[-1]
+            self.assertEqual(text, "2135h 30m")
+            self.assertLessEqual(measured, available)
+
+    def test_summary_titles_align_and_durations_fit_across_periods_and_languages(self):
+        warnings = []
+        previous_handler = qInstallMessageHandler(lambda kind, context, message: warnings.append(message))
+        try:
+            for language in ("en_US", "ja_JP", "ko_KR", "zh_CN", "zh_TW"):
+                set_language(language)
+                window = sample_window()
+                try:
+                    window.show()
+                    window._switch_route("analytics")
+                    page = window.analytics_page
+                    for dark in (False, True):
+                        window._config = replace(window._config, dark=dark)
+                        window.apply_theme()
+                        for width in (880, 1100, 1440):
+                            window.resize(width, 700)
+                            for scope, total, target in (("monthly", 213.5, 168),
+                                                         ("quarterly", 526, 504),
+                                                         ("annual", 2135.5, 2016)):
+                                page.scope_control.set_value(scope)
+                                self.assertTrue(page.refresh(date(2026, 5, 21)))
+                                state = replace(page._dashboard, target_hours=target,
+                                                stats=replace(page._dashboard.stats,
+                                                              total_hours=total, overtime_hours=70.5))
+                                page._set_state(state)
+                                self.app.processEvents()
+                                with self.subTest(language=language, dark=dark, width=width, scope=scope):
+                                    self.assertEqual(window.width(), width)
+                                    titles = (page.monthly_hours_card.title_label, page.overtime_title_label,
+                                              page.attendance_card.title_label, page.rest_card.title_label)
+                                    offsets = [title.mapTo(title.parentWidget(), QPoint()).y() for title in titles]
+                                    self.assertEqual(len(set(offsets)), 1, offsets)
+                                    for label in (page.monthly_hours_card.value_label, page.overtime_value_label):
+                                        self.assertFalse(label.wordWrap())
+                                        self.assertNotIn("\n", label.text())
+                                        font = label.fitted_font()
+                                        self.assertLessEqual(QFontMetricsF(font).horizontalAdvance(label.text()), label.contentsRect().width())
+                                        self.assertGreaterEqual(font.pixelSize(), 12)
+                                    card = page.monthly_hours_card
+                                    self.assertLess(card.title_label.geometry().bottom(), card.value_label.geometry().top())
+                                    self.assertLess(card.value_label.geometry().right(), card.gauge.geometry().left())
+                                    for scroll in page.findChildren(QScrollArea):
+                                        self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)
+                                directory = os.environ.get("WORKLOGGER_SCREENSHOTS")
+                                if directory and language in ("zh_CN", "en_US") and width == 1100:
+                                    destination = Path(directory)
+                                    destination.mkdir(parents=True, exist_ok=True)
+                                    self.assertTrue(window.grab().save(str(destination / f"summary-{language}-{scope}-{'dark' if dark else 'light'}.png")))
+                finally:
+                    window.close()
+                    window.deleteLater()
+                    self.app.processEvents()
+            self.assertFalse([message for message in warnings if "QFont::" in message or "QPainter::" in message], warnings)
+        finally:
+            qInstallMessageHandler(previous_handler)
 
     def test_progress_cards_render_without_overlapping_text(self):
         set_language("en_US")

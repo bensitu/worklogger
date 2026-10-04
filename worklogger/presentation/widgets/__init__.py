@@ -9,6 +9,7 @@ from worklogger.presentation.widgets.page_header import PageHeader
 from worklogger.presentation.widgets.progress_cards import (
     DonutProgressCard,
     DotProgressCard,
+    SummaryValueLabel,
 )
 from worklogger.presentation.widgets.report_history import (
     ReportHistoryDisplayItem,
@@ -40,6 +41,7 @@ __all__ = [
     "SettingsNav",
     "SidebarWidget",
     "StatsPanel",
+    "SummaryValueLabel",
     "SwitchButton",
     "WorkLogEntryDraft",
     "WorkLogEntryPanel",

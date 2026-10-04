@@ -170,4 +170,9 @@ class DonutChart(QWidget):
             painter.setPen(QColor(colors.muted_text))
             painter.drawText(QRectF(x + 12, y if inline else y + 16, available, 18), Qt.AlignmentFlag.AlignRight if inline else Qt.AlignmentFlag.AlignLeft, painter.fontMetrics().elidedText(detail, Qt.TextElideMode.ElideRight, int(available)))
         painter.setPen(QColor(colors.text))
-        painter.drawText(ring, Qt.AlignmentFlag.AlignCenter, duration_label(total).replace(" ", "\n"))
+        center = ring.adjusted(18, 18, -18, -18)
+        total_text = duration_label(total)
+        while painter.fontMetrics().horizontalAdvance(total_text) > center.width() - 4 and font.pixelSize() > 1:
+            font.setPixelSize(font.pixelSize() - 1)
+            painter.setFont(font)
+        painter.drawText(center, Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextSingleLine, total_text)

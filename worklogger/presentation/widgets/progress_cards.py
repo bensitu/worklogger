@@ -4,13 +4,45 @@ from __future__ import annotations
 
 from math import isfinite
 
-from PySide6.QtCore import QRectF, Qt
-from PySide6.QtGui import QColor, QFontMetricsF, QPainter, QPen
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtCore import QRectF, QSize, Qt
+from PySide6.QtGui import QColor, QFont, QFontMetricsF, QPainter, QPen
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
 
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets.card import CardFrame
 from worklogger.presentation.widgets.combo_chart import chart_palette
+
+
+class SummaryValueLabel(QLabel):
+    """Keep a complete metric on one line without widening its card."""
+
+    def __init__(self, text: str = "", parent: QWidget | None = None) -> None:
+        super().__init__(text, parent)
+        self.setWordWrap(False)
+        self.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
+
+    def minimumSizeHint(self) -> QSize:
+        return QSize(0, super().minimumSizeHint().height())
+
+    def fitted_font(self) -> QFont:
+        font = QFont(self.font())
+        available = max(1, self.contentsRect().width())
+        while QFontMetricsF(font).horizontalAdvance(self.text()) > available:
+            if font.pixelSize() > 1:
+                font.setPixelSize(font.pixelSize() - 1)
+            elif font.pixelSize() < 0 and font.pointSizeF() > 1:
+                font.setPointSizeF(max(1, font.pointSizeF() - 0.5))
+            else:
+                break
+        return font
+
+    def paintEvent(self, _event: object) -> None:
+        painter = QPainter(self)
+        painter.setFont(self.fitted_font())
+        painter.setPen(self.palette().color(self.foregroundRole()))
+        painter.drawText(self.contentsRect(), self.alignment(), self.text())
+        painter.end()
 
 
 class DonutGauge(QWidget):
@@ -18,7 +50,7 @@ class DonutGauge(QWidget):
         super().__init__(parent)
         self.setObjectName("donut_gauge_widget")
         self._progress = 0.0
-        self.setFixedSize(80, 80)
+        self.setFixedSize(72, 72)
 
     def set_progress(self, progress: float) -> None:
         value = float(progress or 0.0)
@@ -34,22 +66,22 @@ class DonutGauge(QWidget):
     def paintEvent(self, _event: object) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        rect = QRectF(16, 16, self.width() - 32, self.height() - 32)
+        rect = QRectF(13, 13, self.width() - 26, self.height() - 26)
         colors = chart_palette(self)
         painter.setPen(QPen(QColor(colors.border), 8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
         painter.drawArc(rect, 0, 360 * 16)
         painter.setPen(QPen(QColor(colors.accent), 8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
         painter.drawArc(rect, 90 * 16, -int(360 * 16 * min(self._progress, 1.0)))
         if self._progress > 1.0:
-            outer = QRectF(5, 5, self.width() - 10, self.height() - 10)
-            painter.setPen(QPen(QColor(colors.border), 4, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            outer = QRectF(4, 4, self.width() - 8, self.height() - 8)
+            painter.setPen(QPen(QColor(colors.border), 6, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
             painter.drawArc(outer, 0, 360 * 16)
             overflow_color = QColor(colors.warning)
             accent_hue = QColor(colors.accent).hueF()
             hue_distance = abs(accent_hue - overflow_color.hueF())
             if accent_hue >= 0 and min(hue_distance, 1 - hue_distance) < 0.12:
                 overflow_color = QColor(colors.success)
-            painter.setPen(QPen(overflow_color, 4, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            painter.setPen(QPen(overflow_color, 6, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
             painter.drawArc(outer, 90 * 16, -int(360 * 16 * min(self._progress - 1.0, 1.0)))
         font = painter.font()
         font.setPixelSize(13)
@@ -65,12 +97,15 @@ class DonutGauge(QWidget):
 class DonutProgressCard(CardFrame):
     def __init__(self, title: str, parent: QWidget | None = None) -> None:
         super().__init__(parent, object_name="donut_progress_card_frame")
+        self.content_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.title_label = QLabel(title)
         self.title_label.setObjectName("donut_title_label")
         self.title_label.setWordWrap(True)
-        self.value_label = QLabel("")
+        self.title_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self.title_label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        self.content_layout.addWidget(self.title_label)
+        self.value_label = SummaryValueLabel()
         self.value_label.setObjectName("donut_value_label")
-        self.value_label.setWordWrap(True)
         self.caption_label = QLabel("")
         self.caption_label.setObjectName("donut_caption_label")
         self.caption_label.setProperty("role", "secondary")
@@ -79,9 +114,11 @@ class DonutProgressCard(CardFrame):
 
         row = QHBoxLayout()
         row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(8)
         text = QVBoxLayout()
         text.setContentsMargins(0, 0, 0, 0)
-        text.addWidget(self.title_label)
+        text.setSpacing(12)
+        text.setAlignment(Qt.AlignmentFlag.AlignTop)
         text.addWidget(self.value_label)
         text.addWidget(self.caption_label)
         row.addLayout(text, 1)
@@ -97,11 +134,14 @@ class DonutProgressCard(CardFrame):
 class DotProgressCard(CardFrame):
     def __init__(self, title: str, *, color: str = "#16a34a", parent: QWidget | None = None) -> None:
         super().__init__(parent, object_name="dot_progress_card_frame")
+        self.content_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self._color = color
         self.title_label = QLabel(title)
         self.title_label.setObjectName("dot_title_label")
         self.title_label.setWordWrap(True)
-        self.value_label = QLabel("")
+        self.title_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self.title_label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        self.value_label = SummaryValueLabel()
         self.value_label.setObjectName("dot_value_label")
         self.caption_label = QLabel("")
         self.caption_label.setObjectName("dot_caption_label")

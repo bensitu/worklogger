@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QTextEdit,
     QScrollArea,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -51,6 +52,7 @@ from worklogger.presentation.widgets import (
     ReportHistoryPanel,
     SegmentedControl,
     StatsPanel,
+    SummaryValueLabel,
     WorkLogEntryPanel,
 )
 from worklogger.presentation.widgets.combo_chart import DonutChart
@@ -321,12 +323,14 @@ class AnalyticsPage(QWidget):
         summary_grid.setVerticalSpacing(12)
         self.monthly_hours_card = DonutProgressCard(_("Monthly Hours"))
         self.overtime_card = CardFrame(object_name="analytics_summary_card_frame")
+        self.overtime_card.content_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.overtime_title_label = QLabel(_("Overtime Hours"))
         self.overtime_title_label.setObjectName("overtime_title_label")
         self.overtime_title_label.setWordWrap(True)
-        self.overtime_value_label = QLabel("")
+        self.overtime_title_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self.overtime_title_label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        self.overtime_value_label = SummaryValueLabel()
         self.overtime_value_label.setObjectName("overtime_value_label")
-        self.overtime_value_label.setWordWrap(True)
         self.overtime_caption_label = QLabel("")
         self.overtime_caption_label.setObjectName("overtime_caption_label")
         self.overtime_caption_label.setProperty("role", "secondary")
