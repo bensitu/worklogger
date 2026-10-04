@@ -793,6 +793,9 @@ msgstr "빠른 기록이 업데이트되었습니다."
 msgid "Quit"
 msgstr "종료"
 
+msgid "Q{quarter}"
+msgstr "{quarter}분기"
+
 msgid "Q{quarter} {year}"
 msgstr "{year}년 {quarter}분기"
 

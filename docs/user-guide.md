@@ -92,6 +92,15 @@ Choose monthly, quarterly, or annual scope and navigate between periods. The
 dashboard displays worked hours, overtime, work days, averages, work types, and
 comparisons with the preceding period. Leave is represented separately. The
 configured monthly target is multiplied by the number of months in the period.
+Period selectors retain recent periods when you switch scopes after viewing
+historical data, including the current month, quarter, and year.
+
+The Daily Average chart displays the six months ending in the selected month for
+monthly scope, all four quarters of the selected year for quarterly scope, and
+January through December of the selected year for annual scope. Each point is
+total worked hours divided by the number of days with positive worked hours in
+that interval. Leave and zero-hour records are excluded; empty intervals show
+zero. The value above the chart and its comparison refer to the selected period.
 
 The hours card is titled Monthly Hours, Quarterly Hours, or Annual Hours to match
 the selected period. Its percentage is not capped at 100%. The inner ring shows

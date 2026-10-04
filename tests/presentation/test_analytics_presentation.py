@@ -11,11 +11,14 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtWidgets import QApplication
 
 from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
-from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler
+from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler, GetAnalyticsDashboardHandler
 from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
 from worklogger.domain.worklog.models import WorkLog, WorkType
 from worklogger.infrastructure.export import AnalyticsCsvExporter, AnalyticsPdfExporter
+from worklogger.infrastructure.i18n import set_language
 from worklogger.presentation.analytics import AnalyticsDialog
+from worklogger.presentation.date_labels import month_name
+from worklogger.presentation.shell.pages import AnalyticsPage
 from worklogger.presentation.viewmodels import AnalyticsViewModel
 from worklogger.presentation.widgets import ComboChart
 
@@ -129,6 +132,83 @@ class AnalyticsPresentationTests(unittest.TestCase):
         chart.set_data(state.value.bundle, mode="line")
 
         self.assertEqual(chart.objectName(), "combo_chart_widget")
+
+    def test_historical_period_switching_keeps_current_periods_selectable(self) -> None:
+        today = date.today()
+        scopes = ("monthly", "quarterly", "annual")
+
+        def period_start(day, scope):
+            month = 1 if scope == "annual" else ((day.month - 1) // 3 * 3 + 1 if scope == "quarterly" else day.month)
+            return date(day.year, month, 1)
+
+        for source in scopes:
+            for destination in scopes:
+                if source == destination:
+                    continue
+                with self.subTest(source=source, destination=destination):
+                    repository = MemoryWorkLogRepository()
+                    model = AnalyticsViewModel(
+                        user_id=1, bundle_handler=GetAnalyticsBundleHandler(repository),
+                        dashboard_handler=GetAnalyticsDashboardHandler(repository),
+                        csv_exporter=AnalyticsCsvExporter(), pdf_exporter=AnalyticsPdfExporter(),
+                    )
+                    page = AnalyticsPage(model, today)
+                    try:
+                        page.scope_control.set_value(source)
+                        page.period_combo.setCurrentIndex(page.period_combo.count() - 1)
+                        historical = page.period_combo.currentData()
+                        self.assertLess(historical, today.replace(day=1))
+                        page.scope_control.set_value(destination)
+                        values = [page.period_combo.itemData(index) for index in range(page.period_combo.count())]
+                        current = period_start(today, destination)
+                        self.assertIn(current, values)
+                        self.assertEqual(values, sorted(set(values), reverse=True))
+                        self.assertEqual(page.period_combo.currentData(), period_start(historical, destination))
+                        self.assertEqual(page._dashboard.period_start, period_start(historical, destination))
+                        page.period_combo.setCurrentIndex(values.index(current))
+                        self.assertEqual(page._dashboard.period_start, current)
+                        self.assertEqual(page._selected_day, current)
+                    finally:
+                        page.close()
+                        page.deleteLater()
+                        self._app.processEvents()
+
+    def test_daily_average_chart_uses_localized_scope_specific_points(self) -> None:
+        repository = MemoryWorkLogRepository()
+        for month in (1, 4, 7, 12):
+            repository.save(WorkLog(1, date(2026, month, 5), "09:00", "17:00", 0, "", WorkType.NORMAL))
+        model = AnalyticsViewModel(
+            user_id=1, bundle_handler=GetAnalyticsBundleHandler(repository),
+            dashboard_handler=GetAnalyticsDashboardHandler(repository),
+            csv_exporter=AnalyticsCsvExporter(), pdf_exporter=AnalyticsPdfExporter(),
+        )
+        for language, quarter_label in (("en_US", "Q1"), ("ja_JP", "第1四半期"), ("ko_KR", "1분기"),
+                                         ("zh_CN", "第1季度"), ("zh_TW", "第1季")):
+            set_language(language)
+            page = AnalyticsPage(model, date(2026, 5, 14))
+            try:
+                for scope, count in (("monthly", 6), ("quarterly", 4), ("annual", 12)):
+                    page.scope_control.set_value(scope)
+                    self.assertTrue(page.refresh())
+                    chart = page.daily_average_chart.chart
+                    data = chart._bundle.line_data
+                    with self.subTest(language=language, scope=scope):
+                        self.assertEqual(len(data), count)
+                        self.assertEqual(chart._mode, "line")
+                        self.assertTrue(chart._average)
+                        if scope == "quarterly":
+                            self.assertEqual(data[0], (quarter_label, 8))
+                            self.assertEqual(tuple(value for label, value in data), (8, 8, 8, 8))
+                        else:
+                            first_month, last_month = (12, 5) if scope == "monthly" else (1, 12)
+                            self.assertEqual(data[0][0], month_name(date(2000, first_month, 1)))
+                            self.assertEqual(data[-1][0], month_name(date(2000, last_month, 1)))
+                        self.assertEqual(page.daily_average_value_label.text(), "8h 0m" if scope != "monthly" else "0h 0m")
+            finally:
+                page.close()
+                page.deleteLater()
+                self._app.processEvents()
+                set_language("en_US")
 
 
 if __name__ == "__main__":

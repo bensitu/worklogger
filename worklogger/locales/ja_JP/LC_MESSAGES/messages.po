@@ -793,6 +793,9 @@ msgstr "クイックログを更新しました。"
 msgid "Quit"
 msgstr "終了"
 
+msgid "Q{quarter}"
+msgstr "第{quarter}四半期"
+
 msgid "Q{quarter} {year}"
 msgstr "{year}年第{quarter}四半期"
 

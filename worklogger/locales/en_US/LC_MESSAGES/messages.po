@@ -793,6 +793,9 @@ msgstr "Quick Log updated."
 msgid "Quit"
 msgstr "Quit"
 
+msgid "Q{quarter}"
+msgstr "Q{quarter}"
+
 msgid "Q{quarter} {year}"
 msgstr "Q{quarter} {year}"
 

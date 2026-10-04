@@ -298,6 +298,7 @@ class AnalyticsPage(QWidget):
         header.addStretch(1)
         self.period_combo = QComboBox()
         self.period_combo.setObjectName("analytics_period_combo")
+        self.period_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.period_combo.currentIndexChanged.connect(self._period_changed)
         self._populate_periods()
         header.addWidget(self.period_combo)
@@ -450,24 +451,30 @@ class AnalyticsPage(QWidget):
         )
         self.daily_average_value_label.setText(duration_label(state.stats.average_hours))
         self.daily_average_comparison_label.setText(_("{change:+.1f}h vs previous period").format(change=state.stats.average_hours - state.previous_stats.average_hours))
-        self.daily_average_chart.chart.set_data(_month_chart_labels(state.daily_average_trend), mode="line", average=True)
+        daily_labels = _quarter_chart_labels if self.scope_control.value == "quarterly" else _month_chart_labels
+        self.daily_average_chart.chart.set_data(daily_labels(state.daily_average_trend), mode="line", average=True)
 
     def _populate_periods(self) -> None:
         scope = self.scope_control.value or "monthly"
         selected = self._selected_day.replace(day=1)
+        latest = max(date.today().replace(day=1), selected)
         self.period_combo.blockSignals(True)
         self.period_combo.clear()
         if scope == "annual":
-            values = [date(year, 1, 1) for year in range(selected.year + 1, selected.year - 10, -1)]
+            values = [date(year, 1, 1) for year in range(latest.year + 1, latest.year - 10, -1)]
         else:
             step = 3 if scope == "quarterly" else 1
             if step == 3:
                 selected = selected.replace(month=((selected.month - 1) // 3) * 3 + 1)
-            values = [add_months(selected, offset * step) for offset in range(1, -36, -1)]
+                latest = latest.replace(month=((latest.month - 1) // 3) * 3 + 1)
+            values = [add_months(latest, offset * step) for offset in range(1, -36, -1)]
+        target = selected.replace(month=1) if scope == "annual" else selected
+        if target not in values:
+            values.append(target)
+            values.sort(reverse=True)
         for value in values:
             label = str(value.year) if scope == "annual" else (_("Q{quarter} {year}").format(quarter=(value.month - 1) // 3 + 1, year=value.year) if scope == "quarterly" else _month_label(value))
             self.period_combo.addItem(label, value)
-        target = selected.replace(month=1) if scope == "annual" else selected
         self.period_combo.setCurrentIndex(values.index(target))
         self.period_combo.blockSignals(False)
 
@@ -907,6 +914,12 @@ def _period_range_label(start: date, end: date) -> str:
 def _month_chart_labels(bundle: ChartDataBundle) -> ChartDataBundle:
     def labels(values: tuple[tuple[str, float], ...]) -> tuple[tuple[str, float], ...]:
         return tuple((month_name(date(2000, int(label), 1)), value) for label, value in values)
+    return replace(bundle, bar_data=labels(bundle.bar_data), line_data=labels(bundle.line_data), leave_hours_data=labels(bundle.leave_hours_data))
+
+
+def _quarter_chart_labels(bundle: ChartDataBundle) -> ChartDataBundle:
+    def labels(values: tuple[tuple[str, float], ...]) -> tuple[tuple[str, float], ...]:
+        return tuple((_("Q{quarter}").format(quarter=int(label[1:])), value) for label, value in values)
     return replace(bundle, bar_data=labels(bundle.bar_data), line_data=labels(bundle.line_data), leave_hours_data=labels(bundle.leave_hours_data))
 
 

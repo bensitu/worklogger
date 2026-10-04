@@ -91,11 +91,18 @@ def dashboard_data(
             modes[key] = modes.get(key, 0.0) + hours
 
     daily = []
-    last_month_index = end.year * 12 + end.month - 1
-    for index in range(last_month_index - 5, last_month_index + 1):
-        selected_year, selected_month = index // 12, index % 12 + 1
-        rows = tuple(row for row in records if row.day.year == selected_year and row.day.month == selected_month)
-        daily.append((f"{selected_month:02d}", month_stats(rows, standard_hours).average_hours))
+    if scope == "quarterly":
+        year_rows = tuple(row for row in records if row.day.year == year)
+        for quarter in range(1, 5):
+            rows = tuple(row for row in year_rows if (row.day.month - 1) // 3 + 1 == quarter)
+            daily.append((f"Q{quarter}", month_stats(rows, standard_hours).average_hours))
+    else:
+        last_month_index = end.year * 12 + end.month - 1
+        first_month_index = last_month_index - 5 if scope == "monthly" else year * 12
+        for index in range(first_month_index, last_month_index + 1):
+            selected_year, selected_month = index // 12, index % 12 + 1
+            rows = tuple(row for row in records if row.day.year == selected_year and row.day.month == selected_month)
+            daily.append((f"{selected_month:02d}", month_stats(rows, standard_hours).average_hours))
     return AnalyticsDashboard(
         start, end, stats, month_stats(previous, standard_hours), monthly_target * month_count,
         (end - start).days + 1, (previous_end - previous_start).days + 1,

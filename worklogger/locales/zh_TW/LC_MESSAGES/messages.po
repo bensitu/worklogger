@@ -793,6 +793,9 @@ msgstr "快速記錄已更新。"
 msgid "Quit"
 msgstr "結束"
 
+msgid "Q{quarter}"
+msgstr "第{quarter}季"
+
 msgid "Q{quarter} {year}"
 msgstr "{year}年第{quarter}季"
 

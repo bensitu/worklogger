@@ -14,6 +14,8 @@ Application version: 4.0.0.
 
 ### Desktop Interface
 
+- Analytics period selectors retain current periods after historical navigation;
+  daily-average trends show four quarters or twelve months for the selected year.
 - Analytics target progress adds a third ring above 200% and additional rings for
   higher percentages; overtime includes a previous/current period bar comparison.
 - Analytics summary titles align at the top, duration values stay on one line,

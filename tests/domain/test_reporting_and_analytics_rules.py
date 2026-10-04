@@ -84,6 +84,50 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_report_period("weekly", date(2026, 4, 2), date(2026, 4, 1))
 
+    def test_daily_average_quarters_use_work_days_across_the_selected_year(self) -> None:
+        records = (
+            _record(date(2026, 1, 5), "09:00", "17:00", 0, WorkType.NORMAL),
+            _record(date(2026, 1, 6), "09:00", "17:00", 0, WorkType.REMOTE),
+            _record(date(2026, 2, 5), "06:00", "20:00", 0, WorkType.NORMAL),
+            _record(date(2026, 3, 5), None, None, 0, WorkType.PAID_LEAVE),
+            _record(date(2026, 3, 6), None, None, 0, WorkType.NORMAL),
+            _record(date(2026, 7, 5), "09:00", "15:00", 0, WorkType.NORMAL),
+            _record(date(2026, 12, 5), "09:00", "19:00", 0, WorkType.NORMAL),
+            _record(date(2025, 1, 5), "06:00", "21:00", 0, WorkType.NORMAL),
+            _record(date(2027, 1, 5), "06:00", "21:00", 0, WorkType.NORMAL),
+        )
+        for month in (1, 5, 12):
+            data = dashboard_data(records, year=2026, month=month, scope="quarterly", standard_hours=8, monthly_target=168)
+            expected = (("Q1", 10), ("Q2", 0), ("Q3", 6), ("Q4", 10))
+            self.assertEqual(data.daily_average_trend.bar_data, expected)
+            self.assertEqual(data.daily_average_trend.line_data, expected)
+            self.assertFalse(data.daily_average_trend.leave_indices)
+
+    def test_daily_average_annual_scope_includes_all_twelve_months(self) -> None:
+        records = (
+            _record(date(2026, 1, 5), "09:00", "17:00", 0, WorkType.NORMAL),
+            _record(date(2026, 1, 6), "08:00", "20:00", 0, WorkType.NORMAL),
+            _record(date(2026, 6, 5), "09:00", "15:00", 0, WorkType.NORMAL),
+            _record(date(2026, 12, 5), "09:00", "16:00", 0, WorkType.NORMAL),
+            _record(date(2026, 12, 6), None, None, 0, WorkType.PAID_LEAVE),
+            _record(date(2025, 1, 5), "06:00", "21:00", 0, WorkType.NORMAL),
+        )
+        data = dashboard_data(records, year=2026, month=5, scope="annual", standard_hours=8, monthly_target=168)
+        expected = tuple((f"{month:02d}", {1: 10, 6: 6, 12: 7}.get(month, 0)) for month in range(1, 13))
+        self.assertEqual(data.daily_average_trend.bar_data, expected)
+        self.assertEqual(data.daily_average_trend.line_data, expected)
+
+    def test_daily_average_monthly_scope_keeps_six_months_across_year_boundary(self) -> None:
+        records = tuple(
+            _record(day, "09:00", end, 0, WorkType.NORMAL)
+            for day, end in ((date(2025, 8, 5), "20:00"), (date(2025, 12, 5), "14:00"),
+                             (date(2026, 1, 5), "16:00"), (date(2026, 2, 5), "19:00"),
+                             (date(2026, 3, 5), "20:00"))
+        )
+        data = dashboard_data(records, year=2026, month=2, scope="monthly", standard_hours=8, monthly_target=168)
+        self.assertEqual(data.daily_average_trend.line_data,
+                         (("09", 0), ("10", 0), ("11", 0), ("12", 5), ("01", 7), ("02", 10)))
+
     def test_month_stats_excludes_leave_from_work_and_overtime(self) -> None:
         records = (
             _record(date(2026, 4, 6), "09:00", "19:00", 1.0, WorkType.COMP_LEAVE),

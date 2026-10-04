@@ -791,6 +791,9 @@ msgstr ""
 msgid "Quit"
 msgstr ""
 
+msgid "Q{quarter}"
+msgstr ""
+
 msgid "Q{quarter} {year}"
 msgstr ""
 
