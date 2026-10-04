@@ -30,6 +30,16 @@ from worklogger.presentation.widgets.status_label import StatusLabel
 from worklogger.presentation.widgets.icons import set_button_icon
 
 
+def confirm_report_overwrite(parent: QWidget) -> bool:
+    return QMessageBox.question(
+        parent,
+        _("Overwrite report?"),
+        _("Replace the saved content of this report? This cannot be undone."),
+        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        QMessageBox.StandardButton.No,
+    ) == QMessageBox.StandardButton.Yes
+
+
 class ReportTemplateDialog(QDialog):
     apply_requested = Signal()
 
@@ -239,7 +249,11 @@ class ReportDialog(QDialog):
         if state is None:
             self._set_error(ValidationError("report_not_loaded", "report_not_loaded"))
             return
-        result = self._view_model.save(state, self._current_editor().toPlainText())
+        content = self._current_editor().toPlainText()
+        if state.report_id is not None:
+            if content == state.content or not confirm_report_overwrite(self):
+                return
+        result = self._view_model.save(state, content)
         if not result.ok or result.value is None:
             self._set_error(result.error)
             return

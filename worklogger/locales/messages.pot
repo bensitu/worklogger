@@ -266,6 +266,9 @@ msgstr ""
 msgid "Create user"
 msgstr ""
 
+msgid "Created: {time}"
+msgstr ""
+
 msgid "Current ID"
 msgstr ""
 
@@ -707,6 +710,9 @@ msgstr ""
 msgid "Overtime comparison: previous period {previous:.1f}h, current period {current:.1f}h"
 msgstr ""
 
+msgid "Overwrite report?"
+msgstr ""
+
 msgid "PDF"
 msgstr ""
 
@@ -824,7 +830,13 @@ msgstr ""
 msgid "Replace"
 msgstr ""
 
+msgid "Replace the saved content of this report? This cannot be undone."
+msgstr ""
+
 msgid "Report"
+msgstr ""
+
+msgid "Report #{report_id}"
 msgstr ""
 
 msgid "Report History"
@@ -1025,6 +1037,9 @@ msgstr ""
 msgid "Test"
 msgstr ""
 
+msgid "The saved report is no longer available. Reload the reports and try again."
+msgstr ""
+
 msgid "Theme"
 msgstr ""
 
@@ -1053,6 +1068,9 @@ msgid "Traditional Chinese"
 msgstr ""
 
 msgid "Tue"
+msgstr ""
+
+msgid "Unable to save the report. Your changes have been retained."
 msgstr ""
 
 msgid "Unknown error"

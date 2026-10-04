@@ -21,8 +21,22 @@ class SQLiteReportRepository:
 
     def save(self, report: Report) -> Report:
         report_type = normalize_report_type(report.report_type)
-        created_at = report.created_at.isoformat(timespec="seconds") if report.created_at else utc_now_iso()
         with self._connection_factory.transaction(write=True) as connection:
+            if report.id is not None:
+                cursor = connection.execute(
+                    """
+                    UPDATE reports SET content=?
+                    WHERE id=? AND user_id=? AND type=? AND period_start=? AND period_end=?
+                    """,
+                    (report.content, report.id, report.user_id, report_type,
+                     report.period_start.isoformat(), report.period_end.isoformat()),
+                )
+                if cursor.rowcount != 1:
+                    raise ValueError("report_not_found")
+                row = connection.execute("SELECT * FROM reports WHERE id=? AND user_id=?",
+                                         (report.id, report.user_id)).fetchone()
+                return self._from_row(row)
+            created_at = report.created_at.isoformat(timespec="seconds") if report.created_at else utc_now_iso()
             cursor = connection.execute(
                 """
                 INSERT INTO reports(user_id, type, period_start, period_end, content, created_at)

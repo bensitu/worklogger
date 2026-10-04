@@ -268,6 +268,9 @@ msgstr "アカウントを作成"
 msgid "Create user"
 msgstr "ユーザーを作成"
 
+msgid "Created: {time}"
+msgstr "作成日時: {time}"
+
 msgid "Current ID"
 msgstr "現在のID"
 
@@ -709,6 +712,9 @@ msgstr "残業時間"
 msgid "Overtime comparison: previous period {previous:.1f}h, current period {current:.1f}h"
 msgstr "残業時間の比較：前期間 {previous:.1f}h、今期間 {current:.1f}h"
 
+msgid "Overwrite report?"
+msgstr "レポートを上書きしますか？"
+
 msgid "PDF"
 msgstr "PDF"
 
@@ -826,8 +832,14 @@ msgstr "リモート"
 msgid "Replace"
 msgstr "置換"
 
+msgid "Replace the saved content of this report? This cannot be undone."
+msgstr "このレポートの保存済み内容を置き換えますか？この操作は元に戻せません。"
+
 msgid "Report"
 msgstr "レポート"
+
+msgid "Report #{report_id}"
+msgstr "レポート #{report_id}"
 
 msgid "Report History"
 msgstr "レポート履歴"
@@ -1027,6 +1039,9 @@ msgstr "テンプレート"
 msgid "Test"
 msgstr "テスト"
 
+msgid "The saved report is no longer available. Reload the reports and try again."
+msgstr "保存済みレポートを利用できません。レポートを再読み込みして、もう一度お試しください。"
+
 msgid "Theme"
 msgstr "テーマ"
 
@@ -1056,6 +1071,9 @@ msgstr "繁体字中国語"
 
 msgid "Tue"
 msgstr "火"
+
+msgid "Unable to save the report. Your changes have been retained."
+msgstr "レポートを保存できませんでした。編集内容は保持されています。"
 
 msgid "Unknown error"
 msgstr "不明なエラー"

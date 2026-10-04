@@ -14,6 +14,8 @@ Application version: 4.0.0.
 
 ### Desktop Interface
 
+- Report history displays local creation timestamps and report numbers; editing
+  a saved report replaces its content only after overwrite confirmation.
 - Analytics period selectors retain current periods after historical navigation;
   daily-average trends show four quarters or twelve months for the selected year.
 - Analytics target progress adds a third ring above 200% and additional rings for

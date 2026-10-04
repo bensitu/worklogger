@@ -80,6 +80,12 @@ Choose a daily, weekly, or monthly period. Weekly periods run Monday through
 Sunday, independently of the calendar's displayed week-start preference. Generate
 a report from the period's work records, quick logs, and calendar events, then
 edit and save it. Select a history item to reopen saved content.
+History items display the report period, the first save date and time in your
+local time zone, and a report number that distinguishes multiple reports saved
+in the same second. Editing an existing report and saving it asks for confirmation
+before replacing that report's content. Declining keeps the edited text without
+changing the saved report. Saving unchanged content does nothing. The report
+number and first save time remain unchanged when its content is replaced.
 
 Report content is saved Markdown, not a live query. Changing a work record does
 not rewrite an already saved report. Generate or edit it again when needed.

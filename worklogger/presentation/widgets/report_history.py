@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, timezone
 
 from PySide6.QtCore import QRect, QSize, Qt, Signal
 from PySide6.QtGui import QAbstractTextDocumentLayout, QAction, QPainter, QPalette, QTextDocument
@@ -86,6 +86,7 @@ class ReportHistoryDisplayItem:
     label: str
     content: str = ""
     saved: bool = False
+    created_at: datetime | None = None
 
 
 class ReportHistoryPanel(CardFrame):
@@ -96,7 +97,7 @@ class ReportHistoryPanel(CardFrame):
         super().__init__(parent, object_name="report_history_frame")
         self._items: tuple[ReportHistoryDisplayItem, ...] = ()
         self._buttons: dict[int, QPushButton] = {}
-        self._selected_key = -1
+        self._selected_report_id: int | None = None
 
         title = QLabel(_("Report History"))
         title.setObjectName("report_history_title_label")
@@ -135,10 +136,10 @@ class ReportHistoryPanel(CardFrame):
         self._items = tuple(items)
         self._render()
 
-    def set_selected_period(self, start: date, end: date) -> None:
-        self._selected_key = hash((start, end))
+    def set_selected_report(self, report_id: int | None) -> None:
+        self._selected_report_id = report_id
         for button in self._buttons.values():
-            selected = button.property("history_key") == self._selected_key
+            selected = report_id is not None and button.property("report_id") == report_id
             button.setProperty("active", selected)
             refresh_style(button)
 
@@ -155,7 +156,7 @@ class ReportHistoryPanel(CardFrame):
         visible = [
             item
             for item in self._items
-            if not query or query in item.label.lower()
+            if not query or query in _history_label(item).lower()
         ]
         if not visible:
             label = QLabel(_("No saved reports"))
@@ -176,9 +177,8 @@ class ReportHistoryPanel(CardFrame):
             button = ReportHistoryButton(item)
             button.setObjectName("report_history_item_button")
             button.setProperty("nav_item", True)
-            key = hash((item.period_start, item.period_end))
-            button.setProperty("history_key", key)
-            button.setProperty("active", key == self._selected_key)
+            button.setProperty("report_id", item.report_id)
+            button.setProperty("active", item.report_id is not None and item.report_id == self._selected_report_id)
             button.setCursor(Qt.CursorShape.PointingHandCursor)
             button.setMinimumHeight(button.heightForWidth(self.scroll_area.viewport().width()))
             button.clicked.connect(lambda _checked=False, selected=item: self.item_selected.emit(selected))
@@ -191,4 +191,11 @@ def _history_label(item: ReportHistoryDisplayItem) -> str:
     label = item.label
     if item.report_type == "weekly":
         label += "\n" + _("(Week {week})").format(week=item.period_start.isocalendar().week)
+    if item.created_at is not None:
+        stamp = item.created_at
+        if stamp.tzinfo is None:
+            stamp = stamp.replace(tzinfo=timezone.utc)
+        label += "\n" + _("Created: {time}").format(time=stamp.astimezone().strftime("%Y-%m-%d %H:%M:%S"))
+    if item.report_id is not None:
+        label += "\n" + _("Report #{report_id}").format(report_id=item.report_id)
     return label

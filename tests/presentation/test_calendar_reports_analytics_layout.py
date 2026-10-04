@@ -30,7 +30,7 @@ class WeeklyReports(ReportsViewModel):
         return Result.success(ReportEditorState(1, report_type, start, end,
             "# Weekly Summary\n\n## Key Achievements\n- Implemented calendar updates.\n\n"
             "## Challenges & Solutions\n- Verified layout at different display scales.\n\n"
-            "## Plan for Next Week\n- Complete regression testing.", saved=True))
+            "## Plan for Next Week\n- Complete regression testing.", saved=True, report_id=1))
 
     def list_history(self, report_type):
         return Result.success(tuple(ReportHistoryDisplayItem(index, 1, report_type, start,

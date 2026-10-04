@@ -11,6 +11,7 @@ from worklogger.domain.reporting.templates import ReportTemplate
 
 class ReportRepository(Protocol):
     def save(self, report: Report) -> Report:
+        """Insert a new report or update the matching owned report by ID."""
         ...
 
     def get_for_period(

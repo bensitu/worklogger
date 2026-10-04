@@ -34,6 +34,10 @@ The exact column declarations are in
 Dates are ISO-formatted text; work times are normalized `HH:MM`; breaks are stored
 in hours. Daily notes live in `worklog.note`. No separate daily-note table exists.
 
+Saving a new report inserts a row. Updating a saved report replaces its content
+by ID, with account, type, and period checks. Its ID and creation timestamp are
+preserved. A missing or mismatched ID is rejected rather than creating a new row.
+
 Indexes support per-account/date access, report period lookup, template language
 lookup, remembered tokens, identity ownership, and activity time ordering.
 The standard authentication composition does not currently write every action to

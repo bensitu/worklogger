@@ -268,6 +268,9 @@ msgstr "建立帳戶"
 msgid "Create user"
 msgstr "建立使用者"
 
+msgid "Created: {time}"
+msgstr "建立時間：{time}"
+
 msgid "Current ID"
 msgstr "目前 ID"
 
@@ -709,6 +712,9 @@ msgstr "加班工時"
 msgid "Overtime comparison: previous period {previous:.1f}h, current period {current:.1f}h"
 msgstr "加班工時對比：上一週期 {previous:.1f}h，目前週期 {current:.1f}h"
 
+msgid "Overwrite report?"
+msgstr "覆寫報表？"
+
 msgid "PDF"
 msgstr "PDF"
 
@@ -826,8 +832,14 @@ msgstr "遠端工作"
 msgid "Replace"
 msgstr "取代"
 
+msgid "Replace the saved content of this report? This cannot be undone."
+msgstr "是否覆寫這份報表已儲存的內容？此操作無法復原。"
+
 msgid "Report"
 msgstr "報表"
+
+msgid "Report #{report_id}"
+msgstr "報表 #{report_id}"
 
 msgid "Report History"
 msgstr "報表歷史"
@@ -1027,6 +1039,9 @@ msgstr "範本"
 msgid "Test"
 msgstr "測試"
 
+msgid "The saved report is no longer available. Reload the reports and try again."
+msgstr "已儲存的報表已無法使用。請重新載入報表後再試。"
+
 msgid "Theme"
 msgstr "主題"
 
@@ -1056,6 +1071,9 @@ msgstr "繁體中文"
 
 msgid "Tue"
 msgstr "二"
+
+msgid "Unable to save the report. Your changes have been retained."
+msgstr "無法儲存報表，您的編輯內容已保留。"
 
 msgid "Unknown error"
 msgstr "未知錯誤"

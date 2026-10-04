@@ -268,6 +268,9 @@ msgstr "Create account"
 msgid "Create user"
 msgstr "Create user"
 
+msgid "Created: {time}"
+msgstr "Created: {time}"
+
 msgid "Current ID"
 msgstr "Current ID"
 
@@ -709,6 +712,9 @@ msgstr "Overtime Hours"
 msgid "Overtime comparison: previous period {previous:.1f}h, current period {current:.1f}h"
 msgstr "Overtime comparison: previous period {previous:.1f}h, current period {current:.1f}h"
 
+msgid "Overwrite report?"
+msgstr "Overwrite report?"
+
 msgid "PDF"
 msgstr "PDF"
 
@@ -826,8 +832,14 @@ msgstr "Remote"
 msgid "Replace"
 msgstr "Replace"
 
+msgid "Replace the saved content of this report? This cannot be undone."
+msgstr "Replace the saved content of this report? This cannot be undone."
+
 msgid "Report"
 msgstr "Report"
+
+msgid "Report #{report_id}"
+msgstr "Report #{report_id}"
 
 msgid "Report History"
 msgstr "Report History"
@@ -1027,6 +1039,9 @@ msgstr "Templates"
 msgid "Test"
 msgstr "Test"
 
+msgid "The saved report is no longer available. Reload the reports and try again."
+msgstr "The saved report is no longer available. Reload the reports and try again."
+
 msgid "Theme"
 msgstr "Theme"
 
@@ -1056,6 +1071,9 @@ msgstr "Traditional Chinese"
 
 msgid "Tue"
 msgstr "Tue"
+
+msgid "Unable to save the report. Your changes have been retained."
+msgstr "Unable to save the report. Your changes have been retained."
 
 msgid "Unknown error"
 msgstr "Unknown error"

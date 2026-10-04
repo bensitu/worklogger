@@ -32,7 +32,7 @@ from worklogger.domain.reporting.templates import (
     normalize_template_type,
     render_template,
 )
-from worklogger.domain.shared.errors import ValidationError
+from worklogger.domain.shared.errors import InfrastructureError, NotFoundError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.worklog.repositories import WorkLogRepository
@@ -72,14 +72,21 @@ class SaveReportHandler:
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
         report = Report(
-            id=None,
+            id=command.report_id,
             user_id=command.user_id,
             report_type=period.report_type,
             period_start=period.start,
             period_end=period.end,
             content=command.content,
         )
-        return Result.success(self._repository.save(report))
+        try:
+            return Result.success(self._repository.save(report))
+        except ValueError as exc:
+            if str(exc) == "report_not_found":
+                return Result.failure(NotFoundError("report_not_found", "report_not_found"))
+            return Result.failure(ValidationError(str(exc), str(exc)))
+        except Exception:
+            return Result.failure(InfrastructureError("report_save_failed", "report_save_failed"))
 
 
 class DeleteReportHandler:

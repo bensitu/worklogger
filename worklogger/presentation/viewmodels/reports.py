@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Protocol
 
@@ -77,6 +77,8 @@ class ReportEditorState:
     period_end: date
     content: str
     saved: bool = False
+    report_id: int | None = None
+    created_at: datetime | None = None
 
 
 @dataclass(frozen=True)
@@ -88,6 +90,7 @@ class ReportHistoryItem:
     period_end: date
     content: str
     saved: bool = True
+    created_at: datetime | None = None
 
 
 class ReportEditorViewModel:
@@ -165,6 +168,8 @@ class ReportEditorViewModel:
                     period_end=period.end,
                     content=saved.value.content,
                     saved=True,
+                    report_id=saved.value.id,
+                    created_at=saved.value.created_at,
                 )
             )
         generated = self._generate_handler.handle(
@@ -193,23 +198,26 @@ class ReportEditorViewModel:
     def save(self, state: ReportEditorState, content: str) -> Result[ReportEditorState]:
         saved = self._save_report_handler.handle(
             SaveReportCommand(
-                user_id=state.user_id,
+                user_id=self._user_id,
                 report_type=state.report_type,
                 period_start=state.period_start,
                 period_end=state.period_end,
                 content=content,
+                report_id=state.report_id,
             )
         )
         if not saved.ok or saved.value is None:
             return Result.failure(saved.error or _validation("report_save_failed"))
         return Result.success(
             ReportEditorState(
-                user_id=state.user_id,
+                user_id=self._user_id,
                 report_type=state.report_type,
                 period_start=state.period_start,
                 period_end=state.period_end,
                 content=saved.value.content,
                 saved=True,
+                report_id=saved.value.id,
+                created_at=saved.value.created_at,
             )
         )
 
@@ -257,6 +265,7 @@ class ReportEditorViewModel:
                     period_end=report.period_end,
                     content=report.content,
                     saved=True,
+                    created_at=report.created_at,
                 )
                 for report in result.value
             )

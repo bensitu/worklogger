@@ -268,6 +268,9 @@ msgstr "创建账户"
 msgid "Create user"
 msgstr "创建用户"
 
+msgid "Created: {time}"
+msgstr "创建时间：{time}"
+
 msgid "Current ID"
 msgstr "当前 ID"
 
@@ -709,6 +712,9 @@ msgstr "加班工时"
 msgid "Overtime comparison: previous period {previous:.1f}h, current period {current:.1f}h"
 msgstr "加班工时对比：上一周期 {previous:.1f}h，当前周期 {current:.1f}h"
 
+msgid "Overwrite report?"
+msgstr "覆盖报表？"
+
 msgid "PDF"
 msgstr "PDF"
 
@@ -826,8 +832,14 @@ msgstr "远程办公"
 msgid "Replace"
 msgstr "替换"
 
+msgid "Replace the saved content of this report? This cannot be undone."
+msgstr "是否覆盖这份报表已保存的内容？此操作无法撤销。"
+
 msgid "Report"
 msgstr "报表"
+
+msgid "Report #{report_id}"
+msgstr "报表 #{report_id}"
 
 msgid "Report History"
 msgstr "报表历史"
@@ -1027,6 +1039,9 @@ msgstr "模板"
 msgid "Test"
 msgstr "测试"
 
+msgid "The saved report is no longer available. Reload the reports and try again."
+msgstr "已保存的报表已不可用。请重新加载报表后再试。"
+
 msgid "Theme"
 msgstr "主题"
 
@@ -1056,6 +1071,9 @@ msgstr "繁体中文"
 
 msgid "Tue"
 msgstr "二"
+
+msgid "Unable to save the report. Your changes have been retained."
+msgstr "无法保存报表，您的编辑内容已保留。"
 
 msgid "Unknown error"
 msgstr "未知错误"

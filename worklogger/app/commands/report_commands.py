@@ -13,6 +13,7 @@ class SaveReportCommand:
     period_start: date
     period_end: date
     content: str
+    report_id: int | None = None
 
 
 @dataclass(frozen=True)

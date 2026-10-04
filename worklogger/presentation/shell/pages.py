@@ -30,7 +30,7 @@ from worklogger.domain.shared.errors import AppError, ValidationError
 from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBundle
 from worklogger.app.job_runner import JobRunner
 from worklogger.presentation.job_runner import QtJobRunner
-from worklogger.presentation.reporting.dialog import ReportTemplateDialog
+from worklogger.presentation.reporting.dialog import ReportTemplateDialog, confirm_report_overwrite
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.date_labels import month_label, month_name, period_range_label, duration_label
@@ -766,7 +766,6 @@ class ReportsPage(QWidget):
         self._rendered_type = report_type
         self.period_title_label.setText(_period_label(state))
         self.editor.setPlainText(state.content)
-        self.history_panel.set_selected_period(state.period_start, state.period_end)
         self._refresh_history()
 
     def _save_current(self) -> None:
@@ -777,7 +776,11 @@ class ReportsPage(QWidget):
         if state is None:
             self._set_error(ValidationError("report_not_loaded", "report_not_loaded"))
             return
-        result = self._view_model.save(state, self.editor.toPlainText())
+        content = self.editor.toPlainText()
+        if state.report_id is not None:
+            if content == state.content or not confirm_report_overwrite(self):
+                return
+        result = self._view_model.save(state, content)
         if not result.ok or result.value is None:
             self._set_error(result.error)
             return
@@ -835,9 +838,12 @@ class ReportsPage(QWidget):
                 label=_period_range_label(item.period_start, item.period_end),
                 content=item.content,
                 saved=item.saved,
+                created_at=item.created_at,
             )
             for item in result.value
         )
+        state = self._states.get(self._current_type())
+        self.history_panel.set_selected_report(state.report_id if state is not None else None)
 
     def _select_history_item(self, item: ReportHistoryDisplayItem) -> None:
         if not self._view_model or not self.confirm_leave():
@@ -849,13 +855,15 @@ class ReportsPage(QWidget):
             period_end=item.period_end,
             content=item.content,
             saved=True,
+            report_id=item.report_id,
+            created_at=item.created_at,
         )
         self._states[item.report_type] = state
         self._saved_content[item.report_type] = state.content
         self._rendered_type = item.report_type
         self._selected_day = item.period_start
         self.report_type_control.set_value(item.report_type, emit=False)
-        self.history_panel.set_selected_period(item.period_start, item.period_end)
+        self.history_panel.set_selected_report(item.report_id)
         self.editor.setPlainText(state.content)
         self.period_title_label.setText(_period_label(state))
 
