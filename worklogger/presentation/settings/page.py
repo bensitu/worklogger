@@ -56,7 +56,7 @@ from worklogger.domain.auth.models import User
 from worklogger.domain.shared.errors import AppError
 from worklogger.infrastructure.i18n import _, available_languages
 from worklogger.presentation.errors import display_error_message
-from worklogger.presentation.theme import install_bundled_fonts
+from worklogger.presentation.theme import configure_application_style, install_bundled_fonts
 from worklogger.presentation.viewmodels import SettingsState, SettingsViewModel
 from worklogger.presentation.widgets import CardFrame, SettingsNav, SwitchButton
 from worklogger.presentation.widgets.assets import pixmap_asset
@@ -98,6 +98,7 @@ class SettingsPage(QWidget):
         self._local_model_name = ""
         self.setObjectName("settings_page_widget")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        configure_application_style()
         install_bundled_fonts()
         self._build_ui()
 

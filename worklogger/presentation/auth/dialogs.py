@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
 
 from worklogger.__about__ import APP_NAME
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.theme import ThemeEngine, install_bundled_fonts
+from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
 from worklogger.presentation.widgets.assets import apply_window_icon, asset_path, pixmap_asset
 from worklogger.presentation.widgets import SwitchButton
 from worklogger.presentation.widgets.icons import ui_icon
@@ -71,6 +71,7 @@ class LoginDialog(QDialog):
         self.setWindowTitle(APP_NAME)
         apply_window_icon(self)
         self.setFixedSize(880, 580)
+        configure_application_style()
         install_bundled_fonts()
         self._apply_default_theme()
         self._build_ui()

@@ -15,7 +15,7 @@ from unittest.mock import Mock, patch
 def check_native_login_fonts() -> None:
     from PySide6.QtCore import QEventLoop, QSettings, QTimer, Qt, qInstallMessageHandler
     from PySide6.QtTest import QTest
-    from PySide6.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication, QLineEdit, QMenu, QPlainTextEdit, QSystemTrayIcon, QTextEdit
 
     from tests.infrastructure.test_auth_schema_migration import legacy_database
     from worklogger.bootstrap import DesktopRuntimeConfig, build_authenticated_desktop_runtime
@@ -38,6 +38,24 @@ def check_native_login_fonts() -> None:
         loop = QEventLoop()
         QTimer.singleShot(100, loop.quit)
         loop.exec()
+
+    def check_menu(menu, parent):
+        menu.popup(parent.mapToGlobal(parent.rect().center()))
+        process_events()
+        assert menu.isVisible()
+        for action in menu.actions():
+            if action.menu() is not None:
+                check_menu(action.menu(), parent)
+        menu.close()
+
+    def check_context_menus(parent):
+        for editor in parent.findChildren(QLineEdit) + parent.findChildren(QTextEdit) + parent.findChildren(QPlainTextEdit):
+            if editor.isVisible():
+                menu = editor.createStandardContextMenu()
+                try:
+                    check_menu(menu, editor)
+                finally:
+                    menu.deleteLater()
 
     try:
         try:
@@ -84,6 +102,7 @@ def check_native_login_fonts() -> None:
                     dialogs.append(dialog)
                     dialog.show()
                     process_events()
+                    check_context_menus(dialog)
                     dialog.close()
                 set_language("en_US")
                 for dark in (False, True):
@@ -92,6 +111,12 @@ def check_native_login_fonts() -> None:
                     for route in ("calendar", "reports", "analytics", "settings"):
                         assert window._switch_route(route)
                         process_events()
+                        check_context_menus(window)
+                        if route == "settings":
+                            for category in window.settings_page._category_pages:
+                                window.settings_page.category_nav.set_category(category)
+                                process_events()
+                                check_context_menus(window)
                         buttons = window.findChildren(ExportMenuButton)
                         if route == "calendar":
                             buttons.append(window.calendar_page.add_entry_button)
@@ -113,6 +138,12 @@ def check_native_login_fonts() -> None:
                                 assert opened, button.objectName()
                             finally:
                                 menu.aboutToShow.disconnect(close_menu)
+                    for tray in window.findChildren(QSystemTrayIcon):
+                        check_menu(tray.contextMenu(), window)
+                    nested = QMenu(window)
+                    nested.addMenu("Options").addAction("Choice")
+                    check_menu(nested, window)
+                    nested.deleteLater()
                 assert not [message for message in messages if "QFont::" in message], messages
                 print("Native login, main window, routes, menu buttons, five languages and both themes: no QFont warnings.")
         finally:

@@ -35,7 +35,7 @@ from worklogger.presentation.shell.pages import (
     UnavailableSettingsPage,
 )
 from worklogger.presentation.shell.residency import QtResidencyController
-from worklogger.presentation.theme import ThemeEngine, install_bundled_fonts
+from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
 from worklogger.presentation.viewmodels import (
     CalendarDisplayOptions,
     CalendarViewModel,
@@ -174,6 +174,7 @@ class AppWindow(QMainWindow):
         application = QApplication.instance()
         if application is None:
             return
+        configure_application_style()
         install_bundled_fonts()
         application.setPalette(
             self._theme_engine.qt_palette(

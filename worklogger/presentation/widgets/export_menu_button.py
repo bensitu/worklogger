@@ -7,8 +7,6 @@ from collections.abc import Iterable
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QMenu, QToolButton, QWidget
 
-from worklogger.presentation.widgets.menu_style import configure_menu_button_style
-
 
 class ExportMenuButton(QToolButton):
     export_requested = Signal(str)
@@ -20,7 +18,6 @@ class ExportMenuButton(QToolButton):
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
-        configure_menu_button_style(self)
         self.setObjectName("export_menu_button")
         self.setText(label)
         self.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)

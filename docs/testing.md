@@ -26,14 +26,27 @@ python -m unittest tests.domain.test_worklog_rules -v
 python -m unittest tests.infrastructure.test_activity_schema_migration -v
 python -m unittest tests.presentation.test_auth_presentation -v
 python -m unittest tests.presentation.test_native_fonts -v
+python -m unittest tests.presentation.test_native_dropdowns -v
 python -m unittest discover -s tests -t . -v
 ```
 
-The native font check runs an isolated Windows subprocess using the `windows11`
-style. It signs in through the login dialog, shows the main window, opens the
-Add Entry and export menus, and checks login languages and light/dark themes for
-Qt font warnings. It is skipped on other platforms; headless widget tests alone
-do not exercise Windows style drawing.
+The native font check starts an isolated Windows subprocess with the `windows11`
+style before application initialization. It signs in through the login dialog,
+shows the main window, and opens Add Entry and export menus, input context menus,
+nested menus, available tray menus, and every settings category. It checks login
+languages and light/dark themes for Qt font warnings. It is skipped on other
+platforms; headless widget
+tests alone do not exercise Windows style drawing.
+
+The native dropdown check starts each of the nine business combo boxes and both
+Qt file-dialog dropdowns in independent processes to avoid the Windows style's
+font-metric cache masking a failure. It opens and cancels each popup in five
+languages and light/dark themes and verifies that cancellation preserves the
+selection. Repeat with `QT_SCALE_FACTOR=1.5` to check additional display scaling;
+the native platform scale is multiplied by this factor.
+Run native GUI checks sequentially: competing native windows can dismiss each
+other's popups through focus changes. `WORKLOGGER_SCREENSHOTS` also enables
+dropdown popup captures.
 
 For explicit headless execution on PowerShell:
 

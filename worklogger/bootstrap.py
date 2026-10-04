@@ -150,7 +150,7 @@ from worklogger.presentation.shell import (
     QtResidencyController,
     ResidencyViewModel,
 )
-from worklogger.presentation.theme import install_bundled_fonts
+from worklogger.presentation.theme import configure_application_style, install_bundled_fonts
 from worklogger.presentation.viewmodels import (
     AuthViewModel,
     AiAssistViewModel,
@@ -309,10 +309,12 @@ def build_authenticated_desktop_runtime(
 def _application(argv: Sequence[str] | None) -> QApplication:
     existing = QApplication.instance()
     if existing is not None:
+        configure_application_style()
         install_bundled_fonts()
         apply_application_icon()
         return existing
     application = QApplication(list(argv or []))
+    configure_application_style()
     install_bundled_fonts()
     apply_application_icon()
     return application

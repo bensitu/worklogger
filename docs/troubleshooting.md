@@ -37,14 +37,26 @@ For font-size warnings or clipped text, record the Qt version, language, display
 scaling, and affected control. Compare against the verified environment and run
 the visual tests. Do not suppress Qt warnings instead of identifying their source.
 
-Qt 6.11.0's Windows 11 style assumes point-sized fonts when calculating menu
-button indicators. Pixel-sized QSS fonts can therefore produce
-`QFont::setPointSize: Point size <= 0 (-1)` when the main window first appears.
-On Windows, Add Entry and export menu buttons use Qt's Fusion base style while
-retaining the application stylesheet and menu behavior. Other controls retain
-their platform style. Verify this path with
-`python -m unittest tests.presentation.test_native_fonts -v`; the test uses a
-temporary database and isolated login preferences and session storage.
+Qt 6.11.0's Windows 11 style assumes point-sized fonts when drawing menu
+indicators and combo-box popups. Pixel-sized QSS fonts can therefore produce
+`QFont::setPointSize: Point size <= 0 (-1)` when a window or dropdown first
+appears. The style caches some font calculations, so opening another dropdown
+in the same process may not repeat the warning.
+
+Application initialization replaces the Windows 11 base style with Qt's Fusion
+style before applying QSS. This covers business controls and Qt-generated
+dropdowns, including the non-native file dialog. Existing palettes, fonts, QSS,
+and native file dialogs are retained; macOS/Linux and other Windows base styles
+are unchanged. No Qt warning handler is installed by this compatibility logic.
+Verify with:
+
+```sh
+python -m unittest tests.presentation.test_native_fonts tests.presentation.test_native_dropdowns -v
+```
+
+The login check isolates its database, preferences, and session storage;
+dropdown checks use memory-backed workflows and open each control first in a
+separate process.
 
 Remove `QT_QPA_PLATFORM=offscreen` from an interactive shell if the application
 appears to run without a visible window. Check the system tray/menu bar when

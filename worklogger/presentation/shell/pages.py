@@ -34,7 +34,6 @@ from worklogger.presentation.reporting.dialog import ReportTemplateDialog, confi
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.date_labels import month_label, month_name, period_range_label, duration_label
-from worklogger.presentation.widgets.menu_style import configure_menu_button_style
 from worklogger.presentation.viewmodels import (
     AnalyticsState,
     AnalyticsViewModel,
@@ -148,7 +147,6 @@ class CalendarPage(QWidget):
         self.today_button.setObjectName("today_button")
         self.today_button.clicked.connect(self.today_requested.emit)
         self.add_entry_button = QPushButton(_("+ Add Entry"))
-        configure_menu_button_style(self.add_entry_button)
         self.add_entry_button.setObjectName("add_entry_button")
         self.add_entry_button.setProperty("variant", "primary")
         self.add_entry_button.setText(_("Add Entry"))
