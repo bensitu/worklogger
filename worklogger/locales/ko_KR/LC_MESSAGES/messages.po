@@ -706,6 +706,9 @@ msgstr "초과 근무"
 msgid "Overtime Hours"
 msgstr "초과 근무 시간"
 
+msgid "Overtime comparison: previous period {previous:.1f}h, current period {current:.1f}h"
+msgstr "초과 근무 비교: 이전 기간 {previous:.1f}h, 현재 기간 {current:.1f}h"
+
 msgid "PDF"
 msgstr "PDF"
 

@@ -95,9 +95,15 @@ configured monthly target is multiplied by the number of months in the period.
 
 The hours card is titled Monthly Hours, Quarterly Hours, or Annual Hours to match
 the selected period. Its percentage is not capped at 100%. The inner ring shows
-the first 100%, and a contrasting outer ring shows the next 100%. At 200% and above,
-both rings are full while the percentage continues to show the actual rounded
-value. A zero target displays 0% rather than an undefined ratio.
+the first 100%, with another concentric ring for each additional 100% interval.
+For example, 250% displays two full rings and a half-filled third ring. Rings
+become thinner as their number increases, keeping the card size unchanged. The
+compact chart displays at most 32 rings; the percentage always shows the actual
+rounded value. A zero target displays 0% rather than an undefined ratio.
+
+The overtime card compares the previous period (left, muted bar) with the current
+period (right, colored bar), using a shared scale. Hover over the chart to read
+both values. Zero overtime produces no filled bar.
 
 CSV and PDF exports contain computed analytics. They are not database backups and
 the analytics CSV is not the same format as the work-log import CSV. PDF currently

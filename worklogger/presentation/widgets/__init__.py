@@ -9,6 +9,7 @@ from worklogger.presentation.widgets.page_header import PageHeader
 from worklogger.presentation.widgets.progress_cards import (
     DonutProgressCard,
     DotProgressCard,
+    OvertimeComparisonChart,
     SummaryValueLabel,
 )
 from worklogger.presentation.widgets.report_history import (
@@ -34,6 +35,7 @@ __all__ = [
     "DotProgressCard",
     "ExportMenuButton",
     "IconLineEdit",
+    "OvertimeComparisonChart",
     "PageHeader",
     "ReportHistoryDisplayItem",
     "ReportHistoryPanel",

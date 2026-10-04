@@ -14,6 +14,8 @@ Application version: 4.0.0.
 
 ### Desktop Interface
 
+- Analytics target progress adds a third ring above 200% and additional rings for
+  higher percentages; overtime includes a previous/current period bar comparison.
 - Analytics summary titles align at the top, duration values stay on one line,
   and target progress rings use a compact concentric layout.
 - Analytics hours cards use period-specific titles and display actual target

@@ -47,6 +47,7 @@ from worklogger.presentation.widgets import (
     DonutProgressCard,
     DotProgressCard,
     ExportMenuButton,
+    OvertimeComparisonChart,
     PageHeader,
     ReportHistoryDisplayItem,
     ReportHistoryPanel,
@@ -335,9 +336,20 @@ class AnalyticsPage(QWidget):
         self.overtime_caption_label.setObjectName("overtime_caption_label")
         self.overtime_caption_label.setProperty("role", "secondary")
         self.overtime_caption_label.setWordWrap(True)
+        self.overtime_chart = OvertimeComparisonChart()
         self.overtime_card.content_layout.addWidget(self.overtime_title_label)
-        self.overtime_card.content_layout.addWidget(self.overtime_value_label)
-        self.overtime_card.content_layout.addWidget(self.overtime_caption_label)
+        overtime_row = QHBoxLayout()
+        overtime_row.setContentsMargins(0, 0, 0, 0)
+        overtime_row.setSpacing(8)
+        overtime_text = QVBoxLayout()
+        overtime_text.setContentsMargins(0, 0, 0, 0)
+        overtime_text.setSpacing(12)
+        overtime_text.setAlignment(Qt.AlignmentFlag.AlignTop)
+        overtime_text.addWidget(self.overtime_value_label)
+        overtime_text.addWidget(self.overtime_caption_label)
+        overtime_row.addLayout(overtime_text, 1)
+        overtime_row.addWidget(self.overtime_chart)
+        self.overtime_card.content_layout.addLayout(overtime_row)
         self.attendance_card = DotProgressCard(_("Attendance Days"), color="#16a34a")
         self.rest_card = DotProgressCard(_("Rest Days"), color="#ef4444")
         summary_grid.addWidget(self.monthly_hours_card, 0, 0)
@@ -421,6 +433,7 @@ class AnalyticsPage(QWidget):
             progress,
         )
         self.overtime_value_label.setText(duration_label(state.stats.overtime_hours))
+        self.overtime_chart.set_hours(state.stats.overtime_hours, state.previous_stats.overtime_hours)
         self.overtime_caption_label.setText(_("{change:+.1f}h vs previous period").format(change=state.stats.overtime_hours - state.previous_stats.overtime_hours))
         days = state.stats.work_days
         rest = state.total_days - days

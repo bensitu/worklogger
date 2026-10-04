@@ -13,9 +13,9 @@ from PySide6.QtWidgets import QApplication, QHBoxLayout, QScrollArea, QWidget
 
 from worklogger.infrastructure.i18n import set_language
 from worklogger.presentation.theme import ThemeEngine
-from worklogger.presentation.widgets import combo_chart
+from worklogger.presentation.widgets import combo_chart, progress_cards
 from worklogger.presentation.widgets.combo_chart import chart_palette
-from worklogger.presentation.widgets.progress_cards import DonutGauge, DonutProgressCard
+from worklogger.presentation.widgets.progress_cards import DonutGauge, DonutProgressCard, OvertimeComparisonChart
 from tests.presentation.test_ui_layout import sample_window
 
 
@@ -99,6 +99,75 @@ class ProgressCardTests(unittest.TestCase):
         self.assertGreaterEqual(min(outer) - max(inner) - 1, 1)
         self.assertLessEqual(min(outer) - max(inner) - 1, 3)
 
+    def test_additional_rings_show_each_hundred_percent_interval(self):
+        captured = []
+
+        class RecordingPainter(QPainter):
+            def drawArc(self, rect, start, span):
+                if start == 90 * 16:
+                    captured.append((rect, span, self.pen().color().name(), self.pen().widthF()))
+                return super().drawArc(rect, start, span)
+
+        gauge = DonutGauge()
+        gauge.setPalette(ThemeEngine().qt_palette("blue"))
+        for progress, spans in ((2, (-5760, -5760)), (2.01, (-5760, -5760, -57)),
+                                (2.5, (-5760, -5760, -2880)), (3, (-5760,) * 3),
+                                (3.5, (-5760,) * 3 + (-2880,)), (10, (-5760,) * 10)):
+            captured.clear()
+            gauge.set_progress(progress)
+            with patch.object(progress_cards, "QPainter", RecordingPainter):
+                gauge.grab()
+            with self.subTest(progress=progress):
+                self.assertEqual(tuple(item[1] for item in captured), spans)
+                for inner, outer in zip(captured, captured[1:]):
+                    self.assertGreater(outer[0].width(), inner[0].width())
+                    self.assertNotEqual(inner[2], outer[2])
+                    gap = (outer[0].width() - inner[0].width() - inner[3] - outer[3]) / 2
+                    self.assertGreater(gap, 0)
+                    self.assertLessEqual(gap, 3)
+                self.assertEqual(gauge.size().width(), 72)
+        gauge.set_progress(1_000_000)
+        captured.clear()
+        with patch.object(progress_cards, "QPainter", RecordingPainter):
+            gauge.grab()
+        self.assertEqual(len(captured), 32)
+        self.assertEqual(gauge.percentage_text, "100000000%")
+
+    def test_overtime_bars_use_a_shared_scale_and_clear_zero_values(self):
+        captured = []
+
+        class RecordingPainter(QPainter):
+            def drawRoundedRect(self, rect, *args):
+                captured.append((rect, self.brush().color().name()))
+                return super().drawRoundedRect(rect, *args)
+
+        chart = OvertimeComparisonChart()
+        chart.setPalette(ThemeEngine().qt_palette("blue"))
+        for current, previous, expected in ((20, 10, (25, 50)), (10, 20, (50, 25)),
+                                            (10, 10, (50, 50)), (0, 10, (50,)),
+                                            (10, 0, (50,)), (0, 0, ())):
+            captured.clear()
+            chart.set_hours(current, previous)
+            with patch.object(progress_cards, "QPainter", RecordingPainter):
+                chart.grab()
+            with self.subTest(current=current, previous=previous):
+                self.assertEqual(tuple(rect.height() for rect, color in captured), expected)
+                if len(captured) == 2:
+                    self.assertLess(captured[0][0].right(), captured[1][0].left())
+                    self.assertEqual(captured[0][0].bottom(), captured[1][0].bottom())
+                    self.assertNotEqual(captured[0][1], captured[1][1])
+                for rect, color in captured:
+                    self.assertTrue(chart.rect().contains(rect.toAlignedRect()))
+        for language, label in (("en_US", "Overtime comparison"), ("ja_JP", "残業時間の比較"),
+                                ("ko_KR", "초과 근무 비교"), ("zh_CN", "加班工时对比"),
+                                ("zh_TW", "加班工時對比")):
+            set_language(language)
+            chart.set_hours(70.5, 20)
+            self.assertIn(label, chart.toolTip())
+            self.assertIn("20.0h", chart.toolTip())
+            self.assertIn("70.5h", chart.toolTip())
+            self.assertEqual(chart.toolTip(), chart.accessibleName())
+
     def test_work_mode_total_is_painted_on_one_line(self):
         captured = []
 
@@ -140,7 +209,9 @@ class ProgressCardTests(unittest.TestCase):
                                 self.assertTrue(page.refresh(date(2026, 5, 21)))
                                 state = replace(page._dashboard, target_hours=target,
                                                 stats=replace(page._dashboard.stats,
-                                                              total_hours=total, overtime_hours=70.5))
+                                                              total_hours=total, overtime_hours=70.5),
+                                                previous_stats=replace(page._dashboard.previous_stats,
+                                                                       overtime_hours=20))
                                 page._set_state(state)
                                 self.app.processEvents()
                                 with self.subTest(language=language, dark=dark, width=width, scope=scope):
@@ -158,6 +229,10 @@ class ProgressCardTests(unittest.TestCase):
                                     card = page.monthly_hours_card
                                     self.assertLess(card.title_label.geometry().bottom(), card.value_label.geometry().top())
                                     self.assertLess(card.value_label.geometry().right(), card.gauge.geometry().left())
+                                    self.assertLess(page.overtime_value_label.geometry().right(), page.overtime_chart.geometry().left())
+                                    self.assertTrue(page.overtime_card.rect().contains(page.overtime_chart.geometry()))
+                                    self.assertIn("70.5h", page.overtime_chart.toolTip())
+                                    self.assertIn(f"{state.previous_stats.overtime_hours:.1f}h", page.overtime_chart.toolTip())
                                     for scroll in page.findChildren(QScrollArea):
                                         self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)
                                 directory = os.environ.get("WORKLOGGER_SCREENSHOTS")
@@ -183,12 +258,12 @@ class ProgressCardTests(unittest.TestCase):
             surface.setAutoFillBackground(True)
             layout = QHBoxLayout(surface)
             cards = []
-            for progress in (0.75, 1, 213.5 / 168, 2.5):
+            for progress in (0.75, 1, 213.5 / 168, 2.5, 3.5):
                 card = DonutProgressCard("Monthly Hours")
                 card.set_value(f"{progress * 168:.1f}h", "of 168.0h goal", progress)
                 layout.addWidget(card)
                 cards.append(card)
-            surface.resize(1080, 160)
+            surface.resize(1350, 160)
             surface.show()
             try:
                 self.app.processEvents()

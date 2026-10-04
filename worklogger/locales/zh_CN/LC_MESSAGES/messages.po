@@ -706,6 +706,9 @@ msgstr "加班"
 msgid "Overtime Hours"
 msgstr "加班工时"
 
+msgid "Overtime comparison: previous period {previous:.1f}h, current period {current:.1f}h"
+msgstr "加班工时对比：上一周期 {previous:.1f}h，当前周期 {current:.1f}h"
+
 msgid "PDF"
 msgstr "PDF"
 

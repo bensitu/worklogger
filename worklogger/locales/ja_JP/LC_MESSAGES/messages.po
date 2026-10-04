@@ -706,6 +706,9 @@ msgstr "残業"
 msgid "Overtime Hours"
 msgstr "残業時間"
 
+msgid "Overtime comparison: previous period {previous:.1f}h, current period {current:.1f}h"
+msgstr "残業時間の比較：前期間 {previous:.1f}h、今期間 {current:.1f}h"
+
 msgid "PDF"
 msgstr "PDF"
 

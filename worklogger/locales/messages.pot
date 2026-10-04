@@ -704,6 +704,9 @@ msgstr ""
 msgid "Overtime Hours"
 msgstr ""
 
+msgid "Overtime comparison: previous period {previous:.1f}h, current period {current:.1f}h"
+msgstr ""
+
 msgid "PDF"
 msgstr ""
 
