@@ -3,8 +3,10 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 import csv
+import sqlite3
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from worklogger.app.commands.auth_commands import RegisterUserCommand
 from worklogger.app.commands.data_portability_commands import ImportWorkLogsCsvCommand
@@ -14,6 +16,7 @@ from worklogger.app.use_cases.data_portability import ImportWorkLogsCsvHandler
 from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
 from worklogger.domain.worklog.models import WorkLog, WorkType
 from worklogger.infrastructure.backup import SQLiteBackupService
+from worklogger.infrastructure.backup import sqlite_backup
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
 from worklogger.infrastructure.export import (
     WorkLogCsvExporter,
@@ -108,6 +111,73 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
 
         self.assertFalse(result.ok)
         self.assertEqual(result.error.code if result.error else "", "backup_same_path")
+
+    def test_restore_includes_committed_wal_data_without_uncommitted_changes(self) -> None:
+        user_id = self.register_user("alice")
+        self.save_work_log(user_id, date(2026, 4, 20), note="Before backup")
+        service = SQLiteBackupService(self.factory, expected_username="alice")
+        source = Path(self._tempdir.name) / "source #1.db"
+        self.assertTrue(service.backup_database(source).ok)
+        source_factory = SQLiteConnectionFactory(source, recover_corrupt=False)
+
+        with source_factory.connection() as live:
+            live.execute("PRAGMA wal_autocheckpoint=0")
+            live.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            main_file = source.read_bytes()
+            live.execute("UPDATE worklog SET note='Committed update'")
+            live.execute(
+                'INSERT INTO worklog(user_id, d, start, end, "break", note, work_type) '
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (user_id, "2026-04-21", "09:00", "18:00", 1.0, "Committed insert", "normal"),
+            )
+            self.assertGreater(Path(str(source) + "-wal").stat().st_size, 0)
+            self.assertEqual(source.read_bytes(), main_file)
+            live.execute("BEGIN IMMEDIATE")
+            live.execute("UPDATE worklog SET note='Uncommitted change'")
+            try:
+                restored = service.restore_database(source)
+                self.assertTrue(restored.ok, restored.error)
+                with self.factory.connection() as connection:
+                    rows = connection.execute("SELECT d, note FROM worklog ORDER BY d").fetchall()
+                    self.assertEqual([tuple(row) for row in rows], [
+                        ("2026-04-20", "Committed update"),
+                        ("2026-04-21", "Committed insert"),
+                    ])
+                    self.assertEqual(connection.execute("PRAGMA integrity_check").fetchone()[0], "ok")
+                self.assertEqual(source.read_bytes(), main_file)
+                self.assertTrue(live.in_transaction)
+            finally:
+                live.rollback()
+
+    def test_restore_snapshot_failure_preserves_current_database(self) -> None:
+        user_id = self.register_user("alice")
+        self.save_work_log(user_id, date(2026, 4, 20), note="Before backup")
+        service = SQLiteBackupService(self.factory, expected_username="alice")
+        source = Path(self._tempdir.name) / "source.db"
+        self.assertTrue(service.backup_database(source).ok)
+        self.save_work_log(user_id, date(2026, 4, 20), note="Keep current data")
+        connect = sqlite3.connect
+
+        class FailingSnapshotConnection(sqlite3.Connection):
+            def backup(self, target, **kwargs):
+                target.execute("CREATE TABLE incomplete(value TEXT)")
+                target.commit()
+                raise sqlite3.OperationalError("snapshot write failed")
+
+        def fail_source_backup(database, *args, **kwargs):
+            if str(database) == source.resolve().as_uri() + "?mode=ro":
+                kwargs["factory"] = FailingSnapshotConnection
+            return connect(database, *args, **kwargs)
+
+        with patch.object(sqlite_backup.sqlite3, "connect", side_effect=fail_source_backup):
+            result = service.restore_database(source)
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.error.code, "restore_failed")
+        record = SQLiteWorkLogRepository(self.factory).get_for_day(user_id, date(2026, 4, 20))
+        self.assertEqual(record.note, "Keep current data")
+        self.assertFalse(Path(self.db_path + ".tmp_restore").exists())
+        self.assertFalse(Path(self.db_path + ".pre_restore").exists())
 
     def test_restore_validation_rejects_mismatched_user_database(self) -> None:
         self.register_user("alice")

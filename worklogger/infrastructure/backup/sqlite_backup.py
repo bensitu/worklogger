@@ -5,7 +5,6 @@ from __future__ import annotations
 from contextlib import closing
 from pathlib import Path
 import os
-import shutil
 import sqlite3
 
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
@@ -95,8 +94,14 @@ class SQLiteBackupService:
         try:
             target.parent.mkdir(parents=True, exist_ok=True)
             _remove_if_exists(temp)
+            _remove_sidecars(temp)
             _remove_if_exists(previous)
-            shutil.copy2(source, temp)
+            # Read through SQLite so committed source WAL pages enter the snapshot.
+            with closing(sqlite3.connect(source.resolve().as_uri() + "?mode=ro", uri=True)) as source_connection:
+                with closing(sqlite3.connect(temp)) as snapshot_connection:
+                    secure_database_files(temp)
+                    source_connection.backup(snapshot_connection)
+                    snapshot_connection.execute("PRAGMA journal_mode=DELETE")
             _validate_sqlite_file(temp, expected_username=self._expected_username)
             _remove_sidecars(target)
             if target.exists():
@@ -112,6 +117,7 @@ class SQLiteBackupService:
             _remove_if_exists(previous)
         except Exception as exc:
             _remove_if_exists(temp)
+            _remove_sidecars(temp)
             if not target.exists() and previous.exists():
                 os.replace(previous, target)
             return Result.failure(
@@ -130,7 +136,7 @@ class SQLiteBackupService:
 def _validate_sqlite_file(path: Path, *, expected_username: str | None = None) -> None:
     if not path.is_file():
         raise FileNotFoundError(str(path))
-    with closing(sqlite3.connect(path)) as connection:
+    with closing(sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True)) as connection:
         _ensure_integrity(connection, "restore_integrity_failed")
         users_exists = connection.execute(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name='users'"

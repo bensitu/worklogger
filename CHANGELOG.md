@@ -27,6 +27,8 @@ Application version: 4.0.0.
 
 ### Storage and Compatibility
 
+- Database restore includes committed source WAL data through a read-only SQLite
+  snapshot, validates it before replacement, and excludes uncommitted transactions.
 - Compatibility handling for older authentication column names with a backup
   before changes.
 - Activity-event repository and table names now use consistent terminology.

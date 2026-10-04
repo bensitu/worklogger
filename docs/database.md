@@ -86,9 +86,13 @@ model files, session files, operating-system keyring values, and native language
 preferences.
 
 Restore validates the source, requires the `users` table, and checks the expected
-username when configured. It copies through a temporary file, keeps the previous
-database during replacement, and runs migrations. A failed migration attempts to
-restore the previous database. Restore is replacement, not a per-user merge.
+username when configured. It opens the source read-only and uses the SQLite backup
+API to create a temporary snapshot, including committed source WAL content but not
+uncommitted transactions. The snapshot is converted to a standalone rollback-journal
+database and validated before replacing the target; no source checkpoint is required.
+Restore keeps the previous database during replacement and runs migrations. A failed
+migration attempts to restore the previous database. Restore is replacement, not a
+per-user merge.
 
 The implementation uses file replacement and removes SQLite sidecars; close
 other processes using the database before restoring. Keep an independent backup
