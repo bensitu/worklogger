@@ -321,6 +321,12 @@ class WorkLogEntryPanel(QWidget):
             self.set_preview_form(self._form)
 
     def set_form(self, form: WorkLogEntryForm) -> None:
+        state = self._auto_record_view_model.state()
+        has_automatic_draft = state.active or state.pending_save
+        restore = self._needs_restore or (
+            has_automatic_draft and (self.time_tabs.currentIndex() == 1 or form.day == state.day)
+        )
+        self._needs_restore = has_automatic_draft
         self._form = form
         self._updating = True
         try:
@@ -334,9 +340,9 @@ class WorkLogEntryPanel(QWidget):
             self._updating = False
 
         self.set_preview_form(form)
-        if self._needs_restore:
-            self._needs_restore = False
-            self._apply_auto_state(self._auto_record_view_model.state())
+        self._needs_restore = False
+        if restore:
+            self._apply_auto_state(state)
 
     def set_preview_form(self, form: WorkLogEntryForm) -> None:
         # Preview feedback must not rewrite a draft while the user is typing.

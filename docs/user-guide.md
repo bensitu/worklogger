@@ -58,6 +58,8 @@ Work type and the expandable Notes editor are shared with Manual Input. They can
 be edited before starting, while recording or taking a break, and after stopping.
 Switching entry modes preserves these details. Returning to Auto Record restores
 the active record's date and details rather than editing another selected day.
+Calendar refreshes and date navigation preserve the automatic draft's work type
+and note. In Auto Record, these controls continue editing that draft's date.
 An active timer is not reported as an incomplete-time error. Save remains disabled
 until the completed record passes validation.
 Clock Out rejects invalid or excessive elapsed intervals rather than wrapping
