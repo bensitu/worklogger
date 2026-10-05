@@ -13,8 +13,10 @@ from worklogger.__about__ import APP_ID, APP_VERSION
 datas = bundled_resources(root)
 hiddenimports = collect_submodules("worklogger") + collect_submodules("holidays")
 hiddenimports += collect_submodules("keyring.backends")
-hiddenimports += collect_submodules("icalendar") + collect_submodules("recurring_ical_events")
-datas += collect_data_files("icalendar")
+runtime_module = lambda name: not any(part in {"test", "tests"} for part in name.split("."))
+hiddenimports += collect_submodules("icalendar", filter=runtime_module)
+hiddenimports += collect_submodules("recurring_ical_events", filter=runtime_module)
+datas += collect_data_files("icalendar", excludes=["tests/**"])
 datas += collect_data_files("tzlocal") + collect_data_files("certifi")
 binaries = []
 packages = ["tzdata"]

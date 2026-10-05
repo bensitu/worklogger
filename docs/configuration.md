@@ -76,6 +76,7 @@ variables. They are stored as strings in the settings repository.
 | `default_break_hours` | `1.0` | 0 to 4 hours |
 | `monthly_target_hours` | `168.0` | 0 to 400 hours |
 | `show_holidays` | `1` | Calendar holiday display |
+| `holiday_region` | Empty | Automatic system region, or an ISO country with optional subdivision such as `DE/BW` |
 | `show_note_markers` | `1` | Stored preference; its settings control is hidden |
 | `show_overnight_indicator` | `1` | Calendar overnight indicator |
 | `week_start_monday` | `0` | Sunday-first calendar by default |
@@ -97,6 +98,8 @@ variables. They are stored as strings in the settings repository.
 Model selection also uses `local_model_active_id`. Account password-change
 requirements are enforced by the authentication workflow, not by changing a UI
 preference alone.
+Automatic recording stores its active or completed unsaved state as JSON under
+`auto_record_state`; it is runtime state, not a user-editable preference.
 
 ## Feature Definitions
 

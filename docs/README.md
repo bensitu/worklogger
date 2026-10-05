@@ -25,6 +25,7 @@ desktop features from adapters that require additional runtime configuration.
 | [Testing](testing.md) | Test organization, isolated fixtures, rendering, verification |
 | [Packaging](packaging.md) | Build commands, bundled resources, platform requirements |
 | [Security](security.md) | Credential handling, storage boundaries, network behavior |
+| [Reliability](reliability.md) | Operational contracts, compatibility decisions, verification limits |
 
 Repository policies: [contributing](../CONTRIBUTING.md),
 [security reporting](../SECURITY.md), [conduct](../CODE_OF_CONDUCT.md),

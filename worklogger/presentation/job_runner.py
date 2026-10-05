@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import uuid
-from collections.abc import Callable
 
 from PySide6.QtCore import QCoreApplication, QObject, QRunnable, QThreadPool, Signal
 

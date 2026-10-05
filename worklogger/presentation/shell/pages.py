@@ -48,7 +48,6 @@ from worklogger.presentation.widgets import (
     DotProgressCard,
     ExportMenuButton,
     OvertimeComparisonChart,
-    PageHeader,
     ReportHistoryDisplayItem,
     ReportHistoryPanel,
     SegmentedControl,

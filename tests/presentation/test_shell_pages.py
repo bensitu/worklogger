@@ -14,9 +14,6 @@ from worklogger.domain.shared.result import Result
 from worklogger.domain.shared.errors import CancellationError, ValidationError
 from worklogger.app.job_runner import JobHandle, CancellationToken
 from worklogger.presentation.reporting.dialog import ReportTemplateDialog
-from worklogger.presentation.job_runner import ImmediateJobRunner
-from worklogger.presentation.shell.pages import AnalyticsPage
-from worklogger.presentation.viewmodels import SettingsState
 from worklogger.presentation.shell.pages import ReportsPage
 from worklogger.presentation.viewmodels.reports import ReportEditorState
 from worklogger.presentation.widgets.report_history import ReportHistoryDisplayItem

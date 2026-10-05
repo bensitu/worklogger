@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import date
 import unittest
+from unittest.mock import patch
 
 from worklogger.app.commands.ai_commands import RewriteTextCommand
 from worklogger.app.commands.note_commands import SaveDailyNoteCommand
@@ -308,6 +309,11 @@ class NotesReportsUseCaseTests(unittest.TestCase):
         self.assertIn("Customer sync", content)
         self.assertIn("Design review", content)
         self.assertIn("Total 18.0 OT 2.0", content)
+        for repository, method in ((work_logs, "list_range"), (quick_logs, "list_for_range"), (calendar, "list_for_range")):
+            with self.subTest(repository=type(repository).__name__), patch.object(repository, method, side_effect=OSError("unavailable")):
+                failed = handler.handle(GenerateReportCommand(1, "daily", date(2026, 5, 11), date(2026, 5, 11)))
+                self.assertFalse(failed.ok)
+                self.assertEqual(failed.error.code, "report_load_failed")
 
     def test_template_renderer_preserves_unknown_placeholders(self) -> None:
         self.assertEqual(

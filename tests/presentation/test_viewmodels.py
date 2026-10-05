@@ -7,8 +7,7 @@ import unittest
 from PySide6.QtGui import QPalette
 
 from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
-from worklogger.app.queries.calendar_queries import GetCalendarEventsForRangeQuery
-from worklogger.app.queries.work_log_queries import GetMonthRecordsQuery, GetWorkLogQuery
+from worklogger.app.queries.work_log_queries import GetMonthRecordsQuery
 from worklogger.app.use_cases.calendar import GetCalendarEventsForRangeHandler
 from worklogger.app.use_cases.work_logs import (
     GetMonthRecordsHandler,

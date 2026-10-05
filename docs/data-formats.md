@@ -102,7 +102,8 @@ It contains the complete text summary, not a rendered chart.
 Database backups are SQLite files, not CSV or document exports. They include
 accounts, credentials, work logs, notes, reports, settings, and related tables.
 Treat them as sensitive data. Restore replaces the entire database and validates
-the signed-in username. See [backup details](database.md).
+the signed-in administrator's username and account ID. Proxy passwords are excluded
+from new backups; re-enter them after moving an installation. See [backup details](database.md).
 
 ## Model Metadata
 

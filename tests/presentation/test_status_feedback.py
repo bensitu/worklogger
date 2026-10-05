@@ -35,7 +35,7 @@ class StatusFeedbackTests(unittest.TestCase):
     def test_empty_status_is_hidden_and_errors_can_reappear(self):
         label = StatusLabel()
         self.assertTrue(label.isHidden())
-        for _ in range(2):
+        for _iteration in range(2):
             label.setText("Test error")
             self.assertFalse(label.isHidden())
             label.clear()

@@ -135,7 +135,7 @@ class JsonLocalModelStore:
             self._sync_manifest(merged)
             return Result.success(tuple(merged))
         except Exception:
-            return self.list_models()
+            return Result.failure(InfrastructureError("local_model_catalog_failed", "local_model_catalog_failed"))
 
     def import_model(self, source: Path) -> Result[LocalModelEntry]:
         try:
@@ -207,7 +207,10 @@ class JsonLocalModelStore:
                     "local_model_download_failed",
                 )
             )
-        self._set_manifest_available(entry.value, True)
+        try:
+            self._set_manifest_available(entry.value, True)
+        except Exception:
+            return Result.failure(InfrastructureError("local_model_catalog_failed", "local_model_catalog_failed"))
         return entry
 
     def verify_model(self, model_id: str) -> Result[LocalModelFileStatus]:
@@ -284,7 +287,10 @@ class JsonLocalModelStore:
         cleaned = str(model_id or "").strip()
         if not cleaned:
             return Result.failure(ValidationError("local_model_id_required", "local_model_id_required"))
-        for entry in self._load_catalog():
+        catalog = self.list_models()
+        if not catalog.ok:
+            return Result.failure(catalog.error)
+        for entry in catalog.value or ():
             if entry.id == cleaned:
                 return Result.success(entry)
         return Result.failure(ValidationError("local_model_missing", "local_model_missing"))

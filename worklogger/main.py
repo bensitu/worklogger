@@ -203,7 +203,7 @@ def _startup_message(message: str, *, error: bool = True) -> None:
     from worklogger.bootstrap import _application
     from worklogger.__about__ import APP_NAME
 
-    application = _application([])
+    _application_instance = _application([])
     show = QMessageBox.critical if error else QMessageBox.information
     show(None, APP_NAME, message)
 

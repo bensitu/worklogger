@@ -69,8 +69,9 @@ calendar's Today indicator without discarding the selected date or draft.
 
 ### Holidays and Markers
 
-Enable holiday display in Settings > General. The country is inferred from the
-system time zone using the application's country mapping, with US as the fallback.
+Enable holiday display in Settings > General. Choose a country and an optional
+state/province, or keep System region to infer the country from the system's named
+timezone. Unknown or country-neutral timezones do not select another country's holidays.
 Holiday names come from the holiday data library and may not match the interface
 language. A holiday is not an imported event and does not create a work record.
 
@@ -84,13 +85,15 @@ increase the day's worked-hour total. A quick-log end time must follow its start
 time; overnight ranges belong in the main work record instead.
 
 The note editor supports Markdown, template insertion, quick-log insertion, save,
-and Markdown export. Daily notes and the time-entry note use the same underlying
-field. Review unsaved changes before changing the selected day or leaving an editor.
+and Markdown export. Daily notes have independent storage and also appear in the
+time-entry editor. Deleting work does not delete the note. Concurrent note changes
+reject an outdated save rather than silently overwriting the other editor's content.
+Review unsaved changes before changing the selected day or leaving an editor.
 
 ## Reports
 
-Choose a daily, weekly, or monthly period. Weekly periods run Monday through
-Sunday, independently of the calendar's displayed week-start preference. Generate
+Choose a daily, weekly, or monthly period. Weekly periods follow the calendar's
+Sunday-first or Monday-first preference. Generate
 a report from the period's work records, quick logs, and calendar events, then
 edit and save it. Select a history item to reopen saved content.
 History items display the report period, the first save date and time in your

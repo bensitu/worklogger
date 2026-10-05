@@ -101,14 +101,22 @@ class AutoRecordViewModel:
                             or not isinstance(restored.break_active, bool) or not math.isfinite(restored.break_hours)
                             or restored.break_hours < 0 or restored.break_hours > 24
                             or not isinstance(restored.note, str) or (restored.active and restored.pending_save)
+                            or not (restored.active or restored.pending_save)
                             or (restored.expected_note is not None and not isinstance(restored.expected_note, str))
                             or parse_time(restored.start_time) != restored.start_time
                             or not restored.start_time or normalize_work_type(restored.work_type).value != restored.work_type
                             or (restored.active and (restored.started_at is None or restored.end_time))
                             or (restored.pending_save and not parse_time(restored.end_time))
-                            or (restored.break_active and restored.break_started_at is None)
-                            or any(value is not None and value.tzinfo is None for value in (restored.started_at, restored.break_started_at))):
+                            or (restored.break_active and (not restored.active or restored.break_started_at is None))
+                            or any(value is not None and value.tzinfo is None for value in (restored.started_at, restored.break_started_at, restored.ended_at))):
                         raise ValueError("auto_record_state_invalid")
+                    if restored.pending_save:
+                        normalize_work_log(WorkLog(
+                            user_id, restored.day, restored.start_time, restored.end_time,
+                            restored.break_hours, restored.note, normalize_work_type(restored.work_type),
+                            started_at=restored.started_at if restored.ended_at else None,
+                            ended_at=restored.ended_at,
+                        ))
                     self._state = restored
             except Exception:
                 self._restore_failed = True

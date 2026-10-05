@@ -37,6 +37,23 @@ Application version: 4.0.0.
 
 ### Storage and Compatibility
 
+- Database access preserves originals on lock, permission, and I/O failures;
+  integrity checks run once per factory, and desktop instances hold a database lock.
+- Administrator-only restore validates schema and account ownership, retains a
+  previous snapshot, refuses interrupted replacement, and requires a new login.
+- Transactional CSV and calendar imports, bounded encoding-aware previews, timezone
+  and recurrence handling, stable event identifiers, and private source filenames.
+- Independent daily-note storage with concurrent-edit protection and compatible
+  note-only CSV exchange. New work entries retain offset-aware timestamps for
+  daylight-saving elapsed-time calculations without reinterpreting older records.
+- Persistent automatic recording, break boundaries, and completed unsaved drafts;
+  excessive shifts are rejected and the calendar's current date refreshes.
+- Canonical Unicode account identifiers, decaying login failure counters, verified
+  identity tokens, private atomic credential files, and authenticated encryption.
+- HTTPS destination and redirect validation, certificate verification, bounded
+  responses, checksum-required model transfers, cancellation, and verification caching.
+- Atomic exports preserve existing files on failure; spreadsheet-sensitive text
+  is escaped and PDF summaries support Unicode and pagination.
 - Database restore includes committed source WAL data through a read-only SQLite
   snapshot, validates it before replacement, and excludes uncommitted transactions.
 - Compatibility handling for older authentication column names with a backup
@@ -44,8 +61,21 @@ Application version: 4.0.0.
 - Activity-event repository and table names now use consistent terminology.
   Migration 3 preserves existing event identifiers and content, creates a backup,
   and refuses to combine independently populated tables.
-- Proxy passwords use the system credential store without a plaintext fallback.
+- Proxy passwords use the system credential store without a plaintext fallback;
+  older values are encrypted before use and excluded from new database backups.
 - WebP image assets, bundled fonts, and platform-specific application icons.
+
+### Runtime Configuration
+
+- Packaged user-data directories, visible startup errors, normal login cancellation,
+  encoding-safe console feedback, and cooperative background-task shutdown.
+- Consistent week-start preferences and configurable holiday countries/subdivisions.
+- Bounded translated-catalog and icon caches with theme and display-scale handling.
+- Pinned direct desktop dependencies, separate optional native inference requirements,
+  operational feature switches, and configurable remote model catalogs.
+- Consistent platform application identifiers, Windows version resources, macOS
+  version metadata and optional signing inputs; development-only calendar modules
+  are excluded from distribution.
 
 ### Documentation
 
@@ -60,10 +90,7 @@ Application version: 4.0.0.
 - The proxy form stores preferences but does not configure the built-in HTTP
   adapters. Minimal-mode selection and calendar-event clearing are not available
   in the settings interface.
-- Non-English console diagnostics may fail in terminals with an incompatible
-  output encoding. This is separate from GUI translation.
-- Analytics PDF export is a single-page text summary without chart rendering or
-  full Unicode support.
+- Analytics PDF export is a paginated Unicode text summary without chart rendering.
 - Cross-platform source paths and build definitions exist; the current Windows
   verification does not establish macOS or Linux release compatibility.
 

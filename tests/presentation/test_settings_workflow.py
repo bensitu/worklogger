@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtWidgets import QApplication, QDialog, QWidget
+from PySide6.QtWidgets import QApplication, QDialog
 
 from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandler
 from worklogger.app.use_cases.updates import UpdateCheckResult

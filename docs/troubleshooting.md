@@ -116,10 +116,12 @@ key or an authorized administrator workflow, not manual editing of credential ro
 
 ## Holidays and Calendar Imports
 
-Check Settings > General > holiday display, the system timezone, the selected
-month, and the installed `holidays`/`tzlocal` packages. Unmapped timezones use US
-holidays. iCalendar import does not expand recurrence rules or convert timezones;
-verify the original file before treating missing occurrences as lost work records.
+Check Settings > General > holiday display, the country/state selection, the system
+timezone, the selected month, and the installed `holidays`/`tzlocal`/`tzdata` packages.
+System region does not guess a country for unknown or country-neutral timezones.
+iCalendar import converts UTC and named timezones, expands finite recurrence, and
+rejects recurrence without a count or end date. Verify the original file before
+treating missing occurrences as lost work records.
 
 ## Unavailable Services
 
@@ -134,7 +136,10 @@ proxy preferences do not currently configure outgoing adapter traffic.
 
 ## Restore and Build Failures
 
-Restore requires a valid SQLite file containing the current username. Close other
+Restore requires administrator permission and a compatible SQLite file containing
+the current username with the same account ID. Successful restore ends the current
+session. A retained `.pre_restore` file blocks replacement until it is recovered;
+never delete it without preserving its contents. Close other
 application processes and keep an independent backup. CSV and PDF exports cannot
 be restored as databases.
 

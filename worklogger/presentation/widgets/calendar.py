@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import date
 
 from PySide6.QtCore import QRect, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPen, QTextLayout, QTextOption

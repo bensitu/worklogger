@@ -62,6 +62,8 @@ HTTPS URL, or a programmatic caller passes one to the store constructor. Entries
 used for downloads must contain a SHA-256 checksum. Refresh reads local metadata
 by default. The root catalog file is
 not automatically copied into runtime storage.
+Failed remote refresh returns an error and leaves cached entries intact; listing
+and managing the local catalog remains available without a network connection.
 
 Selection requires a verified file. Deletion considers account selections through
 the settings usage reader. Copy model files and metadata separately when moving

@@ -53,7 +53,7 @@ class LocalModelInfrastructureTests(unittest.TestCase):
                 with self.subTest(status=status, headers=headers):
                     destination.write_bytes(b"previous model")
                     partial.write_bytes(payload[:3])
-                    result = HttpRangeDownloader(opener=lambda *a, **k: FakeResponse(body, status, headers)).download(
+                    result = HttpRangeDownloader(opener=lambda *a, body=body, status=status, headers=headers, **k: FakeResponse(body, status, headers)).download(
                         url="https://example.test/model.gguf", destination=destination, expected_sha256=digest,
                     )
                     self.assertEqual(result.ok, succeeds)
@@ -96,7 +96,7 @@ class LocalModelInfrastructureTests(unittest.TestCase):
             assert status.value is not None
             self.assertTrue(status.value.verified)
 
-    def test_refresh_catalog_falls_back_to_cached_catalog(self) -> None:
+    def test_catalog_failures_preserve_cached_models_and_return_results(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             models_dir = Path(directory) / "models"
             cached = {
@@ -125,9 +125,12 @@ class LocalModelInfrastructureTests(unittest.TestCase):
             )
             result = store.refresh_catalog()
 
-            self.assertTrue(result.ok)
-            assert result.value is not None
-            self.assertEqual(result.value[0].id, "cached")
+            self.assertFalse(result.ok)
+            self.assertEqual(result.error.code, "local_model_catalog_failed")
+            self.assertEqual(store.list_models().value[0].id, "cached")
+            (models_dir / "catalog.json").write_text("invalid json", encoding="utf-8")
+            for operation in (store.verify_model, store.download_model, store.delete_model):
+                self.assertFalse(operation("cached").ok)
 
     def test_download_model_uses_downloader_and_verifies_hash(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

@@ -20,7 +20,6 @@ from tests.app.test_notes_and_reports_use_cases import (
 )
 from worklogger.app.commands.note_commands import SaveDailyNoteCommand
 from worklogger.app.commands.report_commands import SaveReportCommand
-from worklogger.app.queries.note_queries import GetDailyNoteQuery
 from worklogger.app.queries.report_queries import GetReportForPeriodQuery
 from worklogger.app.use_cases.calendar import GetCalendarEventsForDayHandler
 from worklogger.app.use_cases.ai import RewriteTextHandler

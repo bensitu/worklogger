@@ -13,7 +13,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 GUIDES = (
     "README", "architecture", "configuration", "database", "data-formats",
     "development", "integrations", "localization", "packaging", "security",
-    "templates", "testing", "troubleshooting", "user-guide",
+    "templates", "testing", "troubleshooting", "user-guide", "reliability",
 )
 DOCUMENTS = (
     *(PROJECT_ROOT / name for name in (

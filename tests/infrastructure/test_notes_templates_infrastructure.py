@@ -33,7 +33,9 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
     def test_note_storage_migration_conflicts_deletion_and_export_preserve_content(self):
         with tempfile.TemporaryDirectory() as directory:
             factory = SQLiteConnectionFactory(f"{directory}/worklog.db")
-            MigrationRunner(factory, migration_modules=MIGRATION_MODULES[:-1]).run_pending()
+            note_index = next(index for index, module in enumerate(MIGRATION_MODULES)
+                              if module.endswith("migration_005_daily_notes"))
+            MigrationRunner(factory, migration_modules=MIGRATION_MODULES[:note_index]).run_pending()
             user = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1_000)).create_user(
                 "user", "password", recovery_key=None, is_admin=False)
             day = date(2026, 5, 14)
@@ -41,7 +43,8 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
             previous = SQLiteWorkLogRepository(factory)
             previous.save(WorkLog(user.id, day, "09:00", "18:00", 1.0, "original"))
             previous.save(WorkLog(user.id, note_day, note="standalone"))
-            self.assertEqual(MigrationRunner(factory).run_pending(), (5,))
+            self.assertIn(5, MigrationRunner(factory).run_pending())
+            self.assertEqual(MigrationRunner(factory).run_pending(), ())
             work_logs = SQLiteWorkLogRepository(factory)
             notes = SQLiteDailyNoteRepository(factory)
             self.assertEqual(notes.get_for_day(user.id, note_day).content, "standalone")

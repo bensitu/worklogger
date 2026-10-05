@@ -107,7 +107,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             for language in ("en_US", "ja_JP", "ko_KR", "zh_CN", "zh_TW"):
                 self.system_language.return_value = language
 
-                def authenticator(model):
+                def authenticator(model, language=language):
                     self.assertEqual(get_language(), language)
                     dialog = LoginDialog()
                     self.assertEqual(dialog.login_button.text(), _("Login", language=language))

@@ -237,23 +237,13 @@ class GenerateReportHandler:
                 recorded_days = {record.day for record in work_logs}
                 work_logs += tuple(WorkLog(command.user_id, note.day, note=note.content)
                                    for note in notes if note.content and note.day not in recorded_days)
+            quick_logs = self._quick_logs.list_for_range(command.user_id, period.start, period.end)
+            events = self._calendar_events.list_for_range(command.user_id, period.start, period.end)
+            template = self._templates.get_template(
+                command.language, period.report_type, user_id=command.user_id,
+            )
         except Exception:
             return Result.failure(InfrastructureError("report_load_failed", "report_load_failed"))
-        quick_logs = self._quick_logs.list_for_range(
-            command.user_id,
-            period.start,
-            period.end,
-        )
-        events = self._calendar_events.list_for_range(
-            command.user_id,
-            period.start,
-            period.end,
-        )
-        template = self._templates.get_template(
-            command.language,
-            period.report_type,
-            user_id=command.user_id,
-        )
         translate = partial(self._translator, language=command.language)
         if not template.ok or not template.value:
             content = _fallback_report(period.report_type, period.start, period.end, translate)
