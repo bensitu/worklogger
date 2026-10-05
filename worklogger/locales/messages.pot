@@ -302,6 +302,21 @@ msgstr ""
 msgid "WorkLogger is already running."
 msgstr ""
 
+msgid "Work {hours:.1f}h"
+msgstr ""
+
+msgid "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
+msgstr ""
+
+msgid "The CSV file exceeds the supported size or row limit."
+msgstr ""
+
+msgid "Some dates already have records. Review the import and confirm replacement."
+msgstr ""
+
+msgid "Recurring events must have an end date or occurrence count."
+msgstr ""
+
 msgid "DESKTOP START FAILED"
 msgstr ""
 

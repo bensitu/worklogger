@@ -13,6 +13,8 @@ from scripts.build_resources import bundled_resources, executable_icon
 datas = bundled_resources(root)
 hiddenimports = collect_submodules("worklogger") + collect_submodules("holidays")
 hiddenimports += collect_submodules("keyring.backends")
+hiddenimports += collect_submodules("icalendar") + collect_submodules("recurring_ical_events")
+datas += collect_data_files("icalendar")
 datas += collect_data_files("tzlocal") + collect_data_files("certifi")
 binaries = []
 for package in ("tzdata", "llama_cpp"):

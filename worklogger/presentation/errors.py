@@ -25,6 +25,12 @@ def display_error_code(code: str) -> str:
     """Translate known error codes without displaying raw exception text or logging previews."""
 
     match code:
+        case "csv_file_too_large":
+            return _("The CSV file exceeds the supported size or row limit.")
+        case "csv_import_conflict":
+            return _("Some dates already have records. Review the import and confirm replacement.")
+        case "ics_recurrence_unbounded":
+            return _("Recurring events must have an end date or occurrence count.")
         case "report_not_found":
             return _("The saved report is no longer available. Reload the reports and try again.")
         case "report_save_failed":

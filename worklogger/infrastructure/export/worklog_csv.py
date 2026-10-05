@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from pathlib import Path
 import csv
+from worklogger.infrastructure.files import atomic_destination, spreadsheet_text
 
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
@@ -21,8 +22,7 @@ class WorkLogCsvExporter:
     ) -> Result[Path]:
         destination = Path(destination)
         try:
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            with destination.open("w", encoding="utf-8-sig", newline="") as handle:
+            with atomic_destination(destination) as temporary, temporary.open("w", encoding="utf-8-sig", newline="") as handle:
                 writer = csv.writer(handle)
                 writer.writerow(self.HEADER)
                 for row in rows:
@@ -32,8 +32,8 @@ class WorkLogCsvExporter:
                             row.start_time or "",
                             row.end_time or "",
                             row.break_hours,
-                            row.note,
-                            _work_type_value(row.work_type),
+                            spreadsheet_text(row.note),
+                            spreadsheet_text(_work_type_value(row.work_type)),
                         ]
                     )
         except Exception as exc:

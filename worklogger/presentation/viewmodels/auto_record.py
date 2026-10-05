@@ -5,11 +5,14 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import date, datetime, timedelta
+import math
+from worklogger.config.constants import MAX_SHIFT_HOURS
 
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkType
-from worklogger.domain.worklog.rules import normalize_work_type, parse_time
+from worklogger.domain.worklog.rules import normalize_work_type, parse_time, normalize_work_log
+from worklogger.domain.worklog.models import WorkLog
 
 
 Clock = Callable[[], datetime]
@@ -132,6 +135,20 @@ class AutoRecordViewModel:
             return Result.failure(
                 ValidationError("auto_record_not_started", "auto_record_not_started")
             )
+        start = datetime.combine(self._state.day, datetime.strptime(self._state.start_time, "%H:%M").time())
+        if moment.tzinfo is not None:
+            start = start.replace(tzinfo=moment.tzinfo)
+            elapsed = moment.timestamp() - start.timestamp()
+        else:
+            elapsed = (moment - start).total_seconds()
+        if elapsed <= 0 or elapsed > MAX_SHIFT_HOURS * 3600:
+            return Result.failure(ValidationError("time_range_invalid", "time_range_invalid"))
+        try:
+            normalize_work_log(WorkLog(user_id=0, day=self._state.day, start_time=self._state.start_time,
+                                      end_time=_time_text(moment), break_hours=self._current_break_hours(moment),
+                                      note=self._state.note, work_type=self._state.work_type))
+        except (TypeError, ValueError) as exc:
+            return Result.failure(ValidationError(str(exc), str(exc)))
         if self._state.break_active:
             ended = self.end_break(moment)
             if not ended.ok:
@@ -244,4 +261,4 @@ def _time_text(moment: datetime) -> str:
 
 
 def _round_quarter_hours(hours: float) -> float:
-    return round(max(float(hours or 0), 0.0) * 4) / 4
+    return math.floor(max(float(hours or 0), 0.0) * 4 + 0.5) / 4

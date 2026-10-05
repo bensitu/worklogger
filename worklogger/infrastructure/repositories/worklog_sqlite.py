@@ -55,9 +55,17 @@ class SQLiteWorkLogRepository:
         return tuple(self._from_row(row) for row in rows)
 
     def save(self, work_log: WorkLog) -> None:
-        normalized = normalize_work_log(work_log)
+        self.import_many((work_log,), overwrite=True)
+
+    def import_many(self, rows: tuple[WorkLog, ...], *, overwrite: bool = False) -> None:
+        normalized_rows = tuple(normalize_work_log(row) for row in rows)
         with self._connection_factory.transaction(write=True) as connection:
-            connection.execute(
+            if not overwrite:
+                for row in normalized_rows:
+                    if connection.execute("SELECT 1 FROM worklog WHERE user_id=? AND d=?",
+                                          (row.user_id, row.day.isoformat())).fetchone():
+                        raise ValueError("csv_import_conflict")
+            connection.executemany(
                 """
                 INSERT INTO worklog(user_id, d, start, end, "break", note, work_type, overnight)
                 VALUES(?, ?, ?, ?, ?, ?, ?, ?)
@@ -69,7 +77,7 @@ class SQLiteWorkLogRepository:
                     work_type=excluded.work_type,
                     overnight=excluded.overnight
                 """,
-                (
+                [(
                     normalized.user_id,
                     normalized.day.isoformat(),
                     normalized.start_time,
@@ -78,7 +86,7 @@ class SQLiteWorkLogRepository:
                     normalized.note,
                     normalized.work_type.value,
                     1 if normalized.overnight else 0,
-                ),
+                ) for normalized in normalized_rows],
             )
 
     def remove(self, user_id: int, day: date) -> None:

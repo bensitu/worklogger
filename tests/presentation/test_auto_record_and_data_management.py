@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import os
 from pathlib import Path
 import unittest
@@ -93,6 +93,17 @@ class MemorySettingsRepository:
 
 
 class AutoRecordDataManagementPresentationTests(unittest.TestCase):
+    def test_auto_record_rejects_excessive_elapsed_time_without_finishing(self):
+        start = datetime(2026, 4, 20, 9)
+        model = AutoRecordViewModel(default_break_hours=0)
+        self.assertTrue(model.start(start).ok)
+        for elapsed in (timedelta(hours=17), timedelta(hours=25, minutes=30), timedelta(minutes=-1)):
+            self.assertFalse(model.finish(start + elapsed).ok)
+            self.assertTrue(model.state(start).active)
+        result = model.finish(start + timedelta(hours=8))
+        self.assertTrue(result.ok)
+        self.assertEqual(result.value.day, start.date())
+
     @classmethod
     def setUpClass(cls) -> None:
         cls._app = QApplication.instance() or QApplication([])

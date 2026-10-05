@@ -13,7 +13,8 @@ where needed. Backups contain all accounts and are equally sensitive.
 
 Reports, notes, CSV, iCalendar, and PDF exports are unencrypted. Imported or
 generated content must be treated as untrusted text. Inspect spreadsheet exports
-before opening them in software that interprets formulas.
+before opening them in software that interprets formulas. Spreadsheet-sensitive
+exported text is prefixed with an apostrophe; exports are still unencrypted.
 
 ## Authentication
 

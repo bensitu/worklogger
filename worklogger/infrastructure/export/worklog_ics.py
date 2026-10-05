@@ -6,6 +6,8 @@ from collections.abc import Iterable
 from datetime import datetime, timezone
 from pathlib import Path
 import re
+from worklogger.infrastructure.files import atomic_destination
+from worklogger.infrastructure.i18n import _
 
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
@@ -36,8 +38,7 @@ class WorkLogIcsExporter:
             )
         destination = Path(destination)
         try:
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            with destination.open("w", encoding="utf-8", newline="") as handle:
+            with atomic_destination(destination) as temporary, temporary.open("w", encoding="utf-8", newline="") as handle:
                 handle.write(generated.value or "")
         except Exception as exc:
             return Result.failure(
@@ -58,8 +59,8 @@ def _build_calendar(rows: tuple[WorkLog, ...]) -> str:
         "PRODID:-//WorkLogger//WorkLogger//EN",
         "CALSCALE:GREGORIAN",
     ]
-    for index, row in enumerate(rows):
-        event_lines = _event_lines(row, index=index, dtstamp=dtstamp)
+    for row in rows:
+        event_lines = _event_lines(row, dtstamp=dtstamp)
         if event_lines:
             lines.extend(event_lines)
     lines.append("END:VCALENDAR")
@@ -69,7 +70,7 @@ def _build_calendar(rows: tuple[WorkLog, ...]) -> str:
     return "\r\n".join(folded) + "\r\n"
 
 
-def _event_lines(row: WorkLog, *, index: int, dtstamp: str) -> list[str]:
+def _event_lines(row: WorkLog, *, dtstamp: str) -> list[str]:
     if not row.has_times or row.is_leave:
         return []
     assert row.start_time is not None
@@ -82,12 +83,12 @@ def _event_lines(row: WorkLog, *, index: int, dtstamp: str) -> list[str]:
     end_stamp = end_dt.strftime("%Y%m%dT%H%M%S")
     note = row.note or ""
     summary_note = _summary_note(note)
-    summary = f"Work {row.raw_hours():.1f}h"
+    summary = _("Work {hours:.1f}h").format(hours=row.raw_hours())
     if summary_note:
         summary = f"{summary} - {summary_note[:60]}"
     return [
         "BEGIN:VEVENT",
-        f"UID:worklogger-{row.day.isoformat()}-{start_stamp}-{index}@worklogger",
+        f"UID:worklogger-{row.user_id}-{row.day.isoformat()}@worklogger",
         f"DTSTAMP:{dtstamp}",
         f"DTSTART:{start_stamp}",
         f"DTEND:{end_stamp}",

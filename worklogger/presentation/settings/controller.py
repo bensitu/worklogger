@@ -14,6 +14,7 @@ from worklogger.__about__ import APP_VERSION
 from worklogger.app.job_runner import JobHandle, JobRunner
 from worklogger.app.queries.update_queries import CheckForUpdatesQuery
 from worklogger.app.use_cases.updates import CheckForUpdatesHandler, UpdateCheckResult
+from worklogger.app.use_cases.data_portability import WorkLogCsvImportPreview
 from worklogger.domain.auth.models import User
 from worklogger.domain.shared.errors import AppError, CancellationError
 from worklogger.domain.shared.result import Result
@@ -90,6 +91,7 @@ class SettingsWorkflowController:
         ics_destination_provider: PathProvider | None = None,
         ics_import_mode_provider: IcsImportModeProvider | None = None,
         restore_confirmation: ConfirmationProvider | None = None,
+        csv_confirmation: Callable[[QWidget, WorkLogCsvImportPreview], bool] | None = None,
         notify_success: NotificationHandler | None = None,
         notify_error: NotificationHandler | None = None,
         reload_after_restore: ReloadHandler | None = None,
@@ -127,6 +129,7 @@ class SettingsWorkflowController:
             ics_import_mode_provider or _choose_ics_import_mode
         )
         self._restore_confirmation = restore_confirmation or _confirm_restore
+        self._csv_confirmation = csv_confirmation or _confirm_csv_import
         self._notify_success = notify_success or _notify_success
         self._notify_error = notify_error or _notify_error
         self._reload_after_restore = reload_after_restore
@@ -349,17 +352,41 @@ class SettingsWorkflowController:
         )
 
     def _import_csv(self, dialog: QWidget) -> bool:
+        if self._data_job_handle is not None or self._restore_validation_handle is not None:
+            _set_status(dialog, _("Please wait for the current data operation."))
+            return False
         path = self._csv_source_provider(dialog)
         if path is None:
+            _set_status(dialog, _("Import cancelled"))
+            return False
+        if self._job_runner is None:
+            return self._complete_csv_preview(dialog, path, self._data_management_view_model.preview_csv(path))
+        _set_busy(dialog, "data", True)
+        self._data_job_handle = JobHandle(job_id="csv_preview_pending", cancel=lambda: None)
+        handle = self._job_runner.submit(
+            "csv_preview", lambda _token: self._data_management_view_model.preview_csv(path),
+            on_complete=lambda result: self._complete_csv_preview(dialog, path, result),
+        )
+        if self._data_job_handle is not None:
+            self._data_job_handle = handle
+        return True
+
+    def _complete_csv_preview(self, dialog: QWidget, path: Path, result: Result[WorkLogCsvImportPreview]) -> bool:
+        self._data_job_handle = None
+        if not isValid(dialog):
+            return False
+        _set_busy(dialog, "data", False)
+        if not result.ok or result.value is None:
+            return self._handle_data_result(dialog, _("Import CSV"), Result.failure(result.error), lambda _state: "")
+        preview = result.value
+        if not self._csv_confirmation(dialog, preview):
             _set_status(dialog, _("Import cancelled"))
             return False
         return self._run_data_job(
             dialog,
             _("Import CSV"),
-            lambda: self._data_management_view_model.import_csv(path),
-            lambda state: _("Imported {count} records.").format(
-                count=state.record_count
-            ),
+            lambda: self._data_management_view_model.import_csv(path, preview=preview, overwrite=preview.existing_count > 0),
+            lambda state: _("Imported {count} records.").format(count=state.record_count),
             _("Importing CSV..."),
         )
 
@@ -638,6 +665,14 @@ def _save_path(
         file_filter,
     )
     return Path(path) if path else None
+
+
+def _confirm_csv_import(parent: QWidget, preview: WorkLogCsvImportPreview) -> bool:
+    message = _("Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?").format(
+        count=len(preview.rows), existing=preview.existing_count, errors=len(preview.errors))
+    return QMessageBox.question(parent, _("Import CSV"), message,
+                                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes
 
 
 def _confirm_restore(parent: QWidget | None) -> bool:

@@ -320,6 +320,45 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         self.assertEqual(imported.note, "Imported")
         self.assertEqual(leave.work_type, WorkType.PAID_LEAVE)
 
+    def test_csv_validation_limits_conflicts_and_atomic_import(self):
+        user = self.register_user("alice")
+        repository = SQLiteWorkLogRepository(self.factory)
+        source = Path(self._tempdir.name) / "import.csv"
+        source.write_text("date,start,end,break,note,work_type\n"
+                          "2026/4/20,09:00,18:00,1,Valid,normal\n"
+                          "2026-04-21,09:00,18:00,nan,Invalid,normal\n"
+                          "2026-04-22,,,0,Invalid,unknown\n", encoding="utf-8")
+        handler = ImportWorkLogsCsvHandler(importer=WorkLogCsvImporter(), repository=repository)
+        command = ImportWorkLogsCsvCommand(user, source)
+        preview = handler.preview(command).value
+        self.assertEqual((len(preview.rows), len(preview.errors), preview.existing_count), (1, 2, 0))
+        self.assertTrue(handler.apply(preview).ok)
+        self.assertEqual(handler.preview(command).value.existing_count, 1)
+        self.assertEqual(handler.handle(command).error.code, "csv_import_conflict")
+        self.assertTrue(handler.handle(ImportWorkLogsCsvCommand(user, source, overwrite_existing=True)).ok)
+        with self.assertRaises(sqlite3.IntegrityError):
+            repository.import_many((WorkLog(user, date(2026, 4, 23)), WorkLog(9999, date(2026, 4, 24))))
+        self.assertIsNone(repository.get_for_day(user, date(2026, 4, 23)))
+        for importer in (WorkLogCsvImporter(max_bytes=8), WorkLogCsvImporter(max_rows=1)):
+            self.assertEqual(importer.parse(source, user).error.code, "csv_file_too_large")
+        source.write_bytes(b"date,note\n2026-04-20,\xff\n")
+        self.assertFalse(WorkLogCsvImporter(encoding="utf-8").parse(source, user).ok)
+
+    def test_export_preserves_destination_on_failure_and_protects_spreadsheet_text(self):
+        path = Path(self._tempdir.name) / "export.csv"
+        exporter = WorkLogCsvExporter()
+        self.assertTrue(exporter.export_work_logs(path, (WorkLog(1, date(2026, 4, 20), note="=1+1"),)).ok)
+        with path.open(encoding="utf-8-sig", newline="") as handle:
+            self.assertEqual(list(csv.DictReader(handle))[0]["note"], "'=1+1")
+        original = path.read_bytes()
+
+        def broken_rows():
+            yield WorkLog(1, date(2026, 4, 21))
+            raise OSError("export_unavailable")
+
+        self.assertFalse(exporter.export_work_logs(path, broken_rows()).ok)
+        self.assertEqual(path.read_bytes(), original)
+
     def test_worklog_ics_export_escapes_folds_and_skips_leave_records(self) -> None:
         destination = Path(self._tempdir.name) / "exports" / "worklogs.ics"
         rows = (

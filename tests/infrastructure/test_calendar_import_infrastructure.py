@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from datetime import date
+from zoneinfo import ZoneInfo
 from pathlib import Path
 import tempfile
 import unittest
+from dataclasses import replace
 
 from worklogger.app.commands.auth_commands import RegisterUserCommand
 from worklogger.app.commands.calendar_commands import ImportCalendarEventsCommand
@@ -30,6 +32,28 @@ class FakeHolidaysModule:
 
 
 class CalendarImportInfrastructureTests(unittest.TestCase):
+    def test_ics_timezones_recurrences_cancellations_and_multiday_events(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "events.ics"
+            path.write_text("BEGIN:VCALENDAR\nVERSION:2.0\n"
+                            "BEGIN:VEVENT\nUID:meeting\nDTSTART:20260501T000000Z\nDTEND:20260501T010000Z\n"
+                            "RRULE:FREQ=DAILY;COUNT=3\nEXDATE:20260502T000000Z\nSUMMARY:Meeting\nDESCRIPTION:Event notes\n"
+                            "BEGIN:VALARM\nACTION:DISPLAY\nTRIGGER:-PT15M\nDESCRIPTION:Reminder\nEND:VALARM\nEND:VEVENT\n"
+                            "BEGIN:VEVENT\nUID:trip\nDTSTART;VALUE=DATE:20260504\nDTEND;VALUE=DATE:20260506\nSUMMARY:Trip\nEND:VEVENT\n"
+                            "BEGIN:VEVENT\nUID:cancelled\nDTSTART:20260507T000000Z\nSUMMARY:Cancelled\nSTATUS:CANCELLED\nEND:VEVENT\n"
+                            "END:VCALENDAR\n", encoding="utf-8")
+            importer = IcsCalendarImporter(local_timezone=ZoneInfo("Asia/Tokyo"))
+            result = importer.read_events(path, user_id=1)
+            self.assertTrue(result.ok, result.error)
+            events = result.value
+            self.assertEqual([event.day for event in events], [date(2026, 5, n) for n in (1, 3, 4, 5)])
+            self.assertEqual((events[0].start_time, events[0].end_time), ("09:00", "10:00"))
+            self.assertEqual(events[0].description, "Event notes")
+            self.assertTrue(all(event.source_file == "events.ics" for event in events))
+            self.assertFalse(IcsCalendarImporter(max_events=2).read_events(path, user_id=1).ok)
+            path.write_text(path.read_text().replace(";COUNT=3", ""), encoding="utf-8")
+            self.assertEqual(importer.read_events(path, user_id=1).error.code, "ics_recurrence_unbounded")
+
     def test_ics_importer_parses_rich_events_and_folded_lines(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "calendar.ics"
@@ -55,7 +79,7 @@ class CalendarImportInfrastructureTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            result = IcsCalendarImporter().read_events(path, user_id=7)
+            result = IcsCalendarImporter(local_timezone=ZoneInfo("Asia/Tokyo")).read_events(path, user_id=7)
 
         self.assertTrue(result.ok, result.error)
         events = result.value or ()
@@ -115,6 +139,12 @@ class CalendarImportInfrastructureTests(unittest.TestCase):
             appended = handler.handle(
                 ImportCalendarEventsCommand(user_id, path, replace_existing=False)
             )
+            duplicate = handler.handle(ImportCalendarEventsCommand(user_id, path))
+            self.assertEqual(duplicate.value, 0)
+            original = repository.list_for_day(user_id, date(2026, 5, 1))
+            with self.assertRaises(AttributeError):
+                repository.replace_all(user_id, (replace(original[0], day=None),))
+            self.assertEqual(repository.list_for_day(user_id, date(2026, 5, 1)), original)
             replaced = handler.handle(
                 ImportCalendarEventsCommand(user_id, path, replace_existing=True)
             )

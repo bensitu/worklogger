@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import date, datetime, timedelta
+import math
 
 from worklogger.config.constants import LEAVE_TYPES, MAX_SHIFT_HOURS, WORK_TYPE_KEYS
 from worklogger.domain.worklog.models import WorkLog, WorkType
@@ -20,7 +21,7 @@ def parse_time(raw: str | None) -> str | None:
         pass
 
     digits = text.replace(":", "").replace(" ", "")
-    if digits.isdigit():
+    if digits.isdecimal():
         length = len(digits)
         if length <= 2:
             hour, minute = int(digits), 0
@@ -110,7 +111,7 @@ def calc_hours(
         break_value = float(break_hours or 0)
     except (TypeError, ValueError):
         return 0.0
-    if break_value < 0 or break_value >= span:
+    if not math.isfinite(break_value) or break_value < 0 or break_value >= span:
         return 0.0
     return max(span - break_value, 0.0)
 
@@ -135,10 +136,14 @@ def normalize_work_log(
 ) -> WorkLog:
     start = parse_time(work_log.start_time)
     end = parse_time(work_log.end_time)
+    if (work_log.start_time and not start) or (work_log.end_time and not end):
+        raise ValueError("time_range_invalid")
     if bool(start) != bool(end):
         raise ValueError("time_range_incomplete")
 
     break_hours = float(work_log.break_hours or 0)
+    if not math.isfinite(break_hours) or break_hours > max_shift_hours:
+        raise ValueError("break_hours_too_long")
     if break_hours < 0:
         raise ValueError("break_hours_negative")
 

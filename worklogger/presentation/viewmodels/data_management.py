@@ -12,7 +12,7 @@ from worklogger.app.commands.calendar_commands import ImportCalendarEventsComman
 from worklogger.app.commands.data_portability_commands import ImportWorkLogsCsvCommand
 from worklogger.app.queries.calendar_queries import GetCalendarEventsForRangeQuery
 from worklogger.app.queries.work_log_queries import GetAllWorkLogsQuery
-from worklogger.app.use_cases.data_portability import WorkLogCsvImportResult
+from worklogger.app.use_cases.data_portability import WorkLogCsvImportResult, WorkLogCsvImportPreview
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
@@ -38,6 +38,8 @@ class IcsImportHandler(Protocol):
 
 
 class WorkLogCsvImportHandler(Protocol):
+    def preview(self, command: ImportWorkLogsCsvCommand) -> Result[WorkLogCsvImportPreview]: ...
+    def apply(self, preview: WorkLogCsvImportPreview, *, overwrite: bool = False) -> Result[WorkLogCsvImportResult]: ...
     def handle(self, command: ImportWorkLogsCsvCommand) -> Result[WorkLogCsvImportResult]:
         ...
 
@@ -169,15 +171,22 @@ class DataManagementViewModel:
             )
         )
 
-    def import_csv(self, source: Path) -> Result[DataManagementActionState]:
+    def preview_csv(self, source: Path) -> Result[WorkLogCsvImportPreview]:
+        if self._csv_import_handler is None:
+            return Result.failure(ValidationError("csv_import_unavailable", "csv_import_unavailable"))
+        return self._csv_import_handler.preview(ImportWorkLogsCsvCommand(self._user_id, Path(source)))
+
+    def import_csv(self, source: Path, *, preview: WorkLogCsvImportPreview | None = None,
+                   overwrite: bool = False) -> Result[DataManagementActionState]:
         if self._csv_import_handler is None:
             return Result.failure(
                 ValidationError("csv_import_unavailable", "csv_import_unavailable")
             )
-        result = self._csv_import_handler.handle(
+        result = self._csv_import_handler.apply(preview, overwrite=overwrite) if preview is not None else self._csv_import_handler.handle(
             ImportWorkLogsCsvCommand(
                 user_id=self._user_id,
                 source_path=Path(source),
+                overwrite_existing=overwrite,
             )
         )
         if not result.ok or result.value is None:

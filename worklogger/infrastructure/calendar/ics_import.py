@@ -1,10 +1,13 @@
-"""iCalendar import adapter."""
+"""Bounded iCalendar imports with local-time conversion and recurrence support."""
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import datetime, time, timedelta, tzinfo
 from pathlib import Path
-import re
+
+from icalendar import Calendar
+import recurring_ical_events
+from tzlocal import get_localzone
 
 from worklogger.config.constants import ICS_MAX_BYTES
 from worklogger.domain.calendar.models import CalendarEvent
@@ -13,105 +16,78 @@ from worklogger.domain.shared.result import Result
 
 
 class IcsCalendarImporter:
-    def __init__(self, *, max_bytes: int = ICS_MAX_BYTES) -> None:
+    def __init__(self, *, max_bytes: int = ICS_MAX_BYTES, max_events: int = 10_000,
+                 local_timezone: tzinfo | None = None) -> None:
         self._max_bytes = int(max_bytes)
+        self._max_events = int(max_events)
+        self._timezone = local_timezone
 
-    def read_events(
-        self,
-        source: Path,
-        *,
-        user_id: int,
-    ) -> Result[tuple[CalendarEvent, ...]]:
-        source = Path(source)
+    def read_events(self, source: Path, *, user_id: int) -> Result[tuple[CalendarEvent, ...]]:
         try:
-            if source.stat().st_size > self._max_bytes:
-                return Result.failure(
-                    ValidationError("ics_file_too_large", "ics_file_too_large")
-                )
-            raw = source.read_text(encoding="utf-8", errors="replace")
-        except OSError as exc:
-            return Result.failure(
-                InfrastructureError(
-                    "ics_read_failed",
-                    "ics_read_failed",
-                    {"reason": str(exc)},
-                )
-            )
-        return Result.success(_parse_ics(raw, user_id=user_id, source=str(source)))
+            with Path(source).open("rb") as handle:
+                raw = handle.read(self._max_bytes + 1)
+        except OSError:
+            return Result.failure(InfrastructureError("ics_read_failed", "ics_read_failed"))
+        if len(raw) > self._max_bytes:
+            return Result.failure(ValidationError("ics_file_too_large", "ics_file_too_large"))
+        try:
+            calendar = Calendar.from_ical(raw)
+            if calendar.name != "VCALENDAR":
+                raise ValueError("ics_import_failed")
+            for component in calendar.walk("VEVENT"):
+                rule = component.get("RRULE")
+                if rule and "COUNT" not in rule and "UNTIL" not in rule:
+                    raise ValueError("ics_recurrence_unbounded")
+                if component.errors or "DTSTART" not in component:
+                    raise ValueError("ics_import_failed")
+                for field in ("DTSTART", "DTEND"):
+                    value = component.get(field)
+                    if value is not None and value.params.get("TZID") and isinstance(value.dt, datetime) and value.dt.tzinfo is None:
+                        raise ValueError("ics_import_failed")
+            zone = self._timezone or get_localzone()
+            events = []
+            for index, component in enumerate(recurring_ical_events.of(calendar).all()):
+                if index >= self._max_events:
+                    raise ValueError("ics_file_too_large")
+                if str(component.get("STATUS", "")).upper() == "CANCELLED":
+                    continue
+                for event in _daily_events(component, user_id, Path(source).name, zone):
+                    events.append(event)
+                    if len(events) > self._max_events:
+                        raise ValueError("ics_file_too_large")
+            return Result.success(tuple(events))
+        except ValueError as exc:
+            code = str(exc) if str(exc) in {"ics_recurrence_unbounded", "ics_file_too_large"} else "ics_import_failed"
+            return Result.failure(ValidationError(code, code))
+        except Exception:
+            return Result.failure(ValidationError("ics_import_failed", "ics_import_failed"))
 
 
-def _parse_ics(raw: str, *, user_id: int, source: str) -> tuple[CalendarEvent, ...]:
-    unfolded = re.sub(r"\r?\n[ \t]", "", raw)
-    events: list[CalendarEvent] = []
-    for block in re.split(r"BEGIN:VEVENT", unfolded, flags=re.IGNORECASE)[1:]:
-        end = re.search(r"END:VEVENT", block, re.IGNORECASE)
-        if end:
-            block = block[: end.start()]
-        properties = _properties(block)
-        summary = _unescape(properties.get("SUMMARY", ("", ""))[1]).strip()
-        if not summary:
-            continue
-        start, all_day = _parse_dt(*properties.get("DTSTART", ("", "")))
-        end_dt, _end_all_day = _parse_dt(*properties.get("DTEND", ("", "")))
-        if start is None:
-            continue
-        day = start if isinstance(start, date) and not isinstance(start, datetime) else start.date()
-        events.append(
-            CalendarEvent(
-                id=None,
-                user_id=user_id,
-                day=day,
-                summary=summary,
-                start_time=None if all_day else _time_text(start),
-                end_time=None if all_day else _time_text(end_dt),
-                description=_unescape(properties.get("DESCRIPTION", ("", ""))[1]),
-                location=_unescape(properties.get("LOCATION", ("", ""))[1]),
-                all_day=all_day,
-                source_file=source,
-            )
-        )
-    return tuple(events)
-
-
-def _properties(block: str) -> dict[str, tuple[str, str]]:
-    properties: dict[str, tuple[str, str]] = {}
-    for line in block.splitlines():
-        if ":" not in line:
-            continue
-        key_part, _separator, value = line.partition(":")
-        parts = key_part.split(";")
-        key = parts[0].strip().upper()
-        params = ";".join(part.strip().upper() for part in parts[1:])
-        properties[key] = (params, value.strip())
-    return properties
-
-
-def _parse_dt(params: str, value: str) -> tuple[datetime | date | None, bool]:
-    cleaned = re.sub(r"Z$", "", value.strip())
-    all_day = "VALUE=DATE" in params or ("T" not in cleaned and len(cleaned) >= 8)
+def _daily_events(component, user_id: int, source: str, zone: tzinfo):
+    summary = str(component.get("SUMMARY", "")).strip()
+    if not summary:
+        return
+    start = component.decoded("DTSTART")
+    end = component.decoded("DTEND", start)
+    all_day = not isinstance(start, datetime)
     if all_day:
-        try:
-            return datetime.strptime(cleaned[:8], "%Y%m%d").date(), True
-        except ValueError:
-            return None, False
-    for fmt in ("%Y%m%dT%H%M%S", "%Y%m%dT%H%M"):
-        try:
-            return datetime.strptime(cleaned, fmt), False
-        except ValueError:
-            pass
-    return None, False
-
-
-def _time_text(value: datetime | date | None) -> str | None:
-    if not isinstance(value, datetime):
-        return None
-    return value.strftime("%H:%M")
-
-
-def _unescape(value: str) -> str:
-    return (
-        value.replace("\\n", "\n")
-        .replace("\\,", ",")
-        .replace("\\;", ";")
-        .replace("\\\\", "\\")
-    )
+        start_day, stop_day = start, end
+        if stop_day <= start_day:
+            stop_day = start_day + timedelta(days=1)
+    else:
+        start = start.astimezone(zone) if start.tzinfo else start.replace(tzinfo=zone)
+        end = end.astimezone(zone) if end.tzinfo else end.replace(tzinfo=zone)
+        if end < start:
+            raise ValueError("ics_import_failed")
+        start_day = start.date()
+        stop_day = end.date() + (timedelta(days=1) if end.time() != time.min or end == start else timedelta())
+    day = start_day
+    while day < stop_day:
+        yield CalendarEvent(
+            id=None, user_id=user_id, day=day, summary=summary,
+            start_time=None if all_day else (start.strftime("%H:%M") if day == start.date() else "00:00"),
+            end_time=None if all_day else (end.strftime("%H:%M") if day == end.date() else "24:00"),
+            description=str(component.get("DESCRIPTION", "")),
+            location=str(component.get("LOCATION", "")), all_day=all_day, source_file=source,
+        )
+        day += timedelta(days=1)

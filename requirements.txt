@@ -4,6 +4,8 @@ holidays
 cryptography
 keyring
 certifi
+icalendar>=6.1,<8
+recurring-ical-events>=3.8,<4
 PyJWT>=2.8.0
 
 # -- local model inference --

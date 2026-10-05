@@ -71,7 +71,17 @@ class SQLiteCalendarEventRepository:
         events: tuple[CalendarEvent, ...],
     ) -> int:
         count = 0
+        existing = {
+            tuple(row) for row in connection.execute(
+                "SELECT date, start_time, end_time, summary, description, location, all_day FROM calendar_events WHERE user_id=?",
+                (user_id,),
+            )
+        }
         for event in events:
+            identity = (event.day.isoformat(), event.start_time, event.end_time, event.summary,
+                        event.description, event.location, int(event.all_day))
+            if identity in existing:
+                continue
             connection.execute(
                 """
                 INSERT INTO calendar_events(
@@ -100,6 +110,7 @@ class SQLiteCalendarEventRepository:
                 ),
             )
             count += 1
+            existing.add(identity)
         return count
 
     @staticmethod

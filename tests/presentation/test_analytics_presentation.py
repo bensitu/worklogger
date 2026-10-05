@@ -5,15 +5,18 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+import unicodedata
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication
+from PySide6.QtPdf import QPdfDocument
 
 from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
 from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler, GetAnalyticsDashboardHandler
 from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
 from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.analytics.models import ChartDataBundle
 from worklogger.infrastructure.export import AnalyticsCsvExporter, AnalyticsPdfExporter
 from worklogger.infrastructure.i18n import set_language
 from worklogger.presentation.analytics import AnalyticsDialog
@@ -61,9 +64,31 @@ class MemoryWorkLogRepository:
 
 
 class AnalyticsPresentationTests(unittest.TestCase):
+    def test_pdf_export_preserves_unicode_and_all_summary_rows(self):
+        bundle = ChartDataBundle(bar_data=tuple((f"Work {index}", 8.0) for index in range(100)), line_data=(),
+                                 leave_indices=(), leave_line_data=(), leave_hours_data=())
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "summary.pdf"
+            exported = AnalyticsPdfExporter().export_bundle(path, bundle, title="Work / 工作 / 勤務")
+            self.assertTrue(exported.ok, exported.error)
+            document = QPdfDocument()
+            self.assertEqual(document.load(str(path)), QPdfDocument.Error.None_)
+            try:
+                self.assertGreater(document.pageCount(), 1)
+                text = "\n".join(document.getAllText(page).text() for page in range(document.pageCount()))
+            finally:
+                document.close()
+                del document
+            normalized = "".join(unicodedata.normalize("NFKC", text).split())
+            self.assertIn("工作", normalized)
+            self.assertIn("勤務", normalized)
+            self.assertIn("Work99", normalized)
+
     @classmethod
     def setUpClass(cls) -> None:
         cls._app = _app()
+        from worklogger.presentation.theme.fonts import install_bundled_fonts
+        install_bundled_fonts()
 
     def test_analytics_dialog_loads_chart_and_exports_csv_pdf(self) -> None:
         repository = MemoryWorkLogRepository()

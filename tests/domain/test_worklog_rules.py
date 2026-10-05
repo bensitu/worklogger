@@ -21,6 +21,7 @@ class WorkLogRuleTests(unittest.TestCase):
         self.assertEqual(parse_time("16:30"), "16:30")
         self.assertEqual(parse_time("9:3"), "09:03")
         self.assertIsNone(parse_time("24:00"))
+        self.assertIsNone(parse_time("²"))
 
     def test_overnight_calculation_and_shift_datetimes(self) -> None:
         self.assertTrue(is_overnight_shift("22:00", "09:00"))
@@ -97,6 +98,13 @@ class WorkLogRuleTests(unittest.TestCase):
             )
         )
         self.assertEqual(full_day_leave.leave_hours(standard_hours=8.0), 8.0)
+
+    def test_nonfinite_breaks_and_invalid_supplied_times_are_rejected(self):
+        for value in (float("nan"), float("inf"), -float("inf"), 1e9):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                normalize_work_log(WorkLog(1, date(2026, 4, 20), break_hours=value))
+        with self.assertRaises(ValueError):
+            normalize_work_log(WorkLog(1, date(2026, 4, 20), start_time="invalid", end_time="invalid"))
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ from PySide6.QtWidgets import QApplication, QDialog, QWidget
 
 from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandler
 from worklogger.app.use_cases.updates import UpdateCheckResult
+from worklogger.app.use_cases.data_portability import WorkLogCsvImportPreview
 from worklogger.domain.auth.models import User
 from worklogger.domain.shared.result import Result
 from worklogger.domain.shared.errors import CancellationError, InfrastructureError
@@ -124,7 +125,10 @@ class FakeDataManagementViewModel:
             )
         )
 
-    def import_csv(self, source: Path) -> Result[DataManagementActionState]:
+    def preview_csv(self, source: Path):
+        return Result.success(WorkLogCsvImportPreview(()))
+
+    def import_csv(self, source: Path, **kwargs) -> Result[DataManagementActionState]:
         self.calls.append(("csv_import", Path(source)))
         return Result.success(
             DataManagementActionState(
@@ -317,6 +321,7 @@ class SettingsWorkflowTests(unittest.TestCase):
             restore_source_provider=lambda _parent: Path("backup.db"),
             csv_destination_provider=lambda _parent: Path("worklog.csv"),
             csv_source_provider=lambda _parent: Path("import.csv"),
+            csv_confirmation=lambda _parent, _preview: True,
             ics_source_provider=lambda _parent: Path("calendar.ics"),
             ics_destination_provider=lambda _parent: Path("worklog.ics"),
             restore_confirmation=lambda _parent: True,

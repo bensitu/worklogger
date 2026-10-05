@@ -304,6 +304,21 @@ msgstr "カスタム"
 msgid "WorkLogger is already running."
 msgstr "WorkLogger は既に起動しています。"
 
+msgid "Work {hours:.1f}h"
+msgstr "勤務 {hours:.1f}h"
+
+msgid "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
+msgstr "{count} 件を取り込み、既存の {existing} 件を置き換え、無効な {errors} 行をスキップしますか？"
+
+msgid "The CSV file exceeds the supported size or row limit."
+msgstr "CSV ファイルが対応するサイズまたは行数の上限を超えています。"
+
+msgid "Some dates already have records. Review the import and confirm replacement."
+msgstr "一部の日付には記録があります。取り込み内容を確認し、置き換えを承認してください。"
+
+msgid "Recurring events must have an end date or occurrence count."
+msgstr "繰り返し予定には終了日または回数を指定してください。"
+
 msgid "DESKTOP START FAILED"
 msgstr "デスクトップアプリの起動に失敗"
 

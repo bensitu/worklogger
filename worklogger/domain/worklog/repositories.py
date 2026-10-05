@@ -21,6 +21,10 @@ class WorkLogRepository(Protocol):
     def save(self, work_log: WorkLog) -> None:
         ...
 
+    def import_many(self, rows: tuple[WorkLog, ...], *, overwrite: bool = False) -> None:
+        """Save an import atomically, rejecting existing dates unless explicitly allowed."""
+        ...
+
     def remove(self, user_id: int, day: date) -> None:
         ...
 

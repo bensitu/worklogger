@@ -304,6 +304,21 @@ msgstr "사용자 지정"
 msgid "WorkLogger is already running."
 msgstr "WorkLogger가 이미 실행 중입니다."
 
+msgid "Work {hours:.1f}h"
+msgstr "근무 {hours:.1f}h"
+
+msgid "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
+msgstr "{count}개 기록을 가져오고 기존 기록 {existing}개를 교체하며 잘못된 행 {errors}개를 건너뛸까요?"
+
+msgid "The CSV file exceeds the supported size or row limit."
+msgstr "CSV 파일이 지원되는 크기 또는 행 수 제한을 초과했습니다."
+
+msgid "Some dates already have records. Review the import and confirm replacement."
+msgstr "일부 날짜에 기록이 이미 있습니다. 가져올 내용을 검토하고 교체를 확인하세요."
+
+msgid "Recurring events must have an end date or occurrence count."
+msgstr "반복 일정에는 종료 날짜 또는 반복 횟수가 필요합니다."
+
 msgid "DESKTOP START FAILED"
 msgstr "데스크톱 앱 시작 실패"
 

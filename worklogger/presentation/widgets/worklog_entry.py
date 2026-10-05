@@ -347,7 +347,7 @@ class WorkLogEntryPanel(QWidget):
             self.draft_changed.emit(draft)
 
     def _sync_auto_from_form(self, form: WorkLogEntryForm) -> None:
-        if self._applying_auto_state:
+        if self._applying_auto_state or self._auto_record_view_model.state().active:
             return
         self._auto_record_view_model.load_existing(
             day=form.day,
@@ -376,6 +376,7 @@ class WorkLogEntryPanel(QWidget):
             QMessageBox.warning(self, _("Auto Record"), display_error_message(result.error))
             return
         draft = self._draft_from_auto_values(
+            day=result.value.day,
             start_time=result.value.start_time,
             end_time=result.value.end_time,
             break_hours=result.value.break_hours,
@@ -408,6 +409,7 @@ class WorkLogEntryPanel(QWidget):
 
     def _apply_auto_state(self, state: AutoRecordState) -> None:
         draft = self._draft_from_auto_values(
+            day=state.day,
             start_time=state.start_time,
             end_time=state.end_time,
             break_hours=state.break_hours,
@@ -426,6 +428,7 @@ class WorkLogEntryPanel(QWidget):
     def _draft_from_auto_values(
         self,
         *,
+        day: date | None = None,
         start_time: str | None,
         end_time: str | None,
         break_hours: float,
@@ -435,7 +438,7 @@ class WorkLogEntryPanel(QWidget):
         if self._form is None:
             return None
         return WorkLogEntryDraft(
-            day=self._form.day,
+            day=day or self._form.day,
             start_time=start_time,
             end_time=end_time,
             break_hours=break_hours,

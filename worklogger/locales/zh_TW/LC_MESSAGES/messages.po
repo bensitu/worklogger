@@ -304,6 +304,21 @@ msgstr "自訂"
 msgid "WorkLogger is already running."
 msgstr "WorkLogger 已在執行。"
 
+msgid "Work {hours:.1f}h"
+msgstr "工作 {hours:.1f}h"
+
+msgid "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
+msgstr "匯入 {count} 筆記錄，取代 {existing} 筆現有記錄，並略過 {errors} 個無效列？"
+
+msgid "The CSV file exceeds the supported size or row limit."
+msgstr "CSV 檔案超出支援的大小或列數限制。"
+
+msgid "Some dates already have records. Review the import and confirm replacement."
+msgstr "部分日期已有記錄。請檢查匯入內容並確認是否取代。"
+
+msgid "Recurring events must have an end date or occurrence count."
+msgstr "重複事件必須設定結束日期或重複次數。"
+
 msgid "DESKTOP START FAILED"
 msgstr "桌面應用程式啟動失敗"
 

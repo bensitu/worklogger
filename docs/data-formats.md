@@ -20,17 +20,23 @@ date,start,end,break,note,work_type
 | `work_type` | `normal`, `remote`, `business_trip`, `paid_leave`, `comp_leave`, `sick_leave` |
 
 Import also accepts `d` for the date and `lunch` for the break. Missing break values
-default to zero; missing or unrecognized work types normalize to `normal`. The
+default to zero; missing work types default to `normal`, and unknown types are
+reported as invalid rows. Both ISO dates and year-first slash dates are accepted. The
 importer trims field boundaries, so it is not a byte-for-byte archive of note text.
 
 Each valid row is normalized using the work-log rules and saved to the currently
-selected account. Existing dates are updated. Invalid rows are reported with
-their row numbers; other valid rows can still be saved. Import is not an atomic
-all-or-nothing operation. Back up before importing over existing records.
+selected account. The import preview shows valid rows, existing dates, and invalid
+rows before confirmation. Valid rows are written in one transaction; storage
+failure rolls back the entire batch. Existing dates require explicit replacement
+permission. Duplicate dates in the file are reported as invalid rows. Files are
+limited to 10 MiB and 50,000 rows. UTF-8 is preferred, with the selected language's
+legacy Windows encoding used when UTF-8 decoding fails. The adapter also accepts
+an explicit encoding. Invalid encoding and CSV syntax return an import error.
 
-CSV files can contain user-supplied text. WorkLogger does not neutralize spreadsheet
-formula syntax; inspect untrusted exports before opening them in a spreadsheet
-application that evaluates formulas.
+Spreadsheet-sensitive text is prefixed with an apostrophe to prevent formula
+execution. The prefix is part of the exported text. Generated files replace their
+destination atomically after successful writing; failed exports preserve the
+existing destination.
 
 ## iCalendar
 
@@ -40,17 +46,17 @@ records are omitted. Overnight shifts end on the following date. Event summaries
 include worked hours, and descriptions include up to 500 characters of the note.
 Event times are local floating times, without a timezone definition.
 
-Calendar import reads files up to 10 MiB. It supports unfolded `VEVENT` entries
-with a valid start date and nonempty summary, optional end time, description,
-location, and date-only all-day events. Unsupported or incomplete events may be
-skipped. The source filename is stored with each imported event.
+Calendar import uses `icalendar` and `recurring-ical-events`. Files are limited to
+10 MiB and 10,000 expanded daily entries. UTC and named timezones are converted to
+system local time; floating times retain their local clock values. Event properties
+are kept separate from nested alarm properties. Only the source filename is stored.
 
-The importer is a limited interchange reader, not a full calendar engine:
+Imports remain independent calendar records, not work-log entries or hours worked:
 
-- Recurrence rules and exception expansion are not implemented.
-- Timezone identifiers and UTC suffixes are not converted to local time.
-- Multi-day events are represented on their start date rather than expanded.
-- Imports are independent calendar records, not work-log entries or hours worked.
+- Finite recurrence rules, recurrence exclusions, and cancelled occurrences are handled.
+- A recurrence without an end date or occurrence count is rejected, not truncated.
+- Multi-day events expand across occupied dates; an all-day end date is exclusive.
+- Replacement is transactional. Appending deduplicates matching date, time, and content.
 
 Do not use this import/export pair as a lossless round trip for an arbitrary
 calendar provider. Review a small representative file before importing a large one.
@@ -73,12 +79,10 @@ label,bar_value,line_value,leave_hours,leave_marker
 Numeric values use two decimal places, and the leave marker is `1` or `0`.
 The file uses UTF-8 with a byte-order mark.
 
-The PDF adapter writes a single A4 text page, limited to 45 lines including the
-title and spacing. It does not include a rendered chart. It uses Helvetica and
-Latin-1 replacement encoding without embedded fonts, so characters outside that
-encoding, including Japanese, Korean, and Chinese, are not preserved. Use CSV
-when localized labels must remain intact. No external PDF application is required
-to generate the file.
+The PDF adapter uses Qt's text and PDF rendering with Unicode text, font fallback,
+and automatic A4 pagination. It requires the desktop GUI application to be
+initialized, but does not open a window or use an external PDF application.
+It contains the complete text summary, not a rendered chart.
 
 ## Database Files
 

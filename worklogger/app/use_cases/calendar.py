@@ -16,7 +16,7 @@ from worklogger.domain.calendar.repositories import (
     CalendarEventRepository,
     HolidayProvider,
 )
-from worklogger.domain.shared.errors import ValidationError
+from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 
 
@@ -95,7 +95,9 @@ class ImportCalendarEventsHandler:
             return Result.failure(
                 events.error or ValidationError("ics_import_failed", "ics_import_failed")
             )
-        if command.replace_existing:
-            self._repository.clear(command.user_id)
-        imported = self._repository.add_many(command.user_id, events.value)
+        try:
+            operation = self._repository.replace_all if command.replace_existing else self._repository.add_many
+            imported = operation(command.user_id, events.value)
+        except Exception:
+            return Result.failure(InfrastructureError("ics_import_failed", "ics_import_failed"))
         return Result.success(imported)

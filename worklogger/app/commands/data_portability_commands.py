@@ -10,4 +10,5 @@ from pathlib import Path
 class ImportWorkLogsCsvCommand:
     user_id: int
     source_path: Path
+    overwrite_existing: bool = False
 

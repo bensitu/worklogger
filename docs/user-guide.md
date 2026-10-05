@@ -49,6 +49,9 @@ Clock In records the current local date and time in the editor. Clock Out fills
 the end time; choose Save to persist the completed record. Break controls measure a break or
 add 15 minutes; measured break totals are rounded to quarter hours when ended.
 The configured default break applies when starting a new record.
+Clock Out rejects invalid or excessive elapsed intervals rather than wrapping
+them into a shorter shift. The active record keeps its original date when the
+calendar selection changes.
 
 The active timer is application state, not a background service. Do not assume an
 unfinished entry survives closing the application or restarting the computer.
@@ -121,9 +124,8 @@ period (right, colored bar), using a shared scale. Hover over the chart to read
 both values. Zero overtime produces no filled bar.
 
 CSV and PDF exports contain computed analytics. They are not database backups and
-the analytics CSV is not the same format as the work-log import CSV. PDF currently
-provides a single-page text summary, not the chart, and does not preserve all
-localized characters. See [export limitations](data-formats.md).
+the analytics CSV is not the same format as the work-log import CSV. PDF provides
+a paginated Unicode text summary, not the chart. See [data formats](data-formats.md).
 
 ## Settings
 
