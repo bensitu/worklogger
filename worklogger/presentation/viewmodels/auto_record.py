@@ -331,19 +331,21 @@ class AutoRecordViewModel:
         return self._set_state(updated)
 
     def set_note(self, note: str) -> AutoRecordState:
-        updated = replace(self._state, note=str(note or ""))
-        if updated != self._state:
-            self._set_state(updated)
+        self.update_details(note=note, work_type=self._state.work_type)
         return self._state
 
     def set_work_type(self, work_type: str) -> Result[AutoRecordState]:
+        return self.update_details(note=self._state.note, work_type=work_type)
+
+    def update_details(self, *, note: str, work_type: str) -> Result[AutoRecordState]:
         try:
             normalized = normalize_work_type(work_type).value
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
-        if normalized == self._state.work_type:
+        updated = replace(self._state, note=str(note or ""), work_type=normalized)
+        if updated == self._state:
             return Result.success(self._state)
-        return self._set_state(replace(self._state, work_type=normalized))
+        return self._set_state(updated)
 
     def _start_break(self, now: datetime, *, resume: bool) -> Result[AutoRecordState]:
         if self._state.break_active:

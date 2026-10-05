@@ -165,12 +165,22 @@ class WorkLogEntryPanel(QWidget):
             unit_layout.addWidget(unit_label)
         form.addRow(_("Break") if compact else _("Break (h)"), self.break_input)
 
+        details_layout = QVBoxLayout()
+        details_layout.setSpacing(4 if compact else 8)
+        details_form = QFormLayout()
+        details_form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        details_form.setRowWrapPolicy(form.rowWrapPolicy())
+        if compact:
+            details_form.setVerticalSpacing(2)
+        details_layout.addLayout(details_form)
+        root.addLayout(details_layout)
+
         self.work_type_combo = QComboBox()
         self.work_type_combo.setObjectName("work_type_combo")
         for work_type in WorkType:
             self.work_type_combo.addItem(_work_type_label(work_type), work_type.value)
         self.work_type_combo.currentIndexChanged.connect(self._emit_draft_changed)
-        form.addRow(_("Work type"), self.work_type_combo)
+        details_form.addRow(_("Work type"), self.work_type_combo)
 
         self.note_input = QTextEdit()
         self.note_input.setObjectName("note_text_edit")
@@ -188,12 +198,12 @@ class WorkLogEntryPanel(QWidget):
             lambda expanded: self.note_toggle_button.setIcon(ui_icon("chevron-up" if expanded else "chevron-down"))
         )
         if compact:
-            manual_layout.addWidget(self.note_toggle_button, 0, Qt.AlignmentFlag.AlignLeft)
-            manual_layout.addWidget(self.note_input)
+            details_layout.addWidget(self.note_toggle_button, 0, Qt.AlignmentFlag.AlignLeft)
+            details_layout.addWidget(self.note_input)
             self.note_input.hide()
         else:
             self.note_toggle_button.hide()
-            form.addRow(_("Notes"), self.note_input)
+            details_form.addRow(_("Notes"), self.note_input)
 
         self.auto_tab = QWidget()
         self.auto_tab.setObjectName("worklog_auto_tab_widget")
@@ -226,6 +236,7 @@ class WorkLogEntryPanel(QWidget):
         auto_layout.addWidget(self.auto_status_label)
         auto_layout.addStretch(1)
         self.time_tabs.addTab(self.auto_tab, _("Auto Record"))
+        self.time_tabs.currentChanged.connect(self._entry_mode_changed)
         if compact:
             self.time_tabs.currentChanged.connect(self._update_tab_size_policy)
             self._update_tab_size_policy()
@@ -288,6 +299,11 @@ class WorkLogEntryPanel(QWidget):
             page.layout().invalidate()
             page.updateGeometry()
         self.time_tabs.updateGeometry()
+
+    def _entry_mode_changed(self, index: int) -> None:
+        state = self._auto_record_view_model.state()
+        if index == 1 and (state.active or state.pending_save):
+            self._apply_auto_state(state)
 
     def set_form(self, form: WorkLogEntryForm) -> None:
         self._form = form
@@ -357,8 +373,7 @@ class WorkLogEntryPanel(QWidget):
         state = self._auto_record_view_model.state()
         if state.active or state.pending_save:
             if not self._needs_restore and form.day == state.day:
-                self._auto_record_view_model.set_note(form.note)
-                self._auto_record_view_model.set_work_type(form.work_type)
+                self._auto_record_view_model.update_details(note=form.note, work_type=form.work_type)
             self._refresh_auto_state()
             return
         self._auto_record_view_model.load_existing(

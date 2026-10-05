@@ -24,7 +24,7 @@ from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.calendar.repositories import CalendarEventRepository
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.models import WorkLog
+from worklogger.domain.worklog.models import WorkLog, WorkType
 from worklogger.presentation.shell import (
     AppWindow,
     AppWindowConfig,
@@ -288,14 +288,26 @@ class AppWindowTests(unittest.TestCase):
         window = _window(repository, confirm_discard_changes=lambda: True)
         panel = window.entry_panel
         panel._auto_record_view_model = AutoRecordViewModel(clock=lambda: current)
+        window.show()
         try:
             self.assertTrue(window.refresh())
             panel.time_tabs.setCurrentIndex(1)
+            self._app.processEvents()
+            self.assertTrue(panel.work_type_combo.isVisible())
+            panel.note_toggle_button.setChecked(True)
+            self.assertTrue(panel.note_input.isVisible())
             panel.clock_in_button.click()
             current = datetime(2026, 4, 20, 10, 0)
             panel.break_button.click()
             self.assertTrue(panel._auto_record_view_model.state().break_active)
             self.assertTrue(panel.auto_timer.isActive())
+            panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData(WorkType.REMOTE.value))
+            panel.note_input.setPlainText("Project planning")
+            panel.time_tabs.setCurrentIndex(0)
+            panel.time_tabs.setCurrentIndex(1)
+            self.assertEqual(panel.note_input.toPlainText(), "Project planning")
+            self.assertEqual(panel.work_type_combo.currentData(), WorkType.REMOTE.value)
+            self.assertTrue(panel._auto_record_view_model.state().break_active)
             current = datetime(2026, 4, 20, 10, 30)
             panel._refresh_auto_state()
             self.assertIn("90m", panel.break_button.text())
@@ -312,6 +324,8 @@ class AppWindowTests(unittest.TestCase):
             self.assertEqual((record.start_time, record.end_time), ("09:00", "18:00"))
             self.assertEqual(record.break_hours, 1.75)
             self.assertEqual(record.worked_hours(), 7.25)
+            self.assertEqual(record.work_type, WorkType.REMOTE)
+            self.assertEqual(record.note, "Project planning")
             self.information.assert_not_called()
         finally:
             window.close()
