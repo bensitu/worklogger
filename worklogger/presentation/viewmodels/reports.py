@@ -109,6 +109,7 @@ class ReportEditorViewModel:
         language: str = "en_US",
         standard_work_hours: float = 8.0,
         templates: TemplateProvider | None = None,
+        week_start_monday: bool = False,
     ) -> None:
         self._user_id = user_id
         self._generate_handler = generate_handler
@@ -122,6 +123,10 @@ class ReportEditorViewModel:
         self._language = language
         self._standard_work_hours = standard_work_hours
         self._templates = templates
+        self._week_start_monday = week_start_monday
+
+    def set_week_start_monday(self, enabled: bool) -> None:
+        self._week_start_monday = bool(enabled)
 
     @property
     def rewrite_available(self) -> bool:
@@ -146,7 +151,7 @@ class ReportEditorViewModel:
 
     def load(self, report_type: str, selected_day: date) -> Result[ReportEditorState]:
         try:
-            period = _period_for(report_type, selected_day)
+            period = _period_for(report_type, selected_day, self._week_start_monday)
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
         saved = self._get_report_handler.handle(
@@ -286,12 +291,12 @@ class ReportEditorViewModel:
         return Result.success(result.value.content)
 
 
-def _period_for(report_type: str, selected_day: date):
+def _period_for(report_type: str, selected_day: date, week_start_monday: bool = False):
     normalized = str(report_type or "").strip().lower()
     if normalized == "daily":
         return daily_period(selected_day)
     if normalized == "weekly":
-        return weekly_period(selected_day)
+        return weekly_period(selected_day, week_start_monday)
     if normalized == "monthly":
         return monthly_period(selected_day.year, selected_day.month)
     raise ValueError("invalid_report_type")

@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date
 import json
 import unittest
+from unittest.mock import Mock
 
 from worklogger.app.commands.ai_commands import SendAiChatMessageCommand
 from worklogger.app.queries.ai_queries import BuildAiContextQuery
@@ -22,6 +23,7 @@ from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.notes.models import DailyNote
 from worklogger.domain.quicklog.models import QuickLog
 from worklogger.domain.shared.result import Result
+from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.worklog.models import WorkLog, WorkType
 from worklogger.infrastructure.ai.external import OpenAICompatibleGateway
 from worklogger.infrastructure.ai.router import RoutingAIGateway
@@ -46,6 +48,9 @@ class FakeSettings:
 
 
 class FakeWorkLogs:
+    def list_range(self, user_id, start, end):
+        return Result.success(tuple(record for record in self.handle(GetAllWorkLogsQuery(user_id)).value if start <= record.day <= end))
+
     def handle(self, query: GetAllWorkLogsQuery) -> Result[tuple[WorkLog, ...]]:
         return Result.success(
             (
@@ -63,6 +68,9 @@ class FakeWorkLogs:
 
 
 class FakeNotes:
+    def list_range(self, user_id, start, end):
+        return Result.success((DailyNote(user_id, start, "private note"),))
+
     def handle(self, query: GetDailyNoteQuery) -> Result[DailyNote]:
         return Result.success(
             DailyNote(
@@ -123,6 +131,26 @@ class FakeHttpResponse:
 
 
 class AiUseCaseTests(unittest.TestCase):
+    def test_context_reads_only_allowed_ranges_and_rejects_unavailable_settings(self) -> None:
+        settings = FakeSettings({AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY: "0",
+                                 AI_PRIVACY_INCLUDE_CALENDAR_SETTING_KEY: "0",
+                                 AI_PRIVACY_INCLUDE_QUICK_LOGS_SETTING_KEY: "0"})
+        logs = Mock(wraps=FakeWorkLogs())
+        notes, quick_logs, calendar = Mock(), Mock(), Mock()
+        handler = BuildAiContextHandler(work_logs_handler=logs, note_handler=notes,
+            quick_logs_handler=quick_logs, calendar_events_handler=calendar, settings_handler=settings)
+        query = BuildAiContextQuery(1, date(2026, 5, 4), "weekly")
+        self.assertTrue(handler.handle(query).ok)
+        logs.list_range.assert_called_once_with(1, date(2026, 5, 3), date(2026, 5, 9))
+        notes.list_range.assert_not_called()
+        quick_logs.handle.assert_not_called()
+        calendar.handle.assert_not_called()
+        settings.handle = Mock(return_value=Result.failure(InfrastructureError("settings_load_failed", "settings_load_failed")))
+        self.assertFalse(handler.handle(query).ok)
+        self.assertEqual(logs.list_range.call_count, 1)
+        self.assertEqual(AiChatHandler(FakeGateway()).handle(SendAiChatMessageCommand(1, "hello"),
+            cancellation_token=type("Token", (), {"is_cancelled": True})()).error.code, "ai_chat_cancelled")
+
     def test_chat_handler_bounds_history_and_builds_request(self) -> None:
         gateway = FakeGateway("assistant reply")
         handler = AiChatHandler(gateway, max_history_messages=2)

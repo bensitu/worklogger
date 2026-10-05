@@ -129,6 +129,11 @@ class AppWindow(QMainWindow):
         reports_model = getattr(reports_workflow, "view_model", None)
         if hasattr(reports_model, "set_standard_work_hours"):
             reports_model.set_standard_work_hours(self._config.standard_work_hours)
+        if hasattr(reports_model, "set_week_start_monday"):
+            reports_model.set_week_start_monday(self._config.calendar_options.week_start_monday)
+        analytics_model = getattr(analytics_workflow, "view_model", None)
+        if hasattr(analytics_model, "set_week_start_monday"):
+            analytics_model.set_week_start_monday(self._config.calendar_options.week_start_monday)
         self._residency_controller = residency_controller
         self._theme_engine = theme_engine or ThemeEngine()
         self._job_runner = job_runner
@@ -214,6 +219,11 @@ class AppWindow(QMainWindow):
         reports_model = getattr(self._reports_workflow, "view_model", None)
         if hasattr(reports_model, "set_standard_work_hours"):
             reports_model.set_standard_work_hours(state.standard_work_hours)
+        if hasattr(reports_model, "set_week_start_monday"):
+            reports_model.set_week_start_monday(state.week_start_monday)
+        analytics_model = getattr(self._analytics_workflow, "view_model", None)
+        if hasattr(analytics_model, "set_week_start_monday"):
+            analytics_model.set_week_start_monday(state.week_start_monday)
         self.apply_theme()
         self._refresh_calendar()
         self._refresh_stats()

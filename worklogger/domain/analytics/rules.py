@@ -9,6 +9,7 @@ from collections.abc import Callable, Iterable, Sequence
 from worklogger.config.constants import DEFAULT_LEAVE_HOURS
 from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBundle, MonthStats
 from worklogger.domain.worklog.models import WorkLog
+from worklogger.domain.reporting.periods import weekly_period
 
 
 def month_stats(month_rows: Iterable[WorkLog], standard_work_hours: float) -> MonthStats:
@@ -56,6 +57,7 @@ def dashboard_data(
     scope: str,
     standard_hours: float,
     monthly_target: float,
+    week_start_monday: bool = False,
 ) -> AnalyticsDashboard:
     start, end = analytics_period(year, month, scope)
     month_count = end.month - start.month + 1
@@ -68,8 +70,8 @@ def dashboard_data(
 
     if scope == "monthly":
         by_day = {row.day: row for row in current}
-        trend = monthly_chart_data(start, end, "hours", True, by_day.get, standard_leave_hours=standard_hours)
-        average = monthly_chart_data(start, end, "average", True, by_day.get, standard_leave_hours=standard_hours)
+        trend = monthly_chart_data(start, end, "hours", True, by_day.get, standard_leave_hours=standard_hours, week_start_monday=week_start_monday)
+        average = monthly_chart_data(start, end, "average", True, by_day.get, standard_leave_hours=standard_hours, week_start_monday=week_start_monday)
     else:
         labels, totals, counts, leaves, leave_counts = [], [], [], [], []
         for selected_month in range(start.month, end.month + 1):
@@ -160,12 +162,13 @@ def monthly_chart_data(
     record_getter: Callable[[date], WorkLog | None],
     *,
     standard_leave_hours: float = DEFAULT_LEAVE_HOURS,
+    week_start_monday: bool = False,
 ) -> ChartDataBundle:
     if end < start:
         return ChartDataBundle((), (), frozenset(), (), ())
 
     first_weekday, days = monthrange(start.year, start.month)
-    first = (first_weekday + 1) % 7
+    first = first_weekday if week_start_monday else (first_weekday + 1) % 7
     max_row = (days + first - 1) // 7
     labels = [f"W{row + 1}" for row in range(max_row + 1)]
     totals = [0.0 for _label in labels]
@@ -207,12 +210,13 @@ def quarterly_chart_data(
     include_leaves: bool,
     *,
     standard_leave_hours: float = DEFAULT_LEAVE_HOURS,
+    week_start_monday: bool = False,
 ) -> ChartDataBundle:
     labels = [f"Q{quarter}" for quarter in range(1, 5)]
     totals = [0.0 for _label in labels]
-    unit_sets: list[set[tuple[int, int]]] = [set() for _label in labels]
+    unit_sets: list[set[date]] = [set() for _label in labels]
     leave_hours = [0.0 for _label in labels]
-    leave_unit_sets: list[set[tuple[int, int]]] = [set() for _label in labels]
+    leave_unit_sets: list[set[date]] = [set() for _label in labels]
 
     for month in range(1, 13):
         quarter_index = (month - 1) // 3
@@ -220,13 +224,11 @@ def quarterly_chart_data(
             hours = record.worked_hours()
             if hours > 0:
                 totals[quarter_index] += hours
-                iso = record.day.isocalendar()
-                unit_sets[quarter_index].add((iso.year, iso.week))
+                unit_sets[quarter_index].add(weekly_period(record.day, week_start_monday).start)
             leave_value = record.leave_hours(standard_hours=standard_leave_hours)
             if leave_value > 0:
                 leave_hours[quarter_index] += leave_value
-                iso = record.day.isocalendar()
-                leave_unit_sets[quarter_index].add((iso.year, iso.week))
+                leave_unit_sets[quarter_index].add(weekly_period(record.day, week_start_monday).start)
 
     return _bundle(
         labels,

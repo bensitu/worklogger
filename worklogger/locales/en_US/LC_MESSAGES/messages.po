@@ -7,6 +7,19 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 
+msgid "Compensatory leave"
+msgstr "Compensatory leave"
+
+msgid "No notes recorded for this period."
+msgstr "No notes recorded for this period."
+
+msgid "The selected context is too large. Choose a shorter period or exclude optional content."
+msgstr "The selected context is too large. Choose a shorter period or exclude optional content."
+
+msgid "Work Log"
+msgstr "Work Log"
+
+
 msgid "Save the completed automatic record before starting another."
 msgstr "Save the completed automatic record before starting another."
 

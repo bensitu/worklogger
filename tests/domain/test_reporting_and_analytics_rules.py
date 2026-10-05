@@ -73,9 +73,15 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
             analytics_period(2026, 1, "invalid")
 
     def test_report_periods_match_baseline_week_and_month_boundaries(self) -> None:
-        weekly = weekly_period(date(2026, 4, 22))
+        weekly = weekly_period(date(2026, 4, 22), week_start_monday=True)
         self.assertEqual(weekly.start, date(2026, 4, 20))
         self.assertEqual(weekly.end, date(2026, 4, 26))
+        self.assertEqual(weekly_period(date(2026, 4, 22)).start, date(2026, 4, 19))
+        for kind, start, end in (("daily", date(2026, 4, 1), date(2026, 4, 2)),
+                                 ("weekly", date(2026, 4, 20), date(2026, 4, 25)),
+                                 ("monthly", date(2026, 4, 2), date(2026, 4, 30))):
+            with self.assertRaises(ValueError):
+                validate_report_period(kind, start, end)
 
         monthly = monthly_period(2026, 2)
         self.assertEqual(monthly.start, date(2026, 2, 1))

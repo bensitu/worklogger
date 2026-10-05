@@ -17,6 +17,7 @@ from worklogger.app.queries.calendar_queries import GetCalendarEventsForDayQuery
 from worklogger.app.queries.note_queries import GetDailyNoteQuery
 from worklogger.app.queries.quick_log_queries import GetQuickLogsForDayQuery
 from worklogger.app.use_cases.ai import RewriteTextResult
+from worklogger.infrastructure.i18n import _
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.notes.models import DailyNote
 from worklogger.domain.quicklog.models import QuickLog
@@ -170,7 +171,7 @@ class NoteEditorViewModel:
             return state.content
         existing = state.content.rstrip()
         joiner = "\n\n" if existing else ""
-        return f"{existing}{joiner}## Work Log\n{block}".strip()
+        return f"{existing}{joiner}## " + _("Work Log", language=self._language) + f"\n{block}"
 
     def apply_template(self, state: NoteEditorState) -> Result[str]:
         template = self._templates.get_template(
@@ -186,7 +187,7 @@ class NoteEditorViewModel:
                 {
                     "date": state.day.isoformat(),
                     "task_list": "- ",
-                    "calendar_events": _event_block(state.calendar_events),
+                    "calendar_events": _event_block(state.calendar_events, self._language),
                     "quick_logs": _quick_log_block(state.quick_logs),
                     "total_hours": "",
                     "overtime_hours": "",
@@ -237,16 +238,18 @@ def _quick_log_block(quick_logs: tuple[QuickLog, ...]) -> str:
     for quick_log in quick_logs:
         time_text = _time_range(quick_log.start_time, quick_log.end_time)
         prefix = f"{time_text}: " if time_text else ""
-        lines.append(f"- {prefix}{quick_log.description}")
+        description = quick_log.description.replace("\n", "\n  ")
+        lines.append(f"- {prefix}{description}")
     return "\n".join(lines)
 
 
-def _event_block(events: tuple[CalendarEvent, ...]) -> str:
+def _event_block(events: tuple[CalendarEvent, ...], language: str) -> str:
     lines: list[str] = []
     for event in events:
-        time_text = "All day" if event.all_day else _time_range(event.start_time, event.end_time)
+        time_text = _("All day", language=language) if event.all_day else _time_range(event.start_time, event.end_time)
         prefix = f"{time_text}: " if time_text else ""
-        lines.append(f"- {prefix}{event.summary}")
+        summary = event.summary.replace("\n", "\n  ")
+        lines.append(f"- {prefix}{summary}")
     return "\n".join(lines) if lines else "- "
 
 

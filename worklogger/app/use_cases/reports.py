@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from collections.abc import Callable
+from functools import partial
 from datetime import date
+import math
 from typing import Protocol
 
 from worklogger.app.commands.report_commands import (
@@ -205,12 +208,14 @@ class GenerateReportHandler:
         calendar_events: CalendarEventRepository,
         templates: TemplateProvider,
         notes: DailyNoteRepository | None = None,
+        translator: Callable[..., str] | None = None,
     ) -> None:
         self._work_logs = work_logs
         self._quick_logs = quick_logs
         self._calendar_events = calendar_events
         self._templates = templates
         self._notes = notes
+        self._translator = translator or (lambda message, **kwargs: message)
 
     def handle(self, command: GenerateReportCommand) -> Result[GeneratedReport]:
         try:
@@ -219,7 +224,9 @@ class GenerateReportHandler:
                 command.period_start,
                 command.period_end,
             )
-            standard_hours = max(float(command.standard_work_hours), 0.0)
+            standard_hours = float(command.standard_work_hours)
+            if not math.isfinite(standard_hours) or not 1 <= standard_hours <= 24:
+                raise ValueError("standard_work_hours_invalid")
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
 
@@ -247,8 +254,9 @@ class GenerateReportHandler:
             period.report_type,
             user_id=command.user_id,
         )
+        translate = partial(self._translator, language=command.language)
         if not template.ok or not template.value:
-            content = _fallback_report(period.report_type, period.start, period.end)
+            content = _fallback_report(period.report_type, period.start, period.end, translate)
         else:
             content = render_template(
                 template.value,
@@ -260,6 +268,7 @@ class GenerateReportHandler:
                     quick_logs=quick_logs,
                     events=events,
                     standard_hours=standard_hours,
+                    translate=translate,
                 ),
             )
         return Result.success(
@@ -281,6 +290,7 @@ def _template_values(
     quick_logs: tuple[QuickLog, ...],
     events: tuple[CalendarEvent, ...],
     standard_hours: float,
+    translate: Callable[[str], str],
 ) -> dict[str, object]:
     total = sum(work_log.worked_hours() for work_log in work_logs if not work_log.is_leave)
     overtime = sum(
@@ -295,8 +305,8 @@ def _template_values(
         "date_range": f"{start.isoformat()} - {end.isoformat()}",
         "year": start.year,
         "month": f"{start.month:02d}" if report_type == "monthly" else start.month,
-        "task_list": _work_log_lines(work_logs, standard_hours),
-        "calendar_events": _event_lines(events),
+        "task_list": _work_log_lines(work_logs, standard_hours, translate),
+        "calendar_events": _event_lines(events, translate),
         "quick_logs": _quick_log_lines(quick_logs),
         "total_hours": f"{total:.1f}",
         "overtime_hours": f"{overtime:.1f}",
@@ -305,26 +315,27 @@ def _template_values(
     }
 
 
-def _work_log_lines(work_logs: tuple[WorkLog, ...], standard_hours: float) -> str:
+def _work_log_lines(work_logs: tuple[WorkLog, ...], standard_hours: float, _: Callable[[str], str]) -> str:
     if not work_logs:
-        return "- No notes recorded for this period."
+        return "- " + _("No notes recorded for this period.")
     lines: list[str] = []
     for work_log in sorted(work_logs, key=lambda item: item.day):
         if work_log.is_leave:
-            suffix = f" [{work_log.work_type.value}]"
+            labels = {"paid_leave": _("Paid leave"), "comp_leave": _("Compensatory leave"), "sick_leave": _("Sick leave")}
+            suffix = f" [{labels[work_log.work_type.value]}]"
             note = f" - {work_log.note}" if work_log.note else ""
-            lines.append(f"- {work_log.day.isoformat()}{suffix}{note}")
+            lines.append(_list_item(f"{work_log.day.isoformat()}{suffix}{note}"))
             continue
         hours = work_log.worked_hours()
         overtime = max(hours - standard_hours, 0.0)
-        parts = [f"- {work_log.day.isoformat()}: {hours:.1f}h"]
+        parts = [f"{work_log.day.isoformat()}: {hours:.1f}h"]
         if overtime > 0:
-            parts.append(f"OT+{overtime:.1f}h")
+            parts.append(_("Overtime") + f" +{overtime:.1f}h")
         if work_log.is_overnight:
-            parts.append("Night")
+            parts.append(_("Overnight"))
         if work_log.note:
             parts.append(work_log.note)
-        lines.append("  ".join(parts))
+        lines.append(_list_item("  ".join(parts)))
     return "\n".join(lines)
 
 
@@ -335,18 +346,18 @@ def _quick_log_lines(quick_logs: tuple[QuickLog, ...]) -> str:
     for quick_log in sorted(quick_logs, key=lambda item: (item.day, item.start_time, item.id or 0)):
         time_text = _time_range(quick_log.start_time, quick_log.end_time)
         prefix = f"{quick_log.day.isoformat()} {time_text}".strip()
-        lines.append(f"- {prefix}: {quick_log.description}")
+        lines.append(_list_item(f"{prefix}: {quick_log.description}"))
     return "\n".join(lines)
 
 
-def _event_lines(events: tuple[CalendarEvent, ...]) -> str:
+def _event_lines(events: tuple[CalendarEvent, ...], _: Callable[[str], str]) -> str:
     if not events:
         return "- "
     lines: list[str] = []
     for event in sorted(events, key=lambda item: (item.day, item.start_time or "", item.summary)):
-        time_text = "All day" if event.all_day else _time_range(event.start_time, event.end_time)
+        time_text = _("All day") if event.all_day else _time_range(event.start_time, event.end_time)
         prefix = f"{event.day.isoformat()} {time_text}".strip()
-        lines.append(f"- {prefix}: {event.summary}")
+        lines.append(_list_item(f"{prefix}: {event.summary}"))
     return "\n".join(lines)
 
 
@@ -358,11 +369,15 @@ def _time_range(start_time: str | None, end_time: str | None) -> str:
     return start or end
 
 
-def _fallback_report(report_type: str, start: date, end: date) -> str:
+def _list_item(content: str) -> str:
+    return "- " + content.replace("\r\n", "\n").replace("\r", "\n").replace("\n", "\n  ")
+
+
+def _fallback_report(report_type: str, start: date, end: date, _: Callable[[str], str]) -> str:
     if report_type == "daily":
-        title = "Daily Work Report"
+        title = _("Daily Report")
     elif report_type == "weekly":
-        title = "Weekly Work Report"
+        title = _("Weekly Report")
     else:
-        title = "Monthly Work Report"
+        title = _("Monthly Report")
     return f"# {title}  {start.isoformat()} - {end.isoformat()}\n\n- "

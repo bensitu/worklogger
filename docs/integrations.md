@@ -38,8 +38,10 @@ separate responsibilities.
 
 AI context includes records within a daily, weekly, or monthly period. Privacy
 switches control notes, quick logs, and calendar content; working-hour context is
-still included. A settings-read failure currently uses the default inclusion
-value. Review this behavior before enabling an external service. Context and
+still included. Queries are bounded to the selected period, and excluded categories
+are not fetched. Settings-read failures stop context construction. Context is limited
+to 40,000 characters; larger selections are rejected, not silently truncated. Weekly
+ranges follow the account's week-start setting. Context and
 conversation history are user data, not executable instructions.
 
 ## Local Models

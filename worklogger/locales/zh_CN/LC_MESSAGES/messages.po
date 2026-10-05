@@ -7,6 +7,19 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
+msgid "Compensatory leave"
+msgstr "调休"
+
+msgid "No notes recorded for this period."
+msgstr "此期间没有记录备注。"
+
+msgid "The selected context is too large. Choose a shorter period or exclude optional content."
+msgstr "所选上下文过大。请选择更短的时间范围或排除可选内容。"
+
+msgid "Work Log"
+msgstr "工作记录"
+
+
 msgid "Save the completed automatic record before starting another."
 msgstr "开始新的自动记录前，请先保存已结束的记录。"
 

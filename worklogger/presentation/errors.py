@@ -113,8 +113,10 @@ def display_error_code(code: str) -> str:
             return _("AI Assist is not configured.")
         case "ai_chat_empty" | "ai_rewrite_empty" | "local_model_empty_response":
             return _("The model returned no content. Please try again.")
-        case "ai_chat_failed" | "ai_rewrite_failed" | "ai_request_failed" | "ai_context_failed" | "local_model_generation_failed":
+        case "ai_chat_failed" | "ai_rewrite_failed" | "ai_request_failed" | "ai_context_failed" | "ai_context_settings_failed" | "local_model_generation_failed":
             return _("Unable to complete the AI request. Check your model settings and try again.")
+        case "ai_context_too_large":
+            return _("The selected context is too large. Choose a shorter period or exclude optional content.")
         case "local_model_missing" | "local_model_file_missing" | "local_model_not_configured":
             return _("Local model unavailable. Download, import and select a verified model.")
         case "local_model_empty" | "local_model_file_empty" | "local_model_file_must_be_gguf" | "local_model_hash_mismatch" | "local_model_hash_required" | "local_model_verify_failed":

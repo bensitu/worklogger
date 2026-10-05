@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from calendar import monthrange
 from datetime import date
+import math
 
 from worklogger.app.queries.analytics_queries import GetAnalyticsBundleQuery, GetAnalyticsDashboardQuery
 from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBundle
@@ -13,7 +14,7 @@ from worklogger.domain.analytics.rules import (
     quarterly_chart_data,
     dashboard_data,
 )
-from worklogger.config.constants import MONTHLY_TARGET_HOURS_SETTING_KEY, STANDARD_WORK_HOURS_SETTING_KEY
+from worklogger.config.constants import MONTHLY_TARGET_HOURS_SETTING_KEY, STANDARD_WORK_HOURS_SETTING_KEY, WEEK_START_MONDAY_SETTING_KEY
 from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.errors import ValidationError
@@ -59,6 +60,7 @@ class GetAnalyticsBundleHandler:
             query.include_leaves,
             records.get,
             standard_leave_hours=query.standard_leave_hours,
+            week_start_monday=query.week_start_monday,
         )
 
     def _quarterly(self, query: GetAnalyticsBundleQuery) -> ChartDataBundle:
@@ -68,6 +70,7 @@ class GetAnalyticsBundleHandler:
             query.metric,
             query.include_leaves,
             standard_leave_hours=query.standard_leave_hours,
+            week_start_monday=query.week_start_monday,
         )
 
     def _annual(self, query: GetAnalyticsBundleQuery) -> ChartDataBundle:
@@ -96,6 +99,7 @@ class GetAnalyticsDashboardHandler:
             value = dashboard_data(
                 self._repository.list_all(query.user_id), year=query.year, month=query.month,
                 scope=query.scope, standard_hours=standard, monthly_target=target,
+                week_start_monday=self._settings is not None and self._settings.get(query.user_id, WEEK_START_MONDAY_SETTING_KEY, "0") == "1",
             )
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
@@ -106,6 +110,9 @@ class GetAnalyticsDashboardHandler:
     def _number(self, user_id: int, key: str, default: float, minimum: float, maximum: float) -> float:
         value = self._settings.get(user_id, key, str(default)) if self._settings is not None else default
         try:
-            return max(minimum, min(maximum, float(value)))
+            number = float(value)
+            if not math.isfinite(number):
+                raise ValueError("setting_number_invalid")
+            return max(minimum, min(maximum, number))
         except (TypeError, ValueError):
             return default

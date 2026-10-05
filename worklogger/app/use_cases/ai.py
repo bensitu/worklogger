@@ -9,16 +9,16 @@ from typing import Protocol
 from worklogger.app.commands.ai_commands import RewriteTextCommand, SendAiChatMessageCommand
 from worklogger.app.queries.ai_queries import BuildAiContextQuery
 from worklogger.app.queries.calendar_queries import GetCalendarEventsForRangeQuery
-from worklogger.app.queries.note_queries import GetDailyNoteQuery
 from worklogger.app.queries.quick_log_queries import GetQuickLogsForRangeQuery
 from worklogger.app.queries.settings_queries import GetSettingQuery
-from worklogger.app.queries.work_log_queries import GetAllWorkLogsQuery
 from worklogger.app.ports import AIGateway, AIRequest
 from worklogger.config.constants import (
     AI_PRIVACY_INCLUDE_CALENDAR_SETTING_KEY,
     AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY,
     AI_PRIVACY_INCLUDE_QUICK_LOGS_SETTING_KEY,
+    WEEK_START_MONDAY_SETTING_KEY,
 )
+from worklogger.domain.reporting.periods import weekly_period
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.notes.models import DailyNote
 from worklogger.domain.quicklog.models import QuickLog
@@ -34,12 +34,12 @@ class CancellationToken(Protocol):
 
 
 class WorkLogsReader(Protocol):
-    def handle(self, query: GetAllWorkLogsQuery) -> Result[tuple[WorkLog, ...]]:
+    def list_range(self, user_id: int, start: date, end: date) -> Result[tuple[WorkLog, ...]]:
         ...
 
 
 class DailyNoteReader(Protocol):
-    def handle(self, query: GetDailyNoteQuery) -> Result[DailyNote]:
+    def list_range(self, user_id: int, start: date, end: date) -> Result[tuple[DailyNote, ...]]:
         ...
 
 
@@ -128,7 +128,7 @@ class RewriteTextHandler:
                 InfrastructureError(
                     "ai_rewrite_failed",
                     "ai_rewrite_failed",
-                    {"reason": str(exc)},
+                    {"reason": type(exc).__name__},
                 )
             )
         if _cancelled(cancellation_token):
@@ -194,7 +194,7 @@ class AiChatHandler:
         cancellation_token: CancellationToken | None = None,
     ) -> Result[AiChatResult]:
         if _cancelled(cancellation_token):
-            return Result.failure(_cancelled_error())
+            return Result.failure(_cancelled_error("ai_chat_cancelled"))
         message = str(command.message or "").strip()
         if not message:
             return Result.failure(ValidationError("ai_chat_message_required", "ai_chat_message_required"))
@@ -234,11 +234,11 @@ class AiChatHandler:
                 InfrastructureError(
                     "ai_chat_failed",
                     "ai_chat_failed",
-                    {"reason": str(exc)},
+                    {"reason": type(exc).__name__},
                 )
             )
         if _cancelled(cancellation_token):
-            return Result.failure(_cancelled_error())
+            return Result.failure(_cancelled_error("ai_chat_cancelled"))
         if not response.ok or response.value is None:
             return Result.failure(response.error or InfrastructureError("ai_chat_failed", "ai_chat_failed"))
         reply = response.value.text.strip()
@@ -272,12 +272,15 @@ class BuildAiContextHandler:
         self._settings_handler = settings_handler
 
     def handle(self, query: BuildAiContextQuery) -> Result[AiContextResult]:
+        options_result = _context_options(self._settings_handler, query.user_id)
+        if not options_result.ok or options_result.value is None:
+            return Result.failure(options_result.error)
+        options = options_result.value
         try:
-            start_day, end_day = _context_range(query.selected_day, query.period_type)
+            start_day, end_day = _context_range(query.selected_day, query.period_type, options["week_start_monday"])
         except ValueError as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
-        options = _context_options(self._settings_handler, query.user_id)
-        work_logs = self._work_logs_handler.handle(GetAllWorkLogsQuery(query.user_id))
+        work_logs = self._work_logs_handler.list_range(query.user_id, start_day, end_day)
         if not work_logs.ok or work_logs.value is None:
             return Result.failure(work_logs.error or InfrastructureError("ai_context_failed", "ai_context_failed"))
         notes = _notes_for_range(
@@ -291,12 +294,12 @@ class BuildAiContextHandler:
             return Result.failure(notes.error or InfrastructureError("ai_context_failed", "ai_context_failed"))
         quick_logs = self._quick_logs_handler.handle(
             GetQuickLogsForRangeQuery(query.user_id, start_day, end_day)
-        )
+        ) if options["quick_logs"] else Result.success(())
         if not quick_logs.ok or quick_logs.value is None:
             return Result.failure(quick_logs.error or InfrastructureError("ai_context_failed", "ai_context_failed"))
         events = self._calendar_events_handler.handle(
             GetCalendarEventsForRangeQuery(query.user_id, start_day, end_day)
-        )
+        ) if options["calendar"] else Result.success(())
         if not events.ok or events.value is None:
             return Result.failure(events.error or InfrastructureError("ai_context_failed", "ai_context_failed"))
         filtered_logs = tuple(
@@ -316,6 +319,8 @@ class BuildAiContextHandler:
             include_quick_logs=options["quick_logs"],
             include_calendar=options["calendar"],
         )
+        if len(content) > 40_000:
+            return Result.failure(ValidationError("ai_context_too_large", "ai_context_too_large"))
         return Result.success(AiContextResult(content=content))
 
 
@@ -347,13 +352,13 @@ def _chat_user_content(
     return f"Language: {language_text}\n\nUser:\n{message}"
 
 
-def _context_range(selected_day: date, period_type: str) -> tuple[date, date]:
+def _context_range(selected_day: date, period_type: str, week_start_monday: bool = False) -> tuple[date, date]:
     scope = str(period_type or "daily").strip().lower()
     if scope == "daily":
         return selected_day, selected_day
     if scope == "weekly":
-        start_day = selected_day - timedelta(days=selected_day.weekday())
-        return start_day, start_day + timedelta(days=6)
+        period = weekly_period(selected_day, week_start_monday)
+        return period.start, period.end
     if scope == "monthly":
         start_day = selected_day.replace(day=1)
         if start_day.month == 12:
@@ -364,19 +369,22 @@ def _context_range(selected_day: date, period_type: str) -> tuple[date, date]:
     raise ValueError("unsupported_ai_context_period")
 
 
-def _context_options(handler: SettingReader, user_id: int) -> dict[str, bool]:
-    return {
-        "notes": _setting_bool(handler, user_id, AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY, True),
-        "calendar": _setting_bool(handler, user_id, AI_PRIVACY_INCLUDE_CALENDAR_SETTING_KEY, True),
-        "quick_logs": _setting_bool(handler, user_id, AI_PRIVACY_INCLUDE_QUICK_LOGS_SETTING_KEY, True),
-    }
-
-
-def _setting_bool(handler: SettingReader, user_id: int, key: str, default: bool) -> bool:
-    result = handler.handle(GetSettingQuery(user_id, key, "1" if default else "0"))
-    if not result.ok:
-        return default
-    return str(result.value or "").strip().lower() in {"1", "true", "yes", "on"}
+def _context_options(handler: SettingReader, user_id: int) -> Result[dict[str, bool]]:
+    options = {}
+    for name, key, default in (
+        ("notes", AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY, "1"),
+        ("calendar", AI_PRIVACY_INCLUDE_CALENDAR_SETTING_KEY, "1"),
+        ("quick_logs", AI_PRIVACY_INCLUDE_QUICK_LOGS_SETTING_KEY, "1"),
+        ("week_start_monday", WEEK_START_MONDAY_SETTING_KEY, "0"),
+    ):
+        try:
+            result = handler.handle(GetSettingQuery(user_id, key, default))
+        except Exception:
+            return Result.failure(InfrastructureError("ai_context_settings_failed", "ai_context_settings_failed"))
+        if not result.ok:
+            return Result.failure(InfrastructureError("ai_context_settings_failed", "ai_context_settings_failed"))
+        options[name] = str(result.value or "").strip().lower() in {"1", "true", "yes", "on"}
+    return Result.success(options)
 
 
 def _notes_for_range(
@@ -389,16 +397,7 @@ def _notes_for_range(
 ) -> Result[tuple[DailyNote, ...]]:
     if not include_notes:
         return Result.success(())
-    notes: list[DailyNote] = []
-    day = start_day
-    while day <= end_day:
-        result = handler.handle(GetDailyNoteQuery(user_id, day))
-        if not result.ok or result.value is None:
-            return Result.failure(result.error or InfrastructureError("ai_context_failed", "ai_context_failed"))
-        if result.value.content.strip():
-            notes.append(result.value)
-        day += timedelta(days=1)
-    return Result.success(tuple(notes))
+    return handler.list_range(user_id, start_day, end_day)
 
 
 def _format_context(
@@ -482,5 +481,5 @@ def _cancelled(cancellation_token: CancellationToken | None) -> bool:
     return bool(value() if callable(value) else value)
 
 
-def _cancelled_error() -> CancellationError:
-    return CancellationError("ai_rewrite_cancelled", "ai_rewrite_cancelled")
+def _cancelled_error(code: str = "ai_rewrite_cancelled") -> CancellationError:
+    return CancellationError(code, code)

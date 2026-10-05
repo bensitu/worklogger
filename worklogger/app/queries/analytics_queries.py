@@ -14,6 +14,7 @@ class GetAnalyticsBundleQuery:
     include_leaves: bool
     scope: str = "monthly"
     standard_leave_hours: float = 8.0
+    week_start_monday: bool = False
 
 
 @dataclass(frozen=True)

@@ -651,6 +651,7 @@ def _build_reports_workflow(
                 calendar_events=repositories.calendar_events,
                 templates=handlers.templates,
                 notes=repositories.daily_notes,
+                translator=_,
             ),
             get_report_handler=GetReportForPeriodHandler(repositories.reports),
             list_reports_handler=ListReportsHandler(repositories.reports),

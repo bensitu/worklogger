@@ -7,6 +7,19 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
+msgid "Compensatory leave"
+msgstr "대체 휴가"
+
+msgid "No notes recorded for this period."
+msgstr "이 기간에 기록된 메모가 없습니다."
+
+msgid "The selected context is too large. Choose a shorter period or exclude optional content."
+msgstr "선택한 컨텍스트가 너무 큽니다. 더 짧은 기간을 선택하거나 선택적 내용을 제외하세요."
+
+msgid "Work Log"
+msgstr "작업 기록"
+
+
 msgid "Save the completed automatic record before starting another."
 msgstr "새 기록을 시작하기 전에 완료된 자동 기록을 저장하세요."
 

@@ -1,5 +1,10 @@
 # User Guide
 
+Weekly reports and analytics week groups follow the account's week-start setting.
+Daily reports cover one day, weekly reports cover seven days starting on Sunday or
+Monday, and monthly reports cover a complete calendar month. Generated report text
+uses the selected language; multiline notes retain Markdown list indentation.
+
 ## Accounts
 
 Create a local account on first use. The first registered account receives

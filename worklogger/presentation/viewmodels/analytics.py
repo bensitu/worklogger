@@ -60,6 +60,7 @@ class AnalyticsViewModel:
         pdf_exporter: AnalyticsPdfExporterProtocol,
         standard_leave_hours: float = 8.0,
         dashboard_handler: AnalyticsDashboardHandlerProtocol | None = None,
+        week_start_monday: bool = False,
     ) -> None:
         self._user_id = user_id
         self._bundle_handler = bundle_handler
@@ -67,6 +68,10 @@ class AnalyticsViewModel:
         self._pdf_exporter = pdf_exporter
         self._standard_leave_hours = standard_leave_hours
         self._dashboard_handler = dashboard_handler
+        self._week_start_monday = week_start_monday
+
+    def set_week_start_monday(self, enabled: bool) -> None:
+        self._week_start_monday = bool(enabled)
 
     @property
     def user_id(self) -> int:
@@ -104,6 +109,7 @@ class AnalyticsViewModel:
                 include_leaves=include_leaves,
                 scope=normalized_scope,
                 standard_leave_hours=self._standard_leave_hours,
+                week_start_monday=self._week_start_monday,
             )
         )
         if not bundle.ok or bundle.value is None:

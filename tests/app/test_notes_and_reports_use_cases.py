@@ -236,7 +236,7 @@ class NotesReportsUseCaseTests(unittest.TestCase):
                     start_time="09:00",
                     end_time="18:00",
                     break_hours=1.0,
-                    note="Implemented notes",
+                    note="Implemented notes\nContinued implementation",
                     work_type=WorkType.NORMAL,
                 ),
                 WorkLog(
@@ -302,6 +302,7 @@ class NotesReportsUseCaseTests(unittest.TestCase):
         content = report.value.content
         self.assertIn("2026-05-11 - 2026-05-17", content)
         self.assertIn("Implemented notes", content)
+        self.assertIn("\n  Continued implementation", content)
         self.assertIn("Release support", content)
         self.assertIn("Vacation", content)
         self.assertIn("Customer sync", content)
