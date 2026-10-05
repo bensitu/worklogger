@@ -26,6 +26,9 @@ exported text is prefixed with an apostrophe; exports are still unencrypted.
   permissions and protect required account relationships in their handlers.
 - Failed login counts are stored per username. Lockout thresholds are 5, 10, 15,
   and 20 failures, with delays of 30 seconds, 5 minutes, 30 minutes, and 24 hours.
+  Counts restart after 24 hours without a failure. Unknown usernames are not
+  stored, and records older than seven days are removed when the repository opens.
+  Successful password and remembered-token authentication update the last login time.
 - Remembered login tokens are stored as SHA-256-derived values in the database
   and expire after 30 days. Password workflows invalidate remembered credentials.
 
@@ -40,11 +43,13 @@ fallback. If secure storage is unavailable, password entry is disabled and
 existing values are retained. Moving the database can change the namespace and
 require re-entering the proxy password.
 
-Remembered login uses `FileRememberTokenSessionStore`. Its encrypted file is
-protected by `HmacSecretBox` and a local machine-key file. This is an application
-implementation based on HMAC-derived primitives, not OS-backed protection. An
-attacker with both files can recover the session credential. File permissions are
-best effort; protect the containing user profile.
+Remembered login uses `FileRememberTokenSessionStore`. New values use Fernet from
+`cryptography`; earlier authenticated ciphertext remains readable and is upgraded
+after a successful read. Windows machine keys are protected by current-user DPAPI.
+Other platforms use a private local key file, so access to both files can recover
+the credential. Key creation is process-locked, and encrypted values are replaced
+atomically. Missing or corrupt keys are reported rather than silently replaced.
+File permissions remain best effort; protect the containing user profile.
 
 `EncryptedSettingsKeyStore` is an additional adapter with keyring-first behavior
 and encrypted-settings fallback. Its existence does not mean that all application
@@ -67,8 +72,9 @@ network routing; the HTTP adapters are not connected to those settings.
 ## Diagnostics
 
 Runtime logging uses UTF-8 rotating files, up to 1,000,000 bytes per file with five
-backups. The filter rejects messages containing selected credential-related words,
-but it is not comprehensive sanitization of arbitrary text or exception details.
+backups. Explicit credential values are redacted while diagnostic identifiers
+remain visible. Exception formatting retains types and source locations but omits
+arbitrary exception payloads. This is not sanitization of all possible private text.
 Review logs before sharing them. Do not log passwords, recovery keys, tokens,
 authorization headers, prompts containing private records, or downloaded secrets.
 

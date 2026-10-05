@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from collections.abc import Callable
+from dataclasses import replace
 import sqlite3
 
 from worklogger.domain.auth.models import LinkedIdentity, User
@@ -125,7 +127,7 @@ class SQLiteAuthRepository:
         user = self._user_from_row(row)
         if verification.needs_upgrade:
             self._replace_password_hash(user.id, password)
-        return user
+        return self._record_login(user)
 
     def change_password(
         self,
@@ -270,7 +272,13 @@ class SQLiteAuthRepository:
         if remember_token_is_expired(row["remember_token_expires_at"]):
             self.set_remember_token(int(row["id"]), None, None)
             return None
-        return self._user_from_row(row)
+        return self._record_login(self._user_from_row(row))
+
+    def _record_login(self, user: User) -> User:
+        now = datetime.now(timezone.utc)
+        with self._connection_factory.transaction() as connection:
+            connection.execute("UPDATE users SET last_login_at=? WHERE id=?", (now.isoformat(), user.id))
+        return replace(user, last_login_at=now)
 
     def get_by_id(self, user_id: int) -> User | None:
         with self._connection_factory.connection() as connection:
@@ -361,8 +369,15 @@ class SQLiteAuthRepository:
 
 
 class SQLiteLoginFailureRepository:
-    def __init__(self, connection_factory: SQLiteConnectionFactory) -> None:
+    def __init__(self, connection_factory: SQLiteConnectionFactory, *, clock: Callable[[], datetime] | None = None) -> None:
         self._connection_factory = connection_factory
+        self._clock = clock or (lambda: datetime.now(timezone.utc))
+        self.prune()
+
+    def prune(self) -> None:
+        cutoff = (self._clock() - timedelta(days=7)).isoformat()
+        with self._connection_factory.transaction() as connection:
+            connection.execute("DELETE FROM login_attempts WHERE last_failed_at<? OR NOT EXISTS (SELECT 1 FROM users WHERE users.username=login_attempts.username)", (cutoff,))
 
     def lockout_until(self, username: str) -> datetime | None:
         try:
@@ -377,7 +392,7 @@ class SQLiteLoginFailureRepository:
         locked_until = parse_datetime(row["locked_until"]) if row else None
         if locked_until is None:
             return None
-        if locked_until <= datetime.now(timezone.utc):
+        if locked_until <= self._clock():
             with self._connection_factory.transaction(write=True) as connection:
                 connection.execute(
                     "UPDATE login_attempts SET locked_until=NULL WHERE username=?",
@@ -388,13 +403,17 @@ class SQLiteLoginFailureRepository:
 
     def record_failure(self, username: str) -> tuple[int, datetime | None]:
         username = normalize_username(username)
+        now = self._clock()
         with self._connection_factory.transaction(write=True) as connection:
+            if not connection.execute("SELECT 1 FROM users WHERE username=?", (username,)).fetchone():
+                return 0, None
             row = connection.execute(
-                "SELECT failed_count FROM login_attempts WHERE username=?",
+                "SELECT failed_count, last_failed_at FROM login_attempts WHERE username=?",
                 (username,),
             ).fetchone()
-            failed_count = int(row["failed_count"]) + 1 if row else 1
-            locked_until = lockout_until_for_failure_count(failed_count)
+            recent = row is not None and (parse_datetime(row["last_failed_at"]) or datetime.min.replace(tzinfo=timezone.utc)) > now - timedelta(hours=24)
+            failed_count = min(int(row["failed_count"]) + 1, 20) if recent else 1
+            locked_until = lockout_until_for_failure_count(failed_count, now=now)
             locked_until_raw = locked_until.isoformat(timespec="seconds") if locked_until else None
             connection.execute(
                 """
@@ -405,7 +424,7 @@ class SQLiteLoginFailureRepository:
                     locked_until=excluded.locked_until,
                     last_failed_at=excluded.last_failed_at
                 """,
-                (username, failed_count, locked_until_raw, utc_now_iso()),
+                (username, failed_count, locked_until_raw, now.isoformat(timespec="seconds")),
             )
         return failed_count, locked_until
 

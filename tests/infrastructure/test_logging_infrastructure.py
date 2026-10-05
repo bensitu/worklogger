@@ -47,14 +47,23 @@ class LoggingInfrastructureTests(unittest.TestCase):
 
                 setup_logging(log_path, debug=True)
                 logger = logging.getLogger("worklogger.test")
-                logger.error("password should not be recorded")
+                logger.error("password=synthetic-secret token=sensitive-value")
+                logger.error("remember_token_load_failed")
+                try:
+                    raise ValueError("private exception payload")
+                except ValueError:
+                    logger.exception("credential_storage_failed")
                 logger.error("safe diagnostic")
                 for handler in logging.getLogger().handlers:
                     handler.flush()
 
                 content = log_path.read_text(encoding="utf-8")
                 self.assertIn("safe diagnostic", content)
-                self.assertNotIn("password should not be recorded", content)
+                self.assertIn("remember_token_load_failed", content)
+                self.assertIn("credential_storage_failed", content)
+                self.assertIn("ValueError", content)
+                for secret in ("synthetic-secret", "sensitive-value", "private exception payload"):
+                    self.assertNotIn(secret, content)
             finally:
                 _close_worklogger_handlers()
 

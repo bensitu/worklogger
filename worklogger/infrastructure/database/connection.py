@@ -5,6 +5,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from pathlib import Path
 import sqlite3
+import os
 from threading import RLock
 from typing import Iterator
 
@@ -49,7 +50,13 @@ class SQLiteConnectionFactory:
 
     def _open_once(self, *, check_integrity: bool) -> sqlite3.Connection:
         if self.database_path != ":memory:":
-            Path(self.database_path).parent.mkdir(parents=True, exist_ok=True)
+            Path(self.database_path).parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+            try:
+                descriptor = os.open(self.database_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+            except FileExistsError:
+                pass
+            else:
+                os.close(descriptor)
         connection = sqlite3.connect(
             self.database_path,
             detect_types=sqlite3.PARSE_DECLTYPES,

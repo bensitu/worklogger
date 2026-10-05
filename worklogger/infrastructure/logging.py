@@ -7,6 +7,8 @@ from pathlib import Path
 import logging as std_logging
 import os
 import sys
+import re
+import traceback
 
 from worklogger.config.constants import (
     LOG_BACKUP_COUNT,
@@ -19,22 +21,34 @@ _HANDLER_MARKER = "_worklogger_file_handler"
 
 
 class SensitiveDataFilter(std_logging.Filter):
-    """Reject log records that are likely to contain sensitive credential data."""
+    """Redact explicit credentials while retaining diagnostic identifiers."""
 
-    _SENSITIVE_WORDS = (
-        "api_key",
-        "auth code",
-        "password",
-        "pkce",
-        "recovery_key",
-        "refresh_token",
-        "remember_token",
-        "token",
-    )
+    _CREDENTIAL = re.compile(r"(?i)(\b(?:api[_-]?key|password|recovery[_-]?key|refresh[_-]?token|remember[_-]?token|access[_-]?token|token|client_secret|code_verifier|authorization|pkce|auth code)\b\s*[=:]\s*)(?:\"[^\"]*\"|'[^']*'|[^\s,;&]+)")
+    _BEARER = re.compile(r"(?i)\bBearer\s+[^\s,;]+")
 
     def filter(self, record: std_logging.LogRecord) -> bool:
-        message = record.getMessage().lower()
-        return not any(word in message for word in self._SENSITIVE_WORDS)
+        record.msg = self._redact(record.getMessage())
+        record.args = ()
+        for key, value in tuple(record.__dict__.items()):
+            if key not in {"msg", "args", "exc_info", "exc_text"} and self._CREDENTIAL.match(key + "=value"):
+                record.__dict__[key] = "[redacted]"
+            elif isinstance(value, str):
+                record.__dict__[key] = self._redact(value)
+        record.exc_text = None
+        return True
+
+    @classmethod
+    def _redact(cls, message: str) -> str:
+        return cls._CREDENTIAL.sub(r"\1[redacted]", cls._BEARER.sub("Bearer [redacted]", message))
+
+
+class DiagnosticFormatter(std_logging.Formatter):
+    """Keep exception types and locations without arbitrary exception payloads."""
+
+    def formatException(self, exc_info) -> str:
+        error_type, _error, trace = exc_info
+        frames = [f"  {Path(frame.filename).name}:{frame.lineno} in {frame.name}" for frame in traceback.extract_tb(trace)]
+        return "\n".join(["Traceback:", *frames, error_type.__name__])
 
 
 def setup_logging(
@@ -46,7 +60,9 @@ def setup_logging(
     """Configure the root logger with a rotating WorkLogger file handler."""
 
     path = _resolve_log_path(log_path, frozen=frozen)
-    path.parent.mkdir(parents=True, exist_ok=True)
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    descriptor = os.open(path, os.O_CREAT | os.O_APPEND | os.O_WRONLY, 0o600)
+    os.close(descriptor)
 
     level = std_logging.DEBUG if _debug_enabled(debug) else std_logging.INFO
     root = std_logging.getLogger()
@@ -69,7 +85,7 @@ def setup_logging(
     )
     setattr(handler, _HANDLER_MARKER, True)
     handler.setLevel(level)
-    handler.setFormatter(std_logging.Formatter(LOG_FORMAT))
+    handler.setFormatter(DiagnosticFormatter(LOG_FORMAT))
     handler.addFilter(SensitiveDataFilter())
     root.addHandler(handler)
     std_logging.captureWarnings(True)

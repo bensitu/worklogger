@@ -9,7 +9,9 @@ import hashlib
 import hmac
 import os
 import secrets
-import stat
+import portalocker
+from cryptography.fernet import Fernet, InvalidToken
+from worklogger.infrastructure.files import atomic_destination
 from typing import Protocol
 
 from worklogger.config.constants import (
@@ -22,6 +24,7 @@ from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
 
 _ENC_PREFIX = "enc1:"
+_FERNET_PREFIX = "enc2:"
 _KEY_BYTES = 32
 
 
@@ -90,6 +93,7 @@ class SystemCredentialStore:
         secure_modules = {
             "keyring.backends.Windows", "keyring.backends.macOS",
             "keyring.backends.SecretService", "keyring.backends.libsecret",
+            "keyring.backends.kwallet",
         }
         for candidate in candidates:
             if type(candidate).__module__ in secure_modules and candidate.priority > 0:
@@ -131,49 +135,70 @@ class FileMachineKeyProvider:
         return cls(base / MACHINE_KEY_FILENAME)
 
     def load_or_create(self) -> bytes:
-        loaded = self._load()
-        if loaded is not None:
-            return loaded
-        key = secrets.token_bytes(_KEY_BYTES)
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(
-            base64.urlsafe_b64encode(key).decode("ascii"),
-            encoding="ascii",
-        )
-        try:
-            os.chmod(self.path, stat.S_IRUSR | stat.S_IWUSR)
-        except OSError:
-            pass
+        self.path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        with portalocker.Lock(str(self.path) + ".lock", timeout=5):
+            loaded = self._load()
+            if loaded is not None:
+                return loaded
+            key = secrets.token_bytes(_KEY_BYTES)
+            with atomic_destination(self.path) as temporary:
+                temporary.write_text(_encode_machine_key(key), encoding="ascii")
+            return key
+
+    def load(self) -> bytes:
+        with portalocker.Lock(str(self.path) + ".lock", timeout=5):
+            key = self._load()
+        if key is None:
+            raise ValueError("secret_key_missing")
         return key
 
     def _load(self) -> bytes | None:
         try:
             raw = self.path.read_text(encoding="ascii").strip()
-            key = base64.urlsafe_b64decode(raw.encode("ascii"))
-        except Exception:
+            if raw.startswith("dpapi:"):
+                from worklogger.infrastructure.security.windows_protection import unprotect
+                key = unprotect(base64.urlsafe_b64decode(raw[6:].encode("ascii")))
+            else:
+                key = base64.urlsafe_b64decode(raw.encode("ascii"))
+        except FileNotFoundError:
             return None
-        return key if len(key) == _KEY_BYTES else None
+        except Exception as exc:
+            raise ValueError("secret_key_invalid") from exc
+        if len(key) != _KEY_BYTES:
+            raise ValueError("secret_key_invalid")
+        if os.name == "nt" and not raw.startswith("dpapi:"):
+            with atomic_destination(self.path) as temporary:
+                temporary.write_text(_encode_machine_key(key), encoding="ascii")
+        return key
+
+
+def _encode_machine_key(key: bytes) -> str:
+    if os.name == "nt":
+        from worklogger.infrastructure.security.windows_protection import protect
+        return "dpapi:" + base64.urlsafe_b64encode(protect(key)).decode("ascii")
+    return base64.urlsafe_b64encode(key).decode("ascii")
 
 
 class HmacSecretBox:
-    """Authenticated encryption fallback built from standard library primitives."""
+    """Fernet encryption with read compatibility for earlier encrypted values."""
 
     def __init__(self, key_provider: FileMachineKeyProvider | None = None) -> None:
         self._key_provider = key_provider or FileMachineKeyProvider.default()
 
     def encrypt(self, value: str) -> str:
         key = self._key_provider.load_or_create()
-        nonce = secrets.token_bytes(16)
-        plaintext = value.encode("utf-8")
-        ciphertext = _xor_bytes(plaintext, _keystream(_derive(key, b"enc"), nonce, len(plaintext)))
-        mac = hmac.new(_derive(key, b"mac"), nonce + ciphertext, hashlib.sha256).digest()
-        payload = base64.urlsafe_b64encode(nonce + mac + ciphertext).decode("ascii")
-        return _ENC_PREFIX + payload
+        return _FERNET_PREFIX + Fernet(base64.urlsafe_b64encode(key)).encrypt(value.encode("utf-8")).decode("ascii")
 
     def decrypt(self, stored: str) -> str:
+        if stored.startswith(_FERNET_PREFIX):
+            key = self._key_provider.load()
+            try:
+                return Fernet(base64.urlsafe_b64encode(key)).decrypt(stored[len(_FERNET_PREFIX):].encode("ascii")).decode("utf-8")
+            except (InvalidToken, UnicodeError) as exc:
+                raise ValueError("secret_authentication_failed") from exc
         if not stored.startswith(_ENC_PREFIX):
             raise ValueError("secret_not_encrypted")
-        key = self._key_provider.load_or_create()
+        key = self._key_provider.load()
         try:
             payload = base64.urlsafe_b64decode(stored[len(_ENC_PREFIX):].encode("ascii"))
         except Exception as exc:
@@ -217,9 +242,14 @@ class EncryptedSettingsKeyStore:
         if not stored:
             return Result.success(None)
         try:
-            return Result.success(self._secret_box.decrypt(stored))
+            value = self._secret_box.decrypt(stored)
+            if stored.startswith(_ENC_PREFIX):
+                self._settings.set(self._user_id, self._setting_key(key), self._secret_box.encrypt(value))
+            return Result.success(value)
         except ValueError as exc:
             return Result.failure(InfrastructureError(str(exc), str(exc)))
+        except Exception:
+            return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
 
     def set_secret(self, name: str, value: str) -> Result[None]:
         key = self._normalize_name(name)
@@ -228,9 +258,12 @@ class EncryptedSettingsKeyStore:
         try:
             self._keyring.set_password(self._service_name, key, value)
         except RuntimeError:
-            encrypted = self._secret_box.encrypt(value)
-            self._settings.set(self._user_id, self._setting_key(key), encrypted)
-            return Result.success(None)
+            try:
+                encrypted = self._secret_box.encrypt(value)
+                self._settings.set(self._user_id, self._setting_key(key), encrypted)
+                return Result.success(None)
+            except Exception:
+                return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
         self._settings.delete(self._user_id, self._setting_key(key))
         return Result.success(None)
 

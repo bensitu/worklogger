@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import base64
 from contextlib import closing
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 import tempfile
 import sqlite3
@@ -434,7 +434,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         self.assertTrue(result.ok)
         stored = settings.get(user_id, "secret:ai_api_key")
         self.assertIsNotNone(stored)
-        self.assertTrue(str(stored).startswith("enc1:"))
+        self.assertTrue(str(stored).startswith("enc2:"))
         self.assertNotIn("super-secret", str(stored))
 
         reopened = EncryptedSettingsKeyStore(
@@ -465,7 +465,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         )
         self.assertTrue(store.set_secret("ai_api_key", "super-secret").ok)
         stored = settings.get(user_id, "secret:ai_api_key") or ""
-        prefix = "enc1:"
+        prefix = "enc2:"
         payload = bytearray(base64.urlsafe_b64decode(stored[len(prefix) :].encode("ascii")))
         payload[-1] ^= 0x01
         tampered = prefix + base64.urlsafe_b64encode(bytes(payload)).decode("ascii")
@@ -496,6 +496,40 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         self.assertTrue(cleared.ok, cleared.error)
         self.assertFalse(token_path.exists())
         self.assertIsNone(store.load_token().value)
+
+    def test_credentials_upgrade_older_ciphertext_and_preserve_invalid_keys(self):
+        key_path = Path(self._tempdir.name) / "machine.key"
+        key_path.write_text(base64.urlsafe_b64encode(bytes(range(32))).decode("ascii"), encoding="ascii")
+        token_path = Path(self._tempdir.name) / "remember_session.enc"
+        token_path.write_text("enc1:AAECAwQFBgcICQoLDA0OD0LCQBoVPQkluofQClDWlMDl9dOH-TKP9wwrKnsFItAX_uPNOBW30ZL-aiEwkDt5qU2Lew==", encoding="ascii")
+        store = FileRememberTokenSessionStore(token_path, secret_box=HmacSecretBox(FileMachineKeyProvider(key_path)))
+        self.assertEqual(store.load_token().value, "compatibility-token")
+        self.assertTrue(token_path.read_text().startswith("enc2:"))
+        key_path.write_text("invalid key", encoding="ascii")
+        self.assertFalse(store.load_token().ok)
+        self.assertFalse(store.save_token("replacement").ok)
+        self.assertEqual(key_path.read_text(), "invalid key")
+        key_path.unlink()
+        self.assertFalse(store.load_token().ok)
+        self.assertFalse(key_path.exists())
+
+    def test_login_failure_retention_and_successful_login_time(self):
+        auth = self.auth_repository()
+        user = auth.create_user("alice", "secret123", recovery_key=None, is_admin=True)
+        now = datetime(2026, 5, 1, tzinfo=timezone.utc)
+        failures = SQLiteLoginFailureRepository(self.factory, clock=lambda: now)
+        self.assertEqual(failures.record_failure("unknown"), (0, None))
+        for _ in range(4):
+            failures.record_failure("alice")
+        now += timedelta(days=2)
+        self.assertEqual(failures.record_failure("alice"), (1, None))
+        now += timedelta(days=8)
+        failures.prune()
+        with self.factory.connection() as connection:
+            self.assertEqual(connection.execute("SELECT COUNT(*) FROM login_attempts").fetchone()[0], 0)
+        logged_in = auth.verify_user("alice", "secret123")
+        self.assertIsNotNone(logged_in.last_login_at)
+        self.assertEqual(auth.get_by_id(user.id).last_login_at, logged_in.last_login_at)
 
 
 if __name__ == "__main__":

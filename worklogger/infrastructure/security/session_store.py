@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 import os
-import stat
 from typing import Protocol
 
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.security.key_store import HmacSecretBox
+from worklogger.infrastructure.files import atomic_destination
 
 REMEMBER_TOKEN_SECRET_NAME = "remember_login_token"
 REMEMBER_SESSION_FILENAME = "remember_session.enc"
@@ -60,7 +60,12 @@ class FileRememberTokenSessionStore:
             stored = self._path.read_text(encoding="utf-8").strip()
             if not stored:
                 return Result.success(None)
-            return Result.success(self._secret_box.decrypt(stored))
+            token = self._secret_box.decrypt(stored)
+            if stored.startswith("enc1:"):
+                upgraded = self.save_token(token)
+                if not upgraded.ok:
+                    return Result.failure(upgraded.error)
+            return Result.success(token)
         except Exception as exc:
             return Result.failure(
                 InfrastructureError(
@@ -74,12 +79,9 @@ class FileRememberTokenSessionStore:
         try:
             if not token:
                 return self.clear_token()
-            self._path.parent.mkdir(parents=True, exist_ok=True)
-            self._path.write_text(self._secret_box.encrypt(token), encoding="utf-8")
-            try:
-                os.chmod(self._path, stat.S_IRUSR | stat.S_IWUSR)
-            except OSError:
-                pass
+            encrypted = self._secret_box.encrypt(token)
+            with atomic_destination(self._path) as temporary:
+                temporary.write_text(encrypted, encoding="utf-8")
         except Exception as exc:
             return Result.failure(
                 InfrastructureError(
