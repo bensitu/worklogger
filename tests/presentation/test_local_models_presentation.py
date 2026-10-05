@@ -151,11 +151,13 @@ class LocalModelsPresentationTests(unittest.TestCase):
         dialog = LocalModelsDialog(model)
         dialog.show()
         self._app.processEvents()
-        dialog._pending_handle = JobHandle(job_id="pending", cancel=lambda: None)
+        cancellations = []
+        dialog._pending_handle = JobHandle(job_id="pending", cancel=lambda: cancellations.append(True))
         dialog._set_busy(True)
-        self.assertFalse(dialog.close_button.isEnabled())
+        self.assertTrue(dialog.close_button.isEnabled())
         dialog.close()
         self.assertTrue(dialog.isVisible())
+        self.assertEqual(cancellations, [True])
         dialog._pending_handle = None
         dialog._set_busy(False)
         dialog.close()

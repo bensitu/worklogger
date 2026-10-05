@@ -5,7 +5,8 @@ from __future__ import annotations
 import json
 import re
 from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
+from urllib.request import Request
+from worklogger.infrastructure.http import https_opener
 
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
@@ -18,10 +19,12 @@ class GitHubReleaseUpdateChecker:
         api_url: str,
         timeout_seconds: float = 5.0,
         max_response_bytes: int = 64 * 1024,
+        opener=None,
     ) -> None:
         self._api_url = api_url
         self._timeout_seconds = timeout_seconds
         self._max_response_bytes = max_response_bytes
+        self._opener = opener or https_opener(public_only=True)
 
     def check_latest_version(self, current_version: str) -> Result[str | None]:
         try:
@@ -32,22 +35,26 @@ class GitHubReleaseUpdateChecker:
                     "User-Agent": "WorkLogger",
                 },
             )
-            with urlopen(request, timeout=self._timeout_seconds) as response:
+            with self._opener(request, timeout=self._timeout_seconds) as response:
                 payload = response.read(self._max_response_bytes + 1)
             if len(payload) > self._max_response_bytes:
                 raise ValueError("update_response_too_large")
             data = json.loads(payload.decode("utf-8"))
+            if not isinstance(data, dict):
+                raise ValueError("update_response_invalid")
             latest = _normalize_version(str(data.get("tag_name") or data.get("name") or ""))
             current = _normalize_version(current_version)
             if latest and _version_tuple(latest) > _version_tuple(current):
                 return Result.success(latest)
             return Result.success(None)
         except (HTTPError, URLError, TimeoutError, OSError, ValueError, json.JSONDecodeError) as exc:
+            if isinstance(exc, HTTPError):
+                exc.close()
             return Result.failure(
                 InfrastructureError(
                     "update_check_failed",
                     "update_check_failed",
-                    {"reason": str(exc)},
+                    {"error_type": type(exc).__name__},
                 )
             )
 

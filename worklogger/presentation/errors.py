@@ -101,7 +101,7 @@ def display_error_code(code: str) -> str:
             return _("Unable to save the work log. Your changes have been retained.")
         case "settings_load_failed" | "worklog_load_failed" | "worklog_export_load_failed" | "calendar_load_failed" | "holiday_load_failed" | "analytics_load_failed" | "stats_load_failed" | "user_list_failed":
             return _("Unable to load data. Please try again.")
-        case "ai_chat_not_configured" | "ai_rewrite_not_configured" | "ai_secondary_not_configured" | "ai_api_key_required":
+        case "ai_chat_not_configured" | "ai_rewrite_not_configured" | "ai_secondary_not_configured" | "ai_api_key_required" | "ai_configuration_invalid":
             return _("AI Assist is not configured.")
         case "ai_chat_empty" | "ai_rewrite_empty" | "local_model_empty_response":
             return _("The model returned no content. Please try again.")
@@ -109,7 +109,7 @@ def display_error_code(code: str) -> str:
             return _("Unable to complete the AI request. Check your model settings and try again.")
         case "local_model_missing" | "local_model_file_missing" | "local_model_not_configured":
             return _("Local model unavailable. Download, import and select a verified model.")
-        case "local_model_empty" | "local_model_file_empty" | "local_model_file_must_be_gguf" | "local_model_hash_mismatch" | "local_model_verify_failed":
+        case "local_model_empty" | "local_model_file_empty" | "local_model_file_must_be_gguf" | "local_model_hash_mismatch" | "local_model_hash_required" | "local_model_verify_failed":
             return _("Model verification failed. Import or download a valid GGUF model.")
         case "local_model_id_required":
             return _("Select a model first.")

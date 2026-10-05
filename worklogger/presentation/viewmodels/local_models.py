@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from worklogger.app.job_runner import CancellationToken
 from typing import Protocol
 
 from worklogger.app.commands.local_model_commands import (
@@ -116,9 +117,9 @@ class LocalModelManagerViewModel:
             )
         return _with_message(self.load(), _("Model imported."))
 
-    def download_model(self, model_id: str) -> Result[LocalModelManagerState]:
+    def download_model(self, model_id: str, *, cancellation: CancellationToken | None = None) -> Result[LocalModelManagerState]:
         downloaded = self._download_handler.handle(
-            DownloadLocalModelCommand(self._user_id, model_id)
+            DownloadLocalModelCommand(self._user_id, model_id, cancellation)
         )
         if not downloaded.ok:
             return Result.failure(

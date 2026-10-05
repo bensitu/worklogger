@@ -87,10 +87,12 @@ class LocalModelsDialog(QDialog):
             self.status_label.setText(_("Select a model first."))
             return False
         if self._job_runner is not None:
-            return self._run_state_job(
+            return self._run_result_job(
                 "local_model_download",
-                lambda: self._view_model.download_model(model_id),
+                lambda token: self._view_model.download_model(model_id, cancellation=token),
+                self._complete_state_job,
                 _("Downloading model..."),
+                cancellable=True,
             )
         return self._set_state_result(self._view_model.download_model(model_id))
 
@@ -183,13 +185,18 @@ class LocalModelsDialog(QDialog):
     def accept(self) -> None:
         if self._pending_handle is None:
             super().accept()
+        else:
+            self._pending_handle.cancel()
 
     def reject(self) -> None:
         if self._pending_handle is None:
             super().reject()
+        else:
+            self._pending_handle.cancel()
 
     def closeEvent(self, event) -> None:
         if self._pending_handle is not None:
+            self._pending_handle.cancel()
             event.ignore()
         else:
             super().closeEvent(event)
@@ -209,8 +216,10 @@ class LocalModelsDialog(QDialog):
         name: str,
         job: object,
         busy_message: str,
+        *,
+        cancellable: bool = False,
     ) -> bool:
-        return self._run_result_job(name, job, self._complete_state_job, busy_message)
+        return self._run_result_job(name, job, self._complete_state_job, busy_message, cancellable=cancellable)
 
     def _run_result_job(
         self,
@@ -218,6 +227,8 @@ class LocalModelsDialog(QDialog):
         job: object,
         callback: object,
         busy_message: str,
+        *,
+        cancellable: bool = False,
     ) -> bool:
         if self._pending_handle is not None:
             self.status_label.setText(_("Please wait for the current operation."))
@@ -231,7 +242,7 @@ class LocalModelsDialog(QDialog):
         )
         handle = self._job_runner.submit(
             name,
-            lambda _token: job(),
+            lambda token: job(token) if cancellable else job(),
             on_complete=callback,
         )
         if self._pending_handle is not None:
@@ -256,7 +267,8 @@ class LocalModelsDialog(QDialog):
         self.status_label.setText(message)
 
     def _set_busy(self, busy: bool) -> None:
-        self.close_button.setEnabled(not busy)
+        self.close_button.setEnabled(True)
+        self.close_button.setText(_("Cancel") if busy else _("Close"))
         for button in (
             self.refresh_button,
             self.import_button,

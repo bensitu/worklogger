@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from worklogger.app.job_runner import CancellationToken
 
 
 @dataclass(frozen=True)
@@ -21,6 +22,7 @@ class ImportLocalModelCommand:
 class DownloadLocalModelCommand:
     user_id: int
     model_id: str
+    cancellation: CancellationToken | None = None
 
 
 @dataclass(frozen=True)

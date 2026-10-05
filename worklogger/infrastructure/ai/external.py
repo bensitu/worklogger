@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import json
+import errno
+import socket
 import time
 from collections.abc import Callable
 from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
+from urllib.request import Request
+from worklogger.infrastructure.http import https_opener, validate_https_url
 
 from worklogger.app.ports import AIRequest, AIResponse
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
@@ -32,11 +35,15 @@ class OpenAICompatibleGateway:
         self._provider = provider
         self._max_response_bytes = max_response_bytes
         self._retries = max(0, int(retries))
-        self._opener = opener or urlopen
+        self._opener = opener or https_opener(allow_redirects=False)
 
     def generate(self, request: AIRequest) -> Result[AIResponse]:
         if not str(self._api_key or "").strip():
             return Result.failure(ValidationError("ai_api_key_required", "ai_api_key_required"))
+        try:
+            validate_https_url(self._base_url)
+        except ValueError:
+            return Result.failure(ValidationError("ai_configuration_invalid", "ai_configuration_invalid"))
         payload = json.dumps(
             {
                 "model": request.model,
@@ -54,6 +61,7 @@ class OpenAICompatibleGateway:
             method="POST",
         )
         last_error: Exception | None = None
+        error_code = None
         for attempt in range(self._retries + 1):
             try:
                 with self._opener(url_request, timeout=request.timeout_seconds) as response:
@@ -67,13 +75,29 @@ class OpenAICompatibleGateway:
                 return Result.success(AIResponse(text=text, provider=self._provider))
             except (HTTPError, URLError, TimeoutError, OSError, ValueError, json.JSONDecodeError) as exc:
                 last_error = exc
+                reason = exc.reason if isinstance(exc, URLError) else exc
+                retryable = isinstance(reason, socket.gaierror) or (
+                    isinstance(reason, OSError) and reason.errno == errno.ECONNREFUSED
+                )
+                if isinstance(exc, HTTPError):
+                    try:
+                        body = json.loads(exc.read(8193).decode("utf-8"))
+                        value = body.get("error", {}).get("code") if isinstance(body, dict) and isinstance(body.get("error"), dict) else None
+                        if value in ("invalid_api_key", "rate_limit_exceeded", "insufficient_quota", "model_not_found"):
+                            error_code = value
+                    except (OSError, ValueError):
+                        pass
+                    finally:
+                        exc.close()
+                if not retryable:
+                    break
                 if attempt < self._retries:
                     time.sleep(min(0.25 * (attempt + 1), 1.0))
         return Result.failure(
             InfrastructureError(
                 "ai_request_failed",
                 "ai_request_failed",
-                {"reason": str(last_error) if last_error else ""},
+                {"error_type": type(last_error).__name__, "status": last_error.code if isinstance(last_error, HTTPError) else None, "error_code": error_code},
             )
         )
 

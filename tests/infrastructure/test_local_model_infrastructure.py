@@ -5,6 +5,7 @@ import json
 import tempfile
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 from urllib.error import HTTPError
 
 from worklogger.app.ports import AIRequest
@@ -13,9 +14,11 @@ from worklogger.infrastructure.local_model import JsonLocalModelStore, sha256_of
 
 
 class FakeResponse:
-    def __init__(self, payload: bytes) -> None:
+    def __init__(self, payload: bytes, status=200, headers=None) -> None:
         self._payload = payload
         self._offset = 0
+        self.status = status
+        self.headers = headers or {}
 
     def __enter__(self) -> "FakeResponse":
         return self
@@ -32,6 +35,50 @@ class FakeResponse:
 
 
 class LocalModelInfrastructureTests(unittest.TestCase):
+    def test_download_transfer_validation_and_cancellation_preserve_destination(self):
+        from worklogger.infrastructure.local_model.store import HttpRangeDownloader
+
+        payload = b"complete model"
+        digest = hashlib.sha256(payload).hexdigest()
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "model.gguf"
+            destination.write_bytes(b"previous model")
+            partial = destination.with_suffix(".gguf.tmp")
+            for status, headers, body, succeeds in (
+                (200, {"Content-Length": str(len(payload))}, payload, True),
+                (206, {"Content-Range": f"bytes 3-{len(payload)-1}/{len(payload)}"}, payload[3:], True),
+                (200, {"Content-Length": "100"}, payload, False),
+                (206, {"Content-Range": "bytes 1-5/10"}, b"wrong", False),
+            ):
+                with self.subTest(status=status, headers=headers):
+                    destination.write_bytes(b"previous model")
+                    partial.write_bytes(payload[:3])
+                    result = HttpRangeDownloader(opener=lambda *a, **k: FakeResponse(body, status, headers)).download(
+                        url="https://example.test/model.gguf", destination=destination, expected_sha256=digest,
+                    )
+                    self.assertEqual(result.ok, succeeds)
+                    self.assertEqual(destination.read_bytes(), payload if succeeds else b"previous model")
+            downloader = HttpRangeDownloader(opener=lambda *a, **k: self.fail("Unexpected network request"))
+            self.assertFalse(downloader.download(url="https://example.test/model.gguf", destination=destination).ok)
+            result = downloader.download(url="https://example.test/model.gguf", destination=destination,
+                                         expected_sha256=digest, is_cancelled=lambda: True)
+            self.assertFalse(result.ok)
+            self.assertEqual(result.error.code, "job_cancelled")
+
+    def test_model_verification_cache_invalidates_when_file_changes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "model.gguf"
+            source.write_bytes(b"model")
+            store = JsonLocalModelStore(Path(directory) / "models")
+            entry = store.import_model(source).value
+            with patch("worklogger.infrastructure.local_model.store.sha256_of_file", wraps=sha256_of_file) as hashing:
+                self.assertTrue(store.verify_model(entry.id).value.verified)
+                self.assertTrue(store.verify_model(entry.id).value.verified)
+                self.assertEqual(hashing.call_count, 1)
+                (Path(directory) / "models" / entry.filename).write_bytes(b"changed model")
+                self.assertFalse(store.verify_model(entry.id).value.verified)
+                self.assertEqual(hashing.call_count, 2)
+
     def test_import_model_creates_catalog_manifest_and_verifies_sha(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "demo.gguf"
@@ -144,6 +191,7 @@ class LocalModelInfrastructureTests(unittest.TestCase):
             result = HttpRangeDownloader(opener=opener).download(
                 url="https://example.test/remote.gguf",
                 destination=destination,
+                expected_sha256=hashlib.sha256(payload).hexdigest(),
             )
 
             self.assertTrue(result.ok)

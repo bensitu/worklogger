@@ -24,7 +24,11 @@ identifier is not a provider model selection; an integration must supply one.
 
 The external adapter sends model/messages JSON to `<base_url>/chat/completions`
 using an injected API credential and HTTP opener. It applies timeouts, a bounded
-response size, and limited retries. It does not read an API key automatically from
+response size, and retries only DNS or connection-refused failures before a connection is established.
+HTTP errors, read timeouts, and invalid responses are not retried. Redirects are
+rejected to prevent forwarding credentials. Error details retain only exception
+types, HTTP status, and bounded machine-readable error codes, not response messages.
+It does not read an API key automatically from
 environment variables or enable itself from the Settings page.
 
 The local adapter calls an injected Python generator with messages and an output
@@ -43,11 +47,15 @@ conversation history are user data, not executable instructions.
 The desktop store is `models/` beside the database and is shared between accounts
 using that database directory. Selection is an account setting. Imported files
 must be nonempty `.gguf` files; metadata records a computed SHA-256 digest.
-Verification checks existence, size, and an available checksum, not inference
+Verification checks existence, size, and a required checksum, not inference
 quality or semantic validity of a model.
 
-Downloads use a temporary file and HTTP range handling. Catalog entries supply
-their download URLs and may supply a checksum. A remote catalog is only used when
+Downloads require a catalog SHA-256 checksum. A per-file lock protects resumable
+partial files; range and response lengths are validated. Servers ignoring ranges
+restart the transfer. Only a matching complete file replaces the destination.
+Cancellation leaves a partial file for a later retry. Verification results are
+cached by path, file timestamps, size, and expected checksum.
+A remote catalog is only used when
 an explicit URL is passed to the store constructor; desktop startup does not pass
 one. Refresh therefore reads local metadata by default. The root catalog file is
 not automatically copied into runtime storage.
@@ -77,10 +85,11 @@ and response-size limit. It reports a newer version; it does not install it.
 Model and external-AI adapters contact the supplied URLs when invoked. Holiday
 lookup uses the installed `holidays` package rather than an online calendar feed.
 
-The Network settings form does not install a global proxy. Standard-library HTTP
-clients may still observe their own environment/system proxy behavior. Test the
-actual adapter and deployment environment instead of inferring routing from the
-saved form values.
+The shared HTTPS transport uses the certifi certificate bundle and disables
+implicit environment/system proxies. Release and model requests require public
+destination addresses, including redirect targets and the actual connected peer.
+The Network settings form does not install a global proxy or configure this
+transport. A connected proxy integration must be supplied explicitly.
 
 Tray residency is implemented for Windows, menu-bar residency for macOS, and is
 conditional on Qt reporting a tray service. Linux residency is not enabled by the

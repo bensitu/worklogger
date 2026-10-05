@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
+from collections.abc import Callable
 
 from worklogger.app.commands.local_model_commands import (
     DeleteLocalModelCommand,
@@ -37,7 +38,7 @@ class LocalModelStore(Protocol):
     def import_model(self, source: Path) -> Result[LocalModelEntry]:
         ...
 
-    def download_model(self, model_id: str) -> Result[LocalModelEntry]:
+    def download_model(self, model_id: str, *, is_cancelled: Callable[[], bool] | None = None) -> Result[LocalModelEntry]:
         ...
 
     def verify_model(self, model_id: str) -> Result[LocalModelFileStatus]:
@@ -187,6 +188,9 @@ class ImportLocalModelHandler:
             return Result.failure(
                 imported.error or InfrastructureError("local_model_import_failed", "local_model_import_failed")
             )
+        verified = self._store.verify_model(imported.value.id)
+        if not verified.ok or verified.value is None or not verified.value.verified:
+            return Result.failure(verified.error or ValidationError("local_model_not_ready", "local_model_not_ready"))
         self._settings.set(
             command.user_id,
             LOCAL_MODEL_ACTIVE_ID_SETTING_KEY,
@@ -209,7 +213,8 @@ class DownloadLocalModelHandler:
         model_id = _required_model_id(command.model_id)
         if not model_id.ok or model_id.value is None:
             return Result.failure(model_id.error or _model_id_required_error())
-        downloaded = self._store.download_model(model_id.value)
+        downloaded = (self._store.download_model(model_id.value, is_cancelled=command.cancellation.is_cancelled)
+                      if command.cancellation is not None else self._store.download_model(model_id.value))
         if not downloaded.ok or downloaded.value is None:
             return Result.failure(
                 downloaded.error
@@ -218,6 +223,9 @@ class DownloadLocalModelHandler:
                     "local_model_download_failed",
                 )
             )
+        verified = self._store.verify_model(downloaded.value.id)
+        if not verified.ok or verified.value is None or not verified.value.verified:
+            return Result.failure(verified.error or ValidationError("local_model_not_ready", "local_model_not_ready"))
         self._settings.set(
             command.user_id,
             LOCAL_MODEL_ACTIVE_ID_SETTING_KEY,
