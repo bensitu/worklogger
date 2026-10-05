@@ -12,6 +12,7 @@ from worklogger.infrastructure.repositories._mapping import (
     parse_date,
     parse_datetime,
     utc_now_iso,
+    map_rows,
 )
 
 
@@ -98,7 +99,7 @@ class SQLiteReportRepository:
                 """,
                 (user_id, normalized_type),
             ).fetchall()
-        return tuple(self._from_row(row) for row in rows)
+        return map_rows(rows, self._from_row)
 
     def remove(self, user_id: int, report_id: int) -> None:
         with self._connection_factory.transaction(write=True) as connection:

@@ -8,7 +8,6 @@ from worklogger.domain.auth.policies import (
     generate_recovery_key,
     lockout_seconds_for_failure_count,
     normalize_username,
-    password_change_due,
     remember_token_expires_at,
     remember_token_is_expired,
     remember_token_storage_value,
@@ -50,12 +49,6 @@ class AuthPolicyTests(unittest.TestCase):
         self.assertEqual(lockout_seconds_for_failure_count(5, lockout_schedule=schedule), 30)
         self.assertEqual(lockout_seconds_for_failure_count(12, lockout_schedule=schedule), 300)
         self.assertEqual(lockout_seconds_for_failure_count(20, lockout_schedule=schedule), 1800)
-
-    def test_password_change_due_uses_utc_age(self) -> None:
-        now = datetime(2026, 5, 13, tzinfo=timezone.utc)
-        self.assertTrue(password_change_due(None, now=now))
-        self.assertFalse(password_change_due(now - timedelta(days=30), now=now))
-        self.assertTrue(password_change_due(now - timedelta(days=91), now=now))
 
 
 if __name__ == "__main__":

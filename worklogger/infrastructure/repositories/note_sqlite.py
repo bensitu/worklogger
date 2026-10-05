@@ -6,7 +6,7 @@ from datetime import date
 
 from worklogger.domain.notes.models import DailyNote
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
-from worklogger.infrastructure.repositories._mapping import parse_date
+from worklogger.infrastructure.repositories._mapping import parse_date, map_rows
 
 
 def save_note(connection, user_id: int, day: date, content: str, expected_content: str | None = None) -> None:
@@ -44,7 +44,7 @@ class SQLiteDailyNoteRepository:
         with self._connection_factory.connection() as connection:
             rows = connection.execute("SELECT d, content FROM daily_notes WHERE user_id=? AND d BETWEEN ? AND ? ORDER BY d",
                                       (user_id, start.isoformat(), end.isoformat())).fetchall()
-        return tuple(DailyNote(user_id, parse_date(row["d"]), str(row["content"])) for row in rows)
+        return map_rows(rows, lambda row: DailyNote(user_id, parse_date(row["d"]), str(row["content"])))
 
     def save(self, note: DailyNote, *, expected_content: str | None = None) -> None:
         with self._connection_factory.transaction(write=True) as connection:

@@ -143,17 +143,3 @@ def lockout_until_for_failure_count(
     return base + timedelta(seconds=duration)
 
 
-def password_change_due(
-    changed_at: datetime | None,
-    *,
-    now: datetime | None = None,
-    reminder_days: int = 90,
-) -> bool:
-    if changed_at is None:
-        return True
-    base = now or datetime.now(timezone.utc)
-    if base.tzinfo is None:
-        base = base.replace(tzinfo=timezone.utc)
-    if changed_at.tzinfo is None:
-        changed_at = changed_at.replace(tzinfo=timezone.utc)
-    return base - changed_at >= timedelta(days=max(1, int(reminder_days)))

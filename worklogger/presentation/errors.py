@@ -87,6 +87,10 @@ def display_error_code(code: str) -> str:
             return _("Enter content before continuing.")
         case "quick_log_not_selected":
             return _("Select a quick log first.")
+        case "quick_log_not_found":
+            return _("The quick log is no longer available. Reload the records and try again.")
+        case "quick_log_save_failed" | "quick_log_delete_failed":
+            return _("Unable to update the quick log. Your changes have been retained.")
         case "auto_record_already_active" | "auto_record_break_already_active":
             return _("Recording or a break is already active.")
         case "auto_record_not_started" | "auto_record_break_not_active":

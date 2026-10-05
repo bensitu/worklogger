@@ -12,6 +12,7 @@ from worklogger.infrastructure.repositories._mapping import (
     parse_date,
     parse_datetime,
     utc_now_iso,
+    map_rows,
 )
 
 
@@ -57,7 +58,7 @@ class SQLiteQuickLogRepository:
             raise ValueError("quick_log_id_required")
         normalized = normalize_quick_log(quick_log)
         with self._connection_factory.transaction(write=True) as connection:
-            connection.execute(
+            cursor = connection.execute(
                 """
                 UPDATE quick_logs
                 SET date=?, time=?, end_time=?, description=?
@@ -72,13 +73,17 @@ class SQLiteQuickLogRepository:
                     normalized.id,
                 ),
             )
+            if cursor.rowcount != 1:
+                raise ValueError("quick_log_not_found")
 
     def remove(self, user_id: int, quick_log_id: int) -> None:
         with self._connection_factory.transaction(write=True) as connection:
-            connection.execute(
+            cursor = connection.execute(
                 "DELETE FROM quick_logs WHERE user_id=? AND id=?",
                 (user_id, quick_log_id),
             )
+            if cursor.rowcount != 1:
+                raise ValueError("quick_log_not_found")
 
     def list_for_day(self, user_id: int, day: date) -> tuple[QuickLog, ...]:
         with self._connection_factory.connection() as connection:
@@ -90,7 +95,7 @@ class SQLiteQuickLogRepository:
                 """,
                 (user_id, day.isoformat()),
             ).fetchall()
-        return tuple(self._from_row(row) for row in rows)
+        return map_rows(rows, self._from_row)
 
     def list_for_range(
         self,
@@ -107,7 +112,7 @@ class SQLiteQuickLogRepository:
                 """,
                 (user_id, start_day.isoformat(), end_day.isoformat()),
             ).fetchall()
-        return tuple(self._from_row(row) for row in rows)
+        return map_rows(rows, self._from_row)
 
     @staticmethod
     def _from_row(row: sqlite3.Row) -> QuickLog:

@@ -13,7 +13,12 @@ from worklogger.domain.worklog.models import WorkLog, WorkType
 def parse_time(raw: str | None) -> str | None:
     if raw is None or not str(raw).strip():
         return None
-    text = str(raw).strip().replace("：", ":").replace(".", ":")
+    text = str(raw).strip().replace("：", ":")
+    if "." in text:
+        hour_text, _separator, minute_text = text.partition(".")
+        if not hour_text.isdecimal() or len(minute_text) != 2 or not minute_text.isdecimal():
+            return None
+        text = hour_text + ":" + minute_text
 
     try:
         return datetime.strptime(text, "%H:%M").strftime("%H:%M")

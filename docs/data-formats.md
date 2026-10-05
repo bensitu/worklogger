@@ -19,6 +19,10 @@ date,start,end,break,note,work_type
 | `note` | Text; CSV quoting preserves commas and line breaks on export |
 | `work_type` | `normal`, `remote`, `business_trip`, `paid_leave`, `comp_leave`, `sick_leave` |
 
+Time entry accepts `HH:mm` and compact hour/minute digits. Legacy `HH.MM` requires
+two minute digits; ambiguous decimal-looking input such as `1.5` is rejected,
+not interpreted as either decimal hours or `01:05`. Break values remain decimal hours.
+
 Import also accepts `d` for the date and `lunch` for the break. Missing break values
 default to zero; missing work types default to `normal`, and unknown types are
 reported as invalid rows. Both ISO dates and year-first slash dates are accepted. The
@@ -78,6 +82,8 @@ label,bar_value,line_value,leave_hours,leave_marker
 
 Numeric values use two decimal places, and the leave marker is `1` or `0`.
 The file uses UTF-8 with a byte-order mark.
+Export appends the required extension when another suffix is present; a destination
+such as `summary.v2` becomes `summary.v2.csv` or `summary.v2.pdf`.
 
 The PDF adapter uses Qt's text and PDF rendering with Unicode text, font fallback,
 and automatic A4 pagination. It requires the desktop GUI application to be

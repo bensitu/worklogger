@@ -7,6 +7,13 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 
+msgid "The quick log is no longer available. Reload the records and try again."
+msgstr "The quick log is no longer available. Reload the records and try again."
+
+msgid "Unable to update the quick log. Your changes have been retained."
+msgstr "Unable to update the quick log. Your changes have been retained."
+
+
 msgid "System region"
 msgstr "System region"
 

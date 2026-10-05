@@ -7,6 +7,13 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
+msgid "The quick log is no longer available. Reload the records and try again."
+msgstr "빠른 기록을 더 이상 사용할 수 없습니다. 기록을 다시 불러온 후 다시 시도하세요."
+
+msgid "Unable to update the quick log. Your changes have been retained."
+msgstr "빠른 기록을 업데이트할 수 없습니다. 변경 사항은 유지되었습니다."
+
+
 msgid "System region"
 msgstr "시스템 지역"
 

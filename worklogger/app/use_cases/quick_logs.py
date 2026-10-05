@@ -16,7 +16,7 @@ from worklogger.app.queries.quick_log_queries import (
 from worklogger.domain.quicklog.models import QuickLog
 from worklogger.domain.quicklog.repositories import QuickLogRepository
 from worklogger.domain.quicklog.rules import normalize_quick_log
-from worklogger.domain.shared.errors import ValidationError
+from worklogger.domain.shared.errors import ValidationError, NotFoundError, InfrastructureError
 from worklogger.domain.shared.result import Result
 
 
@@ -60,7 +60,12 @@ class UpdateQuickLogHandler:
             )
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
-        self._repository.update(quick_log)
+        try:
+            self._repository.update(quick_log)
+        except ValueError as exc:
+            return Result.failure(NotFoundError(str(exc), str(exc)))
+        except Exception:
+            return Result.failure(InfrastructureError("quick_log_save_failed", "quick_log_save_failed"))
         return Result.success(quick_log)
 
 
@@ -69,7 +74,12 @@ class DeleteQuickLogHandler:
         self._repository = repository
 
     def handle(self, command: DeleteQuickLogCommand) -> Result[None]:
-        self._repository.remove(command.user_id, command.quick_log_id)
+        try:
+            self._repository.remove(command.user_id, command.quick_log_id)
+        except ValueError as exc:
+            return Result.failure(NotFoundError(str(exc), str(exc)))
+        except Exception:
+            return Result.failure(InfrastructureError("quick_log_delete_failed", "quick_log_delete_failed"))
         return Result.success(None)
 
 

@@ -17,7 +17,7 @@ class AnalyticsCsvExporter:
         try:
             path = Path(destination)
             if path.suffix.lower() != ".csv":
-                path = path.with_suffix(".csv")
+                path = path.with_name(path.name + ".csv")
             with atomic_destination(path) as temporary, temporary.open("w", encoding="utf-8-sig", newline="") as handle:
                 writer = csv.writer(handle)
                 writer.writerow(["label", "bar_value", "line_value", "leave_hours", "leave_marker"])
@@ -59,7 +59,7 @@ class AnalyticsPdfExporter:
         try:
             path = Path(destination)
             if path.suffix.lower() != ".pdf":
-                path = path.with_suffix(".pdf")
+                path = path.with_name(path.name + ".pdf")
             lines = [title, ""]
             for index, (label, value) in enumerate(bundle.bar_data):
                 leave = (

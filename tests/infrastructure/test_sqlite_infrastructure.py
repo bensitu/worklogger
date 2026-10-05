@@ -14,7 +14,7 @@ from worklogger.app.commands.auth_commands import (
     RegisterUserCommand,
     ResetPasswordCommand,
 )
-from worklogger.app.commands.quick_log_commands import AddQuickLogCommand
+from worklogger.app.commands.quick_log_commands import AddQuickLogCommand, UpdateQuickLogCommand, DeleteQuickLogCommand
 from worklogger.app.commands.report_commands import SaveReportCommand
 from worklogger.app.commands.settings_commands import SetActiveLocalModelCommand
 from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
@@ -29,7 +29,7 @@ from worklogger.app.use_cases.auth import (
     RegisterUserHandler,
     ResetPasswordHandler,
 )
-from worklogger.app.use_cases.quick_logs import AddQuickLogHandler, GetQuickLogsForRangeHandler
+from worklogger.app.use_cases.quick_logs import AddQuickLogHandler, GetQuickLogsForRangeHandler, UpdateQuickLogHandler, DeleteQuickLogHandler
 from worklogger.app.use_cases.reports import GetReportForPeriodHandler, SaveReportHandler
 from worklogger.app.use_cases.settings import SetActiveLocalModelHandler
 from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
@@ -96,6 +96,29 @@ class SQLiteInfrastructureTests(unittest.TestCase):
                 legacy_iterations=(100,),
             ),
         )
+
+    def test_collection_reads_preserve_valid_records_and_mutations_require_ownership(self) -> None:
+        user = self.auth_repository().create_user("collection-user", "test-password", recovery_key=None, is_admin=False)
+        day = date(2026, 5, 1)
+        repository = SQLiteQuickLogRepository(self.factory)
+        added = AddQuickLogHandler(repository).handle(AddQuickLogCommand(user.id, day, "Valid record"))
+        record_id = added.value.id
+        with self.factory.transaction(write=True) as connection:
+            connection.execute("UPDATE quick_logs SET created_at='invalid' WHERE id=?", (record_id,))
+            connection.execute("INSERT INTO worklog(user_id,d,\"break\",note,work_type) VALUES(?, '2026-05-15X', 0, '', 'normal')", (user.id,))
+            connection.execute("INSERT INTO worklog(user_id,d,\"break\",note,work_type) VALUES(?, '2026-05-01', 0, '', 'normal')", (user.id,))
+        with self.assertLogs("worklogger.infrastructure.repositories._mapping", level="WARNING"):
+            records = SQLiteWorkLogRepository(self.factory).list_for_month(user.id, 2026, 5)
+            quick_logs = repository.list_for_day(user.id, day)
+        self.assertEqual(len(records), 1)
+        self.assertEqual(len(quick_logs), 1)
+        self.assertIsNone(quick_logs[0].created_at)
+        self.assertFalse(UpdateQuickLogHandler(repository).handle(UpdateQuickLogCommand(user.id + 1, record_id, day, "Not owned")).ok)
+        self.assertFalse(DeleteQuickLogHandler(repository).handle(DeleteQuickLogCommand(user.id + 1, record_id)).ok)
+        self.assertTrue(DeleteQuickLogHandler(repository).handle(DeleteQuickLogCommand(user.id, record_id)).ok)
+        self.assertFalse(DeleteQuickLogHandler(repository).handle(DeleteQuickLogCommand(user.id, record_id)).ok)
+        with self.factory.connection() as connection:
+            self.assertEqual(connection.execute("SELECT COUNT(*) FROM worklog").fetchone()[0], 2)
 
     def test_password_hasher_verifies_legacy_iterations(self) -> None:
         hasher = PBKDF2PasswordHasher(iterations=1_000, legacy_iterations=(100,))

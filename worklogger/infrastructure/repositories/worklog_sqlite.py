@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from datetime import date
+import math
 import sqlite3
 
 from worklogger.domain.worklog.models import WorkLog
-from worklogger.domain.worklog.rules import normalize_work_log, normalize_work_type
+from worklogger.domain.worklog.rules import normalize_work_log, normalize_work_type, parse_time
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
-from worklogger.infrastructure.repositories._mapping import parse_date
+from worklogger.infrastructure.repositories._mapping import parse_date, map_rows
 from worklogger.infrastructure.repositories.note_sqlite import save_note
 
 
@@ -38,13 +39,13 @@ class SQLiteWorkLogRepository:
                 self._select + "WHERE w.user_id=? AND w.d BETWEEN ? AND ? ORDER BY w.d",
                 (user_id, f"{prefix}-01", f"{prefix}-31"),
             ).fetchall()
-        return tuple(self._from_row(row) for row in rows)
+        return map_rows(rows, self._from_row)
 
     def list_range(self, user_id: int, start: date, end: date) -> tuple[WorkLog, ...]:
         with self._connection_factory.connection() as connection:
             rows = connection.execute(self._select + "WHERE w.user_id=? AND w.d BETWEEN ? AND ? ORDER BY w.d",
                                       (user_id, start.isoformat(), end.isoformat())).fetchall()
-        return tuple(self._from_row(row) for row in rows)
+        return map_rows(rows, self._from_row)
 
     def list_all(self, user_id: int) -> tuple[WorkLog, ...]:
         with self._connection_factory.connection() as connection:
@@ -52,7 +53,7 @@ class SQLiteWorkLogRepository:
                 self._select + "WHERE w.user_id=? ORDER BY w.d",
                 (user_id,),
             ).fetchall()
-        return tuple(self._from_row(row) for row in rows)
+        return map_rows(rows, self._from_row)
 
     def save(self, work_log: WorkLog, *, expected_note: str | None = None) -> None:
         self.import_many((work_log,), overwrite=True, expected_note=expected_note)
@@ -67,7 +68,8 @@ class SQLiteWorkLogRepository:
                 "AND NOT EXISTS (SELECT 1 FROM worklog WHERE worklog.user_id=daily_notes.user_id AND worklog.d=daily_notes.d)",
                 (user_id,),
             ).fetchall()
-        return tuple(sorted((*records, *(WorkLog(user_id, parse_date(row["d"]), note=row["content"]) for row in rows)),
+        notes = map_rows(rows, lambda row: WorkLog(user_id, parse_date(row["d"]), note=row["content"]))
+        return tuple(sorted((*records, *notes),
                             key=lambda record: record.day))
 
     def import_many(self, rows: tuple[WorkLog, ...], *, overwrite: bool = False, expected_note: str | None = None) -> None:
@@ -125,12 +127,15 @@ class SQLiteWorkLogRepository:
 
     @staticmethod
     def _from_row(row: sqlite3.Row) -> WorkLog:
+        break_hours = float(row["break"] or 0)
+        if not math.isfinite(break_hours) or not 0 <= break_hours <= 24:
+            raise ValueError("stored_work_log_invalid")
         return WorkLog(
             user_id=int(row["user_id"]),
             day=parse_date(row["d"]),
-            start_time=row["start"],
-            end_time=row["end"],
-            break_hours=float(row["break"] or 0),
+            start_time=parse_time(row["start"]),
+            end_time=parse_time(row["end"]),
+            break_hours=break_hours,
             note=str(row["note"] or ""),
             work_type=normalize_work_type(row["work_type"]),
             overnight=bool(int(row["overnight"] or 0)),

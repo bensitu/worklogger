@@ -1,5 +1,12 @@
 # Database and Compatibility
 
+Collection readers omit records with invalid dates or numeric fields and log only
+the count, not their contents. Invalid optional timestamps are presented as absent.
+The original rows remain unchanged so they can be recovered from a retained copy.
+Single-record and storage-operation failures still propagate to the application.
+Quick-log updates and deletions require an existing row belonging to the account;
+missing records are not reported as successful changes.
+
 ## Ownership and Connections
 
 The database is local SQLite. Most business tables include `user_id`, and their

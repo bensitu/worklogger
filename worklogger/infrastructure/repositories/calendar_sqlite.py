@@ -7,7 +7,7 @@ import sqlite3
 
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
-from worklogger.infrastructure.repositories._mapping import parse_date
+from worklogger.infrastructure.repositories._mapping import parse_date, map_rows
 
 
 class SQLiteCalendarEventRepository:
@@ -24,7 +24,7 @@ class SQLiteCalendarEventRepository:
                 """,
                 (user_id, day.isoformat()),
             ).fetchall()
-        return tuple(self._from_row(row) for row in rows)
+        return map_rows(rows, self._from_row)
 
     def list_for_range(
         self,
@@ -41,7 +41,7 @@ class SQLiteCalendarEventRepository:
                 """,
                 (user_id, start_day.isoformat(), end_day.isoformat()),
             ).fetchall()
-        return tuple(self._from_row(row) for row in rows)
+        return map_rows(rows, self._from_row)
 
     def replace_all(self, user_id: int, events: tuple[CalendarEvent, ...]) -> int:
         with self._connection_factory.transaction(write=True) as connection:

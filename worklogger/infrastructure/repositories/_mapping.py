@@ -4,6 +4,25 @@ from __future__ import annotations
 
 from datetime import date, datetime, timezone
 import sqlite3
+import logging
+from collections.abc import Callable, Iterable
+from typing import TypeVar
+
+_T = TypeVar("_T")
+_logger = logging.getLogger(__name__)
+
+
+def map_rows(rows: Iterable[sqlite3.Row], mapper: Callable[[sqlite3.Row], _T]) -> tuple[_T, ...]:
+    records = []
+    invalid = 0
+    for row in rows:
+        try:
+            records.append(mapper(row))
+        except (TypeError, ValueError, OverflowError):
+            invalid += 1
+    if invalid:
+        _logger.warning("Stored records could not be decoded: count=%d", invalid)
+    return tuple(records)
 
 
 def utc_now_iso() -> str:
@@ -26,7 +45,11 @@ def parse_datetime(value: object) -> datetime | None:
         try:
             parsed = datetime.fromisoformat(text)
         except ValueError:
-            parsed = datetime.strptime(text, "%Y-%m-%d %H:%M:%S")
+            try:
+                parsed = datetime.strptime(text, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                _logger.warning("Stored timestamp could not be decoded")
+                return None
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=timezone.utc)
     return parsed

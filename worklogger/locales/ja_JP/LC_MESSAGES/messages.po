@@ -7,6 +7,13 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
+msgid "The quick log is no longer available. Reload the records and try again."
+msgstr "作業メモは利用できなくなりました。記録を再読み込みして再試行してください。"
+
+msgid "Unable to update the quick log. Your changes have been retained."
+msgstr "作業メモを更新できません。変更内容は保持されています。"
+
+
 msgid "System region"
 msgstr "システムの地域"
 

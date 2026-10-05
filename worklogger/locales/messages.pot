@@ -1160,6 +1160,9 @@ msgstr ""
 msgid "The passwords do not match."
 msgstr ""
 
+msgid "The quick log is no longer available. Reload the records and try again."
+msgstr ""
+
 msgid "The report has not loaded. Reload it before continuing."
 msgstr ""
 
@@ -1263,6 +1266,9 @@ msgid "Unable to update automatic recording state. Your saved data has been reta
 msgstr ""
 
 msgid "Unable to update saved sign-in information."
+msgstr ""
+
+msgid "Unable to update the quick log. Your changes have been retained."
 msgstr ""
 
 msgid "Unknown error"

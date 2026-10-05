@@ -7,6 +7,13 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
+msgid "The quick log is no longer available. Reload the records and try again."
+msgstr "该速记已不存在。请重新加载记录后重试。"
+
+msgid "Unable to update the quick log. Your changes have been retained."
+msgstr "无法更新速记。您的修改已保留。"
+
+
 msgid "System region"
 msgstr "系统地区"
 
