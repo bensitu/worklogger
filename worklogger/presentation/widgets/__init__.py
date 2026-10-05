@@ -5,7 +5,6 @@ from worklogger.presentation.widgets.calendar import CalendarDayButton, Calendar
 from worklogger.presentation.widgets.combo_chart import ComboChart
 from worklogger.presentation.widgets.export_menu_button import ExportMenuButton
 from worklogger.presentation.widgets.icon_line_edit import IconLineEdit
-from worklogger.presentation.widgets.page_header import PageHeader
 from worklogger.presentation.widgets.progress_cards import (
     DonutProgressCard,
     DotProgressCard,
@@ -36,7 +35,6 @@ __all__ = [
     "ExportMenuButton",
     "IconLineEdit",
     "OvertimeComparisonChart",
-    "PageHeader",
     "ReportHistoryDisplayItem",
     "ReportHistoryPanel",
     "SegmentedControl",

@@ -18,6 +18,8 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QSizePolicy,
+    QStyle,
+    QStyleOptionTabWidgetFrame,
     QTabWidget,
     QTimeEdit,
     QToolButton,
@@ -30,6 +32,7 @@ from worklogger.domain.worklog.models import WorkType
 from worklogger.domain.worklog.rules import parse_time
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_code, display_error_message
+from worklogger.presentation.work_type_labels import work_type_label
 from worklogger.presentation.viewmodels.auto_record import (
     AutoRecordState,
     AutoRecordViewModel,
@@ -178,7 +181,7 @@ class WorkLogEntryPanel(QWidget):
         self.work_type_combo = QComboBox()
         self.work_type_combo.setObjectName("work_type_combo")
         for work_type in WorkType:
-            self.work_type_combo.addItem(_work_type_label(work_type), work_type.value)
+            self.work_type_combo.addItem(work_type_label(work_type), work_type.value)
         self.work_type_combo.currentIndexChanged.connect(self._emit_draft_changed)
         details_form.addRow(_("Work type"), self.work_type_combo)
 
@@ -299,11 +302,23 @@ class WorkLogEntryPanel(QWidget):
             page.layout().invalidate()
             page.updateGeometry()
         self.time_tabs.updateGeometry()
+        self._fit_current_tab()
+
+    def _fit_current_tab(self) -> None:
+        if self.property("compact"):
+            page = self.time_tabs.currentWidget()
+            option = QStyleOptionTabWidgetFrame()
+            self.time_tabs.initStyleOption(option)
+            content = self.time_tabs.style().subElementRect(QStyle.SubElement.SE_TabWidgetTabContents, option, self.time_tabs)
+            chrome = self.time_tabs.height() - content.height()
+            self.time_tabs.setMaximumHeight(page.sizeHint().height() + max(0, chrome))
 
     def _entry_mode_changed(self, index: int) -> None:
         state = self._auto_record_view_model.state()
         if index == 1 and (state.active or state.pending_save):
             self._apply_auto_state(state)
+        if self._form is not None:
+            self.set_preview_form(self._form)
 
     def set_form(self, form: WorkLogEntryForm) -> None:
         self._form = form
@@ -334,8 +349,11 @@ class WorkLogEntryPanel(QWidget):
         self.hours_label.setText(f"{_('Worked')}: {form.worked_hours:.1f}{_('h')}")
         self.status_label.setText(", ".join(flags))
         self.status_label.setVisible(bool(flags))
-        self.error_label.setText("\n".join(display_error_code(code) for code in form.errors))
-        self.error_label.setVisible(bool(form.errors))
+        errors = form.errors
+        if self.time_tabs.currentIndex() == 1 and self._auto_record_view_model.state().active:
+            errors = tuple(code for code in errors if code != "time_range_incomplete")
+        self.error_label.setText("\n".join(display_error_code(code) for code in errors))
+        self.error_label.setVisible(bool(errors))
         self.save_button.setEnabled(form.can_save)
         self._sync_auto_from_form(form)
 
@@ -513,20 +531,9 @@ class WorkLogEntryPanel(QWidget):
         if self._auto_record_view_model.last_error is not None:
             self.auto_status_label.setText(display_error_message(self._auto_record_view_model.last_error))
             self.auto_status_label.show()
+        self._fit_current_tab()
 
 
 def _empty_to_none(value: str) -> str | None:
     stripped = str(value or "").strip()
     return stripped or None
-
-
-def _work_type_label(work_type: WorkType) -> str:
-    labels = {
-        WorkType.NORMAL: _("Normal"),
-        WorkType.REMOTE: _("Remote"),
-        WorkType.BUSINESS_TRIP: _("Business trip"),
-        WorkType.PAID_LEAVE: _("Paid leave"),
-        WorkType.COMP_LEAVE: _("Comp leave"),
-        WorkType.SICK_LEAVE: _("Sick leave"),
-    }
-    return labels[work_type]

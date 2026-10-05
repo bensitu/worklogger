@@ -482,7 +482,6 @@ def _build_runtime_for_user(
                 window_config=window_config,
                 settings_workflow=settings_workflow,
                 residency_controller=residency_controller,
-                job_runner=job_runner,
             ),
             connection_factory=connection_factory,
             database_path=database_path,
@@ -872,7 +871,6 @@ def _build_minimal_view(
     window_config: AppWindowConfig,
     settings_workflow: SettingsWorkflowController | None,
     residency_controller: QtResidencyController,
-    job_runner: JobRunner | None,
 ) -> MinimalView:
     return MinimalView(
         worklog_entry_view_model=worklog_entry_view_model,

@@ -159,7 +159,7 @@ class JsonLocalModelStore:
                 status="local",
                 sha256=digest,
                 estimated_size_mb=max(1, int(source.stat().st_size / 1_048_576)),
-                description=f"Local model: {destination.name}",
+                description=destination.name,
             )
             with self._metadata_lock:
                 catalog = [item for item in self._load_catalog() if item.id != entry.id]

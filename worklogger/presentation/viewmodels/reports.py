@@ -15,7 +15,12 @@ from worklogger.app.commands.report_commands import (
     SaveReportTemplateCommand,
 )
 from worklogger.app.queries.report_queries import GetReportForPeriodQuery, ListReportsQuery
-from worklogger.app.use_cases.ai import RewriteTextResult
+from worklogger.app.ports import (
+    MarkdownExporter,
+    ResetTemplateHandlerProtocol,
+    RewriteTextHandlerProtocol,
+    SaveTemplateHandlerProtocol,
+)
 from worklogger.app.use_cases.reports import GeneratedReport, TemplateProvider
 from worklogger.domain.reporting.models import Report
 from worklogger.domain.reporting.periods import (
@@ -46,26 +51,6 @@ class ListReportsHandlerProtocol(Protocol):
 
 class SaveReportHandlerProtocol(Protocol):
     def handle(self, command: SaveReportCommand) -> Result[Report]:
-        ...
-
-
-class SaveTemplateHandlerProtocol(Protocol):
-    def handle(self, command: SaveReportTemplateCommand) -> Result[ReportTemplate]:
-        ...
-
-
-class ResetTemplateHandlerProtocol(Protocol):
-    def handle(self, command: ResetReportTemplateCommand) -> Result[None]:
-        ...
-
-
-class MarkdownExportServiceProtocol(Protocol):
-    def export_markdown(self, destination: Path, content: str) -> Result[Path]:
-        ...
-
-
-class RewriteTextHandlerProtocol(Protocol):
-    def handle(self, command: RewriteTextCommand) -> Result[RewriteTextResult]:
         ...
 
 
@@ -103,7 +88,7 @@ class ReportEditorViewModel:
         save_report_handler: SaveReportHandlerProtocol,
         save_template_handler: SaveTemplateHandlerProtocol,
         reset_template_handler: ResetTemplateHandlerProtocol,
-        markdown_exporter: MarkdownExportServiceProtocol,
+        markdown_exporter: MarkdownExporter,
         rewrite_handler: RewriteTextHandlerProtocol,
         list_reports_handler: ListReportsHandlerProtocol | None = None,
         language: str = "en_US",

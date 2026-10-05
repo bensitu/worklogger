@@ -59,12 +59,6 @@ class GitHubReleaseUpdateChecker:
             )
 
 
-class DisabledUpdateChecker:
-    def check_latest_version(self, current_version: str) -> Result[str | None]:
-        del current_version
-        return Result.success(None)
-
-
 def _normalize_version(value: str) -> str:
     match = re.search(r"(\d+(?:\.\d+){0,3})", str(value or ""))
     return match.group(1) if match else "0"

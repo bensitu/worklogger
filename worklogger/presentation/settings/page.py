@@ -830,9 +830,6 @@ class SettingsPage(QWidget):
             self.status_label.setText(message)
             self.status_label.hide()
 
-    def _mark_external_test_unconfigured(self) -> None:
-        self.external_model_status_label.setText(_("External model testing is not configured."))
-
     def _populate_holiday_subdivisions(self, country: str, subdivision: str = "") -> None:
         blocked = self.holiday_subdivision_combo.blockSignals(True)
         try:

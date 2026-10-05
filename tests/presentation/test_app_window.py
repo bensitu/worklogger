@@ -297,6 +297,7 @@ class AppWindowTests(unittest.TestCase):
             panel.note_toggle_button.setChecked(True)
             self.assertTrue(panel.note_input.isVisible())
             panel.clock_in_button.click()
+            self.assertFalse(panel.error_label.isVisible())
             current = datetime(2026, 4, 20, 10, 0)
             panel.break_button.click()
             self.assertTrue(panel._auto_record_view_model.state().break_active)

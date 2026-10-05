@@ -76,6 +76,15 @@ Repositories scope records by user ID. Domain validation owns time normalization
 overnight detection, shift-length limits, and break constraints. The UI must not
 reimplement these calculations independently.
 
+Calendar, report, and analytics navigation share month arithmetic from
+`domain/shared/dates.py`. Entry editors and summary views share localized work-type
+labels; reports, notes, and quick logs share clock-range labels. Manual and
+automatic time entry use the same work-type and notes controls;
+automatic detail updates persist together without changing timer boundaries.
+Notes and reports reuse application contracts for template updates, Markdown
+export, and text rewriting. Update checks use the application-level service
+contract rather than a duplicate use-case definition.
+
 Quick logs, daily notes, reports, calendar events, accounts, and settings follow
 the same command/query and handler pattern. Daily notes have independent storage,
 and time-entry reads combine the note for the selected date. Editor saves use

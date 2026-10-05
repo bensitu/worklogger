@@ -58,6 +58,8 @@ Work type and the expandable Notes editor are shared with Manual Input. They can
 be edited before starting, while recording or taking a break, and after stopping.
 Switching entry modes preserves these details. Returning to Auto Record restores
 the active record's date and details rather than editing another selected day.
+An active timer is not reported as an incomplete-time error. Save remains disabled
+until the completed record passes validation.
 Clock Out rejects invalid or excessive elapsed intervals rather than wrapping
 them into a shorter shift. The active record keeps its original date when the
 calendar selection changes.

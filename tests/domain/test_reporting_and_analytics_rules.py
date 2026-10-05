@@ -17,6 +17,7 @@ from worklogger.domain.reporting.periods import (
     weekly_period,
 )
 from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.shared.dates import add_months
 from worklogger.domain.worklog.rules import normalize_work_log
 
 
@@ -73,6 +74,13 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
             analytics_period(2026, 1, "invalid")
 
     def test_report_periods_match_baseline_week_and_month_boundaries(self) -> None:
+        for day, offset, expected in (
+            (date(2026, 1, 31), -1, date(2025, 12, 1)),
+            (date(2026, 12, 15), 1, date(2027, 1, 1)),
+            (date(2024, 2, 29), 0, date(2024, 2, 1)),
+            (date(2026, 4, 15), -15, date(2025, 1, 1)),
+        ):
+            self.assertEqual(add_months(day, offset), expected)
         weekly = weekly_period(date(2026, 4, 22), week_start_monday=True)
         self.assertEqual(weekly.start, date(2026, 4, 20))
         self.assertEqual(weekly.end, date(2026, 4, 26))

@@ -94,25 +94,15 @@ class SQLiteConnectionFactory:
         *,
         write: bool = True,
     ) -> Iterator[sqlite3.Connection]:
-        lock = self.write_lock if write else _NullLock()
-        with lock:
-            with self.connection() as connection:
-                try:
-                    connection.execute("BEGIN IMMEDIATE" if write else "BEGIN")
-                    yield connection
-                    connection.commit()
-                except Exception:
-                    connection.rollback()
-                    raise
+        with self.connection() as connection:
+            try:
+                connection.execute("BEGIN IMMEDIATE" if write else "BEGIN")
+                yield connection
+                connection.commit()
+            except Exception:
+                connection.rollback()
+                raise
 
 
 class DatabaseIntegrityError(sqlite3.DatabaseError):
     """An explicit integrity failure rather than an operational access failure."""
-
-
-class _NullLock:
-    def __enter__(self) -> "_NullLock":
-        return self
-
-    def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
-        return None

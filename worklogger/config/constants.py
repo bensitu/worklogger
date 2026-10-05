@@ -32,7 +32,6 @@ LOGIN_LOCKOUT_SCHEDULE = (
     (20, 86400),
 )
 
-FORCE_PASSWORD_CHANGE_SETTING_KEY = "force_password_change"
 LOCAL_MODEL_ACTIVE_ID_SETTING_KEY = "local_model_active_id"
 LOCAL_MODEL_ENABLED_SETTING_KEY = "local_model_enabled"
 

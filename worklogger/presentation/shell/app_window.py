@@ -24,9 +24,11 @@ from PySide6.QtWidgets import (
 )
 
 from worklogger.domain.shared.errors import AppError, CancellationError
+from worklogger.domain.shared.dates import add_months
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_code, display_error_message
 from worklogger.presentation.date_labels import month_label
+from worklogger.presentation.work_type_labels import work_type_label
 from worklogger.presentation.settings import SettingsWorkflow
 from worklogger.presentation.shell.pages import (
     AnalyticsPage,
@@ -258,13 +260,13 @@ class AppWindow(QMainWindow):
     def previous_month(self) -> bool:
         if not self._confirm_discard_changes_if_needed():
             return False
-        self._current_month = _add_months(self._current_month, -1)
+        self._current_month = add_months(self._current_month, -1)
         return self.refresh()
 
     def next_month(self) -> bool:
         if not self._confirm_discard_changes_if_needed():
             return False
-        self._current_month = _add_months(self._current_month, 1)
+        self._current_month = add_months(self._current_month, 1)
         return self.refresh()
 
     def go_today(self) -> bool:
@@ -710,17 +712,10 @@ class AppWindow(QMainWindow):
         return answer == QMessageBox.StandardButton.Yes
 
 
-def _add_months(first_day: date, months: int) -> date:
-    month_index = first_day.month - 1 + months
-    year = first_day.year + month_index // 12
-    month = month_index % 12 + 1
-    return date(year, month, 1)
-
-
 def _record_summary(form: object) -> tuple[str, ...]:
     worked_hours = float(getattr(form, "worked_hours", 0.0) or 0.0)
     note = str(getattr(form, "note", "") or "").strip()
-    work_type = _work_type_label(str(getattr(form, "work_type", "") or ""))
+    work_type = work_type_label(str(getattr(form, "work_type", "") or ""))
     start_time = getattr(form, "start_time", None)
     end_time = getattr(form, "end_time", None)
     lines: list[str] = []
@@ -732,15 +727,3 @@ def _record_summary(form: object) -> tuple[str, ...]:
     if note:
         lines.append(note)
     return tuple(lines)
-
-
-def _work_type_label(work_type: str) -> str:
-    labels = {
-        "normal": _("Normal"),
-        "remote": _("Remote"),
-        "business_trip": _("Business trip"),
-        "paid_leave": _("Paid leave"),
-        "comp_leave": _("Comp leave"),
-        "sick_leave": _("Sick leave"),
-    }
-    return labels.get(work_type, "")

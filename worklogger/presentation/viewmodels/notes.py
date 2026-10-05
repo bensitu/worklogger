@@ -16,13 +16,20 @@ from worklogger.app.commands.report_commands import (
 from worklogger.app.queries.calendar_queries import GetCalendarEventsForDayQuery
 from worklogger.app.queries.note_queries import GetDailyNoteQuery
 from worklogger.app.queries.quick_log_queries import GetQuickLogsForDayQuery
-from worklogger.app.use_cases.ai import RewriteTextResult
+from worklogger.app.ports import (
+    MarkdownExporter,
+    ResetTemplateHandlerProtocol,
+    RewriteTextHandlerProtocol,
+    SaveTemplateHandlerProtocol,
+)
+from worklogger.app.use_cases.reports import TemplateProvider
 from worklogger.infrastructure.i18n import _
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.notes.models import DailyNote
 from worklogger.domain.quicklog.models import QuickLog
 from worklogger.domain.reporting.templates import ReportTemplate, render_template
 from worklogger.domain.shared.errors import ValidationError
+from worklogger.domain.shared.dates import time_range_label
 from worklogger.domain.shared.result import Result
 
 
@@ -49,36 +56,6 @@ class CalendarEventsForDayHandlerProtocol(Protocol):
         ...
 
 
-class TemplateProviderProtocol(Protocol):
-    def get_template(
-        self,
-        language: str,
-        template_type: str,
-        user_id: int | None = None,
-    ) -> Result[str]:
-        ...
-
-
-class SaveTemplateHandlerProtocol(Protocol):
-    def handle(self, command: SaveReportTemplateCommand) -> Result[ReportTemplate]:
-        ...
-
-
-class ResetTemplateHandlerProtocol(Protocol):
-    def handle(self, command: ResetReportTemplateCommand) -> Result[None]:
-        ...
-
-
-class MarkdownExportServiceProtocol(Protocol):
-    def export_markdown(self, destination: Path, content: str) -> Result[Path]:
-        ...
-
-
-class RewriteTextHandlerProtocol(Protocol):
-    def handle(self, command: RewriteTextCommand) -> Result[RewriteTextResult]:
-        ...
-
-
 @dataclass(frozen=True)
 class NoteEditorState:
     user_id: int
@@ -97,10 +74,10 @@ class NoteEditorViewModel:
         save_note_handler: SaveDailyNoteHandlerProtocol,
         quick_logs_handler: QuickLogsForDayHandlerProtocol,
         calendar_events_handler: CalendarEventsForDayHandlerProtocol,
-        templates: TemplateProviderProtocol,
+        templates: TemplateProvider,
         save_template_handler: SaveTemplateHandlerProtocol,
         reset_template_handler: ResetTemplateHandlerProtocol,
-        markdown_exporter: MarkdownExportServiceProtocol,
+        markdown_exporter: MarkdownExporter,
         rewrite_handler: RewriteTextHandlerProtocol,
         language: str = "en_US",
     ) -> None:
@@ -236,7 +213,7 @@ class NoteEditorViewModel:
 def _quick_log_block(quick_logs: tuple[QuickLog, ...]) -> str:
     lines: list[str] = []
     for quick_log in quick_logs:
-        time_text = _time_range(quick_log.start_time, quick_log.end_time)
+        time_text = time_range_label(quick_log.start_time, quick_log.end_time)
         prefix = f"{time_text}: " if time_text else ""
         description = quick_log.description.replace("\n", "\n  ")
         lines.append(f"- {prefix}{description}")
@@ -246,19 +223,11 @@ def _quick_log_block(quick_logs: tuple[QuickLog, ...]) -> str:
 def _event_block(events: tuple[CalendarEvent, ...], language: str) -> str:
     lines: list[str] = []
     for event in events:
-        time_text = _("All day", language=language) if event.all_day else _time_range(event.start_time, event.end_time)
+        time_text = _("All day", language=language) if event.all_day else time_range_label(event.start_time, event.end_time)
         prefix = f"{time_text}: " if time_text else ""
         summary = event.summary.replace("\n", "\n  ")
         lines.append(f"- {prefix}{summary}")
     return "\n".join(lines) if lines else "- "
-
-
-def _time_range(start_time: str | None, end_time: str | None) -> str:
-    start = str(start_time or "").strip()
-    end = str(end_time or "").strip()
-    if start and end:
-        return f"{start}-{end}"
-    return start or end
 
 
 def _validation(code: str) -> ValidationError:

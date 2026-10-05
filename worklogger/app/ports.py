@@ -5,10 +5,16 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol
+from typing import Protocol, TYPE_CHECKING
 
+from worklogger.app.commands.ai_commands import RewriteTextCommand
+from worklogger.app.commands.report_commands import ResetReportTemplateCommand, SaveReportTemplateCommand
+from worklogger.domain.reporting.templates import ReportTemplate
 from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.shared.result import Result
+
+if TYPE_CHECKING:
+    from worklogger.app.use_cases.ai import RewriteTextResult
 
 
 @dataclass(frozen=True)
@@ -50,8 +56,23 @@ class UpdateChecker(Protocol):
         ...
 
 
-class ExportService(Protocol):
-    def export_rows(self, destination: Path, rows: Iterable[object]) -> Result[Path]:
+class MarkdownExporter(Protocol):
+    def export_markdown(self, destination: Path, content: str) -> Result[Path]:
+        ...
+
+
+class SaveTemplateHandlerProtocol(Protocol):
+    def handle(self, command: SaveReportTemplateCommand) -> Result[ReportTemplate]:
+        ...
+
+
+class ResetTemplateHandlerProtocol(Protocol):
+    def handle(self, command: ResetReportTemplateCommand) -> Result[None]:
+        ...
+
+
+class RewriteTextHandlerProtocol(Protocol):
+    def handle(self, command: RewriteTextCommand) -> Result[RewriteTextResult]:
         ...
 
 

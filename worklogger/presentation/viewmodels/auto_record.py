@@ -330,13 +330,6 @@ class AutoRecordViewModel:
         )
         return self._set_state(updated)
 
-    def set_note(self, note: str) -> AutoRecordState:
-        self.update_details(note=note, work_type=self._state.work_type)
-        return self._state
-
-    def set_work_type(self, work_type: str) -> Result[AutoRecordState]:
-        return self.update_details(note=self._state.note, work_type=work_type)
-
     def update_details(self, *, note: str, work_type: str) -> Result[AutoRecordState]:
         try:
             normalized = normalize_work_type(work_type).value

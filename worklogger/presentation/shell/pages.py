@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
 )
 
 from worklogger.domain.shared.errors import AppError, CancellationError, ValidationError
+from worklogger.domain.shared.dates import add_months
 from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBundle
 from worklogger.app.job_runner import JobRunner
 from worklogger.presentation.job_runner import QtJobRunner
@@ -34,6 +35,7 @@ from worklogger.presentation.reporting.dialog import ReportTemplateDialog, confi
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.date_labels import month_label, month_name, period_range_label, duration_label
+from worklogger.presentation.work_type_labels import work_type_label
 from worklogger.presentation.viewmodels import (
     AnalyticsState,
     AnalyticsViewModel,
@@ -445,7 +447,7 @@ class AnalyticsPage(QWidget):
         mode_order = {"normal": 0, "remote": 1, "business_trip": 2, "leave": 3}
         work_modes = sorted(state.work_modes, key=lambda item: mode_order.get(item[0], 4))
         self.breakdown_chart.chart.set_segments(
-            tuple((_work_mode_label(key), value) for key, value in work_modes),
+            tuple((work_type_label(key) or key, value) for key, value in work_modes),
             keys=tuple(key for key, _value in work_modes),
         )
         self.daily_average_value_label.setText(duration_label(state.stats.average_hours))
@@ -472,7 +474,7 @@ class AnalyticsPage(QWidget):
             values.append(target)
             values.sort(reverse=True)
         for value in values:
-            label = str(value.year) if scope == "annual" else (_("Q{quarter} {year}").format(quarter=(value.month - 1) // 3 + 1, year=value.year) if scope == "quarterly" else _month_label(value))
+            label = str(value.year) if scope == "annual" else (_("Q{quarter} {year}").format(quarter=(value.month - 1) // 3 + 1, year=value.year) if scope == "quarterly" else month_label(value))
             self.period_combo.addItem(label, value)
         self.period_combo.setCurrentIndex(values.index(target))
         self.period_combo.blockSignals(False)
@@ -834,7 +836,7 @@ class ReportsPage(QWidget):
                 report_type=item.report_type,
                 period_start=item.period_start,
                 period_end=item.period_end,
-                label=_period_range_label(item.period_start, item.period_end),
+                label=period_range_label(item.period_start, item.period_end),
                 content=item.content,
                 saved=item.saved,
                 created_at=item.created_at,
@@ -904,22 +906,10 @@ class UnavailableSettingsPage(QWidget):
 
 
 def _period_label(state: ReportEditorState) -> str:
-    label = _period_range_label(state.period_start, state.period_end)
+    label = period_range_label(state.period_start, state.period_end)
     if state.report_type == "weekly":
         label += " " + _("(Week {week})").format(week=state.period_start.isocalendar().week)
     return label
-
-
-def _month_label(day: date) -> str:
-    return month_label(day)
-
-
-def _work_mode_label(key: str) -> str:
-    return {"normal": _("Normal"), "remote": _("Remote"), "business_trip": _("Business trip"), "leave": _("Leave")}.get(key, key)
-
-
-def _period_range_label(start: date, end: date) -> str:
-    return period_range_label(start, end)
 
 
 def _month_chart_labels(bundle: ChartDataBundle) -> ChartDataBundle:
@@ -932,13 +922,6 @@ def _quarter_chart_labels(bundle: ChartDataBundle) -> ChartDataBundle:
     def labels(values: tuple[tuple[str, float], ...]) -> tuple[tuple[str, float], ...]:
         return tuple((_("Q{quarter}").format(quarter=int(label[1:])), value) for label, value in values)
     return replace(bundle, bar_data=labels(bundle.bar_data), line_data=labels(bundle.line_data), leave_hours_data=labels(bundle.leave_hours_data))
-
-
-def add_months(first_day: date, months: int) -> date:
-    month_index = first_day.month - 1 + months
-    year = first_day.year + month_index // 12
-    month = month_index % 12 + 1
-    return date(year, month, 1)
 
 
 def shift_period(day: date, report_type: str, direction: int) -> date:

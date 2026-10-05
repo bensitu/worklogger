@@ -37,6 +37,7 @@ from worklogger.domain.reporting.templates import (
     render_template,
 )
 from worklogger.domain.shared.errors import InfrastructureError, NotFoundError, ValidationError
+from worklogger.domain.shared.dates import time_range_label
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.worklog.repositories import WorkLogRepository
@@ -334,7 +335,7 @@ def _quick_log_lines(quick_logs: tuple[QuickLog, ...]) -> str:
         return "- "
     lines: list[str] = []
     for quick_log in sorted(quick_logs, key=lambda item: (item.day, item.start_time, item.id or 0)):
-        time_text = _time_range(quick_log.start_time, quick_log.end_time)
+        time_text = time_range_label(quick_log.start_time, quick_log.end_time)
         prefix = f"{quick_log.day.isoformat()} {time_text}".strip()
         lines.append(_list_item(f"{prefix}: {quick_log.description}"))
     return "\n".join(lines)
@@ -345,18 +346,10 @@ def _event_lines(events: tuple[CalendarEvent, ...], _: Callable[[str], str]) -> 
         return "- "
     lines: list[str] = []
     for event in sorted(events, key=lambda item: (item.day, item.start_time or "", item.summary)):
-        time_text = _("All day") if event.all_day else _time_range(event.start_time, event.end_time)
+        time_text = _("All day") if event.all_day else time_range_label(event.start_time, event.end_time)
         prefix = f"{event.day.isoformat()} {time_text}".strip()
         lines.append(_list_item(f"{prefix}: {event.summary}"))
     return "\n".join(lines)
-
-
-def _time_range(start_time: str | None, end_time: str | None) -> str:
-    start = str(start_time or "").strip()
-    end = str(end_time or "").strip()
-    if start and end:
-        return f"{start}-{end}"
-    return start or end
 
 
 def _list_item(content: str) -> str:

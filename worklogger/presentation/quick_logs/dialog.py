@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from worklogger.domain.quicklog.models import QuickLog
+from worklogger.domain.shared.dates import time_range_label
 from worklogger.domain.shared.errors import AppError, ValidationError
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
@@ -190,14 +191,6 @@ class QuickLogDialog(QDialog):
 
 
 def _quick_log_text(quick_log: QuickLog) -> str:
-    time_text = _time_range(quick_log.start_time, quick_log.end_time)
+    time_text = time_range_label(quick_log.start_time, quick_log.end_time)
     prefix = f"{time_text}  " if time_text else ""
     return f"{prefix}{quick_log.description}"
-
-
-def _time_range(start_time: str | None, end_time: str | None) -> str:
-    start = str(start_time or "").strip()
-    end = str(end_time or "").strip()
-    if start and end:
-        return f"{start}-{end}"
-    return start or end

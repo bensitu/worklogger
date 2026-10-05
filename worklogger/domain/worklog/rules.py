@@ -6,7 +6,7 @@ from dataclasses import replace
 from datetime import date, datetime, timedelta, timezone, tzinfo
 import math
 
-from worklogger.config.constants import LEAVE_TYPES, MAX_SHIFT_HOURS, WORK_TYPE_KEYS
+from worklogger.config.constants import MAX_SHIFT_HOURS, WORK_TYPE_KEYS
 from worklogger.domain.worklog.models import WorkLog, WorkType
 
 
@@ -140,10 +140,6 @@ def normalize_work_type(raw: str | WorkType | None) -> WorkType:
     if value not in WORK_TYPE_KEYS:
         return WorkType.NORMAL
     return WorkType(value)
-
-
-def is_leave_work_type(work_type: str | WorkType | None) -> bool:
-    return normalize_work_type(work_type).value in LEAVE_TYPES
 
 
 def normalize_work_log(

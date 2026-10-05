@@ -3,16 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
+from worklogger.app.ports import UpdateChecker
 
 from worklogger.app.queries.update_queries import CheckForUpdatesQuery
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
-
-
-class UpdateCheckerProtocol(Protocol):
-    def check_latest_version(self, current_version: str) -> Result[str | None]:
-        ...
 
 
 @dataclass(frozen=True)
@@ -23,7 +18,7 @@ class UpdateCheckResult:
 
 
 class CheckForUpdatesHandler:
-    def __init__(self, checker: UpdateCheckerProtocol) -> None:
+    def __init__(self, checker: UpdateChecker) -> None:
         self._checker = checker
 
     def handle(self, query: CheckForUpdatesQuery) -> Result[UpdateCheckResult]:
