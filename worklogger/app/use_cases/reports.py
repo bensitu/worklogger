@@ -21,6 +21,7 @@ from worklogger.app.queries.report_queries import (
 )
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.calendar.repositories import CalendarEventRepository
+from worklogger.domain.notes.repositories import DailyNoteRepository
 from worklogger.domain.quicklog.models import QuickLog
 from worklogger.domain.quicklog.repositories import QuickLogRepository
 from worklogger.domain.reporting.models import Report
@@ -203,11 +204,13 @@ class GenerateReportHandler:
         quick_logs: QuickLogRepository,
         calendar_events: CalendarEventRepository,
         templates: TemplateProvider,
+        notes: DailyNoteRepository | None = None,
     ) -> None:
         self._work_logs = work_logs
         self._quick_logs = quick_logs
         self._calendar_events = calendar_events
         self._templates = templates
+        self._notes = notes
 
     def handle(self, command: GenerateReportCommand) -> Result[GeneratedReport]:
         try:
@@ -220,11 +223,15 @@ class GenerateReportHandler:
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
 
-        work_logs = tuple(
-            work_log
-            for work_log in self._work_logs.list_all(command.user_id)
-            if period.start <= work_log.day <= period.end
-        )
+        try:
+            work_logs = self._work_logs.list_range(command.user_id, period.start, period.end)
+            if self._notes is not None:
+                notes = self._notes.list_range(command.user_id, period.start, period.end)
+                recorded_days = {record.day for record in work_logs}
+                work_logs += tuple(WorkLog(command.user_id, note.day, note=note.content)
+                                   for note in notes if note.content and note.day not in recorded_days)
+        except Exception:
+            return Result.failure(InfrastructureError("report_load_failed", "report_load_failed"))
         quick_logs = self._quick_logs.list_for_range(
             command.user_id,
             period.start,

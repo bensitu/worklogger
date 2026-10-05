@@ -75,7 +75,7 @@ class MemoryWorkLogRepository:
     def list_all(self, user_id: int) -> tuple[WorkLog, ...]:
         return tuple(record for (record_user_id, _day), record in self.records.items() if record_user_id == user_id)
 
-    def save(self, work_log: WorkLog) -> None:
+    def save(self, work_log: WorkLog, *, expected_note: str | None = None) -> None:
         self.records[(work_log.user_id, work_log.day)] = work_log
 
     def remove(self, user_id: int, day: date) -> None:

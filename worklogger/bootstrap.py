@@ -551,6 +551,7 @@ def _build_worklog_entry_view_model(
         user_id=user.id,
         get_handler=GetWorkLogHandler(repositories.work_logs),
         save_handler=SaveWorkLogHandler(repositories.work_logs),
+        notes_handler=GetDailyNoteHandler(repositories.daily_notes),
     )
 
 
@@ -647,6 +648,7 @@ def _build_reports_workflow(
                 quick_logs=repositories.quick_logs,
                 calendar_events=repositories.calendar_events,
                 templates=handlers.templates,
+                notes=repositories.daily_notes,
             ),
             get_report_handler=GetReportForPeriodHandler(repositories.reports),
             list_reports_handler=ListReportsHandler(repositories.reports),
@@ -722,7 +724,7 @@ def _build_data_management_view_model(
     return DataManagementViewModel(
         user_id=user.id,
         can_manage_database=user.is_admin,
-        work_logs_handler=GetAllWorkLogsHandler(repositories.work_logs),
+        work_logs_handler=GetAllWorkLogsHandler(repositories.work_logs, include_note_only=True),
         backup_service=SQLiteBackupService(
             connection_factory,
             expected_username=user.username,
@@ -892,6 +894,7 @@ def _build_app_window(
             ),
             holidays_handler=GetHolidaysForRangeHandler(handlers.holiday_provider),
             holiday_country=handlers.holiday_country,
+            notes_handler=GetDailyNoteHandler(repositories.daily_notes),
         ),
         worklog_entry_view_model=worklog_entry_view_model,
         stats_panel_view_model=StatsPanelViewModel(

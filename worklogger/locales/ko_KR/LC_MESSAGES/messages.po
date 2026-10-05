@@ -7,6 +7,9 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
+msgid "This note was changed in another editor. Reload it before saving. Your changes have been retained."
+msgstr "이 메모가 다른 편집기에서 변경되었습니다. 다시 불러온 후 저장하세요. 변경 내용은 유지됩니다."
+
 msgid "Temporary password"
 msgstr "임시 비밀번호"
 

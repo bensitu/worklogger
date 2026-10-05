@@ -14,6 +14,7 @@ from worklogger.app.queries.calendar_queries import (
 )
 from worklogger.app.queries.work_log_queries import GetMonthRecordsQuery
 from worklogger.domain.calendar.models import CalendarEvent, Holiday
+from worklogger.domain.notes.models import DailyNote
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog, WorkType
@@ -23,6 +24,11 @@ from worklogger.presentation.theme import CalendarCellStyle, ThemeEngine
 
 class MonthRecordsHandler(Protocol):
     def handle(self, query: GetMonthRecordsQuery) -> Result[tuple[WorkLog, ...]]:
+        ...
+
+
+class DailyNotesForRangeHandler(Protocol):
+    def list_range(self, user_id: int, start: date, end: date) -> Result[tuple[DailyNote, ...]]:
         ...
 
 
@@ -94,6 +100,7 @@ class CalendarViewModel:
         holidays_handler: HolidaysForRangeHandler | None = None,
         holiday_country: str = "US",
         theme_engine: ThemeEngine | None = None,
+        notes_handler: DailyNotesForRangeHandler | None = None,
     ) -> None:
         self._user_id = user_id
         self._month_records_handler = month_records_handler
@@ -101,6 +108,7 @@ class CalendarViewModel:
         self._holidays_handler = holidays_handler
         self._holiday_country = str(holiday_country or "US").strip().upper() or "US"
         self._theme_engine = theme_engine or ThemeEngine()
+        self._notes_handler = notes_handler
 
     def events_for_day(self, day: date) -> Result[tuple[CalendarEvent, ...]]:
         return self._events_for_range(day, day)
@@ -151,6 +159,12 @@ class CalendarViewModel:
             )
 
         records = {record.day: record for record in record_result.value or ()}
+        notes = {}
+        if options.show_note_markers and self._notes_handler is not None:
+            loaded_notes = self._notes_handler.list_range(self._user_id, grid_start, grid_end)
+            if not loaded_notes.ok or loaded_notes.value is None:
+                return Result.failure(loaded_notes.error or ValidationError("note_load_failed", "note_load_failed"))
+            notes = {note.day: note.content for note in loaded_notes.value}
         events_by_day: dict[date, list[CalendarEvent]] = {}
         for event in event_result.value or ():
             events_by_day.setdefault(event.day, []).append(event)
@@ -195,6 +209,7 @@ class CalendarViewModel:
                     theme=theme,
                     dark=dark,
                     custom_color=custom_color,
+                    note_content=notes.get(cell_day),
                 )
             )
 
@@ -272,6 +287,7 @@ class CalendarViewModel:
         theme: str,
         dark: bool,
         custom_color: str | None,
+        note_content: str | None = None,
     ) -> CalendarDayCell:
         flags: set[str] = set()
         if cell_day == today:
@@ -291,12 +307,11 @@ class CalendarViewModel:
             else 0.0
         )
         leave_hours = record.leave_hours() if record else 0.0
-        note_text = (record.note if record else "").strip()
+        note_text = (note_content if note_content is not None else record.note if record else "").strip()
         has_note_marker = (
             bool(options.show_note_markers)
             and bool(note_text)
-            and bool(record)
-            and not record.has_times
+            and (record is None or not record.has_times)
             and note_text != holiday_name
         )
         text_lines = _cell_text_lines(cell_day, holiday_name, worked_hours, overtime_hours)

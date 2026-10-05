@@ -18,7 +18,10 @@ class WorkLogRepository(Protocol):
     def list_all(self, user_id: int) -> tuple[WorkLog, ...]:
         ...
 
-    def save(self, work_log: WorkLog) -> None:
+    def save(self, work_log: WorkLog, *, expected_note: str | None = None) -> None:
+        ...
+
+    def list_range(self, user_id: int, start: date, end: date) -> tuple[WorkLog, ...]:
         ...
 
     def import_many(self, rows: tuple[WorkLog, ...], *, overwrite: bool = False) -> None:

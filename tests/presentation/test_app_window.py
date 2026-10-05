@@ -70,7 +70,7 @@ class MemoryWorkLogRepository:
             if record_user_id == user_id
         )
 
-    def save(self, work_log: WorkLog) -> None:
+    def save(self, work_log: WorkLog, *, expected_note: str | None = None) -> None:
         self.records[(work_log.user_id, work_log.day)] = work_log
 
     def remove(self, user_id: int, day: date) -> None:

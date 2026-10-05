@@ -39,7 +39,7 @@ class MemoryDailyNoteRepository:
     def get_for_day(self, user_id: int, day: date) -> DailyNote:
         return self.notes.get((user_id, day), DailyNote(user_id, day, ""))
 
-    def save(self, note: DailyNote) -> None:
+    def save(self, note: DailyNote, *, expected_content: str | None = None) -> None:
         self.notes[(note.user_id, note.day)] = note
 
 
@@ -63,7 +63,10 @@ class MemoryWorkLogRepository:
     def list_all(self, user_id: int) -> tuple[WorkLog, ...]:
         return tuple(record for record in self.records if record.user_id == user_id)
 
-    def save(self, work_log: WorkLog) -> None:
+    def list_range(self, user_id: int, start: date, end: date) -> tuple[WorkLog, ...]:
+        return tuple(record for record in self.list_all(user_id) if start <= record.day <= end)
+
+    def save(self, work_log: WorkLog, *, expected_note: str | None = None) -> None:
         self.records = tuple(
             record
             for record in self.records

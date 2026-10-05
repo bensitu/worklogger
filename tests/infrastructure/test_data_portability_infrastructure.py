@@ -34,7 +34,7 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         self.addCleanup(self._tempdir.cleanup)
         self.db_path = str(Path(self._tempdir.name) / "worklog.db")
         self.factory = SQLiteConnectionFactory(self.db_path)
-        self.assertEqual(MigrationRunner(self.factory).run_pending(), (1, 2, 3, 4))
+        self.assertEqual(MigrationRunner(self.factory).run_pending(), (1, 2, 3, 4, 5))
 
     def auth_repository(
         self,
@@ -151,7 +151,7 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         self.assertTrue(service.restore_database(source).ok)
         retained = next(Path(self._tempdir.name).glob("worklog.db.bak_restore_*"))
         with closing(sqlite3.connect(retained)) as connection:
-            self.assertEqual(connection.execute("SELECT note FROM worklog").fetchone()[0], "Recent")
+            self.assertEqual(connection.execute("SELECT content FROM daily_notes").fetchone()[0], "Recent")
         previous = Path(self.db_path + ".pre_restore")
         previous.write_bytes(retained.read_bytes())
         self.assertEqual(service.restore_database(source).error.code, "restore_pending")
@@ -228,7 +228,7 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         self.register_user("alice")
         other_path = Path(self._tempdir.name) / "other.db"
         other_factory = SQLiteConnectionFactory(other_path)
-        self.assertEqual(MigrationRunner(other_factory).run_pending(), (1, 2, 3, 4))
+        self.assertEqual(MigrationRunner(other_factory).run_pending(), (1, 2, 3, 4, 5))
         self.register_user("bob", other_factory)
         service = SQLiteBackupService(self.factory, expected_username="alice")
 

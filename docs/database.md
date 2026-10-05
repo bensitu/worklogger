@@ -23,6 +23,7 @@ external SQLite clients still require SQLite's own locking protections.
 | `users` | Integer ID, unique username, password/recovery hashes and salts, administrator and password-change flags, remembered-token hash/expiry, timestamps |
 | `login_attempts` | Username primary key, failure count, lock expiry, last failure |
 | `worklog` | Composite `(user_id, d)` primary key; start/end, decimal-hour break, note, work type, overnight flag |
+| `daily_notes` | Composite `(user_id, d)` primary key; independent daily note content |
 | `quick_logs` | Integer ID; user/date, optional start/end, description, creation timestamp |
 | `settings` | Composite `(user_id, key)` primary key; string value |
 | `reports` | Integer ID; user, type, inclusive period bounds, Markdown content, creation timestamp |
@@ -34,7 +35,9 @@ external SQLite clients still require SQLite's own locking protections.
 The exact column declarations are in
 [the initial schema](../worklogger/infrastructure/database/migrations/migration_001_initial_schema.py).
 Dates are ISO-formatted text; work times are normalized `HH:MM`; breaks are stored
-in hours. Daily notes live in `worklog.note`. No separate daily-note table exists.
+in hours. Daily notes live in `daily_notes`; the older `worklog.note` column remains
+for file compatibility. Repository reads combine the independent note with its
+working-hour record, while new writes store note content in the independent table.
 
 Saving a new report inserts a row. Updating a saved report replaces its content
 by ID, with account, type, and period checks. Its ID and creation timestamp are
@@ -58,6 +61,7 @@ the application version alone.
 | 2 | Normalize older authentication salt naming and add the required-password-change field |
 | 3 | Normalize activity-event table/index names while preserving identifiers and content |
 | 4 | Add a unique NFKC/casefold account key and explicit local-password availability |
+| 5 | Copy existing notes to independent storage and remove note-only empty work rows |
 
 The initial definition uses current names for new databases. Migration 3 handles
 previous layouts, including a database without a migration ledger. Compatibility
@@ -98,6 +102,15 @@ password when needed. Unversioned databases with current columns are also suppor
 Deleting a user clears the user reference in retained activity records rather
 than leaving a reference to a nonexistent account. Other account-owned data keeps
 its existing cascade behavior.
+
+Daily-note migration saves a private `worklog.db.bak_notes_*` snapshot when notes
+exist, preserves their exact content, and leaves meaningful work/leave rows intact.
+Saving a standalone note never creates a work row. Deleting work preserves its
+note, and deleting an account still removes both. Editor writes compare the loaded
+note content within the transaction; a conflicting edit rejects the save without
+altering either note or work fields. Explicit CSV replacement remains an intentional
+overwrite. CSV export includes note-only dates, which are imported without creating
+empty work rows. Report and calendar queries also include independent notes.
 
 ## Backup and Restore
 

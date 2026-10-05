@@ -1157,6 +1157,9 @@ msgstr ""
 msgid "This model is in use by another user and cannot be deleted."
 msgstr ""
 
+msgid "This note was changed in another editor. Reload it before saving. Your changes have been retained."
+msgstr ""
+
 msgid "Thu"
 msgstr ""
 

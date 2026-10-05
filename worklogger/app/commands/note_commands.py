@@ -11,3 +11,4 @@ class SaveDailyNoteCommand:
     user_id: int
     day: date
     content: str
+    expected_content: str | None = None

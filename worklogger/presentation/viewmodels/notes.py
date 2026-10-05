@@ -114,6 +114,7 @@ class NoteEditorViewModel:
         self._markdown_exporter = markdown_exporter
         self._rewrite_handler = rewrite_handler
         self._language = language
+        self._original_content: dict[date, str] = {}
 
     def load(self, day: date) -> Result[NoteEditorState]:
         note = self._get_note_handler.handle(GetDailyNoteQuery(self._user_id, day))
@@ -129,6 +130,7 @@ class NoteEditorViewModel:
         )
         if not events.ok or events.value is None:
             return Result.failure(events.error or _validation("calendar_load_failed"))
+        self._original_content[day] = note.value.content
         return Result.success(
             NoteEditorState(
                 user_id=self._user_id,
@@ -145,10 +147,12 @@ class NoteEditorViewModel:
                 user_id=self._user_id,
                 day=day,
                 content=content,
+                expected_content=self._original_content.get(day),
             )
         )
         if not saved.ok or saved.value is None:
             return Result.failure(saved.error or _validation("note_save_failed"))
+        self._original_content[day] = saved.value.content
         loaded = self.load(day)
         if loaded.ok:
             return loaded

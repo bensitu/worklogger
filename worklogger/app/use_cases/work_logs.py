@@ -9,7 +9,7 @@ from worklogger.app.queries.work_log_queries import (
     GetMonthRecordsQuery,
     GetWorkLogQuery,
 )
-from worklogger.domain.shared.errors import ValidationError
+from worklogger.domain.shared.errors import ConflictError, InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.worklog.repositories import WorkLogRepository
@@ -40,7 +40,17 @@ class SaveWorkLogHandler:
             )
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
-        self._repository.save(work_log)
+        try:
+            if command.expected_note is None:
+                self._repository.save(work_log)
+            else:
+                self._repository.save(work_log, expected_note=command.expected_note)
+        except ValueError as exc:
+            if str(exc) == "note_conflict":
+                return Result.failure(ConflictError("note_conflict", "note_conflict"))
+            return Result.failure(ValidationError(str(exc), str(exc)))
+        except Exception:
+            return Result.failure(InfrastructureError("worklog_save_failed", "worklog_save_failed"))
         if self._event_bus is not None:
             self._event_bus.publish(WorkLogSaved(user_id=work_log.user_id, day=work_log.day))
         return Result.success(work_log)
@@ -74,8 +84,16 @@ class GetMonthRecordsHandler:
 
 
 class GetAllWorkLogsHandler:
-    def __init__(self, repository: WorkLogRepository) -> None:
+    def __init__(self, repository: WorkLogRepository, *, include_note_only: bool = False) -> None:
         self._repository = repository
+        self._include_note_only = include_note_only
 
     def handle(self, query: GetAllWorkLogsQuery) -> Result[tuple[WorkLog, ...]]:
-        return Result.success(self._repository.list_all(query.user_id))
+        reader = getattr(self._repository, "list_export_rows", self._repository.list_all) if self._include_note_only else self._repository.list_all
+        return Result.success(reader(query.user_id))
+
+    def list_range(self, user_id: int, start, end) -> Result[tuple[WorkLog, ...]]:
+        try:
+            return Result.success(self._repository.list_range(user_id, start, end))
+        except Exception:
+            return Result.failure(InfrastructureError("worklog_load_failed", "worklog_load_failed"))

@@ -1,4 +1,4 @@
-"""SQLite daily note repository backed by the worklog note column."""
+"""Independent SQLite daily notes with optimistic content checks."""
 
 from __future__ import annotations
 
@@ -6,6 +6,19 @@ from datetime import date
 
 from worklogger.domain.notes.models import DailyNote
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
+from worklogger.infrastructure.repositories._mapping import parse_date
+
+
+def save_note(connection, user_id: int, day: date, content: str, expected_content: str | None = None) -> None:
+    row = connection.execute("SELECT content FROM daily_notes WHERE user_id=? AND d=?",
+                             (user_id, day.isoformat())).fetchone()
+    if expected_content is not None and (row[0] if row else "") != expected_content:
+        raise ValueError("note_conflict")
+    connection.execute(
+        "INSERT INTO daily_notes(user_id, d, content) VALUES(?, ?, ?) "
+        "ON CONFLICT(user_id, d) DO UPDATE SET content=excluded.content",
+        (user_id, day.isoformat(), content),
+    )
 
 
 class SQLiteDailyNoteRepository:
@@ -16,7 +29,7 @@ class SQLiteDailyNoteRepository:
         with self._connection_factory.connection() as connection:
             row = connection.execute(
                 """
-                SELECT note FROM worklog
+                SELECT content FROM daily_notes
                 WHERE user_id=? AND d=?
                 """,
                 (user_id, day.isoformat()),
@@ -24,17 +37,15 @@ class SQLiteDailyNoteRepository:
         return DailyNote(
             user_id=user_id,
             day=day,
-            content=str(row["note"] or "") if row else "",
+            content=str(row["content"] or "") if row else "",
         )
 
-    def save(self, note: DailyNote) -> None:
+    def list_range(self, user_id: int, start: date, end: date) -> tuple[DailyNote, ...]:
+        with self._connection_factory.connection() as connection:
+            rows = connection.execute("SELECT d, content FROM daily_notes WHERE user_id=? AND d BETWEEN ? AND ? ORDER BY d",
+                                      (user_id, start.isoformat(), end.isoformat())).fetchall()
+        return tuple(DailyNote(user_id, parse_date(row["d"]), str(row["content"])) for row in rows)
+
+    def save(self, note: DailyNote, *, expected_content: str | None = None) -> None:
         with self._connection_factory.transaction(write=True) as connection:
-            connection.execute(
-                """
-                INSERT INTO worklog(user_id, d, start, end, "break", note, work_type, overnight)
-                VALUES(?, ?, NULL, NULL, 0, ?, 'normal', 0)
-                ON CONFLICT(user_id, d) DO UPDATE SET
-                    note=excluded.note
-                """,
-                (note.user_id, note.day.isoformat(), note.content),
-            )
+            save_note(connection, note.user_id, note.day, note.content, expected_content)

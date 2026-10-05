@@ -8,6 +8,7 @@ from typing import Protocol
 
 from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
 from worklogger.app.queries.work_log_queries import GetWorkLogQuery
+from worklogger.app.queries.note_queries import GetDailyNoteQuery
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog, WorkType
@@ -56,6 +57,7 @@ class WorkLogEntryViewModel:
         get_handler: WorkLogGetHandler,
         save_handler: WorkLogSaveHandler,
         default_break_hours: float = 1.0,
+        notes_handler=None,
     ) -> None:
         self._user_id = user_id
         self._get_handler = get_handler
@@ -63,6 +65,8 @@ class WorkLogEntryViewModel:
         self._default_break_hours = float(default_break_hours)
         self._loaded: dict[date, WorkLog | None] = {}
         self._holiday_notes: dict[date, str] = {}
+        self._notes_handler = notes_handler
+        self._original_notes: dict[date, str] = {}
 
     def set_default_break_hours(self, hours: float) -> None:
         self._default_break_hours = max(0.0, min(float(hours), 4.0))
@@ -77,6 +81,13 @@ class WorkLogEntryViewModel:
         if not loaded.ok:
             return Result.failure(loaded.error or ValidationError("worklog_load_failed", "worklog_load_failed"))
         record = loaded.value
+        note_content = record.note if record else ""
+        if record is None and self._notes_handler is not None:
+            note = self._notes_handler.handle(GetDailyNoteQuery(self._user_id, day))
+            if not note.ok or note.value is None:
+                return Result.failure(note.error or ValidationError("note_load_failed", "note_load_failed"))
+            note_content = note.value.content
+        self._original_notes[day] = note_content
         self._loaded[day] = record
         self._holiday_notes[day] = str(holiday_note or "").strip()
         if record is None:
@@ -86,7 +97,7 @@ class WorkLogEntryViewModel:
                     start_time=None,
                     end_time=None,
                     break_hours=self._default_break_hours,
-                    note=self._holiday_notes[day],
+                    note=note_content or self._holiday_notes[day],
                     work_type=WorkType.NORMAL.value,
                 ).value
             )
@@ -176,12 +187,14 @@ class WorkLogEntryViewModel:
                 break_hours=form.break_hours,
                 note=form.note,
                 work_type=form.work_type,
+                expected_note=self._original_notes.get(form.day),
             )
         )
         if not saved.ok:
             return Result.failure(saved.error or ValidationError("worklog_save_failed", "worklog_save_failed"))
         self._loaded[form.day] = saved.value
         assert saved.value is not None
+        self._original_notes[form.day] = saved.value.note
         return Result.success(
             _form_from_values(
                 user_id=self._user_id,
@@ -215,7 +228,7 @@ class WorkLogEntryViewModel:
                 None,
                 None,
                 self._default_break_hours,
-                "",
+                self._original_notes.get(day, ""),
                 WorkType.NORMAL.value,
             )
         else:

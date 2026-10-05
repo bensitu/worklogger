@@ -77,8 +77,9 @@ overnight detection, shift-length limits, and break constraints. The UI must not
 reimplement these calculations independently.
 
 Quick logs, daily notes, reports, calendar events, accounts, and settings follow
-the same command/query and handler pattern. Daily notes share `worklog.note` with
-the time-entry note; they are not an independent notes table.
+the same command/query and handler pattern. Daily notes have independent storage,
+and time-entry reads combine the note for the selected date. Editor saves use
+optimistic content checks to prevent overwriting another editor's changes.
 
 ## Results and Errors
 

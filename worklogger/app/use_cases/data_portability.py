@@ -101,7 +101,8 @@ class ImportWorkLogsCsvHandler:
                 continue
             rows.append(work_log)
         try:
-            existing = {row.day for row in self._repository.list_all(command.user_id)}
+            reader = getattr(self._repository, "list_export_rows", self._repository.list_all)
+            existing = {row.day for row in reader(command.user_id)}
         except Exception:
             return Result.failure(InfrastructureError("csv_import_failed", "csv_import_failed"))
         return Result.success(WorkLogCsvImportPreview(tuple(rows), tuple(errors), len(existing & dates)))

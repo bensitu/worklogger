@@ -25,6 +25,10 @@ def display_error_code(code: str) -> str:
     """Translate known error codes without displaying raw exception text or logging previews."""
 
     match code:
+        case "note_conflict":
+            return _("This note was changed in another editor. Reload it before saving. Your changes have been retained.")
+        case "note_save_failed":
+            return _("Unable to save the work log. Your changes have been retained.")
         case "csv_file_too_large":
             return _("The CSV file exceeds the supported size or row limit.")
         case "csv_import_conflict":
@@ -99,7 +103,7 @@ def display_error_code(code: str) -> str:
             return _("Unable to save settings. Please try again.")
         case "worklog_save_failed":
             return _("Unable to save the work log. Your changes have been retained.")
-        case "settings_load_failed" | "worklog_load_failed" | "worklog_export_load_failed" | "calendar_load_failed" | "holiday_load_failed" | "analytics_load_failed" | "stats_load_failed" | "user_list_failed":
+        case "settings_load_failed" | "note_load_failed" | "worklog_load_failed" | "worklog_export_load_failed" | "calendar_load_failed" | "holiday_load_failed" | "analytics_load_failed" | "stats_load_failed" | "user_list_failed":
             return _("Unable to load data. Please try again.")
         case "ai_chat_not_configured" | "ai_rewrite_not_configured" | "ai_secondary_not_configured" | "ai_api_key_required" | "ai_configuration_invalid":
             return _("AI Assist is not configured.")

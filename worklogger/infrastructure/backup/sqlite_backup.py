@@ -19,7 +19,7 @@ from worklogger.infrastructure.database.migrations.migration_003_activity_events
 _ALLOWED_TABLES = {
     "users", "login_attempts", "worklog", "quick_logs", "settings", "reports",
     "report_templates", "calendar_events", "external_identities", "activity_events",
-    "schema_migrations", _PREVIOUS_TABLE,
+    "schema_migrations", "daily_notes", _PREVIOUS_TABLE,
 }
 
 

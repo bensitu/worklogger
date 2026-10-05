@@ -14,6 +14,9 @@ from worklogger.app.use_cases.notes import GetDailyNoteHandler, SaveDailyNoteHan
 from worklogger.app.use_cases.reports import SaveReportTemplateHandler
 from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
 from worklogger.domain.worklog.models import WorkType
+from worklogger.domain.worklog.models import WorkLog
+from worklogger.domain.notes.models import DailyNote
+from worklogger.infrastructure.database.migrations.runner import MIGRATION_MODULES
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
 from worklogger.infrastructure.export import MarkdownExporter
 from worklogger.infrastructure.repositories import (
@@ -27,6 +30,41 @@ from worklogger.infrastructure.templates import BuiltInTemplateProvider, UserTem
 
 
 class NotesTemplatesInfrastructureTests(unittest.TestCase):
+    def test_note_storage_migration_conflicts_deletion_and_export_preserve_content(self):
+        with tempfile.TemporaryDirectory() as directory:
+            factory = SQLiteConnectionFactory(f"{directory}/worklog.db")
+            MigrationRunner(factory, migration_modules=MIGRATION_MODULES[:-1]).run_pending()
+            user = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1_000)).create_user(
+                "user", "password", recovery_key=None, is_admin=False)
+            day = date(2026, 5, 14)
+            note_day = date(2026, 5, 15)
+            previous = SQLiteWorkLogRepository(factory)
+            previous.save(WorkLog(user.id, day, "09:00", "18:00", 1.0, "original"))
+            previous.save(WorkLog(user.id, note_day, note="standalone"))
+            self.assertEqual(MigrationRunner(factory).run_pending(), (5,))
+            work_logs = SQLiteWorkLogRepository(factory)
+            notes = SQLiteDailyNoteRepository(factory)
+            self.assertEqual(notes.get_for_day(user.id, note_day).content, "standalone")
+            self.assertIsNone(work_logs.get_for_day(user.id, note_day))
+            notes.save(DailyNote(user.id, day, "edited"), expected_content="original")
+            stale = SaveWorkLogHandler(work_logs).handle(SaveWorkLogCommand(
+                user.id, day, "08:00", "18:00", 1.0, "stale", "normal", expected_note="original"))
+            self.assertFalse(stale.ok)
+            self.assertEqual(stale.error.code, "note_conflict")
+            self.assertEqual(work_logs.get_for_day(user.id, day).start_time, "09:00")
+            self.assertEqual(work_logs.get_for_day(user.id, day).note, "edited")
+            rejected = SaveDailyNoteHandler(notes).handle(SaveDailyNoteCommand(
+                user.id, day, "other editor", expected_content="original"))
+            self.assertFalse(rejected.ok)
+            work_logs.remove(user.id, day)
+            self.assertEqual(notes.get_for_day(user.id, day).content, "edited")
+            exported = work_logs.list_export_rows(user.id)
+            self.assertEqual({row.note for row in exported}, {"edited", "standalone"})
+            self.assertEqual(work_logs.list_all(user.id), ())
+            work_logs.import_many(exported, overwrite=True)
+            self.assertEqual(work_logs.list_all(user.id), ())
+            self.assertEqual(notes.get_for_day(user.id, note_day).content, "standalone")
+
     def test_sqlite_daily_note_repository_preserves_worklog_fields(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             factory = SQLiteConnectionFactory(f"{directory}/worklog.db")

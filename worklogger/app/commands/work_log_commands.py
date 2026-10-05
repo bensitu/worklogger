@@ -15,6 +15,7 @@ class SaveWorkLogCommand:
     break_hours: float
     note: str
     work_type: str
+    expected_note: str | None = None
 
 
 @dataclass(frozen=True)

@@ -6,7 +6,7 @@ from worklogger.app.commands.note_commands import SaveDailyNoteCommand
 from worklogger.app.queries.note_queries import GetDailyNoteQuery
 from worklogger.domain.notes.models import DailyNote
 from worklogger.domain.notes.repositories import DailyNoteRepository
-from worklogger.domain.shared.errors import ValidationError
+from worklogger.domain.shared.errors import ConflictError, InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 
 
@@ -15,7 +15,16 @@ class GetDailyNoteHandler:
         self._repository = repository
 
     def handle(self, query: GetDailyNoteQuery) -> Result[DailyNote]:
-        return Result.success(self._repository.get_for_day(query.user_id, query.day))
+        try:
+            return Result.success(self._repository.get_for_day(query.user_id, query.day))
+        except Exception:
+            return Result.failure(InfrastructureError("note_load_failed", "note_load_failed"))
+
+    def list_range(self, user_id, start, end) -> Result[tuple[DailyNote, ...]]:
+        try:
+            return Result.success(self._repository.list_range(user_id, start, end))
+        except Exception:
+            return Result.failure(InfrastructureError("note_load_failed", "note_load_failed"))
 
 
 class SaveDailyNoteHandler:
@@ -32,5 +41,15 @@ class SaveDailyNoteHandler:
             day=command.day,
             content=command.content,
         )
-        self._repository.save(note)
+        try:
+            if command.expected_content is None:
+                self._repository.save(note)
+            else:
+                self._repository.save(note, expected_content=command.expected_content)
+        except ValueError as exc:
+            if str(exc) == "note_conflict":
+                return Result.failure(ConflictError("note_conflict", "note_conflict"))
+            return Result.failure(ValidationError(str(exc), str(exc)))
+        except Exception:
+            return Result.failure(InfrastructureError("note_save_failed", "note_save_failed"))
         return Result.success(note)
