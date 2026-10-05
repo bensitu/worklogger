@@ -6,6 +6,9 @@ The original rows remain unchanged so they can be recovered from a retained copy
 Single-record and storage-operation failures still propagate to the application.
 Quick-log updates and deletions require an existing row belonging to the account;
 missing records are not reported as successful changes.
+Database backups exclude proxy passwords; re-enter them in the system credential
+store after restoring on another machine. Encrypted fallback credentials require
+their original private key, and Windows-protected keys require the same OS account.
 
 ## Ownership and Connections
 

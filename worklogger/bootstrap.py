@@ -99,7 +99,7 @@ from worklogger.infrastructure.database import (
     default_database_path,
 )
 from worklogger.infrastructure.backup import SQLiteBackupService
-from worklogger.infrastructure.security.key_store import SystemCredentialStore
+from worklogger.infrastructure.security.key_store import SystemCredentialStore, HmacSecretBox, protect_legacy_proxy_passwords
 from worklogger.app.use_cases.settings import ProxyPasswordSettings
 from worklogger.infrastructure.calendar import (
     IcsCalendarImporter,
@@ -366,6 +366,7 @@ def _prepare_database(
     if Path(str(database_path) + ".pre_restore").exists():
         raise ValueError("restore_pending")
     MigrationRunner(connection_factory).run_pending()
+    protect_legacy_proxy_passwords(connection_factory, HmacSecretBox())
     auth_repository = SQLiteAuthRepository(
         connection_factory,
         password_hasher=_password_hasher(config.password_iterations),
@@ -693,6 +694,7 @@ def _build_settings_workflow(
                 repositories.settings,
                 SystemCredentialStore(namespace=str(database_path.resolve())),
                 user_id=user.id,
+                secret_box=HmacSecretBox(),
             ),
         ),
         auth_view_model=auth_view_model,

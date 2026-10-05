@@ -46,7 +46,12 @@ There is no default administrator password or email-based account recovery.
 Proxy passwords use `SystemCredentialStore`, which selects an approved OS keyring
 backend and namespaces entries using the database path. There is no plaintext
 fallback. If secure storage is unavailable, password entry is disabled and
-existing values are retained. Moving the database can change the namespace and
+existing values are retained in authenticated encrypted form until keyring storage
+becomes available. Startup protects legacy plaintext for all accounts; an encryption
+failure stops startup without discarding the original. Proxy passwords are excluded
+from newly created backups, including SQLite free-page content. Private pre-change
+migration snapshots may retain the original data and must be protected accordingly.
+Moving the database can change the namespace and
 require re-entering the proxy password.
 
 Remembered login uses `FileRememberTokenSessionStore`. New values use Fernet from
@@ -70,7 +75,8 @@ external AI adapter would transmit its supplied context and messages; the defaul
 desktop does not connect that adapter.
 
 Privacy switches default to including notes, calendar events, and quick logs in
-built AI context. A failed settings read currently falls back to these defaults.
+built AI context. A failed settings read stops context construction, and categories
+disabled by the user are not queried. Oversized context is rejected before sending.
 An external integration must explicitly assess data disclosure and user consent
 before enabling transmission. Do not claim that a configured proxy form changes
 network routing; the HTTP adapters are not connected to those settings.

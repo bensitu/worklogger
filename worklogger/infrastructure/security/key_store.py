@@ -18,6 +18,7 @@ from worklogger.config.constants import (
     KEYRING_SERVICE_NAME,
     MACHINE_KEY_FILENAME,
     SECRET_SETTING_PREFIX,
+    NETWORK_PROXY_PASSWORD_SETTING_KEY,
 )
 from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.shared.errors import InfrastructureError
@@ -213,6 +214,18 @@ class HmacSecretBox:
             raise ValueError("secret_authentication_failed")
         plaintext = _xor_bytes(ciphertext, _keystream(_derive(key, b"enc"), nonce, len(ciphertext)))
         return plaintext.decode("utf-8")
+
+
+def protect_legacy_proxy_passwords(connection_factory, secret_box: HmacSecretBox) -> None:
+    with connection_factory.transaction(write=True) as connection:
+        connection.execute("PRAGMA secure_delete=ON")
+        rows = connection.execute("SELECT user_id,value FROM settings WHERE key=? AND value<>''",
+                                  (NETWORK_PROXY_PASSWORD_SETTING_KEY,)).fetchall()
+        for user_id, value in rows:
+            if not value.startswith((_ENC_PREFIX, _FERNET_PREFIX)):
+                encrypted = secret_box.encrypt(value)
+                connection.execute("UPDATE settings SET value=? WHERE user_id=? AND key=?",
+                                   (encrypted, user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY))
 
 
 class EncryptedSettingsKeyStore:

@@ -8,7 +8,8 @@ from worklogger.config.constants import NETWORK_PROXY_PASSWORD_SETTING_KEY, NETW
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
 from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteSettingsRepository
 from worklogger.infrastructure.security.key_store import SystemCredentialStore
-from worklogger.infrastructure.security import PBKDF2PasswordHasher
+from worklogger.infrastructure.security import PBKDF2PasswordHasher, HmacSecretBox, FileMachineKeyProvider
+from worklogger.infrastructure.backup import SQLiteBackupService
 from worklogger.presentation.viewmodels import SettingsViewModel
 
 
@@ -44,7 +45,8 @@ class ProxyCredentialTests(unittest.TestCase):
         self.repository = SQLiteSettingsRepository(self.factory)
         self.backend = FakeKeyring()
         self.store = SystemCredentialStore(namespace="test-database", backend=self.backend)
-        self.passwords = ProxyPasswordSettings(self.repository, self.store, user_id=user.id)
+        self.secret_box = HmacSecretBox(FileMachineKeyProvider(Path(self.directory.name) / "test-key"))
+        self.passwords = ProxyPasswordSettings(self.repository, self.store, user_id=user.id, secret_box=self.secret_box)
         self.model = SettingsViewModel(
             user_id=user.id, get_handler=GetSettingHandler(self.repository),
             set_handler=SetSettingHandler(self.repository), proxy_password_settings=self.passwords,
@@ -66,18 +68,25 @@ class ProxyCredentialTests(unittest.TestCase):
         self.repository.set(self.user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY, legacy)
         with patch.object(self.backend, "set_password", side_effect=RuntimeError("unavailable")):
             self.assertFalse(self.passwords.load().ok)
-        self.assertEqual(self.repository.get(self.user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY), legacy)
+        self.assertEqual(self.secret_box.decrypt(self.repository.get(self.user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY)), legacy)
         self.assertEqual(self.passwords.load().value, legacy)
         self.assertIsNone(self.repository.get(self.user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY))
 
-    def test_unavailable_keyring_keeps_legacy_and_refuses_new_passwords(self):
+    def test_unavailable_keyring_encrypts_legacy_and_excludes_it_from_backup(self):
         self.repository.set(self.user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY, "legacy synthetic password")
         self.backend.unavailable = True
         state = self.model.load().value
         self.assertFalse(state.proxy_password_available)
         self.assertEqual(state.network_proxy_password, "")
         self.assertFalse(self.model.set_text(NETWORK_PROXY_PASSWORD_SETTING_KEY, "new synthetic password").ok)
-        self.assertEqual(self.repository.get(self.user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY), "legacy synthetic password")
+        stored = self.repository.get(self.user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY)
+        self.assertTrue(stored.startswith("enc2:"))
+        self.assertEqual(self.secret_box.decrypt(stored), "legacy synthetic password")
+        destination = Path(self.directory.name) / "backup.db"
+        self.assertTrue(SQLiteBackupService(self.factory).backup_database(destination).ok)
+        backup_settings = SQLiteSettingsRepository(SQLiteConnectionFactory(destination))
+        self.assertIsNone(backup_settings.get(self.user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY))
+        self.assertNotIn(b"legacy synthetic password", destination.read_bytes())
 
     def test_namespace_and_user_separate_credentials(self):
         other_database = SystemCredentialStore(namespace="other-database", backend=self.backend)
@@ -89,7 +98,7 @@ class ProxyCredentialTests(unittest.TestCase):
         self.repository.set(self.user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY, "legacy synthetic password")
         with patch.object(self.repository, "delete", side_effect=RuntimeError("database unavailable")):
             self.assertFalse(self.passwords.load().ok)
-        self.assertEqual(self.repository.get(self.user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY), "legacy synthetic password")
+        self.assertEqual(self.secret_box.decrypt(self.repository.get(self.user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY)), "legacy synthetic password")
         self.assertEqual(self.passwords.load().value, "legacy synthetic password")
         self.assertIsNone(self.repository.get(self.user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY))
 

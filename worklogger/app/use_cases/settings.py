@@ -21,14 +21,20 @@ class CredentialStore(Protocol):
     def set_secret(self, name: str, value: str) -> Result[None]: ...
 
 
+class SecretBox(Protocol):
+    def encrypt(self, value: str) -> str: ...
+    def decrypt(self, stored: str) -> str: ...
+
+
 class ProxyPasswordSettings:
     """Migrate a legacy password only after secure storage has succeeded."""
 
-    def __init__(self, repository: SettingsRepository, credentials: CredentialStore, *, user_id: int) -> None:
+    def __init__(self, repository: SettingsRepository, credentials: CredentialStore, *, user_id: int, secret_box: SecretBox) -> None:
         self._repository = repository
         self._credentials = credentials
         self._user_id = user_id
         self._name = f"proxy_password:{user_id}"
+        self._secret_box = secret_box
 
     def load(self) -> Result[str | None]:
         try:
@@ -37,16 +43,21 @@ class ProxyPasswordSettings:
             return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
 
     def _load(self) -> Result[str | None]:
+        legacy = self._repository.get(self._user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY)
+        if legacy and not legacy.startswith(("enc1:", "enc2:")):
+            encrypted = self._secret_box.encrypt(legacy)
+            self._repository.set(self._user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY, encrypted)
+            legacy = encrypted
         stored = self._credentials.get_secret(self._name)
         if not stored.ok:
             return stored
-        legacy = self._repository.get(self._user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY)
         if legacy is not None:
             if legacy and stored.value is None:
-                saved = self._credentials.set_secret(self._name, legacy)
+                password = self._secret_box.decrypt(legacy)
+                saved = self._credentials.set_secret(self._name, password)
                 if not saved.ok:
                     return Result.failure(saved.error)
-                stored = Result.success(legacy)
+                stored = Result.success(password)
             self._repository.delete(self._user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY)
         return stored
 
