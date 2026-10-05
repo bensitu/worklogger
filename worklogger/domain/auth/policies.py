@@ -141,5 +141,3 @@ def lockout_until_for_failure_count(
     if base.tzinfo is None:
         base = base.replace(tzinfo=timezone.utc)
     return base + timedelta(seconds=duration)
-
-

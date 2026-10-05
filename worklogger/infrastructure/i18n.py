@@ -114,6 +114,3 @@ def _(message: str, *, language: str | None = None) -> str:
 def ngettext(singular: str, plural: str, n: int) -> str:
     with _lock:
         return _translation.ngettext(singular, plural, n) or (singular if n == 1 else plural)
-
-
-
