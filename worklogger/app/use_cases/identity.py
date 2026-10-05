@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import secrets
+import hashlib
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -17,7 +17,8 @@ from worklogger.app.queries.identity_queries import (
 )
 from worklogger.domain.auth.models import LinkedIdentity, User
 from worklogger.domain.auth.repositories import AuthCredentialRepository, IdentityRepository
-from worklogger.domain.identity.models import ExternalIdentityProfile, IdentityProviderStatus
+from worklogger.domain.identity.models import ExternalIdentityProfile, IdentityProviderStatus, normalize_provider
+from worklogger.domain.auth.policies import generate_initial_password, username_key
 from worklogger.domain.shared.errors import AuthenticationError, InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 
@@ -136,12 +137,19 @@ class LinkIdentityHandler:
 
 
 class UnlinkIdentityHandler:
-    def __init__(self, repository: IdentityRepository) -> None:
+    def __init__(self, repository: IdentityRepository, auth: AuthCredentialRepository | None = None) -> None:
         self._repository = repository
+        self._auth = auth
 
     def handle(self, command: UnlinkIdentityCommand) -> Result[None]:
         if command.identity_id <= 0:
             return Result.failure(ValidationError("identity_id_required", "identity_id_required"))
+        identities = self._repository.list_for_user(command.user_id)
+        if not any(identity.id == command.identity_id for identity in identities):
+            return Result.failure(ValidationError("identity_missing", "identity_missing"))
+        user = self._auth.get_by_id(command.user_id) if self._auth else None
+        if len(identities) == 1 and (user is None or not user.local_password_enabled):
+            return Result.failure(ValidationError("identity_last_login_method", "identity_last_login_method"))
         self._repository.remove(command.user_id, command.identity_id)
         return Result.success(None)
 
@@ -180,32 +188,26 @@ class LoginWithIdentityHandler:
             if user is None:
                 return Result.failure(AuthenticationError("identity_user_missing", "identity_user_missing"))
             return Result.success(IdentityLoginResult(user=user, linked_identity=linked))
-        username = _username_from_profile(profile.value)
-        user = self._auth.create_user(
-            username,
-            secrets.token_urlsafe(24),
-            recovery_key=None,
-            is_admin=False,
-            must_change_password=False,
-        )
-        linked = self._identities.add(
-            LinkedIdentity(
-                id=0,
-                user_id=user.id,
-                provider=profile.value.provider,
-                subject=profile.value.subject,
-                email=profile.value.email,
-                display_name=profile.value.display_name,
+        base = _username_from_profile(profile.value)
+        occupied = {username_key(user.username) for user in self._auth.list_users()}
+        suffix = hashlib.sha256(f"{profile.value.provider}:{profile.value.issuer}:{profile.value.subject}".encode()).hexdigest()[:12]
+        username = base if username_key(base) not in occupied else f"{base}_{suffix}"
+        user = None
+        try:
+            user = self._auth.create_user(
+                username, generate_initial_password(), recovery_key=None, is_admin=False,
+                must_change_password=False, local_password_enabled=False,
             )
-        )
+            linked = self._identities.add(
+                LinkedIdentity(id=0, user_id=user.id, provider=profile.value.provider,
+                               subject=profile.value.subject, email=profile.value.email,
+                               display_name=profile.value.display_name)
+            )
+        except Exception:
+            if user is not None:
+                self._auth.delete_user(user.id)
+            return Result.failure(InfrastructureError("identity_login_failed", "identity_login_failed"))
         return Result.success(IdentityLoginResult(user=user, linked_identity=linked))
-
-
-def normalize_provider(provider: str) -> str:
-    cleaned = str(provider or "").strip().lower()
-    if cleaned not in {"google", "microsoft"}:
-        raise ValueError("unsupported_identity_provider")
-    return cleaned
 
 
 def _username_from_profile(profile: ExternalIdentityProfile) -> str:

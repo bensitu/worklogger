@@ -698,7 +698,7 @@ def _build_settings_workflow(
             GitHubReleaseUpdateChecker(api_url=GITHUB_LATEST_RELEASE_API_URL)
         ),
         job_runner=job_runner,
-        identity_workflow=_build_identity_workflow(user, repositories),
+        identity_workflow=_build_identity_workflow(user, repositories, auth_repository),
         local_models_workflow=_build_local_models_workflow(
             user=user,
             database_path=database_path,
@@ -804,6 +804,7 @@ def _build_local_models_workflow(
 def _build_identity_workflow(
     user: User,
     repositories: RuntimeRepositories,
+    auth_repository: RuntimeAuthRepository | None,
 ) -> IdentityWorkflowController:
     identity_providers = _identity_providers()
     return IdentityWorkflowController(
@@ -815,7 +816,7 @@ def _build_identity_workflow(
                 repository=repositories.identities,
                 providers=identity_providers,
             ),
-            unlink_handler=UnlinkIdentityHandler(repositories.identities),
+            unlink_handler=UnlinkIdentityHandler(repositories.identities, auth_repository),
         )
     )
 

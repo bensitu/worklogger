@@ -1,13 +1,9 @@
 """Preserve legacy credentials while aligning the authentication columns."""
 
-from contextlib import closing
-from datetime import datetime, timezone
-from pathlib import Path
 import sqlite3
-from uuid import uuid4
 
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
-from worklogger.infrastructure.database.paths import secure_database_files
+from worklogger.infrastructure.database.migrations.snapshot import save_snapshot
 
 VERSION = 2
 DESCRIPTION = "legacy_auth_columns"
@@ -20,15 +16,7 @@ def prepare(connection_factory: SQLiteConnectionFactory) -> None:
             return
         if connection_factory.database_path == ":memory:":
             return
-        path = Path(connection_factory.database_path)
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        backup = path.with_name(f"{path.name}.bak_auth_{stamp}_{uuid4().hex}")
-        # The SQLite backup API includes committed WAL data without copying live files.
-        with closing(sqlite3.connect(backup)) as destination:
-            secure_database_files(backup)
-            connection.backup(destination)
-            destination.execute("PRAGMA journal_mode=DELETE")
-        secure_database_files(backup)
+        save_snapshot(connection, connection_factory.database_path, "auth")
 
 
 def up(connection: sqlite3.Connection) -> None:

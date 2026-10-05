@@ -5,13 +5,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-
-
-def normalize_provider(provider: str) -> str:
-    cleaned = str(provider or "").strip().lower()
-    if cleaned not in {"google", "microsoft"}:
-        raise ValueError("unsupported_identity_provider")
-    return cleaned
+from worklogger.domain.identity.models import normalize_provider
 
 
 def identity_enabled() -> bool:
@@ -25,7 +19,8 @@ def provider_configured(provider: str) -> bool:
             _value("google_client_id", "WORKLOGGER_GOOGLE_CLIENT_ID")
             and _value("firebase_api_key", "WORKLOGGER_FIREBASE_API_KEY")
         )
-    return False
+    return bool(_value("microsoft_client_id", "WORKLOGGER_MICROSOFT_CLIENT_ID")
+                and _value("microsoft_tenant_id", "WORKLOGGER_MICROSOFT_TENANT_ID"))
 
 
 def provider_available(provider: str) -> bool:

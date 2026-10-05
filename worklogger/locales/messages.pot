@@ -92,6 +92,9 @@ msgstr ""
 msgid "Add Entry"
 msgstr ""
 
+msgid "Add another sign-in method before unlinking this identity."
+msgstr ""
+
 msgid "Address"
 msgstr ""
 
@@ -299,24 +302,6 @@ msgstr ""
 msgid "Custom"
 msgstr ""
 
-msgid "WorkLogger is already running."
-msgstr ""
-
-msgid "Work {hours:.1f}h"
-msgstr ""
-
-msgid "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
-msgstr ""
-
-msgid "The CSV file exceeds the supported size or row limit."
-msgstr ""
-
-msgid "Some dates already have records. Review the import and confirm replacement."
-msgstr ""
-
-msgid "Recurring events must have an end date or occurrence count."
-msgstr ""
-
 msgid "DESKTOP START FAILED"
 msgstr ""
 
@@ -519,6 +504,9 @@ msgid "Import or export worklog records as CSV files for backup, migration, or s
 msgstr ""
 
 msgid "Import your .ics file to let AI read your meetings when generating reports."
+msgstr ""
+
+msgid "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
 msgstr ""
 
 msgid "Imported {count} calendar events."
@@ -887,6 +875,9 @@ msgstr ""
 msgid "Recovery key"
 msgstr ""
 
+msgid "Recurring events must have an end date or occurrence count."
+msgstr ""
+
 msgid "Refresh"
 msgstr ""
 
@@ -1085,6 +1076,9 @@ msgstr ""
 msgid "Simplified Chinese"
 msgstr ""
 
+msgid "Some dates already have records. Review the import and confirm replacement."
+msgstr ""
+
 msgid "Standard hours (h)"
 msgstr ""
 
@@ -1118,7 +1112,13 @@ msgstr ""
 msgid "Templates"
 msgstr ""
 
+msgid "Temporary password"
+msgstr ""
+
 msgid "Test"
+msgstr ""
+
+msgid "The CSV file exceeds the supported size or row limit."
 msgstr ""
 
 msgid "The ID or password is incorrect."
@@ -1310,10 +1310,16 @@ msgstr ""
 msgid "Work type"
 msgstr ""
 
+msgid "Work {hours:.1f}h"
+msgstr ""
+
 msgid "WorkLogger"
 msgstr ""
 
 msgid "WorkLogger command line"
+msgstr ""
+
+msgid "WorkLogger is already running."
 msgstr ""
 
 msgid "Worked"

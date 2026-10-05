@@ -16,6 +16,7 @@ class User:
     password_changed_at: datetime | None = None
     recovery_key_created_at: datetime | None = None
     last_login_at: datetime | None = None
+    local_password_enabled: bool = True
 
 
 @dataclass(frozen=True)

@@ -68,11 +68,14 @@ class SQLiteUserManagementTests(unittest.TestCase):
         self.assertTrue(relogged.value.user.must_change_password)
         with self.factory.connection() as connection:
             row = connection.execute(
-                "SELECT remember_token FROM users WHERE id=?",
+                "SELECT remember_token, recovery_key_hash, recovery_salt FROM users WHERE id=?",
                 (user_id,),
             ).fetchone()
         self.assertIsNotNone(row)
         self.assertIsNone(row["remember_token"])
+        self.assertIsNone(row["recovery_key_hash"])
+        self.assertIsNone(row["recovery_salt"])
+        self.assertEqual(reset.value, "secret789")
 
         work_logs = SQLiteWorkLogRepository(self.factory)
         saved = SaveWorkLogHandler(work_logs).handle(

@@ -53,17 +53,17 @@ class ActivitySchemaMigrationTests(unittest.TestCase):
 
     def test_unversioned_database_preserves_existing_activity_rows(self):
         self.previous_database(versioned=False)
-        self.assertEqual(MigrationRunner(self.factory).run_pending(), (1, 2, 3))
+        self.assertEqual(MigrationRunner(self.factory).run_pending(), (1, 2, 3, 4))
         with self.factory.connection() as connection:
             self.assertEqual(connection.execute("SELECT id FROM activity_events").fetchone()[0], 42)
 
     def test_new_database_needs_no_compatibility_backup(self):
-        self.assertEqual(MigrationRunner(self.factory).run_pending(), (1, 2, 3))
+        self.assertEqual(MigrationRunner(self.factory).run_pending(), (1, 2, 3, 4))
         self.assertFalse(list(self.path.parent.glob("*.bak_*")))
 
     def test_backup_failure_does_not_change_database(self):
         self.previous_database()
-        with patch.object(migration, "secure_database_files", side_effect=OSError("backup unavailable")):
+        with patch.object(migration, "save_snapshot", side_effect=OSError("backup unavailable")):
             with self.assertRaises(OSError):
                 MigrationRunner(self.factory).run_pending()
         with self.factory.connection() as connection:

@@ -7,6 +7,12 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 
+msgid "Temporary password"
+msgstr "Temporary password"
+
+msgid "Add another sign-in method before unlinking this identity."
+msgstr "Add another sign-in method before unlinking this identity."
+
 msgid "&Add to Custom Colors"
 msgstr "&Add to Custom Colors"
 

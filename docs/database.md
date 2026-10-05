@@ -57,6 +57,7 @@ the application version alone.
 | 1 | Create the application tables and indexes when absent |
 | 2 | Normalize older authentication salt naming and add the required-password-change field |
 | 3 | Normalize activity-event table/index names while preserving identifiers and content |
+| 4 | Add a unique NFKC/casefold account key and explicit local-password availability |
 
 The initial definition uses current names for new databases. Migration 3 handles
 previous layouts, including a database without a migration ledger. Compatibility
@@ -83,6 +84,20 @@ Do not repeatedly retry against the only copy of important data.
 Authentication compatibility similarly creates `worklog.db.bak_auth_*` before
 changing an older credential layout. Neither migration resets passwords or edits
 working-hour records. New databases do not need these compatibility backups.
+
+Account-key migration creates a private `worklog.db.bak_usernames_*` snapshot
+before changing an existing account table. Display names and integer user IDs
+remain unchanged. A canonical-name collision stops the entire transaction with
+`username_normalization_conflict`; accounts are never merged or renamed automatically.
+Resolve conflicting display names on a preserved copy before retrying. Login,
+recovery lookup, account uniqueness, and failed-attempt records share the same key.
+Existing linked accounts without a recovery credential are treated conservatively
+as external-only accounts. An administrator can establish a temporary local
+password when needed. Unversioned databases with current columns are also supported.
+
+Deleting a user clears the user reference in retained activity records rather
+than leaving a reference to a nonexistent account. Other account-owned data keeps
+its existing cascade behavior.
 
 ## Backup and Restore
 

@@ -78,6 +78,18 @@ external identity record is also separate from obtaining an authenticated local
 application session. Do not advertise provider login until that end-to-end flow
 is connected and tested.
 
+OIDC profile construction accepts a signed token, not an arbitrary claim mapping.
+It verifies RS256 against supplied trusted JWKS, issuer, audience, required expiry
+and issue time, subject, and a nonempty expected nonce. JWKS must come from the
+configured provider through a trusted HTTPS integration, never from token-supplied
+URLs. Microsoft configuration requires a concrete tenant. Firebase response
+conversion verifies the signed project token and subject/provider agreement;
+the broker workflow must still bind its original OAuth request and response.
+Validation uses [PyJWT's supported verification API](https://pyjwt.readthedocs.io/en/stable/usage.html).
+New external accounts use a separate collision-resistant name when a local name
+is occupied and do not have a usable random local password. Removing the last
+identity requires another usable password or identity.
+
 ## Network and Platform Services
 
 The release checker contacts the configured GitHub releases API with a timeout

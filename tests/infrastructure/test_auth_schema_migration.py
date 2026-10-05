@@ -31,6 +31,28 @@ def legacy_database(path: Path, *, iterations: int = 1_000):
 
 
 class AuthSchemaMigrationTests(unittest.TestCase):
+    def test_canonical_username_migration_preserves_accounts_and_rejects_conflicts(self):
+        for conflict in (False, True):
+            with self.subTest(conflict=conflict), tempfile.TemporaryDirectory() as directory:
+                factory = SQLiteConnectionFactory(Path(directory) / "accounts.db")
+                MigrationRunner(factory, migration_modules=(INITIAL,)).run_pending()
+                auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1_000))
+                user = auth.create_user("Alice", "password", recovery_key=None, is_admin=False)
+                if conflict:
+                    auth.create_user("alice", "different", recovery_key=None, is_admin=False)
+                    with self.assertRaisesRegex(ValueError, "username_normalization_conflict"):
+                        MigrationRunner(factory).run_pending()
+                    with factory.connection() as connection:
+                        self.assertEqual(connection.execute("SELECT COUNT(*) FROM users").fetchone()[0], 2)
+                        self.assertNotIn("username_key", {row[1] for row in connection.execute("PRAGMA table_info(users)")})
+                else:
+                    MigrationRunner(factory).run_pending()
+                    auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1_000))
+                    self.assertEqual(auth.verify_user("ＡLICE", "password").id, user.id)
+                    self.assertEqual(auth.get_by_username("alice").username, "Alice")
+                    with self.assertRaisesRegex(ValueError, "username_exists"):
+                        auth.create_user("alice", "different", recovery_key=None, is_admin=False)
+
     def test_legacy_credentials_and_work_logs_survive_migration_and_backup(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "worklog.db"
@@ -38,7 +60,7 @@ class AuthSchemaMigrationTests(unittest.TestCase):
             with factory.connection() as connection:
                 credentials = tuple(connection.execute("SELECT password_hash, salt FROM users").fetchone())
                 work_log = tuple(connection.execute("SELECT * FROM worklog").fetchone())
-            self.assertEqual(MigrationRunner(factory).run_pending(), (2, 3))
+            self.assertEqual(MigrationRunner(factory).run_pending(), (2, 3, 4))
             auth = SQLiteAuthRepository(factory, password_hasher=hasher)
             user = auth.verify_user("admin", "test-password")
             self.assertIsNotNone(user)
@@ -105,7 +127,7 @@ class AuthSchemaMigrationTests(unittest.TestCase):
     def test_new_database_does_not_create_unnecessary_backup(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "new.db"
-            self.assertEqual(MigrationRunner(SQLiteConnectionFactory(path)).run_pending(), (1, 2, 3))
+            self.assertEqual(MigrationRunner(SQLiteConnectionFactory(path)).run_pending(), (1, 2, 3, 4))
             self.assertFalse(list(path.parent.glob("*.bak_auth_*")))
 
     def test_legacy_hash_upgrades_only_after_correct_password(self):

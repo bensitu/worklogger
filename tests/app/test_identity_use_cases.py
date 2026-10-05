@@ -101,6 +101,7 @@ class MemoryAuth:
         recovery_key: str | None,
         is_admin: bool,
         must_change_password: bool = False,
+        local_password_enabled: bool = True,
     ) -> User:
         user = User(
             id=len(self.users) + 1,
@@ -108,6 +109,7 @@ class MemoryAuth:
             is_admin=is_admin,
             must_change_password=must_change_password,
             created_at=datetime.utcnow(),
+            local_password_enabled=local_password_enabled,
         )
         self.users[user.id] = user
         return user
@@ -132,7 +134,9 @@ class IdentityUseCaseTests(unittest.TestCase):
         )
         self.assertEqual(listed.value, (linked.value,))
 
-        unlinked = UnlinkIdentityHandler(identities).handle(
+        auth = MemoryAuth()
+        auth.users[1] = User(id=1, username="local")
+        unlinked = UnlinkIdentityHandler(identities, auth).handle(
             UnlinkIdentityCommand(user_id=1, identity_id=linked.value.id)
         )
         self.assertTrue(unlinked.ok)
@@ -161,6 +165,22 @@ class IdentityUseCaseTests(unittest.TestCase):
         assert result.value is not None
         self.assertFalse(result.value.user.is_admin)
         self.assertEqual(result.value.linked_identity.subject, "sub-1")
+        self.assertFalse(result.value.user.local_password_enabled)
+        unlinked = UnlinkIdentityHandler(identities, auth).handle(
+            UnlinkIdentityCommand(result.value.user.id, result.value.linked_identity.id))
+        self.assertFalse(unlinked.ok)
+        self.assertEqual(identities.list_for_user(result.value.user.id), (result.value.linked_identity,))
+
+    def test_identity_username_collision_does_not_replace_local_account(self):
+        identities = MemoryIdentities()
+        auth = MemoryAuth()
+        auth.users[1] = User(id=1, username="PERSON")
+        result = LoginWithIdentityHandler(identities=identities, auth=auth, providers=(FakeProvider(),)).handle(
+            LoginWithIdentityCommand(provider="google"))
+        self.assertTrue(result.ok)
+        self.assertNotEqual(result.value.user.id, 1)
+        self.assertNotEqual(result.value.user.username.casefold(), "person")
+        self.assertEqual(auth.users[1].username, "PERSON")
 
 
 if __name__ == "__main__":

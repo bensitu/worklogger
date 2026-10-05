@@ -263,15 +263,15 @@ class AdminResetPasswordHandler:
             password = require_password(command.new_password, field_name="new_password")
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
-        recovery_key = self._credentials.reset_password_by_admin(
+        temporary_password = self._credentials.reset_password_by_admin(
             command.target_user_id,
             password,
-            must_change_password=bool(command.must_change_password),
+            must_change_password=True,
         )
-        if recovery_key is None:
+        if temporary_password is None:
             return Result.failure(NotFoundError("user_not_found", "user_not_found"))
         self._credentials.set_remember_token(command.target_user_id, None, None)
-        return Result.success(recovery_key)
+        return Result.success(password)
 
 
 class SetPasswordChangeRequiredHandler:

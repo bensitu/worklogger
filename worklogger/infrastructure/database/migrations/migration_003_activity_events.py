@@ -1,13 +1,9 @@
 """Preserve stored activity records while updating their table name."""
 
-from contextlib import closing
-from datetime import datetime, timezone
-from pathlib import Path
 import sqlite3
-from uuid import uuid4
 
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
-from worklogger.infrastructure.database.paths import secure_database_files
+from worklogger.infrastructure.database.migrations.snapshot import save_snapshot
 
 VERSION = 3
 DESCRIPTION = "activity_event_names"
@@ -21,14 +17,7 @@ def prepare(connection_factory: SQLiteConnectionFactory) -> None:
     with connection_factory.connection() as connection:
         if not _table_exists(connection, _PREVIOUS_TABLE):
             return
-        path = Path(connection_factory.database_path)
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        backup = path.with_name(f"{path.name}.bak_activity_{stamp}_{uuid4().hex}")
-        with closing(sqlite3.connect(backup)) as destination:
-            secure_database_files(backup)
-            connection.backup(destination)
-            destination.execute("PRAGMA journal_mode=DELETE")
-        secure_database_files(backup)
+        save_snapshot(connection, connection_factory.database_path, "activity")
 
 
 def up(connection: sqlite3.Connection) -> None:

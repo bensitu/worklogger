@@ -40,6 +40,7 @@ class AuthCredentialRepository(Protocol):
         recovery_key: str | None,
         is_admin: bool,
         must_change_password: bool = False,
+        local_password_enabled: bool = True,
     ) -> User:
         ...
 

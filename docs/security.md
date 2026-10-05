@@ -19,12 +19,18 @@ exported text is prefixed with an apostrophe; exports are still unencrypted.
 ## Authentication
 
 - New passwords require at least eight characters.
+- Account identifiers are compared using NFKC normalization and Unicode casefolding.
+  The original display name and user ID remain stable when existing data is migrated.
 - Password hashes use PBKDF2-HMAC-SHA256 with 600,000 iterations and a random
   16-byte salt. Supported older hashes are upgraded after successful verification.
 - Recovery keys are generated separately and stored as hashes with separate salts.
+- Administrator password resets invalidate recovery credentials and remembered
+  sessions, return only the supplied temporary password, and always require a
+  password change. The user receives a new recovery key only after changing the
+  temporary password. No periodic password expiry is enforced.
 - The first registered user is an administrator. Administrator operations check
   permissions and protect required account relationships in their handlers.
-- Failed login counts are stored per username. Lockout thresholds are 5, 10, 15,
+- Failed login counts are stored per canonical account key. Lockout thresholds are 5, 10, 15,
   and 20 failures, with delays of 30 seconds, 5 minutes, 30 minutes, and 24 hours.
   Counts restart after 24 hours without a failure. Unknown usernames are not
   stored, and records older than seven days are removed when the repository opens.

@@ -176,6 +176,7 @@ class UserManagementDialog(QDialog):
         self.reset_confirm_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.reset_force_switch = SwitchButton()
         self.reset_force_switch.set_checked(True)
+        self.reset_force_switch.setEnabled(False)
         form.addRow(_("New password"), self.reset_password_input)
         form.addRow(_("Confirm password"), self.reset_confirm_input)
         form.addRow(_("Require password change"), _switch_row(self.reset_force_switch))
@@ -214,6 +215,7 @@ class UserManagementDialog(QDialog):
             self._set_error(result.error)
             return
         self._show_recovery_key(result.value)
+        self.recovery_key_caption.setText(_("Temporary password"))
         self.reset_password_input.clear()
         self.reset_confirm_input.clear()
         self.refresh()
@@ -261,6 +263,7 @@ class UserManagementDialog(QDialog):
         return self._users.get(user_id) if user_id is not None else None
 
     def _show_recovery_key(self, recovery_key: str) -> None:
+        self.recovery_key_caption.setText(_("Recovery key"))
         self.recovery_key_label.setText(recovery_key)
         self.recovery_key_caption.setVisible(bool(recovery_key))
         self.recovery_key_label.setVisible(bool(recovery_key))

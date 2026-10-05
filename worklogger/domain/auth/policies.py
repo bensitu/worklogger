@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import secrets
+import unicodedata
 from datetime import datetime, timedelta, timezone
 from collections.abc import Iterable
 
@@ -23,10 +24,14 @@ from worklogger.config.constants import (
 def normalize_username(username: str) -> str:
     if not isinstance(username, str):
         raise TypeError("username_must_be_string")
-    cleaned = username.strip()
+    cleaned = unicodedata.normalize("NFKC", username).strip()
     if not cleaned:
         raise ValueError("username_required")
     return cleaned
+
+
+def username_key(username: str) -> str:
+    return normalize_username(username).casefold()
 
 
 def require_password(

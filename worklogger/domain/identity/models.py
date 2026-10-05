@@ -5,6 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 
+def normalize_provider(provider: str) -> str:
+    cleaned = str(provider or "").strip().lower()
+    if cleaned not in {"google", "microsoft"}:
+        raise ValueError("unsupported_identity_provider")
+    return cleaned
+
+
 @dataclass(frozen=True)
 class ExternalIdentityProfile:
     provider: str

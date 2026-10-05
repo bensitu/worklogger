@@ -10,7 +10,7 @@ from worklogger.infrastructure.identity.oidc import (
     google_oidc_config,
     microsoft_oidc_config,
     profile_from_firebase_google_response,
-    profile_from_oidc_claims,
+    profile_from_oidc_token,
 )
 from worklogger.infrastructure.identity.pkce import build_code_challenge, generate_verifier
 from worklogger.infrastructure.identity.providers import DisabledIdentityProvider
@@ -26,5 +26,5 @@ __all__ = [
     "provider_available",
     "provider_configured",
     "profile_from_firebase_google_response",
-    "profile_from_oidc_claims",
+    "profile_from_oidc_token",
 ]

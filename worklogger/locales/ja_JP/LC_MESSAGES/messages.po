@@ -7,6 +7,12 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
+msgid "Temporary password"
+msgstr "一時パスワード"
+
+msgid "Add another sign-in method before unlinking this identity."
+msgstr "この連携を解除する前に、別のログイン方法を追加してください。"
+
 msgid "&Add to Custom Colors"
 msgstr "カスタムカラーに追加(&A)"
 

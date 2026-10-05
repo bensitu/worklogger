@@ -119,9 +119,11 @@ def display_error_code(code: str) -> str:
             return _("Unable to obtain the model. Check the source file or download connection.")
         case "local_model_used_by_another_user":
             return _("This model is in use by another user and cannot be deleted.")
-        case "identity_auth_failed" | "identity_login_failed" | "identity_nonce_mismatch" | "identity_subject_missing":
+        case "identity_auth_failed" | "identity_login_failed" | "identity_nonce_mismatch" | "identity_subject_missing" | "identity_token_invalid":
             return _("Unable to sign in with this provider. Please try again.")
         case "identity_already_linked":
             return _("This identity is already linked to an account.")
+        case "identity_last_login_method":
+            return _("Add another sign-in method before unlinking this identity.")
         case _:
             return _("The operation could not be completed. Please try again.")

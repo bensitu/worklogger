@@ -13,6 +13,7 @@ MIGRATION_MODULES = (
     "worklogger.infrastructure.database.migrations.migration_001_initial_schema",
     "worklogger.infrastructure.database.migrations.migration_002_auth_columns",
     "worklogger.infrastructure.database.migrations.migration_003_activity_events",
+    "worklogger.infrastructure.database.migrations.migration_004_usernames",
 )
 
 

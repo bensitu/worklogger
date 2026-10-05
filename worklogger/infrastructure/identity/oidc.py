@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hmac
+import jwt
 from typing import Mapping
 from urllib.parse import urlencode
 
@@ -56,13 +58,21 @@ class OidcAuthorizationBuilder:
         return Result.success(f"{self._config.authorization_endpoint}?{urlencode(params)}")
 
 
-def profile_from_oidc_claims(
+def profile_from_oidc_token(
     provider: str,
-    claims: Mapping[str, object],
+    token: str,
     *,
-    expected_nonce: str | None = None,
+    issuer: str,
+    audience: str,
+    jwks: Mapping[str, object],
+    expected_nonce: str,
 ) -> Result[ExternalIdentityProfile]:
-    if expected_nonce is not None and str(claims.get("nonce") or "") != expected_nonce:
+    verified = _verified_claims(token, issuer=issuer, audience=audience, jwks=jwks)
+    if not verified.ok or verified.value is None:
+        return Result.failure(verified.error)
+    claims = verified.value
+    nonce = claims.get("nonce")
+    if not expected_nonce or not isinstance(nonce, str) or not hmac.compare_digest(nonce.encode(), expected_nonce.encode()):
         return Result.failure(AuthenticationError("identity_nonce_mismatch", "identity_nonce_mismatch"))
     subject = str(claims.get("sub") or "").strip()
     if not subject:
@@ -80,17 +90,27 @@ def profile_from_oidc_claims(
 
 def profile_from_firebase_google_response(
     response: Mapping[str, object],
+    *,
+    project_id: str,
+    jwks: Mapping[str, object],
 ) -> Result[ExternalIdentityProfile]:
-    subject = str(response.get("localId") or "").strip()
-    if not subject:
+    verified = _verified_claims(str(response.get("idToken") or ""),
+                                issuer=f"https://securetoken.google.com/{project_id}",
+                                audience=project_id, jwks=jwks)
+    if not verified.ok or verified.value is None:
+        return Result.failure(verified.error)
+    claims = verified.value
+    subject = str(claims.get("sub") or "").strip()
+    firebase = claims.get("firebase")
+    if not subject or subject != response.get("localId") or not isinstance(firebase, dict) or firebase.get("sign_in_provider") != "google.com":
         return Result.failure(AuthenticationError("identity_subject_missing", "identity_subject_missing"))
     return Result.success(
         ExternalIdentityProfile(
             provider="google",
             subject=subject,
-            email=_optional_str(response.get("email")),
-            display_name=_optional_str(response.get("displayName")),
-            issuer="firebase",
+            email=_optional_str(claims.get("email")),
+            display_name=_optional_str(claims.get("name")),
+            issuer=str(claims["iss"]),
             broker="firebase",
             federated_subject=_optional_str(response.get("federatedId")) or "",
             raw_provider=_optional_str(response.get("providerId")) or "",
@@ -107,13 +127,36 @@ def google_oidc_config(client_id: str) -> OidcProviderConfig:
     )
 
 
-def microsoft_oidc_config(client_id: str) -> OidcProviderConfig:
+def microsoft_oidc_config(client_id: str, tenant_id: str) -> OidcProviderConfig:
+    if not tenant_id or not all(char.isalnum() or char == "-" for char in tenant_id) or tenant_id.lower() in {"common", "organizations", "consumers"}:
+        raise ValueError("identity_tenant_required")
     return OidcProviderConfig(
         provider="microsoft",
         client_id=client_id,
-        authorization_endpoint="https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
-        issuer="https://login.microsoftonline.com/common/v2.0",
+        authorization_endpoint=f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/authorize",
+        issuer=f"https://login.microsoftonline.com/{tenant_id}/v2.0",
     )
+
+
+def _verified_claims(token: str, *, issuer: str, audience: str, jwks: Mapping[str, object]) -> Result[dict]:
+    try:
+        if not issuer or not audience or not token or len(token) > 32768:
+            raise ValueError("identity_token_invalid")
+        header = jwt.get_unverified_header(token)
+        if header.get("alg") != "RS256" or not isinstance(header.get("kid"), str):
+            raise ValueError("identity_token_invalid")
+        keys = [key for key in jwt.PyJWKSet.from_dict(dict(jwks)).keys
+                if key.key_id == header["kid"] and key.key_type == "RSA"
+                and key.public_key_use in (None, "sig") and key.algorithm_name == "RS256"]
+        if len(keys) != 1:
+            raise ValueError("identity_signing_key_invalid")
+        claims = jwt.decode(token, keys[0].key, algorithms=["RS256"], issuer=issuer, audience=audience,
+                            options={"require": ["iss", "aud", "exp", "iat", "sub"]})
+        if not isinstance(claims.get("sub"), str) or not claims["sub"].strip():
+            raise ValueError("identity_subject_missing")
+        return Result.success(claims)
+    except (jwt.PyJWTError, TypeError, ValueError, KeyError):
+        return Result.failure(AuthenticationError("identity_token_invalid", "identity_token_invalid"))
 
 
 def _optional_str(value: object) -> str | None:

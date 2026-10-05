@@ -7,6 +7,12 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
+msgid "Temporary password"
+msgstr "臨時密碼"
+
+msgid "Add another sign-in method before unlinking this identity."
+msgstr "解除此身分連結前，請新增其他登入方式。"
+
 msgid "&Add to Custom Colors"
 msgstr "加入自訂色彩(&A)"
 
