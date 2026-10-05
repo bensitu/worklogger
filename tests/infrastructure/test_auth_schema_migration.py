@@ -60,7 +60,7 @@ class AuthSchemaMigrationTests(unittest.TestCase):
             with factory.connection() as connection:
                 credentials = tuple(connection.execute("SELECT password_hash, salt FROM users").fetchone())
                 work_log = tuple(connection.execute("SELECT * FROM worklog").fetchone())
-            self.assertEqual(MigrationRunner(factory).run_pending(), (2, 3, 4, 5))
+            self.assertEqual(MigrationRunner(factory).run_pending(), (2, 3, 4, 5, 6))
             auth = SQLiteAuthRepository(factory, password_hasher=hasher)
             user = auth.verify_user("admin", "test-password")
             self.assertIsNotNone(user)
@@ -70,7 +70,8 @@ class AuthSchemaMigrationTests(unittest.TestCase):
             self.assertIsNone(auth.verify_user("admin", "wrong-password"))
             with factory.connection() as connection:
                 self.assertEqual(tuple(connection.execute("SELECT password_hash, password_salt FROM users").fetchone()), credentials)
-                self.assertEqual(tuple(connection.execute("SELECT * FROM worklog").fetchone()), work_log)
+                self.assertEqual(tuple(connection.execute('SELECT user_id,d,start,end,"break",note,work_type,overnight FROM worklog').fetchone()), work_log)
+                self.assertEqual(tuple(connection.execute("SELECT started_at,ended_at FROM worklog").fetchone()), (None, None))
             backups = list(path.parent.glob("worklog.db.bak_auth_*"))
             self.assertEqual(len(backups), 1)
             with closing(sqlite3.connect(backups[0].as_uri() + "?mode=ro", uri=True)) as backup:
@@ -127,7 +128,7 @@ class AuthSchemaMigrationTests(unittest.TestCase):
     def test_new_database_does_not_create_unnecessary_backup(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "new.db"
-            self.assertEqual(MigrationRunner(SQLiteConnectionFactory(path)).run_pending(), (1, 2, 3, 4, 5))
+            self.assertEqual(MigrationRunner(SQLiteConnectionFactory(path)).run_pending(), (1, 2, 3, 4, 5, 6))
             self.assertFalse(list(path.parent.glob("*.bak_auth_*")))
 
     def test_legacy_hash_upgrades_only_after_correct_password(self):

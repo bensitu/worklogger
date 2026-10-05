@@ -11,6 +11,7 @@ from worklogger.config.constants import MAX_SHIFT_HOURS
 
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.settings.repositories import SettingsRepository
+from worklogger.domain.notes.repositories import DailyNoteRepository
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkType
 from worklogger.domain.worklog.rules import normalize_work_type, parse_time, normalize_work_log
@@ -44,6 +45,8 @@ class AutoRecordState:
     break_started_at: datetime | None = None
     started_at: datetime | None = None
     pending_save: bool = False
+    ended_at: datetime | None = None
+    expected_note: str | None = None
 
     @property
     def can_finish(self) -> bool:
@@ -62,10 +65,12 @@ class AutoRecordViewModel:
         default_break_hours: float = 1.0,
         settings: SettingsRepository | None = None,
         user_id: int = 0,
+        notes: DailyNoteRepository | None = None,
     ) -> None:
         self._clock = clock or (lambda: datetime.now().astimezone())
         self._settings = settings
         self._user_id = user_id
+        self._notes = notes
         self.last_error = None
         self._restore_failed = False
         self.set_default_break_hours(default_break_hours)
@@ -85,13 +90,18 @@ class AutoRecordViewModel:
                         raise ValueError("auto_record_state_invalid")
                     data = json.loads(raw)
                     data["day"] = date.fromisoformat(data["day"])
-                    for key in ("started_at", "break_started_at"):
+                    for key in ("started_at", "break_started_at", "ended_at"):
                         data[key] = datetime.fromisoformat(data[key]) if data.get(key) else None
                     restored = AutoRecordState(**data)
+                    if restored.started_at and restored.started_at.strftime("%H:%M") != restored.start_time:
+                        local_start = restored.started_at.astimezone()
+                        if local_start.strftime("%H:%M") == restored.start_time and local_start.date() == restored.day:
+                            restored = replace(restored, started_at=local_start)
                     if (not isinstance(restored.active, bool) or not isinstance(restored.pending_save, bool)
                             or not isinstance(restored.break_active, bool) or not math.isfinite(restored.break_hours)
                             or restored.break_hours < 0 or restored.break_hours > 24
                             or not isinstance(restored.note, str) or (restored.active and restored.pending_save)
+                            or (restored.expected_note is not None and not isinstance(restored.expected_note, str))
                             or parse_time(restored.start_time) != restored.start_time
                             or not restored.start_time or normalize_work_type(restored.work_type).value != restored.work_type
                             or (restored.active and (restored.started_at is None or restored.end_time))
@@ -114,8 +124,8 @@ class AutoRecordViewModel:
                 if state.active or state.pending_save:
                     data = asdict(state)
                     data["day"] = state.day.isoformat()
-                    for key in ("started_at", "break_started_at"):
-                        data[key] = data[key].astimezone(timezone.utc).isoformat() if data[key] else None
+                    for key in ("started_at", "break_started_at", "ended_at"):
+                        data[key] = data[key].isoformat() if data[key] else None
                     encoded = json.dumps(data, allow_nan=False)
                     if len(encoded) > 1024 * 1024:
                         raise ValueError("auto_record_state_invalid")
@@ -214,6 +224,11 @@ class AutoRecordViewModel:
             active=True,
             started_at=moment,
         )
+        if self._notes is not None:
+            try:
+                next_state = replace(next_state, expected_note=self._notes.get_for_day(self._user_id, moment.date()).content)
+            except Exception:
+                return Result.failure(InfrastructureError("note_load_failed", "note_load_failed"))
         return self._set_state(next_state)
 
     def finish(self, now: datetime | None = None) -> Result[AutoRecordEntryDraft]:
@@ -230,7 +245,8 @@ class AutoRecordViewModel:
         try:
             normalize_work_log(WorkLog(user_id=0, day=self._state.day, start_time=self._state.start_time,
                                       end_time=_time_text(moment), break_hours=break_hours,
-                                      note=self._state.note, work_type=self._state.work_type))
+                                      note=self._state.note, work_type=self._state.work_type,
+                                      started_at=start.replace(second=0, microsecond=0), ended_at=moment.replace(second=0, microsecond=0)))
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
         updated = replace(
@@ -241,6 +257,7 @@ class AutoRecordViewModel:
             break_active=False,
             break_started_at=None,
             pending_save=True,
+            ended_at=moment,
         )
         saved = self._set_state(updated)
         if not saved.ok:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, tzinfo
 from typing import Protocol
 
 from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
@@ -16,6 +16,7 @@ from worklogger.domain.worklog.rules import (
     normalize_work_log,
     normalize_work_type,
     parse_time,
+    shift_datetimes,
 )
 from worklogger.presentation.viewmodels.auto_record import AutoRecordViewModel
 
@@ -44,6 +45,8 @@ class WorkLogEntryForm:
     is_leave: bool
     dirty: bool
     errors: tuple[str, ...] = ()
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
 
     @property
     def can_save(self) -> bool:
@@ -60,6 +63,7 @@ class WorkLogEntryViewModel:
         default_break_hours: float = 1.0,
         notes_handler=None,
         auto_record_view_model: AutoRecordViewModel | None = None,
+        local_timezone: tzinfo | None = None,
     ) -> None:
         self._user_id = user_id
         self._get_handler = get_handler
@@ -70,6 +74,7 @@ class WorkLogEntryViewModel:
         self._notes_handler = notes_handler
         self._original_notes: dict[date, str] = {}
         self.auto_record_view_model = auto_record_view_model or AutoRecordViewModel(default_break_hours=default_break_hours)
+        self._local_timezone = local_timezone
 
     def set_default_break_hours(self, hours: float) -> None:
         self._default_break_hours = max(0.0, min(float(hours), 4.0))
@@ -134,6 +139,16 @@ class WorkLogEntryViewModel:
                 for raw, parsed in ((start_time, parsed_start), (end_time, parsed_end))
             ):
                 raise ValueError("time_range_invalid")
+            timestamps = (None, None)
+            if parsed_start and parsed_end:
+                original = self._loaded.get(day)
+                auto = self.auto_record_view_model.state()
+                if auto.pending_save and auto.day == day and auto.start_time == parsed_start and auto.end_time == parsed_end:
+                    timestamps = (auto.started_at.replace(second=0, microsecond=0), auto.ended_at.replace(second=0, microsecond=0)) if auto.started_at and auto.ended_at else (None, None)
+                elif original is not None and (original.start_time, original.end_time) == (parsed_start, parsed_end):
+                    timestamps = (original.started_at, original.ended_at)
+                elif self._local_timezone is not None:
+                    timestamps = shift_datetimes(day, parsed_start, parsed_end, self._local_timezone) or (None, None)
             normalized = normalize_work_log(
                 WorkLog(
                     user_id=self._user_id,
@@ -143,6 +158,8 @@ class WorkLogEntryViewModel:
                     break_hours=break_hours,
                     note=note,
                     work_type=normalize_work_type(work_type),
+                    started_at=timestamps[0],
+                    ended_at=timestamps[1],
                 )
             )
         except (TypeError, ValueError) as exc:
@@ -182,6 +199,8 @@ class WorkLogEntryViewModel:
     def save(self, form: WorkLogEntryForm) -> Result[WorkLogEntryForm]:
         if form.errors:
             return Result.failure(ValidationError(form.errors[0], form.errors[0]))
+        auto = self.auto_record_view_model.state()
+        expected_note = auto.expected_note if (auto.active or auto.pending_save) and auto.day == form.day and auto.expected_note is not None else self._original_notes.get(form.day)
         saved = self._save_handler.handle(
             SaveWorkLogCommand(
                 user_id=form.user_id,
@@ -191,7 +210,9 @@ class WorkLogEntryViewModel:
                 break_hours=form.break_hours,
                 note=form.note,
                 work_type=form.work_type,
-                expected_note=self._original_notes.get(form.day),
+                expected_note=expected_note,
+                started_at=form.started_at,
+                ended_at=form.ended_at,
             )
         )
         if not saved.ok:
@@ -280,6 +301,8 @@ def _form_from_values(
         is_leave=bool(record and record.is_leave),
         dirty=dirty,
         errors=errors,
+        started_at=record.started_at if record else None,
+        ended_at=record.ended_at if record else None,
     )
 
 

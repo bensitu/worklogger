@@ -29,7 +29,7 @@ external SQLite clients still require SQLite's own locking protections.
 | `schema_migrations` | `version` primary key; description and applied timestamp |
 | `users` | Integer ID, unique username, password/recovery hashes and salts, administrator and password-change flags, remembered-token hash/expiry, timestamps |
 | `login_attempts` | Username primary key, failure count, lock expiry, last failure |
-| `worklog` | Composite `(user_id, d)` primary key; start/end, decimal-hour break, note, work type, overnight flag |
+| `worklog` | Composite `(user_id, d)` primary key; start/end, optional offset-aware timestamps, decimal-hour break, note, work type, overnight flag |
 | `daily_notes` | Composite `(user_id, d)` primary key; independent daily note content |
 | `quick_logs` | Integer ID; user/date, optional start/end, description, creation timestamp |
 | `settings` | Composite `(user_id, key)` primary key; string value |
@@ -69,6 +69,15 @@ the application version alone.
 | 3 | Normalize activity-event table/index names while preserving identifiers and content |
 | 4 | Add a unique NFKC/casefold account key and explicit local-password availability |
 | 5 | Copy existing notes to independent storage and remove note-only empty work rows |
+| 6 | Add optional offset-aware start/end timestamps, leaving existing clock-only records unchanged |
+
+Migration 6 creates a private pre-change snapshot when existing work rows are
+present. New desktop entries use the system's named timezone; automatic entries
+retain their captured offsets. Duration is measured in UTC. Editing only a note or
+break preserves timestamps. Changing start/end times resolves them in the current
+system zone. Ambiguous manual times use the first occurrence; nonexistent local
+times are rejected. Existing clock-only rows retain their prior wall-clock duration
+because no original timezone can be reconstructed reliably.
 
 The initial definition uses current names for new databases. Migration 3 handles
 previous layouts, including a database without a migration ledger. Compatibility

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+from zoneinfo import ZoneInfo
 import unittest
 
 from worklogger.domain.worklog.models import TimeRange, WorkLog, WorkType
@@ -15,6 +16,19 @@ from worklogger.domain.worklog.rules import (
 
 
 class WorkLogRuleTests(unittest.TestCase):
+    def test_offset_aware_shifts_preserve_elapsed_hours_across_clock_changes(self) -> None:
+        zone = ZoneInfo("America/New_York")
+        for day, expected in ((date(2026, 3, 7), 6.0), (date(2026, 10, 31), 8.0)):
+            with self.subTest(day=day):
+                started, ended = shift_datetimes(day, "22:00", "06:00", zone)
+                record = normalize_work_log(WorkLog(1, day, "22:00", "06:00", 1,
+                    started_at=started, ended_at=ended))
+                self.assertEqual(record.worked_hours(), expected)
+                self.assertTrue(record.is_overnight)
+                self.assertEqual(record.raw_hours(), expected)
+        with self.assertRaises(ValueError):
+            shift_datetimes(date(2026, 3, 8), "02:30", "06:00", zone)
+
     def test_parse_time_accepts_baseline_flexible_inputs(self) -> None:
         self.assertEqual(parse_time("9"), "09:00")
         self.assertEqual(parse_time("930"), "09:30")

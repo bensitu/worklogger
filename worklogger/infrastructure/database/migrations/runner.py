@@ -15,6 +15,7 @@ MIGRATION_MODULES = (
     "worklogger.infrastructure.database.migrations.migration_003_activity_events",
     "worklogger.infrastructure.database.migrations.migration_004_usernames",
     "worklogger.infrastructure.database.migrations.migration_005_daily_notes",
+    "worklogger.infrastructure.database.migrations.migration_006_worklog_timestamps",
 )
 
 

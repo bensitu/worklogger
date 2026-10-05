@@ -10,6 +10,7 @@ import logging
 import secrets
 import os
 import sys
+from tzlocal import get_localzone
 import sqlite3
 from contextlib import closing
 from typing import Protocol
@@ -554,7 +555,8 @@ def _build_worklog_entry_view_model(
         get_handler=GetWorkLogHandler(repositories.work_logs),
         save_handler=SaveWorkLogHandler(repositories.work_logs),
         notes_handler=GetDailyNoteHandler(repositories.daily_notes),
-        auto_record_view_model=AutoRecordViewModel(settings=repositories.settings, user_id=user.id),
+        auto_record_view_model=AutoRecordViewModel(settings=repositories.settings, user_id=user.id, notes=repositories.daily_notes),
+        local_timezone=get_localzone(),
     )
 
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+from zoneinfo import ZoneInfo
 from contextlib import closing
 from pathlib import Path
 import csv
@@ -16,6 +17,7 @@ from worklogger.app.use_cases.auth import RegisterUserHandler
 from worklogger.app.use_cases.data_portability import ImportWorkLogsCsvHandler
 from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
 from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.rules import shift_datetimes
 from worklogger.infrastructure.backup import SQLiteBackupService
 from worklogger.infrastructure.backup import sqlite_backup
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
@@ -29,12 +31,33 @@ from worklogger.infrastructure.security import PBKDF2PasswordHasher
 
 
 class DataPortabilityInfrastructureTests(unittest.TestCase):
+    def test_offset_timestamps_survive_storage_csv_and_calendar_export(self) -> None:
+        user_id = self.register_user("timestamp-user")
+        day = date(2026, 3, 7)
+        started, ended = shift_datetimes(day, "22:00", "06:00", ZoneInfo("America/New_York"))
+        repository = SQLiteWorkLogRepository(self.factory)
+        repository.save(WorkLog(user_id, day, "22:00", "06:00", 1, started_at=started, ended_at=ended))
+        loaded = repository.get_for_day(user_id, day)
+        self.assertEqual(loaded.worked_hours(), 6)
+        destination = Path(self._tempdir.name) / "timestamps.csv"
+        self.assertTrue(WorkLogCsvExporter().export_work_logs(destination, (loaded,)).ok)
+        parsed = WorkLogCsvImporter().parse(destination, user_id).value.rows[0]
+        self.assertEqual(parsed.started_at, started)
+        self.assertEqual(parsed.ended_at, ended)
+        imported = ImportWorkLogsCsvHandler(importer=WorkLogCsvImporter(), repository=repository).handle(
+            ImportWorkLogsCsvCommand(user_id, destination, overwrite_existing=True))
+        self.assertTrue(imported.ok, imported.error)
+        self.assertEqual(repository.get_for_day(user_id, day).worked_hours(), 6)
+        exported = WorkLogIcsExporter().export_work_logs((loaded,)).value
+        self.assertIn("DTSTART:20260308T030000Z", exported)
+        self.assertIn("DTEND:20260308T100000Z", exported)
+
     def setUp(self) -> None:
         self._tempdir = tempfile.TemporaryDirectory()
         self.addCleanup(self._tempdir.cleanup)
         self.db_path = str(Path(self._tempdir.name) / "worklog.db")
         self.factory = SQLiteConnectionFactory(self.db_path)
-        self.assertEqual(MigrationRunner(self.factory).run_pending(), (1, 2, 3, 4, 5))
+        self.assertEqual(MigrationRunner(self.factory).run_pending(), (1, 2, 3, 4, 5, 6))
 
     def auth_repository(
         self,
@@ -228,7 +251,7 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         self.register_user("alice")
         other_path = Path(self._tempdir.name) / "other.db"
         other_factory = SQLiteConnectionFactory(other_path)
-        self.assertEqual(MigrationRunner(other_factory).run_pending(), (1, 2, 3, 4, 5))
+        self.assertEqual(MigrationRunner(other_factory).run_pending(), (1, 2, 3, 4, 5, 6))
         self.register_user("bob", other_factory)
         service = SQLiteBackupService(self.factory, expected_username="alice")
 

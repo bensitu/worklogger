@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Protocol
 
@@ -25,6 +25,8 @@ class WorkLogCsvRowDraft:
     break_hours: float
     note: str
     work_type: str
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
 
 
 @dataclass(frozen=True)
@@ -91,6 +93,8 @@ class ImportWorkLogsCsvHandler:
                         break_hours=row.break_hours,
                         note=row.note,
                         work_type=WorkType(row.work_type),
+                        started_at=row.started_at,
+                        ended_at=row.ended_at,
                     )
                 )
                 if row.day in dates:

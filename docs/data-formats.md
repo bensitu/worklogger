@@ -23,6 +23,12 @@ Time entry accepts `HH:mm` and compact hour/minute digits. Legacy `HH.MM` requir
 two minute digits; ambiguous decimal-looking input such as `1.5` is rejected,
 not interpreted as either decimal hours or `01:05`. Break values remain decimal hours.
 
+When records contain offset-aware timestamps, export appends `started_at` and
+`ended_at` ISO timestamp columns. Import accepts these optional columns and verifies
+that dates and clock times agree. Files containing only older clock-based records
+keep the six-column format. Timestamp offsets preserve elapsed hours across daylight
+saving changes; importing older files does not guess their original timezone.
+
 Import also accepts `d` for the date and `lunch` for the break. Missing break values
 default to zero; missing work types default to `normal`, and unknown types are
 reported as invalid rows. Both ISO dates and year-first slash dates are accepted. The
@@ -48,7 +54,8 @@ Work-log export emits UTF-8 iCalendar text with CRLF endings, escaped text, and
 75-byte line folding. Timed non-leave records become events; untimed and leave
 records are omitted. Overnight shifts end on the following date. Event summaries
 include worked hours, and descriptions include up to 500 characters of the note.
-Event times are local floating times, without a timezone definition.
+Records with captured timestamps export UTC event times. Older clock-only records
+export local floating times, without a timezone definition.
 
 Calendar import uses `icalendar` and `recurring-ical-events`. Files are limited to
 10 MiB and 10,000 expanded daily entries. UTC and named timezones are converted to

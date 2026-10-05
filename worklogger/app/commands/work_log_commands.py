@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 
 
 @dataclass(frozen=True)
@@ -16,6 +16,8 @@ class SaveWorkLogCommand:
     note: str
     work_type: str
     expected_note: str | None = None
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
 
 
 @dataclass(frozen=True)

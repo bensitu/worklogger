@@ -75,12 +75,12 @@ def _event_lines(row: WorkLog, *, dtstamp: str) -> list[str]:
         return []
     assert row.start_time is not None
     assert row.end_time is not None
-    datetimes = TimeRange(row.start_time, row.end_time).as_datetimes(row.day)
+    datetimes = (row.started_at, row.ended_at) if row.started_at and row.ended_at else TimeRange(row.start_time, row.end_time).as_datetimes(row.day)
     if datetimes is None:
         return []
     start_dt, end_dt = datetimes
-    start_stamp = start_dt.strftime("%Y%m%dT%H%M%S")
-    end_stamp = end_dt.strftime("%Y%m%dT%H%M%S")
+    start_stamp = start_dt.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ") if start_dt.tzinfo else start_dt.strftime("%Y%m%dT%H%M%S")
+    end_stamp = end_dt.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ") if end_dt.tzinfo else end_dt.strftime("%Y%m%dT%H%M%S")
     note = row.note or ""
     summary_note = _summary_note(note)
     summary = _("Work {hours:.1f}h").format(hours=row.raw_hours())

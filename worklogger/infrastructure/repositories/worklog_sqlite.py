@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 import math
 import sqlite3
 
@@ -18,9 +18,13 @@ class SQLiteWorkLogRepository:
         self._connection_factory = connection_factory
         with connection_factory.connection() as connection:
             self._separate_notes = connection.execute("SELECT 1 FROM sqlite_master WHERE name='daily_notes'").fetchone() is not None
+            self._timestamps = "started_at" in {row[1] for row in connection.execute("PRAGMA table_info(worklog)")}
         self._select = 'SELECT w.user_id, w.d, w.start, w.end, w."break", '
         self._select += ('COALESCE(n.content, w.note) AS note' if self._separate_notes else 'w.note')
-        self._select += ', w.work_type, w.overnight FROM worklog AS w '
+        self._select += ', w.work_type, w.overnight'
+        if self._timestamps:
+            self._select += ', w.started_at, w.ended_at'
+        self._select += ' FROM worklog AS w '
         if self._separate_notes:
             self._select += 'LEFT JOIN daily_notes AS n ON n.user_id=w.user_id AND n.d=w.d '
 
@@ -74,6 +78,8 @@ class SQLiteWorkLogRepository:
 
     def import_many(self, rows: tuple[WorkLog, ...], *, overwrite: bool = False, expected_note: str | None = None) -> None:
         normalized_rows = tuple(normalize_work_log(row) for row in rows)
+        if not self._timestamps and any(row.started_at is not None or row.ended_at is not None for row in normalized_rows):
+            raise ValueError("database_version_unsupported")
         with self._connection_factory.transaction(write=True) as connection:
             if not overwrite:
                 for row in normalized_rows:
@@ -117,6 +123,10 @@ class SQLiteWorkLogRepository:
                     1 if normalized.overnight else 0,
                 ) for normalized in normalized_rows],
             )
+            if self._timestamps:
+                connection.executemany("UPDATE worklog SET started_at=?, ended_at=? WHERE user_id=? AND d=?",
+                    [(row.started_at.isoformat() if row.started_at else None,
+                      row.ended_at.isoformat() if row.ended_at else None, row.user_id, row.day.isoformat()) for row in normalized_rows])
 
     def remove(self, user_id: int, day: date) -> None:
         with self._connection_factory.transaction(write=True) as connection:
@@ -130,7 +140,7 @@ class SQLiteWorkLogRepository:
         break_hours = float(row["break"] or 0)
         if not math.isfinite(break_hours) or not 0 <= break_hours <= 24:
             raise ValueError("stored_work_log_invalid")
-        return WorkLog(
+        record = WorkLog(
             user_id=int(row["user_id"]),
             day=parse_date(row["d"]),
             start_time=parse_time(row["start"]),
@@ -139,4 +149,7 @@ class SQLiteWorkLogRepository:
             note=str(row["note"] or ""),
             work_type=normalize_work_type(row["work_type"]),
             overnight=bool(int(row["overnight"] or 0)),
+            started_at=datetime.fromisoformat(row["started_at"]) if "started_at" in row.keys() and row["started_at"] else None,
+            ended_at=datetime.fromisoformat(row["ended_at"]) if "ended_at" in row.keys() and row["ended_at"] else None,
         )
+        return normalize_work_log(record) if record.started_at is not None or record.ended_at is not None else record

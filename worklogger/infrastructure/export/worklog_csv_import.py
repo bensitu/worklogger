@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import csv
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 import io
 
@@ -86,6 +86,8 @@ def _parse_row(
             break_hours=float(break_text),
             note=_field(row, "note"),
             work_type=_field(row, "work_type") or "normal",
+            started_at=datetime.fromisoformat(_field(row, "started_at")) if _field(row, "started_at") else None,
+            ended_at=datetime.fromisoformat(_field(row, "ended_at")) if _field(row, "ended_at") else None,
         )
     except Exception as exc:
         return WorkLogCsvRowError(row_number, str(exc))

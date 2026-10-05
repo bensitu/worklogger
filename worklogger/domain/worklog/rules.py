@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone, tzinfo
 import math
 
 from worklogger.config.constants import LEAVE_TYPES, MAX_SHIFT_HOURS, WORK_TYPE_KEYS
@@ -87,7 +87,13 @@ def is_overnight_shift(start: str, end: str) -> bool:
     return end_minutes <= start_minutes
 
 
-def shift_datetimes(day: date, start: str, end: str) -> tuple[datetime, datetime] | None:
+def timestamp_span_hours(start: datetime, end: datetime) -> float:
+    if start.tzinfo is None or end.tzinfo is None:
+        raise ValueError("time_range_invalid")
+    return (end.astimezone(timezone.utc) - start.astimezone(timezone.utc)).total_seconds() / 3600
+
+
+def shift_datetimes(day: date, start: str, end: str, local_timezone: tzinfo | None = None) -> tuple[datetime, datetime] | None:
     start_time = parse_time(start)
     end_time = parse_time(end)
     if start_time is None or end_time is None:
@@ -99,6 +105,12 @@ def shift_datetimes(day: date, start: str, end: str) -> tuple[datetime, datetime
         return None
     if end_dt <= start_dt:
         end_dt += timedelta(days=1)
+    if local_timezone is not None:
+        start_dt = start_dt.replace(tzinfo=local_timezone)
+        end_dt = end_dt.replace(tzinfo=local_timezone)
+        for moment in (start_dt, end_dt):
+            if moment.astimezone(timezone.utc).astimezone(local_timezone).replace(tzinfo=None) != moment.replace(tzinfo=None):
+                raise ValueError("time_range_invalid")
     return start_dt, end_dt
 
 
@@ -153,11 +165,23 @@ def normalize_work_log(
         raise ValueError("break_hours_negative")
 
     if start and end:
-        span = calc_shift_span_hours(start, end, max_shift_hours=max_shift_hours)
+        if work_log.started_at is not None or work_log.ended_at is not None:
+            if work_log.started_at is None or work_log.ended_at is None:
+                raise ValueError("time_range_incomplete")
+            if (work_log.started_at.date() != work_log.day or work_log.started_at.strftime("%H:%M") != start
+                    or work_log.ended_at.strftime("%H:%M") != end):
+                raise ValueError("time_range_invalid")
+            span = timestamp_span_hours(work_log.started_at, work_log.ended_at)
+            if span <= 0 or span > max_shift_hours:
+                raise ValueError("time_range_invalid")
+        else:
+            span = calc_shift_span_hours(start, end, max_shift_hours=max_shift_hours)
         if span is None:
             raise ValueError("time_range_invalid")
         if break_hours >= span:
             raise ValueError("break_hours_too_long")
+    elif work_log.started_at is not None or work_log.ended_at is not None:
+        raise ValueError("time_range_incomplete")
 
     return replace(
         work_log,
@@ -165,5 +189,6 @@ def normalize_work_log(
         end_time=end,
         break_hours=break_hours,
         work_type=normalize_work_type(work_log.work_type),
-        overnight=is_overnight_shift(start, end) if start and end else False,
+        overnight=(work_log.ended_at.date() > work_log.started_at.date()) if work_log.started_at and work_log.ended_at
+        else is_overnight_shift(start, end) if start and end else False,
     )

@@ -54,6 +54,8 @@ class WorkLog:
     note: str = ""
     work_type: WorkType = WorkType.NORMAL
     overnight: bool = False
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
 
     @property
     def has_times(self) -> bool:
@@ -67,6 +69,8 @@ class WorkLog:
 
     @property
     def is_overnight(self) -> bool:
+        if self.started_at is not None and self.ended_at is not None:
+            return self.ended_at.date() > self.started_at.date()
         if self.has_times:
             from worklogger.domain.worklog.rules import is_overnight_shift
 
@@ -79,6 +83,8 @@ class WorkLog:
     def worked_hours(self, *, max_shift_hours: float = MAX_SHIFT_HOURS) -> float:
         if not self.has_times or self.is_leave:
             return 0.0
+        if self.started_at is not None and self.ended_at is not None:
+            return self.raw_hours(max_shift_hours=max_shift_hours)
         from worklogger.domain.worklog.rules import calc_hours
 
         return calc_hours(
@@ -91,6 +97,11 @@ class WorkLog:
     def raw_hours(self, *, max_shift_hours: float = MAX_SHIFT_HOURS) -> float:
         if not self.has_times:
             return 0.0
+        if self.started_at is not None and self.ended_at is not None:
+            from worklogger.domain.worklog.rules import timestamp_span_hours
+
+            span = timestamp_span_hours(self.started_at, self.ended_at)
+            return max(span - self.break_hours, 0.0) if 0 < span <= max_shift_hours else 0.0
         from worklogger.domain.worklog.rules import calc_hours
 
         return calc_hours(

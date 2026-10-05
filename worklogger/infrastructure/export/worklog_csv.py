@@ -22,10 +22,12 @@ class WorkLogCsvExporter:
     ) -> Result[Path]:
         destination = Path(destination)
         try:
+            records = tuple(rows)
+            timestamps = any(row.started_at is not None or row.ended_at is not None for row in records)
             with atomic_destination(destination) as temporary, temporary.open("w", encoding="utf-8-sig", newline="") as handle:
                 writer = csv.writer(handle)
-                writer.writerow(self.HEADER)
-                for row in rows:
+                writer.writerow(self.HEADER + (("started_at", "ended_at") if timestamps else ()))
+                for row in records:
                     writer.writerow(
                         [
                             row.day.isoformat(),
@@ -34,7 +36,7 @@ class WorkLogCsvExporter:
                             row.break_hours,
                             spreadsheet_text(row.note),
                             spreadsheet_text(_work_type_value(row.work_type)),
-                        ]
+                        ] + ([row.started_at.isoformat() if row.started_at else "", row.ended_at.isoformat() if row.ended_at else ""] if timestamps else [])
                     )
         except Exception as exc:
             return Result.failure(

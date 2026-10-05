@@ -36,6 +36,8 @@ class SaveWorkLogHandler:
                     break_hours=command.break_hours,
                     note=command.note,
                     work_type=normalize_work_type(command.work_type),
+                    started_at=command.started_at,
+                    ended_at=command.ended_at,
                 )
             )
         except (TypeError, ValueError) as exc:
