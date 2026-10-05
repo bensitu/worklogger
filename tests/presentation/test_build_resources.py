@@ -32,7 +32,9 @@ class BuildResourceTests(unittest.TestCase):
         self.assertIn("worklogger/presentation/theme/qss/blue_dark.qss", paths)
         self.assertEqual(sum(path.endswith(".otf") for path in paths), 5)
         self.assertEqual(sum(path.endswith(".mo") for path in paths), 5)
-        self.assertFalse(any(path.endswith((".avif", ".db", ".gguf", ".json")) for path in paths))
+        self.assertFalse(any(path.endswith((".avif", ".db", ".gguf")) for path in paths))
+        self.assertEqual({path for path in paths if path.endswith(".json")}, {"model_catalog.json"})
+        self.assertIn((str(ROOT / "model_catalog.json"), "worklogger/assets/models"), resources)
         for platform, suffix in (("win32", ".ico"), ("darwin", ".icns")):
             icon = executable_icon(ROOT, platform)
             self.assertTrue(Path(icon).is_file())

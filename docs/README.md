@@ -20,6 +20,7 @@ desktop features from adapters that require additional runtime configuration.
 | [Architecture](architecture.md) | Dependencies, startup, workflows, state, background jobs |
 | [Database](database.md) | Tables, ownership, migrations, backup and restore |
 | [Integrations](integrations.md) | AI, model management, identities, holidays, networking |
+| [Local Models](local-models.md) | Hugging Face choices, metadata, memory estimates, runtime compatibility |
 | [Localization](localization.md) | Catalog workflow, locale resolution, Qt dialog translation |
 | [Development](development.md) | Environment setup, dependencies, coding conventions |
 | [Testing](testing.md) | Test organization, isolated fixtures, rendering, verification |

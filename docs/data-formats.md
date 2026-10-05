@@ -108,8 +108,17 @@ from new backups; re-enter them after moving an installation. See [backup detail
 ## Model Metadata
 
 Local model storage uses `catalog.json` and `manifest.json` beside shared GGUF
-files. Model entries include an ID, display name, filename, status, optional
-download URL and SHA-256 checksum, description, and estimated size. Metadata and
-models are not part of database backups. The root `model_catalog.json` is a
-separate tracked resource and is not automatically loaded by the default desktop
-model store. See [integrations](integrations.md).
+files. The desktop also reads the bundled `model_catalog.json`; persistent entries
+override bundled entries with the same ID. The root JSON object contains a
+`models` list. Each entry follows `LocalModelEntry`: `id`, `display_name`,
+`filename`, `status`, `sha256`, `download_url`, `estimated_size_mb` (MiB),
+`min_ram_gb`, `context_length`, `max_output_tokens`, `description`,
+`description_translations`, and `license`. The description is English text;
+translations map locale IDs to text. Older localized `description` objects and
+bare entry lists remain readable. Invalid individual entries are skipped.
+
+Catalog reads are limited to 1 MiB and cached by path, timestamps, and file size;
+changes invalidate the parsed metadata. Metadata writes are serialized within a
+store instance. Metadata and models are not part of database backups. Bundled
+entries do not automatically download, select, or load a model. See
+[model choices and configuration](local-models.md).

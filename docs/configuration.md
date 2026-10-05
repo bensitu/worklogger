@@ -40,7 +40,7 @@ platform-dependent. Account settings are stored separately in SQLite.
 | `WORKLOGGER_BUILD_CONSOLE` | Read by `WorkLogger.spec`; normally set by `scripts/build.py --console` |
 | `WORKLOGGER_BUILD_LOCAL_INFERENCE` | Normally set by `scripts/build.py --with-local-inference` |
 | `WORKLOGGER_CODESIGN_IDENTITY`, `WORKLOGGER_CODESIGN_ENTITLEMENTS` | Optional macOS build-signing inputs |
-| `WORKLOGGER_MODEL_CATALOG_URL` | Explicit HTTPS catalog URL for model refresh; unset uses local metadata |
+| `WORKLOGGER_MODEL_CATALOG_URL` | Explicit HTTPS catalog URL for model refresh; unset uses bundled and persistent local metadata |
 | `QT_QPA_PLATFORM=offscreen` | Headless GUI tests and runtime checks; omit for interactive desktop use |
 | `QT_SCALE_FACTOR` | Useful for display-scaling verification, not a saved application preference |
 | `WORKLOGGER_SCREENSHOTS` | Test-only destination for rendered screenshots |

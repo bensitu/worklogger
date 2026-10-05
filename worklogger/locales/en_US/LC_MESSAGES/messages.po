@@ -1449,3 +1449,12 @@ msgstr "{start_month} {start_day} - {end_month} {end_day}, {year}"
 
 msgid "{start} - {end}"
 msgstr "{start} - {end}"
+
+msgid "Estimated RAM: {ram} GB"
+msgstr "Estimated RAM: {ram} GB"
+
+msgid "Context: {context} tokens; output: {output} tokens"
+msgstr "Context: {context} tokens; output: {output} tokens"
+
+msgid "License: {license}"
+msgstr "License: {license}"

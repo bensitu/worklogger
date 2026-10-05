@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
@@ -18,6 +18,8 @@ class LocalModelEntry:
     context_length: int = 8192
     max_output_tokens: int = 2048
     description: str = ""
+    description_translations: dict[str, str] = field(default_factory=dict)
+    license: str = ""
 
 
 @dataclass(frozen=True)

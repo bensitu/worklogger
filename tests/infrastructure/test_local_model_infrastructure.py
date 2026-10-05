@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+from dataclasses import fields
 import json
 import tempfile
 from pathlib import Path
@@ -9,8 +10,10 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 
 from worklogger.app.ports import AIRequest
+from worklogger.domain.local_model.models import LocalModelEntry
 from worklogger.infrastructure.ai.local import LocalModelGateway, strip_thinking
-from worklogger.infrastructure.local_model import JsonLocalModelStore, sha256_of_file
+from worklogger.infrastructure.local_model import JsonLocalModelStore, bundled_model_catalog_path, sha256_of_file
+from worklogger.infrastructure.local_model.store import _entry_from_json
 
 
 class FakeResponse:
@@ -35,6 +38,56 @@ class FakeResponse:
 
 
 class LocalModelInfrastructureTests(unittest.TestCase):
+    def test_catalog_merges_bundled_and_local_entries_and_invalidates_cached_metadata(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            bundled = root / "bundled.json"
+            bundled.write_text(json.dumps({"models": [{
+                "id": "shared", "filename": "shared.gguf", "license": "MIT",
+                "description": {"en_US": "Bundled description", "ja_JP": "Localized description"},
+            }]}), encoding="utf-8")
+            models = root / "models"
+            store = JsonLocalModelStore(models, bundled_catalog_path=bundled)
+            with patch("worklogger.infrastructure.local_model.store._entry_from_json",
+                       wraps=_entry_from_json) as parse:
+                for _ in range(3):
+                    entry = store.list_models().value[0]
+                    self.assertEqual(entry.description, "Bundled description")
+                    self.assertEqual(entry.description_translations["ja_JP"], "Localized description")
+                    self.assertEqual(entry.license, "MIT")
+                    self.assertFalse(store.verify_model(entry.id).value.available)
+                self.assertEqual(parse.call_count, 1)
+                models.mkdir()
+                catalog = models / "catalog.json"
+                catalog.write_text(json.dumps({"models": [{"id": "shared", "filename": "replacement.gguf"}]}), encoding="utf-8")
+                self.assertEqual(store.list_models().value[0].filename, "replacement.gguf")
+                catalog.unlink()
+                self.assertEqual(store.list_models().value[0].filename, "shared.gguf")
+            source = root / "import.gguf"
+            source.write_bytes(b"model")
+            imported = store.import_model(source).value
+            restored = JsonLocalModelStore(models, bundled_catalog_path=bundled)
+            self.assertEqual({item.id for item in restored.list_models().value}, {"shared", imported.id})
+            self.assertTrue(restored.delete_model(imported.id).ok)
+            self.assertEqual([item.id for item in restored.list_models().value], ["shared"])
+            catalog.write_bytes(b"x" * 128)
+            self.assertFalse(JsonLocalModelStore(models, max_catalog_bytes=64).list_models().ok)
+
+    def test_bundled_catalog_matches_the_supported_model_schema(self):
+        catalog = bundled_model_catalog_path()
+        raw = json.loads(catalog.read_text(encoding="utf-8"))["models"]
+        names = {field.name for field in fields(LocalModelEntry)}
+        with tempfile.TemporaryDirectory() as directory:
+            entries = JsonLocalModelStore(directory, bundled_catalog_path=catalog).list_models().value
+            self.assertEqual(len(entries), len(raw))
+            self.assertEqual(len({item.id for item in entries}), len(raw))
+            for item, data in zip(entries, raw):
+                self.assertEqual(set(data), names)
+                self.assertRegex(item.download_url, r"^https://huggingface\.co/[^/]+/[^/]+/resolve/[0-9a-f]{40}/")
+                self.assertRegex(item.sha256, r"^[0-9a-f]{64}$")
+                self.assertLessEqual(item.max_output_tokens, item.context_length)
+                self.assertEqual(set(item.description_translations), {"zh_CN", "zh_TW", "ja_JP", "ko_KR"})
+
     def test_download_transfer_validation_and_cancellation_preserve_destination(self):
         from worklogger.infrastructure.local_model.store import HttpRangeDownloader
 
@@ -209,24 +262,19 @@ class LocalModelInfrastructureTests(unittest.TestCase):
             seen["max_tokens"] = max_tokens
             return "<think>hidden</think>\nFinal answer: visible"
 
-        gateway = LocalModelGateway(
-            generator=generator,
-            model_id="qwen3_demo",
-            catalog_entry={"display_name": "Qwen3 Demo"},
-            max_output_tokens=123,
-        )
-        result = gateway.generate(
-            AIRequest(
-                messages=({"role": "user", "content": "hello"},),
-                model="local",
-                timeout_seconds=1,
-            )
-        )
-
-        self.assertTrue(result.ok)
-        assert result.value is not None
-        self.assertEqual(result.value.text, "visible")
-        self.assertIn("/no_think", seen["messages"][-1]["content"])
+        for model_id, name, needs_directive in (
+            ("qwen3_demo", "Qwen3 Demo", True),
+            ("qwen3_4b_instruct_2507_q4", "Qwen3-4B-Instruct-2507", False),
+            ("qwen35_4b_q4", "Qwen3.5-4B", False),
+            ("qwen25_7b_instruct_q4", "Qwen2.5-7B-Instruct", False),
+        ):
+            gateway = LocalModelGateway(generator=generator, model_id=model_id,
+                                        catalog_entry={"display_name": name}, max_output_tokens=123)
+            result = gateway.generate(AIRequest(messages=({"role": "user", "content": "hello"},),
+                                                model="local", timeout_seconds=1))
+            self.assertTrue(result.ok)
+            self.assertEqual(result.value.text, "visible")
+            self.assertEqual("/no_think" in seen["messages"][-1]["content"], needs_directive)
         self.assertEqual(strip_thinking("<thinking>x</thinking>answer"), "answer")
 
 

@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
 
 from worklogger.app.job_runner import JobHandle, JobRunner
 from worklogger.domain.shared.errors import AppError, CancellationError
-from worklogger.infrastructure.i18n import _
+from worklogger.infrastructure.i18n import _, get_language
 from worklogger.presentation.errors import display_error_code, display_error_message
 from worklogger.presentation.viewmodels import (
     LocalModelManagerState,
@@ -284,7 +284,9 @@ class LocalModelsDialog(QDialog):
         if self._state is None:
             return
         for item in self._state.inventory.items:
-            status = "" if item.verified else _("Not downloaded")
+            status = "" if item.verified else (
+                display_error_code(item.reason) if item.available else _("Not downloaded")
+            )
             active = _("Active") if item.active else ""
             label = " | ".join(
                 part
@@ -297,6 +299,16 @@ class LocalModelsDialog(QDialog):
             )
             list_item = QListWidgetItem(label)
             list_item.setData(256, item.entry.id)
+            entry = item.entry
+            description = entry.description_translations.get(get_language(), entry.description)
+            details = [description]
+            if entry.min_ram_gb:
+                details.append(_("Estimated RAM: {ram} GB").format(ram=entry.min_ram_gb))
+            details.append(_("Context: {context} tokens; output: {output} tokens").format(
+                context=entry.context_length, output=entry.max_output_tokens))
+            if entry.license:
+                details.append(_("License: {license}").format(license=entry.license))
+            list_item.setToolTip("\n".join(part for part in details if part))
             self.model_list.addItem(list_item)
 
     def _selected_model_id(self) -> str | None:

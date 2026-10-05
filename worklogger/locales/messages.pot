@@ -269,6 +269,9 @@ msgstr ""
 msgid "Confirm password"
 msgstr ""
 
+msgid "Context: {context} tokens; output: {output} tokens"
+msgstr ""
+
 msgid "Continue"
 msgstr ""
 
@@ -393,6 +396,9 @@ msgid "Enter your password"
 msgstr ""
 
 msgid "Enter your password."
+msgstr ""
+
+msgid "Estimated RAM: {ram} GB"
 msgstr ""
 
 msgid "Export"
@@ -570,6 +576,9 @@ msgid "Leave days"
 msgstr ""
 
 msgid "License"
+msgstr ""
+
+msgid "License: {license}"
 msgstr ""
 
 msgid "Light mode"

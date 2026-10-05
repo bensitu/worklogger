@@ -1449,3 +1449,12 @@ msgstr "{year}年{start_month}{start_day}日 - {end_month}{end_day}日"
 
 msgid "{start} - {end}"
 msgstr "{start} - {end}"
+
+msgid "Estimated RAM: {ram} GB"
+msgstr "推定メモリ：{ram} GB"
+
+msgid "Context: {context} tokens; output: {output} tokens"
+msgstr "コンテキスト：{context} トークン、出力：{output} トークン"
+
+msgid "License: {license}"
+msgstr "ライセンス：{license}"

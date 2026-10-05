@@ -26,6 +26,7 @@ from worklogger.domain.local_model.models import (
     LocalModelListItem,
 )
 from worklogger.domain.shared.result import Result
+from worklogger.infrastructure.i18n import set_language
 from worklogger.presentation.job_runner import ImmediateJobRunner, QtJobRunner
 from worklogger.presentation.local_models import LocalModelsDialog
 from worklogger.presentation.local_models.controller import LocalModelsWorkflowController
@@ -85,6 +86,9 @@ class FakeLocalModelHandlers:
 
 
 class LocalModelsPresentationTests(unittest.TestCase):
+    def tearDown(self):
+        set_language("en_US")
+
     def test_model_inventory_load_runs_off_ui_thread(self):
         handlers = FakeLocalModelHandlers()
         model = LocalModelManagerViewModel(
@@ -190,6 +194,19 @@ class LocalModelsPresentationTests(unittest.TestCase):
         self.assertEqual(handlers.selected, ["model-a"])
         self.assertEqual(handlers.imported, ["demo.gguf"])
         self.assertIn("Model imported.", dialog.status_label.text())
+
+        from dataclasses import replace
+        handlers.entry = replace(handlers.entry, description="English description", license="MIT", min_ram_gb=8,
+                                 description_translations={"zh_CN": "中文描述", "ja_JP": "日本語の説明"})
+        for language, expected in (("en_US", "English description"), ("zh_CN", "中文描述"), ("ja_JP", "日本語の説明")):
+            set_language(language)
+            self.assertTrue(dialog.refresh())
+            tooltip = dialog.model_list.item(0).toolTip()
+            self.assertIn(expected, tooltip)
+            self.assertIn("8192", tooltip)
+            self.assertIn("MIT", tooltip)
+            if language != "en_US":
+                self.assertNotIn("Estimated RAM", tooltip)
 
     def test_dialog_can_run_long_actions_through_job_runner(self) -> None:
         handlers = FakeLocalModelHandlers()

@@ -46,7 +46,8 @@ Windows distribution builds omit the diagnostic console.
 ## Resources
 
 The resource manifest includes application assets, QSS, and compiled catalogs for
-all five languages. It rejects AVIF files; the login bitmap is WebP. UI SVG files,
+all five languages, plus the public `model_catalog.json` under
+`worklogger/assets/models`. It rejects AVIF files; the login bitmap is WebP. UI SVG files,
 their license notice, bundled OpenType fonts and notices, and platform icons must
 remain available at runtime.
 

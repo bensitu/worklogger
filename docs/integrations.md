@@ -55,13 +55,15 @@ quality or semantic validity of a model.
 Downloads require a catalog SHA-256 checksum. A per-file lock protects resumable
 partial files; range and response lengths are validated. Servers ignoring ranges
 restart the transfer. Only a matching complete file replaces the destination.
-Cancellation leaves a partial file for a later retry. Verification results are
-cached by path, file timestamps, size, and expected checksum.
+Cancellation leaves a partial file for a later retry. Verification results and
+parsed catalogs are cached by path, file timestamps, size, and expected checksum
+where applicable.
 A remote catalog is used when `WORKLOGGER_MODEL_CATALOG_URL` supplies an explicit
 HTTPS URL, or a programmatic caller passes one to the store constructor. Entries
-used for downloads must contain a SHA-256 checksum. Refresh reads local metadata
-by default. The root catalog file is
-not automatically copied into runtime storage.
+used for downloads must contain a SHA-256 checksum. The desktop reads the bundled
+catalog and merges persistent metadata by ID. Refresh without a remote URL reads
+these local resources; it does not contact Hugging Face. Repository revision URLs
+and digests pin the supplied download files. See [local models](local-models.md).
 Failed remote refresh returns an error and leaves cached entries intact; listing
 and managing the local catalog remains available without a network connection.
 

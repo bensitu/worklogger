@@ -1,0 +1,104 @@
+{
+  "models": [
+    {
+      "id": "qwen3_4b_instruct_2507_q4",
+      "display_name": "Qwen3-4B-Instruct-2507 Q4_K_M",
+      "filename": "Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+      "status": "stable",
+      "sha256": "2fde00ce69dd4899c70d020845e2638353015bba0fdf161b3eb965f2bca4464e",
+      "download_url": "https://huggingface.co/bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF/resolve/ae44f08e1392f39c0e474af10c3ff8355c8b6688/Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+      "estimated_size_mb": 2382,
+      "min_ram_gb": 8,
+      "context_length": 8192,
+      "max_output_tokens": 2048,
+      "license": "Apache-2.0",
+      "description": "Multilingual non-thinking instruction model for drafting and editing work summaries. Preferred starting option; review generated text before saving.",
+      "description_translations": {
+        "zh_CN": "多语言非思考模式指令模型，用于起草和编辑工作摘要。建议优先尝试，保存前请检查生成内容。",
+        "zh_TW": "多語言非思考模式指令模型，用於起草和編輯工作摘要。建議優先嘗試，儲存前請檢查產生內容。",
+        "ja_JP": "業務要約の下書きと編集に向けた多言語・非思考型の指示モデル。最初の選択肢として推奨します。保存前に生成内容を確認してください。",
+        "ko_KR": "업무 요약 초안과 편집을 위한 다국어 비사고형 지시 모델입니다. 먼저 사용해 볼 선택지이며, 저장 전에 생성 내용을 검토하세요."
+      }
+    },
+    {
+      "id": "qwen25_15b_instruct_q4",
+      "display_name": "Qwen2.5-1.5B-Instruct Q4_K_M",
+      "filename": "qwen2.5-1.5b-instruct-q4_k_m.gguf",
+      "status": "stable",
+      "sha256": "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e",
+      "download_url": "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/91cad51170dc346986eccefdc2dd33a9da36ead9/qwen2.5-1.5b-instruct-q4_k_m.gguf",
+      "estimated_size_mb": 1066,
+      "min_ram_gb": 4,
+      "context_length": 8192,
+      "max_output_tokens": 1024,
+      "license": "Apache-2.0",
+      "description": "Smaller multilingual instruction model for short notes on memory-constrained computers. More limited capacity than the larger options.",
+      "description_translations": {
+        "zh_CN": "较小的多语言指令模型，适合在内存有限的电脑上处理简短笔记。能力较大模型更有限。",
+        "zh_TW": "較小的多語言指令模型，適合在記憶體有限的電腦上處理簡短筆記。能力較大型模型更有限。",
+        "ja_JP": "メモリが限られた端末で短いメモを処理する小型の多言語指示モデル。大型モデルより処理能力が限られます。",
+        "ko_KR": "메모리가 제한된 컴퓨터에서 짧은 메모를 처리하는 소형 다국어 지시 모델입니다. 큰 모델보다 처리 능력이 제한됩니다."
+      }
+    },
+    {
+      "id": "qwen3_8b_q4",
+      "display_name": "Qwen3-8B Q4_K_M",
+      "filename": "Qwen3-8B-Q4_K_M.gguf",
+      "status": "stable",
+      "sha256": "120307ba529eb2439d6c430d94104dabd578497bc7bfe7e322b5d9933b449bd4",
+      "download_url": "https://huggingface.co/unsloth/Qwen3-8B-GGUF/resolve/a6adef130ffb23ddaf1a62fec9dced968c9bc482/Qwen3-8B-Q4_K_M.gguf",
+      "estimated_size_mb": 4795,
+      "min_ram_gb": 12,
+      "context_length": 8192,
+      "max_output_tokens": 2048,
+      "license": "Apache-2.0",
+      "description": "Larger multilingual model for computers with more memory. The text gateway requests non-thinking output using the Qwen3 prompt directive.",
+      "description_translations": {
+        "zh_CN": "适合内存较充足电脑的较大多语言模型。文本接口使用 Qwen3 提示指令请求非思考模式输出。",
+        "zh_TW": "適合記憶體較充足電腦的較大型多語言模型。文字介面使用 Qwen3 提示指令請求非思考模式輸出。",
+        "ja_JP": "メモリに余裕のある端末向けの大型多言語モデル。テキスト接続は Qwen3 の指示で非思考型の出力を要求します。",
+        "ko_KR": "메모리가 충분한 컴퓨터를 위한 대형 다국어 모델입니다. 텍스트 연결은 Qwen3 지시문으로 비사고형 출력을 요청합니다."
+      }
+    },
+    {
+      "id": "phi4_mini_instruct_q4",
+      "display_name": "Phi-4-mini-instruct Q4_K_M",
+      "filename": "Phi-4-mini-instruct-Q4_K_M.gguf",
+      "status": "stable",
+      "sha256": "88c00229914083cd112853aab84ed51b87bdf6b9ce42f532d8c85c7c63b1730a",
+      "download_url": "https://huggingface.co/unsloth/Phi-4-mini-instruct-GGUF/resolve/78eb92a46fc37e6b524df991ed9aca9bc6aa7b80/Phi-4-mini-instruct-Q4_K_M.gguf",
+      "estimated_size_mb": 2377,
+      "min_ram_gb": 8,
+      "context_length": 8192,
+      "max_output_tokens": 2048,
+      "license": "MIT",
+      "description": "Compact multilingual instruction model from Microsoft. An alternative for drafting work summaries; compare results in your working language.",
+      "description_translations": {
+        "zh_CN": "Microsoft 提供的小型多语言指令模型。可作为起草工作摘要的另一种模型选择，请比较其在工作语言中的输出。",
+        "zh_TW": "Microsoft 提供的小型多語言指令模型。可作為起草工作摘要的另一種模型選擇，請比較其在工作語言中的輸出。",
+        "ja_JP": "Microsoft の小型多言語指示モデル。業務要約の下書きに向けた別の選択肢です。使用言語での出力を比較してください。",
+        "ko_KR": "Microsoft의 소형 다국어 지시 모델입니다. 업무 요약 초안을 위한 다른 선택지이며, 업무 언어의 결과를 비교하세요."
+      }
+    },
+    {
+      "id": "qwen25_7b_instruct_q4",
+      "display_name": "Qwen2.5-7B-Instruct Q4_K_M",
+      "filename": "Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+      "status": "stable",
+      "sha256": "3e357ab3eda2c442f25c0080bb8998eedc05fd16ce1728eacff9ccc5c3d240c6",
+      "download_url": "https://huggingface.co/lmstudio-community/Qwen2.5-7B-Instruct-GGUF/resolve/a8bb3906b78b3009770d7ae7d116be2ea892802d/Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+      "estimated_size_mb": 4467,
+      "min_ram_gb": 12,
+      "context_length": 8192,
+      "max_output_tokens": 2048,
+      "license": "Apache-2.0",
+      "description": "Multilingual non-thinking instruction model retained for compatibility with Qwen2.5 text generation. Requires more memory than the compact options.",
+      "description_translations": {
+        "zh_CN": "保留以兼容 Qwen2.5 文本生成的多语言非思考模式指令模型。所需内存高于小型模型。",
+        "zh_TW": "保留以相容 Qwen2.5 文字產生的多語言非思考模式指令模型。所需記憶體高於小型模型。",
+        "ja_JP": "Qwen2.5 の文章生成との互換性を保つ多言語・非思考型の指示モデル。小型モデルより多くのメモリが必要です。",
+        "ko_KR": "Qwen2.5 텍스트 생성과의 호환성을 위해 유지하는 다국어 비사고형 지시 모델입니다. 소형 모델보다 메모리가 더 필요합니다."
+      }
+    }
+  ]
+}

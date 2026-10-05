@@ -94,14 +94,18 @@ class JsonLocalModelStore:
         catalog_opener: UrlOpen | None = None,
         downloader: HttpRangeDownloader | None = None,
         max_catalog_bytes: int = 1024 * 1024,
+        bundled_catalog_path: Path | None = None,
     ) -> None:
         self._models_dir = Path(models_dir)
         self._remote_catalog_url = remote_catalog_url
         self._catalog_opener = catalog_opener or https_opener(public_only=True)
         self._downloader = downloader or HttpRangeDownloader()
         self._max_catalog_bytes = max_catalog_bytes
+        self._bundled_catalog_path = bundled_catalog_path
         self._verified_files = {}
+        self._catalog_cache = {}
         self._cache_lock = RLock()
+        self._metadata_lock = RLock()
 
     def list_models(self) -> Result[tuple[LocalModelEntry, ...]]:
         try:
@@ -120,20 +124,13 @@ class JsonLocalModelStore:
             return self.list_models()
         try:
             remote = self._fetch_remote_catalog()
-            local = [
-                entry
-                for entry in self._load_catalog()
-                if entry.status in {"local", "preserved"}
-            ]
-            local_ids = {entry.id for entry in local}
-            merged = [
-                entry
-                for entry in remote
-                if entry.id not in local_ids
-            ] + local
-            self._save_catalog(merged)
-            self._sync_manifest(merged)
-            return Result.success(tuple(merged))
+            with self._metadata_lock:
+                local = [entry for entry in self._load_catalog() if entry.status in {"local", "preserved"}]
+                local_ids = {entry.id for entry in local}
+                merged = [entry for entry in remote if entry.id not in local_ids] + local
+                self._save_catalog(merged)
+                self._sync_manifest(merged)
+                return self.list_models()
         except Exception:
             return Result.failure(InfrastructureError("local_model_catalog_failed", "local_model_catalog_failed"))
 
@@ -164,10 +161,11 @@ class JsonLocalModelStore:
                 estimated_size_mb=max(1, int(source.stat().st_size / 1_048_576)),
                 description=f"Local model: {destination.name}",
             )
-            catalog = [item for item in self._load_catalog() if item.id != entry.id]
-            catalog.append(entry)
-            self._save_catalog(catalog)
-            self._set_manifest_available(entry, True)
+            with self._metadata_lock:
+                catalog = [item for item in self._load_catalog() if item.id != entry.id]
+                catalog.append(entry)
+                self._save_catalog(catalog)
+                self._set_manifest_available(entry, True)
             return Result.success(entry)
         except Exception as exc:
             return Result.failure(
@@ -208,7 +206,8 @@ class JsonLocalModelStore:
                 )
             )
         try:
-            self._set_manifest_available(entry.value, True)
+            with self._metadata_lock:
+                self._set_manifest_available(entry.value, True)
         except Exception:
             return Result.failure(InfrastructureError("local_model_catalog_failed", "local_model_catalog_failed"))
         return entry
@@ -263,12 +262,13 @@ class JsonLocalModelStore:
         if not entry.ok or entry.value is None:
             return Result.failure(entry.error or ValidationError("local_model_missing", "local_model_missing"))
         try:
-            self._resolve(entry.value.filename).unlink(missing_ok=True)
-            catalog = self._load_catalog()
-            if entry.value.status in {"local", "preserved"}:
-                catalog = [item for item in catalog if item.id != entry.value.id]
-                self._save_catalog(catalog)
-            self._set_manifest_available(entry.value, False)
+            with self._metadata_lock:
+                self._resolve(entry.value.filename).unlink(missing_ok=True)
+                catalog = self._load_catalog()
+                if entry.value.status in {"local", "preserved"}:
+                    catalog = [item for item in catalog if item.id != entry.value.id]
+                    self._save_catalog(catalog)
+                self._set_manifest_available(entry.value, False)
             return Result.success(None)
         except Exception as exc:
             return Result.failure(
@@ -302,17 +302,35 @@ class JsonLocalModelStore:
         return self._models_dir / MANIFEST_FILENAME
 
     def _load_catalog(self) -> list[LocalModelEntry]:
-        path = self._catalog_path()
-        if not path.exists():
-            return []
-        data = json.loads(path.read_text(encoding="utf-8"))
-        if isinstance(data, dict):
-            raw_entries = data.get("models", [])
-        else:
-            raw_entries = data
-        if not isinstance(raw_entries, list):
-            raise ValueError("local_model_catalog_invalid")
-        return _catalog_entries(raw_entries)
+        entries = {}
+        paths = [self._bundled_catalog_path, self._catalog_path()]
+        for path in paths:
+            if path is not None:
+                for entry in self._load_catalog_file(Path(path)):
+                    entries[entry.id] = entry
+        return list(entries.values())
+
+    def _load_catalog_file(self, path: Path) -> tuple[LocalModelEntry, ...]:
+        with self._cache_lock:
+            if not path.exists():
+                self._catalog_cache.pop(path, None)
+                return ()
+            stat = path.stat()
+            key = (stat.st_mtime_ns, stat.st_ctime_ns, stat.st_size)
+            cached = self._catalog_cache.get(path)
+            if cached is not None and cached[0] == key:
+                return cached[1]
+            with path.open("rb") as source:
+                raw = source.read(self._max_catalog_bytes + 1)
+            if len(raw) > self._max_catalog_bytes:
+                raise ValueError("local_model_catalog_too_large")
+            data = json.loads(raw.decode("utf-8"))
+            raw_entries = data.get("models") if isinstance(data, dict) else data
+            if not isinstance(raw_entries, list):
+                raise ValueError("local_model_catalog_invalid")
+            entries = tuple(_catalog_entries(raw_entries))
+            self._catalog_cache[path] = (key, entries)
+            return entries
 
     def _save_catalog(self, entries: list[LocalModelEntry]) -> None:
         self._models_dir.mkdir(parents=True, exist_ok=True)
@@ -448,6 +466,13 @@ def _entry_from_json(raw: object) -> LocalModelEntry:
     download_url = str(raw.get("download_url") or "").strip()
     if download_url:
         download_url = safe_model_url(download_url)
+    description = raw.get("description") or ""
+    translations = raw.get("description_translations") or {}
+    if isinstance(description, dict):
+        translations = description
+        description = description.get("en_US", "")
+    if not isinstance(description, str) or not isinstance(translations, dict):
+        raise ValueError("local_model_catalog_invalid")
     return LocalModelEntry(
         id=model_id,
         display_name=str(raw.get("display_name") or model_id).strip() or model_id,
@@ -459,7 +484,10 @@ def _entry_from_json(raw: object) -> LocalModelEntry:
         min_ram_gb=max(0, _int(raw.get("min_ram_gb"))),
         context_length=max(1, _int(raw.get("context_length"), 8192)),
         max_output_tokens=max(1, _int(raw.get("max_output_tokens"), 2048)),
-        description=str(raw.get("description") or "").strip(),
+        description=description.strip(),
+        description_translations={key: value.strip() for key, value in translations.items()
+                                  if isinstance(key, str) and isinstance(value, str)},
+        license=str(raw.get("license") or "").strip(),
     )
 
 
@@ -480,6 +508,12 @@ def _read_json_list(path: Path) -> list[object]:
         return []
     data = json.loads(path.read_text(encoding="utf-8"))
     return data if isinstance(data, list) else []
+
+
+def bundled_model_catalog_path() -> Path:
+    package = Path(__file__).resolve().parents[2]
+    bundled = package / "assets/models/model_catalog.json"
+    return bundled if bundled.is_file() else package.parent / "model_catalog.json"
 
 
 def _write_json_atomic(path: Path, data: object) -> None:

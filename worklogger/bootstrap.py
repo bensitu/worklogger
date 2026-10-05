@@ -116,7 +116,7 @@ from worklogger.infrastructure.export import (
 )
 from worklogger.infrastructure.identity import DisabledIdentityProvider
 from worklogger.infrastructure.logging import setup_logging
-from worklogger.infrastructure.local_model import JsonLocalModelStore
+from worklogger.infrastructure.local_model import JsonLocalModelStore, bundled_model_catalog_path
 from worklogger.infrastructure.repositories import (
     SQLiteAuthRepository,
     SQLiteCalendarEventRepository,
@@ -782,6 +782,7 @@ def _build_local_models_workflow(
 ) -> LocalModelsWorkflowController:
     local_model_store = JsonLocalModelStore(
         database_path.parent / "models",
+        bundled_catalog_path=bundled_model_catalog_path(),
         remote_catalog_url=os.environ.get("WORKLOGGER_MODEL_CATALOG_URL", "").strip() or None,
     )
     return LocalModelsWorkflowController(

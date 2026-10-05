@@ -129,7 +129,9 @@ def _uses_qwen_non_thinking(model_id: str, entry: dict[str, object]) -> bool:
             entry.get("filename", ""),
         )
     ).lower()
-    return ("qwen3" in source or "qwen35" in source) and "qwen2.5" not in source
+    if "qwen3.5" in source or "qwen35" in source or "instruct" in source:
+        return False
+    return "qwen3" in source and "qwen2.5" not in source
 
 
 def _append_once(content: str, addition: str) -> str:

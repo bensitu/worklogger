@@ -1,4 +1,4 @@
-"""Explicit, data-free resource manifest for desktop packaging."""
+"""Explicit resource manifest excluding private application data."""
 
 from pathlib import Path
 
@@ -19,6 +19,10 @@ def bundled_resources(root: Path) -> list[tuple[str, str]]:
         if not path.is_file():
             raise FileNotFoundError(f"Compile translations before packaging: {path}")
         resources.append((str(path), path.parent.relative_to(root).as_posix()))
+    model_catalog = root / "model_catalog.json"
+    if not model_catalog.is_file():
+        raise FileNotFoundError(f"Model catalog is missing: {model_catalog}")
+    resources.append((str(model_catalog), "worklogger/assets/models"))
     return resources
 
 

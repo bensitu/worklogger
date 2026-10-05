@@ -1449,3 +1449,12 @@ msgstr "{year}년 {start_month} {start_day}일 - {end_month} {end_day}일"
 
 msgid "{start} - {end}"
 msgstr "{start} - {end}"
+
+msgid "Estimated RAM: {ram} GB"
+msgstr "예상 메모리: {ram} GB"
+
+msgid "Context: {context} tokens; output: {output} tokens"
+msgstr "컨텍스트: {context} 토큰; 출력: {output} 토큰"
+
+msgid "License: {license}"
+msgstr "라이선스: {license}"

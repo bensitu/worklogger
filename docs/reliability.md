@@ -92,7 +92,7 @@ every transitive package or platform wheel. Record the complete build environmen
 
 The standard desktop still does not construct an AI generation engine or a complete
 external-provider login workflow. Proxy preferences do not route outgoing HTTP
-traffic. A nonempty repository catalog is not automatically copied into shared
-runtime model storage. Existing user-edited catalog content is not changed by
+traffic. The bundled model catalog supplies download choices without creating an
+inference engine. Existing user-edited catalog content is not changed by
 configuration updates. These are explicit integration boundaries, not enabled
 features inferred from an adapter's presence.
