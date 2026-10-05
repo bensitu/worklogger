@@ -25,6 +25,10 @@ def display_error_code(code: str) -> str:
     """Translate known error codes without displaying raw exception text or logging previews."""
 
     match code:
+        case "auto_record_pending_save":
+            return _("Save the completed automatic record before starting another.")
+        case "auto_record_restore_failed" | "auto_record_state_save_failed":
+            return _("Unable to update automatic recording state. Your saved data has been retained.")
         case "note_conflict":
             return _("This note was changed in another editor. Reload it before saving. Your changes have been retained.")
         case "note_save_failed":

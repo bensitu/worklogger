@@ -7,6 +7,15 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 
+msgid "Save the completed automatic record before starting another."
+msgstr "Save the completed automatic record before starting another."
+
+msgid "Unable to update automatic recording state. Your saved data has been retained."
+msgstr "Unable to update automatic recording state. Your saved data has been retained."
+
+msgid "Unable to restore the automatic record. Reset it and start a new record?"
+msgstr "Unable to restore the automatic record. Reset it and start a new record?"
+
 msgid "This note was changed in another editor. Reload it before saving. Your changes have been retained."
 msgstr "This note was changed in another editor. Reload it before saving. Your changes have been retained."
 

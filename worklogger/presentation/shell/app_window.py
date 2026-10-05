@@ -8,7 +8,7 @@ from datetime import date
 from typing import Protocol
 from worklogger.app.job_runner import JobRunner
 
-from PySide6.QtCore import QEvent, Qt, Signal
+from PySide6.QtCore import QEvent, QTimer, Qt, Signal
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QApplication,
@@ -133,7 +133,9 @@ class AppWindow(QMainWindow):
         self._theme_engine = theme_engine or ThemeEngine()
         self._job_runner = job_runner
         self._today = self._config.today or date.today()
-        self._selected_day = self._config.selected_day or self._today
+        auto_state = worklog_entry_view_model.auto_record_view_model.state()
+        restored_day = auto_state.day if auto_state.active or auto_state.pending_save else None
+        self._selected_day = self._config.selected_day or restored_day or self._today
         self._current_month = self._selected_day.replace(day=1)
         # None requests regional holidays; an explicit mapping overrides the provider.
         self._holidays = None if self._config.holidays is None else dict(self._config.holidays)
@@ -147,6 +149,11 @@ class AppWindow(QMainWindow):
         self._build_ui()
         self._connect_signals()
         self.apply_theme()
+        self._date_timer = QTimer(self)
+        self._date_timer.setInterval(60_000)
+        self._date_timer.timeout.connect(self._update_today)
+        if self._config.today is None:
+            self._date_timer.start()
         if self._residency_controller is not None:
             self._residency_controller.attach(
                 self,
@@ -250,11 +257,18 @@ class AppWindow(QMainWindow):
         return self.refresh()
 
     def go_today(self) -> bool:
+        self._update_today()
         if self._today != self._selected_day and not self._confirm_discard_changes_if_needed():
             return False
         self._selected_day = self._today
         self._current_month = self._today.replace(day=1)
         return self.refresh()
+
+    def _update_today(self) -> None:
+        current = self._config.today or date.today()
+        if self._today != current:
+            self._today = current
+            self._refresh_calendar()
 
     def _build_ui(self) -> None:
         self.resize(1100, 700)
@@ -284,7 +298,7 @@ class AppWindow(QMainWindow):
         main_layout.addWidget(self.page_stack, 1)
 
         self.calendar_view = CalendarView()
-        self.entry_panel = WorkLogEntryPanel(compact=True)
+        self.entry_panel = WorkLogEntryPanel(compact=True, auto_record_view_model=self._worklog_entry_view_model.auto_record_view_model)
         self.stats_panel = StatsPanel()
         self.calendar_page = CalendarPage(
             calendar_view=self.calendar_view,
@@ -435,6 +449,15 @@ class AppWindow(QMainWindow):
         return True
 
     def _preview_entry_draft(self, draft: WorkLogEntryDraft) -> None:
+        if draft.day != self._selected_day:
+            loaded = self._worklog_entry_view_model.load(draft.day)
+            if not loaded.ok:
+                self._set_error(loaded.error)
+                return
+            self._selected_day = draft.day
+            self._current_month = draft.day.replace(day=1)
+            self._refresh_calendar()
+            self._refresh_stats()
         result = self._worklog_entry_view_model.preview(
             draft.day,
             start_time=draft.start_time,

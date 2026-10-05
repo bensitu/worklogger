@@ -157,6 +157,7 @@ from worklogger.presentation.shell import (
 )
 from worklogger.presentation.theme import configure_application_style, install_bundled_fonts
 from worklogger.presentation.viewmodels import (
+    AutoRecordViewModel,
     AuthViewModel,
     AiAssistViewModel,
     AnalyticsViewModel,
@@ -552,6 +553,7 @@ def _build_worklog_entry_view_model(
         get_handler=GetWorkLogHandler(repositories.work_logs),
         save_handler=SaveWorkLogHandler(repositories.work_logs),
         notes_handler=GetDailyNoteHandler(repositories.daily_notes),
+        auto_record_view_model=AutoRecordViewModel(settings=repositories.settings, user_id=user.id),
     )
 
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 
 from PySide6.QtCore import QTime, QTimer, Qt, Signal
@@ -101,6 +101,7 @@ class WorkLogEntryPanel(QWidget):
         self._updating = False
         self._applying_auto_state = False
         self._auto_record_view_model = auto_record_view_model or AutoRecordViewModel()
+        self._needs_restore = self._auto_record_view_model.state().active or self._auto_record_view_model.state().pending_save
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -302,6 +303,9 @@ class WorkLogEntryPanel(QWidget):
             self._updating = False
 
         self.set_preview_form(form)
+        if self._needs_restore:
+            self._needs_restore = False
+            self._apply_auto_state(self._auto_record_view_model.state())
 
     def set_preview_form(self, form: WorkLogEntryForm) -> None:
         # Preview feedback must not rewrite a draft while the user is typing.
@@ -322,6 +326,7 @@ class WorkLogEntryPanel(QWidget):
     def apply_draft(self, draft: WorkLogEntryDraft) -> None:
         if self._form is None:
             return
+        self._form = replace(self._form, day=draft.day)
         self._updating = True
         try:
             self.start_input.setText(draft.start_time or "")
@@ -347,7 +352,14 @@ class WorkLogEntryPanel(QWidget):
             self.draft_changed.emit(draft)
 
     def _sync_auto_from_form(self, form: WorkLogEntryForm) -> None:
-        if self._applying_auto_state or self._auto_record_view_model.state().active:
+        if self._applying_auto_state:
+            return
+        state = self._auto_record_view_model.state()
+        if state.active or state.pending_save:
+            if not self._needs_restore and form.day == state.day:
+                self._auto_record_view_model.set_note(form.note)
+                self._auto_record_view_model.set_work_type(form.work_type)
+            self._refresh_auto_state()
             return
         self._auto_record_view_model.load_existing(
             day=form.day,
@@ -360,11 +372,20 @@ class WorkLogEntryPanel(QWidget):
         self._refresh_auto_state()
 
     def _auto_clock_in(self) -> None:
-        self._auto_record_view_model.set_note(self.note_input.toPlainText())
-        self._auto_record_view_model.set_work_type(
-            str(self.work_type_combo.currentData() or WorkType.NORMAL.value)
+        if self._auto_record_view_model.last_error and self._auto_record_view_model.last_error.code == "auto_record_restore_failed":
+            answer = QMessageBox.question(self, _("Auto Record"),
+                _("Unable to restore the automatic record. Reset it and start a new record?"),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+            if answer != QMessageBox.StandardButton.Yes:
+                return
+            reset = self._auto_record_view_model.reset_saved_state()
+            if not reset.ok:
+                QMessageBox.warning(self, _("Auto Record"), display_error_message(reset.error))
+                return
+        result = self._auto_record_view_model.start(
+            note=self.note_input.toPlainText(),
+            work_type=str(self.work_type_combo.currentData() or WorkType.NORMAL.value),
         )
-        result = self._auto_record_view_model.start()
         if not result.ok or result.value is None:
             QMessageBox.warning(self, _("Auto Record"), display_error_message(result.error))
             return
@@ -474,6 +495,9 @@ class WorkLogEntryPanel(QWidget):
             self.auto_status_label.hide()
             if self.auto_timer.isActive():
                 self.auto_timer.stop()
+        if self._auto_record_view_model.last_error is not None:
+            self.auto_status_label.setText(display_error_message(self._auto_record_view_model.last_error))
+            self.auto_status_label.show()
 
 
 def _empty_to_none(value: str) -> str | None:

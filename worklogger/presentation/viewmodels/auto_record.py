@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass, replace
-from datetime import date, datetime, timedelta
+from dataclasses import asdict, dataclass, replace
+from datetime import date, datetime, timedelta, timezone
+import json
 import math
 from worklogger.config.constants import MAX_SHIFT_HOURS
 
-from worklogger.domain.shared.errors import ValidationError
+from worklogger.domain.shared.errors import InfrastructureError, ValidationError
+from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkType
 from worklogger.domain.worklog.rules import normalize_work_type, parse_time, normalize_work_log
@@ -16,6 +18,7 @@ from worklogger.domain.worklog.models import WorkLog
 
 
 Clock = Callable[[], datetime]
+AUTO_RECORD_STATE_SETTING_KEY = "auto_record_state"
 
 
 @dataclass(frozen=True)
@@ -39,6 +42,8 @@ class AutoRecordState:
     active: bool = False
     break_active: bool = False
     break_started_at: datetime | None = None
+    started_at: datetime | None = None
+    pending_save: bool = False
 
     @property
     def can_finish(self) -> bool:
@@ -55,9 +60,15 @@ class AutoRecordViewModel:
         *,
         clock: Clock | None = None,
         default_break_hours: float = 1.0,
+        settings: SettingsRepository | None = None,
+        user_id: int = 0,
     ) -> None:
-        self._clock = clock or datetime.now
-        self._default_break_hours = max(float(default_break_hours or 0), 0.0)
+        self._clock = clock or (lambda: datetime.now().astimezone())
+        self._settings = settings
+        self._user_id = user_id
+        self.last_error = None
+        self._restore_failed = False
+        self.set_default_break_hours(default_break_hours)
         self._state = AutoRecordState(
             day=None,
             start_time=None,
@@ -66,6 +77,71 @@ class AutoRecordViewModel:
             note="",
             work_type=WorkType.NORMAL.value,
         )
+        if settings is not None:
+            try:
+                raw = settings.get(user_id, AUTO_RECORD_STATE_SETTING_KEY)
+                if raw:
+                    if len(raw) > 1024 * 1024:
+                        raise ValueError("auto_record_state_invalid")
+                    data = json.loads(raw)
+                    data["day"] = date.fromisoformat(data["day"])
+                    for key in ("started_at", "break_started_at"):
+                        data[key] = datetime.fromisoformat(data[key]) if data.get(key) else None
+                    restored = AutoRecordState(**data)
+                    if (not isinstance(restored.active, bool) or not isinstance(restored.pending_save, bool)
+                            or not isinstance(restored.break_active, bool) or not math.isfinite(restored.break_hours)
+                            or restored.break_hours < 0 or restored.break_hours > 24
+                            or not isinstance(restored.note, str) or (restored.active and restored.pending_save)
+                            or parse_time(restored.start_time) != restored.start_time
+                            or not restored.start_time or normalize_work_type(restored.work_type).value != restored.work_type
+                            or (restored.active and (restored.started_at is None or restored.end_time))
+                            or (restored.pending_save and not parse_time(restored.end_time))
+                            or (restored.break_active and restored.break_started_at is None)
+                            or any(value is not None and value.tzinfo is None for value in (restored.started_at, restored.break_started_at))):
+                        raise ValueError("auto_record_state_invalid")
+                    self._state = restored
+            except Exception:
+                self._restore_failed = True
+                self.last_error = InfrastructureError("auto_record_restore_failed", "auto_record_restore_failed")
+
+    def _set_state(self, state: AutoRecordState) -> Result[AutoRecordState]:
+        if self._restore_failed:
+            return Result.failure(self.last_error)
+        if not math.isfinite(state.break_hours) or not 0 <= state.break_hours <= 24:
+            return Result.failure(ValidationError("break_hours_too_long", "break_hours_too_long"))
+        if self._settings is not None:
+            try:
+                if state.active or state.pending_save:
+                    data = asdict(state)
+                    data["day"] = state.day.isoformat()
+                    for key in ("started_at", "break_started_at"):
+                        data[key] = data[key].astimezone(timezone.utc).isoformat() if data[key] else None
+                    encoded = json.dumps(data, allow_nan=False)
+                    if len(encoded) > 1024 * 1024:
+                        raise ValueError("auto_record_state_invalid")
+                    self._settings.set(self._user_id, AUTO_RECORD_STATE_SETTING_KEY, encoded)
+                else:
+                    self._settings.delete(self._user_id, AUTO_RECORD_STATE_SETTING_KEY)
+            except Exception:
+                self.last_error = InfrastructureError("auto_record_state_save_failed", "auto_record_state_save_failed")
+                return Result.failure(self.last_error)
+        self.last_error = None
+        self._state = state
+        return Result.success(state)
+
+    def reset_saved_state(self) -> Result[AutoRecordState]:
+        failed = self._restore_failed
+        self._restore_failed = False
+        result = self._set_state(AutoRecordState(None, None, None, self._default_break_hours, "", WorkType.NORMAL.value))
+        if not result.ok:
+            self._restore_failed = failed
+        return result
+
+    def acknowledge_saved(self, day: date, start_time: str | None, end_time: str | None) -> Result[AutoRecordState]:
+        if (self._state.active or self._state.pending_save) and day == self._state.day and start_time and end_time:
+            return self._set_state(replace(self._state, start_time=start_time, end_time=end_time, active=False,
+                                           break_active=False, break_started_at=None, pending_save=False))
+        return Result.success(self._state)
 
     def state(self, now: datetime | None = None) -> AutoRecordState:
         return replace(
@@ -83,6 +159,8 @@ class AutoRecordViewModel:
         note: str,
         work_type: str,
     ) -> Result[AutoRecordState]:
+        if self._state.active or self._state.pending_save:
+            return Result.success(self._state)
         try:
             normalized_work_type = normalize_work_type(work_type).value
             normalized_start = parse_time(start_time)
@@ -100,6 +178,12 @@ class AutoRecordViewModel:
         )
         return Result.success(self._state)
 
+    def set_default_break_hours(self, hours: float) -> None:
+        value = float(hours)
+        if not math.isfinite(value) or not 0 <= value <= 4:
+            raise ValueError("break_hours_too_long")
+        self._default_break_hours = value
+
     def start(
         self,
         now: datetime | None = None,
@@ -108,6 +192,8 @@ class AutoRecordViewModel:
         work_type: str | None = None,
     ) -> Result[AutoRecordState]:
         moment = self._coerce_now(now)
+        if self._state.pending_save:
+            return Result.failure(ValidationError("auto_record_pending_save", "auto_record_pending_save"))
         if self._state.active and not self._state.end_time:
             return Result.failure(
                 ValidationError("auto_record_already_active", "auto_record_already_active")
@@ -118,7 +204,7 @@ class AutoRecordViewModel:
             ).value
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
-        self._state = AutoRecordState(
+        next_state = AutoRecordState(
             day=moment.date(),
             start_time=_time_text(moment),
             end_time=None,
@@ -126,8 +212,9 @@ class AutoRecordViewModel:
             note=self._state.note if note is None else str(note),
             work_type=normalized_work_type,
             active=True,
+            started_at=moment,
         )
-        return Result.success(self._state)
+        return self._set_state(next_state)
 
     def finish(self, now: datetime | None = None) -> Result[AutoRecordEntryDraft]:
         moment = self._coerce_now(now)
@@ -135,31 +222,29 @@ class AutoRecordViewModel:
             return Result.failure(
                 ValidationError("auto_record_not_started", "auto_record_not_started")
             )
-        start = datetime.combine(self._state.day, datetime.strptime(self._state.start_time, "%H:%M").time())
-        if moment.tzinfo is not None:
-            start = start.replace(tzinfo=moment.tzinfo)
-            elapsed = moment.timestamp() - start.timestamp()
-        else:
-            elapsed = (moment - start).total_seconds()
+        start = self._state.started_at or datetime.combine(self._state.day, datetime.strptime(self._state.start_time, "%H:%M").time()).astimezone()
+        elapsed = _elapsed_seconds(moment, start)
         if elapsed <= 0 or elapsed > MAX_SHIFT_HOURS * 3600:
             return Result.failure(ValidationError("time_range_invalid", "time_range_invalid"))
+        break_hours = _round_quarter_hours(self._current_break_hours(moment)) if self._state.break_active else self._state.break_hours
         try:
             normalize_work_log(WorkLog(user_id=0, day=self._state.day, start_time=self._state.start_time,
-                                      end_time=_time_text(moment), break_hours=self._current_break_hours(moment),
+                                      end_time=_time_text(moment), break_hours=break_hours,
                                       note=self._state.note, work_type=self._state.work_type))
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
-        if self._state.break_active:
-            ended = self.end_break(moment)
-            if not ended.ok:
-                return Result.failure(ended.error)
-        self._state = replace(
+        updated = replace(
             self._state,
+            break_hours=break_hours,
             end_time=_time_text(moment),
             active=False,
             break_active=False,
             break_started_at=None,
+            pending_save=True,
         )
+        saved = self._set_state(updated)
+        if not saved.ok:
+            return Result.failure(saved.error)
         return self.draft()
 
     def draft(self, now: datetime | None = None) -> Result[AutoRecordEntryDraft]:
@@ -191,15 +276,15 @@ class AutoRecordViewModel:
             return Result.failure(
                 ValidationError("auto_record_break_not_active", "auto_record_break_not_active")
             )
-        self._state = replace(
+        updated = replace(
             self._state,
             break_hours=_round_quarter_hours(
-                (moment - self._state.break_started_at).total_seconds() / 3600
+                _elapsed_seconds(moment, self._state.break_started_at) / 3600
             ),
             break_active=False,
             break_started_at=None,
         )
-        return Result.success(self._state)
+        return self._set_state(updated)
 
     def add_quick_break(self, minutes: int) -> Result[AutoRecordState]:
         try:
@@ -210,7 +295,7 @@ class AutoRecordViewModel:
             return Result.failure(
                 ValidationError("auto_record_break_minutes_invalid", "auto_record_break_minutes_invalid")
             )
-        self._state = replace(
+        updated = replace(
             self._state,
             break_hours=_round_quarter_hours(
                 self._current_break_hours(self._coerce_now(None)) + numeric_minutes / 60
@@ -218,10 +303,12 @@ class AutoRecordViewModel:
             break_active=False,
             break_started_at=None,
         )
-        return Result.success(self._state)
+        return self._set_state(updated)
 
     def set_note(self, note: str) -> AutoRecordState:
-        self._state = replace(self._state, note=str(note or ""))
+        updated = replace(self._state, note=str(note or ""))
+        if updated != self._state:
+            self._set_state(updated)
         return self._state
 
     def set_work_type(self, work_type: str) -> Result[AutoRecordState]:
@@ -229,8 +316,9 @@ class AutoRecordViewModel:
             normalized = normalize_work_type(work_type).value
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
-        self._state = replace(self._state, work_type=normalized)
-        return Result.success(self._state)
+        if normalized == self._state.work_type:
+            return Result.success(self._state)
+        return self._set_state(replace(self._state, work_type=normalized))
 
     def _start_break(self, now: datetime, *, resume: bool) -> Result[AutoRecordState]:
         if self._state.break_active:
@@ -238,26 +326,34 @@ class AutoRecordViewModel:
                 ValidationError("auto_record_break_already_active", "auto_record_break_already_active")
             )
         offset = self._state.break_hours if resume else 0.0
-        self._state = replace(
+        updated = replace(
             self._state,
             break_hours=max(float(offset or 0), 0.0),
             break_active=True,
-            break_started_at=now - timedelta(hours=max(float(offset or 0), 0.0)),
+            break_started_at=now.astimezone(timezone.utc) - timedelta(hours=max(float(offset or 0), 0.0)),
         )
+        saved = self._set_state(updated)
+        if not saved.ok:
+            return saved
         return Result.success(self.state(now))
 
     def _current_break_hours(self, now: datetime) -> float:
         if not self._state.break_active or self._state.break_started_at is None:
             return self._state.break_hours
-        elapsed = (now - self._state.break_started_at).total_seconds() / 3600
+        elapsed = _elapsed_seconds(now, self._state.break_started_at) / 3600
         return max(elapsed, 0.0)
 
     def _coerce_now(self, now: datetime | None) -> datetime:
-        return now if now is not None else self._clock()
+        value = now if now is not None else self._clock()
+        return value.astimezone() if value.tzinfo is None else value
 
 
 def _time_text(moment: datetime) -> str:
     return moment.strftime("%H:%M")
+
+
+def _elapsed_seconds(end: datetime, start: datetime) -> float:
+    return (end.astimezone(timezone.utc) - start.astimezone(timezone.utc)).total_seconds()
 
 
 def _round_quarter_hours(hours: float) -> float:

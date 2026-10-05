@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 import os
 from pathlib import Path
+from unittest.mock import patch
 import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -93,6 +94,29 @@ class MemorySettingsRepository:
 
 
 class AutoRecordDataManagementPresentationTests(unittest.TestCase):
+    def test_automatic_record_restores_break_and_unsaved_draft_and_preserves_failed_writes(self):
+        settings = MemorySettingsRepository()
+        start = datetime(2026, 4, 20, 9)
+        model = AutoRecordViewModel(settings=settings, user_id=1, default_break_hours=0)
+        self.assertTrue(model.start(start, note="Initial").ok)
+        self.assertTrue(model.restart_break(start + timedelta(hours=3)).ok)
+        model.set_note("Updated")
+        resumed = AutoRecordViewModel(settings=settings, user_id=1, default_break_hours=0)
+        self.assertTrue(resumed.state(start + timedelta(hours=3, minutes=30)).break_active)
+        self.assertEqual(resumed.state(start).note, "Updated")
+        self.assertEqual(resumed.state(start + timedelta(hours=3, minutes=30)).break_hours, 0.5)
+        self.assertFalse(AutoRecordViewModel(settings=settings, user_id=2).state(start).active)
+        with patch.object(settings, "set", side_effect=OSError("storage unavailable")):
+            self.assertFalse(resumed.end_break(start + timedelta(hours=4)).ok)
+        self.assertTrue(resumed.state(start + timedelta(hours=4)).break_active)
+        self.assertTrue(resumed.end_break(start + timedelta(hours=4)).ok)
+        self.assertTrue(resumed.finish(start + timedelta(hours=9)).ok)
+        completed = AutoRecordViewModel(settings=settings, user_id=1)
+        self.assertTrue(completed.state(start).pending_save)
+        self.assertFalse(completed.start(start + timedelta(days=1)).ok)
+        self.assertTrue(completed.acknowledge_saved(start.date(), "09:00", "18:00").ok)
+        self.assertFalse(AutoRecordViewModel(settings=settings, user_id=1).state(start).pending_save)
+
     def test_auto_record_rejects_excessive_elapsed_time_without_finishing(self):
         start = datetime(2026, 4, 20, 9)
         model = AutoRecordViewModel(default_break_hours=0)

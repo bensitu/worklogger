@@ -7,6 +7,15 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
+msgid "Save the completed automatic record before starting another."
+msgstr "新しい記録を開始する前に、終了した自動記録を保存してください。"
+
+msgid "Unable to update automatic recording state. Your saved data has been retained."
+msgstr "自動記録の状態を更新できません。保存済みデータは保持されています。"
+
+msgid "Unable to restore the automatic record. Reset it and start a new record?"
+msgstr "自動記録を復元できません。リセットして新しい記録を開始しますか？"
+
 msgid "This note was changed in another editor. Reload it before saving. Your changes have been retained."
 msgstr "このメモは別の編集画面で変更されました。再読み込みしてから保存してください。変更内容は保持されています。"
 

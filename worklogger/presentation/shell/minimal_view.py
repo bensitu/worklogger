@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, timedelta
 
-from PySide6.QtCore import QEvent, Qt, Signal
+from PySide6.QtCore import QEvent, QTimer, Qt, Signal
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -54,7 +54,9 @@ class MinimalView(QWidget):
         self._settings_workflow = settings_workflow
         self._residency_controller = residency_controller
         self._today = self._config.today or date.today()
-        self._selected_day = self._config.selected_day or self._today
+        auto_state = worklog_entry_view_model.auto_record_view_model.state()
+        restored_day = auto_state.day if auto_state.active or auto_state.pending_save else None
+        self._selected_day = self._config.selected_day or restored_day or self._today
         self._entry_dirty = False
         self._last_error: AppError | None = None
 
@@ -63,6 +65,11 @@ class MinimalView(QWidget):
         apply_window_icon(self)
         self._build_ui()
         self._connect_signals()
+        self._date_timer = QTimer(self)
+        self._date_timer.setInterval(60_000)
+        self._date_timer.timeout.connect(self._update_today)
+        if self._config.today is None:
+            self._date_timer.start()
         if self._residency_controller is not None:
             self._residency_controller.attach(
                 self,
@@ -102,7 +109,11 @@ class MinimalView(QWidget):
         return self.select_day(self._selected_day + timedelta(days=1))
 
     def go_today(self) -> bool:
+        self._update_today()
         return self.select_day(self._today)
+
+    def _update_today(self) -> None:
+        self._today = self._config.today or date.today()
 
     def select_day(self, day: date) -> bool:
         if day != self._selected_day and not self._confirm_discard_changes_if_needed():
@@ -141,7 +152,7 @@ class MinimalView(QWidget):
             self.settings_button.setVisible(False)
         root.addLayout(nav)
 
-        self.entry_panel = WorkLogEntryPanel()
+        self.entry_panel = WorkLogEntryPanel(auto_record_view_model=self._worklog_entry_view_model.auto_record_view_model)
         root.addWidget(self.entry_panel)
 
         self.status_label = StatusLabel()
@@ -157,6 +168,13 @@ class MinimalView(QWidget):
         self.entry_panel.save_requested.connect(self._save_entry_draft)
 
     def _preview_entry_draft(self, draft: WorkLogEntryDraft) -> None:
+        if draft.day != self._selected_day:
+            loaded = self._worklog_entry_view_model.load(draft.day)
+            if not loaded.ok:
+                self._set_error(loaded.error)
+                return
+            self._selected_day = draft.day
+            self.date_label.setText(draft.day.isoformat())
         result = self._worklog_entry_view_model.preview(
             draft.day,
             start_time=draft.start_time,

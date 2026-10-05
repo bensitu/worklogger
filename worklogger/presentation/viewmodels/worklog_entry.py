@@ -17,6 +17,7 @@ from worklogger.domain.worklog.rules import (
     normalize_work_type,
     parse_time,
 )
+from worklogger.presentation.viewmodels.auto_record import AutoRecordViewModel
 
 
 class WorkLogGetHandler(Protocol):
@@ -58,6 +59,7 @@ class WorkLogEntryViewModel:
         save_handler: WorkLogSaveHandler,
         default_break_hours: float = 1.0,
         notes_handler=None,
+        auto_record_view_model: AutoRecordViewModel | None = None,
     ) -> None:
         self._user_id = user_id
         self._get_handler = get_handler
@@ -67,9 +69,11 @@ class WorkLogEntryViewModel:
         self._holiday_notes: dict[date, str] = {}
         self._notes_handler = notes_handler
         self._original_notes: dict[date, str] = {}
+        self.auto_record_view_model = auto_record_view_model or AutoRecordViewModel(default_break_hours=default_break_hours)
 
     def set_default_break_hours(self, hours: float) -> None:
         self._default_break_hours = max(0.0, min(float(hours), 4.0))
+        self.auto_record_view_model.set_default_break_hours(self._default_break_hours)
 
     def load(
         self,
@@ -195,6 +199,7 @@ class WorkLogEntryViewModel:
         self._loaded[form.day] = saved.value
         assert saved.value is not None
         self._original_notes[form.day] = saved.value.note
+        self.auto_record_view_model.acknowledge_saved(saved.value.day, saved.value.start_time, saved.value.end_time)
         return Result.success(
             _form_from_values(
                 user_id=self._user_id,

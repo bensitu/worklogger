@@ -986,6 +986,9 @@ msgstr ""
 msgid "Save template"
 msgstr ""
 
+msgid "Save the completed automatic record before starting another."
+msgstr ""
+
 msgid "Save this recovery key before continuing."
 msgstr ""
 
@@ -1211,6 +1214,9 @@ msgstr ""
 msgid "Unable to read the model file. Check its access permissions."
 msgstr ""
 
+msgid "Unable to restore the automatic record. Reset it and start a new record?"
+msgstr ""
+
 msgid "Unable to restore the database. Select a valid SQLite backup."
 msgstr ""
 
@@ -1227,6 +1233,9 @@ msgid "Unable to sign in with this provider. Please try again."
 msgstr ""
 
 msgid "Unable to start WorkLogger. Check the application log for details."
+msgstr ""
+
+msgid "Unable to update automatic recording state. Your saved data has been retained."
 msgstr ""
 
 msgid "Unable to update saved sign-in information."

@@ -53,9 +53,14 @@ Clock Out rejects invalid or excessive elapsed intervals rather than wrapping
 them into a shorter shift. The active record keeps its original date when the
 calendar selection changes.
 
-The active timer is application state, not a background service. Do not assume an
-unfinished entry survives closing the application or restarting the computer.
-Review and save the completed values before leaving the session.
+The timer is not a background service. Its start, break boundaries, note, work
+type, and completed unsaved draft are nevertheless stored per account in the
+database. Reopening restores the original date and elapsed break. A new timer
+cannot replace a completed unsaved draft; save or manually correct it first.
+Successful work-log saving clears that pending state. Failed state writes retain
+the previous state and show an error. Invalid stored state is not silently deleted;
+starting a replacement requires confirmation. System-date changes update the
+calendar's Today indicator without discarding the selected date or draft.
 
 ### Holidays and Markers
 
