@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import base64
+from contextlib import closing
 from datetime import date
 from pathlib import Path
 import tempfile
+import sqlite3
 import unittest
 
 from worklogger.app.commands.auth_commands import (
@@ -142,7 +144,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
     def test_corrupt_database_is_quarantined_and_recreated(self) -> None:
         corrupt_path = Path(self._tempdir.name) / "corrupt.db"
         corrupt_path.write_bytes(b"not a sqlite database")
-        factory = SQLiteConnectionFactory(corrupt_path, corrupt_backup_retention=2)
+        factory = SQLiteConnectionFactory(corrupt_path, recover_corrupt=True, corrupt_backup_retention=2)
 
         self.assertEqual(MigrationRunner(factory).run_pending(), (1, 2, 3))
 
@@ -155,12 +157,36 @@ class SQLiteInfrastructureTests(unittest.TestCase):
     def test_corrupt_database_backups_are_pruned(self) -> None:
         database_path = Path(self._tempdir.name) / "retention.db"
         for index in range(4):
-            backup = database_path.with_name(f"retention.db.bak_{index}")
+            backup = database_path.with_name(f"retention.db.bak_corrupt_{index}")
             backup.write_text(str(index), encoding="utf-8")
 
         prune_corrupt_backups(database_path, keep=2)
 
         self.assertEqual(len(list(database_path.parent.glob("retention.db.bak_*"))), 2)
+
+    def test_database_access_failure_preserves_existing_data(self) -> None:
+        path = Path(self._tempdir.name) / "locked.db"
+        with closing(sqlite3.connect(path)) as connection:
+            connection.execute("CREATE TABLE records(value TEXT)")
+            connection.execute("INSERT INTO records VALUES('retained')")
+            connection.commit()
+        reader = sqlite3.connect(path)
+        self.addCleanup(reader.close)
+        reader.execute("BEGIN")
+        reader.execute("SELECT * FROM records").fetchall()
+        factory = SQLiteConnectionFactory(path, busy_timeout_ms=10, recover_corrupt=True)
+        with self.assertRaises(sqlite3.OperationalError):
+            factory.open()
+        self.assertFalse(list(path.parent.glob("locked.db.bak_*")))
+        self.assertEqual(reader.execute("SELECT value FROM records").fetchone()[0], "retained")
+
+    def test_unknown_schema_version_is_rejected_without_changes(self) -> None:
+        with self.factory.transaction() as connection:
+            connection.execute("INSERT INTO schema_migrations VALUES(9999, 'future_schema', '2026-01-01')")
+        with self.assertRaisesRegex(ValueError, "database_version_unsupported"):
+            MigrationRunner(self.factory).run_pending()
+        with self.factory.connection() as connection:
+            self.assertEqual(connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0], 9999)
 
     def test_auth_handlers_use_sqlite_repository_and_hashed_remember_tokens(self) -> None:
         auth = self.auth_repository()

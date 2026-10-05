@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+from contextlib import closing
 from pathlib import Path
 import csv
 import sqlite3
@@ -111,6 +112,50 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
 
         self.assertFalse(result.ok)
         self.assertEqual(result.error.code if result.error else "", "backup_same_path")
+
+    def test_database_management_requires_current_administrator_identity(self) -> None:
+        admin = self.register_user("administrator")
+        member = self.register_user("member")
+        destination = Path(self._tempdir.name) / "restricted.db"
+        service = SQLiteBackupService(self.factory, expected_username="member", requesting_user_id=member)
+        for operation in (service.backup_database, service.validate_restore_database, service.restore_database):
+            self.assertEqual(operation(destination).error.code, "admin_required")
+        self.assertFalse(destination.exists())
+        allowed = SQLiteBackupService(self.factory, expected_username="administrator", requesting_user_id=admin)
+        self.assertTrue(allowed.backup_database(destination).ok)
+        with self.factory.transaction() as connection:
+            connection.execute("UPDATE users SET is_admin=0 WHERE id=?", (admin,))
+        self.assertEqual(allowed.restore_database(destination).error.code, "admin_required")
+
+    def test_restore_rejects_changed_identity_and_executable_schema(self) -> None:
+        self.register_user("alice")
+        source = Path(self._tempdir.name) / "different.db"
+        other = SQLiteConnectionFactory(source)
+        MigrationRunner(other).run_pending()
+        self.register_user("bob", other)
+        self.register_user("alice", other)
+        service = SQLiteBackupService(self.factory, expected_username="alice")
+        self.assertEqual(service.restore_database(source).error.code, "restore_user_mismatch")
+        with other.transaction() as connection:
+            connection.execute("CREATE VIEW extra AS SELECT * FROM users")
+        self.assertEqual(service.validate_restore_database(source).error.code, "restore_schema_invalid")
+        self.assertEqual(self.auth_repository().get_by_id(1).username, "alice")
+
+    def test_restore_retains_previous_snapshot_and_interrupted_state(self) -> None:
+        user = self.register_user("alice")
+        source = Path(self._tempdir.name) / "snapshot.db"
+        service = SQLiteBackupService(self.factory, expected_username="alice")
+        self.save_work_log(user, date(2026, 4, 20), note="Original")
+        self.assertTrue(service.backup_database(source).ok)
+        self.save_work_log(user, date(2026, 4, 20), note="Recent")
+        self.assertTrue(service.restore_database(source).ok)
+        retained = next(Path(self._tempdir.name).glob("worklog.db.bak_restore_*"))
+        with closing(sqlite3.connect(retained)) as connection:
+            self.assertEqual(connection.execute("SELECT note FROM worklog").fetchone()[0], "Recent")
+        previous = Path(self.db_path + ".pre_restore")
+        previous.write_bytes(retained.read_bytes())
+        self.assertEqual(service.restore_database(source).error.code, "restore_pending")
+        self.assertEqual(previous.read_bytes(), retained.read_bytes())
 
     def test_restore_includes_committed_wal_data_without_uncommitted_changes(self) -> None:
         user_id = self.register_user("alice")

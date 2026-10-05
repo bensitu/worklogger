@@ -157,7 +157,7 @@ class AnalyticsDialog(QDialog):
         return True
 
     def _choose_csv_path(self) -> None:
-        path, _ = QFileDialog.getSaveFileName(
+        path, _selected_filter = QFileDialog.getSaveFileName(
             self,
             _("Export CSV"),
             "analytics.csv",
@@ -167,7 +167,7 @@ class AnalyticsDialog(QDialog):
             self.export_csv(Path(path))
 
     def _choose_pdf_path(self) -> None:
-        path, _ = QFileDialog.getSaveFileName(
+        path, _selected_filter = QFileDialog.getSaveFileName(
             self,
             _("Export PDF"),
             "analytics.pdf",

@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 import os
-import shutil
 import stat
 import sys
 import time
+import uuid
 
 from worklogger.config.constants import DB_CORRUPT_BACKUP_RETENTION, DB_FILENAME
 
@@ -54,15 +54,20 @@ def quarantine_corrupt_database(
     if str(database_path) == ":memory:" or not database_path.exists():
         return None
     backup_path = database_path.with_name(
-        f"{database_path.name}.bak_{int(time.time())}"
+        f"{database_path.name}.bak_corrupt_{time.time_ns()}_{uuid.uuid4().hex}"
     )
-    shutil.move(str(database_path), str(backup_path))
-    for sidecar in (Path(str(database_path) + "-wal"), Path(str(database_path) + "-shm")):
-        try:
-            if sidecar.exists():
-                sidecar.unlink()
-        except OSError:
-            pass
+    moved = []
+    try:
+        for suffix in ("", "-wal", "-shm"):
+            source, target = Path(str(database_path) + suffix), Path(str(backup_path) + suffix)
+            if source.exists():
+                os.replace(source, target)
+                moved.append((source, target))
+        secure_database_files(backup_path)
+    except OSError:
+        for source, target in reversed(moved):
+            os.replace(target, source)
+        raise
     prune_corrupt_backups(database_path, keep=keep)
     return backup_path
 
@@ -76,18 +81,19 @@ def prune_corrupt_backups(
         return
     database_path = Path(path)
     directory = database_path.resolve(strict=False).parent
-    prefix = f"{database_path.name}.bak_"
+    prefix = f"{database_path.name}.bak_corrupt_"
     try:
         backups = [
             candidate
             for candidate in directory.iterdir()
-            if candidate.is_file() and candidate.name.startswith(prefix)
+            if candidate.is_file() and candidate.name.startswith(prefix) and not candidate.name.endswith(("-wal", "-shm"))
         ]
     except OSError:
         return
     backups.sort(key=lambda candidate: (candidate.stat().st_mtime, candidate.name), reverse=True)
     for old_backup in backups[keep:]:
         try:
-            old_backup.unlink()
+            for suffix in ("-wal", "-shm", ""):
+                Path(str(old_backup) + suffix).unlink(missing_ok=True)
         except OSError:
             pass

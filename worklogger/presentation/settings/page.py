@@ -132,6 +132,8 @@ class SettingsPage(QWidget):
         self.current_user_id_line_edit.setText(user.username)
         self.current_user_role_line_edit.setText(_("Admin") if user.is_admin else _("User"))
         self.set_manage_users_available(user.is_admin)
+        self.backup_button.setEnabled(user.is_admin)
+        self.restore_button.setEnabled(user.is_admin)
 
     def set_manage_users_available(self, available: bool) -> None:
         self.manage_users_button.setVisible(bool(available))

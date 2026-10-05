@@ -137,6 +137,9 @@ class SettingsWorkflowController:
         dialog.refresh()
         return dialog
 
+    def set_restore_handler(self, handler: ReloadHandler) -> None:
+        self._reload_after_restore = handler
+
     def create_page(self, parent: QWidget | None = None) -> SettingsPage:
         page = self._page_factory(self._settings_view_model, parent)
         self._bind_surface(page)
@@ -474,7 +477,7 @@ class SettingsWorkflowController:
                 self._notify_error(dialog, title, message)
             return False
         message = success_message(result.value)
-        if title == _("Backup Data"):
+        if result.value.action == "backup":
             recorded = self._settings_view_model.record_backup()
             if recorded.ok:
                 loaded = self._settings_view_model.load()
@@ -531,7 +534,8 @@ class SettingsWorkflowController:
         completed = self._handle_data_result(dialog, title, result, success_message)
         if (
             completed
-            and title == _("Restore Data")
+            and result.value is not None
+            and result.value.action == "restore"
             and self._reload_after_restore is not None
         ):
             self._reload_after_restore()

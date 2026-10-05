@@ -179,7 +179,7 @@ class NoteEditorDialog(QDialog):
         return True
 
     def _choose_export_path(self) -> None:
-        path, _ = QFileDialog.getSaveFileName(
+        path, _selected_filter = QFileDialog.getSaveFileName(
             self,
             _("Export Markdown"),
             f"note-{self._day.isoformat()}.md",

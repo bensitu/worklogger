@@ -23,7 +23,7 @@ class SQLiteConnectionFactory:
         database_path: str | Path,
         *,
         busy_timeout_ms: int = 5000,
-        recover_corrupt: bool = True,
+        recover_corrupt: bool = False,
         corrupt_backup_retention: int = DB_CORRUPT_BACKUP_RETENTION,
     ) -> None:
         self.database_path = str(database_path)
@@ -31,18 +31,21 @@ class SQLiteConnectionFactory:
         self.recover_corrupt = bool(recover_corrupt)
         self.corrupt_backup_retention = int(corrupt_backup_retention)
         self.write_lock = RLock()
+        self._integrity_checked = False
 
     def open(self) -> sqlite3.Connection:
-        try:
-            return self._open_once(check_integrity=True)
-        except sqlite3.DatabaseError:
-            if not self.recover_corrupt or self.database_path == ":memory:":
-                raise
-            quarantine_corrupt_database(
-                self.database_path,
-                keep=self.corrupt_backup_retention,
-            )
-            return self._open_once(check_integrity=False)
+        with self.write_lock:
+            try:
+                connection = self._open_once(check_integrity=not self._integrity_checked)
+            except sqlite3.DatabaseError as exc:
+                code = getattr(exc, "sqlite_errorcode", 0) & 0xFF
+                corrupt = isinstance(exc, DatabaseIntegrityError) or code in (sqlite3.SQLITE_CORRUPT, sqlite3.SQLITE_NOTADB)
+                if not corrupt or not self.recover_corrupt or self.database_path == ":memory:":
+                    raise
+                quarantine_corrupt_database(self.database_path, keep=self.corrupt_backup_retention)
+                connection = self._open_once(check_integrity=True)
+            self._integrity_checked = True
+            return connection
 
     def _open_once(self, *, check_integrity: bool) -> sqlite3.Connection:
         if self.database_path != ":memory:":
@@ -62,22 +65,21 @@ class SQLiteConnectionFactory:
                 secure_database_files(self.database_path)
             if check_integrity and self.database_path != ":memory:":
                 row = connection.execute("PRAGMA integrity_check").fetchone()
-                if row and row[0] != "ok":
-                    raise sqlite3.DatabaseError(f"Integrity check failed: {row[0]}")
-            if self.database_path != ":memory:":
-                secure_database_files(self.database_path)
+                if not row or row[0] != "ok":
+                    raise DatabaseIntegrityError("Database integrity check failed")
             return connection
-        except sqlite3.DatabaseError:
+        except Exception:
             connection.close()
             raise
 
     @contextmanager
     def connection(self) -> Iterator[sqlite3.Connection]:
-        connection = self.open()
-        try:
-            yield connection
-        finally:
-            connection.close()
+        with self.write_lock:
+            connection = self.open()
+            try:
+                yield connection
+            finally:
+                connection.close()
 
     @contextmanager
     def transaction(
@@ -95,6 +97,10 @@ class SQLiteConnectionFactory:
                 except Exception:
                     connection.rollback()
                     raise
+
+
+class DatabaseIntegrityError(sqlite3.DatabaseError):
+    """An explicit integrity failure rather than an operational access failure."""
 
 
 class _NullLock:

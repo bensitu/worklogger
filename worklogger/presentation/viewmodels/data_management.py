@@ -83,6 +83,7 @@ class DataManagementViewModel:
         calendar_events_handler: CalendarEventsForRangeHandler | None = None,
         ics_import_handler: IcsImportHandler | None = None,
         csv_import_handler: WorkLogCsvImportHandler | None = None,
+        can_manage_database: bool = False,
     ) -> None:
         self._user_id = user_id
         self._work_logs_handler = work_logs_handler
@@ -92,8 +93,11 @@ class DataManagementViewModel:
         self._calendar_events_handler = calendar_events_handler
         self._ics_import_handler = ics_import_handler
         self._csv_import_handler = csv_import_handler
+        self._can_manage_database = bool(can_manage_database)
 
     def backup_database(self, destination: Path) -> Result[DataManagementActionState]:
+        if not self._can_manage_database:
+            return Result.failure(ValidationError("admin_required", "admin_required"))
         result = self._backup_service.backup_database(Path(destination))
         if not result.ok or result.value is None:
             return Result.failure(result.error or _error("backup_failed"))
@@ -106,6 +110,8 @@ class DataManagementViewModel:
         )
 
     def validate_restore_database(self, source: Path) -> Result[DataManagementActionState]:
+        if not self._can_manage_database:
+            return Result.failure(ValidationError("admin_required", "admin_required"))
         result = self._backup_service.validate_restore_database(Path(source))
         if not result.ok:
             return Result.failure(result.error or _error("restore_validation_failed"))
@@ -118,6 +124,8 @@ class DataManagementViewModel:
         )
 
     def restore_database(self, source: Path) -> Result[DataManagementActionState]:
+        if not self._can_manage_database:
+            return Result.failure(ValidationError("admin_required", "admin_required"))
         result = self._backup_service.restore_database(Path(source))
         if not result.ok:
             return Result.failure(result.error or _error("restore_failed"))

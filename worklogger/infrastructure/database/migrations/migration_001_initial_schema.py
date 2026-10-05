@@ -9,7 +9,7 @@ DESCRIPTION = "initial_schema"
 
 
 def up(connection: sqlite3.Connection) -> None:
-    connection.executescript(
+    statements = (
         """
         CREATE TABLE IF NOT EXISTS users(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -132,3 +132,6 @@ def up(connection: sqlite3.Connection) -> None:
             ON activity_events(user_id, created_at);
         """
     )
+    for statement in statements.split(";"):
+        if statement.strip():
+            connection.execute(statement)

@@ -173,6 +173,7 @@ class AutoRecordDataManagementPresentationTests(unittest.TestCase):
         ics_exporter = FakeIcsExporter()
         view_model = DataManagementViewModel(
             user_id=1,
+            can_manage_database=True,
             work_logs_handler=rows,
             backup_service=backup,
             csv_exporter=csv_exporter,

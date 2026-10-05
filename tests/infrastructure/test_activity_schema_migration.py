@@ -100,12 +100,12 @@ class ActivitySchemaMigrationTests(unittest.TestCase):
                 MigrationRunner(self.factory).run_pending()
         with self.factory.connection() as connection:
             self.assertEqual(connection.execute("SELECT id FROM audit_events").fetchone()[0], 42)
-            self.assertIsNone(connection.execute("SELECT version FROM schema_migrations WHERE version=3").fetchone())
-            self.assertIsNotNone(connection.execute("SELECT name FROM sqlite_master WHERE name='idx_audit_events_user_created'").fetchone())
             if versioned:
-                self.assertIsNone(connection.execute("SELECT name FROM sqlite_master WHERE name='activity_events'").fetchone())
+                self.assertIsNone(connection.execute("SELECT version FROM schema_migrations WHERE version=3").fetchone())
             else:
-                self.assertEqual(connection.execute("SELECT COUNT(*) FROM activity_events").fetchone()[0], 0)
+                self.assertIsNone(connection.execute("SELECT name FROM sqlite_master WHERE name='schema_migrations'").fetchone())
+            self.assertIsNotNone(connection.execute("SELECT name FROM sqlite_master WHERE name='idx_audit_events_user_created'").fetchone())
+            self.assertIsNone(connection.execute("SELECT name FROM sqlite_master WHERE name='activity_events'").fetchone())
 
     def test_empty_previous_table_preserves_populated_current_table(self):
         self.previous_database()

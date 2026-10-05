@@ -143,14 +143,15 @@ and calendar preferences update the active window.
 
 ## Backups and Updates
 
-Use Settings > Data to create a database backup. It includes all accounts and
+Administrators can use Settings > Data to create a database backup. It includes all accounts and
 their stored records, not only the signed-in user's data. It does not include model
 files, operating-system credentials, language preferences, or the remembered-login
 file. Store backups privately.
 
 Restore replaces the database rather than merging records. The file must pass
-integrity checks and contain the current username. Follow the application's
-confirmation and restart instructions. Keep a separate known-good backup.
+integrity and schema checks and contain the current username with the same account
+ID. Restore requires administrator permission, retains the previous database, and
+ends the session so you can sign in again. Keep a separate known-good backup.
 
 Check for Updates contacts the configured GitHub release endpoint. It does not
 download or install an application update automatically.

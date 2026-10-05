@@ -281,7 +281,7 @@ class ReportDialog(QDialog):
         report_type = self._current_type()
         state = self._states.get(report_type)
         suffix = state.period_start.isoformat() if state is not None else self._selected_day.isoformat()
-        path, _ = QFileDialog.getSaveFileName(
+        path, _selected_filter = QFileDialog.getSaveFileName(
             self,
             _("Export Markdown"),
             f"{report_type}-report-{suffix}.md",

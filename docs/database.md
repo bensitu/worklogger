@@ -84,31 +84,37 @@ working-hour records. New databases do not need these compatibility backups.
 
 ## Backup and Restore
 
-`SQLiteBackupService` uses the SQLite backup API and checks integrity. Backups are
+`SQLiteBackupService` uses the SQLite backup API and checks integrity. Desktop
+backup and restore require a current administrator account. Backups are
 whole-database copies, including all accounts and credential hashes. They exclude
 model files, session files, operating-system keyring values, and native language
 preferences.
 
-Restore validates the source, requires the `users` table, and checks the expected
-username when configured. It opens the source read-only and uses the SQLite backup
+Restore validates supported schema versions and table names, rejects triggers and
+views, and requires the current account's username and ID to agree. It opens the
+source read-only and uses the SQLite backup
 API to create a temporary snapshot, including committed source WAL content but not
 uncommitted transactions. The snapshot is converted to a standalone rollback-journal
 database and validated before replacing the target; no source checkpoint is required.
-Restore keeps the previous database during replacement and runs migrations. A failed
-migration attempts to restore the previous database. Restore is replacement, not a
+Migrations run on the temporary snapshot before replacement. The previous database
+is retained as a uniquely named `.bak_restore_*` file. Successful restore ends the
+current session and requires authentication again. Restore is replacement, not a
 per-user merge.
 
-The implementation uses file replacement and removes SQLite sidecars; close
-other processes using the database before restoring. Keep an independent backup
-instead of treating temporary restore files as retention storage.
+Connections and replacement share a process-local lock. Restore refuses a busy
+target rather than discarding its WAL. An interrupted `.pre_restore` file is
+preserved and blocks startup and further replacement until recovery is completed.
+Keep independent backups and close other processes before restoring.
 
 ## Corruption and Permissions
 
-The connection factory performs integrity checks when opening file databases.
-With automatic recovery enabled, a database error may move the file to a timestamped
-`.bak_*` path before a replacement is opened. The default retention count is three.
-The generic retention pattern also matches compatibility backup names; copy
-important backups outside this directory for long-term retention.
+The connection factory checks integrity once per factory initialization, not on
+every query. Normal desktop startup never automatically replaces a damaged or
+inaccessible database. Explicitly enabled maintenance recovery handles only
+confirmed corruption, preserving the database and its WAL/SHM files together with
+unique `.bak_corrupt_*` names. Its retention count defaults to three and does not
+match migration or restore backups. Lock, permission, and I/O failures are raised
+without renaming the original database.
 
 Database and sidecar permissions are restricted on a best-effort basis. On
 Windows, this is not a replacement for directory access-control configuration.

@@ -36,6 +36,10 @@ class MigrationRunner:
         migrations = self._discover_migrations()
         applied_now: list[int] = []
         with self._connection_factory.write_lock:
+            with self._connection_factory.connection() as connection:
+                exists = connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='schema_migrations'").fetchone()
+                if exists and self._applied_versions(connection) - {migration.version for migration in migrations}:
+                    raise ValueError("database_version_unsupported")
             for migration in migrations:
                 prepare = getattr(migration.module, "prepare", None)
                 if prepare is not None:

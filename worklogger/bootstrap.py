@@ -129,7 +129,7 @@ from worklogger.infrastructure.security import (
 )
 from worklogger.infrastructure.templates import BuiltInTemplateProvider, UserTemplateProvider
 from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
-from worklogger.infrastructure.i18n import get_language, set_language
+from worklogger.infrastructure.i18n import _, get_language, set_language
 from worklogger.infrastructure.language_preferences import LanguagePreferences, initialize_language
 from worklogger.presentation.ai import AiAssistWorkflowController
 from worklogger.presentation.analytics import AnalyticsWorkflowController
@@ -338,6 +338,8 @@ def _prepare_database(
 ) -> tuple[Path, SQLiteConnectionFactory, RuntimeAuthRepository]:
     database_path = Path(config.database_path) if config.database_path else default_database_path()
     connection_factory = SQLiteConnectionFactory(database_path)
+    if Path(str(database_path) + ".pre_restore").exists():
+        raise ValueError("restore_pending")
     MigrationRunner(connection_factory).run_pending()
     auth_repository = SQLiteAuthRepository(
         connection_factory,
@@ -696,10 +698,12 @@ def _build_data_management_view_model(
 ) -> DataManagementViewModel:
     return DataManagementViewModel(
         user_id=user.id,
+        can_manage_database=user.is_admin,
         work_logs_handler=GetAllWorkLogsHandler(repositories.work_logs),
         backup_service=SQLiteBackupService(
             connection_factory,
             expected_username=user.username,
+            requesting_user_id=user.id,
         ),
         csv_exporter=WorkLogCsvExporter(),
         ics_exporter=WorkLogIcsExporter(),
@@ -819,7 +823,7 @@ def _window_config_for_user(
 ) -> AppWindowConfig:
     return replace(
         window_config, account_name=window_config.account_name or user.username,
-        account_role="Admin" if user.is_admin else "User",
+        account_role=_("Admin") if user.is_admin else _("User"),
     )
 
 
@@ -898,6 +902,9 @@ def _runtime_result(
     auth_session: AuthSession | None,
     job_runner: JobRunner | None,
 ) -> Result[DesktopRuntime]:
+    settings_workflow = getattr(window, "_settings_workflow", None)
+    if settings_workflow is not None:
+        settings_workflow.set_restore_handler(window.logout_requested.emit)
     return Result.success(
         DesktopRuntime(
             application=application,
