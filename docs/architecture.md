@@ -115,7 +115,8 @@ use temporary files for repository tests spanning multiple connections.
 currently constructs dependencies directly in `bootstrap.py` and connects Qt
 signals; it is not assembled through a global container or event bus.
 
-Feature-switch definitions alone do not enable a desktop integration. AI handlers
+Feature switches control assistant, model-management, and update-check composition,
+but do not supply missing service implementations. AI handlers
 are constructed without a generation service, identity providers are disabled,
 and the local model manager is independent of inference. See
 [integrations](integrations.md) for the implemented boundaries.

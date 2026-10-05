@@ -7,8 +7,10 @@ Build on the target operating system with the intended Python architecture.
 modules, keyring backends, certificate data, and selected optional packages.
 `scripts/build_resources.py` supplies an explicit application-resource manifest.
 
-The build dependency is pinned in `requirements-build.txt`. Runtime dependencies
-are not fully locked. Record the environment used for a distributed artifact:
+Direct runtime dependencies are pinned in `requirements.txt`, and the build
+dependency is pinned in `requirements-build.txt`. Optional native inference has
+its own `requirements-ai.txt`. Transitive dependencies and platform wheels are
+not fully locked; record the complete environment for each distributed artifact:
 
 ```sh
 python -m pip freeze
@@ -24,9 +26,9 @@ python scripts/build.py
 ```
 
 The script compiles gettext catalogs, checks them, validates resources, and invokes
-PyInstaller with the repository specification. `--check` performs only translation
-and resource validation; it does not prove that all runtime modules or native
-libraries are available. A full build checks required runtime modules separately.
+PyInstaller with the repository specification. `--check` validates translations,
+resources, and required Python module availability, but does not verify native
+library loading or the resulting artifact.
 
 For a Windows artifact with a diagnostic console:
 
@@ -55,19 +57,30 @@ remain available at runtime.
 | Linux | Runtime icon asset; desktop integration requires distribution-specific handling |
 
 No user database, model weight file, session credential, or personal export belongs
-in the artifact. Optional `tzdata` and `llama_cpp` packages are collected when
-installed. An installed inference package can significantly affect size and native
-dependencies without enabling a generation service in the default composition.
+in the artifact. `tzdata` is required for country mapping and timezone rules.
+Native inference is excluded unless `--with-local-inference` is supplied after
+installing `requirements-ai.txt`. Including it does not connect a generation service
+in the default composition.
 
 ## Platform Outputs
 
 - Windows: `dist/WorkLogger/WorkLogger.exe` and its adjacent runtime directory.
 - Linux: the `dist/WorkLogger/` executable directory produced by PyInstaller.
 - macOS: the specification also defines `WorkLogger.app` with a bundle identifier
-  and high-resolution display metadata.
+  matching `APP_ID`, application version, and high-resolution display metadata.
+  Windows embeds version resources from the same application metadata.
 
-The specification does not perform installer creation, code signing, notarization,
-Linux desktop registration, or release upload. Arrange these separately for the
+On macOS, `WORKLOGGER_CODESIGN_IDENTITY` optionally selects the signing identity,
+and `WORKLOGGER_CODESIGN_ENTITLEMENTS` supplies an entitlement-file path. PyInstaller
+propagates these settings to collected binaries and the application bundle. Without
+an identity, its default local signing is not a distributable Developer ID signature.
+Submit the signed bundle using `xcrun notarytool` with a locally configured credential
+profile, then staple the accepted ticket with `xcrun stapler`. Windows distribution
+requires Authenticode signing with the publisher's certificate after building.
+Certificates and notarization credentials must never be committed.
+
+The specification does not perform installer creation, notarization, Windows
+signing, Linux desktop registration, or release upload. Arrange these separately for the
 chosen distribution method. Test data-location permissions on each platform,
 especially inside a macOS bundle; see [configuration](configuration.md).
 

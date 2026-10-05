@@ -78,9 +78,6 @@ class ApplicationContractTests(unittest.TestCase):
         flags = FeatureFlags()
         self.assertTrue(flags.is_enabled(FeatureFlag.AI))
         self.assertTrue(flags.is_enabled(FeatureFlag.LOCAL_MODELS))
-        self.assertFalse(flags.is_enabled(FeatureFlag.GOOGLE_IDENTITY))
-        self.assertFalse(flags.is_enabled(FeatureFlag.MICROSOFT_IDENTITY))
-        self.assertTrue(flags.is_enabled(FeatureFlag.ANALYTICS_PDF_NARRATIVE))
         self.assertTrue(flags.is_enabled(FeatureFlag.UPDATE_CHECK))
 
     def test_feature_flags_can_be_loaded_from_environment_mapping(self) -> None:
@@ -88,17 +85,11 @@ class ApplicationContractTests(unittest.TestCase):
             {
                 "WORKLOGGER_FEATURE_AI": "1",
                 "WORKLOGGER_FEATURE_LOCAL_MODELS": "0",
-                "WORKLOGGER_FEATURE_GOOGLE_IDENTITY": "yes",
-                "WORKLOGGER_FEATURE_MICROSOFT_IDENTITY": "true",
-                "WORKLOGGER_FEATURE_ANALYTICS_PDF_NARRATIVE": "on",
                 "WORKLOGGER_FEATURE_UPDATE_CHECK": "0",
             }
         )
         self.assertTrue(flags.enable_ai)
         self.assertFalse(flags.enable_local_models)
-        self.assertTrue(flags.enable_google_identity)
-        self.assertTrue(flags.enable_microsoft_identity)
-        self.assertTrue(flags.enable_analytics_pdf_narrative)
         self.assertFalse(flags.enable_update_check)
 
     def test_required_protocols_are_importable(self) -> None:

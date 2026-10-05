@@ -57,9 +57,10 @@ partial files; range and response lengths are validated. Servers ignoring ranges
 restart the transfer. Only a matching complete file replaces the destination.
 Cancellation leaves a partial file for a later retry. Verification results are
 cached by path, file timestamps, size, and expected checksum.
-A remote catalog is only used when
-an explicit URL is passed to the store constructor; desktop startup does not pass
-one. Refresh therefore reads local metadata by default. The root catalog file is
+A remote catalog is used when `WORKLOGGER_MODEL_CATALOG_URL` supplies an explicit
+HTTPS URL, or a programmatic caller passes one to the store constructor. Entries
+used for downloads must contain a SHA-256 checksum. Refresh reads local metadata
+by default. The root catalog file is
 not automatically copied into runtime storage.
 
 Selection requires a verified file. Deletion considers account selections through

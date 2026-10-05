@@ -9,12 +9,12 @@ from the checkout rather than using `pip install -e .`.
 
 Use a virtual environment so dependency experiments do not replace system-wide
 packages. The examples use Python 3.11 and the verified PySide6 version. Other
-versions require testing; runtime dependencies are not all pinned.
+versions require testing; direct runtime dependencies are pinned.
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt "PySide6==6.11.0"
+python -m pip install -r requirements.txt
 python -m pip install -r requirements-build.txt
 python scripts/i18n/i18n_compile.py
 python -m worklogger.main
@@ -26,16 +26,15 @@ with `python3 -m venv .venv` and use `.venv/bin/python`.
 
 ## Desktop-Only Dependencies
 
-The default desktop does not construct a local inference engine. A development
-environment that does not need native model inference can install the desktop
-dependencies explicitly:
+The default requirements install the desktop without native model inference.
+Integrations that construct an inference engine may install the separate optional
+requirements with a wheel appropriate to their CPU/GPU and operating system:
 
 ```sh
-python -m pip install "PySide6==6.11.0" tzlocal holidays cryptography keyring certifi "PyJWT>=2.8.0" "httpx>=0.27.0" "portalocker>=2.8.0"
+python -m pip install -r requirements-ai.txt
 ```
 
-This intentionally omits `llama-cpp-python`. The repository's full requirements
-include it; compiling it may require native build tools. CPU and GPU packages must
+This includes `llama-cpp-python`; compiling it may require native build tools. CPU and GPU packages must
 match the target machine and their provider's instructions. Merely installing
 this package does not connect the application's local inference adapter.
 

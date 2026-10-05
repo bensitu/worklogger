@@ -1,0 +1,2 @@
+# Optional native inference dependency; install the wheel for the target platform.
+llama-cpp-python==0.3.19

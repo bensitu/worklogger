@@ -31,7 +31,7 @@ From the repository root on Windows PowerShell:
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt "PySide6==6.11.0"
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe scripts/i18n/i18n_compile.py
 .\.venv\Scripts\python.exe -m worklogger.main
 ```
@@ -40,7 +40,7 @@ On macOS or Linux:
 
 ```sh
 python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt "PySide6==6.11.0"
+.venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python scripts/i18n/i18n_compile.py
 .venv/bin/python -m worklogger.main
 ```

@@ -82,6 +82,26 @@ class RuntimeBootstrapTests(unittest.TestCase):
     def new_preferences(self):
         return LanguagePreferences(QSettings(str(self.preferences_path), QSettings.Format.IniFormat))
 
+    def test_disabled_optional_features_are_not_composed(self):
+        with patch.dict(os.environ, {
+            "WORKLOGGER_FEATURE_AI": "0", "WORKLOGGER_FEATURE_LOCAL_MODELS": "0",
+            "WORKLOGGER_FEATURE_UPDATE_CHECK": "0",
+        }), tempfile.TemporaryDirectory() as directory:
+            result = build_authenticated_desktop_runtime(
+                DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db", password_iterations=1_000),
+                argv=[], auth_controller_factory=AutoRegisterAuthenticator,
+            )
+            self.assertTrue(result.ok, result.error)
+            try:
+                window = result.value.window
+                self.assertIsNone(window._ai_assist_workflow)
+                self.assertIsNone(window._settings_workflow._local_models_workflow)
+                self.assertIsNone(window._settings_workflow._update_check_handler)
+                self.assertFalse(window.settings_page.check_updates_button.isEnabled())
+                self.assertFalse(window.settings_page.manage_local_models_button.isEnabled())
+            finally:
+                result.value.window.close()
+
     def test_first_login_is_translated_before_authentication(self):
         with tempfile.TemporaryDirectory() as directory:
             for language in ("en_US", "ja_JP", "ko_KR", "zh_CN", "zh_TW"):

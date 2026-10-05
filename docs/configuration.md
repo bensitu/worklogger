@@ -38,6 +38,9 @@ platform-dependent. Account settings are stored separately in SQLite.
 | `WORKLOGGER_LOG_PATH` | Alternative runtime log path |
 | `WORKLOGGER_DEBUG` | Enables debug logging for `1`, `true`, `yes`, or `on` |
 | `WORKLOGGER_BUILD_CONSOLE` | Read by `WorkLogger.spec`; normally set by `scripts/build.py --console` |
+| `WORKLOGGER_BUILD_LOCAL_INFERENCE` | Normally set by `scripts/build.py --with-local-inference` |
+| `WORKLOGGER_CODESIGN_IDENTITY`, `WORKLOGGER_CODESIGN_ENTITLEMENTS` | Optional macOS build-signing inputs |
+| `WORKLOGGER_MODEL_CATALOG_URL` | Explicit HTTPS catalog URL for model refresh; unset uses local metadata |
 | `QT_QPA_PLATFORM=offscreen` | Headless GUI tests and runtime checks; omit for interactive desktop use |
 | `QT_SCALE_FACTOR` | Useful for display-scaling verification, not a saved application preference |
 | `WORKLOGGER_SCREENSHOTS` | Test-only destination for rendered screenshots |
@@ -97,11 +100,10 @@ preference alone.
 
 ## Feature Definitions
 
-`FeatureFlags.from_env()` recognizes `WORKLOGGER_FEATURE_AI`,
-`WORKLOGGER_FEATURE_LOCAL_MODELS`, `WORKLOGGER_FEATURE_GOOGLE_IDENTITY`,
-`WORKLOGGER_FEATURE_MICROSOFT_IDENTITY`, `WORKLOGGER_FEATURE_ANALYTICS_PDF_NARRATIVE`,
-and `WORKLOGGER_FEATURE_UPDATE_CHECK`.
-
-These are definitions for programmatic composition. The default `bootstrap.py`
-does not consume `FeatureFlags`; setting these variables does not enable disabled
-login buttons, AI services, or other disconnected desktop features.
+Desktop composition reads `WORKLOGGER_FEATURE_AI`, `WORKLOGGER_FEATURE_LOCAL_MODELS`,
+and `WORKLOGGER_FEATURE_UPDATE_CHECK`. All default to enabled; set a value other
+than `1`, `true`, `yes`, or `on` to disable the corresponding assistant workflow,
+model-management workflow, or manual release check. Account preferences cannot
+override a disabled deployment feature. These switches do not supply AI services
+or enable disconnected identity providers. Unsupported identity and PDF-narrative
+feature definitions have been removed rather than suggesting an available service.

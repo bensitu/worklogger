@@ -19,6 +19,8 @@ class BuildResourceTests(unittest.TestCase):
         self.assertNotIn("poppler", environment["PATH"])
         self.assertIn("System32", environment["PATH"])
         self.assertEqual(environment["WORKLOGGER_BUILD_CONSOLE"], "1")
+        self.assertEqual(environment["WORKLOGGER_BUILD_LOCAL_INFERENCE"], "0")
+        self.assertEqual(build_environment(False, True)["WORKLOGGER_BUILD_LOCAL_INFERENCE"], "1")
 
     def test_resource_manifest_contains_fonts_icons_qss_and_catalogs_without_user_data(self):
         for po in locale_po_paths():

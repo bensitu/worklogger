@@ -1,26 +1,11 @@
-PySide6
-tzlocal
-holidays
-cryptography
-keyring
-certifi
-icalendar>=6.1,<8
-recurring-ical-events>=3.8,<4
-PyJWT>=2.8.0
-
-# -- local model inference --
-# The macOS release script installs this separately per architecture:
-#   arm64  -> Metal wheel
-#   x86_64 -> CPU wheel
-# For GPU acceleration in development, install the appropriate CUDA/Metal variant manually:
-#   pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu121
-# For Apple Silicon (M1/M2) install the appropriate Metal variant manually:
-#   pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/metal
-# For CPU-only usage, install the CPU wheel manually:
-#   pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
-
-llama-cpp-python>=0.3.19
-# Chunked HTTP download with streaming support (model download)
-httpx>=0.27.0
-# File-lock to prevent concurrent multi-process model downloads
-portalocker>=2.8.0
+PySide6==6.11.0
+tzlocal==5.4.4
+tzdata==2026.4
+holidays==0.105
+cryptography==50.0.2
+keyring==25.7.0
+certifi==2026.7.22
+icalendar==7.3.0
+recurring-ical-events==3.8.2
+PyJWT==2.15.1
+portalocker==3.2.0

@@ -84,6 +84,7 @@ from worklogger.app.use_cases.work_logs import (
 )
 from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandler
 from worklogger.app.use_cases.updates import CheckForUpdatesHandler
+from worklogger.config.feature_flags import FeatureFlags
 from worklogger.config.constants import (
     GITHUB_LATEST_RELEASE_API_URL,
     LANGUAGE_SETTING_KEY,
@@ -683,6 +684,7 @@ def _build_settings_workflow(
 ) -> SettingsWorkflowController | None:
     if auth_view_model is None:
         return None
+    features = FeatureFlags.from_env()
     return SettingsWorkflowController(
         settings_view_model=SettingsViewModel(
             user_id=user.id,
@@ -706,7 +708,7 @@ def _build_settings_workflow(
         ),
         update_check_handler=CheckForUpdatesHandler(
             GitHubReleaseUpdateChecker(api_url=GITHUB_LATEST_RELEASE_API_URL)
-        ),
+        ) if features.enable_update_check else None,
         job_runner=job_runner,
         identity_workflow=_build_identity_workflow(user, repositories, auth_repository),
         local_models_workflow=_build_local_models_workflow(
@@ -714,7 +716,7 @@ def _build_settings_workflow(
             database_path=database_path,
             repositories=repositories,
             job_runner=job_runner,
-        ),
+        ) if features.enable_local_models else None,
         user_management_view_model=_build_user_management_view_model(
             user,
             auth_repository,
@@ -779,7 +781,10 @@ def _build_local_models_workflow(
     repositories: RuntimeRepositories,
     job_runner: JobRunner | None,
 ) -> LocalModelsWorkflowController:
-    local_model_store = JsonLocalModelStore(database_path.parent / "models")
+    local_model_store = JsonLocalModelStore(
+        database_path.parent / "models",
+        remote_catalog_url=os.environ.get("WORKLOGGER_MODEL_CATALOG_URL", "").strip() or None,
+    )
     return LocalModelsWorkflowController(
         LocalModelManagerViewModel(
             user_id=user.id,
@@ -918,7 +923,7 @@ def _build_app_window(
             repositories,
             handlers,
             job_runner,
-        ),
+        ) if FeatureFlags.from_env().enable_ai else None,
         notes_workflow=_build_notes_workflow(user, repositories, handlers),
         reports_workflow=_build_reports_workflow(user, repositories, handlers),
         residency_controller=residency_controller,

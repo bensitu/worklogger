@@ -175,6 +175,9 @@ class SettingsWorkflowController:
         surface.import_ics_requested.connect(lambda: self._import_ics(surface))
         surface.export_ics_requested.connect(lambda: self._export_ics(surface))
         surface.update_check_requested.connect(lambda: self._check_updates(surface))
+        if self._update_check_handler is None and hasattr(surface, "check_updates_button"):
+            surface.check_updates_button.setEnabled(False)
+            surface.check_updates_button.setToolTip(_("Update check is not configured."))
         if self._local_models_workflow is not None:
             surface.manage_local_models_requested.connect(
                 lambda: self._open_local_models(surface)
