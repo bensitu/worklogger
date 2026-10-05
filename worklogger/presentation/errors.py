@@ -105,6 +105,8 @@ def display_error_code(code: str) -> str:
             return _("Unable to check for updates. Check your network connection and try again.")
         case "settings_save_failed":
             return _("Unable to save settings. Please try again.")
+        case "holiday_region_invalid":
+            return _("Select a supported holiday country and state or province.")
         case "worklog_save_failed":
             return _("Unable to save the work log. Your changes have been retained.")
         case "settings_load_failed" | "note_load_failed" | "worklog_load_failed" | "worklog_export_load_failed" | "calendar_load_failed" | "holiday_load_failed" | "analytics_load_failed" | "stats_load_failed" | "user_list_failed":

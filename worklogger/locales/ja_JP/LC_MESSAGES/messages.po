@@ -7,6 +7,22 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
+msgid "System region"
+msgstr "システムの地域"
+
+msgid "Holiday country"
+msgstr "祝日の国"
+
+msgid "State / province"
+msgstr "州 / 都道府県"
+
+msgid "National holidays"
+msgstr "全国の祝日"
+
+msgid "Select a supported holiday country and state or province."
+msgstr "対応する祝日の国と州または都道府県を選択してください。"
+
+
 msgid "Compensatory leave"
 msgstr "代休"
 

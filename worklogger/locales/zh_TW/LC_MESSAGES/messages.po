@@ -7,6 +7,22 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
+msgid "System region"
+msgstr "系統地區"
+
+msgid "Holiday country"
+msgstr "假日國家"
+
+msgid "State / province"
+msgstr "州 / 省"
+
+msgid "National holidays"
+msgstr "全國假日"
+
+msgid "Select a supported holiday country and state or province."
+msgstr "請選擇支援的假日國家及州或省。"
+
+
 msgid "Compensatory leave"
 msgstr "補休"
 

@@ -47,6 +47,7 @@ from worklogger.config.constants import (
     NETWORK_PROXY_PORT_SETTING_KEY,
     NETWORK_PROXY_USERNAME_SETTING_KEY,
     SHOW_HOLIDAYS_SETTING_KEY,
+    HOLIDAY_REGION_SETTING_KEY,
     SHOW_NOTE_MARKERS_SETTING_KEY,
     SHOW_OVERNIGHT_INDICATOR_SETTING_KEY,
     STANDARD_WORK_HOURS_SETTING_KEY,
@@ -55,6 +56,7 @@ from worklogger.config.constants import (
 from worklogger.domain.auth.models import User
 from worklogger.domain.shared.errors import AppError
 from worklogger.infrastructure.i18n import _, available_languages
+from worklogger.infrastructure.calendar.holidays_provider import detect_country, supported_holiday_regions
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.theme import configure_application_style, install_bundled_fonts
 from worklogger.presentation.viewmodels import SettingsState, SettingsViewModel
@@ -165,6 +167,10 @@ class SettingsPage(QWidget):
             self.default_break_input.setValue(state.default_break_hours)
             self.monthly_target_input.setValue(state.monthly_target_hours)
             self.holidays_switch.set_checked(state.show_holidays)
+            country, _separator, subdivision = state.holiday_region.partition("/")
+            index = self.holiday_country_combo.findData(country)
+            self.holiday_country_combo.setCurrentIndex(max(index, 0))
+            self._populate_holiday_subdivisions(country or detect_country(), subdivision)
             self.note_markers_switch.set_checked(state.show_note_markers)
             self.overnight_switch.set_checked(state.show_overnight_indicator)
             self.week_start_switch.set_checked(state.week_start_monday)
@@ -339,6 +345,19 @@ class SettingsPage(QWidget):
             lambda enabled: self._set_bool(SHOW_HOLIDAYS_SETTING_KEY, enabled)
         )
         form.addRow(_("Public holidays"), _switch_row(self.holidays_switch))
+
+        self.holiday_country_combo = QComboBox()
+        self.holiday_country_combo.setFixedWidth(320)
+        self.holiday_country_combo.addItem(_("System region") + f" ({detect_country() or '-'})", "")
+        for country in sorted(supported_holiday_regions()):
+            self.holiday_country_combo.addItem(country, country)
+        self.holiday_country_combo.currentIndexChanged.connect(self._holiday_country_changed)
+        form.addRow(_("Holiday country"), self.holiday_country_combo)
+        self.holiday_subdivision_combo = QComboBox()
+        self.holiday_subdivision_combo.setFixedWidth(320)
+        self.holiday_subdivision_combo.currentIndexChanged.connect(self._holiday_subdivision_changed)
+        form.addRow(_("State / province"), self.holiday_subdivision_combo)
+        self._populate_holiday_subdivisions(detect_country())
 
         self.note_markers_switch = SwitchButton()
         self.note_markers_switch.setVisible(False)
@@ -815,6 +834,31 @@ class SettingsPage(QWidget):
 
     def _mark_external_test_unconfigured(self) -> None:
         self.external_model_status_label.setText(_("External model testing is not configured."))
+
+    def _populate_holiday_subdivisions(self, country: str, subdivision: str = "") -> None:
+        blocked = self.holiday_subdivision_combo.blockSignals(True)
+        try:
+            self.holiday_subdivision_combo.clear()
+            self.holiday_subdivision_combo.addItem(_("National holidays"), "")
+            for code in sorted(supported_holiday_regions().get(country, ())):
+                self.holiday_subdivision_combo.addItem(code, code)
+            self.holiday_subdivision_combo.setCurrentIndex(max(0, self.holiday_subdivision_combo.findData(subdivision)))
+            self.holiday_subdivision_combo.setEnabled(self.holiday_subdivision_combo.count() > 1)
+        finally:
+            self.holiday_subdivision_combo.blockSignals(blocked)
+
+    def _holiday_country_changed(self) -> None:
+        if self._updating:
+            return
+        country = str(self.holiday_country_combo.currentData() or "")
+        self._set_text(HOLIDAY_REGION_SETTING_KEY, country)
+
+    def _holiday_subdivision_changed(self) -> None:
+        if self._updating:
+            return
+        subdivision = str(self.holiday_subdivision_combo.currentData() or "")
+        country = str(self.holiday_country_combo.currentData() or detect_country())
+        self._set_text(HOLIDAY_REGION_SETTING_KEY, f"{country}/{subdivision}" if subdivision else country)
 
     def _set_bool(self, key: str, enabled: bool) -> None:
         if self._updating:

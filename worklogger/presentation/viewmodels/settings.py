@@ -34,6 +34,7 @@ from worklogger.config.constants import (
     NETWORK_PROXY_PORT_SETTING_KEY,
     NETWORK_PROXY_USERNAME_SETTING_KEY,
     SHOW_HOLIDAYS_SETTING_KEY,
+    HOLIDAY_REGION_SETTING_KEY,
     SHOW_NOTE_MARKERS_SETTING_KEY,
     SHOW_OVERNIGHT_INDICATOR_SETTING_KEY,
     STANDARD_WORK_HOURS_SETTING_KEY,
@@ -44,6 +45,7 @@ from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.app.use_cases.settings import ProxyPasswordSettings
 from worklogger.infrastructure.i18n import normalize_language
+from worklogger.infrastructure.calendar.holidays_provider import validate_holiday_region
 from worklogger.presentation.theme import DEFAULT_CUSTOM_COLOR, THEME_KEYS, normalize_hex_color
 
 
@@ -88,6 +90,7 @@ class SettingsState:
     network_proxy_domain: str
     proxy_password_available: bool = False
     last_backup_at: str = ""
+    holiday_region: str = ""
 
 
 class SettingsViewModel:
@@ -201,6 +204,7 @@ class SettingsViewModel:
                 network_proxy_domain=_text(values[NETWORK_PROXY_DOMAIN_SETTING_KEY], ""),
                 proxy_password_available=password is not None and password.ok,
                 last_backup_at=_text(values[LAST_BACKUP_AT_SETTING_KEY], ""),
+                holiday_region=_text(values[HOLIDAY_REGION_SETTING_KEY], ""),
             )
         )
 
@@ -247,6 +251,11 @@ class SettingsViewModel:
                 return Result.failure(ValidationError("credential_storage_unavailable", "credential_storage_unavailable"))
             return self._proxy_password_settings.save(str(value or ""))
         cleaned = str(value or "").strip()
+        if key == HOLIDAY_REGION_SETTING_KEY:
+            try:
+                cleaned = validate_holiday_region(cleaned)
+            except ValueError:
+                return Result.failure(ValidationError("holiday_region_invalid", "holiday_region_invalid"))
         if key == NETWORK_PROXY_PORT_SETTING_KEY:
             try:
                 cleaned = _proxy_port(cleaned)
@@ -292,6 +301,7 @@ _DEFAULTS = {
     DEFAULT_BREAK_HOURS_SETTING_KEY: "1.0",
     MONTHLY_TARGET_HOURS_SETTING_KEY: "168.0",
     SHOW_HOLIDAYS_SETTING_KEY: "1",
+    HOLIDAY_REGION_SETTING_KEY: "",
     SHOW_NOTE_MARKERS_SETTING_KEY: "1",
     SHOW_OVERNIGHT_INDICATOR_SETTING_KEY: "1",
     WEEK_START_MONDAY_SETTING_KEY: "0",
@@ -327,6 +337,7 @@ _BOOLEAN_KEYS = frozenset(
 
 _TEXT_KEYS = frozenset(
     {
+        HOLIDAY_REGION_SETTING_KEY,
         EXTERNAL_MODEL_BASE_URL_SETTING_KEY,
         EXTERNAL_MODEL_NAME_SETTING_KEY,
         NETWORK_PROXY_ADDRESS_SETTING_KEY,

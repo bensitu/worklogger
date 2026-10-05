@@ -465,6 +465,7 @@ def _build_runtime_for_user(
         monthly_target_hours=state.monthly_target_hours,
         calendar_options=replace(
             window_config.calendar_options, show_holidays=state.show_holidays,
+            holiday_region=state.holiday_region,
             show_note_markers=state.show_note_markers,
             show_overnight_indicator=state.show_overnight_indicator,
             week_start_monday=state.week_start_monday,

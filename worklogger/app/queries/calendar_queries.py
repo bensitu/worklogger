@@ -24,3 +24,4 @@ class GetHolidaysForRangeQuery:
     country: str
     start_day: date
     end_day: date
+    subdivision: str | None = None

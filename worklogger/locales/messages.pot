@@ -473,6 +473,9 @@ msgstr ""
 msgid "Hide password"
 msgstr ""
 
+msgid "Holiday country"
+msgstr ""
+
 msgid "Hu&e:"
 msgstr ""
 
@@ -675,6 +678,9 @@ msgid "Monthly target (h)"
 msgstr ""
 
 msgid "More actions"
+msgstr ""
+
+msgid "National holidays"
 msgstr ""
 
 msgid "Network"
@@ -1031,6 +1037,9 @@ msgstr ""
 msgid "Select a quick log first."
 msgstr ""
 
+msgid "Select a supported holiday country and state or province."
+msgstr ""
+
 msgid "Select a user."
 msgstr ""
 
@@ -1106,10 +1115,16 @@ msgstr ""
 msgid "Started"
 msgstr ""
 
+msgid "State / province"
+msgstr ""
+
 msgid "Stored securely in a future update"
 msgstr ""
 
 msgid "Sun"
+msgstr ""
+
+msgid "System region"
 msgstr ""
 
 msgid "Template reset."

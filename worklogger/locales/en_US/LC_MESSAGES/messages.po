@@ -7,6 +7,22 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 
+msgid "System region"
+msgstr "System region"
+
+msgid "Holiday country"
+msgstr "Holiday country"
+
+msgid "State / province"
+msgstr "State / province"
+
+msgid "National holidays"
+msgstr "National holidays"
+
+msgid "Select a supported holiday country and state or province."
+msgstr "Select a supported holiday country and state or province."
+
+
 msgid "Compensatory leave"
 msgstr "Compensatory leave"
 

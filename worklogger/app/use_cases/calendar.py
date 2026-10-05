@@ -67,14 +67,14 @@ class GetHolidaysForRangeHandler:
     def handle(self, query: GetHolidaysForRangeQuery) -> Result[tuple[Holiday, ...]]:
         if query.end_day < query.start_day:
             return Result.failure(ValidationError("date_range_invalid", "date_range_invalid"))
-        country = str(query.country or "US").strip().upper() or "US"
-        return Result.success(
-            self._provider.list_for_range(
-                country,
-                query.start_day,
-                query.end_day,
-            )
-        )
+        country = str(query.country or "").strip().upper()
+        if not country:
+            return Result.success(())
+        try:
+            options = {"subdivision": query.subdivision} if query.subdivision else {}
+            return Result.success(self._provider.list_for_range(country, query.start_day, query.end_day, **options))
+        except Exception:
+            return Result.failure(InfrastructureError("holiday_load_failed", "holiday_load_failed"))
 
 
 class ImportCalendarEventsHandler:

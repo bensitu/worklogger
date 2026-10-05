@@ -7,7 +7,7 @@ An implemented adapter is not necessarily connected to the default desktop.
 
 | Component | Implementation | Default desktop behavior |
 | --- | --- | --- |
-| Public holidays | `PythonHolidaysProvider` | Connected, using the system-timezone country mapping |
+| Public holidays | `PythonHolidaysProvider` | Connected, using IANA timezone countries or an explicit account region |
 | Release checks | `GitHubReleaseUpdateChecker` | Connected to the manual update action |
 | Model files | `JsonLocalModelStore` | Connected to local model management |
 | External AI | `OpenAICompatibleGateway` | Not supplied to the chat or rewrite handlers |
@@ -98,6 +98,12 @@ The release checker contacts the configured GitHub releases API with a timeout
 and response-size limit. It reports a newer version; it does not install it.
 Model and external-AI adapters contact the supplied URLs when invoked. Holiday
 lookup uses the installed `holidays` package rather than an online calendar feed.
+Automatic country detection reads the bundled `tzdata` zone table. Unknown or
+country-neutral zones do not fall back to US holidays. General settings provide
+an ISO country selection and supported state/province codes, stored together as
+one account preference. Subdivision support follows the installed holiday library.
+See the [tzdata resource layout](https://tzdata.python.org/) and
+[holiday region API](https://holidays.readthedocs.io/en/latest/api/).
 
 The shared HTTPS transport uses the certifi certificate bundle and disables
 implicit environment/system proxies. Release and model requests require public

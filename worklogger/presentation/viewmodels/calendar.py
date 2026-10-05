@@ -55,6 +55,7 @@ class CalendarDisplayOptions:
     show_overnight_indicator: bool = True
     week_start_monday: bool = False
     standard_work_hours: float = 8.0
+    holiday_region: str = ""
 
 
 @dataclass(frozen=True)
@@ -98,7 +99,7 @@ class CalendarViewModel:
         month_records_handler: MonthRecordsHandler,
         calendar_events_handler: CalendarEventsForRangeHandler | None = None,
         holidays_handler: HolidaysForRangeHandler | None = None,
-        holiday_country: str = "US",
+        holiday_country: str = "",
         theme_engine: ThemeEngine | None = None,
         notes_handler: DailyNotesForRangeHandler | None = None,
     ) -> None:
@@ -106,7 +107,7 @@ class CalendarViewModel:
         self._month_records_handler = month_records_handler
         self._calendar_events_handler = calendar_events_handler
         self._holidays_handler = holidays_handler
-        self._holiday_country = str(holiday_country or "US").strip().upper() or "US"
+        self._holiday_country = str(holiday_country or "").strip().upper()
         self._theme_engine = theme_engine or ThemeEngine()
         self._notes_handler = notes_handler
 
@@ -173,6 +174,7 @@ class CalendarViewModel:
             grid_end,
             provided=holidays,
             enabled=options.show_holidays,
+            region=options.holiday_region,
         )
         if not holidays_result.ok or holidays_result.value is None:
             return Result.failure(
@@ -251,6 +253,7 @@ class CalendarViewModel:
         *,
         provided: Mapping[date, str] | None,
         enabled: bool,
+        region: str,
     ) -> Result[dict[date, str]]:
         if not enabled:
             return Result.success({})
@@ -260,9 +263,10 @@ class CalendarViewModel:
             return Result.success({})
         result = self._holidays_handler.handle(
             GetHolidaysForRangeQuery(
-                country=self._holiday_country,
+                country=region.partition("/")[0] or self._holiday_country,
                 start_day=start_day,
                 end_day=end_day,
+                subdivision=region.partition("/")[2] or None,
             )
         )
         if not result.ok or result.value is None:

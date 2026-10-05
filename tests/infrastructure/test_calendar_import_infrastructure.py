@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 from dataclasses import replace
 
 from worklogger.app.commands.auth_commands import RegisterUserCommand
@@ -13,6 +14,7 @@ from worklogger.app.use_cases.auth import RegisterUserHandler
 from worklogger.app.use_cases.calendar import ImportCalendarEventsHandler
 from worklogger.domain.calendar.models import Holiday
 from worklogger.infrastructure.calendar import IcsCalendarImporter, PythonHolidaysProvider
+from worklogger.infrastructure.calendar.holidays_provider import detect_country, validate_holiday_region
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
 from worklogger.infrastructure.repositories import (
     SQLiteAuthRepository,
@@ -32,6 +34,20 @@ class FakeHolidaysModule:
 
 
 class CalendarImportInfrastructureTests(unittest.TestCase):
+    def test_holiday_country_detection_and_subdivision_selection(self) -> None:
+        for zone, country in (("Asia/Manila", "PH"), ("Europe/Dublin", "IE"),
+                              ("Asia/Ho_Chi_Minh", "VN"), ("America/Argentina/Buenos_Aires", "AR"), ("Etc/UTC", "")):
+            with self.subTest(zone=zone), patch("tzlocal.get_localzone", return_value=zone):
+                self.assertEqual(detect_country(), country)
+        self.assertEqual(validate_holiday_region("us/ca"), "US/CA")
+        with self.assertRaises(ValueError):
+            validate_holiday_region("US/UNKNOWN")
+        provider = PythonHolidaysProvider()
+        national = provider.list_for_range("DE", date(2026, 1, 6), date(2026, 1, 6))
+        regional = provider.list_for_range("DE", date(2026, 1, 6), date(2026, 1, 6), subdivision="BW")
+        self.assertFalse(national)
+        self.assertTrue(regional)
+
     def test_ics_timezones_recurrences_cancellations_and_multiday_events(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "events.ics"
