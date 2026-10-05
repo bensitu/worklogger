@@ -87,7 +87,8 @@ def _resolve_log_path(
     if env_path:
         return Path(env_path)
     if bool(getattr(sys, "frozen", False) if frozen is None else frozen):
-        return Path(sys.executable).resolve().parent / LOG_FILENAME
+        from worklogger.infrastructure.database.paths import default_database_path
+        return default_database_path(frozen=True).parent / LOG_FILENAME
     return Path.cwd() / LOG_FILENAME
 
 

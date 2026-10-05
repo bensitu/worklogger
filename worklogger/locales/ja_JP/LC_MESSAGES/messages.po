@@ -301,6 +301,9 @@ msgstr "カーソル位置: %1, %2\nESC キーでキャンセル"
 msgid "Custom"
 msgstr "カスタム"
 
+msgid "WorkLogger is already running."
+msgstr "WorkLogger は既に起動しています。"
+
 msgid "DESKTOP START FAILED"
 msgstr "デスクトップアプリの起動に失敗"
 

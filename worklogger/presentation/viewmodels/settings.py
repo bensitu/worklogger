@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import math
 from typing import Protocol
 
 from worklogger.app.commands.settings_commands import SetSettingCommand
@@ -108,13 +109,25 @@ class SettingsViewModel:
         self._save_login_language = save_login_language
 
     def load(self) -> Result[SettingsState]:
+        try:
+            return self._load()
+        except (ValueError, TypeError):
+            return Result.failure(ValidationError("invalid_numeric_setting", "invalid_numeric_setting"))
+
+    def _load(self) -> Result[SettingsState]:
         values: dict[str, str | None] = {}
+        batch = None
+        if getattr(type(self._get_handler), "get_all", None) is not None:
+            result = self._get_handler.get_all(self._user_id)
+            if not result.ok:
+                return Result.failure(result.error)
+            batch = result.value
         for key, default in _DEFAULTS.items():
             if key == LANGUAGE_SETTING_KEY:
                 default = self._default_language
             if key == NETWORK_PROXY_PASSWORD_SETTING_KEY:
                 continue
-            result = self._get_handler.handle(GetSettingQuery(self._user_id, key, default))
+            result = Result.success(batch.get(key) if batch.get(key) is not None else default) if batch is not None else self._get_handler.handle(GetSettingQuery(self._user_id, key, default))
             if not result.ok:
                 return Result.failure(
                     result.error or ValidationError("settings_load_failed", "settings_load_failed")
@@ -199,9 +212,15 @@ class SettingsViewModel:
 
     def set_language(self, language: str) -> Result[None]:
         normalized = normalize_language(language)
+        previous = self._get_handler.handle(GetSettingQuery(self._user_id, LANGUAGE_SETTING_KEY, self._default_language))
+        if not previous.ok:
+            return Result.failure(previous.error)
         result = self._set(LANGUAGE_SETTING_KEY, normalized)
         if result.ok and self._save_login_language is not None:
-            return self._save_login_language(normalized)
+            preference = self._save_login_language(normalized)
+            if not preference.ok:
+                rollback = self._set(LANGUAGE_SETTING_KEY, previous.value or self._default_language)
+                return preference if rollback.ok else Result.failure(InfrastructureError("settings_save_failed", "settings_save_failed"))
         return result
 
     def set_bool(self, key: str, enabled: bool) -> Result[None]:
@@ -214,7 +233,10 @@ class SettingsViewModel:
         if limits is None:
             return Result.failure(ValidationError("unknown_numeric_setting", "unknown_numeric_setting"))
         minimum, maximum = limits
-        numeric = _number(str(value), value, minimum=minimum, maximum=maximum)
+        try:
+            numeric = _number(str(value), value, minimum=minimum, maximum=maximum)
+        except (ValueError, TypeError):
+            return Result.failure(ValidationError("invalid_numeric_setting", "invalid_numeric_setting"))
         return self._set(key, _format_number(numeric))
 
     def set_text(self, key: str, value: str) -> Result[None]:
@@ -339,6 +361,8 @@ def _number(
         numeric = float(str(value))
     except (TypeError, ValueError):
         numeric = default
+    if not math.isfinite(numeric):
+        raise ValueError("invalid_numeric_setting")
     return max(minimum, min(maximum, numeric))
 
 

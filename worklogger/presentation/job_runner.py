@@ -6,7 +6,7 @@ import logging
 import uuid
 from collections.abc import Callable
 
-from PySide6.QtCore import QObject, QRunnable, QThreadPool, Signal
+from PySide6.QtCore import QCoreApplication, QObject, QRunnable, QThreadPool, Signal
 
 from worklogger.app.job_runner import (
     CancellationToken,
@@ -50,15 +50,28 @@ class _JobRunnable(QRunnable):
 
 
 class QtJobRunner(QObject):
-    """Run application jobs in Qt's global thread pool and report on the UI thread."""
+    """Run application jobs in an owned thread pool and report on the UI thread."""
 
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
-        self._pool = QThreadPool.globalInstance()
+        self._pool = QThreadPool(self)
+        self._closed = False
         self._callbacks: dict[str, JobCallback[object] | None] = {}
         self._tokens: dict[str, CancellationToken] = {}
         self._signals = _JobSignals()
         self._signals.completed.connect(self._complete)
+        application = QCoreApplication.instance()
+        if application is not None:
+            application.aboutToQuit.connect(self.shutdown)
+
+    def shutdown(self, *, wait: bool = False) -> None:
+        self._closed = True
+        for token in self._tokens.values():
+            token.cancel()
+        self._callbacks.clear()
+        self._pool.clear()
+        if wait:
+            self._pool.waitForDone()
 
     def submit(
         self,
@@ -67,6 +80,8 @@ class QtJobRunner(QObject):
         *,
         on_complete: JobCallback[object] | None = None,
     ) -> JobHandle[object]:
+        if self._closed:
+            raise RuntimeError("job_runner_closed")
         job_id = f"{name}-{uuid.uuid4().hex}"
         token = CancellationToken()
         self._tokens[job_id] = token

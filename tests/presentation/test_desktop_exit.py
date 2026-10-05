@@ -2,6 +2,8 @@
 
 from contextlib import redirect_stdout
 import io
+from pathlib import Path
+import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
@@ -9,7 +11,7 @@ from unittest.mock import Mock, patch
 from worklogger.domain.shared.errors import CancellationError, InfrastructureError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _, set_language
-from worklogger.main import run_desktop
+from worklogger.main import DesktopAlreadyRunningError, _acquire_instance_lock, run_desktop
 
 
 class DesktopExitTests(unittest.TestCase):
@@ -18,13 +20,25 @@ class DesktopExitTests(unittest.TestCase):
 
     def run_with_results(self, *results):
         output = io.StringIO()
-        with patch("worklogger.bootstrap.build_authenticated_desktop_runtime", side_effect=results) as builder, redirect_stdout(output):
+        with patch("worklogger.main._acquire_instance_lock"), patch("worklogger.main._startup_message", side_effect=lambda message: print(message)), patch("worklogger.bootstrap.build_authenticated_desktop_runtime", side_effect=results) as builder, redirect_stdout(output):
             code = run_desktop([])
         return code, output.getvalue(), builder.call_count
 
     def test_initial_authentication_cancellation_exits_silently(self):
         self.assertEqual(self.run_with_results(Result.failure(
             CancellationError("auth_cancelled", "auth_cancelled"))), (0, "", 1))
+
+    def test_database_instance_lock_excludes_another_owner_and_can_be_reacquired(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "worklog.db"
+            lock = _acquire_instance_lock(path)
+            try:
+                with self.assertRaises(DesktopAlreadyRunningError):
+                    _acquire_instance_lock(path)
+            finally:
+                lock.unlock()
+            replacement = _acquire_instance_lock(path)
+            replacement.unlock()
 
     def test_cancellation_after_logout_exits_silently(self):
         runtime = SimpleNamespace(application=Mock(), window=Mock(), remember_session_store=Mock())

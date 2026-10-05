@@ -301,6 +301,9 @@ msgstr "커서 위치: %1, %2\nESC 키를 눌러 취소"
 msgid "Custom"
 msgstr "사용자 지정"
 
+msgid "WorkLogger is already running."
+msgstr "WorkLogger가 이미 실행 중입니다."
+
 msgid "DESKTOP START FAILED"
 msgstr "데스크톱 앱 시작 실패"
 

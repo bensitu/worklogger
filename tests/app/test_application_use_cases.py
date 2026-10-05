@@ -267,6 +267,24 @@ class MemoryLoginFailures:
 
 
 class ApplicationUseCaseTests(unittest.TestCase):
+    def test_event_delivery_isolates_subscriber_failures_and_supports_unsubscribe(self):
+        bus = EventBus()
+        delivered = []
+
+        def failed(event):
+            raise RuntimeError("subscriber_unavailable")
+
+        bus.subscribe(WorkLogSaved, failed)
+        unsubscribe = bus.subscribe(WorkLogSaved, delivered.append)
+        event = WorkLogSaved(1, date(2026, 4, 20))
+        with self.assertLogs("worklogger.app.event_bus", level="ERROR"):
+            bus.publish(event)
+        unsubscribe()
+        unsubscribe()
+        with self.assertLogs("worklogger.app.event_bus", level="ERROR"):
+            bus.publish(event)
+        self.assertEqual(delivered, [event])
+
     def test_work_log_save_normalizes_times_and_publishes_event(self) -> None:
         repository = MemoryWorkLogRepository()
         bus = EventBus()

@@ -85,18 +85,19 @@ data library and are not necessarily in the application language.
 
 ## Console Encoding
 
-An English command-line check can succeed while a localized check raises
-`UnicodeEncodeError` in a CP932 terminal. The current `_safe_stdout` implementation
-does not catch encoding failures. For diagnostic checks in PowerShell:
+Command-line output replaces characters that the terminal encoding cannot
+represent. This does not change localized GUI text or operation results.
+For diagnostic checks in PowerShell:
 
 ```powershell
 $env:WORKLOGGER_LANG = "en_US"
 python -m worklogger.main --smoke-startup
 ```
 
-The packaged console executable may ignore Python encoding environment overrides.
-This known limitation is separate from GUI text rendering and should not be
-reported as a failed database refresh when only the final output write failed.
+Desktop startup failures also display a translated dialog when a graphical
+platform is available, including packaged applications without a console.
+Starting a second instance displays an informational message and leaves the
+running instance and its data unchanged.
 
 ## Missing Records or Login Failures
 

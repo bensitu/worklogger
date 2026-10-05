@@ -21,11 +21,17 @@ def default_database_path(
     frozen: bool | None = None,
     executable: str | None = None,
     package_root_path: Path | None = None,
+    user_data_path: Path | None = None,
 ) -> Path:
     is_frozen = getattr(sys, "frozen", False) if frozen is None else frozen
     if is_frozen:
-        exe = Path(executable or sys.executable)
-        return exe.resolve(strict=False).parent / DB_FILENAME
+        if user_data_path is None:
+            from PySide6.QtCore import QCoreApplication, QStandardPaths
+            from worklogger.__about__ import APP_NAME
+            QCoreApplication.setApplicationName(APP_NAME)
+            QCoreApplication.setOrganizationName(APP_NAME)
+            user_data_path = Path(QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppLocalDataLocation))
+        return user_data_path / DB_FILENAME
     return (package_root_path or package_root()) / DB_FILENAME
 
 

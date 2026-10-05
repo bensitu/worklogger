@@ -84,7 +84,10 @@ class SetSettingHandler:
             value = str(command.value)
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
-        self._repository.set(command.user_id, key, value)
+        try:
+            self._repository.set(command.user_id, key, value)
+        except Exception:
+            return Result.failure(InfrastructureError("settings_save_failed", "settings_save_failed"))
         if self._event_bus is not None:
             self._event_bus.publish(
                 SettingsChanged(user_id=command.user_id, key=key, value=value)
@@ -129,4 +132,16 @@ class GetSettingHandler:
             key = _normalize_key(query.key)
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
-        return Result.success(self._repository.get(query.user_id, key, query.default))
+        try:
+            return Result.success(self._repository.get(query.user_id, key, query.default))
+        except Exception:
+            return Result.failure(InfrastructureError("settings_load_failed", "settings_load_failed"))
+
+    def get_all(self, user_id: int) -> Result[dict[str, str | None] | None]:
+        reader = getattr(self._repository, "get_all", None)
+        if reader is None:
+            return Result.success(None)
+        try:
+            return Result.success(reader(user_id))
+        except Exception:
+            return Result.failure(InfrastructureError("settings_load_failed", "settings_load_failed"))

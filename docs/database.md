@@ -10,8 +10,10 @@ and has no user foreign key.
 `SQLiteConnectionFactory` enables foreign keys on each connection, uses a
 5,000 ms busy timeout, and configures file databases with WAL and
 `synchronous=NORMAL`. Write transactions use `BEGIN IMMEDIATE` and an instance
-`RLock`. Connections are short-lived. A second factory or process is not protected
-by that Python lock; SQLite's locking remains relevant.
+`RLock`. Connections are short-lived and operations using the same factory are
+serialized. Integrity is checked once on the first successful open. The desktop
+also holds a database-specific process lock throughout authentication and use;
+external SQLite clients still require SQLite's own locking protections.
 
 ## Tables
 

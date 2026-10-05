@@ -301,6 +301,9 @@ msgstr "Cursor at %1, %2\nPress ESC to cancel"
 msgid "Custom"
 msgstr "Custom"
 
+msgid "WorkLogger is already running."
+msgstr "WorkLogger is already running."
+
 msgid "DESKTOP START FAILED"
 msgstr "DESKTOP START FAILED"
 

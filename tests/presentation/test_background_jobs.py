@@ -65,6 +65,27 @@ class BackgroundJobTests(unittest.TestCase):
 
         self.assertEqual(completed[0].error.code if completed[0].error else "", "invalid")
 
+    def test_shutdown_cancels_work_and_suppresses_callbacks(self) -> None:
+        runner = QtJobRunner()
+        started = threading.Event()
+        cancelled = threading.Event()
+        completed = []
+
+        def job(token):
+            started.set()
+            while not token.is_cancelled():
+                time.sleep(0.001)
+            cancelled.set()
+
+        runner.submit("operation", job, on_complete=completed.append)
+        self.assertTrue(started.wait(3))
+        runner.shutdown(wait=True)
+        self._app.processEvents()
+        self.assertTrue(cancelled.is_set())
+        self.assertEqual(completed, [])
+        with self.assertRaises(RuntimeError):
+            runner.submit("operation", job)
+
 
 if __name__ == "__main__":
     unittest.main()

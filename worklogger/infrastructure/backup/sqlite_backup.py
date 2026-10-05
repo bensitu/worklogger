@@ -55,7 +55,7 @@ class SQLiteBackupService:
                     raise ValueError("backup_destination_busy")
                 with self._connection_factory.connection() as connection:
                     _ensure_integrity(connection, "backup_integrity_failed")
-                    snapshot = _snapshot(connection, destination)
+                    snapshot = create_database_snapshot(connection, destination)
                 os.replace(snapshot, destination)
                 secure_database_files(destination)
         except ValueError as exc:
@@ -102,7 +102,7 @@ class SQLiteBackupService:
                 if target.resolve() == source.resolve():
                     return Result.success(None)
                 with closing(sqlite3.connect(source.resolve().as_uri() + "?mode=ro", uri=True)) as connection:
-                    snapshot = _snapshot(connection, target)
+                    snapshot = create_database_snapshot(connection, target)
                 staged = SQLiteConnectionFactory(snapshot)
                 MigrationRunner(staged).run_pending()
                 with staged.connection() as connection:
@@ -148,7 +148,7 @@ class SQLiteBackupService:
         _validate_sqlite_file(source, expected_username=self._expected_username, expected_user_id=expected_id)
 
 
-def _snapshot(source: sqlite3.Connection, destination: Path) -> Path:
+def create_database_snapshot(source: sqlite3.Connection, destination: Path) -> Path:
     destination.parent.mkdir(parents=True, exist_ok=True)
     descriptor, name = tempfile.mkstemp(prefix=destination.name + ".", suffix=".tmp", dir=destination.parent)
     os.close(descriptor)

@@ -170,7 +170,42 @@ SMOKE_IMPORT_MODULES = (
 def _safe_stdout(message: str) -> None:
     stream = getattr(sys, "stdout", None)
     if stream is not None:
-        print(message)
+        try:
+            print(message, file=stream)
+        except UnicodeEncodeError:
+            encoding = getattr(stream, "encoding", None) or "ascii"
+            print(message.encode(encoding, errors="replace").decode(encoding), file=stream)
+
+
+class DesktopAlreadyRunningError(RuntimeError):
+    """Another desktop process owns the database lock."""
+
+
+def _acquire_instance_lock(database_path: Path | None = None):
+    from PySide6.QtCore import QLockFile
+    from worklogger.infrastructure.database.paths import default_database_path
+
+    path = (database_path or default_database_path()).resolve()
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    lock = QLockFile(str(path) + ".lock")
+    if not lock.tryLock(0):
+        if lock.error() == QLockFile.LockError.LockFailedError:
+            raise DesktopAlreadyRunningError("desktop_already_running")
+        raise OSError("desktop_lock_unavailable")
+    return lock
+
+
+def _startup_message(message: str, *, error: bool = True) -> None:
+    _safe_stdout(message)
+    if os.environ.get("QT_QPA_PLATFORM") in {"offscreen", "minimal"}:
+        return
+    from PySide6.QtWidgets import QMessageBox
+    from worklogger.bootstrap import _application
+    from worklogger.__about__ import APP_NAME
+
+    application = _application([])
+    show = QMessageBox.critical if error else QMessageBox.information
+    show(None, APP_NAME, message)
 
 
 def smoke_import_check() -> int:
@@ -219,6 +254,21 @@ def smoke_runtime_check() -> int:
 
 
 def run_desktop(args: Sequence[str]) -> int:
+    try:
+        lock = _acquire_instance_lock()
+    except DesktopAlreadyRunningError:
+        _startup_message(_("WorkLogger is already running."), error=False)
+        return 0
+    except OSError:
+        _startup_message(_("Unable to start WorkLogger. Check the application log for details."))
+        return 1
+    try:
+        return _run_desktop(args)
+    finally:
+        lock.unlock()
+
+
+def _run_desktop(args: Sequence[str]) -> int:
     from worklogger.bootstrap import (
         DesktopRuntimeConfig,
         build_authenticated_desktop_runtime,
@@ -234,24 +284,27 @@ def run_desktop(args: Sequence[str]) -> int:
             if isinstance(runtime.error, CancellationError):
                 return 0
             _safe_stdout(_("DESKTOP START FAILED"))
-            if runtime.error:
-                _safe_stdout(display_error_message(runtime.error))
+            _startup_message(display_error_message(runtime.error))
             return 1
 
         logged_out = False
+        current = runtime.value
 
-        def request_logout() -> None:
+        def request_logout(current=current) -> None:
             nonlocal logged_out
             logged_out = True
-            runtime.value.remember_session_store.clear_token()
-            runtime.value.window.close()
-            runtime.value.application.quit()
+            current.remember_session_store.clear_token()
+            current.window.close()
+            current.application.quit()
 
-        if hasattr(runtime.value.window, "logout_requested"):
-            runtime.value.window.logout_requested.connect(request_logout)
-        runtime.value.window.refresh()
-        runtime.value.window.show()
-        exit_code = int(runtime.value.application.exec())
+        if hasattr(current.window, "logout_requested"):
+            current.window.logout_requested.connect(request_logout)
+        current.window.refresh()
+        current.window.show()
+        exit_code = int(current.application.exec())
+        runner = getattr(current, "job_runner", None)
+        if runner is not None:
+            runner.shutdown(wait=True)
         if not logged_out:
             return exit_code
 

@@ -8,9 +8,14 @@ from datetime import date
 from pathlib import Path
 import logging
 import secrets
+import os
+import sys
+import sqlite3
+from contextlib import closing
 from typing import Protocol
 
 from PySide6.QtWidgets import QApplication
+from worklogger.__about__ import APP_ID, APP_NAME, APP_VERSION
 
 from worklogger.app.job_runner import JobRunner
 from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler, GetAnalyticsDashboardHandler
@@ -314,6 +319,12 @@ def _application(argv: Sequence[str] | None) -> QApplication:
         apply_application_icon()
         return existing
     application = QApplication(list(argv or []))
+    application.setApplicationName(APP_NAME)
+    application.setOrganizationName(APP_NAME)
+    application.setApplicationVersion(APP_VERSION)
+    if sys.platform == "win32":
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)
     configure_application_style()
     install_bundled_fonts()
     apply_application_icon()
@@ -337,6 +348,18 @@ def _prepare_database(
     config: DesktopRuntimeConfig,
 ) -> tuple[Path, SQLiteConnectionFactory, RuntimeAuthRepository]:
     database_path = Path(config.database_path) if config.database_path else default_database_path()
+    if config.database_path is None and getattr(sys, "frozen", False) and not database_path.exists():
+        previous = Path(sys.executable).resolve().parent / "worklog.db"
+        if previous.is_file() and previous.resolve() != database_path.resolve():
+            if Path(str(previous) + ".pre_restore").exists():
+                raise ValueError("restore_pending")
+            from worklogger.infrastructure.backup.sqlite_backup import create_database_snapshot
+            with closing(sqlite3.connect(previous.as_uri() + "?mode=ro", uri=True)) as connection:
+                snapshot = create_database_snapshot(connection, database_path)
+            try:
+                os.replace(snapshot, database_path)
+            finally:
+                snapshot.unlink(missing_ok=True)
     connection_factory = SQLiteConnectionFactory(database_path)
     if Path(str(database_path) + ".pre_restore").exists():
         raise ValueError("restore_pending")

@@ -4,16 +4,18 @@
 
 | Item | Source run | Packaged run |
 | --- | --- | --- |
-| SQLite database | `worklogger/worklog.db` | `worklog.db` beside `sys.executable` |
+| SQLite database | `worklogger/worklog.db` | `worklog.db` in Qt's user-specific application data directory |
 | Model storage | `models/` beside the database | Same rule |
-| Runtime log | `worklogger.log` in the working directory | Beside `sys.executable` |
+| Runtime log | `worklogger.log` in the working directory | Beside the user database |
 | Bundled assets | `worklogger/assets/` | Included application resources |
 | gettext catalogs | `worklogger/locales/` | Included application resources |
 
-The frozen database rule uses the actual executable directory, including the
-executable directory within a macOS application bundle. It does not automatically
-relocate data to Application Support. Install in a writable location and consider
-data placement before signing or replacing an application bundle.
+Packaged applications use `QStandardPaths.AppLocalDataLocation` with organization
+and application name `WorkLogger`. Application resources remain read-only. If no
+user database exists, startup copies a database beside the executable using a
+SQLite snapshot that includes committed WAL transactions. The original is kept.
+A pending restore prevents this relocation. A database-specific process lock
+prevents simultaneous desktop instances throughout login and logout.
 
 The session credential and machine-key files use `%APPDATA%/WorkLogger/` when
 `APPDATA` is set, otherwise `~/.config/worklogger/`:

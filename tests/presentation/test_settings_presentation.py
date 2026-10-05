@@ -69,6 +69,28 @@ def _view_model(repository: MemorySettingsRepository) -> SettingsViewModel:
 
 
 class SettingsPresentationTests(unittest.TestCase):
+    def test_language_failure_preserves_account_preference(self):
+        repository = MemorySettingsRepository()
+        repository.set(1, "language", "zh_CN")
+        model = SettingsViewModel(
+            user_id=1, get_handler=GetSettingHandler(repository),
+            set_handler=SetSettingHandler(repository),
+            save_login_language=lambda language: Result.failure(
+                InfrastructureError("settings_save_failed", "settings_save_failed")),
+        )
+        self.assertFalse(model.set_language("ja_JP").ok)
+        self.assertEqual(repository.get(1, "language"), "zh_CN")
+
+    def test_nonfinite_numeric_settings_are_rejected_without_overwriting_values(self):
+        repository = MemorySettingsRepository()
+        model = _view_model(repository)
+        self.assertTrue(model.set_number(MONTHLY_TARGET_HOURS_SETTING_KEY, 160).ok)
+        for value in (float("nan"), float("inf"), -float("inf")):
+            self.assertFalse(model.set_number(MONTHLY_TARGET_HOURS_SETTING_KEY, value).ok)
+            self.assertEqual(model.load().value.monthly_target_hours, 160)
+        repository.set(1, MONTHLY_TARGET_HOURS_SETTING_KEY, "nan")
+        self.assertFalse(model.load().ok)
+
     def test_unset_language_inherits_startup_but_explicit_english_wins(self):
         repository = MemorySettingsRepository()
         model = SettingsViewModel(

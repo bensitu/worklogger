@@ -131,14 +131,15 @@ class SQLiteInfrastructureTests(unittest.TestCase):
     def test_database_path_rules_for_source_and_frozen_modes(self) -> None:
         source_root = Path(self._tempdir.name) / "worklogger"
         exe_path = Path(self._tempdir.name) / "dist" / "WorkLogger.exe"
+        user_path = Path(self._tempdir.name) / "user-data"
 
         self.assertEqual(
             default_database_path(frozen=False, package_root_path=source_root),
             source_root / "worklog.db",
         )
         self.assertEqual(
-            default_database_path(frozen=True, executable=str(exe_path)),
-            exe_path.parent / "worklog.db",
+            default_database_path(frozen=True, executable=str(exe_path), user_data_path=user_path),
+            user_path / "worklog.db",
         )
 
     def test_corrupt_database_is_quarantined_and_recreated(self) -> None:

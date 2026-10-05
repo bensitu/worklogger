@@ -299,6 +299,9 @@ msgstr ""
 msgid "Custom"
 msgstr ""
 
+msgid "WorkLogger is already running."
+msgstr ""
+
 msgid "DESKTOP START FAILED"
 msgstr ""
 

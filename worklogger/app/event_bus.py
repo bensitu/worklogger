@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import date
 from threading import RLock
 from typing import TypeVar
+import logging
 
 
 class AppEvent:
@@ -70,5 +71,8 @@ class EventBus:
         with self._lock:
             handlers = list(self._handlers.get(type(event), []))
         for handler in handlers:
-            handler(event)
+            try:
+                handler(event)
+            except Exception:
+                logging.getLogger(__name__).exception("event_subscriber_failed", extra={"event_type": type(event).__name__})
 

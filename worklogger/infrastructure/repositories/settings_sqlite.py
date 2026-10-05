@@ -15,7 +15,12 @@ class SQLiteSettingsRepository:
                 "SELECT value FROM settings WHERE user_id=? AND key=?",
                 (user_id, key),
             ).fetchone()
-        return str(row["value"]) if row else default
+        return str(row["value"]) if row and row["value"] is not None else default
+
+    def get_all(self, user_id: int) -> dict[str, str | None]:
+        with self._connection_factory.connection() as connection:
+            rows = connection.execute("SELECT key, value FROM settings WHERE user_id=?", (user_id,)).fetchall()
+        return {row["key"]: str(row["value"]) if row["value"] is not None else None for row in rows}
 
     def set(self, user_id: int, key: str, value: str) -> None:
         with self._connection_factory.transaction(write=True) as connection:

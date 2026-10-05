@@ -301,6 +301,9 @@ msgstr "游標位置：%1, %2\n按 ESC 取消"
 msgid "Custom"
 msgstr "自訂"
 
+msgid "WorkLogger is already running."
+msgstr "WorkLogger 已在執行。"
+
 msgid "DESKTOP START FAILED"
 msgstr "桌面應用程式啟動失敗"
 
