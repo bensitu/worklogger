@@ -15,7 +15,7 @@ if __package__ in {None, ""}:
         sys.path.insert(0, workspace_root)
 
 from worklogger.domain.shared.errors import CancellationError
-from worklogger.infrastructure.i18n import _
+from worklogger.infrastructure.i18n import _, set_language
 from worklogger.presentation.errors import display_error_message
 
 DesktopRunner = Callable[[Sequence[str]], int]
@@ -314,6 +314,7 @@ def main(
     *,
     desktop_runner: DesktopRunner = run_desktop,
 ) -> int:
+    set_language(os.environ.get("WORKLOGGER_LANG"))
     args = list(sys.argv[1:] if argv is None else argv)
     if "--help" in args or "-h" in args:
         _safe_stdout(_("WorkLogger command line"))

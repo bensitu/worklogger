@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from functools import lru_cache
 from worklogger.domain.identity.models import normalize_provider
 
 
@@ -49,10 +50,17 @@ def _file_config() -> dict[str, object]:
     if not path:
         return {}
     try:
-        data = json.loads(Path(path).expanduser().read_text(encoding="utf-8"))
+        resolved = Path(path).expanduser().resolve()
+        stat = resolved.stat()
+        data = _read_config(str(resolved), stat.st_mtime_ns, stat.st_size)
     except Exception:
         return {}
     return data if isinstance(data, dict) else {}
+
+
+@lru_cache(maxsize=8)
+def _read_config(path: str, modified: int, size: int) -> object:
+    return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
 def _bool(value: str, default: bool) -> bool:

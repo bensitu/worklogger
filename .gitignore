@@ -42,6 +42,7 @@ Thumbs.db
 worklog.db
 worklogger.log
 *.db
+*.db.lock
 *.bak_*
 worklog.db-shm
 worklog.db-wal

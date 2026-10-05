@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import gettext
-import os
+from functools import lru_cache
 import sys
 import threading
 from pathlib import Path
@@ -75,12 +75,7 @@ def set_language(language: str | None) -> str:
     normalized = normalize_language(language)
     with _lock:
         _current_language = normalized
-        _translation = gettext.translation(
-            DOMAIN,
-            localedir=str(locales_dir()),
-            languages=[normalized],
-            fallback=True,
-        )
+        _translation = _catalog(normalized)
     return normalized
 
 
@@ -93,14 +88,26 @@ def available_languages() -> tuple[str, ...]:
     return SUPPORTED_LANGUAGES
 
 
+def _catalog(language: str) -> gettext.NullTranslations:
+    path = locales_dir() / language / "LC_MESSAGES" / f"{DOMAIN}.mo"
+    try:
+        stat = path.stat()
+    except FileNotFoundError:
+        return gettext.NullTranslations()
+    return _read_catalog(str(path), stat.st_mtime_ns, stat.st_size)
+
+
+@lru_cache(maxsize=32)
+def _read_catalog(path: str, modified: int, size: int) -> gettext.GNUTranslations:
+    with Path(path).open("rb") as source:
+        return gettext.GNUTranslations(source)
+
+
 def _(message: str, *, language: str | None = None) -> str:
     if not message:
         return message
     with _lock:
-        translation = _translation if language is None else gettext.translation(
-            DOMAIN, localedir=str(locales_dir()),
-            languages=[normalize_language(language)], fallback=True,
-        )
+        translation = _translation if language is None else _catalog(normalize_language(language))
         return translation.gettext(message) or message
 
 
@@ -109,5 +116,4 @@ def ngettext(singular: str, plural: str, n: int) -> str:
         return _translation.ngettext(singular, plural, n) or (singular if n == 1 else plural)
 
 
-set_language(os.environ.get("WORKLOGGER_LANG"))
 

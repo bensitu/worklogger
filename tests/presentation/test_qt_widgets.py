@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QTime, Qt
-from PySide6.QtGui import QFont
+from PySide6.QtCore import QTime, Qt, QSize
+from PySide6.QtGui import QFont, QIcon, QPalette, QColor
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QDialog, QToolButton
 
@@ -19,6 +19,7 @@ from worklogger.presentation.viewmodels.calendar import CalendarDayCell, Calenda
 from worklogger.presentation.viewmodels.stats import StatsPanelState
 from worklogger.presentation.viewmodels.worklog_entry import WorkLogEntryForm
 from worklogger.presentation.widgets.assets import application_icon_path, asset_path
+from worklogger.presentation.widgets.icons import ui_icon
 from worklogger.presentation.widgets import (
     CalendarView,
     SegmentedControl,
@@ -85,6 +86,25 @@ def _calendar_state() -> CalendarMonthViewState:
 
 
 class QtWidgetTests(unittest.TestCase):
+    def test_icons_reuse_rendering_and_follow_palette_and_pixel_ratio(self) -> None:
+        app = _app()
+        original = app.palette()
+        icon = ui_icon("clock")
+        first = icon.pixmap(QSize(20, 20))
+        self.assertFalse(first.isNull())
+        self.assertEqual(first.cacheKey(), icon.pixmap(QSize(20, 20)).cacheKey())
+        scaled = icon.pixmap(QSize(20, 20), 2.0)
+        self.assertEqual(scaled.size(), QSize(40, 40))
+        self.assertEqual(scaled.devicePixelRatio(), 2.0)
+        changed = QPalette(original)
+        changed.setColor(QPalette.ColorRole.ButtonText, QColor("#dc2626"))
+        try:
+            app.setPalette(changed)
+            self.assertNotEqual(icon.pixmap(QSize(20, 20)).cacheKey(), first.cacheKey())
+            self.assertFalse(icon.pixmap(QSize(20, 20), QIcon.Mode.Disabled).isNull())
+        finally:
+            app.setPalette(original)
+
     def test_auto_record_failure_uses_dialog_and_idle_status_is_empty(self) -> None:
         panel = WorkLogEntryPanel(compact=True)
         panel._refresh_auto_state()

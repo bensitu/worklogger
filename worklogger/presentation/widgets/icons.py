@@ -3,13 +3,39 @@
 from __future__ import annotations
 
 from xml.etree import ElementTree
+from functools import lru_cache
+import math
 
 from PySide6.QtCore import QByteArray, QRect, QRectF, QSize, Qt
-from PySide6.QtGui import QGuiApplication, QIcon, QIconEngine, QPainter, QPalette, QPixmap
+from PySide6.QtGui import QGuiApplication, QIcon, QIconEngine, QPainter, QPalette, QPixmap, QPixmapCache
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QAbstractButton, QWidget
 
 from worklogger.presentation.widgets.assets import asset_path
+
+
+@lru_cache(maxsize=128)
+def _renderer(name: str, color: str) -> QSvgRenderer:
+    tree = ElementTree.parse(asset_path(f"icons/ui/{name}.svg"))
+    tree.getroot().set("stroke", color)
+    return QSvgRenderer(QByteArray(ElementTree.tostring(tree.getroot())))
+
+
+def _render_pixmap(name: str, color: str, size: QSize, ratio: float) -> QPixmap:
+    key = f"worklogger:icon:{name}:{color}:{size.width()}:{size.height()}:{ratio}"
+    cached = QPixmapCache.find(key)
+    if cached is not None:
+        return cached
+    pixmap = QPixmap(math.ceil(size.width() * ratio), math.ceil(size.height() * ratio))
+    pixmap.setDevicePixelRatio(ratio)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    try:
+        _renderer(name, color).render(painter, QRectF(0, 0, size.width(), size.height()))
+    finally:
+        painter.end()
+    QPixmapCache.insert(key, pixmap)
+    return pixmap
 
 
 class _PaletteIconEngine(QIconEngine):
@@ -23,7 +49,7 @@ class _PaletteIconEngine(QIconEngine):
     def clone(self) -> QIconEngine:
         return _PaletteIconEngine(self._name, self._accent, self._primary, self._success)
 
-    def paint(self, painter: QPainter, rect: QRect, mode: QIcon.Mode, state: QIcon.State) -> None:
+    def _color(self, mode: QIcon.Mode) -> str:
         palette = QGuiApplication.palette()
         role = QPalette.ColorRole.Highlight if self._accent else QPalette.ColorRole.ButtonText
         if self._primary:
@@ -31,21 +57,20 @@ class _PaletteIconEngine(QIconEngine):
         group = QPalette.ColorGroup.Disabled if mode == QIcon.Mode.Disabled else QPalette.ColorGroup.Active
         if mode == QIcon.Mode.Disabled:
             role = QPalette.ColorRole.ButtonText
-        tree = ElementTree.parse(asset_path(f"icons/ui/{self._name}.svg"))
         color = palette.color(group, role).name()
         if self._success and mode != QIcon.Mode.Disabled:
             color = "#45c97a" if palette.color(QPalette.ColorRole.Window).lightness() < 128 else "#16a34a"
-        tree.getroot().set("stroke", color)
-        renderer = QSvgRenderer(QByteArray(ElementTree.tostring(tree.getroot())))
-        renderer.render(painter, QRectF(rect))
+        return color
+
+    def paint(self, painter: QPainter, rect: QRect, mode: QIcon.Mode, state: QIcon.State) -> None:
+        ratio = painter.device().devicePixelRatioF()
+        painter.drawPixmap(rect, _render_pixmap(self._name, self._color(mode), rect.size(), ratio))
 
     def pixmap(self, size: QSize, mode: QIcon.Mode, state: QIcon.State) -> QPixmap:
-        pixmap = QPixmap(size)
-        pixmap.fill(Qt.GlobalColor.transparent)
-        painter = QPainter(pixmap)
-        self.paint(painter, QRect(0, 0, size.width(), size.height()), mode, state)
-        painter.end()
-        return pixmap
+        return _render_pixmap(self._name, self._color(mode), size, 1.0)
+
+    def scaledPixmap(self, size: QSize, mode: QIcon.Mode, state: QIcon.State, scale: float) -> QPixmap:
+        return _render_pixmap(self._name, self._color(mode), size, scale)
 
 
 def ui_icon(name: str, *, accent: bool = False, primary: bool = False, success: bool = False) -> QIcon:

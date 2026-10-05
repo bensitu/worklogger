@@ -1,5 +1,10 @@
 # Localization
 
+Catalogs are activated explicitly at startup or when a language changes; importing
+the translation module does not read assets or select a language. Explicit-language
+lookups reuse parsed catalogs. Cache entries include the file timestamp and size,
+so a newly compiled catalog is loaded on the next explicit lookup or activation.
+
 ## Catalogs
 
 Application strings use gettext through `worklogger.infrastructure.i18n`.
