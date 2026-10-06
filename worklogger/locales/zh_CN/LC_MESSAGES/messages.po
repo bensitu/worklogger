@@ -7,60 +7,6 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
-msgid "The quick log is no longer available. Reload the records and try again."
-msgstr "该速记已不存在。请重新加载记录后重试。"
-
-msgid "Unable to update the quick log. Your changes have been retained."
-msgstr "无法更新速记。您的修改已保留。"
-
-
-msgid "System region"
-msgstr "系统地区"
-
-msgid "Holiday country"
-msgstr "假日国家"
-
-msgid "State / province"
-msgstr "州 / 省"
-
-msgid "National holidays"
-msgstr "全国假日"
-
-msgid "Select a supported holiday country and state or province."
-msgstr "请选择支持的假日国家及州或省。"
-
-
-msgid "Compensatory leave"
-msgstr "调休"
-
-msgid "No notes recorded for this period."
-msgstr "此期间没有记录备注。"
-
-msgid "The selected context is too large. Choose a shorter period or exclude optional content."
-msgstr "所选上下文过大。请选择更短的时间范围或排除可选内容。"
-
-msgid "Work Log"
-msgstr "工作记录"
-
-
-msgid "Save the completed automatic record before starting another."
-msgstr "开始新的自动记录前，请先保存已结束的记录。"
-
-msgid "Unable to update automatic recording state. Your saved data has been retained."
-msgstr "无法更新自动记录状态。已保存的数据已保留。"
-
-msgid "Unable to restore the automatic record. Reset it and start a new record?"
-msgstr "无法恢复自动记录。是否重置并开始新的记录？"
-
-msgid "This note was changed in another editor. Reload it before saving. Your changes have been retained."
-msgstr "此备注已在其他编辑窗口中修改。请重新加载后再保存。您的修改已保留。"
-
-msgid "Temporary password"
-msgstr "临时密码"
-
-msgid "Add another sign-in method before unlinking this identity."
-msgstr "解除此身份关联前，请添加其他登录方式。"
-
 msgid "&Add to Custom Colors"
 msgstr "添加到自定义颜色(&A)"
 
@@ -93,9 +39,6 @@ msgstr "（第{week}周）"
 
 msgid "+"
 msgstr "+"
-
-msgid "+ Add Entry"
-msgstr "+ 添加记录"
 
 msgid "+15m break"
 msgstr "+15分钟休息"
@@ -147,6 +90,9 @@ msgstr "添加"
 
 msgid "Add Entry"
 msgstr "添加记录"
+
+msgid "Add another sign-in method before unlinking this identity."
+msgstr "解除此身份关联前，请添加其他登录方式。"
 
 msgid "Address"
 msgstr "地址"
@@ -253,6 +199,12 @@ msgstr "休息时间不能为负数，且必须短于工作时段。"
 msgid "Break timer running"
 msgstr "休息计时中"
 
+msgid "Break {hours:.1f}h"
+msgstr "休息 {hours:.1f}h"
+
+msgid "Break {hours}"
+msgstr "休息 {hours}"
+
 msgid "Business trip"
 msgstr "出差"
 
@@ -276,6 +228,9 @@ msgstr "日历数据"
 
 msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
 msgstr "已存在日历数据。\n\n替换会在导入前清空原有事件。\n追加会保留原有事件并添加导入的事件。"
+
+msgid "Calendar event"
+msgstr "日历日程"
 
 msgid "Calendar events: {events}"
 msgstr "日历事件：{events}"
@@ -307,6 +262,9 @@ msgstr "选择自定义颜色"
 msgid "Clear Calendar Events"
 msgstr "清空日历事件"
 
+msgid "Clear input"
+msgstr "清空"
+
 msgid "Clearing calendar events is not supported yet."
 msgstr "暂不支持清空日历事件。"
 
@@ -316,8 +274,20 @@ msgstr "关闭"
 msgid "Comp leave"
 msgstr "补休"
 
+msgid "Compensatory leave"
+msgstr "调休"
+
 msgid "Confirm password"
 msgstr "确认密码"
+
+msgid "Content"
+msgstr "内容"
+
+msgid "Content must not exceed 16,000 characters."
+msgstr "内容不得超过 16,000 个字符。"
+
+msgid "Context: {context} tokens; output: {output} tokens"
+msgstr "上下文：{context} tokens；输出：{output} tokens"
 
 msgid "Continue"
 msgstr "继续"
@@ -333,6 +303,9 @@ msgstr "复制 Markdown"
 
 msgid "Create account"
 msgstr "创建账户"
+
+msgid "Create record from event"
+msgstr "从日程创建记录"
 
 msgid "Create user"
 msgstr "创建用户"
@@ -355,24 +328,6 @@ msgstr "光标位置：%1, %2\n按 ESC 取消"
 msgid "Custom"
 msgstr "自定义"
 
-msgid "WorkLogger is already running."
-msgstr "WorkLogger 已在运行。"
-
-msgid "Work {hours:.1f}h"
-msgstr "工作 {hours:.1f}h"
-
-msgid "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
-msgstr "导入 {count} 条记录，替换 {existing} 条已有记录，并跳过 {errors} 个无效行？"
-
-msgid "The CSV file exceeds the supported size or row limit."
-msgstr "CSV 文件超出支持的大小或行数限制。"
-
-msgid "Some dates already have records. Review the import and confirm replacement."
-msgstr "部分日期已有记录。请检查导入内容并确认是否替换。"
-
-msgid "Recurring events must have an end date or occurrence count."
-msgstr "重复事件必须设置结束日期或重复次数。"
-
 msgid "DESKTOP START FAILED"
 msgstr "桌面应用启动失败"
 
@@ -381,6 +336,9 @@ msgstr "日均工时"
 
 msgid "Daily Report"
 msgstr "日报"
+
+msgid "Daily notes"
+msgstr "每日笔记"
 
 msgid "Dark mode"
 msgstr "深色模式"
@@ -403,6 +361,15 @@ msgstr "默认休息（小时）"
 msgid "Delete"
 msgstr "删除"
 
+msgid "Delete record"
+msgstr "删除记录"
+
+msgid "Delete this calendar event?"
+msgstr "删除这条日历日程？"
+
+msgid "Delete this time record?"
+msgstr "删除这条时间记录？"
+
 msgid "Delete user"
 msgstr "删除用户"
 
@@ -412,6 +379,12 @@ msgstr "描述"
 msgid "Discard changes?"
 msgstr "放弃修改？"
 
+msgid "Discard the saved timer without creating a record?"
+msgstr "放弃已保存的计时状态，不创建记录？"
+
+msgid "Discard timer"
+msgstr "放弃计时"
+
 msgid "Domain"
 msgstr "域"
 
@@ -420,6 +393,9 @@ msgstr "下载"
 
 msgid "Downloading model..."
 msgstr "正在下载模型..."
+
+msgid "Edit record"
+msgstr "编辑记录"
 
 msgid "Enable local model"
 msgstr "启用本地模型"
@@ -462,6 +438,9 @@ msgstr "输入您的密码"
 
 msgid "Enter your password."
 msgstr "请输入密码。"
+
+msgid "Estimated RAM: {ram} GB"
+msgstr "估算内存：{ram} GB"
 
 msgid "Export"
 msgstr "导出"
@@ -541,6 +520,12 @@ msgstr "隐藏"
 msgid "Hide password"
 msgstr "隐藏密码"
 
+msgid "Historical break deduction: {hours}"
+msgstr "历史休息扣除：{hours}"
+
+msgid "Holiday country"
+msgstr "假日国家"
+
 msgid "Hu&e:"
 msgstr "色相(&E)："
 
@@ -576,6 +561,9 @@ msgstr "将工作记录导入或导出为 CSV 文件，用于备份、迁移或�
 
 msgid "Import your .ics file to let AI read your meetings when generating reports."
 msgstr "导入 .ics 文件，让 AI 生成报表时参考您的会议。"
+
+msgid "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
+msgstr "导入 {count} 条记录，替换 {existing} 条已有记录，并跳过 {errors} 个无效行？"
 
 msgid "Imported {count} calendar events."
 msgstr "已导入 {count} 个日历事件。"
@@ -633,6 +621,9 @@ msgstr "休假天数"
 
 msgid "License"
 msgstr "许可证"
+
+msgid "License: {license}"
+msgstr "许可证：{license}"
 
 msgid "Light mode"
 msgstr "浅色模式"
@@ -697,6 +688,9 @@ msgstr "Markdown files (*.md)"
 msgid "May"
 msgstr "5月"
 
+msgid "Meeting"
+msgstr "会议"
+
 msgid "Mode"
 msgstr "模式"
 
@@ -742,6 +736,9 @@ msgstr "月度目标（小时）"
 msgid "More actions"
 msgstr "更多操作"
 
+msgid "National holidays"
+msgstr "全国假日"
+
 msgid "Network"
 msgstr "网络"
 
@@ -753,6 +750,9 @@ msgstr "新密码"
 
 msgid "New recovery key"
 msgstr "新恢复密钥"
+
+msgid "New time record"
+msgstr "新增时间记录"
 
 msgid "Next day"
 msgstr "后一天"
@@ -777,6 +777,9 @@ msgstr "暂无数据"
 
 msgid "No events found."
 msgstr "未找到事件。"
+
+msgid "No notes recorded for this period."
+msgstr "此期间没有记录备注。"
 
 msgid "No records for the selected day."
 msgstr "所选日期没有记录。"
@@ -819,6 +822,9 @@ msgstr "支持 OpenAI 兼容接口，可通过兼容服务接入 ChatGPT、Claud
 
 msgid "Operation cancelled."
 msgstr "操作已取消。"
+
+msgid "Other"
+msgstr "其他"
 
 msgid "Overnight"
 msgstr "跨日"
@@ -940,8 +946,14 @@ msgstr "运行时检查通过"
 msgid "Recording or a break is already active."
 msgstr "记录或休息已开始。"
 
+msgid "Recording since {time} - {duration}"
+msgstr "开始于 {time} - {duration}"
+
 msgid "Recovery key"
 msgstr "恢复密钥"
+
+msgid "Recurring events must have an end date or occurrence count."
+msgstr "重复事件必须设置结束日期或重复次数。"
 
 msgid "Refresh"
 msgstr "刷新"
@@ -1018,6 +1030,9 @@ msgstr "恢复会替换当前数据库文件。继续？"
 msgid "Restoring data..."
 msgstr "正在恢复数据..."
 
+msgid "Resume work"
+msgstr "继续工作"
+
 msgid "Rewrite"
 msgstr "改写"
 
@@ -1048,8 +1063,17 @@ msgstr "保存"
 msgid "Save Report"
 msgstr "保存报表"
 
+msgid "Save changes"
+msgstr "保存修改"
+
+msgid "Save content"
+msgstr "保存内容"
+
 msgid "Save template"
 msgstr "保存模板"
+
+msgid "Save the completed automatic record before starting another."
+msgstr "开始新的自动记录前，请先保存已结束的记录。"
 
 msgid "Save this recovery key before continuing."
 msgstr "继续前请保存此恢复密钥。"
@@ -1087,6 +1111,9 @@ msgstr "请先选择提供商。"
 msgid "Select a quick log first."
 msgstr "请先选择一条快捷记录。"
 
+msgid "Select a supported holiday country and state or province."
+msgstr "请选择支持的假日国家及州或省。"
+
 msgid "Select a user."
 msgstr "请选择用户。"
 
@@ -1095,6 +1122,9 @@ msgstr "请选择有效的日期或日期范围。"
 
 msgid "Select an identity first."
 msgstr "请先选择身份。"
+
+msgid "Select an individual time record to edit this day."
+msgstr "请选择当天的一条时间记录进行编辑。"
 
 msgid "Selected day: {day}"
 msgstr "所选日期：{day}"
@@ -1141,6 +1171,9 @@ msgstr "已登录：{username}"
 msgid "Simplified Chinese"
 msgstr "简体中文"
 
+msgid "Some dates already have records. Review the import and confirm replacement."
+msgstr "部分日期已有记录。请检查导入内容并确认是否替换。"
+
 msgid "Standard hours (h)"
 msgstr "标准工时（小时）"
 
@@ -1159,11 +1192,17 @@ msgstr "每周从周一开始"
 msgid "Started"
 msgstr "已开始"
 
+msgid "State / province"
+msgstr "州 / 省"
+
 msgid "Stored securely in a future update"
 msgstr "安全存储将在后续版本提供"
 
 msgid "Sun"
 msgstr "日"
+
+msgid "System region"
+msgstr "系统地区"
 
 msgid "Template reset."
 msgstr "模板已重置。"
@@ -1174,8 +1213,14 @@ msgstr "模板已保存。"
 msgid "Templates"
 msgstr "模板"
 
+msgid "Temporary password"
+msgstr "临时密码"
+
 msgid "Test"
 msgstr "测试"
+
+msgid "The CSV file exceeds the supported size or row limit."
+msgstr "CSV 文件超出支持的大小或行数限制。"
 
 msgid "The ID or password is incorrect."
 msgstr "ID 或密码不正确。"
@@ -1192,17 +1237,26 @@ msgstr "密码至少需要 {length} 个字符。"
 msgid "The passwords do not match."
 msgstr "两次输入的密码不一致。"
 
+msgid "The quick log is no longer available. Reload the records and try again."
+msgstr "该速记已不存在。请重新加载记录后重试。"
+
 msgid "The report has not loaded. Reload it before continuing."
 msgstr "报表尚未加载，请重新加载后继续。"
 
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr "已保存的报表已不可用。请重新加载报表后再试。"
 
+msgid "The selected context is too large. Choose a shorter period or exclude optional content."
+msgstr "所选上下文过大。请选择更短的时间范围或排除可选内容。"
+
 msgid "The user account is no longer available."
 msgstr "该用户账户已不可用。"
 
 msgid "Theme"
 msgstr "主题"
+
+msgid "These times overlap another record or the active timer. Choose a different period."
+msgstr "该时段与其他记录或正在运行的计时重叠，请选择其他时段。"
 
 msgid "This ID is already in use. Choose a different ID."
 msgstr "此 ID 已被使用，请选择其他 ID。"
@@ -1212,6 +1266,12 @@ msgstr "此身份已关联到账户。"
 
 msgid "This model is in use by another user and cannot be deleted."
 msgstr "此模型正被其他用户使用，无法删除。"
+
+msgid "This note was changed in another editor. Reload it before saving. Your changes have been retained."
+msgstr "此备注已在其他编辑窗口中修改。请重新加载后再保存。您的修改已保留。"
+
+msgid "This record changed elsewhere. Reload it before saving. Your changes have been retained."
+msgstr "该记录已在其他位置修改，请重新加载后保存。您的修改已保留。"
 
 msgid "Thu"
 msgstr "四"
@@ -1236,6 +1296,9 @@ msgstr "总计：{hours:.1f}h"
 
 msgid "Traditional Chinese"
 msgstr "繁体中文"
+
+msgid "Training"
+msgstr "培训"
 
 msgid "Tue"
 msgstr "二"
@@ -1264,8 +1327,14 @@ msgstr "无法获取模型，请检查源文件或下载连接。"
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "无法读取模型文件，请检查访问权限。"
 
+msgid "Unable to restore the automatic record. Reset it and start a new record?"
+msgstr "无法恢复自动记录。是否重置并开始新的记录？"
+
 msgid "Unable to restore the database. Select a valid SQLite backup."
 msgstr "无法恢复数据库，请选择有效的 SQLite 备份。"
+
+msgid "Unable to restore the timer. Discard it to start a new record."
+msgstr "无法恢复计时状态，请放弃旧计时后开始新记录。"
 
 msgid "Unable to save settings. Please try again."
 msgstr "无法保存设置，请重试。"
@@ -1282,8 +1351,14 @@ msgstr "无法通过此服务登录，请重试。"
 msgid "Unable to start WorkLogger. Check the application log for details."
 msgstr "无法启动 WorkLogger，请查看应用日志以了解详情。"
 
+msgid "Unable to update automatic recording state. Your saved data has been retained."
+msgstr "无法更新自动记录状态。已保存的数据已保留。"
+
 msgid "Unable to update saved sign-in information."
 msgstr "无法更新已保存的登录信息。"
+
+msgid "Unable to update the quick log. Your changes have been retained."
+msgstr "无法更新速记。您的修改已保留。"
 
 msgid "Unknown error"
 msgstr "未知错误"
@@ -1351,6 +1426,9 @@ msgstr "启用后，文本处理优先使用本地模型，不向外部服务发
 msgid "Work Hours Trend"
 msgstr "工时趋势"
 
+msgid "Work Log"
+msgstr "工作记录"
+
 msgid "Work Mode Breakdown"
 msgstr "工作方式分布"
 
@@ -1366,14 +1444,23 @@ msgstr "工时"
 msgid "Work type"
 msgstr "工作类型"
 
+msgid "Work {hours:.1f}h"
+msgstr "工作 {hours:.1f}h"
+
 msgid "WorkLogger"
 msgstr "WorkLogger"
 
 msgid "WorkLogger command line"
 msgstr "WorkLogger 命令行"
 
+msgid "WorkLogger is already running."
+msgstr "WorkLogger 已在运行。"
+
 msgid "Worked"
 msgstr "已工作"
+
+msgid "Worked: {hours}"
+msgstr "已工作：{hours}"
 
 msgid "Year"
 msgstr "年"
@@ -1449,12 +1536,3 @@ msgstr "{year}年{start_month}{start_day}日 - {end_month}{end_day}日"
 
 msgid "{start} - {end}"
 msgstr "{start} - {end}"
-
-msgid "Estimated RAM: {ram} GB"
-msgstr "估算内存：{ram} GB"
-
-msgid "Context: {context} tokens; output: {output} tokens"
-msgstr "上下文：{context} tokens；输出：{output} tokens"
-
-msgid "License: {license}"
-msgstr "许可证：{license}"

@@ -60,9 +60,10 @@ def _build_calendar(rows: tuple[WorkLog, ...]) -> str:
         "CALSCALE:GREGORIAN",
     ]
     for row in rows:
-        event_lines = _event_lines(row, dtstamp=dtstamp)
-        if event_lines:
-            lines.extend(event_lines)
+        for entry in row.entries or (row,):
+            event_lines = _event_lines(entry, dtstamp=dtstamp)
+            if event_lines:
+                lines.extend(event_lines)
     lines.append("END:VCALENDAR")
     folded: list[str] = []
     for line in lines:
@@ -83,12 +84,13 @@ def _event_lines(row: WorkLog, *, dtstamp: str) -> list[str]:
     end_stamp = end_dt.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ") if end_dt.tzinfo else end_dt.strftime("%Y%m%dT%H%M%S")
     note = row.note or ""
     summary_note = _summary_note(note)
-    summary = _("Work {hours:.1f}h").format(hours=row.raw_hours())
+    summary = (_("Break {hours:.1f}h") if row.work_type.value == "break" else _("Work {hours:.1f}h")).format(hours=row.raw_hours())
+    identity = f"{row.user_id}-{row.day.isoformat()}" + (f"-{row.id}" if row.id is not None else "")
     if summary_note:
         summary = f"{summary} - {summary_note[:60]}"
     return [
         "BEGIN:VEVENT",
-        f"UID:worklogger-{row.user_id}-{row.day.isoformat()}@worklogger",
+        f"UID:worklogger-{identity}@worklogger",
         f"DTSTAMP:{dtstamp}",
         f"DTSTART:{start_stamp}",
         f"DTEND:{end_stamp}",

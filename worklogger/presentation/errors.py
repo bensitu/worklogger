@@ -25,6 +25,14 @@ def display_error_code(code: str) -> str:
     """Translate known error codes without displaying raw exception text or logging previews."""
 
     match code:
+        case "worklog_entry_overlap":
+            return _("These times overlap another record or the active timer. Choose a different period.")
+        case "worklog_entry_conflict" | "time_entry_timer_conflict":
+            return _("This record changed elsewhere. Reload it before saving. Your changes have been retained.")
+        case "time_entry_content_too_long":
+            return _("Content must not exceed 16,000 characters.")
+        case "worklog_summary_not_editable":
+            return _("Select an individual time record to edit this day.")
         case "auto_record_pending_save":
             return _("Save the completed automatic record before starting another.")
         case "auto_record_restore_failed" | "auto_record_state_save_failed":

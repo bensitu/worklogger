@@ -6,13 +6,14 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
 from typing import Protocol
+from bisect import bisect_left
 
 from worklogger.app.commands.data_portability_commands import ImportWorkLogsCsvCommand
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.worklog.repositories import WorkLogRepository
-from worklogger.domain.worklog.rules import normalize_work_log
+from worklogger.domain.worklog.rules import entry_interval, normalize_work_log
 from worklogger.domain.worklog.models import WorkType
 
 
@@ -81,6 +82,8 @@ class ImportWorkLogsCsvHandler:
             return Result.failure(parsed.error or ValidationError("csv_import_failed", "csv_import_failed"))
         rows = []
         dates = set()
+        intervals = []
+        timed_dates, untimed_dates, note_dates = set(), set(), set()
         errors = list(parsed.value.errors)
         for row in parsed.value.rows:
             try:
@@ -97,16 +100,34 @@ class ImportWorkLogsCsvHandler:
                         ended_at=row.ended_at,
                     )
                 )
-                if row.day in dates:
-                    raise ValueError("duplicate_date")
+                interval = entry_interval(work_log)
+                if work_log.is_note_only:
+                    if row.day in note_dates:
+                        raise ValueError("duplicate_date")
+                    note_dates.add(row.day)
+                elif interval is None:
+                    if row.day in untimed_dates or row.day in timed_dates:
+                        raise ValueError("duplicate_date")
+                    untimed_dates.add(row.day)
+                else:
+                    position = bisect_left(intervals, interval)
+                    if (row.day in untimed_dates or position > 0 and intervals[position - 1][1] > interval[0]
+                        or position < len(intervals) and interval[1] > intervals[position][0]):
+                        raise ValueError("duplicate_date")
+                    intervals.insert(position, interval)
+                    timed_dates.add(row.day)
                 dates.add(row.day)
             except (TypeError, ValueError) as exc:
                 errors.append(WorkLogCsvRowError(row.row_number, str(exc)))
                 continue
             rows.append(work_log)
         try:
-            reader = getattr(self._repository, "list_export_rows", self._repository.list_all)
-            existing = {row.day for row in reader(command.user_id)}
+            targeted = getattr(self._repository, "existing_dates", None)
+            if targeted is not None:
+                existing = targeted(command.user_id, dates)
+            else:
+                reader = getattr(self._repository, "list_export_rows", self._repository.list_all)
+                existing = {row.day for row in reader(command.user_id)}
         except Exception:
             return Result.failure(InfrastructureError("csv_import_failed", "csv_import_failed"))
         return Result.success(WorkLogCsvImportPreview(tuple(rows), tuple(errors), len(existing & dates)))

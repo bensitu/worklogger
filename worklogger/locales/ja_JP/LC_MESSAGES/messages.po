@@ -7,60 +7,6 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
-msgid "The quick log is no longer available. Reload the records and try again."
-msgstr "作業メモは利用できなくなりました。記録を再読み込みして再試行してください。"
-
-msgid "Unable to update the quick log. Your changes have been retained."
-msgstr "作業メモを更新できません。変更内容は保持されています。"
-
-
-msgid "System region"
-msgstr "システムの地域"
-
-msgid "Holiday country"
-msgstr "祝日の国"
-
-msgid "State / province"
-msgstr "州 / 都道府県"
-
-msgid "National holidays"
-msgstr "全国の祝日"
-
-msgid "Select a supported holiday country and state or province."
-msgstr "対応する祝日の国と州または都道府県を選択してください。"
-
-
-msgid "Compensatory leave"
-msgstr "代休"
-
-msgid "No notes recorded for this period."
-msgstr "この期間に記録されたメモはありません。"
-
-msgid "The selected context is too large. Choose a shorter period or exclude optional content."
-msgstr "選択したコンテキストが大きすぎます。期間を短くするか、任意の内容を除外してください。"
-
-msgid "Work Log"
-msgstr "作業記録"
-
-
-msgid "Save the completed automatic record before starting another."
-msgstr "新しい記録を開始する前に、終了した自動記録を保存してください。"
-
-msgid "Unable to update automatic recording state. Your saved data has been retained."
-msgstr "自動記録の状態を更新できません。保存済みデータは保持されています。"
-
-msgid "Unable to restore the automatic record. Reset it and start a new record?"
-msgstr "自動記録を復元できません。リセットして新しい記録を開始しますか？"
-
-msgid "This note was changed in another editor. Reload it before saving. Your changes have been retained."
-msgstr "このメモは別の編集画面で変更されました。再読み込みしてから保存してください。変更内容は保持されています。"
-
-msgid "Temporary password"
-msgstr "一時パスワード"
-
-msgid "Add another sign-in method before unlinking this identity."
-msgstr "この連携を解除する前に、別のログイン方法を追加してください。"
-
 msgid "&Add to Custom Colors"
 msgstr "カスタムカラーに追加(&A)"
 
@@ -93,9 +39,6 @@ msgstr "（第{week}週）"
 
 msgid "+"
 msgstr "+"
-
-msgid "+ Add Entry"
-msgstr "+ 記録を追加"
 
 msgid "+15m break"
 msgstr "休憩を15分追加"
@@ -147,6 +90,9 @@ msgstr "追加"
 
 msgid "Add Entry"
 msgstr "記録を追加"
+
+msgid "Add another sign-in method before unlinking this identity."
+msgstr "この連携を解除する前に、別のログイン方法を追加してください。"
 
 msgid "Address"
 msgstr "アドレス"
@@ -253,6 +199,12 @@ msgstr "休憩時間は0以上で、勤務時間より短くしてください�
 msgid "Break timer running"
 msgstr "休憩を計測中"
 
+msgid "Break {hours:.1f}h"
+msgstr "休憩 {hours:.1f}h"
+
+msgid "Break {hours}"
+msgstr "休憩 {hours}"
+
 msgid "Business trip"
 msgstr "出張"
 
@@ -276,6 +228,9 @@ msgstr "カレンダーデータ"
 
 msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
 msgstr "カレンダーデータが既に存在します。\n\n置換は既存の予定を消去してからインポートします。\n追加は既存の予定を保持して新しい予定を追加します。"
+
+msgid "Calendar event"
+msgstr "カレンダーの予定"
 
 msgid "Calendar events: {events}"
 msgstr "カレンダーの予定：{events}"
@@ -307,6 +262,9 @@ msgstr "カスタム色を選択"
 msgid "Clear Calendar Events"
 msgstr "カレンダーの予定を消去"
 
+msgid "Clear input"
+msgstr "入力をクリア"
+
 msgid "Clearing calendar events is not supported yet."
 msgstr "カレンダーの予定の消去はまだ対応していません。"
 
@@ -316,8 +274,20 @@ msgstr "閉じる"
 msgid "Comp leave"
 msgstr "代休"
 
+msgid "Compensatory leave"
+msgstr "代休"
+
 msgid "Confirm password"
 msgstr "パスワードを確認"
+
+msgid "Content"
+msgstr "内容"
+
+msgid "Content must not exceed 16,000 characters."
+msgstr "内容は16,000文字以内で入力してください。"
+
+msgid "Context: {context} tokens; output: {output} tokens"
+msgstr "コンテキスト：{context} トークン、出力：{output} トークン"
 
 msgid "Continue"
 msgstr "続行"
@@ -333,6 +303,9 @@ msgstr "Markdownをコピー"
 
 msgid "Create account"
 msgstr "アカウントを作成"
+
+msgid "Create record from event"
+msgstr "予定から記録を作成"
 
 msgid "Create user"
 msgstr "ユーザーを作成"
@@ -355,24 +328,6 @@ msgstr "カーソル位置: %1, %2\nESC キーでキャンセル"
 msgid "Custom"
 msgstr "カスタム"
 
-msgid "WorkLogger is already running."
-msgstr "WorkLogger は既に起動しています。"
-
-msgid "Work {hours:.1f}h"
-msgstr "勤務 {hours:.1f}h"
-
-msgid "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
-msgstr "{count} 件を取り込み、既存の {existing} 件を置き換え、無効な {errors} 行をスキップしますか？"
-
-msgid "The CSV file exceeds the supported size or row limit."
-msgstr "CSV ファイルが対応するサイズまたは行数の上限を超えています。"
-
-msgid "Some dates already have records. Review the import and confirm replacement."
-msgstr "一部の日付には記録があります。取り込み内容を確認し、置き換えを承認してください。"
-
-msgid "Recurring events must have an end date or occurrence count."
-msgstr "繰り返し予定には終了日または回数を指定してください。"
-
 msgid "DESKTOP START FAILED"
 msgstr "デスクトップアプリの起動に失敗"
 
@@ -381,6 +336,9 @@ msgstr "1日平均"
 
 msgid "Daily Report"
 msgstr "日報"
+
+msgid "Daily notes"
+msgstr "日別メモ"
 
 msgid "Dark mode"
 msgstr "ダークモード"
@@ -403,6 +361,15 @@ msgstr "既定の休憩（時間）"
 msgid "Delete"
 msgstr "削除"
 
+msgid "Delete record"
+msgstr "記録を削除"
+
+msgid "Delete this calendar event?"
+msgstr "この予定を削除しますか？"
+
+msgid "Delete this time record?"
+msgstr "この時間記録を削除しますか？"
+
 msgid "Delete user"
 msgstr "ユーザーを削除"
 
@@ -412,6 +379,12 @@ msgstr "説明"
 msgid "Discard changes?"
 msgstr "変更を破棄しますか？"
 
+msgid "Discard the saved timer without creating a record?"
+msgstr "記録を作成せずに保存済みのタイマーを破棄しますか？"
+
+msgid "Discard timer"
+msgstr "タイマーを破棄"
+
 msgid "Domain"
 msgstr "ドメイン"
 
@@ -420,6 +393,9 @@ msgstr "ダウンロード"
 
 msgid "Downloading model..."
 msgstr "モデルをダウンロード中..."
+
+msgid "Edit record"
+msgstr "記録を編集"
 
 msgid "Enable local model"
 msgstr "ローカルモデルを有効にする"
@@ -462,6 +438,9 @@ msgstr "パスワードを入力"
 
 msgid "Enter your password."
 msgstr "パスワードを入力してください。"
+
+msgid "Estimated RAM: {ram} GB"
+msgstr "推定メモリ：{ram} GB"
 
 msgid "Export"
 msgstr "エクスポート"
@@ -541,6 +520,12 @@ msgstr "非表示"
 msgid "Hide password"
 msgstr "パスワードを隠す"
 
+msgid "Historical break deduction: {hours}"
+msgstr "過去の休憩控除：{hours}"
+
+msgid "Holiday country"
+msgstr "祝日の国"
+
 msgid "Hu&e:"
 msgstr "色相(&E):"
 
@@ -576,6 +561,9 @@ msgstr "業務記録をCSVでインポート・エクスポートして、バッ
 
 msgid "Import your .ics file to let AI read your meetings when generating reports."
 msgstr ".icsファイルをインポートすると、AIがレポート作成時に会議情報を参照できます。"
+
+msgid "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
+msgstr "{count} 件を取り込み、既存の {existing} 件を置き換え、無効な {errors} 行をスキップしますか？"
 
 msgid "Imported {count} calendar events."
 msgstr "{count}件のカレンダーの予定をインポートしました。"
@@ -633,6 +621,9 @@ msgstr "休暇日数"
 
 msgid "License"
 msgstr "ライセンス"
+
+msgid "License: {license}"
+msgstr "ライセンス：{license}"
 
 msgid "Light mode"
 msgstr "ライトモード"
@@ -697,6 +688,9 @@ msgstr "Markdown files (*.md)"
 msgid "May"
 msgstr "5月"
 
+msgid "Meeting"
+msgstr "会議"
+
 msgid "Mode"
 msgstr "モード"
 
@@ -742,6 +736,9 @@ msgstr "月間目標（時間）"
 msgid "More actions"
 msgstr "その他の操作"
 
+msgid "National holidays"
+msgstr "全国の祝日"
+
 msgid "Network"
 msgstr "ネットワーク"
 
@@ -753,6 +750,9 @@ msgstr "新しいパスワード"
 
 msgid "New recovery key"
 msgstr "新しい復旧キー"
+
+msgid "New time record"
+msgstr "時間記録を追加"
 
 msgid "Next day"
 msgstr "翌日"
@@ -777,6 +777,9 @@ msgstr "データがありません"
 
 msgid "No events found."
 msgstr "予定が見つかりません。"
+
+msgid "No notes recorded for this period."
+msgstr "この期間に記録されたメモはありません。"
 
 msgid "No records for the selected day."
 msgstr "選択した日の記録はありません。"
@@ -819,6 +822,9 @@ msgstr "OpenAI互換インターフェースに対応し、互換サービス経
 
 msgid "Operation cancelled."
 msgstr "操作をキャンセルしました。"
+
+msgid "Other"
+msgstr "その他"
 
 msgid "Overnight"
 msgstr "日またぎ"
@@ -940,8 +946,14 @@ msgstr "ランタイムのスモークテスト成功"
 msgid "Recording or a break is already active."
 msgstr "記録または休憩はすでに開始されています。"
 
+msgid "Recording since {time} - {duration}"
+msgstr "開始 {time} - {duration}"
+
 msgid "Recovery key"
 msgstr "復旧キー"
+
+msgid "Recurring events must have an end date or occurrence count."
+msgstr "繰り返し予定には終了日または回数を指定してください。"
 
 msgid "Refresh"
 msgstr "更新"
@@ -1018,6 +1030,9 @@ msgstr "復元すると現在のデータベースファイルが置き換わり
 msgid "Restoring data..."
 msgstr "データを復元中..."
 
+msgid "Resume work"
+msgstr "作業を再開"
+
 msgid "Rewrite"
 msgstr "書き直す"
 
@@ -1048,8 +1063,17 @@ msgstr "保存"
 msgid "Save Report"
 msgstr "レポートを保存"
 
+msgid "Save changes"
+msgstr "変更を保存"
+
+msgid "Save content"
+msgstr "内容を保存"
+
 msgid "Save template"
 msgstr "テンプレートを保存"
+
+msgid "Save the completed automatic record before starting another."
+msgstr "新しい記録を開始する前に、終了した自動記録を保存してください。"
 
 msgid "Save this recovery key before continuing."
 msgstr "続行する前に、この復旧キーを保存してください。"
@@ -1087,6 +1111,9 @@ msgstr "先にプロバイダーを選択してください。"
 msgid "Select a quick log first."
 msgstr "先にクイックログを選択してください。"
 
+msgid "Select a supported holiday country and state or province."
+msgstr "対応する祝日の国と州または都道府県を選択してください。"
+
 msgid "Select a user."
 msgstr "ユーザーを選択してください。"
 
@@ -1095,6 +1122,9 @@ msgstr "有効な日付または日付範囲を選択してください。"
 
 msgid "Select an identity first."
 msgstr "先に連携アカウントを選択してください。"
+
+msgid "Select an individual time record to edit this day."
+msgstr "編集する日の時間記録を選択してください。"
 
 msgid "Selected day: {day}"
 msgstr "選択日：{day}"
@@ -1141,6 +1171,9 @@ msgstr "ログイン中：{username}"
 msgid "Simplified Chinese"
 msgstr "簡体字中国語"
 
+msgid "Some dates already have records. Review the import and confirm replacement."
+msgstr "一部の日付には記録があります。取り込み内容を確認し、置き換えを承認してください。"
+
 msgid "Standard hours (h)"
 msgstr "標準労働時間"
 
@@ -1159,11 +1192,17 @@ msgstr "月曜始まり"
 msgid "Started"
 msgstr "開始しました"
 
+msgid "State / province"
+msgstr "州 / 都道府県"
+
 msgid "Stored securely in a future update"
 msgstr "安全な保存は今後対応予定です"
 
 msgid "Sun"
 msgstr "日"
+
+msgid "System region"
+msgstr "システムの地域"
 
 msgid "Template reset."
 msgstr "テンプレートをリセットしました。"
@@ -1174,8 +1213,14 @@ msgstr "テンプレートを保存しました。"
 msgid "Templates"
 msgstr "テンプレート"
 
+msgid "Temporary password"
+msgstr "一時パスワード"
+
 msgid "Test"
 msgstr "テスト"
+
+msgid "The CSV file exceeds the supported size or row limit."
+msgstr "CSV ファイルが対応するサイズまたは行数の上限を超えています。"
 
 msgid "The ID or password is incorrect."
 msgstr "IDまたはパスワードが正しくありません。"
@@ -1192,17 +1237,26 @@ msgstr "パスワードは{length}文字以上で入力してください。"
 msgid "The passwords do not match."
 msgstr "入力したパスワードが一致しません。"
 
+msgid "The quick log is no longer available. Reload the records and try again."
+msgstr "作業メモは利用できなくなりました。記録を再読み込みして再試行してください。"
+
 msgid "The report has not loaded. Reload it before continuing."
 msgstr "レポートが読み込まれていません。再度読み込んでから続行してください。"
 
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr "保存済みレポートを利用できません。レポートを再読み込みして、もう一度お試しください。"
 
+msgid "The selected context is too large. Choose a shorter period or exclude optional content."
+msgstr "選択したコンテキストが大きすぎます。期間を短くするか、任意の内容を除外してください。"
+
 msgid "The user account is no longer available."
 msgstr "このユーザーアカウントは利用できなくなりました。"
 
 msgid "Theme"
 msgstr "テーマ"
+
+msgid "These times overlap another record or the active timer. Choose a different period."
+msgstr "他の記録または実行中のタイマーと時間が重複しています。別の時間帯を選択してください。"
 
 msgid "This ID is already in use. Choose a different ID."
 msgstr "このIDはすでに使用されています。別のIDを選択してください。"
@@ -1212,6 +1266,12 @@ msgstr "このIDはすでにアカウントに連携されています。"
 
 msgid "This model is in use by another user and cannot be deleted."
 msgstr "このモデルは他のユーザーが使用しているため削除できません。"
+
+msgid "This note was changed in another editor. Reload it before saving. Your changes have been retained."
+msgstr "このメモは別の編集画面で変更されました。再読み込みしてから保存してください。変更内容は保持されています。"
+
+msgid "This record changed elsewhere. Reload it before saving. Your changes have been retained."
+msgstr "この記録は別の場所で変更されました。再読み込みしてから保存してください。入力内容は保持されています。"
 
 msgid "Thu"
 msgstr "木"
@@ -1236,6 +1296,9 @@ msgstr "合計：{hours:.1f}h"
 
 msgid "Traditional Chinese"
 msgstr "繁体字中国語"
+
+msgid "Training"
+msgstr "研修"
 
 msgid "Tue"
 msgstr "火"
@@ -1264,8 +1327,14 @@ msgstr "モデルを取得できませんでした。元のファイルまたは
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "モデルファイルを読み込めませんでした。アクセス権限を確認してください。"
 
+msgid "Unable to restore the automatic record. Reset it and start a new record?"
+msgstr "自動記録を復元できません。リセットして新しい記録を開始しますか？"
+
 msgid "Unable to restore the database. Select a valid SQLite backup."
 msgstr "データベースを復元できませんでした。有効なSQLiteバックアップを選択してください。"
+
+msgid "Unable to restore the timer. Discard it to start a new record."
+msgstr "タイマーを復元できません。古いタイマーを破棄して新しい記録を開始してください。"
 
 msgid "Unable to save settings. Please try again."
 msgstr "設定を保存できませんでした。もう一度お試しください。"
@@ -1282,8 +1351,14 @@ msgstr "このプロバイダーでログインできませんでした。もう
 msgid "Unable to start WorkLogger. Check the application log for details."
 msgstr "WorkLoggerを起動できませんでした。詳細はアプリケーションログを確認してください。"
 
+msgid "Unable to update automatic recording state. Your saved data has been retained."
+msgstr "自動記録の状態を更新できません。保存済みデータは保持されています。"
+
 msgid "Unable to update saved sign-in information."
 msgstr "保存済みのログイン情報を更新できませんでした。"
+
+msgid "Unable to update the quick log. Your changes have been retained."
+msgstr "作業メモを更新できません。変更内容は保持されています。"
 
 msgid "Unknown error"
 msgstr "不明なエラー"
@@ -1351,6 +1426,9 @@ msgstr "有効にすると、テキスト処理はローカルモデルを優先
 msgid "Work Hours Trend"
 msgstr "労働時間の推移"
 
+msgid "Work Log"
+msgstr "作業記録"
+
 msgid "Work Mode Breakdown"
 msgstr "勤務形態の内訳"
 
@@ -1366,14 +1444,23 @@ msgstr "労働時間"
 msgid "Work type"
 msgstr "勤務形態"
 
+msgid "Work {hours:.1f}h"
+msgstr "勤務 {hours:.1f}h"
+
 msgid "WorkLogger"
 msgstr "WorkLogger"
 
 msgid "WorkLogger command line"
 msgstr "WorkLoggerコマンドライン"
 
+msgid "WorkLogger is already running."
+msgstr "WorkLogger は既に起動しています。"
+
 msgid "Worked"
 msgstr "勤務時間"
+
+msgid "Worked: {hours}"
+msgstr "作業時間：{hours}"
 
 msgid "Year"
 msgstr "年"
@@ -1449,12 +1536,3 @@ msgstr "{year}年{start_month}{start_day}日 - {end_month}{end_day}日"
 
 msgid "{start} - {end}"
 msgstr "{start} - {end}"
-
-msgid "Estimated RAM: {ram} GB"
-msgstr "推定メモリ：{ram} GB"
-
-msgid "Context: {context} tokens; output: {output} tokens"
-msgstr "コンテキスト：{context} トークン、出力：{output} トークン"
-
-msgid "License: {license}"
-msgstr "ライセンス：{license}"

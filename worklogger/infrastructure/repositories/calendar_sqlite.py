@@ -64,6 +64,13 @@ class SQLiteCalendarEventRepository:
                 (user_id,),
             )
 
+    def remove(self, user_id: int, event: CalendarEvent) -> None:
+        with self._connection_factory.transaction() as connection:
+            row = connection.execute("SELECT * FROM calendar_events WHERE user_id=? AND id=?", (user_id, event.id)).fetchone()
+            if row is None or self._from_row(row) != event:
+                raise ValueError("worklog_entry_conflict")
+            connection.execute("DELETE FROM calendar_events WHERE user_id=? AND id=?", (user_id, event.id))
+
     @staticmethod
     def _insert_many(
         connection: sqlite3.Connection,

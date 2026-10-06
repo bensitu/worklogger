@@ -18,8 +18,9 @@ def month_stats(month_rows: Iterable[WorkLog], standard_work_hours: float) -> Mo
     work_days = 0
     leave_days = 0
     for record in month_rows:
-        if record.is_leave:
+        if record.leave_hours(standard_hours=standard_work_hours) > 0:
             leave_days += 1
+        if record.is_leave:
             continue
         hours = record.worked_hours()
         if hours > 0:
@@ -86,7 +87,7 @@ def dashboard_data(
         average = _bundle(labels, totals, counts, leaves, leave_counts, "average", True)
 
     modes: dict[str, float] = {}
-    for row in current:
+    for row in (entry for record in current for entry in (record.entries or (record,))):
         key = "leave" if row.is_leave else row.work_type.value
         hours = row.leave_hours(standard_hours=standard_hours) if row.is_leave else row.worked_hours()
         if hours > 0:

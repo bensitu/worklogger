@@ -40,3 +40,6 @@ class CalendarEventRepository(Protocol):
 
     def clear(self, user_id: int) -> None:
         ...
+
+    def remove(self, user_id: int, event: CalendarEvent) -> None:
+        ...

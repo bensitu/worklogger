@@ -64,6 +64,7 @@ class WorkLogEntryViewModel:
         notes_handler=None,
         auto_record_view_model: AutoRecordViewModel | None = None,
         local_timezone: tzinfo | None = None,
+        entry_editor=None,
     ) -> None:
         self._user_id = user_id
         self._get_handler = get_handler
@@ -75,10 +76,13 @@ class WorkLogEntryViewModel:
         self._original_notes: dict[date, str] = {}
         self.auto_record_view_model = auto_record_view_model or AutoRecordViewModel(default_break_hours=default_break_hours)
         self._local_timezone = local_timezone
+        self.entry_editor = entry_editor
 
     def set_default_break_hours(self, hours: float) -> None:
         self._default_break_hours = max(0.0, min(float(hours), 4.0))
         self.auto_record_view_model.set_default_break_hours(self._default_break_hours)
+        if self.entry_editor is not None:
+            self.entry_editor.default_break_hours = self._default_break_hours
 
     def load(
         self,

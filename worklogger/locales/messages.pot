@@ -38,9 +38,6 @@ msgstr ""
 msgid "+"
 msgstr ""
 
-msgid "+ Add Entry"
-msgstr ""
-
 msgid "+15m break"
 msgstr ""
 
@@ -200,6 +197,12 @@ msgstr ""
 msgid "Break timer running"
 msgstr ""
 
+msgid "Break {hours:.1f}h"
+msgstr ""
+
+msgid "Break {hours}"
+msgstr ""
+
 msgid "Business trip"
 msgstr ""
 
@@ -222,6 +225,9 @@ msgid "Calendar Data"
 msgstr ""
 
 msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
+msgstr ""
+
+msgid "Calendar event"
 msgstr ""
 
 msgid "Calendar events: {events}"
@@ -254,6 +260,9 @@ msgstr ""
 msgid "Clear Calendar Events"
 msgstr ""
 
+msgid "Clear input"
+msgstr ""
+
 msgid "Clearing calendar events is not supported yet."
 msgstr ""
 
@@ -267,6 +276,12 @@ msgid "Compensatory leave"
 msgstr ""
 
 msgid "Confirm password"
+msgstr ""
+
+msgid "Content"
+msgstr ""
+
+msgid "Content must not exceed 16,000 characters."
 msgstr ""
 
 msgid "Context: {context} tokens; output: {output} tokens"
@@ -285,6 +300,9 @@ msgid "Copy Markdown"
 msgstr ""
 
 msgid "Create account"
+msgstr ""
+
+msgid "Create record from event"
 msgstr ""
 
 msgid "Create user"
@@ -317,6 +335,9 @@ msgstr ""
 msgid "Daily Report"
 msgstr ""
 
+msgid "Daily notes"
+msgstr ""
+
 msgid "Dark mode"
 msgstr ""
 
@@ -338,6 +359,15 @@ msgstr ""
 msgid "Delete"
 msgstr ""
 
+msgid "Delete record"
+msgstr ""
+
+msgid "Delete this calendar event?"
+msgstr ""
+
+msgid "Delete this time record?"
+msgstr ""
+
 msgid "Delete user"
 msgstr ""
 
@@ -347,6 +377,12 @@ msgstr ""
 msgid "Discard changes?"
 msgstr ""
 
+msgid "Discard the saved timer without creating a record?"
+msgstr ""
+
+msgid "Discard timer"
+msgstr ""
+
 msgid "Domain"
 msgstr ""
 
@@ -354,6 +390,9 @@ msgid "Download"
 msgstr ""
 
 msgid "Downloading model..."
+msgstr ""
+
+msgid "Edit record"
 msgstr ""
 
 msgid "Enable local model"
@@ -477,6 +516,9 @@ msgid "Hide"
 msgstr ""
 
 msgid "Hide password"
+msgstr ""
+
+msgid "Historical break deduction: {hours}"
 msgstr ""
 
 msgid "Holiday country"
@@ -644,6 +686,9 @@ msgstr ""
 msgid "May"
 msgstr ""
 
+msgid "Meeting"
+msgstr ""
+
 msgid "Mode"
 msgstr ""
 
@@ -702,6 +747,9 @@ msgid "New password"
 msgstr ""
 
 msgid "New recovery key"
+msgstr ""
+
+msgid "New time record"
 msgstr ""
 
 msgid "Next day"
@@ -771,6 +819,9 @@ msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, 
 msgstr ""
 
 msgid "Operation cancelled."
+msgstr ""
+
+msgid "Other"
 msgstr ""
 
 msgid "Overnight"
@@ -893,6 +944,9 @@ msgstr ""
 msgid "Recording or a break is already active."
 msgstr ""
 
+msgid "Recording since {time} - {duration}"
+msgstr ""
+
 msgid "Recovery key"
 msgstr ""
 
@@ -974,6 +1028,9 @@ msgstr ""
 msgid "Restoring data..."
 msgstr ""
 
+msgid "Resume work"
+msgstr ""
+
 msgid "Rewrite"
 msgstr ""
 
@@ -1002,6 +1059,12 @@ msgid "Save"
 msgstr ""
 
 msgid "Save Report"
+msgstr ""
+
+msgid "Save changes"
+msgstr ""
+
+msgid "Save content"
 msgstr ""
 
 msgid "Save template"
@@ -1056,6 +1119,9 @@ msgid "Select a valid date or date range."
 msgstr ""
 
 msgid "Select an identity first."
+msgstr ""
+
+msgid "Select an individual time record to edit this day."
 msgstr ""
 
 msgid "Selected day: {day}"
@@ -1187,6 +1253,9 @@ msgstr ""
 msgid "Theme"
 msgstr ""
 
+msgid "These times overlap another record or the active timer. Choose a different period."
+msgstr ""
+
 msgid "This ID is already in use. Choose a different ID."
 msgstr ""
 
@@ -1197,6 +1266,9 @@ msgid "This model is in use by another user and cannot be deleted."
 msgstr ""
 
 msgid "This note was changed in another editor. Reload it before saving. Your changes have been retained."
+msgstr ""
+
+msgid "This record changed elsewhere. Reload it before saving. Your changes have been retained."
 msgstr ""
 
 msgid "Thu"
@@ -1221,6 +1293,9 @@ msgid "Total: {hours:.1f}h"
 msgstr ""
 
 msgid "Traditional Chinese"
+msgstr ""
+
+msgid "Training"
 msgstr ""
 
 msgid "Tue"
@@ -1254,6 +1329,9 @@ msgid "Unable to restore the automatic record. Reset it and start a new record?"
 msgstr ""
 
 msgid "Unable to restore the database. Select a valid SQLite backup."
+msgstr ""
+
+msgid "Unable to restore the timer. Discard it to start a new record."
 msgstr ""
 
 msgid "Unable to save settings. Please try again."
@@ -1377,6 +1455,9 @@ msgid "WorkLogger is already running."
 msgstr ""
 
 msgid "Worked"
+msgstr ""
+
+msgid "Worked: {hours}"
 msgstr ""
 
 msgid "Year"

@@ -9,9 +9,13 @@ WORK_TYPE_KEYS = (
     "normal",
     "remote",
     "business_trip",
+    "meeting",
+    "training",
+    "break",
     "paid_leave",
     "comp_leave",
     "sick_leave",
+    "other",
 )
 LEAVE_TYPES = frozenset({"paid_leave", "comp_leave", "sick_leave"})
 

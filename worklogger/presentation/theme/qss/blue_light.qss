@@ -93,6 +93,48 @@ QFrame#calendar_record_frame {
   border-radius: 4px;
 }
 
+
+QPushButton#calendar_time_entry_button {
+  background: {{ surface }};
+  padding: 0;
+  border-radius: 4px;
+  min-height: 0;
+}
+
+QPushButton#calendar_time_entry_button:checked {
+  border-color: {{ accent }};
+  background: {{ card_hover }};
+}
+
+QToolButton#clear_time_entry_button {
+  padding: 5px;
+  min-width: 20px;
+  max-width: 20px;
+  min-height: 20px;
+  max-height: 20px;
+  border-radius: 4px;
+}
+QWidget#record_delete_slot_widget {
+  background: transparent;
+}
+QToolButton#delete_record_button {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  min-width: 16px;
+  max-width: 16px;
+  min-height: 16px;
+  max-height: 16px;
+  border-radius: 4px;
+}
+QToolButton#delete_record_button:hover {
+  background: {{ button_hover }};
+}
+QToolButton#auto_clock_out_button {
+  min-height: 40px;
+  max-height: 40px;
+  padding: 6px 8px;
+}
 QLabel#calendar_record_marker_label {
   background: {{ accent }};
   border-radius: 3px;

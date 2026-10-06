@@ -26,6 +26,7 @@ from worklogger.presentation.viewmodels import WorkLogEntryViewModel
 from worklogger.presentation.widgets import WorkLogEntryDraft, WorkLogEntryPanel
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
+from worklogger.presentation.widgets.time_entries import TimeEntryPanel
 
 
 @dataclass(frozen=True)
@@ -46,6 +47,7 @@ class MinimalView(QWidget):
         config: MinimalViewConfig | None = None,
         settings_workflow: SettingsWorkflow | None = None,
         residency_controller: QtResidencyController | None = None,
+        job_runner=None,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -53,6 +55,7 @@ class MinimalView(QWidget):
         self._config = config or MinimalViewConfig()
         self._settings_workflow = settings_workflow
         self._residency_controller = residency_controller
+        self._job_runner = job_runner
         self._today = self._config.today or date.today()
         auto_state = worklog_entry_view_model.auto_record_view_model.state()
         restored_day = auto_state.day if auto_state.active or auto_state.pending_save else None
@@ -93,6 +96,12 @@ class MinimalView(QWidget):
         self._last_error = None
         self.date_label.setText(self._selected_day.isoformat())
         self.account_label.setText(self._account_text())
+        if isinstance(self.entry_panel, TimeEntryPanel):
+            result = self.entry_panel.load_day(self._selected_day)
+            self._entry_dirty = self.entry_panel.is_dirty
+            if not result.ok:
+                self._set_error(result.error)
+            return result.ok
         result = self._worklog_entry_view_model.load(self._selected_day)
         if not result.ok or result.value is None:
             self._set_error(result.error)
@@ -152,7 +161,9 @@ class MinimalView(QWidget):
             self.settings_button.setVisible(False)
         root.addLayout(nav)
 
-        self.entry_panel = WorkLogEntryPanel(auto_record_view_model=self._worklog_entry_view_model.auto_record_view_model)
+        editor = self._worklog_entry_view_model.entry_editor
+        self.entry_panel = TimeEntryPanel(editor, compact=False, job_runner=self._job_runner) if editor is not None else WorkLogEntryPanel(
+            auto_record_view_model=self._worklog_entry_view_model.auto_record_view_model)
         root.addWidget(self.entry_panel)
 
         self.status_label = StatusLabel()
@@ -164,8 +175,17 @@ class MinimalView(QWidget):
         self.today_button.clicked.connect(self.go_today)
         self.next_button.clicked.connect(self.next_day)
         self.settings_button.clicked.connect(self.open_settings)
-        self.entry_panel.draft_changed.connect(self._preview_entry_draft)
-        self.entry_panel.save_requested.connect(self._save_entry_draft)
+        if isinstance(self.entry_panel, TimeEntryPanel):
+            self.entry_panel.records_changed.connect(self._entries_changed)
+            self.entry_panel.dirty_changed.connect(lambda dirty: setattr(self, "_entry_dirty", dirty))
+        else:
+            self.entry_panel.draft_changed.connect(self._preview_entry_draft)
+            self.entry_panel.save_requested.connect(self._save_entry_draft)
+
+    def _entries_changed(self, day: date):
+        if self.entry_panel.time_tabs.currentIndex() == 1:
+            self._selected_day = day
+        self.refresh()
 
     def _preview_entry_draft(self, draft: WorkLogEntryDraft) -> None:
         if draft.day != self._selected_day:
@@ -228,6 +248,8 @@ class MinimalView(QWidget):
             self.hide()
             event.ignore()
             return
+        if isinstance(self.entry_panel, TimeEntryPanel):
+            self.entry_panel.auto_timer.stop()
         super().closeEvent(event)
 
     def changeEvent(self, event: QEvent) -> None:
@@ -241,6 +263,9 @@ class MinimalView(QWidget):
             self.hide()
 
     def _confirm_discard_changes_if_needed(self) -> bool:
+        if isinstance(self.entry_panel, TimeEntryPanel) and self.entry_panel.is_busy:
+            self._set_status(_("Please wait for the current operation."))
+            return False
         if not self._entry_dirty:
             return True
         if self._config.confirm_discard_changes is not None:
@@ -250,6 +275,8 @@ class MinimalView(QWidget):
         if not confirmed:
             self._set_status(_("Unsaved changes"))
             return False
+        if isinstance(self.entry_panel, TimeEntryPanel):
+            self.entry_panel.discard_changes()
         self._entry_dirty = False
         return True
 

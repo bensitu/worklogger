@@ -53,6 +53,7 @@ from worklogger.presentation.widgets import (
     WorkLogEntryPanel,
 )
 from worklogger.presentation.widgets.assets import apply_window_icon
+from worklogger.presentation.widgets.time_entries import TimeEntryPanel
 
 
 class NotesWorkflow(Protocol):
@@ -311,7 +312,9 @@ class AppWindow(QMainWindow):
         main_layout.addWidget(self.page_stack, 1)
 
         self.calendar_view = CalendarView()
-        self.entry_panel = WorkLogEntryPanel(compact=True, auto_record_view_model=self._worklog_entry_view_model.auto_record_view_model)
+        editor = self._worklog_entry_view_model.entry_editor
+        self.entry_panel = TimeEntryPanel(editor, job_runner=self._job_runner) if editor is not None else WorkLogEntryPanel(
+            compact=True, auto_record_view_model=self._worklog_entry_view_model.auto_record_view_model)
         self.stats_panel = StatsPanel()
         self.calendar_page = CalendarPage(
             calendar_view=self.calendar_view,
@@ -373,9 +376,10 @@ class AppWindow(QMainWindow):
         ):
             button.hide()
             if workflow is not None:
-                actions.addAction(button.text(), button.click)
-        self.calendar_page.add_entry_button.setMenu(actions)
-        self.calendar_page.add_entry_button.setEnabled(not actions.isEmpty())
+                label = _("Daily notes") if button is self.notes_button and isinstance(self.entry_panel, TimeEntryPanel) else button.text()
+                actions.addAction(label, button.click)
+        self.calendar_page.add_entry_button.setMenu(None if actions.isEmpty() and isinstance(self.entry_panel, TimeEntryPanel) else actions)
+        self.calendar_page.add_entry_button.setEnabled(isinstance(self.entry_panel, TimeEntryPanel) or not actions.isEmpty())
         self.account_label.setVisible(False)
         if self._quick_logs_workflow is None:
             self.quick_logs_button.setVisible(False)
@@ -398,8 +402,24 @@ class AppWindow(QMainWindow):
         if hasattr(self.settings_page, "settings_changed"):
             self.settings_page.settings_changed.connect(self.apply_settings)
         self.calendar_view.day_selected.connect(self.select_day)
-        self.entry_panel.draft_changed.connect(self._preview_entry_draft)
-        self.entry_panel.save_requested.connect(self._save_entry_draft)
+        if isinstance(self.entry_panel, TimeEntryPanel):
+            self.entry_panel.records_changed.connect(self._entries_changed)
+            self.entry_panel.dirty_changed.connect(lambda dirty: setattr(self, "_entry_dirty", dirty))
+            self.entry_panel.busy_changed.connect(self.calendar_page.records_widget.setDisabled)
+            self.calendar_page.entry_selected.connect(self.entry_panel.edit_entry)
+            self.calendar_page.entry_delete_requested.connect(self.entry_panel.delete_entry)
+            self.entry_panel.selection_changed.connect(self.calendar_page.set_selected_entry)
+            self.calendar_page.event_selected.connect(self.entry_panel.copy_event)
+            self.calendar_page.event_delete_requested.connect(self.entry_panel.delete_event)
+        else:
+            self.entry_panel.draft_changed.connect(self._preview_entry_draft)
+            self.entry_panel.save_requested.connect(self._save_entry_draft)
+
+    def _entries_changed(self, day: date) -> None:
+        if self.entry_panel.time_tabs.currentIndex() == 1:
+            self._selected_day = day
+            self._current_month = day.replace(day=1)
+        self.refresh()
 
     def _refresh_calendar(self) -> bool:
         options = replace(
@@ -427,6 +447,15 @@ class AppWindow(QMainWindow):
         return True
 
     def _refresh_entry(self) -> bool:
+        if isinstance(self.entry_panel, TimeEntryPanel):
+            entries = self.entry_panel.load_day(self._selected_day)
+            events = self._calendar_view_model.events_for_day(self._selected_day)
+            if not entries.ok or not events.ok:
+                self._set_error(entries.error or events.error)
+                return False
+            self._entry_dirty = self.entry_panel.is_dirty
+            self.calendar_page.set_time_entries(entries.value, events.value or ())
+            return True
         result = self._worklog_entry_view_model.load(
             self._selected_day,
             holiday_note=self._holiday_note_for_selected_day(),
@@ -660,6 +689,8 @@ class AppWindow(QMainWindow):
             self.hide()
             event.ignore()
             return
+        if isinstance(self.entry_panel, TimeEntryPanel):
+            self.entry_panel.auto_timer.stop()
         super().closeEvent(event)
 
     def changeEvent(self, event: QEvent) -> None:
@@ -683,6 +714,9 @@ class AppWindow(QMainWindow):
         self.close()
 
     def _confirm_discard_changes_if_needed(self) -> bool:
+        if isinstance(self.entry_panel, TimeEntryPanel) and self.entry_panel.is_busy:
+            self._set_status(_("Please wait for the current operation."), notify=True)
+            return False
         if getattr(self.settings_page, "is_busy", False):
             self._set_status(_("Please wait for the current operation."), notify=True)
             return False
@@ -695,6 +729,8 @@ class AppWindow(QMainWindow):
             if not confirmed:
                 self._set_status(_("Unsaved changes"))
                 return False
+            if isinstance(self.entry_panel, TimeEntryPanel):
+                self.entry_panel.discard_changes()
         if not self.reports_page.confirm_leave():
             self._set_status(_("Unsaved changes"))
             return False

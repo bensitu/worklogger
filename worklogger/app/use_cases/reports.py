@@ -235,9 +235,9 @@ class GenerateReportHandler:
             work_logs = self._work_logs.list_range(command.user_id, period.start, period.end)
             if self._notes is not None:
                 notes = self._notes.list_range(command.user_id, period.start, period.end)
-                recorded_days = {record.day for record in work_logs}
+                recorded_notes = {(entry.day, entry.note) for record in work_logs for entry in (record.entries or (record,))}
                 work_logs += tuple(WorkLog(command.user_id, note.day, note=note.content)
-                                   for note in notes if note.content and note.day not in recorded_days)
+                                   for note in notes if note.content and (note.day, note.content) not in recorded_notes)
             quick_logs = self._quick_logs.list_for_range(command.user_id, period.start, period.end)
             events = self._calendar_events.list_for_range(command.user_id, period.start, period.end)
             template = self._templates.get_template(
@@ -311,6 +311,23 @@ def _work_log_lines(work_logs: tuple[WorkLog, ...], standard_hours: float, _: Ca
         return "- " + _("No notes recorded for this period.")
     lines: list[str] = []
     for work_log in sorted(work_logs, key=lambda item: item.day):
+        if work_log.is_note_only:
+            lines.append(_list_item(f"{work_log.day.isoformat()} - {work_log.note}"))
+            continue
+        if work_log.entries:
+            total = work_log.worked_hours()
+            lines.append(_list_item(f"{work_log.day.isoformat()}: {total:.1f}h"))
+            labels = {"normal": _("Normal"), "remote": _("Remote"), "business_trip": _("Business trip"),
+                      "meeting": _("Meeting"), "training": _("Training"), "break": _("Break"),
+                      "other": _("Other"),
+                      "paid_leave": _("Paid leave"), "comp_leave": _("Compensatory leave"), "sick_leave": _("Sick leave")}
+            for entry in work_log.entries:
+                period = time_range_label(entry.start_time, entry.end_time)
+                description = f"{period} [{labels[entry.work_type.value]}]"
+                if entry.note:
+                    description += f" - {entry.note}"
+                lines.append("  " + _list_item(description))
+            continue
         if work_log.is_leave:
             labels = {"paid_leave": _("Paid leave"), "comp_leave": _("Compensatory leave"), "sick_leave": _("Sick leave")}
             suffix = f" [{labels[work_log.work_type.value]}]"

@@ -117,6 +117,8 @@ from worklogger.infrastructure.export import (
 from worklogger.infrastructure.identity import DisabledIdentityProvider
 from worklogger.infrastructure.logging import setup_logging
 from worklogger.infrastructure.local_model import JsonLocalModelStore, bundled_model_catalog_path
+from worklogger.app.use_cases.time_entries import TimeEntryService
+from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
 from worklogger.infrastructure.repositories import (
     SQLiteAuthRepository,
     SQLiteCalendarEventRepository,
@@ -482,6 +484,7 @@ def _build_runtime_for_user(
                 window_config=window_config,
                 settings_workflow=settings_workflow,
                 residency_controller=residency_controller,
+                job_runner=job_runner,
             ),
             connection_factory=connection_factory,
             database_path=database_path,
@@ -557,6 +560,8 @@ def _build_worklog_entry_view_model(
         notes_handler=GetDailyNoteHandler(repositories.daily_notes),
         auto_record_view_model=AutoRecordViewModel(settings=repositories.settings, user_id=user.id, notes=repositories.daily_notes),
         local_timezone=get_localzone(),
+        entry_editor=TimeEntryViewModel(TimeEntryService(user_id=user.id, repository=repositories.work_logs,
+            settings=repositories.settings, local_timezone=get_localzone(), calendar_events=repositories.calendar_events)),
     )
 
 
@@ -871,6 +876,7 @@ def _build_minimal_view(
     window_config: AppWindowConfig,
     settings_workflow: SettingsWorkflowController | None,
     residency_controller: QtResidencyController,
+    job_runner: JobRunner | None,
 ) -> MinimalView:
     return MinimalView(
         worklog_entry_view_model=worklog_entry_view_model,
@@ -882,6 +888,7 @@ def _build_minimal_view(
         ),
         settings_workflow=settings_workflow,
         residency_controller=residency_controller,
+        job_runner=job_runner,
     )
 
 

@@ -55,7 +55,7 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
             self.assertFalse(stale.ok)
             self.assertEqual(stale.error.code, "note_conflict")
             self.assertEqual(work_logs.get_for_day(user.id, day).start_time, "09:00")
-            self.assertEqual(work_logs.get_for_day(user.id, day).note, "edited")
+            self.assertEqual(work_logs.get_for_day(user.id, day).note, "original")
             rejected = SaveDailyNoteHandler(notes).handle(SaveDailyNoteCommand(
                 user.id, day, "other editor", expected_content="original"))
             self.assertFalse(rejected.ok)

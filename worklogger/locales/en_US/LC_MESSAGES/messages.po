@@ -7,60 +7,6 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 
-msgid "The quick log is no longer available. Reload the records and try again."
-msgstr "The quick log is no longer available. Reload the records and try again."
-
-msgid "Unable to update the quick log. Your changes have been retained."
-msgstr "Unable to update the quick log. Your changes have been retained."
-
-
-msgid "System region"
-msgstr "System region"
-
-msgid "Holiday country"
-msgstr "Holiday country"
-
-msgid "State / province"
-msgstr "State / province"
-
-msgid "National holidays"
-msgstr "National holidays"
-
-msgid "Select a supported holiday country and state or province."
-msgstr "Select a supported holiday country and state or province."
-
-
-msgid "Compensatory leave"
-msgstr "Compensatory leave"
-
-msgid "No notes recorded for this period."
-msgstr "No notes recorded for this period."
-
-msgid "The selected context is too large. Choose a shorter period or exclude optional content."
-msgstr "The selected context is too large. Choose a shorter period or exclude optional content."
-
-msgid "Work Log"
-msgstr "Work Log"
-
-
-msgid "Save the completed automatic record before starting another."
-msgstr "Save the completed automatic record before starting another."
-
-msgid "Unable to update automatic recording state. Your saved data has been retained."
-msgstr "Unable to update automatic recording state. Your saved data has been retained."
-
-msgid "Unable to restore the automatic record. Reset it and start a new record?"
-msgstr "Unable to restore the automatic record. Reset it and start a new record?"
-
-msgid "This note was changed in another editor. Reload it before saving. Your changes have been retained."
-msgstr "This note was changed in another editor. Reload it before saving. Your changes have been retained."
-
-msgid "Temporary password"
-msgstr "Temporary password"
-
-msgid "Add another sign-in method before unlinking this identity."
-msgstr "Add another sign-in method before unlinking this identity."
-
 msgid "&Add to Custom Colors"
 msgstr "&Add to Custom Colors"
 
@@ -93,9 +39,6 @@ msgstr "(Week {week})"
 
 msgid "+"
 msgstr "+"
-
-msgid "+ Add Entry"
-msgstr "+ Add Entry"
 
 msgid "+15m break"
 msgstr "+15m break"
@@ -147,6 +90,9 @@ msgstr "Add"
 
 msgid "Add Entry"
 msgstr "Add Entry"
+
+msgid "Add another sign-in method before unlinking this identity."
+msgstr "Add another sign-in method before unlinking this identity."
 
 msgid "Address"
 msgstr "Address"
@@ -253,6 +199,12 @@ msgstr "Break time must be nonnegative and shorter than the work period."
 msgid "Break timer running"
 msgstr "Break timer running"
 
+msgid "Break {hours:.1f}h"
+msgstr "Break {hours:.1f}h"
+
+msgid "Break {hours}"
+msgstr "Break {hours}"
+
 msgid "Business trip"
 msgstr "Business trip"
 
@@ -276,6 +228,9 @@ msgstr "Calendar Data"
 
 msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
 msgstr "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
+
+msgid "Calendar event"
+msgstr "Calendar event"
 
 msgid "Calendar events: {events}"
 msgstr "Calendar events: {events}"
@@ -307,6 +262,9 @@ msgstr "Choose custom color"
 msgid "Clear Calendar Events"
 msgstr "Clear Calendar Events"
 
+msgid "Clear input"
+msgstr "Clear input"
+
 msgid "Clearing calendar events is not supported yet."
 msgstr "Clearing calendar events is not supported yet."
 
@@ -316,8 +274,20 @@ msgstr "Close"
 msgid "Comp leave"
 msgstr "Comp leave"
 
+msgid "Compensatory leave"
+msgstr "Compensatory leave"
+
 msgid "Confirm password"
 msgstr "Confirm password"
+
+msgid "Content"
+msgstr "Content"
+
+msgid "Content must not exceed 16,000 characters."
+msgstr "Content must not exceed 16,000 characters."
+
+msgid "Context: {context} tokens; output: {output} tokens"
+msgstr "Context: {context} tokens; output: {output} tokens"
 
 msgid "Continue"
 msgstr "Continue"
@@ -333,6 +303,9 @@ msgstr "Copy Markdown"
 
 msgid "Create account"
 msgstr "Create account"
+
+msgid "Create record from event"
+msgstr "Create record from event"
 
 msgid "Create user"
 msgstr "Create user"
@@ -355,24 +328,6 @@ msgstr "Cursor at %1, %2\nPress ESC to cancel"
 msgid "Custom"
 msgstr "Custom"
 
-msgid "WorkLogger is already running."
-msgstr "WorkLogger is already running."
-
-msgid "Work {hours:.1f}h"
-msgstr "Work {hours:.1f}h"
-
-msgid "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
-msgstr "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
-
-msgid "The CSV file exceeds the supported size or row limit."
-msgstr "The CSV file exceeds the supported size or row limit."
-
-msgid "Some dates already have records. Review the import and confirm replacement."
-msgstr "Some dates already have records. Review the import and confirm replacement."
-
-msgid "Recurring events must have an end date or occurrence count."
-msgstr "Recurring events must have an end date or occurrence count."
-
 msgid "DESKTOP START FAILED"
 msgstr "DESKTOP START FAILED"
 
@@ -381,6 +336,9 @@ msgstr "Daily Average"
 
 msgid "Daily Report"
 msgstr "Daily Report"
+
+msgid "Daily notes"
+msgstr "Daily notes"
 
 msgid "Dark mode"
 msgstr "Dark mode"
@@ -403,6 +361,15 @@ msgstr "Default break (h)"
 msgid "Delete"
 msgstr "Delete"
 
+msgid "Delete record"
+msgstr "Delete record"
+
+msgid "Delete this calendar event?"
+msgstr "Delete this calendar event?"
+
+msgid "Delete this time record?"
+msgstr "Delete this time record?"
+
 msgid "Delete user"
 msgstr "Delete user"
 
@@ -412,6 +379,12 @@ msgstr "Description"
 msgid "Discard changes?"
 msgstr "Discard changes?"
 
+msgid "Discard the saved timer without creating a record?"
+msgstr "Discard the saved timer without creating a record?"
+
+msgid "Discard timer"
+msgstr "Discard timer"
+
 msgid "Domain"
 msgstr "Domain"
 
@@ -420,6 +393,9 @@ msgstr "Download"
 
 msgid "Downloading model..."
 msgstr "Downloading model..."
+
+msgid "Edit record"
+msgstr "Edit record"
 
 msgid "Enable local model"
 msgstr "Enable local model"
@@ -462,6 +438,9 @@ msgstr "Enter your password"
 
 msgid "Enter your password."
 msgstr "Enter your password."
+
+msgid "Estimated RAM: {ram} GB"
+msgstr "Estimated RAM: {ram} GB"
 
 msgid "Export"
 msgstr "Export"
@@ -541,6 +520,12 @@ msgstr "Hide"
 msgid "Hide password"
 msgstr "Hide password"
 
+msgid "Historical break deduction: {hours}"
+msgstr "Historical break deduction: {hours}"
+
+msgid "Holiday country"
+msgstr "Holiday country"
+
 msgid "Hu&e:"
 msgstr "Hu&e:"
 
@@ -576,6 +561,9 @@ msgstr "Import or export worklog records as CSV files for backup, migration, or 
 
 msgid "Import your .ics file to let AI read your meetings when generating reports."
 msgstr "Import your .ics file to let AI read your meetings when generating reports."
+
+msgid "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
+msgstr "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
 
 msgid "Imported {count} calendar events."
 msgstr "Imported {count} calendar events."
@@ -633,6 +621,9 @@ msgstr "Leave days"
 
 msgid "License"
 msgstr "License"
+
+msgid "License: {license}"
+msgstr "License: {license}"
 
 msgid "Light mode"
 msgstr "Light mode"
@@ -697,6 +688,9 @@ msgstr "Markdown files (*.md)"
 msgid "May"
 msgstr "May"
 
+msgid "Meeting"
+msgstr "Meeting"
+
 msgid "Mode"
 msgstr "Mode"
 
@@ -742,6 +736,9 @@ msgstr "Monthly target (h)"
 msgid "More actions"
 msgstr "More actions"
 
+msgid "National holidays"
+msgstr "National holidays"
+
 msgid "Network"
 msgstr "Network"
 
@@ -753,6 +750,9 @@ msgstr "New password"
 
 msgid "New recovery key"
 msgstr "New recovery key"
+
+msgid "New time record"
+msgstr "New time record"
 
 msgid "Next day"
 msgstr "Next day"
@@ -777,6 +777,9 @@ msgstr "No data"
 
 msgid "No events found."
 msgstr "No events found."
+
+msgid "No notes recorded for this period."
+msgstr "No notes recorded for this period."
 
 msgid "No records for the selected day."
 msgstr "No records for the selected day."
@@ -819,6 +822,9 @@ msgstr "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen,
 
 msgid "Operation cancelled."
 msgstr "Operation cancelled."
+
+msgid "Other"
+msgstr "Other"
 
 msgid "Overnight"
 msgstr "Overnight"
@@ -940,8 +946,14 @@ msgstr "RUNTIME SMOKE OK"
 msgid "Recording or a break is already active."
 msgstr "Recording or a break is already active."
 
+msgid "Recording since {time} - {duration}"
+msgstr "Recording since {time} - {duration}"
+
 msgid "Recovery key"
 msgstr "Recovery key"
+
+msgid "Recurring events must have an end date or occurrence count."
+msgstr "Recurring events must have an end date or occurrence count."
 
 msgid "Refresh"
 msgstr "Refresh"
@@ -1018,6 +1030,9 @@ msgstr "Restore will replace the current database file. Continue?"
 msgid "Restoring data..."
 msgstr "Restoring data..."
 
+msgid "Resume work"
+msgstr "Resume work"
+
 msgid "Rewrite"
 msgstr "Rewrite"
 
@@ -1048,8 +1063,17 @@ msgstr "Save"
 msgid "Save Report"
 msgstr "Save Report"
 
+msgid "Save changes"
+msgstr "Save changes"
+
+msgid "Save content"
+msgstr "Save content"
+
 msgid "Save template"
 msgstr "Save template"
+
+msgid "Save the completed automatic record before starting another."
+msgstr "Save the completed automatic record before starting another."
 
 msgid "Save this recovery key before continuing."
 msgstr "Save this recovery key before continuing."
@@ -1087,6 +1111,9 @@ msgstr "Select a provider first."
 msgid "Select a quick log first."
 msgstr "Select a quick log first."
 
+msgid "Select a supported holiday country and state or province."
+msgstr "Select a supported holiday country and state or province."
+
 msgid "Select a user."
 msgstr "Select a user."
 
@@ -1095,6 +1122,9 @@ msgstr "Select a valid date or date range."
 
 msgid "Select an identity first."
 msgstr "Select an identity first."
+
+msgid "Select an individual time record to edit this day."
+msgstr "Select an individual time record to edit this day."
 
 msgid "Selected day: {day}"
 msgstr "Selected day: {day}"
@@ -1141,6 +1171,9 @@ msgstr "Signed in: {username}"
 msgid "Simplified Chinese"
 msgstr "Simplified Chinese"
 
+msgid "Some dates already have records. Review the import and confirm replacement."
+msgstr "Some dates already have records. Review the import and confirm replacement."
+
 msgid "Standard hours (h)"
 msgstr "Standard hours (h)"
 
@@ -1159,11 +1192,17 @@ msgstr "Start week on Monday"
 msgid "Started"
 msgstr "Started"
 
+msgid "State / province"
+msgstr "State / province"
+
 msgid "Stored securely in a future update"
 msgstr "Stored securely in a future update"
 
 msgid "Sun"
 msgstr "Sun"
+
+msgid "System region"
+msgstr "System region"
 
 msgid "Template reset."
 msgstr "Template reset."
@@ -1174,8 +1213,14 @@ msgstr "Template saved."
 msgid "Templates"
 msgstr "Templates"
 
+msgid "Temporary password"
+msgstr "Temporary password"
+
 msgid "Test"
 msgstr "Test"
+
+msgid "The CSV file exceeds the supported size or row limit."
+msgstr "The CSV file exceeds the supported size or row limit."
 
 msgid "The ID or password is incorrect."
 msgstr "The ID or password is incorrect."
@@ -1192,17 +1237,26 @@ msgstr "The password must contain at least {length} characters."
 msgid "The passwords do not match."
 msgstr "The passwords do not match."
 
+msgid "The quick log is no longer available. Reload the records and try again."
+msgstr "The quick log is no longer available. Reload the records and try again."
+
 msgid "The report has not loaded. Reload it before continuing."
 msgstr "The report has not loaded. Reload it before continuing."
 
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr "The saved report is no longer available. Reload the reports and try again."
 
+msgid "The selected context is too large. Choose a shorter period or exclude optional content."
+msgstr "The selected context is too large. Choose a shorter period or exclude optional content."
+
 msgid "The user account is no longer available."
 msgstr "The user account is no longer available."
 
 msgid "Theme"
 msgstr "Theme"
+
+msgid "These times overlap another record or the active timer. Choose a different period."
+msgstr "These times overlap another record or the active timer. Choose a different period."
 
 msgid "This ID is already in use. Choose a different ID."
 msgstr "This ID is already in use. Choose a different ID."
@@ -1212,6 +1266,12 @@ msgstr "This identity is already linked to an account."
 
 msgid "This model is in use by another user and cannot be deleted."
 msgstr "This model is in use by another user and cannot be deleted."
+
+msgid "This note was changed in another editor. Reload it before saving. Your changes have been retained."
+msgstr "This note was changed in another editor. Reload it before saving. Your changes have been retained."
+
+msgid "This record changed elsewhere. Reload it before saving. Your changes have been retained."
+msgstr "This record changed elsewhere. Reload it before saving. Your changes have been retained."
 
 msgid "Thu"
 msgstr "Thu"
@@ -1236,6 +1296,9 @@ msgstr "Total: {hours:.1f}h"
 
 msgid "Traditional Chinese"
 msgstr "Traditional Chinese"
+
+msgid "Training"
+msgstr "Training"
 
 msgid "Tue"
 msgstr "Tue"
@@ -1264,8 +1327,14 @@ msgstr "Unable to obtain the model. Check the source file or download connection
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "Unable to read the model file. Check its access permissions."
 
+msgid "Unable to restore the automatic record. Reset it and start a new record?"
+msgstr "Unable to restore the automatic record. Reset it and start a new record?"
+
 msgid "Unable to restore the database. Select a valid SQLite backup."
 msgstr "Unable to restore the database. Select a valid SQLite backup."
+
+msgid "Unable to restore the timer. Discard it to start a new record."
+msgstr "Unable to restore the timer. Discard it to start a new record."
 
 msgid "Unable to save settings. Please try again."
 msgstr "Unable to save settings. Please try again."
@@ -1282,8 +1351,14 @@ msgstr "Unable to sign in with this provider. Please try again."
 msgid "Unable to start WorkLogger. Check the application log for details."
 msgstr "Unable to start WorkLogger. Check the application log for details."
 
+msgid "Unable to update automatic recording state. Your saved data has been retained."
+msgstr "Unable to update automatic recording state. Your saved data has been retained."
+
 msgid "Unable to update saved sign-in information."
 msgstr "Unable to update saved sign-in information."
+
+msgid "Unable to update the quick log. Your changes have been retained."
+msgstr "Unable to update the quick log. Your changes have been retained."
 
 msgid "Unknown error"
 msgstr "Unknown error"
@@ -1351,6 +1426,9 @@ msgstr "When enabled, text processing uses the local model first; no data is sen
 msgid "Work Hours Trend"
 msgstr "Work Hours Trend"
 
+msgid "Work Log"
+msgstr "Work Log"
+
 msgid "Work Mode Breakdown"
 msgstr "Work Mode Breakdown"
 
@@ -1366,14 +1444,23 @@ msgstr "Work hours"
 msgid "Work type"
 msgstr "Work type"
 
+msgid "Work {hours:.1f}h"
+msgstr "Work {hours:.1f}h"
+
 msgid "WorkLogger"
 msgstr "WorkLogger"
 
 msgid "WorkLogger command line"
 msgstr "WorkLogger command line"
 
+msgid "WorkLogger is already running."
+msgstr "WorkLogger is already running."
+
 msgid "Worked"
 msgstr "Worked"
+
+msgid "Worked: {hours}"
+msgstr "Worked: {hours}"
 
 msgid "Year"
 msgstr "Year"
@@ -1449,12 +1536,3 @@ msgstr "{start_month} {start_day} - {end_month} {end_day}, {year}"
 
 msgid "{start} - {end}"
 msgstr "{start} - {end}"
-
-msgid "Estimated RAM: {ram} GB"
-msgstr "Estimated RAM: {ram} GB"
-
-msgid "Context: {context} tokens; output: {output} tokens"
-msgstr "Context: {context} tokens; output: {output} tokens"
-
-msgid "License: {license}"
-msgstr "License: {license}"

@@ -16,6 +16,10 @@ class WorkType(str, Enum):
     PAID_LEAVE = "paid_leave"
     COMP_LEAVE = "comp_leave"
     SICK_LEAVE = "sick_leave"
+    MEETING = "meeting"
+    TRAINING = "training"
+    BREAK = "break"
+    OTHER = "other"
 
 
 @dataclass(frozen=True)
@@ -56,19 +60,31 @@ class WorkLog:
     overnight: bool = False
     started_at: datetime | None = None
     ended_at: datetime | None = None
+    id: int | None = None
+    revision: int = 0
+    capture_id: str | None = None
+    entries: tuple[WorkLog, ...] = ()
 
     @property
     def has_times(self) -> bool:
         return bool(self.start_time and self.end_time)
 
     @property
+    def is_note_only(self) -> bool:
+        return not self.has_times and self.work_type == WorkType.NORMAL and self.break_hours == 0 and bool(self.note)
+
+    @property
     def is_leave(self) -> bool:
+        if self.entries:
+            return all(entry.is_leave for entry in self.entries)
         from worklogger.domain.worklog.rules import normalize_work_type
 
         return normalize_work_type(self.work_type).value in LEAVE_TYPES
 
     @property
     def is_overnight(self) -> bool:
+        if self.entries:
+            return any(entry.is_overnight for entry in self.entries)
         if self.started_at is not None and self.ended_at is not None:
             return self.ended_at.date() > self.started_at.date()
         if self.has_times:
@@ -81,7 +97,9 @@ class WorkLog:
         return bool(self.overnight)
 
     def worked_hours(self, *, max_shift_hours: float = MAX_SHIFT_HOURS) -> float:
-        if not self.has_times or self.is_leave:
+        if self.entries:
+            return sum(entry.worked_hours(max_shift_hours=max_shift_hours) for entry in self.entries)
+        if not self.has_times or self.is_leave or self.work_type == WorkType.BREAK:
             return 0.0
         if self.started_at is not None and self.ended_at is not None:
             return self.raw_hours(max_shift_hours=max_shift_hours)
@@ -95,6 +113,8 @@ class WorkLog:
         )
 
     def raw_hours(self, *, max_shift_hours: float = MAX_SHIFT_HOURS) -> float:
+        if self.entries:
+            return sum(entry.raw_hours(max_shift_hours=max_shift_hours) for entry in self.entries)
         if not self.has_times:
             return 0.0
         if self.started_at is not None and self.ended_at is not None:
@@ -112,6 +132,8 @@ class WorkLog:
         )
 
     def leave_hours(self, *, standard_hours: float = DEFAULT_LEAVE_HOURS) -> float:
+        if self.entries:
+            return sum(entry.leave_hours(standard_hours=standard_hours) for entry in self.entries)
         if not self.is_leave:
             return 0.0
         raw = self.raw_hours()

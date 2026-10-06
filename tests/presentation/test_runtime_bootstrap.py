@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -171,24 +172,24 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 self.assertIsNone(window._holidays)
                 self.assertTrue(window.refresh())
                 self.assertEqual(displayed_holidays(), expected)
-                self.assertEqual(window.entry_panel.note_input.toPlainText(), expected[date(2026, 5, 4)])
+                self.assertEqual(window.entry_panel.content_input.toPlainText(), "")
                 self.assertFalse(window.has_unsaved_changes)
                 window.settings_page.holidays_switch.set_checked(False)
                 self.assertEqual(displayed_holidays(), {})
-                self.assertEqual(window.entry_panel.note_input.toPlainText(), "")
+                self.assertEqual(window.entry_panel.content_input.toPlainText(), "")
                 self.assertEqual(settings.get(runtime.user.id, SHOW_HOLIDAYS_SETTING_KEY), "0")
                 window.settings_page.holidays_switch.set_checked(True)
                 self.assertEqual(displayed_holidays(), expected)
                 self.assertEqual(settings.get(runtime.user.id, SHOW_HOLIDAYS_SETTING_KEY), "1")
-                window.entry_panel.note_input.setPlainText("Unsubmitted note")
+                window.entry_panel.content_input.setPlainText("Unsubmitted note")
                 self.assertTrue(window.has_unsaved_changes)
                 window.settings_page.holidays_switch.set_checked(False)
                 self.assertEqual(displayed_holidays(), {})
-                self.assertEqual(window.entry_panel.note_input.toPlainText(), "Unsubmitted note")
+                self.assertEqual(window.entry_panel.content_input.toPlainText(), "Unsubmitted note")
                 window.settings_page.holidays_switch.set_checked(True)
                 self.assertEqual(displayed_holidays(), expected)
-                self.assertEqual(window.entry_panel.note_input.toPlainText(), "Unsubmitted note")
-                window.entry_panel.note_input.setPlainText(expected[date(2026, 5, 4)])
+                self.assertEqual(window.entry_panel.content_input.toPlainText(), "Unsubmitted note")
+                window.entry_panel.content_input.clear()
                 self.assertFalse(window.has_unsaved_changes)
                 self.assertEqual(SQLiteWorkLogRepository(runtime.connection_factory).list_all(runtime.user.id), ())
                 self.assertTrue(window.previous_month())
@@ -298,7 +299,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 self.assertFalse(window._config.calendar_options.show_holidays)
                 self.assertTrue(window._config.calendar_options.week_start_monday)
                 self.assertTrue(window.refresh())
-                self.assertEqual(window.entry_panel.break_input.value(), 0.75)
+                self.assertEqual(window.entry_panel.view_model.default_break_hours, 0.75)
                 self.assertFalse(window._ai_assist_workflow._view_model.available)
             finally:
                 if second is not None and second.value is not None:
@@ -339,9 +340,14 @@ class RuntimeBootstrapTests(unittest.TestCase):
 
             runtime.value.window.entry_panel.start_input.setText("09:00")
             runtime.value.window.entry_panel.end_input.setText("18:00")
-            runtime.value.window.entry_panel.note_input.setPlainText("SQLite backed")
+            runtime.value.window.entry_panel.content_input.setPlainText("SQLite backed")
             with patch("worklogger.presentation.shell.app_window.QMessageBox.information") as notification:
                 runtime.value.window.entry_panel.save_button.click()
+                deadline = time.monotonic() + 5
+                while runtime.value.window.entry_panel.is_busy and time.monotonic() < deadline:
+                    runtime.value.application.processEvents()
+                    time.sleep(0.01)
+                self.assertFalse(runtime.value.window.entry_panel.is_busy)
             notification.assert_not_called()
 
             saved = SQLiteWorkLogRepository(

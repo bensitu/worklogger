@@ -22,7 +22,7 @@ class WorkLogCsvExporter:
     ) -> Result[Path]:
         destination = Path(destination)
         try:
-            records = tuple(rows)
+            records = tuple(entry for row in rows for entry in (row.entries or (row,)))
             timestamps = any(row.started_at is not None or row.ended_at is not None for row in records)
             with atomic_destination(destination) as temporary, temporary.open("w", encoding="utf-8-sig", newline="") as handle:
                 writer = csv.writer(handle)

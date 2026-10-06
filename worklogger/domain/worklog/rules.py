@@ -147,11 +147,15 @@ def normalize_work_log(
     *,
     max_shift_hours: float = MAX_SHIFT_HOURS,
 ) -> WorkLog:
+    if work_log.entries:
+        raise ValueError("worklog_summary_not_editable")
     start = parse_time(work_log.start_time)
     end = parse_time(work_log.end_time)
     if (work_log.start_time and not start) or (work_log.end_time and not end):
         raise ValueError("time_range_invalid")
     if bool(start) != bool(end):
+        raise ValueError("time_range_incomplete")
+    if not start and normalize_work_type(work_log.work_type) in {WorkType.MEETING, WorkType.TRAINING, WorkType.BREAK, WorkType.OTHER}:
         raise ValueError("time_range_incomplete")
 
     break_hours = float(work_log.break_hours or 0)
@@ -188,3 +192,39 @@ def normalize_work_log(
         overnight=(work_log.ended_at.date() > work_log.started_at.date()) if work_log.started_at and work_log.ended_at
         else is_overnight_shift(start, end) if start and end else False,
     )
+
+
+def aggregate_days(records) -> tuple[WorkLog, ...]:
+    grouped = {}
+    for record in records:
+        grouped.setdefault((record.user_id, record.day), []).append(record)
+    result = []
+    for (user_id, day), entries in sorted(grouped.items()):
+        if len(entries) == 1:
+            result.append(entries[0])
+            continue
+        entries.sort(key=lambda entry: (entry.start_time or "", entry.id or 0))
+        result.append(WorkLog(user_id, day, entries[0].start_time, entries[-1].end_time,
+                              sum(entry.break_hours for entry in entries),
+                              "\n".join(entry.note for entry in entries if entry.note),
+                              entries[0].work_type if all(entry.is_leave for entry in entries) else WorkType.NORMAL,
+                              entries=tuple(entries)))
+    return tuple(result)
+
+
+def entry_interval(record: WorkLog) -> tuple[datetime, datetime] | None:
+    if not record.has_times:
+        return None
+    if record.started_at is not None and record.ended_at is not None:
+        return record.started_at.astimezone(timezone.utc), record.ended_at.astimezone(timezone.utc)
+    times = shift_datetimes(record.day, record.start_time, record.end_time)
+    return tuple(moment.astimezone(timezone.utc) for moment in times)
+
+
+def entries_overlap(left: WorkLog, right: WorkLog) -> bool:
+    if left.is_note_only or right.is_note_only:
+        return False
+    a, b = entry_interval(left), entry_interval(right)
+    if a is None or b is None:
+        return left.day == right.day and (left.is_leave or right.is_leave)
+    return a[0] < b[1] and b[0] < a[1]

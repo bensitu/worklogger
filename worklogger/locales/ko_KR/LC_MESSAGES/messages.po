@@ -7,60 +7,6 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 
-msgid "The quick log is no longer available. Reload the records and try again."
-msgstr "빠른 기록을 더 이상 사용할 수 없습니다. 기록을 다시 불러온 후 다시 시도하세요."
-
-msgid "Unable to update the quick log. Your changes have been retained."
-msgstr "빠른 기록을 업데이트할 수 없습니다. 변경 사항은 유지되었습니다."
-
-
-msgid "System region"
-msgstr "시스템 지역"
-
-msgid "Holiday country"
-msgstr "공휴일 국가"
-
-msgid "State / province"
-msgstr "주 / 도"
-
-msgid "National holidays"
-msgstr "전국 공휴일"
-
-msgid "Select a supported holiday country and state or province."
-msgstr "지원되는 공휴일 국가와 주 또는 도를 선택하세요."
-
-
-msgid "Compensatory leave"
-msgstr "대체 휴가"
-
-msgid "No notes recorded for this period."
-msgstr "이 기간에 기록된 메모가 없습니다."
-
-msgid "The selected context is too large. Choose a shorter period or exclude optional content."
-msgstr "선택한 컨텍스트가 너무 큽니다. 더 짧은 기간을 선택하거나 선택적 내용을 제외하세요."
-
-msgid "Work Log"
-msgstr "작업 기록"
-
-
-msgid "Save the completed automatic record before starting another."
-msgstr "새 기록을 시작하기 전에 완료된 자동 기록을 저장하세요."
-
-msgid "Unable to update automatic recording state. Your saved data has been retained."
-msgstr "자동 기록 상태를 업데이트할 수 없습니다. 저장된 데이터는 유지됩니다."
-
-msgid "Unable to restore the automatic record. Reset it and start a new record?"
-msgstr "자동 기록을 복원할 수 없습니다. 초기화하고 새 기록을 시작할까요?"
-
-msgid "This note was changed in another editor. Reload it before saving. Your changes have been retained."
-msgstr "이 메모가 다른 편집기에서 변경되었습니다. 다시 불러온 후 저장하세요. 변경 내용은 유지됩니다."
-
-msgid "Temporary password"
-msgstr "임시 비밀번호"
-
-msgid "Add another sign-in method before unlinking this identity."
-msgstr "이 연결을 해제하기 전에 다른 로그인 방법을 추가하세요."
-
 msgid "&Add to Custom Colors"
 msgstr "사용자 지정 색에 추가(&A)"
 
@@ -93,9 +39,6 @@ msgstr "({week}주차)"
 
 msgid "+"
 msgstr "+"
-
-msgid "+ Add Entry"
-msgstr "+ 기록 추가"
 
 msgid "+15m break"
 msgstr "휴식 15분 추가"
@@ -147,6 +90,9 @@ msgstr "추가"
 
 msgid "Add Entry"
 msgstr "기록 추가"
+
+msgid "Add another sign-in method before unlinking this identity."
+msgstr "이 연결을 해제하기 전에 다른 로그인 방법을 추가하세요."
 
 msgid "Address"
 msgstr "주소"
@@ -253,6 +199,12 @@ msgstr "휴식 시간은 0 이상이고 근무 시간보다 짧아야 합니다.
 msgid "Break timer running"
 msgstr "휴식 시간 측정 중"
 
+msgid "Break {hours:.1f}h"
+msgstr "휴식 {hours:.1f}h"
+
+msgid "Break {hours}"
+msgstr "휴식 {hours}"
+
 msgid "Business trip"
 msgstr "출장"
 
@@ -276,6 +228,9 @@ msgstr "달력 데이터"
 
 msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
 msgstr "달력 데이터가 이미 있습니다.\n\n바꾸기는 기존 일정을 지운 후 가져옵니다.\n추가는 기존 일정을 유지하고 가져온 일정을 추가합니다."
+
+msgid "Calendar event"
+msgstr "캘린더 일정"
 
 msgid "Calendar events: {events}"
 msgstr "달력 일정: {events}"
@@ -307,6 +262,9 @@ msgstr "사용자 지정 색상 선택"
 msgid "Clear Calendar Events"
 msgstr "달력 일정 지우기"
 
+msgid "Clear input"
+msgstr "입력 지우기"
+
 msgid "Clearing calendar events is not supported yet."
 msgstr "달력 일정 지우기는 아직 지원되지 않습니다."
 
@@ -316,8 +274,20 @@ msgstr "닫기"
 msgid "Comp leave"
 msgstr "대체 휴가"
 
+msgid "Compensatory leave"
+msgstr "대체 휴가"
+
 msgid "Confirm password"
 msgstr "비밀번호 확인"
+
+msgid "Content"
+msgstr "내용"
+
+msgid "Content must not exceed 16,000 characters."
+msgstr "내용은 16,000자를 초과할 수 없습니다."
+
+msgid "Context: {context} tokens; output: {output} tokens"
+msgstr "컨텍스트: {context} 토큰; 출력: {output} 토큰"
 
 msgid "Continue"
 msgstr "계속"
@@ -333,6 +303,9 @@ msgstr "Markdown 복사"
 
 msgid "Create account"
 msgstr "계정 만들기"
+
+msgid "Create record from event"
+msgstr "일정에서 기록 만들기"
 
 msgid "Create user"
 msgstr "사용자 만들기"
@@ -355,24 +328,6 @@ msgstr "커서 위치: %1, %2\nESC 키를 눌러 취소"
 msgid "Custom"
 msgstr "사용자 지정"
 
-msgid "WorkLogger is already running."
-msgstr "WorkLogger가 이미 실행 중입니다."
-
-msgid "Work {hours:.1f}h"
-msgstr "근무 {hours:.1f}h"
-
-msgid "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
-msgstr "{count}개 기록을 가져오고 기존 기록 {existing}개를 교체하며 잘못된 행 {errors}개를 건너뛸까요?"
-
-msgid "The CSV file exceeds the supported size or row limit."
-msgstr "CSV 파일이 지원되는 크기 또는 행 수 제한을 초과했습니다."
-
-msgid "Some dates already have records. Review the import and confirm replacement."
-msgstr "일부 날짜에 기록이 이미 있습니다. 가져올 내용을 검토하고 교체를 확인하세요."
-
-msgid "Recurring events must have an end date or occurrence count."
-msgstr "반복 일정에는 종료 날짜 또는 반복 횟수가 필요합니다."
-
 msgid "DESKTOP START FAILED"
 msgstr "데스크톱 앱 시작 실패"
 
@@ -381,6 +336,9 @@ msgstr "일평균"
 
 msgid "Daily Report"
 msgstr "일일 보고서"
+
+msgid "Daily notes"
+msgstr "일별 메모"
 
 msgid "Dark mode"
 msgstr "다크 모드"
@@ -403,6 +361,15 @@ msgstr "기본 휴식(시간)"
 msgid "Delete"
 msgstr "삭제"
 
+msgid "Delete record"
+msgstr "기록 삭제"
+
+msgid "Delete this calendar event?"
+msgstr "이 캘린더 일정을 삭제하시겠습니까?"
+
+msgid "Delete this time record?"
+msgstr "이 시간 기록을 삭제하시겠습니까?"
+
 msgid "Delete user"
 msgstr "사용자 삭제"
 
@@ -412,6 +379,12 @@ msgstr "설명"
 msgid "Discard changes?"
 msgstr "변경 사항을 취소할까요?"
 
+msgid "Discard the saved timer without creating a record?"
+msgstr "기록을 만들지 않고 저장된 타이머를 삭제하시겠습니까?"
+
+msgid "Discard timer"
+msgstr "타이머 삭제"
+
 msgid "Domain"
 msgstr "도메인"
 
@@ -420,6 +393,9 @@ msgstr "다운로드"
 
 msgid "Downloading model..."
 msgstr "모델 다운로드 중..."
+
+msgid "Edit record"
+msgstr "기록 편집"
 
 msgid "Enable local model"
 msgstr "로컬 모델 사용"
@@ -462,6 +438,9 @@ msgstr "비밀번호 입력"
 
 msgid "Enter your password."
 msgstr "비밀번호를 입력하세요."
+
+msgid "Estimated RAM: {ram} GB"
+msgstr "예상 메모리: {ram} GB"
 
 msgid "Export"
 msgstr "내보내기"
@@ -541,6 +520,12 @@ msgstr "숨기기"
 msgid "Hide password"
 msgstr "비밀번호 숨기기"
 
+msgid "Historical break deduction: {hours}"
+msgstr "이전 휴식 차감: {hours}"
+
+msgid "Holiday country"
+msgstr "공휴일 국가"
+
 msgid "Hu&e:"
 msgstr "색상(&E):"
 
@@ -576,6 +561,9 @@ msgstr "백업, 이전 또는 스프레드시트 분석을 위해 근무 기록�
 
 msgid "Import your .ics file to let AI read your meetings when generating reports."
 msgstr ".ics 파일을 가져오면 AI가 보고서 생성 시 회의 정보를 참고할 수 있습니다."
+
+msgid "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
+msgstr "{count}개 기록을 가져오고 기존 기록 {existing}개를 교체하며 잘못된 행 {errors}개를 건너뛸까요?"
 
 msgid "Imported {count} calendar events."
 msgstr "달력 일정 {count}개를 가져왔습니다."
@@ -633,6 +621,9 @@ msgstr "휴가 일수"
 
 msgid "License"
 msgstr "라이선스"
+
+msgid "License: {license}"
+msgstr "라이선스: {license}"
 
 msgid "Light mode"
 msgstr "라이트 모드"
@@ -697,6 +688,9 @@ msgstr "Markdown files (*.md)"
 msgid "May"
 msgstr "5월"
 
+msgid "Meeting"
+msgstr "회의"
+
 msgid "Mode"
 msgstr "모드"
 
@@ -742,6 +736,9 @@ msgstr "월간 목표(시간)"
 msgid "More actions"
 msgstr "더 많은 작업"
 
+msgid "National holidays"
+msgstr "전국 공휴일"
+
 msgid "Network"
 msgstr "네트워크"
 
@@ -753,6 +750,9 @@ msgstr "새 비밀번호"
 
 msgid "New recovery key"
 msgstr "새 복구 키"
+
+msgid "New time record"
+msgstr "새 시간 기록"
 
 msgid "Next day"
 msgstr "다음 날"
@@ -777,6 +777,9 @@ msgstr "데이터 없음"
 
 msgid "No events found."
 msgstr "일정을 찾을 수 없습니다."
+
+msgid "No notes recorded for this period."
+msgstr "이 기간에 기록된 메모가 없습니다."
 
 msgid "No records for the selected day."
 msgstr "선택한 날짜에 기록이 없습니다."
@@ -819,6 +822,9 @@ msgstr "OpenAI 호환 인터페이스를 지원하며 호환 서비스를 통해
 
 msgid "Operation cancelled."
 msgstr "작업이 취소되었습니다."
+
+msgid "Other"
+msgstr "기타"
 
 msgid "Overnight"
 msgstr "자정 넘김"
@@ -940,8 +946,14 @@ msgstr "런타임 스모크 테스트 성공"
 msgid "Recording or a break is already active."
 msgstr "기록 또는 휴식이 이미 진행 중입니다."
 
+msgid "Recording since {time} - {duration}"
+msgstr "시작 {time} - {duration}"
+
 msgid "Recovery key"
 msgstr "복구 키"
+
+msgid "Recurring events must have an end date or occurrence count."
+msgstr "반복 일정에는 종료 날짜 또는 반복 횟수가 필요합니다."
 
 msgid "Refresh"
 msgstr "새로 고침"
@@ -1018,6 +1030,9 @@ msgstr "복원하면 현재 데이터베이스 파일이 바뀝니다. 계속할
 msgid "Restoring data..."
 msgstr "데이터 복원 중..."
 
+msgid "Resume work"
+msgstr "작업 재개"
+
 msgid "Rewrite"
 msgstr "다시 작성"
 
@@ -1048,8 +1063,17 @@ msgstr "저장"
 msgid "Save Report"
 msgstr "보고서 저장"
 
+msgid "Save changes"
+msgstr "변경 저장"
+
+msgid "Save content"
+msgstr "내용 저장"
+
 msgid "Save template"
 msgstr "템플릿 저장"
+
+msgid "Save the completed automatic record before starting another."
+msgstr "새 기록을 시작하기 전에 완료된 자동 기록을 저장하세요."
 
 msgid "Save this recovery key before continuing."
 msgstr "계속하기 전에 이 복구 키를 저장하세요."
@@ -1087,6 +1111,9 @@ msgstr "먼저 제공자를 선택하세요."
 msgid "Select a quick log first."
 msgstr "먼저 빠른 기록을 선택하세요."
 
+msgid "Select a supported holiday country and state or province."
+msgstr "지원되는 공휴일 국가와 주 또는 도를 선택하세요."
+
 msgid "Select a user."
 msgstr "사용자를 선택하세요."
 
@@ -1095,6 +1122,9 @@ msgstr "유효한 날짜 또는 날짜 범위를 선택하세요."
 
 msgid "Select an identity first."
 msgstr "먼저 연결된 계정을 선택하세요."
+
+msgid "Select an individual time record to edit this day."
+msgstr "해당 날짜의 시간 기록을 선택하여 편집하세요."
 
 msgid "Selected day: {day}"
 msgstr "선택한 날짜: {day}"
@@ -1141,6 +1171,9 @@ msgstr "로그인 중: {username}"
 msgid "Simplified Chinese"
 msgstr "중국어 간체"
 
+msgid "Some dates already have records. Review the import and confirm replacement."
+msgstr "일부 날짜에 기록이 이미 있습니다. 가져올 내용을 검토하고 교체를 확인하세요."
+
 msgid "Standard hours (h)"
 msgstr "표준 근무 시간"
 
@@ -1159,11 +1192,17 @@ msgstr "월요일부터 한 주 시작"
 msgid "Started"
 msgstr "시작됨"
 
+msgid "State / province"
+msgstr "주 / 도"
+
 msgid "Stored securely in a future update"
 msgstr "안전한 저장은 추후 지원됩니다"
 
 msgid "Sun"
 msgstr "일"
+
+msgid "System region"
+msgstr "시스템 지역"
 
 msgid "Template reset."
 msgstr "템플릿이 재설정되었습니다."
@@ -1174,8 +1213,14 @@ msgstr "템플릿이 저장되었습니다."
 msgid "Templates"
 msgstr "템플릿"
 
+msgid "Temporary password"
+msgstr "임시 비밀번호"
+
 msgid "Test"
 msgstr "테스트"
+
+msgid "The CSV file exceeds the supported size or row limit."
+msgstr "CSV 파일이 지원되는 크기 또는 행 수 제한을 초과했습니다."
 
 msgid "The ID or password is incorrect."
 msgstr "ID 또는 비밀번호가 올바르지 않습니다."
@@ -1192,17 +1237,26 @@ msgstr "비밀번호는 {length}자 이상이어야 합니다."
 msgid "The passwords do not match."
 msgstr "입력한 비밀번호가 일치하지 않습니다."
 
+msgid "The quick log is no longer available. Reload the records and try again."
+msgstr "빠른 기록을 더 이상 사용할 수 없습니다. 기록을 다시 불러온 후 다시 시도하세요."
+
 msgid "The report has not loaded. Reload it before continuing."
 msgstr "보고서가 로드되지 않았습니다. 다시 불러온 후 계속하세요."
 
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr "저장된 보고서를 사용할 수 없습니다. 보고서를 다시 불러온 후 다시 시도하세요."
 
+msgid "The selected context is too large. Choose a shorter period or exclude optional content."
+msgstr "선택한 컨텍스트가 너무 큽니다. 더 짧은 기간을 선택하거나 선택적 내용을 제외하세요."
+
 msgid "The user account is no longer available."
 msgstr "이 사용자 계정은 더 이상 사용할 수 없습니다."
 
 msgid "Theme"
 msgstr "테마"
+
+msgid "These times overlap another record or the active timer. Choose a different period."
+msgstr "다른 기록 또는 실행 중인 타이머와 시간이 겹칩니다. 다른 시간대를 선택하세요."
 
 msgid "This ID is already in use. Choose a different ID."
 msgstr "이 ID는 이미 사용 중입니다. 다른 ID를 선택하세요."
@@ -1212,6 +1266,12 @@ msgstr "이 ID는 이미 계정에 연결되어 있습니다."
 
 msgid "This model is in use by another user and cannot be deleted."
 msgstr "다른 사용자가 사용 중인 모델은 삭제할 수 없습니다."
+
+msgid "This note was changed in another editor. Reload it before saving. Your changes have been retained."
+msgstr "이 메모가 다른 편집기에서 변경되었습니다. 다시 불러온 후 저장하세요. 변경 내용은 유지됩니다."
+
+msgid "This record changed elsewhere. Reload it before saving. Your changes have been retained."
+msgstr "다른 곳에서 이 기록이 변경되었습니다. 다시 불러온 후 저장하세요. 입력한 내용은 유지되었습니다."
 
 msgid "Thu"
 msgstr "목"
@@ -1236,6 +1296,9 @@ msgstr "합계: {hours:.1f}h"
 
 msgid "Traditional Chinese"
 msgstr "중국어 번체"
+
+msgid "Training"
+msgstr "교육"
 
 msgid "Tue"
 msgstr "화"
@@ -1264,8 +1327,14 @@ msgstr "모델을 가져오지 못했습니다. 원본 파일 또는 다운로�
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "모델 파일을 읽지 못했습니다. 접근 권한을 확인하세요."
 
+msgid "Unable to restore the automatic record. Reset it and start a new record?"
+msgstr "자동 기록을 복원할 수 없습니다. 초기화하고 새 기록을 시작할까요?"
+
 msgid "Unable to restore the database. Select a valid SQLite backup."
 msgstr "데이터베이스를 복원하지 못했습니다. 유효한 SQLite 백업을 선택하세요."
+
+msgid "Unable to restore the timer. Discard it to start a new record."
+msgstr "타이머를 복원할 수 없습니다. 이전 타이머를 삭제한 후 새 기록을 시작하세요."
 
 msgid "Unable to save settings. Please try again."
 msgstr "설정을 저장하지 못했습니다. 다시 시도하세요."
@@ -1282,8 +1351,14 @@ msgstr "이 제공업체로 로그인하지 못했습니다. 다시 시도하세
 msgid "Unable to start WorkLogger. Check the application log for details."
 msgstr "WorkLogger를 시작하지 못했습니다. 자세한 내용은 애플리케이션 로그를 확인하세요."
 
+msgid "Unable to update automatic recording state. Your saved data has been retained."
+msgstr "자동 기록 상태를 업데이트할 수 없습니다. 저장된 데이터는 유지됩니다."
+
 msgid "Unable to update saved sign-in information."
 msgstr "저장된 로그인 정보를 업데이트하지 못했습니다."
+
+msgid "Unable to update the quick log. Your changes have been retained."
+msgstr "빠른 기록을 업데이트할 수 없습니다. 변경 사항은 유지되었습니다."
 
 msgid "Unknown error"
 msgstr "알 수 없는 오류"
@@ -1351,6 +1426,9 @@ msgstr "사용하면 텍스트 처리는 로컬 모델을 우선 사용하며 �
 msgid "Work Hours Trend"
 msgstr "근무 시간 추이"
 
+msgid "Work Log"
+msgstr "작업 기록"
+
 msgid "Work Mode Breakdown"
 msgstr "근무 형태 분포"
 
@@ -1366,14 +1444,23 @@ msgstr "근무 시간"
 msgid "Work type"
 msgstr "근무 형태"
 
+msgid "Work {hours:.1f}h"
+msgstr "근무 {hours:.1f}h"
+
 msgid "WorkLogger"
 msgstr "WorkLogger"
 
 msgid "WorkLogger command line"
 msgstr "WorkLogger 명령줄"
 
+msgid "WorkLogger is already running."
+msgstr "WorkLogger가 이미 실행 중입니다."
+
 msgid "Worked"
 msgstr "근무 시간"
+
+msgid "Worked: {hours}"
+msgstr "작업 시간: {hours}"
 
 msgid "Year"
 msgstr "년"
@@ -1449,12 +1536,3 @@ msgstr "{year}년 {start_month} {start_day}일 - {end_month} {end_day}일"
 
 msgid "{start} - {end}"
 msgstr "{start} - {end}"
-
-msgid "Estimated RAM: {ram} GB"
-msgstr "예상 메모리: {ram} GB"
-
-msgid "Context: {context} tokens; output: {output} tokens"
-msgstr "컨텍스트: {context} 토큰; 출력: {output} 토큰"
-
-msgid "License: {license}"
-msgstr "라이선스: {license}"
