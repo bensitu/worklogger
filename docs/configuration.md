@@ -98,8 +98,12 @@ variables. They are stored as strings in the settings repository.
 Model selection also uses `local_model_active_id`. Account password-change
 requirements are enforced by the authentication workflow, not by changing a UI
 preference alone.
-Automatic recording stores its active or completed unsaved state as JSON under
-`auto_record_state`; it is runtime state, not a user-editable preference.
+Automatic time recording stores its state as JSON under `time_entry_timer`.
+Migration retains older `auto_record_state` values as `previous_auto_record_state`
+until successful conversion. State includes the capture identifier, offset-aware
+start, content, type, and optional break/resume boundary. Historical break deductions
+remain attached only to converted older timers. This is runtime state, not a
+user-editable preference.
 
 ## Feature Definitions
 

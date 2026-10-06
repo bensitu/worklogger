@@ -17,7 +17,7 @@ date,start,end,break,note,work_type
 | `start`, `end` | Local clock times; blank together for an untimed record |
 | `break` | Decimal hours, not minutes |
 | `note` | Text; CSV quoting preserves commas and line breaks on export |
-| `work_type` | `normal`, `remote`, `business_trip`, `paid_leave`, `comp_leave`, `sick_leave` |
+| `work_type` | `normal`, `remote`, `business_trip`, `meeting`, `training`, `break`, `paid_leave`, `comp_leave`, `sick_leave`, `other` |
 
 Time entry accepts `HH:mm` and compact hour/minute digits. Legacy `HH.MM` requires
 two minute digits; ambiguous decimal-looking input such as `1.5` is rejected,
@@ -38,7 +38,9 @@ Each valid row is normalized using the work-log rules and saved to the currently
 selected account. The import preview shows valid rows, existing dates, and invalid
 rows before confirmation. Valid rows are written in one transaction; storage
 failure rolls back the entire batch. Existing dates require explicit replacement
-permission. Duplicate dates in the file are reported as invalid rows. Files are
+permission. Nonoverlapping timed rows may share a date; overlapping periods are
+reported as invalid rows. An independent note-only row may share a date with timed
+rows, but duplicate note-only rows are rejected. Files are
 limited to 10 MiB and 50,000 rows. UTF-8 is preferred, with the selected language's
 legacy Windows encoding used when UTF-8 decoding fails. The adapter also accepts
 an explicit encoding. Invalid encoding and CSV syntax return an import error.
@@ -71,6 +73,13 @@ Imports remain independent calendar records, not work-log entries or hours worke
 
 Do not use this import/export pair as a lossless round trip for an arbitrary
 calendar provider. Review a small representative file before importing a large one.
+
+Time-entry export emits each period separately, with distinct identifiers based on
+the stored entry ID. Break events retain their duration and are labelled as breaks.
+CSV export also retains individual periods and independent daily notes. Neither
+export flattens a multi-entry day into its first-to-last clock span. CSV replacement
+replaces all imported dates only after confirmation; entry IDs are local and are
+not portable identifiers across CSV imports.
 
 ## Markdown
 

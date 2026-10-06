@@ -63,10 +63,10 @@ normal interactive registration flow.
 A manual save follows this path:
 
 ```text
-WorkLogEntryPanel
-  -> AppWindow save callback
-  -> WorkLogEntryViewModel
-  -> SaveWorkLogHandler(SaveWorkLogCommand)
+TimeEntryPanel
+  -> QtJobRunner
+  -> TimeEntryViewModel
+  -> TimeEntryService
   -> normalize_work_log
   -> SQLiteWorkLogRepository
   -> calendar, totals, and record-detail refresh
@@ -79,15 +79,18 @@ reimplement these calculations independently.
 Calendar, report, and analytics navigation share month arithmetic from
 `domain/shared/dates.py`. Entry editors and summary views share localized work-type
 labels; reports, notes, and quick logs share clock-range labels. Manual and
-automatic time entry use the same work-type and notes controls;
-automatic detail updates persist together without changing timer boundaries.
+automatic time entry share visual controls while keeping separate editable drafts.
+Completed periods have independent IDs and revisions. Automatic time completion
+and its timer-state transition share one database transaction. The UI disables
+conflicting edits and closing while a storage operation runs off the UI thread.
+Daily summary reads aggregate periods; editing and exports retain individual rows.
 Notes and reports reuse application contracts for template updates, Markdown
 export, and text rewriting. Update checks use the application-level service
 contract rather than a duplicate use-case definition.
 
 Quick logs, daily notes, reports, calendar events, accounts, and settings follow
 the same command/query and handler pattern. Daily notes have independent storage,
-and time-entry reads combine the note for the selected date. Editor saves use
+and period content does not overwrite an independent daily note. Editor saves use
 optimistic content checks to prevent overwriting another editor's changes.
 
 ## Results and Errors

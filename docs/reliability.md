@@ -44,7 +44,7 @@ complete coverage of every operating-system configuration.
 | Holiday regions | Country detection uses bundled timezone data, with explicit country and subdivision selection. Unknown zones do not fall back to US holidays. |
 | AI context | Repository reads are period-bounded. Disabled private categories are not fetched, settings failures stop construction, and oversized context is rejected before transmission. Chat cancellation has its own result. |
 | Current date | Regular date refresh and the Today action update long-running views without discarding the selected date or unsaved editor state. |
-| Automatic state | Account-scoped start/break boundaries and pending drafts survive reopening. Editing notes or browsing dates does not reset the timer; quarter-hour break rounding is explicit. Invalid persisted state requires deliberate replacement. |
+| Automatic state | Account-scoped timer and break/resume boundaries survive reopening. Finishing a period and changing timer state commit together. Content editing or date browsing does not reset elapsed time. Invalid state requires deliberate replacement. |
 | Report content | Generated labels use gettext, queries are period-bounded, multiline list content is indented, and daily/weekly/monthly ranges are validated against their types. |
 | Model verification cost | Checksum results are cached by file path, timestamps, size, and expected digest. Changes invalidate the cached result. Verification is not a test of inference quality. |
 | Icon rendering cost | SVG renderers and pixmaps are bounded and cached by asset, theme color, size, and device pixel ratio. |

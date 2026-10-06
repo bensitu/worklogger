@@ -8,6 +8,7 @@ desktop features from adapters that require additional runtime configuration.
 | Guide | Contents |
 | --- | --- |
 | [User guide](user-guide.md) | Accounts, time entry, reports, analytics, settings |
+| [Time recording](time-recording.md) | Multiple periods, timer transitions, editing, compatibility, improvement options |
 | [Configuration](configuration.md) | Defaults, language selection, file locations, environment variables |
 | [Data formats](data-formats.md) | CSV, iCalendar, Markdown, PDF, and backup scope |
 | [Templates](templates.md) | Report variables, rendering, custom templates |

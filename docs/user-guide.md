@@ -24,44 +24,56 @@ are disabled in the standard application.
 ## Calendar
 
 Use the month arrows or Today to choose a month, then select a date. The right
-panel edits the selected day's record and lists its work entry and imported
-calendar events. Add Entry opens quick-log, note, and AI-assistance actions; AI
-generation requires a configured service and is unavailable by default.
+panel records individual periods and lists the selected day's time records and
+imported calendar events. New time record opens an empty manual editor and focuses
+the start time. Its menu arrow opens quick logs, daily notes, and AI assistance;
+AI generation requires a configured service and is unavailable by default.
 
 ### Manual Entry
 
 1. Select Manual Input and enter start and end times. The clock icon opens the
    time-selection control.
-2. Enter break duration in decimal hours: `0.5` means 30 minutes.
-3. Select the work type, optionally enter a note, and save.
+2. Select the work type and optionally describe the activity in Content.
+3. Save the period. Repeat with another nonoverlapping period on the same date.
 
-A saved work record is unique per account and date. Saving again updates that
-record; it does not add another shift. Use quick logs for multiple task descriptions.
+A date can contain multiple records with independent IDs. Select a record to edit
+it in Manual Input; saving preserves its ID. Use New time record to start another
+period. Clear input resets the editor without deleting saved records; in Auto
+Record it clears content without stopping the timer. A record's delete button
+appears on hover or keyboard focus and requires confirmation.
 Successful time-entry saves update the calendar without a confirmation popup.
 
-The maximum elapsed shift is 16 hours, before subtracting breaks. Breaks must be
-nonnegative and shorter than the elapsed shift. An end time earlier than the start
+The maximum elapsed period is 16 hours. Historical break deductions must be
+nonnegative and shorter than that period; new breaks are separate records.
+An end time earlier than the start
 means the next day, for example `22:00` to `06:00`. Equal times represent a 24-hour
-interval and therefore fail the maximum-length check. Both times may be omitted
-for a note-only or leave record; entering only one time is invalid.
+interval and therefore fail the maximum-length check. New time entries require
+both times. Daily notes remain independent; historical untimed leave remains
+readable and its content can be edited without inventing times.
 
-Work types are normal, remote, business trip, paid leave, compensatory leave, and
-sick leave. Leave is accounted for separately from worked hours in summary totals.
+Work types are normal work, remote work, business trip, meeting, training, break,
+paid leave, compensatory leave, sick leave, and Other. Other appears last and counts
+as worked time. Breaks do not count as work or leave. Leave is accounted for
+separately from worked hours.
 
 ### Automatic Entry
 
-Clock In records the current local date and time in the editor. Clock Out fills
-the end time; choose Save to persist the completed record. Break controls measure a break or
-add 15 minutes; measured break totals are rounded to quarter hours when ended.
-The configured default break applies when starting a new record.
-Work type and the expandable Notes editor are shared with Manual Input. They can
-be edited before starting, while recording or taking a break, and after stopping.
-Switching entry modes preserves these details. Returning to Auto Record restores
-the active record's date and details rather than editing another selected day.
-Calendar refreshes and date navigation preserve the automatic draft's work type
-and note. In Auto Record, these controls continue editing that draft's date.
-An active timer is not reported as an incomplete-time error. Save remains disabled
-until the completed record passes validation.
+Choose a work type, enter optional content, and choose Start. End saves the timed
+record and its current content automatically. Save content updates the timer's
+description without creating a finished period; after End it updates that same
+saved record's description. Edit a completed record through Manual Input.
+
+Break closes the current work period and starts a separate break timer using the
+configured default duration. Work resumes at that duration's end; Resume work
+ends the break early. Reopening after the deadline preserves the planned boundary
+rather than counting the entire closed-application interval as a break. A default
+duration of zero disables this shortcut; a manual break can still be recorded.
+The End menu contains Discard timer, with confirmation, for an unwanted or
+unrecoverable timer. Clearing the form does not discard or stop it.
+
+Manual and automatic editors preserve their separate drafts when switching modes.
+Calendar refreshes do not replace the active timer's content. The type is fixed
+during a running period; finish it before choosing the next activity.
 Clock Out rejects invalid or excessive elapsed intervals rather than wrapping
 them into a shorter shift. The active record keeps its original date when the
 calendar selection changes.
@@ -69,11 +81,17 @@ calendar selection changes.
 The timer is not a background service. Its start, break boundaries, note, work
 type, and completed unsaved draft are nevertheless stored per account in the
 database. Reopening restores the original date and elapsed break. A new timer
-cannot replace a completed unsaved draft; save or manually correct it first.
-Successful work-log saving clears that pending state. Failed state writes retain
+cannot replace another active timer. Completing a period stores its time and
+clears or transitions the timer in one transaction. Failed state writes retain
 the previous state and show an error. Invalid stored state is not silently deleted;
 starting a replacement requires confirmation. System-date changes update the
 calendar's Today indicator without discarding the selected date or draft.
+
+Historical records retain their original break deduction, shown in the editor;
+the software does not invent a break location. Deleting an imported event affects
+only the local copy. Selecting an imported event creates a manual time-entry draft,
+not an edit to the source calendar file. Imported events themselves contribute no
+worked hours. See [time-recording details and improvement options](time-recording.md).
 
 ### Holidays and Markers
 

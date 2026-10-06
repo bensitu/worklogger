@@ -32,7 +32,7 @@ external SQLite clients still require SQLite's own locking protections.
 | `schema_migrations` | `version` primary key; description and applied timestamp |
 | `users` | Integer ID, unique username, password/recovery hashes and salts, administrator and password-change flags, remembered-token hash/expiry, timestamps |
 | `login_attempts` | Username primary key, failure count, lock expiry, last failure |
-| `worklog` | Composite `(user_id, d)` primary key; start/end, optional offset-aware timestamps, decimal-hour break, note, work type, overnight flag |
+| `worklog` | Integer entry ID; user/date, start/end, offset-aware timestamps, historical break deduction, independent content, work type, revision and capture identifier |
 | `daily_notes` | Composite `(user_id, d)` primary key; independent daily note content |
 | `quick_logs` | Integer ID; user/date, optional start/end, description, creation timestamp |
 | `settings` | Composite `(user_id, key)` primary key; string value |
@@ -42,12 +42,15 @@ external SQLite clients still require SQLite's own locking protections.
 | `external_identities` | Integer ID, user, provider/subject, email/display name, timestamps; unique `(provider, subject)` |
 | `activity_events` | Integer ID, optional user, event type, JSON details, creation timestamp |
 
-The exact column declarations are in
-[the initial schema](../worklogger/infrastructure/database/migrations/migration_001_initial_schema.py).
+Initial tables are defined in
+[the initial schema](../worklogger/infrastructure/database/migrations/migration_001_initial_schema.py);
+the current work-log definition is in
+[the entry migration](../worklogger/infrastructure/database/migrations/migration_007_worklog_entries.py).
 Dates are ISO-formatted text; work times are normalized `HH:MM`; breaks are stored
-in hours. Daily notes live in `daily_notes`; the older `worklog.note` column remains
-for file compatibility. Repository reads combine the independent note with its
-working-hour record, while new writes store note content in the independent table.
+in hours. Daily notes live in `daily_notes`; time-entry content is stored separately
+in `worklog.note`. Multiple entries may belong to the same account and date.
+Collection reads return daily summaries, while editing and exports use individual
+entries. The compatibility daily-save API refuses to replace a multi-entry day.
 
 Saving a new report inserts a row. Updating a saved report replaces its content
 by ID, with account, type, and period checks. Its ID and creation timestamp are
@@ -73,6 +76,21 @@ the application version alone.
 | 4 | Add a unique NFKC/casefold account key and explicit local-password availability |
 | 5 | Copy existing notes to independent storage and remove note-only empty work rows |
 | 6 | Add optional offset-aware start/end timestamps, leaving existing clock-only records unchanged |
+| 7 | Replace the daily primary key with entry IDs, preserve historical content and break deductions, add date/capture indexes and optimistic revisions, and retain previous automatic drafts for conversion |
+
+Migration 7 creates a complete private SQLite snapshot before converting populated
+tables. Table replacement and settings-key conversion are transactional. Existing
+timestamps and break deductions are copied without guessing when a break occurred.
+Daily notes remain independent. The new timer service converts the previous account
+draft on first use; malformed state remains available for deliberate recovery.
+
+New manual and automatic entries use zero legacy break deduction. Breaks are
+independent `break` entries and contribute no worked or leave hours. Entry updates
+and deletions require the account, ID, and revision. Overlap checks include adjacent
+dates and the active timer, inside the write transaction. Automatic completion and
+the corresponding timer-state change commit together. Capture identifiers prevent
+duplicate insertion of the same automatic period. Imported calendar-event deletion
+checks account ownership and the complete expected row before removing it.
 
 Migration 6 creates a private pre-change snapshot when existing work rows are
 present. New desktop entries use the system's named timezone; automatic entries
