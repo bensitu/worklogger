@@ -364,6 +364,12 @@ msgstr "刪除"
 msgid "Delete record"
 msgstr "刪除記錄"
 
+msgid "Delete report"
+msgstr "刪除報表"
+
+msgid "Delete report #{report_id}? This cannot be undone."
+msgstr "刪除報表 #{report_id}？此操作無法復原。"
+
 msgid "Delete this calendar event?"
 msgstr "刪除這筆行事曆日程？"
 
@@ -1273,6 +1279,9 @@ msgstr "此備註已在其他編輯視窗中修改。請重新載入後再儲存
 msgid "This record changed elsewhere. Reload it before saving. Your changes have been retained."
 msgstr "該記錄已在其他位置修改，請重新載入後儲存。您的修改已保留。"
 
+msgid "This report changed elsewhere. Reload the history before deleting it."
+msgstr "此報表已在其他位置修改。請重新載入歷史清單後再刪除。"
+
 msgid "Thu"
 msgstr "四"
 
@@ -1311,6 +1320,9 @@ msgstr "無法檢查更新，請檢查網路連線後重試。"
 
 msgid "Unable to complete the AI request. Check your model settings and try again."
 msgstr "無法完成 AI 請求，請檢查模型設定後重試。"
+
+msgid "Unable to delete the report. Your saved data has been retained."
+msgstr "無法刪除報表，已儲存的資料仍然保留。"
 
 msgid "Unable to export the file. Check the destination and write permissions."
 msgstr "無法匯出檔案，請檢查目標位置與寫入權限。"
@@ -1368,6 +1380,9 @@ msgstr "解除連結"
 
 msgid "Unsaved changes"
 msgstr "未儲存的變更"
+
+msgid "Unsaved edits to this report will also be discarded."
+msgstr "對該報表尚未儲存的修改也將被放棄。"
 
 msgid "Update"
 msgstr "更新"

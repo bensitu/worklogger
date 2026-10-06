@@ -364,6 +364,12 @@ msgstr "削除"
 msgid "Delete record"
 msgstr "記録を削除"
 
+msgid "Delete report"
+msgstr "レポートを削除"
+
+msgid "Delete report #{report_id}? This cannot be undone."
+msgstr "レポート #{report_id} を削除しますか？この操作は取り消せません。"
+
 msgid "Delete this calendar event?"
 msgstr "この予定を削除しますか？"
 
@@ -1273,6 +1279,9 @@ msgstr "このメモは別の編集画面で変更されました。再読み込
 msgid "This record changed elsewhere. Reload it before saving. Your changes have been retained."
 msgstr "この記録は別の場所で変更されました。再読み込みしてから保存してください。入力内容は保持されています。"
 
+msgid "This report changed elsewhere. Reload the history before deleting it."
+msgstr "このレポートは別の場所で変更されました。履歴を再読み込みしてから削除してください。"
+
 msgid "Thu"
 msgstr "木"
 
@@ -1311,6 +1320,9 @@ msgstr "更新を確認できませんでした。ネットワーク接続を確
 
 msgid "Unable to complete the AI request. Check your model settings and try again."
 msgstr "AIリクエストを完了できませんでした。モデル設定を確認して再試行してください。"
+
+msgid "Unable to delete the report. Your saved data has been retained."
+msgstr "レポートを削除できません。保存済みデータは保持されています。"
 
 msgid "Unable to export the file. Check the destination and write permissions."
 msgstr "ファイルをエクスポートできませんでした。保存先と書き込み権限を確認してください。"
@@ -1368,6 +1380,9 @@ msgstr "連携解除"
 
 msgid "Unsaved changes"
 msgstr "未保存の変更"
+
+msgid "Unsaved edits to this report will also be discarded."
+msgstr "このレポートの未保存の編集内容も破棄されます。"
 
 msgid "Update"
 msgstr "更新"

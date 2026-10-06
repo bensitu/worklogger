@@ -1,10 +1,8 @@
 """Selectable record text with a marker aligned to its first line."""
 
-from PySide6.QtCore import QEvent, QSize, Qt, QTimer, Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QToolButton, QWidget
-from PySide6.QtGui import QCursor
-from worklogger.infrastructure.i18n import _
-from worklogger.presentation.widgets.icons import ui_icon
+from PySide6.QtCore import QEvent, QSize, Qt
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy
+from worklogger.presentation.widgets.hover_delete_button import HoverDeleteButton
 
 
 class RecordSummaryLabel(QLabel):
@@ -36,36 +34,17 @@ class RecordSummaryLabel(QLabel):
             self._align_marker()
 
 
-class RecordSummaryButton(QPushButton):
-    delete_requested = Signal()
-    hovered = Signal(object)
-
+class RecordSummaryButton(HoverDeleteButton):
     def __init__(self, text: str, *, deletable: bool = False):
-        super().__init__()
+        super().__init__(deletable=deletable)
         self.setObjectName("calendar_time_entry_button")
+        self.delete_button.setAccessibleName(self.delete_button.toolTip() + ": " + text)
         self.label = RecordSummaryLabel(text)
         self.label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         self.label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         row = QHBoxLayout(self)
-        row.setContentsMargins(8, 8, 8, 8)
+        row.setContentsMargins(8, 8, 42 if deletable else 8, 8)
         row.addWidget(self.label)
-        self.delete_button = QToolButton(self)
-        self.delete_button.setObjectName("delete_record_button")
-        self.delete_button.setIcon(ui_icon("trash"))
-        self.delete_button.setToolTip(_("Delete record"))
-        self.delete_button.setAccessibleName(_("Delete record") + ": " + text)
-        self.delete_button.clicked.connect(self.delete_requested)
-        self._deletable = deletable
-        self._keyboard_focus = False
-        self.delete_button.installEventFilter(self)
-        if deletable:
-            slot = QWidget(self)
-            slot.setObjectName("record_delete_slot_widget")
-            slot.setFixedSize(28, 28)
-            self.delete_button.setParent(slot)
-            self.delete_button.setGeometry(0, 0, 28, 28)
-            row.addWidget(slot, 0, Qt.AlignmentFlag.AlignTop)
-        self.delete_button.hide()
         policy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         policy.setHeightForWidth(True)
         self.setSizePolicy(policy)
@@ -87,33 +66,3 @@ class RecordSummaryButton(QPushButton):
         height = self.heightForWidth(self.width())
         if self.minimumHeight() != height:
             self.setMinimumHeight(height)
-
-    def _show_delete(self, position=None):
-        focused = self._keyboard_focus and (self.hasFocus() or self.delete_button.hasFocus())
-        hovered = self.rect().contains(self.mapFromGlobal(position or QCursor.pos()))
-        self.delete_button.setVisible(self._deletable and (hovered or focused))
-
-    def enterEvent(self, event):
-        super().enterEvent(event)
-        self._show_delete()
-        self.hovered.emit(self)
-
-    def leaveEvent(self, event):
-        super().leaveEvent(event)
-        self._show_delete()
-
-    def focusInEvent(self, event):
-        super().focusInEvent(event)
-        self._keyboard_focus = event.reason() in (Qt.FocusReason.TabFocusReason, Qt.FocusReason.BacktabFocusReason, Qt.FocusReason.ShortcutFocusReason)
-        self._show_delete()
-
-    def focusOutEvent(self, event):
-        super().focusOutEvent(event)
-        QTimer.singleShot(0, self, self._show_delete)
-
-    def eventFilter(self, watched, event):
-        if watched is self.delete_button and event.type() == QEvent.Type.FocusIn:
-            self._keyboard_focus = event.reason() in (Qt.FocusReason.TabFocusReason, Qt.FocusReason.BacktabFocusReason, Qt.FocusReason.ShortcutFocusReason)
-        if watched is self.delete_button and event.type() in (QEvent.Type.FocusIn, QEvent.Type.FocusOut):
-            QTimer.singleShot(0, self, self._show_delete)
-        return super().eventFilter(watched, event)

@@ -30,6 +30,7 @@ class GenerateReportCommand:
 class DeleteReportCommand:
     user_id: int
     report_id: int
+    expected_content: str | None = None
 
 
 @dataclass(frozen=True)

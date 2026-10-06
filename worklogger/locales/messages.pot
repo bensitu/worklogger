@@ -362,6 +362,12 @@ msgstr ""
 msgid "Delete record"
 msgstr ""
 
+msgid "Delete report"
+msgstr ""
+
+msgid "Delete report #{report_id}? This cannot be undone."
+msgstr ""
+
 msgid "Delete this calendar event?"
 msgstr ""
 
@@ -1271,6 +1277,9 @@ msgstr ""
 msgid "This record changed elsewhere. Reload it before saving. Your changes have been retained."
 msgstr ""
 
+msgid "This report changed elsewhere. Reload the history before deleting it."
+msgstr ""
+
 msgid "Thu"
 msgstr ""
 
@@ -1308,6 +1317,9 @@ msgid "Unable to check for updates. Check your network connection and try again.
 msgstr ""
 
 msgid "Unable to complete the AI request. Check your model settings and try again."
+msgstr ""
+
+msgid "Unable to delete the report. Your saved data has been retained."
 msgstr ""
 
 msgid "Unable to export the file. Check the destination and write permissions."
@@ -1365,6 +1377,9 @@ msgid "Unlink"
 msgstr ""
 
 msgid "Unsaved changes"
+msgstr ""
+
+msgid "Unsaved edits to this report will also be discarded."
 msgstr ""
 
 msgid "Update"

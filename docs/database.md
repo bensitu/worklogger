@@ -55,6 +55,9 @@ entries. The compatibility daily-save API refuses to replace a multi-entry day.
 Saving a new report inserts a row. Updating a saved report replaces its content
 by ID, with account, type, and period checks. Its ID and creation timestamp are
 preserved. A missing or mismatched ID is rejected rather than creating a new row.
+Report deletion is scoped to the account and saved ID. Desktop requests also include
+the previously loaded content, checked atomically with deletion to reject stale
+requests without removing a report that another operation changed.
 
 Indexes support per-account/date access, report period lookup, template language
 lookup, remembered tokens, identity ownership, and activity time ordering.

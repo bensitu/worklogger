@@ -3,6 +3,8 @@ from datetime import date, datetime, timezone
 import os
 from pathlib import Path
 import tempfile
+import threading
+import time
 import unittest
 from unittest.mock import patch
 
@@ -14,10 +16,10 @@ from tests.app.test_notes_and_reports_use_cases import (
     MemoryCalendarRepository, MemoryQuickLogRepository, MemoryTemplateProvider,
     MemoryTemplateRepository, MemoryWorkLogRepository,
 )
-from worklogger.app.commands.report_commands import SaveReportCommand
+from worklogger.app.commands.report_commands import DeleteReportCommand, SaveReportCommand
 from worklogger.app.use_cases.ai import RewriteTextHandler
 from worklogger.app.use_cases.reports import (
-    GenerateReportHandler, GetReportForPeriodHandler, ListReportsHandler,
+    DeleteReportHandler, GenerateReportHandler, GetReportForPeriodHandler, ListReportsHandler,
     ResetReportTemplateHandler, SaveReportHandler, SaveReportTemplateHandler,
 )
 from worklogger.domain.reporting.models import Report
@@ -31,6 +33,7 @@ from worklogger.presentation.reporting.dialog import ReportDialog
 from worklogger.presentation.shell.pages import ReportsPage
 from worklogger.presentation.theme import install_bundled_fonts
 from worklogger.presentation.viewmodels.reports import ReportEditorViewModel
+from worklogger.presentation.job_runner import ImmediateJobRunner, QtJobRunner
 
 
 class ReportHistoryTests(unittest.TestCase):
@@ -57,6 +60,7 @@ class ReportHistoryTests(unittest.TestCase):
             get_report_handler=GetReportForPeriodHandler(self.repository),
             save_report_handler=SaveReportHandler(self.repository),
             list_reports_handler=ListReportsHandler(self.repository),
+            delete_report_handler=DeleteReportHandler(self.repository),
             save_template_handler=SaveReportTemplateHandler(templates),
             reset_template_handler=ResetReportTemplateHandler(templates),
             markdown_exporter=MarkdownExporter(), rewrite_handler=RewriteTextHandler(),
@@ -77,12 +81,106 @@ class ReportHistoryTests(unittest.TestCase):
                                            period.start, period.end, content, self.stamp))
 
     def page(self, report_type="daily"):
-        page = ReportsPage(self.model, self.day)
+        page = ReportsPage(self.model, self.day, job_runner=ImmediateJobRunner())
         self.assertTrue(page.refresh())
         page.report_type_control.set_value(report_type)
         self.addCleanup(page.deleteLater)
         self.addCleanup(page.close)
         return page
+
+    def test_history_delete_confirms_and_updates_only_the_target_report(self):
+        for report_type in ("daily", "weekly", "monthly"):
+            first = self.seed(report_type, "First")
+            current = self.seed(report_type, "Current")
+            page = self.page(report_type)
+            page.editor.setPlainText("Unsubmitted edits")
+            button = next(button for button in page.history_panel._buttons.values() if button.property("report_id") == first.id)
+            with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.No):
+                button.delete_button.click()
+            self.assertEqual(len(self.repository.list_by_type(self.user.id, report_type)), 2)
+            with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+                button.delete_button.click()
+            self.assertEqual([report.id for report in self.repository.list_by_type(self.user.id, report_type)], [current.id])
+            self.assertEqual(page.editor.toPlainText(), "Unsubmitted edits")
+            self.assertEqual(page._states[report_type].report_id, current.id)
+            active = next(iter(page.history_panel._buttons.values()))
+            with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+                active.delete_button.click()
+            self.assertEqual(self.repository.list_by_type(self.user.id, report_type), ())
+            self.assertIsNone(page._states[report_type].report_id)
+            self.assertEqual(page.editor.toPlainText(), "")
+            self.assertFalse(page.has_unsaved_changes)
+            page.editor.setPlainText("Replacement")
+            page._save_current()
+            saved = self.repository.list_by_type(self.user.id, report_type)
+            self.assertEqual(len(saved), 1)
+            self.assertNotEqual(saved[0].id, current.id)
+            page._confirm_discard = lambda: True
+
+    def test_history_delete_rejects_stale_foreign_and_failed_storage_operations(self):
+        saved = self.seed("daily", "Original")
+        page = self.page()
+        stale = page.history_panel._items[0]
+        page.editor.setPlainText("Unsubmitted edit")
+        self.repository.save(replace(saved, content="Changed elsewhere"))
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+            page._delete_history_item(stale)
+        self.assertEqual(page.last_error.code, "report_conflict")
+        self.assertEqual(page.editor.toPlainText(), "Unsubmitted edit")
+        self.assertEqual(len(self.repository.list_by_type(self.user.id, "daily")), 1)
+        handler = DeleteReportHandler(self.repository)
+        rejected = handler.handle(DeleteReportCommand(self.other_user.id, saved.id, "Changed elsewhere"))
+        self.assertEqual(rejected.error.code, "report_not_found")
+        item = replace(stale, content="Changed elsewhere")
+        for failure in (OSError("storage unavailable"), ValueError("invalid stored data")):
+            with patch.object(self.repository, "remove", side_effect=failure), patch.object(
+                QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+                page._delete_history_item(item)
+            self.assertEqual(page.last_error.code, "report_delete_failed")
+            self.assertEqual(page.editor.toPlainText(), "Unsubmitted edit")
+            self.assertFalse(page._delete_busy)
+            self.assertTrue(page.history_panel.isEnabled())
+        self.assertFalse(self.model.delete(replace(item, user_id=self.other_user.id)).ok)
+        page._confirm_discard = lambda: True
+
+    def test_background_delete_serializes_editor_actions_without_blocking_events(self):
+        self.seed("daily", "Original")
+        page = self.page()
+        page._job_runner = QtJobRunner(page)
+        self.addCleanup(lambda: page._job_runner.shutdown(wait=True))
+        item = page.history_panel._items[0]
+        release = threading.Event()
+        threads = []
+        remove = self.repository.remove
+
+        def delayed(*args, **kwargs):
+            threads.append(threading.get_ident())
+            release.wait(5)
+            return remove(*args, **kwargs)
+
+        with patch.object(self.repository, "remove", side_effect=delayed), patch.object(
+            QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+            try:
+                page._delete_history_item(item)
+                self.assertTrue(page._delete_busy)
+                self.assertFalse(page.confirm_leave())
+                self.assertTrue(page.editor.isReadOnly())
+                self.assertFalse(page.history_panel.isEnabled())
+                self.assertFalse(page.save_button.isEnabled())
+                self.app.processEvents()
+                self.assertEqual(page.editor.toPlainText(), "Original")
+            finally:
+                release.set()
+            deadline = time.monotonic() + 5
+            while page._delete_busy and time.monotonic() < deadline:
+                self.app.processEvents()
+                time.sleep(0.01)
+        self.assertFalse(page._delete_busy)
+        self.assertNotEqual(threads[0], threading.get_ident())
+        self.assertTrue(page.history_panel.isEnabled())
+        self.assertFalse(page.editor.isReadOnly())
+        self.assertEqual(page.editor.toPlainText(), "")
+        self.assertEqual(self.repository.list_by_type(self.user.id, "daily"), ())
 
     def test_confirmed_overwrite_changes_only_the_selected_report(self):
         for report_type in ("daily", "weekly", "monthly"):

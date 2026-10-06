@@ -36,7 +36,7 @@ from worklogger.domain.reporting.templates import (
     normalize_template_type,
     render_template,
 )
-from worklogger.domain.shared.errors import InfrastructureError, NotFoundError, ValidationError
+from worklogger.domain.shared.errors import ConflictError, InfrastructureError, NotFoundError, ValidationError
 from worklogger.domain.shared.dates import time_range_label
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
@@ -99,8 +99,20 @@ class DeleteReportHandler:
         self._repository = repository
 
     def handle(self, command: DeleteReportCommand) -> Result[None]:
-        self._repository.remove(command.user_id, command.report_id)
-        return Result.success(None)
+        try:
+            if command.expected_content is None:
+                self._repository.remove(command.user_id, command.report_id)
+            else:
+                self._repository.remove(command.user_id, command.report_id, expected_content=command.expected_content)
+            return Result.success(None)
+        except ValueError as exc:
+            if str(exc) == "report_not_found":
+                return Result.failure(NotFoundError("report_not_found", "report_not_found"))
+            if str(exc) == "report_conflict":
+                return Result.failure(ConflictError("report_conflict", "report_conflict"))
+            return Result.failure(InfrastructureError("report_delete_failed", "report_delete_failed"))
+        except Exception:
+            return Result.failure(InfrastructureError("report_delete_failed", "report_delete_failed"))
 
 
 class GetReportForPeriodHandler:

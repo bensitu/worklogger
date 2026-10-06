@@ -6,10 +6,10 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 
-from PySide6.QtCore import QRect, QSize, Qt, Signal
+from PySide6.QtCore import QEvent, QRect, QSize, Qt, Signal
 from PySide6.QtGui import QAbstractTextDocumentLayout, QAction, QPainter, QPalette, QTextDocument
 from PySide6.QtWidgets import (
-    QLabel, QLayout, QLineEdit, QPushButton, QScrollArea, QSizePolicy,
+    QApplication, QLabel, QLayout, QLineEdit, QPushButton, QScrollArea, QSizePolicy,
     QStyle, QStyleOptionButton, QVBoxLayout, QWidget,
 )
 
@@ -18,11 +18,13 @@ from worklogger.presentation.widgets._style import refresh_style
 from worklogger.presentation.widgets.card import CardFrame
 from worklogger.presentation.date_labels import month_label
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
+from worklogger.presentation.widgets.hover_delete_button import HoverDeleteButton
 
 
-class ReportHistoryButton(QPushButton):
-    def __init__(self, item: ReportHistoryDisplayItem, parent: QWidget | None = None) -> None:
-        super().__init__(_history_label(item), parent)
+class ReportHistoryButton(HoverDeleteButton):
+    def __init__(self, item: ReportHistoryDisplayItem, parent: QWidget | None = None, *, allow_delete=True) -> None:
+        super().__init__(_history_label(item), parent, deletable=allow_delete and item.report_id is not None,
+                         delete_label=_("Delete report"))
         self._saved = item.saved
         self._document = QTextDocument(self)
         self._document.setDocumentMargin(0)
@@ -48,13 +50,13 @@ class ReportHistoryButton(QPushButton):
         document.setDocumentMargin(0)
         document.setDefaultFont(self.font())
         document.setPlainText(self.text())
-        document.setTextWidth(max(1, width - (44 if self._saved else 24)))
+        document.setTextWidth(max(1, width - self._text_margins()))
         return max(60, round(document.size().height()) + 20)
 
     def resizeEvent(self, event: object) -> None:
         super().resizeEvent(event)
         self._document.setDefaultFont(self.font())
-        self._document.setTextWidth(max(1, self.width() - (44 if self._saved else 24)))
+        self._document.setTextWidth(max(1, self.width() - self._text_margins()))
         self.setMinimumHeight(self.heightForWidth(self.width()))
 
     def paintEvent(self, _event: object) -> None:
@@ -72,8 +74,11 @@ class ReportHistoryButton(QPushButton):
         self._document.documentLayout().draw(painter, context)
         painter.restore()
         if self._saved:
-            ui_icon("check", success=True).paint(painter, QRect(self.width() - 28, (self.height() - 20) // 2, 20, 20))
+            ui_icon("check", success=True).paint(painter, QRect(self.width() - (60 if self._deletable else 28), (self.height() - 20) // 2, 20, 20))
         painter.end()
+
+    def _text_margins(self):
+        return 76 if self._saved and self._deletable else 52 if self._deletable else 44 if self._saved else 24
 
 
 @dataclass(frozen=True)
@@ -92,12 +97,16 @@ class ReportHistoryDisplayItem:
 class ReportHistoryPanel(CardFrame):
     item_selected = Signal(object)
     export_requested = Signal()
+    delete_requested = Signal(object)
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, parent: QWidget | None = None, *, allow_delete=True) -> None:
         super().__init__(parent, object_name="report_history_frame")
         self._items: tuple[ReportHistoryDisplayItem, ...] = ()
         self._buttons: dict[int, QPushButton] = {}
         self._selected_report_id: int | None = None
+        self._allow_delete = allow_delete
+        self._hovered_button = None
+        QApplication.instance().installEventFilter(self)
 
         title = QLabel(_("Report History"))
         title.setObjectName("report_history_title_label")
@@ -144,6 +153,7 @@ class ReportHistoryPanel(CardFrame):
             refresh_style(button)
 
     def _render(self) -> None:
+        self._hovered_button = None
         while self.scroll_layout.count():
             item = self.scroll_layout.takeAt(0)
             widget = item.widget()
@@ -175,7 +185,7 @@ class ReportHistoryPanel(CardFrame):
                 heading = QLabel(month, self.scroll_widget)
                 heading.setObjectName("report_history_month_label")
                 self.scroll_layout.addWidget(heading)
-            button = ReportHistoryButton(item, self.scroll_widget)
+            button = ReportHistoryButton(item, self.scroll_widget, allow_delete=self._allow_delete)
             button.setObjectName("report_history_item_button")
             button.setProperty("nav_item", True)
             button.setProperty("report_id", item.report_id)
@@ -183,9 +193,23 @@ class ReportHistoryPanel(CardFrame):
             button.setCursor(Qt.CursorShape.PointingHandCursor)
             button.setMinimumHeight(button.heightForWidth(self.scroll_area.viewport().width()))
             button.clicked.connect(lambda _checked=False, selected=item: self.item_selected.emit(selected))
+            button.delete_requested.connect(lambda selected=item: self.delete_requested.emit(selected))
+            button.hovered.connect(self._track_hover)
             self._buttons[index] = button
             self.scroll_layout.addWidget(button)
         self.scroll_layout.addStretch(1)
+
+    def _track_hover(self, button):
+        self._hovered_button = button
+
+    def eventFilter(self, watched, event):
+        if event.type() == QEvent.Type.MouseMove and self.isVisible() and self._hovered_button is not None:
+            button = self._hovered_button
+            position = event.globalPosition().toPoint()
+            button.update_delete_visibility(position)
+            if not button.rect().contains(button.mapFromGlobal(position)):
+                self._hovered_button = None
+        return super().eventFilter(watched, event)
 
 
 def _history_label(item: ReportHistoryDisplayItem) -> str:

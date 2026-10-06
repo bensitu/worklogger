@@ -68,8 +68,9 @@ configured default duration. Work resumes at that duration's end; Resume work
 ends the break early. Reopening after the deadline preserves the planned boundary
 rather than counting the entire closed-application interval as a break. A default
 duration of zero disables this shortcut; a manual break can still be recorded.
-The End menu contains Discard timer, with confirmation, for an unwanted or
-unrecoverable timer. Clearing the form does not discard or stop it.
+The separate Discard timer button beside the break control asks for confirmation
+before removing an unwanted or unrecoverable timer. Clearing the form does not
+discard or stop it.
 
 Manual and automatic editors preserve their separate drafts when switching modes.
 Calendar refreshes do not replace the active timer's content. The type is fixed
@@ -128,6 +129,13 @@ in the same second. Editing an existing report and saving it asks for confirmati
 before replacing that report's content. Declining keeps the edited text without
 changing the saved report. Saving unchanged content does nothing. The report
 number and first save time remain unchanged when its content is replaced.
+
+Each saved history item exposes a Delete report button on hover or keyboard focus.
+Deletion requires confirmation and affects only that account's selected report.
+Deleting the open report clears its editor and saved identity; deleting another
+report preserves the current draft. If the stored content has changed elsewhere,
+deletion is rejected so that you can reload and review it first. A storage failure
+retains the report and editor content.
 
 Report content is saved Markdown, not a live query. Changing a work record does
 not rewrite an already saved report. Generate or edit it again when needed.

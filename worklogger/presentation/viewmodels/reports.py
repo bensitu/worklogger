@@ -10,6 +10,7 @@ from typing import Protocol
 from worklogger.app.commands.ai_commands import RewriteTextCommand
 from worklogger.app.commands.report_commands import (
     GenerateReportCommand,
+    DeleteReportCommand,
     ResetReportTemplateCommand,
     SaveReportCommand,
     SaveReportTemplateCommand,
@@ -54,6 +55,11 @@ class SaveReportHandlerProtocol(Protocol):
         ...
 
 
+class DeleteReportHandlerProtocol(Protocol):
+    def handle(self, command: DeleteReportCommand) -> Result[None]:
+        ...
+
+
 @dataclass(frozen=True)
 class ReportEditorState:
     user_id: int
@@ -95,6 +101,7 @@ class ReportEditorViewModel:
         standard_work_hours: float = 8.0,
         templates: TemplateProvider | None = None,
         week_start_monday: bool = False,
+        delete_report_handler: DeleteReportHandlerProtocol | None = None,
     ) -> None:
         self._user_id = user_id
         self._generate_handler = generate_handler
@@ -109,6 +116,18 @@ class ReportEditorViewModel:
         self._standard_work_hours = standard_work_hours
         self._templates = templates
         self._week_start_monday = week_start_monday
+        self._delete_report_handler = delete_report_handler
+
+    @property
+    def delete_available(self) -> bool:
+        return self._delete_report_handler is not None
+
+    def delete(self, item: ReportHistoryItem) -> Result[None]:
+        if item.user_id != self._user_id or item.report_id is None:
+            return Result.failure(_validation("report_not_found"))
+        if self._delete_report_handler is None:
+            return Result.failure(_validation("report_delete_failed"))
+        return self._delete_report_handler.handle(DeleteReportCommand(self._user_id, item.report_id, item.content))
 
     def set_week_start_monday(self, enabled: bool) -> None:
         self._week_start_monday = bool(enabled)

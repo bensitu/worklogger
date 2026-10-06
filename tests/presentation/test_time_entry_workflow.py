@@ -153,6 +153,21 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertEqual(len(self.repository.list_for_day(self.runtime.user.id, self.now.date())), 3)
         self.warning.assert_not_called()
 
+    def test_discard_timer_is_an_independent_confirmed_action(self):
+        panel = self.panel
+        panel.time_tabs.setCurrentIndex(1)
+        panel.clock_in_button.click()
+        self.assertTrue(panel.discard_timer_button.isEnabled())
+        with patch("worklogger.presentation.widgets.time_entries.QMessageBox.question", return_value=QMessageBox.StandardButton.No):
+            panel.discard_timer_button.click()
+        self.assertIsNotNone(panel.view_model.service.timer)
+        with patch("worklogger.presentation.widgets.time_entries.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes):
+            panel.discard_timer_button.click()
+        self.assertIsNone(panel.view_model.service.timer)
+        self.assertEqual(self.repository.list_for_day(self.runtime.user.id, self.now.date()), ())
+        self.assertFalse(panel.discard_timer_button.isEnabled())
+        self.assertTrue(panel.clock_in_button.isEnabled())
+
     def test_imported_event_actions_preserve_the_source_and_work_records(self):
         events = SQLiteCalendarEventRepository(self.runtime.connection_factory)
         event = CalendarEvent(None, self.runtime.user.id, self.now.date(), "Team discussion", "09:00", "10:00")

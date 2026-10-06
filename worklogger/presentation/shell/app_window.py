@@ -378,8 +378,12 @@ class AppWindow(QMainWindow):
             if workflow is not None:
                 label = _("Daily notes") if button is self.notes_button and isinstance(self.entry_panel, TimeEntryPanel) else button.text()
                 actions.addAction(label, button.click)
-        self.calendar_page.add_entry_button.setMenu(None if actions.isEmpty() and isinstance(self.entry_panel, TimeEntryPanel) else actions)
-        self.calendar_page.add_entry_button.setEnabled(isinstance(self.entry_panel, TimeEntryPanel) or not actions.isEmpty())
+        if isinstance(self.entry_panel, TimeEntryPanel):
+            self.calendar_page.entry_actions_button.setMenu(actions)
+            self.calendar_page.entry_actions_button.setEnabled(not actions.isEmpty())
+        else:
+            self.calendar_page.add_entry_button.setMenu(actions)
+            self.calendar_page.add_entry_button.setEnabled(not actions.isEmpty())
         self.account_label.setVisible(False)
         if self._quick_logs_workflow is None:
             self.quick_logs_button.setVisible(False)

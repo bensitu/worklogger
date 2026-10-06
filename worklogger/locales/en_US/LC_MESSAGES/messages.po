@@ -364,6 +364,12 @@ msgstr "Delete"
 msgid "Delete record"
 msgstr "Delete record"
 
+msgid "Delete report"
+msgstr "Delete report"
+
+msgid "Delete report #{report_id}? This cannot be undone."
+msgstr "Delete report #{report_id}? This cannot be undone."
+
 msgid "Delete this calendar event?"
 msgstr "Delete this calendar event?"
 
@@ -1273,6 +1279,9 @@ msgstr "This note was changed in another editor. Reload it before saving. Your c
 msgid "This record changed elsewhere. Reload it before saving. Your changes have been retained."
 msgstr "This record changed elsewhere. Reload it before saving. Your changes have been retained."
 
+msgid "This report changed elsewhere. Reload the history before deleting it."
+msgstr "This report changed elsewhere. Reload the history before deleting it."
+
 msgid "Thu"
 msgstr "Thu"
 
@@ -1311,6 +1320,9 @@ msgstr "Unable to check for updates. Check your network connection and try again
 
 msgid "Unable to complete the AI request. Check your model settings and try again."
 msgstr "Unable to complete the AI request. Check your model settings and try again."
+
+msgid "Unable to delete the report. Your saved data has been retained."
+msgstr "Unable to delete the report. Your saved data has been retained."
 
 msgid "Unable to export the file. Check the destination and write permissions."
 msgstr "Unable to export the file. Check the destination and write permissions."
@@ -1368,6 +1380,9 @@ msgstr "Unlink"
 
 msgid "Unsaved changes"
 msgstr "Unsaved changes"
+
+msgid "Unsaved edits to this report will also be discarded."
+msgstr "Unsaved edits to this report will also be discarded."
 
 msgid "Update"
 msgstr "Update"

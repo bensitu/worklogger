@@ -26,7 +26,7 @@ class ReportRepository(Protocol):
     def list_by_type(self, user_id: int, report_type: str) -> tuple[Report, ...]:
         ...
 
-    def remove(self, user_id: int, report_id: int) -> None:
+    def remove(self, user_id: int, report_id: int, *, expected_content: str | None = None) -> None:
         ...
 
 

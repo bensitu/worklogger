@@ -118,6 +118,7 @@ from worklogger.infrastructure.identity import DisabledIdentityProvider
 from worklogger.infrastructure.logging import setup_logging
 from worklogger.infrastructure.local_model import JsonLocalModelStore, bundled_model_catalog_path
 from worklogger.app.use_cases.time_entries import TimeEntryService
+from worklogger.app.use_cases.reports import DeleteReportHandler
 from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
 from worklogger.infrastructure.repositories import (
     SQLiteAuthRepository,
@@ -663,6 +664,7 @@ def _build_reports_workflow(
             ),
             get_report_handler=GetReportForPeriodHandler(repositories.reports),
             list_reports_handler=ListReportsHandler(repositories.reports),
+            delete_report_handler=DeleteReportHandler(repositories.reports),
             templates=handlers.templates,
             save_report_handler=SaveReportHandler(repositories.reports),
             save_template_handler=handlers.save_template_handler,

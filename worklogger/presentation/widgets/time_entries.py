@@ -2,9 +2,9 @@
 
 from datetime import date
 
-from PySide6.QtCore import QTimer, Qt, Signal
+from PySide6.QtCore import QTimer, Signal
 from PySide6.QtWidgets import (QComboBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit,
-    QMenu, QMessageBox, QPushButton, QSizePolicy, QStyle, QStyleOptionTabWidgetFrame,
+    QMessageBox, QPushButton, QSizePolicy, QStyle, QStyleOptionTabWidgetFrame,
     QTabWidget, QTextEdit, QToolButton, QVBoxLayout, QWidget)
 
 from worklogger.domain.worklog.models import WorkLog, WorkType
@@ -68,13 +68,7 @@ class TimeEntryPanel(QWidget):
         buttons = QHBoxLayout()
         buttons.setSpacing(8)
         self.clock_in_button = QPushButton(_("Start"))
-        self.clock_out_button = QToolButton()
-        self.clock_out_button.setText(_("End"))
-        self.clock_out_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        self.clock_out_button.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
-        timer_menu = QMenu(self.clock_out_button)
-        timer_menu.addAction(_("Discard timer"), self._discard_timer)
-        self.clock_out_button.setMenu(timer_menu)
+        self.clock_out_button = QPushButton(_("End"))
         for button, name, icon in ((self.clock_in_button, "auto_clock_in_button", "clock"),
                                    (self.clock_out_button, "auto_clock_out_button", "check")):
             button.setObjectName(name)
@@ -85,7 +79,15 @@ class TimeEntryPanel(QWidget):
         self.break_button = QPushButton()
         self.break_button.setObjectName("auto_break_button")
         self.break_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        auto_layout.addWidget(self.break_button)
+        break_row = QHBoxLayout()
+        break_row.setSpacing(8)
+        break_row.addWidget(self.break_button, 1)
+        self.discard_timer_button = QPushButton(_("Discard timer"))
+        self.discard_timer_button.setObjectName("discard_timer_button")
+        set_button_icon(self.discard_timer_button, "trash")
+        self.discard_timer_button.clicked.connect(self._discard_timer)
+        break_row.addWidget(self.discard_timer_button, 1)
+        auto_layout.addLayout(break_row)
         self.auto_status_label = QLabel()
         self.auto_status_label.setObjectName("auto_status_label")
         self.auto_status_label.setWordWrap(True)
@@ -247,6 +249,7 @@ class TimeEntryPanel(QWidget):
                 tick.stop()
         self.clock_in_button.setEnabled(timer is None and not self.view_model.service.restore_failed)
         self.clock_out_button.setEnabled(timer is not None)
+        self.discard_timer_button.setEnabled(timer is not None or self.view_model.service.restore_failed)
         self.break_button.setText(_("Resume work") if timer and timer.break_until else _("Break {hours}").format(hours=duration_label(self.view_model.default_break_hours)))
         self.break_button.setEnabled(bool(timer and (timer.break_until or timer.work_type != WorkType.BREAK and self.view_model.default_break_hours > 0)))
         self.save_button.setText(_("Save content") if auto else _("Save changes") if self.view_model.draft.original else _("Save"))
@@ -268,12 +271,15 @@ class TimeEntryPanel(QWidget):
         if self.view_model.service.restore_failed:
             self.auto_status_label.setText(_("Unable to restore the timer. Discard it to start a new record."))
             self.auto_status_label.show()
-            self.break_button.setText(_("Discard timer"))
-            self.break_button.setEnabled(True)
+            self.break_button.setEnabled(False)
         option = QStyleOptionTabWidgetFrame()
         self.time_tabs.initStyleOption(option)
         content = self.time_tabs.style().subElementRect(QStyle.SubElement.SE_TabWidgetTabContents, option, self.time_tabs)
-        self.time_tabs.setMaximumHeight(self.time_tabs.currentWidget().sizeHint().height() + max(0, self.time_tabs.height() - content.height()))
+        page = self.time_tabs.currentWidget()
+        page.ensurePolished()
+        page.layout().invalidate()
+        page_height = max(page.sizeHint().height(), page.layout().totalHeightForWidth(max(1, content.width())))
+        self.time_tabs.setFixedHeight(page_height + max(0, self.time_tabs.height() - content.height()))
 
     def _apply_result(self, result, *, refresh=True):
         if not result.ok:
@@ -332,9 +338,6 @@ class TimeEntryPanel(QWidget):
 
     def _break(self):
         if self.view_model.service.restore_failed:
-            if QMessageBox.question(self, _("Discard timer"), _("Discard the saved timer without creating a record?"),
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
-                self._submit(self.view_model.service.discard_timer)
             return
         moment = self.view_model.service.now()
         self._submit(lambda: self.view_model.take_break(now=moment))

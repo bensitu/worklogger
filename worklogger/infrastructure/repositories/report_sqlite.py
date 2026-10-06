@@ -101,12 +101,16 @@ class SQLiteReportRepository:
             ).fetchall()
         return map_rows(rows, self._from_row)
 
-    def remove(self, user_id: int, report_id: int) -> None:
+    def remove(self, user_id: int, report_id: int, *, expected_content: str | None = None) -> None:
         with self._connection_factory.transaction(write=True) as connection:
-            connection.execute(
-                "DELETE FROM reports WHERE user_id=? AND id=?",
-                (user_id, report_id),
-            )
+            query = "DELETE FROM reports WHERE user_id=? AND id=?"
+            parameters = (user_id, report_id)
+            if expected_content is not None:
+                query += " AND content=?"
+                parameters += (expected_content,)
+            if connection.execute(query, parameters).rowcount != 1:
+                exists = connection.execute("SELECT 1 FROM reports WHERE user_id=? AND id=?", (user_id, report_id)).fetchone()
+                raise ValueError("report_conflict" if exists else "report_not_found")
 
     @staticmethod
     def _from_row(row: sqlite3.Row) -> Report:

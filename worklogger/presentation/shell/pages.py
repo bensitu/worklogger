@@ -121,7 +121,7 @@ class CalendarPage(QWidget):
         if event.type() == QEvent.Type.MouseMove and self.isVisible() and self._hovered_record is not None:
             record = self._hovered_record
             position = event.globalPosition().toPoint()
-            record._show_delete(position)
+            record.update_delete_visibility(position)
             if not record.rect().contains(record.mapFromGlobal(position)):
                 self._hovered_record = None
         return super().eventFilter(watched, event)
@@ -221,11 +221,15 @@ class CalendarPage(QWidget):
         self.today_button.setObjectName("today_button")
         self.today_button.clicked.connect(self.today_requested.emit)
         if hasattr(self.entry_panel, "view_model"):
-            self.add_entry_button = QToolButton()
-            self.add_entry_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-            self.add_entry_button.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
-            self.add_entry_button.setText(_("New time record"))
+            self.add_entry_button = QPushButton(_("New time record"))
             self.add_entry_button.clicked.connect(self._new_time_record)
+            self.entry_actions_button = QToolButton()
+            self.entry_actions_button.setObjectName("time_entry_actions_button")
+            self.entry_actions_button.setToolTip(_("More actions"))
+            self.entry_actions_button.setAccessibleName(_("More actions"))
+            self.entry_actions_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+            self.entry_actions_button.setProperty("variant", "primary")
+            set_button_icon(self.entry_actions_button, "chevron-down")
         else:
             self.add_entry_button = QPushButton(_("Add Entry"))
         self.add_entry_button.setObjectName("add_entry_button")
@@ -239,6 +243,8 @@ class CalendarPage(QWidget):
         header.addWidget(self.next_month_button)
         header.addWidget(self.today_button)
         header.addWidget(self.add_entry_button)
+        if hasattr(self, "entry_actions_button"):
+            header.addWidget(self.entry_actions_button)
         root.addLayout(header)
 
         content = QHBoxLayout()
@@ -611,6 +617,7 @@ class ReportsPage(QWidget):
         self._confirm_discard = confirm_discard
         self._job_runner = job_runner or QtJobRunner(self)
         self._rewrite_busy = False
+        self._delete_busy = False
         self._build_ui()
 
     @property
@@ -622,7 +629,7 @@ class ReportsPage(QWidget):
         return self.editor.toPlainText() != self._saved_content.get(self._rendered_type, "")
 
     def confirm_leave(self) -> bool:
-        if self._rewrite_busy:
+        if self._rewrite_busy or self._delete_busy:
             self._set_status(_("Please wait for the current request."))
             return False
         if not self.has_unsaved_changes:
@@ -784,8 +791,9 @@ class ReportsPage(QWidget):
         editor_card.content_layout.addLayout(bottom)
         content.addWidget(editor_card, 2)
 
-        self.history_panel = ReportHistoryPanel()
+        self.history_panel = ReportHistoryPanel(allow_delete=bool(getattr(self._view_model, "delete_available", False)))
         self.history_panel.item_selected.connect(self._select_history_item)
+        self.history_panel.delete_requested.connect(self._delete_history_item)
         self.history_panel.export_requested.connect(self._choose_export_path)
         content.addWidget(self.history_panel, 1)
 
@@ -817,7 +825,7 @@ class ReportsPage(QWidget):
         self.refresh(shift_period(day, self._current_type(), direction))
 
     def _open_templates(self) -> None:
-        if self._view_model is None or self._rewrite_busy:
+        if self._view_model is None or self._rewrite_busy or self._delete_busy:
             return
         dialog = ReportTemplateDialog(self._view_model, self._current_type(), self)
         dialog.apply_requested.connect(self._apply_template)
@@ -849,7 +857,7 @@ class ReportsPage(QWidget):
         self._refresh_history()
 
     def _save_current(self) -> None:
-        if self._view_model is None:
+        if self._view_model is None or self._delete_busy or self._rewrite_busy:
             return
         report_type = self._current_type()
         state = self._states.get(report_type)
@@ -870,7 +878,7 @@ class ReportsPage(QWidget):
         self._refresh_history()
 
     def _rewrite_current(self) -> None:
-        if self._view_model is None or self._rewrite_busy:
+        if self._view_model is None or self._rewrite_busy or self._delete_busy:
             return
         state = self._states.get(self._current_type())
         if state is None:
@@ -887,10 +895,49 @@ class ReportsPage(QWidget):
 
     def _set_rewrite_busy(self, busy: bool) -> None:
         self._rewrite_busy = busy
+        self._update_busy_controls()
+
+    def _update_busy_controls(self):
+        busy = self._rewrite_busy or self._delete_busy
         self.editor.setReadOnly(busy)
         for widget in (self.report_type_control, self.previous_period_button, self.next_period_button, self.templates_button, self.ai_hint_line_edit, self.save_button, self.history_panel):
             widget.setEnabled(not busy)
         self.ai_assist_button.setEnabled(not busy and bool(getattr(self._view_model, "rewrite_available", True)))
+
+    def _delete_history_item(self, item: ReportHistoryDisplayItem) -> None:
+        if self._view_model is None or self._rewrite_busy or self._delete_busy or item.report_id is None:
+            return
+        state = self._states.get(item.report_type)
+        deleting_current = state is not None and state.report_id == item.report_id
+        message = _("Delete report #{report_id}? This cannot be undone.").format(report_id=item.report_id)
+        if deleting_current and self.has_unsaved_changes:
+            message += "\n" + _("Unsaved edits to this report will also be discarded.")
+        if QMessageBox.question(self, _("Delete report"), message,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
+            return
+        self._delete_busy = True
+        self._update_busy_controls()
+
+        def complete(result):
+            self._delete_busy = False
+            self._update_busy_controls()
+            if not result.ok:
+                self._set_error(result.error)
+                return
+            if deleting_current:
+                self._states[item.report_type] = replace(state, content="", saved=False, report_id=None, created_at=None)
+                self._saved_content[item.report_type] = ""
+                if self._rendered_type == item.report_type:
+                    self.editor.clear()
+            self._last_error = None
+            self._refresh_history()
+
+        try:
+            self._job_runner.submit("delete_report", lambda _token: self._view_model.delete(item), on_complete=complete)
+        except Exception:
+            self._delete_busy = False
+            self._update_busy_controls()
+            self._set_error(ValidationError("report_delete_failed", "report_delete_failed"))
 
     def _complete_rewrite(self, result: object) -> None:
         self._set_rewrite_busy(False)

@@ -51,6 +51,10 @@ def display_error_code(code: str) -> str:
             return _("The saved report is no longer available. Reload the reports and try again.")
         case "report_save_failed":
             return _("Unable to save the report. Your changes have been retained.")
+        case "report_delete_failed":
+            return _("Unable to delete the report. Your saved data has been retained.")
+        case "report_conflict":
+            return _("This report changed elsewhere. Reload the history before deleting it.")
         case "desktop_runtime_failed" | "auth_state_failed":
             return _("Unable to start WorkLogger. Check the application log for details.")
         case "runtime_user_required" | "runtime_user_missing" | "auth_required":
