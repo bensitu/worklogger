@@ -16,7 +16,7 @@ from worklogger.presentation.date_labels import duration_label, day_label
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
-from worklogger.presentation.widgets.worklog_entry import _TimePickerDialog
+from worklogger.presentation.widgets.time_picker import TimePickerDialog
 from worklogger.presentation.work_type_labels import work_type_label
 
 
@@ -106,7 +106,17 @@ class TimeEntryPanel(QWidget):
         form.setVerticalSpacing(3)
         form.addRow(_("Work type"), self.work_type_combo)
         root.addLayout(form)
-        root.addWidget(QLabel(_("Content")))
+        content_heading = QHBoxLayout()
+        content_heading.addWidget(QLabel(_("Content")), 1)
+        self.polish_button = QToolButton()
+        self.polish_button.setObjectName("polish_time_entry_button")
+        self.polish_button.setToolTip(_("Polish text"))
+        self.polish_button.setAccessibleName(_("Polish text"))
+        self.polish_button.setIcon(ui_icon("sparkles", accent=True))
+        self.polish_button.setVisible(view_model.rewrite_available)
+        self.polish_button.clicked.connect(self._polish_content)
+        content_heading.addWidget(self.polish_button)
+        root.addLayout(content_heading)
         self.content_input = QTextEdit()
         self.content_input.setObjectName("time_entry_content_text_edit")
         self.content_input.setAcceptRichText(False)
@@ -162,7 +172,7 @@ class TimeEntryPanel(QWidget):
         return field
 
     def _pick_time(self, field, title):
-        dialog = _TimePickerDialog(title, field.text(), self)
+        dialog = TimePickerDialog(title, field.text(), self)
         dialog.accepted.connect(lambda: field.setText(dialog.time_input.time().toString("HH:mm")))
         dialog.open()
 
@@ -331,6 +341,16 @@ class TimeEntryPanel(QWidget):
 
     def _save(self):
         self._submit(self.view_model.save_content if self.time_tabs.currentIndex() == 1 else self.view_model.save_manual)
+
+    def _polish_content(self):
+        content = self.content_input.toPlainText()
+        def complete(result):
+            if result.ok:
+                self.content_input.setPlainText(result.value)
+            else:
+                self._apply_result(result, refresh=False)
+            self._update_actions()
+        self._submit(lambda: self.view_model.rewrite_content(content), refresh=False, on_complete=complete)
 
     def _start(self):
         work_type, content = str(self.work_type_combo.currentData()), self.content_input.toPlainText()

@@ -40,9 +40,6 @@ msgstr "（第{week}周）"
 msgid "+"
 msgstr "+"
 
-msgid "+15m break"
-msgstr "+15分钟休息"
-
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr "注重隐私的桌面工时记录工具，支持 AI 报表。"
 
@@ -87,9 +84,6 @@ msgstr "当前模型已更新。"
 
 msgid "Add"
 msgstr "添加"
-
-msgid "Add Entry"
-msgstr "添加记录"
 
 msgid "Add another sign-in method before unlinking this identity."
 msgstr "解除此身份关联前，请添加其他登录方式。"
@@ -199,14 +193,8 @@ msgstr "蓝色"
 msgid "Break"
 msgstr "休息"
 
-msgid "Break (h)"
-msgstr "休息（小时）"
-
 msgid "Break time must be nonnegative and shorter than the work period."
 msgstr "休息时间不能为负数，且必须短于工作时段。"
-
-msgid "Break timer running"
-msgstr "休息计时中"
 
 msgid "Break {hours:.1f}h"
 msgstr "休息 {hours:.1f}h"
@@ -430,9 +418,6 @@ msgstr "提前结束休息？"
 msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
 msgstr "将休息结束时间改为 {time} 并开始记录工作吗？已保存的休息时长将相应缩短。"
 
-msgid "Ended"
-msgstr "已结束"
-
 msgid "English"
 msgstr "英语"
 
@@ -607,11 +592,11 @@ msgstr "正在导入模型..."
 msgid "Include calendar"
 msgstr "包含日历"
 
-msgid "Include notes"
-msgstr "包含笔记"
-
 msgid "Include quick logs"
 msgstr "包含快速记录"
+
+msgid "Include work content"
+msgstr "包含工作内容"
 
 msgid "January"
 msgstr "1月"
@@ -763,9 +748,6 @@ msgstr "月度目标"
 msgid "Monthly target (h)"
 msgstr "月度目标（小时）"
 
-msgid "More actions"
-msgstr "更多操作"
-
 msgid "National holidays"
 msgstr "全国假日"
 
@@ -829,9 +811,6 @@ msgstr "未下载"
 msgid "Not required"
 msgstr "不需要"
 
-msgid "Notes"
-msgstr "笔记"
-
 msgid "November"
 msgstr "11月"
 
@@ -840,9 +819,6 @@ msgstr "确定"
 
 msgid "October"
 msgstr "10月"
-
-msgid "On break"
-msgstr "休息中"
 
 msgid "Open"
 msgstr "打开"
@@ -1222,17 +1198,11 @@ msgstr "标准工时（小时）"
 msgid "Start"
 msgstr "开始"
 
-msgid "Start break"
-msgstr "开始休息"
-
 msgid "Start recording or a break before continuing."
 msgstr "请先开始记录或休息。"
 
 msgid "Start week on Monday"
 msgstr "每周从周一开始"
-
-msgid "Started"
-msgstr "已开始"
 
 msgid "State / province"
 msgstr "州 / 省"
@@ -1321,9 +1291,6 @@ msgstr "此报表已在其他位置修改。请重新加载历史列表后再删
 msgid "Thu"
 msgstr "四"
 
-msgid "Tip: Click AI Assist to generate a draft based on your time logs."
-msgstr "提示：点击 AI 助手，根据工时记录生成草稿。"
-
 msgid "Today"
 msgstr "今天"
 
@@ -1377,9 +1344,6 @@ msgstr "无法获取模型，请检查源文件或下载连接。"
 
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "无法读取模型文件，请检查访问权限。"
-
-msgid "Unable to restore the automatic record. Reset it and start a new record?"
-msgstr "无法恢复自动记录。是否重置并开始新的记录？"
 
 msgid "Unable to restore the database. Select a valid SQLite backup."
 msgstr "无法恢复数据库，请选择有效的 SQLite 备份。"
@@ -1510,9 +1474,6 @@ msgstr "WorkLogger 命令行"
 msgid "WorkLogger is already running."
 msgstr "WorkLogger 已在运行。"
 
-msgid "Worked"
-msgstr "已工作"
-
 msgid "Worked: {hours}"
 msgstr "已工作：{hours}"
 
@@ -1548,9 +1509,6 @@ msgstr "h"
 
 msgid "iCalendar (*.ics)"
 msgstr "iCalendar (*.ics)"
-
-msgid "m"
-msgstr "m"
 
 msgid "of {hours:.1f}h goal"
 msgstr "目标 {hours:.1f}h"

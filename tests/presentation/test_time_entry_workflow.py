@@ -10,7 +10,7 @@ from unittest.mock import patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QSettings
-from PySide6.QtWidgets import QMessageBox, QPushButton
+from PySide6.QtWidgets import QMessageBox
 from PySide6.QtGui import QCloseEvent
 
 from worklogger.bootstrap import DesktopRuntimeConfig, build_desktop_runtime
@@ -20,10 +20,15 @@ from worklogger.infrastructure.repositories.calendar_sqlite import SQLiteCalenda
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.presentation.shell.app_window import AppWindowConfig
 from worklogger.presentation.job_runner import ImmediateJobRunner, QtJobRunner
+from worklogger.app.use_cases.ai import RewriteTextResult
+from worklogger.domain.shared.result import Result
+from PySide6.QtCore import QTime
 
 
 class TimeEntryWorkflowTests(unittest.TestCase):
     def setUp(self):
+        from tests.presentation.qt_support import dispose_test_windows
+        self.addCleanup(dispose_test_windows)
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         root = Path(directory.name)
@@ -46,6 +51,31 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.panel.view_model.service._clock = lambda: self.now
         self.assertTrue(self.window.refresh())
 
+    def test_clock_selection_and_polishing_change_only_the_local_draft(self):
+        panel = self.panel
+        panel.start_input.setText("09:00")
+        panel.end_input.setText("10:00")
+        panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData("meeting"))
+        panel.content_input.setPlainText("Draft description")
+        from worklogger.presentation.widgets.time_picker import TimePickerDialog
+        panel.start_input.actions()[0].trigger()
+        picker = panel.findChild(TimePickerDialog)
+        picker.time_input.setTime(QTime(9, 15))
+        picker.select_button.click()
+        commands = []
+        class Rewriter:
+            available = True
+            def handle(self, command):
+                commands.append(command)
+                return Result.success(RewriteTextResult("Prepared agenda"))
+        panel.view_model._rewrite_handler = Rewriter()
+        panel.polish_button.click()
+        self.assertEqual(panel.content_input.toPlainText(), "Prepared agenda")
+        self.assertEqual((panel.start_input.text(), panel.end_input.text(), panel.work_type_combo.currentData()), ("09:15", "10:00", "meeting"))
+        self.assertEqual(commands[0].context, "time_entry")
+        self.assertEqual(self.repository.list_for_day(self.runtime.user.id, self.now.date()), ())
+        panel.clear_button.click()
+
     def test_manual_create_select_update_and_delete_periods(self):
         panel = self.panel
         self.assertEqual(panel.work_type_combo.itemData(panel.work_type_combo.count() - 1), "other")
@@ -61,9 +91,9 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         entries = self.repository.list_for_day(self.runtime.user.id, self.now.date())
         self.assertEqual(len(entries), 2)
         self.assertEqual([entry.work_type.value for entry in entries], ["meeting", "training"])
-        records = self.window.calendar_page.findChildren(QPushButton, "calendar_time_entry_button")
-        self.assertEqual(len([button for button in records if button.parent() is self.window.calendar_page.records_widget]), 2)
-        current = next(button for button in records if button.parent() is self.window.calendar_page.records_widget)
+        records = self.window.calendar_page.records_widget.entry_buttons
+        self.assertEqual(len(records), 2)
+        current = records[entries[0].id]
         current.click()
         self.assertEqual(panel.view_model.draft.original.id, entries[0].id)
         self.assertEqual(panel.work_type_combo.currentData(), "meeting")
@@ -85,8 +115,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertEqual(panel.time_tabs.currentIndex(), 0)
         self.assertEqual((panel.start_input.text(), panel.end_input.text()), ("", ""))
         self.assertEqual(len(self.repository.list_for_day(self.runtime.user.id, self.now.date())), 2)
-        card = next(button for button in self.window.calendar_page.records_widget.findChildren(QPushButton, "calendar_time_entry_button")
-                    if button.property("entry_id") == saved.id)
+        card = self.window.calendar_page.records_widget.entry_buttons[saved.id]
         with patch("worklogger.presentation.widgets.time_entries.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes):
             card.delete_button.click()
         self.assertEqual(len(self.repository.list_for_day(self.runtime.user.id, self.now.date())), 1)
@@ -188,8 +217,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertEqual((entries[0].work_type.value, entries[0].start_time, entries[0].end_time), ("break", "09:00", "10:00"))
         self.assertIsNone(panel.view_model.service.timer)
         self.assertFalse(panel.clock_out_button.isEnabled())
-        card = next(button for button in self.window.calendar_page.records_widget.findChildren(QPushButton, "calendar_time_entry_button")
-                    if button.property("entry_id") == entries[0].id)
+        card = self.window.calendar_page.records_widget.entry_buttons[entries[0].id]
         self.assertIn("09:00 - 10:00", card.label.text())
         panel.content_input.setPlainText("Updated lunch")
         panel.save_button.click()
@@ -233,8 +261,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         event = CalendarEvent(None, self.runtime.user.id, self.now.date(), "Team discussion", "09:00", "10:00")
         events.add_many(self.runtime.user.id, (event,))
         self.window.refresh()
-        card = next(button for button in self.window.calendar_page.records_widget.findChildren(QPushButton, "calendar_time_entry_button")
-                    if button.property("entry_id") is None)
+        card = next(iter(self.window.calendar_page.records_widget.event_buttons.values()))
         card.click()
         self.assertEqual(self.panel.content_input.toPlainText(), "Team discussion")
         self.assertEqual(self.repository.list_for_day(self.runtime.user.id, self.now.date()), ())
@@ -242,8 +269,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         original = events.list_for_day(self.runtime.user.id, self.now.date())[0]
         with self.assertRaises(ValueError):
             events.remove(self.runtime.user.id + 1, original)
-        card = next(button for button in self.window.calendar_page.records_widget.findChildren(QPushButton, "calendar_time_entry_button")
-                    if button.property("entry_id") is None)
+        card = next(iter(self.window.calendar_page.records_widget.event_buttons.values()))
         with patch("worklogger.presentation.widgets.time_entries.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes):
             card.delete_button.click()
         self.assertEqual(events.list_for_day(self.runtime.user.id, self.now.date()), ())

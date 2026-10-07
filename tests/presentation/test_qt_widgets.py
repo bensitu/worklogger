@@ -1,23 +1,19 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 import os
 import unittest
-from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QTime, Qt, QSize
+from PySide6.QtCore import QSize
 from PySide6.QtGui import QFont, QIcon, QPalette, QColor
-from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QDialog, QToolButton
+from PySide6.QtWidgets import QApplication
 
 from worklogger.presentation.theme import ThemeEngine
 from worklogger.presentation.theme.fonts import _application_font
-from worklogger.presentation.viewmodels import AutoRecordViewModel
 from worklogger.presentation.viewmodels.calendar import CalendarDayCell, CalendarMonthViewState
 from worklogger.presentation.viewmodels.stats import StatsPanelState
-from worklogger.presentation.viewmodels.worklog_entry import WorkLogEntryForm
 from worklogger.presentation.widgets.assets import application_icon_path, asset_path
 from worklogger.presentation.widgets.icons import ui_icon
 from worklogger.presentation.widgets import (
@@ -26,8 +22,6 @@ from worklogger.presentation.widgets import (
     SettingsNav,
     SidebarWidget,
     StatsPanel,
-    WorkLogEntryDraft,
-    WorkLogEntryPanel,
 )
 
 
@@ -105,18 +99,6 @@ class QtWidgetTests(unittest.TestCase):
         finally:
             app.setPalette(original)
 
-    def test_auto_record_failure_uses_dialog_and_idle_status_is_empty(self) -> None:
-        panel = WorkLogEntryPanel(compact=True)
-        panel._refresh_auto_state()
-        self.assertEqual(panel.auto_status_label.text(), "")
-        self.assertTrue(panel.auto_status_label.isHidden())
-        with patch("worklogger.presentation.widgets.worklog_entry.QMessageBox.warning") as notification:
-            panel._auto_clock_out()
-        notification.assert_called_once()
-        self.assertIs(notification.call_args.args[0], panel)
-        self.assertEqual(notification.call_args.args[1], "Auto Record")
-        self.assertEqual(panel.auto_status_label.text(), "")
-
     @classmethod
     def setUpClass(cls) -> None:
         cls._app = _app()
@@ -153,179 +135,6 @@ class QtWidgetTests(unittest.TestCase):
         selected_button.click()
 
         self.assertEqual(selected_days, [date(2026, 4, 20)])
-
-    def test_worklog_entry_panel_binds_form_and_emits_draft(self) -> None:
-        panel = WorkLogEntryPanel()
-        emitted: list[WorkLogEntryDraft] = []
-        panel.save_requested.connect(emitted.append)
-        form = WorkLogEntryForm(
-            user_id=1,
-            day=date(2026, 4, 20),
-            start_time="22:00",
-            end_time="09:00",
-            break_hours=1.0,
-            note="Night shift",
-            work_type="normal",
-            worked_hours=10.0,
-            is_overnight=True,
-            is_leave=False,
-            dirty=True,
-        )
-
-        panel.set_form(form)
-
-        self.assertEqual(panel.start_input.text(), "22:00")
-        self.assertEqual(panel.end_input.text(), "09:00")
-        self.assertEqual(panel.break_input.value(), 1.0)
-        self.assertEqual(panel.note_input.toPlainText(), "Night shift")
-        self.assertIn("10.0h", panel.hours_label.text())
-        self.assertEqual(panel.status_label.text(), "Overnight")
-        self.assertTrue(panel.save_button.isEnabled())
-
-        panel.save_button.click()
-
-        self.assertEqual(
-            emitted,
-            [
-                WorkLogEntryDraft(
-                    day=date(2026, 4, 20),
-                    start_time="22:00",
-                    end_time="09:00",
-                    break_hours=1.0,
-                    note="Night shift",
-                    work_type="normal",
-                )
-            ],
-        )
-
-    def test_worklog_entry_panel_disables_save_for_invalid_form(self) -> None:
-        panel = WorkLogEntryPanel()
-        form = WorkLogEntryForm(
-            user_id=1,
-            day=date(2026, 4, 20),
-            start_time="09:00",
-            end_time=None,
-            break_hours=1.0,
-            note="",
-            work_type="normal",
-            worked_hours=0.0,
-            is_overnight=False,
-            is_leave=False,
-            dirty=True,
-            errors=("time_range_incomplete",),
-        )
-
-        panel.set_form(form)
-
-        self.assertFalse(panel.save_button.isEnabled())
-        self.assertEqual(panel.error_label.text(), "Enter valid start and end times in HH:mm format.")
-
-    def test_manual_clock_buttons_select_times_or_cancel_without_changing_draft(self) -> None:
-        for compact in (False, True):
-            with self.subTest(compact=compact):
-                panel = WorkLogEntryPanel(compact=compact)
-                panel.set_form(WorkLogEntryForm(
-                    user_id=1, day=date(2026, 4, 20), start_time="0930", end_time="1830",
-                    break_hours=1.0, note="Keep note", work_type="normal", worked_hours=8.0,
-                    is_overnight=False, is_leave=False, dirty=False,
-                ))
-                drafts = []
-                panel.draft_changed.connect(drafts.append)
-                panel.show()
-                try:
-                    for field, title, initial, selected in (
-                        (panel.start_input, "Start", QTime(9, 30), QTime(0, 0)),
-                        (panel.end_input, "End", QTime(18, 30), QTime(23, 59)),
-                    ):
-                        clock = field.findChild(QToolButton)
-                        QTest.mouseClick(clock, Qt.MouseButton.LeftButton)
-                        self._app.processEvents()
-                        dialog = next(child for child in panel.findChildren(QDialog) if child.isVisible())
-                        self.assertEqual(dialog.windowTitle(), title)
-                        self.assertEqual(dialog.time_input.displayFormat(), "HH:mm")
-                        self.assertEqual(dialog.time_input.time(), initial)
-                        self.assertFalse(dialog.windowIcon().isNull())
-                        dialog.time_input.setTime(selected)
-                        before = field.text()
-                        QTest.keyClick(dialog, Qt.Key.Key_Escape)
-                        self._app.processEvents()
-                        self.assertEqual(field.text(), before)
-                        self.assertEqual(drafts, [])
-                        QTest.mouseClick(clock, Qt.MouseButton.LeftButton)
-                        self._app.processEvents()
-                        dialog = next(child for child in panel.findChildren(QDialog) if child.isVisible())
-                        dialog.time_input.setTime(selected)
-                        QTest.mouseClick(dialog.select_button, Qt.MouseButton.LeftButton)
-                        self._app.processEvents()
-                        self.assertEqual(field.text(), selected.toString("HH:mm"))
-                        self.assertEqual(len(drafts), 1)
-                        self.assertEqual(drafts[-1].note, "Keep note")
-                        drafts.clear()
-                    panel.start_input.setText("invalid")
-                    drafts.clear()
-                    panel.start_time_action.trigger()
-                    self._app.processEvents()
-                    dialog = next(child for child in panel.findChildren(QDialog) if child.isVisible())
-                    self.assertTrue(dialog.time_input.time().isValid())
-                    QTest.mouseClick(dialog.close_button, Qt.MouseButton.LeftButton)
-                    self.assertEqual(panel.start_input.text(), "invalid")
-                    self.assertEqual(drafts, [])
-                finally:
-                    panel.close()
-
-    def test_worklog_entry_panel_auto_record_tab_applies_timer_values(self) -> None:
-        current = datetime(2026, 4, 20, 9, 0)
-
-        def clock() -> datetime:
-            return current
-
-        panel = WorkLogEntryPanel(
-            auto_record_view_model=AutoRecordViewModel(
-                clock=clock,
-                default_break_hours=0.0,
-            )
-        )
-        drafts: list[WorkLogEntryDraft] = []
-        panel.draft_changed.connect(drafts.append)
-        panel.set_form(
-            WorkLogEntryForm(
-                user_id=1,
-                day=date(2026, 4, 20),
-                start_time=None,
-                end_time=None,
-                break_hours=0.0,
-                note="",
-                work_type="normal",
-                worked_hours=0.0,
-                is_overnight=False,
-                is_leave=False,
-                dirty=False,
-            )
-        )
-
-        panel.clock_in_button.click()
-
-        self.assertEqual(panel.start_input.text(), "09:00")
-        self.assertIn("Started", panel.clock_in_button.text())
-        self.assertTrue(panel.break_button.isEnabled())
-
-        panel.break_button.click()
-        self.assertTrue(panel.auto_timer.isActive())
-        current = datetime(2026, 4, 20, 9, 30)
-        panel._refresh_auto_state()
-        self.assertIn("30m", panel.break_button.text())
-
-        panel.break_button.click()
-        self.assertFalse(panel.auto_timer.isActive())
-        self.assertEqual(panel.break_input.value(), 0.5)
-
-        current = datetime(2026, 4, 20, 18, 0)
-        panel.clock_out_button.click()
-
-        self.assertEqual(panel.end_input.text(), "18:00")
-        self.assertEqual(drafts[-1].start_time, "09:00")
-        self.assertEqual(drafts[-1].end_time, "18:00")
-        self.assertEqual(drafts[-1].break_hours, 0.5)
 
     def test_stats_panel_binds_values_and_progress(self) -> None:
         panel = StatsPanel()

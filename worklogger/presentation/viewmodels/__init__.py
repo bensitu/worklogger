@@ -3,11 +3,6 @@
 from worklogger.presentation.viewmodels.auth import AuthModeState, AuthViewModel
 from worklogger.presentation.viewmodels.ai_assist import AiAssistViewModel, AiChatState
 from worklogger.presentation.viewmodels.analytics import AnalyticsState, AnalyticsViewModel
-from worklogger.presentation.viewmodels.auto_record import (
-    AutoRecordEntryDraft,
-    AutoRecordState,
-    AutoRecordViewModel,
-)
 from worklogger.presentation.viewmodels.calendar import (
     CalendarDayCell,
     CalendarDisplayOptions,
@@ -43,10 +38,7 @@ from worklogger.presentation.viewmodels.user_management import (
     UserManagementState,
     UserManagementViewModel,
 )
-from worklogger.presentation.viewmodels.worklog_entry import (
-    WorkLogEntryForm,
-    WorkLogEntryViewModel,
-)
+from worklogger.presentation.viewmodels.time_entries import TimeEntryDraft, TimeEntryViewModel
 
 __all__ = [
     "AuthModeState",
@@ -55,9 +47,6 @@ __all__ = [
     "AiChatState",
     "AnalyticsState",
     "AnalyticsViewModel",
-    "AutoRecordEntryDraft",
-    "AutoRecordState",
-    "AutoRecordViewModel",
     "CalendarDayCell",
     "CalendarDisplayOptions",
     "CalendarMonthViewState",
@@ -82,6 +71,6 @@ __all__ = [
     "UserListItem",
     "UserManagementState",
     "UserManagementViewModel",
-    "WorkLogEntryForm",
-    "WorkLogEntryViewModel",
+    "TimeEntryDraft",
+    "TimeEntryViewModel",
 ]

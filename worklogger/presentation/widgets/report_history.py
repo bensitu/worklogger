@@ -106,7 +106,6 @@ class ReportHistoryPanel(CardFrame):
         self._selected_report_id: int | None = None
         self._allow_delete = allow_delete
         self._hovered_button = None
-        QApplication.instance().installEventFilter(self)
 
         title = QLabel(_("Report History"))
         title.setObjectName("report_history_title_label")
@@ -140,6 +139,14 @@ class ReportHistoryPanel(CardFrame):
         set_button_icon(self.export_button, "download", accent=True)
         self.export_button.clicked.connect(self.export_requested.emit)
         self.content_layout.addWidget(self.export_button)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        QApplication.instance().installEventFilter(self)
+
+    def hideEvent(self, event):
+        QApplication.instance().removeEventFilter(self)
+        super().hideEvent(event)
 
     def set_items(self, items: Iterable[ReportHistoryDisplayItem]) -> None:
         self._items = tuple(items)

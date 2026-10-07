@@ -20,10 +20,7 @@ from worklogger.presentation.widgets.settings_nav import SettingsNav
 from worklogger.presentation.widgets.sidebar import SidebarWidget
 from worklogger.presentation.widgets.stats import StatsPanel
 from worklogger.presentation.widgets.switch_button import SwitchButton
-from worklogger.presentation.widgets.worklog_entry import (
-    WorkLogEntryDraft,
-    WorkLogEntryPanel,
-)
+from worklogger.presentation.widgets.time_entries import TimeEntryPanel
 
 __all__ = [
     "CardFrame",
@@ -43,6 +40,5 @@ __all__ = [
     "StatsPanel",
     "SummaryValueLabel",
     "SwitchButton",
-    "WorkLogEntryDraft",
-    "WorkLogEntryPanel",
+    "TimeEntryPanel",
 ]

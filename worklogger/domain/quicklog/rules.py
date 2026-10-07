@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import replace
 
 from worklogger.domain.quicklog.models import QuickLog
+from worklogger.domain.shared.dates import time_range_label
 from worklogger.domain.worklog.rules import parse_minutes, parse_time
 
 
@@ -15,6 +16,11 @@ def normalize_description(description: str) -> str:
     if not cleaned:
         raise ValueError("description_required")
     return cleaned
+
+
+def quick_log_reference(entry: QuickLog) -> str:
+    span = time_range_label(entry.start_time, entry.end_time)
+    return "- " + (span + " " if span else "") + entry.description
 
 
 def normalize_quick_log(quick_log: QuickLog) -> QuickLog:

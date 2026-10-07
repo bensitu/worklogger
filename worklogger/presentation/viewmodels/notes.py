@@ -8,7 +8,7 @@ from worklogger.app.use_cases.notes import DailyNotesService, NoteWorkspace
 from worklogger.domain.notes.preferences import NoteSharing
 from worklogger.domain.shared.result import Result
 from worklogger.domain.shared.errors import ValidationError
-from worklogger.domain.shared.dates import time_range_label
+from worklogger.domain.quicklog.rules import quick_log_reference
 
 
 NoteEditorState = NoteWorkspace
@@ -27,10 +27,10 @@ class NoteEditorViewModel:
         return self.service.load(day)
 
     def save(self, state: NoteWorkspace, content: str, sharing: NoteSharing):
-        return self.service.save(state.note.day, content, state.expected_content, sharing)
+        return self.service.save(state.note.day, content, state.expected_content, sharing, state.expected_sharing)
 
     def save_draft(self, state: NoteWorkspace, content: str, sharing: NoteSharing):
-        return self.service.save_draft(state.note.day, content, state.expected_content, sharing)
+        return self.service.save_draft(state.note.day, content, state.expected_content, sharing, state.expected_sharing)
 
     def discard_draft(self, day: date):
         return self.service.discard_draft(day)
@@ -48,8 +48,7 @@ class NoteEditorViewModel:
     def insert_previous_entries(self, state: NoteWorkspace, content: str) -> str:
         lines = []
         for entry in state.previous_entries:
-            span = time_range_label(entry.start_time, entry.end_time)
-            line = "- " + (span + " " if span else "") + entry.description
+            line = quick_log_reference(entry)
             if line not in content.splitlines():
                 lines.append(line)
         return content.rstrip() + ("\n\n" if content.strip() else "") + "\n".join(lines) if lines else content

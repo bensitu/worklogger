@@ -40,9 +40,6 @@ msgstr "（第{week}週）"
 msgid "+"
 msgstr "+"
 
-msgid "+15m break"
-msgstr "休憩を15分追加"
-
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr "プライバシーを重視した、AIレポート対応のデスクトップ業務記録アプリ。"
 
@@ -87,9 +84,6 @@ msgstr "使用中のモデルを更新しました。"
 
 msgid "Add"
 msgstr "追加"
-
-msgid "Add Entry"
-msgstr "記録を追加"
 
 msgid "Add another sign-in method before unlinking this identity."
 msgstr "この連携を解除する前に、別のログイン方法を追加してください。"
@@ -199,14 +193,8 @@ msgstr "青"
 msgid "Break"
 msgstr "休憩"
 
-msgid "Break (h)"
-msgstr "休憩（時間）"
-
 msgid "Break time must be nonnegative and shorter than the work period."
 msgstr "休憩時間は0以上で、勤務時間より短くしてください。"
-
-msgid "Break timer running"
-msgstr "休憩を計測中"
 
 msgid "Break {hours:.1f}h"
 msgstr "休憩 {hours:.1f}h"
@@ -430,9 +418,6 @@ msgstr "休憩を早めに終了しますか？"
 msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
 msgstr "休憩の終了時刻を {time} に変更し、勤務の記録を開始しますか？保存済みの休憩時間が短くなります。"
 
-msgid "Ended"
-msgstr "終了しました"
-
 msgid "English"
 msgstr "英語"
 
@@ -607,11 +592,11 @@ msgstr "モデルをインポート中..."
 msgid "Include calendar"
 msgstr "カレンダーを含める"
 
-msgid "Include notes"
-msgstr "ノートを含める"
-
 msgid "Include quick logs"
 msgstr "クイックログを含める"
+
+msgid "Include work content"
+msgstr "作業内容を含める"
 
 msgid "January"
 msgstr "1月"
@@ -763,9 +748,6 @@ msgstr "月間目標"
 msgid "Monthly target (h)"
 msgstr "月間目標（時間）"
 
-msgid "More actions"
-msgstr "その他の操作"
-
 msgid "National holidays"
 msgstr "全国の祝日"
 
@@ -829,9 +811,6 @@ msgstr "未ダウンロード"
 msgid "Not required"
 msgstr "不要"
 
-msgid "Notes"
-msgstr "ノート"
-
 msgid "November"
 msgstr "11月"
 
@@ -840,9 +819,6 @@ msgstr "OK"
 
 msgid "October"
 msgstr "10月"
-
-msgid "On break"
-msgstr "休憩中"
 
 msgid "Open"
 msgstr "開く"
@@ -1222,17 +1198,11 @@ msgstr "標準労働時間"
 msgid "Start"
 msgstr "開始"
 
-msgid "Start break"
-msgstr "休憩を開始"
-
 msgid "Start recording or a break before continuing."
 msgstr "続行する前に記録または休憩を開始してください。"
 
 msgid "Start week on Monday"
 msgstr "月曜始まり"
-
-msgid "Started"
-msgstr "開始しました"
 
 msgid "State / province"
 msgstr "州 / 都道府県"
@@ -1321,9 +1291,6 @@ msgstr "このレポートは別の場所で変更されました。履歴を再
 msgid "Thu"
 msgstr "木"
 
-msgid "Tip: Click AI Assist to generate a draft based on your time logs."
-msgstr "ヒント：AIアシストをクリックすると、工時記録を基に下書きを作成します。"
-
 msgid "Today"
 msgstr "今日"
 
@@ -1377,9 +1344,6 @@ msgstr "モデルを取得できませんでした。元のファイルまたは
 
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "モデルファイルを読み込めませんでした。アクセス権限を確認してください。"
-
-msgid "Unable to restore the automatic record. Reset it and start a new record?"
-msgstr "自動記録を復元できません。リセットして新しい記録を開始しますか？"
 
 msgid "Unable to restore the database. Select a valid SQLite backup."
 msgstr "データベースを復元できませんでした。有効なSQLiteバックアップを選択してください。"
@@ -1510,9 +1474,6 @@ msgstr "WorkLoggerコマンドライン"
 msgid "WorkLogger is already running."
 msgstr "WorkLogger は既に起動しています。"
 
-msgid "Worked"
-msgstr "勤務時間"
-
 msgid "Worked: {hours}"
 msgstr "作業時間：{hours}"
 
@@ -1548,9 +1509,6 @@ msgstr "h"
 
 msgid "iCalendar (*.ics)"
 msgstr "iCalendar (*.ics)"
-
-msgid "m"
-msgstr "m"
 
 msgid "of {hours:.1f}h goal"
 msgstr "目標 {hours:.1f}h"

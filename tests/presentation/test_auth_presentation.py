@@ -160,6 +160,10 @@ class MemoryRememberSessionStore:
 
 
 class AuthPresentationTests(unittest.TestCase):
+    def setUp(self):
+        from tests.presentation.qt_support import dispose_test_windows
+        self.addCleanup(dispose_test_windows)
+
     @classmethod
     def setUpClass(cls) -> None:
         cls._app = _app()

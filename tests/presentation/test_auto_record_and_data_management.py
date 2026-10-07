@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date
 import os
 from pathlib import Path
-from unittest.mock import patch
 import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -20,7 +19,6 @@ from worklogger.presentation.shell import (
     residency_setting_key,
 )
 from worklogger.presentation.viewmodels import (
-    AutoRecordViewModel,
     DataManagementViewModel,
 )
 
@@ -94,106 +92,9 @@ class MemorySettingsRepository:
 
 
 class AutoRecordDataManagementPresentationTests(unittest.TestCase):
-    def test_automatic_record_restores_break_and_unsaved_draft_and_preserves_failed_writes(self):
-        settings = MemorySettingsRepository()
-        start = datetime(2026, 4, 20, 9)
-        model = AutoRecordViewModel(settings=settings, user_id=1, default_break_hours=0)
-        self.assertTrue(model.start(start, note="Initial").ok)
-        self.assertTrue(model.restart_break(start + timedelta(hours=3)).ok)
-        self.assertTrue(model.update_details(note="Updated", work_type=WorkType.REMOTE.value).ok)
-        resumed = AutoRecordViewModel(settings=settings, user_id=1, default_break_hours=0)
-        self.assertTrue(resumed.state(start + timedelta(hours=3, minutes=30)).break_active)
-        self.assertEqual(resumed.state(start).note, "Updated")
-        self.assertEqual(resumed.state(start).work_type, WorkType.REMOTE.value)
-        self.assertEqual(resumed.state(start + timedelta(hours=3, minutes=30)).break_hours, 0.5)
-        self.assertFalse(AutoRecordViewModel(settings=settings, user_id=2).state(start).active)
-        with patch.object(settings, "set", side_effect=OSError("storage unavailable")):
-            self.assertFalse(resumed.update_details(note="Unsaved", work_type=WorkType.NORMAL.value).ok)
-            self.assertEqual(resumed.state(start).note, "Updated")
-            self.assertEqual(resumed.state(start).work_type, WorkType.REMOTE.value)
-            self.assertFalse(resumed.end_break(start + timedelta(hours=4)).ok)
-        self.assertTrue(resumed.state(start + timedelta(hours=4)).break_active)
-        self.assertTrue(resumed.end_break(start + timedelta(hours=4)).ok)
-        self.assertTrue(resumed.finish(start + timedelta(hours=9)).ok)
-        completed = AutoRecordViewModel(settings=settings, user_id=1)
-        self.assertTrue(completed.state(start).pending_save)
-        self.assertFalse(completed.start(start + timedelta(days=1)).ok)
-        self.assertTrue(completed.acknowledge_saved(start.date(), "09:00", "18:00").ok)
-        self.assertFalse(AutoRecordViewModel(settings=settings, user_id=1).state(start).pending_save)
-
-    def test_auto_record_rejects_excessive_elapsed_time_without_finishing(self):
-        start = datetime(2026, 4, 20, 9)
-        model = AutoRecordViewModel(default_break_hours=0)
-        self.assertTrue(model.start(start).ok)
-        for elapsed in (timedelta(hours=17), timedelta(hours=25, minutes=30), timedelta(minutes=-1)):
-            self.assertFalse(model.finish(start + elapsed).ok)
-            self.assertTrue(model.state(start).active)
-        result = model.finish(start + timedelta(hours=8))
-        self.assertTrue(result.ok)
-        self.assertEqual(result.value.day, start.date())
-
     @classmethod
     def setUpClass(cls) -> None:
         cls._app = QApplication.instance() or QApplication([])
-
-    def test_auto_record_tracks_start_break_finish_and_draft(self) -> None:
-        view_model = AutoRecordViewModel(default_break_hours=1.0)
-
-        started = view_model.start(
-            datetime(2026, 4, 20, 9, 0),
-            note="Focused work",
-            work_type=WorkType.REMOTE.value,
-        )
-        self.assertTrue(started.ok, started.error)
-        assert started.value is not None
-        self.assertEqual(started.value.start_time, "09:00")
-        self.assertEqual(started.value.break_hours, 1.0)
-
-        break_started = view_model.restart_break(datetime(2026, 4, 20, 12, 0))
-        self.assertTrue(break_started.ok, break_started.error)
-        assert break_started.value is not None
-        self.assertTrue(break_started.value.break_active)
-
-        break_ended = view_model.end_break(datetime(2026, 4, 20, 12, 31))
-        self.assertTrue(break_ended.ok, break_ended.error)
-        assert break_ended.value is not None
-        self.assertEqual(break_ended.value.break_hours, 0.5)
-
-        finished = view_model.finish(datetime(2026, 4, 20, 18, 0))
-
-        self.assertTrue(finished.ok, finished.error)
-        assert finished.value is not None
-        self.assertEqual(finished.value.day, date(2026, 4, 20))
-        self.assertEqual(finished.value.start_time, "09:00")
-        self.assertEqual(finished.value.end_time, "18:00")
-        self.assertEqual(finished.value.break_hours, 0.5)
-        self.assertEqual(finished.value.note, "Focused work")
-        self.assertEqual(finished.value.work_type, WorkType.REMOTE.value)
-
-    def test_auto_record_can_continue_existing_break_and_add_quick_break(self) -> None:
-        view_model = AutoRecordViewModel(default_break_hours=0.0)
-        loaded = view_model.load_existing(
-            day=date(2026, 4, 20),
-            start_time="09:00",
-            end_time=None,
-            break_hours=0.5,
-            note="",
-            work_type=WorkType.NORMAL.value,
-        )
-        self.assertTrue(loaded.ok, loaded.error)
-
-        continued = view_model.continue_break(datetime(2026, 4, 20, 13, 0))
-        self.assertTrue(continued.ok, continued.error)
-        ended = view_model.end_break(datetime(2026, 4, 20, 13, 30))
-        self.assertTrue(ended.ok, ended.error)
-        assert ended.value is not None
-        self.assertEqual(ended.value.break_hours, 1.0)
-
-        quick = view_model.add_quick_break(15)
-
-        self.assertTrue(quick.ok, quick.error)
-        assert quick.value is not None
-        self.assertEqual(quick.value.break_hours, 1.25)
 
     def test_data_management_viewmodel_delegates_backup_restore_and_exports(self) -> None:
         row = WorkLog(

@@ -59,8 +59,14 @@ class SQLiteDailyNoteRepository:
         return map_rows(rows, lambda row: DailyNote(user_id, parse_date(row["d"]), str(row["content"])))
 
     def save(self, note: DailyNote, *, expected_content: str | None = None,
-             sharing: NoteSharing | None = None, clear_draft: bool = False) -> None:
+             sharing: NoteSharing | None = None, clear_draft: bool = False,
+             expected_sharing: NoteSharing | None = None) -> None:
         with self._connection_factory.transaction(write=True) as connection:
+            if expected_sharing is not None:
+                row = connection.execute("SELECT value FROM settings WHERE user_id=? AND key=?",
+                                         (note.user_id, note_sharing_key(note.day))).fetchone()
+                if NoteSharing.decode(row[0] if row else None) != expected_sharing:
+                    raise ValueError("note_conflict")
             save_note(connection, note.user_id, note.day, note.content, expected_content)
             if sharing is not None:
                 connection.execute("INSERT INTO settings(user_id,key,value) VALUES(?,?,?) "

@@ -14,7 +14,8 @@ class DailyNoteRepository(Protocol):
         ...
 
     def save(self, note: DailyNote, *, expected_content: str | None = None,
-             sharing: NoteSharing | None = None, clear_draft: bool = False) -> None:
+             sharing: NoteSharing | None = None, clear_draft: bool = False,
+             expected_sharing: NoteSharing | None = None) -> None:
         ...
 
     def list_range(self, user_id: int, start: date, end: date) -> tuple[DailyNote, ...]:

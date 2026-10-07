@@ -24,7 +24,6 @@ from worklogger.presentation.viewmodels import (
     CalendarDisplayOptions,
     CalendarViewModel,
     StatsPanelViewModel,
-    WorkLogEntryViewModel,
 )
 
 
@@ -237,83 +236,6 @@ class PresentationViewModelTests(unittest.TestCase):
         )
         self.assertFalse(failed.ok)
         self.assertEqual(failed.error.code if failed.error else "", "month_failed")
-
-    def test_worklog_entry_viewmodel_tracks_dirty_preview_and_save(self) -> None:
-        view_model = WorkLogEntryViewModel(
-            user_id=1,
-            get_handler=self.get_handler,
-            save_handler=self.save_handler,
-            default_break_hours=1.0,
-        )
-
-        empty = view_model.load(date(2026, 4, 29), holiday_note="Holiday")
-
-        self.assertTrue(empty.ok, empty.error)
-        assert empty.value is not None
-        self.assertEqual(empty.value.note, "Holiday")
-        self.assertFalse(empty.value.dirty)
-
-        preview = view_model.preview(
-            date(2026, 4, 29),
-            start_time="2200",
-            end_time="0900",
-            break_hours=1.0,
-            note="Holiday",
-            work_type=WorkType.NORMAL.value,
-        )
-
-        self.assertTrue(preview.ok, preview.error)
-        assert preview.value is not None
-        self.assertTrue(preview.value.dirty)
-        self.assertTrue(preview.value.can_save)
-        self.assertEqual(preview.value.start_time, "22:00")
-        self.assertEqual(preview.value.end_time, "09:00")
-        self.assertTrue(preview.value.is_overnight)
-        self.assertEqual(preview.value.worked_hours, 10.0)
-
-        saved = view_model.save(preview.value)
-
-        self.assertTrue(saved.ok, saved.error)
-        assert saved.value is not None
-        self.assertFalse(saved.value.dirty)
-        stored = self.work_logs.get_for_day(1, date(2026, 4, 29))
-        self.assertIsNotNone(stored)
-        assert stored is not None
-        self.assertEqual(stored.start_time, "22:00")
-        self.assertEqual(stored.end_time, "09:00")
-        self.assertTrue(stored.overnight)
-
-        invalid = view_model.preview(
-            date(2026, 4, 29),
-            start_time="09:00",
-            end_time=None,
-            break_hours=1.0,
-            note="",
-            work_type=WorkType.NORMAL.value,
-        )
-        self.assertTrue(invalid.ok)
-        assert invalid.value is not None
-        self.assertFalse(invalid.value.can_save)
-        self.assertEqual(invalid.value.errors, ("time_range_incomplete",))
-
-    def test_invalid_time_text_is_dirty_and_cannot_be_saved_as_empty(self) -> None:
-        view_model = WorkLogEntryViewModel(
-            user_id=1, get_handler=self.get_handler, save_handler=self.save_handler,
-        )
-        day = date(2026, 4, 20)
-        self.assertTrue(view_model.load(day).ok)
-        for start, end in (("25:00", "26:00"), ("09:99", None), (None, "invalid")):
-            with self.subTest(start=start, end=end):
-                form = view_model.preview(
-                    day, start_time=start, end_time=end, break_hours=1.0,
-                    note="", work_type=WorkType.NORMAL.value,
-                ).value
-                self.assertEqual((form.start_time, form.end_time), (start, end))
-                self.assertTrue(form.dirty)
-                self.assertFalse(form.can_save)
-                self.assertEqual(form.errors, ("time_range_invalid",))
-                self.assertFalse(view_model.save(form).ok)
-                self.assertIsNone(self.work_logs.get_for_day(1, day))
 
     def test_stats_panel_viewmodel_builds_month_summary(self) -> None:
         self.save_work_log(

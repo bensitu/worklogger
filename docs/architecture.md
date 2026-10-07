@@ -84,14 +84,19 @@ Completed periods have independent IDs and revisions. Automatic time completion
 and its timer-state transition share one database transaction. The UI disables
 conflicting edits and closing while a storage operation runs off the UI thread.
 Daily summary reads aggregate periods; editing and exports retain individual rows.
-Notes and reports reuse application contracts for template updates, Markdown
-export, and text rewriting. Update checks use the application-level service
-contract rather than a duplicate use-case definition.
+Only Reports manages report templates. Memos and time-entry content use optional
+text rewriting without modifying saved durations or inserting work rows. Memo
+sharing and recovered drafts are isolated by account and date. Update checks use
+the application-level service contract rather than a duplicate use-case definition.
 
 Quick logs, daily notes, reports, calendar events, accounts, and settings follow
 the same command/query and handler pattern. Daily notes have independent storage,
 and period content does not overwrite an independent daily note. Editor saves use
-optimistic content checks to prevent overwriting another editor's changes.
+optimistic content and sharing checks to prevent overwriting another editor's
+changes.
+Both desktop windows depend directly on the period editor and reuse the same
+record history widget. No presentation path falls back to the previous daily
+shift editor; compatibility daily reads remain derived summaries only.
 
 ## Results and Errors
 

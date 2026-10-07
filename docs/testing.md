@@ -37,6 +37,9 @@ whose filenames do not start with `test`. Functional Qt tests may instantiate
 widgets or process events; they do not perform screenshot or layout matrices.
 Catalog completeness is checked centrally rather than by repeating every
 workflow in every language.
+Window and authentication fixtures dispose their owned top-level widgets and
+process deferred deletion before another test reapplies application-wide styles.
+This prevents obsolete widgets and event filters from accumulating across tests.
 
 ## Commands
 

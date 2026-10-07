@@ -487,7 +487,7 @@ class SettingsPage(QWidget):
         self.ai_notes_switch.toggled.connect(
             lambda enabled: self._set_bool(AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY, enabled)
         )
-        privacy.content_layout.addWidget(_switch_line(_("Include notes"), self.ai_notes_switch))
+        privacy.content_layout.addWidget(_switch_line(_("Include work content"), self.ai_notes_switch))
         self.ai_calendar_switch = SwitchButton()
         self.ai_calendar_switch.toggled.connect(
             lambda enabled: self._set_bool(AI_PRIVACY_INCLUDE_CALENDAR_SETTING_KEY, enabled)

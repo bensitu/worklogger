@@ -21,7 +21,6 @@ from worklogger.app.job_runner import JobRunner
 from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler, GetAnalyticsDashboardHandler
 from worklogger.app.use_cases.ai import (
     AiChatHandler,
-    BuildAiContextHandler,
     RewriteTextHandler,
 )
 from worklogger.app.use_cases.auth import (
@@ -59,13 +58,6 @@ from worklogger.app.use_cases.local_models import (
     VerifyLocalModelHandler,
 )
 from worklogger.app.use_cases.notes import DailyNotesService, GetDailyNoteHandler
-from worklogger.app.use_cases.quick_logs import (
-    AddQuickLogHandler,
-    DeleteQuickLogHandler,
-    GetQuickLogsForDayHandler,
-    GetQuickLogsForRangeHandler,
-    UpdateQuickLogHandler,
-)
 from worklogger.app.use_cases.reports import (
     GenerateReportHandler,
     GetReportForPeriodHandler,
@@ -77,8 +69,6 @@ from worklogger.app.use_cases.reports import (
 from worklogger.app.use_cases.work_logs import (
     GetAllWorkLogsHandler,
     GetMonthRecordsHandler,
-    GetWorkLogHandler,
-    SaveWorkLogHandler,
 )
 from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandler
 from worklogger.app.use_cases.updates import CheckForUpdatesHandler
@@ -139,7 +129,6 @@ from worklogger.infrastructure.templates import BuiltInTemplateProvider, UserTem
 from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
 from worklogger.infrastructure.i18n import _, get_language, set_language
 from worklogger.infrastructure.language_preferences import LanguagePreferences, initialize_language
-from worklogger.presentation.ai import AiAssistWorkflowController
 from worklogger.presentation.analytics import AnalyticsWorkflowController
 from worklogger.presentation.auth import AuthController, AuthSession
 from worklogger.presentation.auth.controller import RememberSessionStore
@@ -147,7 +136,6 @@ from worklogger.presentation.identity import IdentityWorkflowController
 from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.presentation.local_models import LocalModelsWorkflowController
 from worklogger.presentation.notes import NotesWorkflowController
-from worklogger.presentation.quick_logs import QuickLogsWorkflowController
 from worklogger.presentation.reporting import ReportsWorkflowController
 from worklogger.presentation.settings import SettingsWorkflowController
 from worklogger.presentation.shell import (
@@ -160,21 +148,17 @@ from worklogger.presentation.shell import (
 )
 from worklogger.presentation.theme import configure_application_style, install_bundled_fonts
 from worklogger.presentation.viewmodels import (
-    AutoRecordViewModel,
     AuthViewModel,
-    AiAssistViewModel,
     AnalyticsViewModel,
     CalendarViewModel,
     DataManagementViewModel,
     IdentityManagementViewModel,
     LocalModelManagerViewModel,
     NoteEditorViewModel,
-    QuickLogEditorViewModel,
     ReportEditorViewModel,
     StatsPanelViewModel,
     SettingsViewModel,
     UserManagementViewModel,
-    WorkLogEntryViewModel,
 )
 from worklogger.presentation.widgets.assets import apply_application_icon
 
@@ -436,7 +420,7 @@ def _build_runtime_for_user(
     repositories = _runtime_repositories(connection_factory)
     handlers = _runtime_handlers(repositories)
     remember_store = remember_session_store or _remember_session_store()
-    worklog_entry_view_model = _build_worklog_entry_view_model(user, repositories)
+    time_entry_view_model = _build_time_entry_view_model(user, repositories, handlers)
     settings_workflow = _build_settings_workflow(
         user=user,
         database_path=database_path,
@@ -462,7 +446,7 @@ def _build_runtime_for_user(
     preferences = LanguagePreferences()
     if preferences.load() is None and repositories.settings.get(user.id, LANGUAGE_SETTING_KEY):
         preferences.save(state.language)
-    worklog_entry_view_model.set_default_break_hours(state.default_break_hours)
+    time_entry_view_model.set_default_break_hours(state.default_break_hours)
     window_config = replace(
         window_config, theme=state.theme, dark=state.dark_mode,
         custom_color=state.custom_color, standard_work_hours=state.standard_work_hours,
@@ -480,7 +464,8 @@ def _build_runtime_for_user(
         return _runtime_result(
             application=application,
             window=_build_minimal_view(
-                worklog_entry_view_model=worklog_entry_view_model,
+                time_entry_view_model=time_entry_view_model,
+                notes_workflow=_build_notes_workflow(user, repositories, handlers, job_runner),
                 window_config=window_config,
                 settings_workflow=settings_workflow,
                 residency_controller=residency_controller,
@@ -500,7 +485,7 @@ def _build_runtime_for_user(
             user=user,
             repositories=repositories,
             handlers=handlers,
-            worklog_entry_view_model=worklog_entry_view_model,
+            time_entry_view_model=time_entry_view_model,
             window_config=window_config,
             settings_workflow=settings_workflow,
             residency_controller=residency_controller,
@@ -549,35 +534,10 @@ def _runtime_handlers(repositories: RuntimeRepositories) -> RuntimeHandlers:
     )
 
 
-def _build_worklog_entry_view_model(
-    user: User,
-    repositories: RuntimeRepositories,
-) -> WorkLogEntryViewModel:
-    return WorkLogEntryViewModel(
-        user_id=user.id,
-        get_handler=GetWorkLogHandler(repositories.work_logs),
-        save_handler=SaveWorkLogHandler(repositories.work_logs),
-        notes_handler=GetDailyNoteHandler(repositories.daily_notes),
-        auto_record_view_model=AutoRecordViewModel(settings=repositories.settings, user_id=user.id, notes=repositories.daily_notes),
-        local_timezone=get_localzone(),
-        entry_editor=TimeEntryViewModel(TimeEntryService(user_id=user.id, repository=repositories.work_logs,
-            settings=repositories.settings, local_timezone=get_localzone(), calendar_events=repositories.calendar_events)),
-    )
-
-
-def _build_quick_logs_workflow(
-    user: User,
-    repositories: RuntimeRepositories,
-) -> QuickLogsWorkflowController:
-    return QuickLogsWorkflowController(
-        QuickLogEditorViewModel(
-            user_id=user.id,
-            add_handler=AddQuickLogHandler(repositories.quick_logs),
-            update_handler=UpdateQuickLogHandler(repositories.quick_logs),
-            delete_handler=DeleteQuickLogHandler(repositories.quick_logs),
-            get_day_handler=GetQuickLogsForDayHandler(repositories.quick_logs),
-        )
-    )
+def _build_time_entry_view_model(user: User, repositories: RuntimeRepositories, handlers: RuntimeHandlers) -> TimeEntryViewModel:
+    return TimeEntryViewModel(TimeEntryService(user_id=user.id, repository=repositories.work_logs,
+        settings=repositories.settings, local_timezone=get_localzone(), calendar_events=repositories.calendar_events),
+        rewrite_handler=handlers.rewrite_handler, language=get_language())
 
 
 def _build_analytics_workflow(
@@ -592,31 +552,6 @@ def _build_analytics_workflow(
             csv_exporter=AnalyticsCsvExporter(),
             pdf_exporter=AnalyticsPdfExporter(),
         )
-    )
-
-
-def _build_ai_workflow(
-    user: User,
-    repositories: RuntimeRepositories,
-    handlers: RuntimeHandlers,
-    job_runner: JobRunner | None,
-) -> AiAssistWorkflowController:
-    return AiAssistWorkflowController(
-        AiAssistViewModel(
-            user_id=user.id,
-            chat_handler=handlers.ai_chat_handler,
-            language=get_language(),
-            context_handler=BuildAiContextHandler(
-                work_logs_handler=GetAllWorkLogsHandler(repositories.work_logs),
-                note_handler=GetDailyNoteHandler(repositories.daily_notes),
-                quick_logs_handler=GetQuickLogsForRangeHandler(repositories.quick_logs),
-                calendar_events_handler=GetCalendarEventsForRangeHandler(
-                    repositories.calendar_events
-                ),
-                settings_handler=handlers.settings_get_handler,
-            ),
-        ),
-        job_runner=job_runner,
     )
 
 
@@ -868,14 +803,15 @@ def _window_config_for_user(
 
 def _build_minimal_view(
     *,
-    worklog_entry_view_model: WorkLogEntryViewModel,
+    time_entry_view_model: TimeEntryViewModel,
+    notes_workflow: NotesWorkflowController,
     window_config: AppWindowConfig,
     settings_workflow: SettingsWorkflowController | None,
     residency_controller: QtResidencyController,
     job_runner: JobRunner | None,
 ) -> MinimalView:
     return MinimalView(
-        worklog_entry_view_model=worklog_entry_view_model,
+        time_entry_view_model=time_entry_view_model,
         config=MinimalViewConfig(
             selected_day=window_config.selected_day,
             today=window_config.today,
@@ -883,6 +819,7 @@ def _build_minimal_view(
             confirm_discard_changes=window_config.confirm_discard_changes,
         ),
         settings_workflow=settings_workflow,
+        notes_workflow=notes_workflow,
         residency_controller=residency_controller,
         job_runner=job_runner,
     )
@@ -893,7 +830,7 @@ def _build_app_window(
     user: User,
     repositories: RuntimeRepositories,
     handlers: RuntimeHandlers,
-    worklog_entry_view_model: WorkLogEntryViewModel,
+    time_entry_view_model: TimeEntryViewModel,
     window_config: AppWindowConfig,
     settings_workflow: SettingsWorkflowController | None,
     residency_controller: QtResidencyController,
@@ -910,7 +847,7 @@ def _build_app_window(
             holiday_country=handlers.holiday_country,
             notes_handler=GetDailyNoteHandler(repositories.daily_notes),
         ),
-        worklog_entry_view_model=worklog_entry_view_model,
+        time_entry_view_model=time_entry_view_model,
         stats_panel_view_model=StatsPanelViewModel(
             user_id=user.id,
             month_records_handler=handlers.month_records_handler,

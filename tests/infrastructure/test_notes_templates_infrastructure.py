@@ -7,6 +7,11 @@ from unittest.mock import patch
 from worklogger.app.use_cases.notes import DailyNotesService
 from worklogger.domain.notes.preferences import NoteSharing, note_draft_key
 from worklogger.domain.quicklog.models import QuickLog
+from worklogger.domain.quicklog.rules import quick_log_reference
+from worklogger.domain.shared.dates import time_range_label
+from worklogger.app.commands.report_commands import GenerateReportCommand
+from worklogger.app.use_cases.reports import GenerateReportHandler
+from worklogger.infrastructure.repositories import SQLiteCalendarEventRepository
 from worklogger.infrastructure.repositories import SQLiteSettingsRepository, SQLiteQuickLogRepository
 
 from worklogger.app.commands.auth_commands import RegisterUserCommand
@@ -61,6 +66,28 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
             self.assertEqual(state.previous_entries[0].description, "100% complete")
             self.assertFalse(service.save(day, "Stale", "", NoteSharing(False, True)).ok)
             self.assertEqual(service.load(day).value.sharing, NoteSharing(True, False))
+            workspace = service.load(day).value
+            notes.save(DailyNote(user.id, day, "Draft"), sharing=NoteSharing())
+            rejected = service.save(day, "Edited", "Draft", workspace.sharing, workspace.expected_sharing)
+            self.assertEqual(rejected.error.code, "note_conflict")
+            self.assertEqual(service.load(day).value.sharing, NoteSharing())
+            work = SQLiteWorkLogRepository(factory)
+            work.save_entry(WorkLog(user.id, day, "08:00", "09:00", note="Planning", work_type=WorkType.MEETING))
+            work.save_entry(WorkLog(user.id, day, "10:00", "11:00", note="Practice", work_type=WorkType.TRAINING))
+            report = GenerateReportHandler(work_logs=work, notes=notes, note_settings=settings,
+                quick_logs=quick, calendar_events=SQLiteCalendarEventRepository(factory), templates=BuiltInTemplateProvider())
+            command = GenerateReportCommand(user.id, "daily", day, day)
+            private = report.handle(command).value.content
+            self.assertNotIn("Draft", private)
+            self.assertIn(time_range_label("08:00", "09:00"), private)
+            self.assertIn(time_range_label("10:00", "11:00"), private)
+            self.assertIn("Meeting", private)
+            self.assertIn("Training", private)
+            previous = quick.list_for_day(user.id, day)[0]
+            notes.save(DailyNote(user.id, day, "Approved memo\n" + quick_log_reference(previous)), sharing=NoteSharing(True, False))
+            approved = report.handle(command).value.content
+            self.assertIn("Approved memo", approved)
+            self.assertEqual(approved.count("100% complete"), 1)
 
     def test_note_storage_migration_conflicts_deletion_and_export_preserve_content(self):
         with tempfile.TemporaryDirectory() as directory:

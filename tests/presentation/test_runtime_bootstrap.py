@@ -70,6 +70,8 @@ class CancellingAuthenticator:
 
 class RuntimeBootstrapTests(unittest.TestCase):
     def setUp(self):
+        from tests.presentation.qt_support import dispose_test_windows
+        self.addCleanup(dispose_test_windows)
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         self.preferences_path = Path(directory.name) / "preferences.ini"
@@ -95,7 +97,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             self.assertTrue(result.ok, result.error)
             try:
                 window = result.value.window
-                self.assertIsNone(window._ai_assist_workflow)
+                self.assertFalse(window.entry_panel.view_model.rewrite_available)
                 self.assertIsNone(window._settings_workflow._local_models_workflow)
                 self.assertIsNone(window._settings_workflow._update_check_handler)
                 self.assertFalse(window.settings_page.check_updates_button.isEnabled())
@@ -300,7 +302,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 self.assertTrue(window._config.calendar_options.week_start_monday)
                 self.assertTrue(window.refresh())
                 self.assertEqual(window.entry_panel.view_model.default_break_hours, 0.75)
-                self.assertFalse(window._ai_assist_workflow._view_model.available)
+                self.assertFalse(window.entry_panel.view_model.rewrite_available)
             finally:
                 if second is not None and second.value is not None:
                     second.value.window.close()
@@ -330,10 +332,10 @@ class RuntimeBootstrapTests(unittest.TestCase):
             self.assertEqual(runtime.value.window.account_label.text(), "Signed in: local")
             self.assertIsNotNone(runtime.value.job_runner)
             settings_workflow = getattr(runtime.value.window, "_settings_workflow")
-            ai_workflow = getattr(runtime.value.window, "_ai_assist_workflow")
+            notes_workflow = runtime.value.window._notes_workflow
             local_models_workflow = getattr(settings_workflow, "_local_models_workflow")
             self.assertIs(settings_workflow._job_runner, runtime.value.job_runner)
-            self.assertIs(ai_workflow._job_runner, runtime.value.job_runner)
+            self.assertIs(notes_workflow._job_runner, runtime.value.job_runner)
             self.assertIs(local_models_workflow._job_runner, runtime.value.job_runner)
             self.assertTrue(database_path.exists())
             self.assertTrue(runtime.value.window.refresh())

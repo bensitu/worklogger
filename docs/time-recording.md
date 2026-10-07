@@ -109,7 +109,8 @@ Worked hours sum the individual work periods. Breaks contribute zero. Timed leav
 uses its duration; historical untimed leave retains the standard-day convention.
 Work-day counts and overtime are calculated once per date, not once per period.
 Type breakdowns use individual activities rather than the day's generic summary.
-Reports list the component periods and preserve separate daily notes. CSV and
+Reports list each component period, including its type and content. Separate
+daily notes are included only with explicit per-date permission. CSV and
 iCalendar retain individual periods; iCalendar identifiers include the entry ID.
 
 ## Compatibility
@@ -126,8 +127,19 @@ nonoverlapping periods and an independent note-only row. Optional offset columns
 continue to preserve elapsed time. Explicit CSV replacement replaces the imported
 dates as a whole. Database backups contain the new IDs, revisions, and timer state.
 The older daily-save API refuses to overwrite a multi-entry day; desktop editing
-uses the individual-entry API. Compact mode uses the same recorder, while selection
-and per-item deletion are available in the full calendar list.
+uses the individual-entry API. Compact mode uses the same recorder and history
+widget, including individual selection and deletion. The previous daily editor
+and its presentation timer classes are no longer used or shipped.
+
+## Text Assistance
+
+An available AI service adds a Polish text action to the Content heading. The
+operation rewrites the current description on a background worker. Its result
+remains a local draft until Save or End; times, types, and records are unchanged.
+The general calendar chat entry point is not part of the recording workflow.
+Collected AI context expands each daily summary into its individual periods and
+includes work descriptions only when account privacy settings permit them. Memo
+content additionally requires per-date approval.
 
 ## Improvement Options
 

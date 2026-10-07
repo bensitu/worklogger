@@ -16,7 +16,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QMessageBox,
-    QPushButton,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -25,9 +24,8 @@ from PySide6.QtWidgets import (
 from worklogger.domain.shared.errors import AppError, CancellationError
 from worklogger.domain.shared.dates import add_months
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.errors import display_error_code, display_error_message
+from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.date_labels import month_label
-from worklogger.presentation.work_type_labels import work_type_label
 from worklogger.presentation.settings import SettingsWorkflow
 from worklogger.presentation.shell.pages import (
     AnalyticsPage,
@@ -41,18 +39,16 @@ from worklogger.presentation.viewmodels import (
     CalendarDisplayOptions,
     CalendarViewModel,
     StatsPanelViewModel,
-    WorkLogEntryViewModel,
     SettingsState,
 )
 from worklogger.presentation.widgets import (
     CalendarView,
     SidebarWidget,
     StatsPanel,
-    WorkLogEntryDraft,
-    WorkLogEntryPanel,
 )
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.time_entries import TimeEntryPanel
+from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
 
 
 class NotesWorkflow(Protocol):
@@ -60,17 +56,7 @@ class NotesWorkflow(Protocol):
         ...
 
 
-class QuickLogsWorkflow(Protocol):
-    def open(self, day: date, parent: QWidget | None = None) -> object:
-        ...
-
-
 class AnalyticsWorkflow(Protocol):
-    def open(self, day: date, parent: QWidget | None = None) -> object:
-        ...
-
-
-class AiAssistWorkflow(Protocol):
     def open(self, day: date, parent: QWidget | None = None) -> object:
         ...
 
@@ -103,13 +89,11 @@ class AppWindow(QMainWindow):
         self,
         *,
         calendar_view_model: CalendarViewModel,
-        worklog_entry_view_model: WorkLogEntryViewModel,
+        time_entry_view_model: TimeEntryViewModel,
         stats_panel_view_model: StatsPanelViewModel,
         config: AppWindowConfig | None = None,
         settings_workflow: SettingsWorkflow | None = None,
-        quick_logs_workflow: QuickLogsWorkflow | None = None,
         analytics_workflow: AnalyticsWorkflow | None = None,
-        ai_assist_workflow: AiAssistWorkflow | None = None,
         notes_workflow: NotesWorkflow | None = None,
         reports_workflow: ReportsWorkflow | None = None,
         residency_controller: QtResidencyController | None = None,
@@ -119,13 +103,11 @@ class AppWindow(QMainWindow):
     ) -> None:
         super().__init__(parent)
         self._calendar_view_model = calendar_view_model
-        self._worklog_entry_view_model = worklog_entry_view_model
+        self._time_entry_view_model = time_entry_view_model
         self._stats_panel_view_model = stats_panel_view_model
         self._config = config or AppWindowConfig()
         self._settings_workflow = settings_workflow
-        self._quick_logs_workflow = quick_logs_workflow
         self._analytics_workflow = analytics_workflow
-        self._ai_assist_workflow = ai_assist_workflow
         self._notes_workflow = notes_workflow
         self._reports_workflow = reports_workflow
         reports_model = getattr(reports_workflow, "view_model", None)
@@ -140,8 +122,8 @@ class AppWindow(QMainWindow):
         self._theme_engine = theme_engine or ThemeEngine()
         self._job_runner = job_runner
         self._today = self._config.today or date.today()
-        auto_state = worklog_entry_view_model.auto_record_view_model.state()
-        restored_day = auto_state.day if auto_state.active or auto_state.pending_save else None
+        timer = time_entry_view_model.service.timer
+        restored_day = timer.started_at.date() if timer else None
         self._selected_day = self._config.selected_day or restored_day or self._today
         self._current_month = self._selected_day.replace(day=1)
         # None requests regional holidays; an explicit mapping overrides the provider.
@@ -218,7 +200,7 @@ class AppWindow(QMainWindow):
                 week_start_monday=state.week_start_monday,
             ),
         )
-        self._worklog_entry_view_model.set_default_break_hours(state.default_break_hours)
+        self._time_entry_view_model.set_default_break_hours(state.default_break_hours)
         reports_model = getattr(self._reports_workflow, "view_model", None)
         if hasattr(reports_model, "set_standard_work_hours"):
             reports_model.set_standard_work_hours(state.standard_work_hours)
@@ -311,9 +293,7 @@ class AppWindow(QMainWindow):
         main_layout.addWidget(self.page_stack, 1)
 
         self.calendar_view = CalendarView()
-        editor = self._worklog_entry_view_model.entry_editor
-        self.entry_panel = TimeEntryPanel(editor, job_runner=self._job_runner) if editor is not None else WorkLogEntryPanel(
-            compact=True, auto_record_view_model=self._worklog_entry_view_model.auto_record_view_model)
+        self.entry_panel = TimeEntryPanel(self._time_entry_view_model, job_runner=self._job_runner)
         self.stats_panel = StatsPanel()
         self.calendar_page = CalendarPage(
             calendar_view=self.calendar_view,
@@ -347,33 +327,19 @@ class AppWindow(QMainWindow):
         self.next_month_button = self.calendar_page.next_month_button
         self.account_label = QLabel(self._account_text())
         self.account_label.setObjectName("account_label")
-        self.quick_logs_button = QPushButton(_("Quick Log"))
-        self.quick_logs_button.setObjectName("quick_logs_button")
-        self.quick_logs_button.setToolTip(_("Quick Log"))
-        self.quick_logs_button.setProperty("variant", "ghost")
-        self.notes_button = getattr(self.calendar_page, "notes_button", None) or QPushButton(_("Daily notes"), self)
+        self.notes_button = self.calendar_page.notes_button
         self.reports_button = self.sidebar._buttons["reports"]
         self.analytics_button = self.sidebar._buttons["analytics"]
-        self.ai_assist_button = QPushButton(_("AI Assist"))
-        self.ai_assist_button.setObjectName("ai_assist_button")
-        self.ai_assist_button.setToolTip(_("AI Assist"))
-        self.ai_assist_button.setProperty("variant", "ghost")
         self.settings_button = self.sidebar.settings_button
         self.status_label = QLabel("")
         self.status_label.setObjectName("app_status_label")
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.status_label.hide()
 
-        self.quick_logs_button.hide()
-        self.ai_assist_button.hide()
         self.notes_button.setVisible(self._notes_workflow is not None)
         self.account_label.setVisible(False)
-        if self._quick_logs_workflow is None:
-            self.quick_logs_button.setVisible(False)
         if self._notes_workflow is None:
             self.notes_button.setVisible(False)
-        if self._ai_assist_workflow is None:
-            self.ai_assist_button.setVisible(False)
         main_layout.addWidget(self.status_label)
 
     def _connect_signals(self) -> None:
@@ -381,26 +347,20 @@ class AppWindow(QMainWindow):
         self.calendar_page.previous_month_requested.connect(self.previous_month)
         self.calendar_page.today_requested.connect(self.go_today)
         self.calendar_page.next_month_requested.connect(self.next_month)
-        self.quick_logs_button.clicked.connect(self.open_quick_logs)
         self.notes_button.clicked.connect(self.open_notes)
-        self.ai_assist_button.clicked.connect(self.open_ai_assist)
         if hasattr(self.settings_page, "logout_requested"):
             self.settings_page.logout_requested.connect(self._request_logout)
         if hasattr(self.settings_page, "settings_changed"):
             self.settings_page.settings_changed.connect(self.apply_settings)
         self.calendar_view.day_selected.connect(self.select_day)
-        if isinstance(self.entry_panel, TimeEntryPanel):
-            self.entry_panel.records_changed.connect(self._entries_changed)
-            self.entry_panel.dirty_changed.connect(lambda dirty: setattr(self, "_entry_dirty", dirty))
-            self.entry_panel.busy_changed.connect(self.calendar_page.records_widget.setDisabled)
-            self.calendar_page.entry_selected.connect(self.entry_panel.edit_entry)
-            self.calendar_page.entry_delete_requested.connect(self.entry_panel.delete_entry)
-            self.entry_panel.selection_changed.connect(self.calendar_page.set_selected_entry)
-            self.calendar_page.event_selected.connect(self.entry_panel.copy_event)
-            self.calendar_page.event_delete_requested.connect(self.entry_panel.delete_event)
-        else:
-            self.entry_panel.draft_changed.connect(self._preview_entry_draft)
-            self.entry_panel.save_requested.connect(self._save_entry_draft)
+        self.entry_panel.records_changed.connect(self._entries_changed)
+        self.entry_panel.dirty_changed.connect(lambda dirty: setattr(self, "_entry_dirty", dirty))
+        self.entry_panel.busy_changed.connect(self.calendar_page.records_widget.setDisabled)
+        self.calendar_page.entry_selected.connect(self.entry_panel.edit_entry)
+        self.calendar_page.entry_delete_requested.connect(self.entry_panel.delete_entry)
+        self.entry_panel.selection_changed.connect(self.calendar_page.set_selected_entry)
+        self.calendar_page.event_selected.connect(self.entry_panel.copy_event)
+        self.calendar_page.event_delete_requested.connect(self.entry_panel.delete_event)
 
     def _entries_changed(self, day: date) -> None:
         if self.entry_panel.time_tabs.currentIndex() == 1:
@@ -434,34 +394,13 @@ class AppWindow(QMainWindow):
         return True
 
     def _refresh_entry(self) -> bool:
-        if isinstance(self.entry_panel, TimeEntryPanel):
-            entries = self.entry_panel.load_day(self._selected_day)
-            events = self._calendar_view_model.events_for_day(self._selected_day)
-            if not entries.ok or not events.ok:
-                self._set_error(entries.error or events.error)
-                return False
-            self._entry_dirty = self.entry_panel.is_dirty
-            self.calendar_page.set_time_entries(entries.value, events.value or ())
-            return True
-        result = self._worklog_entry_view_model.load(
-            self._selected_day,
-            holiday_note=self._holiday_note_for_selected_day(),
-        )
-        if not result.ok or result.value is None:
-            self._set_error(result.error)
-            return False
-        self.entry_panel.set_form(result.value)
-        self._entry_dirty = result.value.dirty
+        entries = self.entry_panel.load_day(self._selected_day)
         events = self._calendar_view_model.events_for_day(self._selected_day)
-        if not events.ok:
-            self._set_error(events.error)
+        if not entries.ok or not events.ok:
+            self._set_error(entries.error or events.error)
             return False
-        summary = _record_summary(result.value)
-        lines = ["\n".join(summary)] if summary else []
-        for event in sorted(events.value or (), key=lambda value: (value.start_time or "", value.summary)):
-            time_text = _("All day") if event.all_day else f"{event.start_time or '--:--'} - {event.end_time or '--:--'}"
-            lines.append(f"{time_text}\n{event.summary}")
-        self.calendar_page.set_record_summary(tuple(lines))
+        self._entry_dirty = self.entry_panel.is_dirty
+        self.calendar_page.set_time_entries(entries.value, events.value or ())
         return True
 
     def _refresh_stats(self) -> bool:
@@ -476,71 +415,6 @@ class AppWindow(QMainWindow):
             return False
         self.stats_panel.set_state(result.value)
         return True
-
-    def _preview_entry_draft(self, draft: WorkLogEntryDraft) -> None:
-        if draft.day != self._selected_day:
-            loaded = self._worklog_entry_view_model.load(draft.day)
-            if not loaded.ok:
-                self._set_error(loaded.error)
-                return
-            self._selected_day = draft.day
-            self._current_month = draft.day.replace(day=1)
-            self._refresh_calendar()
-            self._refresh_stats()
-        result = self._worklog_entry_view_model.preview(
-            draft.day,
-            start_time=draft.start_time,
-            end_time=draft.end_time,
-            break_hours=draft.break_hours,
-            note=draft.note,
-            work_type=draft.work_type,
-        )
-        if not result.ok or result.value is None:
-            self._set_error(result.error)
-            return
-        self.entry_panel.set_preview_form(result.value)
-        self._entry_dirty = result.value.dirty
-        if result.value.errors:
-            self._set_status("\n".join(display_error_code(code) for code in result.value.errors))
-        else:
-            self._set_status("")
-
-    def _save_entry_draft(self, draft: WorkLogEntryDraft) -> None:
-        preview = self._worklog_entry_view_model.preview(
-            draft.day,
-            start_time=draft.start_time,
-            end_time=draft.end_time,
-            break_hours=draft.break_hours,
-            note=draft.note,
-            work_type=draft.work_type,
-        )
-        if not preview.ok or preview.value is None:
-            self._set_error(preview.error)
-            return
-        if preview.value.errors:
-            self.entry_panel.set_preview_form(preview.value)
-            self._set_status("\n".join(display_error_code(code) for code in preview.value.errors), notify=True, error=True)
-            return
-        saved = self._worklog_entry_view_model.save(preview.value)
-        if not saved.ok or saved.value is None:
-            self._set_error(saved.error)
-            return
-        self.entry_panel.set_form(saved.value)
-        self._entry_dirty = saved.value.dirty
-        self._refresh_entry()
-        self._refresh_calendar()
-        self._refresh_stats()
-        self._set_status(_("Saved"))
-
-    def _holiday_note_for_selected_day(self) -> str:
-        if not self._config.calendar_options.show_holidays:
-            return ""
-        state = self.calendar_view.state
-        if state is not None:
-            for cell in state.cells:
-                if cell.day == self._selected_day:
-                    return cell.holiday_name
-        return str((self._holidays or {}).get(self._selected_day, "")).strip()
 
     def _set_error(self, error: AppError | None) -> None:
         if isinstance(error, CancellationError):
@@ -583,18 +457,10 @@ class AppWindow(QMainWindow):
     def open_notes(self) -> bool:
         if self._notes_workflow is None:
             return False
-        if not self._confirm_discard_changes_if_needed():
+        if self.entry_panel.is_busy:
+            self._set_status(_("Please wait for the current operation."), notify=True)
             return False
         self._notes_workflow.open(self._selected_day, self)
-        self.refresh()
-        return True
-
-    def open_quick_logs(self) -> bool:
-        if self._quick_logs_workflow is None:
-            return False
-        if not self._confirm_discard_changes_if_needed():
-            return False
-        self._quick_logs_workflow.open(self._selected_day, self)
         self.refresh()
         return True
 
@@ -617,15 +483,6 @@ class AppWindow(QMainWindow):
         if not self._confirm_discard_changes_if_needed():
             return False
         self._analytics_workflow.open(self._selected_day, self)
-        self.refresh()
-        return True
-
-    def open_ai_assist(self) -> bool:
-        if self._ai_assist_workflow is None:
-            return False
-        if not self._confirm_discard_changes_if_needed():
-            return False
-        self._ai_assist_workflow.open(self._selected_day, self)
         self.refresh()
         return True
 
@@ -701,6 +558,8 @@ class AppWindow(QMainWindow):
         self.close()
 
     def _confirm_discard_changes_if_needed(self) -> bool:
+        if bool(getattr(self._notes_workflow, "is_open", False)):
+            return False
         if isinstance(self.entry_panel, TimeEntryPanel) and self.entry_panel.is_busy:
             self._set_status(_("Please wait for the current operation."), notify=True)
             return False
@@ -733,20 +592,3 @@ class AppWindow(QMainWindow):
             QMessageBox.StandardButton.No,
         )
         return answer == QMessageBox.StandardButton.Yes
-
-
-def _record_summary(form: object) -> tuple[str, ...]:
-    worked_hours = float(getattr(form, "worked_hours", 0.0) or 0.0)
-    note = str(getattr(form, "note", "") or "").strip()
-    work_type = work_type_label(str(getattr(form, "work_type", "") or ""))
-    start_time = getattr(form, "start_time", None)
-    end_time = getattr(form, "end_time", None)
-    lines: list[str] = []
-    if start_time or end_time or worked_hours > 0:
-        time_text = f"{start_time or '--:--'} - {end_time or '--:--'}"
-        lines.append(f"{time_text}  {worked_hours:.1f}{_('h')}")
-    if work_type and (lines or bool(getattr(form, "is_leave", False))):
-        lines.append(work_type)
-    if note:
-        lines.append(note)
-    return tuple(lines)

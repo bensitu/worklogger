@@ -40,9 +40,6 @@ msgstr "(Week {week})"
 msgid "+"
 msgstr "+"
 
-msgid "+15m break"
-msgstr "+15m break"
-
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr "A privacy-first desktop work tracker with AI-powered reporting."
 
@@ -87,9 +84,6 @@ msgstr "Active model updated."
 
 msgid "Add"
 msgstr "Add"
-
-msgid "Add Entry"
-msgstr "Add Entry"
 
 msgid "Add another sign-in method before unlinking this identity."
 msgstr "Add another sign-in method before unlinking this identity."
@@ -199,14 +193,8 @@ msgstr "Blue"
 msgid "Break"
 msgstr "Break"
 
-msgid "Break (h)"
-msgstr "Break (h)"
-
 msgid "Break time must be nonnegative and shorter than the work period."
 msgstr "Break time must be nonnegative and shorter than the work period."
-
-msgid "Break timer running"
-msgstr "Break timer running"
 
 msgid "Break {hours:.1f}h"
 msgstr "Break {hours:.1f}h"
@@ -430,9 +418,6 @@ msgstr "End break early?"
 msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
 msgstr "End the break at {time} and start recording work? The saved break duration will be shortened."
 
-msgid "Ended"
-msgstr "Ended"
-
 msgid "English"
 msgstr "English"
 
@@ -607,11 +592,11 @@ msgstr "Importing model..."
 msgid "Include calendar"
 msgstr "Include calendar"
 
-msgid "Include notes"
-msgstr "Include notes"
-
 msgid "Include quick logs"
 msgstr "Include quick logs"
+
+msgid "Include work content"
+msgstr "Include work content"
 
 msgid "January"
 msgstr "January"
@@ -763,9 +748,6 @@ msgstr "Monthly target"
 msgid "Monthly target (h)"
 msgstr "Monthly target (h)"
 
-msgid "More actions"
-msgstr "More actions"
-
 msgid "National holidays"
 msgstr "National holidays"
 
@@ -829,9 +811,6 @@ msgstr "Not downloaded"
 msgid "Not required"
 msgstr "Not required"
 
-msgid "Notes"
-msgstr "Notes"
-
 msgid "November"
 msgstr "November"
 
@@ -840,9 +819,6 @@ msgstr "OK"
 
 msgid "October"
 msgstr "October"
-
-msgid "On break"
-msgstr "On break"
 
 msgid "Open"
 msgstr "Open"
@@ -1222,17 +1198,11 @@ msgstr "Standard hours (h)"
 msgid "Start"
 msgstr "Start"
 
-msgid "Start break"
-msgstr "Start break"
-
 msgid "Start recording or a break before continuing."
 msgstr "Start recording or a break before continuing."
 
 msgid "Start week on Monday"
 msgstr "Start week on Monday"
-
-msgid "Started"
-msgstr "Started"
 
 msgid "State / province"
 msgstr "State / province"
@@ -1321,9 +1291,6 @@ msgstr "This report changed elsewhere. Reload the history before deleting it."
 msgid "Thu"
 msgstr "Thu"
 
-msgid "Tip: Click AI Assist to generate a draft based on your time logs."
-msgstr "Tip: Click AI Assist to generate a draft based on your time logs."
-
 msgid "Today"
 msgstr "Today"
 
@@ -1377,9 +1344,6 @@ msgstr "Unable to obtain the model. Check the source file or download connection
 
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "Unable to read the model file. Check its access permissions."
-
-msgid "Unable to restore the automatic record. Reset it and start a new record?"
-msgstr "Unable to restore the automatic record. Reset it and start a new record?"
 
 msgid "Unable to restore the database. Select a valid SQLite backup."
 msgstr "Unable to restore the database. Select a valid SQLite backup."
@@ -1510,9 +1474,6 @@ msgstr "WorkLogger command line"
 msgid "WorkLogger is already running."
 msgstr "WorkLogger is already running."
 
-msgid "Worked"
-msgstr "Worked"
-
 msgid "Worked: {hours}"
 msgstr "Worked: {hours}"
 
@@ -1548,9 +1509,6 @@ msgstr "h"
 
 msgid "iCalendar (*.ics)"
 msgstr "iCalendar (*.ics)"
-
-msgid "m"
-msgstr "m"
 
 msgid "of {hours:.1f}h goal"
 msgstr "of {hours:.1f}h goal"

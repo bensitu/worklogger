@@ -167,8 +167,12 @@ QWidget#worklog_entry_panel_widget[compact="true"] QDoubleSpinBox QLineEdit {
   border: none;
 }
 
-QWidget#worklog_entry_panel_widget[compact="true"] QDoubleSpinBox#break_hours_double_spin_box {
-  padding-right: 50px;
+QToolButton#polish_time_entry_button {
+  min-height: 16px;
+  max-height: 16px;
+  min-width: 16px;
+  max-width: 16px;
+  padding: 3px;
 }
 
 QWidget#worklog_entry_panel_widget QWidget#worklog_auto_tab_widget QPushButton {
@@ -181,12 +185,6 @@ QWidget#worklog_entry_panel_widget[compact="true"] QTabWidget::pane {
   border: none;
 }
 
-QToolButton#entry_notes_toggle_button {
-  background: transparent;
-  border: none;
-  min-height: 20px;
-  padding: 0;
-}
 
 QFrame#login_form_frame {
   background: {{ surface }};

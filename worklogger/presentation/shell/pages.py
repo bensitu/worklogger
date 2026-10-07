@@ -7,7 +7,7 @@ from collections.abc import Callable
 from dataclasses import replace
 from datetime import date, timedelta
 from pathlib import Path
-from PySide6.QtCore import QEvent, Qt, QTimer, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -55,11 +55,11 @@ from worklogger.presentation.widgets import (
     SegmentedControl,
     StatsPanel,
     SummaryValueLabel,
-    WorkLogEntryPanel,
 )
 from worklogger.presentation.widgets.combo_chart import DonutChart
 from worklogger.presentation.widgets.icons import IconLabel, set_button_icon
-from worklogger.presentation.widgets.record_summary import RecordSummaryButton, RecordSummaryLabel
+from worklogger.presentation.widgets.time_entries import TimeEntryPanel
+from worklogger.presentation.widgets.time_entry_history import TimeEntryHistory
 
 
 class CalendarPage(QWidget):
@@ -75,7 +75,7 @@ class CalendarPage(QWidget):
         self,
         *,
         calendar_view: CalendarView,
-        entry_panel: WorkLogEntryPanel,
+        entry_panel: TimeEntryPanel,
         stats_panel: StatsPanel,
         parent: QWidget | None = None,
     ) -> None:
@@ -84,11 +84,8 @@ class CalendarPage(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.calendar_view = calendar_view
         self.entry_panel = entry_panel
-        self._hovered_record = None
         self.stats_panel = stats_panel
         self._build_ui()
-        if hasattr(entry_panel, "view_model"):
-            QApplication.instance().installEventFilter(self)
 
     def set_month_title(self, title: str) -> None:
         self.month_title_label.setText(title)
@@ -104,91 +101,11 @@ class CalendarPage(QWidget):
         if self.entry_panel.new_record():
             QTimer.singleShot(0, self, lambda: self.details_scroll.ensureWidgetVisible(self.entry_panel.start_input, 0, 8))
 
-    def _clear_records(self) -> None:
-        self._hovered_record = None
-        while self.records_layout.count():
-            item = self.records_layout.takeAt(0)
-            widget = item.widget()
-            if widget is not None:
-                widget.setParent(None)
-                widget.deleteLater()
-
-    def _track_hover(self, record):
-        self._hovered_record = record
-
-    def eventFilter(self, watched, event):
-        if event.type() == QEvent.Type.MouseMove and self.isVisible() and self._hovered_record is not None:
-            record = self._hovered_record
-            position = event.globalPosition().toPoint()
-            record.update_delete_visibility(position)
-            if not record.rect().contains(record.mapFromGlobal(position)):
-                self._hovered_record = None
-        return super().eventFilter(watched, event)
-
-    def set_record_summary(self, lines: tuple[str, ...]) -> None:
-        self._clear_records()
-        if not lines:
-            empty = QLabel(_("No records for the selected day."))
-            empty.setObjectName("calendar_empty_records_label")
-            empty.setProperty("role", "secondary")
-            empty.setWordWrap(True)
-            self.records_layout.addWidget(empty)
-            self.records_layout.addStretch(1)
-            return
-        for line in lines:
-            record = QFrame()
-            record.setObjectName("calendar_record_frame")
-            row = QHBoxLayout(record)
-            row.setContentsMargins(8, 8, 8, 8)
-            row.setSpacing(6)
-            row.addWidget(RecordSummaryLabel(line), 1)
-            self.records_layout.addWidget(record)
-        self.records_layout.addStretch(1)
-
-    def set_time_entries(self, entries, events) -> None:
-        self._clear_records()
-        selected = self.entry_panel.view_model.draft.original
-        for entry in entries:
-            content = entry.note.splitlines()[0][:64] if entry.note else ""
-            if entry.note and len(entry.note.splitlines()[0]) > 64:
-                content += "..."
-            period = f"{entry.start_time} - {entry.end_time}" if entry.has_times else _("All day")
-            text = f"{period}  {duration_label(entry.raw_hours())}\n{work_type_label(entry.work_type)}"
-            if content:
-                text += "\n" + content
-            record = RecordSummaryButton(text, deletable=True)
-            record.hovered.connect(self._track_hover)
-            record.setProperty("entry_id", entry.id)
-            record.setCheckable(True)
-            record.setAutoExclusive(True)
-            record.setChecked(bool(selected and selected.id == entry.id))
-            record.setToolTip(entry.note or work_type_label(entry.work_type))
-            record.setAccessibleName(_("Edit record") + ": " + text)
-            record.clicked.connect(lambda _checked=False, entry=entry: self.entry_selected.emit(entry))
-            record.delete_requested.connect(lambda entry=entry: self.entry_delete_requested.emit(entry))
-            self.records_layout.addWidget(record)
-        for event in events:
-            time = _("All day") if event.all_day else f"{event.start_time or '--:--'} - {event.end_time or '--:--'}"
-            record = RecordSummaryButton(f"{time}\n{_('Calendar event')}\n{event.summary}",
-                deletable=self.entry_panel.view_model.service.calendar_events is not None)
-            record.hovered.connect(self._track_hover)
-            record.setToolTip(_("Create record from event"))
-            record.setAccessibleName(_("Create record from event") + ": " + event.summary)
-            record.clicked.connect(lambda _checked=False, event=event: self.event_selected.emit(event))
-            record.delete_requested.connect(lambda event=event: self.event_delete_requested.emit(event))
-            self.records_layout.addWidget(record)
-        if not entries and not events:
-            empty = QLabel(_("No records for the selected day."))
-            empty.setWordWrap(True)
-            self.records_layout.addWidget(empty)
-        self.records_layout.addStretch(1)
+    def set_time_entries(self, entries, events):
+        self.records_widget.set_entries(entries, events)
 
     def set_selected_entry(self, entry_id):
-        for record in self.records_widget.findChildren(RecordSummaryButton):
-            if record.property("entry_id") is not None:
-                record.setAutoExclusive(False)
-                record.setChecked(record.property("entry_id") == entry_id)
-                record.setAutoExclusive(True)
+        self.records_widget.set_selected_entry(entry_id)
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
@@ -219,19 +136,16 @@ class CalendarPage(QWidget):
         self.today_button = QPushButton(_("Today"))
         self.today_button.setObjectName("today_button")
         self.today_button.clicked.connect(self.today_requested.emit)
-        if hasattr(self.entry_panel, "view_model"):
-            self.add_entry_button = QPushButton(_("New time record"))
-            self.add_entry_button.clicked.connect(self._new_time_record)
-            self.notes_button = QPushButton(_("Daily notes"))
-            self.notes_button.setObjectName("daily_notes_button")
-            self.notes_button.setToolTip(_("Daily notes"))
-            set_button_icon(self.notes_button, "file-text")
-        else:
-            self.add_entry_button = QPushButton(_("Add Entry"))
+        self.add_entry_button = QPushButton(_("New time record"))
+        self.add_entry_button.clicked.connect(self._new_time_record)
+        self.notes_button = QPushButton(_("Daily notes"))
+        self.notes_button.setObjectName("daily_notes_button")
+        self.notes_button.setToolTip(_("Daily notes"))
+        set_button_icon(self.notes_button, "file-text")
         self.add_entry_button.setObjectName("add_entry_button")
         self.add_entry_button.setProperty("variant", "primary")
         set_button_icon(self.add_entry_button, "plus")
-        self.add_entry_button.setToolTip(_("New time record") if hasattr(self.entry_panel, "view_model") else _("More actions"))
+        self.add_entry_button.setToolTip(_("New time record"))
         header.addWidget(self.previous_month_button)
         header.addStretch(1)
         header.addWidget(self.month_title_label)
@@ -239,8 +153,7 @@ class CalendarPage(QWidget):
         header.addWidget(self.next_month_button)
         header.addWidget(self.today_button)
         header.addWidget(self.add_entry_button)
-        if hasattr(self, "notes_button"):
-            header.addWidget(self.notes_button)
+        header.addWidget(self.notes_button)
         root.addLayout(header)
 
         content = QHBoxLayout()
@@ -261,7 +174,7 @@ class CalendarPage(QWidget):
         self.details_scroll.setObjectName("calendar_details_scroll_widget")
         self.details_scroll.setWidgetResizable(True)
         self.details_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.details_scroll.setFixedWidth(280 if hasattr(self.entry_panel, "view_model") else 236)
+        self.details_scroll.setFixedWidth(280)
         right = QFrame()
         right.setObjectName("calendar_right_panel_frame")
         right_layout = QVBoxLayout(right)
@@ -279,12 +192,13 @@ class CalendarPage(QWidget):
         self.records_scroll.setWidgetResizable(True)
         self.records_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.records_scroll.setMinimumHeight(96)
-        self.records_widget = QWidget()
-        self.records_widget.setObjectName("calendar_records_widget")
+        self.records_widget = TimeEntryHistory(self.entry_panel.view_model)
+        self.records_layout = self.records_widget.rows
         self.records_widget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        self.records_layout = QVBoxLayout(self.records_widget)
-        self.records_layout.setContentsMargins(0, 0, 0, 0)
-        self.records_layout.setSpacing(4)
+        self.records_widget.entry_selected.connect(self.entry_selected.emit)
+        self.records_widget.entry_delete_requested.connect(self.entry_delete_requested.emit)
+        self.records_widget.event_selected.connect(self.event_selected.emit)
+        self.records_widget.event_delete_requested.connect(self.event_delete_requested.emit)
         self.records_scroll.setWidget(self.records_widget)
         right_layout.addWidget(self.records_scroll, 1)
         content.addWidget(self.details_scroll)
@@ -755,7 +669,7 @@ class ReportsPage(QWidget):
         editor_card.content_layout.addWidget(self.ai_hint_line_edit)
 
         ai_row = QHBoxLayout()
-        self.ai_assist_button = QPushButton(_("AI Assist"))
+        self.ai_assist_button = QPushButton(_("Polish text"))
         self.ai_assist_button.setObjectName("report_ai_assist_button")
         self.ai_assist_button.setProperty("variant", "outline")
         self.ai_assist_button.clicked.connect(self._rewrite_current)
@@ -763,12 +677,8 @@ class ReportsPage(QWidget):
         if self._view_model is None or not getattr(self._view_model, "rewrite_available", True):
             self.ai_assist_button.setEnabled(False)
             self.ai_assist_button.setToolTip(_("AI Assist is not configured."))
-        self.tip_label = QLabel(_("Tip: Click AI Assist to generate a draft based on your time logs."))
-        self.tip_label.setObjectName("report_tip_label")
-        self.tip_label.setProperty("role", "secondary")
-        self.tip_label.setWordWrap(True)
         ai_row.addWidget(self.ai_assist_button)
-        ai_row.addWidget(self.tip_label, 1)
+        ai_row.addStretch(1)
         editor_card.content_layout.addLayout(ai_row)
 
         bottom = QHBoxLayout()

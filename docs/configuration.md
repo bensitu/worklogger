@@ -83,9 +83,11 @@ variables. They are stored as strings in the settings repository.
 | `enable_tray`, `enable_menu_bar` | `0` | Platform residency preference |
 | `minimal_mode` | `0` | Programmatic/stored option; its settings control is hidden |
 | `ai_assist_enabled` | `1` | Preference, not proof of a configured generation service |
-| `ai_privacy_include_notes` | `1` | Include notes when building AI context |
+| `ai_privacy_include_notes` | `1` | Include period descriptions and approved daily notes when building AI context |
 | `ai_privacy_include_calendar` | `1` | Include calendar events in AI context |
 | `ai_privacy_include_quick_logs` | `1` | Include quick logs in AI context |
+| `daily_note_sharing:<ISO date>` | Both off | JSON with per-date `reports` and `ai` approval |
+| `daily_note_draft:<ISO date>` | Absent | Recoverable content, original content, and original/current sharing choices |
 | `local_model_enabled` | `1` | Local model preference |
 | `external_model_base_url` | `https://api.openai.com/v1` | Stored external-service preference |
 | `external_model_name` | `gpt-4o-mini` | Stored model identifier, not an active service |

@@ -132,8 +132,10 @@ See [daily notes](daily-notes.md) for recovery and sharing behavior.
 
 Choose a daily, weekly, or monthly period. Weekly periods follow the calendar's
 Sunday-first or Monday-first preference. Generate
-a report from the period's work records, quick logs, and calendar events, then
+a report from the period's individual work records, previous quick logs,
+approved daily notes, and calendar events, then
 edit and save it. Select a history item to reopen saved content.
+Polish text edits the current report draft without changing recorded work time.
 History items display the report period, the first save date and time in your
 local time zone, and a report number that distinguishes multiple reports saved
 in the same second. Editing an existing report and saving it asks for confirmation

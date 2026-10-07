@@ -15,13 +15,10 @@ from worklogger.presentation.ai.dialog import AiAssistDialog
 from worklogger.presentation.analytics.dialog import AnalyticsDialog
 from worklogger.presentation.identity.dialog import IdentityDialog
 from worklogger.presentation.local_models.dialog import LocalModelsDialog
-from worklogger.presentation.notes.dialog import NoteEditorDialog
 from worklogger.presentation.quick_logs.dialog import QuickLogDialog
 from worklogger.presentation.reporting.dialog import ReportDialog, ReportTemplateDialog
 from worklogger.presentation.user_management.dialog import UserManagementDialog
 from worklogger.presentation.widgets.status_label import StatusLabel
-from worklogger.presentation.widgets.worklog_entry import WorkLogEntryPanel
-from worklogger.presentation.viewmodels.worklog_entry import WorkLogEntryForm
 
 
 class StatusFeedbackTests(unittest.TestCase):
@@ -46,13 +43,9 @@ class StatusFeedbackTests(unittest.TestCase):
     def test_validation_and_model_feedback_use_translated_descriptions(self):
         for language in ("en_US", "zh_CN"):
             set_language(language)
-            panel = WorkLogEntryPanel()
             model = Mock()
             dialog = LocalModelsDialog(model)
             try:
-                panel.set_form(WorkLogEntryForm(1, date(2026, 5, 4), "09:00", "invalid", 1.0,
-                    "", "normal", 0.0, False, False, True, ("time_range_invalid",)))
-                self.assertEqual(panel.error_label.text(), _("Enter valid start and end times in HH:mm format."))
                 state = SimpleNamespace(inventory=SimpleNamespace(items=()), message=_("Model imported."))
                 self.assertTrue(dialog._set_state_result(Result.success(state)))
                 self.assertEqual(dialog.status_label.text(), _("Model imported."))
@@ -61,7 +54,6 @@ class StatusFeedbackTests(unittest.TestCase):
                 dialog._show_verify_result(SimpleNamespace(verified=False, reason="local_model_hash_mismatch"))
                 self.assertEqual(dialog.status_label.text(), _("Model verification failed. Import or download a valid GGUF model."))
             finally:
-                panel.deleteLater()
                 dialog.deleteLater()
 
     def test_cancelled_ai_request_keeps_input_and_recovers_controls(self):
@@ -86,7 +78,6 @@ class StatusFeedbackTests(unittest.TestCase):
             lambda model: AnalyticsDialog(model, day),
             lambda model: IdentityDialog(model),
             lambda model: LocalModelsDialog(model),
-            lambda model: NoteEditorDialog(model, day),
             lambda model: QuickLogDialog(model, day),
             lambda model: UserManagementDialog(model),
             lambda model: ReportDialog(model, day),

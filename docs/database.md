@@ -158,7 +158,11 @@ note, and deleting an account still removes both. Editor writes compare the load
 note content within the transaction; a conflicting edit rejects the save without
 altering either note or work fields. Explicit CSV replacement remains an intentional
 overwrite. CSV export includes note-only dates, which are imported without creating
-empty work rows. Report and calendar queries also include independent notes.
+empty work rows. Calendar queries include saved note markers. Report and AI
+queries require explicit per-date permission before collecting a memo. Memos,
+permissions, and draft removal commit together; content and sharing checks
+reject conflicting saves. Drafts and sharing use account-scoped settings keys,
+not work rows or a new schema.
 
 ## Backup and Restore
 

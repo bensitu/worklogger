@@ -28,6 +28,7 @@ from worklogger.domain.notes.repositories import DailyNoteRepository
 from worklogger.domain.notes.preferences import NoteSharing, note_sharing_key
 from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.quicklog.models import QuickLog
+from worklogger.domain.quicklog.rules import quick_log_reference
 from worklogger.domain.quicklog.repositories import QuickLogRepository
 from worklogger.domain.reporting.models import Report
 from worklogger.domain.reporting.periods import normalize_report_type, validate_report_period
@@ -249,6 +250,7 @@ class GenerateReportHandler:
 
         try:
             work_logs = self._work_logs.list_range(command.user_id, period.start, period.end)
+            notes = ()
             if self._notes is not None and self._note_settings is not None:
                 notes = self._notes.list_range(command.user_id, period.start, period.end)
                 notes = tuple(note for note in notes if NoteSharing.decode(
@@ -257,6 +259,8 @@ class GenerateReportHandler:
                 work_logs += tuple(WorkLog(command.user_id, note.day, note=note.content)
                                    for note in notes if note.content and (note.day, note.content) not in recorded_notes)
             quick_logs = self._quick_logs.list_for_range(command.user_id, period.start, period.end)
+            quick_logs = tuple(entry for entry in quick_logs if not any(note.day == entry.day
+                and quick_log_reference(entry) in note.content.splitlines() for note in notes))
             events = self._calendar_events.list_for_range(command.user_id, period.start, period.end)
             template = self._templates.get_template(
                 command.language, period.report_type, user_id=command.user_id,
@@ -327,41 +331,28 @@ def _template_values(
 def _work_log_lines(work_logs: tuple[WorkLog, ...], standard_hours: float, _: Callable[[str], str]) -> str:
     if not work_logs:
         return "- " + _("No notes recorded for this period.")
-    lines: list[str] = []
-    for work_log in sorted(work_logs, key=lambda item: item.day):
-        if work_log.is_note_only:
-            lines.append(_list_item(f"{work_log.day.isoformat()} - {work_log.note}"))
+    labels = {"normal": _("Normal"), "remote": _("Remote"), "business_trip": _("Business trip"),
+              "meeting": _("Meeting"), "training": _("Training"), "break": _("Break"), "other": _("Other"),
+              "paid_leave": _("Paid leave"), "comp_leave": _("Compensatory leave"), "sick_leave": _("Sick leave")}
+    lines = []
+    for record in sorted(work_logs, key=lambda item: item.day):
+        if record.is_note_only:
+            lines.append(_list_item(f"{record.day.isoformat()} - {record.note}"))
             continue
-        if work_log.entries:
-            total = work_log.worked_hours()
-            lines.append(_list_item(f"{work_log.day.isoformat()}: {total:.1f}h"))
-            labels = {"normal": _("Normal"), "remote": _("Remote"), "business_trip": _("Business trip"),
-                      "meeting": _("Meeting"), "training": _("Training"), "break": _("Break"),
-                      "other": _("Other"),
-                      "paid_leave": _("Paid leave"), "comp_leave": _("Compensatory leave"), "sick_leave": _("Sick leave")}
-            for entry in work_log.entries:
-                period = time_range_label(entry.start_time, entry.end_time)
-                description = f"{period} [{labels[entry.work_type.value]}]"
-                if entry.note:
-                    description += f" - {entry.note}"
-                lines.append("  " + _list_item(description))
-            continue
-        if work_log.is_leave:
-            labels = {"paid_leave": _("Paid leave"), "comp_leave": _("Compensatory leave"), "sick_leave": _("Sick leave")}
-            suffix = f" [{labels[work_log.work_type.value]}]"
-            note = f" - {work_log.note}" if work_log.note else ""
-            lines.append(_list_item(f"{work_log.day.isoformat()}{suffix}{note}"))
-            continue
-        hours = work_log.worked_hours()
+        hours = record.worked_hours()
+        heading = f"{record.day.isoformat()}: {hours:.1f}h"
         overtime = max(hours - standard_hours, 0.0)
-        parts = [f"{work_log.day.isoformat()}: {hours:.1f}h"]
-        if overtime > 0:
-            parts.append(_("Overtime") + f" +{overtime:.1f}h")
-        if work_log.is_overnight:
-            parts.append(_("Overnight"))
-        if work_log.note:
-            parts.append(work_log.note)
-        lines.append(_list_item("  ".join(parts)))
+        if overtime:
+            heading += "  " + _("Overtime") + f" +{overtime:.1f}h"
+        lines.append(_list_item(heading))
+        for entry in record.entries or (record,):
+            span = time_range_label(entry.start_time, entry.end_time) if entry.has_times else _("All day")
+            description = f"{span} [{labels[entry.work_type.value]}]"
+            if entry.is_overnight:
+                description += " " + _("Overnight")
+            if entry.note:
+                description += " - " + entry.note
+            lines.append("  " + _list_item(description))
     return "\n".join(lines)
 
 

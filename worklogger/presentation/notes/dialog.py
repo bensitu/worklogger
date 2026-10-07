@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QDialog, QFileDialog,
     QPushButton, QTextEdit, QToolButton, QVBoxLayout, QWidget)
 
 from worklogger.domain.notes.preferences import NoteSharing
+from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.job_runner import QtJobRunner
@@ -196,7 +197,7 @@ class NoteEditorDialog(QDialog):
             self._job_runner.submit(name, lambda _token: operation(), on_complete=done)
         except Exception:
             self._set_busy(False)
-            self._set_error(None)
+            self._set_error(InfrastructureError("note_save_failed", "note_save_failed"))
 
     def _persist_draft(self):
         if self._state is None or self._busy or self._draft_busy:
@@ -217,7 +218,7 @@ class NoteEditorDialog(QDialog):
             self._job_runner.submit("save_note_draft", lambda _token: self._view_model.save_draft(state, content, sharing), on_complete=done)
         except Exception:
             self._draft_busy = False
-            self._set_error(None)
+            self._set_error(InfrastructureError("note_save_failed", "note_save_failed"))
 
     def _search(self):
         if self._busy or self._draft_busy:

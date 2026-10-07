@@ -4,6 +4,8 @@ from dataclasses import dataclass, replace
 from datetime import date
 
 from worklogger.app.use_cases.time_entries import TimeEntryService
+from worklogger.app.commands.ai_commands import RewriteTextCommand
+from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
 
@@ -19,8 +21,10 @@ class TimeEntryDraft:
 
 
 class TimeEntryViewModel:
-    def __init__(self, service: TimeEntryService, *, default_break_hours: float = 1) -> None:
+    def __init__(self, service: TimeEntryService, *, default_break_hours: float = 1,
+                 rewrite_handler=None, language="en_US") -> None:
         self.service = service
+        self._rewrite_handler, self._language = rewrite_handler, language
         self.default_break_hours = default_break_hours
         self.draft = TimeEntryDraft(service.now().date())
         self._baseline = self.draft
@@ -28,6 +32,24 @@ class TimeEntryViewModel:
         self.auto_completed: WorkLog | None = None
         self.auto_content = service.timer.content if service.timer else ""
         self.auto_work_type = service.timer.work_type.value if service.timer else "normal"
+
+    def set_default_break_hours(self, hours: float) -> None:
+        self.default_break_hours = max(0.0, min(float(hours), 4.0))
+
+    @property
+    def rewrite_available(self):
+        return self._rewrite_handler is not None and bool(getattr(self._rewrite_handler, "available", True))
+
+    def rewrite_content(self, content: str):
+        if not self.rewrite_available:
+            return Result.failure(ValidationError("ai_rewrite_not_configured", "ai_rewrite_not_configured"))
+        result = self._rewrite_handler.handle(RewriteTextCommand(self.service.user_id, content,
+                                               context="time_entry", language=self._language))
+        if not result.ok:
+            return result
+        if result.value is None or len(result.value.content) > 16000:
+            return Result.failure(ValidationError("time_entry_content_too_long", "time_entry_content_too_long"))
+        return Result.success(result.value.content)
 
     @property
     def manual_dirty(self) -> bool:

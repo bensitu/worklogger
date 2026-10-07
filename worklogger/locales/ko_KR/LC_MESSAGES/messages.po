@@ -40,9 +40,6 @@ msgstr "({week}주차)"
 msgid "+"
 msgstr "+"
 
-msgid "+15m break"
-msgstr "휴식 15분 추가"
-
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr "개인정보 보호를 우선하는 AI 보고서 지원 데스크톱 근무 기록 도구."
 
@@ -87,9 +84,6 @@ msgstr "현재 모델이 업데이트되었습니다."
 
 msgid "Add"
 msgstr "추가"
-
-msgid "Add Entry"
-msgstr "기록 추가"
 
 msgid "Add another sign-in method before unlinking this identity."
 msgstr "이 연결을 해제하기 전에 다른 로그인 방법을 추가하세요."
@@ -199,14 +193,8 @@ msgstr "파랑"
 msgid "Break"
 msgstr "휴식"
 
-msgid "Break (h)"
-msgstr "휴식(시간)"
-
 msgid "Break time must be nonnegative and shorter than the work period."
 msgstr "휴식 시간은 0 이상이고 근무 시간보다 짧아야 합니다."
-
-msgid "Break timer running"
-msgstr "휴식 시간 측정 중"
 
 msgid "Break {hours:.1f}h"
 msgstr "휴식 {hours:.1f}h"
@@ -430,9 +418,6 @@ msgstr "휴식을 일찍 종료할까요?"
 msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
 msgstr "휴식 종료 시간을 {time}(으)로 변경하고 근무 기록을 시작할까요? 저장된 휴식 시간이 줄어듭니다."
 
-msgid "Ended"
-msgstr "종료됨"
-
 msgid "English"
 msgstr "영어"
 
@@ -607,11 +592,11 @@ msgstr "모델 가져오는 중..."
 msgid "Include calendar"
 msgstr "달력 포함"
 
-msgid "Include notes"
-msgstr "메모 포함"
-
 msgid "Include quick logs"
 msgstr "빠른 기록 포함"
+
+msgid "Include work content"
+msgstr "작업 내용 포함"
 
 msgid "January"
 msgstr "1월"
@@ -763,9 +748,6 @@ msgstr "월간 목표"
 msgid "Monthly target (h)"
 msgstr "월간 목표(시간)"
 
-msgid "More actions"
-msgstr "더 많은 작업"
-
 msgid "National holidays"
 msgstr "전국 공휴일"
 
@@ -829,9 +811,6 @@ msgstr "다운로드되지 않음"
 msgid "Not required"
 msgstr "필요 없음"
 
-msgid "Notes"
-msgstr "메모"
-
 msgid "November"
 msgstr "11월"
 
@@ -840,9 +819,6 @@ msgstr "확인"
 
 msgid "October"
 msgstr "10월"
-
-msgid "On break"
-msgstr "휴식 중"
 
 msgid "Open"
 msgstr "열기"
@@ -1222,17 +1198,11 @@ msgstr "표준 근무 시간"
 msgid "Start"
 msgstr "시작"
 
-msgid "Start break"
-msgstr "휴식 시작"
-
 msgid "Start recording or a break before continuing."
 msgstr "계속하기 전에 기록 또는 휴식을 시작하세요."
 
 msgid "Start week on Monday"
 msgstr "월요일부터 한 주 시작"
-
-msgid "Started"
-msgstr "시작됨"
 
 msgid "State / province"
 msgstr "주 / 도"
@@ -1321,9 +1291,6 @@ msgstr "다른 곳에서 이 보고서가 변경되었습니다. 기록을 다�
 msgid "Thu"
 msgstr "목"
 
-msgid "Tip: Click AI Assist to generate a draft based on your time logs."
-msgstr "팁: AI 도우미를 클릭하면 근무 기록을 바탕으로 초안을 생성합니다."
-
 msgid "Today"
 msgstr "오늘"
 
@@ -1377,9 +1344,6 @@ msgstr "모델을 가져오지 못했습니다. 원본 파일 또는 다운로�
 
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "모델 파일을 읽지 못했습니다. 접근 권한을 확인하세요."
-
-msgid "Unable to restore the automatic record. Reset it and start a new record?"
-msgstr "자동 기록을 복원할 수 없습니다. 초기화하고 새 기록을 시작할까요?"
 
 msgid "Unable to restore the database. Select a valid SQLite backup."
 msgstr "데이터베이스를 복원하지 못했습니다. 유효한 SQLite 백업을 선택하세요."
@@ -1510,9 +1474,6 @@ msgstr "WorkLogger 명령줄"
 msgid "WorkLogger is already running."
 msgstr "WorkLogger가 이미 실행 중입니다."
 
-msgid "Worked"
-msgstr "근무 시간"
-
 msgid "Worked: {hours}"
 msgstr "작업 시간: {hours}"
 
@@ -1548,9 +1509,6 @@ msgstr "h"
 
 msgid "iCalendar (*.ics)"
 msgstr "iCalendar (*.ics)"
-
-msgid "m"
-msgstr "m"
 
 msgid "of {hours:.1f}h goal"
 msgstr "목표 {hours:.1f}h"

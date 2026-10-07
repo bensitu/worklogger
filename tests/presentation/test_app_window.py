@@ -1,30 +1,33 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 import os
 import unittest
 from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QTime, QTimer, Qt, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QDialog, QTimeEdit, QWidget
+from PySide6.QtWidgets import QApplication, QWidget, QMessageBox
 
 from worklogger.app.queries.work_log_queries import GetMonthRecordsQuery
 from worklogger.app.use_cases.calendar import GetCalendarEventsForRangeHandler
 from worklogger.app.use_cases.work_logs import (
     GetMonthRecordsHandler,
-    GetWorkLogHandler,
-    SaveWorkLogHandler,
 )
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.calendar.repositories import CalendarEventRepository
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import WorkLog
+from worklogger.domain.worklog.rules import aggregate_days, entries_overlap, normalize_work_log
+from dataclasses import replace
+from worklogger.app.use_cases.time_entries import TimeEntryService
+from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
+from worklogger.presentation.job_runner import ImmediateJobRunner
+from tests.presentation.qt_support import dispose_test_windows
 from worklogger.presentation.shell import (
     AppWindow,
     AppWindowConfig,
@@ -32,11 +35,9 @@ from worklogger.presentation.shell import (
     MinimalViewConfig,
 )
 from worklogger.presentation.viewmodels import (
-    AutoRecordViewModel,
     CalendarDisplayOptions,
     CalendarViewModel,
     StatsPanelViewModel,
-    WorkLogEntryViewModel,
 )
 
 
@@ -48,33 +49,87 @@ def _app() -> QApplication:
 
 
 class MemoryWorkLogRepository:
-    def __init__(self) -> None:
-        self.records: dict[tuple[int, date], WorkLog] = {}
+    def __init__(self):
+        self.records = {}
+        self._next_id = 1
+        self.timers = {}
 
-    def get_for_day(self, user_id: int, day: date) -> WorkLog | None:
+    def get_for_day(self, user_id, day):
         return self.records.get((user_id, day))
 
-    def list_for_month(self, user_id: int, year: int, month: int) -> tuple[WorkLog, ...]:
-        return tuple(
-            record
-            for (record_user_id, record_day), record in sorted(self.records.items())
-            if record_user_id == user_id
-            and record_day.year == year
-            and record_day.month == month
-        )
+    def list_for_month(self, user_id, year, month):
+        return tuple(record for (owner, day), record in sorted(self.records.items())
+                     if owner == user_id and (day.year, day.month) == (year, month))
 
-    def list_all(self, user_id: int) -> tuple[WorkLog, ...]:
-        return tuple(
-            record
-            for (record_user_id, _day), record in sorted(self.records.items())
-            if record_user_id == user_id
-        )
+    def list_all(self, user_id):
+        return tuple(record for (owner, _day), record in sorted(self.records.items()) if owner == user_id)
 
-    def save(self, work_log: WorkLog, *, expected_note: str | None = None) -> None:
-        self.records[(work_log.user_id, work_log.day)] = work_log
+    def save(self, record, *, expected_note=None):
+        if record.id is None:
+            record = replace(record, id=self._next_id)
+            self._next_id += 1
+        self.records[(record.user_id, record.day)] = record
 
-    def remove(self, user_id: int, day: date) -> None:
+    def remove(self, user_id, day):
         self.records.pop((user_id, day), None)
+
+    def list_for_day(self, user_id, day):
+        record = self.get_for_day(user_id, day)
+        return (record.entries or (record,)) if record else ()
+
+    def get_entry(self, user_id, entry_id):
+        return next((entry for record in self.list_all(user_id)
+                     for entry in record.entries or (record,) if entry.id == entry_id), None)
+
+    def save_entry(self, record, *, timer_change=None):
+        record = normalize_work_log(record)
+        entries = list(self.list_for_day(record.user_id, record.day))
+        if any(entry.id != record.id and entries_overlap(entry, record) for entry in entries):
+            raise ValueError("worklog_entry_overlap")
+        if timer_change is not None:
+            self.change_timer(record.user_id, *timer_change)
+        if record.id is None:
+            record = replace(record, id=self._next_id)
+            self._next_id += 1
+        else:
+            current = self.get_entry(record.user_id, record.id)
+            if current is None or current.revision != record.revision:
+                raise ValueError("worklog_entry_conflict")
+            record = replace(record, revision=record.revision + 1)
+        entries = [entry for entry in entries if entry.id != record.id] + [record]
+        self.records[(record.user_id, record.day)] = aggregate_days(entries)[0]
+        return record
+
+    def delete_entry(self, user_id, entry_id, revision, *, timer_change=None):
+        record = self.get_entry(user_id, entry_id)
+        if record is None or record.revision != revision:
+            raise ValueError("worklog_entry_conflict")
+        if timer_change is not None:
+            self.change_timer(user_id, *timer_change)
+        entries = [entry for entry in self.list_for_day(user_id, record.day) if entry.id != entry_id]
+        if entries:
+            self.records[(user_id, record.day)] = aggregate_days(entries)[0]
+        else:
+            self.remove(user_id, record.day)
+
+    def change_timer(self, user_id, expected, value):
+        if self.timers.get(user_id) != expected:
+            raise ValueError("time_entry_timer_conflict")
+        self.timers[user_id] = value
+
+
+class MemoryTimerSettings:
+    def __init__(self, repository):
+        self.repository = repository
+
+    def get(self, user_id, key, default=None):
+        return self.repository.timers.get(user_id, default) if key == "time_entry_timer" else default
+
+
+def _entry_model(repository):
+    return TimeEntryViewModel(TimeEntryService(user_id=1, repository=repository,
+        settings=MemoryTimerSettings(repository), local_timezone=timezone.utc,
+        clock=lambda: datetime(2026, 4, 20, 9, tzinfo=timezone.utc)))
 
 
 class MemoryCalendarRepository(CalendarEventRepository):
@@ -120,9 +175,7 @@ def _window(
     confirm_discard_changes: Callable[[], bool] | None = None,
     month_handler: object | None = None,
     settings_workflow: object | None = None,
-    quick_logs_workflow: object | None = None,
     analytics_workflow: object | None = None,
-    ai_assist_workflow: object | None = None,
     notes_workflow: object | None = None,
     reports_workflow: object | None = None,
     residency_controller: object | None = None,
@@ -146,12 +199,7 @@ def _window(
     )
     return AppWindow(
         calendar_view_model=calendar_view_model,
-        worklog_entry_view_model=WorkLogEntryViewModel(
-            user_id=1,
-            get_handler=GetWorkLogHandler(repository),
-            save_handler=SaveWorkLogHandler(repository),
-            default_break_hours=1.0,
-        ),
+        time_entry_view_model=_entry_model(repository),
         stats_panel_view_model=StatsPanelViewModel(
             user_id=1,
             month_records_handler=month_records,
@@ -166,17 +214,17 @@ def _window(
             holidays={date(2026, 4, 29): "Holiday"},
         ),
         settings_workflow=settings_workflow,
-        quick_logs_workflow=quick_logs_workflow,
         analytics_workflow=analytics_workflow,
-        ai_assist_workflow=ai_assist_workflow,
         notes_workflow=notes_workflow,
         reports_workflow=reports_workflow,
         residency_controller=residency_controller,
+        job_runner=ImmediateJobRunner(),
     )
 
 
 class AppWindowTests(unittest.TestCase):
     def setUp(self) -> None:
+        self.addCleanup(dispose_test_windows)
         self.information = self.enterContext(patch("worklogger.presentation.shell.app_window.QMessageBox.information"))
         self.warning = self.enterContext(patch("worklogger.presentation.shell.app_window.QMessageBox.warning"))
 
@@ -213,7 +261,7 @@ class AppWindowTests(unittest.TestCase):
 
         window.entry_panel.start_input.setText("0900")
         window.entry_panel.end_input.setText("1800")
-        window.entry_panel.note_input.setPlainText("Focused work")
+        window.entry_panel.content_input.setPlainText("Focused work")
 
         self.assertTrue(window.entry_panel.save_button.isEnabled())
         window.entry_panel.save_button.click()
@@ -224,189 +272,17 @@ class AppWindowTests(unittest.TestCase):
         self.assertEqual(saved.start_time, "09:00")
         self.assertEqual(saved.end_time, "18:00")
         self.assertEqual(saved.note, "Focused work")
-        self.assertEqual(window.status_label.text(), "Saved")
+        self.assertEqual(window.status_label.text(), "")
         self.assertTrue(window.status_label.isHidden())
         self.information.assert_not_called()
-        self.assertEqual(window.stats_panel.value_text("total_hours"), "8.0h")
-        self.assertIn("8.0h", window.calendar_view.week_total_labels()[3].text())
+        self.assertEqual(window.stats_panel.value_text("total_hours"), "9.0h")
+        self.assertIn("9.0h", window.calendar_view.week_total_labels()[3].text())
         selected = next(
             button
             for button in window.calendar_view.day_buttons()
             if button.cell and button.cell.day == date(2026, 4, 20)
         )
-        self.assertIn("8.0h", selected.text())
-
-    def test_manual_time_typing_preserves_text_and_saves_normalized_times(self) -> None:
-        for minimal in (False, True):
-            for start, end, expected_start, expected_end in (
-                ("0930", "1830", "09:30", "18:30"),
-                ("09:30", "18:30", "09:30", "18:30"),
-                ("9", "18", "09:00", "18:00"),
-                ("2200", "0730", "22:00", "07:30"),
-            ):
-                with self.subTest(minimal=minimal, start=start):
-                    repository = MemoryWorkLogRepository()
-                    if minimal:
-                        window = MinimalView(
-                            worklog_entry_view_model=WorkLogEntryViewModel(
-                                user_id=1,
-                                get_handler=GetWorkLogHandler(repository),
-                                save_handler=SaveWorkLogHandler(repository),
-                            ),
-                            config=MinimalViewConfig(selected_day=date(2026, 4, 20)),
-                        )
-                    else:
-                        window = _window(repository)
-                    window.show()
-                    try:
-                        self.assertTrue(window.refresh())
-                        panel = window.entry_panel
-                        for field, text in ((panel.start_input, start), (panel.end_input, end)):
-                            field.setFocus()
-                            for index, character in enumerate(text, 1):
-                                QTest.keyClicks(field, character)
-                                self.assertEqual(field.text(), text[:index])
-                                self.assertEqual(field.cursorPosition(), index)
-                        panel.note_toggle_button.setChecked(True)
-                        panel.note_input.setFocus()
-                        QTest.keyClicks(panel.note_input, "Work note")
-                        self.assertEqual(panel.note_input.toPlainText(), "Work note")
-                        self.assertTrue(panel.save_button.isEnabled())
-                        self.assertTrue(window.has_unsaved_changes)
-                        panel.save_button.click()
-                        saved = repository.get_for_day(1, date(2026, 4, 20))
-                        self.assertEqual((saved.start_time, saved.end_time), (expected_start, expected_end))
-                        self.assertEqual(saved.note, "Work note")
-                        self.assertEqual((panel.start_input.text(), panel.end_input.text()), (expected_start, expected_end))
-                        self.assertFalse(window.has_unsaved_changes)
-                    finally:
-                        window.close()
-
-    def test_auto_record_keeps_break_timer_and_saves_elapsed_time(self) -> None:
-        repository = MemoryWorkLogRepository()
-        current = datetime(2026, 4, 20, 9, 0)
-        window = _window(repository, confirm_discard_changes=lambda: True)
-        panel = window.entry_panel
-        panel._auto_record_view_model = AutoRecordViewModel(clock=lambda: current)
-        window.show()
-        try:
-            self.assertTrue(window.refresh())
-            panel.time_tabs.setCurrentIndex(1)
-            self._app.processEvents()
-            self.assertTrue(panel.work_type_combo.isVisible())
-            panel.note_toggle_button.setChecked(True)
-            self.assertTrue(panel.note_input.isVisible())
-            panel.clock_in_button.click()
-            self.assertFalse(panel.error_label.isVisible())
-            current = datetime(2026, 4, 20, 10, 0)
-            panel.break_button.click()
-            self.assertTrue(panel._auto_record_view_model.state().break_active)
-            self.assertTrue(panel.auto_timer.isActive())
-            panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData(WorkType.REMOTE.value))
-            panel.note_input.setPlainText("Project planning")
-            self.assertTrue(window.refresh())
-            self.assertTrue(window.select_day(date(2026, 4, 21)))
-            self.assertEqual(panel.current_draft().day, date(2026, 4, 20))
-            self.assertTrue(window.select_day(date(2026, 4, 20)))
-            panel.time_tabs.setCurrentIndex(0)
-            panel.time_tabs.setCurrentIndex(1)
-            self.assertEqual(panel.note_input.toPlainText(), "Project planning")
-            self.assertEqual(panel.work_type_combo.currentData(), WorkType.REMOTE.value)
-            self.assertTrue(panel._auto_record_view_model.state().break_active)
-            current = datetime(2026, 4, 20, 10, 30)
-            panel._refresh_auto_state()
-            self.assertIn("90m", panel.break_button.text())
-            panel.break_button.click()
-            self.assertFalse(panel.auto_timer.isActive())
-            self.assertEqual(panel.break_input.value(), 1.5)
-            panel.quick_break_button.click()
-            self.assertEqual(panel.break_input.value(), 1.75)
-            current = datetime(2026, 4, 20, 18, 0)
-            panel.clock_out_button.click()
-            self.assertTrue(panel.save_button.isEnabled())
-            panel.save_button.click()
-            record = repository.get_for_day(1, date(2026, 4, 20))
-            self.assertEqual((record.start_time, record.end_time), ("09:00", "18:00"))
-            self.assertEqual(record.break_hours, 1.75)
-            self.assertEqual(record.worked_hours(), 7.25)
-            self.assertEqual(record.work_type, WorkType.REMOTE)
-            self.assertEqual(record.note, "Project planning")
-            self.information.assert_not_called()
-        finally:
-            window.close()
-
-    def test_manual_clock_selection_updates_preview_and_saves_record(self) -> None:
-        repository = MemoryWorkLogRepository()
-        window = _window(repository, confirm_discard_changes=lambda: True)
-        window.show()
-        try:
-            self.assertTrue(window.refresh())
-            panel = window.entry_panel
-            for action, time in ((panel.start_time_action, QTime(9, 15)), (panel.end_time_action, QTime(18, 30))):
-                action.trigger()
-                self._app.processEvents()
-                dialog = next(child for child in panel.findChildren(QDialog) if child.isVisible())
-                dialog.time_input.setTime(QTime(0, 0))
-                dialog.time_input.setFocus()
-                dialog.time_input.setSelectedSection(QTimeEdit.Section.HourSection)
-                QTest.keyClicks(dialog.time_input, f"{time.hour():02d}")
-                dialog.time_input.setSelectedSection(QTimeEdit.Section.MinuteSection)
-                QTest.keyClicks(dialog.time_input, f"{time.minute():02d}")
-                QTest.keyClick(dialog.time_input, Qt.Key.Key_Return)
-                self._app.processEvents()
-                self.assertFalse(any(child.isVisible() for child in panel.findChildren(QDialog)))
-            self.assertEqual(panel.start_input.text(), "09:15")
-            self.assertEqual(panel.end_input.text(), "18:30")
-            self.assertAlmostEqual(panel._form.worked_hours, 8.25)
-            self.assertTrue(panel.save_button.isEnabled())
-            self.assertTrue(window.has_unsaved_changes)
-            panel.save_button.click()
-            record = repository.get_for_day(1, date(2026, 4, 20))
-            self.assertEqual((record.start_time, record.end_time), ("09:15", "18:30"))
-            self.assertFalse(window.has_unsaved_changes)
-        finally:
-            window.close()
-
-    def test_manual_time_editing_keeps_cursor_and_invalid_drafts(self) -> None:
-        repository = MemoryWorkLogRepository()
-        repository.save(WorkLog(1, date(2026, 4, 20), "09:00", "18:00", 1.0))
-        window = _window(repository, confirm_discard_changes=lambda: False)
-        window.show()
-        try:
-            self.assertTrue(window.refresh())
-            panel = window.entry_panel
-            panel.start_input.setFocus()
-            panel.start_input.setSelection(3, 2)
-            QTest.keyClicks(panel.start_input, "30")
-            self.assertEqual(panel.start_input.text(), "09:30")
-            self.assertEqual(panel.start_input.cursorPosition(), 5)
-            panel.start_input.setCursorPosition(2)
-            QTest.keyClick(panel.start_input, Qt.Key.Key_Backspace)
-            self.assertEqual(panel.start_input.text(), "0:30")
-            self.assertEqual(panel.start_input.cursorPosition(), 1)
-            QTest.keyClicks(panel.start_input, "9")
-            self.assertEqual(panel.start_input.text(), "09:30")
-            self.assertEqual(panel.start_input.cursorPosition(), 2)
-            for field, text in ((panel.start_input, "25:00"), (panel.end_input, "26:00")):
-                field.selectAll()
-                QTest.keyClicks(field, text)
-                self.assertEqual(field.text(), text)
-            self.assertFalse(panel.save_button.isEnabled())
-            self.assertTrue(window.has_unsaved_changes)
-            self.assertFalse(window.select_day(date(2026, 4, 21)))
-            panel._emit_save_requested()
-            self.assertEqual(panel.start_input.text(), "25:00")
-            self.assertEqual(panel.end_input.text(), "26:00")
-            self.assertEqual(repository.get_for_day(1, date(2026, 4, 20)).start_time, "09:00")
-            self.warning.assert_called_once()
-            self.assertEqual(self.warning.call_args.args[2], "Enter valid start and end times in HH:mm format.")
-            self.assertEqual(panel._form.errors, ("time_range_invalid",))
-            panel.start_input.setText("09:30")
-            panel.end_input.setText("18:30")
-            self.assertTrue(panel.save_button.isEnabled())
-            panel.save_button.click()
-        finally:
-            window.close()
+        self.assertIn("9.0h", selected.text())
 
     def test_app_window_displays_handler_errors(self) -> None:
         window = _window(
@@ -504,65 +380,24 @@ class AppWindowTests(unittest.TestCase):
         self.assertEqual(workflow.created[0][1].refreshes, 1)
         self.assertEqual(logouts, [True])
 
-    def test_app_window_opens_secondary_workflows_when_available(self) -> None:
-        class FakeDayWorkflow:
-            def __init__(self) -> None:
-                self.opened: list[tuple[date, object]] = []
-
+    def test_daily_notes_and_routes_have_direct_actions(self):
+        class DayWorkflow:
+            def __init__(self):
+                self.opened = []
             def open(self, day, parent=None):
                 self.opened.append((day, parent))
-                return None
-
-        quick_logs = FakeDayWorkflow()
-        analytics = FakeDayWorkflow()
-        ai_assist = FakeDayWorkflow()
-        notes = FakeDayWorkflow()
-        reports = FakeDayWorkflow()
-        window = _window(
-            MemoryWorkLogRepository(),
-            account_name="alice",
-            quick_logs_workflow=quick_logs,
-            analytics_workflow=analytics,
-            ai_assist_workflow=ai_assist,
-            notes_workflow=notes,
-            reports_workflow=reports,
-        )
-
-        self.assertFalse(hasattr(window, "more_actions_button"))
-        self.assertIsNone(window.findChild(QWidget, "calendar_more_actions_button"))
+        notes = DayWorkflow()
+        window = _window(MemoryWorkLogRepository(), notes_workflow=notes)
+        self.assertTrue(window.refresh())
+        window.entry_panel.start_input.setText("09:00")
+        self.assertIsNone(window.calendar_page.add_entry_button.menu())
         self.assertTrue(window.calendar_page.add_entry_button.isEnabled())
-        self.assertFalse(window.analytics_button.isHidden())
-        self.assertFalse(window.reports_button.isHidden())
-        menu = window.calendar_page.add_entry_button.menu()
-        actions = menu.actions()
-        self.assertEqual([action.text() for action in actions], ["Quick Log", "Notes", "AI Assist"])
-        opened = []
-        menu.aboutToShow.connect(lambda: opened.append(True))
-        menu.aboutToShow.connect(lambda: QTimer.singleShot(0, menu.close))
-        window.show()
-        self._app.processEvents()
-        QTest.mouseClick(window.calendar_page.add_entry_button, Qt.MouseButton.LeftButton)
-        self._app.processEvents()
-        self.assertEqual(opened, [True])
-        self.assertEqual(quick_logs.opened + notes.opened + ai_assist.opened, [])
-        actions[0].trigger()
-        window.analytics_button.click()
-        actions[2].trigger()
-        actions[1].trigger()
-        window.reports_button.click()
-
-        self.assertEqual(quick_logs.opened, [(date(2026, 4, 20), window)])
-        self.assertEqual(analytics.opened, [(date(2026, 4, 20), window)])
-        self.assertEqual(ai_assist.opened, [(date(2026, 4, 20), window)])
+        window.notes_button.click()
         self.assertEqual(notes.opened, [(date(2026, 4, 20), window)])
-        self.assertEqual(reports.opened, [(date(2026, 4, 20), window)])
-        window.close()
-
-    def test_add_entry_is_disabled_without_available_workflows(self) -> None:
-        window = _window(MemoryWorkLogRepository())
-        self.assertFalse(window.calendar_page.add_entry_button.isEnabled())
-        self.assertTrue(window.calendar_page.add_entry_button.menu().isEmpty())
-        window.close()
+        self.assertEqual(window.entry_panel.start_input.text(), "09:00")
+        self.assertTrue(window.has_unsaved_changes)
+        self.assertFalse(hasattr(window, "quick_logs_button"))
+        self.assertFalse(hasattr(window, "ai_assist_button"))
 
     def test_app_window_blocks_day_navigation_when_dirty_prompt_is_cancelled(self) -> None:
         window = _window(
@@ -654,11 +489,8 @@ class AppWindowTests(unittest.TestCase):
     def test_minimal_view_saves_entry_and_navigates_days(self) -> None:
         repository = MemoryWorkLogRepository()
         view = MinimalView(
-            worklog_entry_view_model=WorkLogEntryViewModel(
-                user_id=1,
-                get_handler=GetWorkLogHandler(repository),
-                save_handler=SaveWorkLogHandler(repository),
-            ),
+            time_entry_view_model=_entry_model(repository),
+            job_runner=ImmediateJobRunner(),
             config=MinimalViewConfig(
                 selected_day=date(2026, 4, 20),
                 today=date(2026, 4, 13),
@@ -672,10 +504,8 @@ class AppWindowTests(unittest.TestCase):
 
         self.assertTrue(view.status_label.isHidden())
         view.entry_panel.start_input.setText("25:00")
-        self.assertTrue(view.status_label.text())
-        self.assertFalse(view.status_label.isHidden())
         view.entry_panel.start_input.setText("0900")
-        view.entry_panel.end_input.setText("1800")
+        view.entry_panel.end_input.setText("1000")
         self.assertEqual(view.status_label.text(), "")
         self.assertTrue(view.status_label.isHidden())
         view.entry_panel.save_button.click()
@@ -684,6 +514,19 @@ class AppWindowTests(unittest.TestCase):
         self.assertIsNotNone(saved)
         assert saved is not None
         self.assertEqual(saved.start_time, "09:00")
+        view.entry_panel.end_input.setText("1200")
+        view.entry_panel.work_type_combo.setCurrentIndex(view.entry_panel.work_type_combo.findData("meeting"))
+        view.entry_panel.save_button.click()
+        entries = repository.list_for_day(1, date(2026, 4, 20))
+        self.assertEqual(len(entries), 2)
+        view.history_widget.entry_buttons[entries[0].id].click()
+        self.assertEqual(view.entry_panel.view_model.draft.original.id, entries[0].id)
+        view.entry_panel.content_input.setPlainText("Updated")
+        view.entry_panel.save_button.click()
+        self.assertEqual(repository.get_entry(1, entries[0].id).note, "Updated")
+        with patch("worklogger.presentation.widgets.time_entries.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes):
+            view.history_widget.entry_buttons[entries[1].id].delete_button.click()
+        self.assertEqual(len(repository.list_for_day(1, date(2026, 4, 20))), 1)
         self.assertEqual(view.status_label.text(), "")
         self.assertTrue(view.status_label.isHidden())
 
@@ -702,11 +545,8 @@ class AppWindowTests(unittest.TestCase):
 
         workflow = FakeSettingsWorkflow()
         view = MinimalView(
-            worklog_entry_view_model=WorkLogEntryViewModel(
-                user_id=1,
-                get_handler=GetWorkLogHandler(MemoryWorkLogRepository()),
-                save_handler=SaveWorkLogHandler(MemoryWorkLogRepository()),
-            ),
+            time_entry_view_model=_entry_model(MemoryWorkLogRepository()),
+            job_runner=ImmediateJobRunner(),
             config=MinimalViewConfig(
                 selected_day=date(2026, 4, 20),
                 today=date(2026, 4, 13),
@@ -725,11 +565,8 @@ class AppWindowTests(unittest.TestCase):
 
     def test_minimal_view_blocks_navigation_when_dirty_prompt_is_cancelled(self) -> None:
         view = MinimalView(
-            worklog_entry_view_model=WorkLogEntryViewModel(
-                user_id=1,
-                get_handler=GetWorkLogHandler(MemoryWorkLogRepository()),
-                save_handler=SaveWorkLogHandler(MemoryWorkLogRepository()),
-            ),
+            time_entry_view_model=_entry_model(MemoryWorkLogRepository()),
+            job_runner=ImmediateJobRunner(),
             config=MinimalViewConfig(
                 selected_day=date(2026, 4, 20),
                 today=date(2026, 4, 13),

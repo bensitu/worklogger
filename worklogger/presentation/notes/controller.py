@@ -36,13 +36,18 @@ class NotesWorkflowController:
         self._dialog_factory = dialog_factory
         self._job_runner = job_runner
         self._after_save = after_save
+        self.is_open = False
 
     def open(self, day: date, parent: QWidget | None = None) -> NoteEditorDialog:
         dialog = self._dialog_factory(self._view_model, day, parent) if self._dialog_factory is not None else NoteEditorDialog(
             self._view_model, day, parent, job_runner=self._job_runner)
         if self._after_save is not None:
             dialog.saved.connect(self._after_save)
-        dialog.refresh()
-        dialog.exec()
-        dialog.deleteLater()
+        self.is_open = True
+        try:
+            dialog.refresh()
+            dialog.exec()
+        finally:
+            self.is_open = False
+            dialog.deleteLater()
         return dialog

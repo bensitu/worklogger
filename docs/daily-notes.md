@@ -15,13 +15,15 @@ underscores in search terms are literal characters, not wildcard operators.
 Drafts are saved after a short typing pause. Each draft retains the content on
 which editing began and the sharing choices. Reopening restores that draft without
 overwriting the saved memo. If another editor changed the saved content, Save
-rejects the stale update. Reload saved note deliberately discards the local draft
-and loads the latest saved text. Closing an edited memo offers Keep draft, Discard,
-or Cancel. A draft can contain up to 1 MiB of text; saved memo writes use the same
+rejects the stale update. Sharing changes are also compared with their loaded
+values so an older editor cannot restore revoked permissions. Reload saved note
+deliberately discards the local draft and loads the latest saved text. Closing an
+edited memo offers Keep draft, Discard, or Cancel. A draft can contain up to 1 MiB
+of UTF-8 text; saved memo writes use the same
 limit. Background writes are serialized before saving or closing the editor.
 
 Saving commits the memo, sharing choices, and draft removal in one SQLite
-transaction. Storage or revision conflicts retain the editor content. Save, export,
+transaction. Storage, content, or sharing conflicts retain the editor content. Save, export,
 and error feedback use dialogs, not persistent readiness messages.
 
 ## Previous Entries
@@ -32,6 +34,8 @@ Add to note copies their descriptions and optional times into the current draft.
 Repeating it does not append the same unchanged lines again. These references are
 not converted into worked-time entries. Existing report template placeholders and
 database backups continue to support the original rows.
+Generated reports omit a separate quick-log reference when an approved memo
+already contains that same unchanged reference, avoiding duplicate report text.
 
 ## Sharing
 

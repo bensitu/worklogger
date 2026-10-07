@@ -38,9 +38,6 @@ msgstr ""
 msgid "+"
 msgstr ""
 
-msgid "+15m break"
-msgstr ""
-
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr ""
 
@@ -84,9 +81,6 @@ msgid "Active model updated."
 msgstr ""
 
 msgid "Add"
-msgstr ""
-
-msgid "Add Entry"
 msgstr ""
 
 msgid "Add another sign-in method before unlinking this identity."
@@ -197,13 +191,7 @@ msgstr ""
 msgid "Break"
 msgstr ""
 
-msgid "Break (h)"
-msgstr ""
-
 msgid "Break time must be nonnegative and shorter than the work period."
-msgstr ""
-
-msgid "Break timer running"
 msgstr ""
 
 msgid "Break {hours:.1f}h"
@@ -428,9 +416,6 @@ msgstr ""
 msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
 msgstr ""
 
-msgid "Ended"
-msgstr ""
-
 msgid "English"
 msgstr ""
 
@@ -605,10 +590,10 @@ msgstr ""
 msgid "Include calendar"
 msgstr ""
 
-msgid "Include notes"
+msgid "Include quick logs"
 msgstr ""
 
-msgid "Include quick logs"
+msgid "Include work content"
 msgstr ""
 
 msgid "January"
@@ -761,9 +746,6 @@ msgstr ""
 msgid "Monthly target (h)"
 msgstr ""
 
-msgid "More actions"
-msgstr ""
-
 msgid "National holidays"
 msgstr ""
 
@@ -827,9 +809,6 @@ msgstr ""
 msgid "Not required"
 msgstr ""
 
-msgid "Notes"
-msgstr ""
-
 msgid "November"
 msgstr ""
 
@@ -837,9 +816,6 @@ msgid "OK"
 msgstr ""
 
 msgid "October"
-msgstr ""
-
-msgid "On break"
 msgstr ""
 
 msgid "Open"
@@ -1220,16 +1196,10 @@ msgstr ""
 msgid "Start"
 msgstr ""
 
-msgid "Start break"
-msgstr ""
-
 msgid "Start recording or a break before continuing."
 msgstr ""
 
 msgid "Start week on Monday"
-msgstr ""
-
-msgid "Started"
 msgstr ""
 
 msgid "State / province"
@@ -1319,9 +1289,6 @@ msgstr ""
 msgid "Thu"
 msgstr ""
 
-msgid "Tip: Click AI Assist to generate a draft based on your time logs."
-msgstr ""
-
 msgid "Today"
 msgstr ""
 
@@ -1374,9 +1341,6 @@ msgid "Unable to obtain the model. Check the source file or download connection.
 msgstr ""
 
 msgid "Unable to read the model file. Check its access permissions."
-msgstr ""
-
-msgid "Unable to restore the automatic record. Reset it and start a new record?"
 msgstr ""
 
 msgid "Unable to restore the database. Select a valid SQLite backup."
@@ -1508,9 +1472,6 @@ msgstr ""
 msgid "WorkLogger is already running."
 msgstr ""
 
-msgid "Worked"
-msgstr ""
-
 msgid "Worked: {hours}"
 msgstr ""
 
@@ -1545,9 +1506,6 @@ msgid "h"
 msgstr ""
 
 msgid "iCalendar (*.ics)"
-msgstr ""
-
-msgid "m"
 msgstr ""
 
 msgid "of {hours:.1f}h goal"
