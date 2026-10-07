@@ -3,6 +3,11 @@ from __future__ import annotations
 from datetime import date
 import tempfile
 import unittest
+from unittest.mock import patch
+from worklogger.app.use_cases.notes import DailyNotesService
+from worklogger.domain.notes.preferences import NoteSharing, note_draft_key
+from worklogger.domain.quicklog.models import QuickLog
+from worklogger.infrastructure.repositories import SQLiteSettingsRepository, SQLiteQuickLogRepository
 
 from worklogger.app.commands.auth_commands import RegisterUserCommand
 from worklogger.app.commands.note_commands import SaveDailyNoteCommand
@@ -30,6 +35,33 @@ from worklogger.infrastructure.templates import BuiltInTemplateProvider, UserTem
 
 
 class NotesTemplatesInfrastructureTests(unittest.TestCase):
+    def test_memo_workspaces_isolate_search_and_commit_sharing_with_content(self):
+        with tempfile.TemporaryDirectory() as directory:
+            factory = SQLiteConnectionFactory(f"{directory}/memos.db")
+            MigrationRunner(factory).run_pending()
+            auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
+            user = auth.create_user("memo.owner", "example-password", recovery_key=None, is_admin=False)
+            other = auth.create_user("memo.other", "example-password", recovery_key=None, is_admin=False)
+            notes, settings, quick = SQLiteDailyNoteRepository(factory), SQLiteSettingsRepository(factory), SQLiteQuickLogRepository(factory)
+            service = DailyNotesService(user_id=user.id, notes=notes, settings=settings, previous_entries=quick)
+            day = date(2026, 5, 14)
+            quick.add(QuickLog(None, user.id, day, "100% complete", "09:00", "10:00"))
+            notes.save(DailyNote(other.id, day, "private 100%"))
+            self.assertEqual([note.user_id for note in service.search("100%").value], [user.id])
+            self.assertFalse(service.load(day).value.sharing.reports)
+            self.assertTrue(service.save_draft(day, "Draft", "", NoteSharing(True, False)).ok)
+            with patch("worklogger.infrastructure.repositories.note_sqlite.note_sharing_key", side_effect=OSError("storage unavailable")):
+                self.assertFalse(service.save(day, "Draft", "", NoteSharing(True, False)).ok)
+            self.assertEqual(notes.get_for_day(user.id, day).content, "")
+            self.assertIsNotNone(settings.get(user.id, note_draft_key(day)))
+            self.assertTrue(service.save(day, "Draft", "", NoteSharing(True, False)).ok)
+            self.assertIsNone(settings.get(user.id, note_draft_key(day)))
+            state = service.load(day).value
+            self.assertEqual(state.sharing, NoteSharing(True, False))
+            self.assertEqual(state.previous_entries[0].description, "100% complete")
+            self.assertFalse(service.save(day, "Stale", "", NoteSharing(False, True)).ok)
+            self.assertEqual(service.load(day).value.sharing, NoteSharing(True, False))
+
     def test_note_storage_migration_conflicts_deletion_and_export_preserve_content(self):
         with tempfile.TemporaryDirectory() as directory:
             factory = SQLiteConnectionFactory(f"{directory}/worklog.db")

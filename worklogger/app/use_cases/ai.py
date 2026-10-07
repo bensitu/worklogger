@@ -21,6 +21,7 @@ from worklogger.config.constants import (
 from worklogger.domain.reporting.periods import weekly_period
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.notes.models import DailyNote
+from worklogger.domain.notes.preferences import NoteSharing, note_sharing_key
 from worklogger.domain.quicklog.models import QuickLog
 from worklogger.domain.shared.errors import CancellationError, InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
@@ -292,6 +293,16 @@ class BuildAiContextHandler:
         )
         if not notes.ok or notes.value is None:
             return Result.failure(notes.error or InfrastructureError("ai_context_failed", "ai_context_failed"))
+        approved_notes = []
+        for note in notes.value:
+            try:
+                permission = self._settings_handler.handle(GetSettingQuery(query.user_id, note_sharing_key(note.day), None))
+            except Exception:
+                return Result.failure(InfrastructureError("ai_context_settings_failed", "ai_context_settings_failed"))
+            if not permission.ok:
+                return Result.failure(permission.error)
+            if NoteSharing.decode(permission.value).ai:
+                approved_notes.append(note)
         quick_logs = self._quick_logs_handler.handle(
             GetQuickLogsForRangeQuery(query.user_id, start_day, end_day)
         ) if options["quick_logs"] else Result.success(())
@@ -312,7 +323,7 @@ class BuildAiContextHandler:
             start_day=start_day,
             end_day=end_day,
             work_logs=filtered_logs,
-            notes=notes.value,
+            notes=tuple(approved_notes),
             quick_logs=quick_logs.value,
             events=events.value,
             include_notes=options["notes"],
@@ -422,13 +433,13 @@ def _format_context(
     ]
     if work_logs:
         for record in sorted(work_logs, key=lambda item: item.day):
-            lines.append(
-                "- "
-                f"{record.day.isoformat()} | {record.work_type.value} | "
-                f"{record.start_time or '-'}-{record.end_time or '-'} | "
-                f"break {record.break_hours:.2f}h | "
-                f"worked {record.worked_hours():.2f}h"
-            )
+            for entry in record.entries or (record,):
+                lines.append(
+                    f"- {entry.day.isoformat()} | {entry.work_type.value} | "
+                    f"{entry.start_time or '-'}-{entry.end_time or '-'} | "
+                    f"break {entry.break_hours:.2f}h | worked {entry.worked_hours():.2f}h"
+                    + (f" | content: {_single_line(entry.note)}" if include_notes and entry.note else "")
+                )
     else:
         lines.append("No work logs found.")
     lines.extend(["", "## Notes"])

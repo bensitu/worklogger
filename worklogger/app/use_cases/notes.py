@@ -2,10 +2,17 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from datetime import date
+import json
 from worklogger.app.commands.note_commands import SaveDailyNoteCommand
 from worklogger.app.queries.note_queries import GetDailyNoteQuery
 from worklogger.domain.notes.models import DailyNote
+from worklogger.domain.notes.preferences import NoteSharing, note_draft_key, note_sharing_key
 from worklogger.domain.notes.repositories import DailyNoteRepository
+from worklogger.domain.quicklog.models import QuickLog
+from worklogger.domain.quicklog.repositories import QuickLogRepository
+from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.shared.errors import ConflictError, InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 
@@ -53,3 +60,75 @@ class SaveDailyNoteHandler:
         except Exception:
             return Result.failure(InfrastructureError("note_save_failed", "note_save_failed"))
         return Result.success(note)
+
+
+@dataclass(frozen=True)
+class NoteWorkspace:
+    note: DailyNote
+    content: str
+    expected_content: str
+    sharing: NoteSharing
+    previous_entries: tuple[QuickLog, ...] = ()
+    recovered_draft: bool = False
+    saved_sharing: NoteSharing = NoteSharing()
+
+
+class DailyNotesService:
+    def __init__(self, *, user_id: int, notes: DailyNoteRepository, settings: SettingsRepository,
+                 previous_entries: QuickLogRepository):
+        self.user_id, self.notes, self.settings, self.previous_entries = user_id, notes, settings, previous_entries
+
+    def _run(self, operation, *, error_code="note_save_failed"):
+        try:
+            return Result.success(operation())
+        except ValueError as exc:
+            if str(exc) == "note_conflict":
+                return Result.failure(ConflictError("note_conflict", "note_conflict"))
+            return Result.failure(ValidationError(error_code, error_code))
+        except Exception:
+            return Result.failure(InfrastructureError(error_code, error_code))
+
+    def load(self, day: date, *, recover_draft: bool = True) -> Result[NoteWorkspace]:
+        def load():
+            note = self.notes.get_for_day(self.user_id, day)
+            sharing = NoteSharing.decode(self.settings.get(self.user_id, note_sharing_key(day)))
+            saved_sharing = sharing
+            draft_raw = self.settings.get(self.user_id, note_draft_key(day)) if recover_draft else None
+            content, expected, recovered = note.content, note.content, False
+            if draft_raw:
+                if len(draft_raw) > 4 * 1024 * 1024:
+                    raise ValueError("note_load_failed")
+                draft = json.loads(draft_raw)
+                content, expected = draft["content"], draft["expected_content"]
+                if not isinstance(content, str) or not isinstance(expected, str):
+                    raise ValueError("note_load_failed")
+                sharing = NoteSharing.decode(json.dumps(draft.get("sharing", {})))
+                recovered = content != note.content or sharing != NoteSharing.decode(self.settings.get(self.user_id, note_sharing_key(day)))
+            return NoteWorkspace(note, content, expected, sharing,
+                                 self.previous_entries.list_for_day(self.user_id, day), recovered, saved_sharing)
+        return self._run(load, error_code="note_load_failed")
+
+    def save(self, day: date, content: str, expected_content: str, sharing: NoteSharing):
+        def save():
+            if not isinstance(content, str) or len(content) > 1024 * 1024:
+                raise ValueError("note_save_failed")
+            entries = self.previous_entries.list_for_day(self.user_id, day)
+            note = DailyNote(self.user_id, day, content)
+            self.notes.save(note, expected_content=expected_content, sharing=sharing, clear_draft=True)
+            return NoteWorkspace(note, content, content, sharing, entries, saved_sharing=sharing)
+        return self._run(save)
+
+    def save_draft(self, day: date, content: str, expected_content: str, sharing: NoteSharing):
+        def save():
+            if len(content) > 1024 * 1024 or len(expected_content) > 1024 * 1024:
+                raise ValueError("note_load_failed")
+            raw = json.dumps({"content": content, "expected_content": expected_content,
+                              "sharing": {"reports": sharing.reports, "ai": sharing.ai}}, ensure_ascii=False)
+            self.settings.set(self.user_id, note_draft_key(day), raw)
+        return self._run(save)
+
+    def discard_draft(self, day: date):
+        return self._run(lambda: self.settings.delete(self.user_id, note_draft_key(day)))
+
+    def search(self, query: str):
+        return self._run(lambda: self.notes.search(self.user_id, query.strip()[:256]), error_code="note_load_failed")

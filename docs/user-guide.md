@@ -26,8 +26,8 @@ are disabled in the standard application.
 Use the month arrows or Today to choose a month, then select a date. The right
 panel records individual periods and lists the selected day's time records and
 imported calendar events. New time record opens an empty manual editor and focuses
-the start time. Its menu arrow opens quick logs, daily notes, and AI assistance;
-AI generation requires a configured service and is unavailable by default.
+the start time. Daily notes opens the selected date's separate memo. The calendar
+does not expose a separate quick-log editor or a general AI chat window.
 
 ### Manual Entry
 
@@ -114,17 +114,19 @@ language. A holiday is not an imported event and does not create a work record.
 Cells can show notes, overnight work, event counts, and work-type indicators.
 Markers and daily totals are visual summaries, not additional entries.
 
-## Notes and Quick Logs
+## Daily Notes
 
-Quick logs store a description and optional same-day time range. They do not
-increase the day's worked-hour total. A quick-log end time must follow its start
-time; overnight ranges belong in the main work record instead.
+Use Daily notes for extra matters that do not belong to a work period. Search finds
+saved notes and previous quick-log descriptions. Previous entries remain readable
+and can be added to a draft without converting them to work time. The editor supports
+draft recovery, copying, Markdown export, and optional text polishing. Templates
+belong to Reports and cannot be changed from the memo editor.
 
-The note editor supports Markdown, template insertion, quick-log insertion, save,
-and Markdown export. Daily notes have independent storage and also appear in the
-time-entry editor. Deleting work does not delete the note. Concurrent note changes
-reject an outdated save rather than silently overwriting the other editor's content.
-Review unsaved changes before changing the selected day or leaving an editor.
+Notes are private by default. Allow in reports and Allow in AI context are explicit
+per-date choices; AI collection also respects the account's privacy settings.
+Concurrent changes reject stale saves. Closing edited text offers to keep its draft,
+discard it, or cancel. Deleting a time record does not delete its day's memo.
+See [daily notes](daily-notes.md) for recovery and sharing behavior.
 
 ## Reports
 

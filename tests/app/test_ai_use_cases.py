@@ -21,6 +21,8 @@ from worklogger.config.constants import (
 )
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.notes.models import DailyNote
+from worklogger.domain.notes.preferences import NoteSharing, note_sharing_key
+from worklogger.domain.worklog.rules import aggregate_days
 from worklogger.domain.quicklog.models import QuickLog
 from worklogger.domain.shared.result import Result
 from worklogger.domain.shared.errors import InfrastructureError
@@ -131,6 +133,29 @@ class FakeHttpResponse:
 
 
 class AiUseCaseTests(unittest.TestCase):
+    def test_context_expands_time_periods_and_requires_memo_permission(self):
+        day = date(2026, 5, 4)
+        entries = (WorkLog(1, day, "09:00", "10:00", note="Planning", work_type=WorkType.MEETING),
+                   WorkLog(1, day, "10:00", "11:00", note="Learning", work_type=WorkType.TRAINING))
+        reader = Mock()
+        reader.list_range.return_value = Result.success(aggregate_days(entries))
+        settings = FakeSettings()
+        handler = BuildAiContextHandler(work_logs_handler=reader, note_handler=FakeNotes(),
+            quick_logs_handler=FakeQuickLogs(), calendar_events_handler=FakeCalendar(), settings_handler=settings)
+        query = BuildAiContextQuery(1, day)
+        content = handler.handle(query).value.content
+        self.assertIn("09:00-10:00", content)
+        self.assertIn("10:00-11:00", content)
+        self.assertIn("Planning", content)
+        self.assertIn("Learning", content)
+        self.assertNotIn("private note", content)
+        settings.values[note_sharing_key(day)] = NoteSharing(False, True).encode()
+        self.assertIn("private note", handler.handle(query).value.content)
+        settings.values[AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY] = "0"
+        content = handler.handle(query).value.content
+        self.assertNotIn("Planning", content)
+        self.assertNotIn("private note", content)
+
     def test_context_reads_only_allowed_ranges_and_rejects_unavailable_settings(self) -> None:
         settings = FakeSettings({AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY: "0",
                                  AI_PRIVACY_INCLUDE_CALENDAR_SETTING_KEY: "0",

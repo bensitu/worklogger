@@ -25,6 +25,8 @@ from worklogger.app.queries.report_queries import (
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.calendar.repositories import CalendarEventRepository
 from worklogger.domain.notes.repositories import DailyNoteRepository
+from worklogger.domain.notes.preferences import NoteSharing, note_sharing_key
+from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.quicklog.models import QuickLog
 from worklogger.domain.quicklog.repositories import QuickLogRepository
 from worklogger.domain.reporting.models import Report
@@ -222,12 +224,14 @@ class GenerateReportHandler:
         templates: TemplateProvider,
         notes: DailyNoteRepository | None = None,
         translator: Callable[..., str] | None = None,
+        note_settings: SettingsRepository | None = None,
     ) -> None:
         self._work_logs = work_logs
         self._quick_logs = quick_logs
         self._calendar_events = calendar_events
         self._templates = templates
         self._notes = notes
+        self._note_settings = note_settings
         self._translator = translator or (lambda message, **kwargs: message)
 
     def handle(self, command: GenerateReportCommand) -> Result[GeneratedReport]:
@@ -245,8 +249,10 @@ class GenerateReportHandler:
 
         try:
             work_logs = self._work_logs.list_range(command.user_id, period.start, period.end)
-            if self._notes is not None:
+            if self._notes is not None and self._note_settings is not None:
                 notes = self._notes.list_range(command.user_id, period.start, period.end)
+                notes = tuple(note for note in notes if NoteSharing.decode(
+                    self._note_settings.get(command.user_id, note_sharing_key(note.day))).reports)
                 recorded_notes = {(entry.day, entry.note) for record in work_logs for entry in (record.entries or (record,))}
                 work_logs += tuple(WorkLog(command.user_id, note.day, note=note.content)
                                    for note in notes if note.content and (note.day, note.content) not in recorded_notes)

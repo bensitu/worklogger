@@ -1,234 +1,65 @@
-"""Notes presentation ViewModel."""
+"""Daily memo presentation state, history references, and optional text editing."""
 
-from __future__ import annotations
-
-from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
-from typing import Protocol
 
 from worklogger.app.commands.ai_commands import RewriteTextCommand
-from worklogger.app.commands.note_commands import SaveDailyNoteCommand
-from worklogger.app.commands.report_commands import (
-    ResetReportTemplateCommand,
-    SaveReportTemplateCommand,
-)
-from worklogger.app.queries.calendar_queries import GetCalendarEventsForDayQuery
-from worklogger.app.queries.note_queries import GetDailyNoteQuery
-from worklogger.app.queries.quick_log_queries import GetQuickLogsForDayQuery
-from worklogger.app.ports import (
-    MarkdownExporter,
-    ResetTemplateHandlerProtocol,
-    RewriteTextHandlerProtocol,
-    SaveTemplateHandlerProtocol,
-)
-from worklogger.app.use_cases.reports import TemplateProvider
-from worklogger.infrastructure.i18n import _
-from worklogger.domain.calendar.models import CalendarEvent
-from worklogger.domain.notes.models import DailyNote
-from worklogger.domain.quicklog.models import QuickLog
-from worklogger.domain.reporting.templates import ReportTemplate, render_template
+from worklogger.app.use_cases.notes import DailyNotesService, NoteWorkspace
+from worklogger.domain.notes.preferences import NoteSharing
+from worklogger.domain.shared.result import Result
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.dates import time_range_label
-from worklogger.domain.shared.result import Result
 
 
-class GetDailyNoteHandlerProtocol(Protocol):
-    def handle(self, query: GetDailyNoteQuery) -> Result[DailyNote]:
-        ...
-
-
-class SaveDailyNoteHandlerProtocol(Protocol):
-    def handle(self, command: SaveDailyNoteCommand) -> Result[DailyNote]:
-        ...
-
-
-class QuickLogsForDayHandlerProtocol(Protocol):
-    def handle(self, query: GetQuickLogsForDayQuery) -> Result[tuple[QuickLog, ...]]:
-        ...
-
-
-class CalendarEventsForDayHandlerProtocol(Protocol):
-    def handle(
-        self,
-        query: GetCalendarEventsForDayQuery,
-    ) -> Result[tuple[CalendarEvent, ...]]:
-        ...
-
-
-@dataclass(frozen=True)
-class NoteEditorState:
-    user_id: int
-    day: date
-    content: str
-    quick_logs: tuple[QuickLog, ...] = ()
-    calendar_events: tuple[CalendarEvent, ...] = ()
+NoteEditorState = NoteWorkspace
 
 
 class NoteEditorViewModel:
-    def __init__(
-        self,
-        *,
-        user_id: int,
-        get_note_handler: GetDailyNoteHandlerProtocol,
-        save_note_handler: SaveDailyNoteHandlerProtocol,
-        quick_logs_handler: QuickLogsForDayHandlerProtocol,
-        calendar_events_handler: CalendarEventsForDayHandlerProtocol,
-        templates: TemplateProvider,
-        save_template_handler: SaveTemplateHandlerProtocol,
-        reset_template_handler: ResetTemplateHandlerProtocol,
-        markdown_exporter: MarkdownExporter,
-        rewrite_handler: RewriteTextHandlerProtocol,
-        language: str = "en_US",
-    ) -> None:
-        self._user_id = user_id
-        self._get_note_handler = get_note_handler
-        self._save_note_handler = save_note_handler
-        self._quick_logs_handler = quick_logs_handler
-        self._calendar_events_handler = calendar_events_handler
-        self._templates = templates
-        self._save_template_handler = save_template_handler
-        self._reset_template_handler = reset_template_handler
-        self._markdown_exporter = markdown_exporter
-        self._rewrite_handler = rewrite_handler
-        self._language = language
-        self._original_content: dict[date, str] = {}
+    def __init__(self, service: DailyNotesService, *, markdown_exporter, rewrite_handler, language="en_US"):
+        self.service = service
+        self._markdown_exporter, self._rewrite_handler, self._language = markdown_exporter, rewrite_handler, language
 
-    def load(self, day: date) -> Result[NoteEditorState]:
-        note = self._get_note_handler.handle(GetDailyNoteQuery(self._user_id, day))
-        if not note.ok or note.value is None:
-            return Result.failure(note.error or _validation("note_load_failed"))
-        quick_logs = self._quick_logs_handler.handle(
-            GetQuickLogsForDayQuery(self._user_id, day)
-        )
-        if not quick_logs.ok or quick_logs.value is None:
-            return Result.failure(quick_logs.error or _validation("quick_log_load_failed"))
-        events = self._calendar_events_handler.handle(
-            GetCalendarEventsForDayQuery(self._user_id, day)
-        )
-        if not events.ok or events.value is None:
-            return Result.failure(events.error or _validation("calendar_load_failed"))
-        self._original_content[day] = note.value.content
-        return Result.success(
-            NoteEditorState(
-                user_id=self._user_id,
-                day=day,
-                content=note.value.content,
-                quick_logs=quick_logs.value,
-                calendar_events=events.value,
-            )
-        )
+    @property
+    def rewrite_available(self):
+        return bool(getattr(self._rewrite_handler, "available", True))
 
-    def save(self, day: date, content: str) -> Result[NoteEditorState]:
-        saved = self._save_note_handler.handle(
-            SaveDailyNoteCommand(
-                user_id=self._user_id,
-                day=day,
-                content=content,
-                expected_content=self._original_content.get(day),
-            )
-        )
-        if not saved.ok or saved.value is None:
-            return Result.failure(saved.error or _validation("note_save_failed"))
-        self._original_content[day] = saved.value.content
-        loaded = self.load(day)
-        if loaded.ok:
+    def load(self, day: date):
+        return self.service.load(day)
+
+    def save(self, state: NoteWorkspace, content: str, sharing: NoteSharing):
+        return self.service.save(state.note.day, content, state.expected_content, sharing)
+
+    def save_draft(self, state: NoteWorkspace, content: str, sharing: NoteSharing):
+        return self.service.save_draft(state.note.day, content, state.expected_content, sharing)
+
+    def discard_draft(self, day: date):
+        return self.service.discard_draft(day)
+
+    def reload(self, day: date):
+        loaded = self.service.load(day, recover_draft=False)
+        if not loaded.ok:
             return loaded
-        return Result.success(
-            NoteEditorState(
-                user_id=self._user_id,
-                day=day,
-                content=saved.value.content,
-            )
-        )
+        cleared = self.service.discard_draft(day)
+        return loaded if cleared.ok else Result.failure(cleared.error)
 
-    def insert_quick_logs(self, state: NoteEditorState) -> str:
-        block = _quick_log_block(state.quick_logs)
-        if not block:
-            return state.content
-        existing = state.content.rstrip()
-        joiner = "\n\n" if existing else ""
-        return f"{existing}{joiner}## " + _("Work Log", language=self._language) + f"\n{block}"
+    def search(self, query: str):
+        return self.service.search(query)
 
-    def apply_template(self, state: NoteEditorState) -> Result[str]:
-        template = self._templates.get_template(
-            self._language,
-            "daily",
-            user_id=self._user_id,
-        )
-        if not template.ok:
-            return Result.failure(template.error or _validation("template_load_failed"))
-        return Result.success(
-            render_template(
-                template.value or "",
-                {
-                    "date": state.day.isoformat(),
-                    "task_list": "- ",
-                    "calendar_events": _event_block(state.calendar_events, self._language),
-                    "quick_logs": _quick_log_block(state.quick_logs),
-                    "total_hours": "",
-                    "overtime_hours": "",
-                    "issues": "- ",
-                    "next_plan": "- ",
-                },
-            )
-        )
+    def insert_previous_entries(self, state: NoteWorkspace, content: str) -> str:
+        lines = []
+        for entry in state.previous_entries:
+            span = time_range_label(entry.start_time, entry.end_time)
+            line = "- " + (span + " " if span else "") + entry.description
+            if line not in content.splitlines():
+                lines.append(line)
+        return content.rstrip() + ("\n\n" if content.strip() else "") + "\n".join(lines) if lines else content
 
-    def save_template(self, content: str) -> Result[ReportTemplate]:
-        return self._save_template_handler.handle(
-            SaveReportTemplateCommand(
-                user_id=self._user_id,
-                language=self._language,
-                template_type="daily",
-                content=content,
-            )
-        )
-
-    def reset_template(self) -> Result[None]:
-        return self._reset_template_handler.handle(
-            ResetReportTemplateCommand(
-                user_id=self._user_id,
-                language=self._language,
-                template_type="daily",
-            )
-        )
-
-    def export_markdown(self, destination: Path, content: str) -> Result[Path]:
+    def export_markdown(self, destination: Path, content: str):
         return self._markdown_exporter.export_markdown(destination, content)
 
-    def rewrite(self, content: str) -> Result[str]:
-        result = self._rewrite_handler.handle(
-            RewriteTextCommand(
-                user_id=self._user_id,
-                content=content,
-                context="daily_note",
-                language=self._language,
-            )
-        )
+    def rewrite(self, content: str):
+        result = self._rewrite_handler.handle(RewriteTextCommand(self.service.user_id, content,
+                                               context="daily_note", language=self._language))
         if not result.ok or result.value is None:
-            return Result.failure(result.error or _validation("rewrite_failed"))
+            return Result.failure(result.error or ValidationError("rewrite_failed", "rewrite_failed"))
         return Result.success(result.value.content)
-
-
-def _quick_log_block(quick_logs: tuple[QuickLog, ...]) -> str:
-    lines: list[str] = []
-    for quick_log in quick_logs:
-        time_text = time_range_label(quick_log.start_time, quick_log.end_time)
-        prefix = f"{time_text}: " if time_text else ""
-        description = quick_log.description.replace("\n", "\n  ")
-        lines.append(f"- {prefix}{description}")
-    return "\n".join(lines)
-
-
-def _event_block(events: tuple[CalendarEvent, ...], language: str) -> str:
-    lines: list[str] = []
-    for event in events:
-        time_text = _("All day", language=language) if event.all_day else time_range_label(event.start_time, event.end_time)
-        prefix = f"{time_text}: " if time_text else ""
-        summary = event.summary.replace("\n", "\n  ")
-        lines.append(f"- {prefix}{summary}")
-    return "\n".join(lines) if lines else "- "
-
-
-def _validation(code: str) -> ValidationError:
-    return ValidationError(code, code)

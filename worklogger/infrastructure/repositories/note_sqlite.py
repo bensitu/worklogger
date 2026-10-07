@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 from worklogger.domain.notes.models import DailyNote
+from worklogger.domain.notes.preferences import NoteSharing, note_draft_key, note_sharing_key
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
 from worklogger.infrastructure.repositories._mapping import parse_date, map_rows
 
@@ -46,6 +47,24 @@ class SQLiteDailyNoteRepository:
                                       (user_id, start.isoformat(), end.isoformat())).fetchall()
         return map_rows(rows, lambda row: DailyNote(user_id, parse_date(row["d"]), str(row["content"])))
 
-    def save(self, note: DailyNote, *, expected_content: str | None = None) -> None:
+    def search(self, user_id: int, query: str, *, limit: int = 50) -> tuple[DailyNote, ...]:
+        term = "%" + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+        with self._connection_factory.connection() as connection:
+            rows = connection.execute("""SELECT d, content FROM daily_notes
+                WHERE user_id=? AND content<>'' AND content LIKE ? ESCAPE '\\'
+                UNION SELECT q.date AS d, COALESCE(n.content, '') AS content FROM quick_logs q
+                LEFT JOIN daily_notes n ON n.user_id=q.user_id AND n.d=q.date
+                WHERE q.user_id=? AND q.description LIKE ? ESCAPE '\\'
+                ORDER BY d DESC LIMIT ?""", (user_id, term, user_id, term, max(1, min(limit, 100)))).fetchall()
+        return map_rows(rows, lambda row: DailyNote(user_id, parse_date(row["d"]), str(row["content"])))
+
+    def save(self, note: DailyNote, *, expected_content: str | None = None,
+             sharing: NoteSharing | None = None, clear_draft: bool = False) -> None:
         with self._connection_factory.transaction(write=True) as connection:
             save_note(connection, note.user_id, note.day, note.content, expected_content)
+            if sharing is not None:
+                connection.execute("INSERT INTO settings(user_id,key,value) VALUES(?,?,?) "
+                    "ON CONFLICT(user_id,key) DO UPDATE SET value=excluded.value",
+                    (note.user_id, note_sharing_key(note.day), sharing.encode()))
+            if clear_draft:
+                connection.execute("DELETE FROM settings WHERE user_id=? AND key=?", (note.user_id, note_draft_key(note.day)))

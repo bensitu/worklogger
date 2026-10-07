@@ -94,6 +94,9 @@ msgstr "新增記錄"
 msgid "Add another sign-in method before unlinking this identity."
 msgstr "解除此身分連結前，請新增其他登入方式。"
 
+msgid "Add to note"
+msgstr "加入便箋"
+
 msgid "Address"
 msgstr "位址"
 
@@ -105,6 +108,12 @@ msgstr "需要管理員權限。"
 
 msgid "All day"
 msgstr "全天"
+
+msgid "Allow in AI context"
+msgstr "允許用於 AI 上下文"
+
+msgid "Allow in reports"
+msgstr "允許用於報表"
 
 msgid "Analytics"
 msgstr "統計分析"
@@ -231,9 +240,6 @@ msgstr "已有行事曆資料。\n\n取代會在匯入前清除原有事件。\n
 
 msgid "Calendar event"
 msgstr "行事曆日程"
-
-msgid "Calendar events: {events}"
-msgstr "行事曆事件：{events}"
 
 msgid "Cancel"
 msgstr "取消"
@@ -382,6 +388,9 @@ msgstr "刪除使用者"
 msgid "Description"
 msgstr "說明"
 
+msgid "Discard"
+msgstr "捨棄"
+
 msgid "Discard changes?"
 msgstr "捨棄變更？"
 
@@ -450,6 +459,9 @@ msgstr "輸入您的密碼"
 
 msgid "Enter your password."
 msgstr "請輸入密碼。"
+
+msgid "Error"
+msgstr "錯誤"
 
 msgid "Estimated RAM: {ram} GB"
 msgstr "估算記憶體：{ram} GB"
@@ -601,9 +613,6 @@ msgstr "包含筆記"
 msgid "Include quick logs"
 msgstr "包含快速記錄"
 
-msgid "Insert Quick Log"
-msgstr "插入快速記錄"
-
 msgid "January"
 msgstr "1月"
 
@@ -615,6 +624,15 @@ msgstr "7月"
 
 msgid "June"
 msgstr "6月"
+
+msgid "Keep draft"
+msgstr "保留草稿"
+
+msgid "Keep the current draft and open another date?"
+msgstr "保留目前草稿並開啟其他日期嗎？"
+
+msgid "Keep this draft for later?"
+msgstr "保留這份草稿以便稍後繼續嗎？"
 
 msgid "Korean"
 msgstr "韓語"
@@ -904,11 +922,17 @@ msgstr "請等待目前的請求完成。"
 msgid "Please wait for the current update check."
 msgstr "請等待目前的更新檢查完成。"
 
+msgid "Polish text"
+msgstr "潤飾內容"
+
 msgid "Port"
 msgstr "連接埠"
 
 msgid "Previous day"
 msgstr "前一天"
+
+msgid "Previous entries"
+msgstr "歷史事項"
 
 msgid "Previous month"
 msgstr "上個月"
@@ -961,6 +985,9 @@ msgstr "記錄或休息已開始。"
 msgid "Recording since {time} - {duration}"
 msgstr "開始於 {time} - {duration}"
 
+msgid "Recovered draft"
+msgstr "已復原草稿"
+
 msgid "Recovery key"
 msgstr "復原金鑰"
 
@@ -975,6 +1002,9 @@ msgstr "正在重新整理模型目錄..."
 
 msgid "Register"
 msgstr "註冊"
+
+msgid "Reload saved note"
+msgstr "重新載入已儲存的便箋"
 
 msgid "Remember me"
 msgstr "記住我"
@@ -1098,6 +1128,9 @@ msgstr "已儲存。重新啟動後語言設定生效。"
 
 msgid "Schedule / Records"
 msgstr "日程 / 記錄"
+
+msgid "Search notes"
+msgstr "搜尋便箋"
 
 msgid "Search reports..."
 msgstr "搜尋報表..."
@@ -1333,6 +1366,9 @@ msgstr "無法匯出檔案，請檢查目標位置與寫入權限。"
 msgid "Unable to import the file. Check its format and contents."
 msgstr "無法匯入檔案，請檢查檔案格式與內容。"
 
+msgid "Unable to load daily notes. Your saved data has been retained."
+msgstr "無法載入每日便箋，已儲存的資料未被更改。"
+
 msgid "Unable to load data. Please try again."
 msgstr "無法載入資料，請重試。"
 
@@ -1353,6 +1389,9 @@ msgstr "無法恢復計時狀態，請放棄舊計時後開始新記錄。"
 
 msgid "Unable to save settings. Please try again."
 msgstr "無法儲存設定，請重試。"
+
+msgid "Unable to save the note. Your changes have been retained."
+msgstr "無法儲存便箋，編輯內容已保留。"
 
 msgid "Unable to save the report. Your changes have been retained."
 msgstr "無法儲存報表，您的編輯內容已保留。"
@@ -1443,9 +1482,6 @@ msgstr "啟用後，文字處理優先使用本機模型，不向外部服務傳
 
 msgid "Work Hours Trend"
 msgstr "工時趨勢"
-
-msgid "Work Log"
-msgstr "工作記錄"
 
 msgid "Work Mode Breakdown"
 msgstr "工作方式分布"

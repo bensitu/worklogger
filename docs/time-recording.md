@@ -8,9 +8,9 @@ The right-side total shows worked time already stored for the selected date.
 Scheduled calendar events are displayed separately and do not count as work.
 
 New time record is the main action in the calendar header. It opens Manual Input,
-clears the editing selection, and focuses the start field. A separate, full-height
-menu button contains quick logs, independent daily notes, and AI assistance.
-These actions are distinct from creating a time period.
+clears the editing selection, and focuses the start field. A separate Daily notes
+button opens the selected date's memo without creating a work period. Historical
+quick logs are readable there; they do not contribute worked hours.
 
 Manual Save creates a new period unless a list item was selected; Save changes
 updates that item's ID. After saving, the next draft starts at the previous end,

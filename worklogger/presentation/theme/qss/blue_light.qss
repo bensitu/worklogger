@@ -126,18 +126,10 @@ QWidget#worklog_entry_panel_widget[compact="true"] QToolButton#clear_time_entry_
   padding: 2px 8px;
 }
 QPushButton#add_entry_button,
-QToolButton#time_entry_actions_button {
+QPushButton#daily_notes_button {
   min-height: 28px;
   max-height: 28px;
   padding: 5px 8px;
-}
-QToolButton#time_entry_actions_button {
-  min-width: 22px;
-  max-width: 22px;
-}
-QToolButton#time_entry_actions_button::menu-indicator {
-  image: none;
-  width: 0;
 }
 QToolButton#delete_record_button {
   background: transparent;

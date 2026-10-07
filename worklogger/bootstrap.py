@@ -38,7 +38,6 @@ from worklogger.app.use_cases.auth import (
     SetPasswordChangeRequiredHandler,
 )
 from worklogger.app.use_cases.calendar import (
-    GetCalendarEventsForDayHandler,
     GetCalendarEventsForRangeHandler,
     GetHolidaysForRangeHandler,
     ImportCalendarEventsHandler,
@@ -59,7 +58,7 @@ from worklogger.app.use_cases.local_models import (
     SelectLocalModelHandler,
     VerifyLocalModelHandler,
 )
-from worklogger.app.use_cases.notes import GetDailyNoteHandler, SaveDailyNoteHandler
+from worklogger.app.use_cases.notes import DailyNotesService, GetDailyNoteHandler
 from worklogger.app.use_cases.quick_logs import (
     AddQuickLogHandler,
     DeleteQuickLogHandler,
@@ -625,23 +624,17 @@ def _build_notes_workflow(
     user: User,
     repositories: RuntimeRepositories,
     handlers: RuntimeHandlers,
+    job_runner=None,
 ) -> NotesWorkflowController:
     return NotesWorkflowController(
         NoteEditorViewModel(
-            user_id=user.id,
+            DailyNotesService(user_id=user.id, notes=repositories.daily_notes, settings=repositories.settings,
+                              previous_entries=repositories.quick_logs),
             language=get_language(),
-            get_note_handler=GetDailyNoteHandler(repositories.daily_notes),
-            save_note_handler=SaveDailyNoteHandler(repositories.daily_notes),
-            quick_logs_handler=GetQuickLogsForDayHandler(repositories.quick_logs),
-            calendar_events_handler=GetCalendarEventsForDayHandler(
-                repositories.calendar_events
-            ),
-            templates=handlers.templates,
-            save_template_handler=handlers.save_template_handler,
-            reset_template_handler=handlers.reset_template_handler,
             markdown_exporter=handlers.markdown_exporter,
             rewrite_handler=handlers.rewrite_handler,
-        )
+        ),
+        job_runner=job_runner,
     )
 
 
@@ -661,6 +654,7 @@ def _build_reports_workflow(
                 templates=handlers.templates,
                 notes=repositories.daily_notes,
                 translator=_,
+                note_settings=repositories.settings,
             ),
             get_report_handler=GetReportForPeriodHandler(repositories.reports),
             list_reports_handler=ListReportsHandler(repositories.reports),
@@ -923,15 +917,8 @@ def _build_app_window(
         ),
         config=window_config,
         settings_workflow=settings_workflow,
-        quick_logs_workflow=_build_quick_logs_workflow(user, repositories),
         analytics_workflow=_build_analytics_workflow(user, repositories),
-        ai_assist_workflow=_build_ai_workflow(
-            user,
-            repositories,
-            handlers,
-            job_runner,
-        ) if FeatureFlags.from_env().enable_ai else None,
-        notes_workflow=_build_notes_workflow(user, repositories, handlers),
+        notes_workflow=_build_notes_workflow(user, repositories, handlers, job_runner),
         reports_workflow=_build_reports_workflow(user, repositories, handlers),
         residency_controller=residency_controller,
         job_runner=job_runner,

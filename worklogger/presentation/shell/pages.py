@@ -19,7 +19,6 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMessageBox,
     QPushButton,
-    QToolButton,
     QTextEdit,
     QScrollArea,
     QSizePolicy,
@@ -223,13 +222,10 @@ class CalendarPage(QWidget):
         if hasattr(self.entry_panel, "view_model"):
             self.add_entry_button = QPushButton(_("New time record"))
             self.add_entry_button.clicked.connect(self._new_time_record)
-            self.entry_actions_button = QToolButton()
-            self.entry_actions_button.setObjectName("time_entry_actions_button")
-            self.entry_actions_button.setToolTip(_("More actions"))
-            self.entry_actions_button.setAccessibleName(_("More actions"))
-            self.entry_actions_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
-            self.entry_actions_button.setProperty("variant", "primary")
-            set_button_icon(self.entry_actions_button, "chevron-down")
+            self.notes_button = QPushButton(_("Daily notes"))
+            self.notes_button.setObjectName("daily_notes_button")
+            self.notes_button.setToolTip(_("Daily notes"))
+            set_button_icon(self.notes_button, "file-text")
         else:
             self.add_entry_button = QPushButton(_("Add Entry"))
         self.add_entry_button.setObjectName("add_entry_button")
@@ -243,8 +239,8 @@ class CalendarPage(QWidget):
         header.addWidget(self.next_month_button)
         header.addWidget(self.today_button)
         header.addWidget(self.add_entry_button)
-        if hasattr(self, "entry_actions_button"):
-            header.addWidget(self.entry_actions_button)
+        if hasattr(self, "notes_button"):
+            header.addWidget(self.notes_button)
         root.addLayout(header)
 
         content = QHBoxLayout()

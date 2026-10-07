@@ -94,6 +94,9 @@ msgstr "記録を追加"
 msgid "Add another sign-in method before unlinking this identity."
 msgstr "この連携を解除する前に、別のログイン方法を追加してください。"
 
+msgid "Add to note"
+msgstr "メモに追加"
+
 msgid "Address"
 msgstr "アドレス"
 
@@ -105,6 +108,12 @@ msgstr "管理者権限が必要です。"
 
 msgid "All day"
 msgstr "終日"
+
+msgid "Allow in AI context"
+msgstr "AI の参照を許可"
+
+msgid "Allow in reports"
+msgstr "レポートへの使用を許可"
 
 msgid "Analytics"
 msgstr "分析"
@@ -231,9 +240,6 @@ msgstr "カレンダーデータが既に存在します。\n\n置換は既存�
 
 msgid "Calendar event"
 msgstr "カレンダーの予定"
-
-msgid "Calendar events: {events}"
-msgstr "カレンダーの予定：{events}"
 
 msgid "Cancel"
 msgstr "キャンセル"
@@ -382,6 +388,9 @@ msgstr "ユーザーを削除"
 msgid "Description"
 msgstr "説明"
 
+msgid "Discard"
+msgstr "破棄"
+
 msgid "Discard changes?"
 msgstr "変更を破棄しますか？"
 
@@ -450,6 +459,9 @@ msgstr "パスワードを入力"
 
 msgid "Enter your password."
 msgstr "パスワードを入力してください。"
+
+msgid "Error"
+msgstr "エラー"
 
 msgid "Estimated RAM: {ram} GB"
 msgstr "推定メモリ：{ram} GB"
@@ -601,9 +613,6 @@ msgstr "ノートを含める"
 msgid "Include quick logs"
 msgstr "クイックログを含める"
 
-msgid "Insert Quick Log"
-msgstr "クイックログを挿入"
-
 msgid "January"
 msgstr "1月"
 
@@ -615,6 +624,15 @@ msgstr "7月"
 
 msgid "June"
 msgstr "6月"
+
+msgid "Keep draft"
+msgstr "下書きを保持"
+
+msgid "Keep the current draft and open another date?"
+msgstr "現在の下書きを保持して、別の日付を開きますか？"
+
+msgid "Keep this draft for later?"
+msgstr "この下書きを後で使えるように保持しますか？"
 
 msgid "Korean"
 msgstr "韓国語"
@@ -904,11 +922,17 @@ msgstr "現在のリクエストが完了するまでお待ちください。"
 msgid "Please wait for the current update check."
 msgstr "現在の更新確認が完了するまでお待ちください。"
 
+msgid "Polish text"
+msgstr "文章を整える"
+
 msgid "Port"
 msgstr "ポート"
 
 msgid "Previous day"
 msgstr "前日"
+
+msgid "Previous entries"
+msgstr "以前の記録"
 
 msgid "Previous month"
 msgstr "前月"
@@ -961,6 +985,9 @@ msgstr "記録または休憩はすでに開始されています。"
 msgid "Recording since {time} - {duration}"
 msgstr "開始 {time} - {duration}"
 
+msgid "Recovered draft"
+msgstr "復元された下書き"
+
 msgid "Recovery key"
 msgstr "復旧キー"
 
@@ -975,6 +1002,9 @@ msgstr "モデルカタログを更新中..."
 
 msgid "Register"
 msgstr "登録"
+
+msgid "Reload saved note"
+msgstr "保存済みメモを再読み込み"
 
 msgid "Remember me"
 msgstr "ログイン状態を保持"
@@ -1098,6 +1128,9 @@ msgstr "保存しました。言語設定は再起動後に適用されます。
 
 msgid "Schedule / Records"
 msgstr "予定 / 記録"
+
+msgid "Search notes"
+msgstr "メモを検索"
 
 msgid "Search reports..."
 msgstr "レポートを検索..."
@@ -1333,6 +1366,9 @@ msgstr "ファイルをエクスポートできませんでした。保存先と
 msgid "Unable to import the file. Check its format and contents."
 msgstr "ファイルをインポートできませんでした。形式と内容を確認してください。"
 
+msgid "Unable to load daily notes. Your saved data has been retained."
+msgstr "日次メモを読み込めません。保存済みのデータは保持されています。"
+
 msgid "Unable to load data. Please try again."
 msgstr "データを読み込めませんでした。もう一度お試しください。"
 
@@ -1353,6 +1389,9 @@ msgstr "タイマーを復元できません。古いタイマーを破棄して
 
 msgid "Unable to save settings. Please try again."
 msgstr "設定を保存できませんでした。もう一度お試しください。"
+
+msgid "Unable to save the note. Your changes have been retained."
+msgstr "メモを保存できません。編集内容は保持されています。"
 
 msgid "Unable to save the report. Your changes have been retained."
 msgstr "レポートを保存できませんでした。編集内容は保持されています。"
@@ -1443,9 +1482,6 @@ msgstr "有効にすると、テキスト処理はローカルモデルを優先
 
 msgid "Work Hours Trend"
 msgstr "労働時間の推移"
-
-msgid "Work Log"
-msgstr "作業記録"
 
 msgid "Work Mode Breakdown"
 msgstr "勤務形態の内訳"

@@ -5,32 +5,28 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 from tests.app.test_notes_and_reports_use_cases import (
     MemoryCalendarRepository,
-    MemoryDailyNoteRepository,
     MemoryQuickLogRepository,
     MemoryTemplateProvider,
     MemoryTemplateRepository,
     MemoryWorkLogRepository,
 )
-from worklogger.app.commands.note_commands import SaveDailyNoteCommand
 from worklogger.app.commands.report_commands import SaveReportCommand
 from worklogger.app.queries.report_queries import GetReportForPeriodQuery
-from worklogger.app.use_cases.calendar import GetCalendarEventsForDayHandler
 from worklogger.app.use_cases.ai import RewriteTextHandler
-from worklogger.app.use_cases.notes import GetDailyNoteHandler, SaveDailyNoteHandler
-from worklogger.app.use_cases.quick_logs import GetQuickLogsForDayHandler
+from worklogger.app.use_cases.notes import DailyNotesService
 from worklogger.app.use_cases.reports import (
     GenerateReportHandler,
     ResetReportTemplateHandler,
     SaveReportTemplateHandler,
 )
-from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.quicklog.models import QuickLog
 from worklogger.domain.reporting.models import Report
 from worklogger.domain.shared.result import Result
@@ -39,6 +35,11 @@ from worklogger.infrastructure.export import MarkdownExporter
 from worklogger.presentation.notes import NoteEditorDialog
 from worklogger.presentation.reporting import ReportDialog
 from worklogger.presentation.viewmodels import NoteEditorViewModel, ReportEditorViewModel
+from worklogger.presentation.job_runner import ImmediateJobRunner
+from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
+from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteDailyNoteRepository, SQLiteQuickLogRepository, SQLiteSettingsRepository
+from worklogger.infrastructure.security import PBKDF2PasswordHasher
+from worklogger.domain.notes.models import DailyNote
 
 
 def _app() -> QApplication:
@@ -135,84 +136,81 @@ class NotesReportsPresentationTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls._app = _app()
 
-    def test_note_viewmodel_and_dialog_apply_template_insert_quicklogs_and_save(self) -> None:
-        notes = MemoryDailyNoteRepository()
-        quick_logs = MemoryQuickLogRepository(
-            (
-                QuickLog(
-                    id=1,
-                    user_id=1,
-                    day=date(2026, 5, 14),
-                    start_time="09:30",
-                    end_time="10:00",
-                    description="Standup",
-                ),
-            )
-        )
-        calendar = MemoryCalendarRepository(
-            (
-                CalendarEvent(
-                    id=1,
-                    user_id=1,
-                    day=date(2026, 5, 14),
-                    start_time="14:00",
-                    end_time="15:00",
-                    summary="Planning",
-                ),
-            )
-        )
-        template_repository = MemoryTemplateRepository()
-        view_model = NoteEditorViewModel(
-            user_id=1,
-            get_note_handler=GetDailyNoteHandler(notes),
-            save_note_handler=SaveDailyNoteHandler(notes),
-            quick_logs_handler=GetQuickLogsForDayHandler(quick_logs),
-            calendar_events_handler=GetCalendarEventsForDayHandler(calendar),
-            templates=MemoryTemplateProvider(),
-            save_template_handler=SaveReportTemplateHandler(template_repository),
-            reset_template_handler=ResetReportTemplateHandler(template_repository),
-            markdown_exporter=MarkdownExporter(),
-            rewrite_handler=RewriteTextHandler(),
-        )
-        SaveDailyNoteHandler(notes).handle(
-            SaveDailyNoteCommand(1, date(2026, 5, 14), "Existing note")
-        )
-        dialog = NoteEditorDialog(view_model, date(2026, 5, 14))
+    def _note_model(self):
+        root = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        factory = SQLiteConnectionFactory(root / "notes.db")
+        MigrationRunner(factory).run_pending()
+        auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
+        user = auth.create_user("memo.user", "example-password", recovery_key=None, is_admin=False)
+        notes, quick = SQLiteDailyNoteRepository(factory), SQLiteQuickLogRepository(factory)
+        service = DailyNotesService(user_id=user.id, notes=notes, settings=SQLiteSettingsRepository(factory), previous_entries=quick)
+        return NoteEditorViewModel(service, markdown_exporter=MarkdownExporter(), rewrite_handler=RewriteTextHandler()), notes, quick
 
+    def test_memos_preserve_previous_entries_drafts_and_sharing_choices(self):
+        model, notes, quick = self._note_model()
+        day = date(2026, 5, 14)
+        quick.add(QuickLog(None, model.service.user_id, day, "Standup", "09:30", "10:00"))
+        notes.save(DailyNote(model.service.user_id, day, "Existing note"))
+        dialog = NoteEditorDialog(model, day, job_runner=ImmediateJobRunner())
+        self.addCleanup(dialog.deleteLater)
         self.assertTrue(dialog.refresh())
         self.assertEqual(dialog.editor.toPlainText(), "Existing note")
-        self.assertIn("Planning", dialog.calendar_label.text())
+        self.assertFalse(dialog.report_checkbox.isChecked())
+        self.assertFalse(dialog.ai_checkbox.isChecked())
+        self.assertEqual(dialog.previous_list.count(), 1)
+        dialog.insert_button.click()
+        first = dialog.editor.toPlainText()
+        dialog.insert_button.click()
+        self.assertEqual(dialog.editor.toPlainText(), first)
+        self.assertIn("Standup", first)
+        self.assertEqual(len(quick.list_for_day(model.service.user_id, day)), 1)
+        dialog.editor.setPlainText("Recoverable draft")
+        dialog.report_checkbox.setChecked(True)
+        dialog._persist_draft()
+        restored = NoteEditorDialog(model, day, job_runner=ImmediateJobRunner())
+        self.addCleanup(restored.deleteLater)
+        self.assertTrue(restored.refresh())
+        self.assertEqual(restored.editor.toPlainText(), "Recoverable draft")
+        self.assertTrue(restored._state.recovered_draft)
+        self.assertTrue(restored.report_checkbox.isChecked())
+        with patch.object(QMessageBox, "information"):
+            restored.save_button.click()
+        self.assertEqual(notes.get_for_day(model.service.user_id, day).content, "Recoverable draft")
+        self.assertFalse(model.load(day).value.recovered_draft)
+        self.assertTrue(model.load(day).value.sharing.reports)
+        self.assertFalse(model.load(day).value.sharing.ai)
+        self.assertEqual(model.search("Standup").value[0].day, day)
+        restored.copy_button.click()
+        self.assertEqual(QApplication.clipboard().text(), "Recoverable draft")
+        with tempfile.TemporaryDirectory() as directory, patch.object(QMessageBox, "information"):
+            target = Path(directory) / "note"
+            restored.export_markdown(target)
+            self.assertEqual(target.with_suffix(".md").read_text(encoding="utf-8"), "Recoverable draft")
+        dialog._draft_timer.stop()
+        restored._draft_timer.stop()
 
-        dialog.quick_logs_button.click()
-        self.assertIn("Standup", dialog.editor.toPlainText())
-
-        dialog.template_button.click()
-        self.assertIn("Planning", dialog.editor.toPlainText())
-        self.assertIn("Standup", dialog.editor.toPlainText())
-
-        dialog.editor.setPlainText("Saved from dialog")
-        dialog.save_button.click()
-
-        self.assertEqual(
-            notes.get_for_day(1, date(2026, 5, 14)).content,
-            "Saved from dialog",
-        )
-        self.assertEqual(dialog.status_label.text(), "Saved")
-
-        dialog.copy_button.click()
-        self.assertEqual(QApplication.clipboard().text(), "Saved from dialog")
-        with tempfile.TemporaryDirectory() as directory:
-            exported = Path(directory) / "note"
-            self.assertTrue(dialog.export_markdown(exported))
-            self.assertEqual(exported.with_suffix(".md").read_text(encoding="utf-8"), "Saved from dialog")
-
-        dialog.save_template_button.click()
-        saved_template = template_repository.get(1, "en_US", "daily")
-        self.assertIsNotNone(saved_template)
-        assert saved_template is not None
-        self.assertEqual(saved_template.content, "Saved from dialog")
-        dialog.reset_template_button.click()
-        self.assertIsNone(template_repository.get(1, "en_US", "daily"))
+    def test_memo_conflicts_and_cancelled_close_keep_the_draft(self):
+        model, notes, _quick = self._note_model()
+        day = date(2026, 5, 14)
+        notes.save(DailyNote(model.service.user_id, day, "Original"))
+        dialog = NoteEditorDialog(model, day, job_runner=ImmediateJobRunner())
+        self.addCleanup(dialog.deleteLater)
+        self.assertTrue(dialog.refresh())
+        dialog.editor.setPlainText("Unsubmitted")
+        notes.save(DailyNote(model.service.user_id, day, "Changed elsewhere"))
+        with patch.object(QMessageBox, "warning"):
+            dialog.save_button.click()
+        self.assertEqual(dialog.last_error.code, "note_conflict")
+        self.assertEqual(dialog.editor.toPlainText(), "Unsubmitted")
+        with patch.object(QMessageBox, "exec", return_value=QMessageBox.StandardButton.Cancel):
+            dialog.reject()
+        self.assertTrue(dialog.has_unsaved_changes)
+        with patch.object(QMessageBox, "exec", return_value=QMessageBox.StandardButton.Save):
+            dialog.reject()
+        recovered = model.load(day).value
+        self.assertEqual((recovered.content, recovered.expected_content), ("Unsubmitted", "Original"))
+        self.assertEqual(notes.get_for_day(model.service.user_id, day).content, "Changed elsewhere")
+        dialog._draft_timer.stop()
 
     def test_report_viewmodel_and_dialog_generate_then_save_report(self) -> None:
         reports = MemoryReportRepository()
@@ -277,33 +275,18 @@ class NotesReportsPresentationTests(unittest.TestCase):
         self.assertIsNone(template_repository.get(1, "en_US", "weekly"))
 
     def test_note_and_report_dialogs_block_close_when_dirty_prompt_is_cancelled(self) -> None:
-        notes = MemoryDailyNoteRepository()
         quick_logs = MemoryQuickLogRepository(())
         calendar = MemoryCalendarRepository(())
         template_repository = MemoryTemplateRepository()
-        note_view_model = NoteEditorViewModel(
-            user_id=1,
-            get_note_handler=GetDailyNoteHandler(notes),
-            save_note_handler=SaveDailyNoteHandler(notes),
-            quick_logs_handler=GetQuickLogsForDayHandler(quick_logs),
-            calendar_events_handler=GetCalendarEventsForDayHandler(calendar),
-            templates=MemoryTemplateProvider(),
-            save_template_handler=SaveReportTemplateHandler(template_repository),
-            reset_template_handler=ResetReportTemplateHandler(template_repository),
-            markdown_exporter=MarkdownExporter(),
-            rewrite_handler=RewriteTextHandler(),
-        )
-        note_dialog = NoteEditorDialog(
-            note_view_model,
-            date(2026, 5, 14),
-            confirm_discard_changes=lambda: False,
-        )
+        note_view_model, _notes, _quick = self._note_model()
+        note_dialog = NoteEditorDialog(note_view_model, date(2026, 5, 14),
+            confirm_discard_changes=lambda: False, job_runner=ImmediateJobRunner())
+        self.addCleanup(note_dialog.deleteLater)
         self.assertTrue(note_dialog.refresh())
         note_dialog.editor.setPlainText("dirty")
         note_dialog.reject()
-
         self.assertTrue(note_dialog.has_unsaved_changes)
-        self.assertEqual(note_dialog.status_label.text(), "Unsaved changes")
+        note_dialog._draft_timer.stop()
 
         reports = MemoryReportRepository()
         report_view_model = ReportEditorViewModel(

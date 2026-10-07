@@ -40,7 +40,9 @@ def display_error_code(code: str) -> str:
         case "note_conflict":
             return _("This note was changed in another editor. Reload it before saving. Your changes have been retained.")
         case "note_save_failed":
-            return _("Unable to save the work log. Your changes have been retained.")
+            return _("Unable to save the note. Your changes have been retained.")
+        case "note_load_failed":
+            return _("Unable to load daily notes. Your saved data has been retained.")
         case "csv_file_too_large":
             return _("The CSV file exceeds the supported size or row limit.")
         case "csv_import_conflict":

@@ -94,6 +94,9 @@ msgstr "Add Entry"
 msgid "Add another sign-in method before unlinking this identity."
 msgstr "Add another sign-in method before unlinking this identity."
 
+msgid "Add to note"
+msgstr "Add to note"
+
 msgid "Address"
 msgstr "Address"
 
@@ -105,6 +108,12 @@ msgstr "Administrator permission is required."
 
 msgid "All day"
 msgstr "All day"
+
+msgid "Allow in AI context"
+msgstr "Allow in AI context"
+
+msgid "Allow in reports"
+msgstr "Allow in reports"
 
 msgid "Analytics"
 msgstr "Analytics"
@@ -231,9 +240,6 @@ msgstr "Calendar data already exists.\n\nReplace clears previous calendar events
 
 msgid "Calendar event"
 msgstr "Calendar event"
-
-msgid "Calendar events: {events}"
-msgstr "Calendar events: {events}"
 
 msgid "Cancel"
 msgstr "Cancel"
@@ -382,6 +388,9 @@ msgstr "Delete user"
 msgid "Description"
 msgstr "Description"
 
+msgid "Discard"
+msgstr "Discard"
+
 msgid "Discard changes?"
 msgstr "Discard changes?"
 
@@ -450,6 +459,9 @@ msgstr "Enter your password"
 
 msgid "Enter your password."
 msgstr "Enter your password."
+
+msgid "Error"
+msgstr "Error"
 
 msgid "Estimated RAM: {ram} GB"
 msgstr "Estimated RAM: {ram} GB"
@@ -601,9 +613,6 @@ msgstr "Include notes"
 msgid "Include quick logs"
 msgstr "Include quick logs"
 
-msgid "Insert Quick Log"
-msgstr "Insert Quick Log"
-
 msgid "January"
 msgstr "January"
 
@@ -615,6 +624,15 @@ msgstr "July"
 
 msgid "June"
 msgstr "June"
+
+msgid "Keep draft"
+msgstr "Keep draft"
+
+msgid "Keep the current draft and open another date?"
+msgstr "Keep the current draft and open another date?"
+
+msgid "Keep this draft for later?"
+msgstr "Keep this draft for later?"
 
 msgid "Korean"
 msgstr "Korean"
@@ -904,11 +922,17 @@ msgstr "Please wait for the current request."
 msgid "Please wait for the current update check."
 msgstr "Please wait for the current update check."
 
+msgid "Polish text"
+msgstr "Polish text"
+
 msgid "Port"
 msgstr "Port"
 
 msgid "Previous day"
 msgstr "Previous day"
+
+msgid "Previous entries"
+msgstr "Previous entries"
 
 msgid "Previous month"
 msgstr "Previous month"
@@ -961,6 +985,9 @@ msgstr "Recording or a break is already active."
 msgid "Recording since {time} - {duration}"
 msgstr "Recording since {time} - {duration}"
 
+msgid "Recovered draft"
+msgstr "Recovered draft"
+
 msgid "Recovery key"
 msgstr "Recovery key"
 
@@ -975,6 +1002,9 @@ msgstr "Refreshing catalog..."
 
 msgid "Register"
 msgstr "Register"
+
+msgid "Reload saved note"
+msgstr "Reload saved note"
 
 msgid "Remember me"
 msgstr "Remember me"
@@ -1098,6 +1128,9 @@ msgstr "Saved. Language changes apply after restarting."
 
 msgid "Schedule / Records"
 msgstr "Schedule / Records"
+
+msgid "Search notes"
+msgstr "Search notes"
 
 msgid "Search reports..."
 msgstr "Search reports..."
@@ -1333,6 +1366,9 @@ msgstr "Unable to export the file. Check the destination and write permissions."
 msgid "Unable to import the file. Check its format and contents."
 msgstr "Unable to import the file. Check its format and contents."
 
+msgid "Unable to load daily notes. Your saved data has been retained."
+msgstr "Unable to load daily notes. Your saved data has been retained."
+
 msgid "Unable to load data. Please try again."
 msgstr "Unable to load data. Please try again."
 
@@ -1353,6 +1389,9 @@ msgstr "Unable to restore the timer. Discard it to start a new record."
 
 msgid "Unable to save settings. Please try again."
 msgstr "Unable to save settings. Please try again."
+
+msgid "Unable to save the note. Your changes have been retained."
+msgstr "Unable to save the note. Your changes have been retained."
 
 msgid "Unable to save the report. Your changes have been retained."
 msgstr "Unable to save the report. Your changes have been retained."
@@ -1443,9 +1482,6 @@ msgstr "When enabled, text processing uses the local model first; no data is sen
 
 msgid "Work Hours Trend"
 msgstr "Work Hours Trend"
-
-msgid "Work Log"
-msgstr "Work Log"
 
 msgid "Work Mode Breakdown"
 msgstr "Work Mode Breakdown"

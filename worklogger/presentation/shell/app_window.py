@@ -16,7 +16,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QMessageBox,
-    QMenu,
     QPushButton,
     QStackedWidget,
     QVBoxLayout,
@@ -352,10 +351,7 @@ class AppWindow(QMainWindow):
         self.quick_logs_button.setObjectName("quick_logs_button")
         self.quick_logs_button.setToolTip(_("Quick Log"))
         self.quick_logs_button.setProperty("variant", "ghost")
-        self.notes_button = QPushButton(_("Notes"))
-        self.notes_button.setObjectName("notes_button")
-        self.notes_button.setToolTip(_("Notes"))
-        self.notes_button.setProperty("variant", "ghost")
+        self.notes_button = getattr(self.calendar_page, "notes_button", None) or QPushButton(_("Daily notes"), self)
         self.reports_button = self.sidebar._buttons["reports"]
         self.analytics_button = self.sidebar._buttons["analytics"]
         self.ai_assist_button = QPushButton(_("AI Assist"))
@@ -368,22 +364,9 @@ class AppWindow(QMainWindow):
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.status_label.hide()
 
-        actions = QMenu(self)
-        for button, workflow in (
-            (self.quick_logs_button, self._quick_logs_workflow),
-            (self.notes_button, self._notes_workflow),
-            (self.ai_assist_button, self._ai_assist_workflow),
-        ):
-            button.hide()
-            if workflow is not None:
-                label = _("Daily notes") if button is self.notes_button and isinstance(self.entry_panel, TimeEntryPanel) else button.text()
-                actions.addAction(label, button.click)
-        if isinstance(self.entry_panel, TimeEntryPanel):
-            self.calendar_page.entry_actions_button.setMenu(actions)
-            self.calendar_page.entry_actions_button.setEnabled(not actions.isEmpty())
-        else:
-            self.calendar_page.add_entry_button.setMenu(actions)
-            self.calendar_page.add_entry_button.setEnabled(not actions.isEmpty())
+        self.quick_logs_button.hide()
+        self.ai_assist_button.hide()
+        self.notes_button.setVisible(self._notes_workflow is not None)
         self.account_label.setVisible(False)
         if self._quick_logs_workflow is None:
             self.quick_logs_button.setVisible(False)
