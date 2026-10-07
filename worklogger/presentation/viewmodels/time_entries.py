@@ -39,7 +39,7 @@ class TimeEntryViewModel:
         return self.auto_content != baseline
 
     def new(self, day: date, *, start: str = "") -> None:
-        self.draft = TimeEntryDraft(day, start=start, work_type=self.draft.work_type)
+        self.draft = TimeEntryDraft(day, start=start)
         self._baseline = self.draft
 
     def clear(self, day: date) -> None:
@@ -89,6 +89,7 @@ class TimeEntryViewModel:
         if result.ok:
             self.auto_completed = result.value
             self.auto_content = result.value.note
+            self.auto_work_type = "normal"
         return result
 
     def save_content(self):

@@ -14,8 +14,9 @@ These actions are distinct from creating a time period.
 
 Manual Save creates a new period unless a list item was selected; Save changes
 updates that item's ID. After saving, the next draft starts at the previous end,
-with no end or content yet entered. Clear input resets the manual form and leaves
-stored records intact. In Auto Record it clears only editable content, not the
+with the Normal work type and no end or content yet entered. Clear input resets
+the manual form and leaves stored records intact. In Auto Record it clears only
+editable content, not the
 timer or already saved descriptions. Delete is a per-item hover/focus action with
 confirmation. Its space is reserved so revealing it does not resize the record.
 
@@ -50,6 +51,10 @@ Start persists an active timer with its chosen type and content. The type is fix
 for that period. Save content persists the description without creating a finished
 time row. End stores time and current content together and clears the timer.
 Following End, Save content can update that completed row without inserting another.
+Successful End resets the type selector to Normal for the next timer without
+changing the completed record's type. Saving content while a timer is running
+does not change its type. Failed saves and failed End operations preserve the
+selected type for correction or retry.
 
 Discard timer is a separate button beside the break control. It asks for confirmation
 before removing an active or unrecoverable timer without saving a completed period.

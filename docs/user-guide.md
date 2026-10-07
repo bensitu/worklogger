@@ -42,6 +42,8 @@ period. Clear input resets the editor without deleting saved records; in Auto
 Record it clears content without stopping the timer. A record's delete button
 appears on hover or keyboard focus and requires confirmation.
 Successful time-entry saves update the calendar without a confirmation popup.
+After saving, the work type resets to Normal for the next record. Selecting an
+existing record still loads its saved type for editing.
 
 The maximum elapsed period is 16 hours. Historical break deductions must be
 nonnegative and shorter than that period; new breaks are separate records.
@@ -62,6 +64,8 @@ Choose a work type, enter optional content, and choose Start. End saves the time
 record and its current content automatically. Save content updates the timer's
 description without creating a finished period; after End it updates that same
 saved record's description. Edit a completed record through Manual Input.
+After End succeeds, the work type resets to Normal for the next timer; the saved
+record keeps its original type. Saving content during a timer does not reset it.
 
 Break closes the current work period and starts a separate break timer using the
 configured default duration. Work resumes at that duration's end; Resume work
