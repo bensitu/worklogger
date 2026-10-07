@@ -94,6 +94,14 @@ dates and the active timer, inside the write transaction. Automatic completion a
 the corresponding timer-state change commit together. Capture identifiers prevent
 duplicate insertion of the same automatic period. Imported calendar-event deletion
 checks account ownership and the complete expected row before removing it.
+The fixed-duration break shortcut writes its complete period immediately and
+checks the expected absence of an active timer in the same transaction. A timer
+created by another application instance or a conflicting period rolls back the
+write. It requires no schema or settings-format change.
+Shortcut breaks use a `fixed-break:` capture-ID prefix. A confirmed early Start
+updates that break with an expected revision and creates the timer in one
+transaction. If the click coincides with the break's start, deletion and timer
+creation commit together instead. Failures roll back both changes.
 
 Migration 6 creates a private pre-change snapshot when existing work rows are
 present. New desktop entries use the system's named timezone; automatic entries

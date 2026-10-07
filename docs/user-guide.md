@@ -67,11 +67,16 @@ saved record's description. Edit a completed record through Manual Input.
 After End succeeds, the work type resets to Normal for the next timer; the saved
 record keeps its original type. Saving content during a timer does not reset it.
 
-Break closes the current work period and starts a separate break timer using the
-configured default duration. Work resumes at that duration's end; Resume work
-ends the break early. Reopening after the deadline preserves the planned boundary
-rather than counting the entire closed-application interval as a break. A default
-duration of zero disables this shortcut; a manual break can still be recorded.
+Break immediately saves a separate rest period starting at the click time and
+ending after the configured default duration. It is available without pressing
+Start, but disabled while a timer is running: finish that timer first. The record
+appears in Schedule / Records immediately and can be edited in Manual Input.
+No timer is started, and work does not resume automatically. Clicking Start during
+this rest period asks whether to end it early. Confirming shortens the rest to the
+Start click time and begins work at that same time; cancelling keeps it unchanged.
+Manual and imported periods are never automatically shortened. Other overlapping
+records are rejected. A default duration of zero disables this shortcut; a manual
+break can still be recorded.
 The separate Discard timer button beside the break control asks for confirmation
 before removing an unwanted or unrecoverable timer. Clearing the form does not
 discard or stop it.

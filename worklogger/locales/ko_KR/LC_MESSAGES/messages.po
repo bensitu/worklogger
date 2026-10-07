@@ -415,6 +415,12 @@ msgstr "트레이 아이콘 사용"
 msgid "End"
 msgstr "종료"
 
+msgid "End break early?"
+msgstr "휴식을 일찍 종료할까요?"
+
+msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
+msgstr "휴식 종료 시간을 {time}(으)로 변경하고 근무 기록을 시작할까요? 저장된 휴식 시간이 줄어듭니다."
+
 msgid "Ended"
 msgstr "종료됨"
 
@@ -1035,9 +1041,6 @@ msgstr "복원하면 현재 데이터베이스 파일이 바뀝니다. 계속할
 
 msgid "Restoring data..."
 msgstr "데이터 복원 중..."
-
-msgid "Resume work"
-msgstr "작업 재개"
 
 msgid "Rewrite"
 msgstr "다시 작성"

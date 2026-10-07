@@ -59,13 +59,25 @@ selected type for correction or retry.
 Discard timer is a separate button beside the break control. It asks for confirmation
 before removing an active or unrecoverable timer without saving a completed period.
 
-Break closes the work period and transitions to a separate break using the account's
-default duration. The application resumes the previous work type at the configured
-deadline. Resume work can end it early. If the application was closed, reopening
-uses the saved deadline rather than extending the break until reopening. A zero
-default disables the shortcut; manual break periods remain available. A break
-chosen directly as the activity type is a measured period and has no scheduled
-automatic resumption.
+Break is available only when no timer is running. It immediately saves an independent
+Break record from the captured click time to that time plus the account's default
+duration, including current Content. It does not start a timer or resume work at
+the end. Finish the current timer before using the shortcut. Overlapping periods
+are rejected. A zero default disables the shortcut; manual break periods remain
+available. A break
+chosen directly as the activity type is a measured period.
+
+Starting work during a shortcut break offers to end it early. Confirmation shortens
+that record to the original Start click time and starts work at the same instant
+in one transaction. Cancellation changes neither record nor timer. If no rest time
+has elapsed, the unused break record is removed instead of saving a zero-length
+period. Revision and timer checks reject stale or competing requests. Only shortcut
+breaks identified by their capture ID are eligible; manual and imported records
+are never automatically shortened.
+
+Previously persisted scheduled break timers remain readable. They retain their
+saved deadline and resume the original activity there rather than extending the
+break until application reopening. The shortcut no longer creates such timers.
 
 Only one account timer may be active. Its capture ID, offset-aware start, description,
 type, and break/resume state are stored in the database. A period write and the

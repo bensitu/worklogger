@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from worklogger.app.use_cases.time_entries import TimeEntryService
+from worklogger.app.use_cases.time_entries import EntryTimer, TimeEntryService
 from worklogger.app.use_cases.data_portability import ImportWorkLogsCsvHandler
 from worklogger.app.commands.data_portability_commands import ImportWorkLogsCsvCommand
 from worklogger.domain.notes.models import DailyNote
@@ -84,22 +84,89 @@ class TimeEntryTests(unittest.TestCase):
         updated = resumed.save_content("Edited after stopping", saved).value
         self.assertEqual(updated.id, saved.id)
         self.assertEqual(len(self.repository.list_for_day(self.user.id, self.now.date())), 1)
+        deadline = clicked_end + timedelta(hours=1)
+        scheduled = EntryTimer("saved-break", clicked_end, WorkType.BREAK, break_until=deadline,
+                               resume_type=WorkType.REMOTE, resume_content="Continued work")
+        self.repository.change_timer(self.user.id, None, TimeEntryService._encode(scheduled))
+        restored = self.make_service()
+        self.now = deadline + timedelta(minutes=15)
+        self.assertTrue(restored.advance().ok)
+        self.assertEqual(restored.timer.started_at, deadline)
+        self.assertEqual(restored.timer.work_type, WorkType.REMOTE)
+        self.assertEqual(len(self.repository.list_for_day(self.user.id, self.now.date())), 2)
 
-    def test_default_break_creates_distinct_records_and_resumes_original_activity(self):
-        self.service.start("normal", "Project")
-        self.now += timedelta(hours=3)
-        self.assertTrue(self.service.take_break(1, "Project").ok)
-        resumed = self.make_service()
-        self.assertEqual(resumed.timer.work_type, WorkType.BREAK)
-        self.now += timedelta(hours=1, minutes=15)
-        self.assertTrue(resumed.advance().ok)
-        self.assertEqual(resumed.timer.work_type, WorkType.NORMAL)
-        self.assertEqual(resumed.timer.started_at.hour, 13)
-        self.now = self.now.replace(hour=18, minute=0)
-        self.assertTrue(resumed.finish("Delivery").ok)
-        entries = self.repository.list_for_day(self.user.id, self.now.date())
-        self.assertEqual([entry.work_type for entry in entries], [WorkType.NORMAL, WorkType.BREAK, WorkType.NORMAL])
-        self.assertEqual(self.repository.get_for_day(self.user.id, self.now.date()).worked_hours(), 8)
+    def test_fixed_break_is_saved_immediately_with_captured_times_and_no_timer(self):
+        clicked = self.now.replace(hour=23, minute=30, second=17)
+        self.now = clicked + timedelta(minutes=1)
+        result = self.service.take_break(1.75, "Rest", now=clicked)
+        self.assertTrue(result.ok, result.error)
+        stored = self.repository.list_for_day(self.user.id, clicked.date())[0]
+        self.assertEqual((stored.work_type, stored.note, stored.start_time, stored.end_time), (WorkType.BREAK, "Rest", "23:30", "01:15"))
+        self.assertEqual(stored.started_at, clicked)
+        self.assertEqual(stored.ended_at, clicked + timedelta(hours=1.75))
+        self.assertEqual(stored.worked_hours(), 0)
+        restored = self.make_service()
+        self.assertIsNone(restored.timer)
+        self.assertFalse(restored.start("normal", "Overlapping work").ok)
+        self.now = stored.ended_at
+        self.assertTrue(restored.advance().ok)
+        self.assertIsNone(restored.timer)
+        self.assertTrue(restored.start("normal", "Next work").ok)
+
+    def test_break_validation_and_failed_writes_preserve_records_and_timer_state(self):
+        for hours in (0, -1, 4.1, float("nan"), float("inf")):
+            self.assertFalse(self.service.take_break(hours, "Invalid").ok)
+        stale = self.make_service()
+        self.assertTrue(self.service.start("meeting", "Active").ok)
+        self.assertEqual(self.service.take_break(1, "Rest").error.code, "auto_record_already_active")
+        self.assertFalse(stale.take_break(1, "Stale request").ok)
+        self.assertEqual(self.repository.list_for_day(self.user.id, self.now.date()), ())
+        self.assertEqual(self.make_service().timer.work_type, WorkType.MEETING)
+        self.now += timedelta(hours=1)
+        self.assertTrue(self.service.finish("Completed").ok)
+        with patch.object(self.repository, "_change_timer", side_effect=OSError("storage unavailable")):
+            self.assertFalse(self.service.take_break(1, "Rest").ok)
+        self.assertEqual(len(self.repository.list_for_day(self.user.id, self.now.date())), 1)
+        self.assertIsNone(self.make_service().timer)
+        self.assertTrue(self.service.take_break(1, "Rest").ok)
+        self.assertFalse(self.service.take_break(1, "Overlapping rest").ok)
+        self.assertEqual(len(self.repository.list_for_day(self.user.id, self.now.date())), 2)
+        saved_break = self.repository.list_for_day(self.user.id, self.now.date())[-1]
+        updated = self.service.save_manual(saved_break.day, saved_break.start_time, saved_break.end_time,
+                                           "break", "Changed elsewhere", saved_break).value
+        early = self.now + timedelta(minutes=1)
+        self.assertEqual(self.service.start("normal", "Work", now=early, break_entry=saved_break).error.code, "worklog_entry_conflict")
+        self.assertIsNone(self.service.timer)
+        self.assertEqual(self.repository.get_entry(self.user.id, updated.id), updated)
+        tomorrow = self.now.date() + timedelta(days=1)
+        self.assertTrue(self.service.save_manual(tomorrow, "09:00", "10:00", "break", "Manual rest").ok)
+        manual_start = self.now.replace(hour=9, minute=30) + timedelta(days=1)
+        self.assertEqual(self.service.start("normal", "Work", now=manual_start).error.code, "worklog_entry_overlap")
+
+    def test_confirmed_early_start_changes_break_and_timer_together(self):
+        for elapsed in (timedelta(minutes=1), timedelta(0)):
+            self.now += timedelta(days=1)
+            record = self.service.take_break(1, "Lunch").value
+            clicked = self.now + elapsed
+            offered = self.service.start("meeting", "Work", now=clicked)
+            self.assertEqual(offered.error.code, "fixed_break_active")
+            self.assertEqual(offered.error.details["break_entry"], record)
+            with patch.object(self.repository, "_change_timer", side_effect=OSError("storage unavailable")):
+                self.assertFalse(self.service.start("meeting", "Work", now=clicked, break_entry=record).ok)
+            self.assertEqual(self.repository.get_entry(self.user.id, record.id), record)
+            self.assertIsNone(self.make_service().timer)
+            started = self.service.start("meeting", "Work", now=clicked, break_entry=record)
+            self.assertTrue(started.ok, started.error)
+            self.assertEqual(self.make_service().timer.started_at, clicked)
+            changed = self.repository.get_entry(self.user.id, record.id)
+            if elapsed:
+                self.assertEqual((changed.started_at, changed.ended_at, changed.note), (record.started_at, clicked, "Lunch"))
+                self.assertEqual(changed.revision, record.revision + 1)
+            else:
+                self.assertIsNone(changed)
+            self.assertTrue(self.service.finish("Work", now=clicked + timedelta(minutes=30)).ok)
+            entries = self.repository.list_for_day(self.user.id, record.day)
+            self.assertEqual(sum(entry.worked_hours() for entry in entries), 0.5)
 
     def test_failed_automatic_transition_rolls_back_record_and_preserves_timer(self):
         self.service.start("normal", "Retained")

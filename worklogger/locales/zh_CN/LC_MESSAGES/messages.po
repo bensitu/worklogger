@@ -415,6 +415,12 @@ msgstr "启用托盘图标"
 msgid "End"
 msgstr "结束"
 
+msgid "End break early?"
+msgstr "提前结束休息？"
+
+msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
+msgstr "将休息结束时间改为 {time} 并开始记录工作吗？已保存的休息时长将相应缩短。"
+
 msgid "Ended"
 msgstr "已结束"
 
@@ -1035,9 +1041,6 @@ msgstr "恢复会替换当前数据库文件。继续？"
 
 msgid "Restoring data..."
 msgstr "正在恢复数据..."
-
-msgid "Resume work"
-msgstr "继续工作"
 
 msgid "Rewrite"
 msgstr "改写"

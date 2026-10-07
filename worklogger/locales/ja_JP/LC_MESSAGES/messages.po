@@ -415,6 +415,12 @@ msgstr "トレイアイコンを有効にする"
 msgid "End"
 msgstr "終了"
 
+msgid "End break early?"
+msgstr "休憩を早めに終了しますか？"
+
+msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
+msgstr "休憩の終了時刻を {time} に変更し、勤務の記録を開始しますか？保存済みの休憩時間が短くなります。"
+
 msgid "Ended"
 msgstr "終了しました"
 
@@ -1035,9 +1041,6 @@ msgstr "復元すると現在のデータベースファイルが置き換わり
 
 msgid "Restoring data..."
 msgstr "データを復元中..."
-
-msgid "Resume work"
-msgstr "作業を再開"
 
 msgid "Rewrite"
 msgstr "書き直す"

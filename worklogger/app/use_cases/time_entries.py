@@ -18,6 +18,9 @@ from worklogger.domain.worklog.models import WorkLog, WorkType
 from worklogger.domain.worklog.rules import entry_interval, normalize_work_log, parse_time, shift_datetimes, timestamp_span_hours
 
 
+FIXED_BREAK_CAPTURE_PREFIX = "fixed-break:"
+
+
 @dataclass(frozen=True)
 class EntryTimer:
     capture_id: str
@@ -124,6 +127,9 @@ class TimeEntryService:
     def _run(self, operation):
         try:
             value = operation()
+            if isinstance(value, Result):
+                self.last_error = value.error
+                return value
             self.last_error = None
             return Result.success(value)
         except ValueError as exc:
@@ -171,7 +177,8 @@ class TimeEntryService:
     def delete_event(self, event) -> Result[None]:
         return self._run(lambda: self.calendar_events.remove(self.user_id, event))
 
-    def start(self, work_type: str, content: str, *, now: datetime | None = None) -> Result[EntryTimer]:
+    def start(self, work_type: str, content: str, *, now: datetime | None = None,
+              break_entry: WorkLog | None = None) -> Result[EntryTimer]:
         def start():
             if self.restore_failed:
                 raise ValueError("auto_record_restore_failed")
@@ -180,15 +187,46 @@ class TimeEntryService:
             moment = now or self.now()
             if not isinstance(moment, datetime) or moment.tzinfo is None:
                 raise ValueError("time_range_invalid")
+            moment = moment.astimezone(self.local_timezone)
+            instant = moment.astimezone(timezone.utc)
+            break_interval = None
+            if break_entry is not None:
+                break_interval = entry_interval(break_entry)
+                if (break_entry.user_id != self.user_id or break_entry.id is None or not self._is_fixed_break(break_entry)
+                    or break_interval is None or not break_interval[0] <= instant < break_interval[1]):
+                    raise ValueError("worklog_entry_conflict")
+            active_break = None
             for day in (moment.date() - timedelta(days=1), moment.date()):
                 for record in self.repository.list_for_day(self.user_id, day):
+                    if break_entry is not None and record.id == break_entry.id:
+                        if record != break_entry:
+                            raise ValueError("worklog_entry_conflict")
+                        continue
                     interval = entry_interval(record)
-                    if (record.day == moment.date() and record.is_leave and not record.has_times) or (interval and interval[0] <= moment.astimezone(timezone.utc) < interval[1]):
-                        raise ValueError("worklog_entry_overlap")
+                    if (record.day == moment.date() and record.is_leave and not record.has_times) or (interval and interval[0] <= instant < interval[1]):
+                        if break_entry is None and self._is_fixed_break(record):
+                            active_break = record
+                        else:
+                            raise ValueError("worklog_entry_overlap")
+            if active_break is not None:
+                return Result.failure(ConflictError("fixed_break_active", "fixed_break_active", {"break_entry": active_break}))
             timer = EntryTimer(uuid4().hex, moment, WorkType(work_type), self._content(content))
-            self._persist(timer)
+            if break_entry is None:
+                self._persist(timer)
+            else:
+                raw = self._encode(timer)
+                change = (self._timer_raw, raw)
+                if instant == break_interval[0]:
+                    self.repository.delete_entry(self.user_id, break_entry.id, break_entry.revision, timer_change=change)
+                else:
+                    self.repository.save_entry(replace(break_entry, end_time=moment.strftime("%H:%M"), ended_at=moment), timer_change=change)
+                self.timer, self._timer_raw = timer, raw
             return timer
         return self._run(start)
+
+    @staticmethod
+    def _is_fixed_break(record: WorkLog) -> bool:
+        return record.work_type == WorkType.BREAK and bool(record.capture_id and record.capture_id.startswith(FIXED_BREAK_CAPTURE_PREFIX))
 
     def save_content(self, content: str, completed: WorkLog | None = None) -> Result[WorkLog | EntryTimer]:
         def save():
@@ -222,15 +260,21 @@ class TimeEntryService:
 
     def take_break(self, hours: float, content: str, *, now: datetime | None = None) -> Result[WorkLog]:
         def take_break():
-            if self.timer is None or self.timer.work_type == WorkType.BREAK:
-                raise ValueError("auto_record_not_started")
+            if self.restore_failed:
+                raise ValueError("auto_record_restore_failed")
+            if self.timer is not None:
+                raise ValueError("auto_record_already_active")
             if not math.isfinite(hours) or not 0 < hours <= 4:
                 raise ValueError("break_hours_too_long")
             moment = now or self.now()
+            if not isinstance(moment, datetime) or moment.tzinfo is None:
+                raise ValueError("time_range_invalid")
+            moment = moment.astimezone(self.local_timezone)
             deadline = (moment.astimezone(timezone.utc) + timedelta(hours=hours)).astimezone(self.local_timezone)
-            next_timer = EntryTimer(uuid4().hex, moment, WorkType.BREAK, break_until=deadline,
-                                    resume_type=self.timer.work_type, resume_content=self._content(content))
-            return self._finish(moment, content, next_timer)
+            record = normalize_work_log(WorkLog(self.user_id, moment.date(), moment.strftime("%H:%M"),
+                deadline.strftime("%H:%M"), 0, self._content(content), WorkType.BREAK,
+                started_at=moment, ended_at=deadline, capture_id=FIXED_BREAK_CAPTURE_PREFIX + uuid4().hex))
+            return self.repository.save_entry(record, timer_change=(self._timer_raw, None))
         return self._run(take_break)
 
     def resume(self, content: str, *, at_deadline: bool = False, now: datetime | None = None) -> Result[WorkLog]:

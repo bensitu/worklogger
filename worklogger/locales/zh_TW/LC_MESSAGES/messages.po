@@ -415,6 +415,12 @@ msgstr "啟用系統匣圖示"
 msgid "End"
 msgstr "結束"
 
+msgid "End break early?"
+msgstr "提前結束休息？"
+
+msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
+msgstr "將休息結束時間改為 {time} 並開始記錄工作嗎？已儲存的休息時長將相應縮短。"
+
 msgid "Ended"
 msgstr "已結束"
 
@@ -1035,9 +1041,6 @@ msgstr "還原會取代目前的資料庫檔案。繼續？"
 
 msgid "Restoring data..."
 msgstr "正在還原資料..."
-
-msgid "Resume work"
-msgstr "繼續工作"
 
 msgid "Rewrite"
 msgstr "改寫"

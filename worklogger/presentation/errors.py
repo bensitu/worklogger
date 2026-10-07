@@ -25,7 +25,7 @@ def display_error_code(code: str) -> str:
     """Translate known error codes without displaying raw exception text or logging previews."""
 
     match code:
-        case "worklog_entry_overlap":
+        case "worklog_entry_overlap" | "fixed_break_active":
             return _("These times overlap another record or the active timer. Choose a different period.")
         case "worklog_entry_conflict" | "time_entry_timer_conflict":
             return _("This record changed elsewhere. Reload it before saving. Your changes have been retained.")

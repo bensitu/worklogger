@@ -413,6 +413,12 @@ msgstr ""
 msgid "End"
 msgstr ""
 
+msgid "End break early?"
+msgstr ""
+
+msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
+msgstr ""
+
 msgid "Ended"
 msgstr ""
 
@@ -1032,9 +1038,6 @@ msgid "Restore will replace the current database file. Continue?"
 msgstr ""
 
 msgid "Restoring data..."
-msgstr ""
-
-msgid "Resume work"
 msgstr ""
 
 msgid "Rewrite"

@@ -210,11 +210,13 @@ class SQLiteWorkLogRepository:
                 self._change_timer(connection, record.user_id, *timer_change)
             return record
 
-    def delete_entry(self, user_id: int, entry_id: int, revision: int) -> None:
+    def delete_entry(self, user_id: int, entry_id: int, revision: int, *, timer_change: tuple[str | None, str | None] | None = None) -> None:
         with self._connection_factory.transaction() as connection:
             cursor = connection.execute("DELETE FROM worklog WHERE user_id=? AND id=? AND revision=?", (user_id, entry_id, revision))
             if cursor.rowcount != 1:
                 raise ValueError("worklog_entry_conflict")
+            if timer_change is not None:
+                self._change_timer(connection, user_id, *timer_change)
 
     def change_timer(self, user_id: int, expected: str | None, value: str | None) -> None:
         with self._connection_factory.transaction() as connection:

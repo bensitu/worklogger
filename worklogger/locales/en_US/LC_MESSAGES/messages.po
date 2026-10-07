@@ -415,6 +415,12 @@ msgstr "Enable tray icon"
 msgid "End"
 msgstr "End"
 
+msgid "End break early?"
+msgstr "End break early?"
+
+msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
+msgstr "End the break at {time} and start recording work? The saved break duration will be shortened."
+
 msgid "Ended"
 msgstr "Ended"
 
@@ -1035,9 +1041,6 @@ msgstr "Restore will replace the current database file. Continue?"
 
 msgid "Restoring data..."
 msgstr "Restoring data..."
-
-msgid "Resume work"
-msgstr "Resume work"
 
 msgid "Rewrite"
 msgstr "Rewrite"

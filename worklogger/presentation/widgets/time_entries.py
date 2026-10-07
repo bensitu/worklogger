@@ -250,8 +250,8 @@ class TimeEntryPanel(QWidget):
         self.clock_in_button.setEnabled(timer is None and not self.view_model.service.restore_failed)
         self.clock_out_button.setEnabled(timer is not None)
         self.discard_timer_button.setEnabled(timer is not None or self.view_model.service.restore_failed)
-        self.break_button.setText(_("Resume work") if timer and timer.break_until else _("Break {hours}").format(hours=duration_label(self.view_model.default_break_hours)))
-        self.break_button.setEnabled(bool(timer and (timer.break_until or timer.work_type != WorkType.BREAK and self.view_model.default_break_hours > 0)))
+        self.break_button.setText(_("Break {hours}").format(hours=duration_label(self.view_model.default_break_hours)))
+        self.break_button.setEnabled(timer is None and not self.view_model.service.restore_failed and self.view_model.default_break_hours > 0)
         self.save_button.setText(_("Save content") if auto else _("Save changes") if self.view_model.draft.original else _("Save"))
         self.save_button.setEnabled(self.view_model.auto_dirty and bool(timer or self.view_model.auto_completed) if auto else self.view_model.manual_dirty)
         if timer and timer.pending_end:
@@ -289,15 +289,20 @@ class TimeEntryPanel(QWidget):
         self._render_editor()
         if refresh:
             record = result.value
-            day = record.day if isinstance(record, WorkLog) else self._day
+            timer = self.view_model.service.timer
+            day = record.day if isinstance(record, WorkLog) else timer.started_at.date() if timer else self._day
             self.records_changed.emit(day)
         return True
 
-    def _submit(self, operation, *, refresh=True, automatic=False):
+    def _submit(self, operation, *, refresh=True, automatic=False, on_complete=None):
         if self.is_busy:
             return
         if self._job_runner is None:
-            self._apply_result(operation(), refresh=refresh)
+            result = operation()
+            if on_complete is None:
+                self._apply_result(result, refresh=refresh)
+            else:
+                on_complete(result)
             return
         self.is_busy = True
         self.auto_timer.stop()
@@ -310,7 +315,10 @@ class TimeEntryPanel(QWidget):
             self.busy_changed.emit(False)
             if automatic and not result.ok:
                 self._timer_failed = True
-            self._apply_result(result, refresh=refresh and (not automatic or result.value is not None))
+            if on_complete is None:
+                self._apply_result(result, refresh=refresh and (not automatic or result.value is not None))
+            else:
+                on_complete(result)
 
         try:
             self._job_runner.submit("time_entry_update", lambda _token: operation(), on_complete=complete)
@@ -327,7 +335,24 @@ class TimeEntryPanel(QWidget):
     def _start(self):
         work_type, content = str(self.work_type_combo.currentData()), self.content_input.toPlainText()
         moment = self.view_model.service.now()
-        self._submit(lambda: self.view_model.start(work_type, content, now=moment), refresh=False)
+        self._submit(lambda: self.view_model.start(work_type, content, now=moment), refresh=False,
+                     on_complete=lambda result: self._complete_start(result, work_type, content, moment))
+
+    def _complete_start(self, result, work_type, content, moment):
+        if result.error is None or result.error.code != "fixed_break_active":
+            self._apply_result(result, refresh=False)
+            return
+        dialog = QMessageBox(QMessageBox.Icon.Question, _("End break early?"),
+            _("End the break at {time} and start recording work? The saved break duration will be shortened.").format(time=moment.strftime("%H:%M")),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, self)
+        dialog.setDefaultButton(QMessageBox.StandardButton.No)
+        dialog.button(QMessageBox.StandardButton.Yes).setText(_("Start"))
+        dialog.button(QMessageBox.StandardButton.No).setText(_("Cancel"))
+        answer = dialog.exec()
+        dialog.deleteLater()
+        if answer == QMessageBox.StandardButton.Yes:
+            record = result.error.details["break_entry"]
+            self._submit(lambda: self.view_model.start(work_type, content, now=moment, break_entry=record))
 
     def _finish(self):
         moment = self.view_model.service.now()

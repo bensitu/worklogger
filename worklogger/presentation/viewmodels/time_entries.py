@@ -77,8 +77,8 @@ class TimeEntryViewModel:
             self.new(saved.value.day, start=saved.value.end_time or "")
         return saved
 
-    def start(self, work_type: str, content: str, *, now=None):
-        result = self.service.start(work_type, content, now=now)
+    def start(self, work_type: str, content: str, *, now=None, break_entry=None):
+        result = self.service.start(work_type, content, now=now, break_entry=break_entry)
         if result.ok:
             self.auto_completed = None
             self._sync_auto()
@@ -99,12 +99,11 @@ class TimeEntryViewModel:
         return result
 
     def take_break(self, *, now=None):
-        if self.service.timer and self.service.timer.break_until:
-            result = self.service.resume(self.auto_content, now=now)
-        else:
-            result = self.service.take_break(self.default_break_hours, self.auto_content, now=now)
+        result = self.service.take_break(self.default_break_hours, self.auto_content, now=now)
         if result.ok:
-            self._sync_auto()
+            self.auto_completed = result.value
+            self.auto_content = result.value.note
+            self.auto_work_type = "normal"
         return result
 
     def advance(self, *, now=None):
