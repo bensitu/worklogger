@@ -44,9 +44,9 @@ from worklogger.config.constants import (
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.app.use_cases.settings import ProxyPasswordSettings
-from worklogger.infrastructure.i18n import normalize_language
+from worklogger.domain.shared.languages import normalize_language
 from worklogger.infrastructure.calendar.holidays_provider import validate_holiday_region
-from worklogger.presentation.theme import DEFAULT_CUSTOM_COLOR, THEME_KEYS, normalize_hex_color
+from worklogger.domain.settings.appearance import DEFAULT_CUSTOM_COLOR, THEME_KEYS, normalize_hex_color
 
 
 class SettingsGetHandler(Protocol):

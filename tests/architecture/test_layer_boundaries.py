@@ -4,6 +4,8 @@ import ast
 from pathlib import Path
 import re
 import unittest
+import subprocess
+import sys
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -54,6 +56,11 @@ def _imports_for(path: Path) -> set[str]:
 
 
 class LayerBoundaryTests(unittest.TestCase):
+    def test_editing_and_settings_viewmodels_import_without_qt(self):
+        result = subprocess.run([sys.executable, "-c", "import sys; from worklogger.presentation.viewmodels import TimeEntryViewModel, NoteEditorViewModel, SettingsViewModel; assert not any(name.startswith('PySide6') for name in sys.modules)"],
+                                cwd=PROJECT_ROOT, capture_output=True, text=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_domain_has_no_ui_database_or_infrastructure_imports(self) -> None:
         forbidden = ("PySide6", "sqlite3", "worklogger.infrastructure")
         offenders: list[str] = []
@@ -64,7 +71,7 @@ class LayerBoundaryTests(unittest.TestCase):
         self.assertEqual(offenders, [])
 
     def test_app_has_no_qt_widget_or_sqlite_imports(self) -> None:
-        forbidden = ("PySide6.QtWidgets", "sqlite3")
+        forbidden = ("PySide6", "sqlite3", "worklogger.infrastructure", "worklogger.presentation")
         offenders: list[str] = []
         for path in _python_files(PACKAGE_ROOT / "app"):
             for module_name in _imports_for(path):
@@ -78,6 +85,15 @@ class LayerBoundaryTests(unittest.TestCase):
             for module_name in _imports_for(path):
                 if module_name == "sqlite3" or module_name.startswith("sqlite3."):
                     offenders.append(f"{path.relative_to(PROJECT_ROOT)} imports {module_name}")
+        self.assertEqual(offenders, [])
+
+    def test_widgets_depend_on_viewmodel_operations_not_business_services(self):
+        offenders = []
+        for path in _python_files(PACKAGE_ROOT / "presentation" / "widgets"):
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Attribute) and node.attr == "service":
+                    offenders.append(f"{path.relative_to(PROJECT_ROOT)}:{node.lineno}")
         self.assertEqual(offenders, [])
 
     def test_runtime_identifiers_do_not_embed_release_numbers(self) -> None:

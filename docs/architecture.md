@@ -17,7 +17,10 @@ presentation -> app -> domain
 
 The diagram describes principal responsibilities, not an absolute import rule:
 presentation also uses infrastructure translation/resource helpers, and existing
-domain defaults are defined in `config/constants.py`.
+domain defaults are defined in `config/constants.py`. Application code cannot
+import Qt or implementation adapters. Record widgets use view-model operations,
+not business-service internals. Language and appearance normalization are pure
+domain rules. See [architecture quality](architecture-quality.md) for the dependency review.
 
 | Location | Responsibility |
 | --- | --- |
@@ -84,6 +87,10 @@ Completed periods have independent IDs and revisions. Automatic time completion
 and its timer-state transition share one database transaction. The UI disables
 conflicting edits and closing while a storage operation runs off the UI thread.
 Daily summary reads aggregate periods; editing and exports retain individual rows.
+`TimeEntryOperations` is the recorder contract. View models expose elapsed-time
+state, delete operations, and capability flags rather than exposing repositories
+to widgets. Public view-model types are loaded on demand, allowing editing and
+settings imports without loading Qt.
 Only Reports manages report templates. Memos and time-entry content use optional
 text rewriting without modifying saved durations or inserting work rows. Memo
 sharing and recovered drafts are isolated by account and date. Update checks use
@@ -144,6 +151,11 @@ The shell exposes Calendar, Reports, Analytics, and Settings. Each feature uses
 existing reusable controls. Calendar cells and charts use `QPainter`; reports use
 Markdown-backed editors and history. Theme tokens render the shared QSS templates.
 The Qt palette and QSS are applied at the application boundary.
+Calendar, Analytics, and Reports have separate implementation modules. The shell
+page facade preserves existing imports without combining their implementations.
+
+Database copying, schema inspection, and ordered upgrades belong to infrastructure
+adapters rather than startup assembly. See [database upgrade](database-upgrade.md).
 
 Fonts, SVG icons, WebP imagery, platform icons, and compiled gettext catalogs are
 runtime resources. Source and frozen path handling is defined in the resource,

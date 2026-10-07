@@ -9,6 +9,8 @@ desktop features from adapters that require additional runtime configuration.
 | --- | --- |
 | [User guide](user-guide.md) | Accounts, time entry, reports, analytics, settings |
 | [Time recording](time-recording.md) | Multiple periods, timer transitions, editing, compatibility, improvement options |
+| [Daily notes](daily-notes.md) | Memos, history references, recoverable drafts, sharing choices |
+| [Database upgrade](database-upgrade.md) | Released-source compatibility, safe copying, explicit upgrade tool, templates and credentials |
 | [Configuration](configuration.md) | Defaults, language selection, file locations, environment variables |
 | [Data formats](data-formats.md) | CSV, iCalendar, Markdown, PDF, and backup scope |
 | [Templates](templates.md) | Report variables, rendering, custom templates |
@@ -19,6 +21,7 @@ desktop features from adapters that require additional runtime configuration.
 | Guide | Contents |
 | --- | --- |
 | [Architecture](architecture.md) | Dependencies, startup, workflows, state, background jobs |
+| [Architecture quality](architecture-quality.md) | Dependency review, implemented boundaries, migration improvements, remaining constraints |
 | [Database](database.md) | Tables, ownership, migrations, backup and restore |
 | [Integrations](integrations.md) | AI, model management, identities, holidays, networking |
 | [Local Models](local-models.md) | Hugging Face choices, metadata, memory estimates, runtime compatibility |

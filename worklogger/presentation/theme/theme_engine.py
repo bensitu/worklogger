@@ -4,16 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-import re
 
 from PySide6.QtGui import QColor, QPalette
 
 from worklogger.domain.worklog.models import WorkType
 
-DEFAULT_CUSTOM_COLOR = "#4f8ef7"
-THEME_KEYS = ("blue", "pink", "green", "purple", "custom")
+from worklogger.domain.settings.appearance import DEFAULT_CUSTOM_COLOR, THEME_KEYS, normalize_hex_color
 STYLE_PRIORITY = ("weekend", "holiday", "today", "selected")
-_HEX_RE = re.compile(r"^#?[0-9a-fA-F]{6}$")
 _QSS_ROOT = Path(__file__).with_name("qss")
 
 _THEMES: dict[str, dict[bool, tuple[str, str, str, str, str]]] = {
@@ -279,15 +276,6 @@ class ThemeEngine:
             QColor(disabled_text),
         )
         return qt_palette
-
-
-def normalize_hex_color(accent_hex: str | None) -> str:
-    raw = str(accent_hex or "").strip()
-    if not _HEX_RE.match(raw):
-        return DEFAULT_CUSTOM_COLOR
-    if not raw.startswith("#"):
-        raw = f"#{raw}"
-    return raw.lower()
 
 
 def _normalize_theme(theme: str) -> str:

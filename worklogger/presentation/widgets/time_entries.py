@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (QComboBox, QFormLayout, QHBoxLayout, QLabel, QLin
 from worklogger.domain.worklog.models import WorkLog, WorkType
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.rules import timestamp_span_hours
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.date_labels import duration_label, day_label
 from worklogger.presentation.errors import display_error_message
@@ -157,7 +156,7 @@ class TimeEntryPanel(QWidget):
         self.auto_timer = QTimer(self)
         self.auto_timer.setInterval(1000)
         self.auto_timer.timeout.connect(self._tick)
-        if self.view_model.service.timer is not None:
+        if self.view_model.timer is not None:
             self.time_tabs.setCurrentIndex(1)
         self._render_editor()
 
@@ -194,7 +193,7 @@ class TimeEntryPanel(QWidget):
         if self.view_model.manual_dirty and not self._confirm_discard():
             self.selection_changed.emit(self.view_model.draft.original.id if self.view_model.draft.original else None)
             return
-        loaded = self.view_model.service.get_entry(record.id)
+        loaded = self.view_model.get_entry(record.id)
         if not loaded.ok:
             self._apply_result(loaded, refresh=False)
             return
@@ -223,7 +222,7 @@ class TimeEntryPanel(QWidget):
                                    work_type=str(self.work_type_combo.currentData()), content=self.content_input.toPlainText())
         else:
             self.view_model.auto_content = self.content_input.toPlainText()
-            if self.view_model.service.timer is None:
+            if self.view_model.timer is None:
                 self.view_model.auto_work_type = str(self.work_type_combo.currentData())
         self._update_actions()
         self.dirty_changed.emit(self.is_dirty)
@@ -238,7 +237,7 @@ class TimeEntryPanel(QWidget):
             work_type = self.view_model.auto_work_type if auto else draft.work_type
             self.work_type_combo.setCurrentIndex(max(0, self.work_type_combo.findData(work_type)))
             self.content_input.setPlainText(self.view_model.auto_content if auto else draft.content)
-            self.work_type_combo.setEnabled(not (auto and self.view_model.service.timer))
+            self.work_type_combo.setEnabled(not (auto and self.view_model.timer))
             legacy = draft.original.break_hours if not auto and draft.original else 0
             self.history_label.setText(_("Historical break deduction: {hours}").format(hours=duration_label(legacy)) if legacy else "")
             self.history_label.setVisible(bool(legacy))
@@ -250,18 +249,18 @@ class TimeEntryPanel(QWidget):
 
     def _update_actions(self):
         auto = self.time_tabs.currentIndex() == 1
-        timer = self.view_model.service.timer
+        timer = self.view_model.timer
         tick = getattr(self, "auto_timer", None)
         if tick is not None:
             if timer and not self._timer_failed and not tick.isActive():
                 tick.start()
             elif not timer and tick.isActive():
                 tick.stop()
-        self.clock_in_button.setEnabled(timer is None and not self.view_model.service.restore_failed)
+        self.clock_in_button.setEnabled(timer is None and not self.view_model.restore_failed)
         self.clock_out_button.setEnabled(timer is not None)
-        self.discard_timer_button.setEnabled(timer is not None or self.view_model.service.restore_failed)
+        self.discard_timer_button.setEnabled(timer is not None or self.view_model.restore_failed)
         self.break_button.setText(_("Break {hours}").format(hours=duration_label(self.view_model.default_break_hours)))
-        self.break_button.setEnabled(timer is None and not self.view_model.service.restore_failed and self.view_model.default_break_hours > 0)
+        self.break_button.setEnabled(timer is None and not self.view_model.restore_failed and self.view_model.default_break_hours > 0)
         self.save_button.setText(_("Save content") if auto else _("Save changes") if self.view_model.draft.original else _("Save"))
         self.save_button.setEnabled(self.view_model.auto_dirty and bool(timer or self.view_model.auto_completed) if auto else self.view_model.manual_dirty)
         if timer and timer.pending_end:
@@ -271,14 +270,14 @@ class TimeEntryPanel(QWidget):
             self.auto_status_label.show()
         elif timer:
             self.clock_out_button.setText(_("End"))
-            elapsed = max(0, timestamp_span_hours(timer.started_at, self.view_model.service.now()))
+            elapsed = self.view_model.elapsed_hours()
             self.auto_status_label.setText(_("Recording since {time} - {duration}").format(
                 time=f"{day_label(timer.started_at.date())} {timer.started_at:%H:%M}", duration=duration_label(elapsed)))
             self.auto_status_label.show()
         else:
             self.auto_status_label.clear()
             self.auto_status_label.hide()
-        if self.view_model.service.restore_failed:
+        if self.view_model.restore_failed:
             self.auto_status_label.setText(_("Unable to restore the timer. Discard it to start a new record."))
             self.auto_status_label.show()
             self.break_button.setEnabled(False)
@@ -299,7 +298,7 @@ class TimeEntryPanel(QWidget):
         self._render_editor()
         if refresh:
             record = result.value
-            timer = self.view_model.service.timer
+            timer = self.view_model.timer
             day = record.day if isinstance(record, WorkLog) else timer.started_at.date() if timer else self._day
             self.records_changed.emit(day)
         return True
@@ -354,7 +353,7 @@ class TimeEntryPanel(QWidget):
 
     def _start(self):
         work_type, content = str(self.work_type_combo.currentData()), self.content_input.toPlainText()
-        moment = self.view_model.service.now()
+        moment = self.view_model.now()
         self._submit(lambda: self.view_model.start(work_type, content, now=moment), refresh=False,
                      on_complete=lambda result: self._complete_start(result, work_type, content, moment))
 
@@ -375,23 +374,22 @@ class TimeEntryPanel(QWidget):
             self._submit(lambda: self.view_model.start(work_type, content, now=moment, break_entry=record))
 
     def _finish(self):
-        moment = self.view_model.service.now()
+        moment = self.view_model.now()
         def finish():
             advanced = self.view_model.advance(now=moment)
             return self.view_model.finish(now=moment) if advanced.ok else advanced
         self._submit(finish)
 
     def _break(self):
-        if self.view_model.service.restore_failed:
+        if self.view_model.restore_failed:
             return
-        moment = self.view_model.service.now()
+        moment = self.view_model.now()
         self._submit(lambda: self.view_model.take_break(now=moment))
 
     def _tick(self):
         if self.is_busy:
             return
-        timer = self.view_model.service.timer
-        if timer and timer.break_until and self.view_model.service.now() >= timer.break_until:
+        if self.view_model.resume_due:
             self._submit(self.view_model.advance, automatic=True)
         else:
             self._update_actions()
@@ -419,36 +417,21 @@ class TimeEntryPanel(QWidget):
     def _discard_timer(self):
         if QMessageBox.question(self, _("Discard timer"), _("Discard the saved timer without creating a record?"),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
-            def discard():
-                result = self.view_model.service.discard_timer()
-                if result.ok:
-                    self.view_model.auto_content = ""
-                    self.view_model.auto_completed = None
-                return result
-            self._submit(discard)
+            self._submit(self.view_model.discard_timer)
 
     def delete_entry(self, record: WorkLog):
         if self.is_busy:
             return
         if QMessageBox.question(self, _("Delete record"), _("Delete this time record?"),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
-            def delete():
-                result = self.view_model.service.delete(record)
-                if result.ok:
-                    if self.view_model.draft.original and self.view_model.draft.original.id == record.id:
-                        self.view_model.clear(self._day)
-                    if self.view_model.auto_completed and self.view_model.auto_completed.id == record.id:
-                        self.view_model.auto_completed = None
-                        self.view_model.auto_content = ""
-                return result
-            self._submit(delete)
+            self._submit(lambda: self.view_model.delete_entry(record))
 
     def delete_event(self, event):
         if self.is_busy:
             return
         if QMessageBox.question(self, _("Delete record"), _("Delete this calendar event?"),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
-            self._submit(lambda: self.view_model.service.delete_event(event))
+            self._submit(lambda: self.view_model.delete_event(event))
 
     def discard_changes(self):
         self.view_model.discard_changes()

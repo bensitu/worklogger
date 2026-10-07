@@ -53,6 +53,10 @@ class TimeEntryService:
     def now(self) -> datetime:
         return self._clock().astimezone(self.local_timezone)
 
+    @property
+    def events_deletable(self) -> bool:
+        return self.calendar_events is not None
+
     def _restore(self) -> None:
         try:
             self._timer_raw = self.settings.get(self.user_id, "time_entry_timer")

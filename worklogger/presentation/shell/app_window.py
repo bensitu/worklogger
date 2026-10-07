@@ -122,7 +122,7 @@ class AppWindow(QMainWindow):
         self._theme_engine = theme_engine or ThemeEngine()
         self._job_runner = job_runner
         self._today = self._config.today or date.today()
-        timer = time_entry_view_model.service.timer
+        timer = time_entry_view_model.timer
         restored_day = timer.started_at.date() if timer else None
         self._selected_day = self._config.selected_day or restored_day or self._today
         self._current_month = self._selected_day.replace(day=1)

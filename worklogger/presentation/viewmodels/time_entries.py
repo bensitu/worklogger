@@ -3,11 +3,12 @@
 from dataclasses import dataclass, replace
 from datetime import date
 
-from worklogger.app.use_cases.time_entries import TimeEntryService
+from worklogger.app.ports import TimeEntryOperations
 from worklogger.app.commands.ai_commands import RewriteTextCommand
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
+from worklogger.domain.worklog.rules import timestamp_span_hours
 
 
 @dataclass(frozen=True)
@@ -21,7 +22,7 @@ class TimeEntryDraft:
 
 
 class TimeEntryViewModel:
-    def __init__(self, service: TimeEntryService, *, default_break_hours: float = 1,
+    def __init__(self, service: TimeEntryOperations, *, default_break_hours: float = 1,
                  rewrite_handler=None, language="en_US") -> None:
         self.service = service
         self._rewrite_handler, self._language = rewrite_handler, language
@@ -32,6 +33,51 @@ class TimeEntryViewModel:
         self.auto_completed: WorkLog | None = None
         self.auto_content = service.timer.content if service.timer else ""
         self.auto_work_type = service.timer.work_type.value if service.timer else "normal"
+
+    @property
+    def timer(self):
+        return self.service.timer
+
+    @property
+    def restore_failed(self):
+        return self.service.restore_failed
+
+    @property
+    def events_deletable(self):
+        return self.service.events_deletable
+
+    def now(self):
+        return self.service.now()
+
+    def elapsed_hours(self):
+        return max(0, timestamp_span_hours(self.timer.started_at, self.now())) if self.timer else 0
+
+    @property
+    def resume_due(self):
+        return bool(self.timer and self.timer.break_until and self.now() >= self.timer.break_until)
+
+    def get_entry(self, entry_id):
+        return self.service.get_entry(entry_id)
+
+    def discard_timer(self):
+        result = self.service.discard_timer()
+        if result.ok:
+            self.auto_content = ""
+            self.auto_completed = None
+        return result
+
+    def delete_entry(self, record):
+        result = self.service.delete(record)
+        if result.ok:
+            if self.draft.original and self.draft.original.id == record.id:
+                self.clear(self.draft.day)
+            if self.auto_completed and self.auto_completed.id == record.id:
+                self.auto_completed = None
+                self.auto_content = ""
+        return result
+
+    def delete_event(self, event):
+        return self.service.delete_event(event)
 
     def set_default_break_hours(self, hours: float) -> None:
         self.default_break_hours = max(0.0, min(float(hours), 4.0))

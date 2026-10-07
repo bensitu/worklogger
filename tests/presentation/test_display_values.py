@@ -6,7 +6,8 @@ import unittest
 from worklogger.domain.analytics.models import ChartDataBundle
 from worklogger.infrastructure.i18n import set_language
 from worklogger.presentation.date_labels import duration_label, period_range_label
-from worklogger.presentation.shell.pages import _month_chart_labels, _period_label
+from worklogger.presentation.shell.analytics_page import _month_chart_labels
+from worklogger.presentation.shell.reports_page import _period_label
 from worklogger.presentation.viewmodels.reports import ReportEditorState
 from worklogger.presentation.widgets.combo_chart import chart_tick_step
 

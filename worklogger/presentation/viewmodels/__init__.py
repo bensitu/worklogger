@@ -1,76 +1,145 @@
-"""Presentation ViewModels."""
+"""Public view-model types loaded only when requested by a consumer."""
 
-from worklogger.presentation.viewmodels.auth import AuthModeState, AuthViewModel
-from worklogger.presentation.viewmodels.ai_assist import AiAssistViewModel, AiChatState
-from worklogger.presentation.viewmodels.analytics import AnalyticsState, AnalyticsViewModel
-from worklogger.presentation.viewmodels.calendar import (
-    CalendarDayCell,
-    CalendarDisplayOptions,
-    CalendarMonthViewState,
-    CalendarViewModel,
-)
-from worklogger.presentation.viewmodels.data_management import (
-    DataManagementActionState,
-    DataManagementViewModel,
-)
-from worklogger.presentation.viewmodels.local_models import (
-    LocalModelManagerState,
-    LocalModelManagerViewModel,
-)
-from worklogger.presentation.viewmodels.identity import (
-    IdentityManagementState,
-    IdentityManagementViewModel,
-)
-from worklogger.presentation.viewmodels.notes import NoteEditorState, NoteEditorViewModel
-from worklogger.presentation.viewmodels.quick_logs import (
-    QuickLogEditorState,
-    QuickLogEditorViewModel,
-)
-from worklogger.presentation.viewmodels.reports import (
-    ReportEditorState,
-    ReportEditorViewModel,
-    ReportHistoryItem,
-)
-from worklogger.presentation.viewmodels.settings import SettingsState, SettingsViewModel
-from worklogger.presentation.viewmodels.stats import StatsPanelState, StatsPanelViewModel
-from worklogger.presentation.viewmodels.user_management import (
-    UserListItem,
-    UserManagementState,
-    UserManagementViewModel,
-)
-from worklogger.presentation.viewmodels.time_entries import TimeEntryDraft, TimeEntryViewModel
+from importlib import import_module
 
-__all__ = [
-    "AuthModeState",
-    "AuthViewModel",
-    "AiAssistViewModel",
-    "AiChatState",
-    "AnalyticsState",
-    "AnalyticsViewModel",
-    "CalendarDayCell",
-    "CalendarDisplayOptions",
-    "CalendarMonthViewState",
-    "CalendarViewModel",
-    "DataManagementActionState",
-    "DataManagementViewModel",
-    "IdentityManagementState",
-    "IdentityManagementViewModel",
-    "LocalModelManagerState",
-    "LocalModelManagerViewModel",
-    "NoteEditorState",
-    "NoteEditorViewModel",
-    "QuickLogEditorState",
-    "QuickLogEditorViewModel",
-    "ReportEditorState",
-    "ReportEditorViewModel",
-    "ReportHistoryItem",
-    "SettingsState",
-    "SettingsViewModel",
-    "StatsPanelState",
-    "StatsPanelViewModel",
-    "UserListItem",
-    "UserManagementState",
-    "UserManagementViewModel",
-    "TimeEntryDraft",
-    "TimeEntryViewModel",
-]
+_EXPORTS = {
+    "AuthModeState": [
+        "worklogger.presentation.viewmodels.auth",
+        "AuthModeState"
+    ],
+    "AuthViewModel": [
+        "worklogger.presentation.viewmodels.auth",
+        "AuthViewModel"
+    ],
+    "AiAssistViewModel": [
+        "worklogger.presentation.viewmodels.ai_assist",
+        "AiAssistViewModel"
+    ],
+    "AiChatState": [
+        "worklogger.presentation.viewmodels.ai_assist",
+        "AiChatState"
+    ],
+    "AnalyticsState": [
+        "worklogger.presentation.viewmodels.analytics",
+        "AnalyticsState"
+    ],
+    "AnalyticsViewModel": [
+        "worklogger.presentation.viewmodels.analytics",
+        "AnalyticsViewModel"
+    ],
+    "CalendarDayCell": [
+        "worklogger.presentation.viewmodels.calendar",
+        "CalendarDayCell"
+    ],
+    "CalendarDisplayOptions": [
+        "worklogger.presentation.viewmodels.calendar",
+        "CalendarDisplayOptions"
+    ],
+    "CalendarMonthViewState": [
+        "worklogger.presentation.viewmodels.calendar",
+        "CalendarMonthViewState"
+    ],
+    "CalendarViewModel": [
+        "worklogger.presentation.viewmodels.calendar",
+        "CalendarViewModel"
+    ],
+    "DataManagementActionState": [
+        "worklogger.presentation.viewmodels.data_management",
+        "DataManagementActionState"
+    ],
+    "DataManagementViewModel": [
+        "worklogger.presentation.viewmodels.data_management",
+        "DataManagementViewModel"
+    ],
+    "LocalModelManagerState": [
+        "worklogger.presentation.viewmodels.local_models",
+        "LocalModelManagerState"
+    ],
+    "LocalModelManagerViewModel": [
+        "worklogger.presentation.viewmodels.local_models",
+        "LocalModelManagerViewModel"
+    ],
+    "IdentityManagementState": [
+        "worklogger.presentation.viewmodels.identity",
+        "IdentityManagementState"
+    ],
+    "IdentityManagementViewModel": [
+        "worklogger.presentation.viewmodels.identity",
+        "IdentityManagementViewModel"
+    ],
+    "NoteEditorState": [
+        "worklogger.presentation.viewmodels.notes",
+        "NoteEditorState"
+    ],
+    "NoteEditorViewModel": [
+        "worklogger.presentation.viewmodels.notes",
+        "NoteEditorViewModel"
+    ],
+    "QuickLogEditorState": [
+        "worklogger.presentation.viewmodels.quick_logs",
+        "QuickLogEditorState"
+    ],
+    "QuickLogEditorViewModel": [
+        "worklogger.presentation.viewmodels.quick_logs",
+        "QuickLogEditorViewModel"
+    ],
+    "ReportEditorState": [
+        "worklogger.presentation.viewmodels.reports",
+        "ReportEditorState"
+    ],
+    "ReportEditorViewModel": [
+        "worklogger.presentation.viewmodels.reports",
+        "ReportEditorViewModel"
+    ],
+    "ReportHistoryItem": [
+        "worklogger.presentation.viewmodels.reports",
+        "ReportHistoryItem"
+    ],
+    "SettingsState": [
+        "worklogger.presentation.viewmodels.settings",
+        "SettingsState"
+    ],
+    "SettingsViewModel": [
+        "worklogger.presentation.viewmodels.settings",
+        "SettingsViewModel"
+    ],
+    "StatsPanelState": [
+        "worklogger.presentation.viewmodels.stats",
+        "StatsPanelState"
+    ],
+    "StatsPanelViewModel": [
+        "worklogger.presentation.viewmodels.stats",
+        "StatsPanelViewModel"
+    ],
+    "UserListItem": [
+        "worklogger.presentation.viewmodels.user_management",
+        "UserListItem"
+    ],
+    "UserManagementState": [
+        "worklogger.presentation.viewmodels.user_management",
+        "UserManagementState"
+    ],
+    "UserManagementViewModel": [
+        "worklogger.presentation.viewmodels.user_management",
+        "UserManagementViewModel"
+    ],
+    "TimeEntryDraft": [
+        "worklogger.presentation.viewmodels.time_entries",
+        "TimeEntryDraft"
+    ],
+    "TimeEntryViewModel": [
+        "worklogger.presentation.viewmodels.time_entries",
+        "TimeEntryViewModel"
+    ]
+}
+
+__all__ = list(_EXPORTS)
+
+
+def __getattr__(name):
+    if name not in _EXPORTS:
+        raise AttributeError(name)
+    module, attribute = _EXPORTS[name]
+    value = getattr(import_module(module), attribute)
+    globals()[name] = value
+    return value

@@ -66,7 +66,7 @@ class TimeEntryHistory(QWidget):
         for event in events:
             span = _("All day") if event.all_day else f"{event.start_time or '--:--'} - {event.end_time or '--:--'}"
             button = self._button(f"{span}\n{_('Calendar event')}\n{event.summary}",
-                                  deletable=self.view_model.service.calendar_events is not None)
+                                  deletable=self.view_model.events_deletable)
             button.setToolTip(_("Create record from event"))
             self.event_buttons[event.id] = button
             button.setAccessibleName(_("Create record from event") + ": " + event.summary)
