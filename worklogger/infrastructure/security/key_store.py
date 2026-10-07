@@ -13,6 +13,7 @@ import portalocker
 from cryptography.fernet import Fernet, InvalidToken
 from worklogger.infrastructure.files import atomic_destination
 from typing import Protocol
+from collections.abc import Callable
 
 from worklogger.config.constants import (
     KEYRING_SERVICE_NAME,
@@ -125,6 +126,7 @@ class SystemCredentialStore:
 @dataclass(frozen=True)
 class FileMachineKeyProvider:
     path: Path
+    previous_key_loader: Callable[[], bytes | None] | None = None
 
     @classmethod
     def default(cls) -> "FileMachineKeyProvider":
@@ -133,7 +135,7 @@ class FileMachineKeyProvider:
             base = Path(appdata) / "WorkLogger"
         else:
             base = Path.home() / ".config" / "worklogger"
-        return cls(base / MACHINE_KEY_FILENAME)
+        return cls(base / MACHINE_KEY_FILENAME, _load_previous_machine_key)
 
     def load_or_create(self) -> bytes:
         self.path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -162,7 +164,7 @@ class FileMachineKeyProvider:
             else:
                 key = base64.urlsafe_b64decode(raw.encode("ascii"))
         except FileNotFoundError:
-            return None
+            return self.previous_key_loader() if self.previous_key_loader is not None else None
         except Exception as exc:
             raise ValueError("secret_key_invalid") from exc
         if len(key) != _KEY_BYTES:
@@ -178,6 +180,26 @@ def _encode_machine_key(key: bytes) -> str:
         from worklogger.infrastructure.security.windows_protection import protect
         return "dpapi:" + base64.urlsafe_b64encode(protect(key)).decode("ascii")
     return base64.urlsafe_b64encode(key).decode("ascii")
+
+
+def _load_previous_machine_key() -> bytes | None:
+    try:
+        backend = SystemCredentialStore(namespace="machine-key")._keyring()
+        raw = backend.get_password("dev.worklogger.app.v1", "machine-key-v2")
+        key = base64.urlsafe_b64decode(raw.encode("ascii")) if raw else None
+        return key if key is not None and len(key) == _KEY_BYTES else None
+    except Exception:
+        return None
+
+
+def _decrypt_previous_fernet(stored: str) -> str:
+    import platform
+    import uuid
+    key = hashlib.sha256(f"{platform.node()}|{uuid.getnode()}".encode("utf-8")).digest()
+    try:
+        return Fernet(base64.urlsafe_b64encode(key)).decrypt(stored[len(_ENC_PREFIX):].encode("ascii")).decode("utf-8")
+    except (InvalidToken, UnicodeError, ValueError) as exc:
+        raise ValueError("secret_authentication_failed") from exc
 
 
 class HmacSecretBox:
@@ -199,7 +221,16 @@ class HmacSecretBox:
                 raise ValueError("secret_authentication_failed") from exc
         if not stored.startswith(_ENC_PREFIX):
             raise ValueError("secret_not_encrypted")
-        key = self._key_provider.load()
+        try:
+            key = self._key_provider.load()
+        except ValueError as exc:
+            if str(exc) != "secret_key_missing":
+                raise
+            return _decrypt_previous_fernet(stored)
+        try:
+            return Fernet(base64.urlsafe_b64encode(key)).decrypt(stored[len(_ENC_PREFIX):].encode("ascii")).decode("utf-8")
+        except (InvalidToken, UnicodeError, ValueError):
+            pass
         try:
             payload = base64.urlsafe_b64decode(stored[len(_ENC_PREFIX):].encode("ascii"))
         except Exception as exc:
@@ -211,7 +242,7 @@ class HmacSecretBox:
         ciphertext = payload[48:]
         expected = hmac.new(_derive(key, b"mac"), nonce + ciphertext, hashlib.sha256).digest()
         if not hmac.compare_digest(mac, expected):
-            raise ValueError("secret_authentication_failed")
+            return _decrypt_previous_fernet(stored)
         plaintext = _xor_bytes(ciphertext, _keystream(_derive(key, b"enc"), nonce, len(ciphertext)))
         return plaintext.decode("utf-8")
 
@@ -252,12 +283,18 @@ class EncryptedSettingsKeyStore:
         if keyring_value is not None:
             return Result.success(keyring_value)
         stored = self._settings.get(self._user_id, self._setting_key(key), None)
+        previous_value = False
+        if not stored and key == "ai_api_key":
+            stored = self._settings.get(self._user_id, key, None)
+            previous_value = bool(stored)
         if not stored:
             return Result.success(None)
         try:
-            value = self._secret_box.decrypt(stored)
-            if stored.startswith(_ENC_PREFIX):
+            value = stored if previous_value and not stored.startswith((_ENC_PREFIX, _FERNET_PREFIX)) else self._secret_box.decrypt(stored)
+            if stored.startswith(_ENC_PREFIX) or previous_value:
                 self._settings.set(self._user_id, self._setting_key(key), self._secret_box.encrypt(value))
+                if previous_value:
+                    self._settings.delete(self._user_id, key)
             return Result.success(value)
         except ValueError as exc:
             return Result.failure(InfrastructureError(str(exc), str(exc)))

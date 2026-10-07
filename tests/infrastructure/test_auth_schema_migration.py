@@ -60,7 +60,7 @@ class AuthSchemaMigrationTests(unittest.TestCase):
             with factory.connection() as connection:
                 credentials = tuple(connection.execute("SELECT password_hash, salt FROM users").fetchone())
                 work_log = tuple(connection.execute("SELECT * FROM worklog").fetchone())
-            self.assertEqual(MigrationRunner(factory).run_pending(), (2, 3, 4, 5, 6, 7))
+            self.assertEqual(MigrationRunner(factory).run_pending(), (2, 3, 4, 5, 6, 7, 8))
             auth = SQLiteAuthRepository(factory, password_hasher=hasher)
             user = auth.verify_user("admin", "test-password")
             self.assertIsNotNone(user)
@@ -72,14 +72,14 @@ class AuthSchemaMigrationTests(unittest.TestCase):
                 self.assertEqual(tuple(connection.execute("SELECT password_hash, password_salt FROM users").fetchone()), credentials)
                 self.assertEqual(tuple(connection.execute('SELECT user_id,d,start,end,"break",note,work_type,overnight FROM worklog').fetchone()), work_log)
                 self.assertEqual(tuple(connection.execute("SELECT started_at,ended_at FROM worklog").fetchone()), (None, None))
-            backups = list(path.parent.glob("worklog.db.bak_auth_*"))
+            backups = list(path.parent.glob("worklog.db.bak_upgrade_*"))
             self.assertEqual(len(backups), 1)
             with closing(sqlite3.connect(backups[0].as_uri() + "?mode=ro", uri=True)) as backup:
                 self.assertEqual(tuple(backup.execute("SELECT password_hash, salt FROM users").fetchone()), credentials)
                 self.assertEqual(tuple(backup.execute("SELECT * FROM worklog").fetchone()), work_log)
                 self.assertEqual(backup.execute("PRAGMA integrity_check").fetchone()[0], "ok")
             self.assertEqual(MigrationRunner(factory).run_pending(), ())
-            self.assertEqual(len(list(path.parent.glob("worklog.db.bak_auth_*"))), 1)
+            self.assertEqual(len(list(path.parent.glob("worklog.db.bak_upgrade_*"))), 1)
             recovery = auth.change_password(user_id, "test-password", "changed-password")
             self.assertIsNotNone(recovery)
             self.assertIsNotNone(auth.verify_user("admin", "changed-password"))
@@ -94,7 +94,7 @@ class AuthSchemaMigrationTests(unittest.TestCase):
             connect = sqlite3.connect
 
             def fail_backup(database, *args, **kwargs):
-                if ".bak_auth_" in str(database):
+                if ".bak_upgrade_" in str(database):
                     raise sqlite3.OperationalError("backup unavailable")
                 return connect(database, *args, **kwargs)
 
@@ -128,8 +128,8 @@ class AuthSchemaMigrationTests(unittest.TestCase):
     def test_new_database_does_not_create_unnecessary_backup(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "new.db"
-            self.assertEqual(MigrationRunner(SQLiteConnectionFactory(path)).run_pending(), (1, 2, 3, 4, 5, 6, 7))
-            self.assertFalse(list(path.parent.glob("*.bak_auth_*")))
+            self.assertEqual(MigrationRunner(SQLiteConnectionFactory(path)).run_pending(), (1, 2, 3, 4, 5, 6, 7, 8))
+            self.assertFalse(list(path.parent.glob("*.bak_upgrade_*")))
 
     def test_legacy_hash_upgrades_only_after_correct_password(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -156,7 +156,7 @@ class AuthSchemaMigrationTests(unittest.TestCase):
                 live.execute("UPDATE worklog SET note=?", ("Committed WAL data",))
                 self.assertGreater(Path(str(path) + "-wal").stat().st_size, 0)
                 MigrationRunner(factory).run_pending()
-                backups = list(path.parent.glob("worklog.db.bak_auth_*"))
+                backups = list(path.parent.glob("worklog.db.bak_upgrade_*"))
                 self.assertEqual(len(backups), 1)
                 with closing(sqlite3.connect(backups[0])) as backup:
                     self.assertEqual(backup.execute("SELECT note FROM worklog").fetchone()[0], "Committed WAL data")

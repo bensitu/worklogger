@@ -456,14 +456,16 @@ class SQLiteIdentityRepository:
         subject: str,
     ) -> LinkedIdentity | None:
         with self._connection_factory.connection() as connection:
-            row = connection.execute(
+            rows = connection.execute(
                 """
                 SELECT * FROM external_identities
-                WHERE provider=? AND subject=?
+                WHERE provider=? AND subject=? LIMIT 2
                 """,
                 (str(provider), str(subject)),
-            ).fetchone()
-        return self._identity_from_row(row) if row else None
+            ).fetchall()
+        if len(rows) > 1:
+            raise ValueError("identity_subject_ambiguous")
+        return self._identity_from_row(rows[0]) if rows else None
 
     def add(self, identity: LinkedIdentity) -> LinkedIdentity:
         now = utc_now_iso()
@@ -471,9 +473,9 @@ class SQLiteIdentityRepository:
             cursor = connection.execute(
                 """
                 INSERT INTO external_identities(
-                    user_id, provider, subject, email, display_name, created_at, updated_at
+                    user_id, provider, subject, email, display_name, created_at, updated_at, broker, issuer
                 )
-                VALUES(?, ?, ?, ?, ?, ?, ?)
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     identity.user_id,
@@ -483,6 +485,8 @@ class SQLiteIdentityRepository:
                     identity.display_name,
                     now,
                     now,
+                    "direct_oidc",
+                    identity.provider,
                 ),
             )
             identity_id = int(cursor.lastrowid)

@@ -2,21 +2,9 @@
 
 import sqlite3
 
-from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
-from worklogger.infrastructure.database.migrations.snapshot import save_snapshot
 
 VERSION = 2
 DESCRIPTION = "legacy_auth_columns"
-
-
-def prepare(connection_factory: SQLiteConnectionFactory) -> None:
-    with connection_factory.connection() as connection:
-        columns = {row[1] for row in connection.execute("PRAGMA table_info(users)")}
-        if not columns or {"password_salt", "must_change_password"}.issubset(columns):
-            return
-        if connection_factory.database_path == ":memory:":
-            return
-        save_snapshot(connection, connection_factory.database_path, "auth")
 
 
 def up(connection: sqlite3.Connection) -> None:

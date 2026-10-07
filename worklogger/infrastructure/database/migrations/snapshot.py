@@ -19,3 +19,5 @@ def save_snapshot(connection: sqlite3.Connection, database_path: str, category: 
         with closing(sqlite3.connect(temporary)) as destination:
             connection.backup(destination)
             destination.execute("PRAGMA journal_mode=DELETE")
+            if destination.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
+                raise ValueError("backup_integrity_failed")

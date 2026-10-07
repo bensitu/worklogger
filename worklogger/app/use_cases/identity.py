@@ -91,10 +91,10 @@ class LinkIdentityHandler:
                     "identity_auth_failed",
                 )
             )
-        existing = self._repository.get_by_provider_subject(
-            profile.value.provider,
-            profile.value.subject,
-        )
+        try:
+            existing = self._repository.get_by_provider_subject(profile.value.provider, profile.value.subject)
+        except Exception:
+            return Result.failure(AuthenticationError("identity_login_failed", "identity_login_failed"))
         if existing is not None and existing.user_id != command.user_id:
             return Result.failure(
                 ValidationError(
@@ -179,10 +179,10 @@ class LoginWithIdentityHandler:
             return Result.failure(
                 profile.error or AuthenticationError("identity_login_failed", "identity_login_failed")
             )
-        linked = self._identities.get_by_provider_subject(
-            profile.value.provider,
-            profile.value.subject,
-        )
+        try:
+            linked = self._identities.get_by_provider_subject(profile.value.provider, profile.value.subject)
+        except Exception:
+            return Result.failure(AuthenticationError("identity_login_failed", "identity_login_failed"))
         if linked is not None:
             user = self._auth.get_by_id(linked.user_id)
             if user is None:

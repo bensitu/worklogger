@@ -8,6 +8,7 @@ from types import ModuleType
 from typing import Any
 
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
+from worklogger.infrastructure.database.migrations.snapshot import save_snapshot
 
 MIGRATION_MODULES = (
     "worklogger.infrastructure.database.migrations.migration_001_initial_schema",
@@ -17,6 +18,7 @@ MIGRATION_MODULES = (
     "worklogger.infrastructure.database.migrations.migration_005_daily_notes",
     "worklogger.infrastructure.database.migrations.migration_006_worklog_timestamps",
     "worklogger.infrastructure.database.migrations.migration_007_worklog_entries",
+    "worklogger.infrastructure.database.migrations.migration_008_account_preferences",
 )
 
 
@@ -42,12 +44,19 @@ class MigrationRunner:
         with self._connection_factory.write_lock:
             with self._connection_factory.connection() as connection:
                 exists = connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='schema_migrations'").fetchone()
-                if exists and self._applied_versions(connection) - {migration.version for migration in migrations}:
+                applied = self._applied_versions(connection) if exists else set()
+                if applied - {migration.version for migration in migrations}:
                     raise ValueError("database_version_unsupported")
-            for migration in migrations:
-                prepare = getattr(migration.module, "prepare", None)
-                if prepare is not None:
-                    prepare(self._connection_factory)
+                pending = tuple(migration for migration in migrations if migration.version not in applied)
+                if not pending:
+                    return ()
+                objects = connection.execute("SELECT type,name FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'").fetchall()
+                if any(row[0] in {"trigger", "view"} for row in objects):
+                    raise ValueError("database_schema_unsupported")
+                populated = any(connection.execute('SELECT 1 FROM "' + row[1].replace('"', '""') + '" LIMIT 1').fetchone()
+                                for row in objects if row[0] == "table" and row[1] != "schema_migrations")
+                if populated:
+                    save_snapshot(connection, self._connection_factory.database_path, "upgrade")
             with self._connection_factory.transaction(write=True) as connection:
                 self._ensure_schema_migrations(connection)
                 applied = self._applied_versions(connection)
@@ -61,6 +70,8 @@ class MigrationRunner:
                         (migration.version, migration.description),
                     )
                     applied_now.append(migration.version)
+                if connection.execute("PRAGMA foreign_key_check").fetchone() is not None:
+                    raise ValueError("database_foreign_key_invalid")
         return tuple(applied_now)
 
     def _discover_migrations(self) -> tuple[Migration, ...]:
@@ -70,6 +81,8 @@ class MigrationRunner:
             version = int(getattr(module, "VERSION"))
             description = str(getattr(module, "DESCRIPTION", module_name.rsplit(".", 1)[-1]))
             migrations.append(Migration(version, description, module))
+        if len({migration.version for migration in migrations}) != len(migrations):
+            raise ValueError("database_migration_duplicate")
         return tuple(sorted(migrations, key=lambda migration: migration.version))
 
     @staticmethod

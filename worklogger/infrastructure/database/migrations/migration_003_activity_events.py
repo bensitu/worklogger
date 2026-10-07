@@ -1,23 +1,13 @@
 """Preserve stored activity records while updating their table name."""
 
 import sqlite3
+from worklogger.infrastructure.database.schema import PREVIOUS_ACTIVITY_TABLE
 
-from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
-from worklogger.infrastructure.database.migrations.snapshot import save_snapshot
 
 VERSION = 3
 DESCRIPTION = "activity_event_names"
-_PREVIOUS_TABLE = "audit_events"
+_PREVIOUS_TABLE = PREVIOUS_ACTIVITY_TABLE
 _PREVIOUS_INDEX = "idx_audit_events_user_created"
-
-
-def prepare(connection_factory: SQLiteConnectionFactory) -> None:
-    if connection_factory.database_path == ":memory:":
-        return
-    with connection_factory.connection() as connection:
-        if not _table_exists(connection, _PREVIOUS_TABLE):
-            return
-        save_snapshot(connection, connection_factory.database_path, "activity")
 
 
 def up(connection: sqlite3.Connection) -> None:

@@ -66,8 +66,8 @@ the activity repository; the table is not a complete history of user operations.
 
 ## Migrations
 
-`MigrationRunner` imports an explicit ordered module list, runs preparation hooks,
-and records applied versions in `schema_migrations`. Re-running against an updated
+`MigrationRunner` imports an explicit ordered module list, identifies pending
+versions, and records applied versions in `schema_migrations`. Re-running against an updated
 database applies no additional versions. Do not infer schema compatibility from
 the application version alone.
 
@@ -80,9 +80,10 @@ the application version alone.
 | 5 | Copy existing notes to independent storage and remove note-only empty work rows |
 | 6 | Add optional offset-aware start/end timestamps, leaving existing clock-only records unchanged |
 | 7 | Replace the daily primary key with entry IDs, preserve historical content and break deductions, add date/capture indexes and optimistic revisions, and retain previous automatic drafts for conversion |
+| 8 | Complete released account fields, map older preferences, retain password-change requirements and identity metadata, and index cross-account settings lookups |
 
-Migration 7 creates a complete private SQLite snapshot before converting populated
-tables. Table replacement and settings-key conversion are transactional. Existing
+The runner creates one complete private SQLite snapshot before converting populated
+tables, rather than a separate copy for each migration. Table replacement and settings-key conversion are transactional. Existing
 timestamps and break deductions are copied without guessing when a break occurred.
 Daily notes remain independent. The new timer service converts the previous account
 draft on first use; malformed state remains available for deliberate recovery.
@@ -118,7 +119,7 @@ identifiers are confined to migration code and fixtures that exercise old files.
 ### Activity Storage Compatibility
 
 Before changing an older activity table, preparation uses SQLite's backup API to
-create `worklog.db.bak_activity_<UTC timestamp>_<unique identifier>` beside the
+create `worklog.db.bak_upgrade_<UTC timestamp>_<unique identifier>` beside the
 database. Committed WAL content is included. If backup creation fails, migration
 does not proceed.
 
@@ -133,11 +134,11 @@ If both tables contain records, migration stops with
 IDs. Preserve the original and backup, and resolve the duplicate storage on a copy.
 Do not repeatedly retry against the only copy of important data.
 
-Authentication compatibility similarly creates `worklog.db.bak_auth_*` before
-changing an older credential layout. Neither migration resets passwords or edits
+Authentication compatibility uses the same `worklog.db.bak_upgrade_*` snapshot
+before changing an older credential layout. Neither migration resets passwords or edits
 working-hour records. New databases do not need these compatibility backups.
 
-Account-key migration creates a private `worklog.db.bak_usernames_*` snapshot
+Account-key migration shares the private upgrade snapshot
 before changing an existing account table. Display names and integer user IDs
 remain unchanged. A canonical-name collision stops the entire transaction with
 `username_normalization_conflict`; accounts are never merged or renamed automatically.
@@ -151,7 +152,7 @@ Deleting a user clears the user reference in retained activity records rather
 than leaving a reference to a nonexistent account. Other account-owned data keeps
 its existing cascade behavior.
 
-Daily-note migration saves a private `worklog.db.bak_notes_*` snapshot when notes
+Daily-note migration uses the same private upgrade snapshot when notes
 exist, preserves their exact content, and leaves meaningful work/leave rows intact.
 Saving a standalone note never creates a work row. Deleting work preserves its
 note, and deleting an account still removes both. Editor writes compare the loaded

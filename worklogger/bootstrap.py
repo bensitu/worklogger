@@ -10,8 +10,7 @@ import secrets
 import os
 import sys
 from tzlocal import get_localzone
-import sqlite3
-from contextlib import closing
+from worklogger.infrastructure.database.upgrade import copy_database
 from typing import Protocol
 
 from PySide6.QtWidgets import QApplication
@@ -339,15 +338,7 @@ def _prepare_database(
     if config.database_path is None and getattr(sys, "frozen", False) and not database_path.exists():
         previous = Path(sys.executable).resolve().parent / "worklog.db"
         if previous.is_file() and previous.resolve() != database_path.resolve():
-            if Path(str(previous) + ".pre_restore").exists():
-                raise ValueError("restore_pending")
-            from worklogger.infrastructure.backup.sqlite_backup import create_database_snapshot
-            with closing(sqlite3.connect(previous.as_uri() + "?mode=ro", uri=True)) as connection:
-                snapshot = create_database_snapshot(connection, database_path)
-            try:
-                os.replace(snapshot, database_path)
-            finally:
-                snapshot.unlink(missing_ok=True)
+            copy_database(previous, database_path)
     connection_factory = SQLiteConnectionFactory(database_path)
     if Path(str(database_path) + ".pre_restore").exists():
         raise ValueError("restore_pending")

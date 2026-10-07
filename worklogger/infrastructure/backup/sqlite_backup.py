@@ -14,15 +14,8 @@ from worklogger.domain.shared.result import Result
 from worklogger.config.constants import NETWORK_PROXY_PASSWORD_SETTING_KEY
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
 from worklogger.infrastructure.database.paths import secure_database_files
-from worklogger.infrastructure.database.migrations.runner import MigrationRunner, MIGRATION_MODULES
-from worklogger.infrastructure.database.migrations.migration_003_activity_events import _PREVIOUS_TABLE
-
-_ALLOWED_TABLES = {
-    "users", "login_attempts", "worklog", "quick_logs", "settings", "reports",
-    "report_templates", "calendar_events", "external_identities", "activity_events",
-    "schema_migrations", "daily_notes", _PREVIOUS_TABLE,
-}
-
+from worklogger.infrastructure.database.migrations.runner import MigrationRunner
+from worklogger.infrastructure.database.inspection import validate_database_file
 
 class SQLiteBackupService:
     def __init__(self, connection_factory: SQLiteConnectionFactory, *,
@@ -152,7 +145,7 @@ class SQLiteBackupService:
                 if not user:
                     raise ValueError("restore_user_mismatch")
                 expected_id = user[0]
-        _validate_sqlite_file(source, expected_username=self._expected_username, expected_user_id=expected_id)
+        validate_database_file(source, expected_username=self._expected_username, expected_user_id=expected_id)
 
 
 def create_database_snapshot(source: sqlite3.Connection, destination: Path) -> Path:
@@ -170,29 +163,6 @@ def create_database_snapshot(source: sqlite3.Connection, destination: Path) -> P
     except Exception:
         _remove_if_exists(snapshot)
         raise
-
-
-def _validate_sqlite_file(path: Path, *, expected_username: str | None = None,
-                          expected_user_id: int | None = None) -> None:
-    if not path.is_file():
-        raise FileNotFoundError(str(path))
-    with closing(sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True)) as connection:
-        _ensure_integrity(connection, "restore_integrity_failed")
-        objects = connection.execute("SELECT type, name FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'").fetchall()
-        tables = {name for kind, name in objects if kind == "table"}
-        if any(kind in ("trigger", "view") for kind, _name in objects) or tables - _ALLOWED_TABLES:
-            raise ValueError("restore_schema_invalid")
-        if "users" not in tables:
-            raise ValueError("restore_missing_users")
-        if "schema_migrations" in tables:
-            from importlib import import_module
-            supported = {import_module(name).VERSION for name in MIGRATION_MODULES}
-            if {row[0] for row in connection.execute("SELECT version FROM schema_migrations")} - supported:
-                raise ValueError("database_version_unsupported")
-        if expected_username:
-            row = connection.execute("SELECT id FROM users WHERE username=?", (expected_username,)).fetchone()
-            if row is None or (expected_user_id is not None and row[0] != expected_user_id):
-                raise ValueError("restore_user_mismatch")
 
 
 def _ensure_integrity(connection: sqlite3.Connection, error_code: str) -> None:

@@ -266,7 +266,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 self.assertEqual(runtime.value.user.id, admin_id)
                 self.assertTrue(runtime.value.user.is_admin)
                 self.assertTrue(runtime.value.window.refresh())
-                self.assertEqual(len(list(path.parent.glob("worklog.db.bak_auth_*"))), 1)
+                self.assertEqual(len(list(path.parent.glob("worklog.db.bak_upgrade_*"))), 1)
             finally:
                 if runtime is not None and runtime.value is not None:
                     runtime.value.window.close()

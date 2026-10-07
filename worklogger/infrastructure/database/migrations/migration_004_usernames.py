@@ -3,17 +3,9 @@
 import sqlite3
 
 from worklogger.domain.auth.policies import username_key
-from worklogger.infrastructure.database.migrations.snapshot import save_snapshot
 
 VERSION = 4
 DESCRIPTION = "canonical_usernames"
-
-
-def prepare(connection_factory) -> None:
-    with connection_factory.connection() as connection:
-        columns = {row[1] for row in connection.execute("PRAGMA table_info(users)")}
-        if columns and "username_key" not in columns and connection.execute("SELECT 1 FROM users LIMIT 1").fetchone():
-            save_snapshot(connection, connection_factory.database_path, "usernames")
 
 
 def up(connection: sqlite3.Connection) -> None:

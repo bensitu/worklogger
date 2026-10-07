@@ -2,18 +2,9 @@
 
 import sqlite3
 
-from worklogger.infrastructure.database.migrations.snapshot import save_snapshot
 
 VERSION = 5
 DESCRIPTION = "daily_note_storage"
-
-
-def prepare(connection_factory) -> None:
-    with connection_factory.connection() as connection:
-        exists = connection.execute("SELECT 1 FROM sqlite_master WHERE name='daily_notes'").fetchone()
-        worklog_exists = connection.execute("SELECT 1 FROM sqlite_master WHERE name='worklog'").fetchone()
-        if not exists and worklog_exists and connection.execute("SELECT 1 FROM worklog WHERE note<>'' LIMIT 1").fetchone():
-            save_snapshot(connection, connection_factory.database_path, "notes")
 
 
 def up(connection: sqlite3.Connection) -> None:

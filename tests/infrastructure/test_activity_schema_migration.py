@@ -40,30 +40,30 @@ class ActivitySchemaMigrationTests(unittest.TestCase):
             self.assertEqual(row, (42, 7, "login", '{"ok": true}', "2026-05-21T09:00:00+00:00"))
             self.assertIsNone(connection.execute("SELECT name FROM sqlite_master WHERE name='audit_events'").fetchone())
             self.assertIsNotNone(connection.execute("SELECT name FROM sqlite_master WHERE name='idx_activity_events_user_created'").fetchone())
-        backups = list(self.path.parent.glob("*.bak_activity_*"))
+        backups = list(self.path.parent.glob("*.bak_upgrade_*"))
         self.assertEqual(len(backups), 1)
         with closing(sqlite3.connect(backups[0])) as connection:
             self.assertEqual(tuple(connection.execute("SELECT * FROM audit_events").fetchone()), row)
             self.assertEqual(connection.execute("PRAGMA integrity_check").fetchone()[0], "ok")
         self.assertEqual(MigrationRunner(self.factory).run_pending(), ())
-        self.assertEqual(len(list(self.path.parent.glob("*.bak_activity_*"))), 1)
+        self.assertEqual(len(list(self.path.parent.glob("*.bak_upgrade_*"))), 1)
         SQLiteActivityRepository(self.factory).record(ActivityEvent("logout", user_id=7))
         with self.factory.connection() as connection:
             self.assertGreater(connection.execute("SELECT MAX(id) FROM activity_events").fetchone()[0], 42)
 
     def test_unversioned_database_preserves_existing_activity_rows(self):
         self.previous_database(versioned=False)
-        self.assertEqual(MigrationRunner(self.factory).run_pending(), (1, 2, 3, 4, 5, 6, 7))
+        self.assertEqual(MigrationRunner(self.factory).run_pending(), (1, 2, 3, 4, 5, 6, 7, 8))
         with self.factory.connection() as connection:
             self.assertEqual(connection.execute("SELECT id FROM activity_events").fetchone()[0], 42)
 
     def test_new_database_needs_no_compatibility_backup(self):
-        self.assertEqual(MigrationRunner(self.factory).run_pending(), (1, 2, 3, 4, 5, 6, 7))
+        self.assertEqual(MigrationRunner(self.factory).run_pending(), (1, 2, 3, 4, 5, 6, 7, 8))
         self.assertFalse(list(self.path.parent.glob("*.bak_*")))
 
     def test_backup_failure_does_not_change_database(self):
         self.previous_database()
-        with patch.object(migration, "save_snapshot", side_effect=OSError("backup unavailable")):
+        with patch("worklogger.infrastructure.database.migrations.runner.save_snapshot", side_effect=OSError("backup unavailable")):
             with self.assertRaises(OSError):
                 MigrationRunner(self.factory).run_pending()
         with self.factory.connection() as connection:

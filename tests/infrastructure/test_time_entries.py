@@ -182,17 +182,17 @@ class TimeEntryTests(unittest.TestCase):
     def test_daily_schema_migration_preserves_notes_breaks_and_offsets(self):
         path = Path(self.directory.name) / "previous.db"
         factory = SQLiteConnectionFactory(path)
-        MigrationRunner(factory, MIGRATION_MODULES[:-1]).run_pending()
+        MigrationRunner(factory, MIGRATION_MODULES[:6]).run_pending()
         auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
         user = auth.create_user("previous", "example-password", recovery_key=None, is_admin=False)
         repository = SQLiteWorkLogRepository(factory)
         record = WorkLog(user.id, self.now.date(), "09:00", "18:00", 1, "History", WorkType.REMOTE,
                          started_at=self.now, ended_at=self.now + timedelta(hours=9))
         repository.save(record)
-        self.assertEqual(MigrationRunner(factory).run_pending(), (7,))
+        self.assertEqual(MigrationRunner(factory).run_pending(), (7, 8))
         current = SQLiteWorkLogRepository(factory).list_for_day(user.id, record.day)[0]
         self.assertEqual((current.note, current.break_hours, current.worked_hours(), current.started_at), ("History", 1, 8, record.started_at))
-        self.assertTrue(list(path.parent.glob("previous.db.bak_entries_*")))
+        self.assertTrue(list(path.parent.glob("previous.db.bak_upgrade_*")))
         self.assertEqual(MigrationRunner(factory).run_pending(), ())
 
     def test_portability_preserves_periods_types_notes_and_distinct_calendar_identifiers(self):
