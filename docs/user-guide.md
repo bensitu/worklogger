@@ -114,6 +114,17 @@ language. A holiday is not an imported event and does not create a work record.
 Cells can show notes, overnight work, event counts, and work-type indicators.
 Markers and daily totals are visual summaries, not additional entries.
 
+## User Administration
+
+Administrators can open Manage users from Settings > Account. The left-hand table
+selects the account shown in the Selected user panel. Password-change requirements,
+password resets, and deletion apply to that selection. Refreshing keeps the same
+selected account when it still exists. Create user opens a separate form; after
+creation, the new account is selected and its recovery key is displayed. Resetting
+shows the supplied temporary password, and changing the selected account clears
+credential text and unfinished reset fields. Deletion requires confirmation and
+still enforces the existing account-protection rules.
+
 ## Notes
 
 Use Notes for extra matters that do not belong to a work period. Search finds
@@ -220,3 +231,5 @@ ends the session so you can sign in again. Keep a separate known-good backup.
 
 Check for Updates contacts the configured GitHub release endpoint. It does not
 download or install an application update automatically.
+The About page reserves a status area beneath the check button, so checking,
+completion, and error messages do not reposition the application information.

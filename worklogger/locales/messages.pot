@@ -371,6 +371,9 @@ msgstr ""
 msgid "Delete user"
 msgstr ""
 
+msgid "Delete user {username} and their data?"
+msgstr ""
+
 msgid "Description"
 msgstr ""
 
@@ -884,6 +887,9 @@ msgstr ""
 msgid "Password changed successfully."
 msgstr ""
 
+msgid "Password changes are required after a reset."
+msgstr ""
+
 msgid "Password is stored in the system credential store."
 msgstr ""
 
@@ -1031,9 +1037,6 @@ msgstr ""
 msgid "Reset password"
 msgstr ""
 
-msgid "Reset selected user password"
-msgstr ""
-
 msgid "Reset template"
 msgstr ""
 
@@ -1155,6 +1158,9 @@ msgid "Select an individual time record to edit this day."
 msgstr ""
 
 msgid "Selected day: {day}"
+msgstr ""
+
+msgid "Selected user"
 msgstr ""
 
 msgid "Send"
@@ -1302,9 +1308,6 @@ msgid "Thu"
 msgstr ""
 
 msgid "Today"
-msgstr ""
-
-msgid "Toggle password change"
 msgstr ""
 
 msgid "Total"

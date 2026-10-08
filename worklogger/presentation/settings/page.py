@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -737,6 +738,12 @@ class SettingsPage(QWidget):
         self.update_status_label = _secondary_label("")
         self.update_status_label.setObjectName("update_status_label")
         self.update_status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.update_status_label.setFixedHeight(48)
+        self.update_status_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
+        self.update_status_label.setTextFormat(Qt.TextFormat.PlainText)
+        size_policy = self.update_status_label.sizePolicy()
+        size_policy.setRetainSizeWhenHidden(True)
+        self.update_status_label.setSizePolicy(size_policy)
         self.update_status_label.hide()
         card.content_layout.addWidget(self.update_status_label)
         page.layout().addStretch(1)

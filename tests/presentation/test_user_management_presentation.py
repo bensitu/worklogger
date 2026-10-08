@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import os
 import unittest
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 from tests.app.test_user_management_use_cases import MemoryAuthRepository
 from worklogger.app.commands.auth_commands import RegisterUserCommand
@@ -91,21 +92,40 @@ class UserManagementPresentationTests(unittest.TestCase):
         self.assertTrue(bob.must_change_password)
 
         dialog.user_table.selectRow(1)
-        dialog.toggle_required_button.click()
+        self.assertEqual(dialog.selected_user_label.text(), "bob")
+        dialog.password_change_checkbox.click()
         bob = repository.get_by_username("bob")
         assert bob is not None
         self.assertFalse(bob.must_change_password)
+        self.assertEqual(dialog.selected_user_label.text(), "bob")
 
         dialog.user_table.selectRow(1)
         dialog.reset_password_input.setText("secret789")
         dialog.reset_confirm_input.setText("secret789")
         dialog.reset_password_button.click()
         self.assertIsNotNone(repository.verify_user("bob", "secret789"))
+        self.assertEqual(dialog.selected_user_label.text(), "bob")
+        self.assertEqual(dialog.recovery_key_caption.text(), "Temporary password")
+        dialog.user_table.selectRow(0)
+        self.assertTrue(dialog.recovery_key_label.isHidden())
+        self.assertEqual(dialog.recovery_key_label.text(), "")
+        dialog.new_user_button.click()
+        self.assertEqual(dialog.operation_tabs.currentIndex(), 1)
 
         dialog.user_table.selectRow(1)
-        dialog.delete_user_button.click()
+        self.assertEqual(dialog.operation_tabs.currentIndex(), 0)
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.No):
+            dialog.delete_user_button.click()
+        self.assertIsNotNone(repository.get_by_username("bob"))
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+            dialog.delete_user_button.click()
         self.assertIsNone(repository.get_by_username("bob"))
         self.assertEqual(dialog.user_table.rowCount(), 1)
+        dialog.user_table.clearSelection()
+        self.assertFalse(dialog.reset_password_button.isEnabled())
+        self.assertFalse(dialog.delete_user_button.isEnabled())
+        self.assertFalse(dialog.password_change_checkbox.isEnabled())
+        self.assertEqual(dialog.selected_user_label.text(), "Select a user.")
 
 
 if __name__ == "__main__":

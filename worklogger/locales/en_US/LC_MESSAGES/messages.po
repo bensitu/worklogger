@@ -373,6 +373,9 @@ msgstr "Delete this time record?"
 msgid "Delete user"
 msgstr "Delete user"
 
+msgid "Delete user {username} and their data?"
+msgstr "Delete user {username} and their data?"
+
 msgid "Description"
 msgstr "Description"
 
@@ -886,6 +889,9 @@ msgstr "Password change required."
 msgid "Password changed successfully."
 msgstr "Password changed successfully."
 
+msgid "Password changes are required after a reset."
+msgstr "Password changes are required after a reset."
+
 msgid "Password is stored in the system credential store."
 msgstr "Password is stored in the system credential store."
 
@@ -1033,9 +1039,6 @@ msgstr "Required"
 msgid "Reset password"
 msgstr "Reset password"
 
-msgid "Reset selected user password"
-msgstr "Reset selected user password"
-
 msgid "Reset template"
 msgstr "Reset template"
 
@@ -1158,6 +1161,9 @@ msgstr "Select an individual time record to edit this day."
 
 msgid "Selected day: {day}"
 msgstr "Selected day: {day}"
+
+msgid "Selected user"
+msgstr "Selected user"
 
 msgid "Send"
 msgstr "Send"
@@ -1305,9 +1311,6 @@ msgstr "Thu"
 
 msgid "Today"
 msgstr "Today"
-
-msgid "Toggle password change"
-msgstr "Toggle password change"
 
 msgid "Total"
 msgstr "Total"

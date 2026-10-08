@@ -373,6 +373,9 @@ msgstr "刪除這筆時間記錄？"
 msgid "Delete user"
 msgstr "刪除使用者"
 
+msgid "Delete user {username} and their data?"
+msgstr "刪除使用者 {username} 及其資料嗎？"
+
 msgid "Description"
 msgstr "說明"
 
@@ -886,6 +889,9 @@ msgstr "需要變更密碼。"
 msgid "Password changed successfully."
 msgstr "密碼變更成功。"
 
+msgid "Password changes are required after a reset."
+msgstr "重設後必須修改密碼。"
+
 msgid "Password is stored in the system credential store."
 msgstr "密碼儲存於系統認證資料庫中。"
 
@@ -1033,9 +1039,6 @@ msgstr "必要"
 msgid "Reset password"
 msgstr "重設密碼"
 
-msgid "Reset selected user password"
-msgstr "重設所選使用者的密碼"
-
 msgid "Reset template"
 msgstr "重設範本"
 
@@ -1158,6 +1161,9 @@ msgstr "請選擇當天的一筆時間記錄進行編輯。"
 
 msgid "Selected day: {day}"
 msgstr "所選日期：{day}"
+
+msgid "Selected user"
+msgstr "選取的使用者"
 
 msgid "Send"
 msgstr "傳送"
@@ -1305,9 +1311,6 @@ msgstr "四"
 
 msgid "Today"
 msgstr "今天"
-
-msgid "Toggle password change"
-msgstr "切換密碼變更要求"
 
 msgid "Total"
 msgstr "總計"

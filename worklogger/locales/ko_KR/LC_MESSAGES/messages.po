@@ -373,6 +373,9 @@ msgstr "이 시간 기록을 삭제하시겠습니까?"
 msgid "Delete user"
 msgstr "사용자 삭제"
 
+msgid "Delete user {username} and their data?"
+msgstr "사용자 {username} 및 해당 사용자의 데이터를 삭제할까요?"
+
 msgid "Description"
 msgstr "설명"
 
@@ -886,6 +889,9 @@ msgstr "비밀번호를 변경해야 합니다."
 msgid "Password changed successfully."
 msgstr "비밀번호가 변경되었습니다."
 
+msgid "Password changes are required after a reset."
+msgstr "재설정 후에는 비밀번호를 변경해야 합니다."
+
 msgid "Password is stored in the system credential store."
 msgstr "비밀번호는 시스템 자격 증명 저장소에 저장됩니다."
 
@@ -1033,9 +1039,6 @@ msgstr "필수"
 msgid "Reset password"
 msgstr "비밀번호 재설정"
 
-msgid "Reset selected user password"
-msgstr "선택한 사용자 비밀번호 재설정"
-
 msgid "Reset template"
 msgstr "템플릿 재설정"
 
@@ -1158,6 +1161,9 @@ msgstr "해당 날짜의 시간 기록을 선택하여 편집하세요."
 
 msgid "Selected day: {day}"
 msgstr "선택한 날짜: {day}"
+
+msgid "Selected user"
+msgstr "선택한 사용자"
 
 msgid "Send"
 msgstr "보내기"
@@ -1305,9 +1311,6 @@ msgstr "목"
 
 msgid "Today"
 msgstr "오늘"
-
-msgid "Toggle password change"
-msgstr "비밀번호 변경 요구 전환"
 
 msgid "Total"
 msgstr "합계"

@@ -22,6 +22,8 @@ and exporting remain disabled until the editor contains non-whitespace text.
 Search starts after a 650 ms pause and runs independently of editing and draft
 saving. It does not disable the search field or move keyboard focus. Results from
 an older query or a previously opened date are discarded.
+When no saved notes match, the empty-result message appears directly below the
+search field rather than at the bottom of the date history.
 
 Drafts are saved after a short typing pause. Each draft retains the content on
 which editing began and the sharing choices. Reopening restores that draft without

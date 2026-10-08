@@ -373,6 +373,9 @@ msgstr "この時間記録を削除しますか？"
 msgid "Delete user"
 msgstr "ユーザーを削除"
 
+msgid "Delete user {username} and their data?"
+msgstr "ユーザー {username} とそのデータを削除しますか？"
+
 msgid "Description"
 msgstr "説明"
 
@@ -886,6 +889,9 @@ msgstr "パスワードの変更が必要です。"
 msgid "Password changed successfully."
 msgstr "パスワードを変更しました。"
 
+msgid "Password changes are required after a reset."
+msgstr "リセット後はパスワードの変更が必要です。"
+
 msgid "Password is stored in the system credential store."
 msgstr "パスワードはシステムの資格情報ストアに保存されます。"
 
@@ -1033,9 +1039,6 @@ msgstr "必須"
 msgid "Reset password"
 msgstr "パスワードをリセット"
 
-msgid "Reset selected user password"
-msgstr "選択したユーザーのパスワードをリセット"
-
 msgid "Reset template"
 msgstr "テンプレートをリセット"
 
@@ -1158,6 +1161,9 @@ msgstr "編集する日の時間記録を選択してください。"
 
 msgid "Selected day: {day}"
 msgstr "選択日：{day}"
+
+msgid "Selected user"
+msgstr "選択したユーザー"
 
 msgid "Send"
 msgstr "送信"
@@ -1305,9 +1311,6 @@ msgstr "木"
 
 msgid "Today"
 msgstr "今日"
-
-msgid "Toggle password change"
-msgstr "パスワード変更要求を切り替え"
 
 msgid "Total"
 msgstr "合計"
