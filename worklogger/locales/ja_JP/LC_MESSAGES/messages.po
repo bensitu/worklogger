@@ -88,6 +88,9 @@ msgstr "追加"
 msgid "Add another sign-in method before unlinking this identity."
 msgstr "この連携を解除する前に、別のログイン方法を追加してください。"
 
+msgid "Add these entries to the note and save it? Their original records will be deleted only if saving succeeds."
+msgstr "これらの項目をメモに追加して保存しますか？保存に成功した場合のみ、元の記録を削除します。"
+
 msgid "Add to note"
 msgstr "メモに追加"
 
@@ -814,6 +817,9 @@ msgstr "未ダウンロード"
 msgid "Not required"
 msgstr "不要"
 
+msgid "Note saved."
+msgstr "メモを保存しました。"
+
 msgid "Notes"
 msgstr "メモ"
 
@@ -1509,6 +1515,9 @@ msgstr "テンプレートに未保存の変更があります。破棄します
 
 msgid "You have unsaved work log changes. Discard them?"
 msgstr "業務記録に未保存の変更があります。破棄しますか？"
+
+msgid "Your changes have been saved for {date}."
+msgstr "{date}の変更を保存しました。"
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."
 msgstr "保存済みのログイン情報が無効か、有効期限が切れています。再度ログインしてください。"

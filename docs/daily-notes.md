@@ -19,6 +19,9 @@ editor heading displays that date in the active language, next to Polish text,
 Copy Markdown, Export Markdown, and Reload saved note. These actions operate only
 on the displayed note. Empty notes show an input placeholder; polishing, copying,
 and exporting remain disabled until the editor contains non-whitespace text.
+Search starts after a 650 ms pause and runs independently of editing and draft
+saving. It does not disable the search field or move keyboard focus. Results from
+an older query or a previously opened date are discarded.
 
 Drafts are saved after a short typing pause. Each draft retains the content on
 which editing began and the sharing choices. Reopening restores that draft without
@@ -37,13 +40,22 @@ and error feedback use dialogs, not persistent readiness messages.
 ## Previous Entries
 
 The separate Quick Log creation interface is no longer part of the calendar.
-Existing quick-log rows remain unchanged and can be viewed in the memo editor.
-Add to note copies their descriptions and optional times into the current draft.
-Repeating it does not append the same unchanged lines again. These references are
-not converted into worked-time entries. Existing report template placeholders and
-database backups continue to support the original rows.
+Existing quick-log rows can be viewed in the memo editor. Add to note asks for
+confirmation before adding their descriptions and optional times and saving the
+current note, including its sharing choices. After successful saving, the matching
+original rows are deleted and the previous-entry area disappears when no rows
+remain. Note saving, draft removal, and source-row deletion share one transaction.
+A changed or missing source row, an incomplete reference, or a note conflict rolls
+back the entire operation. Cancelling the confirmation changes nothing. Ordinary
+Save never removes previous entries.
+References already present in the note are not appended again, including
+multi-line descriptions. These references are not converted into worked-time
+entries. Existing report template placeholders and database backups continue to
+support previous entries that have not been transferred.
 Generated reports omit a separate quick-log reference when an approved memo
 already contains that same unchanged reference, avoiding duplicate report text.
+After transfer, the text follows the note's report and AI sharing choices;
+previously saved reports remain unchanged.
 
 ## Sharing
 

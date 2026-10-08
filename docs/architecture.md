@@ -153,6 +153,12 @@ Markdown-backed editors and history. Theme tokens render the shared QSS template
 The Qt palette and QSS are applied at the application boundary.
 Calendar, Analytics, and Reports have separate implementation modules. The shell
 page facade preserves existing imports without combining their implementations.
+Button icons follow consistent operation meanings: an eraser clears unsaved input,
+circular arrows refresh data, a single backward arrow restores saved or default
+data, and file arrows indicate local import or export. Network model downloads
+retain the download icon. Icon-only actions include tooltips and accessible names.
+Information feedback in the note editor uses a shared dialog layout with a readable
+minimum width, explicit saved-date text, and translated controls.
 
 Database copying, schema inspection, and ordered upgrades belong to infrastructure
 adapters rather than startup assembly. See [database upgrade](database-upgrade.md).

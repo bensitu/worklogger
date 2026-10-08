@@ -160,12 +160,20 @@ class NotesReportsPresentationTests(unittest.TestCase):
         self.assertFalse(dialog.report_checkbox.isChecked())
         self.assertFalse(dialog.ai_checkbox.isChecked())
         self.assertEqual(dialog.previous_list.count(), 1)
-        dialog.insert_button.click()
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.No):
+            dialog.insert_button.click()
+        self.assertEqual(dialog.editor.toPlainText(), "Existing note")
+        self.assertEqual(len(quick.list_for_day(model.service.user_id, day)), 1)
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes), \
+                patch("worklogger.presentation.notes.dialog.show_information"):
+            dialog.insert_button.click()
         first = dialog.editor.toPlainText()
         dialog.insert_button.click()
         self.assertEqual(dialog.editor.toPlainText(), first)
         self.assertIn("Standup", first)
-        self.assertEqual(len(quick.list_for_day(model.service.user_id, day)), 1)
+        self.assertEqual(len(quick.list_for_day(model.service.user_id, day)), 0)
+        self.assertTrue(dialog.previous_group.isHidden())
+        self.assertEqual(notes.get_for_day(model.service.user_id, day).content, first)
         dialog.editor.setPlainText("Recoverable draft")
         dialog.report_checkbox.setChecked(True)
         dialog._persist_draft()
@@ -175,16 +183,16 @@ class NotesReportsPresentationTests(unittest.TestCase):
         self.assertEqual(restored.editor.toPlainText(), "Recoverable draft")
         self.assertTrue(restored._state.recovered_draft)
         self.assertTrue(restored.report_checkbox.isChecked())
-        with patch.object(QMessageBox, "information"):
+        with patch("worklogger.presentation.notes.dialog.show_information"):
             restored.save_button.click()
         self.assertEqual(notes.get_for_day(model.service.user_id, day).content, "Recoverable draft")
         self.assertFalse(model.load(day).value.recovered_draft)
         self.assertTrue(model.load(day).value.sharing.reports)
         self.assertFalse(model.load(day).value.sharing.ai)
-        self.assertEqual(model.search("Standup").value[0].day, day)
+        self.assertEqual(model.search("Recoverable").value[0].day, day)
         restored.copy_button.click()
         self.assertEqual(QApplication.clipboard().text(), "Recoverable draft")
-        with tempfile.TemporaryDirectory() as directory, patch.object(QMessageBox, "information"):
+        with tempfile.TemporaryDirectory() as directory, patch("worklogger.presentation.notes.dialog.show_information"):
             target = Path(directory) / "note"
             restored.export_markdown(target)
             self.assertEqual(target.with_suffix(".md").read_text(encoding="utf-8"), "Recoverable draft")
@@ -252,6 +260,51 @@ class NotesReportsPresentationTests(unittest.TestCase):
         self.assertEqual(dialog._day, empty_day)
         dialog._draft_timer.stop()
         dialog._search_timer.stop()
+
+    def test_search_keeps_inputs_available_and_discards_obsolete_results(self):
+        model, notes, _quick = self._note_model()
+        day = date(2026, 10, 9)
+        notes.save(DailyNote(model.service.user_id, day, "Planning and meeting"))
+
+        class DeferredSearchRunner(ImmediateJobRunner):
+            def __init__(self):
+                self.pending = []
+
+            def submit(self, name, job, *, on_complete=None):
+                if name == "search_notes":
+                    self.pending.append((job, on_complete))
+                    return None
+                return super().submit(name, job, on_complete=on_complete)
+
+            def complete(self):
+                job, callback = self.pending.pop(0)
+                callback(job(None))
+
+        runner = DeferredSearchRunner()
+        dialog = NoteEditorDialog(model, day, job_runner=runner)
+        self.addCleanup(dialog.deleteLater)
+        self.assertTrue(dialog.refresh())
+        runner.complete()
+        dialog.editor.setPlainText("Keep the current draft")
+        dialog.search_input.setText("Planning")
+        dialog._search()
+        self.assertTrue(dialog.search_input.isEnabled())
+        self.assertTrue(dialog.editor.isEnabled())
+        self.assertTrue(dialog._draft_timer.isActive())
+        dialog.search_input.setText("no matching content")
+        runner.complete()
+        self.assertEqual(dialog.history_list.count(), 1)
+        dialog._search()
+        runner.complete()
+        self.assertEqual(dialog.history_list.count(), 0)
+        self.assertEqual(dialog.editor.toPlainText(), "Keep the current draft")
+        self.assertEqual(dialog._day, day)
+        dialog.search_input.clear()
+        dialog._search()
+        dialog._stop_search()
+        runner.complete()
+        self.assertFalse(dialog._search_timer.isActive())
+        dialog._draft_timer.stop()
 
     def test_report_viewmodel_and_dialog_generate_then_save_report(self) -> None:
         reports = MemoryReportRepository()

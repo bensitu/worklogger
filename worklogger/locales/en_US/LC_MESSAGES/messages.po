@@ -88,6 +88,9 @@ msgstr "Add"
 msgid "Add another sign-in method before unlinking this identity."
 msgstr "Add another sign-in method before unlinking this identity."
 
+msgid "Add these entries to the note and save it? Their original records will be deleted only if saving succeeds."
+msgstr "Add these entries to the note and save it? Their original records will be deleted only if saving succeeds."
+
 msgid "Add to note"
 msgstr "Add to note"
 
@@ -814,6 +817,9 @@ msgstr "Not downloaded"
 msgid "Not required"
 msgstr "Not required"
 
+msgid "Note saved."
+msgstr "Note saved."
+
 msgid "Notes"
 msgstr "Notes"
 
@@ -1509,6 +1515,9 @@ msgstr "You have unsaved template changes. Discard them?"
 
 msgid "You have unsaved work log changes. Discard them?"
 msgstr "You have unsaved work log changes. Discard them?"
+
+msgid "Your changes have been saved for {date}."
+msgstr "Your changes have been saved for {date}."
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."
 msgstr "Your saved sign-in is invalid or expired. Please sign in again."

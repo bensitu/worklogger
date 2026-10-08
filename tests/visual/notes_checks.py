@@ -9,6 +9,7 @@ import unittest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import Qt, qInstallMessageHandler
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
 from worklogger.app.use_cases.ai import RewriteTextHandler
@@ -24,6 +25,8 @@ from worklogger.presentation.notes import NoteEditorDialog
 from worklogger.presentation.theme import configure_application_style, install_bundled_fonts
 from worklogger.presentation.theme.theme_engine import ThemeEngine
 from worklogger.presentation.viewmodels.notes import NoteEditorViewModel
+from worklogger.presentation.widgets.feedback import information_dialog
+from worklogger.infrastructure.i18n import _
 
 
 class NotesLayoutChecks(unittest.TestCase):
@@ -75,10 +78,33 @@ class NotesLayoutChecks(unittest.TestCase):
                                     rect = widget.rect().translated(widget.mapTo(dialog, widget.rect().topLeft()))
                                     self.assertTrue(dialog.rect().contains(rect), (language_code, dark, widget.objectName()))
                                 self.capture(dialog, f"{language_code}-notes-{'dark' if dark else 'light'}-{width}-empty")
+                            dialog.activateWindow()
+                            dialog.search_input.setFocus()
+                            self.app.processEvents()
+                            QTest.keyClicks(dialog.search_input, "Meeting")
+                            dialog._search_timer.stop()
+                            dialog._search()
+                            self.app.processEvents()
+                            self.assertTrue(dialog.search_input.hasFocus())
+                            QTest.keyClicks(dialog.search_input, " notes")
+                            self.assertEqual(dialog.search_input.text(), "Meeting notes")
+                            dialog.search_input.clear()
+                            dialog._search_timer.stop()
+                            dialog._search()
                             dialog._select_note(dialog.history_list.item(1))
                             self.app.processEvents()
                             self.assertTrue(dialog.copy_button.isEnabled())
                             self.capture(dialog, f"{language_code}-notes-{'dark' if dark else 'light'}-content")
+                            feedback = information_dialog(dialog, _("Notes"), _("Note saved."),
+                                detail=_("Your changes have been saved for {date}.").format(date="2026-10-08"))
+                            try:
+                                feedback.show()
+                                self.app.processEvents()
+                                self.assertGreaterEqual(feedback.width(), 360)
+                                self.capture(feedback, f"{language_code}-note-saved-{'dark' if dark else 'light'}")
+                            finally:
+                                feedback.hide()
+                                feedback.deleteLater()
                         finally:
                             dialog._draft_timer.stop()
                             dialog._search_timer.stop()

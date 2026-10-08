@@ -28,7 +28,7 @@ from worklogger.domain.notes.repositories import DailyNoteRepository
 from worklogger.domain.notes.preferences import NoteSharing, note_sharing_key
 from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.quicklog.models import QuickLog
-from worklogger.domain.quicklog.rules import quick_log_reference
+from worklogger.domain.quicklog.rules import contains_quick_log_reference
 from worklogger.domain.quicklog.repositories import QuickLogRepository
 from worklogger.domain.reporting.models import Report
 from worklogger.domain.reporting.periods import normalize_report_type, validate_report_period
@@ -260,7 +260,7 @@ class GenerateReportHandler:
                                    for note in notes if note.content and (note.day, note.content) not in recorded_notes)
             quick_logs = self._quick_logs.list_for_range(command.user_id, period.start, period.end)
             quick_logs = tuple(entry for entry in quick_logs if not any(note.day == entry.day
-                and quick_log_reference(entry) in note.content.splitlines() for note in notes))
+                and contains_quick_log_reference(note.content, entry) for note in notes))
             events = self._calendar_events.list_for_range(command.user_id, period.start, period.end)
             template = self._templates.get_template(
                 command.language, period.report_type, user_id=command.user_id,

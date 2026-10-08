@@ -468,7 +468,7 @@ class SettingsPage(QWidget):
         self.download_local_model_button.setObjectName("download_local_model_button")
         self.download_local_model_button.clicked.connect(self.download_local_model_requested.emit)
         for button, icon in ((self.download_local_model_button, "download"),
-                             (self.import_local_model_button, "upload"),
+                             (self.import_local_model_button, "file-input"),
                              (self.manage_local_models_button, "settings")):
             button.setProperty("variant", "outline")
             set_button_icon(button, icon, accent=True)
@@ -516,8 +516,8 @@ class SettingsPage(QWidget):
         self.import_csv_button.setObjectName("import_csv_button")
         self.import_csv_button.setProperty("variant", "outline")
         self.import_csv_button.clicked.connect(self.import_csv_requested.emit)
-        set_button_icon(self.export_csv_button, "upload", accent=True)
-        set_button_icon(self.import_csv_button, "download", accent=True)
+        set_button_icon(self.export_csv_button, "file-output", accent=True)
+        set_button_icon(self.import_csv_button, "file-input", accent=True)
         _add_action_buttons(csv_card, self.export_csv_button, self.import_csv_button, columns=2)
         page.layout().addWidget(csv_card)
 
@@ -562,8 +562,8 @@ class SettingsPage(QWidget):
         self.clear_calendar_events_button.setProperty("variant", "outline")
         self.clear_calendar_events_button.setEnabled(False)
         self.clear_calendar_events_button.setToolTip(_("Clearing calendar events is not supported yet."))
-        for button, icon in ((self.import_ics_button, "calendar-days"),
-                             (self.export_ics_button, "upload"),
+        for button, icon in ((self.import_ics_button, "file-input"),
+                             (self.export_ics_button, "file-output"),
                              (self.clear_calendar_events_button, "trash")):
             set_button_icon(button, icon, accent=True)
         _add_action_buttons(
@@ -732,7 +732,7 @@ class SettingsPage(QWidget):
         self.check_updates_button.setObjectName("check_updates_button")
         self.check_updates_button.setProperty("variant", "outline")
         self.check_updates_button.clicked.connect(self.update_check_requested.emit)
-        set_button_icon(self.check_updates_button, "rotate-ccw", accent=True)
+        set_button_icon(self.check_updates_button, "refresh-cw", accent=True)
         card.content_layout.addWidget(self.check_updates_button, 0, Qt.AlignmentFlag.AlignHCenter)
         self.update_status_label = _secondary_label("")
         self.update_status_label.setObjectName("update_status_label")

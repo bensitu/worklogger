@@ -177,9 +177,9 @@ class LocalModelsDialog(QDialog):
         self.select_button.clicked.connect(self.select_current)
         self.delete_button.clicked.connect(self.delete_selected)
         self.close_button.clicked.connect(self.accept)
-        for button, icon in ((self.refresh_button, "rotate-ccw"), (self.import_button, "upload"),
-                             (self.download_button, "download"), (self.verify_button, "info"),
-                             (self.select_button, "save"), (self.delete_button, "trash")):
+        for button, icon in ((self.refresh_button, "refresh-cw"), (self.import_button, "file-input"),
+                             (self.download_button, "download"), (self.verify_button, "shield-check"),
+                             (self.select_button, "check"), (self.delete_button, "trash")):
             set_button_icon(button, icon)
 
     def accept(self) -> None:

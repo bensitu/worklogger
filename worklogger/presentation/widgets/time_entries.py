@@ -132,7 +132,7 @@ class TimeEntryPanel(QWidget):
         actions.addWidget(self.save_button, 1)
         self.clear_button = QToolButton()
         self.clear_button.setObjectName("clear_time_entry_button")
-        self.clear_button.setIcon(ui_icon("rotate-ccw"))
+        self.clear_button.setIcon(ui_icon("eraser"))
         self.clear_button.setToolTip(_("Clear input"))
         self.clear_button.setAccessibleName(_("Clear input"))
         actions.addWidget(self.clear_button)

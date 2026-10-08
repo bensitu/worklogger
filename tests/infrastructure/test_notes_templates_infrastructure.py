@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+from dataclasses import replace
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -40,6 +41,55 @@ from worklogger.infrastructure.templates import BuiltInTemplateProvider, UserTem
 
 
 class NotesTemplatesInfrastructureTests(unittest.TestCase):
+    def test_previous_entry_transfer_is_atomic_and_requires_unchanged_complete_content(self):
+        with tempfile.TemporaryDirectory() as directory:
+            factory = SQLiteConnectionFactory(f"{directory}/notes.db")
+            MigrationRunner(factory).run_pending()
+            auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
+            user = auth.create_user("note.owner", "example-password", recovery_key=None, is_admin=False)
+            other = auth.create_user("note.other", "example-password", recovery_key=None, is_admin=False)
+            notes, settings, quick = SQLiteDailyNoteRepository(factory), SQLiteSettingsRepository(factory), SQLiteQuickLogRepository(factory)
+            service = DailyNotesService(user_id=user.id, notes=notes, settings=settings, previous_entries=quick)
+            day = date(2026, 10, 9)
+            notes.save(DailyNote(user.id, day, "Original note"))
+            first = quick.add(QuickLog(None, user.id, day, "Planning\nPrepare the agenda", "09:00", "10:00"))
+            second = quick.add(QuickLog(None, user.id, day, "Follow up", "10:00", "11:00"))
+            unrelated = quick.add(QuickLog(None, other.id, day, "Private entry"))
+            original = service.load(day).value
+            content = "Original note\n" + "\n".join(quick_log_reference(entry) for entry in original.previous_entries)
+            service.save_draft(day, content, "Original note", NoteSharing(True, False))
+            quick.update(replace(second, description="Updated follow up"))
+            rejected = service.save(day, content, original.expected_content, NoteSharing(True, False),
+                                    original.expected_sharing, previous_entries_to_remove=original.previous_entries)
+            self.assertEqual(rejected.error.code, "note_conflict")
+            self.assertEqual(notes.get_for_day(user.id, day).content, "Original note")
+            self.assertEqual(len(quick.list_for_day(user.id, day)), 2)
+            self.assertIsNotNone(settings.get(user.id, note_draft_key(day)))
+            self.assertEqual(service.load(day).value.saved_sharing, NoteSharing())
+            missing_content = service.save(day, "Original note", "Original note", NoteSharing(),
+                                           previous_entries_to_remove=(first,))
+            self.assertEqual(missing_content.error.code, "note_conflict")
+            wrong_owner = service.save(day, quick_log_reference(unrelated), "Original note", NoteSharing(),
+                                       previous_entries_to_remove=(unrelated,))
+            self.assertEqual(wrong_owner.error.code, "note_conflict")
+            current = service.load(day, recover_draft=False).value
+            merged = "Original note\n" + "\n".join(quick_log_reference(entry) for entry in current.previous_entries)
+            notes.save(DailyNote(user.id, day, "Changed elsewhere"))
+            stale = service.save(day, merged, current.expected_content, NoteSharing(),
+                                 previous_entries_to_remove=current.previous_entries)
+            self.assertEqual(stale.error.code, "note_conflict")
+            current = service.load(day, recover_draft=False).value
+            merged = current.content + "\n" + "\n".join(quick_log_reference(entry) for entry in current.previous_entries)
+            saved = service.save(day, merged, current.expected_content, NoteSharing(True, False),
+                                 current.expected_sharing, previous_entries_to_remove=current.previous_entries)
+            self.assertTrue(saved.ok, saved.error)
+            self.assertEqual(saved.value.previous_entries, ())
+            self.assertEqual(notes.get_for_day(user.id, day).content, merged)
+            self.assertEqual(quick.list_for_day(user.id, day), ())
+            self.assertEqual(quick.list_for_day(other.id, day), (unrelated,))
+            self.assertIsNone(settings.get(user.id, note_draft_key(day)))
+            self.assertEqual(service.load(day).value.sharing, NoteSharing(True, False))
+
     def test_memo_workspaces_isolate_search_and_commit_sharing_with_content(self):
         with tempfile.TemporaryDirectory() as directory:
             factory = SQLiteConnectionFactory(f"{directory}/memos.db")

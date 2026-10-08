@@ -118,7 +118,10 @@ Markers and daily totals are visual summaries, not additional entries.
 
 Use Notes for extra matters that do not belong to a work period. Search finds
 saved notes and previous quick-log descriptions. Previous entries remain readable
-and can be added to a draft without converting them to work time. The editor supports
+and can be transferred into a saved note without converting them to work time.
+Add to note asks for confirmation: it saves the current note and removes the
+original entries only if that save succeeds. Cancelling or encountering a conflict
+preserves the source entries. The editor supports
 draft recovery, copying, Markdown export, and optional text polishing. Templates
 belong to Reports and cannot be changed from the memo editor.
 

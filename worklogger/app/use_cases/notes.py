@@ -112,13 +112,16 @@ class DailyNotesService:
         return self._run(load, error_code="note_load_failed")
 
     def save(self, day: date, content: str, expected_content: str, sharing: NoteSharing,
-             expected_sharing: NoteSharing | None = None):
+             expected_sharing: NoteSharing | None = None, *, previous_entries_to_remove: tuple[QuickLog, ...] = ()):
         def save():
             if not isinstance(content, str) or len(content.encode("utf-8")) > 1024 * 1024:
                 raise ValueError("note_save_failed")
             entries = self.previous_entries.list_for_day(self.user_id, day)
             note = DailyNote(self.user_id, day, content)
-            self.notes.save(note, expected_content=expected_content, sharing=sharing, clear_draft=True, expected_sharing=expected_sharing)
+            self.notes.save(note, expected_content=expected_content, sharing=sharing, clear_draft=True,
+                            expected_sharing=expected_sharing, previous_entries_to_remove=previous_entries_to_remove)
+            removed_ids = {entry.id for entry in previous_entries_to_remove}
+            entries = tuple(entry for entry in entries if entry.id not in removed_ids)
             return NoteWorkspace(note, content, content, sharing, entries, saved_sharing=sharing, expected_sharing=sharing)
         return self._run(save)
 

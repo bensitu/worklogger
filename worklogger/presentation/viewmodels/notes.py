@@ -8,7 +8,7 @@ from worklogger.app.use_cases.notes import DailyNotesService, NoteWorkspace
 from worklogger.domain.notes.preferences import NoteSharing
 from worklogger.domain.shared.result import Result
 from worklogger.domain.shared.errors import ValidationError
-from worklogger.domain.quicklog.rules import quick_log_reference
+from worklogger.domain.quicklog.rules import contains_quick_log_reference, quick_log_reference
 
 
 NoteEditorState = NoteWorkspace
@@ -32,6 +32,10 @@ class NoteEditorViewModel:
     def save_draft(self, state: NoteWorkspace, content: str, sharing: NoteSharing):
         return self.service.save_draft(state.note.day, content, state.expected_content, sharing, state.expected_sharing)
 
+    def transfer_previous_entries(self, state: NoteWorkspace, content: str, sharing: NoteSharing):
+        return self.service.save(state.note.day, content, state.expected_content, sharing, state.expected_sharing,
+                                 previous_entries_to_remove=state.previous_entries)
+
     def discard_draft(self, day: date):
         return self.service.discard_draft(day)
 
@@ -49,7 +53,7 @@ class NoteEditorViewModel:
         lines = []
         for entry in state.previous_entries:
             line = quick_log_reference(entry)
-            if line not in content.splitlines():
+            if not contains_quick_log_reference(content, entry) and line not in lines:
                 lines.append(line)
         return content.rstrip() + ("\n\n" if content.strip() else "") + "\n".join(lines) if lines else content
 

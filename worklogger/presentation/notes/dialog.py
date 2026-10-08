@@ -16,6 +16,7 @@ from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.widgets.feedback import show_information
 
 
 class NoteEditorDialog(QDialog):
@@ -30,6 +31,9 @@ class NoteEditorDialog(QDialog):
         self._last_error = None
         self._busy = False
         self._draft_busy = False
+        self._search_busy = False
+        self._search_revision = 0
+        self._closed = False
         self._after_draft = None
         self._version = 0
         self._updating = False
@@ -47,8 +51,9 @@ class NoteEditorDialog(QDialog):
         self._draft_timer.timeout.connect(self._persist_draft)
         self._search_timer = QTimer(self)
         self._search_timer.setSingleShot(True)
-        self._search_timer.setInterval(250)
+        self._search_timer.setInterval(650)
         self._search_timer.timeout.connect(self._search)
+        self.finished.connect(self._stop_search)
 
     @property
     def last_error(self):
@@ -71,6 +76,7 @@ class NoteEditorDialog(QDialog):
         return True
 
     def set_state(self, state):
+        self._search_revision += 1
         self._updating = True
         try:
             self._state = state
@@ -143,12 +149,12 @@ class NoteEditorDialog(QDialog):
         self.export_button = QToolButton()
         self.export_button.setToolTip(_("Export Markdown"))
         self.export_button.setAccessibleName(_("Export Markdown"))
-        set_button_icon(self.export_button, "download")
+        set_button_icon(self.export_button, "file-output")
         heading.addWidget(self.export_button)
         self.reload_button = QToolButton()
         self.reload_button.setToolTip(_("Reload saved note"))
         self.reload_button.setAccessibleName(_("Reload saved note"))
-        set_button_icon(self.reload_button, "rotate-ccw")
+        set_button_icon(self.reload_button, "refresh-cw")
         heading.addWidget(self.reload_button)
         content.addLayout(heading)
         self.recovery_label = QLabel(_("Recovered draft"))
@@ -195,11 +201,10 @@ class NoteEditorDialog(QDialog):
         self.editor.textChanged.connect(self._changed)
         self.report_checkbox.toggled.connect(self._changed)
         self.ai_checkbox.toggled.connect(self._changed)
-        self.search_input.textChanged.connect(lambda: self._search_timer.start())
+        self.search_input.textChanged.connect(self._schedule_search)
         self.history_list.currentItemChanged.connect(
             lambda current, _previous: self._select_note(current) if current is not None else None)
-        self.insert_button.clicked.connect(lambda: self.editor.setPlainText(
-            self._view_model.insert_previous_entries(self._state, self.editor.toPlainText())))
+        self.insert_button.clicked.connect(self._transfer_previous_entries)
         self.reload_button.clicked.connect(self._reload)
         self.rewrite_button.clicked.connect(self._rewrite)
         self.copy_button.clicked.connect(lambda: QApplication.clipboard().setText(self.editor.toPlainText()))
@@ -277,11 +282,21 @@ class NoteEditorDialog(QDialog):
             self._draft_busy = False
             self._set_error(InfrastructureError("note_save_failed", "note_save_failed"))
 
+    def _schedule_search(self, *_args):
+        self._search_revision += 1
+        self._search_timer.start()
+
+    def _stop_search(self, *_args):
+        self._closed = True
+        self._search_timer.stop()
+
     def _search(self):
-        if self._busy or self._draft_busy:
+        if self._closed:
+            return
+        if self._busy or self._search_busy:
             self._search_timer.start()
             return
-        query = self.search_input.text()
+        query, day, revision = self.search_input.text(), self._day, self._search_revision
         def render(notes):
             previews = {note.day: " ".join(note.content.split()) for note in notes}
             if not query.strip() and self._state is not None:
@@ -294,7 +309,38 @@ class NoteEditorDialog(QDialog):
                     self.history_list.addItem(item)
             self.empty_label.setVisible(not previews)
             self._sync_history_selection()
-        self._run("search_notes", lambda: self._view_model.search(query), render)
+        self._search_busy = True
+        def done(result):
+            self._search_busy = False
+            if self._closed:
+                return
+            if revision != self._search_revision or day != self._day or self._busy:
+                self._search_timer.start()
+                return
+            if result.ok:
+                render(result.value)
+            else:
+                self._set_error(result.error)
+        try:
+            self._job_runner.submit("search_notes", lambda _token: self._view_model.search(query), on_complete=done)
+        except Exception:
+            self._search_busy = False
+            self._set_error(InfrastructureError("note_load_failed", "note_load_failed"))
+
+    def _transfer_previous_entries(self):
+        if self._state is None or not self._state.previous_entries or self._busy:
+            return
+        if QMessageBox.question(self, _("Add to note"),
+            _("Add these entries to the note and save it? Their original records will be deleted only if saving succeeds."),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
+            return
+        state, sharing = self._state, self._sharing()
+        content = self._view_model.insert_previous_entries(state, self.editor.toPlainText())
+        self.editor.setPlainText(content)
+        content = self.editor.toPlainText()
+        self._run("transfer_note_entries", lambda: self._view_model.transfer_previous_entries(state, content, sharing),
+                  self._note_saved)
 
     def _select_note(self, item):
         day = item.data(Qt.ItemDataRole.UserRole)
@@ -323,12 +369,14 @@ class NoteEditorDialog(QDialog):
         if self._state is None:
             return
         state, content, sharing = self._state, self.editor.toPlainText(), self._sharing()
-        def saved(workspace):
-            self.set_state(workspace)
-            self.saved.emit()
-            QMessageBox.information(self, _("Notes"), _("Saved"))
-            self._search()
-        self._run("save_note", lambda: self._view_model.save(state, content, sharing), saved)
+        self._run("save_note", lambda: self._view_model.save(state, content, sharing), self._note_saved)
+
+    def _note_saved(self, workspace):
+        self.set_state(workspace)
+        self.saved.emit()
+        show_information(self, _("Notes"), _("Note saved."),
+                         detail=_("Your changes have been saved for {date}.").format(date=workspace.note.day.isoformat()))
+        self._search()
 
     def _rewrite(self):
         content = self.editor.toPlainText()
@@ -337,7 +385,7 @@ class NoteEditorDialog(QDialog):
     def export_markdown(self, destination: Path):
         content = self.editor.toPlainText()
         self._run("export_note", lambda: self._view_model.export_markdown(destination, content),
-                  lambda _path: QMessageBox.information(self, _("Export Markdown"), _("Exported Markdown")))
+                  lambda _path: show_information(self, _("Export Markdown"), _("Exported Markdown")))
 
     def _choose_export_path(self):
         path, _filter = QFileDialog.getSaveFileName(self, _("Export Markdown"), f"note-{self._day.isoformat()}.md", _("Markdown files (*.md)"))

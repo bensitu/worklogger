@@ -6,8 +6,10 @@ from datetime import date
 
 from worklogger.domain.notes.models import DailyNote
 from worklogger.domain.notes.preferences import NoteSharing, note_draft_key, note_sharing_key
+from worklogger.domain.quicklog.models import QuickLog
+from worklogger.domain.quicklog.rules import contains_quick_log_reference
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
-from worklogger.infrastructure.repositories._mapping import parse_date, map_rows
+from worklogger.infrastructure.repositories._mapping import parse_date, parse_datetime, map_rows
 
 
 def save_note(connection, user_id: int, day: date, content: str, expected_content: str | None = None) -> None:
@@ -60,7 +62,8 @@ class SQLiteDailyNoteRepository:
 
     def save(self, note: DailyNote, *, expected_content: str | None = None,
              sharing: NoteSharing | None = None, clear_draft: bool = False,
-             expected_sharing: NoteSharing | None = None) -> None:
+             expected_sharing: NoteSharing | None = None,
+             previous_entries_to_remove: tuple[QuickLog, ...] = ()) -> None:
         with self._connection_factory.transaction(write=True) as connection:
             if expected_sharing is not None:
                 row = connection.execute("SELECT value FROM settings WHERE user_id=? AND key=?",
@@ -74,3 +77,17 @@ class SQLiteDailyNoteRepository:
                     (note.user_id, note_sharing_key(note.day), sharing.encode()))
             if clear_draft:
                 connection.execute("DELETE FROM settings WHERE user_id=? AND key=?", (note.user_id, note_draft_key(note.day)))
+            for entry in previous_entries_to_remove:
+                if (entry.id is None or entry.user_id != note.user_id or entry.day != note.day
+                        or not contains_quick_log_reference(note.content, entry)):
+                    raise ValueError("note_conflict")
+                current = connection.execute("SELECT created_at FROM quick_logs WHERE id=? AND user_id=? AND date=?",
+                                             (entry.id, note.user_id, note.day.isoformat())).fetchone()
+                if current is None or parse_datetime(current["created_at"]) != entry.created_at:
+                    raise ValueError("note_conflict")
+                cursor = connection.execute("""DELETE FROM quick_logs
+                    WHERE id=? AND user_id=? AND date=? AND description=?
+                    AND COALESCE(time, '')=? AND COALESCE(end_time, '')=?""",
+                    (entry.id, note.user_id, note.day.isoformat(), entry.description, entry.start_time, entry.end_time))
+                if cursor.rowcount != 1:
+                    raise ValueError("note_conflict")

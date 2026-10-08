@@ -23,6 +23,12 @@ def quick_log_reference(entry: QuickLog) -> str:
     return "- " + (span + " " if span else "") + entry.description
 
 
+def contains_quick_log_reference(content: str, entry: QuickLog) -> bool:
+    text = content.replace("\r\n", "\n").replace("\r", "\n")
+    reference = quick_log_reference(entry).replace("\r\n", "\n").replace("\r", "\n")
+    return "\n" + reference + "\n" in "\n" + text + "\n"
+
+
 def normalize_quick_log(quick_log: QuickLog) -> QuickLog:
     description = normalize_description(quick_log.description)
     start_time = parse_time(quick_log.start_time) or ""

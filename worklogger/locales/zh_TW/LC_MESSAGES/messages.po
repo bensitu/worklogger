@@ -88,8 +88,11 @@ msgstr "新增"
 msgid "Add another sign-in method before unlinking this identity."
 msgstr "解除此身分連結前，請新增其他登入方式。"
 
+msgid "Add these entries to the note and save it? Their original records will be deleted only if saving succeeds."
+msgstr "將這些歷史事項加入筆記並儲存嗎？僅在儲存成功後刪除對應的原始記錄。"
+
 msgid "Add to note"
-msgstr "加入便箋"
+msgstr "加入筆記"
 
 msgid "Address"
 msgstr "位址"
@@ -814,6 +817,9 @@ msgstr "尚未下載"
 msgid "Not required"
 msgstr "不需要"
 
+msgid "Note saved."
+msgstr "筆記已儲存。"
+
 msgid "Notes"
 msgstr "筆記"
 
@@ -1509,6 +1515,9 @@ msgstr "範本有未儲存的變更。捨棄變更？"
 
 msgid "You have unsaved work log changes. Discard them?"
 msgstr "工作記錄有未儲存的變更。捨棄變更？"
+
+msgid "Your changes have been saved for {date}."
+msgstr "已儲存 {date} 的修改。"
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."
 msgstr "已儲存的登入無效或已過期，請重新登入。"
