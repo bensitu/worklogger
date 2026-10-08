@@ -10,6 +10,7 @@ from unittest.mock import patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtCore import QDate, QLocale, Qt
 
 from tests.app.test_notes_and_reports_use_cases import (
     MemoryCalendarRepository,
@@ -40,6 +41,7 @@ from worklogger.infrastructure.database import MigrationRunner, SQLiteConnection
 from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteDailyNoteRepository, SQLiteQuickLogRepository, SQLiteSettingsRepository
 from worklogger.infrastructure.security import PBKDF2PasswordHasher
 from worklogger.domain.notes.models import DailyNote
+from worklogger.infrastructure.i18n import get_language
 
 
 def _app() -> QApplication:
@@ -211,6 +213,45 @@ class NotesReportsPresentationTests(unittest.TestCase):
         self.assertEqual((recovered.content, recovered.expected_content), ("Unsubmitted", "Original"))
         self.assertEqual(notes.get_for_day(model.service.user_id, day).content, "Changed elsewhere")
         dialog._draft_timer.stop()
+
+    def test_note_navigation_keeps_date_selection_and_content_actions_in_sync(self):
+        model, notes, _quick = self._note_model()
+        saved_day, empty_day = date(2026, 10, 8), date(2026, 10, 9)
+        notes.save(DailyNote(model.service.user_id, saved_day, "Meeting summary\nFollow up tomorrow"))
+        dialog = NoteEditorDialog(model, empty_day, job_runner=ImmediateJobRunner())
+        self.addCleanup(dialog.deleteLater)
+        self.assertTrue(dialog.refresh())
+        self.assertEqual(dialog.editor.toPlainText(), "")
+        self.assertTrue(dialog.editor.placeholderText())
+        self.assertFalse(dialog.copy_button.isEnabled())
+        self.assertFalse(dialog.export_button.isEnabled())
+        self.assertFalse(dialog.rewrite_button.isEnabled())
+        self.assertEqual(dialog.history_list.currentItem().data(Qt.ItemDataRole.UserRole), empty_day)
+        saved_item = dialog.history_list.item(1)
+        dialog.history_list.setCurrentItem(saved_item)
+        self.assertEqual(dialog.editor.toPlainText(), "Meeting summary\nFollow up tomorrow")
+        self.assertEqual(dialog.date_label.text(), QLocale(get_language()).toString(
+            QDate(2026, 10, 8), QLocale.FormatType.LongFormat))
+        self.assertEqual(dialog.history_list.currentItem().data(Qt.ItemDataRole.UserRole), saved_day)
+        self.assertTrue(dialog.copy_button.isEnabled())
+        self.assertTrue(dialog.export_button.isEnabled())
+        dialog.editor.setPlainText("Keep this draft")
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.No):
+            dialog.history_list.setCurrentItem(dialog.history_list.item(0))
+        self.assertEqual(dialog.editor.toPlainText(), "Keep this draft")
+        self.assertEqual(dialog.history_list.currentItem().data(Qt.ItemDataRole.UserRole), saved_day)
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+            dialog.history_list.setCurrentItem(dialog.history_list.item(0))
+        self.assertEqual(model.load(saved_day).value.content, "Keep this draft")
+        self.assertEqual(dialog.editor.toPlainText(), "")
+        self.assertFalse(dialog.copy_button.isEnabled())
+        dialog.search_input.setText("no matching content")
+        dialog._search()
+        self.assertEqual(dialog.history_list.count(), 0)
+        self.assertFalse(dialog.empty_label.isHidden())
+        self.assertEqual(dialog._day, empty_day)
+        dialog._draft_timer.stop()
+        dialog._search_timer.stop()
 
     def test_report_viewmodel_and_dialog_generate_then_save_report(self) -> None:
         reports = MemoryReportRepository()

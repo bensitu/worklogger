@@ -331,9 +331,6 @@ msgstr "일평균"
 msgid "Daily Report"
 msgstr "일일 보고서"
 
-msgid "Daily notes"
-msgstr "일별 메모"
-
 msgid "Dark mode"
 msgstr "다크 모드"
 
@@ -790,6 +787,12 @@ msgstr "데이터 없음"
 msgid "No events found."
 msgstr "일정을 찾을 수 없습니다."
 
+msgid "No note yet"
+msgstr "아직 메모가 없습니다"
+
+msgid "No notes found"
+msgstr "메모를 찾을 수 없습니다"
+
 msgid "No notes recorded for this period."
 msgstr "이 기간에 기록된 메모가 없습니다."
 
@@ -810,6 +813,9 @@ msgstr "다운로드되지 않음"
 
 msgid "Not required"
 msgstr "필요 없음"
+
+msgid "Notes"
+msgstr "메모"
 
 msgid "November"
 msgstr "11월"
@@ -1476,6 +1482,9 @@ msgstr "WorkLogger가 이미 실행 중입니다."
 
 msgid "Worked: {hours}"
 msgstr "작업 시간: {hours}"
+
+msgid "Write a note for this date..."
+msgstr "이 날짜의 메모를 입력하세요..."
 
 msgid "Year"
 msgstr "년"

@@ -331,9 +331,6 @@ msgstr "日均工时"
 msgid "Daily Report"
 msgstr "日报"
 
-msgid "Daily notes"
-msgstr "每日笔记"
-
 msgid "Dark mode"
 msgstr "深色模式"
 
@@ -790,6 +787,12 @@ msgstr "暂无数据"
 msgid "No events found."
 msgstr "未找到事件。"
 
+msgid "No note yet"
+msgstr "暂无笔记"
+
+msgid "No notes found"
+msgstr "未找到笔记"
+
 msgid "No notes recorded for this period."
 msgstr "此期间没有记录备注。"
 
@@ -810,6 +813,9 @@ msgstr "未下载"
 
 msgid "Not required"
 msgstr "不需要"
+
+msgid "Notes"
+msgstr "笔记"
 
 msgid "November"
 msgstr "11月"
@@ -1106,7 +1112,7 @@ msgid "Schedule / Records"
 msgstr "日程 / 记录"
 
 msgid "Search notes"
-msgstr "搜索便签"
+msgstr "搜索笔记"
 
 msgid "Search reports..."
 msgstr "搜索报表..."
@@ -1476,6 +1482,9 @@ msgstr "WorkLogger 已在运行。"
 
 msgid "Worked: {hours}"
 msgstr "已工作：{hours}"
+
+msgid "Write a note for this date..."
+msgstr "输入这一天的笔记..."
 
 msgid "Year"
 msgstr "年"

@@ -26,7 +26,7 @@ are disabled in the standard application.
 Use the month arrows or Today to choose a month, then select a date. The right
 panel records individual periods and lists the selected day's time records and
 imported calendar events. New time record opens an empty manual editor and focuses
-the start time. Daily notes opens the selected date's separate memo. The calendar
+the start time. Notes opens the selected date's separate memo. The calendar
 does not expose a separate quick-log editor or a general AI chat window.
 
 ### Manual Entry
@@ -114,9 +114,9 @@ language. A holiday is not an imported event and does not create a work record.
 Cells can show notes, overnight work, event counts, and work-type indicators.
 Markers and daily totals are visual summaries, not additional entries.
 
-## Daily Notes
+## Notes
 
-Use Daily notes for extra matters that do not belong to a work period. Search finds
+Use Notes for extra matters that do not belong to a work period. Search finds
 saved notes and previous quick-log descriptions. Previous entries remain readable
 and can be added to a draft without converting them to work time. The editor supports
 draft recovery, copying, Markdown export, and optional text polishing. Templates

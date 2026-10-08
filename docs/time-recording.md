@@ -8,7 +8,7 @@ The right-side total shows worked time already stored for the selected date.
 Scheduled calendar events are displayed separately and do not count as work.
 
 New time record is the main action in the calendar header. It opens Manual Input,
-clears the editing selection, and focuses the start field. A separate Daily notes
+clears the editing selection, and focuses the start field. A separate Notes
 button opens the selected date's memo without creating a work period. Historical
 quick logs are readable there; they do not contribute worked hours.
 

@@ -329,9 +329,6 @@ msgstr ""
 msgid "Daily Report"
 msgstr ""
 
-msgid "Daily notes"
-msgstr ""
-
 msgid "Dark mode"
 msgstr ""
 
@@ -788,6 +785,12 @@ msgstr ""
 msgid "No events found."
 msgstr ""
 
+msgid "No note yet"
+msgstr ""
+
+msgid "No notes found"
+msgstr ""
+
 msgid "No notes recorded for this period."
 msgstr ""
 
@@ -807,6 +810,9 @@ msgid "Not downloaded"
 msgstr ""
 
 msgid "Not required"
+msgstr ""
+
+msgid "Notes"
 msgstr ""
 
 msgid "November"
@@ -1473,6 +1479,9 @@ msgid "WorkLogger is already running."
 msgstr ""
 
 msgid "Worked: {hours}"
+msgstr ""
+
+msgid "Write a note for this date..."
 msgstr ""
 
 msgid "Year"

@@ -1,8 +1,8 @@
-# Daily Notes
+# Notes
 
 Daily notes are date-scoped memos, independent of recorded work periods. They do
-not add worked hours, break time, or leave. The calendar provides a direct Daily
-notes action and marks dates with saved notes when note markers are enabled.
+not add worked hours, break time, or leave. The calendar provides a direct Notes
+action and marks dates with saved notes when note markers are enabled.
 
 ## Editing and Recovery
 
@@ -11,6 +11,14 @@ Report templates are managed in Reports; the memo editor never changes them.
 Search returns up to 50 matching dates, scoped to the signed-in account. It searches
 saved memo content and descriptions in previous quick logs. Percent signs and
 underscores in search terms are literal characters, not wildcard operators.
+
+Search sits above the date history. Each history row separates its date from a
+single-line, width-constrained content preview. The selected date is highlighted;
+the unfiltered list also includes the open date when it has no saved note. The
+editor heading displays that date in the active language, next to Polish text,
+Copy Markdown, Export Markdown, and Reload saved note. These actions operate only
+on the displayed note. Empty notes show an input placeholder; polishing, copying,
+and exporting remain disabled until the editor contains non-whitespace text.
 
 Drafts are saved after a short typing pause. Each draft retains the content on
 which editing began and the sharing choices. Reopening restores that draft without

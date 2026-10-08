@@ -148,7 +148,7 @@ class MinimalView(QWidget):
         nav.addWidget(self.today_button)
         nav.addWidget(self.next_button)
         nav.addWidget(self.date_label, 1)
-        self.notes_button = QPushButton(_("Daily notes"))
+        self.notes_button = QPushButton(_("Notes"))
         self.notes_button.setVisible(self._notes_workflow is not None)
         nav.addWidget(self.notes_button)
         if self._config.account_name:

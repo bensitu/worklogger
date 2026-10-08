@@ -3,14 +3,15 @@
 from datetime import date
 from pathlib import Path
 
-from PySide6.QtCore import QTimer, Signal, Qt
+from PySide6.QtCore import QDate, QLocale, QSignalBlocker, QTimer, Signal, Qt
 from PySide6.QtWidgets import (QApplication, QCheckBox, QDialog, QFileDialog,
-    QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMessageBox,
+    QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMessageBox,
     QPushButton, QTextEdit, QToolButton, QVBoxLayout, QWidget)
 
 from worklogger.domain.notes.preferences import NoteSharing
 from worklogger.domain.shared.errors import InfrastructureError
-from worklogger.infrastructure.i18n import _
+from worklogger.infrastructure.i18n import _, get_language
+from worklogger.presentation.notes.history_delegate import NoteHistoryDelegate
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.presentation.widgets.assets import apply_window_icon
@@ -35,9 +36,10 @@ class NoteEditorDialog(QDialog):
         self._saved_content = ""
         self._saved_sharing = NoteSharing()
         self.setObjectName("note_editor_dialog")
-        self.setWindowTitle(_("Daily notes"))
+        self.setWindowTitle(_("Notes"))
         apply_window_icon(self)
-        self.resize(740, 580)
+        self.resize(900, 640)
+        self.setMinimumSize(760, 520)
         self._build_ui()
         self._draft_timer = QTimer(self)
         self._draft_timer.setSingleShot(True)
@@ -74,7 +76,9 @@ class NoteEditorDialog(QDialog):
             self._state = state
             self._day = state.note.day
             self._saved_content, self._saved_sharing = state.note.content, state.saved_sharing
-            self.date_label.setText(state.note.day.isoformat())
+            day = state.note.day
+            self.date_label.setText(QLocale(get_language()).toString(
+                QDate(day.year, day.month, day.day), QLocale.FormatType.LongFormat))
             self.editor.setPlainText(state.content)
             self.report_checkbox.setChecked(state.sharing.reports)
             self.ai_checkbox.setChecked(state.sharing.ai)
@@ -87,32 +91,74 @@ class NoteEditorDialog(QDialog):
             self._last_error = None
         finally:
             self._updating = False
+        self._sync_history_selection()
+        self._update_actions()
 
     def _build_ui(self):
         root = QVBoxLayout(self)
-        root.setContentsMargins(16, 16, 16, 16)
-        row = QHBoxLayout()
+        root.setContentsMargins(20, 20, 20, 16)
+        root.setSpacing(16)
+        body = QHBoxLayout()
+        body.setSpacing(20)
+        sidebar = QWidget()
+        sidebar.setMinimumWidth(190)
+        sidebar.setMaximumWidth(250)
+        history = QVBoxLayout(sidebar)
+        history.setContentsMargins(0, 0, 0, 0)
+        history.setSpacing(12)
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText(_("Search notes"))
-        row.addWidget(self.search_input, 1)
+        self.search_input.setClearButtonEnabled(True)
+        history.addWidget(self.search_input)
+        self.history_list = QListWidget()
+        self.history_list.setObjectName("note_history_list")
+        self.history_list.setAccessibleName(_("Notes"))
+        self.history_list.setItemDelegate(NoteHistoryDelegate(self.history_list))
+        self.history_list.setSpacing(4)
+        self.history_list.setFrameShape(QFrame.Shape.NoFrame)
+        self.history_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        history.addWidget(self.history_list, 1)
+        self.empty_label = QLabel(_("No notes found"))
+        self.empty_label.setProperty("role", "secondary")
+        self.empty_label.setWordWrap(True)
+        self.empty_label.hide()
+        history.addWidget(self.empty_label)
+        body.addWidget(sidebar, 1)
+        content = QVBoxLayout()
+        content.setSpacing(12)
+        heading = QHBoxLayout()
+        heading.setSpacing(8)
         self.date_label = QLabel()
-        row.addWidget(self.date_label)
+        self.date_label.setWordWrap(True)
+        self.date_label.setStyleSheet("font-size: 16px; font-weight: 600;")
+        heading.addWidget(self.date_label, 1)
+        self.rewrite_button = QPushButton(_("Polish text"))
+        set_button_icon(self.rewrite_button, "sparkles", accent=True)
+        heading.addWidget(self.rewrite_button)
+        self.copy_button = QToolButton()
+        self.copy_button.setToolTip(_("Copy Markdown"))
+        self.copy_button.setAccessibleName(_("Copy Markdown"))
+        set_button_icon(self.copy_button, "copy")
+        heading.addWidget(self.copy_button)
+        self.export_button = QToolButton()
+        self.export_button.setToolTip(_("Export Markdown"))
+        self.export_button.setAccessibleName(_("Export Markdown"))
+        set_button_icon(self.export_button, "download")
+        heading.addWidget(self.export_button)
         self.reload_button = QToolButton()
         self.reload_button.setToolTip(_("Reload saved note"))
+        self.reload_button.setAccessibleName(_("Reload saved note"))
         set_button_icon(self.reload_button, "rotate-ccw")
-        row.addWidget(self.reload_button)
-        root.addLayout(row)
-        body = QHBoxLayout()
-        self.history_list = QListWidget()
-        self.history_list.setMaximumWidth(190)
-        body.addWidget(self.history_list)
-        content = QVBoxLayout()
+        heading.addWidget(self.reload_button)
+        content.addLayout(heading)
         self.recovery_label = QLabel(_("Recovered draft"))
         self.recovery_label.setProperty("role", "secondary")
         content.addWidget(self.recovery_label)
         self.editor = QTextEdit()
         self.editor.setObjectName("note_text_edit")
         self.editor.setAcceptRichText(False)
+        self.editor.setAccessibleName(_("Notes"))
+        self.editor.setPlaceholderText(_("Write a note for this date..."))
         content.addWidget(self.editor, 1)
         self.previous_group = QWidget()
         previous = QVBoxLayout(self.previous_group)
@@ -130,24 +176,18 @@ class NoteEditorDialog(QDialog):
         self.ai_checkbox = QCheckBox(_("Allow in AI context"))
         content.addWidget(self.report_checkbox)
         content.addWidget(self.ai_checkbox)
-        body.addLayout(content, 1)
+        body.addLayout(content, 3)
         root.addLayout(body, 1)
         tools = QHBoxLayout()
-        self.rewrite_button = QPushButton(_("Polish text"))
-        set_button_icon(self.rewrite_button, "sparkles", accent=True)
-        self.rewrite_button.setEnabled(self._view_model.rewrite_available)
-        self.copy_button = QToolButton()
-        self.copy_button.setToolTip(_("Copy Markdown"))
-        set_button_icon(self.copy_button, "copy")
-        self.export_button = QToolButton()
-        self.export_button.setToolTip(_("Export Markdown"))
-        set_button_icon(self.export_button, "download")
         self.close_button = QPushButton(_("Close"))
         self.save_button = QPushButton(_("Save"))
         self.save_button.setProperty("variant", "primary")
         set_button_icon(self.save_button, "save")
-        for button in (self.rewrite_button, self.copy_button, self.export_button):
-            tools.addWidget(button)
+        for button in (self.rewrite_button, self.copy_button, self.export_button, self.reload_button,
+                       self.close_button, self.save_button):
+            button.setMinimumHeight(36)
+        for button in (self.copy_button, self.export_button, self.reload_button):
+            button.setMinimumWidth(36)
         tools.addStretch()
         tools.addWidget(self.close_button)
         tools.addWidget(self.save_button)
@@ -156,8 +196,8 @@ class NoteEditorDialog(QDialog):
         self.report_checkbox.toggled.connect(self._changed)
         self.ai_checkbox.toggled.connect(self._changed)
         self.search_input.textChanged.connect(lambda: self._search_timer.start())
-        self.history_list.itemActivated.connect(self._select_note)
-        self.history_list.itemClicked.connect(self._select_note)
+        self.history_list.currentItemChanged.connect(
+            lambda current, _previous: self._select_note(current) if current is not None else None)
         self.insert_button.clicked.connect(lambda: self.editor.setPlainText(
             self._view_model.insert_previous_entries(self._state, self.editor.toPlainText())))
         self.reload_button.clicked.connect(self._reload)
@@ -166,8 +206,25 @@ class NoteEditorDialog(QDialog):
         self.export_button.clicked.connect(self._choose_export_path)
         self.close_button.clicked.connect(self.reject)
         self.save_button.clicked.connect(self._save)
+        self._update_actions()
+
+    def _update_actions(self):
+        has_content = bool(self.editor.toPlainText().strip())
+        self.rewrite_button.setEnabled(has_content and self._view_model.rewrite_available)
+        self.copy_button.setEnabled(has_content)
+        self.export_button.setEnabled(has_content)
+
+    def _sync_history_selection(self):
+        with QSignalBlocker(self.history_list):
+            self.history_list.setCurrentRow(-1)
+            for row in range(self.history_list.count()):
+                item = self.history_list.item(row)
+                if item.data(Qt.ItemDataRole.UserRole) == self._day:
+                    self.history_list.setCurrentItem(item)
+                    break
 
     def _changed(self, *_args):
+        self._update_actions()
         if self._updating or self._state is None:
             return
         self._version += 1
@@ -226,21 +283,28 @@ class NoteEditorDialog(QDialog):
             return
         query = self.search_input.text()
         def render(notes):
-            self.history_list.clear()
-            for note in notes:
-                preview = note.content.splitlines()[0][:45] if note.content else _("Previous entries")
-                item = QListWidgetItem(note.day.isoformat() + "\n" + preview)
-                item.setData(Qt.ItemDataRole.UserRole, note.day)
-                self.history_list.addItem(item)
+            previews = {note.day: " ".join(note.content.split()) for note in notes}
+            if not query.strip() and self._state is not None:
+                previews.setdefault(self._day, " ".join(self._state.content.split()))
+            with QSignalBlocker(self.history_list):
+                self.history_list.clear()
+                for day, preview in sorted(previews.items(), reverse=True):
+                    item = QListWidgetItem(day.isoformat() + "\n" + (preview[:160] or _("No note yet")))
+                    item.setData(Qt.ItemDataRole.UserRole, day)
+                    self.history_list.addItem(item)
+            self.empty_label.setVisible(not previews)
+            self._sync_history_selection()
         self._run("search_notes", lambda: self._view_model.search(query), render)
 
     def _select_note(self, item):
         day = item.data(Qt.ItemDataRole.UserRole)
         if day == self._day or self._busy:
+            self._sync_history_selection()
             return
         if self.has_unsaved_changes and QMessageBox.question(self, _("Keep draft"),
             _("Keep the current draft and open another date?"), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
+            self._sync_history_selection()
             return
         state, content, sharing = self._state, self.editor.toPlainText(), self._sharing()
         def load():
@@ -262,7 +326,7 @@ class NoteEditorDialog(QDialog):
         def saved(workspace):
             self.set_state(workspace)
             self.saved.emit()
-            QMessageBox.information(self, _("Daily notes"), _("Saved"))
+            QMessageBox.information(self, _("Notes"), _("Saved"))
             self._search()
         self._run("save_note", lambda: self._view_model.save(state, content, sharing), saved)
 
@@ -282,6 +346,7 @@ class NoteEditorDialog(QDialog):
 
     def _set_error(self, error):
         self._last_error = error
+        self._sync_history_selection()
         QMessageBox.warning(self, _("Error"), display_error_message(error))
 
     def _request_close(self):
@@ -296,7 +361,7 @@ class NoteEditorDialog(QDialog):
             self._run("close_note", lambda: self._view_model.discard_draft(self._day), lambda _value: QDialog.reject(self))
             return
         if self.has_unsaved_changes:
-            box = QMessageBox(QMessageBox.Icon.Question, _("Daily notes"), _("Keep this draft for later?"),
+            box = QMessageBox(QMessageBox.Icon.Question, _("Notes"), _("Keep this draft for later?"),
                 QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel, self)
             box.button(QMessageBox.StandardButton.Save).setText(_("Keep draft"))
             box.button(QMessageBox.StandardButton.Discard).setText(_("Discard"))

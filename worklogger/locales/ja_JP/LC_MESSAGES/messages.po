@@ -331,9 +331,6 @@ msgstr "1日平均"
 msgid "Daily Report"
 msgstr "日報"
 
-msgid "Daily notes"
-msgstr "日別メモ"
-
 msgid "Dark mode"
 msgstr "ダークモード"
 
@@ -790,6 +787,12 @@ msgstr "データがありません"
 msgid "No events found."
 msgstr "予定が見つかりません。"
 
+msgid "No note yet"
+msgstr "メモはまだありません"
+
+msgid "No notes found"
+msgstr "メモが見つかりません"
+
 msgid "No notes recorded for this period."
 msgstr "この期間に記録されたメモはありません。"
 
@@ -810,6 +813,9 @@ msgstr "未ダウンロード"
 
 msgid "Not required"
 msgstr "不要"
+
+msgid "Notes"
+msgstr "メモ"
 
 msgid "November"
 msgstr "11月"
@@ -1476,6 +1482,9 @@ msgstr "WorkLogger は既に起動しています。"
 
 msgid "Worked: {hours}"
 msgstr "作業時間：{hours}"
+
+msgid "Write a note for this date..."
+msgstr "この日付のメモを入力..."
 
 msgid "Year"
 msgstr "年"
