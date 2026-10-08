@@ -298,6 +298,9 @@ msgstr "Copy"
 msgid "Copy Markdown"
 msgstr "Copy Markdown"
 
+msgid "Copy recovery key"
+msgstr "Copy recovery key"
+
 msgid "Create account"
 msgstr "Create account"
 
@@ -354,6 +357,9 @@ msgstr "Default break (h)"
 
 msgid "Delete"
 msgstr "Delete"
+
+msgid "Delete model {model}?"
+msgstr "Delete model {model}?"
 
 msgid "Delete record"
 msgstr "Delete record"
@@ -451,8 +457,14 @@ msgstr "Enter your password."
 msgid "Error"
 msgstr "Error"
 
+msgid "Estimated RAM"
+msgstr "Estimated RAM"
+
 msgid "Estimated RAM: {ram} GB"
 msgstr "Estimated RAM: {ram} GB"
+
+msgid "Estimated size"
+msgstr "Estimated size"
 
 msgid "Export"
 msgstr "Export"
@@ -504,6 +516,9 @@ msgstr "External model testing is not configured."
 
 msgid "February"
 msgstr "February"
+
+msgid "File"
+msgstr "File"
 
 msgid "Forgot Password?"
 msgstr "Forgot Password?"
@@ -622,6 +637,9 @@ msgstr "Keep the current draft and open another date?"
 msgid "Keep this draft for later?"
 msgstr "Keep this draft for later?"
 
+msgid "Keep this recovery key private. The saved file is not encrypted."
+msgstr "Keep this recovery key private. The saved file is not encrypted."
+
 msgid "Korean"
 msgstr "Korean"
 
@@ -678,6 +696,9 @@ msgstr "Local user"
 
 msgid "Log Out"
 msgstr "Log Out"
+
+msgid "Log out of your account?"
+msgstr "Log out of your account?"
 
 msgid "Login"
 msgstr "Login"
@@ -793,6 +814,9 @@ msgstr "No data"
 msgid "No events found."
 msgstr "No events found."
 
+msgid "No models found"
+msgstr "No models found"
+
 msgid "No note yet"
 msgstr "No note yet"
 
@@ -819,6 +843,9 @@ msgstr "Not downloaded"
 
 msgid "Not required"
 msgstr "Not required"
+
+msgid "Not verified"
+msgstr "Not verified"
 
 msgid "Note saved."
 msgstr "Note saved."
@@ -985,6 +1012,9 @@ msgstr "Recovered draft"
 msgid "Recovery key"
 msgstr "Recovery key"
 
+msgid "Recovery key saved."
+msgstr "Recovery key saved."
+
 msgid "Recurring events must have an end date or occurrence count."
 msgstr "Recurring events must have an end date or occurrence count."
 
@@ -1098,6 +1128,9 @@ msgstr "Save changes"
 
 msgid "Save content"
 msgstr "Save content"
+
+msgid "Save recovery key"
+msgstr "Save recovery key"
 
 msgid "Save template"
 msgstr "Save template"
@@ -1249,6 +1282,9 @@ msgstr "Temporary password"
 msgid "Test"
 msgstr "Test"
 
+msgid "Text files (*.txt)"
+msgstr "Text files (*.txt)"
+
 msgid "The CSV file exceeds the supported size or row limit."
 msgstr "The CSV file exceeds the supported size or row limit."
 
@@ -1372,6 +1408,9 @@ msgstr "Unable to save settings. Please try again."
 msgid "Unable to save the note. Your changes have been retained."
 msgstr "Unable to save the note. Your changes have been retained."
 
+msgid "Unable to save the recovery key. Choose another location and try again."
+msgstr "Unable to save the recovery key. Choose another location and try again."
+
 msgid "Unable to save the report. Your changes have been retained."
 msgstr "Unable to save the report. Your changes have been retained."
 
@@ -1392,6 +1431,9 @@ msgstr "Unable to update saved sign-in information."
 
 msgid "Unable to update the quick log. Your changes have been retained."
 msgstr "Unable to update the quick log. Your changes have been retained."
+
+msgid "Unknown"
+msgstr "Unknown"
 
 msgid "Unknown error"
 msgstr "Unknown error"
@@ -1417,6 +1459,9 @@ msgstr "Update check is not configured."
 msgid "Use a web proxy for this application."
 msgstr "Use a web proxy for this application."
 
+msgid "Use model"
+msgstr "Use model"
+
 msgid "User"
 msgstr "User"
 
@@ -1434,6 +1479,9 @@ msgstr "Username"
 
 msgid "Validating backup..."
 msgstr "Validating backup..."
+
+msgid "Verified"
+msgstr "Verified"
 
 msgid "Verify"
 msgstr "Verify"
@@ -1563,6 +1611,12 @@ msgstr "{month} {year}"
 
 msgid "{percent}%"
 msgstr "{percent}%"
+
+msgid "{ram} GB"
+msgstr "{ram} GB"
+
+msgid "{size} MB"
+msgstr "{size} MB"
 
 msgid "{start_month} {start_day} - {end_month} {end_day}, {year}"
 msgstr "{start_month} {start_day} - {end_month} {end_day}, {year}"

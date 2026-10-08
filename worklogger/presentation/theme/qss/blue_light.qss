@@ -207,6 +207,11 @@ QFrame#settings_navigation_frame {
   border-radius: 8px;
 }
 
+QLabel[role="section_heading"] {
+  font-size: 16px;
+  font-weight: 600;
+}
+
 QLabel[role="title"] {
   color: {{ text }};
   font-size: 24px;

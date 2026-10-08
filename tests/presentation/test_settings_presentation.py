@@ -11,7 +11,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QApplication, QColorDialog, QDialog, QLineEdit
+from PySide6.QtWidgets import QApplication, QColorDialog, QDialog, QLineEdit, QMessageBox
 
 from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandler
 from worklogger.config.constants import (
@@ -205,6 +205,17 @@ class SettingsPresentationTests(unittest.TestCase):
         page.set_account(User(id=42, username="alice", is_admin=False))
         self.assertTrue(page.manage_users_button.isHidden())
         self.assertFalse(page.manage_users_button.isEnabled())
+
+    def test_logout_requires_confirmation(self):
+        page = SettingsPage(_view_model(MemorySettingsRepository()))
+        requests = []
+        page.logout_requested.connect(lambda: requests.append(True))
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.No):
+            page.logout_button.click()
+        self.assertEqual(requests, [])
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+            page.logout_button.click()
+        self.assertEqual(requests, [True])
 
     def test_invalid_port_keeps_saved_value_and_has_visible_error(self):
         repository = MemorySettingsRepository()

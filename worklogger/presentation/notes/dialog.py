@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QDialog, QFileDialog,
 from worklogger.domain.notes.preferences import NoteSharing
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.infrastructure.i18n import _, get_language
-from worklogger.presentation.notes.history_delegate import NoteHistoryDelegate
+from worklogger.presentation.widgets.two_line_delegate import TwoLineItemDelegate
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.presentation.widgets.assets import apply_window_icon
@@ -117,9 +117,9 @@ class NoteEditorDialog(QDialog):
         self.search_input.setClearButtonEnabled(True)
         history.addWidget(self.search_input)
         self.history_list = QListWidget()
-        self.history_list.setObjectName("note_history_list")
+        self.history_list.setObjectName("note_history_list_widget")
         self.history_list.setAccessibleName(_("Notes"))
-        self.history_list.setItemDelegate(NoteHistoryDelegate(self.history_list))
+        self.history_list.setItemDelegate(TwoLineItemDelegate(self.history_list))
         self.history_list.setSpacing(4)
         self.history_list.setFrameShape(QFrame.Shape.NoFrame)
         self.history_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -136,7 +136,7 @@ class NoteEditorDialog(QDialog):
         heading.setSpacing(8)
         self.date_label = QLabel()
         self.date_label.setWordWrap(True)
-        self.date_label.setStyleSheet("font-size: 16px; font-weight: 600;")
+        self.date_label.setProperty("role", "section_heading")
         heading.addWidget(self.date_label, 1)
         self.rewrite_button = QPushButton(_("Polish text"))
         set_button_icon(self.rewrite_button, "sparkles", accent=True)

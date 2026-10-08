@@ -39,6 +39,17 @@ supply its own metadata and backend after verifying compatibility.
 
 ## Catalog Configuration
 
+The model manager separates the catalog list from the selected model's details.
+Details show localized descriptions, file names, size and RAM estimates, context
+and output limits, license, verification state, and active selection. Refresh and
+Import apply to the catalog; Download, Verify, Delete, and Use model apply to the
+selected item. Unavailable actions are disabled, refresh preserves selection,
+and deletion requires confirmation. The primary Use model action is enabled only
+for an available, verified file that is not already active. Background operations
+disable selection until completion; Cancel requests cancellation and keeps the
+dialog open until that operation finishes. Model management does not itself
+configure or start an inference backend.
+
 Every supplied URL uses an immutable repository commit, with the corresponding
 LFS SHA-256 digest. File existence and digests were checked through public Hugging
 Face metadata. The multi-gigabyte files were not downloaded or benchmarked.

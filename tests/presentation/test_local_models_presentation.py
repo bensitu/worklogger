@@ -5,10 +5,11 @@ from pathlib import Path
 import unittest
 import threading
 import time
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 from worklogger.app.commands.local_model_commands import (
     DeleteLocalModelCommand,
@@ -50,6 +51,7 @@ class FakeLocalModelHandlers:
         )
         self.selected: list[str | None] = []
         self.imported: list[Path | str] = []
+        self.deleted: list[str] = []
 
     def handle(self, command: object) -> object:
         if isinstance(command, ListLocalModelsQuery):
@@ -81,6 +83,7 @@ class FakeLocalModelHandlers:
             self.selected.append(command.model_id)
             return Result.success(None)
         if isinstance(command, DeleteLocalModelCommand):
+            self.deleted.append(command.model_id)
             return Result.success(None)
         raise AssertionError(f"Unexpected command: {command!r}")
 
@@ -105,12 +108,16 @@ class LocalModelsPresentationTests(unittest.TestCase):
         model.load = load
         dialog = LocalModelsDialog(model, job_runner=QtJobRunner())
         self.assertTrue(dialog.refresh())
+        self.assertFalse(dialog.select_button.isEnabled())
         deadline = time.monotonic() + 3
         while dialog._pending_handle is not None and time.monotonic() < deadline:
             self._app.processEvents()
             time.sleep(0.01)
         self.assertIsNone(dialog._pending_handle)
         self.assertIsNotNone(dialog.state)
+        self.assertEqual(dialog.model_name_label.text(), "Model A")
+        self.assertFalse(dialog.download_button.isEnabled())
+        self.assertTrue(dialog.select_button.isEnabled())
         self.assertTrue(threads)
         self.assertNotEqual(threads[0], threading.get_ident())
         dialog.close()
@@ -189,11 +196,19 @@ class LocalModelsPresentationTests(unittest.TestCase):
         dialog.model_list.setCurrentRow(0)
         self.assertTrue(dialog.verify_selected())
         self.assertTrue(dialog.select_current())
+        self.assertEqual(dialog._selected_model_id(), "model-a")
+        self.assertFalse(dialog.select_button.isEnabled())
         self.assertTrue(dialog.import_model("demo.gguf"))
 
         self.assertEqual(handlers.selected, ["model-a"])
         self.assertEqual(handlers.imported, ["demo.gguf"])
         self.assertIn("Model imported.", dialog.status_label.text())
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.No):
+            self.assertFalse(dialog.delete_selected())
+        self.assertEqual(handlers.deleted, [])
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+            self.assertTrue(dialog.delete_selected())
+        self.assertEqual(handlers.deleted, ["model-a"])
 
         from dataclasses import replace
         handlers.entry = replace(handlers.entry, description="English description", license="MIT", min_ram_gb=8,
@@ -203,6 +218,7 @@ class LocalModelsPresentationTests(unittest.TestCase):
             self.assertTrue(dialog.refresh())
             tooltip = dialog.model_list.item(0).toolTip()
             self.assertIn(expected, tooltip)
+            self.assertEqual(dialog.description_label.text(), expected)
             self.assertIn("8192", tooltip)
             self.assertIn("MIT", tooltip)
             if language != "en_US":

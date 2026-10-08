@@ -298,6 +298,9 @@ msgstr "コピー"
 msgid "Copy Markdown"
 msgstr "Markdownをコピー"
 
+msgid "Copy recovery key"
+msgstr "復旧キーをコピー"
+
 msgid "Create account"
 msgstr "アカウントを作成"
 
@@ -354,6 +357,9 @@ msgstr "既定の休憩（時間）"
 
 msgid "Delete"
 msgstr "削除"
+
+msgid "Delete model {model}?"
+msgstr "モデル {model} を削除しますか？"
 
 msgid "Delete record"
 msgstr "記録を削除"
@@ -451,8 +457,14 @@ msgstr "パスワードを入力してください。"
 msgid "Error"
 msgstr "エラー"
 
+msgid "Estimated RAM"
+msgstr "推定メモリ"
+
 msgid "Estimated RAM: {ram} GB"
 msgstr "推定メモリ：{ram} GB"
+
+msgid "Estimated size"
+msgstr "推定サイズ"
 
 msgid "Export"
 msgstr "エクスポート"
@@ -504,6 +516,9 @@ msgstr "外部モデルのテストは未設定です。"
 
 msgid "February"
 msgstr "2月"
+
+msgid "File"
+msgstr "ファイル"
 
 msgid "Forgot Password?"
 msgstr "パスワードをお忘れですか？"
@@ -622,6 +637,9 @@ msgstr "現在の下書きを保持して、別の日付を開きますか？"
 msgid "Keep this draft for later?"
 msgstr "この下書きを後で使えるように保持しますか？"
 
+msgid "Keep this recovery key private. The saved file is not encrypted."
+msgstr "この復旧キーを他人に知らせないでください。保存ファイルは暗号化されません。"
+
 msgid "Korean"
 msgstr "韓国語"
 
@@ -678,6 +696,9 @@ msgstr "ローカルユーザー"
 
 msgid "Log Out"
 msgstr "ログアウト"
+
+msgid "Log out of your account?"
+msgstr "アカウントからログアウトしますか？"
 
 msgid "Login"
 msgstr "ログイン"
@@ -793,6 +814,9 @@ msgstr "データがありません"
 msgid "No events found."
 msgstr "予定が見つかりません。"
 
+msgid "No models found"
+msgstr "モデルが見つかりません"
+
 msgid "No note yet"
 msgstr "メモはまだありません"
 
@@ -819,6 +843,9 @@ msgstr "未ダウンロード"
 
 msgid "Not required"
 msgstr "不要"
+
+msgid "Not verified"
+msgstr "未検証"
 
 msgid "Note saved."
 msgstr "メモを保存しました。"
@@ -985,6 +1012,9 @@ msgstr "復元された下書き"
 msgid "Recovery key"
 msgstr "復旧キー"
 
+msgid "Recovery key saved."
+msgstr "復旧キーを保存しました。"
+
 msgid "Recurring events must have an end date or occurrence count."
 msgstr "繰り返し予定には終了日または回数を指定してください。"
 
@@ -1098,6 +1128,9 @@ msgstr "変更を保存"
 
 msgid "Save content"
 msgstr "内容を保存"
+
+msgid "Save recovery key"
+msgstr "復旧キーを保存"
 
 msgid "Save template"
 msgstr "テンプレートを保存"
@@ -1249,6 +1282,9 @@ msgstr "一時パスワード"
 msgid "Test"
 msgstr "テスト"
 
+msgid "Text files (*.txt)"
+msgstr "テキストファイル (*.txt)"
+
 msgid "The CSV file exceeds the supported size or row limit."
 msgstr "CSV ファイルが対応するサイズまたは行数の上限を超えています。"
 
@@ -1372,6 +1408,9 @@ msgstr "設定を保存できませんでした。もう一度お試しくださ
 msgid "Unable to save the note. Your changes have been retained."
 msgstr "メモを保存できません。編集内容は保持されています。"
 
+msgid "Unable to save the recovery key. Choose another location and try again."
+msgstr "復旧キーを保存できません。別の場所を選んで再試行してください。"
+
 msgid "Unable to save the report. Your changes have been retained."
 msgstr "レポートを保存できませんでした。編集内容は保持されています。"
 
@@ -1392,6 +1431,9 @@ msgstr "保存済みのログイン情報を更新できませんでした。"
 
 msgid "Unable to update the quick log. Your changes have been retained."
 msgstr "作業メモを更新できません。変更内容は保持されています。"
+
+msgid "Unknown"
+msgstr "不明"
 
 msgid "Unknown error"
 msgstr "不明なエラー"
@@ -1417,6 +1459,9 @@ msgstr "更新確認は未設定です。"
 msgid "Use a web proxy for this application."
 msgstr "このアプリでWebプロキシを使用します。"
 
+msgid "Use model"
+msgstr "モデルを使用"
+
 msgid "User"
 msgstr "ユーザー"
 
@@ -1434,6 +1479,9 @@ msgstr "ユーザー名"
 
 msgid "Validating backup..."
 msgstr "バックアップを検証中..."
+
+msgid "Verified"
+msgstr "検証済み"
 
 msgid "Verify"
 msgstr "検証"
@@ -1563,6 +1611,12 @@ msgstr "{year}年{month}"
 
 msgid "{percent}%"
 msgstr "{percent}%"
+
+msgid "{ram} GB"
+msgstr "{ram} GB"
+
+msgid "{size} MB"
+msgstr "{size} MB"
 
 msgid "{start_month} {start_day} - {end_month} {end_day}, {year}"
 msgstr "{year}年{start_month}{start_day}日 - {end_month}{end_day}日"

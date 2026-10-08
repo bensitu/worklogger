@@ -3,14 +3,24 @@
 from __future__ import annotations
 
 from pathlib import Path
+from dataclasses import replace
+
+from PySide6.QtCore import QSignalBlocker, Qt
 
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
+    QFormLayout,
+    QFrame,
     QHBoxLayout,
+    QLabel,
     QListWidget,
     QListWidgetItem,
+    QMessageBox,
     QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -26,6 +36,7 @@ from worklogger.presentation.viewmodels import (
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
 from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.widgets.two_line_delegate import TwoLineItemDelegate
 
 
 class LocalModelsDialog(QDialog):
@@ -41,10 +52,13 @@ class LocalModelsDialog(QDialog):
         self._last_error: AppError | None = None
         self._job_runner = job_runner
         self._pending_handle: JobHandle[object] | None = None
+        self._busy = False
         self.setObjectName("local_models_dialog")
         self.setWindowTitle(_("Local Models"))
         apply_window_icon(self)
         self._build_ui()
+        self.resize(920, 560)
+        self.setMinimumSize(800, 500)
 
     @property
     def last_error(self) -> AppError | None:
@@ -130,6 +144,12 @@ class LocalModelsDialog(QDialog):
         if not model_id:
             self.status_label.setText(_("Select a model first."))
             return False
+        item = self._selected_item()
+        if QMessageBox.question(self, _("Delete"),
+            _("Delete model {model}?").format(model=item.entry.display_name if item else model_id),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
+            return False
         if self._job_runner is not None:
             return self._run_state_job("local_model_delete", lambda: self._view_model.delete_model(model_id),
                                        _("Please wait for the current operation."))
@@ -137,30 +157,74 @@ class LocalModelsDialog(QDialog):
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
-        root.setContentsMargins(14, 14, 14, 14)
-        root.setSpacing(10)
+        root.setContentsMargins(20, 20, 20, 16)
+        root.setSpacing(16)
+        toolbar = QHBoxLayout()
+        toolbar.addWidget(QLabel(_("Local Models")), 1)
+        self.refresh_button = QToolButton()
+        self.refresh_button.setToolTip(_("Refresh"))
+        self.refresh_button.setAccessibleName(_("Refresh"))
+        self.import_button = QPushButton(_("Import .gguf"))
+        toolbar.addWidget(self.refresh_button)
+        toolbar.addWidget(self.import_button)
+        root.addLayout(toolbar)
+        body = QHBoxLayout()
+        body.setSpacing(20)
 
         self.model_list = QListWidget()
         self.model_list.setObjectName("local_model_list_widget")
-        root.addWidget(self.model_list, 1)
+        self.model_list.setMinimumWidth(280)
+        self.model_list.setItemDelegate(TwoLineItemDelegate(self.model_list))
+        self.model_list.setSpacing(4)
+        self.model_list.setFrameShape(QFrame.Shape.NoFrame)
+        self.model_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        body.addWidget(self.model_list, 1)
+        details = QVBoxLayout()
+        details.setSpacing(12)
+        self.details_scroll = QScrollArea()
+        self.details_scroll.setWidgetResizable(True)
+        self.details_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.details_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        panel = QWidget()
+        info = QVBoxLayout(panel)
+        info.setContentsMargins(0, 0, 8, 0)
+        info.setSpacing(12)
+        self.model_name_label = self._detail_label()
+        self.model_name_label.setProperty("role", "section_heading")
+        self.model_status_label = self._detail_label()
+        self.model_status_label.setProperty("role", "secondary")
+        self.description_label = self._detail_label()
+        info.addWidget(self.model_name_label)
+        info.addWidget(self.model_status_label)
+        info.addWidget(self.description_label)
+        form = QFormLayout()
+        form.setSpacing(12)
+        self.file_label, self.size_label, self.ram_label = (self._detail_label() for _index in range(3))
+        self.context_label, self.license_label = self._detail_label(), self._detail_label()
+        for caption, label in ((_("File"), self.file_label), (_("Estimated size"), self.size_label),
+                               (_("Estimated RAM"), self.ram_label), (None, self.context_label),
+                               (_("License"), self.license_label)):
+            if caption is None:
+                form.addRow(label)
+            else:
+                form.addRow(caption, label)
+        info.addLayout(form)
+        info.addStretch(1)
+        self.details_scroll.setWidget(panel)
+        details.addWidget(self.details_scroll, 1)
 
         actions = QHBoxLayout()
-        self.refresh_button = QPushButton(_("Refresh"))
-        self.import_button = QPushButton(_("Import .gguf"))
         self.download_button = QPushButton(_("Download"))
         self.verify_button = QPushButton(_("Verify"))
-        self.select_button = QPushButton(_("Select"))
+        self.select_button = QPushButton(_("Use model"))
+        self.select_button.setProperty("variant", "primary")
         self.delete_button = QPushButton(_("Delete"))
-        for button in (
-            self.refresh_button,
-            self.import_button,
-            self.download_button,
-            self.verify_button,
-            self.select_button,
-            self.delete_button,
-        ):
+        for button in (self.download_button, self.verify_button, self.delete_button):
             actions.addWidget(button)
-        root.addLayout(actions)
+        details.addLayout(actions)
+        details.addWidget(self.select_button)
+        body.addLayout(details, 1)
+        root.addLayout(body, 1)
 
         bottom = QHBoxLayout()
         self.status_label = StatusLabel()
@@ -181,6 +245,57 @@ class LocalModelsDialog(QDialog):
                              (self.download_button, "download"), (self.verify_button, "shield-check"),
                              (self.select_button, "check"), (self.delete_button, "trash")):
             set_button_icon(button, icon)
+            button.setMinimumHeight(36)
+            if isinstance(button, QPushButton):
+                button.setAutoDefault(False)
+        self.close_button.setMinimumHeight(36)
+        self.close_button.setAutoDefault(False)
+        self.model_list.currentItemChanged.connect(lambda _current, _previous: self._update_details())
+        self._update_details()
+
+    def _detail_label(self):
+        label = QLabel()
+        label.setWordWrap(True)
+        label.setTextFormat(Qt.TextFormat.PlainText)
+        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        return label
+
+    def _selected_item(self):
+        model_id = self._selected_model_id()
+        return next((item for item in self._state.inventory.items if item.entry.id == model_id), None) if self._state else None
+
+    def _update_details(self):
+        item = self._selected_item()
+        if item is None:
+            self.model_name_label.setText(_("No models found") if self._state is not None else "")
+            for label in (self.model_status_label, self.description_label, self.file_label, self.size_label,
+                          self.ram_label, self.context_label, self.license_label):
+                label.clear()
+        else:
+            entry = item.entry
+            self.model_name_label.setText(entry.display_name)
+            self.model_status_label.setText(self._status_text(item))
+            self.description_label.setText(entry.description_translations.get(get_language(), entry.description))
+            self.file_label.setText(entry.filename)
+            self.size_label.setText(_("{size} MB").format(size=entry.estimated_size_mb) if entry.estimated_size_mb else _("Unknown"))
+            self.ram_label.setText(_("{ram} GB").format(ram=entry.min_ram_gb) if entry.min_ram_gb else _("Unknown"))
+            self.context_label.setText(_("Context: {context} tokens; output: {output} tokens").format(
+                context=entry.context_length, output=entry.max_output_tokens))
+            self.license_label.setText(entry.license or _("Unknown"))
+        self.download_button.setEnabled(bool(not self._busy and item and not item.available and item.entry.download_url))
+        self.verify_button.setEnabled(bool(not self._busy and item and item.available))
+        self.select_button.setEnabled(bool(not self._busy and item and item.verified and item.available and not item.active))
+        self.delete_button.setEnabled(bool(not self._busy and item and item.available))
+
+    def _status_text(self, item):
+        if item.verified:
+            status = _("Verified")
+        elif not item.available:
+            status = _("Not downloaded")
+        else:
+            status = display_error_code(item.reason) if item.reason else _("Not verified")
+        return status + (" | " + _("Active") if item.active else "")
 
     def accept(self) -> None:
         if self._pending_handle is None:
@@ -265,40 +380,31 @@ class LocalModelsDialog(QDialog):
     def _show_verify_result(self, status: object) -> None:
         message = _("Model verified.") if status.verified else display_error_code(status.reason)
         self.status_label.setText(message)
+        if self._state is not None:
+            items = tuple(replace(item, available=status.available, verified=status.verified, reason=status.reason)
+                          if item.entry.id == status.model_id else item for item in self._state.inventory.items)
+            self._state = replace(self._state, inventory=replace(self._state.inventory, items=items))
+            self._render()
 
     def _set_busy(self, busy: bool) -> None:
+        self._busy = busy
         self.close_button.setEnabled(True)
         self.close_button.setText(_("Cancel") if busy else _("Close"))
-        for button in (
-            self.refresh_button,
-            self.import_button,
-            self.download_button,
-            self.verify_button,
-            self.select_button,
-            self.delete_button,
-        ):
+        self.model_list.setEnabled(not busy)
+        for button in (self.refresh_button, self.import_button):
             button.setEnabled(not busy)
+        self._update_details()
 
     def _render(self) -> None:
-        self.model_list.clear()
+        selected_id = self._selected_model_id()
+        with QSignalBlocker(self.model_list):
+            self.model_list.clear()
         if self._state is None:
             return
         for item in self._state.inventory.items:
-            status = "" if item.verified else (
-                display_error_code(item.reason) if item.available else _("Not downloaded")
-            )
-            active = _("Active") if item.active else ""
-            label = " | ".join(
-                part
-                for part in (
-                    item.entry.display_name,
-                    status,
-                    active,
-                )
-                if part
-            )
+            label = item.entry.display_name + "\n" + self._status_text(item)
             list_item = QListWidgetItem(label)
-            list_item.setData(256, item.entry.id)
+            list_item.setData(Qt.ItemDataRole.UserRole, item.entry.id)
             entry = item.entry
             description = entry.description_translations.get(get_language(), entry.description)
             details = [description]
@@ -310,12 +416,16 @@ class LocalModelsDialog(QDialog):
                 details.append(_("License: {license}").format(license=entry.license))
             list_item.setToolTip("\n".join(part for part in details if part))
             self.model_list.addItem(list_item)
+        row = next((row for row, item in enumerate(self._state.inventory.items) if item.entry.id == selected_id), 0)
+        if self.model_list.count():
+            self.model_list.setCurrentRow(row)
+        self._update_details()
 
     def _selected_model_id(self) -> str | None:
         item = self.model_list.currentItem()
         if item is None:
             return None
-        return str(item.data(256) or "").strip() or None
+        return str(item.data(Qt.ItemDataRole.UserRole) or "").strip() or None
 
     def _choose_model_file(self) -> Path | None:
         path, _selected_filter = QFileDialog.getOpenFileName(

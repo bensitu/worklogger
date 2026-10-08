@@ -298,6 +298,9 @@ msgstr "복사"
 msgid "Copy Markdown"
 msgstr "Markdown 복사"
 
+msgid "Copy recovery key"
+msgstr "복구 키 복사"
+
 msgid "Create account"
 msgstr "계정 만들기"
 
@@ -354,6 +357,9 @@ msgstr "기본 휴식(시간)"
 
 msgid "Delete"
 msgstr "삭제"
+
+msgid "Delete model {model}?"
+msgstr "모델 {model}을 삭제할까요?"
 
 msgid "Delete record"
 msgstr "기록 삭제"
@@ -451,8 +457,14 @@ msgstr "비밀번호를 입력하세요."
 msgid "Error"
 msgstr "오류"
 
+msgid "Estimated RAM"
+msgstr "예상 메모리"
+
 msgid "Estimated RAM: {ram} GB"
 msgstr "예상 메모리: {ram} GB"
+
+msgid "Estimated size"
+msgstr "예상 크기"
 
 msgid "Export"
 msgstr "내보내기"
@@ -504,6 +516,9 @@ msgstr "외부 모델 테스트가 설정되지 않았습니다."
 
 msgid "February"
 msgstr "2월"
+
+msgid "File"
+msgstr "파일"
 
 msgid "Forgot Password?"
 msgstr "비밀번호를 잊으셨나요?"
@@ -622,6 +637,9 @@ msgstr "현재 초안을 유지하고 다른 날짜를 열까요?"
 msgid "Keep this draft for later?"
 msgstr "이 초안을 나중을 위해 보관할까요?"
 
+msgid "Keep this recovery key private. The saved file is not encrypted."
+msgstr "이 복구 키를 다른 사람에게 공개하지 마세요. 저장된 파일은 암호화되지 않습니다."
+
 msgid "Korean"
 msgstr "한국어"
 
@@ -678,6 +696,9 @@ msgstr "로컬 사용자"
 
 msgid "Log Out"
 msgstr "로그아웃"
+
+msgid "Log out of your account?"
+msgstr "계정에서 로그아웃할까요?"
 
 msgid "Login"
 msgstr "로그인"
@@ -793,6 +814,9 @@ msgstr "데이터 없음"
 msgid "No events found."
 msgstr "일정을 찾을 수 없습니다."
 
+msgid "No models found"
+msgstr "모델을 찾을 수 없습니다"
+
 msgid "No note yet"
 msgstr "아직 메모가 없습니다"
 
@@ -819,6 +843,9 @@ msgstr "다운로드되지 않음"
 
 msgid "Not required"
 msgstr "필요 없음"
+
+msgid "Not verified"
+msgstr "검증되지 않음"
 
 msgid "Note saved."
 msgstr "메모가 저장되었습니다."
@@ -985,6 +1012,9 @@ msgstr "복구된 초안"
 msgid "Recovery key"
 msgstr "복구 키"
 
+msgid "Recovery key saved."
+msgstr "복구 키를 저장했습니다."
+
 msgid "Recurring events must have an end date or occurrence count."
 msgstr "반복 일정에는 종료 날짜 또는 반복 횟수가 필요합니다."
 
@@ -1098,6 +1128,9 @@ msgstr "변경 저장"
 
 msgid "Save content"
 msgstr "내용 저장"
+
+msgid "Save recovery key"
+msgstr "복구 키 저장"
 
 msgid "Save template"
 msgstr "템플릿 저장"
@@ -1249,6 +1282,9 @@ msgstr "임시 비밀번호"
 msgid "Test"
 msgstr "테스트"
 
+msgid "Text files (*.txt)"
+msgstr "텍스트 파일 (*.txt)"
+
 msgid "The CSV file exceeds the supported size or row limit."
 msgstr "CSV 파일이 지원되는 크기 또는 행 수 제한을 초과했습니다."
 
@@ -1372,6 +1408,9 @@ msgstr "설정을 저장하지 못했습니다. 다시 시도하세요."
 msgid "Unable to save the note. Your changes have been retained."
 msgstr "메모를 저장할 수 없습니다. 변경 내용은 유지됩니다."
 
+msgid "Unable to save the recovery key. Choose another location and try again."
+msgstr "복구 키를 저장할 수 없습니다. 다른 위치를 선택하고 다시 시도하세요."
+
 msgid "Unable to save the report. Your changes have been retained."
 msgstr "보고서를 저장할 수 없습니다. 편집 내용은 유지되었습니다."
 
@@ -1392,6 +1431,9 @@ msgstr "저장된 로그인 정보를 업데이트하지 못했습니다."
 
 msgid "Unable to update the quick log. Your changes have been retained."
 msgstr "빠른 기록을 업데이트할 수 없습니다. 변경 사항은 유지되었습니다."
+
+msgid "Unknown"
+msgstr "알 수 없음"
 
 msgid "Unknown error"
 msgstr "알 수 없는 오류"
@@ -1417,6 +1459,9 @@ msgstr "업데이트 확인이 설정되지 않았습니다."
 msgid "Use a web proxy for this application."
 msgstr "이 앱에 웹 프록시를 사용합니다."
 
+msgid "Use model"
+msgstr "모델 사용"
+
 msgid "User"
 msgstr "사용자"
 
@@ -1434,6 +1479,9 @@ msgstr "사용자 이름"
 
 msgid "Validating backup..."
 msgstr "백업 검증 중..."
+
+msgid "Verified"
+msgstr "검증됨"
 
 msgid "Verify"
 msgstr "검증"
@@ -1563,6 +1611,12 @@ msgstr "{year}년 {month}"
 
 msgid "{percent}%"
 msgstr "{percent}%"
+
+msgid "{ram} GB"
+msgstr "{ram} GB"
+
+msgid "{size} MB"
+msgstr "{size} MB"
 
 msgid "{start_month} {start_day} - {end_month} {end_day}, {year}"
 msgstr "{year}년 {start_month} {start_day}일 - {end_month} {end_day}일"

@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMessageBox,
     QPushButton,
     QScrollArea,
     QSizePolicy,
@@ -656,7 +657,7 @@ class SettingsPage(QWidget):
         self.logout_button = QPushButton(_("Log Out"))
         self.logout_button.setObjectName("settings_logout_button")
         self.logout_button.setProperty("variant", "outline")
-        self.logout_button.clicked.connect(self.logout_requested.emit)
+        self.logout_button.clicked.connect(self._confirm_logout)
         self.manage_identities_button = QPushButton(_("Linked identities"))
         self.manage_identities_button.setObjectName("manage_identities_button")
         self.manage_identities_button.setProperty("variant", "outline")
@@ -750,6 +751,12 @@ class SettingsPage(QWidget):
         page.layout().addWidget(card)
         page.layout().addStretch(1)
         return page
+
+    def _confirm_logout(self) -> None:
+        if QMessageBox.question(self, _("Log Out"), _("Log out of your account?"),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
+            self.logout_requested.emit()
 
     def _scroll_page(self) -> QWidget:
         return _SettingsScrollPage()

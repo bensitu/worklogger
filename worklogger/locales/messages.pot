@@ -296,6 +296,9 @@ msgstr ""
 msgid "Copy Markdown"
 msgstr ""
 
+msgid "Copy recovery key"
+msgstr ""
+
 msgid "Create account"
 msgstr ""
 
@@ -351,6 +354,9 @@ msgid "Default break (h)"
 msgstr ""
 
 msgid "Delete"
+msgstr ""
+
+msgid "Delete model {model}?"
 msgstr ""
 
 msgid "Delete record"
@@ -449,7 +455,13 @@ msgstr ""
 msgid "Error"
 msgstr ""
 
+msgid "Estimated RAM"
+msgstr ""
+
 msgid "Estimated RAM: {ram} GB"
+msgstr ""
+
+msgid "Estimated size"
 msgstr ""
 
 msgid "Export"
@@ -501,6 +513,9 @@ msgid "External model testing is not configured."
 msgstr ""
 
 msgid "February"
+msgstr ""
+
+msgid "File"
 msgstr ""
 
 msgid "Forgot Password?"
@@ -620,6 +635,9 @@ msgstr ""
 msgid "Keep this draft for later?"
 msgstr ""
 
+msgid "Keep this recovery key private. The saved file is not encrypted."
+msgstr ""
+
 msgid "Korean"
 msgstr ""
 
@@ -675,6 +693,9 @@ msgid "Local user"
 msgstr ""
 
 msgid "Log Out"
+msgstr ""
+
+msgid "Log out of your account?"
 msgstr ""
 
 msgid "Login"
@@ -791,6 +812,9 @@ msgstr ""
 msgid "No events found."
 msgstr ""
 
+msgid "No models found"
+msgstr ""
+
 msgid "No note yet"
 msgstr ""
 
@@ -816,6 +840,9 @@ msgid "Not downloaded"
 msgstr ""
 
 msgid "Not required"
+msgstr ""
+
+msgid "Not verified"
 msgstr ""
 
 msgid "Note saved."
@@ -983,6 +1010,9 @@ msgstr ""
 msgid "Recovery key"
 msgstr ""
 
+msgid "Recovery key saved."
+msgstr ""
+
 msgid "Recurring events must have an end date or occurrence count."
 msgstr ""
 
@@ -1095,6 +1125,9 @@ msgid "Save changes"
 msgstr ""
 
 msgid "Save content"
+msgstr ""
+
+msgid "Save recovery key"
 msgstr ""
 
 msgid "Save template"
@@ -1247,6 +1280,9 @@ msgstr ""
 msgid "Test"
 msgstr ""
 
+msgid "Text files (*.txt)"
+msgstr ""
+
 msgid "The CSV file exceeds the supported size or row limit."
 msgstr ""
 
@@ -1370,6 +1406,9 @@ msgstr ""
 msgid "Unable to save the note. Your changes have been retained."
 msgstr ""
 
+msgid "Unable to save the recovery key. Choose another location and try again."
+msgstr ""
+
 msgid "Unable to save the report. Your changes have been retained."
 msgstr ""
 
@@ -1389,6 +1428,9 @@ msgid "Unable to update saved sign-in information."
 msgstr ""
 
 msgid "Unable to update the quick log. Your changes have been retained."
+msgstr ""
+
+msgid "Unknown"
 msgstr ""
 
 msgid "Unknown error"
@@ -1415,6 +1457,9 @@ msgstr ""
 msgid "Use a web proxy for this application."
 msgstr ""
 
+msgid "Use model"
+msgstr ""
+
 msgid "User"
 msgstr ""
 
@@ -1431,6 +1476,9 @@ msgid "Username"
 msgstr ""
 
 msgid "Validating backup..."
+msgstr ""
+
+msgid "Verified"
 msgstr ""
 
 msgid "Verify"
@@ -1560,6 +1608,12 @@ msgid "{month} {year}"
 msgstr ""
 
 msgid "{percent}%"
+msgstr ""
+
+msgid "{ram} GB"
+msgstr ""
+
+msgid "{size} MB"
 msgstr ""
 
 msgid "{start_month} {start_day} - {end_month} {end_day}, {year}"

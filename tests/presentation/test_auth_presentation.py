@@ -4,12 +4,15 @@ from dataclasses import replace
 from datetime import datetime
 import os
 import unittest
+from unittest.mock import patch
+from pathlib import Path
+import tempfile
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QWidget
+from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QWidget, QFileDialog, QMessageBox
 
 from worklogger.__about__ import APP_NAME
 from worklogger.app.use_cases.auth import (
@@ -350,6 +353,24 @@ class AuthPresentationTests(unittest.TestCase):
         self.assertEqual(continue_requested, [True])
         self.assertFalse(dialog.recovery_key_label.isHidden())
         self.assertEqual(dialog.recovery_key_label.text(), "EEEE-FFFF")
+        self.assertTrue(dialog.password_fields.isHidden())
+        self.assertEqual(dialog.current_password_input.text(), "")
+        dialog.recovery_actions.copy_button.click()
+        self.assertEqual(QApplication.clipboard().text(), "EEEE-FFFF")
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "recovery.txt"
+            with patch.object(QFileDialog, "getSaveFileName", return_value=(str(target), "")), \
+                    patch("worklogger.presentation.widgets.recovery_key_actions.show_information"):
+                dialog.recovery_actions.save_button.click()
+            self.assertEqual(target.read_text(encoding="utf-8"), "EEEE-FFFF\n")
+            with patch("worklogger.infrastructure.files.os.replace", side_effect=OSError("write failed")), \
+                    patch.object(QMessageBox, "warning"):
+                self.assertFalse(dialog.recovery_actions.save_to(target).ok)
+            self.assertEqual(target.read_text(encoding="utf-8"), "EEEE-FFFF\n")
+            self.assertEqual(dialog.recovery_key_label.text(), "EEEE-FFFF")
+            with patch.object(QFileDialog, "getSaveFileName", return_value=("", "")):
+                dialog.recovery_actions.save_button.click()
+        QApplication.clipboard().clear()
 
     def test_auth_viewmodel_changes_and_resets_passwords(self) -> None:
         repository = MemoryAuthRepository()

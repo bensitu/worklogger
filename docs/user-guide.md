@@ -116,6 +116,11 @@ Markers and daily totals are visual summaries, not additional entries.
 
 ## User Administration
 
+Settings > Account asks for confirmation before logging out. Changing the password
+replaces the recovery key. After a successful change, copy or save the new key
+before continuing; the saved file is not encrypted. The previous key no longer
+recovers the account.
+
 Administrators can open Manage users from Settings > Account. The left-hand table
 selects the account shown in the Selected user panel. Password-change requirements,
 password resets, and deletion apply to that selection. Refreshing keeps the same

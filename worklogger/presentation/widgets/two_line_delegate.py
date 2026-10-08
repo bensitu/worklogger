@@ -1,11 +1,11 @@
-"""Readable, width-constrained date and preview rows for the note history."""
+"""Readable, width-constrained title and secondary text for compact lists."""
 
 from PySide6.QtCore import QRect, QSize, Qt
 from PySide6.QtGui import QFont, QFontMetrics, QPalette
 from PySide6.QtWidgets import QApplication, QStyle, QStyledItemDelegate, QStyleOptionViewItem
 
 
-class NoteHistoryDelegate(QStyledItemDelegate):
+class TwoLineItemDelegate(QStyledItemDelegate):
     def sizeHint(self, option, index):
         return QSize(190, max(64, 2 * QFontMetrics(option.font).height() + 28))
 

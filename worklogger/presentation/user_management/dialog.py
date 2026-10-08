@@ -184,7 +184,7 @@ class UserManagementDialog(QDialog):
         layout.setSpacing(12)
         self.selected_user_label = QLabel(_("Select a user."))
         self.selected_user_label.setWordWrap(True)
-        self.selected_user_label.setStyleSheet("font-size: 18px; font-weight: 600;")
+        self.selected_user_label.setProperty("role", "section_heading")
         heading = QHBoxLayout()
         heading.addWidget(self.selected_user_label, 1)
         self.selected_role_label = QLabel()

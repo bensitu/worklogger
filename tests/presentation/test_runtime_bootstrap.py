@@ -235,7 +235,8 @@ class RuntimeBootstrapTests(unittest.TestCase):
             try:
                 self.assertIsInstance(window, MinimalView)
                 self.assertFalse(hasattr(window, "logout_button"))
-                self.assertTrue(window.open_settings())
+                with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+                    self.assertTrue(window.open_settings())
                 self.assertEqual(requests, [True])
             finally:
                 window.close()

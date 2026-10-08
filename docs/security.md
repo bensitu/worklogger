@@ -24,6 +24,11 @@ exported text is prefixed with an apostrophe; exports are still unencrypted.
 - Password hashes use PBKDF2-HMAC-SHA256 with 600,000 iterations and a random
   16-byte salt. Supported older hashes are upgraded after successful verification.
 - Recovery keys are generated separately and stored as hashes with separate salts.
+  After a password change, the new key can be explicitly copied to the system
+  clipboard or saved as a plain-text file. Export uses atomic replacement and
+  does not log the key. The clipboard and exported file are outside application
+  encryption; keep them private. Failed or cancelled exports leave the displayed
+  key available and do not overwrite an existing file with an incomplete result.
 - Administrator password resets invalidate recovery credentials and remembered
   sessions, return only the supplied temporary password, and always require a
   password change. The user receives a new recovery key only after changing the

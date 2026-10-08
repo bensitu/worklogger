@@ -298,6 +298,9 @@ msgstr "複製"
 msgid "Copy Markdown"
 msgstr "複製 Markdown"
 
+msgid "Copy recovery key"
+msgstr "複製復原金鑰"
+
 msgid "Create account"
 msgstr "建立帳戶"
 
@@ -354,6 +357,9 @@ msgstr "預設休息（小時）"
 
 msgid "Delete"
 msgstr "刪除"
+
+msgid "Delete model {model}?"
+msgstr "刪除模型 {model} 嗎？"
 
 msgid "Delete record"
 msgstr "刪除記錄"
@@ -451,8 +457,14 @@ msgstr "請輸入密碼。"
 msgid "Error"
 msgstr "錯誤"
 
+msgid "Estimated RAM"
+msgstr "預估記憶體"
+
 msgid "Estimated RAM: {ram} GB"
 msgstr "估算記憶體：{ram} GB"
+
+msgid "Estimated size"
+msgstr "預估大小"
 
 msgid "Export"
 msgstr "匯出"
@@ -504,6 +516,9 @@ msgstr "外部模型測試尚未設定。"
 
 msgid "February"
 msgstr "2月"
+
+msgid "File"
+msgstr "檔案"
 
 msgid "Forgot Password?"
 msgstr "忘記密碼？"
@@ -622,6 +637,9 @@ msgstr "保留目前草稿並開啟其他日期嗎？"
 msgid "Keep this draft for later?"
 msgstr "保留這份草稿以便稍後繼續嗎？"
 
+msgid "Keep this recovery key private. The saved file is not encrypted."
+msgstr "請妥善保管此復原金鑰，不要分享給他人。儲存的檔案未加密。"
+
 msgid "Korean"
 msgstr "韓語"
 
@@ -678,6 +696,9 @@ msgstr "本機使用者"
 
 msgid "Log Out"
 msgstr "登出"
+
+msgid "Log out of your account?"
+msgstr "確定登出目前帳戶嗎？"
 
 msgid "Login"
 msgstr "登入"
@@ -793,6 +814,9 @@ msgstr "尚無資料"
 msgid "No events found."
 msgstr "未找到事件。"
 
+msgid "No models found"
+msgstr "找不到模型"
+
 msgid "No note yet"
 msgstr "尚無筆記"
 
@@ -819,6 +843,9 @@ msgstr "尚未下載"
 
 msgid "Not required"
 msgstr "不需要"
+
+msgid "Not verified"
+msgstr "尚未驗證"
 
 msgid "Note saved."
 msgstr "筆記已儲存。"
@@ -985,6 +1012,9 @@ msgstr "已復原草稿"
 msgid "Recovery key"
 msgstr "復原金鑰"
 
+msgid "Recovery key saved."
+msgstr "復原金鑰已儲存。"
+
 msgid "Recurring events must have an end date or occurrence count."
 msgstr "重複事件必須設定結束日期或重複次數。"
 
@@ -1098,6 +1128,9 @@ msgstr "儲存修改"
 
 msgid "Save content"
 msgstr "儲存內容"
+
+msgid "Save recovery key"
+msgstr "儲存復原金鑰"
 
 msgid "Save template"
 msgstr "儲存範本"
@@ -1249,6 +1282,9 @@ msgstr "臨時密碼"
 msgid "Test"
 msgstr "測試"
 
+msgid "Text files (*.txt)"
+msgstr "文字檔案 (*.txt)"
+
 msgid "The CSV file exceeds the supported size or row limit."
 msgstr "CSV 檔案超出支援的大小或列數限制。"
 
@@ -1372,6 +1408,9 @@ msgstr "無法儲存設定，請重試。"
 msgid "Unable to save the note. Your changes have been retained."
 msgstr "無法儲存便箋，編輯內容已保留。"
 
+msgid "Unable to save the recovery key. Choose another location and try again."
+msgstr "無法儲存復原金鑰。請選擇其他位置後重試。"
+
 msgid "Unable to save the report. Your changes have been retained."
 msgstr "無法儲存報表，您的編輯內容已保留。"
 
@@ -1392,6 +1431,9 @@ msgstr "無法更新已儲存的登入資訊。"
 
 msgid "Unable to update the quick log. Your changes have been retained."
 msgstr "無法更新速記。您的修改已保留。"
+
+msgid "Unknown"
+msgstr "未知"
 
 msgid "Unknown error"
 msgstr "未知錯誤"
@@ -1417,6 +1459,9 @@ msgstr "更新檢查尚未設定。"
 msgid "Use a web proxy for this application."
 msgstr "為此應用程式使用網頁代理。"
 
+msgid "Use model"
+msgstr "使用模型"
+
 msgid "User"
 msgstr "使用者"
 
@@ -1434,6 +1479,9 @@ msgstr "使用者名稱"
 
 msgid "Validating backup..."
 msgstr "正在驗證備份..."
+
+msgid "Verified"
+msgstr "已驗證"
 
 msgid "Verify"
 msgstr "驗證"
@@ -1563,6 +1611,12 @@ msgstr "{year}年{month}"
 
 msgid "{percent}%"
 msgstr "{percent}%"
+
+msgid "{ram} GB"
+msgstr "{ram} GB"
+
+msgid "{size} MB"
+msgstr "{size} MB"
 
 msgid "{start_month} {start_day} - {end_month} {end_day}, {year}"
 msgstr "{year}年{start_month}{start_day}日 - {end_month}{end_day}日"

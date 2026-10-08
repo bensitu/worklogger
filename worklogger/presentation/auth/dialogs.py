@@ -24,6 +24,7 @@ from worklogger.__about__ import APP_NAME
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
 from worklogger.presentation.widgets.assets import apply_window_icon, asset_path, pixmap_asset
+from worklogger.presentation.widgets.recovery_key_actions import RecoveryKeyActions
 from worklogger.presentation.widgets import SwitchButton
 from worklogger.presentation.widgets.icons import ui_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
@@ -521,6 +522,8 @@ class ChangePasswordDialog(QDialog):
         self.setWindowTitle(_("Change password"))
         apply_window_icon(self)
         self._build_ui()
+        self.resize(480, 360)
+        self.setMinimumWidth(440)
 
     def draft(self) -> ChangePasswordDraft:
         return ChangePasswordDraft(
@@ -536,6 +539,7 @@ class ChangePasswordDialog(QDialog):
         self.recovery_key_label.setText(recovery_key)
         self.recovery_key_label.setVisible(bool(recovery_key))
         self.recovery_key_caption.setVisible(bool(recovery_key))
+        self.recovery_actions.setVisible(bool(recovery_key))
 
     def mark_complete(self, recovery_key: str) -> None:
         self._change_complete = True
@@ -543,6 +547,10 @@ class ChangePasswordDialog(QDialog):
         self.current_password_input.setEnabled(False)
         self.password_input.setEnabled(False)
         self.confirm_input.setEnabled(False)
+        self.current_password_input.clear()
+        self.password_input.clear()
+        self.confirm_input.clear()
+        self.password_fields.hide()
         self.change_button.setText(_("Continue"))
         self.change_button.setEnabled(True)
 
@@ -554,12 +562,16 @@ class ChangePasswordDialog(QDialog):
         root.setContentsMargins(16, 16, 16, 16)
         root.setSpacing(10)
 
-        title = QLabel(_("Change password"))
+        title = QLabel(_("Changing password will reset the recovery key."))
         title.setObjectName("change_password_title_label")
+        title.setWordWrap(True)
         root.addWidget(title)
 
-        form = QFormLayout()
-        root.addLayout(form)
+        self.password_fields = QWidget()
+        form = QFormLayout(self.password_fields)
+        form.setContentsMargins(0, 0, 0, 0)
+        form.setSpacing(12)
+        root.addWidget(self.password_fields)
         self.current_password_input = QLineEdit()
         self.current_password_input.setObjectName("current_password_line_edit")
         self.current_password_input.setEchoMode(QLineEdit.EchoMode.Password)
@@ -585,10 +597,17 @@ class ChangePasswordDialog(QDialog):
         self.recovery_key_label = QLabel("")
         self.recovery_key_label.setObjectName("recovery_key_label")
         self.recovery_key_label.setWordWrap(True)
+        self.recovery_key_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.recovery_key_caption.setVisible(False)
         self.recovery_key_label.setVisible(False)
         root.addWidget(self.recovery_key_caption)
         root.addWidget(self.recovery_key_label)
+        self.recovery_actions = RecoveryKeyActions(self.recovery_key_label.text, self)
+        self.recovery_actions.hide()
+        root.addWidget(self.recovery_actions)
+        for label in (title, self.status_label, self.recovery_key_caption, self.recovery_key_label):
+            label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        root.addStretch(1)
 
         buttons = QHBoxLayout()
         self.change_button = QPushButton(_("Change password"))
