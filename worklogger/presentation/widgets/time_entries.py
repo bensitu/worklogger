@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from PySide6.QtCore import QTimer, Signal
+from PySide6.QtCore import QEvent, QTimer, Signal
 from PySide6.QtWidgets import (QComboBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit,
     QMessageBox, QPushButton, QSizePolicy, QStyle, QStyleOptionTabWidgetFrame,
     QTabWidget, QTextEdit, QToolButton, QVBoxLayout, QWidget)
@@ -45,6 +45,8 @@ class TimeEntryPanel(QWidget):
         self.time_tabs.tabBar().setObjectName("worklog_mode_selector_widget")
         self.time_tabs.tabBar().setExpanding(True)
         self.time_tabs.tabBar().setDrawBase(False)
+        self._mode_height_pending = False
+        self.time_tabs.installEventFilter(self)
         root.addWidget(self.time_tabs)
         manual = QWidget()
         manual.setObjectName("worklog_manual_tab_widget")
@@ -330,14 +332,31 @@ class TimeEntryPanel(QWidget):
             self.auto_status_label.setText(_("Unable to restore the timer. Discard it to start a new record."))
             self.auto_status_label.show()
             self.break_button.setEnabled(False)
+        self._fit_mode_height()
+
+    def eventFilter(self, watched, event):
+        if watched is self.time_tabs and event.type() in (QEvent.Type.Resize, QEvent.Type.LayoutRequest, QEvent.Type.StyleChange, QEvent.Type.FontChange):
+            if not self._mode_height_pending:
+                self._mode_height_pending = True
+                QTimer.singleShot(0, self, self._fit_mode_height)
+        return super().eventFilter(watched, event)
+
+    def _fit_mode_height(self):
+        self._mode_height_pending = False
+        if self.time_tabs.currentWidget() is None:
+            return
         option = QStyleOptionTabWidgetFrame()
         self.time_tabs.initStyleOption(option)
         content = self.time_tabs.style().subElementRect(QStyle.SubElement.SE_TabWidgetTabContents, option, self.time_tabs)
         page = self.time_tabs.currentWidget()
         page.ensurePolished()
+        for widget in page.findChildren(QWidget):
+            widget.ensurePolished()
         page.layout().invalidate()
         page_height = max(page.sizeHint().height(), page.layout().totalHeightForWidth(max(1, content.width())))
-        self.time_tabs.setFixedHeight(page_height + max(0, self.time_tabs.height() - content.height()))
+        required_height = page_height + max(self.time_tabs.tabBar().sizeHint().height(), self.time_tabs.height() - content.height())
+        if self.time_tabs.height() != required_height:
+            self.time_tabs.setFixedHeight(required_height)
 
     def _apply_result(self, result, *, refresh=True):
         if not result.ok:

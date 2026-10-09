@@ -26,6 +26,41 @@ from PySide6.QtCore import QTime
 
 
 class TimeEntryWorkflowTests(unittest.TestCase):
+    def test_custom_type_management_and_manual_automatic_recording_preserve_saved_categories(self):
+        from worklogger.presentation.widgets.work_type_manager import WorkTypeManagerDialog
+        panel = self.panel
+        definitions = []
+
+        def create_type(dialog):
+            dialog.name_input.setText("Research")
+            dialog.category_combo.setCurrentIndex(dialog.category_combo.findData("work"))
+            dialog.save_button.click()
+            definitions.append(dialog.type_list.currentItem().data(256))
+            return 1
+
+        with patch.object(WorkTypeManagerDialog, "exec", create_type):
+            panel.manage_types_button.click()
+        definition = definitions[0]
+        panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData(definition.value))
+        panel.start_input.setText("09:00")
+        panel.end_input.setText("10:00")
+        panel.save_button.click()
+        first = self.repository.list_for_day(self.runtime.user.id, self.now.date())[0]
+        self.assertEqual((first.work_type.label, first.worked_hours()), ("Research", 1))
+        self.assertEqual(panel.work_type_combo.currentData(), "normal")
+        panel.time_tabs.setCurrentIndex(1)
+        self.now += timedelta(hours=1)
+        panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData(definition.value))
+        panel.clock_in_button.click()
+        self.now += timedelta(hours=1)
+        panel.clock_out_button.click()
+        self.assertEqual(len(self.repository.list_for_day(self.runtime.user.id, self.now.date())), 2)
+        panel.edit_entry(first)
+        panel.content_input.setPlainText("Revised description")
+        panel.save_button.click()
+        self.assertEqual(self.repository.get_entry(self.runtime.user.id, first.id).work_type.label, "Research")
+        self.warning.assert_not_called()
+
     def setUp(self):
         from tests.presentation.qt_support import dispose_test_windows
         self.addCleanup(dispose_test_windows)

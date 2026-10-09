@@ -475,7 +475,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                     second.value.remember_session_store,
                 )
                 self.assertIs(
-                    getattr(second.value.window, "_settings_workflow")._remember_session_store,
+                    getattr(second.value.window, "_settings_workflow")._account_workflow._remember_session_store,
                     second.value.remember_session_store,
                 )
                 second.value.window.close()

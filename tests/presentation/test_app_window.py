@@ -179,6 +179,7 @@ def _window(
     notes_workflow: object | None = None,
     reports_workflow: object | None = None,
     residency_controller: object | None = None,
+    calendar_events: tuple[CalendarEvent, ...] | None = None,
 ) -> AppWindow:
     month_records = month_handler or GetMonthRecordsHandler(repository)
     calendar_view_model = CalendarViewModel(
@@ -186,7 +187,7 @@ def _window(
         month_records_handler=month_records,
         calendar_events_handler=GetCalendarEventsForRangeHandler(
             MemoryCalendarRepository(
-                (
+                calendar_events if calendar_events is not None else (
                     CalendarEvent(
                         id=1,
                         user_id=1,

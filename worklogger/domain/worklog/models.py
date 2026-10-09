@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from enum import Enum
 from uuid import UUID
+from worklogger.config.constants import DEFAULT_LEAVE_HOURS, LEAVE_TYPES, MAX_SHIFT_HOURS
 
 
 @dataclass(frozen=True)
@@ -17,13 +18,16 @@ class CustomWorkType:
     archived: bool = False
 
     def __post_init__(self):
-        if not self.value.startswith("custom:") or UUID(self.value[7:]).hex != self.value[7:]:
+        if not isinstance(self.value, str) or len(self.value) != 39 or not self.value.startswith("custom:"):
             raise ValueError("work_type_invalid")
-        if not self.label.strip() or len(self.label) > 80 or self.category not in {"work", "break", "leave"}:
+        try:
+            valid_id = UUID(self.value[7:]).hex == self.value[7:]
+        except ValueError:
+            valid_id = False
+        if not valid_id or not isinstance(self.label, str) or not self.label.strip() or len(self.label) > 80 or any(ord(char) < 32 for char in self.label):
             raise ValueError("work_type_invalid")
-
-from worklogger.config.constants import DEFAULT_LEAVE_HOURS, LEAVE_TYPES, MAX_SHIFT_HOURS
-
+        if self.category not in {"work", "break", "leave"} or not isinstance(self.revision, int) or self.revision < 0:
+            raise ValueError("work_type_invalid")
 
 class WorkType(str, Enum):
     NORMAL = "normal"

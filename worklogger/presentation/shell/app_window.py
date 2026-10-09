@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from datetime import date
 from typing import Protocol
-from worklogger.app.job_runner import JobRunner
 
-from PySide6.QtCore import QEvent, QTimer, Qt, Signal
+from PySide6.QtCore import QEvent, Qt, QTimer, Signal
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QApplication,
@@ -21,12 +20,16 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from worklogger.domain.shared.errors import AppError, CancellationError
+from worklogger.app.job_runner import JobRunner
 from worklogger.domain.shared.dates import add_months
+from worklogger.domain.shared.errors import AppError, CancellationError
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
-from worklogger.presentation.date_labels import month_label
 from worklogger.presentation.settings import SettingsWorkflow
+from worklogger.presentation.shell.calendar_controller import (
+    CalendarCoordinator,
+    apply_recording_preferences,
+)
 from worklogger.presentation.shell.pages import (
     AnalyticsPage,
     CalendarPage,
@@ -34,13 +37,18 @@ from worklogger.presentation.shell.pages import (
     UnavailableSettingsPage,
 )
 from worklogger.presentation.shell.residency import QtResidencyController
-from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
+from worklogger.presentation.theme import (
+    ThemeEngine,
+    configure_application_style,
+    install_bundled_fonts,
+)
 from worklogger.presentation.viewmodels import (
     CalendarDisplayOptions,
     CalendarViewModel,
-    StatsPanelViewModel,
     SettingsState,
+    StatsPanelViewModel,
 )
+from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
 from worklogger.presentation.widgets import (
     CalendarView,
     SidebarWidget,
@@ -48,22 +56,18 @@ from worklogger.presentation.widgets import (
 )
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.time_entries import TimeEntryPanel
-from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
 
 
 class NotesWorkflow(Protocol):
-    def open(self, day: date, parent: QWidget | None = None) -> object:
-        ...
+    def open(self, day: date, parent: QWidget | None = None) -> object: ...
 
 
 class AnalyticsWorkflow(Protocol):
-    def open(self, day: date, parent: QWidget | None = None) -> object:
-        ...
+    def open(self, day: date, parent: QWidget | None = None) -> object: ...
 
 
 class ReportsWorkflow(Protocol):
-    def open(self, day: date, parent: QWidget | None = None) -> object:
-        ...
+    def open(self, day: date, parent: QWidget | None = None) -> object: ...
 
 
 @dataclass(frozen=True)
@@ -114,10 +118,14 @@ class AppWindow(QMainWindow):
         if hasattr(reports_model, "set_standard_work_hours"):
             reports_model.set_standard_work_hours(self._config.standard_work_hours)
         if hasattr(reports_model, "set_week_start_monday"):
-            reports_model.set_week_start_monday(self._config.calendar_options.week_start_monday)
+            reports_model.set_week_start_monday(
+                self._config.calendar_options.week_start_monday
+            )
         analytics_model = getattr(analytics_workflow, "view_model", None)
         if hasattr(analytics_model, "set_week_start_monday"):
-            analytics_model.set_week_start_monday(self._config.calendar_options.week_start_monday)
+            analytics_model.set_week_start_monday(
+                self._config.calendar_options.week_start_monday
+            )
         self._residency_controller = residency_controller
         self._theme_engine = theme_engine or ThemeEngine()
         self._job_runner = job_runner
@@ -127,7 +135,9 @@ class AppWindow(QMainWindow):
         self._selected_day = self._config.selected_day or restored_day or self._today
         self._current_month = self._selected_day.replace(day=1)
         # None requests regional holidays; an explicit mapping overrides the provider.
-        self._holidays = None if self._config.holidays is None else dict(self._config.holidays)
+        self._holidays = (
+            None if self._config.holidays is None else dict(self._config.holidays)
+        )
         self._last_error: AppError | None = None
         self._refreshing = False
         self._entry_dirty = False
@@ -136,6 +146,13 @@ class AppWindow(QMainWindow):
         self.setWindowTitle(_("WorkLogger"))
         apply_window_icon(self)
         self._build_ui()
+        self._calendar_coordinator = CalendarCoordinator(
+            calendar_view_model=self._calendar_view_model,
+            stats_view_model=self._stats_panel_view_model,
+            calendar_page=self.calendar_page,
+            entry_panel=self.entry_panel,
+            stats_panel=self.stats_panel,
+        )
         self._connect_signals()
         self.apply_theme()
         self._date_timer = QTimer(self)
@@ -188,27 +205,13 @@ class AppWindow(QMainWindow):
         )
 
     def apply_settings(self, state: SettingsState) -> None:
-        self._config = replace(
-            self._config, theme=state.theme, dark=state.dark_mode,
-            custom_color=state.custom_color, standard_work_hours=state.standard_work_hours,
-            monthly_target_hours=state.monthly_target_hours,
-            calendar_options=replace(
-                self._config.calendar_options, show_holidays=state.show_holidays,
-                holiday_region=state.holiday_region,
-                show_note_markers=state.show_note_markers,
-                show_overnight_indicator=state.show_overnight_indicator,
-                week_start_monday=state.week_start_monday,
-            ),
+        self._config = apply_recording_preferences(
+            self._config,
+            state,
+            time_entries=self._time_entry_view_model,
+            reports=getattr(self._reports_workflow, "view_model", None),
+            analytics=getattr(self._analytics_workflow, "view_model", None),
         )
-        self._time_entry_view_model.set_default_break_hours(state.default_break_hours)
-        reports_model = getattr(self._reports_workflow, "view_model", None)
-        if hasattr(reports_model, "set_standard_work_hours"):
-            reports_model.set_standard_work_hours(state.standard_work_hours)
-        if hasattr(reports_model, "set_week_start_monday"):
-            reports_model.set_week_start_monday(state.week_start_monday)
-        analytics_model = getattr(self._analytics_workflow, "view_model", None)
-        if hasattr(analytics_model, "set_week_start_monday"):
-            analytics_model.set_week_start_monday(state.week_start_monday)
         self.apply_theme()
         self._refresh_calendar()
         self._refresh_stats()
@@ -253,7 +256,10 @@ class AppWindow(QMainWindow):
 
     def go_today(self) -> bool:
         self._update_today()
-        if self._today != self._selected_day and not self._confirm_discard_changes_if_needed():
+        if (
+            self._today != self._selected_day
+            and not self._confirm_discard_changes_if_needed()
+        ):
             return False
         self._selected_day = self._today
         self._current_month = self._today.replace(day=1)
@@ -293,7 +299,9 @@ class AppWindow(QMainWindow):
         main_layout.addWidget(self.page_stack, 1)
 
         self.calendar_view = CalendarView()
-        self.entry_panel = TimeEntryPanel(self._time_entry_view_model, job_runner=self._job_runner)
+        self.entry_panel = TimeEntryPanel(
+            self._time_entry_view_model, job_runner=self._job_runner
+        )
         self.stats_panel = StatsPanel()
         self.calendar_page = CalendarPage(
             calendar_view=self.calendar_view,
@@ -333,7 +341,9 @@ class AppWindow(QMainWindow):
         self.settings_button = self.sidebar.settings_button
         self.status_label = QLabel("")
         self.status_label.setObjectName("app_status_label")
-        self.status_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.status_label.setAlignment(
+            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+        )
         self.status_label.hide()
 
         self.notes_button.setVisible(self._notes_workflow is not None)
@@ -354,11 +364,17 @@ class AppWindow(QMainWindow):
             self.settings_page.settings_changed.connect(self.apply_settings)
         self.calendar_view.day_selected.connect(self.select_day)
         self.entry_panel.records_changed.connect(self._entries_changed)
-        self.entry_panel.dirty_changed.connect(lambda dirty: setattr(self, "_entry_dirty", dirty))
-        self.entry_panel.busy_changed.connect(self.calendar_page.records_widget.setDisabled)
+        self.entry_panel.dirty_changed.connect(
+            lambda dirty: setattr(self, "_entry_dirty", dirty)
+        )
+        self.entry_panel.busy_changed.connect(
+            self.calendar_page.records_widget.setDisabled
+        )
         self.calendar_page.entry_selected.connect(self.entry_panel.edit_entry)
         self.calendar_page.entry_delete_requested.connect(self.entry_panel.delete_entry)
-        self.entry_panel.selection_changed.connect(self.calendar_page.set_selected_entry)
+        self.entry_panel.selection_changed.connect(
+            self.calendar_page.set_selected_entry
+        )
         self.calendar_page.event_selected.connect(self.entry_panel.copy_event)
         self.calendar_page.event_delete_requested.connect(self.entry_panel.delete_event)
 
@@ -369,52 +385,32 @@ class AppWindow(QMainWindow):
         self.refresh()
 
     def _refresh_calendar(self) -> bool:
-        options = replace(
-            self._config.calendar_options,
-            standard_work_hours=float(self._config.standard_work_hours),
-        )
-        result = self._calendar_view_model.build_month(
-            year=self._current_month.year,
-            month=self._current_month.month,
+        result = self._calendar_coordinator.refresh_calendar(
+            config=self._config,
+            month=self._current_month,
             selected_day=self._selected_day,
             today=self._today,
             holidays=self._holidays,
-            options=options,
-            theme=self._config.theme,
-            dark=self._config.dark,
-            custom_color=self._config.custom_color,
         )
-        if not result.ok or result.value is None:
+        if not result.ok:
             self._set_error(result.error)
-            return False
-        self.calendar_view.set_state(result.value)
-        self.calendar_page.set_month_title(
-            month_label(date(result.value.year, result.value.month, 1))
-        )
-        return True
+        return result.ok
 
     def _refresh_entry(self) -> bool:
-        entries = self.entry_panel.load_day(self._selected_day)
-        events = self._calendar_view_model.events_for_day(self._selected_day)
-        if not entries.ok or not events.ok:
-            self._set_error(entries.error or events.error)
+        result = self._calendar_coordinator.refresh_entries(self._selected_day)
+        if not result.ok:
+            self._set_error(result.error)
             return False
-        self._entry_dirty = self.entry_panel.is_dirty
-        self.calendar_page.set_time_entries(entries.value, events.value or ())
+        self._entry_dirty = result.value
         return True
 
     def _refresh_stats(self) -> bool:
-        result = self._stats_panel_view_model.build_month(
-            year=self._current_month.year,
-            month=self._current_month.month,
-            standard_work_hours=self._config.standard_work_hours,
-            monthly_target_hours=self._config.monthly_target_hours,
+        result = self._calendar_coordinator.refresh_statistics(
+            self._config, self._current_month
         )
-        if not result.ok or result.value is None:
+        if not result.ok:
             self._set_error(result.error)
-            return False
-        self.stats_panel.set_state(result.value)
-        return True
+        return result.ok
 
     def _set_error(self, error: AppError | None) -> None:
         if isinstance(error, CancellationError):
@@ -422,9 +418,13 @@ class AppWindow(QMainWindow):
             self._set_status(display_error_message(error))
             return
         self._last_error = error
-        self._set_status(display_error_message(error), notify=not self._refreshing, error=True)
+        self._set_status(
+            display_error_message(error), notify=not self._refreshing, error=True
+        )
 
-    def _set_status(self, message: str, *, notify: bool = False, error: bool = False) -> None:
+    def _set_status(
+        self, message: str, *, notify: bool = False, error: bool = False
+    ) -> None:
         self.status_label.setText(message)
         self.status_label.hide()
         if message and notify:
@@ -433,7 +433,11 @@ class AppWindow(QMainWindow):
 
     def _account_text(self) -> str:
         account_name = str(self._config.account_name or "").strip()
-        return _("Signed in: {username}").format(username=account_name) if account_name else ""
+        return (
+            _("Signed in: {username}").format(username=account_name)
+            if account_name
+            else ""
+        )
 
     def _request_logout(self) -> None:
         if not self._confirm_discard_changes_if_needed():
@@ -488,20 +492,32 @@ class AppWindow(QMainWindow):
 
     def _switch_route(self, route: str) -> bool:
         normalized = str(route or "calendar").strip().lower()
-        if normalized == "analytics" and getattr(self._analytics_workflow, "view_model", None) is None:
+        if (
+            normalized == "analytics"
+            and getattr(self._analytics_workflow, "view_model", None) is None
+        ):
             opened = self.open_analytics()
             self.sidebar.set_active_route("calendar")
             return opened
-        if normalized == "reports" and getattr(self._reports_workflow, "view_model", None) is None:
+        if (
+            normalized == "reports"
+            and getattr(self._reports_workflow, "view_model", None) is None
+        ):
             opened = self.open_reports()
             self.sidebar.set_active_route("calendar")
             return opened
-        if normalized == "settings" and not hasattr(self._settings_workflow, "create_page"):
+        if normalized == "settings" and not hasattr(
+            self._settings_workflow, "create_page"
+        ):
             opened = self.open_settings()
             self.sidebar.set_active_route("calendar")
             return opened
         if not self._confirm_discard_changes_if_needed():
-            current = next(key for key, value in self._page_routes.items() if value == self.page_stack.currentIndex())
+            current = next(
+                key
+                for key, value in self._page_routes.items()
+                if value == self.page_stack.currentIndex()
+            )
             self.sidebar.set_active_route(current)
             return False
         index = self._page_routes.get(normalized)

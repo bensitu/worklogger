@@ -72,6 +72,29 @@ def _view_model(repository: MemorySettingsRepository) -> SettingsViewModel:
 
 
 class SettingsPresentationTests(unittest.TestCase):
+    def test_external_configuration_is_editable_without_activating_a_service(self):
+        class SecureStore:
+            value = None
+            def get_secret(self, name):
+                return Result.success(self.value)
+            def set_secret(self, name, value):
+                self.value = value
+                return Result.success(None)
+        repository, store = MemorySettingsRepository(), SecureStore()
+        model = SettingsViewModel(user_id=1, get_handler=GetSettingHandler(repository),
+            set_handler=SetSettingHandler(repository), external_key_store=store)
+        page = SettingsPage(model)
+        self.addCleanup(page.deleteLater)
+        page.refresh()
+        self.assertTrue(page.external_api_key_line_edit.isEnabled())
+        self.assertEqual(page.external_api_key_line_edit.echoMode(), QLineEdit.EchoMode.Password)
+        self.assertEqual((page.external_base_url_line_edit.text(), page.external_model_line_edit.text()), ("", ""))
+        self.assertTrue(page.external_base_url_line_edit.placeholderText())
+        page.external_api_key_line_edit.setText("synthetic-credential")
+        page.external_api_key_line_edit.editingFinished.emit()
+        self.assertEqual(store.value, "synthetic-credential")
+        self.assertFalse(page.test_external_model_button.isEnabled())
+
     def test_language_failure_preserves_account_preference(self):
         repository = MemorySettingsRepository()
         repository.set(1, "language", "zh_CN")

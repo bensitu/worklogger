@@ -11,7 +11,7 @@ from typing import Protocol, TYPE_CHECKING
 from worklogger.app.commands.ai_commands import RewriteTextCommand
 from worklogger.app.commands.report_commands import ResetReportTemplateCommand, SaveReportTemplateCommand
 from worklogger.domain.reporting.templates import ReportTemplate
-from worklogger.domain.worklog.models import WorkLog
+from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType
 from worklogger.domain.shared.result import Result
 
 if TYPE_CHECKING:
@@ -110,11 +110,19 @@ class LocalModelManager(Protocol):
         ...
 
 
+class WorkTypeOperations(Protocol):
+    def list_types(self) -> Result[tuple[CustomWorkType, ...]]: ...
+    def save(self, label: str, category: str, previous: CustomWorkType | None = None) -> Result[CustomWorkType]: ...
+    def archive(self, definition: CustomWorkType) -> Result[None]: ...
+    def resolve(self, value: str, original: WorkType | CustomWorkType | None = None) -> WorkType | CustomWorkType: ...
+
+
 class TimeEntryOperations(Protocol):
     user_id: int
     timer: EntryTimer | None
     restore_failed: bool
     events_deletable: bool
+    work_types: WorkTypeOperations | None
 
     def now(self) -> datetime: ...
     def list_for_day(self, day: date) -> Result[tuple[WorkLog, ...]]: ...

@@ -25,6 +25,7 @@ from worklogger.domain.local_model.models import (
     LocalModelEntry,
     LocalModelFileStatus,
     LocalModelListItem,
+    DownloadProgress,
 )
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import set_language
@@ -89,6 +90,41 @@ class FakeLocalModelHandlers:
 
 
 class LocalModelsPresentationTests(unittest.TestCase):
+    def test_download_progress_distinguishes_transfer_verification_and_completion(self):
+        class Runner:
+            def submit(self, name, job, *, on_complete):
+                self.job, self.complete = job, on_complete
+                return JobHandle("model-download", lambda: None)
+        handlers = FakeLocalModelHandlers()
+        model = LocalModelManagerViewModel(user_id=1, list_handler=handlers, refresh_handler=handlers,
+            import_handler=handlers, download_handler=handlers, verify_handler=handlers,
+            select_handler=handlers, delete_handler=handlers)
+        dialog = LocalModelsDialog(model)
+        self.addCleanup(dialog.deleteLater)
+        dialog.refresh()
+        runner = Runner()
+        dialog._job_runner = runner
+        self.assertTrue(dialog.download_selected())
+        dialog.download_progress.emit(DownloadProgress(25, 100))
+        self._app.processEvents()
+        self.assertEqual(dialog.progress_bar.value(), 25)
+        dialog.download_progress.emit(DownloadProgress(100, 100))
+        self._app.processEvents()
+        self.assertEqual(dialog.progress_bar.value(), 99)
+        dialog.download_progress.emit(DownloadProgress(100, None))
+        self._app.processEvents()
+        self.assertEqual(dialog.progress_bar.maximum(), 0)
+        dialog.download_progress.emit(DownloadProgress(100, 100, "verification"))
+        self._app.processEvents()
+        self.assertEqual(dialog.progress_bar.maximum(), 0)
+        from worklogger.domain.shared.errors import CancellationError
+        runner.complete(Result.failure(CancellationError("job_cancelled", "job_cancelled")))
+        self.assertTrue(dialog.progress_bar.isHidden())
+        self.assertFalse(dialog._busy)
+        self.assertTrue(dialog.download_selected())
+        runner.complete(model.load())
+        self.assertEqual(dialog.progress_bar.value(), 100)
+
     def tearDown(self):
         set_language("en_US")
 

@@ -125,6 +125,10 @@ class ReportEditorViewModel:
     def delete_available(self) -> bool:
         return self._delete_report_handler is not None
 
+    @property
+    def saved_export_available(self) -> bool:
+        return self._list_reports_handler is not None
+
     def delete(self, item: ReportHistoryItem) -> Result[None]:
         if item.user_id != self._user_id or item.report_id is None:
             return Result.failure(_validation("report_not_found"))

@@ -14,6 +14,16 @@ Application version: 4.0.0.
 
 ### Desktop Interface
 
+- Account-owned custom work types with Work, Break, or Leave accounting; saved
+  periods and timers retain their original names and categories.
+- Fixed calendar date/time controls and save actions, with independent editor and
+  record-list scrolling.
+- Clear saved-report scope and editing selection, direct template Save and apply,
+  and daily/month-wide saved daily-report Markdown export.
+- Editable securely stored external API credentials with placeholder-only default
+  endpoint/model fields; one local model management entry and verified download
+  percentage feedback.
+
 - Report history displays local creation timestamps and report numbers; editing
   a saved report replaces its content only after overwrite confirmation.
 - Analytics period selectors retain current periods after historical navigation;
@@ -36,6 +46,11 @@ Application version: 4.0.0.
   do not open a success dialog.
 
 ### Storage and Compatibility
+
+- Schema 9 classification snapshots and account type catalog; structure-aware
+  upgrades preserve current entry IDs and metadata even without a version ledger.
+- Feature-specific dependency composition, independent settings sections and
+  workflows, a calendar coordinator, and separate worklog query/write components.
 
 - Database access preserves originals on lock, permission, and I/O failures;
   integrity checks run once per factory, and desktop instances hold a database lock.

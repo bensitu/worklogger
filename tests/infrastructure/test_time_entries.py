@@ -169,7 +169,7 @@ class TimeEntryTests(unittest.TestCase):
         self.assertEqual(self.make_service().timer.work_type, WorkType.MEETING)
         self.now += timedelta(hours=1)
         self.assertTrue(self.service.finish("Completed").ok)
-        with patch.object(self.repository, "_change_timer", side_effect=OSError("storage unavailable")):
+        with patch.object(self.repository._writes, "_change_timer", side_effect=OSError("storage unavailable")):
             self.assertFalse(self.service.take_break(1, "Rest").ok)
         self.assertEqual(len(self.repository.list_for_day(self.user.id, self.now.date())), 1)
         self.assertIsNone(self.make_service().timer)
@@ -196,7 +196,7 @@ class TimeEntryTests(unittest.TestCase):
             offered = self.service.start("meeting", "Work", now=clicked)
             self.assertEqual(offered.error.code, "fixed_break_active")
             self.assertEqual(offered.error.details["break_entry"], record)
-            with patch.object(self.repository, "_change_timer", side_effect=OSError("storage unavailable")):
+            with patch.object(self.repository._writes, "_change_timer", side_effect=OSError("storage unavailable")):
                 self.assertFalse(self.service.start("meeting", "Work", now=clicked, break_entry=record).ok)
             self.assertEqual(self.repository.get_entry(self.user.id, record.id), record)
             self.assertIsNone(self.make_service().timer)
@@ -216,7 +216,7 @@ class TimeEntryTests(unittest.TestCase):
     def test_failed_automatic_transition_rolls_back_record_and_preserves_timer(self):
         self.service.start("normal", "Retained")
         self.now += timedelta(hours=1)
-        with patch.object(self.repository, "_change_timer", side_effect=OSError("storage unavailable")):
+        with patch.object(self.repository._writes, "_change_timer", side_effect=OSError("storage unavailable")):
             self.assertFalse(self.service.finish("Changed").ok)
         self.assertEqual(self.repository.list_for_day(self.user.id, self.now.date()), ())
         self.assertEqual(self.make_service().timer.content, "Retained")

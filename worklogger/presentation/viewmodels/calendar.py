@@ -343,7 +343,7 @@ class CalendarViewModel:
             has_note_marker=has_note_marker,
             note_tooltip=note_text[:200] if has_note_marker else "",
             work_type_marker_color=self._theme_engine.work_type_marker_color(
-                work_type,
+                record.work_type if record else work_type,
                 dark=dark,
             ),
             show_overnight_marker=bool(

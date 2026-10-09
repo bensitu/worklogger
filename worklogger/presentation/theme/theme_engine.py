@@ -7,7 +7,7 @@ from pathlib import Path
 
 from PySide6.QtGui import QColor, QPalette
 
-from worklogger.domain.worklog.models import WorkType
+from worklogger.domain.worklog.models import CustomWorkType, WorkType
 
 from worklogger.domain.settings.appearance import DEFAULT_CUSTOM_COLOR, THEME_KEYS, normalize_hex_color
 STYLE_PRIORITY = ("weekend", "holiday", "today", "selected")
@@ -190,11 +190,14 @@ class ThemeEngine:
 
     def work_type_marker_color(
         self,
-        work_type: WorkType | str,
+        work_type: WorkType | CustomWorkType | str,
         *,
         dark: bool = False,
     ) -> str | None:
-        value = work_type.value if isinstance(work_type, WorkType) else str(work_type)
+        if isinstance(work_type, CustomWorkType):
+            value = WorkType.PAID_LEAVE.value if work_type.category == "leave" else WorkType.NORMAL.value
+        else:
+            value = work_type.value if isinstance(work_type, WorkType) else str(work_type)
         return _WORK_TYPE_MARKERS[bool(dark)].get(value)
 
     def application_stylesheet(

@@ -13,6 +13,8 @@ def up(connection: sqlite3.Connection) -> None:
         "user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, "
         "d TEXT NOT NULL, content TEXT NOT NULL DEFAULT '', PRIMARY KEY(user_id, d))"
     )
+    if "id" in {row[1] for row in connection.execute("PRAGMA table_info(worklog)")}:
+        return
     connection.execute(
         "INSERT INTO daily_notes(user_id, d, content) SELECT user_id, d, note FROM worklog WHERE note<>'' "
         "ON CONFLICT(user_id, d) DO NOTHING"

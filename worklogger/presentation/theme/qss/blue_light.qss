@@ -10,6 +10,32 @@ QLabel {
   background: transparent;
 }
 
+QListWidget#local_model_list_widget,
+QListWidget#custom_work_type_list_widget {
+  background: {{ surface }};
+  border: 1px solid {{ border }};
+  border-radius: 6px;
+  padding: 6px;
+}
+
+QListWidget#local_model_list_widget::item,
+QListWidget#custom_work_type_list_widget::item {
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+
+QListWidget#local_model_list_widget::item:hover,
+QListWidget#custom_work_type_list_widget::item:hover {
+  background: {{ accent_dim }};
+}
+
+QListWidget#local_model_list_widget::item:selected,
+QListWidget#custom_work_type_list_widget::item:selected {
+  background: {{ accent }};
+  color: #ffffff;
+}
+
+
 QWidget#settings_theme_row_widget {
   background: transparent;
 }

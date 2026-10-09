@@ -6,7 +6,9 @@ An implemented adapter is not necessarily connected to the default desktop.
 `worklogger/bootstrap.py` is the authoritative composition entry point.
 `SettingsCapabilities` communicates actual generation and proxy availability to
 the settings surface. Default composition supplies no such services: activation
-and configuration controls are disabled while stored preferences remain intact.
+controls are disabled while stored preferences remain intact. External endpoint,
+model identifier, and securely stored API-key configuration remain editable without
+activating or contacting a service.
 File management is independent and remains available only when its workflow is
 connected. Capability declarations do not create adapters or route requests.
 
@@ -129,7 +131,8 @@ features.
 ## Adding a Connected Service
 
 Define the contract in the application/domain layer, implement it in infrastructure,
-and construct it explicitly in `bootstrap.py`. Add secure credential access,
+and construct it in the appropriate `composition/` feature module, called by
+`bootstrap.py`. Add secure credential access,
 availability reporting, privacy controls, timeout/cancellation handling, and tests
 with injected transports. Run blocking network and inference work through the
 job runner. Keep disabled UI controls disabled until the complete workflow works.

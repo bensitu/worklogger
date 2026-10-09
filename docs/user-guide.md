@@ -57,6 +57,9 @@ Work types are normal work, remote work, business trip, meeting, training, break
 paid leave, compensatory leave, sick leave, and Other. Other appears last and counts
 as worked time. Breaks do not count as work or leave. Leave is accounted for
 separately from worked hours.
+Manage work types beside the selector adds custom account classifications. Assign
+each to Work, Break, or Leave. Names and accounting categories are saved with each
+period; later catalog edits and archiving do not change historical totals.
 
 ### Automatic Entry
 

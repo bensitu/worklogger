@@ -60,7 +60,7 @@ class AuthSchemaMigrationTests(unittest.TestCase):
             with factory.connection() as connection:
                 credentials = tuple(connection.execute("SELECT password_hash, salt FROM users").fetchone())
                 work_log = tuple(connection.execute("SELECT * FROM worklog").fetchone())
-            self.assertEqual(MigrationRunner(factory).run_pending(), (2, 3, 4, 5, 6, 7, 8))
+            self.assertEqual(MigrationRunner(factory).run_pending(), (2, 3, 4, 5, 6, 7, 8, 9))
             auth = SQLiteAuthRepository(factory, password_hasher=hasher)
             user = auth.verify_user("admin", "test-password")
             self.assertIsNotNone(user)

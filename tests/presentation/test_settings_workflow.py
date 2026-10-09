@@ -218,9 +218,9 @@ class SettingsWorkflowTests(unittest.TestCase):
         dialog = SettingsDialog(_settings_view_model(repository))
         cancelled = Result.failure(CancellationError("job_cancelled", "job_cancelled"))
         try:
-            controller._complete_data_job(dialog, "Backup Data", cancelled, lambda _state: "Must not run")
-            controller._complete_data_job(dialog, "Restore Data", cancelled, lambda _state: "Must not run")
-            controller._complete_update_check(dialog, cancelled)
+            controller._data_workflow._complete_data_job(dialog, "Backup Data", cancelled, lambda _state: "Must not run")
+            controller._data_workflow._complete_data_job(dialog, "Restore Data", cancelled, lambda _state: "Must not run")
+            controller._updates_workflow._complete_update_check(dialog, cancelled)
             self.assertIsNone(repository.get(1, LAST_BACKUP_AT_SETTING_KEY))
             self.assertEqual(dialog.status_label.text(), "Operation cancelled.")
             success.assert_not_called()

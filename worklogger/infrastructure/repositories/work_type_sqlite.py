@@ -29,8 +29,10 @@ class SQLiteWorkTypeRepository:
                 connection.execute("UPDATE work_types SET name=?,normalized_name=?,category=?,revision=revision+1 WHERE id=? AND user_id=?",
                                    (definition.label.strip(), normalized, definition.category, definition.value, user_id))
                 return replace(definition, revision=definition.revision + 1)
-        except sqlite3.IntegrityError:
-            raise ValueError("work_type_name_exists") from None
+        except sqlite3.IntegrityError as error:
+            if getattr(error, "sqlite_errorcode", None) == sqlite3.SQLITE_CONSTRAINT_UNIQUE:
+                raise ValueError("work_type_name_exists") from None
+            raise
 
     def archive_type(self, user_id, definition):
         with self._connection_factory.transaction(write=True) as connection:

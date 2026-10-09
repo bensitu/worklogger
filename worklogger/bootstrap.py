@@ -2,144 +2,85 @@
 
 from __future__ import annotations
 
+import logging
+import secrets
+import sys
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
-import logging
-import secrets
-import os
-import sys
-from tzlocal import get_localzone
-from worklogger.infrastructure.database.upgrade import copy_database
 from typing import Protocol
 
 from PySide6.QtWidgets import QApplication
-from worklogger.__about__ import APP_ID, APP_NAME, APP_VERSION
 
+from worklogger.__about__ import APP_ID, APP_NAME, APP_VERSION
 from worklogger.app.job_runner import JobRunner
-from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler, GetAnalyticsDashboardHandler
-from worklogger.app.use_cases.ai import (
-    AiChatHandler,
-    RewriteTextHandler,
-)
 from worklogger.app.use_cases.auth import (
-    AdminResetPasswordHandler,
     ChangePasswordHandler,
-    CreateManagedUserHandler,
-    DeleteManagedUserHandler,
     GetAuthBootstrapStateHandler,
     LoginHandler,
     LoginWithRememberTokenHandler,
-    ListUsersHandler,
     RegisterUserHandler,
     ResetPasswordHandler,
-    SetPasswordChangeRequiredHandler,
 )
 from worklogger.app.use_cases.calendar import (
     GetCalendarEventsForRangeHandler,
     GetHolidaysForRangeHandler,
-    ImportCalendarEventsHandler,
 )
-from worklogger.app.use_cases.data_portability import ImportWorkLogsCsvHandler
-from worklogger.app.use_cases.identity import (
-    GetIdentityProvidersHandler,
-    LinkIdentityHandler,
-    ListLinkedIdentitiesHandler,
-    UnlinkIdentityHandler,
+from worklogger.app.use_cases.notes import GetDailyNoteHandler
+from worklogger.composition.context import (
+    RuntimeAuthRepository,
+    RuntimeHandlers,
+    RuntimeRepositories,
+    _runtime_handlers,
+    _runtime_repositories,
 )
-from worklogger.app.use_cases.local_models import (
-    DeleteLocalModelHandler,
-    DownloadLocalModelHandler,
-    ImportLocalModelHandler,
-    ListLocalModelsHandler,
-    RefreshLocalModelCatalogHandler,
-    SelectLocalModelHandler,
-    VerifyLocalModelHandler,
+from worklogger.composition.recording import _build_time_entry_view_model
+from worklogger.composition.reporting import (
+    _build_analytics_workflow,
+    _build_notes_workflow,
+    _build_reports_workflow,
 )
-from worklogger.app.use_cases.notes import DailyNotesService, GetDailyNoteHandler
-from worklogger.app.use_cases.reports import (
-    GenerateReportHandler,
-    GetReportForPeriodHandler,
-    ListReportsHandler,
-    ResetReportTemplateHandler,
-    SaveReportHandler,
-    SaveReportTemplateHandler,
-)
-from worklogger.app.use_cases.work_logs import (
-    GetAllWorkLogsHandler,
-    GetMonthRecordsHandler,
-)
-from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandler
-from worklogger.app.use_cases.updates import CheckForUpdatesHandler
-from worklogger.config.feature_flags import FeatureFlags
+from worklogger.composition.settings import _build_settings_workflow
 from worklogger.config.constants import (
-    GITHUB_LATEST_RELEASE_API_URL,
     LANGUAGE_SETTING_KEY,
     MINIMAL_MODE_SETTING_KEY,
 )
-from worklogger.domain.auth.repositories import AuthCredentialRepository
 from worklogger.domain.auth.models import User
+from worklogger.domain.auth.repositories import AuthCredentialRepository
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
+from worklogger.infrastructure.calendar import (
+    detect_country,
+)
 from worklogger.infrastructure.database import (
     MigrationRunner,
     SQLiteConnectionFactory,
     default_database_path,
 )
-from worklogger.infrastructure.backup import SQLiteBackupService
-from worklogger.infrastructure.security.key_store import SystemCredentialStore, HmacSecretBox, protect_legacy_proxy_passwords
-from worklogger.infrastructure.security.key_store import EncryptedSettingsKeyStore
-import hashlib
-from worklogger.app.use_cases.settings import ProxyPasswordSettings
-from worklogger.infrastructure.calendar import (
-    IcsCalendarImporter,
-    PythonHolidaysProvider,
-    detect_country,
+from worklogger.infrastructure.database.upgrade import copy_database
+from worklogger.infrastructure.i18n import _, get_language, set_language
+from worklogger.infrastructure.language_preferences import (
+    LanguagePreferences,
+    initialize_language,
 )
-from worklogger.infrastructure.export import (
-    AnalyticsCsvExporter,
-    AnalyticsPdfExporter,
-    MarkdownExporter,
-    WorkLogCsvExporter,
-    WorkLogCsvImporter,
-    WorkLogIcsExporter,
-)
-from worklogger.infrastructure.identity import DisabledIdentityProvider
 from worklogger.infrastructure.logging import setup_logging
-from worklogger.infrastructure.local_model import JsonLocalModelStore, bundled_model_catalog_path
-from worklogger.app.use_cases.time_entries import TimeEntryService
-from worklogger.app.use_cases.work_types import WorkTypeService
-from worklogger.infrastructure.repositories.work_type_sqlite import SQLiteWorkTypeRepository
-from worklogger.app.use_cases.reports import DeleteReportHandler
-from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
 from worklogger.infrastructure.repositories import (
     SQLiteAuthRepository,
-    SQLiteCalendarEventRepository,
-    SQLiteDailyNoteRepository,
-    SQLiteIdentityRepository,
     SQLiteLoginFailureRepository,
-    SQLiteQuickLogRepository,
-    SQLiteReportRepository,
-    SQLiteReportTemplateRepository,
     SQLiteSettingsRepository,
-    SQLiteWorkLogRepository,
 )
 from worklogger.infrastructure.security import (
     FileRememberTokenSessionStore,
     PBKDF2PasswordHasher,
 )
-from worklogger.infrastructure.templates import BuiltInTemplateProvider, UserTemplateProvider
-from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
-from worklogger.infrastructure.i18n import _, get_language, set_language
-from worklogger.infrastructure.language_preferences import LanguagePreferences, initialize_language
-from worklogger.presentation.analytics import AnalyticsWorkflowController
+from worklogger.infrastructure.security.key_store import (
+    HmacSecretBox,
+    protect_legacy_proxy_passwords,
+)
 from worklogger.presentation.auth import AuthController, AuthSession
 from worklogger.presentation.auth.controller import RememberSessionStore
-from worklogger.presentation.identity import IdentityWorkflowController
 from worklogger.presentation.job_runner import QtJobRunner
-from worklogger.presentation.local_models import LocalModelsWorkflowController
 from worklogger.presentation.notes import NotesWorkflowController
-from worklogger.presentation.reporting import ReportsWorkflowController
 from worklogger.presentation.settings import SettingsWorkflowController
 from worklogger.presentation.shell import (
     AppWindow,
@@ -149,20 +90,17 @@ from worklogger.presentation.shell import (
     QtResidencyController,
     ResidencyViewModel,
 )
-from worklogger.presentation.theme import configure_application_style, install_bundled_fonts
+from worklogger.presentation.theme import (
+    configure_application_style,
+    install_bundled_fonts,
+)
 from worklogger.presentation.viewmodels import (
     AuthViewModel,
-    AnalyticsViewModel,
     CalendarViewModel,
-    DataManagementViewModel,
-    IdentityManagementViewModel,
-    LocalModelManagerViewModel,
-    NoteEditorViewModel,
-    ReportEditorViewModel,
-    StatsPanelViewModel,
     SettingsViewModel,
-    UserManagementViewModel,
+    StatsPanelViewModel,
 )
+from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
 from worklogger.presentation.widgets.assets import apply_application_icon
 
 LOGGER = logging.getLogger(__name__)
@@ -192,16 +130,10 @@ class DesktopRuntime:
 
 
 class DesktopAuthenticator(Protocol):
-    def authenticate(self) -> Result[AuthSession]:
-        ...
+    def authenticate(self) -> Result[AuthSession]: ...
 
 
 AuthControllerFactory = Callable[[AuthViewModel], DesktopAuthenticator]
-
-
-class RuntimeAuthRepository(AuthCredentialRepository, Protocol):
-    def get_by_username(self, username: str) -> User | None:
-        ...
 
 
 _remember_session_store_instance: RememberSessionStore | None = None
@@ -315,6 +247,7 @@ def _application(argv: Sequence[str] | None) -> QApplication:
     application.setApplicationVersion(APP_VERSION)
     if sys.platform == "win32":
         import ctypes
+
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)
     configure_application_style()
     install_bundled_fonts()
@@ -338,8 +271,14 @@ def _password_hasher(iterations: int | None) -> PBKDF2PasswordHasher:
 def _prepare_database(
     config: DesktopRuntimeConfig,
 ) -> tuple[Path, SQLiteConnectionFactory, RuntimeAuthRepository]:
-    database_path = Path(config.database_path) if config.database_path else default_database_path()
-    if config.database_path is None and getattr(sys, "frozen", False) and not database_path.exists():
+    database_path = (
+        Path(config.database_path) if config.database_path else default_database_path()
+    )
+    if (
+        config.database_path is None
+        and getattr(sys, "frozen", False)
+        and not database_path.exists()
+    ):
         previous = Path(sys.executable).resolve().parent / "worklog.db"
         if previous.is_file() and previous.resolve() != database_path.resolve():
             copy_database(previous, database_path)
@@ -372,34 +311,6 @@ def _auth_view_model(
     )
 
 
-@dataclass(frozen=True)
-class RuntimeRepositories:
-    work_logs: SQLiteWorkLogRepository
-    calendar_events: SQLiteCalendarEventRepository
-    daily_notes: SQLiteDailyNoteRepository
-    identities: SQLiteIdentityRepository
-    quick_logs: SQLiteQuickLogRepository
-    reports: SQLiteReportRepository
-    report_templates: SQLiteReportTemplateRepository
-    settings: SQLiteSettingsRepository
-    work_types: SQLiteWorkTypeRepository
-
-
-@dataclass(frozen=True)
-class RuntimeHandlers:
-    templates: UserTemplateProvider
-    markdown_exporter: MarkdownExporter
-    rewrite_handler: RewriteTextHandler
-    ai_chat_handler: AiChatHandler
-    save_template_handler: SaveReportTemplateHandler
-    reset_template_handler: ResetReportTemplateHandler
-    settings_get_handler: GetSettingHandler
-    settings_set_handler: SetSettingHandler
-    month_records_handler: GetMonthRecordsHandler
-    holiday_provider: PythonHolidaysProvider
-    holiday_country: str
-
-
 def _build_runtime_for_user(
     *,
     application: QApplication,
@@ -414,7 +325,7 @@ def _build_runtime_for_user(
     job_runner: JobRunner | None = None,
 ) -> Result[DesktopRuntime]:
     repositories = _runtime_repositories(connection_factory)
-    handlers = _runtime_handlers(repositories)
+    handlers = _runtime_handlers(repositories, holiday_country=detect_country())
     remember_store = remember_session_store or _remember_session_store()
     time_entry_view_model = _build_time_entry_view_model(user, repositories, handlers)
     settings_workflow = _build_settings_workflow(
@@ -427,28 +338,39 @@ def _build_runtime_for_user(
         auth_view_model=auth_view_model,
         remember_session_store=remember_store,
         job_runner=job_runner,
+        save_login_language=LanguagePreferences().save,
     )
     residency_controller = _build_residency_controller(user, handlers)
     window_config = _window_config_for_user(config.window, user)
     settings = SettingsViewModel(
-        user_id=user.id, get_handler=handlers.settings_get_handler,
+        user_id=user.id,
+        get_handler=handlers.settings_get_handler,
         set_handler=handlers.settings_set_handler,
         default_language=get_language(),
     ).load()
     if not settings.ok or settings.value is None:
-        return Result.failure(settings.error or InfrastructureError("settings_load_failed", "settings_load_failed"))
+        return Result.failure(
+            settings.error
+            or InfrastructureError("settings_load_failed", "settings_load_failed")
+        )
     state = settings.value
     set_language(state.language)
     preferences = LanguagePreferences()
-    if preferences.load() is None and repositories.settings.get(user.id, LANGUAGE_SETTING_KEY):
+    if preferences.load() is None and repositories.settings.get(
+        user.id, LANGUAGE_SETTING_KEY
+    ):
         preferences.save(state.language)
     time_entry_view_model.set_default_break_hours(state.default_break_hours)
     window_config = replace(
-        window_config, theme=state.theme, dark=state.dark_mode,
-        custom_color=state.custom_color, standard_work_hours=state.standard_work_hours,
+        window_config,
+        theme=state.theme,
+        dark=state.dark_mode,
+        custom_color=state.custom_color,
+        standard_work_hours=state.standard_work_hours,
         monthly_target_hours=state.monthly_target_hours,
         calendar_options=replace(
-            window_config.calendar_options, show_holidays=state.show_holidays,
+            window_config.calendar_options,
+            show_holidays=state.show_holidays,
             holiday_region=state.holiday_region,
             show_note_markers=state.show_note_markers,
             show_overnight_indicator=state.show_overnight_indicator,
@@ -461,7 +383,9 @@ def _build_runtime_for_user(
             application=application,
             window=_build_minimal_view(
                 time_entry_view_model=time_entry_view_model,
-                notes_workflow=_build_notes_workflow(user, repositories, handlers, job_runner),
+                notes_workflow=_build_notes_workflow(
+                    user, repositories, handlers, job_runner
+                ),
                 window_config=window_config,
                 settings_workflow=settings_workflow,
                 residency_controller=residency_controller,
@@ -496,288 +420,6 @@ def _build_runtime_for_user(
     )
 
 
-def _runtime_repositories(
-    connection_factory: SQLiteConnectionFactory,
-) -> RuntimeRepositories:
-    return RuntimeRepositories(
-        work_logs=SQLiteWorkLogRepository(connection_factory),
-        calendar_events=SQLiteCalendarEventRepository(connection_factory),
-        daily_notes=SQLiteDailyNoteRepository(connection_factory),
-        identities=SQLiteIdentityRepository(connection_factory),
-        quick_logs=SQLiteQuickLogRepository(connection_factory),
-        reports=SQLiteReportRepository(connection_factory),
-        report_templates=SQLiteReportTemplateRepository(connection_factory),
-        settings=SQLiteSettingsRepository(connection_factory),
-        work_types=SQLiteWorkTypeRepository(connection_factory),
-    )
-
-
-def _runtime_handlers(repositories: RuntimeRepositories) -> RuntimeHandlers:
-    return RuntimeHandlers(
-        templates=UserTemplateProvider(
-            repositories.report_templates,
-            BuiltInTemplateProvider(),
-        ),
-        markdown_exporter=MarkdownExporter(),
-        rewrite_handler=RewriteTextHandler(),
-        ai_chat_handler=AiChatHandler(),
-        save_template_handler=SaveReportTemplateHandler(repositories.report_templates),
-        reset_template_handler=ResetReportTemplateHandler(repositories.report_templates),
-        settings_get_handler=GetSettingHandler(repositories.settings),
-        settings_set_handler=SetSettingHandler(repositories.settings),
-        month_records_handler=GetMonthRecordsHandler(repositories.work_logs),
-        holiday_provider=PythonHolidaysProvider(),
-        holiday_country=detect_country(),
-    )
-
-
-def _build_time_entry_view_model(user: User, repositories: RuntimeRepositories, handlers: RuntimeHandlers) -> TimeEntryViewModel:
-    return TimeEntryViewModel(TimeEntryService(user_id=user.id, repository=repositories.work_logs,
-        settings=repositories.settings, local_timezone=get_localzone(), calendar_events=repositories.calendar_events,
-        work_types=WorkTypeService(user.id, repositories.work_types)),
-        rewrite_handler=handlers.rewrite_handler, language=get_language())
-
-
-def _build_analytics_workflow(
-    user: User,
-    repositories: RuntimeRepositories,
-) -> AnalyticsWorkflowController:
-    return AnalyticsWorkflowController(
-        AnalyticsViewModel(
-            user_id=user.id,
-            bundle_handler=GetAnalyticsBundleHandler(repositories.work_logs),
-            dashboard_handler=GetAnalyticsDashboardHandler(repositories.work_logs, repositories.settings),
-            csv_exporter=AnalyticsCsvExporter(),
-            pdf_exporter=AnalyticsPdfExporter(),
-        )
-    )
-
-
-def _build_notes_workflow(
-    user: User,
-    repositories: RuntimeRepositories,
-    handlers: RuntimeHandlers,
-    job_runner=None,
-) -> NotesWorkflowController:
-    return NotesWorkflowController(
-        NoteEditorViewModel(
-            DailyNotesService(user_id=user.id, notes=repositories.daily_notes, settings=repositories.settings,
-                              previous_entries=repositories.quick_logs),
-            language=get_language(),
-            markdown_exporter=handlers.markdown_exporter,
-            rewrite_handler=handlers.rewrite_handler,
-        ),
-        job_runner=job_runner,
-    )
-
-
-def _build_reports_workflow(
-    user: User,
-    repositories: RuntimeRepositories,
-    handlers: RuntimeHandlers,
-) -> ReportsWorkflowController:
-    return ReportsWorkflowController(
-        ReportEditorViewModel(
-            user_id=user.id,
-            language=get_language(),
-            generate_handler=GenerateReportHandler(
-                work_logs=repositories.work_logs,
-                quick_logs=repositories.quick_logs,
-                calendar_events=repositories.calendar_events,
-                templates=handlers.templates,
-                notes=repositories.daily_notes,
-                translator=_,
-                note_settings=repositories.settings,
-            ),
-            get_report_handler=GetReportForPeriodHandler(repositories.reports),
-            list_reports_handler=ListReportsHandler(repositories.reports),
-            delete_report_handler=DeleteReportHandler(repositories.reports),
-            templates=handlers.templates,
-            save_report_handler=SaveReportHandler(repositories.reports),
-            save_template_handler=handlers.save_template_handler,
-            reset_template_handler=handlers.reset_template_handler,
-            markdown_exporter=handlers.markdown_exporter,
-            rewrite_handler=handlers.rewrite_handler,
-        )
-    )
-
-
-def _build_settings_workflow(
-    *,
-    user: User,
-    database_path: Path,
-    connection_factory: SQLiteConnectionFactory,
-    repositories: RuntimeRepositories,
-    handlers: RuntimeHandlers,
-    auth_repository: RuntimeAuthRepository | None,
-    auth_view_model: AuthViewModel | None,
-    remember_session_store: RememberSessionStore,
-    job_runner: JobRunner | None,
-) -> SettingsWorkflowController | None:
-    if auth_view_model is None:
-        return None
-    features = FeatureFlags.from_env()
-    return SettingsWorkflowController(
-        settings_view_model=SettingsViewModel(
-            user_id=user.id,
-            get_handler=handlers.settings_get_handler,
-            set_handler=handlers.settings_set_handler,
-            default_language=get_language(),
-            save_login_language=LanguagePreferences().save,
-            external_key_store=EncryptedSettingsKeyStore(repositories.settings, user_id=user.id,
-                service_name="worklogger.external." + hashlib.sha256((str(database_path.resolve()) + ":" + str(user.id)).encode()).hexdigest()),
-            proxy_password_settings=ProxyPasswordSettings(
-                repositories.settings,
-                SystemCredentialStore(namespace=str(database_path.resolve())),
-                user_id=user.id,
-                secret_box=HmacSecretBox(),
-            ),
-        ),
-        auth_view_model=auth_view_model,
-        user=user,
-        data_management_view_model=_build_data_management_view_model(
-            user=user,
-            connection_factory=connection_factory,
-            repositories=repositories,
-        ),
-        update_check_handler=CheckForUpdatesHandler(
-            GitHubReleaseUpdateChecker(api_url=GITHUB_LATEST_RELEASE_API_URL)
-        ) if features.enable_update_check else None,
-        job_runner=job_runner,
-        identity_workflow=_build_identity_workflow(user, repositories, auth_repository),
-        local_models_workflow=_build_local_models_workflow(
-            user=user,
-            database_path=database_path,
-            repositories=repositories,
-            job_runner=job_runner,
-        ) if features.enable_local_models else None,
-        user_management_view_model=_build_user_management_view_model(
-            user,
-            auth_repository,
-        ),
-        remember_session_store=remember_session_store,
-    )
-
-
-def _build_data_management_view_model(
-    *,
-    user: User,
-    connection_factory: SQLiteConnectionFactory,
-    repositories: RuntimeRepositories,
-) -> DataManagementViewModel:
-    return DataManagementViewModel(
-        user_id=user.id,
-        can_manage_database=user.is_admin,
-        work_logs_handler=GetAllWorkLogsHandler(repositories.work_logs, include_note_only=True),
-        backup_service=SQLiteBackupService(
-            connection_factory,
-            expected_username=user.username,
-            requesting_user_id=user.id,
-        ),
-        csv_exporter=WorkLogCsvExporter(),
-        ics_exporter=WorkLogIcsExporter(),
-        csv_import_handler=ImportWorkLogsCsvHandler(
-            importer=WorkLogCsvImporter(),
-            repository=repositories.work_logs,
-        ),
-        calendar_events_handler=GetCalendarEventsForRangeHandler(
-            repositories.calendar_events
-        ),
-        ics_import_handler=ImportCalendarEventsHandler(
-            repositories.calendar_events,
-            IcsCalendarImporter(),
-        ),
-    )
-
-
-def _build_user_management_view_model(
-    user: User,
-    auth_repository: RuntimeAuthRepository | None,
-) -> UserManagementViewModel | None:
-    if auth_repository is None:
-        return None
-    return UserManagementViewModel(
-        requesting_user_id=user.id,
-        list_users_handler=ListUsersHandler(auth_repository),
-        create_user_handler=CreateManagedUserHandler(auth_repository),
-        reset_password_handler=AdminResetPasswordHandler(auth_repository),
-        set_password_change_required_handler=SetPasswordChangeRequiredHandler(
-            auth_repository
-        ),
-        delete_user_handler=DeleteManagedUserHandler(auth_repository),
-    )
-
-
-def _build_local_models_workflow(
-    *,
-    user: User,
-    database_path: Path,
-    repositories: RuntimeRepositories,
-    job_runner: JobRunner | None,
-) -> LocalModelsWorkflowController:
-    local_model_store = JsonLocalModelStore(
-        database_path.parent / "models",
-        bundled_catalog_path=bundled_model_catalog_path(),
-        remote_catalog_url=os.environ.get("WORKLOGGER_MODEL_CATALOG_URL", "").strip() or None,
-    )
-    return LocalModelsWorkflowController(
-        LocalModelManagerViewModel(
-            user_id=user.id,
-            list_handler=ListLocalModelsHandler(
-                store=local_model_store,
-                settings=repositories.settings,
-            ),
-            refresh_handler=RefreshLocalModelCatalogHandler(local_model_store),
-            import_handler=ImportLocalModelHandler(
-                store=local_model_store,
-                settings=repositories.settings,
-            ),
-            download_handler=DownloadLocalModelHandler(
-                store=local_model_store,
-                settings=repositories.settings,
-            ),
-            verify_handler=VerifyLocalModelHandler(local_model_store),
-            select_handler=SelectLocalModelHandler(
-                store=local_model_store,
-                settings=repositories.settings,
-            ),
-            delete_handler=DeleteLocalModelHandler(
-                store=local_model_store,
-                settings=repositories.settings,
-                usage_reader=repositories.settings,
-            ),
-        ),
-        job_runner=job_runner,
-    )
-
-
-def _build_identity_workflow(
-    user: User,
-    repositories: RuntimeRepositories,
-    auth_repository: RuntimeAuthRepository | None,
-) -> IdentityWorkflowController:
-    identity_providers = _identity_providers()
-    return IdentityWorkflowController(
-        IdentityManagementViewModel(
-            user_id=user.id,
-            list_handler=ListLinkedIdentitiesHandler(repositories.identities),
-            providers_handler=GetIdentityProvidersHandler(identity_providers),
-            link_handler=LinkIdentityHandler(
-                repository=repositories.identities,
-                providers=identity_providers,
-            ),
-            unlink_handler=UnlinkIdentityHandler(repositories.identities, auth_repository),
-        )
-    )
-
-
-def _identity_providers() -> tuple[DisabledIdentityProvider, ...]:
-    return (
-        DisabledIdentityProvider("google", "Google"),
-        DisabledIdentityProvider("microsoft", "Microsoft"),
-    )
-
-
 def _build_residency_controller(
     user: User,
     handlers: RuntimeHandlers,
@@ -796,7 +438,8 @@ def _window_config_for_user(
     user: User,
 ) -> AppWindowConfig:
     return replace(
-        window_config, account_name=window_config.account_name or user.username,
+        window_config,
+        account_name=window_config.account_name or user.username,
         account_role=_("Admin") if user.is_admin else _("User"),
     )
 
@@ -908,7 +551,9 @@ def _resolve_runtime_user(
     if config.user_id is not None:
         user = auth_repository.get_by_id(int(config.user_id))
         if user is None:
-            return Result.failure(ValidationError("runtime_user_missing", "runtime_user_missing"))
+            return Result.failure(
+                ValidationError("runtime_user_missing", "runtime_user_missing")
+            )
         return Result.success(user)
 
     users = auth_repository.list_users()
@@ -916,7 +561,9 @@ def _resolve_runtime_user(
         return Result.success(users[0])
 
     if not config.create_user_if_empty:
-        return Result.failure(ValidationError("runtime_user_required", "runtime_user_required"))
+        return Result.failure(
+            ValidationError("runtime_user_required", "runtime_user_required")
+        )
 
     username = _available_bootstrap_username(auth_repository, config.bootstrap_username)
     user = auth_repository.create_user(

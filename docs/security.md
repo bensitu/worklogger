@@ -70,10 +70,12 @@ the credential. Key creation is process-locked, and encrypted values are replace
 atomically. Missing or corrupt keys are reported rather than silently replaced.
 File permissions remain best effort; protect the containing user profile.
 
-`EncryptedSettingsKeyStore` is an additional adapter with keyring-first behavior
-and encrypted-settings fallback. Its existence does not mean that all application
-secrets or the database are encrypted. The default proxy workflow uses the stricter
-system-only store instead.
+The external API-key form uses `EncryptedSettingsKeyStore`, with keyring-first
+behavior and encrypted-settings fallback. Its namespace includes the resolved
+database path and account ID. Saving a key does not make a service request or
+connect an inference engine. This does not mean that all application secrets or
+the database are encrypted. The proxy workflow uses the stricter system-only
+store instead.
 
 ## Network Exposure
 

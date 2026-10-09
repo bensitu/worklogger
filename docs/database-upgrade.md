@@ -2,7 +2,7 @@
 
 ## Supported Sources
 
-The current schema version is 8. The application supports the released 3.x
+The current schema version is 9. The application supports the released 3.x
 multi-account SQLite layouts and existing versioned 4.0 databases. It preserves
 integer account IDs, password and recovery material, report content, previous
 quick logs, calendar events, settings, and stored identity metadata.
@@ -14,6 +14,11 @@ explicit preference. A recorded password-change requirement is retained and
 subsequently acknowledged through the current account field. Nullable previous work values receive
 their existing semantic defaults; old break deductions remain deductions rather
 than guessed rest periods.
+
+Migration 9 adds custom classification snapshots and the account-owned type catalog.
+Built-in records keep their stored meaning. Without a migration ledger, an already
+converted entry table is recognized structurally and is not rebuilt; entry IDs,
+revisions, capture identifiers, snapshots, and independent memos remain intact.
 
 Unknown versions, invalid foreign keys, executable stored schema objects, and
 canonical account-name conflicts stop the upgrade. Accounts are not merged,

@@ -20,6 +20,11 @@ The following concrete dependencies have been reduced:
 | Startup contained SQLite copying and file replacement logic | A validated database-copy adapter owns that operation |
 | Restore imported private migration details | Shared schema definitions and read-only inspection support both restore and upgrade |
 | Every migration separately inspected and backed up the same database | One runner determines pending versions and creates one complete pre-change snapshot |
+| Startup built every feature inline | Domain-focused composition functions construct recording, reporting, settings, and model workflows |
+| One settings surface constructed all controls | Independent sections own widgets and receive explicit callback bindings |
+| One settings controller owned every pending operation | Data, account, and update workflows have isolated dependencies and state |
+| The main window directly coordinated calendar query results | A calendar coordinator updates views; the window keeps navigation and lifecycle |
+| One worklog repository mixed all queries, writes, and mapping | A stable facade composes query/write components with shared schema mapping |
 
 These changes preserve UI behavior and persisted identifiers. They do not add a
 global service locator, a second event system, or an additional GUI framework.

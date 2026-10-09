@@ -8,6 +8,15 @@ DESCRIPTION = "worklog_entries"
 
 
 def up(connection: sqlite3.Connection) -> None:
+    columns = {row[1] for row in connection.execute("PRAGMA table_info(worklog)")}
+    if "id" in columns:
+        if not {"revision", "capture_id"}.issubset(columns):
+            raise ValueError("database_schema_unsupported")
+        connection.execute("CREATE INDEX IF NOT EXISTS worklog_user_date ON worklog(user_id,d,start,id)")
+        connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS worklog_capture ON worklog(user_id,capture_id) WHERE capture_id IS NOT NULL")
+        connection.execute("DROP INDEX IF EXISTS idx_worklog_user_date")
+        _convert_timer_key(connection)
+        return
     connection.execute('''CREATE TABLE worklog_entries(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -25,6 +34,10 @@ def up(connection: sqlite3.Connection) -> None:
     connection.execute("ALTER TABLE worklog_entries RENAME TO worklog")
     connection.execute("CREATE INDEX worklog_user_date ON worklog(user_id,d,start,id)")
     connection.execute("CREATE UNIQUE INDEX worklog_capture ON worklog(user_id,capture_id) WHERE capture_id IS NOT NULL")
+    _convert_timer_key(connection)
+
+
+def _convert_timer_key(connection):
     connection.execute("INSERT INTO settings(user_id,key,value) SELECT user_id,'previous_auto_record_state',value "
                        "FROM settings WHERE key='auto_record_state' AND 1 "
                        "ON CONFLICT(user_id,key) DO NOTHING")

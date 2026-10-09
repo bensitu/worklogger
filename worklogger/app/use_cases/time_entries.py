@@ -16,7 +16,7 @@ from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.entry_repository import TimeEntryRepository
 from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType
 from worklogger.domain.worklog.rules import decode_work_type, entry_interval, normalize_work_log, parse_time, shift_datetimes, timestamp_span_hours
-from worklogger.app.use_cases.work_types import WorkTypeService
+from worklogger.app.ports import WorkTypeOperations
 
 
 FIXED_BREAK_CAPTURE_PREFIX = "fixed-break:"
@@ -39,7 +39,7 @@ class TimeEntryService:
     def __init__(self, *, user_id: int, repository: TimeEntryRepository, settings: SettingsRepository,
                  local_timezone: tzinfo, clock: Callable[[], datetime] | None = None,
                  calendar_events: CalendarEventRepository | None = None,
-                 work_types: WorkTypeService | None = None) -> None:
+                 work_types: WorkTypeOperations | None = None) -> None:
         self.user_id = user_id
         self.repository = repository
         self.settings = settings

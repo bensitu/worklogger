@@ -1,4 +1,5 @@
 from contextlib import closing
+from dataclasses import replace
 from pathlib import Path
 import sqlite3
 import tempfile
@@ -22,6 +23,33 @@ from worklogger.infrastructure.database.migrations import migration_008_account_
 
 
 class DatabaseUpgradeTests(unittest.TestCase):
+    def test_unversioned_current_layout_preserves_periods_classifications_and_memos(self):
+        from datetime import date
+        from worklogger.domain.worklog.models import WorkLog
+        from worklogger.app.use_cases.work_types import WorkTypeService
+        from worklogger.infrastructure.repositories.work_type_sqlite import SQLiteWorkTypeRepository
+        from worklogger.infrastructure.repositories.note_sqlite import SQLiteDailyNoteRepository
+        with tempfile.TemporaryDirectory() as directory:
+            factory = SQLiteConnectionFactory(Path(directory) / "current.db")
+            MigrationRunner(factory).run_pending()
+            auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
+            user = auth.create_user("sample", "example-password", recovery_key=None, is_admin=False)
+            types = WorkTypeService(user.id, SQLiteWorkTypeRepository(factory))
+            definition = types.save("Research", "work").value
+            records = SQLiteWorkLogRepository(factory)
+            day = date(2026, 5, 20)
+            first = records.save_entry(WorkLog(user.id, day, "09:00", "10:00", note="Entry content", work_type=definition))
+            edited = records.save_entry(replace(first, note="Revised content"))
+            second = records.save_entry(WorkLog(user.id, day, "10:00", "11:00", note="Another period"))
+            with factory.transaction() as connection:
+                connection.execute("INSERT INTO daily_notes(user_id,d,content) VALUES(?,?,?)", (user.id, day.isoformat(), "Independent memo"))
+                connection.execute("DROP TABLE schema_migrations")
+            self.assertEqual(MigrationRunner(factory).run_pending(), tuple(range(1,10)))
+            self.assertEqual(records.list_for_day(user.id, day), (edited, second))
+            self.assertEqual(types.list_types().value, (definition,))
+            self.assertEqual(SQLiteDailyNoteRepository(factory).get_for_day(user.id, day).content, "Independent memo")
+            self.assertEqual(MigrationRunner(factory).run_pending(), ())
+
     def test_explicit_upgrade_keeps_source_and_publishes_only_complete_results(self):
         with tempfile.TemporaryDirectory() as directory:
             source, destination = Path(directory)/"source.db", Path(directory)/"updated.db"

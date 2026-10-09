@@ -434,8 +434,12 @@ def _format_context(
     if work_logs:
         for record in sorted(work_logs, key=lambda item: item.day):
             for entry in record.entries or (record,):
+                type_label = getattr(entry.work_type, "label", None) or entry.work_type.value
+                category = getattr(entry.work_type, "category", "")
+                if category:
+                    type_label += f" ({category})"
                 lines.append(
-                    f"- {entry.day.isoformat()} | {entry.work_type.value} | "
+                    f"- {entry.day.isoformat()} | {type_label} | "
                     f"{entry.start_time or '-'}-{entry.end_time or '-'} | "
                     f"break {entry.break_hours:.2f}h | worked {entry.worked_hours():.2f}h"
                     + (f" | content: {_single_line(entry.note)}" if include_notes and entry.note else "")

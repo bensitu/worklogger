@@ -7,6 +7,7 @@ from collections.abc import Callable
 from dataclasses import replace
 from datetime import date, timedelta
 from pathlib import Path
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication,
@@ -23,24 +24,33 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from worklogger.domain.shared.errors import AppError, CancellationError, InfrastructureError, ValidationError
-from worklogger.domain.shared.dates import add_months
 from worklogger.app.job_runner import JobRunner
-from worklogger.presentation.job_runner import QtJobRunner
-from worklogger.presentation.reporting.dialog import ReportTemplateDialog, confirm_report_overwrite
+from worklogger.domain.shared.dates import add_months
+from worklogger.domain.shared.errors import (
+    AppError,
+    CancellationError,
+    InfrastructureError,
+    ValidationError,
+)
+from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.date_labels import period_range_label
+from worklogger.presentation.errors import display_error_message
+from worklogger.presentation.job_runner import QtJobRunner
+from worklogger.presentation.reporting.dialog import (
+    ReportTemplateDialog,
+    confirm_report_overwrite,
+)
 from worklogger.presentation.viewmodels import (
     ReportEditorState,
     ReportEditorViewModel,
 )
 from worklogger.presentation.widgets import (
     CardFrame,
+    ExportMenuButton,
     ReportHistoryDisplayItem,
     ReportHistoryPanel,
     SegmentedControl,
-    ExportMenuButton,
 )
 from worklogger.presentation.widgets.icons import IconLabel, set_button_icon
 
@@ -258,6 +268,9 @@ class ReportsPage(QWidget):
             (("current", _("Current visible report")), ("day", _("Saved daily report")), ("month", _("Saved daily reports for this month"))))
         self.export_current_button.setObjectName("export_current_report_button")
         self.export_current_button.setProperty("variant", "outline")
+        self.export_current_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        set_button_icon(self.export_current_button, "file-output")
+        self.export_current_button.setMinimumWidth(self.export_current_button.fontMetrics().horizontalAdvance(self.export_current_button.text()) + 56)
         self.export_current_button.export_requested.connect(self._choose_export_scope)
         bottom.addWidget(self.export_current_button)
         bottom.addStretch(1)
@@ -296,7 +309,15 @@ class ReportsPage(QWidget):
         busy = self._rewrite_busy or self._delete_busy or self._generate_busy
         has_content = bool(self.editor.toPlainText().strip())
         self.save_button.setEnabled(not busy and has_content and (state.report_id is None or modified))
-        self.export_current_button.setEnabled(not busy and has_content)
+        saved_export = bool(getattr(self._view_model, "saved_export_available", False))
+        self.export_current_button.setEnabled(not busy and (has_content or saved_export))
+        for action in self.export_current_button.menu().actions():
+            key = action.data()
+            action.setEnabled(not busy and (has_content if key == "current" else saved_export))
+            if key == "day":
+                action.setText(_("Saved daily report") + f" ({self._selected_day.isoformat()})")
+            elif key == "month":
+                action.setText(_("Saved daily reports for this month") + f" ({self._selected_day:%Y-%m})")
         self.copy_button.setEnabled(not busy and has_content)
         self.generate_button.setEnabled(not busy and self._view_model is not None)
 
@@ -520,9 +541,6 @@ class ReportsPage(QWidget):
         self._saved_content[item.report_type] = self.editor.toPlainText()
         self.period_title_label.setText(_period_label(state))
         self._update_report_status()
-
-    def _choose_export_path(self) -> None:
-        self._choose_export_scope("current")
 
     def _choose_export_scope(self, scope: str) -> None:
         if scope not in {"current", "day", "month"} or self._view_model is None or self._generate_busy or self._rewrite_busy or self._delete_busy:

@@ -25,6 +25,7 @@ class ExportMenuButton(QToolButton):
         menu = QMenu(self)
         for key, text in actions:
             action = menu.addAction(text)
+            action.setData(key)
             action.triggered.connect(lambda _checked=False, item_key=key: self.export_requested.emit(item_key))
         self.setMenu(menu)
 

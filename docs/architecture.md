@@ -7,7 +7,7 @@ storage, not a network service. The code separates domain rules, application
 operations, infrastructure implementations, and presentation.
 
 ```text
-main.py -> bootstrap.py
+main.py -> bootstrap.py -> composition/
                | constructs repositories, handlers, view models, and controllers
                v
 presentation -> app -> domain
@@ -25,7 +25,8 @@ domain rules. See [architecture quality](architecture-quality.md) for the depend
 | Location | Responsibility |
 | --- | --- |
 | `worklogger/main.py` | Desktop entry point and non-interactive checks |
-| `worklogger/bootstrap.py` | Runtime composition, account resolution, settings, resource setup |
+| `worklogger/bootstrap.py` | Startup orchestration, account resolution, window lifecycle, resource setup |
+| `worklogger/composition/` | Feature-specific repository, handler, and workflow construction |
 | `worklogger/config/` | Application constants and optional feature-switch definitions |
 | `worklogger/domain/` | Data models, calculations, validation, repository protocols |
 | `worklogger/app/commands/` | Immutable write-operation inputs |
@@ -137,7 +138,22 @@ use temporary files for repository tests spanning multiple connections.
 
 `AppContainer` and `EventBus` are reusable, tested utilities. The standard desktop
 currently constructs dependencies directly in `bootstrap.py` and connects Qt
-signals; it is not assembled through a global container or event bus.
+signals through feature-specific functions in `composition/`; it is not assembled
+through a global container or event bus.
+
+Settings controls live in independent `settings/sections/` widgets, injected with
+explicit `SectionActions` callbacks. `SettingsPage` coordinates account state,
+capabilities, and change signals; it does not construct every section inline.
+Data, account, and update operations have separate `settings/workflows/` components
+with their own dependencies and pending-job state. The controller binds surfaces
+and delegates to those components without sharing all its state through mixins.
+
+`CalendarCoordinator` owns calendar/entry/statistics query-to-view updates. The
+main window owns composition, navigation, themes, and lifecycle. The worklog
+repository facade composes read queries and transactional writes using one schema
+mapping object; optimistic updates, overlap checks, and timer transitions remain
+inside the write transaction. Custom-type operations use an application protocol,
+and historical accounting depends on immutable record snapshots, not catalog joins.
 
 Feature switches control assistant, model-management, and update-check composition,
 but do not supply missing service implementations. AI handlers
