@@ -119,6 +119,14 @@ Markers and daily totals are visual summaries, not additional entries.
 
 ## User Administration
 
+Settings > Account displays an avatar below Role. Change avatar accepts PNG,
+JPEG, WebP, or BMP images up to 10 MiB and 20 million pixels. Drag the circular
+preview and adjust Zoom; arrow keys also move the crop. Save stores a normalized
+256-pixel PNG for this account, without the original path or image metadata.
+The sidebar updates immediately and retains a circular display after restarting.
+Use default avatar removes the custom selection. Avatar pixels are included in
+database backups; they are not an operating-system credential.
+
 Settings > Account asks for confirmation before logging out. Changing the password
 replaces the recovery key. After a successful change, copy or save the new key
 before continuing; the saved file is not encrypted. The previous key no longer

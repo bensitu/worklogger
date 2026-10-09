@@ -125,10 +125,19 @@ treating missing occurrences as lost work records.
 
 ## Unavailable Services
 
-Disabled external login and AI controls are intentional in the standard runtime.
-Selecting a local model or filling an external base URL does not connect a
-generation service. A model list may be empty when no runtime catalog has been
-configured. See [integration availability](integrations.md).
+External login and external AI requests remain disconnected. Local rewriting
+requires the optional native dependency, a verified selected model, Local Model,
+and AI Assist. Check the service message under Settings > AI; a downloaded file
+must be selected with Use model. After installing `requirements-ai.txt` into the
+Python environment used to start WorkLogger, restart it. Packaged applications
+must be built with native inference included. See [local models](local-models.md).
+
+Loading is lazy, so the first rewrite takes longer. An out-of-memory/load failure
+does not change the draft; select a smaller model. A native message that configured
+context is lower than training context describes the intentional 8,192-token bound,
+not a damaged model. Oversized content must be shortened; timeouts can be retried
+with less text or a smaller model. Avatar upload rejects unsupported, invalid,
+oversized, or excessively high-resolution images without changing the saved picture.
 
 If proxy password entry is disabled, inspect system credential-store availability.
 Do not work around it by storing passwords in a plain-text configuration. Saved

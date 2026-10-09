@@ -130,6 +130,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
                 commands.append(command)
                 return Result.success(RewriteTextResult("Prepared agenda"))
         panel.view_model._rewrite_handler = Rewriter()
+        panel.refresh_ai_availability()
         panel.polish_button.click()
         self.assertEqual(panel.content_input.toPlainText(), "Prepared agenda")
         self.assertEqual((panel.start_input.text(), panel.end_input.text(), panel.work_type_combo.currentData()), ("09:15", "10:00", "meeting"))

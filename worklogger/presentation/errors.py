@@ -87,6 +87,26 @@ def display_error_code(code: str) -> str:
             return _("The user account is no longer available.")
         case "credential_storage_unavailable":
             return _("Secure credential storage is unavailable.")
+        case "local_inference_dependency_missing":
+            return _("Install the native inference dependency from requirements-ai.txt, then restart WorkLogger.")
+        case "local_model_not_selected":
+            return _("Select a verified model in Manage models.")
+        case "ai_assist_disabled":
+            return _("Enable AI Assist to use text processing.")
+        case "ai_service_disabled":
+            return _("AI Assist is disabled for this installation.")
+        case "local_model_disabled":
+            return _("Enable the local model to use text processing.")
+        case "local_model_load_failed":
+            return _("Unable to load the selected model. Check available memory or choose a smaller model.")
+        case "local_inference_timeout":
+            return _("Local text processing timed out. Try shorter content or a smaller model.")
+        case "local_inference_context_limit":
+            return _("This text exceeds the selected model's context limit. Shorten it and try again.")
+        case "avatar_image_invalid":
+            return _("Choose a valid PNG, JPEG, WebP, or BMP image.")
+        case "avatar_image_too_large":
+            return _("Choose an image smaller than 10 MB and 20 million pixels.")
         case "work_type_invalid":
             return _("Enter a name of up to 80 characters and select an accounting category.")
         case "work_type_name_exists":

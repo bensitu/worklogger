@@ -58,6 +58,9 @@ msgstr "AIアシスト"
 msgid "AI Assist Hint / extra instructions (optional)"
 msgstr "AIへのヒント / 追加指示（任意）"
 
+msgid "AI Assist is disabled for this installation."
+msgstr "このインストールではAI支援が無効になっています。"
+
 msgid "AI Assist is not configured."
 msgstr "AIアシストは未設定です。"
 
@@ -163,6 +166,12 @@ msgstr "作者"
 msgid "Auto Record"
 msgstr "自動記録"
 
+msgid "Avatar"
+msgstr "アバター"
+
+msgid "Avatar crop"
+msgstr "アバターの切り抜き"
+
 msgid "Average"
 msgstr "平均"
 
@@ -247,6 +256,9 @@ msgstr "キャンセル"
 msgid "Catalog refreshed."
 msgstr "モデルカタログを更新しました。"
 
+msgid "Change avatar"
+msgstr "アバターを変更"
+
 msgid "Change password"
 msgstr "パスワードを変更"
 
@@ -264,6 +276,12 @@ msgstr "更新を確認中..."
 
 msgid "Choose a backup destination different from the active database."
 msgstr "使用中のデータベースとは異なるバックアップ先を選択してください。"
+
+msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
+msgstr "有効なPNG、JPEG、WebP、BMP画像を選択してください。"
+
+msgid "Choose an image smaller than 10 MB and 20 million pixels."
+msgstr "10MB以下、2,000万画素以下の画像を選択してください。"
 
 msgid "Choose custom color"
 msgstr "カスタム色を選択"
@@ -433,11 +451,17 @@ msgstr "モデルをダウンロード中..."
 msgid "Edit record"
 msgstr "記録を編集"
 
+msgid "Enable AI Assist to use text processing."
+msgstr "テキスト処理を使うにはAI支援を有効にしてください。"
+
 msgid "Enable local model"
 msgstr "ローカルモデルを有効にする"
 
 msgid "Enable menu bar"
 msgstr "メニューバーアイコンを有効にする"
+
+msgid "Enable the local model to use text processing."
+msgstr "テキスト処理を使うにはローカルモデルを有効にしてください。"
 
 msgid "Enable tray icon"
 msgstr "トレイアイコンを有効にする"
@@ -619,6 +643,9 @@ msgstr "アカウント連携の管理は未設定です。"
 msgid "Identity unlinked."
 msgstr "IDの連携を解除しました。"
 
+msgid "Images (*.png *.jpg *.jpeg *.webp *.bmp)"
+msgstr "画像 (*.png *.jpg *.jpeg *.webp *.bmp)"
+
 msgid "Import .gguf"
 msgstr ".ggufをインポート"
 
@@ -666,6 +693,9 @@ msgstr "クイックログを含める"
 
 msgid "Include work content"
 msgstr "作業内容を含める"
+
+msgid "Install the native inference dependency from requirements-ai.txt, then restart WorkLogger."
+msgstr "requirements-ai.txtの推論依存パッケージをインストールして、WorkLoggerを再起動してください。"
 
 msgid "January"
 msgstr "1月"
@@ -739,6 +769,9 @@ msgstr "ローカルモデル"
 msgid "Local model is disabled."
 msgstr "ローカルモデルは無効です。"
 
+msgid "Local model is ready. It loads when text processing starts."
+msgstr "ローカルモデルは準備完了です。テキスト処理の開始時に読み込まれます。"
+
 msgid "Local model management is not configured."
 msgstr "ローカルモデルの管理は未設定です。"
 
@@ -748,8 +781,14 @@ msgstr "ローカルモデルを利用できません。モデルをダウンロ
 msgid "Local preference is enabled, but no inference service is connected."
 msgstr "ローカルモデルの設定は有効ですが、推論サービスは接続されていません。"
 
+msgid "Local text processing does not send content to an external service."
+msgstr "ローカルのテキスト処理では内容を外部サービスに送信しません。"
+
 msgid "Local text processing is available."
 msgstr "ローカルテキスト処理を利用できます。"
+
+msgid "Local text processing timed out. Try shorter content or a smaller model."
+msgstr "ローカルのテキスト処理が時間切れです。内容を短くするか、小さいモデルを選択してください。"
 
 msgid "Local user"
 msgstr "ローカルユーザー"
@@ -807,9 +846,6 @@ msgstr "モデルをダウンロードしました。"
 
 msgid "Model file management is unavailable."
 msgstr "モデルファイル管理は利用できません。"
-
-msgid "Model file selection does not activate a text-processing service."
-msgstr "モデルファイルの選択ではテキスト処理サービスは有効になりません。"
 
 msgid "Model identifier"
 msgstr "モデル識別子"
@@ -1303,6 +1339,9 @@ msgstr "ユーザーを選択してください。"
 msgid "Select a valid date or date range."
 msgstr "有効な日付または日付範囲を選択してください。"
 
+msgid "Select a verified model in Manage models."
+msgstr "モデル管理で検証済みのモデルを選択してください。"
+
 msgid "Select an identity first."
 msgstr "先に連携アカウントを選択してください。"
 
@@ -1477,6 +1516,9 @@ msgstr "この記録は別の場所で変更されました。再読み込みし
 msgid "This report changed elsewhere. Reload the history before deleting it."
 msgstr "このレポートは別の場所で変更されました。履歴を再読み込みしてから削除してください。"
 
+msgid "This text exceeds the selected model's context limit. Shorten it and try again."
+msgstr "内容が選択したモデルのコンテキスト上限を超えています。短くして再試行してください。"
+
 msgid "This work type changed or is no longer available. Reload the types and try again."
 msgstr "この勤務種別は変更されたか利用できません。種別を再読み込みして再試行してください。"
 
@@ -1527,6 +1569,9 @@ msgstr "日次メモを読み込めません。保存済みのデータは保持
 
 msgid "Unable to load data. Please try again."
 msgstr "データを読み込めませんでした。もう一度お試しください。"
+
+msgid "Unable to load the selected model. Check available memory or choose a smaller model."
+msgstr "選択したモデルを読み込めません。空きメモリを確認するか、小さいモデルを選択してください。"
 
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "モデルを取得できませんでした。元のファイルまたはダウンロード接続を確認してください。"
@@ -1602,6 +1647,9 @@ msgstr "更新確認は未設定です。"
 
 msgid "Use a web proxy for this application."
 msgstr "このアプリでWebプロキシを使用します。"
+
+msgid "Use default avatar"
+msgstr "既定のアバターを使用"
 
 msgid "Use model"
 msgstr "モデルを使用"
@@ -1731,6 +1779,9 @@ msgstr "{date}の変更を保存しました。"
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."
 msgstr "保存済みのログイン情報が無効か、有効期限が切れています。再度ログインしてください。"
+
+msgid "Zoom"
+msgstr "ズーム"
 
 msgid "h"
 msgstr "h"

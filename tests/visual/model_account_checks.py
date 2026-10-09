@@ -7,7 +7,7 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QPoint
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtWidgets import QApplication
 
 from tests.presentation.test_local_models_presentation import FakeLocalModelHandlers
@@ -70,6 +70,26 @@ class ModelAccountLayoutChecks(unittest.TestCase):
                     ResetPasswordDialog,
                 ):
                     self.check_credential_dialog(dialog_type, language, dark)
+
+    def test_avatar_crop_controls_fit_localized_labels(self):
+        from PySide6.QtGui import QImage
+        from worklogger.presentation.widgets.avatar import AvatarCropDialog
+        image = QImage(500, 350, QImage.Format.Format_RGB32)
+        image.fill(Qt.GlobalColor.green)
+        for language, dark in (("en_US", False), ("zh_CN", True)):
+            set_language(language)
+            self.theme(dark)
+            dialog = AvatarCropDialog(image)
+            try:
+                dialog.show()
+                self.app.processEvents()
+                dialog.zoom_slider.setValue(170)
+                self.assertTrue(dialog.rect().contains(dialog.canvas.rect().translated(dialog.canvas.mapTo(dialog, QPoint()))))
+                self.assertGreaterEqual(dialog.save_button.width(), dialog.save_button.fontMetrics().horizontalAdvance(dialog.save_button.text()) + 28)
+                self.capture(dialog, f"{language}-avatar-crop-{'dark' if dark else 'light'}")
+            finally:
+                dialog.hide()
+                dialog.deleteLater()
 
     def check_credential_dialog(self, dialog_type, language, dark):
         dialog = dialog_type()

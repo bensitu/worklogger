@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import (
     QFormLayout,
+    QHBoxLayout,
+    QLabel,
     QPushButton,
+    QWidget,
 )
 
 from worklogger.infrastructure.i18n import _
@@ -27,6 +30,9 @@ class AccountSection(_SettingsScrollPage):
         "logout_button",
         "manage_identities_button",
         "manage_users_button",
+        "avatar_preview_label",
+        "change_avatar_button",
+        "reset_avatar_button",
     )
 
     def __init__(self, actions: SectionActions):
@@ -43,6 +49,25 @@ class AccountSection(_SettingsScrollPage):
         form.addRow(_("Current user"), self.current_user_name_line_edit)
         form.addRow(_("Current ID"), self.current_user_id_line_edit)
         form.addRow(_("Role"), self.current_user_role_line_edit)
+        avatar_row = QWidget()
+        avatar_row.setObjectName("account_avatar_row_widget")
+        avatar_layout = QHBoxLayout(avatar_row)
+        avatar_layout.setContentsMargins(0, 0, 0, 0)
+        self.avatar_preview_label = QLabel()
+        self.avatar_preview_label.setObjectName("account_avatar_label")
+        self.avatar_preview_label.setFixedSize(72, 72)
+        self.change_avatar_button = QPushButton(_("Change avatar"))
+        self.change_avatar_button.setObjectName("change_avatar_button")
+        set_button_icon(self.change_avatar_button, "upload")
+        self.change_avatar_button.clicked.connect(actions.change_avatar_requested)
+        self.reset_avatar_button = QPushButton(_("Use default avatar"))
+        self.reset_avatar_button.setObjectName("reset_avatar_button")
+        self.reset_avatar_button.clicked.connect(actions.reset_avatar_requested)
+        avatar_layout.addWidget(self.avatar_preview_label)
+        avatar_layout.addWidget(self.change_avatar_button)
+        avatar_layout.addWidget(self.reset_avatar_button)
+        avatar_layout.addStretch()
+        form.addRow(_("Avatar"), avatar_row)
         card.content_layout.addLayout(form)
         card.content_layout.addWidget(
             _secondary_label(_("Changing password will reset the recovery key."))

@@ -125,7 +125,7 @@ class AISection(_SettingsScrollPage):
         local.content_layout.addLayout(local_row)
         local.content_layout.addWidget(
             _secondary_label(
-                _("Model file selection does not activate a text-processing service.")
+                _("Local text processing does not send content to an external service.")
             )
         )
         self.local_model_status_label = QLabel(

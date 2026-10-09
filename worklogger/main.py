@@ -306,6 +306,9 @@ def _run_desktop(args: Sequence[str]) -> int:
         runner = getattr(current, "job_runner", None)
         if runner is not None:
             runner.shutdown(wait=True)
+        inference = getattr(current, "local_inference", None)
+        if inference is not None:
+            inference.close()
         if not logged_out:
             return exit_code
 

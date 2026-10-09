@@ -172,7 +172,7 @@ class CalendarLayoutChecks(unittest.TestCase):
                 self.assertTrue(window.refresh())
                 window.show()
                 try:
-                    sizes = ((880, 580), (1100, 700)) if language == "en_US" else ((880, 580),)
+                    sizes = ((880, 580), (1100, 700), (1800, 1000)) if language == "en_US" else ((880, 580),)
                     for width, height in sizes:
                         with self.subTest(language=language, dark=dark, width=width):
                             window.resize(width, height)
@@ -181,6 +181,10 @@ class CalendarLayoutChecks(unittest.TestCase):
                             panel = window.entry_panel
                             right = window.calendar_page.findChild(QFrame, "calendar_right_panel_frame")
                             self.assertGreater(window.calendar_page.calendar_scroll.width(), right.width())
+                            self.assertLessEqual(right.width(), 380)
+                            self.assertLessEqual(panel.content_input.mapTo(window.calendar_page, QPoint()).y(), 350)
+                            if height >= 700:
+                                self.assertLessEqual(panel.save_button.mapTo(window.calendar_page, QPoint()).y() - panel.hours_label.mapTo(window.calendar_page, QPoint()).y(), 60)
                             self.assertTrue(panel.content_input.isVisible())
                             fields = (panel.start_input, panel.end_input)
                             self.assertEqual(fields[0].mapTo(window, QPoint()).y(), fields[1].mapTo(window, QPoint()).y())

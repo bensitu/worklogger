@@ -8,6 +8,8 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QHBoxLayout,
+    QFileDialog,
+    QDialog,
     QLabel,
     QLineEdit,
     QMessageBox,
@@ -28,7 +30,7 @@ from worklogger.infrastructure.calendar.holidays_provider import (
     supported_holiday_regions,
 )
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.errors import display_error_message
+from worklogger.presentation.errors import display_error_code, display_error_message
 from worklogger.presentation.settings.sections.about import AboutSection
 from worklogger.presentation.settings.sections.account import AccountSection
 from worklogger.presentation.settings.sections.actions import SectionActions
@@ -49,6 +51,8 @@ from worklogger.presentation.viewmodels import SettingsState, SettingsViewModel
 from worklogger.presentation.widgets import SettingsNav
 from worklogger.presentation.widgets.color_dialog import choose_custom_color
 from worklogger.presentation.widgets.icons import ui_icon
+from worklogger.presentation.widgets.avatar import AvatarCropDialog, avatar_pixmap
+from worklogger.infrastructure.images.avatar import load_avatar_image
 
 
 class SettingsPage(QWidget):
@@ -64,6 +68,7 @@ class SettingsPage(QWidget):
     manage_users_requested = Signal()
     manage_work_types_requested = Signal()
     work_types_changed = Signal()
+    ai_availability_changed = Signal()
     logout_requested = Signal()
     restore_requested = Signal()
     update_check_requested = Signal()
@@ -87,6 +92,8 @@ class SettingsPage(QWidget):
         self._custom_color = "#4f8ef7"
         self._local_model_ready = False
         self._local_model_name = ""
+        self._local_runtime_reason = None
+        self._local_runtime_ready = False
         self.setObjectName("settings_page_widget")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         configure_application_style()
@@ -218,6 +225,8 @@ class SettingsPage(QWidget):
             self.proxy_domain_line_edit.setText(state.network_proxy_domain)
             self._update_configuration_status()
             self.set_backup_time(state.last_backup_at)
+            self.avatar_preview_label.setPixmap(avatar_pixmap(state.profile_avatar_png))
+            self.reset_avatar_button.setEnabled(bool(state.profile_avatar_png))
         finally:
             self._updating = False
 
@@ -305,6 +314,11 @@ class SettingsPage(QWidget):
                 "Local preference is enabled, but no inference service is connected."
             )
         )
+        if self._local_runtime_reason is not None and state.local_model_enabled:
+            self.local_runtime_status_label.setText(
+                _("Local model is ready. It loads when text processing starts.") if self._local_runtime_ready
+                else display_error_code(self._local_runtime_reason)
+            )
         port = state.network_proxy_port.strip()
         configured = bool(
             state.network_proxy_address.strip()
@@ -377,6 +391,8 @@ class SettingsPage(QWidget):
 
     def _section_actions(self) -> SectionActions:
         return SectionActions(
+            change_avatar_requested=self._change_avatar,
+            reset_avatar_requested=lambda: self._handle_save_result(self._view_model.set_avatar("")),
             backup_requested=self.backup_requested.emit,
             change_password_requested=self.change_password_requested.emit,
             choose_custom_color=self._choose_custom_color,
@@ -460,6 +476,21 @@ class SettingsPage(QWidget):
         ):
             self.logout_requested.emit()
 
+    def _change_avatar(self):
+        path, _filter = QFileDialog.getOpenFileName(self, _("Change avatar"), "", _("Images (*.png *.jpg *.jpeg *.webp *.bmp)"))
+        if not path:
+            return
+        result = load_avatar_image(path)
+        if not result.ok:
+            self._set_error(result.error)
+            return
+        dialog = AvatarCropDialog(result.value, self)
+        try:
+            if dialog.exec() == QDialog.DialogCode.Accepted:
+                self._handle_save_result(self._view_model.set_avatar(dialog.canvas.encoded_avatar()))
+        finally:
+            dialog.deleteLater()
+
     def _language_changed(self) -> None:
         if self._updating:
             return
@@ -537,6 +568,11 @@ class SettingsPage(QWidget):
         self._local_model_ready = ready
         self._local_model_name = name
         self._update_local_model_status()
+
+    def set_local_runtime_status(self, *, ready: bool, reason: str):
+        self._local_runtime_ready = ready
+        self._local_runtime_reason = reason
+        self._update_configuration_status()
 
     def _update_local_model_status(self) -> None:
         text = (

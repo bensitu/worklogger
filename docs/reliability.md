@@ -90,9 +90,9 @@ macOS/Linux credential services, tray behavior, signing, notarization, and relea
 artifacts require target-platform verification. Direct dependency pins do not lock
 every transitive package or platform wheel. Record the complete build environment.
 
-The standard desktop still does not construct an AI generation engine or a complete
-external-provider login workflow. Proxy preferences do not route outgoing HTTP
-traffic. The bundled model catalog supplies download choices without creating an
-inference engine. Existing user-edited catalog content is not changed by
-configuration updates. These are explicit integration boundaries, not enabled
-features inferred from an adapter's presence.
+Local rewriting now uses an account-scoped, lazy CPU engine when the optional
+native dependency and selected verified model are available. Tests cover preference
+changes, engine reuse/release, safe error handling, and cross-editor availability.
+A real Qwen2.5-1.5B rewrite used synthetic text; other model/hardware combinations
+still require verification. External-provider login, external AI generation, and
+proxy routing remain unconnected. Existing user-edited catalog metadata is retained.

@@ -288,6 +288,12 @@ class JsonLocalModelStore:
     def models_dir(self) -> Path:
         return self._models_dir
 
+    def model_path(self, model_id: str) -> Path:
+        entry = self._entry(model_id)
+        if not entry.ok or entry.value is None:
+            raise ValueError("local_model_missing")
+        return self._resolve(entry.value.filename)
+
     def _entry(self, model_id: str) -> Result[LocalModelEntry]:
         cleaned = str(model_id or "").strip()
         if not cleaned:

@@ -27,7 +27,7 @@ with `python3 -m venv .venv` and use `.venv/bin/python`.
 ## Desktop-Only Dependencies
 
 The default requirements install the desktop without native model inference.
-Integrations that construct an inference engine may install the separate optional
+Local text processing uses the separate optional
 requirements with a wheel appropriate to their CPU/GPU and operating system:
 
 ```sh
@@ -36,7 +36,8 @@ python -m pip install -r requirements-ai.txt
 
 This includes `llama-cpp-python`; compiling it may require native build tools. CPU and GPU packages must
 match the target machine and their provider's instructions. Merely installing
-this package does not connect the application's local inference adapter.
+this package does not download or select a model. The desktop connects the native
+adapter when a verified model is selected and the corresponding preferences are enabled.
 
 ## Runtime Checks
 

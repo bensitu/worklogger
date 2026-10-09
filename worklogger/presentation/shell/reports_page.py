@@ -319,6 +319,14 @@ class ReportsPage(QWidget):
                 action.setText(_("Saved daily reports for this month") + f" ({self._selected_day:%Y-%m})")
         self.copy_button.setEnabled(not busy and has_content)
         self.generate_button.setEnabled(not busy and self._view_model is not None)
+        self.refresh_ai_availability()
+
+    def refresh_ai_availability(self):
+        available = bool(self._view_model is not None and getattr(self._view_model, "rewrite_available", True))
+        busy = self._rewrite_busy or self._delete_busy or self._generate_busy
+        self.ai_assist_button.setEnabled(available and not busy and bool(self.editor.toPlainText().strip()))
+        self.ai_hint_line_edit.setEnabled(available and not busy)
+        self.ai_assist_button.setToolTip("" if available else _("AI Assist is not configured."))
 
     def _generate_current(self):
         if self._view_model is None or self._generate_busy or self._rewrite_busy or self._delete_busy:

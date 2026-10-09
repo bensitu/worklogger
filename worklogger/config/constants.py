@@ -111,6 +111,7 @@ TZ_COUNTRY = {
 }
 
 SECRET_SETTING_PREFIX = "secret:"
+PROFILE_AVATAR_SETTING_KEY = "profile_avatar_png"
 MACHINE_KEY_FILENAME = ".worklogger_machine_key"
 KEYRING_SERVICE_NAME = "WorkLogger"
 GITHUB_LATEST_RELEASE_API_URL = "https://api.github.com/repos/bensitu/worklogger/releases/latest"

@@ -6,6 +6,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 import math
+import base64
+from worklogger.config.constants import PROFILE_AVATAR_SETTING_KEY
 from typing import Protocol
 
 from worklogger.app.commands.settings_commands import SetSettingCommand
@@ -93,6 +95,7 @@ class SettingsState:
     external_api_key_available: bool = False
     last_backup_at: str = ""
     holiday_region: str = ""
+    profile_avatar_png: str = field(default="", repr=False)
 
 
 class SettingsViewModel:
@@ -212,11 +215,22 @@ class SettingsViewModel:
                 external_api_key_available=api_key is not None and api_key.ok,
                 last_backup_at=_text(values[LAST_BACKUP_AT_SETTING_KEY], ""),
                 holiday_region=_text(values[HOLIDAY_REGION_SETTING_KEY], ""),
+                profile_avatar_png=_text(values[PROFILE_AVATAR_SETTING_KEY], ""),
             )
         )
 
     def set_theme(self, theme: str) -> Result[None]:
         return self._set(THEME_SETTING_KEY, _theme(theme))
+
+    def set_avatar(self, encoded: str) -> Result[None]:
+        try:
+            if not isinstance(encoded, str) or len(encoded) > 512 * 1024:
+                raise ValueError("avatar_image_invalid")
+            if encoded and not base64.b64decode(encoded, validate=True).startswith(b"\x89PNG\r\n\x1a\n"):
+                raise ValueError("avatar_image_invalid")
+        except (ValueError, TypeError):
+            return Result.failure(ValidationError("avatar_image_invalid", "avatar_image_invalid"))
+        return self._set(PROFILE_AVATAR_SETTING_KEY, encoded)
 
     def set_external_api_key(self, value: str) -> Result[None]:
         if self._external_key_store is None or not isinstance(value, str) or len(value) > 8192:
@@ -300,6 +314,7 @@ class SettingsViewModel:
 
 
 _DEFAULTS = {
+    PROFILE_AVATAR_SETTING_KEY: "",
     THEME_SETTING_KEY: "blue",
     CUSTOM_THEME_COLOR_SETTING_KEY: DEFAULT_CUSTOM_COLOR,
     DARK_MODE_SETTING_KEY: "0",

@@ -33,8 +33,10 @@ def _build_local_models_workflow(
     database_path: Path,
     repositories: RuntimeRepositories,
     job_runner: JobRunner | None,
+    store=None,
+    before_delete=None,
 ) -> LocalModelsWorkflowController:
-    local_model_store = JsonLocalModelStore(
+    local_model_store = store or JsonLocalModelStore(
         database_path.parent / "models",
         bundled_catalog_path=bundled_model_catalog_path(),
         remote_catalog_url=os.environ.get("WORKLOGGER_MODEL_CATALOG_URL", "").strip()
@@ -65,6 +67,7 @@ def _build_local_models_workflow(
                 store=local_model_store,
                 settings=repositories.settings,
                 usage_reader=repositories.settings,
+                before_delete=before_delete,
             ),
         ),
         job_runner=job_runner,

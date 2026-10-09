@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from PySide6.QtCore import QEvent, QTimer, Signal
+from PySide6.QtCore import QEvent, QTimer, Qt, Signal
 from PySide6.QtWidgets import (QComboBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit,
     QMessageBox, QPushButton, QSizePolicy, QStyle, QStyleOptionTabWidgetFrame,
     QTabWidget, QTextEdit, QToolButton, QVBoxLayout, QWidget)
@@ -38,6 +38,7 @@ class TimeEntryPanel(QWidget):
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(6)
+        root.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.time_tabs = QTabWidget()
         self.time_tabs.setObjectName("worklog_mode_tab_widget")
         self.time_tabs.setDocumentMode(True)
@@ -287,6 +288,8 @@ class TimeEntryPanel(QWidget):
         self.dirty_changed.emit(self.is_dirty)
 
     def _update_actions(self):
+        self.polish_button.setVisible(self.view_model.rewrite_available)
+        self.polish_button.setEnabled(not self.is_busy and self.view_model.rewrite_available and bool(self.content_input.toPlainText().strip()))
         auto = self.time_tabs.currentIndex() == 1
         timer = self.view_model.timer
         tick = getattr(self, "auto_timer", None)
@@ -412,6 +415,9 @@ class TimeEntryPanel(QWidget):
         moment = self.view_model.now()
         self._submit(lambda: self.view_model.start(work_type, content, now=moment), refresh=False,
                      on_complete=lambda result: self._complete_start(result, work_type, content, moment))
+
+    def refresh_ai_availability(self):
+        self._update_actions()
 
     def _complete_start(self, result, work_type, content, moment):
         if result.error is None or result.error.code != "fixed_break_active":

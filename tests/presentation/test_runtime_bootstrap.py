@@ -69,6 +69,57 @@ class CancellingAuthenticator:
 
 
 class RuntimeBootstrapTests(unittest.TestCase):
+    def test_selected_model_connects_record_note_and_report_rewriting(self):
+        self.enterContext(patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes))
+        from worklogger.infrastructure.ai.runtime import LocalInferenceRuntime
+        from worklogger.infrastructure.local_model import JsonLocalModelStore
+        from worklogger.app.use_cases.local_models import ListLocalModelsHandler
+        from worklogger.app.queries.local_model_queries import ListLocalModelsQuery
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "sample.gguf"
+            source.write_bytes(b"synthetic model fixture")
+            store = JsonLocalModelStore(root / "models")
+            entry = store.import_model(source).value
+
+            class Engine:
+                def __init__(self, **kwargs): pass
+                def tokenize(self, content, **kwargs): return [1] * 8
+                def create_chat_completion(self, **kwargs):
+                    return {"choices": [{"message": {"content": "Revised synthetic text"}}]}
+                def close(self): pass
+
+            def inference(**kwargs):
+                return LocalInferenceRuntime(**kwargs, engine_factory=Engine)
+
+            with patch("worklogger.composition.context.LocalInferenceRuntime", side_effect=inference):
+                result = build_authenticated_desktop_runtime(DesktopRuntimeConfig(database_path=root / "worklog.db",
+                    password_iterations=1000), argv=[], auth_controller_factory=AutoRegisterAuthenticator)
+            self.assertTrue(result.ok, result.error)
+            runtime = result.value
+            self.addCleanup(runtime.window.close)
+            self.addCleanup(runtime.local_inference.close)
+            settings = SQLiteSettingsRepository(runtime.connection_factory)
+            settings.set(runtime.user.id, "local_model_active_id", entry.id)
+            inventory = ListLocalModelsHandler(store=runtime.local_inference.store, settings=settings).handle(ListLocalModelsQuery(runtime.user.id)).value
+            runtime.local_inference.update_inventory(inventory)
+            runtime.window.settings_page.refresh()
+            runtime.window._settings_workflow._sync_inference(runtime.window.settings_page)
+            panel = runtime.window.entry_panel
+            panel.content_input.setPlainText("A local record description")
+            self.assertTrue(panel.polish_button.isEnabled())
+            reports = runtime.window.reports_page
+            reports.refresh()
+            self.assertTrue(reports.ai_assist_button.isEnabled())
+            notes = runtime.window._notes_workflow._view_model
+            self.assertTrue(notes.rewrite_available)
+            self.assertEqual(notes.rewrite("Synthetic note").value, "Revised synthetic text")
+            runtime.window.settings_page.local_model_enabled_switch.click()
+            self.assertFalse(reports.ai_assist_button.isEnabled())
+            self.assertFalse(notes.rewrite_available)
+            self.assertFalse(panel.polish_button.isEnabled())
+            panel.clear_button.click()
+
     def setUp(self):
         from tests.presentation.qt_support import dispose_test_windows
         self.addCleanup(dispose_test_windows)

@@ -56,6 +56,9 @@ msgstr ""
 msgid "AI Assist Hint / extra instructions (optional)"
 msgstr ""
 
+msgid "AI Assist is disabled for this installation."
+msgstr ""
+
 msgid "AI Assist is not configured."
 msgstr ""
 
@@ -161,6 +164,12 @@ msgstr ""
 msgid "Auto Record"
 msgstr ""
 
+msgid "Avatar"
+msgstr ""
+
+msgid "Avatar crop"
+msgstr ""
+
 msgid "Average"
 msgstr ""
 
@@ -245,6 +254,9 @@ msgstr ""
 msgid "Catalog refreshed."
 msgstr ""
 
+msgid "Change avatar"
+msgstr ""
+
 msgid "Change password"
 msgstr ""
 
@@ -261,6 +273,12 @@ msgid "Checking for updates..."
 msgstr ""
 
 msgid "Choose a backup destination different from the active database."
+msgstr ""
+
+msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
+msgstr ""
+
+msgid "Choose an image smaller than 10 MB and 20 million pixels."
 msgstr ""
 
 msgid "Choose custom color"
@@ -431,10 +449,16 @@ msgstr ""
 msgid "Edit record"
 msgstr ""
 
+msgid "Enable AI Assist to use text processing."
+msgstr ""
+
 msgid "Enable local model"
 msgstr ""
 
 msgid "Enable menu bar"
+msgstr ""
+
+msgid "Enable the local model to use text processing."
 msgstr ""
 
 msgid "Enable tray icon"
@@ -617,6 +641,9 @@ msgstr ""
 msgid "Identity unlinked."
 msgstr ""
 
+msgid "Images (*.png *.jpg *.jpeg *.webp *.bmp)"
+msgstr ""
+
 msgid "Import .gguf"
 msgstr ""
 
@@ -663,6 +690,9 @@ msgid "Include quick logs"
 msgstr ""
 
 msgid "Include work content"
+msgstr ""
+
+msgid "Install the native inference dependency from requirements-ai.txt, then restart WorkLogger."
 msgstr ""
 
 msgid "January"
@@ -737,6 +767,9 @@ msgstr ""
 msgid "Local model is disabled."
 msgstr ""
 
+msgid "Local model is ready. It loads when text processing starts."
+msgstr ""
+
 msgid "Local model management is not configured."
 msgstr ""
 
@@ -746,7 +779,13 @@ msgstr ""
 msgid "Local preference is enabled, but no inference service is connected."
 msgstr ""
 
+msgid "Local text processing does not send content to an external service."
+msgstr ""
+
 msgid "Local text processing is available."
+msgstr ""
+
+msgid "Local text processing timed out. Try shorter content or a smaller model."
 msgstr ""
 
 msgid "Local user"
@@ -804,9 +843,6 @@ msgid "Model downloaded."
 msgstr ""
 
 msgid "Model file management is unavailable."
-msgstr ""
-
-msgid "Model file selection does not activate a text-processing service."
 msgstr ""
 
 msgid "Model identifier"
@@ -1301,6 +1337,9 @@ msgstr ""
 msgid "Select a valid date or date range."
 msgstr ""
 
+msgid "Select a verified model in Manage models."
+msgstr ""
+
 msgid "Select an identity first."
 msgstr ""
 
@@ -1475,6 +1514,9 @@ msgstr ""
 msgid "This report changed elsewhere. Reload the history before deleting it."
 msgstr ""
 
+msgid "This text exceeds the selected model's context limit. Shorten it and try again."
+msgstr ""
+
 msgid "This work type changed or is no longer available. Reload the types and try again."
 msgstr ""
 
@@ -1524,6 +1566,9 @@ msgid "Unable to load daily notes. Your saved data has been retained."
 msgstr ""
 
 msgid "Unable to load data. Please try again."
+msgstr ""
+
+msgid "Unable to load the selected model. Check available memory or choose a smaller model."
 msgstr ""
 
 msgid "Unable to obtain the model. Check the source file or download connection."
@@ -1599,6 +1644,9 @@ msgid "Update check is not configured."
 msgstr ""
 
 msgid "Use a web proxy for this application."
+msgstr ""
+
+msgid "Use default avatar"
 msgstr ""
 
 msgid "Use model"
@@ -1728,6 +1776,9 @@ msgid "Your changes have been saved for {date}."
 msgstr ""
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."
+msgstr ""
+
+msgid "Zoom"
 msgstr ""
 
 msgid "h"

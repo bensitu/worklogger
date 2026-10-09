@@ -292,10 +292,12 @@ class DeleteLocalModelHandler:
         store: LocalModelStore,
         settings: SettingsRepository,
         usage_reader: LocalModelUsageReader | None = None,
+        before_delete: Callable[[str], None] | None = None,
     ) -> None:
         self._store = store
         self._settings = settings
         self._usage_reader = usage_reader
+        self._before_delete = before_delete
 
     def handle(self, command: DeleteLocalModelCommand) -> Result[None]:
         model_id = _required_model_id(command.model_id)
@@ -317,6 +319,8 @@ class DeleteLocalModelHandler:
                     "local_model_used_by_another_user",
                 )
             )
+        if self._before_delete is not None:
+            self._before_delete(model_id.value)
         deleted = self._store.delete_model(model_id.value)
         if not deleted.ok:
             return deleted

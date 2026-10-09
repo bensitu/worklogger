@@ -273,6 +273,8 @@ class MinimalView(QWidget):
             dialog = self._settings_workflow.create_dialog(self)
             if hasattr(dialog, "work_types_changed"):
                 dialog.work_types_changed.connect(self.entry_panel.refresh_work_types)
+            if hasattr(dialog, "ai_availability_changed"):
+                dialog.ai_availability_changed.connect(self.entry_panel.refresh_ai_availability)
 
             def logout() -> None:
                 nonlocal logged_out

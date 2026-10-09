@@ -131,6 +131,8 @@ def _build_settings_workflow(
             database_path=database_path,
             repositories=repositories,
             job_runner=job_runner,
+            store=handlers.local_inference.store if handlers.local_inference else None,
+            before_delete=handlers.local_inference.release_model if handlers.local_inference else None,
         )
         if features.enable_local_models
         else None,
@@ -140,6 +142,7 @@ def _build_settings_workflow(
         ),
         remember_session_store=remember_session_store,
         work_types_view_model=WorkTypeManagerViewModel(WorkTypeService(user.id, repositories.work_types)),
+        local_inference=handlers.local_inference,
     )
 
 

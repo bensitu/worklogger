@@ -60,8 +60,9 @@ remain available at runtime.
 No user database, model weight file, session credential, or personal export belongs
 in the artifact. `tzdata` is required for country mapping and timezone rules.
 Native inference is excluded unless `--with-local-inference` is supplied after
-installing `requirements-ai.txt`. Including it does not connect a generation service
-in the default composition.
+installing `requirements-ai.txt`. Builds with this option support the desktop's
+local rewriting service after a verified model is selected. Builds without it
+retain model-file management but report that native inference is unavailable.
 
 ## Platform Outputs
 

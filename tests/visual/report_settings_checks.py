@@ -57,7 +57,7 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                         settings.refresh()
                         settings.resize(880, 580)
                         settings.show()
-                        for category in ("general", "ai", "network"):
+                        for category in ("general", "ai", "network", "account"):
                             settings.category_nav.set_category(category)
                             self.app.processEvents()
                             scroll = settings.category_stack.currentWidget()

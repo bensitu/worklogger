@@ -58,6 +58,9 @@ msgstr "AI 助手"
 msgid "AI Assist Hint / extra instructions (optional)"
 msgstr "AI 提示 / 額外要求（選填）"
 
+msgid "AI Assist is disabled for this installation."
+msgstr "此安裝環境已停用 AI 助手。"
+
 msgid "AI Assist is not configured."
 msgstr "AI 助手尚未設定。"
 
@@ -163,6 +166,12 @@ msgstr "作者"
 msgid "Auto Record"
 msgstr "自動記錄"
 
+msgid "Avatar"
+msgstr "頭像"
+
+msgid "Avatar crop"
+msgstr "頭像裁剪"
+
 msgid "Average"
 msgstr "平均值"
 
@@ -247,6 +256,9 @@ msgstr "取消"
 msgid "Catalog refreshed."
 msgstr "模型目錄已重新整理。"
 
+msgid "Change avatar"
+msgstr "更換頭像"
+
 msgid "Change password"
 msgstr "變更密碼"
 
@@ -264,6 +276,12 @@ msgstr "正在檢查更新..."
 
 msgid "Choose a backup destination different from the active database."
 msgstr "請選擇不同於目前資料庫的備份位置。"
+
+msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
+msgstr "請選擇有效的 PNG、JPEG、WebP 或 BMP 圖片。"
+
+msgid "Choose an image smaller than 10 MB and 20 million pixels."
+msgstr "請選擇不超過10 MB及2000萬像素的圖片。"
 
 msgid "Choose custom color"
 msgstr "選擇自訂色彩"
@@ -433,11 +451,17 @@ msgstr "正在下載模型..."
 msgid "Edit record"
 msgstr "編輯記錄"
 
+msgid "Enable AI Assist to use text processing."
+msgstr "請啟用 AI 助手以使用文字處理。"
+
 msgid "Enable local model"
 msgstr "啟用本機模型"
 
 msgid "Enable menu bar"
 msgstr "啟用選單列圖示"
+
+msgid "Enable the local model to use text processing."
+msgstr "請啟用本機模型以使用文字處理。"
 
 msgid "Enable tray icon"
 msgstr "啟用系統匣圖示"
@@ -619,6 +643,9 @@ msgstr "身分管理尚未設定。"
 msgid "Identity unlinked."
 msgstr "身分連結已解除。"
 
+msgid "Images (*.png *.jpg *.jpeg *.webp *.bmp)"
+msgstr "圖片 (*.png *.jpg *.jpeg *.webp *.bmp)"
+
 msgid "Import .gguf"
 msgstr "匯入 .gguf"
 
@@ -666,6 +693,9 @@ msgstr "包含快速記錄"
 
 msgid "Include work content"
 msgstr "包含工作內容"
+
+msgid "Install the native inference dependency from requirements-ai.txt, then restart WorkLogger."
+msgstr "請安裝 requirements-ai.txt 中的本機推論相依套件，然後重新啟動 WorkLogger。"
 
 msgid "January"
 msgstr "1月"
@@ -739,6 +769,9 @@ msgstr "本機模型"
 msgid "Local model is disabled."
 msgstr "本機模型已關閉。"
 
+msgid "Local model is ready. It loads when text processing starts."
+msgstr "本機模型已就緒，將在開始文字處理時載入。"
+
 msgid "Local model management is not configured."
 msgstr "本機模型管理尚未設定。"
 
@@ -748,8 +781,14 @@ msgstr "本機模型無法使用。請下載或匯入模型，並選擇已驗證
 msgid "Local preference is enabled, but no inference service is connected."
 msgstr "本機模型偏好已啟用，但尚未接入推論服務。"
 
+msgid "Local text processing does not send content to an external service."
+msgstr "本機文字處理不會將內容傳送至外部服務。"
+
 msgid "Local text processing is available."
 msgstr "本機文字處理可用。"
+
+msgid "Local text processing timed out. Try shorter content or a smaller model."
+msgstr "本機文字處理逾時。請縮短內容或選擇較小的模型。"
 
 msgid "Local user"
 msgstr "本機使用者"
@@ -807,9 +846,6 @@ msgstr "模型已下載。"
 
 msgid "Model file management is unavailable."
 msgstr "模型檔案管理無法使用。"
-
-msgid "Model file selection does not activate a text-processing service."
-msgstr "選擇模型檔案不會啟用文字處理服務。"
 
 msgid "Model identifier"
 msgstr "模型識別碼"
@@ -1303,6 +1339,9 @@ msgstr "請選取使用者。"
 msgid "Select a valid date or date range."
 msgstr "請選擇有效的日期或日期範圍。"
 
+msgid "Select a verified model in Manage models."
+msgstr "請在管理模型中選用已驗證的模型。"
+
 msgid "Select an identity first."
 msgstr "請先選取身分。"
 
@@ -1477,6 +1516,9 @@ msgstr "該記錄已在其他位置修改，請重新載入後儲存。您的修
 msgid "This report changed elsewhere. Reload the history before deleting it."
 msgstr "此報表已在其他位置修改。請重新載入歷史清單後再刪除。"
 
+msgid "This text exceeds the selected model's context limit. Shorten it and try again."
+msgstr "內容超過所選模型的上下文限制。請縮短後重試。"
+
 msgid "This work type changed or is no longer available. Reload the types and try again."
 msgstr "此工作類型已變更或無法使用。請重新載入類型後重試。"
 
@@ -1527,6 +1569,9 @@ msgstr "無法載入每日便箋，已儲存的資料未被更改。"
 
 msgid "Unable to load data. Please try again."
 msgstr "無法載入資料，請重試。"
+
+msgid "Unable to load the selected model. Check available memory or choose a smaller model."
+msgstr "無法載入所選模型。請檢查可用記憶體或選擇較小的模型。"
 
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "無法取得模型，請檢查來源檔案或下載連線。"
@@ -1602,6 +1647,9 @@ msgstr "更新檢查尚未設定。"
 
 msgid "Use a web proxy for this application."
 msgstr "為此應用程式使用網頁代理。"
+
+msgid "Use default avatar"
+msgstr "使用預設頭像"
 
 msgid "Use model"
 msgstr "使用模型"
@@ -1731,6 +1779,9 @@ msgstr "已儲存 {date} 的修改。"
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."
 msgstr "已儲存的登入無效或已過期，請重新登入。"
+
+msgid "Zoom"
+msgstr "縮放"
 
 msgid "h"
 msgstr "h"

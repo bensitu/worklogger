@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtCore import QEvent, Qt, QTimer, Signal
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -135,6 +135,7 @@ class CalendarPage(QWidget):
         content.addWidget(self.calendar_scroll, 1)
 
         right = QFrame()
+        self.right_panel = right
         right.setFixedWidth(300)
         right.setObjectName("calendar_right_panel_frame")
         right_layout = QVBoxLayout(right)
@@ -154,7 +155,7 @@ class CalendarPage(QWidget):
         self.details_scroll.setMinimumHeight(60)
         self.details_scroll.setWidget(self.entry_panel)
         self.stats_panel.setVisible(False)
-        right_layout.addWidget(self.details_scroll, 2)
+        right_layout.addWidget(self.details_scroll)
         self.entry_panel.layout().removeWidget(self.entry_panel.actions_widget)
         right_layout.addWidget(self.entry_panel.actions_widget)
         self.entry_panel.busy_changed.connect(lambda busy: self.entry_panel.actions_widget.setEnabled(not busy))
@@ -177,3 +178,18 @@ class CalendarPage(QWidget):
         self.records_scroll.setWidget(self.records_widget)
         right_layout.addWidget(self.records_scroll, 1)
         content.addWidget(right, 0)
+        self.entry_panel.installEventFilter(self)
+        QTimer.singleShot(0, self, self._fit_editor)
+
+    def _fit_editor(self):
+        self.details_scroll.setMaximumHeight(max(60, self.entry_panel.sizeHint().height() + 4))
+
+    def eventFilter(self, watched, event):
+        if watched is self.entry_panel and event.type() in (QEvent.Type.LayoutRequest, QEvent.Type.StyleChange, QEvent.Type.FontChange):
+            QTimer.singleShot(0, self, self._fit_editor)
+        return super().eventFilter(watched, event)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, "right_panel"):
+            self.right_panel.setFixedWidth(max(300, min(380, round((self.width() - 52) * 0.28))))

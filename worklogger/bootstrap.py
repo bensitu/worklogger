@@ -127,6 +127,7 @@ class DesktopRuntime:
     remember_session_store: RememberSessionStore
     job_runner: JobRunner | None = None
     auth_session: AuthSession | None = None
+    local_inference: object | None = None
 
 
 class DesktopAuthenticator(Protocol):
@@ -325,7 +326,7 @@ def _build_runtime_for_user(
     job_runner: JobRunner | None = None,
 ) -> Result[DesktopRuntime]:
     repositories = _runtime_repositories(connection_factory)
-    handlers = _runtime_handlers(repositories, holiday_country=detect_country())
+    handlers = _runtime_handlers(repositories, holiday_country=detect_country(), user_id=user.id, database_path=database_path)
     remember_store = remember_session_store or _remember_session_store()
     time_entry_view_model = _build_time_entry_view_model(user, repositories, handlers)
     settings_workflow = _build_settings_workflow(
@@ -368,6 +369,7 @@ def _build_runtime_for_user(
         custom_color=state.custom_color,
         standard_work_hours=state.standard_work_hours,
         monthly_target_hours=state.monthly_target_hours,
+        profile_avatar_png=state.profile_avatar_png,
         calendar_options=replace(
             window_config.calendar_options,
             show_holidays=state.show_holidays,
@@ -396,6 +398,7 @@ def _build_runtime_for_user(
             user=user,
             remember_session_store=remember_store,
             auth_session=auth_session,
+            local_inference=handlers.local_inference,
             job_runner=job_runner,
         )
 
@@ -416,6 +419,7 @@ def _build_runtime_for_user(
         user=user,
         remember_session_store=remember_store,
         auth_session=auth_session,
+        local_inference=handlers.local_inference,
         job_runner=job_runner,
     )
 
@@ -515,6 +519,7 @@ def _runtime_result(
     remember_session_store: RememberSessionStore,
     auth_session: AuthSession | None,
     job_runner: JobRunner | None,
+    local_inference=None,
 ) -> Result[DesktopRuntime]:
     settings_workflow = getattr(window, "_settings_workflow", None)
     if settings_workflow is not None:
@@ -529,6 +534,7 @@ def _runtime_result(
             remember_session_store=remember_session_store,
             job_runner=job_runner,
             auth_session=auth_session,
+            local_inference=local_inference,
         )
     )
 

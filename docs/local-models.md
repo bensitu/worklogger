@@ -48,7 +48,8 @@ and deletion requires confirmation. The primary Use model action is enabled only
 for an available, verified file that is not already active. Background operations
 disable selection until completion; Cancel requests cancellation and keeps the
 dialog open until that operation finishes. Model management does not itself
-configure or start an inference backend.
+load model weights. Selecting a verified file updates the shared account inference
+service and enables rewriting when the native dependency and preferences are available.
 Settings exposes only Manage models; downloading and importing are performed
 inside that dialog. Downloads show measured byte progress and a percentage when
 the server supplies a total, including resumed transfers. Unknown lengths and
@@ -77,12 +78,34 @@ details appear in localized model-list tooltips. See [data formats](data-formats
 
 ## Runtime Integration
 
-The standard application manages files but does not construct a generation
-engine. `LocalModelGateway` requires an injected generator. Installing
-`requirements-ai.txt` or packaging native inference is not sufficient to connect
-that generator. Model selection alone does not enable AI generation.
+The desktop constructs `LocalInferenceRuntime` for the signed-in account. It shares
+the model store with model management, checks selection and enablement preferences,
+and verifies the file before inference. `LocalModelGateway` supplies prompt handling
+and removes reasoning blocks from the final text. Records, notes, and reports share
+the same rewrite handler; selecting a model refreshes their controls without restart.
 
-An integration must initialize the backend with the selected file, context limit,
-chat template, and hardware configuration; enforce token and timeout limits; and
-test representative input in each required language. File integrity does not
-prove prompt compatibility, correct output, or acceptable interactive performance.
+Install the optional CPU dependency using the upstream wheel index:
+
+```sh
+python -m pip install --only-binary=:all: --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu -r requirements-ai.txt
+```
+
+The index and chat-completion interface are documented by
+[llama-cpp-python](https://github.com/abetlen/llama-cpp-python). Use the same Python
+environment that starts WorkLogger. Restart after installing the dependency.
+Choose a verified file with Use model, then enable Local Model and AI Assist.
+Downloading alone does not select a model, and toggling a preference does not load
+weights on the GUI thread.
+
+The engine loads lazily on a worker, uses CPU execution and a bounded thread count,
+and reuses one loaded model per account session. Changing models releases the previous
+engine on the next request; deleting its file releases the native handle first.
+Session shutdown releases the engine after outstanding jobs finish. Context is
+limited to at most 8,192 tokens with space reserved for formatting and output.
+Rewriting has a cooperative 180-second inference deadline, including weight loading;
+the native loader and prompt evaluation cannot be forcibly interrupted mid-call.
+Failed loading, timeout, and oversized input return errors without replacing the draft.
+
+A native CPU rewrite was checked with Qwen2.5-1.5B-Instruct using synthetic text.
+This is not a speed or quality benchmark across all catalog choices or platforms.
+File integrity does not prove prompt compatibility or generated-text accuracy.

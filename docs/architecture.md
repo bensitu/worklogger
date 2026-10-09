@@ -156,9 +156,10 @@ inside the write transaction. Custom-type operations use an application protocol
 and historical accounting depends on immutable record snapshots, not catalog joins.
 
 Feature switches control assistant, model-management, and update-check composition,
-but do not supply missing service implementations. AI handlers
-are constructed without a generation service, identity providers are disabled,
-and the local model manager is independent of inference. See
+but do not supply missing native dependencies. AI handlers share an account-scoped
+lazy local inference service; weights load only on background rewrite requests.
+Model management updates its selection/verification state. Identity providers and
+external generation remain disconnected. See
 [integrations](integrations.md) for the implemented boundaries.
 
 ## Presentation and Resources

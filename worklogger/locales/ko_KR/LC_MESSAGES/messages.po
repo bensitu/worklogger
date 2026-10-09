@@ -58,6 +58,9 @@ msgstr "AI 도우미"
 msgid "AI Assist Hint / extra instructions (optional)"
 msgstr "AI 힌트 / 추가 지시(선택 사항)"
 
+msgid "AI Assist is disabled for this installation."
+msgstr "이 설치 환경에서는 AI 지원이 비활성화되어 있습니다."
+
 msgid "AI Assist is not configured."
 msgstr "AI 도우미가 설정되지 않았습니다."
 
@@ -163,6 +166,12 @@ msgstr "작성자"
 msgid "Auto Record"
 msgstr "자동 기록"
 
+msgid "Avatar"
+msgstr "아바타"
+
+msgid "Avatar crop"
+msgstr "아바타 자르기"
+
 msgid "Average"
 msgstr "평균"
 
@@ -247,6 +256,9 @@ msgstr "취소"
 msgid "Catalog refreshed."
 msgstr "모델 카탈로그를 새로 고쳤습니다."
 
+msgid "Change avatar"
+msgstr "아바타 변경"
+
 msgid "Change password"
 msgstr "비밀번호 변경"
 
@@ -264,6 +276,12 @@ msgstr "업데이트 확인 중..."
 
 msgid "Choose a backup destination different from the active database."
 msgstr "현재 데이터베이스와 다른 백업 위치를 선택하세요."
+
+msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
+msgstr "올바른 PNG, JPEG, WebP 또는 BMP 이미지를 선택하세요."
+
+msgid "Choose an image smaller than 10 MB and 20 million pixels."
+msgstr "10MB 및 2천만 화소 이하의 이미지를 선택하세요."
 
 msgid "Choose custom color"
 msgstr "사용자 지정 색상 선택"
@@ -433,11 +451,17 @@ msgstr "모델 다운로드 중..."
 msgid "Edit record"
 msgstr "기록 편집"
 
+msgid "Enable AI Assist to use text processing."
+msgstr "텍스트 처리를 사용하려면 AI 지원을 켜세요."
+
 msgid "Enable local model"
 msgstr "로컬 모델 사용"
 
 msgid "Enable menu bar"
 msgstr "메뉴 막대 아이콘 사용"
+
+msgid "Enable the local model to use text processing."
+msgstr "텍스트 처리를 사용하려면 로컬 모델을 켜세요."
 
 msgid "Enable tray icon"
 msgstr "트레이 아이콘 사용"
@@ -619,6 +643,9 @@ msgstr "계정 연결 관리가 설정되지 않았습니다."
 msgid "Identity unlinked."
 msgstr "ID 연결이 해제되었습니다."
 
+msgid "Images (*.png *.jpg *.jpeg *.webp *.bmp)"
+msgstr "이미지 (*.png *.jpg *.jpeg *.webp *.bmp)"
+
 msgid "Import .gguf"
 msgstr ".gguf 가져오기"
 
@@ -666,6 +693,9 @@ msgstr "빠른 기록 포함"
 
 msgid "Include work content"
 msgstr "작업 내용 포함"
+
+msgid "Install the native inference dependency from requirements-ai.txt, then restart WorkLogger."
+msgstr "requirements-ai.txt의 추론 의존성을 설치한 후 WorkLogger를 다시 시작하세요."
 
 msgid "January"
 msgstr "1월"
@@ -739,6 +769,9 @@ msgstr "로컬 모델"
 msgid "Local model is disabled."
 msgstr "로컬 모델이 꺼져 있습니다."
 
+msgid "Local model is ready. It loads when text processing starts."
+msgstr "로컬 모델이 준비되었습니다. 텍스트 처리를 시작할 때 불러옵니다."
+
 msgid "Local model management is not configured."
 msgstr "로컬 모델 관리가 설정되지 않았습니다."
 
@@ -748,8 +781,14 @@ msgstr "로컬 모델을 사용할 수 없습니다. 모델을 다운로드하�
 msgid "Local preference is enabled, but no inference service is connected."
 msgstr "로컬 모델 설정은 켜져 있지만 추론 서비스가 연결되지 않았습니다."
 
+msgid "Local text processing does not send content to an external service."
+msgstr "로컬 텍스트 처리는 내용을 외부 서비스로 전송하지 않습니다."
+
 msgid "Local text processing is available."
 msgstr "로컬 텍스트 처리를 사용할 수 있습니다."
+
+msgid "Local text processing timed out. Try shorter content or a smaller model."
+msgstr "로컬 텍스트 처리가 시간 초과되었습니다. 내용을 줄이거나 더 작은 모델을 선택하세요."
 
 msgid "Local user"
 msgstr "로컬 사용자"
@@ -807,9 +846,6 @@ msgstr "모델이 다운로드되었습니다."
 
 msgid "Model file management is unavailable."
 msgstr "모델 파일 관리를 사용할 수 없습니다."
-
-msgid "Model file selection does not activate a text-processing service."
-msgstr "모델 파일을 선택해도 텍스트 처리 서비스는 활성화되지 않습니다."
 
 msgid "Model identifier"
 msgstr "모델 식별자"
@@ -1303,6 +1339,9 @@ msgstr "사용자를 선택하세요."
 msgid "Select a valid date or date range."
 msgstr "유효한 날짜 또는 날짜 범위를 선택하세요."
 
+msgid "Select a verified model in Manage models."
+msgstr "모델 관리에서 검증된 모델을 선택하세요."
+
 msgid "Select an identity first."
 msgstr "먼저 연결된 계정을 선택하세요."
 
@@ -1477,6 +1516,9 @@ msgstr "다른 곳에서 이 기록이 변경되었습니다. 다시 불러온 �
 msgid "This report changed elsewhere. Reload the history before deleting it."
 msgstr "다른 곳에서 이 보고서가 변경되었습니다. 기록을 다시 불러온 후 삭제하세요."
 
+msgid "This text exceeds the selected model's context limit. Shorten it and try again."
+msgstr "텍스트가 선택한 모델의 문맥 한도를 초과합니다. 내용을 줄인 후 다시 시도하세요."
+
 msgid "This work type changed or is no longer available. Reload the types and try again."
 msgstr "이 근무 유형이 변경되었거나 사용할 수 없습니다. 유형을 다시 불러온 후 시도하세요."
 
@@ -1527,6 +1569,9 @@ msgstr "일일 메모를 불러올 수 없습니다. 저장된 데이터는 유�
 
 msgid "Unable to load data. Please try again."
 msgstr "데이터를 불러오지 못했습니다. 다시 시도하세요."
+
+msgid "Unable to load the selected model. Check available memory or choose a smaller model."
+msgstr "선택한 모델을 불러올 수 없습니다. 사용 가능한 메모리를 확인하거나 더 작은 모델을 선택하세요."
 
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "모델을 가져오지 못했습니다. 원본 파일 또는 다운로드 연결을 확인하세요."
@@ -1602,6 +1647,9 @@ msgstr "업데이트 확인이 설정되지 않았습니다."
 
 msgid "Use a web proxy for this application."
 msgstr "이 앱에 웹 프록시를 사용합니다."
+
+msgid "Use default avatar"
+msgstr "기본 아바타 사용"
 
 msgid "Use model"
 msgstr "모델 사용"
@@ -1731,6 +1779,9 @@ msgstr "{date}의 변경 사항을 저장했습니다."
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."
 msgstr "저장된 로그인이 유효하지 않거나 만료되었습니다. 다시 로그인하세요."
+
+msgid "Zoom"
+msgstr "확대"
 
 msgid "h"
 msgstr "h"

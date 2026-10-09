@@ -6,6 +6,8 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class SectionActions:
+    change_avatar_requested: Callable
+    reset_avatar_requested: Callable
     backup_requested: Callable
     change_password_requested: Callable
     choose_custom_color: Callable

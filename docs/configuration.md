@@ -89,6 +89,7 @@ variables. They are stored as strings in the settings repository.
 | `daily_note_sharing:<ISO date>` | Both off | JSON with per-date `reports` and `ai` approval |
 | `daily_note_draft:<ISO date>` | Absent | Recoverable content, original content, and original/current sharing choices |
 | `local_model_enabled` | `1` | Local model preference |
+| `profile_avatar_png` | Empty | Account-specific normalized avatar as base64 PNG; empty uses the bundled default |
 | `external_model_base_url` | Empty | Stored external-service preference; example shown only as a placeholder |
 | `external_model_name` | Empty | Stored model identifier, not an active service |
 | `network_proxy_enabled` | `0` | Stored preference; not applied to HTTP adapters |

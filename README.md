@@ -17,8 +17,9 @@ version 4.0.0; this does not imply that a matching release has been published.
 - CSV and iCalendar exchange, database backup and restore, and local model management.
 
 The standard desktop configuration does **not** enable Google/Microsoft sign-in
-or connect an AI generation service. Model management and adapter implementations
-exist, but selecting a model does not by itself enable AI chat or rewriting.
+or external AI requests. Offline rewriting is connected to the selected, verified
+GGUF model when the optional native inference dependency, Local Model, and AI Assist
+are enabled. Model loading and rewriting run on a background worker.
 See [integration availability](docs/integrations.md) for exact boundaries.
 
 ## Run From Source
@@ -45,9 +46,9 @@ python3 -m venv .venv
 .venv/bin/python -m worklogger.main
 ```
 
-`llama-cpp-python` is included in the dependency list and may require a native
-build toolchain. It is not required by the default, unconfigured AI handlers.
-See [development setup](docs/development.md) for a desktop-only environment.
+Native inference is a separate optional dependency in `requirements-ai.txt`.
+Install an appropriate wheel or native build before using local rewriting.
+See [local model setup](docs/local-models.md) and [development setup](docs/development.md).
 
 Create an account on first use. The first registered account is an administrator;
 there is no supplied administrator password. Keep the displayed recovery key in

@@ -5,8 +5,8 @@
 An implemented adapter is not necessarily connected to the default desktop.
 `worklogger/bootstrap.py` is the authoritative composition entry point.
 `SettingsCapabilities` communicates actual generation and proxy availability to
-the settings surface. Default composition supplies no such services: generation
-commands remain unavailable. Local model and proxy preferences can be enabled and
+the settings surface. Local generation is connected through the optional native
+backend; proxy transport and external generation remain unconnected. Local model and proxy preferences can be enabled and
 configured beforehand; their switches show saved intent rather than runtime readiness.
 External endpoint,
 model identifier, and securely stored API-key configuration remain editable without
@@ -20,7 +20,7 @@ connected. Capability declarations do not create adapters or route requests.
 | Release checks | `GitHubReleaseUpdateChecker` | Connected to the manual update action |
 | Model files | `JsonLocalModelStore` | Connected to local model management |
 | External AI | `OpenAICompatibleGateway` | Not supplied to the chat or rewrite handlers |
-| Local AI | `LocalModelGateway` | Requires an injected generator; not supplied by desktop startup |
+| Local AI | `LocalInferenceRuntime` and `LocalModelGateway` | Connected when the native dependency and a selected verified model are available; controlled by account preferences |
 | Identity providers | OIDC/PKCE and provider helpers | Desktop constructs disabled Google/Microsoft providers |
 | Proxy preferences | Settings and system credential storage | Saved, but not applied to the HTTP adapters |
 
@@ -43,7 +43,8 @@ environment variables or enable itself from the Settings page.
 The local adapter calls an injected Python generator with messages and an output
 token limit. It does not load GGUF files itself. `RoutingAIGateway` can coordinate
 two supplied adapters. Model management, model loading, and request routing are
-separate responsibilities.
+separate responsibilities. Desktop composition injects a lazy CPU engine into the
+local adapter; it does not transmit rewrite requests to an external provider.
 
 AI context includes records within a daily, weekly, or monthly period. Privacy
 switches control notes, quick logs, and calendar content; working-hour context is

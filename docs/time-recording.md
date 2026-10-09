@@ -63,6 +63,9 @@ saved classification.
 The calendar's date, mode/time controls, and Save/Clear actions remain outside
 the editor scroll area. The record list scrolls independently, without an outer
 scroll area enclosing the complete right panel.
+The right column grows within a 300-to-380 logical-pixel range. Editor rows remain
+top-aligned and height-bounded, so taller windows give their extra space to the
+record list rather than expanding gaps between labels and fields.
 
 ## Automatic Recording
 

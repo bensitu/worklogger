@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from typing import Protocol
 
@@ -83,6 +83,7 @@ class AppWindowConfig:
     holidays: Mapping[date, str] | None = None
     account_name: str | None = None
     account_role: str = "Admin"
+    profile_avatar_png: str = field(default="", repr=False)
     confirm_discard_changes: Callable[[], bool] | None = None
 
 
@@ -154,6 +155,7 @@ class AppWindow(QMainWindow):
             stats_panel=self.stats_panel,
         )
         self._connect_signals()
+        self.sidebar.set_avatar(self._config.profile_avatar_png)
         self.apply_theme()
         self._date_timer = QTimer(self)
         self._date_timer.setInterval(60_000)
@@ -205,6 +207,7 @@ class AppWindow(QMainWindow):
         )
 
     def apply_settings(self, state: SettingsState) -> None:
+        self.sidebar.set_avatar(state.profile_avatar_png)
         self._config = apply_recording_preferences(
             self._config,
             state,
@@ -364,6 +367,8 @@ class AppWindow(QMainWindow):
             self.settings_page.settings_changed.connect(self.apply_settings)
         if hasattr(self.settings_page, "work_types_changed"):
             self.settings_page.work_types_changed.connect(self.entry_panel.refresh_work_types)
+        if hasattr(self.settings_page, "ai_availability_changed"):
+            self.settings_page.ai_availability_changed.connect(self._refresh_ai_availability)
         self.calendar_view.day_selected.connect(self.select_day)
         self.entry_panel.records_changed.connect(self._entries_changed)
         self.entry_panel.dirty_changed.connect(
@@ -385,6 +390,10 @@ class AppWindow(QMainWindow):
             self._selected_day = day
             self._current_month = day.replace(day=1)
         self.refresh()
+
+    def _refresh_ai_availability(self):
+        self.entry_panel.refresh_ai_availability()
+        self.reports_page.refresh_ai_availability()
 
     def _refresh_calendar(self) -> bool:
         result = self._calendar_coordinator.refresh_calendar(

@@ -81,7 +81,7 @@ class AiContextResult:
 class RewriteTextHandler:
     @property
     def available(self) -> bool:
-        return self._gateway is not None
+        return self._gateway is not None and bool(getattr(self._gateway, "available", True))
 
     def __init__(
         self,
@@ -187,7 +187,7 @@ class AiChatHandler:
 
     @property
     def available(self) -> bool:
-        return self._gateway is not None
+        return self._gateway is not None and bool(getattr(self._gateway, "available", True))
 
     def handle(
         self,

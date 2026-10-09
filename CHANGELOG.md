@@ -14,6 +14,13 @@ Application version: 4.0.0.
 
 ### Desktop Interface
 
+- Connected verified local model selection to offline record, note, and report
+  rewriting through a cached CPU inference engine with bounded context and timeout.
+- Added account avatar upload, circular drag/zoom cropping, keyboard positioning,
+  immediate sidebar preview, and default restoration.
+- Kept the calendar editor top-aligned and height-bounded, with a responsive
+  right-column width and additional room for history in taller windows.
+
 - Account-owned custom work types with Work, Break, or Leave accounting; saved
   periods and timers retain their original names and categories.
 - Fixed calendar date/time controls and save actions, with independent editor and
