@@ -43,10 +43,9 @@ The model manager separates the catalog list from the selected model's details.
 Details show localized descriptions, file names, size and RAM estimates, context
 and output limits, license, verification state, and active selection. Refresh and
 Import apply to the catalog; Download, Verify, Delete, and Use model apply to the
-selected item. Unavailable actions are disabled, refresh preserves selection,
-Context and maximum output are displayed as separate label/value rows using the
-same columns as file, RAM, size, and license metadata.
-and deletion requires confirmation. The primary Use model action is enabled only
+selected item. Context and maximum output use separate label/value rows in the same
+columns as file, RAM, size, and license metadata. Unavailable actions are disabled,
+refresh preserves selection, and deletion requires confirmation. The primary Use model action is enabled only
 for an available, verified file that is not already active. Background operations
 disable selection until completion; Cancel requests cancellation and keeps the
 dialog open until that operation finishes. Model management does not itself
