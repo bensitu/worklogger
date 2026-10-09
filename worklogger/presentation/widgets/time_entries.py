@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (QComboBox, QFormLayout, QHBoxLayout, QLabel, QLin
     QMessageBox, QPushButton, QSizePolicy, QStyle, QStyleOptionTabWidgetFrame,
     QTabWidget, QTextEdit, QToolButton, QVBoxLayout, QWidget)
 
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
@@ -16,6 +16,7 @@ from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 from worklogger.presentation.widgets.time_picker import TimePickerDialog
+from worklogger.presentation.widgets.work_type_manager import WorkTypeManagerDialog
 from worklogger.presentation.work_type_labels import work_type_label
 
 
@@ -95,15 +96,24 @@ class TimeEntryPanel(QWidget):
 
         self.work_type_combo = QComboBox()
         self.work_type_combo.setObjectName("work_type_combo")
-        for work_type in (WorkType.NORMAL, WorkType.REMOTE, WorkType.BUSINESS_TRIP,
-                          WorkType.MEETING, WorkType.TRAINING, WorkType.BREAK,
-                          WorkType.PAID_LEAVE, WorkType.COMP_LEAVE, WorkType.SICK_LEAVE, WorkType.OTHER):
-            self.work_type_combo.addItem(work_type_label(work_type), work_type.value)
+        self._custom_types = ()
+        self._reload_work_types()
+        type_row = QHBoxLayout()
+        type_row.setContentsMargins(0, 0, 0, 0)
+        type_row.addWidget(self.work_type_combo, 1)
+        self.manage_types_button = QToolButton()
+        self.manage_types_button.setObjectName("manage_work_types_button")
+        self.manage_types_button.setIcon(ui_icon("settings"))
+        self.manage_types_button.setToolTip(_("Manage work types"))
+        self.manage_types_button.setAccessibleName(_("Manage work types"))
+        self.manage_types_button.setVisible(view_model.custom_types_available)
+        self.manage_types_button.clicked.connect(self._manage_work_types)
+        type_row.addWidget(self.manage_types_button)
         form = QFormLayout()
         form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows)
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         form.setVerticalSpacing(3)
-        form.addRow(_("Work type"), self.work_type_combo)
+        form.addRow(_("Work type"), type_row)
         root.addLayout(form)
         content_heading = QHBoxLayout()
         content_heading.addWidget(QLabel(_("Content")), 1)
@@ -124,7 +134,10 @@ class TimeEntryPanel(QWidget):
         self.hours_label = QLabel()
         self.hours_label.setObjectName("worklog_hours_label")
         root.addWidget(self.hours_label)
-        actions = QHBoxLayout()
+        self.actions_widget = QWidget()
+        self.actions_widget.setObjectName("time_entry_actions_widget")
+        actions = QHBoxLayout(self.actions_widget)
+        actions.setContentsMargins(0, 0, 0, 0)
         self.save_button = QPushButton(_("Save"))
         self.save_button.setObjectName("save_worklog_button")
         self.save_button.setProperty("variant", "primary")
@@ -136,7 +149,7 @@ class TimeEntryPanel(QWidget):
         self.clear_button.setToolTip(_("Clear input"))
         self.clear_button.setAccessibleName(_("Clear input"))
         actions.addWidget(self.clear_button)
-        root.addLayout(actions)
+        root.addWidget(self.actions_widget)
         self.history_label = QLabel()
         self.history_label.setObjectName("time_entry_history_label")
         self.history_label.setProperty("role", "secondary")
@@ -170,6 +183,35 @@ class TimeEntryPanel(QWidget):
         action.setToolTip(title)
         action.triggered.connect(lambda: self._pick_time(field, title))
         return field
+
+    def _reload_work_types(self):
+        result = self.view_model.list_work_types()
+        if result.ok:
+            self._custom_types = result.value
+        self._populate_work_types()
+        return result
+
+    def _populate_work_types(self):
+        self.work_type_combo.clear()
+        for definition in (WorkType.NORMAL, WorkType.REMOTE, WorkType.BUSINESS_TRIP,
+                WorkType.MEETING, WorkType.TRAINING, WorkType.BREAK,
+                WorkType.PAID_LEAVE, WorkType.COMP_LEAVE, WorkType.SICK_LEAVE):
+            self.work_type_combo.addItem(work_type_label(definition), definition.value)
+        for definition in self._custom_types:
+            if not definition.archived:
+                self.work_type_combo.addItem(definition.label, definition.value)
+        self.work_type_combo.addItem(work_type_label(WorkType.OTHER), WorkType.OTHER.value)
+
+    def _manage_work_types(self):
+        dialog = WorkTypeManagerDialog(self.view_model, self)
+        dialog.exec()
+        dialog.deleteLater()
+        self._updating = True
+        result = self._reload_work_types()
+        self._updating = False
+        if not result.ok:
+            self._apply_result(result, refresh=False)
+        self._render_editor()
 
     def _pick_time(self, field, title):
         dialog = TimePickerDialog(title, field.text(), self)
@@ -236,6 +278,12 @@ class TimeEntryPanel(QWidget):
             self.start_input.setText(draft.start)
             self.end_input.setText(draft.end)
             work_type = self.view_model.auto_work_type if auto else draft.work_type
+            self._populate_work_types()
+            snapshot = self.view_model.timer.work_type if auto and self.view_model.timer else draft.original.work_type if not auto and draft.original else None
+            if isinstance(snapshot, CustomWorkType) and self.work_type_combo.findData(work_type) < 0:
+                self.work_type_combo.insertItem(self.work_type_combo.count() - 1, snapshot.label, snapshot.value)
+            elif isinstance(snapshot, CustomWorkType):
+                self.work_type_combo.setItemText(self.work_type_combo.findData(work_type), snapshot.label)
             self.work_type_combo.setCurrentIndex(max(0, self.work_type_combo.findData(work_type)))
             self.content_input.setPlainText(self.view_model.auto_content if auto else draft.content)
             self.work_type_combo.setEnabled(not (auto and self.view_model.timer))

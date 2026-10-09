@@ -5,6 +5,22 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime
 from enum import Enum
+from uuid import UUID
+
+
+@dataclass(frozen=True)
+class CustomWorkType:
+    value: str
+    label: str
+    category: str = "work"
+    revision: int = 0
+    archived: bool = False
+
+    def __post_init__(self):
+        if not self.value.startswith("custom:") or UUID(self.value[7:]).hex != self.value[7:]:
+            raise ValueError("work_type_invalid")
+        if not self.label.strip() or len(self.label) > 80 or self.category not in {"work", "break", "leave"}:
+            raise ValueError("work_type_invalid")
 
 from worklogger.config.constants import DEFAULT_LEAVE_HOURS, LEAVE_TYPES, MAX_SHIFT_HOURS
 
@@ -56,7 +72,7 @@ class WorkLog:
     end_time: str | None = None
     break_hours: float = 0.0
     note: str = ""
-    work_type: WorkType = WorkType.NORMAL
+    work_type: WorkType | CustomWorkType = WorkType.NORMAL
     overnight: bool = False
     started_at: datetime | None = None
     ended_at: datetime | None = None
@@ -77,9 +93,17 @@ class WorkLog:
     def is_leave(self) -> bool:
         if self.entries:
             return all(entry.is_leave for entry in self.entries)
+        if isinstance(self.work_type, CustomWorkType):
+            return self.work_type.category == "leave"
         from worklogger.domain.worklog.rules import normalize_work_type
 
         return normalize_work_type(self.work_type).value in LEAVE_TYPES
+
+    @property
+    def is_break(self) -> bool:
+        if self.entries:
+            return all(entry.is_break for entry in self.entries)
+        return self.work_type.category == "break" if isinstance(self.work_type, CustomWorkType) else self.work_type == WorkType.BREAK
 
     @property
     def is_overnight(self) -> bool:
@@ -99,7 +123,7 @@ class WorkLog:
     def worked_hours(self, *, max_shift_hours: float = MAX_SHIFT_HOURS) -> float:
         if self.entries:
             return sum(entry.worked_hours(max_shift_hours=max_shift_hours) for entry in self.entries)
-        if not self.has_times or self.is_leave or self.work_type == WorkType.BREAK:
+        if not self.has_times or self.is_leave or self.is_break:
             return 0.0
         if self.started_at is not None and self.ended_at is not None:
             return self.raw_hours(max_shift_hours=max_shift_hours)

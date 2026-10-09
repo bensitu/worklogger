@@ -43,6 +43,9 @@ msgstr "+"
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr "개인정보 보호를 우선하는 AI 보고서 지원 데스크톱 근무 기록 도구."
 
+msgid "A work type with this name already exists."
+msgstr "같은 이름의 근무 유형이 이미 있습니다."
+
 msgid "A&lpha channel:"
 msgstr "알파 채널(&L):"
 
@@ -75,6 +78,9 @@ msgstr "계정"
 
 msgid "Account: {username}"
 msgstr "계정: {username}"
+
+msgid "Accounting category"
+msgstr "집계 분류"
 
 msgid "Active"
 msgstr "활성"
@@ -130,11 +136,11 @@ msgstr "모양"
 msgid "Append"
 msgstr "추가"
 
-msgid "Apply template"
-msgstr "템플릿 적용"
-
 msgid "April"
 msgstr "4월"
+
+msgid "Archive type"
+msgstr "유형 보관"
 
 msgid "Ask about your work logs"
 msgstr "근무 기록에 대해 질문"
@@ -244,6 +250,9 @@ msgstr "모델 카탈로그를 새로 고쳤습니다."
 msgid "Change password"
 msgstr "비밀번호 변경"
 
+msgid "Changes apply to new records. Existing records keep their saved name and accounting category."
+msgstr "변경 사항은 새 기록에 적용됩니다. 기존 기록은 저장 당시 이름과 집계 분류를 유지합니다."
+
 msgid "Changing password will reset the recovery key."
 msgstr "비밀번호를 변경하면 복구 키가 재설정됩니다."
 
@@ -316,9 +325,6 @@ msgstr "일정에서 기록 만들기"
 msgid "Create user"
 msgstr "사용자 만들기"
 
-msgid "Created: {time}"
-msgstr "생성 시간: {time}"
-
 msgid "Current ID"
 msgstr "현재 ID"
 
@@ -331,6 +337,9 @@ msgstr "{period}의 현재 보고서를 내보냈습니다."
 msgid "Current user"
 msgstr "현재 사용자"
 
+msgid "Current visible report"
+msgstr "현재 표시된 보고서"
+
 msgid "Cursor at %1, %2\nPress ESC to cancel"
 msgstr "커서 위치: %1, %2\nESC 키를 눌러 취소"
 
@@ -339,6 +348,9 @@ msgstr "사용자 지정"
 
 msgid "DESKTOP START FAILED"
 msgstr "데스크톱 앱 시작 실패"
+
+msgid "Daily"
+msgstr "일간"
 
 msgid "Daily Average"
 msgstr "일평균"
@@ -442,6 +454,9 @@ msgstr "휴식 종료 시간을 {time}(으)로 변경하고 근무 기록을 시
 msgid "English"
 msgstr "영어"
 
+msgid "Enter a name of up to 80 characters and select an accounting category."
+msgstr "80자 이내의 이름을 입력하고 집계 분류를 선택하세요."
+
 msgid "Enter a port between 0 and 65535."
 msgstr "0에서 65535 사이의 포트 번호를 입력하세요."
 
@@ -499,8 +514,8 @@ msgstr "보고서 내보내기"
 msgid "Export cancelled"
 msgstr "내보내기 취소됨"
 
-msgid "Export current report"
-msgstr "현재 보고서 내보내기"
+msgid "Export report"
+msgstr "보고서 내보내기"
 
 msgid "Exported CSV"
 msgstr "CSV 내보내기 완료"
@@ -541,6 +556,9 @@ msgstr "2월"
 msgid "File"
 msgstr "파일"
 
+msgid "First saved: {time}"
+msgstr "최초 저장: {time}"
+
 msgid "Forgot Password?"
 msgstr "비밀번호를 잊으셨나요?"
 
@@ -573,6 +591,9 @@ msgstr "숨기기"
 
 msgid "Hide password"
 msgstr "비밀번호 숨기기"
+
+msgid "Hide this type from new records? Existing records will not change."
+msgstr "새 기록에서 이 유형을 숨길까요? 기존 기록은 변경되지 않습니다."
 
 msgid "Historical break deduction: {hours}"
 msgstr "이전 휴식 차감: {hours}"
@@ -748,6 +769,9 @@ msgstr "모델 관리"
 msgid "Manage users"
 msgstr "사용자 관리"
 
+msgid "Manage work types"
+msgstr "근무 유형 관리"
+
 msgid "Manual Input"
 msgstr "직접 입력"
 
@@ -781,6 +805,9 @@ msgstr "모델 파일 관리를 사용할 수 없습니다."
 msgid "Model file selection does not activate a text-processing service."
 msgstr "모델 파일을 선택해도 텍스트 처리 서비스는 활성화되지 않습니다."
 
+msgid "Model identifier"
+msgstr "모델 식별자"
+
 msgid "Model imported."
 msgstr "모델을 가져왔습니다."
 
@@ -811,6 +838,9 @@ msgstr "월간 목표"
 msgid "Monthly target (h)"
 msgstr "월간 목표(시간)"
 
+msgid "Name"
+msgstr "이름"
+
 msgid "National holidays"
 msgstr "전국 공휴일"
 
@@ -825,6 +855,9 @@ msgstr "새 복구 키"
 
 msgid "New time record"
 msgstr "새 시간 기록"
+
+msgid "New type"
+msgstr "새 유형"
 
 msgid "Next day"
 msgstr "다음 날"
@@ -865,6 +898,9 @@ msgstr "이 기간에 기록된 메모가 없습니다."
 msgid "No records for the selected day."
 msgstr "선택한 날짜에 기록이 없습니다."
 
+msgid "No saved daily reports exist in the selected date range."
+msgstr "선택한 기간에 저장된 일간 보고서가 없습니다."
+
 msgid "No saved reports"
 msgstr "저장된 보고서 없음"
 
@@ -903,6 +939,9 @@ msgstr "10월"
 
 msgid "Open"
 msgstr "열기"
+
+msgid "Open in editor"
+msgstr "편집 중"
 
 msgid "Operation cancelled."
 msgstr "작업이 취소되었습니다."
@@ -1096,9 +1135,6 @@ msgstr "보고서"
 msgid "Report #{report_id}"
 msgstr "보고서 #{report_id}"
 
-msgid "Report History"
-msgstr "보고서 기록"
-
 msgid "Report saved."
 msgstr "보고서가 저장되었습니다."
 
@@ -1171,6 +1207,9 @@ msgstr "저장"
 msgid "Save Report"
 msgstr "보고서 저장"
 
+msgid "Save and apply"
+msgstr "저장 및 적용"
+
 msgid "Save changes"
 msgstr "변경 저장"
 
@@ -1195,11 +1234,29 @@ msgstr "계속하기 전에 이 복구 키를 저장하세요."
 msgid "Save this recovery key before returning to login."
 msgstr "로그인으로 돌아가기 전에 이 복구 키를 저장하세요."
 
+msgid "Save time unavailable"
+msgstr "저장 시간 없음"
+
 msgid "Saved"
 msgstr "저장됨"
 
+msgid "Saved daily report"
+msgstr "저장된 일간 보고서"
+
+msgid "Saved daily reports exported."
+msgstr "저장된 일간 보고서를 내보냈습니다."
+
+msgid "Saved daily reports for this month"
+msgstr "이번 달의 저장된 일간 보고서"
+
 msgid "Saved report #{report_id}"
 msgstr "저장된 보고서 #{report_id}"
+
+msgid "Saved reports"
+msgstr "저장된 보고서"
+
+msgid "Saved reports for this account, not revisions of the open report."
+msgstr "이 계정에 저장된 보고서이며, 열린 보고서의 변경 이력이 아닙니다."
 
 msgid "Saved. Language changes apply after restarting."
 msgstr "저장되었습니다. 언어 변경은 다시 시작한 후 적용됩니다."
@@ -1315,6 +1372,9 @@ msgstr "월요일부터 한 주 시작"
 msgid "State / province"
 msgstr "주 / 도"
 
+msgid "Stored securely; no request is sent when saving."
+msgstr "안전하게 저장되며 저장 시 요청을 보내지 않습니다."
+
 msgid "Sun"
 msgstr "일"
 
@@ -1326,6 +1386,9 @@ msgstr "템플릿이 재설정되었습니다."
 
 msgid "Template saved."
 msgstr "템플릿이 저장되었습니다."
+
+msgid "Template: {type} | {language}"
+msgstr "템플릿: {type} | {language}"
 
 msgid "Templates"
 msgstr "템플릿"
@@ -1390,6 +1453,9 @@ msgstr "다른 기록 또는 실행 중인 타이머와 시간이 겹칩니다. 
 msgid "This ID is already in use. Choose a different ID."
 msgstr "이 ID는 이미 사용 중입니다. 다른 ID를 선택하세요."
 
+msgid "This account | Newest saved first"
+msgstr "현재 계정 | 최신 저장순"
+
 msgid "This identity is already linked to an account."
 msgstr "이 ID는 이미 계정에 연결되어 있습니다."
 
@@ -1404,6 +1470,9 @@ msgstr "다른 곳에서 이 기록이 변경되었습니다. 다시 불러온 �
 
 msgid "This report changed elsewhere. Reload the history before deleting it."
 msgstr "다른 곳에서 이 보고서가 변경되었습니다. 기록을 다시 불러온 후 삭제하세요."
+
+msgid "This work type changed or is no longer available. Reload the types and try again."
+msgstr "이 근무 유형이 변경되었거나 사용할 수 없습니다. 유형을 다시 불러온 후 시도하세요."
 
 msgid "Thu"
 msgstr "목"
@@ -1498,6 +1567,9 @@ msgstr "저장된 로그인 정보를 업데이트하지 못했습니다."
 msgid "Unable to update the quick log. Your changes have been retained."
 msgstr "빠른 기록을 업데이트할 수 없습니다. 변경 사항은 유지되었습니다."
 
+msgid "Unable to update work types. Your records have not changed."
+msgstr "근무 유형을 업데이트할 수 없습니다. 기록은 변경되지 않았습니다."
+
 msgid "Unknown"
 msgstr "알 수 없음"
 
@@ -1555,6 +1627,9 @@ msgstr "검증됨"
 msgid "Verify"
 msgstr "검증"
 
+msgid "Verifying downloaded file..."
+msgstr "다운로드한 파일 확인 중..."
+
 msgid "Verifying model..."
 msgstr "모델 검증 중..."
 
@@ -1567,11 +1642,17 @@ msgstr "웹 프록시"
 msgid "Wed"
 msgstr "수"
 
+msgid "Weekly"
+msgstr "주간"
+
 msgid "Weekly Report"
 msgstr "주간 보고서"
 
 msgid "Welcome!"
 msgstr "환영합니다!"
+
+msgid "Work"
+msgstr "근무"
 
 msgid "Work Hours Trend"
 msgstr "근무 시간 추이"
@@ -1590,6 +1671,9 @@ msgstr "근무 시간"
 
 msgid "Work type"
 msgstr "근무 형태"
+
+msgid "Work types"
+msgstr "근무 유형"
 
 msgid "Work {hours:.1f}h"
 msgstr "근무 {hours:.1f}h"
@@ -1681,6 +1765,9 @@ msgstr "{percent}%"
 msgid "{ram} GB"
 msgstr "{ram} GB"
 
+msgid "{received} MB of {total} MB"
+msgstr "{total} MB 중 {received} MB"
+
 msgid "{size} MB"
 msgstr "{size} MB"
 
@@ -1689,3 +1776,6 @@ msgstr "{year}년 {start_month} {start_day}일 - {end_month} {end_day}일"
 
 msgid "{start} - {end}"
 msgstr "{start} - {end}"
+
+msgid "{type} | This account | Newest saved first"
+msgstr "{type} | 현재 계정 | 최신 저장순"

@@ -18,6 +18,8 @@ class GetReportForPeriodQuery:
 class ListReportsQuery:
     user_id: int
     report_type: str
+    period_start: date | None = None
+    period_end: date | None = None
 
 
 @dataclass(frozen=True)

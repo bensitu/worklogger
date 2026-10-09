@@ -89,8 +89,8 @@ variables. They are stored as strings in the settings repository.
 | `daily_note_sharing:<ISO date>` | Both off | JSON with per-date `reports` and `ai` approval |
 | `daily_note_draft:<ISO date>` | Absent | Recoverable content, original content, and original/current sharing choices |
 | `local_model_enabled` | `1` | Local model preference |
-| `external_model_base_url` | `https://api.openai.com/v1` | Stored external-service preference |
-| `external_model_name` | `gpt-4o-mini` | Stored model identifier, not an active service |
+| `external_model_base_url` | Empty | Stored external-service preference; example shown only as a placeholder |
+| `external_model_name` | Empty | Stored model identifier, not an active service |
 | `network_proxy_enabled` | `0` | Stored preference; not applied to HTTP adapters |
 | `network_proxy_port` | `0` | Integer from 0 to 65535 |
 | `network_proxy_address`, `network_proxy_username`, `network_proxy_domain` | Empty | Stored proxy fields |
@@ -100,6 +100,12 @@ variables. They are stored as strings in the settings repository.
 Model selection also uses `local_model_active_id`. Account password-change
 requirements are enforced by the authentication workflow, not by changing a UI
 preference alone.
+The masked external API-key field is editable when secure storage is available.
+It uses a database/account-specific credential namespace, with an encrypted local
+fallback. Saving a key sends no service request and does not activate inference.
+Explicitly saved endpoint/model preferences are retained; absent preferences have
+no provider or model default. Secret values are excluded from settings-state
+representations and are not stored in ordinary settings fields.
 Automatic time recording stores its state as JSON under `time_entry_timer`.
 Migration retains older `auto_record_state` values as `previous_auto_record_state`
 until successful conversion. State includes the capture identifier, offset-aware

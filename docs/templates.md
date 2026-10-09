@@ -14,6 +14,22 @@ saved template uses the same draft-generation operation. Existing report IDs
 are retained until saving; generation failure or a declined replacement leaves
 the visible draft unchanged. Native editor normalization of line endings and
 spacing does not mark an untouched stored report as modified.
+The template editor displays its report type and language. Save and apply persists
+the edited template and starts generation in one interaction. Replacing edited
+report content still requires confirmation; a failed generation preserves the
+report draft even though the template may already have been saved.
+
+Saved reports shows all account-owned reports of the selected type, newest first
+by initial save time and ID. It is not a revision history of the visible report.
+The selected item is marked Open in editor, rather than an unexplained checkmark.
+Content replacement retains the saved report's ID and initial save time.
+
+Export report offers the visible editor content, the selected date's saved daily
+report, or that month's saved daily reports. Saved-report exports do not save or
+replace the current draft. For each date, the newest saved daily report by timestamp
+and ID is included; dates are ordered chronologically. Weekly/monthly reports and
+other accounts are excluded. An empty selection reports an error and preserves
+any destination file.
 
 ## Rendering
 

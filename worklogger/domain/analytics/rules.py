@@ -8,14 +8,14 @@ from collections.abc import Callable, Iterable, Sequence
 
 from worklogger.config.constants import DEFAULT_LEAVE_HOURS
 from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBundle, MonthStats
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import CustomWorkType, WorkLog
 from worklogger.domain.reporting.periods import weekly_period
 
 
 def month_stats(month_rows: Iterable[WorkLog], standard_work_hours: float) -> MonthStats:
     month_rows = tuple(month_rows)
     rest_dates = {entry.day for record in month_rows for entry in (record.entries or (record,))
-                  if entry.work_type == WorkType.BREAK and entry.raw_hours() > 0}
+                  if entry.is_break and entry.raw_hours() > 0}
     total = 0.0
     overtime = 0.0
     work_days = 0
@@ -91,11 +91,14 @@ def dashboard_data(
         average = _bundle(labels, totals, counts, leaves, leave_counts, "average", True)
 
     modes: dict[str, float] = {}
+    mode_labels: dict[str, str] = {}
     for row in (entry for record in current for entry in (record.entries or (record,))):
         key = "leave" if row.is_leave else row.work_type.value
         hours = row.leave_hours(standard_hours=standard_hours) if row.is_leave else row.worked_hours()
         if hours > 0:
             modes[key] = modes.get(key, 0.0) + hours
+            if isinstance(row.work_type, CustomWorkType) and not row.is_leave:
+                mode_labels[key] = row.work_type.label
 
     daily = []
     if scope == "quarterly":
@@ -114,6 +117,7 @@ def dashboard_data(
         start, end, stats, month_stats(previous, standard_hours), monthly_target * month_count,
         (end - start).days + 1, (previous_end - previous_start).days + 1,
         trend, average, tuple(modes.items()), ChartDataBundle(tuple(daily), tuple(daily), frozenset(), (), ()),
+        tuple(mode_labels.items()),
     )
 
 

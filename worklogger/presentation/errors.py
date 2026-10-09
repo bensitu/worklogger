@@ -87,6 +87,14 @@ def display_error_code(code: str) -> str:
             return _("The user account is no longer available.")
         case "credential_storage_unavailable":
             return _("Secure credential storage is unavailable.")
+        case "work_type_invalid":
+            return _("Enter a name of up to 80 characters and select an accounting category.")
+        case "work_type_name_exists":
+            return _("A work type with this name already exists.")
+        case "work_type_unavailable" | "work_type_conflict":
+            return _("This work type changed or is no longer available. Reload the types and try again.")
+        case "work_types_load_failed" | "work_types_save_failed":
+            return _("Unable to update work types. Your records have not changed.")
         case "invalid_proxy_port":
             return _("Enter a port between 0 and 65535.")
         case "time_range_invalid" | "time_range_incomplete" | "quick_log_time_range_invalid" | "start_time_required":
@@ -97,6 +105,8 @@ def display_error_code(code: str) -> str:
             return _("Select a valid date or date range.")
         case "report_not_loaded":
             return _("The report has not loaded. Reload it before continuing.")
+        case "report_export_empty":
+            return _("No saved daily reports exist in the selected date range.")
         case "description_required" | "report_content_required" | "rewrite_content_required" | "template_content_required" | "ai_chat_message_required":
             return _("Enter content before continuing.")
         case "quick_log_not_selected":

@@ -128,7 +128,7 @@ class AuthSchemaMigrationTests(unittest.TestCase):
     def test_new_database_does_not_create_unnecessary_backup(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "new.db"
-            self.assertEqual(MigrationRunner(SQLiteConnectionFactory(path)).run_pending(), (1, 2, 3, 4, 5, 6, 7, 8))
+            self.assertEqual(MigrationRunner(SQLiteConnectionFactory(path)).run_pending(), (1, 2, 3, 4, 5, 6, 7, 8, 9))
             self.assertFalse(list(path.parent.glob("*.bak_upgrade_*")))
 
     def test_legacy_hash_upgrades_only_after_correct_password(self):

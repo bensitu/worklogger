@@ -9,7 +9,7 @@ from worklogger.infrastructure.files import atomic_destination, spreadsheet_text
 
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType
 
 
 class WorkLogCsvExporter:
@@ -24,9 +24,11 @@ class WorkLogCsvExporter:
         try:
             records = tuple(entry for row in rows for entry in (row.entries or (row,)))
             timestamps = any(row.started_at is not None or row.ended_at is not None for row in records)
+            custom_types = any(isinstance(row.work_type, CustomWorkType) for row in records)
             with atomic_destination(destination) as temporary, temporary.open("w", encoding="utf-8-sig", newline="") as handle:
                 writer = csv.writer(handle)
-                writer.writerow(self.HEADER + (("started_at", "ended_at") if timestamps else ()))
+                writer.writerow(self.HEADER + (("started_at", "ended_at") if timestamps else ())
+                    + (("work_type_label", "work_type_category") if custom_types else ()))
                 for row in records:
                     writer.writerow(
                         [
@@ -37,6 +39,8 @@ class WorkLogCsvExporter:
                             spreadsheet_text(row.note),
                             spreadsheet_text(_work_type_value(row.work_type)),
                         ] + ([row.started_at.isoformat() if row.started_at else "", row.ended_at.isoformat() if row.ended_at else ""] if timestamps else [])
+                        + ([spreadsheet_text(row.work_type.label), row.work_type.category] if isinstance(row.work_type, CustomWorkType)
+                           else ["", ""] if custom_types else [])
                     )
         except Exception as exc:
             return Result.failure(
@@ -49,7 +53,7 @@ class WorkLogCsvExporter:
         return Result.success(destination)
 
 
-def _work_type_value(work_type: WorkType | str) -> str:
-    if isinstance(work_type, WorkType):
+def _work_type_value(work_type: WorkType | CustomWorkType | str) -> str:
+    if isinstance(work_type, (WorkType, CustomWorkType)):
         return work_type.value
     return str(work_type or WorkType.NORMAL.value)

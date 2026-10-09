@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from worklogger.domain.shared.errors import AppError, CancellationError, ValidationError
+from worklogger.domain.shared.errors import AppError, CancellationError, InfrastructureError, ValidationError
 from worklogger.domain.shared.dates import add_months
 from worklogger.app.job_runner import JobRunner
 from worklogger.presentation.job_runner import QtJobRunner
@@ -40,6 +40,7 @@ from worklogger.presentation.widgets import (
     ReportHistoryDisplayItem,
     ReportHistoryPanel,
     SegmentedControl,
+    ExportMenuButton,
 )
 from worklogger.presentation.widgets.icons import IconLabel, set_button_icon
 
@@ -253,10 +254,11 @@ class ReportsPage(QWidget):
         self.save_button.clicked.connect(self._save_current)
         set_button_icon(self.save_button, "save")
         bottom.addWidget(self.copy_button)
-        self.export_current_button = QPushButton(_("Export current report"))
+        self.export_current_button = ExportMenuButton(_("Export report"),
+            (("current", _("Current visible report")), ("day", _("Saved daily report")), ("month", _("Saved daily reports for this month"))))
         self.export_current_button.setObjectName("export_current_report_button")
-        set_button_icon(self.export_current_button, "file-output")
-        self.export_current_button.clicked.connect(self._choose_export_path)
+        self.export_current_button.setProperty("variant", "outline")
+        self.export_current_button.export_requested.connect(self._choose_export_scope)
         bottom.addWidget(self.export_current_button)
         bottom.addStretch(1)
         bottom.addWidget(self.save_button)
@@ -470,6 +472,7 @@ class ReportsPage(QWidget):
         self._set_status(_("Rewritten"))
 
     def _refresh_history(self) -> None:
+        self.history_panel.set_report_type(self._current_type())
         if self._view_model is None:
             self.history_panel.set_items(())
             return
@@ -519,17 +522,42 @@ class ReportsPage(QWidget):
         self._update_report_status()
 
     def _choose_export_path(self) -> None:
+        self._choose_export_scope("current")
+
+    def _choose_export_scope(self, scope: str) -> None:
+        if scope not in {"current", "day", "month"} or self._view_model is None or self._generate_busy or self._rewrite_busy or self._delete_busy:
+            return
         state = self._states.get(self._current_type())
         suffix = state.period_start.isoformat() if state is not None else self._selected_day.isoformat()
         identity = str(state.report_id) if state is not None and state.report_id is not None else "draft"
+        filename = f"{self._current_type()}-report-{suffix}-{identity}.md"
+        if scope != "current":
+            filename = "daily-reports-" + (self._selected_day.strftime("%Y-%m") if scope == "month" else self._selected_day.isoformat()) + ".md"
         path, _selected = QFileDialog.getSaveFileName(
             self,
             _("Export Markdown"),
-            f"{self._current_type()}-report-{suffix}-{identity}.md",
+            filename,
             _("Markdown files (*.md)"),
         )
         if path:
-            self.export_markdown(Path(path))
+            if scope == "current":
+                self.export_markdown(Path(path))
+            else:
+                day = self._selected_day
+                self._generate_busy = True
+                self._update_busy_controls()
+                def complete(result):
+                    self._generate_busy = False
+                    self._update_busy_controls()
+                    if result.ok:
+                        self._set_status(_("Saved daily reports exported."))
+                    else:
+                        self._set_error(result.error)
+                try:
+                    self._job_runner.submit("export_saved_reports", lambda _token: self._view_model.export_saved_daily(
+                        Path(path), day, whole_month=scope == "month"), on_complete=complete)
+                except Exception:
+                    complete(Result.failure(InfrastructureError("report_export_failed", "report_export_failed")))
 
     def _set_error(self, error: AppError | None) -> None:
         if isinstance(error, CancellationError):

@@ -15,7 +15,7 @@ from threading import RLock
 from urllib.error import HTTPError, URLError
 from urllib.request import Request
 
-from worklogger.domain.local_model.models import LocalModelEntry, LocalModelFileStatus
+from worklogger.domain.local_model.models import LocalModelEntry, LocalModelFileStatus, DownloadProgress
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.errors import CancellationError
 from worklogger.domain.shared.result import Result
@@ -50,6 +50,7 @@ class HttpRangeDownloader:
         destination: Path,
         expected_sha256: str = "",
         is_cancelled: Callable[[], bool] | None = None,
+        progress=None,
     ) -> Result[Path]:
         try:
             safe_url = safe_model_url(url)
@@ -63,7 +64,10 @@ class HttpRangeDownloader:
                     opener=self._opener, url=safe_url, destination=temp_path,
                     timeout_seconds=self._timeout_seconds, chunk_size=self._chunk_size,
                     is_cancelled=is_cancelled,
+                    progress=progress,
                 )
+                if progress is not None:
+                    progress(DownloadProgress(temp_path.stat().st_size, temp_path.stat().st_size, "verification"))
                 actual_sha = sha256_of_file(temp_path, is_cancelled=is_cancelled)
                 if actual_sha != expected:
                     temp_path.unlink(missing_ok=True)
@@ -176,7 +180,7 @@ class JsonLocalModelStore:
                 )
             )
 
-    def download_model(self, model_id: str, *, is_cancelled: Callable[[], bool] | None = None) -> Result[LocalModelEntry]:
+    def download_model(self, model_id: str, *, is_cancelled: Callable[[], bool] | None = None, progress=None) -> Result[LocalModelEntry]:
         entry = self._entry(model_id)
         if not entry.ok or entry.value is None:
             return Result.failure(entry.error or ValidationError("local_model_missing", "local_model_missing"))
@@ -196,6 +200,7 @@ class JsonLocalModelStore:
             destination=destination,
             expected_sha256=entry.value.sha256,
             is_cancelled=is_cancelled,
+            **({"progress": progress} if progress is not None else {}),
         )
         if not downloaded.ok:
             return Result.failure(
@@ -529,6 +534,7 @@ def _download_to_temp(
     timeout_seconds: float,
     chunk_size: int,
     is_cancelled: Callable[[], bool] | None = None,
+    progress=None,
 ) -> None:
     _check_cancelled(is_cancelled)
     resume_from = destination.stat().st_size if destination.exists() else 0
@@ -568,6 +574,11 @@ def _download_to_temp(
                 raise ValueError("local_model_range_invalid")
             expected_bytes = range_length
         received = 0
+        from time import monotonic
+        last_progress = monotonic()
+        total = int(match[3]) if status == 206 else expected_bytes
+        if progress is not None:
+            progress(DownloadProgress(resume_from, total))
         mode = "ab" if resume_from > 0 else "wb"
         with destination.open(mode) as handle:
             while True:
@@ -577,10 +588,15 @@ def _download_to_temp(
                     break
                 handle.write(chunk)
                 received += len(chunk)
+                if progress is not None and monotonic() - last_progress >= 0.1:
+                    progress(DownloadProgress(resume_from + received, total))
+                    last_progress = monotonic()
             handle.flush()
             os.fsync(handle.fileno())
         if expected_bytes is not None and received != expected_bytes:
             raise ValueError("local_model_response_incomplete")
+        if progress is not None:
+            progress(DownloadProgress(resume_from + received, total))
 
 
 def _check_cancelled(is_cancelled: Callable[[], bool] | None):

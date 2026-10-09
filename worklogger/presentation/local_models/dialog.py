@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from dataclasses import replace
 
-from PySide6.QtCore import QSignalBlocker, Qt
+from PySide6.QtCore import QSignalBlocker, Qt, Signal
 
 from PySide6.QtWidgets import (
     QDialog,
@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
     QMessageBox,
     QPushButton,
+    QProgressBar,
     QScrollArea,
     QSizePolicy,
     QToolButton,
@@ -26,7 +27,7 @@ from PySide6.QtWidgets import (
 )
 
 from worklogger.app.job_runner import JobHandle, JobRunner
-from worklogger.domain.shared.errors import AppError, CancellationError
+from worklogger.domain.shared.errors import AppError, CancellationError, InfrastructureError
 from worklogger.infrastructure.i18n import _, get_language
 from worklogger.presentation.errors import display_error_code, display_error_message
 from worklogger.presentation.viewmodels import (
@@ -40,6 +41,7 @@ from worklogger.presentation.widgets.two_line_delegate import TwoLineItemDelegat
 
 
 class LocalModelsDialog(QDialog):
+    download_progress = Signal(object)
     def __init__(
         self,
         view_model: LocalModelManagerViewModel,
@@ -53,10 +55,12 @@ class LocalModelsDialog(QDialog):
         self._job_runner = job_runner
         self._pending_handle: JobHandle[object] | None = None
         self._busy = False
+        self._download_active = False
         self.setObjectName("local_models_dialog")
         self.setWindowTitle(_("Local Models"))
         apply_window_icon(self)
         self._build_ui()
+        self.download_progress.connect(self._show_download_progress, Qt.ConnectionType.QueuedConnection)
         self.resize(920, 560)
         self.setMinimumSize(800, 500)
 
@@ -96,14 +100,19 @@ class LocalModelsDialog(QDialog):
         return self._set_state_result(self._view_model.import_model(source))
 
     def download_selected(self) -> bool:
+        if self._pending_handle is not None:
+            return False
         model_id = self._selected_model_id()
         if not model_id:
             self.status_label.setText(_("Select a model first."))
             return False
         if self._job_runner is not None:
+            self._download_active = True
+            self.progress_bar.setRange(0, 0)
+            self.progress_bar.show()
             return self._run_result_job(
                 "local_model_download",
-                lambda token: self._view_model.download_model(model_id, cancellation=token),
+                lambda token: self._view_model.download_model(model_id, cancellation=token, progress=self.download_progress.emit),
                 self._complete_state_job,
                 _("Downloading model..."),
                 cancellable=True,
@@ -176,7 +185,7 @@ class LocalModelsDialog(QDialog):
         self.model_list.setMinimumWidth(280)
         self.model_list.setItemDelegate(TwoLineItemDelegate(self.model_list))
         self.model_list.setSpacing(4)
-        self.model_list.setFrameShape(QFrame.Shape.NoFrame)
+        self.model_list.setFrameShape(QFrame.Shape.StyledPanel)
         self.model_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         body.addWidget(self.model_list, 1)
         details = QVBoxLayout()
@@ -212,6 +221,10 @@ class LocalModelsDialog(QDialog):
         info.addStretch(1)
         self.details_scroll.setWidget(panel)
         details.addWidget(self.details_scroll, 1)
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setObjectName("model_download_progress_bar")
+        self.progress_bar.hide()
+        details.addWidget(self.progress_bar)
 
         actions = QHBoxLayout()
         self.download_button = QPushButton(_("Download"))
@@ -350,16 +363,26 @@ class LocalModelsDialog(QDialog):
             return False
         assert self._job_runner is not None
         self._set_busy(True)
+        if not self._download_active:
+            self.progress_bar.hide()
         self.status_label.setText(busy_message)
         self._pending_handle = JobHandle(
             job_id=f"{name}_pending",
             cancel=lambda: None,
         )
-        handle = self._job_runner.submit(
-            name,
-            lambda token: job(token) if cancellable else job(),
-            on_complete=callback,
-        )
+        try:
+            handle = self._job_runner.submit(
+                name,
+                lambda token: job(token) if cancellable else job(),
+                on_complete=callback,
+            )
+        except Exception:
+            self._pending_handle = None
+            self._set_busy(False)
+            self._download_active = False
+            self.progress_bar.hide()
+            self._set_error(InfrastructureError("local_model_operation_failed", "local_model_operation_failed"))
+            return False
         if self._pending_handle is not None:
             self._pending_handle = handle
         return True
@@ -368,6 +391,27 @@ class LocalModelsDialog(QDialog):
         self._pending_handle = None
         self._set_busy(False)
         self._set_state_result(result)
+        if self._download_active:
+            if getattr(result, "ok", False):
+                self.progress_bar.setRange(0, 100)
+                self.progress_bar.setValue(100)
+            else:
+                self.progress_bar.hide()
+            self._download_active = False
+
+    def _show_download_progress(self, progress):
+        if not self._download_active:
+            return
+        if progress.phase == "verification":
+            self.progress_bar.setRange(0, 0)
+            self.status_label.setText(_("Verifying downloaded file..."))
+        elif progress.total_bytes:
+            self.progress_bar.setRange(0, 100)
+            self.progress_bar.setValue(min(99, int(progress.received_bytes * 100 / progress.total_bytes)))
+            self.progress_bar.setToolTip(_("{received} MB of {total} MB").format(
+                received=f"{progress.received_bytes / 1024 ** 2:.1f}", total=f"{progress.total_bytes / 1024 ** 2:.1f}"))
+        else:
+            self.progress_bar.setRange(0, 0)
 
     def _complete_verify(self, result: object) -> None:
         self._pending_handle = None

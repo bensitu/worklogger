@@ -43,6 +43,9 @@ msgstr "+"
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr "A privacy-first desktop work tracker with AI-powered reporting."
 
+msgid "A work type with this name already exists."
+msgstr "A work type with this name already exists."
+
 msgid "A&lpha channel:"
 msgstr "A&lpha channel:"
 
@@ -75,6 +78,9 @@ msgstr "Account"
 
 msgid "Account: {username}"
 msgstr "Account: {username}"
+
+msgid "Accounting category"
+msgstr "Accounting category"
 
 msgid "Active"
 msgstr "Active"
@@ -130,11 +136,11 @@ msgstr "Appearance"
 msgid "Append"
 msgstr "Append"
 
-msgid "Apply template"
-msgstr "Apply template"
-
 msgid "April"
 msgstr "April"
+
+msgid "Archive type"
+msgstr "Archive type"
 
 msgid "Ask about your work logs"
 msgstr "Ask about your work logs"
@@ -244,6 +250,9 @@ msgstr "Catalog refreshed."
 msgid "Change password"
 msgstr "Change password"
 
+msgid "Changes apply to new records. Existing records keep their saved name and accounting category."
+msgstr "Changes apply to new records. Existing records keep their saved name and accounting category."
+
 msgid "Changing password will reset the recovery key."
 msgstr "Changing password will reset the recovery key."
 
@@ -316,9 +325,6 @@ msgstr "Create record from event"
 msgid "Create user"
 msgstr "Create user"
 
-msgid "Created: {time}"
-msgstr "Created: {time}"
-
 msgid "Current ID"
 msgstr "Current ID"
 
@@ -331,6 +337,9 @@ msgstr "Current report exported for {period}."
 msgid "Current user"
 msgstr "Current user"
 
+msgid "Current visible report"
+msgstr "Current visible report"
+
 msgid "Cursor at %1, %2\nPress ESC to cancel"
 msgstr "Cursor at %1, %2\nPress ESC to cancel"
 
@@ -339,6 +348,9 @@ msgstr "Custom"
 
 msgid "DESKTOP START FAILED"
 msgstr "DESKTOP START FAILED"
+
+msgid "Daily"
+msgstr "Daily"
 
 msgid "Daily Average"
 msgstr "Daily Average"
@@ -442,6 +454,9 @@ msgstr "End the break at {time} and start recording work? The saved break durati
 msgid "English"
 msgstr "English"
 
+msgid "Enter a name of up to 80 characters and select an accounting category."
+msgstr "Enter a name of up to 80 characters and select an accounting category."
+
 msgid "Enter a port between 0 and 65535."
 msgstr "Enter a port between 0 and 65535."
 
@@ -499,8 +514,8 @@ msgstr "Export Reports"
 msgid "Export cancelled"
 msgstr "Export cancelled"
 
-msgid "Export current report"
-msgstr "Export current report"
+msgid "Export report"
+msgstr "Export report"
 
 msgid "Exported CSV"
 msgstr "Exported CSV"
@@ -541,6 +556,9 @@ msgstr "February"
 msgid "File"
 msgstr "File"
 
+msgid "First saved: {time}"
+msgstr "First saved: {time}"
+
 msgid "Forgot Password?"
 msgstr "Forgot Password?"
 
@@ -573,6 +591,9 @@ msgstr "Hide"
 
 msgid "Hide password"
 msgstr "Hide password"
+
+msgid "Hide this type from new records? Existing records will not change."
+msgstr "Hide this type from new records? Existing records will not change."
 
 msgid "Historical break deduction: {hours}"
 msgstr "Historical break deduction: {hours}"
@@ -748,6 +769,9 @@ msgstr "Manage models"
 msgid "Manage users"
 msgstr "Manage users"
 
+msgid "Manage work types"
+msgstr "Manage work types"
+
 msgid "Manual Input"
 msgstr "Manual Input"
 
@@ -781,6 +805,9 @@ msgstr "Model file management is unavailable."
 msgid "Model file selection does not activate a text-processing service."
 msgstr "Model file selection does not activate a text-processing service."
 
+msgid "Model identifier"
+msgstr "Model identifier"
+
 msgid "Model imported."
 msgstr "Model imported."
 
@@ -811,6 +838,9 @@ msgstr "Monthly target"
 msgid "Monthly target (h)"
 msgstr "Monthly target (h)"
 
+msgid "Name"
+msgstr "Name"
+
 msgid "National holidays"
 msgstr "National holidays"
 
@@ -825,6 +855,9 @@ msgstr "New recovery key"
 
 msgid "New time record"
 msgstr "New time record"
+
+msgid "New type"
+msgstr "New type"
 
 msgid "Next day"
 msgstr "Next day"
@@ -865,6 +898,9 @@ msgstr "No notes recorded for this period."
 msgid "No records for the selected day."
 msgstr "No records for the selected day."
 
+msgid "No saved daily reports exist in the selected date range."
+msgstr "No saved daily reports exist in the selected date range."
+
 msgid "No saved reports"
 msgstr "No saved reports"
 
@@ -903,6 +939,9 @@ msgstr "October"
 
 msgid "Open"
 msgstr "Open"
+
+msgid "Open in editor"
+msgstr "Open in editor"
 
 msgid "Operation cancelled."
 msgstr "Operation cancelled."
@@ -1096,9 +1135,6 @@ msgstr "Report"
 msgid "Report #{report_id}"
 msgstr "Report #{report_id}"
 
-msgid "Report History"
-msgstr "Report History"
-
 msgid "Report saved."
 msgstr "Report saved."
 
@@ -1171,6 +1207,9 @@ msgstr "Save"
 msgid "Save Report"
 msgstr "Save Report"
 
+msgid "Save and apply"
+msgstr "Save and apply"
+
 msgid "Save changes"
 msgstr "Save changes"
 
@@ -1195,11 +1234,29 @@ msgstr "Save this recovery key before continuing."
 msgid "Save this recovery key before returning to login."
 msgstr "Save this recovery key before returning to login."
 
+msgid "Save time unavailable"
+msgstr "Save time unavailable"
+
 msgid "Saved"
 msgstr "Saved"
 
+msgid "Saved daily report"
+msgstr "Saved daily report"
+
+msgid "Saved daily reports exported."
+msgstr "Saved daily reports exported."
+
+msgid "Saved daily reports for this month"
+msgstr "Saved daily reports for this month"
+
 msgid "Saved report #{report_id}"
 msgstr "Saved report #{report_id}"
+
+msgid "Saved reports"
+msgstr "Saved reports"
+
+msgid "Saved reports for this account, not revisions of the open report."
+msgstr "Saved reports for this account, not revisions of the open report."
 
 msgid "Saved. Language changes apply after restarting."
 msgstr "Saved. Language changes apply after restarting."
@@ -1315,6 +1372,9 @@ msgstr "Start week on Monday"
 msgid "State / province"
 msgstr "State / province"
 
+msgid "Stored securely; no request is sent when saving."
+msgstr "Stored securely; no request is sent when saving."
+
 msgid "Sun"
 msgstr "Sun"
 
@@ -1326,6 +1386,9 @@ msgstr "Template reset."
 
 msgid "Template saved."
 msgstr "Template saved."
+
+msgid "Template: {type} | {language}"
+msgstr "Template: {type} | {language}"
 
 msgid "Templates"
 msgstr "Templates"
@@ -1390,6 +1453,9 @@ msgstr "These times overlap another record or the active timer. Choose a differe
 msgid "This ID is already in use. Choose a different ID."
 msgstr "This ID is already in use. Choose a different ID."
 
+msgid "This account | Newest saved first"
+msgstr "This account | Newest saved first"
+
 msgid "This identity is already linked to an account."
 msgstr "This identity is already linked to an account."
 
@@ -1404,6 +1470,9 @@ msgstr "This record changed elsewhere. Reload it before saving. Your changes hav
 
 msgid "This report changed elsewhere. Reload the history before deleting it."
 msgstr "This report changed elsewhere. Reload the history before deleting it."
+
+msgid "This work type changed or is no longer available. Reload the types and try again."
+msgstr "This work type changed or is no longer available. Reload the types and try again."
 
 msgid "Thu"
 msgstr "Thu"
@@ -1498,6 +1567,9 @@ msgstr "Unable to update saved sign-in information."
 msgid "Unable to update the quick log. Your changes have been retained."
 msgstr "Unable to update the quick log. Your changes have been retained."
 
+msgid "Unable to update work types. Your records have not changed."
+msgstr "Unable to update work types. Your records have not changed."
+
 msgid "Unknown"
 msgstr "Unknown"
 
@@ -1555,6 +1627,9 @@ msgstr "Verified"
 msgid "Verify"
 msgstr "Verify"
 
+msgid "Verifying downloaded file..."
+msgstr "Verifying downloaded file..."
+
 msgid "Verifying model..."
 msgstr "Verifying model..."
 
@@ -1567,11 +1642,17 @@ msgstr "Web proxy"
 msgid "Wed"
 msgstr "Wed"
 
+msgid "Weekly"
+msgstr "Weekly"
+
 msgid "Weekly Report"
 msgstr "Weekly Report"
 
 msgid "Welcome!"
 msgstr "Welcome!"
+
+msgid "Work"
+msgstr "Work"
 
 msgid "Work Hours Trend"
 msgstr "Work Hours Trend"
@@ -1590,6 +1671,9 @@ msgstr "Work hours"
 
 msgid "Work type"
 msgstr "Work type"
+
+msgid "Work types"
+msgstr "Work types"
 
 msgid "Work {hours:.1f}h"
 msgstr "Work {hours:.1f}h"
@@ -1681,6 +1765,9 @@ msgstr "{percent}%"
 msgid "{ram} GB"
 msgstr "{ram} GB"
 
+msgid "{received} MB of {total} MB"
+msgstr "{received} MB of {total} MB"
+
 msgid "{size} MB"
 msgstr "{size} MB"
 
@@ -1689,3 +1776,6 @@ msgstr "{start_month} {start_day} - {end_month} {end_day}, {year}"
 
 msgid "{start} - {end}"
 msgstr "{start} - {end}"
+
+msgid "{type} | This account | Newest saved first"
+msgstr "{type} | This account | Newest saved first"

@@ -29,6 +29,14 @@ that dates and clock times agree. Files containing only older clock-based record
 keep the six-column format. Timestamp offsets preserve elapsed hours across daylight
 saving changes; importing older files does not guess their original timezone.
 
+If any record uses a custom type, export also appends `work_type_label` and
+`work_type_category`. The type ID is `custom:` followed by a UUID in hexadecimal
+form; its saved label and `work`, `break`, or `leave` category are required on
+import. Built-in rows leave these optional fields empty. Import preserves the
+record snapshot without modifying the receiving account's editable type catalog.
+Imported custom records remain editable with their saved classification; select
+an active account type explicitly when assigning a different classification.
+
 Import also accepts `d` for the date and `lunch` for the break. Missing break values
 default to zero; missing work types default to `normal`, and unknown types are
 reported as invalid rows. Both ISO dates and year-first slash dates are accepted. The

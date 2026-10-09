@@ -21,6 +21,7 @@ from worklogger.presentation.widgets import (
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.time_entries import TimeEntryPanel
 from worklogger.presentation.widgets.time_entry_history import TimeEntryHistory
+from worklogger.presentation.date_labels import day_label
 
 
 class CalendarPage(QWidget):
@@ -59,10 +60,10 @@ class CalendarPage(QWidget):
             self.calendar_scroll.ensureWidgetVisible(selected, 0, 8)
 
     def _new_time_record(self):
-        if self.entry_panel.new_record():
-            QTimer.singleShot(0, self, lambda: self.details_scroll.ensureWidgetVisible(self.entry_panel.start_input, 0, 8))
+        self.entry_panel.new_record()
 
     def set_time_entries(self, entries, events):
+        self.selected_date_label.setText(day_label(self.entry_panel.view_model.draft.day))
         self.records_widget.set_entries(entries, events)
 
     def set_selected_entry(self, entry_id):
@@ -133,20 +134,32 @@ class CalendarPage(QWidget):
         self.calendar_scroll.setWidget(self.calendar_view)
         content.addWidget(self.calendar_scroll, 1)
 
-        self.details_scroll = QScrollArea()
-        self.details_scroll.setObjectName("calendar_details_scroll_widget")
-        self.details_scroll.setWidgetResizable(True)
-        self.details_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.details_scroll.setFixedWidth(280)
         right = QFrame()
+        right.setMinimumWidth(280)
+        right.setMaximumWidth(360)
         right.setObjectName("calendar_right_panel_frame")
         right_layout = QVBoxLayout(right)
         right_layout.setContentsMargins(12, 0, 0, 0)
         right_layout.setSpacing(10)
-        self.details_scroll.setWidget(right)
+        self.selected_date_label = QLabel()
+        self.selected_date_label.setObjectName("selected_calendar_date_label")
+        self.selected_date_label.setProperty("role", "section_heading")
+        self.selected_date_label.setWordWrap(True)
+        right_layout.addWidget(self.selected_date_label)
+        self.entry_panel.layout().removeWidget(self.entry_panel.time_tabs)
+        right_layout.addWidget(self.entry_panel.time_tabs)
+        self.details_scroll = QScrollArea()
+        self.details_scroll.setObjectName("calendar_details_scroll_widget")
+        self.details_scroll.setWidgetResizable(True)
+        self.details_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.details_scroll.setMinimumHeight(60)
+        self.details_scroll.setWidget(self.entry_panel)
         self.stats_panel.setVisible(False)
-        right_layout.addWidget(self.entry_panel)
-        right_layout.addWidget(self.stats_panel)
+        right_layout.addWidget(self.details_scroll, 2)
+        self.entry_panel.layout().removeWidget(self.entry_panel.actions_widget)
+        right_layout.addWidget(self.entry_panel.actions_widget)
+        self.entry_panel.busy_changed.connect(lambda busy: self.entry_panel.actions_widget.setEnabled(not busy))
+        self.entry_panel.busy_changed.connect(lambda busy: self.entry_panel.time_tabs.setEnabled(not busy))
         separator = QLabel(_("Schedule / Records"))
         separator.setObjectName("schedule_records_label")
         right_layout.addWidget(separator)
@@ -164,4 +177,4 @@ class CalendarPage(QWidget):
         self.records_widget.event_delete_requested.connect(self.event_delete_requested.emit)
         self.records_scroll.setWidget(self.records_widget)
         right_layout.addWidget(self.records_scroll, 1)
-        content.addWidget(self.details_scroll)
+        content.addWidget(right, 0)

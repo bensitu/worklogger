@@ -43,6 +43,9 @@ msgstr "+"
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr "注重隐私的桌面工时记录工具，支持 AI 报表。"
 
+msgid "A work type with this name already exists."
+msgstr "已存在同名工作类型。"
+
 msgid "A&lpha channel:"
 msgstr "透明度(&L)："
 
@@ -75,6 +78,9 @@ msgstr "账户"
 
 msgid "Account: {username}"
 msgstr "账户：{username}"
+
+msgid "Accounting category"
+msgstr "统计口径"
 
 msgid "Active"
 msgstr "已启用"
@@ -130,11 +136,11 @@ msgstr "外观"
 msgid "Append"
 msgstr "追加"
 
-msgid "Apply template"
-msgstr "应用模板"
-
 msgid "April"
 msgstr "4月"
+
+msgid "Archive type"
+msgstr "停用类型"
 
 msgid "Ask about your work logs"
 msgstr "询问您的工作记录"
@@ -244,6 +250,9 @@ msgstr "模型目录已刷新。"
 msgid "Change password"
 msgstr "修改密码"
 
+msgid "Changes apply to new records. Existing records keep their saved name and accounting category."
+msgstr "修改仅用于新记录。既存记录保留保存时的名称和统计口径。"
+
 msgid "Changing password will reset the recovery key."
 msgstr "修改密码会重置恢复密钥。"
 
@@ -316,9 +325,6 @@ msgstr "从日程创建记录"
 msgid "Create user"
 msgstr "创建用户"
 
-msgid "Created: {time}"
-msgstr "创建时间：{time}"
-
 msgid "Current ID"
 msgstr "当前 ID"
 
@@ -331,6 +337,9 @@ msgstr "已导出 {period} 的当前报表。"
 msgid "Current user"
 msgstr "当前用户"
 
+msgid "Current visible report"
+msgstr "当前显示的报表"
+
 msgid "Cursor at %1, %2\nPress ESC to cancel"
 msgstr "光标位置：%1, %2\n按 ESC 取消"
 
@@ -339,6 +348,9 @@ msgstr "自定义"
 
 msgid "DESKTOP START FAILED"
 msgstr "桌面应用启动失败"
+
+msgid "Daily"
+msgstr "日报"
 
 msgid "Daily Average"
 msgstr "日均工时"
@@ -442,6 +454,9 @@ msgstr "将休息结束时间改为 {time} 并开始记录工作吗？已保存�
 msgid "English"
 msgstr "英语"
 
+msgid "Enter a name of up to 80 characters and select an accounting category."
+msgstr "请输入不超过80个字符的名称，并选择统计口径。"
+
 msgid "Enter a port between 0 and 65535."
 msgstr "请输入 0 到 65535 之间的端口号。"
 
@@ -499,8 +514,8 @@ msgstr "导出报表"
 msgid "Export cancelled"
 msgstr "已取消导出"
 
-msgid "Export current report"
-msgstr "导出当前报表"
+msgid "Export report"
+msgstr "导出报表"
 
 msgid "Exported CSV"
 msgstr "已导出 CSV"
@@ -541,6 +556,9 @@ msgstr "2月"
 msgid "File"
 msgstr "文件"
 
+msgid "First saved: {time}"
+msgstr "首次保存：{time}"
+
 msgid "Forgot Password?"
 msgstr "忘记密码？"
 
@@ -573,6 +591,9 @@ msgstr "隐藏"
 
 msgid "Hide password"
 msgstr "隐藏密码"
+
+msgid "Hide this type from new records? Existing records will not change."
+msgstr "在新记录中停用此类型？既存记录不会改变。"
 
 msgid "Historical break deduction: {hours}"
 msgstr "历史休息扣除：{hours}"
@@ -748,6 +769,9 @@ msgstr "管理模型"
 msgid "Manage users"
 msgstr "管理用户"
 
+msgid "Manage work types"
+msgstr "管理工作类型"
+
 msgid "Manual Input"
 msgstr "手动输入"
 
@@ -781,6 +805,9 @@ msgstr "模型文件管理不可用。"
 msgid "Model file selection does not activate a text-processing service."
 msgstr "选择模型文件不会启用文本处理服务。"
 
+msgid "Model identifier"
+msgstr "模型标识"
+
 msgid "Model imported."
 msgstr "模型已导入。"
 
@@ -811,6 +838,9 @@ msgstr "月度目标"
 msgid "Monthly target (h)"
 msgstr "月度目标（小时）"
 
+msgid "Name"
+msgstr "名称"
+
 msgid "National holidays"
 msgstr "全国假日"
 
@@ -825,6 +855,9 @@ msgstr "新恢复密钥"
 
 msgid "New time record"
 msgstr "新增时间记录"
+
+msgid "New type"
+msgstr "新增类型"
 
 msgid "Next day"
 msgstr "后一天"
@@ -865,6 +898,9 @@ msgstr "此期间没有记录备注。"
 msgid "No records for the selected day."
 msgstr "所选日期没有记录。"
 
+msgid "No saved daily reports exist in the selected date range."
+msgstr "所选日期范围内没有已保存的日报。"
+
 msgid "No saved reports"
 msgstr "尚无已保存的报表"
 
@@ -903,6 +939,9 @@ msgstr "10月"
 
 msgid "Open"
 msgstr "打开"
+
+msgid "Open in editor"
+msgstr "正在编辑"
 
 msgid "Operation cancelled."
 msgstr "操作已取消。"
@@ -1096,9 +1135,6 @@ msgstr "报表"
 msgid "Report #{report_id}"
 msgstr "报表 #{report_id}"
 
-msgid "Report History"
-msgstr "报表历史"
-
 msgid "Report saved."
 msgstr "报表已保存。"
 
@@ -1171,6 +1207,9 @@ msgstr "保存"
 msgid "Save Report"
 msgstr "保存报表"
 
+msgid "Save and apply"
+msgstr "保存并应用"
+
 msgid "Save changes"
 msgstr "保存修改"
 
@@ -1195,11 +1234,29 @@ msgstr "继续前请保存此恢复密钥。"
 msgid "Save this recovery key before returning to login."
 msgstr "返回登录前请保存此恢复密钥。"
 
+msgid "Save time unavailable"
+msgstr "保存时间未知"
+
 msgid "Saved"
 msgstr "已保存"
 
+msgid "Saved daily report"
+msgstr "已保存日报"
+
+msgid "Saved daily reports exported."
+msgstr "已导出保存的日报。"
+
+msgid "Saved daily reports for this month"
+msgstr "本月已保存日报"
+
 msgid "Saved report #{report_id}"
 msgstr "已保存报表 #{report_id}"
+
+msgid "Saved reports"
+msgstr "已保存报表"
+
+msgid "Saved reports for this account, not revisions of the open report."
+msgstr "本账户已保存的报表，不是当前报表的修改历史。"
 
 msgid "Saved. Language changes apply after restarting."
 msgstr "已保存。重启后语言设置生效。"
@@ -1315,6 +1372,9 @@ msgstr "每周从周一开始"
 msgid "State / province"
 msgstr "州 / 省"
 
+msgid "Stored securely; no request is sent when saving."
+msgstr "安全存储，保存时不会发送请求。"
+
 msgid "Sun"
 msgstr "日"
 
@@ -1326,6 +1386,9 @@ msgstr "模板已重置。"
 
 msgid "Template saved."
 msgstr "模板已保存。"
+
+msgid "Template: {type} | {language}"
+msgstr "模板：{type} | {language}"
 
 msgid "Templates"
 msgstr "模板"
@@ -1390,6 +1453,9 @@ msgstr "该时段与其他记录或正在运行的计时重叠，请选择其他
 msgid "This ID is already in use. Choose a different ID."
 msgstr "此 ID 已被使用，请选择其他 ID。"
 
+msgid "This account | Newest saved first"
+msgstr "本账户 | 按保存时间倒序"
+
 msgid "This identity is already linked to an account."
 msgstr "此身份已关联到账户。"
 
@@ -1404,6 +1470,9 @@ msgstr "该记录已在其他位置修改，请重新加载后保存。您的修
 
 msgid "This report changed elsewhere. Reload the history before deleting it."
 msgstr "此报表已在其他位置修改。请重新加载历史列表后再删除。"
+
+msgid "This work type changed or is no longer available. Reload the types and try again."
+msgstr "此工作类型已更改或不可用。请重新加载类型后重试。"
 
 msgid "Thu"
 msgstr "四"
@@ -1498,6 +1567,9 @@ msgstr "无法更新已保存的登录信息。"
 msgid "Unable to update the quick log. Your changes have been retained."
 msgstr "无法更新速记。您的修改已保留。"
 
+msgid "Unable to update work types. Your records have not changed."
+msgstr "无法更新工作类型。您的记录未改变。"
+
 msgid "Unknown"
 msgstr "未知"
 
@@ -1555,6 +1627,9 @@ msgstr "已验证"
 msgid "Verify"
 msgstr "验证"
 
+msgid "Verifying downloaded file..."
+msgstr "正在验证下载文件..."
+
 msgid "Verifying model..."
 msgstr "正在验证模型..."
 
@@ -1567,11 +1642,17 @@ msgstr "网页代理"
 msgid "Wed"
 msgstr "三"
 
+msgid "Weekly"
+msgstr "周报"
+
 msgid "Weekly Report"
 msgstr "周报"
 
 msgid "Welcome!"
 msgstr "欢迎！"
+
+msgid "Work"
+msgstr "工作"
 
 msgid "Work Hours Trend"
 msgstr "工时趋势"
@@ -1589,6 +1670,9 @@ msgid "Work hours"
 msgstr "工时"
 
 msgid "Work type"
+msgstr "工作类型"
+
+msgid "Work types"
 msgstr "工作类型"
 
 msgid "Work {hours:.1f}h"
@@ -1681,6 +1765,9 @@ msgstr "{percent}%"
 msgid "{ram} GB"
 msgstr "{ram} GB"
 
+msgid "{received} MB of {total} MB"
+msgstr "{received} MB / {total} MB"
+
 msgid "{size} MB"
 msgstr "{size} MB"
 
@@ -1689,3 +1776,6 @@ msgstr "{year}年{start_month}{start_day}日 - {end_month}{end_day}日"
 
 msgid "{start} - {end}"
 msgstr "{start} - {end}"
+
+msgid "{type} | This account | Newest saved first"
+msgstr "{type} | 本账户 | 按保存时间倒序"

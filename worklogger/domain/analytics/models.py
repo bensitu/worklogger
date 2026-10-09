@@ -38,3 +38,4 @@ class AnalyticsDashboard:
     average: ChartDataBundle
     work_modes: tuple[tuple[str, float], ...]
     daily_average_trend: ChartDataBundle
+    work_mode_labels: tuple[tuple[str, str], ...] = ()

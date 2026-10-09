@@ -33,6 +33,7 @@ external SQLite clients still require SQLite's own locking protections.
 | `users` | Integer ID, unique username, password/recovery hashes and salts, administrator and password-change flags, remembered-token hash/expiry, timestamps |
 | `login_attempts` | Username primary key, failure count, lock expiry, last failure |
 | `worklog` | Integer entry ID; user/date, start/end, offset-aware timestamps, historical break deduction, independent content, work type, revision and capture identifier |
+| `work_types` | Account-owned custom classification IDs, normalized unique active names, accounting category, revision and archived flag |
 | `daily_notes` | Composite `(user_id, d)` primary key; independent daily note content |
 | `quick_logs` | Integer ID; user/date, optional start/end, description, creation timestamp |
 | `settings` | Composite `(user_id, key)` primary key; string value |
@@ -81,6 +82,13 @@ the application version alone.
 | 6 | Add optional offset-aware start/end timestamps, leaving existing clock-only records unchanged |
 | 7 | Replace the daily primary key with entry IDs, preserve historical content and break deductions, add date/capture indexes and optimistic revisions, and retain previous automatic drafts for conversion |
 | 8 | Complete released account fields, map older preferences, retain password-change requirements and identity metadata, and index cross-account settings lookups |
+| 9 | Add custom type name/category snapshots to work entries, an account-owned type catalog, and an indexed report-date range lookup |
+
+Migration 9 leaves built-in classifications unchanged and initializes their
+snapshot columns to empty strings. Custom records use a `custom:` UUID identifier
+with a saved name and Work/Break/Leave category. Historical accounting uses these
+columns, not a join to the editable catalog. Catalog edits use revision checks;
+archiving hides a type from new entries without deleting its historical snapshots.
 
 The runner creates one complete private SQLite snapshot before converting populated
 tables, rather than a separate copy for each migration. Table replacement and settings-key conversion are transactional. Existing

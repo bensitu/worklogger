@@ -117,9 +117,9 @@ class LocalModelManagerViewModel:
             )
         return _with_message(self.load(), _("Model imported."))
 
-    def download_model(self, model_id: str, *, cancellation: CancellationToken | None = None) -> Result[LocalModelManagerState]:
+    def download_model(self, model_id: str, *, cancellation: CancellationToken | None = None, progress=None) -> Result[LocalModelManagerState]:
         downloaded = self._download_handler.handle(
-            DownloadLocalModelCommand(self._user_id, model_id, cancellation)
+            DownloadLocalModelCommand(self._user_id, model_id, cancellation, progress)
         )
         if not downloaded.ok:
             return Result.failure(

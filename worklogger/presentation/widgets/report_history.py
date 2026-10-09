@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 
-from PySide6.QtCore import QEvent, QRect, QSize, Qt, Signal
+from PySide6.QtCore import QEvent, QSize, Qt, Signal
 from PySide6.QtGui import QAbstractTextDocumentLayout, QAction, QPainter, QPalette, QTextDocument
 from PySide6.QtWidgets import (
     QApplication, QLabel, QLayout, QLineEdit, QPushButton, QScrollArea, QSizePolicy,
@@ -19,13 +19,14 @@ from worklogger.presentation.widgets.card import CardFrame
 from worklogger.presentation.date_labels import month_label
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 from worklogger.presentation.widgets.hover_delete_button import HoverDeleteButton
+from worklogger.domain.reporting.export_selection import saved_report_order
 
 
 class ReportHistoryButton(HoverDeleteButton):
     def __init__(self, item: ReportHistoryDisplayItem, parent: QWidget | None = None, *, allow_delete=True) -> None:
         super().__init__(_history_label(item), parent, deletable=allow_delete and item.report_id is not None,
                          delete_label=_("Delete report"))
-        self._saved = item.saved
+        self._base_label = _history_label(item)
         self._document = QTextDocument(self)
         self._document.setDocumentMargin(0)
         self._document.setPlainText(self.text())
@@ -73,12 +74,22 @@ class ReportHistoryButton(HoverDeleteButton):
         painter.translate(12, (self.height() - self._document.size().height()) / 2)
         self._document.documentLayout().draw(painter, context)
         painter.restore()
-        if self._saved:
-            ui_icon("check", success=True).paint(painter, QRect(self.width() - (60 if self._deletable else 28), (self.height() - 20) // 2, 20, 20))
         painter.end()
 
     def _text_margins(self):
-        return 76 if self._saved and self._deletable else 52 if self._deletable else 44 if self._saved else 24
+        return 52 if self._deletable else 24
+
+    def set_current(self, current):
+        self.setProperty("active", current)
+        text = self._base_label + "\n" + (_("Open in editor") if current else _("Saved"))
+        self.setText(text)
+        self.setAccessibleName(text)
+        self._document.setPlainText(text)
+        self._document.setDefaultFont(self.font())
+        self._document.setTextWidth(max(1, self.width() - self._text_margins()))
+        self.setToolTip(text)
+        self.setMinimumHeight(self.heightForWidth(max(80, self.width())))
+        refresh_style(self)
 
 
 @dataclass(frozen=True)
@@ -107,9 +118,13 @@ class ReportHistoryPanel(CardFrame):
         self._allow_delete = allow_delete
         self._hovered_button = None
 
-        title = QLabel(_("Report History"))
+        title = QLabel(_("Saved reports"))
         title.setObjectName("report_history_title_label")
         self.content_layout.addWidget(title)
+        self.scope_label = QLabel(_("This account | Newest saved first"))
+        self.scope_label.setProperty("role", "secondary")
+        self.scope_label.setWordWrap(True)
+        self.content_layout.addWidget(self.scope_label)
 
         self.search_line_edit = QLineEdit()
         self.search_line_edit.setObjectName("report_search_line_edit")
@@ -150,15 +165,19 @@ class ReportHistoryPanel(CardFrame):
         super().hideEvent(event)
 
     def set_items(self, items: Iterable[ReportHistoryDisplayItem]) -> None:
-        self._items = tuple(items)
+        self._items = tuple(sorted(items, key=saved_report_order, reverse=True))
         self._render()
+
+    def set_report_type(self, report_type):
+        caption = {"daily": _("Daily"), "weekly": _("Weekly"), "monthly": _("Monthly")}[report_type]
+        self.scope_label.setText(_("{type} | This account | Newest saved first").format(type=caption))
+        self.scope_label.setToolTip(_("Saved reports for this account, not revisions of the open report."))
 
     def set_selected_report(self, report_id: int | None) -> None:
         self._selected_report_id = report_id
         for button in self._buttons.values():
             selected = report_id is not None and button.property("report_id") == report_id
-            button.setProperty("active", selected)
-            refresh_style(button)
+            button.set_current(selected)
 
     def _render(self) -> None:
         self._hovered_button = None
@@ -187,7 +206,12 @@ class ReportHistoryPanel(CardFrame):
 
         current_month = ""
         for index, item in enumerate(visible):
-            month = month_label(item.period_start)
+            stamp = item.created_at
+            if stamp is not None:
+                stamp = stamp.replace(tzinfo=timezone.utc) if stamp.tzinfo is None else stamp
+                month = month_label(stamp.astimezone().date())
+            else:
+                month = _("Save time unavailable")
             if month != current_month:
                 current_month = month
                 heading = QLabel(month, self.scroll_widget)
@@ -197,7 +221,7 @@ class ReportHistoryPanel(CardFrame):
             button.setObjectName("report_history_item_button")
             button.setProperty("nav_item", True)
             button.setProperty("report_id", item.report_id)
-            button.setProperty("active", item.report_id is not None and item.report_id == self._selected_report_id)
+            button.set_current(item.report_id is not None and item.report_id == self._selected_report_id)
             button.setCursor(Qt.CursorShape.PointingHandCursor)
             button.setMinimumHeight(button.heightForWidth(self.scroll_area.viewport().width()))
             button.clicked.connect(lambda _checked=False, selected=item: self.item_selected.emit(selected))
@@ -228,7 +252,7 @@ def _history_label(item: ReportHistoryDisplayItem) -> str:
         stamp = item.created_at
         if stamp.tzinfo is None:
             stamp = stamp.replace(tzinfo=timezone.utc)
-        label += "\n" + _("Created: {time}").format(time=stamp.astimezone().strftime("%Y-%m-%d %H:%M:%S"))
+        label += "\n" + _("First saved: {time}").format(time=stamp.astimezone().strftime("%Y-%m-%d %H:%M:%S"))
     if item.report_id is not None:
         label += "\n" + _("Report #{report_id}").format(report_id=item.report_id)
     return label

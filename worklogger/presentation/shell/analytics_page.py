@@ -282,7 +282,7 @@ class AnalyticsPage(QWidget):
         mode_order = {"normal": 0, "remote": 1, "business_trip": 2, "meeting": 3, "training": 4, "leave": 5, "other": 6}
         work_modes = sorted(state.work_modes, key=lambda item: mode_order.get(item[0], 4))
         self.breakdown_chart.chart.set_segments(
-            tuple((work_type_label(key) or key, value) for key, value in work_modes),
+            tuple((dict(state.work_mode_labels).get(key) or work_type_label(key) or key, value) for key, value in work_modes),
             keys=tuple(key for key, _value in work_modes),
         )
         self.daily_average_value_label.setText(duration_label(state.stats.average_hours))

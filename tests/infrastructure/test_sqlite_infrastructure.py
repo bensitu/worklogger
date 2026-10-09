@@ -86,7 +86,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         self.addCleanup(self._tempdir.cleanup)
         self.db_path = f"{self._tempdir.name}/worklog.db"
         self.factory = SQLiteConnectionFactory(self.db_path)
-        self.assertEqual(MigrationRunner(self.factory).run_pending(), (1, 2, 3, 4, 5, 6, 7, 8))
+        self.assertEqual(MigrationRunner(self.factory).run_pending(), (1, 2, 3, 4, 5, 6, 7, 8, 9))
 
     def auth_repository(self) -> SQLiteAuthRepository:
         return SQLiteAuthRepository(
@@ -148,7 +148,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         with SQLiteUnitOfWork(self.factory).transaction(write=False) as connection:
             self.assertEqual(
                 connection.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0],
-                8,
+                9,
             )
 
     def test_database_path_rules_for_source_and_frozen_modes(self) -> None:
@@ -170,7 +170,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         corrupt_path.write_bytes(b"not a sqlite database")
         factory = SQLiteConnectionFactory(corrupt_path, recover_corrupt=True, corrupt_backup_retention=2)
 
-        self.assertEqual(MigrationRunner(factory).run_pending(), (1, 2, 3, 4, 5, 6, 7, 8))
+        self.assertEqual(MigrationRunner(factory).run_pending(), (1, 2, 3, 4, 5, 6, 7, 8, 9))
 
         backups = sorted(corrupt_path.parent.glob("corrupt.db.bak_*"))
         self.assertEqual(len(backups), 1)

@@ -256,12 +256,10 @@ class SettingsWorkflowTests(unittest.TestCase):
         self.assertEqual(page.update_status_label.text(), "Update available: 4.0.1")
         self.assertTrue(page.status_label.isHidden())
 
-    def test_direct_local_model_actions_reach_the_existing_workflow(self):
+    def test_model_management_uses_a_single_settings_entry(self):
         calls = []
         workflow = type("LocalWorkflow", (), {
             "open": lambda _self, parent: calls.append("manage"),
-            "open_for_import": lambda _self, parent: calls.append("import"),
-            "open_for_download": lambda _self, parent: calls.append("download"),
         })()
         controller = SettingsWorkflowController(
             settings_view_model=_settings_view_model(MemorySettingsRepository()),
@@ -269,10 +267,8 @@ class SettingsWorkflowTests(unittest.TestCase):
             data_management_view_model=FakeDataManagementViewModel(), local_models_workflow=workflow,
         )
         page = controller.create_page()
-        page.download_local_model_button.click()
-        page.import_local_model_button.click()
         page.manage_local_models_button.click()
-        self.assertEqual(calls, ["download", "import", "manage"])
+        self.assertEqual(calls, ["manage"])
 
     @classmethod
     def setUpClass(cls) -> None:

@@ -66,8 +66,8 @@ QWidget#calendar_scroll_viewport_widget,
 QWidget#calendar_records_widget,
 QWidget#worklog_manual_tab_widget,
 QWidget#worklog_auto_tab_widget,
-QWidget#worklog_entry_panel_widget[compact="true"] QTabWidget,
-QWidget#worklog_entry_panel_widget[compact="true"] QStackedWidget {
+QTabWidget#worklog_mode_tab_widget,
+QTabWidget#worklog_mode_tab_widget QStackedWidget {
   background: {{ surface }};
 }
 
@@ -181,7 +181,7 @@ QWidget#worklog_entry_panel_widget QWidget#worklog_auto_tab_widget QPushButton {
   padding: 6px 8px;
 }
 
-QWidget#worklog_entry_panel_widget[compact="true"] QTabWidget::pane {
+QTabWidget#worklog_mode_tab_widget::pane {
   border: none;
 }
 
@@ -407,7 +407,7 @@ QDoubleSpinBox::down-arrow, QSpinBox::down-arrow, QTimeEdit::down-arrow {
   height: 12px;
 }
 
-QWidget#worklog_entry_panel_widget QTabWidget#worklog_mode_tab_widget::pane {
+QTabWidget#worklog_mode_tab_widget::pane {
   border: none;
   padding-top: 8px;
 }
@@ -418,7 +418,7 @@ QTabBar#worklog_mode_selector_widget {
   border-radius: 8px;
 }
 
-QWidget#worklog_entry_panel_widget QTabBar#worklog_mode_selector_widget::tab {
+QTabBar#worklog_mode_selector_widget::tab {
   background: transparent;
   color: {{ muted_text }};
   border: 1px solid transparent;
@@ -430,12 +430,12 @@ QWidget#worklog_entry_panel_widget QTabBar#worklog_mode_selector_widget::tab {
   font-weight: 500;
 }
 
-QWidget#worklog_entry_panel_widget QTabBar#worklog_mode_selector_widget::tab:hover {
+QTabBar#worklog_mode_selector_widget::tab:hover {
   color: {{ text }};
   background: {{ card_hover }};
 }
 
-QWidget#worklog_entry_panel_widget QTabBar#worklog_mode_selector_widget::tab:selected {
+QTabBar#worklog_mode_selector_widget::tab:selected {
   background: {{ surface }};
   color: {{ accent }};
   border-color: {{ border_strong }};

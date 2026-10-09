@@ -191,21 +191,6 @@ class SettingsWorkflowController:
         elif hasattr(surface, "manage_local_models_button"):
             surface.manage_local_models_button.setEnabled(False)
             surface.manage_local_models_button.setToolTip(_("Local model management is not configured."))
-        for action, signal, button in (
-            ("open_for_import", "import_local_model_requested", "import_local_model_button"),
-            ("open_for_download", "download_local_model_requested", "download_local_model_button"),
-        ):
-            handler = getattr(self._local_models_workflow, action, None)
-            if handler is not None:
-                getattr(surface, signal).connect(lambda handler=handler: self._open_local_model_action(surface, handler))
-            else:
-                getattr(surface, button).setEnabled(False)
-                getattr(surface, button).setToolTip(_("Local model management is not configured."))
-
-    def _open_local_model_action(self, surface: QWidget, handler: Callable) -> None:
-        handler(surface)
-        self._refresh_local_models_status(surface)
-
     def _open_local_models(self, surface: QWidget) -> None:
         self._local_models_workflow.open(surface)
         self._refresh_local_models_status(surface)

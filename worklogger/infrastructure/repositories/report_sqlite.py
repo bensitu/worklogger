@@ -112,6 +112,13 @@ class SQLiteReportRepository:
                 exists = connection.execute("SELECT 1 FROM reports WHERE user_id=? AND id=?", (user_id, report_id)).fetchone()
                 raise ValueError("report_conflict" if exists else "report_not_found")
 
+    def list_range(self, user_id: int, report_type: str, start: date, end: date) -> tuple[Report, ...]:
+        with self._connection_factory.connection() as connection:
+            rows = connection.execute("SELECT * FROM reports WHERE user_id=? AND type=? AND period_start BETWEEN ? AND ? "
+                                      "ORDER BY period_start,created_at DESC,id DESC",
+                                      (user_id, normalize_report_type(report_type), start.isoformat(), end.isoformat())).fetchall()
+        return map_rows(rows, self._from_row)
+
     @staticmethod
     def _from_row(row: sqlite3.Row) -> Report:
         return Report(

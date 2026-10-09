@@ -7,7 +7,7 @@ from worklogger.app.use_cases.settings import GetSettingHandler, ProxyPasswordSe
 from worklogger.config.constants import NETWORK_PROXY_PASSWORD_SETTING_KEY, NETWORK_PROXY_PORT_SETTING_KEY
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
 from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteSettingsRepository
-from worklogger.infrastructure.security.key_store import SystemCredentialStore
+from worklogger.infrastructure.security.key_store import SystemCredentialStore, EncryptedSettingsKeyStore
 from worklogger.infrastructure.security import PBKDF2PasswordHasher, HmacSecretBox, FileMachineKeyProvider
 from worklogger.infrastructure.backup import SQLiteBackupService
 from worklogger.presentation.viewmodels import SettingsViewModel
@@ -33,6 +33,25 @@ class FakeKeyring:
 
 
 class ProxyCredentialTests(unittest.TestCase):
+    def test_external_keys_are_editable_scoped_and_kept_out_of_plain_settings(self):
+        store = EncryptedSettingsKeyStore(self.repository, user_id=self.user_id,
+            service_name="test.external.database", keyring_backend=self.backend, secret_box=self.secret_box)
+        model = SettingsViewModel(user_id=self.user_id, get_handler=GetSettingHandler(self.repository),
+            set_handler=SetSettingHandler(self.repository), external_key_store=store)
+        state = model.load().value
+        self.assertTrue(state.external_api_key_available)
+        self.assertEqual((state.external_model_base_url, state.external_model_name), ("", ""))
+        key = "synthetic-api-credential"
+        self.assertTrue(model.set_external_api_key(key).ok)
+        self.assertEqual(model.load().value.external_api_key, key)
+        self.assertNotIn(key, repr(model.load().value))
+        self.assertIsNone(self.repository.get(self.user_id, "ai_api_key"))
+        other = EncryptedSettingsKeyStore(self.repository, user_id=self.user_id,
+            service_name="test.external.other", keyring_backend=self.backend, secret_box=self.secret_box)
+        self.assertIsNone(other.get_secret("ai_api_key").value)
+        self.assertTrue(model.set_external_api_key("").ok)
+        self.assertEqual(model.load().value.external_api_key, "")
+
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)

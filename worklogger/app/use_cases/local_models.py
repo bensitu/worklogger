@@ -38,7 +38,7 @@ class LocalModelStore(Protocol):
     def import_model(self, source: Path) -> Result[LocalModelEntry]:
         ...
 
-    def download_model(self, model_id: str, *, is_cancelled: Callable[[], bool] | None = None) -> Result[LocalModelEntry]:
+    def download_model(self, model_id: str, *, is_cancelled: Callable[[], bool] | None = None, progress=None) -> Result[LocalModelEntry]:
         ...
 
     def verify_model(self, model_id: str) -> Result[LocalModelFileStatus]:
@@ -213,8 +213,12 @@ class DownloadLocalModelHandler:
         model_id = _required_model_id(command.model_id)
         if not model_id.ok or model_id.value is None:
             return Result.failure(model_id.error or _model_id_required_error())
-        downloaded = (self._store.download_model(model_id.value, is_cancelled=command.cancellation.is_cancelled)
-                      if command.cancellation is not None else self._store.download_model(model_id.value))
+        options = {}
+        if command.cancellation is not None:
+            options["is_cancelled"] = command.cancellation.is_cancelled
+        if command.progress is not None:
+            options["progress"] = command.progress
+        downloaded = self._store.download_model(model_id.value, **options)
         if not downloaded.ok or downloaded.value is None:
             return Result.failure(
                 downloaded.error

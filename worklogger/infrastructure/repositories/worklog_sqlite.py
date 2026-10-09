@@ -10,8 +10,8 @@ import json
 from datetime import timezone, timedelta
 from worklogger.config.constants import MAX_SHIFT_HOURS
 
-from worklogger.domain.worklog.models import WorkLog
-from worklogger.domain.worklog.rules import aggregate_days, entries_overlap, entry_interval, normalize_work_log, normalize_work_type, parse_time
+from worklogger.domain.worklog.models import CustomWorkType, WorkLog
+from worklogger.domain.worklog.rules import aggregate_days, decode_work_type, entries_overlap, entry_interval, normalize_work_log, parse_time
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
 from worklogger.infrastructure.repositories._mapping import parse_date, map_rows
 from worklogger.infrastructure.repositories.note_sqlite import save_note
@@ -24,6 +24,7 @@ class SQLiteWorkLogRepository:
             self._separate_notes = connection.execute("SELECT 1 FROM sqlite_master WHERE name='daily_notes'").fetchone() is not None
             self._timestamps = "started_at" in {row[1] for row in connection.execute("PRAGMA table_info(worklog)")}
             self.supports_entries = "id" in {row[1] for row in connection.execute("PRAGMA table_info(worklog)")}
+            self._type_snapshots = "work_type_label" in {row[1] for row in connection.execute("PRAGMA table_info(worklog)")}
         self._select = 'SELECT w.user_id, w.d, w.start, w.end, w."break", '
         self._select += ('COALESCE(n.content, w.note) AS note' if self._separate_notes and not self.supports_entries else 'w.note')
         self._select += ', w.work_type, w.overnight'
@@ -31,6 +32,8 @@ class SQLiteWorkLogRepository:
             self._select += ', w.started_at, w.ended_at'
         if self.supports_entries:
             self._select += ', w.id, w.revision, w.capture_id'
+        if self._type_snapshots:
+            self._select += ', w.work_type_label, w.work_type_category'
         self._select += ' FROM worklog AS w '
         if self._separate_notes and not self.supports_entries:
             self._select += 'LEFT JOIN daily_notes AS n ON n.user_id=w.user_id AND n.d=w.d '
@@ -92,6 +95,8 @@ class SQLiteWorkLogRepository:
 
     def import_many(self, rows: tuple[WorkLog, ...], *, overwrite: bool = False, expected_note: str | None = None) -> None:
         normalized_rows = tuple(normalize_work_log(row) for row in rows)
+        if not self._type_snapshots and any(isinstance(row.work_type, CustomWorkType) for row in normalized_rows):
+            raise ValueError("database_version_unsupported")
         if self.supports_entries:
             self._import_entries(normalized_rows, overwrite=overwrite, expected_note=expected_note)
             return
@@ -179,6 +184,8 @@ class SQLiteWorkLogRepository:
 
     def save_entry(self, record: WorkLog, *, timer_change: tuple[str | None, str | None] | None = None) -> WorkLog:
         record = normalize_work_log(record)
+        if isinstance(record.work_type, CustomWorkType) and not self._type_snapshots:
+            raise ValueError("database_version_unsupported")
         if not record.has_times:
             previous = self.get_entry(record.user_id, record.id) if record.id else None
             if previous is None or previous.has_times or not record.is_leave:
@@ -200,9 +207,10 @@ class SQLiteWorkLogRepository:
                 entry_id = self._insert_entry(connection, record)
                 record = replace(record, id=entry_id)
             else:
+                snapshots = ',work_type_label=?,work_type_category=?' if self._type_snapshots else ''
                 cursor = connection.execute('''UPDATE worklog SET d=?,start=?,end=?,"break"=?,note=?,work_type=?,overnight=?,
-                    started_at=?,ended_at=?,revision=revision+1 WHERE user_id=? AND id=? AND revision=?''',
-                    (*self._values(record)[1:], record.user_id, record.id, record.revision))
+                    started_at=?,ended_at=?''' + snapshots + ''',revision=revision+1 WHERE user_id=? AND id=? AND revision=?''',
+                    (*self._entry_values(record)[1:], record.user_id, record.id, record.revision))
                 if cursor.rowcount != 1:
                     raise ValueError("worklog_entry_conflict")
                 record = replace(record, revision=record.revision + 1)
@@ -292,9 +300,21 @@ class SQLiteWorkLogRepository:
                 record.ended_at.isoformat() if record.ended_at else None)
 
     def _insert_entry(self, connection, record: WorkLog) -> int:
-        cursor = connection.execute('''INSERT INTO worklog(user_id,d,start,end,"break",note,work_type,overnight,started_at,ended_at,capture_id)
-            VALUES(?,?,?,?,?,?,?,?,?,?,?)''', (*self._values(record), record.capture_id))
+        columns = 'user_id,d,start,end,"break",note,work_type,overnight,started_at,ended_at'
+        if self._type_snapshots:
+            columns += ',work_type_label,work_type_category'
+        values = (*self._entry_values(record), record.capture_id)
+        cursor = connection.execute(f'INSERT INTO worklog({columns},capture_id) VALUES({",".join("?" for _ in values)})', values)
         return cursor.lastrowid
+
+    def _entry_values(self, record: WorkLog) -> tuple:
+        if isinstance(record.work_type, CustomWorkType) and not self._type_snapshots:
+            raise ValueError("database_version_unsupported")
+        values = self._values(record)
+        if self._type_snapshots:
+            definition = record.work_type
+            values += (definition.label, definition.category) if isinstance(definition, CustomWorkType) else ("", "")
+        return values
 
     @staticmethod
     def _from_row(row: sqlite3.Row) -> WorkLog:
@@ -308,7 +328,9 @@ class SQLiteWorkLogRepository:
             end_time=parse_time(row["end"]),
             break_hours=break_hours,
             note=str(row["note"] or ""),
-            work_type=normalize_work_type(row["work_type"]),
+            work_type=decode_work_type(row["work_type"],
+                label=row["work_type_label"] if "work_type_label" in row.keys() else "",
+                category=row["work_type_category"] if "work_type_category" in row.keys() else ""),
             overnight=bool(int(row["overnight"] or 0)),
             started_at=datetime.fromisoformat(row["started_at"]) if "started_at" in row.keys() and row["started_at"] else None,
             ended_at=datetime.fromisoformat(row["ended_at"]) if "ended_at" in row.keys() and row["ended_at"] else None,

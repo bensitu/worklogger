@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
+from calendar import monthrange
+from worklogger.infrastructure.i18n import _
+from worklogger.domain.reporting.export_selection import latest_daily_reports
 from pathlib import Path
 from typing import Protocol
 
@@ -250,6 +253,25 @@ class ReportEditorViewModel:
         )
 
     def export_markdown(self, destination: Path, content: str) -> Result[Path]:
+        return self._markdown_exporter.export_markdown(destination, content)
+
+    @property
+    def language(self):
+        return self._language
+
+    def export_saved_daily(self, destination: Path, selected_day: date, *, whole_month=False):
+        if self._list_reports_handler is None:
+            return Result.failure(_validation("report_history_failed"))
+        start = selected_day.replace(day=1) if whole_month else selected_day
+        end = selected_day.replace(day=monthrange(selected_day.year, selected_day.month)[1]) if whole_month else selected_day
+        result = self._list_reports_handler.handle(ListReportsQuery(self._user_id, "daily", start, end))
+        if not result.ok:
+            return Result.failure(result.error)
+        reports = latest_daily_reports(result.value or (), self._user_id, start, end)
+        if not reports:
+            return Result.failure(_validation("report_export_empty"))
+        content = "\n\n".join("## " + row.period_start.isoformat() + "\n" +
+                    _("Report #{report_id}").format(report_id=row.id) + "\n\n" + row.content for row in reports)
         return self._markdown_exporter.export_markdown(destination, content)
 
     def list_history(self, report_type: str) -> Result[tuple[ReportHistoryItem, ...]]:

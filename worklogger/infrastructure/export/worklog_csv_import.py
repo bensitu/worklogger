@@ -88,6 +88,8 @@ def _parse_row(
             work_type=_field(row, "work_type") or "normal",
             started_at=datetime.fromisoformat(_field(row, "started_at")) if _field(row, "started_at") else None,
             ended_at=datetime.fromisoformat(_field(row, "ended_at")) if _field(row, "ended_at") else None,
+            work_type_label=_field(row, "work_type_label"),
+            work_type_category=_field(row, "work_type_category"),
         )
     except Exception as exc:
         return WorkLogCsvRowError(row_number, str(exc))

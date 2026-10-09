@@ -49,6 +49,12 @@ for an available, verified file that is not already active. Background operation
 disable selection until completion; Cancel requests cancellation and keeps the
 dialog open until that operation finishes. Model management does not itself
 configure or start an inference backend.
+Settings exposes only Manage models; downloading and importing are performed
+inside that dialog. Downloads show measured byte progress and a percentage when
+the server supplies a total, including resumed transfers. Unknown lengths and
+hash verification use indeterminate progress. Transfer progress is capped below
+100 percent until download verification succeeds; failure/cancellation never
+shows a completed download. UI progress notifications are rate-limited.
 
 Every supplied URL uses an immutable repository commit, with the corresponding
 LFS SHA-256 digest. File existence and digests were checked through public Hugging

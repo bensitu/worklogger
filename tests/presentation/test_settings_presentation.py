@@ -287,7 +287,7 @@ class SettingsPresentationTests(unittest.TestCase):
         self.assertFalse(page.ai_enabled_switch.is_checked())
         self.assertFalse(page.local_model_enabled_switch.isEnabled())
         self.assertFalse(page.proxy_enabled_switch.isEnabled())
-        self.assertFalse(page.external_model_line_edit.isEnabled())
+        self.assertTrue(page.external_model_line_edit.isEnabled())
         self.assertEqual(page.external_model_line_edit.text(), "retained-model")
         self.assertEqual(repository.values, before)
         page.set_capabilities(SettingsCapabilities(local_generation=True, proxy_routing=True))

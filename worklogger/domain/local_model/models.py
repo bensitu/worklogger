@@ -6,6 +6,13 @@ from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
+class DownloadProgress:
+    received_bytes: int
+    total_bytes: int | None
+    phase: str = "download"
+
+
+@dataclass(frozen=True)
 class LocalModelEntry:
     id: str
     display_name: str

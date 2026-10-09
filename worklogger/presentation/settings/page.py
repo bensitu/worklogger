@@ -77,8 +77,6 @@ class SettingsPage(QWidget):
     import_ics_requested = Signal()
     manage_identities_requested = Signal()
     manage_local_models_requested = Signal()
-    import_local_model_requested = Signal()
-    download_local_model_requested = Signal()
     manage_users_requested = Signal()
     logout_requested = Signal()
     restore_requested = Signal()
@@ -168,6 +166,10 @@ class SettingsPage(QWidget):
             self.ai_quick_logs_switch.set_checked(state.ai_privacy_include_quick_logs)
             self.external_base_url_line_edit.setText(state.external_model_base_url)
             self.external_model_line_edit.setText(state.external_model_name)
+            self.external_api_key_line_edit.setText(state.external_api_key)
+            self.external_api_key_line_edit.setEnabled(state.external_api_key_available)
+            self.external_api_key_line_edit.setToolTip(_("Stored securely; no request is sent when saving.") if state.external_api_key_available
+                                                    else _("Secure credential storage is unavailable."))
             self.local_model_enabled_switch.set_checked(state.local_model_enabled and self._capabilities.local_generation)
             self._update_local_model_status()
             self.standard_hours_input.setValue(state.standard_work_hours)
@@ -215,13 +217,13 @@ class SettingsPage(QWidget):
             widget.setEnabled(available)
             widget.setToolTip("" if available else _("Text processing is unavailable. Saved preferences are retained."))
         for widget in (self.external_base_url_line_edit, self.external_model_line_edit):
-            widget.setEnabled(self._capabilities.external_generation)
+            widget.setEnabled(True)
         self.external_runtime_status_label.setText(_("External text processing is available.") if self._capabilities.external_generation
                                                  else _("External text processing is unavailable. Saved preferences are retained."))
         self.local_model_enabled_switch.setEnabled(self._capabilities.local_generation)
         self.local_runtime_status_label.setText(_("Local text processing is available.") if self._capabilities.local_generation
                                                else _("Local text processing is unavailable."))
-        for widget in (self.manage_local_models_button, self.import_local_model_button, self.download_local_model_button):
+        for widget in (self.manage_local_models_button,):
             widget.setEnabled(self._capabilities.model_management)
             widget.setToolTip("" if self._capabilities.model_management else _("Model file management is unavailable."))
         self.proxy_enabled_switch.setEnabled(self._capabilities.proxy_routing)
@@ -451,9 +453,11 @@ class SettingsPage(QWidget):
         self.external_api_key_line_edit.setEnabled(False)
         self.external_api_key_line_edit.setToolTip(_("External model testing is not configured."))
         self.external_api_key_line_edit.setPlaceholderText("")
+        self.external_api_key_line_edit.editingFinished.connect(self._save_external_api_key)
         form.addRow(_("API Key"), self.external_api_key_line_edit)
         self.external_base_url_line_edit = QLineEdit()
         self.external_base_url_line_edit.setObjectName("external_base_url_line_edit")
+        self.external_base_url_line_edit.setPlaceholderText("https://api.example.com/v1")
         self.external_base_url_line_edit.editingFinished.connect(
             lambda: self._set_text(
                 EXTERNAL_MODEL_BASE_URL_SETTING_KEY,
@@ -463,6 +467,7 @@ class SettingsPage(QWidget):
         form.addRow(_("API Base URL"), self.external_base_url_line_edit)
         self.external_model_line_edit = QLineEdit()
         self.external_model_line_edit.setObjectName("external_model_line_edit")
+        self.external_model_line_edit.setPlaceholderText(_("Model identifier"))
         self.external_model_line_edit.editingFinished.connect(
             lambda: self._set_text(EXTERNAL_MODEL_NAME_SETTING_KEY, self.external_model_line_edit.text())
         )
@@ -506,19 +511,9 @@ class SettingsPage(QWidget):
         self.manage_local_models_button = QPushButton(_("Manage models"))
         self.manage_local_models_button.setObjectName("manage_local_models_button")
         self.manage_local_models_button.clicked.connect(self.manage_local_models_requested.emit)
-        self.import_local_model_button = QPushButton(_("Import .gguf"))
-        self.import_local_model_button.setObjectName("import_local_model_button")
-        self.import_local_model_button.clicked.connect(self.import_local_model_requested.emit)
-        self.download_local_model_button = QPushButton(_("Download"))
-        self.download_local_model_button.setObjectName("download_local_model_button")
-        self.download_local_model_button.clicked.connect(self.download_local_model_requested.emit)
-        for button, icon in ((self.download_local_model_button, "download"),
-                             (self.import_local_model_button, "file-input"),
-                             (self.manage_local_models_button, "settings")):
-            button.setProperty("variant", "outline")
-            set_button_icon(button, icon, accent=True)
-        _add_action_buttons(local, self.download_local_model_button, self.import_local_model_button,
-                            self.manage_local_models_button, columns=3)
+        self.manage_local_models_button.setProperty("variant", "outline")
+        set_button_icon(self.manage_local_models_button, "settings", accent=True)
+        _add_action_buttons(local, self.manage_local_models_button, columns=1)
         page.layout().addWidget(local)
 
         privacy = CardFrame(object_name="settings_content_frame")
@@ -849,6 +844,12 @@ class SettingsPage(QWidget):
         self.proxy_password_line_edit.setEchoMode(QLineEdit.EchoMode.Normal if visible else QLineEdit.EchoMode.Password)
         self.proxy_password_visibility_action.setIcon(ui_icon("eye-off" if visible else "eye"))
         self.proxy_password_visibility_action.setToolTip(_("Hide password") if visible else _("Show password"))
+
+    def _save_external_api_key(self) -> None:
+        if self._updating or self._state is None or self.external_api_key_line_edit.text() == self._state.external_api_key:
+            return
+        result = self._view_model.set_external_api_key(self.external_api_key_line_edit.text())
+        self._handle_save_result(result)
 
     def set_local_model_status(self, *, ready: bool, name: str = "") -> None:
         self._local_model_ready = ready

@@ -122,7 +122,7 @@ class LocalModelsPresentationTests(unittest.TestCase):
         self.assertNotEqual(threads[0], threading.get_ident())
         dialog.close()
 
-    def test_workflow_direct_actions_start_after_dialog_enters_event_loop(self):
+    def test_workflow_loads_inventory_and_opens_model_manager(self):
         handlers = FakeLocalModelHandlers()
         model = LocalModelManagerViewModel(
             user_id=1, list_handler=handlers, refresh_handler=handlers, import_handler=handlers,
@@ -132,14 +132,11 @@ class LocalModelsPresentationTests(unittest.TestCase):
         dialogs = []
 
         class ActionDialog(LocalModelsDialog):
-            def import_model(self, source=None):
-                calls.append("import")
-                self.accept()
-                return True
-
-            def refresh_catalog(self):
-                calls.append("download")
-                self.accept()
+            def refresh(self):
+                from PySide6.QtCore import QTimer
+                calls.append("load")
+                QTimer.singleShot(0, self, self.accept)
+                return super().refresh()
 
         def create(view_model, parent):
             dialog = ActionDialog(view_model, parent)
@@ -147,9 +144,8 @@ class LocalModelsPresentationTests(unittest.TestCase):
             return dialog
 
         workflow = LocalModelsWorkflowController(model, dialog_factory=create)
-        workflow.open_for_import()
-        workflow.open_for_download()
-        self.assertEqual(calls, ["import", "download"])
+        workflow.open()
+        self.assertEqual(calls, ["load"])
         for dialog in dialogs:
             dialog.deleteLater()
 

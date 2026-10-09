@@ -150,7 +150,16 @@ class ListReportsHandler:
             report_type = normalize_report_type(query.report_type)
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
-        return Result.success(self._repository.list_by_type(query.user_id, report_type))
+        try:
+            if query.period_start is not None and query.period_end is not None:
+                reader = getattr(self._repository, "list_range", None)
+                if reader is not None:
+                    return Result.success(reader(query.user_id, report_type, query.period_start, query.period_end))
+                return Result.success(tuple(row for row in self._repository.list_by_type(query.user_id, report_type)
+                                            if query.period_start <= row.period_start <= query.period_end))
+            return Result.success(self._repository.list_by_type(query.user_id, report_type))
+        except Exception:
+            return Result.failure(InfrastructureError("report_history_failed", "report_history_failed"))
 
 
 class SaveReportTemplateHandler:
@@ -347,7 +356,8 @@ def _work_log_lines(work_logs: tuple[WorkLog, ...], standard_hours: float, _: Ca
         lines.append(_list_item(heading))
         for entry in record.entries or (record,):
             span = time_range_label(entry.start_time, entry.end_time) if entry.has_times else _("All day")
-            description = f"{span} [{labels[entry.work_type.value]}]"
+            label = getattr(entry.work_type, "label", None) or labels.get(entry.work_type.value, entry.work_type.value)
+            description = f"{span} [{label}]"
             if entry.is_overnight:
                 description += " " + _("Overnight")
             if entry.note:

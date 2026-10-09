@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QMessageBox,
     QPushButton,
+    QLabel,
     QTabWidget,
     QTextEdit,
     QVBoxLayout,
@@ -53,8 +54,14 @@ class ReportTemplateDialog(QDialog):
         apply_window_icon(self)
         self.resize(620, 480)
         layout = QVBoxLayout(self)
+        labels = {"daily": _("Daily Report"), "weekly": _("Weekly Report"), "monthly": _("Monthly Report")}
+        self.scope_label = QLabel(_("Template: {type} | {language}").format(
+            type=labels.get(report_type, report_type), language=getattr(view_model, "language", "en_US")))
+        self.scope_label.setObjectName("template_scope_label")
+        layout.addWidget(self.scope_label)
         self.editor = QTextEdit()
         self.editor.setObjectName("template_text_edit")
+        self.editor.setAcceptRichText(False)
         self.editor.textChanged.connect(self._update_actions)
         layout.addWidget(self.editor, 1)
         self.status_label = StatusLabel()
@@ -67,11 +74,14 @@ class ReportTemplateDialog(QDialog):
         self.save_button = QPushButton(_("Save template"))
         self.save_button.clicked.connect(self.save_template)
         set_button_icon(self.save_button, "save")
-        self.apply_button = QPushButton(_("Apply template"))
+        self.apply_button = QPushButton(_("Save and apply"))
         self.apply_button.clicked.connect(self.apply_template)
         self.apply_button.setProperty("variant", "primary")
         for button in (self.reset_button, self.save_button, self.apply_button):
             row.addWidget(button)
+        self.close_button = QPushButton(_("Close"))
+        self.close_button.clicked.connect(self.reject)
+        row.addWidget(self.close_button)
         layout.addLayout(row)
 
     def refresh(self) -> bool:
@@ -105,14 +115,14 @@ class ReportTemplateDialog(QDialog):
         return self.refresh()
 
     def apply_template(self) -> None:
-        if self.editor.toPlainText() != self._saved_template:
+        if self.editor.toPlainText() != self._saved_template and not self.save_template():
             return
         self.apply_requested.emit()
         self.accept()
 
     def _update_actions(self) -> None:
         if hasattr(self, "apply_button"):
-            self.apply_button.setEnabled(bool(self.editor.toPlainText().strip()) and self.editor.toPlainText() == self._saved_template)
+            self.apply_button.setEnabled(bool(self.editor.toPlainText().strip()))
 
     def _confirm_close(self) -> bool:
         return self.editor.toPlainText() == self._saved_template or QMessageBox.question(self, _("Discard changes?"), _("You have unsaved template changes. Discard them?"), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes

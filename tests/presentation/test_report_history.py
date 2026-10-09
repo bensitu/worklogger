@@ -26,7 +26,7 @@ from worklogger.domain.reporting.models import Report
 from worklogger.domain.reporting.periods import daily_period, monthly_period, weekly_period
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
 from worklogger.infrastructure.export import MarkdownExporter
-from worklogger.infrastructure.i18n import set_language
+from worklogger.infrastructure.i18n import _, set_language
 from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteReportRepository
 from worklogger.infrastructure.security import PBKDF2PasswordHasher
 from worklogger.presentation.reporting.dialog import ReportDialog
@@ -304,12 +304,10 @@ class ReportHistoryTests(unittest.TestCase):
         for report_type in ("daily", "weekly", "monthly"):
             self.seed(report_type, "Original")
             self.seed(report_type, "Another report")
-        for language, created_label, report_label in (
-            ("en_US", "Created:", "Report #"), ("ja_JP", "作成日時:", "レポート #"),
-            ("ko_KR", "생성 시간:", "보고서 #"), ("zh_CN", "创建时间：", "报表 #"),
-            ("zh_TW", "建立時間：", "報表 #"),
-        ):
+        for language in ("en_US", "ja_JP", "ko_KR", "zh_CN", "zh_TW"):
             set_language(language)
+            created_label = _("First saved: {time}").split("{time}")[0]
+            report_label = _("Report #{report_id}").split("{report_id}")[0]
             page = self.page()
             for report_type in ("daily", "weekly", "monthly"):
                 page.report_type_control.set_value(report_type)
@@ -328,6 +326,34 @@ class ReportHistoryTests(unittest.TestCase):
                 self.assertTrue(page.history_panel._buttons[0].property("active"))
                 page.history_panel.search_line_edit.clear()
                 self.assertEqual(sum(bool(button.property("active")) for button in page.history_panel._buttons.values()), 1)
+
+    def test_saved_daily_exports_use_latest_owned_report_per_day_without_changing_editor(self):
+        older = self.seed("daily", "Older daily")
+        latest = self.seed("daily", "Latest daily")
+        self.seed("monthly", "Monthly report is not a daily report")
+        self.seed("daily", "Another account", user_id=self.other_user.id)
+        previous_day = self.day.replace(day=20)
+        self.repository.save(Report(None, self.user.id, "daily", previous_day, previous_day,
+                                    "Previous day", self.stamp))
+        next_month = self.day.replace(month=6)
+        self.repository.save(Report(None, self.user.id, "daily", next_month, next_month, "Next month", self.stamp))
+        destination = Path(self.factory.database_path).parent / "daily.md"
+        day_result = self.model.export_saved_daily(destination, self.day)
+        self.assertTrue(day_result.ok, day_result.error)
+        exported = destination.read_text(encoding="utf-8")
+        self.assertIn("Latest daily", exported)
+        self.assertNotIn("Older daily", exported)
+        self.assertNotIn("Another account", exported)
+        self.assertIn(f"#{latest.id}", exported)
+        self.assertNotIn(f"#{older.id}", exported)
+        month_result = self.model.export_saved_daily(destination, self.day, whole_month=True)
+        self.assertTrue(month_result.ok, month_result.error)
+        exported = destination.read_text(encoding="utf-8")
+        self.assertLess(exported.index("Previous day"), exported.index("Latest daily"))
+        self.assertNotIn("Monthly report", exported)
+        self.assertNotIn("Next month", exported)
+        self.assertFalse(self.model.export_saved_daily(destination, self.day.replace(month=7)).ok)
+        self.assertEqual(destination.read_text(encoding="utf-8"), exported)
 
 
 if __name__ == "__main__":

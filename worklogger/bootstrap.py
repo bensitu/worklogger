@@ -88,6 +88,8 @@ from worklogger.infrastructure.database import (
 )
 from worklogger.infrastructure.backup import SQLiteBackupService
 from worklogger.infrastructure.security.key_store import SystemCredentialStore, HmacSecretBox, protect_legacy_proxy_passwords
+from worklogger.infrastructure.security.key_store import EncryptedSettingsKeyStore
+import hashlib
 from worklogger.app.use_cases.settings import ProxyPasswordSettings
 from worklogger.infrastructure.calendar import (
     IcsCalendarImporter,
@@ -106,6 +108,8 @@ from worklogger.infrastructure.identity import DisabledIdentityProvider
 from worklogger.infrastructure.logging import setup_logging
 from worklogger.infrastructure.local_model import JsonLocalModelStore, bundled_model_catalog_path
 from worklogger.app.use_cases.time_entries import TimeEntryService
+from worklogger.app.use_cases.work_types import WorkTypeService
+from worklogger.infrastructure.repositories.work_type_sqlite import SQLiteWorkTypeRepository
 from worklogger.app.use_cases.reports import DeleteReportHandler
 from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
 from worklogger.infrastructure.repositories import (
@@ -378,6 +382,7 @@ class RuntimeRepositories:
     reports: SQLiteReportRepository
     report_templates: SQLiteReportTemplateRepository
     settings: SQLiteSettingsRepository
+    work_types: SQLiteWorkTypeRepository
 
 
 @dataclass(frozen=True)
@@ -503,6 +508,7 @@ def _runtime_repositories(
         reports=SQLiteReportRepository(connection_factory),
         report_templates=SQLiteReportTemplateRepository(connection_factory),
         settings=SQLiteSettingsRepository(connection_factory),
+        work_types=SQLiteWorkTypeRepository(connection_factory),
     )
 
 
@@ -527,7 +533,8 @@ def _runtime_handlers(repositories: RuntimeRepositories) -> RuntimeHandlers:
 
 def _build_time_entry_view_model(user: User, repositories: RuntimeRepositories, handlers: RuntimeHandlers) -> TimeEntryViewModel:
     return TimeEntryViewModel(TimeEntryService(user_id=user.id, repository=repositories.work_logs,
-        settings=repositories.settings, local_timezone=get_localzone(), calendar_events=repositories.calendar_events),
+        settings=repositories.settings, local_timezone=get_localzone(), calendar_events=repositories.calendar_events,
+        work_types=WorkTypeService(user.id, repositories.work_types)),
         rewrite_handler=handlers.rewrite_handler, language=get_language())
 
 
@@ -617,6 +624,8 @@ def _build_settings_workflow(
             set_handler=handlers.settings_set_handler,
             default_language=get_language(),
             save_login_language=LanguagePreferences().save,
+            external_key_store=EncryptedSettingsKeyStore(repositories.settings, user_id=user.id,
+                service_name="worklogger.external." + hashlib.sha256((str(database_path.resolve()) + ":" + str(user.id)).encode()).hexdigest()),
             proxy_password_settings=ProxyPasswordSettings(
                 repositories.settings,
                 SystemCredentialStore(namespace=str(database_path.resolve())),

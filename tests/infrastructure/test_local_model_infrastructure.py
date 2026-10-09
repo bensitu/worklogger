@@ -209,7 +209,7 @@ class LocalModelInfrastructureTests(unittest.TestCase):
             )
 
             def opener(*args: object, **kwargs: object) -> FakeResponse:
-                return FakeResponse(payload)
+                return FakeResponse(payload, headers={"Content-Length": str(len(payload))})
 
             from worklogger.infrastructure.local_model.store import HttpRangeDownloader
 
@@ -217,10 +217,15 @@ class LocalModelInfrastructureTests(unittest.TestCase):
                 models_dir,
                 downloader=HttpRangeDownloader(opener=opener),
             )
-            result = store.download_model("remote")
+            progress = []
+            result = store.download_model("remote", progress=progress.append)
 
             self.assertTrue(result.ok)
             self.assertEqual((models_dir / "remote.gguf").read_bytes(), payload)
+            self.assertEqual(progress[0].received_bytes, 0)
+            self.assertEqual(progress[0].total_bytes, len(payload))
+            self.assertEqual(progress[-1].phase, "verification")
+            self.assertEqual(progress[-1].received_bytes, len(payload))
 
     def test_downloader_recovers_from_http_416_by_resetting_temp_file(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

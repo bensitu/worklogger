@@ -93,7 +93,7 @@ class ShellPagesTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "draft.md"
             with patch.object(QFileDialog, "getSaveFileName", return_value=(str(path), "")):
-                page.export_current_button.click()
+                page.export_current_button.export_requested.emit("current")
             self.assertEqual(path.read_text(encoding="utf-8"), "Visible unsaved draft")
             self.assertEqual(model.saved_content, "Generated from current records")
         model.fail_generation = True
@@ -172,12 +172,11 @@ class ShellPagesTests(unittest.TestCase):
         dialog = ReportTemplateDialog(model, "daily")
         self.assertTrue(dialog.refresh())
         dialog.editor.setPlainText("Custom template")
-        self.assertFalse(dialog.apply_button.isEnabled())
-        self.assertTrue(dialog.save_template())
-        self.assertEqual(model.template, "Custom template")
+        self.assertTrue(dialog.apply_button.isEnabled())
         applied = []
         dialog.apply_requested.connect(lambda: applied.append(True))
         dialog.apply_template()
+        self.assertEqual(model.template, "Custom template")
         self.assertEqual(applied, [True])
         with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
             self.assertTrue(dialog.reset_template())
@@ -195,7 +194,7 @@ class ShellPagesTests(unittest.TestCase):
         window.refresh()
         labels = window.calendar_page.records_widget.findChildren(QLabel)
         self.assertTrue(any("Planning" in label.text() for label in labels))
-        self.assertTrue(window.entry_panel.time_tabs.tabBar().isVisibleTo(window.entry_panel))
+        self.assertTrue(window.entry_panel.time_tabs.tabBar().isVisibleTo(window.calendar_page))
 
     @classmethod
     def setUpClass(cls) -> None:

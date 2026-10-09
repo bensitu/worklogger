@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta, timezone, tzinfo
 import math
 
 from worklogger.config.constants import MAX_SHIFT_HOURS, WORK_TYPE_KEYS
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import WorkLog, WorkType, CustomWorkType
 
 
 def parse_time(raw: str | None) -> str | None:
@@ -133,13 +133,19 @@ def calc_hours(
     return max(span - break_value, 0.0)
 
 
-def normalize_work_type(raw: str | WorkType | None) -> WorkType:
-    if isinstance(raw, WorkType):
+def normalize_work_type(raw: str | WorkType | CustomWorkType | None) -> WorkType | CustomWorkType:
+    if isinstance(raw, (WorkType, CustomWorkType)):
         return raw
     value = str(raw or WorkType.NORMAL.value)
     if value not in WORK_TYPE_KEYS:
         return WorkType.NORMAL
     return WorkType(value)
+
+
+def decode_work_type(value: str, label: str = "", category: str = "", *, strict: bool = False):
+    if isinstance(value, str) and value.startswith("custom:"):
+        return CustomWorkType(value, label, category)
+    return WorkType(value) if strict else normalize_work_type(value)
 
 
 def normalize_work_log(
@@ -155,7 +161,7 @@ def normalize_work_log(
         raise ValueError("time_range_invalid")
     if bool(start) != bool(end):
         raise ValueError("time_range_incomplete")
-    if not start and normalize_work_type(work_log.work_type) in {WorkType.MEETING, WorkType.TRAINING, WorkType.BREAK, WorkType.OTHER}:
+    if not start and ((isinstance(work_log.work_type, CustomWorkType) and work_log.work_type.category != "leave") or normalize_work_type(work_log.work_type) in {WorkType.MEETING, WorkType.TRAINING, WorkType.BREAK, WorkType.OTHER}):
         raise ValueError("time_range_incomplete")
 
     break_hours = float(work_log.break_hours or 0)

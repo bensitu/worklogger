@@ -5,6 +5,8 @@ import unittest
 from unittest.mock import patch
 
 from worklogger.app.use_cases.time_entries import EntryTimer, TimeEntryService
+from worklogger.app.use_cases.work_types import WorkTypeService
+from worklogger.infrastructure.repositories.work_type_sqlite import SQLiteWorkTypeRepository
 from worklogger.app.use_cases.data_portability import ImportWorkLogsCsvHandler
 from worklogger.app.commands.data_portability_commands import ImportWorkLogsCsvCommand
 from worklogger.domain.notes.models import DailyNote
@@ -38,7 +40,50 @@ class TimeEntryTests(unittest.TestCase):
 
     def make_service(self):
         return TimeEntryService(user_id=self.user.id, repository=self.repository, settings=self.settings,
-                                local_timezone=timezone.utc, clock=lambda: self.now)
+                                local_timezone=timezone.utc, clock=lambda: self.now,
+                                work_types=WorkTypeService(self.user.id, SQLiteWorkTypeRepository(self.factory)))
+
+    def test_custom_classifications_keep_accounting_snapshots_across_catalog_changes(self):
+        types = self.service.work_types
+        work = types.save("Research", "work").value
+        saved = self.service.save_manual(self.now.date(), "09:00", "11:00", work.value, "Reading").value
+        changed = types.save("Personal break", "break", work).value
+        self.assertFalse(types.save("Another name", "work", work).ok)
+        self.assertFalse(types.save("personal BREAK", "work").ok)
+        rest = self.service.save_manual(self.now.date(), "11:00", "12:00", changed.value, "Rest").value
+        self.assertEqual((saved.worked_hours(), rest.worked_hours()), (2, 0))
+        self.assertTrue(types.archive(changed).ok)
+        self.assertFalse(self.service.save_manual(self.now.date(), "12:00", "13:00", changed.value, "Unavailable").ok)
+        edited = self.service.save_manual(saved.day, "09:00", "10:00", work.value, "Updated", saved).value
+        loaded = self.repository.get_entry(self.user.id, edited.id)
+        self.assertEqual((loaded.work_type.label, loaded.work_type.category, loaded.worked_hours()), ("Research", "work", 1))
+        summary = self.repository.list_all(self.user.id)
+        data = dashboard_data(summary, year=2026, month=5, scope="monthly", standard_hours=8, monthly_target=160)
+        self.assertEqual((data.stats.total_hours, data.stats.rest_days), (1, 1))
+        self.assertEqual(dict(data.work_mode_labels)[work.value], "Research")
+        other = WorkTypeService(self.user.id + 1, SQLiteWorkTypeRepository(self.factory))
+        self.assertEqual(other.list_types().value, ())
+        self.assertFalse(other.archive(changed).ok)
+        with self.assertRaises(ValueError):
+            other.resolve(work.value)
+
+    def test_custom_types_survive_timer_restore_and_csv_round_trip(self):
+        definition = self.service.work_types.save("Research", "work").value
+        self.assertTrue(self.service.start(definition.value, "Draft").ok)
+        self.assertTrue(self.service.work_types.save("Lunch", "break", definition).ok)
+        restored = self.make_service()
+        self.assertEqual((restored.timer.work_type.label, restored.timer.work_type.category), ("Research", "work"))
+        self.now += timedelta(hours=1)
+        saved = restored.finish("Completed").value
+        csv_path = Path(self.directory.name) / "custom.csv"
+        self.assertTrue(WorkLogCsvExporter().export_work_logs(csv_path, (saved,)).ok)
+        importer = ImportWorkLogsCsvHandler(importer=WorkLogCsvImporter(), repository=self.repository)
+        preview = importer.preview(ImportWorkLogsCsvCommand(self.user.id, str(csv_path))).value
+        self.assertEqual(preview.errors, ())
+        self.assertEqual(preview.rows[0].work_type.label, "Research")
+        self.assertEqual(preview.rows[0].worked_hours(), 1)
+        self.assertTrue(importer.apply(preview, overwrite=True).ok)
+        self.assertEqual(self.repository.list_for_day(self.user.id, saved.day)[0].work_type.category, "work")
 
     def test_multiple_entries_edit_delete_and_daily_statistics(self):
         first = self.service.save_manual(self.now.date(), "09:00", "12:00", "meeting", "Planning").value
@@ -189,7 +234,7 @@ class TimeEntryTests(unittest.TestCase):
         record = WorkLog(user.id, self.now.date(), "09:00", "18:00", 1, "History", WorkType.REMOTE,
                          started_at=self.now, ended_at=self.now + timedelta(hours=9))
         repository.save(record)
-        self.assertEqual(MigrationRunner(factory).run_pending(), (7, 8))
+        self.assertEqual(MigrationRunner(factory).run_pending(), (7, 8, 9))
         current = SQLiteWorkLogRepository(factory).list_for_day(user.id, record.day)[0]
         self.assertEqual((current.note, current.break_hours, current.worked_hours(), current.started_at), ("History", 1, 8, record.started_at))
         self.assertTrue(list(path.parent.glob("previous.db.bak_upgrade_*")))

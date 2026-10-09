@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 import math
 from typing import Protocol
@@ -89,6 +89,8 @@ class SettingsState:
     network_proxy_password: str
     network_proxy_domain: str
     proxy_password_available: bool = False
+    external_api_key: str = field(default="", repr=False)
+    external_api_key_available: bool = False
     last_backup_at: str = ""
     holiday_region: str = ""
 
@@ -103,6 +105,7 @@ class SettingsViewModel:
         proxy_password_settings: ProxyPasswordSettings | None = None,
         default_language: str = "en_US",
         save_login_language: Callable[[str], Result[None]] | None = None,
+        external_key_store=None,
     ) -> None:
         self._user_id = user_id
         self._get_handler = get_handler
@@ -110,6 +113,7 @@ class SettingsViewModel:
         self._proxy_password_settings = proxy_password_settings
         self._default_language = normalize_language(default_language)
         self._save_login_language = save_login_language
+        self._external_key_store = external_key_store
 
     def load(self) -> Result[SettingsState]:
         try:
@@ -137,6 +141,7 @@ class SettingsViewModel:
                 )
             values[key] = result.value
         password = self._proxy_password_settings.load() if self._proxy_password_settings is not None else None
+        api_key = self._external_key_store.get_secret("ai_api_key") if self._external_key_store is not None else None
         return Result.success(
             SettingsState(
                 theme=_theme(values[THEME_SETTING_KEY]),
@@ -158,11 +163,11 @@ class SettingsViewModel:
                 ),
                 external_model_base_url=_text(
                     values[EXTERNAL_MODEL_BASE_URL_SETTING_KEY],
-                    "https://api.openai.com/v1",
+                    "",
                 ),
                 external_model_name=_text(
                     values[EXTERNAL_MODEL_NAME_SETTING_KEY],
-                    "gpt-4o-mini",
+                    "",
                 ),
                 minimal_mode=_bool(values[MINIMAL_MODE_SETTING_KEY], False),
                 local_model_enabled=_bool(values[LOCAL_MODEL_ENABLED_SETTING_KEY], True),
@@ -203,6 +208,8 @@ class SettingsViewModel:
                 network_proxy_password=str(password.value or "") if password is not None and password.ok else "",
                 network_proxy_domain=_text(values[NETWORK_PROXY_DOMAIN_SETTING_KEY], ""),
                 proxy_password_available=password is not None and password.ok,
+                external_api_key=str(api_key.value or "") if api_key is not None and api_key.ok else "",
+                external_api_key_available=api_key is not None and api_key.ok,
                 last_backup_at=_text(values[LAST_BACKUP_AT_SETTING_KEY], ""),
                 holiday_region=_text(values[HOLIDAY_REGION_SETTING_KEY], ""),
             )
@@ -210,6 +217,14 @@ class SettingsViewModel:
 
     def set_theme(self, theme: str) -> Result[None]:
         return self._set(THEME_SETTING_KEY, _theme(theme))
+
+    def set_external_api_key(self, value: str) -> Result[None]:
+        if self._external_key_store is None or not isinstance(value, str) or len(value) > 8192:
+            return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
+        try:
+            return self._external_key_store.set_secret("ai_api_key", value.strip())
+        except Exception:
+            return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
 
     def set_custom_color(self, color: str) -> Result[None]:
         return self._set(CUSTOM_THEME_COLOR_SETTING_KEY, normalize_hex_color(color))
@@ -293,8 +308,8 @@ _DEFAULTS = {
     AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY: "1",
     AI_PRIVACY_INCLUDE_CALENDAR_SETTING_KEY: "1",
     AI_PRIVACY_INCLUDE_QUICK_LOGS_SETTING_KEY: "1",
-    EXTERNAL_MODEL_BASE_URL_SETTING_KEY: "https://api.openai.com/v1",
-    EXTERNAL_MODEL_NAME_SETTING_KEY: "gpt-4o-mini",
+    EXTERNAL_MODEL_BASE_URL_SETTING_KEY: "",
+    EXTERNAL_MODEL_NAME_SETTING_KEY: "",
     MINIMAL_MODE_SETTING_KEY: "0",
     LOCAL_MODEL_ENABLED_SETTING_KEY: "1",
     STANDARD_WORK_HOURS_SETTING_KEY: "8.0",

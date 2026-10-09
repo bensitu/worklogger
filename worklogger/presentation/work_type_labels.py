@@ -1,10 +1,12 @@
 """Localized work-type labels shared by entry and summary views."""
 
-from worklogger.domain.worklog.models import WorkType
+from worklogger.domain.worklog.models import WorkType, CustomWorkType
 from worklogger.infrastructure.i18n import _
 
 
 def work_type_label(work_type: str | WorkType) -> str:
+    if isinstance(work_type, CustomWorkType):
+        return work_type.label
     key = work_type.value if isinstance(work_type, WorkType) else work_type
     return {
         "normal": _("Normal"),
