@@ -73,11 +73,11 @@ msgstr "このアプリについて"
 msgid "Account"
 msgstr "アカウント"
 
+msgid "Account: {username}"
+msgstr "アカウント: {username}"
+
 msgid "Active"
 msgstr "有効"
-
-msgid "Active local model: {model}"
-msgstr "使用中のローカルモデル：{model}"
 
 msgid "Active model updated."
 msgstr "使用中のモデルを更新しました。"
@@ -162,6 +162,9 @@ msgstr "平均"
 
 msgid "Average Work Hours"
 msgstr "平均労働時間"
+
+msgid "Back to account"
+msgstr "アカウントに戻る"
 
 msgid "Back to login"
 msgstr "ログインに戻る"
@@ -301,6 +304,9 @@ msgstr "Markdownをコピー"
 msgid "Copy recovery key"
 msgstr "復旧キーをコピー"
 
+msgid "Copy temporary password"
+msgstr "一時パスワードをコピー"
+
 msgid "Create account"
 msgstr "アカウントを作成"
 
@@ -318,6 +324,9 @@ msgstr "現在のID"
 
 msgid "Current password"
 msgstr "現在のパスワード"
+
+msgid "Current report exported for {period}."
+msgstr "{period}の現在のレポートを出力しました。"
 
 msgid "Current user"
 msgstr "現在のユーザー"
@@ -348,6 +357,9 @@ msgstr "データを復元しました。"
 
 msgid "Database Backup"
 msgstr "データベースのバックアップ"
+
+msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
+msgstr "休憩記録がある日付。勤務日と休憩日は重複できます。休暇は別に集計します。"
 
 msgid "December"
 msgstr "12月"
@@ -487,6 +499,9 @@ msgstr "レポートをエクスポート"
 msgid "Export cancelled"
 msgstr "エクスポートをキャンセルしました"
 
+msgid "Export current report"
+msgstr "このレポートを出力"
+
 msgid "Exported CSV"
 msgstr "CSVをエクスポートしました"
 
@@ -514,6 +529,12 @@ msgstr "外部モデル"
 msgid "External model testing is not configured."
 msgstr "外部モデルのテストは未設定です。"
 
+msgid "External text processing is available."
+msgstr "外部テキスト処理を利用できます。"
+
+msgid "External text processing is unavailable. Saved preferences are retained."
+msgstr "外部テキスト処理は利用できません。保存済みの設定は保持されます。"
+
 msgid "February"
 msgstr "2月"
 
@@ -534,6 +555,12 @@ msgstr "GNU GPLv3"
 
 msgid "General"
 msgstr "一般"
+
+msgid "Generate from records"
+msgstr "記録から生成"
+
+msgid "Generated draft"
+msgstr "生成した下書き"
 
 msgid "GitHub"
 msgstr "GitHub"
@@ -640,6 +667,9 @@ msgstr "この下書きを後で使えるように保持しますか？"
 msgid "Keep this recovery key private. The saved file is not encrypted."
 msgstr "この復旧キーを他人に知らせないでください。保存ファイルは暗号化されません。"
 
+msgid "Keep this temporary password private. The saved file is not encrypted."
+msgstr "この一時パスワードを他人に知らせないでください。保存ファイルは暗号化されません。"
+
 msgid "Korean"
 msgstr "韓国語"
 
@@ -682,14 +712,17 @@ msgstr "ローカルモデル"
 msgid "Local Models"
 msgstr "ローカルモデル"
 
-msgid "Local model disabled."
-msgstr "ローカルモデルは無効です。"
-
 msgid "Local model management is not configured."
 msgstr "ローカルモデルの管理は未設定です。"
 
 msgid "Local model unavailable. Download, import and select a verified model."
 msgstr "ローカルモデルを利用できません。モデルをダウンロードまたはインポートし、検証済みのモデルを選択してください。"
+
+msgid "Local text processing is available."
+msgstr "ローカルテキスト処理を利用できます。"
+
+msgid "Local text processing is unavailable."
+msgstr "ローカルテキスト処理は利用できません。"
 
 msgid "Local user"
 msgstr "ローカルユーザー"
@@ -742,6 +775,12 @@ msgstr "モデルを削除しました。"
 msgid "Model downloaded."
 msgstr "モデルをダウンロードしました。"
 
+msgid "Model file management is unavailable."
+msgstr "モデルファイル管理は利用できません。"
+
+msgid "Model file selection does not activate a text-processing service."
+msgstr "モデルファイルの選択ではテキスト処理サービスは有効になりません。"
+
 msgid "Model imported."
 msgstr "モデルをインポートしました。"
 
@@ -777,9 +816,6 @@ msgstr "全国の祝日"
 
 msgid "Network"
 msgstr "ネットワーク"
-
-msgid "Network proxy settings are saved now; applying them to HTTP requests is a follow-up item."
-msgstr "プロキシ設定は保存されます。HTTPリクエストへの適用は今後対応予定です。"
 
 msgid "New password"
 msgstr "新しいパスワード"
@@ -832,6 +868,9 @@ msgstr "選択した日の記録はありません。"
 msgid "No saved reports"
 msgstr "保存済みレポートはありません"
 
+msgid "No verified model file selected."
+msgstr "検証済みモデルファイルが選択されていません。"
+
 msgid "Normal"
 msgstr "通常"
 
@@ -864,9 +903,6 @@ msgstr "10月"
 
 msgid "Open"
 msgstr "開く"
-
-msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
-msgstr "OpenAI互換インターフェースに対応し、互換サービス経由でChatGPT、Claude、Qwen、DeepSeekなどを利用できます。"
 
 msgid "Operation cancelled."
 msgstr "操作をキャンセルしました。"
@@ -961,6 +997,12 @@ msgstr "前月"
 msgid "Previous period"
 msgstr "前の期間"
 
+msgid "Proxy routing is available."
+msgstr "プロキシ通信を利用できます。"
+
+msgid "Proxy routing is unavailable. Saved preferences are retained."
+msgstr "プロキシ通信は利用できません。保存済みの設定は保持されます。"
+
 msgid "Public holidays"
 msgstr "祝日"
 
@@ -1012,6 +1054,9 @@ msgstr "復元された下書き"
 msgid "Recovery key"
 msgstr "復旧キー"
 
+msgid "Recovery key for {username}"
+msgstr "{username}の復旧キー"
+
 msgid "Recovery key saved."
 msgstr "復旧キーを保存しました。"
 
@@ -1041,6 +1086,9 @@ msgstr "置換"
 
 msgid "Replace the saved content of this report? This cannot be undone."
 msgstr "このレポートの保存済み内容を置き換えますか？この操作は元に戻せません。"
+
+msgid "Replace the visible draft with current records? The saved report will not change until you save."
+msgstr "現在の記録で表示中の下書きを置き換えますか？保存済みレポートは再保存するまで変更されません。"
 
 msgid "Report"
 msgstr "レポート"
@@ -1135,6 +1183,9 @@ msgstr "復旧キーを保存"
 msgid "Save template"
 msgstr "テンプレートを保存"
 
+msgid "Save temporary password"
+msgstr "一時パスワードを保存"
+
 msgid "Save the completed automatic record before starting another."
 msgstr "新しい記録を開始する前に、終了した自動記録を保存してください。"
 
@@ -1146,6 +1197,9 @@ msgstr "ログインに戻る前に、この復旧キーを保存してくださ
 
 msgid "Saved"
 msgstr "保存しました"
+
+msgid "Saved report #{report_id}"
+msgstr "保存済みレポート #{report_id}"
 
 msgid "Saved. Language changes apply after restarting."
 msgstr "保存しました。言語設定は再起動後に適用されます。"
@@ -1194,6 +1248,9 @@ msgstr "編集する日の時間記録を選択してください。"
 
 msgid "Selected day: {day}"
 msgstr "選択日：{day}"
+
+msgid "Selected model file: {name}"
+msgstr "選択したモデルファイル: {name}"
 
 msgid "Selected user"
 msgstr "選択したユーザー"
@@ -1258,9 +1315,6 @@ msgstr "月曜始まり"
 msgid "State / province"
 msgstr "州 / 都道府県"
 
-msgid "Stored securely in a future update"
-msgstr "安全な保存は今後対応予定です"
-
 msgid "Sun"
 msgstr "日"
 
@@ -1279,11 +1333,20 @@ msgstr "テンプレート"
 msgid "Temporary password"
 msgstr "一時パスワード"
 
+msgid "Temporary password for {username}"
+msgstr "{username}の一時パスワード"
+
+msgid "Temporary password saved."
+msgstr "一時パスワードを保存しました。"
+
 msgid "Test"
 msgstr "テスト"
 
 msgid "Text files (*.txt)"
 msgstr "テキストファイル (*.txt)"
+
+msgid "Text processing is unavailable. Saved preferences are retained."
+msgstr "テキスト処理は利用できません。保存済みの設定は保持されます。"
 
 msgid "The CSV file exceeds the supported size or row limit."
 msgstr "CSV ファイルが対応するサイズまたは行数の上限を超えています。"
@@ -1414,6 +1477,9 @@ msgstr "復旧キーを保存できません。別の場所を選んで再試行
 msgid "Unable to save the report. Your changes have been retained."
 msgstr "レポートを保存できませんでした。編集内容は保持されています。"
 
+msgid "Unable to save the temporary password. Choose another location and try again."
+msgstr "一時パスワードを保存できません。別の場所を選んで再試行してください。"
+
 msgid "Unable to save the work log. Your changes have been retained."
 msgstr "作業記録を保存できませんでした。変更内容は保持されています。"
 
@@ -1465,6 +1531,9 @@ msgstr "モデルを使用"
 msgid "User"
 msgstr "ユーザー"
 
+msgid "User created, but the account list could not be refreshed."
+msgstr "ユーザーは作成されましたが、アカウント一覧を更新できませんでした。"
+
 msgid "User created."
 msgstr "ユーザーを作成しました。"
 
@@ -1503,9 +1572,6 @@ msgstr "週報"
 
 msgid "Welcome!"
 msgstr "ようこそ！"
-
-msgid "When enabled, text processing uses the local model first; no data is sent to external services."
-msgstr "有効にすると、テキスト処理はローカルモデルを優先し、外部サービスにデータを送信しません。"
 
 msgid "Work Hours Trend"
 msgstr "労働時間の推移"

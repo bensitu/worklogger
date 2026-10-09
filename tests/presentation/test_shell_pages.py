@@ -4,11 +4,14 @@ from dataclasses import replace
 from datetime import date
 import os
 import unittest
+import tempfile
+from pathlib import Path
 from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtWidgets import QApplication, QMessageBox, QLabel
+from PySide6.QtWidgets import QApplication, QMessageBox, QLabel, QFileDialog
+from worklogger.presentation.job_runner import ImmediateJobRunner
 
 from worklogger.domain.shared.result import Result
 from worklogger.domain.shared.errors import CancellationError, ValidationError
@@ -36,6 +39,73 @@ class ReportsViewModel:
 
 
 class ShellPagesTests(unittest.TestCase):
+    def test_loaded_report_formatting_does_not_create_false_unsaved_changes(self):
+        for content in ("First\r\nSecond", "First\nSecond", "First\u2029Second", "Work\u00a0summary"):
+            class Model(ReportsViewModel):
+                def load(self, kind, day, content=content):
+                    return Result.success(ReportEditorState(1, kind, day, day, content, saved=True, report_id=42))
+            page = ReportsPage(Model(), date(2026, 5, 20))
+            try:
+                page.refresh()
+                self.assertFalse(page.has_unsaved_changes)
+                self.assertFalse(page.save_button.isEnabled())
+                self.assertNotIn("Unsaved changes", page.report_state_label.text())
+                self.assertEqual(page._states["daily"].content, content)
+            finally:
+                page.deleteLater()
+
+    def test_report_identity_generation_and_export_follow_the_visible_draft(self):
+        class Model(ReportsViewModel):
+            fail_generation = False
+            saved_content = ""
+
+            def generate_draft(self, state):
+                return (Result.failure(ValidationError("report_generate_failed", "report_generate_failed")) if self.fail_generation
+                        else Result.success("Generated from current records"))
+
+            def save(self, state, content):
+                self.saved_content = content
+                return Result.success(replace(state, content=content, saved=True, report_id=state.report_id or 42))
+
+            def export_markdown(self, path, content):
+                path.write_text(content, encoding="utf-8")
+                return Result.success(path)
+
+        model = Model()
+        page = ReportsPage(model, date(2026, 5, 20), job_runner=ImmediateJobRunner())
+        self.addCleanup(page.deleteLater)
+        page.refresh()
+        self.assertEqual(page.report_state_label.text(), "Generated draft")
+        self.assertTrue(page.history_panel.export_button.isHidden())
+        page.editor.setPlainText("Local changes")
+        self.assertIn("Unsaved changes", page.report_state_label.text())
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.No):
+            page.generate_button.click()
+        self.assertEqual(page.editor.toPlainText(), "Local changes")
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+            page.generate_button.click()
+        self.assertEqual(page.editor.toPlainText(), "Generated from current records")
+        page.save_button.click()
+        self.assertEqual(page._states["daily"].report_id, 42)
+        self.assertEqual(page.save_button.text(), "Save changes")
+        self.assertFalse(page.save_button.isEnabled())
+        page.editor.setPlainText("Visible unsaved draft")
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "draft.md"
+            with patch.object(QFileDialog, "getSaveFileName", return_value=(str(path), "")):
+                page.export_current_button.click()
+            self.assertEqual(path.read_text(encoding="utf-8"), "Visible unsaved draft")
+            self.assertEqual(model.saved_content, "Generated from current records")
+        model.fail_generation = True
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+            page.generate_button.click()
+        self.assertEqual(page.editor.toPlainText(), "Visible unsaved draft")
+        self.assertEqual(page._states["daily"].report_id, 42)
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+            page.save_button.click()
+        self.assertEqual(page._states["daily"].report_id, 42)
+        self.assertFalse(page.has_unsaved_changes)
+
     def setUp(self) -> None:
         self.information = self.enterContext(patch.object(QMessageBox, "information"))
         self.warning = self.enterContext(patch.object(QMessageBox, "warning"))

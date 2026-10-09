@@ -77,6 +77,7 @@ python -m unittest tests.visual.reporting_checks -v
 python -m unittest tests.visual.notes_checks -v
 python -m unittest tests.visual.user_management_checks -v
 python -m unittest tests.visual.model_account_checks -v
+python -m unittest tests.visual.report_settings_checks -v
 ```
 
 To retain screenshots at additional scaling in PowerShell:
@@ -85,7 +86,7 @@ To retain screenshots at additional scaling in PowerShell:
 $env:QT_QPA_PLATFORM = "offscreen"
 $env:QT_SCALE_FACTOR = "1.5"
 $env:WORKLOGGER_SCREENSHOTS = Join-Path $env:TEMP "worklogger-screenshots"
-python -m unittest tests.visual.shell_checks tests.visual.calendar_checks tests.visual.reporting_checks tests.visual.notes_checks tests.visual.user_management_checks tests.visual.model_account_checks -v
+python -m unittest tests.visual.shell_checks tests.visual.calendar_checks tests.visual.reporting_checks tests.visual.notes_checks tests.visual.user_management_checks tests.visual.model_account_checks tests.visual.report_settings_checks -v
 ```
 
 Inspect text clipping, icon positions, calendar indicators, summary charts,

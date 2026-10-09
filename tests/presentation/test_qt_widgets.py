@@ -6,7 +6,10 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QSize
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtTest import QTest
+from PySide6.QtGui import QAccessible
+from worklogger.presentation.widgets.switch_button import SwitchButton
 from PySide6.QtGui import QFont, QIcon, QPalette, QColor
 from PySide6.QtWidgets import QApplication
 
@@ -80,6 +83,24 @@ def _calendar_state() -> CalendarMonthViewState:
 
 
 class QtWidgetTests(unittest.TestCase):
+    def test_switch_supports_keyboard_checked_state_and_accessible_name(self):
+        switch = SwitchButton()
+        switch.setAccessibleName("Public holidays")
+        changes = []
+        switch.toggled.connect(changes.append)
+        QTest.keyClick(switch, Qt.Key.Key_Space)
+        self.assertTrue(switch.is_checked())
+        interface = QAccessible.queryAccessibleInterface(switch)
+        self.assertEqual(interface.role(), QAccessible.Role.CheckBox)
+        self.assertEqual(interface.text(QAccessible.Text.Name), "Public holidays")
+        self.assertTrue(interface.state().checked)
+        switch.setEnabled(False)
+        QTest.keyClick(switch, Qt.Key.Key_Space)
+        self.assertTrue(switch.is_checked())
+        switch.set_checked(False)
+        self.assertEqual(changes, [True, False])
+        switch.deleteLater()
+
     def test_icons_reuse_rendering_and_follow_palette_and_pixel_ratio(self) -> None:
         app = _app()
         original = app.palette()

@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QTextEdit,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -66,6 +67,7 @@ class ReportsPage(QWidget):
         self._job_runner = job_runner or QtJobRunner(self)
         self._rewrite_busy = False
         self._delete_busy = False
+        self._generate_busy = False
         self._build_ui()
 
     @property
@@ -77,7 +79,7 @@ class ReportsPage(QWidget):
         return self.editor.toPlainText() != self._saved_content.get(self._rendered_type, "")
 
     def confirm_leave(self) -> bool:
-        if self._rewrite_busy or self._delete_busy:
+        if self._rewrite_busy or self._delete_busy or self._generate_busy:
             self._set_status(_("Please wait for the current request."))
             return False
         if not self.has_unsaved_changes:
@@ -131,7 +133,9 @@ class ReportsPage(QWidget):
         if not result.ok or result.value is None:
             self._set_error(result.error)
             return False
-        self._set_status(_("Exported Markdown"))
+        state = self._states.get(self._current_type())
+        period = _period_label(state) if state is not None else period_range_label(self._selected_day, self._selected_day)
+        self._set_status(_("Current report exported for {period}.").format(period=period))
         return True
 
     def _build_ui(self) -> None:
@@ -163,6 +167,7 @@ class ReportsPage(QWidget):
         self.previous_period_button.setProperty("variant", "outline")
         self.previous_period_button.clicked.connect(lambda: self._shift_period(-1))
         self.previous_period_button.setToolTip(_("Previous period"))
+        self.previous_period_button.setAccessibleName(_("Previous period"))
         set_button_icon(self.previous_period_button, "chevron-left")
         self.previous_period_button.setText("")
         self.next_period_button = QPushButton(">")
@@ -170,6 +175,7 @@ class ReportsPage(QWidget):
         self.next_period_button.setProperty("variant", "outline")
         self.next_period_button.clicked.connect(lambda: self._shift_period(1))
         self.next_period_button.setToolTip(_("Next period"))
+        self.next_period_button.setAccessibleName(_("Next period"))
         set_button_icon(self.next_period_button, "chevron-right")
         self.next_period_button.setText("")
         period_row.addWidget(IconLabel("calendar-days"))
@@ -194,11 +200,23 @@ class ReportsPage(QWidget):
         self.templates_button.clicked.connect(self._open_templates)
         set_button_icon(self.templates_button, "file-text", accent=True)
         report_row.addWidget(report_title, 1)
+        self.generate_button = QPushButton(_("Generate from records"))
+        self.generate_button.setObjectName("generate_report_button")
+        set_button_icon(self.generate_button, "refresh-cw")
+        self.generate_button.clicked.connect(self._generate_current)
+        report_row.addWidget(self.generate_button)
         report_row.addWidget(self.templates_button)
         editor_card.content_layout.addLayout(report_row)
 
         self.editor = QTextEdit()
         self.editor.setObjectName("report_text_edit")
+        self.editor.setAcceptRichText(False)
+        self.editor.textChanged.connect(self._update_report_status)
+        self.report_state_label = QLabel()
+        self.report_state_label.setObjectName("report_state_label")
+        self.report_state_label.setProperty("role", "secondary")
+        self.report_state_label.setWordWrap(True)
+        editor_card.content_layout.addWidget(self.report_state_label)
         editor_card.content_layout.addWidget(self.editor, 1)
 
         self.ai_hint_line_edit = QLineEdit()
@@ -215,12 +233,17 @@ class ReportsPage(QWidget):
         if self._view_model is None or not getattr(self._view_model, "rewrite_available", True):
             self.ai_assist_button.setEnabled(False)
             self.ai_assist_button.setToolTip(_("AI Assist is not configured."))
+            self.ai_hint_line_edit.setEnabled(False)
         ai_row.addWidget(self.ai_assist_button)
         ai_row.addStretch(1)
         editor_card.content_layout.addLayout(ai_row)
 
         bottom = QHBoxLayout()
-        self.copy_button = QPushButton(_("Copy"))
+        self.copy_button = QToolButton()
+        self.copy_button.setToolTip(_("Copy"))
+        self.copy_button.setAccessibleName(_("Copy"))
+        self.copy_button.setFixedWidth(40)
+        self.copy_button.setMinimumHeight(36)
         self.copy_button.setObjectName("copy_report_button")
         self.copy_button.clicked.connect(self.copy_markdown)
         set_button_icon(self.copy_button, "copy")
@@ -230,15 +253,19 @@ class ReportsPage(QWidget):
         self.save_button.clicked.connect(self._save_current)
         set_button_icon(self.save_button, "save")
         bottom.addWidget(self.copy_button)
+        self.export_current_button = QPushButton(_("Export current report"))
+        self.export_current_button.setObjectName("export_current_report_button")
+        set_button_icon(self.export_current_button, "file-output")
+        self.export_current_button.clicked.connect(self._choose_export_path)
+        bottom.addWidget(self.export_current_button)
         bottom.addStretch(1)
         bottom.addWidget(self.save_button)
         editor_card.content_layout.addLayout(bottom)
         content.addWidget(editor_card, 2)
 
-        self.history_panel = ReportHistoryPanel(allow_delete=bool(getattr(self._view_model, "delete_available", False)))
+        self.history_panel = ReportHistoryPanel(allow_delete=bool(getattr(self._view_model, "delete_available", False)), show_export=False)
         self.history_panel.item_selected.connect(self._select_history_item)
         self.history_panel.delete_requested.connect(self._delete_history_item)
-        self.history_panel.export_requested.connect(self._choose_export_path)
         content.addWidget(self.history_panel, 1)
 
         self.status_label = QLabel("")
@@ -246,8 +273,62 @@ class ReportsPage(QWidget):
         self.status_label.setProperty("role", "secondary")
         self.status_label.hide()
         root.addWidget(self.status_label)
+        self._update_report_status()
+
+    def _update_report_status(self):
+        if not hasattr(self, "save_button"):
+            return
+        state = self._states.get(self._current_type())
+        if state is None:
+            self.report_state_label.clear()
+            self.save_button.setEnabled(False)
+            self.export_current_button.setEnabled(False)
+            self.copy_button.setEnabled(False)
+            self.generate_button.setEnabled(False)
+            return
+        modified = self.editor.toPlainText() != self._saved_content.get(self._current_type(), state.content)
+        identity = (_("Saved report #{report_id}").format(report_id=state.report_id)
+                    if state.report_id is not None else _("Generated draft"))
+        self.report_state_label.setText(identity + (" | " + _("Unsaved changes") if modified else ""))
+        self.save_button.setText(_("Save changes") if state.report_id is not None else _("Save Report"))
+        busy = self._rewrite_busy or self._delete_busy or self._generate_busy
+        has_content = bool(self.editor.toPlainText().strip())
+        self.save_button.setEnabled(not busy and has_content and (state.report_id is None or modified))
+        self.export_current_button.setEnabled(not busy and has_content)
+        self.copy_button.setEnabled(not busy and has_content)
+        self.generate_button.setEnabled(not busy and self._view_model is not None)
+
+    def _generate_current(self):
+        if self._view_model is None or self._generate_busy or self._rewrite_busy or self._delete_busy:
+            return
+        state = self._states.get(self._current_type())
+        if state is None:
+            return
+        if (state.report_id is not None or self.has_unsaved_changes) and QMessageBox.question(self, _("Generate from records"),
+            _("Replace the visible draft with current records? The saved report will not change until you save."),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
+            return
+        self._generate_busy = True
+        self._update_busy_controls()
+        def complete(result):
+            self._generate_busy = False
+            self._update_busy_controls()
+            if result.ok and result.value is not None:
+                self._last_error = None
+                self.editor.setPlainText(result.value)
+            else:
+                self._set_error(result.error or ValidationError("report_generate_failed", "report_generate_failed"))
+        try:
+            self._job_runner.submit("generate_report", lambda _token: self._view_model.generate_draft(state), on_complete=complete)
+        except Exception:
+            self._generate_busy = False
+            self._update_busy_controls()
+            self._set_error(ValidationError("report_generate_failed", "report_generate_failed"))
 
     def _set_status(self, message: str, *, notify: bool = True, error: bool = False) -> None:
+        if not error:
+            self._last_error = None
         self.status_label.setText(message)
         self.status_label.hide()
         if message and notify:
@@ -269,7 +350,7 @@ class ReportsPage(QWidget):
         self.refresh(shift_period(day, self._current_type(), direction))
 
     def _open_templates(self) -> None:
-        if self._view_model is None or self._rewrite_busy or self._delete_busy:
+        if self._view_model is None or self._rewrite_busy or self._delete_busy or self._generate_busy:
             return
         dialog = ReportTemplateDialog(self._view_model, self._current_type(), self)
         dialog.apply_requested.connect(self._apply_template)
@@ -279,16 +360,7 @@ class ReportsPage(QWidget):
             self._set_status(dialog.status_label.text(), error=True)
 
     def _apply_template(self) -> None:
-        if self._view_model is None or not self.confirm_leave():
-            return
-        state = self._states.get(self._current_type())
-        if state is None:
-            return
-        result = self._view_model.generate_draft(state)
-        if result.ok and result.value is not None:
-            self.editor.setPlainText(result.value)
-        else:
-            self._set_error(result.error)
+        self._generate_current()
 
     def _render_current(self) -> None:
         report_type = self._current_type()
@@ -298,10 +370,12 @@ class ReportsPage(QWidget):
         self._rendered_type = report_type
         self.period_title_label.setText(_period_label(state))
         self.editor.setPlainText(state.content)
+        self._saved_content[report_type] = self.editor.toPlainText()
+        self._update_report_status()
         self._refresh_history()
 
     def _save_current(self) -> None:
-        if self._view_model is None or self._delete_busy or self._rewrite_busy:
+        if self._view_model is None or self._delete_busy or self._rewrite_busy or self._generate_busy:
             return
         report_type = self._current_type()
         state = self._states.get(report_type)
@@ -310,7 +384,7 @@ class ReportsPage(QWidget):
             return
         content = self.editor.toPlainText()
         if state.report_id is not None:
-            if content == state.content or not confirm_report_overwrite(self):
+            if content == self._saved_content.get(report_type, state.content) or not confirm_report_overwrite(self):
                 return
         result = self._view_model.save(state, content)
         if not result.ok or result.value is None:
@@ -318,11 +392,12 @@ class ReportsPage(QWidget):
             return
         self._states[report_type] = result.value
         self._saved_content[report_type] = result.value.content
+        self._update_report_status()
         self._set_status(_("Report saved."))
         self._refresh_history()
 
     def _rewrite_current(self) -> None:
-        if self._view_model is None or self._rewrite_busy or self._delete_busy:
+        if self._view_model is None or self._rewrite_busy or self._delete_busy or self._generate_busy:
             return
         state = self._states.get(self._current_type())
         if state is None:
@@ -342,14 +417,17 @@ class ReportsPage(QWidget):
         self._update_busy_controls()
 
     def _update_busy_controls(self):
-        busy = self._rewrite_busy or self._delete_busy
+        busy = self._rewrite_busy or self._delete_busy or self._generate_busy
         self.editor.setReadOnly(busy)
         for widget in (self.report_type_control, self.previous_period_button, self.next_period_button, self.templates_button, self.ai_hint_line_edit, self.save_button, self.history_panel):
             widget.setEnabled(not busy)
         self.ai_assist_button.setEnabled(not busy and bool(getattr(self._view_model, "rewrite_available", True)))
+        self.ai_hint_line_edit.setEnabled(self.ai_assist_button.isEnabled())
+        self.generate_button.setEnabled(not busy)
+        self._update_report_status()
 
     def _delete_history_item(self, item: ReportHistoryDisplayItem) -> None:
-        if self._view_model is None or self._rewrite_busy or self._delete_busy or item.report_id is None:
+        if self._view_model is None or self._rewrite_busy or self._delete_busy or self._generate_busy or item.report_id is None:
             return
         state = self._states.get(item.report_type)
         deleting_current = state is not None and state.report_id == item.report_id
@@ -436,15 +514,18 @@ class ReportsPage(QWidget):
         self.report_type_control.set_value(item.report_type, emit=False)
         self.history_panel.set_selected_report(item.report_id)
         self.editor.setPlainText(state.content)
+        self._saved_content[item.report_type] = self.editor.toPlainText()
         self.period_title_label.setText(_period_label(state))
+        self._update_report_status()
 
     def _choose_export_path(self) -> None:
         state = self._states.get(self._current_type())
         suffix = state.period_start.isoformat() if state is not None else self._selected_day.isoformat()
+        identity = str(state.report_id) if state is not None and state.report_id is not None else "draft"
         path, _selected = QFileDialog.getSaveFileName(
             self,
             _("Export Markdown"),
-            f"{self._current_type()}-report-{suffix}.md",
+            f"{self._current_type()}-report-{suffix}-{identity}.md",
             _("Markdown files (*.md)"),
         )
         if path:

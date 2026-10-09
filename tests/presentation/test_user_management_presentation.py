@@ -20,6 +20,8 @@ from worklogger.app.use_cases.auth import (
 )
 from worklogger.presentation.user_management import UserManagementDialog
 from worklogger.presentation.viewmodels import UserManagementViewModel
+from worklogger.domain.shared.result import Result
+from worklogger.domain.shared.errors import InfrastructureError
 
 
 def _app() -> QApplication:
@@ -44,6 +46,26 @@ def _view_model(
 
 
 class UserManagementPresentationTests(unittest.TestCase):
+    def test_credential_handoff_keeps_its_owner_when_list_refresh_fails(self):
+        repository = MemoryAuthRepository()
+        admin = RegisterUserHandler(repository).handle(RegisterUserCommand("admin", "secret123"))
+        model = _view_model(repository, admin.value.user.id)
+        dialog = UserManagementDialog(model)
+        self.addCleanup(dialog.deleteLater)
+        dialog.refresh()
+        dialog.username_input.setText("new.owner")
+        dialog.create_password_input.setText("example-password")
+        dialog.create_confirm_input.setText("example-password")
+        with patch.object(model, "load", return_value=Result.failure(InfrastructureError("user_list_failed", "user_list_failed"))):
+            dialog.create_user_button.click()
+        self.assertIsNotNone(repository.get_by_username("new.owner"))
+        self.assertIn("new.owner", dialog.recovery_key_caption.text())
+        self.assertFalse(dialog.credential_actions.isHidden())
+        self.assertTrue(dialog.delete_user_button.isHidden())
+        dialog.credential_done_button.click()
+        self.assertEqual(dialog.recovery_key_label.text(), "")
+        self.assertTrue(dialog.credential_actions.isHidden())
+
     @classmethod
     def setUpClass(cls) -> None:
         cls._app = _app()
@@ -90,6 +112,9 @@ class UserManagementPresentationTests(unittest.TestCase):
         bob = repository.get_by_username("bob")
         assert bob is not None
         self.assertTrue(bob.must_change_password)
+        dialog.credential_actions.copy_button.click()
+        self.assertEqual(QApplication.clipboard().text(), dialog.recovery_key_label.text())
+        dialog.credential_done_button.click()
 
         dialog.user_table.selectRow(1)
         self.assertEqual(dialog.selected_user_label.text(), "bob")
@@ -105,7 +130,10 @@ class UserManagementPresentationTests(unittest.TestCase):
         dialog.reset_password_button.click()
         self.assertIsNotNone(repository.verify_user("bob", "secret789"))
         self.assertEqual(dialog.selected_user_label.text(), "bob")
-        self.assertEqual(dialog.recovery_key_caption.text(), "Temporary password")
+        self.assertEqual(dialog.recovery_key_caption.text(), "Temporary password for bob")
+        self.assertEqual(dialog.credential_actions.copy_button.text(), "Copy temporary password")
+        dialog.credential_actions.copy_button.click()
+        self.assertEqual(QApplication.clipboard().text(), "secret789")
         dialog.user_table.selectRow(0)
         self.assertTrue(dialog.recovery_key_label.isHidden())
         self.assertEqual(dialog.recovery_key_label.text(), "")
@@ -126,6 +154,7 @@ class UserManagementPresentationTests(unittest.TestCase):
         self.assertFalse(dialog.delete_user_button.isEnabled())
         self.assertFalse(dialog.password_change_checkbox.isEnabled())
         self.assertEqual(dialog.selected_user_label.text(), "Select a user.")
+        QApplication.clipboard().clear()
 
 
 if __name__ == "__main__":

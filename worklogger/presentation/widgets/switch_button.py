@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QRectF, Qt, Signal
+from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QBrush, QColor, QPainter, QPen
-from PySide6.QtWidgets import QSizePolicy, QWidget
+from PySide6.QtWidgets import QCheckBox, QSizePolicy, QWidget
 
 
-class SwitchButton(QWidget):
-    toggled = Signal(bool)
+class SwitchButton(QCheckBox):
 
     _WIDTH = 42
     _HEIGHT = 24
@@ -22,26 +21,20 @@ class SwitchButton(QWidget):
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
-        self._checked = bool(checked)
+        super().setChecked(bool(checked))
         self._color_on = QColor(color_on)
         self._color_off = QColor(color_off)
         self.setFixedSize(self._WIDTH, self._HEIGHT)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.toggled.connect(lambda _checked: self.update())
 
     def is_checked(self) -> bool:
-        return self._checked
+        return super().isChecked()
 
     def set_checked(self, checked: bool) -> None:
-        checked = bool(checked)
-        if checked == self._checked:
-            return
-        self._checked = checked
-        self.toggled.emit(self._checked)
-        self.update()
-
-    isChecked = is_checked
-    setChecked = set_checked
+        super().setChecked(bool(checked))
 
     def setEnabled(self, enabled: bool) -> None:
         super().setEnabled(enabled)
@@ -52,20 +45,15 @@ class SwitchButton(QWidget):
         )
         self.update()
 
-    def mousePressEvent(self, event: object) -> None:
-        if not self.isEnabled():
-            if hasattr(event, "ignore"):
-                event.ignore()
-            return
-        if getattr(event, "button", lambda: None)() == Qt.MouseButton.LeftButton:
-            self.set_checked(not self._checked)
-        super().mousePressEvent(event)
+    def hitButton(self, position) -> bool:
+        return self.rect().contains(position)
 
     def paintEvent(self, _event: object) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        track = QColor(self._color_on if self._checked else self._color_off)
+        checked = self.is_checked()
+        track = QColor(self._color_on if checked else self._color_off)
         thumb = QColor("#ffffff")
         border: QColor | None = None
         if not self.isEnabled():
@@ -92,7 +80,11 @@ class SwitchButton(QWidget):
 
         padding = 3
         diameter = self._HEIGHT - padding * 2
-        x = self._WIDTH - self._HEIGHT + padding if self._checked else padding
+        x = self._WIDTH - self._HEIGHT + padding if checked else padding
         painter.setBrush(QBrush(thumb))
         painter.drawEllipse(QRectF(x, padding, diameter, diameter))
+        if self.hasFocus():
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.setPen(QPen(self.palette().highlight().color(), 2, Qt.PenStyle.DotLine))
+            painter.drawRoundedRect(QRectF(1, 1, self._WIDTH - 2, self._HEIGHT - 2), 10, 10)
         painter.end()

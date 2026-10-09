@@ -58,6 +58,7 @@ from worklogger.domain.shared.errors import AppError
 from worklogger.infrastructure.i18n import _, available_languages
 from worklogger.infrastructure.calendar.holidays_provider import detect_country, supported_holiday_regions
 from worklogger.presentation.errors import display_error_message
+from worklogger.presentation.settings_capabilities import SettingsCapabilities
 from worklogger.presentation.theme import configure_application_style, install_bundled_fonts
 from worklogger.presentation.viewmodels import SettingsState, SettingsViewModel
 from worklogger.presentation.widgets import CardFrame, SettingsNav, SwitchButton
@@ -87,9 +88,12 @@ class SettingsPage(QWidget):
         self,
         view_model: SettingsViewModel,
         parent: QWidget | None = None,
+        *, capabilities: SettingsCapabilities | None = None,
     ) -> None:
         super().__init__(parent)
         self._view_model = view_model
+        self._capabilities = capabilities or SettingsCapabilities()
+        self._state: SettingsState | None = None
         self._updating = False
         self._last_error: AppError | None = None
         self._busy_jobs: set[str] = set()
@@ -103,6 +107,7 @@ class SettingsPage(QWidget):
         configure_application_style()
         install_bundled_fonts()
         self._build_ui()
+        self._apply_capabilities()
 
     @property
     def last_error(self) -> AppError | None:
@@ -142,6 +147,7 @@ class SettingsPage(QWidget):
         self.manage_users_button.setEnabled(bool(available))
 
     def set_state(self, state: SettingsState) -> None:
+        self._state = state
         self._updating = True
         try:
             language_index = self.language_combo.findData(state.language)
@@ -155,13 +161,14 @@ class SettingsPage(QWidget):
             self.mode_combo.setCurrentIndex(mode_index if mode_index >= 0 else 0)
             self.dark_switch.set_checked(state.dark_mode)
             self.minimal_switch.set_checked(state.minimal_mode)
-            self.ai_enabled_switch.set_checked(state.ai_assist_enabled)
+            self.ai_enabled_switch.set_checked(state.ai_assist_enabled and
+                (self._capabilities.external_generation or self._capabilities.local_generation))
             self.ai_notes_switch.set_checked(state.ai_privacy_include_notes)
             self.ai_calendar_switch.set_checked(state.ai_privacy_include_calendar)
             self.ai_quick_logs_switch.set_checked(state.ai_privacy_include_quick_logs)
             self.external_base_url_line_edit.setText(state.external_model_base_url)
             self.external_model_line_edit.setText(state.external_model_name)
-            self.local_model_enabled_switch.set_checked(state.local_model_enabled)
+            self.local_model_enabled_switch.set_checked(state.local_model_enabled and self._capabilities.local_generation)
             self._update_local_model_status()
             self.standard_hours_input.setValue(state.standard_work_hours)
             self.default_break_input.setValue(state.default_break_hours)
@@ -180,13 +187,13 @@ class SettingsPage(QWidget):
                     if self._residency_key == ENABLE_TRAY_SETTING_KEY
                     else state.enable_menu_bar
                 )
-            self.proxy_enabled_switch.set_checked(state.network_proxy_enabled)
+            self.proxy_enabled_switch.set_checked(state.network_proxy_enabled and self._capabilities.proxy_routing)
             self.proxy_address_line_edit.setText(state.network_proxy_address)
             self.proxy_port_line_edit.setText(state.network_proxy_port)
             self.proxy_username_line_edit.setText(state.network_proxy_username)
             self.proxy_password_line_edit.setText(state.network_proxy_password)
-            self.proxy_password_line_edit.setEnabled(state.proxy_password_available)
-            self.proxy_password_visibility_action.setEnabled(state.proxy_password_available)
+            self.proxy_password_line_edit.setEnabled(state.proxy_password_available and self._capabilities.proxy_routing)
+            self.proxy_password_visibility_action.setEnabled(state.proxy_password_available and self._capabilities.proxy_routing)
             self.proxy_credentials_status_label.setText(
                 _("Password is stored in the system credential store.") if state.proxy_password_available
                 else _("Secure credential storage is unavailable. Existing passwords are retained; new passwords cannot be saved.")
@@ -195,6 +202,42 @@ class SettingsPage(QWidget):
             self.set_backup_time(state.last_backup_at)
         finally:
             self._updating = False
+
+    def set_capabilities(self, capabilities: SettingsCapabilities) -> None:
+        self._capabilities = capabilities
+        self._apply_capabilities()
+        if self._state is not None:
+            self.set_state(self._state)
+
+    def _apply_capabilities(self) -> None:
+        available = self._capabilities.external_generation or self._capabilities.local_generation
+        for widget in (self.ai_enabled_switch, self.ai_notes_switch, self.ai_calendar_switch, self.ai_quick_logs_switch):
+            widget.setEnabled(available)
+            widget.setToolTip("" if available else _("Text processing is unavailable. Saved preferences are retained."))
+        for widget in (self.external_base_url_line_edit, self.external_model_line_edit):
+            widget.setEnabled(self._capabilities.external_generation)
+        self.external_runtime_status_label.setText(_("External text processing is available.") if self._capabilities.external_generation
+                                                 else _("External text processing is unavailable. Saved preferences are retained."))
+        self.local_model_enabled_switch.setEnabled(self._capabilities.local_generation)
+        self.local_runtime_status_label.setText(_("Local text processing is available.") if self._capabilities.local_generation
+                                               else _("Local text processing is unavailable."))
+        for widget in (self.manage_local_models_button, self.import_local_model_button, self.download_local_model_button):
+            widget.setEnabled(self._capabilities.model_management)
+            widget.setToolTip("" if self._capabilities.model_management else _("Model file management is unavailable."))
+        self.proxy_enabled_switch.setEnabled(self._capabilities.proxy_routing)
+        for widget in (self.proxy_address_line_edit, self.proxy_port_line_edit, self.proxy_username_line_edit,
+                       self.proxy_domain_line_edit):
+            widget.setEnabled(self._capabilities.proxy_routing)
+        self.proxy_runtime_status_label.setText(_("Proxy routing is available.") if self._capabilities.proxy_routing
+                                               else _("Proxy routing is unavailable. Saved preferences are retained."))
+        for switch, name in ((self.ai_enabled_switch, _("AI Assist")), (self.ai_notes_switch, _("Include work content")),
+            (self.ai_calendar_switch, _("Include calendar")), (self.ai_quick_logs_switch, _("Include quick logs")),
+            (self.local_model_enabled_switch, _("Enable local model")), (self.proxy_enabled_switch, _("Use a web proxy for this application.")),
+            (self.dark_switch, _("Dark mode")), (self.holidays_switch, _("Public holidays")),
+            (self.overnight_switch, _("Overnight indicator")), (self.week_start_switch, _("Start week on Monday"))):
+            switch.setAccessibleName(name)
+        if self.residency_switch is not None:
+            self.residency_switch.setAccessibleName(_("Enable tray icon") if self._residency_key == ENABLE_TRAY_SETTING_KEY else _("Enable menu bar"))
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
@@ -398,11 +441,8 @@ class SettingsPage(QWidget):
 
         external = CardFrame(object_name="settings_content_frame")
         external.content_layout.addWidget(_section_title(_("External Model")))
-        external.content_layout.addWidget(
-            _secondary_label(
-                _("OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek.")
-            )
-        )
+        self.external_runtime_status_label = _secondary_label("")
+        external.content_layout.addWidget(self.external_runtime_status_label)
         form = QFormLayout()
         form.setSpacing(12)
         self.external_api_key_line_edit = QLineEdit()
@@ -410,7 +450,7 @@ class SettingsPage(QWidget):
         self.external_api_key_line_edit.setEchoMode(QLineEdit.EchoMode.Password)
         self.external_api_key_line_edit.setEnabled(False)
         self.external_api_key_line_edit.setToolTip(_("External model testing is not configured."))
-        self.external_api_key_line_edit.setPlaceholderText(_("Stored securely in a future update"))
+        self.external_api_key_line_edit.setPlaceholderText("")
         form.addRow(_("API Key"), self.external_api_key_line_edit)
         self.external_base_url_line_edit = QLineEdit()
         self.external_base_url_line_edit.setObjectName("external_base_url_line_edit")
@@ -452,14 +492,17 @@ class SettingsPage(QWidget):
         local.content_layout.addLayout(local_row)
         local.content_layout.addWidget(
             _secondary_label(
-                _("When enabled, text processing uses the local model first; no data is sent to external services.")
+                _("Model file selection does not activate a text-processing service.")
             )
         )
         self.local_model_status_label = QLabel(_("Manage downloaded and imported GGUF models."))
         self.local_model_status_label.setWordWrap(True)
+        self.local_model_status_label.setTextFormat(Qt.TextFormat.PlainText)
         self.local_model_status_label.setObjectName("local_model_status_label")
         self.local_model_status_label.setProperty("role", "secondary")
         local.content_layout.addWidget(self.local_model_status_label)
+        self.local_runtime_status_label = _secondary_label("")
+        local.content_layout.addWidget(self.local_runtime_status_label)
         self.manage_local_models_button = QPushButton(_("Manage models"))
         self.manage_local_models_button.setObjectName("manage_local_models_button")
         self.manage_local_models_button.clicked.connect(self.manage_local_models_requested.emit)
@@ -587,9 +630,8 @@ class SettingsPage(QWidget):
             lambda enabled: self._set_bool(NETWORK_PROXY_ENABLED_SETTING_KEY, enabled)
         )
         card.content_layout.addWidget(_switch_line(_("Use a web proxy for this application."), self.proxy_enabled_switch))
-        card.content_layout.addWidget(
-            _secondary_label(_("Network proxy settings are saved now; applying them to HTTP requests is a follow-up item."))
-        )
+        self.proxy_runtime_status_label = _secondary_label("")
+        card.content_layout.addWidget(self.proxy_runtime_status_label)
 
         grid = QGridLayout()
         grid.setHorizontalSpacing(18)
@@ -814,12 +856,8 @@ class SettingsPage(QWidget):
         self._update_local_model_status()
 
     def _update_local_model_status(self) -> None:
-        if not self.local_model_enabled_switch.is_checked():
-            text = _("Local model disabled.")
-        elif self._local_model_ready:
-            text = _("Active local model: {model}").format(model=self._local_model_name)
-        else:
-            text = _("Local model unavailable. Download, import and select a verified model.")
+        text = (_("Selected model file: {name}").format(name=self._local_model_name or _("Local Model"))
+                if self._local_model_ready else _("No verified model file selected."))
         self.local_model_status_label.setText(text)
 
     def set_backup_time(self, value: str) -> None:

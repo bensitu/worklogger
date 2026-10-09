@@ -10,6 +10,9 @@ from PySide6.QtWidgets import QApplication
 
 from worklogger.domain.shared.errors import CancellationError, InfrastructureError
 from worklogger.domain.shared.result import Result
+from worklogger.app.use_cases.local_models import LocalModelInventory
+from worklogger.domain.local_model.models import LocalModelFileStatus
+from worklogger.presentation.viewmodels.local_models import LocalModelManagerState
 from worklogger.infrastructure.i18n import _, set_language
 from worklogger.presentation.ai.dialog import AiAssistDialog
 from worklogger.presentation.analytics.dialog import AnalyticsDialog
@@ -46,12 +49,13 @@ class StatusFeedbackTests(unittest.TestCase):
             model = Mock()
             dialog = LocalModelsDialog(model)
             try:
-                state = SimpleNamespace(inventory=SimpleNamespace(items=()), message=_("Model imported."))
+                state = LocalModelManagerState(LocalModelInventory((), None), _("Model imported."))
                 self.assertTrue(dialog._set_state_result(Result.success(state)))
                 self.assertEqual(dialog.status_label.text(), _("Model imported."))
                 if language != "en_US":
                     self.assertNotEqual(dialog.status_label.text(), "Model imported.")
-                dialog._show_verify_result(SimpleNamespace(verified=False, reason="local_model_hash_mismatch"))
+                dialog._show_verify_result(LocalModelFileStatus("sample-model", available=True, verified=False,
+                                                               reason="local_model_hash_mismatch"))
                 self.assertEqual(dialog.status_label.text(), _("Model verification failed. Import or download a valid GGUF model."))
             finally:
                 dialog.deleteLater()

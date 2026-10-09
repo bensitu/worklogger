@@ -28,12 +28,15 @@ from worklogger.config.constants import (
     STANDARD_WORK_HOURS_SETTING_KEY,
     THEME_SETTING_KEY,
     NETWORK_PROXY_PORT_SETTING_KEY,
+    NETWORK_PROXY_ENABLED_SETTING_KEY,
+    EXTERNAL_MODEL_NAME_SETTING_KEY,
 )
 from worklogger.domain.auth.models import User
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _, available_languages, get_language, set_language
 from worklogger.presentation.settings import SettingsDialog, SettingsPage
+from worklogger.presentation.settings_capabilities import SettingsCapabilities
 from worklogger.presentation.viewmodels import SettingsViewModel
 from worklogger.presentation.widgets import SwitchButton
 from worklogger.presentation.widgets.color_dialog import _ColorDialogTranslator, choose_custom_color
@@ -233,6 +236,7 @@ class SettingsPresentationTests(unittest.TestCase):
     def test_proxy_password_visibility_respects_storage_availability(self):
         model = _view_model(MemorySettingsRepository())
         page = SettingsPage(model)
+        page.set_capabilities(SettingsCapabilities(proxy_routing=True))
         page.refresh()
         self.assertFalse(page.proxy_password_line_edit.isEnabled())
         self.assertFalse(page.proxy_password_visibility_action.isEnabled())
@@ -261,11 +265,36 @@ class SettingsPresentationTests(unittest.TestCase):
     def test_local_model_enabled_preference_does_not_claim_unavailable_model_is_ready(self):
         page = SettingsPage(_view_model(MemorySettingsRepository()))
         page.refresh()
-        self.assertIn("unavailable", page.local_model_status_label.text())
+        self.assertEqual(page.local_model_status_label.text(), "No verified model file selected.")
+        self.assertFalse(page.local_model_enabled_switch.isEnabled())
         page.set_local_model_status(ready=True, name="Verified model")
         self.assertIn("Verified model", page.local_model_status_label.text())
         page.local_model_enabled_switch.set_checked(False)
-        self.assertEqual(page.local_model_status_label.text(), "Local model disabled.")
+        self.assertIn("Verified model", page.local_model_status_label.text())
+        self.assertIn("unavailable", page.local_runtime_status_label.text())
+
+    def test_unavailable_services_preserve_preferences_without_claiming_activation(self):
+        repository = MemorySettingsRepository()
+        model = _view_model(repository)
+        model.set_bool(AI_ASSIST_ENABLED_SETTING_KEY, True)
+        model.set_bool(LOCAL_MODEL_ENABLED_SETTING_KEY, True)
+        model.set_bool(NETWORK_PROXY_ENABLED_SETTING_KEY, True)
+        model.set_text(EXTERNAL_MODEL_NAME_SETTING_KEY, "retained-model")
+        before = dict(repository.values)
+        page = SettingsPage(model)
+        page.refresh()
+        self.assertFalse(page.ai_enabled_switch.isEnabled())
+        self.assertFalse(page.ai_enabled_switch.is_checked())
+        self.assertFalse(page.local_model_enabled_switch.isEnabled())
+        self.assertFalse(page.proxy_enabled_switch.isEnabled())
+        self.assertFalse(page.external_model_line_edit.isEnabled())
+        self.assertEqual(page.external_model_line_edit.text(), "retained-model")
+        self.assertEqual(repository.values, before)
+        page.set_capabilities(SettingsCapabilities(local_generation=True, proxy_routing=True))
+        self.assertTrue(page.ai_enabled_switch.isEnabled())
+        self.assertTrue(page.ai_enabled_switch.is_checked())
+        self.assertTrue(page.proxy_enabled_switch.is_checked())
+        self.assertEqual(repository.values, before)
 
     def test_native_settings_expose_unavailable_features_and_busy_state(self) -> None:
         page = SettingsPage(_view_model(MemorySettingsRepository()))
@@ -390,6 +419,7 @@ class SettingsPresentationTests(unittest.TestCase):
     def test_settings_dialog_exposes_ai_local_model_and_about_tabs(self) -> None:
         repository = MemorySettingsRepository()
         dialog = SettingsDialog(_view_model(repository))
+        dialog.set_capabilities(SettingsCapabilities(local_generation=True))
 
         self.assertTrue(dialog.refresh())
         self.assertIsInstance(dialog.page, SettingsPage)

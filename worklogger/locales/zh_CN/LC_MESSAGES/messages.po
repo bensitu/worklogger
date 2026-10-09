@@ -73,11 +73,11 @@ msgstr "关于"
 msgid "Account"
 msgstr "账户"
 
+msgid "Account: {username}"
+msgstr "账户：{username}"
+
 msgid "Active"
 msgstr "已启用"
-
-msgid "Active local model: {model}"
-msgstr "当前本地模型：{model}"
 
 msgid "Active model updated."
 msgstr "当前模型已更新。"
@@ -162,6 +162,9 @@ msgstr "平均值"
 
 msgid "Average Work Hours"
 msgstr "平均工时"
+
+msgid "Back to account"
+msgstr "返回账户"
 
 msgid "Back to login"
 msgstr "返回登录"
@@ -301,6 +304,9 @@ msgstr "复制 Markdown"
 msgid "Copy recovery key"
 msgstr "复制恢复密钥"
 
+msgid "Copy temporary password"
+msgstr "复制临时密码"
+
 msgid "Create account"
 msgstr "创建账户"
 
@@ -318,6 +324,9 @@ msgstr "当前 ID"
 
 msgid "Current password"
 msgstr "当前密码"
+
+msgid "Current report exported for {period}."
+msgstr "已导出 {period} 的当前报表。"
 
 msgid "Current user"
 msgstr "当前用户"
@@ -348,6 +357,9 @@ msgstr "数据恢复成功。"
 
 msgid "Database Backup"
 msgstr "数据库备份"
+
+msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
+msgstr "包含休息类型记录的日期。工作天数与休息天数可以重叠，请假单独统计。"
 
 msgid "December"
 msgstr "12月"
@@ -487,6 +499,9 @@ msgstr "导出报表"
 msgid "Export cancelled"
 msgstr "已取消导出"
 
+msgid "Export current report"
+msgstr "导出当前报表"
+
 msgid "Exported CSV"
 msgstr "已导出 CSV"
 
@@ -514,6 +529,12 @@ msgstr "外部模型"
 msgid "External model testing is not configured."
 msgstr "外部模型测试尚未配置。"
 
+msgid "External text processing is available."
+msgstr "外部文本处理可用。"
+
+msgid "External text processing is unavailable. Saved preferences are retained."
+msgstr "外部文本处理不可用，已保存的配置会保留。"
+
 msgid "February"
 msgstr "2月"
 
@@ -534,6 +555,12 @@ msgstr "GNU GPLv3"
 
 msgid "General"
 msgstr "常规"
+
+msgid "Generate from records"
+msgstr "从记录生成"
+
+msgid "Generated draft"
+msgstr "生成的草稿"
 
 msgid "GitHub"
 msgstr "GitHub"
@@ -640,6 +667,9 @@ msgstr "保留这份草稿以便稍后继续吗？"
 msgid "Keep this recovery key private. The saved file is not encrypted."
 msgstr "请妥善保管此恢复密钥，不要分享给他人。保存的文件未加密。"
 
+msgid "Keep this temporary password private. The saved file is not encrypted."
+msgstr "请妥善保管此临时密码，不要分享给他人。保存的文件未加密。"
+
 msgid "Korean"
 msgstr "韩语"
 
@@ -682,14 +712,17 @@ msgstr "本地模型"
 msgid "Local Models"
 msgstr "本地模型"
 
-msgid "Local model disabled."
-msgstr "本地模型已关闭。"
-
 msgid "Local model management is not configured."
 msgstr "本地模型管理尚未配置。"
 
 msgid "Local model unavailable. Download, import and select a verified model."
 msgstr "本地模型不可用。请下载或导入模型，并选择已验证的模型。"
+
+msgid "Local text processing is available."
+msgstr "本地文本处理可用。"
+
+msgid "Local text processing is unavailable."
+msgstr "本地文本处理不可用。"
 
 msgid "Local user"
 msgstr "本地用户"
@@ -742,6 +775,12 @@ msgstr "模型已删除。"
 msgid "Model downloaded."
 msgstr "模型已下载。"
 
+msgid "Model file management is unavailable."
+msgstr "模型文件管理不可用。"
+
+msgid "Model file selection does not activate a text-processing service."
+msgstr "选择模型文件不会启用文本处理服务。"
+
 msgid "Model imported."
 msgstr "模型已导入。"
 
@@ -777,9 +816,6 @@ msgstr "全国假日"
 
 msgid "Network"
 msgstr "网络"
-
-msgid "Network proxy settings are saved now; applying them to HTTP requests is a follow-up item."
-msgstr "代理配置已保存；应用于 HTTP 请求将在后续版本实现。"
 
 msgid "New password"
 msgstr "新密码"
@@ -832,6 +868,9 @@ msgstr "所选日期没有记录。"
 msgid "No saved reports"
 msgstr "尚无已保存的报表"
 
+msgid "No verified model file selected."
+msgstr "未选择已验证的模型文件。"
+
 msgid "Normal"
 msgstr "常规"
 
@@ -864,9 +903,6 @@ msgstr "10月"
 
 msgid "Open"
 msgstr "打开"
-
-msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
-msgstr "支持 OpenAI 兼容接口，可通过兼容服务接入 ChatGPT、Claude、Qwen 和 DeepSeek 等模型。"
 
 msgid "Operation cancelled."
 msgstr "操作已取消。"
@@ -961,6 +997,12 @@ msgstr "上个月"
 msgid "Previous period"
 msgstr "上一期间"
 
+msgid "Proxy routing is available."
+msgstr "代理路由可用。"
+
+msgid "Proxy routing is unavailable. Saved preferences are retained."
+msgstr "代理路由不可用，已保存的配置会保留。"
+
 msgid "Public holidays"
 msgstr "法定节假日"
 
@@ -1012,6 +1054,9 @@ msgstr "已恢复草稿"
 msgid "Recovery key"
 msgstr "恢复密钥"
 
+msgid "Recovery key for {username}"
+msgstr "恢复密钥（账户：{username}）"
+
 msgid "Recovery key saved."
 msgstr "恢复密钥已保存。"
 
@@ -1041,6 +1086,9 @@ msgstr "替换"
 
 msgid "Replace the saved content of this report? This cannot be undone."
 msgstr "是否覆盖这份报表已保存的内容？此操作无法撤销。"
+
+msgid "Replace the visible draft with current records? The saved report will not change until you save."
+msgstr "用当前记录替换可见草稿吗？已保存的报表仅在再次保存后才会修改。"
 
 msgid "Report"
 msgstr "报表"
@@ -1135,6 +1183,9 @@ msgstr "保存恢复密钥"
 msgid "Save template"
 msgstr "保存模板"
 
+msgid "Save temporary password"
+msgstr "保存临时密码"
+
 msgid "Save the completed automatic record before starting another."
 msgstr "开始新的自动记录前，请先保存已结束的记录。"
 
@@ -1146,6 +1197,9 @@ msgstr "返回登录前请保存此恢复密钥。"
 
 msgid "Saved"
 msgstr "已保存"
+
+msgid "Saved report #{report_id}"
+msgstr "已保存报表 #{report_id}"
 
 msgid "Saved. Language changes apply after restarting."
 msgstr "已保存。重启后语言设置生效。"
@@ -1194,6 +1248,9 @@ msgstr "请选择当天的一条时间记录进行编辑。"
 
 msgid "Selected day: {day}"
 msgstr "所选日期：{day}"
+
+msgid "Selected model file: {name}"
+msgstr "已选择模型文件：{name}"
 
 msgid "Selected user"
 msgstr "选中用户"
@@ -1258,9 +1315,6 @@ msgstr "每周从周一开始"
 msgid "State / province"
 msgstr "州 / 省"
 
-msgid "Stored securely in a future update"
-msgstr "安全存储将在后续版本提供"
-
 msgid "Sun"
 msgstr "日"
 
@@ -1279,11 +1333,20 @@ msgstr "模板"
 msgid "Temporary password"
 msgstr "临时密码"
 
+msgid "Temporary password for {username}"
+msgstr "临时密码（账户：{username}）"
+
+msgid "Temporary password saved."
+msgstr "临时密码已保存。"
+
 msgid "Test"
 msgstr "测试"
 
 msgid "Text files (*.txt)"
 msgstr "文本文件 (*.txt)"
+
+msgid "Text processing is unavailable. Saved preferences are retained."
+msgstr "文本处理不可用，已保存的配置会保留。"
 
 msgid "The CSV file exceeds the supported size or row limit."
 msgstr "CSV 文件超出支持的大小或行数限制。"
@@ -1414,6 +1477,9 @@ msgstr "无法保存恢复密钥。请选择其他位置后重试。"
 msgid "Unable to save the report. Your changes have been retained."
 msgstr "无法保存报表，您的编辑内容已保留。"
 
+msgid "Unable to save the temporary password. Choose another location and try again."
+msgstr "无法保存临时密码。请选择其他位置后重试。"
+
 msgid "Unable to save the work log. Your changes have been retained."
 msgstr "无法保存工作记录，您的修改已保留。"
 
@@ -1465,6 +1531,9 @@ msgstr "使用模型"
 msgid "User"
 msgstr "用户"
 
+msgid "User created, but the account list could not be refreshed."
+msgstr "用户已创建，但账户列表未能刷新。"
+
 msgid "User created."
 msgstr "用户已创建。"
 
@@ -1503,9 +1572,6 @@ msgstr "周报"
 
 msgid "Welcome!"
 msgstr "欢迎！"
-
-msgid "When enabled, text processing uses the local model first; no data is sent to external services."
-msgstr "启用后，文本处理优先使用本地模型，不向外部服务发送数据。"
 
 msgid "Work Hours Trend"
 msgstr "工时趋势"

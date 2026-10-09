@@ -129,6 +129,11 @@ creation, the new account is selected and its recovery key is displayed. Resetti
 shows the supplied temporary password, and changing the selected account clears
 credential text and unfinished reset fields. Deletion requires confirmation and
 still enforces the existing account-protection rules.
+Recovery keys issued during registration, password recovery, or administrator
+account creation use the same copy and plain-text save controls as password
+changes. Administrator resets provide a separate temporary-password handoff.
+The account detail panel temporarily replaces reset fields with that result;
+Back to account returns to editing and clears the displayed credential.
 
 ## Notes
 
@@ -173,6 +178,12 @@ Report content is saved Markdown, not a live query. Changing a work record does
 not rewrite an already saved report. Generate or edit it again when needed.
 Template changes are scoped by account, language, and report type. Exported
 Markdown is an unencrypted document. See [templates](templates.md).
+The editor identifies generated drafts and saved report numbers, and marks
+unsaved changes. Generate from records rebuilds the visible content without
+changing the saved report until Save changes succeeds. Cancelling or failing
+generation preserves the visible draft. Export current report is beside Copy and
+Save; it exports the visible content, including unsaved edits, not the history
+list. Suggested filenames identify the period and saved report number or draft.
 
 ## Analytics
 
@@ -182,6 +193,10 @@ comparisons with the preceding period. Leave is represented separately. The
 configured monthly target is multiplied by the number of months in the period.
 Period selectors retain recent periods when you switch scopes after viewing
 historical data, including the current month, quarter, and year.
+Rest Days counts distinct record dates containing a positive-duration Break
+entry, not dates with missing work records. Multiple breaks on one date count
+once; work and rest counts can overlap. Leave and historical break deductions
+are separate, and unrecorded or future dates are not inferred to be rest days.
 
 The Daily Average chart displays the six months ending in the selected month for
 monthly scope, all four quarters of the selected year for quarterly scope, and
@@ -212,15 +227,19 @@ a paginated Unicode text summary, not the chart. See [data formats](data-formats
 | --- | --- |
 | Appearance | Native-language choices, preset/custom accent, light/dark mode; palette appears only for Custom |
 | General | Standard hours, default break, monthly target, holidays, week start, overnight display, platform residency |
-| AI | Preferences and privacy switches, external service fields, local model management; generation is not connected by default |
+| AI | Runtime availability, retained preferences, and model file management; generation controls are disabled when no service is connected |
 | Data | Work-log CSV and iCalendar export, CSV and calendar import, database backup/restore; clearing calendar events is disabled |
-| Network | Stored proxy preferences and system-stored proxy password; these do not currently route adapter traffic |
+| Network | Retained proxy preferences and system-stored password; controls are inactive until composition supplies proxy routing |
 | Account | Current account, password change, identities, administrator tools when authorized, logout |
 | About | Version and author information, license display, repository link, manual update check |
 
 Most settings save when changed. Language changes take effect after restart or
 the next login rather than rebuilding the open interface immediately. Appearance
 and calendar preferences update the active window.
+Unavailable services do not discard their stored settings or credentials. A
+verified selected model file is not presented as an active inference service.
+Settings switches can receive keyboard focus and toggle with Space; native
+accessibility exposes their name and checked state.
 
 ## Backups and Updates
 

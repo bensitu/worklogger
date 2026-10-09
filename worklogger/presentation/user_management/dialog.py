@@ -34,6 +34,7 @@ from worklogger.presentation.widgets import SwitchButton
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
 from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.widgets.credential_actions import CredentialActions
 
 
 class UserManagementDialog(QDialog):
@@ -141,15 +142,26 @@ class UserManagementDialog(QDialog):
         root.addLayout(body, 1)
 
         self.recovery_key_caption = QLabel(_("Recovery key"))
+        self.recovery_key_caption.setWordWrap(True)
+        self.recovery_key_caption.setTextFormat(Qt.TextFormat.PlainText)
         self.recovery_key_caption.setObjectName("recovery_key_caption_label")
         self.recovery_key_label = QLabel("")
         self.recovery_key_label.setObjectName("recovery_key_label")
         self.recovery_key_label.setWordWrap(True)
+        self.recovery_key_label.setTextFormat(Qt.TextFormat.PlainText)
         self.recovery_key_caption.setVisible(False)
         self.recovery_key_label.setVisible(False)
         self.recovery_key_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.credential_layout.addWidget(self.recovery_key_caption)
         self.credential_layout.addWidget(self.recovery_key_label)
+        self.credential_actions = CredentialActions(self.recovery_key_label.text, self)
+        self.credential_actions.hide()
+        self.credential_layout.addWidget(self.credential_actions)
+        self.credential_done_button = QPushButton(_("Back to account"))
+        self.credential_done_button.setAutoDefault(False)
+        self.credential_done_button.clicked.connect(self._dismiss_credential)
+        self.credential_done_button.hide()
+        self.credential_layout.addWidget(self.credential_done_button)
 
         bottom = QHBoxLayout()
         self.status_label = StatusLabel()
@@ -184,6 +196,8 @@ class UserManagementDialog(QDialog):
         layout.setSpacing(12)
         self.selected_user_label = QLabel(_("Select a user."))
         self.selected_user_label.setWordWrap(True)
+        self.selected_user_label.setTextFormat(Qt.TextFormat.PlainText)
+        self.selected_user_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         self.selected_user_label.setProperty("role", "section_heading")
         heading = QHBoxLayout()
         heading.addWidget(self.selected_user_label, 1)
@@ -193,7 +207,8 @@ class UserManagementDialog(QDialog):
         layout.addLayout(heading)
         self.password_change_checkbox = QCheckBox(_("Require password change"))
         layout.addWidget(self.password_change_checkbox)
-        layout.addWidget(self._build_reset_box())
+        self.reset_fields = self._build_reset_box()
+        layout.addWidget(self.reset_fields)
         self.credential_layout = QVBoxLayout()
         self.credential_layout.setSpacing(6)
         layout.addLayout(self.credential_layout)
@@ -216,7 +231,9 @@ class UserManagementDialog(QDialog):
         self.create_confirm_input = QLineEdit()
         self.create_confirm_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.create_admin_switch = SwitchButton()
+        self.create_admin_switch.setAccessibleName(_("Admin"))
         self.create_force_switch = SwitchButton()
+        self.create_force_switch.setAccessibleName(_("Require password change"))
         self.create_force_switch.set_checked(True)
         self.create_user_button = QPushButton(_("Create user"))
         self.create_user_button.setObjectName("create_user_button")
@@ -273,6 +290,11 @@ class UserManagementDialog(QDialog):
             self.recovery_key_caption.hide()
             self.recovery_key_label.clear()
             self.recovery_key_label.hide()
+            self.credential_actions.hide()
+            self.credential_done_button.hide()
+            self.password_change_checkbox.show()
+            self.reset_fields.show()
+            self.delete_user_button.show()
             if user is not None:
                 self.operation_tabs.setCurrentIndex(0)
         self._selection_id = user_id
@@ -304,11 +326,12 @@ class UserManagementDialog(QDialog):
         self.username_input.clear()
         self.create_password_input.clear()
         self.create_confirm_input.clear()
-        self.refresh()
-        self._select_user(result.value.user.id)
+        refreshed = self.refresh()
+        if refreshed:
+            self._select_user(result.value.user.id)
         self.operation_tabs.setCurrentIndex(0)
-        self._show_recovery_key(result.value.recovery_key)
-        self.status_label.setText(_("User created."))
+        self._show_recovery_key(result.value.recovery_key, account_name=result.value.user.username)
+        self.status_label.setText(_("User created.") if refreshed else _("User created, but the account list could not be refreshed."))
 
     def _reset_password(self) -> None:
         user_id = self._selected_user_id()
@@ -327,8 +350,7 @@ class UserManagementDialog(QDialog):
         self.reset_password_input.clear()
         self.reset_confirm_input.clear()
         self.refresh()
-        self._show_recovery_key(result.value)
-        self.recovery_key_caption.setText(_("Temporary password"))
+        self._show_recovery_key(result.value, temporary_password=True)
         self.status_label.setText(_("Password reset."))
 
     def _toggle_required(self) -> None:
@@ -379,11 +401,24 @@ class UserManagementDialog(QDialog):
         user_id = self._selected_user_id()
         return self._users.get(user_id) if user_id is not None else None
 
-    def _show_recovery_key(self, recovery_key: str) -> None:
-        self.recovery_key_caption.setText(_("Recovery key"))
+    def _show_recovery_key(self, recovery_key: str, *, temporary_password=False, account_name=None) -> None:
+        user = self._selected_user()
+        name = account_name if account_name is not None else user.username if user else ""
+        caption = (_("Temporary password for {username}") if temporary_password else _("Recovery key for {username}"))
+        self.recovery_key_caption.setText(caption.format(username=name) if name else
+                                         _("Temporary password") if temporary_password else _("Recovery key"))
         self.recovery_key_label.setText(recovery_key)
         self.recovery_key_caption.setVisible(bool(recovery_key))
         self.recovery_key_label.setVisible(bool(recovery_key))
+        self.credential_actions.set_temporary_password(temporary_password)
+        self.credential_actions.setVisible(bool(recovery_key))
+        self.credential_done_button.setVisible(bool(recovery_key))
+        self.password_change_checkbox.setVisible(not recovery_key)
+        self.reset_fields.setVisible(not recovery_key)
+        self.delete_user_button.setVisible(not recovery_key)
+
+    def _dismiss_credential(self):
+        self._show_recovery_key("")
 
     def _set_error(self, error: AppError | None) -> None:
         self._last_error = error

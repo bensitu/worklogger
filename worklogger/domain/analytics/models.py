@@ -13,6 +13,7 @@ class MonthStats:
     work_days: int
     leave_days: int
     average_hours: float
+    rest_days: int = 0
 
 
 @dataclass(frozen=True)

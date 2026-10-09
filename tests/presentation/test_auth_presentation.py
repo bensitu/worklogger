@@ -304,6 +304,9 @@ class AuthPresentationTests(unittest.TestCase):
         self.assertFalse(dialog.recovery_key_label.isHidden())
         self.assertFalse(dialog.recovery_key_caption.isHidden())
         self.assertEqual(dialog.recovery_key_label.text(), "AAAA-BBBB")
+        dialog.recovery_actions.copy_button.click()
+        self.assertEqual(QApplication.clipboard().text(), "AAAA-BBBB")
+        QApplication.clipboard().clear()
 
     def test_reset_password_dialog_emits_draft_and_shows_new_key(self) -> None:
         dialog = ResetPasswordDialog()
@@ -331,6 +334,11 @@ class AuthPresentationTests(unittest.TestCase):
         self.assertEqual(continue_requested, [True])
         self.assertFalse(dialog.recovery_key_result_label.isHidden())
         self.assertEqual(dialog.recovery_key_result_label.text(), "CCCC-DDDD")
+        self.assertTrue(dialog.password_fields.isHidden())
+        self.assertEqual(dialog.password_input.text(), "")
+        dialog.recovery_actions.copy_button.click()
+        self.assertEqual(QApplication.clipboard().text(), "CCCC-DDDD")
+        QApplication.clipboard().clear()
 
     def test_change_password_dialog_emits_draft_and_shows_new_key(self) -> None:
         dialog = ChangePasswordDialog()
@@ -360,7 +368,7 @@ class AuthPresentationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             target = Path(directory) / "recovery.txt"
             with patch.object(QFileDialog, "getSaveFileName", return_value=(str(target), "")), \
-                    patch("worklogger.presentation.widgets.recovery_key_actions.show_information"):
+                    patch("worklogger.presentation.widgets.credential_actions.show_information"):
                 dialog.recovery_actions.save_button.click()
             self.assertEqual(target.read_text(encoding="utf-8"), "EEEE-FFFF\n")
             with patch("worklogger.infrastructure.files.os.replace", side_effect=OSError("write failed")), \

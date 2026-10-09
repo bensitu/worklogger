@@ -9,6 +9,11 @@ templates are identified by account, language, and report type.
 
 Reset removes the custom template for that selection; it does not delete existing
 reports. Changes affect subsequent generation, not previously saved content.
+Generate from records is available directly in the report editor. Applying a
+saved template uses the same draft-generation operation. Existing report IDs
+are retained until saving; generation failure or a declined replacement leaves
+the visible draft unchanged. Native editor normalization of line endings and
+spacing does not mark an untouched stored report as modified.
 
 ## Rendering
 

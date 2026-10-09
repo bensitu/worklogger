@@ -41,6 +41,25 @@ def _record(
 
 
 class ReportingAndAnalyticsRuleTests(unittest.TestCase):
+    def test_rest_days_count_recorded_break_dates_and_exclude_leave_and_missing_dates(self):
+        day = date(2026, 5, 4)
+        periods = (WorkLog(1, day, "09:00", "12:00"),
+                   WorkLog(1, day, "12:00", "13:00", work_type=WorkType.BREAK),
+                   WorkLog(1, day, "15:00", "15:30", work_type=WorkType.BREAK))
+        rows = (WorkLog(1, day, entries=periods),
+                WorkLog(1, date(2026, 5, 5), "12:00", "13:00", work_type=WorkType.BREAK),
+                WorkLog(1, date(2026, 5, 6), work_type=WorkType.PAID_LEAVE),
+                WorkLog(1, date(2026, 5, 7), "09:00", "18:00", break_hours=1),
+                WorkLog(1, date(2026, 4, 3), "12:00", "13:00", work_type=WorkType.BREAK),
+                WorkLog(1, date(2025, 7, 3), "12:00", "13:00", work_type=WorkType.BREAK))
+        for scope in ("monthly", "quarterly", "annual"):
+            data = dashboard_data(rows, year=2026, month=5, scope=scope, standard_hours=8, monthly_target=168)
+            self.assertEqual(data.stats.rest_days, 2 if scope == "monthly" else 3)
+        self.assertEqual(dashboard_data(rows, year=2026, month=5, scope="monthly",
+                                       standard_hours=8, monthly_target=168).previous_stats.rest_days, 1)
+        self.assertEqual(dashboard_data((), year=2026, month=5, scope="monthly",
+                                       standard_hours=8, monthly_target=168).stats.rest_days, 0)
+
     def test_dashboard_uses_real_days_targets_modes_and_comparison(self) -> None:
         records = (
             _record(date(2026, 3, 6), "09:00", "17:00", 1.0, WorkType.NORMAL),

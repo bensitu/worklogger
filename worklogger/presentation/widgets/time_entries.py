@@ -163,6 +163,7 @@ class TimeEntryPanel(QWidget):
     def _time_input(self, name, title):
         field = QLineEdit()
         field.setObjectName(name)
+        field.setAccessibleName(title)
         field.setMinimumWidth(0)
         field.setPlaceholderText("HH:mm")
         action = field.addAction(ui_icon("clock"), QLineEdit.ActionPosition.TrailingPosition)

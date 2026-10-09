@@ -4,6 +4,11 @@
 
 An implemented adapter is not necessarily connected to the default desktop.
 `worklogger/bootstrap.py` is the authoritative composition entry point.
+`SettingsCapabilities` communicates actual generation and proxy availability to
+the settings surface. Default composition supplies no such services: activation
+and configuration controls are disabled while stored preferences remain intact.
+File management is independent and remains available only when its workflow is
+connected. Capability declarations do not create adapters or route requests.
 
 | Component | Implementation | Default desktop behavior |
 | --- | --- | --- |

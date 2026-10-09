@@ -26,6 +26,7 @@ from worklogger.presentation.auth.controller import (
     RememberSessionStore,
 )
 from worklogger.presentation.settings.dialog import SettingsDialog
+from worklogger.presentation.settings_capabilities import SettingsCapabilities
 from worklogger.presentation.settings.page import SettingsPage
 from worklogger.presentation.user_management import UserManagementDialog
 from worklogger.presentation.viewmodels import (
@@ -95,8 +96,10 @@ class SettingsWorkflowController:
         notify_success: NotificationHandler | None = None,
         notify_error: NotificationHandler | None = None,
         reload_after_restore: ReloadHandler | None = None,
+        capabilities: SettingsCapabilities | None = None,
     ) -> None:
         self._settings_view_model = settings_view_model
+        self._capabilities = capabilities or SettingsCapabilities(model_management=local_models_workflow is not None)
         self._auth_view_model = auth_view_model
         self._user = user
         self._data_management_view_model = data_management_view_model
@@ -150,6 +153,8 @@ class SettingsWorkflowController:
         return page
 
     def _bind_surface(self, surface: QWidget) -> None:
+        if hasattr(surface, "set_capabilities"):
+            surface.set_capabilities(self._capabilities)
         if hasattr(surface, "set_account"):
             surface.set_account(self._user)
         if hasattr(surface, "set_manage_users_available"):

@@ -71,10 +71,10 @@ msgstr ""
 msgid "Account"
 msgstr ""
 
-msgid "Active"
+msgid "Account: {username}"
 msgstr ""
 
-msgid "Active local model: {model}"
+msgid "Active"
 msgstr ""
 
 msgid "Active model updated."
@@ -159,6 +159,9 @@ msgid "Average"
 msgstr ""
 
 msgid "Average Work Hours"
+msgstr ""
+
+msgid "Back to account"
 msgstr ""
 
 msgid "Back to login"
@@ -299,6 +302,9 @@ msgstr ""
 msgid "Copy recovery key"
 msgstr ""
 
+msgid "Copy temporary password"
+msgstr ""
+
 msgid "Create account"
 msgstr ""
 
@@ -315,6 +321,9 @@ msgid "Current ID"
 msgstr ""
 
 msgid "Current password"
+msgstr ""
+
+msgid "Current report exported for {period}."
 msgstr ""
 
 msgid "Current user"
@@ -345,6 +354,9 @@ msgid "Data restored successfully."
 msgstr ""
 
 msgid "Database Backup"
+msgstr ""
+
+msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
 msgstr ""
 
 msgid "December"
@@ -485,6 +497,9 @@ msgstr ""
 msgid "Export cancelled"
 msgstr ""
 
+msgid "Export current report"
+msgstr ""
+
 msgid "Exported CSV"
 msgstr ""
 
@@ -512,6 +527,12 @@ msgstr ""
 msgid "External model testing is not configured."
 msgstr ""
 
+msgid "External text processing is available."
+msgstr ""
+
+msgid "External text processing is unavailable. Saved preferences are retained."
+msgstr ""
+
 msgid "February"
 msgstr ""
 
@@ -531,6 +552,12 @@ msgid "GNU GPLv3"
 msgstr ""
 
 msgid "General"
+msgstr ""
+
+msgid "Generate from records"
+msgstr ""
+
+msgid "Generated draft"
 msgstr ""
 
 msgid "GitHub"
@@ -638,6 +665,9 @@ msgstr ""
 msgid "Keep this recovery key private. The saved file is not encrypted."
 msgstr ""
 
+msgid "Keep this temporary password private. The saved file is not encrypted."
+msgstr ""
+
 msgid "Korean"
 msgstr ""
 
@@ -680,13 +710,16 @@ msgstr ""
 msgid "Local Models"
 msgstr ""
 
-msgid "Local model disabled."
-msgstr ""
-
 msgid "Local model management is not configured."
 msgstr ""
 
 msgid "Local model unavailable. Download, import and select a verified model."
+msgstr ""
+
+msgid "Local text processing is available."
+msgstr ""
+
+msgid "Local text processing is unavailable."
 msgstr ""
 
 msgid "Local user"
@@ -740,6 +773,12 @@ msgstr ""
 msgid "Model downloaded."
 msgstr ""
 
+msgid "Model file management is unavailable."
+msgstr ""
+
+msgid "Model file selection does not activate a text-processing service."
+msgstr ""
+
 msgid "Model imported."
 msgstr ""
 
@@ -774,9 +813,6 @@ msgid "National holidays"
 msgstr ""
 
 msgid "Network"
-msgstr ""
-
-msgid "Network proxy settings are saved now; applying them to HTTP requests is a follow-up item."
 msgstr ""
 
 msgid "New password"
@@ -830,6 +866,9 @@ msgstr ""
 msgid "No saved reports"
 msgstr ""
 
+msgid "No verified model file selected."
+msgstr ""
+
 msgid "Normal"
 msgstr ""
 
@@ -861,9 +900,6 @@ msgid "October"
 msgstr ""
 
 msgid "Open"
-msgstr ""
-
-msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
 msgstr ""
 
 msgid "Operation cancelled."
@@ -959,6 +995,12 @@ msgstr ""
 msgid "Previous period"
 msgstr ""
 
+msgid "Proxy routing is available."
+msgstr ""
+
+msgid "Proxy routing is unavailable. Saved preferences are retained."
+msgstr ""
+
 msgid "Public holidays"
 msgstr ""
 
@@ -1010,6 +1052,9 @@ msgstr ""
 msgid "Recovery key"
 msgstr ""
 
+msgid "Recovery key for {username}"
+msgstr ""
+
 msgid "Recovery key saved."
 msgstr ""
 
@@ -1038,6 +1083,9 @@ msgid "Replace"
 msgstr ""
 
 msgid "Replace the saved content of this report? This cannot be undone."
+msgstr ""
+
+msgid "Replace the visible draft with current records? The saved report will not change until you save."
 msgstr ""
 
 msgid "Report"
@@ -1133,6 +1181,9 @@ msgstr ""
 msgid "Save template"
 msgstr ""
 
+msgid "Save temporary password"
+msgstr ""
+
 msgid "Save the completed automatic record before starting another."
 msgstr ""
 
@@ -1143,6 +1194,9 @@ msgid "Save this recovery key before returning to login."
 msgstr ""
 
 msgid "Saved"
+msgstr ""
+
+msgid "Saved report #{report_id}"
 msgstr ""
 
 msgid "Saved. Language changes apply after restarting."
@@ -1191,6 +1245,9 @@ msgid "Select an individual time record to edit this day."
 msgstr ""
 
 msgid "Selected day: {day}"
+msgstr ""
+
+msgid "Selected model file: {name}"
 msgstr ""
 
 msgid "Selected user"
@@ -1256,9 +1313,6 @@ msgstr ""
 msgid "State / province"
 msgstr ""
 
-msgid "Stored securely in a future update"
-msgstr ""
-
 msgid "Sun"
 msgstr ""
 
@@ -1277,10 +1331,19 @@ msgstr ""
 msgid "Temporary password"
 msgstr ""
 
+msgid "Temporary password for {username}"
+msgstr ""
+
+msgid "Temporary password saved."
+msgstr ""
+
 msgid "Test"
 msgstr ""
 
 msgid "Text files (*.txt)"
+msgstr ""
+
+msgid "Text processing is unavailable. Saved preferences are retained."
 msgstr ""
 
 msgid "The CSV file exceeds the supported size or row limit."
@@ -1412,6 +1475,9 @@ msgstr ""
 msgid "Unable to save the report. Your changes have been retained."
 msgstr ""
 
+msgid "Unable to save the temporary password. Choose another location and try again."
+msgstr ""
+
 msgid "Unable to save the work log. Your changes have been retained."
 msgstr ""
 
@@ -1463,6 +1529,9 @@ msgstr ""
 msgid "User"
 msgstr ""
 
+msgid "User created, but the account list could not be refreshed."
+msgstr ""
+
 msgid "User created."
 msgstr ""
 
@@ -1500,9 +1569,6 @@ msgid "Weekly Report"
 msgstr ""
 
 msgid "Welcome!"
-msgstr ""
-
-msgid "When enabled, text processing uses the local model first; no data is sent to external services."
 msgstr ""
 
 msgid "Work Hours Trend"

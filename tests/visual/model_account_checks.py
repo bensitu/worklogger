@@ -15,10 +15,22 @@ from worklogger.app.queries.local_model_queries import ListLocalModelsQuery
 from worklogger.app.use_cases.local_models import LocalModelInventory
 from worklogger.domain.local_model.models import LocalModelEntry, LocalModelListItem
 from worklogger.domain.shared.result import Result
-from worklogger.infrastructure.i18n import _, available_languages, get_language, set_language
-from worklogger.presentation.auth import ChangePasswordDialog
+from worklogger.infrastructure.i18n import (
+    _,
+    available_languages,
+    get_language,
+    set_language,
+)
+from worklogger.presentation.auth import (
+    ChangePasswordDialog,
+    RegisterDialog,
+    ResetPasswordDialog,
+)
 from worklogger.presentation.local_models import LocalModelsDialog
-from worklogger.presentation.theme import configure_application_style, install_bundled_fonts
+from worklogger.presentation.theme import (
+    configure_application_style,
+    install_bundled_fonts,
+)
 from worklogger.presentation.theme.theme_engine import ThemeEngine
 from worklogger.presentation.viewmodels import LocalModelManagerViewModel
 
@@ -31,7 +43,11 @@ class ModelAccountLayoutChecks(unittest.TestCase):
         install_bundled_fonts()
 
     def setUp(self):
-        self.language, self.stylesheet, self.palette = get_language(), self.app.styleSheet(), self.app.palette()
+        self.language, self.stylesheet, self.palette = (
+            get_language(),
+            self.app.styleSheet(),
+            self.app.palette(),
+        )
         self.engine = ThemeEngine()
 
     def tearDown(self):
@@ -48,42 +64,104 @@ class ModelAccountLayoutChecks(unittest.TestCase):
             set_language(language)
             for dark in (False, True):
                 self.theme(dark)
-                dialog = ChangePasswordDialog()
-                try:
-                    dialog.show()
-                    self.app.processEvents()
-                    self.capture(dialog, f"{language}-change-password-{'dark' if dark else 'light'}")
-                    dialog.set_error(_("Save this recovery key before continuing."))
-                    dialog.mark_complete("example-recovery-key-not-a-credential-" + "x" * 24)
-                    self.app.processEvents()
-                    self.assertLessEqual(dialog.height(), 500)
-                    for widget in (dialog.recovery_key_label, dialog.recovery_actions.copy_button,
-                                   dialog.recovery_actions.save_button, dialog.change_button):
-                        rect = widget.rect().translated(widget.mapTo(dialog, QPoint()))
-                        self.assertTrue(dialog.rect().contains(rect))
-                        if hasattr(widget, "icon"):
-                            self.assertLessEqual(widget.fontMetrics().horizontalAdvance(widget.text()) +
-                                                 (widget.iconSize().width() + 4 if not widget.icon().isNull() else 0) + 16,
-                                                 widget.width())
-                    self.capture(dialog, f"{language}-recovery-key-{'dark' if dark else 'light'}")
-                finally:
-                    dialog.hide()
-                    dialog.deleteLater()
+                for dialog_type in (
+                    ChangePasswordDialog,
+                    RegisterDialog,
+                    ResetPasswordDialog,
+                ):
+                    self.check_credential_dialog(dialog_type, language, dark)
+
+    def check_credential_dialog(self, dialog_type, language, dark):
+        dialog = dialog_type()
+        if hasattr(dialog, "username_input"):
+            dialog.username_input.setText("sample.user")
+        try:
+            dialog.show()
+            self.app.processEvents()
+            self.capture(
+                dialog,
+                f"{language}-{dialog_type.__name__}-{'dark' if dark else 'light'}",
+            )
+            dialog.set_error(_("Save this recovery key before continuing."))
+            dialog.mark_complete("example-recovery-key-not-a-credential-" + "x" * 24)
+            self.app.processEvents()
+            self.assertLessEqual(dialog.height(), 500)
+            key_label = (
+                dialog.recovery_key_result_label
+                if isinstance(dialog, ResetPasswordDialog)
+                else dialog.recovery_key_label
+            )
+            primary = (
+                dialog.change_button
+                if isinstance(dialog, ChangePasswordDialog)
+                else dialog.reset_button
+                if isinstance(dialog, ResetPasswordDialog)
+                else dialog.register_button
+            )
+            for widget in (
+                key_label,
+                dialog.recovery_actions.copy_button,
+                dialog.recovery_actions.save_button,
+                primary,
+            ):
+                rect = widget.rect().translated(widget.mapTo(dialog, QPoint()))
+                self.assertTrue(dialog.rect().contains(rect))
+                if hasattr(widget, "icon"):
+                    self.assertLessEqual(
+                        widget.fontMetrics().horizontalAdvance(widget.text())
+                        + (
+                            widget.iconSize().width() + 4
+                            if not widget.icon().isNull()
+                            else 0
+                        )
+                        + 16,
+                        widget.width(),
+                    )
+            self.capture(
+                dialog,
+                f"{language}-{dialog_type.__name__}-recovery-{'dark' if dark else 'light'}",
+            )
+        finally:
+            dialog.hide()
+            dialog.deleteLater()
 
     def test_model_details_and_actions_fit_inventory_states(self):
         root = Path(__file__).resolve().parents[2]
-        entries = tuple(LocalModelEntry(**entry) for entry in json.loads((root / "model_catalog.json").read_text(encoding="utf-8"))["models"])
-        inventory = LocalModelInventory(tuple(LocalModelListItem(entry, index == 3, index in (1, 2, 3), index in (2, 3))
-                                                for index, entry in enumerate(entries)), entries[3].id)
+        entries = tuple(
+            LocalModelEntry(**entry)
+            for entry in json.loads(
+                (root / "model_catalog.json").read_text(encoding="utf-8")
+            )["models"]
+        )
+        inventory = LocalModelInventory(
+            tuple(
+                LocalModelListItem(
+                    entry, index == 3, index in (1, 2, 3), index in (2, 3)
+                )
+                for index, entry in enumerate(entries)
+            ),
+            entries[3].id,
+        )
 
         class Handlers(FakeLocalModelHandlers):
             def handle(self, command):
-                return Result.success(inventory) if isinstance(command, ListLocalModelsQuery) else super().handle(command)
+                return (
+                    Result.success(inventory)
+                    if isinstance(command, ListLocalModelsQuery)
+                    else super().handle(command)
+                )
 
         handlers = Handlers()
-        model = LocalModelManagerViewModel(user_id=1, list_handler=handlers, refresh_handler=handlers,
-            import_handler=handlers, download_handler=handlers, verify_handler=handlers, select_handler=handlers,
-            delete_handler=handlers)
+        model = LocalModelManagerViewModel(
+            user_id=1,
+            list_handler=handlers,
+            refresh_handler=handlers,
+            import_handler=handlers,
+            download_handler=handlers,
+            verify_handler=handlers,
+            select_handler=handlers,
+            delete_handler=handlers,
+        )
         for language in available_languages():
             set_language(language)
             for dark in (False, True):
@@ -97,21 +175,52 @@ class ModelAccountLayoutChecks(unittest.TestCase):
                         for row in range(4):
                             dialog.model_list.setCurrentRow(row)
                             self.app.processEvents()
-                            self.assertEqual((dialog.width(), dialog.height()), (width, height))
-                            self.assertEqual(dialog.details_scroll.horizontalScrollBar().maximum(), 0)
-                            self.assertEqual(dialog.download_button.isEnabled(), row == 0)
+                            self.assertEqual(
+                                (dialog.width(), dialog.height()), (width, height)
+                            )
+                            self.assertEqual(
+                                dialog.details_scroll.horizontalScrollBar().maximum(), 0
+                            )
+                            self.assertEqual(
+                                dialog.download_button.isEnabled(), row == 0
+                            )
                             self.assertEqual(dialog.verify_button.isEnabled(), row != 0)
                             self.assertEqual(dialog.select_button.isEnabled(), row == 2)
-                            for widget in (dialog.model_list, dialog.details_scroll, dialog.download_button,
-                                           dialog.verify_button, dialog.select_button, dialog.delete_button,
-                                           dialog.refresh_button, dialog.import_button, dialog.close_button):
-                                rect = widget.rect().translated(widget.mapTo(dialog, QPoint()))
-                                self.assertTrue(dialog.rect().contains(rect), (language, width, row, widget))
+                            for widget in (
+                                dialog.model_list,
+                                dialog.details_scroll,
+                                dialog.download_button,
+                                dialog.verify_button,
+                                dialog.select_button,
+                                dialog.delete_button,
+                                dialog.refresh_button,
+                                dialog.import_button,
+                                dialog.close_button,
+                            ):
+                                rect = widget.rect().translated(
+                                    widget.mapTo(dialog, QPoint())
+                                )
+                                self.assertTrue(
+                                    dialog.rect().contains(rect),
+                                    (language, width, row, widget),
+                                )
                                 if hasattr(widget, "text") and widget.text():
-                                    self.assertLessEqual(widget.fontMetrics().horizontalAdvance(widget.text()) +
-                                                         (widget.iconSize().width() + 4 if not widget.icon().isNull() else 0) + 16,
-                                                         widget.width())
-                            self.capture(dialog, f"{language}-models-{'dark' if dark else 'light'}-{width}-{row}")
+                                    self.assertLessEqual(
+                                        widget.fontMetrics().horizontalAdvance(
+                                            widget.text()
+                                        )
+                                        + (
+                                            widget.iconSize().width() + 4
+                                            if not widget.icon().isNull()
+                                            else 0
+                                        )
+                                        + 16,
+                                        widget.width(),
+                                    )
+                            self.capture(
+                                dialog,
+                                f"{language}-models-{'dark' if dark else 'light'}-{width}-{row}",
+                            )
                     selected = dialog._selected_model_id()
                     dialog.refresh()
                     self.assertEqual(dialog._selected_model_id(), selected)

@@ -24,7 +24,7 @@ from worklogger.__about__ import APP_NAME
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
 from worklogger.presentation.widgets.assets import apply_window_icon, asset_path, pixmap_asset
-from worklogger.presentation.widgets.recovery_key_actions import RecoveryKeyActions
+from worklogger.presentation.widgets.credential_actions import CredentialActions, fit_credential_result
 from worklogger.presentation.widgets import SwitchButton
 from worklogger.presentation.widgets.icons import ui_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
@@ -313,6 +313,8 @@ class RegisterDialog(QDialog):
         self.setWindowTitle(_("Create account"))
         apply_window_icon(self)
         self._build_ui()
+        self.resize(480, 360)
+        self.setMinimumWidth(440)
 
     def draft(self) -> RegisterDraft:
         return RegisterDraft(
@@ -328,6 +330,7 @@ class RegisterDialog(QDialog):
         self.recovery_key_label.setText(recovery_key)
         self.recovery_key_label.setVisible(bool(recovery_key))
         self.recovery_key_caption.setVisible(bool(recovery_key))
+        self.recovery_actions.setVisible(bool(recovery_key))
 
     def mark_complete(self, recovery_key: str) -> None:
         self._registration_complete = True
@@ -335,9 +338,15 @@ class RegisterDialog(QDialog):
         self.username_input.setEnabled(False)
         self.password_input.setEnabled(False)
         self.confirm_input.setEnabled(False)
+        self.account_label.setText(_("Account: {username}").format(username=self.username_input.text()))
+        self.account_label.show()
+        self.password_input.clear()
+        self.confirm_input.clear()
+        self.password_fields.hide()
         self.login_button.setEnabled(False)
         self.register_button.setText(_("Continue"))
         self.register_button.setEnabled(True)
+        fit_credential_result(self)
 
     def set_busy(self, busy: bool) -> None:
         self.register_button.setEnabled(not busy)
@@ -352,8 +361,15 @@ class RegisterDialog(QDialog):
         title.setObjectName("register_title_label")
         root.addWidget(title)
 
-        form = QFormLayout()
-        root.addLayout(form)
+        self.account_label = QLabel()
+        self.account_label.setTextFormat(Qt.TextFormat.PlainText)
+        self.account_label.setWordWrap(True)
+        self.account_label.hide()
+        root.addWidget(self.account_label)
+        self.password_fields = QWidget()
+        form = QFormLayout(self.password_fields)
+        form.setContentsMargins(0, 0, 0, 0)
+        root.addWidget(self.password_fields)
         self.username_input = QLineEdit()
         self.username_input.setObjectName("username_line_edit")
         form.addRow(_("Username"), self.username_input)
@@ -378,10 +394,15 @@ class RegisterDialog(QDialog):
         self.recovery_key_label = QLabel("")
         self.recovery_key_label.setObjectName("recovery_key_label")
         self.recovery_key_label.setWordWrap(True)
+        self.recovery_key_label.setTextFormat(Qt.TextFormat.PlainText)
+        self.recovery_key_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.recovery_key_caption.setVisible(False)
         self.recovery_key_label.setVisible(False)
         root.addWidget(self.recovery_key_caption)
         root.addWidget(self.recovery_key_label)
+        self.recovery_actions = CredentialActions(self.recovery_key_label.text, self)
+        self.recovery_actions.hide()
+        root.addWidget(self.recovery_actions)
 
         buttons = QHBoxLayout()
         self.login_button = QPushButton(_("Back to login"))
@@ -415,6 +436,8 @@ class ResetPasswordDialog(QDialog):
         self.setWindowTitle(_("Reset password"))
         apply_window_icon(self)
         self._build_ui()
+        self.resize(480, 400)
+        self.setMinimumWidth(440)
 
     def draft(self) -> ResetPasswordDraft:
         return ResetPasswordDraft(
@@ -431,6 +454,7 @@ class ResetPasswordDialog(QDialog):
         self.recovery_key_result_label.setText(recovery_key)
         self.recovery_key_result_label.setVisible(bool(recovery_key))
         self.recovery_key_caption.setVisible(bool(recovery_key))
+        self.recovery_actions.setVisible(bool(recovery_key))
 
     def mark_complete(self, recovery_key: str) -> None:
         self._reset_complete = True
@@ -439,9 +463,16 @@ class ResetPasswordDialog(QDialog):
         self.recovery_key_input.setEnabled(False)
         self.password_input.setEnabled(False)
         self.confirm_input.setEnabled(False)
+        self.account_label.setText(_("Account: {username}").format(username=self.username_input.text()))
+        self.account_label.show()
+        self.password_input.clear()
+        self.confirm_input.clear()
+        self.recovery_key_input.clear()
+        self.password_fields.hide()
         self.login_button.setEnabled(False)
         self.reset_button.setText(_("Back to login"))
         self.reset_button.setEnabled(True)
+        fit_credential_result(self)
 
     def set_busy(self, busy: bool) -> None:
         self.reset_button.setEnabled(not busy)
@@ -456,8 +487,15 @@ class ResetPasswordDialog(QDialog):
         title.setObjectName("reset_password_title_label")
         root.addWidget(title)
 
-        form = QFormLayout()
-        root.addLayout(form)
+        self.account_label = QLabel()
+        self.account_label.setTextFormat(Qt.TextFormat.PlainText)
+        self.account_label.setWordWrap(True)
+        self.account_label.hide()
+        root.addWidget(self.account_label)
+        self.password_fields = QWidget()
+        form = QFormLayout(self.password_fields)
+        form.setContentsMargins(0, 0, 0, 0)
+        root.addWidget(self.password_fields)
         self.username_input = QLineEdit()
         self.username_input.setObjectName("username_line_edit")
         form.addRow(_("Username"), self.username_input)
@@ -486,10 +524,15 @@ class ResetPasswordDialog(QDialog):
         self.recovery_key_result_label = QLabel("")
         self.recovery_key_result_label.setObjectName("recovery_key_label")
         self.recovery_key_result_label.setWordWrap(True)
+        self.recovery_key_result_label.setTextFormat(Qt.TextFormat.PlainText)
+        self.recovery_key_result_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.recovery_key_caption.setVisible(False)
         self.recovery_key_result_label.setVisible(False)
         root.addWidget(self.recovery_key_caption)
         root.addWidget(self.recovery_key_result_label)
+        self.recovery_actions = CredentialActions(self.recovery_key_result_label.text, self)
+        self.recovery_actions.hide()
+        root.addWidget(self.recovery_actions)
 
         buttons = QHBoxLayout()
         self.login_button = QPushButton(_("Back to login"))
@@ -553,6 +596,7 @@ class ChangePasswordDialog(QDialog):
         self.password_fields.hide()
         self.change_button.setText(_("Continue"))
         self.change_button.setEnabled(True)
+        fit_credential_result(self)
 
     def set_busy(self, busy: bool) -> None:
         self.change_button.setEnabled(not busy)
@@ -597,12 +641,13 @@ class ChangePasswordDialog(QDialog):
         self.recovery_key_label = QLabel("")
         self.recovery_key_label.setObjectName("recovery_key_label")
         self.recovery_key_label.setWordWrap(True)
+        self.recovery_key_label.setTextFormat(Qt.TextFormat.PlainText)
         self.recovery_key_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.recovery_key_caption.setVisible(False)
         self.recovery_key_label.setVisible(False)
         root.addWidget(self.recovery_key_caption)
         root.addWidget(self.recovery_key_label)
-        self.recovery_actions = RecoveryKeyActions(self.recovery_key_label.text, self)
+        self.recovery_actions = CredentialActions(self.recovery_key_label.text, self)
         self.recovery_actions.hide()
         root.addWidget(self.recovery_actions)
         for label in (title, self.status_label, self.recovery_key_caption, self.recovery_key_label):

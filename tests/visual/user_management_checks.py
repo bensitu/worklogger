@@ -70,13 +70,14 @@ class AccountLayoutChecks(unittest.TestCase):
                                            dialog.reset_password_button, dialog.delete_user_button,
                                            dialog.username_input, dialog.create_password_input,
                                            dialog.create_confirm_input, dialog.create_user_button,
-                                           dialog.recovery_key_label):
+                                           dialog.recovery_key_label, dialog.credential_actions.copy_button,
+                                           dialog.credential_actions.save_button, dialog.credential_done_button):
                                 if widget.isVisible():
                                     rect = widget.rect().translated(widget.mapTo(dialog, QPoint()))
                                     self.assertTrue(dialog.rect().contains(rect), (language, width, tab, widget))
                                     self.assertTrue(widget.parentWidget().rect().contains(widget.geometry()),
                                                     (language, width, tab, widget))
-                            if tab == 0:
+                            if tab == 0 and dialog.reset_fields.isVisible():
                                 self.assertLess(dialog.reset_password_input.geometry().bottom(),
                                                 dialog.reset_confirm_input.geometry().top())
                             self.capture(dialog, f"{language}-users-{'dark' if dark else 'light'}-{width}-{tab}")

@@ -187,7 +187,8 @@ class AnalyticsPage(QWidget):
         overtime_row.addWidget(self.overtime_chart)
         self.overtime_card.content_layout.addLayout(overtime_row)
         self.attendance_card = DotProgressCard(_("Attendance Days"), color="#16a34a")
-        self.rest_card = DotProgressCard(_("Rest Days"), color="#ef4444")
+        self.rest_card = DotProgressCard(_("Rest Days"), color="#64748b")
+        self.rest_card.setToolTip(_("Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."))
         summary_grid.addWidget(self.monthly_hours_card, 0, 0)
         summary_grid.addWidget(self.overtime_card, 0, 1)
         summary_grid.addWidget(self.attendance_card, 0, 2)
@@ -272,9 +273,9 @@ class AnalyticsPage(QWidget):
         self.overtime_chart.set_hours(state.stats.overtime_hours, state.previous_stats.overtime_hours)
         self.overtime_caption_label.setText(_("{change:+.1f}h vs previous period").format(change=state.stats.overtime_hours - state.previous_stats.overtime_hours))
         days = state.stats.work_days
-        rest = state.total_days - days
+        rest = state.stats.rest_days
         self.attendance_card.set_value(f"{days} / {state.total_days}", _("{change:+d} days vs previous period").format(change=days - state.previous_stats.work_days), days, state.total_days)
-        self.rest_card.set_value(str(rest), _("{change:+d} days vs previous period").format(change=rest - (state.previous_total_days - state.previous_stats.work_days)), rest, state.total_days)
+        self.rest_card.set_value(str(rest), _("{change:+d} days vs previous period").format(change=rest - state.previous_stats.rest_days), rest, state.total_days)
         monthly = self.scope_control.value == "monthly"
         self.trend_chart.chart.set_data(state.trend if monthly else _month_chart_labels(state.trend), mode="bar")
         self.average_chart.chart.set_data(state.average if monthly else _month_chart_labels(state.average), mode="bar", average=True)

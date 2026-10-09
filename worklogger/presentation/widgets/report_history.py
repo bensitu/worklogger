@@ -99,7 +99,7 @@ class ReportHistoryPanel(CardFrame):
     export_requested = Signal()
     delete_requested = Signal(object)
 
-    def __init__(self, parent: QWidget | None = None, *, allow_delete=True) -> None:
+    def __init__(self, parent: QWidget | None = None, *, allow_delete=True, show_export=True) -> None:
         super().__init__(parent, object_name="report_history_frame")
         self._items: tuple[ReportHistoryDisplayItem, ...] = ()
         self._buttons: dict[int, QPushButton] = {}
@@ -139,6 +139,7 @@ class ReportHistoryPanel(CardFrame):
         set_button_icon(self.export_button, "file-output", accent=True)
         self.export_button.clicked.connect(self.export_requested.emit)
         self.content_layout.addWidget(self.export_button)
+        self.export_button.setVisible(show_export)
 
     def showEvent(self, event):
         super().showEvent(event)

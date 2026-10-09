@@ -73,11 +73,11 @@ msgstr "정보"
 msgid "Account"
 msgstr "계정"
 
+msgid "Account: {username}"
+msgstr "계정: {username}"
+
 msgid "Active"
 msgstr "활성"
-
-msgid "Active local model: {model}"
-msgstr "사용 중인 로컬 모델: {model}"
 
 msgid "Active model updated."
 msgstr "현재 모델이 업데이트되었습니다."
@@ -162,6 +162,9 @@ msgstr "평균"
 
 msgid "Average Work Hours"
 msgstr "평균 근무 시간"
+
+msgid "Back to account"
+msgstr "계정으로 돌아가기"
 
 msgid "Back to login"
 msgstr "로그인으로 돌아가기"
@@ -301,6 +304,9 @@ msgstr "Markdown 복사"
 msgid "Copy recovery key"
 msgstr "복구 키 복사"
 
+msgid "Copy temporary password"
+msgstr "임시 비밀번호 복사"
+
 msgid "Create account"
 msgstr "계정 만들기"
 
@@ -318,6 +324,9 @@ msgstr "현재 ID"
 
 msgid "Current password"
 msgstr "현재 비밀번호"
+
+msgid "Current report exported for {period}."
+msgstr "{period}의 현재 보고서를 내보냈습니다."
 
 msgid "Current user"
 msgstr "현재 사용자"
@@ -348,6 +357,9 @@ msgstr "데이터가 복원되었습니다."
 
 msgid "Database Backup"
 msgstr "데이터베이스 백업"
+
+msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
+msgstr "휴식 기록이 있는 날짜입니다. 근무일과 휴식일은 겹칠 수 있으며 휴가는 별도로 집계합니다."
 
 msgid "December"
 msgstr "12월"
@@ -487,6 +499,9 @@ msgstr "보고서 내보내기"
 msgid "Export cancelled"
 msgstr "내보내기 취소됨"
 
+msgid "Export current report"
+msgstr "현재 보고서 내보내기"
+
 msgid "Exported CSV"
 msgstr "CSV 내보내기 완료"
 
@@ -514,6 +529,12 @@ msgstr "외부 모델"
 msgid "External model testing is not configured."
 msgstr "외부 모델 테스트가 설정되지 않았습니다."
 
+msgid "External text processing is available."
+msgstr "외부 텍스트 처리를 사용할 수 있습니다."
+
+msgid "External text processing is unavailable. Saved preferences are retained."
+msgstr "외부 텍스트 처리를 사용할 수 없습니다. 저장된 설정은 유지됩니다."
+
 msgid "February"
 msgstr "2월"
 
@@ -534,6 +555,12 @@ msgstr "GNU GPLv3"
 
 msgid "General"
 msgstr "일반"
+
+msgid "Generate from records"
+msgstr "기록에서 생성"
+
+msgid "Generated draft"
+msgstr "생성된 초안"
 
 msgid "GitHub"
 msgstr "GitHub"
@@ -640,6 +667,9 @@ msgstr "이 초안을 나중을 위해 보관할까요?"
 msgid "Keep this recovery key private. The saved file is not encrypted."
 msgstr "이 복구 키를 다른 사람에게 공개하지 마세요. 저장된 파일은 암호화되지 않습니다."
 
+msgid "Keep this temporary password private. The saved file is not encrypted."
+msgstr "이 임시 비밀번호를 다른 사람에게 공개하지 마세요. 저장된 파일은 암호화되지 않습니다."
+
 msgid "Korean"
 msgstr "한국어"
 
@@ -682,14 +712,17 @@ msgstr "로컬 모델"
 msgid "Local Models"
 msgstr "로컬 모델"
 
-msgid "Local model disabled."
-msgstr "로컬 모델이 비활성화되었습니다."
-
 msgid "Local model management is not configured."
 msgstr "로컬 모델 관리가 설정되지 않았습니다."
 
 msgid "Local model unavailable. Download, import and select a verified model."
 msgstr "로컬 모델을 사용할 수 없습니다. 모델을 다운로드하거나 가져온 후 검증된 모델을 선택하세요."
+
+msgid "Local text processing is available."
+msgstr "로컬 텍스트 처리를 사용할 수 있습니다."
+
+msgid "Local text processing is unavailable."
+msgstr "로컬 텍스트 처리를 사용할 수 없습니다."
 
 msgid "Local user"
 msgstr "로컬 사용자"
@@ -742,6 +775,12 @@ msgstr "모델이 삭제되었습니다."
 msgid "Model downloaded."
 msgstr "모델이 다운로드되었습니다."
 
+msgid "Model file management is unavailable."
+msgstr "모델 파일 관리를 사용할 수 없습니다."
+
+msgid "Model file selection does not activate a text-processing service."
+msgstr "모델 파일을 선택해도 텍스트 처리 서비스는 활성화되지 않습니다."
+
 msgid "Model imported."
 msgstr "모델을 가져왔습니다."
 
@@ -777,9 +816,6 @@ msgstr "전국 공휴일"
 
 msgid "Network"
 msgstr "네트워크"
-
-msgid "Network proxy settings are saved now; applying them to HTTP requests is a follow-up item."
-msgstr "프록시 설정은 저장됩니다. HTTP 요청에 적용하는 기능은 추후 지원됩니다."
 
 msgid "New password"
 msgstr "새 비밀번호"
@@ -832,6 +868,9 @@ msgstr "선택한 날짜에 기록이 없습니다."
 msgid "No saved reports"
 msgstr "저장된 보고서 없음"
 
+msgid "No verified model file selected."
+msgstr "검증된 모델 파일이 선택되지 않았습니다."
+
 msgid "Normal"
 msgstr "일반"
 
@@ -864,9 +903,6 @@ msgstr "10월"
 
 msgid "Open"
 msgstr "열기"
-
-msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
-msgstr "OpenAI 호환 인터페이스를 지원하며 호환 서비스를 통해 ChatGPT, Claude, Qwen, DeepSeek 등을 사용할 수 있습니다."
 
 msgid "Operation cancelled."
 msgstr "작업이 취소되었습니다."
@@ -961,6 +997,12 @@ msgstr "이전 달"
 msgid "Previous period"
 msgstr "이전 기간"
 
+msgid "Proxy routing is available."
+msgstr "프록시 라우팅을 사용할 수 있습니다."
+
+msgid "Proxy routing is unavailable. Saved preferences are retained."
+msgstr "프록시 라우팅을 사용할 수 없습니다. 저장된 설정은 유지됩니다."
+
 msgid "Public holidays"
 msgstr "공휴일"
 
@@ -1012,6 +1054,9 @@ msgstr "복구된 초안"
 msgid "Recovery key"
 msgstr "복구 키"
 
+msgid "Recovery key for {username}"
+msgstr "{username}의 복구 키"
+
 msgid "Recovery key saved."
 msgstr "복구 키를 저장했습니다."
 
@@ -1041,6 +1086,9 @@ msgstr "바꾸기"
 
 msgid "Replace the saved content of this report? This cannot be undone."
 msgstr "이 보고서의 저장된 내용을 교체할까요? 이 작업은 되돌릴 수 없습니다."
+
+msgid "Replace the visible draft with current records? The saved report will not change until you save."
+msgstr "현재 기록으로 표시된 초안을 바꿀까요? 저장된 보고서는 다시 저장하기 전까지 변경되지 않습니다."
 
 msgid "Report"
 msgstr "보고서"
@@ -1135,6 +1183,9 @@ msgstr "복구 키 저장"
 msgid "Save template"
 msgstr "템플릿 저장"
 
+msgid "Save temporary password"
+msgstr "임시 비밀번호 저장"
+
 msgid "Save the completed automatic record before starting another."
 msgstr "새 기록을 시작하기 전에 완료된 자동 기록을 저장하세요."
 
@@ -1146,6 +1197,9 @@ msgstr "로그인으로 돌아가기 전에 이 복구 키를 저장하세요."
 
 msgid "Saved"
 msgstr "저장됨"
+
+msgid "Saved report #{report_id}"
+msgstr "저장된 보고서 #{report_id}"
 
 msgid "Saved. Language changes apply after restarting."
 msgstr "저장되었습니다. 언어 변경은 다시 시작한 후 적용됩니다."
@@ -1194,6 +1248,9 @@ msgstr "해당 날짜의 시간 기록을 선택하여 편집하세요."
 
 msgid "Selected day: {day}"
 msgstr "선택한 날짜: {day}"
+
+msgid "Selected model file: {name}"
+msgstr "선택한 모델 파일: {name}"
 
 msgid "Selected user"
 msgstr "선택한 사용자"
@@ -1258,9 +1315,6 @@ msgstr "월요일부터 한 주 시작"
 msgid "State / province"
 msgstr "주 / 도"
 
-msgid "Stored securely in a future update"
-msgstr "안전한 저장은 추후 지원됩니다"
-
 msgid "Sun"
 msgstr "일"
 
@@ -1279,11 +1333,20 @@ msgstr "템플릿"
 msgid "Temporary password"
 msgstr "임시 비밀번호"
 
+msgid "Temporary password for {username}"
+msgstr "{username}의 임시 비밀번호"
+
+msgid "Temporary password saved."
+msgstr "임시 비밀번호를 저장했습니다."
+
 msgid "Test"
 msgstr "테스트"
 
 msgid "Text files (*.txt)"
 msgstr "텍스트 파일 (*.txt)"
+
+msgid "Text processing is unavailable. Saved preferences are retained."
+msgstr "텍스트 처리를 사용할 수 없습니다. 저장된 설정은 유지됩니다."
 
 msgid "The CSV file exceeds the supported size or row limit."
 msgstr "CSV 파일이 지원되는 크기 또는 행 수 제한을 초과했습니다."
@@ -1414,6 +1477,9 @@ msgstr "복구 키를 저장할 수 없습니다. 다른 위치를 선택하고 
 msgid "Unable to save the report. Your changes have been retained."
 msgstr "보고서를 저장할 수 없습니다. 편집 내용은 유지되었습니다."
 
+msgid "Unable to save the temporary password. Choose another location and try again."
+msgstr "임시 비밀번호를 저장할 수 없습니다. 다른 위치를 선택하고 다시 시도하세요."
+
 msgid "Unable to save the work log. Your changes have been retained."
 msgstr "작업 기록을 저장하지 못했습니다. 변경 내용은 유지되었습니다."
 
@@ -1465,6 +1531,9 @@ msgstr "모델 사용"
 msgid "User"
 msgstr "사용자"
 
+msgid "User created, but the account list could not be refreshed."
+msgstr "사용자를 만들었지만 계정 목록을 새로 고치지 못했습니다."
+
 msgid "User created."
 msgstr "사용자가 생성되었습니다."
 
@@ -1503,9 +1572,6 @@ msgstr "주간 보고서"
 
 msgid "Welcome!"
 msgstr "환영합니다!"
-
-msgid "When enabled, text processing uses the local model first; no data is sent to external services."
-msgstr "사용하면 텍스트 처리는 로컬 모델을 우선 사용하며 외부 서비스로 데이터를 보내지 않습니다."
 
 msgid "Work Hours Trend"
 msgstr "근무 시간 추이"

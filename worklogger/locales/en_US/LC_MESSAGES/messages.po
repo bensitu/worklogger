@@ -73,11 +73,11 @@ msgstr "About"
 msgid "Account"
 msgstr "Account"
 
+msgid "Account: {username}"
+msgstr "Account: {username}"
+
 msgid "Active"
 msgstr "Active"
-
-msgid "Active local model: {model}"
-msgstr "Active local model: {model}"
 
 msgid "Active model updated."
 msgstr "Active model updated."
@@ -162,6 +162,9 @@ msgstr "Average"
 
 msgid "Average Work Hours"
 msgstr "Average Work Hours"
+
+msgid "Back to account"
+msgstr "Back to account"
 
 msgid "Back to login"
 msgstr "Back to login"
@@ -301,6 +304,9 @@ msgstr "Copy Markdown"
 msgid "Copy recovery key"
 msgstr "Copy recovery key"
 
+msgid "Copy temporary password"
+msgstr "Copy temporary password"
+
 msgid "Create account"
 msgstr "Create account"
 
@@ -318,6 +324,9 @@ msgstr "Current ID"
 
 msgid "Current password"
 msgstr "Current password"
+
+msgid "Current report exported for {period}."
+msgstr "Current report exported for {period}."
 
 msgid "Current user"
 msgstr "Current user"
@@ -348,6 +357,9 @@ msgstr "Data restored successfully."
 
 msgid "Database Backup"
 msgstr "Database Backup"
+
+msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
+msgstr "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
 
 msgid "December"
 msgstr "December"
@@ -487,6 +499,9 @@ msgstr "Export Reports"
 msgid "Export cancelled"
 msgstr "Export cancelled"
 
+msgid "Export current report"
+msgstr "Export current report"
+
 msgid "Exported CSV"
 msgstr "Exported CSV"
 
@@ -514,6 +529,12 @@ msgstr "External Model"
 msgid "External model testing is not configured."
 msgstr "External model testing is not configured."
 
+msgid "External text processing is available."
+msgstr "External text processing is available."
+
+msgid "External text processing is unavailable. Saved preferences are retained."
+msgstr "External text processing is unavailable. Saved preferences are retained."
+
 msgid "February"
 msgstr "February"
 
@@ -534,6 +555,12 @@ msgstr "GNU GPLv3"
 
 msgid "General"
 msgstr "General"
+
+msgid "Generate from records"
+msgstr "Generate from records"
+
+msgid "Generated draft"
+msgstr "Generated draft"
 
 msgid "GitHub"
 msgstr "GitHub"
@@ -640,6 +667,9 @@ msgstr "Keep this draft for later?"
 msgid "Keep this recovery key private. The saved file is not encrypted."
 msgstr "Keep this recovery key private. The saved file is not encrypted."
 
+msgid "Keep this temporary password private. The saved file is not encrypted."
+msgstr "Keep this temporary password private. The saved file is not encrypted."
+
 msgid "Korean"
 msgstr "Korean"
 
@@ -682,14 +712,17 @@ msgstr "Local Model"
 msgid "Local Models"
 msgstr "Local Models"
 
-msgid "Local model disabled."
-msgstr "Local model disabled."
-
 msgid "Local model management is not configured."
 msgstr "Local model management is not configured."
 
 msgid "Local model unavailable. Download, import and select a verified model."
 msgstr "Local model unavailable. Download, import and select a verified model."
+
+msgid "Local text processing is available."
+msgstr "Local text processing is available."
+
+msgid "Local text processing is unavailable."
+msgstr "Local text processing is unavailable."
 
 msgid "Local user"
 msgstr "Local user"
@@ -742,6 +775,12 @@ msgstr "Model deleted."
 msgid "Model downloaded."
 msgstr "Model downloaded."
 
+msgid "Model file management is unavailable."
+msgstr "Model file management is unavailable."
+
+msgid "Model file selection does not activate a text-processing service."
+msgstr "Model file selection does not activate a text-processing service."
+
 msgid "Model imported."
 msgstr "Model imported."
 
@@ -777,9 +816,6 @@ msgstr "National holidays"
 
 msgid "Network"
 msgstr "Network"
-
-msgid "Network proxy settings are saved now; applying them to HTTP requests is a follow-up item."
-msgstr "Network proxy settings are saved now; applying them to HTTP requests is a follow-up item."
 
 msgid "New password"
 msgstr "New password"
@@ -832,6 +868,9 @@ msgstr "No records for the selected day."
 msgid "No saved reports"
 msgstr "No saved reports"
 
+msgid "No verified model file selected."
+msgstr "No verified model file selected."
+
 msgid "Normal"
 msgstr "Normal"
 
@@ -864,9 +903,6 @@ msgstr "October"
 
 msgid "Open"
 msgstr "Open"
-
-msgid "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
-msgstr "OpenAI-compatible models are supported, including ChatGPT, Claude, Qwen, and DeepSeek."
 
 msgid "Operation cancelled."
 msgstr "Operation cancelled."
@@ -961,6 +997,12 @@ msgstr "Previous month"
 msgid "Previous period"
 msgstr "Previous period"
 
+msgid "Proxy routing is available."
+msgstr "Proxy routing is available."
+
+msgid "Proxy routing is unavailable. Saved preferences are retained."
+msgstr "Proxy routing is unavailable. Saved preferences are retained."
+
 msgid "Public holidays"
 msgstr "Public holidays"
 
@@ -1012,6 +1054,9 @@ msgstr "Recovered draft"
 msgid "Recovery key"
 msgstr "Recovery key"
 
+msgid "Recovery key for {username}"
+msgstr "Recovery key for {username}"
+
 msgid "Recovery key saved."
 msgstr "Recovery key saved."
 
@@ -1041,6 +1086,9 @@ msgstr "Replace"
 
 msgid "Replace the saved content of this report? This cannot be undone."
 msgstr "Replace the saved content of this report? This cannot be undone."
+
+msgid "Replace the visible draft with current records? The saved report will not change until you save."
+msgstr "Replace the visible draft with current records? The saved report will not change until you save."
 
 msgid "Report"
 msgstr "Report"
@@ -1135,6 +1183,9 @@ msgstr "Save recovery key"
 msgid "Save template"
 msgstr "Save template"
 
+msgid "Save temporary password"
+msgstr "Save temporary password"
+
 msgid "Save the completed automatic record before starting another."
 msgstr "Save the completed automatic record before starting another."
 
@@ -1146,6 +1197,9 @@ msgstr "Save this recovery key before returning to login."
 
 msgid "Saved"
 msgstr "Saved"
+
+msgid "Saved report #{report_id}"
+msgstr "Saved report #{report_id}"
 
 msgid "Saved. Language changes apply after restarting."
 msgstr "Saved. Language changes apply after restarting."
@@ -1194,6 +1248,9 @@ msgstr "Select an individual time record to edit this day."
 
 msgid "Selected day: {day}"
 msgstr "Selected day: {day}"
+
+msgid "Selected model file: {name}"
+msgstr "Selected model file: {name}"
 
 msgid "Selected user"
 msgstr "Selected user"
@@ -1258,9 +1315,6 @@ msgstr "Start week on Monday"
 msgid "State / province"
 msgstr "State / province"
 
-msgid "Stored securely in a future update"
-msgstr "Stored securely in a future update"
-
 msgid "Sun"
 msgstr "Sun"
 
@@ -1279,11 +1333,20 @@ msgstr "Templates"
 msgid "Temporary password"
 msgstr "Temporary password"
 
+msgid "Temporary password for {username}"
+msgstr "Temporary password for {username}"
+
+msgid "Temporary password saved."
+msgstr "Temporary password saved."
+
 msgid "Test"
 msgstr "Test"
 
 msgid "Text files (*.txt)"
 msgstr "Text files (*.txt)"
+
+msgid "Text processing is unavailable. Saved preferences are retained."
+msgstr "Text processing is unavailable. Saved preferences are retained."
 
 msgid "The CSV file exceeds the supported size or row limit."
 msgstr "The CSV file exceeds the supported size or row limit."
@@ -1414,6 +1477,9 @@ msgstr "Unable to save the recovery key. Choose another location and try again."
 msgid "Unable to save the report. Your changes have been retained."
 msgstr "Unable to save the report. Your changes have been retained."
 
+msgid "Unable to save the temporary password. Choose another location and try again."
+msgstr "Unable to save the temporary password. Choose another location and try again."
+
 msgid "Unable to save the work log. Your changes have been retained."
 msgstr "Unable to save the work log. Your changes have been retained."
 
@@ -1465,6 +1531,9 @@ msgstr "Use model"
 msgid "User"
 msgstr "User"
 
+msgid "User created, but the account list could not be refreshed."
+msgstr "User created, but the account list could not be refreshed."
+
 msgid "User created."
 msgstr "User created."
 
@@ -1503,9 +1572,6 @@ msgstr "Weekly Report"
 
 msgid "Welcome!"
 msgstr "Welcome!"
-
-msgid "When enabled, text processing uses the local model first; no data is sent to external services."
-msgstr "When enabled, text processing uses the local model first; no data is sent to external services."
 
 msgid "Work Hours Trend"
 msgstr "Work Hours Trend"
