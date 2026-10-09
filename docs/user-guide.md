@@ -57,7 +57,7 @@ Work types are normal work, remote work, business trip, meeting, training, break
 paid leave, compensatory leave, sick leave, and Other. Other appears last and counts
 as worked time. Breaks do not count as work or leave. Leave is accounted for
 separately from worked hours.
-Manage work types beside the selector adds custom account classifications. Assign
+Settings > General > Manage work types adds custom account classifications. Assign
 each to Work, Break, or Leave. Names and accounting categories are saved with each
 period; later catalog edits and archiving do not change historical totals.
 
@@ -230,9 +230,9 @@ a paginated Unicode text summary, not the chart. See [data formats](data-formats
 | --- | --- |
 | Appearance | Native-language choices, preset/custom accent, light/dark mode; palette appears only for Custom |
 | General | Standard hours, default break, monthly target, holidays, week start, overnight display, platform residency |
-| AI | Runtime availability, retained preferences, and model file management; generation controls are disabled when no service is connected |
+| AI | Enable the local-model preference before setup; model management remains separate from generation-service availability |
 | Data | Work-log CSV and iCalendar export, CSV and calendar import, database backup/restore; clearing calendar events is disabled |
-| Network | Retained proxy preferences and system-stored password; controls are inactive until composition supplies proxy routing |
+| Network | Enable the saved proxy preference first, then enter configuration; transport availability is reported separately |
 | Account | Current account, password change, identities, administrator tools when authorized, logout |
 | About | Version and author information, license display, repository link, manual update check |
 

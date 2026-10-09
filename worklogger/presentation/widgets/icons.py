@@ -31,7 +31,9 @@ def _render_pixmap(name: str, color: str, size: QSize, ratio: float) -> QPixmap:
     pixmap.fill(Qt.GlobalColor.transparent)
     painter = QPainter(pixmap)
     try:
-        _renderer(name, color).render(painter, QRectF(0, 0, size.width(), size.height()))
+        side = min(size.width(), size.height())
+        bounds = QRectF((size.width() - side) / 2, (size.height() - side) / 2, side, side)
+        _renderer(name, color).render(painter, bounds)
     finally:
         painter.end()
     QPixmapCache.insert(key, pixmap)

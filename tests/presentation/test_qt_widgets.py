@@ -111,6 +111,12 @@ class QtWidgetTests(unittest.TestCase):
         scaled = icon.pixmap(QSize(20, 20), 2.0)
         self.assertEqual(scaled.size(), QSize(40, 40))
         self.assertEqual(scaled.devicePixelRatio(), 2.0)
+        rectangular = icon.pixmap(QSize(12, 24)).toImage()
+        points = [(x, y) for x in range(rectangular.width()) for y in range(rectangular.height())
+                  if rectangular.pixelColor(x, y).alpha() > 0]
+        width = max(x for x, _y in points) - min(x for x, _y in points) + 1
+        height = max(y for _x, y in points) - min(y for _x, y in points) + 1
+        self.assertLessEqual(abs(width - height), 1)
         changed = QPalette(original)
         changed.setColor(QPalette.ColorRole.ButtonText, QColor("#dc2626"))
         try:

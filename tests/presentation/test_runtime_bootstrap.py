@@ -135,6 +135,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             try:
                 self.assertEqual(get_language(), "ja_JP")
                 page = first.value.window.settings_page
+                self.assertTrue(page.manage_work_types_button.isEnabled())
                 self.assertEqual(page.language_combo.currentData(), "ja_JP")
                 self.assertIsNone(self.preferences.load())
                 page.language_combo.setCurrentIndex(page.language_combo.findData("en_US"))

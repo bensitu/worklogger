@@ -458,6 +458,9 @@ msgstr ""
 msgid "Enter a port between 0 and 65535."
 msgstr ""
 
+msgid "Enter a proxy address and port."
+msgstr ""
+
 msgid "Enter a valid recovery key."
 msgstr ""
 
@@ -731,16 +734,19 @@ msgstr ""
 msgid "Local Models"
 msgstr ""
 
+msgid "Local model is disabled."
+msgstr ""
+
 msgid "Local model management is not configured."
 msgstr ""
 
 msgid "Local model unavailable. Download, import and select a verified model."
 msgstr ""
 
-msgid "Local text processing is available."
+msgid "Local preference is enabled, but no inference service is connected."
 msgstr ""
 
-msgid "Local text processing is unavailable."
+msgid "Local text processing is available."
 msgstr ""
 
 msgid "Local user"
@@ -1037,7 +1043,7 @@ msgstr ""
 msgid "Proxy routing is available."
 msgstr ""
 
-msgid "Proxy routing is unavailable. Saved preferences are retained."
+msgid "Proxy settings are saved, but no proxy transport is connected."
 msgstr ""
 
 msgid "Public holidays"
@@ -1635,6 +1641,9 @@ msgid "Version {version}"
 msgstr ""
 
 msgid "Web proxy"
+msgstr ""
+
+msgid "Web proxy is disabled."
 msgstr ""
 
 msgid "Wed"

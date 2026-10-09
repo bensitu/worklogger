@@ -45,7 +45,7 @@ The retained remote/trip categories describe an arrangement rather than a task;
 choose the primary category and put additional context in Content. A separate
 location dimension would be a future schema change, not an implicit second type.
 
-Manage work types beside the selector creates account-owned custom types. Each
+Settings > General > Manage work types creates account-owned custom types. Each
 has a name and a Work, Break, or Leave accounting category. Work contributes to
 worked hours, Break contributes only to rest-date counts, and Leave contributes
 to leave totals. The selector retains one classification dimension; use Content
@@ -56,6 +56,9 @@ changing, or archiving a type affects new records only. Editing an existing peri
 without changing its selected type preserves the snapshot, even if archived.
 Archived types cannot be chosen for new periods. Active names are unique per
 account after Unicode normalization and case folding.
+The recorder only selects a type. Returning from type management refreshes its
+choices without clearing entered times/content or changing a running timer's
+saved classification.
 
 The calendar's date, mode/time controls, and Save/Clear actions remain outside
 the editor scroll area. The record list scrolls independently, without an outer

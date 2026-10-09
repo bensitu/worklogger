@@ -62,6 +62,8 @@ class SettingsPage(QWidget):
     manage_identities_requested = Signal()
     manage_local_models_requested = Signal()
     manage_users_requested = Signal()
+    manage_work_types_requested = Signal()
+    work_types_changed = Signal()
     logout_requested = Signal()
     restore_requested = Signal()
     update_check_requested = Signal()
@@ -131,6 +133,9 @@ class SettingsPage(QWidget):
         self.manage_users_button.setVisible(bool(available))
         self.manage_users_button.setEnabled(bool(available))
 
+    def set_work_types_available(self, available: bool) -> None:
+        self.manage_work_types_button.setEnabled(available)
+
     def set_state(self, state: SettingsState) -> None:
         self._state = state
         self._updating = True
@@ -171,9 +176,7 @@ class SettingsPage(QWidget):
                 if state.external_api_key_available
                 else _("Secure credential storage is unavailable.")
             )
-            self.local_model_enabled_switch.set_checked(
-                state.local_model_enabled and self._capabilities.local_generation
-            )
+            self.local_model_enabled_switch.set_checked(state.local_model_enabled)
             self._update_local_model_status()
             self.standard_hours_input.setValue(state.standard_work_hours)
             self.default_break_input.setValue(state.default_break_hours)
@@ -194,18 +197,16 @@ class SettingsPage(QWidget):
                     if self._residency_key == ENABLE_TRAY_SETTING_KEY
                     else state.enable_menu_bar
                 )
-            self.proxy_enabled_switch.set_checked(
-                state.network_proxy_enabled and self._capabilities.proxy_routing
-            )
+            self.proxy_enabled_switch.set_checked(state.network_proxy_enabled)
             self.proxy_address_line_edit.setText(state.network_proxy_address)
             self.proxy_port_line_edit.setText(state.network_proxy_port)
             self.proxy_username_line_edit.setText(state.network_proxy_username)
             self.proxy_password_line_edit.setText(state.network_proxy_password)
             self.proxy_password_line_edit.setEnabled(
-                state.proxy_password_available and self._capabilities.proxy_routing
+                state.proxy_password_available and state.network_proxy_enabled
             )
             self.proxy_password_visibility_action.setEnabled(
-                state.proxy_password_available and self._capabilities.proxy_routing
+                state.proxy_password_available and state.network_proxy_enabled
             )
             self.proxy_credentials_status_label.setText(
                 _("Password is stored in the system credential store.")
@@ -215,6 +216,7 @@ class SettingsPage(QWidget):
                 )
             )
             self.proxy_domain_line_edit.setText(state.network_proxy_domain)
+            self._update_configuration_status()
             self.set_backup_time(state.last_backup_at)
         finally:
             self._updating = False
@@ -253,12 +255,7 @@ class SettingsPage(QWidget):
                 "External text processing is unavailable. Saved preferences are retained."
             )
         )
-        self.local_model_enabled_switch.setEnabled(self._capabilities.local_generation)
-        self.local_runtime_status_label.setText(
-            _("Local text processing is available.")
-            if self._capabilities.local_generation
-            else _("Local text processing is unavailable.")
-        )
+        self.local_model_enabled_switch.setEnabled(True)
         for widget in (self.manage_local_models_button,):
             widget.setEnabled(self._capabilities.model_management)
             widget.setToolTip(
@@ -266,19 +263,8 @@ class SettingsPage(QWidget):
                 if self._capabilities.model_management
                 else _("Model file management is unavailable.")
             )
-        self.proxy_enabled_switch.setEnabled(self._capabilities.proxy_routing)
-        for widget in (
-            self.proxy_address_line_edit,
-            self.proxy_port_line_edit,
-            self.proxy_username_line_edit,
-            self.proxy_domain_line_edit,
-        ):
-            widget.setEnabled(self._capabilities.proxy_routing)
-        self.proxy_runtime_status_label.setText(
-            _("Proxy routing is available.")
-            if self._capabilities.proxy_routing
-            else _("Proxy routing is unavailable. Saved preferences are retained.")
-        )
+        self.proxy_enabled_switch.setEnabled(True)
+        self._update_configuration_status()
         for switch, name in (
             (self.ai_enabled_switch, _("AI Assist")),
             (self.ai_notes_switch, _("Include work content")),
@@ -298,6 +284,43 @@ class SettingsPage(QWidget):
                 if self._residency_key == ENABLE_TRAY_SETTING_KEY
                 else _("Enable menu bar")
             )
+
+    def _update_configuration_status(self) -> None:
+        state = self._state
+        for widget in (
+            self.proxy_address_line_edit,
+            self.proxy_port_line_edit,
+            self.proxy_username_line_edit,
+            self.proxy_domain_line_edit,
+        ):
+            widget.setEnabled(bool(state and state.network_proxy_enabled))
+        if state is None:
+            return
+        self.local_runtime_status_label.setText(
+            _("Local model is disabled.")
+            if not state.local_model_enabled
+            else _("Local text processing is available.")
+            if self._capabilities.local_generation
+            else _(
+                "Local preference is enabled, but no inference service is connected."
+            )
+        )
+        port = state.network_proxy_port.strip()
+        configured = bool(
+            state.network_proxy_address.strip()
+            and len(port) <= 5
+            and port.isdecimal()
+            and 0 < int(port) <= 65535
+        )
+        self.proxy_runtime_status_label.setText(
+            _("Web proxy is disabled.")
+            if not state.network_proxy_enabled
+            else _("Enter a proxy address and port.")
+            if not configured
+            else _("Proxy routing is available.")
+            if self._capabilities.proxy_routing
+            else _("Proxy settings are saved, but no proxy transport is connected.")
+        )
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
@@ -368,6 +391,7 @@ class SettingsPage(QWidget):
             manage_identities_requested=self.manage_identities_requested.emit,
             manage_local_models_requested=self.manage_local_models_requested.emit,
             manage_users_requested=self.manage_users_requested.emit,
+            manage_work_types_requested=self.manage_work_types_requested.emit,
             mode_changed=self._mode_changed,
             residency_key=self._residency_key,
             restore_requested=self.restore_requested.emit,

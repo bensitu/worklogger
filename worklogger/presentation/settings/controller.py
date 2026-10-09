@@ -55,6 +55,8 @@ from worklogger.presentation.settings.workflows.account import AccountSettingsWo
 from worklogger.presentation.settings.workflows.common import _error_message
 from worklogger.presentation.settings.workflows.data import DataSettingsWorkflow
 from worklogger.presentation.settings.workflows.updates import UpdatesSettingsWorkflow
+from worklogger.presentation.viewmodels.work_types import WorkTypeManagerViewModel
+from worklogger.presentation.widgets.work_type_manager import WorkTypeManagerDialog
 
 
 class SettingsWorkflowController:
@@ -89,6 +91,7 @@ class SettingsWorkflowController:
         notify_error: NotificationHandler | None = None,
         reload_after_restore: ReloadHandler | None = None,
         capabilities: SettingsCapabilities | None = None,
+        work_types_view_model: WorkTypeManagerViewModel | None = None,
     ) -> None:
         self._settings_view_model = settings_view_model
         self._capabilities = capabilities or SettingsCapabilities(
@@ -102,6 +105,7 @@ class SettingsWorkflowController:
         self._user_management_view_model = user_management_view_model
         self._dialog_factory = dialog_factory or SettingsDialog
         self._page_factory = page_factory or SettingsPage
+        self._work_types_view_model = work_types_view_model
 
         self._data_workflow = DataSettingsWorkflow(
             data_management_view_model=data_management_view_model,
@@ -152,6 +156,10 @@ class SettingsWorkflowController:
         return page
 
     def _bind_surface(self, surface: QWidget) -> None:
+        if hasattr(surface, "set_work_types_available"):
+            surface.set_work_types_available(self._work_types_view_model is not None)
+        if self._work_types_view_model is not None:
+            surface.manage_work_types_requested.connect(lambda: self._manage_work_types(surface))
         if hasattr(surface, "set_capabilities"):
             surface.set_capabilities(self._capabilities)
         if hasattr(surface, "set_account"):
@@ -202,6 +210,12 @@ class SettingsWorkflowController:
     def _open_local_models(self, surface: QWidget) -> None:
         self._local_models_workflow.open(surface)
         self._refresh_local_models_status(surface)
+
+    def _manage_work_types(self, surface: QWidget) -> None:
+        dialog = WorkTypeManagerDialog(self._work_types_view_model, surface)
+        dialog.exec()
+        dialog.deleteLater()
+        surface.work_types_changed.emit()
 
     def _refresh_local_models_status(self, surface: QWidget) -> None:
         view_model = getattr(self._local_models_workflow, "view_model", None)

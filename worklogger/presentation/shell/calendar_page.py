@@ -135,8 +135,7 @@ class CalendarPage(QWidget):
         content.addWidget(self.calendar_scroll, 1)
 
         right = QFrame()
-        right.setMinimumWidth(280)
-        right.setMaximumWidth(360)
+        right.setFixedWidth(300)
         right.setObjectName("calendar_right_panel_frame")
         right_layout = QVBoxLayout(right)
         right_layout.setContentsMargins(12, 0, 0, 0)

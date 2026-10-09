@@ -201,7 +201,7 @@ QToolButton#polish_time_entry_button {
   padding: 3px;
 }
 
-QWidget#worklog_entry_panel_widget QWidget#worklog_auto_tab_widget QPushButton {
+QTabWidget#worklog_mode_tab_widget QWidget#worklog_auto_tab_widget QPushButton {
   min-height: 40px;
   max-height: 40px;
   padding: 6px 8px;
@@ -614,6 +614,14 @@ QLabel#daily_average_value_label {
 QLabel#donut_caption_label, QLabel#dot_caption_label, QLabel#overtime_caption_label,
 QLabel#daily_average_comparison_label {
   font-size: 11px;
+}
+
+QToolButton#copy_report_button {
+  min-width: 20px;
+  max-width: 20px;
+  min-height: 28px;
+  max-height: 28px;
+  padding: 5px 9px;
 }
 
 QToolButton#export_menu_button {

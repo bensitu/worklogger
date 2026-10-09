@@ -460,6 +460,9 @@ msgstr "80자 이내의 이름을 입력하고 집계 분류를 선택하세요.
 msgid "Enter a port between 0 and 65535."
 msgstr "0에서 65535 사이의 포트 번호를 입력하세요."
 
+msgid "Enter a proxy address and port."
+msgstr "프록시 주소와 포트를 입력하세요."
+
 msgid "Enter a valid recovery key."
 msgstr "유효한 복구 키를 입력하세요."
 
@@ -733,17 +736,20 @@ msgstr "로컬 모델"
 msgid "Local Models"
 msgstr "로컬 모델"
 
+msgid "Local model is disabled."
+msgstr "로컬 모델이 꺼져 있습니다."
+
 msgid "Local model management is not configured."
 msgstr "로컬 모델 관리가 설정되지 않았습니다."
 
 msgid "Local model unavailable. Download, import and select a verified model."
 msgstr "로컬 모델을 사용할 수 없습니다. 모델을 다운로드하거나 가져온 후 검증된 모델을 선택하세요."
 
+msgid "Local preference is enabled, but no inference service is connected."
+msgstr "로컬 모델 설정은 켜져 있지만 추론 서비스가 연결되지 않았습니다."
+
 msgid "Local text processing is available."
 msgstr "로컬 텍스트 처리를 사용할 수 있습니다."
-
-msgid "Local text processing is unavailable."
-msgstr "로컬 텍스트 처리를 사용할 수 없습니다."
 
 msgid "Local user"
 msgstr "로컬 사용자"
@@ -1039,8 +1045,8 @@ msgstr "이전 기간"
 msgid "Proxy routing is available."
 msgstr "프록시 라우팅을 사용할 수 있습니다."
 
-msgid "Proxy routing is unavailable. Saved preferences are retained."
-msgstr "프록시 라우팅을 사용할 수 없습니다. 저장된 설정은 유지됩니다."
+msgid "Proxy settings are saved, but no proxy transport is connected."
+msgstr "프록시 설정은 저장되었지만 프록시 통신이 연결되지 않았습니다."
 
 msgid "Public holidays"
 msgstr "공휴일"
@@ -1638,6 +1644,9 @@ msgstr "버전 {version}"
 
 msgid "Web proxy"
 msgstr "웹 프록시"
+
+msgid "Web proxy is disabled."
+msgstr "웹 프록시가 꺼져 있습니다."
 
 msgid "Wed"
 msgstr "수"

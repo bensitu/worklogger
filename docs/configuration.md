@@ -100,6 +100,11 @@ variables. They are stored as strings in the settings repository.
 Model selection also uses `local_model_active_id`. Account password-change
 requirements are enforced by the authentication workflow, not by changing a UI
 preference alone.
+Local model and proxy switches remain editable before their services are configured.
+They display saved preferences, not inferred readiness. Enabling the proxy opens
+its address, port, and optional authentication fields; switching it off preserves
+the configuration. Password editing still requires secure credential storage.
+Missing settings and disconnected services are reported separately from the switch.
 The masked external API-key field is editable when secure storage is available.
 It uses a database/account-specific credential namespace, with an encrypted local
 fallback. Saving a key sends no service request and does not activate inference.

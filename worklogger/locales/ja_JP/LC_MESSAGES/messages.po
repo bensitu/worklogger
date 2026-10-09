@@ -460,6 +460,9 @@ msgstr "80文字以内の名前を入力し、集計区分を選択してくだ�
 msgid "Enter a port between 0 and 65535."
 msgstr "0～65535のポート番号を入力してください。"
 
+msgid "Enter a proxy address and port."
+msgstr "プロキシのアドレスとポートを入力してください。"
+
 msgid "Enter a valid recovery key."
 msgstr "有効なリカバリーキーを入力してください。"
 
@@ -733,17 +736,20 @@ msgstr "ローカルモデル"
 msgid "Local Models"
 msgstr "ローカルモデル"
 
+msgid "Local model is disabled."
+msgstr "ローカルモデルは無効です。"
+
 msgid "Local model management is not configured."
 msgstr "ローカルモデルの管理は未設定です。"
 
 msgid "Local model unavailable. Download, import and select a verified model."
 msgstr "ローカルモデルを利用できません。モデルをダウンロードまたはインポートし、検証済みのモデルを選択してください。"
 
+msgid "Local preference is enabled, but no inference service is connected."
+msgstr "ローカルモデルの設定は有効ですが、推論サービスは接続されていません。"
+
 msgid "Local text processing is available."
 msgstr "ローカルテキスト処理を利用できます。"
-
-msgid "Local text processing is unavailable."
-msgstr "ローカルテキスト処理は利用できません。"
 
 msgid "Local user"
 msgstr "ローカルユーザー"
@@ -1039,8 +1045,8 @@ msgstr "前の期間"
 msgid "Proxy routing is available."
 msgstr "プロキシ通信を利用できます。"
 
-msgid "Proxy routing is unavailable. Saved preferences are retained."
-msgstr "プロキシ通信は利用できません。保存済みの設定は保持されます。"
+msgid "Proxy settings are saved, but no proxy transport is connected."
+msgstr "プロキシ設定は保存されていますが、プロキシ通信は接続されていません。"
 
 msgid "Public holidays"
 msgstr "祝日"
@@ -1638,6 +1644,9 @@ msgstr "バージョン {version}"
 
 msgid "Web proxy"
 msgstr "Webプロキシ"
+
+msgid "Web proxy is disabled."
+msgstr "Webプロキシは無効です。"
 
 msgid "Wed"
 msgstr "水"

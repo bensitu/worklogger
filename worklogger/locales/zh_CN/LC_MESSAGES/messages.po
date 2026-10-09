@@ -460,6 +460,9 @@ msgstr "请输入不超过80个字符的名称，并选择统计口径。"
 msgid "Enter a port between 0 and 65535."
 msgstr "请输入 0 到 65535 之间的端口号。"
 
+msgid "Enter a proxy address and port."
+msgstr "请输入代理地址和端口。"
+
 msgid "Enter a valid recovery key."
 msgstr "请输入有效的恢复密钥。"
 
@@ -733,17 +736,20 @@ msgstr "本地模型"
 msgid "Local Models"
 msgstr "本地模型"
 
+msgid "Local model is disabled."
+msgstr "本地模型已关闭。"
+
 msgid "Local model management is not configured."
 msgstr "本地模型管理尚未配置。"
 
 msgid "Local model unavailable. Download, import and select a verified model."
 msgstr "本地模型不可用。请下载或导入模型，并选择已验证的模型。"
 
+msgid "Local preference is enabled, but no inference service is connected."
+msgstr "本地模型偏好已启用，但尚未接入推理服务。"
+
 msgid "Local text processing is available."
 msgstr "本地文本处理可用。"
-
-msgid "Local text processing is unavailable."
-msgstr "本地文本处理不可用。"
 
 msgid "Local user"
 msgstr "本地用户"
@@ -1039,8 +1045,8 @@ msgstr "上一期间"
 msgid "Proxy routing is available."
 msgstr "代理路由可用。"
 
-msgid "Proxy routing is unavailable. Saved preferences are retained."
-msgstr "代理路由不可用，已保存的配置会保留。"
+msgid "Proxy settings are saved, but no proxy transport is connected."
+msgstr "代理配置已保存，但尚未接入代理传输服务。"
 
 msgid "Public holidays"
 msgstr "法定节假日"
@@ -1638,6 +1644,9 @@ msgstr "版本 {version}"
 
 msgid "Web proxy"
 msgstr "网页代理"
+
+msgid "Web proxy is disabled."
+msgstr "网页代理已关闭。"
 
 msgid "Wed"
 msgstr "三"

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import (
     QComboBox,
+    QPushButton,
 )
 
 from worklogger.config.constants import (
@@ -29,6 +30,7 @@ from worklogger.presentation.settings.sections.common import (
     _switch_row,
 )
 from worklogger.presentation.widgets import SwitchButton
+from worklogger.presentation.widgets.icons import set_button_icon
 
 
 class GeneralSection(_SettingsScrollPage):
@@ -43,6 +45,7 @@ class GeneralSection(_SettingsScrollPage):
         "residency_switch",
         "standard_hours_input",
         "week_start_switch",
+        "manage_work_types_button",
     )
 
     def __init__(self, actions: SectionActions):
@@ -68,6 +71,15 @@ class GeneralSection(_SettingsScrollPage):
             lambda value: actions.set_number(MONTHLY_TARGET_HOURS_SETTING_KEY, value)
         )
         form.addRow(_("Monthly target (h)"), self.monthly_target_input)
+
+        self.manage_work_types_button = QPushButton(_("Manage work types"))
+        self.manage_work_types_button.setObjectName("manage_work_types_button")
+        self.manage_work_types_button.setFixedWidth(320)
+        self.manage_work_types_button.setProperty("variant", "outline")
+        self.manage_work_types_button.setEnabled(False)
+        set_button_icon(self.manage_work_types_button, "settings", accent=True)
+        self.manage_work_types_button.clicked.connect(actions.manage_work_types_requested)
+        form.addRow(_("Work types"), self.manage_work_types_button)
 
         self.holidays_switch = SwitchButton()
         self.holidays_switch.toggled.connect(

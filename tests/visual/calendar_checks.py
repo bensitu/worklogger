@@ -9,7 +9,7 @@ import unittest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QPoint
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QFrame
 
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.worklog.models import WorkLog, WorkType
@@ -179,6 +179,8 @@ class CalendarLayoutChecks(unittest.TestCase):
                             self.app.processEvents()
                             self.assertEqual((window.width(), window.height()), (width, height))
                             panel = window.entry_panel
+                            right = window.calendar_page.findChild(QFrame, "calendar_right_panel_frame")
+                            self.assertGreater(window.calendar_page.calendar_scroll.width(), right.width())
                             self.assertTrue(panel.content_input.isVisible())
                             fields = (panel.start_input, panel.end_input)
                             self.assertEqual(fields[0].mapTo(window, QPoint()).y(), fields[1].mapTo(window, QPoint()).y())
@@ -206,6 +208,8 @@ class CalendarLayoutChecks(unittest.TestCase):
                             panel.time_tabs.setCurrentIndex(1)
                             self.app.processEvents()
                             self.assertTrue(panel.clock_in_button.isVisible())
+                            for button in (panel.clock_in_button, panel.clock_out_button, panel.break_button, panel.discard_timer_button):
+                                self.assertLessEqual(button.fontMetrics().horizontalAdvance(button.text()) + (24 if not button.icon().isNull() else 0) + 18, button.width())
                             self.assertTrue(panel.actions_widget.isVisible())
                             panel.time_tabs.setCurrentIndex(0)
                             self.app.processEvents()

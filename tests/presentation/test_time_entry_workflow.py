@@ -28,7 +28,18 @@ from PySide6.QtCore import QTime
 class TimeEntryWorkflowTests(unittest.TestCase):
     def test_custom_type_management_and_manual_automatic_recording_preserve_saved_categories(self):
         from worklogger.presentation.widgets.work_type_manager import WorkTypeManagerDialog
+        from worklogger.presentation.settings import SettingsWorkflowController
+        from worklogger.presentation.viewmodels.work_types import WorkTypeManagerViewModel
+        from tests.presentation.test_settings_presentation import _view_model, MemorySettingsRepository
+        from tests.presentation.test_settings_workflow import FakeAuthViewModel, FakeDataManagementViewModel
         panel = self.panel
+        controller = SettingsWorkflowController(settings_view_model=_view_model(MemorySettingsRepository()),
+            auth_view_model=FakeAuthViewModel(), user=self.runtime.user,
+            data_management_view_model=FakeDataManagementViewModel(),
+            work_types_view_model=WorkTypeManagerViewModel(panel.view_model.service.work_types))
+        settings = controller.create_page()
+        self.addCleanup(settings.deleteLater)
+        settings.work_types_changed.connect(panel.refresh_work_types)
         definitions = []
 
         def create_type(dialog):
@@ -39,7 +50,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
             return 1
 
         with patch.object(WorkTypeManagerDialog, "exec", create_type):
-            panel.manage_types_button.click()
+            settings.manage_work_types_button.click()
         definition = definitions[0]
         panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData(definition.value))
         panel.start_input.setText("09:00")
@@ -52,6 +63,20 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.now += timedelta(hours=1)
         panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData(definition.value))
         panel.clock_in_button.click()
+        panel.content_input.setPlainText("Ongoing research")
+
+        def edit_type(dialog):
+            dialog.type_list.setCurrentRow(0)
+            dialog.name_input.setText("Study")
+            dialog.category_combo.setCurrentIndex(dialog.category_combo.findData("break"))
+            dialog.save_button.click()
+            return 1
+
+        with patch.object(WorkTypeManagerDialog, "exec", edit_type):
+            settings.manage_work_types_button.click()
+        self.assertEqual(panel.work_type_combo.currentText(), "Research")
+        self.assertEqual(panel.content_input.toPlainText(), "Ongoing research")
+        self.assertEqual(panel.view_model.timer.work_type.category, "work")
         self.now += timedelta(hours=1)
         panel.clock_out_button.click()
         self.assertEqual(len(self.repository.list_for_day(self.runtime.user.id, self.now.date())), 2)
@@ -59,6 +84,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.content_input.setPlainText("Revised description")
         panel.save_button.click()
         self.assertEqual(self.repository.get_entry(self.runtime.user.id, first.id).work_type.label, "Research")
+        self.assertEqual(sum(entry.worked_hours() for entry in self.repository.list_for_day(self.runtime.user.id, self.now.date())), 2)
         self.warning.assert_not_called()
 
     def setUp(self):

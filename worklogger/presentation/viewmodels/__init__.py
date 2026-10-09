@@ -3,6 +3,7 @@
 from importlib import import_module
 
 _EXPORTS = {
+    "WorkTypeManagerViewModel": ["worklogger.presentation.viewmodels.work_types", "WorkTypeManagerViewModel"],
     "AuthModeState": [
         "worklogger.presentation.viewmodels.auth",
         "AuthModeState"

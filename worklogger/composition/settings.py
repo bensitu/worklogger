@@ -29,6 +29,8 @@ from worklogger.app.use_cases.updates import CheckForUpdatesHandler
 from worklogger.app.use_cases.work_logs import (
     GetAllWorkLogsHandler,
 )
+from worklogger.app.use_cases.work_types import WorkTypeService
+from worklogger.presentation.viewmodels.work_types import WorkTypeManagerViewModel
 from worklogger.composition.context import (
     RuntimeAuthRepository,
     RuntimeHandlers,
@@ -137,6 +139,7 @@ def _build_settings_workflow(
             auth_repository,
         ),
         remember_session_store=remember_session_store,
+        work_types_view_model=WorkTypeManagerViewModel(WorkTypeService(user.id, repositories.work_types)),
     )
 
 

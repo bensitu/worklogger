@@ -5,8 +5,10 @@
 An implemented adapter is not necessarily connected to the default desktop.
 `worklogger/bootstrap.py` is the authoritative composition entry point.
 `SettingsCapabilities` communicates actual generation and proxy availability to
-the settings surface. Default composition supplies no such services: activation
-controls are disabled while stored preferences remain intact. External endpoint,
+the settings surface. Default composition supplies no such services: generation
+commands remain unavailable. Local model and proxy preferences can be enabled and
+configured beforehand; their switches show saved intent rather than runtime readiness.
+External endpoint,
 model identifier, and securely stored API-key configuration remain editable without
 activating or contacting a service.
 File management is independent and remains available only when its workflow is

@@ -362,6 +362,8 @@ class AppWindow(QMainWindow):
             self.settings_page.logout_requested.connect(self._request_logout)
         if hasattr(self.settings_page, "settings_changed"):
             self.settings_page.settings_changed.connect(self.apply_settings)
+        if hasattr(self.settings_page, "work_types_changed"):
+            self.settings_page.work_types_changed.connect(self.entry_panel.refresh_work_types)
         self.calendar_view.day_selected.connect(self.select_day)
         self.entry_panel.records_changed.connect(self._entries_changed)
         self.entry_panel.dirty_changed.connect(

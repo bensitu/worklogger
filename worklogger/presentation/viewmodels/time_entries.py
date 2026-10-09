@@ -56,12 +56,6 @@ class TimeEntryViewModel:
     def list_work_types(self):
         return self.service.work_types.list_types() if self.custom_types_available else Result.success(())
 
-    def save_work_type(self, label, category, previous=None):
-        return self.service.work_types.save(label, category, previous)
-
-    def archive_work_type(self, definition):
-        return self.service.work_types.archive(definition)
-
     def elapsed_hours(self):
         return max(0, timestamp_span_hours(self.timer.started_at, self.now())) if self.timer else 0
 

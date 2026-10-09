@@ -16,7 +16,6 @@ from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 from worklogger.presentation.widgets.time_picker import TimePickerDialog
-from worklogger.presentation.widgets.work_type_manager import WorkTypeManagerDialog
 from worklogger.presentation.work_type_labels import work_type_label
 
 
@@ -100,22 +99,11 @@ class TimeEntryPanel(QWidget):
         self.work_type_combo.setObjectName("work_type_combo")
         self._custom_types = ()
         self._reload_work_types()
-        type_row = QHBoxLayout()
-        type_row.setContentsMargins(0, 0, 0, 0)
-        type_row.addWidget(self.work_type_combo, 1)
-        self.manage_types_button = QToolButton()
-        self.manage_types_button.setObjectName("manage_work_types_button")
-        self.manage_types_button.setIcon(ui_icon("settings"))
-        self.manage_types_button.setToolTip(_("Manage work types"))
-        self.manage_types_button.setAccessibleName(_("Manage work types"))
-        self.manage_types_button.setVisible(view_model.custom_types_available)
-        self.manage_types_button.clicked.connect(self._manage_work_types)
-        type_row.addWidget(self.manage_types_button)
         form = QFormLayout()
         form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows)
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         form.setVerticalSpacing(3)
-        form.addRow(_("Work type"), type_row)
+        form.addRow(_("Work type"), self.work_type_combo)
         root.addLayout(form)
         content_heading = QHBoxLayout()
         content_heading.addWidget(QLabel(_("Content")), 1)
@@ -204,16 +192,14 @@ class TimeEntryPanel(QWidget):
                 self.work_type_combo.addItem(definition.label, definition.value)
         self.work_type_combo.addItem(work_type_label(WorkType.OTHER), WorkType.OTHER.value)
 
-    def _manage_work_types(self):
-        dialog = WorkTypeManagerDialog(self.view_model, self)
-        dialog.exec()
-        dialog.deleteLater()
+    def refresh_work_types(self):
         self._updating = True
         result = self._reload_work_types()
         self._updating = False
         if not result.ok:
             self._apply_result(result, refresh=False)
         self._render_editor()
+        return result.ok
 
     def _pick_time(self, field, title):
         dialog = TimePickerDialog(title, field.text(), self)
@@ -282,6 +268,8 @@ class TimeEntryPanel(QWidget):
             work_type = self.view_model.auto_work_type if auto else draft.work_type
             self._populate_work_types()
             snapshot = self.view_model.timer.work_type if auto and self.view_model.timer else draft.original.work_type if not auto and draft.original else None
+            if snapshot is None:
+                snapshot = next((definition for definition in self._custom_types if definition.value == work_type), None)
             if isinstance(snapshot, CustomWorkType) and self.work_type_combo.findData(work_type) < 0:
                 self.work_type_combo.insertItem(self.work_type_combo.count() - 1, snapshot.label, snapshot.value)
             elif isinstance(snapshot, CustomWorkType):
