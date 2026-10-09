@@ -20,6 +20,7 @@ from worklogger.presentation.work_type_labels import work_type_label
 
 
 class TimeEntryPanel(QWidget):
+    recording_changed = Signal()
     records_changed = Signal(object)
     dirty_changed = Signal(bool)
     busy_changed = Signal(bool)
@@ -324,6 +325,20 @@ class TimeEntryPanel(QWidget):
             self.auto_status_label.show()
             self.break_button.setEnabled(False)
         self._fit_mode_height()
+        self.recording_changed.emit()
+
+    def recording_action_state(self):
+        can_start = not self.is_busy and self.view_model.timer is None and not self.view_model.restore_failed
+        can_end = not self.is_busy and self.view_model.timer is not None
+        return can_start, can_end
+
+    def start_recording(self):
+        if self.recording_action_state()[0]:
+            self._start_with_content(self.view_model.auto_work_type, self.view_model.auto_content)
+
+    def end_recording(self):
+        if self.recording_action_state()[1]:
+            self._finish()
 
     def eventFilter(self, watched, event):
         if watched is self.time_tabs and event.type() in (QEvent.Type.Resize, QEvent.Type.LayoutRequest, QEvent.Type.StyleChange, QEvent.Type.FontChange):
@@ -412,6 +427,9 @@ class TimeEntryPanel(QWidget):
 
     def _start(self):
         work_type, content = str(self.work_type_combo.currentData()), self.content_input.toPlainText()
+        self._start_with_content(work_type, content)
+
+    def _start_with_content(self, work_type, content):
         moment = self.view_model.now()
         self._submit(lambda: self.view_model.start(work_type, content, now=moment), refresh=False,
                      on_complete=lambda result: self._complete_start(result, work_type, content, moment))

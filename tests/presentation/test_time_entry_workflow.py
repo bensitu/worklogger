@@ -26,6 +26,50 @@ from PySide6.QtCore import QTime
 
 
 class TimeEntryWorkflowTests(unittest.TestCase):
+    def test_tray_recording_uses_automatic_state_and_preserves_manual_input(self):
+        from worklogger.presentation.shell.residency import QtResidencyController, ResidencyViewModel
+        from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandler
+        from tests.presentation.test_settings_presentation import MemorySettingsRepository
+        settings = MemorySettingsRepository()
+        controller = QtResidencyController(ResidencyViewModel(user_id=1,
+            get_handler=GetSettingHandler(settings), set_handler=SetSettingHandler(settings),
+            platform="win32", availability_probe=lambda: True),
+            application=self.runtime.application, tray_available=lambda: True)
+        controller.attach(self.window)
+        panel = self.panel
+        controller.bind_recording(start_callback=panel.start_recording, end_callback=panel.end_recording,
+                                  state_probe=panel.recording_action_state)
+        panel.recording_changed.connect(controller.update_recording_actions)
+        panel.view_model.auto_work_type = "meeting"
+        panel.view_model.auto_content = "Timed meeting"
+        panel.start_input.setText("07:00")
+        panel.end_input.setText("08:00")
+        panel.content_input.setPlainText("Unsaved manual description")
+        draft = panel.view_model.draft
+        self.window.hide()
+        self.assertTrue(controller._start_action.isEnabled())
+        self.assertFalse(controller._end_action.isEnabled())
+        controller._start_action.trigger()
+        self.assertFalse(controller._start_action.isEnabled())
+        self.assertTrue(controller._end_action.isEnabled())
+        self.assertEqual(panel.view_model.timer.work_type.value, "meeting")
+        self.assertEqual(panel.view_model.draft, draft)
+        panel.is_busy = True
+        controller.update_recording_actions()
+        self.assertFalse(controller._end_action.isEnabled())
+        panel.is_busy = False
+        controller.update_recording_actions()
+        self.now += timedelta(hours=1)
+        controller._end_action.trigger()
+        self.assertTrue(controller._start_action.isEnabled())
+        self.assertFalse(controller._end_action.isEnabled())
+        entry = self.repository.list_for_day(self.runtime.user.id, self.now.date())[0]
+        self.assertEqual((entry.note, entry.work_type.value, entry.worked_hours()), ("Timed meeting", "meeting", 1))
+        self.assertEqual(panel.view_model.draft, draft)
+        self.assertTrue(self.window.isHidden())
+        panel.clear_button.click()
+        self.warning.assert_not_called()
+
     def test_custom_type_management_and_manual_automatic_recording_preserve_saved_categories(self):
         from worklogger.presentation.widgets.work_type_manager import WorkTypeManagerDialog
         from worklogger.presentation.settings import SettingsWorkflowController

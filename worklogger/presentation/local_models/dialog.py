@@ -209,14 +209,12 @@ class LocalModelsDialog(QDialog):
         form = QFormLayout()
         form.setSpacing(12)
         self.file_label, self.size_label, self.ram_label = (self._detail_label() for _index in range(3))
-        self.context_label, self.license_label = self._detail_label(), self._detail_label()
+        self.context_label, self.output_label, self.license_label = (self._detail_label() for _index in range(3))
         for caption, label in ((_("File"), self.file_label), (_("Estimated size"), self.size_label),
-                               (_("Estimated RAM"), self.ram_label), (None, self.context_label),
+                               (_("Estimated RAM"), self.ram_label), (_("Context"), self.context_label),
+                               (_("Output"), self.output_label),
                                (_("License"), self.license_label)):
-            if caption is None:
-                form.addRow(label)
-            else:
-                form.addRow(caption, label)
+            form.addRow(caption, label)
         info.addLayout(form)
         info.addStretch(1)
         self.details_scroll.setWidget(panel)
@@ -283,7 +281,7 @@ class LocalModelsDialog(QDialog):
         if item is None:
             self.model_name_label.setText(_("No models found") if self._state is not None else "")
             for label in (self.model_status_label, self.description_label, self.file_label, self.size_label,
-                          self.ram_label, self.context_label, self.license_label):
+                          self.ram_label, self.context_label, self.output_label, self.license_label):
                 label.clear()
         else:
             entry = item.entry
@@ -293,8 +291,8 @@ class LocalModelsDialog(QDialog):
             self.file_label.setText(entry.filename)
             self.size_label.setText(_("{size} MB").format(size=entry.estimated_size_mb) if entry.estimated_size_mb else _("Unknown"))
             self.ram_label.setText(_("{ram} GB").format(ram=entry.min_ram_gb) if entry.min_ram_gb else _("Unknown"))
-            self.context_label.setText(_("Context: {context} tokens; output: {output} tokens").format(
-                context=entry.context_length, output=entry.max_output_tokens))
+            self.context_label.setText(_("{count} tokens").format(count=entry.context_length))
+            self.output_label.setText(_("{count} tokens").format(count=entry.max_output_tokens))
             self.license_label.setText(entry.license or _("Unknown"))
         self.download_button.setEnabled(bool(not self._busy and item and not item.available and item.entry.download_url))
         self.verify_button.setEnabled(bool(not self._busy and item and item.available))

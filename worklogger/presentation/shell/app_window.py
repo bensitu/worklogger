@@ -168,6 +168,11 @@ class AppWindow(QMainWindow):
                 open_callback=self._restore_from_residency,
                 quit_callback=self._quit_from_residency,
             )
+            if hasattr(self._residency_controller, "bind_recording"):
+                self._residency_controller.bind_recording(start_callback=self.entry_panel.start_recording,
+                    end_callback=self.entry_panel.end_recording, state_probe=self.entry_panel.recording_action_state)
+                self.entry_panel.recording_changed.connect(self._residency_controller.update_recording_actions)
+                self.entry_panel.busy_changed.connect(lambda _busy: self._residency_controller.update_recording_actions())
 
     @property
     def selected_day(self) -> date:

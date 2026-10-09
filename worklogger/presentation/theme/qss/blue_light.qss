@@ -37,7 +37,8 @@ QListWidget#custom_work_type_list_widget::item:selected {
 
 
 QWidget#settings_theme_row_widget,
-QWidget#account_avatar_row_widget {
+QWidget#account_avatar_row_widget,
+QWidget#time_entry_actions_widget {
   background: transparent;
 }
 

@@ -273,6 +273,8 @@ class LocalModelsPresentationTests(unittest.TestCase):
         self.assertTrue(dialog.refresh())
         dialog.model_list.setCurrentRow(0)
         self.assertTrue(dialog.refresh_catalog())
+        self.assertIn(str(handlers.entry.context_length), dialog.context_label.text())
+        self.assertIn(str(handlers.entry.max_output_tokens), dialog.output_label.text())
         dialog.model_list.setCurrentRow(0)
         self.assertTrue(dialog.download_selected())
         dialog.model_list.setCurrentRow(0)

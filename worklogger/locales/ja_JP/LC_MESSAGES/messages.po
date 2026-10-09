@@ -313,6 +313,9 @@ msgstr "内容"
 msgid "Content must not exceed 16,000 characters."
 msgstr "内容は16,000文字以内で入力してください。"
 
+msgid "Context"
+msgstr "コンテキスト"
+
 msgid "Context: {context} tokens; output: {output} tokens"
 msgstr "コンテキスト：{context} トークン、出力：{output} トークン"
 
@@ -471,6 +474,9 @@ msgstr "終了"
 
 msgid "End break early?"
 msgstr "休憩を早めに終了しますか？"
+
+msgid "End recording"
+msgstr "計時を終了"
 
 msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
 msgstr "休憩の終了時刻を {time} に変更し、勤務の記録を開始しますか？保存済みの休憩時間が短くなります。"
@@ -991,6 +997,9 @@ msgstr "操作をキャンセルしました。"
 msgid "Other"
 msgstr "その他"
 
+msgid "Output"
+msgstr "出力"
+
 msgid "Overnight"
 msgstr "日またぎ"
 
@@ -1408,6 +1417,9 @@ msgstr "標準労働時間"
 msgid "Start"
 msgstr "開始"
 
+msgid "Start recording"
+msgstr "計時を開始"
+
 msgid "Start recording or a break before continuing."
 msgstr "続行する前に記録または休憩を開始してください。"
 
@@ -1806,6 +1818,9 @@ msgstr "予定 {count} 件"
 
 msgid "{count} events"
 msgstr "予定 {count} 件"
+
+msgid "{count} tokens"
+msgstr "{count} トークン"
 
 msgid "{duration} ({percent:.0f}%)"
 msgstr "{duration}（{percent:.0f}%）"

@@ -311,6 +311,9 @@ msgstr ""
 msgid "Content must not exceed 16,000 characters."
 msgstr ""
 
+msgid "Context"
+msgstr ""
+
 msgid "Context: {context} tokens; output: {output} tokens"
 msgstr ""
 
@@ -468,6 +471,9 @@ msgid "End"
 msgstr ""
 
 msgid "End break early?"
+msgstr ""
+
+msgid "End recording"
 msgstr ""
 
 msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
@@ -989,6 +995,9 @@ msgstr ""
 msgid "Other"
 msgstr ""
 
+msgid "Output"
+msgstr ""
+
 msgid "Overnight"
 msgstr ""
 
@@ -1406,6 +1415,9 @@ msgstr ""
 msgid "Start"
 msgstr ""
 
+msgid "Start recording"
+msgstr ""
+
 msgid "Start recording or a break before continuing."
 msgstr ""
 
@@ -1803,6 +1815,9 @@ msgid "{count} event"
 msgstr ""
 
 msgid "{count} events"
+msgstr ""
+
+msgid "{count} tokens"
 msgstr ""
 
 msgid "{duration} ({percent:.0f}%)"

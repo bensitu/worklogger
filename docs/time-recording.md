@@ -69,6 +69,14 @@ record list rather than expanding gaps between labels and fields.
 
 ## Automatic Recording
 
+The system tray and macOS menu-bar menu offer Start recording and End recording.
+Their enabled states follow the same account timer as the editor. Start is available
+only when idle and restored successfully; End only while a timer exists. Both are
+disabled during a record operation. They reuse the editor's background workflow,
+captured boundaries, overlap validation, and break confirmation. Tray actions use
+the automatic type/content draft without overwriting manual input or opening the
+main window unnecessarily.
+
 Start persists an active timer with its chosen type and content. The type is fixed
 for that period. Save content persists the description without creating a finished
 time row. End stores time and current content together and clears the timer.
@@ -159,6 +167,9 @@ An available AI service adds a Polish text action to the Content heading. The
 operation rewrites the current description on a background worker. Its result
 remains a local draft until Save or End; times, types, and records are unchanged.
 The general calendar chat entry point is not part of the recording workflow.
+Current Polish text requests are single-turn operations. Repeating the command can
+rewrite the latest draft, but does not carry prior conversation messages. Generic
+chat handlers retain bounded history separately; they are not the polish workflow.
 Collected AI context expands each daily summary into its individual periods and
 includes work descriptions only when account privacy settings permit them. Memo
 content additionally requires per-date approval.

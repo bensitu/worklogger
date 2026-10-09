@@ -130,6 +130,11 @@ class QtResidencyController:
         self._tray_icon: QSystemTrayIcon | None = None
         self._quit_requested = False
         self._last_keep_resident = False
+        self._start_action = None
+        self._end_action = None
+        self._start_recording = None
+        self._end_recording = None
+        self._recording_state = None
 
     @property
     def quit_requested(self) -> bool:
@@ -154,14 +159,45 @@ class QtResidencyController:
             quit_action.triggered.connect(quit_callback or self.request_quit)
             menu.addAction(open_action)
             menu.addSeparator()
+            self._start_action = menu.addAction(_("Start recording"))
+            self._end_action = menu.addAction(_("End recording"))
+            self._start_action.triggered.connect(lambda: self._run_recording_action(True))
+            self._end_action.triggered.connect(lambda: self._run_recording_action(False))
+            menu.addSeparator()
             menu.addAction(quit_action)
+            menu.aboutToShow.connect(self.update_recording_actions)
             self._tray_icon.setContextMenu(menu)
             self._tray_icon.activated.connect(
                 lambda reason: self._handle_activated(reason, open_callback or parent.show)
             )
         self.refresh()
 
+    def bind_recording(self, *, start_callback, end_callback, state_probe):
+        self._start_recording = start_callback
+        self._end_recording = end_callback
+        self._recording_state = state_probe
+        self.update_recording_actions()
+
+    def update_recording_actions(self):
+        if self._start_action is None:
+            return
+        supported = self._recording_state is not None
+        self._start_action.setVisible(supported)
+        self._end_action.setVisible(supported)
+        can_start, can_end = self._recording_state() if supported else (False, False)
+        self._start_action.setEnabled(can_start and not self._quit_requested)
+        self._end_action.setEnabled(can_end and not self._quit_requested)
+
+    def _run_recording_action(self, start):
+        self.update_recording_actions()
+        action = self._start_action if start else self._end_action
+        callback = self._start_recording if start else self._end_recording
+        if action is not None and action.isEnabled() and callback is not None:
+            callback()
+        self.update_recording_actions()
+
     def refresh(self) -> ResidencyState | None:
+        self.update_recording_actions()
         state = self._view_model.load()
         if not state.ok or state.value is None:
             self._last_keep_resident = False

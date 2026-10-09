@@ -313,6 +313,9 @@ msgstr "내용"
 msgid "Content must not exceed 16,000 characters."
 msgstr "내용은 16,000자를 초과할 수 없습니다."
 
+msgid "Context"
+msgstr "문맥"
+
 msgid "Context: {context} tokens; output: {output} tokens"
 msgstr "컨텍스트: {context} 토큰; 출력: {output} 토큰"
 
@@ -471,6 +474,9 @@ msgstr "종료"
 
 msgid "End break early?"
 msgstr "휴식을 일찍 종료할까요?"
+
+msgid "End recording"
+msgstr "시간 기록 종료"
 
 msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
 msgstr "휴식 종료 시간을 {time}(으)로 변경하고 근무 기록을 시작할까요? 저장된 휴식 시간이 줄어듭니다."
@@ -991,6 +997,9 @@ msgstr "작업이 취소되었습니다."
 msgid "Other"
 msgstr "기타"
 
+msgid "Output"
+msgstr "출력"
+
 msgid "Overnight"
 msgstr "자정 넘김"
 
@@ -1408,6 +1417,9 @@ msgstr "표준 근무 시간"
 msgid "Start"
 msgstr "시작"
 
+msgid "Start recording"
+msgstr "시간 기록 시작"
+
 msgid "Start recording or a break before continuing."
 msgstr "계속하기 전에 기록 또는 휴식을 시작하세요."
 
@@ -1806,6 +1818,9 @@ msgstr "일정 {count}개"
 
 msgid "{count} events"
 msgstr "일정 {count}개"
+
+msgid "{count} tokens"
+msgstr "{count} 토큰"
 
 msgid "{duration} ({percent:.0f}%)"
 msgstr "{duration} ({percent:.0f}%)"
