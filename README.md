@@ -59,8 +59,9 @@ a private location.
 ## Data and Upgrades
 
 Source runs use `worklogger/worklog.db`. Packaged applications use `worklog.db`
-beside the running executable. These are separate locations. The directory must
-be writable. Back up through **Settings > Data** before replacing an installation
+in Qt's application-local user-data directory, not beside the executable. These
+are separate locations. See [file locations](docs/configuration.md) for platform
+details. Back up through **Settings > Data** before replacing an installation
 or changing dependencies. SQLite files and exported reports are not encrypted.
 
 Startup applies database migrations. The activity-event naming migration preserves
