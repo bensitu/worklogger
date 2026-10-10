@@ -404,6 +404,9 @@ msgstr ""
 msgid "Current report exported for {period}."
 msgstr ""
 
+msgid "Current saved version"
+msgstr ""
+
 msgid "Current visible report"
 msgstr ""
 
@@ -510,6 +513,9 @@ msgid "Download"
 msgstr ""
 
 msgid "Downloading model..."
+msgstr ""
+
+msgid "Draft"
 msgstr ""
 
 msgid "Edit display name"
@@ -713,6 +719,9 @@ msgstr ""
 msgid "Generated draft"
 msgstr ""
 
+msgid "Generated: {time}"
+msgstr ""
+
 msgid "GitHub"
 msgstr ""
 
@@ -741,6 +750,9 @@ msgid "Historical break deduction: {hours}"
 msgstr ""
 
 msgid "Historical clock records do not contain timezone offsets."
+msgstr ""
+
+msgid "Historical items"
 msgstr ""
 
 msgid "Holiday country"
@@ -848,10 +860,16 @@ msgstr ""
 msgid "Language"
 msgstr ""
 
+msgid "Language: {language}"
+msgstr ""
+
 msgid "Larger context windows increase memory use and may prevent the model from loading."
 msgstr ""
 
 msgid "Last backup: {time}"
+msgstr ""
+
+msgid "Last saved: {time}"
 msgstr ""
 
 msgid "Leave"
@@ -1412,7 +1430,7 @@ msgstr ""
 msgid "Replace"
 msgstr ""
 
-msgid "Replace the saved content of this report? This cannot be undone."
+msgid "Replace the saved content of this report? Previous versions remain available in report versions."
 msgstr ""
 
 msgid "Replace the visible draft with current records? The saved report will not change until you save."
@@ -1425,6 +1443,9 @@ msgid "Report #{report_id}"
 msgstr ""
 
 msgid "Report saved."
+msgstr ""
+
+msgid "Report versions"
 msgstr ""
 
 msgid "Reports"
@@ -1460,7 +1481,13 @@ msgstr ""
 msgid "Restore cancelled"
 msgstr ""
 
+msgid "Restore this version as the current report? Any unsaved editor content will be replaced after successful recovery."
+msgstr ""
+
 msgid "Restore validation passed."
+msgstr ""
+
+msgid "Restore version"
 msgstr ""
 
 msgid "Restore will replace the current database file. Continue?"
@@ -1700,10 +1727,25 @@ msgstr ""
 msgid "Source URL"
 msgstr ""
 
+msgid "Source information unavailable for this report."
+msgstr ""
+
+msgid "Source references: {count}"
+msgstr ""
+
+msgid "Sources"
+msgstr ""
+
+msgid "Sources describe the last generation, not verification of later text edits."
+msgstr ""
+
 msgid "Split record"
 msgstr ""
 
 msgid "Splitting across dates changes daily and period totals."
+msgstr ""
+
+msgid "Standard daily hours: {hours:g}"
 msgstr ""
 
 msgid "Standard hours (h)"
@@ -1737,6 +1779,9 @@ msgid "System region"
 msgstr ""
 
 msgid "Template content must not exceed 1 MiB."
+msgstr ""
+
+msgid "Template fingerprint: {digest}"
 msgstr ""
 
 msgid "Template reset."
@@ -1791,6 +1836,9 @@ msgid "The file contains conflicting records for the same date."
 msgstr ""
 
 msgid "The historical break must fit inside the recorded interval."
+msgstr ""
+
+msgid "The latest 50 saved versions are retained. Restoring creates a new version."
 msgstr ""
 
 msgid "The model returned no content. Please try again."
@@ -1871,6 +1919,9 @@ msgstr ""
 msgid "This report changed elsewhere. Reload the history before deleting it."
 msgstr ""
 
+msgid "This report is too large to save. Your current content has been retained."
+msgstr ""
+
 msgid "This text exceeds the selected model's context limit. Shorten it and try again."
 msgstr ""
 
@@ -1890,6 +1941,9 @@ msgid "Thu"
 msgstr ""
 
 msgid "Time"
+msgstr ""
+
+msgid "Time record"
 msgstr ""
 
 msgid "Time zone: {zone}"
@@ -2117,6 +2171,9 @@ msgstr ""
 msgid "Verifying model..."
 msgstr ""
 
+msgid "Version {number}"
+msgstr ""
+
 msgid "Version {version}"
 msgstr ""
 
@@ -2289,6 +2346,9 @@ msgid "{start_month} {start_day} - {end_month} {end_day}, {year}"
 msgstr ""
 
 msgid "{start} - {end}"
+msgstr ""
+
+msgid "{type} #{id} | {start} - {end}"
 msgstr ""
 
 msgid "{type} | This account | Newest saved first"

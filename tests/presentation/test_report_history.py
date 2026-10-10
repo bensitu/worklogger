@@ -20,7 +20,7 @@ from worklogger.app.commands.report_commands import DeleteReportCommand, SaveRep
 from worklogger.app.use_cases.ai import RewriteTextHandler
 from worklogger.app.use_cases.reports import (
     DeleteReportHandler, GenerateReportHandler, GetReportForPeriodHandler, ListReportsHandler,
-    ResetReportTemplateHandler, SaveReportHandler, SaveReportTemplateHandler,
+    ResetReportTemplateHandler, SaveReportHandler, SaveReportTemplateHandler, ReportRevisionService,
 )
 from worklogger.domain.reporting.models import Report
 from worklogger.domain.reporting.periods import daily_period, monthly_period, weekly_period
@@ -135,6 +135,7 @@ class ReportHistoryTests(unittest.TestCase):
             save_report_handler=SaveReportHandler(self.repository),
             list_reports_handler=ListReportsHandler(self.repository),
             delete_report_handler=DeleteReportHandler(self.repository),
+            revision_service=ReportRevisionService(self.repository),
             save_template_handler=SaveReportTemplateHandler(templates),
             reset_template_handler=ResetReportTemplateHandler(templates),
             markdown_exporter=MarkdownExporter(), rewrite_handler=RewriteTextHandler(),
@@ -153,6 +154,71 @@ class ReportHistoryTests(unittest.TestCase):
                   "monthly": monthly_period(self.day.year, self.day.month)}[report_type]
         return self.repository.save(Report(None, user_id or self.user.id, report_type,
                                            period.start, period.end, content, self.stamp))
+
+    def test_report_recovery_preserves_sources_versions_and_account_boundaries(self):
+        saved = self.seed("daily", "Original")
+        state = self.model.load("daily", self.day).value
+        changed = self.model.save(state, "Updated").value
+        self.assertEqual(changed.revision, 1)
+        conflict = self.model.save(state, "Stale edit")
+        self.assertFalse(conflict.ok)
+        self.assertEqual(conflict.error.code, "report_conflict")
+        self.assertEqual([value.content for value in self.model.list_revisions(changed).value], ["Updated", "Original"])
+        restored = self.model.restore_revision(changed, 0).value
+        self.assertEqual((restored.report_id, restored.content, restored.revision), (saved.id, "Original", 2))
+        self.assertEqual([value.revision for value in self.model.list_revisions(restored).value], [2, 1, 0])
+        self.assertEqual(self.repository.list_revisions(self.other_user.id, saved.id), ())
+        with self.assertRaisesRegex(ValueError, "report_not_found"):
+            self.repository.restore_revision(self.other_user.id, saved.id, 0, 2)
+        page = self.page()
+        page.editor.setPlainText("Unsaved")
+        from worklogger.presentation.widgets.report_revisions import ReportRevisionsDialog
+        dialog = ReportRevisionsDialog(self.model, restored, job_runner=ImmediateJobRunner())
+        dialog._load()
+        self.assertEqual(dialog.versions.count(), 3)
+        dialog.versions.setCurrentRow(1)
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.No):
+            dialog._restore()
+        self.assertEqual(page.editor.toPlainText(), "Unsaved")
+        self.assertEqual(self.model.load("daily", self.day).value.revision, 2)
+        dialog.close()
+        self.repository.remove(self.user.id, saved.id)
+        with self.factory.connection() as connection:
+            self.assertEqual(connection.execute("SELECT COUNT(*) FROM report_revisions").fetchone()[0], 0)
+
+    def test_generation_sources_and_retained_versions_are_bounded(self):
+        draft = self.model.load("daily", self.day).value
+        self.assertTrue(draft.provenance.generated_at)
+        self.assertEqual(draft.provenance.language, "en_US")
+        saved = self.model.save(draft, "First").value
+        self.assertEqual(saved.provenance, draft.provenance)
+        for index in range(55):
+            saved = self.model.save(saved, f"Version {index}").value
+        versions = self.model.list_revisions(saved).value
+        self.assertEqual(len(versions), 50)
+        self.assertEqual(versions[0].revision, 55)
+        self.assertEqual(versions[-1].revision, 6)
+        before = saved
+        self.assertFalse(self.model.save(saved, "X" * (1024 * 1024 + 1)).ok)
+        self.assertEqual(self.model.load("daily", self.day).value, before)
+
+    def test_existing_reports_migrate_with_recoverable_content(self):
+        from worklogger.infrastructure.database.migrations.runner import MIGRATION_MODULES
+        path = Path(self.factory.database_path).parent / "existing.db"
+        factory = SQLiteConnectionFactory(path)
+        MigrationRunner(factory, MIGRATION_MODULES[:12]).run_pending()
+        auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
+        user = auth.create_user("migration.user", "synthetic-password", recovery_key=None, is_admin=False)
+        with factory.transaction(write=True) as connection:
+            connection.execute("INSERT INTO reports(user_id,type,period_start,period_end,content,created_at) VALUES(?,'daily',?,?,?,?)",
+                (user.id, self.day.isoformat(), self.day.isoformat(), "Existing content", self.stamp.isoformat()))
+        self.assertEqual(MigrationRunner(factory).run_pending(), (13,))
+        self.assertEqual(MigrationRunner(factory).run_pending(), ())
+        repository = SQLiteReportRepository(factory)
+        report = repository.get_for_period(user.id, "daily", self.day, self.day)
+        self.assertEqual(repository.list_revisions(user.id, report.id)[0].content, "Existing content")
+        self.assertEqual(report.provenance.generated_at, "")
+        self.assertTrue(list(path.parent.glob("*upgrade*")))
 
     def page(self, report_type="daily"):
         page = ReportsPage(self.model, self.day, job_runner=ImmediateJobRunner())

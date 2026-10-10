@@ -35,7 +35,7 @@ def confirm_report_overwrite(parent: QWidget) -> bool:
     return QMessageBox.question(
         parent,
         _("Overwrite report?"),
-        _("Replace the saved content of this report? This cannot be undone."),
+        _("Replace the saved content of this report? Previous versions remain available in report versions."),
         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         QMessageBox.StandardButton.No,
     ) == QMessageBox.StandardButton.Yes

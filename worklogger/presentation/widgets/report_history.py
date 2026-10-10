@@ -20,6 +20,7 @@ from worklogger.presentation.date_labels import month_label
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 from worklogger.presentation.widgets.hover_delete_button import HoverDeleteButton
 from worklogger.domain.reporting.export_selection import saved_report_order
+from worklogger.domain.reporting.models import ReportProvenance
 
 
 class ReportHistoryButton(HoverDeleteButton):
@@ -103,6 +104,9 @@ class ReportHistoryDisplayItem:
     content: str = ""
     saved: bool = False
     created_at: datetime | None = None
+    revision: int = 0
+    updated_at: datetime | None = None
+    provenance: ReportProvenance = ReportProvenance()
 
 
 class ReportHistoryPanel(CardFrame):

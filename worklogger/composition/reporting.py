@@ -16,6 +16,7 @@ from worklogger.app.use_cases.reports import (
     GetReportForPeriodHandler,
     ListReportsHandler,
     SaveReportHandler,
+    ReportRevisionService,
 )
 from worklogger.composition.context import RuntimeHandlers, RuntimeRepositories
 from worklogger.domain.auth.models import User
@@ -98,6 +99,7 @@ def _build_reports_workflow(
             delete_report_handler=DeleteReportHandler(repositories.reports),
             templates=handlers.templates,
             save_report_handler=SaveReportHandler(repositories.reports),
+            revision_service=ReportRevisionService(repositories.reports),
             save_template_handler=handlers.save_template_handler,
             reset_template_handler=handlers.reset_template_handler,
             markdown_exporter=handlers.markdown_exporter,

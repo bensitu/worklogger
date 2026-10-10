@@ -25,6 +25,8 @@ def display_error_code(code: str) -> str:
     """Translate known error codes without displaying raw exception text or logging previews."""
 
     match code:
+        case "report_content_too_long":
+            return _("This report is too large to save. Your current content has been retained.")
         case "record_range_too_large":
             return _("Too many records. Choose a shorter date range to calculate complete totals.")
         case "timesheet_too_large":

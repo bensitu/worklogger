@@ -406,6 +406,9 @@ msgstr "現在のパスワード"
 msgid "Current report exported for {period}."
 msgstr "{period}の現在のレポートを出力しました。"
 
+msgid "Current saved version"
+msgstr "現在の保存済みバージョン"
+
 msgid "Current visible report"
 msgstr "表示中のレポート"
 
@@ -513,6 +516,9 @@ msgstr "ダウンロード"
 
 msgid "Downloading model..."
 msgstr "モデルをダウンロード中..."
+
+msgid "Draft"
+msgstr "下書き"
 
 msgid "Edit display name"
 msgstr "表示名を編集"
@@ -715,6 +721,9 @@ msgstr "生成日時：{time}"
 msgid "Generated draft"
 msgstr "生成した下書き"
 
+msgid "Generated: {time}"
+msgstr "生成日時：{time}"
+
 msgid "GitHub"
 msgstr "GitHub"
 
@@ -744,6 +753,9 @@ msgstr "過去の休憩控除：{hours}"
 
 msgid "Historical clock records do not contain timezone offsets."
 msgstr "過去の時刻記録にはタイムゾーンのオフセットが含まれていません。"
+
+msgid "Historical items"
+msgstr "過去の項目"
 
 msgid "Holiday country"
 msgstr "祝日の国"
@@ -850,11 +862,17 @@ msgstr "韓国語"
 msgid "Language"
 msgstr "言語"
 
+msgid "Language: {language}"
+msgstr "言語：{language}"
+
 msgid "Larger context windows increase memory use and may prevent the model from loading."
 msgstr "コンテキストを大きくするとメモリ使用量が増え、モデルを読み込めなくなる場合があります。"
 
 msgid "Last backup: {time}"
 msgstr "最終バックアップ：{time}"
+
+msgid "Last saved: {time}"
+msgstr "最終保存：{time}"
 
 msgid "Leave"
 msgstr "休暇"
@@ -1414,8 +1432,8 @@ msgstr "リモート"
 msgid "Replace"
 msgstr "置換"
 
-msgid "Replace the saved content of this report? This cannot be undone."
-msgstr "このレポートの保存済み内容を置き換えますか？この操作は元に戻せません。"
+msgid "Replace the saved content of this report? Previous versions remain available in report versions."
+msgstr "保存済みの内容を置き換えますか？以前のバージョンは報告書のバージョンから確認・復元できます。"
 
 msgid "Replace the visible draft with current records? The saved report will not change until you save."
 msgstr "現在の記録で表示中の下書きを置き換えますか？保存済みレポートは再保存するまで変更されません。"
@@ -1428,6 +1446,9 @@ msgstr "レポート #{report_id}"
 
 msgid "Report saved."
 msgstr "レポートを保存しました。"
+
+msgid "Report versions"
+msgstr "報告書のバージョン"
 
 msgid "Reports"
 msgstr "レポート"
@@ -1462,8 +1483,14 @@ msgstr "データを復元"
 msgid "Restore cancelled"
 msgstr "復元をキャンセルしました"
 
+msgid "Restore this version as the current report? Any unsaved editor content will be replaced after successful recovery."
+msgstr "このバージョンを現在の報告書として復元しますか？復元に成功すると未保存の編集内容が置き換わります。"
+
 msgid "Restore validation passed."
 msgstr "復元前の検証に成功しました。"
+
+msgid "Restore version"
+msgstr "バージョンを復元"
 
 msgid "Restore will replace the current database file. Continue?"
 msgstr "復元すると現在のデータベースファイルが置き換わります。続行しますか？"
@@ -1702,11 +1729,26 @@ msgstr "一部の日付には記録があります。取り込み内容を確認
 msgid "Source URL"
 msgstr "参照 URL"
 
+msgid "Source information unavailable for this report."
+msgstr "この報告書の出典情報はありません。"
+
+msgid "Source references: {count}"
+msgstr "出典参照数：{count}"
+
+msgid "Sources"
+msgstr "出典"
+
+msgid "Sources describe the last generation, not verification of later text edits."
+msgstr "出典は最終生成時の情報です。その後の編集内容が検証済みであることは示しません。"
+
 msgid "Split record"
 msgstr "記録を分割"
 
 msgid "Splitting across dates changes daily and period totals."
 msgstr "日付をまたぐ分割は日別・期間別の合計を変更します。"
+
+msgid "Standard daily hours: {hours:g}"
+msgstr "標準の一日勤務時間：{hours:g}"
 
 msgid "Standard hours (h)"
 msgstr "標準労働時間"
@@ -1740,6 +1782,9 @@ msgstr "システムの地域"
 
 msgid "Template content must not exceed 1 MiB."
 msgstr "テンプレートの内容は1 MiB以下にしてください。"
+
+msgid "Template fingerprint: {digest}"
+msgstr "テンプレートの指紋：{digest}"
 
 msgid "Template reset."
 msgstr "テンプレートをリセットしました。"
@@ -1794,6 +1839,9 @@ msgstr "ファイル内に同じ日付の競合する記録があります。"
 
 msgid "The historical break must fit inside the recorded interval."
 msgstr "過去の休憩は記録区間の内側に収まる必要があります。"
+
+msgid "The latest 50 saved versions are retained. Restoring creates a new version."
+msgstr "最新の保存済みバージョン50件を保持します。復元すると新しいバージョンが作成されます。"
 
 msgid "The model returned no content. Please try again."
 msgstr "モデルから内容が返されませんでした。もう一度お試しください。"
@@ -1873,6 +1921,9 @@ msgstr "この記録は元に戻せる編集の上限を超えています。既
 msgid "This report changed elsewhere. Reload the history before deleting it."
 msgstr "このレポートは別の場所で変更されました。履歴を再読み込みしてから削除してください。"
 
+msgid "This report is too large to save. Your current content has been retained."
+msgstr "報告書が大きすぎて保存できません。現在の内容は保持されています。"
+
 msgid "This text exceeds the selected model's context limit. Shorten it and try again."
 msgstr "内容が選択したモデルのコンテキスト上限を超えています。短くして再試行してください。"
 
@@ -1893,6 +1944,9 @@ msgstr "木"
 
 msgid "Time"
 msgstr "時間"
+
+msgid "Time record"
+msgstr "時間記録"
 
 msgid "Time zone: {zone}"
 msgstr "タイムゾーン：{zone}"
@@ -2119,6 +2173,9 @@ msgstr "ダウンロードしたファイルを検証中..."
 msgid "Verifying model..."
 msgstr "モデルを検証中..."
 
+msgid "Version {number}"
+msgstr "バージョン {number}"
+
 msgid "Version {version}"
 msgstr "バージョン {version}"
 
@@ -2292,6 +2349,9 @@ msgstr "{year}年{start_month}{start_day}日 - {end_month}{end_day}日"
 
 msgid "{start} - {end}"
 msgstr "{start} - {end}"
+
+msgid "{type} #{id} | {start} - {end}"
+msgstr "{type} #{id} | {start} - {end}"
 
 msgid "{type} | This account | Newest saved first"
 msgstr "{type} | このアカウント | 新しい保存順"

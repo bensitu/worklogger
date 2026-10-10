@@ -35,6 +35,39 @@ class WeeklyReports(ReportsViewModel):
 
 
 class ReportingLayoutChecks(unittest.TestCase):
+    def test_report_versions_preview_fits_localized_dialogs(self):
+        from worklogger.presentation.widgets.report_revisions import ReportRevisionsDialog
+        from worklogger.domain.reporting.models import ReportRevision
+        from worklogger.presentation.job_runner import ImmediateJobRunner
+        from worklogger.presentation.theme import configure_application_style, install_bundled_fonts, ThemeEngine
+        configure_application_style()
+        install_bundled_fonts()
+        class Model:
+            def list_revisions(self, state):
+                return Result.success((ReportRevision(1, "Updated report", None), ReportRevision(0, "Original report", None)))
+        old_style, old_palette = self.app.styleSheet(), self.app.palette()
+        try:
+            for language in available_languages():
+                set_language(language)
+                for dark in (False, True):
+                    engine = ThemeEngine()
+                    self.app.setPalette(engine.qt_palette(dark=dark))
+                    self.app.setStyleSheet(engine.application_stylesheet(dark=dark))
+                    state = ReportEditorState(1, "monthly", date(2026, 10, 1), date(2026, 10, 31), "Updated", True, 1, revision=1)
+                    dialog = ReportRevisionsDialog(Model(), state, job_runner=ImmediateJobRunner())
+                    dialog.show()
+                    self.app.processEvents()
+                    dialog.versions.setCurrentRow(1)
+                    self.assertTrue(dialog.restore_button.isEnabled())
+                    self.assertEqual(dialog.preview.toPlainText(), "Original report")
+                    for field in (dialog.versions, dialog.preview, dialog.restore_button, dialog.status_label):
+                        self.assertTrue(dialog.rect().contains(field.mapTo(dialog, field.rect().bottomRight())))
+                    self.capture(dialog, "report-versions-" + str(dark), language)
+                    dialog.close()
+        finally:
+            self.app.setStyleSheet(old_style)
+            self.app.setPalette(old_palette)
+
     def test_project_range_controls_fit_all_languages(self):
         from worklogger.presentation.widgets.project_analytics import ProjectAnalyticsDialog
         from worklogger.domain.analytics.projects import ContextSummary

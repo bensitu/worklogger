@@ -406,6 +406,9 @@ msgstr "当前密码"
 msgid "Current report exported for {period}."
 msgstr "已导出 {period} 的当前报表。"
 
+msgid "Current saved version"
+msgstr "当前已保存版本"
+
 msgid "Current visible report"
 msgstr "当前显示的报表"
 
@@ -513,6 +516,9 @@ msgstr "下载"
 
 msgid "Downloading model..."
 msgstr "正在下载模型..."
+
+msgid "Draft"
+msgstr "草稿"
 
 msgid "Edit display name"
 msgstr "编辑显示名称"
@@ -715,6 +721,9 @@ msgstr "生成时间：{time}"
 msgid "Generated draft"
 msgstr "生成的草稿"
 
+msgid "Generated: {time}"
+msgstr "生成时间：{time}"
+
 msgid "GitHub"
 msgstr "GitHub"
 
@@ -744,6 +753,9 @@ msgstr "历史休息扣除：{hours}"
 
 msgid "Historical clock records do not contain timezone offsets."
 msgstr "历史时钟记录不含时区偏移。"
+
+msgid "Historical items"
+msgstr "历史事项"
 
 msgid "Holiday country"
 msgstr "假日国家"
@@ -850,11 +862,17 @@ msgstr "韩语"
 msgid "Language"
 msgstr "语言"
 
+msgid "Language: {language}"
+msgstr "语言：{language}"
+
 msgid "Larger context windows increase memory use and may prevent the model from loading."
 msgstr "更大的上下文窗口会增加内存占用，可能导致模型无法加载。"
 
 msgid "Last backup: {time}"
 msgstr "最近备份：{time}"
+
+msgid "Last saved: {time}"
+msgstr "最近保存：{time}"
 
 msgid "Leave"
 msgstr "休假"
@@ -1414,8 +1432,8 @@ msgstr "远程办公"
 msgid "Replace"
 msgstr "替换"
 
-msgid "Replace the saved content of this report? This cannot be undone."
-msgstr "是否覆盖这份报表已保存的内容？此操作无法撤销。"
+msgid "Replace the saved content of this report? Previous versions remain available in report versions."
+msgstr "替换此报表已保存的内容？旧版本仍可在报表版本中查看和恢复。"
 
 msgid "Replace the visible draft with current records? The saved report will not change until you save."
 msgstr "用当前记录替换可见草稿吗？已保存的报表仅在再次保存后才会修改。"
@@ -1428,6 +1446,9 @@ msgstr "报表 #{report_id}"
 
 msgid "Report saved."
 msgstr "报表已保存。"
+
+msgid "Report versions"
+msgstr "报表版本"
 
 msgid "Reports"
 msgstr "报表"
@@ -1462,8 +1483,14 @@ msgstr "恢复数据"
 msgid "Restore cancelled"
 msgstr "已取消恢复"
 
+msgid "Restore this version as the current report? Any unsaved editor content will be replaced after successful recovery."
+msgstr "将此版本恢复为当前报表？恢复成功后将替换编辑器中未保存的内容。"
+
 msgid "Restore validation passed."
 msgstr "恢复验证通过。"
+
+msgid "Restore version"
+msgstr "恢复版本"
 
 msgid "Restore will replace the current database file. Continue?"
 msgstr "恢复会替换当前数据库文件。继续？"
@@ -1702,11 +1729,26 @@ msgstr "部分日期已有记录。请检查导入内容并确认是否替换。
 msgid "Source URL"
 msgstr "来源链接"
 
+msgid "Source information unavailable for this report."
+msgstr "此报表没有来源信息。"
+
+msgid "Source references: {count}"
+msgstr "来源引用：{count}"
+
+msgid "Sources"
+msgstr "来源"
+
+msgid "Sources describe the last generation, not verification of later text edits."
+msgstr "来源描述最近一次生成时使用的信息，不代表已验证后续编辑的文字。"
+
 msgid "Split record"
 msgstr "拆分记录"
 
 msgid "Splitting across dates changes daily and period totals."
 msgstr "跨日期拆分会改变每日和各期间的合计。"
+
+msgid "Standard daily hours: {hours:g}"
+msgstr "标准每日工时：{hours:g}"
 
 msgid "Standard hours (h)"
 msgstr "标准工时（小时）"
@@ -1740,6 +1782,9 @@ msgstr "系统地区"
 
 msgid "Template content must not exceed 1 MiB."
 msgstr "模板内容不得超过1 MiB。"
+
+msgid "Template fingerprint: {digest}"
+msgstr "模板指纹：{digest}"
 
 msgid "Template reset."
 msgstr "模板已重置。"
@@ -1794,6 +1839,9 @@ msgstr "文件中存在同一日期的冲突记录。"
 
 msgid "The historical break must fit inside the recorded interval."
 msgstr "历史休息必须完整位于记录区间内。"
+
+msgid "The latest 50 saved versions are retained. Restoring creates a new version."
+msgstr "保留最近 50 个已保存版本。恢复将创建新版本。"
 
 msgid "The model returned no content. Please try again."
 msgstr "模型未返回内容，请重试。"
@@ -1873,6 +1921,9 @@ msgstr "此记录超过可撤销编辑的大小限制，现有记录未改变。
 msgid "This report changed elsewhere. Reload the history before deleting it."
 msgstr "此报表已在其他位置修改。请重新加载历史列表后再删除。"
 
+msgid "This report is too large to save. Your current content has been retained."
+msgstr "此报表过大，无法保存。当前内容已保留。"
+
 msgid "This text exceeds the selected model's context limit. Shorten it and try again."
 msgstr "内容超过所选模型的上下文限制。请缩短后重试。"
 
@@ -1893,6 +1944,9 @@ msgstr "四"
 
 msgid "Time"
 msgstr "时间"
+
+msgid "Time record"
+msgstr "时间记录"
 
 msgid "Time zone: {zone}"
 msgstr "时区：{zone}"
@@ -2119,6 +2173,9 @@ msgstr "正在验证下载文件..."
 msgid "Verifying model..."
 msgstr "正在验证模型..."
 
+msgid "Version {number}"
+msgstr "版本 {number}"
+
 msgid "Version {version}"
 msgstr "版本 {version}"
 
@@ -2292,6 +2349,9 @@ msgstr "{year}年{start_month}{start_day}日 - {end_month}{end_day}日"
 
 msgid "{start} - {end}"
 msgstr "{start} - {end}"
+
+msgid "{type} #{id} | {start} - {end}"
+msgstr "{type} #{id} | {start} - {end}"
 
 msgid "{type} | This account | Newest saved first"
 msgstr "{type} | 本账户 | 按保存时间倒序"

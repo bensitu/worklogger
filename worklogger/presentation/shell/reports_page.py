@@ -178,7 +178,9 @@ class ReportsPage(QWidget):
                 self._set_error(result.error)
             else:
                 self._set_status(_("Current report exported for {period}.").format(period=period))
-        return self._run_io("export_report", lambda: self._view_model.export_markdown(destination, content), complete)
+        exporter = getattr(self._view_model, "export_with_sources", None)
+        return self._run_io("export_report", lambda: exporter(destination, state, content) if exporter and state
+                            else self._view_model.export_markdown(destination, content), complete)
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
@@ -278,6 +280,10 @@ class ReportsPage(QWidget):
             self.ai_hint_line_edit.setEnabled(False)
         ai_row.addWidget(self.ai_assist_button)
         ai_row.addStretch(1)
+        self.versions_button = QPushButton(_("Report versions"))
+        set_button_icon(self.versions_button, "clock")
+        self.versions_button.clicked.connect(self._open_versions)
+        ai_row.addWidget(self.versions_button)
         editor_card.content_layout.addLayout(ai_row)
 
         bottom = QHBoxLayout()
@@ -331,6 +337,8 @@ class ReportsPage(QWidget):
         if not hasattr(self, "save_button"):
             return
         state = self._states.get(self._current_type())
+        self.versions_button.setEnabled(not self.is_busy and state is not None and state.report_id is not None
+            and bool(getattr(self._view_model, "revisions_available", False)))
         if state is None:
             self.report_state_label.clear()
             self.save_button.setEnabled(False)
@@ -342,6 +350,10 @@ class ReportsPage(QWidget):
         identity = (_("Saved report #{report_id}").format(report_id=state.report_id)
                     if state.report_id is not None else _("Generated draft"))
         self.report_state_label.setText(identity + (" | " + _("Unsaved changes") if modified else ""))
+        from worklogger.presentation.report_source_labels import provenance_text
+        self.report_state_label.setToolTip(provenance_text(state.provenance))
+        if state.report_id is not None:
+            self.report_state_label.setText(self.report_state_label.text() + " | " + _("Version {number}").format(number=state.revision + 1))
         self.save_button.setText(_("Save changes") if state.report_id is not None else _("Save Report"))
         busy = self.is_busy
         has_content = bool(self.editor.toPlainText().strip())
@@ -385,15 +397,37 @@ class ReportsPage(QWidget):
             self._update_busy_controls()
             if result.ok and result.value is not None:
                 self._last_error = None
-                self.editor.setPlainText(result.value)
+                generated = result.value
+                if isinstance(generated, str):
+                    self.editor.setPlainText(generated)
+                else:
+                    self._states[state.report_type] = replace(state, provenance=generated.provenance)
+                    self.editor.setPlainText(generated.content)
             else:
                 self._set_error(result.error or ValidationError("report_generate_failed", "report_generate_failed"))
         try:
-            self._job_runner.submit("generate_report", lambda _token: self._view_model.generate_draft(state), on_complete=complete)
+            generator = getattr(self._view_model, "generate_with_sources", self._view_model.generate_draft)
+            self._job_runner.submit("generate_report", lambda _token: generator(state), on_complete=complete)
         except Exception:
             self._generate_busy = False
             self._update_busy_controls()
             self._set_error(ValidationError("report_generate_failed", "report_generate_failed"))
+
+    def _open_versions(self):
+        state = self._states.get(self._current_type())
+        if state is None or self.is_busy or not self.versions_button.isEnabled():
+            return
+        from worklogger.presentation.widgets.report_revisions import ReportRevisionsDialog
+        dialog = ReportRevisionsDialog(self._view_model, state, self, job_runner=self._job_runner)
+        def restored(value):
+            self._states[value.report_type] = value
+            self._saved_content[value.report_type] = value.content
+            self.editor.setPlainText(value.content)
+            self._update_report_status()
+            self._refresh_history()
+        dialog.restored.connect(restored)
+        dialog.finished.connect(dialog.deleteLater)
+        dialog.open()
 
     def _set_status(self, message: str, *, notify: bool = True, error: bool = False) -> None:
         if not error:
@@ -569,6 +603,8 @@ class ReportsPage(QWidget):
                 content=item.content,
                 saved=item.saved,
                 created_at=item.created_at,
+                revision=getattr(item, "revision", 0), updated_at=getattr(item, "updated_at", None),
+                provenance=getattr(item, "provenance", ReportEditorState.__dataclass_fields__["provenance"].default),
             )
             for item in items
         )
@@ -589,6 +625,7 @@ class ReportsPage(QWidget):
             saved=True,
             report_id=item.report_id,
             created_at=item.created_at,
+            revision=item.revision, updated_at=item.updated_at, provenance=item.provenance,
         )
         self._states[item.report_type] = state
         self._saved_content[item.report_type] = state.content

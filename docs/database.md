@@ -206,6 +206,20 @@ permissions, and draft removal commit together; content and sharing checks
 reject conflicting saves. Drafts and sharing use account-scoped settings keys,
 not work rows or a new schema.
 
+## Report Versions
+
+Migration 13 preserves report IDs, periods, content and first-save timestamps. It
+adds monotonically increasing revisions, last-save timestamps, structured generation
+references and a `report_revisions` table. Existing reports receive a recoverable
+initial version with unavailable source information; no historical sources are
+invented. The migration runner retains the complete pre-change snapshot.
+
+An update compares the loaded revision and atomically saves the next version.
+Recovery also compares the current revision and creates a new version, retaining
+the intervening saved content. The latest 50 versions per report are retained;
+individual content is limited to 1 MiB and reference metadata to 8 MiB. Deleting a
+report or account cascades to its versions. Whole-database backup includes versions.
+
 ## Backup and Restore
 
 `SQLiteBackupService` uses the SQLite backup API and checks integrity. Desktop

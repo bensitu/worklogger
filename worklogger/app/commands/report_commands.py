@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
+from worklogger.domain.reporting.models import ReportProvenance
 
 
 @dataclass(frozen=True)
@@ -14,6 +15,8 @@ class SaveReportCommand:
     period_end: date
     content: str
     report_id: int | None = None
+    revision: int = 0
+    provenance: ReportProvenance = ReportProvenance()
 
 
 @dataclass(frozen=True)

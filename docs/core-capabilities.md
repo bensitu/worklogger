@@ -17,6 +17,7 @@ analysis remains an offline file and is not part of repository documentation.
 | Recovery | Bounded reversible individual-record changes with stable IDs and newer revisions; confirmation and no timer restart |
 | Timer reminders | Configurable nonblocking long/continuous-work-timer reminders, inline and optional tray notification, explicit long-timer end correction with timezone validation |
 | Report context | Individual lines show project/work-item labels; the optional `projects_summary` variable groups recorded work without including rest or leave |
+| Report recovery and sources | Per-report saved versions, revision-checked overwrite/recovery, generation references and annotated Markdown delivery |
 | Delivery | Selected day/month XLSX and paginated Unicode table PDF, separate work/rest/leave columns, reference metadata, safe text cells and atomic destinations |
 | Compatibility | Existing type IDs, account credentials, clock/offset semantics and historical deductions remain; schema upgrades retain a complete pre-change snapshot |
 
@@ -46,7 +47,7 @@ The following agreed capabilities are not implemented by the changes above:
 - Weekly timesheet review and deliberate placement of duration-only drafts.
 - Conflict-aware batch record association and reusable recent context.
 - Bounded grouped template sections and comprehensive report provenance/source references.
-- Distinct report revision history, immutable submitted snapshots and recovery.
+- Immutable submitted report snapshots, beyond recoverable saved versions.
 - Explicit period finalization/reopening enforced beyond presentation controls.
 - Explainable configurable working-time policies, with unknown/incomplete results.
 - A skippable initial setup, isolated demonstration data and a visible data-directory action.

@@ -10,6 +10,9 @@ from worklogger.domain.reporting.templates import ReportTemplate
 
 
 class ReportRepository(Protocol):
+    def list_revisions(self, user_id: int, report_id: int): ...
+    def restore_revision(self, user_id: int, report_id: int, revision: int, expected_revision: int) -> Report: ...
+
     def save(self, report: Report) -> Report:
         """Insert a new report or update the matching owned report by ID."""
         ...

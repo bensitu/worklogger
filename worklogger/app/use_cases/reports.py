@@ -32,7 +32,11 @@ from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.quicklog.models import QuickLog
 from worklogger.domain.quicklog.rules import contains_quick_log_reference
 from worklogger.domain.quicklog.repositories import QuickLogRepository
-from worklogger.domain.reporting.models import Report
+from worklogger.domain.reporting.models import Report, ReportProvenance, ReportSource
+from dataclasses import asdict
+from datetime import datetime, timezone
+from hashlib import sha256
+import json
 from worklogger.domain.reporting.periods import normalize_report_type, validate_report_period
 from worklogger.domain.reporting.repositories import ReportRepository, ReportTemplateRepository
 from worklogger.domain.reporting.templates import (
@@ -64,6 +68,7 @@ class GeneratedReport:
     period_start: date
     period_end: date
     content: str
+    provenance: ReportProvenance = ReportProvenance()
 
 
 class SaveReportHandler:
@@ -88,10 +93,14 @@ class SaveReportHandler:
             period_start=period.start,
             period_end=period.end,
             content=command.content,
+            revision=command.revision,
+            provenance=command.provenance,
         )
         try:
             return Result.success(self._repository.save(report))
         except ValueError as exc:
+            if str(exc) == "report_conflict":
+                return Result.failure(ConflictError("report_conflict", "report_conflict"))
             if str(exc) == "report_not_found":
                 return Result.failure(NotFoundError("report_not_found", "report_not_found"))
             return Result.failure(ValidationError(str(exc), str(exc)))
@@ -118,6 +127,27 @@ class DeleteReportHandler:
             return Result.failure(InfrastructureError("report_delete_failed", "report_delete_failed"))
         except Exception:
             return Result.failure(InfrastructureError("report_delete_failed", "report_delete_failed"))
+
+
+class ReportRevisionService:
+    def __init__(self, repository):
+        self._repository = repository
+
+    def list(self, user_id, report_id):
+        return self._run(lambda: self._repository.list_revisions(user_id, report_id))
+
+    def restore(self, user_id, report_id, revision, expected_revision):
+        return self._run(lambda: self._repository.restore_revision(user_id, report_id, revision, expected_revision))
+
+    @staticmethod
+    def _run(operation):
+        try:
+            return Result.success(operation())
+        except ValueError as error:
+            return Result.failure(ConflictError(str(error), str(error)) if str(error) == "report_conflict"
+                                  else NotFoundError("report_not_found", "report_not_found"))
+        except Exception:
+            return Result.failure(InfrastructureError("report_history_failed", "report_history_failed"))
 
 
 class GetReportForPeriodHandler:
@@ -276,6 +306,9 @@ class GenerateReportHandler:
         try:
             display_name = profile_display_name(self._profiles, command.user_id)
             work_logs = self._work_logs.list_range(command.user_id, period.start, period.end)
+            source_records = tuple(entry for record in work_logs for entry in (record.entries or (record,)))
+            if len(source_records) > 50000:
+                raise ValueError("record_range_too_large")
             notes = ()
             if self._notes is not None and self._note_settings is not None:
                 notes = self._notes.list_range(command.user_id, period.start, period.end)
@@ -317,8 +350,28 @@ class GenerateReportHandler:
                 period_start=period.start,
                 period_end=period.end,
                 content=content,
+                provenance=ReportProvenance(
+                    generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                    language=command.language, standard_hours=standard_hours,
+                    template_digest=_source_digest(template.value) if template.ok and template.value else "",
+                    sources=tuple(_report_source("record", str(entry.id) if entry.id else entry.day.isoformat(), entry, entry.revision)
+                                  for entry in source_records)
+                    + tuple(_report_source("note", note.day.isoformat(), note) for note in notes)
+                    + tuple(_report_source("calendar", str(event.id), event) for event in events)
+                    + tuple(_report_source("quick_log", str(entry.id), entry) for entry in quick_logs),
+                ),
             )
         )
+
+
+def _source_digest(value):
+    from dataclasses import is_dataclass
+    payload = asdict(value) if is_dataclass(value) else value
+    return sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8")).hexdigest()
+
+
+def _report_source(kind, identifier, value, revision=None):
+    return ReportSource(kind, identifier, revision, _source_digest(value))
 
 
 def _template_values(

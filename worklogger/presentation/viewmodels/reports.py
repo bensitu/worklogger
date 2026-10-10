@@ -26,7 +26,7 @@ from worklogger.app.ports import (
     SaveTemplateHandlerProtocol,
 )
 from worklogger.app.use_cases.reports import GeneratedReport, TemplateProvider
-from worklogger.domain.reporting.models import Report
+from worklogger.domain.reporting.models import Report, ReportProvenance
 from worklogger.domain.reporting.periods import (
     daily_period,
     monthly_period,
@@ -73,6 +73,9 @@ class ReportEditorState:
     saved: bool = False
     report_id: int | None = None
     created_at: datetime | None = None
+    revision: int = 0
+    updated_at: datetime | None = None
+    provenance: ReportProvenance = ReportProvenance()
 
 
 @dataclass(frozen=True)
@@ -85,6 +88,9 @@ class ReportHistoryItem:
     content: str
     saved: bool = True
     created_at: datetime | None = None
+    revision: int = 0
+    updated_at: datetime | None = None
+    provenance: ReportProvenance = ReportProvenance()
 
 
 class ReportEditorViewModel:
@@ -106,6 +112,7 @@ class ReportEditorViewModel:
         week_start_monday: bool = False,
         delete_report_handler: DeleteReportHandlerProtocol | None = None,
         timesheet_export_handler=None,
+        revision_service=None,
     ) -> None:
         self._user_id = user_id
         self._generate_handler = generate_handler
@@ -122,6 +129,30 @@ class ReportEditorViewModel:
         self._week_start_monday = week_start_monday
         self._delete_report_handler = delete_report_handler
         self._timesheet_export_handler = timesheet_export_handler
+        self._revision_service = revision_service
+
+    @property
+    def revisions_available(self):
+        return self._revision_service is not None
+
+    def list_revisions(self, state):
+        if not self.revisions_available or state.user_id != self._user_id or state.report_id is None:
+            return Result.failure(_validation("report_not_found"))
+        return self._revision_service.list(self._user_id, state.report_id)
+
+    def restore_revision(self, state, revision):
+        if not self.revisions_available or state.user_id != self._user_id or state.report_id is None:
+            return Result.failure(_validation("report_not_found"))
+        result = self._revision_service.restore(self._user_id, state.report_id, revision, state.revision)
+        if not result.ok:
+            return result
+        row = result.value
+        return Result.success(ReportEditorState(row.user_id, row.report_type, row.period_start, row.period_end,
+            row.content, True, row.id, row.created_at, row.revision, row.updated_at, row.provenance))
+
+    def generate_with_sources(self, state):
+        return self._generate_handler.handle(GenerateReportCommand(self._user_id, state.report_type,
+            state.period_start, state.period_end, self._language, self._standard_work_hours))
 
     @property
     def timesheet_available(self):
@@ -199,6 +230,9 @@ class ReportEditorViewModel:
                     saved=True,
                     report_id=saved.value.id,
                     created_at=saved.value.created_at,
+                    revision=saved.value.revision,
+                    updated_at=saved.value.updated_at,
+                    provenance=saved.value.provenance,
                 )
             )
         generated = self._generate_handler.handle(
@@ -221,6 +255,7 @@ class ReportEditorViewModel:
                 period_end=generated.value.period_end,
                 content=generated.value.content,
                 saved=False,
+                provenance=generated.value.provenance,
             )
         )
 
@@ -233,6 +268,8 @@ class ReportEditorViewModel:
                 period_end=state.period_end,
                 content=content,
                 report_id=state.report_id,
+                revision=state.revision,
+                provenance=state.provenance,
             )
         )
         if not saved.ok or saved.value is None:
@@ -247,6 +284,9 @@ class ReportEditorViewModel:
                 saved=True,
                 report_id=saved.value.id,
                 created_at=saved.value.created_at,
+                revision=saved.value.revision,
+                updated_at=saved.value.updated_at,
+                provenance=saved.value.provenance,
             )
         )
 
@@ -272,6 +312,24 @@ class ReportEditorViewModel:
     def export_markdown(self, destination: Path, content: str) -> Result[Path]:
         return self._markdown_exporter.export_markdown(destination, content)
 
+    def export_with_sources(self, destination, state, content):
+        return self._markdown_exporter.export_markdown(destination, self._annotated_content(state, content))
+
+    @staticmethod
+    def _annotated_content(state, content):
+        labels = {"daily": _("Daily Report"), "weekly": _("Weekly Report"), "monthly": _("Monthly Report")}
+        identity = _("Report #{report_id}").format(report_id=getattr(state, "report_id", getattr(state, "id", None)))
+        if getattr(state, "report_id", getattr(state, "id", None)) is None:
+            identity = _("Draft")
+        lines = [labels[state.report_type] + " | " + identity,
+                 state.period_start.isoformat() + " - " + state.period_end.isoformat(),
+                 _("Version {number}").format(number=state.revision + 1)]
+        if state.updated_at:
+            lines.append(_("Last saved: {time}").format(time=state.updated_at.isoformat()))
+        from worklogger.presentation.report_source_labels import provenance_text
+        lines.extend(["", content, "", "---", "", _("Sources"), provenance_text(state.provenance)])
+        return "\n".join(lines)
+
     @property
     def language(self):
         return self._language
@@ -287,8 +345,7 @@ class ReportEditorViewModel:
         reports = latest_daily_reports(result.value or (), self._user_id, start, end)
         if not reports:
             return Result.failure(_validation("report_export_empty"))
-        content = "\n\n".join("## " + row.period_start.isoformat() + "\n" +
-                    _("Report #{report_id}").format(report_id=row.id) + "\n\n" + row.content for row in reports)
+        content = "\n\n".join(self._annotated_content(row, row.content) for row in reports)
         return self._markdown_exporter.export_markdown(destination, content)
 
     def list_history(self, report_type: str) -> Result[tuple[ReportHistoryItem, ...]]:
@@ -314,6 +371,9 @@ class ReportEditorViewModel:
                     content=report.content,
                     saved=True,
                     created_at=report.created_at,
+                    revision=report.revision,
+                    updated_at=report.updated_at,
+                    provenance=report.provenance,
                 )
                 for report in result.value
             )

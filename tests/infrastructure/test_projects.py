@@ -25,6 +25,30 @@ from worklogger.app.use_cases.reports import _template_values
 
 
 class ProjectTests(unittest.TestCase):
+    def test_report_source_references_capture_saved_record_versions(self):
+        from worklogger.app.use_cases.reports import GenerateReportHandler, SaveReportHandler
+        from worklogger.app.commands.report_commands import GenerateReportCommand, SaveReportCommand
+        from worklogger.infrastructure.repositories.report_sqlite import SQLiteReportRepository
+        from tests.app.test_notes_and_reports_use_cases import MemoryQuickLogRepository, MemoryCalendarRepository, MemoryTemplateProvider
+        day = self.now.date()
+        record = self.records.save_entry(WorkLog(self.user.id, day, "09:00", "10:00", note="Original"))
+        self.records.save_entry(WorkLog(self.other.id, day, "09:00", "11:00", note="Other account"))
+        handler = GenerateReportHandler(work_logs=self.records, quick_logs=MemoryQuickLogRepository(()),
+            calendar_events=MemoryCalendarRepository(()), templates=MemoryTemplateProvider())
+        generated = handler.handle(GenerateReportCommand(self.user.id, "daily", day, day)).value
+        source = generated.provenance.sources[0]
+        self.assertEqual((source.kind, source.identifier, source.revision), ("record", str(record.id), record.revision))
+        self.assertEqual(len(source.digest), 64)
+        self.assertEqual(len(generated.provenance.sources), 1)
+        reports = SQLiteReportRepository(self.factory)
+        saved = SaveReportHandler(reports).handle(SaveReportCommand(self.user.id, "daily", day, day, generated.content,
+            provenance=generated.provenance)).value
+        from dataclasses import replace
+        self.records.save_entry(replace(record, note="Updated"))
+        latest = handler.handle(GenerateReportCommand(self.user.id, "daily", day, day)).value
+        self.assertNotEqual(source.digest, latest.provenance.sources[0].digest)
+        self.assertEqual(reports.list_revisions(self.user.id, saved.id)[0].provenance, generated.provenance)
+
     def test_project_range_accounting_and_exact_detail_filters(self):
         from worklogger.app.use_cases.project_analytics import ProjectAnalyticsHandler
         from worklogger.domain.worklog.models import WorkType

@@ -23,6 +23,7 @@ MIGRATION_MODULES = (
     "worklogger.infrastructure.database.migrations.migration_010_user_display_names",
     "worklogger.infrastructure.database.migrations.migration_011_work_context",
     "worklogger.infrastructure.database.migrations.migration_012_entry_changes",
+    "worklogger.infrastructure.database.migrations.migration_013_report_revisions",
 )
 
 

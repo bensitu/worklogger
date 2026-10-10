@@ -12,6 +12,20 @@ calendar editor. Archived associations remain visible. Imported, unlinked labels
 remain distinct from owned catalog identifiers. Queries exceeding 50,000 records
 are rejected rather than returning incomplete totals.
 
+## Report Recovery and Sources
+
+**Report versions** beside the report editor opens versions of that report only;
+the right-hand **Saved reports** panel continues to list separate saved reports.
+Preview a version, then **Restore version** and confirm. The restored content becomes
+a new saved version. Unsaved editor content is replaced only after successful
+recovery. A stale version rejects saving or recovery; reload before trying again.
+
+The **Sources** tab lists the most recent generation time, language, daily threshold,
+template fingerprint and record/note/event references. These references describe
+generation inputs, not verification of later manual or AI edits. Older reports can
+have unavailable source information. Current Markdown exports and saved daily-report
+exports include this information; copying the editor copies its content only.
+
 Weekly reports and analytics week groups follow the account's week-start setting.
 Daily reports cover one day, weekly reports cover seven days starting on Sunday or
 Monday, and monthly reports cover a complete calendar month. Generated report text

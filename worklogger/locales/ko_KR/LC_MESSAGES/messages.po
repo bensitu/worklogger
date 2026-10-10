@@ -406,6 +406,9 @@ msgstr "현재 비밀번호"
 msgid "Current report exported for {period}."
 msgstr "{period}의 현재 보고서를 내보냈습니다."
 
+msgid "Current saved version"
+msgstr "현재 저장된 버전"
+
 msgid "Current visible report"
 msgstr "현재 표시된 보고서"
 
@@ -513,6 +516,9 @@ msgstr "다운로드"
 
 msgid "Downloading model..."
 msgstr "모델 다운로드 중..."
+
+msgid "Draft"
+msgstr "초안"
 
 msgid "Edit display name"
 msgstr "표시 이름 편집"
@@ -715,6 +721,9 @@ msgstr "생성 시각: {time}"
 msgid "Generated draft"
 msgstr "생성된 초안"
 
+msgid "Generated: {time}"
+msgstr "생성: {time}"
+
 msgid "GitHub"
 msgstr "GitHub"
 
@@ -744,6 +753,9 @@ msgstr "이전 휴식 차감: {hours}"
 
 msgid "Historical clock records do not contain timezone offsets."
 msgstr "이전 시각 기록에는 시간대 오프셋이 포함되어 있지 않습니다."
+
+msgid "Historical items"
+msgstr "과거 항목"
 
 msgid "Holiday country"
 msgstr "공휴일 국가"
@@ -850,11 +862,17 @@ msgstr "한국어"
 msgid "Language"
 msgstr "언어"
 
+msgid "Language: {language}"
+msgstr "언어: {language}"
+
 msgid "Larger context windows increase memory use and may prevent the model from loading."
 msgstr "컨텍스트 창이 커지면 메모리 사용량이 증가하여 모델을 불러오지 못할 수 있습니다."
 
 msgid "Last backup: {time}"
 msgstr "마지막 백업: {time}"
+
+msgid "Last saved: {time}"
+msgstr "마지막 저장: {time}"
 
 msgid "Leave"
 msgstr "휴가"
@@ -1414,8 +1432,8 @@ msgstr "원격 근무"
 msgid "Replace"
 msgstr "바꾸기"
 
-msgid "Replace the saved content of this report? This cannot be undone."
-msgstr "이 보고서의 저장된 내용을 교체할까요? 이 작업은 되돌릴 수 없습니다."
+msgid "Replace the saved content of this report? Previous versions remain available in report versions."
+msgstr "저장된 보고서 내용을 바꿀까요? 이전 버전은 보고서 버전에서 확인하고 복원할 수 있습니다."
 
 msgid "Replace the visible draft with current records? The saved report will not change until you save."
 msgstr "현재 기록으로 표시된 초안을 바꿀까요? 저장된 보고서는 다시 저장하기 전까지 변경되지 않습니다."
@@ -1428,6 +1446,9 @@ msgstr "보고서 #{report_id}"
 
 msgid "Report saved."
 msgstr "보고서가 저장되었습니다."
+
+msgid "Report versions"
+msgstr "보고서 버전"
 
 msgid "Reports"
 msgstr "보고서"
@@ -1462,8 +1483,14 @@ msgstr "데이터 복원"
 msgid "Restore cancelled"
 msgstr "복원 취소됨"
 
+msgid "Restore this version as the current report? Any unsaved editor content will be replaced after successful recovery."
+msgstr "이 버전을 현재 보고서로 복원할까요? 복원이 성공하면 저장하지 않은 편집 내용이 바뀝니다."
+
 msgid "Restore validation passed."
 msgstr "복원 검증을 통과했습니다."
+
+msgid "Restore version"
+msgstr "버전 복원"
 
 msgid "Restore will replace the current database file. Continue?"
 msgstr "복원하면 현재 데이터베이스 파일이 바뀝니다. 계속할까요?"
@@ -1702,11 +1729,26 @@ msgstr "일부 날짜에 기록이 이미 있습니다. 가져올 내용을 검�
 msgid "Source URL"
 msgstr "출처 URL"
 
+msgid "Source information unavailable for this report."
+msgstr "이 보고서의 출처 정보가 없습니다."
+
+msgid "Source references: {count}"
+msgstr "출처 참조: {count}"
+
+msgid "Sources"
+msgstr "출처"
+
+msgid "Sources describe the last generation, not verification of later text edits."
+msgstr "출처는 마지막 생성에 사용된 정보이며 이후 편집된 텍스트의 검증을 의미하지 않습니다."
+
 msgid "Split record"
 msgstr "기록 분할"
 
 msgid "Splitting across dates changes daily and period totals."
 msgstr "날짜를 넘는 분할은 일별 및 기간별 합계를 변경합니다."
+
+msgid "Standard daily hours: {hours:g}"
+msgstr "일일 기준 근무 시간: {hours:g}"
 
 msgid "Standard hours (h)"
 msgstr "표준 근무 시간"
@@ -1740,6 +1782,9 @@ msgstr "시스템 지역"
 
 msgid "Template content must not exceed 1 MiB."
 msgstr "템플릿 내용은 1 MiB를 초과할 수 없습니다."
+
+msgid "Template fingerprint: {digest}"
+msgstr "템플릿 지문: {digest}"
 
 msgid "Template reset."
 msgstr "템플릿이 재설정되었습니다."
@@ -1794,6 +1839,9 @@ msgstr "파일에 같은 날짜의 충돌하는 기록이 있습니다."
 
 msgid "The historical break must fit inside the recorded interval."
 msgstr "이전 휴식은 기록된 구간 안에 있어야 합니다."
+
+msgid "The latest 50 saved versions are retained. Restoring creates a new version."
+msgstr "최근 저장된 버전 50개를 보관합니다. 복원하면 새 버전이 생성됩니다."
 
 msgid "The model returned no content. Please try again."
 msgstr "모델이 내용을 반환하지 않았습니다. 다시 시도하세요."
@@ -1873,6 +1921,9 @@ msgstr "되돌릴 수 있는 편집을 하기에는 기록이 너무 큽니다. 
 msgid "This report changed elsewhere. Reload the history before deleting it."
 msgstr "다른 곳에서 이 보고서가 변경되었습니다. 기록을 다시 불러온 후 삭제하세요."
 
+msgid "This report is too large to save. Your current content has been retained."
+msgstr "보고서가 너무 커서 저장할 수 없습니다. 현재 내용은 유지됩니다."
+
 msgid "This text exceeds the selected model's context limit. Shorten it and try again."
 msgstr "텍스트가 선택한 모델의 문맥 한도를 초과합니다. 내용을 줄인 후 다시 시도하세요."
 
@@ -1893,6 +1944,9 @@ msgstr "목"
 
 msgid "Time"
 msgstr "시간"
+
+msgid "Time record"
+msgstr "시간 기록"
 
 msgid "Time zone: {zone}"
 msgstr "시간대: {zone}"
@@ -2119,6 +2173,9 @@ msgstr "다운로드한 파일 확인 중..."
 msgid "Verifying model..."
 msgstr "모델 검증 중..."
 
+msgid "Version {number}"
+msgstr "버전 {number}"
+
 msgid "Version {version}"
 msgstr "버전 {version}"
 
@@ -2292,6 +2349,9 @@ msgstr "{year}년 {start_month} {start_day}일 - {end_month} {end_day}일"
 
 msgid "{start} - {end}"
 msgstr "{start} - {end}"
+
+msgid "{type} #{id} | {start} - {end}"
+msgstr "{type} #{id} | {start} - {end}"
 
 msgid "{type} | This account | Newest saved first"
 msgstr "{type} | 현재 계정 | 최신 저장순"
