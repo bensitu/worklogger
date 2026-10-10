@@ -165,10 +165,7 @@ class SQLiteAuthRepository:
         )
         if not verification.matched:
             return None
-        user = self._user_from_row(row)
-        if verification.needs_upgrade:
-            self._replace_password_hash(user.id, password)
-        return self._record_login(user)
+        return self._complete_password_login(row, password, upgrade=verification.needs_upgrade)
 
     def change_password(
         self,
@@ -190,7 +187,8 @@ class SQLiteAuthRepository:
         )
         if not verification.matched:
             return None
-        return self._reset_password(user_id, new_password, must_change_password=False)
+        return self._reset_password(user_id, new_password, must_change_password=False,
+                                    expected_password=(row["password_hash"], row["password_salt"]))
 
     def reset_password_with_recovery(
         self,
@@ -227,6 +225,7 @@ class SQLiteAuthRepository:
             user_id,
             new_password,
             must_change_password=False,
+            expected_recovery=(row["recovery_key_hash"], row["recovery_salt"]),
         )
         user = self.get_by_id(user_id)
         if user is None or new_recovery_key is None:
@@ -305,23 +304,20 @@ class SQLiteAuthRepository:
     def get_user_by_remember_token(self, stored_token: str) -> User | None:
         if not stored_token:
             return None
-        with self._connection_factory.connection() as connection:
+        with self._connection_factory.transaction() as connection:
             row = connection.execute(
                 "SELECT * FROM users WHERE remember_token=?",
                 (stored_token,),
             ).fetchone()
-        if row is None:
-            return None
-        if remember_token_is_expired(row["remember_token_expires_at"]):
-            self.set_remember_token(int(row["id"]), None, None)
-            return None
-        return self._record_login(self._user_from_row(row))
-
-    def _record_login(self, user: User) -> User:
-        now = datetime.now(timezone.utc)
-        with self._connection_factory.transaction() as connection:
+            if row is None:
+                return None
+            if remember_token_is_expired(row["remember_token_expires_at"]):
+                connection.execute("UPDATE users SET remember_token=NULL,remember_token_expires_at=NULL WHERE id=?", (row["id"],))
+                return None
+            user = self._user_from_row(row)
+            now = datetime.now(timezone.utc)
             connection.execute("UPDATE users SET last_login_at=? WHERE id=?", (now.isoformat(), user.id))
-        return replace(user, last_login_at=now)
+            return replace(user, last_login_at=now)
 
     def get_by_id(self, user_id: int) -> User | None:
         with self._connection_factory.connection() as connection:
@@ -350,13 +346,24 @@ class SQLiteAuthRepository:
             ).fetchall()
         return tuple(self._user_from_row(row) for row in rows)
 
-    def _replace_password_hash(self, user_id: int, password: str) -> None:
-        material = self._password_hasher.hash_password(password)
+    def _complete_password_login(self, expected, password: str, *, upgrade: bool) -> User | None:
+        material = self._password_hasher.hash_password(password) if upgrade else None
+        now = datetime.now(timezone.utc)
         with self._connection_factory.transaction(write=True) as connection:
+            condition = " AND local_password_enabled=1" if self._canonical_usernames else ""
+            current = connection.execute(
+                "SELECT * FROM users WHERE id=? AND password_hash=? AND password_salt=?" + condition,
+                (expected["id"], expected["password_hash"], expected["password_salt"]),
+            ).fetchone()
+            if current is None:
+                return None
+            if material is not None:
+                connection.execute("UPDATE users SET password_hash=?,password_salt=? WHERE id=?",
+                                   (material.hash_hex, material.salt_hex, current["id"]))
             connection.execute(
-                "UPDATE users SET password_hash=?, password_salt=? WHERE id=?",
-                (material.hash_hex, material.salt_hex, user_id),
+                "UPDATE users SET last_login_at=? WHERE id=?", (now.isoformat(), current["id"]),
             )
+            return replace(self._user_from_row(current), last_login_at=now)
 
     def _reset_password(
         self,
@@ -365,12 +372,21 @@ class SQLiteAuthRepository:
         *,
         must_change_password: bool,
         issue_recovery_key: bool = True,
+        expected_password: tuple[str, str] | None = None,
+        expected_recovery: tuple[str, str] | None = None,
     ) -> str | None:
         password_material = self._password_hasher.hash_password(new_password)
         recovery_key = generate_recovery_key() if issue_recovery_key else None
         recovery_material = self._password_hasher.hash_password(recovery_key) if recovery_key else None
         now = utc_now_iso()
         with self._connection_factory.transaction(write=True) as connection:
+            conditions = ""
+            expected_values = ()
+            for columns, values in ((("password_hash", "password_salt"), expected_password),
+                                    (("recovery_key_hash", "recovery_salt"), expected_recovery)):
+                if values is not None:
+                    conditions += " AND " + " AND ".join(column + "=?" for column in columns)
+                    expected_values += values
             cursor = connection.execute(
                 """
                 UPDATE users
@@ -384,7 +400,7 @@ class SQLiteAuthRepository:
                     remember_token=NULL,
                     remember_token_expires_at=NULL
                 WHERE id=?
-                """,
+                """ + conditions,
                 (
                     password_material.hash_hex,
                     password_material.salt_hex,
@@ -394,9 +410,9 @@ class SQLiteAuthRepository:
                     now,
                     1 if must_change_password else 0,
                     user_id,
-                ),
+                ) + expected_values,
             )
-            if self._canonical_usernames:
+            if self._canonical_usernames and cursor.rowcount:
                 connection.execute("UPDATE users SET local_password_enabled=1 WHERE id=?", (user_id,))
         return (recovery_key if issue_recovery_key else new_password) if cursor.rowcount else None
 

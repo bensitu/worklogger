@@ -378,7 +378,7 @@ class SQLiteWorkLogWrites:
                         (user_id, day.isoformat()),
                     ).fetchone():
                         raise ValueError("csv_import_conflict")
-                if len(entries) == 1:
+                if daily_replacement and len(entries) == 1:
                     save_note(connection, user_id, day, entries[0].note, expected_note)
                 if overwrite:
                     connection.execute(

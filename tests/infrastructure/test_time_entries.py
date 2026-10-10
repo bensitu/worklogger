@@ -334,3 +334,20 @@ class TimeEntryTests(unittest.TestCase):
         identifiers = [line for line in exported.splitlines() if line.startswith("UID:")]
         self.assertEqual(len(identifiers), 3)
         self.assertEqual(len(set(identifiers)), 3)
+
+    def test_single_record_import_preserves_independent_memo_semantics(self):
+        day = self.now.date()
+        self.assertTrue(self.service.save_manual(day, "09:00", "10:00", "normal", "Record content").ok)
+        path = Path(self.directory.name) / "single-record.csv"
+        self.assertTrue(WorkLogCsvExporter().export_work_logs(path, self.repository.list_export_rows(self.user.id)).ok)
+        auth = SQLiteAuthRepository(self.factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
+        other = auth.create_user("single-import", "example-password", recovery_key=None, is_admin=False)
+        importer = ImportWorkLogsCsvHandler(importer=WorkLogCsvImporter(), repository=self.repository)
+        preview = importer.preview(ImportWorkLogsCsvCommand(other.id, path)).value
+        self.assertTrue(importer.apply(preview).ok)
+        notes = SQLiteDailyNoteRepository(self.factory)
+        self.assertEqual(notes.get_for_day(other.id, day).content, "")
+        notes.save(DailyNote(other.id, day, "Independent memo"))
+        self.assertTrue(importer.apply(preview, overwrite=True).ok)
+        self.assertEqual(notes.get_for_day(other.id, day).content, "Independent memo")
+        self.assertEqual(self.repository.list_for_day(other.id, day)[0].note, "Record content")
