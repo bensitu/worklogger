@@ -151,6 +151,9 @@ msgstr "모양"
 msgid "Append"
 msgstr "추가"
 
+msgid "Apply"
+msgstr "적용"
+
 msgid "April"
 msgstr "4월"
 
@@ -883,6 +886,9 @@ msgstr "연결된 계정"
 msgid "Loading models..."
 msgstr "모델을 불러오는 중..."
 
+msgid "Loading..."
+msgstr "불러오는 중…"
+
 msgid "Local Model"
 msgstr "로컬 모델"
 
@@ -1282,6 +1288,12 @@ msgstr "프로젝트 / 작업 항목"
 msgid "Project ID"
 msgstr "프로젝트 ID"
 
+msgid "Project records"
+msgstr "프로젝트 기록"
+
+msgid "Project statistics"
+msgstr "프로젝트 통계"
+
 msgid "Projects"
 msgstr "프로젝트"
 
@@ -1362,6 +1374,9 @@ msgstr "시작 {time} - {duration}"
 
 msgid "Recording started: {time}"
 msgstr "기록 시작: {time}"
+
+msgid "Records"
+msgstr "기록 수"
 
 msgid "Recovered draft"
 msgstr "복구된 초안"
@@ -1900,6 +1915,9 @@ msgstr "종료일"
 msgid "Today"
 msgstr "오늘"
 
+msgid "Too many records. Choose a shorter date range to calculate complete totals."
+msgstr "기록이 너무 많습니다. 전체 합계를 계산하려면 날짜 범위를 줄이세요."
+
 msgid "Total"
 msgstr "합계"
 
@@ -2104,6 +2122,9 @@ msgstr "모델 검증 중..."
 msgid "Version {version}"
 msgstr "버전 {version}"
 
+msgid "View records"
+msgstr "기록 보기"
+
 msgid "Web proxy"
 msgstr "웹 프록시"
 
@@ -2157,6 +2178,9 @@ msgstr "근무 유형"
 
 msgid "Work {hours:.1f}h"
 msgstr "근무 {hours:.1f}h"
+
+msgid "Work: {work} | Rest: {rest} | Leave: {leave}"
+msgstr "근무: {work} | 휴식: {rest} | 휴가: {leave}"
 
 msgid "WorkLogger"
 msgstr "WorkLogger"

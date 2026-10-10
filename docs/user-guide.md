@@ -1,5 +1,17 @@
 # User Guide
 
+## Project Statistics
+
+Open **Analytics > Projects**, choose the inclusive date range and select **Apply**.
+The summary separates work, rest and leave for each project/work-item combination.
+Work-day counts are distinct dates within each group and must not be added across
+groups. Historical break deductions remain separate from worked time. Overtime is
+not apportioned to projects because its threshold applies to the whole day.
+Select a row and **View records** to browse its paged records or open one in the
+calendar editor. Archived associations remain visible. Imported, unlinked labels
+remain distinct from owned catalog identifiers. Queries exceeding 50,000 records
+are rejected rather than returning incomplete totals.
+
 Weekly reports and analytics week groups follow the account's week-start setting.
 Daily reports cover one day, weekly reports cover seven days starting on Sunday or
 Monday, and monthly reports cover a complete calendar month. Generated report text

@@ -35,6 +35,37 @@ class WeeklyReports(ReportsViewModel):
 
 
 class ReportingLayoutChecks(unittest.TestCase):
+    def test_project_range_controls_fit_all_languages(self):
+        from worklogger.presentation.widgets.project_analytics import ProjectAnalyticsDialog
+        from worklogger.domain.analytics.projects import ContextSummary
+        from worklogger.domain.projects.models import WorkContext
+        from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
+        configure_application_style()
+        install_bundled_fonts()
+        class Analytics:
+            def load_projects(self, start, end):
+                return Result.success((ContextSummary(WorkContext(project_label="Research", work_item_label="Review"), 7, 1, 0, 1, 2),))
+        old_style, old_palette = self.app.styleSheet(), self.app.palette()
+        try:
+            for language in available_languages():
+                set_language(language)
+                for dark in (False, True):
+                    engine = ThemeEngine()
+                    self.app.setPalette(engine.qt_palette(dark=dark))
+                    self.app.setStyleSheet(engine.application_stylesheet(dark=dark))
+                    dialog = ProjectAnalyticsDialog(Analytics(), None, date(2026, 10, 10))
+                    dialog.show()
+                    self.app.processEvents()
+                    self.assertEqual(dialog.results.topLevelItemCount(), 1)
+                    for field in (dialog.start_input, dialog.end_input, dialog.refresh_button, dialog.detail_button):
+                        self.assertTrue(dialog.rect().contains(field.mapTo(dialog, field.rect().bottomRight())))
+                        self.assertGreater(field.height(), 20)
+                    self.capture(dialog, "project-statistics-" + str(dark), language)
+                    dialog.close()
+        finally:
+            self.app.setStyleSheet(old_style)
+            self.app.setPalette(old_palette)
+
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])

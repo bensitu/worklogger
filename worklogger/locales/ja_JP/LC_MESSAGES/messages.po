@@ -151,6 +151,9 @@ msgstr "外観"
 msgid "Append"
 msgstr "追加"
 
+msgid "Apply"
+msgstr "適用"
+
 msgid "April"
 msgstr "4月"
 
@@ -883,6 +886,9 @@ msgstr "連携アカウント"
 msgid "Loading models..."
 msgstr "モデルを読み込み中..."
 
+msgid "Loading..."
+msgstr "読み込み中…"
+
 msgid "Local Model"
 msgstr "ローカルモデル"
 
@@ -1282,6 +1288,12 @@ msgstr "プロジェクト / 作業項目"
 msgid "Project ID"
 msgstr "プロジェクト ID"
 
+msgid "Project records"
+msgstr "プロジェクトの記録"
+
+msgid "Project statistics"
+msgstr "プロジェクト統計"
+
 msgid "Projects"
 msgstr "プロジェクト"
 
@@ -1362,6 +1374,9 @@ msgstr "開始 {time} - {duration}"
 
 msgid "Recording started: {time}"
 msgstr "記録開始：{time}"
+
+msgid "Records"
+msgstr "記録数"
 
 msgid "Recovered draft"
 msgstr "復元された下書き"
@@ -1900,6 +1915,9 @@ msgstr "終了日"
 msgid "Today"
 msgstr "今日"
 
+msgid "Too many records. Choose a shorter date range to calculate complete totals."
+msgstr "記録が多すぎます。完全な合計を計算するには、日付範囲を短くしてください。"
+
 msgid "Total"
 msgstr "合計"
 
@@ -2104,6 +2122,9 @@ msgstr "モデルを検証中..."
 msgid "Version {version}"
 msgstr "バージョン {version}"
 
+msgid "View records"
+msgstr "記録を表示"
+
 msgid "Web proxy"
 msgstr "Webプロキシ"
 
@@ -2157,6 +2178,9 @@ msgstr "勤務種別"
 
 msgid "Work {hours:.1f}h"
 msgstr "勤務 {hours:.1f}h"
+
+msgid "Work: {work} | Rest: {rest} | Leave: {leave}"
+msgstr "勤務：{work} | 休憩：{rest} | 休暇：{leave}"
 
 msgid "WorkLogger"
 msgstr "WorkLogger"

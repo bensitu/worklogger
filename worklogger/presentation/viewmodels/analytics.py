@@ -61,6 +61,7 @@ class AnalyticsViewModel:
         standard_leave_hours: float = 8.0,
         dashboard_handler: AnalyticsDashboardHandlerProtocol | None = None,
         week_start_monday: bool = False,
+        project_handler=None,
     ) -> None:
         self._user_id = user_id
         self._bundle_handler = bundle_handler
@@ -69,6 +70,12 @@ class AnalyticsViewModel:
         self._standard_leave_hours = standard_leave_hours
         self._dashboard_handler = dashboard_handler
         self._week_start_monday = week_start_monday
+        self._project_handler = project_handler
+
+    def load_projects(self, start, end):
+        if self._project_handler is None:
+            return Result.failure(_validation("analytics_load_failed"))
+        return self._project_handler.handle(self._user_id, start, end)
 
     def set_week_start_monday(self, enabled: bool) -> None:
         self._week_start_monday = bool(enabled)

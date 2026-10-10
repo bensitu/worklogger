@@ -149,6 +149,9 @@ msgstr ""
 msgid "Append"
 msgstr ""
 
+msgid "Apply"
+msgstr ""
+
 msgid "April"
 msgstr ""
 
@@ -881,6 +884,9 @@ msgstr ""
 msgid "Loading models..."
 msgstr ""
 
+msgid "Loading..."
+msgstr ""
+
 msgid "Local Model"
 msgstr ""
 
@@ -1280,6 +1286,12 @@ msgstr ""
 msgid "Project ID"
 msgstr ""
 
+msgid "Project records"
+msgstr ""
+
+msgid "Project statistics"
+msgstr ""
+
 msgid "Projects"
 msgstr ""
 
@@ -1359,6 +1371,9 @@ msgid "Recording since {time} - {duration}"
 msgstr ""
 
 msgid "Recording started: {time}"
+msgstr ""
+
+msgid "Records"
 msgstr ""
 
 msgid "Recovered draft"
@@ -1898,6 +1913,9 @@ msgstr ""
 msgid "Today"
 msgstr ""
 
+msgid "Too many records. Choose a shorter date range to calculate complete totals."
+msgstr ""
+
 msgid "Total"
 msgstr ""
 
@@ -2102,6 +2120,9 @@ msgstr ""
 msgid "Version {version}"
 msgstr ""
 
+msgid "View records"
+msgstr ""
+
 msgid "Web proxy"
 msgstr ""
 
@@ -2154,6 +2175,9 @@ msgid "Work types"
 msgstr ""
 
 msgid "Work {hours:.1f}h"
+msgstr ""
+
+msgid "Work: {work} | Rest: {rest} | Leave: {leave}"
 msgstr ""
 
 msgid "WorkLogger"

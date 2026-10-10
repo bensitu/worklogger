@@ -15,6 +15,8 @@ class EntryFilter:
     project_id: str | None = None
     work_item_id: str | None = None
     unclassified: bool = False
+    project_label: str | None = None
+    work_item_label: str | None = None
 
     def __post_init__(self):
         if (type(self.start) is not date or type(self.end) is not date or self.end < self.start
@@ -26,6 +28,9 @@ class EntryFilter:
         for identifier in (self.project_id, self.work_item_id):
             if identifier is not None:
                 validate_identifier(identifier)
+        for label in (self.project_label, self.work_item_label):
+            if label is not None and (not isinstance(label, str) or len(label) > 240):
+                raise ValueError("record_search_invalid")
 
 
 @dataclass(frozen=True)

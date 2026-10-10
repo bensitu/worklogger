@@ -26,6 +26,10 @@ class SQLiteWorkLogQueries:
                 parameters.append(value)
         if criteria.unclassified:
             conditions.append("w.project_id IS NULL")
+        for column, value in (("project_label", criteria.project_label), ("work_item_label", criteria.work_item_label)):
+            if value is not None:
+                conditions.append(f"w.{column}=?")
+                parameters.append(value)
         if criteria.text:
             pattern = "%" + criteria.text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
             conditions.append("(w.note LIKE ? ESCAPE '\\' OR w.project_label LIKE ? ESCAPE '\\' OR w.work_item_label LIKE ? ESCAPE '\\')")

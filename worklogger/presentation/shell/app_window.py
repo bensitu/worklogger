@@ -369,6 +369,7 @@ class AppWindow(QMainWindow):
         self.calendar_page.today_requested.connect(self.go_today)
         self.calendar_page.next_month_requested.connect(self.next_month)
         self.calendar_page.search_requested.connect(self.open_record_search)
+        self.analytics_page.projects_requested.connect(self.open_project_analytics)
         self.notes_button.clicked.connect(self.open_notes)
         if hasattr(self.settings_page, "logout_requested"):
             self.settings_page.logout_requested.connect(self._request_logout)
@@ -398,6 +399,16 @@ class AppWindow(QMainWindow):
         )
         self.calendar_page.event_selected.connect(self.entry_panel.copy_event)
         self.calendar_page.event_delete_requested.connect(self.entry_panel.delete_event)
+
+    def open_project_analytics(self):
+        from worklogger.presentation.widgets.project_analytics import ProjectAnalyticsDialog
+        model = getattr(self._analytics_workflow, "view_model", None)
+        if model is None or not self._time_entry_view_model.search_available:
+            return
+        dialog = ProjectAnalyticsDialog(model, self._time_entry_view_model, self._selected_day, self,
+            job_runner=self._job_runner, selection_handler=self._open_found_entry)
+        dialog.finished.connect(dialog.deleteLater)
+        dialog.open()
 
     def open_record_search(self):
         from worklogger.presentation.widgets.record_search import RecordSearchDialog

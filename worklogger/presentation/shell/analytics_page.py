@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QVBoxLayout,
     QWidget,
+    QPushButton,
 )
 
 from worklogger.domain.shared.errors import AppError
@@ -41,9 +42,12 @@ from worklogger.presentation.widgets import (
     SummaryValueLabel,
 )
 from worklogger.presentation.widgets.combo_chart import DonutChart
+from worklogger.presentation.widgets.icons import set_button_icon
+from PySide6.QtCore import Signal
 
 
 class AnalyticsPage(QWidget):
+    projects_requested = Signal()
     def __init__(
         self,
         view_model: AnalyticsViewModel | None,
@@ -137,6 +141,10 @@ class AnalyticsPage(QWidget):
         self.period_combo.currentIndexChanged.connect(self._period_changed)
         self._populate_periods()
         header.addWidget(self.period_combo)
+        self.projects_button = QPushButton(_("Projects"))
+        set_button_icon(self.projects_button, "search")
+        self.projects_button.clicked.connect(self.projects_requested)
+        header.addWidget(self.projects_button)
         self.export_button = ExportMenuButton(
             _("Export"),
             (("csv", _("CSV")), ("pdf", _("PDF"))),

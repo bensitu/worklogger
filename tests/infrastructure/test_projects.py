@@ -25,6 +25,27 @@ from worklogger.app.use_cases.reports import _template_values
 
 
 class ProjectTests(unittest.TestCase):
+    def test_project_range_accounting_and_exact_detail_filters(self):
+        from worklogger.app.use_cases.project_analytics import ProjectAnalyticsHandler
+        from worklogger.domain.worklog.models import WorkType
+        project = self.projects.save_project("Research").value
+        item = self.projects.save_work_item(project.id, "Review").value
+        context = WorkContext(project.id, item.id, project.name, item.title)
+        day = self.now.date()
+        for start, end, kind in (("09:00", "11:00", WorkType.NORMAL), ("11:00", "12:00", WorkType.BREAK),
+                                 ("12:00", "13:00", WorkType.PAID_LEAVE)):
+            self.records.save_entry(WorkLog(self.user.id, day, start, end, work_type=kind, context=context))
+        self.records.save_entry(WorkLog(self.user.id, day, "13:00", "14:00", context=WorkContext(project_label="Imported")))
+        self.records.save_entry(WorkLog(self.other.id, day, "09:00", "16:00"))
+        handler = ProjectAnalyticsHandler(self.records, self.settings)
+        groups = handler.handle(self.user.id, day, day).value
+        group = next(value for value in groups if value.context.project_id == project.id)
+        self.assertEqual((group.work_hours, group.rest_hours, group.leave_hours, group.work_days, group.record_count), (2, 1, 1, 1, 3))
+        self.assertEqual(sum(value.work_hours for value in groups), self.records.get_for_day(self.user.id, day).worked_hours())
+        self.assertEqual(len(self.records.search_entries(self.user.id, EntryFilter(day, day, project_id=project.id, work_item_id=item.id)).entries), 3)
+        self.assertEqual(len(self.records.search_entries(self.user.id, EntryFilter(day, day, unclassified=True, project_label="Imported", work_item_label="")).entries), 1)
+        self.assertFalse(handler.handle(self.user.id, day, day.replace(day=1)).ok)
+
     def setUp(self):
         directory = self.enterContext(tempfile.TemporaryDirectory())
         self.factory = SQLiteConnectionFactory(Path(directory) / "worklog.db")

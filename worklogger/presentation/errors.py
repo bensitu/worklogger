@@ -25,6 +25,8 @@ def display_error_code(code: str) -> str:
     """Translate known error codes without displaying raw exception text or logging previews."""
 
     match code:
+        case "record_range_too_large":
+            return _("Too many records. Choose a shorter date range to calculate complete totals.")
         case "timesheet_too_large":
             return _("This timesheet is too large. Choose a shorter period; the destination file is unchanged.")
         case "timesheet_invalid" | "timesheet_format_invalid":

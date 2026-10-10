@@ -151,6 +151,9 @@ msgstr "Appearance"
 msgid "Append"
 msgstr "Append"
 
+msgid "Apply"
+msgstr "Apply"
+
 msgid "April"
 msgstr "April"
 
@@ -883,6 +886,9 @@ msgstr "Linked identities"
 msgid "Loading models..."
 msgstr "Loading models..."
 
+msgid "Loading..."
+msgstr "Loading..."
+
 msgid "Local Model"
 msgstr "Local Model"
 
@@ -1282,6 +1288,12 @@ msgstr "Project / work item"
 msgid "Project ID"
 msgstr "Project ID"
 
+msgid "Project records"
+msgstr "Project records"
+
+msgid "Project statistics"
+msgstr "Project statistics"
+
 msgid "Projects"
 msgstr "Projects"
 
@@ -1362,6 +1374,9 @@ msgstr "Recording since {time} - {duration}"
 
 msgid "Recording started: {time}"
 msgstr "Recording started: {time}"
+
+msgid "Records"
+msgstr "Records"
 
 msgid "Recovered draft"
 msgstr "Recovered draft"
@@ -1900,6 +1915,9 @@ msgstr "To"
 msgid "Today"
 msgstr "Today"
 
+msgid "Too many records. Choose a shorter date range to calculate complete totals."
+msgstr "Too many records. Choose a shorter date range to calculate complete totals."
+
 msgid "Total"
 msgstr "Total"
 
@@ -2104,6 +2122,9 @@ msgstr "Verifying model..."
 msgid "Version {version}"
 msgstr "Version {version}"
 
+msgid "View records"
+msgstr "View records"
+
 msgid "Web proxy"
 msgstr "Web proxy"
 
@@ -2157,6 +2178,9 @@ msgstr "Work types"
 
 msgid "Work {hours:.1f}h"
 msgstr "Work {hours:.1f}h"
+
+msgid "Work: {work} | Rest: {rest} | Leave: {leave}"
+msgstr "Work: {work} | Rest: {rest} | Leave: {leave}"
 
 msgid "WorkLogger"
 msgstr "WorkLogger"

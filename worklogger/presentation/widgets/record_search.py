@@ -22,10 +22,11 @@ from worklogger.presentation.date_labels import duration_label
 class RecordSearchDialog(QDialog):
     entry_selected = Signal(object)
 
-    def __init__(self, view_model, selected_day, parent=None, *, job_runner=None, selection_handler=None):
+    def __init__(self, view_model, selected_day, parent=None, *, job_runner=None, selection_handler=None, criteria=None):
         super().__init__(parent)
         self._model, self._runner = view_model, job_runner
         self._selection_handler = selection_handler
+        self._fixed_criteria = criteria
         self._cursor = None
         self._version = 0
         self._job = None
@@ -131,6 +132,12 @@ class RecordSearchDialog(QDialog):
         self.close_button.clicked.connect(self.reject)
         self.results.itemSelectionChanged.connect(self._actions)
         self.results.itemActivated.connect(lambda *_args: self._open())
+        if criteria is not None:
+            self.start_input.setDate(criteria.start)
+            self.end_input.setDate(criteria.end)
+            for field in (self.start_input, self.end_input, self.project_combo, self.item_combo, self.unclassified_check):
+                field.setEnabled(False)
+            self.setWindowTitle(_("Project records"))
         shortcut = QShortcut(QKeySequence.StandardKey.Find, self)
         shortcut.activated.connect(self.search_input.setFocus)
         self._reload()
@@ -156,6 +163,9 @@ class RecordSearchDialog(QDialog):
         self._debounce.start()
 
     def _criteria(self):
+        if self._fixed_criteria is not None:
+            from dataclasses import replace
+            return replace(self._fixed_criteria, text=self.search_input.text(), work_type=self.type_combo.currentData())
         return EntryFilter(self.start_input.date().toPython(), self.end_input.date().toPython(), self.search_input.text(),
                            self.type_combo.currentData(), self.project_combo.currentData() if not self.unclassified_check.isChecked() else None,
                            self.item_combo.currentData() if not self.unclassified_check.isChecked() else None, self.unclassified_check.isChecked())

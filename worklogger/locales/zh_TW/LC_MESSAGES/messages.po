@@ -151,6 +151,9 @@ msgstr "外觀"
 msgid "Append"
 msgstr "附加"
 
+msgid "Apply"
+msgstr "套用"
+
 msgid "April"
 msgstr "4月"
 
@@ -883,6 +886,9 @@ msgstr "連結的身分"
 msgid "Loading models..."
 msgstr "正在載入模型..."
 
+msgid "Loading..."
+msgstr "正在載入…"
+
 msgid "Local Model"
 msgstr "本機模型"
 
@@ -1282,6 +1288,12 @@ msgstr "專案／工作項目"
 msgid "Project ID"
 msgstr "專案 ID"
 
+msgid "Project records"
+msgstr "專案記錄"
+
+msgid "Project statistics"
+msgstr "專案統計"
+
 msgid "Projects"
 msgstr "專案"
 
@@ -1362,6 +1374,9 @@ msgstr "開始於 {time} - {duration}"
 
 msgid "Recording started: {time}"
 msgstr "計時開始於：{time}"
+
+msgid "Records"
+msgstr "記錄數"
 
 msgid "Recovered draft"
 msgstr "已復原草稿"
@@ -1900,6 +1915,9 @@ msgstr "結束日期"
 msgid "Today"
 msgstr "今天"
 
+msgid "Too many records. Choose a shorter date range to calculate complete totals."
+msgstr "記錄過多。請選擇較短的日期範圍，以計算完整合計。"
+
 msgid "Total"
 msgstr "總計"
 
@@ -2104,6 +2122,9 @@ msgstr "正在驗證模型..."
 msgid "Version {version}"
 msgstr "版本 {version}"
 
+msgid "View records"
+msgstr "檢視記錄"
+
 msgid "Web proxy"
 msgstr "網頁代理"
 
@@ -2157,6 +2178,9 @@ msgstr "工作類型"
 
 msgid "Work {hours:.1f}h"
 msgstr "工作 {hours:.1f}h"
+
+msgid "Work: {work} | Rest: {rest} | Leave: {leave}"
+msgstr "工作：{work} | 休息：{rest} | 請假：{leave}"
 
 msgid "WorkLogger"
 msgstr "WorkLogger"

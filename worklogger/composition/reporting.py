@@ -8,6 +8,7 @@ from worklogger.app.use_cases.analytics import (
 )
 from worklogger.app.use_cases.notes import DailyNotesService
 from worklogger.app.use_cases.timesheets import ExportTimesheetHandler
+from worklogger.app.use_cases.project_analytics import ProjectAnalyticsHandler
 from worklogger.infrastructure.export.timesheets import TimesheetXlsxExporter, TimesheetPdfExporter
 from worklogger.app.use_cases.reports import (
     DeleteReportHandler,
@@ -46,6 +47,7 @@ def _build_analytics_workflow(
             ),
             csv_exporter=AnalyticsCsvExporter(),
             pdf_exporter=AnalyticsPdfExporter(),
+            project_handler=ProjectAnalyticsHandler(repositories.work_logs, repositories.settings),
         )
     )
 
