@@ -14,6 +14,9 @@ Application version: 4.0.0.
 
 ### Desktop Interface
 
+- Centered export-menu indicators across report and analytics buttons and aligned
+  the compact local runtime context control with its settings label.
+
 - Separated declared local model capacity from an account-specific runtime context
   setting, with effective-limit feedback and lazy engine reload on the next request.
 

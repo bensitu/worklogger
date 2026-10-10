@@ -7,7 +7,7 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QFormLayout
 from tests.presentation.test_settings_presentation import MemorySettingsRepository, _view_model
 from tests.presentation.test_shell_pages import ReportsViewModel
 from worklogger.infrastructure.i18n import get_language, available_languages, set_language
@@ -43,6 +43,12 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                         self.app.processEvents()
                         page.category_stack.currentWidget().ensureWidgetVisible(page.local_context_spin_box)
                         control = page.local_context_spin_box
+                        form = next(layout for layout in control.parentWidget().findChildren(QFormLayout)
+                                    if layout.labelForField(control) is not None)
+                        caption = form.labelForField(control)
+                        self.assertLessEqual(abs(caption.geometry().center().y() - control.geometry().center().y()), 1)
+                        self.assertLessEqual(control.width(), 200)
+                        self.assertLessEqual(control.height(), control.fontMetrics().height() + 12)
                         self.assertTrue(control.parentWidget().rect().contains(control.geometry()))
                         self.assertGreaterEqual(control.width(), control.fontMetrics().horizontalAdvance(control.text()) + 36)
                         self.assertEqual(control.value(), 32768)

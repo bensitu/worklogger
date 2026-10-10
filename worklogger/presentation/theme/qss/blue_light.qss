@@ -444,6 +444,11 @@ QDoubleSpinBox::down-arrow, QSpinBox::down-arrow, QTimeEdit::down-arrow {
   height: 12px;
 }
 
+QSpinBox#local_context_spin_box {
+  min-height: 18px;
+  padding: 2px 8px;
+}
+
 QTabWidget#worklog_mode_tab_widget::pane {
   border: none;
   padding-top: 8px;
@@ -635,11 +640,12 @@ QToolButton#copy_report_button {
   padding: 5px 9px;
 }
 
-QToolButton#export_menu_button {
+QToolButton[export_menu="true"] {
   padding-right: 28px;
 }
 
-QToolButton#export_menu_button::menu-indicator {
+QToolButton[export_menu="true"]::menu-indicator {
+  image: url("{{ icons_root }}/chevron-down.svg");
   subcontrol-origin: padding;
   subcontrol-position: center right;
   right: 8px;

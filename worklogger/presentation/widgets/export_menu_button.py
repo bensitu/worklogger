@@ -19,6 +19,7 @@ class ExportMenuButton(QToolButton):
     ) -> None:
         super().__init__(parent)
         self.setObjectName("export_menu_button")
+        self.setProperty("export_menu", True)
         self.setText(label)
         self.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         self.setProperty("variant", "primary")
