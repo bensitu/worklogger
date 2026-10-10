@@ -13,6 +13,7 @@ from worklogger.app.commands.report_commands import ResetReportTemplateCommand, 
 from worklogger.domain.reporting.templates import ReportTemplate
 from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType
 from worklogger.domain.projects.models import WorkContext, Project, WorkItem
+from worklogger.domain.reporting.timesheets import Timesheet
 from worklogger.domain.shared.result import Result
 
 if TYPE_CHECKING:
@@ -62,6 +63,10 @@ class UpdateChecker(Protocol):
 class MarkdownExporter(Protocol):
     def export_markdown(self, destination: Path, content: str) -> Result[Path]:
         ...
+
+
+class TimesheetExporter(Protocol):
+    def export_timesheet(self, destination: Path, snapshot: Timesheet) -> Result[Path]: ...
 
 
 class SaveTemplateHandlerProtocol(Protocol):

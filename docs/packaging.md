@@ -17,6 +17,11 @@ python -m pip freeze
 python -c "import sys, PySide6; from PySide6.QtCore import qVersion; print(sys.version); print(PySide6.__version__); print(qVersion())"
 ```
 
+Timesheet XLSX export uses the pinned openpyxl and et-xmlfile packages. The build
+checks their availability and includes their modules. PDF generation reuses Qt;
+neither export requires a spreadsheet application or a remote service. Install
+the updated requirements in source environments before using XLSX export.
+
 ## Commands
 
 ```sh

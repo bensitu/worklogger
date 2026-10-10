@@ -308,6 +308,9 @@ msgstr ""
 msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
 msgstr ""
 
+msgid "Choose a valid timesheet period and format."
+msgstr ""
+
 msgid "Choose an earlier end time to save this timer."
 msgstr ""
 
@@ -542,6 +545,9 @@ msgstr ""
 msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
 msgstr ""
 
+msgid "Ended at"
+msgstr ""
+
 msgid "English"
 msgstr ""
 
@@ -596,6 +602,9 @@ msgstr ""
 msgid "Estimated size"
 msgstr ""
 
+msgid "Excel files (*.xlsx)"
+msgstr ""
+
 msgid "Export"
 msgstr ""
 
@@ -618,6 +627,9 @@ msgid "Export cancelled"
 msgstr ""
 
 msgid "Export report"
+msgstr ""
+
+msgid "Export timesheet"
 msgstr ""
 
 msgid "Exported CSV"
@@ -692,6 +704,9 @@ msgstr ""
 msgid "Generate from records"
 msgstr ""
 
+msgid "Generated at: {time}"
+msgstr ""
+
 msgid "Generated draft"
 msgstr ""
 
@@ -713,7 +728,16 @@ msgstr ""
 msgid "Hide this type from new records? Existing records will not change."
 msgstr ""
 
+msgid "Historical"
+msgstr ""
+
+msgid "Historical break deduction"
+msgstr ""
+
 msgid "Historical break deduction: {hours}"
+msgstr ""
+
+msgid "Historical clock records do not contain timezone offsets."
 msgstr ""
 
 msgid "Holiday country"
@@ -831,6 +855,9 @@ msgid "Leave"
 msgstr ""
 
 msgid "Leave days"
+msgstr ""
+
+msgid "Leave hours"
 msgstr ""
 
 msgid "License"
@@ -1076,6 +1103,9 @@ msgstr ""
 msgid "No notes recorded for this period."
 msgstr ""
 
+msgid "No records"
+msgstr ""
+
 msgid "No records for the selected day."
 msgstr ""
 
@@ -1157,6 +1187,9 @@ msgstr ""
 msgid "Overtime comparison: previous period {previous:.1f}h, current period {current:.1f}h"
 msgstr ""
 
+msgid "Overtime hours"
+msgstr ""
+
 msgid "Overwrite report?"
 msgstr ""
 
@@ -1223,6 +1256,9 @@ msgstr ""
 msgid "Port"
 msgstr ""
 
+msgid "Prepared by: {name}"
+msgstr ""
+
 msgid "Previous day"
 msgstr ""
 
@@ -1236,6 +1272,12 @@ msgid "Previous period"
 msgstr ""
 
 msgid "Project"
+msgstr ""
+
+msgid "Project / work item"
+msgstr ""
+
+msgid "Project ID"
 msgstr ""
 
 msgid "Projects"
@@ -1286,13 +1328,28 @@ msgstr ""
 msgid "RUNTIME SMOKE OK"
 msgstr ""
 
+msgid "Record ID"
+msgstr ""
+
 msgid "Record actions"
+msgstr ""
+
+msgid "Record references"
 msgstr ""
 
 msgid "Record search is unavailable."
 msgstr ""
 
+msgid "Record status"
+msgstr ""
+
+msgid "Recorded"
+msgstr ""
+
 msgid "Recorded duration: {duration}"
+msgstr ""
+
+msgid "Recorded totals at export. Editing this file does not change WorkLogger records."
 msgstr ""
 
 msgid "Recording or a break is already active."
@@ -1379,6 +1436,9 @@ msgstr ""
 msgid "Rest Days"
 msgstr ""
 
+msgid "Rest hours"
+msgstr ""
+
 msgid "Restore Data"
 msgstr ""
 
@@ -1392,6 +1452,9 @@ msgid "Restore will replace the current database file. Continue?"
 msgstr ""
 
 msgid "Restoring data..."
+msgstr ""
+
+msgid "Revision"
 msgstr ""
 
 msgid "Rewrite"
@@ -1496,6 +1559,9 @@ msgstr ""
 msgid "Schedule / Records"
 msgstr ""
 
+msgid "Scheduled"
+msgstr ""
+
 msgid "Search notes"
 msgstr ""
 
@@ -1544,10 +1610,22 @@ msgstr ""
 msgid "Select an individual time record to edit this day."
 msgstr ""
 
+msgid "Selected day (Excel)"
+msgstr ""
+
+msgid "Selected day (PDF)"
+msgstr ""
+
 msgid "Selected day: {day}"
 msgstr ""
 
 msgid "Selected model file: {name}"
+msgstr ""
+
+msgid "Selected month (Excel)"
+msgstr ""
+
+msgid "Selected month (PDF)"
 msgstr ""
 
 msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
@@ -1626,6 +1704,9 @@ msgid "Start recording or a break before continuing."
 msgstr ""
 
 msgid "Start week on Monday"
+msgstr ""
+
+msgid "Started at"
 msgstr ""
 
 msgid "State / province"
@@ -1733,6 +1814,9 @@ msgstr ""
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr ""
 
+msgid "The timesheet contains content that cannot be represented in this format. The destination file is unchanged."
+msgstr ""
+
 msgid "The user account is no longer available."
 msgstr ""
 
@@ -1778,6 +1862,9 @@ msgstr ""
 msgid "This timer has reached your reminder duration."
 msgstr ""
 
+msgid "This timesheet is too large. Choose a shorter period; the destination file is unchanged."
+msgstr ""
+
 msgid "This work timer has reached your continuous-work reminder duration."
 msgstr ""
 
@@ -1794,6 +1881,12 @@ msgid "Time zone: {zone}"
 msgstr ""
 
 msgid "Timer reminder"
+msgstr ""
+
+msgid "Timesheet"
+msgstr ""
+
+msgid "Timesheet exported."
 msgstr ""
 
 msgid "Title"
@@ -1844,6 +1937,9 @@ msgstr ""
 msgid "Unable to export the file. Check the destination and write permissions."
 msgstr ""
 
+msgid "Unable to export the timesheet. The destination file and report draft are unchanged."
+msgstr ""
+
 msgid "Unable to import the file. Check its format and contents."
 msgstr ""
 
@@ -1860,6 +1956,9 @@ msgid "Unable to load the selected model. Check available memory or choose a sma
 msgstr ""
 
 msgid "Unable to load the user profile. Please try again."
+msgstr ""
+
+msgid "Unable to load timesheet records. Your report draft is unchanged."
 msgstr ""
 
 msgid "Unable to obtain the model. Check the source file or download connection."
@@ -2042,6 +2141,9 @@ msgstr ""
 msgid "Work item"
 msgstr ""
 
+msgid "Work item ID"
+msgstr ""
+
 msgid "Work items"
 msgstr ""
 
@@ -2061,6 +2163,9 @@ msgid "WorkLogger command line"
 msgstr ""
 
 msgid "WorkLogger is already running."
+msgstr ""
+
+msgid "Worked hours"
 msgstr ""
 
 msgid "Worked: {hours}"

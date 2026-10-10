@@ -37,6 +37,80 @@ from worklogger.presentation.job_runner import ImmediateJobRunner, QtJobRunner
 
 
 class ReportHistoryTests(unittest.TestCase):
+    def test_timesheet_exports_preserve_periods_unicode_and_report_drafts(self):
+        from openpyxl import load_workbook
+        from PySide6.QtPdf import QPdfDocument
+        import unicodedata
+        from worklogger.domain.worklog.models import WorkLog, WorkType
+        from worklogger.domain.projects.models import WorkContext
+        from worklogger.infrastructure.repositories.worklog_sqlite import SQLiteWorkLogRepository
+        from worklogger.infrastructure.export.timesheets import TimesheetXlsxExporter, TimesheetPdfExporter
+        from worklogger.app.use_cases.timesheets import ExportTimesheetHandler
+        records = SQLiteWorkLogRepository(self.factory)
+        original = records.save_entry(WorkLog(self.user.id, self.day, "09:00", "12:00", 0.5, "=SUM(A1:A2)\n\u5de5\u4f5c\u5185\u5bb9",
+            context=WorkContext(project_label="Research", work_item_label="Review")))
+        records.save_entry(WorkLog(self.user.id, self.day, "12:00", "13:00", work_type=WorkType.BREAK))
+        records.save_entry(WorkLog(self.user.id, self.day, "14:00", "16:00", note="Afternoon"))
+        records.save_entry(WorkLog(self.other_user.id, self.day, "09:00", "10:00", note="Other account"))
+        handler = ExportTimesheetHandler(records=records, exporters={"xlsx": TimesheetXlsxExporter(), "pdf": TimesheetPdfExporter()}, clock=lambda: self.stamp)
+        self.model._timesheet_export_handler = handler
+        page = self.page()
+        page.editor.setPlainText("Unsaved report draft")
+        target = Path(self.factory.database_path).parent / "timesheet.xlsx"
+        with patch("worklogger.presentation.shell.reports_page.QFileDialog.getSaveFileName", return_value=(str(target), "")):
+            page._choose_export_scope("timesheet_day_xlsx")
+        self.assertTrue(target.is_file())
+        book = load_workbook(target, data_only=False)
+        try:
+            sheet = book.worksheets[0]
+            self.assertEqual(sheet["G7"].value, original.note)
+            self.assertEqual(sheet["G7"].data_type, "s")
+            self.assertEqual([sheet.cell(row, 2).value for row in range(7, 10)], ["09:00", "12:00", "14:00"])
+            self.assertEqual(sum(sheet.cell(row, 8).value for row in range(7, 10)), 4.5)
+            self.assertEqual(sum(sheet.cell(row, 9).value for row in range(7, 10)), 1.5)
+            self.assertEqual(book.worksheets[1].max_row, 4)
+            self.assertNotIn("Other account", str(tuple(sheet.values)))
+        finally:
+            book.close()
+        pdf = target.with_suffix(".pdf")
+        self.assertTrue(self.model.export_timesheet(pdf, self.day, whole_month=True, format="pdf").ok)
+        document = QPdfDocument()
+        self.assertEqual(document.load(str(pdf)), QPdfDocument.Error.None_)
+        try:
+            text = "\n".join(document.getAllText(index).text() for index in range(document.pageCount()))
+            self.assertIn("Afternoon", text)
+            self.assertIn("\u5de5\u4f5c\u5185\u5bb9", "".join(unicodedata.normalize("NFKC", text).split()))
+            self.assertNotIn("Other account", text)
+            self.assertGreater(document.pageCount(), 0)
+        finally:
+            document.close()
+        self.assertEqual(page.editor.toPlainText(), "Unsaved report draft")
+        self.assertEqual(self.repository.list_by_type(self.user.id, "daily"), ())
+        self.assertEqual(records.get_entry(self.user.id, original.id), original)
+
+    def test_timesheet_export_failures_preserve_destinations_and_classify_future_rest(self):
+        from worklogger.domain.reporting.timesheets import Timesheet
+        from worklogger.domain.worklog.models import WorkLog, WorkType
+        from worklogger.infrastructure.export.timesheets import TimesheetXlsxExporter
+        from datetime import timedelta
+        start = self.stamp.replace(hour=12, minute=0, second=0)
+        end = start + timedelta(hours=1)
+        rest = WorkLog(self.user.id, start.date(), "12:00", "13:00", work_type=WorkType.BREAK,
+                       started_at=start, ended_at=end)
+        snapshot = Timesheet(self.day, self.day, "Mary", start + timedelta(minutes=5), 8, (rest,))
+        self.assertEqual(snapshot.record_status(rest), "scheduled")
+        self.assertEqual(snapshot.statistics.total_hours, 0)
+        self.assertEqual(snapshot.rest_hours, 1)
+        target = Path(self.factory.database_path).parent / "preserved.xlsx"
+        target.write_bytes(b"Existing file")
+        with patch("openpyxl.workbook.workbook.Workbook.save", side_effect=OSError("synthetic failure")):
+            self.assertFalse(TimesheetXlsxExporter().export_timesheet(target, snapshot).ok)
+        self.assertEqual(target.read_bytes(), b"Existing file")
+        oversized = replace(rest, note="X" * 32768)
+        invalid = replace(snapshot, entries=(oversized,))
+        self.assertFalse(TimesheetXlsxExporter().export_timesheet(target, invalid).ok)
+        self.assertEqual(target.read_bytes(), b"Existing file")
+
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])

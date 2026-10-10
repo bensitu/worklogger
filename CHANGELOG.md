@@ -14,6 +14,9 @@ Application version: 4.0.0.
 
 ### Desktop Interface
 
+- Added day/month timesheet delivery as editable XLSX and paginated Unicode table
+  PDF, with separate accounting columns, source references and atomic file output.
+
 - Added configurable nonblocking timer reminders and explicit end-time correction
   for long-running timers, including ambiguous-time selection and invalid-time rejection.
 

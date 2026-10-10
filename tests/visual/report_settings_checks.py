@@ -22,6 +22,59 @@ from worklogger.infrastructure.i18n import _
 
 
 class ReportSettingsLayoutChecks(unittest.TestCase):
+    def test_timesheet_files_render_multiperiod_unicode_content_and_page_headers(self):
+        from datetime import datetime, timezone
+        import tempfile
+        from PySide6.QtCore import QSize
+        from PySide6.QtGui import QImage, QPainter
+        from PySide6.QtPdf import QPdfDocument
+        from worklogger.domain.reporting.timesheets import Timesheet
+        from worklogger.domain.worklog.models import WorkLog, WorkType
+        from worklogger.domain.projects.models import WorkContext
+        from worklogger.infrastructure.export.timesheets import TimesheetXlsxExporter, TimesheetPdfExporter
+        old_language = get_language()
+        output = os.environ.get("WORKLOGGER_SCREENSHOTS")
+        try:
+            with tempfile.TemporaryDirectory() as temporary:
+                directory = Path(output) if output else Path(temporary)
+                directory.mkdir(parents=True, exist_ok=True)
+                entries = []
+                for number in range(1, 29):
+                    day = date(2026, 10, number)
+                    entries.extend((WorkLog(1, day, "09:00", "12:00", note="Planning and research / \u5de5\u4f5c\u5185\u5bb9 / \u52e4\u52d9",
+                        context=WorkContext(project_label="Research", work_item_label="Review")),
+                        WorkLog(1, day, "12:00", "13:00", work_type=WorkType.BREAK),
+                        WorkLog(1, day, "14:00", "18:00", note="Implementation and validation")))
+                snapshot = Timesheet(date(2026, 10, 1), date(2026, 10, 31), "Mary", datetime(2026, 11, 1, tzinfo=timezone.utc), 8, tuple(entries))
+                for language in available_languages():
+                    set_language(language)
+                    pdf, xlsx = directory / f"{language}-timesheet.pdf", directory / f"{language}-timesheet.xlsx"
+                    self.assertTrue(TimesheetPdfExporter().export_timesheet(pdf, snapshot).ok)
+                    self.assertTrue(TimesheetXlsxExporter().export_timesheet(xlsx, snapshot).ok)
+                    document = QPdfDocument()
+                    self.assertEqual(document.load(str(pdf)), QPdfDocument.Error.None_)
+                    try:
+                        self.assertGreater(document.pageCount(), 1)
+                        for index in (0, document.pageCount() - 1):
+                            rendered = document.render(index, QSize(1400, 1000))
+                            self.assertFalse(rendered.isNull())
+                            opaque = QImage(rendered.size(), QImage.Format.Format_RGB32)
+                            opaque.fill(0xFFFFFFFF)
+                            painter = QPainter(opaque)
+                            painter.drawImage(0, 0, rendered)
+                            painter.end()
+                            rendered = opaque
+                            self.assertGreater(len({rendered.pixelColor(x, y).name() for x in range(10, 1380, 13) for y in range(10, 980, 13)}), 2)
+                            if output:
+                                self.assertTrue(rendered.save(str(directory / f"{language}-timesheet-page-{index + 1}.png")))
+                        text = "\n".join(document.getAllText(index).text() for index in range(document.pageCount()))
+                        self.assertIn("2026-10-31", "".join(text.split()))
+                        self.assertIn("196.00", text)
+                    finally:
+                        document.close()
+        finally:
+            set_language(old_language)
+
     def test_local_context_settings_fit_model_limits_and_supported_languages(self):
         old_language, old_style, old_palette = get_language(), self.app.styleSheet(), self.app.palette()
         engine = ThemeEngine()

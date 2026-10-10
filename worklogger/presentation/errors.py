@@ -25,6 +25,16 @@ def display_error_code(code: str) -> str:
     """Translate known error codes without displaying raw exception text or logging previews."""
 
     match code:
+        case "timesheet_too_large":
+            return _("This timesheet is too large. Choose a shorter period; the destination file is unchanged.")
+        case "timesheet_invalid" | "timesheet_format_invalid":
+            return _("Choose a valid timesheet period and format.")
+        case "timesheet_content_invalid":
+            return _("The timesheet contains content that cannot be represented in this format. The destination file is unchanged.")
+        case "timesheet_load_failed":
+            return _("Unable to load timesheet records. Your report draft is unchanged.")
+        case "timesheet_export_failed":
+            return _("Unable to export the timesheet. The destination file and report draft are unchanged.")
         case "record_split_invalid":
             return _("Choose a split duration strictly inside the recorded interval.")
         case "record_merge_invalid":

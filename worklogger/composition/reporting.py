@@ -7,6 +7,8 @@ from worklogger.app.use_cases.analytics import (
     GetAnalyticsDashboardHandler,
 )
 from worklogger.app.use_cases.notes import DailyNotesService
+from worklogger.app.use_cases.timesheets import ExportTimesheetHandler
+from worklogger.infrastructure.export.timesheets import TimesheetXlsxExporter, TimesheetPdfExporter
 from worklogger.app.use_cases.reports import (
     DeleteReportHandler,
     GenerateReportHandler,
@@ -98,5 +100,7 @@ def _build_reports_workflow(
             reset_template_handler=handlers.reset_template_handler,
             markdown_exporter=handlers.markdown_exporter,
             rewrite_handler=handlers.rewrite_handler,
+            timesheet_export_handler=ExportTimesheetHandler(records=repositories.work_logs,
+                exporters={"xlsx": TimesheetXlsxExporter(), "pdf": TimesheetPdfExporter()}, profiles=handlers.user_profiles),
         )
     )

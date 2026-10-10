@@ -1,5 +1,37 @@
 # Data Formats
 
+## Timesheet Delivery
+
+Reports > Export report > Timesheet exports the selected date or its entire month
+as XLSX or a paginated table PDF. These outputs read account-owned time records,
+not saved report text, and neither save nor replace the report editor's draft.
+Individual periods remain separate; gaps are never implied to be worked time.
+Days without records are included without inventing work. Work, recorded rest,
+historical deductions and leave have separate columns. Overtime is computed once
+per date using the existing standard-hour definition.
+
+Exports are recorded-time snapshots, not legal or payroll verification. Future
+timestamped periods are marked Scheduled; clock-only legacy records remain
+Historical, with no invented timezone offsets. Declared rest duration can include
+a future portion. Snapshot totals align with the current recorded accounting;
+they do not establish that scheduled rest has already elapsed.
+
+XLSX provides an editable period table and a Record references worksheet containing
+IDs, revisions, available offsets, deduction and context identifiers. User text is
+explicitly typed as text, including content beginning with spreadsheet formula
+characters. The table freezes its header, supports filtering and print layout,
+and contains stored snapshot totals rather than a live recalculating model. Edits
+in the exported workbook do not write back to the application. User-provided XLSX
+template import is not supported.
+
+PDF uses the bundled-font-aware Qt pipeline, landscape A4 tables and repeated
+column headers. User content is HTML-escaped before rendering. Large content can
+continue across pages. Both formats atomically replace the selected destination
+only after successful generation. A rejected or failed export preserves existing
+files. Limits are 50,000 entries and two million text characters per snapshot;
+XLSX additionally rejects a cell exceeding Excel's 32,767-character limit rather
+than silently truncating it.
+
 When records have project context, CSV appends optional `project_label` and
 `work_item_label` columns. Imports preserve these historical labels but do not
 reuse another database's project IDs or create projects implicitly. Association

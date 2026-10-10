@@ -71,6 +71,14 @@ class SQLiteWorkLogQueries:
             ).fetchall()
         return aggregate_days(map_rows(rows, self._storage.from_row))
 
+    def list_entries_range(self, user_id, start, end, *, limit=50001):
+        if type(limit) is not int or not 1 <= limit <= 50001:
+            raise ValueError("record_search_invalid")
+        with self._storage.connection_factory.connection() as connection:
+            rows = connection.execute(self._storage.select + " WHERE w.user_id=? AND w.d BETWEEN ? AND ? ORDER BY w.d,w.start,w.id LIMIT ?",
+                                      (user_id, start.isoformat(), end.isoformat(), limit)).fetchall()
+        return map_rows(rows, self._storage.from_row)
+
     def list_all(self, user_id: int) -> tuple[WorkLog, ...]:
         with self._storage.connection_factory.connection() as connection:
             rows = connection.execute(

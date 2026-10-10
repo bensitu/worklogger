@@ -310,6 +310,9 @@ msgstr "Choose a split duration strictly inside the recorded interval."
 msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
 msgstr "Choose a valid PNG, JPEG, WebP, or BMP image."
 
+msgid "Choose a valid timesheet period and format."
+msgstr "Choose a valid timesheet period and format."
+
 msgid "Choose an earlier end time to save this timer."
 msgstr "Choose an earlier end time to save this timer."
 
@@ -544,6 +547,9 @@ msgstr "End recording"
 msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
 msgstr "End the break at {time} and start recording work? The saved break duration will be shortened."
 
+msgid "Ended at"
+msgstr "Ended at"
+
 msgid "English"
 msgstr "English"
 
@@ -598,6 +604,9 @@ msgstr "Estimated RAM: {ram} GB"
 msgid "Estimated size"
 msgstr "Estimated size"
 
+msgid "Excel files (*.xlsx)"
+msgstr "Excel files (*.xlsx)"
+
 msgid "Export"
 msgstr "Export"
 
@@ -621,6 +630,9 @@ msgstr "Export cancelled"
 
 msgid "Export report"
 msgstr "Export report"
+
+msgid "Export timesheet"
+msgstr "Export timesheet"
 
 msgid "Exported CSV"
 msgstr "Exported CSV"
@@ -694,6 +706,9 @@ msgstr "General"
 msgid "Generate from records"
 msgstr "Generate from records"
 
+msgid "Generated at: {time}"
+msgstr "Generated at: {time}"
+
 msgid "Generated draft"
 msgstr "Generated draft"
 
@@ -715,8 +730,17 @@ msgstr "Hide this item from new records? Existing records will not change."
 msgid "Hide this type from new records? Existing records will not change."
 msgstr "Hide this type from new records? Existing records will not change."
 
+msgid "Historical"
+msgstr "Historical"
+
+msgid "Historical break deduction"
+msgstr "Historical break deduction"
+
 msgid "Historical break deduction: {hours}"
 msgstr "Historical break deduction: {hours}"
+
+msgid "Historical clock records do not contain timezone offsets."
+msgstr "Historical clock records do not contain timezone offsets."
 
 msgid "Holiday country"
 msgstr "Holiday country"
@@ -834,6 +858,9 @@ msgstr "Leave"
 
 msgid "Leave days"
 msgstr "Leave days"
+
+msgid "Leave hours"
+msgstr "Leave hours"
 
 msgid "License"
 msgstr "License"
@@ -1078,6 +1105,9 @@ msgstr "No notes found"
 msgid "No notes recorded for this period."
 msgstr "No notes recorded for this period."
 
+msgid "No records"
+msgstr "No records"
+
 msgid "No records for the selected day."
 msgstr "No records for the selected day."
 
@@ -1159,6 +1189,9 @@ msgstr "Overtime Hours"
 msgid "Overtime comparison: previous period {previous:.1f}h, current period {current:.1f}h"
 msgstr "Overtime comparison: previous period {previous:.1f}h, current period {current:.1f}h"
 
+msgid "Overtime hours"
+msgstr "Overtime hours"
+
 msgid "Overwrite report?"
 msgstr "Overwrite report?"
 
@@ -1225,6 +1258,9 @@ msgstr "Polish text"
 msgid "Port"
 msgstr "Port"
 
+msgid "Prepared by: {name}"
+msgstr "Prepared by: {name}"
+
 msgid "Previous day"
 msgstr "Previous day"
 
@@ -1239,6 +1275,12 @@ msgstr "Previous period"
 
 msgid "Project"
 msgstr "Project"
+
+msgid "Project / work item"
+msgstr "Project / work item"
+
+msgid "Project ID"
+msgstr "Project ID"
 
 msgid "Projects"
 msgstr "Projects"
@@ -1288,14 +1330,29 @@ msgstr "RUNTIME SMOKE FAILED"
 msgid "RUNTIME SMOKE OK"
 msgstr "RUNTIME SMOKE OK"
 
+msgid "Record ID"
+msgstr "Record ID"
+
 msgid "Record actions"
 msgstr "Record actions"
+
+msgid "Record references"
+msgstr "Record references"
 
 msgid "Record search is unavailable."
 msgstr "Record search is unavailable."
 
+msgid "Record status"
+msgstr "Record status"
+
+msgid "Recorded"
+msgstr "Recorded"
+
 msgid "Recorded duration: {duration}"
 msgstr "Recorded duration: {duration}"
+
+msgid "Recorded totals at export. Editing this file does not change WorkLogger records."
+msgstr "Recorded totals at export. Editing this file does not change WorkLogger records."
 
 msgid "Recording or a break is already active."
 msgstr "Recording or a break is already active."
@@ -1381,6 +1438,9 @@ msgstr "Reset this template to its default?"
 msgid "Rest Days"
 msgstr "Rest Days"
 
+msgid "Rest hours"
+msgstr "Rest hours"
+
 msgid "Restore Data"
 msgstr "Restore Data"
 
@@ -1395,6 +1455,9 @@ msgstr "Restore will replace the current database file. Continue?"
 
 msgid "Restoring data..."
 msgstr "Restoring data..."
+
+msgid "Revision"
+msgstr "Revision"
 
 msgid "Rewrite"
 msgstr "Rewrite"
@@ -1498,6 +1561,9 @@ msgstr "Saved. Language changes apply after restarting."
 msgid "Schedule / Records"
 msgstr "Schedule / Records"
 
+msgid "Scheduled"
+msgstr "Scheduled"
+
 msgid "Search notes"
 msgstr "Search notes"
 
@@ -1546,11 +1612,23 @@ msgstr "Select an identity first."
 msgid "Select an individual time record to edit this day."
 msgstr "Select an individual time record to edit this day."
 
+msgid "Selected day (Excel)"
+msgstr "Selected day (Excel)"
+
+msgid "Selected day (PDF)"
+msgstr "Selected day (PDF)"
+
 msgid "Selected day: {day}"
 msgstr "Selected day: {day}"
 
 msgid "Selected model file: {name}"
 msgstr "Selected model file: {name}"
+
+msgid "Selected month (Excel)"
+msgstr "Selected month (Excel)"
+
+msgid "Selected month (PDF)"
+msgstr "Selected month (PDF)"
 
 msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
 msgstr "Selected text and permitted context are sent to this provider when external processing is enabled."
@@ -1629,6 +1707,9 @@ msgstr "Start recording or a break before continuing."
 
 msgid "Start week on Monday"
 msgstr "Start week on Monday"
+
+msgid "Started at"
+msgstr "Started at"
 
 msgid "State / province"
 msgstr "State / province"
@@ -1735,6 +1816,9 @@ msgstr "The selected project or work item is unavailable for new records."
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 
+msgid "The timesheet contains content that cannot be represented in this format. The destination file is unchanged."
+msgstr "The timesheet contains content that cannot be represented in this format. The destination file is unchanged."
+
 msgid "The user account is no longer available."
 msgstr "The user account is no longer available."
 
@@ -1780,6 +1864,9 @@ msgstr "This text exceeds the selected model's context limit. Shorten it and try
 msgid "This timer has reached your reminder duration."
 msgstr "This timer has reached your reminder duration."
 
+msgid "This timesheet is too large. Choose a shorter period; the destination file is unchanged."
+msgstr "This timesheet is too large. Choose a shorter period; the destination file is unchanged."
+
 msgid "This work timer has reached your continuous-work reminder duration."
 msgstr "This work timer has reached your continuous-work reminder duration."
 
@@ -1797,6 +1884,12 @@ msgstr "Time zone: {zone}"
 
 msgid "Timer reminder"
 msgstr "Timer reminder"
+
+msgid "Timesheet"
+msgstr "Timesheet"
+
+msgid "Timesheet exported."
+msgstr "Timesheet exported."
 
 msgid "Title"
 msgstr "Title"
@@ -1846,6 +1939,9 @@ msgstr "Unable to delete the report. Your saved data has been retained."
 msgid "Unable to export the file. Check the destination and write permissions."
 msgstr "Unable to export the file. Check the destination and write permissions."
 
+msgid "Unable to export the timesheet. The destination file and report draft are unchanged."
+msgstr "Unable to export the timesheet. The destination file and report draft are unchanged."
+
 msgid "Unable to import the file. Check its format and contents."
 msgstr "Unable to import the file. Check its format and contents."
 
@@ -1863,6 +1959,9 @@ msgstr "Unable to load the selected model. Check available memory or choose a sm
 
 msgid "Unable to load the user profile. Please try again."
 msgstr "Unable to load the user profile. Please try again."
+
+msgid "Unable to load timesheet records. Your report draft is unchanged."
+msgstr "Unable to load timesheet records. Your report draft is unchanged."
 
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "Unable to obtain the model. Check the source file or download connection."
@@ -2044,6 +2143,9 @@ msgstr "Work hours"
 msgid "Work item"
 msgstr "Work item"
 
+msgid "Work item ID"
+msgstr "Work item ID"
+
 msgid "Work items"
 msgstr "Work items"
 
@@ -2064,6 +2166,9 @@ msgstr "WorkLogger command line"
 
 msgid "WorkLogger is already running."
 msgstr "WorkLogger is already running."
+
+msgid "Worked hours"
+msgstr "Worked hours"
 
 msgid "Worked: {hours}"
 msgstr "Worked: {hours}"

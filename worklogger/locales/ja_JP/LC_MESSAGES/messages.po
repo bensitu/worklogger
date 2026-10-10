@@ -310,6 +310,9 @@ msgstr "記録区間の内側になる分割時間を選択してください。
 msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
 msgstr "有効なPNG、JPEG、WebP、BMP画像を選択してください。"
 
+msgid "Choose a valid timesheet period and format."
+msgstr "有効な勤務表の期間と形式を選択してください。"
+
 msgid "Choose an earlier end time to save this timer."
 msgstr "このタイマーを保存するには、より早い終了時刻を選択してください。"
 
@@ -544,6 +547,9 @@ msgstr "計時を終了"
 msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
 msgstr "休憩の終了時刻を {time} に変更し、勤務の記録を開始しますか？保存済みの休憩時間が短くなります。"
 
+msgid "Ended at"
+msgstr "終了日時"
+
 msgid "English"
 msgstr "英語"
 
@@ -598,6 +604,9 @@ msgstr "推定メモリ：{ram} GB"
 msgid "Estimated size"
 msgstr "推定サイズ"
 
+msgid "Excel files (*.xlsx)"
+msgstr "Excel ファイル (*.xlsx)"
+
 msgid "Export"
 msgstr "エクスポート"
 
@@ -621,6 +630,9 @@ msgstr "エクスポートをキャンセルしました"
 
 msgid "Export report"
 msgstr "レポートを出力"
+
+msgid "Export timesheet"
+msgstr "勤務表をエクスポート"
 
 msgid "Exported CSV"
 msgstr "CSVをエクスポートしました"
@@ -694,6 +706,9 @@ msgstr "一般"
 msgid "Generate from records"
 msgstr "記録から生成"
 
+msgid "Generated at: {time}"
+msgstr "生成日時：{time}"
+
 msgid "Generated draft"
 msgstr "生成した下書き"
 
@@ -715,8 +730,17 @@ msgstr "新しい記録でこの項目を非表示にしますか？既存の記
 msgid "Hide this type from new records? Existing records will not change."
 msgstr "新しい記録からこの種別を非表示にしますか？既存の記録は変更されません。"
 
+msgid "Historical"
+msgstr "過去の記録"
+
+msgid "Historical break deduction"
+msgstr "過去の休憩控除"
+
 msgid "Historical break deduction: {hours}"
 msgstr "過去の休憩控除：{hours}"
+
+msgid "Historical clock records do not contain timezone offsets."
+msgstr "過去の時刻記録にはタイムゾーンのオフセットが含まれていません。"
 
 msgid "Holiday country"
 msgstr "祝日の国"
@@ -834,6 +858,9 @@ msgstr "休暇"
 
 msgid "Leave days"
 msgstr "休暇日数"
+
+msgid "Leave hours"
+msgstr "休暇時間"
 
 msgid "License"
 msgstr "ライセンス"
@@ -1078,6 +1105,9 @@ msgstr "メモが見つかりません"
 msgid "No notes recorded for this period."
 msgstr "この期間に記録されたメモはありません。"
 
+msgid "No records"
+msgstr "記録なし"
+
 msgid "No records for the selected day."
 msgstr "選択した日の記録はありません。"
 
@@ -1159,6 +1189,9 @@ msgstr "残業時間"
 msgid "Overtime comparison: previous period {previous:.1f}h, current period {current:.1f}h"
 msgstr "残業時間の比較：前期間 {previous:.1f}h、今期間 {current:.1f}h"
 
+msgid "Overtime hours"
+msgstr "時間外労働時間"
+
 msgid "Overwrite report?"
 msgstr "レポートを上書きしますか？"
 
@@ -1225,6 +1258,9 @@ msgstr "文章を整える"
 msgid "Port"
 msgstr "ポート"
 
+msgid "Prepared by: {name}"
+msgstr "作成者：{name}"
+
 msgid "Previous day"
 msgstr "前日"
 
@@ -1239,6 +1275,12 @@ msgstr "前の期間"
 
 msgid "Project"
 msgstr "プロジェクト"
+
+msgid "Project / work item"
+msgstr "プロジェクト / 作業項目"
+
+msgid "Project ID"
+msgstr "プロジェクト ID"
 
 msgid "Projects"
 msgstr "プロジェクト"
@@ -1288,14 +1330,29 @@ msgstr "ランタイムのスモークテストに失敗"
 msgid "RUNTIME SMOKE OK"
 msgstr "ランタイムのスモークテスト成功"
 
+msgid "Record ID"
+msgstr "記録 ID"
+
 msgid "Record actions"
 msgstr "記録の操作"
+
+msgid "Record references"
+msgstr "記録の参照情報"
 
 msgid "Record search is unavailable."
 msgstr "記録検索を利用できません。"
 
+msgid "Record status"
+msgstr "記録状態"
+
+msgid "Recorded"
+msgstr "記録済み"
+
 msgid "Recorded duration: {duration}"
 msgstr "記録時間：{duration}"
+
+msgid "Recorded totals at export. Editing this file does not change WorkLogger records."
+msgstr "エクスポート時点の記録合計です。このファイルを編集しても WorkLogger の記録は変更されません。"
 
 msgid "Recording or a break is already active."
 msgstr "記録または休憩はすでに開始されています。"
@@ -1381,6 +1438,9 @@ msgstr "このテンプレートを既定の内容に戻しますか？"
 msgid "Rest Days"
 msgstr "休日数"
 
+msgid "Rest hours"
+msgstr "休憩時間"
+
 msgid "Restore Data"
 msgstr "データを復元"
 
@@ -1395,6 +1455,9 @@ msgstr "復元すると現在のデータベースファイルが置き換わり
 
 msgid "Restoring data..."
 msgstr "データを復元中..."
+
+msgid "Revision"
+msgstr "更新番号"
 
 msgid "Rewrite"
 msgstr "書き直す"
@@ -1498,6 +1561,9 @@ msgstr "保存しました。言語設定は再起動後に適用されます。
 msgid "Schedule / Records"
 msgstr "予定 / 記録"
 
+msgid "Scheduled"
+msgstr "予定"
+
 msgid "Search notes"
 msgstr "メモを検索"
 
@@ -1546,11 +1612,23 @@ msgstr "先に連携アカウントを選択してください。"
 msgid "Select an individual time record to edit this day."
 msgstr "編集する日の時間記録を選択してください。"
 
+msgid "Selected day (Excel)"
+msgstr "選択日（Excel）"
+
+msgid "Selected day (PDF)"
+msgstr "選択日（PDF）"
+
 msgid "Selected day: {day}"
 msgstr "選択日：{day}"
 
 msgid "Selected model file: {name}"
 msgstr "選択したモデルファイル: {name}"
+
+msgid "Selected month (Excel)"
+msgstr "選択月（Excel）"
+
+msgid "Selected month (PDF)"
+msgstr "選択月（PDF）"
 
 msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
 msgstr "外部処理を有効にすると、選択したテキストと許可されたコンテキストがこのプロバイダーに送信されます。"
@@ -1629,6 +1707,9 @@ msgstr "続行する前に記録または休憩を開始してください。"
 
 msgid "Start week on Monday"
 msgstr "月曜始まり"
+
+msgid "Started at"
+msgstr "開始日時"
 
 msgid "State / province"
 msgstr "州 / 都道府県"
@@ -1735,6 +1816,9 @@ msgstr "選択したプロジェクトまたは作業項目は新しい記録に
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr "保存された認証情報をこのデバイスで復号できません。再入力してください。既存の作業記録には影響しません。"
 
+msgid "The timesheet contains content that cannot be represented in this format. The destination file is unchanged."
+msgstr "勤務表にこの形式で表せない内容があります。出力先ファイルは変更されていません。"
+
 msgid "The user account is no longer available."
 msgstr "このユーザーアカウントは利用できなくなりました。"
 
@@ -1780,6 +1864,9 @@ msgstr "内容が選択したモデルのコンテキスト上限を超えてい
 msgid "This timer has reached your reminder duration."
 msgstr "タイマーが設定した通知時間に達しました。"
 
+msgid "This timesheet is too large. Choose a shorter period; the destination file is unchanged."
+msgstr "勤務表が大きすぎます。短い期間を選択してください。出力先ファイルは変更されていません。"
+
 msgid "This work timer has reached your continuous-work reminder duration."
 msgstr "作業タイマーが連続作業の通知時間に達しました。"
 
@@ -1797,6 +1884,12 @@ msgstr "タイムゾーン：{zone}"
 
 msgid "Timer reminder"
 msgstr "タイマー通知"
+
+msgid "Timesheet"
+msgstr "勤務表"
+
+msgid "Timesheet exported."
+msgstr "勤務表をエクスポートしました。"
 
 msgid "Title"
 msgstr "タイトル"
@@ -1846,6 +1939,9 @@ msgstr "レポートを削除できません。保存済みデータは保持さ
 msgid "Unable to export the file. Check the destination and write permissions."
 msgstr "ファイルをエクスポートできませんでした。保存先と書き込み権限を確認してください。"
 
+msgid "Unable to export the timesheet. The destination file and report draft are unchanged."
+msgstr "勤務表をエクスポートできません。出力先ファイルとレポート下書きは変更されていません。"
+
 msgid "Unable to import the file. Check its format and contents."
 msgstr "ファイルをインポートできませんでした。形式と内容を確認してください。"
 
@@ -1863,6 +1959,9 @@ msgstr "選択したモデルを読み込めません。空きメモリを確認
 
 msgid "Unable to load the user profile. Please try again."
 msgstr "ユーザープロフィールを読み込めません。再試行してください。"
+
+msgid "Unable to load timesheet records. Your report draft is unchanged."
+msgstr "勤務表の記録を読み込めません。レポート下書きは変更されていません。"
 
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "モデルを取得できませんでした。元のファイルまたはダウンロード接続を確認してください。"
@@ -2044,6 +2143,9 @@ msgstr "労働時間"
 msgid "Work item"
 msgstr "作業項目"
 
+msgid "Work item ID"
+msgstr "作業項目 ID"
+
 msgid "Work items"
 msgstr "作業項目"
 
@@ -2064,6 +2166,9 @@ msgstr "WorkLoggerコマンドライン"
 
 msgid "WorkLogger is already running."
 msgstr "WorkLogger は既に起動しています。"
+
+msgid "Worked hours"
+msgstr "実働時間"
 
 msgid "Worked: {hours}"
 msgstr "作業時間：{hours}"

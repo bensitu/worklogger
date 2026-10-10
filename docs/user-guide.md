@@ -250,6 +250,11 @@ a paginated Unicode text summary, not the chart. See [data formats](data-formats
 
 ## Settings
 
+The report export menu also provides Timesheet > Selected day/month in Excel or
+PDF. This is a structured export of time records, separate from editor Markdown
+and saved-daily-report aggregation. Multiple periods retain individual rows.
+
+
 | Category | Available controls and behavior |
 | --- | --- |
 | Appearance | Native-language choices, preset/custom accent, light/dark mode; palette appears only for Custom |

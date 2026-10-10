@@ -310,6 +310,9 @@ msgstr "請選擇位於紀錄區間內部的分割時長。"
 msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
 msgstr "請選擇有效的 PNG、JPEG、WebP 或 BMP 圖片。"
 
+msgid "Choose a valid timesheet period and format."
+msgstr "請選擇有效的工時表期間與格式。"
+
 msgid "Choose an earlier end time to save this timer."
 msgstr "請選擇更早的結束時間以儲存此計時。"
 
@@ -544,6 +547,9 @@ msgstr "結束計時"
 msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
 msgstr "將休息結束時間改為 {time} 並開始記錄工作嗎？已儲存的休息時長將相應縮短。"
 
+msgid "Ended at"
+msgstr "結束時間戳"
+
 msgid "English"
 msgstr "英語"
 
@@ -598,6 +604,9 @@ msgstr "估算記憶體：{ram} GB"
 msgid "Estimated size"
 msgstr "預估大小"
 
+msgid "Excel files (*.xlsx)"
+msgstr "Excel 檔案 (*.xlsx)"
+
 msgid "Export"
 msgstr "匯出"
 
@@ -621,6 +630,9 @@ msgstr "已取消匯出"
 
 msgid "Export report"
 msgstr "匯出報表"
+
+msgid "Export timesheet"
+msgstr "匯出工時表"
 
 msgid "Exported CSV"
 msgstr "已匯出 CSV"
@@ -694,6 +706,9 @@ msgstr "一般"
 msgid "Generate from records"
 msgstr "從記錄產生"
 
+msgid "Generated at: {time}"
+msgstr "產生時間：{time}"
+
 msgid "Generated draft"
 msgstr "產生的草稿"
 
@@ -715,8 +730,17 @@ msgstr "在新紀錄中隱藏此項目？現有紀錄不會改變。"
 msgid "Hide this type from new records? Existing records will not change."
 msgstr "在新記錄中停用此類型？既有記錄不會改變。"
 
+msgid "Historical"
+msgstr "歷史紀錄"
+
+msgid "Historical break deduction"
+msgstr "歷史休息扣除"
+
 msgid "Historical break deduction: {hours}"
 msgstr "歷史休息扣除：{hours}"
+
+msgid "Historical clock records do not contain timezone offsets."
+msgstr "歷史時鐘紀錄不含時區偏移。"
 
 msgid "Holiday country"
 msgstr "假日國家"
@@ -834,6 +858,9 @@ msgstr "休假"
 
 msgid "Leave days"
 msgstr "休假天數"
+
+msgid "Leave hours"
+msgstr "請假時長"
 
 msgid "License"
 msgstr "授權條款"
@@ -1078,6 +1105,9 @@ msgstr "找不到筆記"
 msgid "No notes recorded for this period."
 msgstr "此期間沒有記錄備註。"
 
+msgid "No records"
+msgstr "無紀錄"
+
 msgid "No records for the selected day."
 msgstr "所選日期沒有記錄。"
 
@@ -1159,6 +1189,9 @@ msgstr "加班工時"
 msgid "Overtime comparison: previous period {previous:.1f}h, current period {current:.1f}h"
 msgstr "加班工時對比：上一週期 {previous:.1f}h，目前週期 {current:.1f}h"
 
+msgid "Overtime hours"
+msgstr "加班時長"
+
 msgid "Overwrite report?"
 msgstr "覆寫報表？"
 
@@ -1225,6 +1258,9 @@ msgstr "潤飾內容"
 msgid "Port"
 msgstr "連接埠"
 
+msgid "Prepared by: {name}"
+msgstr "編製人：{name}"
+
 msgid "Previous day"
 msgstr "前一天"
 
@@ -1239,6 +1275,12 @@ msgstr "上一期間"
 
 msgid "Project"
 msgstr "專案"
+
+msgid "Project / work item"
+msgstr "專案／工作項目"
+
+msgid "Project ID"
+msgstr "專案 ID"
 
 msgid "Projects"
 msgstr "專案"
@@ -1288,14 +1330,29 @@ msgstr "執行階段檢查失敗"
 msgid "RUNTIME SMOKE OK"
 msgstr "執行階段檢查通過"
 
+msgid "Record ID"
+msgstr "紀錄 ID"
+
 msgid "Record actions"
 msgstr "紀錄操作"
+
+msgid "Record references"
+msgstr "紀錄參照"
 
 msgid "Record search is unavailable."
 msgstr "紀錄檢索不可用。"
 
+msgid "Record status"
+msgstr "紀錄狀態"
+
+msgid "Recorded"
+msgstr "已記錄"
+
 msgid "Recorded duration: {duration}"
 msgstr "紀錄時長：{duration}"
+
+msgid "Recorded totals at export. Editing this file does not change WorkLogger records."
+msgstr "合計為匯出時的紀錄快照。編輯此檔案不會改變 WorkLogger 中的紀錄。"
 
 msgid "Recording or a break is already active."
 msgstr "記錄或休息已開始。"
@@ -1381,6 +1438,9 @@ msgstr "將此範本還原為預設內容？"
 msgid "Rest Days"
 msgstr "休息天數"
 
+msgid "Rest hours"
+msgstr "休息時長"
+
 msgid "Restore Data"
 msgstr "還原資料"
 
@@ -1395,6 +1455,9 @@ msgstr "還原會取代目前的資料庫檔案。繼續？"
 
 msgid "Restoring data..."
 msgstr "正在還原資料..."
+
+msgid "Revision"
+msgstr "修訂號"
 
 msgid "Rewrite"
 msgstr "改寫"
@@ -1498,6 +1561,9 @@ msgstr "已儲存。重新啟動後語言設定生效。"
 msgid "Schedule / Records"
 msgstr "日程 / 記錄"
 
+msgid "Scheduled"
+msgstr "預定"
+
 msgid "Search notes"
 msgstr "搜尋筆記"
 
@@ -1546,11 +1612,23 @@ msgstr "請先選取身分。"
 msgid "Select an individual time record to edit this day."
 msgstr "請選擇當天的一筆時間記錄進行編輯。"
 
+msgid "Selected day (Excel)"
+msgstr "所選日期（Excel）"
+
+msgid "Selected day (PDF)"
+msgstr "所選日期（PDF）"
+
 msgid "Selected day: {day}"
 msgstr "所選日期：{day}"
 
 msgid "Selected model file: {name}"
 msgstr "已選擇模型檔案：{name}"
+
+msgid "Selected month (Excel)"
+msgstr "所選月份（Excel）"
+
+msgid "Selected month (PDF)"
+msgstr "所選月份（PDF）"
 
 msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
 msgstr "啟用外部處理後，所選文字與允許的上下文將傳送至此供應商。"
@@ -1629,6 +1707,9 @@ msgstr "請先開始記錄或休息。"
 
 msgid "Start week on Monday"
 msgstr "每週從週一開始"
+
+msgid "Started at"
+msgstr "開始時間戳"
 
 msgid "State / province"
 msgstr "州 / 省"
@@ -1735,6 +1816,9 @@ msgstr "所選專案或工作項目不可用於新紀錄。"
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr "無法在此裝置上解密已存憑證。請重新輸入，現有工作記錄不受影響。"
 
+msgid "The timesheet contains content that cannot be represented in this format. The destination file is unchanged."
+msgstr "工時表含有此格式無法表示的內容，目標檔案未改變。"
+
 msgid "The user account is no longer available."
 msgstr "該使用者帳戶已無法使用。"
 
@@ -1780,6 +1864,9 @@ msgstr "內容超過所選模型的上下文限制。請縮短後重試。"
 msgid "This timer has reached your reminder duration."
 msgstr "此計時已達到設定的提醒時長。"
 
+msgid "This timesheet is too large. Choose a shorter period; the destination file is unchanged."
+msgstr "此工時表過大，請選擇更短的期間。目標檔案未改變。"
+
 msgid "This work timer has reached your continuous-work reminder duration."
 msgstr "此工作計時已達到連續工作提醒時長。"
 
@@ -1797,6 +1884,12 @@ msgstr "時區：{zone}"
 
 msgid "Timer reminder"
 msgstr "計時提醒"
+
+msgid "Timesheet"
+msgstr "工時表"
+
+msgid "Timesheet exported."
+msgstr "工時表已匯出。"
 
 msgid "Title"
 msgstr "標題"
@@ -1846,6 +1939,9 @@ msgstr "無法刪除報表，已儲存的資料仍然保留。"
 msgid "Unable to export the file. Check the destination and write permissions."
 msgstr "無法匯出檔案，請檢查目標位置與寫入權限。"
 
+msgid "Unable to export the timesheet. The destination file and report draft are unchanged."
+msgstr "無法匯出工時表，目標檔案與報表草稿未改變。"
+
 msgid "Unable to import the file. Check its format and contents."
 msgstr "無法匯入檔案，請檢查檔案格式與內容。"
 
@@ -1863,6 +1959,9 @@ msgstr "無法載入所選模型。請檢查可用記憶體或選擇較小的模
 
 msgid "Unable to load the user profile. Please try again."
 msgstr "無法載入使用者資料，請再試一次。"
+
+msgid "Unable to load timesheet records. Your report draft is unchanged."
+msgstr "無法載入工時表紀錄，報表草稿未改變。"
 
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "無法取得模型，請檢查來源檔案或下載連線。"
@@ -2044,6 +2143,9 @@ msgstr "工時"
 msgid "Work item"
 msgstr "工作項目"
 
+msgid "Work item ID"
+msgstr "工作項目 ID"
+
 msgid "Work items"
 msgstr "工作項目"
 
@@ -2064,6 +2166,9 @@ msgstr "WorkLogger 命令列"
 
 msgid "WorkLogger is already running."
 msgstr "WorkLogger 已在執行。"
+
+msgid "Worked hours"
+msgstr "工作時長"
 
 msgid "Worked: {hours}"
 msgstr "已工作：{hours}"

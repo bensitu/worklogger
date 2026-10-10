@@ -105,6 +105,7 @@ class ReportEditorViewModel:
         templates: TemplateProvider | None = None,
         week_start_monday: bool = False,
         delete_report_handler: DeleteReportHandlerProtocol | None = None,
+        timesheet_export_handler=None,
     ) -> None:
         self._user_id = user_id
         self._generate_handler = generate_handler
@@ -120,6 +121,18 @@ class ReportEditorViewModel:
         self._templates = templates
         self._week_start_monday = week_start_monday
         self._delete_report_handler = delete_report_handler
+        self._timesheet_export_handler = timesheet_export_handler
+
+    @property
+    def timesheet_available(self):
+        return self._timesheet_export_handler is not None
+
+    def export_timesheet(self, destination, selected_day, *, whole_month=False, format="xlsx"):
+        if not self.timesheet_available:
+            return Result.failure(_validation("timesheet_format_invalid"))
+        period = monthly_period(selected_day.year, selected_day.month) if whole_month else daily_period(selected_day)
+        return self._timesheet_export_handler.handle(self._user_id, period.start, period.end, destination,
+                                                     format=format, standard_hours=self._standard_work_hours)
 
     @property
     def delete_available(self) -> bool:

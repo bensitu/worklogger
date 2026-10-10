@@ -302,6 +302,13 @@ class ReportsPage(QWidget):
         set_button_icon(self.export_current_button, "file-output")
         self.export_current_button.setMinimumWidth(self.export_current_button.fontMetrics().horizontalAdvance(self.export_current_button.text()) + 56)
         self.export_current_button.export_requested.connect(self._choose_export_scope)
+        if bool(getattr(self._view_model, "timesheet_available", False)):
+            menu = self.export_current_button.menu().addMenu(_("Timesheet"))
+            for key, caption in (("timesheet_day_xlsx", _("Selected day (Excel)")), ("timesheet_month_xlsx", _("Selected month (Excel)")),
+                                 ("timesheet_day_pdf", _("Selected day (PDF)")), ("timesheet_month_pdf", _("Selected month (PDF)"))):
+                action = menu.addAction(caption)
+                action.setData(key)
+                action.triggered.connect(lambda _checked=False, key=key: self._choose_export_scope(key))
         bottom.addWidget(self.export_current_button)
         bottom.addStretch(1)
         bottom.addWidget(self.save_button)
@@ -340,10 +347,11 @@ class ReportsPage(QWidget):
         has_content = bool(self.editor.toPlainText().strip())
         self.save_button.setEnabled(not busy and has_content and (state.report_id is None or modified))
         saved_export = bool(getattr(self._view_model, "saved_export_available", False))
-        self.export_current_button.setEnabled(not busy and (has_content or saved_export))
+        timesheet_export = bool(getattr(self._view_model, "timesheet_available", False))
+        self.export_current_button.setEnabled(not busy and (has_content or saved_export or timesheet_export))
         for action in self.export_current_button.menu().actions():
             key = action.data()
-            action.setEnabled(not busy and (has_content if key == "current" else saved_export))
+            action.setEnabled(not busy and (timesheet_export if action.menu() is not None else has_content if key == "current" else saved_export))
             if key == "day":
                 action.setText(_("Saved daily report") + f" ({self._selected_day.isoformat()})")
             elif key == "month":
@@ -594,6 +602,9 @@ class ReportsPage(QWidget):
         self._update_report_status()
 
     def _choose_export_scope(self, scope: str) -> None:
+        if scope.startswith("timesheet_"):
+            self._export_timesheet(scope)
+            return
         if scope not in {"current", "day", "month"} or self._view_model is None or self.is_busy:
             return
         state = self._states.get(self._current_type())
@@ -627,6 +638,33 @@ class ReportsPage(QWidget):
                         Path(path), day, whole_month=scope == "month"), on_complete=complete)
                 except Exception:
                     complete(Result.failure(InfrastructureError("report_export_failed", "report_export_failed")))
+
+    def _export_timesheet(self, scope):
+        options = {"timesheet_day_xlsx": (False, "xlsx"), "timesheet_month_xlsx": (True, "xlsx"),
+                   "timesheet_day_pdf": (False, "pdf"), "timesheet_month_pdf": (True, "pdf")}
+        if scope not in options or self.is_busy or not bool(getattr(self._view_model, "timesheet_available", False)):
+            return
+        whole_month, format = options[scope]
+        day = self._selected_day
+        suffix = day.strftime("%Y-%m") if whole_month else day.isoformat()
+        path, _selected = QFileDialog.getSaveFileName(self, _("Export timesheet"), f"timesheet-{suffix}.{format}",
+            _("Excel files (*.xlsx)") if format == "xlsx" else _("PDF files (*.pdf)"))
+        if not path:
+            return
+        self._generate_busy = True
+        self._update_busy_controls()
+        def completed(result):
+            self._generate_busy = False
+            self._update_busy_controls()
+            if result.ok:
+                self._set_status(_("Timesheet exported."))
+            else:
+                self._set_error(result.error)
+        try:
+            self._job_runner.submit("export_timesheet", lambda _token: self._view_model.export_timesheet(
+                Path(path), day, whole_month=whole_month, format=format), on_complete=completed)
+        except Exception:
+            completed(Result.failure(InfrastructureError("timesheet_export_failed", "timesheet_export_failed")))
 
     def _set_error(self, error: AppError | None) -> None:
         if isinstance(error, CancellationError):

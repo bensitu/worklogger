@@ -310,6 +310,9 @@ msgstr "기록된 구간 안에 있는 분할 시간을 선택하세요."
 msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
 msgstr "올바른 PNG, JPEG, WebP 또는 BMP 이미지를 선택하세요."
 
+msgid "Choose a valid timesheet period and format."
+msgstr "올바른 근무 기록표 기간과 형식을 선택하세요."
+
 msgid "Choose an earlier end time to save this timer."
 msgstr "이 타이머를 저장하려면 더 이른 종료 시간을 선택하세요."
 
@@ -544,6 +547,9 @@ msgstr "시간 기록 종료"
 msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
 msgstr "휴식 종료 시간을 {time}(으)로 변경하고 근무 기록을 시작할까요? 저장된 휴식 시간이 줄어듭니다."
 
+msgid "Ended at"
+msgstr "종료 시각"
+
 msgid "English"
 msgstr "영어"
 
@@ -598,6 +604,9 @@ msgstr "예상 메모리: {ram} GB"
 msgid "Estimated size"
 msgstr "예상 크기"
 
+msgid "Excel files (*.xlsx)"
+msgstr "Excel 파일 (*.xlsx)"
+
 msgid "Export"
 msgstr "내보내기"
 
@@ -621,6 +630,9 @@ msgstr "내보내기 취소됨"
 
 msgid "Export report"
 msgstr "보고서 내보내기"
+
+msgid "Export timesheet"
+msgstr "근무 기록표 내보내기"
 
 msgid "Exported CSV"
 msgstr "CSV 내보내기 완료"
@@ -694,6 +706,9 @@ msgstr "일반"
 msgid "Generate from records"
 msgstr "기록에서 생성"
 
+msgid "Generated at: {time}"
+msgstr "생성 시각: {time}"
+
 msgid "Generated draft"
 msgstr "생성된 초안"
 
@@ -715,8 +730,17 @@ msgstr "새 기록에서 이 항목을 숨기시겠습니까? 기존 기록은 �
 msgid "Hide this type from new records? Existing records will not change."
 msgstr "새 기록에서 이 유형을 숨길까요? 기존 기록은 변경되지 않습니다."
 
+msgid "Historical"
+msgstr "이전 기록"
+
+msgid "Historical break deduction"
+msgstr "이전 휴식 공제"
+
 msgid "Historical break deduction: {hours}"
 msgstr "이전 휴식 차감: {hours}"
+
+msgid "Historical clock records do not contain timezone offsets."
+msgstr "이전 시각 기록에는 시간대 오프셋이 포함되어 있지 않습니다."
 
 msgid "Holiday country"
 msgstr "공휴일 국가"
@@ -834,6 +858,9 @@ msgstr "휴가"
 
 msgid "Leave days"
 msgstr "휴가 일수"
+
+msgid "Leave hours"
+msgstr "휴가 시간"
 
 msgid "License"
 msgstr "라이선스"
@@ -1078,6 +1105,9 @@ msgstr "메모를 찾을 수 없습니다"
 msgid "No notes recorded for this period."
 msgstr "이 기간에 기록된 메모가 없습니다."
 
+msgid "No records"
+msgstr "기록 없음"
+
 msgid "No records for the selected day."
 msgstr "선택한 날짜에 기록이 없습니다."
 
@@ -1159,6 +1189,9 @@ msgstr "초과 근무 시간"
 msgid "Overtime comparison: previous period {previous:.1f}h, current period {current:.1f}h"
 msgstr "초과 근무 비교: 이전 기간 {previous:.1f}h, 현재 기간 {current:.1f}h"
 
+msgid "Overtime hours"
+msgstr "초과 근무 시간"
+
 msgid "Overwrite report?"
 msgstr "보고서를 덮어쓸까요?"
 
@@ -1225,6 +1258,9 @@ msgstr "문장 다듬기"
 msgid "Port"
 msgstr "포트"
 
+msgid "Prepared by: {name}"
+msgstr "작성자: {name}"
+
 msgid "Previous day"
 msgstr "이전 날"
 
@@ -1239,6 +1275,12 @@ msgstr "이전 기간"
 
 msgid "Project"
 msgstr "프로젝트"
+
+msgid "Project / work item"
+msgstr "프로젝트 / 작업 항목"
+
+msgid "Project ID"
+msgstr "프로젝트 ID"
 
 msgid "Projects"
 msgstr "프로젝트"
@@ -1288,14 +1330,29 @@ msgstr "런타임 스모크 테스트 실패"
 msgid "RUNTIME SMOKE OK"
 msgstr "런타임 스모크 테스트 성공"
 
+msgid "Record ID"
+msgstr "기록 ID"
+
 msgid "Record actions"
 msgstr "기록 작업"
+
+msgid "Record references"
+msgstr "기록 참조"
 
 msgid "Record search is unavailable."
 msgstr "기록 검색을 사용할 수 없습니다."
 
+msgid "Record status"
+msgstr "기록 상태"
+
+msgid "Recorded"
+msgstr "기록됨"
+
 msgid "Recorded duration: {duration}"
 msgstr "기록 시간: {duration}"
+
+msgid "Recorded totals at export. Editing this file does not change WorkLogger records."
+msgstr "내보내기 시점의 기록 합계입니다. 이 파일을 편집해도 WorkLogger 기록은 변경되지 않습니다."
 
 msgid "Recording or a break is already active."
 msgstr "기록 또는 휴식이 이미 진행 중입니다."
@@ -1381,6 +1438,9 @@ msgstr "이 템플릿을 기본 내용으로 되돌릴까요?"
 msgid "Rest Days"
 msgstr "휴무 일수"
 
+msgid "Rest hours"
+msgstr "휴식 시간"
+
 msgid "Restore Data"
 msgstr "데이터 복원"
 
@@ -1395,6 +1455,9 @@ msgstr "복원하면 현재 데이터베이스 파일이 바뀝니다. 계속할
 
 msgid "Restoring data..."
 msgstr "데이터 복원 중..."
+
+msgid "Revision"
+msgstr "변경 번호"
 
 msgid "Rewrite"
 msgstr "다시 작성"
@@ -1498,6 +1561,9 @@ msgstr "저장되었습니다. 언어 변경은 다시 시작한 후 적용됩�
 msgid "Schedule / Records"
 msgstr "일정 / 기록"
 
+msgid "Scheduled"
+msgstr "예정됨"
+
 msgid "Search notes"
 msgstr "메모 검색"
 
@@ -1546,11 +1612,23 @@ msgstr "먼저 연결된 계정을 선택하세요."
 msgid "Select an individual time record to edit this day."
 msgstr "해당 날짜의 시간 기록을 선택하여 편집하세요."
 
+msgid "Selected day (Excel)"
+msgstr "선택한 날짜(Excel)"
+
+msgid "Selected day (PDF)"
+msgstr "선택한 날짜(PDF)"
+
 msgid "Selected day: {day}"
 msgstr "선택한 날짜: {day}"
 
 msgid "Selected model file: {name}"
 msgstr "선택한 모델 파일: {name}"
+
+msgid "Selected month (Excel)"
+msgstr "선택한 월(Excel)"
+
+msgid "Selected month (PDF)"
+msgstr "선택한 월(PDF)"
 
 msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
 msgstr "외부 처리가 활성화되면 선택한 텍스트와 허용된 맥락이 이 제공업체에 전송됩니다."
@@ -1629,6 +1707,9 @@ msgstr "계속하기 전에 기록 또는 휴식을 시작하세요."
 
 msgid "Start week on Monday"
 msgstr "월요일부터 한 주 시작"
+
+msgid "Started at"
+msgstr "시작 시각"
 
 msgid "State / province"
 msgstr "주 / 도"
@@ -1735,6 +1816,9 @@ msgstr "선택한 프로젝트 또는 작업 항목은 새 기록에 사용할 �
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr "이 기기에서 저장된 자격 증명을 복호화할 수 없습니다. 다시 입력하세요. 기존 작업 기록에는 영향이 없습니다."
 
+msgid "The timesheet contains content that cannot be represented in this format. The destination file is unchanged."
+msgstr "근무 기록표에 이 형식으로 표현할 수 없는 내용이 있습니다. 대상 파일은 변경되지 않았습니다."
+
 msgid "The user account is no longer available."
 msgstr "이 사용자 계정은 더 이상 사용할 수 없습니다."
 
@@ -1780,6 +1864,9 @@ msgstr "텍스트가 선택한 모델의 문맥 한도를 초과합니다. 내�
 msgid "This timer has reached your reminder duration."
 msgstr "타이머가 설정한 알림 시간에 도달했습니다."
 
+msgid "This timesheet is too large. Choose a shorter period; the destination file is unchanged."
+msgstr "근무 기록표가 너무 큽니다. 더 짧은 기간을 선택하세요. 대상 파일은 변경되지 않았습니다."
+
 msgid "This work timer has reached your continuous-work reminder duration."
 msgstr "작업 타이머가 연속 작업 알림 시간에 도달했습니다."
 
@@ -1797,6 +1884,12 @@ msgstr "시간대: {zone}"
 
 msgid "Timer reminder"
 msgstr "타이머 알림"
+
+msgid "Timesheet"
+msgstr "근무 기록표"
+
+msgid "Timesheet exported."
+msgstr "근무 기록표를 내보냈습니다."
 
 msgid "Title"
 msgstr "제목"
@@ -1846,6 +1939,9 @@ msgstr "보고서를 삭제할 수 없습니다. 저장된 데이터는 유지�
 msgid "Unable to export the file. Check the destination and write permissions."
 msgstr "파일을 내보내지 못했습니다. 저장 위치와 쓰기 권한을 확인하세요."
 
+msgid "Unable to export the timesheet. The destination file and report draft are unchanged."
+msgstr "근무 기록표를 내보낼 수 없습니다. 대상 파일과 보고서 초안은 변경되지 않았습니다."
+
 msgid "Unable to import the file. Check its format and contents."
 msgstr "파일을 가져오지 못했습니다. 파일 형식과 내용을 확인하세요."
 
@@ -1863,6 +1959,9 @@ msgstr "선택한 모델을 불러올 수 없습니다. 사용 가능한 메모�
 
 msgid "Unable to load the user profile. Please try again."
 msgstr "사용자 프로필을 불러올 수 없습니다. 다시 시도하세요."
+
+msgid "Unable to load timesheet records. Your report draft is unchanged."
+msgstr "근무 기록표의 기록을 불러올 수 없습니다. 보고서 초안은 변경되지 않았습니다."
 
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "모델을 가져오지 못했습니다. 원본 파일 또는 다운로드 연결을 확인하세요."
@@ -2044,6 +2143,9 @@ msgstr "근무 시간"
 msgid "Work item"
 msgstr "작업 항목"
 
+msgid "Work item ID"
+msgstr "작업 항목 ID"
+
 msgid "Work items"
 msgstr "작업 항목"
 
@@ -2064,6 +2166,9 @@ msgstr "WorkLogger 명령줄"
 
 msgid "WorkLogger is already running."
 msgstr "WorkLogger가 이미 실행 중입니다."
+
+msgid "Worked hours"
+msgstr "근무 시간"
 
 msgid "Worked: {hours}"
 msgstr "작업 시간: {hours}"

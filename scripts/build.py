@@ -41,7 +41,7 @@ def main() -> int:
     subprocess.run([sys.executable, str(ROOT / "scripts/i18n/i18n_check.py")], cwd=ROOT, check=True)
     resources = bundled_resources(ROOT)
     print(f"Validated {len(resources)} bundled resource files.")
-    required = ("PySide6", "tzlocal", "tzdata", "holidays", "cryptography", "keyring", "certifi", "jwt", "icalendar", "recurring_ical_events", "portalocker")
+    required = ("PySide6", "tzlocal", "tzdata", "holidays", "cryptography", "keyring", "certifi", "jwt", "icalendar", "recurring_ical_events", "portalocker", "openpyxl", "et_xmlfile")
     if args.with_local_inference:
         required += ("llama_cpp",)
     missing = [name for name in required if importlib.util.find_spec(name) is None]
