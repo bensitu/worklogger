@@ -44,6 +44,7 @@ class _SettingsScrollPage(QScrollArea):
 
 def _card_with_form(title: str) -> CardFrame:
     card = CardFrame(object_name="settings_content_frame")
+    card.content_layout.addWidget(_section_title(title))
     form = _settings_form()
     card.content_layout.addLayout(form)
     card.form_layout = form

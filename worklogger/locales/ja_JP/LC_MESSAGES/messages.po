@@ -1771,6 +1771,9 @@ msgstr "休暇を表示"
 msgid "Show password"
 msgstr "パスワードを表示"
 
+msgid "Show recent context"
+msgstr "最近のプロジェクトの表示"
+
 msgid "Showing the first {count} source references."
 msgstr "最初の{count}件の出典参照を表示しています。"
 

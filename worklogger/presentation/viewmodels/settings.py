@@ -43,6 +43,7 @@ from worklogger.config.constants import (
     HOLIDAY_REGION_SETTING_KEY,
     SHOW_NOTE_MARKERS_SETTING_KEY,
     SHOW_OVERNIGHT_INDICATOR_SETTING_KEY,
+    SHOW_RECENT_CONTEXT_SETTING_KEY,
     STANDARD_WORK_HOURS_SETTING_KEY,
     THEME_SETTING_KEY,
     WEEK_START_MONDAY_SETTING_KEY,
@@ -109,6 +110,7 @@ class SettingsState:
     local_model_context_tokens: int = DEFAULT_RUNTIME_CONTEXT_TOKENS
     timer_reminder_hours: float = 10.0
     continuous_timer_reminder_hours: float = 0.0
+    show_recent_context: bool = True
 
 
 class SettingsViewModel:
@@ -219,6 +221,7 @@ class SettingsViewModel:
                 ),
                 show_holidays=_bool(values[SHOW_HOLIDAYS_SETTING_KEY], True),
                 show_note_markers=_bool(values[SHOW_NOTE_MARKERS_SETTING_KEY], True),
+                show_recent_context=_bool(values[SHOW_RECENT_CONTEXT_SETTING_KEY], True),
                 show_overnight_indicator=_bool(
                     values[SHOW_OVERNIGHT_INDICATOR_SETTING_KEY],
                     True,
@@ -376,6 +379,7 @@ _DEFAULTS = {
     HOLIDAY_REGION_SETTING_KEY: "",
     SHOW_NOTE_MARKERS_SETTING_KEY: "1",
     SHOW_OVERNIGHT_INDICATOR_SETTING_KEY: "1",
+    SHOW_RECENT_CONTEXT_SETTING_KEY: "1",
     WEEK_START_MONDAY_SETTING_KEY: "0",
     ENABLE_TRAY_SETTING_KEY: "0",
     ENABLE_MENU_BAR_SETTING_KEY: "0",
@@ -406,6 +410,7 @@ _BOOLEAN_KEYS = frozenset(
         SHOW_HOLIDAYS_SETTING_KEY,
         SHOW_NOTE_MARKERS_SETTING_KEY,
         SHOW_OVERNIGHT_INDICATOR_SETTING_KEY,
+        SHOW_RECENT_CONTEXT_SETTING_KEY,
         WEEK_START_MONDAY_SETTING_KEY,
         ENABLE_TRAY_SETTING_KEY,
         ENABLE_MENU_BAR_SETTING_KEY,

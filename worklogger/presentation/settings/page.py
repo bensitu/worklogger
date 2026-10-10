@@ -256,6 +256,7 @@ class SettingsPage(QWidget):
             )
             self.note_markers_switch.set_checked(state.show_note_markers)
             self.overnight_switch.set_checked(state.show_overnight_indicator)
+            self.recent_context_switch.set_checked(state.show_recent_context)
             self.week_start_switch.set_checked(state.week_start_monday)
             if self.residency_switch is not None:
                 self.residency_switch.set_checked(
@@ -345,6 +346,7 @@ class SettingsPage(QWidget):
             (self.dark_switch, _("Dark mode")),
             (self.holidays_switch, _("Public holidays")),
             (self.overnight_switch, _("Overnight indicator")),
+            (self.recent_context_switch, _("Show recent context")),
             (self.week_start_switch, _("Start week on Monday")),
         ):
             switch.setAccessibleName(name)

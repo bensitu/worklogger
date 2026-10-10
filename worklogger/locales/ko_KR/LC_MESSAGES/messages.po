@@ -1771,6 +1771,9 @@ msgstr "휴가 표시"
 msgid "Show password"
 msgstr "비밀번호 표시"
 
+msgid "Show recent context"
+msgstr "최근 프로젝트 표시"
+
 msgid "Showing the first {count} source references."
 msgstr "처음 {count}개의 출처 참조를 표시합니다."
 

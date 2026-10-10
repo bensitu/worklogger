@@ -16,6 +16,7 @@ from worklogger.config.constants import (
     SHOW_HOLIDAYS_SETTING_KEY,
     SHOW_NOTE_MARKERS_SETTING_KEY,
     SHOW_OVERNIGHT_INDICATOR_SETTING_KEY,
+    SHOW_RECENT_CONTEXT_SETTING_KEY,
     STANDARD_WORK_HOURS_SETTING_KEY,
     WEEK_START_MONDAY_SETTING_KEY,
 )
@@ -30,7 +31,6 @@ from worklogger.presentation.settings.sections.common import (
     _hours_input,
     _SettingsScrollPage,
     _switch_row,
-    _section_title,
 )
 from worklogger.presentation.widgets import SwitchButton
 from worklogger.presentation.widgets.icons import set_button_icon
@@ -45,6 +45,7 @@ class GeneralSection(_SettingsScrollPage):
         "monthly_target_input",
         "note_markers_switch",
         "overnight_switch",
+        "recent_context_switch",
         "residency_switch",
         "standard_hours_input",
         "week_start_switch",
@@ -58,7 +59,6 @@ class GeneralSection(_SettingsScrollPage):
         super().__init__()
         page = self
         card = _card_with_form(_("Work and recording"))
-        card.content_layout.insertWidget(0, _section_title(_("Work and recording")))
         form = card.form_layout
 
         self.standard_hours_input = _hours_input(1.0, 24.0, 0.5)
@@ -109,7 +109,6 @@ class GeneralSection(_SettingsScrollPage):
 
         page.layout().addWidget(card)
         card = _card_with_form(_("Calendar display"))
-        card.content_layout.insertWidget(0, _section_title(_("Calendar display")))
         form = card.form_layout
 
         self.holidays_switch = SwitchButton()
@@ -155,12 +154,16 @@ class GeneralSection(_SettingsScrollPage):
             lambda enabled: actions.set_bool(WEEK_START_MONDAY_SETTING_KEY, enabled)
         )
         form.addRow(_("Start week on Monday"), _switch_row(self.week_start_switch))
+        self.recent_context_switch = SwitchButton()
+        self.recent_context_switch.toggled.connect(
+            lambda enabled: actions.set_bool(SHOW_RECENT_CONTEXT_SETTING_KEY, enabled)
+        )
+        form.addRow(_("Show recent context"), _switch_row(self.recent_context_switch))
         page.layout().addWidget(card)
 
         self.residency_switch: SwitchButton | None = None
         if actions.residency_key:
             card = _card_with_form(_("Application behavior"))
-            card.content_layout.insertWidget(0, _section_title(_("Application behavior")))
             form = card.form_layout
             self.residency_switch = SwitchButton()
             self.residency_switch.toggled.connect(

@@ -474,10 +474,12 @@ class SettingsPresentationTests(unittest.TestCase):
         self.assertEqual(dialog.theme_combo.currentData(), "pink")
         self.assertTrue(dialog.dark_switch.is_checked())
         self.assertEqual(dialog.standard_hours_input.value(), 7.5)
+        self.assertTrue(dialog.recent_context_switch.is_checked())
 
         dialog.theme_combo.setCurrentIndex(dialog.theme_combo.findData("green"))
         dialog.dark_switch.set_checked(False)
         dialog.standard_hours_input.setValue(8.5)
+        dialog.recent_context_switch.set_checked(False)
         if dialog.residency_switch is not None:
             dialog.residency_switch.set_checked(True)
             residency_key = (
@@ -490,6 +492,8 @@ class SettingsPresentationTests(unittest.TestCase):
         self.assertEqual(repository.values[(1, THEME_SETTING_KEY)], "green")
         self.assertEqual(repository.values[(1, DARK_MODE_SETTING_KEY)], "0")
         self.assertEqual(repository.values[(1, STANDARD_WORK_HOURS_SETTING_KEY)], "8.5")
+        self.assertEqual(repository.values[(1, "show_recent_context")], "0")
+        self.assertFalse(_view_model(repository).load().value.show_recent_context)
         self.assertEqual(dialog.status_label.text(), "Saved")
 
     def test_settings_dialog_exposes_account_change_password_entry(self) -> None:

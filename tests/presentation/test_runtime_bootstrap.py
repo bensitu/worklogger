@@ -343,6 +343,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 "language": "ja_JP", "dark_mode": "1", "standard_work_hours": "7.5",
                 "default_break_hours": "0.75", "monthly_target_hours": "150",
                 "show_holidays": "0", "week_start_monday": "1",
+                "show_recent_context": "0",
             }.items():
                 settings.set(runtime.user.id, key, value)
             runtime.window.close()
@@ -358,6 +359,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 self.assertEqual(window._config.monthly_target_hours, 150)
                 self.assertFalse(window._config.calendar_options.show_holidays)
                 self.assertTrue(window._config.calendar_options.week_start_monday)
+                self.assertTrue(window.entry_panel.context_picker.recent_button.isHidden())
                 self.assertTrue(window.refresh())
                 self.assertEqual(window.entry_panel.view_model.default_break_hours, 0.75)
                 self.assertFalse(window.entry_panel.view_model.rewrite_available)

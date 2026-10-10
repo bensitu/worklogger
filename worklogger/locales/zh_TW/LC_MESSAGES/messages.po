@@ -1771,6 +1771,9 @@ msgstr "顯示休假"
 msgid "Show password"
 msgstr "顯示密碼"
 
+msgid "Show recent context"
+msgstr "顯示最近使用的專案"
+
 msgid "Showing the first {count} source references."
 msgstr "顯示前 {count} 個來源引用。"
 

@@ -37,6 +37,7 @@ class MinimalViewConfig:
     selected_day: date | None = None
     today: date | None = None
     account_name: str | None = None
+    show_recent_context: bool = True
     confirm_discard_changes: Callable[[], bool] | None = None
 
 
@@ -174,6 +175,7 @@ class MinimalView(QWidget):
         root.addLayout(nav)
 
         self.entry_panel = TimeEntryPanel(self._time_entry_view_model, compact=False, job_runner=self._job_runner)
+        self.entry_panel.context_picker.recent_button.setVisible(self._config.show_recent_context)
         root.addWidget(self.entry_panel)
         root.addWidget(QLabel(_("Schedule / Records")))
         self.history_widget = TimeEntryHistory(self._time_entry_view_model)
@@ -354,6 +356,8 @@ class MinimalView(QWidget):
         from PySide6.QtWidgets import QApplication
         from worklogger.presentation.theme import ThemeEngine
         self._time_entry_view_model.set_default_break_hours(state.default_break_hours)
+        self._config = replace(self._config, show_recent_context=state.show_recent_context)
+        self.entry_panel.context_picker.recent_button.setVisible(state.show_recent_context)
         self._time_entry_view_model.set_timer_reminders(state.timer_reminder_hours, state.continuous_timer_reminder_hours)
         application = QApplication.instance()
         if application is not None:

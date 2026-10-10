@@ -1771,6 +1771,9 @@ msgstr "Show leaves"
 msgid "Show password"
 msgstr "Show password"
 
+msgid "Show recent context"
+msgstr "Show recent context"
+
 msgid "Showing the first {count} source references."
 msgstr "Showing the first {count} source references."
 

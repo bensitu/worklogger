@@ -15,6 +15,7 @@ from worklogger.presentation.settings.sections.actions import SectionActions
 from worklogger.presentation.settings.sections.common import (
     _readonly_line_edit,
     _secondary_label,
+    _section_title,
     _SettingsScrollPage,
 )
 from worklogger.presentation.widgets import CardFrame
@@ -41,6 +42,7 @@ class AccountSection(_SettingsScrollPage):
         super().__init__()
         page = self
         card = CardFrame(object_name="settings_content_frame")
+        card.content_layout.addWidget(_section_title(_("Account")))
         form = QFormLayout()
         form.setSpacing(12)
         self.display_name_editor = DisplayNameEditor()

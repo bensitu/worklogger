@@ -1769,6 +1769,9 @@ msgstr ""
 msgid "Show password"
 msgstr ""
 
+msgid "Show recent context"
+msgstr ""
+
 msgid "Showing the first {count} source references."
 msgstr ""
 

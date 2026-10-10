@@ -94,6 +94,12 @@ imported calendar events. New time record opens an empty manual editor and focus
 the start time. Notes opens the selected date's separate memo. The calendar
 does not expose a separate quick-log editor or a general AI chat window.
 
+**Settings > General > Calendar display > Show recent context** controls the
+history shortcut beside Project in both recording interfaces. It is enabled by
+default, is stored per account, and takes effect immediately without changing
+the current draft or removing saved project associations. Existing installations
+retain the visible shortcut without a database schema change.
+
 ### Manual Entry
 
 1. Select Manual Input and enter start and end times. The clock icon opens the

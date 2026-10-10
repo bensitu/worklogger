@@ -222,6 +222,7 @@ QToolButton#recent_work_context_button::menu-indicator {
 }
 QToolButton#cancel_processing_button {
     padding: 0px;
+    min-height: 0;
 }
 QToolButton#polish_time_entry_button {
   min-height: 16px;

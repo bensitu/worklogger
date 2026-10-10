@@ -379,6 +379,7 @@ def _build_runtime_for_user(
         standard_work_hours=state.standard_work_hours,
         monthly_target_hours=state.monthly_target_hours,
         profile_avatar_png=state.profile_avatar_png,
+        show_recent_context=state.show_recent_context,
         calendar_options=replace(
             window_config.calendar_options,
             show_holidays=state.show_holidays,
@@ -472,6 +473,7 @@ def _build_minimal_view(
             selected_day=window_config.selected_day,
             today=window_config.today,
             account_name=window_config.account_name,
+            show_recent_context=window_config.show_recent_context,
             confirm_discard_changes=window_config.confirm_discard_changes,
         ),
         settings_workflow=settings_workflow,

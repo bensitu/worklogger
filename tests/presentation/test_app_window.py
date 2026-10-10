@@ -403,6 +403,21 @@ class AppWindowTests(unittest.TestCase):
         self.assertEqual(notes.opened, [(date(2026, 4, 20), window)])
         self.assertEqual(window.entry_panel.start_input.text(), "09:00")
         self.assertTrue(window.has_unsaved_changes)
+
+    def test_recent_context_visibility_changes_without_discarding_record_draft(self):
+        from dataclasses import replace
+        from tests.presentation.test_settings_presentation import MemorySettingsRepository, _view_model
+        state = _view_model(MemorySettingsRepository()).load().value
+        window = _window(MemoryWorkLogRepository())
+        window.refresh()
+        window.entry_panel.start_input.setText("09:00")
+        window.entry_panel.content_input.setPlainText("Keep this draft")
+        for enabled in (False, True):
+            window.apply_settings(replace(state, show_recent_context=enabled))
+            self.assertEqual(window.entry_panel.context_picker.recent_button.isHidden(), not enabled)
+            self.assertEqual(window.entry_panel.start_input.text(), "09:00")
+            self.assertEqual(window.entry_panel.content_input.toPlainText(), "Keep this draft")
+            self.assertTrue(window.has_unsaved_changes)
         self.assertFalse(hasattr(window, "quick_logs_button"))
         self.assertFalse(hasattr(window, "ai_assist_button"))
 

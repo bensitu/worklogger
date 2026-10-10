@@ -84,6 +84,7 @@ class AppWindowConfig:
     account_name: str | None = None
     account_role: str = "Admin"
     profile_avatar_png: str = field(default="", repr=False)
+    show_recent_context: bool = True
     confirm_discard_changes: Callable[[], bool] | None = None
 
 
@@ -217,6 +218,7 @@ class AppWindow(QMainWindow):
 
     def apply_settings(self, state: SettingsState) -> None:
         self.sidebar.set_avatar(state.profile_avatar_png)
+        self.entry_panel.context_picker.recent_button.setVisible(state.show_recent_context)
         self._config = apply_recording_preferences(
             self._config,
             state,
@@ -314,6 +316,7 @@ class AppWindow(QMainWindow):
         self.entry_panel = TimeEntryPanel(
             self._time_entry_view_model, job_runner=self._job_runner
         )
+        self.entry_panel.context_picker.recent_button.setVisible(self._config.show_recent_context)
         self.stats_panel = StatsPanel()
         self.calendar_page = CalendarPage(
             calendar_view=self.calendar_view,

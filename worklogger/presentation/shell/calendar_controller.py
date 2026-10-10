@@ -78,6 +78,7 @@ def apply_recording_preferences(
         custom_color=state.custom_color,
         standard_work_hours=state.standard_work_hours,
         monthly_target_hours=state.monthly_target_hours,
+        show_recent_context=state.show_recent_context,
         calendar_options=replace(
             config.calendar_options,
             show_holidays=state.show_holidays,

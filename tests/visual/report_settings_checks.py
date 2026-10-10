@@ -51,6 +51,10 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                     groups = [label.parentWidget() for label in headings]
                     self.assertEqual(len(set(groups)), len(headings))
                     self.assertTrue(all(group.objectName() == "settings_content_frame" for group in groups))
+                    for category in ("appearance", "account", "ai", "network", "about"):
+                        settings.category_nav.set_category(category)
+                        self.assertTrue(settings.category_stack.currentWidget().findChildren(QLabel, "settings_section_title_label"))
+                    settings.category_nav.set_category("general")
                     self.capture(settings, f"{language}-general-groups-{dark}")
                     settings.set_data_directory(Path("D:/Application Data/WorkLogger"))
                     settings.category_nav.set_category("data")
@@ -79,6 +83,7 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                     self.assertTrue(panel.processing_progress.cancel_button.isEnabled())
                     self.assertTrue(panel.isEnabled())
                     self.assertTrue(panel.content_input.isReadOnly())
+                    self.assertEqual(panel.content_input.y() - panel.content_heading_stack.geometry().bottom() - 1, 3)
                     self.assertEqual(panel.processing_progress.bar.minimum(), panel.processing_progress.bar.maximum())
                     self.assertTrue(panel.rect().contains(panel.processing_progress.rect().translated(panel.processing_progress.mapTo(panel, panel.rect().topLeft()))))
                     input_bottom = panel.content_input.mapTo(window, panel.content_input.rect().bottomLeft()).y()
