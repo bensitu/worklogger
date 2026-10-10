@@ -58,6 +58,8 @@ from worklogger.presentation.settings.workflows.data import DataSettingsWorkflow
 from worklogger.presentation.settings.workflows.updates import UpdatesSettingsWorkflow
 from worklogger.presentation.viewmodels.work_types import WorkTypeManagerViewModel
 from worklogger.presentation.widgets.work_type_manager import WorkTypeManagerDialog
+from worklogger.app.ports import AIRequest
+from worklogger.presentation.job_runner import QtJobRunner
 
 
 class SettingsWorkflowController:
@@ -94,6 +96,7 @@ class SettingsWorkflowController:
         capabilities: SettingsCapabilities | None = None,
         work_types_view_model: WorkTypeManagerViewModel | None = None,
         local_inference=None,
+        ai_gateway=None,
     ) -> None:
         self._settings_view_model = settings_view_model
         self._capabilities = capabilities or SettingsCapabilities(
@@ -109,6 +112,7 @@ class SettingsWorkflowController:
         self._page_factory = page_factory or SettingsPage
         self._work_types_view_model = work_types_view_model
         self._local_inference = local_inference
+        self._ai_gateway = ai_gateway
         if local_inference is not None:
             self._capabilities = replace(self._capabilities, local_generation=local_inference.backend_available)
 
@@ -150,6 +154,7 @@ class SettingsWorkflowController:
         dialog = self._dialog_factory(self._settings_view_model, parent)
         self._bind_surface(dialog)
         dialog.refresh()
+        self._sync_inference(dialog)
         return dialog
 
     def set_restore_handler(self, handler: ReloadHandler) -> None:
@@ -159,11 +164,14 @@ class SettingsWorkflowController:
         page = self._page_factory(self._settings_view_model, parent)
         self._bind_surface(page)
         page.refresh()
+        self._sync_inference(page)
         return page
 
     def _bind_surface(self, surface: QWidget) -> None:
-        if self._local_inference is not None:
+        if self._local_inference is not None or self._ai_gateway is not None:
             surface.settings_changed.connect(lambda _state: self._sync_inference(surface))
+        if self._ai_gateway is not None:
+            surface.test_external_model_requested.connect(lambda: self._test_external_model(surface))
         if hasattr(surface, "set_work_types_available"):
             surface.set_work_types_available(self._work_types_view_model is not None)
         if self._work_types_view_model is not None:
@@ -239,7 +247,9 @@ class SettingsWorkflowController:
                 return
             inventory = result.value.inventory
             if self._local_inference is not None:
-                self._local_inference.update_inventory(inventory)
+                if self._local_inference.update_inventory(inventory) is False:
+                    self._refresh_local_models_status(surface)
+                    return
             active = next(
                 (
                     item
@@ -270,9 +280,31 @@ class SettingsWorkflowController:
         return dialog
 
     def _sync_inference(self, surface):
+        if self._ai_gateway is not None and surface.state is not None:
+            self._ai_gateway.update_configuration(surface.state)
         if self._local_inference is not None and hasattr(surface, "set_local_runtime_status"):
             surface.set_local_runtime_status(ready=self._local_inference.available, reason=self._local_inference.reason)
+        if self._local_inference is not None or self._ai_gateway is not None:
             surface.ai_availability_changed.emit()
+
+    def _test_external_model(self, surface):
+        if surface.is_busy or self._ai_gateway is None:
+            return
+        surface.set_busy("external_model_test", True)
+        surface.external_model_status_label.setText(_("Testing connection..."))
+        runner = self._job_runner or QtJobRunner(surface)
+        def complete(result):
+            if not isValid(surface):
+                return
+            surface.set_busy("external_model_test", False)
+            surface.external_model_status_label.setText(_("Connection succeeded.") if result.ok else _error_message(result.error))
+        try:
+            runner.submit("test_external_model", lambda _token: self._ai_gateway.generate(AIRequest(
+                messages=({"role": "user", "content": "Reply with OK."},), model="default", timeout_seconds=30)), on_complete=complete)
+        except Exception:
+            from worklogger.domain.shared.errors import InfrastructureError
+            from worklogger.domain.shared.result import Result
+            complete(Result.failure(InfrastructureError("ai_request_failed", "ai_request_failed")))
 
     def _change_password(self, parent: QWidget | None) -> bool:
         return self._account_workflow.change_password(parent)

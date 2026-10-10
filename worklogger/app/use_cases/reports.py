@@ -199,7 +199,10 @@ class ResetReportTemplateHandler:
             language = normalize_template_language(command.language)
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
-        self._repository.remove(command.user_id, language, template_type)
+        try:
+            self._repository.remove(command.user_id, language, template_type)
+        except Exception:
+            return Result.failure(InfrastructureError("template_save_failed", "template_save_failed"))
         return Result.success(None)
 
 
@@ -213,7 +216,10 @@ class GetReportTemplateHandler:
             language = normalize_template_language(query.language)
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
-        return Result.success(self._repository.get(query.user_id, language, template_type))
+        try:
+            return Result.success(self._repository.get(query.user_id, language, template_type))
+        except Exception:
+            return Result.failure(InfrastructureError("template_load_failed", "template_load_failed"))
 
 
 class ListReportTemplatesHandler:
@@ -221,12 +227,13 @@ class ListReportTemplatesHandler:
         self._repository = repository
 
     def handle(self, query: ListReportTemplatesQuery) -> Result[tuple[ReportTemplate, ...]]:
-        language = (
-            normalize_template_language(query.language)
-            if query.language is not None
-            else None
-        )
-        return Result.success(self._repository.list_for_user(query.user_id, language))
+        try:
+            language = normalize_template_language(query.language) if query.language is not None else None
+            return Result.success(self._repository.list_for_user(query.user_id, language))
+        except (TypeError, ValueError) as exc:
+            return Result.failure(ValidationError(str(exc), str(exc)))
+        except Exception:
+            return Result.failure(InfrastructureError("template_load_failed", "template_load_failed"))
 
 
 class GenerateReportHandler:

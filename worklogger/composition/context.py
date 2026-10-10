@@ -50,6 +50,12 @@ from worklogger.infrastructure.local_model import JsonLocalModelStore, bundled_m
 from worklogger.config.feature_flags import FeatureFlags
 from pathlib import Path
 import os
+import hashlib
+from worklogger.app.use_cases.settings import ProxyPasswordSettings
+from worklogger.infrastructure.network import AccountHTTPTransport
+from worklogger.infrastructure.ai.account import AccountAIGateway
+from worklogger.infrastructure.security.key_store import EncryptedSettingsKeyStore, SystemCredentialStore, HmacSecretBox
+from worklogger.infrastructure.local_model.store import HttpRangeDownloader
 
 
 class RuntimeAuthRepository(AuthCredentialRepository, Protocol):
@@ -83,6 +89,10 @@ class RuntimeHandlers:
     holiday_provider: PythonHolidaysProvider
     holiday_country: str
     local_inference: LocalInferenceRuntime | None = None
+    network_transport: AccountHTTPTransport | None = None
+    ai_gateway: AccountAIGateway | None = None
+    external_keys: object | None = None
+    proxy_password: object | None = None
 
 
 def _runtime_repositories(
@@ -105,19 +115,30 @@ def _runtime_handlers(
     repositories: RuntimeRepositories, *, holiday_country: str, user_id=None, database_path=None
 ) -> RuntimeHandlers:
     inference = None
+    transport = gateway = external_keys = proxy_password = None
     if user_id is not None and database_path is not None:
+        namespace = str(Path(database_path).resolve())
+        external_keys = EncryptedSettingsKeyStore(repositories.settings, user_id=user_id,
+            service_name="worklogger.external." + hashlib.sha256((namespace + ":" + str(user_id)).encode()).hexdigest())
+        proxy_password = ProxyPasswordSettings(repositories.settings, SystemCredentialStore(namespace=namespace),
+                                               user_id=user_id, secret_box=HmacSecretBox())
+        transport = AccountHTTPTransport(settings=repositories.settings, user_id=user_id, proxy_password=proxy_password)
+        opener = transport.opener(public_only=True)
         store = JsonLocalModelStore(Path(database_path).parent / "models", bundled_catalog_path=bundled_model_catalog_path(),
+            catalog_opener=opener, downloader=HttpRangeDownloader(opener=opener),
             remote_catalog_url=os.environ.get("WORKLOGGER_MODEL_CATALOG_URL", "").strip() or None)
         inference = LocalInferenceRuntime(store=store, settings=repositories.settings, user_id=user_id,
             enabled=FeatureFlags.from_env().enable_ai)
+        gateway = AccountAIGateway(local=inference, settings=repositories.settings, user_id=user_id,
+            key_store=external_keys, transport=transport, enabled=FeatureFlags.from_env().enable_ai)
     return RuntimeHandlers(
         templates=UserTemplateProvider(
             repositories.report_templates,
             BuiltInTemplateProvider(),
         ),
         markdown_exporter=MarkdownExporter(),
-        rewrite_handler=RewriteTextHandler(inference, timeout_seconds=180),
-        ai_chat_handler=AiChatHandler(inference, timeout_seconds=180),
+        rewrite_handler=RewriteTextHandler(gateway, timeout_seconds=180),
+        ai_chat_handler=AiChatHandler(gateway, timeout_seconds=180),
         save_template_handler=SaveReportTemplateHandler(repositories.report_templates),
         reset_template_handler=ResetReportTemplateHandler(
             repositories.report_templates
@@ -128,4 +149,8 @@ def _runtime_handlers(
         holiday_provider=PythonHolidaysProvider(),
         holiday_country=holiday_country,
         local_inference=inference,
+        network_transport=transport,
+        ai_gateway=gateway,
+        external_keys=external_keys,
+        proxy_password=proxy_password,
     )

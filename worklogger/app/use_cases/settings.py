@@ -53,7 +53,10 @@ class ProxyPasswordSettings:
             return stored
         if legacy is not None:
             if legacy and stored.value is None:
-                password = self._secret_box.decrypt(legacy)
+                try:
+                    password = self._secret_box.decrypt(legacy)
+                except ValueError:
+                    return Result.failure(InfrastructureError("credential_reentry_required", "credential_reentry_required"))
                 saved = self._credentials.set_secret(self._name, password)
                 if not saved.ok:
                     return Result.failure(saved.error)

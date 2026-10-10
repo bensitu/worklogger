@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 
 from worklogger.app.job_runner import JobRunner
@@ -24,7 +23,6 @@ from worklogger.app.use_cases.identity import (
     ListLinkedIdentitiesHandler,
     UnlinkIdentityHandler,
 )
-from worklogger.app.use_cases.settings import ProxyPasswordSettings
 from worklogger.app.use_cases.updates import CheckForUpdatesHandler
 from worklogger.app.use_cases.work_logs import (
     GetAllWorkLogsHandler,
@@ -56,11 +54,6 @@ from worklogger.infrastructure.export import (
 )
 from worklogger.infrastructure.i18n import get_language
 from worklogger.infrastructure.identity import DisabledIdentityProvider
-from worklogger.infrastructure.security.key_store import (
-    EncryptedSettingsKeyStore,
-    HmacSecretBox,
-    SystemCredentialStore,
-)
 from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
 from worklogger.presentation.auth.controller import RememberSessionStore
 from worklogger.presentation.identity import IdentityWorkflowController
@@ -72,6 +65,7 @@ from worklogger.presentation.viewmodels import (
     SettingsViewModel,
     UserManagementViewModel,
 )
+from worklogger.presentation.settings_capabilities import SettingsCapabilities
 
 
 def _build_settings_workflow(
@@ -97,20 +91,8 @@ def _build_settings_workflow(
             set_handler=handlers.settings_set_handler,
             default_language=get_language(),
             save_login_language=save_login_language,
-            external_key_store=EncryptedSettingsKeyStore(
-                repositories.settings,
-                user_id=user.id,
-                service_name="worklogger.external."
-                + hashlib.sha256(
-                    (str(database_path.resolve()) + ":" + str(user.id)).encode()
-                ).hexdigest(),
-            ),
-            proxy_password_settings=ProxyPasswordSettings(
-                repositories.settings,
-                SystemCredentialStore(namespace=str(database_path.resolve())),
-                user_id=user.id,
-                secret_box=HmacSecretBox(),
-            ),
+            external_key_store=handlers.external_keys,
+            proxy_password_settings=handlers.proxy_password,
         ),
         auth_view_model=auth_view_model,
         user=user,
@@ -120,7 +102,8 @@ def _build_settings_workflow(
             repositories=repositories,
         ),
         update_check_handler=CheckForUpdatesHandler(
-            GitHubReleaseUpdateChecker(api_url=GITHUB_LATEST_RELEASE_API_URL)
+            GitHubReleaseUpdateChecker(api_url=GITHUB_LATEST_RELEASE_API_URL,
+                opener=handlers.network_transport.opener(public_only=True) if handlers.network_transport else None)
         )
         if features.enable_update_check
         else None,
@@ -143,6 +126,9 @@ def _build_settings_workflow(
         remember_session_store=remember_session_store,
         work_types_view_model=WorkTypeManagerViewModel(WorkTypeService(user.id, repositories.work_types)),
         local_inference=handlers.local_inference,
+        ai_gateway=handlers.ai_gateway,
+        capabilities=SettingsCapabilities(external_generation=features.enable_ai,
+            proxy_routing=handlers.network_transport is not None, model_management=features.enable_local_models),
     )
 
 

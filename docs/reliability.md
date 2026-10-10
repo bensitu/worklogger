@@ -102,5 +102,7 @@ Local rewriting now uses an account-scoped, lazy CPU engine when the optional
 native dependency and selected verified model are available. Tests cover preference
 changes, engine reuse/release, safe error handling, and cross-editor availability.
 A real Qwen2.5-1.5B rewrite used synthetic text; other model/hardware combinations
-still require verification. External-provider login, external AI generation, and
-proxy routing remain unconnected. Existing user-edited catalog metadata is retained.
+still require verification. External-provider desktop login remains unconnected.
+External AI and proxy routing have deterministic injected-transport coverage; no
+live paid requests or platform proxy infrastructure were used for verification.
+Existing user-edited catalog metadata is retained.

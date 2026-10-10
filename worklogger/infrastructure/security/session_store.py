@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from pathlib import Path
-import os
 from typing import Protocol
+from worklogger.config.constants import REMEMBER_SESSION_FILENAME
 
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
@@ -12,7 +12,6 @@ from worklogger.infrastructure.security.key_store import HmacSecretBox
 from worklogger.infrastructure.files import atomic_destination
 
 REMEMBER_TOKEN_SECRET_NAME = "remember_login_token"
-REMEMBER_SESSION_FILENAME = "remember_session.enc"
 
 
 class SecretStore(Protocol):
@@ -109,9 +108,6 @@ class FileRememberTokenSessionStore:
 
 
 def _default_session_path() -> Path:
-    appdata = os.environ.get("APPDATA", "").strip()
-    if appdata:
-        base = Path(appdata) / "WorkLogger"
-    else:
-        base = Path.home() / ".config" / "worklogger"
+    from worklogger.infrastructure.security.paths import credential_directory
+    base = credential_directory()
     return base / REMEMBER_SESSION_FILENAME

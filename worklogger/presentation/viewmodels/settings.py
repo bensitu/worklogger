@@ -24,6 +24,7 @@ from worklogger.config.constants import (
     ENABLE_TRAY_SETTING_KEY,
     EXTERNAL_MODEL_BASE_URL_SETTING_KEY,
     EXTERNAL_MODEL_NAME_SETTING_KEY,
+    EXTERNAL_MODEL_ENABLED_SETTING_KEY,
     LANGUAGE_SETTING_KEY,
     LAST_BACKUP_AT_SETTING_KEY,
     LOCAL_MODEL_ENABLED_SETTING_KEY,
@@ -88,7 +89,7 @@ class SettingsState:
     network_proxy_address: str
     network_proxy_port: str
     network_proxy_username: str
-    network_proxy_password: str
+    network_proxy_password: str = field(repr=False)
     network_proxy_domain: str
     proxy_password_available: bool = False
     external_api_key: str = field(default="", repr=False)
@@ -96,6 +97,9 @@ class SettingsState:
     last_backup_at: str = ""
     holiday_region: str = ""
     profile_avatar_png: str = field(default="", repr=False)
+    external_model_enabled: bool = False
+    external_api_key_error: str = ""
+    proxy_password_error: str = ""
 
 
 class SettingsViewModel:
@@ -126,6 +130,8 @@ class SettingsViewModel:
             return self._load(refresh_credentials=refresh_credentials)
         except (ValueError, TypeError):
             return Result.failure(ValidationError("invalid_numeric_setting", "invalid_numeric_setting"))
+        except Exception:
+            return Result.failure(InfrastructureError("settings_load_failed", "settings_load_failed"))
 
     def _load(self, *, refresh_credentials=True) -> Result[SettingsState]:
         values: dict[str, str | None] = {}
@@ -178,6 +184,7 @@ class SettingsViewModel:
                     values[EXTERNAL_MODEL_NAME_SETTING_KEY],
                     "",
                 ),
+                external_model_enabled=_bool(values[EXTERNAL_MODEL_ENABLED_SETTING_KEY], False),
                 minimal_mode=_bool(values[MINIMAL_MODE_SETTING_KEY], False),
                 local_model_enabled=_bool(values[LOCAL_MODEL_ENABLED_SETTING_KEY], True),
                 standard_work_hours=_number(
@@ -216,9 +223,11 @@ class SettingsViewModel:
                 network_proxy_username=_text(values[NETWORK_PROXY_USERNAME_SETTING_KEY], ""),
                 network_proxy_password=str(password.value or "") if password is not None and password.ok else "",
                 network_proxy_domain=_text(values[NETWORK_PROXY_DOMAIN_SETTING_KEY], ""),
-                proxy_password_available=password is not None and password.ok,
+                proxy_password_available=_can_replace_credential(password),
                 external_api_key=str(api_key.value or "") if api_key is not None and api_key.ok else "",
-                external_api_key_available=api_key is not None and api_key.ok,
+                external_api_key_available=_can_replace_credential(api_key),
+                external_api_key_error=api_key.error.code if api_key is not None and api_key.error else "",
+                proxy_password_error=password.error.code if password is not None and password.error else "",
                 last_backup_at=_text(values[LAST_BACKUP_AT_SETTING_KEY], ""),
                 holiday_region=_text(values[HOLIDAY_REGION_SETTING_KEY], ""),
                 profile_avatar_png=_text(values[PROFILE_AVATAR_SETTING_KEY], ""),
@@ -337,6 +346,7 @@ _DEFAULTS = {
     AI_PRIVACY_INCLUDE_QUICK_LOGS_SETTING_KEY: "1",
     EXTERNAL_MODEL_BASE_URL_SETTING_KEY: "",
     EXTERNAL_MODEL_NAME_SETTING_KEY: "",
+    EXTERNAL_MODEL_ENABLED_SETTING_KEY: "0",
     MINIMAL_MODE_SETTING_KEY: "0",
     LOCAL_MODEL_ENABLED_SETTING_KEY: "1",
     STANDARD_WORK_HOURS_SETTING_KEY: "8.0",
@@ -358,8 +368,14 @@ _DEFAULTS = {
     LAST_BACKUP_AT_SETTING_KEY: "",
 }
 
+
+def _can_replace_credential(result):
+    return bool(result is not None and (result.ok or result.error.code in {
+        "secret_authentication_failed", "secret_key_missing", "secret_key_invalid", "credential_reentry_required"}))
+
 _BOOLEAN_KEYS = frozenset(
     {
+        EXTERNAL_MODEL_ENABLED_SETTING_KEY,
         DARK_MODE_SETTING_KEY,
         AI_ASSIST_ENABLED_SETTING_KEY,
         AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY,

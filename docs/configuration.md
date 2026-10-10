@@ -18,7 +18,9 @@ A pending restore prevents this relocation. A database-specific process lock
 prevents simultaneous desktop instances throughout login and logout.
 
 The session credential and machine-key files use `%APPDATA%/WorkLogger/` when
-`APPDATA` is set, otherwise `~/.config/worklogger/`:
+`APPDATA` is set. New macOS installations use
+`~/Library/Application Support/WorkLogger/`; existing macOS credential files remain
+in `~/.config/worklogger/` as a pair. Other platforms use `~/.config/worklogger/`:
 
 - `remember_session.enc`: encrypted remembered-login credential.
 - `.worklogger_machine_key`: local key used by the session storage implementation.
@@ -91,8 +93,9 @@ variables. They are stored as strings in the settings repository.
 | `local_model_enabled` | `1` | Local model preference |
 | `profile_avatar_png` | Empty | Account-specific normalized avatar as base64 PNG; empty uses the bundled default |
 | `external_model_base_url` | Empty | Stored external-service preference; example shown only as a placeholder |
-| `external_model_name` | Empty | Stored model identifier, not an active service |
-| `network_proxy_enabled` | `0` | Stored preference; not applied to HTTP adapters |
+| `external_model_name` | Empty | Model identifier sent to the explicitly selected provider |
+| `external_model_enabled` | `0` | Explicit remote-processing consent; external takes precedence when enabled |
+| `network_proxy_enabled` | `0` | Applies the account HTTP CONNECT proxy to HTTPS adapters |
 | `network_proxy_port` | `0` | Integer from 0 to 65535 |
 | `network_proxy_address`, `network_proxy_username`, `network_proxy_domain` | Empty | Stored proxy fields |
 | `network_proxy_password` | Empty | Accessed through the system credential store |
@@ -108,7 +111,10 @@ the configuration. Password editing still requires secure credential storage.
 Missing settings and disconnected services are reported separately from the switch.
 The masked external API-key field is editable when secure storage is available.
 It uses a database/account-specific credential namespace, with an encrypted local
-fallback. Saving a key sends no service request and does not activate inference.
+fallback. Saving a key sends no service request. External processing additionally
+requires explicit opt-in, AI Assist, and complete endpoint/model/key configuration.
+The new opt-in preference defaults to false without a schema change or modification
+of existing rows; previously saved credentials never automatically enable requests.
 Explicitly saved endpoint/model preferences are retained; absent preferences have
 no provider or model default. Secret values are excluded from settings-state
 representations and are not stored in ordinary settings fields.

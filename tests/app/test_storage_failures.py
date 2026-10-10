@@ -19,6 +19,23 @@ from worklogger.domain.shared.result import Result
 
 
 class StorageFailureTests(unittest.TestCase):
+    def test_content_size_limits_reject_input_before_writing(self):
+        from worklogger.app.commands.note_commands import SaveDailyNoteCommand
+        from worklogger.app.commands.report_commands import SaveReportTemplateCommand
+        from worklogger.app.use_cases.notes import SaveDailyNoteHandler
+        from worklogger.app.use_cases.reports import SaveReportTemplateHandler
+        repository = Mock()
+        day = date(2026, 10, 10)
+        cases = (
+            (AddQuickLogHandler(repository), AddQuickLogCommand(1, day, "x" * 16_001)),
+            (SaveDailyNoteHandler(repository), SaveDailyNoteCommand(1, day, "\u4e2d" * 350_000)),
+            (SaveReportTemplateHandler(repository), SaveReportTemplateCommand(1, "en_US", "daily", "x" * (1024 * 1024 + 1))),
+        )
+        for handler, command in cases:
+            self.assertFalse(handler.handle(command).ok)
+        repository.add.assert_not_called()
+        repository.save.assert_not_called()
+
     def test_queries_and_commands_return_safe_storage_errors(self):
         day = date(2026, 10, 10)
         repository = Mock()

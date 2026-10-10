@@ -83,6 +83,13 @@ class MemoryIdentities:
 class MemoryAuth:
     def __init__(self) -> None:
         self.users: dict[int, User] = {}
+        self.identities = None
+
+    def create_identity_account(self, username, profile):
+        user = self.create_user(username, "", recovery_key=None, is_admin=False, local_password_enabled=False)
+        linked = self.identities.add(LinkedIdentity(0, user.id, profile.provider, profile.subject,
+                                                    profile.email, profile.display_name))
+        return user, linked
 
     def user_count(self) -> int:
         return len(self.users)
@@ -154,6 +161,7 @@ class IdentityUseCaseTests(unittest.TestCase):
     def test_identity_login_creates_non_admin_user_and_link(self) -> None:
         identities = MemoryIdentities()
         auth = MemoryAuth()
+        auth.identities = identities
 
         result = LoginWithIdentityHandler(
             identities=identities,
@@ -174,6 +182,7 @@ class IdentityUseCaseTests(unittest.TestCase):
     def test_identity_username_collision_does_not_replace_local_account(self):
         identities = MemoryIdentities()
         auth = MemoryAuth()
+        auth.identities = identities
         auth.users[1] = User(id=1, username="PERSON")
         result = LoginWithIdentityHandler(identities=identities, auth=auth, providers=(FakeProvider(),)).handle(
             LoginWithIdentityCommand(provider="google"))

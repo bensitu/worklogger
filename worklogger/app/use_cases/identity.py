@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import hashlib
+import secrets
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -18,9 +18,10 @@ from worklogger.app.queries.identity_queries import (
 from worklogger.domain.auth.models import LinkedIdentity, User
 from worklogger.domain.auth.repositories import AuthCredentialRepository, IdentityRepository
 from worklogger.domain.identity.models import ExternalIdentityProfile, IdentityProviderStatus, normalize_provider
-from worklogger.domain.auth.policies import generate_initial_password, username_key
+from worklogger.domain.auth.policies import username_key
 from worklogger.domain.shared.errors import AuthenticationError, InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
+from worklogger.app.use_cases._errors import storage_boundary
 
 
 class IdentityProviderClient(Protocol):
@@ -49,6 +50,7 @@ class ListLinkedIdentitiesHandler:
     def __init__(self, repository: IdentityRepository) -> None:
         self._repository = repository
 
+    @storage_boundary("identity_list_failed")
     def handle(
         self,
         query: ListLinkedIdentitiesQuery,
@@ -60,6 +62,7 @@ class GetIdentityProvidersHandler:
     def __init__(self, providers: tuple[IdentityProviderClient, ...]) -> None:
         self._providers = providers
 
+    @storage_boundary("identity_list_failed")
     def handle(self, _query: GetIdentityProvidersQuery) -> Result[IdentityProviderList]:
         return Result.success(
             IdentityProviderList(
@@ -78,6 +81,7 @@ class LinkIdentityHandler:
         self._repository = repository
         self._providers = {provider.provider_id: provider for provider in providers}
 
+    @storage_boundary("identity_link_failed")
     def handle(self, command: LinkIdentityCommand) -> Result[LinkedIdentity]:
         provider = self._provider(command.provider)
         if not provider.ok or provider.value is None:
@@ -115,12 +119,11 @@ class LinkIdentityHandler:
                     display_name=profile.value.display_name,
                 )
             )
-        except Exception as exc:
+        except Exception:
             return Result.failure(
                 InfrastructureError(
                     "identity_link_failed",
                     "identity_link_failed",
-                    {"reason": str(exc)},
                 )
             )
         return Result.success(linked)
@@ -141,6 +144,7 @@ class UnlinkIdentityHandler:
         self._repository = repository
         self._auth = auth
 
+    @storage_boundary("identity_unlink_failed")
     def handle(self, command: UnlinkIdentityCommand) -> Result[None]:
         if command.identity_id <= 0:
             return Result.failure(ValidationError("identity_id_required", "identity_id_required"))
@@ -166,6 +170,7 @@ class LoginWithIdentityHandler:
         self._auth = auth
         self._providers = {provider.provider_id: provider for provider in providers}
 
+    @storage_boundary("identity_login_failed")
     def handle(self, command: LoginWithIdentityCommand) -> Result[IdentityLoginResult]:
         try:
             provider_key = normalize_provider(command.provider)
@@ -190,24 +195,20 @@ class LoginWithIdentityHandler:
             return Result.success(IdentityLoginResult(user=user, linked_identity=linked))
         base = _username_from_profile(profile.value)
         occupied = {username_key(user.username) for user in self._auth.list_users()}
-        suffix = hashlib.sha256(f"{profile.value.provider}:{profile.value.issuer}:{profile.value.subject}".encode()).hexdigest()[:12]
-        username = base if username_key(base) not in occupied else f"{base}_{suffix}"
-        user = None
-        try:
-            user = self._auth.create_user(
-                username, generate_initial_password(), recovery_key=None, is_admin=False,
-                must_change_password=False, local_password_enabled=False,
-            )
-            linked = self._identities.add(
-                LinkedIdentity(id=0, user_id=user.id, provider=profile.value.provider,
-                               subject=profile.value.subject, email=profile.value.email,
-                               display_name=profile.value.display_name)
-            )
-        except Exception:
-            if user is not None:
-                self._auth.delete_user(user.id)
-            return Result.failure(InfrastructureError("identity_login_failed", "identity_login_failed"))
-        return Result.success(IdentityLoginResult(user=user, linked_identity=linked))
+        for _attempt in range(8):
+            username = base if username_key(base) not in occupied else f"{base}_{secrets.token_hex(6)}"
+            creator = getattr(self._auth, "create_identity_account", None)
+            if creator is None:
+                return Result.failure(InfrastructureError("identity_login_failed", "identity_login_failed"))
+            try:
+                user, linked = creator(username, profile.value)
+            except ValueError as exc:
+                if str(exc) != "username_exists":
+                    raise
+                occupied.add(username_key(username))
+                continue
+            return Result.success(IdentityLoginResult(user=user, linked_identity=linked))
+        return Result.failure(InfrastructureError("identity_login_failed", "identity_login_failed"))
 
 
 def _username_from_profile(profile: ExternalIdentityProfile) -> str:

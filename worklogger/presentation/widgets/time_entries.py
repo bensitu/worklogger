@@ -313,9 +313,7 @@ class TimeEntryPanel(QWidget):
             self.auto_status_label.show()
         elif timer:
             self.clock_out_button.setText(_("End"))
-            elapsed = self.view_model.elapsed_hours()
-            self.auto_status_label.setText(_("Recording since {time} - {duration}").format(
-                time=f"{day_label(timer.started_at.date())} {timer.started_at:%H:%M}", duration=duration_label(elapsed)))
+            self._update_elapsed_label()
             self.auto_status_label.show()
         else:
             self.auto_status_label.clear()

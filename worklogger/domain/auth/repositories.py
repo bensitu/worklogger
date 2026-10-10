@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Protocol
 
 from worklogger.domain.auth.models import LinkedIdentity, User
+from worklogger.domain.identity.models import ExternalIdentityProfile
 
 
 class UserRepository(Protocol):
@@ -23,6 +24,9 @@ class UserRepository(Protocol):
 
 
 class AuthCredentialRepository(Protocol):
+    def create_identity_account(self, username: str, profile: ExternalIdentityProfile) -> tuple[User, LinkedIdentity]:
+        ...
+
     def user_count(self) -> int:
         ...
 

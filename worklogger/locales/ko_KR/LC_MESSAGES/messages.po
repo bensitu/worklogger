@@ -310,8 +310,14 @@ msgstr "대체 휴가"
 msgid "Compensatory leave"
 msgstr "대체 휴가"
 
+msgid "Configure the address, model, and API key to test the connection."
+msgstr "연결을 테스트하려면 주소, 모델 및 API 키를 설정하세요."
+
 msgid "Confirm password"
 msgstr "비밀번호 확인"
+
+msgid "Connection succeeded."
+msgstr "연결에 성공했습니다."
 
 msgid "Content"
 msgstr "내용"
@@ -577,8 +583,14 @@ msgstr "CSV 내보내는 중..."
 msgid "External Model"
 msgstr "외부 모델"
 
+msgid "External model configuration is incomplete."
+msgstr "외부 모델 설정이 완료되지 않았습니다."
+
 msgid "External model testing is not configured."
 msgstr "외부 모델 테스트가 설정되지 않았습니다."
+
+msgid "External processing is disabled."
+msgstr "외부 처리가 비활성화되어 있습니다."
 
 msgid "External text processing is available."
 msgstr "외부 텍스트 처리를 사용할 수 있습니다."
@@ -1366,6 +1378,9 @@ msgstr "선택한 날짜: {day}"
 msgid "Selected model file: {name}"
 msgstr "선택한 모델 파일: {name}"
 
+msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
+msgstr "외부 처리가 활성화되면 선택한 텍스트와 허용된 맥락이 이 제공업체에 전송됩니다."
+
 msgid "Selected user"
 msgstr "선택한 사용자"
 
@@ -1468,17 +1483,29 @@ msgstr "임시 비밀번호를 저장했습니다."
 msgid "Test"
 msgstr "테스트"
 
+msgid "Test connection using sample text; no work records are included."
+msgstr "예제 텍스트로 연결을 테스트하며 작업 기록은 포함하지 않습니다."
+
+msgid "Testing connection..."
+msgstr "연결 테스트 중…"
+
 msgid "Text files (*.txt)"
 msgstr "텍스트 파일 (*.txt)"
 
 msgid "Text processing is unavailable. Saved preferences are retained."
 msgstr "텍스트 처리를 사용할 수 없습니다. 저장된 설정은 유지됩니다."
 
+msgid "Text processing source: external model."
+msgstr "텍스트 처리 소스: 외부 모델."
+
 msgid "The CSV file exceeds the supported size or row limit."
 msgstr "CSV 파일이 지원되는 크기 또는 행 수 제한을 초과했습니다."
 
 msgid "The ID or password is incorrect."
 msgstr "ID 또는 비밀번호가 올바르지 않습니다."
+
+msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
+msgstr "데이터베이스를 읽을 수 없습니다. 원본 파일은 보존되었습니다. 데이터베이스 복구 안내에 따라 검증된 백업을 복원하세요."
 
 msgid "The file contains conflicting records for the same date."
 msgstr "파일에 같은 날짜의 충돌하는 기록이 있습니다."
@@ -1506,6 +1533,9 @@ msgstr "저장된 보고서를 사용할 수 없습니다. 보고서를 다시 �
 
 msgid "The selected context is too large. Choose a shorter period or exclude optional content."
 msgstr "선택한 컨텍스트가 너무 큽니다. 더 짧은 기간을 선택하거나 선택적 내용을 제외하세요."
+
+msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
+msgstr "이 기기에서 저장된 자격 증명을 복호화할 수 없습니다. 다시 입력하세요. 기존 작업 기록에는 영향이 없습니다."
 
 msgid "The user account is no longer available."
 msgstr "이 사용자 계정은 더 이상 사용할 수 없습니다."
@@ -1671,6 +1701,9 @@ msgstr "이 앱에 웹 프록시를 사용합니다."
 
 msgid "Use default avatar"
 msgstr "기본 아바타 사용"
+
+msgid "Use external model"
+msgstr "외부 모델 사용"
 
 msgid "Use model"
 msgstr "모델 사용"

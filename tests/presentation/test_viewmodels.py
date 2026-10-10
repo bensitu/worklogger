@@ -308,13 +308,16 @@ class PresentationViewModelTests(unittest.TestCase):
             "#e07800",
         )
 
-    def test_theme_engine_loads_named_qss_templates(self) -> None:
+    def test_theme_engine_uses_shared_templates_and_resolved_palettes(self) -> None:
         engine = ThemeEngine()
         qss_root = Path("worklogger/presentation/theme/qss")
 
         for theme in ("blue", "pink", "green", "purple", "custom"):
             for mode in ("light", "dark"):
-                self.assertTrue((qss_root / f"{theme}_{mode}.qss").exists())
+                self.assertTrue((qss_root / f"blue_{mode}.qss").exists())
+                stylesheet = engine.application_stylesheet(theme, dark=mode == "dark")
+                self.assertIn("QPushButton", stylesheet)
+                self.assertNotIn("{{", stylesheet)
 
         stylesheet = engine.application_stylesheet("custom", custom_color="#123456")
         self.assertIn("#123456", stylesheet)

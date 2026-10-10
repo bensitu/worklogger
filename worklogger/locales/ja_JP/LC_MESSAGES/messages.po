@@ -310,8 +310,14 @@ msgstr "代休"
 msgid "Compensatory leave"
 msgstr "代休"
 
+msgid "Configure the address, model, and API key to test the connection."
+msgstr "接続をテストするには、アドレス、モデル、APIキーを設定してください。"
+
 msgid "Confirm password"
 msgstr "パスワードを確認"
+
+msgid "Connection succeeded."
+msgstr "接続に成功しました。"
 
 msgid "Content"
 msgstr "内容"
@@ -577,8 +583,14 @@ msgstr "CSVをエクスポート中..."
 msgid "External Model"
 msgstr "外部モデル"
 
+msgid "External model configuration is incomplete."
+msgstr "外部モデルの設定が不完全です。"
+
 msgid "External model testing is not configured."
 msgstr "外部モデルのテストは未設定です。"
+
+msgid "External processing is disabled."
+msgstr "外部処理は無効です。"
 
 msgid "External text processing is available."
 msgstr "外部テキスト処理を利用できます。"
@@ -1366,6 +1378,9 @@ msgstr "選択日：{day}"
 msgid "Selected model file: {name}"
 msgstr "選択したモデルファイル: {name}"
 
+msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
+msgstr "外部処理を有効にすると、選択したテキストと許可されたコンテキストがこのプロバイダーに送信されます。"
+
 msgid "Selected user"
 msgstr "選択したユーザー"
 
@@ -1468,17 +1483,29 @@ msgstr "一時パスワードを保存しました。"
 msgid "Test"
 msgstr "テスト"
 
+msgid "Test connection using sample text; no work records are included."
+msgstr "サンプルテキストで接続をテストします。作業記録は含まれません。"
+
+msgid "Testing connection..."
+msgstr "接続をテストしています…"
+
 msgid "Text files (*.txt)"
 msgstr "テキストファイル (*.txt)"
 
 msgid "Text processing is unavailable. Saved preferences are retained."
 msgstr "テキスト処理は利用できません。保存済みの設定は保持されます。"
 
+msgid "Text processing source: external model."
+msgstr "テキスト処理のソース: 外部モデル。"
+
 msgid "The CSV file exceeds the supported size or row limit."
 msgstr "CSV ファイルが対応するサイズまたは行数の上限を超えています。"
 
 msgid "The ID or password is incorrect."
 msgstr "IDまたはパスワードが正しくありません。"
+
+msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
+msgstr "データベースを読み込めませんでした。元のファイルは保持されています。データベースの復元手順に従って、検証済みのバックアップを復元してください。"
 
 msgid "The file contains conflicting records for the same date."
 msgstr "ファイル内に同じ日付の競合する記録があります。"
@@ -1506,6 +1533,9 @@ msgstr "保存済みレポートを利用できません。レポートを再読
 
 msgid "The selected context is too large. Choose a shorter period or exclude optional content."
 msgstr "選択したコンテキストが大きすぎます。期間を短くするか、任意の内容を除外してください。"
+
+msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
+msgstr "保存された認証情報をこのデバイスで復号できません。再入力してください。既存の作業記録には影響しません。"
 
 msgid "The user account is no longer available."
 msgstr "このユーザーアカウントは利用できなくなりました。"
@@ -1671,6 +1701,9 @@ msgstr "このアプリでWebプロキシを使用します。"
 
 msgid "Use default avatar"
 msgstr "既定のアバターを使用"
+
+msgid "Use external model"
+msgstr "外部モデルを使用"
 
 msgid "Use model"
 msgstr "モデルを使用"

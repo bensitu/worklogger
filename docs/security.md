@@ -24,6 +24,9 @@ exported text is prefixed with an apostrophe; exports are still unencrypted.
 - Password hashes use PBKDF2-HMAC-SHA256 with 600,000 iterations and a random
   16-byte salt. Supported older hashes are upgraded after successful verification.
 - Recovery keys are generated separately and stored as hashes with separate salts.
+  Recovery attempts share the account login failure limits. Successful recovery
+  clears the counter; a locked account must wait for its lockout or use an
+  administrator reset. Unknown account attempts do not create persistent counters.
   After registration, recovery, account creation, or a password change, a new key can be explicitly copied to the system
   clipboard or saved as a plain-text file. Export uses atomic replacement and
   does not log the key. The clipboard and exported file are outside application
@@ -81,15 +84,24 @@ store instead.
 
 Normal work recording does not require a network service. Manual update checks
 contact GitHub. Model downloads contact the selected catalog URL. A connected
-external AI adapter would transmit its supplied context and messages; the default
-desktop does not connect that adapter.
+external AI adapter transmits its supplied context and messages only after explicit
+account opt-in. New and existing accounts default to local processing. Saving an
+API credential or selecting an unavailable local model never initiates remote
+requests. Synthetic connection tests exclude work records.
 
 Privacy switches default to including notes, calendar events, and quick logs in
 built AI context. A failed settings read stops context construction, and categories
 disabled by the user are not queried. Oversized context is rejected before sending.
-An external integration must explicitly assess data disclosure and user consent
-before enabling transmission. Do not claim that a configured proxy form changes
-network routing; the HTTP adapters are not connected to those settings.
+The external switch is the account's explicit remote-processing selection. Context
+privacy settings still apply. A configured HTTP CONNECT proxy routes adapter
+traffic without disabling TLS verification. Trust the proxy and its network before
+using Basic proxy credentials. See [integrations](integrations.md) for supported
+proxy authentication and destination-validation boundaries.
+
+Cross-device restores can retain encrypted credentials that cannot be decrypted
+on the new device. Settings show an explicit re-entry message and allow successful
+replacement where secure storage is available. Work records remain unaffected;
+unreadable machine keys are never silently regenerated or removed.
 
 ## Diagnostics
 

@@ -125,7 +125,11 @@ treating missing occurrences as lost work records.
 
 ## Unavailable Services
 
-External login and external AI requests remain disconnected. Local rewriting
+External login remains disconnected. External rewriting requires explicit Use
+external model, AI Assist, an HTTPS API base address, a model identifier, and a
+securely saved API key. Test checks with sample text only. Disable external
+processing to select local processing; there is no silent remote fallback.
+Local rewriting
 requires the optional native dependency, a verified selected model, Local Model,
 and AI Assist. Check the service message under Settings > AI; a downloaded file
 must be selected with Use model. After installing `requirements-ai.txt` into the
@@ -141,9 +145,23 @@ oversized, or excessively high-resolution images without changing the saved pict
 
 If proxy password entry is disabled, inspect system credential-store availability.
 Do not work around it by storing passwords in a plain-text configuration. Saved
-proxy preferences do not currently configure outgoing adapter traffic.
+proxy preferences configure subsequent adapter requests. Use a host or HTTP proxy
+address and port; unsupported proxy schemes/authentication must be handled by a
+separate supported network service, not by disabling certificate checks.
+
+When encrypted credentials cannot be read after moving a database to a new device,
+re-enter the credential in Settings. Do not delete a damaged machine-key file to
+make the warning disappear; preserve it and seek recovery first.
 
 ## Restore and Build Failures
+
+Confirmed database corruption stops startup without replacing any files. With the
+application closed, preserve the main database and its `-wal`/`-shm` sidecars
+together. Validate and upgrade a known-good backup into a new destination using
+`python scripts/upgrade_database.py <backup> <new-destination>`. Keep the original
+files outside the active database directory, then use the validated copy at the
+documented database location. Never copy a live main database without its WAL or
+use automatic empty-database creation as a recovery substitute.
 
 Restore requires administrator permission and a compatible SQLite file containing
 the current username with the same account ID. Successful restore ends the current

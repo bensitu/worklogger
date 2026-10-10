@@ -18,6 +18,7 @@ from worklogger.config.constants import (
     AI_PRIVACY_INCLUDE_QUICK_LOGS_SETTING_KEY,
     EXTERNAL_MODEL_BASE_URL_SETTING_KEY,
     EXTERNAL_MODEL_NAME_SETTING_KEY,
+    EXTERNAL_MODEL_ENABLED_SETTING_KEY,
     LOCAL_MODEL_ENABLED_SETTING_KEY,
 )
 from worklogger.infrastructure.i18n import _
@@ -44,6 +45,7 @@ class AISection(_SettingsScrollPage):
         "external_model_line_edit",
         "external_model_status_label",
         "external_runtime_status_label",
+        "external_model_enabled_switch",
         "local_model_enabled_switch",
         "local_model_status_label",
         "local_runtime_status_label",
@@ -57,6 +59,10 @@ class AISection(_SettingsScrollPage):
 
         external = CardFrame(object_name="settings_content_frame")
         external.content_layout.addWidget(_section_title(_("External Model")))
+        self.external_model_enabled_switch = SwitchButton()
+        self.external_model_enabled_switch.toggled.connect(lambda enabled: actions.set_bool(EXTERNAL_MODEL_ENABLED_SETTING_KEY, enabled))
+        external.content_layout.addWidget(_switch_line(_("Use external model"), self.external_model_enabled_switch))
+        external.content_layout.addWidget(_secondary_label(_("Selected text and permitted context are sent to this provider when external processing is enabled.")))
         self.external_runtime_status_label = _secondary_label("")
         external.content_layout.addWidget(self.external_runtime_status_label)
         form = QFormLayout()

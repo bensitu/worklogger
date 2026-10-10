@@ -8,6 +8,12 @@ The version in source metadata may not yet correspond to a published release.
 See the [changelog](CHANGELOG.md) for current behavior and
 [security and privacy](docs/security.md) for storage and credential limitations.
 
+Dependencies are pinned for reproducible installations, not automatic security
+updates. Check direct and transitive dependency advisories before publishing a
+release and when a relevant vulnerability is reported. Apply applicable updates
+with focused compatibility/security tests; do not infer protection from a version
+pin alone. Optional native inference dependencies need the same review.
+
 ## Reporting a Vulnerability
 
 Please do not open a public issue for security-sensitive reports.

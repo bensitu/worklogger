@@ -74,31 +74,17 @@ class LocalModelsDialog(QDialog):
         return self._state
 
     def refresh(self) -> bool:
-        if self._job_runner is not None:
-            return self._run_state_job("local_model_load", self._view_model.load, _("Loading models..."))
-        return self._set_state_result(self._view_model.load())
+        return self._run_state_job("local_model_load", self._view_model.load, _("Loading models..."))
 
     def refresh_catalog(self) -> bool:
-        if self._job_runner is not None:
-            return self._run_state_job(
-                "local_model_refresh",
-                self._view_model.refresh_catalog,
-                _("Refreshing catalog..."),
-            )
-        return self._set_state_result(self._view_model.refresh_catalog())
+        return self._run_state_job("local_model_refresh", self._view_model.refresh_catalog, _("Refreshing catalog..."))
 
     def import_model(self, source: Path | str | None = None) -> bool:
         source = source or self._choose_model_file()
         if source is None:
             self.status_label.setText(_("Import cancelled"))
             return False
-        if self._job_runner is not None:
-            return self._run_state_job(
-                "local_model_import",
-                lambda: self._view_model.import_model(source),
-                _("Importing model..."),
-            )
-        return self._set_state_result(self._view_model.import_model(source))
+        return self._run_state_job("local_model_import", lambda: self._view_model.import_model(source), _("Importing model..."))
 
     def download_selected(self) -> bool:
         if self._pending_handle is not None:
@@ -107,47 +93,29 @@ class LocalModelsDialog(QDialog):
         if not model_id:
             self.status_label.setText(_("Select a model first."))
             return False
-        if self._job_runner is not None:
-            self._download_active = True
-            self.progress_bar.setRange(0, 0)
-            self.progress_bar.show()
-            return self._run_result_job(
-                "local_model_download",
-                lambda token: self._view_model.download_model(model_id, cancellation=token, progress=self.download_progress.emit),
-                self._complete_state_job,
-                _("Downloading model..."),
-                cancellable=True,
-            )
-        return self._set_state_result(self._view_model.download_model(model_id))
+        self._download_active = True
+        self.progress_bar.setRange(0, 0)
+        self.progress_bar.show()
+        return self._run_result_job(
+            "local_model_download",
+            lambda token: self._view_model.download_model(model_id, cancellation=token, progress=self.download_progress.emit),
+            self._complete_state_job, _("Downloading model..."), cancellable=True)
 
     def verify_selected(self) -> bool:
         model_id = self._selected_model_id()
         if not model_id:
             self.status_label.setText(_("Select a model first."))
             return False
-        if self._job_runner is not None:
-            return self._run_result_job(
-                "local_model_verify",
-                lambda: self._view_model.verify_model(model_id),
-                self._complete_verify,
-                _("Verifying model..."),
-            )
-        result = self._view_model.verify_model(model_id)
-        if not result.ok or result.value is None:
-            self._set_error(result.error)
-            return False
-        self._show_verify_result(result.value)
-        return result.value.verified
+        return self._run_result_job("local_model_verify", lambda: self._view_model.verify_model(model_id),
+                                    self._complete_verify, _("Verifying model..."))
 
     def select_current(self) -> bool:
         model_id = self._selected_model_id()
         if not model_id:
             self.status_label.setText(_("Select a model first."))
             return False
-        if self._job_runner is not None:
-            return self._run_state_job("local_model_select", lambda: self._view_model.select_model(model_id),
-                                       _("Please wait for the current operation."))
-        return self._set_state_result(self._view_model.select_model(model_id))
+        return self._run_state_job("local_model_select", lambda: self._view_model.select_model(model_id),
+                                   _("Please wait for the current operation."))
 
     def delete_selected(self) -> bool:
         model_id = self._selected_model_id()
@@ -160,10 +128,8 @@ class LocalModelsDialog(QDialog):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
             return False
-        if self._job_runner is not None:
-            return self._run_state_job("local_model_delete", lambda: self._view_model.delete_model(model_id),
-                                       _("Please wait for the current operation."))
-        return self._set_state_result(self._view_model.delete_model(model_id))
+        return self._run_state_job("local_model_delete", lambda: self._view_model.delete_model(model_id),
+                                   _("Please wait for the current operation."))
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)

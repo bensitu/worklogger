@@ -72,6 +72,7 @@ class SettingsPage(QWidget):
     logout_requested = Signal()
     restore_requested = Signal()
     update_check_requested = Signal()
+    test_external_model_requested = Signal()
 
     def __init__(
         self,
@@ -104,6 +105,10 @@ class SettingsPage(QWidget):
     @property
     def last_error(self) -> AppError | None:
         return self._last_error
+
+    @property
+    def state(self):
+        return self._state
 
     @property
     def is_busy(self) -> bool:
@@ -175,6 +180,7 @@ class SettingsPage(QWidget):
             self.ai_calendar_switch.set_checked(state.ai_privacy_include_calendar)
             self.ai_quick_logs_switch.set_checked(state.ai_privacy_include_quick_logs)
             self.external_base_url_line_edit.setText(state.external_model_base_url)
+            self.external_model_enabled_switch.set_checked(state.external_model_enabled)
             self.external_model_line_edit.setText(state.external_model_name)
             self.external_api_key_line_edit.setText(state.external_api_key)
             self.external_api_key_line_edit.setEnabled(state.external_api_key_available)
@@ -265,6 +271,8 @@ class SettingsPage(QWidget):
             )
         )
         self.local_model_enabled_switch.setEnabled(True)
+        self.external_model_enabled_switch.setEnabled(self._capabilities.external_generation)
+        self.external_model_enabled_switch.setAccessibleName(_("Use external model"))
         for widget in (self.manage_local_models_button,):
             widget.setEnabled(self._capabilities.model_management)
             widget.setToolTip(
@@ -305,6 +313,19 @@ class SettingsPage(QWidget):
             widget.setEnabled(bool(state and state.network_proxy_enabled))
         if state is None:
             return
+        external_ready = bool(self._capabilities.external_generation and state.external_model_enabled
+                              and state.external_model_base_url and state.external_model_name and state.external_api_key)
+        self.test_external_model_button.setEnabled(external_ready)
+        self.test_external_model_button.setToolTip(_("Test connection using sample text; no work records are included."))
+        self.external_model_status_label.setText("" if external_ready else _("Configure the address, model, and API key to test the connection."))
+        if state.external_api_key_error:
+            self.external_model_status_label.setText(display_error_code(state.external_api_key_error))
+        if state.proxy_password_error:
+            self.proxy_credentials_status_label.setText(display_error_code(state.proxy_password_error))
+        self.external_runtime_status_label.setText(
+            _("Text processing source: external model.") if external_ready else
+            _("External processing is disabled.") if not state.external_model_enabled else
+            _("External model configuration is incomplete."))
         self.local_runtime_status_label.setText(
             _("Local model is disabled.")
             if not state.local_model_enabled
@@ -437,6 +458,7 @@ class SettingsPage(QWidget):
         section = AISection(self._section_actions())
         for name in section.control_names:
             setattr(self, name, getattr(section, name))
+        self.test_external_model_button.clicked.connect(self.test_external_model_requested.emit)
         return section
 
     def _build_data_page(self) -> QWidget:

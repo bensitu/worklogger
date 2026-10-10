@@ -130,11 +130,8 @@ class FileMachineKeyProvider:
 
     @classmethod
     def default(cls) -> "FileMachineKeyProvider":
-        appdata = os.environ.get("APPDATA", "").strip()
-        if appdata:
-            base = Path(appdata) / "WorkLogger"
-        else:
-            base = Path.home() / ".config" / "worklogger"
+        from worklogger.infrastructure.security.paths import credential_directory
+        base = credential_directory()
         return cls(base / MACHINE_KEY_FILENAME, _load_previous_machine_key)
 
     def load_or_create(self) -> bytes:
@@ -279,7 +276,10 @@ class EncryptedSettingsKeyStore:
 
     def get_secret(self, name: str) -> Result[str | None]:
         key = self._normalize_name(name)
-        keyring_value = self._keyring.get_password(self._service_name, key)
+        try:
+            keyring_value = self._keyring.get_password(self._service_name, key)
+        except Exception:
+            keyring_value = None
         if keyring_value is not None:
             return Result.success(keyring_value)
         stored = self._settings.get(self._user_id, self._setting_key(key), None)

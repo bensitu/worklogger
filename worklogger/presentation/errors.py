@@ -95,6 +95,10 @@ def display_error_code(code: str) -> str:
             return _("The user account is no longer available.")
         case "credential_storage_unavailable":
             return _("Secure credential storage is unavailable.")
+        case "secret_authentication_failed" | "secret_key_missing" | "secret_key_invalid" | "secret_ciphertext_invalid" | "credential_reentry_required":
+            return _("The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected.")
+        case "database_corrupt":
+            return _("The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions.")
         case "local_inference_dependency_missing":
             return _("Install the native inference dependency from requirements-ai.txt, then restart WorkLogger.")
         case "local_model_not_selected":

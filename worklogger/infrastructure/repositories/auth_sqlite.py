@@ -10,6 +10,7 @@ import sqlite3
 from worklogger.domain.auth.models import LinkedIdentity, User
 from worklogger.domain.auth.policies import (
     generate_recovery_key,
+    generate_initial_password,
     lockout_until_for_failure_count,
     normalize_username,
     username_key,
@@ -87,6 +88,42 @@ class SQLiteAuthRepository:
         if user is None:
             raise RuntimeError("created_user_not_found")
         return user
+
+    def create_identity_account(self, username, profile):
+        if not self._canonical_usernames:
+            raise ValueError("identity_schema_unavailable")
+        username = normalize_username(username)
+        material = self._password_hasher.hash_password(generate_initial_password())
+        now = utc_now_iso()
+        with self._connection_factory.transaction(write=True) as connection:
+            existing = connection.execute(
+                "SELECT * FROM external_identities WHERE provider=? AND subject=?",
+                (profile.provider, profile.subject)).fetchall()
+            if len(existing) > 1:
+                raise ValueError("identity_subject_ambiguous")
+            if existing:
+                linked = SQLiteIdentityRepository._identity_from_row(existing[0])
+                row = connection.execute("SELECT * FROM users WHERE id=?", (linked.user_id,)).fetchone()
+                if row is None:
+                    raise ValueError("identity_user_missing")
+                return self._user_from_row(row), linked
+            try:
+                cursor = connection.execute(
+                    "INSERT INTO users(username,username_key,password_hash,password_salt,is_admin,"
+                    "must_change_password,created_at,password_changed_at,local_password_enabled) VALUES(?,?,?,?,0,0,?,?,0)",
+                    (username, username_key(username), material.hash_hex, material.salt_hex, now, now))
+            except sqlite3.IntegrityError as exc:
+                raise ValueError("username_exists") from exc
+            user_id = int(cursor.lastrowid)
+            cursor = connection.execute(
+                "INSERT INTO external_identities(user_id,provider,subject,email,display_name,created_at,updated_at,broker,issuer) "
+                "VALUES(?,?,?,?,?,?,?,'direct_oidc',?)",
+                (user_id, profile.provider, profile.subject, profile.email, profile.display_name, now, now,
+                 profile.issuer or profile.provider))
+            linked = LinkedIdentity(int(cursor.lastrowid), user_id, profile.provider, profile.subject,
+                                    profile.email, profile.display_name)
+            user = self._user_from_row(connection.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone())
+        return user, linked
 
     def verify_user(self, username: str, password: str) -> User | None:
         try:

@@ -110,7 +110,12 @@ class RuntimeBootstrapTests(unittest.TestCase):
             self.assertTrue(panel.polish_button.isEnabled())
             reports = runtime.window.reports_page
             reports.refresh()
-            self.assertTrue(reports.ai_assist_button.isEnabled())
+            deadline = time.monotonic() + 3
+            while reports.is_busy and time.monotonic() < deadline:
+                runtime.application.processEvents()
+                time.sleep(0.005)
+            self.assertTrue(reports.ai_assist_button.isEnabled(),
+                            (reports.is_busy, reports.last_error, bool(reports._states), bool(reports.editor.toPlainText())))
             notes = runtime.window._notes_workflow._view_model
             self.assertTrue(notes.rewrite_available)
             self.assertEqual(notes.rewrite("Synthetic note").value, "Revised synthetic text")
@@ -454,7 +459,8 @@ class RuntimeBootstrapTests(unittest.TestCase):
             assert runtime.value is not None
             self.assertIsInstance(runtime.value.window, MinimalView)
             self.assertTrue(runtime.value.window.refresh())
-            self.assertEqual(runtime.value.window.date_label.text(), "2026-04-20")
+            from worklogger.presentation.date_labels import day_label
+            self.assertEqual(runtime.value.window.date_label.text(), day_label(date(2026, 4, 20)))
             self.assertEqual(runtime.value.window.account_label.text(), "Signed in: local")
             runtime.value.window.close()
 

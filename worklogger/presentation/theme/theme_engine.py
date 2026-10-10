@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from functools import lru_cache
 
 from PySide6.QtGui import QColor, QPalette
 
@@ -209,7 +210,7 @@ class ThemeEngine:
     ) -> str:
         palette = self.palette(theme, dark=dark, custom_color=custom_color)
         mode = "dark" if palette.dark else "light"
-        template = _read_qss_template(palette.theme, mode)
+        template = _read_qss_template(mode)
         return _render_qss(
             template,
             {
@@ -296,9 +297,18 @@ def _theme_colors(
     return _THEMES.get(theme, _THEMES["blue"])[bool(dark)]
 
 
-def _read_qss_template(theme: str, mode: str) -> str:
+@lru_cache(maxsize=2)
+def _read_qss_template(mode: str) -> str:
     path = _QSS_ROOT / f"blue_{mode}.qss"
     return path.read_text(encoding="utf-8")
+
+
+def contrasting_text_color(background: QColor) -> QColor:
+    def linear(channel):
+        return channel / 12.92 if channel <= 0.04045 else ((channel + 0.055) / 1.055) ** 2.4
+    luminance = sum(weight * linear(channel) for weight, channel in zip(
+        (0.2126, 0.7152, 0.0722), (background.redF(), background.greenF(), background.blueF())))
+    return QColor("#000000" if luminance > 0.179 else "#ffffff")
 
 
 def _render_qss(template: str, replacements: dict[str, str]) -> str:

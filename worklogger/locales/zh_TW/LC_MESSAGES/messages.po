@@ -310,8 +310,14 @@ msgstr "補休"
 msgid "Compensatory leave"
 msgstr "補休"
 
+msgid "Configure the address, model, and API key to test the connection."
+msgstr "請設定位址、模型和API金鑰以測試連線。"
+
 msgid "Confirm password"
 msgstr "確認密碼"
+
+msgid "Connection succeeded."
+msgstr "連線成功。"
 
 msgid "Content"
 msgstr "內容"
@@ -577,8 +583,14 @@ msgstr "正在匯出 CSV..."
 msgid "External Model"
 msgstr "外部模型"
 
+msgid "External model configuration is incomplete."
+msgstr "外部模型設定不完整。"
+
 msgid "External model testing is not configured."
 msgstr "外部模型測試尚未設定。"
+
+msgid "External processing is disabled."
+msgstr "外部處理已停用。"
 
 msgid "External text processing is available."
 msgstr "外部文字處理可用。"
@@ -1366,6 +1378,9 @@ msgstr "所選日期：{day}"
 msgid "Selected model file: {name}"
 msgstr "已選擇模型檔案：{name}"
 
+msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
+msgstr "啟用外部處理後，所選文字與允許的上下文將傳送至此供應商。"
+
 msgid "Selected user"
 msgstr "選取的使用者"
 
@@ -1468,17 +1483,29 @@ msgstr "臨時密碼已儲存。"
 msgid "Test"
 msgstr "測試"
 
+msgid "Test connection using sample text; no work records are included."
+msgstr "使用範例文字測試連線，不包含任何工作記錄。"
+
+msgid "Testing connection..."
+msgstr "正在測試連線…"
+
 msgid "Text files (*.txt)"
 msgstr "文字檔案 (*.txt)"
 
 msgid "Text processing is unavailable. Saved preferences are retained."
 msgstr "文字處理無法使用，已儲存的設定會保留。"
 
+msgid "Text processing source: external model."
+msgstr "文字處理來源：外部模型。"
+
 msgid "The CSV file exceeds the supported size or row limit."
 msgstr "CSV 檔案超出支援的大小或列數限制。"
 
 msgid "The ID or password is incorrect."
 msgstr "ID 或密碼不正確。"
+
+msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
+msgstr "無法讀取資料庫，原始檔案已保留。請按照資料庫復原說明復原經過驗證的備份。"
 
 msgid "The file contains conflicting records for the same date."
 msgstr "檔案中存在同一日期的衝突記錄。"
@@ -1506,6 +1533,9 @@ msgstr "已儲存的報表已無法使用。請重新載入報表後再試。"
 
 msgid "The selected context is too large. Choose a shorter period or exclude optional content."
 msgstr "所選上下文過大。請選擇更短的時間範圍或排除選用內容。"
+
+msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
+msgstr "無法在此裝置上解密已存憑證。請重新輸入，現有工作記錄不受影響。"
 
 msgid "The user account is no longer available."
 msgstr "該使用者帳戶已無法使用。"
@@ -1671,6 +1701,9 @@ msgstr "為此應用程式使用網頁代理。"
 
 msgid "Use default avatar"
 msgstr "使用預設頭像"
+
+msgid "Use external model"
+msgstr "使用外部模型"
 
 msgid "Use model"
 msgstr "使用模型"

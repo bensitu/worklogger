@@ -33,6 +33,48 @@ class FakeKeyring:
 
 
 class ProxyCredentialTests(unittest.TestCase):
+    def test_cross_device_credentials_can_be_replaced_without_touching_account_data(self):
+        unavailable = FakeKeyring(unavailable=True)
+        first = EncryptedSettingsKeyStore(self.repository, user_id=self.user_id, keyring_backend=unavailable,
+                                         secret_box=self.secret_box)
+        self.assertTrue(first.set_secret("ai_api_key", "previous-synthetic-key").ok)
+        second_box = HmacSecretBox(FileMachineKeyProvider(Path(self.directory.name) / "other-key"))
+        second_box.encrypt("initialize")
+        restored = EncryptedSettingsKeyStore(self.repository, user_id=self.user_id, keyring_backend=unavailable,
+                                            secret_box=second_box)
+        model = SettingsViewModel(user_id=self.user_id, get_handler=GetSettingHandler(self.repository),
+            set_handler=SetSettingHandler(self.repository), external_key_store=restored)
+        state = model.load().value
+        self.assertTrue(state.external_api_key_available)
+        self.assertEqual(state.external_api_key_error, "secret_authentication_failed")
+        self.assertEqual(state.external_api_key, "")
+        self.assertTrue(model.set_external_api_key("replacement-synthetic-key").ok)
+        state = model.load(refresh_credentials=False).value
+        self.assertEqual(state.external_api_key, "replacement-synthetic-key")
+        self.assertEqual(state.external_api_key_error, "")
+
+    def test_routine_settings_loads_reuse_credentials_until_explicit_refresh(self):
+        model = self.model
+        with patch.object(self.passwords, "load", wraps=self.passwords.load) as read:
+            self.assertTrue(model.load().ok)
+            for enabled in (True, False, True):
+                self.assertTrue(model.set_bool("dark_mode", enabled).ok)
+                self.assertTrue(model.load(refresh_credentials=False).ok)
+            self.assertEqual(read.call_count, 1)
+            self.assertTrue(model.load().ok)
+            self.assertEqual(read.call_count, 2)
+
+    def test_new_macos_credentials_use_platform_location_and_existing_pair_stays_accessible(self):
+        from worklogger.infrastructure.security.paths import credential_directory
+        home = Path(self.directory.name)
+        previous = home / ".config" / "worklogger"
+        with patch("worklogger.infrastructure.security.paths.sys.platform", "darwin"), \
+             patch("pathlib.Path.home", return_value=home), patch.dict("os.environ", {"APPDATA": ""}):
+            self.assertEqual(credential_directory(), home / "Library" / "Application Support" / "WorkLogger")
+            previous.mkdir(parents=True)
+            (previous / "remember_session.enc").touch()
+            self.assertEqual(credential_directory(), previous)
+
     def test_external_keys_are_editable_scoped_and_kept_out_of_plain_settings(self):
         store = EncryptedSettingsKeyStore(self.repository, user_id=self.user_id,
             service_name="test.external.database", keyring_backend=self.backend, secret_box=self.secret_box)

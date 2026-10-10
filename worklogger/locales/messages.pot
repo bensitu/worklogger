@@ -308,7 +308,13 @@ msgstr ""
 msgid "Compensatory leave"
 msgstr ""
 
+msgid "Configure the address, model, and API key to test the connection."
+msgstr ""
+
 msgid "Confirm password"
+msgstr ""
+
+msgid "Connection succeeded."
 msgstr ""
 
 msgid "Content"
@@ -575,7 +581,13 @@ msgstr ""
 msgid "External Model"
 msgstr ""
 
+msgid "External model configuration is incomplete."
+msgstr ""
+
 msgid "External model testing is not configured."
+msgstr ""
+
+msgid "External processing is disabled."
 msgstr ""
 
 msgid "External text processing is available."
@@ -1364,6 +1376,9 @@ msgstr ""
 msgid "Selected model file: {name}"
 msgstr ""
 
+msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
+msgstr ""
+
 msgid "Selected user"
 msgstr ""
 
@@ -1466,16 +1481,28 @@ msgstr ""
 msgid "Test"
 msgstr ""
 
+msgid "Test connection using sample text; no work records are included."
+msgstr ""
+
+msgid "Testing connection..."
+msgstr ""
+
 msgid "Text files (*.txt)"
 msgstr ""
 
 msgid "Text processing is unavailable. Saved preferences are retained."
 msgstr ""
 
+msgid "Text processing source: external model."
+msgstr ""
+
 msgid "The CSV file exceeds the supported size or row limit."
 msgstr ""
 
 msgid "The ID or password is incorrect."
+msgstr ""
+
+msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 msgstr ""
 
 msgid "The file contains conflicting records for the same date."
@@ -1503,6 +1530,9 @@ msgid "The saved report is no longer available. Reload the reports and try again
 msgstr ""
 
 msgid "The selected context is too large. Choose a shorter period or exclude optional content."
+msgstr ""
+
+msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr ""
 
 msgid "The user account is no longer available."
@@ -1668,6 +1698,9 @@ msgid "Use a web proxy for this application."
 msgstr ""
 
 msgid "Use default avatar"
+msgstr ""
+
+msgid "Use external model"
 msgstr ""
 
 msgid "Use model"

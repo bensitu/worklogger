@@ -37,6 +37,7 @@ from worklogger.domain.shared.errors import (
     ValidationError,
 )
 from worklogger.domain.shared.result import Result
+from worklogger.app.use_cases._errors import storage_boundary
 
 
 @dataclass(frozen=True)
@@ -54,6 +55,7 @@ class GetAuthBootstrapStateHandler:
     def __init__(self, credentials: AuthCredentialRepository) -> None:
         self._credentials = credentials
 
+    @storage_boundary("auth_state_failed")
     def handle(self) -> Result[AuthBootstrapState]:
         return Result.success(AuthBootstrapState(has_users=self._credentials.user_count() > 0))
 
@@ -62,6 +64,7 @@ class RegisterUserHandler:
     def __init__(self, credentials: AuthCredentialRepository) -> None:
         self._credentials = credentials
 
+    @storage_boundary("auth_state_failed")
     def handle(self, command: RegisterUserCommand) -> Result[RegisteredUser]:
         try:
             username = normalize_username(command.username)
@@ -89,6 +92,7 @@ class LoginHandler:
         self._credentials = credentials
         self._failures = failures
 
+    @storage_boundary("auth_state_failed")
     def handle(self, command: LoginCommand) -> Result[RememberedLogin]:
         try:
             username = normalize_username(command.username)
@@ -135,6 +139,7 @@ class LoginWithRememberTokenHandler:
     def __init__(self, credentials: AuthCredentialRepository) -> None:
         self._credentials = credentials
 
+    @storage_boundary("auth_state_failed")
     def handle(self, token: str) -> Result[User]:
         try:
             stored_token = remember_token_storage_value(token)
@@ -152,6 +157,7 @@ class ChangePasswordHandler:
     def __init__(self, credentials: AuthCredentialRepository) -> None:
         self._credentials = credentials
 
+    @storage_boundary("auth_state_failed")
     def handle(self, command: ChangePasswordCommand) -> Result[str]:
         try:
             current_password = require_password(
@@ -177,9 +183,11 @@ class ChangePasswordHandler:
 
 
 class ResetPasswordHandler:
-    def __init__(self, credentials: AuthCredentialRepository) -> None:
+    def __init__(self, credentials: AuthCredentialRepository, failures: LoginFailureRepository | None = None) -> None:
         self._credentials = credentials
+        self._failures = failures
 
+    @storage_boundary("auth_state_failed")
     def handle(self, command: ResetPasswordCommand) -> Result[str]:
         try:
             username = normalize_username(command.username)
@@ -194,16 +202,24 @@ class ResetPasswordHandler:
             )
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
+        if self._failures is not None:
+            until = self._failures.lockout_until(username)
+            if until is not None and until.replace(tzinfo=until.tzinfo or timezone.utc) > datetime.now(timezone.utc):
+                return Result.failure(AuthenticationError("invalid_recovery_key", "invalid_recovery_key"))
         reset = self._credentials.reset_password_with_recovery(
             username,
             recovery_key,
             new_password,
         )
         if reset is None:
+            if self._failures is not None:
+                self._failures.record_failure(username)
             return Result.failure(
                 AuthenticationError("invalid_recovery_key", "invalid_recovery_key")
             )
         user, new_recovery_key = reset
+        if self._failures is not None:
+            self._failures.clear_failures(username)
         self._credentials.set_remember_token(user.id, None, None)
         return Result.success(new_recovery_key)
 
@@ -212,6 +228,7 @@ class ListUsersHandler:
     def __init__(self, credentials: AuthCredentialRepository) -> None:
         self._credentials = credentials
 
+    @storage_boundary("auth_state_failed")
     def handle(self, query: ListUsersQuery) -> Result[tuple[User, ...]]:
         admin = _require_admin(self._credentials, query.requesting_user_id)
         if not admin.ok:
@@ -225,6 +242,7 @@ class CreateManagedUserHandler:
     def __init__(self, credentials: AuthCredentialRepository) -> None:
         self._credentials = credentials
 
+    @storage_boundary("auth_state_failed")
     def handle(self, command: CreateManagedUserCommand) -> Result[RegisteredUser]:
         admin = _require_admin(self._credentials, command.requesting_user_id)
         if not admin.ok:
@@ -251,6 +269,7 @@ class AdminResetPasswordHandler:
     def __init__(self, credentials: AuthCredentialRepository) -> None:
         self._credentials = credentials
 
+    @storage_boundary("auth_state_failed")
     def handle(self, command: AdminResetPasswordCommand) -> Result[str]:
         admin = _require_admin(self._credentials, command.requesting_user_id)
         if not admin.ok:
@@ -278,6 +297,7 @@ class SetPasswordChangeRequiredHandler:
     def __init__(self, credentials: AuthCredentialRepository) -> None:
         self._credentials = credentials
 
+    @storage_boundary("auth_state_failed")
     def handle(self, command: SetPasswordChangeRequiredCommand) -> Result[User]:
         admin = _require_admin(self._credentials, command.requesting_user_id)
         if not admin.ok:
@@ -303,6 +323,7 @@ class DeleteManagedUserHandler:
     def __init__(self, credentials: AuthCredentialRepository) -> None:
         self._credentials = credentials
 
+    @storage_boundary("auth_state_failed")
     def handle(self, command: DeleteManagedUserCommand) -> Result[None]:
         admin = _require_admin(self._credentials, command.requesting_user_id)
         if not admin.ok or admin.value is None:

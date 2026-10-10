@@ -88,6 +88,8 @@ class LocalInferenceRuntime:
             )
 
     def update_inventory(self, inventory):
+        if inventory.active_model_id != self._settings.get(self._user_id, LOCAL_MODEL_ACTIVE_ID_SETTING_KEY):
+            return False
         item = next(
             (
                 item
@@ -107,6 +109,7 @@ class LocalInferenceRuntime:
                 if item and item.reason
                 else "local_model_not_selected"
             )
+        return True
 
     def generate(self, request):
         try:

@@ -238,9 +238,9 @@ a paginated Unicode text summary, not the chart. See [data formats](data-formats
 | --- | --- |
 | Appearance | Native-language choices, preset/custom accent, light/dark mode; palette appears only for Custom |
 | General | Standard hours, default break, monthly target, holidays, week start, overnight display, platform residency |
-| AI | Enable the local-model preference before setup; model management remains separate from generation-service availability |
+| AI | Local model selection and native runtime, explicit external-model opt-in with HTTPS endpoint/model/key, sample connection test, and context privacy |
 | Data | Work-log CSV and iCalendar export, CSV and calendar import, database backup/restore; clearing calendar events is disabled |
-| Network | Enable the saved proxy preference first, then enter configuration; transport availability is reported separately |
+| Network | Enable and configure an HTTP CONNECT proxy; subsequent update, download, and external AI requests use it |
 | Account | Current account, password change, identities, administrator tools when authorized, logout |
 | About | Version and author information, license display, repository link, manual update check |
 

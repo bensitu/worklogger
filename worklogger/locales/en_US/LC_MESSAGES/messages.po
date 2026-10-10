@@ -310,8 +310,14 @@ msgstr "Comp leave"
 msgid "Compensatory leave"
 msgstr "Compensatory leave"
 
+msgid "Configure the address, model, and API key to test the connection."
+msgstr "Configure the address, model, and API key to test the connection."
+
 msgid "Confirm password"
 msgstr "Confirm password"
+
+msgid "Connection succeeded."
+msgstr "Connection succeeded."
 
 msgid "Content"
 msgstr "Content"
@@ -577,8 +583,14 @@ msgstr "Exporting CSV..."
 msgid "External Model"
 msgstr "External Model"
 
+msgid "External model configuration is incomplete."
+msgstr "External model configuration is incomplete."
+
 msgid "External model testing is not configured."
 msgstr "External model testing is not configured."
+
+msgid "External processing is disabled."
+msgstr "External processing is disabled."
 
 msgid "External text processing is available."
 msgstr "External text processing is available."
@@ -1366,6 +1378,9 @@ msgstr "Selected day: {day}"
 msgid "Selected model file: {name}"
 msgstr "Selected model file: {name}"
 
+msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
+msgstr "Selected text and permitted context are sent to this provider when external processing is enabled."
+
 msgid "Selected user"
 msgstr "Selected user"
 
@@ -1468,17 +1483,29 @@ msgstr "Temporary password saved."
 msgid "Test"
 msgstr "Test"
 
+msgid "Test connection using sample text; no work records are included."
+msgstr "Test connection using sample text; no work records are included."
+
+msgid "Testing connection..."
+msgstr "Testing connection..."
+
 msgid "Text files (*.txt)"
 msgstr "Text files (*.txt)"
 
 msgid "Text processing is unavailable. Saved preferences are retained."
 msgstr "Text processing is unavailable. Saved preferences are retained."
 
+msgid "Text processing source: external model."
+msgstr "Text processing source: external model."
+
 msgid "The CSV file exceeds the supported size or row limit."
 msgstr "The CSV file exceeds the supported size or row limit."
 
 msgid "The ID or password is incorrect."
 msgstr "The ID or password is incorrect."
+
+msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
+msgstr "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 
 msgid "The file contains conflicting records for the same date."
 msgstr "The file contains conflicting records for the same date."
@@ -1506,6 +1533,9 @@ msgstr "The saved report is no longer available. Reload the reports and try agai
 
 msgid "The selected context is too large. Choose a shorter period or exclude optional content."
 msgstr "The selected context is too large. Choose a shorter period or exclude optional content."
+
+msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
+msgstr "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 
 msgid "The user account is no longer available."
 msgstr "The user account is no longer available."
@@ -1671,6 +1701,9 @@ msgstr "Use a web proxy for this application."
 
 msgid "Use default avatar"
 msgstr "Use default avatar"
+
+msgid "Use external model"
+msgstr "Use external model"
 
 msgid "Use model"
 msgstr "Use model"

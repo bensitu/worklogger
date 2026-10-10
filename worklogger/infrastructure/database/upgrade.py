@@ -32,11 +32,15 @@ def copy_database(source: Path, destination: Path) -> None:
     if Path(str(source) + ".pre_restore").exists():
         raise ValueError("restore_pending")
     validate_database_file(source)
+    with atomic_destination(destination, overwrite=False) as temporary:
+        _copy_into_temporary(source, temporary)
+
+
+def _copy_into_temporary(source, temporary):
     with closing(sqlite3.connect(source.as_uri() + "?mode=ro", uri=True)) as connection:
-        snapshot = create_database_snapshot(connection, destination)
+        snapshot = create_database_snapshot(connection, temporary)
     try:
-        with atomic_destination(destination, overwrite=False) as temporary:
-            os.replace(snapshot, temporary)
+        os.replace(snapshot, temporary)
     finally:
         snapshot.unlink(missing_ok=True)
 
@@ -49,8 +53,10 @@ def upgrade_database(source: Path, destination: Path, *, template_file: Path | N
     if destination.exists():
         raise ValueError("database_destination_exists")
     with atomic_destination(destination, overwrite=False) as temporary:
-        temporary.unlink()
-        copy_database(source, temporary)
+        if Path(str(source) + ".pre_restore").exists():
+            raise ValueError("restore_pending")
+        validate_database_file(source)
+        _copy_into_temporary(source, temporary)
         factory = SQLiteConnectionFactory(temporary)
         try:
             versions = MigrationRunner(factory).run_pending()

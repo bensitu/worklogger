@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from worklogger.presentation.theme.theme_engine import contrasting_text_color
+
 from math import floor, log10
 
 from PySide6.QtCore import QRectF, Qt
@@ -89,7 +91,7 @@ class ComboChart(QWidget):
                         painter.drawText(QRectF(x - step / 2, top - leave_height / 2 - 8, step, 16), Qt.AlignmentFlag.AlignCenter, f"{leave:.1f}")
                 if step >= 28:
                     inside = height >= 24
-                    painter.setPen(QColor("#ffffff" if inside else colors.text))
+                    painter.setPen(contrasting_text_color(color) if inside else QColor(colors.text))
                     painter.drawText(QRectF(x - step / 2, top + 3 if inside else top - 18, step, 16), Qt.AlignmentFlag.AlignCenter, f"{value:.1f}")
             points.append((x, top))
             painter.setPen(QColor(colors.muted_text))

@@ -5,12 +5,14 @@ from __future__ import annotations
 import logging
 import secrets
 import sys
+import sqlite3
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Protocol
 
 from PySide6.QtWidgets import QApplication
+from worklogger.infrastructure.database.connection import DatabaseIntegrityError
 
 from worklogger.__about__ import APP_ID, APP_NAME, APP_VERSION
 from worklogger.app.job_runner import JobRunner
@@ -173,14 +175,7 @@ def build_desktop_runtime(
             job_runner=job_runner,
         )
     except Exception as exc:
-        LOGGER.exception("desktop_runtime_failed")
-        return Result.failure(
-            InfrastructureError(
-                "desktop_runtime_failed",
-                "desktop_runtime_failed",
-                {"reason": str(exc)},
-            )
-        )
+        return _startup_failure(exc)
 
 
 def build_authenticated_desktop_runtime(
@@ -226,14 +221,15 @@ def build_authenticated_desktop_runtime(
             job_runner=job_runner,
         )
     except Exception as exc:
-        LOGGER.exception("desktop_runtime_failed")
-        return Result.failure(
-            InfrastructureError(
-                "desktop_runtime_failed",
-                "desktop_runtime_failed",
-                {"reason": str(exc)},
-            )
-        )
+        return _startup_failure(exc)
+
+
+def _startup_failure(exc):
+    LOGGER.exception("desktop_runtime_failed")
+    code = getattr(exc, "sqlite_errorcode", 0) & 0xFF
+    corrupt = isinstance(exc, DatabaseIntegrityError) or code in {sqlite3.SQLITE_CORRUPT, sqlite3.SQLITE_NOTADB}
+    error = "database_corrupt" if corrupt else "desktop_runtime_failed"
+    return Result.failure(InfrastructureError(error, error, {"error_type": type(exc).__name__}))
 
 
 def _application(argv: Sequence[str] | None) -> QApplication:
@@ -309,7 +305,7 @@ def _auth_view_model(
         register_handler=RegisterUserHandler(auth_repository),
         change_password_handler=ChangePasswordHandler(auth_repository),
         remember_token_handler=LoginWithRememberTokenHandler(auth_repository),
-        reset_password_handler=ResetPasswordHandler(auth_repository),
+        reset_password_handler=ResetPasswordHandler(auth_repository, SQLiteLoginFailureRepository(connection_factory)),
     )
 
 

@@ -6,7 +6,7 @@ An implemented adapter is not necessarily connected to the default desktop.
 `worklogger/bootstrap.py` is the authoritative composition entry point.
 `SettingsCapabilities` communicates actual generation and proxy availability to
 the settings surface. Local generation is connected through the optional native
-backend; proxy transport and external generation remain unconnected. Local model and proxy preferences can be enabled and
+backend; account proxy transport and external generation are connected. Local model and proxy preferences can be enabled and
 configured beforehand; their switches show saved intent rather than runtime readiness.
 External endpoint,
 model identifier, and securely stored API-key configuration remain editable without
@@ -19,10 +19,10 @@ connected. Capability declarations do not create adapters or route requests.
 | Public holidays | `PythonHolidaysProvider` | Connected, using IANA timezone countries or an explicit account region |
 | Release checks | `GitHubReleaseUpdateChecker` | Connected to the manual update action |
 | Model files | `JsonLocalModelStore` | Connected to local model management |
-| External AI | `OpenAICompatibleGateway` | Not supplied to the chat or rewrite handlers |
+| External AI | `AccountAIGateway` and `OpenAICompatibleGateway` | Explicit account opt-in; configured endpoint/model/key are used by rewriting and chat handlers |
 | Local AI | `LocalInferenceRuntime` and `LocalModelGateway` | Connected when the native dependency and a selected verified model are available; controlled by account preferences |
 | Identity providers | OIDC/PKCE and provider helpers | Desktop constructs disabled Google/Microsoft providers |
-| Proxy preferences | Settings and system credential storage | Saved, but not applied to the HTTP adapters |
+| Proxy preferences | `AccountHTTPTransport` and system credential storage | Applied to update checks, model catalog/file downloads, and external AI |
 
 ## AI Services
 
@@ -37,14 +37,19 @@ response size, and retries only DNS or connection-refused failures before a conn
 HTTP errors, read timeouts, and invalid responses are not retried. Redirects are
 rejected to prevent forwarding credentials. Error details retain only exception
 types, HTTP status, and bounded machine-readable error codes, not response messages.
-It does not read an API key automatically from
-environment variables or enable itself from the Settings page.
+It does not read an API key automatically from environment variables. The account
+switch `external_model_enabled` defaults to false for new and existing accounts;
+enabling it selects external processing explicitly. Saving configuration alone
+does not send a request. Test sends only sample text, not work records. External
+configuration or request failures never silently fall back to another provider.
 
 The local adapter calls an injected Python generator with messages and an output
 token limit. It does not load GGUF files itself. `RoutingAIGateway` can coordinate
 two supplied adapters. Model management, model loading, and request routing are
 separate responsibilities. Desktop composition injects a lazy CPU engine into the
-local adapter; it does not transmit rewrite requests to an external provider.
+local adapter. `AccountAIGateway` selects external processing only when explicitly
+enabled; otherwise it uses the local adapter. A local failure never causes remote
+transmission. Both handlers share the account routing policy and privacy controls.
 
 AI context includes records within a daily, weekly, or monthly period. Privacy
 switches control notes, quick logs, and calendar content; working-hour context is
@@ -106,6 +111,8 @@ Validation uses [PyJWT's supported verification API](https://pyjwt.readthedocs.i
 New external accounts use a separate collision-resistant name when a local name
 is occupied and do not have a usable random local password. Removing the last
 identity requires another usable password or identity.
+Account creation and identity binding use one SQLite transaction. A failed binding
+cannot leave a partial account, and bounded random-name retries handle collisions.
 
 ## Network and Platform Services
 
@@ -123,8 +130,21 @@ See the [tzdata resource layout](https://tzdata.python.org/) and
 The shared HTTPS transport uses the certifi certificate bundle and disables
 implicit environment/system proxies. Release and model requests require public
 destination addresses, including redirect targets and the actual connected peer.
-The Network settings form does not install a global proxy or configure this
-transport. A connected proxy integration must be supplied explicitly.
+The Network settings form configures `AccountHTTPTransport`, not a global OS proxy.
+When enabled, an HTTP CONNECT proxy carries HTTPS requests and their redirects;
+certificate verification still authenticates the destination. Public requests
+validate public destination DNS addresses before tunneling instead of incorrectly
+treating the trusted proxy's private address as the destination. The configured
+proxy is trusted to resolve and forward the destination correctly. Direct traffic
+continues to validate the connected peer. Implicit environment/system proxies
+remain disabled to prevent unrequested routing or disclosure.
+
+Address fields accept a host or `http://host` plus a separate port. Optional Basic
+proxy authentication uses the system credential store; a domain prefixes the
+username as `domain\\username`. SOCKS, HTTPS-to-proxy transport, NTLM, and automatic
+proxy discovery are not supported. Proxy authentication over HTTP requires a
+trusted network. Invalid/incomplete enabled configurations fail rather than
+silently bypassing the proxy. New settings apply on the next request.
 
 Tray residency is implemented for Windows, menu-bar residency for macOS, and is
 conditional on Qt reporting a tray service. Linux residency is not enabled by the

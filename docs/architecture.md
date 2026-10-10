@@ -157,9 +157,13 @@ and historical accounting depends on immutable record snapshots, not catalog joi
 
 Feature switches control assistant, model-management, and update-check composition,
 but do not supply missing native dependencies. AI handlers share an account-scoped
-lazy local inference service; weights load only on background rewrite requests.
-Model management updates its selection/verification state. Identity providers and
-external generation remain disconnected. See
+local inference service through `AccountAIGateway`; weights load only on background
+rewrite requests. Explicit external opt-in selects a configured HTTPS provider,
+without automatic fallback. Shared account credential stores feed settings and
+runtime adapters. `AccountHTTPTransport` supplies proxy-aware HTTPS openers to
+updates, model downloads, and external AI. Model management updates selection and
+verification state; stale inventory results cannot replace newer selections.
+Identity-provider desktop login remains disconnected. See
 [integrations](integrations.md) for the implemented boundaries.
 
 ## Presentation and Resources

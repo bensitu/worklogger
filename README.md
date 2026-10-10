@@ -16,10 +16,12 @@ version 4.0.0; this does not imply that a matching release has been published.
 - Light and dark modes with preset or custom accent colors.
 - CSV and iCalendar exchange, database backup and restore, and local model management.
 
-The standard desktop configuration does **not** enable Google/Microsoft sign-in
-or external AI requests. Offline rewriting is connected to the selected, verified
+Google/Microsoft sign-in is not connected. External AI is connected but disabled
+by default; explicitly enable it and configure an HTTPS endpoint, model, and
+securely stored credential. Offline rewriting uses the selected, verified
 GGUF model when the optional native inference dependency, Local Model, and AI Assist
 are enabled. Model loading and rewriting run on a background worker.
+Account proxy settings route update checks, model downloads, and external AI calls.
 See [integration availability](docs/integrations.md) for exact boundaries.
 
 ## Run From Source
