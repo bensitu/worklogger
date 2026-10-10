@@ -14,6 +14,13 @@ Application version: 4.0.0.
 
 ### Desktop Interface
 
+- Moved authentication, administrator operations, note loading, and report
+  loading/saving/export to background workers with recoverable busy state.
+- Corrected adjacent-month calendar hours, rejected-history selection, compact
+  date localization, account field duplication, and custom-chart label contrast.
+- Connected account HTTP CONNECT proxies and explicitly enabled external AI,
+  with securely stored credentials, sample connection tests, and no remote fallback.
+
 - Connected verified local model selection to offline record, note, and report
   rewriting through a cached CPU inference engine with bounded context and timeout.
 - Added account avatar upload, circular drag/zoom cropping, keyboard positioning,
@@ -53,6 +60,13 @@ Application version: 4.0.0.
   do not open a success dialog.
 
 ### Storage and Compatibility
+
+- Added transactional external account/identity creation, recovery-attempt limits,
+  safe application error boundaries, content size limits, and cross-device
+  credential re-entry feedback.
+- Bounded analytics reads, preserved reserved database-copy destinations, cached
+  complete shared stylesheets, and retained existing macOS credential pairs while
+  using Application Support for new installations.
 
 - Schema 9 classification snapshots and account type catalog; structure-aware
   upgrades preserve current entry IDs and metadata even without a version ledger.
