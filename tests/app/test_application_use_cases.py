@@ -75,6 +75,9 @@ class MemoryWorkLogRepository:
     def list_all(self, user_id: int) -> tuple[WorkLog, ...]:
         return tuple(record for (record_user_id, _day), record in self.records.items() if record_user_id == user_id)
 
+    def list_range(self, user_id: int, start: date, end: date) -> tuple[WorkLog, ...]:
+        return tuple(record for record in self.list_all(user_id) if start <= record.day <= end)
+
     def save(self, work_log: WorkLog, *, expected_note: str | None = None) -> None:
         self.records[(work_log.user_id, work_log.day)] = work_log
 

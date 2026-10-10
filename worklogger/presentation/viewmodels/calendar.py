@@ -12,7 +12,6 @@ from worklogger.app.queries.calendar_queries import (
     GetCalendarEventsForRangeQuery,
     GetHolidaysForRangeQuery,
 )
-from worklogger.app.queries.work_log_queries import GetMonthRecordsQuery
 from worklogger.domain.calendar.models import CalendarEvent, Holiday
 from worklogger.domain.notes.models import DailyNote
 from worklogger.domain.shared.errors import ValidationError
@@ -23,7 +22,7 @@ from worklogger.presentation.theme import CalendarCellStyle, ThemeEngine
 
 
 class MonthRecordsHandler(Protocol):
-    def handle(self, query: GetMonthRecordsQuery) -> Result[tuple[WorkLog, ...]]:
+    def list_range(self, user_id: int, start: date, end: date) -> Result[tuple[WorkLog, ...]]:
         ...
 
 
@@ -139,13 +138,7 @@ class CalendarViewModel:
             week_start_monday=options.week_start_monday,
         )
         grid_end = grid_start + timedelta(days=41)
-        record_result = self._month_records_handler.handle(
-            GetMonthRecordsQuery(
-                user_id=self._user_id,
-                year=first_day.year,
-                month=first_day.month,
-            )
-        )
+        record_result = self._month_records_handler.list_range(self._user_id, grid_start, grid_end)
         if not record_result.ok:
             return Result.failure(
                 record_result.error

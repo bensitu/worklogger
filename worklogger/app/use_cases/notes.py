@@ -43,6 +43,8 @@ class SaveDailyNoteHandler:
             return Result.failure(
                 ValidationError("note_content_must_be_string", "note_content_must_be_string")
             )
+        if len(command.content.encode("utf-8")) > 1024 * 1024:
+            return Result.failure(ValidationError("note_save_failed", "note_save_failed"))
         note = DailyNote(
             user_id=command.user_id,
             day=command.day,

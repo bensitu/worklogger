@@ -289,7 +289,7 @@ class TimeEntryService:
             if self.timer is not None:
                 raise ValueError("auto_record_already_active")
             if not math.isfinite(hours) or not 0 < hours <= 4:
-                raise ValueError("break_hours_too_long")
+                raise ValueError("fixed_break_hours_invalid")
             moment = now or self.now()
             if not isinstance(moment, datetime) or moment.tzinfo is None:
                 raise ValueError("time_range_invalid")

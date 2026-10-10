@@ -18,6 +18,10 @@ class SQLiteReportTemplateRepository:
         self._connection_factory = connection_factory
 
     def save(self, template: ReportTemplate) -> ReportTemplate:
+        if not isinstance(template.content, str) or not template.content.strip():
+            raise ValueError("template_content_required")
+        if len(template.content.encode("utf-8")) > 1024 * 1024:
+            raise ValueError("template_content_too_long")
         language = normalize_template_language(template.language)
         template_type = normalize_template_type(template.template_type)
         updated_at = template.updated_at.isoformat(timespec="seconds") if template.updated_at else utc_now_iso()
@@ -39,7 +43,8 @@ class SQLiteReportTemplateRepository:
                 ),
             )
             row = self._select(connection, template.user_id, language, template_type)
-        assert row is not None
+        if row is None:
+            raise ValueError("template_save_failed")
         return self._from_row(row)
 
     def get(

@@ -172,6 +172,8 @@ class SaveReportTemplateHandler:
             language = normalize_template_language(command.language)
             if not isinstance(command.content, str) or not command.content.strip():
                 raise ValueError("template_content_required")
+            if len(command.content.encode("utf-8")) > 1024 * 1024:
+                raise ValueError("template_content_too_long")
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
         template = ReportTemplate(
@@ -181,7 +183,10 @@ class SaveReportTemplateHandler:
             template_type=template_type,
             content=command.content,
         )
-        return Result.success(self._repository.save(template))
+        try:
+            return Result.success(self._repository.save(template))
+        except Exception:
+            return Result.failure(InfrastructureError("template_save_failed", "template_save_failed"))
 
 
 class ResetReportTemplateHandler:

@@ -214,6 +214,9 @@ msgstr "蓝色"
 msgid "Break"
 msgstr "休息"
 
+msgid "Break duration must be greater than zero and no more than four hours."
+msgstr "休息时长必须大于零且不超过四小时。"
+
 msgid "Break time must be nonnegative and shorter than the work period."
 msgstr "休息时间不能为负数，且必须短于工作时段。"
 
@@ -1438,6 +1441,9 @@ msgstr "日"
 msgid "System region"
 msgstr "系统地区"
 
+msgid "Template content must not exceed 1 MiB."
+msgstr "模板内容不得超过1 MiB。"
+
 msgid "Template reset."
 msgstr "模板已重置。"
 
@@ -1473,6 +1479,9 @@ msgstr "CSV 文件超出支持的大小或行数限制。"
 
 msgid "The ID or password is incorrect."
 msgstr "ID 或密码不正确。"
+
+msgid "The file contains conflicting records for the same date."
+msgstr "文件中存在同一日期的冲突记录。"
 
 msgid "The model returned no content. Please try again."
 msgstr "模型未返回内容，请重试。"

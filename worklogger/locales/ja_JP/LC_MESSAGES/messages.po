@@ -214,6 +214,9 @@ msgstr "青"
 msgid "Break"
 msgstr "休憩"
 
+msgid "Break duration must be greater than zero and no more than four hours."
+msgstr "休憩時間は0時間より長く、4時間以下にしてください。"
+
 msgid "Break time must be nonnegative and shorter than the work period."
 msgstr "休憩時間は0以上で、勤務時間より短くしてください。"
 
@@ -1438,6 +1441,9 @@ msgstr "日"
 msgid "System region"
 msgstr "システムの地域"
 
+msgid "Template content must not exceed 1 MiB."
+msgstr "テンプレートの内容は1 MiB以下にしてください。"
+
 msgid "Template reset."
 msgstr "テンプレートをリセットしました。"
 
@@ -1473,6 +1479,9 @@ msgstr "CSV ファイルが対応するサイズまたは行数の上限を超�
 
 msgid "The ID or password is incorrect."
 msgstr "IDまたはパスワードが正しくありません。"
+
+msgid "The file contains conflicting records for the same date."
+msgstr "ファイル内に同じ日付の競合する記録があります。"
 
 msgid "The model returned no content. Please try again."
 msgstr "モデルから内容が返されませんでした。もう一度お試しください。"

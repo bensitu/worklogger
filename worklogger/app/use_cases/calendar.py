@@ -38,7 +38,10 @@ class GetCalendarEventsForDayHandler:
         self,
         query: GetCalendarEventsForDayQuery,
     ) -> Result[tuple[CalendarEvent, ...]]:
-        return Result.success(self._repository.list_for_day(query.user_id, query.day))
+        try:
+            return Result.success(self._repository.list_for_day(query.user_id, query.day))
+        except Exception:
+            return Result.failure(InfrastructureError("calendar_load_failed", "calendar_load_failed"))
 
 
 class GetCalendarEventsForRangeHandler:
@@ -51,13 +54,10 @@ class GetCalendarEventsForRangeHandler:
     ) -> Result[tuple[CalendarEvent, ...]]:
         if query.end_day < query.start_day:
             return Result.failure(ValidationError("date_range_invalid", "date_range_invalid"))
-        return Result.success(
-            self._repository.list_for_range(
-                query.user_id,
-                query.start_day,
-                query.end_day,
-            )
-        )
+        try:
+            return Result.success(self._repository.list_for_range(query.user_id, query.start_day, query.end_day))
+        except Exception:
+            return Result.failure(InfrastructureError("calendar_load_failed", "calendar_load_failed"))
 
 
 class GetHolidaysForRangeHandler:

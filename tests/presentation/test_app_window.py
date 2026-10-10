@@ -64,6 +64,9 @@ class MemoryWorkLogRepository:
     def list_all(self, user_id):
         return tuple(record for (owner, _day), record in sorted(self.records.items()) if owner == user_id)
 
+    def list_range(self, user_id, start, end):
+        return tuple(record for record in self.list_all(user_id) if start <= record.day <= end)
+
     def save(self, record, *, expected_note=None):
         if record.id is None:
             record = replace(record, id=self._next_id)
@@ -164,6 +167,9 @@ class MemoryCalendarRepository(CalendarEventRepository):
 
 
 class FailingMonthRecordsHandler:
+    def list_range(self, user_id, start, end):
+        return Result.failure(ValidationError("month_failed", "month_failed"))
+
     def handle(self, query: GetMonthRecordsQuery) -> Result[tuple[WorkLog, ...]]:
         return Result.failure(ValidationError("month_failed", "month_failed"))
 

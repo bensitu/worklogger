@@ -15,6 +15,8 @@ def normalize_description(description: str) -> str:
     cleaned = description.strip()
     if not cleaned:
         raise ValueError("description_required")
+    if len(cleaned) > 16_000:
+        raise ValueError("description_too_long")
     return cleaned
 
 

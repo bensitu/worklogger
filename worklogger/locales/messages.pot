@@ -212,6 +212,9 @@ msgstr ""
 msgid "Break"
 msgstr ""
 
+msgid "Break duration must be greater than zero and no more than four hours."
+msgstr ""
+
 msgid "Break time must be nonnegative and shorter than the work period."
 msgstr ""
 
@@ -1436,6 +1439,9 @@ msgstr ""
 msgid "System region"
 msgstr ""
 
+msgid "Template content must not exceed 1 MiB."
+msgstr ""
+
 msgid "Template reset."
 msgstr ""
 
@@ -1470,6 +1476,9 @@ msgid "The CSV file exceeds the supported size or row limit."
 msgstr ""
 
 msgid "The ID or password is incorrect."
+msgstr ""
+
+msgid "The file contains conflicting records for the same date."
 msgstr ""
 
 msgid "The model returned no content. Please try again."

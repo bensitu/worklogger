@@ -163,6 +163,12 @@ and its presentation timer classes are no longer used or shipped.
 
 ## Text Assistance
 
+The month grid reads all 42 displayed dates, including records in adjacent months.
+Weekly totals use this same visible range. Copying an imported event normalizes
+the calendar-only end-of-day notation `24:00` to next-day `00:00`; the regular
+record duration and overlap rules still apply, including the maximum shift length.
+
+
 An available AI service adds a Polish text action to the Content heading. The
 operation rewrites the current description on a background worker. Its result
 remains a local draft until Save or End; times, types, and records are unchanged.

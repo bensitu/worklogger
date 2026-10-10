@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 from collections.abc import Callable
+from functools import wraps
 
 from worklogger.app.commands.local_model_commands import (
     DeleteLocalModelCommand,
@@ -67,6 +68,18 @@ class LocalModelRuntimeStatus:
     reason: str = ""
 
 
+def _storage_boundary(code: str):
+    def decorate(operation):
+        @wraps(operation)
+        def guarded(*args, **kwargs):
+            try:
+                return operation(*args, **kwargs)
+            except Exception:
+                return Result.failure(InfrastructureError(code, code))
+        return guarded
+    return decorate
+
+
 class GetLocalModelRuntimeStatusHandler:
     def __init__(
         self,
@@ -77,6 +90,7 @@ class GetLocalModelRuntimeStatusHandler:
         self._store = store
         self._settings = settings
 
+    @_storage_boundary("local_model_verify_failed")
     def handle(self, query: ListLocalModelsQuery) -> Result[LocalModelRuntimeStatus]:
         enabled = str(
             self._settings.get(query.user_id, LOCAL_MODEL_ENABLED_SETTING_KEY, "1")
@@ -125,6 +139,7 @@ class ListLocalModelsHandler:
         self._store = store
         self._settings = settings
 
+    @_storage_boundary("local_model_list_failed")
     def handle(self, query: ListLocalModelsQuery) -> Result[LocalModelInventory]:
         entries = self._store.list_models()
         if not entries.ok or entries.value is None:
@@ -165,6 +180,7 @@ class RefreshLocalModelCatalogHandler:
     def __init__(self, store: LocalModelStore) -> None:
         self._store = store
 
+    @_storage_boundary("local_model_catalog_failed")
     def handle(
         self,
         _command: RefreshLocalModelCatalogCommand,
@@ -182,6 +198,7 @@ class ImportLocalModelHandler:
         self._store = store
         self._settings = settings
 
+    @_storage_boundary("local_model_import_failed")
     def handle(self, command: ImportLocalModelCommand) -> Result[LocalModelEntry]:
         imported = self._store.import_model(Path(command.source_path))
         if not imported.ok or imported.value is None:
@@ -209,6 +226,7 @@ class DownloadLocalModelHandler:
         self._store = store
         self._settings = settings
 
+    @_storage_boundary("local_model_download_failed")
     def handle(self, command: DownloadLocalModelCommand) -> Result[LocalModelEntry]:
         model_id = _required_model_id(command.model_id)
         if not model_id.ok or model_id.value is None:
@@ -242,6 +260,7 @@ class VerifyLocalModelHandler:
     def __init__(self, store: LocalModelStore) -> None:
         self._store = store
 
+    @_storage_boundary("local_model_verify_failed")
     def handle(
         self,
         command: VerifyLocalModelCommand,
@@ -262,6 +281,7 @@ class SelectLocalModelHandler:
         self._store = store
         self._settings = settings
 
+    @_storage_boundary("local_model_select_failed")
     def handle(self, command: SelectLocalModelCommand) -> Result[None]:
         model_id = str(command.model_id or "").strip()
         if not model_id:
@@ -299,6 +319,7 @@ class DeleteLocalModelHandler:
         self._usage_reader = usage_reader
         self._before_delete = before_delete
 
+    @_storage_boundary("local_model_delete_failed")
     def handle(self, command: DeleteLocalModelCommand) -> Result[None]:
         model_id = _required_model_id(command.model_id)
         if not model_id.ok or model_id.value is None:

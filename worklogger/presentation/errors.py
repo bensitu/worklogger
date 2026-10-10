@@ -25,6 +25,14 @@ def display_error_code(code: str) -> str:
     """Translate known error codes without displaying raw exception text or logging previews."""
 
     match code:
+        case "fixed_break_hours_invalid":
+            return _("Break duration must be greater than zero and no more than four hours.")
+        case "duplicate_date":
+            return _("The file contains conflicting records for the same date.")
+        case "description_too_long":
+            return _("Content must not exceed 16,000 characters.")
+        case "template_content_too_long":
+            return _("Template content must not exceed 1 MiB.")
         case "worklog_entry_overlap" | "fixed_break_active":
             return _("These times overlap another record or the active timer. Choose a different period.")
         case "worklog_entry_conflict" | "time_entry_timer_conflict":

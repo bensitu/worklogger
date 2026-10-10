@@ -12,6 +12,9 @@ from worklogger.presentation.viewmodels import CalendarDisplayOptions, CalendarV
 
 
 class EmptyMonthRecordsHandler:
+    def list_range(self, user_id, start, end):
+        return Result.success(())
+
     def handle(self, query: GetMonthRecordsQuery) -> Result[tuple[WorkLog, ...]]:
         return Result.success(())
 
@@ -33,6 +36,23 @@ class RecordingHolidaysHandler:
 
 
 class CalendarPresentationTests(unittest.TestCase):
+    def test_visible_grid_includes_adjacent_month_records_and_week_totals(self):
+        from worklogger.app.use_cases.work_logs import GetMonthRecordsHandler
+        from tests.app.test_application_use_cases import MemoryWorkLogRepository
+
+        repository = MemoryWorkLogRepository()
+        for day in (date(2026, 4, 30), date(2026, 5, 1), date(2026, 6, 1)):
+            repository.save(WorkLog(1, day, "09:00", "17:00"))
+            repository.save(WorkLog(2, day, "09:00", "19:00"))
+        model = CalendarViewModel(user_id=1, month_records_handler=GetMonthRecordsHandler(repository))
+        result = model.build_month(year=2026, month=5, selected_day=date(2026, 5, 1))
+        self.assertTrue(result.ok, result.error)
+        cells = {cell.day: cell for cell in result.value.cells}
+        for day in (date(2026, 4, 30), date(2026, 6, 1)):
+            self.assertFalse(cells[day].in_month)
+            self.assertEqual(cells[day].worked_hours, 8)
+        self.assertEqual(cells[date(2026, 4, 30)].weekly_total_hours, 16)
+
     def test_explicit_holiday_map_overrides_provider_even_when_empty(self) -> None:
         holidays = RecordingHolidaysHandler()
         model = CalendarViewModel(user_id=1, month_records_handler=EmptyMonthRecordsHandler(),

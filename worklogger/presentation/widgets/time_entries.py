@@ -240,7 +240,7 @@ class TimeEntryPanel(QWidget):
             return
         self.view_model.new(event.day)
         self.time_tabs.setCurrentIndex(0)
-        self.view_model.update(start=event.start_time or "", end=event.end_time or "", work_type="meeting",
+        self.view_model.update(start=event.start_time or "", end="00:00" if event.end_time == "24:00" else event.end_time or "", work_type="meeting",
                                content="\n".join(part for part in (event.summary, event.description, event.location) if part))
         self._render_editor()
 

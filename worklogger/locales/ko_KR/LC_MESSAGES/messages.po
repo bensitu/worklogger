@@ -214,6 +214,9 @@ msgstr "파랑"
 msgid "Break"
 msgstr "휴식"
 
+msgid "Break duration must be greater than zero and no more than four hours."
+msgstr "휴식 시간은 0시간보다 길고 4시간 이하여야 합니다."
+
 msgid "Break time must be nonnegative and shorter than the work period."
 msgstr "휴식 시간은 0 이상이고 근무 시간보다 짧아야 합니다."
 
@@ -1438,6 +1441,9 @@ msgstr "일"
 msgid "System region"
 msgstr "시스템 지역"
 
+msgid "Template content must not exceed 1 MiB."
+msgstr "템플릿 내용은 1 MiB를 초과할 수 없습니다."
+
 msgid "Template reset."
 msgstr "템플릿이 재설정되었습니다."
 
@@ -1473,6 +1479,9 @@ msgstr "CSV 파일이 지원되는 크기 또는 행 수 제한을 초과했습�
 
 msgid "The ID or password is incorrect."
 msgstr "ID 또는 비밀번호가 올바르지 않습니다."
+
+msgid "The file contains conflicting records for the same date."
+msgstr "파일에 같은 날짜의 충돌하는 기록이 있습니다."
 
 msgid "The model returned no content. Please try again."
 msgstr "모델이 내용을 반환하지 않았습니다. 다시 시도하세요."

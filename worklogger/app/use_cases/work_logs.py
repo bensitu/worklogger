@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 from worklogger.app.commands.work_log_commands import DeleteWorkLogCommand, SaveWorkLogCommand
 from worklogger.app.event_bus import EventBus, WorkLogSaved
 from worklogger.app.queries.work_log_queries import (
@@ -63,7 +65,10 @@ class DeleteWorkLogHandler:
         self._repository = repository
 
     def handle(self, command: DeleteWorkLogCommand) -> Result[None]:
-        self._repository.remove(command.user_id, command.day)
+        try:
+            self._repository.remove(command.user_id, command.day)
+        except Exception:
+            return Result.failure(InfrastructureError("worklog_delete_failed", "worklog_delete_failed"))
         return Result.success(None)
 
 
@@ -72,7 +77,10 @@ class GetWorkLogHandler:
         self._repository = repository
 
     def handle(self, query: GetWorkLogQuery) -> Result[WorkLog | None]:
-        return Result.success(self._repository.get_for_day(query.user_id, query.day))
+        try:
+            return Result.success(self._repository.get_for_day(query.user_id, query.day))
+        except Exception:
+            return Result.failure(InfrastructureError("worklog_load_failed", "worklog_load_failed"))
 
 
 class GetMonthRecordsHandler:
@@ -80,9 +88,16 @@ class GetMonthRecordsHandler:
         self._repository = repository
 
     def handle(self, query: GetMonthRecordsQuery) -> Result[tuple[WorkLog, ...]]:
-        return Result.success(
-            self._repository.list_for_month(query.user_id, query.year, query.month)
-        )
+        try:
+            return Result.success(self._repository.list_for_month(query.user_id, query.year, query.month))
+        except Exception:
+            return Result.failure(InfrastructureError("worklog_load_failed", "worklog_load_failed"))
+
+    def list_range(self, user_id: int, start: date, end: date) -> Result[tuple[WorkLog, ...]]:
+        try:
+            return Result.success(self._repository.list_range(user_id, start, end))
+        except Exception:
+            return Result.failure(InfrastructureError("worklog_load_failed", "worklog_load_failed"))
 
 
 class GetAllWorkLogsHandler:
@@ -91,8 +106,11 @@ class GetAllWorkLogsHandler:
         self._include_note_only = include_note_only
 
     def handle(self, query: GetAllWorkLogsQuery) -> Result[tuple[WorkLog, ...]]:
-        reader = getattr(self._repository, "list_export_rows", self._repository.list_all) if self._include_note_only else self._repository.list_all
-        return Result.success(reader(query.user_id))
+        try:
+            reader = getattr(self._repository, "list_export_rows", self._repository.list_all) if self._include_note_only else self._repository.list_all
+            return Result.success(reader(query.user_id))
+        except Exception:
+            return Result.failure(InfrastructureError("worklog_load_failed", "worklog_load_failed"))
 
     def list_range(self, user_id: int, start, end) -> Result[tuple[WorkLog, ...]]:
         try:
