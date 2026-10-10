@@ -374,6 +374,8 @@ class AppWindow(QMainWindow):
             self.settings_page.profile_changed.connect(self.apply_user_profile)
         if hasattr(self.settings_page, "work_types_changed"):
             self.settings_page.work_types_changed.connect(self.entry_panel.refresh_work_types)
+        if hasattr(self.settings_page, "projects_changed"):
+            self.settings_page.projects_changed.connect(self.entry_panel.refresh_projects)
         if hasattr(self.settings_page, "ai_availability_changed"):
             self.settings_page.ai_availability_changed.connect(self._refresh_ai_availability)
         self.calendar_view.day_selected.connect(self.select_day)

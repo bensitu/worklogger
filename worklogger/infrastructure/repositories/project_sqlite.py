@@ -16,6 +16,17 @@ class SQLiteProjectRepository:
     def __init__(self, connection_factory):
         self._factory = connection_factory
 
+    def catalog(self, user_id):
+        with self._factory.transaction(write=False) as connection:
+            rows = connection.execute("SELECT * FROM projects WHERE user_id=? ORDER BY archived,normalized_name,id", (user_id,)).fetchall()
+            item_rows = connection.execute("SELECT * FROM work_items WHERE user_id=? ORDER BY archived,completed,normalized_title,id", (user_id,)).fetchall()
+        projects = tuple(Project(row["id"], row["name"], row["code"], row["revision"], bool(row["archived"])) for row in rows)
+        items = {project.id: [] for project in projects}
+        for row in item_rows:
+            items[row["project_id"]].append(WorkItem(row["id"], row["project_id"], row["title"], row["source_url"],
+                                                   bool(row["completed"]), row["revision"], bool(row["archived"])))
+        return projects, {key: tuple(value) for key, value in items.items()}
+
     def list_projects(self, user_id):
         with self._factory.connection() as connection:
             rows = connection.execute("SELECT * FROM projects WHERE user_id=? ORDER BY archived,normalized_name,id", (user_id,)).fetchall()

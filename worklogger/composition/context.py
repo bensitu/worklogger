@@ -55,6 +55,7 @@ import hashlib
 from worklogger.app.use_cases.settings import ProxyPasswordSettings
 from worklogger.infrastructure.network import AccountHTTPTransport
 from worklogger.infrastructure.ai.account import AccountAIGateway
+from worklogger.infrastructure.repositories.project_sqlite import SQLiteProjectRepository
 from worklogger.infrastructure.security.key_store import EncryptedSettingsKeyStore, SystemCredentialStore, HmacSecretBox
 from worklogger.infrastructure.local_model.store import HttpRangeDownloader
 
@@ -74,6 +75,7 @@ class RuntimeRepositories:
     report_templates: SQLiteReportTemplateRepository
     settings: SQLiteSettingsRepository
     work_types: SQLiteWorkTypeRepository
+    projects: SQLiteProjectRepository
 
 
 @dataclass(frozen=True)
@@ -110,6 +112,7 @@ def _runtime_repositories(
         report_templates=SQLiteReportTemplateRepository(connection_factory),
         settings=SQLiteSettingsRepository(connection_factory),
         work_types=SQLiteWorkTypeRepository(connection_factory),
+        projects=SQLiteProjectRepository(connection_factory),
     )
 
 

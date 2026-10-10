@@ -46,6 +46,7 @@ class GeneralSection(_SettingsScrollPage):
         "standard_hours_input",
         "week_start_switch",
         "manage_work_types_button",
+        "manage_projects_button",
     )
 
     def __init__(self, actions: SectionActions):
@@ -80,6 +81,15 @@ class GeneralSection(_SettingsScrollPage):
         set_button_icon(self.manage_work_types_button, "settings", accent=True)
         self.manage_work_types_button.clicked.connect(actions.manage_work_types_requested)
         form.addRow(_("Work types"), self.manage_work_types_button)
+
+        self.manage_projects_button = QPushButton(_("Manage projects"))
+        self.manage_projects_button.setObjectName("manage_projects_button")
+        self.manage_projects_button.setFixedWidth(320)
+        self.manage_projects_button.setProperty("variant", "outline")
+        self.manage_projects_button.setEnabled(False)
+        set_button_icon(self.manage_projects_button, "settings", accent=True)
+        self.manage_projects_button.clicked.connect(actions.manage_projects_requested)
+        form.addRow(_("Projects"), self.manage_projects_button)
 
         self.holidays_switch = SwitchButton()
         self.holidays_switch.toggled.connect(

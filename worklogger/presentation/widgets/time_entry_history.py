@@ -51,6 +51,8 @@ class TimeEntryHistory(QWidget):
             content = first_line[:64] + ("..." if len(first_line) > 64 else "")
             span = f"{entry.start_time} - {entry.end_time}" if entry.has_times else _("All day")
             text = f"{span}  {duration_label(entry.raw_hours())}\n{work_type_label(entry.work_type)}"
+            if entry.context.label:
+                text += "\n" + entry.context.label
             if content:
                 text += "\n" + content
             button = self._button(text)

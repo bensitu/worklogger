@@ -3,7 +3,7 @@
 from datetime import date
 
 from PySide6.QtCore import QEvent, QTimer, Qt, Signal
-from PySide6.QtWidgets import (QComboBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit,
+from PySide6.QtWidgets import (QComboBox, QHBoxLayout, QLabel, QLineEdit,
     QMessageBox, QPushButton, QSizePolicy, QStyle, QStyleOptionTabWidgetFrame,
     QTabWidget, QTextEdit, QToolButton, QVBoxLayout, QWidget)
 
@@ -16,6 +16,7 @@ from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 from worklogger.presentation.widgets.time_picker import TimePickerDialog
+from worklogger.presentation.widgets.work_context_picker import WorkContextPicker
 from worklogger.presentation.work_type_labels import work_type_label
 
 
@@ -99,14 +100,29 @@ class TimeEntryPanel(QWidget):
 
         self.work_type_combo = QComboBox()
         self.work_type_combo.setObjectName("work_type_combo")
+        self.work_type_combo.setMinimumWidth(0)
+        self.work_type_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        self.work_type_combo.setMinimumContentsLength(1)
         self._custom_types = ()
         self._reload_work_types()
-        form = QFormLayout()
-        form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows)
-        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
-        form.setVerticalSpacing(3)
-        form.addRow(_("Work type"), self.work_type_combo)
-        root.addLayout(form)
+        classification_row = QHBoxLayout()
+        classification_row.setContentsMargins(0, 0, 0, 0)
+        classification_row.setSpacing(8)
+        type_column = QVBoxLayout()
+        type_column.setSpacing(3)
+        type_caption = QLabel(_("Work type"))
+        type_caption.setBuddy(self.work_type_combo)
+        type_column.addWidget(type_caption)
+        type_column.addWidget(self.work_type_combo)
+        classification_row.addLayout(type_column, 1)
+        self.context_picker = WorkContextPicker(self)
+        self.context_picker.setVisible(view_model.projects_available)
+        classification_row.addWidget(self.context_picker, 2)
+        root.addLayout(classification_row)
+        inventory = view_model.project_inventory()
+        self._context_error = inventory.error
+        if inventory.ok:
+            self.context_picker.set_inventory(*inventory.value)
         content_heading = QHBoxLayout()
         content_heading.addWidget(QLabel(_("Content")), 1)
         self.polish_button = QToolButton()
@@ -152,6 +168,7 @@ class TimeEntryPanel(QWidget):
         for field in (self.start_input, self.end_input):
             field.textChanged.connect(self._draft_changed)
         self.work_type_combo.currentIndexChanged.connect(self._draft_changed)
+        self.context_picker.changed.connect(self._draft_changed)
         self.content_input.textChanged.connect(self._draft_changed)
         self.clock_in_button.clicked.connect(self._start)
         self.clock_out_button.clicked.connect(self._finish)
@@ -208,6 +225,18 @@ class TimeEntryPanel(QWidget):
         dialog.accepted.connect(lambda: field.setText(dialog.time_input.time().toString("HH:mm")))
         dialog.open()
 
+    def refresh_projects(self):
+        def completed(result):
+            if result.ok:
+                self._context_error = None
+                self._updating = True
+                self.context_picker.set_inventory(*result.value)
+                self._updating = False
+                self._render_editor()
+            else:
+                self._apply_result(result, refresh=False)
+        self._submit(self.view_model.project_inventory, refresh=False, on_complete=completed)
+
     @property
     def is_dirty(self):
         return self.view_model.manual_dirty or self.view_model.auto_dirty
@@ -252,11 +281,13 @@ class TimeEntryPanel(QWidget):
             return
         if self.time_tabs.currentIndex() == 0:
             self.view_model.update(start=self.start_input.text(), end=self.end_input.text(),
-                                   work_type=str(self.work_type_combo.currentData()), content=self.content_input.toPlainText())
+                                   work_type=str(self.work_type_combo.currentData()), content=self.content_input.toPlainText(),
+                                   context=self.context_picker.context())
         else:
             self.view_model.auto_content = self.content_input.toPlainText()
             if self.view_model.timer is None:
                 self.view_model.auto_work_type = str(self.work_type_combo.currentData())
+                self.view_model.auto_context = self.context_picker.context()
         self._update_actions()
         self.dirty_changed.emit(self.is_dirty)
 
@@ -277,11 +308,17 @@ class TimeEntryPanel(QWidget):
             elif isinstance(snapshot, CustomWorkType):
                 self.work_type_combo.setItemText(self.work_type_combo.findData(work_type), snapshot.label)
             self.work_type_combo.setCurrentIndex(max(0, self.work_type_combo.findData(work_type)))
+            self.work_type_combo.setToolTip(self.work_type_combo.currentText())
             self.content_input.setPlainText(self.view_model.auto_content if auto else draft.content)
             self.work_type_combo.setEnabled(not (auto and self.view_model.timer))
+            self.context_picker.set_context(self.view_model.timer.context if auto and self.view_model.timer else
+                                           self.view_model.auto_context if auto else draft.context)
+            self.context_picker.setEnabled(self._context_error is None and not (auto and self.view_model.timer))
             legacy = draft.original.break_hours if not auto and draft.original else 0
             self.history_label.setText(_("Historical break deduction: {hours}").format(hours=duration_label(legacy)) if legacy else "")
-            self.history_label.setVisible(bool(legacy))
+            if self._context_error is not None:
+                self.history_label.setText(display_error_message(self._context_error))
+            self.history_label.setVisible(bool(legacy) or self._context_error is not None)
         finally:
             self._updating = False
         self._update_actions()

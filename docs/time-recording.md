@@ -145,6 +145,15 @@ iCalendar retain individual periods; iCalendar identifiers include the entry ID.
 
 ## Compatibility
 
+Projects and work items are optional record context. Manage them under Settings >
+General > Projects; the recorder provides only selection. Manual and automatic
+records save their context labels, and active timing keeps the captured context
+until completion. Catalog archival hides a choice from new associations without
+removing historical records. Editing old content preserves its existing association.
+Unlinked labels imported from CSV remain visible and can be explicitly cleared or
+assigned to a local project. Record history and generated reports show the context.
+
+
 Migration 7 makes a complete private snapshot before converting populated daily
 records. It copies times, content, offsets, and historical break deductions without
 inventing break placement. Independent daily notes remain available. Previous

@@ -26,6 +26,63 @@ from PySide6.QtCore import QTime
 
 
 class TimeEntryWorkflowTests(unittest.TestCase):
+    def test_project_management_and_record_selection_share_persisted_context(self):
+        from worklogger.presentation.widgets.project_manager import ProjectManagerDialog
+        from worklogger.presentation.viewmodels.projects import ProjectManagerViewModel
+        panel = self.panel
+        service = panel.view_model.service.projects
+        dialog = ProjectManagerDialog(ProjectManagerViewModel(service), self.window, job_runner=ImmediateJobRunner())
+        self.addCleanup(dialog.deleteLater)
+        dialog.changed.connect(panel.refresh_projects)
+        dialog.project_name_input.setText("Research")
+        dialog.project_code_input.setText("R1")
+        dialog.project_save_button.click()
+        project = service.list_projects().value[0]
+        dialog.editor_tabs.setCurrentIndex(1)
+        dialog.work_item_title_input.setText("Review")
+        dialog.work_item_url_input.setText("https://example.test/issue/1")
+        dialog.work_item_save_button.click()
+        item = service.list_work_items(project.id).value[0]
+        picker = panel.context_picker
+        picker.project_combo.setCurrentIndex(picker.project_combo.findData(project.id))
+        picker.work_item_combo.setCurrentIndex(picker.work_item_combo.findData(item.id))
+        panel.start_input.setText("09:00")
+        panel.end_input.setText("10:00")
+        panel.content_input.setPlainText("Completed review")
+        panel.save_button.click()
+        record = self.repository.list_for_day(self.runtime.user.id, self.now.date())[0]
+        self.assertEqual(record.context.label, "Research / Review")
+        self.assertIn(record.context.label, self.window.calendar_page.records_widget.entry_buttons[record.id].label.text())
+        panel.edit_entry(record)
+        self.assertEqual(picker.work_item_combo.currentData(), item.id)
+        panel.clear_button.click()
+        panel.time_tabs.setCurrentIndex(1)
+        picker.project_combo.setCurrentIndex(picker.project_combo.findData(project.id))
+        picker.work_item_combo.setCurrentIndex(picker.work_item_combo.findData(item.id))
+        self.now += timedelta(hours=1)
+        panel.clock_in_button.click()
+        self.assertFalse(picker.isEnabled())
+        self.now += timedelta(hours=1)
+        panel.clock_out_button.click()
+        self.assertTrue(picker.isEnabled())
+        timed = self.repository.list_for_day(self.runtime.user.id, self.now.date())[-1]
+        self.assertEqual(timed.context, record.context)
+        self.assertEqual(panel.work_type_combo.currentData(), "normal")
+        dialog.work_item_title_input.setText("Unsaved rename")
+        with patch("worklogger.presentation.widgets.project_manager.QMessageBox.question", return_value=QMessageBox.StandardButton.No):
+            dialog.editor_tabs.setCurrentIndex(0)
+            self.assertEqual(dialog.editor_tabs.currentIndex(), 1)
+            self.assertEqual(dialog.work_item_title_input.text(), "Unsaved rename")
+        with patch("worklogger.presentation.widgets.project_manager.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes):
+            dialog.editor_tabs.setCurrentIndex(0)
+            dialog.project_archive_button.click()
+        panel.edit_entry(record)
+        self.assertEqual(picker.context().project_id, project.id)
+        panel.content_input.setPlainText("Corrected description")
+        panel.save_button.click()
+        self.assertEqual(self.repository.get_entry(self.runtime.user.id, record.id).context, record.context)
+        self.warning.assert_not_called()
+
     def test_tray_recording_uses_automatic_state_and_preserves_manual_input(self):
         from worklogger.presentation.shell.residency import QtResidencyController, ResidencyViewModel
         from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandler

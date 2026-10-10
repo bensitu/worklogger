@@ -121,6 +121,9 @@ msgstr "Allow in AI context"
 msgid "Allow in reports"
 msgstr "Allow in reports"
 
+msgid "An active item with this name already exists."
+msgstr "An active item with this name already exists."
+
 msgid "Analytics"
 msgstr "Analytics"
 
@@ -142,8 +145,17 @@ msgstr "Append"
 msgid "April"
 msgstr "April"
 
+msgid "Archive"
+msgstr "Archive"
+
+msgid "Archive project"
+msgstr "Archive project"
+
 msgid "Archive type"
 msgstr "Archive type"
+
+msgid "Archive work item"
+msgstr "Archive work item"
 
 msgid "Ask about your work logs"
 msgstr "Ask about your work logs"
@@ -304,11 +316,17 @@ msgstr "Close"
 msgid "Close the note editor before continuing."
 msgstr "Close the note editor before continuing."
 
+msgid "Code"
+msgstr "Code"
+
 msgid "Comp leave"
 msgstr "Comp leave"
 
 msgid "Compensatory leave"
 msgstr "Compensatory leave"
+
+msgid "Completed"
+msgstr "Completed"
 
 msgid "Configure the address, model, and API key to test the connection."
 msgstr "Configure the address, model, and API key to test the connection."
@@ -445,6 +463,9 @@ msgstr "Discard the saved timer without creating a record?"
 msgid "Discard timer"
 msgstr "Discard timer"
 
+msgid "Discard unsaved changes?"
+msgstr "Discard unsaved changes?"
+
 msgid "Discard unsaved display name changes?"
 msgstr "Discard unsaved display name changes?"
 
@@ -511,8 +532,14 @@ msgstr "Enter a port between 0 and 65535."
 msgid "Enter a proxy address and port."
 msgstr "Enter a proxy address and port."
 
+msgid "Enter a valid project or work item name."
+msgstr "Enter a valid project or work item name."
+
 msgid "Enter a valid recovery key."
 msgstr "Enter a valid recovery key."
+
+msgid "Enter an HTTP or HTTPS source URL without embedded credentials."
+msgstr "Enter an HTTP or HTTPS source URL without embedded credentials."
 
 msgid "Enter content before continuing."
 msgstr "Enter content before continuing."
@@ -648,6 +675,9 @@ msgstr "Hide"
 
 msgid "Hide password"
 msgstr "Hide password"
+
+msgid "Hide this item from new records? Existing records will not change."
+msgstr "Hide this item from new records? Existing records will not change."
 
 msgid "Hide this type from new records? Existing records will not change."
 msgstr "Hide this type from new records? Existing records will not change."
@@ -850,6 +880,9 @@ msgstr "Manage downloaded and imported GGUF models."
 msgid "Manage models"
 msgstr "Manage models"
 
+msgid "Manage projects"
+msgstr "Manage projects"
+
 msgid "Manage users"
 msgstr "Manage users"
 
@@ -937,6 +970,9 @@ msgstr "Network"
 msgid "New password"
 msgstr "New password"
 
+msgid "New project"
+msgstr "New project"
+
 msgid "New recovery key"
 msgstr "New recovery key"
 
@@ -945,6 +981,9 @@ msgstr "New time record"
 
 msgid "New type"
 msgstr "New type"
+
+msgid "New work item"
+msgstr "New work item"
 
 msgid "Next day"
 msgstr "Next day"
@@ -996,6 +1035,9 @@ msgstr "No saved reports"
 
 msgid "No verified model file selected."
 msgstr "No verified model file selected."
+
+msgid "No work item"
+msgstr "No work item"
 
 msgid "Normal"
 msgstr "Normal"
@@ -1125,6 +1167,12 @@ msgstr "Previous month"
 
 msgid "Previous period"
 msgstr "Previous period"
+
+msgid "Project"
+msgstr "Project"
+
+msgid "Projects"
+msgstr "Projects"
 
 msgid "Proxy routing is available."
 msgstr "Proxy routing is available."
@@ -1465,6 +1513,9 @@ msgstr "Simplified Chinese"
 msgid "Some dates already have records. Review the import and confirm replacement."
 msgstr "Some dates already have records. Review the import and confirm replacement."
 
+msgid "Source URL"
+msgstr "Source URL"
+
 msgid "Standard hours (h)"
 msgstr "Standard hours (h)"
 
@@ -1573,6 +1624,9 @@ msgstr "The selected context is too large. Choose a shorter period or exclude op
 msgid "The selected model's context limit is too small for text processing."
 msgstr "The selected model's context limit is too small for text processing."
 
+msgid "The selected project or work item is unavailable for new records."
+msgstr "The selected project or work item is unavailable for new records."
+
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 
@@ -1594,6 +1648,9 @@ msgstr "This account | Newest saved first"
 msgid "This identity is already linked to an account."
 msgstr "This identity is already linked to an account."
 
+msgid "This item has changed. Reload it before saving; your input has been retained."
+msgstr "This item has changed. Reload it before saving; your input has been retained."
+
 msgid "This model is in use by another user and cannot be deleted."
 msgstr "This model is in use by another user and cannot be deleted."
 
@@ -1614,6 +1671,9 @@ msgstr "This work type changed or is no longer available. Reload the types and t
 
 msgid "Thu"
 msgstr "Thu"
+
+msgid "Title"
+msgstr "Title"
 
 msgid "Today"
 msgstr "Today"
@@ -1659,6 +1719,9 @@ msgstr "Unable to load daily notes. Your saved data has been retained."
 
 msgid "Unable to load data. Please try again."
 msgstr "Unable to load data. Please try again."
+
+msgid "Unable to load or save project data. Your input has been retained."
+msgstr "Unable to load or save project data. Your input has been retained."
 
 msgid "Unable to load the selected model. Check available memory or choose a smaller model."
 msgstr "Unable to load the selected model. Check available memory or choose a smaller model."
@@ -1728,6 +1791,9 @@ msgstr "Unknown error"
 
 msgid "Unlink"
 msgstr "Unlink"
+
+msgid "Unlinked"
+msgstr "Unlinked"
 
 msgid "Unsaved changes"
 msgstr "Unsaved changes"
@@ -1830,6 +1896,12 @@ msgstr "Work days"
 
 msgid "Work hours"
 msgstr "Work hours"
+
+msgid "Work item"
+msgstr "Work item"
+
+msgid "Work items"
+msgstr "Work items"
 
 msgid "Work type"
 msgstr "Work type"

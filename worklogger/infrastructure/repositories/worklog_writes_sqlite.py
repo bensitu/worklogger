@@ -8,6 +8,7 @@ from datetime import date, datetime, timedelta, timezone
 
 from worklogger.config.constants import MAX_SHIFT_HOURS
 from worklogger.domain.worklog.models import CustomWorkType, WorkLog
+from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.rules import (
     entries_overlap,
     entry_interval,
@@ -268,6 +269,12 @@ class SQLiteWorkLogWrites:
         ).fetchone()
         if (row[0] if row else None) != expected:
             raise ValueError("time_entry_timer_conflict")
+        if value is not None:
+            data = json.loads(value)
+            if data.get("context"):
+                previous = json.loads(row[0]) if row else {}
+                validate_record_context(connection, WorkLog(user_id, date.fromisoformat(data["started_at"][:10]),
+                    capture_id=previous.get("capture_id"), context=WorkContext(**data["context"])))
         connection.execute(
             "DELETE FROM settings WHERE user_id=? AND key='previous_auto_record_state'",
             (user_id,),

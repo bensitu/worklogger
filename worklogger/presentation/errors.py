@@ -25,6 +25,18 @@ def display_error_code(code: str) -> str:
     """Translate known error codes without displaying raw exception text or logging previews."""
 
     match code:
+        case "work_context_invalid":
+            return _("Enter a valid project or work item name.")
+        case "work_item_url_invalid":
+            return _("Enter an HTTP or HTTPS source URL without embedded credentials.")
+        case "project_name_exists" | "work_item_name_exists":
+            return _("An active item with this name already exists.")
+        case "project_conflict" | "work_item_conflict":
+            return _("This item has changed. Reload it before saving; your input has been retained.")
+        case "project_unavailable" | "work_item_unavailable":
+            return _("The selected project or work item is unavailable for new records.")
+        case "work_context_operation_failed":
+            return _("Unable to load or save project data. Your input has been retained.")
         case "local_runtime_context_invalid":
             return _("Runtime context must be a whole number of at least 512 tokens.")
         case "local_model_context_limit_invalid":

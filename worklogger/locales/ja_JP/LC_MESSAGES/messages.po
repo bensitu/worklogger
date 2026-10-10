@@ -121,6 +121,9 @@ msgstr "AI の参照を許可"
 msgid "Allow in reports"
 msgstr "レポートへの使用を許可"
 
+msgid "An active item with this name already exists."
+msgstr "同じ名前の有効な項目が既にあります。"
+
 msgid "Analytics"
 msgstr "分析"
 
@@ -142,8 +145,17 @@ msgstr "追加"
 msgid "April"
 msgstr "4月"
 
+msgid "Archive"
+msgstr "アーカイブ"
+
+msgid "Archive project"
+msgstr "プロジェクトをアーカイブ"
+
 msgid "Archive type"
 msgstr "種別を非表示"
+
+msgid "Archive work item"
+msgstr "作業項目をアーカイブ"
 
 msgid "Ask about your work logs"
 msgstr "業務記録について質問"
@@ -304,11 +316,17 @@ msgstr "閉じる"
 msgid "Close the note editor before continuing."
 msgstr "続行する前にノートエディターを閉じてください。"
 
+msgid "Code"
+msgstr "コード"
+
 msgid "Comp leave"
 msgstr "代休"
 
 msgid "Compensatory leave"
 msgstr "代休"
+
+msgid "Completed"
+msgstr "完了"
 
 msgid "Configure the address, model, and API key to test the connection."
 msgstr "接続をテストするには、アドレス、モデル、APIキーを設定してください。"
@@ -445,6 +463,9 @@ msgstr "記録を作成せずに保存済みのタイマーを破棄しますか
 msgid "Discard timer"
 msgstr "タイマーを破棄"
 
+msgid "Discard unsaved changes?"
+msgstr "未保存の変更を破棄しますか？"
+
 msgid "Discard unsaved display name changes?"
 msgstr "表示名の未保存の変更を破棄しますか？"
 
@@ -511,8 +532,14 @@ msgstr "0～65535のポート番号を入力してください。"
 msgid "Enter a proxy address and port."
 msgstr "プロキシのアドレスとポートを入力してください。"
 
+msgid "Enter a valid project or work item name."
+msgstr "有効なプロジェクト名または作業項目名を入力してください。"
+
 msgid "Enter a valid recovery key."
 msgstr "有効なリカバリーキーを入力してください。"
+
+msgid "Enter an HTTP or HTTPS source URL without embedded credentials."
+msgstr "認証情報を含まない HTTP または HTTPS の参照 URL を入力してください。"
 
 msgid "Enter content before continuing."
 msgstr "続行する前に内容を入力してください。"
@@ -648,6 +675,9 @@ msgstr "非表示"
 
 msgid "Hide password"
 msgstr "パスワードを隠す"
+
+msgid "Hide this item from new records? Existing records will not change."
+msgstr "新しい記録でこの項目を非表示にしますか？既存の記録は変更されません。"
 
 msgid "Hide this type from new records? Existing records will not change."
 msgstr "新しい記録からこの種別を非表示にしますか？既存の記録は変更されません。"
@@ -850,6 +880,9 @@ msgstr "ダウンロード・インポートしたGGUFモデルを管理しま�
 msgid "Manage models"
 msgstr "モデルを管理"
 
+msgid "Manage projects"
+msgstr "プロジェクト管理"
+
 msgid "Manage users"
 msgstr "ユーザーを管理"
 
@@ -937,6 +970,9 @@ msgstr "ネットワーク"
 msgid "New password"
 msgstr "新しいパスワード"
 
+msgid "New project"
+msgstr "新しいプロジェクト"
+
 msgid "New recovery key"
 msgstr "新しい復旧キー"
 
@@ -945,6 +981,9 @@ msgstr "時間記録を追加"
 
 msgid "New type"
 msgstr "新しい種別"
+
+msgid "New work item"
+msgstr "新しい作業項目"
 
 msgid "Next day"
 msgstr "翌日"
@@ -996,6 +1035,9 @@ msgstr "保存済みレポートはありません"
 
 msgid "No verified model file selected."
 msgstr "検証済みモデルファイルが選択されていません。"
+
+msgid "No work item"
+msgstr "作業項目なし"
 
 msgid "Normal"
 msgstr "通常"
@@ -1125,6 +1167,12 @@ msgstr "前月"
 
 msgid "Previous period"
 msgstr "前の期間"
+
+msgid "Project"
+msgstr "プロジェクト"
+
+msgid "Projects"
+msgstr "プロジェクト"
 
 msgid "Proxy routing is available."
 msgstr "プロキシ通信を利用できます。"
@@ -1465,6 +1513,9 @@ msgstr "簡体字中国語"
 msgid "Some dates already have records. Review the import and confirm replacement."
 msgstr "一部の日付には記録があります。取り込み内容を確認し、置き換えを承認してください。"
 
+msgid "Source URL"
+msgstr "参照 URL"
+
 msgid "Standard hours (h)"
 msgstr "標準労働時間"
 
@@ -1573,6 +1624,9 @@ msgstr "選択したコンテキストが大きすぎます。期間を短くす
 msgid "The selected model's context limit is too small for text processing."
 msgstr "選択したモデルのコンテキスト上限が小さすぎるため、テキストを処理できません。"
 
+msgid "The selected project or work item is unavailable for new records."
+msgstr "選択したプロジェクトまたは作業項目は新しい記録に使用できません。"
+
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr "保存された認証情報をこのデバイスで復号できません。再入力してください。既存の作業記録には影響しません。"
 
@@ -1594,6 +1648,9 @@ msgstr "このアカウント | 新しい保存順"
 msgid "This identity is already linked to an account."
 msgstr "このIDはすでにアカウントに連携されています。"
 
+msgid "This item has changed. Reload it before saving; your input has been retained."
+msgstr "この項目は変更されています。保存前に再読み込みしてください。入力内容は保持されています。"
+
 msgid "This model is in use by another user and cannot be deleted."
 msgstr "このモデルは他のユーザーが使用しているため削除できません。"
 
@@ -1614,6 +1671,9 @@ msgstr "この勤務種別は変更されたか利用できません。種別を
 
 msgid "Thu"
 msgstr "木"
+
+msgid "Title"
+msgstr "タイトル"
 
 msgid "Today"
 msgstr "今日"
@@ -1659,6 +1719,9 @@ msgstr "日次メモを読み込めません。保存済みのデータは保持
 
 msgid "Unable to load data. Please try again."
 msgstr "データを読み込めませんでした。もう一度お試しください。"
+
+msgid "Unable to load or save project data. Your input has been retained."
+msgstr "プロジェクトデータを読み込みまたは保存できません。入力内容は保持されています。"
 
 msgid "Unable to load the selected model. Check available memory or choose a smaller model."
 msgstr "選択したモデルを読み込めません。空きメモリを確認するか、小さいモデルを選択してください。"
@@ -1728,6 +1791,9 @@ msgstr "不明なエラー"
 
 msgid "Unlink"
 msgstr "連携解除"
+
+msgid "Unlinked"
+msgstr "未関連付け"
 
 msgid "Unsaved changes"
 msgstr "未保存の変更"
@@ -1830,6 +1896,12 @@ msgstr "勤務日数"
 
 msgid "Work hours"
 msgstr "労働時間"
+
+msgid "Work item"
+msgstr "作業項目"
+
+msgid "Work items"
+msgstr "作業項目"
 
 msgid "Work type"
 msgstr "勤務形態"

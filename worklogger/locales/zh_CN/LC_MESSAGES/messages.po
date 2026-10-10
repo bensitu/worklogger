@@ -121,6 +121,9 @@ msgstr "允许用于 AI 上下文"
 msgid "Allow in reports"
 msgstr "允许用于报表"
 
+msgid "An active item with this name already exists."
+msgstr "已存在同名的未归档项目。"
+
 msgid "Analytics"
 msgstr "统计分析"
 
@@ -142,8 +145,17 @@ msgstr "追加"
 msgid "April"
 msgstr "4月"
 
+msgid "Archive"
+msgstr "归档"
+
+msgid "Archive project"
+msgstr "归档项目"
+
 msgid "Archive type"
 msgstr "停用类型"
+
+msgid "Archive work item"
+msgstr "归档工作项"
 
 msgid "Ask about your work logs"
 msgstr "询问您的工作记录"
@@ -304,11 +316,17 @@ msgstr "关闭"
 msgid "Close the note editor before continuing."
 msgstr "请先关闭笔记编辑器再继续。"
 
+msgid "Code"
+msgstr "编号"
+
 msgid "Comp leave"
 msgstr "补休"
 
 msgid "Compensatory leave"
 msgstr "调休"
+
+msgid "Completed"
+msgstr "已完成"
 
 msgid "Configure the address, model, and API key to test the connection."
 msgstr "请配置地址、模型和API密钥以测试连接。"
@@ -445,6 +463,9 @@ msgstr "放弃已保存的计时状态，不创建记录？"
 msgid "Discard timer"
 msgstr "放弃计时"
 
+msgid "Discard unsaved changes?"
+msgstr "放弃未保存的更改？"
+
 msgid "Discard unsaved display name changes?"
 msgstr "要放弃尚未保存的显示名称修改吗？"
 
@@ -511,8 +532,14 @@ msgstr "请输入 0 到 65535 之间的端口号。"
 msgid "Enter a proxy address and port."
 msgstr "请输入代理地址和端口。"
 
+msgid "Enter a valid project or work item name."
+msgstr "请输入有效的项目或工作项名称。"
+
 msgid "Enter a valid recovery key."
 msgstr "请输入有效的恢复密钥。"
+
+msgid "Enter an HTTP or HTTPS source URL without embedded credentials."
+msgstr "请输入不含嵌入式凭据的 HTTP 或 HTTPS 来源链接。"
 
 msgid "Enter content before continuing."
 msgstr "请先输入内容。"
@@ -648,6 +675,9 @@ msgstr "隐藏"
 
 msgid "Hide password"
 msgstr "隐藏密码"
+
+msgid "Hide this item from new records? Existing records will not change."
+msgstr "在新记录中隐藏此项？现有记录不会改变。"
 
 msgid "Hide this type from new records? Existing records will not change."
 msgstr "在新记录中停用此类型？既存记录不会改变。"
@@ -850,6 +880,9 @@ msgstr "管理已下载和导入的 GGUF 模型。"
 msgid "Manage models"
 msgstr "管理模型"
 
+msgid "Manage projects"
+msgstr "管理项目"
+
 msgid "Manage users"
 msgstr "管理用户"
 
@@ -937,6 +970,9 @@ msgstr "网络"
 msgid "New password"
 msgstr "新密码"
 
+msgid "New project"
+msgstr "新建项目"
+
 msgid "New recovery key"
 msgstr "新恢复密钥"
 
@@ -945,6 +981,9 @@ msgstr "新增时间记录"
 
 msgid "New type"
 msgstr "新增类型"
+
+msgid "New work item"
+msgstr "新建工作项"
 
 msgid "Next day"
 msgstr "后一天"
@@ -996,6 +1035,9 @@ msgstr "尚无已保存的报表"
 
 msgid "No verified model file selected."
 msgstr "未选择已验证的模型文件。"
+
+msgid "No work item"
+msgstr "未指定工作项"
 
 msgid "Normal"
 msgstr "常规"
@@ -1125,6 +1167,12 @@ msgstr "上个月"
 
 msgid "Previous period"
 msgstr "上一期间"
+
+msgid "Project"
+msgstr "项目"
+
+msgid "Projects"
+msgstr "项目"
 
 msgid "Proxy routing is available."
 msgstr "代理路由可用。"
@@ -1465,6 +1513,9 @@ msgstr "简体中文"
 msgid "Some dates already have records. Review the import and confirm replacement."
 msgstr "部分日期已有记录。请检查导入内容并确认是否替换。"
 
+msgid "Source URL"
+msgstr "来源链接"
+
 msgid "Standard hours (h)"
 msgstr "标准工时（小时）"
 
@@ -1573,6 +1624,9 @@ msgstr "所选上下文过大。请选择更短的时间范围或排除可选内
 msgid "The selected model's context limit is too small for text processing."
 msgstr "所选模型的上下文上限过小，无法用于文本处理。"
 
+msgid "The selected project or work item is unavailable for new records."
+msgstr "所选项目或工作项不可用于新记录。"
+
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr "无法在此设备上解密已存凭据。请重新输入，现有工作记录不受影响。"
 
@@ -1594,6 +1648,9 @@ msgstr "本账户 | 按保存时间倒序"
 msgid "This identity is already linked to an account."
 msgstr "此身份已关联到账户。"
 
+msgid "This item has changed. Reload it before saving; your input has been retained."
+msgstr "此项已发生更改。保存前请重新加载，输入内容已保留。"
+
 msgid "This model is in use by another user and cannot be deleted."
 msgstr "此模型正被其他用户使用，无法删除。"
 
@@ -1614,6 +1671,9 @@ msgstr "此工作类型已更改或不可用。请重新加载类型后重试。
 
 msgid "Thu"
 msgstr "四"
+
+msgid "Title"
+msgstr "标题"
 
 msgid "Today"
 msgstr "今天"
@@ -1659,6 +1719,9 @@ msgstr "无法加载每日便签，已保存的数据未被更改。"
 
 msgid "Unable to load data. Please try again."
 msgstr "无法加载数据，请重试。"
+
+msgid "Unable to load or save project data. Your input has been retained."
+msgstr "无法加载或保存项目数据，输入内容已保留。"
 
 msgid "Unable to load the selected model. Check available memory or choose a smaller model."
 msgstr "无法加载所选模型。请检查可用内存或选择较小的模型。"
@@ -1728,6 +1791,9 @@ msgstr "未知错误"
 
 msgid "Unlink"
 msgstr "取消关联"
+
+msgid "Unlinked"
+msgstr "未关联"
 
 msgid "Unsaved changes"
 msgstr "未保存的修改"
@@ -1830,6 +1896,12 @@ msgstr "工作天数"
 
 msgid "Work hours"
 msgstr "工时"
+
+msgid "Work item"
+msgstr "工作项"
+
+msgid "Work items"
+msgstr "工作项"
 
 msgid "Work type"
 msgstr "工作类型"

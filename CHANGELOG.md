@@ -14,6 +14,10 @@ Application version: 4.0.0.
 
 ### Desktop Interface
 
+- Added optional account-owned projects and work items, settings management,
+  recorder selection, persistent timer context, historical labels, and report
+  summaries without changing work-type accounting or requiring classification.
+
 - Centered export-menu indicators across report and analytics buttons and aligned
   the compact local runtime context control with its settings label.
 

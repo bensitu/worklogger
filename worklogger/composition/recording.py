@@ -6,6 +6,7 @@ from tzlocal import get_localzone
 
 from worklogger.app.use_cases.time_entries import TimeEntryService
 from worklogger.app.use_cases.work_types import WorkTypeService
+from worklogger.app.use_cases.projects import ProjectService
 from worklogger.composition.context import RuntimeHandlers, RuntimeRepositories
 from worklogger.domain.auth.models import User
 from worklogger.infrastructure.i18n import get_language
@@ -23,6 +24,7 @@ def _build_time_entry_view_model(
             local_timezone=get_localzone(),
             calendar_events=repositories.calendar_events,
             work_types=WorkTypeService(user.id, repositories.work_types),
+            projects=ProjectService(user.id, repositories.projects),
         ),
         rewrite_handler=handlers.rewrite_handler,
         language=get_language(),

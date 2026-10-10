@@ -28,6 +28,8 @@ from worklogger.app.use_cases.work_logs import (
     GetAllWorkLogsHandler,
 )
 from worklogger.app.use_cases.work_types import WorkTypeService
+from worklogger.app.use_cases.projects import ProjectService
+from worklogger.presentation.viewmodels.projects import ProjectManagerViewModel
 from worklogger.app.use_cases.user_profile import UserProfileService
 from worklogger.presentation.viewmodels.work_types import WorkTypeManagerViewModel
 from worklogger.composition.context import (
@@ -127,6 +129,7 @@ def _build_settings_workflow(
         ),
         remember_session_store=remember_session_store,
         work_types_view_model=WorkTypeManagerViewModel(WorkTypeService(user.id, repositories.work_types)),
+        projects_view_model=ProjectManagerViewModel(ProjectService(user.id, repositories.projects)),
         local_inference=handlers.local_inference,
         ai_gateway=handlers.ai_gateway,
         capabilities=SettingsCapabilities(external_generation=features.enable_ai,

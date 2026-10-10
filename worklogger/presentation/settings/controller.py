@@ -58,6 +58,7 @@ from worklogger.presentation.settings.workflows.data import DataSettingsWorkflow
 from worklogger.presentation.settings.workflows.updates import UpdatesSettingsWorkflow
 from worklogger.presentation.viewmodels.work_types import WorkTypeManagerViewModel
 from worklogger.presentation.widgets.work_type_manager import WorkTypeManagerDialog
+from worklogger.presentation.widgets.project_manager import ProjectManagerDialog
 from worklogger.app.ports import AIRequest
 from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.app.use_cases.user_profile import UserProfileService
@@ -101,6 +102,7 @@ class SettingsWorkflowController:
         local_inference=None,
         ai_gateway=None,
         profile_service: UserProfileService | None = None,
+        projects_view_model=None,
     ) -> None:
         self._settings_view_model = settings_view_model
         self._capabilities = capabilities or SettingsCapabilities(
@@ -119,6 +121,8 @@ class SettingsWorkflowController:
         self._ai_gateway = ai_gateway
         self._profile_service = profile_service
         self._profile_revision = 0
+        self._projects_view_model = projects_view_model
+        self._project_dialog = None
         if local_inference is not None:
             self._capabilities = replace(self._capabilities, local_generation=local_inference.backend_available)
 
@@ -187,6 +191,10 @@ class SettingsWorkflowController:
             surface.set_work_types_available(self._work_types_view_model is not None)
         if self._work_types_view_model is not None:
             surface.manage_work_types_requested.connect(lambda: self._manage_work_types(surface))
+        if hasattr(surface, "set_projects_available"):
+            surface.set_projects_available(self._projects_view_model is not None)
+        if self._projects_view_model is not None and hasattr(surface, "manage_projects_requested"):
+            surface.manage_projects_requested.connect(lambda: self._manage_projects(surface))
         if hasattr(surface, "set_capabilities"):
             surface.set_capabilities(self._capabilities)
         if hasattr(surface, "set_account"):
@@ -243,6 +251,18 @@ class SettingsWorkflowController:
         dialog.exec()
         dialog.deleteLater()
         surface.work_types_changed.emit()
+
+    def _manage_projects(self, surface):
+        if self._project_dialog is not None and isValid(self._project_dialog):
+            self._project_dialog.raise_()
+            self._project_dialog.activateWindow()
+            return
+        dialog = ProjectManagerDialog(self._projects_view_model, surface, job_runner=self._job_runner)
+        self._project_dialog = dialog
+        dialog.changed.connect(surface.projects_changed.emit)
+        dialog.finished.connect(lambda: setattr(self, "_project_dialog", None))
+        dialog.finished.connect(dialog.deleteLater)
+        dialog.open()
 
     def _refresh_local_models_status(self, surface: QWidget) -> None:
         view_model = getattr(self._local_models_workflow, "view_model", None)

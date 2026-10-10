@@ -8,6 +8,7 @@ from worklogger.app.commands.ai_commands import RewriteTextCommand
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
+from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.rules import timestamp_span_hours
 
 
@@ -19,6 +20,7 @@ class TimeEntryDraft:
     work_type: str = "normal"
     content: str = ""
     original: WorkLog | None = None
+    context: WorkContext = WorkContext()
 
 
 class TimeEntryViewModel:
@@ -33,6 +35,16 @@ class TimeEntryViewModel:
         self.auto_completed: WorkLog | None = None
         self.auto_content = service.timer.content if service.timer else ""
         self.auto_work_type = service.timer.work_type.value if service.timer else "normal"
+        self.auto_context = service.timer.context if service.timer else WorkContext()
+
+    @property
+    def projects_available(self):
+        return getattr(self.service, "projects", None) is not None
+
+    def project_inventory(self):
+        if not self.projects_available:
+            return Result.success(((), {}))
+        return self.service.projects.catalog()
 
     @property
     def timer(self):
@@ -136,15 +148,17 @@ class TimeEntryViewModel:
 
     def select(self, record: WorkLog) -> None:
         self.draft = TimeEntryDraft(record.day, record.start_time or "", record.end_time or "",
-                                    record.work_type.value, record.note, original=record)
+                                    record.work_type.value, record.note, original=record, context=record.context)
         self._baseline = self.draft
 
-    def update(self, *, start: str, end: str, work_type: str, content: str) -> None:
-        self.draft = replace(self.draft, start=start, end=end, work_type=work_type, content=content)
+    def update(self, *, start: str, end: str, work_type: str, content: str, context: WorkContext | None = None) -> None:
+        self.draft = replace(self.draft, start=start, end=end, work_type=work_type, content=content,
+                             context=context if context is not None else self.draft.context)
 
     def save_manual(self):
         draft = self.draft
-        saved = self.service.save_manual(draft.day, draft.start, draft.end, draft.work_type, draft.content, draft.original)
+        options = {"context": draft.context} if self.projects_available or draft.context != WorkContext() else {}
+        saved = self.service.save_manual(draft.day, draft.start, draft.end, draft.work_type, draft.content, draft.original, **options)
         if saved.ok:
             if self.auto_completed and self.auto_completed.id == saved.value.id:
                 self.auto_completed = saved.value
@@ -153,7 +167,8 @@ class TimeEntryViewModel:
         return saved
 
     def start(self, work_type: str, content: str, *, now=None, break_entry=None):
-        result = self.service.start(work_type, content, now=now, break_entry=break_entry)
+        options = {"context": self.auto_context} if self.projects_available else {}
+        result = self.service.start(work_type, content, now=now, break_entry=break_entry, **options)
         if result.ok:
             self.auto_completed = None
             self._sync_auto()
@@ -165,6 +180,7 @@ class TimeEntryViewModel:
             self.auto_completed = result.value
             self.auto_content = result.value.note
             self.auto_work_type = "normal"
+            self.auto_context = WorkContext()
         return result
 
     def save_content(self):
@@ -194,3 +210,4 @@ class TimeEntryViewModel:
         if self.service.timer:
             self.auto_work_type = self.service.timer.work_type.value
             self.auto_content = self.service.timer.content
+            self.auto_context = self.service.timer.context

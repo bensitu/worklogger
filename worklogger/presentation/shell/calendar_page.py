@@ -182,7 +182,18 @@ class CalendarPage(QWidget):
         QTimer.singleShot(0, self, self._fit_editor)
 
     def _fit_editor(self):
-        self.details_scroll.setMaximumHeight(max(60, self.entry_panel.sizeHint().height() + 4))
+        layout = self.right_panel.layout()
+        visible = [layout.itemAt(index).widget() for index in range(layout.count())
+                   if layout.itemAt(index).widget() is not None and not layout.itemAt(index).widget().isHidden()]
+        fixed = sum(widget.height() for widget in visible if widget not in (self.details_scroll, self.records_scroll))
+        margins = layout.contentsMargins()
+        available = max(60, self.right_panel.height() - margins.top() - margins.bottom()
+                        - layout.spacing() * max(0, len(visible) - 1) - fixed - self.records_scroll.minimumHeight())
+        content = self.entry_panel.content_input
+        content.setFixedHeight(max(48, min(76, content.height() + available - self.entry_panel.sizeHint().height() - 4)))
+        preferred = max(60, self.entry_panel.sizeHint().height() + 4)
+        self.details_scroll.setMinimumHeight(min(available, preferred))
+        self.details_scroll.setMaximumHeight(preferred)
 
     def eventFilter(self, watched, event):
         if watched is self.entry_panel and event.type() in (QEvent.Type.LayoutRequest, QEvent.Type.StyleChange, QEvent.Type.FontChange):
@@ -193,3 +204,4 @@ class CalendarPage(QWidget):
         super().resizeEvent(event)
         if hasattr(self, "right_panel"):
             self.right_panel.setFixedWidth(max(300, min(380, round((self.width() - 52) * 0.28))))
+            QTimer.singleShot(0, self, self._fit_editor)

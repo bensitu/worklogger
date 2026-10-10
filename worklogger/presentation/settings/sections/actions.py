@@ -23,6 +23,7 @@ class SectionActions:
     manage_local_models_requested: Callable
     manage_users_requested: Callable
     manage_work_types_requested: Callable
+    manage_projects_requested: Callable
     mode_changed: Callable
     residency_key: str | None
     restore_requested: Callable
