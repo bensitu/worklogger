@@ -390,6 +390,7 @@ class AppWindow(QMainWindow):
         )
         self.calendar_page.entry_selected.connect(self.entry_panel.edit_entry)
         self.calendar_page.entry_delete_requested.connect(self.entry_panel.delete_entry)
+        self.calendar_page.entry_actions_requested.connect(self.entry_panel.record_actions)
         self.entry_panel.selection_changed.connect(
             self.calendar_page.set_selected_entry
         )

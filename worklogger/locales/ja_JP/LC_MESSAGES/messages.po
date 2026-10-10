@@ -304,6 +304,9 @@ msgstr "更新を確認中..."
 msgid "Choose a backup destination different from the active database."
 msgstr "使用中のデータベースとは異なるバックアップ先を選択してください。"
 
+msgid "Choose a split duration strictly inside the recorded interval."
+msgstr "記録区間の内側になる分割時間を選択してください。"
+
 msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
 msgstr "有効なPNG、JPEG、WebP、BMP画像を選択してください。"
 
@@ -658,6 +661,9 @@ msgstr "2月"
 msgid "File"
 msgstr "ファイル"
 
+msgid "First part duration (minutes)"
+msgstr "前半の長さ（分）"
+
 msgid "First saved: {time}"
 msgstr "初回保存: {time}"
 
@@ -925,6 +931,18 @@ msgstr "5月"
 msgid "Meeting"
 msgstr "会議"
 
+msgid "Merge records"
+msgstr "記録を結合"
+
+msgid "Merge these adjacent records? Their content will be combined."
+msgstr "隣接する記録を結合しますか？内容もまとめられます。"
+
+msgid "Merge with previous record"
+msgstr "前の記録と結合"
+
+msgid "Minutes from the record start to the break start"
+msgstr "記録開始から休憩開始までの分数"
+
 msgid "Mode"
 msgstr "モード"
 
@@ -1054,6 +1072,9 @@ msgstr "この期間に記録されたメモはありません。"
 msgid "No records for the selected day."
 msgstr "選択した日の記録はありません。"
 
+msgid "No reversible record changes are available."
+msgstr "元に戻せる記録変更がありません。"
+
 msgid "No saved daily reports exist in the selected date range."
 msgstr "選択した期間に保存済みの日報はありません。"
 
@@ -1095,6 +1116,9 @@ msgstr "OK"
 
 msgid "October"
 msgstr "10月"
+
+msgid "Only adjacent records with matching types and context can be merged."
+msgstr "種別と関連付けが一致する隣接記録だけを結合できます。"
 
 msgid "Open"
 msgstr "開く"
@@ -1161,6 +1185,12 @@ msgstr "パスワードをリセットしました。"
 
 msgid "Pink"
 msgstr "ピンク"
+
+msgid "Place historical break"
+msgstr "過去の休憩位置を指定"
+
+msgid "Place the historical break before splitting this record."
+msgstr "この記録を分割する前に過去の休憩位置を指定してください。"
 
 msgid "Please sign in to continue."
 msgstr "続行するにはログインしてください。"
@@ -1245,6 +1275,9 @@ msgstr "ランタイムのスモークテストに失敗"
 
 msgid "RUNTIME SMOKE OK"
 msgstr "ランタイムのスモークテスト成功"
+
+msgid "Record actions"
+msgstr "記録の操作"
 
 msgid "Record search is unavailable."
 msgstr "記録検索を利用できません。"
@@ -1405,6 +1438,9 @@ msgstr "一時パスワードを保存"
 msgid "Save the completed automatic record before starting another."
 msgstr "新しい記録を開始する前に、終了した自動記録を保存してください。"
 
+msgid "Save these periods?"
+msgstr "これらの区間を保存しますか？"
+
 msgid "Save this recovery key before continuing."
 msgstr "続行する前に、この復旧キーを保存してください。"
 
@@ -1555,6 +1591,12 @@ msgstr "一部の日付には記録があります。取り込み内容を確認
 msgid "Source URL"
 msgstr "参照 URL"
 
+msgid "Split record"
+msgstr "記録を分割"
+
+msgid "Splitting across dates changes daily and period totals."
+msgstr "日付をまたぐ分割は日別・期間別の合計を変更します。"
+
 msgid "Standard hours (h)"
 msgstr "標準労働時間"
 
@@ -1636,6 +1678,9 @@ msgstr "データベースを読み込めませんでした。元のファイル
 msgid "The file contains conflicting records for the same date."
 msgstr "ファイル内に同じ日付の競合する記録があります。"
 
+msgid "The historical break must fit inside the recorded interval."
+msgstr "過去の休憩は記録区間の内側に収まる必要があります。"
+
 msgid "The model returned no content. Please try again."
 msgstr "モデルから内容が返されませんでした。もう一度お試しください。"
 
@@ -1650,6 +1695,9 @@ msgstr "入力したパスワードが一致しません。"
 
 msgid "The quick log is no longer available. Reload the records and try again."
 msgstr "作業メモは利用できなくなりました。記録を再読み込みして再試行してください。"
+
+msgid "The records have changed. Reload them before undoing this operation."
+msgstr "記録が変更されています。元に戻す前に再読み込みしてください。"
 
 msgid "The report has not loaded. Reload it before continuing."
 msgstr "レポートが読み込まれていません。再度読み込んでから続行してください。"
@@ -1684,6 +1732,9 @@ msgstr "このIDはすでに使用されています。別のIDを選択して�
 msgid "This account | Newest saved first"
 msgstr "このアカウント | 新しい保存順"
 
+msgid "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
+msgstr "この過去の控除は分単位で表せません。元の記録は変更されていません。"
+
 msgid "This identity is already linked to an account."
 msgstr "このIDはすでにアカウントに連携されています。"
 
@@ -1698,6 +1749,9 @@ msgstr "このメモは別の編集画面で変更されました。再読み込
 
 msgid "This record changed elsewhere. Reload it before saving. Your changes have been retained."
 msgstr "この記録は別の場所で変更されました。再読み込みしてから保存してください。入力内容は保持されています。"
+
+msgid "This record is too large for reversible editing. Existing records are unchanged."
+msgstr "この記録は元に戻せる編集の上限を超えています。既存の記録は変更されていません。"
 
 msgid "This report changed elsewhere. Reload the history before deleting it."
 msgstr "このレポートは別の場所で変更されました。履歴を再読み込みしてから削除してください。"
@@ -1740,6 +1794,9 @@ msgstr "研修"
 
 msgid "Tue"
 msgstr "火"
+
+msgid "Unable to apply this record change. Existing records are unchanged."
+msgstr "記録変更を適用できません。既存の記録は変更されていません。"
 
 msgid "Unable to back up the database. Check the destination and available disk space."
 msgstr "データベースをバックアップできませんでした。保存先とディスクの空き容量を確認してください。"
@@ -1830,6 +1887,12 @@ msgstr "勤務種別を更新できません。記録は変更されていませ
 
 msgid "Unclassified"
 msgstr "未分類"
+
+msgid "Undo latest record change"
+msgstr "直前の記録変更を元に戻す"
+
+msgid "Undo the latest record change for {date}, {start} - {end}? This does not restart a timer."
+msgstr "{date}、{start} - {end} の直前の記録変更を元に戻しますか？タイマーは再開されません。"
 
 msgid "Unknown"
 msgstr "不明"

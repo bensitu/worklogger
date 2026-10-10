@@ -13,6 +13,7 @@ class TimeEntryHistory(QWidget):
     entry_delete_requested = Signal(object)
     event_selected = Signal(object)
     event_delete_requested = Signal(object)
+    entry_actions_requested = Signal(object, object)
 
     def __init__(self, view_model, parent=None):
         super().__init__(parent)
@@ -55,7 +56,8 @@ class TimeEntryHistory(QWidget):
                 text += "\n" + entry.context.label
             if content:
                 text += "\n" + content
-            button = self._button(text)
+            button = self._button(text, actions_enabled=bool(getattr(self.view_model, "changes_available", False)))
+            button.actions_requested.connect(lambda position, entry=entry: self.entry_actions_requested.emit(entry, position))
             button.setProperty("entry_id", entry.id)
             self.entry_buttons[entry.id] = button
             button.setCheckable(True)
@@ -80,8 +82,8 @@ class TimeEntryHistory(QWidget):
             self.rows.addWidget(empty)
         self.rows.addStretch(1)
 
-    def _button(self, text, *, deletable=True):
-        button = RecordSummaryButton(text, deletable=deletable)
+    def _button(self, text, *, deletable=True, actions_enabled=False):
+        button = RecordSummaryButton(text, deletable=deletable, actions_enabled=actions_enabled)
         button.hovered.connect(lambda hovered: setattr(self, "_hovered", hovered))
         self.rows.addWidget(button)
         return button

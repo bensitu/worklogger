@@ -34,6 +34,7 @@ class CalendarPage(QWidget):
     event_selected = Signal(object)
     entry_delete_requested = Signal(object)
     event_delete_requested = Signal(object)
+    entry_actions_requested = Signal(object, object)
 
     def __init__(
         self,
@@ -186,6 +187,7 @@ class CalendarPage(QWidget):
         self.records_widget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.records_widget.entry_selected.connect(self.entry_selected.emit)
         self.records_widget.entry_delete_requested.connect(self.entry_delete_requested.emit)
+        self.records_widget.entry_actions_requested.connect(self.entry_actions_requested.emit)
         self.records_widget.event_selected.connect(self.event_selected.emit)
         self.records_widget.event_delete_requested.connect(self.event_delete_requested.emit)
         self.records_scroll.setWidget(self.records_widget)

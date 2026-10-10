@@ -166,6 +166,23 @@ assigned to a local project. Record history and generated reports show the conte
 
 ## Compatibility
 
+Record actions offer splitting at an elapsed whole-minute boundary, merging with
+the preceding adjacent compatible record, and explicit placement of a historical
+break. Conversion asks for the actual break position and previews all resulting
+periods; it never guesses a location. Whole-minute historical deductions are
+supported; other precision is rejected without changing the original. Splits and
+conversion conserve total accounted time, but an explicit cross-date split changes
+daily/period allocation. Captured offsets and legacy clock-only semantics remain
+intact. Type/context differences, stale records and excessive merged duration are
+rejected. The same actions are connected in compact mode.
+
+Undo latest record change is available beside Save and Clear, including after the
+last visible record is deleted. It confirms the source date/time and does not
+restart a timer. It is disabled while recording; competing edits reject restoration.
+History is bounded to 50 record changes and 30 days. CSV imports and database
+replacement are outside this individual-operation history. No redo workflow is
+currently exposed.
+
 Migration 7 makes a complete private snapshot before converting populated daily
 records. It copies times, content, offsets, and historical break deductions without
 inventing break placement. Independent daily notes remain available. Previous

@@ -304,6 +304,9 @@ msgstr "正在檢查更新..."
 msgid "Choose a backup destination different from the active database."
 msgstr "請選擇不同於目前資料庫的備份位置。"
 
+msgid "Choose a split duration strictly inside the recorded interval."
+msgstr "請選擇位於紀錄區間內部的分割時長。"
+
 msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
 msgstr "請選擇有效的 PNG、JPEG、WebP 或 BMP 圖片。"
 
@@ -658,6 +661,9 @@ msgstr "2月"
 msgid "File"
 msgstr "檔案"
 
+msgid "First part duration (minutes)"
+msgstr "前一段時長（分鐘）"
+
 msgid "First saved: {time}"
 msgstr "首次儲存：{time}"
 
@@ -925,6 +931,18 @@ msgstr "5月"
 msgid "Meeting"
 msgstr "會議"
 
+msgid "Merge records"
+msgstr "合併紀錄"
+
+msgid "Merge these adjacent records? Their content will be combined."
+msgstr "合併這兩段相鄰紀錄？內容也會合併。"
+
+msgid "Merge with previous record"
+msgstr "與前一筆紀錄合併"
+
+msgid "Minutes from the record start to the break start"
+msgstr "從紀錄開始到休息開始的分鐘數"
+
 msgid "Mode"
 msgstr "模式"
 
@@ -1054,6 +1072,9 @@ msgstr "此期間沒有記錄備註。"
 msgid "No records for the selected day."
 msgstr "所選日期沒有記錄。"
 
+msgid "No reversible record changes are available."
+msgstr "沒有可復原的紀錄變更。"
+
 msgid "No saved daily reports exist in the selected date range."
 msgstr "所選日期範圍內沒有已儲存的日報。"
 
@@ -1095,6 +1116,9 @@ msgstr "確定"
 
 msgid "October"
 msgstr "10月"
+
+msgid "Only adjacent records with matching types and context can be merged."
+msgstr "僅可合併工作類型與關聯一致的相鄰紀錄。"
 
 msgid "Open"
 msgstr "開啟"
@@ -1161,6 +1185,12 @@ msgstr "密碼已重設。"
 
 msgid "Pink"
 msgstr "粉紅色"
+
+msgid "Place historical break"
+msgstr "指定歷史休息位置"
+
+msgid "Place the historical break before splitting this record."
+msgstr "分割此紀錄前，請先指定歷史休息的位置。"
 
 msgid "Please sign in to continue."
 msgstr "請登入後繼續。"
@@ -1245,6 +1275,9 @@ msgstr "執行階段檢查失敗"
 
 msgid "RUNTIME SMOKE OK"
 msgstr "執行階段檢查通過"
+
+msgid "Record actions"
+msgstr "紀錄操作"
 
 msgid "Record search is unavailable."
 msgstr "紀錄檢索不可用。"
@@ -1405,6 +1438,9 @@ msgstr "儲存臨時密碼"
 msgid "Save the completed automatic record before starting another."
 msgstr "開始新的自動記錄前，請先儲存已結束的記錄。"
 
+msgid "Save these periods?"
+msgstr "儲存這些時段？"
+
 msgid "Save this recovery key before continuing."
 msgstr "繼續前請儲存此復原金鑰。"
 
@@ -1555,6 +1591,12 @@ msgstr "部分日期已有記錄。請檢查匯入內容並確認是否取代。
 msgid "Source URL"
 msgstr "來源連結"
 
+msgid "Split record"
+msgstr "分割紀錄"
+
+msgid "Splitting across dates changes daily and period totals."
+msgstr "跨日期分割會改變每日與各期間的合計。"
+
 msgid "Standard hours (h)"
 msgstr "標準工時（小時）"
 
@@ -1636,6 +1678,9 @@ msgstr "無法讀取資料庫，原始檔案已保留。請按照資料庫復原
 msgid "The file contains conflicting records for the same date."
 msgstr "檔案中存在同一日期的衝突記錄。"
 
+msgid "The historical break must fit inside the recorded interval."
+msgstr "歷史休息必須完整位於紀錄區間內。"
+
 msgid "The model returned no content. Please try again."
 msgstr "模型未傳回內容，請重試。"
 
@@ -1650,6 +1695,9 @@ msgstr "兩次輸入的密碼不一致。"
 
 msgid "The quick log is no longer available. Reload the records and try again."
 msgstr "該速記已不存在。請重新載入記錄後重試。"
+
+msgid "The records have changed. Reload them before undoing this operation."
+msgstr "紀錄已發生變更，復原前請重新載入。"
 
 msgid "The report has not loaded. Reload it before continuing."
 msgstr "報表尚未載入，請重新載入後繼續。"
@@ -1684,6 +1732,9 @@ msgstr "此 ID 已被使用，請選擇其他 ID。"
 msgid "This account | Newest saved first"
 msgstr "本帳戶 | 按儲存時間倒序"
 
+msgid "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
+msgstr "這項歷史扣除無法用整分鐘表示，原紀錄未改變。"
+
 msgid "This identity is already linked to an account."
 msgstr "此身分已連結至帳戶。"
 
@@ -1698,6 +1749,9 @@ msgstr "此備註已在其他編輯視窗中修改。請重新載入後再儲存
 
 msgid "This record changed elsewhere. Reload it before saving. Your changes have been retained."
 msgstr "該記錄已在其他位置修改，請重新載入後儲存。您的修改已保留。"
+
+msgid "This record is too large for reversible editing. Existing records are unchanged."
+msgstr "此紀錄超過可復原編輯的大小限制，現有紀錄未改變。"
 
 msgid "This report changed elsewhere. Reload the history before deleting it."
 msgstr "此報表已在其他位置修改。請重新載入歷史清單後再刪除。"
@@ -1740,6 +1794,9 @@ msgstr "培訓"
 
 msgid "Tue"
 msgstr "二"
+
+msgid "Unable to apply this record change. Existing records are unchanged."
+msgstr "無法套用此紀錄變更，現有紀錄未改變。"
 
 msgid "Unable to back up the database. Check the destination and available disk space."
 msgstr "無法備份資料庫，請檢查目標位置與可用磁碟空間。"
@@ -1830,6 +1887,12 @@ msgstr "無法更新工作類型。您的記錄未改變。"
 
 msgid "Unclassified"
 msgstr "未分類"
+
+msgid "Undo latest record change"
+msgstr "復原最近的紀錄變更"
+
+msgid "Undo the latest record change for {date}, {start} - {end}? This does not restart a timer."
+msgstr "復原 {date}、{start} - {end} 的最近紀錄變更？這不會重新開始計時。"
 
 msgid "Unknown"
 msgstr "未知"

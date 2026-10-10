@@ -1,8 +1,10 @@
 """Project catalog operations exposed to presentation workflows."""
 
+from worklogger.app.ports import ProjectOperations
+
 
 class ProjectManagerViewModel:
-    def __init__(self, service):
+    def __init__(self, service: ProjectOperations):
         self.service = service
 
     def list_projects(self):

@@ -77,7 +77,7 @@ class SQLiteProjectRepository:
             raise
 
 
-def validate_record_context(connection, record):
+def validate_record_context(connection, record, *, historical=False):
     context = record.context
     previous = connection.execute("SELECT project_id,work_item_id FROM worklog WHERE user_id=? AND id=?",
                                   (record.user_id, record.id or 0)).fetchone()
@@ -91,10 +91,10 @@ def validate_record_context(connection, record):
                 and (captured.get("project_id"), captured.get("work_item_id")) == (context.project_id, context.work_item_id))
     if context.project_id is not None:
         project = connection.execute("SELECT archived FROM projects WHERE user_id=? AND id=?", (record.user_id, context.project_id)).fetchone()
-        if project is None or (project["archived"] and not unchanged):
+        if project is None or (project["archived"] and not (unchanged or historical)):
             raise ValueError("project_unavailable")
     if context.work_item_id is not None:
         item = connection.execute("SELECT archived FROM work_items WHERE user_id=? AND id=? AND project_id=?",
                                   (record.user_id, context.work_item_id, context.project_id)).fetchone()
-        if item is None or (item["archived"] and not unchanged):
+        if item is None or (item["archived"] and not (unchanged or historical)):
             raise ValueError("work_item_unavailable")

@@ -13,14 +13,17 @@ from worklogger.infrastructure.repositories.worklog_queries_sqlite import (
 from worklogger.infrastructure.repositories.worklog_writes_sqlite import (
     SQLiteWorkLogWrites,
 )
+from worklogger.infrastructure.repositories.entry_operations_sqlite import SQLiteEntryOperations
 
 
 class SQLiteWorkLogRepository:
     def __init__(self, connection_factory: SQLiteConnectionFactory):
         storage = WorkLogStorage(connection_factory)
         self.supports_entries = storage.supports_entries
+        self.changes_available = storage.change_history
         self._queries = SQLiteWorkLogQueries(storage)
         self._writes = SQLiteWorkLogWrites(storage, self._queries)
+        self._operations = SQLiteEntryOperations(storage, self._writes)
 
     def get_for_day(self, user_id: int, day: date) -> WorkLog | None:
         return self._queries.get_for_day(user_id, day)
@@ -66,3 +69,18 @@ class SQLiteWorkLogRepository:
 
     def change_timer(self, user_id: int, expected: str | None, value: str | None) -> None:
         return self._writes.change_timer(user_id, expected, value)
+
+    def latest_change(self, user_id):
+        return self._writes.changes.latest(user_id)
+
+    def split_entry(self, user_id, record, first_minutes):
+        return self._operations.split(user_id, record, first_minutes)
+
+    def merge_entries(self, user_id, left, right):
+        return self._operations.merge(user_id, left, right)
+
+    def convert_historical_break(self, user_id, record, first_minutes):
+        return self._operations.convert_break(user_id, record, first_minutes)
+
+    def undo_change(self, user_id, change_id):
+        return self._operations.undo(user_id, change_id)

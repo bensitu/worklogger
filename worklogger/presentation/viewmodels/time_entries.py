@@ -10,6 +10,7 @@ from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.rules import timestamp_span_hours
+from worklogger.domain.worklog.editing import merge_entries
 
 
 @dataclass(frozen=True)
@@ -36,6 +37,7 @@ class TimeEntryViewModel:
         self.auto_content = service.timer.content if service.timer else ""
         self.auto_work_type = service.timer.work_type.value if service.timer else "normal"
         self.auto_context = service.timer.context if service.timer else WorkContext()
+        self.latest_change_info = None
 
     @property
     def projects_available(self):
@@ -52,6 +54,43 @@ class TimeEntryViewModel:
 
     def search(self, criteria, *, cursor=None):
         return self.service.search(criteria, cursor=cursor)
+
+    @property
+    def changes_available(self):
+        return bool(getattr(self.service, "changes_available", False))
+
+    def merge_candidate(self, record):
+        index = next((index for index, entry in enumerate(self.entries) if entry.id == record.id), -1)
+        if index < 1:
+            return None
+        previous = self.entries[index - 1]
+        try:
+            merge_entries(previous, record)
+            return previous
+        except ValueError:
+            return None
+
+    def latest_change(self):
+        return self.service.latest_change()
+
+    def _changed(self, result):
+        if result.ok:
+            self.clear(self.draft.day)
+            self.auto_completed = None
+            self.auto_content = ""
+        return result
+
+    def split(self, record, first_minutes):
+        return self._changed(self.service.split(record, first_minutes))
+
+    def merge(self, left, right):
+        return self._changed(self.service.merge(left, right))
+
+    def convert_break(self, record, first_minutes):
+        return self._changed(self.service.convert_break(record, first_minutes))
+
+    def undo(self, change_id):
+        return self._changed(self.service.undo(change_id))
 
     @property
     def timer(self):
@@ -147,6 +186,9 @@ class TimeEntryViewModel:
 
     def load(self, day: date):
         loaded = self.service.list_for_day(day)
+        if self.changes_available:
+            latest = self.service.latest_change()
+            self.latest_change_info = latest.value if latest.ok else None
         if loaded.ok:
             self.entries = loaded.value
             if self.draft.day != day:

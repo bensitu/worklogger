@@ -304,6 +304,9 @@ msgstr "업데이트 확인 중..."
 msgid "Choose a backup destination different from the active database."
 msgstr "현재 데이터베이스와 다른 백업 위치를 선택하세요."
 
+msgid "Choose a split duration strictly inside the recorded interval."
+msgstr "기록된 구간 안에 있는 분할 시간을 선택하세요."
+
 msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
 msgstr "올바른 PNG, JPEG, WebP 또는 BMP 이미지를 선택하세요."
 
@@ -658,6 +661,9 @@ msgstr "2월"
 msgid "File"
 msgstr "파일"
 
+msgid "First part duration (minutes)"
+msgstr "첫 구간 길이(분)"
+
 msgid "First saved: {time}"
 msgstr "최초 저장: {time}"
 
@@ -925,6 +931,18 @@ msgstr "5월"
 msgid "Meeting"
 msgstr "회의"
 
+msgid "Merge records"
+msgstr "기록 병합"
+
+msgid "Merge these adjacent records? Their content will be combined."
+msgstr "인접한 기록을 병합하시겠습니까? 내용도 합쳐집니다."
+
+msgid "Merge with previous record"
+msgstr "이전 기록과 병합"
+
+msgid "Minutes from the record start to the break start"
+msgstr "기록 시작부터 휴식 시작까지의 분 수"
+
 msgid "Mode"
 msgstr "모드"
 
@@ -1054,6 +1072,9 @@ msgstr "이 기간에 기록된 메모가 없습니다."
 msgid "No records for the selected day."
 msgstr "선택한 날짜에 기록이 없습니다."
 
+msgid "No reversible record changes are available."
+msgstr "되돌릴 수 있는 기록 변경이 없습니다."
+
 msgid "No saved daily reports exist in the selected date range."
 msgstr "선택한 기간에 저장된 일간 보고서가 없습니다."
 
@@ -1095,6 +1116,9 @@ msgstr "확인"
 
 msgid "October"
 msgstr "10월"
+
+msgid "Only adjacent records with matching types and context can be merged."
+msgstr "유형과 맥락이 일치하는 인접 기록만 병합할 수 있습니다."
 
 msgid "Open"
 msgstr "열기"
@@ -1161,6 +1185,12 @@ msgstr "비밀번호가 재설정되었습니다."
 
 msgid "Pink"
 msgstr "분홍"
+
+msgid "Place historical break"
+msgstr "이전 휴식 위치 지정"
+
+msgid "Place the historical break before splitting this record."
+msgstr "이 기록을 나누기 전에 이전 휴식 위치를 지정하세요."
 
 msgid "Please sign in to continue."
 msgstr "계속하려면 로그인하세요."
@@ -1245,6 +1275,9 @@ msgstr "런타임 스모크 테스트 실패"
 
 msgid "RUNTIME SMOKE OK"
 msgstr "런타임 스모크 테스트 성공"
+
+msgid "Record actions"
+msgstr "기록 작업"
 
 msgid "Record search is unavailable."
 msgstr "기록 검색을 사용할 수 없습니다."
@@ -1405,6 +1438,9 @@ msgstr "임시 비밀번호 저장"
 msgid "Save the completed automatic record before starting another."
 msgstr "새 기록을 시작하기 전에 완료된 자동 기록을 저장하세요."
 
+msgid "Save these periods?"
+msgstr "이 구간들을 저장하시겠습니까?"
+
 msgid "Save this recovery key before continuing."
 msgstr "계속하기 전에 이 복구 키를 저장하세요."
 
@@ -1555,6 +1591,12 @@ msgstr "일부 날짜에 기록이 이미 있습니다. 가져올 내용을 검�
 msgid "Source URL"
 msgstr "출처 URL"
 
+msgid "Split record"
+msgstr "기록 분할"
+
+msgid "Splitting across dates changes daily and period totals."
+msgstr "날짜를 넘는 분할은 일별 및 기간별 합계를 변경합니다."
+
 msgid "Standard hours (h)"
 msgstr "표준 근무 시간"
 
@@ -1636,6 +1678,9 @@ msgstr "데이터베이스를 읽을 수 없습니다. 원본 파일은 보존�
 msgid "The file contains conflicting records for the same date."
 msgstr "파일에 같은 날짜의 충돌하는 기록이 있습니다."
 
+msgid "The historical break must fit inside the recorded interval."
+msgstr "이전 휴식은 기록된 구간 안에 있어야 합니다."
+
 msgid "The model returned no content. Please try again."
 msgstr "모델이 내용을 반환하지 않았습니다. 다시 시도하세요."
 
@@ -1650,6 +1695,9 @@ msgstr "입력한 비밀번호가 일치하지 않습니다."
 
 msgid "The quick log is no longer available. Reload the records and try again."
 msgstr "빠른 기록을 더 이상 사용할 수 없습니다. 기록을 다시 불러온 후 다시 시도하세요."
+
+msgid "The records have changed. Reload them before undoing this operation."
+msgstr "기록이 변경되었습니다. 되돌리기 전에 다시 불러오세요."
 
 msgid "The report has not loaded. Reload it before continuing."
 msgstr "보고서가 로드되지 않았습니다. 다시 불러온 후 계속하세요."
@@ -1684,6 +1732,9 @@ msgstr "이 ID는 이미 사용 중입니다. 다른 ID를 선택하세요."
 msgid "This account | Newest saved first"
 msgstr "현재 계정 | 최신 저장순"
 
+msgid "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
+msgstr "이전 공제 시간을 정수 분으로 표현할 수 없습니다. 원래 기록은 변경되지 않았습니다."
+
 msgid "This identity is already linked to an account."
 msgstr "이 ID는 이미 계정에 연결되어 있습니다."
 
@@ -1698,6 +1749,9 @@ msgstr "이 메모가 다른 편집기에서 변경되었습니다. 다시 불�
 
 msgid "This record changed elsewhere. Reload it before saving. Your changes have been retained."
 msgstr "다른 곳에서 이 기록이 변경되었습니다. 다시 불러온 후 저장하세요. 입력한 내용은 유지되었습니다."
+
+msgid "This record is too large for reversible editing. Existing records are unchanged."
+msgstr "되돌릴 수 있는 편집을 하기에는 기록이 너무 큽니다. 기존 기록은 변경되지 않았습니다."
 
 msgid "This report changed elsewhere. Reload the history before deleting it."
 msgstr "다른 곳에서 이 보고서가 변경되었습니다. 기록을 다시 불러온 후 삭제하세요."
@@ -1740,6 +1794,9 @@ msgstr "교육"
 
 msgid "Tue"
 msgstr "화"
+
+msgid "Unable to apply this record change. Existing records are unchanged."
+msgstr "기록 변경을 적용할 수 없습니다. 기존 기록은 변경되지 않았습니다."
 
 msgid "Unable to back up the database. Check the destination and available disk space."
 msgstr "데이터베이스를 백업하지 못했습니다. 저장 위치와 디스크 여유 공간을 확인하세요."
@@ -1830,6 +1887,12 @@ msgstr "근무 유형을 업데이트할 수 없습니다. 기록은 변경되�
 
 msgid "Unclassified"
 msgstr "미분류"
+
+msgid "Undo latest record change"
+msgstr "최근 기록 변경 되돌리기"
+
+msgid "Undo the latest record change for {date}, {start} - {end}? This does not restart a timer."
+msgstr "{date}, {start} - {end}의 최근 기록 변경을 되돌리시겠습니까? 타이머는 다시 시작되지 않습니다."
 
 msgid "Unknown"
 msgstr "알 수 없음"

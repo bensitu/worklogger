@@ -26,6 +26,37 @@ from PySide6.QtCore import QTime
 
 
 class TimeEntryWorkflowTests(unittest.TestCase):
+    def test_record_actions_and_global_undo_work_after_the_last_record_is_deleted(self):
+        panel = self.panel
+        original = panel.view_model.service.save_manual(self.now.date(), "09:00", "12:00", "normal", "Work").value
+        self.window.refresh()
+        self.assertTrue(panel.undo_button.isEnabled())
+        with patch("worklogger.presentation.widgets.time_entries.QInputDialog.getInt", return_value=(60, True)), \
+                patch("worklogger.presentation.widgets.time_entries.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes):
+            panel._split_record(original)
+        records = self.repository.list_for_day(self.runtime.user.id, self.now.date())
+        self.assertEqual(len(records), 2)
+        self.assertEqual(sum(record.worked_hours() for record in records), 3)
+        with patch("worklogger.presentation.widgets.time_entries.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes):
+            panel._merge_record(*records)
+            panel.undo_button.click()
+        self.assertEqual(len(self.repository.list_for_day(self.runtime.user.id, self.now.date())), 2)
+        with patch("worklogger.presentation.widgets.time_entries.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes):
+            panel.undo_button.click()
+        restored = self.repository.list_for_day(self.runtime.user.id, self.now.date())[0]
+        self.assertEqual(restored.id, original.id)
+        with patch("worklogger.presentation.widgets.time_entries.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes):
+            panel.delete_entry(restored)
+        self.assertEqual(self.repository.list_for_day(self.runtime.user.id, self.now.date()), ())
+        self.assertTrue(panel.undo_button.isEnabled())
+        with patch("worklogger.presentation.widgets.time_entries.QMessageBox.question", return_value=QMessageBox.StandardButton.No):
+            panel.undo_button.click()
+        self.assertEqual(self.repository.list_for_day(self.runtime.user.id, self.now.date()), ())
+        with patch("worklogger.presentation.widgets.time_entries.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes):
+            panel.undo_button.click()
+        self.assertEqual(self.repository.list_for_day(self.runtime.user.id, self.now.date())[0].id, original.id)
+        self.warning.assert_not_called()
+
     def test_record_search_filters_preserve_focus_and_open_the_owned_entry(self):
         from worklogger.presentation.widgets.record_search import RecordSearchDialog
         first = self.panel.view_model.service.save_manual(self.now.date(), "09:00", "10:00", "meeting", "Planning").value

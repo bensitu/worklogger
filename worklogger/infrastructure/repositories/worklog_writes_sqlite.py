@@ -17,6 +17,7 @@ from worklogger.domain.worklog.rules import (
 from worklogger.infrastructure.repositories._mapping import map_rows
 from worklogger.infrastructure.repositories.note_sqlite import save_note
 from worklogger.infrastructure.repositories.project_sqlite import validate_record_context
+from worklogger.infrastructure.repositories.entry_changes_sqlite import SQLiteEntryChanges
 from worklogger.infrastructure.repositories.worklog_mapping_sqlite import WorkLogStorage
 from worklogger.infrastructure.repositories.worklog_queries_sqlite import (
     SQLiteWorkLogQueries,
@@ -27,6 +28,7 @@ class SQLiteWorkLogWrites:
     def __init__(self, storage: WorkLogStorage, queries: SQLiteWorkLogQueries):
         self._storage = storage
         self._queries = queries
+        self.changes = SQLiteEntryChanges(storage)
 
     def save(self, work_log: WorkLog, *, expected_note: str | None = None) -> None:
         if self._storage.supports_entries:
@@ -167,6 +169,7 @@ class SQLiteWorkLogWrites:
             if previous is None or previous.has_times or not record.is_leave:
                 raise ValueError("time_range_incomplete")
         with self._storage.connection_factory.transaction() as connection:
+            before = self.changes.rows(connection, record.user_id, (record.id,)) if record.id is not None else []
             if record.capture_id:
                 existing = connection.execute(
                     self._storage.select + "WHERE w.user_id=? AND w.capture_id=?",
@@ -233,6 +236,8 @@ class SQLiteWorkLogWrites:
                 record = replace(record, revision=record.revision + 1)
             if timer_change is not None:
                 self._change_timer(connection, record.user_id, *timer_change)
+            self.changes.remember(connection, record.user_id, "update" if before else "create", before,
+                                  self.changes.rows(connection, record.user_id, (record.id,)))
             return record
 
     def delete_entry(
@@ -244,6 +249,7 @@ class SQLiteWorkLogWrites:
         timer_change: tuple[str | None, str | None] | None = None,
     ) -> None:
         with self._storage.connection_factory.transaction() as connection:
+            before = self.changes.rows(connection, user_id, (entry_id,))
             cursor = connection.execute(
                 "DELETE FROM worklog WHERE user_id=? AND id=? AND revision=?",
                 (user_id, entry_id, revision),
@@ -252,6 +258,7 @@ class SQLiteWorkLogWrites:
                 raise ValueError("worklog_entry_conflict")
             if timer_change is not None:
                 self._change_timer(connection, user_id, *timer_change)
+            self.changes.remember(connection, user_id, "delete", before, [])
 
     def change_timer(
         self, user_id: int, expected: str | None, value: str | None
@@ -395,18 +402,22 @@ class SQLiteWorkLogWrites:
                     continue
                 self._insert_entry(connection, record)
 
-    def _insert_entry(self, connection, record: WorkLog) -> int:
+    def _insert_entry(self, connection, record: WorkLog, *, historical=False, preserve_identity=False) -> int:
         columns = (
             'user_id,d,start,end,"break",note,work_type,overnight,started_at,ended_at'
         )
         if self._storage.type_snapshots:
             columns += ",work_type_label,work_type_category"
         if self._storage.work_context:
-            validate_record_context(connection, record)
+            validate_record_context(connection, record, historical=historical)
             columns += ",project_id,work_item_id,project_label,work_item_label"
         values = (*self._storage.entry_values(record), record.capture_id)
+        columns += ",capture_id"
+        if preserve_identity:
+            columns += ",id,revision"
+            values += (record.id, record.revision)
         cursor = connection.execute(
-            f"INSERT INTO worklog({columns},capture_id) VALUES({','.join('?' for _ in values)})",
+            f"INSERT INTO worklog({columns}) VALUES({','.join('?' for _ in values)})",
             values,
         )
         return cursor.lastrowid

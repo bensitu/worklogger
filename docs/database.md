@@ -36,6 +36,7 @@ external SQLite clients still require SQLite's own locking protections.
 | `work_types` | Account-owned custom classification IDs, normalized unique active names, accounting category, revision and archived flag |
 | `projects` | Account-owned project IDs, name/code, normalized unique active name, revision and archived flag |
 | `work_items` | Account-owned project-specific work items, title/source URL, completion, revision and archived flag |
+| `entry_changes` | Account-owned before/after snapshots and expected undo state; at most 50 changes with a 30-day undo window |
 | `daily_notes` | Composite `(user_id, d)` primary key; independent daily note content |
 | `quick_logs` | Integer ID; user/date, optional start/end, description, creation timestamp |
 | `settings` | Composite `(user_id, key)` primary key; string value |
@@ -87,6 +88,7 @@ the application version alone.
 | 9 | Add custom type name/category snapshots to work entries, an account-owned type catalog, and an indexed report-date range lookup |
 | 10 | Add an optional display name independently of the existing login identifier |
 | 11 | Add optional projects and work items, record associations and label snapshots, and indexed context/date queries |
+| 12 | Add bounded reversible record snapshots independently of timer persistence |
 
 Migration 9 leaves built-in classifications unchanged and initializes their
 snapshot columns to empty strings. Custom records use a `custom:` UUID identifier
@@ -112,6 +114,18 @@ restart and catalog changes. CSV carries labels without cross-database foreign I
 The runner creates one complete private SQLite snapshot before converting populated
 tables, rather than a separate copy for each migration. Table replacement and settings-key conversion are transactional. Existing
 timestamps and break deductions are copied without guessing when a break occurred.
+
+Individual creates, edits, deletions, splits, merges and explicit historical-break
+conversion save reversible snapshots in the same transaction. Undo validates the
+latest change's expected rows and account, restores stable IDs with newer revisions,
+and checks overlap before committing. Original before/after snapshots stay unchanged;
+expected undo state advances when compensating changes increase revisions. No timer
+is restarted. Interval transformations and undo require idle recording. CSV date
+replacement and whole-database restore are not reversible through this history.
+Snapshots are private application data in the unencrypted database and its backups;
+they are not a complete activity log or proof that recorded work occurred.
+Expired snapshots are ineligible for undo immediately and are removed on the next
+record mutation; retained backups may still contain them.
 Daily notes remain independent. The new timer service converts the previous account
 draft on first use; malformed state remains available for deliberate recovery.
 

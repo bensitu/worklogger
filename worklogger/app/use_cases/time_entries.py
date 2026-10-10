@@ -16,8 +16,7 @@ from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.entry_repository import TimeEntryRepository
 from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType
 from worklogger.domain.worklog.rules import decode_work_type, entry_interval, normalize_work_log, parse_time, shift_datetimes, timestamp_span_hours
-from worklogger.app.ports import WorkTypeOperations
-from worklogger.app.use_cases.projects import ProjectService
+from worklogger.app.ports import WorkTypeOperations, ProjectOperations
 from worklogger.domain.projects.models import WorkContext
 
 
@@ -43,7 +42,7 @@ class TimeEntryService:
                  local_timezone: tzinfo, clock: Callable[[], datetime] | None = None,
                  calendar_events: CalendarEventRepository | None = None,
                  work_types: WorkTypeOperations | None = None,
-                 projects: ProjectService | None = None) -> None:
+                 projects: ProjectOperations | None = None) -> None:
         self.user_id = user_id
         self.repository = repository
         self.settings = settings
@@ -147,7 +146,7 @@ class TimeEntryService:
             raise ValueError("time_entry_content_too_long")
         return content
 
-    def _run(self, operation):
+    def _run(self, operation, *, error_code="worklog_save_failed"):
         try:
             value = operation()
             if isinstance(value, Result):
@@ -157,10 +156,10 @@ class TimeEntryService:
             return Result.success(value)
         except ValueError as exc:
             code = str(exc)
-            error_type = ConflictError if code in {"worklog_entry_conflict", "time_entry_timer_conflict"} else ValidationError
+            error_type = ConflictError if code in {"worklog_entry_conflict", "time_entry_timer_conflict", "record_change_conflict"} else ValidationError
             self.last_error = error_type(code, code)
         except Exception:
-            self.last_error = InfrastructureError("worklog_save_failed", "worklog_save_failed")
+            self.last_error = InfrastructureError(error_code, error_code)
         return Result.failure(self.last_error)
 
     def list_for_day(self, day: date) -> Result[tuple[WorkLog, ...]]:
@@ -179,6 +178,25 @@ class TimeEntryService:
             return Result.failure(ValidationError("record_search_invalid", "record_search_invalid"))
         except Exception:
             return Result.failure(InfrastructureError("record_search_failed", "record_search_failed"))
+
+    @property
+    def changes_available(self):
+        return bool(getattr(self.repository, "changes_available", False))
+
+    def latest_change(self):
+        return self._run(lambda: self.repository.latest_change(self.user_id), error_code="record_change_failed")
+
+    def split(self, record, first_minutes):
+        return self._run(lambda: self.repository.split_entry(self.user_id, record, first_minutes), error_code="record_change_failed")
+
+    def merge(self, left, right):
+        return self._run(lambda: self.repository.merge_entries(self.user_id, left, right), error_code="record_change_failed")
+
+    def convert_break(self, record, first_minutes):
+        return self._run(lambda: self.repository.convert_historical_break(self.user_id, record, first_minutes), error_code="record_change_failed")
+
+    def undo(self, change_id):
+        return self._run(lambda: self.repository.undo_change(self.user_id, change_id), error_code="record_change_failed")
 
     def get_entry(self, entry_id: int) -> Result[WorkLog]:
         def load():

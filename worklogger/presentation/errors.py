@@ -25,6 +25,24 @@ def display_error_code(code: str) -> str:
     """Translate known error codes without displaying raw exception text or logging previews."""
 
     match code:
+        case "record_split_invalid":
+            return _("Choose a split duration strictly inside the recorded interval.")
+        case "record_merge_invalid":
+            return _("Only adjacent records with matching types and context can be merged.")
+        case "historical_break_placement_required":
+            return _("Place the historical break before splitting this record.")
+        case "historical_break_placement_invalid":
+            return _("The historical break must fit inside the recorded interval.")
+        case "historical_break_precision_invalid":
+            return _("This historical deduction cannot be represented in whole minutes. The original record is unchanged.")
+        case "record_change_conflict":
+            return _("The records have changed. Reload them before undoing this operation.")
+        case "record_change_invalid" | "record_change_failed":
+            return _("Unable to apply this record change. Existing records are unchanged.")
+        case "record_change_unavailable":
+            return _("No reversible record changes are available.")
+        case "record_change_too_large":
+            return _("This record is too large for reversible editing. Existing records are unchanged.")
         case "record_search_invalid":
             return _("Enter a valid date range and search text.")
         case "record_search_failed":

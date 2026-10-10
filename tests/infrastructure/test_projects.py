@@ -121,7 +121,7 @@ class ProjectTests(unittest.TestCase):
             user = auth.create_user("sample", "synthetic-password", recovery_key=None, is_admin=False)
             repository = SQLiteWorkLogRepository(factory)
             original = repository.save_entry(WorkLog(user.id, date(2026, 10, 9), "22:00", "06:00", 1, "Original"))
-            self.assertEqual(MigrationRunner(factory).run_pending(), (11,))
+            self.assertEqual(MigrationRunner(factory).run_pending(), tuple(range(11, len(MIGRATION_MODULES) + 1)))
             loaded = SQLiteWorkLogRepository(factory).get_entry(user.id, original.id)
             self.assertEqual(loaded, original)
             self.assertEqual(loaded.worked_hours(), 7)

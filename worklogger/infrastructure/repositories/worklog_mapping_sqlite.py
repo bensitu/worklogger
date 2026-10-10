@@ -34,6 +34,7 @@ class WorkLogStorage:
             self.supports_entries = "id" in columns
             self.type_snapshots = "work_type_label" in columns
             self.work_context = "project_id" in columns
+            self.change_history = connection.execute("SELECT 1 FROM sqlite_master WHERE name='entry_changes'").fetchone() is not None
         self.select = 'SELECT w.user_id, w.d, w.start, w.end, w."break", '
         self.select += (
             "COALESCE(n.content, w.note) AS note"

@@ -14,6 +14,9 @@ Application version: 4.0.0.
 
 ### Desktop Interface
 
+- Added transactional record splitting, adjacent compatible merging, explicit
+  historical-break placement, and conflict-aware undo with stable record identities.
+
 - Added account-scoped record search with date/type/context filters, stable paging,
   background queries, keyboard search focus, and navigation to the original editor.
 

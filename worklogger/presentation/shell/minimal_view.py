@@ -196,6 +196,7 @@ class MinimalView(QWidget):
         self.entry_panel.selection_changed.connect(self.history_widget.set_selected_entry)
         self.history_widget.entry_selected.connect(self.entry_panel.edit_entry)
         self.history_widget.entry_delete_requested.connect(self.entry_panel.delete_entry)
+        self.history_widget.entry_actions_requested.connect(self.entry_panel.record_actions)
         self.entry_panel.busy_changed.connect(self.history_widget.setDisabled)
 
     def _entries_changed(self, day: date):

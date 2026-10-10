@@ -9,8 +9,8 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QPoint
-from PySide6.QtWidgets import QApplication, QFrame
+from PySide6.QtCore import QPoint, Qt
+from PySide6.QtWidgets import QApplication, QFrame, QVBoxLayout, QWidget
 
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.worklog.models import WorkLog, WorkType
@@ -74,6 +74,59 @@ class CalendarLayoutChecks(unittest.TestCase):
 
     def tearDown(self):
         set_language("en_US")
+
+    def test_record_action_icons_and_undo_fit_keyboard_focus_and_localized_layouts(self):
+        from tests.presentation.test_app_window import _entry_model
+        from worklogger.domain.worklog.editing import EntryChangeInfo
+        from worklogger.presentation.widgets.time_entries import TimeEntryPanel
+        from worklogger.presentation.widgets.record_summary import RecordSummaryButton
+        from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
+        configure_application_style()
+        install_bundled_fonts()
+        engine = ThemeEngine()
+        old_style, old_palette = self.app.styleSheet(), self.app.palette()
+        try:
+            for language in available_languages():
+                set_language(language)
+                for dark in (False, True):
+                    self.app.setPalette(engine.qt_palette(dark=dark))
+                    self.app.setStyleSheet(engine.application_stylesheet(dark=dark))
+                    repository = MemoryWorkLogRepository()
+                    repository.changes_available = True
+                    model = _entry_model(repository)
+                    model.latest_change_info = EntryChangeInfo(1, "create", WorkLog(1, date(2026, 10, 10), "09:00", "12:00", id=1))
+                    window = QWidget()
+                    window.resize(330, 520)
+                    root = QVBoxLayout(window)
+                    panel = TimeEntryPanel(model)
+                    row = RecordSummaryButton("09:00 - 12:00  3h 0m\nResearch / Review\nSource material", deletable=True, actions_enabled=True)
+                    root.addWidget(panel)
+                    root.addWidget(row)
+                    root.addStretch()
+                    try:
+                        window.show()
+                        row.actions_button.setFocus(Qt.FocusReason.TabFocusReason)
+                        self.app.processEvents()
+                        row.update_delete_visibility(row.mapToGlobal(QPoint(10, 10)))
+                        self.assertTrue(panel.undo_button.isVisible())
+                        self.assertEqual(panel.save_button.height(), panel.clear_button.height())
+                        self.assertEqual(panel.save_button.height(), panel.undo_button.height())
+                        for button in (row.actions_button, row.delete_button):
+                            self.assertTrue(button.isVisible())
+                            self.assertTrue(row.rect().contains(button.geometry()))
+                            self.assertFalse(button.geometry().intersects(row.label.geometry()))
+                            self.assertFalse(button.icon().pixmap(20, 20).isNull())
+                        self.assertFalse(row.actions_button.geometry().intersects(row.delete_button.geometry()))
+                        target = os.environ.get("WORKLOGGER_SCREENSHOTS")
+                        if target:
+                            Path(target).mkdir(parents=True, exist_ok=True)
+                            self.assertTrue(window.grab().save(str(Path(target) / f"{language}-record-actions-{'dark' if dark else 'light'}.png")))
+                    finally:
+                        window.hide()
+                        window.deleteLater()
+        finally:
+            self.app.setPalette(old_palette)
+            self.app.setStyleSheet(old_style)
 
     def test_project_management_and_context_fit_supported_languages_and_window_sizes(self):
         import tempfile

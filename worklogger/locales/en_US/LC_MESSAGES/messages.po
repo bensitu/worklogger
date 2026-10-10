@@ -304,6 +304,9 @@ msgstr "Checking for updates..."
 msgid "Choose a backup destination different from the active database."
 msgstr "Choose a backup destination different from the active database."
 
+msgid "Choose a split duration strictly inside the recorded interval."
+msgstr "Choose a split duration strictly inside the recorded interval."
+
 msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
 msgstr "Choose a valid PNG, JPEG, WebP, or BMP image."
 
@@ -658,6 +661,9 @@ msgstr "February"
 msgid "File"
 msgstr "File"
 
+msgid "First part duration (minutes)"
+msgstr "First part duration (minutes)"
+
 msgid "First saved: {time}"
 msgstr "First saved: {time}"
 
@@ -925,6 +931,18 @@ msgstr "May"
 msgid "Meeting"
 msgstr "Meeting"
 
+msgid "Merge records"
+msgstr "Merge records"
+
+msgid "Merge these adjacent records? Their content will be combined."
+msgstr "Merge these adjacent records? Their content will be combined."
+
+msgid "Merge with previous record"
+msgstr "Merge with previous record"
+
+msgid "Minutes from the record start to the break start"
+msgstr "Minutes from the record start to the break start"
+
 msgid "Mode"
 msgstr "Mode"
 
@@ -1054,6 +1072,9 @@ msgstr "No notes recorded for this period."
 msgid "No records for the selected day."
 msgstr "No records for the selected day."
 
+msgid "No reversible record changes are available."
+msgstr "No reversible record changes are available."
+
 msgid "No saved daily reports exist in the selected date range."
 msgstr "No saved daily reports exist in the selected date range."
 
@@ -1095,6 +1116,9 @@ msgstr "OK"
 
 msgid "October"
 msgstr "October"
+
+msgid "Only adjacent records with matching types and context can be merged."
+msgstr "Only adjacent records with matching types and context can be merged."
 
 msgid "Open"
 msgstr "Open"
@@ -1161,6 +1185,12 @@ msgstr "Password reset."
 
 msgid "Pink"
 msgstr "Pink"
+
+msgid "Place historical break"
+msgstr "Place historical break"
+
+msgid "Place the historical break before splitting this record."
+msgstr "Place the historical break before splitting this record."
 
 msgid "Please sign in to continue."
 msgstr "Please sign in to continue."
@@ -1245,6 +1275,9 @@ msgstr "RUNTIME SMOKE FAILED"
 
 msgid "RUNTIME SMOKE OK"
 msgstr "RUNTIME SMOKE OK"
+
+msgid "Record actions"
+msgstr "Record actions"
 
 msgid "Record search is unavailable."
 msgstr "Record search is unavailable."
@@ -1405,6 +1438,9 @@ msgstr "Save temporary password"
 msgid "Save the completed automatic record before starting another."
 msgstr "Save the completed automatic record before starting another."
 
+msgid "Save these periods?"
+msgstr "Save these periods?"
+
 msgid "Save this recovery key before continuing."
 msgstr "Save this recovery key before continuing."
 
@@ -1555,6 +1591,12 @@ msgstr "Some dates already have records. Review the import and confirm replaceme
 msgid "Source URL"
 msgstr "Source URL"
 
+msgid "Split record"
+msgstr "Split record"
+
+msgid "Splitting across dates changes daily and period totals."
+msgstr "Splitting across dates changes daily and period totals."
+
 msgid "Standard hours (h)"
 msgstr "Standard hours (h)"
 
@@ -1636,6 +1678,9 @@ msgstr "The database could not be read. The original files have been retained. R
 msgid "The file contains conflicting records for the same date."
 msgstr "The file contains conflicting records for the same date."
 
+msgid "The historical break must fit inside the recorded interval."
+msgstr "The historical break must fit inside the recorded interval."
+
 msgid "The model returned no content. Please try again."
 msgstr "The model returned no content. Please try again."
 
@@ -1650,6 +1695,9 @@ msgstr "The passwords do not match."
 
 msgid "The quick log is no longer available. Reload the records and try again."
 msgstr "The quick log is no longer available. Reload the records and try again."
+
+msgid "The records have changed. Reload them before undoing this operation."
+msgstr "The records have changed. Reload them before undoing this operation."
 
 msgid "The report has not loaded. Reload it before continuing."
 msgstr "The report has not loaded. Reload it before continuing."
@@ -1684,6 +1732,9 @@ msgstr "This ID is already in use. Choose a different ID."
 msgid "This account | Newest saved first"
 msgstr "This account | Newest saved first"
 
+msgid "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
+msgstr "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
+
 msgid "This identity is already linked to an account."
 msgstr "This identity is already linked to an account."
 
@@ -1698,6 +1749,9 @@ msgstr "This note was changed in another editor. Reload it before saving. Your c
 
 msgid "This record changed elsewhere. Reload it before saving. Your changes have been retained."
 msgstr "This record changed elsewhere. Reload it before saving. Your changes have been retained."
+
+msgid "This record is too large for reversible editing. Existing records are unchanged."
+msgstr "This record is too large for reversible editing. Existing records are unchanged."
 
 msgid "This report changed elsewhere. Reload the history before deleting it."
 msgstr "This report changed elsewhere. Reload the history before deleting it."
@@ -1740,6 +1794,9 @@ msgstr "Training"
 
 msgid "Tue"
 msgstr "Tue"
+
+msgid "Unable to apply this record change. Existing records are unchanged."
+msgstr "Unable to apply this record change. Existing records are unchanged."
 
 msgid "Unable to back up the database. Check the destination and available disk space."
 msgstr "Unable to back up the database. Check the destination and available disk space."
@@ -1830,6 +1887,12 @@ msgstr "Unable to update work types. Your records have not changed."
 
 msgid "Unclassified"
 msgstr "Unclassified"
+
+msgid "Undo latest record change"
+msgstr "Undo latest record change"
+
+msgid "Undo the latest record change for {date}, {start} - {end}? This does not restart a timer."
+msgstr "Undo the latest record change for {date}, {start} - {end}? This does not restart a timer."
 
 msgid "Unknown"
 msgstr "Unknown"

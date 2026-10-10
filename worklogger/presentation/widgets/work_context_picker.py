@@ -1,7 +1,7 @@
 """Compact project and work-item selection for record drafts."""
 
 from PySide6.QtCore import Signal, QSignalBlocker
-from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QVBoxLayout, QWidget, QSizePolicy
 from worklogger.domain.projects.models import WorkContext
 from worklogger.infrastructure.i18n import _
 
@@ -12,6 +12,7 @@ class WorkContextPicker(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("work_context_picker_widget")
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self._projects, self._items = (), {}
         self._snapshot = WorkContext()
         self.project_combo = QComboBox()
@@ -27,6 +28,7 @@ class WorkContextPicker(QWidget):
             field.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
             field.setMinimumContentsLength(1)
             caption = QLabel(label)
+            caption.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
             caption.setBuddy(field)
             column = QVBoxLayout()
             column.setSpacing(3)

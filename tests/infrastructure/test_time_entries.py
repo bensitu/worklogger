@@ -25,6 +25,76 @@ from worklogger.infrastructure.security.password_hasher import PBKDF2PasswordHas
 
 
 class TimeEntryTests(unittest.TestCase):
+    def test_split_merge_and_undo_preserve_time_identity_and_revisions(self):
+        saved = self.service.save_manual(self.now.date(), "09:00", "12:00", "meeting", "Review").value
+        split = self.service.split(saved, 60)
+        self.assertTrue(split.ok, split.error)
+        left, right = split.value
+        self.assertEqual(left.id, saved.id)
+        self.assertEqual((left.worked_hours(), right.worked_hours()), (1, 2))
+        self.assertFalse(self.service.split(saved, 30).ok)
+        self.assertFalse(self.service.merge(right, left).ok)
+        merged = self.service.merge(left, right)
+        self.assertTrue(merged.ok, merged.error)
+        self.assertEqual((merged.value.id, merged.value.worked_hours()), (saved.id, 3))
+        self.assertEqual(merged.value.note, saved.note)
+        self.assertEqual(self.service.latest_change().value.operation, "merge")
+        restored = self.service.undo(self.service.latest_change().value.id)
+        self.assertTrue(restored.ok, restored.error)
+        self.assertEqual({record.id for record in restored.value}, {left.id, right.id})
+        self.assertEqual(sum(record.worked_hours() for record in restored.value), 3)
+        self.assertTrue(self.service.undo(self.service.latest_change().value.id).ok)
+        original = self.repository.get_entry(self.user.id, saved.id)
+        self.assertEqual((original.start_time, original.end_time, original.worked_hours()), ("09:00", "12:00", 3))
+        self.assertGreater(original.revision, merged.value.revision)
+        self.assertTrue(self.service.undo(self.service.latest_change().value.id).ok)
+        self.assertEqual(self.repository.list_for_day(self.user.id, saved.day), ())
+        self.assertIsNone(self.service.latest_change().value)
+
+    def test_reversible_record_changes_reject_conflicts_and_preserve_active_timing(self):
+        saved = self.service.save_manual(self.now.date(), "07:00", "08:00", "normal", "Original").value
+        updated = self.service.save_manual(saved.day, "07:00", "08:00", "normal", "Changed", saved).value
+        change = self.service.latest_change().value
+        self.assertTrue(self.service.start("normal", "Active").ok)
+        self.assertFalse(self.service.undo(change.id).ok)
+        self.assertEqual(self.repository.get_entry(self.user.id, saved.id), updated)
+        self.assertTrue(self.service.discard_timer().ok)
+        self.assertTrue(self.service.undo(change.id).ok)
+        restored = self.repository.get_entry(self.user.id, saved.id)
+        self.assertEqual(restored.note, "Original")
+        self.assertFalse(self.service.save_content("Stale", saved).ok)
+        self.assertTrue(self.service.delete(restored).ok)
+        deletion = self.service.latest_change().value
+        self.assertTrue(self.service.undo(deletion.id).ok)
+        self.assertEqual(self.repository.get_entry(self.user.id, saved.id).note, "Original")
+        with self.assertRaises(ValueError):
+            self.repository.undo_change(self.user.id + 1, deletion.id)
+        with self.factory.transaction() as connection:
+            connection.execute("UPDATE entry_changes SET created_at=datetime('now','-31 days') WHERE user_id=?", (self.user.id,))
+        self.assertIsNone(self.service.latest_change().value)
+        self.assertFalse(self.service.undo(deletion.id).ok)
+
+    def test_interval_operations_preserve_offsets_and_do_not_guess_historical_breaks(self):
+        day = self.now.date()
+        historical = self.repository.save_entry(WorkLog(self.user.id, day, "09:00", "18:00", 1, "Historical"))
+        failed = self.service.split(historical, 240)
+        self.assertEqual(failed.error.code, "historical_break_placement_required")
+        self.assertEqual(self.repository.get_entry(self.user.id, historical.id), historical)
+        converted = self.service.convert_break(historical, 180)
+        self.assertTrue(converted.ok, converted.error)
+        self.assertEqual([entry.work_type.value for entry in converted.value], ["normal", "break", "normal"])
+        self.assertEqual(sum(entry.worked_hours() for entry in converted.value), historical.worked_hours())
+        self.assertTrue(self.service.undo(self.service.latest_change().value.id).ok)
+        self.assertEqual(self.repository.get_entry(self.user.id, historical.id).break_hours, 1)
+        start = self.now.replace(hour=22)
+        end = start + timedelta(hours=4)
+        overnight = self.repository.save_entry(WorkLog(self.user.id, day, "22:00", "02:00", note="Night",
+            started_at=start, ended_at=end))
+        split = self.service.split(overnight, 120)
+        self.assertTrue(split.ok, split.error)
+        self.assertEqual(sum(record.worked_hours() for record in split.value), 4)
+        self.assertEqual(split.value[1].day, day + timedelta(days=1))
+        self.assertEqual(split.value[0].ended_at, split.value[1].started_at)
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)

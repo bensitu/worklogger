@@ -143,7 +143,7 @@ QPushButton#calendar_time_entry_button:checked {
   background: {{ card_hover }};
 }
 
-QToolButton#clear_time_entry_button {
+QToolButton#clear_time_entry_button, QToolButton#undo_record_change_button {
   padding: 5px 8px;
   min-width: 20px;
   max-width: 20px;
@@ -157,7 +157,8 @@ QPushButton#save_worklog_button {
   padding: 5px 8px;
 }
 QWidget#worklog_entry_panel_widget[compact="true"] QPushButton#save_worklog_button,
-QWidget#worklog_entry_panel_widget[compact="true"] QToolButton#clear_time_entry_button {
+QWidget#worklog_entry_panel_widget[compact="true"] QToolButton#clear_time_entry_button,
+QWidget#worklog_entry_panel_widget[compact="true"] QToolButton#undo_record_change_button {
   min-height: 24px;
   max-height: 24px;
   padding: 2px 8px;
@@ -168,7 +169,7 @@ QPushButton#daily_notes_button {
   max-height: 28px;
   padding: 5px 8px;
 }
-QToolButton#delete_record_button {
+QToolButton#delete_record_button, QToolButton#record_actions_button {
   background: transparent;
   border: none;
   padding: 4px;
@@ -178,7 +179,7 @@ QToolButton#delete_record_button {
   max-height: 16px;
   border-radius: 4px;
 }
-QToolButton#delete_record_button:hover {
+QToolButton#delete_record_button:hover, QToolButton#record_actions_button:hover {
   background: {{ button_hover }};
 }
 QLabel#calendar_record_marker_label {

@@ -302,6 +302,9 @@ msgstr ""
 msgid "Choose a backup destination different from the active database."
 msgstr ""
 
+msgid "Choose a split duration strictly inside the recorded interval."
+msgstr ""
+
 msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
 msgstr ""
 
@@ -656,6 +659,9 @@ msgstr ""
 msgid "File"
 msgstr ""
 
+msgid "First part duration (minutes)"
+msgstr ""
+
 msgid "First saved: {time}"
 msgstr ""
 
@@ -923,6 +929,18 @@ msgstr ""
 msgid "Meeting"
 msgstr ""
 
+msgid "Merge records"
+msgstr ""
+
+msgid "Merge these adjacent records? Their content will be combined."
+msgstr ""
+
+msgid "Merge with previous record"
+msgstr ""
+
+msgid "Minutes from the record start to the break start"
+msgstr ""
+
 msgid "Mode"
 msgstr ""
 
@@ -1052,6 +1070,9 @@ msgstr ""
 msgid "No records for the selected day."
 msgstr ""
 
+msgid "No reversible record changes are available."
+msgstr ""
+
 msgid "No saved daily reports exist in the selected date range."
 msgstr ""
 
@@ -1092,6 +1113,9 @@ msgid "OK"
 msgstr ""
 
 msgid "October"
+msgstr ""
+
+msgid "Only adjacent records with matching types and context can be merged."
 msgstr ""
 
 msgid "Open"
@@ -1158,6 +1182,12 @@ msgid "Password reset."
 msgstr ""
 
 msgid "Pink"
+msgstr ""
+
+msgid "Place historical break"
+msgstr ""
+
+msgid "Place the historical break before splitting this record."
 msgstr ""
 
 msgid "Please sign in to continue."
@@ -1242,6 +1272,9 @@ msgid "RUNTIME SMOKE FAILED"
 msgstr ""
 
 msgid "RUNTIME SMOKE OK"
+msgstr ""
+
+msgid "Record actions"
 msgstr ""
 
 msgid "Record search is unavailable."
@@ -1403,6 +1436,9 @@ msgstr ""
 msgid "Save the completed automatic record before starting another."
 msgstr ""
 
+msgid "Save these periods?"
+msgstr ""
+
 msgid "Save this recovery key before continuing."
 msgstr ""
 
@@ -1553,6 +1589,12 @@ msgstr ""
 msgid "Source URL"
 msgstr ""
 
+msgid "Split record"
+msgstr ""
+
+msgid "Splitting across dates changes daily and period totals."
+msgstr ""
+
 msgid "Standard hours (h)"
 msgstr ""
 
@@ -1634,6 +1676,9 @@ msgstr ""
 msgid "The file contains conflicting records for the same date."
 msgstr ""
 
+msgid "The historical break must fit inside the recorded interval."
+msgstr ""
+
 msgid "The model returned no content. Please try again."
 msgstr ""
 
@@ -1647,6 +1692,9 @@ msgid "The passwords do not match."
 msgstr ""
 
 msgid "The quick log is no longer available. Reload the records and try again."
+msgstr ""
+
+msgid "The records have changed. Reload them before undoing this operation."
 msgstr ""
 
 msgid "The report has not loaded. Reload it before continuing."
@@ -1682,6 +1730,9 @@ msgstr ""
 msgid "This account | Newest saved first"
 msgstr ""
 
+msgid "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
+msgstr ""
+
 msgid "This identity is already linked to an account."
 msgstr ""
 
@@ -1695,6 +1746,9 @@ msgid "This note was changed in another editor. Reload it before saving. Your ch
 msgstr ""
 
 msgid "This record changed elsewhere. Reload it before saving. Your changes have been retained."
+msgstr ""
+
+msgid "This record is too large for reversible editing. Existing records are unchanged."
 msgstr ""
 
 msgid "This report changed elsewhere. Reload the history before deleting it."
@@ -1737,6 +1791,9 @@ msgid "Training"
 msgstr ""
 
 msgid "Tue"
+msgstr ""
+
+msgid "Unable to apply this record change. Existing records are unchanged."
 msgstr ""
 
 msgid "Unable to back up the database. Check the destination and available disk space."
@@ -1827,6 +1884,12 @@ msgid "Unable to update work types. Your records have not changed."
 msgstr ""
 
 msgid "Unclassified"
+msgstr ""
+
+msgid "Undo latest record change"
+msgstr ""
+
+msgid "Undo the latest record change for {date}, {start} - {end}? This does not restart a timer."
 msgstr ""
 
 msgid "Unknown"
