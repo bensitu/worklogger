@@ -1,5 +1,12 @@
 # Data Formats
 
+When records have project context, CSV appends optional `project_label` and
+`work_item_label` columns. Imports preserve these historical labels but do not
+reuse another database's project IDs or create projects implicitly. Association
+with a local project is a separate explicit operation. Database backups retain
+complete project/work-item identities and associations. Records without context
+retain the existing six-column format and other optional columns unchanged.
+
 ## Work-Log CSV
 
 Export writes UTF-8 with a byte-order mark and these columns:

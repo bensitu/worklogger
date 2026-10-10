@@ -21,6 +21,7 @@ MIGRATION_MODULES = (
     "worklogger.infrastructure.database.migrations.migration_008_account_preferences",
     "worklogger.infrastructure.database.migrations.migration_009_custom_work_types",
     "worklogger.infrastructure.database.migrations.migration_010_user_display_names",
+    "worklogger.infrastructure.database.migrations.migration_011_work_context",
 )
 
 

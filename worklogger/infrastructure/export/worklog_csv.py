@@ -25,10 +25,12 @@ class WorkLogCsvExporter:
             records = tuple(entry for row in rows for entry in (row.entries or (row,)))
             timestamps = any(row.started_at is not None or row.ended_at is not None for row in records)
             custom_types = any(isinstance(row.work_type, CustomWorkType) for row in records)
+            work_context = any(row.context.label for row in records)
             with atomic_destination(destination) as temporary, temporary.open("w", encoding="utf-8-sig", newline="") as handle:
                 writer = csv.writer(handle)
                 writer.writerow(self.HEADER + (("started_at", "ended_at") if timestamps else ())
-                    + (("work_type_label", "work_type_category") if custom_types else ()))
+                    + (("work_type_label", "work_type_category") if custom_types else ())
+                    + (("project_label", "work_item_label") if work_context else ()))
                 for row in records:
                     writer.writerow(
                         [
@@ -41,6 +43,7 @@ class WorkLogCsvExporter:
                         ] + ([row.started_at.isoformat() if row.started_at else "", row.ended_at.isoformat() if row.ended_at else ""] if timestamps else [])
                         + ([spreadsheet_text(row.work_type.label), row.work_type.category] if isinstance(row.work_type, CustomWorkType)
                            else ["", ""] if custom_types else [])
+                        + ([spreadsheet_text(row.context.project_label), spreadsheet_text(row.context.work_item_label)] if work_context else [])
                     )
         except Exception as exc:
             return Result.failure(

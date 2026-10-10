@@ -234,7 +234,7 @@ class TimeEntryTests(unittest.TestCase):
         record = WorkLog(user.id, self.now.date(), "09:00", "18:00", 1, "History", WorkType.REMOTE,
                          started_at=self.now, ended_at=self.now + timedelta(hours=9))
         repository.save(record)
-        self.assertEqual(MigrationRunner(factory).run_pending(), (7, 8, 9, 10))
+        self.assertEqual(MigrationRunner(factory).run_pending(), tuple(range(7, len(MIGRATION_MODULES) + 1)))
         current = SQLiteWorkLogRepository(factory).list_for_day(user.id, record.day)[0]
         self.assertEqual((current.note, current.break_hours, current.worked_hours(), current.started_at), ("History", 1, 8, record.started_at))
         self.assertTrue(list(path.parent.glob("previous.db.bak_upgrade_*")))

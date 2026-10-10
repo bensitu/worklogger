@@ -12,6 +12,7 @@ from worklogger.app.commands.data_portability_commands import ImportWorkLogsCsvC
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
+from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.repositories import WorkLogRepository
 from worklogger.domain.worklog.rules import decode_work_type, entry_interval, normalize_work_log
 
@@ -29,6 +30,8 @@ class WorkLogCsvRowDraft:
     ended_at: datetime | None = None
     work_type_label: str = ""
     work_type_category: str = ""
+    project_label: str = ""
+    work_item_label: str = ""
 
 
 @dataclass(frozen=True)
@@ -99,6 +102,7 @@ class ImportWorkLogsCsvHandler:
                         work_type=decode_work_type(row.work_type, label=row.work_type_label, category=row.work_type_category, strict=True),
                         started_at=row.started_at,
                         ended_at=row.ended_at,
+                        context=WorkContext(project_label=row.project_label, work_item_label=row.work_item_label),
                     )
                 )
                 interval = entry_interval(work_log)

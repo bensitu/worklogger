@@ -20,6 +20,7 @@ from worklogger.domain.auth.models import LinkedIdentity
 from worklogger.infrastructure.security.key_store import EncryptedSettingsKeyStore, FileMachineKeyProvider, HmacSecretBox, NoKeyringBackend
 from worklogger.infrastructure.database.upgrade import upgrade_database
 from worklogger.infrastructure.database.migrations import migration_008_account_preferences
+from worklogger.infrastructure.database.migrations.runner import MIGRATION_MODULES
 
 
 class DatabaseUpgradeTests(unittest.TestCase):
@@ -45,7 +46,7 @@ class DatabaseUpgradeTests(unittest.TestCase):
             with factory.transaction() as connection:
                 connection.execute("INSERT INTO daily_notes(user_id,d,content) VALUES(?,?,?)", (user.id, day.isoformat(), "Independent memo"))
                 connection.execute("DROP TABLE schema_migrations")
-            self.assertEqual(MigrationRunner(factory).run_pending(), tuple(range(1,11)))
+            self.assertEqual(MigrationRunner(factory).run_pending(), tuple(range(1, len(MIGRATION_MODULES) + 1)))
             self.assertEqual(auth.get_by_id(user.id).display_name, "Mary")
             self.assertEqual(records.list_for_day(user.id, day), (edited, second))
             self.assertEqual(types.list_types().value, (definition,))
@@ -64,7 +65,7 @@ class DatabaseUpgradeTests(unittest.TestCase):
             self.assertEqual(source.read_bytes(), original)
             report = upgrade_database(source,destination)
             self.assertEqual((report.accounts,report.time_records,report.reports),(1,2,1))
-            self.assertEqual(report.applied_versions,tuple(range(1,11)))
+            self.assertEqual(report.applied_versions, tuple(range(1, len(MIGRATION_MODULES) + 1)))
             self.assertEqual(source.read_bytes(),original)
             result = destination.read_bytes()
             with self.assertRaisesRegex(ValueError,"database_destination_exists"):
@@ -134,7 +135,7 @@ class DatabaseUpgradeTests(unittest.TestCase):
                 path = Path(directory)/"source.db"
                 password = self.create_source(path, schema)
                 factory = SQLiteConnectionFactory(path)
-                self.assertEqual(MigrationRunner(factory).run_pending(), tuple(range(1,11)))
+                self.assertEqual(MigrationRunner(factory).run_pending(), tuple(range(1, len(MIGRATION_MODULES) + 1)))
                 backups = list(path.parent.glob("*.bak_upgrade_*"))
                 self.assertEqual(len(backups), 1)
                 auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))

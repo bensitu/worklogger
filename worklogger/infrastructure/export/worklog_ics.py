@@ -82,7 +82,7 @@ def _event_lines(row: WorkLog, *, dtstamp: str) -> list[str]:
     start_dt, end_dt = datetimes
     start_stamp = start_dt.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ") if start_dt.tzinfo else start_dt.strftime("%Y%m%dT%H%M%S")
     end_stamp = end_dt.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ") if end_dt.tzinfo else end_dt.strftime("%Y%m%dT%H%M%S")
-    note = row.note or ""
+    note = "\n".join(part for part in (row.context.label, row.note) if part)
     summary_note = _summary_note(note)
     summary = (_("Break {hours:.1f}h") if row.is_break else _("Work {hours:.1f}h")).format(hours=row.raw_hours())
     identity = f"{row.user_id}-{row.day.isoformat()}" + (f"-{row.id}" if row.id is not None else "")

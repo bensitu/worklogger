@@ -352,9 +352,23 @@ def _template_values(
         "quick_logs": _quick_log_lines(quick_logs),
         "total_hours": f"{total:.1f}",
         "overtime_hours": f"{overtime:.1f}",
+        "projects_summary": _project_summary(work_logs, translate),
         "issues": "- ",
         "next_plan": "- ",
     }
+
+
+def _project_summary(work_logs, _):
+    totals = {}
+    for record in work_logs:
+        for entry in record.entries or (record,):
+            hours = entry.worked_hours()
+            if hours > 0:
+                key = ("project", entry.context.project_id) if entry.context.project_id else ("label", entry.context.project_label)
+                previous = totals.get(key, ("", 0))
+                totals[key] = (entry.context.project_label, previous[1] + hours)
+    return "\n".join(_list_item(f"{label or _('Unclassified')}: {hours:.1f}h")
+                     for label, hours in sorted(totals.values()))
 
 
 def _work_log_lines(work_logs: tuple[WorkLog, ...], standard_hours: float, _: Callable[[str], str]) -> str:
@@ -378,6 +392,8 @@ def _work_log_lines(work_logs: tuple[WorkLog, ...], standard_hours: float, _: Ca
             span = time_range_label(entry.start_time, entry.end_time) if entry.has_times else _("All day")
             label = getattr(entry.work_type, "label", None) or labels.get(entry.work_type.value, entry.work_type.value)
             description = f"{span} [{label}]"
+            if entry.context.label:
+                description += " [" + entry.context.label + "]"
             if entry.is_overnight:
                 description += " " + _("Overnight")
             if entry.note:

@@ -15,6 +15,7 @@ from worklogger.domain.worklog.rules import (
 )
 from worklogger.infrastructure.repositories._mapping import map_rows
 from worklogger.infrastructure.repositories.note_sqlite import save_note
+from worklogger.infrastructure.repositories.project_sqlite import validate_record_context
 from worklogger.infrastructure.repositories.worklog_mapping_sqlite import WorkLogStorage
 from worklogger.infrastructure.repositories.worklog_queries_sqlite import (
     SQLiteWorkLogQueries,
@@ -182,6 +183,7 @@ class SQLiteWorkLogWrites:
                             stored.ended_at,
                             stored.note,
                             stored.work_type,
+                            stored.context,
                         ) != (
                             record.day,
                             record.start_time,
@@ -191,6 +193,7 @@ class SQLiteWorkLogWrites:
                             record.ended_at,
                             record.note,
                             record.work_type,
+                            record.context,
                         ):
                             raise ValueError("worklog_entry_conflict")
                         if timer_change is not None:
@@ -198,6 +201,8 @@ class SQLiteWorkLogWrites:
                                 connection, record.user_id, *timer_change
                             )
                         return stored
+            if self._storage.work_context:
+                validate_record_context(connection, record)
             self._check_overlap(connection, record)
             if record.id is None:
                 entry_id = self._insert_entry(connection, record)
@@ -208,6 +213,8 @@ class SQLiteWorkLogWrites:
                     if self._storage.type_snapshots
                     else ""
                 )
+                if self._storage.work_context:
+                    snapshots += ",project_id=?,work_item_id=?,project_label=?,work_item_label=?"
                 cursor = connection.execute(
                     """UPDATE worklog SET d=?,start=?,end=?,"break"=?,note=?,work_type=?,overnight=?,
                     started_at=?,ended_at=?"""
@@ -387,6 +394,9 @@ class SQLiteWorkLogWrites:
         )
         if self._storage.type_snapshots:
             columns += ",work_type_label,work_type_category"
+        if self._storage.work_context:
+            validate_record_context(connection, record)
+            columns += ",project_id,work_item_id,project_label,work_item_label"
         values = (*self._storage.entry_values(record), record.capture_id)
         cursor = connection.execute(
             f"INSERT INTO worklog({columns},capture_id) VALUES({','.join('?' for _ in values)})",

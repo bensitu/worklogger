@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
+from worklogger.infrastructure.database.migrations.runner import MIGRATION_MODULES
 from worklogger.infrastructure.database.migrations import migration_002_auth_columns
 from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteWorkLogRepository
 from worklogger.infrastructure.security import PBKDF2PasswordHasher
@@ -60,7 +61,7 @@ class AuthSchemaMigrationTests(unittest.TestCase):
             with factory.connection() as connection:
                 credentials = tuple(connection.execute("SELECT password_hash, salt FROM users").fetchone())
                 work_log = tuple(connection.execute("SELECT * FROM worklog").fetchone())
-            self.assertEqual(MigrationRunner(factory).run_pending(), (2, 3, 4, 5, 6, 7, 8, 9, 10))
+            self.assertEqual(MigrationRunner(factory).run_pending(), tuple(range(2, len(MIGRATION_MODULES) + 1)))
             auth = SQLiteAuthRepository(factory, password_hasher=hasher)
             user = auth.verify_user("admin", "test-password")
             self.assertIsNotNone(user)
@@ -128,7 +129,7 @@ class AuthSchemaMigrationTests(unittest.TestCase):
     def test_new_database_does_not_create_unnecessary_backup(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "new.db"
-            self.assertEqual(MigrationRunner(SQLiteConnectionFactory(path)).run_pending(), (1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+            self.assertEqual(MigrationRunner(SQLiteConnectionFactory(path)).run_pending(), tuple(range(1, len(MIGRATION_MODULES) + 1)))
             self.assertFalse(list(path.parent.glob("*.bak_upgrade_*")))
 
     def test_legacy_hash_upgrades_only_after_correct_password(self):

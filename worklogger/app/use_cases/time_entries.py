@@ -17,6 +17,8 @@ from worklogger.domain.worklog.entry_repository import TimeEntryRepository
 from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType
 from worklogger.domain.worklog.rules import decode_work_type, entry_interval, normalize_work_log, parse_time, shift_datetimes, timestamp_span_hours
 from worklogger.app.ports import WorkTypeOperations
+from worklogger.app.use_cases.projects import ProjectService
+from worklogger.domain.projects.models import WorkContext
 
 
 FIXED_BREAK_CAPTURE_PREFIX = "fixed-break:"
@@ -33,18 +35,21 @@ class EntryTimer:
     resume_content: str = ""
     legacy_break_hours: float = 0.0
     pending_end: datetime | None = None
+    context: WorkContext = WorkContext()
 
 
 class TimeEntryService:
     def __init__(self, *, user_id: int, repository: TimeEntryRepository, settings: SettingsRepository,
                  local_timezone: tzinfo, clock: Callable[[], datetime] | None = None,
                  calendar_events: CalendarEventRepository | None = None,
-                 work_types: WorkTypeOperations | None = None) -> None:
+                 work_types: WorkTypeOperations | None = None,
+                 projects: ProjectService | None = None) -> None:
         self.user_id = user_id
         self.repository = repository
         self.settings = settings
         self.calendar_events = calendar_events
         self.work_types = work_types
+        self.projects = projects
         self.local_timezone = local_timezone
         self._clock = clock or (lambda: datetime.now().astimezone())
         self.timer: EntryTimer | None = None
@@ -67,6 +72,7 @@ class TimeEntryService:
                 if len(self._timer_raw) > 128 * 1024:
                     raise ValueError("auto_record_restore_failed")
                 data = json.loads(self._timer_raw)
+                data["context"] = WorkContext(**data.get("context", {}))
                 for key in ("started_at", "break_until", "pending_end"):
                     data[key] = datetime.fromisoformat(data[key]) if data.get(key) else None
                 for key in ("work_type", "resume_type"):
@@ -74,6 +80,8 @@ class TimeEntryService:
                     category = data.pop(key + "_category", "")
                     data[key] = decode_work_type(data[key], label=label, category=category, strict=True) if data.get(key) else None
                 timer = EntryTimer(**data)
+                if self.projects is not None:
+                    self.projects.resolve(timer.context, timer.context)
                 if (not isinstance(timer.capture_id, str) or not timer.capture_id or len(timer.capture_id) > 64 or timer.started_at is None
                     or any(moment.tzinfo is None for moment in (timer.started_at, timer.break_until, timer.pending_end) if moment)
                     or not math.isfinite(timer.legacy_break_hours) or not 0 <= timer.legacy_break_hours <= MAX_SHIFT_HOURS
@@ -167,13 +175,15 @@ class TimeEntryService:
         return self._run(load)
 
     def save_manual(self, day: date, start: str, end: str, work_type: str, content: str,
-                    original: WorkLog | None = None) -> Result[WorkLog]:
+                    original: WorkLog | None = None, *, context: WorkContext | None = None) -> Result[WorkLog]:
         def save():
             if original and original.user_id != self.user_id:
                 raise ValueError("worklog_entry_conflict")
             definition = self._resolve_type(work_type, original.work_type if original else None)
+            association = self._resolve_context(context if context is not None else original.context if original else WorkContext(),
+                                                original.context if original else None)
             if original and original.is_leave and not original.has_times and not start.strip() and not end.strip() and replace(original, work_type=definition).is_leave:
-                return self.repository.save_entry(replace(original, note=self._content(content), work_type=definition))
+                return self.repository.save_entry(replace(original, note=self._content(content), work_type=definition, context=association))
             start_time, end_time = parse_time(start), parse_time(end)
             if not start_time or not end_time:
                 raise ValueError("time_range_incomplete")
@@ -184,7 +194,7 @@ class TimeEntryService:
             record = normalize_work_log(WorkLog(self.user_id, day, start_time, end_time,
                 original.break_hours if original else 0, self._content(content), definition,
                 started_at=timestamps[0], ended_at=timestamps[1], id=original.id if original else None,
-                revision=original.revision if original else 0, capture_id=original.capture_id if original else None))
+                revision=original.revision if original else 0, capture_id=original.capture_id if original else None, context=association))
             return self.repository.save_entry(record)
         return self._run(save)
 
@@ -195,6 +205,15 @@ class TimeEntryService:
             return original
         return WorkType(value)
 
+    def _resolve_context(self, context, original=None):
+        if not isinstance(context, WorkContext):
+            raise ValueError("work_context_invalid")
+        if self.projects is None:
+            if context.project_id is not None:
+                raise ValueError("project_unavailable")
+            return context
+        return self.projects.resolve(context, original)
+
     def delete(self, record: WorkLog) -> Result[None]:
         return self._run(lambda: self.repository.delete_entry(self.user_id, record.id, record.revision))
 
@@ -202,7 +221,7 @@ class TimeEntryService:
         return self._run(lambda: self.calendar_events.remove(self.user_id, event))
 
     def start(self, work_type: str, content: str, *, now: datetime | None = None,
-              break_entry: WorkLog | None = None) -> Result[EntryTimer]:
+              break_entry: WorkLog | None = None, context: WorkContext | None = None) -> Result[EntryTimer]:
         def start():
             if self.restore_failed:
                 raise ValueError("auto_record_restore_failed")
@@ -234,7 +253,8 @@ class TimeEntryService:
                             raise ValueError("worklog_entry_overlap")
             if active_break is not None:
                 return Result.failure(ConflictError("fixed_break_active", "fixed_break_active", {"break_entry": active_break}))
-            timer = EntryTimer(uuid4().hex, moment, self._resolve_type(work_type), self._content(content))
+            timer = EntryTimer(uuid4().hex, moment, self._resolve_type(work_type), self._content(content),
+                               context=self._resolve_context(context or WorkContext()))
             if break_entry is None:
                 self._persist(timer)
             else:
@@ -269,7 +289,7 @@ class TimeEntryService:
             raise ValueError("auto_record_not_started")
         record = normalize_work_log(WorkLog(self.user_id, timer.started_at.date(), timer.started_at.strftime("%H:%M"),
             end.strftime("%H:%M"), timer.legacy_break_hours, self._content(content), timer.work_type,
-            started_at=timer.started_at, ended_at=end, capture_id=timer.capture_id))
+            started_at=timer.started_at, ended_at=end, capture_id=timer.capture_id, context=timer.context))
         raw = self._encode(next_timer)
         saved = self.repository.save_entry(record, timer_change=(self._timer_raw, raw))
         self.timer, self._timer_raw = next_timer, raw
@@ -306,7 +326,7 @@ class TimeEntryService:
             if self.timer is None or self.timer.break_until is None:
                 raise ValueError("auto_record_break_not_active")
             moment = self.timer.break_until if at_deadline else min(now or self.now(), self.timer.break_until)
-            next_timer = EntryTimer(uuid4().hex, moment, self.timer.resume_type, self.timer.resume_content)
+            next_timer = EntryTimer(uuid4().hex, moment, self.timer.resume_type, self.timer.resume_content, context=self.timer.context)
             return self._finish(moment, content, next_timer)
         return self._run(resume)
 

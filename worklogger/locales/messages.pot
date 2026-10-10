@@ -1715,6 +1715,9 @@ msgstr ""
 msgid "Unable to update work types. Your records have not changed."
 msgstr ""
 
+msgid "Unclassified"
+msgstr ""
+
 msgid "Unknown"
 msgstr ""
 

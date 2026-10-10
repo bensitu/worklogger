@@ -1717,6 +1717,9 @@ msgstr "无法更新速记。您的修改已保留。"
 msgid "Unable to update work types. Your records have not changed."
 msgstr "无法更新工作类型。您的记录未改变。"
 
+msgid "Unclassified"
+msgstr "未分类"
+
 msgid "Unknown"
 msgstr "未知"
 

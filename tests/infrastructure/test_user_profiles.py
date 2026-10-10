@@ -28,13 +28,13 @@ class UserProfileTests(unittest.TestCase):
         self.directory = self.enterContext(tempfile.TemporaryDirectory())
         self.path = Path(self.directory) / "worklog.db"
         self.factory = SQLiteConnectionFactory(self.path)
-        MigrationRunner(self.factory, migration_modules=MIGRATION_MODULES[:-1]).run_pending()
+        MigrationRunner(self.factory, migration_modules=MIGRATION_MODULES[:9]).run_pending()
         self.auth = SQLiteAuthRepository(self.factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
         self.registered = RegisterUserHandler(self.auth).handle(RegisterUserCommand("han_meimei", "synthetic-password")).value
         self.other = RegisterUserHandler(self.auth).handle(RegisterUserCommand("other_login", "other-password")).value.user
         with self.factory.connection() as connection:
             self.previous_users = [dict(row) for row in connection.execute("SELECT * FROM users ORDER BY id")]
-        self.assertEqual(MigrationRunner(self.factory).run_pending(), (10,))
+        self.assertEqual(MigrationRunner(self.factory).run_pending(), tuple(range(10, len(MIGRATION_MODULES) + 1)))
         self.profile = UserProfileService(user_id=self.registered.user.id, repository=self.auth)
 
     def test_migration_and_profile_changes_preserve_credentials_and_ownership(self):

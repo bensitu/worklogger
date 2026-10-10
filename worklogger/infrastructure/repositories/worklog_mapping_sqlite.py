@@ -7,6 +7,7 @@ import sqlite3
 from datetime import datetime
 
 from worklogger.domain.worklog.models import CustomWorkType, WorkLog
+from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.rules import (
     decode_work_type,
     normalize_work_log,
@@ -32,6 +33,7 @@ class WorkLogStorage:
             self.timestamps = "started_at" in columns
             self.supports_entries = "id" in columns
             self.type_snapshots = "work_type_label" in columns
+            self.work_context = "project_id" in columns
         self.select = 'SELECT w.user_id, w.d, w.start, w.end, w."break", '
         self.select += (
             "COALESCE(n.content, w.note) AS note"
@@ -45,6 +47,8 @@ class WorkLogStorage:
             self.select += ", w.id, w.revision, w.capture_id"
         if self.type_snapshots:
             self.select += ", w.work_type_label, w.work_type_category"
+        if self.work_context:
+            self.select += ", w.project_id, w.work_item_id, w.project_label, w.work_item_label"
         self.select += " FROM worklog AS w "
         if self.separate_notes and not self.supports_entries:
             self.select += (
@@ -69,6 +73,8 @@ class WorkLogStorage:
     def entry_values(self, record: WorkLog) -> tuple:
         if isinstance(record.work_type, CustomWorkType) and not self.type_snapshots:
             raise ValueError("database_version_unsupported")
+        if record.context != WorkContext() and not self.work_context:
+            raise ValueError("database_version_unsupported")
         values = self.values(record)
         if self.type_snapshots:
             definition = record.work_type
@@ -77,6 +83,9 @@ class WorkLogStorage:
                 if isinstance(definition, CustomWorkType)
                 else ("", "")
             )
+        if self.work_context:
+            context = record.context
+            values += (context.project_id, context.work_item_id, context.project_label, context.work_item_label)
         return values
 
     @staticmethod
@@ -108,6 +117,8 @@ class WorkLogStorage:
             id=int(row["id"]) if "id" in row.keys() else None,
             revision=int(row["revision"]) if "revision" in row.keys() else 0,
             capture_id=row["capture_id"] if "capture_id" in row.keys() else None,
+            context=WorkContext(row["project_id"], row["work_item_id"], row["project_label"], row["work_item_label"])
+                    if "project_id" in row.keys() else WorkContext(),
         )
         return (
             normalize_work_log(record)

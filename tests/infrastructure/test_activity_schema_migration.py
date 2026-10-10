@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from worklogger.infrastructure.backup import SQLiteBackupService
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
+from worklogger.infrastructure.database.migrations.runner import MIGRATION_MODULES
 from worklogger.infrastructure.database.migrations import migration_003_activity_events as migration
 from worklogger.infrastructure.repositories import ActivityEvent, SQLiteActivityRepository
 
@@ -53,12 +54,12 @@ class ActivitySchemaMigrationTests(unittest.TestCase):
 
     def test_unversioned_database_preserves_existing_activity_rows(self):
         self.previous_database(versioned=False)
-        self.assertEqual(MigrationRunner(self.factory).run_pending(), (1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+        self.assertEqual(MigrationRunner(self.factory).run_pending(), tuple(range(1, len(MIGRATION_MODULES) + 1)))
         with self.factory.connection() as connection:
             self.assertEqual(connection.execute("SELECT id FROM activity_events").fetchone()[0], 42)
 
     def test_new_database_needs_no_compatibility_backup(self):
-        self.assertEqual(MigrationRunner(self.factory).run_pending(), (1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+        self.assertEqual(MigrationRunner(self.factory).run_pending(), tuple(range(1, len(MIGRATION_MODULES) + 1)))
         self.assertFalse(list(self.path.parent.glob("*.bak_*")))
 
     def test_backup_failure_does_not_change_database(self):

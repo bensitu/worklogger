@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from enum import Enum
 from uuid import UUID
+from worklogger.domain.projects.models import WorkContext
 from worklogger.config.constants import DEFAULT_LEAVE_HOURS, LEAVE_TYPES, MAX_SHIFT_HOURS
 
 
@@ -84,6 +85,7 @@ class WorkLog:
     revision: int = 0
     capture_id: str | None = None
     entries: tuple[WorkLog, ...] = ()
+    context: WorkContext = WorkContext()
 
     @property
     def has_times(self) -> bool:

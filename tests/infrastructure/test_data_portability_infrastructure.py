@@ -21,6 +21,7 @@ from worklogger.domain.worklog.rules import shift_datetimes
 from worklogger.infrastructure.backup import SQLiteBackupService
 from worklogger.infrastructure.backup import sqlite_backup
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
+from worklogger.infrastructure.database.migrations.runner import MIGRATION_MODULES
 from worklogger.infrastructure.export import (
     WorkLogCsvExporter,
     WorkLogCsvImporter,
@@ -57,7 +58,7 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         self.addCleanup(self._tempdir.cleanup)
         self.db_path = str(Path(self._tempdir.name) / "worklog.db")
         self.factory = SQLiteConnectionFactory(self.db_path)
-        self.assertEqual(MigrationRunner(self.factory).run_pending(), (1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+        self.assertEqual(MigrationRunner(self.factory).run_pending(), tuple(range(1, len(MIGRATION_MODULES) + 1)))
 
     def auth_repository(
         self,
@@ -251,7 +252,7 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         self.register_user("alice")
         other_path = Path(self._tempdir.name) / "other.db"
         other_factory = SQLiteConnectionFactory(other_path)
-        self.assertEqual(MigrationRunner(other_factory).run_pending(), (1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+        self.assertEqual(MigrationRunner(other_factory).run_pending(), tuple(range(1, len(MIGRATION_MODULES) + 1)))
         self.register_user("bob", other_factory)
         service = SQLiteBackupService(self.factory, expected_username="alice")
 

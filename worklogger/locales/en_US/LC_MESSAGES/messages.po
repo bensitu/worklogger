@@ -1717,6 +1717,9 @@ msgstr "Unable to update the quick log. Your changes have been retained."
 msgid "Unable to update work types. Your records have not changed."
 msgstr "Unable to update work types. Your records have not changed."
 
+msgid "Unclassified"
+msgstr "Unclassified"
+
 msgid "Unknown"
 msgstr "Unknown"
 

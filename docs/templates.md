@@ -69,6 +69,7 @@ Overtime: {{overtime_hours}}
 | `quick_logs` | Lines derived from quick logs |
 | `total_hours` | Worked hours formatted to one decimal place |
 | `overtime_hours` | Overtime formatted to one decimal place |
+| `projects_summary` | Worked hours grouped by saved project identity/label, including an unclassified group; rest and leave contribute no worked hours |
 | `issues`, `next_plan` | Empty list items for manual completion |
 
 For example, `Prepared by: {{display_name}}` adds an author line. The profile is

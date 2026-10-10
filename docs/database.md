@@ -34,6 +34,8 @@ external SQLite clients still require SQLite's own locking protections.
 | `login_attempts` | Username primary key, failure count, lock expiry, last failure |
 | `worklog` | Integer entry ID; user/date, start/end, offset-aware timestamps, historical break deduction, independent content, work type, revision and capture identifier |
 | `work_types` | Account-owned custom classification IDs, normalized unique active names, accounting category, revision and archived flag |
+| `projects` | Account-owned project IDs, name/code, normalized unique active name, revision and archived flag |
+| `work_items` | Account-owned project-specific work items, title/source URL, completion, revision and archived flag |
 | `daily_notes` | Composite `(user_id, d)` primary key; independent daily note content |
 | `quick_logs` | Integer ID; user/date, optional start/end, description, creation timestamp |
 | `settings` | Composite `(user_id, key)` primary key; string value |
@@ -84,6 +86,7 @@ the application version alone.
 | 8 | Complete released account fields, map older preferences, retain password-change requirements and identity metadata, and index cross-account settings lookups |
 | 9 | Add custom type name/category snapshots to work entries, an account-owned type catalog, and an indexed report-date range lookup |
 | 10 | Add an optional display name independently of the existing login identifier |
+| 11 | Add optional projects and work items, record associations and label snapshots, and indexed context/date queries |
 
 Migration 9 leaves built-in classifications unchanged and initializes their
 snapshot columns to empty strings. Custom records use a `custom:` UUID identifier
@@ -97,6 +100,14 @@ credentials, roles, tokens, and account-owned records are unchanged. Empty displ
 names fall back to the login ID. Names are not unique, have an 80-character limit,
 and exclude control/format/surrogate characters. Changes use an account-scoped
 transaction and the previously loaded value to reject conflicting edits.
+
+Project associations are optional. Migration 11 leaves old records unclassified
+without changing their IDs, timestamps, deductions, or content. Project and work-item
+updates use revisions; archival preserves records and labels. Writes verify account
+ownership and the work item's project inside the record transaction. Existing
+associations and captured timers can finish or be edited after archival; new
+associations cannot select archived context. A timer preserves its labels across
+restart and catalog changes. CSV carries labels without cross-database foreign IDs.
 
 The runner creates one complete private SQLite snapshot before converting populated
 tables, rather than a separate copy for each migration. Table replacement and settings-key conversion are transactional. Existing

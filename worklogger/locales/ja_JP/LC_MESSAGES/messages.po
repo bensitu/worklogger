@@ -1717,6 +1717,9 @@ msgstr "作業メモを更新できません。変更内容は保持されてい
 msgid "Unable to update work types. Your records have not changed."
 msgstr "勤務種別を更新できません。記録は変更されていません。"
 
+msgid "Unclassified"
+msgstr "未分類"
+
 msgid "Unknown"
 msgstr "不明"
 
