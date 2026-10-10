@@ -22,6 +22,44 @@ from worklogger.infrastructure.i18n import _
 
 
 class ReportSettingsLayoutChecks(unittest.TestCase):
+    def test_analytics_period_and_actions_share_toolbar_height_across_scopes(self):
+        from PySide6.QtCore import QPoint
+        from worklogger.presentation.shell.analytics_page import AnalyticsPage
+        engine = ThemeEngine()
+        old_language, old_style, old_palette = get_language(), self.app.styleSheet(), self.app.palette()
+        try:
+            for language in available_languages():
+                set_language(language)
+                for dark in (False, True):
+                    self.app.setPalette(engine.qt_palette(dark=dark))
+                    self.app.setStyleSheet(engine.application_stylesheet(dark=dark))
+                    page = AnalyticsPage(None, date(2026, 10, 11))
+                    page.show()
+                    for width, height in ((740, 580), (1100, 700)):
+                        page.resize(width, height)
+                        for scope in ("monthly", "quarterly", "annual"):
+                            page.scope_control.set_value(scope, emit=False)
+                            page._populate_periods()
+                            for enabled in (True, False):
+                                controls = (page.period_combo, page.projects_button, page.export_button)
+                                for control in controls:
+                                    control.setEnabled(enabled)
+                                self.app.processEvents()
+                                self.assertEqual({control.height() for control in controls}, {44})
+                                self.assertEqual(len({control.mapTo(page, control.rect().center()).y() for control in controls}), 1)
+                                for control in controls:
+                                    self.assertTrue(page.rect().contains(control.rect().translated(control.mapTo(page, QPoint()))))
+                            for control in controls:
+                                control.setEnabled(True)
+                            self.app.processEvents()
+                            self.capture(page, f"{language}-analytics-toolbar-{dark}-{width}-{scope}")
+                    page.close()
+                    page.deleteLater()
+        finally:
+            set_language(old_language)
+            self.app.setStyleSheet(old_style)
+            self.app.setPalette(old_palette)
+
     def test_button_states_remain_distinct_across_themes_and_action_variants(self):
         from PySide6.QtGui import QPalette
         from PySide6.QtWidgets import QGridLayout, QPushButton, QWidget
@@ -82,8 +120,12 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                         self.assertEqual(disabled.palette().color(QPalette.ColorRole.ButtonText).name(),
                                          "#6f7699" if dark else "#9aa3bb")
                         disabled_background = disabled.grab().toImage().pixelColor(8, disabled.height() // 2)
-                        self.assertEqual(disabled_background.name(), "#111827" if dark else "#edf0f5")
-                        self.assertNotEqual(enabled.grab().toImage().pixelColor(8, enabled.height() // 2), disabled_background)
+                        enabled_background = enabled.grab().toImage().pixelColor(8, enabled.height() // 2)
+                        if enabled.property("variant") == "ghost":
+                            self.assertEqual(disabled_background, enabled_background)
+                        else:
+                            self.assertEqual(disabled_background.name(), "#111827" if dark else "#edf0f5")
+                            self.assertNotEqual(enabled_background, disabled_background)
                         if isinstance(disabled, RecordSummaryButton):
                             self.assertEqual(enabled.label.palette().color(QPalette.ColorRole.WindowText).name(),
                                              engine.palette(theme, dark=dark, custom_color="#168078").text)
@@ -124,9 +166,11 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                     groups = [label.parentWidget() for label in headings]
                     self.assertEqual(len(set(groups)), len(headings))
                     self.assertTrue(all(group.objectName() == "settings_content_frame" for group in groups))
-                    for category in ("appearance", "account", "ai", "network", "about"):
+                    for category in ("appearance", "account", "ai", "network"):
                         settings.category_nav.set_category(category)
                         self.assertTrue(settings.category_stack.currentWidget().findChildren(QLabel, "settings_section_title_label"))
+                    settings.category_nav.set_category("about")
+                    self.assertFalse(settings.category_stack.currentWidget().findChildren(QLabel, "settings_section_title_label"))
                     settings.category_nav.set_category("general")
                     self.capture(settings, f"{language}-general-groups-{dark}")
                     settings.set_data_directory(Path("D:/Application Data/WorkLogger"))

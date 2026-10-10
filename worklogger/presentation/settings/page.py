@@ -131,7 +131,7 @@ class SettingsPage(QWidget):
             self._busy_jobs.add(job)
         else:
             self._busy_jobs.discard(job)
-        self.category_stack.setEnabled(not self._busy_jobs or self._busy_jobs == {"external_model_test"})
+        self.category_stack.setEnabled(not self._busy_jobs.difference({"external_model_test", "update"}))
         if job == "external_model_test":
             fields = (self.external_model_enabled_switch, self.external_api_key_line_edit,
                       self.external_base_url_line_edit, self.external_model_line_edit, self.test_external_model_button)
@@ -733,7 +733,7 @@ class SettingsPage(QWidget):
             else self.status_label
         )
         label.setText(message)
-        label.setVisible(bool(message))
+        label.setVisible(bool(message) or category == "update")
         # Keep the compatibility status value without showing a duplicate footer.
         if label is not self.status_label:
             self.status_label.setText(message)

@@ -119,6 +119,7 @@ class AccountLayoutChecks(unittest.TestCase):
                     dialog.deleteLater()
 
     def test_update_feedback_preserves_about_content_positions(self):
+        from PySide6.QtWidgets import QLabel
         for language in available_languages():
             set_language(language)
             for dark in (False, True):
@@ -128,18 +129,27 @@ class AccountLayoutChecks(unittest.TestCase):
                     page.refresh()
                     page.category_nav.set_category("about")
                     page.show()
+                    about = page.category_stack.currentWidget()
+                    self.assertFalse(about.findChildren(QLabel, "settings_section_title_label"))
+                    icon = page.findChild(QLabel, "about_icon_label")
                     for width, height in ((880, 580), (1100, 700)):
                         page.resize(width, height)
                         self.app.processEvents()
-                        widgets = (page.about_name_label, page.about_version_label, page.about_author_label,
+                        widgets = (icon, page.about_name_label, page.about_version_label, page.about_author_label,
                                    page.about_license_label, page.about_url_label, page.check_updates_button)
                         positions = tuple(widget.mapTo(page, QPoint()) for widget in widgets)
-                        for message in (_("Checking for updates..."), _("You are using the latest version."),
-                                        _("Unable to check for updates."), ""):
+                        icon_image = icon.grab().toImage()
+                        for checking, message in ((True, _("Checking for updates...")), (False, _("You are using the latest version.")),
+                                                  (False, _("Unable to check for updates.")), (False, "")):
+                            page.set_busy("update", checking)
+                            page.check_updates_button.setEnabled(not checking)
                             page.set_operation_status(message, "update")
                             self.app.processEvents()
+                            self.assertTrue(icon.isEnabled())
+                            self.assertEqual(icon.grab().toImage(), icon_image)
                             self.assertEqual(tuple(widget.mapTo(page, QPoint()) for widget in widgets), positions,
                                              (language, dark, width, message))
+                            self.assertFalse(page.update_status_label.isHidden())
                             self.assertEqual(page.category_stack.currentWidget().horizontalScrollBar().maximum(), 0)
                         page.set_operation_status(_("You are using the latest version."), "update")
                         self.app.processEvents()

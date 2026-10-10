@@ -329,6 +329,12 @@ QToolButton[variant="ghost"] {
   font-weight: 400;
 }
 
+QPushButton[variant="ghost"]:hover,
+QToolButton[variant="ghost"]:hover {
+  background: {{ button_hover }};
+  border-color: transparent;
+}
+
 QPushButton[variant="outline"],
 QToolButton[variant="outline"] {
   background: {{ surface }};
@@ -683,6 +689,25 @@ QToolButton[export_menu="true"]::menu-indicator {
   height: 12px;
 }
 
+QComboBox#analytics_period_combo,
+QPushButton#analytics_projects_button,
+QToolButton#analytics_export_button {
+  min-height: 30px;
+  max-height: 30px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+QToolButton#note_copy_button,
+QToolButton#note_export_button,
+QToolButton#note_reload_button {
+  min-width: 20px;
+  max-width: 20px;
+  min-height: 28px;
+  max-height: 28px;
+  padding: 5px 9px;
+}
+
 QPushButton:disabled,
 QToolButton:disabled,
 QPushButton[variant]:disabled,
@@ -696,6 +721,12 @@ QPushButton#calendar_time_entry_button:disabled {
   color: {{ disabled_text }};
   background: {{ disabled_background }};
   border-color: {{ border }};
+}
+
+QPushButton[variant="ghost"]:disabled,
+QToolButton[variant="ghost"]:disabled {
+  background: transparent;
+  border-color: transparent;
 }
 
 QPushButton QLabel:disabled {

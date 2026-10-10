@@ -206,6 +206,40 @@ def _settings_view_model(repository: MemorySettingsRepository) -> SettingsViewMo
 
 
 class SettingsWorkflowTests(unittest.TestCase):
+    def test_update_check_preserves_about_availability_and_prevents_duplicate_requests(self):
+        from worklogger.app.job_runner import JobHandle, CancellationToken
+        from PySide6.QtWidgets import QLabel
+        class DeferredRunner:
+            def __init__(self):
+                self.requests = []
+            def submit(self, name, operation, *, on_complete):
+                self.requests.append((operation, on_complete))
+                return JobHandle(name, lambda: None)
+        runner = DeferredRunner()
+        controller = SettingsWorkflowController(
+            settings_view_model=_settings_view_model(MemorySettingsRepository()),
+            auth_view_model=FakeAuthViewModel(), user=User(1, "alice"),
+            data_management_view_model=FakeDataManagementViewModel(),
+            update_check_handler=FakeUpdateCheckHandler(), job_runner=runner,
+            notify_success=lambda *_args: None, notify_error=lambda *_args: None,
+        )
+        page = controller.create_page()
+        page.category_nav.set_category("about")
+        self.assertFalse(page.update_status_label.isHidden())
+        page.check_updates_button.click()
+        self.assertTrue(page.is_busy)
+        self.assertFalse(page.check_updates_button.isEnabled())
+        self.assertTrue(page.category_stack.isEnabled())
+        self.assertTrue(page.findChild(QLabel, "about_icon_label").isEnabled())
+        self.assertFalse(controller._check_updates(page))
+        self.assertEqual(len(runner.requests), 1)
+        operation, complete = runner.requests[0]
+        complete(operation(CancellationToken()))
+        self.assertFalse(page.is_busy)
+        self.assertTrue(page.check_updates_button.isEnabled())
+        self.assertEqual(page.update_status_label.text(), "Update available: 4.0.1")
+        page.deleteLater()
+
     def test_user_management_entry_requires_an_administrator_and_configured_workflow(self):
         for is_admin, configured in ((False, True), (True, False)):
             with self.subTest(is_admin=is_admin, configured=configured):

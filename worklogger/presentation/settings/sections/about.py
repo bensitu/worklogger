@@ -18,7 +18,6 @@ from worklogger.presentation.settings.sections.actions import SectionActions
 from worklogger.presentation.settings.sections.common import (
     _secondary_label,
     _separator,
-    _section_title,
     _SettingsScrollPage,
 )
 from worklogger.presentation.widgets.assets import pixmap_asset
@@ -45,7 +44,6 @@ class AboutSection(_SettingsScrollPage):
         card.content_layout.setContentsMargins(18, 20, 18, 20)
         card.content_layout.setSpacing(16)
         card.content_layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        card.content_layout.addWidget(_section_title(_("About")), 0, Qt.AlignmentFlag.AlignLeft)
         icon = QLabel("")
         icon.setObjectName("about_icon_label")
         pixmap = pixmap_asset("icons/worklogger.webp")
@@ -123,7 +121,6 @@ class AboutSection(_SettingsScrollPage):
         size_policy = self.update_status_label.sizePolicy()
         size_policy.setRetainSizeWhenHidden(True)
         self.update_status_label.setSizePolicy(size_policy)
-        self.update_status_label.hide()
         card.content_layout.addWidget(self.update_status_label)
         page.layout().addStretch(1)
         page.layout().addWidget(card)

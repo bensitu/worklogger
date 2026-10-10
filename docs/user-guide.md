@@ -115,8 +115,9 @@ with a neutral outline, neutral text and medium weight. Primary save, creation,
 sign-in and confirmation actions use a theme-colored background, white text and
 semibold weight. Auxiliary actions use regular weight and a transparent background;
 destructive actions use red text and matching icons. Selected navigation retains
-theme-color emphasis. Disabled actions use muted text and icons with a distinct
-background while keeping their role's weight to avoid layout changes. Button icons
+theme-color emphasis. Disabled framed actions use muted text and icons with a distinct
+background; frameless auxiliary actions keep their transparent contour. Both retain
+their role's weight to avoid layout changes. Button icons
 follow the text color rather than applying a separate accent color.
 
 ### Manual Entry
@@ -255,6 +256,11 @@ preserves the source entries. The editor supports
 draft recovery, copying, Markdown export, and optional text polishing. Templates
 belong to Reports and cannot be changed from the memo editor.
 
+The note toolbar orders polishing, export, copy and reload from left to right.
+Copy and reload remain frameless when disabled; their icons become muted instead
+of gaining a border. The icon targets keep the same size, and keyboard navigation
+follows the displayed order.
+
 Notes are private by default. Allow in reports and Allow in AI context are explicit
 per-date choices; AI collection also respects the account's privacy settings.
 Concurrent changes reject stale saves. Closing edited text offers to keep its draft,
@@ -379,3 +385,5 @@ Check for Updates contacts the configured GitHub release endpoint. It does not
 download or install an application update automatically.
 The About page reserves a status area beneath the check button, so checking,
 completion, and error messages do not reposition the application information.
+It intentionally has no separate About subtitle. Checking disables only the
+check button, retaining the application image's original colors.

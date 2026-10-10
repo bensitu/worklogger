@@ -142,6 +142,7 @@ class AnalyticsPage(QWidget):
         self._populate_periods()
         header.addWidget(self.period_combo)
         self.projects_button = QPushButton(_("Projects"))
+        self.projects_button.setObjectName("analytics_projects_button")
         set_button_icon(self.projects_button, "folder-kanban")
         self.projects_button.clicked.connect(self.projects_requested)
         header.addWidget(self.projects_button)
@@ -149,6 +150,7 @@ class AnalyticsPage(QWidget):
             _("Export"),
             (("csv", _("CSV")), ("pdf", _("PDF"))),
         )
+        self.export_button.setObjectName("analytics_export_button")
         self.export_button.export_requested.connect(self._choose_export_path)
         header.addWidget(self.export_button)
         root.addLayout(header)
