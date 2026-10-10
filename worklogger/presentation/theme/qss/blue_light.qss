@@ -428,9 +428,9 @@ QDateEdit::drop-down {
 }
 
 QDateEdit::down-arrow {
-  image: url("{{ icons_root }}/calendar.svg");
-  width: 16px;
-  height: 16px;
+  image: url("{{ icons_root }}/chevron-down.svg");
+  width: 14px;
+  height: 14px;
 }
 
 QDoubleSpinBox::up-button, QSpinBox::up-button, QTimeEdit::up-button {
