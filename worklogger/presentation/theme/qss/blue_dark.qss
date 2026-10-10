@@ -39,7 +39,10 @@ QListWidget#custom_work_type_list_widget::item:selected {
 QWidget#settings_theme_row_widget,
 QWidget#account_avatar_row_widget,
 QWidget#account_display_name_editor_widget,
-QWidget#time_entry_actions_widget {
+QWidget#time_entry_actions_widget,
+QWidget#processing_progress_widget,
+QWidget#time_entry_content_heading_widget,
+QStackedWidget#time_entry_content_heading_stack_widget {
   background: transparent;
 }
 

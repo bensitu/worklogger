@@ -152,6 +152,7 @@ class TimeEntryPanel(QWidget):
         if recent.ok:
             self.context_picker.set_recent(recent.value)
         self.content_heading = QWidget()
+        self.content_heading.setObjectName("time_entry_content_heading_widget")
         content_heading = QHBoxLayout(self.content_heading)
         content_heading.setContentsMargins(0, 0, 0, 0)
         content_heading.addWidget(QLabel(_("Content")), 1)
@@ -164,6 +165,7 @@ class TimeEntryPanel(QWidget):
         self.polish_button.clicked.connect(self._polish_content)
         content_heading.addWidget(self.polish_button)
         self.content_heading_stack = QStackedWidget()
+        self.content_heading_stack.setObjectName("time_entry_content_heading_stack_widget")
         self.content_heading_stack.addWidget(self.content_heading)
         self.processing_progress = ProcessingProgress()
         self.processing_progress.bar.setFixedWidth(48)
