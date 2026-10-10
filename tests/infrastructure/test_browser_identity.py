@@ -150,3 +150,39 @@ class BrowserIdentityTests(unittest.TestCase):
         self.assertTrue(client.status().available)
         self.assertEqual(client.authenticate().error.code, "identity_browser_failed")
 
+    def test_verified_browser_identity_links_and_reopens_sqlite_account(self):
+        from worklogger.app.commands.identity_commands import LinkIdentityCommand, LoginWithIdentityCommand
+        from worklogger.app.use_cases.identity import LinkIdentityHandler, LoginWithIdentityHandler, UnlinkIdentityHandler
+        from worklogger.app.commands.identity_commands import UnlinkIdentityCommand
+        from worklogger.infrastructure.database import SQLiteConnectionFactory, MigrationRunner
+        from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteIdentityRepository
+        from worklogger.infrastructure.security.password_hasher import PBKDF2PasswordHasher
+        from worklogger.domain.auth.policies import remember_token_storage_value
+        factory = SQLiteConnectionFactory(self.store._path.parent / "worklog.db")
+        MigrationRunner(factory).run_pending()
+        auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
+        user = auth.create_user("local-id", "password123", recovery_key="recovery", is_admin=True)
+        auth.set_display_name(user.id, "Mary", expected_display_name="")
+        identities = SQLiteIdentityRepository(factory)
+        owner = self
+        class Provider:
+            provider_id = "google"
+            def authenticate(self, *, cancellation=None):
+                return owner._flow("google")[0]
+        linked = LinkIdentityHandler(repository=identities, providers=(Provider(),)).handle(LinkIdentityCommand(user.id, "google"))
+        self.assertTrue(linked.ok, linked.error)
+        login = LoginWithIdentityHandler(identities=identities, auth=auth, providers=(Provider(),)).handle(
+            LoginWithIdentityCommand("google", remember=True))
+        self.assertTrue(login.ok, login.error)
+        self.assertEqual(login.value.user.id, user.id)
+        self.assertEqual(login.value.user.effective_display_name, "Mary")
+        self.assertEqual(login.value.linked_identity.issuer, "https://accounts.google.com")
+        self.assertEqual(auth.user_count(), 1)
+        self.assertEqual(auth.get_user_by_remember_token(remember_token_storage_value(login.value.token)).id, user.id)
+        self.assertTrue(UnlinkIdentityHandler(identities, auth).handle(UnlinkIdentityCommand(user.id, linked.value.id)).ok)
+        self.assertEqual(identities.list_for_user(user.id), ())
+        with factory.connection() as connection:
+            columns = {row[1] for row in connection.execute("PRAGMA table_info(external_identities)")}
+            self.assertNotIn("access_token", columns)
+            self.assertNotIn("refresh_token", columns)
+

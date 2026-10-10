@@ -21,7 +21,7 @@ connected. Capability declarations do not create adapters or route requests.
 | Model files | `JsonLocalModelStore` | Connected to local model management |
 | External AI | `AccountAIGateway` and `OpenAICompatibleGateway` | Explicit account opt-in; configured endpoint/model/key are used by rewriting and chat handlers |
 | Local AI | `LocalInferenceRuntime` and `LocalModelGateway` | Connected when the native dependency and a selected verified model are available; controlled by account preferences |
-| Identity providers | OIDC/PKCE and provider helpers | Desktop constructs disabled Google/Microsoft providers |
+| Identity providers | `BrowserIdentityProvider`, OIDC/PKCE and loopback callbacks | Configured Google/Microsoft sign-in and account linking use background browser authorization |
 | Proxy preferences | `AccountHTTPTransport` and system credential storage | Applied to update checks, model catalog/file downloads, and external AI |
 
 ## AI Services
@@ -96,25 +96,36 @@ hardware suitability remain the distributor's responsibility.
 
 ## Identity Providers
 
-Identity helpers include provider normalization, configuration parsing, PKCE,
-OIDC handling, and linked-identity storage. The configuration helper can read
-`WORKLOGGER_IDENTITY_CONFIG` and selected provider environment values such as
-`WORKLOGGER_GOOGLE_CLIENT_ID` and `WORKLOGGER_FIREBASE_API_KEY`.
+Google and Microsoft sign-in and account linking use authorization code requests
+with PKCE, unpredictable state and nonce, the system browser and an ephemeral
+callback listener bound only to IPv4 loopback. The callback verifies the request
+authority, path and state and accepts a single code or provider error. Duplicate
+parameters and replayed responses are rejected. Authorization waits at most
+180 seconds; HTTPS operations have 15-second timeouts and 256 KiB response limits.
+Callbacks never log request URLs or display authorization codes.
 
-These helpers are not connected to the disabled desktop login buttons. Changing
-those environment values alone does not enable federated login. Linking an
-external identity record is also separate from obtaining an authenticated local
-application session. Do not advertise provider login until that end-to-end flow
-is connected and tested.
+Registration settings can be entered in provider configuration dialogs, or managed
+through `WORKLOGGER_IDENTITY_CONFIG` and provider environment values. Local registration
+configuration is encrypted in the operating-system user's WorkLogger credential
+directory. Google direct OIDC no longer requires Firebase configuration. Existing
+Firebase verification helpers remain independent of the direct desktop flow.
+See [identity sign-in](identity-signin.md) for registration requirements and precedence.
 
 OIDC profile construction accepts a signed token, not an arbitrary claim mapping.
 It verifies RS256 against supplied trusted JWKS, issuer, audience, required expiry
 and issue time, subject, and a nonempty expected nonce. JWKS must come from the
 configured provider through a trusted HTTPS integration, never from token-supplied
-URLs. Microsoft configuration requires a concrete tenant. Firebase response
+URLs. Token exchange and signing-key requests use fixed provider HTTPS endpoints
+without redirects. Multiple-audience tokens also require the matching authorized
+party. Microsoft configuration requires a concrete tenant. Firebase response
 conversion verifies the signed project token and subject/provider agreement;
 the broker workflow must still bind its original OAuth request and response.
 Validation uses [PyJWT's supported verification API](https://pyjwt.readthedocs.io/en/stable/usage.html).
+Provider sign-in resolves the saved issuer and subject before opening a local
+session. The Remember me option stores the same hashed, expiring local credential
+as password sign-in, not a provider access or refresh token. Account linking uses
+the account's configured proxy transport; pre-login provider requests use direct
+HTTPS because there is no authenticated account from which to select proxy credentials.
 New external accounts use a separate collision-resistant name when a local name
 is occupied and do not have a usable random local password. Removing the last
 identity requires another usable password or identity.

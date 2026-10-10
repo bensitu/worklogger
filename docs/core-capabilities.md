@@ -82,7 +82,8 @@ these checks. See [testing](testing.md), [recording](time-recording.md),
 
 A prior windowed Windows AMD64 artifact, from source commit `04aa6e4`, was built from the hash-verified CPython 3.11.9
 environment and passed executable import, startup and isolated workflow checks.
-The current source suite passed 455 tests; localized recording/settings feedback
-checks also passed. The prior artifact does not contain these later interface changes.
+The source behavior and integration suite, targeted browser-authentication checks,
+and localized interface checks passed. The prior artifact does not contain these
+later interface and authentication changes.
 It is unsigned and excludes optional
 native inference; no real model or provider request was used for certification.

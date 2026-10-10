@@ -190,7 +190,8 @@ class IdentityDialog(QDialog):
         for provider in self._state.providers:
             label = provider.display_name
             if not provider.available:
-                label = f"{label} ({_('Not configured')})"
+                status = _("Off") if provider.configured else _("Not configured")
+                label = f"{label} ({status})"
             self.provider_combo.addItem(label, provider.provider)
         self._update_provider()
         self.unlink_button.setEnabled(self.identity_list.currentItem() is not None)

@@ -55,8 +55,20 @@ password visibility. Remember me stores a local session credential with a
 temporary lockouts. See [security behavior](security.md).
 
 The login language uses the previous explicit language choice, otherwise a
-supported system language, otherwise English. Google and Microsoft login buttons
-are disabled in the standard application.
+supported system language, otherwise English. After the initial local administrator
+account is created, configured Google and Microsoft buttons open the system browser
+for sign-in. The settings icon beside each provider opens its application registration
+configuration. These values come from the distributor or deployment administrator,
+not from the user's account password; no source edit or rebuild is required.
+
+In **Settings > Account > Linked identities**, choose a configured provider and
+**Link**, then complete browser authorization. Signing in through an existing link
+opens the same local account and retains its display name and data. An unlinked
+identity creates a separate non-administrator account; matching email addresses
+do not merge accounts. **Unlink** cannot remove the only usable sign-in method.
+The cancel icon stops pending authorization without opening a session. Closing
+an authorization dialog requests cancellation and waits for the bounded background
+operation to finish. See [provider configuration and compatibility](identity-signin.md).
 
 ### Display Names
 

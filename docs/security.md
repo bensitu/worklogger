@@ -48,6 +48,12 @@ exported text is prefixed with an apostrophe; exports are still unencrypted.
   Successful password and remembered-token authentication update the last login time.
 - Remembered login tokens are stored as SHA-256-derived values in the database
   and expire after 30 days. Password workflows invalidate remembered credentials.
+- Google and configured-tenant Microsoft sign-in use the system browser, PKCE,
+  request-bound state and nonce, loopback-only callbacks, and verified RS256 ID
+  tokens. Provider access and refresh tokens are not persisted. Linking requires
+  an authenticated local session and does not merge accounts based on email.
+  Removing the last usable sign-in method is rejected. Existing issuer information
+  is checked before opening a linked local session. See [browser sign-in](identity-signin.md).
 
 Do not use the reduced hashing iterations supplied by test fixtures in production.
 There is no default administrator password or email-based account recovery.
@@ -72,6 +78,12 @@ Other platforms use a private local key file, so access to both files can recove
 the credential. Key creation is process-locked, and encrypted values are replaced
 atomically. Missing or corrupt keys are reported rather than silently replaced.
 File permissions remain best effort; protect the containing user profile.
+
+Locally saved provider registrations use the same authenticated encryption in
+`identity-config.enc`. They apply to the current operating-system user's installation.
+Externally supplied registration files are not encrypted by WorkLogger and must
+be protected by the deployment administrator. Registration secrets are not an
+alternative to PKCE or proof that a desktop client can keep a confidential secret.
 
 The external API-key form uses `EncryptedSettingsKeyStore`, with keyring-first
 behavior and encrypted-settings fallback. Its namespace includes the resolved

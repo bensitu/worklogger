@@ -85,6 +85,10 @@ class IdentityInfrastructureTests(unittest.TestCase):
         self.assertTrue(profile.ok)
         assert profile.value is not None
         self.assertFalse(hasattr(profile.value, "id_token"))
+        alias = profile_from_oidc_token("google", self.token(iss="accounts.google.com"),
+            issuer="https://accounts.google.com", audience="client-id", jwks=self.jwks, expected_nonce="nonce")
+        self.assertTrue(alias.ok)
+        self.assertEqual(alias.value.issuer, "https://accounts.google.com")
 
         firebase = profile_from_firebase_google_response(
             {

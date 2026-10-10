@@ -83,7 +83,7 @@ def profile_from_oidc_token(
             subject=subject,
             email=_optional_str(claims.get("email")),
             display_name=_optional_str(claims.get("name")),
-            issuer=_optional_str(claims.get("iss")) or "",
+            issuer=issuer,
         )
     )
 
@@ -150,7 +150,8 @@ def _verified_claims(token: str, *, issuer: str, audience: str, jwks: Mapping[st
                 and key.public_key_use in (None, "sig") and key.algorithm_name == "RS256"]
         if len(keys) != 1:
             raise ValueError("identity_signing_key_invalid")
-        claims = jwt.decode(token, keys[0].key, algorithms=["RS256"], issuer=issuer, audience=audience,
+        accepted_issuers = (issuer, "accounts.google.com") if issuer == "https://accounts.google.com" else issuer
+        claims = jwt.decode(token, keys[0].key, algorithms=["RS256"], issuer=accepted_issuers, audience=audience,
                             options={"require": ["iss", "aud", "exp", "iat", "sub"]})
         authorized_party = claims.get("azp")
         if (authorized_party is not None and authorized_party != audience

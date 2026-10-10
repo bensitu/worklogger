@@ -104,5 +104,3 @@ class BrowserIdentityProvider:
 
 def _cancelled():
     return Result.failure(CancellationError("identity_authorization_cancelled", "identity_authorization_cancelled"))
-
-
