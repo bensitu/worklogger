@@ -25,6 +25,65 @@ from worklogger.app.use_cases.reports import _template_values
 
 
 class ProjectTests(unittest.TestCase):
+    def test_batch_context_assignment_is_atomic_reversible_and_conflict_aware(self):
+        from dataclasses import replace
+        project = self.projects.save_project("Research").value
+        item = self.projects.save_work_item(project.id, "Review").value
+        context = WorkContext(project.id, item.id)
+        rows = tuple(self.records.save_entry(WorkLog(self.user.id, self.now.date() + timedelta(days=index), "09:00", "10:00", note="Original"))
+                     for index in range(5))
+        changed_last = self.records.save_entry(replace(rows[-1], note="Newer edit"))
+        recorder = self.recorder()
+        self.assertFalse(recorder.associate(rows, context).ok)
+        self.assertEqual(self.records.get_entry(self.user.id, rows[0].id), rows[0])
+        current = (*rows[:-1], changed_last)
+        assigned = recorder.associate(current, context).value
+        self.assertEqual(len(assigned), 5)
+        for before, after in zip(current, assigned):
+            self.assertEqual((before.start_time, before.end_time, before.note, before.work_type, before.break_hours),
+                             (after.start_time, after.end_time, after.note, after.work_type, after.break_hours))
+            self.assertEqual(after.context.label, "Research / Review")
+        change = self.records.latest_change(self.user.id)
+        self.assertEqual((change.operation, len(change.entries)), ("associate", 5))
+        restored = recorder.undo(change.id).value
+        self.assertEqual({entry.id for entry in restored}, {entry.id for entry in current})
+        self.assertTrue(all(entry.context == WorkContext() for entry in restored))
+        self.assertTrue(all(entry.revision > previous.revision for entry, previous in zip(restored, current)))
+        foreign = self.records.save_entry(WorkLog(self.other.id, self.now.date(), "09:00", "10:00"))
+        self.assertFalse(recorder.associate((restored[0], foreign), context).ok)
+        self.assertFalse(recorder.associate((restored[0], restored[0]), context).ok)
+        self.assertTrue(recorder.start("normal", "Timer").ok)
+        self.assertFalse(recorder.associate(restored, context).ok)
+        self.assertTrue(recorder.discard_timer().ok)
+        self.assertTrue(self.projects.archive_project(project).ok)
+        self.assertFalse(recorder.associate(restored, context).ok)
+
+    def test_recent_contexts_follow_saved_usage_and_active_catalog_ownership(self):
+        contexts = []
+        for index in range(10):
+            project = self.projects.save_project(f"Project {index}").value
+            context = WorkContext(project.id, None, project.name)
+            contexts.append((project, context))
+            self.records.save_entry(WorkLog(self.user.id, self.now.date() + timedelta(days=index), "09:00", "10:00", context=context))
+        recent = self.projects.recent_contexts().value
+        self.assertEqual([value.project_id for value in recent], [project.id for project, context in reversed(contexts[2:])])
+        self.assertEqual(ProjectService(self.other.id, self.projects.repository).recent_contexts().value, ())
+        renamed = self.projects.save_project("Renamed", previous=contexts[-1][0]).value
+        self.assertEqual(self.projects.recent_contexts().value[0].project_label, "Renamed")
+        self.assertTrue(self.projects.archive_project(renamed).ok)
+        self.assertEqual(len(self.projects.recent_contexts().value), 7)
+        self.settings.set(self.user.id, "recent_work_contexts", "invalid")
+        self.assertEqual(self.projects.recent_contexts().value, ())
+
+    def test_oversized_batch_history_rolls_back_all_associations(self):
+        project = self.projects.save_project("Research").value
+        rows = tuple(self.records.save_entry(WorkLog(self.user.id, self.now.date() + timedelta(days=index),
+            "09:00", "10:00", note="X" * 16000)) for index in range(70))
+        result = self.recorder().associate(rows, WorkContext(project.id))
+        self.assertFalse(result.ok)
+        self.assertEqual(result.error.code, "record_change_too_large")
+        self.assertEqual(tuple(self.records.get_entry(self.user.id, row.id) for row in rows), rows)
+
     def test_report_source_references_capture_saved_record_versions(self):
         from worklogger.app.use_cases.reports import GenerateReportHandler, SaveReportHandler
         from worklogger.app.commands.report_commands import GenerateReportCommand, SaveReportCommand

@@ -38,7 +38,8 @@ class SQLiteEntryChanges:
         snapshots = self._decode(row["after_json"]) or self._decode(row["before_json"])
         if not snapshots or snapshots[0].get("user_id") != user_id:
             raise ValueError("record_change_invalid")
-        return EntryChangeInfo(row["id"], row["operation"], self.storage.from_row(snapshots[0]))
+        records = tuple(self.storage.from_row(snapshot) for snapshot in snapshots)
+        return EntryChangeInfo(row["id"], row["operation"], records[0], records)
 
     @staticmethod
     def _decode(value):
@@ -48,7 +49,7 @@ class SQLiteEntryChanges:
             snapshots = json.loads(value)
         except (TypeError, ValueError):
             raise ValueError("record_change_invalid") from None
-        if not isinstance(snapshots, list) or len(snapshots) > 3 or any(not isinstance(row, dict) for row in snapshots):
+        if not isinstance(snapshots, list) or len(snapshots) > 250 or any(not isinstance(row, dict) for row in snapshots):
             raise ValueError("record_change_invalid")
         return snapshots
 
@@ -58,7 +59,7 @@ class SQLiteEntryChanges:
         if row is None or latest is None or latest[0] != change_id:
             raise ValueError("record_change_conflict")
         before, after = self._decode(row["before_json"]), self._decode(row["expected_json"])
-        if not isinstance(before, list) or not isinstance(after, list) or len(before) > 3 or len(after) > 3:
+        if not isinstance(before, list) or not isinstance(after, list) or len(before) > 250 or len(after) > 250:
             raise ValueError("record_change_invalid")
         for snapshot in (*before, *after):
             if not isinstance(snapshot, dict) or snapshot.get("user_id") != user_id or type(snapshot.get("id")) is not int or snapshot["id"] < 1:

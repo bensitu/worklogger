@@ -12,6 +12,7 @@ class EntryChangeInfo:
     id: int
     operation: str
     entry: WorkLog
+    entries: tuple[WorkLog, ...] = ()
 
 
 def split_entry(record: WorkLog, first_minutes: int) -> tuple[WorkLog, WorkLog]:

@@ -173,6 +173,15 @@ msgstr ""
 msgid "Ask about your work logs"
 msgstr ""
 
+msgid "Assign context"
+msgstr ""
+
+msgid "Assign project and work item"
+msgstr ""
+
+msgid "Assign {context} to {count} selected records? Existing associations will be replaced; recorded times, types and content will not change."
+msgstr ""
+
 msgid "Assistant"
 msgstr ""
 
@@ -1358,6 +1367,9 @@ msgstr ""
 msgid "RUNTIME SMOKE OK"
 msgstr ""
 
+msgid "Recent context"
+msgstr ""
+
 msgid "Record ID"
 msgstr ""
 
@@ -1652,6 +1664,9 @@ msgstr ""
 msgid "Select an individual time record to edit this day."
 msgstr ""
 
+msgid "Select between 1 and 250 distinct records and an available project context."
+msgstr ""
+
 msgid "Selected day (Excel)"
 msgstr ""
 
@@ -1668,6 +1683,9 @@ msgid "Selected month (Excel)"
 msgstr ""
 
 msgid "Selected month (PDF)"
+msgstr ""
+
+msgid "Selected records: {count} | Existing associations: {existing}"
 msgstr ""
 
 msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
@@ -2091,6 +2109,9 @@ msgid "Unclassified"
 msgstr ""
 
 msgid "Undo latest record change"
+msgstr ""
+
+msgid "Undo project associations for {count} records from {start} to {end}?"
 msgstr ""
 
 msgid "Undo the latest record change for {date}, {start} - {end}? This does not restart a timer."

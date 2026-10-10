@@ -68,6 +68,44 @@ def may_records():
 
 
 class CalendarLayoutChecks(unittest.TestCase):
+    def test_batch_context_and_recent_controls_fit_localized_layouts(self):
+        from worklogger.presentation.widgets.batch_context import BatchContextDialog
+        from worklogger.domain.projects.models import Project, WorkItem, WorkContext
+        from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
+        from uuid import uuid4
+        configure_application_style()
+        install_bundled_fonts()
+        project = Project(uuid4().hex, "Research")
+        item = WorkItem(uuid4().hex, project.id, "Review")
+        context = WorkContext(project.id, item.id, project.name, item.title)
+        entries = (WorkLog(1, date(2026, 10, 10), "09:00", "10:00", id=1, context=context),
+                   WorkLog(1, date(2026, 10, 10), "10:00", "11:00", id=2))
+        old_style, old_palette = self.app.styleSheet(), self.app.palette()
+        try:
+            for language in available_languages():
+                set_language(language)
+                for dark in (False, True):
+                    engine = ThemeEngine()
+                    self.app.setPalette(engine.qt_palette(dark=dark))
+                    self.app.setStyleSheet(engine.application_stylesheet(dark=dark))
+                    dialog = BatchContextDialog(None, entries, (project,), {project.id: (item,)})
+                    dialog.picker.set_recent((context,))
+                    dialog.picker.recent_menu.actions()[0].trigger()
+                    dialog.show()
+                    self.app.processEvents()
+                    self.assertEqual(dialog.picker.context(), context)
+                    for field in (dialog.picker, dialog.records_list, dialog.apply_button):
+                        self.assertTrue(dialog.rect().contains(field.mapTo(dialog, field.rect().bottomRight())))
+                    directory = os.environ.get("WORKLOGGER_SCREENSHOTS")
+                    if directory:
+                        path = Path(directory)
+                        path.mkdir(parents=True, exist_ok=True)
+                        self.assertTrue(dialog.grab().save(str(path / f"{language}-batch-{dark}.png")))
+                    dialog.close()
+        finally:
+            self.app.setStyleSheet(old_style)
+            self.app.setPalette(old_palette)
+
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])

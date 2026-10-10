@@ -87,3 +87,6 @@ class SQLiteWorkLogRepository:
 
     def undo_change(self, user_id, change_id):
         return self._operations.undo(user_id, change_id)
+
+    def associate_entries(self, user_id, records, context):
+        return self._operations.associate(user_id, records, context)

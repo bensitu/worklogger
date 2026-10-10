@@ -407,6 +407,7 @@ class AppWindow(QMainWindow):
             return
         dialog = ProjectAnalyticsDialog(model, self._time_entry_view_model, self._selected_day, self,
             job_runner=self._job_runner, selection_handler=self._open_found_entry)
+        dialog.records_changed.connect(self._records_associated)
         dialog.finished.connect(dialog.deleteLater)
         dialog.open()
 
@@ -421,10 +422,18 @@ class AppWindow(QMainWindow):
             return
         dialog = RecordSearchDialog(self._time_entry_view_model, self._selected_day, self,
                                     job_runner=self._job_runner, selection_handler=self._open_found_entry)
+        dialog.records_changed.connect(self._records_associated)
         self._record_search_dialog = dialog
         dialog.finished.connect(lambda: setattr(self, "_record_search_dialog", None))
         dialog.finished.connect(dialog.deleteLater)
         dialog.open()
+
+    def _records_associated(self):
+        self._refresh_calendar()
+        self._refresh_stats()
+        if not self.entry_panel.is_dirty:
+            self._refresh_entry()
+        self.entry_panel.refresh_projects()
 
     def _open_found_entry(self, record):
         if self.entry_panel.is_busy or not self.select_day(record.day):

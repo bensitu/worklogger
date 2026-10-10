@@ -1,8 +1,10 @@
 """Date-range context summaries with paged record drill-down."""
 
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import QDialog, QDateEdit, QHBoxLayout, QLabel, QPushButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout
 from shiboken6 import isValid
+from worklogger.domain.shared.result import Result
+from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.worklog.search import EntryFilter
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.date_labels import duration_label
@@ -13,6 +15,7 @@ from worklogger.presentation.widgets.record_search import RecordSearchDialog
 
 
 class ProjectAnalyticsDialog(QDialog):
+    records_changed = Signal()
     def __init__(self, analytics, records, day, parent=None, *, job_runner=None, selection_handler=None):
         super().__init__(parent)
         self._analytics, self._records = analytics, records
@@ -108,7 +111,10 @@ class ProjectAnalyticsDialog(QDialog):
         if self._runner is None:
             completed(operation())
         else:
-            self._job = self._runner.submit("project_analytics", lambda _token: operation(), on_complete=completed)
+            try:
+                self._job = self._runner.submit("project_analytics", lambda _token: operation(), on_complete=completed)
+            except Exception:
+                completed(Result.failure(InfrastructureError("analytics_load_failed", "analytics_load_failed")))
 
     def _details(self):
         row = self.results.currentItem()
@@ -122,6 +128,8 @@ class ProjectAnalyticsDialog(QDialog):
         dialog = RecordSearchDialog(self._records, self._range[0], self, criteria=criteria,
                                    job_runner=self._runner, selection_handler=self._selection)
         dialog.entry_selected.connect(lambda _entry: self.accept())
+        dialog.records_changed.connect(self.records_changed)
+        dialog.records_changed.connect(self._load)
         dialog.finished.connect(dialog.deleteLater)
         dialog.open()
 

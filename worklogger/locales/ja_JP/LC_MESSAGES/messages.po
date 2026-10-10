@@ -175,6 +175,15 @@ msgstr "アーカイブ済み"
 msgid "Ask about your work logs"
 msgstr "業務記録について質問"
 
+msgid "Assign context"
+msgstr "プロジェクトを関連付け"
+
+msgid "Assign project and work item"
+msgstr "プロジェクトと作業項目を関連付け"
+
+msgid "Assign {context} to {count} selected records? Existing associations will be replaced; recorded times, types and content will not change."
+msgstr "選択した{count}件の記録を{context}に関連付けますか？既存の関連付けは置き換わりますが、時間・種類・内容は変わりません。"
+
 msgid "Assistant"
 msgstr "アシスタント"
 
@@ -1360,6 +1369,9 @@ msgstr "ランタイムのスモークテストに失敗"
 msgid "RUNTIME SMOKE OK"
 msgstr "ランタイムのスモークテスト成功"
 
+msgid "Recent context"
+msgstr "最近使用したプロジェクトと項目"
+
 msgid "Record ID"
 msgstr "記録 ID"
 
@@ -1654,6 +1666,9 @@ msgstr "先に連携アカウントを選択してください。"
 msgid "Select an individual time record to edit this day."
 msgstr "編集する日の時間記録を選択してください。"
 
+msgid "Select between 1 and 250 distinct records and an available project context."
+msgstr "異なる記録を1～250件選択し、利用可能なプロジェクトを指定してください。"
+
 msgid "Selected day (Excel)"
 msgstr "選択日（Excel）"
 
@@ -1671,6 +1686,9 @@ msgstr "選択月（Excel）"
 
 msgid "Selected month (PDF)"
 msgstr "選択月（PDF）"
+
+msgid "Selected records: {count} | Existing associations: {existing}"
+msgstr "選択した記録：{count}件 | 既存の関連付け：{existing}件"
 
 msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
 msgstr "外部処理を有効にすると、選択したテキストと許可されたコンテキストがこのプロバイダーに送信されます。"
@@ -2094,6 +2112,9 @@ msgstr "未分類"
 
 msgid "Undo latest record change"
 msgstr "直前の記録変更を元に戻す"
+
+msgid "Undo project associations for {count} records from {start} to {end}?"
+msgstr "{start}から{end}までの{count}件のプロジェクト関連付けを元に戻しますか？"
 
 msgid "Undo the latest record change for {date}, {start} - {end}? This does not restart a timer."
 msgstr "{date}、{start} - {end} の直前の記録変更を元に戻しますか？タイマーは再開されません。"

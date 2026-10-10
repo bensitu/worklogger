@@ -198,6 +198,9 @@ class TimeEntryService:
     def undo(self, change_id):
         return self._run(lambda: self.repository.undo_change(self.user_id, change_id), error_code="record_change_failed")
 
+    def associate(self, records, context):
+        return self._run(lambda: self.repository.associate_entries(self.user_id, records, context), error_code="record_change_failed")
+
     def get_entry(self, entry_id: int) -> Result[WorkLog]:
         def load():
             record = self.repository.get_entry(self.user_id, entry_id)

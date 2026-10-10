@@ -4,6 +4,8 @@ from datetime import timezone
 from PySide6.QtCore import Qt, QTimer, Signal, QSize
 from PySide6.QtWidgets import QDialog, QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QTabWidget, QTextEdit, QVBoxLayout
 from shiboken6 import isValid
+from worklogger.domain.shared.result import Result
+from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.widgets.assets import apply_window_icon
@@ -79,7 +81,10 @@ class ReportRevisionsDialog(QDialog):
         if self._runner is None:
             finished(operation())
         else:
-            self._runner.submit(name, lambda _token: operation(), on_complete=finished)
+            try:
+                self._runner.submit(name, lambda _token: operation(), on_complete=finished)
+            except Exception:
+                finished(Result.failure(InfrastructureError("report_history_failed", "report_history_failed")))
 
     def _load(self):
         if not isValid(self) or self._loaded:

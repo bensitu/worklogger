@@ -12,6 +12,7 @@ analysis remains an offline file and is not part of repository documentation.
 | Project and work-item context | Optional account-owned catalogs, settings management, archival/completion, recorder choices, timer restoration, stable associations and saved labels |
 | Record retrieval | Account-scoped date/type/context/text filters, unclassified selection, bounded chronological paging, background search and navigation to the existing editor |
 | Project statistics | Selected date-range work/rest/leave totals by saved project and work-item identity, work-date counts and paged record drill-down |
+| Context reuse | Eight recent owned active contexts and explicit atomic assignment to selected records with conflict checks and whole-operation undo |
 | Interval correction | Transactional elapsed-minute splitting and adjacent compatible merging; ownership, expected versions, overlap and duration checks |
 | Historical rest | Explicit whole-minute break placement with preview; no inferred boundaries or duplicate deduction |
 | Recovery | Bounded reversible individual-record changes with stable IDs and newer revisions; confirmation and no timer restart |
@@ -45,7 +46,6 @@ The following agreed capabilities are not implemented by the changes above:
 
 - Daily timeline with distinct confirmed, active, planned and uncovered intervals.
 - Weekly timesheet review and deliberate placement of duration-only drafts.
-- Conflict-aware batch record association and reusable recent context.
 - Bounded grouped template sections and comprehensive report provenance/source references.
 - Immutable submitted report snapshots, beyond recoverable saved versions.
 - Explicit period finalization/reopening enforced beyond presentation controls.

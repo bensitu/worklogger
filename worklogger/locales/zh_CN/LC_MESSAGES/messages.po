@@ -175,6 +175,15 @@ msgstr "已归档"
 msgid "Ask about your work logs"
 msgstr "询问您的工作记录"
 
+msgid "Assign context"
+msgstr "关联项目"
+
+msgid "Assign project and work item"
+msgstr "关联项目与工作事项"
+
+msgid "Assign {context} to {count} selected records? Existing associations will be replaced; recorded times, types and content will not change."
+msgstr "将 {context} 关联到选中的 {count} 条记录？已有的关联将被替换，时间、类型和内容不会改变。"
+
 msgid "Assistant"
 msgstr "助手"
 
@@ -1360,6 +1369,9 @@ msgstr "运行时检查失败"
 msgid "RUNTIME SMOKE OK"
 msgstr "运行时检查通过"
 
+msgid "Recent context"
+msgstr "最近使用的项目与事项"
+
 msgid "Record ID"
 msgstr "记录 ID"
 
@@ -1654,6 +1666,9 @@ msgstr "请先选择身份。"
 msgid "Select an individual time record to edit this day."
 msgstr "请选择当天的一条时间记录进行编辑。"
 
+msgid "Select between 1 and 250 distinct records and an available project context."
+msgstr "请选择 1 至 250 条不同的记录和可用的项目关联。"
+
 msgid "Selected day (Excel)"
 msgstr "所选日期（Excel）"
 
@@ -1671,6 +1686,9 @@ msgstr "所选月份（Excel）"
 
 msgid "Selected month (PDF)"
 msgstr "所选月份（PDF）"
+
+msgid "Selected records: {count} | Existing associations: {existing}"
+msgstr "已选择：{count} 条记录 | 已有关联：{existing} 条"
 
 msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
 msgstr "启用外部处理后，所选文本和允许的上下文将发送至此供应商。"
@@ -2094,6 +2112,9 @@ msgstr "未分类"
 
 msgid "Undo latest record change"
 msgstr "撤销最近的记录更改"
+
+msgid "Undo project associations for {count} records from {start} to {end}?"
+msgstr "撤销 {start} 至 {end} 的 {count} 条记录的项目关联？"
 
 msgid "Undo the latest record change for {date}, {start} - {end}? This does not restart a timer."
 msgstr "撤销 {date}、{start} - {end} 的最近记录更改？这不会重新开始计时。"

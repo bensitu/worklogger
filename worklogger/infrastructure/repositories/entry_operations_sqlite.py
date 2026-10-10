@@ -3,6 +3,9 @@
 from dataclasses import replace
 from worklogger.domain.worklog.editing import split_entry, merge_entries, place_historical_break
 from worklogger.domain.worklog.rules import normalize_work_log
+from worklogger.domain.projects.models import WorkContext
+from worklogger.infrastructure.repositories.project_sqlite import validate_record_context
+from worklogger.infrastructure.repositories.recent_context_sqlite import remember_context
 
 
 class SQLiteEntryOperations:
@@ -57,6 +60,42 @@ class SQLiteEntryOperations:
 
     def split(self, user_id, expected, first_minutes):
         return self._transform(user_id, expected, lambda record: split_entry(record, first_minutes), "split")
+
+    def associate(self, user_id, expected, context):
+        if (not self.storage.change_history or not 1 <= len(expected) <= 250
+                or len({entry.id for entry in expected}) != len(expected)
+                or any(entry.user_id != user_id or entry.id is None for entry in expected)):
+            raise ValueError("record_batch_invalid")
+        with self.storage.connection_factory.transaction() as connection:
+            self._ensure_idle(connection, user_id)
+            records = tuple(self._load(connection, user_id, entry) for entry in expected)
+            if context.project_id is not None:
+                project = connection.execute("SELECT name,archived FROM projects WHERE user_id=? AND id=?", (user_id, context.project_id)).fetchone()
+                if project is None or project["archived"]:
+                    raise ValueError("project_unavailable")
+                item = None
+                if context.work_item_id:
+                    item = connection.execute("SELECT title,archived FROM work_items WHERE user_id=? AND id=? AND project_id=?",
+                                              (user_id, context.work_item_id, context.project_id)).fetchone()
+                    if item is None or item["archived"]:
+                        raise ValueError("work_item_unavailable")
+                context = WorkContext(context.project_id, context.work_item_id, project["name"], item["title"] if item else "")
+            elif context.project_label or context.work_item_label:
+                raise ValueError("record_batch_invalid")
+            targets = tuple(replace(record, context=context) for record in records if record.context != context)
+            before = self.writes.changes.rows(connection, user_id, [record.id for record in targets])
+            result = []
+            for record in targets:
+                validate_record_context(connection, record)
+                connection.execute("UPDATE worklog SET project_id=?,work_item_id=?,project_label=?,work_item_label=?,revision=revision+1 "
+                    "WHERE user_id=? AND id=? AND revision=?", (context.project_id, context.work_item_id, context.project_label,
+                    context.work_item_label, user_id, record.id, record.revision))
+                result.append(replace(record, revision=record.revision + 1))
+            if targets:
+                self.writes.changes.remember(connection, user_id, "associate", before,
+                    self.writes.changes.rows(connection, user_id, [record.id for record in result]))
+                remember_context(connection, user_id, context)
+            return tuple(result)
 
     def convert_break(self, user_id, expected, first_minutes):
         return self._transform(user_id, expected, lambda record: place_historical_break(record, first_minutes), "break")

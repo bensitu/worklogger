@@ -28,6 +28,9 @@ class ProjectService:
     def catalog(self):
         return self._run(lambda: self.repository.catalog(self.user_id))
 
+    def recent_contexts(self):
+        return self._run(lambda: self.repository.recent_contexts(self.user_id))
+
     def list_work_items(self, project_id):
         return self._run(lambda: self.repository.list_work_items(self.user_id, project_id))
 

@@ -1,9 +1,10 @@
 """Compact project and work-item selection for record drafts."""
 
 from PySide6.QtCore import Signal, QSignalBlocker
-from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QVBoxLayout, QWidget, QSizePolicy
+from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QVBoxLayout, QWidget, QSizePolicy, QToolButton, QMenu
 from worklogger.domain.projects.models import WorkContext
 from worklogger.infrastructure.i18n import _
+from worklogger.presentation.widgets.icons import set_button_icon
 
 
 class WorkContextPicker(QWidget):
@@ -32,7 +33,22 @@ class WorkContextPicker(QWidget):
             caption.setBuddy(field)
             column = QVBoxLayout()
             column.setSpacing(3)
-            column.addWidget(caption)
+            heading = QHBoxLayout()
+            heading.addWidget(caption, 1)
+            if field is self.project_combo:
+                self.recent_button = QToolButton()
+                self.recent_button.setFixedSize(28, 28)
+                self.recent_button.setObjectName("recent_work_context_button")
+                self.recent_button.setToolTip(_("Recent context"))
+                self.recent_button.setAccessibleName(_("Recent context"))
+                set_button_icon(self.recent_button, "clock")
+                self.recent_menu = QMenu(self.recent_button)
+                self.recent_button.setMenu(self.recent_menu)
+                self.recent_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+                self.recent_button.setEnabled(False)
+                heading.addWidget(self.recent_button)
+            caption.setMinimumHeight(28)
+            column.addLayout(heading)
             column.addWidget(field)
             row.addLayout(column, 1)
         self.project_combo.currentIndexChanged.connect(self._project_changed)
@@ -43,6 +59,17 @@ class WorkContextPicker(QWidget):
         context = self.context()
         self._projects, self._items = projects, items
         self.set_context(context)
+
+    def set_recent(self, contexts):
+        self.recent_menu.clear()
+        for context in contexts:
+            action = self.recent_menu.addAction(context.label)
+            action.triggered.connect(lambda _checked=False, context=context: self._choose_recent(context))
+        self.recent_button.setEnabled(bool(contexts))
+
+    def _choose_recent(self, context):
+        self.set_context(context)
+        self.changed.emit()
 
     def set_context(self, context):
         self._snapshot = context

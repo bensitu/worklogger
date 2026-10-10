@@ -60,6 +60,12 @@ class TimeEntryViewModel:
             return Result.success(((), {}))
         return self.service.projects.catalog()
 
+    def recent_contexts(self):
+        return self.service.projects.recent_contexts() if self.projects_available else Result.success(())
+
+    def associate(self, records, context):
+        return self.service.associate(records, context)
+
     @property
     def search_available(self):
         return bool(getattr(self.service, "search_available", False))

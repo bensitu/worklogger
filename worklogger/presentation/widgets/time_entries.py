@@ -125,6 +125,7 @@ class TimeEntryPanel(QWidget):
         type_caption = QLabel(_("Work type"))
         type_caption.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         type_caption.setBuddy(self.work_type_combo)
+        type_caption.setMinimumHeight(28)
         type_column.addWidget(type_caption)
         type_column.addWidget(self.work_type_combo)
         classification_row.addLayout(type_column, 1)
@@ -136,6 +137,9 @@ class TimeEntryPanel(QWidget):
         self._context_error = inventory.error
         if inventory.ok:
             self.context_picker.set_inventory(*inventory.value)
+        recent = view_model.recent_contexts()
+        if recent.ok:
+            self.context_picker.set_recent(recent.value)
         content_heading = QHBoxLayout()
         content_heading.addWidget(QLabel(_("Content")), 1)
         self.polish_button = QToolButton()
@@ -253,6 +257,9 @@ class TimeEntryPanel(QWidget):
                 self._context_error = None
                 self._updating = True
                 self.context_picker.set_inventory(*result.value)
+                recent = self.view_model.recent_contexts()
+                if recent.ok:
+                    self.context_picker.set_recent(recent.value)
                 self._updating = False
                 self._render_editor()
             else:
@@ -449,6 +456,9 @@ class TimeEntryPanel(QWidget):
             QMessageBox.warning(self, _("WorkLogger"), display_error_message(result.error))
             return False
         self._timer_failed = False
+        recent = self.view_model.recent_contexts()
+        if recent.ok:
+            self.context_picker.set_recent(recent.value)
         self._render_editor()
         if refresh:
             record = result.value
@@ -693,6 +703,10 @@ class TimeEntryPanel(QWidget):
             entry = change.entry
             question = _("Undo the latest record change for {date}, {start} - {end}? This does not restart a timer.").format(
                 date=day_label(entry.day), start=entry.start_time or "", end=entry.end_time or "")
+            if change.operation == "associate":
+                days = [record.day for record in change.entries]
+                question = _("Undo project associations for {count} records from {start} to {end}?").format(
+                    count=len(change.entries), start=min(days).isoformat(), end=max(days).isoformat())
             if QMessageBox.question(self, _("Undo latest record change"), question,
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
                 self._submit(lambda: self.view_model.undo(change.id))

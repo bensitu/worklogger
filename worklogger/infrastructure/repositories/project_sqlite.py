@@ -5,7 +5,8 @@ import json
 import sqlite3
 import unicodedata
 
-from worklogger.domain.projects.models import Project, WorkItem
+from worklogger.domain.projects.models import Project, WorkItem, WorkContext
+from worklogger.infrastructure.repositories.recent_context_sqlite import KEY, recent_pairs
 
 
 def normalized_name(value):
@@ -26,6 +27,21 @@ class SQLiteProjectRepository:
             items[row["project_id"]].append(WorkItem(row["id"], row["project_id"], row["title"], row["source_url"],
                                                    bool(row["completed"]), row["revision"], bool(row["archived"])))
         return projects, {key: tuple(value) for key, value in items.items()}
+
+    def recent_contexts(self, user_id):
+        with self._factory.connection() as connection:
+            setting = connection.execute("SELECT value FROM settings WHERE user_id=? AND key=?", (user_id, KEY)).fetchone()
+            pairs = recent_pairs(setting[0] if setting else None)
+            if not pairs:
+                return ()
+            placeholders = ",".join("(?,?,?)" for _pair in pairs)
+            parameters = [value for index, pair in enumerate(pairs) for value in (*pair, index)]
+            rows = connection.execute("WITH recent(project_id,item_id,position) AS (VALUES " + placeholders + ") "
+                "SELECT p.id,p.name,w.id AS item_id,w.title FROM recent r JOIN projects p ON p.id=r.project_id "
+                "LEFT JOIN work_items w ON w.id=r.item_id AND w.project_id=p.id AND w.user_id=p.user_id "
+                "WHERE p.user_id=? AND p.archived=0 AND (r.item_id IS NULL OR (w.id IS NOT NULL AND w.archived=0)) ORDER BY r.position",
+                (*parameters, user_id)).fetchall()
+        return tuple(WorkContext(row["id"], row["item_id"], row["name"], row["title"] or "") for row in rows)
 
     def list_projects(self, user_id):
         with self._factory.connection() as connection:

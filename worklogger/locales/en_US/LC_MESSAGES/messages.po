@@ -175,6 +175,15 @@ msgstr "Archived"
 msgid "Ask about your work logs"
 msgstr "Ask about your work logs"
 
+msgid "Assign context"
+msgstr "Assign context"
+
+msgid "Assign project and work item"
+msgstr "Assign project and work item"
+
+msgid "Assign {context} to {count} selected records? Existing associations will be replaced; recorded times, types and content will not change."
+msgstr "Assign {context} to {count} selected records? Existing associations will be replaced; recorded times, types and content will not change."
+
 msgid "Assistant"
 msgstr "Assistant"
 
@@ -1360,6 +1369,9 @@ msgstr "RUNTIME SMOKE FAILED"
 msgid "RUNTIME SMOKE OK"
 msgstr "RUNTIME SMOKE OK"
 
+msgid "Recent context"
+msgstr "Recent context"
+
 msgid "Record ID"
 msgstr "Record ID"
 
@@ -1654,6 +1666,9 @@ msgstr "Select an identity first."
 msgid "Select an individual time record to edit this day."
 msgstr "Select an individual time record to edit this day."
 
+msgid "Select between 1 and 250 distinct records and an available project context."
+msgstr "Select between 1 and 250 distinct records and an available project context."
+
 msgid "Selected day (Excel)"
 msgstr "Selected day (Excel)"
 
@@ -1671,6 +1686,9 @@ msgstr "Selected month (Excel)"
 
 msgid "Selected month (PDF)"
 msgstr "Selected month (PDF)"
+
+msgid "Selected records: {count} | Existing associations: {existing}"
+msgstr "Selected records: {count} | Existing associations: {existing}"
 
 msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
 msgstr "Selected text and permitted context are sent to this provider when external processing is enabled."
@@ -2094,6 +2112,9 @@ msgstr "Unclassified"
 
 msgid "Undo latest record change"
 msgstr "Undo latest record change"
+
+msgid "Undo project associations for {count} records from {start} to {end}?"
+msgstr "Undo project associations for {count} records from {start} to {end}?"
 
 msgid "Undo the latest record change for {date}, {start} - {end}? This does not restart a timer."
 msgstr "Undo the latest record change for {date}, {start} - {end}? This does not restart a timer."

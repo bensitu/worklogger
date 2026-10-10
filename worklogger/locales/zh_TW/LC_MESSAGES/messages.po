@@ -175,6 +175,15 @@ msgstr "已封存"
 msgid "Ask about your work logs"
 msgstr "詢問您的工作記錄"
 
+msgid "Assign context"
+msgstr "關聯專案"
+
+msgid "Assign project and work item"
+msgstr "關聯專案與工作事項"
+
+msgid "Assign {context} to {count} selected records? Existing associations will be replaced; recorded times, types and content will not change."
+msgstr "將 {context} 關聯到選取的 {count} 筆記錄？既有關聯將被取代，時間、類型和內容不會改變。"
+
 msgid "Assistant"
 msgstr "助手"
 
@@ -1360,6 +1369,9 @@ msgstr "執行階段檢查失敗"
 msgid "RUNTIME SMOKE OK"
 msgstr "執行階段檢查通過"
 
+msgid "Recent context"
+msgstr "最近使用的專案與事項"
+
 msgid "Record ID"
 msgstr "紀錄 ID"
 
@@ -1654,6 +1666,9 @@ msgstr "請先選取身分。"
 msgid "Select an individual time record to edit this day."
 msgstr "請選擇當天的一筆時間記錄進行編輯。"
 
+msgid "Select between 1 and 250 distinct records and an available project context."
+msgstr "請選取 1 至 250 筆不同的記錄和可用的專案關聯。"
+
 msgid "Selected day (Excel)"
 msgstr "所選日期（Excel）"
 
@@ -1671,6 +1686,9 @@ msgstr "所選月份（Excel）"
 
 msgid "Selected month (PDF)"
 msgstr "所選月份（PDF）"
+
+msgid "Selected records: {count} | Existing associations: {existing}"
+msgstr "已選取：{count} 筆記錄 | 既有關聯：{existing} 筆"
 
 msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
 msgstr "啟用外部處理後，所選文字與允許的上下文將傳送至此供應商。"
@@ -2094,6 +2112,9 @@ msgstr "未分類"
 
 msgid "Undo latest record change"
 msgstr "復原最近的紀錄變更"
+
+msgid "Undo project associations for {count} records from {start} to {end}?"
+msgstr "復原 {start} 至 {end} 的 {count} 筆記錄的專案關聯？"
 
 msgid "Undo the latest record change for {date}, {start} - {end}? This does not restart a timer."
 msgstr "復原 {date}、{start} - {end} 的最近紀錄變更？這不會重新開始計時。"

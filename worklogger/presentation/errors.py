@@ -25,6 +25,8 @@ def display_error_code(code: str) -> str:
     """Translate known error codes without displaying raw exception text or logging previews."""
 
     match code:
+        case "record_batch_invalid":
+            return _("Select between 1 and 250 distinct records and an available project context.")
         case "report_content_too_long":
             return _("This report is too large to save. Your current content has been retained.")
         case "record_range_too_large":

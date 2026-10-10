@@ -175,6 +175,15 @@ msgstr "보관됨"
 msgid "Ask about your work logs"
 msgstr "근무 기록에 대해 질문"
 
+msgid "Assign context"
+msgstr "프로젝트 연결"
+
+msgid "Assign project and work item"
+msgstr "프로젝트 및 작업 항목 연결"
+
+msgid "Assign {context} to {count} selected records? Existing associations will be replaced; recorded times, types and content will not change."
+msgstr "선택한 기록 {count}개에 {context}을(를) 연결할까요? 기존 연결이 바뀌며 시간, 유형 및 내용은 유지됩니다."
+
 msgid "Assistant"
 msgstr "어시스턴트"
 
@@ -1360,6 +1369,9 @@ msgstr "런타임 스모크 테스트 실패"
 msgid "RUNTIME SMOKE OK"
 msgstr "런타임 스모크 테스트 성공"
 
+msgid "Recent context"
+msgstr "최근 사용한 프로젝트 및 항목"
+
 msgid "Record ID"
 msgstr "기록 ID"
 
@@ -1654,6 +1666,9 @@ msgstr "먼저 연결된 계정을 선택하세요."
 msgid "Select an individual time record to edit this day."
 msgstr "해당 날짜의 시간 기록을 선택하여 편집하세요."
 
+msgid "Select between 1 and 250 distinct records and an available project context."
+msgstr "서로 다른 기록 1~250개와 사용 가능한 프로젝트를 선택하세요."
+
 msgid "Selected day (Excel)"
 msgstr "선택한 날짜(Excel)"
 
@@ -1671,6 +1686,9 @@ msgstr "선택한 월(Excel)"
 
 msgid "Selected month (PDF)"
 msgstr "선택한 월(PDF)"
+
+msgid "Selected records: {count} | Existing associations: {existing}"
+msgstr "선택한 기록: {count}개 | 기존 연결: {existing}개"
 
 msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
 msgstr "외부 처리가 활성화되면 선택한 텍스트와 허용된 맥락이 이 제공업체에 전송됩니다."
@@ -2094,6 +2112,9 @@ msgstr "미분류"
 
 msgid "Undo latest record change"
 msgstr "최근 기록 변경 되돌리기"
+
+msgid "Undo project associations for {count} records from {start} to {end}?"
+msgstr "{start}~{end} 기록 {count}개의 프로젝트 연결을 되돌릴까요?"
 
 msgid "Undo the latest record change for {date}, {start} - {end}? This does not restart a timer."
 msgstr "{date}, {start} - {end}의 최근 기록 변경을 되돌리시겠습니까? 타이머는 다시 시작되지 않습니다."

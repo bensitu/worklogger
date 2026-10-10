@@ -21,6 +21,7 @@ from worklogger.presentation.date_labels import duration_label
 
 class RecordSearchDialog(QDialog):
     entry_selected = Signal(object)
+    records_changed = Signal()
 
     def __init__(self, view_model, selected_day, parent=None, *, job_runner=None, selection_handler=None, criteria=None):
         super().__init__(parent)
@@ -31,7 +32,7 @@ class RecordSearchDialog(QDialog):
         self._version = 0
         self._job = None
         self._loading = False
-        self._items = {}
+        self._items, self._projects = {}, ()
         self.setObjectName("record_search_dialog")
         self.setWindowTitle(_("Search records"))
         apply_window_icon(self)
@@ -74,6 +75,7 @@ class RecordSearchDialog(QDialog):
         inventory = view_model.project_inventory()
         if inventory.ok:
             projects, self._items = inventory.value
+            self._projects = projects
             for project in projects:
                 self.project_combo.addItem(project.name + (" (" + _("Archived") + ")" if project.archived else ""), project.id)
         self.item_combo.addItem(_("All work items"), None)
@@ -91,6 +93,7 @@ class RecordSearchDialog(QDialog):
         self.results.setObjectName("record_search_tree_view")
         self.results.setHeaderLabels([_("Date"), _("Time"), _("Work type"), _("Project"), _("Work item"), _("Content")])
         self.results.setRootIsDecorated(False)
+        self.results.setSelectionMode(QTreeWidget.SelectionMode.ExtendedSelection)
         self.results.setUniformRowHeights(True)
         self.results.header().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         self.results.header().setStretchLastSection(True)
@@ -108,9 +111,13 @@ class RecordSearchDialog(QDialog):
         self.open_button.setProperty("variant", "primary")
         set_button_icon(self.open_button, "pencil")
         self.close_button = QPushButton(_("Close"))
+        self.associate_button = QPushButton(_("Assign context"))
+        set_button_icon(self.associate_button, "pencil")
+        self.associate_button.setAutoDefault(False)
         for button in (self.more_button, self.open_button, self.close_button):
             button.setAutoDefault(False)
         footer.addWidget(self.more_button)
+        footer.addWidget(self.associate_button)
         footer.addStretch()
         footer.addWidget(self.close_button)
         footer.addWidget(self.open_button)
@@ -129,6 +136,7 @@ class RecordSearchDialog(QDialog):
         self.search_input.returnPressed.connect(self._reload)
         self.more_button.clicked.connect(lambda: self._reload(append=True))
         self.open_button.clicked.connect(self._open)
+        self.associate_button.clicked.connect(self._associate)
         self.close_button.clicked.connect(self.reject)
         self.results.itemSelectionChanged.connect(self._actions)
         self.results.itemActivated.connect(lambda *_args: self._open())
@@ -225,12 +233,28 @@ class RecordSearchDialog(QDialog):
                 completed(Result.failure(InfrastructureError("record_search_failed", "record_search_failed")))
 
     def _actions(self):
-        self.open_button.setEnabled(not self._loading and self.results.currentItem() is not None)
+        count = len(self.results.selectedItems())
+        self.open_button.setEnabled(not self._loading and count == 1)
+        self.associate_button.setEnabled(not self._loading and 1 <= count <= 250
+            and bool(getattr(self._model, "projects_available", False)) and bool(getattr(self._model, "changes_available", False)))
         self.more_button.setEnabled(not self._loading and self._cursor is not None)
+
+    def _associate(self):
+        if not self.associate_button.isEnabled():
+            return
+        from worklogger.presentation.widgets.batch_context import BatchContextDialog
+        entries = tuple(row.data(0, Qt.ItemDataRole.UserRole) for row in self.results.selectedItems())
+        dialog = BatchContextDialog(self._model, entries, self._projects, self._items, self, job_runner=self._runner)
+        def applied(_entries):
+            self.records_changed.emit()
+            self._reload()
+        dialog.applied.connect(applied)
+        dialog.finished.connect(dialog.deleteLater)
+        dialog.open()
 
     def _open(self):
         row = self.results.currentItem()
-        if not self._loading and row is not None:
+        if not self._loading and row is not None and len(self.results.selectedItems()) == 1:
             record = row.data(0, Qt.ItemDataRole.UserRole)
             if self._selection_handler is None or self._selection_handler(record):
                 self.entry_selected.emit(record)

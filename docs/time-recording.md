@@ -1,5 +1,23 @@
 # Time Recording
 
+## Context Reuse and Batch Assignment
+
+The project heading offers a clock-icon menu for the latest eight successfully
+saved owned contexts. It reuses project and work-item selection without replacing
+times, work type or content. Names follow the current catalog and archived items
+are omitted. Preferences use the account-owned `recent_work_contexts` setting;
+unlinked imported labels are not treated as owned shortcuts.
+
+In **Search records**, select 1 to 250 records and choose **Assign context**. The
+confirmation names the target and explicitly replaces existing associations;
+choosing **Unclassified** clears them. All selected revisions and ownership are
+checked in one transaction. Failure leaves the entire selection unchanged. End
+any active timer before this operation. Times, classifications, notes, historical
+deductions and capture IDs remain unchanged. The existing **Undo latest record
+change** restores the whole assignment, subject to its retention and size limits.
+Other unsaved recorder content is preserved; an edited record with an older revision
+must be reloaded before saving.
+
 ## Interaction Model
 
 The calendar is a period recorder, not a single daily shift form. Each completed

@@ -26,6 +26,38 @@ from PySide6.QtCore import QTime
 
 
 class TimeEntryWorkflowTests(unittest.TestCase):
+    def test_multi_record_assignment_and_recent_selection_preserve_editor_content(self):
+        from worklogger.presentation.widgets.record_search import RecordSearchDialog
+        from worklogger.presentation.widgets.batch_context import BatchContextDialog
+        service = self.panel.view_model.service
+        project = service.projects.save_project("Research").value
+        item = service.projects.save_work_item(project.id, "Review").value
+        for start, end in (("09:00", "10:00"), ("10:00", "11:00")):
+            service.save_manual(self.now.date(), start, end, "normal", "Original")
+        self.panel.content_input.setPlainText("Unsaved editor content")
+        dialog = RecordSearchDialog(self.panel.view_model, self.now.date(), self.window, job_runner=ImmediateJobRunner())
+        self.addCleanup(dialog.deleteLater)
+        dialog.records_changed.connect(self.window._records_associated)
+        for index in range(dialog.results.topLevelItemCount()):
+            dialog.results.topLevelItem(index).setSelected(True)
+        self.assertFalse(dialog.open_button.isEnabled())
+        self.assertTrue(dialog.associate_button.isEnabled())
+        dialog.associate_button.click()
+        batch = dialog.findChild(BatchContextDialog)
+        batch.picker.project_combo.setCurrentIndex(batch.picker.project_combo.findData(project.id))
+        batch.picker.work_item_combo.setCurrentIndex(batch.picker.work_item_combo.findData(item.id))
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+            batch.apply_button.click()
+        records = self.repository.list_for_day(self.runtime.user.id, self.now.date())
+        self.assertTrue(all(record.context.label == "Research / Review" for record in records))
+        self.assertEqual(self.panel.content_input.toPlainText(), "Unsaved editor content")
+        picker = self.panel.context_picker
+        self.assertTrue(picker.recent_button.isEnabled())
+        picker.recent_menu.actions()[0].trigger()
+        self.assertEqual(picker.context().work_item_id, item.id)
+        self.assertEqual(self.panel.content_input.toPlainText(), "Unsaved editor content")
+        dialog.close()
+
     def test_timer_end_correction_handles_ambiguous_and_nonexistent_local_times(self):
         from zoneinfo import ZoneInfo
         from worklogger.presentation.widgets.end_timer import EndTimerDialog

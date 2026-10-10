@@ -18,6 +18,7 @@ from worklogger.infrastructure.repositories._mapping import map_rows
 from worklogger.infrastructure.repositories.note_sqlite import save_note
 from worklogger.infrastructure.repositories.project_sqlite import validate_record_context
 from worklogger.infrastructure.repositories.entry_changes_sqlite import SQLiteEntryChanges
+from worklogger.infrastructure.repositories.recent_context_sqlite import remember_context
 from worklogger.infrastructure.repositories.worklog_mapping_sqlite import WorkLogStorage
 from worklogger.infrastructure.repositories.worklog_queries_sqlite import (
     SQLiteWorkLogQueries,
@@ -238,6 +239,7 @@ class SQLiteWorkLogWrites:
                 self._change_timer(connection, record.user_id, *timer_change)
             self.changes.remember(connection, record.user_id, "update" if before else "create", before,
                                   self.changes.rows(connection, record.user_id, (record.id,)))
+            remember_context(connection, record.user_id, record.context)
             return record
 
     def delete_entry(
