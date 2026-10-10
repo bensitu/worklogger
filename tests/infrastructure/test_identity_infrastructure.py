@@ -47,12 +47,11 @@ class IdentityInfrastructureTests(unittest.TestCase):
                                                 audience="client-id", jwks={"keys": []}, expected_nonce="nonce").ok)
         self.assertFalse(profile_from_oidc_token("google", self.token(), issuer="https://accounts.google.com",
                                                 audience="client-id", jwks=self.jwks, expected_nonce="").ok)
-    def test_provider_availability_requires_google_and_firebase_config(self) -> None:
+    def test_provider_availability_uses_direct_google_registration(self) -> None:
         env = {
             "WORKLOGGER_IDENTITY_ENABLED": "1",
             "WORKLOGGER_GOOGLE_LOGIN_ENABLED": "1",
             "WORKLOGGER_GOOGLE_CLIENT_ID": "google-client",
-            "WORKLOGGER_FIREBASE_API_KEY": "firebase-key",
         }
         with patch.dict(os.environ, env, clear=False):
             self.assertTrue(provider_configured("google"))
