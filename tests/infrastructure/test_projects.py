@@ -9,6 +9,7 @@ from worklogger.app.use_cases.projects import ProjectService
 from worklogger.app.use_cases.time_entries import TimeEntryService
 from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.models import WorkLog
+from worklogger.domain.worklog.search import EntryFilter
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
 from worklogger.infrastructure.database.migrations.runner import MIGRATION_MODULES
 from worklogger.infrastructure.repositories.auth_sqlite import SQLiteAuthRepository
@@ -127,3 +128,26 @@ class ProjectTests(unittest.TestCase):
             self.assertEqual(loaded.context, WorkContext())
             self.assertEqual(MigrationRunner(factory).run_pending(), ())
             self.assertEqual(len(tuple(Path(directory).glob("*.bak_upgrade_*"))), 1)
+
+    def test_record_search_is_scoped_filtered_literal_and_stably_paged(self):
+        project = self.projects.save_project("Research").value
+        item = self.projects.save_work_item(project.id, "Review").value
+        day = self.now.date()
+        first = self.recorder().save_manual(day, "09:00", "10:00", "meeting", "Progress 100%", context=WorkContext(project.id, item.id)).value
+        second = self.recorder().save_manual(day, "10:00", "11:00", "normal", "Notes").value
+        third = self.recorder().save_manual(day + timedelta(days=1), "09:00", "10:00", "normal", "Later").value
+        self.records.save_entry(WorkLog(self.other.id, day, "09:00", "10:00", note="Progress 100%"))
+        criteria = EntryFilter(day, day + timedelta(days=1))
+        page = self.records.search_entries(self.user.id, criteria, limit=1)
+        self.assertEqual(page.entries, (first,))
+        next_page = self.records.search_entries(self.user.id, criteria, cursor=page.next_cursor, limit=1)
+        self.assertEqual(next_page.entries, (second,))
+        last = self.records.search_entries(self.user.id, criteria, cursor=next_page.next_cursor, limit=1)
+        self.assertEqual(last.entries, (third,))
+        self.assertIsNone(last.next_cursor)
+        self.assertEqual(self.records.search_entries(self.user.id, EntryFilter(day, day, text="100%")).entries, (first,))
+        self.assertEqual(self.records.search_entries(self.user.id, EntryFilter(day, day, text="100_")).entries, ())
+        self.assertEqual(self.records.search_entries(self.user.id, EntryFilter(day, day, project_id=project.id, work_item_id=item.id, work_type="meeting")).entries, (first,))
+        self.assertEqual(self.records.search_entries(self.user.id, EntryFilter(day, day, unclassified=True)).entries, (second,))
+        with self.assertRaises(ValueError):
+            self.records.search_entries(self.user.id, criteria, limit=1000)

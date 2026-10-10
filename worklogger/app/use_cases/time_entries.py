@@ -166,6 +166,20 @@ class TimeEntryService:
     def list_for_day(self, day: date) -> Result[tuple[WorkLog, ...]]:
         return self._run(lambda: self.repository.list_for_day(self.user_id, day))
 
+    @property
+    def search_available(self):
+        return callable(getattr(self.repository, "search_entries", None))
+
+    def search(self, criteria, *, cursor=None):
+        if not self.search_available:
+            return Result.failure(ValidationError("record_search_unavailable", "record_search_unavailable"))
+        try:
+            return Result.success(self.repository.search_entries(self.user_id, criteria, cursor=cursor))
+        except ValueError:
+            return Result.failure(ValidationError("record_search_invalid", "record_search_invalid"))
+        except Exception:
+            return Result.failure(InfrastructureError("record_search_failed", "record_search_failed"))
+
     def get_entry(self, entry_id: int) -> Result[WorkLog]:
         def load():
             record = self.repository.get_entry(self.user_id, entry_id)

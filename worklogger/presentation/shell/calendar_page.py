@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QEvent, Qt, QTimer, Signal
+from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -28,6 +29,7 @@ class CalendarPage(QWidget):
     previous_month_requested = Signal()
     next_month_requested = Signal()
     today_requested = Signal()
+    search_requested = Signal()
     entry_selected = Signal(object)
     event_selected = Signal(object)
     entry_delete_requested = Signal(object)
@@ -100,6 +102,16 @@ class CalendarPage(QWidget):
         self.today_button = QPushButton(_("Today"))
         self.today_button.setObjectName("today_button")
         self.today_button.clicked.connect(self.today_requested.emit)
+        self.search_button = QPushButton()
+        self.search_button.setObjectName("search_records_button")
+        self.search_button.setToolTip(_("Search records"))
+        self.search_button.setAccessibleName(_("Search records"))
+        set_button_icon(self.search_button, "search")
+        self.search_button.setVisible(self.entry_panel.view_model.search_available)
+        self.search_button.clicked.connect(self.search_requested.emit)
+        shortcut = QShortcut(QKeySequence.StandardKey.Find, self)
+        shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        shortcut.activated.connect(lambda: self.search_requested.emit() if self.entry_panel.view_model.search_available else None)
         self.add_entry_button = QPushButton(_("New time record"))
         self.add_entry_button.clicked.connect(self._new_time_record)
         self.notes_button = QPushButton(_("Notes"))
@@ -116,6 +128,7 @@ class CalendarPage(QWidget):
         header.addStretch(1)
         header.addWidget(self.next_month_button)
         header.addWidget(self.today_button)
+        header.addWidget(self.search_button)
         header.addWidget(self.add_entry_button)
         header.addWidget(self.notes_button)
         root.addLayout(header)

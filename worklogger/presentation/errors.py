@@ -25,6 +25,12 @@ def display_error_code(code: str) -> str:
     """Translate known error codes without displaying raw exception text or logging previews."""
 
     match code:
+        case "record_search_invalid":
+            return _("Enter a valid date range and search text.")
+        case "record_search_failed":
+            return _("Unable to search records. Your filters have been retained.")
+        case "record_search_unavailable":
+            return _("Record search is unavailable.")
         case "work_context_invalid":
             return _("Enter a valid project or work item name.")
         case "work_item_url_invalid":

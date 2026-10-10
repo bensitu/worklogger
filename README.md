@@ -10,6 +10,7 @@ version 4.0.0; this does not imply that a matching release has been published.
 - Calendar-based manual entry and clock-in/clock-out controls, including breaks,
   overnight shifts, work types, notes, and public holidays.
 - Daily, weekly, and monthly Markdown reports with editable templates and history.
+- Optional projects and work items, record search, and project summaries in reports.
 - Monthly, quarterly, and annual analytics with CSV and PDF export.
 - Local accounts, password recovery keys, remembered login, and administrator tools.
 - English, Japanese, Korean, Simplified Chinese, and Traditional Chinese interfaces.

@@ -115,6 +115,15 @@ msgstr "Administrator permission is required."
 msgid "All day"
 msgstr "All day"
 
+msgid "All projects"
+msgstr "All projects"
+
+msgid "All work items"
+msgstr "All work items"
+
+msgid "All work types"
+msgstr "All work types"
+
 msgid "Allow in AI context"
 msgstr "Allow in AI context"
 
@@ -156,6 +165,9 @@ msgstr "Archive type"
 
 msgid "Archive work item"
 msgstr "Archive work item"
+
+msgid "Archived"
+msgstr "Archived"
 
 msgid "Ask about your work logs"
 msgstr "Ask about your work logs"
@@ -412,6 +424,9 @@ msgstr "Data restored successfully."
 msgid "Database Backup"
 msgstr "Database Backup"
 
+msgid "Date"
+msgstr "Date"
+
 msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
 msgstr "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
 
@@ -532,6 +547,9 @@ msgstr "Enter a port between 0 and 65535."
 msgid "Enter a proxy address and port."
 msgstr "Enter a proxy address and port."
 
+msgid "Enter a valid date range and search text."
+msgstr "Enter a valid date range and search text."
+
 msgid "Enter a valid project or work item name."
 msgstr "Enter a valid project or work item name."
 
@@ -648,6 +666,9 @@ msgstr "Forgot Password?"
 
 msgid "Fri"
 msgstr "Fri"
+
+msgid "From"
+msgstr "From"
 
 msgid "GGUF Model (*.gguf)"
 msgstr "GGUF Model (*.gguf)"
@@ -958,6 +979,9 @@ msgstr "Monthly target"
 msgid "Monthly target (h)"
 msgstr "Monthly target (h)"
 
+msgid "More records"
+msgstr "More records"
+
 msgid "Name"
 msgstr "Name"
 
@@ -1008,6 +1032,9 @@ msgstr "No data"
 
 msgid "No events found."
 msgstr "No events found."
+
+msgid "No matching records."
+msgstr "No matching records."
 
 msgid "No model selected."
 msgstr "No model selected."
@@ -1219,6 +1246,9 @@ msgstr "RUNTIME SMOKE FAILED"
 msgid "RUNTIME SMOKE OK"
 msgstr "RUNTIME SMOKE OK"
 
+msgid "Record search is unavailable."
+msgstr "Record search is unavailable."
+
 msgid "Recording or a break is already active."
 msgstr "Recording or a break is already active."
 
@@ -1417,8 +1447,14 @@ msgstr "Schedule / Records"
 msgid "Search notes"
 msgstr "Search notes"
 
+msgid "Search records"
+msgstr "Search records"
+
 msgid "Search reports..."
 msgstr "Search reports..."
+
+msgid "Searching..."
+msgstr "Searching..."
 
 msgid "Secure credential storage is unavailable."
 msgstr "Secure credential storage is unavailable."
@@ -1491,6 +1527,9 @@ msgstr "Show leaves"
 
 msgid "Show password"
 msgstr "Show password"
+
+msgid "Showing {count} records"
+msgstr "Showing {count} records"
 
 msgid "Sick leave"
 msgstr "Sick leave"
@@ -1672,8 +1711,14 @@ msgstr "This work type changed or is no longer available. Reload the types and t
 msgid "Thu"
 msgstr "Thu"
 
+msgid "Time"
+msgstr "Time"
+
 msgid "Title"
 msgstr "Title"
+
+msgid "To"
+msgstr "To"
 
 msgid "Today"
 msgstr "Today"
@@ -1761,6 +1806,9 @@ msgstr "Unable to save the work log. Your changes have been retained."
 
 msgid "Unable to save your display name. Your input has been retained."
 msgstr "Unable to save your display name. Your input has been retained."
+
+msgid "Unable to search records. Your filters have been retained."
+msgstr "Unable to search records. Your filters have been retained."
 
 msgid "Unable to sign in with this provider. Please try again."
 msgstr "Unable to sign in with this provider. Please try again."

@@ -115,6 +115,15 @@ msgstr "管理者権限が必要です。"
 msgid "All day"
 msgstr "終日"
 
+msgid "All projects"
+msgstr "すべてのプロジェクト"
+
+msgid "All work items"
+msgstr "すべての作業項目"
+
+msgid "All work types"
+msgstr "すべての作業種別"
+
 msgid "Allow in AI context"
 msgstr "AI の参照を許可"
 
@@ -156,6 +165,9 @@ msgstr "種別を非表示"
 
 msgid "Archive work item"
 msgstr "作業項目をアーカイブ"
+
+msgid "Archived"
+msgstr "アーカイブ済み"
 
 msgid "Ask about your work logs"
 msgstr "業務記録について質問"
@@ -412,6 +424,9 @@ msgstr "データを復元しました。"
 msgid "Database Backup"
 msgstr "データベースのバックアップ"
 
+msgid "Date"
+msgstr "日付"
+
 msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
 msgstr "休憩記録がある日付。勤務日と休憩日は重複できます。休暇は別に集計します。"
 
@@ -532,6 +547,9 @@ msgstr "0～65535のポート番号を入力してください。"
 msgid "Enter a proxy address and port."
 msgstr "プロキシのアドレスとポートを入力してください。"
 
+msgid "Enter a valid date range and search text."
+msgstr "有効な日付範囲と検索文字列を入力してください。"
+
 msgid "Enter a valid project or work item name."
 msgstr "有効なプロジェクト名または作業項目名を入力してください。"
 
@@ -648,6 +666,9 @@ msgstr "パスワードをお忘れですか？"
 
 msgid "Fri"
 msgstr "金"
+
+msgid "From"
+msgstr "開始日"
 
 msgid "GGUF Model (*.gguf)"
 msgstr "GGUF Model (*.gguf)"
@@ -958,6 +979,9 @@ msgstr "月間目標"
 msgid "Monthly target (h)"
 msgstr "月間目標（時間）"
 
+msgid "More records"
+msgstr "さらに表示"
+
 msgid "Name"
 msgstr "名前"
 
@@ -1008,6 +1032,9 @@ msgstr "データがありません"
 
 msgid "No events found."
 msgstr "予定が見つかりません。"
+
+msgid "No matching records."
+msgstr "一致する記録がありません。"
 
 msgid "No model selected."
 msgstr "モデルが選択されていません。"
@@ -1219,6 +1246,9 @@ msgstr "ランタイムのスモークテストに失敗"
 msgid "RUNTIME SMOKE OK"
 msgstr "ランタイムのスモークテスト成功"
 
+msgid "Record search is unavailable."
+msgstr "記録検索を利用できません。"
+
 msgid "Recording or a break is already active."
 msgstr "記録または休憩はすでに開始されています。"
 
@@ -1417,8 +1447,14 @@ msgstr "予定 / 記録"
 msgid "Search notes"
 msgstr "メモを検索"
 
+msgid "Search records"
+msgstr "記録を検索"
+
 msgid "Search reports..."
 msgstr "レポートを検索..."
+
+msgid "Searching..."
+msgstr "検索中..."
 
 msgid "Secure credential storage is unavailable."
 msgstr "安全な資格情報ストアを利用できません。"
@@ -1491,6 +1527,9 @@ msgstr "休暇を表示"
 
 msgid "Show password"
 msgstr "パスワードを表示"
+
+msgid "Showing {count} records"
+msgstr "{count} 件の記録を表示"
 
 msgid "Sick leave"
 msgstr "病気休暇"
@@ -1672,8 +1711,14 @@ msgstr "この勤務種別は変更されたか利用できません。種別を
 msgid "Thu"
 msgstr "木"
 
+msgid "Time"
+msgstr "時間"
+
 msgid "Title"
 msgstr "タイトル"
+
+msgid "To"
+msgstr "終了日"
 
 msgid "Today"
 msgstr "今日"
@@ -1761,6 +1806,9 @@ msgstr "作業記録を保存できませんでした。変更内容は保持さ
 
 msgid "Unable to save your display name. Your input has been retained."
 msgstr "表示名を保存できません。入力内容は保持されています。"
+
+msgid "Unable to search records. Your filters have been retained."
+msgstr "記録を検索できません。検索条件は保持されています。"
 
 msgid "Unable to sign in with this provider. Please try again."
 msgstr "このプロバイダーでログインできませんでした。もう一度お試しください。"

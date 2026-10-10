@@ -143,7 +143,17 @@ Reports list each component period, including its type and content. Separate
 daily notes are included only with explicit per-date permission. CSV and
 iCalendar retain individual periods; iCalendar identifiers include the entry ID.
 
-## Compatibility
+## Record Search
+
+The calendar search action opens an account-owned record browser. Date, work type,
+project, work item, literal text, and unclassified filters query individual entries,
+not daily summaries. Results are chronologically ordered and read in bounded pages
+using a date/time/ID cursor. Search text is debounced without moving focus; changed
+filters invalidate pending results. Opening a result uses the existing calendar
+editor with fresh record loading and unsaved-draft confirmation. Archived project
+and work-item associations remain searchable.
+
+## Project Context
 
 Projects and work items are optional record context. Manage them under Settings >
 General > Projects; the recorder provides only selection. Manual and automatic
@@ -153,6 +163,8 @@ removing historical records. Editing old content preserves its existing associat
 Unlinked labels imported from CSV remain visible and can be explicitly cleared or
 assigned to a local project. Record history and generated reports show the context.
 
+
+## Compatibility
 
 Migration 7 makes a complete private snapshot before converting populated daily
 records. It copies times, content, offsets, and historical break deductions without

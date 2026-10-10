@@ -47,6 +47,13 @@ class TimeEntryViewModel:
         return self.service.projects.catalog()
 
     @property
+    def search_available(self):
+        return bool(getattr(self.service, "search_available", False))
+
+    def search(self, criteria, *, cursor=None):
+        return self.service.search(criteria, cursor=cursor)
+
+    @property
     def timer(self):
         return self.service.timer
 

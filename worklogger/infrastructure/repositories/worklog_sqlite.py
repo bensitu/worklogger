@@ -31,6 +31,9 @@ class SQLiteWorkLogRepository:
     def list_range(self, user_id: int, start: date, end: date) -> tuple[WorkLog, ...]:
         return self._queries.list_range(user_id, start, end)
 
+    def search_entries(self, user_id, criteria, *, cursor=None, limit=100):
+        return self._queries.search_entries(user_id, criteria, cursor=cursor, limit=limit)
+
     def list_all(self, user_id: int) -> tuple[WorkLog, ...]:
         return self._queries.list_all(user_id)
 

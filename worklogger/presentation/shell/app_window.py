@@ -142,6 +142,7 @@ class AppWindow(QMainWindow):
         self._last_error: AppError | None = None
         self._refreshing = False
         self._entry_dirty = False
+        self._record_search_dialog = None
 
         self.setObjectName("app_window")
         self.setWindowTitle(_("WorkLogger"))
@@ -365,6 +366,7 @@ class AppWindow(QMainWindow):
         self.calendar_page.previous_month_requested.connect(self.previous_month)
         self.calendar_page.today_requested.connect(self.go_today)
         self.calendar_page.next_month_requested.connect(self.next_month)
+        self.calendar_page.search_requested.connect(self.open_record_search)
         self.notes_button.clicked.connect(self.open_notes)
         if hasattr(self.settings_page, "logout_requested"):
             self.settings_page.logout_requested.connect(self._request_logout)
@@ -393,6 +395,29 @@ class AppWindow(QMainWindow):
         )
         self.calendar_page.event_selected.connect(self.entry_panel.copy_event)
         self.calendar_page.event_delete_requested.connect(self.entry_panel.delete_event)
+
+    def open_record_search(self):
+        from worklogger.presentation.widgets.record_search import RecordSearchDialog
+        from shiboken6 import isValid
+        if not self._time_entry_view_model.search_available:
+            return
+        if self._record_search_dialog is not None and isValid(self._record_search_dialog):
+            self._record_search_dialog.raise_()
+            self._record_search_dialog.activateWindow()
+            return
+        dialog = RecordSearchDialog(self._time_entry_view_model, self._selected_day, self,
+                                    job_runner=self._job_runner, selection_handler=self._open_found_entry)
+        self._record_search_dialog = dialog
+        dialog.finished.connect(lambda: setattr(self, "_record_search_dialog", None))
+        dialog.finished.connect(dialog.deleteLater)
+        dialog.open()
+
+    def _open_found_entry(self, record):
+        if self.entry_panel.is_busy or not self.select_day(record.day):
+            return False
+        self.entry_panel.edit_entry(record)
+        original = self._time_entry_view_model.draft.original
+        return original is not None and original.id == record.id
 
     def _entries_changed(self, day: date) -> None:
         if self.entry_panel.time_tabs.currentIndex() == 1:

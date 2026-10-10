@@ -26,6 +26,29 @@ from PySide6.QtCore import QTime
 
 
 class TimeEntryWorkflowTests(unittest.TestCase):
+    def test_record_search_filters_preserve_focus_and_open_the_owned_entry(self):
+        from worklogger.presentation.widgets.record_search import RecordSearchDialog
+        first = self.panel.view_model.service.save_manual(self.now.date(), "09:00", "10:00", "meeting", "Planning").value
+        self.panel.view_model.service.save_manual(self.now.date(), "10:00", "11:00", "normal", "Review")
+        selected = []
+        dialog = RecordSearchDialog(self.panel.view_model, self.now.date(), self.window, job_runner=ImmediateJobRunner())
+        self.addCleanup(dialog.deleteLater)
+        dialog.entry_selected.connect(selected.append)
+        dialog.show()
+        self.runtime.application.processEvents()
+        self.assertEqual(dialog.results.topLevelItemCount(), 2)
+        dialog.search_input.setFocus()
+        dialog.search_input.setText("Plan")
+        dialog._reload()
+        self.assertEqual(dialog.results.topLevelItemCount(), 1)
+        self.assertTrue(dialog.search_input.hasFocus())
+        dialog.results.setCurrentItem(dialog.results.topLevelItem(0))
+        dialog.open_button.click()
+        self.assertEqual(selected, [first])
+        self.assertTrue(self.window._open_found_entry(first))
+        self.assertEqual(self.panel.view_model.draft.original.id, first.id)
+        self.warning.assert_not_called()
+
     def test_project_management_and_record_selection_share_persisted_context(self):
         from worklogger.presentation.widgets.project_manager import ProjectManagerDialog
         from worklogger.presentation.viewmodels.projects import ProjectManagerViewModel

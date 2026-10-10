@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 from worklogger.domain.worklog.models import WorkLog
+from worklogger.domain.worklog.search import EntryCursor, EntryPage
 from worklogger.domain.worklog.rules import aggregate_days
 from worklogger.infrastructure.repositories._mapping import map_rows, parse_date
 from worklogger.infrastructure.repositories.worklog_mapping_sqlite import WorkLogStorage
@@ -13,6 +14,30 @@ from worklogger.infrastructure.repositories.worklog_mapping_sqlite import WorkLo
 class SQLiteWorkLogQueries:
     def __init__(self, storage: WorkLogStorage):
         self._storage = storage
+
+    def search_entries(self, user_id, criteria, *, cursor=None, limit=100):
+        if type(limit) is not int or not 1 <= limit <= 250 or not self._storage.supports_entries:
+            raise ValueError("record_search_invalid")
+        conditions = ["w.user_id=?", "w.d BETWEEN ? AND ?", "date(w.d,'+0 days')=w.d"]
+        parameters = [user_id, criteria.start.isoformat(), criteria.end.isoformat()]
+        for column, value in (("work_type", criteria.work_type), ("project_id", criteria.project_id), ("work_item_id", criteria.work_item_id)):
+            if value is not None:
+                conditions.append(f"w.{column}=?")
+                parameters.append(value)
+        if criteria.unclassified:
+            conditions.append("w.project_id IS NULL")
+        if criteria.text:
+            pattern = "%" + criteria.text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+            conditions.append("(w.note LIKE ? ESCAPE '\\' OR w.project_label LIKE ? ESCAPE '\\' OR w.work_item_label LIKE ? ESCAPE '\\')")
+            parameters.extend((pattern, pattern, pattern))
+        if cursor is not None:
+            conditions.append("(w.d,COALESCE(w.start,''),w.id)>(?,?,?)")
+            parameters.extend((cursor.day, cursor.start, cursor.entry_id))
+        with self._storage.connection_factory.connection() as connection:
+            rows = connection.execute(self._storage.select + " WHERE " + " AND ".join(conditions)
+                + " ORDER BY w.d,COALESCE(w.start,''),w.id LIMIT ?", (*parameters, limit + 1)).fetchall()
+        next_cursor = EntryCursor(rows[limit - 1]["d"], rows[limit - 1]["start"] or "", rows[limit - 1]["id"]) if len(rows) > limit else None
+        return EntryPage(map_rows(rows[:limit], self._storage.from_row), next_cursor)
 
     def get_for_day(self, user_id: int, day: date) -> WorkLog | None:
         if self._storage.supports_entries:

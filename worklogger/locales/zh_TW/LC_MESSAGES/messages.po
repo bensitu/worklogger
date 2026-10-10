@@ -115,6 +115,15 @@ msgstr "需要管理員權限。"
 msgid "All day"
 msgstr "全天"
 
+msgid "All projects"
+msgstr "所有專案"
+
+msgid "All work items"
+msgstr "所有工作項目"
+
+msgid "All work types"
+msgstr "所有工作類型"
+
 msgid "Allow in AI context"
 msgstr "允許用於 AI 上下文"
 
@@ -156,6 +165,9 @@ msgstr "停用類型"
 
 msgid "Archive work item"
 msgstr "封存工作項目"
+
+msgid "Archived"
+msgstr "已封存"
 
 msgid "Ask about your work logs"
 msgstr "詢問您的工作記錄"
@@ -412,6 +424,9 @@ msgstr "資料還原成功。"
 msgid "Database Backup"
 msgstr "資料庫備份"
 
+msgid "Date"
+msgstr "日期"
+
 msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
 msgstr "包含休息類型記錄的日期。工作天數與休息天數可以重疊，請假另行統計。"
 
@@ -532,6 +547,9 @@ msgstr "請輸入 0 到 65535 之間的連接埠號碼。"
 msgid "Enter a proxy address and port."
 msgstr "請輸入代理位址和連接埠。"
 
+msgid "Enter a valid date range and search text."
+msgstr "請輸入有效的日期範圍與檢索內容。"
+
 msgid "Enter a valid project or work item name."
 msgstr "請輸入有效的專案或工作項目名稱。"
 
@@ -648,6 +666,9 @@ msgstr "忘記密碼？"
 
 msgid "Fri"
 msgstr "五"
+
+msgid "From"
+msgstr "開始日期"
 
 msgid "GGUF Model (*.gguf)"
 msgstr "GGUF Model (*.gguf)"
@@ -958,6 +979,9 @@ msgstr "每月目標"
 msgid "Monthly target (h)"
 msgstr "每月目標（小時）"
 
+msgid "More records"
+msgstr "更多紀錄"
+
 msgid "Name"
 msgstr "名稱"
 
@@ -1008,6 +1032,9 @@ msgstr "尚無資料"
 
 msgid "No events found."
 msgstr "未找到事件。"
+
+msgid "No matching records."
+msgstr "沒有符合條件的紀錄。"
 
 msgid "No model selected."
 msgstr "未選取模型。"
@@ -1219,6 +1246,9 @@ msgstr "執行階段檢查失敗"
 msgid "RUNTIME SMOKE OK"
 msgstr "執行階段檢查通過"
 
+msgid "Record search is unavailable."
+msgstr "紀錄檢索不可用。"
+
 msgid "Recording or a break is already active."
 msgstr "記錄或休息已開始。"
 
@@ -1417,8 +1447,14 @@ msgstr "日程 / 記錄"
 msgid "Search notes"
 msgstr "搜尋筆記"
 
+msgid "Search records"
+msgstr "檢索紀錄"
+
 msgid "Search reports..."
 msgstr "搜尋報表..."
+
+msgid "Searching..."
+msgstr "正在檢索..."
 
 msgid "Secure credential storage is unavailable."
 msgstr "安全認證資料庫無法使用。"
@@ -1491,6 +1527,9 @@ msgstr "顯示休假"
 
 msgid "Show password"
 msgstr "顯示密碼"
+
+msgid "Showing {count} records"
+msgstr "已顯示 {count} 筆紀錄"
 
 msgid "Sick leave"
 msgstr "病假"
@@ -1672,8 +1711,14 @@ msgstr "此工作類型已變更或無法使用。請重新載入類型後重試
 msgid "Thu"
 msgstr "四"
 
+msgid "Time"
+msgstr "時間"
+
 msgid "Title"
 msgstr "標題"
+
+msgid "To"
+msgstr "結束日期"
 
 msgid "Today"
 msgstr "今天"
@@ -1761,6 +1806,9 @@ msgstr "無法儲存工作記錄，您的修改已保留。"
 
 msgid "Unable to save your display name. Your input has been retained."
 msgstr "無法儲存顯示名稱，您的輸入已保留。"
+
+msgid "Unable to search records. Your filters have been retained."
+msgstr "無法檢索紀錄，篩選條件已保留。"
 
 msgid "Unable to sign in with this provider. Please try again."
 msgstr "無法透過此服務登入，請重試。"

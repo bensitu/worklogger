@@ -14,6 +14,9 @@ Application version: 4.0.0.
 
 ### Desktop Interface
 
+- Added account-scoped record search with date/type/context filters, stable paging,
+  background queries, keyboard search focus, and navigation to the original editor.
+
 - Added optional account-owned projects and work items, settings management,
   recorder selection, persistent timer context, historical labels, and report
   summaries without changing work-type accounting or requiring classification.

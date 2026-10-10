@@ -151,6 +151,54 @@ class CalendarLayoutChecks(unittest.TestCase):
             self.app.setPalette(old_palette)
             self.app.setStyleSheet(old_style)
 
+    def test_record_search_controls_fit_localized_filters_and_results(self):
+        from types import SimpleNamespace
+        from worklogger.domain.projects.models import Project, WorkContext, WorkItem
+        from worklogger.domain.worklog.search import EntryPage
+        from worklogger.domain.shared.result import Result
+        from worklogger.presentation.widgets.record_search import RecordSearchDialog
+        from worklogger.presentation.job_runner import ImmediateJobRunner
+        from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
+        configure_application_style()
+        install_bundled_fonts()
+        engine = ThemeEngine()
+        old_style, old_palette = self.app.styleSheet(), self.app.palette()
+        project = Project("1" * 32, "Research", archived=True)
+        item = WorkItem("2" * 32, project.id, "Review", archived=True)
+        record = WorkLog(1, date(2026, 10, 10), "09:00", "10:00", note="Source material", id=1,
+                         context=WorkContext(project.id, item.id, project.name, item.title))
+        model = SimpleNamespace(list_work_types=lambda: Result.success(()),
+            project_inventory=lambda: Result.success(((project,), {project.id: (item,)})),
+            search=lambda _criteria, **_options: Result.success(EntryPage((record,))))
+        try:
+            for language in available_languages():
+                set_language(language)
+                for dark in (False, True):
+                    self.app.setPalette(engine.qt_palette(dark=dark))
+                    self.app.setStyleSheet(engine.application_stylesheet(dark=dark))
+                    dialog = RecordSearchDialog(model, record.day, job_runner=ImmediateJobRunner())
+                    try:
+                        dialog.show()
+                        for width, height in ((740, 500), (960, 600)):
+                            dialog.resize(width, height)
+                            self.app.processEvents()
+                            self.assertEqual((dialog.width(), dialog.height()), (width, height))
+                            for field in (dialog.search_input, dialog.start_input, dialog.end_input,
+                                          dialog.type_combo, dialog.project_combo, dialog.item_combo,
+                                          dialog.open_button, dialog.more_button, dialog.close_button):
+                                self.assertTrue(dialog.rect().contains(field.rect().translated(field.mapTo(dialog, QPoint()))))
+                            self.assertEqual(dialog.results.topLevelItemCount(), 1)
+                            target = os.environ.get("WORKLOGGER_SCREENSHOTS")
+                            if target:
+                                Path(target).mkdir(parents=True, exist_ok=True)
+                                self.assertTrue(dialog.grab().save(str(Path(target) / f"{language}-record-search-{'dark' if dark else 'light'}-{width}.png")))
+                    finally:
+                        dialog.hide()
+                        dialog.deleteLater()
+        finally:
+            self.app.setPalette(old_palette)
+            self.app.setStyleSheet(old_style)
+
     def test_custom_type_manager_fits_long_names_and_accounting_controls(self):
         import tempfile
         from worklogger.app.use_cases.work_types import WorkTypeService

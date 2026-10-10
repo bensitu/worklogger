@@ -374,6 +374,7 @@ QTextEdit,
 QPlainTextEdit,
 QComboBox,
 QSpinBox,
+QDateEdit,
 QTimeEdit,
 QDoubleSpinBox {
   background: {{ input_background }};
@@ -402,6 +403,7 @@ QTextEdit:focus,
 QPlainTextEdit:focus,
 QComboBox:focus,
 QSpinBox:focus,
+QDateEdit:focus,
 QTimeEdit:focus,
 QDoubleSpinBox:focus {
   border-color: {{ accent }};
@@ -416,6 +418,19 @@ QComboBox::down-arrow {
   image: url("{{ icons_root }}/chevron-down.svg");
   width: 14px;
   height: 14px;
+}
+
+QDateEdit::drop-down {
+  subcontrol-origin: padding;
+  subcontrol-position: top right;
+  border: none;
+  width: 26px;
+}
+
+QDateEdit::down-arrow {
+  image: url("{{ icons_root }}/calendar.svg");
+  width: 16px;
+  height: 16px;
 }
 
 QDoubleSpinBox::up-button, QSpinBox::up-button, QTimeEdit::up-button {

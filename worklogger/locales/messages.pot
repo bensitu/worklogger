@@ -113,6 +113,15 @@ msgstr ""
 msgid "All day"
 msgstr ""
 
+msgid "All projects"
+msgstr ""
+
+msgid "All work items"
+msgstr ""
+
+msgid "All work types"
+msgstr ""
+
 msgid "Allow in AI context"
 msgstr ""
 
@@ -153,6 +162,9 @@ msgid "Archive type"
 msgstr ""
 
 msgid "Archive work item"
+msgstr ""
+
+msgid "Archived"
 msgstr ""
 
 msgid "Ask about your work logs"
@@ -410,6 +422,9 @@ msgstr ""
 msgid "Database Backup"
 msgstr ""
 
+msgid "Date"
+msgstr ""
+
 msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
 msgstr ""
 
@@ -530,6 +545,9 @@ msgstr ""
 msgid "Enter a proxy address and port."
 msgstr ""
 
+msgid "Enter a valid date range and search text."
+msgstr ""
+
 msgid "Enter a valid project or work item name."
 msgstr ""
 
@@ -645,6 +663,9 @@ msgid "Forgot Password?"
 msgstr ""
 
 msgid "Fri"
+msgstr ""
+
+msgid "From"
 msgstr ""
 
 msgid "GGUF Model (*.gguf)"
@@ -956,6 +977,9 @@ msgstr ""
 msgid "Monthly target (h)"
 msgstr ""
 
+msgid "More records"
+msgstr ""
+
 msgid "Name"
 msgstr ""
 
@@ -1005,6 +1029,9 @@ msgid "No data"
 msgstr ""
 
 msgid "No events found."
+msgstr ""
+
+msgid "No matching records."
 msgstr ""
 
 msgid "No model selected."
@@ -1217,6 +1244,9 @@ msgstr ""
 msgid "RUNTIME SMOKE OK"
 msgstr ""
 
+msgid "Record search is unavailable."
+msgstr ""
+
 msgid "Recording or a break is already active."
 msgstr ""
 
@@ -1415,7 +1445,13 @@ msgstr ""
 msgid "Search notes"
 msgstr ""
 
+msgid "Search records"
+msgstr ""
+
 msgid "Search reports..."
+msgstr ""
+
+msgid "Searching..."
 msgstr ""
 
 msgid "Secure credential storage is unavailable."
@@ -1488,6 +1524,9 @@ msgid "Show leaves"
 msgstr ""
 
 msgid "Show password"
+msgstr ""
+
+msgid "Showing {count} records"
 msgstr ""
 
 msgid "Sick leave"
@@ -1670,7 +1709,13 @@ msgstr ""
 msgid "Thu"
 msgstr ""
 
+msgid "Time"
+msgstr ""
+
 msgid "Title"
+msgstr ""
+
+msgid "To"
 msgstr ""
 
 msgid "Today"
@@ -1758,6 +1803,9 @@ msgid "Unable to save the work log. Your changes have been retained."
 msgstr ""
 
 msgid "Unable to save your display name. Your input has been retained."
+msgstr ""
+
+msgid "Unable to search records. Your filters have been retained."
 msgstr ""
 
 msgid "Unable to sign in with this provider. Please try again."

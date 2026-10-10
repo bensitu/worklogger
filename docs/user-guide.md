@@ -253,8 +253,7 @@ a paginated Unicode text summary, not the chart. See [data formats](data-formats
 | Category | Available controls and behavior |
 | --- | --- |
 | Appearance | Native-language choices, preset/custom accent, light/dark mode; palette appears only for Custom |
-| General | Standard hours, default break, monthly target, holidays, week start, overnight display, platform residency |
-| Projects | Settings > General provides project/work-item creation, editing, completion and archival; recorder choices are optional and history remains available |
+| General | Standard hours, default break, monthly target, holidays, week start, overnight display, platform residency, and project/work-item management |
 | AI | Local model selection and native runtime, explicit external-model opt-in with HTTPS endpoint/model/key, sample connection test, and context privacy |
 | Data | Work-log CSV and iCalendar export, CSV and calendar import, database backup/restore; clearing calendar events is disabled |
 | Network | Enable and configure an HTTP CONNECT proxy; subsequent update, download, and external AI requests use it |
