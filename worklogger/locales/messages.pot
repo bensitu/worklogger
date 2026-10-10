@@ -1007,6 +1007,9 @@ msgstr ""
 msgid "Long timer reminder (h)"
 msgstr ""
 
+msgid "Manage all user accounts in this database."
+msgstr ""
+
 msgid "Manage downloaded and imported GGUF models."
 msgstr ""
 
@@ -1302,6 +1305,9 @@ msgid "Password is stored in the system credential store."
 msgstr ""
 
 msgid "Password reset."
+msgstr ""
+
+msgid "Personal profile"
 msgstr ""
 
 msgid "Pink"
@@ -1790,6 +1796,9 @@ msgstr ""
 msgid "Sign in with Microsoft"
 msgstr ""
 
+msgid "Sign-in and security"
+msgstr ""
+
 msgid "Sign-in cancelled. No application session was opened."
 msgstr ""
 
@@ -2253,6 +2262,9 @@ msgid "Use model"
 msgstr ""
 
 msgid "User"
+msgstr ""
+
+msgid "User administration"
 msgstr ""
 
 msgid "User created, but the account list could not be refreshed."

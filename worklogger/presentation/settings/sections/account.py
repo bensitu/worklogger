@@ -36,13 +36,14 @@ class AccountSection(_SettingsScrollPage):
         "change_avatar_button",
         "reset_avatar_button",
         "display_name_editor",
+        "account_administration_frame",
     )
 
     def __init__(self, actions: SectionActions):
         super().__init__()
         page = self
         card = CardFrame(object_name="settings_content_frame")
-        card.content_layout.addWidget(_section_title(_("Account")))
+        card.content_layout.addWidget(_section_title(_("Personal profile")))
         form = QFormLayout()
         form.setSpacing(12)
         self.display_name_editor = DisplayNameEditor()
@@ -74,7 +75,11 @@ class AccountSection(_SettingsScrollPage):
         avatar_layout.addStretch()
         form.addRow(_("Avatar"), avatar_row)
         card.content_layout.addLayout(form)
-        card.content_layout.addWidget(
+        page.layout().addWidget(card)
+
+        security = CardFrame(object_name="settings_content_frame")
+        security.content_layout.addWidget(_section_title(_("Sign-in and security")))
+        security.content_layout.addWidget(
             _secondary_label(_("Changing password will reset the recovery key."))
         )
         self.change_password_button = QPushButton(_("Change password"))
@@ -97,11 +102,10 @@ class AccountSection(_SettingsScrollPage):
         )
         for button in (
             self.change_password_button,
-            self.manage_users_button,
-            self.logout_button,
             self.manage_identities_button,
+            self.logout_button,
         ):
-            card.content_layout.addWidget(button)
+            security.content_layout.addWidget(button)
         for button, icon in (
             (self.change_password_button, "lock-keyhole"),
             (self.manage_users_button, "users"),
@@ -109,5 +113,14 @@ class AccountSection(_SettingsScrollPage):
             (self.manage_identities_button, "link"),
         ):
             set_button_icon(button, icon, accent=True)
-        page.layout().addWidget(card)
+        page.layout().addWidget(security)
+        self.account_administration_frame = CardFrame(object_name="settings_content_frame")
+        self.account_administration_frame.content_layout.addWidget(_section_title(_("User administration")))
+        self.account_administration_frame.content_layout.addWidget(
+            _secondary_label(_("Manage all user accounts in this database."))
+        )
+        self.account_administration_frame.content_layout.addWidget(self.manage_users_button)
+        self.manage_users_button.setEnabled(False)
+        self.account_administration_frame.hide()
+        page.layout().addWidget(self.account_administration_frame)
         page.layout().addStretch(1)

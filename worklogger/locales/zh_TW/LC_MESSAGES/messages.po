@@ -1009,6 +1009,9 @@ msgstr "已要求登出"
 msgid "Long timer reminder (h)"
 msgstr "長時間計時提醒（h）"
 
+msgid "Manage all user accounts in this database."
+msgstr "管理目前資料庫中的所有使用者帳戶。"
+
 msgid "Manage downloaded and imported GGUF models."
 msgstr "管理已下載和匯入的 GGUF 模型。"
 
@@ -1305,6 +1308,9 @@ msgstr "密碼儲存於系統認證資料庫中。"
 
 msgid "Password reset."
 msgstr "密碼已重設。"
+
+msgid "Personal profile"
+msgstr "個人資料"
 
 msgid "Pink"
 msgstr "粉紅色"
@@ -1792,6 +1798,9 @@ msgstr "使用 Google 登入"
 msgid "Sign in with Microsoft"
 msgstr "使用 Microsoft 登入"
 
+msgid "Sign-in and security"
+msgstr "登入與安全性"
+
 msgid "Sign-in cancelled. No application session was opened."
 msgstr "登入已取消，未建立應用程式工作階段。"
 
@@ -2256,6 +2265,9 @@ msgstr "使用模型"
 
 msgid "User"
 msgstr "使用者"
+
+msgid "User administration"
+msgstr "使用者管理"
 
 msgid "User created, but the account list could not be refreshed."
 msgstr "使用者已建立，但帳戶清單無法重新整理。"

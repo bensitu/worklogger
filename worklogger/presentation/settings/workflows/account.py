@@ -89,8 +89,9 @@ class AccountSettingsWorkflow:
             )
         return changed
 
-    def manage_users(self, parent: QWidget | None) -> UserManagementDialog:
-        assert self._user_management_view_model is not None
+    def manage_users(self, parent: QWidget | None) -> UserManagementDialog | None:
+        if not self._user.is_admin or self._user_management_view_model is None:
+            return None
         options = {"job_runner": self._job_runner} if self._user_management_dialog_factory is UserManagementDialog else {}
         dialog = self._user_management_dialog_factory(self._user_management_view_model, parent, **options)
         dialog.refresh()

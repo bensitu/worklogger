@@ -219,11 +219,22 @@ class UserManagementUseCaseTests(unittest.TestCase):
         )
         assert user.value is not None
 
-        denied = CreateManagedUserHandler(repository).handle(
-            CreateManagedUserCommand(user.value.user.id, "carol", "secret789")
+        user_id = user.value.user.id
+        admin_id = admin.value.user.id
+        operations = (
+            (ListUsersHandler(repository), ListUsersQuery(user_id)),
+            (CreateManagedUserHandler(repository), CreateManagedUserCommand(user_id, "carol", "secret789")),
+            (AdminResetPasswordHandler(repository), AdminResetPasswordCommand(user_id, admin_id, "newsecret123")),
+            (SetPasswordChangeRequiredHandler(repository), SetPasswordChangeRequiredCommand(user_id, admin_id, True)),
+            (DeleteManagedUserHandler(repository), DeleteManagedUserCommand(user_id, admin_id)),
         )
-        self.assertFalse(denied.ok)
-        self.assertEqual(denied.error.code if denied.error else "", "admin_required")
+        original_users = dict(repository.users)
+        for handler, command in operations:
+            with self.subTest(operation=type(handler).__name__):
+                denied = handler.handle(command)
+                self.assertFalse(denied.ok)
+                self.assertEqual(denied.error.code if denied.error else "", "admin_required")
+        self.assertEqual(repository.users, original_users)
 
         delete_self = DeleteManagedUserHandler(repository).handle(
             DeleteManagedUserCommand(admin.value.user.id, admin.value.user.id)

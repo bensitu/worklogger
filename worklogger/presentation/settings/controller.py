@@ -415,7 +415,7 @@ class SettingsWorkflowController:
     def _change_password(self, parent: QWidget | None) -> bool:
         return self._account_workflow.change_password(parent)
 
-    def _manage_users(self, parent: QWidget | None) -> UserManagementDialog:
+    def _manage_users(self, parent: QWidget | None) -> UserManagementDialog | None:
         return self._account_workflow.manage_users(parent)
 
     def _backup_database(self, dialog: QWidget) -> bool:

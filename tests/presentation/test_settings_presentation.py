@@ -274,16 +274,32 @@ class SettingsPresentationTests(unittest.TestCase):
 
     def test_account_uses_login_id_and_action_icons_and_admin_permissions(self):
         page = SettingsPage(_view_model(MemorySettingsRepository()))
+        self.assertTrue(page.account_administration_frame.isHidden())
+        self.assertFalse(page.manage_users_button.isEnabled())
         page.set_account(User(id=42, username="alice", is_admin=True))
         self.assertEqual(page.current_user_id_line_edit.text(), "alice")
         self.assertFalse(page.manage_users_button.isHidden())
+        self.assertFalse(page.account_administration_frame.isHidden())
+        groups = {page.current_user_id_line_edit.parentWidget(), page.change_password_button.parentWidget(),
+                  page.manage_users_button.parentWidget()}
+        self.assertEqual(len(groups), 3)
         for button in (page.change_password_button, page.manage_users_button, page.logout_button,
                        page.manage_identities_button, page.export_csv_button, page.import_csv_button,
                        page.backup_button, page.restore_button, page.import_ics_button, page.export_ics_button):
             self.assertFalse(button.icon().isNull())
+        page.set_manage_users_available(False)
+        page.set_account(User(id=42, username="alice", is_admin=True, display_name="Mary"))
+        self.assertTrue(page.account_administration_frame.isHidden())
+        self.assertFalse(page.manage_users_button.isEnabled())
+        page.set_manage_users_available(True)
+        self.assertFalse(page.account_administration_frame.isHidden())
         page.set_account(User(id=42, username="alice", is_admin=False))
+        page.set_manage_users_available(True)
+        self.assertTrue(page.account_administration_frame.isHidden())
         self.assertTrue(page.manage_users_button.isHidden())
         self.assertFalse(page.manage_users_button.isEnabled())
+        self.assertTrue(page.change_password_button.isEnabled())
+        self.assertTrue(page.logout_button.isEnabled())
 
     def test_logout_requires_confirmation(self):
         page = SettingsPage(_view_model(MemorySettingsRepository()))

@@ -177,7 +177,7 @@ def _build_user_management_view_model(
     user: User,
     auth_repository: RuntimeAuthRepository | None,
 ) -> UserManagementViewModel | None:
-    if auth_repository is None:
+    if auth_repository is None or not user.is_admin:
         return None
     return UserManagementViewModel(
         requesting_user_id=user.id,

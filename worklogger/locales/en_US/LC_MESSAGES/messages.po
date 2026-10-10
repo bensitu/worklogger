@@ -1009,6 +1009,9 @@ msgstr "Logout requested"
 msgid "Long timer reminder (h)"
 msgstr "Long timer reminder (h)"
 
+msgid "Manage all user accounts in this database."
+msgstr "Manage all user accounts in this database."
+
 msgid "Manage downloaded and imported GGUF models."
 msgstr "Manage downloaded and imported GGUF models."
 
@@ -1305,6 +1308,9 @@ msgstr "Password is stored in the system credential store."
 
 msgid "Password reset."
 msgstr "Password reset."
+
+msgid "Personal profile"
+msgstr "Personal profile"
 
 msgid "Pink"
 msgstr "Pink"
@@ -1792,6 +1798,9 @@ msgstr "Sign in with Google"
 msgid "Sign in with Microsoft"
 msgstr "Sign in with Microsoft"
 
+msgid "Sign-in and security"
+msgstr "Sign-in and security"
+
 msgid "Sign-in cancelled. No application session was opened."
 msgstr "Sign-in cancelled. No application session was opened."
 
@@ -2256,6 +2265,9 @@ msgstr "Use model"
 
 msgid "User"
 msgstr "User"
+
+msgid "User administration"
+msgstr "User administration"
 
 msgid "User created, but the account list could not be refreshed."
 msgstr "User created, but the account list could not be refreshed."

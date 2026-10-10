@@ -72,6 +72,14 @@ operation to finish. See [provider configuration and compatibility](identity-sig
 
 ### Display Names
 
+**Settings > Account** separates personal profile fields from sign-in and security
+actions. Display name, login ID, role and avatar belong to the current account.
+Password changes, linked identities and logout affect that account's sign-in.
+The separate **User administration** group manages all accounts in the current
+database and appears only for administrators when user management is available.
+Ordinary users cannot open it, including through a direct workflow request;
+business operations independently recheck the requesting account's permissions.
+
 Login ID is the stable identifier entered at sign-in. Display name is an optional
 personal name and does not change authentication or data ownership. In Settings >
 Account, choose the pencil beside Display name, edit it, then use the checkmark to
@@ -331,7 +339,7 @@ and saved-daily-report aggregation. Multiple periods retain individual rows.
 | AI | Local model selection and native runtime, explicit external-model opt-in with HTTPS endpoint/model/key, sample connection test, and context privacy |
 | Data | Work-log CSV and iCalendar export, CSV and calendar import, database backup/restore; clearing calendar events is disabled |
 | Network | Enable and configure an HTTP CONNECT proxy; subsequent update, download, and external AI requests use it |
-| Account | Current account, password change, identities, administrator tools when authorized, logout |
+| Account | Personal profile, sign-in and security, and a separate user administration group visible only to authorized administrators |
 | About | Version and author information, license display, repository link, manual update check |
 
 Under AI > Local Model, Model context limit is read-only catalog metadata; Runtime

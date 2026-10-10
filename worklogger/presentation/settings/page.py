@@ -94,6 +94,8 @@ class SettingsPage(QWidget):
         self._view_model = view_model
         self._capabilities = capabilities or SettingsCapabilities()
         self._state: SettingsState | None = None
+        self._account_is_admin = False
+        self._manage_users_available = True
         self._updating = False
         self._last_error: AppError | None = None
         self._busy_jobs: set[str] = set()
@@ -155,13 +157,14 @@ class SettingsPage(QWidget):
         return True
 
     def set_account(self, user: User) -> None:
+        self._account_is_admin = user.is_admin
         self.display_name_editor.set_profile(user)
         self.current_user_id_line_edit.setText(user.username)
         self.current_user_id_line_edit.setAccessibleName(_("Login ID"))
         self.current_user_role_line_edit.setText(
             _("Admin") if user.is_admin else _("User")
         )
-        self.set_manage_users_available(user.is_admin)
+        self._update_user_management_access()
         self.backup_button.setEnabled(user.is_admin)
         self.restore_button.setEnabled(user.is_admin)
 
@@ -189,8 +192,14 @@ class SettingsPage(QWidget):
         return True
 
     def set_manage_users_available(self, available: bool) -> None:
-        self.manage_users_button.setVisible(bool(available))
-        self.manage_users_button.setEnabled(bool(available))
+        self._manage_users_available = bool(available)
+        self._update_user_management_access()
+
+    def _update_user_management_access(self) -> None:
+        allowed = self._account_is_admin and self._manage_users_available
+        self.account_administration_frame.setVisible(allowed)
+        self.manage_users_button.setVisible(allowed)
+        self.manage_users_button.setEnabled(allowed)
 
     def set_work_types_available(self, available: bool) -> None:
         self.manage_work_types_button.setEnabled(available)

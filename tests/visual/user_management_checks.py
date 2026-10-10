@@ -21,6 +21,39 @@ from worklogger.presentation.viewmodels.user_management import UserListItem, Use
 
 
 class AccountLayoutChecks(unittest.TestCase):
+    def test_account_groups_separate_personal_actions_from_administration(self):
+        from PySide6.QtWidgets import QLabel
+        from worklogger.domain.auth.models import User
+        for language in available_languages():
+            set_language(language)
+            for dark in (False, True):
+                self.apply_theme(dark)
+                for is_admin in (False, True):
+                    page = SettingsPage(settings_model(MemorySettingsRepository()))
+                    page.refresh()
+                    page.set_account(User(1, "login-id", is_admin=is_admin, display_name="Mary"))
+                    page.category_nav.set_category("account")
+                    page.resize(880, 680)
+                    page.show()
+                    self.app.processEvents()
+                    account = page.category_stack.currentWidget()
+                    titles = [label for label in account.findChildren(QLabel, "settings_section_title_label") if label.isVisible()]
+                    expected = [_("Personal profile"), _("Sign-in and security")]
+                    if is_admin:
+                        expected.append(_("User administration"))
+                    self.assertEqual([label.text() for label in titles], expected)
+                    self.assertEqual(page.account_administration_frame.isHidden(), not is_admin)
+                    self.assertEqual(page.manage_users_button.isEnabled(), is_admin)
+                    for index, title in enumerate(titles):
+                        frame = title.parentWidget()
+                        self.assertLessEqual(frame.width(), account.viewport().width())
+                        self.assertTrue(frame.rect().contains(title.geometry()))
+                        account.ensureWidgetVisible(frame)
+                        self.app.processEvents()
+                        self.capture(page, f"{language}-account-{is_admin}-{dark}-group-{index}")
+                    page.close()
+                    page.deleteLater()
+
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])

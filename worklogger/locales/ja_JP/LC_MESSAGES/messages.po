@@ -1009,6 +1009,9 @@ msgstr "ログアウトを要求しました"
 msgid "Long timer reminder (h)"
 msgstr "長時間タイマーの通知（h）"
 
+msgid "Manage all user accounts in this database."
+msgstr "このデータベース内のすべてのユーザーアカウントを管理します。"
+
 msgid "Manage downloaded and imported GGUF models."
 msgstr "ダウンロード・インポートしたGGUFモデルを管理します。"
 
@@ -1305,6 +1308,9 @@ msgstr "パスワードはシステムの資格情報ストアに保存されま
 
 msgid "Password reset."
 msgstr "パスワードをリセットしました。"
+
+msgid "Personal profile"
+msgstr "個人プロフィール"
 
 msgid "Pink"
 msgstr "ピンク"
@@ -1792,6 +1798,9 @@ msgstr "Googleでログイン"
 msgid "Sign in with Microsoft"
 msgstr "Microsoftでログイン"
 
+msgid "Sign-in and security"
+msgstr "サインインとセキュリティ"
+
 msgid "Sign-in cancelled. No application session was opened."
 msgstr "サインインをキャンセルしました。アプリケーションのセッションは開始されていません。"
 
@@ -2256,6 +2265,9 @@ msgstr "モデルを使用"
 
 msgid "User"
 msgstr "ユーザー"
+
+msgid "User administration"
+msgstr "ユーザー管理"
 
 msgid "User created, but the account list could not be refreshed."
 msgstr "ユーザーは作成されましたが、アカウント一覧を更新できませんでした。"

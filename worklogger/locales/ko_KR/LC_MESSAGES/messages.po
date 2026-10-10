@@ -1009,6 +1009,9 @@ msgstr "로그아웃 요청됨"
 msgid "Long timer reminder (h)"
 msgstr "장시간 타이머 알림(h)"
 
+msgid "Manage all user accounts in this database."
+msgstr "이 데이터베이스의 모든 사용자 계정을 관리합니다."
+
 msgid "Manage downloaded and imported GGUF models."
 msgstr "다운로드하거나 가져온 GGUF 모델을 관리합니다."
 
@@ -1305,6 +1308,9 @@ msgstr "비밀번호는 시스템 자격 증명 저장소에 저장됩니다."
 
 msgid "Password reset."
 msgstr "비밀번호가 재설정되었습니다."
+
+msgid "Personal profile"
+msgstr "개인 프로필"
 
 msgid "Pink"
 msgstr "분홍"
@@ -1792,6 +1798,9 @@ msgstr "Google로 로그인"
 msgid "Sign in with Microsoft"
 msgstr "Microsoft로 로그인"
 
+msgid "Sign-in and security"
+msgstr "로그인 및 보안"
+
 msgid "Sign-in cancelled. No application session was opened."
 msgstr "로그인이 취소되었습니다. 애플리케이션 세션이 시작되지 않았습니다."
 
@@ -2256,6 +2265,9 @@ msgstr "모델 사용"
 
 msgid "User"
 msgstr "사용자"
+
+msgid "User administration"
+msgstr "사용자 관리"
 
 msgid "User created, but the account list could not be refreshed."
 msgstr "사용자를 만들었지만 계정 목록을 새로 고치지 못했습니다."

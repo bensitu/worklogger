@@ -206,6 +206,26 @@ def _settings_view_model(repository: MemorySettingsRepository) -> SettingsViewMo
 
 
 class SettingsWorkflowTests(unittest.TestCase):
+    def test_user_management_entry_requires_an_administrator_and_configured_workflow(self):
+        for is_admin, configured in ((False, True), (True, False)):
+            with self.subTest(is_admin=is_admin, configured=configured):
+                factory = Mock()
+                controller = SettingsWorkflowController(
+                    settings_view_model=_settings_view_model(MemorySettingsRepository()),
+                    auth_view_model=FakeAuthViewModel(),
+                    data_management_view_model=FakeDataManagementViewModel(),
+                    user=User(id=1, username="alice", is_admin=is_admin),
+                    user_management_view_model=Mock() if configured else None,
+                    user_management_dialog_factory=factory,
+                )
+                page = controller.create_page()
+                self.assertTrue(page.account_administration_frame.isHidden())
+                self.assertFalse(page.manage_users_button.isEnabled())
+                page.manage_users_requested.emit()
+                self.assertIsNone(controller._manage_users(page))
+                factory.assert_not_called()
+                page.deleteLater()
+
     def test_cancelled_data_and_update_jobs_do_not_notify_or_record_success(self):
         repository = MemorySettingsRepository()
         success, error, reload_data = Mock(), Mock(), Mock()
