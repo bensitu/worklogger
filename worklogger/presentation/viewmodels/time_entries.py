@@ -145,8 +145,7 @@ class TimeEntryViewModel:
     def discard_timer(self):
         result = self.service.discard_timer()
         if result.ok:
-            self.auto_content = ""
-            self.auto_completed = None
+            self._share_idle_fields(completed=self.draft.original)
         return result
 
     def delete_entry(self, record):
@@ -185,20 +184,47 @@ class TimeEntryViewModel:
         return self.draft != self._baseline and bool(self.draft.original or self.draft.start or self.draft.end or self.draft.content)
 
     @property
+    def editing_active_timer(self):
+        origin = getattr(self, "_timer_origin", None)
+        return bool(self.service.timer and getattr(self, "_timer_shares_draft", False) and origin
+            and self.draft.original is None and (self.draft.day, self.draft.start, self.draft.end) ==
+            (origin.day, origin.start, origin.end))
+
+    @property
     def auto_dirty(self) -> bool:
         baseline = self.service.timer.content if self.service.timer else self.auto_completed.note if self.auto_completed else ""
-        return self.auto_content != baseline
+        return (self.auto_content != baseline or (self.service.timer is None and self.auto_completed is not None
+            and (self.auto_work_type != self.auto_completed.work_type.value or self.auto_context != self.auto_completed.context)))
 
     def new(self, day: date, *, start: str = "") -> None:
         self.draft = TimeEntryDraft(day, start=start)
         self._baseline = self.draft
+        self._share_idle_fields(completed=None)
 
     def clear(self, day: date) -> None:
-        self.draft = TimeEntryDraft(day)
-        self._baseline = self.draft
+        self.new(day)
+
+    def _share_idle_fields(self, *, completed=None):
+        if self.service.timer is None:
+            self.auto_completed = completed
+            self.auto_content = self.draft.content
+            self.auto_work_type = self.draft.work_type
+            self.auto_context = self.draft.context
+
+    def update_auto(self, *, content, work_type, context):
+        self.auto_content = content
+        if self.editing_active_timer:
+            self.draft = replace(self.draft, content=content)
+        if self.service.timer is None:
+            self.auto_work_type, self.auto_context = work_type, context
+            if (self.auto_completed is not None and self.manual_dirty
+                    and (self.draft.original is None or self.draft.original.id != self.auto_completed.id)):
+                return
+            self.update(start=self.draft.start, end=self.draft.end, work_type=work_type, content=content, context=context)
 
     def discard_changes(self) -> None:
         self.draft = self._baseline
+        self._share_idle_fields(completed=self.draft.original)
         timer = self.service.timer
         self.auto_content = timer.content if timer else self.auto_completed.note if self.auto_completed else ""
 
@@ -214,29 +240,43 @@ class TimeEntryViewModel:
         return loaded
 
     def select(self, record: WorkLog) -> None:
+        if self.service.timer is not None:
+            self._timer_shares_draft = False
         self.draft = TimeEntryDraft(record.day, record.start_time or "", record.end_time or "",
                                     record.work_type.value, record.note, original=record, context=record.context)
         self._baseline = self.draft
+        self._share_idle_fields(completed=record)
 
     def update(self, *, start: str, end: str, work_type: str, content: str, context: WorkContext | None = None) -> None:
+        linked = self.editing_active_timer
         self.draft = replace(self.draft, start=start, end=end, work_type=work_type, content=content,
                              context=context if context is not None else self.draft.context)
+        self._share_idle_fields(completed=self.draft.original)
+        if linked and self.editing_active_timer:
+            self.auto_content = content
 
     def save_manual(self):
         draft = self.draft
         options = {"context": draft.context} if self.projects_available or draft.context != WorkContext() else {}
         saved = self.service.save_manual(draft.day, draft.start, draft.end, draft.work_type, draft.content, draft.original, **options)
         if saved.ok:
-            if self.auto_completed and self.auto_completed.id == saved.value.id:
-                self.auto_completed = saved.value
-                self.auto_content = saved.value.note
-            self.new(saved.value.day, start=saved.value.end_time or "")
+            self.select(saved.value)
         return saved
 
     def start(self, work_type: str, content: str, *, now=None, break_entry=None):
+        original_draft = self.draft
+        shared = (original_draft.work_type == work_type and original_draft.content == content
+                  and original_draft.context == self.auto_context)
         options = {"context": self.auto_context} if self.projects_available else {}
         result = self.service.start(work_type, content, now=now, break_entry=break_entry, **options)
         if result.ok:
+            self._timer_shares_draft = shared
+            if shared:
+                timer = self.service.timer
+                self.draft = TimeEntryDraft(timer.started_at.date(), timer.started_at.strftime("%H:%M"),
+                    work_type=timer.work_type.value, content=timer.content, context=timer.context)
+                self._baseline = self.draft
+            self._timer_origin = self.draft
             self.auto_completed = None
             self._sync_auto()
         return result
@@ -246,22 +286,46 @@ class TimeEntryViewModel:
         if result.ok:
             self.auto_completed = result.value
             self.auto_content = result.value.note
-            self.auto_work_type = "normal"
-            self.auto_context = WorkContext()
+            self.auto_work_type = result.value.work_type.value
+            self.auto_context = result.value.context
+            origin = getattr(self, "_timer_origin", None)
+            linked = bool(getattr(self, "_timer_shares_draft", False) and origin and self.draft.original is None
+                          and (self.draft.day, self.draft.start, self.draft.end) == (origin.day, origin.start, origin.end))
+            if not self.manual_dirty or linked:
+                self.select(result.value)
         return result
 
     def save_content(self):
+        if self.service.timer is None and self.auto_completed is not None:
+            original = self.auto_completed
+            options = {"context": self.auto_context} if self.projects_available or self.auto_context != WorkContext() else {}
+            result = self.service.save_manual(original.day, original.start_time or "", original.end_time or "",
+                self.auto_work_type, self.auto_content, original, **options)
+            if result.ok:
+                record = result.value
+                if self.draft.original is not None and self.draft.original.id == record.id:
+                    self.draft = replace(self.draft, content=record.note, work_type=record.work_type.value, context=record.context, original=record)
+                    self._baseline = TimeEntryDraft(record.day, record.start_time or "", record.end_time or "",
+                        record.work_type.value, record.note, record, record.context)
+                    self._share_idle_fields(completed=record)
+                else:
+                    if self.manual_dirty:
+                        self.auto_completed = record
+                        self.auto_content, self.auto_work_type, self.auto_context = record.note, record.work_type.value, record.context
+                    else:
+                        self.select(record)
+            return result
         result = self.service.save_content(self.auto_content, self.auto_completed)
+        if result.ok and self.editing_active_timer:
+            self._baseline = self.draft
         if result.ok and self.service.timer is None:
-            self.auto_completed = result.value
+            self.select(result.value)
         return result
 
     def take_break(self, *, now=None):
         result = self.service.take_break(self.default_break_hours, self.auto_content, now=now)
         if result.ok:
-            self.auto_completed = result.value
-            self.auto_content = result.value.note
-            self.auto_work_type = "normal"
+            self.select(result.value)
         return result
 
     def advance(self, *, now=None):

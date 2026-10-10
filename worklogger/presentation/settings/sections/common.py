@@ -44,20 +44,26 @@ class _SettingsScrollPage(QScrollArea):
 
 def _card_with_form(title: str) -> CardFrame:
     card = CardFrame(object_name="settings_content_frame")
-    form = QFormLayout()
-    form.setContentsMargins(0, 0, 0, 0)
-    form.setSpacing(8)
-    form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
-    form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows)
+    form = _settings_form()
     card.content_layout.addLayout(form)
     card.form_layout = form
     return card
 
 
+def _settings_form() -> QFormLayout:
+    form = QFormLayout()
+    form.setContentsMargins(0, 0, 0, 0)
+    form.setSpacing(8)
+    form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
+    form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows)
+    return form
+
+
 def _action_card(title: str, description: str) -> CardFrame:
     card = CardFrame(object_name="settings_content_frame")
     card.content_layout.addWidget(_section_title(title))
-    card.content_layout.addWidget(_secondary_label(description))
+    if description:
+        card.content_layout.addWidget(_secondary_label(description))
     return card
 
 

@@ -23,6 +23,8 @@ from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import AiAssistViewModel, AiChatState
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
+from worklogger.presentation.processing import TextProcessingTask
+from worklogger.presentation.widgets.processing_progress import ProcessingProgress
 
 
 class AiAssistDialog(QDialog):
@@ -39,6 +41,7 @@ class AiAssistDialog(QDialog):
         self._state = view_model.initial_state()
         self._last_error: AppError | None = None
         self._job_runner = job_runner
+        self._processing_task = TextProcessingTask(self, job_runner=job_runner)
         self._pending_handle: JobHandle[object] | None = None
         self.setObjectName("ai_assist_dialog")
         self.setWindowTitle(_("AI Assist"))
@@ -76,6 +79,11 @@ class AiAssistDialog(QDialog):
         row.addWidget(self.message_input, 1)
         row.addWidget(self.send_button)
         root.addLayout(row)
+        self.processing_progress = ProcessingProgress()
+        self.processing_progress.cancel_requested.connect(self._processing_task.cancel)
+        self._processing_task.started.connect(lambda: self.processing_progress.start(_("Sending...")))
+        self._processing_task.finished.connect(self.processing_progress.finish)
+        root.addWidget(self.processing_progress)
 
         bottom = QHBoxLayout()
         self.status_label = StatusLabel()
@@ -101,43 +109,12 @@ class AiAssistDialog(QDialog):
             self.status_label.setText(_("Please wait for the current request."))
             return False
         message = self.message_input.text()
-        if self._job_runner is not None:
-            state = self._state
-            selected_day = self._selected_day
-            self._set_busy(True)
-            self.status_label.setText(_("Sending..."))
-            self._pending_handle = JobHandle(
-                job_id="ai_chat_pending",
-                cancel=lambda: None,
-            )
-            handle = self._job_runner.submit(
-                "ai_chat",
-                lambda _token: self._view_model.send(
-                    state,
-                    message,
-                    selected_day=selected_day,
-                    period_type="daily",
-                ),
-                on_complete=self._complete_send,
-            )
-            if self._pending_handle is not None:
-                self._pending_handle = handle
-            return True
-        result = self._view_model.send(
-            self._state,
-            message,
-            selected_day=self._selected_day,
-            period_type="daily",
-        )
-        if not result.ok or result.value is None:
-            self._set_error(result.error)
-            return False
-        self._state = result.value
-        self.message_input.clear()
-        self._render_history()
-        self._last_error = None
-        self.status_label.clear()
-        return True
+        state, selected_day = self._state, self._selected_day
+        self._set_busy(True)
+        self.status_label.setText(_("Sending..."))
+        self._pending_handle = JobHandle(job_id="ai_chat_pending", cancel=self._processing_task.cancel)
+        return self._processing_task.run("ai_chat", lambda _token: self._view_model.send(
+            state, message, selected_day=selected_day, period_type="daily"), on_complete=self._complete_send)
 
     def _complete_send(self, result: object) -> None:
         self._pending_handle = None

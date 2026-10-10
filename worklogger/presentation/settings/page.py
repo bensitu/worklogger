@@ -129,7 +129,19 @@ class SettingsPage(QWidget):
             self._busy_jobs.add(job)
         else:
             self._busy_jobs.discard(job)
-        self.category_stack.setEnabled(not self.is_busy)
+        self.category_stack.setEnabled(not self._busy_jobs or self._busy_jobs == {"external_model_test"})
+        if job == "external_model_test":
+            fields = (self.external_model_enabled_switch, self.external_api_key_line_edit,
+                      self.external_base_url_line_edit, self.external_model_line_edit, self.test_external_model_button)
+            if busy:
+                self._external_test_controls = tuple((field, field.isEnabled()) for field in fields)
+                for field in fields:
+                    field.setEnabled(False)
+            else:
+                for field, enabled in getattr(self, "_external_test_controls", ()):
+                    field.setEnabled(enabled)
+            if not busy:
+                self._update_configuration_status()
 
     def refresh(self) -> bool:
         result = self._view_model.load()

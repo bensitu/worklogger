@@ -194,9 +194,12 @@ class CalendarPage(QWidget):
         right_layout.addWidget(self.records_scroll, 1)
         content.addWidget(right, 0)
         self.entry_panel.installEventFilter(self)
+        self.entry_panel.editor_layout_changed.connect(self._fit_editor)
         QTimer.singleShot(0, self, self._fit_editor)
 
     def _fit_editor(self):
+        self.entry_panel.layout().invalidate()
+        self.entry_panel.layout().activate()
         layout = self.right_panel.layout()
         visible = [layout.itemAt(index).widget() for index in range(layout.count())
                    if layout.itemAt(index).widget() is not None and not layout.itemAt(index).widget().isHidden()]
@@ -209,6 +212,7 @@ class CalendarPage(QWidget):
         preferred = max(60, self.entry_panel.sizeHint().height() + 4)
         self.details_scroll.setMinimumHeight(min(available, preferred))
         self.details_scroll.setMaximumHeight(preferred)
+        layout.activate()
 
     def eventFilter(self, watched, event):
         if watched is self.entry_panel and event.type() in (QEvent.Type.LayoutRequest, QEvent.Type.StyleChange, QEvent.Type.FontChange):

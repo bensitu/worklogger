@@ -36,7 +36,8 @@ class DataSection(_SettingsScrollPage):
     def __init__(self, actions: SectionActions):
         super().__init__()
         page = self
-        location = _action_card(_("Data location"), "")
+        location = _action_card(_("Data location"),
+            _("Your local database is stored here. Open this folder to locate it; use Backup Data to create a safe copy."))
         self.data_directory_input = QLineEdit()
         self.data_directory_input.setObjectName("data_directory_line_edit")
         self.data_directory_input.setReadOnly(True)

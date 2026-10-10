@@ -151,6 +151,9 @@ msgstr "外観"
 msgid "Append"
 msgstr "追加"
 
+msgid "Application behavior"
+msgstr "アプリケーションの動作"
+
 msgid "Apply"
 msgstr "適用"
 
@@ -286,11 +289,17 @@ msgstr "カレンダーデータ"
 msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
 msgstr "カレンダーデータが既に存在します。\n\n置換は既存の予定を消去してからインポートします。\n追加は既存の予定を保持して新しい予定を追加します。"
 
+msgid "Calendar display"
+msgstr "カレンダー表示"
+
 msgid "Calendar event"
 msgstr "カレンダーの予定"
 
 msgid "Cancel"
 msgstr "キャンセル"
+
+msgid "Cancel processing"
+msgstr "処理をキャンセル"
 
 msgid "Catalog refreshed."
 msgstr "モデルカタログを更新しました。"
@@ -540,6 +549,9 @@ msgstr "表示名を編集"
 
 msgid "Edit record"
 msgstr "記録を編集"
+
+msgid "Editing record: {date} {start} - {end}"
+msgstr "編集中の記録：{date} {start} - {end}"
 
 msgid "Effective context: {count} tokens."
 msgstr "実効コンテキスト: {count} トークン。"
@@ -1297,6 +1309,9 @@ msgstr "現在の更新確認が完了するまでお待ちください。"
 msgid "Polish text"
 msgstr "文章を整える"
 
+msgid "Polishing text..."
+msgstr "文章を推敲中…"
+
 msgid "Port"
 msgstr "ポート"
 
@@ -1314,6 +1329,9 @@ msgstr "前月"
 
 msgid "Previous period"
 msgstr "前の期間"
+
+msgid "Processing"
+msgstr "処理中"
 
 msgid "Project"
 msgstr "プロジェクト"
@@ -1849,6 +1867,9 @@ msgstr "接続をテストしています…"
 msgid "Text files (*.txt)"
 msgstr "テキストファイル (*.txt)"
 
+msgid "Text processing is not ready. Check AI settings."
+msgstr "文章処理の準備ができていません。AI設定を確認してください。"
+
 msgid "Text processing is unavailable. Saved preferences are retained."
 msgstr "テキスト処理は利用できません。保存済みの設定は保持されます。"
 
@@ -2251,6 +2272,9 @@ msgstr "勤務形態の内訳"
 msgid "Work Report"
 msgstr "業務レポート"
 
+msgid "Work and recording"
+msgstr "勤務と記録"
+
 msgid "Work days"
 msgstr "勤務日数"
 
@@ -2331,6 +2355,9 @@ msgstr "{date}の変更を保存しました。"
 
 msgid "Your display name changed elsewhere. Cancel to reload it before saving; your input has been retained."
 msgstr "表示名が別の場所で変更されました。保存する前に編集をキャンセルして再読み込みしてください。入力内容は保持されています。"
+
+msgid "Your local database is stored here. Open this folder to locate it; use Backup Data to create a safe copy."
+msgstr "ローカルデータベースの保存先です。フォルダーで確認できます。安全なコピーは「データをバックアップ」で作成してください。"
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."
 msgstr "保存済みのログイン情報が無効か、有効期限が切れています。再度ログインしてください。"

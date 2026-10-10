@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QDialog, QFileDialog,
 
 from worklogger.domain.notes.preferences import NoteSharing
 from worklogger.domain.shared.errors import InfrastructureError
+from worklogger.domain.shared.errors import CancellationError
 from worklogger.infrastructure.i18n import _, get_language
 from worklogger.presentation.widgets.two_line_delegate import TwoLineItemDelegate
 from worklogger.presentation.errors import display_error_message
@@ -17,6 +18,8 @@ from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.feedback import show_information
+from worklogger.presentation.processing import TextProcessingTask
+from worklogger.presentation.widgets.processing_progress import ProcessingProgress
 
 
 class NoteEditorDialog(QDialog):
@@ -25,7 +28,9 @@ class NoteEditorDialog(QDialog):
     def __init__(self, view_model, day: date, parent=None, *, job_runner=None, confirm_discard_changes=None):
         super().__init__(parent)
         self._view_model, self._day = view_model, day
+        self._ai_ready = view_model.rewrite_available
         self._job_runner = job_runner or QtJobRunner(self)
+        self._rewrite_task = TextProcessingTask(self, job_runner=self._job_runner)
         self._confirm_discard_changes = confirm_discard_changes
         self._state = None
         self._last_error = None
@@ -167,6 +172,11 @@ class NoteEditorDialog(QDialog):
         self.editor.setAccessibleName(_("Notes"))
         self.editor.setPlaceholderText(_("Write a note for this date..."))
         content.addWidget(self.editor, 1)
+        self.processing_progress = ProcessingProgress()
+        self.processing_progress.cancel_requested.connect(self._rewrite_task.cancel)
+        self._rewrite_task.started.connect(lambda: self.processing_progress.start(_("Polishing text...")))
+        self._rewrite_task.finished.connect(self.processing_progress.finish)
+        content.addWidget(self.processing_progress)
         self.previous_group = QWidget()
         previous = QVBoxLayout(self.previous_group)
         previous.setContentsMargins(0, 0, 0, 0)
@@ -216,9 +226,13 @@ class NoteEditorDialog(QDialog):
 
     def _update_actions(self):
         has_content = bool(self.editor.toPlainText().strip())
-        self.rewrite_button.setEnabled(has_content and self._view_model.rewrite_available)
+        self.rewrite_button.setEnabled(not self._busy and has_content and self._ai_ready)
         self.copy_button.setEnabled(has_content)
         self.export_button.setEnabled(has_content)
+
+    def refresh_ai_availability(self):
+        self._ai_ready = self._view_model.rewrite_available
+        self._update_actions()
 
     def _sync_history_selection(self):
         with QSignalBlocker(self.history_list):
@@ -380,8 +394,37 @@ class NoteEditorDialog(QDialog):
         self._search()
 
     def _rewrite(self):
+        if self._busy or self._rewrite_task.is_running:
+            return
+        if self._draft_busy:
+            self._after_draft = self._rewrite
+            return
         content = self.editor.toPlainText()
-        self._run("rewrite_note", lambda: self._view_model.rewrite(content), self.editor.setPlainText)
+        self._draft_timer.stop()
+        self._busy = True
+        self.editor.setReadOnly(True)
+        self._last_error = None
+        for field in (self.history_list, self.search_input, self.reload_button, self.save_button,
+                      self.insert_button, self.report_checkbox, self.ai_checkbox):
+            field.setEnabled(False)
+        self.rewrite_button.setEnabled(False)
+        self.close_button.setEnabled(False)
+        def completed(result):
+            self._busy = False
+            self.editor.setReadOnly(False)
+            for field in (self.history_list, self.search_input, self.reload_button, self.save_button,
+                          self.insert_button, self.report_checkbox, self.ai_checkbox, self.close_button):
+                field.setEnabled(True)
+            if result.ok:
+                self.editor.setPlainText(result.value)
+            elif not isinstance(result.error, CancellationError):
+                self._set_error(result.error)
+            else:
+                self._draft_timer.start()
+            if not isinstance(result.error, CancellationError):
+                self._ai_ready = self._view_model.rewrite_available
+            self._update_actions()
+        self._rewrite_task.run("rewrite_note", lambda _token: self._view_model.rewrite(content), on_complete=completed)
 
     def export_markdown(self, destination: Path):
         content = self.editor.toPlainText()

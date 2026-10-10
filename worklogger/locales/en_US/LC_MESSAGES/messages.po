@@ -151,6 +151,9 @@ msgstr "Appearance"
 msgid "Append"
 msgstr "Append"
 
+msgid "Application behavior"
+msgstr "Application behavior"
+
 msgid "Apply"
 msgstr "Apply"
 
@@ -286,11 +289,17 @@ msgstr "Calendar Data"
 msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
 msgstr "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
 
+msgid "Calendar display"
+msgstr "Calendar display"
+
 msgid "Calendar event"
 msgstr "Calendar event"
 
 msgid "Cancel"
 msgstr "Cancel"
+
+msgid "Cancel processing"
+msgstr "Cancel processing"
 
 msgid "Catalog refreshed."
 msgstr "Catalog refreshed."
@@ -540,6 +549,9 @@ msgstr "Edit display name"
 
 msgid "Edit record"
 msgstr "Edit record"
+
+msgid "Editing record: {date} {start} - {end}"
+msgstr "Editing record: {date} {start} - {end}"
 
 msgid "Effective context: {count} tokens."
 msgstr "Effective context: {count} tokens."
@@ -1297,6 +1309,9 @@ msgstr "Please wait for the current update check."
 msgid "Polish text"
 msgstr "Polish text"
 
+msgid "Polishing text..."
+msgstr "Polishing text..."
+
 msgid "Port"
 msgstr "Port"
 
@@ -1314,6 +1329,9 @@ msgstr "Previous month"
 
 msgid "Previous period"
 msgstr "Previous period"
+
+msgid "Processing"
+msgstr "Processing"
 
 msgid "Project"
 msgstr "Project"
@@ -1849,6 +1867,9 @@ msgstr "Testing connection..."
 msgid "Text files (*.txt)"
 msgstr "Text files (*.txt)"
 
+msgid "Text processing is not ready. Check AI settings."
+msgstr "Text processing is not ready. Check AI settings."
+
 msgid "Text processing is unavailable. Saved preferences are retained."
 msgstr "Text processing is unavailable. Saved preferences are retained."
 
@@ -2251,6 +2272,9 @@ msgstr "Work Mode Breakdown"
 msgid "Work Report"
 msgstr "Work Report"
 
+msgid "Work and recording"
+msgstr "Work and recording"
+
 msgid "Work days"
 msgstr "Work days"
 
@@ -2331,6 +2355,9 @@ msgstr "Your changes have been saved for {date}."
 
 msgid "Your display name changed elsewhere. Cancel to reload it before saving; your input has been retained."
 msgstr "Your display name changed elsewhere. Cancel to reload it before saving; your input has been retained."
+
+msgid "Your local database is stored here. Open this folder to locate it; use Backup Data to create a safe copy."
+msgstr "Your local database is stored here. Open this folder to locate it; use Backup Data to create a safe copy."
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."
 msgstr "Your saved sign-in is invalid or expired. Please sign in again."

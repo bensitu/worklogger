@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QWidget
 
 from worklogger.presentation.notes.dialog import NoteEditorDialog
 from worklogger.presentation.viewmodels import NoteEditorViewModel
+from shiboken6 import isValid
 
 
 class NotesWorkflow(Protocol):
@@ -37,6 +38,12 @@ class NotesWorkflowController:
         self._job_runner = job_runner
         self._after_save = after_save
         self.is_open = False
+        self._active_dialog = None
+
+    def refresh_ai_availability(self):
+        dialog = self._active_dialog
+        if dialog is not None and isValid(dialog) and hasattr(dialog, "refresh_ai_availability"):
+            dialog.refresh_ai_availability()
 
     def open(self, day: date, parent: QWidget | None = None) -> NoteEditorDialog:
         dialog = self._dialog_factory(self._view_model, day, parent) if self._dialog_factory is not None else NoteEditorDialog(
@@ -44,10 +51,12 @@ class NotesWorkflowController:
         if self._after_save is not None:
             dialog.saved.connect(self._after_save)
         self.is_open = True
+        self._active_dialog = dialog
         try:
             dialog.refresh()
             dialog.exec()
         finally:
             self.is_open = False
+            self._active_dialog = None
             dialog.deleteLater()
         return dialog

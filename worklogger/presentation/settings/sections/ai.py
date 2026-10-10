@@ -35,12 +35,14 @@ from worklogger.presentation.settings.sections.common import (
     _SettingsScrollPage,
     _switch_line,
 )
+from worklogger.presentation.widgets.processing_progress import ProcessingProgress
 from worklogger.presentation.widgets import CardFrame, SwitchButton
 from worklogger.presentation.widgets.icons import set_button_icon
 
 
 class AISection(_SettingsScrollPage):
     control_names = (
+        "external_processing_progress",
         "ai_calendar_switch",
         "ai_enabled_switch",
         "ai_notes_switch",
@@ -123,6 +125,8 @@ class AISection(_SettingsScrollPage):
             self.test_external_model_button, 0, Qt.AlignmentFlag.AlignLeft
         )
         external.content_layout.addWidget(self.external_model_status_label)
+        self.external_processing_progress = ProcessingProgress()
+        external.content_layout.addWidget(self.external_processing_progress)
         page.layout().addWidget(external)
 
         local = CardFrame(object_name="settings_content_frame")

@@ -66,7 +66,9 @@ from worklogger.app.ports import AIRequest
 from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.app.use_cases.user_profile import UserProfileService
 from worklogger.domain.shared.errors import InfrastructureError
+from worklogger.domain.shared.errors import CancellationError
 from worklogger.domain.shared.result import Result
+from worklogger.presentation.processing import TextProcessingTask
 
 
 class SettingsWorkflowController:
@@ -390,19 +392,25 @@ class SettingsWorkflowController:
             return
         surface.set_busy("external_model_test", True)
         surface.external_model_status_label.setText(_("Testing connection..."))
-        runner = self._job_runner or QtJobRunner(surface)
+        if hasattr(surface, "external_processing_progress"):
+            surface.external_model_status_label.clear()
+        task = getattr(surface, "_connection_test_task", None)
+        if task is None:
+            task = TextProcessingTask(surface, job_runner=self._job_runner)
+            surface._connection_test_task = task
+            if hasattr(surface, "external_processing_progress"):
+                progress = surface.external_processing_progress
+                task.started.connect(lambda: progress.start(_("Testing connection...")))
+                task.finished.connect(progress.finish)
+                progress.cancel_requested.connect(task.cancel)
         def complete(result):
             if not isValid(surface):
                 return
             surface.set_busy("external_model_test", False)
-            surface.external_model_status_label.setText(_("Connection succeeded.") if result.ok else _error_message(result.error))
-        try:
-            runner.submit("test_external_model", lambda _token: self._ai_gateway.generate(AIRequest(
-                messages=({"role": "user", "content": "Reply with OK."},), model="default", timeout_seconds=30)), on_complete=complete)
-        except Exception:
-            from worklogger.domain.shared.errors import InfrastructureError
-            from worklogger.domain.shared.result import Result
-            complete(Result.failure(InfrastructureError("ai_request_failed", "ai_request_failed")))
+            surface.external_model_status_label.setText(_("Connection succeeded.") if result.ok else
+                _("Operation cancelled.") if isinstance(result.error, CancellationError) else _error_message(result.error))
+        task.run("test_external_model", lambda _token: self._ai_gateway.generate(AIRequest(
+            messages=({"role": "user", "content": "Reply with OK."},), model="default", timeout_seconds=30)), on_complete=complete)
 
     def _change_password(self, parent: QWidget | None) -> bool:
         return self._account_workflow.change_password(parent)

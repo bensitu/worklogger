@@ -151,6 +151,9 @@ msgstr "모양"
 msgid "Append"
 msgstr "추가"
 
+msgid "Application behavior"
+msgstr "애플리케이션 동작"
+
 msgid "Apply"
 msgstr "적용"
 
@@ -286,11 +289,17 @@ msgstr "달력 데이터"
 msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
 msgstr "달력 데이터가 이미 있습니다.\n\n바꾸기는 기존 일정을 지운 후 가져옵니다.\n추가는 기존 일정을 유지하고 가져온 일정을 추가합니다."
 
+msgid "Calendar display"
+msgstr "달력 표시"
+
 msgid "Calendar event"
 msgstr "캘린더 일정"
 
 msgid "Cancel"
 msgstr "취소"
+
+msgid "Cancel processing"
+msgstr "처리 취소"
 
 msgid "Catalog refreshed."
 msgstr "모델 카탈로그를 새로 고쳤습니다."
@@ -540,6 +549,9 @@ msgstr "표시 이름 편집"
 
 msgid "Edit record"
 msgstr "기록 편집"
+
+msgid "Editing record: {date} {start} - {end}"
+msgstr "기록 편집 중: {date} {start} - {end}"
 
 msgid "Effective context: {count} tokens."
 msgstr "실제 컨텍스트: {count} 토큰."
@@ -1297,6 +1309,9 @@ msgstr "현재 업데이트 확인이 완료될 때까지 기다려 주세요."
 msgid "Polish text"
 msgstr "문장 다듬기"
 
+msgid "Polishing text..."
+msgstr "텍스트 다듬는 중…"
+
 msgid "Port"
 msgstr "포트"
 
@@ -1314,6 +1329,9 @@ msgstr "이전 달"
 
 msgid "Previous period"
 msgstr "이전 기간"
+
+msgid "Processing"
+msgstr "처리 중"
 
 msgid "Project"
 msgstr "프로젝트"
@@ -1849,6 +1867,9 @@ msgstr "연결 테스트 중…"
 msgid "Text files (*.txt)"
 msgstr "텍스트 파일 (*.txt)"
 
+msgid "Text processing is not ready. Check AI settings."
+msgstr "텍스트 처리가 준비되지 않았습니다. AI 설정을 확인하세요."
+
 msgid "Text processing is unavailable. Saved preferences are retained."
 msgstr "텍스트 처리를 사용할 수 없습니다. 저장된 설정은 유지됩니다."
 
@@ -2251,6 +2272,9 @@ msgstr "근무 형태 분포"
 msgid "Work Report"
 msgstr "업무 보고서"
 
+msgid "Work and recording"
+msgstr "근무 및 기록"
+
 msgid "Work days"
 msgstr "근무 일수"
 
@@ -2331,6 +2355,9 @@ msgstr "{date}의 변경 사항을 저장했습니다."
 
 msgid "Your display name changed elsewhere. Cancel to reload it before saving; your input has been retained."
 msgstr "다른 곳에서 표시 이름이 변경되었습니다. 저장하기 전에 편집을 취소하여 다시 불러오세요. 입력한 내용은 유지됩니다."
+
+msgid "Your local database is stored here. Open this folder to locate it; use Backup Data to create a safe copy."
+msgstr "로컬 데이터베이스 저장 폴더입니다. 폴더를 열어 확인할 수 있으며 안전한 복사본은 '데이터 백업'으로 만드세요."
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."
 msgstr "저장된 로그인이 유효하지 않거나 만료되었습니다. 다시 로그인하세요."

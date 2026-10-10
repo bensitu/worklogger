@@ -100,6 +100,7 @@ class AiAssistPresentationTests(unittest.TestCase):
                 context_handler=context,
             ),
             date(2026, 5, 4),
+            job_runner=ImmediateJobRunner(),
         )
 
         dialog.message_input.setText("Summarize")

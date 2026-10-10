@@ -202,7 +202,9 @@ class MinimalView(QWidget):
         self.entry_panel.busy_changed.connect(self.history_widget.setDisabled)
 
     def _entries_changed(self, day: date):
-        if self.entry_panel.time_tabs.currentIndex() == 1:
+        model = self.entry_panel.view_model
+        preserve_day = model.manual_dirty and model.draft.day != day
+        if not preserve_day and (self.entry_panel.time_tabs.currentIndex() == 1 or model.editing_active_timer):
             self._selected_day = day
         self.refresh()
 
@@ -315,6 +317,7 @@ class MinimalView(QWidget):
                 dialog.settings_changed.connect(self._apply_recording_settings)
             if hasattr(dialog, "ai_availability_changed"):
                 dialog.ai_availability_changed.connect(self.entry_panel.refresh_ai_availability)
+            self.entry_panel.refresh_ai_availability()
 
             def logout() -> None:
                 nonlocal logged_out

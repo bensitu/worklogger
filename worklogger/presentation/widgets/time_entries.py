@@ -6,12 +6,13 @@ import math
 from PySide6.QtCore import QEvent, QTimer, Qt, Signal
 from PySide6.QtWidgets import (QComboBox, QHBoxLayout, QLabel, QLineEdit,
     QMessageBox, QPushButton, QMenu, QInputDialog, QSizePolicy, QStyle, QStyleOptionTabWidgetFrame,
-    QTabWidget, QTextEdit, QToolButton, QVBoxLayout, QWidget)
+    QTabWidget, QTextEdit, QToolButton, QVBoxLayout, QWidget, QStackedWidget)
 
 from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType, TimeRange
 from worklogger.domain.worklog.editing import split_entry, place_historical_break
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.errors import ConflictError
+from worklogger.domain.shared.errors import CancellationError
 from worklogger.config.constants import MAX_SHIFT_HOURS
 from worklogger.presentation.widgets.end_timer import EndTimerDialog
 from worklogger.domain.shared.result import Result
@@ -23,9 +24,12 @@ from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 from worklogger.presentation.widgets.time_picker import TimePickerDialog
 from worklogger.presentation.widgets.work_context_picker import WorkContextPicker
 from worklogger.presentation.work_type_labels import work_type_label
+from worklogger.presentation.processing import TextProcessingTask
+from worklogger.presentation.widgets.processing_progress import ProcessingProgress
 
 
 class TimeEntryPanel(QWidget):
+    editor_layout_changed = Signal()
     recording_changed = Signal()
     records_changed = Signal(object)
     dirty_changed = Signal(bool)
@@ -37,6 +41,8 @@ class TimeEntryPanel(QWidget):
         super().__init__(parent)
         self.view_model = view_model
         self._job_runner = job_runner
+        self._ai_ready = view_model.rewrite_available
+        self._polish_task = TextProcessingTask(self, job_runner=job_runner)
         self.is_busy = False
         self._updating = False
         self._timer_failed = False
@@ -60,6 +66,11 @@ class TimeEntryPanel(QWidget):
         self._mode_height_pending = False
         self.time_tabs.installEventFilter(self)
         root.addWidget(self.time_tabs)
+        self.selected_record_label = QLabel()
+        self.selected_record_label.setProperty("role", "secondary")
+        self.selected_record_label.setWordWrap(True)
+        self.selected_record_label.hide()
+        root.addWidget(self.selected_record_label)
         manual = QWidget()
         manual.setObjectName("worklog_manual_tab_widget")
         manual_layout = QHBoxLayout(manual)
@@ -140,17 +151,32 @@ class TimeEntryPanel(QWidget):
         recent = view_model.recent_contexts()
         if recent.ok:
             self.context_picker.set_recent(recent.value)
-        content_heading = QHBoxLayout()
+        self.content_heading = QWidget()
+        content_heading = QHBoxLayout(self.content_heading)
+        content_heading.setContentsMargins(0, 0, 0, 0)
         content_heading.addWidget(QLabel(_("Content")), 1)
         self.polish_button = QToolButton()
         self.polish_button.setObjectName("polish_time_entry_button")
         self.polish_button.setToolTip(_("Polish text"))
         self.polish_button.setAccessibleName(_("Polish text"))
         self.polish_button.setIcon(ui_icon("sparkles", accent=True))
-        self.polish_button.setVisible(view_model.rewrite_available)
+        self.polish_button.setFixedSize(28, 28)
         self.polish_button.clicked.connect(self._polish_content)
         content_heading.addWidget(self.polish_button)
-        root.addLayout(content_heading)
+        self.content_heading_stack = QStackedWidget()
+        self.content_heading_stack.addWidget(self.content_heading)
+        self.processing_progress = ProcessingProgress()
+        self.processing_progress.bar.setFixedWidth(48)
+        self.content_heading_stack.addWidget(self.processing_progress)
+        self.content_heading_stack.setCurrentWidget(self.content_heading)
+        self.processing_progress.cancel_requested.connect(self._polish_task.cancel)
+        self._polish_task.started.connect(lambda: self.processing_progress.start(_("Polishing text...")))
+        self._polish_task.started.connect(lambda: self.content_heading_stack.setCurrentWidget(self.processing_progress))
+        self._polish_task.finished.connect(self.processing_progress.finish)
+        self._polish_task.finished.connect(lambda: self.content_heading_stack.setCurrentWidget(self.content_heading))
+        self._polish_task.started.connect(self.editor_layout_changed)
+        self._polish_task.finished.connect(self.editor_layout_changed)
+        root.addWidget(self.content_heading_stack)
         self.content_input = QTextEdit()
         self.content_input.setObjectName("time_entry_content_text_edit")
         self.content_input.setAcceptRichText(False)
@@ -271,6 +297,8 @@ class TimeEntryPanel(QWidget):
         return self.view_model.manual_dirty or self.view_model.auto_dirty
 
     def load_day(self, day: date):
+        if day != self._day:
+            self._polish_task.cancel()
         self._day = day
         result = self.view_model.load(day)
         if result.ok:
@@ -288,6 +316,7 @@ class TimeEntryPanel(QWidget):
         if not loaded.ok:
             self._apply_result(loaded, refresh=False)
             return
+        self._polish_task.cancel()
         self.view_model.select(loaded.value)
         self.time_tabs.setCurrentIndex(0)
         self._render_editor()
@@ -296,6 +325,7 @@ class TimeEntryPanel(QWidget):
     def copy_event(self, event):
         if self.is_busy or self.view_model.manual_dirty and not self._confirm_discard():
             return
+        self._polish_task.cancel()
         self.view_model.new(event.day)
         self.time_tabs.setCurrentIndex(0)
         self.view_model.update(start=event.start_time or "", end="00:00" if event.end_time == "24:00" else event.end_time or "", work_type="meeting",
@@ -303,7 +333,16 @@ class TimeEntryPanel(QWidget):
         self._render_editor()
 
     def _mode_changed(self, *_args):
+        if self._polish_task.is_running and self._processing_target() != self._polish_target:
+            self._polish_task.cancel()
         self._render_editor()
+
+    def _processing_target(self):
+        auto = self.time_tabs.currentIndex() == 1
+        if (auto or self.view_model.editing_active_timer) and self.view_model.timer:
+            return ("timer", self.view_model.timer.capture_id)
+        selected = self.view_model.auto_completed if auto else self.view_model.draft.original
+        return ("entry", selected.id) if selected else ("draft", self.view_model.draft.day)
 
     def _draft_changed(self, *_args):
         if self._updating:
@@ -313,10 +352,8 @@ class TimeEntryPanel(QWidget):
                                    work_type=str(self.work_type_combo.currentData()), content=self.content_input.toPlainText(),
                                    context=self.context_picker.context())
         else:
-            self.view_model.auto_content = self.content_input.toPlainText()
-            if self.view_model.timer is None:
-                self.view_model.auto_work_type = str(self.work_type_combo.currentData())
-                self.view_model.auto_context = self.context_picker.context()
+            self.view_model.update_auto(content=self.content_input.toPlainText(),
+                work_type=str(self.work_type_combo.currentData()), context=self.context_picker.context())
         self._update_actions()
         self.dirty_changed.emit(self.is_dirty)
 
@@ -325,11 +362,13 @@ class TimeEntryPanel(QWidget):
         try:
             auto = self.time_tabs.currentIndex() == 1
             draft = self.view_model.draft
+            linked_timer = self.view_model.editing_active_timer
             self.start_input.setText(draft.start)
             self.end_input.setText(draft.end)
             work_type = self.view_model.auto_work_type if auto else draft.work_type
             self._populate_work_types()
-            snapshot = self.view_model.timer.work_type if auto and self.view_model.timer else draft.original.work_type if not auto and draft.original else None
+            selected_snapshot = self.view_model.auto_completed if auto else draft.original
+            snapshot = self.view_model.timer.work_type if (auto or linked_timer) and self.view_model.timer else selected_snapshot.work_type if selected_snapshot else None
             if snapshot is None:
                 snapshot = next((definition for definition in self._custom_types if definition.value == work_type), None)
             if isinstance(snapshot, CustomWorkType) and self.work_type_combo.findData(work_type) < 0:
@@ -338,11 +377,26 @@ class TimeEntryPanel(QWidget):
                 self.work_type_combo.setItemText(self.work_type_combo.findData(work_type), snapshot.label)
             self.work_type_combo.setCurrentIndex(max(0, self.work_type_combo.findData(work_type)))
             self.work_type_combo.setToolTip(self.work_type_combo.currentText())
-            self.content_input.setPlainText(self.view_model.auto_content if auto else draft.content)
-            self.work_type_combo.setEnabled(not (auto and self.view_model.timer))
-            self.context_picker.set_context(self.view_model.timer.context if auto and self.view_model.timer else
+            content = self.view_model.auto_content if auto else draft.content
+            if self.content_input.toPlainText() != content:
+                self.content_input.setPlainText(content)
+            selected = self.view_model.auto_completed if auto and self.view_model.timer is None else draft.original if not auto else None
+            self.selected_record_label.setText(_("Editing record: {date} {start} - {end}").format(
+                date=day_label(selected.day), start=selected.start_time or "", end=selected.end_time or "") if selected else "")
+            self.selected_record_label.setVisible(selected is not None)
+            if linked_timer and not auto:
+                timer = self.view_model.timer
+                self.selected_record_label.setText(_("Recording since {time} - {duration}").format(
+                    time=f"{day_label(timer.started_at.date())} {timer.started_at:%H:%M}", duration=duration_label(self.view_model.elapsed_hours())))
+                self.selected_record_label.show()
+            self.start_input.setReadOnly(linked_timer)
+            self.end_input.setReadOnly(linked_timer)
+            self.start_input.setEnabled(not linked_timer)
+            self.end_input.setEnabled(not linked_timer)
+            self.work_type_combo.setEnabled(not ((auto or linked_timer) and self.view_model.timer))
+            self.context_picker.set_context(self.view_model.timer.context if (auto or linked_timer) and self.view_model.timer else
                                            self.view_model.auto_context if auto else draft.context)
-            self.context_picker.setEnabled(self._context_error is None and not (auto and self.view_model.timer))
+            self.context_picker.setEnabled(self._context_error is None and not ((auto or linked_timer) and self.view_model.timer))
             legacy = draft.original.break_hours if not auto and draft.original else 0
             self.history_label.setText(_("Historical break deduction: {hours}").format(hours=duration_label(legacy)) if legacy else "")
             if self._context_error is not None:
@@ -351,12 +405,17 @@ class TimeEntryPanel(QWidget):
         finally:
             self._updating = False
         self._update_actions()
-        self.selection_changed.emit(self.view_model.draft.original.id if not auto and self.view_model.draft.original else None)
+        selected = self.view_model.auto_completed if auto and self.view_model.timer is None else self.view_model.draft.original if not auto else None
+        self.selection_changed.emit(selected.id if selected else None)
         self.dirty_changed.emit(self.is_dirty)
+        self.editor_layout_changed.emit()
 
     def _update_actions(self):
-        self.polish_button.setVisible(self.view_model.rewrite_available)
-        self.polish_button.setEnabled(not self.is_busy and self.view_model.rewrite_available and bool(self.content_input.toPlainText().strip()))
+        rewriting = self._polish_task.is_running
+        ready = False if rewriting else self._ai_ready
+        self.polish_button.setEnabled(not self.is_busy and not rewriting and ready and bool(self.content_input.toPlainText().strip()))
+        self.polish_button.setToolTip(_("Polish text") if ready or rewriting else _("Text processing is not ready. Check AI settings."))
+        self.content_input.setReadOnly(rewriting)
         auto = self.time_tabs.currentIndex() == 1
         timer = self.view_model.timer
         self.undo_button.setEnabled(not self.is_busy and timer is None and not self.view_model.restore_failed
@@ -372,8 +431,14 @@ class TimeEntryPanel(QWidget):
         self.discard_timer_button.setEnabled(timer is not None or self.view_model.restore_failed)
         self.break_button.setText(_("Break {hours}").format(hours=duration_label(self.view_model.default_break_hours)))
         self.break_button.setEnabled(timer is None and not self.view_model.restore_failed and self.view_model.default_break_hours > 0)
-        self.save_button.setText(_("Save content") if auto else _("Save changes") if self.view_model.draft.original else _("Save"))
+        self.save_button.setText(_("Save content") if auto and timer else _("Save changes") if
+            (self.view_model.auto_completed if auto else self.view_model.draft.original) else _("Save"))
         self.save_button.setEnabled(self.view_model.auto_dirty and bool(timer or self.view_model.auto_completed) if auto else self.view_model.manual_dirty)
+        if not auto and self.view_model.editing_active_timer:
+            self.save_button.setText(_("Save content"))
+            self.save_button.setEnabled(self.view_model.auto_dirty)
+        if rewriting:
+            self.save_button.setEnabled(False)
         if timer and timer.pending_end:
             self.clock_out_button.setText(_("Save"))
             self.break_button.setEnabled(False)
@@ -413,6 +478,8 @@ class TimeEntryPanel(QWidget):
             if reasons:
                 status += "\n" + messages[reasons[0]]
             self.auto_status_label.setText(status)
+            if self.view_model.editing_active_timer and self.time_tabs.currentIndex() == 0:
+                self.selected_record_label.setText(status)
 
     def recording_action_state(self):
         can_start = not self.is_busy and self.view_model.timer is None and not self.view_model.restore_failed
@@ -470,6 +537,7 @@ class TimeEntryPanel(QWidget):
     def _submit(self, operation, *, refresh=True, automatic=False, on_complete=None):
         if self.is_busy:
             return
+        self._polish_task.cancel()
         if self._job_runner is None:
             result = operation()
             if on_complete is None:
@@ -503,28 +571,38 @@ class TimeEntryPanel(QWidget):
             self._apply_result(Result.failure(InfrastructureError("worklog_save_failed", "worklog_save_failed")), refresh=False)
 
     def _save(self):
-        self._submit(self.view_model.save_content if self.time_tabs.currentIndex() == 1 else self.view_model.save_manual)
+        self._submit(self.view_model.save_content if self.time_tabs.currentIndex() == 1 or self.view_model.editing_active_timer else self.view_model.save_manual)
 
     def _polish_content(self):
+        if self.is_busy or self._polish_task.is_running:
+            return
         content = self.content_input.toPlainText()
+        if not content.strip():
+            return
+        self._polish_target = self._processing_target()
         def complete(result):
             if result.ok:
                 self.content_input.setPlainText(result.value)
-            else:
+            elif not isinstance(result.error, CancellationError):
                 self._apply_result(result, refresh=False)
+            if not isinstance(result.error, CancellationError):
+                self._ai_ready = self.view_model.rewrite_available
             self._update_actions()
-        self._submit(lambda: self.view_model.rewrite_content(content), refresh=False, on_complete=complete)
+        self._polish_task.run("polish_record_content", lambda _token: self.view_model.rewrite_content(content), on_complete=complete)
+        self._update_actions()
 
     def _start(self):
         work_type, content = str(self.work_type_combo.currentData()), self.content_input.toPlainText()
         self._start_with_content(work_type, content)
 
     def _start_with_content(self, work_type, content):
+        self._polish_task.cancel()
         moment = self.view_model.now()
         self._submit(lambda: self.view_model.start(work_type, content, now=moment), refresh=False,
                      on_complete=lambda result: self._complete_start(result, work_type, content, moment))
 
     def refresh_ai_availability(self):
+        self._ai_ready = self.view_model.rewrite_available
         self._update_actions()
 
     def _complete_start(self, result, work_type, content, moment):
@@ -544,6 +622,7 @@ class TimeEntryPanel(QWidget):
             self._submit(lambda: self.view_model.start(work_type, content, now=moment, break_entry=record))
 
     def _finish(self):
+        self._polish_task.cancel()
         moment = self.view_model.now()
         timer = self.view_model.timer
         if timer and timer.pending_end is None and self.view_model.elapsed_hours() > MAX_SHIFT_HOURS:
@@ -573,6 +652,7 @@ class TimeEntryPanel(QWidget):
         self._submit(finish)
 
     def _break(self):
+        self._polish_task.cancel()
         if self.view_model.restore_failed:
             return
         moment = self.view_model.now()
@@ -587,13 +667,15 @@ class TimeEntryPanel(QWidget):
             self._update_elapsed_label()
 
     def _clear(self):
-        if self.time_tabs.currentIndex() == 1:
+        self._polish_task.cancel()
+        if self.time_tabs.currentIndex() == 1 and self.view_model.timer is not None:
             self.view_model.auto_content = ""
         else:
             self.view_model.clear(self._day)
         self._render_editor()
 
     def new_record(self):
+        self._polish_task.cancel()
         if self.is_busy or self.view_model.manual_dirty and not self._confirm_discard():
             return False
         self.view_model.clear(self._day)
@@ -720,5 +802,6 @@ class TimeEntryPanel(QWidget):
             self._submit(lambda: self.view_model.delete_event(event))
 
     def discard_changes(self):
+        self._polish_task.cancel()
         self.view_model.discard_changes()
         self._render_editor()

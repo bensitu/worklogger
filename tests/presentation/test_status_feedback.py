@@ -123,7 +123,8 @@ class StatusFeedbackTests(unittest.TestCase):
                 self.complete = on_complete
                 return JobHandle(job_id=name, cancel=lambda: None)
 
-        for runner in (None, DeferredRunner()):
+        from worklogger.presentation.job_runner import ImmediateJobRunner
+        for runner in (ImmediateJobRunner(), DeferredRunner()):
             state = SimpleNamespace(history=())
             model = Mock(available=True)
             model.initial_state.return_value = state
@@ -135,7 +136,7 @@ class StatusFeedbackTests(unittest.TestCase):
                 self.assertFalse(dialog.status_label.isHidden())
                 dialog.message_input.setText("Test request")
                 self.assertTrue(dialog.send_current_message())
-                if runner:
+                if isinstance(runner, DeferredRunner):
                     self.assertFalse(dialog.status_label.isHidden())
                     self.assertEqual(dialog.status_label.text(), "Sending...")
                     runner.complete(Result.success(state))

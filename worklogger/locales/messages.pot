@@ -149,6 +149,9 @@ msgstr ""
 msgid "Append"
 msgstr ""
 
+msgid "Application behavior"
+msgstr ""
+
 msgid "Apply"
 msgstr ""
 
@@ -284,10 +287,16 @@ msgstr ""
 msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
 msgstr ""
 
+msgid "Calendar display"
+msgstr ""
+
 msgid "Calendar event"
 msgstr ""
 
 msgid "Cancel"
+msgstr ""
+
+msgid "Cancel processing"
 msgstr ""
 
 msgid "Catalog refreshed."
@@ -537,6 +546,9 @@ msgid "Edit display name"
 msgstr ""
 
 msgid "Edit record"
+msgstr ""
+
+msgid "Editing record: {date} {start} - {end}"
 msgstr ""
 
 msgid "Effective context: {count} tokens."
@@ -1295,6 +1307,9 @@ msgstr ""
 msgid "Polish text"
 msgstr ""
 
+msgid "Polishing text..."
+msgstr ""
+
 msgid "Port"
 msgstr ""
 
@@ -1311,6 +1326,9 @@ msgid "Previous month"
 msgstr ""
 
 msgid "Previous period"
+msgstr ""
+
+msgid "Processing"
 msgstr ""
 
 msgid "Project"
@@ -1847,6 +1865,9 @@ msgstr ""
 msgid "Text files (*.txt)"
 msgstr ""
 
+msgid "Text processing is not ready. Check AI settings."
+msgstr ""
+
 msgid "Text processing is unavailable. Saved preferences are retained."
 msgstr ""
 
@@ -2249,6 +2270,9 @@ msgstr ""
 msgid "Work Report"
 msgstr ""
 
+msgid "Work and recording"
+msgstr ""
+
 msgid "Work days"
 msgstr ""
 
@@ -2328,6 +2352,9 @@ msgid "Your changes have been saved for {date}."
 msgstr ""
 
 msgid "Your display name changed elsewhere. Cancel to reload it before saving; your input has been retained."
+msgstr ""
+
+msgid "Your local database is stored here. Open this folder to locate it; use Backup Data to create a safe copy."
 msgstr ""
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."

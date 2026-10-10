@@ -26,6 +26,113 @@ from PySide6.QtCore import QTime
 
 
 class TimeEntryWorkflowTests(unittest.TestCase):
+    def test_record_modes_share_content_classification_and_saved_identity(self):
+        panel = self.panel
+        panel.start_input.setText("09:00")
+        panel.end_input.setText("10:00")
+        panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData("meeting"))
+        panel.content_input.setPlainText("Agenda")
+        panel.save_button.click()
+        saved = self.repository.list_for_day(self.runtime.user.id, self.now.date())[0]
+        panel.time_tabs.setCurrentIndex(1)
+        self.assertEqual(panel.content_input.toPlainText(), "Agenda")
+        self.assertEqual(panel.work_type_combo.currentData(), "meeting")
+        self.assertEqual(panel.view_model.auto_completed.id, saved.id)
+        panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData("training"))
+        panel.content_input.setPlainText("Training agenda")
+        panel.save_button.click()
+        edited = self.repository.get_entry(self.runtime.user.id, saved.id)
+        self.assertEqual((edited.note, edited.work_type.value), ("Training agenda", "training"))
+        panel.time_tabs.setCurrentIndex(0)
+        self.assertEqual(panel.content_input.toPlainText(), edited.note)
+        panel.start_input.setText("09:15")
+        panel.time_tabs.setCurrentIndex(1)
+        panel.content_input.setPlainText("Further detail")
+        panel.save_button.click()
+        self.assertEqual(self.repository.get_entry(self.runtime.user.id, saved.id).start_time, "09:00")
+        panel.time_tabs.setCurrentIndex(0)
+        self.assertEqual(panel.start_input.text(), "09:15")
+        panel.save_button.click()
+        self.assertEqual(self.repository.get_entry(self.runtime.user.id, saved.id).start_time, "09:15")
+        self.assertEqual(len(self.repository.list_for_day(self.runtime.user.id, self.now.date())), 1)
+        panel.clear_button.click()
+        panel.time_tabs.setCurrentIndex(1)
+        self.assertEqual(panel.content_input.toPlainText(), "")
+        self.assertEqual(panel.work_type_combo.currentData(), "normal")
+        self.assertIsNone(panel.view_model.auto_completed)
+
+    def test_active_timer_content_is_shared_without_editable_manual_boundaries(self):
+        panel = self.panel
+        panel.content_input.setPlainText("Initial description")
+        panel.time_tabs.setCurrentIndex(1)
+        panel.clock_in_button.click()
+        panel.content_input.setPlainText("Active description")
+        panel.time_tabs.setCurrentIndex(0)
+        self.assertEqual(panel.content_input.toPlainText(), "Active description")
+        self.assertFalse(panel.start_input.isEnabled())
+        self.assertFalse(panel.work_type_combo.isEnabled())
+        panel.content_input.setPlainText("Revised description")
+        panel.save_button.click()
+        self.assertEqual(panel.view_model.timer.content, "Revised description")
+        panel.time_tabs.setCurrentIndex(1)
+        self.assertEqual(panel.content_input.toPlainText(), "Revised description")
+        self.now += timedelta(hours=1)
+        panel.clock_out_button.click()
+        panel.time_tabs.setCurrentIndex(0)
+        self.assertEqual(panel.content_input.toPlainText(), "Revised description")
+        self.assertEqual(panel.view_model.draft.original.note, "Revised description")
+        self.assertTrue(panel.start_input.isEnabled())
+        self.assertEqual(len(self.repository.list_for_day(self.runtime.user.id, self.now.date())), 1)
+        self.warning.assert_not_called()
+
+    def test_polishing_keeps_event_loop_and_calendar_available_and_rejects_late_results(self):
+        from PySide6.QtCore import QTimer
+        entered, release = threading.Event(), threading.Event()
+        availability_reads = []
+        class Rewriter:
+            @property
+            def available(self):
+                availability_reads.append(True)
+                return True
+            def handle(self, command):
+                entered.set()
+                release.wait(3)
+                return Result.success(RewriteTextResult("Processed text"))
+        panel = self.panel
+        runner = QtJobRunner()
+        self.addCleanup(lambda: runner.shutdown(wait=True))
+        self.addCleanup(release.set)
+        panel._polish_task._runner = runner
+        panel.view_model._rewrite_handler = Rewriter()
+        self.window.show()
+        panel.content_input.setPlainText("Original content")
+        panel.refresh_ai_availability()
+        count = len(availability_reads)
+        panel.content_input.setPlainText("Original content")
+        self.assertEqual(len(availability_reads), count)
+        panel.polish_button.click()
+        self.assertTrue(entered.wait(3))
+        self.assertTrue(panel.processing_progress.isVisible())
+        self.assertTrue(panel.content_input.isReadOnly())
+        self.assertFalse(panel.is_busy)
+        self.assertTrue(self.window.calendar_page.records_widget.isEnabled())
+        ticks = []
+        QTimer.singleShot(0, lambda: ticks.append(True))
+        self.runtime.application.processEvents()
+        self.assertEqual(ticks, [True])
+        panel.time_tabs.setCurrentIndex(1)
+        self.assertTrue(panel._polish_task.is_running)
+        self.assertEqual(panel.content_input.toPlainText(), "Original content")
+        panel.processing_progress.cancel_button.click()
+        self.assertFalse(panel.content_input.isReadOnly())
+        panel.content_input.setPlainText("New input")
+        release.set()
+        runner.shutdown(wait=True)
+        self.runtime.application.processEvents()
+        self.assertEqual(panel.content_input.toPlainText(), "New input")
+        self.assertEqual(self.repository.list_for_day(self.runtime.user.id, self.now.date()), ())
+        self.warning.assert_not_called()
+
     def test_settings_data_directory_uses_the_active_database_location(self):
         page = self.window.settings_page
         directory = Path(self.runtime.database_path).resolve().parent
@@ -247,11 +354,12 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         controller.bind_recording(start_callback=panel.start_recording, end_callback=panel.end_recording,
                                   state_probe=panel.recording_action_state)
         panel.recording_changed.connect(controller.update_recording_actions)
-        panel.view_model.auto_work_type = "meeting"
-        panel.view_model.auto_content = "Timed meeting"
+        self.assertTrue(self.window.select_day(self.now.date() - timedelta(days=1)))
         panel.start_input.setText("07:00")
         panel.end_input.setText("08:00")
         panel.content_input.setPlainText("Unsaved manual description")
+        panel.view_model.auto_work_type = "meeting"
+        panel.view_model.auto_content = "Timed meeting"
         draft = panel.view_model.draft
         self.window.hide()
         self.assertTrue(controller._start_action.isEnabled())
@@ -261,6 +369,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertTrue(controller._end_action.isEnabled())
         self.assertEqual(panel.view_model.timer.work_type.value, "meeting")
         self.assertEqual(panel.view_model.draft, draft)
+        panel.time_tabs.setCurrentIndex(1)
         panel.is_busy = True
         controller.update_recording_actions()
         self.assertFalse(controller._end_action.isEnabled())
@@ -309,6 +418,8 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.save_button.click()
         first = self.repository.list_for_day(self.runtime.user.id, self.now.date())[0]
         self.assertEqual((first.work_type.label, first.worked_hours()), ("Research", 1))
+        self.assertEqual(panel.work_type_combo.currentData(), definition.value)
+        self.assertTrue(panel.new_record())
         self.assertEqual(panel.work_type_combo.currentData(), "normal")
         panel.time_tabs.setCurrentIndex(1)
         self.now += timedelta(hours=1)
@@ -358,6 +469,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.addCleanup(self.window.close)
         self.panel = self.window.entry_panel
         self.panel._job_runner = ImmediateJobRunner()
+        self.panel._polish_task._runner = self.panel._job_runner
         self.repository = SQLiteWorkLogRepository(result.value.connection_factory)
         self.now = datetime(2026, 5, 20, 9, tzinfo=self.panel.view_model.service.local_timezone)
         self.panel.view_model.service._clock = lambda: self.now
@@ -394,13 +506,15 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertEqual(panel.work_type_combo.itemData(panel.work_type_combo.count() - 1), "other")
         for start, end, kind, content in (("09:00", "11:00", "meeting", "Planning"),
                                          ("11:00", "12:00", "training", "Practice")):
+            self.assertTrue(panel.new_record())
             panel.start_input.setText(start)
             panel.end_input.setText(end)
             panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData(kind))
             panel.content_input.setPlainText(content)
             panel.save_button.click()
-            self.assertEqual(panel.work_type_combo.currentData(), "normal")
-            self.assertEqual(panel.start_input.text(), end)
+            self.assertEqual(panel.work_type_combo.currentData(), kind)
+            self.assertEqual(panel.start_input.text(), start)
+            self.assertEqual(panel.content_input.toPlainText(), content)
         entries = self.repository.list_for_day(self.runtime.user.id, self.now.date())
         self.assertEqual(len(entries), 2)
         self.assertEqual([entry.work_type.value for entry in entries], ["meeting", "training"])
@@ -413,7 +527,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.content_input.setPlainText("Updated planning")
         panel.save_button.click()
         self.assertEqual(len(self.repository.list_for_day(self.runtime.user.id, self.now.date())), 2)
-        self.assertEqual(panel.work_type_combo.currentData(), "normal")
+        self.assertEqual(panel.work_type_combo.currentData(), "meeting")
         saved = self.repository.get_entry(self.runtime.user.id, entries[0].id)
         self.assertEqual(saved.note, "Updated planning")
         panel.edit_entry(saved)
@@ -495,6 +609,8 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertEqual(len(entries), 2)
         self.assertEqual((entries[-1].work_type.value, entries[-1].start_time, entries[-1].end_time), ("break", "12:00", "13:00"))
         self.assertIsNone(panel.view_model.service.timer)
+        self.assertEqual(panel.work_type_combo.currentData(), "break")
+        panel.clear_button.click()
         self.assertEqual(panel.work_type_combo.currentData(), "normal")
         self.now += timedelta(hours=1)
         panel._tick()
@@ -505,7 +621,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.now = self.now.replace(hour=16, minute=0)
         panel.content_input.setPlainText("Review")
         panel.clock_out_button.click()
-        self.assertEqual(panel.work_type_combo.currentData(), "normal")
+        self.assertEqual(panel.work_type_combo.currentData(), "meeting")
         entries = self.repository.list_for_day(self.runtime.user.id, self.now.date())
         self.assertEqual(len(entries), 3)
         self.assertEqual([entry.work_type.value for entry in entries], ["meeting", "break", "meeting"])
@@ -514,6 +630,8 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.save_button.click()
         self.assertEqual(self.repository.get_entry(self.runtime.user.id, entries[-1].id).note, "Updated review")
         self.assertEqual(len(self.repository.list_for_day(self.runtime.user.id, self.now.date())), 3)
+        self.assertEqual(panel.work_type_combo.currentData(), "meeting")
+        panel.clear_button.click()
         self.assertEqual(panel.work_type_combo.currentData(), "normal")
         panel.clock_in_button.click()
         self.assertEqual(panel.view_model.service.timer.work_type.value, "normal")

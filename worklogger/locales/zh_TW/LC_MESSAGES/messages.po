@@ -151,6 +151,9 @@ msgstr "外觀"
 msgid "Append"
 msgstr "附加"
 
+msgid "Application behavior"
+msgstr "應用行為"
+
 msgid "Apply"
 msgstr "套用"
 
@@ -286,11 +289,17 @@ msgstr "行事曆資料"
 msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
 msgstr "已有行事曆資料。\n\n取代會在匯入前清除原有事件。\n附加會保留原有事件並新增匯入的事件。"
 
+msgid "Calendar display"
+msgstr "日曆顯示"
+
 msgid "Calendar event"
 msgstr "行事曆日程"
 
 msgid "Cancel"
 msgstr "取消"
+
+msgid "Cancel processing"
+msgstr "取消處理"
 
 msgid "Catalog refreshed."
 msgstr "模型目錄已重新整理。"
@@ -540,6 +549,9 @@ msgstr "編輯顯示名稱"
 
 msgid "Edit record"
 msgstr "編輯記錄"
+
+msgid "Editing record: {date} {start} - {end}"
+msgstr "正在編輯：{date} {start} - {end}"
 
 msgid "Effective context: {count} tokens."
 msgstr "實際上下文：{count} tokens。"
@@ -1297,6 +1309,9 @@ msgstr "請等待目前的更新檢查完成。"
 msgid "Polish text"
 msgstr "潤飾內容"
 
+msgid "Polishing text..."
+msgstr "正在潤色內容…"
+
 msgid "Port"
 msgstr "連接埠"
 
@@ -1314,6 +1329,9 @@ msgstr "上個月"
 
 msgid "Previous period"
 msgstr "上一期間"
+
+msgid "Processing"
+msgstr "處理中"
 
 msgid "Project"
 msgstr "專案"
@@ -1849,6 +1867,9 @@ msgstr "正在測試連線…"
 msgid "Text files (*.txt)"
 msgstr "文字檔案 (*.txt)"
 
+msgid "Text processing is not ready. Check AI settings."
+msgstr "文字處理尚未就緒，請檢查 AI 設定。"
+
 msgid "Text processing is unavailable. Saved preferences are retained."
 msgstr "文字處理無法使用，已儲存的設定會保留。"
 
@@ -2251,6 +2272,9 @@ msgstr "工作方式分布"
 msgid "Work Report"
 msgstr "工作報表"
 
+msgid "Work and recording"
+msgstr "工作與記錄"
+
 msgid "Work days"
 msgstr "工作天數"
 
@@ -2331,6 +2355,9 @@ msgstr "已儲存 {date} 的修改。"
 
 msgid "Your display name changed elsewhere. Cancel to reload it before saving; your input has been retained."
 msgstr "顯示名稱已在其他位置變更。請取消編輯以重新載入後再儲存，您的輸入已保留。"
+
+msgid "Your local database is stored here. Open this folder to locate it; use Backup Data to create a safe copy."
+msgstr "本機資料庫儲存在此目錄中。可開啟目錄檢視；請使用「備份資料」建立安全副本。"
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."
 msgstr "已儲存的登入無效或已過期，請重新登入。"

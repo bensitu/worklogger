@@ -22,6 +22,35 @@ def _app() -> QApplication:
 
 
 class BackgroundJobTests(unittest.TestCase):
+    def test_processing_requests_cancel_and_ignore_late_or_replaced_results(self):
+        from worklogger.presentation.processing import TextProcessingTask
+        from worklogger.app.job_runner import JobHandle
+        class DeferredRunner:
+            def __init__(self):
+                self.callbacks = []
+                self.cancelled = []
+            def submit(self, name, work, *, on_complete):
+                self.callbacks.append(on_complete)
+                return JobHandle(name, lambda: self.cancelled.append(name))
+        runner = DeferredRunner()
+        task = TextProcessingTask(job_runner=runner)
+        completed, changes = [], []
+        task.started.connect(lambda: changes.append("started"))
+        task.finished.connect(lambda: changes.append("finished"))
+        self.assertTrue(task.run("first", lambda token: "first", on_complete=completed.append))
+        self.assertFalse(task.run("duplicate", lambda token: "duplicate", on_complete=completed.append))
+        task.cancel()
+        self.assertFalse(task.is_running)
+        self.assertEqual(runner.cancelled, ["first"])
+        self.assertEqual(completed[0].error.code, "ai_rewrite_cancelled")
+        self.assertTrue(task.run("second", lambda token: "second", on_complete=completed.append))
+        runner.callbacks[0](Result.success("Late first result"))
+        self.assertTrue(task.is_running)
+        self.assertEqual(len(completed), 1)
+        runner.callbacks[1](Result.success("Second result"))
+        self.assertEqual(completed[1].value, "Second result")
+        self.assertEqual(changes, ["started", "finished", "started", "finished"])
+
     @classmethod
     def setUpClass(cls) -> None:
         cls._app = _app()

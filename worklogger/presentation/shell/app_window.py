@@ -156,6 +156,7 @@ class AppWindow(QMainWindow):
             stats_panel=self.stats_panel,
         )
         self._connect_signals()
+        self._refresh_ai_availability()
         if hasattr(self._residency_controller, "notify_timer_reminder"):
             self.entry_panel.reminder.connect(self._residency_controller.notify_timer_reminder)
         self.sidebar.set_avatar(self._config.profile_avatar_png)
@@ -443,7 +444,8 @@ class AppWindow(QMainWindow):
         return original is not None and original.id == record.id
 
     def _entries_changed(self, day: date) -> None:
-        if self.entry_panel.time_tabs.currentIndex() == 1:
+        preserve_day = self._time_entry_view_model.manual_dirty and self._time_entry_view_model.draft.day != day
+        if not preserve_day and (self.entry_panel.time_tabs.currentIndex() == 1 or self._time_entry_view_model.editing_active_timer):
             self._selected_day = day
             self._current_month = day.replace(day=1)
         self.refresh()
@@ -451,6 +453,8 @@ class AppWindow(QMainWindow):
     def _refresh_ai_availability(self):
         self.entry_panel.refresh_ai_availability()
         self.reports_page.refresh_ai_availability()
+        if hasattr(self._notes_workflow, "refresh_ai_availability"):
+            self._notes_workflow.refresh_ai_availability()
 
     def _refresh_calendar(self) -> bool:
         result = self._calendar_coordinator.refresh_calendar(

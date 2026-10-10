@@ -151,6 +151,9 @@ msgstr "外观"
 msgid "Append"
 msgstr "追加"
 
+msgid "Application behavior"
+msgstr "应用行为"
+
 msgid "Apply"
 msgstr "应用"
 
@@ -286,11 +289,17 @@ msgstr "日历数据"
 msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
 msgstr "已存在日历数据。\n\n替换会在导入前清空原有事件。\n追加会保留原有事件并添加导入的事件。"
 
+msgid "Calendar display"
+msgstr "日历显示"
+
 msgid "Calendar event"
 msgstr "日历日程"
 
 msgid "Cancel"
 msgstr "取消"
+
+msgid "Cancel processing"
+msgstr "取消处理"
 
 msgid "Catalog refreshed."
 msgstr "模型目录已刷新。"
@@ -540,6 +549,9 @@ msgstr "编辑显示名称"
 
 msgid "Edit record"
 msgstr "编辑记录"
+
+msgid "Editing record: {date} {start} - {end}"
+msgstr "正在编辑：{date} {start} - {end}"
 
 msgid "Effective context: {count} tokens."
 msgstr "实际上下文：{count} tokens。"
@@ -1297,6 +1309,9 @@ msgstr "请等待当前更新检查完成。"
 msgid "Polish text"
 msgstr "润色内容"
 
+msgid "Polishing text..."
+msgstr "正在润色内容…"
+
 msgid "Port"
 msgstr "端口"
 
@@ -1314,6 +1329,9 @@ msgstr "上个月"
 
 msgid "Previous period"
 msgstr "上一期间"
+
+msgid "Processing"
+msgstr "处理中"
 
 msgid "Project"
 msgstr "项目"
@@ -1849,6 +1867,9 @@ msgstr "正在测试连接…"
 msgid "Text files (*.txt)"
 msgstr "文本文件 (*.txt)"
 
+msgid "Text processing is not ready. Check AI settings."
+msgstr "文本处理尚未就绪，请检查 AI 设置。"
+
 msgid "Text processing is unavailable. Saved preferences are retained."
 msgstr "文本处理不可用，已保存的配置会保留。"
 
@@ -2251,6 +2272,9 @@ msgstr "工作方式分布"
 msgid "Work Report"
 msgstr "工作报表"
 
+msgid "Work and recording"
+msgstr "工作与记录"
+
 msgid "Work days"
 msgstr "工作天数"
 
@@ -2331,6 +2355,9 @@ msgstr "已保存 {date} 的修改。"
 
 msgid "Your display name changed elsewhere. Cancel to reload it before saving; your input has been retained."
 msgstr "显示名称已在其他位置修改。请取消编辑以重新加载后再保存，您的输入已保留。"
+
+msgid "Your local database is stored here. Open this folder to locate it; use Backup Data to create a safe copy."
+msgstr "本地数据库保存在此目录中。可打开目录查看；请使用“备份数据”创建安全副本。"
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."
 msgstr "已保存的登录无效或已过期，请重新登录。"

@@ -22,6 +22,86 @@ from worklogger.infrastructure.i18n import _
 
 
 class ReportSettingsLayoutChecks(unittest.TestCase):
+    def test_settings_groups_and_processing_feedback_fit_localized_pages(self):
+        from PySide6.QtWidgets import QLabel
+        from worklogger.app.job_runner import JobHandle
+        from worklogger.domain.worklog.models import WorkLog, WorkType
+        from tests.presentation.test_app_window import _window, MemoryWorkLogRepository
+        from types import SimpleNamespace
+        class DeferredRunner:
+            def submit(self, name, work, *, on_complete):
+                return JobHandle(name, lambda: None)
+        engine = ThemeEngine()
+        old_language, old_style, old_palette = get_language(), self.app.styleSheet(), self.app.palette()
+        try:
+            for language in available_languages():
+                set_language(language)
+                for dark in (False, True):
+                    self.app.setPalette(engine.qt_palette(dark=dark))
+                    self.app.setStyleSheet(engine.application_stylesheet(dark=dark))
+                    settings = SettingsPage(_view_model(MemorySettingsRepository()))
+                    settings.refresh()
+                    settings.resize(880, 680)
+                    settings.show()
+                    settings.category_nav.set_category("general")
+                    self.app.processEvents()
+                    general = settings.category_stack.currentWidget()
+                    headings = [label.text() for label in general.findChildren(QLabel, "settings_section_title_label")]
+                    self.assertEqual(headings, [_("Work and recording"), _("Calendar display"), _("Application behavior")])
+                    self.capture(settings, f"{language}-general-groups-{dark}")
+                    settings.set_data_directory(Path("D:/Application Data/WorkLogger"))
+                    settings.category_nav.set_category("data")
+                    self.app.processEvents()
+                    card = settings.data_directory_input.parentWidget()
+                    description = card.findChild(QLabel, "settings_secondary_label")
+                    self.assertTrue(description.text())
+                    self.assertLess(description.geometry().bottom(), settings.data_directory_input.geometry().top())
+                    self.capture(settings, f"{language}-data-description-{dark}")
+                    settings.close()
+                    window = _window(MemoryWorkLogRepository())
+                    window.resize(1100, 700)
+                    window.refresh()
+                    panel = window.entry_panel
+                    panel.view_model.service.projects = SimpleNamespace(catalog=lambda: Result.success(((), {})), recent_contexts=lambda: Result.success(()))
+                    panel.context_picker.show()
+                    panel.view_model._rewrite_handler = SimpleNamespace(available=True)
+                    panel.refresh_ai_availability()
+                    panel._polish_task._runner = DeferredRunner()
+                    panel.view_model.select(WorkLog(1, window._selected_day, "09:00", "10:00", note="Meeting agenda", work_type=WorkType.MEETING, id=1))
+                    panel._render_editor()
+                    window.show()
+                    panel.polish_button.click()
+                    self.app.processEvents()
+                    self.assertTrue(panel.processing_progress.isVisible())
+                    self.assertTrue(panel.processing_progress.cancel_button.isEnabled())
+                    self.assertTrue(panel.isEnabled())
+                    self.assertTrue(panel.content_input.isReadOnly())
+                    self.assertEqual(panel.processing_progress.bar.minimum(), panel.processing_progress.bar.maximum())
+                    self.assertTrue(panel.rect().contains(panel.processing_progress.rect().translated(panel.processing_progress.mapTo(panel, panel.rect().topLeft()))))
+                    input_bottom = panel.content_input.mapTo(window, panel.content_input.rect().bottomLeft()).y()
+                    actions_top = panel.actions_widget.mapTo(window, panel.actions_widget.rect().topLeft()).y()
+                    self.assertLess(input_bottom, actions_top)
+                    self.capture(window, f"{language}-record-processing-{dark}")
+                    panel.processing_progress.cancel_button.click()
+                    panel.clear_button.click()
+                    window.close()
+                    page = ReportsPage(ReportsViewModel(), date(2026, 5, 21), job_runner=ImmediateJobRunner())
+                    page.refresh()
+                    page._rewrite_task._runner = DeferredRunner()
+                    page.resize(1000, 650)
+                    page.show()
+                    page._rewrite_current()
+                    self.app.processEvents()
+                    self.assertTrue(page.processing_progress.isVisible())
+                    self.assertTrue(page.processing_progress.cancel_button.isEnabled())
+                    self.capture(page, f"{language}-report-processing-{dark}")
+                    page.processing_progress.cancel_button.click()
+                    page.close()
+        finally:
+            set_language(old_language)
+            self.app.setStyleSheet(old_style)
+            self.app.setPalette(old_palette)
+
     def test_data_location_controls_fit_long_paths_and_localized_pages(self):
         old_language, old_style, old_palette = get_language(), self.app.styleSheet(), self.app.palette()
         engine = ThemeEngine()

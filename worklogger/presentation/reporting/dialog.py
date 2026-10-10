@@ -29,6 +29,8 @@ from worklogger.presentation.viewmodels import ReportEditorState, ReportEditorVi
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
 from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.processing import TextProcessingTask
+from worklogger.presentation.widgets.processing_progress import ProcessingProgress
 
 
 def confirm_report_overwrite(parent: QWidget) -> bool:
@@ -147,6 +149,7 @@ class ReportDialog(QDialog):
         selected_day: date,
         parent: QWidget | None = None,
         confirm_discard_changes: Callable[[], bool] | None = None,
+        job_runner=None,
     ) -> None:
         super().__init__(parent)
         self._view_model = view_model
@@ -155,6 +158,7 @@ class ReportDialog(QDialog):
         self._states: dict[str, ReportEditorState] = {}
         self._saved_content: dict[str, str] = {}
         self._last_error: AppError | None = None
+        self._rewrite_task = TextProcessingTask(self, job_runner=job_runner)
         self.setObjectName("report_dialog")
         self.setWindowTitle(_("Work Report"))
         apply_window_icon(self)
@@ -203,6 +207,8 @@ class ReportDialog(QDialog):
 
         tools = QHBoxLayout()
         self.rewrite_button = QPushButton(_("Rewrite"))
+        self.rewrite_button.setEnabled(bool(self._view_model.rewrite_available))
+        self.rewrite_button.setToolTip(_("Polish text") if self._view_model.rewrite_available else _("Text processing is not ready. Check AI settings."))
         self.copy_button = QPushButton(_("Copy Markdown"))
         self.export_button = QPushButton(_("Export Markdown"))
         self.save_template_button = QPushButton(_("Save template"))
@@ -214,6 +220,11 @@ class ReportDialog(QDialog):
         tools.addWidget(self.reset_template_button)
         tools.addStretch(1)
         root.addLayout(tools)
+        self.processing_progress = ProcessingProgress()
+        self.processing_progress.cancel_requested.connect(self._rewrite_task.cancel)
+        self._rewrite_task.started.connect(lambda: self.processing_progress.start(_("Polishing text...")))
+        self._rewrite_task.finished.connect(self.processing_progress.finish)
+        root.addWidget(self.processing_progress)
 
         bottom = QHBoxLayout()
         self.status_label = StatusLabel()
@@ -319,28 +330,48 @@ class ReportDialog(QDialog):
         self.status_label.setText(_("Template reset."))
 
     def _rewrite_current(self) -> None:
+        if self._rewrite_task.is_running or not self._view_model.rewrite_available:
+            return
         report_type = self._current_type()
         state = self._states.get(report_type)
         if state is None:
             self._set_error(ValidationError("report_not_loaded", "report_not_loaded"))
             return
-        result = self._view_model.rewrite(state, self._current_editor().toPlainText())
-        if not result.ok or result.value is None:
-            self._set_error(result.error)
-            return
-        self._current_editor().setPlainText(result.value)
-        self.status_label.setText(_("Rewritten"))
+        editor = self._current_editor()
+        content = editor.toPlainText()
+        self.tabs.tabBar().setEnabled(False)
+        editor.setReadOnly(True)
+        for field in (self.rewrite_button, self.save_button, self.save_template_button,
+                      self.reset_template_button, self.close_button):
+            field.setEnabled(False)
+        def completed(result):
+            self.tabs.tabBar().setEnabled(True)
+            editor.setReadOnly(False)
+            for field in (self.rewrite_button, self.save_button, self.save_template_button,
+                          self.reset_template_button, self.close_button):
+                field.setEnabled(True)
+            if not result.ok or result.value is None:
+                self._set_error(result.error)
+                return
+            editor.setPlainText(result.value)
+            self.status_label.setText(_("Rewritten"))
+        self._rewrite_task.run("rewrite_report", lambda _token: self._view_model.rewrite(state, content), on_complete=completed)
 
     def _set_error(self, error: AppError | None) -> None:
         self._last_error = None if isinstance(error, CancellationError) else error
         self.status_label.setText(display_error_message(error))
 
     def reject(self) -> None:
+        if self._rewrite_task.is_running:
+            return
         if not self._confirm_discard_changes_if_needed():
             return
         super().reject()
 
     def closeEvent(self, event: QCloseEvent) -> None:
+        if self._rewrite_task.is_running:
+            event.ignore()
+            return
         if not self._confirm_discard_changes_if_needed():
             event.ignore()
             return

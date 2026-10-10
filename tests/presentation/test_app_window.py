@@ -522,6 +522,8 @@ class AppWindowTests(unittest.TestCase):
         self.assertIsNotNone(saved)
         assert saved is not None
         self.assertEqual(saved.start_time, "09:00")
+        self.assertTrue(view.entry_panel.new_record())
+        view.entry_panel.start_input.setText("1000")
         view.entry_panel.end_input.setText("1200")
         view.entry_panel.work_type_combo.setCurrentIndex(view.entry_panel.work_type_combo.findData("meeting"))
         view.entry_panel.save_button.click()

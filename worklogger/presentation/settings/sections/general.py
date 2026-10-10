@@ -30,6 +30,9 @@ from worklogger.presentation.settings.sections.common import (
     _hours_input,
     _SettingsScrollPage,
     _switch_row,
+    _section_title,
+    _separator,
+    _settings_form,
 )
 from worklogger.presentation.widgets import SwitchButton
 from worklogger.presentation.widgets.icons import set_button_icon
@@ -57,6 +60,7 @@ class GeneralSection(_SettingsScrollPage):
         super().__init__()
         page = self
         card = _card_with_form(_("General"))
+        card.content_layout.insertWidget(0, _section_title(_("Work and recording")))
         form = card.form_layout
 
         self.standard_hours_input = _hours_input(1.0, 24.0, 0.5)
@@ -105,6 +109,11 @@ class GeneralSection(_SettingsScrollPage):
         self.manage_projects_button.clicked.connect(actions.manage_projects_requested)
         form.addRow(_("Projects"), self.manage_projects_button)
 
+        card.content_layout.addWidget(_separator())
+        card.content_layout.addWidget(_section_title(_("Calendar display")))
+        form = _settings_form()
+        card.content_layout.addLayout(form)
+
         self.holidays_switch = SwitchButton()
         self.holidays_switch.toggled.connect(
             lambda enabled: actions.set_bool(SHOW_HOLIDAYS_SETTING_KEY, enabled)
@@ -151,6 +160,10 @@ class GeneralSection(_SettingsScrollPage):
 
         self.residency_switch: SwitchButton | None = None
         if actions.residency_key:
+            card.content_layout.addWidget(_separator())
+            card.content_layout.addWidget(_section_title(_("Application behavior")))
+            form = _settings_form()
+            card.content_layout.addLayout(form)
             self.residency_switch = SwitchButton()
             self.residency_switch.toggled.connect(
                 lambda enabled: actions.set_bool(str(actions.residency_key), enabled)

@@ -53,6 +53,8 @@ from worklogger.presentation.widgets import (
     SegmentedControl,
 )
 from worklogger.presentation.widgets.icons import IconLabel, set_button_icon
+from worklogger.presentation.processing import TextProcessingTask
+from worklogger.presentation.widgets.processing_progress import ProcessingProgress
 
 
 class ReportsPage(QWidget):
@@ -69,6 +71,7 @@ class ReportsPage(QWidget):
         self.setObjectName("reports_page_widget")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self._view_model = view_model
+        self._ai_ready = bool(view_model is not None and getattr(view_model, "rewrite_available", True))
         self._selected_day = selected_day
         self._states: dict[str, ReportEditorState] = {}
         self._saved_content: dict[str, str] = {}
@@ -76,6 +79,7 @@ class ReportsPage(QWidget):
         self._rendered_type = "daily"
         self._confirm_discard = confirm_discard
         self._job_runner = job_runner or QtJobRunner(self)
+        self._rewrite_task = TextProcessingTask(self, job_runner=self._job_runner)
         self._rewrite_busy = False
         self._delete_busy = False
         self._generate_busy = False
@@ -274,7 +278,7 @@ class ReportsPage(QWidget):
         self.ai_assist_button.setProperty("variant", "outline")
         self.ai_assist_button.clicked.connect(self._rewrite_current)
         set_button_icon(self.ai_assist_button, "sparkles", accent=True)
-        if self._view_model is None or not getattr(self._view_model, "rewrite_available", True):
+        if not self._ai_ready:
             self.ai_assist_button.setEnabled(False)
             self.ai_assist_button.setToolTip(_("AI Assist is not configured."))
             self.ai_hint_line_edit.setEnabled(False)
@@ -285,6 +289,11 @@ class ReportsPage(QWidget):
         self.versions_button.clicked.connect(self._open_versions)
         ai_row.addWidget(self.versions_button)
         editor_card.content_layout.addLayout(ai_row)
+        self.processing_progress = ProcessingProgress()
+        self.processing_progress.cancel_requested.connect(self._rewrite_task.cancel)
+        self._rewrite_task.started.connect(lambda: self.processing_progress.start(_("Polishing text...")))
+        self._rewrite_task.finished.connect(self.processing_progress.finish)
+        editor_card.content_layout.addWidget(self.processing_progress)
 
         bottom = QHBoxLayout()
         self.copy_button = QToolButton()
@@ -370,10 +379,14 @@ class ReportsPage(QWidget):
                 action.setText(_("Saved daily reports for this month") + f" ({self._selected_day:%Y-%m})")
         self.copy_button.setEnabled(not busy and has_content)
         self.generate_button.setEnabled(not busy and self._view_model is not None)
-        self.refresh_ai_availability()
+        self._update_ai_controls()
 
     def refresh_ai_availability(self):
-        available = bool(self._view_model is not None and getattr(self._view_model, "rewrite_available", True))
+        self._ai_ready = bool(self._view_model is not None and getattr(self._view_model, "rewrite_available", True))
+        self._update_ai_controls()
+
+    def _update_ai_controls(self):
+        available = self._ai_ready
         busy = self.is_busy
         self.ai_assist_button.setEnabled(available and not busy and bool(self.editor.toPlainText().strip()))
         self.ai_hint_line_edit.setEnabled(available and not busy)
@@ -512,13 +525,8 @@ class ReportsPage(QWidget):
         instructions = self.ai_hint_line_edit.text()
         self._set_rewrite_busy(True)
         self._set_status(_("Rewriting report..."), notify=False)
-        try:
-            self._job_runner.submit(
-                "rewrite_report", lambda _token: self._view_model.rewrite(state, content, instructions),
-                on_complete=self._complete_rewrite,
-            )
-        except Exception:
-            self._complete_rewrite(Result.failure(InfrastructureError("ai_request_failed", "ai_request_failed")))
+        self._rewrite_task.run("rewrite_report", lambda _token: self._view_model.rewrite(state, content, instructions),
+                               on_complete=self._complete_rewrite)
 
     def _set_rewrite_busy(self, busy: bool) -> None:
         self._rewrite_busy = busy
@@ -529,7 +537,7 @@ class ReportsPage(QWidget):
         self.editor.setReadOnly(busy)
         for widget in (self.report_type_control, self.previous_period_button, self.next_period_button, self.templates_button, self.ai_hint_line_edit, self.save_button, self.history_panel):
             widget.setEnabled(not busy)
-        self.ai_assist_button.setEnabled(not busy and bool(getattr(self._view_model, "rewrite_available", True)))
+        self.ai_assist_button.setEnabled(not busy and self._ai_ready)
         self.ai_hint_line_edit.setEnabled(self.ai_assist_button.isEnabled())
         self.generate_button.setEnabled(not busy)
         self._update_report_status()
@@ -571,6 +579,8 @@ class ReportsPage(QWidget):
 
     def _complete_rewrite(self, result: object) -> None:
         self._set_rewrite_busy(False)
+        if not isinstance(result.error, CancellationError):
+            self.refresh_ai_availability()
         if not result.ok or result.value is None:
             self._set_error(result.error)
             return
