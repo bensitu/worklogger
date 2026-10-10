@@ -26,6 +26,13 @@ connected. Capability declarations do not create adapters or route requests.
 
 ## AI Services
 
+Recording, notes, reports (including the compatibility dialog), chat and sample
+connection checks run text-processing requests in background jobs with visible
+indeterminate progress and cancellation. Cancellation prevents applying a late
+response, but does not guarantee immediate termination of a native inference or
+provider request. Inputs are not automatically saved. Stable disabled actions
+indicate unavailable services without shifting the recording layout during startup.
+
 The `AIGateway` protocol takes `AIRequest` and returns `Result[AIResponse]`.
 `AiChatHandler` and `RewriteTextHandler` accept a service and model identifier.
 Without one they return an unconfigured-service result. The generic default model

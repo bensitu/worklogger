@@ -95,7 +95,8 @@ period. Clear input resets the editor without deleting saved records; in Auto
 Record it clears content without stopping the timer. A record's delete button
 appears on hover or keyboard focus and requires confirmation.
 Successful time-entry saves update the calendar without a confirmation popup.
-After saving, the work type resets to Normal for the next record. Selecting an
+After saving, the record remains selected in both input modes. New time record or
+Clear input resets the next draft to Normal. Selecting an
 existing record still loads its saved type for editing.
 
 The maximum elapsed period is 16 hours. Historical break deductions must be
@@ -118,18 +119,23 @@ period; later catalog edits and archiving do not change historical totals.
 
 Choose a work type, enter optional content, and choose Start. End saves the timed
 record and its current content automatically. Save content updates the timer's
-description without creating a finished period; after End it updates that same
-saved record's description. Edit a completed record through Manual Input.
-After End succeeds, the work type resets to Normal for the next timer; the saved
-record keeps its original type. Saving content during a timer does not reset it.
+description without creating a finished period. When idle, Save changes updates
+the selected record's content, type and project; use Manual Input for boundary
+corrections. Unsaved manual boundary edits are not committed by an automatic-mode
+content save.
+After End succeeds, the completed record remains selected for review in both modes.
+Use New time record or Clear input before entering another period. Saving content
+during a timer does not change its classification or boundaries.
 
 Break immediately saves a separate rest period starting at the click time and
 ending after the configured default duration. It is available without pressing
 Start, but disabled while a timer is running: finish that timer first. The record
 appears in Schedule / Records immediately and can be edited in Manual Input.
-No timer is started, and work does not resume automatically. Clicking Start during
-this rest period asks whether to end it early. Confirming shortens the rest to the
-Start click time and begins work at that same time; cancelling keeps it unchanged.
+No timer is started, and work does not resume automatically. Choose the type of the
+next activity before Start, or use New time record to restore Normal. Clicking Start
+during this rest period asks whether to end it early. Confirming shortens the rest
+to the Start click time and begins the new timer at that same time; cancelling
+keeps it unchanged.
 Manual and imported periods are never automatically shortened. Other overlapping
 records are rejected. A default duration of zero disables this shortcut; a manual
 break can still be recorded.
@@ -137,7 +143,9 @@ The separate Discard timer button beside the break control asks for confirmation
 before removing an unwanted or unrecoverable timer. Clearing the form does not
 discard or stop it.
 
-Manual and automatic editors preserve their separate drafts when switching modes.
+Manual and automatic modes share the selected record's content, classification and
+project. A running timer keeps its own content when another historical record is
+being edited; an unrelated unsaved manual draft is not silently overwritten.
 Calendar refreshes do not replace the active timer's content. The type is fixed
 during a running period; finish it before choosing the next activity.
 Clock Out rejects invalid or excessive elapsed intervals rather than wrapping
@@ -295,7 +303,7 @@ and saved-daily-report aggregation. Multiple periods retain individual rows.
 | Category | Available controls and behavior |
 | --- | --- |
 | Appearance | Native-language choices, preset/custom accent, light/dark mode; palette appears only for Custom |
-| General | Standard hours, default break, monthly target, holidays, week start, overnight display, platform residency, and project/work-item management |
+| General | Work and recording, calendar display, and application behavior groups; existing preferences and management entries remain in this category |
 | AI | Local model selection and native runtime, explicit external-model opt-in with HTTPS endpoint/model/key, sample connection test, and context privacy |
 | Data | Work-log CSV and iCalendar export, CSV and calendar import, database backup/restore; clearing calendar events is disabled |
 | Network | Enable and configure an HTTP CONNECT proxy; subsequent update, download, and external AI requests use it |

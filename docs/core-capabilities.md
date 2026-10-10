@@ -13,6 +13,8 @@ analysis remains an offline file and is not part of repository documentation.
 | Record retrieval | Account-scoped date/type/context/text filters, unclassified selection, bounded chronological paging, background search and navigation to the existing editor |
 | Project statistics | Selected date-range work/rest/leave totals by saved project and work-item identity, work-date counts and paged record drill-down |
 | Context reuse | Eight recent owned active contexts and explicit atomic assignment to selected records with conflict checks and whole-operation undo |
+| Recording workspace | Shared selected-record fields across input modes, retained saved selection, explicit new/clear defaults and protected active-timer boundaries |
+| Text processing feedback | Stable readiness controls, background requests, indeterminate progress, cancellation and rejection of late results across recording, notes, reports, chat and connection checks |
 | Interval correction | Transactional elapsed-minute splitting and adjacent compatible merging; ownership, expected versions, overlap and duration checks |
 | Historical rest | Explicit whole-minute break placement with preview; no inferred boundaries or duplicate deduction |
 | Recovery | Bounded reversible individual-record changes with stable IDs and newer revisions; confirmation and no timer restart |
@@ -78,7 +80,9 @@ native tray notification and signed multi-platform artifacts are not certified b
 these checks. See [testing](testing.md), [recording](time-recording.md),
 [data formats](data-formats.md), [database](database.md), and [packaging](packaging.md).
 
-A windowed Windows AMD64 artifact was built from the hash-verified CPython 3.11.9
+A prior windowed Windows AMD64 artifact, from source commit `04aa6e4`, was built from the hash-verified CPython 3.11.9
 environment and passed executable import, startup and isolated workflow checks.
-The default suite passed 451 tests. This artifact is unsigned and excludes optional
+The current source suite passed 455 tests; localized recording/settings feedback
+checks also passed. The prior artifact does not contain these later interface changes.
+It is unsigned and excludes optional
 native inference; no real model or provider request was used for certification.

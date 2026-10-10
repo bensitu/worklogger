@@ -31,17 +31,28 @@ button opens the selected date's memo without creating a work period. Historical
 quick logs are readable there; they do not contribute worked hours.
 
 Manual Save creates a new period unless a list item was selected; Save changes
-updates that item's ID. After saving, the next draft starts at the previous end,
-with the Normal work type and no end or content yet entered. Clear input resets
-the manual form and leaves stored records intact. In Auto Record it clears only
-editable content, not the
-timer or already saved descriptions. Delete is a per-item hover/focus action with
+updates that item's ID. Saving retains the selected record, its content, type and
+project in both input modes. New time record or Clear input starts an empty draft
+with the Normal type; neither deletes stored records. While a timer is running,
+Clear input in Auto Record clears only editable content, not the timer or saved
+descriptions. Delete is a per-item hover/focus action with
 confirmation. Its space is reserved so revealing it does not resize the record.
 
 Selecting an imported event creates a time-entry draft from its schedule and text.
 Saving that draft creates worked-time data; it does not modify the source event.
 Deleting a calendar event removes the local imported copy only. Re-importing its
 source file may bring it back. The original file or calendar provider is untouched.
+
+## Text Processing Feedback
+
+The polish action has a stable position even while AI availability is being checked.
+It remains disabled until the configured service is ready. Model verification is
+not skipped to make startup appear faster. Text processing runs in the background
+with an indeterminate progress indicator and cancellation. The calendar remains
+responsive and the input is not automatically saved. Switching input mode for the
+same record preserves the request; changing records or clearing input cancels it.
+Cancellation rejects late responses; an already running native or provider operation
+may finish in the background. No cancelled response overwrites subsequent input.
 
 ## Activity Types
 
@@ -99,10 +110,19 @@ Start persists an active timer with its chosen type and content. The type is fix
 for that period. Save content persists the description without creating a finished
 time row. End stores time and current content together and clears the timer.
 Following End, Save content can update that completed row without inserting another.
-Successful End resets the type selector to Normal for the next timer without
-changing the completed record's type. Saving content while a timer is running
-does not change its type. Failed saves and failed End operations preserve the
-selected type for correction or retry.
+Successful End retains the completed record's metadata for review and editing.
+New time record or Clear input explicitly resets the next record to Normal. During
+an active timer, both input modes can edit its content, but manual boundaries and
+classification remain locked. Selecting another historical record does not change
+the active timer's content. Failed saves and failed End operations preserve input
+for correction or retry.
+
+When idle, Auto Record can update the selected record's content, type and project
+without changing its recorded boundaries. Unsaved manual boundary edits remain in
+the manual draft until explicitly saved. Saved IDs, revisions, historical break
+deductions and original timestamp offsets are preserved by the existing storage
+validation. A separate unsaved manual draft created while timing is protected from
+changes to the timer's completed record.
 
 Discard timer is a separate button beside the break control. It asks for confirmation
 before removing an active or unrecoverable timer without saving a completed period.
@@ -115,8 +135,9 @@ are rejected. A zero default disables the shortcut; manual break periods remain
 available. A break
 chosen directly as the activity type is a measured period.
 
-Starting work during a shortcut break offers to end it early. Confirmation shortens
-that record to the original Start click time and starts work at the same instant
+Starting another timed period during a shortcut break offers to end it early.
+Choose the next activity type, or use New time record to restore Normal. Confirmation
+shortens that record to the original Start click time and starts the next timer at the same instant
 in one transaction. Cancellation changes neither record nor timer. If no rest time
 has elapsed, the unused break record is removed instead of saving a zero-length
 period. Revision and timer checks reject stale or competing requests. Only shortcut
