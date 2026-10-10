@@ -82,7 +82,9 @@ actions use danger-colored text and weight 500. Disabled actions use the disable
 palette while retaining their role's weight to prevent layout shifts.
 Disabled ghost actions keep their transparent background and border; only the
 foreground is muted. Their hover feedback uses a soft fill without introducing
-an outline. This keeps auxiliary toolbar groups stable across states.
+an outline. Reserve this role for text links and controls embedded in record rows.
+Standalone icon actions, including copy, reload, history, clear, undo and period
+navigation, use the outline role. Their borders remain visible when disabled.
 
 Navigation and view selectors use theme-color emphasis and weight 600 only when
 selected. Record summaries retain weight 400; saved-report entries use 400 normally
@@ -103,11 +105,16 @@ in a footer. Refresh dynamic-property styling with the existing `refresh_style`
 helper when switching a role on a live control.
 
 Analytics period and action controls use one 44-logical-pixel toolbar height.
-The note toolbar groups polishing and export before frameless copy and reload;
+The note toolbar groups polishing and export before outlined copy and reload;
 its icon buttons use 40-by-40 logical-pixel targets and matching keyboard order.
 About intentionally omits a section subtitle. Its status area remains allocated
 when empty, and update checks disable only the repeated-check action rather than
 the presentation area, preserving both geometry and the application image colors.
+
+Table and tree data views use the shared surface background rather than the page
+background. Light mode uses white for both ordinary and alternating rows, including
+the empty viewport. Dark mode uses dark surfaces and retains alternating-row contrast.
+Selection highlighting remains controlled by the theme palette.
 
 ## Data Safety
 

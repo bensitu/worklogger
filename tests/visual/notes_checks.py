@@ -84,13 +84,14 @@ class NotesLayoutChecks(unittest.TestCase):
                                 self.assertIs(dialog.export_button.nextInFocusChain(), dialog.copy_button)
                                 self.assertIs(dialog.copy_button.nextInFocusChain(), dialog.reload_button)
                                 for tool in (dialog.copy_button, dialog.reload_button):
-                                    before = tool.grab().toImage().pixelColor(1, tool.height() // 2)
                                     enabled = tool.isEnabled()
-                                    tool.setEnabled(not enabled)
-                                    self.app.processEvents()
-                                    after = tool.grab().toImage().pixelColor(1, tool.height() // 2)
-                                    self.assertEqual(before, after)
-                                    self.assertEqual((tool.width(), tool.height()), (40, 40))
+                                    for state in (True, False):
+                                        tool.setEnabled(state)
+                                        self.app.processEvents()
+                                        rendered = tool.grab().toImage()
+                                        self.assertNotEqual(rendered.pixelColor(0, tool.height() // 2),
+                                                            rendered.pixelColor(4, tool.height() // 2))
+                                        self.assertEqual((tool.width(), tool.height()), (40, 40))
                                     tool.setEnabled(enabled)
                                 self.capture(dialog, f"{language_code}-notes-{'dark' if dark else 'light'}-{width}-empty")
                             dialog.activateWindow()

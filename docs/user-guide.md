@@ -113,7 +113,8 @@ retain the clock icon. Report generation uses a new-file icon, and project
 statistics use a project-folder icon. Ordinary actions use a surface background
 with a neutral outline, neutral text and medium weight. Primary save, creation,
 sign-in and confirmation actions use a theme-colored background, white text and
-semibold weight. Auxiliary actions use regular weight and a transparent background;
+semibold weight. Standalone icon actions also use a neutral outline. Text links and
+controls embedded in record rows use regular weight and a transparent background;
 destructive actions use red text and matching icons. Selected navigation retains
 theme-color emphasis. Disabled framed actions use muted text and icons with a distinct
 background; frameless auxiliary actions keep their transparent contour. Both retain
@@ -257,9 +258,9 @@ draft recovery, copying, Markdown export, and optional text polishing. Templates
 belong to Reports and cannot be changed from the memo editor.
 
 The note toolbar orders polishing, export, copy and reload from left to right.
-Copy and reload remain frameless when disabled; their icons become muted instead
-of gaining a border. The icon targets keep the same size, and keyboard navigation
-follows the displayed order.
+Copy and reload keep a visible border in both enabled and disabled states; disabled
+icons and backgrounds become muted. The icon targets keep the same size, and
+keyboard navigation follows the displayed order.
 
 Notes are private by default. Allow in reports and Allow in AI context are explicit
 per-date choices; AI collection also respects the account's privacy settings.

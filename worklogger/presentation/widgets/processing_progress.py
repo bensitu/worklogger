@@ -27,7 +27,7 @@ class ProcessingProgress(QWidget):
         row.addWidget(self.bar)
         self.cancel_button = QToolButton()
         self.cancel_button.setObjectName("cancel_processing_button")
-        self.cancel_button.setProperty("variant", "ghost")
+        self.cancel_button.setProperty("variant", "outline")
         self.cancel_button.setFixedSize(32, 32)
         self.cancel_button.setAccessibleName(_("Cancel processing"))
         self.cancel_button.setToolTip(_("Cancel processing"))

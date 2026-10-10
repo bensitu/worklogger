@@ -300,7 +300,7 @@ class LoginDialog(AuthDialog):
             configure.setFixedSize(36, 36)
             configure.setToolTip(_("Configure sign-in") + " - " + button.text())
             configure.setAccessibleName(configure.toolTip())
-            configure.setProperty("variant", "ghost")
+            configure.setProperty("variant", "outline")
             set_button_icon(configure, "settings")
             configure.clicked.connect(lambda _checked=False, key=key: self.identity_configuration_requested.emit(key))
             row.addWidget(configure)

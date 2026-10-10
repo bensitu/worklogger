@@ -135,7 +135,7 @@ class IdentityDialog(QDialog):
         link_row.addWidget(self.provider_combo, 1)
         self.configure_button = QToolButton()
         self.configure_button.setObjectName("configure_identity_button")
-        self.configure_button.setProperty("variant", "ghost")
+        self.configure_button.setProperty("variant", "outline")
         self.configure_button.setFixedSize(36, 36)
         self.configure_button.setToolTip(_("Configure sign-in"))
         self.configure_button.setAccessibleName(_("Configure sign-in"))
