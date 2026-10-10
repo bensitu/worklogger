@@ -40,6 +40,7 @@ external SQLite clients still require SQLite's own locking protections.
 | `daily_notes` | Composite `(user_id, d)` primary key; independent daily note content |
 | `quick_logs` | Integer ID; user/date, optional start/end, description, creation timestamp |
 | `settings` | Composite `(user_id, key)` primary key; string value |
+| `background_images` | Optional account-owned raster bytes and format/dimension/frame metadata, enabled flag and opacity; deleted with the account |
 | `reports` | Integer ID; user, type, inclusive period bounds, Markdown content, first/last-save timestamps, revision and generation references |
 | `report_revisions` | Per-report revision key, saved content, timestamp and generation references; latest 50 versions retained |
 | `report_templates` | Integer ID and unique `(user_id, language, type)`; content and update timestamp |
@@ -90,6 +91,15 @@ the application version alone.
 | 10 | Add an optional display name independently of the existing login identifier |
 | 11 | Add optional projects and work items, record associations and label snapshots, and indexed context/date queries |
 | 12 | Add bounded reversible record snapshots independently of timer persistence |
+| 13 | Retain saved report revisions and generation references |
+| 14 | Add optional background media and preferences without changing existing records or settings |
+
+Migration 14 creates an empty `background_images` table. Existing accounts have no
+background, remain disabled, and use 50 percent image opacity by default. Media is
+stored as a bounded BLOB separately from ordinary settings, so full database backups
+include it without expanding settings reads. This optional media is private local
+data in the unencrypted database and its backups, not report or AI context. The
+existing transactional migration and pre-upgrade snapshot rules apply unchanged.
 
 Migration 9 leaves built-in classifications unchanged and initializes their
 snapshot columns to empty strings. Custom records use a `custom:` UUID identifier
