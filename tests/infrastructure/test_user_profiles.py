@@ -18,7 +18,6 @@ from worklogger.app.use_cases.reports import GenerateReportHandler, SaveReportHa
 from worklogger.app.use_cases.user_profile import UserProfileService
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
-from worklogger.infrastructure.database.migrations.runner import MIGRATION_MODULES
 from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteReportRepository
 from worklogger.infrastructure.security import PBKDF2PasswordHasher
 
@@ -28,13 +27,13 @@ class UserProfileTests(unittest.TestCase):
         self.directory = self.enterContext(tempfile.TemporaryDirectory())
         self.path = Path(self.directory) / "worklog.db"
         self.factory = SQLiteConnectionFactory(self.path)
-        MigrationRunner(self.factory, migration_modules=MIGRATION_MODULES[:9]).run_pending()
+        MigrationRunner(self.factory).run_pending()
         self.auth = SQLiteAuthRepository(self.factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
         self.registered = RegisterUserHandler(self.auth).handle(RegisterUserCommand("han_meimei", "synthetic-password")).value
         self.other = RegisterUserHandler(self.auth).handle(RegisterUserCommand("other_login", "other-password")).value.user
         with self.factory.connection() as connection:
             self.previous_users = [dict(row) for row in connection.execute("SELECT * FROM users ORDER BY id")]
-        self.assertEqual(MigrationRunner(self.factory).run_pending(), tuple(range(10, len(MIGRATION_MODULES) + 1)))
+        self.assertEqual(MigrationRunner(self.factory).run_pending(), ())
         self.profile = UserProfileService(user_id=self.registered.user.id, repository=self.auth)
 
     def test_migration_and_profile_changes_preserve_credentials_and_ownership(self):
@@ -98,15 +97,15 @@ class UserProfileTests(unittest.TestCase):
         self.assertEqual(reports.list_by_type(self.registered.user.id, "daily")[0].content, saved.content)
         self.assertTrue(saved.content.startswith("Mary:"))
 
-    def test_profile_migration_adds_only_the_name_and_retains_existing_values(self):
-        from worklogger.infrastructure.database.migrations.migration_010_user_display_names import up
+    def test_current_profile_retains_existing_values_across_repeated_startup(self):
         with self.factory.connection() as connection:
             users = [dict(row) for row in connection.execute("SELECT * FROM users ORDER BY id")]
         for previous, current in zip(self.previous_users, users):
-            self.assertEqual(current.pop("display_name"), "")
+            self.assertEqual(current["display_name"], "")
             self.assertEqual(current, previous)
         with self.factory.transaction() as connection:
             connection.execute("UPDATE users SET display_name='Mary' WHERE id=?", (self.registered.user.id,))
-            up(connection)
             self.assertEqual(connection.execute("SELECT display_name FROM users WHERE id=?", (self.registered.user.id,)).fetchone()[0], "Mary")
-        self.assertTrue(list(self.path.parent.glob(self.path.name + ".bak_upgrade_*")))
+        self.assertEqual(MigrationRunner(self.factory).run_pending(), ())
+        self.assertEqual(self.auth.get_by_id(self.registered.user.id).display_name, "Mary")
+        self.assertFalse(list(self.path.parent.glob(self.path.name + ".bak_upgrade_*")))

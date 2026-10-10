@@ -27,6 +27,10 @@ def display_error_code(code: str) -> str:
     """Translate known error codes without displaying raw exception text or logging previews."""
 
     match code:
+        case "database_version_unsupported" | "database_schema_unsupported" | "restore_schema_invalid":
+            return _("This database version or structure is not supported. Keep the original file and use a compatible version to export your data.")
+        case "database_foreign_key_invalid" | "username_normalization_conflict" | "identity_subject_ambiguous":
+            return _("The database contains conflicting account identifiers or record links. Keep the original file and resolve these conflicts on a copy.")
         case "record_batch_invalid":
             return _("Select between 1 and 250 distinct records and an available project context.")
         case "report_content_too_long":

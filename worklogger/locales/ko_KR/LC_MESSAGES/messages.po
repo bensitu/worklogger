@@ -1930,6 +1930,9 @@ msgstr "ID 또는 비밀번호가 올바르지 않습니다."
 msgid "The data directory is unavailable."
 msgstr "데이터 폴더를 사용할 수 없습니다."
 
+msgid "The database contains conflicting account identifiers or record links. Keep the original file and resolve these conflicts on a copy."
+msgstr "데이터베이스에 충돌하는 계정 식별자 또는 기록 연결이 있습니다. 원본 파일을 보존하고 복사본에서 충돌을 해결하세요."
+
 msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 msgstr "데이터베이스를 읽을 수 없습니다. 원본 파일은 보존되었습니다. 데이터베이스 복구 안내에 따라 검증된 백업을 복원하세요."
 
@@ -1998,6 +2001,9 @@ msgstr "현재 계정 | 최신 저장순"
 
 msgid "This authorization response is invalid. Return to WorkLogger."
 msgstr "이 인증 응답은 유효하지 않습니다. WorkLogger로 돌아가세요."
+
+msgid "This database version or structure is not supported. Keep the original file and use a compatible version to export your data."
+msgstr "이 데이터베이스 버전 또는 구조는 지원되지 않습니다. 원본 파일을 보존하고 호환되는 버전으로 데이터를 내보내세요."
 
 msgid "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
 msgstr "이전 공제 시간을 정수 분으로 표현할 수 없습니다. 원래 기록은 변경되지 않았습니다."

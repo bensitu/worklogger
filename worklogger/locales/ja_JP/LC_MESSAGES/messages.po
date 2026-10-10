@@ -1930,6 +1930,9 @@ msgstr "IDまたはパスワードが正しくありません。"
 msgid "The data directory is unavailable."
 msgstr "データフォルダーを利用できません。"
 
+msgid "The database contains conflicting account identifiers or record links. Keep the original file and resolve these conflicts on a copy."
+msgstr "データベースに競合するアカウント識別子または記録の関連付けがあります。元のファイルを保持し、コピー上で競合を解消してください。"
+
 msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 msgstr "データベースを読み込めませんでした。元のファイルは保持されています。データベースの復元手順に従って、検証済みのバックアップを復元してください。"
 
@@ -1998,6 +2001,9 @@ msgstr "このアカウント | 新しい保存順"
 
 msgid "This authorization response is invalid. Return to WorkLogger."
 msgstr "この認証応答は無効です。WorkLogger に戻ってください。"
+
+msgid "This database version or structure is not supported. Keep the original file and use a compatible version to export your data."
+msgstr "このデータベースのバージョンまたは構造はサポートされていません。元のファイルを保持し、互換性のあるバージョンでデータをエクスポートしてください。"
 
 msgid "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
 msgstr "この過去の控除は分単位で表せません。元の記録は変更されていません。"

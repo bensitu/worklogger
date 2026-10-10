@@ -24,6 +24,22 @@ single record's content. Explicit note-only rows still import memos. Replacing t
 records without a memo row preserves an existing independent memo. The six-column
 CSV contract is unchanged.
 
+## Schema Compatibility
+
+Current initialization builds the complete schema at version 15 rather than
+replaying development migrations 1-14. Released unversioned 3.x import is confined
+to one adapter verified against the v3.3.3 tag. Earlier development-v4 ledgers are
+rejected without conversion; complete latest ledger-14 databases preserve their
+data and receive only the current ledger entry. Read-only preflight rejects unknown
+or inconsistent structures before opening them for mutation.
+
+Structural validation checks columns, types, primary keys and foreign-key
+declarations even for an already applied ledger. Restore and conversion also check
+foreign-key rows. Conversion snapshots are taken while the writer lock is held,
+so another writer cannot change the source between backup and conversion.
+Released API address/model preferences are mapped, and local password availability
+follows the released nonempty-hash behavior rather than inferred recovery-key state.
+
 ## Naming Semantics
 
 SQL identifiers are storage contracts, not localized UI captions. Exact spelling

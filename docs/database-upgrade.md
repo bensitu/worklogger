@@ -2,87 +2,64 @@
 
 ## Supported Sources
 
-The current schema version is 10. The application supports the released 3.x
-multi-account SQLite layouts and existing versioned 4.0 databases. It preserves
-integer account IDs, password and recovery material, report content, previous
-quick logs, calendar events, settings, and stored identity metadata.
+Schema version 15 creates the complete current structure directly. It accepts the
+released unversioned 3.x layout verified against v3.3.3 and a complete current
+database with ledger 14 or 15. A complete current database without its ledger can
+be identified structurally. Earlier development-v4 versions are no longer
+automatically upgraded. Missing columns, primary keys or foreign-key declarations,
+unknown tables, executable schema objects and future ledgers are rejected.
 
-The ordered migration chain adds missing authentication fields, canonical account
-keys, independent daily notes, offset timestamp columns, and individually editable
-periods. Migration 8 also maps previous preference names without replacing a newer
-explicit preference. A recorded password-change requirement is retained and
-subsequently acknowledged through the current account field. Nullable previous work values receive
-their existing semantic defaults; old break deductions remain deductions rather
-than guessed rest periods.
+Released import preserves account IDs, credentials, roles, work and report content,
+quick entries, calendar events and provider metadata. It introduces canonical
+login keys, independent daily memos, individual time-entry identities and initial
+report versions. Display aliases start empty without affecting login IDs.
+Historical clock durations and break deductions are retained without guessed
+timezones or break periods.
 
-Migration 9 adds custom classification snapshots and the account-owned type catalog.
-Built-in records keep their stored meaning. Without a migration ledger, an already
-converted entry table is recognized structurally and is not rebuilt; entry IDs,
-revisions, capture identifiers, snapshots, and independent memos remain intact.
+Known released preferences map to current keys, including API address and model;
+existing current keys take precedence. API configuration is retained without
+automatically enabling paid external processing. OS keyring credentials and model
+files are not part of database transfer and may require configuration again.
+Normalized login-key collisions and ambiguous cross-account identities reject the
+whole conversion rather than merging accounts.
 
-Migration 10 adds an optional user display name with an empty default, preserving
-login IDs, credentials, roles, and record ownership. Existing display-name values
-are retained when recognizing a database without a version ledger. No alias is
-guessed from identity-provider metadata; users choose it in Account settings.
+## Startup and Snapshots
 
-Unknown versions, invalid foreign keys, executable stored schema objects, and
-canonical account-name conflicts stop the upgrade. Accounts are not merged,
-passwords are not reset, and incompatible identity links are not selected
-arbitrarily. Existing broker and issuer metadata remains in the database.
+Current startup checks the actual structure even when no conversion is pending.
+It does not replay development migrations or create unnecessary upgrade backups.
+Supported populated sources receive one private `.bak_upgrade_*` snapshot while
+the writer lock prevents concurrent changes. SQLite's backup API includes committed
+WAL data. Conversion and the ledger update commit together; failures leave source
+data available.
 
-## Automatic Startup
-
-The runner reads the applied-version set and returns immediately when no upgrade
-is pending. It does not run earlier preparation hooks, scan their data, or create
-new compatibility backups on an updated database.
-
-A populated database with pending transformations receives one private complete
-`worklog.db.bak_upgrade_<timestamp>_<identifier>` snapshot before any schema change.
-SQLite's backup API includes committed WAL data. Snapshot integrity is checked,
-and all transformations and version-history writes share one transaction. A
-failure retains the original schema and data; the snapshot remains available.
-
-Frozen installations can adopt an existing database beside the executable when
-the new user-data destination does not exist. The copy is validated and includes
-WAL data. Use the explicit tool when installing into a different directory or
-when choosing a source manually.
+Frozen installations can adopt a supported database beside the executable when
+the new user-data destination does not exist. Unsupported sources are retained,
+not silently converted or reset.
 
 ## Explicit Upgrade Tool
 
-Run from the project root:
+Close the old application first and run from the project root:
 
 ```powershell
 python scripts/upgrade_database.py --source "D:\OldWorkLogger\worklog.db" --destination "D:\UpdatedWorkLogger\worklog.db"
 ```
 
-The destination must not exist. The source is opened read-only and remains
-unchanged. Migration runs on an unpublished private copy. Only a complete,
-integrity-checked result is published, without overwriting a destination created
-by another process. The JSON result contains applied version numbers and record
-counts, not usernames, work descriptions, passwords, or credentials.
+The destination must not exist. The source is read-only and remains unchanged.
+Conversion runs on an unpublished copy, and only an integrity-checked result is
+published. Output contains schema versions and record counts, not credentials
+or work descriptions. Committed WAL data is included, not uncommitted changes.
 
-Close the old application first. Committed WAL data is included; an uncommitted
-transaction is not part of the snapshot. Confirm the new application opens the
-result successfully before removing any original installation or backup.
-
-## Templates and Credentials
-
-Previous JSON templates were shared files, without an owning account or language.
-Import a selected template with explicit choices:
+Previous JSON templates can be imported with explicit ownership and language:
 
 ```powershell
 python scripts/upgrade_database.py --source "D:\OldWorkLogger\worklog.db" --destination "D:\UpdatedWorkLogger\worklog.db" --template-file "D:\OldWorkLogger\templates\custom\Personal.json" --template-user "ExistingUser" --template-language "en_US"
 ```
 
-The file is bounded to 1 MiB and must contain a supported report type and content.
-An existing template for the selected account/language/type is not silently
-replaced. Other template files, model files, and OS credentials are not copied or
-deleted; retain the original folders. Database upgrade is not a model download or
-a secure cross-machine credential-transfer operation.
+Templates are bounded to 1 MiB and must use a supported report type. An existing
+account/language/type template is not silently replaced. Original template and
+model folders remain unchanged.
 
-Earlier `enc1:` Fernet values and previous authenticated settings values are read
-compatibly and rewritten only after successful authenticated decryption. The
-previous random machine key can be read from its secure OS backend or original
-key file; the older deterministic-key format remains read-compatible. Unknown or
-damaged ciphertext is retained. Never paste keyring values, machine keys, recovery
-keys, or API credentials into diagnostic output.
+Released `enc1:` Fernet credentials can be decrypted only with their original
+machine key and are rewritten securely after successful authentication.
+Unknown or damaged values are retained for deliberate re-entry. Never include
+machine keys, API credentials, recovery keys or OS keyring values in diagnostics.

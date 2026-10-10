@@ -1,8 +1,6 @@
 """Supported stored tables shared by upgrade and recovery adapters."""
 
-PREVIOUS_ACTIVITY_TABLE = "audit_events"
-SUPPORTED_TABLES = frozenset({
-    "users", "login_attempts", "worklog", "quick_logs", "settings", "reports", "background_images",
-    "report_templates", "report_revisions", "calendar_events", "external_identities", "oauth_identities",
-    "activity_events", "schema_migrations", "daily_notes", "work_types", "projects", "work_items", "entry_changes", PREVIOUS_ACTIVITY_TABLE,
-})
+from worklogger.infrastructure.database.current_schema import TABLE_STATEMENTS
+from worklogger.infrastructure.database.released_import import RELEASED_TABLES
+
+SUPPORTED_TABLES = frozenset(TABLE_STATEMENTS) | RELEASED_TABLES

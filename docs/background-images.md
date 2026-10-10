@@ -19,7 +19,7 @@ decoded pixels across an animation. Every frame is decoded before committing, wi
 bounded reads and no external URLs or SVG execution. Failed validation or storage
 does not replace the existing media.
 
-Migration 14 adds one optional row per account. Source filenames and paths are not
+The current schema includes one optional background row per account. Source filenames and paths are not
 stored as separate fields, but encoded bytes may retain embedded image metadata.
 Media resides in the unencrypted database and its backups. Bytes and preferences
 commit transactionally, replacements retain current

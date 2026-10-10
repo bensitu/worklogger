@@ -15,7 +15,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtCore import QSettings, QTimer
 from PySide6.QtWidgets import QMessageBox
 
-from tests.infrastructure.test_auth_schema_migration import legacy_database
+from tests.infrastructure.test_auth_schema_migration import released_database
 from worklogger.bootstrap import (
     DesktopRuntimeConfig,
     build_authenticated_desktop_runtime,
@@ -301,7 +301,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
     def test_legacy_admin_can_authenticate_after_startup_migration(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "worklog.db"
-            _, _, admin_id = legacy_database(path)
+            _, _, admin_id = released_database(path)
 
             class LegacyAdminAuthenticator:
                 def __init__(self, model):

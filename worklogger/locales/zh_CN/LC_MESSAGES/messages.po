@@ -1930,6 +1930,9 @@ msgstr "ID 或密码不正确。"
 msgid "The data directory is unavailable."
 msgstr "数据目录不可用。"
 
+msgid "The database contains conflicting account identifiers or record links. Keep the original file and resolve these conflicts on a copy."
+msgstr "数据库包含冲突的账户标识或记录关联。请保留原文件，在副本中解决这些冲突。"
+
 msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 msgstr "无法读取数据库，原始文件已保留。请按照数据库恢复说明恢复经过验证的备份。"
 
@@ -1998,6 +2001,9 @@ msgstr "本账户 | 按保存时间倒序"
 
 msgid "This authorization response is invalid. Return to WorkLogger."
 msgstr "此授权响应无效。请返回 WorkLogger。"
+
+msgid "This database version or structure is not supported. Keep the original file and use a compatible version to export your data."
+msgstr "不支持此数据库版本或结构。请保留原文件，使用兼容版本导出数据。"
 
 msgid "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
 msgstr "这项历史扣除无法用整分钟表示，原记录未改变。"

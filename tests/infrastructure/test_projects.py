@@ -11,7 +11,6 @@ from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.worklog.search import EntryFilter
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
-from worklogger.infrastructure.database.migrations.runner import MIGRATION_MODULES
 from worklogger.infrastructure.repositories.auth_sqlite import SQLiteAuthRepository
 from worklogger.infrastructure.repositories.project_sqlite import SQLiteProjectRepository
 from worklogger.infrastructure.repositories.settings_sqlite import SQLiteSettingsRepository
@@ -222,21 +221,21 @@ class ProjectTests(unittest.TestCase):
         self.assertTrue(handler.apply(preview).ok)
         self.assertEqual(self.records.list_for_day(self.other.id, day)[0].worked_hours(), 2)
 
-    def test_context_upgrade_preserves_existing_data_and_repeated_startup(self):
+    def test_current_context_survives_repeated_startup_without_conversion(self):
         with tempfile.TemporaryDirectory() as directory:
             factory = SQLiteConnectionFactory(Path(directory) / "previous.db")
-            MigrationRunner(factory, migration_modules=MIGRATION_MODULES[:10]).run_pending()
+            MigrationRunner(factory).run_pending()
             auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
             user = auth.create_user("sample", "synthetic-password", recovery_key=None, is_admin=False)
             repository = SQLiteWorkLogRepository(factory)
             original = repository.save_entry(WorkLog(user.id, date(2026, 10, 9), "22:00", "06:00", 1, "Original"))
-            self.assertEqual(MigrationRunner(factory).run_pending(), tuple(range(11, len(MIGRATION_MODULES) + 1)))
+            self.assertEqual(MigrationRunner(factory).run_pending(), ())
             loaded = SQLiteWorkLogRepository(factory).get_entry(user.id, original.id)
             self.assertEqual(loaded, original)
             self.assertEqual(loaded.worked_hours(), 7)
             self.assertEqual(loaded.context, WorkContext())
             self.assertEqual(MigrationRunner(factory).run_pending(), ())
-            self.assertEqual(len(tuple(Path(directory).glob("*.bak_upgrade_*"))), 1)
+            self.assertFalse(tuple(Path(directory).glob("*.bak_upgrade_*")))
 
     def test_record_search_is_scoped_filtered_literal_and_stably_paged(self):
         project = self.projects.save_project("Research").value

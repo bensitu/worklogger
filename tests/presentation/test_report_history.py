@@ -206,20 +206,18 @@ class ReportHistoryTests(unittest.TestCase):
         self.assertEqual(self.model.load("daily", self.day).value, before)
 
     def test_existing_reports_migrate_with_recoverable_content(self):
-        from worklogger.infrastructure.database.migrations.runner import MIGRATION_MODULES
+        from tests.infrastructure.schema_samples import create_released_database
         path = Path(self.factory.database_path).parent / "existing.db"
         factory = SQLiteConnectionFactory(path)
-        MigrationRunner(factory, MIGRATION_MODULES[:12]).run_pending()
-        auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
-        user = auth.create_user("migration.user", "synthetic-password", recovery_key=None, is_admin=False)
+        _hasher, user_id = create_released_database(factory)
         with factory.transaction(write=True) as connection:
             connection.execute("INSERT INTO reports(user_id,type,period_start,period_end,content,created_at) VALUES(?,'daily',?,?,?,?)",
-                (user.id, self.day.isoformat(), self.day.isoformat(), "Existing content", self.stamp.isoformat()))
-        self.assertEqual(MigrationRunner(factory).run_pending(), (13,))
+                (user_id, self.day.isoformat(), self.day.isoformat(), "Existing content", self.stamp.isoformat()))
+        self.assertEqual(MigrationRunner(factory).run_pending(), (15,))
         self.assertEqual(MigrationRunner(factory).run_pending(), ())
         repository = SQLiteReportRepository(factory)
-        report = repository.get_for_period(user.id, "daily", self.day, self.day)
-        self.assertEqual(repository.list_revisions(user.id, report.id)[0].content, "Existing content")
+        report = repository.get_for_period(user_id, "daily", self.day, self.day)
+        self.assertEqual(repository.list_revisions(user_id, report.id)[0].content, "Existing content")
         self.assertEqual(report.provenance.generated_at, "")
         self.assertTrue(list(path.parent.glob("*upgrade*")))
 

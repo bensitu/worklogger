@@ -1,109 +1,80 @@
-"""Idempotent SQLite migration runner."""
+"""Transactional current-schema initialization and released database import."""
 
-from __future__ import annotations
-
-from dataclasses import dataclass
+import sqlite3
+from contextlib import closing
 from importlib import import_module
-from types import ModuleType
-from typing import Any
+from pathlib import Path
 
-from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
+from worklogger.infrastructure.database.current_schema import (
+    CURRENT_SCHEMA_VERSION,
+    PREVIOUS_CURRENT_VERSION,
+    validate_current_schema,
+)
 from worklogger.infrastructure.database.migrations.snapshot import save_snapshot
-
-MIGRATION_MODULES = (
-    "worklogger.infrastructure.database.migrations.migration_001_initial_schema",
-    "worklogger.infrastructure.database.migrations.migration_002_auth_columns",
-    "worklogger.infrastructure.database.migrations.migration_003_activity_events",
-    "worklogger.infrastructure.database.migrations.migration_004_usernames",
-    "worklogger.infrastructure.database.migrations.migration_005_daily_notes",
-    "worklogger.infrastructure.database.migrations.migration_006_worklog_timestamps",
-    "worklogger.infrastructure.database.migrations.migration_007_worklog_entries",
-    "worklogger.infrastructure.database.migrations.migration_008_account_preferences",
-    "worklogger.infrastructure.database.migrations.migration_009_custom_work_types",
-    "worklogger.infrastructure.database.migrations.migration_010_user_display_names",
-    "worklogger.infrastructure.database.migrations.migration_011_work_context",
-    "worklogger.infrastructure.database.migrations.migration_012_entry_changes",
-    "worklogger.infrastructure.database.migrations.migration_013_report_revisions",
-    "worklogger.infrastructure.database.migrations.migration_014_background_images",
+from worklogger.infrastructure.database.released_import import (
+    import_released_schema,
+    validate_released_schema,
 )
 
+MIGRATION_MODULES = ("worklogger.infrastructure.database.migrations.migration_015_current_schema",)
+MIGRATION_VERSIONS = (CURRENT_SCHEMA_VERSION,)
+SUPPORTED_VERSIONS = frozenset(range(1, CURRENT_SCHEMA_VERSION + 1))
 
-@dataclass(frozen=True)
-class Migration:
-    version: int
-    description: str
-    module: ModuleType
+
+def database_kind(connection, *, check_data=True):
+    objects = connection.execute("SELECT type,name FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'").fetchall()
+    if any(row[0] in {"view", "trigger"} for row in objects):
+        raise ValueError("database_schema_unsupported")
+    tables = {row[1] for row in objects if row[0] == "table"}
+    if not tables:
+        return "empty"
+    if "schema_migrations" in tables:
+        versions = {row[0] for row in connection.execute("SELECT version FROM schema_migrations")}
+        if versions - SUPPORTED_VERSIONS or not versions & {PREVIOUS_CURRENT_VERSION, CURRENT_SCHEMA_VERSION}:
+            raise ValueError("database_version_unsupported")
+        validate_current_schema(connection, check_data=check_data)
+        return "current" if CURRENT_SCHEMA_VERSION in versions else "current_previous_ledger"
+    try:
+        validate_current_schema(connection, ledger_required=False, check_data=check_data)
+    except ValueError:
+        validate_released_schema(connection, tables)
+        return "released"
+    return "current_unversioned"
 
 
 class MigrationRunner:
-    def __init__(
-        self,
-        connection_factory: SQLiteConnectionFactory,
-        migration_modules: tuple[str, ...] = MIGRATION_MODULES,
-    ) -> None:
+    def __init__(self, connection_factory):
         self._connection_factory = connection_factory
-        self._migration_modules = migration_modules
 
-    def run_pending(self) -> tuple[int, ...]:
-        migrations = self._discover_migrations()
-        applied_now: list[int] = []
+    def run_pending(self):
         with self._connection_factory.write_lock:
-            with self._connection_factory.connection() as connection:
-                exists = connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='schema_migrations'").fetchone()
-                applied = self._applied_versions(connection) if exists else set()
-                if applied - {migration.version for migration in migrations}:
-                    raise ValueError("database_version_unsupported")
-                pending = tuple(migration for migration in migrations if migration.version not in applied)
-                if not pending:
+            path = Path(self._connection_factory.database_path)
+            if path.is_file() and path.stat().st_size:
+                try:
+                    with closing(sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True)) as source:
+                        kind = database_kind(source, check_data=False)
+                    if kind == "current":
+                        with self._connection_factory.connection() as connection:
+                            if database_kind(connection, check_data=False) == "current":
+                                return ()
+                except sqlite3.DatabaseError:
+                    if not self._connection_factory.recover_corrupt:
+                        raise
+            with self._connection_factory.transaction() as connection:
+                kind = database_kind(connection, check_data=False)
+                if kind == "current":
                     return ()
-                objects = connection.execute("SELECT type,name FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'").fetchall()
-                if any(row[0] in {"trigger", "view"} for row in objects):
-                    raise ValueError("database_schema_unsupported")
-                populated = any(connection.execute('SELECT 1 FROM "' + row[1].replace('"', '""') + '" LIMIT 1').fetchone()
-                                for row in objects if row[0] == "table" and row[1] != "schema_migrations")
-                if populated:
-                    save_snapshot(connection, self._connection_factory.database_path, "upgrade")
-            with self._connection_factory.transaction(write=True) as connection:
-                self._ensure_schema_migrations(connection)
-                applied = self._applied_versions(connection)
-                for migration in migrations:
-                    if migration.version in applied:
-                        continue
-                    migration.module.up(connection)
-                    connection.execute(
-                        "INSERT INTO schema_migrations(version, description, applied_at) "
-                        "VALUES(?, ?, datetime('now'))",
-                        (migration.version, migration.description),
-                    )
-                    applied_now.append(migration.version)
-                if connection.execute("PRAGMA foreign_key_check").fetchone() is not None:
-                    raise ValueError("database_foreign_key_invalid")
-        return tuple(applied_now)
-
-    def _discover_migrations(self) -> tuple[Migration, ...]:
-        migrations: list[Migration] = []
-        for module_name in self._migration_modules:
-            module = import_module(module_name)
-            version = int(getattr(module, "VERSION"))
-            description = str(getattr(module, "DESCRIPTION", module_name.rsplit(".", 1)[-1]))
-            migrations.append(Migration(version, description, module))
-        if len({migration.version for migration in migrations}) != len(migrations):
-            raise ValueError("database_migration_duplicate")
-        return tuple(sorted(migrations, key=lambda migration: migration.version))
-
-    @staticmethod
-    def _ensure_schema_migrations(connection: Any) -> None:
-        connection.execute(
-            """
-            CREATE TABLE IF NOT EXISTS schema_migrations(
-                version INTEGER PRIMARY KEY,
-                description TEXT NOT NULL,
-                applied_at TEXT NOT NULL
-            )
-            """
-        )
-
-    @staticmethod
-    def _applied_versions(connection: Any) -> set[int]:
-        rows = connection.execute("SELECT version FROM schema_migrations").fetchall()
-        return {int(row[0]) for row in rows}
+                if self._connection_factory.database_path != ":memory:" and kind != "empty" and any(connection.execute(f'SELECT 1 FROM "{row[0]}" LIMIT 1').fetchone()
+                        for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name<>'schema_migrations'")):
+                    # The writer lock prevents changes while a separate reader snapshots committed data.
+                    with closing(sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True)) as source:
+                        save_snapshot(source, self._connection_factory.database_path, "upgrade")
+                if kind == "released":
+                    import_released_schema(connection)
+                for module_name in MIGRATION_MODULES:
+                    migration = import_module(module_name)
+                    migration.up(connection)
+                    connection.execute("INSERT INTO schema_migrations(version,description,applied_at) VALUES(?,?,datetime('now'))",
+                                       (migration.VERSION, migration.DESCRIPTION))
+                validate_current_schema(connection)
+        return MIGRATION_VERSIONS

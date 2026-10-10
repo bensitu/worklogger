@@ -1928,6 +1928,9 @@ msgstr ""
 msgid "The data directory is unavailable."
 msgstr ""
 
+msgid "The database contains conflicting account identifiers or record links. Keep the original file and resolve these conflicts on a copy."
+msgstr ""
+
 msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 msgstr ""
 
@@ -1995,6 +1998,9 @@ msgid "This account | Newest saved first"
 msgstr ""
 
 msgid "This authorization response is invalid. Return to WorkLogger."
+msgstr ""
+
+msgid "This database version or structure is not supported. Keep the original file and use a compatible version to export your data."
 msgstr ""
 
 msgid "This historical deduction cannot be represented in whole minutes. The original record is unchanged."

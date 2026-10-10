@@ -1,273 +1,135 @@
 # Database and Compatibility
 
-Collection readers omit records with invalid dates or numeric fields and log only
-the count, not their contents. Invalid optional timestamps are presented as absent.
-The original rows remain unchanged so they can be recovered from a retained copy.
-Single-record and storage-operation failures still propagate to the application.
-Quick-log updates and deletions require an existing row belonging to the account;
-missing records are not reported as successful changes.
-Database backups exclude proxy passwords; re-enter them in the system credential
-store after restoring on another machine. Encrypted fallback credentials require
-their original private key, and Windows-protected keys require the same OS account.
+## Supported Structure
 
-## Ownership and Connections
+The current schema version is 15, independently of the application version.
+New databases create the complete current structure directly. Development
+migrations 1 through 14 are no longer replayed or bundled.
 
-The database is local SQLite. Most business tables include `user_id`, and their
-repositories query by the authenticated account. User-owned foreign keys cascade
-on account deletion. The activity table intentionally allows an absent user ID
-and has no user foreign key.
+Supported inputs are an empty database, the released unversioned 3.x layout
+verified against v3.3.3, and the complete latest structure carrying schema ledger
+14 or 15. A complete current database without its ledger can receive a new ledger
+without rewriting records. Earlier development-v4 ledgers, incomplete current
+schemas, unknown tables, views, triggers and future versions are rejected before
+opening the source for mutation. The original is not automatically repaired,
+merged, reset or downgraded.
 
-`SQLiteConnectionFactory` enables foreign keys on each connection, uses a
-5,000 ms busy timeout, and configures file databases with WAL and
-`synchronous=NORMAL`. Write transactions use `BEGIN IMMEDIATE` and an instance
-`RLock`. Connections are short-lived and operations using the same factory are
-serialized. Integrity is checked once on the first successful open. The desktop
-also holds a database-specific process lock throughout authentication and use;
-external SQLite clients still require SQLite's own locking protections.
+The canonical definition is [current_schema.py](../worklogger/infrastructure/database/current_schema.py).
+Columns, declared types, primary keys and foreign-key declarations are checked
+against that definition even when no conversion is pending. Existing optional
+provider metadata and the archived `oauth_identities` table can remain. Routine
+startup performs structural checks without rescanning all foreign-key rows.
+Import, restore and post-conversion validation also check stored foreign-key
+relationships. SQLite integrity checks remain part of connection preparation.
 
-## Tables
+## Ownership and Naming
 
-| Table | Key and purpose |
+The database is local SQLite. Account-owned foreign keys cascade on account
+deletion. Activity events deliberately permit an absent user reference; deleting
+an account clears that reference. Authentication queries and current writes use
+the account identifier, not the display alias.
+
+| Table or column | Current meaning |
 | --- | --- |
-| `schema_migrations` | `version` primary key; description and applied timestamp |
-| `users` | Integer ID, unique login username, optional display name, password/recovery hashes and salts, administrator and password-change flags, remembered-token hash/expiry, timestamps |
-| `login_attempts` | Username primary key, failure count, lock expiry, last failure |
-| `worklog` | Integer entry ID; user/date, start/end, offset-aware timestamps, historical break deduction, independent content, work type, revision and capture identifier |
-| `work_types` | Account-owned custom classification IDs, normalized unique active names, accounting category, revision and archived flag |
-| `projects` | Account-owned project IDs, name/code, normalized unique active name, revision and archived flag |
-| `work_items` | Account-owned project-specific work items, title/source URL, completion, revision and archived flag |
-| `entry_changes` | Account-owned before/after snapshots and expected undo state; at most 50 changes with a 30-day undo window |
-| `daily_notes` | Composite `(user_id, d)` primary key; independent daily note content |
-| `quick_logs` | Integer ID; user/date, optional start/end, description, creation timestamp |
-| `settings` | Composite `(user_id, key)` primary key; string value |
-| `background_images` | Optional account-owned raster bytes and format/dimension/frame metadata, enabled flag and opacity; deleted with the account |
-| `reports` | Integer ID; user, type, inclusive period bounds, Markdown content, first/last-save timestamps, revision and generation references |
-| `report_revisions` | Per-report revision key, saved content, timestamp and generation references; latest 50 versions retained |
-| `report_templates` | Integer ID and unique `(user_id, language, type)`; content and update timestamp |
-| `calendar_events` | Integer ID; user/date, optional times, summary, description, location, all-day flag, source filename |
-| `external_identities` | Integer ID, user, provider/subject, email/display name, timestamps; unique `(provider, subject)` |
-| `activity_events` | Integer ID, optional user, event type, JSON details, creation timestamp |
+| `schema_migrations` | Applied schema versions, descriptions and timestamps |
+| `users.username` / `username_key` | Login ID and canonical lookup key |
+| `users.display_name` | Editable alias, independent of login and ownership |
+| `worklog` | Independently editable time records with IDs and revisions |
+| `worklog.d` / `start` / `end` | Record date and local clock boundaries |
+| `worklog.note` | Time-record content, not the independent daily memo |
+| `worklog.break` | Historical deducted hours, not a counted break record |
+| `worklog.started_at` / `ended_at` | Captured offset-aware boundaries |
+| `work_type_label` / `work_type_category` | Historical custom type and accounting snapshots |
+| `daily_notes.content` | Independent account/date memo |
+| `quick_logs` | Retained historical quick entries, transferable into memos |
+| `settings` | Account/key string values |
+| `work_types` | Editable Work/Break/Leave classifications |
+| `projects` / `work_items` | Optional account-owned context |
+| `entry_changes` | Reversible before/after/expected record snapshots |
+| `reports` / `report_revisions` | Saved reports and their individual versions |
+| `report_templates` | Templates owned by account, language and report type |
+| `calendar_events` | Imported calendar events, independently stored |
+| `external_identities` | Account-owned provider identities and issuer metadata |
+| `activity_events` | Optional activity records, not a complete action history |
+| `background_images` | Optional raster bytes and opacity, disabled in the desktop configuration |
 
-Initial tables are defined in
-[the initial schema](../worklogger/infrastructure/database/migrations/migration_001_initial_schema.py);
-the current work-log definition is in
-[the entry migration](../worklogger/infrastructure/database/migrations/migration_007_worklog_entries.py).
-Dates are ISO-formatted text; work times are normalized `HH:MM`; breaks are stored
-in hours. Daily notes live in `daily_notes`; time-entry content is stored separately
-in `worklog.note`. Multiple entries may belong to the same account and date.
-Collection reads return daily summaries, while editing and exports use individual
-entries. The compatibility daily-save API refuses to replace a multi-entry day.
+SQL names are stable storage contracts, not localized captions. Dates use ISO
+text, clock fields use `HH:MM`, and durations are hours. Daily collection readers
+aggregate individual entries; editors and exports retain each entry's identity.
 
-Saving a new report inserts a row. Updating a saved report replaces its content
-by ID, with account, type, and period checks. Its ID and creation timestamp are
-preserved. A missing or mismatched ID is rejected rather than creating a new row.
-Report deletion is scoped to the account and saved ID. Desktop requests also include
-the previously loaded content, checked atomically with deletion to reject stale
-requests without removing a report that another operation changed.
+## Released Database Import
 
-Indexes support per-account/date access, report period lookup, template language
-lookup, remembered tokens, identity ownership, and activity time ordering.
-The standard authentication composition does not currently write every action to
-the activity repository; the table is not a complete history of user operations.
+The single released-import adapter renames `salt` to `password_salt`, establishes
+canonical login keys and a separate display-name field, and converts daily work
+rows into individual entries. User IDs, credentials, roles, records, report IDs,
+calendar events, quick entries and provider metadata are preserved. Display names
+start empty; no name is inferred from an identity provider.
 
-## Migrations
+Existing clock-only durations remain wall-clock durations because their original
+timezone is unknown. Historical deducted breaks are preserved, not replaced with
+invented break periods. Old daily note text is retained in independent memos;
+meaningful work and leave rows remain. Note-only dates do not acquire empty time
+records. Existing reports receive an initial recoverable version with unavailable
+generation references rather than invented source history.
 
-`MigrationRunner` imports an explicit ordered module list, identifies pending
-versions, and records applied versions in `schema_migrations`. Re-running against an updated
-database applies no additional versions. Do not infer schema compatibility from
-the application version alone.
+Known released setting names are mapped once, including language, mode, hours,
+AI privacy, API address and model. A newer explicit value takes precedence.
+Password-change requirements are retained. Local password availability follows
+the released version's nonempty password-hash rule; a missing recovery key alone
+does not disable login. Unknown archived settings remain stored.
 
-| Version | Operation |
-| --- | --- |
-| 1 | Create the application tables and indexes when absent |
-| 2 | Normalize older authentication salt naming and add the required-password-change field |
-| 3 | Normalize activity-event table/index names while preserving identifiers and content |
-| 4 | Add a unique NFKC/casefold account key and explicit local-password availability |
-| 5 | Copy existing notes to independent storage and remove note-only empty work rows |
-| 6 | Add optional offset-aware start/end timestamps, leaving existing clock-only records unchanged |
-| 7 | Replace the daily primary key with entry IDs, preserve historical content and break deductions, add date/capture indexes and optimistic revisions, and retain previous automatic drafts for conversion |
-| 8 | Complete released account fields, map older preferences, retain password-change requirements and identity metadata, and index cross-account settings lookups |
-| 9 | Add custom type name/category snapshots to work entries, an account-owned type catalog, and an indexed report-date range lookup |
-| 10 | Add an optional display name independently of the existing login identifier |
-| 11 | Add optional projects and work items, record associations and label snapshots, and indexed context/date queries |
-| 12 | Add bounded reversible record snapshots independently of timer persistence |
-| 13 | Retain saved report revisions and generation references |
-| 14 | Add optional background media and preferences without changing existing records or settings |
+The last complete development ledger (14) receives only the new current-schema
+ledger entry after validation. Names, IDs, timestamps, revisions, record snapshots,
+memos, custom types, contexts and background bytes are not rewritten. Earlier
+development-v4 layouts and their automatic-recording draft conversion are not
+supported upgrade inputs.
 
-Migration 14 creates an empty `background_images` table. Existing accounts have no
-background, remain disabled, and use 50 percent image opacity by default. Media is
-stored as a bounded BLOB separately from ordinary settings, so full database backups
-include it without expanding settings reads. This optional media is private local
-data in the unencrypted database and its backups, not report or AI context. The
-existing transactional migration and pre-upgrade snapshot rules apply unchanged.
+## Transactions and Recovery
 
-Migration 9 leaves built-in classifications unchanged and initializes their
-snapshot columns to empty strings. Custom records use a `custom:` UUID identifier
-with a saved name and Work/Break/Leave category. Historical accounting uses these
-columns, not a join to the editable catalog. Catalog edits use revision checks;
-archiving hides a type from new entries without deleting its historical snapshots.
+`SQLiteConnectionFactory` enables foreign keys, uses a 5,000 ms busy timeout,
+WAL and `synchronous=NORMAL`. Connections are short-lived; writes share the
+factory's reentrant lock and use `BEGIN IMMEDIATE`. The desktop also holds a
+database-specific process lock. External clients must still honor SQLite locking.
 
-Migration 10 adds `users.display_name` as non-null text with an empty default.
-An existing display-name column is retained. The login username/key, user ID,
-credentials, roles, tokens, and account-owned records are unchanged. Empty display
-names fall back to the login ID. Names are not unique, have an 80-character limit,
-and exclude control/format/surrogate characters. Changes use an account-scoped
-transaction and the previously loaded value to reject conflicting edits.
+Before converting a populated supported source, the runner takes the writer lock
+and creates one private complete `.bak_upgrade_*` snapshot through a separate
+read-only connection. It includes committed WAL data and checks integrity before
+any conversion. Schema changes and ledger updates commit together. Backup or
+conversion failure preserves the original schema and data. Fresh and already
+current databases do not accumulate compatibility backups.
 
-Project associations are optional. Migration 11 leaves old records unclassified
-without changing their IDs, timestamps, deductions, or content. Project and work-item
-updates use revisions; archival preserves records and labels. Writes verify account
-ownership and the work item's project inside the record transaction. Existing
-associations and captured timers can finish or be edited after archival; new
-associations cannot select archived context. A timer preserves its labels across
-restart and catalog changes. CSV carries labels without cross-database foreign IDs.
+Record creation, editing, deletion, splitting, merging, associations, historical
+break placement and undo use atomic transactions with revision and overlap checks.
+The latest 50 undo snapshots are retained for 30 days. Undo compares the expected
+current rows; it does not restart a timer. CSV replacement and whole-database
+restore are not covered by record undo. Single-record CSV imports do not create
+or overwrite independent memos unless a note-only row is present.
 
-The runner creates one complete private SQLite snapshot before converting populated
-tables, rather than a separate copy for each migration. Table replacement and settings-key conversion are transactional. Existing
-timestamps and break deductions are copied without guessing when a break occurred.
-
-Individual creates, edits, deletions, splits, merges and explicit historical-break
-conversion save reversible snapshots in the same transaction. Undo validates the
-latest change's expected rows and account, restores stable IDs with newer revisions,
-and checks overlap before committing. Original before/after snapshots stay unchanged;
-expected undo state advances when compensating changes increase revisions. No timer
-is restarted. Interval transformations and undo require idle recording. CSV date
-replacement and whole-database restore are not reversible through this history.
-Snapshots are private application data in the unencrypted database and its backups;
-they are not a complete activity log or proof that recorded work occurred.
-Expired snapshots are ineligible for undo immediately and are removed on the next
-record mutation; retained backups may still contain them.
-Daily notes remain independent. The new timer service converts the previous account
-draft on first use; malformed state remains available for deliberate recovery.
-
-New manual and automatic entries use zero legacy break deduction. Breaks are
-independent `break` entries and contribute no worked or leave hours. Entry updates
-and deletions require the account, ID, and revision. Overlap checks include adjacent
-dates and the active timer, inside the write transaction. Automatic completion and
-the corresponding timer-state change commit together. Capture identifiers prevent
-duplicate insertion of the same automatic period. Imported calendar-event deletion
-checks account ownership and the complete expected row before removing it.
-The fixed-duration break shortcut writes its complete period immediately and
-checks the expected absence of an active timer in the same transaction. A timer
-created by another application instance or a conflicting period rolls back the
-write. It requires no schema or settings-format change.
-Shortcut breaks use a `fixed-break:` capture-ID prefix. A confirmed early Start
-updates that break with an expected revision and creates the timer in one
-transaction. If the click coincides with the break's start, deletion and timer
-creation commit together instead. Failures roll back both changes.
-
-Migration 6 creates a private pre-change snapshot when existing work rows are
-present. New desktop entries use the system's named timezone; automatic entries
-retain their captured offsets. Duration is measured in UTC. Editing only a note or
-break preserves timestamps. Changing start/end times resolves them in the current
-system zone. Ambiguous manual times use the first occurrence; nonexistent local
-times are rejected. Existing clock-only rows retain their prior wall-clock duration
-because no original timezone can be reconstructed reliably.
-
-The initial definition uses current names for new databases. Migration 3 handles
-previous layouts, including a database without a migration ledger. Compatibility
-identifiers are confined to migration code and fixtures that exercise old files.
-
-### Activity Storage Compatibility
-
-Before changing an older activity table, preparation uses SQLite's backup API to
-create `worklog.db.bak_upgrade_<UTC timestamp>_<unique identifier>` beside the
-database. Committed WAL content is included. If backup creation fails, migration
-does not proceed.
-
-The migration renames the existing table and recreates the current index, retaining
-row IDs, timestamps, JSON details, optional user references, and the automatic ID
-sequence. An empty current table created during initialization can be replaced by
-the existing populated table. An empty previous table can be removed when the
-current table already contains data.
-
-If both tables contain records, migration stops with
-`activity_event_table_conflict`. It does not guess how to merge records or renumber
-IDs. Preserve the original and backup, and resolve the duplicate storage on a copy.
-Do not repeatedly retry against the only copy of important data.
-
-Authentication compatibility uses the same `worklog.db.bak_upgrade_*` snapshot
-before changing an older credential layout. Neither migration resets passwords or edits
-working-hour records. New databases do not need these compatibility backups.
-
-Account-key migration shares the private upgrade snapshot
-before changing an existing account table. Display names and integer user IDs
-remain unchanged. A canonical-name collision stops the entire transaction with
-`username_normalization_conflict`; accounts are never merged or renamed automatically.
-Resolve conflicting display names on a preserved copy before retrying. Login,
-recovery lookup, account uniqueness, and failed-attempt records share the same key.
-Existing linked accounts without a recovery credential are treated conservatively
-as external-only accounts. An administrator can establish a temporary local
-password when needed. Unversioned databases with current columns are also supported.
-
-Deleting a user clears the user reference in retained activity records rather
-than leaving a reference to a nonexistent account. Other account-owned data keeps
-its existing cascade behavior.
-
-Daily-note migration uses the same private upgrade snapshot when notes
-exist, preserves their exact content, and leaves meaningful work/leave rows intact.
-Saving a standalone note never creates a work row. Deleting work preserves its
-note, and deleting an account still removes both. Editor writes compare the loaded
-note content within the transaction; a conflicting edit rejects the save without
-altering either note or work fields. Explicit CSV replacement remains an intentional
-overwrite. CSV export includes note-only dates, which are imported without creating
-empty work rows. Calendar queries include saved note markers. Report and AI
-queries require explicit per-date permission before collecting a memo. Memos,
-permissions, and draft removal commit together; content and sharing checks
-reject conflicting saves. Drafts and sharing use account-scoped settings keys,
-not work rows or a new schema.
-
-## Report Versions
-
-Migration 13 preserves report IDs, periods, content and first-save timestamps. It
-adds monotonically increasing revisions, last-save timestamps, structured generation
-references and a `report_revisions` table. Existing reports receive a recoverable
-initial version with unavailable source information; no historical sources are
-invented. The migration runner retains the complete pre-change snapshot.
-
-An update compares the loaded revision and atomically saves the next version.
-Recovery also compares the current revision and creates a new version, retaining
-the intervening saved content. The latest 50 versions per report are retained;
-individual content is limited to 1 MiB and reference metadata to 8 MiB. Deleting a
-report or account cascades to its versions. Whole-database backup includes versions.
+Report updates compare the loaded revision, retain IDs and first-save timestamps,
+and save a new version atomically. Recovery also creates a new version. The latest
+50 versions per report are retained. Content is bounded to 1 MiB and provenance
+to 8 MiB. Account/report deletion cascades to versions.
 
 ## Backup and Restore
 
-`SQLiteBackupService` uses the SQLite backup API and checks integrity. Desktop
-backup and restore require a current administrator account. Backups are
-whole-database copies, including all accounts and credential hashes. They exclude
-model files, session files, operating-system keyring values, and native language
-preferences.
+Desktop backup and restore require a current administrator. A backup is a complete
+database copy containing all accounts, credential hashes, background media and
+record/report history. Proxy passwords are excluded; OS credentials, sessions,
+model files and native language preferences are not copied.
 
-Restore validates supported schema versions and table names, rejects triggers and
-views, and requires the current account's username and ID to agree. It opens the
-source read-only and uses the SQLite backup
-API to create a temporary snapshot, including committed source WAL content but not
-uncommitted transactions. The snapshot is converted to a standalone rollback-journal
-database and validated before replacing the target; no source checkpoint is required.
-Migrations run on the temporary snapshot before replacement. The previous database
-is retained as a uniquely named `.bak_restore_*` file. Successful restore ends the
-current session and requires authentication again. Restore is replacement, not a
-per-user merge.
+Restore opens the source read-only, validates its supported shape and the current
+account's login ID and integer ID, and snapshots committed WAL data. Conversion
+and integrity checks run on an unpublished temporary copy. A complete result
+replaces the target only when it is not busy; the previous database is retained as
+a unique `.bak_restore_*` copy. Restore is replacement, not a per-user merge, and
+ends the current authenticated session.
 
-Connections and replacement share a process-local lock. Restore refuses a busy
-target rather than discarding its WAL. An interrupted `.pre_restore` file is
-preserved and blocks startup and further replacement until recovery is completed.
-Keep independent backups and close other processes before restoring.
+An interrupted `.pre_restore` file blocks startup and further replacement. Normal
+startup never recreates a damaged or inaccessible database. Explicit maintenance
+recovery preserves confirmed corruption and its sidecars, retaining three copies
+by default; permission, lock and I/O failures do not rename the original.
 
-## Corruption and Permissions
-
-The connection factory checks integrity once per factory initialization, not on
-every query. Normal desktop startup never automatically replaces a damaged or
-inaccessible database. Explicitly enabled maintenance recovery handles only
-confirmed corruption, preserving the database and its WAL/SHM files together with
-unique `.bak_corrupt_*` names. Its retention count defaults to three and does not
-match migration or restore backups. Lock, permission, and I/O failures are raised
-without renaming the original database.
-
-Database and sidecar permissions are restricted on a best-effort basis. On
-Windows, this is not a replacement for directory access-control configuration.
-SQLite data and backups are not encrypted at rest by WorkLogger.
-
-There is no automatic downgrade migration. Before returning to an older executable,
-restore a compatible backup with all application processes closed.
+Database data and backups are not encrypted at rest. File permissions are
+restricted on a best-effort basis; Windows directory access controls remain
+necessary. There is no automatic downgrade. Retain compatible independent
+backups before returning to an older executable.

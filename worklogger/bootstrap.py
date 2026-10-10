@@ -235,6 +235,11 @@ def _startup_failure(exc):
     code = getattr(exc, "sqlite_errorcode", 0) & 0xFF
     corrupt = isinstance(exc, DatabaseIntegrityError) or code in {sqlite3.SQLITE_CORRUPT, sqlite3.SQLITE_NOTADB}
     error = "database_corrupt" if corrupt else "desktop_runtime_failed"
+    if isinstance(exc, ValueError) and str(exc) in {
+        "database_version_unsupported", "database_schema_unsupported", "database_foreign_key_invalid",
+        "username_normalization_conflict", "identity_subject_ambiguous", "restore_pending",
+    }:
+        error = str(exc)
     return Result.failure(InfrastructureError(error, error, {"error_type": type(exc).__name__}))
 
 

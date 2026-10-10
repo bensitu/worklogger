@@ -17,7 +17,7 @@ def check_workflows():
     from worklogger.domain.projects.models import WorkContext
     from worklogger.infrastructure.backup import SQLiteBackupService
     from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
-    from worklogger.infrastructure.database.migrations.runner import MIGRATION_MODULES
+    from worklogger.domain.reporting.models import Report
     from worklogger.infrastructure.database.upgrade import upgrade_database
     from worklogger.infrastructure.repositories.auth_sqlite import SQLiteAuthRepository
     from worklogger.infrastructure.repositories.worklog_sqlite import SQLiteWorkLogRepository
@@ -31,15 +31,14 @@ def check_workflows():
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
         factory = SQLiteConnectionFactory(root / "previous.db")
-        MigrationRunner(factory, MIGRATION_MODULES[:1]).run_pending()
+        MigrationRunner(factory).run_pending()
         auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
         previous = auth.create_user("sample", "synthetic-password", recovery_key=None, is_admin=True)
         day = date(2026, 5, 21)
         with factory.transaction() as connection:
             connection.execute('INSERT INTO worklog(user_id,d,start,end,"break",note) VALUES(?,?,?,?,?,?)',
                                (previous.id, day.isoformat(), "09:00", "12:00", 0.5, "Historical work"))
-            connection.execute("INSERT INTO reports(user_id,type,period_start,period_end,content,created_at) VALUES(?,'daily',?,?,?,datetime('now'))",
-                               (previous.id, day.isoformat(), day.isoformat(), "Historical report"))
+        SQLiteReportRepository(factory).save(Report(None, previous.id, "daily", day, day, "Historical report"))
         upgraded = root / "worklog.db"
         summary = upgrade_database(Path(factory.database_path), upgraded)
         if summary.time_records != 1 or summary.reports != 1:

@@ -13,7 +13,6 @@ from worklogger.domain.settings.background import BackgroundState
 from worklogger.infrastructure.backup.sqlite_backup import SQLiteBackupService
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
 from worklogger.infrastructure.database.inspection import validate_database_file
-from worklogger.infrastructure.database.migrations.runner import MIGRATION_MODULES
 from worklogger.infrastructure.images.background import (
     QtBackgroundImageLoader,
     validate_background_data,
@@ -114,12 +113,15 @@ class BackgroundImageTests(unittest.TestCase):
 
     def test_migration_adds_no_preferences_and_preserves_existing_settings(self):
         factory = SQLiteConnectionFactory(self.directory / "previous.db")
-        MigrationRunner(factory, MIGRATION_MODULES[:-1]).run_pending()
+        MigrationRunner(factory).run_pending()
         auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
         user = auth.create_user("previous", "example-password", recovery_key=None, is_admin=False)
         settings = SQLiteSettingsRepository(factory)
         settings.set(user.id, "theme", "green")
-        self.assertEqual(MigrationRunner(factory).run_pending(), (14,))
+        with factory.transaction() as connection:
+            connection.execute("DELETE FROM schema_migrations")
+            connection.execute("INSERT INTO schema_migrations VALUES(14,'previous','2026-10-10')")
+        self.assertEqual(MigrationRunner(factory).run_pending(), (15,))
         self.assertEqual(MigrationRunner(factory).run_pending(), ())
         self.assertEqual(settings.get(user.id, "theme"), "green")
         self.assertEqual(SQLiteBackgroundRepository(factory).load(user.id), BackgroundState())

@@ -13,7 +13,7 @@ from worklogger.domain.notes.models import DailyNote
 from worklogger.domain.analytics.rules import dashboard_data
 from worklogger.domain.worklog.models import WorkLog, WorkType
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
-from worklogger.infrastructure.database.migrations.runner import MIGRATION_MODULES, MigrationRunner
+from worklogger.infrastructure.database.migrations.runner import MigrationRunner
 from worklogger.infrastructure.repositories.auth_sqlite import SQLiteAuthRepository
 from worklogger.infrastructure.repositories.settings_sqlite import SQLiteSettingsRepository
 from worklogger.infrastructure.repositories.worklog_sqlite import SQLiteWorkLogRepository
@@ -294,20 +294,20 @@ class TimeEntryTests(unittest.TestCase):
         self.assertFalse(self.service.finish("Changed").ok)
         self.assertEqual(len(self.repository.list_for_day(self.user.id, self.now.date())), 1)
 
-    def test_daily_schema_migration_preserves_notes_breaks_and_offsets(self):
+    def test_current_record_restart_preserves_content_breaks_and_offsets(self):
         path = Path(self.directory.name) / "previous.db"
         factory = SQLiteConnectionFactory(path)
-        MigrationRunner(factory, MIGRATION_MODULES[:6]).run_pending()
+        MigrationRunner(factory).run_pending()
         auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
         user = auth.create_user("previous", "example-password", recovery_key=None, is_admin=False)
         repository = SQLiteWorkLogRepository(factory)
         record = WorkLog(user.id, self.now.date(), "09:00", "18:00", 1, "History", WorkType.REMOTE,
                          started_at=self.now, ended_at=self.now + timedelta(hours=9))
-        repository.save(record)
-        self.assertEqual(MigrationRunner(factory).run_pending(), tuple(range(7, len(MIGRATION_MODULES) + 1)))
+        repository.save_entry(record)
+        self.assertEqual(MigrationRunner(factory).run_pending(), ())
         current = SQLiteWorkLogRepository(factory).list_for_day(user.id, record.day)[0]
         self.assertEqual((current.note, current.break_hours, current.worked_hours(), current.started_at), ("History", 1, 8, record.started_at))
-        self.assertTrue(list(path.parent.glob("previous.db.bak_upgrade_*")))
+        self.assertFalse(list(path.parent.glob("previous.db.bak_upgrade_*")))
         self.assertEqual(MigrationRunner(factory).run_pending(), ())
 
     def test_portability_preserves_periods_types_notes_and_distinct_calendar_identifiers(self):

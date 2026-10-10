@@ -27,7 +27,6 @@ from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
 from worklogger.domain.worklog.models import WorkType
 from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.notes.models import DailyNote
-from worklogger.infrastructure.database.migrations.runner import MIGRATION_MODULES
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
 from worklogger.infrastructure.export import MarkdownExporter
 from worklogger.infrastructure.repositories import (
@@ -142,17 +141,17 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
     def test_note_storage_migration_conflicts_deletion_and_export_preserve_content(self):
         with tempfile.TemporaryDirectory() as directory:
             factory = SQLiteConnectionFactory(f"{directory}/worklog.db")
-            note_index = next(index for index, module in enumerate(MIGRATION_MODULES)
-                              if module.endswith("migration_005_daily_notes"))
-            MigrationRunner(factory, migration_modules=MIGRATION_MODULES[:note_index]).run_pending()
-            user = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1_000)).create_user(
-                "user", "password", recovery_key=None, is_admin=False)
+            from tests.infrastructure.schema_samples import create_released_database
+            _hasher, user_id = create_released_database(factory)
             day = date(2026, 5, 14)
             note_day = date(2026, 5, 15)
-            previous = SQLiteWorkLogRepository(factory)
-            previous.save(WorkLog(user.id, day, "09:00", "18:00", 1.0, "original"))
-            previous.save(WorkLog(user.id, note_day, note="standalone"))
-            self.assertIn(5, MigrationRunner(factory).run_pending())
+            with factory.transaction() as connection:
+                connection.execute('INSERT INTO worklog(user_id,d,start,end,"break",note) VALUES(?,?,?,?,?,?)',
+                                   (user_id, day.isoformat(), "09:00", "18:00", 1.0, "original"))
+                connection.execute('INSERT INTO worklog(user_id,d,"break",note) VALUES(?,?,0,?)',
+                                   (user_id, note_day.isoformat(), "standalone"))
+            self.assertEqual(MigrationRunner(factory).run_pending(), (15,))
+            user = SQLiteAuthRepository(factory).get_by_id(user_id)
             self.assertEqual(MigrationRunner(factory).run_pending(), ())
             work_logs = SQLiteWorkLogRepository(factory)
             notes = SQLiteDailyNoteRepository(factory)
