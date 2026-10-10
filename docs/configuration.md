@@ -92,6 +92,8 @@ variables. They are stored as strings in the settings repository.
 | `daily_note_draft:<ISO date>` | Absent | Recoverable content, original content, and original/current sharing choices |
 | `local_model_enabled` | `1` | Local model preference |
 | `local_model_context_tokens` | `8192` | Account runtime context preference; effective local inference uses the smaller of this value and the selected model's declared context limit |
+| `timer_reminder_hours` | `10.0` | Nonblocking reminder for the active timer; `0` disables it, up to the 16-hour interval limit |
+| `continuous_timer_reminder_hours` | `0.0` | Optional reminder for one uninterrupted active work timer; rest/leave timers are excluded |
 | `profile_avatar_png` | Empty | Account-specific normalized avatar as base64 PNG; empty uses the bundled default |
 | `external_model_base_url` | Empty | Stored external-service preference; example shown only as a placeholder |
 | `external_model_name` | Empty | Model identifier sent to the explicitly selected provider |

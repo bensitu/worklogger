@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 import unittest
 
@@ -16,6 +16,17 @@ from worklogger.domain.worklog.rules import (
 
 
 class WorkLogRuleTests(unittest.TestCase):
+    def test_timer_reminders_use_elapsed_time_and_do_not_treat_rest_or_leave_as_work(self):
+        from worklogger.domain.worklog.reminders import timer_reminders
+        zone = ZoneInfo("America/New_York")
+        start = datetime(2026, 11, 1, 0, 30, tzinfo=zone)
+        end = datetime(2026, 11, 1, 1, 30, tzinfo=zone, fold=1)
+        self.assertEqual(timer_reminders(start, end, WorkType.NORMAL, long_hours=2, continuous_hours=1), ("long_timer", "continuous_timer"))
+        self.assertEqual(timer_reminders(start, end, WorkType.BREAK, long_hours=0, continuous_hours=1), ())
+        self.assertEqual(timer_reminders(start, end, WorkType.PAID_LEAVE, long_hours=0, continuous_hours=1), ())
+        late = start.astimezone(timezone.utc) + timedelta(hours=17)
+        self.assertEqual(timer_reminders(start, late, WorkType.NORMAL, long_hours=0), ("duration_limit",))
+
     def test_offset_aware_shifts_preserve_elapsed_hours_across_clock_changes(self) -> None:
         zone = ZoneInfo("America/New_York")
         for day, expected in ((date(2026, 3, 7), 6.0), (date(2026, 10, 31), 8.0)):

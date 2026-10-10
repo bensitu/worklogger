@@ -9,6 +9,8 @@ from PySide6.QtWidgets import (
 
 from worklogger.config.constants import (
     DEFAULT_BREAK_HOURS_SETTING_KEY,
+    TIMER_REMINDER_HOURS_SETTING_KEY,
+    CONTINUOUS_TIMER_REMINDER_HOURS_SETTING_KEY,
     ENABLE_TRAY_SETTING_KEY,
     MONTHLY_TARGET_HOURS_SETTING_KEY,
     SHOW_HOLIDAYS_SETTING_KEY,
@@ -47,6 +49,8 @@ class GeneralSection(_SettingsScrollPage):
         "week_start_switch",
         "manage_work_types_button",
         "manage_projects_button",
+        "timer_reminder_input",
+        "continuous_timer_reminder_input",
     )
 
     def __init__(self, actions: SectionActions):
@@ -66,6 +70,16 @@ class GeneralSection(_SettingsScrollPage):
             lambda value: actions.set_number(DEFAULT_BREAK_HOURS_SETTING_KEY, value)
         )
         form.addRow(_("Default break (h)"), self.default_break_input)
+
+        self.timer_reminder_input = _hours_input(0.0, 16.0, 0.5)
+        self.continuous_timer_reminder_input = _hours_input(0.0, 16.0, 0.5)
+        for field, caption, key in ((self.timer_reminder_input, _("Long timer reminder (h)"), TIMER_REMINDER_HOURS_SETTING_KEY),
+                                    (self.continuous_timer_reminder_input, _("Continuous work timer reminder (h)"), CONTINUOUS_TIMER_REMINDER_HOURS_SETTING_KEY)):
+            field.setSpecialValueText(_("Off"))
+            field.setKeyboardTracking(False)
+            field.setAccessibleName(caption)
+            field.valueChanged.connect(lambda value, key=key: actions.set_number(key, value))
+            form.addRow(caption, field)
 
         self.monthly_target_input = _hours_input(0.0, 400.0, 8.0)
         self.monthly_target_input.valueChanged.connect(

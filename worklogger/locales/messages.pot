@@ -308,6 +308,9 @@ msgstr ""
 msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
 msgstr ""
 
+msgid "Choose an earlier end time to save this timer."
+msgstr ""
+
 msgid "Choose an image smaller than 10 MB and 20 million pixels."
 msgstr ""
 
@@ -360,6 +363,9 @@ msgid "Context: {context} tokens; output: {output} tokens"
 msgstr ""
 
 msgid "Continue"
+msgstr ""
+
+msgid "Continuous work timer reminder (h)"
 msgstr ""
 
 msgid "Copied"
@@ -899,6 +905,9 @@ msgstr ""
 msgid "Logout requested"
 msgstr ""
 
+msgid "Long timer reminder (h)"
+msgstr ""
+
 msgid "Manage downloaded and imported GGUF models."
 msgstr ""
 
@@ -1115,6 +1124,9 @@ msgstr ""
 msgid "October"
 msgstr ""
 
+msgid "Off"
+msgstr ""
+
 msgid "Only adjacent records with matching types and context can be merged."
 msgstr ""
 
@@ -1280,10 +1292,16 @@ msgstr ""
 msgid "Record search is unavailable."
 msgstr ""
 
+msgid "Recorded duration: {duration}"
+msgstr ""
+
 msgid "Recording or a break is already active."
 msgstr ""
 
 msgid "Recording since {time} - {duration}"
+msgstr ""
+
+msgid "Recording started: {time}"
 msgstr ""
 
 msgid "Recovered draft"
@@ -1757,6 +1775,12 @@ msgstr ""
 msgid "This text exceeds the selected model's context limit. Shorten it and try again."
 msgstr ""
 
+msgid "This timer has reached your reminder duration."
+msgstr ""
+
+msgid "This work timer has reached your continuous-work reminder duration."
+msgstr ""
+
 msgid "This work type changed or is no longer available. Reload the types and try again."
 msgstr ""
 
@@ -1764,6 +1788,12 @@ msgid "Thu"
 msgstr ""
 
 msgid "Time"
+msgstr ""
+
+msgid "Time zone: {zone}"
+msgstr ""
+
+msgid "Timer reminder"
 msgstr ""
 
 msgid "Title"
@@ -1791,6 +1821,9 @@ msgid "Training"
 msgstr ""
 
 msgid "Tue"
+msgstr ""
+
+msgid "UTC offset"
 msgstr ""
 
 msgid "Unable to apply this record change. Existing records are unchanged."

@@ -26,6 +26,58 @@ from PySide6.QtCore import QTime
 
 
 class TimeEntryWorkflowTests(unittest.TestCase):
+    def test_timer_end_correction_handles_ambiguous_and_nonexistent_local_times(self):
+        from zoneinfo import ZoneInfo
+        from worklogger.presentation.widgets.end_timer import EndTimerDialog
+        from worklogger.domain.worklog.rules import timestamp_span_hours
+        zone = ZoneInfo("America/New_York")
+        start = datetime(2026, 11, 1, 0, 30, tzinfo=zone)
+        dialog = EndTimerDialog(start, start + timedelta(hours=5), zone)
+        self.addCleanup(dialog.deleteLater)
+        dialog.end_input.setDateTime(datetime(2026, 11, 1, 1, 30))
+        self.assertEqual(dialog.offset_combo.count(), 2)
+        dialog.offset_combo.setCurrentIndex(0)
+        self.assertEqual(timestamp_span_hours(start, dialog.chosen_end()), 1)
+        dialog.offset_combo.setCurrentIndex(1)
+        self.assertEqual(timestamp_span_hours(start, dialog.chosen_end()), 2)
+        gap_start = datetime(2026, 3, 8, 0, 30, tzinfo=zone)
+        gap = EndTimerDialog(gap_start, gap_start + timedelta(hours=4), zone)
+        self.addCleanup(gap.deleteLater)
+        gap.end_input.setDateTime(datetime(2026, 3, 8, 2, 30))
+        self.assertIsNone(gap.chosen_end())
+        self.assertFalse(gap.end_button.isEnabled())
+
+    def test_timer_reminders_are_nonblocking_and_long_timer_finish_requires_explicit_correction(self):
+        from worklogger.presentation.widgets.end_timer import EndTimerDialog
+        panel = self.panel
+        panel.time_tabs.setCurrentIndex(1)
+        panel.clock_in_button.click()
+        notifications = []
+        panel.reminder.connect(notifications.append)
+        panel.view_model.set_timer_reminders(1, 0.5)
+        self.now += timedelta(hours=2)
+        panel._tick()
+        self.runtime.application.processEvents()
+        self.assertEqual(len(notifications), 2)
+        panel._tick()
+        self.runtime.application.processEvents()
+        self.assertEqual(len(notifications), 2)
+        self.assertEqual(self.repository.list_for_day(self.runtime.user.id, self.now.date()), ())
+        started = panel.view_model.timer.started_at
+        self.now = started + timedelta(hours=20)
+        panel.clock_out_button.click()
+        dialog = panel.findChild(EndTimerDialog)
+        self.assertIsNotNone(dialog)
+        self.assertIsNotNone(panel.view_model.timer)
+        self.assertEqual(self.repository.list_for_day(self.runtime.user.id, started.date()), ())
+        corrected = started + timedelta(hours=8)
+        dialog.end_input.setDateTime(corrected.replace(tzinfo=None))
+        dialog.end_button.click()
+        saved = self.repository.list_for_day(self.runtime.user.id, started.date())[0]
+        self.assertAlmostEqual(saved.worked_hours(), 8)
+        self.assertIsNone(panel.view_model.timer)
+        self.warning.assert_not_called()
+
     def test_record_actions_and_global_undo_work_after_the_last_record_is_deleted(self):
         panel = self.panel
         original = panel.view_model.service.save_manual(self.now.date(), "09:00", "12:00", "normal", "Work").value

@@ -156,6 +156,8 @@ class AppWindow(QMainWindow):
             stats_panel=self.stats_panel,
         )
         self._connect_signals()
+        if hasattr(self._residency_controller, "notify_timer_reminder"):
+            self.entry_panel.reminder.connect(self._residency_controller.notify_timer_reminder)
         self.sidebar.set_avatar(self._config.profile_avatar_png)
         self.apply_theme()
         self._date_timer = QTimer(self)

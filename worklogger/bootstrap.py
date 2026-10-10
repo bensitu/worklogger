@@ -360,6 +360,7 @@ def _build_runtime_for_user(
     ):
         preferences.save(state.language)
     time_entry_view_model.set_default_break_hours(state.default_break_hours)
+    time_entry_view_model.set_timer_reminders(state.timer_reminder_hours, state.continuous_timer_reminder_hours)
     window_config = replace(
         window_config,
         theme=state.theme,

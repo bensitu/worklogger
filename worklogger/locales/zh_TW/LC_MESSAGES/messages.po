@@ -310,6 +310,9 @@ msgstr "請選擇位於紀錄區間內部的分割時長。"
 msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
 msgstr "請選擇有效的 PNG、JPEG、WebP 或 BMP 圖片。"
 
+msgid "Choose an earlier end time to save this timer."
+msgstr "請選擇更早的結束時間以儲存此計時。"
+
 msgid "Choose an image smaller than 10 MB and 20 million pixels."
 msgstr "請選擇不超過10 MB及2000萬像素的圖片。"
 
@@ -363,6 +366,9 @@ msgstr "上下文：{context} tokens；輸出：{output} tokens"
 
 msgid "Continue"
 msgstr "繼續"
+
+msgid "Continuous work timer reminder (h)"
+msgstr "連續工作計時提醒（h）"
 
 msgid "Copied"
 msgstr "已複製"
@@ -901,6 +907,9 @@ msgstr "登入 ID：{login_id}"
 msgid "Logout requested"
 msgstr "已要求登出"
 
+msgid "Long timer reminder (h)"
+msgstr "長時間計時提醒（h）"
+
 msgid "Manage downloaded and imported GGUF models."
 msgstr "管理已下載和匯入的 GGUF 模型。"
 
@@ -1117,6 +1126,9 @@ msgstr "確定"
 msgid "October"
 msgstr "10月"
 
+msgid "Off"
+msgstr "關閉"
+
 msgid "Only adjacent records with matching types and context can be merged."
 msgstr "僅可合併工作類型與關聯一致的相鄰紀錄。"
 
@@ -1282,11 +1294,17 @@ msgstr "紀錄操作"
 msgid "Record search is unavailable."
 msgstr "紀錄檢索不可用。"
 
+msgid "Recorded duration: {duration}"
+msgstr "紀錄時長：{duration}"
+
 msgid "Recording or a break is already active."
 msgstr "記錄或休息已開始。"
 
 msgid "Recording since {time} - {duration}"
 msgstr "開始於 {time} - {duration}"
+
+msgid "Recording started: {time}"
+msgstr "計時開始於：{time}"
 
 msgid "Recovered draft"
 msgstr "已復原草稿"
@@ -1759,6 +1777,12 @@ msgstr "此報表已在其他位置修改。請重新載入歷史清單後再刪
 msgid "This text exceeds the selected model's context limit. Shorten it and try again."
 msgstr "內容超過所選模型的上下文限制。請縮短後重試。"
 
+msgid "This timer has reached your reminder duration."
+msgstr "此計時已達到設定的提醒時長。"
+
+msgid "This work timer has reached your continuous-work reminder duration."
+msgstr "此工作計時已達到連續工作提醒時長。"
+
 msgid "This work type changed or is no longer available. Reload the types and try again."
 msgstr "此工作類型已變更或無法使用。請重新載入類型後重試。"
 
@@ -1767,6 +1791,12 @@ msgstr "四"
 
 msgid "Time"
 msgstr "時間"
+
+msgid "Time zone: {zone}"
+msgstr "時區：{zone}"
+
+msgid "Timer reminder"
+msgstr "計時提醒"
 
 msgid "Title"
 msgstr "標題"
@@ -1794,6 +1824,9 @@ msgstr "培訓"
 
 msgid "Tue"
 msgstr "二"
+
+msgid "UTC offset"
+msgstr "UTC 偏移"
 
 msgid "Unable to apply this record change. Existing records are unchanged."
 msgstr "無法套用此紀錄變更，現有紀錄未改變。"

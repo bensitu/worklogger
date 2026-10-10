@@ -72,6 +72,31 @@ class ModelAccountLayoutChecks(unittest.TestCase):
                 ):
                     self.check_credential_dialog(dialog_type, language, dark)
 
+    def test_timer_end_correction_fits_dates_offsets_and_supported_languages(self):
+        from datetime import datetime, timedelta
+        from zoneinfo import ZoneInfo
+        from worklogger.presentation.widgets.end_timer import EndTimerDialog
+        zone = ZoneInfo("America/New_York")
+        start = datetime(2026, 11, 1, 0, 30, tzinfo=zone)
+        for language in available_languages():
+            set_language(language)
+            for dark in (False, True):
+                self.theme(dark)
+                dialog = EndTimerDialog(start, start + timedelta(hours=18), zone)
+                try:
+                    dialog.end_input.setDateTime(datetime(2026, 11, 1, 1, 30))
+                    dialog.show()
+                    self.app.processEvents()
+                    self.assertEqual(dialog.offset_combo.count(), 2)
+                    for field in (dialog.end_input, dialog.offset_combo, dialog.status_label,
+                                  dialog.end_button, dialog.cancel_button):
+                        self.assertTrue(dialog.rect().contains(field.rect().translated(field.mapTo(dialog, QPoint()))))
+                    self.assertGreaterEqual(dialog.end_input.width(), dialog.end_input.fontMetrics().horizontalAdvance(dialog.end_input.text()) + 40)
+                    self.capture(dialog, f"{language}-timer-end-{'dark' if dark else 'light'}")
+                finally:
+                    dialog.hide()
+                    dialog.deleteLater()
+
     def test_avatar_crop_controls_fit_localized_labels(self):
         from PySide6.QtGui import QImage
         from worklogger.presentation.widgets.avatar import AvatarCropDialog

@@ -74,6 +74,8 @@ class MinimalView(QWidget):
         apply_window_icon(self)
         self._build_ui()
         self._connect_signals()
+        if hasattr(self._residency_controller, "notify_timer_reminder"):
+            self.entry_panel.reminder.connect(self._residency_controller.notify_timer_reminder)
         self._date_timer = QTimer(self)
         self._date_timer.setInterval(60_000)
         self._date_timer.timeout.connect(self._update_today)
@@ -307,6 +309,10 @@ class MinimalView(QWidget):
                 dialog.profile_changed.connect(self.apply_user_profile)
             if hasattr(dialog, "work_types_changed"):
                 dialog.work_types_changed.connect(self.entry_panel.refresh_work_types)
+            if hasattr(dialog, "projects_changed"):
+                dialog.projects_changed.connect(self.entry_panel.refresh_projects)
+            if hasattr(dialog, "settings_changed"):
+                dialog.settings_changed.connect(self._apply_recording_settings)
             if hasattr(dialog, "ai_availability_changed"):
                 dialog.ai_availability_changed.connect(self.entry_panel.refresh_ai_availability)
 
@@ -340,6 +346,17 @@ class MinimalView(QWidget):
         self._notes_workflow.open(self._selected_day, self)
         self.refresh()
         return True
+
+    def _apply_recording_settings(self, state):
+        from PySide6.QtWidgets import QApplication
+        from worklogger.presentation.theme import ThemeEngine
+        self._time_entry_view_model.set_default_break_hours(state.default_break_hours)
+        self._time_entry_view_model.set_timer_reminders(state.timer_reminder_hours, state.continuous_timer_reminder_hours)
+        application = QApplication.instance()
+        if application is not None:
+            engine = ThemeEngine()
+            application.setPalette(engine.qt_palette(state.theme, dark=state.dark_mode, custom_color=state.custom_color))
+            application.setStyleSheet(engine.application_stylesheet(state.theme, dark=state.dark_mode, custom_color=state.custom_color))
 
     def _restore_from_residency(self) -> None:
         self.showNormal()

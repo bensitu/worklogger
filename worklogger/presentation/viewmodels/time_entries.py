@@ -11,6 +11,7 @@ from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.rules import timestamp_span_hours
 from worklogger.domain.worklog.editing import merge_entries
+from worklogger.domain.worklog.reminders import timer_reminders
 
 
 @dataclass(frozen=True)
@@ -38,6 +39,17 @@ class TimeEntryViewModel:
         self.auto_work_type = service.timer.work_type.value if service.timer else "normal"
         self.auto_context = service.timer.context if service.timer else WorkContext()
         self.latest_change_info = None
+        self.timer_reminder_hours = 10.0
+        self.continuous_timer_reminder_hours = 0.0
+
+    def set_timer_reminders(self, long_hours, continuous_hours):
+        self.timer_reminder_hours = long_hours
+        self.continuous_timer_reminder_hours = continuous_hours
+
+    def reminder_reasons(self):
+        timer = self.timer
+        return timer_reminders(timer.started_at, self.now(), timer.work_type, long_hours=self.timer_reminder_hours,
+                               continuous_hours=self.continuous_timer_reminder_hours) if timer else ()
 
     @property
     def projects_available(self):

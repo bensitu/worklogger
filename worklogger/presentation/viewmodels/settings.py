@@ -20,6 +20,8 @@ from worklogger.config.constants import (
     CUSTOM_THEME_COLOR_SETTING_KEY,
     DARK_MODE_SETTING_KEY,
     DEFAULT_BREAK_HOURS_SETTING_KEY,
+    TIMER_REMINDER_HOURS_SETTING_KEY,
+    CONTINUOUS_TIMER_REMINDER_HOURS_SETTING_KEY,
     ENABLE_MENU_BAR_SETTING_KEY,
     ENABLE_TRAY_SETTING_KEY,
     EXTERNAL_MODEL_BASE_URL_SETTING_KEY,
@@ -105,6 +107,8 @@ class SettingsState:
     external_api_key_error: str = ""
     proxy_password_error: str = ""
     local_model_context_tokens: int = DEFAULT_RUNTIME_CONTEXT_TOKENS
+    timer_reminder_hours: float = 10.0
+    continuous_timer_reminder_hours: float = 0.0
 
 
 class SettingsViewModel:
@@ -193,6 +197,8 @@ class SettingsViewModel:
                 minimal_mode=_bool(values[MINIMAL_MODE_SETTING_KEY], False),
                 local_model_enabled=_bool(values[LOCAL_MODEL_ENABLED_SETTING_KEY], True),
                 local_model_context_tokens=runtime_context_preference(values[LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY]),
+                timer_reminder_hours=_number(values[TIMER_REMINDER_HOURS_SETTING_KEY], 10.0, minimum=0.0, maximum=16.0),
+                continuous_timer_reminder_hours=_number(values[CONTINUOUS_TIMER_REMINDER_HOURS_SETTING_KEY], 0.0, minimum=0.0, maximum=16.0),
                 standard_work_hours=_number(
                     values[STANDARD_WORK_HOURS_SETTING_KEY],
                     8.0,
@@ -363,6 +369,8 @@ _DEFAULTS = {
     LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY: str(DEFAULT_RUNTIME_CONTEXT_TOKENS),
     STANDARD_WORK_HOURS_SETTING_KEY: "8.0",
     DEFAULT_BREAK_HOURS_SETTING_KEY: "1.0",
+    TIMER_REMINDER_HOURS_SETTING_KEY: "10.0",
+    CONTINUOUS_TIMER_REMINDER_HOURS_SETTING_KEY: "0.0",
     MONTHLY_TARGET_HOURS_SETTING_KEY: "168.0",
     SHOW_HOLIDAYS_SETTING_KEY: "1",
     HOLIDAY_REGION_SETTING_KEY: "",
@@ -419,6 +427,8 @@ _TEXT_KEYS = frozenset(
 )
 
 _NUMBER_LIMITS = {
+    TIMER_REMINDER_HOURS_SETTING_KEY: (0.0, 16.0),
+    CONTINUOUS_TIMER_REMINDER_HOURS_SETTING_KEY: (0.0, 16.0),
     STANDARD_WORK_HOURS_SETTING_KEY: (1.0, 24.0),
     DEFAULT_BREAK_HOURS_SETTING_KEY: (0.0, 4.0),
     MONTHLY_TARGET_HOURS_SETTING_KEY: (0.0, 400.0),

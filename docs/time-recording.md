@@ -143,6 +143,22 @@ Reports list each component period, including its type and content. Separate
 daily notes are included only with explicit per-date permission. CSV and
 iCalendar retain individual periods; iCalendar identifiers include the entry ID.
 
+## Timer Reminders
+
+Settings > General stores account-specific long-timer and continuous-work-timer
+reminder durations. Off disables the corresponding reminder. Alerts show inline
+and, when enabled and available, through the existing tray. Each alert reason is
+announced at most once per captured timer. They observe only explicit elapsed
+timing, never keyboard activity, and do not change records. The continuous-work
+reminder concerns the current work timer, not a legal assessment or a reconstructed
+union of earlier intervals. Rest and leave timers are excluded from that reminder.
+
+When an active timer exceeds the individual interval limit, End opens an explicit
+end-time correction dialog. It shows timezone, candidate offset where a local
+time is ambiguous, and the resulting duration. Nonexistent local times and invalid
+durations cannot be confirmed. Only confirmation saves the chosen end; cancellation
+preserves the timer. Capture checks reject a timer changed while the dialog is open.
+
 ## Record Search
 
 The calendar search action opens an account-owned record browser. Date, work type,

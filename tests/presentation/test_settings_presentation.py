@@ -72,6 +72,23 @@ def _view_model(repository: MemorySettingsRepository) -> SettingsViewModel:
 
 
 class SettingsPresentationTests(unittest.TestCase):
+    def test_timer_reminder_preferences_validate_and_persist_without_starting_recording(self):
+        from worklogger.config.constants import TIMER_REMINDER_HOURS_SETTING_KEY, CONTINUOUS_TIMER_REMINDER_HOURS_SETTING_KEY
+        repository = MemorySettingsRepository()
+        model = _view_model(repository)
+        state = model.load().value
+        self.assertEqual((state.timer_reminder_hours, state.continuous_timer_reminder_hours), (10, 0))
+        self.assertTrue(model.set_number(TIMER_REMINDER_HOURS_SETTING_KEY, 9).ok)
+        self.assertTrue(model.set_number(CONTINUOUS_TIMER_REMINDER_HOURS_SETTING_KEY, 4).ok)
+        self.assertTrue(model.set_number(TIMER_REMINDER_HOURS_SETTING_KEY, 17).ok)
+        self.assertEqual(model.load().value.timer_reminder_hours, 16)
+        self.assertTrue(model.set_number(TIMER_REMINDER_HOURS_SETTING_KEY, 9).ok)
+        self.assertFalse(model.set_number(CONTINUOUS_TIMER_REMINDER_HOURS_SETTING_KEY, float("nan")).ok)
+        state = model.load().value
+        self.assertEqual((state.timer_reminder_hours, state.continuous_timer_reminder_hours), (9, 4))
+        self.assertTrue(model.set_number(TIMER_REMINDER_HOURS_SETTING_KEY, 0).ok)
+        self.assertIsNone(repository.get(1, "time_entry_timer"))
+
     def test_local_runtime_context_persists_by_account_and_respects_selected_model(self):
         from worklogger.config.constants import LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY as key
         from PySide6.QtTest import QTest

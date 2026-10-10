@@ -310,6 +310,9 @@ msgstr "Choose a split duration strictly inside the recorded interval."
 msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
 msgstr "Choose a valid PNG, JPEG, WebP, or BMP image."
 
+msgid "Choose an earlier end time to save this timer."
+msgstr "Choose an earlier end time to save this timer."
+
 msgid "Choose an image smaller than 10 MB and 20 million pixels."
 msgstr "Choose an image smaller than 10 MB and 20 million pixels."
 
@@ -363,6 +366,9 @@ msgstr "Context: {context} tokens; output: {output} tokens"
 
 msgid "Continue"
 msgstr "Continue"
+
+msgid "Continuous work timer reminder (h)"
+msgstr "Continuous work timer reminder (h)"
 
 msgid "Copied"
 msgstr "Copied"
@@ -901,6 +907,9 @@ msgstr "Login ID: {login_id}"
 msgid "Logout requested"
 msgstr "Logout requested"
 
+msgid "Long timer reminder (h)"
+msgstr "Long timer reminder (h)"
+
 msgid "Manage downloaded and imported GGUF models."
 msgstr "Manage downloaded and imported GGUF models."
 
@@ -1117,6 +1126,9 @@ msgstr "OK"
 msgid "October"
 msgstr "October"
 
+msgid "Off"
+msgstr "Off"
+
 msgid "Only adjacent records with matching types and context can be merged."
 msgstr "Only adjacent records with matching types and context can be merged."
 
@@ -1282,11 +1294,17 @@ msgstr "Record actions"
 msgid "Record search is unavailable."
 msgstr "Record search is unavailable."
 
+msgid "Recorded duration: {duration}"
+msgstr "Recorded duration: {duration}"
+
 msgid "Recording or a break is already active."
 msgstr "Recording or a break is already active."
 
 msgid "Recording since {time} - {duration}"
 msgstr "Recording since {time} - {duration}"
+
+msgid "Recording started: {time}"
+msgstr "Recording started: {time}"
 
 msgid "Recovered draft"
 msgstr "Recovered draft"
@@ -1759,6 +1777,12 @@ msgstr "This report changed elsewhere. Reload the history before deleting it."
 msgid "This text exceeds the selected model's context limit. Shorten it and try again."
 msgstr "This text exceeds the selected model's context limit. Shorten it and try again."
 
+msgid "This timer has reached your reminder duration."
+msgstr "This timer has reached your reminder duration."
+
+msgid "This work timer has reached your continuous-work reminder duration."
+msgstr "This work timer has reached your continuous-work reminder duration."
+
 msgid "This work type changed or is no longer available. Reload the types and try again."
 msgstr "This work type changed or is no longer available. Reload the types and try again."
 
@@ -1767,6 +1791,12 @@ msgstr "Thu"
 
 msgid "Time"
 msgstr "Time"
+
+msgid "Time zone: {zone}"
+msgstr "Time zone: {zone}"
+
+msgid "Timer reminder"
+msgstr "Timer reminder"
 
 msgid "Title"
 msgstr "Title"
@@ -1794,6 +1824,9 @@ msgstr "Training"
 
 msgid "Tue"
 msgstr "Tue"
+
+msgid "UTC offset"
+msgstr "UTC offset"
 
 msgid "Unable to apply this record change. Existing records are unchanged."
 msgstr "Unable to apply this record change. Existing records are unchanged."

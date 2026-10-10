@@ -231,6 +231,8 @@ class SettingsPage(QWidget):
             self._update_local_context()
             self.standard_hours_input.setValue(state.standard_work_hours)
             self.default_break_input.setValue(state.default_break_hours)
+            self.timer_reminder_input.setValue(state.timer_reminder_hours)
+            self.continuous_timer_reminder_input.setValue(state.continuous_timer_reminder_hours)
             self.monthly_target_input.setValue(state.monthly_target_hours)
             self.holidays_switch.set_checked(state.show_holidays)
             country, _separator, subdivision = state.holiday_region.partition("/")

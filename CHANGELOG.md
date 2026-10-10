@@ -14,6 +14,9 @@ Application version: 4.0.0.
 
 ### Desktop Interface
 
+- Added configurable nonblocking timer reminders and explicit end-time correction
+  for long-running timers, including ambiguous-time selection and invalid-time rejection.
+
 - Added transactional record splitting, adjacent compatible merging, explicit
   historical-break placement, and conflict-aware undo with stable record identities.
 

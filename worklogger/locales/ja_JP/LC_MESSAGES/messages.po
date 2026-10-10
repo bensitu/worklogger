@@ -310,6 +310,9 @@ msgstr "記録区間の内側になる分割時間を選択してください。
 msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
 msgstr "有効なPNG、JPEG、WebP、BMP画像を選択してください。"
 
+msgid "Choose an earlier end time to save this timer."
+msgstr "このタイマーを保存するには、より早い終了時刻を選択してください。"
+
 msgid "Choose an image smaller than 10 MB and 20 million pixels."
 msgstr "10MB以下、2,000万画素以下の画像を選択してください。"
 
@@ -363,6 +366,9 @@ msgstr "コンテキスト：{context} トークン、出力：{output} トー�
 
 msgid "Continue"
 msgstr "続行"
+
+msgid "Continuous work timer reminder (h)"
+msgstr "連続作業タイマーの通知（h）"
 
 msgid "Copied"
 msgstr "コピーしました"
@@ -901,6 +907,9 @@ msgstr "ログインID: {login_id}"
 msgid "Logout requested"
 msgstr "ログアウトを要求しました"
 
+msgid "Long timer reminder (h)"
+msgstr "長時間タイマーの通知（h）"
+
 msgid "Manage downloaded and imported GGUF models."
 msgstr "ダウンロード・インポートしたGGUFモデルを管理します。"
 
@@ -1117,6 +1126,9 @@ msgstr "OK"
 msgid "October"
 msgstr "10月"
 
+msgid "Off"
+msgstr "オフ"
+
 msgid "Only adjacent records with matching types and context can be merged."
 msgstr "種別と関連付けが一致する隣接記録だけを結合できます。"
 
@@ -1282,11 +1294,17 @@ msgstr "記録の操作"
 msgid "Record search is unavailable."
 msgstr "記録検索を利用できません。"
 
+msgid "Recorded duration: {duration}"
+msgstr "記録時間：{duration}"
+
 msgid "Recording or a break is already active."
 msgstr "記録または休憩はすでに開始されています。"
 
 msgid "Recording since {time} - {duration}"
 msgstr "開始 {time} - {duration}"
+
+msgid "Recording started: {time}"
+msgstr "記録開始：{time}"
 
 msgid "Recovered draft"
 msgstr "復元された下書き"
@@ -1759,6 +1777,12 @@ msgstr "このレポートは別の場所で変更されました。履歴を再
 msgid "This text exceeds the selected model's context limit. Shorten it and try again."
 msgstr "内容が選択したモデルのコンテキスト上限を超えています。短くして再試行してください。"
 
+msgid "This timer has reached your reminder duration."
+msgstr "タイマーが設定した通知時間に達しました。"
+
+msgid "This work timer has reached your continuous-work reminder duration."
+msgstr "作業タイマーが連続作業の通知時間に達しました。"
+
 msgid "This work type changed or is no longer available. Reload the types and try again."
 msgstr "この勤務種別は変更されたか利用できません。種別を再読み込みして再試行してください。"
 
@@ -1767,6 +1791,12 @@ msgstr "木"
 
 msgid "Time"
 msgstr "時間"
+
+msgid "Time zone: {zone}"
+msgstr "タイムゾーン：{zone}"
+
+msgid "Timer reminder"
+msgstr "タイマー通知"
 
 msgid "Title"
 msgstr "タイトル"
@@ -1794,6 +1824,9 @@ msgstr "研修"
 
 msgid "Tue"
 msgstr "火"
+
+msgid "UTC offset"
+msgstr "UTC オフセット"
 
 msgid "Unable to apply this record change. Existing records are unchanged."
 msgstr "記録変更を適用できません。既存の記録は変更されていません。"

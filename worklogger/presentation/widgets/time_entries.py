@@ -11,6 +11,9 @@ from PySide6.QtWidgets import (QComboBox, QHBoxLayout, QLabel, QLineEdit,
 from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType, TimeRange
 from worklogger.domain.worklog.editing import split_entry, place_historical_break
 from worklogger.domain.shared.errors import InfrastructureError
+from worklogger.domain.shared.errors import ConflictError
+from worklogger.config.constants import MAX_SHIFT_HOURS
+from worklogger.presentation.widgets.end_timer import EndTimerDialog
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.date_labels import duration_label, day_label
@@ -28,6 +31,7 @@ class TimeEntryPanel(QWidget):
     dirty_changed = Signal(bool)
     busy_changed = Signal(bool)
     selection_changed = Signal(object)
+    reminder = Signal(str)
 
     def __init__(self, view_model: TimeEntryViewModel, *, compact: bool = True, parent=None, job_runner=None):
         super().__init__(parent)
@@ -36,6 +40,9 @@ class TimeEntryPanel(QWidget):
         self.is_busy = False
         self._updating = False
         self._timer_failed = False
+        self._reminder_capture = None
+        self._notified_reminders = set()
+        self._end_dialog = None
         self._day = view_model.draft.day
         self.setObjectName("worklog_entry_panel_widget")
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -381,9 +388,24 @@ class TimeEntryPanel(QWidget):
     def _update_elapsed_label(self):
         timer = self.view_model.timer
         if timer and not timer.pending_end:
-            self.auto_status_label.setText(_("Recording since {time} - {duration}").format(
+            status = _("Recording since {time} - {duration}").format(
                 time=f"{day_label(timer.started_at.date())} {timer.started_at:%H:%M}",
-                duration=duration_label(self.view_model.elapsed_hours())))
+                duration=duration_label(self.view_model.elapsed_hours()))
+            if self._reminder_capture != timer.capture_id:
+                self._reminder_capture = timer.capture_id
+                self._notified_reminders.clear()
+            messages = {"duration_limit": _("Choose an earlier end time to save this timer."),
+                        "long_timer": _("This timer has reached your reminder duration."),
+                        "continuous_timer": _("This work timer has reached your continuous-work reminder duration.")}
+            reasons = self.view_model.reminder_reasons()
+            for reason in reasons:
+                if reason not in self._notified_reminders:
+                    self._notified_reminders.add(reason)
+                    message = messages[reason]
+                    QTimer.singleShot(0, self, lambda message=message: self.reminder.emit(message))
+            if reasons:
+                status += "\n" + messages[reasons[0]]
+            self.auto_status_label.setText(status)
 
     def recording_action_state(self):
         can_start = not self.is_busy and self.view_model.timer is None and not self.view_model.restore_failed
@@ -513,6 +535,28 @@ class TimeEntryPanel(QWidget):
 
     def _finish(self):
         moment = self.view_model.now()
+        timer = self.view_model.timer
+        if timer and timer.pending_end is None and self.view_model.elapsed_hours() > MAX_SHIFT_HOURS:
+            if self._end_dialog is not None:
+                self._end_dialog.raise_()
+                self._end_dialog.activateWindow()
+                return
+            dialog = EndTimerDialog(timer.started_at, moment, moment.tzinfo, self)
+            self._end_dialog = dialog
+            capture_id = timer.capture_id
+            def accepted():
+                end = dialog.chosen_end()
+                def finish_corrected():
+                    current = self.view_model.timer
+                    if current is None or current.capture_id != capture_id:
+                        return Result.failure(ConflictError("time_entry_timer_conflict", "time_entry_timer_conflict"))
+                    return self.view_model.finish(now=end)
+                self._submit(finish_corrected)
+            dialog.accepted.connect(accepted)
+            dialog.finished.connect(lambda: setattr(self, "_end_dialog", None))
+            dialog.finished.connect(dialog.deleteLater)
+            dialog.open()
+            return
         def finish():
             advanced = self.view_model.advance(now=moment)
             return self.view_model.finish(now=moment) if advanced.ok else advanced

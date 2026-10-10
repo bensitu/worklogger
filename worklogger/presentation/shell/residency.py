@@ -228,6 +228,10 @@ class QtResidencyController:
         if self._application is not None:
             self._application.quit()
 
+    def notify_timer_reminder(self, message):
+        if self._tray_icon is not None and self._last_keep_resident and self._tray_icon.isVisible():
+            self._tray_icon.showMessage(_("Timer reminder"), message, QSystemTrayIcon.MessageIcon.Information, 10000)
+
     def _set_quit_on_last_window_closed(self, enabled: bool) -> None:
         if self._application is not None:
             self._application.setQuitOnLastWindowClosed(enabled)
