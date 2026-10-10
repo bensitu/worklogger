@@ -62,6 +62,7 @@ Overtime: {{overtime_hours}}
 | `end` | Inclusive period end |
 | `date_range` | Start and end joined by a separator |
 | `year` | Period-start year |
+| `display_name` | Current account's preferred display name, falling back to its login ID |
 | `month` | Period-start month; two digits for monthly reports |
 | `task_list` | Lines derived from work records |
 | `calendar_events` | Lines derived from imported calendar events |
@@ -69,6 +70,11 @@ Overtime: {{overtime_hours}}
 | `total_hours` | Worked hours formatted to one decimal place |
 | `overtime_hours` | Overtime formatted to one decimal place |
 | `issues`, `next_plan` | Empty list items for manual completion |
+
+For example, `Prepared by: {{display_name}}` adds an author line. The profile is
+read when generating a new draft, not captured when opening the editor. Renaming
+a profile does not alter saved reports, existing drafts, or previously exported
+documents. No author line is forced into existing custom templates.
 
 Daily-note template insertion has a smaller context: `date`, `task_list`,
 `calendar_events`, `quick_logs`, `total_hours`, `overtime_hours`, `issues`, and

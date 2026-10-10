@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, timedelta
 
 from PySide6.QtCore import QEvent, QTimer, Qt, Signal
@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMessageBox,
     QPushButton,
+    QSizePolicy,
     QScrollArea,
     QVBoxLayout,
     QWidget,
@@ -66,6 +67,7 @@ class MinimalView(QWidget):
         self._selected_day = self._config.selected_day or restored_day or self._today
         self._entry_dirty = False
         self._last_error: AppError | None = None
+        self._settings_dialog = None
 
         self.setObjectName("minimal_view")
         self.setWindowTitle(_("WorkLogger"))
@@ -146,6 +148,9 @@ class MinimalView(QWidget):
         self.date_label = QLabel("")
         self.date_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.account_label = QLabel("")
+        self.account_label.setTextFormat(Qt.TextFormat.PlainText)
+        self.account_label.setWordWrap(True)
+        self.account_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         self.account_label.setObjectName("minimal_account_label")
         self.settings_button = QPushButton(_("Settings"))
         self.settings_button.setObjectName("minimal_settings_button")
@@ -158,7 +163,7 @@ class MinimalView(QWidget):
         self.notes_button.setVisible(self._notes_workflow is not None)
         nav.addWidget(self.notes_button)
         if self._config.account_name:
-            nav.addWidget(self.account_label)
+            nav.addWidget(self.account_label, 1)
             nav.addWidget(self.settings_button)
         else:
             self.settings_button.setVisible(False)
@@ -235,6 +240,9 @@ class MinimalView(QWidget):
         super().showEvent(event)
 
     def _confirm_discard_changes_if_needed(self) -> bool:
+        if (self._settings_dialog is not None and hasattr(self._settings_dialog, "confirm_profile_leave")
+                and not self._settings_dialog.confirm_profile_leave()):
+            return False
         if bool(getattr(self._notes_workflow, "is_open", False)):
             self._set_status(_("Close the note editor before continuing."))
             return False
@@ -276,6 +284,11 @@ class MinimalView(QWidget):
         account_name = str(self._config.account_name or "").strip()
         return _("Signed in: {username}").format(username=account_name) if account_name else ""
 
+    def apply_user_profile(self, user):
+        self._config = replace(self._config, account_name=user.effective_display_name)
+        self.account_label.setText(self._account_text())
+        self.account_label.setToolTip(user.effective_display_name)
+
     def _request_logout(self) -> None:
         if not self._confirm_discard_changes_if_needed():
             return
@@ -288,6 +301,9 @@ class MinimalView(QWidget):
         logged_out = False
         if hasattr(self._settings_workflow, "create_dialog"):
             dialog = self._settings_workflow.create_dialog(self)
+            self._settings_dialog = dialog
+            if hasattr(dialog, "profile_changed"):
+                dialog.profile_changed.connect(self.apply_user_profile)
             if hasattr(dialog, "work_types_changed"):
                 dialog.work_types_changed.connect(self.entry_panel.refresh_work_types)
             if hasattr(dialog, "ai_availability_changed"):
@@ -305,6 +321,7 @@ class MinimalView(QWidget):
             try:
                 dialog.exec()
             finally:
+                self._settings_dialog = None
                 dialog.logout_requested.disconnect(logout)
                 dialog.deleteLater()
         else:

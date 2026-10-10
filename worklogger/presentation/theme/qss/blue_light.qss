@@ -38,8 +38,17 @@ QListWidget#custom_work_type_list_widget::item:selected {
 
 QWidget#settings_theme_row_widget,
 QWidget#account_avatar_row_widget,
+QWidget#account_display_name_editor_widget,
 QWidget#time_entry_actions_widget {
   background: transparent;
+}
+
+QToolButton#display_name_action_button {
+  padding: 8px;
+  min-width: 22px;
+  max-width: 22px;
+  min-height: 22px;
+  max-height: 22px;
 }
 
 QDialog,

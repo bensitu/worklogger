@@ -8,6 +8,7 @@ from dataclasses import replace
 import sqlite3
 
 from worklogger.domain.auth.models import LinkedIdentity, User
+from worklogger.domain.auth.profile import normalize_display_name
 from worklogger.domain.auth.policies import (
     generate_recovery_key,
     generate_initial_password,
@@ -124,6 +125,19 @@ class SQLiteAuthRepository:
                                     profile.email, profile.display_name)
             user = self._user_from_row(connection.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone())
         return user, linked
+
+    def set_display_name(self, user_id: int, display_name: str, *, expected_display_name: str) -> User:
+        name = normalize_display_name(display_name)
+        with self._connection_factory.transaction(write=True) as connection:
+            cursor = connection.execute(
+                "UPDATE users SET display_name=? WHERE id=? AND COALESCE(display_name,'')=?",
+                (name, user_id, expected_display_name))
+            row = connection.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone()
+            if row is None:
+                raise ValueError("user_not_found")
+            if cursor.rowcount != 1:
+                raise ValueError("user_profile_conflict")
+            return self._user_from_row(row)
 
     def verify_user(self, username: str, password: str) -> User | None:
         try:
@@ -389,6 +403,7 @@ class SQLiteAuthRepository:
         return User(
             id=int(row["id"]),
             username=str(row["username"]),
+            display_name=str(row["display_name"] or "") if "display_name" in row.keys() else "",
             is_admin=bool_from_row(row, "is_admin"),
             must_change_password=bool_from_row(row, "must_change_password"),
             created_at=parse_datetime(row["created_at"]),

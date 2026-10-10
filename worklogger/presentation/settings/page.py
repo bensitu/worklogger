@@ -73,6 +73,9 @@ class SettingsPage(QWidget):
     restore_requested = Signal()
     update_check_requested = Signal()
     test_external_model_requested = Signal()
+    profile_save_requested = Signal(str, str)
+    profile_refresh_requested = Signal()
+    profile_changed = Signal(object)
 
     def __init__(
         self,
@@ -129,17 +132,42 @@ class SettingsPage(QWidget):
         self.set_state(result.value)
         self.status_label.clear()
         self.status_label.hide()
+        self.profile_refresh_requested.emit()
         return True
 
     def set_account(self, user: User) -> None:
-        self.current_user_name_line_edit.setText(user.username)
+        self.display_name_editor.set_profile(user)
         self.current_user_id_line_edit.setText(user.username)
+        self.current_user_id_line_edit.setAccessibleName(_("Login ID"))
         self.current_user_role_line_edit.setText(
             _("Admin") if user.is_admin else _("User")
         )
         self.set_manage_users_available(user.is_admin)
         self.backup_button.setEnabled(user.is_admin)
         self.restore_button.setEnabled(user.is_admin)
+
+    def set_profile_available(self, available: bool):
+        self.display_name_editor.set_available(available)
+
+    def set_profile_error(self, error):
+        self._last_error = error
+        self.display_name_editor.set_error(display_error_message(error))
+
+    def complete_profile_save(self, user):
+        self._last_error = None
+        self.display_name_editor.complete_save(user)
+
+    def confirm_profile_leave(self):
+        if self.is_busy:
+            return False
+        if not self.display_name_editor.has_unsaved_changes:
+            return True
+        if QMessageBox.question(self, _("Discard changes?"), _("Discard unsaved display name changes?"),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
+            return False
+        self.display_name_editor.cancel_editing()
+        return True
 
     def set_manage_users_available(self, available: bool) -> None:
         self.manage_users_button.setVisible(bool(available))
@@ -477,6 +505,7 @@ class SettingsPage(QWidget):
         section = AccountSection(self._section_actions())
         for name in section.control_names:
             setattr(self, name, getattr(section, name))
+        self.display_name_editor.save_requested.connect(self.profile_save_requested.emit)
         return section
 
     def _build_about_page(self) -> QWidget:

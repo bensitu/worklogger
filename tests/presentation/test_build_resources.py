@@ -29,6 +29,8 @@ class BuildResourceTests(unittest.TestCase):
         paths = {Path(source).relative_to(ROOT).as_posix() for source, _ in resources}
         self.assertIn("worklogger/assets/images/worklogger_login_image.webp", paths)
         self.assertIn("worklogger/assets/icons/ui/LICENSE", paths)
+        self.assertIn("worklogger/assets/icons/ui/pencil.svg", paths)
+        self.assertIn("worklogger/assets/icons/ui/x.svg", paths)
         self.assertIn("worklogger/presentation/theme/qss/blue_dark.qss", paths)
         self.assertEqual(sum(path.endswith(".otf") for path in paths), 5)
         self.assertEqual(sum(path.endswith(".mo") for path in paths), 5)

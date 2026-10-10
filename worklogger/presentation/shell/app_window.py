@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 from typing import Protocol
 
@@ -370,6 +370,8 @@ class AppWindow(QMainWindow):
             self.settings_page.logout_requested.connect(self._request_logout)
         if hasattr(self.settings_page, "settings_changed"):
             self.settings_page.settings_changed.connect(self.apply_settings)
+        if hasattr(self.settings_page, "profile_changed"):
+            self.settings_page.profile_changed.connect(self.apply_user_profile)
         if hasattr(self.settings_page, "work_types_changed"):
             self.settings_page.work_types_changed.connect(self.entry_panel.refresh_work_types)
         if hasattr(self.settings_page, "ai_availability_changed"):
@@ -454,6 +456,11 @@ class AppWindow(QMainWindow):
             if account_name
             else ""
         )
+
+    def apply_user_profile(self, user):
+        self._config = replace(self._config, account_name=user.effective_display_name)
+        self.sidebar.set_profile(user.effective_display_name, self._config.account_role)
+        self.account_label.setText(self._account_text())
 
     def _request_logout(self) -> None:
         if not self._confirm_discard_changes_if_needed():
@@ -597,6 +604,8 @@ class AppWindow(QMainWindow):
             return False
         if getattr(self.settings_page, "is_busy", False):
             self._set_status(_("Please wait for the current operation."), notify=True)
+            return False
+        if hasattr(self.settings_page, "confirm_profile_leave") and not self.settings_page.confirm_profile_leave():
             return False
         if self._entry_dirty:
             confirmed = (

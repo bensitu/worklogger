@@ -132,13 +132,17 @@ class UserManagementDialog(QDialog):
             for row, user in enumerate(state.users):
                 username = QTableWidgetItem(user.username)
                 username.setData(Qt.ItemDataRole.UserRole, user.user_id)
+                username.setToolTip(user.username)
+                display_name = QTableWidgetItem(user.effective_display_name)
+                display_name.setToolTip(user.effective_display_name)
                 role = QTableWidgetItem(_("Admin") if user.is_admin else _("User"))
                 required = QTableWidgetItem(_("Required") if user.must_change_password else _("Not required"))
-                for item in (username, role, required):
+                for item in (username, display_name, role, required):
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 self.user_table.setItem(row, 0, username)
-                self.user_table.setItem(row, 1, role)
-                self.user_table.setItem(row, 2, required)
+                self.user_table.setItem(row, 1, display_name)
+                self.user_table.setItem(row, 2, role)
+                self.user_table.setItem(row, 3, required)
                 if user.user_id == selected_id:
                     selected_row = row
             if selected_row is not None:
@@ -162,9 +166,9 @@ class UserManagementDialog(QDialog):
         toolbar.addWidget(self.new_user_button)
         users.addLayout(toolbar)
 
-        self.user_table = QTableWidget(0, 3)
+        self.user_table = QTableWidget(0, 4)
         self.user_table.setHorizontalHeaderLabels(
-            (_("Username"), _("Role"), _("Password change"))
+            (_("Login ID"), _("Display name"), _("Role"), _("Password change"))
         )
         self.user_table.horizontalHeader().setSectionResizeMode(
             0,
@@ -172,18 +176,20 @@ class UserManagementDialog(QDialog):
         )
         self.user_table.horizontalHeader().setSectionResizeMode(
             1,
-            QHeaderView.ResizeMode.ResizeToContents,
+            QHeaderView.ResizeMode.Stretch,
         )
         self.user_table.horizontalHeader().setSectionResizeMode(
             2,
             QHeaderView.ResizeMode.ResizeToContents,
         )
+        self.user_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         self.user_table.setSelectionBehavior(
             QAbstractItemView.SelectionBehavior.SelectRows
         )
         self.user_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.user_table.verticalHeader().hide()
         self.user_table.setShowGrid(False)
+        self.user_table.setWordWrap(False)
         self.user_table.setAlternatingRowColors(True)
         self.user_table.verticalHeader().setDefaultSectionSize(36)
         users.addWidget(self.user_table, 1)
@@ -260,6 +266,12 @@ class UserManagementDialog(QDialog):
         self.selected_role_label.setProperty("role", "secondary")
         heading.addWidget(self.selected_role_label)
         layout.addLayout(heading)
+        self.selected_login_id_label = QLabel()
+        self.selected_login_id_label.setTextFormat(Qt.TextFormat.PlainText)
+        self.selected_login_id_label.setWordWrap(True)
+        self.selected_login_id_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        self.selected_login_id_label.setProperty("role", "secondary")
+        layout.addWidget(self.selected_login_id_label)
         self.password_change_checkbox = QCheckBox(_("Require password change"))
         layout.addWidget(self.password_change_checkbox)
         self.reset_fields = self._build_reset_box()
@@ -294,7 +306,7 @@ class UserManagementDialog(QDialog):
         self.create_user_button.setObjectName("create_user_button")
         self.create_user_button.setProperty("variant", "primary")
         set_button_icon(self.create_user_button, "user-round")
-        form.addRow(_("Username"), self.username_input)
+        form.addRow(_("Login ID"), self.username_input)
         form.addRow(_("Password"), self.create_password_input)
         form.addRow(_("Confirm password"), self.create_confirm_input)
         form.addRow(_("Admin"), _switch_row(self.create_admin_switch))
@@ -353,7 +365,9 @@ class UserManagementDialog(QDialog):
             if user is not None:
                 self.operation_tabs.setCurrentIndex(0)
         self._selection_id = user_id
-        self.selected_user_label.setText(user.username if user else _("Select a user."))
+        self.selected_user_label.setText(user.effective_display_name if user else _("Select a user."))
+        self.selected_login_id_label.setText(_("Login ID: {login_id}").format(login_id=user.username) if user else "")
+        self.selected_login_id_label.setVisible(user is not None)
         self.selected_role_label.setText((_("Admin") if user.is_admin else _("User")) if user else "")
         with QSignalBlocker(self.password_change_checkbox):
             self.password_change_checkbox.setChecked(bool(user and user.must_change_password))

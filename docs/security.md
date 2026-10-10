@@ -82,6 +82,14 @@ store instead.
 
 ## Network Exposure
 
+Display names are presentation data, not login identifiers or authorization keys.
+They are stored in the user row and included in database backups. Editing a name
+does not rotate credentials, invalidate sessions, or change record ownership.
+AI requests include the preferred name, or login ID when no alias is set; explicit
+external processing sends this name to the selected provider alongside permitted
+context. Names are quoted as data, not concatenated as user instructions, and
+rewriting preserves existing names in source text and historical messages.
+
 Normal work recording does not require a network service. Manual update checks
 contact GitHub. Model downloads contact the selected catalog URL. A connected
 external AI adapter transmits its supplied context and messages only after explicit

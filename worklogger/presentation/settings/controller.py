@@ -60,6 +60,9 @@ from worklogger.presentation.viewmodels.work_types import WorkTypeManagerViewMod
 from worklogger.presentation.widgets.work_type_manager import WorkTypeManagerDialog
 from worklogger.app.ports import AIRequest
 from worklogger.presentation.job_runner import QtJobRunner
+from worklogger.app.use_cases.user_profile import UserProfileService
+from worklogger.domain.shared.errors import InfrastructureError
+from worklogger.domain.shared.result import Result
 
 
 class SettingsWorkflowController:
@@ -97,6 +100,7 @@ class SettingsWorkflowController:
         work_types_view_model: WorkTypeManagerViewModel | None = None,
         local_inference=None,
         ai_gateway=None,
+        profile_service: UserProfileService | None = None,
     ) -> None:
         self._settings_view_model = settings_view_model
         self._capabilities = capabilities or SettingsCapabilities(
@@ -113,6 +117,8 @@ class SettingsWorkflowController:
         self._work_types_view_model = work_types_view_model
         self._local_inference = local_inference
         self._ai_gateway = ai_gateway
+        self._profile_service = profile_service
+        self._profile_revision = 0
         if local_inference is not None:
             self._capabilities = replace(self._capabilities, local_generation=local_inference.backend_available)
 
@@ -168,6 +174,11 @@ class SettingsWorkflowController:
         return page
 
     def _bind_surface(self, surface: QWidget) -> None:
+        if hasattr(surface, "set_profile_available"):
+            surface.set_profile_available(self._profile_service is not None)
+        if self._profile_service is not None:
+            surface.profile_save_requested.connect(lambda value, expected: self._save_profile(surface, value, expected))
+            surface.profile_refresh_requested.connect(lambda: self._refresh_profile(surface))
         if self._local_inference is not None or self._ai_gateway is not None:
             surface.settings_changed.connect(lambda _state: self._sync_inference(surface))
         if self._ai_gateway is not None:
@@ -286,6 +297,54 @@ class SettingsWorkflowController:
             surface.set_local_runtime_status(ready=self._local_inference.available, reason=self._local_inference.reason)
         if self._local_inference is not None or self._ai_gateway is not None:
             surface.ai_availability_changed.emit()
+
+    def _refresh_profile(self, surface):
+        if surface.is_busy:
+            return
+        self._profile_revision += 1
+        revision = self._profile_revision
+        def complete(result):
+            if not isValid(surface) or revision != self._profile_revision:
+                return
+            if result.ok and result.value is not None:
+                self._apply_profile(surface, result.value)
+            else:
+                surface.set_profile_error(result.error)
+        runner = self._job_runner or QtJobRunner(surface)
+        try:
+            runner.submit("load_user_profile", lambda _token: self._profile_service.load(), on_complete=complete)
+        except Exception:
+            complete(Result.failure(InfrastructureError("user_profile_load_failed", "user_profile_load_failed")))
+
+    def _apply_profile(self, surface, user):
+        self._user = user
+        surface.set_account(user)
+        surface.profile_changed.emit(user)
+
+    def _save_profile(self, surface, value, expected):
+        if surface.is_busy:
+            return
+        self._profile_revision += 1
+        surface.set_busy("user_profile", True)
+        surface.display_name_editor.set_busy(True)
+        def complete(result):
+            if not isValid(surface):
+                return
+            surface.set_busy("user_profile", False)
+            surface.display_name_editor.set_busy(False)
+            if result.ok and result.value is not None:
+                surface.complete_profile_save(result.value)
+                self._apply_profile(surface, result.value)
+            else:
+                surface.set_profile_error(result.error)
+                if result.error is not None and result.error.code == "user_profile_conflict":
+                    self._refresh_profile(surface)
+        runner = self._job_runner or QtJobRunner(surface)
+        try:
+            runner.submit("save_user_profile", lambda _token: self._profile_service.save_display_name(
+                value, expected_display_name=expected), on_complete=complete)
+        except Exception:
+            complete(Result.failure(InfrastructureError("user_profile_save_failed", "user_profile_save_failed")))
 
     def _test_external_model(self, surface):
         if surface.is_busy or self._ai_gateway is None:

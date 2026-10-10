@@ -17,9 +17,53 @@ from worklogger.presentation.job_runner import ImmediateJobRunner
 from worklogger.presentation.theme import configure_application_style, install_bundled_fonts, ThemeEngine
 from worklogger.domain.shared.result import Result
 from worklogger.presentation.viewmodels.reports import ReportEditorState
+from worklogger.domain.auth.models import User
+from worklogger.infrastructure.i18n import _
 
 
 class ReportSettingsLayoutChecks(unittest.TestCase):
+    def test_display_name_actions_fit_read_edit_and_error_states(self):
+        old_language, old_style, old_palette = get_language(), self.app.styleSheet(), self.app.palette()
+        engine = ThemeEngine()
+        try:
+            for language in available_languages():
+                set_language(language)
+                for dark in (False, True):
+                    self.app.setPalette(engine.qt_palette(dark=dark))
+                    self.app.setStyleSheet(engine.application_stylesheet(dark=dark))
+                    page = SettingsPage(_view_model(MemorySettingsRepository()))
+                    try:
+                        page.refresh()
+                        page.set_account(User(1, "han_meimei", display_name="Mary"))
+                        page.set_profile_available(True)
+                        page.category_nav.set_category("account")
+                        page.resize(880, 580)
+                        page.show()
+                        editor = page.display_name_editor
+                        for mode in ("read", "edit", "error"):
+                            if mode != "read":
+                                editor.begin_editing()
+                                editor.input.setText("Mary Han")
+                            if mode == "error":
+                                editor.set_error(_("Unable to save your display name. Your input has been retained."))
+                            self.app.processEvents()
+                            buttons = [button for button in (editor.edit_button, editor.save_button, editor.cancel_button)
+                                       if button.isVisible()]
+                            for button in buttons:
+                                self.assertTrue(editor.rect().contains(button.geometry()))
+                                self.assertEqual((button.width(), button.height()), (40, 40))
+                                self.assertFalse(button.icon().pixmap(20, 20).isNull())
+                                self.assertLess(editor.input.geometry().right(), button.geometry().left())
+                            self.assertTrue(page.current_user_id_line_edit.isReadOnly())
+                            self.capture(page, f"{language}-profile-{'dark' if dark else 'light'}-{mode}")
+                    finally:
+                        page.hide()
+                        page.deleteLater()
+        finally:
+            set_language(old_language)
+            self.app.setPalette(old_palette)
+            self.app.setStyleSheet(old_style)
+
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])

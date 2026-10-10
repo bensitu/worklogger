@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QVBoxLayout, QWidget, QSizePolicy
 
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets._style import refresh_style
@@ -38,6 +38,7 @@ class SidebarWidget(QFrame):
     def set_profile(self, account_name: str, role: str = "Admin") -> None:
         name = str(account_name or "").strip() or _("Local user")
         self.profile_name_label.setText(name)
+        self.profile_name_label.setToolTip(name)
         self.profile_role_label.setText(_("Admin") if role == "Admin" else _("User") if role == "User" else role)
         if self.profile_avatar_label.pixmap() is None:
             self.profile_avatar_label.setText(_initials(name))
@@ -68,6 +69,8 @@ class SidebarWidget(QFrame):
         layout.addWidget(self.profile_avatar_label, 0, Qt.AlignmentFlag.AlignHCenter)
 
         self.profile_name_label = QLabel("")
+        self.profile_name_label.setTextFormat(Qt.TextFormat.PlainText)
+        self.profile_name_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         self.profile_name_label.setObjectName("sidebar_name_label")
         self.profile_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.profile_name_label.setWordWrap(True)

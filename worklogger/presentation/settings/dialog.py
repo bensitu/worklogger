@@ -32,15 +32,15 @@ class SettingsDialog(QDialog):
         raise AttributeError(name)
 
     def accept(self) -> None:
-        if not self.page.is_busy:
+        if self.page.confirm_profile_leave():
             super().accept()
 
     def reject(self) -> None:
-        if not self.page.is_busy:
+        if self.page.confirm_profile_leave():
             super().reject()
 
     def closeEvent(self, event) -> None:
-        if self.page.is_busy:
+        if not self.page.confirm_profile_leave():
             event.ignore()
         else:
             super().closeEvent(event)

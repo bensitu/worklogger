@@ -23,6 +23,14 @@ class UserRepository(Protocol):
         ...
 
 
+class UserProfileRepository(Protocol):
+    def get_by_id(self, user_id: int) -> User | None:
+        ...
+
+    def set_display_name(self, user_id: int, display_name: str, *, expected_display_name: str) -> User:
+        ...
+
+
 class AuthCredentialRepository(Protocol):
     def create_identity_account(self, username: str, profile: ExternalIdentityProfile) -> tuple[User, LinkedIdentity]:
         ...

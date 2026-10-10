@@ -23,6 +23,8 @@ from worklogger.app.queries.report_queries import (
     ListReportTemplatesQuery,
 )
 from worklogger.domain.calendar.models import CalendarEvent
+from worklogger.domain.auth.repositories import UserProfileRepository
+from worklogger.app.use_cases.user_profile import profile_display_name
 from worklogger.domain.calendar.repositories import CalendarEventRepository
 from worklogger.domain.notes.repositories import DailyNoteRepository
 from worklogger.domain.notes.preferences import NoteSharing, note_sharing_key
@@ -247,6 +249,7 @@ class GenerateReportHandler:
         notes: DailyNoteRepository | None = None,
         translator: Callable[..., str] | None = None,
         note_settings: SettingsRepository | None = None,
+        profiles: UserProfileRepository | None = None,
     ) -> None:
         self._work_logs = work_logs
         self._quick_logs = quick_logs
@@ -255,6 +258,7 @@ class GenerateReportHandler:
         self._notes = notes
         self._note_settings = note_settings
         self._translator = translator or (lambda message, **kwargs: message)
+        self._profiles = profiles
 
     def handle(self, command: GenerateReportCommand) -> Result[GeneratedReport]:
         try:
@@ -270,6 +274,7 @@ class GenerateReportHandler:
             return Result.failure(ValidationError(str(exc), str(exc)))
 
         try:
+            display_name = profile_display_name(self._profiles, command.user_id)
             work_logs = self._work_logs.list_range(command.user_id, period.start, period.end)
             notes = ()
             if self._notes is not None and self._note_settings is not None:
@@ -303,6 +308,7 @@ class GenerateReportHandler:
                     events=events,
                     standard_hours=standard_hours,
                     translate=translate,
+                    display_name=display_name,
                 ),
             )
         return Result.success(
@@ -325,6 +331,7 @@ def _template_values(
     events: tuple[CalendarEvent, ...],
     standard_hours: float,
     translate: Callable[[str], str],
+    display_name: str = "",
 ) -> dict[str, object]:
     total = sum(work_log.worked_hours() for work_log in work_logs if not work_log.is_leave)
     overtime = sum(
@@ -333,6 +340,7 @@ def _template_values(
         if not work_log.is_leave
     )
     return {
+        "display_name": display_name,
         "date": start.isoformat(),
         "start": start.isoformat(),
         "end": end.isoformat(),

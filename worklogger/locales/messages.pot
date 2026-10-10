@@ -362,9 +362,6 @@ msgstr ""
 msgid "Current report exported for {period}."
 msgstr ""
 
-msgid "Current user"
-msgstr ""
-
 msgid "Current visible report"
 msgstr ""
 
@@ -449,6 +446,15 @@ msgstr ""
 msgid "Discard timer"
 msgstr ""
 
+msgid "Discard unsaved display name changes?"
+msgstr ""
+
+msgid "Display name"
+msgstr ""
+
+msgid "Display names must not exceed 80 characters."
+msgstr ""
+
 msgid "Domain"
 msgstr ""
 
@@ -456,6 +462,9 @@ msgid "Download"
 msgstr ""
 
 msgid "Downloading model..."
+msgstr ""
+
+msgid "Edit display name"
 msgstr ""
 
 msgid "Edit record"
@@ -819,6 +828,12 @@ msgid "Log out of your account?"
 msgstr ""
 
 msgid "Login"
+msgstr ""
+
+msgid "Login ID"
+msgstr ""
+
+msgid "Login ID: {login_id}"
 msgstr ""
 
 msgid "Logout requested"
@@ -1280,6 +1295,9 @@ msgstr ""
 msgid "Save content"
 msgstr ""
 
+msgid "Save display name"
+msgstr ""
+
 msgid "Save recovery key"
 msgstr ""
 
@@ -1622,6 +1640,9 @@ msgstr ""
 msgid "Unable to load the selected model. Check available memory or choose a smaller model."
 msgstr ""
 
+msgid "Unable to load the user profile. Please try again."
+msgstr ""
+
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr ""
 
@@ -1650,6 +1671,9 @@ msgid "Unable to save the temporary password. Choose another location and try ag
 msgstr ""
 
 msgid "Unable to save the work log. Your changes have been retained."
+msgstr ""
+
+msgid "Unable to save your display name. Your input has been retained."
 msgstr ""
 
 msgid "Unable to sign in with this provider. Please try again."
@@ -1692,6 +1716,9 @@ msgid "Update available: {version}"
 msgstr ""
 
 msgid "Update check is not configured."
+msgstr ""
+
+msgid "Use a single-line display name without control characters."
 msgstr ""
 
 msgid "Use a web proxy for this application."
@@ -1827,6 +1854,9 @@ msgid "You have unsaved work log changes. Discard them?"
 msgstr ""
 
 msgid "Your changes have been saved for {date}."
+msgstr ""
+
+msgid "Your display name changed elsewhere. Cancel to reload it before saving; your input has been retained."
 msgstr ""
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."

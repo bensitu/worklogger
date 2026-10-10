@@ -21,6 +21,22 @@ The login language uses the previous explicit language choice, otherwise a
 supported system language, otherwise English. Google and Microsoft login buttons
 are disabled in the standard application.
 
+### Display Names
+
+Login ID is the stable identifier entered at sign-in. Display name is an optional
+personal name and does not change authentication or data ownership. In Settings >
+Account, choose the pencil beside Display name, edit it, then use the checkmark to
+save or the cross to cancel. Enter saves and Esc cancels while editing. Moving
+focus does not save. Unsaved changes require confirmation before leaving; failed
+saves retain input. Clear the name and save to use the login ID again.
+
+Names support Unicode and spaces, allow up to 80 characters, and may be shared by
+different accounts. User management shows both names and login IDs so identical
+aliases remain distinguishable. Successful changes update the main and compact
+interfaces immediately and survive restarting. New AI requests use the latest
+preferred name without changing names in source text or past messages. Report
+templates can use `{{display_name}}`; already-saved report content is not rewritten.
+
 ## Calendar
 
 Use the month arrows or Today to choose a month, then select a date. The right

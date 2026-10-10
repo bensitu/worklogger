@@ -364,9 +364,6 @@ msgstr "目前密碼"
 msgid "Current report exported for {period}."
 msgstr "已匯出 {period} 的目前報表。"
 
-msgid "Current user"
-msgstr "目前使用者"
-
 msgid "Current visible report"
 msgstr "目前顯示的報表"
 
@@ -451,6 +448,15 @@ msgstr "放棄已儲存的計時狀態，不建立記錄？"
 msgid "Discard timer"
 msgstr "放棄計時"
 
+msgid "Discard unsaved display name changes?"
+msgstr "要放棄尚未儲存的顯示名稱變更嗎？"
+
+msgid "Display name"
+msgstr "顯示名稱"
+
+msgid "Display names must not exceed 80 characters."
+msgstr "顯示名稱不能超過80個字元。"
+
 msgid "Domain"
 msgstr "網域"
 
@@ -459,6 +465,9 @@ msgstr "下載"
 
 msgid "Downloading model..."
 msgstr "正在下載模型..."
+
+msgid "Edit display name"
+msgstr "編輯顯示名稱"
 
 msgid "Edit record"
 msgstr "編輯記錄"
@@ -822,6 +831,12 @@ msgstr "確定登出目前帳戶嗎？"
 
 msgid "Login"
 msgstr "登入"
+
+msgid "Login ID"
+msgstr "登入 ID"
+
+msgid "Login ID: {login_id}"
+msgstr "登入 ID：{login_id}"
 
 msgid "Logout requested"
 msgstr "已要求登出"
@@ -1282,6 +1297,9 @@ msgstr "儲存修改"
 msgid "Save content"
 msgstr "儲存內容"
 
+msgid "Save display name"
+msgstr "儲存顯示名稱"
+
 msgid "Save recovery key"
 msgstr "儲存復原金鑰"
 
@@ -1624,6 +1642,9 @@ msgstr "無法載入資料，請重試。"
 msgid "Unable to load the selected model. Check available memory or choose a smaller model."
 msgstr "無法載入所選模型。請檢查可用記憶體或選擇較小的模型。"
 
+msgid "Unable to load the user profile. Please try again."
+msgstr "無法載入使用者資料，請再試一次。"
+
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "無法取得模型，請檢查來源檔案或下載連線。"
 
@@ -1653,6 +1674,9 @@ msgstr "無法儲存臨時密碼。請選擇其他位置後重試。"
 
 msgid "Unable to save the work log. Your changes have been retained."
 msgstr "無法儲存工作記錄，您的修改已保留。"
+
+msgid "Unable to save your display name. Your input has been retained."
+msgstr "無法儲存顯示名稱，您的輸入已保留。"
 
 msgid "Unable to sign in with this provider. Please try again."
 msgstr "無法透過此服務登入，請重試。"
@@ -1695,6 +1719,9 @@ msgstr "有可用更新：{version}"
 
 msgid "Update check is not configured."
 msgstr "更新檢查尚未設定。"
+
+msgid "Use a single-line display name without control characters."
+msgstr "顯示名稱必須為單行，且不能包含控制字元。"
 
 msgid "Use a web proxy for this application."
 msgstr "為此應用程式使用網頁代理。"
@@ -1830,6 +1857,9 @@ msgstr "工作記錄有未儲存的變更。捨棄變更？"
 
 msgid "Your changes have been saved for {date}."
 msgstr "已儲存 {date} 的修改。"
+
+msgid "Your display name changed elsewhere. Cancel to reload it before saving; your input has been retained."
+msgstr "顯示名稱已在其他位置變更。請取消編輯以重新載入後再儲存，您的輸入已保留。"
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."
 msgstr "已儲存的登入無效或已過期，請重新登入。"

@@ -19,6 +19,7 @@ from worklogger.presentation.settings.sections.common import (
 )
 from worklogger.presentation.widgets import CardFrame
 from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.widgets.display_name_editor import DisplayNameEditor
 
 
 class AccountSection(_SettingsScrollPage):
@@ -33,6 +34,7 @@ class AccountSection(_SettingsScrollPage):
         "avatar_preview_label",
         "change_avatar_button",
         "reset_avatar_button",
+        "display_name_editor",
     )
 
     def __init__(self, actions: SectionActions):
@@ -41,12 +43,14 @@ class AccountSection(_SettingsScrollPage):
         card = CardFrame(object_name="settings_content_frame")
         form = QFormLayout()
         form.setSpacing(12)
-        self.current_user_name_line_edit = _readonly_line_edit("account_name_line_edit")
+        self.display_name_editor = DisplayNameEditor()
+        self.current_user_name_line_edit = self.display_name_editor.input
         form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows)
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
-        self.current_user_id_line_edit = self.current_user_name_line_edit
+        self.current_user_id_line_edit = _readonly_line_edit("account_id_line_edit")
         self.current_user_role_line_edit = _readonly_line_edit("account_role_line_edit")
-        form.addRow(_("Current user"), self.current_user_name_line_edit)
+        form.addRow(_("Display name"), self.display_name_editor)
+        form.addRow(_("Login ID"), self.current_user_id_line_edit)
         form.addRow(_("Role"), self.current_user_role_line_edit)
         avatar_row = QWidget()
         avatar_row.setObjectName("account_avatar_row_widget")

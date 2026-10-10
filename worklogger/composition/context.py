@@ -19,6 +19,7 @@ from worklogger.app.use_cases.work_logs import (
 )
 from worklogger.domain.auth.models import User
 from worklogger.domain.auth.repositories import AuthCredentialRepository
+from worklogger.domain.auth.repositories import UserProfileRepository
 from worklogger.infrastructure.calendar import (
     PythonHolidaysProvider,
 )
@@ -58,7 +59,7 @@ from worklogger.infrastructure.security.key_store import EncryptedSettingsKeySto
 from worklogger.infrastructure.local_model.store import HttpRangeDownloader
 
 
-class RuntimeAuthRepository(AuthCredentialRepository, Protocol):
+class RuntimeAuthRepository(AuthCredentialRepository, UserProfileRepository, Protocol):
     def get_by_username(self, username: str) -> User | None: ...
 
 
@@ -93,6 +94,7 @@ class RuntimeHandlers:
     ai_gateway: AccountAIGateway | None = None
     external_keys: object | None = None
     proxy_password: object | None = None
+    user_profiles: UserProfileRepository | None = None
 
 
 def _runtime_repositories(
@@ -112,7 +114,8 @@ def _runtime_repositories(
 
 
 def _runtime_handlers(
-    repositories: RuntimeRepositories, *, holiday_country: str, user_id=None, database_path=None
+    repositories: RuntimeRepositories, *, holiday_country: str, user_id=None, database_path=None,
+    user_profiles: UserProfileRepository | None = None,
 ) -> RuntimeHandlers:
     inference = None
     transport = gateway = external_keys = proxy_password = None
@@ -137,8 +140,8 @@ def _runtime_handlers(
             BuiltInTemplateProvider(),
         ),
         markdown_exporter=MarkdownExporter(),
-        rewrite_handler=RewriteTextHandler(gateway, timeout_seconds=180),
-        ai_chat_handler=AiChatHandler(gateway, timeout_seconds=180),
+        rewrite_handler=RewriteTextHandler(gateway, timeout_seconds=180, profiles=user_profiles),
+        ai_chat_handler=AiChatHandler(gateway, timeout_seconds=180, profiles=user_profiles),
         save_template_handler=SaveReportTemplateHandler(repositories.report_templates),
         reset_template_handler=ResetReportTemplateHandler(
             repositories.report_templates
@@ -153,4 +156,5 @@ def _runtime_handlers(
         ai_gateway=gateway,
         external_keys=external_keys,
         proxy_password=proxy_password,
+        user_profiles=user_profiles,
     )

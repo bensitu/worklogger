@@ -30,7 +30,7 @@ external SQLite clients still require SQLite's own locking protections.
 | Table | Key and purpose |
 | --- | --- |
 | `schema_migrations` | `version` primary key; description and applied timestamp |
-| `users` | Integer ID, unique username, password/recovery hashes and salts, administrator and password-change flags, remembered-token hash/expiry, timestamps |
+| `users` | Integer ID, unique login username, optional display name, password/recovery hashes and salts, administrator and password-change flags, remembered-token hash/expiry, timestamps |
 | `login_attempts` | Username primary key, failure count, lock expiry, last failure |
 | `worklog` | Integer entry ID; user/date, start/end, offset-aware timestamps, historical break deduction, independent content, work type, revision and capture identifier |
 | `work_types` | Account-owned custom classification IDs, normalized unique active names, accounting category, revision and archived flag |
@@ -83,12 +83,20 @@ the application version alone.
 | 7 | Replace the daily primary key with entry IDs, preserve historical content and break deductions, add date/capture indexes and optimistic revisions, and retain previous automatic drafts for conversion |
 | 8 | Complete released account fields, map older preferences, retain password-change requirements and identity metadata, and index cross-account settings lookups |
 | 9 | Add custom type name/category snapshots to work entries, an account-owned type catalog, and an indexed report-date range lookup |
+| 10 | Add an optional display name independently of the existing login identifier |
 
 Migration 9 leaves built-in classifications unchanged and initializes their
 snapshot columns to empty strings. Custom records use a `custom:` UUID identifier
 with a saved name and Work/Break/Leave category. Historical accounting uses these
 columns, not a join to the editable catalog. Catalog edits use revision checks;
 archiving hides a type from new entries without deleting its historical snapshots.
+
+Migration 10 adds `users.display_name` as non-null text with an empty default.
+An existing display-name column is retained. The login username/key, user ID,
+credentials, roles, tokens, and account-owned records are unchanged. Empty display
+names fall back to the login ID. Names are not unique, have an 80-character limit,
+and exclude control/format/surrogate characters. Changes use an account-scoped
+transaction and the previously loaded value to reject conflicting edits.
 
 The runner creates one complete private SQLite snapshot before converting populated
 tables, rather than a separate copy for each migration. Table replacement and settings-key conversion are transactional. Existing

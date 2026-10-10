@@ -11,7 +11,7 @@ consent, predictable error results, and responsive editing.
 | Administrator operations block interaction | User listing, creation, reset, changes, and deletion run on background workers; duplicate mutation and premature close are prevented. |
 | Adjacent-month cells show incorrect hours | One range query covers all 42 visible dates and their weekly totals. |
 | Report rewrite submission leaves controls locked | Submission failure restores controls and retains the draft. |
-| Account name and login ID repeat identical values | One account field is displayed; the role and avatar remain separate. |
+| Presentation names and login identifiers share one field | Separate editable Display name and read-only Login ID; fallback, authentication, and ownership remain independent. |
 | Rejected history navigation leaves misleading selection | Selection returns to the report still open in the editor. |
 | Removed users cause unrelated selection | Refresh preserves the selected user by ID; absent selections are cleared. |
 | Fixed break validation describes the wrong constraint | A dedicated error describes a positive duration of at most four hours. |
@@ -78,7 +78,7 @@ consent, predictable error results, and responsive editing.
 
 ## Verification Limits
 
-The current default suite passed 412 tests. Focused Qt layout checks passed for
+The current default suite passed 420 tests. Focused Qt layout checks passed for
 account administration, report/settings pages, recovery credentials, and model
 details. Ruff undefined/unused checks, gettext catalog validation, and whitespace
 checks also passed. Visual checks remain opt-in rather than part of default test

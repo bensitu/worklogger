@@ -364,9 +364,6 @@ msgstr "現在のパスワード"
 msgid "Current report exported for {period}."
 msgstr "{period}の現在のレポートを出力しました。"
 
-msgid "Current user"
-msgstr "現在のユーザー"
-
 msgid "Current visible report"
 msgstr "表示中のレポート"
 
@@ -451,6 +448,15 @@ msgstr "記録を作成せずに保存済みのタイマーを破棄しますか
 msgid "Discard timer"
 msgstr "タイマーを破棄"
 
+msgid "Discard unsaved display name changes?"
+msgstr "表示名の未保存の変更を破棄しますか？"
+
+msgid "Display name"
+msgstr "表示名"
+
+msgid "Display names must not exceed 80 characters."
+msgstr "表示名は80文字以内にしてください。"
+
 msgid "Domain"
 msgstr "ドメイン"
 
@@ -459,6 +465,9 @@ msgstr "ダウンロード"
 
 msgid "Downloading model..."
 msgstr "モデルをダウンロード中..."
+
+msgid "Edit display name"
+msgstr "表示名を編集"
 
 msgid "Edit record"
 msgstr "記録を編集"
@@ -822,6 +831,12 @@ msgstr "アカウントからログアウトしますか？"
 
 msgid "Login"
 msgstr "ログイン"
+
+msgid "Login ID"
+msgstr "ログインID"
+
+msgid "Login ID: {login_id}"
+msgstr "ログインID: {login_id}"
 
 msgid "Logout requested"
 msgstr "ログアウトを要求しました"
@@ -1282,6 +1297,9 @@ msgstr "変更を保存"
 msgid "Save content"
 msgstr "内容を保存"
 
+msgid "Save display name"
+msgstr "表示名を保存"
+
 msgid "Save recovery key"
 msgstr "復旧キーを保存"
 
@@ -1624,6 +1642,9 @@ msgstr "データを読み込めませんでした。もう一度お試しくだ
 msgid "Unable to load the selected model. Check available memory or choose a smaller model."
 msgstr "選択したモデルを読み込めません。空きメモリを確認するか、小さいモデルを選択してください。"
 
+msgid "Unable to load the user profile. Please try again."
+msgstr "ユーザープロフィールを読み込めません。再試行してください。"
+
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "モデルを取得できませんでした。元のファイルまたはダウンロード接続を確認してください。"
 
@@ -1653,6 +1674,9 @@ msgstr "一時パスワードを保存できません。別の場所を選んで
 
 msgid "Unable to save the work log. Your changes have been retained."
 msgstr "作業記録を保存できませんでした。変更内容は保持されています。"
+
+msgid "Unable to save your display name. Your input has been retained."
+msgstr "表示名を保存できません。入力内容は保持されています。"
 
 msgid "Unable to sign in with this provider. Please try again."
 msgstr "このプロバイダーでログインできませんでした。もう一度お試しください。"
@@ -1695,6 +1719,9 @@ msgstr "更新があります：{version}"
 
 msgid "Update check is not configured."
 msgstr "更新確認は未設定です。"
+
+msgid "Use a single-line display name without control characters."
+msgstr "表示名は制御文字を含まない1行の文字列にしてください。"
 
 msgid "Use a web proxy for this application."
 msgstr "このアプリでWebプロキシを使用します。"
@@ -1830,6 +1857,9 @@ msgstr "業務記録に未保存の変更があります。破棄しますか？
 
 msgid "Your changes have been saved for {date}."
 msgstr "{date}の変更を保存しました。"
+
+msgid "Your display name changed elsewhere. Cancel to reload it before saving; your input has been retained."
+msgstr "表示名が別の場所で変更されました。保存する前に編集をキャンセルして再読み込みしてください。入力内容は保持されています。"
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."
 msgstr "保存済みのログイン情報が無効か、有効期限が切れています。再度ログインしてください。"

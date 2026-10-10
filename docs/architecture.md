@@ -155,6 +155,15 @@ mapping object; optimistic updates, overlap checks, and timer transitions remain
 inside the write transaction. Custom-type operations use an application protocol,
 and historical accounting depends on immutable record snapshots, not catalog joins.
 
+`UserProfileService` binds display-name writes to the signed-in account. Its
+repository update checks the previously loaded value within one transaction.
+The Account section uses an inline editor; the controller submits reads/writes to
+the background runner and discards stale profile-load results. Profile change
+signals update identity labels without rebuilding recording or report drafts.
+AI and report generation read the current profile through an injected repository;
+they do not rely on the immutable user snapshot held at login. `User.username`
+remains the login identifier, while `effective_display_name` centralizes fallback.
+
 Feature switches control assistant, model-management, and update-check composition,
 but do not supply missing native dependencies. AI handlers share an account-scoped
 local inference service through `AccountAIGateway`; weights load only on background

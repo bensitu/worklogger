@@ -323,7 +323,8 @@ def _build_runtime_for_user(
     job_runner: JobRunner | None = None,
 ) -> Result[DesktopRuntime]:
     repositories = _runtime_repositories(connection_factory)
-    handlers = _runtime_handlers(repositories, holiday_country=detect_country(), user_id=user.id, database_path=database_path)
+    handlers = _runtime_handlers(repositories, holiday_country=detect_country(), user_id=user.id,
+                                 database_path=database_path, user_profiles=auth_repository)
     remember_store = remember_session_store or _remember_session_store()
     time_entry_view_model = _build_time_entry_view_model(user, repositories, handlers)
     settings_workflow = _build_settings_workflow(
@@ -440,7 +441,7 @@ def _window_config_for_user(
 ) -> AppWindowConfig:
     return replace(
         window_config,
-        account_name=window_config.account_name or user.username,
+        account_name=window_config.account_name or user.effective_display_name,
         account_role=_("Admin") if user.is_admin else _("User"),
     )
 

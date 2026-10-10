@@ -49,6 +49,11 @@ class UserListItem:
     username: str
     is_admin: bool
     must_change_password: bool
+    display_name: str = ""
+
+    @property
+    def effective_display_name(self):
+        return self.display_name.strip() or self.username
 
 
 @dataclass(frozen=True)
@@ -162,6 +167,7 @@ def _item_from_user(user: User) -> UserListItem:
     return UserListItem(
         user_id=user.id,
         username=user.username,
+        display_name=user.display_name,
         is_admin=user.is_admin,
         must_change_password=user.must_change_password,
     )

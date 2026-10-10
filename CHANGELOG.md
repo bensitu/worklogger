@@ -14,6 +14,10 @@ Application version: 4.0.0.
 
 ### Desktop Interface
 
+- Added editable account display names separate from read-only login IDs, with
+  inline save/cancel and keyboard actions, live identity labels, current AI
+  addressing, and an optional report author variable.
+
 - Moved authentication, administrator operations, note loading, and report
   loading/saving/export to background workers with recoverable busy state.
 - Corrected adjacent-month calendar hours, rejected-history selection, compact
@@ -60,6 +64,9 @@ Application version: 4.0.0.
   do not open a success dialog.
 
 ### Storage and Compatibility
+
+- Schema 10 adds optional display names without changing existing identities,
+  credentials, roles, sessions, record ownership, or saved report content.
 
 - Added transactional external account/identity creation, recovery-attempt limits,
   safe application error boundaries, content size limits, and cross-device

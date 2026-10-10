@@ -87,6 +87,7 @@ def _build_reports_workflow(
                 notes=repositories.daily_notes,
                 translator=_,
                 note_settings=repositories.settings,
+                profiles=handlers.user_profiles,
             ),
             get_report_handler=GetReportForPeriodHandler(repositories.reports),
             list_reports_handler=ListReportsHandler(repositories.reports),

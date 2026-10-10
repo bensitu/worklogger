@@ -49,6 +49,23 @@ def _view_model(
 
 
 class UserManagementPresentationTests(unittest.TestCase):
+    def test_duplicate_display_names_remain_distinguishable_by_login_id(self):
+        from dataclasses import replace
+        from worklogger.presentation.viewmodels.user_management import UserManagementState, UserListItem
+        dialog = UserManagementDialog(_view_model(MemoryAuthRepository(), 1), job_runner=ImmediateJobRunner())
+        self.addCleanup(dialog.deleteLater)
+        users = (UserListItem(1, "han_meimei", False, False, "Mary"),
+                 UserListItem(2, "another_login", False, False, "Mary"))
+        dialog.set_state(UserManagementState(users))
+        for row, user in enumerate(users):
+            dialog.user_table.selectRow(row)
+            self.assertEqual(dialog.user_table.item(row, 0).text(), user.username)
+            self.assertEqual(dialog.user_table.item(row, 1).text(), "Mary")
+            self.assertEqual(dialog.selected_user_label.text(), "Mary")
+            self.assertIn(user.username, dialog.selected_login_id_label.text())
+        dialog.set_state(UserManagementState((users[0], replace(users[1], display_name="Amy"))))
+        self.assertEqual(dialog.selected_user_label.text(), "Amy")
+
     def test_background_account_changes_keep_ui_responsive_and_selection_explicit(self):
         repository = MemoryAuthRepository()
         admin = RegisterUserHandler(repository).handle(RegisterUserCommand("admin", "secret123"))

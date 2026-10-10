@@ -28,6 +28,7 @@ from worklogger.app.use_cases.work_logs import (
     GetAllWorkLogsHandler,
 )
 from worklogger.app.use_cases.work_types import WorkTypeService
+from worklogger.app.use_cases.user_profile import UserProfileService
 from worklogger.presentation.viewmodels.work_types import WorkTypeManagerViewModel
 from worklogger.composition.context import (
     RuntimeAuthRepository,
@@ -96,6 +97,7 @@ def _build_settings_workflow(
         ),
         auth_view_model=auth_view_model,
         user=user,
+        profile_service=UserProfileService(user_id=user.id, repository=auth_repository) if auth_repository is not None else None,
         data_management_view_model=_build_data_management_view_model(
             user=user,
             connection_factory=connection_factory,

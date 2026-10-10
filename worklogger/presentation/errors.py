@@ -25,6 +25,16 @@ def display_error_code(code: str) -> str:
     """Translate known error codes without displaying raw exception text or logging previews."""
 
     match code:
+        case "display_name_invalid":
+            return _("Use a single-line display name without control characters.")
+        case "display_name_too_long":
+            return _("Display names must not exceed 80 characters.")
+        case "user_profile_conflict":
+            return _("Your display name changed elsewhere. Cancel to reload it before saving; your input has been retained.")
+        case "user_profile_save_failed":
+            return _("Unable to save your display name. Your input has been retained.")
+        case "user_profile_load_failed":
+            return _("Unable to load the user profile. Please try again.")
         case "fixed_break_hours_invalid":
             return _("Break duration must be greater than zero and no more than four hours.")
         case "duplicate_date":

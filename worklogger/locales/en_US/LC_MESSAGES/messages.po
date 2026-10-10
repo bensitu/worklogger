@@ -364,9 +364,6 @@ msgstr "Current password"
 msgid "Current report exported for {period}."
 msgstr "Current report exported for {period}."
 
-msgid "Current user"
-msgstr "Current user"
-
 msgid "Current visible report"
 msgstr "Current visible report"
 
@@ -451,6 +448,15 @@ msgstr "Discard the saved timer without creating a record?"
 msgid "Discard timer"
 msgstr "Discard timer"
 
+msgid "Discard unsaved display name changes?"
+msgstr "Discard unsaved display name changes?"
+
+msgid "Display name"
+msgstr "Display name"
+
+msgid "Display names must not exceed 80 characters."
+msgstr "Display names must not exceed 80 characters."
+
 msgid "Domain"
 msgstr "Domain"
 
@@ -459,6 +465,9 @@ msgstr "Download"
 
 msgid "Downloading model..."
 msgstr "Downloading model..."
+
+msgid "Edit display name"
+msgstr "Edit display name"
 
 msgid "Edit record"
 msgstr "Edit record"
@@ -822,6 +831,12 @@ msgstr "Log out of your account?"
 
 msgid "Login"
 msgstr "Login"
+
+msgid "Login ID"
+msgstr "Login ID"
+
+msgid "Login ID: {login_id}"
+msgstr "Login ID: {login_id}"
 
 msgid "Logout requested"
 msgstr "Logout requested"
@@ -1282,6 +1297,9 @@ msgstr "Save changes"
 msgid "Save content"
 msgstr "Save content"
 
+msgid "Save display name"
+msgstr "Save display name"
+
 msgid "Save recovery key"
 msgstr "Save recovery key"
 
@@ -1624,6 +1642,9 @@ msgstr "Unable to load data. Please try again."
 msgid "Unable to load the selected model. Check available memory or choose a smaller model."
 msgstr "Unable to load the selected model. Check available memory or choose a smaller model."
 
+msgid "Unable to load the user profile. Please try again."
+msgstr "Unable to load the user profile. Please try again."
+
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "Unable to obtain the model. Check the source file or download connection."
 
@@ -1653,6 +1674,9 @@ msgstr "Unable to save the temporary password. Choose another location and try a
 
 msgid "Unable to save the work log. Your changes have been retained."
 msgstr "Unable to save the work log. Your changes have been retained."
+
+msgid "Unable to save your display name. Your input has been retained."
+msgstr "Unable to save your display name. Your input has been retained."
 
 msgid "Unable to sign in with this provider. Please try again."
 msgstr "Unable to sign in with this provider. Please try again."
@@ -1695,6 +1719,9 @@ msgstr "Update available: {version}"
 
 msgid "Update check is not configured."
 msgstr "Update check is not configured."
+
+msgid "Use a single-line display name without control characters."
+msgstr "Use a single-line display name without control characters."
 
 msgid "Use a web proxy for this application."
 msgstr "Use a web proxy for this application."
@@ -1830,6 +1857,9 @@ msgstr "You have unsaved work log changes. Discard them?"
 
 msgid "Your changes have been saved for {date}."
 msgstr "Your changes have been saved for {date}."
+
+msgid "Your display name changed elsewhere. Cancel to reload it before saving; your input has been retained."
+msgstr "Your display name changed elsewhere. Cancel to reload it before saving; your input has been retained."
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."
 msgstr "Your saved sign-in is invalid or expired. Please sign in again."

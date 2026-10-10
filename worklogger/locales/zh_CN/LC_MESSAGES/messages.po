@@ -364,9 +364,6 @@ msgstr "当前密码"
 msgid "Current report exported for {period}."
 msgstr "已导出 {period} 的当前报表。"
 
-msgid "Current user"
-msgstr "当前用户"
-
 msgid "Current visible report"
 msgstr "当前显示的报表"
 
@@ -451,6 +448,15 @@ msgstr "放弃已保存的计时状态，不创建记录？"
 msgid "Discard timer"
 msgstr "放弃计时"
 
+msgid "Discard unsaved display name changes?"
+msgstr "要放弃尚未保存的显示名称修改吗？"
+
+msgid "Display name"
+msgstr "显示名称"
+
+msgid "Display names must not exceed 80 characters."
+msgstr "显示名称不能超过80个字符。"
+
 msgid "Domain"
 msgstr "域"
 
@@ -459,6 +465,9 @@ msgstr "下载"
 
 msgid "Downloading model..."
 msgstr "正在下载模型..."
+
+msgid "Edit display name"
+msgstr "编辑显示名称"
 
 msgid "Edit record"
 msgstr "编辑记录"
@@ -822,6 +831,12 @@ msgstr "确定退出当前账户吗？"
 
 msgid "Login"
 msgstr "登录"
+
+msgid "Login ID"
+msgstr "登录 ID"
+
+msgid "Login ID: {login_id}"
+msgstr "登录 ID：{login_id}"
 
 msgid "Logout requested"
 msgstr "已请求退出登录"
@@ -1282,6 +1297,9 @@ msgstr "保存修改"
 msgid "Save content"
 msgstr "保存内容"
 
+msgid "Save display name"
+msgstr "保存显示名称"
+
 msgid "Save recovery key"
 msgstr "保存恢复密钥"
 
@@ -1624,6 +1642,9 @@ msgstr "无法加载数据，请重试。"
 msgid "Unable to load the selected model. Check available memory or choose a smaller model."
 msgstr "无法加载所选模型。请检查可用内存或选择较小的模型。"
 
+msgid "Unable to load the user profile. Please try again."
+msgstr "无法加载用户资料，请重试。"
+
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "无法获取模型，请检查源文件或下载连接。"
 
@@ -1653,6 +1674,9 @@ msgstr "无法保存临时密码。请选择其他位置后重试。"
 
 msgid "Unable to save the work log. Your changes have been retained."
 msgstr "无法保存工作记录，您的修改已保留。"
+
+msgid "Unable to save your display name. Your input has been retained."
+msgstr "无法保存显示名称，您的输入已保留。"
 
 msgid "Unable to sign in with this provider. Please try again."
 msgstr "无法通过此服务登录，请重试。"
@@ -1695,6 +1719,9 @@ msgstr "有可用更新：{version}"
 
 msgid "Update check is not configured."
 msgstr "更新检查尚未配置。"
+
+msgid "Use a single-line display name without control characters."
+msgstr "显示名称必须为单行，且不能包含控制字符。"
 
 msgid "Use a web proxy for this application."
 msgstr "为此应用使用网页代理。"
@@ -1830,6 +1857,9 @@ msgstr "工作记录有未保存的修改。放弃修改？"
 
 msgid "Your changes have been saved for {date}."
 msgstr "已保存 {date} 的修改。"
+
+msgid "Your display name changed elsewhere. Cancel to reload it before saving; your input has been retained."
+msgstr "显示名称已在其他位置修改。请取消编辑以重新加载后再保存，您的输入已保留。"
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."
 msgstr "已保存的登录无效或已过期，请重新登录。"

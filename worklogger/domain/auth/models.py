@@ -17,6 +17,11 @@ class User:
     recovery_key_created_at: datetime | None = None
     last_login_at: datetime | None = None
     local_password_enabled: bool = True
+    display_name: str = ""
+
+    @property
+    def effective_display_name(self) -> str:
+        return self.display_name.strip() or self.username
 
 
 @dataclass(frozen=True)
