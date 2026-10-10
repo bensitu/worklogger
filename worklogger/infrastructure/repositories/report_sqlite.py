@@ -81,6 +81,20 @@ class SQLiteReportRepository:
                 "WHERE r.user_id=? AND r.id=? ORDER BY v.revision DESC LIMIT 50", (user_id, report_id)).fetchall()
         return tuple(ReportRevision(row["revision"], row["content"], parse_datetime(row["saved_at"]), decode_provenance(row["provenance"])) for row in rows)
 
+    def list_revision_headers(self, user_id, report_id):
+        with self._connection_factory.connection() as connection:
+            rows = connection.execute("SELECT v.revision,v.saved_at FROM report_revisions v JOIN reports r ON r.id=v.report_id "
+                "WHERE r.user_id=? AND r.id=? ORDER BY v.revision DESC LIMIT 50", (user_id, report_id)).fetchall()
+        return tuple(ReportRevision(row["revision"], "", parse_datetime(row["saved_at"])) for row in rows)
+
+    def get_revision(self, user_id, report_id, revision):
+        with self._connection_factory.connection() as connection:
+            row = connection.execute("SELECT v.* FROM report_revisions v JOIN reports r ON r.id=v.report_id "
+                "WHERE r.user_id=? AND r.id=? AND v.revision=?", (user_id, report_id, revision)).fetchone()
+        if row is None:
+            raise ValueError("report_not_found")
+        return ReportRevision(row["revision"], row["content"], parse_datetime(row["saved_at"]), decode_provenance(row["provenance"]))
+
     def restore_revision(self, user_id, report_id, revision, expected_revision):
         with self._connection_factory.transaction(write=True) as connection:
             row = connection.execute("SELECT * FROM reports WHERE user_id=? AND id=?", (user_id, report_id)).fetchone()
@@ -135,13 +149,16 @@ class SQLiteReportRepository:
             ).fetchall()
         return map_rows(rows, self._from_row)
 
-    def remove(self, user_id: int, report_id: int, *, expected_content: str | None = None) -> None:
+    def remove(self, user_id: int, report_id: int, *, expected_content: str | None = None, expected_revision: int | None = None) -> None:
         with self._connection_factory.transaction(write=True) as connection:
             query = "DELETE FROM reports WHERE user_id=? AND id=?"
             parameters = (user_id, report_id)
             if expected_content is not None:
                 query += " AND content=?"
                 parameters += (expected_content,)
+            if expected_revision is not None:
+                query += " AND revision=?"
+                parameters += (expected_revision,)
             if connection.execute(query, parameters).rowcount != 1:
                 exists = connection.execute("SELECT 1 FROM reports WHERE user_id=? AND id=?", (user_id, report_id)).fetchone()
                 raise ValueError("report_conflict" if exists else "report_not_found")

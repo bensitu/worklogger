@@ -9,8 +9,43 @@ modules, keyring backends, certificate data, and selected optional packages.
 
 Direct runtime dependencies are pinned in `requirements.txt`, and the build
 dependency is pinned in `requirements-build.txt`. Optional native inference has
-its own `requirements-ai.txt`. Transitive dependencies and platform wheels are
-not fully locked; record the complete environment for each distributed artifact:
+its own `requirements-ai.txt`. The Windows AMD64 CPython 3.11.9 build environment,
+including transitive dependencies and bootstrap tools, is captured in
+`requirements/windows-cpython311.lock.json` and its hash-pinned `.txt` companion.
+Other Python versions, architectures and operating systems require their own lock
+and actual artifact verification; do not reuse Windows wheels on those targets.
+
+Install in an isolated environment and verify the exact target, input fingerprints
+and installed package set before building:
+
+```powershell
+python -m venv .venv-release
+.venv-release\Scripts\python.exe -m pip install --require-hashes -r requirements/windows-cpython311.lock.txt
+.venv-release\Scripts\python.exe scripts/lock_environment.py requirements/windows-cpython311.lock.json
+.venv-release\Scripts\python.exe scripts/release_artifact.py --lock requirements/windows-cpython311.lock.json --build --zip
+```
+
+The last command runs the default behavior suite, builds the regular windowed
+application, verifies its resources and isolated executable checks, and creates an
+archive plus a SHA-256 inventory in `release/`. Visual checks are not part of every
+build. Artifacts include `build-info.json` with application version, source digest,
+repository revision, dependency versions, lock fingerprint and native-inference
+inclusion. The digest identifies source content even when changes are not committed.
+The `source_dirty` field identifies builds with uncommitted repository changes.
+Build metadata and the repository's GPL license are included by `WorkLogger.spec`.
+
+To capture a new target lock after deliberately resolving and reviewing dependency
+updates in a clean environment:
+
+```sh
+python scripts/lock_environment.py requirements/target.lock.json --capture
+```
+
+This downloads target wheels, records their hashes, and creates the paired install
+file. It does not certify dependency security or permit skipping review. For a native
+inference lock, install `requirements-ai.txt` first and use `--with-local-inference`
+when capturing; native wheel availability must be verified on that target.
+For diagnostic environment information:
 
 ```sh
 python -m pip freeze
@@ -34,6 +69,8 @@ The script compiles gettext catalogs, checks them, validates resources, and invo
 PyInstaller with the repository specification. `--check` validates translations,
 resources, and required Python module availability, but does not verify native
 library loading or the resulting artifact.
+Use `--lock requirements/windows-cpython311.lock.json` to require the locked build
+environment. A native-inference build also requires that dependency in its lock.
 
 For a Windows artifact with a diagnostic console:
 
@@ -42,11 +79,22 @@ python scripts/build.py --console
 $env:WORKLOGGER_LANG = "en_US"
 .\dist\WorkLogger\WorkLogger.exe --smoke-import
 .\dist\WorkLogger\WorkLogger.exe --smoke-startup
+.\dist\WorkLogger\WorkLogger.exe --smoke-workflows
 ```
 
 The build replaces its generated output directory. Never store the only copy of
 user data under `dist/`, and do not rebuild over a running executable. Regular
 Windows distribution builds omit the diagnostic console.
+The workflow check creates a temporary older daily-record database, upgrades a copy,
+verifies credentials, recording/context operations, project accounting, report
+versions, XLSX/PDF readability and a complete backup. It does not use personal
+accounts or make provider requests. These executable checks are also required for
+windowed builds and rely on process exit status, not console availability.
+
+The verification script rejects private database/sidecar/model/session files in the
+artifact. It does not certify an interactive login, system credential-store access,
+tray delivery, a real local model or external provider. Signing, notarization and
+non-Windows target checks remain separate release requirements.
 
 ## Resources
 

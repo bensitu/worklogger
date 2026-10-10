@@ -445,6 +445,12 @@ msgstr "Dark mode"
 msgid "Data"
 msgstr "Data"
 
+msgid "Data directory"
+msgstr "Data directory"
+
+msgid "Data location"
+msgstr "Data location"
+
 msgid "Data restored successfully."
 msgstr "Data restored successfully."
 
@@ -1198,6 +1204,9 @@ msgstr "Only adjacent records with matching types and context can be merged."
 msgid "Open"
 msgstr "Open"
 
+msgid "Open data directory"
+msgstr "Open data directory"
+
 msgid "Open in editor"
 msgstr "Open in editor"
 
@@ -1720,6 +1729,9 @@ msgstr "Show leaves"
 msgid "Show password"
 msgstr "Show password"
 
+msgid "Showing the first {count} source references."
+msgstr "Showing the first {count} source references."
+
 msgid "Showing {count} records"
 msgstr "Showing {count} records"
 
@@ -1848,6 +1860,9 @@ msgstr "The CSV file exceeds the supported size or row limit."
 
 msgid "The ID or password is incorrect."
 msgstr "The ID or password is incorrect."
+
+msgid "The data directory is unavailable."
+msgstr "The data directory is unavailable."
 
 msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 msgstr "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
@@ -2055,6 +2070,9 @@ msgstr "Unable to load timesheet records. Your report draft is unchanged."
 
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "Unable to obtain the model. Check the source file or download connection."
+
+msgid "Unable to open the data directory."
+msgstr "Unable to open the data directory."
 
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "Unable to read the model file. Check its access permissions."
@@ -2274,6 +2292,12 @@ msgstr "Worked hours"
 
 msgid "Worked: {hours}"
 msgstr "Worked: {hours}"
+
+msgid "Workflow verification failed."
+msgstr "Workflow verification failed."
+
+msgid "Workflow verification passed."
+msgstr "Workflow verification passed."
 
 msgid "Write a note for this date..."
 msgstr "Write a note for this date..."

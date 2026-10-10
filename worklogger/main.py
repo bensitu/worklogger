@@ -320,6 +320,16 @@ def main(
 ) -> int:
     set_language(os.environ.get("WORKLOGGER_LANG"))
     args = list(sys.argv[1:] if argv is None else argv)
+    if "--smoke-workflows" in args:
+        os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+        from worklogger.diagnostics import check_workflows
+        try:
+            check_workflows()
+        except Exception as error:
+            _safe_stdout(_("Workflow verification failed.") + " " + type(error).__name__)
+            return 1
+        _safe_stdout(_("Workflow verification passed."))
+        return 0
     if "--help" in args or "-h" in args:
         _safe_stdout(_("WorkLogger command line"))
         _safe_stdout(_("No arguments start the desktop application."))

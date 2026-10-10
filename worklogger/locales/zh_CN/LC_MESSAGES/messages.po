@@ -445,6 +445,12 @@ msgstr "深色模式"
 msgid "Data"
 msgstr "数据"
 
+msgid "Data directory"
+msgstr "数据目录"
+
+msgid "Data location"
+msgstr "数据位置"
+
 msgid "Data restored successfully."
 msgstr "数据恢复成功。"
 
@@ -1198,6 +1204,9 @@ msgstr "仅可合并工作类型和关联一致的相邻记录。"
 msgid "Open"
 msgstr "打开"
 
+msgid "Open data directory"
+msgstr "打开数据目录"
+
 msgid "Open in editor"
 msgstr "正在编辑"
 
@@ -1720,6 +1729,9 @@ msgstr "显示休假"
 msgid "Show password"
 msgstr "显示密码"
 
+msgid "Showing the first {count} source references."
+msgstr "显示前 {count} 个来源引用。"
+
 msgid "Showing {count} records"
 msgstr "已显示 {count} 条记录"
 
@@ -1848,6 +1860,9 @@ msgstr "CSV 文件超出支持的大小或行数限制。"
 
 msgid "The ID or password is incorrect."
 msgstr "ID 或密码不正确。"
+
+msgid "The data directory is unavailable."
+msgstr "数据目录不可用。"
 
 msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 msgstr "无法读取数据库，原始文件已保留。请按照数据库恢复说明恢复经过验证的备份。"
@@ -2055,6 +2070,9 @@ msgstr "无法加载工时表记录，报表草稿未改变。"
 
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "无法获取模型，请检查源文件或下载连接。"
+
+msgid "Unable to open the data directory."
+msgstr "无法打开数据目录。"
 
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "无法读取模型文件，请检查访问权限。"
@@ -2274,6 +2292,12 @@ msgstr "工作时长"
 
 msgid "Worked: {hours}"
 msgstr "已工作：{hours}"
+
+msgid "Workflow verification failed."
+msgstr "工作流验证失败。"
+
+msgid "Workflow verification passed."
+msgstr "工作流验证通过。"
 
 msgid "Write a note for this date..."
 msgstr "输入这一天的笔记..."

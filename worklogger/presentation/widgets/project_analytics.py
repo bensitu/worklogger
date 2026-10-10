@@ -43,7 +43,7 @@ class ProjectAnalyticsDialog(QDialog):
         root.addLayout(dates)
         self.results = QTreeWidget()
         self.results.setHeaderLabels([_("Project"), _("Work item"), _("Work hours"), _("Rest hours"), _("Leave hours"), _("Work days"), _("Records")])
-        self.results.setRootIsDecorated(False)
+        self.results.setRootIsDecorated(True)
         self.results.setUniformRowHeights(True)
         self.results.setColumnWidth(0, 160)
         self.results.setColumnWidth(1, 180)
@@ -100,8 +100,15 @@ class ProjectAnalyticsDialog(QDialog):
                 row = QTreeWidgetItem([label, context.work_item_label,
                     duration_label(group.work_hours), duration_label(group.rest_hours), duration_label(group.leave_hours),
                     str(group.work_days), str(group.record_count)])
-                row.setData(0, Qt.ItemDataRole.UserRole, context)
+                row.setData(0, Qt.ItemDataRole.UserRole, (context, True))
                 self.results.addTopLevelItem(row)
+                for child in group.children:
+                    item = QTreeWidgetItem(["", child.context.work_item_label or _("No work item"),
+                        duration_label(child.work_hours), duration_label(child.rest_hours), duration_label(child.leave_hours),
+                        str(child.work_days), str(child.record_count)])
+                    item.setData(0, Qt.ItemDataRole.UserRole, (child.context, False))
+                    row.addChild(item)
+                row.setExpanded(True)
                 for index, value in enumerate((group.work_hours, group.rest_hours, group.leave_hours)):
                     totals[index] += value
             self._range = (start, end)
@@ -120,11 +127,11 @@ class ProjectAnalyticsDialog(QDialog):
         row = self.results.currentItem()
         if self._range is None or row is None:
             return
-        context = row.data(0, Qt.ItemDataRole.UserRole)
+        context, whole_project = row.data(0, Qt.ItemDataRole.UserRole)
         criteria = EntryFilter(*self._range, project_id=context.project_id, work_item_id=context.work_item_id,
             unclassified=context.project_id is None,
             project_label=context.project_label if context.project_id is None else None,
-            work_item_label=context.work_item_label if context.work_item_id is None else None)
+            work_item_label=context.work_item_label if context.work_item_id is None and not whole_project else None)
         dialog = RecordSearchDialog(self._records, self._range[0], self, criteria=criteria,
                                    job_runner=self._runner, selection_handler=self._selection)
         dialog.entry_selected.connect(lambda _entry: self.accept())

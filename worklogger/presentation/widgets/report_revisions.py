@@ -108,16 +108,26 @@ class ReportRevisionsDialog(QDialog):
                 self.versions.addItem(item)
             if self.versions.count():
                 self.versions.setCurrentRow(0)
-        self._run("report_versions", lambda: self._model.list_revisions(self._state), completed)
+        reader = getattr(self._model, "list_revision_headers", self._model.list_revisions)
+        self._run("report_versions", lambda: reader(self._state), completed)
 
     def _preview(self, current, _previous=None):
         if current is None:
             self.restore_button.setEnabled(False)
             return
         version = current.data(Qt.ItemDataRole.UserRole)
-        self.preview.setPlainText(version.content)
-        self.sources.setPlainText(provenance_text(version.provenance))
-        self.restore_button.setEnabled(not self._busy and version.revision != self._state.revision)
+        def display(result):
+            if not result.ok:
+                self.status_label.setText(display_error_message(result.error))
+                return
+            value = result.value
+            self.preview.setPlainText(value.content)
+            self.sources.setPlainText(provenance_text(value.provenance, reference_limit=1000))
+            self.restore_button.setEnabled(not self._busy and version.revision != self._state.revision)
+        if hasattr(self._model, "get_revision"):
+            self._run("report_version_preview", lambda: self._model.get_revision(self._state, version.revision), display)
+        else:
+            display(Result.success(version))
 
     def _restore(self):
         current = self.versions.currentItem()

@@ -436,7 +436,7 @@ class AppWindow(QMainWindow):
         self.entry_panel.refresh_projects()
 
     def _open_found_entry(self, record):
-        if self.entry_panel.is_busy or not self.select_day(record.day):
+        if self.entry_panel.is_busy or not self._switch_route("calendar") or not self.select_day(record.day):
             return False
         self.entry_panel.edit_entry(record)
         original = self._time_entry_view_model.draft.original

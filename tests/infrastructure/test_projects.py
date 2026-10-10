@@ -119,11 +119,16 @@ class ProjectTests(unittest.TestCase):
                                  ("12:00", "13:00", WorkType.PAID_LEAVE)):
             self.records.save_entry(WorkLog(self.user.id, day, start, end, work_type=kind, context=context))
         self.records.save_entry(WorkLog(self.user.id, day, "13:00", "14:00", context=WorkContext(project_label="Imported")))
+        self.records.save_entry(WorkLog(self.user.id, day, "14:00", "15:00", context=WorkContext(project_label=project.id, work_item_label=item.id)))
+        another = self.projects.save_work_item(project.id, "Implementation").value
+        self.records.save_entry(WorkLog(self.user.id, day, "15:00", "16:00", context=WorkContext(project.id, another.id, project.name, another.title)))
         self.records.save_entry(WorkLog(self.other.id, day, "09:00", "16:00"))
         handler = ProjectAnalyticsHandler(self.records, self.settings)
         groups = handler.handle(self.user.id, day, day).value
         group = next(value for value in groups if value.context.project_id == project.id)
-        self.assertEqual((group.work_hours, group.rest_hours, group.leave_hours, group.work_days, group.record_count), (2, 1, 1, 1, 3))
+        self.assertEqual((group.work_hours, group.rest_hours, group.leave_hours, group.work_days, group.record_count), (3, 1, 1, 1, 4))
+        self.assertEqual(len(group.children), 2)
+        self.assertEqual(sum(child.work_days for child in group.children), 2)
         self.assertEqual(sum(value.work_hours for value in groups), self.records.get_for_day(self.user.id, day).worked_hours())
         self.assertEqual(len(self.records.search_entries(self.user.id, EntryFilter(day, day, project_id=project.id, work_item_id=item.id)).entries), 3)
         self.assertEqual(len(self.records.search_entries(self.user.id, EntryFilter(day, day, unclassified=True, project_label="Imported", work_item_label="")).entries), 1)

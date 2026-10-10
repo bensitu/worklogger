@@ -5,6 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import replace
 from typing import Protocol
+from pathlib import Path
+from PySide6.QtCore import QUrl
+from PySide6.QtGui import QDesktopServices
 
 from PySide6.QtWidgets import QWidget
 from shiboken6 import isValid
@@ -103,8 +106,10 @@ class SettingsWorkflowController:
         ai_gateway=None,
         profile_service: UserProfileService | None = None,
         projects_view_model=None,
+        database_path: Path | None = None,
     ) -> None:
         self._settings_view_model = settings_view_model
+        self._data_directory = Path(database_path).resolve().parent if database_path is not None else None
         self._capabilities = capabilities or SettingsCapabilities(
             model_management=local_models_workflow is not None
         )
@@ -178,6 +183,9 @@ class SettingsWorkflowController:
         return page
 
     def _bind_surface(self, surface: QWidget) -> None:
+        if hasattr(surface, "set_data_directory"):
+            surface.set_data_directory(self._data_directory)
+            surface.open_data_directory_requested.connect(lambda: self._open_data_directory(surface))
         if hasattr(surface, "set_profile_available"):
             surface.set_profile_available(self._profile_service is not None)
         if self._profile_service is not None:
@@ -263,6 +271,15 @@ class SettingsWorkflowController:
         dialog.finished.connect(lambda: setattr(self, "_project_dialog", None))
         dialog.finished.connect(dialog.deleteLater)
         dialog.open()
+
+    def _open_data_directory(self, surface):
+        if self._data_directory is None or not self._data_directory.is_dir():
+            self._data_workflow._notify_error(surface, _("Data location"), _("The data directory is unavailable."))
+            return False
+        if not QDesktopServices.openUrl(QUrl.fromLocalFile(str(self._data_directory))):
+            self._data_workflow._notify_error(surface, _("Data location"), _("Unable to open the data directory."))
+            return False
+        return True
 
     def _refresh_local_models_status(self, surface: QWidget) -> None:
         view_model = getattr(self._local_models_workflow, "view_model", None)

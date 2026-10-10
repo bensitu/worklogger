@@ -445,6 +445,12 @@ msgstr "ダークモード"
 msgid "Data"
 msgstr "データ"
 
+msgid "Data directory"
+msgstr "データフォルダー"
+
+msgid "Data location"
+msgstr "データの場所"
+
 msgid "Data restored successfully."
 msgstr "データを復元しました。"
 
@@ -1198,6 +1204,9 @@ msgstr "種別と関連付けが一致する隣接記録だけを結合できま
 msgid "Open"
 msgstr "開く"
 
+msgid "Open data directory"
+msgstr "データフォルダーを開く"
+
 msgid "Open in editor"
 msgstr "編集中"
 
@@ -1720,6 +1729,9 @@ msgstr "休暇を表示"
 msgid "Show password"
 msgstr "パスワードを表示"
 
+msgid "Showing the first {count} source references."
+msgstr "最初の{count}件の出典参照を表示しています。"
+
 msgid "Showing {count} records"
 msgstr "{count} 件の記録を表示"
 
@@ -1848,6 +1860,9 @@ msgstr "CSV ファイルが対応するサイズまたは行数の上限を超�
 
 msgid "The ID or password is incorrect."
 msgstr "IDまたはパスワードが正しくありません。"
+
+msgid "The data directory is unavailable."
+msgstr "データフォルダーを利用できません。"
 
 msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 msgstr "データベースを読み込めませんでした。元のファイルは保持されています。データベースの復元手順に従って、検証済みのバックアップを復元してください。"
@@ -2055,6 +2070,9 @@ msgstr "勤務表の記録を読み込めません。レポート下書きは変
 
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "モデルを取得できませんでした。元のファイルまたはダウンロード接続を確認してください。"
+
+msgid "Unable to open the data directory."
+msgstr "データフォルダーを開けません。"
 
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "モデルファイルを読み込めませんでした。アクセス権限を確認してください。"
@@ -2274,6 +2292,12 @@ msgstr "実働時間"
 
 msgid "Worked: {hours}"
 msgstr "作業時間：{hours}"
+
+msgid "Workflow verification failed."
+msgstr "ワークフローの検証に失敗しました。"
+
+msgid "Workflow verification passed."
+msgstr "ワークフローの検証に成功しました。"
 
 msgid "Write a note for this date..."
 msgstr "この日付のメモを入力..."

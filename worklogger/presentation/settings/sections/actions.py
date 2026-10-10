@@ -27,6 +27,7 @@ class SectionActions:
     mode_changed: Callable
     residency_key: str | None
     restore_requested: Callable
+    open_data_directory_requested: Callable
     save_external_api_key: Callable
     set_bool: Callable[[str, bool], None]
     set_number: Callable[[str, float], None]

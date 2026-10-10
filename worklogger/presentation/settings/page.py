@@ -61,6 +61,7 @@ from worklogger.domain.local_model.preferences import (
 class SettingsPage(QWidget):
     settings_changed = Signal(object)
     backup_requested = Signal()
+    open_data_directory_requested = Signal()
     change_password_requested = Signal()
     export_csv_requested = Signal()
     export_ics_requested = Signal()
@@ -442,6 +443,10 @@ class SettingsPage(QWidget):
         self.status_label.setProperty("role", "secondary")
         root.addWidget(self.status_label)
 
+    def set_data_directory(self, directory):
+        self.data_directory_input.setText(str(directory) if directory else "")
+        self.open_data_directory_button.setEnabled(directory is not None)
+
     def _add_category(self, key: str, widget: QWidget) -> None:
         self._category_pages[key] = self.category_stack.addWidget(widget)
 
@@ -455,6 +460,7 @@ class SettingsPage(QWidget):
             change_avatar_requested=self._change_avatar,
             reset_avatar_requested=lambda: self._handle_save_result(self._view_model.set_avatar("")),
             backup_requested=self.backup_requested.emit,
+            open_data_directory_requested=self.open_data_directory_requested.emit,
             change_password_requested=self.change_password_requested.emit,
             choose_custom_color=self._choose_custom_color,
             confirm_logout=self._confirm_logout,

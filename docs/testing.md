@@ -1,5 +1,16 @@
 # Testing
 
+## Packaged Application Checks
+
+`scripts/release_artifact.py` verifies the artifact against its dependency lock and
+source/resource fingerprints, then runs import, startup and isolated data-workflow
+checks using the built executable. The workflow includes a previous daily-record
+schema upgrade, password verification, context assignment/undo, accounting, report
+version recovery, XLSX/PDF output and backup preservation. It uses synthetic data
+and no paid-provider requests. `--build` additionally runs the default test suite,
+not optional visual checks. Actual native interaction and signed-platform validation
+remain separate. See [packaging](packaging.md) for commands and limitations.
+
 ## Scope
 
 Keep tests that protect durable behavior: business rules, authorization, data

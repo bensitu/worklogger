@@ -445,6 +445,12 @@ msgstr "다크 모드"
 msgid "Data"
 msgstr "데이터"
 
+msgid "Data directory"
+msgstr "데이터 폴더"
+
+msgid "Data location"
+msgstr "데이터 위치"
+
 msgid "Data restored successfully."
 msgstr "데이터가 복원되었습니다."
 
@@ -1198,6 +1204,9 @@ msgstr "유형과 맥락이 일치하는 인접 기록만 병합할 수 있습�
 msgid "Open"
 msgstr "열기"
 
+msgid "Open data directory"
+msgstr "데이터 폴더 열기"
+
 msgid "Open in editor"
 msgstr "편집 중"
 
@@ -1720,6 +1729,9 @@ msgstr "휴가 표시"
 msgid "Show password"
 msgstr "비밀번호 표시"
 
+msgid "Showing the first {count} source references."
+msgstr "처음 {count}개의 출처 참조를 표시합니다."
+
 msgid "Showing {count} records"
 msgstr "기록 {count}개 표시"
 
@@ -1848,6 +1860,9 @@ msgstr "CSV 파일이 지원되는 크기 또는 행 수 제한을 초과했습�
 
 msgid "The ID or password is incorrect."
 msgstr "ID 또는 비밀번호가 올바르지 않습니다."
+
+msgid "The data directory is unavailable."
+msgstr "데이터 폴더를 사용할 수 없습니다."
 
 msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 msgstr "데이터베이스를 읽을 수 없습니다. 원본 파일은 보존되었습니다. 데이터베이스 복구 안내에 따라 검증된 백업을 복원하세요."
@@ -2055,6 +2070,9 @@ msgstr "근무 기록표의 기록을 불러올 수 없습니다. 보고서 초�
 
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "모델을 가져오지 못했습니다. 원본 파일 또는 다운로드 연결을 확인하세요."
+
+msgid "Unable to open the data directory."
+msgstr "데이터 폴더를 열 수 없습니다."
 
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "모델 파일을 읽지 못했습니다. 접근 권한을 확인하세요."
@@ -2274,6 +2292,12 @@ msgstr "근무 시간"
 
 msgid "Worked: {hours}"
 msgstr "작업 시간: {hours}"
+
+msgid "Workflow verification failed."
+msgstr "워크플로 검증에 실패했습니다."
+
+msgid "Workflow verification passed."
+msgstr "워크플로 검증에 성공했습니다."
 
 msgid "Write a note for this date..."
 msgstr "이 날짜의 메모를 입력하세요..."

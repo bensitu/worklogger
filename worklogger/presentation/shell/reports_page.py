@@ -351,7 +351,7 @@ class ReportsPage(QWidget):
                     if state.report_id is not None else _("Generated draft"))
         self.report_state_label.setText(identity + (" | " + _("Unsaved changes") if modified else ""))
         from worklogger.presentation.report_source_labels import provenance_text
-        self.report_state_label.setToolTip(provenance_text(state.provenance))
+        self.report_state_label.setToolTip(provenance_text(state.provenance, include_references=False))
         if state.report_id is not None:
             self.report_state_label.setText(self.report_state_label.text() + " | " + _("Version {number}").format(number=state.revision + 1))
         self.save_button.setText(_("Save changes") if state.report_id is not None else _("Save Report"))

@@ -114,7 +114,10 @@ class DeleteReportHandler:
 
     def handle(self, command: DeleteReportCommand) -> Result[None]:
         try:
-            if command.expected_content is None:
+            if command.expected_revision is not None:
+                self._repository.remove(command.user_id, command.report_id,
+                    expected_content=command.expected_content, expected_revision=command.expected_revision)
+            elif command.expected_content is None:
                 self._repository.remove(command.user_id, command.report_id)
             else:
                 self._repository.remove(command.user_id, command.report_id, expected_content=command.expected_content)
@@ -136,6 +139,12 @@ class ReportRevisionService:
     def list(self, user_id, report_id):
         return self._run(lambda: self._repository.list_revisions(user_id, report_id))
 
+    def list_headers(self, user_id, report_id):
+        return self._run(lambda: self._repository.list_revision_headers(user_id, report_id))
+
+    def get(self, user_id, report_id, revision):
+        return self._run(lambda: self._repository.get_revision(user_id, report_id, revision))
+
     def restore(self, user_id, report_id, revision, expected_revision):
         return self._run(lambda: self._repository.restore_revision(user_id, report_id, revision, expected_revision))
 
@@ -144,8 +153,11 @@ class ReportRevisionService:
         try:
             return Result.success(operation())
         except ValueError as error:
-            return Result.failure(ConflictError(str(error), str(error)) if str(error) == "report_conflict"
-                                  else NotFoundError("report_not_found", "report_not_found"))
+            if str(error) == "report_conflict":
+                return Result.failure(ConflictError("report_conflict", "report_conflict"))
+            if str(error) == "report_not_found":
+                return Result.failure(NotFoundError("report_not_found", "report_not_found"))
+            return Result.failure(InfrastructureError("report_history_failed", "report_history_failed"))
         except Exception:
             return Result.failure(InfrastructureError("report_history_failed", "report_history_failed"))
 

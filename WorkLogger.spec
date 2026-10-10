@@ -11,6 +11,7 @@ from scripts.build_resources import bundled_resources, executable_icon, windows_
 from worklogger.__about__ import APP_ID, APP_VERSION
 
 datas = bundled_resources(root)
+datas += [(str(root / "build/build-info.json"), "."), (str(root / "LICENSE"), ".")]
 hiddenimports = collect_submodules("worklogger") + collect_submodules("holidays")
 hiddenimports += collect_submodules("keyring.backends")
 hiddenimports += collect_submodules("openpyxl") + collect_submodules("et_xmlfile")

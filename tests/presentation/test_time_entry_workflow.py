@@ -26,6 +26,16 @@ from PySide6.QtCore import QTime
 
 
 class TimeEntryWorkflowTests(unittest.TestCase):
+    def test_settings_data_directory_uses_the_active_database_location(self):
+        page = self.window.settings_page
+        directory = Path(self.runtime.database_path).resolve().parent
+        self.assertEqual(page.data_directory_input.text(), str(directory))
+        self.assertTrue(page.data_directory_input.isReadOnly())
+        self.assertTrue(page.open_data_directory_button.isEnabled())
+        with patch("worklogger.presentation.settings.controller.QDesktopServices.openUrl", return_value=True) as opened:
+            page.open_data_directory_button.click()
+        self.assertEqual(Path(opened.call_args.args[0].toLocalFile()).resolve(), directory)
+
     def test_multi_record_assignment_and_recent_selection_preserve_editor_content(self):
         from worklogger.presentation.widgets.record_search import RecordSearchDialog
         from worklogger.presentation.widgets.batch_context import BatchContextDialog
@@ -160,7 +170,9 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         dialog.results.setCurrentItem(dialog.results.topLevelItem(0))
         dialog.open_button.click()
         self.assertEqual(selected, [first])
+        self.assertTrue(self.window._switch_route("analytics"))
         self.assertTrue(self.window._open_found_entry(first))
+        self.assertIs(self.window.page_stack.currentWidget(), self.window.calendar_page)
         self.assertEqual(self.panel.view_model.draft.original.id, first.id)
         self.warning.assert_not_called()
 

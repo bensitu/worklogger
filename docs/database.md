@@ -40,7 +40,8 @@ external SQLite clients still require SQLite's own locking protections.
 | `daily_notes` | Composite `(user_id, d)` primary key; independent daily note content |
 | `quick_logs` | Integer ID; user/date, optional start/end, description, creation timestamp |
 | `settings` | Composite `(user_id, key)` primary key; string value |
-| `reports` | Integer ID; user, type, inclusive period bounds, Markdown content, creation timestamp |
+| `reports` | Integer ID; user, type, inclusive period bounds, Markdown content, first/last-save timestamps, revision and generation references |
+| `report_revisions` | Per-report revision key, saved content, timestamp and generation references; latest 50 versions retained |
 | `report_templates` | Integer ID and unique `(user_id, language, type)`; content and update timestamp |
 | `calendar_events` | Integer ID; user/date, optional times, summary, description, location, all-day flag, source filename |
 | `external_identities` | Integer ID, user, provider/subject, email/display name, timestamps; unique `(provider, subject)` |

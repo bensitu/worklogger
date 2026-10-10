@@ -8,7 +8,7 @@ analysis remains an offline file and is not part of repository documentation.
 
 | Capability | Current behavior |
 | --- | --- |
-| Data-location information | README identifies the packaged application-local user-data directory correctly |
+| Data-location information | README identifies the packaged application-local directory; Settings displays and opens the active database directory |
 | Project and work-item context | Optional account-owned catalogs, settings management, archival/completion, recorder choices, timer restoration, stable associations and saved labels |
 | Record retrieval | Account-scoped date/type/context/text filters, unclassified selection, bounded chronological paging, background search and navigation to the existing editor |
 | Project statistics | Selected date-range work/rest/leave totals by saved project and work-item identity, work-date counts and paged record drill-down |
@@ -21,6 +21,7 @@ analysis remains an offline file and is not part of repository documentation.
 | Report recovery and sources | Per-report saved versions, revision-checked overwrite/recovery, generation references and annotated Markdown delivery |
 | Delivery | Selected day/month XLSX and paginated Unicode table PDF, separate work/rest/leave columns, reference metadata, safe text cells and atomic destinations |
 | Compatibility | Existing type IDs, account credentials, clock/offset semantics and historical deductions remain; schema upgrades retain a complete pre-change snapshot |
+| Build verification | Windows CPython 3.11.9 hash-pinned dependency closure, exact environment checks, source/resource provenance, isolated executable checks and checksum archive generation |
 
 Project codes and work-item source URLs can be edited in the catalog. This does
 not yet provide complete historical source-link capture or project descriptions,
@@ -50,8 +51,8 @@ The following agreed capabilities are not implemented by the changes above:
 - Immutable submitted report snapshots, beyond recoverable saved versions.
 - Explicit period finalization/reopening enforced beyond presentation controls.
 - Explainable configurable working-time policies, with unknown/incomplete results.
-- A skippable initial setup, isolated demonstration data and a visible data-directory action.
-- Dependency environment locking, automated verification/distribution, signing and target-platform artifact checks.
+- A skippable initial setup and isolated demonstration data.
+- Publisher signing, other target-specific locks/artifact checks and release hosting automation.
 
 These are separate remaining responsibilities. Existing code for an adapter,
 documented design or a successful test run does not establish their completion.
@@ -76,3 +77,8 @@ light/dark palettes and PDF rendering. Actual spreadsheet-application editing,
 native tray notification and signed multi-platform artifacts are not certified by
 these checks. See [testing](testing.md), [recording](time-recording.md),
 [data formats](data-formats.md), [database](database.md), and [packaging](packaging.md).
+
+A windowed Windows AMD64 artifact was built from the hash-verified CPython 3.11.9
+environment and passed executable import, startup and isolated workflow checks.
+The default suite passed 451 tests. This artifact is unsigned and excludes optional
+native inference; no real model or provider request was used for certification.

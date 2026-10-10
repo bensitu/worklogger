@@ -14,6 +14,8 @@ sys.path.insert(0, str(ROOT))
 
 from scripts.build_resources import bundled_resources
 from scripts.i18n.catalog_tools import compile_po_to_mo, locale_po_paths
+from scripts.lock_environment import verify_lock
+from scripts.release_artifact import write_build_info
 
 
 def build_environment(console: bool, with_local_inference: bool = False) -> dict[str, str]:
@@ -35,7 +37,12 @@ def main() -> int:
     parser.add_argument("--check", action="store_true", help="Validate without running PyInstaller")
     parser.add_argument("--console", action="store_true", help="Build with a console for smoke checks")
     parser.add_argument("--with-local-inference", action="store_true", help="Include optional native inference libraries")
+    parser.add_argument("--lock", type=Path, help="Require the exact target-specific dependency environment")
     args = parser.parse_args()
+    if args.lock is not None:
+        lock = verify_lock(args.lock.resolve())
+        if args.with_local_inference and "requirements-ai.txt" not in lock["inputs"]:
+            parser.error("Native inference must be included in the dependency lock.")
     for path in locale_po_paths():
         compile_po_to_mo(path)
     subprocess.run([sys.executable, str(ROOT / "scripts/i18n/i18n_check.py")], cwd=ROOT, check=True)
@@ -51,6 +58,7 @@ def main() -> int:
         return 0
     if importlib.util.find_spec("PyInstaller") is None:
         parser.error("PyInstaller is required. Install requirements-build.txt first.")
+    write_build_info(ROOT / "build/build-info.json", args.lock, local_inference=args.with_local_inference)
     environment = build_environment(args.console, args.with_local_inference)
     subprocess.run(
         [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", str(ROOT / "WorkLogger.spec")],

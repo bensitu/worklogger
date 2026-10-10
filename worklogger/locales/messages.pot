@@ -443,6 +443,12 @@ msgstr ""
 msgid "Data"
 msgstr ""
 
+msgid "Data directory"
+msgstr ""
+
+msgid "Data location"
+msgstr ""
+
 msgid "Data restored successfully."
 msgstr ""
 
@@ -1196,6 +1202,9 @@ msgstr ""
 msgid "Open"
 msgstr ""
 
+msgid "Open data directory"
+msgstr ""
+
 msgid "Open in editor"
 msgstr ""
 
@@ -1718,6 +1727,9 @@ msgstr ""
 msgid "Show password"
 msgstr ""
 
+msgid "Showing the first {count} source references."
+msgstr ""
+
 msgid "Showing {count} records"
 msgstr ""
 
@@ -1845,6 +1857,9 @@ msgid "The CSV file exceeds the supported size or row limit."
 msgstr ""
 
 msgid "The ID or password is incorrect."
+msgstr ""
+
+msgid "The data directory is unavailable."
 msgstr ""
 
 msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
@@ -2052,6 +2067,9 @@ msgid "Unable to load timesheet records. Your report draft is unchanged."
 msgstr ""
 
 msgid "Unable to obtain the model. Check the source file or download connection."
+msgstr ""
+
+msgid "Unable to open the data directory."
 msgstr ""
 
 msgid "Unable to read the model file. Check its access permissions."
@@ -2271,6 +2289,12 @@ msgid "Worked hours"
 msgstr ""
 
 msgid "Worked: {hours}"
+msgstr ""
+
+msgid "Workflow verification failed."
+msgstr ""
+
+msgid "Workflow verification passed."
 msgstr ""
 
 msgid "Write a note for this date..."

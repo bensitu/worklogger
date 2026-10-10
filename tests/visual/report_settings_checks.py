@@ -22,6 +22,32 @@ from worklogger.infrastructure.i18n import _
 
 
 class ReportSettingsLayoutChecks(unittest.TestCase):
+    def test_data_location_controls_fit_long_paths_and_localized_pages(self):
+        old_language, old_style, old_palette = get_language(), self.app.styleSheet(), self.app.palette()
+        engine = ThemeEngine()
+        try:
+            for language in available_languages():
+                set_language(language)
+                for dark in (False, True):
+                    self.app.setPalette(engine.qt_palette(dark=dark))
+                    self.app.setStyleSheet(engine.application_stylesheet(dark=dark))
+                    page = SettingsPage(_view_model(MemorySettingsRepository()))
+                    page.refresh()
+                    page.set_data_directory(Path("D:/Application Data/WorkLogger/" + "Records/" * 6))
+                    page.category_nav.set_category("data")
+                    page.resize(880, 680)
+                    page.show()
+                    self.app.processEvents()
+                    for control in (page.data_directory_input, page.open_data_directory_button):
+                        self.assertTrue(control.parentWidget().rect().contains(control.geometry()))
+                    self.assertTrue(page.open_data_directory_button.isEnabled())
+                    self.capture(page, f"{language}-data-location-{dark}")
+                    page.close()
+        finally:
+            set_language(old_language)
+            self.app.setStyleSheet(old_style)
+            self.app.setPalette(old_palette)
+
     def test_timesheet_files_render_multiperiod_unicode_content_and_page_headers(self):
         from datetime import datetime, timezone
         import tempfile

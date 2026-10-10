@@ -140,6 +140,16 @@ class ReportEditorViewModel:
             return Result.failure(_validation("report_not_found"))
         return self._revision_service.list(self._user_id, state.report_id)
 
+    def list_revision_headers(self, state):
+        if not self.revisions_available or state.user_id != self._user_id or state.report_id is None:
+            return Result.failure(_validation("report_not_found"))
+        return self._revision_service.list_headers(self._user_id, state.report_id)
+
+    def get_revision(self, state, revision):
+        if not self.revisions_available or state.user_id != self._user_id or state.report_id is None:
+            return Result.failure(_validation("report_not_found"))
+        return self._revision_service.get(self._user_id, state.report_id, revision)
+
     def restore_revision(self, state, revision):
         if not self.revisions_available or state.user_id != self._user_id or state.report_id is None:
             return Result.failure(_validation("report_not_found"))
@@ -178,7 +188,7 @@ class ReportEditorViewModel:
             return Result.failure(_validation("report_not_found"))
         if self._delete_report_handler is None:
             return Result.failure(_validation("report_delete_failed"))
-        return self._delete_report_handler.handle(DeleteReportCommand(self._user_id, item.report_id, item.content))
+        return self._delete_report_handler.handle(DeleteReportCommand(self._user_id, item.report_id, item.content, getattr(item, "revision", None)))
 
     def set_week_start_monday(self, enabled: bool) -> None:
         self._week_start_monday = bool(enabled)

@@ -98,6 +98,7 @@ def _build_settings_workflow(
             proxy_password_settings=handlers.proxy_password,
         ),
         auth_view_model=auth_view_model,
+        database_path=database_path,
         user=user,
         profile_service=UserProfileService(user_id=user.id, repository=auth_repository) if auth_repository is not None else None,
         data_management_view_model=_build_data_management_view_model(

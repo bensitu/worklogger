@@ -3,7 +3,9 @@
 ## Project Statistics
 
 Open **Analytics > Projects**, choose the inclusive date range and select **Apply**.
-The summary separates work, rest and leave for each project/work-item combination.
+The summary separates work, rest and leave at project level with work-item detail
+under each project. Select a project to browse all its records or a work item to
+browse only that item's records.
 Work-day counts are distinct dates within each group and must not be added across
 groups. Historical break deductions remain separate from worked time. Overtime is
 not apportioned to projects because its threshold applies to the whole day.
@@ -25,6 +27,15 @@ template fingerprint and record/note/event references. These references describe
 generation inputs, not verification of later manual or AI edits. Older reports can
 have unavailable source information. Current Markdown exports and saved daily-report
 exports include this information; copying the editor copies its content only.
+The preview lists at most 1,000 source references; Markdown export includes all
+stored references. Version content loads only when selected.
+
+## Data Location
+
+**Settings > Data > Data location** shows the directory containing the active
+database. **Open data directory** opens that folder using the operating system.
+The path is selectable but not editable; opening it does not move or replace data.
+Use the existing backup operation instead of copying an open SQLite database file.
 
 Weekly reports and analytics week groups follow the account's week-start setting.
 Daily reports cover one day, weekly reports cover seven days starting on Sunday or

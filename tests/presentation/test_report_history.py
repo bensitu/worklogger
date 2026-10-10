@@ -167,6 +167,9 @@ class ReportHistoryTests(unittest.TestCase):
         restored = self.model.restore_revision(changed, 0).value
         self.assertEqual((restored.report_id, restored.content, restored.revision), (saved.id, "Original", 2))
         self.assertEqual([value.revision for value in self.model.list_revisions(restored).value], [2, 1, 0])
+        stale_delete = DeleteReportHandler(self.repository).handle(DeleteReportCommand(self.user.id, saved.id, "Original", 0))
+        self.assertFalse(stale_delete.ok)
+        self.assertEqual(stale_delete.error.code, "report_conflict")
         self.assertEqual(self.repository.list_revisions(self.other_user.id, saved.id), ())
         with self.assertRaisesRegex(ValueError, "report_not_found"):
             self.repository.restore_revision(self.other_user.id, saved.id, 0, 2)

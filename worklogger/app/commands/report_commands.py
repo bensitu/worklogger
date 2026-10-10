@@ -34,6 +34,7 @@ class DeleteReportCommand:
     user_id: int
     report_id: int
     expected_content: str | None = None
+    expected_revision: int | None = None
 
 
 @dataclass(frozen=True)

@@ -445,6 +445,12 @@ msgstr "深色模式"
 msgid "Data"
 msgstr "資料"
 
+msgid "Data directory"
+msgstr "資料目錄"
+
+msgid "Data location"
+msgstr "資料位置"
+
 msgid "Data restored successfully."
 msgstr "資料還原成功。"
 
@@ -1198,6 +1204,9 @@ msgstr "僅可合併工作類型與關聯一致的相鄰紀錄。"
 msgid "Open"
 msgstr "開啟"
 
+msgid "Open data directory"
+msgstr "開啟資料目錄"
+
 msgid "Open in editor"
 msgstr "正在編輯"
 
@@ -1720,6 +1729,9 @@ msgstr "顯示休假"
 msgid "Show password"
 msgstr "顯示密碼"
 
+msgid "Showing the first {count} source references."
+msgstr "顯示前 {count} 個來源引用。"
+
 msgid "Showing {count} records"
 msgstr "已顯示 {count} 筆紀錄"
 
@@ -1848,6 +1860,9 @@ msgstr "CSV 檔案超出支援的大小或列數限制。"
 
 msgid "The ID or password is incorrect."
 msgstr "ID 或密碼不正確。"
+
+msgid "The data directory is unavailable."
+msgstr "資料目錄無法使用。"
 
 msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 msgstr "無法讀取資料庫，原始檔案已保留。請按照資料庫復原說明復原經過驗證的備份。"
@@ -2055,6 +2070,9 @@ msgstr "無法載入工時表紀錄，報表草稿未改變。"
 
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "無法取得模型，請檢查來源檔案或下載連線。"
+
+msgid "Unable to open the data directory."
+msgstr "無法開啟資料目錄。"
 
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "無法讀取模型檔案，請檢查存取權限。"
@@ -2274,6 +2292,12 @@ msgstr "工作時長"
 
 msgid "Worked: {hours}"
 msgstr "已工作：{hours}"
+
+msgid "Workflow verification failed."
+msgstr "工作流程驗證失敗。"
+
+msgid "Workflow verification passed."
+msgstr "工作流程驗證通過。"
 
 msgid "Write a note for this date..."
 msgstr "輸入這一天的筆記..."

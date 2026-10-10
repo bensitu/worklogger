@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import (
     QPushButton,
+    QLineEdit,
 )
 
 from worklogger.infrastructure.i18n import _
@@ -19,6 +20,8 @@ from worklogger.presentation.widgets.icons import set_button_icon
 
 class DataSection(_SettingsScrollPage):
     control_names = (
+        "data_directory_input",
+        "open_data_directory_button",
         "backup_button",
         "backup_status_label",
         "clear_calendar_events_button",
@@ -33,6 +36,18 @@ class DataSection(_SettingsScrollPage):
     def __init__(self, actions: SectionActions):
         super().__init__()
         page = self
+        location = _action_card(_("Data location"), "")
+        self.data_directory_input = QLineEdit()
+        self.data_directory_input.setObjectName("data_directory_line_edit")
+        self.data_directory_input.setReadOnly(True)
+        self.data_directory_input.setAccessibleName(_("Data directory"))
+        location.content_layout.addWidget(self.data_directory_input)
+        self.open_data_directory_button = QPushButton(_("Open data directory"))
+        self.open_data_directory_button.setEnabled(False)
+        self.open_data_directory_button.clicked.connect(actions.open_data_directory_requested)
+        set_button_icon(self.open_data_directory_button, "folder-open")
+        location.content_layout.addWidget(self.open_data_directory_button)
+        page.layout().addWidget(location)
         csv_card = _action_card(
             _("CSV Data Management"),
             _(
