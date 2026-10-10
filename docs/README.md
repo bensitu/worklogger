@@ -32,6 +32,7 @@ desktop features from adapters that require additional runtime configuration.
 | [Security](security.md) | Credential handling, storage boundaries, network behavior |
 | [Reliability](reliability.md) | Operational contracts, compatibility decisions, verification limits |
 | [Implementation status](implementation-status.md) | Verified fixes, retained design choices, platform and integration limits |
+| [Core capability coverage](core-capabilities.md) | Connected recording/reporting improvements, remaining core work and verification limits |
 
 Repository policies: [contributing](../CONTRIBUTING.md),
 [security reporting](../SECURITY.md), [conduct](../CODE_OF_CONDUCT.md),
