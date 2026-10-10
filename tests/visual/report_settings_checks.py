@@ -22,6 +22,68 @@ from worklogger.infrastructure.i18n import _
 
 
 class ReportSettingsLayoutChecks(unittest.TestCase):
+    def test_button_states_remain_distinct_across_themes_and_action_variants(self):
+        from PySide6.QtGui import QPalette
+        from PySide6.QtWidgets import QGridLayout, QPushButton, QWidget
+        from worklogger.presentation.widgets.icons import set_button_icon
+        from worklogger.presentation.widgets.record_summary import RecordSummaryButton
+        variants = ({}, {"variant": "primary"}, {"variant": "outline"}, {"variant": "ghost"},
+                    {"variant": "danger"}, {"nav_item": True, "active": True},
+                    {"settings_nav_item": True, "active": True}, {"segment": True, "checked": True},
+                    {"page_tab": True, "checked": True}, {"object_name": "report_history_item_button", "active": True},
+                    {"object_name": "calendar_time_entry_button"})
+        old_style, old_palette = self.app.styleSheet(), self.app.palette()
+        engine = ThemeEngine()
+        try:
+            for theme in ("blue", "pink", "green", "purple", "custom"):
+                for dark in (False, True):
+                    self.app.setPalette(engine.qt_palette(theme, dark=dark, custom_color="#168078"))
+                    self.app.setStyleSheet(engine.application_stylesheet(theme, dark=dark, custom_color="#168078"))
+                    panel = QWidget()
+                    grid = QGridLayout(panel)
+                    pairs = []
+                    for row, properties in enumerate(variants):
+                        pair = []
+                        for column, enabled in enumerate((True, False)):
+                            is_record = properties.get("object_name") == "calendar_time_entry_button"
+                            button = RecordSummaryButton("Action") if is_record else QPushButton("Action")
+                            for key, value in properties.items():
+                                if key == "object_name":
+                                    button.setObjectName(value)
+                                else:
+                                    button.setProperty(key, value)
+                            button.setFixedSize(180, 64 if is_record else 44)
+                            if not is_record:
+                                set_button_icon(button, "file-text")
+                            button.setEnabled(enabled)
+                            grid.addWidget(button, row, column)
+                            pair.append(button)
+                        pairs.append(pair)
+                    panel.show()
+                    self.app.processEvents()
+                    panel.adjustSize()
+                    self.app.processEvents()
+                    for enabled, disabled in pairs:
+                        self.assertTrue(panel.rect().contains(enabled.geometry()))
+                        self.assertTrue(panel.rect().contains(disabled.geometry()))
+                        self.assertNotEqual(enabled.palette().color(QPalette.ColorRole.ButtonText),
+                                            disabled.palette().color(QPalette.ColorRole.ButtonText))
+                        self.assertEqual(disabled.palette().color(QPalette.ColorRole.ButtonText).name(),
+                                         "#6f7699" if dark else "#9aa3bb")
+                        disabled_background = disabled.grab().toImage().pixelColor(8, disabled.height() // 2)
+                        self.assertEqual(disabled_background.name(), "#111827" if dark else "#edf0f5")
+                        self.assertNotEqual(enabled.grab().toImage().pixelColor(8, enabled.height() // 2), disabled_background)
+                        if isinstance(disabled, RecordSummaryButton):
+                            self.assertEqual(enabled.label.palette().color(QPalette.ColorRole.WindowText).name(),
+                                             engine.palette(theme, dark=dark, custom_color="#168078").text)
+                            self.assertEqual(disabled.label.palette().color(QPalette.ColorRole.WindowText).name(),
+                                             "#6f7699" if dark else "#9aa3bb")
+                    self.capture(panel, f"{theme}-button-states-{dark}")
+                    panel.close()
+        finally:
+            self.app.setStyleSheet(old_style)
+            self.app.setPalette(old_palette)
+
     def test_settings_groups_and_processing_feedback_fit_localized_pages(self):
         from PySide6.QtWidgets import QLabel
         from worklogger.app.job_runner import JobHandle

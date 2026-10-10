@@ -230,6 +230,22 @@ class QtWidgetTests(unittest.TestCase):
         self.assertTrue(asset_path("images/worklogger_login_image.webp").exists())
         self.assertTrue(asset_path("images/worklogger_login_image.webp").exists())
 
+    def test_all_bundled_action_icons_render_for_enabled_and_disabled_controls(self):
+        from PySide6.QtSvg import QSvgRenderer
+        from scripts.build_resources import bundled_resources
+        from pathlib import Path
+        root = Path(__file__).resolve().parents[2]
+        bundled = {Path(source) for source, _target in bundled_resources(root)}
+        for path in asset_path("icons/ui").glob("*.svg"):
+            with self.subTest(icon=path.stem):
+                self.assertIn(path, bundled)
+                self.assertTrue(QSvgRenderer(str(path)).isValid())
+                icon = ui_icon(path.stem)
+                for mode in (QIcon.Mode.Normal, QIcon.Mode.Disabled):
+                    image = icon.pixmap(QSize(20, 20), mode).toImage()
+                    self.assertTrue(any(image.pixelColor(x, y).alpha() > 0
+                        for x in range(image.width()) for y in range(image.height())))
+
 
 if __name__ == "__main__":
     unittest.main()

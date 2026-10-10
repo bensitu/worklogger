@@ -219,12 +219,13 @@ class ThemeEngine:
                 "background": palette.background,
                 "border": palette.border,
                 "border_strong": palette.border_strong,
-                "button_background": "#232438" if palette.dark else "#f4f5fa",
+                "button_background": palette.surface,
                 "button_hover": "#2c2e50" if palette.dark else "#e8ecf8",
                 "card": palette.card,
                 "card_hover": palette.card_hover,
                 "danger": palette.danger,
                 "disabled_text": "#6f7699" if palette.dark else "#9aa3bb",
+                "disabled_background": "#111827" if palette.dark else "#edf0f5",
                 "hover": palette.hover,
                 "input_background": palette.input_background,
                 "input_border": palette.input_border,
@@ -251,7 +252,7 @@ class ThemeEngine:
     ) -> QPalette:
         palette = self.palette(theme, dark=dark, custom_color=custom_color)
         qt_palette = QPalette()
-        button_background = "#232438" if palette.dark else "#f4f5fa"
+        button_background = palette.surface
         disabled_text = "#6f7699" if palette.dark else "#9aa3bb"
 
         _set_palette_color(qt_palette, QPalette.ColorRole.Window, palette.background)

@@ -100,6 +100,12 @@ default, is stored per account, and takes effect immediately without changing
 the current draft or removing saved project associations. Existing installations
 retain the visible shortcut without a database schema change.
 
+History shortcuts use the history-arrow icon; time selection and timer actions
+retain the clock icon. Report generation uses a new-file icon, and project
+statistics use a project-folder icon. Ordinary actions use a surface background
+with a stronger border. Disabled actions use muted text and icons with a distinct
+background, including selected navigation controls and saved-report entries.
+
 ### Manual Entry
 
 1. Select Manual Input and enter start and end times. The clock icon opens the

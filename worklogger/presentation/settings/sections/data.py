@@ -44,9 +44,10 @@ class DataSection(_SettingsScrollPage):
         self.data_directory_input.setAccessibleName(_("Data directory"))
         location.content_layout.addWidget(self.data_directory_input)
         self.open_data_directory_button = QPushButton(_("Open data directory"))
+        self.open_data_directory_button.setProperty("variant", "outline")
         self.open_data_directory_button.setEnabled(False)
         self.open_data_directory_button.clicked.connect(actions.open_data_directory_requested)
-        set_button_icon(self.open_data_directory_button, "folder-open")
+        set_button_icon(self.open_data_directory_button, "folder-open", accent=True)
         location.content_layout.addWidget(self.open_data_directory_button)
         page.layout().addWidget(location)
         csv_card = _action_card(

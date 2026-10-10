@@ -292,7 +292,7 @@ QLabel[badge="true"] {
 QPushButton,
 QToolButton {
   background: {{ button_background }};
-  border: 1px solid {{ border }};
+  border: 1px solid {{ border_strong }};
   color: {{ text }};
   border-radius: 8px;
   min-height: 28px;
@@ -303,13 +303,6 @@ QPushButton:hover,
 QToolButton:hover {
   background: {{ button_hover }};
   border-color: {{ accent }};
-}
-
-QPushButton:disabled,
-QToolButton:disabled {
-  color: {{ disabled_text }};
-  background: {{ surface_alt }};
-  border-color: {{ border }};
 }
 
 QPushButton[variant="primary"],
@@ -339,12 +332,6 @@ QToolButton[variant="outline"] {
   border: 1px solid {{ border_strong }};
   color: {{ accent }};
   font-weight: 600;
-}
-
-QPushButton[variant]:disabled, QToolButton[variant]:disabled {
-  color: {{ disabled_text }};
-  background: {{ surface_alt }};
-  border-color: {{ border }};
 }
 
 QPushButton[variant="danger"] {
@@ -688,4 +675,27 @@ QToolButton[export_menu="true"]::menu-indicator {
   right: 8px;
   width: 12px;
   height: 12px;
+}
+
+QPushButton:disabled,
+QToolButton:disabled,
+QPushButton[variant]:disabled,
+QToolButton[variant]:disabled,
+QPushButton[nav_item]:disabled,
+QPushButton[settings_nav_item]:disabled,
+QPushButton[segment]:disabled,
+QPushButton[page_tab]:disabled,
+QPushButton#report_history_item_button:disabled,
+QPushButton#calendar_time_entry_button:disabled {
+  color: {{ disabled_text }};
+  background: {{ disabled_background }};
+  border-color: {{ border }};
+}
+
+QPushButton QLabel:disabled {
+  color: {{ disabled_text }};
+}
+
+QLabel#calendar_record_marker_label:disabled {
+  background: {{ disabled_text }};
 }

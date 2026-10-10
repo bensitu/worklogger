@@ -142,7 +142,7 @@ class AnalyticsPage(QWidget):
         self._populate_periods()
         header.addWidget(self.period_combo)
         self.projects_button = QPushButton(_("Projects"))
-        set_button_icon(self.projects_button, "search")
+        set_button_icon(self.projects_button, "folder-kanban")
         self.projects_button.clicked.connect(self.projects_requested)
         header.addWidget(self.projects_button)
         self.export_button = ExportMenuButton(
