@@ -18,6 +18,7 @@ OBJECT_NAME_SUFFIXES = (
     "_combo",
     "_dialog",
     "_double_spin_box",
+    "_spin_box",
     "_frame",
     "_label",
     "_line_edit",

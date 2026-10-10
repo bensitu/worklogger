@@ -325,9 +325,6 @@ msgstr "Content"
 msgid "Content must not exceed 16,000 characters."
 msgstr "Content must not exceed 16,000 characters."
 
-msgid "Context"
-msgstr "Context"
-
 msgid "Context: {context} tokens; output: {output} tokens"
 msgstr "Context: {context} tokens; output: {output} tokens"
 
@@ -471,6 +468,9 @@ msgstr "Edit display name"
 
 msgid "Edit record"
 msgstr "Edit record"
+
+msgid "Effective context: {count} tokens."
+msgstr "Effective context: {count} tokens."
 
 msgid "Enable AI Assist to use text processing."
 msgstr "Enable AI Assist to use text processing."
@@ -760,6 +760,9 @@ msgstr "Korean"
 msgid "Language"
 msgstr "Language"
 
+msgid "Larger context windows increase memory use and may prevent the model from loading."
+msgstr "Larger context windows increase memory use and may prevent the model from loading."
+
 msgid "Last backup: {time}"
 msgstr "Last backup: {time}"
 
@@ -874,6 +877,9 @@ msgstr "Mode"
 msgid "Model"
 msgstr "Model"
 
+msgid "Model context limit"
+msgstr "Model context limit"
+
 msgid "Model deleted."
 msgstr "Model deleted."
 
@@ -888,6 +894,9 @@ msgstr "Model identifier"
 
 msgid "Model imported."
 msgstr "Model imported."
+
+msgid "Model output limit"
+msgstr "Model output limit"
 
 msgid "Model verification failed. Import or download a valid GGUF model."
 msgstr "Model verification failed. Import or download a valid GGUF model."
@@ -961,6 +970,9 @@ msgstr "No data"
 msgid "No events found."
 msgstr "No events found."
 
+msgid "No model selected."
+msgstr "No model selected."
+
 msgid "No models found"
 msgstr "No models found"
 
@@ -1026,9 +1038,6 @@ msgstr "Operation cancelled."
 
 msgid "Other"
 msgstr "Other"
-
-msgid "Output"
-msgstr "Output"
 
 msgid "Overnight"
 msgstr "Overnight"
@@ -1270,6 +1279,12 @@ msgstr "Rewritten"
 msgid "Role"
 msgstr "Role"
 
+msgid "Runtime context"
+msgstr "Runtime context"
+
+msgid "Runtime context must be a whole number of at least 512 tokens."
+msgstr "Runtime context must be a whole number of at least 512 tokens."
+
 msgid "SMOKE IMPORT FAILED"
 msgstr "SMOKE IMPORT FAILED"
 
@@ -1332,6 +1347,9 @@ msgstr "Saved daily reports exported."
 
 msgid "Saved daily reports for this month"
 msgstr "Saved daily reports for this month"
+
+msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
+msgstr "Saved preference: {requested} tokens; effective context: {effective} tokens."
 
 msgid "Saved report #{report_id}"
 msgstr "Saved report #{report_id}"
@@ -1551,6 +1569,9 @@ msgstr "The saved report is no longer available. Reload the reports and try agai
 
 msgid "The selected context is too large. Choose a shorter period or exclude optional content."
 msgstr "The selected context is too large. Choose a shorter period or exclude optional content."
+
+msgid "The selected model's context limit is too small for text processing."
+msgstr "The selected model's context limit is too small for text processing."
 
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."

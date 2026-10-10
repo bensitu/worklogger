@@ -325,9 +325,6 @@ msgstr "內容"
 msgid "Content must not exceed 16,000 characters."
 msgstr "內容不得超過 16,000 個字元。"
 
-msgid "Context"
-msgstr "上下文"
-
 msgid "Context: {context} tokens; output: {output} tokens"
 msgstr "上下文：{context} tokens；輸出：{output} tokens"
 
@@ -471,6 +468,9 @@ msgstr "編輯顯示名稱"
 
 msgid "Edit record"
 msgstr "編輯記錄"
+
+msgid "Effective context: {count} tokens."
+msgstr "實際上下文：{count} tokens。"
 
 msgid "Enable AI Assist to use text processing."
 msgstr "請啟用 AI 助手以使用文字處理。"
@@ -760,6 +760,9 @@ msgstr "韓語"
 msgid "Language"
 msgstr "語言"
 
+msgid "Larger context windows increase memory use and may prevent the model from loading."
+msgstr "更大的上下文視窗會增加記憶體用量，可能導致模型無法載入。"
+
 msgid "Last backup: {time}"
 msgstr "最近備份：{time}"
 
@@ -874,6 +877,9 @@ msgstr "模式"
 msgid "Model"
 msgstr "模型"
 
+msgid "Model context limit"
+msgstr "模型上下文上限"
+
 msgid "Model deleted."
 msgstr "模型已刪除。"
 
@@ -888,6 +894,9 @@ msgstr "模型識別碼"
 
 msgid "Model imported."
 msgstr "模型已匯入。"
+
+msgid "Model output limit"
+msgstr "模型輸出上限"
 
 msgid "Model verification failed. Import or download a valid GGUF model."
 msgstr "模型驗證失敗。請匯入或下載有效的 GGUF 模型。"
@@ -961,6 +970,9 @@ msgstr "尚無資料"
 msgid "No events found."
 msgstr "未找到事件。"
 
+msgid "No model selected."
+msgstr "未選取模型。"
+
 msgid "No models found"
 msgstr "找不到模型"
 
@@ -1026,9 +1038,6 @@ msgstr "操作已取消。"
 
 msgid "Other"
 msgstr "其他"
-
-msgid "Output"
-msgstr "輸出"
 
 msgid "Overnight"
 msgstr "跨日"
@@ -1270,6 +1279,12 @@ msgstr "已改寫"
 msgid "Role"
 msgstr "角色"
 
+msgid "Runtime context"
+msgstr "執行上下文"
+
+msgid "Runtime context must be a whole number of at least 512 tokens."
+msgstr "執行上下文必須是至少512 tokens的整數。"
+
 msgid "SMOKE IMPORT FAILED"
 msgstr "匯入檢查失敗"
 
@@ -1332,6 +1347,9 @@ msgstr "已匯出儲存的日報。"
 
 msgid "Saved daily reports for this month"
 msgstr "本月已儲存日報"
+
+msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
+msgstr "已儲存的偏好：{requested} tokens；實際上下文：{effective} tokens。"
 
 msgid "Saved report #{report_id}"
 msgstr "已儲存報表 #{report_id}"
@@ -1551,6 +1569,9 @@ msgstr "已儲存的報表已無法使用。請重新載入報表後再試。"
 
 msgid "The selected context is too large. Choose a shorter period or exclude optional content."
 msgstr "所選上下文過大。請選擇更短的時間範圍或排除選用內容。"
+
+msgid "The selected model's context limit is too small for text processing."
+msgstr "所選模型的上下文上限過小，無法用於文字處理。"
 
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr "無法在此裝置上解密已存憑證。請重新輸入，現有工作記錄不受影響。"

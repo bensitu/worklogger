@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QSpinBox,
 )
 
 from worklogger.config.constants import (
@@ -20,6 +21,10 @@ from worklogger.config.constants import (
     EXTERNAL_MODEL_NAME_SETTING_KEY,
     EXTERNAL_MODEL_ENABLED_SETTING_KEY,
     LOCAL_MODEL_ENABLED_SETTING_KEY,
+    LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY,
+)
+from worklogger.domain.local_model.preferences import (
+    DEFAULT_RUNTIME_CONTEXT_TOKENS, MIN_RUNTIME_CONTEXT_TOKENS, MAX_RUNTIME_CONTEXT_TOKENS,
 )
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.settings.sections.actions import SectionActions
@@ -51,6 +56,9 @@ class AISection(_SettingsScrollPage):
         "local_runtime_status_label",
         "manage_local_models_button",
         "test_external_model_button",
+        "local_context_limit_label",
+        "local_context_spin_box",
+        "local_context_status_label",
     )
 
     def __init__(self, actions: SectionActions):
@@ -144,6 +152,27 @@ class AISection(_SettingsScrollPage):
         local.content_layout.addWidget(self.local_model_status_label)
         self.local_runtime_status_label = _secondary_label("")
         local.content_layout.addWidget(self.local_runtime_status_label)
+        context_form = QFormLayout()
+        context_form.setSpacing(12)
+        context_form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        self.local_context_limit_label = _secondary_label(_("Unknown"))
+        self.local_context_limit_label.setObjectName("local_context_limit_label")
+        context_form.addRow(_("Model context limit"), self.local_context_limit_label)
+        self.local_context_spin_box = QSpinBox()
+        self.local_context_spin_box.setObjectName("local_context_spin_box")
+        self.local_context_spin_box.setRange(MIN_RUNTIME_CONTEXT_TOKENS, MAX_RUNTIME_CONTEXT_TOKENS)
+        self.local_context_spin_box.setSingleStep(512)
+        self.local_context_spin_box.setValue(DEFAULT_RUNTIME_CONTEXT_TOKENS)
+        self.local_context_spin_box.setGroupSeparatorShown(True)
+        self.local_context_spin_box.setKeyboardTracking(False)
+        self.local_context_spin_box.setAccessibleName(_("Runtime context"))
+        self.local_context_spin_box.setToolTip(_("Larger context windows increase memory use and may prevent the model from loading."))
+        self.local_context_spin_box.valueChanged.connect(lambda value: actions.set_number(LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY, value))
+        context_form.addRow(_("Runtime context"), self.local_context_spin_box)
+        local.content_layout.addLayout(context_form)
+        self.local_context_status_label = _secondary_label("")
+        self.local_context_status_label.setObjectName("local_context_status_label")
+        local.content_layout.addWidget(self.local_context_status_label)
         self.manage_local_models_button = QPushButton(_("Manage models"))
         self.manage_local_models_button.setObjectName("manage_local_models_button")
         self.manage_local_models_button.clicked.connect(

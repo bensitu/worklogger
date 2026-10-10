@@ -23,11 +23,13 @@ class LocalInferenceTests(unittest.TestCase):
         class Engine:
             def __init__(engine, **kwargs):
                 self.engines.append(engine)
+                engine.configuration = kwargs
                 engine.closed = False
                 engine.token_count = 4
             def tokenize(engine, data, **kwargs):
                 return [1] * engine.token_count
             def create_chat_completion(engine, **kwargs):
+                engine.last_request = kwargs
                 kwargs["logits_processor"]([], [])
                 return {"choices": [{"message": {"content": "Rewritten note"}}]}
             def close(engine):
@@ -60,6 +62,32 @@ class LocalInferenceTests(unittest.TestCase):
         self.assertTrue(self.engines[1].closed)
         self.select(verified=False)
         self.assertFalse(self.handler.available)
+
+    def test_runtime_context_preference_reloads_only_when_effective_capacity_changes(self):
+        from dataclasses import replace
+        self.select(replace(self.entry, context_length=131072, max_output_tokens=8192))
+        command = RewriteTextCommand(1, "Original note")
+        self.assertTrue(self.handler.handle(command).ok)
+        self.assertEqual(self.engines[-1].configuration["n_ctx"], 8192)
+        self.assertEqual(self.engines[-1].last_request["max_tokens"], 2048)
+        for tokens in (16384, 65536, 131072):
+            self.values["local_model_context_tokens"] = str(tokens)
+            previous = self.engines[-1]
+            self.assertTrue(self.handler.handle(command).ok)
+            self.assertTrue(previous.closed)
+            self.assertEqual(self.engines[-1].configuration["n_ctx"], tokens)
+        count = len(self.engines)
+        self.values["local_model_context_tokens"] = "262144"
+        self.assertTrue(self.handler.handle(command).ok)
+        self.assertEqual(len(self.engines), count)
+        self.assertEqual(self.engines[-1].configuration["n_ctx"], 131072)
+        self.select(replace(self.entry, context_length=32768))
+        self.assertTrue(self.handler.handle(command).ok)
+        self.assertEqual(self.engines[-1].configuration["n_ctx"], 32768)
+        self.assertEqual(self.values["local_model_context_tokens"], "262144")
+        self.values["local_model_context_tokens"] = "invalid"
+        self.assertTrue(self.handler.handle(command).ok)
+        self.assertEqual(self.engines[-1].configuration["n_ctx"], 8192)
 
     def test_time_and_context_limits_return_safe_errors(self):
         self.select()

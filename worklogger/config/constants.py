@@ -38,6 +38,7 @@ LOGIN_LOCKOUT_SCHEDULE = (
 
 LOCAL_MODEL_ACTIVE_ID_SETTING_KEY = "local_model_active_id"
 LOCAL_MODEL_ENABLED_SETTING_KEY = "local_model_enabled"
+LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY = "local_model_context_tokens"
 
 THEME_SETTING_KEY = "theme"
 CUSTOM_THEME_COLOR_SETTING_KEY = "custom_theme_color"

@@ -323,9 +323,6 @@ msgstr ""
 msgid "Content must not exceed 16,000 characters."
 msgstr ""
 
-msgid "Context"
-msgstr ""
-
 msgid "Context: {context} tokens; output: {output} tokens"
 msgstr ""
 
@@ -468,6 +465,9 @@ msgid "Edit display name"
 msgstr ""
 
 msgid "Edit record"
+msgstr ""
+
+msgid "Effective context: {count} tokens."
 msgstr ""
 
 msgid "Enable AI Assist to use text processing."
@@ -758,6 +758,9 @@ msgstr ""
 msgid "Language"
 msgstr ""
 
+msgid "Larger context windows increase memory use and may prevent the model from loading."
+msgstr ""
+
 msgid "Last backup: {time}"
 msgstr ""
 
@@ -872,6 +875,9 @@ msgstr ""
 msgid "Model"
 msgstr ""
 
+msgid "Model context limit"
+msgstr ""
+
 msgid "Model deleted."
 msgstr ""
 
@@ -885,6 +891,9 @@ msgid "Model identifier"
 msgstr ""
 
 msgid "Model imported."
+msgstr ""
+
+msgid "Model output limit"
 msgstr ""
 
 msgid "Model verification failed. Import or download a valid GGUF model."
@@ -959,6 +968,9 @@ msgstr ""
 msgid "No events found."
 msgstr ""
 
+msgid "No model selected."
+msgstr ""
+
 msgid "No models found"
 msgstr ""
 
@@ -1023,9 +1035,6 @@ msgid "Operation cancelled."
 msgstr ""
 
 msgid "Other"
-msgstr ""
-
-msgid "Output"
 msgstr ""
 
 msgid "Overnight"
@@ -1268,6 +1277,12 @@ msgstr ""
 msgid "Role"
 msgstr ""
 
+msgid "Runtime context"
+msgstr ""
+
+msgid "Runtime context must be a whole number of at least 512 tokens."
+msgstr ""
+
 msgid "SMOKE IMPORT FAILED"
 msgstr ""
 
@@ -1329,6 +1344,9 @@ msgid "Saved daily reports exported."
 msgstr ""
 
 msgid "Saved daily reports for this month"
+msgstr ""
+
+msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
 msgstr ""
 
 msgid "Saved report #{report_id}"
@@ -1548,6 +1566,9 @@ msgid "The saved report is no longer available. Reload the reports and try again
 msgstr ""
 
 msgid "The selected context is too large. Choose a shorter period or exclude optional content."
+msgstr ""
+
+msgid "The selected model's context limit is too small for text processing."
 msgstr ""
 
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."

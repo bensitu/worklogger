@@ -28,6 +28,7 @@ from worklogger.config.constants import (
     LANGUAGE_SETTING_KEY,
     LAST_BACKUP_AT_SETTING_KEY,
     LOCAL_MODEL_ENABLED_SETTING_KEY,
+    LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY,
     MINIMAL_MODE_SETTING_KEY,
     MONTHLY_TARGET_HOURS_SETTING_KEY,
     NETWORK_PROXY_ADDRESS_SETTING_KEY,
@@ -50,6 +51,9 @@ from worklogger.app.use_cases.settings import ProxyPasswordSettings
 from worklogger.domain.shared.languages import normalize_language
 from worklogger.infrastructure.calendar.holidays_provider import validate_holiday_region
 from worklogger.domain.settings.appearance import DEFAULT_CUSTOM_COLOR, THEME_KEYS, normalize_hex_color
+from worklogger.domain.local_model.preferences import (
+    DEFAULT_RUNTIME_CONTEXT_TOKENS, normalize_runtime_context, runtime_context_preference,
+)
 
 
 class SettingsGetHandler(Protocol):
@@ -100,6 +104,7 @@ class SettingsState:
     external_model_enabled: bool = False
     external_api_key_error: str = ""
     proxy_password_error: str = ""
+    local_model_context_tokens: int = DEFAULT_RUNTIME_CONTEXT_TOKENS
 
 
 class SettingsViewModel:
@@ -187,6 +192,7 @@ class SettingsViewModel:
                 external_model_enabled=_bool(values[EXTERNAL_MODEL_ENABLED_SETTING_KEY], False),
                 minimal_mode=_bool(values[MINIMAL_MODE_SETTING_KEY], False),
                 local_model_enabled=_bool(values[LOCAL_MODEL_ENABLED_SETTING_KEY], True),
+                local_model_context_tokens=runtime_context_preference(values[LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY]),
                 standard_work_hours=_number(
                     values[STANDARD_WORK_HOURS_SETTING_KEY],
                     8.0,
@@ -280,6 +286,11 @@ class SettingsViewModel:
         return self._set(key, "1" if enabled else "0")
 
     def set_number(self, key: str, value: float) -> Result[None]:
+        if key == LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY:
+            try:
+                return self._set(key, str(normalize_runtime_context(value)))
+            except ValueError as exc:
+                return Result.failure(ValidationError(str(exc), str(exc)))
         limits = _NUMBER_LIMITS.get(key)
         if limits is None:
             return Result.failure(ValidationError("unknown_numeric_setting", "unknown_numeric_setting"))
@@ -349,6 +360,7 @@ _DEFAULTS = {
     EXTERNAL_MODEL_ENABLED_SETTING_KEY: "0",
     MINIMAL_MODE_SETTING_KEY: "0",
     LOCAL_MODEL_ENABLED_SETTING_KEY: "1",
+    LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY: str(DEFAULT_RUNTIME_CONTEXT_TOKENS),
     STANDARD_WORK_HOURS_SETTING_KEY: "8.0",
     DEFAULT_BREAK_HOURS_SETTING_KEY: "1.0",
     MONTHLY_TARGET_HOURS_SETTING_KEY: "168.0",

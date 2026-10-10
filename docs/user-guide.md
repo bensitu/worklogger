@@ -260,6 +260,14 @@ a paginated Unicode text summary, not the chart. See [data formats](data-formats
 | Account | Current account, password change, identities, administrator tools when authorized, logout |
 | About | Version and author information, license display, repository link, manual update check |
 
+Under AI > Local Model, Model context limit is read-only catalog metadata; Runtime
+context is your account's adjustable local inference window. It defaults to 8,192
+tokens and cannot exceed the selected model's declared limit. A smaller model
+temporarily limits the effective value without overwriting your saved preference.
+Changes apply on the next request, not during an active generation. Larger values
+use more memory and may prevent loading. This control does not change the model
+file, catalog, or external AI configuration.
+
 Most settings save when changed. Language changes take effect after restart or
 the next login rather than rebuilding the open interface immediately. Appearance
 and calendar preferences update the active window.

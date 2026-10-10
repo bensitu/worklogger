@@ -178,8 +178,8 @@ class LocalModelsDialog(QDialog):
         self.file_label, self.size_label, self.ram_label = (self._detail_label() for _index in range(3))
         self.context_label, self.output_label, self.license_label = (self._detail_label() for _index in range(3))
         for caption, label in ((_("File"), self.file_label), (_("Estimated size"), self.size_label),
-                               (_("Estimated RAM"), self.ram_label), (_("Context"), self.context_label),
-                               (_("Output"), self.output_label),
+                               (_("Estimated RAM"), self.ram_label), (_("Model context limit"), self.context_label),
+                               (_("Model output limit"), self.output_label),
                                (_("License"), self.license_label)):
             form.addRow(caption, label)
         info.addLayout(form)

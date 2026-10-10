@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QSignalBlocker
 from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -53,6 +53,9 @@ from worklogger.presentation.widgets.color_dialog import choose_custom_color
 from worklogger.presentation.widgets.icons import ui_icon
 from worklogger.presentation.widgets.avatar import AvatarCropDialog, avatar_pixmap
 from worklogger.infrastructure.images.avatar import load_avatar_image
+from worklogger.domain.local_model.preferences import (
+    DEFAULT_RUNTIME_CONTEXT_TOKENS, MIN_RUNTIME_CONTEXT_TOKENS, MAX_RUNTIME_CONTEXT_TOKENS,
+)
 
 
 class SettingsPage(QWidget):
@@ -98,6 +101,7 @@ class SettingsPage(QWidget):
         self._local_model_name = ""
         self._local_runtime_reason = None
         self._local_runtime_ready = False
+        self._local_context_limit = None
         self.setObjectName("settings_page_widget")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         configure_application_style()
@@ -219,6 +223,7 @@ class SettingsPage(QWidget):
             )
             self.local_model_enabled_switch.set_checked(state.local_model_enabled)
             self._update_local_model_status()
+            self._update_local_context()
             self.standard_hours_input.setValue(state.standard_work_hours)
             self.default_break_input.setValue(state.default_break_hours)
             self.monthly_target_input.setValue(state.monthly_target_hours)
@@ -619,6 +624,36 @@ class SettingsPage(QWidget):
         self._local_model_ready = ready
         self._local_model_name = name
         self._update_local_model_status()
+
+    def set_local_model_context_limit(self, limit: int | None):
+        self._local_context_limit = limit
+        self._update_local_context()
+
+    def _update_local_context(self):
+        if not hasattr(self, "local_context_spin_box"):
+            return
+        limit = self._local_context_limit
+        requested = self._state.local_model_context_tokens if self._state else DEFAULT_RUNTIME_CONTEXT_TOKENS
+        valid_limit = limit is not None and limit >= MIN_RUNTIME_CONTEXT_TOKENS
+        maximum = min(limit, MAX_RUNTIME_CONTEXT_TOKENS) if valid_limit else MAX_RUNTIME_CONTEXT_TOKENS
+        effective = min(requested, maximum)
+        with QSignalBlocker(self.local_context_spin_box):
+            self.local_context_spin_box.setRange(MIN_RUNTIME_CONTEXT_TOKENS, maximum)
+            self.local_context_spin_box.setValue(effective)
+        self.local_context_spin_box.setEnabled(valid_limit)
+        self.local_context_limit_label.setText(_("{count} tokens").format(count=limit) if limit is not None else _("Unknown"))
+        if valid_limit and requested > maximum:
+            status = _("Saved preference: {requested} tokens; effective context: {effective} tokens.").format(
+                requested=requested, effective=effective)
+        elif valid_limit:
+            status = _("Effective context: {count} tokens.").format(count=effective)
+        elif limit is not None:
+            status = display_error_code("local_model_context_limit_invalid")
+        else:
+            status = _("No model selected.")
+        if valid_limit and effective > DEFAULT_RUNTIME_CONTEXT_TOKENS:
+            status += "\n" + _("Larger context windows increase memory use and may prevent the model from loading.")
+        self.local_context_status_label.setText(status)
 
     def set_local_runtime_status(self, *, ready: bool, reason: str):
         self._local_runtime_ready = ready

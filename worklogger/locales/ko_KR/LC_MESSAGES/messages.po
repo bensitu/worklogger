@@ -325,9 +325,6 @@ msgstr "내용"
 msgid "Content must not exceed 16,000 characters."
 msgstr "내용은 16,000자를 초과할 수 없습니다."
 
-msgid "Context"
-msgstr "문맥"
-
 msgid "Context: {context} tokens; output: {output} tokens"
 msgstr "컨텍스트: {context} 토큰; 출력: {output} 토큰"
 
@@ -471,6 +468,9 @@ msgstr "표시 이름 편집"
 
 msgid "Edit record"
 msgstr "기록 편집"
+
+msgid "Effective context: {count} tokens."
+msgstr "실제 컨텍스트: {count} 토큰."
 
 msgid "Enable AI Assist to use text processing."
 msgstr "텍스트 처리를 사용하려면 AI 지원을 켜세요."
@@ -760,6 +760,9 @@ msgstr "한국어"
 msgid "Language"
 msgstr "언어"
 
+msgid "Larger context windows increase memory use and may prevent the model from loading."
+msgstr "컨텍스트 창이 커지면 메모리 사용량이 증가하여 모델을 불러오지 못할 수 있습니다."
+
 msgid "Last backup: {time}"
 msgstr "마지막 백업: {time}"
 
@@ -874,6 +877,9 @@ msgstr "모드"
 msgid "Model"
 msgstr "모델"
 
+msgid "Model context limit"
+msgstr "모델 컨텍스트 한도"
+
 msgid "Model deleted."
 msgstr "모델이 삭제되었습니다."
 
@@ -888,6 +894,9 @@ msgstr "모델 식별자"
 
 msgid "Model imported."
 msgstr "모델을 가져왔습니다."
+
+msgid "Model output limit"
+msgstr "모델 출력 한도"
 
 msgid "Model verification failed. Import or download a valid GGUF model."
 msgstr "모델 검증에 실패했습니다. 유효한 GGUF 모델을 가져오거나 다운로드하세요."
@@ -961,6 +970,9 @@ msgstr "데이터 없음"
 msgid "No events found."
 msgstr "일정을 찾을 수 없습니다."
 
+msgid "No model selected."
+msgstr "선택한 모델이 없습니다."
+
 msgid "No models found"
 msgstr "모델을 찾을 수 없습니다"
 
@@ -1026,9 +1038,6 @@ msgstr "작업이 취소되었습니다."
 
 msgid "Other"
 msgstr "기타"
-
-msgid "Output"
-msgstr "출력"
 
 msgid "Overnight"
 msgstr "자정 넘김"
@@ -1270,6 +1279,12 @@ msgstr "다시 작성됨"
 msgid "Role"
 msgstr "역할"
 
+msgid "Runtime context"
+msgstr "실행 컨텍스트"
+
+msgid "Runtime context must be a whole number of at least 512 tokens."
+msgstr "실행 컨텍스트는 512토큰 이상의 정수여야 합니다."
+
 msgid "SMOKE IMPORT FAILED"
 msgstr "가져오기 스모크 테스트 실패"
 
@@ -1332,6 +1347,9 @@ msgstr "저장된 일간 보고서를 내보냈습니다."
 
 msgid "Saved daily reports for this month"
 msgstr "이번 달의 저장된 일간 보고서"
+
+msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
+msgstr "저장된 설정: {requested} 토큰. 실제 컨텍스트: {effective} 토큰."
 
 msgid "Saved report #{report_id}"
 msgstr "저장된 보고서 #{report_id}"
@@ -1551,6 +1569,9 @@ msgstr "저장된 보고서를 사용할 수 없습니다. 보고서를 다시 �
 
 msgid "The selected context is too large. Choose a shorter period or exclude optional content."
 msgstr "선택한 컨텍스트가 너무 큽니다. 더 짧은 기간을 선택하거나 선택적 내용을 제외하세요."
+
+msgid "The selected model's context limit is too small for text processing."
+msgstr "선택한 모델의 컨텍스트 한도가 너무 작아 텍스트를 처리할 수 없습니다."
 
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr "이 기기에서 저장된 자격 증명을 복호화할 수 없습니다. 다시 입력하세요. 기존 작업 기록에는 영향이 없습니다."

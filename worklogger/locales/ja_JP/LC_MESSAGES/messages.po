@@ -325,9 +325,6 @@ msgstr "内容"
 msgid "Content must not exceed 16,000 characters."
 msgstr "内容は16,000文字以内で入力してください。"
 
-msgid "Context"
-msgstr "コンテキスト"
-
 msgid "Context: {context} tokens; output: {output} tokens"
 msgstr "コンテキスト：{context} トークン、出力：{output} トークン"
 
@@ -471,6 +468,9 @@ msgstr "表示名を編集"
 
 msgid "Edit record"
 msgstr "記録を編集"
+
+msgid "Effective context: {count} tokens."
+msgstr "実効コンテキスト: {count} トークン。"
 
 msgid "Enable AI Assist to use text processing."
 msgstr "テキスト処理を使うにはAI支援を有効にしてください。"
@@ -760,6 +760,9 @@ msgstr "韓国語"
 msgid "Language"
 msgstr "言語"
 
+msgid "Larger context windows increase memory use and may prevent the model from loading."
+msgstr "コンテキストを大きくするとメモリ使用量が増え、モデルを読み込めなくなる場合があります。"
+
 msgid "Last backup: {time}"
 msgstr "最終バックアップ：{time}"
 
@@ -874,6 +877,9 @@ msgstr "モード"
 msgid "Model"
 msgstr "モデル"
 
+msgid "Model context limit"
+msgstr "モデルのコンテキスト上限"
+
 msgid "Model deleted."
 msgstr "モデルを削除しました。"
 
@@ -888,6 +894,9 @@ msgstr "モデル識別子"
 
 msgid "Model imported."
 msgstr "モデルをインポートしました。"
+
+msgid "Model output limit"
+msgstr "モデルの出力上限"
 
 msgid "Model verification failed. Import or download a valid GGUF model."
 msgstr "モデルの検証に失敗しました。有効なGGUFモデルをインポートまたはダウンロードしてください。"
@@ -961,6 +970,9 @@ msgstr "データがありません"
 msgid "No events found."
 msgstr "予定が見つかりません。"
 
+msgid "No model selected."
+msgstr "モデルが選択されていません。"
+
 msgid "No models found"
 msgstr "モデルが見つかりません"
 
@@ -1026,9 +1038,6 @@ msgstr "操作をキャンセルしました。"
 
 msgid "Other"
 msgstr "その他"
-
-msgid "Output"
-msgstr "出力"
 
 msgid "Overnight"
 msgstr "日またぎ"
@@ -1270,6 +1279,12 @@ msgstr "書き直しました"
 msgid "Role"
 msgstr "権限"
 
+msgid "Runtime context"
+msgstr "実行コンテキスト"
+
+msgid "Runtime context must be a whole number of at least 512 tokens."
+msgstr "実行コンテキストは512トークン以上の整数にしてください。"
+
 msgid "SMOKE IMPORT FAILED"
 msgstr "インポートのスモークテストに失敗"
 
@@ -1332,6 +1347,9 @@ msgstr "保存済みの日報を出力しました。"
 
 msgid "Saved daily reports for this month"
 msgstr "この月の保存済み日報"
+
+msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
+msgstr "保存された設定: {requested} トークン。実効コンテキスト: {effective} トークン。"
 
 msgid "Saved report #{report_id}"
 msgstr "保存済みレポート #{report_id}"
@@ -1551,6 +1569,9 @@ msgstr "保存済みレポートを利用できません。レポートを再読
 
 msgid "The selected context is too large. Choose a shorter period or exclude optional content."
 msgstr "選択したコンテキストが大きすぎます。期間を短くするか、任意の内容を除外してください。"
+
+msgid "The selected model's context limit is too small for text processing."
+msgstr "選択したモデルのコンテキスト上限が小さすぎるため、テキストを処理できません。"
 
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr "保存された認証情報をこのデバイスで復号できません。再入力してください。既存の作業記録には影響しません。"

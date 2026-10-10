@@ -72,6 +72,42 @@ def _view_model(repository: MemorySettingsRepository) -> SettingsViewModel:
 
 
 class SettingsPresentationTests(unittest.TestCase):
+    def test_local_runtime_context_persists_by_account_and_respects_selected_model(self):
+        from worklogger.config.constants import LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY as key
+        from PySide6.QtTest import QTest
+        from PySide6.QtCore import Qt
+        repository = MemorySettingsRepository()
+        model = _view_model(repository)
+        self.assertEqual(model.load().value.local_model_context_tokens, 8192)
+        for invalid in (511, 8192.5, float("nan"), float("inf"), -1, 0, True):
+            self.assertFalse(model.set_number(key, invalid).ok)
+            self.assertIsNone(repository.get(1, key))
+        self.assertTrue(model.set_number(key, 65536).ok)
+        page = SettingsPage(model)
+        self.addCleanup(page.deleteLater)
+        page.refresh()
+        self.assertFalse(page.local_context_spin_box.isEnabled())
+        with patch.object(model, "set_number", wraps=model.set_number) as save:
+            page.set_local_model_context_limit(131072)
+            self.assertEqual(page.local_context_spin_box.value(), 65536)
+            page.set_local_model_context_limit(32768)
+            self.assertEqual(page.local_context_spin_box.value(), 32768)
+            self.assertEqual(repository.get(1, key), "65536")
+            self.assertIn("65536", page.local_context_status_label.text())
+            self.assertIn("32768", page.local_context_status_label.text())
+            page.refresh()
+            save.assert_not_called()
+        page.local_context_spin_box.setValue(16384)
+        self.assertEqual(repository.get(1, key), "16384")
+        page.local_context_spin_box.lineEdit().setText("12288")
+        self.assertEqual(repository.get(1, key), "16384")
+        QTest.keyClick(page.local_context_spin_box, Qt.Key.Key_Return)
+        self.assertEqual(repository.get(1, key), "12288")
+        second = SettingsViewModel(user_id=2, get_handler=GetSettingHandler(repository), set_handler=SetSettingHandler(repository))
+        self.assertEqual(second.load().value.local_model_context_tokens, 8192)
+        page.set_local_model_context_limit(None)
+        self.assertFalse(page.local_context_spin_box.isEnabled())
+
     def test_external_configuration_is_editable_without_activating_a_service(self):
         class SecureStore:
             value = None

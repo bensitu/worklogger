@@ -25,6 +25,10 @@ def display_error_code(code: str) -> str:
     """Translate known error codes without displaying raw exception text or logging previews."""
 
     match code:
+        case "local_runtime_context_invalid":
+            return _("Runtime context must be a whole number of at least 512 tokens.")
+        case "local_model_context_limit_invalid":
+            return _("The selected model's context limit is too small for text processing.")
         case "display_name_invalid":
             return _("Use a single-line display name without control characters.")
         case "display_name_too_long":

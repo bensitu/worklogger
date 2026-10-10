@@ -22,6 +22,40 @@ from worklogger.infrastructure.i18n import _
 
 
 class ReportSettingsLayoutChecks(unittest.TestCase):
+    def test_local_context_settings_fit_model_limits_and_supported_languages(self):
+        old_language, old_style, old_palette = get_language(), self.app.styleSheet(), self.app.palette()
+        engine = ThemeEngine()
+        try:
+            for language in available_languages():
+                set_language(language)
+                for dark in (False, True):
+                    self.app.setPalette(engine.qt_palette(dark=dark))
+                    self.app.setStyleSheet(engine.application_stylesheet(dark=dark))
+                    repository = MemorySettingsRepository()
+                    repository.set(1, "local_model_context_tokens", "131072")
+                    page = SettingsPage(_view_model(repository))
+                    try:
+                        page.refresh()
+                        page.set_local_model_context_limit(32768)
+                        page.category_nav.set_category("ai")
+                        page.resize(880, 680)
+                        page.show()
+                        self.app.processEvents()
+                        page.category_stack.currentWidget().ensureWidgetVisible(page.local_context_spin_box)
+                        control = page.local_context_spin_box
+                        self.assertTrue(control.parentWidget().rect().contains(control.geometry()))
+                        self.assertGreaterEqual(control.width(), control.fontMetrics().horizontalAdvance(control.text()) + 36)
+                        self.assertEqual(control.value(), 32768)
+                        self.assertIn("131072", page.local_context_status_label.text())
+                        self.capture(page, f"{language}-context-{'dark' if dark else 'light'}")
+                    finally:
+                        page.hide()
+                        page.deleteLater()
+        finally:
+            set_language(old_language)
+            self.app.setPalette(old_palette)
+            self.app.setStyleSheet(old_style)
+
     def test_display_name_actions_fit_read_edit_and_error_states(self):
         old_language, old_style, old_palette = get_language(), self.app.styleSheet(), self.app.palette()
         engine = ThemeEngine()

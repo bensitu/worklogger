@@ -62,12 +62,22 @@ Every supplied URL uses an immutable repository commit, with the corresponding
 LFS SHA-256 digest. File existence and digests were checked through public Hugging
 Face metadata. The multi-gigabyte files were not downloaded or benchmarked.
 
-The configured context is 8,192 tokens, not the model's advertised maximum.
-Output is limited to 2,048 tokens, or 1,024 for the small model. These settings are
-intended for short work summaries and leave room for input within the context;
-an injected inference implementation must enforce the total token budget.
-Using the advertised maximum would require substantially more memory and may
-need additional backend configuration.
+The catalog's `context_length` describes the declared model context limit,
+independently of the account's runtime preference. Settings > AI > Local Model
+shows that limit and provides a Runtime context control, defaulting to 8,192
+tokens. The minimum runtime value is 512 tokens. The effective context is the
+smaller of the saved preference and the selected model's declared limit. Choosing
+a smaller model does not overwrite the preference; the settings status shows both
+values when they differ.
+
+Catalog metadata is not an independently verified GGUF training-context limit.
+Editing JSON does not change model weights or configure context-extension
+mechanisms. A declared maximum may require additional backend configuration and
+substantially more memory. Increasing the runtime window can prevent a model from
+loading; reduce it if memory is insufficient. Output remains limited to 2,048
+tokens, the catalog output limit, and the remaining context budget, with 256 tokens
+reserved for formatting. The small supplied model declares a 1,024-token output
+limit. Injected inference implementations must enforce their total token budget.
 
 The desktop loads the root catalog in source checkouts and its packaged copy at
 `worklogger/assets/models/model_catalog.json` in distributions. Persistent
@@ -101,8 +111,12 @@ weights on the GUI thread.
 The engine loads lazily on a worker, uses CPU execution and a bounded thread count,
 and reuses one loaded model per account session. Changing models releases the previous
 engine on the next request; deleting its file releases the native handle first.
-Session shutdown releases the engine after outstanding jobs finish. Context is
-limited to at most 8,192 tokens with space reserved for formatting and output.
+Session shutdown releases the engine after outstanding jobs finish. Changing the
+effective runtime context rebuilds the engine lazily on the next request and does
+not interrupt an active generation. The setting applies only to local inference;
+it does not configure an external provider's context window. A native message that
+the runtime context is below the GGUF training context is informational and can
+remain visible even when the selected runtime value is applied correctly.
 Rewriting has a cooperative 180-second inference deadline, including weight loading;
 the native loader and prompt evaluation cannot be forcibly interrupted mid-call.
 Failed loading, timeout, and oversized input return errors without replacing the draft.

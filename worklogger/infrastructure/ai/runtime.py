@@ -10,6 +10,11 @@ from worklogger.config.constants import (
     AI_ASSIST_ENABLED_SETTING_KEY,
     LOCAL_MODEL_ENABLED_SETTING_KEY,
     LOCAL_MODEL_ACTIVE_ID_SETTING_KEY,
+    LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY,
+)
+from worklogger.domain.local_model.preferences import (
+    DEFAULT_RUNTIME_CONTEXT_TOKENS, MIN_RUNTIME_CONTEXT_TOKENS,
+    effective_runtime_context, runtime_context_preference,
 )
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
@@ -50,6 +55,7 @@ class LocalInferenceRuntime:
             return bool(
                 self.backend_available
                 and entry
+                and entry.context_length >= MIN_RUNTIME_CONTEXT_TOKENS
                 and self._preference(LOCAL_MODEL_ENABLED_SETTING_KEY)
                 and self._preference(AI_ASSIST_ENABLED_SETTING_KEY)
                 and self._settings.get(self._user_id, LOCAL_MODEL_ACTIVE_ID_SETTING_KEY)
@@ -75,6 +81,8 @@ class LocalInferenceRuntime:
         if not self._preference(AI_ASSIST_ENABLED_SETTING_KEY):
             return "ai_assist_disabled"
         with self._state_lock:
+            if self._entry is not None and self._entry.context_length < MIN_RUNTIME_CONTEXT_TOKENS:
+                return "local_model_context_limit_invalid"
             if (
                 self._entry is not None
                 and self._settings.get(self._user_id, LOCAL_MODEL_ACTIVE_ID_SETTING_KEY)
@@ -128,7 +136,9 @@ class LocalInferenceRuntime:
                     return Result.failure(ValidationError(code, code))
                 path = self.store.model_path(entry.id)
                 stat = path.stat()
-                context = min(8192, max(512, entry.context_length))
+                requested_context = runtime_context_preference(self._settings.get(
+                    self._user_id, LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY, str(DEFAULT_RUNTIME_CONTEXT_TOKENS)))
+                context = effective_runtime_context(requested_context, entry.context_length)
                 key = (entry.id, stat.st_mtime_ns, stat.st_size, entry.sha256, context)
                 started = monotonic()
                 if self._engine_key != key:

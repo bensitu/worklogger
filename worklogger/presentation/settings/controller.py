@@ -274,6 +274,8 @@ class SettingsWorkflowController:
                     ready=active is not None and active.verified,
                     name=active.entry.display_name if active is not None else "",
                 )
+            if hasattr(surface, "set_local_model_context_limit"):
+                surface.set_local_model_context_limit(active.entry.context_length if active is not None else None)
             self._sync_inference(surface)
 
         if self._job_runner is None:

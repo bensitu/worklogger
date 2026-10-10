@@ -91,6 +91,7 @@ variables. They are stored as strings in the settings repository.
 | `daily_note_sharing:<ISO date>` | Both off | JSON with per-date `reports` and `ai` approval |
 | `daily_note_draft:<ISO date>` | Absent | Recoverable content, original content, and original/current sharing choices |
 | `local_model_enabled` | `1` | Local model preference |
+| `local_model_context_tokens` | `8192` | Account runtime context preference; effective local inference uses the smaller of this value and the selected model's declared context limit |
 | `profile_avatar_png` | Empty | Account-specific normalized avatar as base64 PNG; empty uses the bundled default |
 | `external_model_base_url` | Empty | Stored external-service preference; example shown only as a placeholder |
 | `external_model_name` | Empty | Model identifier sent to the explicitly selected provider |
@@ -104,6 +105,12 @@ variables. They are stored as strings in the settings repository.
 Model selection also uses `local_model_active_id`. Account password-change
 requirements are enforced by the authentication workflow, not by changing a UI
 preference alone.
+Runtime context uses the existing account settings store, without a schema change.
+Missing or invalid stored values use 8,192 tokens without rewriting existing rows.
+The control accepts whole numbers from 512 tokens up to the selected model's limit
+and the native integer control's maximum (2,147,483,647). Changing models preserves
+the saved preference; changing the effective value reloads local inference on its
+next request. See [local models](local-models.md) for memory and metadata limits.
 Local model and proxy switches remain editable before their services are configured.
 They display saved preferences, not inferred readiness. Enabling the proxy opens
 its address, port, and optional authentication fields; switching it off preserves

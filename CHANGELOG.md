@@ -14,6 +14,9 @@ Application version: 4.0.0.
 
 ### Desktop Interface
 
+- Separated declared local model capacity from an account-specific runtime context
+  setting, with effective-limit feedback and lazy engine reload on the next request.
+
 - Added editable account display names separate from read-only login IDs, with
   inline save/cancel and keyboard actions, live identity labels, current AI
   addressing, and an optional report author variable.

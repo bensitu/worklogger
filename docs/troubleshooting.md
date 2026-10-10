@@ -137,9 +137,13 @@ Python environment used to start WorkLogger, restart it. Packaged applications
 must be built with native inference included. See [local models](local-models.md).
 
 Loading is lazy, so the first rewrite takes longer. An out-of-memory/load failure
-does not change the draft; select a smaller model. A native message that configured
-context is lower than training context describes the intentional 8,192-token bound,
-not a damaged model. Oversized content must be shortened; timeouts can be retried
+does not change the draft; reduce Runtime context under Settings > AI > Local Model
+or select a smaller model. A native message that configured context is lower than
+training context describes the selected runtime window, not a damaged model. The
+default is 8,192 tokens, and the effective value is limited by the selected model's
+declared catalog capacity. Editing the catalog does not change GGUF training
+metadata or configure context extension. Oversized content must be shortened;
+timeouts can be retried
 with less text or a smaller model. Avatar upload rejects unsupported, invalid,
 oversized, or excessively high-resolution images without changing the saved picture.
 
