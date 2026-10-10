@@ -13,7 +13,7 @@ from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.identity.models import normalize_provider
 from worklogger.infrastructure.files import atomic_destination
-from worklogger.infrastructure.security.key_store import HmacSecretBox
+from worklogger.infrastructure.security.key_store import FernetSecretBox
 from worklogger.infrastructure.security.paths import credential_directory
 from worklogger.infrastructure.identity.oidc import microsoft_oidc_config
 
@@ -30,7 +30,7 @@ class IdentityConfigurationStore:
 
     def __init__(self, path: Path | None = None, *, secret_box=None):
         self._path = path or credential_directory() / "identity-config.enc"
-        self._box = secret_box or HmacSecretBox()
+        self._box = secret_box or FernetSecretBox()
         self._lock = RLock()
 
     def _local(self):

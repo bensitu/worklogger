@@ -19,8 +19,8 @@ from worklogger.infrastructure.repositories.entry_operations_sqlite import SQLit
 class SQLiteWorkLogRepository:
     def __init__(self, connection_factory: SQLiteConnectionFactory):
         storage = WorkLogStorage(connection_factory)
-        self.supports_entries = storage.supports_entries
-        self.changes_available = storage.change_history
+        self.supports_entries = True
+        self.changes_available = True
         self._queries = SQLiteWorkLogQueries(storage)
         self._writes = SQLiteWorkLogWrites(storage, self._queries)
         self._operations = SQLiteEntryOperations(storage, self._writes)

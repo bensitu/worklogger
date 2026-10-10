@@ -40,6 +40,37 @@ so another writer cannot change the source between backup and conversion.
 Released API address/model preferences are mapped, and local password availability
 follows the released nonempty-hash behavior rather than inferred recovery-key state.
 
+## Runtime Cleanup and Module Boundaries
+
+Worklog and authentication repositories now assume the validated current schema.
+Per-repository schema probing, daily-table fallback writes and optional-column
+branches have been removed. Development automatic-recording draft conversion is
+removed; an unsupported retained draft is reported for deliberate recovery or
+discard rather than silently converted. Current timer serialization is unchanged.
+
+The encryption adapter is named `FernetSecretBox`, matching its actual algorithm.
+Released Fernet credential compatibility remains, including original machine-key
+access; the early development custom stream-cipher reader and helpers are removed.
+Invalid or unsupported ciphertext is retained rather than overwritten.
+
+Settings-section state binding is separate from page composition. Recording
+transitions/reminders and record transformation/undo prompts are separate from the
+editor widget. Layout construction, signals, keyboard actions and translated UI
+captions are preserved. Settings page executable lines decrease from 746 to 424;
+the recording editor decreases from 769 to 578 without dropping functionality.
+
+Owned callback wrapping prevents time-record and report jobs from touching a
+deleted Qt widget. Boolean preference decoding is shared between UI and runtime.
+Invalid stored numeric preferences use safe display defaults without modifying
+their original values; new nonfinite values still cannot be saved. Invalid optional
+offset timestamps no longer hide otherwise valid clock-only records and are not
+rewritten on read.
+
+Settings state reads request only known preference keys rather than loading
+unrelated note drafts and history. Canonical repositories avoid repeated schema
+queries. Unchanged global palettes/stylesheets are not reapplied; background
+surface transitions explicitly force refresh of their descendant styling.
+
 ## Naming Semantics
 
 SQL identifiers are storage contracts, not localized UI captions. Exact spelling
@@ -62,3 +93,23 @@ Keep these distinctions explicit in adapters and documentation. Renaming SQL
 columns merely to mirror a localized caption would require an additional data
 conversion without correcting behavior, and would not improve multilingual UI
 consistency.
+
+## Verification and Limits
+
+The final complete suite passes 481 tests, including isolated runtime/import smoke
+checks. Gettext consistency and undefined-name/unused-import checks pass. Opt-in
+record-action and model-context layout checks pass across supported languages and
+light/dark modes; background cover and opacity checks also pass.
+
+Repeated native global stylesheet replacement caused an access violation during
+the combined Qt suite. Applying an unchanged stylesheet is now skipped, while
+explicit background-container transitions force the required refresh. A complete
+rerun succeeds; this does not establish that every possible Qt/platform rendering
+failure is eliminated.
+
+No writable real-user database was used. Existing schema 14 is exercised through
+isolated complete-schema fixtures. Earlier development files require their
+compatible executable for manual export; the current application deliberately
+does not convert them. No real paid AI requests, live provider authorization or
+new packaged executable were used in this review. Existing original metadata and
+unsupported encrypted values remain available for deliberate recovery.

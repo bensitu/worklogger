@@ -46,8 +46,6 @@ class SQLiteEntryOperations:
         return tuple(result)
 
     def _transform(self, user_id, expected, transformation, operation):
-        if not self.storage.change_history:
-            raise ValueError("record_change_unavailable")
         with self.storage.connection_factory.transaction() as connection:
             self._ensure_idle(connection, user_id)
             record = self._load(connection, user_id, expected)
@@ -62,7 +60,7 @@ class SQLiteEntryOperations:
         return self._transform(user_id, expected, lambda record: split_entry(record, first_minutes), "split")
 
     def associate(self, user_id, expected, context):
-        if (not self.storage.change_history or not 1 <= len(expected) <= 250
+        if (not 1 <= len(expected) <= 250
                 or len({entry.id for entry in expected}) != len(expected)
                 or any(entry.user_id != user_id or entry.id is None for entry in expected)):
             raise ValueError("record_batch_invalid")
@@ -101,8 +99,6 @@ class SQLiteEntryOperations:
         return self._transform(user_id, expected, lambda record: place_historical_break(record, first_minutes), "break")
 
     def merge(self, user_id, expected_left, expected_right):
-        if not self.storage.change_history:
-            raise ValueError("record_change_unavailable")
         if expected_left.id == expected_right.id:
             raise ValueError("record_merge_invalid")
         with self.storage.connection_factory.transaction() as connection:
@@ -117,8 +113,6 @@ class SQLiteEntryOperations:
             return result[0]
 
     def undo(self, user_id, change_id):
-        if not self.storage.change_history:
-            raise ValueError("record_change_unavailable")
         with self.storage.connection_factory.transaction() as connection:
             self._ensure_idle(connection, user_id)
             before, after = self.writes.changes.load(connection, user_id, change_id)

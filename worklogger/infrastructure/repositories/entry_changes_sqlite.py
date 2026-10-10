@@ -18,8 +18,6 @@ class SQLiteEntryChanges:
         return result
 
     def remember(self, connection, user_id, operation, before, after):
-        if not self.storage.change_history:
-            return
         before_json, after_json = json.dumps(before, ensure_ascii=False), json.dumps(after, ensure_ascii=False)
         if len(before_json) > 1024 * 1024 or len(after_json) > 1024 * 1024:
             raise ValueError("record_change_too_large")
@@ -29,8 +27,6 @@ class SQLiteEntryChanges:
                            (user_id, user_id))
 
     def latest(self, user_id):
-        if not self.storage.change_history:
-            return None
         with self.storage.connection_factory.connection() as connection:
             row = connection.execute("SELECT id,operation,before_json,after_json FROM entry_changes WHERE user_id=? AND undone=0 AND created_at>=datetime('now','-30 days') ORDER BY id DESC LIMIT 1", (user_id,)).fetchone()
         if row is None:

@@ -8,6 +8,7 @@ from worklogger.config.constants import (
 )
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
+from worklogger.domain.settings.values import setting_bool
 from worklogger.infrastructure.ai.external import OpenAICompatibleGateway
 from worklogger.infrastructure.http import validate_https_url
 
@@ -30,9 +31,9 @@ class AccountAIGateway:
     def available(self):
         try:
             values = self._settings.get_all(self._user_id)
-            if not self._enabled or values.get(AI_ASSIST_ENABLED_SETTING_KEY, "1") != "1":
+            if not self._enabled or not setting_bool(values.get(AI_ASSIST_ENABLED_SETTING_KEY), True):
                 return False
-            if values.get(EXTERNAL_MODEL_ENABLED_SETTING_KEY, "0") == "1":
+            if setting_bool(values.get(EXTERNAL_MODEL_ENABLED_SETTING_KEY)):
                 return bool(self._external_ready and self._configuration(values))
             return bool(self._local and self._local.available)
         except Exception:
@@ -49,9 +50,9 @@ class AccountAIGateway:
     def generate(self, request):
         try:
             values = self._settings.get_all(self._user_id)
-            if not self._enabled or values.get(AI_ASSIST_ENABLED_SETTING_KEY, "1") != "1":
+            if not self._enabled or not setting_bool(values.get(AI_ASSIST_ENABLED_SETTING_KEY), True):
                 return Result.failure(ValidationError("ai_assist_disabled", "ai_assist_disabled"))
-            if values.get(EXTERNAL_MODEL_ENABLED_SETTING_KEY, "0") != "1":
+            if not setting_bool(values.get(EXTERNAL_MODEL_ENABLED_SETTING_KEY)):
                 if self._local is None:
                     return Result.failure(ValidationError("local_model_not_selected", "local_model_not_selected"))
                 return self._local.generate(request)

@@ -17,6 +17,7 @@ from worklogger.domain.analytics.rules import (
 )
 from worklogger.config.constants import MONTHLY_TARGET_HOURS_SETTING_KEY, STANDARD_WORK_HOURS_SETTING_KEY, WEEK_START_MONDAY_SETTING_KEY
 from worklogger.domain.settings.repositories import SettingsRepository
+from worklogger.domain.settings.values import setting_bool
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
@@ -114,7 +115,7 @@ class GetAnalyticsDashboardHandler:
             value = dashboard_data(
                 self._repository.list_range(query.user_id, range_start, range_end), year=query.year, month=query.month,
                 scope=query.scope, standard_hours=standard, monthly_target=target,
-                week_start_monday=self._settings is not None and self._settings.get(query.user_id, WEEK_START_MONDAY_SETTING_KEY, "0") == "1",
+                week_start_monday=self._settings is not None and setting_bool(self._settings.get(query.user_id, WEEK_START_MONDAY_SETTING_KEY)),
             )
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))

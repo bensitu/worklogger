@@ -36,7 +36,7 @@ from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.date_labels import period_range_label
 from worklogger.presentation.errors import display_error_message
-from worklogger.presentation.job_runner import QtJobRunner
+from worklogger.presentation.job_runner import QtJobRunner, owned_callback
 from worklogger.presentation.reporting.dialog import (
     ReportTemplateDialog,
     confirm_report_overwrite,
@@ -100,7 +100,7 @@ class ReportsPage(QWidget):
             self._update_busy_controls()
             complete(result)
         try:
-            self._job_runner.submit(name, lambda _token: operation(), on_complete=finished)
+            self._job_runner.submit(name, lambda _token: operation(), on_complete=owned_callback(self, finished))
         except Exception:
             finished(Result.failure(InfrastructureError("report_request_failed", "report_request_failed")))
             return False
@@ -421,7 +421,7 @@ class ReportsPage(QWidget):
                 self._set_error(result.error or ValidationError("report_generate_failed", "report_generate_failed"))
         try:
             generator = getattr(self._view_model, "generate_with_sources", self._view_model.generate_draft)
-            self._job_runner.submit("generate_report", lambda _token: generator(state), on_complete=complete)
+            self._job_runner.submit("generate_report", lambda _token: generator(state), on_complete=owned_callback(self, complete))
         except Exception:
             self._generate_busy = False
             self._update_busy_controls()
@@ -572,7 +572,7 @@ class ReportsPage(QWidget):
             self._refresh_history()
 
         try:
-            self._job_runner.submit("delete_report", lambda _token: self._view_model.delete(item), on_complete=complete)
+            self._job_runner.submit("delete_report", lambda _token: self._view_model.delete(item), on_complete=owned_callback(self, complete))
         except Exception:
             self._delete_busy = False
             self._update_busy_controls()
@@ -683,7 +683,7 @@ class ReportsPage(QWidget):
                         self._set_error(result.error)
                 try:
                     self._job_runner.submit("export_saved_reports", lambda _token: self._view_model.export_saved_daily(
-                        Path(path), day, whole_month=scope == "month"), on_complete=complete)
+                        Path(path), day, whole_month=scope == "month"), on_complete=owned_callback(self, complete))
                 except Exception:
                     complete(Result.failure(InfrastructureError("report_export_failed", "report_export_failed")))
 
@@ -710,7 +710,7 @@ class ReportsPage(QWidget):
                 self._set_error(result.error)
         try:
             self._job_runner.submit("export_timesheet", lambda _token: self._view_model.export_timesheet(
-                Path(path), day, whole_month=whole_month, format=format), on_complete=completed)
+                Path(path), day, whole_month=whole_month, format=format), on_complete=owned_callback(self, completed))
         except Exception:
             completed(Result.failure(InfrastructureError("timesheet_export_failed", "timesheet_export_failed")))
 

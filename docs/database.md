@@ -32,6 +32,8 @@ the account identifier, not the display alias.
 | Table or column | Current meaning |
 | --- | --- |
 | `schema_migrations` | Applied schema versions, descriptions and timestamps |
+| `users` | Account identities, display aliases, credential material and role/status fields |
+| `login_attempts` | Canonical login ID, failed-attempt count and lockout timestamps |
 | `users.username` / `username_key` | Login ID and canonical lookup key |
 | `users.display_name` | Editable alias, independent of login and ownership |
 | `worklog` | Independently editable time records with IDs and revisions |
@@ -41,12 +43,15 @@ the account identifier, not the display alias.
 | `worklog.started_at` / `ended_at` | Captured offset-aware boundaries |
 | `work_type_label` / `work_type_category` | Historical custom type and accounting snapshots |
 | `daily_notes.content` | Independent account/date memo |
+| `daily_notes` | Independent account/date memos |
 | `quick_logs` | Retained historical quick entries, transferable into memos |
 | `settings` | Account/key string values |
 | `work_types` | Editable Work/Break/Leave classifications |
-| `projects` / `work_items` | Optional account-owned context |
+| `projects` | Optional account-owned projects |
+| `work_items` | Project-specific account-owned work items |
 | `entry_changes` | Reversible before/after/expected record snapshots |
-| `reports` / `report_revisions` | Saved reports and their individual versions |
+| `reports` | Saved daily, weekly and monthly reports |
+| `report_revisions` | Individual saved versions of each report |
 | `report_templates` | Templates owned by account, language and report type |
 | `calendar_events` | Imported calendar events, independently stored |
 | `external_identities` | Account-owned provider identities and issuer metadata |

@@ -168,7 +168,10 @@ class SettingsPresentationTests(unittest.TestCase):
             self.assertFalse(model.set_number(MONTHLY_TARGET_HOURS_SETTING_KEY, value).ok)
             self.assertEqual(model.load().value.monthly_target_hours, 160)
         repository.set(1, MONTHLY_TARGET_HOURS_SETTING_KEY, "nan")
-        self.assertFalse(model.load().ok)
+        restored = model.load()
+        self.assertTrue(restored.ok)
+        self.assertEqual(restored.value.monthly_target_hours, 168)
+        self.assertEqual(repository.get(1, MONTHLY_TARGET_HOURS_SETTING_KEY), "nan")
 
     def test_unset_language_inherits_startup_but_explicit_english_wins(self):
         repository = MemorySettingsRepository()

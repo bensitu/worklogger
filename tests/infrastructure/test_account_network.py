@@ -87,3 +87,16 @@ class AccountNetworkTests(unittest.TestCase):
             with self.assertRaises(OSError):
                 connection.connect()
             connect.assert_not_called()
+
+    def test_runtime_boolean_preferences_match_the_settings_decoder(self):
+        local = Mock(available=True)
+        gateway = AccountAIGateway(local=local, settings=self.settings, user_id=1, key_store=self.keys, transport=self.transport)
+        for enabled in ("1", "true", "yes", " on "):
+            self.values.update(ai_assist_enabled=enabled, network_proxy_enabled=enabled,
+                               network_proxy_address="127.0.0.1", network_proxy_port="8080")
+            self.assertTrue(gateway.available)
+            self.assertEqual(self.transport._proxy_url(), "http://127.0.0.1:8080")
+        for disabled in ("0", "false", "off"):
+            self.values.update(ai_assist_enabled=disabled, network_proxy_enabled=disabled)
+            self.assertFalse(gateway.available)
+            self.assertIsNone(self.transport._proxy_url())

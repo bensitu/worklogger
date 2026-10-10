@@ -8,7 +8,7 @@ from worklogger.config.constants import REMEMBER_SESSION_FILENAME
 
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
-from worklogger.infrastructure.security.key_store import HmacSecretBox
+from worklogger.infrastructure.security.key_store import FernetSecretBox
 from worklogger.infrastructure.files import atomic_destination
 
 REMEMBER_TOKEN_SECRET_NAME = "remember_login_token"
@@ -47,10 +47,10 @@ class FileRememberTokenSessionStore:
         self,
         path: Path | None = None,
         *,
-        secret_box: HmacSecretBox | None = None,
+        secret_box: FernetSecretBox | None = None,
     ) -> None:
         self._path = path or _default_session_path()
-        self._secret_box = secret_box or HmacSecretBox()
+        self._secret_box = secret_box or FernetSecretBox()
 
     def load_token(self) -> Result[str | None]:
         if not self._path.exists():

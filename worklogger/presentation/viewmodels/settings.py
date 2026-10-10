@@ -54,6 +54,7 @@ from worklogger.app.use_cases.settings import ProxyPasswordSettings
 from worklogger.domain.shared.languages import normalize_language
 from worklogger.infrastructure.calendar.holidays_provider import validate_holiday_region
 from worklogger.domain.settings.appearance import DEFAULT_CUSTOM_COLOR, THEME_KEYS, normalize_hex_color
+from worklogger.domain.settings.values import setting_bool as _bool
 from worklogger.domain.local_model.preferences import (
     DEFAULT_RUNTIME_CONTEXT_TOKENS, normalize_runtime_context, runtime_context_preference,
 )
@@ -147,8 +148,8 @@ class SettingsViewModel:
     def _load(self, *, refresh_credentials=True) -> Result[SettingsState]:
         values: dict[str, str | None] = {}
         batch = None
-        if getattr(type(self._get_handler), "get_all", None) is not None:
-            result = self._get_handler.get_all(self._user_id)
+        if getattr(type(self._get_handler), "get_many", None) is not None:
+            result = self._get_handler.get_many(self._user_id, tuple(_DEFAULTS))
             if not result.ok:
                 return Result.failure(result.error)
             batch = result.value
@@ -305,6 +306,8 @@ class SettingsViewModel:
             return Result.failure(ValidationError("unknown_numeric_setting", "unknown_numeric_setting"))
         minimum, maximum = limits
         try:
+            if not math.isfinite(float(value)):
+                raise ValueError("invalid_numeric_setting")
             numeric = _number(str(value), value, minimum=minimum, maximum=maximum)
         except (ValueError, TypeError):
             return Result.failure(ValidationError("invalid_numeric_setting", "invalid_numeric_setting"))
@@ -440,12 +443,6 @@ _NUMBER_LIMITS = {
 }
 
 
-def _bool(value: str | None, default: bool) -> bool:
-    if value is None:
-        return default
-    return str(value).strip().lower() in {"1", "true", "yes", "on"}
-
-
 def _number(
     value: str | None,
     default: float,
@@ -458,7 +455,7 @@ def _number(
     except (TypeError, ValueError):
         numeric = default
     if not math.isfinite(numeric):
-        raise ValueError("invalid_numeric_setting")
+        numeric = default
     return max(minimum, min(maximum, numeric))
 
 

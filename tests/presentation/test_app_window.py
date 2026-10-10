@@ -234,6 +234,14 @@ def _window(
 
 
 class AppWindowTests(unittest.TestCase):
+    def test_unchanged_theme_does_not_reapply_the_global_stylesheet(self):
+        window = _window(MemoryWorkLogRepository())
+        with patch.object(self._app, "setStyleSheet", wraps=self._app.setStyleSheet) as apply:
+            window.apply_theme()
+            apply.assert_not_called()
+            window.apply_theme(force=True)
+            apply.assert_called_once()
+
     def setUp(self) -> None:
         self.addCleanup(dispose_test_windows)
         self.information = self.enterContext(patch("worklogger.presentation.shell.app_window.QMessageBox.information"))

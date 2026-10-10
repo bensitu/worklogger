@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from pathlib import Path
 import base64
 import hashlib
-import hmac
 import os
 import secrets
 import portalocker
@@ -189,7 +188,7 @@ def _load_previous_machine_key() -> bytes | None:
         return None
 
 
-def _decrypt_previous_fernet(stored: str) -> str:
+def _decrypt_released_fernet(stored: str) -> str:
     import platform
     import uuid
     key = hashlib.sha256(f"{platform.node()}|{uuid.getnode()}".encode("utf-8")).digest()
@@ -199,7 +198,7 @@ def _decrypt_previous_fernet(stored: str) -> str:
         raise ValueError("secret_authentication_failed") from exc
 
 
-class HmacSecretBox:
+class FernetSecretBox:
     """Fernet encryption with read compatibility for earlier encrypted values."""
 
     def __init__(self, key_provider: FileMachineKeyProvider | None = None) -> None:
@@ -223,28 +222,15 @@ class HmacSecretBox:
         except ValueError as exc:
             if str(exc) != "secret_key_missing":
                 raise
-            return _decrypt_previous_fernet(stored)
+            return _decrypt_released_fernet(stored)
         try:
             return Fernet(base64.urlsafe_b64encode(key)).decrypt(stored[len(_ENC_PREFIX):].encode("ascii")).decode("utf-8")
         except (InvalidToken, UnicodeError, ValueError):
             pass
-        try:
-            payload = base64.urlsafe_b64decode(stored[len(_ENC_PREFIX):].encode("ascii"))
-        except Exception as exc:
-            raise ValueError("secret_ciphertext_invalid") from exc
-        if len(payload) < 48:
-            raise ValueError("secret_ciphertext_invalid")
-        nonce = payload[:16]
-        mac = payload[16:48]
-        ciphertext = payload[48:]
-        expected = hmac.new(_derive(key, b"mac"), nonce + ciphertext, hashlib.sha256).digest()
-        if not hmac.compare_digest(mac, expected):
-            return _decrypt_previous_fernet(stored)
-        plaintext = _xor_bytes(ciphertext, _keystream(_derive(key, b"enc"), nonce, len(ciphertext)))
-        return plaintext.decode("utf-8")
+        return _decrypt_released_fernet(stored)
 
 
-def protect_legacy_proxy_passwords(connection_factory, secret_box: HmacSecretBox) -> None:
+def protect_legacy_proxy_passwords(connection_factory, secret_box: FernetSecretBox) -> None:
     with connection_factory.transaction(write=True) as connection:
         connection.execute("PRAGMA secure_delete=ON")
         rows = connection.execute("SELECT user_id,value FROM settings WHERE key=? AND value<>''",
@@ -266,13 +252,13 @@ class EncryptedSettingsKeyStore:
         user_id: int,
         service_name: str = KEYRING_SERVICE_NAME,
         keyring_backend: KeyringBackend | None = None,
-        secret_box: HmacSecretBox | None = None,
+        secret_box: FernetSecretBox | None = None,
     ) -> None:
         self._settings = settings
         self._user_id = int(user_id)
         self._service_name = service_name
         self._keyring = keyring_backend or OptionalKeyringBackend()
-        self._secret_box = secret_box or HmacSecretBox()
+        self._secret_box = secret_box or FernetSecretBox()
 
     def get_secret(self, name: str) -> Result[str | None]:
         key = self._normalize_name(name)
@@ -334,26 +320,3 @@ class EncryptedSettingsKeyStore:
     @staticmethod
     def _setting_key(name: str) -> str:
         return f"{SECRET_SETTING_PREFIX}{name}"
-
-
-def _derive(key: bytes, purpose: bytes) -> bytes:
-    return hmac.new(key, b"worklogger:" + purpose, hashlib.sha256).digest()
-
-
-def _keystream(key: bytes, nonce: bytes, length: int) -> bytes:
-    blocks: list[bytes] = []
-    counter = 0
-    while sum(len(block) for block in blocks) < length:
-        blocks.append(
-            hmac.new(
-                key,
-                nonce + counter.to_bytes(8, "big"),
-                hashlib.sha256,
-            ).digest()
-        )
-        counter += 1
-    return b"".join(blocks)[:length]
-
-
-def _xor_bytes(left: bytes, right: bytes) -> bytes:
-    return bytes(a ^ b for a, b in zip(left, right))

@@ -38,8 +38,6 @@ class SQLiteAuthRepository:
     ) -> None:
         self._connection_factory = connection_factory
         self._password_hasher = password_hasher or PBKDF2PasswordHasher()
-        with connection_factory.connection() as connection:
-            self._canonical_usernames = "username_key" in {row[1] for row in connection.execute("PRAGMA table_info(users)")}
 
     def user_count(self) -> int:
         with self._connection_factory.connection() as connection:
@@ -74,8 +72,7 @@ class SQLiteAuthRepository:
             "must_change_password": int(must_change_password), "created_at": now,
             "password_changed_at": now, "recovery_key_created_at": recovery_created_at,
         }
-        if self._canonical_usernames:
-            values.update(username_key=username_key(username), local_password_enabled=int(local_password_enabled))
+        values.update(username_key=username_key(username), local_password_enabled=int(local_password_enabled))
         try:
             with self._connection_factory.transaction(write=True) as connection:
                 cursor = connection.execute(
@@ -91,8 +88,6 @@ class SQLiteAuthRepository:
         return user
 
     def create_identity_account(self, username, profile):
-        if not self._canonical_usernames:
-            raise ValueError("identity_schema_unavailable")
         username = normalize_username(username)
         material = self._password_hasher.hash_password(generate_initial_password())
         now = utc_now_iso()
@@ -148,10 +143,9 @@ class SQLiteAuthRepository:
             return None
         with self._connection_factory.connection() as connection:
             row = connection.execute(
-                "SELECT * FROM users WHERE " + ("username_key=?" if self._canonical_usernames else "username=?"),
-                (username_key(username) if self._canonical_usernames else username,),
+                "SELECT * FROM users WHERE username_key=?", (username_key(username),),
             ).fetchone()
-        if row is None or (self._canonical_usernames and not row["local_password_enabled"]):
+        if row is None or not row["local_password_enabled"]:
             self._password_hasher.verify(
                 password,
                 _DUMMY_PASSWORD_HASH,
@@ -203,8 +197,7 @@ class SQLiteAuthRepository:
         cleaned_key = recovery_key.strip() if isinstance(recovery_key, str) else ""
         with self._connection_factory.connection() as connection:
             row = connection.execute(
-                "SELECT * FROM users WHERE " + ("username_key=?" if self._canonical_usernames else "username=?"),
-                (username_key(username) if self._canonical_usernames else username,),
+                "SELECT * FROM users WHERE username_key=?", (username_key(username),),
             ).fetchone()
         if row is None or not row["recovery_key_hash"] or not row["recovery_salt"]:
             self._password_hasher.verify(
@@ -279,7 +272,7 @@ class SQLiteAuthRepository:
             if username is not None:
                 connection.execute(
                     "DELETE FROM login_attempts WHERE username=?",
-                    (username_key(username) if self._canonical_usernames else username,),
+                    (username_key(username),),
                 )
             connection.execute("UPDATE activity_events SET user_id=NULL WHERE user_id=?", (user_id,))
             cursor = connection.execute(
@@ -334,8 +327,7 @@ class SQLiteAuthRepository:
             return None
         with self._connection_factory.connection() as connection:
             row = connection.execute(
-                "SELECT * FROM users WHERE " + ("username_key=?" if self._canonical_usernames else "username=?"),
-                (username_key(username) if self._canonical_usernames else username,),
+                "SELECT * FROM users WHERE username_key=?", (username_key(username),),
             ).fetchone()
         return self._user_from_row(row) if row else None
 
@@ -350,9 +342,8 @@ class SQLiteAuthRepository:
         material = self._password_hasher.hash_password(password) if upgrade else None
         now = datetime.now(timezone.utc)
         with self._connection_factory.transaction(write=True) as connection:
-            condition = " AND local_password_enabled=1" if self._canonical_usernames else ""
             current = connection.execute(
-                "SELECT * FROM users WHERE id=? AND password_hash=? AND password_salt=?" + condition,
+                "SELECT * FROM users WHERE id=? AND password_hash=? AND password_salt=? AND local_password_enabled=1",
                 (expected["id"], expected["password_hash"], expected["password_salt"]),
             ).fetchone()
             if current is None:
@@ -412,7 +403,7 @@ class SQLiteAuthRepository:
                     user_id,
                 ) + expected_values,
             )
-            if self._canonical_usernames and cursor.rowcount:
+            if cursor.rowcount:
                 connection.execute("UPDATE users SET local_password_enabled=1 WHERE id=?", (user_id,))
         return (recovery_key if issue_recovery_key else new_password) if cursor.rowcount else None
 
@@ -421,14 +412,14 @@ class SQLiteAuthRepository:
         return User(
             id=int(row["id"]),
             username=str(row["username"]),
-            display_name=str(row["display_name"] or "") if "display_name" in row.keys() else "",
+            display_name=str(row["display_name"] or ""),
             is_admin=bool_from_row(row, "is_admin"),
             must_change_password=bool_from_row(row, "must_change_password"),
             created_at=parse_datetime(row["created_at"]),
             password_changed_at=parse_datetime(row["password_changed_at"]),
             recovery_key_created_at=parse_datetime(row["recovery_key_created_at"]),
             last_login_at=parse_datetime(row["last_login_at"]),
-            local_password_enabled=bool_from_row(row, "local_password_enabled") if "local_password_enabled" in row.keys() else True,
+            local_password_enabled=bool_from_row(row, "local_password_enabled"),
         )
 
 
@@ -436,19 +427,17 @@ class SQLiteLoginFailureRepository:
     def __init__(self, connection_factory: SQLiteConnectionFactory, *, clock: Callable[[], datetime] | None = None) -> None:
         self._connection_factory = connection_factory
         self._clock = clock or (lambda: datetime.now(timezone.utc))
-        with connection_factory.connection() as connection:
-            self._canonical_usernames = "username_key" in {row[1] for row in connection.execute("PRAGMA table_info(users)")}
         self.prune()
 
     def prune(self) -> None:
         cutoff = (self._clock() - timedelta(days=7)).isoformat()
         with self._connection_factory.transaction() as connection:
-            column = "username_key" if self._canonical_usernames else "username"
+            column = "username_key"
             connection.execute(f"DELETE FROM login_attempts WHERE last_failed_at<? OR NOT EXISTS (SELECT 1 FROM users WHERE users.{column}=login_attempts.username)", (cutoff,))
 
     def lockout_until(self, username: str) -> datetime | None:
         try:
-            username = username_key(username) if self._canonical_usernames else normalize_username(username)
+            username = username_key(username)
         except (TypeError, ValueError):
             return None
         with self._connection_factory.connection() as connection:
@@ -469,10 +458,10 @@ class SQLiteLoginFailureRepository:
         return locked_until
 
     def record_failure(self, username: str) -> tuple[int, datetime | None]:
-        username = username_key(username) if self._canonical_usernames else normalize_username(username)
+        username = username_key(username)
         now = self._clock()
         with self._connection_factory.transaction(write=True) as connection:
-            column = "username_key" if self._canonical_usernames else "username"
+            column = "username_key"
             if not connection.execute(f"SELECT 1 FROM users WHERE {column}=?", (username,)).fetchone():
                 return 0, None
             row = connection.execute(
@@ -498,7 +487,7 @@ class SQLiteLoginFailureRepository:
 
     def clear_failures(self, username: str) -> None:
         try:
-            username = username_key(username) if self._canonical_usernames else normalize_username(username)
+            username = username_key(username)
         except (TypeError, ValueError):
             return
         with self._connection_factory.transaction(write=True) as connection:

@@ -8,7 +8,7 @@ from worklogger.config.constants import NETWORK_PROXY_PASSWORD_SETTING_KEY, NETW
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
 from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteSettingsRepository
 from worklogger.infrastructure.security.key_store import SystemCredentialStore, EncryptedSettingsKeyStore
-from worklogger.infrastructure.security import PBKDF2PasswordHasher, HmacSecretBox, FileMachineKeyProvider
+from worklogger.infrastructure.security import PBKDF2PasswordHasher, FernetSecretBox, FileMachineKeyProvider
 from worklogger.infrastructure.backup import SQLiteBackupService
 from worklogger.presentation.viewmodels import SettingsViewModel
 
@@ -38,7 +38,7 @@ class ProxyCredentialTests(unittest.TestCase):
         first = EncryptedSettingsKeyStore(self.repository, user_id=self.user_id, keyring_backend=unavailable,
                                          secret_box=self.secret_box)
         self.assertTrue(first.set_secret("ai_api_key", "previous-synthetic-key").ok)
-        second_box = HmacSecretBox(FileMachineKeyProvider(Path(self.directory.name) / "other-key"))
+        second_box = FernetSecretBox(FileMachineKeyProvider(Path(self.directory.name) / "other-key"))
         second_box.encrypt("initialize")
         restored = EncryptedSettingsKeyStore(self.repository, user_id=self.user_id, keyring_backend=unavailable,
                                             secret_box=second_box)
@@ -106,7 +106,7 @@ class ProxyCredentialTests(unittest.TestCase):
         self.repository = SQLiteSettingsRepository(self.factory)
         self.backend = FakeKeyring()
         self.store = SystemCredentialStore(namespace="test-database", backend=self.backend)
-        self.secret_box = HmacSecretBox(FileMachineKeyProvider(Path(self.directory.name) / "test-key"))
+        self.secret_box = FernetSecretBox(FileMachineKeyProvider(Path(self.directory.name) / "test-key"))
         self.passwords = ProxyPasswordSettings(self.repository, self.store, user_id=user.id, secret_box=self.secret_box)
         self.model = SettingsViewModel(
             user_id=user.id, get_handler=GetSettingHandler(self.repository),

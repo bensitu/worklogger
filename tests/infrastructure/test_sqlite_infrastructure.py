@@ -61,7 +61,7 @@ from worklogger.infrastructure.security import (
     EncryptedSettingsKeyStore,
     FileRememberTokenSessionStore,
     FileMachineKeyProvider,
-    HmacSecretBox,
+    FernetSecretBox,
     NoKeyringBackend,
     PBKDF2PasswordHasher,
 )
@@ -130,6 +130,16 @@ class SQLiteInfrastructureTests(unittest.TestCase):
 
         self.assertTrue(verification.matched)
         self.assertTrue(verification.needs_upgrade)
+
+    def test_selected_settings_reads_exclude_other_accounts_and_unrelated_drafts(self):
+        user = self.auth_repository().create_user("settings-user", "synthetic-password", recovery_key=None, is_admin=False)
+        other = self.auth_repository().create_user("other-settings", "synthetic-password", recovery_key=None, is_admin=False)
+        settings = SQLiteSettingsRepository(self.factory)
+        settings.set(user.id, "theme", "green")
+        settings.set(user.id, "daily_note_draft:2026-10-11", "Private draft" * 1000)
+        settings.set(other.id, "theme", "purple")
+        self.assertEqual(settings.get_many(user.id, ("theme", "dark_mode", "theme")), {"theme": "green"})
+        self.assertEqual(settings.get_many(user.id, ()), {})
 
     def test_migration_runner_is_idempotent_and_enables_foreign_keys(self) -> None:
         self.assertEqual(MigrationRunner(self.factory).run_pending(), ())
@@ -445,7 +455,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         user_id = registered.value.user.id
         settings = SQLiteSettingsRepository(self.factory)
         key_path = Path(self._tempdir.name) / "machine.key"
-        secret_box = HmacSecretBox(FileMachineKeyProvider(key_path))
+        secret_box = FernetSecretBox(FileMachineKeyProvider(key_path))
         store = EncryptedSettingsKeyStore(
             settings,
             user_id=user_id,
@@ -465,7 +475,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
             settings,
             user_id=user_id,
             keyring_backend=NoKeyringBackend(),
-            secret_box=HmacSecretBox(FileMachineKeyProvider(key_path)),
+            secret_box=FernetSecretBox(FileMachineKeyProvider(key_path)),
         )
         self.assertEqual(reopened.get_secret("ai_api_key").value, "super-secret")
         self.assertTrue(key_path.exists())
@@ -485,7 +495,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
             settings,
             user_id=user_id,
             keyring_backend=NoKeyringBackend(),
-            secret_box=HmacSecretBox(FileMachineKeyProvider(key_path)),
+            secret_box=FernetSecretBox(FileMachineKeyProvider(key_path)),
         )
         self.assertTrue(store.set_secret("ai_api_key", "super-secret").ok)
         stored = settings.get(user_id, "secret:ai_api_key") or ""
@@ -505,7 +515,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         key_path = Path(self._tempdir.name) / "machine.key"
         store = FileRememberTokenSessionStore(
             token_path,
-            secret_box=HmacSecretBox(FileMachineKeyProvider(key_path)),
+            secret_box=FernetSecretBox(FileMachineKeyProvider(key_path)),
         )
 
         saved = store.save_token("plain-token")
@@ -522,11 +532,13 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         self.assertIsNone(store.load_token().value)
 
     def test_credentials_upgrade_older_ciphertext_and_preserve_invalid_keys(self):
+        from cryptography.fernet import Fernet
         key_path = Path(self._tempdir.name) / "machine.key"
         key_path.write_text(base64.urlsafe_b64encode(bytes(range(32))).decode("ascii"), encoding="ascii")
         token_path = Path(self._tempdir.name) / "remember_session.enc"
-        token_path.write_text("enc1:AAECAwQFBgcICQoLDA0OD0LCQBoVPQkluofQClDWlMDl9dOH-TKP9wwrKnsFItAX_uPNOBW30ZL-aiEwkDt5qU2Lew==", encoding="ascii")
-        store = FileRememberTokenSessionStore(token_path, secret_box=HmacSecretBox(FileMachineKeyProvider(key_path)))
+        released = "enc1:" + Fernet(base64.urlsafe_b64encode(bytes(range(32)))).encrypt(b"compatibility-token").decode("ascii")
+        token_path.write_text(released, encoding="ascii")
+        store = FileRememberTokenSessionStore(token_path, secret_box=FernetSecretBox(FileMachineKeyProvider(key_path)))
         self.assertEqual(store.load_token().value, "compatibility-token")
         self.assertTrue(token_path.read_text().startswith("enc2:"))
         key_path.write_text("invalid key", encoding="ascii")

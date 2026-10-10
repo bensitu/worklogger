@@ -1,20 +1,15 @@
 """Compact editor for individually recorded work periods."""
 
 from datetime import date
-import math
 
 from PySide6.QtCore import QEvent, QTimer, Qt, Signal
 from PySide6.QtWidgets import (QComboBox, QHBoxLayout, QLabel, QLineEdit,
-    QMessageBox, QPushButton, QMenu, QInputDialog, QSizePolicy, QStyle, QStyleOptionTabWidgetFrame,
+    QMessageBox, QPushButton, QSizePolicy, QStyle, QStyleOptionTabWidgetFrame,
     QTabWidget, QTextEdit, QToolButton, QVBoxLayout, QWidget, QStackedWidget)
 
-from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType, TimeRange
-from worklogger.domain.worklog.editing import split_entry, place_historical_break
+from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType
 from worklogger.domain.shared.errors import InfrastructureError
-from worklogger.domain.shared.errors import ConflictError
 from worklogger.domain.shared.errors import CancellationError
-from worklogger.config.constants import MAX_SHIFT_HOURS
-from worklogger.presentation.widgets.end_timer import EndTimerDialog
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.date_labels import duration_label, day_label
@@ -25,11 +20,16 @@ from worklogger.presentation.widgets.time_picker import TimePickerDialog
 from worklogger.presentation.widgets.work_context_picker import WorkContextPicker
 from worklogger.presentation.work_type_labels import work_type_label
 from worklogger.presentation.processing import TextProcessingTask
+from worklogger.presentation.job_runner import owned_callback
 from worklogger.presentation.widgets.processing_progress import ProcessingProgress
 from worklogger.presentation.widgets._style import refresh_style
 
 
-class TimeEntryPanel(QWidget):
+from worklogger.presentation.widgets.time_entry_actions import TimeEntryRecordActions
+from worklogger.presentation.widgets.time_entry_recording import AutomaticRecordingActions
+
+
+class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions):
     editor_layout_changed = Signal()
     recording_changed = Signal()
     records_changed = Signal(object)
@@ -475,42 +475,9 @@ class TimeEntryPanel(QWidget):
             self.break_button.setEnabled(False)
         self.recording_changed.emit()
 
-    def _update_elapsed_label(self):
-        timer = self.view_model.timer
-        if timer and not timer.pending_end:
-            status = _("Recording since {time} - {duration}").format(
-                time=f"{day_label(timer.started_at.date())} {timer.started_at:%H:%M}",
-                duration=duration_label(self.view_model.elapsed_hours()))
-            if self._reminder_capture != timer.capture_id:
-                self._reminder_capture = timer.capture_id
-                self._notified_reminders.clear()
-            messages = {"duration_limit": _("Choose an earlier end time to save this timer."),
-                        "long_timer": _("This timer has reached your reminder duration."),
-                        "continuous_timer": _("This work timer has reached your continuous-work reminder duration.")}
-            reasons = self.view_model.reminder_reasons()
-            for reason in reasons:
-                if reason not in self._notified_reminders:
-                    self._notified_reminders.add(reason)
-                    message = messages[reason]
-                    QTimer.singleShot(0, self, lambda message=message: self.reminder.emit(message))
-            if reasons:
-                status += "\n" + messages[reasons[0]]
-            self.auto_status_label.setText(status)
-            if self.view_model.editing_active_timer and self.time_tabs.currentIndex() == 0:
-                self.selected_record_label.setText(status)
 
-    def recording_action_state(self):
-        can_start = not self.is_busy and self.view_model.timer is None and not self.view_model.restore_failed
-        can_end = not self.is_busy and self.view_model.timer is not None
-        return can_start, can_end
 
-    def start_recording(self):
-        if self.recording_action_state()[0]:
-            self._start_with_content(self.view_model.auto_work_type, self.view_model.auto_content)
 
-    def end_recording(self):
-        if self.recording_action_state()[1]:
-            self._finish()
 
     def eventFilter(self, watched, event):
         if watched is self.time_tabs and event.type() in (QEvent.Type.Resize, QEvent.Type.LayoutRequest, QEvent.Type.StyleChange, QEvent.Type.FontChange):
@@ -580,7 +547,7 @@ class TimeEntryPanel(QWidget):
                 on_complete(result)
 
         try:
-            self._job_runner.submit("time_entry_update", lambda _token: operation(), on_complete=complete)
+            self._job_runner.submit("time_entry_update", lambda _token: operation(), on_complete=owned_callback(self, complete))
         except Exception:
             self.is_busy = False
             self.setEnabled(True)
@@ -609,80 +576,15 @@ class TimeEntryPanel(QWidget):
         self._polish_task.run("polish_record_content", lambda _token: self.view_model.rewrite_content(content), on_complete=complete)
         self._update_actions()
 
-    def _start(self):
-        work_type, content = str(self.work_type_combo.currentData()), self.content_input.toPlainText()
-        self._start_with_content(work_type, content)
 
-    def _start_with_content(self, work_type, content):
-        self._polish_task.cancel()
-        moment = self.view_model.now()
-        self._submit(lambda: self.view_model.start(work_type, content, now=moment), refresh=False,
-                     on_complete=lambda result: self._complete_start(result, work_type, content, moment))
 
     def refresh_ai_availability(self):
         self._ai_ready = self.view_model.rewrite_available
         self._update_actions()
 
-    def _complete_start(self, result, work_type, content, moment):
-        if result.error is None or result.error.code != "fixed_break_active":
-            self._apply_result(result, refresh=False)
-            return
-        dialog = QMessageBox(QMessageBox.Icon.Question, _("End break early?"),
-            _("End the break at {time} and start recording work? The saved break duration will be shortened.").format(time=moment.strftime("%H:%M")),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, self)
-        dialog.setDefaultButton(QMessageBox.StandardButton.No)
-        dialog.button(QMessageBox.StandardButton.Yes).setText(_("Start"))
-        dialog.button(QMessageBox.StandardButton.No).setText(_("Cancel"))
-        answer = dialog.exec()
-        dialog.deleteLater()
-        if answer == QMessageBox.StandardButton.Yes:
-            record = result.error.details["break_entry"]
-            self._submit(lambda: self.view_model.start(work_type, content, now=moment, break_entry=record))
 
-    def _finish(self):
-        self._polish_task.cancel()
-        moment = self.view_model.now()
-        timer = self.view_model.timer
-        if timer and timer.pending_end is None and self.view_model.elapsed_hours() > MAX_SHIFT_HOURS:
-            if self._end_dialog is not None:
-                self._end_dialog.raise_()
-                self._end_dialog.activateWindow()
-                return
-            dialog = EndTimerDialog(timer.started_at, moment, moment.tzinfo, self)
-            self._end_dialog = dialog
-            capture_id = timer.capture_id
-            def accepted():
-                end = dialog.chosen_end()
-                def finish_corrected():
-                    current = self.view_model.timer
-                    if current is None or current.capture_id != capture_id:
-                        return Result.failure(ConflictError("time_entry_timer_conflict", "time_entry_timer_conflict"))
-                    return self.view_model.finish(now=end)
-                self._submit(finish_corrected)
-            dialog.accepted.connect(accepted)
-            dialog.finished.connect(lambda: setattr(self, "_end_dialog", None))
-            dialog.finished.connect(dialog.deleteLater)
-            dialog.open()
-            return
-        def finish():
-            advanced = self.view_model.advance(now=moment)
-            return self.view_model.finish(now=moment) if advanced.ok else advanced
-        self._submit(finish)
 
-    def _break(self):
-        self._polish_task.cancel()
-        if self.view_model.restore_failed:
-            return
-        moment = self.view_model.now()
-        self._submit(lambda: self.view_model.take_break(now=moment))
 
-    def _tick(self):
-        if self.is_busy:
-            return
-        if self.view_model.resume_due:
-            self._submit(self.view_model.advance, automatic=True)
-        else:
-            self._update_elapsed_label()
 
     def _clear(self):
         self._polish_task.cancel()
@@ -706,10 +608,6 @@ class TimeEntryPanel(QWidget):
         return QMessageBox.question(self, _("Discard changes?"), _("You have unsaved work log changes. Discard them?"),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes
 
-    def _discard_timer(self):
-        if QMessageBox.question(self, _("Discard timer"), _("Discard the saved timer without creating a record?"),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
-            self._submit(self.view_model.discard_timer)
 
     def delete_entry(self, record: WorkLog):
         if self.is_busy:
@@ -718,99 +616,12 @@ class TimeEntryPanel(QWidget):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
             self._submit(lambda: self.view_model.delete_entry(record))
 
-    def record_actions(self, record, position):
-        menu = QMenu(self)
-        available = not self.is_busy and self.view_model.timer is None and not self.view_model.restore_failed
-        split = menu.addAction(ui_icon("pencil"), _("Split record"))
-        split.setEnabled(available and record.has_times and not record.break_hours and record.raw_hours() * 60 > 1)
-        split.triggered.connect(lambda: self._split_record(record))
-        previous = self.view_model.merge_candidate(record)
-        merge = menu.addAction(ui_icon("link"), _("Merge with previous record"))
-        merge.setEnabled(available and previous is not None)
-        merge.triggered.connect(lambda: self._merge_record(previous, record))
-        rest = menu.addAction(ui_icon("clock"), _("Place historical break"))
-        rest.setEnabled(available and record.has_times and record.break_hours > 0 and not record.is_break)
-        rest.triggered.connect(lambda: self._place_break(record))
-        menu.addSeparator()
-        undo = menu.addAction(ui_icon("rotate-ccw"), _("Undo latest record change"))
-        undo.setEnabled(available)
-        undo.triggered.connect(self._undo_record_change)
-        menu.aboutToHide.connect(menu.deleteLater)
-        menu.popup(position)
 
-    def _changes_confirmed(self):
-        return not self.is_dirty or self._confirm_discard()
 
-    def _split_record(self, record):
-        if not self._changes_confirmed():
-            return
-        minutes, confirmed = QInputDialog.getInt(self, _("Split record"), _("First part duration (minutes)"),
-            max(1, math.floor(record.raw_hours() * 30)), 1, max(1, math.ceil(record.raw_hours() * 60) - 1))
-        if confirmed:
-            try:
-                preview = split_entry(record, minutes)
-            except ValueError as error:
-                from worklogger.presentation.errors import display_error_code
-                QMessageBox.warning(self, _("Split record"), display_error_code(str(error)))
-                return
-            if self._confirm_periods(_("Split record"), preview):
-                self._submit(lambda: self.view_model.split(record, minutes))
 
-    def _merge_record(self, previous, record):
-        if previous is not None and self._changes_confirmed() and QMessageBox.question(self, _("Merge records"),
-                _("Merge these adjacent records? Their content will be combined."), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
-            self._submit(lambda: self.view_model.merge(previous, record))
 
-    def _place_break(self, record):
-        if not self._changes_confirmed():
-            return
-        maximum = max(0, math.floor(record.raw_hours() * 60))
-        minutes, confirmed = QInputDialog.getInt(self, _("Place historical break"),
-            _("Minutes from the record start to the break start"), min(180, maximum), 0, maximum)
-        if confirmed:
-            try:
-                preview = place_historical_break(record, minutes)
-            except ValueError as error:
-                from worklogger.presentation.errors import display_error_code
-                QMessageBox.warning(self, _("Place historical break"), display_error_code(str(error)))
-                return
-            if self._confirm_periods(_("Place historical break"), preview):
-                self._submit(lambda: self.view_model.convert_break(record, minutes))
 
-    def _confirm_periods(self, title, periods):
-        lines = []
-        for period in periods:
-            start, end = (period.started_at, period.ended_at) if period.started_at else TimeRange(period.start_time, period.end_time).as_datetimes(period.day)
-            lines.append(f"{start.isoformat(timespec='minutes')} - {end.isoformat(timespec='minutes')} [{work_type_label(period.work_type)}]")
-        lines.append(_("Worked: {hours}").format(hours=duration_label(sum(period.worked_hours() for period in periods))))
-        if len({period.day for period in periods}) > 1:
-            lines.append(_("Splitting across dates changes daily and period totals."))
-        return QMessageBox.question(self, title, _("Save these periods?") + "\n\n" + "\n".join(lines),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes
 
-    def _undo_record_change(self):
-        if not self._changes_confirmed():
-            return
-        def ready(result):
-            if not result.ok:
-                self._apply_result(result, refresh=False)
-                return
-            change = result.value
-            if change is None:
-                QMessageBox.information(self, _("Undo latest record change"), _("No reversible record changes are available."))
-                return
-            entry = change.entry
-            question = _("Undo the latest record change for {date}, {start} - {end}? This does not restart a timer.").format(
-                date=day_label(entry.day), start=entry.start_time or "", end=entry.end_time or "")
-            if change.operation == "associate":
-                days = [record.day for record in change.entries]
-                question = _("Undo project associations for {count} records from {start} to {end}?").format(
-                    count=len(change.entries), start=min(days).isoformat(), end=max(days).isoformat())
-            if QMessageBox.question(self, _("Undo latest record change"), question,
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
-                self._submit(lambda: self.view_model.undo(change.id))
-        self._submit(self.view_model.latest_change, refresh=False, on_complete=ready)
 
     def delete_event(self, event):
         if self.is_busy:

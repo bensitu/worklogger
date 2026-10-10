@@ -232,7 +232,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         original = panel.view_model.service.save_manual(self.now.date(), "09:00", "12:00", "normal", "Work").value
         self.window.refresh()
         self.assertTrue(panel.undo_button.isEnabled())
-        with patch("worklogger.presentation.widgets.time_entries.QInputDialog.getInt", return_value=(60, True)), \
+        with patch("worklogger.presentation.widgets.time_entry_actions.QInputDialog.getInt", return_value=(60, True)), \
                 patch("worklogger.presentation.widgets.time_entries.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes):
             panel._split_record(original)
         records = self.repository.list_for_day(self.runtime.user.id, self.now.date())

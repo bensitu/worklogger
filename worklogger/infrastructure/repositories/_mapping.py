@@ -57,3 +57,16 @@ def parse_datetime(value: object) -> datetime | None:
 
 def bool_from_row(row: sqlite3.Row, key: str) -> bool:
     return bool(int(row[key] or 0))
+
+
+def parse_offset_datetime(value: object) -> datetime | None:
+    if value in (None, ""):
+        return None
+    try:
+        parsed = value if isinstance(value, datetime) else datetime.fromisoformat(str(value))
+        if parsed.tzinfo is not None:
+            return parsed
+    except (TypeError, ValueError):
+        pass
+    _logger.warning("Stored offset timestamp could not be decoded")
+    return None

@@ -80,7 +80,7 @@ from worklogger.infrastructure.security import (
     PBKDF2PasswordHasher,
 )
 from worklogger.infrastructure.security.key_store import (
-    HmacSecretBox,
+    FernetSecretBox,
     protect_legacy_proxy_passwords,
 )
 from worklogger.presentation.auth import AuthController, AuthSession
@@ -89,6 +89,7 @@ from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.presentation.notes import NotesWorkflowController
 from worklogger.presentation.settings import SettingsWorkflowController
 from worklogger.app.use_cases.backgrounds import BackgroundService
+from worklogger.domain.settings.values import setting_bool
 from worklogger.infrastructure.images.background import QtBackgroundImageLoader
 from worklogger.presentation.shell import (
     AppWindow,
@@ -295,7 +296,7 @@ def _prepare_database(
     if Path(str(database_path) + ".pre_restore").exists():
         raise ValueError("restore_pending")
     MigrationRunner(connection_factory).run_pending()
-    protect_legacy_proxy_passwords(connection_factory, HmacSecretBox())
+    protect_legacy_proxy_passwords(connection_factory, FernetSecretBox())
     auth_repository = SQLiteAuthRepository(
         connection_factory,
         password_hasher=_password_hasher(config.password_iterations),
@@ -566,7 +567,7 @@ def _minimal_mode_enabled(
     if config.minimal_mode is not None:
         return bool(config.minimal_mode)
     settings = SQLiteSettingsRepository(connection_factory)
-    return str(settings.get(user.id, MINIMAL_MODE_SETTING_KEY, "0")).strip() == "1"
+    return setting_bool(settings.get(user.id, MINIMAL_MODE_SETTING_KEY))
 
 
 def _resolve_runtime_user(

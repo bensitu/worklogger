@@ -17,7 +17,7 @@ from worklogger.infrastructure.database import MigrationRunner, SQLiteConnection
 from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteSettingsRepository, SQLiteWorkLogRepository, SQLiteIdentityRepository
 from worklogger.infrastructure.security import PBKDF2PasswordHasher
 from worklogger.domain.auth.models import LinkedIdentity
-from worklogger.infrastructure.security.key_store import EncryptedSettingsKeyStore, FileMachineKeyProvider, HmacSecretBox, NoKeyringBackend
+from worklogger.infrastructure.security.key_store import EncryptedSettingsKeyStore, FileMachineKeyProvider, FernetSecretBox, NoKeyringBackend
 from worklogger.infrastructure.database.upgrade import upgrade_database
 from worklogger.infrastructure.database.migrations.runner import MIGRATION_VERSIONS
 
@@ -95,7 +95,7 @@ class DatabaseUpgradeTests(unittest.TestCase):
                 previous_key = hashlib.sha256(f"{platform.node()}|{uuid.getnode()}".encode()).digest() if deterministic else current_key
                 encoded = "enc1:" + Fernet(base64.urlsafe_b64encode(previous_key)).encrypt(b"example-secret").decode()
                 settings.set(17,"ai_api_key",encoded)
-                store = EncryptedSettingsKeyStore(settings,user_id=17,keyring_backend=NoKeyringBackend(),secret_box=HmacSecretBox(key_provider))
+                store = EncryptedSettingsKeyStore(settings,user_id=17,keyring_backend=NoKeyringBackend(),secret_box=FernetSecretBox(key_provider))
                 result = store.get_secret("ai_api_key")
                 self.assertTrue(result.ok,result.error)
                 self.assertEqual(result.value,"example-secret")

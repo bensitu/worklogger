@@ -7,7 +7,7 @@ from dataclasses import replace
 from datetime import date, datetime, timedelta, timezone
 
 from worklogger.config.constants import MAX_SHIFT_HOURS
-from worklogger.domain.worklog.models import CustomWorkType, WorkLog
+from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.rules import (
     entries_overlap,
@@ -32,115 +32,10 @@ class SQLiteWorkLogWrites:
         self.changes = SQLiteEntryChanges(storage)
 
     def save(self, work_log: WorkLog, *, expected_note: str | None = None) -> None:
-        if self._storage.supports_entries:
-            self._import_entries(
-                (normalize_work_log(work_log),),
-                overwrite=True,
-                expected_note=expected_note,
-                daily_replacement=True,
-            )
-            return
-        self.import_many((work_log,), overwrite=True, expected_note=expected_note)
+        self._import_entries((normalize_work_log(work_log),), overwrite=True, expected_note=expected_note, daily_replacement=True)
 
-    def import_many(
-        self,
-        rows: tuple[WorkLog, ...],
-        *,
-        overwrite: bool = False,
-        expected_note: str | None = None,
-    ) -> None:
-        normalized_rows = tuple(normalize_work_log(row) for row in rows)
-        if not self._storage.type_snapshots and any(
-            isinstance(row.work_type, CustomWorkType) for row in normalized_rows
-        ):
-            raise ValueError("database_version_unsupported")
-        if self._storage.supports_entries:
-            self._import_entries(
-                normalized_rows, overwrite=overwrite, expected_note=expected_note
-            )
-            return
-        if not self._storage.timestamps and any(
-            row.started_at is not None or row.ended_at is not None
-            for row in normalized_rows
-        ):
-            raise ValueError("database_version_unsupported")
-        with self._storage.connection_factory.transaction(write=True) as connection:
-            if not overwrite:
-                for row in normalized_rows:
-                    if connection.execute(
-                        "SELECT 1 FROM worklog WHERE user_id=? AND d=?",
-                        (row.user_id, row.day.isoformat()),
-                    ).fetchone():
-                        raise ValueError("csv_import_conflict")
-                    if (
-                        self._storage.separate_notes
-                        and connection.execute(
-                            "SELECT 1 FROM daily_notes WHERE user_id=? AND d=? AND content<>''",
-                            (row.user_id, row.day.isoformat()),
-                        ).fetchone()
-                    ):
-                        raise ValueError("csv_import_conflict")
-            if self._storage.separate_notes:
-                for row in normalized_rows:
-                    save_note(connection, row.user_id, row.day, row.note, expected_note)
-                note_only_rows = tuple(
-                    row
-                    for row in normalized_rows
-                    if not row.has_times
-                    and row.work_type.value == "normal"
-                    and row.break_hours == 0
-                    and bool(row.note)
-                )
-                for row in note_only_rows:
-                    connection.execute(
-                        "DELETE FROM worklog WHERE user_id=? AND d=?",
-                        (row.user_id, row.day.isoformat()),
-                    )
-                note_only_dates = {(row.user_id, row.day) for row in note_only_rows}
-                normalized_rows = tuple(
-                    row
-                    for row in normalized_rows
-                    if (row.user_id, row.day) not in note_only_dates
-                )
-            connection.executemany(
-                """
-                INSERT INTO worklog(user_id, d, start, end, "break", note, work_type, overnight)
-                VALUES(?, ?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(user_id, d) DO UPDATE SET
-                    start=excluded.start,
-                    end=excluded.end,
-                    "break"=excluded."break",
-                    note=excluded.note,
-                    work_type=excluded.work_type,
-                    overnight=excluded.overnight
-                """,
-                [
-                    (
-                        normalized.user_id,
-                        normalized.day.isoformat(),
-                        normalized.start_time,
-                        normalized.end_time,
-                        normalized.break_hours,
-                        "" if self._storage.separate_notes else normalized.note,
-                        normalized.work_type.value,
-                        1 if normalized.overnight else 0,
-                    )
-                    for normalized in normalized_rows
-                ],
-            )
-            if self._storage.timestamps:
-                connection.executemany(
-                    "UPDATE worklog SET started_at=?, ended_at=? WHERE user_id=? AND d=?",
-                    [
-                        (
-                            row.started_at.isoformat() if row.started_at else None,
-                            row.ended_at.isoformat() if row.ended_at else None,
-                            row.user_id,
-                            row.day.isoformat(),
-                        )
-                        for row in normalized_rows
-                    ],
-                )
+    def import_many(self, rows: tuple[WorkLog, ...], *, overwrite: bool = False, expected_note: str | None = None) -> None:
+        self._import_entries(tuple(normalize_work_log(row) for row in rows), overwrite=overwrite, expected_note=expected_note)
 
     def remove(self, user_id: int, day: date) -> None:
         with self._storage.connection_factory.transaction(write=True) as connection:
@@ -156,11 +51,6 @@ class SQLiteWorkLogWrites:
         timer_change: tuple[str | None, str | None] | None = None,
     ) -> WorkLog:
         record = normalize_work_log(record)
-        if (
-            isinstance(record.work_type, CustomWorkType)
-            and not self._storage.type_snapshots
-        ):
-            raise ValueError("database_version_unsupported")
         if not record.has_times:
             previous = (
                 self._queries.get_entry(record.user_id, record.id)
@@ -206,20 +96,13 @@ class SQLiteWorkLogWrites:
                                 connection, record.user_id, *timer_change
                             )
                         return stored
-            if self._storage.work_context:
-                validate_record_context(connection, record)
+            validate_record_context(connection, record)
             self._check_overlap(connection, record)
             if record.id is None:
                 entry_id = self._insert_entry(connection, record)
                 record = replace(record, id=entry_id)
             else:
-                snapshots = (
-                    ",work_type_label=?,work_type_category=?"
-                    if self._storage.type_snapshots
-                    else ""
-                )
-                if self._storage.work_context:
-                    snapshots += ",project_id=?,work_item_id=?,project_label=?,work_item_label=?"
+                snapshots = ",work_type_label=?,work_type_category=?,project_id=?,work_item_id=?,project_label=?,work_item_label=?"
                 cursor = connection.execute(
                     """UPDATE worklog SET d=?,start=?,end=?,"break"=?,note=?,work_type=?,overnight=?,
                     started_at=?,ended_at=?"""
@@ -408,11 +291,9 @@ class SQLiteWorkLogWrites:
         columns = (
             'user_id,d,start,end,"break",note,work_type,overnight,started_at,ended_at'
         )
-        if self._storage.type_snapshots:
-            columns += ",work_type_label,work_type_category"
-        if self._storage.work_context:
-            validate_record_context(connection, record, historical=historical)
-            columns += ",project_id,work_item_id,project_label,work_item_label"
+        columns += ",work_type_label,work_type_category"
+        validate_record_context(connection, record, historical=historical)
+        columns += ",project_id,work_item_id,project_label,work_item_label"
         values = (*self._storage.entry_values(record), record.capture_id)
         columns += ",capture_id"
         if preserve_identity:

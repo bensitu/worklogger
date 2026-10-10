@@ -351,3 +351,15 @@ class TimeEntryTests(unittest.TestCase):
         self.assertTrue(importer.apply(preview, overwrite=True).ok)
         self.assertEqual(notes.get_for_day(other.id, day).content, "Independent memo")
         self.assertEqual(self.repository.list_for_day(other.id, day)[0].note, "Record content")
+
+    def test_invalid_optional_offsets_do_not_hide_valid_clock_records(self):
+        record = self.service.save_manual(self.now.date(), "09:00", "10:00", "normal", "Retained content").value
+        with self.factory.transaction() as connection:
+            connection.execute("UPDATE worklog SET started_at='invalid',ended_at=NULL WHERE id=?", (record.id,))
+        with self.assertLogs("worklogger.infrastructure.repositories._mapping", level="WARNING"):
+            loaded = self.repository.list_for_day(self.user.id, self.now.date())[0]
+        self.assertEqual((loaded.id, loaded.note, loaded.worked_hours()), (record.id, "Retained content", 1))
+        self.assertIsNone(loaded.started_at)
+        self.assertIsNone(loaded.ended_at)
+        with self.factory.connection() as connection:
+            self.assertEqual(connection.execute("SELECT started_at FROM worklog WHERE id=?", (record.id,)).fetchone()[0], "invalid")

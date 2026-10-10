@@ -3,7 +3,7 @@
 from worklogger.infrastructure.security.key_store import (
     EncryptedSettingsKeyStore,
     FileMachineKeyProvider,
-    HmacSecretBox,
+    FernetSecretBox,
     NoKeyringBackend,
     OptionalKeyringBackend,
 )
@@ -21,7 +21,7 @@ from worklogger.infrastructure.security.session_store import (
 __all__ = [
     "EncryptedSettingsKeyStore",
     "FileMachineKeyProvider",
-    "HmacSecretBox",
+    "FernetSecretBox",
     "NoKeyringBackend",
     "OptionalKeyringBackend",
     "PBKDF2PasswordHasher",

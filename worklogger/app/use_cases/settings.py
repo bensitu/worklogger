@@ -159,3 +159,12 @@ class GetSettingHandler:
             return Result.success(reader(user_id))
         except Exception:
             return Result.failure(InfrastructureError("settings_load_failed", "settings_load_failed"))
+
+    def get_many(self, user_id: int, keys) -> Result[dict[str, str | None] | None]:
+        reader = getattr(self._repository, "get_many", None)
+        if reader is None:
+            return Result.success(None)
+        try:
+            return Result.success(reader(user_id, keys))
+        except Exception:
+            return Result.failure(InfrastructureError("settings_load_failed", "settings_load_failed"))

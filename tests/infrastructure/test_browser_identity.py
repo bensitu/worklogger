@@ -19,7 +19,7 @@ from worklogger.infrastructure.identity.config import IdentityConfigurationStore
 from worklogger.infrastructure.identity.loopback import LoopbackAuthorization
 from worklogger.infrastructure.identity.pkce import build_code_challenge
 from worklogger.infrastructure.identity.providers import BrowserIdentityProvider
-from worklogger.infrastructure.security.key_store import FileMachineKeyProvider, HmacSecretBox
+from worklogger.infrastructure.security.key_store import FileMachineKeyProvider, FernetSecretBox
 
 
 class Response(io.BytesIO):
@@ -39,7 +39,7 @@ class BrowserIdentityTests(unittest.TestCase):
         self.enterContext(patch.dict(os.environ, {}, clear=True))
         folder = Path(self.enterContext(tempfile.TemporaryDirectory()))
         self.store = IdentityConfigurationStore(folder / "identity.enc",
-            secret_box=HmacSecretBox(FileMachineKeyProvider(folder / "machine.key")))
+            secret_box=FernetSecretBox(FileMachineKeyProvider(folder / "machine.key")))
 
     def test_registration_storage_encrypts_values_and_respects_managed_overrides(self):
         registration = ProviderRegistration("client-id", client_secret="desktop-registration")

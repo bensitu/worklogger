@@ -22,6 +22,22 @@ def _app() -> QApplication:
 
 
 class BackgroundJobTests(unittest.TestCase):
+    def test_owned_completion_ignores_a_deleted_widget(self):
+        from PySide6.QtCore import QCoreApplication, QEvent
+        from PySide6.QtWidgets import QWidget
+        from worklogger.presentation.job_runner import owned_callback
+
+        owner = QWidget()
+        results = []
+        complete = owned_callback(owner, results.append)
+        first = Result.success("Current result")
+        complete(first)
+        self.assertEqual(results, [first])
+        owner.deleteLater()
+        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+        complete(Result.success("Late result"))
+        self.assertEqual(results, [first])
+
     def test_processing_requests_cancel_and_ignore_late_or_replaced_results(self):
         from worklogger.presentation.processing import TextProcessingTask
         from worklogger.app.job_runner import JobHandle

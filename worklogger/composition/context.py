@@ -57,7 +57,7 @@ from worklogger.infrastructure.network import AccountHTTPTransport
 from worklogger.infrastructure.ai.account import AccountAIGateway
 from worklogger.infrastructure.repositories.project_sqlite import SQLiteProjectRepository
 from worklogger.infrastructure.repositories.background_sqlite import SQLiteBackgroundRepository
-from worklogger.infrastructure.security.key_store import EncryptedSettingsKeyStore, SystemCredentialStore, HmacSecretBox
+from worklogger.infrastructure.security.key_store import EncryptedSettingsKeyStore, SystemCredentialStore, FernetSecretBox
 from worklogger.infrastructure.local_model.store import HttpRangeDownloader
 
 
@@ -130,7 +130,7 @@ def _runtime_handlers(
         external_keys = EncryptedSettingsKeyStore(repositories.settings, user_id=user_id,
             service_name="worklogger.external." + hashlib.sha256((namespace + ":" + str(user_id)).encode()).hexdigest())
         proxy_password = ProxyPasswordSettings(repositories.settings, SystemCredentialStore(namespace=namespace),
-                                               user_id=user_id, secret_box=HmacSecretBox())
+                                               user_id=user_id, secret_box=FernetSecretBox())
         transport = AccountHTTPTransport(settings=repositories.settings, user_id=user_id, proxy_password=proxy_password)
         opener = transport.opener(public_only=True)
         store = JsonLocalModelStore(Path(database_path).parent / "models", bundled_catalog_path=bundled_model_catalog_path(),

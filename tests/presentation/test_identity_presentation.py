@@ -138,11 +138,11 @@ class IdentityPresentationTests(unittest.TestCase):
         import tempfile
         from unittest.mock import patch
         from worklogger.infrastructure.identity.config import IdentityConfigurationStore
-        from worklogger.infrastructure.security.key_store import HmacSecretBox, FileMachineKeyProvider
+        from worklogger.infrastructure.security.key_store import FernetSecretBox, FileMachineKeyProvider
         from worklogger.presentation.identity.dialogs import IdentityConfigurationDialog
         with tempfile.TemporaryDirectory() as folder, patch.dict(os.environ, {}, clear=True):
             root = Path(folder)
-            store = IdentityConfigurationStore(root / "identity.enc", secret_box=HmacSecretBox(FileMachineKeyProvider(root / "machine.key")))
+            store = IdentityConfigurationStore(root / "identity.enc", secret_box=FernetSecretBox(FileMachineKeyProvider(root / "machine.key")))
             dialog = IdentityConfigurationDialog(store, "google")
             dialog.client_id_input.setText("client-id")
             dialog.secret_input.setText("desktop-registration")

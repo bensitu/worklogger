@@ -158,7 +158,7 @@ class AppWindow(QMainWindow):
             self._background_surface, background_service,
             available=self._config.background_images_available, job_runner=self._job_runner,
         )
-        self._background_surface.active_changed.connect(self.apply_theme)
+        self._background_surface.active_changed.connect(lambda _active: self.apply_theme(force=True))
         self._calendar_coordinator = CalendarCoordinator(
             calendar_view_model=self._calendar_view_model,
             stats_view_model=self._stats_panel_view_model,
@@ -206,7 +206,7 @@ class AppWindow(QMainWindow):
     def has_unsaved_changes(self) -> bool:
         return self._entry_dirty or self.reports_page.has_unsaved_changes
 
-    def apply_theme(self) -> None:
+    def apply_theme(self, *, force: bool = False) -> None:
         application = QApplication.instance()
         if application is None:
             return
@@ -215,20 +215,16 @@ class AppWindow(QMainWindow):
         ).surface)
         configure_application_style()
         install_bundled_fonts()
-        application.setPalette(
-            self._theme_engine.qt_palette(
-                self._config.theme,
-                dark=self._config.dark,
-                custom_color=self._config.custom_color,
-            )
+        palette = self._theme_engine.qt_palette(
+            self._config.theme, dark=self._config.dark, custom_color=self._config.custom_color,
         )
-        application.setStyleSheet(
-            self._theme_engine.application_stylesheet(
-                self._config.theme,
-                dark=self._config.dark,
-                custom_color=self._config.custom_color,
-            )
+        stylesheet = self._theme_engine.application_stylesheet(
+            self._config.theme, dark=self._config.dark, custom_color=self._config.custom_color,
         )
+        if application.palette() != palette:
+            application.setPalette(palette)
+        if force or application.styleSheet() != stylesheet:
+            application.setStyleSheet(stylesheet)
 
     def apply_settings(self, state: SettingsState) -> None:
         self.sidebar.set_avatar(state.profile_avatar_png)

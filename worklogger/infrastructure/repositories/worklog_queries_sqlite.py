@@ -16,7 +16,7 @@ class SQLiteWorkLogQueries:
         self._storage = storage
 
     def search_entries(self, user_id, criteria, *, cursor=None, limit=100):
-        if type(limit) is not int or not 1 <= limit <= 250 or not self._storage.supports_entries:
+        if type(limit) is not int or not 1 <= limit <= 250:
             raise ValueError("record_search_invalid")
         conditions = ["w.user_id=?", "w.d BETWEEN ? AND ?", "date(w.d,'+0 days')=w.d"]
         parameters = [user_id, criteria.start.isoformat(), criteria.end.isoformat()]
@@ -44,15 +44,8 @@ class SQLiteWorkLogQueries:
         return EntryPage(map_rows(rows[:limit], self._storage.from_row), next_cursor)
 
     def get_for_day(self, user_id: int, day: date) -> WorkLog | None:
-        if self._storage.supports_entries:
-            summaries = aggregate_days(self.list_for_day(user_id, day))
-            return summaries[0] if summaries else None
-        with self._storage.connection_factory.connection() as connection:
-            row = connection.execute(
-                self._storage.select + "WHERE w.user_id=? AND w.d=?",
-                (user_id, day.isoformat()),
-            ).fetchone()
-        return self._storage.from_row(row) if row else None
+        summaries = aggregate_days(self.list_for_day(user_id, day))
+        return summaries[0] if summaries else None
 
     def list_for_month(
         self, user_id: int, year: int, month: int
@@ -100,16 +93,8 @@ class SQLiteWorkLogQueries:
                 ).fetchall(),
                 self._storage.from_row,
             )
-            if not self._storage.separate_notes:
-                return records
-            condition = (
-                ""
-                if self._storage.supports_entries
-                else "AND NOT EXISTS (SELECT 1 FROM worklog WHERE worklog.user_id=daily_notes.user_id AND worklog.d=daily_notes.d)"
-            )
             rows = connection.execute(
-                "SELECT d, content FROM daily_notes WHERE user_id=? AND content<>'' "
-                + condition,
+                "SELECT d, content FROM daily_notes WHERE user_id=? AND content<>'' ",
                 (user_id,),
             ).fetchall()
         notes = map_rows(
@@ -146,9 +131,8 @@ class SQLiteWorkLogQueries:
                     f"SELECT d FROM worklog WHERE user_id=? AND d IN ({placeholders})"
                 )
                 parameters = (user_id, *chunk)
-                if self._storage.separate_notes:
-                    query += f" UNION SELECT d FROM daily_notes WHERE user_id=? AND d IN ({placeholders}) AND content<>''"
-                    parameters += (user_id, *chunk)
+                query += f" UNION SELECT d FROM daily_notes WHERE user_id=? AND d IN ({placeholders}) AND content<>''"
+                parameters += (user_id, *chunk)
                 existing.update(
                     parse_date(row[0]) for row in connection.execute(query, parameters)
                 )

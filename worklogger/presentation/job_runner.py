@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import logging
 import uuid
+from weakref import ref
 
 from PySide6.QtCore import QCoreApplication, QObject, QRunnable, QThreadPool, Signal
+from shiboken6 import isValid
 
 from worklogger.app.job_runner import (
     CancellationToken,
@@ -17,6 +19,17 @@ from worklogger.domain.shared.errors import CancellationError, InfrastructureErr
 from worklogger.domain.shared.result import Result
 
 LOGGER = logging.getLogger(__name__)
+
+
+def owned_callback(owner: QObject, callback):
+    reference = ref(owner)
+
+    def completed(result):
+        current = reference()
+        if current is not None and isValid(current):
+            callback(result)
+
+    return completed
 
 
 class _JobSignals(QObject):

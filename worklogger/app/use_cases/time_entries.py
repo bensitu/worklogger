@@ -2,7 +2,6 @@
 
 from dataclasses import asdict, dataclass, replace
 from datetime import date, datetime, timedelta, timezone, tzinfo
-import hashlib
 import json
 import math
 from uuid import uuid4
@@ -94,31 +93,12 @@ class TimeEntryService:
                     raise ValueError("auto_record_restore_failed")
                 self.timer = timer
             else:
-                previous = self.settings.get(self.user_id, "previous_auto_record_state")
-                if previous:
-                    self._restore_previous(previous)
+                if self.settings.get(self.user_id, "previous_auto_record_state"):
+                    raise ValueError("auto_record_restore_failed")
         except Exception:
             self.restore_failed = True
             self.last_error = InfrastructureError("auto_record_restore_failed", "auto_record_restore_failed")
 
-    def _restore_previous(self, raw: str) -> None:
-        if len(raw) > 1024 * 1024:
-            raise ValueError("auto_record_restore_failed")
-        data = json.loads(raw)
-        start = datetime.fromisoformat(data["started_at"]) if data.get("started_at") else datetime.combine(
-            date.fromisoformat(data["day"]), datetime.strptime(data["start_time"], "%H:%M").time(), self.local_timezone)
-        end = datetime.fromisoformat(data["ended_at"]) if data.get("ended_at") else None
-        if data.get("pending_save") and end is None:
-            end = shift_datetimes(start.date(), data["start_time"], data["end_time"], self.local_timezone)[1]
-        deduction = float(data.get("break_hours", 0))
-        if data.get("break_active") and data.get("break_started_at"):
-            deduction = max(0, timestamp_span_hours(datetime.fromisoformat(data["break_started_at"]), self.now()))
-        timer = EntryTimer(hashlib.sha256((str(self.user_id) + raw).encode()).hexdigest(), start,
-                           WorkType(data["work_type"]), self._content(data.get("note", "")),
-                           legacy_break_hours=deduction, pending_end=end)
-        if not math.isfinite(deduction) or not 0 <= deduction <= MAX_SHIFT_HOURS or start.tzinfo is None:
-            raise ValueError("auto_record_restore_failed")
-        self._persist(timer)
 
     @staticmethod
     def _encode(timer: EntryTimer | None) -> str | None:
