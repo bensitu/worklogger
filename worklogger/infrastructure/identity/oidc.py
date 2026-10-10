@@ -152,6 +152,10 @@ def _verified_claims(token: str, *, issuer: str, audience: str, jwks: Mapping[st
             raise ValueError("identity_signing_key_invalid")
         claims = jwt.decode(token, keys[0].key, algorithms=["RS256"], issuer=issuer, audience=audience,
                             options={"require": ["iss", "aud", "exp", "iat", "sub"]})
+        authorized_party = claims.get("azp")
+        if (authorized_party is not None and authorized_party != audience
+                or isinstance(claims.get("aud"), list) and len(claims["aud"]) > 1 and authorized_party != audience):
+            raise ValueError("identity_token_invalid")
         if not isinstance(claims.get("sub"), str) or not claims["sub"].strip():
             raise ValueError("identity_subject_missing")
         return Result.success(claims)

@@ -154,6 +154,9 @@ msgstr "Append"
 msgid "Application behavior"
 msgstr "Application behavior"
 
+msgid "Application client ID"
+msgstr "Application client ID"
+
 msgid "Apply"
 msgstr "Apply"
 
@@ -201,6 +204,9 @@ msgstr "Authentication information (optional)"
 
 msgid "Author"
 msgstr "Author"
+
+msgid "Authorization response received. Return to WorkLogger to continue."
+msgstr "Authorization response received. Return to WorkLogger to continue."
 
 msgid "Auto Record"
 msgstr "Auto Record"
@@ -367,11 +373,20 @@ msgstr "Comp leave"
 msgid "Compensatory leave"
 msgstr "Compensatory leave"
 
+msgid "Complete sign-in in your browser..."
+msgstr "Complete sign-in in your browser..."
+
 msgid "Completed"
 msgstr "Completed"
 
+msgid "Configure sign-in"
+msgstr "Configure sign-in"
+
 msgid "Configure the address, model, and API key to test the connection."
 msgstr "Configure the address, model, and API key to test the connection."
+
+msgid "Configure this sign-in provider before continuing."
+msgstr "Configure this sign-in provider before continuing."
 
 msgid "Confirm password"
 msgstr "Confirm password"
@@ -414,6 +429,9 @@ msgstr "Create account"
 
 msgid "Create record from event"
 msgstr "Create record from event"
+
+msgid "Create the initial local administrator account before using provider sign-in."
+msgstr "Create the initial local administrator account before using provider sign-in."
 
 msgid "Create user"
 msgstr "Create user"
@@ -507,6 +525,9 @@ msgstr "Delete user {username} and their data?"
 
 msgid "Description"
 msgstr "Description"
+
+msgid "Desktop client secret (optional)"
+msgstr "Desktop client secret (optional)"
 
 msgid "Discard"
 msgstr "Discard"
@@ -1026,6 +1047,9 @@ msgstr "Merge these adjacent records? Their content will be combined."
 
 msgid "Merge with previous record"
 msgstr "Merge with previous record"
+
+msgid "Microsoft tenant ID"
+msgstr "Microsoft tenant ID"
 
 msgid "Minutes from the record start to the break start"
 msgstr "Minutes from the record start to the break start"
@@ -1765,6 +1789,15 @@ msgstr "Sign in with Google"
 msgid "Sign in with Microsoft"
 msgstr "Sign in with Microsoft"
 
+msgid "Sign-in cancelled. No application session was opened."
+msgstr "Sign-in cancelled. No application session was opened."
+
+msgid "Sign-in provider unavailable. Check the application client ID and Microsoft tenant ID, where applicable."
+msgstr "Sign-in provider unavailable. Check the application client ID and Microsoft tenant ID, where applicable."
+
+msgid "Sign-in timed out. Try again and complete authorization in your browser."
+msgstr "Sign-in timed out. Try again and complete authorization in your browser."
+
 msgid "Signed in: {username}"
 msgstr "Signed in: {username}"
 
@@ -1951,6 +1984,9 @@ msgstr "This ID is already in use. Choose a different ID."
 msgid "This account | Newest saved first"
 msgstr "This account | Newest saved first"
 
+msgid "This authorization response is invalid. Return to WorkLogger."
+msgstr "This authorization response is invalid. Return to WorkLogger."
+
 msgid "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
 msgstr "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
 
@@ -1977,6 +2013,9 @@ msgstr "This report changed elsewhere. Reload the history before deleting it."
 
 msgid "This report is too large to save. Your current content has been retained."
 msgstr "This report is too large to save. Your current content has been retained."
+
+msgid "This sign-in configuration is managed outside the application."
+msgstr "This sign-in configuration is managed outside the application."
 
 msgid "This text exceeds the selected model's context limit. Shorten it and try again."
 msgstr "This text exceeds the selected model's context limit. Shorten it and try again."
@@ -2059,6 +2098,9 @@ msgstr "Unable to check for updates. Check your network connection and try again
 msgid "Unable to complete the AI request. Check your model settings and try again."
 msgstr "Unable to complete the AI request. Check your model settings and try again."
 
+msgid "Unable to contact the sign-in provider. Check your network connection and try again."
+msgstr "Unable to contact the sign-in provider. Check your network connection and try again."
+
 msgid "Unable to delete the report. Your saved data has been retained."
 msgstr "Unable to delete the report. Your saved data has been retained."
 
@@ -2092,6 +2134,9 @@ msgstr "Unable to load timesheet records. Your report draft is unchanged."
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "Unable to obtain the model. Check the source file or download connection."
 
+msgid "Unable to open the browser. Check your default browser and try again."
+msgstr "Unable to open the browser. Check your default browser and try again."
+
 msgid "Unable to open the data directory."
 msgstr "Unable to open the data directory."
 
@@ -2106,6 +2151,9 @@ msgstr "Unable to restore the timer. Discard it to start a new record."
 
 msgid "Unable to save settings. Please try again."
 msgstr "Unable to save settings. Please try again."
+
+msgid "Unable to save sign-in configuration. Check access to the local configuration directory."
+msgstr "Unable to save sign-in configuration. Check access to the local configuration directory."
 
 msgid "Unable to save the note. Your changes have been retained."
 msgstr "Unable to save the note. Your changes have been retained."
@@ -2190,6 +2238,9 @@ msgstr "Use a single-line display name without control characters."
 
 msgid "Use a web proxy for this application."
 msgstr "Use a web proxy for this application."
+
+msgid "Use an application registration supplied by your distributor or administrator. This is not your account password."
+msgstr "Use an application registration supplied by your distributor or administrator. This is not your account password."
 
 msgid "Use default avatar"
 msgstr "Use default avatar"

@@ -182,6 +182,39 @@ class AuthPresentationTests(unittest.TestCase):
             reset_password_handler=ResetPasswordHandler(repository),
         )
 
+    def test_provider_login_opens_bound_local_session_and_saves_remember_choice(self):
+        from worklogger.app.use_cases.identity import IdentityProviderList, IdentityLoginResult
+        from worklogger.domain.identity.models import IdentityProviderStatus
+        from worklogger.domain.auth.models import LinkedIdentity
+        from worklogger.domain.shared.result import Result
+        repository = MemoryAuthRepository()
+        user = repository.create_user("local-id", "secret123", recovery_key="recovery", is_admin=False)
+        user = replace(user, display_name="Mary")
+        linked = LinkedIdentity(1, user.id, "google", "provider-subject")
+        commands = []
+        class IdentityLogin:
+            def handle(self, command, *, cancellation=None):
+                commands.append(command)
+                return Result.success(IdentityLoginResult(user, linked, "local-session-token"))
+        class Providers:
+            def handle(self, _query):
+                return Result.success(IdentityProviderList((IdentityProviderStatus("google", "Google", True, True),)))
+        class AutoLogin(LoginDialog):
+            def exec(self):
+                self.remember_check.set_checked(True)
+                self.google_login_button.click()
+                return self.result()
+        model = self.auth_view_model(repository)
+        model._identity_login_handler, model._identity_providers_handler = IdentityLogin(), Providers()
+        store = MemoryRememberSessionStore()
+        result = AuthController(model, login_dialog_factory=AutoLogin, remember_session_store=store,
+                                job_runner=ImmediateJobRunner()).authenticate()
+        self.assertTrue(result.ok, result.error)
+        self.assertEqual(result.value.user.username, "local-id")
+        self.assertEqual(result.value.user.effective_display_name, "Mary")
+        self.assertTrue(commands[0].remember)
+        self.assertEqual(store.saved, ["local-session-token"])
+
     def test_auth_viewmodel_registers_first_user_then_logs_in(self) -> None:
         repository = MemoryAuthRepository()
         view_model = self.auth_view_model(repository)

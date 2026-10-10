@@ -37,7 +37,7 @@ class FakeProvider:
             configured=True,
         )
 
-    def authenticate(self) -> Result[ExternalIdentityProfile]:
+    def authenticate(self, *, cancellation=None) -> Result[ExternalIdentityProfile]:
         return Result.success(
             ExternalIdentityProfile(
                 provider="google",
@@ -84,6 +84,10 @@ class MemoryAuth:
     def __init__(self) -> None:
         self.users: dict[int, User] = {}
         self.identities = None
+        self.remember_tokens = {}
+
+    def set_remember_token(self, user_id, token, expires_at):
+        self.remember_tokens[user_id] = (token, expires_at)
 
     def create_identity_account(self, username, profile):
         user = self.create_user(username, "", recovery_key=None, is_admin=False, local_password_enabled=False)
@@ -190,6 +194,41 @@ class IdentityUseCaseTests(unittest.TestCase):
         self.assertNotEqual(result.value.user.id, 1)
         self.assertNotEqual(result.value.user.username.casefold(), "person")
         self.assertEqual(auth.users[1].username, "PERSON")
+
+    def test_cancelled_authorization_does_not_create_or_link_accounts(self):
+        from worklogger.app.job_runner import CancellationToken
+        token = CancellationToken()
+        class CancelProvider(FakeProvider):
+            def authenticate(self, *, cancellation=None):
+                cancellation.cancel()
+                return super().authenticate()
+        identities, auth = MemoryIdentities(), MemoryAuth()
+        auth.identities = identities
+        providers = (CancelProvider(),)
+        for handler, command in ((LinkIdentityHandler(repository=identities, providers=providers), LinkIdentityCommand(1, "google")),
+                                 (LoginWithIdentityHandler(identities=identities, auth=auth, providers=providers), LoginWithIdentityCommand("google"))):
+            result = handler.handle(command, cancellation=token)
+            self.assertFalse(result.ok)
+            self.assertEqual(result.error.code, "identity_authorization_cancelled")
+        self.assertEqual(identities.items, [])
+        self.assertEqual(auth.users, {})
+
+    def test_provider_login_remembers_local_session_and_retains_bound_account(self):
+        from worklogger.domain.auth.policies import remember_token_storage_value
+        identities, auth = MemoryIdentities(), MemoryAuth()
+        auth.identities = identities
+        auth.users[1] = User(1, "local", display_name="Mary")
+        linked = LinkIdentityHandler(repository=identities, providers=(FakeProvider(),)).handle(LinkIdentityCommand(1, "google"))
+        handler = LoginWithIdentityHandler(identities=identities, auth=auth, providers=(FakeProvider(),))
+        login = handler.handle(LoginWithIdentityCommand("google", remember=True))
+        self.assertTrue(login.ok)
+        self.assertEqual(login.value.user.effective_display_name, "Mary")
+        self.assertEqual(login.value.linked_identity, linked.value)
+        self.assertEqual(auth.remember_tokens[1][0], remember_token_storage_value(login.value.token))
+        self.assertNotEqual(auth.remember_tokens[1][0], login.value.token)
+        self.assertTrue(handler.handle(LoginWithIdentityCommand("google")).ok)
+        self.assertEqual(auth.remember_tokens[1], (None, None))
+        self.assertEqual(len(auth.users), 1)
 
 
 if __name__ == "__main__":

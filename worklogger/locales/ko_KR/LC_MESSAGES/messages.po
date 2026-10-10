@@ -154,6 +154,9 @@ msgstr "추가"
 msgid "Application behavior"
 msgstr "애플리케이션 동작"
 
+msgid "Application client ID"
+msgstr "애플리케이션 클라이언트 ID"
+
 msgid "Apply"
 msgstr "적용"
 
@@ -201,6 +204,9 @@ msgstr "인증 정보(선택 사항)"
 
 msgid "Author"
 msgstr "작성자"
+
+msgid "Authorization response received. Return to WorkLogger to continue."
+msgstr "인증 응답을 받았습니다. WorkLogger로 돌아가 계속하세요."
 
 msgid "Auto Record"
 msgstr "자동 기록"
@@ -367,11 +373,20 @@ msgstr "대체 휴가"
 msgid "Compensatory leave"
 msgstr "대체 휴가"
 
+msgid "Complete sign-in in your browser..."
+msgstr "브라우저 로그인을 기다리는 중…"
+
 msgid "Completed"
 msgstr "완료"
 
+msgid "Configure sign-in"
+msgstr "로그인 구성"
+
 msgid "Configure the address, model, and API key to test the connection."
 msgstr "연결을 테스트하려면 주소, 모델 및 API 키를 설정하세요."
+
+msgid "Configure this sign-in provider before continuing."
+msgstr "먼저 이 로그인 공급자를 구성하세요."
 
 msgid "Confirm password"
 msgstr "비밀번호 확인"
@@ -414,6 +429,9 @@ msgstr "계정 만들기"
 
 msgid "Create record from event"
 msgstr "일정에서 기록 만들기"
+
+msgid "Create the initial local administrator account before using provider sign-in."
+msgstr "외부 계정으로 로그인하기 전에 최초 로컬 관리자 계정을 만드세요."
 
 msgid "Create user"
 msgstr "사용자 만들기"
@@ -507,6 +525,9 @@ msgstr "사용자 {username} 및 해당 사용자의 데이터를 삭제할까�
 
 msgid "Description"
 msgstr "설명"
+
+msgid "Desktop client secret (optional)"
+msgstr "데스크톱 클라이언트 비밀 값(선택)"
 
 msgid "Discard"
 msgstr "버리기"
@@ -1026,6 +1047,9 @@ msgstr "인접한 기록을 병합하시겠습니까? 내용도 합쳐집니다.
 
 msgid "Merge with previous record"
 msgstr "이전 기록과 병합"
+
+msgid "Microsoft tenant ID"
+msgstr "Microsoft 테넌트 ID"
 
 msgid "Minutes from the record start to the break start"
 msgstr "기록 시작부터 휴식 시작까지의 분 수"
@@ -1765,6 +1789,15 @@ msgstr "Google로 로그인"
 msgid "Sign in with Microsoft"
 msgstr "Microsoft로 로그인"
 
+msgid "Sign-in cancelled. No application session was opened."
+msgstr "로그인이 취소되었습니다. 애플리케이션 세션이 시작되지 않았습니다."
+
+msgid "Sign-in provider unavailable. Check the application client ID and Microsoft tenant ID, where applicable."
+msgstr "로그인 공급자를 사용할 수 없습니다. 애플리케이션 클라이언트 ID와 해당하는 경우 Microsoft 테넌트 ID를 확인하세요."
+
+msgid "Sign-in timed out. Try again and complete authorization in your browser."
+msgstr "로그인 시간이 초과되었습니다. 다시 시도하고 브라우저에서 인증을 완료하세요."
+
 msgid "Signed in: {username}"
 msgstr "로그인 중: {username}"
 
@@ -1951,6 +1984,9 @@ msgstr "이 ID는 이미 사용 중입니다. 다른 ID를 선택하세요."
 msgid "This account | Newest saved first"
 msgstr "현재 계정 | 최신 저장순"
 
+msgid "This authorization response is invalid. Return to WorkLogger."
+msgstr "이 인증 응답은 유효하지 않습니다. WorkLogger로 돌아가세요."
+
 msgid "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
 msgstr "이전 공제 시간을 정수 분으로 표현할 수 없습니다. 원래 기록은 변경되지 않았습니다."
 
@@ -1977,6 +2013,9 @@ msgstr "다른 곳에서 이 보고서가 변경되었습니다. 기록을 다�
 
 msgid "This report is too large to save. Your current content has been retained."
 msgstr "보고서가 너무 커서 저장할 수 없습니다. 현재 내용은 유지됩니다."
+
+msgid "This sign-in configuration is managed outside the application."
+msgstr "이 로그인 구성은 애플리케이션 외부에서 관리됩니다."
 
 msgid "This text exceeds the selected model's context limit. Shorten it and try again."
 msgstr "텍스트가 선택한 모델의 문맥 한도를 초과합니다. 내용을 줄인 후 다시 시도하세요."
@@ -2059,6 +2098,9 @@ msgstr "업데이트를 확인하지 못했습니다. 네트워크 연결을 확
 msgid "Unable to complete the AI request. Check your model settings and try again."
 msgstr "AI 요청을 완료하지 못했습니다. 모델 설정을 확인하고 다시 시도하세요."
 
+msgid "Unable to contact the sign-in provider. Check your network connection and try again."
+msgstr "로그인 공급자에 연결할 수 없습니다. 네트워크 연결을 확인하고 다시 시도하세요."
+
 msgid "Unable to delete the report. Your saved data has been retained."
 msgstr "보고서를 삭제할 수 없습니다. 저장된 데이터는 유지됩니다."
 
@@ -2092,6 +2134,9 @@ msgstr "근무 기록표의 기록을 불러올 수 없습니다. 보고서 초�
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "모델을 가져오지 못했습니다. 원본 파일 또는 다운로드 연결을 확인하세요."
 
+msgid "Unable to open the browser. Check your default browser and try again."
+msgstr "브라우저를 열 수 없습니다. 기본 브라우저를 확인하고 다시 시도하세요."
+
 msgid "Unable to open the data directory."
 msgstr "데이터 폴더를 열 수 없습니다."
 
@@ -2106,6 +2151,9 @@ msgstr "타이머를 복원할 수 없습니다. 이전 타이머를 삭제한 �
 
 msgid "Unable to save settings. Please try again."
 msgstr "설정을 저장하지 못했습니다. 다시 시도하세요."
+
+msgid "Unable to save sign-in configuration. Check access to the local configuration directory."
+msgstr "로그인 구성을 저장할 수 없습니다. 로컬 구성 디렉터리의 접근 권한을 확인하세요."
 
 msgid "Unable to save the note. Your changes have been retained."
 msgstr "메모를 저장할 수 없습니다. 변경 내용은 유지됩니다."
@@ -2190,6 +2238,9 @@ msgstr "표시 이름은 제어 문자 없이 한 줄로 입력하세요."
 
 msgid "Use a web proxy for this application."
 msgstr "이 앱에 웹 프록시를 사용합니다."
+
+msgid "Use an application registration supplied by your distributor or administrator. This is not your account password."
+msgstr "배포자 또는 관리자가 제공한 애플리케이션 등록 정보를 사용하세요. 계정 비밀번호가 아닙니다."
 
 msgid "Use default avatar"
 msgstr "기본 아바타 사용"

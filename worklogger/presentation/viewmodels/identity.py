@@ -79,10 +79,10 @@ class IdentityManagementViewModel:
             )
         )
 
-    def link(self, provider: str) -> Result[IdentityManagementState]:
-        linked = self._link_handler.handle(
-            LinkIdentityCommand(user_id=self._user_id, provider=provider)
-        )
+    def link(self, provider: str, *, cancellation=None) -> Result[IdentityManagementState]:
+        command = LinkIdentityCommand(user_id=self._user_id, provider=provider)
+        linked = (self._link_handler.handle(command, cancellation=cancellation) if cancellation is not None
+                  else self._link_handler.handle(command))
         if not linked.ok:
             return Result.failure(
                 linked.error or ValidationError("identity_link_failed", "identity_link_failed")

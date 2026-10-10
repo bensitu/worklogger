@@ -154,6 +154,9 @@ msgstr "附加"
 msgid "Application behavior"
 msgstr "應用行為"
 
+msgid "Application client ID"
+msgstr "應用程式用戶端 ID"
+
 msgid "Apply"
 msgstr "套用"
 
@@ -201,6 +204,9 @@ msgstr "驗證資訊（選填）"
 
 msgid "Author"
 msgstr "作者"
+
+msgid "Authorization response received. Return to WorkLogger to continue."
+msgstr "已收到授權回應。請返回 WorkLogger 繼續。"
 
 msgid "Auto Record"
 msgstr "自動記錄"
@@ -367,11 +373,20 @@ msgstr "補休"
 msgid "Compensatory leave"
 msgstr "補休"
 
+msgid "Complete sign-in in your browser..."
+msgstr "正在等待瀏覽器登入…"
+
 msgid "Completed"
 msgstr "已完成"
 
+msgid "Configure sign-in"
+msgstr "設定登入"
+
 msgid "Configure the address, model, and API key to test the connection."
 msgstr "請設定位址、模型和API金鑰以測試連線。"
+
+msgid "Configure this sign-in provider before continuing."
+msgstr "請先設定此登入服務。"
 
 msgid "Confirm password"
 msgstr "確認密碼"
@@ -414,6 +429,9 @@ msgstr "建立帳戶"
 
 msgid "Create record from event"
 msgstr "從日程建立記錄"
+
+msgid "Create the initial local administrator account before using provider sign-in."
+msgstr "請先建立本機管理員帳戶，再使用外部帳戶登入。"
 
 msgid "Create user"
 msgstr "建立使用者"
@@ -507,6 +525,9 @@ msgstr "刪除使用者 {username} 及其資料嗎？"
 
 msgid "Description"
 msgstr "說明"
+
+msgid "Desktop client secret (optional)"
+msgstr "桌面用戶端密鑰（選填）"
 
 msgid "Discard"
 msgstr "捨棄"
@@ -1026,6 +1047,9 @@ msgstr "合併這兩段相鄰紀錄？內容也會合併。"
 
 msgid "Merge with previous record"
 msgstr "與前一筆紀錄合併"
+
+msgid "Microsoft tenant ID"
+msgstr "Microsoft 租用戶 ID"
 
 msgid "Minutes from the record start to the break start"
 msgstr "從紀錄開始到休息開始的分鐘數"
@@ -1765,6 +1789,15 @@ msgstr "使用 Google 登入"
 msgid "Sign in with Microsoft"
 msgstr "使用 Microsoft 登入"
 
+msgid "Sign-in cancelled. No application session was opened."
+msgstr "登入已取消，未建立應用程式工作階段。"
+
+msgid "Sign-in provider unavailable. Check the application client ID and Microsoft tenant ID, where applicable."
+msgstr "登入服務無法使用。請檢查應用程式用戶端 ID，以及適用時的 Microsoft 租用戶 ID。"
+
+msgid "Sign-in timed out. Try again and complete authorization in your browser."
+msgstr "登入逾時。請重試，並在瀏覽器中完成授權。"
+
 msgid "Signed in: {username}"
 msgstr "已登入：{username}"
 
@@ -1951,6 +1984,9 @@ msgstr "此 ID 已被使用，請選擇其他 ID。"
 msgid "This account | Newest saved first"
 msgstr "本帳戶 | 按儲存時間倒序"
 
+msgid "This authorization response is invalid. Return to WorkLogger."
+msgstr "此授權回應無效。請返回 WorkLogger。"
+
 msgid "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
 msgstr "這項歷史扣除無法用整分鐘表示，原紀錄未改變。"
 
@@ -1977,6 +2013,9 @@ msgstr "此報表已在其他位置修改。請重新載入歷史清單後再刪
 
 msgid "This report is too large to save. Your current content has been retained."
 msgstr "此報表過大，無法儲存。目前內容已保留。"
+
+msgid "This sign-in configuration is managed outside the application."
+msgstr "此登入設定由應用程式外部管理。"
 
 msgid "This text exceeds the selected model's context limit. Shorten it and try again."
 msgstr "內容超過所選模型的上下文限制。請縮短後重試。"
@@ -2059,6 +2098,9 @@ msgstr "無法檢查更新，請檢查網路連線後重試。"
 msgid "Unable to complete the AI request. Check your model settings and try again."
 msgstr "無法完成 AI 請求，請檢查模型設定後重試。"
 
+msgid "Unable to contact the sign-in provider. Check your network connection and try again."
+msgstr "無法連線至登入服務。請檢查網路連線後重試。"
+
 msgid "Unable to delete the report. Your saved data has been retained."
 msgstr "無法刪除報表，已儲存的資料仍然保留。"
 
@@ -2092,6 +2134,9 @@ msgstr "無法載入工時表紀錄，報表草稿未改變。"
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "無法取得模型，請檢查來源檔案或下載連線。"
 
+msgid "Unable to open the browser. Check your default browser and try again."
+msgstr "無法開啟瀏覽器。請檢查預設瀏覽器設定後重試。"
+
 msgid "Unable to open the data directory."
 msgstr "無法開啟資料目錄。"
 
@@ -2106,6 +2151,9 @@ msgstr "無法恢復計時狀態，請放棄舊計時後開始新記錄。"
 
 msgid "Unable to save settings. Please try again."
 msgstr "無法儲存設定，請重試。"
+
+msgid "Unable to save sign-in configuration. Check access to the local configuration directory."
+msgstr "無法儲存登入設定。請檢查本機設定目錄的存取權限。"
 
 msgid "Unable to save the note. Your changes have been retained."
 msgstr "無法儲存便箋，編輯內容已保留。"
@@ -2190,6 +2238,9 @@ msgstr "顯示名稱必須為單行，且不能包含控制字元。"
 
 msgid "Use a web proxy for this application."
 msgstr "為此應用程式使用網頁代理。"
+
+msgid "Use an application registration supplied by your distributor or administrator. This is not your account password."
+msgstr "使用發行方或管理員提供的應用程式註冊資訊。這裡不是帳戶密碼。"
 
 msgid "Use default avatar"
 msgstr "使用預設頭像"

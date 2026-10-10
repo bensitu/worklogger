@@ -42,8 +42,13 @@ QWidget#account_display_name_editor_widget,
 QWidget#time_entry_actions_widget,
 QWidget#processing_progress_widget,
 QWidget#time_entry_content_heading_widget,
-QStackedWidget#time_entry_content_heading_stack_widget {
+QStackedWidget#time_entry_content_heading_stack_widget,
+QStackedWidget#authentication_feedback_stack_widget {
   background: transparent;
+}
+
+QToolButton#configure_identity_button {
+  padding: 0;
 }
 
 QToolButton#display_name_action_button {

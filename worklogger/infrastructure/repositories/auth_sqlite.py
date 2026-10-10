@@ -104,6 +104,8 @@ class SQLiteAuthRepository:
                 raise ValueError("identity_subject_ambiguous")
             if existing:
                 linked = SQLiteIdentityRepository._identity_from_row(existing[0])
+                if profile.issuer and linked.issuer != profile.issuer:
+                    raise ValueError("identity_issuer_mismatch")
                 row = connection.execute("SELECT * FROM users WHERE id=?", (linked.user_id,)).fetchone()
                 if row is None:
                     raise ValueError("identity_user_missing")
@@ -122,7 +124,7 @@ class SQLiteAuthRepository:
                 (user_id, profile.provider, profile.subject, profile.email, profile.display_name, now, now,
                  profile.issuer or profile.provider))
             linked = LinkedIdentity(int(cursor.lastrowid), user_id, profile.provider, profile.subject,
-                                    profile.email, profile.display_name)
+                                    profile.email, profile.display_name, profile.issuer or profile.provider)
             user = self._user_from_row(connection.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone())
         return user, linked
 
@@ -538,7 +540,7 @@ class SQLiteIdentityRepository:
                     now,
                     now,
                     "direct_oidc",
-                    identity.provider,
+                    identity.issuer or identity.provider,
                 ),
             )
             identity_id = int(cursor.lastrowid)
@@ -549,6 +551,7 @@ class SQLiteIdentityRepository:
             subject=identity.subject,
             email=identity.email,
             display_name=identity.display_name,
+            issuer=identity.issuer or identity.provider,
         )
 
     def remove(self, user_id: int, identity_id: int) -> None:
@@ -567,4 +570,5 @@ class SQLiteIdentityRepository:
             subject=str(row["subject"]),
             email=row["email"],
             display_name=row["display_name"],
+            issuer=str(row["issuer"] or ""),
         )

@@ -21,9 +21,11 @@ class IdentityWorkflowController:
         self,
         view_model: IdentityManagementViewModel,
         dialog_factory: IdentityDialogFactory | None = None,
+        *, configuration=None, job_runner=None,
     ) -> None:
         self._view_model = view_model
-        self._dialog_factory = dialog_factory or IdentityDialog
+        self._dialog_factory = dialog_factory or (lambda model, parent: IdentityDialog(model, parent,
+            configuration=configuration, job_runner=job_runner))
 
     def open(self, parent: QWidget | None = None) -> IdentityDialog:
         dialog = self._dialog_factory(self._view_model, parent)

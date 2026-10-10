@@ -72,6 +72,49 @@ class ModelAccountLayoutChecks(unittest.TestCase):
                 ):
                     self.check_credential_dialog(dialog_type, language, dark)
 
+    def test_browser_sign_in_and_registration_controls_fit_supported_languages(self):
+        from worklogger.presentation.auth import LoginDialog
+        from worklogger.presentation.identity.dialogs import IdentityConfigurationDialog
+        from worklogger.presentation.identity import IdentityDialog
+        from worklogger.infrastructure.identity.config import ProviderRegistration
+        from worklogger.domain.identity.models import IdentityProviderStatus
+        from worklogger.presentation.viewmodels import IdentityManagementViewModel
+        from tests.presentation.test_identity_presentation import FakeIdentityHandlers
+        class Configuration:
+            def load(self, provider):
+                return Result.success((ProviderRegistration("desktop-client-id", "tenant-id" if provider == "microsoft" else ""), True))
+            def managed(self, provider):
+                return False
+        for language in available_languages():
+            set_language(language)
+            for dark in (False, True):
+                login = LoginDialog()
+                login.set_identity_providers((IdentityProviderStatus("google", "Google", True, True),))
+                login.authorization_progress.start(_("Complete sign-in in your browser..."))
+                login.auth_feedback_stack.setCurrentWidget(login.authorization_progress)
+                login.set_busy(True)
+                handlers = FakeIdentityHandlers()
+                identity = IdentityDialog(IdentityManagementViewModel(user_id=1, list_handler=handlers,
+                    providers_handler=handlers, link_handler=handlers, unlink_handler=handlers), configuration=Configuration())
+                identity.refresh()
+                dialogs = (login, identity, IdentityConfigurationDialog(Configuration(), "google"),
+                           IdentityConfigurationDialog(Configuration(), "microsoft"))
+                self.theme(dark)
+                for index, dialog in enumerate(dialogs):
+                    try:
+                        dialog.show()
+                        self.app.processEvents()
+                        controls = ((login.google_login_button, login.microsoft_login_button, login.authorization_progress,
+                                     *login.identity_configuration_buttons.values()) if index == 0 else
+                                    (identity.provider_combo, identity.configure_button, identity.link_button, identity.close_button) if index == 1 else
+                                    (dialog.client_id_input, dialog.tenant_input if index == 3 else dialog.secret_input, dialog.save_button))
+                        for field in controls:
+                            self.assertTrue(dialog.rect().contains(field.rect().translated(field.mapTo(dialog, QPoint()))))
+                        self.capture(dialog, f"{language}-identity-{index}-{'dark' if dark else 'light'}")
+                    finally:
+                        dialog.hide()
+                        dialog.deleteLater()
+
     def test_timer_end_correction_fits_dates_offsets_and_supported_languages(self):
         from datetime import datetime, timedelta
         from zoneinfo import ZoneInfo

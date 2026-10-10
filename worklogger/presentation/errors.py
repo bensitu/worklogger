@@ -15,6 +15,8 @@ def display_error_message(error: AppError | None) -> str:
     """Return a translated message safe for direct UI display."""
 
     if isinstance(error, CancellationError):
+        if error.code == "identity_authorization_cancelled":
+            return display_error_code(error.code)
         return _("Operation cancelled.")
     if error is not None and logging.getLogger().handlers:
         LOGGER.error("app_error_displayed", extra={"error_code": error.code})
@@ -257,8 +259,24 @@ def display_error_code(code: str) -> str:
             return _("Unable to obtain the model. Check the source file or download connection.")
         case "local_model_used_by_another_user":
             return _("This model is in use by another user and cannot be deleted.")
-        case "identity_auth_failed" | "identity_login_failed" | "identity_nonce_mismatch" | "identity_subject_missing" | "identity_token_invalid":
+        case "identity_auth_failed" | "identity_login_failed" | "identity_nonce_mismatch" | "identity_subject_missing" | "identity_token_invalid" | "identity_issuer_mismatch" | "identity_token_exchange_failed":
             return _("Unable to sign in with this provider. Please try again.")
+        case "identity_provider_not_configured" | "identity_configuration_invalid":
+            return _("Sign-in provider unavailable. Check the application client ID and Microsoft tenant ID, where applicable.")
+        case "identity_configuration_managed":
+            return _("This sign-in configuration is managed outside the application.")
+        case "identity_configuration_save_failed":
+            return _("Unable to save sign-in configuration. Check access to the local configuration directory.")
+        case "identity_authorization_cancelled":
+            return _("Sign-in cancelled. No application session was opened.")
+        case "identity_authorization_timeout":
+            return _("Sign-in timed out. Try again and complete authorization in your browser.")
+        case "identity_browser_failed":
+            return _("Unable to open the browser. Check your default browser and try again.")
+        case "identity_local_setup_required":
+            return _("Create the initial local administrator account before using provider sign-in.")
+        case "identity_network_failed":
+            return _("Unable to contact the sign-in provider. Check your network connection and try again.")
         case "identity_already_linked":
             return _("This identity is already linked to an account.")
         case "identity_last_login_method":

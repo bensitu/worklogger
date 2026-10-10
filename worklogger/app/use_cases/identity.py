@@ -19,7 +19,9 @@ from worklogger.domain.auth.models import LinkedIdentity, User
 from worklogger.domain.auth.repositories import AuthCredentialRepository, IdentityRepository
 from worklogger.domain.identity.models import ExternalIdentityProfile, IdentityProviderStatus, normalize_provider
 from worklogger.domain.auth.policies import username_key
-from worklogger.domain.shared.errors import AuthenticationError, InfrastructureError, ValidationError
+from worklogger.domain.auth.policies import remember_token_expires_at, remember_token_storage_value
+from worklogger.app.job_runner import CancellationToken
+from worklogger.domain.shared.errors import AuthenticationError, InfrastructureError, ValidationError, CancellationError
 from worklogger.domain.shared.result import Result
 from worklogger.app.use_cases._errors import storage_boundary
 
@@ -31,7 +33,7 @@ class IdentityProviderClient(Protocol):
     def status(self) -> IdentityProviderStatus:
         ...
 
-    def authenticate(self) -> Result[ExternalIdentityProfile]:
+    def authenticate(self, *, cancellation: CancellationToken | None = None) -> Result[ExternalIdentityProfile]:
         ...
 
 
@@ -44,6 +46,7 @@ class IdentityProviderList:
 class IdentityLoginResult:
     user: User
     linked_identity: LinkedIdentity
+    token: str | None = None
 
 
 class ListLinkedIdentitiesHandler:
@@ -82,11 +85,11 @@ class LinkIdentityHandler:
         self._providers = {provider.provider_id: provider for provider in providers}
 
     @storage_boundary("identity_link_failed")
-    def handle(self, command: LinkIdentityCommand) -> Result[LinkedIdentity]:
+    def handle(self, command: LinkIdentityCommand, *, cancellation=None) -> Result[LinkedIdentity]:
         provider = self._provider(command.provider)
         if not provider.ok or provider.value is None:
             return Result.failure(provider.error or _provider_missing_error())
-        profile = provider.value.authenticate()
+        profile = _authenticate(provider.value, cancellation)
         if not profile.ok or profile.value is None:
             return Result.failure(
                 profile.error
@@ -95,6 +98,8 @@ class LinkIdentityHandler:
                     "identity_auth_failed",
                 )
             )
+        if cancellation and cancellation.is_cancelled():
+            return _cancelled()
         try:
             existing = self._repository.get_by_provider_subject(profile.value.provider, profile.value.subject)
         except Exception:
@@ -107,7 +112,11 @@ class LinkIdentityHandler:
                 )
             )
         if existing is not None:
+            if profile.value.issuer and existing.issuer != profile.value.issuer:
+                return Result.failure(AuthenticationError("identity_issuer_mismatch", "identity_issuer_mismatch"))
             return Result.success(existing)
+        if cancellation and cancellation.is_cancelled():
+            return _cancelled()
         try:
             linked = self._repository.add(
                 LinkedIdentity(
@@ -117,6 +126,7 @@ class LinkIdentityHandler:
                     subject=profile.value.subject,
                     email=profile.value.email,
                     display_name=profile.value.display_name,
+                    issuer=profile.value.issuer,
                 )
             )
         except Exception:
@@ -171,7 +181,7 @@ class LoginWithIdentityHandler:
         self._providers = {provider.provider_id: provider for provider in providers}
 
     @storage_boundary("identity_login_failed")
-    def handle(self, command: LoginWithIdentityCommand) -> Result[IdentityLoginResult]:
+    def handle(self, command: LoginWithIdentityCommand, *, cancellation=None) -> Result[IdentityLoginResult]:
         try:
             provider_key = normalize_provider(command.provider)
         except ValueError as exc:
@@ -179,23 +189,29 @@ class LoginWithIdentityHandler:
         provider = self._providers.get(provider_key)
         if provider is None:
             return Result.failure(ValidationError("identity_provider_missing", "identity_provider_missing"))
-        profile = provider.authenticate()
+        profile = _authenticate(provider, cancellation)
         if not profile.ok or profile.value is None:
             return Result.failure(
                 profile.error or AuthenticationError("identity_login_failed", "identity_login_failed")
             )
+        if cancellation and cancellation.is_cancelled():
+            return _cancelled()
         try:
             linked = self._identities.get_by_provider_subject(profile.value.provider, profile.value.subject)
         except Exception:
             return Result.failure(AuthenticationError("identity_login_failed", "identity_login_failed"))
         if linked is not None:
+            if profile.value.issuer and linked.issuer != profile.value.issuer:
+                return Result.failure(AuthenticationError("identity_issuer_mismatch", "identity_issuer_mismatch"))
             user = self._auth.get_by_id(linked.user_id)
             if user is None:
                 return Result.failure(AuthenticationError("identity_user_missing", "identity_user_missing"))
-            return Result.success(IdentityLoginResult(user=user, linked_identity=linked))
+            return self._session(user, linked, command.remember)
         base = _username_from_profile(profile.value)
         occupied = {username_key(user.username) for user in self._auth.list_users()}
         for _attempt in range(8):
+            if cancellation and cancellation.is_cancelled():
+                return _cancelled()
             username = base if username_key(base) not in occupied else f"{base}_{secrets.token_hex(6)}"
             creator = getattr(self._auth, "create_identity_account", None)
             if creator is None:
@@ -207,8 +223,14 @@ class LoginWithIdentityHandler:
                     raise
                 occupied.add(username_key(username))
                 continue
-            return Result.success(IdentityLoginResult(user=user, linked_identity=linked))
+            return self._session(user, linked, command.remember)
         return Result.failure(InfrastructureError("identity_login_failed", "identity_login_failed"))
+
+    def _session(self, user, linked, remember):
+        token = secrets.token_urlsafe(32) if remember and not user.must_change_password else None
+        self._auth.set_remember_token(user.id, remember_token_storage_value(token) if token else None,
+                                      remember_token_expires_at() if token else None)
+        return Result.success(IdentityLoginResult(user, linked, token))
 
 
 def _username_from_profile(profile: ExternalIdentityProfile) -> str:
@@ -225,3 +247,13 @@ def _username_from_profile(profile: ExternalIdentityProfile) -> str:
 
 def _provider_missing_error() -> ValidationError:
     return ValidationError("identity_provider_missing", "identity_provider_missing")
+
+
+def _authenticate(provider, cancellation):
+    if cancellation and cancellation.is_cancelled():
+        return _cancelled()
+    return provider.authenticate(cancellation=cancellation) if cancellation is not None else provider.authenticate()
+
+
+def _cancelled():
+    return Result.failure(CancellationError("identity_authorization_cancelled", "identity_authorization_cancelled"))

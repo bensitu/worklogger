@@ -25,6 +25,8 @@ from worklogger.presentation.auth.dialogs import (
 )
 from worklogger.presentation.viewmodels import AuthViewModel
 from worklogger.presentation.job_runner import QtJobRunner
+from worklogger.presentation.identity_authorization import IdentityAuthorizationRequest
+from worklogger.presentation.identity.dialogs import IdentityConfigurationDialog
 
 ChangePasswordDialogFactory = Callable[[QWidget | None], ChangePasswordDialog]
 LoginDialogFactory = Callable[[QWidget | None], LoginDialog]
@@ -152,6 +154,43 @@ class AuthController:
         def submit(draft: LoginDraft) -> None:
             self._submit(dialog, lambda: self._view_model.login(
                 username=draft.username, password=draft.password, remember=draft.remember), complete)
+
+        if isinstance(dialog, LoginDialog):
+            dialog.set_identity_providers(self._view_model.identity_providers())
+            request = IdentityAuthorizationRequest(dialog, job_runner=self._job_runner)
+            dialog._authorization_request = request
+            def started():
+                dialog._auth_request_pending = True
+                dialog.set_busy(True)
+                dialog.authorization_progress.start(_("Complete sign-in in your browser..."))
+                dialog.auth_feedback_stack.setCurrentWidget(dialog.authorization_progress)
+            def finished():
+                dialog._auth_request_pending = False
+                dialog.set_busy(False)
+                dialog.authorization_progress.finish()
+                dialog.auth_feedback_stack.setCurrentWidget(dialog.status_label)
+            request.started.connect(started)
+            request.finished.connect(finished)
+            dialog.authorization_progress.cancel_requested.connect(request.cancel)
+            def identity_complete(result):
+                pending_close = getattr(dialog, "_authorization_close_result", None)
+                if pending_close is not None:
+                    dialog.done(pending_close)
+                    return
+                complete(result)
+            def sign_in(provider):
+                if getattr(dialog, "_auth_request_pending", False):
+                    return
+                remember = dialog.remember_check.isChecked()
+                request.start(lambda token: self._view_model.login_with_identity(provider, remember=remember,
+                    cancellation=token), on_complete=identity_complete)
+            def configure(provider):
+                store = self._view_model.identity_configuration
+                if store is not None:
+                    IdentityConfigurationDialog(store, provider, dialog).exec()
+                    dialog.set_identity_providers(self._view_model.identity_providers())
+            dialog.identity_login_requested.connect(sign_in)
+            dialog.identity_configuration_requested.connect(configure)
 
         def switch_to_register() -> None:
             outcome.next_mode = "register"

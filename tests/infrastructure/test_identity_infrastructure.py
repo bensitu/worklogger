@@ -19,7 +19,6 @@ from worklogger.infrastructure.identity.oidc import (
     profile_from_oidc_token,
 )
 from worklogger.infrastructure.identity.pkce import build_code_challenge
-from worklogger.infrastructure.identity.providers import DisabledIdentityProvider
 
 
 class IdentityInfrastructureTests(unittest.TestCase):
@@ -39,7 +38,8 @@ class IdentityInfrastructureTests(unittest.TestCase):
 
     def test_oidc_rejects_invalid_signatures_claims_and_nonce(self):
         for overrides in ({"iss": "https://other.example.com"}, {"aud": "other-client"},
-                          {"exp": int(time.time()) - 1}, {"nonce": "other"}, {"sub": ""}):
+                          {"exp": int(time.time()) - 1}, {"nonce": "other"}, {"sub": ""},
+                          {"aud": ["client-id", "other-client"]}, {"azp": "other-client"}):
             result = profile_from_oidc_token("google", self.token(**overrides), issuer="https://accounts.google.com",
                                             audience="client-id", jwks=self.jwks, expected_nonce="nonce")
             self.assertFalse(result.ok)
@@ -64,13 +64,6 @@ class IdentityInfrastructureTests(unittest.TestCase):
             build_code_challenge(verifier),
             "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
         )
-
-    def test_disabled_provider_reports_no_token_storage_auth_failure(self) -> None:
-        provider = DisabledIdentityProvider("google", "Google")
-        result = provider.authenticate()
-
-        self.assertFalse(result.ok)
-        self.assertEqual(result.error.code if result.error else "", "identity_provider_not_configured")
 
     def test_oidc_url_and_profiles_do_not_expose_tokens(self) -> None:
         builder = OidcAuthorizationBuilder(google_oidc_config("client-id"))

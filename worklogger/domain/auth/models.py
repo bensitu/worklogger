@@ -32,6 +32,7 @@ class LinkedIdentity:
     subject: str
     email: str | None = None
     display_name: str | None = None
+    issuer: str = ""
 
 
 @dataclass(frozen=True)

@@ -12,11 +12,8 @@ from urllib.error import HTTPError
 from worklogger.domain.identity.models import ExternalIdentityProfile, IdentityProviderStatus
 from worklogger.domain.shared.errors import InfrastructureError, AuthenticationError, CancellationError
 from worklogger.domain.shared.result import Result
-from worklogger.infrastructure.identity.config import (
-    normalize_provider,
-    provider_configured,
-    IdentityConfigurationStore,
-)
+from worklogger.infrastructure.identity.config import IdentityConfigurationStore
+from worklogger.domain.identity.models import normalize_provider
 from worklogger.infrastructure.http import https_opener
 from worklogger.infrastructure.identity.loopback import LoopbackAuthorization
 from worklogger.infrastructure.identity.oidc import OidcAuthorizationBuilder, google_oidc_config, microsoft_oidc_config, profile_from_oidc_token
@@ -41,7 +38,7 @@ class BrowserIdentityProvider:
         message = "" if available else ("identity_provider_not_configured" if loaded.ok else "identity_configuration_invalid")
         return IdentityProviderStatus(self.provider_id, self.display_name, available, configured, message)
 
-    def authenticate(self, *, cancellation=None):
+    def authenticate(self, *, cancellation=None) -> Result[ExternalIdentityProfile]:
         if not self.status().available:
             return Result.failure(InfrastructureError("identity_provider_not_configured", "identity_provider_not_configured"))
         try:
@@ -109,27 +106,3 @@ def _cancelled():
     return Result.failure(CancellationError("identity_authorization_cancelled", "identity_authorization_cancelled"))
 
 
-class DisabledIdentityProvider:
-    def __init__(
-        self,
-        provider_id: str,
-        display_name: str,
-        *,
-        message: str = "identity_provider_not_configured",
-    ) -> None:
-        self.provider_id = normalize_provider(provider_id)
-        self.display_name = display_name
-        self._message = message
-
-    def status(self) -> IdentityProviderStatus:
-        configured = provider_configured(self.provider_id)
-        return IdentityProviderStatus(
-            provider=self.provider_id,
-            display_name=self.display_name,
-            available=False,
-            configured=configured,
-            message=self._message,
-        )
-
-    def authenticate(self) -> Result[ExternalIdentityProfile]:
-        return Result.failure(InfrastructureError(self._message, self._message))

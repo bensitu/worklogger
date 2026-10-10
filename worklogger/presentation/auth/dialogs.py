@@ -18,6 +18,8 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QVBoxLayout,
     QWidget,
+    QToolButton,
+    QStackedWidget,
 )
 
 from worklogger.__about__ import APP_NAME
@@ -28,6 +30,7 @@ from worklogger.presentation.widgets.credential_actions import CredentialActions
 from worklogger.presentation.widgets import SwitchButton
 from worklogger.presentation.widgets.icons import ui_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
+from worklogger.presentation.widgets.processing_progress import ProcessingProgress
 
 
 @dataclass(frozen=True)
@@ -61,6 +64,11 @@ class ChangePasswordDraft:
 
 class AuthDialog(QDialog):
     def done(self, result):
+        request = getattr(self, "_authorization_request", None)
+        if request is not None and request.is_running:
+            self._authorization_close_result = result
+            request.cancel()
+            return
         if not getattr(self, "_auth_request_pending", False):
             super().done(result)
 
@@ -69,15 +77,19 @@ class LoginDialog(AuthDialog):
     login_submitted = Signal(object)
     register_requested = Signal()
     reset_password_requested = Signal()
+    identity_login_requested = Signal(str)
+    identity_configuration_requested = Signal(str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.hero_frame: QFrame | None = None
+        self._identity_availability = {}
+        self._busy = False
         self.form_frame: QFrame | None = None
         self.setObjectName("login_dialog")
         self.setWindowTitle(APP_NAME)
         apply_window_icon(self)
-        self.setFixedSize(880, 580)
+        self.setFixedSize(880, 640)
         configure_application_style()
         install_bundled_fonts()
         self._apply_default_theme()
@@ -94,11 +106,23 @@ class LoginDialog(AuthDialog):
         self.status_label.setText(message)
 
     def set_busy(self, busy: bool) -> None:
+        self._busy = busy
         self.login_button.setEnabled(not busy)
+        self.username_input.setEnabled(not busy)
+        self.password_input.setEnabled(not busy)
+        self.remember_check.setEnabled(not busy)
         self.register_button.setEnabled(not busy)
         self.reset_password_button.setEnabled(not busy)
-        self.google_login_button.setEnabled(False)
-        self.microsoft_login_button.setEnabled(False)
+        for key, button in (("google", self.google_login_button), ("microsoft", self.microsoft_login_button)):
+            button.setEnabled(not busy and self._identity_availability.get(key, False))
+        for button in self.identity_configuration_buttons.values():
+            button.setEnabled(not busy)
+
+    def set_identity_providers(self, providers):
+        self._identity_availability = {provider.provider: provider.available for provider in providers}
+        for key, button in (("google", self.google_login_button), ("microsoft", self.microsoft_login_button)):
+            button.setToolTip("" if self._identity_availability.get(key) else _("Configure this sign-in provider before continuing."))
+        self.set_busy(self._busy)
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
@@ -204,7 +228,13 @@ class LoginDialog(AuthDialog):
         self.status_label = StatusLabel()
         self.status_label.setObjectName("auth_status_label")
         self.status_label.setWordWrap(True)
-        form_root.addWidget(self.status_label)
+        self.auth_feedback_stack = QStackedWidget()
+        self.auth_feedback_stack.setObjectName("authentication_feedback_stack_widget")
+        self.auth_feedback_stack.addWidget(self.status_label)
+        self.authorization_progress = ProcessingProgress()
+        self.auth_feedback_stack.addWidget(self.authorization_progress)
+        self.auth_feedback_stack.setCurrentWidget(self.status_label)
+        form_root.addWidget(self.auth_feedback_stack)
 
         self.login_button = QPushButton(_("Login"))
         self.login_button.setObjectName("login_button")
@@ -252,7 +282,6 @@ class LoginDialog(AuthDialog):
         if not google_icon.isNull():
             self.google_login_button.setIcon(google_icon)
         self.google_login_button.setEnabled(False)
-        form_root.addWidget(self.google_login_button)
 
         self.microsoft_login_button = QPushButton(_("Sign in with Microsoft"))
         self.microsoft_login_button.setObjectName("microsoft_login_button")
@@ -260,7 +289,22 @@ class LoginDialog(AuthDialog):
         if not microsoft_icon.isNull():
             self.microsoft_login_button.setIcon(microsoft_icon)
         self.microsoft_login_button.setEnabled(False)
-        form_root.addWidget(self.microsoft_login_button)
+        self.identity_configuration_buttons = {}
+        for key, button in (("google", self.google_login_button), ("microsoft", self.microsoft_login_button)):
+            button.setAutoDefault(False)
+            button.clicked.connect(lambda _checked=False, key=key: self.identity_login_requested.emit(key))
+            row = QHBoxLayout()
+            row.addWidget(button, 1)
+            configure = QToolButton()
+            configure.setObjectName("configure_identity_button")
+            configure.setFixedSize(36, 36)
+            configure.setToolTip(_("Configure sign-in") + " - " + button.text())
+            configure.setAccessibleName(configure.toolTip())
+            configure.setIcon(ui_icon("settings"))
+            configure.clicked.connect(lambda _checked=False, key=key: self.identity_configuration_requested.emit(key))
+            row.addWidget(configure)
+            self.identity_configuration_buttons[key] = configure
+            form_root.addLayout(row)
         form_root.addStretch(1)
 
         self._set_login_control_heights()

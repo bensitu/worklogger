@@ -56,7 +56,8 @@ from worklogger.infrastructure.export import (
     WorkLogIcsExporter,
 )
 from worklogger.infrastructure.i18n import get_language
-from worklogger.infrastructure.identity import DisabledIdentityProvider
+from worklogger.composition.identity import identity_providers
+from worklogger.infrastructure.identity.config import IdentityConfigurationStore
 from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
 from worklogger.presentation.auth.controller import RememberSessionStore
 from worklogger.presentation.identity import IdentityWorkflowController
@@ -113,7 +114,8 @@ def _build_settings_workflow(
         if features.enable_update_check
         else None,
         job_runner=job_runner,
-        identity_workflow=_build_identity_workflow(user, repositories, auth_repository),
+        identity_workflow=_build_identity_workflow(user, repositories, auth_repository, job_runner=job_runner,
+            opener=handlers.network_transport.opener(public_only=True, allow_redirects=False) if handlers.network_transport else None),
         local_models_workflow=_build_local_models_workflow(
             user=user,
             database_path=database_path,
@@ -193,26 +195,21 @@ def _build_identity_workflow(
     user: User,
     repositories: RuntimeRepositories,
     auth_repository: RuntimeAuthRepository | None,
+    *, job_runner=None, opener=None,
 ) -> IdentityWorkflowController:
-    identity_providers = _identity_providers()
+    configuration = IdentityConfigurationStore()
+    providers = identity_providers(configuration=configuration, opener=opener)
     return IdentityWorkflowController(
         IdentityManagementViewModel(
             user_id=user.id,
             list_handler=ListLinkedIdentitiesHandler(repositories.identities),
-            providers_handler=GetIdentityProvidersHandler(identity_providers),
+            providers_handler=GetIdentityProvidersHandler(providers),
             link_handler=LinkIdentityHandler(
                 repository=repositories.identities,
-                providers=identity_providers,
+                providers=providers,
             ),
             unlink_handler=UnlinkIdentityHandler(
                 repositories.identities, auth_repository
             ),
-        )
-    )
-
-
-def _identity_providers() -> tuple[DisabledIdentityProvider, ...]:
-    return (
-        DisabledIdentityProvider("google", "Google"),
-        DisabledIdentityProvider("microsoft", "Microsoft"),
+        ), configuration=configuration, job_runner=job_runner,
     )

@@ -13,10 +13,10 @@ from worklogger.infrastructure.identity.oidc import (
     profile_from_oidc_token,
 )
 from worklogger.infrastructure.identity.pkce import build_code_challenge, generate_verifier
-from worklogger.infrastructure.identity.providers import DisabledIdentityProvider
+from worklogger.infrastructure.identity.providers import BrowserIdentityProvider
 
 __all__ = [
-    "DisabledIdentityProvider",
+    "BrowserIdentityProvider",
     "OidcAuthorizationBuilder",
     "build_code_challenge",
     "generate_verifier",

@@ -29,6 +29,9 @@ from worklogger.app.use_cases.calendar import (
     GetHolidaysForRangeHandler,
 )
 from worklogger.app.use_cases.notes import GetDailyNoteHandler
+from worklogger.app.use_cases.identity import LoginWithIdentityHandler, GetIdentityProvidersHandler
+from worklogger.composition.identity import identity_providers
+from worklogger.infrastructure.identity.config import IdentityConfigurationStore
 from worklogger.composition.context import (
     RuntimeAuthRepository,
     RuntimeHandlers,
@@ -70,6 +73,7 @@ from worklogger.infrastructure.repositories import (
     SQLiteAuthRepository,
     SQLiteLoginFailureRepository,
     SQLiteSettingsRepository,
+    SQLiteIdentityRepository,
 )
 from worklogger.infrastructure.security import (
     FileRememberTokenSessionStore,
@@ -296,6 +300,8 @@ def _auth_view_model(
     auth_repository: AuthCredentialRepository,
     connection_factory: SQLiteConnectionFactory,
 ) -> AuthViewModel:
+    configuration = IdentityConfigurationStore()
+    providers = identity_providers(configuration=configuration)
     return AuthViewModel(
         state_handler=GetAuthBootstrapStateHandler(auth_repository),
         login_handler=LoginHandler(
@@ -306,6 +312,10 @@ def _auth_view_model(
         change_password_handler=ChangePasswordHandler(auth_repository),
         remember_token_handler=LoginWithRememberTokenHandler(auth_repository),
         reset_password_handler=ResetPasswordHandler(auth_repository, SQLiteLoginFailureRepository(connection_factory)),
+        identity_login_handler=LoginWithIdentityHandler(identities=SQLiteIdentityRepository(connection_factory),
+            auth=auth_repository, providers=providers),
+        identity_providers_handler=GetIdentityProvidersHandler(providers),
+        identity_configuration=configuration,
     )
 
 

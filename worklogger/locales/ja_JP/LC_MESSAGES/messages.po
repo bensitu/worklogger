@@ -154,6 +154,9 @@ msgstr "追加"
 msgid "Application behavior"
 msgstr "アプリケーションの動作"
 
+msgid "Application client ID"
+msgstr "アプリケーションのクライアント ID"
+
 msgid "Apply"
 msgstr "適用"
 
@@ -201,6 +204,9 @@ msgstr "認証情報（任意）"
 
 msgid "Author"
 msgstr "作者"
+
+msgid "Authorization response received. Return to WorkLogger to continue."
+msgstr "認証応答を受信しました。WorkLogger に戻って続行してください。"
 
 msgid "Auto Record"
 msgstr "自動記録"
@@ -367,11 +373,20 @@ msgstr "代休"
 msgid "Compensatory leave"
 msgstr "代休"
 
+msgid "Complete sign-in in your browser..."
+msgstr "ブラウザーでのサインインを待っています…"
+
 msgid "Completed"
 msgstr "完了"
 
+msgid "Configure sign-in"
+msgstr "サインインの設定"
+
 msgid "Configure the address, model, and API key to test the connection."
 msgstr "接続をテストするには、アドレス、モデル、APIキーを設定してください。"
+
+msgid "Configure this sign-in provider before continuing."
+msgstr "先にこのサインインプロバイダーを設定してください。"
 
 msgid "Confirm password"
 msgstr "パスワードを確認"
@@ -414,6 +429,9 @@ msgstr "アカウントを作成"
 
 msgid "Create record from event"
 msgstr "予定から記録を作成"
+
+msgid "Create the initial local administrator account before using provider sign-in."
+msgstr "外部アカウントでサインインする前に、最初のローカル管理者アカウントを作成してください。"
 
 msgid "Create user"
 msgstr "ユーザーを作成"
@@ -507,6 +525,9 @@ msgstr "ユーザー {username} とそのデータを削除しますか？"
 
 msgid "Description"
 msgstr "説明"
+
+msgid "Desktop client secret (optional)"
+msgstr "デスクトップクライアントのシークレット（任意）"
 
 msgid "Discard"
 msgstr "破棄"
@@ -1026,6 +1047,9 @@ msgstr "隣接する記録を結合しますか？内容もまとめられます
 
 msgid "Merge with previous record"
 msgstr "前の記録と結合"
+
+msgid "Microsoft tenant ID"
+msgstr "Microsoft テナント ID"
 
 msgid "Minutes from the record start to the break start"
 msgstr "記録開始から休憩開始までの分数"
@@ -1765,6 +1789,15 @@ msgstr "Googleでログイン"
 msgid "Sign in with Microsoft"
 msgstr "Microsoftでログイン"
 
+msgid "Sign-in cancelled. No application session was opened."
+msgstr "サインインをキャンセルしました。アプリケーションのセッションは開始されていません。"
+
+msgid "Sign-in provider unavailable. Check the application client ID and Microsoft tenant ID, where applicable."
+msgstr "サインインプロバイダーを利用できません。クライアント ID と、該当する場合は Microsoft テナント ID を確認してください。"
+
+msgid "Sign-in timed out. Try again and complete authorization in your browser."
+msgstr "サインインがタイムアウトしました。再試行してブラウザーで認証を完了してください。"
+
 msgid "Signed in: {username}"
 msgstr "ログイン中：{username}"
 
@@ -1951,6 +1984,9 @@ msgstr "このIDはすでに使用されています。別のIDを選択して�
 msgid "This account | Newest saved first"
 msgstr "このアカウント | 新しい保存順"
 
+msgid "This authorization response is invalid. Return to WorkLogger."
+msgstr "この認証応答は無効です。WorkLogger に戻ってください。"
+
 msgid "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
 msgstr "この過去の控除は分単位で表せません。元の記録は変更されていません。"
 
@@ -1977,6 +2013,9 @@ msgstr "このレポートは別の場所で変更されました。履歴を再
 
 msgid "This report is too large to save. Your current content has been retained."
 msgstr "報告書が大きすぎて保存できません。現在の内容は保持されています。"
+
+msgid "This sign-in configuration is managed outside the application."
+msgstr "このサインイン設定はアプリケーションの外部で管理されています。"
 
 msgid "This text exceeds the selected model's context limit. Shorten it and try again."
 msgstr "内容が選択したモデルのコンテキスト上限を超えています。短くして再試行してください。"
@@ -2059,6 +2098,9 @@ msgstr "更新を確認できませんでした。ネットワーク接続を確
 msgid "Unable to complete the AI request. Check your model settings and try again."
 msgstr "AIリクエストを完了できませんでした。モデル設定を確認して再試行してください。"
 
+msgid "Unable to contact the sign-in provider. Check your network connection and try again."
+msgstr "サインインプロバイダーに接続できません。ネットワーク接続を確認して再試行してください。"
+
 msgid "Unable to delete the report. Your saved data has been retained."
 msgstr "レポートを削除できません。保存済みデータは保持されています。"
 
@@ -2092,6 +2134,9 @@ msgstr "勤務表の記録を読み込めません。レポート下書きは変
 msgid "Unable to obtain the model. Check the source file or download connection."
 msgstr "モデルを取得できませんでした。元のファイルまたはダウンロード接続を確認してください。"
 
+msgid "Unable to open the browser. Check your default browser and try again."
+msgstr "ブラウザーを開けません。既定のブラウザーを確認して再試行してください。"
+
 msgid "Unable to open the data directory."
 msgstr "データフォルダーを開けません。"
 
@@ -2106,6 +2151,9 @@ msgstr "タイマーを復元できません。古いタイマーを破棄して
 
 msgid "Unable to save settings. Please try again."
 msgstr "設定を保存できませんでした。もう一度お試しください。"
+
+msgid "Unable to save sign-in configuration. Check access to the local configuration directory."
+msgstr "サインイン設定を保存できません。ローカル設定ディレクトリのアクセス権を確認してください。"
 
 msgid "Unable to save the note. Your changes have been retained."
 msgstr "メモを保存できません。編集内容は保持されています。"
@@ -2190,6 +2238,9 @@ msgstr "表示名は制御文字を含まない1行の文字列にしてくだ�
 
 msgid "Use a web proxy for this application."
 msgstr "このアプリでWebプロキシを使用します。"
+
+msgid "Use an application registration supplied by your distributor or administrator. This is not your account password."
+msgstr "配布元または管理者が提供したアプリケーション登録情報を使用します。アカウントのパスワードではありません。"
 
 msgid "Use default avatar"
 msgstr "既定のアバターを使用"
