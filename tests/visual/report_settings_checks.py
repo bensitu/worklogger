@@ -46,8 +46,11 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                     settings.category_nav.set_category("general")
                     self.app.processEvents()
                     general = settings.category_stack.currentWidget()
-                    headings = [label.text() for label in general.findChildren(QLabel, "settings_section_title_label")]
-                    self.assertEqual(headings, [_("Work and recording"), _("Calendar display"), _("Application behavior")])
+                    headings = general.findChildren(QLabel, "settings_section_title_label")
+                    self.assertEqual([label.text() for label in headings], [_("Work and recording"), _("Calendar display"), _("Application behavior")])
+                    groups = [label.parentWidget() for label in headings]
+                    self.assertEqual(len(set(groups)), len(headings))
+                    self.assertTrue(all(group.objectName() == "settings_content_frame" for group in groups))
                     self.capture(settings, f"{language}-general-groups-{dark}")
                     settings.set_data_directory(Path("D:/Application Data/WorkLogger"))
                     settings.category_nav.set_category("data")

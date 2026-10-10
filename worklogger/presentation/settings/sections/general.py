@@ -31,8 +31,6 @@ from worklogger.presentation.settings.sections.common import (
     _SettingsScrollPage,
     _switch_row,
     _section_title,
-    _separator,
-    _settings_form,
 )
 from worklogger.presentation.widgets import SwitchButton
 from worklogger.presentation.widgets.icons import set_button_icon
@@ -59,7 +57,7 @@ class GeneralSection(_SettingsScrollPage):
     def __init__(self, actions: SectionActions):
         super().__init__()
         page = self
-        card = _card_with_form(_("General"))
+        card = _card_with_form(_("Work and recording"))
         card.content_layout.insertWidget(0, _section_title(_("Work and recording")))
         form = card.form_layout
 
@@ -109,10 +107,10 @@ class GeneralSection(_SettingsScrollPage):
         self.manage_projects_button.clicked.connect(actions.manage_projects_requested)
         form.addRow(_("Projects"), self.manage_projects_button)
 
-        card.content_layout.addWidget(_separator())
-        card.content_layout.addWidget(_section_title(_("Calendar display")))
-        form = _settings_form()
-        card.content_layout.addLayout(form)
+        page.layout().addWidget(card)
+        card = _card_with_form(_("Calendar display"))
+        card.content_layout.insertWidget(0, _section_title(_("Calendar display")))
+        form = card.form_layout
 
         self.holidays_switch = SwitchButton()
         self.holidays_switch.toggled.connect(
@@ -157,13 +155,13 @@ class GeneralSection(_SettingsScrollPage):
             lambda enabled: actions.set_bool(WEEK_START_MONDAY_SETTING_KEY, enabled)
         )
         form.addRow(_("Start week on Monday"), _switch_row(self.week_start_switch))
+        page.layout().addWidget(card)
 
         self.residency_switch: SwitchButton | None = None
         if actions.residency_key:
-            card.content_layout.addWidget(_separator())
-            card.content_layout.addWidget(_section_title(_("Application behavior")))
-            form = _settings_form()
-            card.content_layout.addLayout(form)
+            card = _card_with_form(_("Application behavior"))
+            card.content_layout.insertWidget(0, _section_title(_("Application behavior")))
+            form = card.form_layout
             self.residency_switch = SwitchButton()
             self.residency_switch.toggled.connect(
                 lambda enabled: actions.set_bool(str(actions.residency_key), enabled)
@@ -174,5 +172,5 @@ class GeneralSection(_SettingsScrollPage):
                 else _("Enable menu bar")
             )
             form.addRow(label, _switch_row(self.residency_switch))
-        page.layout().addWidget(card)
+            page.layout().addWidget(card)
         page.layout().addStretch(1)

@@ -303,7 +303,7 @@ and saved-daily-report aggregation. Multiple periods retain individual rows.
 | Category | Available controls and behavior |
 | --- | --- |
 | Appearance | Native-language choices, preset/custom accent, light/dark mode; palette appears only for Custom |
-| General | Work and recording, calendar display, and application behavior groups; existing preferences and management entries remain in this category |
+| General | Separate rounded groups for work and recording, calendar display, and application behavior; existing preferences and management entries remain in this category |
 | AI | Local model selection and native runtime, explicit external-model opt-in with HTTPS endpoint/model/key, sample connection test, and context privacy |
 | Data | Work-log CSV and iCalendar export, CSV and calendar import, database backup/restore; clearing calendar events is disabled |
 | Network | Enable and configure an HTTP CONNECT proxy; subsequent update, download, and external AI requests use it |
