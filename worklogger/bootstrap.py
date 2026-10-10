@@ -204,6 +204,7 @@ def build_authenticated_desktop_runtime(
             if auth_controller_factory is not None
             else AuthController(
                 auth_view_model,
+                job_runner=job_runner,
                 remember_session_store=remember_session_store,
             )
         )

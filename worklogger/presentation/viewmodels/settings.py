@@ -117,14 +117,17 @@ class SettingsViewModel:
         self._default_language = normalize_language(default_language)
         self._save_login_language = save_login_language
         self._external_key_store = external_key_store
+        self._cached_password = None
+        self._cached_api_key = None
+        self._credentials_loaded = False
 
-    def load(self) -> Result[SettingsState]:
+    def load(self, *, refresh_credentials=True) -> Result[SettingsState]:
         try:
-            return self._load()
+            return self._load(refresh_credentials=refresh_credentials)
         except (ValueError, TypeError):
             return Result.failure(ValidationError("invalid_numeric_setting", "invalid_numeric_setting"))
 
-    def _load(self) -> Result[SettingsState]:
+    def _load(self, *, refresh_credentials=True) -> Result[SettingsState]:
         values: dict[str, str | None] = {}
         batch = None
         if getattr(type(self._get_handler), "get_all", None) is not None:
@@ -143,8 +146,11 @@ class SettingsViewModel:
                     result.error or ValidationError("settings_load_failed", "settings_load_failed")
                 )
             values[key] = result.value
-        password = self._proxy_password_settings.load() if self._proxy_password_settings is not None else None
-        api_key = self._external_key_store.get_secret("ai_api_key") if self._external_key_store is not None else None
+        if refresh_credentials or not self._credentials_loaded:
+            self._cached_password = self._proxy_password_settings.load() if self._proxy_password_settings is not None else None
+            self._cached_api_key = self._external_key_store.get_secret("ai_api_key") if self._external_key_store is not None else None
+            self._credentials_loaded = True
+        password, api_key = self._cached_password, self._cached_api_key
         return Result.success(
             SettingsState(
                 theme=_theme(values[THEME_SETTING_KEY]),
@@ -236,7 +242,10 @@ class SettingsViewModel:
         if self._external_key_store is None or not isinstance(value, str) or len(value) > 8192:
             return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
         try:
-            return self._external_key_store.set_secret("ai_api_key", value.strip())
+            result = self._external_key_store.set_secret("ai_api_key", value.strip())
+            if result.ok:
+                self._cached_api_key = Result.success(value.strip())
+            return result
         except Exception:
             return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
 
@@ -278,7 +287,10 @@ class SettingsViewModel:
         if key == NETWORK_PROXY_PASSWORD_SETTING_KEY:
             if self._proxy_password_settings is None:
                 return Result.failure(ValidationError("credential_storage_unavailable", "credential_storage_unavailable"))
-            return self._proxy_password_settings.save(str(value or ""))
+            result = self._proxy_password_settings.save(str(value or ""))
+            if result.ok:
+                self._cached_password = Result.success(str(value or ""))
+            return result
         cleaned = str(value or "").strip()
         if key == HOLIDAY_REGION_SETTING_KEY:
             try:

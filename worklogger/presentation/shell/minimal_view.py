@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 from worklogger.domain.shared.errors import AppError
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
+from worklogger.presentation.date_labels import day_label
 from worklogger.presentation.settings import SettingsWorkflow
 from worklogger.presentation.shell.residency import QtResidencyController
 from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
@@ -102,7 +103,7 @@ class MinimalView(QWidget):
 
     def refresh(self) -> bool:
         self._last_error = None
-        self.date_label.setText(self._selected_day.isoformat())
+        self.date_label.setText(day_label(self._selected_day))
         self.account_label.setText(self._account_text())
         result = self.entry_panel.load_day(self._selected_day)
         self._entry_dirty = self.entry_panel.is_dirty
@@ -223,8 +224,19 @@ class MinimalView(QWidget):
         ):
             self.hide()
 
+    def hideEvent(self, event):
+        self._date_timer.stop()
+        super().hideEvent(event)
+
+    def showEvent(self, event):
+        if self._config.today is None:
+            self._date_timer.start()
+            self._update_today()
+        super().showEvent(event)
+
     def _confirm_discard_changes_if_needed(self) -> bool:
         if bool(getattr(self._notes_workflow, "is_open", False)):
+            self._set_status(_("Close the note editor before continuing."))
             return False
         if isinstance(self.entry_panel, TimeEntryPanel) and self.entry_panel.is_busy:
             self._set_status(_("Please wait for the current operation."))

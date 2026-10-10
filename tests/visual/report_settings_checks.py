@@ -13,6 +13,7 @@ from tests.presentation.test_shell_pages import ReportsViewModel
 from worklogger.infrastructure.i18n import get_language, available_languages, set_language
 from worklogger.presentation.settings import SettingsPage
 from worklogger.presentation.shell.reports_page import ReportsPage
+from worklogger.presentation.job_runner import ImmediateJobRunner
 from worklogger.presentation.theme import configure_application_style, install_bundled_fonts, ThemeEngine
 from worklogger.domain.shared.result import Result
 from worklogger.presentation.viewmodels.reports import ReportEditorState
@@ -40,7 +41,7 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                 for dark in (False, True):
                     self.app.setPalette(engine.qt_palette(dark=dark))
                     self.app.setStyleSheet(engine.application_stylesheet(dark=dark))
-                    page = ReportsPage(Model(), date(2026, 5, 20))
+                    page = ReportsPage(Model(), date(2026, 5, 20), job_runner=ImmediateJobRunner())
                     settings = SettingsPage(_view_model(MemorySettingsRepository()))
                     try:
                         page.refresh()

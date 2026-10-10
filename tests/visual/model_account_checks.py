@@ -27,6 +27,7 @@ from worklogger.presentation.auth import (
     ResetPasswordDialog,
 )
 from worklogger.presentation.local_models import LocalModelsDialog
+from worklogger.presentation.job_runner import ImmediateJobRunner
 from worklogger.presentation.theme import (
     configure_application_style,
     install_bundled_fonts,
@@ -186,7 +187,7 @@ class ModelAccountLayoutChecks(unittest.TestCase):
             set_language(language)
             for dark in (False, True):
                 self.theme(dark)
-                dialog = LocalModelsDialog(model)
+                dialog = LocalModelsDialog(model, job_runner=ImmediateJobRunner())
                 try:
                     dialog.refresh()
                     dialog.show()

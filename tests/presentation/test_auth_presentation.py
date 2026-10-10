@@ -15,6 +15,7 @@ from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QWidget, QFileDialog, QMessageBox
 
 from worklogger.__about__ import APP_NAME
+from worklogger.presentation.job_runner import ImmediateJobRunner
 from worklogger.app.use_cases.auth import (
     ChangePasswordHandler,
     GetAuthBootstrapStateHandler,
@@ -453,6 +454,7 @@ class AuthPresentationTests(unittest.TestCase):
 
         controller = AuthController(
             view_model,
+            job_runner=ImmediateJobRunner(),
             register_dialog_factory=ScriptedRegisterDialog,
         )
 
@@ -486,6 +488,7 @@ class AuthPresentationTests(unittest.TestCase):
         session_store = MemoryRememberSessionStore()
         controller = AuthController(
             view_model,
+            job_runner=ImmediateJobRunner(),
             login_dialog_factory=ScriptedLoginDialog,
             remember_session_store=session_store,
         )
@@ -523,6 +526,7 @@ class AuthPresentationTests(unittest.TestCase):
 
         controller = AuthController(
             view_model,
+            job_runner=ImmediateJobRunner(),
             login_dialog_factory=FailingLoginDialog,
             remember_session_store=MemoryRememberSessionStore(logged_in.value.token),
         )
@@ -552,6 +556,7 @@ class AuthPresentationTests(unittest.TestCase):
 
         controller = AuthController(
             view_model,
+            job_runner=ImmediateJobRunner(),
             login_dialog_factory=ScriptedLoginDialog,
             remember_session_store=session_store,
         )
@@ -598,6 +603,7 @@ class AuthPresentationTests(unittest.TestCase):
 
         controller = AuthController(
             view_model,
+            job_runner=ImmediateJobRunner(),
             login_dialog_factory=ScriptedLoginDialog,
             reset_password_dialog_factory=ScriptedResetDialog,
         )
@@ -639,6 +645,7 @@ class AuthPresentationTests(unittest.TestCase):
 
         controller = AuthController(
             view_model,
+            job_runner=ImmediateJobRunner(),
             change_password_dialog_factory=ScriptedChangeDialog,
             login_dialog_factory=ScriptedLoginDialog,
         )

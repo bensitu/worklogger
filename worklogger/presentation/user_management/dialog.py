@@ -22,7 +22,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from worklogger.domain.shared.errors import AppError
+from worklogger.domain.shared.errors import AppError, InfrastructureError
+from worklogger.domain.shared.result import Result
+from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import (
@@ -42,12 +44,16 @@ class UserManagementDialog(QDialog):
         self,
         view_model: UserManagementViewModel,
         parent: QWidget | None = None,
+        *,
+        job_runner=None,
     ) -> None:
         super().__init__(parent)
         self._view_model = view_model
         self._users: dict[int, UserListItem] = {}
         self._last_error: AppError | None = None
         self._selection_id: int | None = None
+        self._job_runner = job_runner or QtJobRunner(self)
+        self._busy = False
         self.setObjectName("user_management_dialog")
         self.setWindowTitle(_("Manage users"))
         apply_window_icon(self)
@@ -60,21 +66,69 @@ class UserManagementDialog(QDialog):
         return self._last_error
 
     def refresh(self) -> bool:
-        result = self._view_model.load()
-        if not result.ok or result.value is None:
-            self._set_error(result.error)
+        def complete(result):
+            if not result.ok or result.value is None:
+                self._set_error(result.error)
+                return
+            self.set_state(result.value)
+            self._last_error = None
+            self.status_label.clear()
+        return self._run(self._view_model.load, complete)
+
+    def _run(self, operation, complete):
+        if self._busy:
             return False
-        self.set_state(result.value)
-        self._last_error = None
-        self.status_label.clear()
-        return True
+        self._busy = True
+        self.user_table.setEnabled(False)
+        self.operation_tabs.setEnabled(False)
+        self.new_user_button.setEnabled(False)
+        self.close_button.setEnabled(False)
+        completed_ok = None
+        def finished(result):
+            nonlocal completed_ok
+            completed_ok = result.ok
+            self._busy = False
+            self.user_table.setEnabled(True)
+            self.operation_tabs.setEnabled(True)
+            self.new_user_button.setEnabled(True)
+            self.close_button.setEnabled(True)
+            complete(result)
+        try:
+            self._job_runner.submit("manage_users", lambda _token: operation(), on_complete=finished)
+        except Exception:
+            finished(Result.failure(InfrastructureError("user_management_failed", "user_management_failed")))
+            return False
+        return completed_ok is not False
+
+    def done(self, result):
+        if not self._busy:
+            super().done(result)
+
+    def _mutate(self, operation, complete):
+        def run():
+            result = operation()
+            if not result.ok:
+                return result
+            return Result.success((result.value, self._view_model.load()))
+        def finished(result):
+            if not result.ok:
+                self._set_error(result.error)
+                self._sync_selected_user()
+                return
+            value, refreshed = result.value
+            if refreshed.ok and refreshed.value is not None:
+                self.set_state(refreshed.value)
+            else:
+                self._set_error(refreshed.error)
+            complete(value, refreshed.ok)
+        self._run(run, finished)
 
     def set_state(self, state: UserManagementState) -> None:
         selected_id = self._selected_user_id()
         self._users = {item.user_id: item for item in state.users}
         with QSignalBlocker(self.user_table):
             self.user_table.setRowCount(len(state.users))
-            selected_row = 0
+            selected_row = None
             for row, user in enumerate(state.users):
                 username = QTableWidgetItem(user.username)
                 username.setData(Qt.ItemDataRole.UserRole, user.user_id)
@@ -87,9 +141,10 @@ class UserManagementDialog(QDialog):
                 self.user_table.setItem(row, 2, required)
                 if user.user_id == selected_id:
                     selected_row = row
-            if state.users:
+            if selected_row is not None:
                 self.user_table.selectRow(selected_row)
             else:
+                self.user_table.clearSelection()
                 self.user_table.setCurrentCell(-1, -1)
         self._sync_selected_user()
 
@@ -313,61 +368,52 @@ class UserManagementDialog(QDialog):
                 break
 
     def _create_user(self) -> None:
-        result = self._view_model.create_user(
+        values = dict(
             username=self.username_input.text(),
             password=self.create_password_input.text(),
             password_confirm=self.create_confirm_input.text(),
             is_admin=self.create_admin_switch.is_checked(),
             must_change_password=self.create_force_switch.is_checked(),
         )
-        if not result.ok or result.value is None:
-            self._set_error(result.error)
-            return
-        self.username_input.clear()
-        self.create_password_input.clear()
-        self.create_confirm_input.clear()
-        refreshed = self.refresh()
-        if refreshed:
-            self._select_user(result.value.user.id)
-        self.operation_tabs.setCurrentIndex(0)
-        self._show_recovery_key(result.value.recovery_key, account_name=result.value.user.username)
-        self.status_label.setText(_("User created.") if refreshed else _("User created, but the account list could not be refreshed."))
+        def complete(value, refreshed):
+            self.username_input.clear()
+            self.create_password_input.clear()
+            self.create_confirm_input.clear()
+            if refreshed:
+                self._select_user(value.user.id)
+            self.operation_tabs.setCurrentIndex(0)
+            self._show_recovery_key(value.recovery_key, account_name=value.user.username)
+            self.status_label.setText(_("User created.") if refreshed else _("User created, but the account list could not be refreshed."))
+        self._mutate(lambda: self._view_model.create_user(**values), complete)
 
     def _reset_password(self) -> None:
         user_id = self._selected_user_id()
         if user_id is None:
             self.status_label.setText(_("Select a user."))
             return
-        result = self._view_model.reset_password(
+        name = self._selected_user().username
+        values = dict(
             target_user_id=user_id,
             new_password=self.reset_password_input.text(),
             password_confirm=self.reset_confirm_input.text(),
             must_change_password=True,
         )
-        if not result.ok or result.value is None:
-            self._set_error(result.error)
-            return
-        self.reset_password_input.clear()
-        self.reset_confirm_input.clear()
-        self.refresh()
-        self._show_recovery_key(result.value, temporary_password=True)
-        self.status_label.setText(_("Password reset."))
+        def complete(value, refreshed):
+            self.reset_password_input.clear()
+            self.reset_confirm_input.clear()
+            self._show_recovery_key(value, temporary_password=True, account_name=name)
+            if refreshed:
+                self.status_label.setText(_("Password reset."))
+        self._mutate(lambda: self._view_model.reset_password(**values), complete)
 
     def _toggle_required(self) -> None:
         user = self._selected_user()
         if user is None:
             self.status_label.setText(_("Select a user."))
             return
-        result = self._view_model.set_password_change_required(
-            target_user_id=user.user_id,
-            required=not user.must_change_password,
-        )
-        if not result.ok:
-            self._set_error(result.error)
-            self._sync_selected_user()
-            return
-        self.refresh()
-        self.status_label.setText(_("User updated."))
+        self._mutate(lambda: self._view_model.set_password_change_required(
+            target_user_id=user.user_id, required=not user.must_change_password),
+            lambda _value, refreshed: self.status_label.setText(_("User updated.")) if refreshed else None)
 
     def _delete_selected(self) -> None:
         user = self._selected_user()
@@ -379,12 +425,8 @@ class UserManagementDialog(QDialog):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
             return
-        result = self._view_model.delete_user(target_user_id=user.user_id)
-        if not result.ok:
-            self._set_error(result.error)
-            return
-        self.refresh()
-        self.status_label.setText(_("User deleted."))
+        self._mutate(lambda: self._view_model.delete_user(target_user_id=user.user_id),
+            lambda _value, refreshed: self.status_label.setText(_("User deleted.")) if refreshed else None)
 
     def _selected_user_id(self) -> int | None:
         selected = self.user_table.selectionModel().selectedRows()

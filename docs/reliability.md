@@ -76,6 +76,14 @@ complete coverage of every operating-system configuration.
 
 ## Verification and Limits
 
+Account creation, password verification and changes, user management, note loading,
+and report loading/saving/export run on background workers. Credential dialogs
+cannot close during a pending mutation, and failed submissions restore controls
+without discarding drafts. Report selection returns to the visible report when
+the user declines to leave it. Routine settings saves reuse already-loaded
+credential results instead of repeatedly querying the operating-system keyring.
+
+
 Functional coverage uses representative domain boundaries, temporary file databases,
 transaction failures, persistence round trips, injected network responses, and
 desktop workflow contracts. Visual checks remain optional and are used when

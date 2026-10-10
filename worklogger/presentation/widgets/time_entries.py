@@ -324,8 +324,14 @@ class TimeEntryPanel(QWidget):
             self.auto_status_label.setText(_("Unable to restore the timer. Discard it to start a new record."))
             self.auto_status_label.show()
             self.break_button.setEnabled(False)
-        self._fit_mode_height()
         self.recording_changed.emit()
+
+    def _update_elapsed_label(self):
+        timer = self.view_model.timer
+        if timer and not timer.pending_end:
+            self.auto_status_label.setText(_("Recording since {time} - {duration}").format(
+                time=f"{day_label(timer.started_at.date())} {timer.started_at:%H:%M}",
+                duration=duration_label(self.view_model.elapsed_hours())))
 
     def recording_action_state(self):
         can_start = not self.is_busy and self.view_model.timer is None and not self.view_model.restore_failed
@@ -472,7 +478,7 @@ class TimeEntryPanel(QWidget):
         if self.view_model.resume_due:
             self._submit(self.view_model.advance, automatic=True)
         else:
-            self._update_actions()
+            self._update_elapsed_label()
 
     def _clear(self):
         if self.time_tabs.currentIndex() == 1:

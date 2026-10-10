@@ -136,6 +136,7 @@ class SettingsWorkflowController:
             notify_error=notify_error,
         )
         self._account_workflow = AccountSettingsWorkflow(
+            job_runner=job_runner,
             auth_view_model=auth_view_model,
             user=user,
             user_management_view_model=user_management_view_model,

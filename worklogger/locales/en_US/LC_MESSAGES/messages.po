@@ -301,6 +301,9 @@ msgstr "Clearing calendar events is not supported yet."
 msgid "Close"
 msgstr "Close"
 
+msgid "Close the note editor before continuing."
+msgstr "Close the note editor before continuing."
+
 msgid "Comp leave"
 msgstr "Comp leave"
 
@@ -348,9 +351,6 @@ msgstr "Create record from event"
 
 msgid "Create user"
 msgstr "Create user"
-
-msgid "Current ID"
-msgstr "Current ID"
 
 msgid "Current password"
 msgstr "Current password"

@@ -9,7 +9,7 @@ from typing import Protocol
 from PySide6.QtWidgets import QWidget
 
 from worklogger.domain.auth.models import User
-from worklogger.domain.shared.errors import AppError, CancellationError, ValidationError
+from worklogger.domain.shared.errors import AppError, CancellationError, InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
@@ -24,6 +24,7 @@ from worklogger.presentation.auth.dialogs import (
     ResetPasswordDraft,
 )
 from worklogger.presentation.viewmodels import AuthViewModel
+from worklogger.presentation.job_runner import QtJobRunner
 
 ChangePasswordDialogFactory = Callable[[QWidget | None], ChangePasswordDialog]
 LoginDialogFactory = Callable[[QWidget | None], LoginDialog]
@@ -67,8 +68,10 @@ class AuthController:
         register_dialog_factory: RegisterDialogFactory | None = None,
         remember_session_store: RememberSessionStore | None = None,
         reset_password_dialog_factory: ResetPasswordDialogFactory | None = None,
+        job_runner=None,
     ) -> None:
         self._view_model = view_model
+        self._job_runner = job_runner or QtJobRunner(parent)
         self._parent = parent
         self._change_password_dialog_factory = (
             change_password_dialog_factory or ChangePasswordDialog
@@ -79,6 +82,20 @@ class AuthController:
         self._reset_password_dialog_factory = (
             reset_password_dialog_factory or ResetPasswordDialog
         )
+
+    def _submit(self, dialog, operation, complete):
+        if getattr(dialog, "_auth_request_pending", False):
+            return
+        dialog._auth_request_pending = True
+        dialog.set_busy(True)
+        def finished(result):
+            dialog._auth_request_pending = False
+            dialog.set_busy(False)
+            complete(result)
+        try:
+            self._job_runner.submit("authenticate", lambda _token: operation(), on_complete=finished)
+        except Exception:
+            finished(Result.failure(InfrastructureError("auth_state_failed", "auth_state_failed")))
 
     def authenticate(self) -> Result[AuthSession]:
         remembered = self._authenticate_remembered_session()
@@ -110,14 +127,7 @@ class AuthController:
         dialog = self._login_dialog_factory(self._parent)
         outcome = _AuthDialogOutcome()
 
-        def submit(draft: LoginDraft) -> None:
-            dialog.set_busy(True)
-            result = self._view_model.login(
-                username=draft.username,
-                password=draft.password,
-                remember=draft.remember,
-            )
-            dialog.set_busy(False)
+        def complete(result):
             if not result.ok or result.value is None:
                 dialog.set_error(_error_message(result.error))
                 return
@@ -138,6 +148,10 @@ class AuthController:
                 self._clear_remembered_session()
             outcome.accepted = True
             dialog.accept()
+
+        def submit(draft: LoginDraft) -> None:
+            self._submit(dialog, lambda: self._view_model.login(
+                username=draft.username, password=draft.password, remember=draft.remember), complete)
 
         def switch_to_register() -> None:
             outcome.next_mode = "register"
@@ -188,14 +202,7 @@ class AuthController:
         dialog = self._register_dialog_factory(self._parent)
         outcome = _AuthDialogOutcome()
 
-        def submit(draft: RegisterDraft) -> None:
-            dialog.set_busy(True)
-            result = self._view_model.register(
-                username=draft.username,
-                password=draft.password,
-                password_confirm=draft.password_confirm,
-            )
-            dialog.set_busy(False)
+        def complete(result):
             if not result.ok or result.value is None:
                 dialog.set_error(_error_message(result.error))
                 return
@@ -205,6 +212,10 @@ class AuthController:
             )
             dialog.set_error(_("Save this recovery key before continuing."))
             dialog.mark_complete(result.value.recovery_key)
+
+        def submit(draft: RegisterDraft) -> None:
+            self._submit(dialog, lambda: self._view_model.register(
+                username=draft.username, password=draft.password, password_confirm=draft.password_confirm), complete)
 
         def continue_to_app() -> None:
             outcome.accepted = outcome.session is not None
@@ -225,20 +236,17 @@ class AuthController:
         dialog = self._reset_password_dialog_factory(self._parent)
         outcome = _AuthDialogOutcome()
 
-        def submit(draft: ResetPasswordDraft) -> None:
-            dialog.set_busy(True)
-            result = self._view_model.reset_password(
-                username=draft.username,
-                recovery_key=draft.recovery_key,
-                new_password=draft.new_password,
-                password_confirm=draft.password_confirm,
-            )
-            dialog.set_busy(False)
+        def complete(result):
             if not result.ok or result.value is None:
                 dialog.set_error(_error_message(result.error))
                 return
             dialog.set_error(_("Save this recovery key before returning to login."))
             dialog.mark_complete(result.value)
+
+        def submit(draft: ResetPasswordDraft) -> None:
+            self._submit(dialog, lambda: self._view_model.reset_password(
+                username=draft.username, recovery_key=draft.recovery_key,
+                new_password=draft.new_password, password_confirm=draft.password_confirm), complete)
 
         def continue_to_login() -> None:
             outcome.next_mode = "login"
@@ -258,15 +266,7 @@ class AuthController:
         dialog = self._change_password_dialog_factory(self._parent)
         outcome = _AuthDialogOutcome()
 
-        def submit(draft: ChangePasswordDraft) -> None:
-            dialog.set_busy(True)
-            result = self._view_model.change_password(
-                user_id=user.id,
-                current_password=draft.current_password,
-                new_password=draft.new_password,
-                password_confirm=draft.password_confirm,
-            )
-            dialog.set_busy(False)
+        def complete(result):
             if not result.ok or result.value is None:
                 dialog.set_error(_error_message(result.error))
                 return
@@ -276,6 +276,11 @@ class AuthController:
             )
             dialog.set_error(_("Save this recovery key before continuing."))
             dialog.mark_complete(result.value)
+
+        def submit(draft: ChangePasswordDraft) -> None:
+            self._submit(dialog, lambda: self._view_model.change_password(
+                user_id=user.id, current_password=draft.current_password,
+                new_password=draft.new_password, password_confirm=draft.password_confirm), complete)
 
         def continue_to_app() -> None:
             outcome.accepted = outcome.session is not None

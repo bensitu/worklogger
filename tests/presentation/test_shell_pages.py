@@ -39,12 +39,32 @@ class ReportsViewModel:
 
 
 class ShellPagesTests(unittest.TestCase):
+    def test_failed_background_submission_retains_draft_and_recovers_controls(self):
+        class Model(ReportsViewModel):
+            rewrite_available = True
+        class ClosedRunner:
+            def submit(self, *args, **kwargs):
+                raise RuntimeError("job_runner_closed")
+        page = ReportsPage(Model(), date(2026, 10, 10), job_runner=ImmediateJobRunner())
+        self.addCleanup(page.deleteLater)
+        page.refresh()
+        page.editor.setPlainText("Unsaved draft")
+        page._job_runner = ClosedRunner()
+        with patch.object(QMessageBox, "warning"):
+            page._rewrite_current()
+            self.assertFalse(page.is_busy)
+            self.assertFalse(page.editor.isReadOnly())
+            self.assertEqual(page.editor.toPlainText(), "Unsaved draft")
+            page._save_current()
+            self.assertFalse(page.is_busy)
+            self.assertEqual(page.editor.toPlainText(), "Unsaved draft")
+
     def test_loaded_report_formatting_does_not_create_false_unsaved_changes(self):
         for content in ("First\r\nSecond", "First\nSecond", "First\u2029Second", "Work\u00a0summary"):
             class Model(ReportsViewModel):
                 def load(self, kind, day, content=content):
                     return Result.success(ReportEditorState(1, kind, day, day, content, saved=True, report_id=42))
-            page = ReportsPage(Model(), date(2026, 5, 20))
+            page = ReportsPage(Model(), date(2026, 5, 20), job_runner=ImmediateJobRunner())
             try:
                 page.refresh()
                 self.assertFalse(page.has_unsaved_changes)
@@ -111,7 +131,7 @@ class ShellPagesTests(unittest.TestCase):
         self.warning = self.enterContext(patch.object(QMessageBox, "warning"))
 
     def test_cancelled_rewrite_preserves_draft_without_error_or_success_dialog(self):
-        page = ReportsPage(ReportsViewModel(), date(2026, 4, 20))
+        page = ReportsPage(ReportsViewModel(), date(2026, 4, 20), job_runner=ImmediateJobRunner())
         try:
             self.assertTrue(page.refresh())
             page.editor.setPlainText("Unsaved draft")
@@ -142,6 +162,7 @@ class ShellPagesTests(unittest.TestCase):
         model, runner = ViewModel(), Runner()
         page = ReportsPage(model, date(2026, 4, 20), job_runner=runner)
         page.refresh()
+        runner.complete(runner.job(CancellationToken()))
         page.ai_hint_line_edit.setText("Keep it concise")
         page._rewrite_current()
         self.assertEqual(runner.name, "rewrite_report")
@@ -184,7 +205,7 @@ class ShellPagesTests(unittest.TestCase):
 
     def test_period_buttons_and_calendar_event_summary_are_connected(self) -> None:
         model = ReportsViewModel()
-        page = ReportsPage(model, date(2026, 4, 20))
+        page = ReportsPage(model, date(2026, 4, 20), job_runner=ImmediateJobRunner())
         page.refresh()
         page.next_period_button.click()
         self.assertEqual(page._selected_day, date(2026, 4, 21))
@@ -201,7 +222,7 @@ class ShellPagesTests(unittest.TestCase):
         cls.app = QApplication.instance() or QApplication([])
 
     def test_report_type_cancel_preserves_draft_and_active_type(self) -> None:
-        page = ReportsPage(ReportsViewModel(), date(2026, 4, 20), confirm_discard=lambda: False)
+        page = ReportsPage(ReportsViewModel(), date(2026, 4, 20), job_runner=ImmediateJobRunner(), confirm_discard=lambda: False)
         self.assertTrue(page.refresh())
         page.editor.setPlainText("Unsaved draft")
         page.report_type_control.set_value("weekly")
@@ -210,7 +231,7 @@ class ShellPagesTests(unittest.TestCase):
         self.assertTrue(page.has_unsaved_changes)
 
     def test_history_and_refresh_cancel_preserve_report(self) -> None:
-        page = ReportsPage(ReportsViewModel(), date(2026, 4, 20), confirm_discard=lambda: False)
+        page = ReportsPage(ReportsViewModel(), date(2026, 4, 20), job_runner=ImmediateJobRunner(), confirm_discard=lambda: False)
         page.refresh()
         page.editor.setPlainText("Unsaved draft")
         item = ReportHistoryDisplayItem(2, 1, "daily", date(2026, 4, 19), date(2026, 4, 19), "History", "Saved")
@@ -221,7 +242,7 @@ class ShellPagesTests(unittest.TestCase):
 
     def test_saved_report_does_not_prompt_and_confirmed_discard_switches(self) -> None:
         prompts: list[bool] = []
-        page = ReportsPage(ReportsViewModel(), date(2026, 4, 20), confirm_discard=lambda: prompts.append(True) or True)
+        page = ReportsPage(ReportsViewModel(), date(2026, 4, 20), job_runner=ImmediateJobRunner(), confirm_discard=lambda: prompts.append(True) or True)
         page.refresh()
         page.editor.setPlainText("Saved draft")
         page._save_current()

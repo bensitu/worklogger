@@ -670,7 +670,7 @@ class SettingsPage(QWidget):
             self._set_error(getattr(result, "error", None))
             return
         self._last_error = None
-        loaded = self._view_model.load()
+        loaded = self._view_model.load(refresh_credentials=False)
         if not loaded.ok or loaded.value is None:
             self._set_error(loaded.error)
             return

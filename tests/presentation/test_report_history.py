@@ -172,7 +172,7 @@ class ReportHistoryTests(unittest.TestCase):
             finally:
                 release.set()
             deadline = time.monotonic() + 5
-            while page._delete_busy and time.monotonic() < deadline:
+            while page.is_busy and time.monotonic() < deadline:
                 self.app.processEvents()
                 time.sleep(0.01)
         self.assertFalse(page._delete_busy)

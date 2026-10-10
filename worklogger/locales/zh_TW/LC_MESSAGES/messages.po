@@ -301,6 +301,9 @@ msgstr "尚不支援清除行事曆事件。"
 msgid "Close"
 msgstr "關閉"
 
+msgid "Close the note editor before continuing."
+msgstr "請先關閉筆記編輯器再繼續。"
+
 msgid "Comp leave"
 msgstr "補休"
 
@@ -348,9 +351,6 @@ msgstr "從日程建立記錄"
 
 msgid "Create user"
 msgstr "建立使用者"
-
-msgid "Current ID"
-msgstr "目前 ID"
 
 msgid "Current password"
 msgstr "目前密碼"

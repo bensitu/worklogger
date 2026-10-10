@@ -22,6 +22,7 @@ from worklogger.presentation.quick_logs.dialog import QuickLogDialog
 from worklogger.presentation.reporting.dialog import ReportDialog, ReportTemplateDialog
 from worklogger.presentation.user_management.dialog import UserManagementDialog
 from worklogger.presentation.widgets.status_label import StatusLabel
+from worklogger.presentation.job_runner import ImmediateJobRunner
 
 
 class StatusFeedbackTests(unittest.TestCase):
@@ -47,7 +48,7 @@ class StatusFeedbackTests(unittest.TestCase):
         for language in ("en_US", "zh_CN"):
             set_language(language)
             model = Mock()
-            dialog = LocalModelsDialog(model)
+            dialog = LocalModelsDialog(model, job_runner=ImmediateJobRunner())
             try:
                 state = LocalModelManagerState(LocalModelInventory((), None), _("Model imported."))
                 self.assertTrue(dialog._set_state_result(Result.success(state)))
@@ -81,9 +82,9 @@ class StatusFeedbackTests(unittest.TestCase):
         factories = (
             lambda model: AnalyticsDialog(model, day),
             lambda model: IdentityDialog(model),
-            lambda model: LocalModelsDialog(model),
+            lambda model: LocalModelsDialog(model, job_runner=ImmediateJobRunner()),
             lambda model: QuickLogDialog(model, day),
-            lambda model: UserManagementDialog(model),
+            lambda model: UserManagementDialog(model, job_runner=ImmediateJobRunner()),
             lambda model: ReportDialog(model, day),
         )
         state = SimpleNamespace(content="", message="", identities=(), providers=(),
@@ -103,7 +104,7 @@ class StatusFeedbackTests(unittest.TestCase):
                     self.assertEqual(dialog.status_label.text(), "")
                     self.assertTrue(dialog.status_label.isHidden())
                     model.load.return_value = Result.failure(error)
-                    self.assertFalse(dialog.refresh())
+                    dialog.refresh()
                     self.assertEqual(dialog.last_error, error)
                     self.assertFalse(dialog.status_label.isHidden())
                     self.assertTrue(dialog.status_label.text())

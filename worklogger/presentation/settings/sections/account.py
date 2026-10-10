@@ -44,10 +44,9 @@ class AccountSection(_SettingsScrollPage):
         self.current_user_name_line_edit = _readonly_line_edit("account_name_line_edit")
         form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows)
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
-        self.current_user_id_line_edit = _readonly_line_edit("account_id_line_edit")
+        self.current_user_id_line_edit = self.current_user_name_line_edit
         self.current_user_role_line_edit = _readonly_line_edit("account_role_line_edit")
         form.addRow(_("Current user"), self.current_user_name_line_edit)
-        form.addRow(_("Current ID"), self.current_user_id_line_edit)
         form.addRow(_("Role"), self.current_user_role_line_edit)
         avatar_row = QWidget()
         avatar_row.setObjectName("account_avatar_row_widget")

@@ -299,6 +299,9 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
+msgid "Close the note editor before continuing."
+msgstr ""
+
 msgid "Comp leave"
 msgstr ""
 
@@ -345,9 +348,6 @@ msgid "Create record from event"
 msgstr ""
 
 msgid "Create user"
-msgstr ""
-
-msgid "Current ID"
 msgstr ""
 
 msgid "Current password"

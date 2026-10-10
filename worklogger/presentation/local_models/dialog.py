@@ -30,6 +30,7 @@ from worklogger.app.job_runner import JobHandle, JobRunner
 from worklogger.domain.shared.errors import AppError, CancellationError, InfrastructureError
 from worklogger.infrastructure.i18n import _, get_language
 from worklogger.presentation.errors import display_error_code, display_error_message
+from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.presentation.viewmodels import (
     LocalModelManagerState,
     LocalModelManagerViewModel,
@@ -52,7 +53,7 @@ class LocalModelsDialog(QDialog):
         self._view_model = view_model
         self._state: LocalModelManagerState | None = None
         self._last_error: AppError | None = None
-        self._job_runner = job_runner
+        self._job_runner = job_runner or QtJobRunner(self)
         self._pending_handle: JobHandle[object] | None = None
         self._busy = False
         self._download_active = False

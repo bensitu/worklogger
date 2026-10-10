@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 import unittest
+import threading
+import time
 from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -19,6 +21,7 @@ from worklogger.app.use_cases.auth import (
     SetPasswordChangeRequiredHandler,
 )
 from worklogger.presentation.user_management import UserManagementDialog
+from worklogger.presentation.job_runner import ImmediateJobRunner, QtJobRunner
 from worklogger.presentation.viewmodels import UserManagementViewModel
 from worklogger.domain.shared.result import Result
 from worklogger.domain.shared.errors import InfrastructureError
@@ -46,11 +49,51 @@ def _view_model(
 
 
 class UserManagementPresentationTests(unittest.TestCase):
+    def test_background_account_changes_keep_ui_responsive_and_selection_explicit(self):
+        repository = MemoryAuthRepository()
+        admin = RegisterUserHandler(repository).handle(RegisterUserCommand("admin", "secret123"))
+        model = _view_model(repository, admin.value.user.id)
+        dialog = UserManagementDialog(model, job_runner=ImmediateJobRunner())
+        self.addCleanup(dialog.deleteLater)
+        dialog.refresh()
+        self.assertIsNone(dialog._selected_user_id())
+        runner = QtJobRunner(dialog)
+        self.addCleanup(lambda: runner.shutdown(wait=True))
+        dialog._job_runner = runner
+        release = threading.Event()
+        self.addCleanup(release.set)
+        calls = []
+        create = model.create_user
+        def delayed(**values):
+            calls.append(threading.get_ident())
+            release.wait(3)
+            return create(**values)
+        dialog.username_input.setText("worker")
+        dialog.create_password_input.setText("secret456")
+        dialog.create_confirm_input.setText("secret456")
+        with patch.object(model, "create_user", side_effect=delayed):
+            dialog.create_user_button.click()
+            self.assertTrue(dialog._busy)
+            self.assertFalse(dialog.create_user_button.isEnabled())
+            self._app.processEvents()
+            release.set()
+            deadline = time.monotonic() + 3
+            while dialog._busy and time.monotonic() < deadline:
+                self._app.processEvents()
+                time.sleep(0.005)
+        self.assertFalse(dialog._busy)
+        self.assertNotEqual(calls, [threading.get_ident()])
+        self.assertEqual(dialog._selected_user().username, "worker")
+        repository.delete_user(dialog._selected_user_id())
+        dialog.set_state(model.load().value)
+        self.assertIsNone(dialog._selected_user_id())
+        self.assertFalse(dialog.delete_user_button.isEnabled())
+
     def test_credential_handoff_keeps_its_owner_when_list_refresh_fails(self):
         repository = MemoryAuthRepository()
         admin = RegisterUserHandler(repository).handle(RegisterUserCommand("admin", "secret123"))
         model = _view_model(repository, admin.value.user.id)
-        dialog = UserManagementDialog(model)
+        dialog = UserManagementDialog(model, job_runner=ImmediateJobRunner())
         self.addCleanup(dialog.deleteLater)
         dialog.refresh()
         dialog.username_input.setText("new.owner")
@@ -98,7 +141,7 @@ class UserManagementPresentationTests(unittest.TestCase):
             RegisterUserCommand("admin", "secret123")
         )
         assert admin.value is not None
-        dialog = UserManagementDialog(_view_model(repository, admin.value.user.id))
+        dialog = UserManagementDialog(_view_model(repository, admin.value.user.id), job_runner=ImmediateJobRunner())
         self.assertTrue(dialog.refresh())
 
         dialog.username_input.setText("bob")

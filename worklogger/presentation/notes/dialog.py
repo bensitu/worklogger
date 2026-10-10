@@ -67,12 +67,13 @@ class NoteEditorDialog(QDialog):
         return NoteSharing(self.report_checkbox.isChecked(), self.ai_checkbox.isChecked())
 
     def refresh(self):
-        result = self._view_model.load(self._day)
-        if not result.ok:
-            self._set_error(result.error)
+        if self._busy:
             return False
-        self.set_state(result.value)
-        self._search()
+        day = self._day
+        def complete(state):
+            self.set_state(state)
+            self._search()
+        self._run("load_note", lambda: self._view_model.load(day), complete)
         return True
 
     def set_state(self, state):

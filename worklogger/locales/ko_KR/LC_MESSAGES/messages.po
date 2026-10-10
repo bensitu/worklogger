@@ -301,6 +301,9 @@ msgstr "달력 일정 지우기는 아직 지원되지 않습니다."
 msgid "Close"
 msgstr "닫기"
 
+msgid "Close the note editor before continuing."
+msgstr "계속하기 전에 노트 편집기를 닫으세요."
+
 msgid "Comp leave"
 msgstr "대체 휴가"
 
@@ -348,9 +351,6 @@ msgstr "일정에서 기록 만들기"
 
 msgid "Create user"
 msgstr "사용자 만들기"
-
-msgid "Current ID"
-msgstr "현재 ID"
 
 msgid "Current password"
 msgstr "현재 비밀번호"

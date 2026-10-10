@@ -32,6 +32,9 @@ class SidebarWidget(QFrame):
     def active_route(self) -> str:
         return self._active_route
 
+    def button(self, route: str) -> QPushButton:
+        return self._buttons[route]
+
     def set_profile(self, account_name: str, role: str = "Admin") -> None:
         name = str(account_name or "").strip() or _("Local user")
         self.profile_name_label.setText(name)

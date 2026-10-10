@@ -344,8 +344,8 @@ class AppWindow(QMainWindow):
         self.account_label = QLabel(self._account_text())
         self.account_label.setObjectName("account_label")
         self.notes_button = self.calendar_page.notes_button
-        self.reports_button = self.sidebar._buttons["reports"]
-        self.analytics_button = self.sidebar._buttons["analytics"]
+        self.reports_button = self.sidebar.button("reports")
+        self.analytics_button = self.sidebar.button("analytics")
         self.settings_button = self.sidebar.settings_button
         self.status_label = QLabel("")
         self.status_label.setObjectName("app_status_label")

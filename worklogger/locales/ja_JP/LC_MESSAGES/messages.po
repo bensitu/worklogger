@@ -301,6 +301,9 @@ msgstr "カレンダーの予定の消去はまだ対応していません。"
 msgid "Close"
 msgstr "閉じる"
 
+msgid "Close the note editor before continuing."
+msgstr "続行する前にノートエディターを閉じてください。"
+
 msgid "Comp leave"
 msgstr "代休"
 
@@ -348,9 +351,6 @@ msgstr "予定から記録を作成"
 
 msgid "Create user"
 msgstr "ユーザーを作成"
-
-msgid "Current ID"
-msgstr "現在のID"
 
 msgid "Current password"
 msgstr "現在のパスワード"

@@ -506,7 +506,8 @@ class AppWindowTests(unittest.TestCase):
         )
 
         self.assertTrue(view.refresh())
-        self.assertEqual(view.date_label.text(), "2026-04-20")
+        from worklogger.presentation.date_labels import day_label
+        self.assertEqual(view.date_label.text(), day_label(date(2026, 4, 20)))
         self.assertEqual(view.account_label.text(), "Signed in: alice")
 
         self.assertTrue(view.status_label.isHidden())
@@ -539,7 +540,7 @@ class AppWindowTests(unittest.TestCase):
 
         self.assertTrue(view.next_day())
         self.assertEqual(view.selected_day, date(2026, 4, 21))
-        self.assertEqual(view.date_label.text(), "2026-04-21")
+        self.assertEqual(view.date_label.text(), day_label(date(2026, 4, 21)))
 
     def test_minimal_view_opens_settings_workflow_when_available(self) -> None:
         class FakeSettingsWorkflow:

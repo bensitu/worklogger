@@ -99,7 +99,7 @@ class LocalModelsPresentationTests(unittest.TestCase):
         model = LocalModelManagerViewModel(user_id=1, list_handler=handlers, refresh_handler=handlers,
             import_handler=handlers, download_handler=handlers, verify_handler=handlers,
             select_handler=handlers, delete_handler=handlers)
-        dialog = LocalModelsDialog(model)
+        dialog = LocalModelsDialog(model, job_runner=ImmediateJobRunner())
         self.addCleanup(dialog.deleteLater)
         dialog.refresh()
         runner = Runner()
@@ -175,7 +175,7 @@ class LocalModelsPresentationTests(unittest.TestCase):
                 return super().refresh()
 
         def create(view_model, parent):
-            dialog = ActionDialog(view_model, parent)
+            dialog = ActionDialog(view_model, parent, job_runner=ImmediateJobRunner())
             dialogs.append(dialog)
             return dialog
 
@@ -191,7 +191,7 @@ class LocalModelsPresentationTests(unittest.TestCase):
             user_id=1, list_handler=handlers, refresh_handler=handlers, import_handler=handlers,
             download_handler=handlers, verify_handler=handlers, select_handler=handlers, delete_handler=handlers,
         )
-        dialog = LocalModelsDialog(model)
+        dialog = LocalModelsDialog(model, job_runner=ImmediateJobRunner())
         dialog.show()
         self._app.processEvents()
         cancellations = []
@@ -222,7 +222,7 @@ class LocalModelsPresentationTests(unittest.TestCase):
             select_handler=handlers,
             delete_handler=handlers,
         )
-        dialog = LocalModelsDialog(view_model)
+        dialog = LocalModelsDialog(view_model, job_runner=ImmediateJobRunner())
 
         self.assertTrue(dialog.refresh())
         dialog.model_list.setCurrentRow(0)

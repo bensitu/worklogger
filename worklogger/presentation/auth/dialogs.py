@@ -59,7 +59,13 @@ class ChangePasswordDraft:
     password_confirm: str
 
 
-class LoginDialog(QDialog):
+class AuthDialog(QDialog):
+    def done(self, result):
+        if not getattr(self, "_auth_request_pending", False):
+            super().done(result)
+
+
+class LoginDialog(AuthDialog):
     login_submitted = Signal(object)
     register_requested = Signal()
     reset_password_requested = Signal()
@@ -301,7 +307,7 @@ class LoginDialog(QDialog):
 def _visibility_icon(password_visible: bool) -> QIcon:
     return ui_icon("eye-off" if password_visible else "eye")
 
-class RegisterDialog(QDialog):
+class RegisterDialog(AuthDialog):
     register_submitted = Signal(object)
     login_requested = Signal()
     continue_requested = Signal()
@@ -424,7 +430,7 @@ class RegisterDialog(QDialog):
         self.register_submitted.emit(self.draft())
 
 
-class ResetPasswordDialog(QDialog):
+class ResetPasswordDialog(AuthDialog):
     reset_submitted = Signal(object)
     login_requested = Signal()
     continue_requested = Signal()
@@ -554,7 +560,7 @@ class ResetPasswordDialog(QDialog):
         self.reset_submitted.emit(self.draft())
 
 
-class ChangePasswordDialog(QDialog):
+class ChangePasswordDialog(AuthDialog):
     change_submitted = Signal(object)
     continue_requested = Signal()
 

@@ -301,6 +301,9 @@ msgstr "暂不支持清空日历事件。"
 msgid "Close"
 msgstr "关闭"
 
+msgid "Close the note editor before continuing."
+msgstr "请先关闭笔记编辑器再继续。"
+
 msgid "Comp leave"
 msgstr "补休"
 
@@ -348,9 +351,6 @@ msgstr "从日程创建记录"
 
 msgid "Create user"
 msgstr "创建用户"
-
-msgid "Current ID"
-msgstr "当前 ID"
 
 msgid "Current password"
 msgstr "当前密码"

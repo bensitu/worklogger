@@ -79,7 +79,28 @@ class ReportsPage(QWidget):
         self._rewrite_busy = False
         self._delete_busy = False
         self._generate_busy = False
+        self._io_busy = False
         self._build_ui()
+
+    @property
+    def is_busy(self):
+        return self._rewrite_busy or self._delete_busy or self._generate_busy or self._io_busy
+
+    def _run_io(self, name, operation, complete):
+        if self.is_busy:
+            return False
+        self._io_busy = True
+        self._update_busy_controls()
+        def finished(result):
+            self._io_busy = False
+            self._update_busy_controls()
+            complete(result)
+        try:
+            self._job_runner.submit(name, lambda _token: operation(), on_complete=finished)
+        except Exception:
+            finished(Result.failure(InfrastructureError("report_request_failed", "report_request_failed")))
+            return False
+        return True
 
     @property
     def last_error(self) -> AppError | None:
@@ -90,7 +111,7 @@ class ReportsPage(QWidget):
         return self.editor.toPlainText() != self._saved_content.get(self._rendered_type, "")
 
     def confirm_leave(self) -> bool:
-        if self._rewrite_busy or self._delete_busy or self._generate_busy:
+        if self.is_busy:
             self._set_status(_("Please wait for the current request."))
             return False
         if not self.has_unsaved_changes:
@@ -118,20 +139,29 @@ class ReportsPage(QWidget):
         if self._view_model is None:
             self._set_status(_("Reports are not configured."), error=True)
             return False
-        ok = True
-        for report_type in ("daily", "weekly", "monthly"):
-            result = self._view_model.load(report_type, self._selected_day)
+        day, report_type = self._selected_day, self._current_type()
+        def load():
+            states = {}
+            for kind in ("daily", "weekly", "monthly"):
+                result = self._view_model.load(kind, day)
+                if not result.ok:
+                    return result
+                states[kind] = result.value
+            history = self._view_model.list_history(report_type)
+            if not history.ok:
+                return history
+            return Result.success((states, history.value))
+        def complete(result):
             if not result.ok or result.value is None:
                 self._set_error(result.error)
-                ok = False
-                continue
-            self._states[report_type] = result.value
-            self._saved_content[report_type] = result.value.content
-        self._render_current()
-        self._refresh_history()
-        if ok:
+                return
+            states, history = result.value
+            self._states = states
+            self._saved_content = {kind: state.content for kind, state in states.items()}
+            self._render_current(refresh_history=False)
+            self._set_history(history)
             self._set_status("")
-        return ok
+        return self._run_io("load_reports", load, complete)
 
     def copy_markdown(self) -> None:
         QApplication.clipboard().setText(self.editor.toPlainText())
@@ -140,14 +170,15 @@ class ReportsPage(QWidget):
     def export_markdown(self, destination: Path) -> bool:
         if self._view_model is None:
             return False
-        result = self._view_model.export_markdown(destination, self.editor.toPlainText())
-        if not result.ok or result.value is None:
-            self._set_error(result.error)
-            return False
+        content = self.editor.toPlainText()
         state = self._states.get(self._current_type())
         period = _period_label(state) if state is not None else period_range_label(self._selected_day, self._selected_day)
-        self._set_status(_("Current report exported for {period}.").format(period=period))
-        return True
+        def complete(result):
+            if not result.ok:
+                self._set_error(result.error)
+            else:
+                self._set_status(_("Current report exported for {period}.").format(period=period))
+        return self._run_io("export_report", lambda: self._view_model.export_markdown(destination, content), complete)
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
@@ -305,7 +336,7 @@ class ReportsPage(QWidget):
                     if state.report_id is not None else _("Generated draft"))
         self.report_state_label.setText(identity + (" | " + _("Unsaved changes") if modified else ""))
         self.save_button.setText(_("Save changes") if state.report_id is not None else _("Save Report"))
-        busy = self._rewrite_busy or self._delete_busy or self._generate_busy
+        busy = self.is_busy
         has_content = bool(self.editor.toPlainText().strip())
         self.save_button.setEnabled(not busy and has_content and (state.report_id is None or modified))
         saved_export = bool(getattr(self._view_model, "saved_export_available", False))
@@ -323,13 +354,13 @@ class ReportsPage(QWidget):
 
     def refresh_ai_availability(self):
         available = bool(self._view_model is not None and getattr(self._view_model, "rewrite_available", True))
-        busy = self._rewrite_busy or self._delete_busy or self._generate_busy
+        busy = self.is_busy
         self.ai_assist_button.setEnabled(available and not busy and bool(self.editor.toPlainText().strip()))
         self.ai_hint_line_edit.setEnabled(available and not busy)
         self.ai_assist_button.setToolTip("" if available else _("AI Assist is not configured."))
 
     def _generate_current(self):
-        if self._view_model is None or self._generate_busy or self._rewrite_busy or self._delete_busy:
+        if self._view_model is None or self.is_busy:
             return
         state = self._states.get(self._current_type())
         if state is None:
@@ -380,7 +411,7 @@ class ReportsPage(QWidget):
         self.refresh(shift_period(day, self._current_type(), direction))
 
     def _open_templates(self) -> None:
-        if self._view_model is None or self._rewrite_busy or self._delete_busy or self._generate_busy:
+        if self._view_model is None or self.is_busy:
             return
         dialog = ReportTemplateDialog(self._view_model, self._current_type(), self)
         dialog.apply_requested.connect(self._apply_template)
@@ -392,7 +423,7 @@ class ReportsPage(QWidget):
     def _apply_template(self) -> None:
         self._generate_current()
 
-    def _render_current(self) -> None:
+    def _render_current(self, *, refresh_history=True) -> None:
         report_type = self._current_type()
         state = self._states.get(report_type)
         if state is None:
@@ -402,10 +433,11 @@ class ReportsPage(QWidget):
         self.editor.setPlainText(state.content)
         self._saved_content[report_type] = self.editor.toPlainText()
         self._update_report_status()
-        self._refresh_history()
+        if refresh_history:
+            self._refresh_history()
 
     def _save_current(self) -> None:
-        if self._view_model is None or self._delete_busy or self._rewrite_busy or self._generate_busy:
+        if self._view_model is None or self.is_busy:
             return
         report_type = self._current_type()
         state = self._states.get(report_type)
@@ -416,18 +448,19 @@ class ReportsPage(QWidget):
         if state.report_id is not None:
             if content == self._saved_content.get(report_type, state.content) or not confirm_report_overwrite(self):
                 return
-        result = self._view_model.save(state, content)
-        if not result.ok or result.value is None:
-            self._set_error(result.error)
-            return
-        self._states[report_type] = result.value
-        self._saved_content[report_type] = result.value.content
-        self._update_report_status()
-        self._set_status(_("Report saved."))
-        self._refresh_history()
+        def complete(result):
+            if not result.ok or result.value is None:
+                self._set_error(result.error)
+                return
+            self._states[report_type] = result.value
+            self._saved_content[report_type] = result.value.content
+            self._update_report_status()
+            self._set_status(_("Report saved."))
+            self._refresh_history()
+        self._run_io("save_report", lambda: self._view_model.save(state, content), complete)
 
     def _rewrite_current(self) -> None:
-        if self._view_model is None or self._rewrite_busy or self._delete_busy or self._generate_busy:
+        if self._view_model is None or self.is_busy:
             return
         state = self._states.get(self._current_type())
         if state is None:
@@ -437,17 +470,20 @@ class ReportsPage(QWidget):
         instructions = self.ai_hint_line_edit.text()
         self._set_rewrite_busy(True)
         self._set_status(_("Rewriting report..."), notify=False)
-        self._job_runner.submit(
-            "rewrite_report", lambda _token: self._view_model.rewrite(state, content, instructions),
-            on_complete=self._complete_rewrite,
-        )
+        try:
+            self._job_runner.submit(
+                "rewrite_report", lambda _token: self._view_model.rewrite(state, content, instructions),
+                on_complete=self._complete_rewrite,
+            )
+        except Exception:
+            self._complete_rewrite(Result.failure(InfrastructureError("ai_request_failed", "ai_request_failed")))
 
     def _set_rewrite_busy(self, busy: bool) -> None:
         self._rewrite_busy = busy
         self._update_busy_controls()
 
     def _update_busy_controls(self):
-        busy = self._rewrite_busy or self._delete_busy or self._generate_busy
+        busy = self.is_busy
         self.editor.setReadOnly(busy)
         for widget in (self.report_type_control, self.previous_period_button, self.next_period_button, self.templates_button, self.ai_hint_line_edit, self.save_button, self.history_panel):
             widget.setEnabled(not busy)
@@ -457,7 +493,7 @@ class ReportsPage(QWidget):
         self._update_report_status()
 
     def _delete_history_item(self, item: ReportHistoryDisplayItem) -> None:
-        if self._view_model is None or self._rewrite_busy or self._delete_busy or self._generate_busy or item.report_id is None:
+        if self._view_model is None or self.is_busy or item.report_id is None:
             return
         state = self._states.get(item.report_type)
         deleting_current = state is not None and state.report_id == item.report_id
@@ -504,10 +540,16 @@ class ReportsPage(QWidget):
         if self._view_model is None:
             self.history_panel.set_items(())
             return
-        result = self._view_model.list_history(self._current_type())
-        if not result.ok or result.value is None:
-            self._set_error(result.error)
-            return
+        report_type = self._current_type()
+        def complete(result):
+            if not result.ok or result.value is None:
+                self._set_error(result.error)
+            else:
+                self._set_history(result.value)
+        self._run_io("load_report_history", lambda: self._view_model.list_history(report_type), complete)
+
+    def _set_history(self, items):
+        self.history_panel.set_report_type(self._current_type())
         self.history_panel.set_items(
             ReportHistoryDisplayItem(
                 report_id=item.report_id,
@@ -520,13 +562,15 @@ class ReportsPage(QWidget):
                 saved=item.saved,
                 created_at=item.created_at,
             )
-            for item in result.value
+            for item in items
         )
         state = self._states.get(self._current_type())
         self.history_panel.set_selected_report(state.report_id if state is not None else None)
 
     def _select_history_item(self, item: ReportHistoryDisplayItem) -> None:
         if not self._view_model or not self.confirm_leave():
+            state = self._states.get(self._rendered_type)
+            self.history_panel.set_selected_report(state.report_id if state else None)
             return
         state = ReportEditorState(
             user_id=item.user_id,
@@ -550,7 +594,7 @@ class ReportsPage(QWidget):
         self._update_report_status()
 
     def _choose_export_scope(self, scope: str) -> None:
-        if scope not in {"current", "day", "month"} or self._view_model is None or self._generate_busy or self._rewrite_busy or self._delete_busy:
+        if scope not in {"current", "day", "month"} or self._view_model is None or self.is_busy:
             return
         state = self._states.get(self._current_type())
         suffix = state.period_start.isoformat() if state is not None else self._selected_day.isoformat()

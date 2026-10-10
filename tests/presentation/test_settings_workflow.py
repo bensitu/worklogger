@@ -285,6 +285,7 @@ class SettingsWorkflowTests(unittest.TestCase):
             data_management_view_model=FakeDataManagementViewModel(),
             remember_session_store=remember_store,
             change_password_dialog_factory=ScriptedChangePasswordDialog,
+            job_runner=ImmediateJobRunner(),
             notify_success=lambda _parent, title, message: notifications.append((title, message)),
             notify_error=lambda _parent, title, message: notifications.append((title, message)),
         )
