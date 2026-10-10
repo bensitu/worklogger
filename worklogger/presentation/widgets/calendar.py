@@ -150,6 +150,7 @@ class CalendarView(QWidget):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        self.setObjectName("calendar_view_widget")
         self._state: CalendarMonthViewState | None = None
         self._buttons: list[CalendarDayButton] = []
         self._week_total_labels: list[QLabel] = []

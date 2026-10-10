@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 )
 
 from worklogger.app.job_runner import JobRunner
+from worklogger.app.use_cases.backgrounds import BackgroundService
 from worklogger.domain.shared.dates import add_months
 from worklogger.domain.shared.errors import AppError, CancellationError
 from worklogger.infrastructure.i18n import _
@@ -37,6 +38,8 @@ from worklogger.presentation.shell.pages import (
     UnavailableSettingsPage,
 )
 from worklogger.presentation.shell.residency import QtResidencyController
+from worklogger.presentation.shell.background_controller import BackgroundController
+from worklogger.presentation.theme.background import MainBackgroundWidget
 from worklogger.presentation.theme import (
     ThemeEngine,
     configure_application_style,
@@ -85,6 +88,7 @@ class AppWindowConfig:
     account_role: str = "Admin"
     profile_avatar_png: str = field(default="", repr=False)
     show_recent_context: bool = True
+    background_images_available: bool = False
     confirm_discard_changes: Callable[[], bool] | None = None
 
 
@@ -105,6 +109,7 @@ class AppWindow(QMainWindow):
         residency_controller: QtResidencyController | None = None,
         theme_engine: ThemeEngine | None = None,
         job_runner: JobRunner | None = None,
+        background_service: BackgroundService | None = None,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -149,6 +154,11 @@ class AppWindow(QMainWindow):
         self.setWindowTitle(_("WorkLogger"))
         apply_window_icon(self)
         self._build_ui()
+        self.background_controller = BackgroundController(
+            self._background_surface, background_service,
+            available=self._config.background_images_available, job_runner=self._job_runner,
+        )
+        self._background_surface.active_changed.connect(self.apply_theme)
         self._calendar_coordinator = CalendarCoordinator(
             calendar_view_model=self._calendar_view_model,
             stats_view_model=self._stats_panel_view_model,
@@ -162,6 +172,7 @@ class AppWindow(QMainWindow):
             self.entry_panel.reminder.connect(self._residency_controller.notify_timer_reminder)
         self.sidebar.set_avatar(self._config.profile_avatar_png)
         self.apply_theme()
+        self.background_controller.reload()
         self._date_timer = QTimer(self)
         self._date_timer.setInterval(60_000)
         self._date_timer.timeout.connect(self._update_today)
@@ -199,6 +210,9 @@ class AppWindow(QMainWindow):
         application = QApplication.instance()
         if application is None:
             return
+        self._background_surface.set_base_color(self._theme_engine.palette(
+            self._config.theme, dark=self._config.dark, custom_color=self._config.custom_color,
+        ).surface)
         configure_application_style()
         install_bundled_fonts()
         application.setPalette(
@@ -301,8 +315,8 @@ class AppWindow(QMainWindow):
         )
         root.addWidget(self.sidebar)
 
-        main = QWidget()
-        main.setObjectName("app_main_content_widget")
+        main = MainBackgroundWidget()
+        self._background_surface = main
         main_layout = QVBoxLayout(main)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
@@ -631,6 +645,8 @@ class AppWindow(QMainWindow):
             return
         if isinstance(self.entry_panel, TimeEntryPanel):
             self.entry_panel.auto_timer.stop()
+        self.background_controller.dispose()
+        self._background_surface.shutdown()
         super().closeEvent(event)
 
     def changeEvent(self, event: QEvent) -> None:

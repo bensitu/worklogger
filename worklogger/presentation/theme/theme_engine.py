@@ -301,7 +301,7 @@ def _theme_colors(
 @lru_cache(maxsize=2)
 def _read_qss_template(mode: str) -> str:
     path = _QSS_ROOT / f"blue_{mode}.qss"
-    return path.read_text(encoding="utf-8")
+    return path.read_text(encoding="utf-8") + "\n" + (_QSS_ROOT / "background_images.qss").read_text(encoding="utf-8")
 
 
 def contrasting_text_color(background: QColor) -> QColor:

@@ -186,6 +186,8 @@ def _window(
     reports_workflow: object | None = None,
     residency_controller: object | None = None,
     calendar_events: tuple[CalendarEvent, ...] | None = None,
+    background_service=None,
+    background_images_available: bool = False,
 ) -> AppWindow:
     month_records = month_handler or GetMonthRecordsHandler(repository)
     calendar_view_model = CalendarViewModel(
@@ -219,6 +221,7 @@ def _window(
             monthly_target_hours=40.0,
             calendar_options=CalendarDisplayOptions(standard_work_hours=8.0),
             holidays={date(2026, 4, 29): "Holiday"},
+            background_images_available=background_images_available,
         ),
         settings_workflow=settings_workflow,
         analytics_workflow=analytics_workflow,
@@ -226,6 +229,7 @@ def _window(
         reports_workflow=reports_workflow,
         residency_controller=residency_controller,
         job_runner=ImmediateJobRunner(),
+        background_service=background_service,
     )
 
 

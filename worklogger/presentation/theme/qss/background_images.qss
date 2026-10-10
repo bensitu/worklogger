@@ -1,0 +1,22 @@
+QWidget#app_main_content_widget[background_image="true"] QStackedWidget#app_page_stack_widget,
+QWidget#app_main_content_widget[background_image="true"] QWidget#calendar_page_widget,
+QWidget#app_main_content_widget[background_image="true"] QWidget#calendar_view_widget,
+QWidget#app_main_content_widget[background_image="true"] QFrame#calendar_grid_frame,
+QWidget#app_main_content_widget[background_image="true"] QFrame#calendar_right_panel_frame,
+QWidget#app_main_content_widget[background_image="true"] QWidget#calendar_records_widget,
+QWidget#app_main_content_widget[background_image="true"] QWidget#worklog_entry_panel_widget,
+QWidget#app_main_content_widget[background_image="true"] QWidget#work_context_picker_widget,
+QWidget#app_main_content_widget[background_image="true"] QWidget#worklog_manual_tab_widget,
+QWidget#app_main_content_widget[background_image="true"] QWidget#worklog_auto_tab_widget,
+QWidget#app_main_content_widget[background_image="true"] QTabWidget#worklog_mode_tab_widget,
+QWidget#app_main_content_widget[background_image="true"] QTabWidget#worklog_mode_tab_widget QStackedWidget,
+QWidget#app_main_content_widget[background_image="true"] QWidget#analytics_page_widget,
+QWidget#app_main_content_widget[background_image="true"] QWidget#analytics_content_widget,
+QWidget#app_main_content_widget[background_image="true"] QWidget#reports_page_widget,
+QWidget#app_main_content_widget[background_image="true"] QWidget#report_history_content_widget,
+QWidget#app_main_content_widget[background_image="true"] QWidget#settings_page_widget,
+QWidget#app_main_content_widget[background_image="true"] QStackedWidget#settings_category_stack_widget,
+QWidget#app_main_content_widget[background_image="true"] QWidget#settings_scroll_content_widget,
+QWidget#app_main_content_widget[background_image="true"] QScrollArea > QWidget {
+  background: transparent;
+}

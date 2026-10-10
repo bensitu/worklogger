@@ -88,6 +88,8 @@ from worklogger.presentation.auth.controller import RememberSessionStore
 from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.presentation.notes import NotesWorkflowController
 from worklogger.presentation.settings import SettingsWorkflowController
+from worklogger.app.use_cases.backgrounds import BackgroundService
+from worklogger.infrastructure.images.background import QtBackgroundImageLoader
 from worklogger.presentation.shell import (
     AppWindow,
     AppWindowConfig,
@@ -517,6 +519,7 @@ def _build_app_window(
         reports_workflow=_build_reports_workflow(user, repositories, handlers),
         residency_controller=residency_controller,
         job_runner=job_runner,
+        background_service=BackgroundService(user.id, repositories.background_images, QtBackgroundImageLoader()),
     )
 
 

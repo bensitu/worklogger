@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from PySide6.QtCore import QBuffer, QByteArray, QIODevice
-from PySide6.QtGui import QImageReader
+from PySide6.QtGui import QImage, QImageReader, QMovie
 
 from worklogger.domain.settings.background import (
     BACKGROUND_FORMATS,
@@ -12,6 +12,7 @@ from worklogger.domain.settings.background import (
     MAX_BACKGROUND_FRAMES,
     MAX_BACKGROUND_TOTAL_PIXELS,
     BackgroundImage,
+    BackgroundState,
 )
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
@@ -65,3 +66,24 @@ def validate_background_data(data: bytes) -> BackgroundImage:
     if not frames or declared_frames > 0 and frames != declared_frames:
         raise ValueError("background_image_invalid")
     return BackgroundImage(data, format_name, candidate.width, candidate.height, frames)
+
+
+def prepare_background(state: BackgroundState) -> Result[tuple[BackgroundState, QImage]]:
+    """Decode stored media off the UI thread before presentation consumes it."""
+    if not state.enabled or state.image is None:
+        return Result.success((state, QImage()))
+    try:
+        image = validate_background_data(state.image.data)
+        if image.animated and image.format.encode("ascii") not in {bytes(format_name) for format_name in QMovie.supportedFormats()}:
+            raise ValueError("background_animation_unsupported")
+        buffer = QBuffer()
+        buffer.setData(QByteArray(image.data))
+        buffer.open(QIODevice.OpenModeFlag.ReadOnly)
+        reader = QImageReader(buffer)
+        reader.setAutoTransform(True)
+        frame = reader.read()
+        if frame.isNull():
+            raise ValueError("background_image_invalid")
+        return Result.success((BackgroundState(image, state.enabled, state.opacity), frame))
+    except ValueError as error:
+        return Result.failure(ValidationError(str(error), str(error)))
