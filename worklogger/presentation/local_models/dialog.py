@@ -197,6 +197,7 @@ class LocalModelsDialog(QDialog):
         self.select_button = QPushButton(_("Use model"))
         self.select_button.setProperty("variant", "primary")
         self.delete_button = QPushButton(_("Delete"))
+        self.delete_button.setProperty("variant", "danger")
         for button in (self.download_button, self.verify_button, self.delete_button):
             actions.addWidget(button)
         details.addLayout(actions)

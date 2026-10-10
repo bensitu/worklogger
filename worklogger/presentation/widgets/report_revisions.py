@@ -55,6 +55,7 @@ class ReportRevisionsDialog(QDialog):
         footer.addStretch()
         self.close_button = QPushButton(_("Close"))
         self.restore_button = QPushButton(_("Restore version"))
+        self.restore_button.setProperty("variant", "primary")
         set_button_icon(self.restore_button, "rotate-ccw")
         self.restore_button.setEnabled(False)
         for field in (self.close_button, self.restore_button):

@@ -155,7 +155,7 @@ class ReportHistoryPanel(CardFrame):
         self.export_button = QPushButton(_("Export Reports"))
         self.export_button.setObjectName("export_reports_button")
         self.export_button.setProperty("variant", "outline")
-        set_button_icon(self.export_button, "file-output", accent=True)
+        set_button_icon(self.export_button, "file-output")
         self.export_button.clicked.connect(self.export_requested.emit)
         self.content_layout.addWidget(self.export_button)
         self.export_button.setVisible(show_export)

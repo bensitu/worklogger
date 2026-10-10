@@ -5,11 +5,13 @@ from __future__ import annotations
 from xml.etree import ElementTree
 from functools import lru_cache
 import math
+import weakref
 
 from PySide6.QtCore import QByteArray, QRect, QRectF, QSize, Qt
 from PySide6.QtGui import QGuiApplication, QIcon, QIconEngine, QPainter, QPalette, QPixmap, QPixmapCache
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QAbstractButton, QWidget
+from shiboken6 import isValid
 
 from worklogger.presentation.widgets.assets import asset_path
 
@@ -41,17 +43,25 @@ def _render_pixmap(name: str, color: str, size: QSize, ratio: float) -> QPixmap:
 
 
 class _PaletteIconEngine(QIconEngine):
-    def __init__(self, name: str, accent: bool = False, primary: bool = False, success: bool = False) -> None:
+    def __init__(self, name: str, accent: bool = False, primary: bool = False, success: bool = False,
+                 *, button: QAbstractButton | None = None) -> None:
         super().__init__()
         self._name = name
         self._accent = accent
         self._primary = primary
         self._success = success
+        self._button = weakref.ref(button) if button is not None else None
 
     def clone(self) -> QIconEngine:
-        return _PaletteIconEngine(self._name, self._accent, self._primary, self._success)
+        button = self._button() if self._button is not None else None
+        return _PaletteIconEngine(self._name, self._accent, self._primary, self._success,
+                                  button=button if button is not None and isValid(button) else None)
 
     def _color(self, mode: QIcon.Mode) -> str:
+        button = self._button() if self._button is not None else None
+        if button is not None and isValid(button):
+            group = QPalette.ColorGroup.Disabled if mode == QIcon.Mode.Disabled or not button.isEnabled() else QPalette.ColorGroup.Active
+            return button.palette().color(group, QPalette.ColorRole.ButtonText).name()
         palette = QGuiApplication.palette()
         role = QPalette.ColorRole.Highlight if self._accent else QPalette.ColorRole.ButtonText
         if self._primary:
@@ -91,6 +101,6 @@ class IconLabel(QWidget):
         painter.end()
 
 
-def set_button_icon(button: QAbstractButton, name: str, *, accent: bool = False) -> None:
-    button.setIcon(ui_icon(name, accent=accent, primary=button.property("variant") == "primary"))
+def set_button_icon(button: QAbstractButton, name: str) -> None:
+    button.setIcon(QIcon(_PaletteIconEngine(name, button=button)))
     button.setIconSize(QSize(20, 20))

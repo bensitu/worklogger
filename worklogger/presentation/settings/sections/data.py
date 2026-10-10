@@ -47,7 +47,7 @@ class DataSection(_SettingsScrollPage):
         self.open_data_directory_button.setProperty("variant", "outline")
         self.open_data_directory_button.setEnabled(False)
         self.open_data_directory_button.clicked.connect(actions.open_data_directory_requested)
-        set_button_icon(self.open_data_directory_button, "folder-open", accent=True)
+        set_button_icon(self.open_data_directory_button, "folder-open")
         location.content_layout.addWidget(self.open_data_directory_button)
         page.layout().addWidget(location)
         csv_card = _action_card(
@@ -64,8 +64,8 @@ class DataSection(_SettingsScrollPage):
         self.import_csv_button.setObjectName("import_csv_button")
         self.import_csv_button.setProperty("variant", "outline")
         self.import_csv_button.clicked.connect(actions.import_csv_requested)
-        set_button_icon(self.export_csv_button, "file-output", accent=True)
-        set_button_icon(self.import_csv_button, "file-input", accent=True)
+        set_button_icon(self.export_csv_button, "file-output")
+        set_button_icon(self.import_csv_button, "file-input")
         _add_action_buttons(
             csv_card, self.export_csv_button, self.import_csv_button, columns=2
         )
@@ -85,8 +85,8 @@ class DataSection(_SettingsScrollPage):
         self.restore_button.setObjectName("restore_button")
         self.restore_button.setProperty("variant", "outline")
         self.restore_button.clicked.connect(actions.restore_requested)
-        set_button_icon(self.backup_button, "database", accent=True)
-        set_button_icon(self.restore_button, "rotate-ccw", accent=True)
+        set_button_icon(self.backup_button, "database")
+        set_button_icon(self.restore_button, "rotate-ccw")
         _add_action_buttons(
             backup_card, self.backup_button, self.restore_button, columns=2
         )
@@ -117,7 +117,7 @@ class DataSection(_SettingsScrollPage):
         self.export_ics_button.clicked.connect(actions.export_ics_requested)
         self.clear_calendar_events_button = QPushButton(_("Clear Calendar Events"))
         self.clear_calendar_events_button.setObjectName("clear_calendar_events_button")
-        self.clear_calendar_events_button.setProperty("variant", "outline")
+        self.clear_calendar_events_button.setProperty("variant", "danger")
         self.clear_calendar_events_button.setEnabled(False)
         self.clear_calendar_events_button.setToolTip(
             _("Clearing calendar events is not supported yet.")
@@ -127,7 +127,7 @@ class DataSection(_SettingsScrollPage):
             (self.export_ics_button, "file-output"),
             (self.clear_calendar_events_button, "trash"),
         ):
-            set_button_icon(button, icon, accent=True)
+            set_button_icon(button, icon)
         _add_action_buttons(
             calendar_card,
             self.import_ics_button,

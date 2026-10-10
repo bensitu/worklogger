@@ -140,6 +140,7 @@ QFrame#calendar_record_frame {
 
 
 QPushButton#calendar_time_entry_button {
+  font-weight: 400;
   background: {{ surface }};
   padding: 0;
   border-radius: 4px;
@@ -294,6 +295,7 @@ QToolButton {
   background: {{ button_background }};
   border: 1px solid {{ border_strong }};
   color: {{ text }};
+  font-weight: 500;
   border-radius: 8px;
   min-height: 28px;
   padding: 5px 14px;
@@ -324,18 +326,21 @@ QToolButton[variant="ghost"] {
   background: transparent;
   border: 1px solid transparent;
   color: {{ text }};
+  font-weight: 400;
 }
 
 QPushButton[variant="outline"],
 QToolButton[variant="outline"] {
   background: {{ surface }};
   border: 1px solid {{ border_strong }};
-  color: {{ accent }};
-  font-weight: 600;
+  color: {{ text }};
+  font-weight: 500;
 }
 
-QPushButton[variant="danger"] {
+QPushButton[variant="danger"],
+QToolButton[variant="danger"] {
   color: {{ danger }};
+  font-weight: 500;
 }
 
 QPushButton[nav_item="true"],
@@ -628,6 +633,7 @@ QLabel#donut_title_label, QLabel#dot_title_label, QLabel#overtime_title_label {
 }
 
 QPushButton#report_history_item_button {
+  font-weight: 400;
   background: {{ surface }};
   border: 1px solid {{ border }};
   border-radius: 6px;
@@ -636,6 +642,7 @@ QPushButton#report_history_item_button {
 }
 
 QPushButton#report_history_item_button[active="true"] {
+  font-weight: 500;
   background: {{ sidebar_active_background }};
   border: 1px solid {{ accent }};
   color: {{ accent }};
@@ -669,7 +676,6 @@ QToolButton[export_menu="true"] {
 }
 
 QToolButton[export_menu="true"]::menu-indicator {
-  image: url("{{ icons_root }}/chevron-down.svg");
   subcontrol-origin: padding;
   subcontrol-position: center right;
   right: 8px;

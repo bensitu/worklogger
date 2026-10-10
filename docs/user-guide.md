@@ -111,8 +111,13 @@ retain the visible shortcut without a database schema change.
 History shortcuts use the history-arrow icon; time selection and timer actions
 retain the clock icon. Report generation uses a new-file icon, and project
 statistics use a project-folder icon. Ordinary actions use a surface background
-with a stronger border. Disabled actions use muted text and icons with a distinct
-background, including selected navigation controls and saved-report entries.
+with a neutral outline, neutral text and medium weight. Primary save, creation,
+sign-in and confirmation actions use a theme-colored background, white text and
+semibold weight. Auxiliary actions use regular weight and a transparent background;
+destructive actions use red text and matching icons. Selected navigation retains
+theme-color emphasis. Disabled actions use muted text and icons with a distinct
+background while keeping their role's weight to avoid layout changes. Button icons
+follow the text color rather than applying a separate accent color.
 
 ### Manual Entry
 

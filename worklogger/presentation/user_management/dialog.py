@@ -229,7 +229,7 @@ class UserManagementDialog(QDialog):
         self.status_label.setObjectName("user_management_status_label")
         self.close_button = QPushButton(_("Close"))
         self.close_button.setObjectName("close_user_management_button")
-        self.close_button.setProperty("variant", "primary")
+        self.close_button.setProperty("variant", "outline")
         bottom.addWidget(self.status_label, 1)
         bottom.addStretch()
         bottom.addWidget(self.close_button)
@@ -281,6 +281,7 @@ class UserManagementDialog(QDialog):
         layout.addLayout(self.credential_layout)
         layout.addStretch(1)
         self.delete_user_button = QPushButton(_("Delete user"))
+        self.delete_user_button.setProperty("variant", "danger")
         set_button_icon(self.delete_user_button, "trash")
         layout.addWidget(self.delete_user_button, 0, Qt.AlignmentFlag.AlignRight)
         return page

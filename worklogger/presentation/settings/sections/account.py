@@ -112,7 +112,7 @@ class AccountSection(_SettingsScrollPage):
             (self.logout_button, "log-out"),
             (self.manage_identities_button, "link"),
         ):
-            set_button_icon(button, icon, accent=True)
+            set_button_icon(button, icon)
         page.layout().addWidget(security)
         self.account_administration_frame = CardFrame(object_name="settings_content_frame")
         self.account_administration_frame.content_layout.addWidget(_section_title(_("User administration")))

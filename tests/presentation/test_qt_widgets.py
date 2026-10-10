@@ -83,6 +83,45 @@ def _calendar_state() -> CalendarMonthViewState:
 
 
 class QtWidgetTests(unittest.TestCase):
+    def test_button_icons_follow_text_through_role_theme_and_enabled_changes(self):
+        from PySide6.QtWidgets import QPushButton, QToolButton
+        from worklogger.presentation.widgets.icons import set_button_icon
+        from worklogger.presentation.widgets._style import refresh_style
+        app = _app()
+        original_style, original_palette = app.styleSheet(), app.palette()
+        engine = ThemeEngine()
+        try:
+            for button_type in (QPushButton, QToolButton):
+                button = button_type()
+                set_button_icon(button, "file-text")
+                for theme, dark in (("blue", False), ("blue", True), ("green", False), ("green", True)):
+                    app.setPalette(engine.qt_palette(theme, dark=dark))
+                    app.setStyleSheet(engine.application_stylesheet(theme, dark=dark))
+                    colors = engine.palette(theme, dark=dark)
+                    for variant in ("outline", "primary", "ghost", "danger"):
+                        button.setProperty("variant", variant)
+                        for enabled in (True, False):
+                            button.setEnabled(enabled)
+                            refresh_style(button)
+                            group = QPalette.ColorGroup.Active if enabled else QPalette.ColorGroup.Disabled
+                            expected = button.palette().color(group, QPalette.ColorRole.ButtonText).name()
+                            if enabled:
+                                self.assertEqual(expected, "#ffffff" if variant == "primary" else colors.danger if variant == "danger" else colors.text)
+                            self.assertEqual(button.font().weight(), QFont.Weight.DemiBold if variant == "primary" else
+                                             QFont.Weight.Normal if variant == "ghost" else QFont.Weight.Medium)
+                            image = button.icon().pixmap(QSize(20, 20), QIcon.Mode.Normal if enabled else QIcon.Mode.Disabled).toImage()
+                            opaque_colors = {image.pixelColor(x, y).name() for x in range(image.width()) for y in range(image.height())
+                                if image.pixelColor(x, y).alpha() == 255}
+                            self.assertEqual(opaque_colors, {expected})
+                icon = button.icon()
+                button.deleteLater()
+                from PySide6.QtCore import QCoreApplication, QEvent
+                QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+                self.assertFalse(icon.pixmap(QSize(20, 20)).isNull())
+        finally:
+            app.setStyleSheet(original_style)
+            app.setPalette(original_palette)
+
     def test_switch_supports_keyboard_checked_state_and_accessible_name(self):
         switch = SwitchButton()
         switch.setAccessibleName("Public holidays")

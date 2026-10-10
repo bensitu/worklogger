@@ -22,7 +22,7 @@ class ExportMenuButton(QToolButton):
         self.setProperty("export_menu", True)
         self.setText(label)
         self.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
-        self.setProperty("variant", "primary")
+        self.setProperty("variant", "outline")
         menu = QMenu(self)
         for key, text in actions:
             action = menu.addAction(text)

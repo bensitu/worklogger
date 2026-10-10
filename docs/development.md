@@ -72,6 +72,33 @@ Use English comments and neutral, descriptive names. Public documentation should
 explain supported behavior and limitations. Standard technical identifiers such
 as HTTP, SQLite, PKCE, GGUF, and gettext retain their usual meanings.
 
+## Action Styling
+
+Button roles are defined by the shared application stylesheet, not individual
+color assignments. Primary actions use theme-colored backgrounds, white text and
+weight 600. Ordinary and outline actions use neutral text and weight 500. Auxiliary
+ghost actions use neutral text, transparent backgrounds and weight 400. Destructive
+actions use danger-colored text and weight 500. Disabled actions use the disabled
+palette while retaining their role's weight to prevent layout shifts.
+
+Navigation and view selectors use theme-color emphasis and weight 600 only when
+selected. Record summaries retain weight 400; saved-report entries use 400 normally
+and 500 when selected. Headings keep their separate hierarchy. Existing bundled
+Noto families remain unchanged; Qt resolves requested emphasis against available
+font faces. Font sizing and styling remain at the application stylesheet boundary.
+
+Use `set_button_icon` for Lucide action icons. It reads the owning button's effective
+text palette through a weak reference, so theme changes, disabled states, selected
+navigation and late role assignments stay synchronized. Per-call accent overrides
+are not supported for buttons. Provider logos and non-action status icons retain
+their branded or semantic colors. Export-menu arrows use the native style palette.
+
+Assign primary roles to save, creation, sign-in, apply and main timer actions.
+Automatic recording's separate Save Content action is secondary; manual Save is
+primary. Close and export actions do not become primary merely because they appear
+in a footer. Refresh dynamic-property styling with the existing `refresh_style`
+helper when switching a role on a live control.
+
 ## Data Safety
 
 Never use the development user's actual database as a writable test fixture.

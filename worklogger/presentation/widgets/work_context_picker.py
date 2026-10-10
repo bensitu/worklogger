@@ -39,6 +39,7 @@ class WorkContextPicker(QWidget):
                 self.recent_button = QToolButton()
                 self.recent_button.setFixedSize(28, 28)
                 self.recent_button.setObjectName("recent_work_context_button")
+                self.recent_button.setProperty("variant", "ghost")
                 self.recent_button.setToolTip(_("Recent context"))
                 self.recent_button.setAccessibleName(_("Recent context"))
                 set_button_icon(self.recent_button, "history")

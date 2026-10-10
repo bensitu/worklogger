@@ -4,7 +4,7 @@ from PySide6.QtCore import QEvent, QSize, Qt, Signal, QTimer
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QToolButton
 from worklogger.presentation.widgets.hover_delete_button import HoverDeleteButton
-from worklogger.presentation.widgets.icons import ui_icon
+from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.infrastructure.i18n import _
 
 
@@ -45,7 +45,8 @@ class RecordSummaryButton(HoverDeleteButton):
         self._actions_enabled = actions_enabled
         self.actions_button = QToolButton(self)
         self.actions_button.setObjectName("record_actions_button")
-        self.actions_button.setIcon(ui_icon("chevron-down"))
+        self.actions_button.setProperty("variant", "ghost")
+        set_button_icon(self.actions_button, "chevron-down")
         self.actions_button.setToolTip(_("Record actions"))
         self.actions_button.setAccessibleName(_("Record actions") + ": " + text)
         self.actions_button.clicked.connect(lambda: self.actions_requested.emit(self.actions_button.mapToGlobal(self.actions_button.rect().bottomLeft())))

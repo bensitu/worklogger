@@ -119,7 +119,7 @@ class ProjectManagerDialog(QDialog):
         button.setAutoDefault(False)
         button.setProperty("variant", "primary" if primary else "outline")
         if icon:
-            set_button_icon(button, icon, accent=not primary)
+            set_button_icon(button, icon)
         button.clicked.connect(callback)
         return button
 

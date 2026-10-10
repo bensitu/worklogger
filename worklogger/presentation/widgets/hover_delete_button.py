@@ -5,7 +5,7 @@ from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QPushButton, QToolButton
 
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.widgets.icons import ui_icon
+from worklogger.presentation.widgets.icons import set_button_icon
 
 
 class HoverDeleteButton(QPushButton):
@@ -18,7 +18,8 @@ class HoverDeleteButton(QPushButton):
         self._keyboard_focus = False
         self.delete_button = QToolButton(self)
         self.delete_button.setObjectName("delete_record_button")
-        self.delete_button.setIcon(ui_icon("trash"))
+        self.delete_button.setProperty("variant", "danger")
+        set_button_icon(self.delete_button, "trash")
         self.delete_button.setToolTip(delete_label or _("Delete record"))
         self.delete_button.setAccessibleName((delete_label or _("Delete record")) + ": " + text)
         self.delete_button.clicked.connect(self.delete_requested)

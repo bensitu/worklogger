@@ -75,7 +75,7 @@ class CalendarDayButton(QPushButton):
         lines = list(cell.text_lines)
         font = painter.font()
         font.setPixelSize(12)
-        font.setBold(cell.is_selected)
+        font.setWeight(QFont.Weight.DemiBold if cell.is_selected else QFont.Weight.Normal)
         painter.setFont(font)
         painter.setPen(QColor(foreground))
         if lines:

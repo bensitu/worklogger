@@ -28,7 +28,7 @@ from worklogger.presentation.theme import ThemeEngine, configure_application_sty
 from worklogger.presentation.widgets.assets import apply_window_icon, asset_path, pixmap_asset
 from worklogger.presentation.widgets.credential_actions import CredentialActions, fit_credential_result
 from worklogger.presentation.widgets import SwitchButton
-from worklogger.presentation.widgets.icons import ui_icon
+from worklogger.presentation.widgets.icons import ui_icon, set_button_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
 from worklogger.presentation.widgets.processing_progress import ProcessingProgress
 
@@ -300,7 +300,8 @@ class LoginDialog(AuthDialog):
             configure.setFixedSize(36, 36)
             configure.setToolTip(_("Configure sign-in") + " - " + button.text())
             configure.setAccessibleName(configure.toolTip())
-            configure.setIcon(ui_icon("settings"))
+            configure.setProperty("variant", "ghost")
+            set_button_icon(configure, "settings")
             configure.clicked.connect(lambda _checked=False, key=key: self.identity_configuration_requested.emit(key))
             row.addWidget(configure)
             self.identity_configuration_buttons[key] = configure

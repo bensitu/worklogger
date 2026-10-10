@@ -47,6 +47,8 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                         for column, enabled in enumerate((True, False)):
                             is_record = properties.get("object_name") == "calendar_time_entry_button"
                             button = RecordSummaryButton("Action") if is_record else QPushButton("Action")
+                            if properties.get("checked"):
+                                button.setCheckable(True)
                             for key, value in properties.items():
                                 if key == "object_name":
                                     button.setObjectName(value)
@@ -68,6 +70,15 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                         self.assertTrue(panel.rect().contains(disabled.geometry()))
                         self.assertNotEqual(enabled.palette().color(QPalette.ColorRole.ButtonText),
                                             disabled.palette().color(QPalette.ColorRole.ButtonText))
+                        if enabled.property("variant") in ("outline", "ghost"):
+                            self.assertEqual(enabled.palette().color(QPalette.ColorRole.ButtonText).name(),
+                                             engine.palette(theme, dark=dark, custom_color="#168078").text)
+                        expected_weight = (600 if enabled.property("variant") == "primary" or enabled.property("nav_item") or
+                                           enabled.property("settings_nav_item") or enabled.property("segment") or enabled.property("page_tab")
+                                           else 400 if enabled.property("variant") == "ghost" or isinstance(enabled, RecordSummaryButton)
+                                           else 500)
+                        self.assertEqual(enabled.font().weight(), expected_weight)
+                        self.assertEqual(disabled.font().weight(), expected_weight)
                         self.assertEqual(disabled.palette().color(QPalette.ColorRole.ButtonText).name(),
                                          "#6f7699" if dark else "#9aa3bb")
                         disabled_background = disabled.grab().toImage().pixelColor(8, disabled.height() // 2)

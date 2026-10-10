@@ -94,7 +94,7 @@ class GeneralSection(_SettingsScrollPage):
         self.manage_work_types_button.setFixedWidth(320)
         self.manage_work_types_button.setProperty("variant", "outline")
         self.manage_work_types_button.setEnabled(False)
-        set_button_icon(self.manage_work_types_button, "settings", accent=True)
+        set_button_icon(self.manage_work_types_button, "settings")
         self.manage_work_types_button.clicked.connect(actions.manage_work_types_requested)
         form.addRow(_("Work types"), self.manage_work_types_button)
 
@@ -103,7 +103,7 @@ class GeneralSection(_SettingsScrollPage):
         self.manage_projects_button.setFixedWidth(320)
         self.manage_projects_button.setProperty("variant", "outline")
         self.manage_projects_button.setEnabled(False)
-        set_button_icon(self.manage_projects_button, "settings", accent=True)
+        set_button_icon(self.manage_projects_button, "settings")
         self.manage_projects_button.clicked.connect(actions.manage_projects_requested)
         form.addRow(_("Projects"), self.manage_projects_button)
 

@@ -108,7 +108,7 @@ class AboutSection(_SettingsScrollPage):
         self.check_updates_button.setObjectName("check_updates_button")
         self.check_updates_button.setProperty("variant", "outline")
         self.check_updates_button.clicked.connect(actions.update_check_requested)
-        set_button_icon(self.check_updates_button, "refresh-cw", accent=True)
+        set_button_icon(self.check_updates_button, "refresh-cw")
         card.content_layout.addWidget(
             self.check_updates_button, 0, Qt.AlignmentFlag.AlignHCenter
         )

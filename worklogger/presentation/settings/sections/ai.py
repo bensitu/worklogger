@@ -186,7 +186,7 @@ class AISection(_SettingsScrollPage):
             actions.manage_local_models_requested
         )
         self.manage_local_models_button.setProperty("variant", "outline")
-        set_button_icon(self.manage_local_models_button, "settings", accent=True)
+        set_button_icon(self.manage_local_models_button, "settings")
         _add_action_buttons(local, self.manage_local_models_button, columns=1)
         page.layout().addWidget(local)
 

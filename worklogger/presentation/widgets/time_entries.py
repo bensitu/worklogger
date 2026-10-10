@@ -26,6 +26,7 @@ from worklogger.presentation.widgets.work_context_picker import WorkContextPicke
 from worklogger.presentation.work_type_labels import work_type_label
 from worklogger.presentation.processing import TextProcessingTask
 from worklogger.presentation.widgets.processing_progress import ProcessingProgress
+from worklogger.presentation.widgets._style import refresh_style
 
 
 class TimeEntryPanel(QWidget):
@@ -97,6 +98,7 @@ class TimeEntryPanel(QWidget):
         for button, name, icon in ((self.clock_in_button, "auto_clock_in_button", "clock"),
                                    (self.clock_out_button, "auto_clock_out_button", "check")):
             button.setObjectName(name)
+            button.setProperty("variant", "primary")
             button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             set_button_icon(button, icon)
             buttons.addWidget(button)
@@ -109,6 +111,7 @@ class TimeEntryPanel(QWidget):
         break_row.addWidget(self.break_button, 1)
         self.discard_timer_button = QPushButton(_("Discard timer"))
         self.discard_timer_button.setObjectName("discard_timer_button")
+        self.discard_timer_button.setProperty("variant", "danger")
         set_button_icon(self.discard_timer_button, "trash")
         self.discard_timer_button.clicked.connect(self._discard_timer)
         break_row.addWidget(self.discard_timer_button, 1)
@@ -160,7 +163,8 @@ class TimeEntryPanel(QWidget):
         self.polish_button.setObjectName("polish_time_entry_button")
         self.polish_button.setToolTip(_("Polish text"))
         self.polish_button.setAccessibleName(_("Polish text"))
-        self.polish_button.setIcon(ui_icon("sparkles", accent=True))
+        self.polish_button.setProperty("variant", "ghost")
+        set_button_icon(self.polish_button, "sparkles")
         self.polish_button.setFixedSize(28, 28)
         self.polish_button.clicked.connect(self._polish_content)
         content_heading.addWidget(self.polish_button)
@@ -205,13 +209,15 @@ class TimeEntryPanel(QWidget):
         actions.addWidget(self.save_button, 1)
         self.clear_button = QToolButton()
         self.clear_button.setObjectName("clear_time_entry_button")
-        self.clear_button.setIcon(ui_icon("eraser"))
+        self.clear_button.setProperty("variant", "ghost")
+        set_button_icon(self.clear_button, "eraser")
         self.clear_button.setToolTip(_("Clear input"))
         self.clear_button.setAccessibleName(_("Clear input"))
         actions.addWidget(self.clear_button)
         self.undo_button = QToolButton()
         self.undo_button.setObjectName("undo_record_change_button")
-        self.undo_button.setIcon(ui_icon("rotate-ccw"))
+        self.undo_button.setProperty("variant", "ghost")
+        set_button_icon(self.undo_button, "rotate-ccw")
         self.undo_button.setToolTip(_("Undo latest record change"))
         self.undo_button.setAccessibleName(_("Undo latest record change"))
         self.undo_button.setVisible(view_model.changes_available)
@@ -369,6 +375,10 @@ class TimeEntryPanel(QWidget):
         self._updating = True
         try:
             auto = self.time_tabs.currentIndex() == 1
+            variant = "outline" if auto else "primary"
+            if self.save_button.property("variant") != variant:
+                self.save_button.setProperty("variant", variant)
+                refresh_style(self.save_button)
             draft = self.view_model.draft
             linked_timer = self.view_model.editing_active_timer
             self.start_input.setText(draft.start)
