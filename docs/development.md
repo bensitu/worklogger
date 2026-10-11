@@ -67,8 +67,16 @@ material. Settings choices and configuration validation use this catalog;
 customizable choices appear last. Translate new labels through the normal
 gettext workflow.
 
-`theme/palettes.py` resolves material colors, `calendar_styles.py` defines date
-states, and `stylesheets.py` renders shared tokens with bounded caches. Effects
+`config/theme_colors.py` validates immutable color roles. Optional
+`light_overrides` and `dark_overrides` use `SurfaceOverrides` to customize a few
+surface or status colors without duplicating a material. Keep overrides limited
+to genuine brand requirements and verify their contrast.
+
+`theme/materials.py` defines reusable surfaces, calendar states, backdrop colors,
+stylesheet fragments, and rendering capabilities. `palettes.py` combines these
+with brand colors; `qt_palette.py` adapts resolved colors to Qt. Color resolution
+and calendar rules do not require Qt. `stylesheets.py` renders shared tokens with
+bounded caches. Effects
 depend on material capabilities, not a theme's key. Reuse these profiles for
 branded themes rather than copying QSS or adding theme-name checks to widgets.
 Apply application themes through `ThemeEngine.apply_to`. Custom-painted controls

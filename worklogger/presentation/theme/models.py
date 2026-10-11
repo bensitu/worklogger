@@ -1,9 +1,11 @@
 """Resolved theme colors and calendar appearance values."""
 
 from dataclasses import dataclass
+from worklogger.config.theme_colors import SurfaceColors
+
 
 @dataclass(frozen=True)
-class ColorPalette:
+class ColorPalette(SurfaceColors):
     theme: str
     dark: bool
     accent: str
@@ -11,28 +13,6 @@ class ColorPalette:
     accent_dim: str
     stat_background: str
     stat_border: str
-    background: str
-    surface: str
-    surface_alt: str
-    table_alternate: str
-    button_hover: str
-    disabled_text: str
-    disabled_background: str
-    highlighted_text: str
-    login_hero_background: str
-    card: str
-    card_hover: str
-    border: str
-    border_strong: str
-    text: str
-    muted_text: str
-    input_background: str
-    input_border: str
-    sidebar_background: str
-    sidebar_active_background: str
-    danger: str
-    success: str
-    warning: str
     material: str = "solid"
 
 

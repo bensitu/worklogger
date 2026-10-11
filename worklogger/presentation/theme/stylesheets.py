@@ -6,9 +6,8 @@ from pathlib import Path
 import re
 from types import MappingProxyType
 
-from PySide6.QtGui import QColor
-
 from worklogger.presentation.theme.models import ColorPalette
+from worklogger.presentation.theme.materials import MATERIAL_PROFILES, material_profile
 
 _QSS_ROOT = Path(__file__).with_name("qss")
 _QSS_TOKEN_RE = re.compile(r"\{\{\s*([a-z_]+)\s*\}\}")
@@ -17,10 +16,10 @@ COMMON_TEMPLATES = (
     "inputs.qss", "scrolling.qss", "settings.qss", "date_picker.qss",
     "reporting.qss", "disabled.qss", "background_images.qss",
 )
-MATERIAL_TEMPLATES = MappingProxyType({"solid": (), "glass": ("materials.qss",)})
+MATERIAL_TEMPLATES = MappingProxyType({key: profile.stylesheet_fragments for key, profile in MATERIAL_PROFILES.items()})
 
 
-@lru_cache(maxsize=2)
+@lru_cache(maxsize=len(MATERIAL_TEMPLATES))
 def _read_qss_template(material: str) -> str:
     if material not in MATERIAL_TEMPLATES:
         raise ValueError("Unsupported stylesheet material")
@@ -37,7 +36,7 @@ def application_stylesheet(palette: ColorPalette) -> str:
 
 
 def _surface_tokens(colors: ColorPalette) -> dict[str, str]:
-    glass = colors.material == "glass"
+    glass = material_profile(colors.material).translucent
     fill = _rgba(colors.input_background, 200) if glass else colors.surface
     border = _rgba(colors.border_strong, 115) if glass else colors.border
     hover = _rgba(colors.button_hover, 225) if glass else colors.button_hover
@@ -65,7 +64,7 @@ def _surface_tokens(colors: ColorPalette) -> dict[str, str]:
 
 
 def _rgba(color: str, alpha: int) -> str:
-    red, green, blue, _alpha = QColor(color).getRgb()
+    red, green, blue = (int(color[index:index + 2], 16) for index in (1, 3, 5))
     return f"rgba({red}, {green}, {blue}, {alpha})"
 
 

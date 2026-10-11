@@ -1,10 +1,12 @@
 """Resolve accent definitions against reusable material color profiles."""
 
 from functools import lru_cache
+from dataclasses import asdict, replace
 
 from worklogger.config.themes import AccentColors, ThemeDefinition
 from worklogger.domain.settings.appearance import DEFAULT_CUSTOM_COLOR, normalize_hex_color
 from worklogger.presentation.theme.models import ColorPalette
+from worklogger.presentation.theme.materials import material_profile
 
 
 @lru_cache(maxsize=32)
@@ -13,38 +15,13 @@ def build_palette(definition: ThemeDefinition, dark: bool, custom_color: str | N
               if definition.customizable else definition.dark if dark else definition.light)
     accent, hover, accent_dim, stat_background, stat_border = (
         colors.accent, colors.hover, colors.accent_dim, colors.stat_background, colors.stat_border)
-    if dark:
-        background, surface, surface_alt = "#111827", "#182033", "#202a42"
-        card, card_hover = "#1b2438", "#22304b"
-        border, border_strong = "#303b56", "#4b5a78"
-        text, muted = "#c8cde8", "#8890b8"
-        input_background, input_border = "#181928", "#33365a"
-        sidebar_background, sidebar_active = "#141d2d", "#172f58"
-        danger, success, warning = "#ff6b6b", "#45c97a", "#ffb84d"
-        table_alternate, button_hover = surface_alt, "#2c2e50"
-        disabled_text, disabled_background = "#6f7699", background
-    else:
-        background, surface, surface_alt = "#f5f7fb", "#ffffff", "#f8fafc"
-        card, card_hover = "#ffffff", "#f3f7ff"
-        border, border_strong = "#dce3ef", "#c7d0df"
-        text, muted = "#1e2035", "#606888"
-        input_background, input_border = "#ffffff", "#d0d5e8"
-        sidebar_background, sidebar_active = "#ffffff", "#eaf2ff"
-        danger, success, warning = "#ef4444", "#16a34a", "#f59e0b"
-        table_alternate, button_hover = surface, "#e8ecf8"
-        disabled_text, disabled_background = "#9aa3bb", "#edf0f5"
-    if definition.material == "glass":
-        background, surface, surface_alt = (("#20252a", "#252c32", "#30383f") if dark else
-                                          ("#e5edf1", "#f3f7fa", "#eaf1f5"))
-        card, card_hover = surface, surface_alt
-        border, border_strong = (("#53636c", "#71838d") if dark else ("#bdced9", "#a5bac7"))
-        text, muted = (("#e8eef3", "#b2bdc6") if dark else ("#182b35", "#506976"))
-        input_background, input_border = (("#222a30", "#697b85") if dark else ("#ffffff", "#aabdc9"))
-        sidebar_background, sidebar_active = surface, accent_dim
-        table_alternate, button_hover = surface_alt if dark else input_background, surface_alt
-        disabled_text, disabled_background = (("#8e9ba5", "#30383f") if dark else ("#7e939f", "#e4edf2"))
-        danger, success, warning = (("#ff9baf", "#87e5ba", "#f4d989") if dark else
-                                    ("#a9243a", "#166c44", "#875900"))
+    profile = material_profile(definition.material)
+    surfaces = profile.surfaces(dark)
+    if profile.translucent:
+        surfaces = replace(surfaces, sidebar_active_background=accent_dim)
+    overrides = definition.dark_overrides if dark else definition.light_overrides
+    if overrides is not None:
+        surfaces = replace(surfaces, **dict(overrides.colors))
     return ColorPalette(
         theme=definition.key,
         material=definition.material,
@@ -54,28 +31,7 @@ def build_palette(definition: ThemeDefinition, dark: bool, custom_color: str | N
         accent_dim=accent_dim,
         stat_background=stat_background,
         stat_border=stat_border,
-        background=background,
-        surface=surface,
-        surface_alt=surface_alt,
-        table_alternate=table_alternate,
-        button_hover=button_hover,
-        disabled_text=disabled_text,
-        disabled_background=disabled_background,
-        highlighted_text="#10242a" if definition.material == "glass" and dark else "#ffffff",
-        login_hero_background="#111827",
-        card=card,
-        card_hover=card_hover,
-        border=border,
-        border_strong=border_strong,
-        text=text,
-        muted_text=muted,
-        input_background=input_background,
-        input_border=input_border,
-        sidebar_background=sidebar_background,
-        sidebar_active_background=sidebar_active,
-        danger=danger,
-        success=success,
-        warning=warning,
+        **asdict(surfaces),
     )
 
 

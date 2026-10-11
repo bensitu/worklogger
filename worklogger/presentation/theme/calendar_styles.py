@@ -1,26 +1,10 @@
 """Calendar state styling independent of theme identifiers."""
 
-from PySide6.QtGui import QColor
-
 from worklogger.domain.worklog.models import CustomWorkType, WorkType
 from worklogger.presentation.theme.models import CalendarCellStyle, ColorPalette
+from worklogger.presentation.theme.materials import material_profile
 
 STYLE_PRIORITY = ("weekend", "holiday", "today", "selected")
-
-_CELL_COLORS: dict[bool, dict[str, tuple[str, str, str, str]]] = {
-    False: {
-        "default": ("#ffffff", "#1e2035", "#dde1ee", "1"),
-        "today": ("#fffce0", "#8a6800", "#e0c800", "2"),
-        "weekend": ("#eef3ff", "#1e5cc4", "#b8cfff", "1"),
-        "holiday": ("#fff0f0", "#cc2222", "#ffaaaa", "1"),
-    },
-    True: {
-        "default": ("#1e2030", "#c0c8e0", "#2d2f4a", "1"),
-        "today": ("#2e2a00", "#ffd855", "#aa9500", "2"),
-        "weekend": ("#0c1d3c", "#5aafff", "#1a3a6a", "1"),
-        "holiday": ("#3c0d0d", "#ff7777", "#802020", "1"),
-    },
-}
 
 _WORK_TYPE_MARKERS: dict[bool, dict[str, str | None]] = {
     False: {
@@ -43,6 +27,7 @@ _WORK_TYPE_MARKERS: dict[bool, dict[str, str | None]] = {
 
 
 def calendar_cell_style(flags: set[str], palette: ColorPalette) -> CalendarCellStyle:
+    profile = material_profile(palette.material)
     key = "default"
     for candidate in STYLE_PRIORITY:
         if candidate in flags:
@@ -52,22 +37,15 @@ def calendar_cell_style(flags: set[str], palette: ColorPalette) -> CalendarCellS
             palette.accent,
             palette.highlighted_text,
             palette.accent,
-            "2",
+            2,
         )
     else:
-        background, foreground, border, width = _CELL_COLORS[palette.dark][key]
-        if palette.material == "glass":
-            background = QColor(palette.surface)
-            if key == "holiday":
-                background = QColor("#5b292e" if palette.dark else "#f6dce0")
-            elif key == "weekend":
-                background = QColor(palette.accent_dim)
-            elif key == "today":
-                background = QColor("#444230" if palette.dark else "#f5f1d5")
-            background.setAlpha(180)
-            background = background.name(QColor.NameFormat.HexArgb)
-            foreground = palette.accent if key == "weekend" else palette.danger if key == "holiday" else palette.text
-            border = palette.border
+        state = profile.calendar(key, palette.dark)
+        background, foreground, border = (_color(value, palette) for value in
+                                         (state.background, state.foreground, state.border))
+        width = state.border_width
+        if state.alpha != 255:
+            background = f"#{state.alpha:02x}" + background.lstrip("#").lower()
     return CalendarCellStyle(
         key=key,
         background=background,
@@ -75,9 +53,13 @@ def calendar_cell_style(flags: set[str], palette: ColorPalette) -> CalendarCellS
         border=border,
         border_width=int(width),
         hover_border=palette.hover,
-        holiday_foreground=palette.danger if palette.material == "glass" else "#ef4444",
+        holiday_foreground=_color(profile.holiday_foreground, palette),
         highlighted_foreground=palette.highlighted_text,
     )
+
+
+def _color(value: str, palette: ColorPalette) -> str:
+    return value if value.startswith("#") else getattr(palette, value)
 
 
 def work_type_marker_color(work_type: WorkType | CustomWorkType | str, *, dark: bool = False) -> str | None:

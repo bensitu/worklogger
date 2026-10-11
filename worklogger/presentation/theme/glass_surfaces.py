@@ -9,6 +9,7 @@ from shiboken6 import isValid
 
 from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.presentation.theme.glass_renderer import GLASS_PADDING, render_geometry, render_glass
+from worklogger.presentation.theme.materials import material_profile
 from worklogger.presentation.widgets._style import set_style_property
 
 _SURFACE_NAMES = {"app_main_content_widget", "app_sidebar_frame",
@@ -66,14 +67,14 @@ class GlassThemeController(QObject):
         if self._disposed or colors == self._colors:
             return
         self._generation += 1
-        self._enabled, self._colors = colors.material == "glass", colors
+        self._enabled, self._colors = material_profile(colors.material).refraction, colors
         self._software_failed = False
         self._timer.stop()
         self._pending.clear()
         for handle in self._jobs.values():
             if handle is not None:
                 handle.cancel()
-        self._source.set_glass_colors(colors)
+        self._source.set_material_colors(colors)
         for target, layer in tuple(self._layers.items()):
             if not isValid(target):
                 del self._layers[target]

@@ -4,24 +4,12 @@ from dataclasses import dataclass
 import re
 from types import MappingProxyType
 
+from worklogger.config.theme_colors import AccentColors as AccentColors, SurfaceOverrides as SurfaceOverrides
+
 
 def N_(message: str) -> str:
     """Mark a label for gettext extraction without translating it at import time."""
     return message
-
-
-@dataclass(frozen=True)
-class AccentColors:
-    accent: str
-    hover: str
-    accent_dim: str
-    stat_background: str
-    stat_border: str
-
-    def __post_init__(self):
-        for value in (self.accent, self.hover, self.accent_dim, self.stat_background, self.stat_border):
-            if not re.fullmatch(r"#[0-9a-fA-F]{6}", value):
-                raise ValueError("Theme colors must use six-digit hexadecimal notation")
 
 
 @dataclass(frozen=True)
@@ -31,6 +19,8 @@ class ThemeDefinition:
     light: AccentColors | None = None
     dark: AccentColors | None = None
     material: str = "solid"
+    light_overrides: SurfaceOverrides | None = None
+    dark_overrides: SurfaceOverrides | None = None
 
     def __post_init__(self):
         if not re.fullmatch(r"[a-z][a-z0-9_]*", self.key) or not self.label.strip():
@@ -39,6 +29,9 @@ class ThemeDefinition:
             raise ValueError("Unsupported theme material")
         if (self.light is None) != (self.dark is None):
             raise ValueError("A theme must define both light and dark accent colors")
+        if any(value is not None and not isinstance(value, SurfaceOverrides)
+               for value in (self.light_overrides, self.dark_overrides)):
+            raise ValueError("Theme surface overrides must use validated colors")
 
     @property
     def customizable(self) -> bool:

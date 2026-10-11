@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QWidget
 
 from worklogger.domain.settings.background import BackgroundState
 from worklogger.presentation.theme.background_player import BackgroundMoviePlayer
+from worklogger.presentation.theme.materials import material_profile
 
 
 class MainBackgroundWidget(QWidget):
@@ -20,7 +21,7 @@ class MainBackgroundWidget(QWidget):
         self._frame = QImage()
         self._version = 0
         self._player = None
-        self._glass_colors = None
+        self._material_colors = None
         self.setProperty("background_image", False)
 
     @property
@@ -35,11 +36,11 @@ class MainBackgroundWidget(QWidget):
         self.frame_changed.emit()
         self.update()
 
-    def set_glass_colors(self, colors):
-        value = colors if colors.material == "glass" else None
-        if value == self._glass_colors:
+    def set_material_colors(self, colors):
+        value = colors if material_profile(colors.material).backdrop(colors.dark) else None
+        if value == self._material_colors:
             return
-        self._glass_colors = value
+        self._material_colors = value
         self.frame_changed.emit()
         self.update()
 
@@ -114,10 +115,11 @@ class MainBackgroundWidget(QWidget):
 
     def _paint_background(self, painter):
         painter.fillRect(self.rect(), self._base)
-        if self._glass_colors is not None:
-            colors = ("#26333b", "#343c43", "#24413f") if self._glass_colors.dark else ("#d0e0eb", "#eff2f5", "#d3e7df")
+        if self._material_colors is not None:
+            colors = material_profile(self._material_colors.material).backdrop(self._material_colors.dark)
             gradient = QLinearGradient(QPointF(), QPointF(max(1, self.width()), max(1, self.height())))
-            for position, color in zip((0.0, 0.5, 1.0), colors):
+            for index, color in enumerate(colors):
+                position = index / max(1, len(colors) - 1)
                 gradient.setColorAt(position, QColor(color))
             painter.fillRect(QRectF(-self.width(), -self.height(), self.width() * 3, self.height() * 3), gradient)
         if not self.background_active:
