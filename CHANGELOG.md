@@ -1,7 +1,61 @@
 # Changelog
 
-Published release history. These entries describe their respective releases;
-see the [user guide](docs/user-guide.md) for operating instructions.
+All notable changes to this project are documented in this file.
+
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+Version numbers use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Historical entries describe their respective releases; see the
+[user guide](docs/user-guide.md) for operating instructions.
+
+## [Unreleased](https://github.com/bensitu/worklogger/compare/v3.3.3...dev-v4)
+
+**4.0.0: Major application refactor.** The desktop and storage workflows have been
+reorganized around separate domain, application, infrastructure, and presentation
+layers. Back up your database before upgrading.
+
+### Added
+
+- Account-owned custom work types, projects, and work items, with historical
+  classification snapshots, record search, split/merge actions, and conflict-aware undo.
+- Saved report versions, version recovery, generation-source references, and
+  day/month timesheet exports in XLSX and PDF.
+- Editable display names separate from login IDs, circular account avatars, and
+  deployment-controlled static or animated background images.
+- Microsoft browser sign-in and in-application provider registration settings.
+- Adjustable local runtime context and a public deployment configuration file.
+
+### Changed
+
+- Organized Calendar, Analytics, Reports, and Settings in a shared desktop workspace,
+  with grouped settings and consistent action styling and keyboard access.
+- Stored independently editable time periods and persistent timers; manual and
+  automatic input share the selected record's content and classification.
+- Separated daily memos from time-record content, with recoverable drafts and
+  explicit report/AI sharing choices.
+- Distinguished separate saved reports from versions of the open report and
+  simplified template application and saved-daily-report export.
+- Made external AI an explicit account choice and applied account proxy settings
+  to supported requests without silent provider or proxy fallback.
+- Changed Google sign-in to direct browser authorization with request-bound
+  provider-token validation.
+
+### Removed
+
+- Automatic conversion of unsupported development database layouts. Released
+  v3.3.3 imports and supported canonical database upgrades remain available.
+
+### Fixed
+
+- UI freezes during long-running authentication, text processing, and data operations.
+- Unsynchronized manual/automatic record content, inconsistent rest-day accounting,
+  and duplicated record content in independent memos during CSV import.
+- Inconsistent export indicators, button states, settings alignment, and busy feedback.
+- Loss of pending editor content after failed or conflicting saves and exports.
+
+### Security
+
+- Rechecked verified credentials within write transactions so concurrent password
+  resets or recovery-key use cannot be overwritten by stale authentication results.
 
 ## [3.3.3] - 2026-05-11
 
