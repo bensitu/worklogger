@@ -267,6 +267,8 @@ class ModelAccountLayoutChecks(unittest.TestCase):
                             self.assertEqual(
                                 (dialog.width(), dialog.height()), (width, height)
                             )
+                            self.assertGreaterEqual(dialog.summary_label.height(),
+                                                    dialog.summary_label.heightForWidth(dialog.summary_label.width()))
                             self.assertEqual(
                                 dialog.details_scroll.horizontalScrollBar().maximum(), 0
                             )
@@ -276,6 +278,7 @@ class ModelAccountLayoutChecks(unittest.TestCase):
                             self.assertEqual(dialog.verify_button.isEnabled(), row != 0)
                             self.assertEqual(dialog.select_button.isEnabled(), row == 2)
                             for widget in (
+                                dialog.summary_label,
                                 dialog.model_list,
                                 dialog.details_scroll,
                                 dialog.download_button,
@@ -293,7 +296,7 @@ class ModelAccountLayoutChecks(unittest.TestCase):
                                     dialog.rect().contains(rect),
                                     (language, width, row, widget),
                                 )
-                                if hasattr(widget, "text") and widget.text():
+                                if hasattr(widget, "icon") and widget.text():
                                     self.assertLessEqual(
                                         widget.fontMetrics().horizontalAdvance(
                                             widget.text()

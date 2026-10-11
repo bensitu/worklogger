@@ -574,6 +574,9 @@ msgstr "ドメイン"
 msgid "Download"
 msgstr "ダウンロード"
 
+msgid "Download, import, and select a local model."
+msgstr "ローカルモデルをダウンロード、インポート、選択します。"
+
 msgid "Downloading model..."
 msgstr "モデルをダウンロード中..."
 

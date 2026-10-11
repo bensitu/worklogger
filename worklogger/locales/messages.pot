@@ -572,6 +572,9 @@ msgstr ""
 msgid "Download"
 msgstr ""
 
+msgid "Download, import, and select a local model."
+msgstr ""
+
 msgid "Downloading model..."
 msgstr ""
 

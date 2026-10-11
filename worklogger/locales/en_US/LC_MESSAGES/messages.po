@@ -574,6 +574,9 @@ msgstr "Domain"
 msgid "Download"
 msgstr "Download"
 
+msgid "Download, import, and select a local model."
+msgstr "Download, import, and select a local model."
+
 msgid "Downloading model..."
 msgstr "Downloading model..."
 

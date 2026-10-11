@@ -89,6 +89,8 @@ class AccountLayoutChecks(unittest.TestCase):
                         dialog.resize(width, height)
                         self.app.processEvents()
                         self.assertEqual((dialog.width(), dialog.height()), (width, height))
+                        self.assertGreaterEqual(dialog.summary_label.height(),
+                                                dialog.summary_label.heightForWidth(dialog.summary_label.width()))
                         self.assertEqual(dialog.user_table.horizontalScrollBar().maximum(), 0)
                         dialog.user_table.selectRow(1)
                         dialog._show_recovery_key("example-recovery-key-" + "x" * 48)
@@ -97,7 +99,7 @@ class AccountLayoutChecks(unittest.TestCase):
                             dialog.operation_tabs.setCurrentIndex(tab)
                             self.app.processEvents()
                             self.assertEqual((dialog.width(), dialog.height()), (width, height))
-                            for widget in (dialog.user_table, dialog.close_button, dialog.new_user_button,
+                            for widget in (dialog.summary_label, dialog.user_table, dialog.close_button, dialog.new_user_button,
                                            dialog.selected_user_label, dialog.password_change_checkbox,
                                            dialog.reset_password_input, dialog.reset_confirm_input,
                                            dialog.reset_password_button, dialog.delete_user_button,
