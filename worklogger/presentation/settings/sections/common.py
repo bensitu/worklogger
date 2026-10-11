@@ -24,7 +24,7 @@ from worklogger.config.constants import (
 )
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets import CardFrame, SwitchButton
-from worklogger.presentation.widgets._style import apply_numeric_input_padding
+from worklogger.presentation.widgets.numeric_input import apply_numeric_input_padding
 
 
 class _SettingsScrollPage(QScrollArea):

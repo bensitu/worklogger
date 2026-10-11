@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.widgets._style import refresh_style
+from worklogger.presentation.theme.widget_style import refresh_style
 from worklogger.presentation.widgets.card import CardFrame
 from worklogger.presentation.date_labels import month_label
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon

@@ -11,7 +11,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QCoreApplication, QEvent, QTimer
 from PySide6.QtTest import QSignalSpy, QTest
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QWidget
 
 from tests.background_samples import (
     animated_background_bytes,
@@ -28,7 +28,9 @@ from worklogger.infrastructure.images.background import (
 )
 from worklogger.presentation.job_runner import ImmediateJobRunner
 from worklogger.presentation.shell.background_controller import BackgroundController
+from worklogger.presentation.shell.appearance_controller import WindowAppearanceController
 from worklogger.presentation.theme.background import MainBackgroundWidget
+from worklogger.presentation.theme.context import current_colors
 
 
 class BackgroundWorkflowTests(unittest.TestCase):
@@ -64,6 +66,34 @@ class BackgroundWorkflowTests(unittest.TestCase):
         self.assertFalse(window.background_controller.clear())
         self.assertFalse(window._background_surface.background_active)
         service.load.assert_not_called()
+
+    def test_window_appearance_keeps_media_across_material_changes_and_disposes_playback(self):
+        old_palette, old_style = self.app.palette(), self.app.styleSheet()
+        old_context = self.app.property("worklogger_theme_context")
+        window = QWidget()
+        self.addCleanup(window.deleteLater)
+        surface = MainBackgroundWidget(window)
+        state = BackgroundState(validate_background_data(animated_background_bytes()), True)
+        service = SimpleNamespace(load=lambda: Result.success(state))
+        controller = WindowAppearanceController(window, surface, background_service=service,
+            background_images_available=True, job_runner=ImmediateJobRunner())
+        try:
+            controller.background.reload()
+            for theme, dark in (("green", False), ("liquid_glass", True), ("custom", False)):
+                colors = controller.apply(theme, dark=dark, custom_color="#ab1234")
+                self.assertEqual(current_colors(), colors)
+                self.assertTrue(surface.background_active)
+                self.assertEqual(surface._state, state)
+            controller.dispose()
+            controller.dispose()
+            self.assertIsNone(surface._player)
+            self.assertFalse(controller.background.reload())
+            self.assertIsNone(controller.apply("blue"))
+        finally:
+            controller.dispose()
+            self.app.setPalette(old_palette)
+            self.app.setStyleSheet(old_style)
+            self.app.setProperty("worklogger_theme_context", old_context)
 
     def test_failed_loading_preserves_media_and_disposal_ignores_pending_results(self):
         state = BackgroundState(validate_background_data(still_background_bytes()), True)

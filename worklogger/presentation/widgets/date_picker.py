@@ -12,7 +12,7 @@ from worklogger.presentation.date_labels import day_label
 from worklogger.presentation.theme import ThemeEngine
 from worklogger.presentation.theme.context import current_colors
 from worklogger.presentation.widgets.icons import set_button_icon
-from worklogger.presentation.widgets._style import apply_numeric_input_padding
+from worklogger.presentation.widgets.numeric_input import apply_numeric_input_padding
 from worklogger.presentation.widgets.status_label import StatusLabel
 
 

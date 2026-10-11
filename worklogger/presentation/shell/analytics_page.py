@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QMessageBox,
     QScrollArea,
-    QSizePolicy,
     QVBoxLayout,
     QWidget,
     QPushButton,
@@ -39,8 +38,8 @@ from worklogger.presentation.widgets import (
     ExportMenuButton,
     OvertimeComparisonChart,
     SegmentedControl,
-    SummaryValueLabel,
 )
+from worklogger.presentation.widgets.summary_card import SummaryCard
 from worklogger.presentation.widgets.combo_chart import DonutChart
 from worklogger.presentation.widgets.icons import set_button_icon
 from PySide6.QtCore import Signal
@@ -169,35 +168,14 @@ class AnalyticsPage(QWidget):
         summary_grid.setHorizontalSpacing(12)
         summary_grid.setVerticalSpacing(12)
         self.monthly_hours_card = DonutProgressCard(_("Monthly Hours"))
-        self.overtime_card = CardFrame(object_name="analytics_summary_card_frame")
-        self.overtime_card.content_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.overtime_title_label = QLabel(_("Overtime Hours"))
-        self.overtime_title_label.setObjectName("overtime_title_label")
-        self.overtime_title_label.setWordWrap(True)
-        self.overtime_title_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
-        self.overtime_title_label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        self.overtime_value_label = SummaryValueLabel()
-        self.overtime_value_label.setObjectName("overtime_value_label")
-        self.overtime_caption_label = QLabel("")
-        self.overtime_caption_label.setObjectName("overtime_caption_label")
-        self.overtime_caption_label.setProperty("role", "secondary")
-        self.overtime_caption_label.setWordWrap(True)
         self.overtime_chart = OvertimeComparisonChart()
-        self.overtime_card.content_layout.addWidget(self.overtime_title_label)
-        overtime_row = QHBoxLayout()
-        overtime_row.setContentsMargins(0, 0, 0, 0)
-        overtime_row.setSpacing(8)
-        overtime_text = QVBoxLayout()
-        overtime_text.setContentsMargins(0, 0, 0, 0)
-        overtime_text.setSpacing(12)
-        overtime_text.setAlignment(Qt.AlignmentFlag.AlignTop)
-        overtime_text.addWidget(self.overtime_value_label)
-        overtime_text.addWidget(self.overtime_caption_label)
-        overtime_row.addLayout(overtime_text, 1)
-        overtime_row.addWidget(self.overtime_chart)
-        self.overtime_card.content_layout.addLayout(overtime_row)
-        self.attendance_card = DotProgressCard(_("Attendance Days"), color="#16a34a")
-        self.rest_card = DotProgressCard(_("Rest Days"), color="#64748b")
+        self.overtime_card = SummaryCard(_("Overtime Hours"), visual=self.overtime_chart,
+                                         object_name="analytics_summary_card_frame")
+        self.overtime_title_label = self.overtime_card.title_label
+        self.overtime_value_label = self.overtime_card.value_label
+        self.overtime_caption_label = self.overtime_card.caption_label
+        self.attendance_card = DotProgressCard(_("Attendance Days"), color_role="success")
+        self.rest_card = DotProgressCard(_("Rest Days"), color_role="muted_text")
         self.rest_card.setToolTip(_("Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."))
         summary_grid.addWidget(self.monthly_hours_card, 0, 0)
         summary_grid.addWidget(self.overtime_card, 0, 1)

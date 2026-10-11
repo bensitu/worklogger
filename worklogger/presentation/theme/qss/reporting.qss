@@ -65,9 +65,7 @@ QTreeWidget[data_browser="true"] QHeaderView::section {
 
 QLabel#report_history_month_label,
 QLabel#analytics_chart_title_label,
-QLabel#donut_title_label,
-QLabel#dot_title_label,
-QLabel#overtime_title_label {
+QLabel[role="metric_title"] {
   font-weight: 600;
 }
 
@@ -87,17 +85,13 @@ QPushButton#report_history_item_button[active="true"] {
   color: {{ accent }};
 }
 
-QLabel#donut_value_label,
-QLabel#dot_value_label,
-QLabel#overtime_value_label,
+QLabel[role="metric_value"],
 QLabel#daily_average_value_label {
   font-size: 21px;
   font-weight: 600;
 }
 
-QLabel#donut_caption_label,
-QLabel#dot_caption_label,
-QLabel#overtime_caption_label,
+QLabel[role="metric_caption"],
 QLabel#daily_average_comparison_label {
   font-size: 11px;
 }

@@ -19,6 +19,7 @@ def configure_application_style() -> None:
     from worklogger.presentation.theme.platform_style import configure_application_style as configure
     configure()
 
+
 __all__ = [
     "CalendarCellStyle",
     "ColorPalette",

@@ -38,14 +38,9 @@ from worklogger.presentation.shell.pages import (
     UnavailableSettingsPage,
 )
 from worklogger.presentation.shell.residency import QtResidencyController
-from worklogger.presentation.shell.background_controller import BackgroundController
+from worklogger.presentation.shell.appearance_controller import WindowAppearanceController
 from worklogger.presentation.theme.background import MainBackgroundWidget
-from worklogger.presentation.theme.glass_surfaces import GlassThemeController
-from worklogger.presentation.theme import (
-    ThemeEngine,
-    configure_application_style,
-    install_bundled_fonts,
-)
+from worklogger.presentation.theme import ThemeEngine
 from worklogger.presentation.viewmodels import (
     CalendarDisplayOptions,
     CalendarViewModel,
@@ -59,7 +54,6 @@ from worklogger.presentation.widgets import (
     StatsPanel,
 )
 from worklogger.presentation.widgets.assets import apply_window_icon
-from worklogger.presentation.widgets._style import refresh_style_tree
 from worklogger.presentation.widgets.time_entries import TimeEntryPanel
 
 
@@ -136,7 +130,6 @@ class AppWindow(QMainWindow):
                 self._config.calendar_options.week_start_monday
             )
         self._residency_controller = residency_controller
-        self._theme_engine = theme_engine or ThemeEngine()
         self._job_runner = job_runner
         self._today = self._config.today or date.today()
         timer = time_entry_view_model.timer
@@ -156,13 +149,14 @@ class AppWindow(QMainWindow):
         self.setWindowTitle(_("WorkLogger"))
         apply_window_icon(self)
         self._build_ui()
-        self.background_controller = BackgroundController(
-            self._background_surface, background_service,
-            available=self._config.background_images_available, job_runner=self._job_runner,
+        self.appearance_controller = WindowAppearanceController(
+            self, self._background_surface, theme_engine=theme_engine, background_service=background_service,
+            background_images_available=self._config.background_images_available, job_runner=self._job_runner,
         )
+        self.background_controller = self.appearance_controller.background
+        self.glass_controller = self.appearance_controller.glass
         if hasattr(self.settings_page, "background_settings"):
             self.settings_page.background_settings.bind(self.background_controller)
-        self._background_surface.active_changed.connect(lambda _active: refresh_style_tree(self._background_surface))
         self._calendar_coordinator = CalendarCoordinator(
             calendar_view_model=self._calendar_view_model,
             stats_view_model=self._stats_panel_view_model,
@@ -175,7 +169,6 @@ class AppWindow(QMainWindow):
         if hasattr(self._residency_controller, "notify_timer_reminder"):
             self.entry_panel.reminder.connect(self._residency_controller.notify_timer_reminder)
         self.sidebar.set_avatar(self._config.profile_avatar_png)
-        self.glass_controller = GlassThemeController(self, self._background_surface, job_runner=self._job_runner)
         self.apply_theme()
         self.background_controller.reload()
         self._date_timer = QTimer(self)
@@ -212,17 +205,10 @@ class AppWindow(QMainWindow):
         return self._entry_dirty or self.reports_page.has_unsaved_changes
 
     def apply_theme(self, *, force: bool = False) -> None:
-        application = QApplication.instance()
-        if application is None:
-            return
-        configure_application_style()
-        install_bundled_fonts()
-        colors = self._theme_engine.apply_to(application,
+        self.appearance_controller.apply(
             self._config.theme, dark=self._config.dark, custom_color=self._config.custom_color,
             force=force,
         )
-        self._background_surface.set_base_color(colors.surface)
-        self.glass_controller.configure(colors)
 
     def apply_settings(self, state: SettingsState) -> None:
         self.sidebar.set_avatar(state.profile_avatar_png)
@@ -639,9 +625,7 @@ class AppWindow(QMainWindow):
             return
         if isinstance(self.entry_panel, TimeEntryPanel):
             self.entry_panel.auto_timer.stop()
-        self.background_controller.dispose()
-        self.glass_controller.dispose()
-        self._background_surface.shutdown()
+        self.appearance_controller.dispose()
         super().closeEvent(event)
 
     def changeEvent(self, event: QEvent) -> None:

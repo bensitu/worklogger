@@ -1,29 +1,10 @@
-"""Helpers for refreshing Qt dynamic-property styling."""
+"""Numeric editor content alignment after Qt stylesheet layout."""
 
 from __future__ import annotations
 
 from PySide6.QtCore import QEvent, QObject, QTimer, Slot
-from PySide6.QtWidgets import QAbstractSpinBox, QStyle, QStyleOptionFrame, QWidget
+from PySide6.QtWidgets import QAbstractSpinBox, QStyle, QStyleOptionFrame
 from shiboken6 import isValid
-
-
-def refresh_style(widget: QWidget) -> None:
-    style = widget.style()
-    style.unpolish(widget)
-    style.polish(widget)
-    widget.update()
-
-
-def set_style_property(widget: QWidget, name: str, value: bool | str | int) -> None:
-    if widget.property(name) != value:
-        widget.setProperty(name, value)
-        refresh_style(widget)
-
-
-def refresh_style_tree(widget: QWidget) -> None:
-    refresh_style(widget)
-    for child in widget.findChildren(QWidget):
-        refresh_style(child)
 
 
 class _NumericInputPadding(QObject):

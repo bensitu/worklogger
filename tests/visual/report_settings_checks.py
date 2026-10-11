@@ -120,13 +120,12 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                     {"object_name": "calendar_time_entry_button"}, {"variant": "outline", "tool_button": True},
                     {"nav_item": True}, {"settings_nav_item": True}, {"segment": True}, {"page_tab": True})
         old_style, old_palette = self.app.styleSheet(), self.app.palette()
+        old_context = self.app.property("worklogger_theme_context")
         engine = ThemeEngine()
         try:
             for theme in THEME_KEYS:
                 for dark in (False, True):
-                    colors = engine.palette(theme, dark=dark, custom_color="#168078")
-                    self.app.setPalette(engine.qt_palette(theme, dark=dark, custom_color="#168078"))
-                    self.app.setStyleSheet(engine.application_stylesheet(theme, dark=dark, custom_color="#168078"))
+                    colors = engine.apply_to(self.app, theme, dark=dark, custom_color="#168078")
                     panel = QWidget()
                     grid = QGridLayout(panel)
                     pairs = []
@@ -165,6 +164,12 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                     self.app.processEvents()
                     panel.adjustSize()
                     self.app.processEvents()
+                    QTest.mouseMove(panel, QPoint(1, 1))
+                    self.app.processEvents()
+                    for enabled, disabled in switch_pairs:
+                        expected = colors.accent if enabled.isChecked() else colors.border_strong
+                        self.assertEqual(enabled.grab().toImage().pixelColor(21, 2).name(), expected)
+                        self.assertEqual(disabled.grab().toImage().pixelColor(21, 2).name(), colors.disabled_background)
                     for enabled, disabled in pairs:
                         self.assertTrue(panel.rect().contains(enabled.geometry()))
                         self.assertTrue(panel.rect().contains(disabled.geometry()))
@@ -215,6 +220,50 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
         finally:
             self.app.setStyleSheet(old_style)
             self.app.setPalette(old_palette)
+            self.app.setProperty("worklogger_theme_context", old_context)
+
+    def test_summary_metrics_follow_theme_roles_without_changing_geometry(self):
+        from PySide6.QtGui import QFontMetricsF
+        from PySide6.QtWidgets import QHBoxLayout, QWidget
+        from worklogger.presentation.widgets.progress_cards import DotProgressCard
+        from worklogger.presentation.widgets.progress_visuals import ProgressDots
+        old_style, old_palette = self.app.styleSheet(), self.app.palette()
+        old_context = self.app.property("worklogger_theme_context")
+        panel = QWidget()
+        row = QHBoxLayout(panel)
+        cards = [DotProgressCard("Metric", color_role=role) for role in ("success", "muted_text")]
+        for card in cards:
+            row.addWidget(card)
+            card.set_value("127.5h", "Previous period", 8, 12)
+        fixed = ProgressDots(color="#123456")
+        fixed.set_progress(1, 1)
+        row.addWidget(fixed)
+        panel.resize(660, 180)
+        panel.show()
+        try:
+            geometry = None
+            for theme in THEME_KEYS:
+                for dark in (False, True):
+                    colors = ThemeEngine().apply_to(self.app, theme, dark=dark)
+                    self.app.processEvents()
+                    for card, expected in zip(cards, (colors.success, colors.muted_text)):
+                        self.assertEqual(card.dots_widget.grab().toImage().pixelColor(4, 8).name(), expected)
+                        self.assertEqual(card.title_label.font().weight(), 600)
+                        self.assertEqual(card.value_label.font().pixelSize(), 21)
+                        self.assertEqual(card.caption_label.palette().color(card.caption_label.foregroundRole()).name(), colors.muted_text)
+                        self.assertLessEqual(QFontMetricsF(card.value_label.fitted_font()).horizontalAdvance(card.value_label.text()),
+                                             card.value_label.contentsRect().width())
+                    self.assertEqual(fixed.grab().toImage().pixelColor(4, 8).name(), "#123456")
+                    bounds = tuple(card.geometry() for card in cards)
+                    if geometry is not None:
+                        self.assertEqual(bounds, geometry)
+                    geometry = bounds
+        finally:
+            panel.close()
+            panel.deleteLater()
+            self.app.setStyleSheet(old_style)
+            self.app.setPalette(old_palette)
+            self.app.setProperty("worklogger_theme_context", old_context)
 
     def test_settings_groups_and_processing_feedback_fit_localized_pages(self):
         from PySide6.QtWidgets import QLabel

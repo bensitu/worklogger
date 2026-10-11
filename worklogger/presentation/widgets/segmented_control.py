@@ -7,7 +7,7 @@ from collections.abc import Iterable
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QHBoxLayout, QPushButton, QWidget
 
-from worklogger.presentation.widgets._style import refresh_style
+from worklogger.presentation.theme.widget_style import refresh_style
 
 
 class SegmentedControl(QWidget):

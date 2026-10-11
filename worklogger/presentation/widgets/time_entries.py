@@ -22,7 +22,7 @@ from worklogger.presentation.work_type_labels import work_type_label
 from worklogger.presentation.processing import TextProcessingTask
 from worklogger.presentation.job_runner import owned_callback
 from worklogger.presentation.widgets.processing_progress import ProcessingProgress
-from worklogger.presentation.widgets._style import refresh_style
+from worklogger.presentation.theme.widget_style import refresh_style
 
 
 from worklogger.presentation.widgets.time_entry_actions import TimeEntryRecordActions

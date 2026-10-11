@@ -25,14 +25,11 @@ from worklogger.domain.shared.errors import AppError
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.settings import SettingsWorkflow
-from worklogger.presentation.shell.background_controller import BackgroundController
+from worklogger.presentation.shell.appearance_controller import WindowAppearanceController
 from worklogger.presentation.shell.residency import QtResidencyController
-from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
 from worklogger.presentation.theme.background import MainBackgroundWidget
-from worklogger.presentation.theme.glass_surfaces import GlassThemeController
 from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
 from worklogger.presentation.widgets.assets import apply_window_icon
-from worklogger.presentation.widgets._style import refresh_style_tree
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
 from worklogger.presentation.widgets.date_picker import DatePickerButton
@@ -97,11 +94,12 @@ class MinimalView(QWidget):
         self.date_picker_holidays = DatePickerHolidaysController(self.date_button, holidays_handler,
             country=holiday_country, enabled=self._config.show_holidays, region=self._config.holiday_region,
             job_runner=self._job_runner)
-        self.glass_controller = GlassThemeController(self, self._background_surface, job_runner=self._job_runner)
+        self.appearance_controller = WindowAppearanceController(self, self._background_surface,
+            background_service=background_service, background_images_available=self._config.background_images_available,
+            job_runner=self._job_runner)
+        self.glass_controller = self.appearance_controller.glass
+        self.background_controller = self.appearance_controller.background
         self.apply_theme()
-        self.background_controller = BackgroundController(self._background_surface, background_service,
-            available=self._config.background_images_available, job_runner=self._job_runner)
-        self._background_surface.active_changed.connect(lambda _active: refresh_style_tree(self._background_surface))
         self.background_controller.reload()
         self._connect_signals()
         self.resize(680, 760)
@@ -285,17 +283,10 @@ class MinimalView(QWidget):
             self.refresh()
 
     def apply_theme(self):
-        engine = ThemeEngine()
-        application = QApplication.instance()
-        colors = engine.palette(self._config.theme, dark=self._config.dark, custom_color=self._config.custom_color)
-        if application is not None:
-            configure_application_style()
-            install_bundled_fonts()
-            colors = engine.apply_to(application, self._config.theme, dark=self._config.dark,
-                                     custom_color=self._config.custom_color)
-        self.date_button.set_colors(colors)
-        self._background_surface.set_base_color(colors.surface)
-        self.glass_controller.configure(colors)
+        colors = self.appearance_controller.apply(self._config.theme, dark=self._config.dark,
+                                                  custom_color=self._config.custom_color)
+        if colors is not None:
+            self.date_button.set_colors(colors)
 
     def _entries_changed(self, day: date):
         model = self.entry_panel.view_model
@@ -318,10 +309,8 @@ class MinimalView(QWidget):
             return
         if isinstance(self.entry_panel, TimeEntryPanel):
             self.entry_panel.auto_timer.stop()
-        self.background_controller.dispose()
-        self.glass_controller.dispose()
+        self.appearance_controller.dispose()
         self.date_picker_holidays.dispose()
-        self._background_surface.shutdown()
         self._date_timer.stop()
         super().closeEvent(event)
 

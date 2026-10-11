@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QVBoxLayout, QWidget, QSizePolicy
 
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.widgets._style import set_style_property
+from worklogger.presentation.theme.widget_style import set_style_property
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.avatar import avatar_pixmap
 

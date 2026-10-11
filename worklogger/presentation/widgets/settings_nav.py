@@ -8,7 +8,7 @@ from PySide6.QtCore import Qt, Signal, QTimer
 from PySide6.QtGui import QFont, QTextLayout, QTextOption
 from PySide6.QtWidgets import QFrame, QVBoxLayout, QPushButton, QWidget
 
-from worklogger.presentation.widgets._style import set_style_property
+from worklogger.presentation.theme.widget_style import set_style_property
 from worklogger.presentation.widgets.icons import set_button_icon
 
 

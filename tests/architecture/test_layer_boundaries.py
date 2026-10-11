@@ -31,6 +31,22 @@ def _imports_for(path: Path) -> set[str]:
 
 
 class LayerBoundaryTests(unittest.TestCase):
+    def test_theme_color_and_stylesheet_resolution_runs_without_qt(self):
+        script = """
+import sys
+from worklogger.config.themes import THEME_KEYS
+from worklogger.presentation.theme import ThemeEngine
+engine = ThemeEngine()
+for theme in THEME_KEYS:
+    for dark in (False, True):
+        assert '{{' not in engine.application_stylesheet(theme, dark=dark)
+        assert engine.calendar_cell_style({'holiday'}, theme=theme, dark=dark).background
+assert not any(name.startswith('PySide6') for name in sys.modules)
+"""
+        result = subprocess.run([sys.executable, "-c", script], cwd=PROJECT_ROOT,
+                                capture_output=True, text=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_editing_and_settings_viewmodels_import_without_qt(self):
         result = subprocess.run([sys.executable, "-c", "import sys; from worklogger.presentation.viewmodels import TimeEntryViewModel, NoteEditorViewModel, SettingsViewModel; assert not any(name.startswith('PySide6') for name in sys.modules)"],
                                 cwd=PROJECT_ROOT, capture_output=True, text=True, timeout=15)

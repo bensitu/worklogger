@@ -27,7 +27,7 @@ from worklogger.domain.local_model.preferences import (
     DEFAULT_RUNTIME_CONTEXT_TOKENS, MIN_RUNTIME_CONTEXT_TOKENS, MAX_RUNTIME_CONTEXT_TOKENS,
 )
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.widgets._style import apply_numeric_input_padding
+from worklogger.presentation.widgets.numeric_input import apply_numeric_input_padding
 from worklogger.presentation.settings.sections.actions import SectionActions
 from worklogger.presentation.settings.sections.common import (
     _add_action_buttons,

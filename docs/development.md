@@ -76,14 +76,23 @@ to genuine brand requirements and verify their contrast.
 stylesheet fragments, and rendering capabilities. `palettes.py` combines these
 with brand colors; `qt_palette.py` adapts resolved colors to Qt. Color resolution
 and calendar rules do not require Qt. `stylesheets.py` renders shared tokens with
-bounded caches. Effects
-depend on material capabilities, not a theme's key. Reuse these profiles for
+bounded caches. Effects depend on material capabilities, not a theme's key.
+Reuse these profiles for
 branded themes rather than copying QSS or adding theme-name checks to widgets.
 Apply application themes through `ThemeEngine.apply_to`. Custom-painted controls
 use `theme/context.py` to read resolved colors; do not infer mode or material from
 widget backgrounds, which can be transparent.
 Check both color modes, contrast, interaction states, theme switching and
 resource packaging when changing a theme or material.
+
+Full and minimal windows share `shell/appearance_controller.py` for theme
+application, background styling, effects, and cleanup. Keep navigation and
+account preferences in their respective shell controllers. Theme rendering must
+not import window workflows or storage services. Prefer semantic color roles in
+custom painting; explicit color overrides are for intentional fixed-color content.
+`theme/widget_style.py` refreshes dynamic-property selectors without importing
+application controls. Metric cards share `widgets/summary_card.py` and semantic
+text roles; their charts live independently in `widgets/progress_visuals.py`.
 
 ## Data and Resources
 

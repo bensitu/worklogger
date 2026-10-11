@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QToolButton, QVBoxLayout, 
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
-from worklogger.presentation.widgets._style import refresh_style
+from worklogger.presentation.theme.widget_style import refresh_style
 
 
 class DisplayNameEditor(QWidget):

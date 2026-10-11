@@ -34,6 +34,7 @@ QLabel[role="title"] {
 
 QLabel[role="subtitle"],
 QLabel[role="caption"],
+QLabel[role="metric_caption"],
 QLabel[role="secondary"] {
   color: {{ muted_text }};
 }

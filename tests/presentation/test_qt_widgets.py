@@ -86,7 +86,7 @@ class QtWidgetTests(unittest.TestCase):
     def test_button_icons_follow_text_through_role_theme_and_enabled_changes(self):
         from PySide6.QtWidgets import QPushButton, QToolButton
         from worklogger.presentation.widgets.icons import set_button_icon
-        from worklogger.presentation.widgets._style import refresh_style
+        from worklogger.presentation.theme.widget_style import refresh_style
         app = _app()
         original_style, original_palette = app.styleSheet(), app.palette()
         engine = ThemeEngine()

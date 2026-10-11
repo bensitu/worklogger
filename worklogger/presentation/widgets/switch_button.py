@@ -6,6 +6,8 @@ from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QBrush, QColor, QPainter, QPen
 from PySide6.QtWidgets import QCheckBox, QSizePolicy, QWidget
 
+from worklogger.presentation.theme.context import current_colors
+
 
 class SwitchButton(QCheckBox):
 
@@ -16,14 +18,14 @@ class SwitchButton(QCheckBox):
         self,
         *,
         checked: bool = False,
-        color_on: str = "#4f8ef7",
-        color_off: str = "#c9cfdd",
+        color_on: str | None = None,
+        color_off: str | None = None,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         super().setChecked(bool(checked))
-        self._color_on = QColor(color_on)
-        self._color_off = QColor(color_off)
+        self._color_on = QColor(color_on) if color_on is not None else None
+        self._color_off = QColor(color_off) if color_off is not None else None
         self.setFixedSize(self._WIDTH, self._HEIGHT)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
@@ -61,13 +63,15 @@ class SwitchButton(QCheckBox):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         checked = self.is_checked()
-        track = QColor(self._color_on if checked else self._color_off)
-        thumb = QColor("#ffffff")
+        colors = current_colors()
+        override = self._color_on if checked else self._color_off
+        track = QColor(override if override is not None else colors.accent if checked else colors.border_strong)
+        thumb = QColor(colors.highlighted_text if checked else colors.surface)
         border: QColor | None = None
         if not self.isEnabled():
-            track = QColor("#d9dfef")
-            thumb = QColor("#f5f7fb")
-            border = QColor("#aab1c5")
+            track = QColor(colors.disabled_background)
+            thumb = QColor(colors.disabled_text)
+            border = QColor(colors.border_strong)
         elif self.underMouse():
             track = track.lighter(115) if track.lightness() < 128 else track.darker(110)
 

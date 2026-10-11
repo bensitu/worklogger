@@ -23,7 +23,7 @@ from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import AnalyticsState, AnalyticsViewModel
 from worklogger.presentation.widgets import ComboChart
-from worklogger.presentation.widgets._style import apply_numeric_input_padding
+from worklogger.presentation.widgets.numeric_input import apply_numeric_input_padding
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
 

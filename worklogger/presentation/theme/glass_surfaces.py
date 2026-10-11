@@ -10,7 +10,7 @@ from shiboken6 import isValid
 from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.presentation.theme.glass_renderer import GLASS_PADDING, render_geometry, render_glass
 from worklogger.presentation.theme.materials import material_profile
-from worklogger.presentation.widgets._style import set_style_property
+from worklogger.presentation.theme.widget_style import set_style_property
 
 _SURFACE_NAMES = {"app_main_content_widget", "app_sidebar_frame",
                   "settings_navigation_frame", "worklog_entry_panel_widget"}

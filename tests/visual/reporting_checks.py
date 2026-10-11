@@ -29,7 +29,8 @@ class WeeklyReports(ReportsViewModel):
 
     def list_history(self, report_type):
         return Result.success(tuple(ReportHistoryDisplayItem(index, 1, report_type, start,
-            start + timedelta(days=6), "", "Saved report", index == 1)
+            start + timedelta(days=6), "", "Saved report", index == 1,
+            created_at=datetime.combine(start, datetime.min.time(), tzinfo=timezone.utc))
             for index, start in enumerate((date(2026, 5, 18), date(2026, 5, 11), date(2026, 5, 4),
                 date(2026, 4, 27), date(2026, 4, 20)), 1)))
 
