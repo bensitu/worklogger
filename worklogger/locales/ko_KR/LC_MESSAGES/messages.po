@@ -379,6 +379,9 @@ msgstr "닫기"
 msgid "Close the note editor before continuing."
 msgstr "계속하기 전에 노트 편집기를 닫으세요."
 
+msgid "Close window"
+msgstr "창 닫기"
+
 msgid "Code"
 msgstr "코드"
 
@@ -468,6 +471,9 @@ msgstr "커서 위치: %1, %2\nESC 키를 눌러 취소"
 
 msgid "Custom"
 msgstr "사용자 지정"
+
+msgid "Cut"
+msgstr "잘라내기"
 
 msgid "DESKTOP START FAILED"
 msgstr "데스크톱 앱 시작 실패"
@@ -582,6 +588,9 @@ msgstr "모델 다운로드 중..."
 
 msgid "Draft"
 msgstr "초안"
+
+msgid "Edit"
+msgstr "편집"
 
 msgid "Edit display name"
 msgstr "표시 이름 편집"
@@ -798,6 +807,9 @@ msgstr "GitHub"
 
 msgid "Green"
 msgstr "초록"
+
+msgid "Help"
+msgstr "도움말"
 
 msgid "Hide"
 msgstr "숨기기"
@@ -1093,6 +1105,9 @@ msgstr "Microsoft 테넌트 ID"
 msgid "Minimal view"
 msgstr "간소화 보기"
 
+msgid "Minimize"
+msgstr "최소화"
+
 msgid "Minutes from the record start to the break start"
 msgstr "기록 시작부터 휴식 시작까지의 분 수"
 
@@ -1351,6 +1366,9 @@ msgstr "비밀번호는 시스템 자격 증명 저장소에 저장됩니다."
 msgid "Password reset."
 msgstr "비밀번호가 재설정되었습니다."
 
+msgid "Paste"
+msgstr "붙여넣기"
+
 msgid "Personal profile"
 msgstr "개인 프로필"
 
@@ -1413,6 +1431,9 @@ msgstr "프로젝트 / 작업 항목"
 
 msgid "Project ID"
 msgstr "프로젝트 ID"
+
+msgid "Project homepage"
+msgstr "프로젝트 홈페이지"
 
 msgid "Project records"
 msgstr "프로젝트 기록"
@@ -1525,6 +1546,9 @@ msgstr "복구 키를 저장했습니다."
 msgid "Recurring events must have an end date or occurrence count."
 msgstr "반복 일정에는 종료 날짜 또는 반복 횟수가 필요합니다."
 
+msgid "Redo"
+msgstr "다시 실행"
+
 msgid "Refresh"
 msgstr "새로 고침"
 
@@ -1569,6 +1593,9 @@ msgstr "보고서"
 
 msgid "Report #{report_id}"
 msgstr "보고서 #{report_id}"
+
+msgid "Report an issue"
+msgstr "문제 보고"
 
 msgid "Report saved."
 msgstr "보고서가 저장되었습니다."
@@ -1780,6 +1807,9 @@ msgstr "유효한 날짜 또는 날짜 범위를 선택하세요."
 msgid "Select a verified model in Manage models."
 msgstr "모델 관리에서 검증된 모델을 선택하세요."
 
+msgid "Select all"
+msgstr "모두 선택"
+
 msgid "Select an identity first."
 msgstr "먼저 연결된 계정을 선택하세요."
 
@@ -1836,6 +1866,9 @@ msgstr "표시"
 
 msgid "Show leaves"
 msgstr "휴가 표시"
+
+msgid "Show main window"
+msgstr "메인 창 표시"
 
 msgid "Show password"
 msgstr "비밀번호 표시"
@@ -2293,6 +2326,9 @@ msgstr "근무 유형을 업데이트할 수 없습니다. 기록은 변경되�
 msgid "Unclassified"
 msgstr "미분류"
 
+msgid "Undo"
+msgstr "실행 취소"
+
 msgid "Undo latest record change"
 msgstr "최근 기록 변경 되돌리기"
 
@@ -2392,6 +2428,9 @@ msgstr "버전 {number}"
 msgid "Version {version}"
 msgstr "버전 {version}"
 
+msgid "View"
+msgstr "보기"
+
 msgid "View changes apply after restarting or signing in again."
 msgstr "보기 변경 사항은 다시 시작하거나 다시 로그인한 후에 적용됩니다."
 
@@ -2415,6 +2454,9 @@ msgstr "주간 보고서"
 
 msgid "Welcome!"
 msgstr "환영합니다!"
+
+msgid "Window"
+msgstr "창"
 
 msgid "Work"
 msgstr "근무"

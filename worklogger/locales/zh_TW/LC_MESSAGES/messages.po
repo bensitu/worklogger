@@ -379,6 +379,9 @@ msgstr "關閉"
 msgid "Close the note editor before continuing."
 msgstr "請先關閉筆記編輯器再繼續。"
 
+msgid "Close window"
+msgstr "關閉視窗"
+
 msgid "Code"
 msgstr "編號"
 
@@ -468,6 +471,9 @@ msgstr "游標位置：%1, %2\n按 ESC 取消"
 
 msgid "Custom"
 msgstr "自訂"
+
+msgid "Cut"
+msgstr "剪下"
 
 msgid "DESKTOP START FAILED"
 msgstr "桌面應用程式啟動失敗"
@@ -582,6 +588,9 @@ msgstr "正在下載模型..."
 
 msgid "Draft"
 msgstr "草稿"
+
+msgid "Edit"
+msgstr "編輯"
 
 msgid "Edit display name"
 msgstr "編輯顯示名稱"
@@ -798,6 +807,9 @@ msgstr "GitHub"
 
 msgid "Green"
 msgstr "綠色"
+
+msgid "Help"
+msgstr "說明"
 
 msgid "Hide"
 msgstr "隱藏"
@@ -1093,6 +1105,9 @@ msgstr "Microsoft 租用戶 ID"
 msgid "Minimal view"
 msgstr "精簡檢視"
 
+msgid "Minimize"
+msgstr "最小化"
+
 msgid "Minutes from the record start to the break start"
 msgstr "從紀錄開始到休息開始的分鐘數"
 
@@ -1351,6 +1366,9 @@ msgstr "密碼儲存於系統認證資料庫中。"
 msgid "Password reset."
 msgstr "密碼已重設。"
 
+msgid "Paste"
+msgstr "貼上"
+
 msgid "Personal profile"
 msgstr "個人資料"
 
@@ -1413,6 +1431,9 @@ msgstr "專案／工作項目"
 
 msgid "Project ID"
 msgstr "專案 ID"
+
+msgid "Project homepage"
+msgstr "專案首頁"
 
 msgid "Project records"
 msgstr "專案記錄"
@@ -1525,6 +1546,9 @@ msgstr "復原金鑰已儲存。"
 msgid "Recurring events must have an end date or occurrence count."
 msgstr "重複事件必須設定結束日期或重複次數。"
 
+msgid "Redo"
+msgstr "重做"
+
 msgid "Refresh"
 msgstr "重新整理"
 
@@ -1569,6 +1593,9 @@ msgstr "報表"
 
 msgid "Report #{report_id}"
 msgstr "報表 #{report_id}"
+
+msgid "Report an issue"
+msgstr "問題回報"
 
 msgid "Report saved."
 msgstr "報表已儲存。"
@@ -1780,6 +1807,9 @@ msgstr "請選擇有效的日期或日期範圍。"
 msgid "Select a verified model in Manage models."
 msgstr "請在管理模型中選用已驗證的模型。"
 
+msgid "Select all"
+msgstr "全選"
+
 msgid "Select an identity first."
 msgstr "請先選取身分。"
 
@@ -1836,6 +1866,9 @@ msgstr "顯示"
 
 msgid "Show leaves"
 msgstr "顯示休假"
+
+msgid "Show main window"
+msgstr "顯示主視窗"
 
 msgid "Show password"
 msgstr "顯示密碼"
@@ -2293,6 +2326,9 @@ msgstr "無法更新工作類型。您的記錄未改變。"
 msgid "Unclassified"
 msgstr "未分類"
 
+msgid "Undo"
+msgstr "復原"
+
 msgid "Undo latest record change"
 msgstr "復原最近的紀錄變更"
 
@@ -2392,6 +2428,9 @@ msgstr "版本 {number}"
 msgid "Version {version}"
 msgstr "版本 {version}"
 
+msgid "View"
+msgstr "檢視"
+
 msgid "View changes apply after restarting or signing in again."
 msgstr "重新啟動軟體或重新登入後，檢視變更生效。"
 
@@ -2415,6 +2454,9 @@ msgstr "週報"
 
 msgid "Welcome!"
 msgstr "歡迎！"
+
+msgid "Window"
+msgstr "視窗"
 
 msgid "Work"
 msgstr "工作"

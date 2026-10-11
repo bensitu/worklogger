@@ -377,6 +377,9 @@ msgstr ""
 msgid "Close the note editor before continuing."
 msgstr ""
 
+msgid "Close window"
+msgstr ""
+
 msgid "Code"
 msgstr ""
 
@@ -465,6 +468,9 @@ msgid "Cursor at %1, %2\nPress ESC to cancel"
 msgstr ""
 
 msgid "Custom"
+msgstr ""
+
+msgid "Cut"
 msgstr ""
 
 msgid "DESKTOP START FAILED"
@@ -579,6 +585,9 @@ msgid "Downloading model..."
 msgstr ""
 
 msgid "Draft"
+msgstr ""
+
+msgid "Edit"
 msgstr ""
 
 msgid "Edit display name"
@@ -795,6 +804,9 @@ msgid "GitHub"
 msgstr ""
 
 msgid "Green"
+msgstr ""
+
+msgid "Help"
 msgstr ""
 
 msgid "Hide"
@@ -1091,6 +1103,9 @@ msgstr ""
 msgid "Minimal view"
 msgstr ""
 
+msgid "Minimize"
+msgstr ""
+
 msgid "Minutes from the record start to the break start"
 msgstr ""
 
@@ -1349,6 +1364,9 @@ msgstr ""
 msgid "Password reset."
 msgstr ""
 
+msgid "Paste"
+msgstr ""
+
 msgid "Personal profile"
 msgstr ""
 
@@ -1410,6 +1428,9 @@ msgid "Project / work item"
 msgstr ""
 
 msgid "Project ID"
+msgstr ""
+
+msgid "Project homepage"
 msgstr ""
 
 msgid "Project records"
@@ -1523,6 +1544,9 @@ msgstr ""
 msgid "Recurring events must have an end date or occurrence count."
 msgstr ""
 
+msgid "Redo"
+msgstr ""
+
 msgid "Refresh"
 msgstr ""
 
@@ -1566,6 +1590,9 @@ msgid "Report"
 msgstr ""
 
 msgid "Report #{report_id}"
+msgstr ""
+
+msgid "Report an issue"
 msgstr ""
 
 msgid "Report saved."
@@ -1778,6 +1805,9 @@ msgstr ""
 msgid "Select a verified model in Manage models."
 msgstr ""
 
+msgid "Select all"
+msgstr ""
+
 msgid "Select an identity first."
 msgstr ""
 
@@ -1833,6 +1863,9 @@ msgid "Show"
 msgstr ""
 
 msgid "Show leaves"
+msgstr ""
+
+msgid "Show main window"
 msgstr ""
 
 msgid "Show password"
@@ -2291,6 +2324,9 @@ msgstr ""
 msgid "Unclassified"
 msgstr ""
 
+msgid "Undo"
+msgstr ""
+
 msgid "Undo latest record change"
 msgstr ""
 
@@ -2390,6 +2426,9 @@ msgstr ""
 msgid "Version {version}"
 msgstr ""
 
+msgid "View"
+msgstr ""
+
 msgid "View changes apply after restarting or signing in again."
 msgstr ""
 
@@ -2412,6 +2451,9 @@ msgid "Weekly Report"
 msgstr ""
 
 msgid "Welcome!"
+msgstr ""
+
+msgid "Window"
 msgstr ""
 
 msgid "Work"

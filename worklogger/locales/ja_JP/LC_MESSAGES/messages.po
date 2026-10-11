@@ -379,6 +379,9 @@ msgstr "閉じる"
 msgid "Close the note editor before continuing."
 msgstr "続行する前にノートエディターを閉じてください。"
 
+msgid "Close window"
+msgstr "ウィンドウを閉じる"
+
 msgid "Code"
 msgstr "コード"
 
@@ -468,6 +471,9 @@ msgstr "カーソル位置: %1, %2\nESC キーでキャンセル"
 
 msgid "Custom"
 msgstr "カスタム"
+
+msgid "Cut"
+msgstr "切り取り"
 
 msgid "DESKTOP START FAILED"
 msgstr "デスクトップアプリの起動に失敗"
@@ -582,6 +588,9 @@ msgstr "モデルをダウンロード中..."
 
 msgid "Draft"
 msgstr "下書き"
+
+msgid "Edit"
+msgstr "編集"
 
 msgid "Edit display name"
 msgstr "表示名を編集"
@@ -798,6 +807,9 @@ msgstr "GitHub"
 
 msgid "Green"
 msgstr "緑"
+
+msgid "Help"
+msgstr "ヘルプ"
 
 msgid "Hide"
 msgstr "非表示"
@@ -1093,6 +1105,9 @@ msgstr "Microsoft テナント ID"
 msgid "Minimal view"
 msgstr "シンプル表示"
 
+msgid "Minimize"
+msgstr "最小化"
+
 msgid "Minutes from the record start to the break start"
 msgstr "記録開始から休憩開始までの分数"
 
@@ -1351,6 +1366,9 @@ msgstr "パスワードはシステムの資格情報ストアに保存されま
 msgid "Password reset."
 msgstr "パスワードをリセットしました。"
 
+msgid "Paste"
+msgstr "貼り付け"
+
 msgid "Personal profile"
 msgstr "個人プロフィール"
 
@@ -1413,6 +1431,9 @@ msgstr "プロジェクト / 作業項目"
 
 msgid "Project ID"
 msgstr "プロジェクト ID"
+
+msgid "Project homepage"
+msgstr "プロジェクトのホームページ"
 
 msgid "Project records"
 msgstr "プロジェクトの記録"
@@ -1525,6 +1546,9 @@ msgstr "復旧キーを保存しました。"
 msgid "Recurring events must have an end date or occurrence count."
 msgstr "繰り返し予定には終了日または回数を指定してください。"
 
+msgid "Redo"
+msgstr "やり直す"
+
 msgid "Refresh"
 msgstr "更新"
 
@@ -1569,6 +1593,9 @@ msgstr "レポート"
 
 msgid "Report #{report_id}"
 msgstr "レポート #{report_id}"
+
+msgid "Report an issue"
+msgstr "問題を報告"
 
 msgid "Report saved."
 msgstr "レポートを保存しました。"
@@ -1780,6 +1807,9 @@ msgstr "有効な日付または日付範囲を選択してください。"
 msgid "Select a verified model in Manage models."
 msgstr "モデル管理で検証済みのモデルを選択してください。"
 
+msgid "Select all"
+msgstr "すべて選択"
+
 msgid "Select an identity first."
 msgstr "先に連携アカウントを選択してください。"
 
@@ -1836,6 +1866,9 @@ msgstr "表示"
 
 msgid "Show leaves"
 msgstr "休暇を表示"
+
+msgid "Show main window"
+msgstr "メインウィンドウを表示"
 
 msgid "Show password"
 msgstr "パスワードを表示"
@@ -2293,6 +2326,9 @@ msgstr "勤務種別を更新できません。記録は変更されていませ
 msgid "Unclassified"
 msgstr "未分類"
 
+msgid "Undo"
+msgstr "元に戻す"
+
 msgid "Undo latest record change"
 msgstr "直前の記録変更を元に戻す"
 
@@ -2392,6 +2428,9 @@ msgstr "バージョン {number}"
 msgid "Version {version}"
 msgstr "バージョン {version}"
 
+msgid "View"
+msgstr "表示"
+
 msgid "View changes apply after restarting or signing in again."
 msgstr "表示モードの変更は再起動または再ログイン後に適用されます。"
 
@@ -2415,6 +2454,9 @@ msgstr "週報"
 
 msgid "Welcome!"
 msgstr "ようこそ！"
+
+msgid "Window"
+msgstr "ウィンドウ"
 
 msgid "Work"
 msgstr "勤務"

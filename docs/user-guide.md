@@ -167,6 +167,18 @@ and tables retain readable surfaces. All platforms use the same PyGlass renderin
 core adapted for PySide6, including the sidebar.
 Glass surfaces retain a tint for text contrast even at full background opacity.
 
+On macOS, the application menu provides About, Settings (Command+,), and Quit
+(Command+Q). File provides New time record (Command+N), Save (Command+S), and
+Close window (Command+W). Save uses the current record, report, note, or other
+editor's existing save action; settings that save automatically do not require
+this command. Closing and quitting retain the usual unsaved-change confirmation.
+
+Edit commands apply to the focused text field. Read-only fields and hidden
+password fields retain their editing and clipboard restrictions. View opens the
+available pages; unsupported pages are disabled in minimal view. Window provides
+Minimize (Command+M) and Show main window. Help opens the project homepage or the
+issue reporting page.
+
 Minimal view provides time recording, the selected day's records, Notes, and the
 complete Settings dialog. Use New time record to start another entry; selecting
 a saved record loads it for editing. Enable or disable Minimal view in Appearance

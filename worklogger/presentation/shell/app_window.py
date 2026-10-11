@@ -39,6 +39,7 @@ from worklogger.presentation.shell.pages import (
 )
 from worklogger.presentation.shell.residency import QtResidencyController
 from worklogger.presentation.shell.appearance_controller import WindowAppearanceController
+from worklogger.presentation.shell.menu_bar import install_application_menu
 from worklogger.presentation.theme.background import MainBackgroundWidget
 from worklogger.presentation.theme import ThemeEngine
 from worklogger.presentation.viewmodels import (
@@ -187,6 +188,29 @@ class AppWindow(QMainWindow):
                     end_callback=self.entry_panel.end_recording, state_probe=self.entry_panel.recording_action_state)
                 self.entry_panel.recording_changed.connect(self._residency_controller.update_recording_actions)
                 self.entry_panel.busy_changed.connect(lambda _busy: self._residency_controller.update_recording_actions())
+        self.application_menu = install_application_menu(
+            self, new_record=self.new_record, save_target=self._menu_save_target,
+            settings=self.open_settings if self._settings_workflow is not None else None,
+            routes={"calendar": lambda: self._switch_route("calendar"),
+                    "analytics": self.open_analytics if self._analytics_workflow is not None else None,
+                    "reports": self.open_reports if self._reports_workflow is not None else None,
+                    "settings": self.open_settings if self._settings_workflow is not None else None},
+            quit_app=self._quit_from_residency,
+        )
+        if self.application_menu is not None:
+            self.page_stack.currentChanged.connect(self.application_menu.refresh)
+            self.entry_panel.busy_changed.connect(self.application_menu.refresh)
+
+    def new_record(self) -> bool:
+        return self._switch_route("calendar") and self.entry_panel.new_record()
+
+    def _menu_save_target(self):
+        page = self.page_stack.currentWidget()
+        if page is self.calendar_page:
+            return self.entry_panel.save_button
+        if page is self.reports_page:
+            return self.reports_page.save_button
+        return None
 
     @property
     def selected_day(self) -> date:

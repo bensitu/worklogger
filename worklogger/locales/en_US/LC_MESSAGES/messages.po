@@ -379,6 +379,9 @@ msgstr "Close"
 msgid "Close the note editor before continuing."
 msgstr "Close the note editor before continuing."
 
+msgid "Close window"
+msgstr "Close window"
+
 msgid "Code"
 msgstr "Code"
 
@@ -468,6 +471,9 @@ msgstr "Cursor at %1, %2\nPress ESC to cancel"
 
 msgid "Custom"
 msgstr "Custom"
+
+msgid "Cut"
+msgstr "Cut"
 
 msgid "DESKTOP START FAILED"
 msgstr "DESKTOP START FAILED"
@@ -582,6 +588,9 @@ msgstr "Downloading model..."
 
 msgid "Draft"
 msgstr "Draft"
+
+msgid "Edit"
+msgstr "Edit"
 
 msgid "Edit display name"
 msgstr "Edit display name"
@@ -798,6 +807,9 @@ msgstr "GitHub"
 
 msgid "Green"
 msgstr "Green"
+
+msgid "Help"
+msgstr "Help"
 
 msgid "Hide"
 msgstr "Hide"
@@ -1093,6 +1105,9 @@ msgstr "Microsoft tenant ID"
 msgid "Minimal view"
 msgstr "Minimal view"
 
+msgid "Minimize"
+msgstr "Minimize"
+
 msgid "Minutes from the record start to the break start"
 msgstr "Minutes from the record start to the break start"
 
@@ -1351,6 +1366,9 @@ msgstr "Password is stored in the system credential store."
 msgid "Password reset."
 msgstr "Password reset."
 
+msgid "Paste"
+msgstr "Paste"
+
 msgid "Personal profile"
 msgstr "Personal profile"
 
@@ -1413,6 +1431,9 @@ msgstr "Project / work item"
 
 msgid "Project ID"
 msgstr "Project ID"
+
+msgid "Project homepage"
+msgstr "Project homepage"
 
 msgid "Project records"
 msgstr "Project records"
@@ -1525,6 +1546,9 @@ msgstr "Recovery key saved."
 msgid "Recurring events must have an end date or occurrence count."
 msgstr "Recurring events must have an end date or occurrence count."
 
+msgid "Redo"
+msgstr "Redo"
+
 msgid "Refresh"
 msgstr "Refresh"
 
@@ -1569,6 +1593,9 @@ msgstr "Report"
 
 msgid "Report #{report_id}"
 msgstr "Report #{report_id}"
+
+msgid "Report an issue"
+msgstr "Report an issue"
 
 msgid "Report saved."
 msgstr "Report saved."
@@ -1780,6 +1807,9 @@ msgstr "Select a valid date or date range."
 msgid "Select a verified model in Manage models."
 msgstr "Select a verified model in Manage models."
 
+msgid "Select all"
+msgstr "Select all"
+
 msgid "Select an identity first."
 msgstr "Select an identity first."
 
@@ -1836,6 +1866,9 @@ msgstr "Show"
 
 msgid "Show leaves"
 msgstr "Show leaves"
+
+msgid "Show main window"
+msgstr "Show main window"
 
 msgid "Show password"
 msgstr "Show password"
@@ -2293,6 +2326,9 @@ msgstr "Unable to update work types. Your records have not changed."
 msgid "Unclassified"
 msgstr "Unclassified"
 
+msgid "Undo"
+msgstr "Undo"
+
 msgid "Undo latest record change"
 msgstr "Undo latest record change"
 
@@ -2392,6 +2428,9 @@ msgstr "Version {number}"
 msgid "Version {version}"
 msgstr "Version {version}"
 
+msgid "View"
+msgstr "View"
+
 msgid "View changes apply after restarting or signing in again."
 msgstr "View changes apply after restarting or signing in again."
 
@@ -2415,6 +2454,9 @@ msgstr "Weekly Report"
 
 msgid "Welcome!"
 msgstr "Welcome!"
+
+msgid "Window"
+msgstr "Window"
 
 msgid "Work"
 msgstr "Work"
