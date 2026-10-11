@@ -51,7 +51,7 @@ class ProjectTests(unittest.TestCase):
         foreign = self.records.save_entry(WorkLog(self.other.id, self.now.date(), "09:00", "10:00"))
         self.assertFalse(recorder.associate((restored[0], foreign), context).ok)
         self.assertFalse(recorder.associate((restored[0], restored[0]), context).ok)
-        self.assertTrue(recorder.start("normal", "Timer").ok)
+        self.assertTrue(recorder.start("normal", "Timer", now=self.now + timedelta(hours=2)).ok)
         self.assertFalse(recorder.associate(restored, context).ok)
         self.assertTrue(recorder.discard_timer().ok)
         self.assertTrue(self.projects.archive_project(project).ok)
