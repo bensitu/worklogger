@@ -40,6 +40,7 @@ from worklogger.presentation.shell.pages import (
 from worklogger.presentation.shell.residency import QtResidencyController
 from worklogger.presentation.shell.background_controller import BackgroundController
 from worklogger.presentation.theme.background import MainBackgroundWidget
+from worklogger.presentation.theme.glass_surfaces import GlassThemeController
 from worklogger.presentation.theme import (
     ThemeEngine,
     configure_application_style,
@@ -174,6 +175,8 @@ class AppWindow(QMainWindow):
         if hasattr(self._residency_controller, "notify_timer_reminder"):
             self.entry_panel.reminder.connect(self._residency_controller.notify_timer_reminder)
         self.sidebar.set_avatar(self._config.profile_avatar_png)
+        self.glass_controller = GlassThemeController(self, self._background_surface, job_runner=self._job_runner,
+                                                     native_target=self.sidebar)
         self.apply_theme()
         self.background_controller.reload()
         self._date_timer = QTimer(self)
@@ -228,6 +231,8 @@ class AppWindow(QMainWindow):
             application.setPalette(palette)
         if force or application.styleSheet() != stylesheet:
             application.setStyleSheet(stylesheet)
+        self.glass_controller.configure(self._theme_engine.palette(self._config.theme, dark=self._config.dark,
+                                                                  custom_color=self._config.custom_color))
 
     def apply_settings(self, state: SettingsState) -> None:
         self.sidebar.set_avatar(state.profile_avatar_png)
@@ -645,6 +650,7 @@ class AppWindow(QMainWindow):
         if isinstance(self.entry_panel, TimeEntryPanel):
             self.entry_panel.auto_timer.stop()
         self.background_controller.dispose()
+        self.glass_controller.dispose()
         self._background_surface.shutdown()
         super().closeEvent(event)
 

@@ -29,6 +29,7 @@ from worklogger.presentation.shell.background_controller import BackgroundContro
 from worklogger.presentation.shell.residency import QtResidencyController
 from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
 from worklogger.presentation.theme.background import MainBackgroundWidget
+from worklogger.presentation.theme.glass_surfaces import GlassThemeController
 from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets._style import refresh_style_tree
@@ -96,6 +97,7 @@ class MinimalView(QWidget):
         self.date_picker_holidays = DatePickerHolidaysController(self.date_button, holidays_handler,
             country=holiday_country, enabled=self._config.show_holidays, region=self._config.holiday_region,
             job_runner=self._job_runner)
+        self.glass_controller = GlassThemeController(self, self._background_surface, job_runner=self._job_runner)
         self.apply_theme()
         self.background_controller = BackgroundController(self._background_surface, background_service,
             available=self._config.background_images_available, job_runner=self._job_runner)
@@ -298,6 +300,8 @@ class MinimalView(QWidget):
                 application.setPalette(palette)
             if application.styleSheet() != stylesheet:
                 application.setStyleSheet(stylesheet)
+        self.glass_controller.configure(engine.palette(self._config.theme, dark=self._config.dark,
+                                                       custom_color=self._config.custom_color))
 
     def _entries_changed(self, day: date):
         model = self.entry_panel.view_model
@@ -321,6 +325,7 @@ class MinimalView(QWidget):
         if isinstance(self.entry_panel, TimeEntryPanel):
             self.entry_panel.auto_timer.stop()
         self.background_controller.dispose()
+        self.glass_controller.dispose()
         self.date_picker_holidays.dispose()
         self._background_surface.shutdown()
         self._date_timer.stop()
@@ -413,6 +418,7 @@ class MinimalView(QWidget):
         if hasattr(self._settings_workflow, "create_dialog"):
             dialog = self._settings_workflow.create_dialog(self)
             self._settings_dialog = dialog
+            self.glass_controller.refresh_surfaces()
             if hasattr(dialog, "background_settings"):
                 dialog.background_settings.bind(self.background_controller)
                 self.background_controller.reload()

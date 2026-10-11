@@ -37,7 +37,7 @@ def render_glass(backdrop: QImage, width: int, height: int, tint: str) -> QImage
     color = QColor(tint)
     if not color.isValid():
         raise ValueError("glass_tint_invalid")
-    color.setAlpha(160)
+    color.setAlpha(190 if color.lightness() < 128 else 160)
     painter = QPainter(result)
     painter.fillRect(result.rect(), color)
     painter.end()

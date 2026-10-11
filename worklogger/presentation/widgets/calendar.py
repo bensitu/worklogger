@@ -92,7 +92,7 @@ class CalendarDayButton(QPushButton):
             holiday_font = painter.font()
             holiday_font.setPixelSize(11)
             painter.setFont(holiday_font)
-            painter.setPen(QColor("#ef4444" if not cell.is_selected else "#ffffff"))
+            painter.setPen(QColor(cell.style.holiday_foreground if not cell.is_selected else cell.style.highlighted_foreground))
             holiday_width = self.width() - (40 if cell.event_count else 36 if cell.show_overnight_marker else 20)
             for index, line in enumerate(_holiday_lines(cell.holiday_name, holiday_font, int(holiday_width))):
                 painter.drawText(
@@ -137,7 +137,7 @@ class CalendarDayButton(QPushButton):
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QColor(cell.style.hover_border))
             painter.drawRoundedRect(badge, 6, 6)
-            painter.setPen(QColor("#ffffff"))
+            painter.setPen(QColor(cell.style.highlighted_foreground))
             painter.drawText(
                 badge,
                 Qt.AlignmentFlag.AlignCenter,

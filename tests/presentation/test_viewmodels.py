@@ -310,7 +310,7 @@ class PresentationViewModelTests(unittest.TestCase):
     def test_theme_engine_uses_shared_templates_and_resolved_palettes(self) -> None:
         engine = ThemeEngine()
 
-        for theme in ("blue", "pink", "green", "purple", "custom"):
+        for theme in ("blue", "pink", "green", "purple", "custom", "liquid_glass"):
             for mode in ("light", "dark"):
                 stylesheet = engine.application_stylesheet(theme, dark=mode == "dark")
                 self.assertIn("QPushButton", stylesheet)

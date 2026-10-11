@@ -6,6 +6,7 @@ from PySide6.QtGui import QColor, QImage, QLinearGradient, QPainter
 
 from worklogger._vendor.pyglass.refract import array_to_qimage, qimage_to_array
 from worklogger.presentation.theme.glass_renderer import GLASS_PADDING, MAX_GLASS_PIXELS, render_glass
+from worklogger.presentation.theme import ThemeEngine
 
 
 class GlassRendererTests(unittest.TestCase):
@@ -35,3 +36,16 @@ class GlassRendererTests(unittest.TestCase):
         self.assertEqual(rendered.pixelColor(10, 10).alpha(), 255)
         with self.assertRaises(ValueError):
             render_glass(QImage(), width, height, "#ffffff")
+
+    def test_glass_tint_keeps_text_readable_over_extreme_backgrounds(self):
+        def luminance(color):
+            channels = (color.redF(), color.greenF(), color.blueF())
+            return sum(weight * (channel / 12.92 if channel <= 0.04045 else ((channel + 0.055) / 1.055) ** 2.4)
+                       for channel, weight in zip(channels, (0.2126, 0.7152, 0.0722)))
+        for dark, background in ((False, "#000000"), (True, "#ffffff")):
+            colors = ThemeEngine().palette("liquid_glass", dark=dark)
+            image = QImage(236, 136, QImage.Format.Format_ARGB32)
+            image.fill(QColor(background))
+            result = render_glass(image, 200, 100, colors.surface)
+            values = sorted((luminance(QColor(colors.text)), luminance(result.pixelColor(100, 50))))
+            self.assertGreaterEqual((values[1] + 0.05) / (values[0] + 0.05), 4.5)

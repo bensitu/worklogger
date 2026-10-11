@@ -979,6 +979,9 @@ msgstr "Link"
 msgid "Linked identities"
 msgstr "Linked identities"
 
+msgid "Liquid Glass"
+msgstr "Liquid Glass"
+
 msgid "Loading models..."
 msgstr "Loading models..."
 

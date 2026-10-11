@@ -68,6 +68,7 @@ class AppearanceSection(_SettingsScrollPage):
             ("pink", _("Pink")),
             ("green", _("Green")),
             ("purple", _("Purple")),
+            ("liquid_glass", _("Liquid Glass")),
             ("custom", _("Custom")),
         ):
             self.theme_combo.addItem(label, key)

@@ -33,6 +33,10 @@ _THEMES: dict[str, dict[bool, tuple[str, str, str, str, str]]] = {
         False: ("#7c55d6", "#5c38b8", "#ede8ff", "#f2efff", "#cfc8f0"),
         True: ("#9a78f0", "#7c55d6", "#261852", "#1a1038", "#3a2868"),
     },
+    "liquid_glass": {
+        False: ("#146c76", "#0f5660", "#dceff0", "#edf4f5", "#bfd6da"),
+        True: ("#82d1d8", "#9fe0e5", "#203a3e", "#242e33", "#4e6066"),
+    },
 }
 
 _CELL_COLORS: dict[bool, dict[str, tuple[str, str, str, str]]] = {
@@ -111,6 +115,8 @@ class CalendarCellStyle:
     border: str
     border_width: int
     hover_border: str
+    holiday_foreground: str = "#ef4444"
+    highlighted_foreground: str = "#ffffff"
 
 
 class ThemeEngine:
@@ -147,6 +153,18 @@ class ThemeEngine:
             )
         else:
             background, foreground, border, width = _CELL_COLORS[bool(dark)][key]
+            if palette.theme == "liquid_glass":
+                background = QColor(palette.surface)
+                if key == "holiday":
+                    background = QColor("#5b292e" if dark else "#f6dce0")
+                elif key == "weekend":
+                    background = QColor(palette.accent_dim)
+                elif key == "today":
+                    background = QColor("#444230" if dark else "#f5f1d5")
+                background.setAlpha(180)
+                background = background.name(QColor.NameFormat.HexArgb)
+                foreground = palette.accent if key == "weekend" else palette.danger if key == "holiday" else palette.text
+                border = palette.border
         return CalendarCellStyle(
             key=key,
             background=background,
@@ -154,6 +172,8 @@ class ThemeEngine:
             border=border,
             border_width=int(width),
             hover_border=palette.hover,
+            holiday_foreground=palette.danger if palette.theme == "liquid_glass" else "#ef4444",
+            highlighted_foreground=palette.highlighted_text,
         )
 
     def work_type_marker_color(
@@ -239,6 +259,18 @@ def _color_palette(theme_key: str, dark: bool, custom_color: str | None) -> Colo
         danger, success, warning = "#ef4444", "#16a34a", "#f59e0b"
         table_alternate, button_hover = surface, "#e8ecf8"
         disabled_text, disabled_background = "#9aa3bb", "#edf0f5"
+    if theme_key == "liquid_glass":
+        background, surface, surface_alt = (("#20252a", "#252c32", "#30383f") if dark else
+                                          ("#e5edf1", "#f3f7fa", "#eaf1f5"))
+        card, card_hover = surface, surface_alt
+        border, border_strong = (("#53636c", "#71838d") if dark else ("#bdced9", "#a5bac7"))
+        text, muted = (("#e8eef3", "#b2bdc6") if dark else ("#182b35", "#506976"))
+        input_background, input_border = (("#222a30", "#697b85") if dark else ("#ffffff", "#aabdc9"))
+        sidebar_background, sidebar_active = surface, accent_dim
+        table_alternate, button_hover = surface_alt, surface_alt
+        disabled_text, disabled_background = (("#8e9ba5", "#30383f") if dark else ("#7e939f", "#e4edf2"))
+        danger, success, warning = (("#ff9baf", "#87e5ba", "#f4d989") if dark else
+                                    ("#a9243a", "#166c44", "#875900"))
     return ColorPalette(
         theme=theme_key,
         dark=bool(dark),
@@ -254,7 +286,7 @@ def _color_palette(theme_key: str, dark: bool, custom_color: str | None) -> Colo
         button_hover=button_hover,
         disabled_text=disabled_text,
         disabled_background=disabled_background,
-        highlighted_text="#ffffff",
+        highlighted_text="#10242a" if theme_key == "liquid_glass" and dark else "#ffffff",
         login_hero_background="#111827",
         card=card,
         card_hover=card_hover,
@@ -297,7 +329,15 @@ def _read_qss_template() -> str:
 def _application_stylesheet(palette: ColorPalette) -> str:
     tokens = {name: color for name, color in asdict(palette).items() if isinstance(color, str)}
     tokens["icons_root"] = (Path(__file__).resolve().parents[2] / "assets" / "icons" / "ui").as_posix()
-    return _render_qss(_read_qss_template(), tokens)
+    template = _read_qss_template()
+    if palette.theme == "liquid_glass":
+        for name, color, alpha in (("glass_fill", palette.input_background, 200),
+                                   ("glass_border", palette.border_strong, 115),
+                                   ("glass_hover", palette.button_hover, 225)):
+            red, green, blue, _alpha = QColor(color).getRgb()
+            tokens[name] = f"rgba({red}, {green}, {blue}, {alpha})"
+        template += "\n" + (_QSS_ROOT / "liquid_glass.qss").read_text(encoding="utf-8")
+    return _render_qss(template, tokens)
 
 
 def contrasting_text_color(background: QColor) -> QColor:

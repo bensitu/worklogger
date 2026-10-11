@@ -1,0 +1,145 @@
+/* Glass backgrounds do not alter foreground control geometry. */
+
+QWidget#app_main_content_widget,
+QStackedWidget#app_page_stack_widget,
+QWidget#calendar_page_widget,
+QWidget#calendar_view_widget,
+QWidget#analytics_page_widget,
+QWidget#analytics_content_widget,
+QWidget#reports_page_widget,
+QWidget#report_history_content_widget,
+QWidget#settings_page_widget,
+QStackedWidget#settings_category_stack_widget,
+QWidget#settings_scroll_content_widget,
+QWidget#calendar_scroll_viewport_widget,
+QWidget#calendar_records_widget,
+QWidget#stats_panel_widget,
+QWidget#combo_chart_widget,
+QWidget#work_mode_chart_widget,
+QWidget#work_context_picker_widget,
+QWidget#worklog_entry_panel_widget,
+QWidget#worklog_manual_tab_widget,
+QWidget#worklog_auto_tab_widget,
+QTabWidget#worklog_mode_tab_widget,
+QTabWidget#worklog_mode_tab_widget QStackedWidget,
+QScrollArea > QWidget,
+QWidget#glass_surface_layer_widget {
+  background: transparent;
+}
+
+QTableView,
+QTreeView {
+  background: {{ input_background }};
+  border-color: {{ glass_border }};
+}
+
+QHeaderView::section {
+  background: {{ input_background }};
+  border: none;
+  border-bottom: 1px solid {{ glass_border }};
+  border-right: 1px solid {{ glass_border }};
+  padding: 4px 6px;
+}
+
+QFrame[glass_surface="true"],
+QFrame#app_sidebar_frame[glass_surface="true"],
+QFrame#calendar_right_panel_frame[glass_surface="true"],
+QFrame#calendar_grid_frame[glass_surface="true"],
+QFrame#stat_card_frame[glass_surface="true"],
+QFrame#report_editor_frame[glass_surface="true"],
+QFrame#report_history_frame[glass_surface="true"],
+QFrame#analytics_chart_frame[glass_surface="true"],
+QFrame#settings_content_frame[glass_surface="true"],
+QFrame#settings_navigation_frame[glass_surface="true"],
+QWidget#worklog_entry_panel_widget[glass_surface="true"] {
+  background: transparent;
+  border: 1px solid {{ glass_border }};
+  border-radius: 8px;
+}
+
+QFrame[glass_surface="true"]:hover {
+  background: transparent;
+  border-color: {{ border_strong }};
+}
+
+QFrame#app_sidebar_frame QPushButton[nav_item="true"] {
+  background: transparent;
+}
+
+QPushButton,
+QToolButton,
+QPushButton[variant="outline"],
+QToolButton[variant="outline"],
+QLineEdit,
+QTextEdit,
+QPlainTextEdit,
+QComboBox,
+QSpinBox,
+QDoubleSpinBox,
+QDateEdit,
+QDateTimeEdit,
+QTimeEdit,
+QLineEdit#account_name_line_edit,
+QLineEdit#account_id_line_edit,
+QLineEdit#account_role_line_edit {
+  background: {{ glass_fill }};
+  border-color: {{ glass_border }};
+}
+
+QPushButton[variant="outline"]:hover:enabled,
+QToolButton[variant="outline"]:hover:enabled,
+QFrame#app_sidebar_frame QPushButton[nav_item="true"]:hover:enabled {
+  background: {{ glass_hover }};
+}
+
+QFrame#app_sidebar_frame QPushButton[nav_item="true"][active="true"] {
+  background: {{ accent_dim }};
+}
+
+QPushButton[variant="outline"]:disabled,
+QToolButton[variant="outline"]:disabled {
+  background: {{ disabled_background }};
+}
+
+QFrame#calendar_record_frame,
+QPushButton#calendar_time_entry_button,
+QPushButton#report_history_item_button {
+  background: {{ glass_fill }};
+  border-color: {{ glass_border }};
+}
+
+QPushButton#calendar_time_entry_button:checked,
+QPushButton#report_history_item_button[active="true"] {
+  background: {{ accent_dim }};
+  border-color: {{ accent }};
+}
+
+QPushButton#calendar_time_entry_button:hover:enabled,
+QPushButton#report_history_item_button:hover:enabled {
+  background: {{ glass_hover }};
+  border-color: {{ accent }};
+}
+
+QTabBar#worklog_mode_selector_widget,
+QTabWidget::pane,
+QTabWidget#project_editor_tab_widget::pane,
+QTabWidget#report_revision_tab_widget::pane {
+  background: transparent;
+  border-color: {{ glass_border }};
+}
+
+QTabBar::tab,
+QTabBar#worklog_mode_selector_widget::tab:selected,
+QWidget#management_editor_page {
+  background: {{ glass_fill }};
+  border-color: {{ glass_border }};
+}
+
+QFrame#settings_separator_frame,
+QFrame#report_period_separator_frame {
+  background: {{ glass_border }};
+}
+
+QLabel#schedule_records_label {
+  border-top-color: {{ glass_border }};
+}

@@ -979,6 +979,9 @@ msgstr "연결"
 msgid "Linked identities"
 msgstr "연결된 계정"
 
+msgid "Liquid Glass"
+msgstr "리퀴드 글래스"
+
 msgid "Loading models..."
 msgstr "모델을 불러오는 중..."
 

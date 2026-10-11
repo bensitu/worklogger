@@ -979,6 +979,9 @@ msgstr "連携"
 msgid "Linked identities"
 msgstr "連携アカウント"
 
+msgid "Liquid Glass"
+msgstr "リキッドグラス"
+
 msgid "Loading models..."
 msgstr "モデルを読み込み中..."
 

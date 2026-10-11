@@ -979,6 +979,9 @@ msgstr "連結"
 msgid "Linked identities"
 msgstr "連結的身分"
 
+msgid "Liquid Glass"
+msgstr "液態玻璃"
+
 msgid "Loading models..."
 msgstr "正在載入模型..."
 

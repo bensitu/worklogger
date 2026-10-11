@@ -3,7 +3,7 @@
 import re
 
 DEFAULT_CUSTOM_COLOR = "#4f8ef7"
-THEME_KEYS = ("blue", "pink", "green", "purple", "custom")
+THEME_KEYS = ("blue", "pink", "green", "purple", "liquid_glass", "custom")
 
 
 def normalize_hex_color(value: str | None) -> str:
