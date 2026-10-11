@@ -19,6 +19,9 @@ class BuildResourceTests(unittest.TestCase):
             root = Path(directory)
             dependency = root / "requirements.txt"
             dependency.write_text("sample==1.0\n", encoding="utf-8")
+            initial_digest = digest(dependency)
+            dependency.write_bytes(b"sample==1.0\r\n")
+            self.assertEqual(digest(dependency), initial_digest)
             target = {"system": "Windows", "machine": "AMD64", "python": "3.11.9", "implementation": "CPython"}
             value = {"format_version": 1, "target": target, "inputs": {"requirements.txt": digest(dependency)},
                      "packages": [{"name": "sample", "version": "1.0", "sha256": "a" * 64, "wheel": "sample.whl"}]}

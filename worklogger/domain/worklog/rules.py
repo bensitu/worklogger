@@ -27,7 +27,14 @@ def parse_time(raw: str | None) -> str | None:
     except ValueError:
         pass
 
-    digits = text.replace(":", "").replace(" ", "")
+    if ":" in text:
+        hour_text, minute_text = (part.strip() for part in text.split(":", 1))
+        if not hour_text.isdecimal() or (minute_text and not minute_text.isdecimal()):
+            return None
+        hour, minute = int(hour_text), int(minute_text or "0")
+        return f"{hour:02d}:{minute:02d}" if 0 <= hour <= 23 and 0 <= minute <= 59 else None
+
+    digits = text.replace(" ", "")
     if digits.isdecimal():
         length = len(digits)
         if length <= 2:
@@ -36,16 +43,6 @@ def parse_time(raw: str | None) -> str | None:
             hour, minute = int(digits[0]), int(digits[1:])
         else:
             hour, minute = int(digits[:-2]), int(digits[-2:])
-        if 0 <= hour <= 23 and 0 <= minute <= 59:
-            return f"{hour:02d}:{minute:02d}"
-
-    if ":" in text:
-        hour_text, minute_text = text.split(":", 1)
-        try:
-            hour = int(hour_text)
-            minute = int(minute_text) if minute_text else 0
-        except ValueError:
-            return None
         if 0 <= hour <= 23 and 0 <= minute <= 59:
             return f"{hour:02d}:{minute:02d}"
 

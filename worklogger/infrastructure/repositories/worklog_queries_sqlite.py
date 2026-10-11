@@ -92,6 +92,7 @@ class SQLiteWorkLogQueries:
                     (user_id,),
                 ).fetchall(),
                 self._storage.from_row,
+                strict=True,
             )
             rows = connection.execute(
                 "SELECT d, content FROM daily_notes WHERE user_id=? AND content<>'' ",
@@ -100,6 +101,7 @@ class SQLiteWorkLogQueries:
         notes = map_rows(
             rows,
             lambda row: WorkLog(user_id, parse_date(row["d"]), note=row["content"]),
+            strict=True,
         )
         return tuple(sorted((*records, *notes), key=lambda record: record.day))
 

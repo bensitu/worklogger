@@ -87,7 +87,9 @@ class _ValidatedRedirect(HTTPRedirectHandler):
 
 @lru_cache(maxsize=2)
 def _certificate_context(path: str, modified: int, size: int):
-    return ssl.create_default_context(cafile=path)
+    context = ssl.create_default_context()
+    context.load_verify_locations(cafile=path)
+    return context
 
 
 def https_opener(*, public_only: bool = False, allow_redirects: bool = True, proxy_url: str | None = None):

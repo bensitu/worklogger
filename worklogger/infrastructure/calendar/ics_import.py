@@ -13,6 +13,7 @@ from worklogger.config.constants import ICS_MAX_BYTES
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
+from worklogger.infrastructure.calendar.recurrence import validate_recurrence_capacity
 
 
 class IcsCalendarImporter:
@@ -49,6 +50,7 @@ class IcsCalendarImporter:
                     if value is not None and value.params.get("TZID") and isinstance(value.dt, datetime) and value.dt.tzinfo is None:
                         raise ValueError("ics_import_failed")
             zone = self._timezone or get_localzone()
+            validate_recurrence_capacity(calendar, self._max_events)
             events = []
             for index, component in enumerate(recurring_ical_events.of(calendar).all()):
                 if index >= self._max_events:

@@ -14,6 +14,7 @@ from worklogger.config.constants import LOCAL_MODEL_ACTIVE_ID_SETTING_KEY, NETWO
 from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
+from worklogger.app.use_cases._errors import storage_boundary
 
 
 class CredentialStore(Protocol):
@@ -95,6 +96,8 @@ class SetSettingHandler:
     def handle(self, command: SetSettingCommand) -> Result[None]:
         try:
             key = _normalize_key(command.key)
+            if command.value is None:
+                raise ValueError("setting_value_invalid")
             value = str(command.value)
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
@@ -118,6 +121,7 @@ class SetActiveLocalModelHandler:
         self._repository = repository
         self._event_bus = event_bus
 
+    @storage_boundary("settings_save_failed")
     def handle(self, command: SetActiveLocalModelCommand) -> Result[None]:
         model_id = command.model_id.strip() if isinstance(command.model_id, str) else None
         if model_id:

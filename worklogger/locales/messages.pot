@@ -2009,6 +2009,9 @@ msgstr ""
 msgid "The latest 50 saved versions are retained. Restoring creates a new version."
 msgstr ""
 
+msgid "The model exceeds the supported download size limit."
+msgstr ""
+
 msgid "The model returned no content. Please try again."
 msgstr ""
 

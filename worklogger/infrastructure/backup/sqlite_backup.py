@@ -121,7 +121,7 @@ class SQLiteBackupService:
                 with staged.connection(write=True) as connection:
                     _ensure_integrity(connection, "restore_integrity_failed")
                     connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
-                    connection.execute("PRAGMA journal_mode=DELETE")
+                    _use_delete_journal(connection)
                 retained = self._publish_restore(snapshot, target, previous)
         except ValueError as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
@@ -141,7 +141,7 @@ class SQLiteBackupService:
                     checkpoint = connection.execute("PRAGMA wal_checkpoint(TRUNCATE)").fetchone()
                     if checkpoint and checkpoint[0]:
                         raise ValueError("restore_database_busy")
-                    connection.execute("PRAGMA journal_mode=DELETE")
+                    _use_delete_journal(connection)
                 if target.exists():
                     os.replace(target, previous)
                 replacement_started = True
@@ -182,7 +182,7 @@ def create_database_snapshot(source: sqlite3.Connection, destination: Path) -> P
     try:
         with closing(sqlite3.connect(snapshot)) as connection:
             source.backup(connection)
-            connection.execute("PRAGMA journal_mode=DELETE")
+            _use_delete_journal(connection, error_code="backup_integrity_failed")
             _ensure_integrity(connection, "backup_integrity_failed")
         secure_database_files(snapshot)
         return snapshot
@@ -194,6 +194,12 @@ def create_database_snapshot(source: sqlite3.Connection, destination: Path) -> P
 def _ensure_integrity(connection: sqlite3.Connection, error_code: str) -> None:
     rows = connection.execute("PRAGMA integrity_check").fetchall()
     if len(rows) != 1 or rows[0][0] != "ok":
+        raise ValueError(error_code)
+
+
+def _use_delete_journal(connection: sqlite3.Connection, *, error_code="restore_database_busy") -> None:
+    row = connection.execute("PRAGMA journal_mode=DELETE").fetchone()
+    if row is None or str(row[0]).lower() != "delete":
         raise ValueError(error_code)
 
 

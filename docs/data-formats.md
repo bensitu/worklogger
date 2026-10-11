@@ -68,6 +68,8 @@ Finite recurrence, exclusions, and cancellations are handled.
 Recurrence without an end date or count is rejected.
 Declared recurrence counts above the event limit are rejected before expansion,
 even if exclusions would reduce the final selection.
+Date-bounded recurrence and combined rules are also counted before expansion;
+the capacity budget includes additional dates and exclusion rules.
 
 Multi-day events expand by occupied date; all-day end dates are exclusive.
 Append deduplicates matching events; replace is transactional.

@@ -38,6 +38,21 @@ class FakeResponse:
 
 
 class LocalModelInfrastructureTests(unittest.TestCase):
+    def test_download_limits_headers_and_streaming_without_replacing_existing_files(self):
+        from worklogger.infrastructure.local_model.store import HttpRangeDownloader
+        payload = b"x" * 16
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "model.gguf"
+            path.write_bytes(b"Existing model")
+            for headers in ({"Content-Length": "16"}, {}):
+                downloader = HttpRangeDownloader(opener=lambda *_args, **_kwargs: FakeResponse(payload, headers=headers),
+                                                 max_bytes=8, chunk_size=4)
+                result = downloader.download(url="https://example.test/model.gguf", destination=path,
+                                             expected_sha256=hashlib.sha256(payload).hexdigest())
+                self.assertEqual(result.error.code, "local_model_file_too_large")
+                self.assertEqual(path.read_bytes(), b"Existing model")
+                self.assertFalse(path.with_suffix(".gguf.tmp").exists())
+
     def test_catalog_merges_bundled_and_local_entries_and_invalidates_cached_metadata(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

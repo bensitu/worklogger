@@ -7,7 +7,7 @@
     "implementation": "CPython"
   },
   "inputs": {
-    "requirements.txt": "e2f24a05dbda63bea6be8d9a7c45b539cd32a2bfea49031ff8eb0db56c402259",
+    "requirements.txt": "2d833f27bac1b24c34d9c39c574b463a41b86a1d2456bc84f9e8786a337ed1da",
     "requirements-build.txt": "4439c693c19271e4b0bdc56c641c36b3b06010b1b22eae6733cd244d752e85d5"
   },
   "packages": [
@@ -100,6 +100,12 @@
       "version": "11.1.0",
       "wheel": "more_itertools-11.1.0-py3-none-any.whl",
       "sha256": "4b65538ae22f6fed0ce4874efd317463a7489796a0939fa66824dd542125a192"
+    },
+    {
+      "name": "numpy",
+      "version": "2.3.5",
+      "wheel": "numpy-2.3.5-cp311-cp311-win_amd64.whl",
+      "sha256": "a414504bef8945eae5f2d7cb7be2d4af77c5d1cb5e20b296c2c25b61dff2900c"
     },
     {
       "name": "openpyxl",

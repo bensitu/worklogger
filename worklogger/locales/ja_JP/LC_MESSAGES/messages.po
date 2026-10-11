@@ -2011,6 +2011,9 @@ msgstr "過去の休憩は記録区間の内側に収まる必要があります
 msgid "The latest 50 saved versions are retained. Restoring creates a new version."
 msgstr "最新の保存済みバージョン50件を保持します。復元すると新しいバージョンが作成されます。"
 
+msgid "The model exceeds the supported download size limit."
+msgstr "モデルがダウンロードサイズの上限を超えています。"
+
 msgid "The model returned no content. Please try again."
 msgstr "モデルから内容が返されませんでした。もう一度お試しください。"
 

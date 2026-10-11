@@ -82,6 +82,16 @@ class MemoryKeyringBackend:
 
 
 class SQLiteInfrastructureTests(unittest.TestCase):
+    def test_missing_or_weakened_named_indexes_are_rejected_without_repairing_data(self):
+        with self.factory.transaction() as connection:
+            connection.execute("DROP INDEX idx_users_username_key")
+            connection.execute("CREATE INDEX idx_users_username_key ON users(username_key)")
+        with self.assertRaisesRegex(ValueError, "database_schema_unsupported"):
+            MigrationRunner(self.factory).run_pending()
+        with self.factory.connection() as connection:
+            index = next(row for row in connection.execute("PRAGMA index_list(users)") if row[1] == "idx_users_username_key")
+            self.assertEqual(index[2], 0)
+
     def setUp(self) -> None:
         self._tempdir = tempfile.TemporaryDirectory()
         self.addCleanup(self._tempdir.cleanup)
@@ -114,6 +124,9 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         self.assertEqual(len(records), 1)
         self.assertEqual(len(quick_logs), 1)
         self.assertIsNone(quick_logs[0].created_at)
+        with self.assertLogs("worklogger.infrastructure.repositories._mapping", level="WARNING"):
+            with self.assertRaisesRegex(ValueError, "stored_records_invalid"):
+                SQLiteWorkLogRepository(self.factory).list_export_rows(user.id)
         self.assertFalse(UpdateQuickLogHandler(repository).handle(UpdateQuickLogCommand(user.id + 1, record_id, day, "Not owned")).ok)
         self.assertFalse(DeleteQuickLogHandler(repository).handle(DeleteQuickLogCommand(user.id + 1, record_id)).ok)
         self.assertTrue(DeleteQuickLogHandler(repository).handle(DeleteQuickLogCommand(user.id, record_id)).ok)

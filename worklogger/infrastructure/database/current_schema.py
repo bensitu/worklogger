@@ -122,8 +122,21 @@ def schema_columns():
     with closing(sqlite3.connect(":memory:")) as connection:
         create_current_schema(connection)
         return {table: (tuple((row[1], row[2], row[5]) for row in connection.execute(f'PRAGMA table_info("{table}")')),
-                        foreign_key_contract(connection, table))
+                        foreign_key_contract(connection, table), index_contract(connection, table))
                 for table in TABLE_STATEMENTS}
+
+
+def index_contract(connection, table):
+    indexes = {}
+    for row in connection.execute(f'PRAGMA index_list("{table}")'):
+        if row[3] != "c":
+            continue
+        name = row[1]
+        quoted = name.replace('"', '""')
+        columns = tuple((value[2], value[3], value[4], value[5])
+                        for value in connection.execute(f'PRAGMA index_xinfo("{quoted}")'))
+        indexes[name] = (row[2], row[3], row[4], columns)
+    return indexes
 
 
 def foreign_key_contract(connection, table):
@@ -138,13 +151,16 @@ def validate_current_schema(connection, *, ledger_required=True, check_data=True
     tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")}
     if tables - set(TABLE_STATEMENTS) - {"oauth_identities"}:
         raise ValueError("database_schema_unsupported")
-    for table, (required, foreign_keys) in schema_columns().items():
+    for table, (required, foreign_keys, indexes) in schema_columns().items():
         if table == "schema_migrations" and not ledger_required:
             continue
         actual = {row[1]: (row[2], row[5]) for row in connection.execute(f'PRAGMA table_info("{table}")')}
         if any(actual.get(name) != (declaration, primary_key) for name, declaration, primary_key in required):
             raise ValueError("database_schema_unsupported")
         if foreign_key_contract(connection, table) != foreign_keys:
+            raise ValueError("database_schema_unsupported")
+        actual_indexes = index_contract(connection, table)
+        if any(actual_indexes.get(name) != definition for name, definition in indexes.items()):
             raise ValueError("database_schema_unsupported")
     if check_data and connection.execute("PRAGMA foreign_key_check").fetchone() is not None:
         raise ValueError("database_foreign_key_invalid")

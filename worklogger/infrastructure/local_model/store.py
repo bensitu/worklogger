@@ -38,10 +38,14 @@ class HttpRangeDownloader:
         opener: UrlOpen | None = None,
         timeout_seconds: float = 30.0,
         chunk_size: int = 64 * 1024,
+        max_bytes: int = 32 * 1024 ** 3,
     ) -> None:
         self._opener = opener or https_opener(public_only=True)
         self._timeout_seconds = timeout_seconds
         self._chunk_size = chunk_size
+        self._max_bytes = int(max_bytes)
+        if self._max_bytes < 1:
+            raise ValueError("local_model_download_limit_invalid")
 
     def download(
         self,
@@ -59,12 +63,15 @@ class HttpRangeDownloader:
                 return Result.failure(ValidationError("local_model_hash_required", "local_model_hash_required"))
             destination.parent.mkdir(parents=True, exist_ok=True)
             temp_path = destination.with_suffix(destination.suffix + ".tmp")
+            if temp_path.is_symlink() or (temp_path.exists() and not temp_path.is_file()):
+                raise ValueError("local_model_filename_invalid")
             with portalocker.Lock(str(destination) + ".lock", timeout=0):
                 _download_to_temp(
                     opener=self._opener, url=safe_url, destination=temp_path,
                     timeout_seconds=self._timeout_seconds, chunk_size=self._chunk_size,
                     is_cancelled=is_cancelled,
                     progress=progress,
+                    max_bytes=self._max_bytes,
                 )
                 if progress is not None:
                     progress(DownloadProgress(temp_path.stat().st_size, temp_path.stat().st_size, "verification"))
@@ -79,6 +86,11 @@ class HttpRangeDownloader:
             return Result.success(destination)
         except InterruptedError:
             return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
+        except ValueError as exc:
+            if str(exc) == "local_model_file_too_large":
+                temp_path.unlink(missing_ok=True)
+                return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(InfrastructureError("local_model_download_failed", "local_model_download_failed"))
         except Exception as exc:
             return Result.failure(
                 InfrastructureError(
@@ -555,9 +567,12 @@ def _download_to_temp(
     chunk_size: int,
     is_cancelled: Callable[[], bool] | None = None,
     progress=None,
+    max_bytes: int = 32 * 1024 ** 3,
 ) -> None:
     _check_cancelled(is_cancelled)
     resume_from = destination.stat().st_size if destination.exists() else 0
+    if resume_from > max_bytes:
+        raise ValueError("local_model_file_too_large")
     headers = {"Range": f"bytes={resume_from}-"} if resume_from > 0 else {}
     request = Request(url, headers=headers)
     try:
@@ -597,6 +612,8 @@ def _download_to_temp(
         from time import monotonic
         last_progress = monotonic()
         total = int(match[3]) if status == 206 else expected_bytes
+        if total is not None and total > max_bytes:
+            raise ValueError("local_model_file_too_large")
         if progress is not None:
             progress(DownloadProgress(resume_from, total))
         mode = "ab" if resume_from > 0 else "wb"
@@ -606,6 +623,8 @@ def _download_to_temp(
                 chunk = response.read(chunk_size)
                 if not chunk:
                     break
+                if resume_from + received + len(chunk) > max_bytes:
+                    raise ValueError("local_model_file_too_large")
                 handle.write(chunk)
                 received += len(chunk)
                 if progress is not None and monotonic() - last_progress >= 0.1:

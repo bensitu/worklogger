@@ -7,7 +7,7 @@ import json
 import os
 import sqlite3
 
-from worklogger.infrastructure.backup.sqlite_backup import create_database_snapshot
+from worklogger.infrastructure.backup.sqlite_backup import create_database_snapshot, _use_delete_journal
 from worklogger.infrastructure.database.inspection import validate_database_file
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
 from worklogger.infrastructure.database.migrations.runner import MigrationRunner
@@ -68,7 +68,7 @@ def upgrade_database(source: Path, destination: Path, *, template_file: Path | N
                 counts = tuple(connection.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()[0]
                                for table in ("users", "worklog", "reports", "daily_notes"))
                 connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
-                connection.execute("PRAGMA journal_mode=DELETE")
+                _use_delete_journal(connection, error_code="database_integrity_invalid")
                 if connection.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
                     raise ValueError("database_integrity_invalid")
             return UpgradeReport(versions, *counts)

@@ -1,5 +1,8 @@
 # Packaging
 
+Dependency input fingerprints normalize text line endings. Wheel hashes remain
+byte-for-byte checksums for the declared target platform.
+
 ## Dependencies
 
 Build on the target operating system and architecture in a clean environment.

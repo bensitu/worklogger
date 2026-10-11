@@ -45,6 +45,8 @@ ranges, while two captured occurrences of a repeated DST hour can remain distinc
 Startup checks the stored structure and ledger against supported contracts.
 Missing keys/columns, unknown layouts, executable schema objects, and unknown
 future versions are rejected rather than reset.
+Required named indexes are checked for their columns, uniqueness and partial
+index attributes; incomplete constraints are not silently repaired during startup.
 Canonical source baselines are ledger versions 14, 15, and 16, with the full
 required structure. Earlier ledger entries may remain as history but do not make
 an incomplete or unsupported source eligible for conversion.

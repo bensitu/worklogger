@@ -12,7 +12,7 @@ _T = TypeVar("_T")
 _logger = logging.getLogger(__name__)
 
 
-def map_rows(rows: Iterable[sqlite3.Row], mapper: Callable[[sqlite3.Row], _T]) -> tuple[_T, ...]:
+def map_rows(rows: Iterable[sqlite3.Row], mapper: Callable[[sqlite3.Row], _T], *, strict: bool = False) -> tuple[_T, ...]:
     records = []
     invalid = 0
     for row in rows:
@@ -22,6 +22,8 @@ def map_rows(rows: Iterable[sqlite3.Row], mapper: Callable[[sqlite3.Row], _T]) -
             invalid += 1
     if invalid:
         _logger.warning("Stored records could not be decoded: count=%d", invalid)
+        if strict:
+            raise ValueError("stored_records_invalid")
     return tuple(records)
 
 

@@ -27,9 +27,12 @@ settings affect memory use.
 Downloads show byte progress and a percentage when the total is known. Checksum
 verification completes before the file can be selected. Cancellation retains a
 partial download for retry. Only verified complete files replace a destination.
+Downloads have a 32 GiB size limit, including resumed bytes. An oversized response
+is rejected even when it does not declare its length.
 
 Import requires a nonempty GGUF file. Keep its source and license. Verification
 checks file integrity, not the accuracy or suitability of generated text.
+Use files from publishers you trust; a checksum is not a publisher signature.
 Deletion asks for confirmation and checks selections made by other accounts.
 
 Models and their metadata are stored beside the database and are shared by its

@@ -32,6 +32,13 @@ from worklogger.infrastructure.security import PBKDF2PasswordHasher
 
 
 class DataPortabilityInfrastructureTests(unittest.TestCase):
+    def test_restore_requires_confirmed_delete_journal_mode(self):
+        from unittest.mock import Mock
+        connection = Mock()
+        connection.execute.return_value.fetchone.return_value = ("wal",)
+        with self.assertRaisesRegex(ValueError, "restore_database_busy"):
+            sqlite_backup._use_delete_journal(connection)
+
     def test_offset_timestamps_survive_storage_csv_and_calendar_export(self) -> None:
         user_id = self.register_user("timestamp-user")
         day = date(2026, 3, 7)

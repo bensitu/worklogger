@@ -22,6 +22,8 @@ def target():
 
 
 def digest(path):
+    if path.suffix == ".txt":
+        return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
     with path.open("rb") as stream:
         return hashlib.file_digest(stream, "sha256").hexdigest()
 

@@ -273,6 +273,13 @@ class MemoryLoginFailures:
 
 
 class ApplicationUseCaseTests(unittest.TestCase):
+    def test_settings_reject_missing_values_instead_of_storing_none_as_text(self):
+        repository = MemorySettingsRepository()
+        result = SetSettingHandler(repository).handle(SetSettingCommand(1, "theme", None))
+        self.assertFalse(result.ok)
+        self.assertEqual(result.error.code, "setting_value_invalid")
+        self.assertIsNone(repository.get(1, "theme"))
+
     def test_event_delivery_isolates_subscriber_failures_and_supports_unsubscribe(self):
         bus = EventBus()
         delivered = []

@@ -2011,6 +2011,9 @@ msgstr "历史休息必须完整位于记录区间内。"
 msgid "The latest 50 saved versions are retained. Restoring creates a new version."
 msgstr "保留最近 50 个已保存版本。恢复将创建新版本。"
 
+msgid "The model exceeds the supported download size limit."
+msgstr "模型超过支持的下载大小上限。"
+
 msgid "The model returned no content. Please try again."
 msgstr "模型未返回内容，请重试。"
 

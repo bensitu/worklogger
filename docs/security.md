@@ -74,12 +74,17 @@ Saving a credential alone makes no request. Sample connection tests exclude work
 records. Local failures do not trigger remote fallback.
 
 Review account privacy controls and per-date note sharing.
+Per-date sharing controls independent memos, not time-record content. The account's
+content setting controls whether record notes accompany AI context; selecting
+text for rewriting explicitly supplies that text.
 The preferred account name accompanies AI requests. Approved context and generated
 responses can contain private work information.
 
 The HTTP CONNECT proxy preserves destination TLS verification. Trust the proxy
 and network before using authentication. Pre-login provider requests and browser
 traffic are separate from account proxy configuration.
+Transport loads default SSL trust roots together with certifi; certificate and
+hostname checks remain enabled. Restart after changing trust configuration.
 See [configuration](configuration.md).
 
 ## Sharing Diagnostics
