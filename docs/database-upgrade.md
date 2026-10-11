@@ -38,6 +38,29 @@ not silently converted or reset.
 
 ## Explicit Upgrade Tool
 
+### One-Time Development Test Repair
+
+The verified local schema-13 test database can be repaired explicitly while the
+application is closed. This is not an automatic migration or general support for
+development-v4 databases. The tool accepts only ledger 1 through 13 with a current
+structure missing solely `background_images`; other shapes are rejected.
+
+```powershell
+python scripts/migrate_test_database.py --database "D:\workLoggerProject\worklogger\worklog.db"
+python scripts/migrate_test_database.py --database "D:\workLoggerProject\worklogger\worklog.db" --apply
+```
+
+The first command inspects without writing. `--apply` acquires the desktop instance
+lock and refuses a pending restore. It creates a private SQLite
+`.bak_test_v13_*` snapshot including committed WAL data, adds the missing table
+and current indexes, and registers version 15 in one transaction. Every original
+table's rows and original ledger entries are compared with the snapshot before
+commit. Failures roll back; the backup is retained. Repeating on a current
+database performs no repair and creates no further backup. Ordinary startup
+continues to reject unrepaired early-development databases.
+
+### Released and Current Database Copy
+
 Close the old application first and run from the project root:
 
 ```powershell
