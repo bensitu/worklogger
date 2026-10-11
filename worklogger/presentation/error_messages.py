@@ -122,7 +122,7 @@ _MESSAGE_GROUPS = (
     (("settings_save_failed",), N_("Unable to save settings. Please try again.")),
     (("holiday_region_invalid",), N_("Select a supported holiday country and state or province.")),
     (("worklog_save_failed",), N_("Unable to save the work log. Your changes have been retained.")),
-    (("settings_load_failed", "note_load_failed", "worklog_load_failed", "worklog_export_load_failed", "calendar_load_failed", "holiday_load_failed", "analytics_load_failed", "stats_load_failed", "user_list_failed"), N_("Unable to load data. Please try again.")),
+    (("settings_load_failed", "worklog_load_failed", "worklog_export_load_failed", "calendar_load_failed", "holiday_load_failed", "analytics_load_failed", "stats_load_failed", "user_list_failed"), N_("Unable to load data. Please try again.")),
     (("ai_chat_not_configured", "ai_rewrite_not_configured", "ai_secondary_not_configured", "ai_api_key_required", "ai_configuration_invalid"), N_("AI Assist is not configured.")),
     (("ai_chat_empty", "ai_rewrite_empty", "local_model_empty_response"), N_("The model returned no content. Please try again.")),
     (("ai_chat_failed", "ai_rewrite_failed", "ai_request_failed", "ai_context_failed", "ai_context_settings_failed", "local_model_generation_failed"), N_("Unable to complete the AI request. Check your model settings and try again.")),
