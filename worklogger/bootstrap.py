@@ -348,7 +348,6 @@ def _build_runtime_for_user(
     handlers = _runtime_handlers(repositories, holiday_country=detect_country(), user_id=user.id,
                                  database_path=database_path, user_profiles=auth_repository)
     remember_store = remember_session_store or _remember_session_store()
-    time_entry_view_model = _build_time_entry_view_model(user, repositories, handlers)
     settings_workflow = _build_settings_workflow(
         user=user,
         database_path=database_path,
@@ -376,6 +375,7 @@ def _build_runtime_for_user(
         )
     state = settings.value
     set_language(state.language)
+    time_entry_view_model = _build_time_entry_view_model(user, repositories, handlers)
     preferences = LanguagePreferences()
     if preferences.load() is None and repositories.settings.get(
         user.id, LANGUAGE_SETTING_KEY
@@ -411,6 +411,7 @@ def _build_runtime_for_user(
                     user, repositories, handlers, job_runner
                 ),
                 window_config=window_config,
+                background_service=BackgroundService(user.id, repositories.background_images, QtBackgroundImageLoader()),
                 settings_workflow=settings_workflow,
                 residency_controller=residency_controller,
                 job_runner=job_runner,
@@ -484,6 +485,7 @@ def _build_minimal_view(
     settings_workflow: SettingsWorkflowController | None,
     residency_controller: QtResidencyController,
     job_runner: JobRunner | None,
+    background_service: BackgroundService,
 ) -> MinimalView:
     return MinimalView(
         time_entry_view_model=time_entry_view_model,
@@ -491,6 +493,10 @@ def _build_minimal_view(
             selected_day=window_config.selected_day,
             today=window_config.today,
             account_name=window_config.account_name,
+            theme=window_config.theme,
+            dark=window_config.dark,
+            custom_color=window_config.custom_color,
+            background_images_available=window_config.background_images_available,
             show_recent_context=window_config.show_recent_context,
             confirm_discard_changes=window_config.confirm_discard_changes,
         ),
@@ -498,6 +504,7 @@ def _build_minimal_view(
         notes_workflow=notes_workflow,
         residency_controller=residency_controller,
         job_runner=job_runner,
+        background_service=background_service,
     )
 
 

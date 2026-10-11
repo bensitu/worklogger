@@ -2116,6 +2116,9 @@ msgstr "Time"
 msgid "Time record"
 msgstr "Time record"
 
+msgid "Time records"
+msgstr "Time records"
+
 msgid "Time zone: {zone}"
 msgstr "Time zone: {zone}"
 

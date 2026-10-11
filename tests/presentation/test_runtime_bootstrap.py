@@ -479,6 +479,52 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 finally:
                     fallback.value.window.close()
 
+    def test_minimal_runtime_restores_theme_timer_and_full_settings(self):
+        with tempfile.TemporaryDirectory() as directory:
+            configuration = DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db",
+                                                  create_user_if_empty=True, password_iterations=1_000)
+            first = build_desktop_runtime(configuration, argv=[])
+            self.assertTrue(first.ok, first.error)
+            settings = SQLiteSettingsRepository(first.value.connection_factory)
+            for key, value in ((MINIMAL_MODE_SETTING_KEY, "1"), ("theme", "green"), ("dark_mode", "1"),
+                               ("language", "ja_JP")):
+                settings.set(first.value.user.id, key, value)
+            started = first.value.window.entry_panel.view_model.start("break", "Ongoing record")
+            self.assertTrue(started.ok, started.error)
+            first.value.window.close()
+            restored = build_desktop_runtime(configuration, argv=[])
+            self.assertTrue(restored.ok, restored.error)
+            window = restored.value.window
+            observed = []
+
+            def dialog_factory(model, parent):
+                dialog = SettingsDialog(model, parent)
+
+                def inspect_and_close():
+                    observed.append((set(dialog.page._category_pages), dialog.minimal_switch.isEnabled(),
+                                     not dialog.background_settings.isHidden()))
+                    dialog.reject()
+
+                QTimer.singleShot(0, dialog, inspect_and_close)
+                return dialog
+
+            window._settings_workflow._dialog_factory = dialog_factory
+            try:
+                self.assertIsInstance(window, MinimalView)
+                self.assertTrue(window.refresh())
+                self.assertEqual(window._config.theme, "green")
+                self.assertTrue(window._config.dark)
+                self.assertEqual(get_language(), "ja_JP")
+                self.assertEqual(window.entry_panel.view_model.timer.capture_id, started.value.capture_id)
+                window.entry_panel.time_tabs.setCurrentIndex(1)
+                self.assertEqual(window.entry_panel.content_input.toPlainText(), "Ongoing record")
+                self.assertTrue(window.open_settings())
+                self.assertEqual(observed, [({"appearance", "general", "ai", "data", "network", "account", "about"}, True, True)])
+            finally:
+                window.close()
+                first.value.job_runner.shutdown(wait=True)
+                restored.value.job_runner.shutdown(wait=True)
+
     def test_runtime_bootstrap_rejects_empty_database_without_bootstrap_user(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             runtime = build_desktop_runtime(

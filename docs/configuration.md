@@ -8,7 +8,7 @@ user; provider registrations belong to the operating-system user's installation.
 
 | Group | Important defaults |
 | --- | --- |
-| Appearance | Blue accent, light mode; language inherits startup selection |
+| Appearance | Blue accent, light mode, full view; language inherits startup selection |
 | Work/recording | 8 standard hours, 1-hour default break, 168-hour monthly target |
 | Reminders | Long timer: 10 hours; continuous-work reminder: off |
 | Calendar | Holidays and overnight indicators on; Sunday first; recent context on |
@@ -31,22 +31,38 @@ Changes apply after restarting.
 ```json
 {
   "features": {
-    "background_images": true
+    "background_images": true,
+    "minimal_view": true
   }
 }
 ```
 
 `features.background_images` controls whether the background setting and rendering
 are available. Disabling it does not delete account images or preferences.
-The flag must be a JSON boolean. Missing or invalid configuration disables this
-feature. Files are limited to 64 KiB. Keep credentials and private data out of this
-file.
+`features.minimal_view` controls whether the minimal-view preference and startup
+mode are available. Disabling it selects the full view without removing the
+account's saved preference or interrupting its persisted timer.
+Both flags must be JSON booleans. Missing flags default to disabled; invalid
+configuration disables deployment-controlled features. Files are limited to
+64 KiB. Keep credentials and private data out of this file.
 
 Assistant, model-management, and update-check workflows also honor
 `WORKLOGGER_FEATURE_AI`, `WORKLOGGER_FEATURE_LOCAL_MODELS`, and
 `WORKLOGGER_FEATURE_UPDATE_CHECK`. These default to enabled. Values `1`,
 `true`, `yes`, and `on` enable them; other values disable them.
 Account preferences cannot override a disabled deployment workflow.
+
+## Minimal View
+
+When available, use **Settings > Appearance > Minimal view** to choose the
+account's startup view. The choice applies after restarting or signing in again;
+it does not replace the current window or discard current edits.
+
+Minimal view provides manual/automatic time recording, the selected day's
+record list, daily notes, and the complete Settings dialog. Settings use the same
+account permissions as the full view. The appearance switch can return to the
+full view on the next startup or sign-in. Background images and themes apply to
+the recording window when enabled, not to separate dialogs.
 
 ## Background Images
 

@@ -344,6 +344,13 @@ def _run_desktop(args: Sequence[str]) -> int:
         inference = getattr(current, "local_inference", None)
         if inference is not None:
             inference.close()
+        from PySide6.QtCore import QCoreApplication, QEvent
+        from PySide6.QtWidgets import QWidget
+        from shiboken6 import isValid
+
+        if isinstance(current.window, QWidget) and isValid(current.window):
+            current.window.deleteLater()
+            QCoreApplication.sendPostedEvents(current.window, QEvent.Type.DeferredDelete)
         if not logged_out:
             return exit_code
 

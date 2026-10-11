@@ -4,7 +4,7 @@ from collections.abc import Callable
 from datetime import date, datetime, timezone
 import os
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -560,7 +560,8 @@ class AppWindowTests(unittest.TestCase):
         self.assertIsNotNone(saved)
         assert saved is not None
         self.assertEqual(saved.start_time, "09:00")
-        self.assertTrue(view.entry_panel.new_record())
+        view.new_record_button.click()
+        self.assertIsNone(view.entry_panel.view_model.draft.original)
         view.entry_panel.start_input.setText("1000")
         view.entry_panel.end_input.setText("1200")
         view.entry_panel.work_type_combo.setCurrentIndex(view.entry_panel.work_type_combo.findData("meeting"))
@@ -630,6 +631,78 @@ class AppWindowTests(unittest.TestCase):
         self.assertTrue(view.has_unsaved_changes)
         self.assertEqual(view.selected_day, date(2026, 4, 20))
         self.assertEqual(view.status_label.text(), "Unsaved changes")
+
+    def test_minimal_settings_and_notes_preserve_the_current_record_draft(self):
+        class Settings:
+            def open(self, parent):
+                self.parent = parent
+
+        class Notes:
+            def open(self, day, parent):
+                self.day, self.parent = day, parent
+
+        settings, notes = Settings(), Notes()
+        view = MinimalView(time_entry_view_model=_entry_model(MemoryWorkLogRepository()),
+                           settings_workflow=settings, notes_workflow=notes, job_runner=ImmediateJobRunner(),
+                           config=MinimalViewConfig(selected_day=date(2026, 4, 20)))
+        view.refresh()
+        self.assertFalse(view.settings_button.isHidden())
+        view.entry_panel.content_input.setPlainText("Unsaved record content")
+        self.assertTrue(view.open_settings())
+        self.assertTrue(view.open_notes())
+        self.assertIs(settings.parent, view)
+        self.assertEqual(notes.day, view.selected_day)
+        self.assertEqual(view.entry_panel.content_input.toPlainText(), "Unsaved record content")
+        self.assertTrue(view.has_unsaved_changes)
+        view.entry_panel.discard_changes()
+
+    def test_minimal_record_jobs_protect_navigation_and_refresh_after_completion(self):
+        from worklogger.app.job_runner import JobHandle, CancellationToken
+
+        class Runner:
+            def submit(self, name, job, *, on_complete):
+                self.job, self.complete = job, on_complete
+                return JobHandle("pending", lambda: None)
+
+        repository = MemoryWorkLogRepository()
+        view = MinimalView(time_entry_view_model=_entry_model(repository), job_runner=ImmediateJobRunner(),
+                           config=MinimalViewConfig(selected_day=date(2026, 4, 20)))
+        view.refresh()
+        runner = Runner()
+        view.entry_panel._job_runner = runner
+        view.entry_panel.start_input.setText("09:00")
+        view.entry_panel.end_input.setText("10:00")
+        view.entry_panel.content_input.setPlainText("Completed record")
+        view.entry_panel.save_button.click()
+        self.assertFalse(view.next_day())
+        self.assertFalse(view.refresh())
+        self.assertFalse(view.new_record_button.isEnabled())
+        self.assertFalse(view.today_button.isEnabled())
+        runner.complete(runner.job(CancellationToken()))
+        self._app.processEvents()
+        self.assertEqual(view.selected_day, date(2026, 4, 20))
+        self.assertTrue(view.today_button.isEnabled())
+        self.assertTrue(view.new_record_button.isEnabled())
+        self.assertEqual(repository.list_for_day(1, view.selected_day)[0].note, "Completed record")
+        self.assertEqual(len(view.history_widget.entry_buttons), 1)
+
+    def test_tray_quit_preserves_unsaved_record_when_discard_is_cancelled(self):
+        for minimal in (False, True):
+            controller = Mock()
+            controller.should_keep_resident.return_value = True
+            controller.quit_requested = False
+            model = _entry_model(MemoryWorkLogRepository())
+            view = (MinimalView(time_entry_view_model=model, job_runner=ImmediateJobRunner(),
+                                residency_controller=controller, config=MinimalViewConfig(
+                                    selected_day=date(2026, 4, 20), confirm_discard_changes=lambda: False)) if minimal else
+                    _window(MemoryWorkLogRepository(), residency_controller=controller,
+                            confirm_discard_changes=lambda: False))
+            view.refresh()
+            view.entry_panel.content_input.setPlainText("Keep this draft")
+            view._quit_from_residency()
+            controller.request_quit.assert_not_called()
+            self.assertEqual(view.entry_panel.content_input.toPlainText(), "Keep this draft")
+            view.entry_panel.discard_changes()
 
 
 if __name__ == "__main__":

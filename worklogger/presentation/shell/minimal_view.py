@@ -9,6 +9,7 @@ from datetime import date, timedelta
 from PySide6.QtCore import QEvent, QTimer, Qt, Signal
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
+    QApplication,
     QHBoxLayout,
     QLabel,
     QMessageBox,
@@ -24,9 +25,14 @@ from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.date_labels import day_label
 from worklogger.presentation.settings import SettingsWorkflow
+from worklogger.presentation.shell.background_controller import BackgroundController
 from worklogger.presentation.shell.residency import QtResidencyController
+from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
+from worklogger.presentation.theme.background import MainBackgroundWidget
 from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
 from worklogger.presentation.widgets.assets import apply_window_icon
+from worklogger.presentation.widgets._style import refresh_style_tree
+from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
 from worklogger.presentation.widgets.time_entries import TimeEntryPanel
 from worklogger.presentation.widgets.time_entry_history import TimeEntryHistory
@@ -39,6 +45,10 @@ class MinimalViewConfig:
     account_name: str | None = None
     show_recent_context: bool = True
     confirm_discard_changes: Callable[[], bool] | None = None
+    theme: str = "blue"
+    dark: bool = False
+    custom_color: str | None = None
+    background_images_available: bool = True
 
 
 class MinimalView(QWidget):
@@ -53,6 +63,7 @@ class MinimalView(QWidget):
         notes_workflow=None,
         residency_controller: QtResidencyController | None = None,
         job_runner=None,
+        background_service=None,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -69,12 +80,20 @@ class MinimalView(QWidget):
         self._entry_dirty = False
         self._last_error: AppError | None = None
         self._settings_dialog = None
+        self._refresh_pending = False
 
         self.setObjectName("minimal_view")
         self.setWindowTitle(_("WorkLogger"))
         apply_window_icon(self)
         self._build_ui()
+        self.apply_theme()
+        self.background_controller = BackgroundController(self._background_surface, background_service,
+            available=self._config.background_images_available, job_runner=self._job_runner)
+        self._background_surface.active_changed.connect(lambda _active: refresh_style_tree(self._background_surface))
+        self.background_controller.reload()
         self._connect_signals()
+        self.resize(760, 760)
+        self.setMinimumSize(640, 640)
         if hasattr(self._residency_controller, "notify_timer_reminder"):
             self.entry_panel.reminder.connect(self._residency_controller.notify_timer_reminder)
         self._date_timer = QTimer(self)
@@ -107,6 +126,10 @@ class MinimalView(QWidget):
         return self._last_error
 
     def refresh(self) -> bool:
+        if self.entry_panel.is_busy:
+            self._refresh_pending = True
+            return False
+        self._refresh_pending = False
         self._last_error = None
         self.date_label.setText(day_label(self._selected_day))
         self.account_label.setText(self._account_text())
@@ -132,52 +155,82 @@ class MinimalView(QWidget):
         self._today = self._config.today or date.today()
 
     def select_day(self, day: date) -> bool:
+        if self.entry_panel.is_busy:
+            return False
         if day != self._selected_day and not self._confirm_discard_changes_if_needed():
             return False
         self._selected_day = day
         return self.refresh()
 
     def _build_ui(self) -> None:
-        root = QVBoxLayout(self)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        self._background_surface = MainBackgroundWidget(self)
+        outer.addWidget(self._background_surface)
+        root = QVBoxLayout(self._background_surface)
         root.setContentsMargins(12, 12, 12, 12)
         root.setSpacing(8)
 
         nav = QHBoxLayout()
         self.previous_button = QPushButton("<")
         self.previous_button.setToolTip(_("Previous day"))
+        self.previous_button.setAccessibleName(_("Previous day"))
+        self.previous_button.setProperty("variant", "outline")
+        self.previous_button.setFixedWidth(40)
+        set_button_icon(self.previous_button, "chevron-left")
+        self.previous_button.setText("")
         self.today_button = QPushButton(_("Today"))
         self.next_button = QPushButton(">")
         self.next_button.setToolTip(_("Next day"))
+        self.next_button.setAccessibleName(_("Next day"))
+        self.next_button.setProperty("variant", "outline")
+        self.next_button.setFixedWidth(40)
+        set_button_icon(self.next_button, "chevron-right")
+        self.next_button.setText("")
         self.date_label = QLabel("")
+        self.date_label.setProperty("role", "section_heading")
         self.date_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.date_label.setWordWrap(True)
+        self.date_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         self.account_label = QLabel("")
         self.account_label.setTextFormat(Qt.TextFormat.PlainText)
         self.account_label.setWordWrap(True)
         self.account_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         self.account_label.setObjectName("minimal_account_label")
+        self.account_label.setProperty("role", "secondary")
         self.settings_button = QPushButton(_("Settings"))
         self.settings_button.setObjectName("minimal_settings_button")
         self.settings_button.setToolTip(_("Settings"))
+        set_button_icon(self.settings_button, "settings")
         nav.addWidget(self.previous_button)
         nav.addWidget(self.today_button)
         nav.addWidget(self.next_button)
         nav.addWidget(self.date_label, 1)
         self.notes_button = QPushButton(_("Notes"))
+        set_button_icon(self.notes_button, "notebook-text")
         self.notes_button.setVisible(self._notes_workflow is not None)
-        nav.addWidget(self.notes_button)
         if self._config.account_name:
             nav.addWidget(self.account_label, 1)
-            nav.addWidget(self.settings_button)
         else:
-            self.settings_button.setVisible(False)
-        if self._settings_workflow is None:
-            self.settings_button.setVisible(False)
+            self.account_label.hide()
+        self.settings_button.setVisible(self._settings_workflow is not None)
         root.addLayout(nav)
+        actions = QHBoxLayout()
+        self.new_record_button = QPushButton(_("New time record"))
+        self.new_record_button.setProperty("variant", "primary")
+        set_button_icon(self.new_record_button, "plus")
+        actions.addWidget(self.new_record_button)
+        actions.addStretch(1)
+        actions.addWidget(self.notes_button)
+        actions.addWidget(self.settings_button)
+        root.addLayout(actions)
 
         self.entry_panel = TimeEntryPanel(self._time_entry_view_model, compact=False, job_runner=self._job_runner)
         self.entry_panel.context_picker.recent_button.setVisible(self._config.show_recent_context)
         root.addWidget(self.entry_panel)
-        root.addWidget(QLabel(_("Schedule / Records")))
+        self.records_title_label = QLabel(_("Time records"))
+        self.records_title_label.setProperty("role", "section_heading")
+        root.addWidget(self.records_title_label)
         self.history_widget = TimeEntryHistory(self._time_entry_view_model)
         self.records_scroll = QScrollArea()
         self.records_scroll.setWidgetResizable(True)
@@ -195,13 +248,41 @@ class MinimalView(QWidget):
         self.next_button.clicked.connect(self.next_day)
         self.settings_button.clicked.connect(self.open_settings)
         self.notes_button.clicked.connect(self.open_notes)
+        self.new_record_button.clicked.connect(self.entry_panel.new_record)
         self.entry_panel.records_changed.connect(self._entries_changed)
         self.entry_panel.dirty_changed.connect(lambda dirty: setattr(self, "_entry_dirty", dirty))
         self.entry_panel.selection_changed.connect(self.history_widget.set_selected_entry)
         self.history_widget.entry_selected.connect(self.entry_panel.edit_entry)
         self.history_widget.entry_delete_requested.connect(self.entry_panel.delete_entry)
         self.history_widget.entry_actions_requested.connect(self.entry_panel.record_actions)
-        self.entry_panel.busy_changed.connect(self.history_widget.setDisabled)
+        self.entry_panel.busy_changed.connect(self._set_entry_busy)
+
+    def _set_entry_busy(self, busy):
+        self.history_widget.setDisabled(busy)
+        for button in (self.previous_button, self.today_button, self.next_button, self.new_record_button,
+                       self.notes_button, self.settings_button):
+            button.setEnabled(not busy)
+        if not busy and self._refresh_pending:
+            QTimer.singleShot(0, self, self._refresh_after_job)
+
+    def _refresh_after_job(self):
+        if self._refresh_pending and not self.entry_panel.is_busy:
+            self.refresh()
+
+    def apply_theme(self):
+        engine = ThemeEngine()
+        self._background_surface.set_base_color(engine.palette(self._config.theme, dark=self._config.dark,
+                                                              custom_color=self._config.custom_color).surface)
+        application = QApplication.instance()
+        if application is not None:
+            configure_application_style()
+            install_bundled_fonts()
+            palette = engine.qt_palette(self._config.theme, dark=self._config.dark, custom_color=self._config.custom_color)
+            stylesheet = engine.application_stylesheet(self._config.theme, dark=self._config.dark, custom_color=self._config.custom_color)
+            if application.palette() != palette:
+                application.setPalette(palette)
+            if application.styleSheet() != stylesheet:
+                application.setStyleSheet(stylesheet)
 
     def _entries_changed(self, day: date):
         model = self.entry_panel.view_model
@@ -224,6 +305,9 @@ class MinimalView(QWidget):
             return
         if isinstance(self.entry_panel, TimeEntryPanel):
             self.entry_panel.auto_timer.stop()
+        self.background_controller.dispose()
+        self._background_surface.shutdown()
+        self._date_timer.stop()
         super().closeEvent(event)
 
     def changeEvent(self, event: QEvent) -> None:
@@ -247,6 +331,9 @@ class MinimalView(QWidget):
         super().showEvent(event)
 
     def _confirm_discard_changes_if_needed(self) -> bool:
+        modal = QApplication.activeModalWidget()
+        if modal is not None and modal is not self._settings_dialog and self.isAncestorOf(modal):
+            return False
         if (self._settings_dialog is not None and hasattr(self._settings_dialog, "confirm_profile_leave")
                 and not self._settings_dialog.confirm_profile_leave()):
             return False
@@ -303,12 +390,16 @@ class MinimalView(QWidget):
         self.logout_requested.emit()
 
     def open_settings(self) -> bool:
-        if self._settings_workflow is None:
+        if (self._settings_workflow is None or self.entry_panel.is_busy or self._settings_dialog is not None
+                or bool(getattr(self._notes_workflow, "is_open", False))):
             return False
         logged_out = False
         if hasattr(self._settings_workflow, "create_dialog"):
             dialog = self._settings_workflow.create_dialog(self)
             self._settings_dialog = dialog
+            if hasattr(dialog, "background_settings"):
+                dialog.background_settings.bind(self.background_controller)
+                self.background_controller.reload()
             if hasattr(dialog, "profile_changed"):
                 dialog.profile_changed.connect(self.apply_user_profile)
             if hasattr(dialog, "work_types_changed"):
@@ -346,28 +437,20 @@ class MinimalView(QWidget):
         return True
 
     def open_notes(self) -> bool:
-        if self._notes_workflow is None or self.entry_panel.is_busy:
+        if (self._notes_workflow is None or self.entry_panel.is_busy or self._settings_dialog is not None
+                or bool(getattr(self._notes_workflow, "is_open", False))):
             return False
         self._notes_workflow.open(self._selected_day, self)
         self.refresh()
         return True
 
     def _apply_recording_settings(self, state):
-        from PySide6.QtWidgets import QApplication
-        from worklogger.presentation.theme import ThemeEngine
         self._time_entry_view_model.set_default_break_hours(state.default_break_hours)
-        self._config = replace(self._config, show_recent_context=state.show_recent_context)
+        self._config = replace(self._config, show_recent_context=state.show_recent_context,
+                               theme=state.theme, dark=state.dark_mode, custom_color=state.custom_color)
         self.entry_panel.context_picker.recent_button.setVisible(state.show_recent_context)
         self._time_entry_view_model.set_timer_reminders(state.timer_reminder_hours, state.continuous_timer_reminder_hours)
-        application = QApplication.instance()
-        if application is not None:
-            engine = ThemeEngine()
-            palette = engine.qt_palette(state.theme, dark=state.dark_mode, custom_color=state.custom_color)
-            stylesheet = engine.application_stylesheet(state.theme, dark=state.dark_mode, custom_color=state.custom_color)
-            if application.palette() != palette:
-                application.setPalette(palette)
-            if application.styleSheet() != stylesheet:
-                application.setStyleSheet(stylesheet)
+        self.apply_theme()
 
     def _restore_from_residency(self) -> None:
         self.showNormal()
@@ -375,6 +458,8 @@ class MinimalView(QWidget):
         self.activateWindow()
 
     def _quit_from_residency(self) -> None:
+        if not self._confirm_discard_changes_if_needed():
+            return
         if self._residency_controller is not None:
             self._residency_controller.request_quit()
         self.close()

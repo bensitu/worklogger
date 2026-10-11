@@ -424,6 +424,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             self._updating = False
         self._update_actions()
         selected = self.view_model.auto_completed if auto and self.view_model.timer is None else self.view_model.draft.original if not auto else None
+        self._fit_mode_height()
         self.selection_changed.emit(selected.id if selected else None)
         self.dirty_changed.emit(self.is_dirty)
         self.editor_layout_changed.emit()
@@ -502,6 +503,13 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         required_height = page_height + max(self.time_tabs.tabBar().sizeHint().height(), self.time_tabs.height() - content.height())
         if self.time_tabs.height() != required_height:
             self.time_tabs.setFixedHeight(required_height)
+            self.layout().invalidate()
+            self.updateGeometry()
+            parent = self.parentWidget()
+            if parent is not None and parent.layout() is not None:
+                parent.layout().invalidate()
+                parent.layout().activate()
+            self.layout().activate()
 
     def _apply_result(self, result, *, refresh=True):
         if not result.ok:

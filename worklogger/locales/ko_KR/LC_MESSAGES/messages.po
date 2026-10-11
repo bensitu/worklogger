@@ -2116,6 +2116,9 @@ msgstr "시간"
 msgid "Time record"
 msgstr "시간 기록"
 
+msgid "Time records"
+msgstr "시간 기록"
+
 msgid "Time zone: {zone}"
 msgstr "시간대: {zone}"
 

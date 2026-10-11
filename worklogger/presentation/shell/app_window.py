@@ -664,11 +664,16 @@ class AppWindow(QMainWindow):
         self.activateWindow()
 
     def _quit_from_residency(self) -> None:
+        if not self._confirm_discard_changes_if_needed():
+            return
         if self._residency_controller is not None:
             self._residency_controller.request_quit()
         self.close()
 
     def _confirm_discard_changes_if_needed(self) -> bool:
+        modal = QApplication.activeModalWidget()
+        if modal is not None and self.isAncestorOf(modal):
+            return False
         if bool(getattr(self._notes_workflow, "is_open", False)):
             return False
         if isinstance(self.entry_panel, TimeEntryPanel) and self.entry_panel.is_busy:

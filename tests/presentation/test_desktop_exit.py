@@ -15,6 +15,42 @@ from worklogger.main import DesktopAlreadyRunningError, _acquire_instance_lock, 
 
 
 class DesktopExitTests(unittest.TestCase):
+    def test_logout_disposes_resident_window_before_authenticating_again(self):
+        from shiboken6 import isValid
+        from tests.presentation.test_app_window import _app, _entry_model, MemoryWorkLogRepository
+        from worklogger.presentation.shell import MinimalView
+        from worklogger.presentation.job_runner import ImmediateJobRunner
+
+        _app()
+        residency = Mock()
+        residency.quit_requested = False
+        residency.should_keep_resident.return_value = True
+        model = _entry_model(MemoryWorkLogRepository())
+        window = MinimalView(time_entry_view_model=model, residency_controller=residency, job_runner=ImmediateJobRunner())
+        window.refresh()
+        self.assertTrue(model.start("break", "Ongoing record").ok)
+        window.entry_panel.time_tabs.setCurrentIndex(1)
+        timer = window.entry_panel.auto_timer
+        self.assertTrue(timer.isActive())
+        runtime = SimpleNamespace(application=Mock(), window=window, remember_session_store=Mock(),
+                                  revoke_remembered_session=Mock(return_value=Result.success(None)))
+        runtime.remember_session_store.clear_token.return_value = Result.success(None)
+        runtime.application.exec.side_effect = lambda: window.logout_requested.emit() or 0
+        calls = []
+
+        def build(config, **_kwargs):
+            calls.append(config)
+            if len(calls) == 1:
+                return Result.success(runtime)
+            self.assertFalse(isValid(window))
+            self.assertFalse(isValid(timer))
+            return Result.failure(CancellationError("auth_cancelled", "auth_cancelled"))
+
+        with (patch("worklogger.main._acquire_instance_lock"),
+              patch("worklogger.bootstrap.build_authenticated_desktop_runtime", side_effect=build)):
+            self.assertEqual(run_desktop([]), 0)
+        self.assertEqual(len(calls), 2)
+
     def test_session_file_failure_after_revocation_returns_to_manual_authentication(self):
         runtime = SimpleNamespace(application=Mock(), window=Mock(), remember_session_store=Mock(),
                                   revoke_remembered_session=Mock(return_value=Result.success(None)))

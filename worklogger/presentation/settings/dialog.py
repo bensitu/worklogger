@@ -1,4 +1,4 @@
-"""Compatibility modal wrapper around the native settings page."""
+"""Modal wrapper around the shared settings page."""
 
 from __future__ import annotations
 

@@ -157,13 +157,21 @@ database backups.
 
 ## Settings and Optional Services
 
-Appearance controls language, theme, and light/dark mode. Language changes take
-effect after restarting or signing in again. Most other settings save when changed.
+Appearance controls language, theme, light/dark mode, and the startup view when
+minimal view is available. Language and view changes take effect after restarting
+or signing in again. Most other settings save when changed.
+
+Minimal view provides time recording, the selected day's records, Notes, and the
+complete Settings dialog. Use New time record to start another entry; selecting
+a saved record loads it for editing. Enable or disable Minimal view in Appearance
+to choose the view for your next startup or sign-in. Account permissions and
+stored records are the same in both views.
 
 When Background image is available, enable its switch to show upload and opacity
 controls. Until an image is uploaded, the normal theme background remains.
 Disabling keeps the image; removing it keeps the enabled preference and opacity.
-Images cover the four main pages, not the sidebar or separate dialogs.
+Images cover the four main pages or the minimal recording window, not the sidebar
+or separate dialogs.
 See [configuration](configuration.md) for formats and deployment controls.
 
 Enable AI Assist and configure either a selected local model or an external

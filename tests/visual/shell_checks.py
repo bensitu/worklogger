@@ -49,6 +49,93 @@ def sample_window():
 
 
 class ShellLayoutChecks(unittest.TestCase):
+    def test_minimal_view_and_shared_settings_fit_supported_languages(self):
+        from types import SimpleNamespace
+        from PySide6.QtCore import QCoreApplication, QEvent, QPoint
+        from PySide6.QtWidgets import QLabel
+        from tests.presentation.test_app_window import _entry_model
+        from tests.background_samples import still_background_bytes
+        from worklogger.domain.settings.background import BackgroundState
+        from worklogger.domain.shared.result import Result
+        from worklogger.infrastructure.images.background import validate_background_data
+        from worklogger.presentation.job_runner import ImmediateJobRunner
+        from worklogger.presentation.settings import SettingsDialog
+        from worklogger.presentation.settings_capabilities import SettingsCapabilities
+        from worklogger.presentation.shell import MinimalView, MinimalViewConfig
+        from worklogger.presentation.theme import ThemeEngine
+
+        repository = MemoryWorkLogRepository()
+        repository.save(WorkLog(1, date(2026, 4, 20), "09:00", "10:00", 0, "Recorded review"))
+        media = BackgroundState(validate_background_data(still_background_bytes()), True, 50)
+        service = SimpleNamespace(load=lambda: Result.success(media))
+
+        class Settings:
+            def create_dialog(self, parent):
+                settings = MemorySettingsRepository()
+                settings.set(1, "minimal_mode", "1")
+                dialog = SettingsDialog(_view_model(settings), parent)
+                dialog.set_capabilities(SettingsCapabilities(minimal_view=True))
+                dialog.set_account(User(1, "sample.user", True, display_name="Alex Morgan"))
+                dialog.refresh()
+                return dialog
+
+        original_style, original_palette = self.app.styleSheet(), self.app.palette()
+        try:
+            for language in available_languages():
+                set_language(language)
+                for dark in (False, True):
+                    workflow = Settings()
+                    view = MinimalView(time_entry_view_model=_entry_model(repository), settings_workflow=workflow,
+                        notes_workflow=SimpleNamespace(open=lambda *_args: None), job_runner=ImmediateJobRunner(),
+                        background_service=service, config=MinimalViewConfig(selected_day=date(2026, 4, 20),
+                            today=date(2026, 4, 20), account_name="Alex Morgan", theme="green", dark=dark))
+                    dialog = None
+                    try:
+                        view.refresh()
+                        view.show()
+                        for width, height in ((640, 840), (900, 920)):
+                            view.resize(width, height)
+                            for mode in (0, 1):
+                                view.entry_panel.time_tabs.setCurrentIndex(mode)
+                                self.app.processEvents()
+                                self.assertEqual((view.width(), view.height()), (width, height))
+                                panel = view.entry_panel
+                                caption = next(label for label in panel.findChildren(QLabel)
+                                               if label.buddy() is panel.work_type_combo)
+                                self.assertLess(panel.time_tabs.geometry().bottom(), caption.mapTo(panel, QPoint()).y())
+                                if mode == 1:
+                                    for button in (panel.clock_in_button, panel.clock_out_button, panel.break_button,
+                                                   panel.discard_timer_button):
+                                        self.assertTrue(panel.time_tabs.rect().contains(button.rect().translated(
+                                            button.mapTo(panel.time_tabs, QPoint()))))
+                                for field in (view.date_label, view.account_label, view.new_record_button,
+                                              view.notes_button, view.settings_button, view.entry_panel.content_input,
+                                              view.entry_panel.save_button, view.records_scroll):
+                                    bounds = field.rect().translated(field.mapTo(view, QPoint()))
+                                    self.assertTrue(view.rect().contains(bounds), (language, dark, width, mode, field))
+                                rendered = view._background_surface.grab().toImage()
+                                self.assertNotEqual(rendered.pixelColor(2, 2).name(), ThemeEngine().palette("green", dark=dark).surface)
+                                self.capture(view, f"minimal-{'dark' if dark else 'light'}-{width}-{mode}")
+                        dialog = workflow.create_dialog(view)
+                        dialog.background_settings.bind(view.background_controller)
+                        view.background_controller.reload()
+                        dialog.show()
+                        for category in dialog.page._category_pages:
+                            dialog.category_nav.set_category(category)
+                            self.app.processEvents()
+                            self.assertEqual(dialog.category_stack.currentWidget().horizontalScrollBar().maximum(), 0)
+                        self.capture(dialog, f"minimal-settings-{'dark' if dark else 'light'}")
+                    finally:
+                        if dialog is not None:
+                            dialog.hide()
+                            dialog.deleteLater()
+                        view.close()
+                        view.deleteLater()
+                        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+        finally:
+            self.app.setPalette(original_palette)
+            self.app.setStyleSheet(original_style)
+
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
