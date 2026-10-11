@@ -35,6 +35,79 @@ class WeeklyReports(ReportsViewModel):
 
 
 class ReportingLayoutChecks(unittest.TestCase):
+    def test_project_hierarchy_and_scoped_record_results_fit_themed_dialogs(self):
+        from types import SimpleNamespace
+        from PySide6.QtCore import QPoint, Qt
+        from PySide6.QtTest import QTest
+        from worklogger.domain.analytics.projects import context_summaries
+        from worklogger.domain.projects.models import Project, WorkContext, WorkItem
+        from worklogger.domain.worklog.search import EntryFilter, EntryPage
+        from worklogger.presentation.date_labels import duration_label
+        from worklogger.presentation.job_runner import ImmediateJobRunner
+        from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
+        from worklogger.presentation.widgets.project_analytics import ProjectAnalyticsDialog
+        from worklogger.presentation.widgets.record_search import RecordSearchDialog
+        from worklogger.infrastructure.i18n import get_language
+        configure_application_style()
+        install_bundled_fonts()
+        project = Project("1" * 32, "Research")
+        item = WorkItem("2" * 32, project.id, "Interface review")
+        context = WorkContext(project.id, item.id, project.name, item.title)
+        entries = tuple(WorkLog(1, date(2026, 10, day), "09:00", "17:00", 1,
+                               "Reviewed calendar interactions and navigation. " * 4,
+                               id=day, context=context) for day in range(1, 9))
+        groups = context_summaries(entries)
+        records = SimpleNamespace(list_work_types=lambda: Result.success(()),
+            project_inventory=lambda: Result.success(((project,), {project.id: (item,)})),
+            search=lambda *_args, **_kwargs: Result.success(EntryPage(entries)))
+        analytics = SimpleNamespace(load_projects=lambda *_args: Result.success(groups))
+        criteria = EntryFilter(date(2026, 10, 1), date(2026, 10, 11), project_id=project.id, work_item_id=item.id)
+        old_language, old_style, old_palette = get_language(), self.app.styleSheet(), self.app.palette()
+        try:
+            for language in available_languages():
+                set_language(language)
+                for theme in ("blue", "liquid_glass"):
+                    for dark in (False, True):
+                        ThemeEngine().apply_to(self.app, theme, dark=dark)
+                        summary = ProjectAnalyticsDialog(analytics, records, criteria.end)
+                        detail = RecordSearchDialog(records, criteria.end, criteria=criteria,
+                                                    job_runner=ImmediateJobRunner())
+                        try:
+                            for dialog in (summary, detail):
+                                dialog.resize(740, 560)
+                                dialog.show()
+                            QTest.qWait(1)
+                            self.assertEqual([label.text() for label in summary.summary_values],
+                                             [duration_label(56), duration_label(8), duration_label(0)])
+                            parent = summary.results.topLevelItem(0)
+                            self.assertEqual(parent.childCount(), 1)
+                            summary.results.setCurrentItem(parent.child(0))
+                            detail.results.setCurrentItem(detail.results.topLevelItem(0))
+                            self.assertTrue(summary.detail_button.isEnabled())
+                            self.assertTrue(detail.open_button.isEnabled())
+                            self.assertEqual(detail.project_combo.currentData(), project.id)
+                            self.assertEqual(detail.item_combo.currentData(), item.id)
+                            for dialog in (summary, detail):
+                                tree = dialog.results
+                                self.assertGreaterEqual(tree.visualItemRect(tree.topLevelItem(0)).height(), 28)
+                                self.assertGreaterEqual(tree.header().height(), 30)
+                                self.assertEqual(tree.horizontalScrollBar().maximum(), 0)
+                                for field in (dialog.start_input, dialog.end_input):
+                                    self.assertTrue(dialog.rect().contains(field.rect().translated(field.mapTo(dialog, QPoint()))))
+                                action = summary.detail_button if dialog is summary else detail.open_button
+                                self.assertTrue(dialog.rect().contains(action.rect().translated(action.mapTo(dialog, QPoint()))))
+                                self.capture(dialog, f"data-browser-{type(dialog).__name__}-{theme}-{dark}", language)
+                            self.assertTrue(parent.textAlignment(2) & Qt.AlignmentFlag.AlignRight)
+                        finally:
+                            summary.close()
+                            detail.close()
+                            summary.deleteLater()
+                            detail.deleteLater()
+        finally:
+            set_language(old_language)
+            self.app.setStyleSheet(old_style)
+            self.app.setPalette(old_palette)
+
     def test_date_popups_share_navigation_and_calendar_styles(self):
         from types import SimpleNamespace
         from PySide6.QtCore import QPoint, Qt

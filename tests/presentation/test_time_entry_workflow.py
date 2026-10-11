@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QSettings
+from PySide6.QtCore import QSettings, Qt
 from PySide6.QtWidgets import QMessageBox
 from PySide6.QtGui import QCloseEvent
 
@@ -174,6 +174,38 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertEqual(picker.context().work_item_id, item.id)
         self.assertEqual(self.panel.content_input.toPlainText(), "Unsaved editor content")
         dialog.close()
+
+    def test_project_records_display_and_preserve_the_fixed_context(self):
+        from worklogger.domain.projects.models import WorkContext
+        from worklogger.domain.worklog.search import EntryFilter
+        from worklogger.presentation.widgets.record_search import RecordSearchDialog
+        service = self.panel.view_model.service
+        project = service.projects.save_project("Research").value
+        item = service.projects.save_work_item(project.id, "Review").value
+        day = self.now.date()
+        service.save_manual(day, "09:00", "10:00", "normal", "<b>Agenda</b>\n" + "Details " * 30,
+                            context=WorkContext(project.id, item.id))
+        service.save_manual(day, "10:00", "11:00", "normal", "Agenda")
+        criteria = EntryFilter(day, day, project_id=project.id, work_item_id=item.id)
+        dialog = RecordSearchDialog(self.panel.view_model, day, self.window,
+                                    job_runner=ImmediateJobRunner(), criteria=criteria)
+        self.addCleanup(dialog.deleteLater)
+        try:
+            self.assertEqual(dialog.project_combo.currentData(), project.id)
+            self.assertEqual(dialog.item_combo.currentData(), item.id)
+            self.assertEqual(dialog.project_combo.currentText(), project.name)
+            self.assertEqual(dialog.item_combo.currentText(), item.title)
+            self.assertFalse(dialog.project_combo.isEnabled())
+            self.assertFalse(dialog.item_combo.isEnabled())
+            dialog.search_input.setText("Agenda")
+            dialog.search_input.returnPressed.emit()
+            self.assertEqual(dialog.results.topLevelItemCount(), 1)
+            row = dialog.results.topLevelItem(0)
+            self.assertEqual(row.data(0, Qt.ItemDataRole.UserRole).context.project_id, project.id)
+            self.assertTrue(row.text(5).endswith("..."))
+            self.assertIn("&lt;b&gt;Agenda&lt;/b&gt;", row.toolTip(5))
+        finally:
+            dialog.close()
 
     def test_timer_end_correction_handles_ambiguous_and_nonexistent_local_times(self):
         from zoneinfo import ZoneInfo

@@ -2453,9 +2453,6 @@ msgstr ""
 msgid "Work {hours:.1f}h"
 msgstr ""
 
-msgid "Work: {work} | Rest: {rest} | Leave: {leave}"
-msgstr ""
-
 msgid "WorkLogger"
 msgstr ""
 

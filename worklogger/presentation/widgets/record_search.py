@@ -4,7 +4,7 @@ from datetime import date
 from PySide6.QtCore import Qt, QTimer, Signal, QSignalBlocker
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDateEdit, QDialog, QHBoxLayout,
-    QHeaderView, QLabel, QLineEdit, QPushButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout)
+    QLabel, QLineEdit, QPushButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout)
 from shiboken6 import isValid
 
 from worklogger.domain.shared.errors import InfrastructureError
@@ -14,10 +14,11 @@ from worklogger.domain.worklog.search import EntryFilter
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_code, display_error_message
 from worklogger.presentation.widgets.assets import apply_window_icon
-from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 from worklogger.presentation.widgets.date_picker import configure_calendar_popup
 from worklogger.presentation.work_type_labels import work_type_label
 from worklogger.presentation.date_labels import duration_label
+from worklogger.presentation.widgets.data_tree import configure_data_tree, set_data_tooltips
 
 
 class RecordSearchDialog(QDialog):
@@ -40,11 +41,15 @@ class RecordSearchDialog(QDialog):
         self.resize(960, 600)
         root = QVBoxLayout(self)
         root.setContentsMargins(20, 20, 20, 16)
+        root.setSpacing(10)
         self.search_input = QLineEdit()
         self.search_input.setObjectName("record_search_line_edit")
         self.search_input.setPlaceholderText(_("Search records"))
         self.search_input.setAccessibleName(_("Search records"))
         self.search_input.setClearButtonEnabled(True)
+        search_action = self.search_input.addAction(ui_icon("search"), QLineEdit.ActionPosition.LeadingPosition)
+        search_action.setToolTip(_("Search records"))
+        search_action.triggered.connect(lambda _checked: self.search_input.setFocus())
         self.search_input.setMaxLength(512)
         root.addWidget(self.search_input)
         dates = QHBoxLayout()
@@ -95,16 +100,12 @@ class RecordSearchDialog(QDialog):
         self.results.setHeaderLabels([_("Date"), _("Time"), _("Work type"), _("Project"), _("Work item"), _("Content")])
         self.results.setRootIsDecorated(False)
         self.results.setSelectionMode(QTreeWidget.SelectionMode.ExtendedSelection)
-        self.results.setUniformRowHeights(True)
-        self.results.header().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-        self.results.header().setStretchLastSection(True)
-        self.results.setColumnWidth(0, 100)
-        self.results.setColumnWidth(1, 160)
+        configure_data_tree(self.results, (100, 160, 85, 100, 110, 220), stretch_column=5)
         root.addWidget(self.results, 1)
         self.status_label = QLabel()
         self.status_label.setObjectName("record_search_status_label")
         self.status_label.setWordWrap(True)
-        root.addWidget(self.status_label)
+        self.status_label.setProperty("role", "secondary")
         footer = QHBoxLayout()
         self.more_button = QPushButton(_("More records"))
         set_button_icon(self.more_button, "chevron-down")
@@ -117,7 +118,10 @@ class RecordSearchDialog(QDialog):
         self.associate_button.setAutoDefault(False)
         for button in (self.more_button, self.open_button, self.close_button):
             button.setAutoDefault(False)
-        footer.addWidget(self.more_button)
+        results_status = QHBoxLayout()
+        results_status.addWidget(self.status_label, 1)
+        results_status.addWidget(self.more_button)
+        root.addLayout(results_status)
         footer.addWidget(self.associate_button)
         footer.addStretch()
         footer.addWidget(self.close_button)
@@ -144,6 +148,24 @@ class RecordSearchDialog(QDialog):
         if criteria is not None:
             self.start_input.setDate(criteria.start)
             self.end_input.setDate(criteria.end)
+            with QSignalBlocker(self.project_combo), QSignalBlocker(self.item_combo), QSignalBlocker(self.unclassified_check):
+                project_index = self.project_combo.findData(criteria.project_id) if criteria.project_id is not None else -1
+                if project_index >= 0:
+                    self.project_combo.setCurrentIndex(project_index)
+                elif criteria.project_label or criteria.unclassified:
+                    self.project_combo.addItem(criteria.project_label or _("Unclassified"), criteria.project_id)
+                    self.project_combo.setCurrentIndex(self.project_combo.count() - 1)
+                self.item_combo.clear()
+                self.item_combo.addItem(_("All work items"), None)
+                for item in self._items.get(criteria.project_id, ()):
+                    self.item_combo.addItem(item.title, item.id)
+                item_index = self.item_combo.findData(criteria.work_item_id) if criteria.work_item_id is not None else -1
+                if item_index >= 0:
+                    self.item_combo.setCurrentIndex(item_index)
+                elif criteria.work_item_label is not None:
+                    self.item_combo.addItem(criteria.work_item_label or _("No work item"), criteria.work_item_id)
+                    self.item_combo.setCurrentIndex(self.item_combo.count() - 1)
+                self.unclassified_check.setChecked(criteria.unclassified)
             for field in (self.start_input, self.end_input, self.project_combo, self.item_combo, self.unclassified_check):
                 field.setEnabled(False)
             self.setWindowTitle(_("Project records"))
@@ -209,14 +231,16 @@ class RecordSearchDialog(QDialog):
                 self.results.clear()
             for entry in result.value.entries:
                 span = f"{entry.start_time} - {entry.end_time}" if entry.has_times else _("All day")
-                project_label = entry.context.project_label
-                if project_label and entry.context.project_id is None:
+                project_label = entry.context.project_label or _("Unclassified")
+                if entry.context.project_label and entry.context.project_id is None:
                     project_label += " (" + _("Unlinked") + ")"
+                preview = entry.note.replace("\n", " ")
+                if len(preview) > 120:
+                    preview = preview[:120] + "..."
                 row = QTreeWidgetItem([entry.day.isoformat(), span + "  " + duration_label(entry.raw_hours()),
-                    work_type_label(entry.work_type), project_label, entry.context.work_item_label,
-                    entry.note.replace("\n", " ")[:120]])
+                    work_type_label(entry.work_type), project_label, entry.context.work_item_label or _("No work item"), preview])
                 row.setData(0, Qt.ItemDataRole.UserRole, entry)
-                row.setToolTip(5, entry.note)
+                set_data_tooltips(row, {5: entry.note})
                 self.results.addTopLevelItem(row)
             self._cursor = result.value.next_cursor
             count = self.results.topLevelItemCount()

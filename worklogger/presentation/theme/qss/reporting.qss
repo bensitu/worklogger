@@ -30,6 +30,39 @@ QFrame#report_period_separator_frame {
   border: none;
 }
 
+QWidget#data_browser_summary_widget {
+  background: transparent;
+}
+
+QLabel[data_metric="true"] {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+QTreeWidget[data_browser="true"]::item {
+  min-height: 18px;
+  padding: 6px 8px;
+  border-bottom: 1px solid {{ table_border }};
+}
+
+QTreeWidget[data_browser="true"]::item:hover:!selected {
+  background: {{ accent_dim }};
+}
+
+QTreeWidget[data_browser="true"]::item:selected {
+  background: {{ accent }};
+  color: {{ highlighted_text }};
+}
+
+QTreeWidget[data_browser="true"] QHeaderView::section {
+  background: {{ surface_alt }};
+  color: {{ muted_text }};
+  border: none;
+  border-bottom: 1px solid {{ table_border }};
+  padding: 8px 10px;
+  font-weight: 500;
+}
+
 QLabel#report_history_month_label,
 QLabel#analytics_chart_title_label,
 QLabel#donut_title_label,

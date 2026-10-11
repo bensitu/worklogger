@@ -1,7 +1,8 @@
 """Date-range context summaries with paged record drill-down."""
 
 from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtWidgets import QDialog, QDateEdit, QHBoxLayout, QLabel, QPushButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QDialog, QDateEdit, QHBoxLayout, QLabel, QPushButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget
 from shiboken6 import isValid
 from worklogger.domain.shared.result import Result
 from worklogger.domain.shared.errors import InfrastructureError
@@ -13,6 +14,7 @@ from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.date_picker import configure_calendar_popup
 from worklogger.presentation.widgets.record_search import RecordSearchDialog
+from worklogger.presentation.widgets.data_tree import configure_data_tree, set_data_tooltips
 
 
 class ProjectAnalyticsDialog(QDialog):
@@ -22,11 +24,13 @@ class ProjectAnalyticsDialog(QDialog):
         self._analytics, self._records = analytics, records
         self._runner, self._selection = job_runner, selection_handler
         self._version, self._job, self._range = 0, None, None
+        self.setObjectName("project_analytics_dialog")
         self.setWindowTitle(_("Project statistics"))
         apply_window_icon(self)
         self.resize(900, 560)
         root = QVBoxLayout(self)
         root.setContentsMargins(20, 20, 20, 16)
+        root.setSpacing(12)
         dates = QHBoxLayout()
         self.start_input, self.end_input = QDateEdit(), QDateEdit()
         for field, caption, value in ((self.start_input, _("From"), day.replace(day=1)), (self.end_input, _("To"), day)):
@@ -42,20 +46,43 @@ class ProjectAnalyticsDialog(QDialog):
         set_button_icon(self.refresh_button, "check")
         dates.addWidget(self.refresh_button)
         root.addLayout(dates)
+        self.summary_widget = QWidget()
+        self.summary_widget.setObjectName("data_browser_summary_widget")
+        summary = QHBoxLayout(self.summary_widget)
+        summary.setContentsMargins(0, 4, 0, 4)
+        summary.setSpacing(24)
+        self.summary_values = []
+        for caption in (_("Work hours"), _("Rest hours"), _("Leave hours")):
+            metric = QVBoxLayout()
+            metric.setSpacing(2)
+            label = QLabel(caption)
+            label.setProperty("role", "caption")
+            value = QLabel("-")
+            value.setProperty("data_metric", True)
+            value.setAccessibleDescription(caption)
+            metric.addWidget(label)
+            metric.addWidget(value)
+            summary.addLayout(metric, 1)
+            self.summary_values.append(value)
+        root.addWidget(self.summary_widget)
         self.results = QTreeWidget()
+        self.results.setObjectName("project_analytics_tree_view")
         self.results.setHeaderLabels([_("Project"), _("Work item"), _("Work hours"), _("Rest hours"), _("Leave hours"), _("Work days"), _("Records")])
         self.results.setRootIsDecorated(True)
-        self.results.setUniformRowHeights(True)
-        self.results.setColumnWidth(0, 160)
-        self.results.setColumnWidth(1, 180)
+        configure_data_tree(self.results, (160, 170, 88, 88, 88, 90, 76), stretch_column=1)
+        for column in range(2, 7):
+            self.results.headerItem().setTextAlignment(column, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         root.addWidget(self.results, 1)
         self.status_label = QLabel()
         self.status_label.setWordWrap(True)
+        self.status_label.setProperty("role", "secondary")
+        self.status_label.setMinimumHeight(20)
         root.addWidget(self.status_label)
         footer = QHBoxLayout()
         footer.addStretch()
         close = QPushButton(_("Close"))
         self.detail_button = QPushButton(_("View records"))
+        self.detail_button.setProperty("variant", "primary")
         set_button_icon(self.detail_button, "search")
         footer.addWidget(close)
         footer.addWidget(self.detail_button)
@@ -75,6 +102,9 @@ class ProjectAnalyticsDialog(QDialog):
     def _invalidate(self):
         self._version += 1
         self._range = None
+        for label in self.summary_values:
+            label.setText("-")
+        self.status_label.clear()
         self.detail_button.setEnabled(False)
 
     def _load(self):
@@ -93,6 +123,7 @@ class ProjectAnalyticsDialog(QDialog):
                 return
             self.results.clear()
             totals = [0.0, 0.0, 0.0]
+            record_count = 0
             for group in result.value:
                 context = group.context
                 label = context.project_label or _("Unclassified")
@@ -102,19 +133,31 @@ class ProjectAnalyticsDialog(QDialog):
                     duration_label(group.work_hours), duration_label(group.rest_hours), duration_label(group.leave_hours),
                     str(group.work_days), str(group.record_count)])
                 row.setData(0, Qt.ItemDataRole.UserRole, (context, True))
+                font = row.font(0)
+                font.setWeight(QFont.Weight.DemiBold)
+                for column in range(7):
+                    row.setFont(column, font)
+                set_data_tooltips(row)
+                for column in range(2, 7):
+                    row.setTextAlignment(column, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
                 self.results.addTopLevelItem(row)
                 for child in group.children:
                     item = QTreeWidgetItem(["", child.context.work_item_label or _("No work item"),
                         duration_label(child.work_hours), duration_label(child.rest_hours), duration_label(child.leave_hours),
                         str(child.work_days), str(child.record_count)])
                     item.setData(0, Qt.ItemDataRole.UserRole, (child.context, False))
+                    set_data_tooltips(item)
+                    for column in range(2, 7):
+                        item.setTextAlignment(column, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
                     row.addChild(item)
                 row.setExpanded(True)
                 for index, value in enumerate((group.work_hours, group.rest_hours, group.leave_hours)):
                     totals[index] += value
+                record_count += group.record_count
             self._range = (start, end)
-            self.status_label.setText(_("Work: {work} | Rest: {rest} | Leave: {leave}").format(
-                work=duration_label(totals[0]), rest=duration_label(totals[1]), leave=duration_label(totals[2])))
+            for label, hours in zip(self.summary_values, totals):
+                label.setText(duration_label(hours))
+            self.status_label.setText(_("Records") + ": " + str(record_count))
         operation = lambda: self._analytics.load_projects(start, end)
         if self._runner is None:
             completed(operation())

@@ -2455,9 +2455,6 @@ msgstr "근무 유형"
 msgid "Work {hours:.1f}h"
 msgstr "근무 {hours:.1f}h"
 
-msgid "Work: {work} | Rest: {rest} | Leave: {leave}"
-msgstr "근무: {work} | 휴식: {rest} | 휴가: {leave}"
-
 msgid "WorkLogger"
 msgstr "WorkLogger"
 
