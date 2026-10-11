@@ -22,6 +22,51 @@ from worklogger.infrastructure.i18n import _
 
 
 class ReportSettingsLayoutChecks(unittest.TestCase):
+    def test_numeric_inputs_match_dropdown_content_insets_across_themes(self):
+        from PySide6.QtTest import QTest
+        from PySide6.QtWidgets import QStyle, QStyleOptionComboBox, QStyleOptionFrame
+        engine = ThemeEngine()
+        old_language, old_style, old_palette = get_language(), self.app.styleSheet(), self.app.palette()
+        page = None
+        try:
+            set_language("zh_CN")
+            page = SettingsPage(_view_model(MemorySettingsRepository()))
+            page.refresh()
+            page.resize(900, 700)
+            page.show()
+            for theme in THEME_KEYS:
+                for dark in (False, True):
+                    self.app.setPalette(engine.qt_palette(theme, dark=dark))
+                    self.app.setStyleSheet(engine.application_stylesheet(theme, dark=dark))
+                    page.category_nav.set_category("general")
+                    self.app.processEvents()
+                    QTest.qWait(1)
+                    option = QStyleOptionComboBox()
+                    page.holiday_country_combo.initStyleOption(option)
+                    reference = page.holiday_country_combo.style().subControlRect(
+                        QStyle.ComplexControl.CC_ComboBox, option,
+                        QStyle.SubControl.SC_ComboBoxEditField, page.holiday_country_combo)
+                    for spin in (page.standard_hours_input, page.default_break_input, page.timer_reminder_input,
+                                 page.continuous_timer_reminder_input, page.monthly_target_input):
+                        editor = spin.lineEdit()
+                        self.assertEqual(editor.geometry().left() + editor.textMargins().left(), reference.left())
+                    self.capture(page, f"numeric-insets-{theme}-{dark}")
+                    page.category_nav.set_category("ai")
+                    self.app.processEvents()
+                    QTest.qWait(1)
+                    spin = page.local_context_spin_box
+                    option = QStyleOptionFrame()
+                    option.initFrom(spin)
+                    contents = spin.style().subElementRect(QStyle.SubElement.SE_LineEditContents, option, spin)
+                    self.assertEqual(spin.lineEdit().geometry().left() + spin.lineEdit().textMargins().left(), contents.left())
+        finally:
+            if page is not None:
+                page.close()
+                page.deleteLater()
+            set_language(old_language)
+            self.app.setStyleSheet(old_style)
+            self.app.setPalette(old_palette)
+
     def test_analytics_period_and_actions_share_toolbar_height_across_scopes(self):
         from PySide6.QtCore import QPoint
         from worklogger.presentation.shell.analytics_page import AnalyticsPage

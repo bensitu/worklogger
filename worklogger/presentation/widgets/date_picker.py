@@ -5,18 +5,22 @@ from html import escape
 
 from PySide6.QtCore import QDate, QEvent, QLocale, QPoint, QRect, Qt, Signal
 from PySide6.QtGui import QColor, QKeySequence, QPainter, QPalette, QShortcut, QTextCharFormat
-from PySide6.QtWidgets import QCalendarWidget, QFrame, QPushButton, QSizePolicy, QTableView, QToolButton, QToolTip, QVBoxLayout
+from PySide6.QtWidgets import QCalendarWidget, QFrame, QPushButton, QSizePolicy, QSpinBox, QTableView, QToolButton, QToolTip, QVBoxLayout
 
 from worklogger.infrastructure.i18n import _, get_language
 from worklogger.presentation.date_labels import day_label
 from worklogger.presentation.theme import ThemeEngine
 from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.widgets._style import apply_numeric_input_padding
 from worklogger.presentation.widgets.status_label import StatusLabel
 
 
 class MonthCalendar(QCalendarWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        year_editor = self.findChild(QSpinBox, "qt_calendar_yearedit")
+        if year_editor is not None:
+            apply_numeric_input_padding(year_editor)
         self._colors = ThemeEngine().palette()
         self._holidays = {}
         self._cell_rects = {}

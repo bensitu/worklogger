@@ -27,6 +27,7 @@ from worklogger.domain.local_model.preferences import (
     DEFAULT_RUNTIME_CONTEXT_TOKENS, MIN_RUNTIME_CONTEXT_TOKENS, MAX_RUNTIME_CONTEXT_TOKENS,
 )
 from worklogger.infrastructure.i18n import _
+from worklogger.presentation.widgets._style import apply_numeric_input_padding
 from worklogger.presentation.settings.sections.actions import SectionActions
 from worklogger.presentation.settings.sections.common import (
     _add_action_buttons,
@@ -164,6 +165,7 @@ class AISection(_SettingsScrollPage):
         self.local_context_limit_label.setObjectName("local_context_limit_label")
         context_form.addRow(_("Model context limit"), self.local_context_limit_label)
         self.local_context_spin_box = QSpinBox()
+        apply_numeric_input_padding(self.local_context_spin_box)
         self.local_context_spin_box.setObjectName("local_context_spin_box")
         self.local_context_spin_box.setMinimumWidth(160)
         self.local_context_spin_box.setMaximumWidth(200)

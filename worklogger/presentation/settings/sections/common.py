@@ -24,6 +24,7 @@ from worklogger.config.constants import (
 )
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets import CardFrame, SwitchButton
+from worklogger.presentation.widgets._style import apply_numeric_input_padding
 
 
 class _SettingsScrollPage(QScrollArea):
@@ -119,6 +120,7 @@ def _switch_row(switch: SwitchButton) -> QWidget:
 
 def _hours_input(minimum: float, maximum: float, step: float) -> QDoubleSpinBox:
     spin = QDoubleSpinBox()
+    apply_numeric_input_padding(spin)
     spin.setDecimals(2)
     spin.setRange(minimum, maximum)
     spin.setSingleStep(step)

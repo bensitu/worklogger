@@ -23,6 +23,7 @@ from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import AnalyticsState, AnalyticsViewModel
 from worklogger.presentation.widgets import ComboChart
+from worklogger.presentation.widgets._style import apply_numeric_input_padding
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
 
@@ -80,9 +81,11 @@ class AnalyticsDialog(QDialog):
 
         controls = QHBoxLayout()
         self.year_input = QSpinBox()
+        apply_numeric_input_padding(self.year_input)
         self.year_input.setRange(1970, 9999)
         self.year_input.setValue(self._selected_day.year)
         self.month_input = QSpinBox()
+        apply_numeric_input_padding(self.month_input)
         self.month_input.setRange(1, 12)
         self.month_input.setValue(self._selected_day.month)
         self.scope_combo = QComboBox()
