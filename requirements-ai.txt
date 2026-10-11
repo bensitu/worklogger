@@ -1,2 +1,3 @@
-# Optional native inference dependency; install the wheel for the target platform.
+# Optional native inference dependencies; install the wheel for the target platform.
 llama-cpp-python==0.3.19
+Jinja2==3.1.6

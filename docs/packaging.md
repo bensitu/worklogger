@@ -7,7 +7,8 @@ byte-for-byte checksums for the declared target platform.
 
 Build on the target operating system and architecture in a clean environment.
 `requirements.txt` supplies runtime dependencies, `requirements-build.txt`
-supplies PyInstaller, and `requirements-ai.txt` supplies optional native inference.
+supplies the pinned installer and build tools, and `requirements-ai.txt` supplies
+optional native inference.
 
 Target locks under `requirements/` contain the exact Python/OS/architecture,
 input hashes, package versions, and wheel hashes. The adjacent TXT is the

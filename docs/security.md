@@ -72,6 +72,12 @@ representations, and exception messages.
 Ordinary recording is local. Update checks contact the release service; model
 downloads contact selected catalog/file hosts.
 
+The optional native inference backend depends on DiskCache, which has an
+unpatched pickle-deserialization advisory ([CVE-2025-69872](https://github.com/grantjenks/python-diskcache/issues/357)).
+WorkLogger does not enable the backend's on-disk inference cache. Do not add
+disk-backed inference caching or read shared cache files without reviewing
+serialization safety and directory permissions.
+
 External AI sends selected content only after explicit account enablement.
 Saving a credential alone makes no request. Sample connection tests exclude work
 records. Local failures do not trigger remote fallback.
