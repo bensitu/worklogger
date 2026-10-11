@@ -227,10 +227,34 @@ def entry_interval(record: WorkLog) -> tuple[datetime, datetime] | None:
     return tuple(moment.astimezone(timezone.utc) for moment in times)
 
 
+def wall_position(moment: datetime) -> int:
+    return ((moment.date().toordinal() * 86400 + moment.hour * 3600 + moment.minute * 60 + moment.second)
+            * 1_000_000 + moment.microsecond)
+
+
+def wall_interval(record: WorkLog) -> tuple[int, int] | None:
+    if not record.has_times:
+        return None
+    if record.started_at is not None and record.ended_at is not None:
+        start, end = wall_position(record.started_at), wall_position(record.ended_at)
+        shift = record.ended_at.utcoffset() - record.started_at.utcoffset()
+        change = (shift.days * 86400 + shift.seconds) * 1_000_000 + shift.microseconds
+        if change < 0:
+            # Without the historical timezone, reserve the whole backward-clock envelope.
+            return min(start + change, end), max(start, end - change)
+        return start, end
+    start, end = parse_minutes(record.start_time), parse_minutes(record.end_time)
+    if start is None or end is None:
+        return None
+    base = record.day.toordinal() * 86400 * 1_000_000
+    return base + start * 60_000_000, base + end * 60_000_000 + (86_400_000_000 if end <= start else 0)
+
+
 def entries_overlap(left: WorkLog, right: WorkLog) -> bool:
     if left.is_note_only or right.is_note_only:
         return False
-    a, b = entry_interval(left), entry_interval(right)
+    captured = all(record.started_at is not None and record.ended_at is not None for record in (left, right))
+    a, b = (entry_interval(left), entry_interval(right)) if captured else (wall_interval(left), wall_interval(right))
     if a is None or b is None:
         return left.day == right.day and (left.is_leave or right.is_leave)
     return a[0] < b[1] and b[0] < a[1]

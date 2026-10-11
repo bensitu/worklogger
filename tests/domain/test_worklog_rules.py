@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
+from random import Random
 import unittest
 
 from worklogger.domain.worklog.models import TimeRange, WorkLog, WorkType
+from worklogger.domain.worklog.intervals import EntryIntervalIndex
 from worklogger.domain.worklog.rules import (
     calc_hours,
     calc_shift_span_hours,
@@ -12,10 +14,49 @@ from worklogger.domain.worklog.rules import (
     normalize_work_log,
     parse_time,
     shift_datetimes,
+    entries_overlap,
 )
 
 
 class WorkLogRuleTests(unittest.TestCase):
+    def test_incremental_interval_index_matches_pairwise_rules_in_source_order(self):
+        random = Random(17)
+        records = []
+        for _index in range(250):
+            start = datetime(2026, 11, 1, 1) + timedelta(minutes=random.randrange(120))
+            end = start + timedelta(minutes=random.randrange(1, 90), seconds=random.randrange(60))
+            user = random.choice((1, 2))
+            if random.choice((True, False)):
+                started = start.replace(tzinfo=timezone(timedelta(hours=random.choice((-4, -5, 9)))))
+                ended = (started.astimezone(timezone.utc) + (end - start)).astimezone(
+                    timezone(timedelta(hours=random.choice((-4, -5, 9)))))
+                records.append(WorkLog(user, started.date(), started.strftime("%H:%M"), ended.strftime("%H:%M"),
+                                       started_at=started, ended_at=ended))
+            else:
+                records.append(WorkLog(user, start.date(), start.strftime("%H:%M"), end.strftime("%H:%M")))
+        index, accepted = EntryIntervalIndex(records), []
+        for record in records:
+            expected = not any(record.user_id == other.user_id and entries_overlap(record, other) for other in accepted)
+            self.assertEqual(index.add(record), expected)
+            if expected:
+                accepted.append(record)
+
+    def test_unknown_offsets_use_wall_clocks_but_captured_offsets_use_elapsed_intervals(self):
+        zone = ZoneInfo("America/New_York")
+        day = date(2026, 3, 8)
+        legacy = WorkLog(1, day, "02:30", "04:00")
+        captured = WorkLog(1, day, "03:00", "03:20", started_at=datetime(2026, 3, 8, 3, tzinfo=zone),
+                           ended_at=datetime(2026, 3, 8, 3, 20, tzinfo=zone))
+        self.assertTrue(entries_overlap(legacy, captured))
+        self.assertTrue(entries_overlap(captured, legacy))
+        fall = date(2026, 11, 1)
+        early = WorkLog(1, fall, "01:10", "01:20", started_at=datetime(2026, 11, 1, 1, 10, tzinfo=zone),
+                        ended_at=datetime(2026, 11, 1, 1, 20, tzinfo=zone))
+        late = WorkLog(1, fall, "01:10", "01:20", started_at=datetime(2026, 11, 1, 1, 10, tzinfo=zone, fold=1),
+                       ended_at=datetime(2026, 11, 1, 1, 20, tzinfo=zone, fold=1))
+        self.assertFalse(entries_overlap(early, late))
+        self.assertTrue(entries_overlap(WorkLog(1, fall, "01:10", "01:20"), late))
+
     def test_timer_reminders_use_elapsed_time_and_do_not_treat_rest_or_leave_as_work(self):
         from worklogger.domain.worklog.reminders import timer_reminders
         zone = ZoneInfo("America/New_York")

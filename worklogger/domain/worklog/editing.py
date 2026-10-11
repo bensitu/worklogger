@@ -33,7 +33,8 @@ def split_entry(record: WorkLog, first_minutes: int) -> tuple[WorkLog, WorkLog]:
 
 
 def merge_entries(left: WorkLog, right: WorkLog) -> WorkLog:
-    first, second = entry_interval(left), entry_interval(right)
+    first = entry_interval(left) if left.started_at else TimeRange(left.start_time, left.end_time).as_datetimes(left.day) if left.has_times else None
+    second = entry_interval(right) if right.started_at else TimeRange(right.start_time, right.end_time).as_datetimes(right.day) if right.has_times else None
     if (left.entries or right.entries or first is None or second is None or first[1] != second[0]
             or left.work_type != right.work_type or left.context != right.context
             or bool(left.started_at) != bool(right.started_at)):

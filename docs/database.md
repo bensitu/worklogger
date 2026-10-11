@@ -35,6 +35,10 @@ SQL identifiers are storage contracts, not localized UI captions.
 Dates use ISO text, clocks use `HH:MM`, and durations use hours.
 Captured `started_at`/`ended_at` contain offsets; clock-only rows have no inferred
 timezone. Saved type/context labels preserve historical meaning.
+Overlap checks compare UTC instants when both records have captured offsets.
+If either lacks offsets, their stored date/clock intervals are compared without
+inventing a timezone. This conservatively reserves ambiguous historical clock
+ranges, while two captured occurrences of a repeated DST hour can remain distinct.
 
 ## Compatibility
 

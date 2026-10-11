@@ -25,6 +25,41 @@ from worklogger.infrastructure.security.password_hasher import PBKDF2PasswordHas
 
 
 class TimeEntryTests(unittest.TestCase):
+    def test_timer_start_rechecks_occupied_time_within_its_write_transaction(self):
+        start = self.now
+        self.repository.save_entry(WorkLog(self.user.id, start.date(), start.strftime("%H:%M"),
+                                          (start + timedelta(hours=1)).strftime("%H:%M"),
+                                          started_at=start, ended_at=start + timedelta(hours=1)))
+        raw = TimeEntryService._encode(EntryTimer("new-capture", start + timedelta(minutes=15), WorkType.NORMAL))
+        with self.assertRaisesRegex(ValueError, "worklog_entry_overlap"):
+            self.repository.change_timer(self.user.id, None, raw)
+        self.assertIsNone(self.settings.get(self.user.id, "time_entry_timer"))
+
+    def test_captured_records_across_two_calendar_dates_still_conflict(self):
+        start = datetime(2030, 1, 1, 23, tzinfo=timezone(timedelta(hours=-12)))
+        old = WorkLog(self.user.id, start.date(), "23:00", "23:30", started_at=start, ended_at=start + timedelta(minutes=30))
+        self.repository.save_entry(old)
+        current = datetime(2030, 1, 3, 1, 15, tzinfo=timezone(timedelta(hours=14)))
+        overlap = WorkLog(self.user.id, current.date(), "01:15", "01:25",
+                          started_at=current, ended_at=current + timedelta(minutes=10))
+        with self.assertRaisesRegex(ValueError, "worklog_entry_overlap"):
+            self.repository.save_entry(overlap)
+        self.assertEqual(len(self.repository.list_export_rows(self.user.id)), 1)
+
+    def test_csv_preview_and_commit_allow_distinct_captured_dst_occurrences(self):
+        from zoneinfo import ZoneInfo
+
+        zone = ZoneInfo("America/New_York")
+        entries = tuple(WorkLog(self.user.id, datetime(2026, 11, 1).date(), "01:10", "01:20",
+                               started_at=datetime(2026, 11, 1, 1, 10, tzinfo=zone, fold=fold),
+                               ended_at=datetime(2026, 11, 1, 1, 20, tzinfo=zone, fold=fold)) for fold in (0, 1))
+        path = Path(self.directory.name) / "folds.csv"
+        self.assertTrue(WorkLogCsvExporter().export_work_logs(path, entries).ok)
+        result = ImportWorkLogsCsvHandler(importer=WorkLogCsvImporter(), repository=self.repository).handle(
+            ImportWorkLogsCsvCommand(self.user.id, path))
+        self.assertTrue(result.ok, result.error)
+        self.assertEqual(result.value.imported_count, 2)
+        self.assertFalse(result.value.errors)
     def test_invalid_timer_blocks_writes_with_a_specific_error_and_can_be_discarded(self):
         for raw in ("invalid", "[]", "{}", '{"capture_id":"sample","started_at":"2030-01-01T09:00:00"}'):
             with self.subTest(raw=raw):

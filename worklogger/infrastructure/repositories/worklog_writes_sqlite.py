@@ -11,9 +11,9 @@ from worklogger.domain.worklog.timer_state import timer_payload
 from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.rules import (
     entries_overlap,
-    entry_interval,
     normalize_work_log,
 )
+from worklogger.domain.worklog.intervals import EntryIntervalIndex
 from worklogger.infrastructure.repositories._mapping import map_rows
 from worklogger.infrastructure.repositories.note_sqlite import save_note
 from worklogger.infrastructure.repositories.project_sqlite import validate_record_context
@@ -151,9 +151,8 @@ class SQLiteWorkLogWrites:
         with self._storage.connection_factory.transaction() as connection:
             self._change_timer(connection, user_id, expected, value)
 
-    @staticmethod
     def _change_timer(
-        connection, user_id: int, expected: str | None, value: str | None
+        self, connection, user_id: int, expected: str | None, value: str | None
     ) -> None:
         row = connection.execute(
             "SELECT value FROM settings WHERE user_id=? AND key='time_entry_timer'",
@@ -163,10 +162,19 @@ class SQLiteWorkLogWrites:
             raise ValueError("time_entry_timer_conflict")
         if value is not None:
             data = timer_payload(value)
+            previous = timer_payload(row[0]) if row else {}
             if data.get("context"):
-                previous = timer_payload(row[0]) if row else {}
                 validate_record_context(connection, WorkLog(user_id, date.fromisoformat(data["started_at"][:10]),
                     capture_id=previous.get("capture_id"), context=WorkContext(**data["context"])))
+            if data["capture_id"] != previous.get("capture_id"):
+                start = datetime.fromisoformat(data["started_at"])
+                try:
+                    end = (start.astimezone(timezone.utc) + timedelta(microseconds=1)).astimezone(start.tzinfo)
+                except OverflowError as exc:
+                    raise ValueError("auto_record_restore_failed") from exc
+                point = WorkLog(user_id, start.date(), start.strftime("%H:%M"), end.strftime("%H:%M"),
+                                started_at=start, ended_at=end, capture_id=previous.get("capture_id"))
+                self._check_overlap(connection, point)
         connection.execute(
             "DELETE FROM settings WHERE user_id=? AND key='previous_auto_record_state'",
             (user_id,),
@@ -182,7 +190,7 @@ class SQLiteWorkLogWrites:
                 (user_id, value),
             )
 
-    def _check_overlap(self, connection, record: WorkLog) -> None:
+    def _check_overlap(self, connection, record: WorkLog, *, cached_rows=None) -> None:
         timer = connection.execute(
             "SELECT value FROM settings WHERE user_id=? AND key='time_entry_timer'",
             (record.user_id,),
@@ -190,29 +198,28 @@ class SQLiteWorkLogWrites:
         if timer and record.has_times:
             state = timer_payload(timer[0])
             if state["capture_id"] != record.capture_id:
-                start = datetime.fromisoformat(state["started_at"]).astimezone(
-                    timezone.utc
-                )
-                interval = entry_interval(record)
-                if (
-                    interval[0] < start + timedelta(hours=MAX_SHIFT_HOURS)
-                    and start < interval[1]
-                ):
+                start = datetime.fromisoformat(state["started_at"])
+                try:
+                    end = (start.astimezone(timezone.utc) + timedelta(hours=MAX_SHIFT_HOURS)).astimezone(start.tzinfo)
+                except OverflowError as exc:
+                    raise ValueError("auto_record_restore_failed") from exc
+                reserved = WorkLog(record.user_id, start.date(), start.strftime("%H:%M"), end.strftime("%H:%M"),
+                                   started_at=start, ended_at=end)
+                if entries_overlap(record, reserved):
                     raise ValueError("worklog_entry_overlap")
-        start = max(record.day.toordinal() - 1, date.min.toordinal())
-        end = min(record.day.toordinal() + 1, date.max.toordinal())
-        rows = connection.execute(
-            self._storage.select
-            + "WHERE w.user_id=? AND w.d BETWEEN ? AND ? AND w.id<>?",
-            (
-                record.user_id,
-                date.fromordinal(start).isoformat(),
-                date.fromordinal(end).isoformat(),
-                record.id or 0,
-            ),
-        ).fetchall()
-        for other in map_rows(rows, self._storage.from_row):
-            if entries_overlap(record, other):
+        key = (record.user_id, record.day)
+        if cached_rows is None or key not in cached_rows:
+            start = max(record.day.toordinal() - 3, date.min.toordinal())
+            end = min(record.day.toordinal() + 3, date.max.toordinal())
+            rows = connection.execute(self._storage.select + "WHERE w.user_id=? AND w.d BETWEEN ? AND ?",
+                                      (record.user_id, date.fromordinal(start).isoformat(), date.fromordinal(end).isoformat())).fetchall()
+            others = map_rows(rows, self._storage.from_row)
+            if cached_rows is not None:
+                cached_rows[key] = others
+        else:
+            others = cached_rows[key]
+        for other in others:
+            if other.id != record.id and entries_overlap(record, other):
                 raise ValueError("worklog_entry_overlap")
 
     def _import_entries(
@@ -226,13 +233,9 @@ class SQLiteWorkLogWrites:
         grouped = {}
         for record in records:
             grouped.setdefault((record.user_id, record.day), []).append(record)
-        intervals = sorted(
-            (record.user_id, *entry_interval(record))
-            for record in records
-            if record.has_times
-        )
-        for left, right in zip(intervals, intervals[1:]):
-            if left[0] == right[0] and left[2] > right[1]:
+        intervals = EntryIntervalIndex(records)
+        for record in records:
+            if not intervals.add(record):
                 raise ValueError("worklog_entry_overlap")
         for entries in grouped.values():
             if len([entry for entry in entries if not entry.is_note_only]) > 1 and any(
@@ -268,9 +271,10 @@ class SQLiteWorkLogWrites:
                         "DELETE FROM worklog WHERE user_id=? AND d=?",
                         (user_id, day.isoformat()),
                     )
+            cached_rows = {}
             for record in records:
                 if not record.is_note_only:
-                    self._check_overlap(connection, record)
+                    self._check_overlap(connection, record, cached_rows=cached_rows)
             for record in records:
                 if (
                     not record.has_times

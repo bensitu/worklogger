@@ -14,6 +14,7 @@ from worklogger.domain.shared.errors import ConflictError, InfrastructureError, 
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.entry_repository import TimeEntryRepository
 from worklogger.domain.worklog.timer_state import timer_payload
+from worklogger.domain.worklog.rules import wall_interval, wall_position
 from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType
 from worklogger.domain.worklog.rules import decode_work_type, entry_interval, normalize_work_log, parse_time, shift_datetimes, timestamp_span_hours
 from worklogger.app.ports import WorkTypeOperations, ProjectOperations
@@ -135,6 +136,8 @@ class TimeEntryService:
             return Result.success(value)
         except ValueError as exc:
             code = str(exc)
+            if code == "auto_record_restore_failed":
+                self.restore_failed = True
             error_type = ConflictError if code in {"worklog_entry_conflict", "time_entry_timer_conflict", "record_change_conflict"} else ValidationError
             self.last_error = error_type(code, code)
         except Exception:
@@ -253,14 +256,18 @@ class TimeEntryService:
                     or break_interval is None or not break_interval[0] <= instant < break_interval[1]):
                     raise ValueError("worklog_entry_conflict")
             active_break = None
-            for day in (moment.date() - timedelta(days=1), moment.date()):
+            for ordinal in range(max(date.min.toordinal(), moment.date().toordinal() - 3),
+                                 min(date.max.toordinal(), moment.date().toordinal() + 3) + 1):
+                day = date.fromordinal(ordinal)
                 for record in self.repository.list_for_day(self.user_id, day):
                     if break_entry is not None and record.id == break_entry.id:
                         if record != break_entry:
                             raise ValueError("worklog_entry_conflict")
                         continue
-                    interval = entry_interval(record)
-                    if (record.day == moment.date() and record.is_leave and not record.has_times) or (interval and interval[0] <= instant < interval[1]):
+                    captured = record.started_at is not None and record.ended_at is not None
+                    interval = entry_interval(record) if captured else wall_interval(record)
+                    point = instant if captured else wall_position(moment)
+                    if (record.day == moment.date() and record.is_leave and not record.has_times) or (interval and interval[0] <= point < interval[1]):
                         if break_entry is None and self._is_fixed_break(record):
                             active_break = record
                         else:
