@@ -21,6 +21,7 @@ from worklogger.config.constants import (
     DARK_MODE_SETTING_KEY,
     MINIMAL_MODE_SETTING_KEY,
 )
+from worklogger.config.themes import get_theme
 from worklogger.domain.auth.models import User
 from worklogger.domain.shared.errors import AppError
 from worklogger.infrastructure.calendar.holidays_provider import (
@@ -385,13 +386,16 @@ class SettingsPage(QWidget, SettingsSectionState):
             )
 
     def _theme_changed(self) -> None:
-        self.custom_color_button.setVisible(self.theme_combo.currentData() == "custom")
+        self._update_custom_color_control()
         if self._updating:
             return
         result = self._view_model.set_theme(
             str(self.theme_combo.currentData() or "blue")
         )
         self._handle_save_result(result)
+
+    def _update_custom_color_control(self) -> None:
+        self.custom_color_button.setVisible(get_theme(self.theme_combo.currentData()).customizable)
 
     def _mode_changed(self) -> None:
         if self._updating:
@@ -405,7 +409,8 @@ class SettingsPage(QWidget, SettingsSectionState):
             result = self._view_model.set_custom_color(color.name())
             self._handle_save_result(result)
             if result.ok:
-                self._handle_save_result(self._view_model.set_theme("custom"))
+                definition = get_theme(self.theme_combo.currentData())
+                self._handle_save_result(self._view_model.set_theme(definition.key if definition.customizable else "custom"))
 
     def _update_color_swatch(self) -> None:
         pixmap = QPixmap(20, 20)

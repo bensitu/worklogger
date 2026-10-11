@@ -286,22 +286,16 @@ class MinimalView(QWidget):
 
     def apply_theme(self):
         engine = ThemeEngine()
-        self.date_button.set_colors(engine.palette(self._config.theme, dark=self._config.dark,
-                                                  custom_color=self._config.custom_color))
-        self._background_surface.set_base_color(engine.palette(self._config.theme, dark=self._config.dark,
-                                                              custom_color=self._config.custom_color).surface)
         application = QApplication.instance()
+        colors = engine.palette(self._config.theme, dark=self._config.dark, custom_color=self._config.custom_color)
         if application is not None:
             configure_application_style()
             install_bundled_fonts()
-            palette = engine.qt_palette(self._config.theme, dark=self._config.dark, custom_color=self._config.custom_color)
-            stylesheet = engine.application_stylesheet(self._config.theme, dark=self._config.dark, custom_color=self._config.custom_color)
-            if application.palette() != palette:
-                application.setPalette(palette)
-            if application.styleSheet() != stylesheet:
-                application.setStyleSheet(stylesheet)
-        self.glass_controller.configure(engine.palette(self._config.theme, dark=self._config.dark,
-                                                       custom_color=self._config.custom_color))
+            colors = engine.apply_to(application, self._config.theme, dark=self._config.dark,
+                                     custom_color=self._config.custom_color)
+        self.date_button.set_colors(colors)
+        self._background_surface.set_base_color(colors.surface)
+        self.glass_controller.configure(colors)
 
     def _entries_changed(self, day: date):
         model = self.entry_panel.view_model

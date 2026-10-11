@@ -1,0 +1,47 @@
+/* Authentication and semantic text roles. */
+
+QFrame#login_hero_frame {
+  background: {{ login_hero_background }};
+}
+
+QFrame#login_divider_left_frame,
+QFrame#login_divider_right_frame {
+  color: {{ border }};
+  background: {{ border }};
+  max-height: 1px;
+}
+
+QFrame#settings_navigation_frame {
+  background: {{ navigation_fill }};
+  border: 1px solid {{ panel_border }};
+  border-radius: 8px;
+}
+
+QLabel[role="section_heading"],
+QPushButton#date_picker_button,
+QLabel#settings_section_title_label,
+QLabel#report_title_label,
+QLabel#report_history_title_label {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+QLabel[role="title"] {
+  color: {{ text }};
+  font-size: 24px;
+  font-weight: 700;
+}
+
+QLabel[role="subtitle"],
+QLabel[role="caption"],
+QLabel[role="secondary"] {
+  color: {{ muted_text }};
+}
+
+QLabel[badge="true"] {
+  color: {{ accent }};
+  background: {{ accent_dim }};
+  border: 1px solid {{ border_strong }};
+  border-radius: 6px;
+  padding: 2px 8px;
+}

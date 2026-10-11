@@ -6,6 +6,7 @@ from unittest.mock import patch
 from scripts.build import build_environment
 from scripts.build_resources import bundled_resources, executable_icon
 from scripts.i18n.catalog_tools import compile_po_to_mo, locale_po_paths
+from worklogger.presentation.theme.stylesheets import COMMON_TEMPLATES, MATERIAL_TEMPLATES
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -66,9 +67,8 @@ class BuildResourceTests(unittest.TestCase):
         self.assertIn("worklogger/_vendor/pyglass/LICENSE", paths)
         self.assertIn("worklogger/assets/icons/ui/pencil.svg", paths)
         self.assertIn("worklogger/assets/icons/ui/x.svg", paths)
-        self.assertIn("worklogger/presentation/theme/qss/application.qss", paths)
-        self.assertIn("worklogger/presentation/theme/qss/background_images.qss", paths)
-        self.assertIn("worklogger/presentation/theme/qss/liquid_glass.qss", paths)
+        for name in (*COMMON_TEMPLATES, *(name for files in MATERIAL_TEMPLATES.values() for name in files)):
+            self.assertIn(f"worklogger/presentation/theme/qss/{name}", paths)
         self.assertIn("worklogger/assets/licenses/pyqt-liquidglass.txt", paths)
         self.assertEqual(sum(path.endswith(".otf") for path in paths), 5)
         self.assertEqual(sum(path.endswith(".mo") for path in paths), 5)

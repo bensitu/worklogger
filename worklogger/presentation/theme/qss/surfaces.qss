@@ -1,0 +1,156 @@
+/* Application defaults and shared surfaces. */
+
+QWidget {
+  background: {{ background }};
+  color: {{ text }};
+  font-size: 13px;
+  font-weight: 400;
+  font-family: "Noto Sans", "Segoe UI", sans-serif;
+}
+
+QLabel,
+QWidget#minimal_date_navigation_widget,
+QWidget#settings_theme_row_widget,
+QWidget#account_avatar_row_widget,
+QWidget#account_display_name_editor_widget,
+QWidget#time_entry_actions_widget,
+QWidget#processing_progress_widget,
+QWidget#time_entry_content_heading_widget,
+QWidget#report_history_content_widget,
+QWidget#stats_panel_widget,
+QWidget#combo_chart_widget,
+QWidget#work_mode_chart_widget,
+QWidget#donut_gauge_widget,
+QWidget#overtime_comparison_widget,
+QWidget#dots_progress_widget,
+QWidget#work_context_picker_widget,
+QWidget#worklog_entry_panel_widget,
+QScrollArea > QWidget,
+QStackedWidget#time_entry_content_heading_stack_widget,
+QStackedWidget#authentication_feedback_stack_widget,
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical,
+QWidget#settings_switch_row_widget,
+QWidget#settings_about_widget,
+QSlider#background_opacity_slider_widget {
+  background: transparent;
+}
+
+QTableView,
+QTreeView {
+  background: {{ table_fill }};
+  alternate-background-color: {{ table_alternate }};
+  border: 1px solid {{ table_border }};
+}
+
+QListWidget#local_model_list_widget,
+QListWidget#custom_work_type_list_widget,
+QListWidget[management_list="true"] {
+  background: {{ surface }};
+  border: 1px solid {{ border }};
+  border-radius: 6px;
+  padding: 6px;
+}
+
+QListWidget#local_model_list_widget::item,
+QListWidget#custom_work_type_list_widget::item,
+QListWidget[management_list="true"]::item {
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+
+QListWidget#local_model_list_widget::item:hover,
+QListWidget#custom_work_type_list_widget::item:hover,
+QListWidget[management_list="true"]::item:hover:enabled {
+  background: {{ accent_dim }};
+}
+
+QListWidget#local_model_list_widget::item:selected,
+QListWidget#custom_work_type_list_widget::item:selected {
+  background: {{ accent }};
+  color: {{ highlighted_text }};
+}
+
+QListWidget[management_list="true"]::item:selected {
+  background: {{ accent_dim }};
+  border-color: {{ accent }};
+  color: {{ text }};
+}
+
+QListWidget[management_list="true"]:focus {
+  border-color: {{ accent }};
+}
+
+QListWidget[management_list="true"]::item:selected:disabled {
+  background: {{ disabled_background }};
+  border-color: {{ border }};
+  color: {{ disabled_text }};
+}
+
+QToolButton#configure_identity_button {
+  padding: 0;
+}
+
+QToolButton#display_name_action_button {
+  padding: 8px;
+  min-width: 22px;
+  max-width: 22px;
+  min-height: 22px;
+  max-height: 22px;
+}
+
+QDialog,
+QMainWindow,
+QWidget#app_window_central_widget {
+  background: {{ background }};
+}
+
+QFrame[card="true"],
+QFrame#stat_card_frame,
+QFrame#report_editor_frame,
+QFrame#report_history_frame,
+QFrame#analytics_chart_frame,
+QFrame#settings_content_frame {
+  background: {{ card_fill }};
+  border: 1px solid {{ panel_border }};
+  border-radius: 8px;
+}
+
+QFrame[card="true"]:hover {
+  background: {{ card_hover_fill }};
+  border-color: {{ border_strong }};
+}
+
+QFrame#app_sidebar_frame {
+  background: {{ sidebar_fill }};
+  border-right: 1px solid {{ panel_border }};
+}
+
+QLabel#sidebar_avatar_label {
+  background: {{ surface_alt }};
+  border-radius: 36px;
+}
+
+QFrame#app_sidebar_frame QPushButton[nav_item="true"] {
+  padding: 10px 8px;
+  font-size: 12px;
+}
+
+QWidget#app_main_content_widget,
+QStackedWidget#app_page_stack_widget,
+QWidget#calendar_page_widget,
+QWidget#analytics_page_widget,
+QWidget#analytics_content_widget,
+QWidget#reports_page_widget,
+QFrame#calendar_grid_frame,
+QWidget#calendar_scroll_viewport_widget,
+QWidget#calendar_records_widget,
+QWidget#worklog_manual_tab_widget,
+QWidget#worklog_auto_tab_widget,
+QTabWidget#worklog_mode_tab_widget,
+QTabWidget#worklog_mode_tab_widget QStackedWidget,
+QFrame#login_form_frame,
+QWidget#settings_page_widget,
+QWidget#settings_scroll_content_widget {
+  background: {{ page_fill }};
+}

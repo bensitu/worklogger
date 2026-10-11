@@ -345,8 +345,7 @@ class LoginDialog(AuthDialog):
         if application is None:
             return
         engine = ThemeEngine()
-        application.setPalette(engine.qt_palette())
-        application.setStyleSheet(engine.application_stylesheet())
+        engine.apply_to(application)
 
 
 def _visibility_icon(password_visible: bool) -> QIcon:

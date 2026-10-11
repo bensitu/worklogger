@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
 
 from worklogger.presentation.theme import (
     ThemeEngine,
+    THEME_KEYS,
     configure_application_style,
     install_bundled_fonts,
 )
@@ -36,9 +37,10 @@ class DataViewLayoutChecks(unittest.TestCase):
         engine = ThemeEngine()
         old_style, old_palette = self.app.styleSheet(), self.app.palette()
         try:
-            for theme in ("blue", "pink", "green", "purple", "custom"):
+            for theme in THEME_KEYS:
                 for dark in (False, True):
                     colors = engine.palette(theme, dark=dark, custom_color="#168078")
+                    table_fill = colors.input_background if colors.material == "glass" else colors.surface
                     self.app.setPalette(engine.qt_palette(theme, dark=dark, custom_color="#168078"))
                     self.app.setStyleSheet(engine.application_stylesheet(theme, dark=dark, custom_color="#168078"))
                     panel = QWidget()
@@ -68,11 +70,11 @@ class DataViewLayoutChecks(unittest.TestCase):
                             rendered = view.viewport().grab().toImage()
                             for row in range(2):
                                 center = view.visualRect(view.model().index(row, 1)).center()
-                                expected = colors.surface_alt if dark and row == 1 else colors.surface
+                                expected = colors.table_alternate if dark and row == 1 else table_fill
                                 self.assertEqual(rendered.pixelColor(center).name(), expected,
                                                  (theme, dark, type(view).__name__, row))
                             self.assertEqual(rendered.pixelColor(rendered.width() - 5, rendered.height() - 5).name(),
-                                             colors.surface)
+                                             table_fill)
                             if view is table:
                                 table.selectRow(0)
                             else:
@@ -80,7 +82,7 @@ class DataViewLayoutChecks(unittest.TestCase):
                             self.app.processEvents()
                             selected = view.viewport().grab().toImage()
                             center = view.visualRect(view.model().index(0, 1)).center()
-                            self.assertNotEqual(selected.pixelColor(center).name(), colors.surface)
+                            self.assertNotEqual(selected.pixelColor(center).name(), table_fill)
                         destination = os.environ.get("WORKLOGGER_SCREENSHOTS")
                         if destination:
                             path = Path(destination)

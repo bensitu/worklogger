@@ -1,0 +1,41 @@
+/* Material effects supplement shared control and layout rules. */
+
+QWidget#calendar_view_widget,
+QStackedWidget#settings_category_stack_widget {
+  background: transparent;
+}
+
+QWidget#worklog_entry_panel_widget[glass_surface="true"] {
+  background: transparent;
+  border: 1px solid {{ panel_border }};
+  border-radius: 8px;
+}
+
+QHeaderView::section {
+  background: {{ input_background }};
+  border: none;
+  border-bottom: 1px solid {{ panel_border }};
+  border-right: 1px solid {{ panel_border }};
+  padding: 4px 6px;
+}
+
+QFrame#app_sidebar_frame QPushButton[nav_item="true"] {
+  background: transparent;
+}
+
+QFrame#app_sidebar_frame QPushButton[nav_item="true"][active="true"] {
+  background: {{ accent_dim }};
+}
+
+QTabWidget::pane,
+QTabWidget#project_editor_tab_widget::pane,
+QTabWidget#report_revision_tab_widget::pane {
+  background: transparent;
+  border-color: {{ panel_border }};
+}
+
+QTabBar::tab,
+QWidget#management_editor_page {
+  background: {{ button_fill }};
+  border-color: {{ panel_border }};
+}

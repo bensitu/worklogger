@@ -7,12 +7,12 @@ from worklogger.presentation.theme.theme_engine import contrasting_text_color
 from math import floor, log10
 
 from PySide6.QtCore import QRectF, Qt
-from PySide6.QtGui import QBrush, QColor, QPainter, QPainterPath, QPen, QPalette
+from PySide6.QtGui import QBrush, QColor, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from worklogger.domain.analytics.models import ChartDataBundle
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.theme import ThemeEngine
+from worklogger.presentation.theme.context import current_colors
 from worklogger.presentation.date_labels import duration_label
 
 
@@ -20,14 +20,6 @@ def chart_tick_step(maximum: float) -> float:
     raw = max(1.0, maximum) / 4
     magnitude = 10 ** floor(log10(raw))
     return next(step * magnitude for step in (1, 2, 2.5, 5, 10) if step * magnitude >= raw)
-
-
-def chart_palette(widget: QWidget):
-    palette = widget.palette()
-    return ThemeEngine().palette(
-        "custom", dark=palette.color(QPalette.ColorRole.Window).lightness() < 128,
-        custom_color=palette.color(QPalette.ColorRole.Highlight).name(),
-    )
 
 
 class ComboChart(QWidget):
@@ -52,7 +44,7 @@ class ComboChart(QWidget):
         font = painter.font()
         font.setPixelSize(10)
         painter.setFont(font)
-        colors = chart_palette(self)
+        colors = current_colors()
         rect = QRectF(34, 25, max(1, self.width() - 44), max(1, self.height() - 48))
         values = self._bundle.line_data if self._mode == "line" else self._bundle.bar_data
         leave_values = dict(self._bundle.leave_hours_data)
@@ -132,7 +124,7 @@ class DonutChart(QWidget):
     def paintEvent(self, _event: object) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        colors = chart_palette(self)
+        colors = current_colors()
         total = sum(value for _, value in self._segments)
         painter.setPen(QColor(colors.muted_text))
         if total <= 0:
@@ -150,12 +142,11 @@ class DonutChart(QWidget):
         details = tuple(_("{duration} ({percent:.0f}%)").format(duration=duration_label(value), percent=value / total * 100) for _label, value in self._segments)
         inline = all(painter.fontMetrics().horizontalAdvance(label + "  " + detail) <= available for (label, _value), detail in zip(self._segments, details))
         row_height = 28 if inline else 34
+        keyed_colors = {
+            "normal": colors.accent, "remote": QColor(colors.accent).lighter(145).name(),
+            "business_trip": colors.warning, "leave": colors.danger,
+        }
         for index, (label, value) in enumerate(self._segments):
-            keyed_colors = {
-                "normal": colors.accent, "remote": QColor(colors.accent).lighter(145).name(),
-                "business_trip": ThemeEngine().palette("purple", dark=colors.dark).accent,
-                "leave": colors.danger,
-            }
             color = QColor(keyed_colors.get(self._keys[index], segment_colors[index % len(segment_colors)]))
             span = round(360 * 16 * value / total)
             painter.setPen(QPen(color, 15))

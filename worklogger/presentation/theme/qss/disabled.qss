@@ -1,0 +1,30 @@
+/* Disabled states preserve control geometry and role typography. */
+
+QPushButton:disabled,
+QToolButton:disabled,
+QPushButton[variant]:disabled,
+QToolButton[variant]:disabled,
+QPushButton[nav_item]:disabled,
+QPushButton[settings_nav_item]:disabled,
+QPushButton[segment]:disabled,
+QPushButton[page_tab]:disabled,
+QPushButton#report_history_item_button:disabled,
+QPushButton#calendar_time_entry_button:disabled {
+  color: {{ disabled_text }};
+  background: {{ disabled_background }};
+  border-color: {{ border }};
+}
+
+QPushButton[variant="ghost"]:disabled,
+QToolButton[variant="ghost"]:disabled {
+  background: transparent;
+  border-color: transparent;
+}
+
+QPushButton QLabel:disabled {
+  color: {{ disabled_text }};
+}
+
+QLabel#calendar_record_marker_label:disabled {
+  background: {{ disabled_text }};
+}

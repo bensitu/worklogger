@@ -1,0 +1,60 @@
+QFrame#date_picker_popup_frame {
+  background: {{ surface }};
+  border: 1px solid {{ border_strong }};
+  border-radius: 8px;
+}
+
+QCalendarWidget#date_picker_calendar_widget QWidget#qt_calendar_navigationbar {
+  background: {{ surface }};
+}
+
+QLabel#date_picker_holiday_status_label {
+  color: {{ danger }};
+  padding: 2px 4px;
+}
+
+QCalendarWidget#date_picker_calendar_widget QToolButton {
+  min-width: 24px;
+  min-height: 24px;
+  padding: 4px 6px;
+}
+
+QCalendarWidget#date_picker_calendar_widget QToolButton#qt_calendar_monthbutton {
+  padding-right: 18px;
+}
+
+QCalendarWidget#date_picker_calendar_widget QToolButton::menu-indicator {
+  subcontrol-origin: padding;
+  subcontrol-position: right center;
+  right: 4px;
+  image: url("{{ icons_root }}/chevron-down.svg");
+  width: 10px;
+  height: 10px;
+}
+
+QCalendarWidget#date_picker_calendar_widget QSpinBox#qt_calendar_yearedit {
+  min-width: 42px;
+  max-width: 56px;
+  min-height: 24px;
+  max-height: 24px;
+  padding: 4px 6px;
+}
+
+QCalendarWidget#date_picker_calendar_widget QSpinBox#qt_calendar_yearedit::up-button,
+QCalendarWidget#date_picker_calendar_widget QSpinBox#qt_calendar_yearedit::down-button {
+  width: 16px;
+}
+
+QCalendarWidget#date_picker_calendar_widget QSpinBox#qt_calendar_yearedit::up-arrow,
+QCalendarWidget#date_picker_calendar_widget QSpinBox#qt_calendar_yearedit::down-arrow {
+  width: 10px;
+  height: 10px;
+}
+
+QCalendarWidget#date_picker_calendar_widget QTableView {
+  background: {{ surface }};
+  alternate-background-color: {{ surface_alt }};
+  border: none;
+  selection-background-color: {{ accent }};
+  selection-color: {{ highlighted_text }};
+}

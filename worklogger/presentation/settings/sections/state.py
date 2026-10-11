@@ -35,9 +35,7 @@ class SettingsSectionState:
             )
             theme_index = self.theme_combo.findData(state.theme)
             self.theme_combo.setCurrentIndex(max(theme_index, 0))
-            self.custom_color_button.setVisible(
-                self.theme_combo.currentData() == "custom"
-            )
+            self._update_custom_color_control()
             self._custom_color = state.custom_color
             self._update_color_swatch()
             mode_index = self.mode_combo.findData(

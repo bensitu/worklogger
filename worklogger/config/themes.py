@@ -70,6 +70,10 @@ if len(THEME_CATALOG) != len(THEME_DEFINITIONS):
 THEME_KEYS = tuple(THEME_CATALOG)
 
 
-def normalize_theme(value: str | None) -> str:
+def get_theme(value: str | None) -> ThemeDefinition:
     key = str(value or "blue").strip().lower()
-    return key if key in THEME_CATALOG else "blue"
+    return THEME_CATALOG.get(key, THEME_CATALOG["blue"])
+
+
+def normalize_theme(value: str | None) -> str:
+    return get_theme(value).key

@@ -40,20 +40,40 @@ updates, and disposal. Treat error codes as stable diagnostic identifiers.
 Use shared theme tokens, controls, fonts, and Lucide icons. Apply QSS at the
 application boundary, not on individual widgets.
 
-Shared rules live in `presentation/theme/qss/application.qss`; background-image
-transparency overrides live in `background_images.qss`. Define light/dark colors
-in `ColorPalette`, not in separate copies of component styles. Keep role and state
-selectors explicit where their priority is needed. Hover, selection, and disabled
-states must preserve control dimensions and typography.
+Shared rules live in responsibility-specific fragments under
+`presentation/theme/qss`. `stylesheets.py` defines their cascade order;
+`background_images.qss` handles uploaded backgrounds and `materials.qss` contains
+glass-specific effects. Define colors through theme tokens, not separate copies
+of component styles. Keep role and state selectors explicit where their priority
+is needed. Hover, selection, and disabled states must preserve dimensions and
+typography.
 
 Ordinary framed actions use neutral text and outlines; primary actions use accent
-backgrounds and white text. Destructive actions use the danger role.
+backgrounds and the highlighted text role. Destructive actions use the danger role.
 Disabled states retain geometry and weight while using muted colors.
 Selected navigation uses accent emphasis. Button icons follow their text color.
 
 Qt object names use descriptive snake case and existing suffix conventions.
 Icon-only actions need tooltips/accessibility names. Preserve keyboard navigation
 and check long translated text. See [localization](localization.md).
+
+## Theme Definitions
+
+Add a `ThemeDefinition` to `config/themes.py` with a stable lowercase key,
+a label marked with `N_`, light/dark `AccentColors`, and a `solid` or `glass`
+material. Settings choices and configuration validation use this catalog;
+customizable choices appear last. Translate new labels through the normal
+gettext workflow.
+
+`theme/palettes.py` resolves material colors, `calendar_styles.py` defines date
+states, and `stylesheets.py` renders shared tokens with bounded caches. Effects
+depend on material capabilities, not a theme's key. Reuse these profiles for
+branded themes rather than copying QSS or adding theme-name checks to widgets.
+Apply application themes through `ThemeEngine.apply_to`. Custom-painted controls
+use `theme/context.py` to read resolved colors; do not infer mode or material from
+widget backgrounds, which can be transparent.
+Check both color modes, contrast, interaction states, theme switching and
+resource packaging when changing a theme or material.
 
 ## Data and Resources
 

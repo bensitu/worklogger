@@ -1,0 +1,138 @@
+/* Input fields, popup indicators, and tabs. */
+
+QLineEdit,
+QTextEdit,
+QPlainTextEdit,
+QComboBox,
+QSpinBox,
+QDateEdit,
+QDateTimeEdit,
+QTimeEdit,
+QDoubleSpinBox {
+  background: {{ input_fill }};
+  border: 1px solid {{ field_border }};
+  color: {{ text }};
+  border-radius: 8px;
+  min-height: 28px;
+  padding: 5px 10px;
+}
+
+QDialog#login_dialog QLineEdit,
+QDialog#login_dialog QPushButton {
+  min-height: 32px;
+}
+
+QLineEdit QToolButton {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  min-height: 0;
+  padding: 0;
+}
+
+QLineEdit:focus,
+QTextEdit:focus,
+QPlainTextEdit:focus,
+QComboBox:focus,
+QSpinBox:focus,
+QDateEdit:focus,
+QDateTimeEdit:focus,
+QTimeEdit:focus,
+QDoubleSpinBox:focus {
+  border-color: {{ accent }};
+}
+
+QComboBox::drop-down {
+  border: none;
+  width: 26px;
+}
+
+QComboBox::down-arrow,
+QDateEdit::down-arrow,
+QDateTimeEdit::down-arrow {
+  image: url("{{ icons_root }}/chevron-down.svg");
+  width: 14px;
+  height: 14px;
+}
+
+QDateEdit::drop-down,
+QDateTimeEdit::drop-down {
+  subcontrol-origin: padding;
+  subcontrol-position: top right;
+  border: none;
+  width: 26px;
+}
+
+QDoubleSpinBox::up-button,
+QSpinBox::up-button,
+QTimeEdit::up-button {
+  subcontrol-origin: border;
+  subcontrol-position: top right;
+  width: 22px;
+  border: none;
+}
+
+QDoubleSpinBox::down-button,
+QSpinBox::down-button,
+QTimeEdit::down-button {
+  subcontrol-origin: border;
+  subcontrol-position: bottom right;
+  width: 22px;
+  border: none;
+}
+
+QDoubleSpinBox::up-arrow,
+QSpinBox::up-arrow,
+QTimeEdit::up-arrow {
+  image: url("{{ icons_root }}/chevron-up.svg");
+  width: 12px;
+  height: 12px;
+}
+
+QDoubleSpinBox::down-arrow,
+QSpinBox::down-arrow,
+QTimeEdit::down-arrow {
+  image: url("{{ icons_root }}/chevron-down.svg");
+  width: 12px;
+  height: 12px;
+}
+
+QSpinBox#local_context_spin_box {
+  min-height: 18px;
+  padding: 2px 8px;
+}
+
+QTabWidget#worklog_mode_tab_widget::pane {
+  border: none;
+  padding-top: 8px;
+}
+
+QTabBar#worklog_mode_selector_widget {
+  background: {{ surface_alt }};
+  border: 1px solid {{ border }};
+  border-radius: 8px;
+}
+
+QTabBar#worklog_mode_selector_widget::tab {
+  background: transparent;
+  color: {{ muted_text }};
+  border: 1px solid transparent;
+  border-radius: 5px;
+  margin: 3px;
+  min-height: 20px;
+  padding: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+QTabBar#worklog_mode_selector_widget::tab:hover:enabled {
+  color: {{ text }};
+  background: {{ card_hover }};
+}
+
+QTabBar#worklog_mode_selector_widget::tab:selected {
+  background: {{ button_fill }};
+  color: {{ accent }};
+  border-color: {{ button_border }};
+  font-weight: 600;
+}

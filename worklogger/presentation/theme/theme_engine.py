@@ -2,16 +2,29 @@
 
 from PySide6.QtGui import QColor, QPalette
 
-from worklogger.config.themes import THEME_CATALOG, normalize_theme
+from worklogger.config.themes import get_theme
 from worklogger.domain.settings.appearance import DEFAULT_CUSTOM_COLOR as DEFAULT_CUSTOM_COLOR, THEME_KEYS as THEME_KEYS, normalize_hex_color
 from worklogger.domain.worklog.models import CustomWorkType, WorkType
 from worklogger.presentation.theme import calendar_styles
 from worklogger.presentation.theme.models import CalendarCellStyle, ColorPalette
 from worklogger.presentation.theme.palettes import build_palette
 from worklogger.presentation.theme.stylesheets import application_stylesheet as render_stylesheet
+from worklogger.presentation.theme.context import remember_colors
 
 
 class ThemeEngine:
+    def apply_to(self, application, theme: str = "blue", *, dark: bool = False,
+                 custom_color: str | None = None, force: bool = False) -> ColorPalette:
+        colors = self.palette(theme, dark=dark, custom_color=custom_color)
+        palette = self.qt_palette(theme, dark=dark, custom_color=custom_color)
+        stylesheet = render_stylesheet(colors)
+        if application.palette() != palette:
+            application.setPalette(palette)
+        if force or application.styleSheet() != stylesheet:
+            application.setStyleSheet(stylesheet)
+        remember_colors(application, colors)
+        return colors
+
     def palette(
         self,
         theme: str = "blue",
@@ -19,7 +32,7 @@ class ThemeEngine:
         dark: bool = False,
         custom_color: str | None = None,
     ) -> ColorPalette:
-        definition = THEME_CATALOG[normalize_theme(theme)]
+        definition = get_theme(theme)
         accent = normalize_hex_color(custom_color) if definition.customizable else None
         return build_palette(definition, bool(dark), accent)
 

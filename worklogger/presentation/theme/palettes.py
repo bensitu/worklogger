@@ -41,7 +41,7 @@ def build_palette(definition: ThemeDefinition, dark: bool, custom_color: str | N
         text, muted = (("#e8eef3", "#b2bdc6") if dark else ("#182b35", "#506976"))
         input_background, input_border = (("#222a30", "#697b85") if dark else ("#ffffff", "#aabdc9"))
         sidebar_background, sidebar_active = surface, accent_dim
-        table_alternate, button_hover = surface_alt, surface_alt
+        table_alternate, button_hover = surface_alt if dark else input_background, surface_alt
         disabled_text, disabled_background = (("#8e9ba5", "#30383f") if dark else ("#7e939f", "#e4edf2"))
         danger, success, warning = (("#ff9baf", "#87e5ba", "#f4d989") if dark else
                                     ("#a9243a", "#166c44", "#875900"))

@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWi
 
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets.card import CardFrame
-from worklogger.presentation.widgets.combo_chart import chart_palette
+from worklogger.presentation.theme.context import current_colors
 
 
 class SummaryValueLabel(QLabel):
@@ -67,7 +67,7 @@ class DonutGauge(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         rect = QRectF(13, 13, self.width() - 26, self.height() - 26)
-        colors = chart_palette(self)
+        colors = current_colors()
         overflow_color = QColor(colors.warning)
         accent_hue = QColor(colors.accent).hueF()
         hue_distance = abs(accent_hue - overflow_color.hueF())
@@ -126,7 +126,7 @@ class OvertimeComparisonChart(QWidget):
     def paintEvent(self, _event: object) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        colors = chart_palette(self)
+        colors = current_colors()
         maximum = max(self._previous, self._current)
         painter.setPen(QPen(QColor(colors.border_strong), 1))
         painter.drawLine(7, 62, 65, 62)
@@ -225,7 +225,7 @@ class _DotsWidget(QWidget):
         filled = round(self._filled / self._total * visible)
         spacing = min(10.0, self.width() / visible)
         radius = min(4.0, spacing * 0.36)
-        colors = chart_palette(self)
+        colors = current_colors()
         for index in range(visible):
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(self._color if index < filled else QColor(colors.border_strong))

@@ -14,7 +14,7 @@ from worklogger.infrastructure.i18n import get_language, available_languages, se
 from worklogger.presentation.settings import SettingsPage
 from worklogger.presentation.shell.reports_page import ReportsPage
 from worklogger.presentation.job_runner import ImmediateJobRunner
-from worklogger.presentation.theme import configure_application_style, install_bundled_fonts, ThemeEngine
+from worklogger.presentation.theme import configure_application_style, install_bundled_fonts, ThemeEngine, THEME_KEYS
 from worklogger.domain.shared.result import Result
 from worklogger.presentation.viewmodels.reports import ReportEditorState
 from worklogger.domain.auth.models import User
@@ -77,8 +77,9 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
         old_style, old_palette = self.app.styleSheet(), self.app.palette()
         engine = ThemeEngine()
         try:
-            for theme in ("blue", "pink", "green", "purple", "custom"):
+            for theme in THEME_KEYS:
                 for dark in (False, True):
+                    colors = engine.palette(theme, dark=dark, custom_color="#168078")
                     self.app.setPalette(engine.qt_palette(theme, dark=dark, custom_color="#168078"))
                     self.app.setStyleSheet(engine.application_stylesheet(theme, dark=dark, custom_color="#168078"))
                     panel = QWidget()
@@ -135,19 +136,19 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                         self.assertEqual(enabled.font().weight(), expected_weight)
                         self.assertEqual(disabled.font().weight(), expected_weight)
                         self.assertEqual(disabled.palette().color(QPalette.ColorRole.ButtonText).name(),
-                                         "#6f7699" if dark else "#9aa3bb")
+                                         colors.disabled_text)
                         disabled_background = disabled.grab().toImage().pixelColor(8, disabled.height() // 2)
                         enabled_background = enabled.grab().toImage().pixelColor(8, enabled.height() // 2)
                         if enabled.property("variant") == "ghost":
                             self.assertEqual(disabled_background, enabled_background)
                         else:
-                            self.assertEqual(disabled_background.name(), "#111827" if dark else "#edf0f5")
+                            self.assertEqual(disabled_background.name(), colors.disabled_background)
                             self.assertNotEqual(enabled_background, disabled_background)
                         if isinstance(disabled, RecordSummaryButton):
                             self.assertEqual(enabled.label.palette().color(QPalette.ColorRole.WindowText).name(),
                                              engine.palette(theme, dark=dark, custom_color="#168078").text)
                             self.assertEqual(disabled.label.palette().color(QPalette.ColorRole.WindowText).name(),
-                                             "#6f7699" if dark else "#9aa3bb")
+                                             colors.disabled_text)
                     for enabled, disabled in pairs + switch_pairs:
                         with self.subTest(theme=theme, dark=dark, name=enabled.objectName(), variant=enabled.property("variant")):
                             QTest.mouseMove(panel, QPoint(1, 1))

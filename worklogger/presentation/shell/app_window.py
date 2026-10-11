@@ -216,23 +216,14 @@ class AppWindow(QMainWindow):
         application = QApplication.instance()
         if application is None:
             return
-        self._background_surface.set_base_color(self._theme_engine.palette(
-            self._config.theme, dark=self._config.dark, custom_color=self._config.custom_color,
-        ).surface)
         configure_application_style()
         install_bundled_fonts()
-        palette = self._theme_engine.qt_palette(
+        colors = self._theme_engine.apply_to(application,
             self._config.theme, dark=self._config.dark, custom_color=self._config.custom_color,
+            force=force,
         )
-        stylesheet = self._theme_engine.application_stylesheet(
-            self._config.theme, dark=self._config.dark, custom_color=self._config.custom_color,
-        )
-        if application.palette() != palette:
-            application.setPalette(palette)
-        if force or application.styleSheet() != stylesheet:
-            application.setStyleSheet(stylesheet)
-        self.glass_controller.configure(self._theme_engine.palette(self._config.theme, dark=self._config.dark,
-                                                                  custom_color=self._config.custom_color))
+        self._background_surface.set_base_color(colors.surface)
+        self.glass_controller.configure(colors)
 
     def apply_settings(self, state: SettingsState) -> None:
         self.sidebar.set_avatar(state.profile_avatar_png)

@@ -1,0 +1,140 @@
+/* Calendar controls and compact recording layout. */
+
+QFrame#calendar_right_panel_frame {
+  background: {{ page_fill }};
+  border: none;
+  border-left: 1px solid {{ panel_border }};
+}
+
+QPushButton#calendar_day_button {
+  min-height: 90px;
+  padding: 0;
+}
+
+QLabel#schedule_records_label {
+  padding-top: 10px;
+  border-top: 1px solid {{ panel_border }};
+}
+
+QFrame#calendar_record_frame {
+  background: {{ row_fill }};
+  border: 1px solid {{ row_border }};
+  border-radius: 4px;
+}
+
+QPushButton#calendar_time_entry_button {
+  font-weight: 400;
+  background: {{ row_fill }};
+  padding: 0;
+  border-radius: 4px;
+  min-height: 0;
+}
+
+QPushButton#calendar_time_entry_button:checked {
+  border-color: {{ accent }};
+  background: {{ record_selected_fill }};
+}
+
+QPushButton#calendar_time_entry_button:hover:enabled,
+QPushButton#report_history_item_button:hover:enabled {
+  background: {{ row_hover_fill }};
+  border-color: {{ accent }};
+}
+
+QPushButton#calendar_time_entry_button:checked:hover:enabled,
+QPushButton#report_history_item_button[active="true"]:hover:enabled,
+QToolButton#delete_record_button:hover:enabled,
+QToolButton#record_actions_button:hover:enabled,
+QLineEdit QToolButton:hover:enabled {
+  background: {{ button_hover }};
+}
+
+QToolButton#clear_time_entry_button,
+QToolButton#undo_record_change_button {
+  padding: 5px 8px;
+  min-width: 20px;
+  max-width: 20px;
+  min-height: 28px;
+  max-height: 28px;
+  border-radius: 4px;
+}
+
+QPushButton#save_worklog_button,
+QPushButton#add_entry_button,
+QPushButton#daily_notes_button {
+  min-height: 28px;
+  max-height: 28px;
+  padding: 5px 8px;
+}
+
+QWidget#worklog_entry_panel_widget[compact="true"] QPushButton#save_worklog_button,
+QWidget#worklog_entry_panel_widget[compact="true"] QToolButton#clear_time_entry_button,
+QWidget#worklog_entry_panel_widget[compact="true"] QToolButton#undo_record_change_button {
+  min-height: 24px;
+  max-height: 24px;
+  padding: 2px 8px;
+}
+
+QToolButton#delete_record_button,
+QToolButton#record_actions_button {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  min-width: 16px;
+  max-width: 16px;
+  min-height: 16px;
+  max-height: 16px;
+  border-radius: 4px;
+}
+
+QLabel#calendar_record_marker_label {
+  background: {{ accent }};
+  border-radius: 3px;
+}
+
+QLabel#week_header_label[weekend="true"],
+QTabBar#worklog_mode_selector_widget::tab:selected:hover:enabled {
+  color: {{ accent }};
+}
+
+QWidget#worklog_entry_panel_widget[compact="true"] QLineEdit,
+QWidget#worklog_entry_panel_widget[compact="true"] QComboBox,
+QWidget#worklog_entry_panel_widget[compact="true"] QDoubleSpinBox,
+QWidget#worklog_entry_panel_widget[compact="true"] QPushButton {
+  min-height: 24px;
+  padding: 2px 8px;
+}
+
+QWidget#worklog_entry_panel_widget[compact="true"] QDoubleSpinBox QLineEdit {
+  min-height: 0;
+  padding: 0;
+  border: none;
+}
+
+QToolButton#recent_work_context_button {
+  padding: 0px;
+}
+
+QToolButton#recent_work_context_button::menu-indicator {
+  image: none;
+  width: 0px;
+}
+
+QToolButton#cancel_processing_button {
+  padding: 0px;
+  min-height: 0;
+}
+
+QToolButton#polish_time_entry_button {
+  min-height: 16px;
+  max-height: 16px;
+  min-width: 16px;
+  max-width: 16px;
+  padding: 3px;
+}
+
+QTabWidget#worklog_mode_tab_widget QWidget#worklog_auto_tab_widget QPushButton {
+  min-height: 40px;
+  max-height: 40px;
+  padding: 6px 8px;
+}

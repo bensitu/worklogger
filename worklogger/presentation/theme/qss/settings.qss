@@ -1,0 +1,110 @@
+/* Settings and reporting components. */
+
+QSlider#background_opacity_slider_widget::groove:horizontal {
+  height: 4px;
+  border-radius: 2px;
+  background: {{ border }};
+}
+
+QSlider#background_opacity_slider_widget::sub-page:horizontal {
+  background: {{ accent }};
+  border-radius: 2px;
+}
+
+QSlider#background_opacity_slider_widget::handle:horizontal {
+  width: 16px;
+  margin: -6px 0;
+  border: 1px solid {{ accent }};
+  border-radius: 8px;
+  background: {{ surface }};
+}
+
+QSlider#background_opacity_slider_widget::handle:horizontal:focus {
+  border: 2px solid {{ accent }};
+}
+
+QSlider#background_opacity_slider_widget::sub-page:horizontal:disabled,
+QSlider#background_opacity_slider_widget::handle:horizontal:disabled {
+  background: {{ border }};
+  border-color: {{ border }};
+}
+
+QLineEdit#account_name_line_edit,
+QLineEdit#account_id_line_edit,
+QLineEdit#account_role_line_edit {
+  background: {{ readonly_fill }};
+}
+
+QFrame#settings_separator_frame {
+  background: {{ panel_border }};
+  border: none;
+  max-height: 1px;
+}
+
+QTabWidget::pane {
+  border: 1px solid {{ border }};
+  border-radius: 8px;
+}
+
+QTabBar::tab {
+  background: {{ surface }};
+  border: 1px solid {{ border }};
+  padding: 8px 16px;
+}
+
+QTabBar::tab:selected {
+  color: {{ accent }};
+  border-bottom: 2px solid {{ accent }};
+}
+
+QTabBar::tab:hover:enabled {
+  background: {{ card_hover }};
+}
+
+QTabWidget#project_editor_tab_widget::pane,
+QTabWidget#report_revision_tab_widget::pane {
+  background: {{ surface }};
+  border: 1px solid {{ border }};
+  border-radius: 6px;
+  top: 8px;
+}
+
+QWidget#management_editor_page {
+  background: {{ surface }};
+  border-radius: 6px;
+}
+
+QCheckBox#work_item_completed_check {
+  background: transparent;
+}
+
+QTabBar#management_tab_bar::tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 8px 18px;
+  margin-right: 8px;
+  color: {{ muted_text }};
+  font-weight: 500;
+}
+
+QTabBar#management_tab_bar::tab:selected {
+  color: {{ accent }};
+  border-bottom-color: {{ accent }};
+  font-weight: 600;
+}
+
+QTabBar#management_tab_bar::tab:hover:enabled {
+  background: {{ button_hover }};
+}
+
+QTabBar#management_tab_bar::tab:disabled {
+  color: {{ disabled_text }};
+}
+
+QTextEdit#report_revision_preview {
+  background: {{ surface }};
+  border: none;
+  border-radius: 6px;
+  padding: 0;
+}

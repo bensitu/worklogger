@@ -1,0 +1,113 @@
+/* Action roles and interaction states. */
+
+QPushButton,
+QToolButton {
+  background: {{ button_fill }};
+  border: 1px solid {{ button_border }};
+  color: {{ text }};
+  font-weight: 500;
+  border-radius: 8px;
+  min-height: 28px;
+  padding: 5px 14px;
+}
+
+QPushButton:hover:enabled,
+QToolButton:hover:enabled,
+QPushButton[variant="outline"]:hover:enabled,
+QToolButton[variant="outline"]:hover:enabled,
+QPushButton[segment="true"]:hover:enabled {
+  background: {{ button_hover_fill }};
+  border-color: {{ accent }};
+}
+
+QPushButton[variant="primary"],
+QToolButton[variant="primary"] {
+  background: {{ accent }};
+  color: {{ highlighted_text }};
+  border: 1px solid {{ accent }};
+  font-weight: 600;
+}
+
+QPushButton[variant="primary"]:hover:enabled,
+QToolButton[variant="primary"]:hover:enabled {
+  background: {{ hover }};
+  border-color: {{ hover }};
+}
+
+QPushButton[variant="ghost"],
+QToolButton[variant="ghost"] {
+  background: transparent;
+  border: 1px solid transparent;
+  color: {{ text }};
+  font-weight: 400;
+}
+
+QPushButton[variant="ghost"]:hover:enabled,
+QToolButton[variant="ghost"]:hover:enabled {
+  background: {{ button_hover_fill }};
+  border-color: transparent;
+}
+
+QPushButton[variant="outline"],
+QToolButton[variant="outline"] {
+  background: {{ button_fill }};
+  border: 1px solid {{ button_border }};
+  color: {{ text }};
+  font-weight: 500;
+}
+
+QPushButton[variant="danger"],
+QToolButton[variant="danger"] {
+  color: {{ danger }};
+  font-weight: 500;
+}
+
+QPushButton[variant="danger"]:hover:enabled,
+QToolButton[variant="danger"]:hover:enabled {
+  border-color: {{ danger }};
+}
+
+QPushButton[nav_item="true"],
+QPushButton[settings_nav_item="true"] {
+  background: transparent;
+  border: 1px solid transparent;
+  color: {{ text }};
+  text-align: left;
+  padding: 10px 14px;
+  font-weight: 500;
+}
+
+QPushButton[nav_item="true"]:hover:enabled,
+QPushButton[settings_nav_item="true"]:hover:enabled {
+  background: {{ navigation_hover_fill }};
+  border-color: {{ border }};
+}
+
+QPushButton[nav_item="true"][active="true"],
+QPushButton[settings_nav_item="true"][active="true"] {
+  background: {{ sidebar_active_background }};
+  border-left: 3px solid {{ accent }};
+  color: {{ accent }};
+  font-weight: 600;
+}
+
+QPushButton[nav_item="true"][active="true"]:hover:enabled,
+QPushButton[settings_nav_item="true"][active="true"]:hover:enabled {
+  background: {{ button_hover_fill }};
+  border-color: transparent;
+  border-left-color: {{ accent }};
+}
+
+QPushButton[segment="true"] {
+  background: {{ surface }};
+  border: 1px solid {{ border }};
+  border-radius: 0;
+  padding: 7px 18px;
+}
+
+QPushButton[segment="true"][checked="true"] {
+  background: {{ accent_dim }};
+  color: {{ accent }};
+  border-color: {{ accent }};
+  font-weight: 600;
+}

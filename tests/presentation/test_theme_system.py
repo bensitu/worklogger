@@ -1,16 +1,51 @@
 """Theme definitions, reusable materials and configuration fallbacks."""
 
 from dataclasses import replace
+import os
 import unittest
+
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QWidget
 
 from worklogger.config.themes import AccentColors, THEME_CATALOG, ThemeDefinition, normalize_theme
 from worklogger.presentation.theme import ThemeEngine
 from worklogger.presentation.theme.calendar_styles import calendar_cell_style
 from worklogger.presentation.theme.palettes import build_palette
 from worklogger.presentation.theme.stylesheets import application_stylesheet
+from worklogger.presentation.theme.context import current_colors
 
 
 class ThemeSystemTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+
+    def test_applied_theme_colors_ignore_transparent_widgets_and_follow_palette_changes(self):
+        application = self.app
+        old_palette, old_style = application.palette(), application.styleSheet()
+        old_context = application.property("worklogger_theme_context")
+        widget = QWidget()
+        try:
+            widget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
+            widget.setObjectName("combo_chart_widget")
+            engine = ThemeEngine()
+            for theme in ("blue", "liquid_glass"):
+                for dark in (False, True):
+                    colors = engine.apply_to(application, theme, dark=dark)
+                    widget.ensurePolished()
+                    self.assertEqual(current_colors(), colors)
+                    self.assertEqual(widget.palette().color(widget.backgroundRole()).alpha(), 0)
+            application.setPalette(engine.qt_palette("green"))
+            self.assertFalse(current_colors().dark)
+            self.assertEqual(current_colors().accent, engine.palette("green").accent)
+        finally:
+            widget.deleteLater()
+            application.setPalette(old_palette)
+            application.setStyleSheet(old_style)
+            application.setProperty("worklogger_theme_context", old_context)
+
     def test_material_profiles_support_independent_theme_keys(self):
         for original in ("blue", "liquid_glass"):
             definition = replace(THEME_CATALOG[original], key="studio", label="Studio")

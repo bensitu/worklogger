@@ -1,4 +1,6 @@
 import os
+from dataclasses import replace
+import time
 import unittest
 from types import SimpleNamespace
 
@@ -13,6 +15,8 @@ from worklogger.app.job_runner import CancellationToken, JobHandle
 from worklogger.domain.shared.result import Result
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.presentation.theme import ThemeEngine
+from worklogger.config.themes import THEME_CATALOG
+from worklogger.presentation.theme.palettes import build_palette
 from worklogger.presentation.theme.background import MainBackgroundWidget
 from worklogger.presentation.theme.glass_surfaces import GlassThemeController
 from worklogger.presentation.theme.native_glass import NativeGlassAdapter
@@ -57,10 +61,12 @@ class GlassThemeTests(unittest.TestCase):
         foreground.setAutoFillBackground(True)
         runner = DeferredRunner()
         controller = GlassThemeController(window, source, job_runner=runner)
-        colors = ThemeEngine().palette("liquid_glass")
+        colors = build_palette(replace(THEME_CATALOG["liquid_glass"], key="studio_glass", label="Studio Glass"), False, None)
         controller.configure(colors)
         window.show()
-        QTest.qWait(120)
+        deadline = time.monotonic() + 1
+        while len(runner.jobs) < 2 and time.monotonic() < deadline:
+            QTest.qWait(10)
         self.assertEqual(len(runner.jobs), 2)
         sampled = source.backdrop(source.rect(), QSize(400, 300))
         self.assertNotEqual(sampled.pixelColor(50, 50).name(), "#ff0000")

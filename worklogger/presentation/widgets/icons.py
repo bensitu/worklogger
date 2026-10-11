@@ -14,6 +14,7 @@ from PySide6.QtWidgets import QAbstractButton, QWidget
 from shiboken6 import isValid
 
 from worklogger.presentation.widgets.assets import asset_path
+from worklogger.presentation.theme.context import current_colors
 
 
 @lru_cache(maxsize=128)
@@ -71,7 +72,7 @@ class _PaletteIconEngine(QIconEngine):
             role = QPalette.ColorRole.ButtonText
         color = palette.color(group, role).name()
         if self._success and mode != QIcon.Mode.Disabled:
-            color = "#45c97a" if palette.color(QPalette.ColorRole.Window).lightness() < 128 else "#16a34a"
+            color = current_colors().success
         return color
 
     def paint(self, painter: QPainter, rect: QRect, mode: QIcon.Mode, state: QIcon.State) -> None:
