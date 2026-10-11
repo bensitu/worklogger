@@ -73,6 +73,10 @@ def _view_model(repository: MemorySettingsRepository) -> SettingsViewModel:
 
 
 class SettingsPresentationTests(unittest.TestCase):
+    def setUp(self):
+        from tests.presentation.qt_support import dispose_test_windows
+        self.addCleanup(dispose_test_windows)
+
     def test_minimal_view_preference_is_available_only_when_enabled_by_deployment(self):
         repository = MemorySettingsRepository()
         repository.set(1, MINIMAL_MODE_SETTING_KEY, "1")

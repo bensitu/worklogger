@@ -22,6 +22,42 @@ from worklogger.infrastructure.i18n import _
 
 
 class ReportSettingsLayoutChecks(unittest.TestCase):
+    def test_external_model_fields_use_available_form_width(self):
+        from PySide6.QtCore import QPoint
+        engine = ThemeEngine()
+        old_language, old_style, old_palette = get_language(), self.app.styleSheet(), self.app.palette()
+        try:
+            for language in available_languages():
+                set_language(language)
+                for dark in (False, True):
+                    self.app.setPalette(engine.qt_palette(dark=dark))
+                    self.app.setStyleSheet(engine.application_stylesheet(dark=dark))
+                    page = SettingsPage(_view_model(MemorySettingsRepository()))
+                    try:
+                        page.refresh()
+                        page.category_nav.set_category("ai")
+                        page.show()
+                        for width in (900, 1100):
+                            page.resize(width, 760)
+                            self.app.processEvents()
+                            fields = (page.external_api_key_line_edit, page.external_base_url_line_edit,
+                                      page.external_model_line_edit)
+                            self.assertEqual(len({field.width() for field in fields}), 1)
+                            for field in fields:
+                                parent = field.parentWidget()
+                                rectangle = field.rect().translated(field.mapTo(parent, QPoint()))
+                                self.assertTrue(parent.contentsRect().contains(rectangle))
+                                self.assertGreater(field.width(), parent.width() / 2)
+                            self.capture(page, f"{language}-external-model-{'dark' if dark else 'light'}-{width}")
+                    finally:
+                        page.close()
+                        page.deleteLater()
+                        self.app.processEvents()
+        finally:
+            set_language(old_language)
+            self.app.setStyleSheet(old_style)
+            self.app.setPalette(old_palette)
+
     def test_numeric_inputs_match_dropdown_content_insets_across_themes(self):
         from PySide6.QtTest import QTest
         from PySide6.QtWidgets import QStyle, QStyleOptionComboBox, QStyleOptionFrame

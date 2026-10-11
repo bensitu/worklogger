@@ -180,7 +180,11 @@ class LocalModelsDialog(QDialog):
         info.addWidget(self.model_status_label)
         info.addWidget(self.description_label)
         form = QFormLayout()
+        self.details_form = form
         form.setSpacing(12)
+        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        form.setFormAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self.file_label, self.size_label, self.ram_label = (self._detail_label() for _index in range(3))
         self.context_label, self.output_label, self.license_label = (self._detail_label() for _index in range(3))
         for caption, label in ((_("File"), self.file_label), (_("Estimated size"), self.size_label),
@@ -243,7 +247,9 @@ class LocalModelsDialog(QDialog):
         label.setWordWrap(True)
         label.setTextFormat(Qt.TextFormat.PlainText)
         label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        policy = label.sizePolicy()
+        policy.setHorizontalPolicy(QSizePolicy.Policy.Ignored)
+        label.setSizePolicy(policy)
         return label
 
     def _selected_item(self):
@@ -268,6 +274,7 @@ class LocalModelsDialog(QDialog):
             self.context_label.setText(_("{count} tokens").format(count=entry.context_length))
             self.output_label.setText(_("{count} tokens").format(count=entry.max_output_tokens))
             self.license_label.setText(entry.license or _("Unknown"))
+        self.details_form.invalidate()
         self.download_button.setEnabled(bool(not self._busy and item and not item.available and item.entry.download_url))
         self.verify_button.setEnabled(bool(not self._busy and item and item.available))
         self.select_button.setEnabled(bool(not self._busy and item and item.verified and item.available and not item.active))

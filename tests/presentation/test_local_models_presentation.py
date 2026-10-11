@@ -90,6 +90,10 @@ class FakeLocalModelHandlers:
 
 
 class LocalModelsPresentationTests(unittest.TestCase):
+    def setUp(self):
+        from tests.presentation.qt_support import dispose_test_windows
+        self.addCleanup(dispose_test_windows)
+
     def test_download_progress_distinguishes_transfer_verification_and_completion(self):
         class Runner:
             def submit(self, name, job, *, on_complete):

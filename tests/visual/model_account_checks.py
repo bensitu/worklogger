@@ -272,6 +272,13 @@ class ModelAccountLayoutChecks(unittest.TestCase):
                             self.assertEqual(
                                 dialog.details_scroll.horizontalScrollBar().maximum(), 0
                             )
+                            for label in (dialog.file_label, dialog.size_label, dialog.ram_label,
+                                          dialog.context_label, dialog.output_label, dialog.license_label):
+                                self.assertTrue(label.text())
+                                self.assertGreaterEqual(label.width(), label.fontMetrics().horizontalAdvance(_("Unknown")))
+                                self.assertGreaterEqual(label.height(), label.heightForWidth(label.width()),
+                                                        (language, dark, width, row, label.text(), label.width()))
+                                self.assertTrue(dialog.details_scroll.widget().rect().contains(label.geometry()))
                             self.assertEqual(
                                 dialog.download_button.isEnabled(), row == 0
                             )
