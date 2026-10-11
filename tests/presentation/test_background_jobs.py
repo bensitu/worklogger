@@ -22,6 +22,36 @@ def _app() -> QApplication:
 
 
 class BackgroundJobTests(unittest.TestCase):
+    def test_processing_completion_ignores_results_replaced_by_finished_signal(self):
+        from worklogger.app.job_runner import JobHandle
+        from worklogger.presentation.processing import TextProcessingTask
+
+        class DeferredRunner:
+            def __init__(self):
+                self.callbacks = []
+            def submit(self, name, work, *, on_complete):
+                self.callbacks.append(on_complete)
+                return JobHandle(name, lambda: None)
+
+        runner = DeferredRunner()
+        task = TextProcessingTask(job_runner=runner)
+        self.addCleanup(task.deleteLater)
+        results, restarted = [], []
+
+        def restart():
+            if not restarted:
+                restarted.append(True)
+                task.run("second", lambda _token: "Second", on_complete=results.append)
+
+        task.finished.connect(restart)
+        task.run("first", lambda _token: "First", on_complete=results.append)
+        runner.callbacks[0](Result.success("First"))
+        self.assertTrue(task.is_running)
+        self.assertEqual(results, [])
+        runner.callbacks[1](Result.success("Second"))
+        self.assertEqual(results[0].value, "Second")
+        self.assertFalse(task.is_running)
+
     def test_owned_completion_ignores_a_deleted_widget(self):
         from PySide6.QtCore import QCoreApplication, QEvent
         from PySide6.QtWidgets import QWidget

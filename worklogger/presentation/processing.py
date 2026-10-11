@@ -36,7 +36,8 @@ class TextProcessingTask(QObject):
             callback = self._callback
             self._running, self._handle, self._callback = False, None, None
             self.finished.emit()
-            callback(result)
+            if isValid(self) and version == self._version:
+                callback(result)
         try:
             handle = self._runner.submit(name, operation, on_complete=complete)
             if self._running and version == self._version:
@@ -53,5 +54,7 @@ class TextProcessingTask(QObject):
             self._handle.cancel()
         callback = self._callback
         self._running, self._handle, self._callback = False, None, None
+        version = self._version
         self.finished.emit()
-        callback(Result.failure(CancellationError("ai_rewrite_cancelled", "ai_rewrite_cancelled")))
+        if isValid(self) and version == self._version:
+            callback(Result.failure(CancellationError("ai_rewrite_cancelled", "ai_rewrite_cancelled")))

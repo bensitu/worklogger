@@ -12,7 +12,6 @@ from worklogger.domain.auth.models import User
 from worklogger.domain.shared.errors import AppError, CancellationError, InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.auth.dialogs import (
     ChangePasswordDialog,
     ChangePasswordDraft,
@@ -23,10 +22,11 @@ from worklogger.presentation.auth.dialogs import (
     ResetPasswordDialog,
     ResetPasswordDraft,
 )
-from worklogger.presentation.viewmodels import AuthViewModel
-from worklogger.presentation.job_runner import QtJobRunner
-from worklogger.presentation.identity_authorization import IdentityAuthorizationRequest
+from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.identity.dialogs import IdentityConfigurationDialog
+from worklogger.presentation.identity_authorization import IdentityAuthorizationRequest
+from worklogger.presentation.job_runner import QtJobRunner
+from worklogger.presentation.viewmodels import AuthViewModel
 
 ChangePasswordDialogFactory = Callable[[QWidget | None], ChangePasswordDialog]
 LoginDialogFactory = Callable[[QWidget | None], LoginDialog]

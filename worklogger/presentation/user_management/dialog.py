@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
 
 from worklogger.domain.shared.errors import AppError, InfrastructureError
 from worklogger.domain.shared.result import Result
-from worklogger.presentation.job_runner import QtJobRunner
+from worklogger.presentation.job_runner import QtJobRunner, owned_callback
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import (
@@ -94,7 +94,7 @@ class UserManagementDialog(QDialog):
             self.close_button.setEnabled(True)
             complete(result)
         try:
-            self._job_runner.submit("manage_users", lambda _token: operation(), on_complete=finished)
+            self._job_runner.submit("manage_users", lambda _token: operation(), on_complete=owned_callback(self, finished))
         except Exception:
             finished(Result.failure(InfrastructureError("user_management_failed", "user_management_failed")))
             return False

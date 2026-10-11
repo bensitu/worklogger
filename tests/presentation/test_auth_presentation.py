@@ -167,6 +167,14 @@ class MemoryRememberSessionStore:
 
 
 class AuthPresentationTests(unittest.TestCase):
+    def test_form_drafts_keep_credentials_out_of_representations(self):
+        drafts = (LoginDraft("alice", "private-test-secret", False),
+                  RegisterDraft("alice", "private-test-secret", "private-test-secret"),
+                  ResetPasswordDraft("alice", "private-test-secret", "private-test-secret", "private-test-secret"),
+                  ChangePasswordDraft("private-test-secret", "private-test-secret", "private-test-secret"))
+        for draft in drafts:
+            self.assertNotIn("private-test-secret", repr(draft))
+
     def setUp(self):
         from tests.presentation.qt_support import dispose_test_windows
         self.addCleanup(dispose_test_windows)

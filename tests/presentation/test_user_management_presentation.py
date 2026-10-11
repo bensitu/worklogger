@@ -49,6 +49,10 @@ def _view_model(
 
 
 class UserManagementPresentationTests(unittest.TestCase):
+    def setUp(self):
+        from tests.presentation.qt_support import dispose_test_windows
+        self.addCleanup(dispose_test_windows)
+
     def test_duplicate_display_names_remain_distinguishable_by_login_id(self):
         from dataclasses import replace
         from worklogger.presentation.viewmodels.user_management import UserManagementState, UserListItem
