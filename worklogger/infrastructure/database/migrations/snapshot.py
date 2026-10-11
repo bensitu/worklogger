@@ -9,7 +9,7 @@ from uuid import uuid4
 from worklogger.infrastructure.files import atomic_destination
 
 
-def save_snapshot(connection: sqlite3.Connection, database_path: str, category: str) -> Path | None:
+def save_snapshot(connection: sqlite3.Connection, database_path: str, category: str) -> None:
     if database_path == ":memory:":
         return
     path = Path(database_path)
@@ -21,4 +21,3 @@ def save_snapshot(connection: sqlite3.Connection, database_path: str, category: 
             destination.execute("PRAGMA journal_mode=DELETE")
             if destination.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
                 raise ValueError("backup_integrity_failed")
-    return backup
