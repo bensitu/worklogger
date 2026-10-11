@@ -5,6 +5,7 @@ from __future__ import annotations
 from contextlib import closing
 from pathlib import Path
 import os
+import logging
 import sqlite3
 import tempfile
 from uuid import uuid4
@@ -16,6 +17,18 @@ from worklogger.infrastructure.database.connection import SQLiteConnectionFactor
 from worklogger.infrastructure.database.paths import secure_database_files
 from worklogger.infrastructure.database.migrations.runner import MigrationRunner
 from worklogger.infrastructure.database.inspection import validate_database_file
+from worklogger.infrastructure.database.restore_recovery import prune_restore_backups
+
+LOGGER = logging.getLogger(__name__)
+
+
+def _rollback_replacement(previous, target):
+    try:
+        os.replace(previous, target)
+        return True
+    except OSError:
+        LOGGER.error("restore_rollback_failed")
+        return False
 
 class SQLiteBackupService:
     def __init__(self, connection_factory: SQLiteConnectionFactory, *,
@@ -92,6 +105,7 @@ class SQLiteBackupService:
             return Result.failure(ValidationError("restore_memory_database", "restore_memory_database"))
         snapshot = None
         previous = target.with_name(target.name + ".pre_restore")
+        retained = None
         replacement_started = False
         try:
             with self._connection_factory.write_lock:
@@ -124,17 +138,24 @@ class SQLiteBackupService:
                     retained = target.with_name(target.name + ".bak_restore_" + uuid4().hex)
                     os.replace(previous, retained)
                     secure_database_files(retained)
+                    try:
+                        os.utime(retained, None)
+                    except OSError:
+                        LOGGER.warning("restore_backup_timestamp_failed")
         except ValueError as exc:
             if replacement_started and previous.exists():
-                os.replace(previous, target)
+                if not _rollback_replacement(previous, target):
+                    return Result.failure(InfrastructureError("restore_pending", "restore_pending"))
             return Result.failure(ValidationError(str(exc), str(exc)))
         except Exception as exc:
             if replacement_started and previous.exists():
-                os.replace(previous, target)
+                if not _rollback_replacement(previous, target):
+                    return Result.failure(InfrastructureError("restore_pending", "restore_pending"))
             return Result.failure(InfrastructureError("restore_failed", "restore_failed", {"reason": str(exc)}))
         finally:
             if snapshot:
                 _remove_if_exists(snapshot)
+        prune_restore_backups(target, preserve=retained)
         return Result.success(None)
 
     def _validate_restore_source(self, source: Path) -> None:
@@ -172,4 +193,7 @@ def _ensure_integrity(connection: sqlite3.Connection, error_code: str) -> None:
 
 
 def _remove_if_exists(path: Path) -> None:
-    path.unlink(missing_ok=True)
+    try:
+        path.unlink(missing_ok=True)
+    except OSError:
+        LOGGER.warning("database_snapshot_cleanup_failed")

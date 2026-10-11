@@ -38,6 +38,12 @@ msgstr ""
 msgid "+"
 msgstr ""
 
+msgid "A database restore is unfinished. Restart WorkLogger to choose recovery, and preserve the database and its .pre_restore file."
+msgstr ""
+
+msgid "A database restore was interrupted. Choose which database to use. Both copies will be retained. Cancel leaves all files unchanged."
+msgstr ""
+
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr ""
 
@@ -908,6 +914,9 @@ msgstr ""
 msgid "Keep draft"
 msgstr ""
 
+msgid "Keep restored database"
+msgstr ""
+
 msgid "Keep the current draft and open another date?"
 msgstr ""
 
@@ -1484,6 +1493,9 @@ msgstr ""
 msgid "Records"
 msgstr ""
 
+msgid "Recover interrupted restore"
+msgstr ""
+
 msgid "Recovered draft"
 msgstr ""
 
@@ -1605,6 +1617,9 @@ msgid "Rewritten"
 msgstr ""
 
 msgid "Role"
+msgstr ""
+
+msgid "Roll back to previous database"
 msgstr ""
 
 msgid "Runtime context"

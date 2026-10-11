@@ -98,7 +98,12 @@ ID/account ID. It prepares an unpublished copy before replacing the target,
 retains a `.bak_restore_*` copy, and ends the authenticated session.
 
 Preserve a pending `.pre_restore` file and any database journals before recovering
-an interrupted restore. Do not rename/reset a database after a lock, permission,
+an interrupted restore. Startup offers rollback or keeping the restored database
+only when the selected copy validates. Cancel leaves files unchanged. Recovery
+retains the previous copy; rollback also archives a replaced candidate separately.
+The latest three automatically generated `.bak_restore_*` snapshots are retained;
+manual backups and recovery-candidate archives are not rotated by this policy.
+Do not rename/reset a database after a lock, permission,
 or I/O error. Do not copy only the main file while committed data remains in WAL.
 
 Databases and backups are unencrypted. Restrict access and keep independent

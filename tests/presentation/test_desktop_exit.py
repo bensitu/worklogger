@@ -15,6 +15,35 @@ from worklogger.main import DesktopAlreadyRunningError, _acquire_instance_lock, 
 
 
 class DesktopExitTests(unittest.TestCase):
+    def test_pending_restore_choice_recovers_before_retrying_authentication(self):
+        from worklogger.domain.shared.recovery import RestoreRecoveryChoices
+
+        pending = Result.failure(InfrastructureError("restore_pending", "restore_pending"))
+        cancelled = Result.failure(CancellationError("auth_cancelled", "auth_cancelled"))
+        with (patch.dict("os.environ", {"QT_QPA_PLATFORM": "interactive-test"}),
+              patch("worklogger.bootstrap._application"),
+              patch("worklogger.infrastructure.language_preferences.initialize_language"),
+              patch("worklogger.infrastructure.database.restore_recovery.inspect_pending_restore",
+                    return_value=RestoreRecoveryChoices(True, True)),
+              patch("worklogger.presentation.auth.restore_recovery.choose_restore_recovery", return_value="rollback"),
+              patch("worklogger.infrastructure.database.restore_recovery.recover_pending_restore") as recover):
+            self.assertEqual(self.run_with_results(pending, cancelled), (0, "", 2))
+            self.assertEqual(recover.call_args.args[1], "rollback")
+
+    def test_cancelled_restore_recovery_leaves_files_untouched(self):
+        from worklogger.domain.shared.recovery import RestoreRecoveryChoices
+
+        pending = Result.failure(InfrastructureError("restore_pending", "restore_pending"))
+        with (patch.dict("os.environ", {"QT_QPA_PLATFORM": "interactive-test"}),
+              patch("worklogger.bootstrap._application"),
+              patch("worklogger.infrastructure.language_preferences.initialize_language"),
+              patch("worklogger.infrastructure.database.restore_recovery.inspect_pending_restore",
+                    return_value=RestoreRecoveryChoices(True, False)),
+              patch("worklogger.presentation.auth.restore_recovery.choose_restore_recovery", return_value=None),
+              patch("worklogger.infrastructure.database.restore_recovery.recover_pending_restore") as recover):
+            self.assertEqual(self.run_with_results(pending), (0, "", 1))
+            recover.assert_not_called()
+
     def tearDown(self) -> None:
         set_language("en_US")
 

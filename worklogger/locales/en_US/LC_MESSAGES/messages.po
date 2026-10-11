@@ -40,6 +40,12 @@ msgstr "(Week {week})"
 msgid "+"
 msgstr "+"
 
+msgid "A database restore is unfinished. Restart WorkLogger to choose recovery, and preserve the database and its .pre_restore file."
+msgstr "A database restore is unfinished. Restart WorkLogger to choose recovery, and preserve the database and its .pre_restore file."
+
+msgid "A database restore was interrupted. Choose which database to use. Both copies will be retained. Cancel leaves all files unchanged."
+msgstr "A database restore was interrupted. Choose which database to use. Both copies will be retained. Cancel leaves all files unchanged."
+
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr "A privacy-first desktop work tracker with AI-powered reporting."
 
@@ -910,6 +916,9 @@ msgstr "June"
 msgid "Keep draft"
 msgstr "Keep draft"
 
+msgid "Keep restored database"
+msgstr "Keep restored database"
+
 msgid "Keep the current draft and open another date?"
 msgstr "Keep the current draft and open another date?"
 
@@ -1486,6 +1495,9 @@ msgstr "Recording started: {time}"
 msgid "Records"
 msgstr "Records"
 
+msgid "Recover interrupted restore"
+msgstr "Recover interrupted restore"
+
 msgid "Recovered draft"
 msgstr "Recovered draft"
 
@@ -1608,6 +1620,9 @@ msgstr "Rewritten"
 
 msgid "Role"
 msgstr "Role"
+
+msgid "Roll back to previous database"
+msgstr "Roll back to previous database"
 
 msgid "Runtime context"
 msgstr "Runtime context"

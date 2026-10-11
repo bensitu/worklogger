@@ -40,6 +40,12 @@ msgstr "（第{week}周）"
 msgid "+"
 msgstr "+"
 
+msgid "A database restore is unfinished. Restart WorkLogger to choose recovery, and preserve the database and its .pre_restore file."
+msgstr "数据库恢复尚未完成。请重启 WorkLogger 选择恢复方式，并保留数据库及其 .pre_restore 文件。"
+
+msgid "A database restore was interrupted. Choose which database to use. Both copies will be retained. Cancel leaves all files unchanged."
+msgstr "数据库恢复被中断。请选择使用哪个数据库，两份副本都会保留。取消不会更改任何文件。"
+
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr "注重隐私的桌面工时记录工具，支持 AI 报表。"
 
@@ -910,6 +916,9 @@ msgstr "6月"
 msgid "Keep draft"
 msgstr "保留草稿"
 
+msgid "Keep restored database"
+msgstr "保留恢复后的数据库"
+
 msgid "Keep the current draft and open another date?"
 msgstr "保留当前草稿并打开其他日期吗？"
 
@@ -1486,6 +1495,9 @@ msgstr "计时开始于：{time}"
 msgid "Records"
 msgstr "记录数"
 
+msgid "Recover interrupted restore"
+msgstr "处理未完成的恢复"
+
 msgid "Recovered draft"
 msgstr "已恢复草稿"
 
@@ -1608,6 +1620,9 @@ msgstr "已改写"
 
 msgid "Role"
 msgstr "角色"
+
+msgid "Roll back to previous database"
+msgstr "回滚至原数据库"
 
 msgid "Runtime context"
 msgstr "运行上下文"

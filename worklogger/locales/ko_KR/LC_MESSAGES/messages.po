@@ -40,6 +40,12 @@ msgstr "({week}주차)"
 msgid "+"
 msgstr "+"
 
+msgid "A database restore is unfinished. Restart WorkLogger to choose recovery, and preserve the database and its .pre_restore file."
+msgstr "데이터베이스 복원이 완료되지 않았습니다. WorkLogger를 다시 시작해 복구 방법을 선택하고 데이터베이스와 .pre_restore 파일을 보존하세요."
+
+msgid "A database restore was interrupted. Choose which database to use. Both copies will be retained. Cancel leaves all files unchanged."
+msgstr "데이터베이스 복원이 중단되었습니다. 사용할 데이터베이스를 선택하세요. 두 사본은 모두 보존됩니다. 취소하면 파일이 변경되지 않습니다."
+
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr "개인정보 보호를 우선하는 AI 보고서 지원 데스크톱 근무 기록 도구."
 
@@ -910,6 +916,9 @@ msgstr "6월"
 msgid "Keep draft"
 msgstr "초안 유지"
 
+msgid "Keep restored database"
+msgstr "복원된 데이터베이스 유지"
+
 msgid "Keep the current draft and open another date?"
 msgstr "현재 초안을 유지하고 다른 날짜를 열까요?"
 
@@ -1486,6 +1495,9 @@ msgstr "기록 시작: {time}"
 msgid "Records"
 msgstr "기록 수"
 
+msgid "Recover interrupted restore"
+msgstr "중단된 복원 복구"
+
 msgid "Recovered draft"
 msgstr "복구된 초안"
 
@@ -1608,6 +1620,9 @@ msgstr "다시 작성됨"
 
 msgid "Role"
 msgstr "역할"
+
+msgid "Roll back to previous database"
+msgstr "이전 데이터베이스로 되돌리기"
 
 msgid "Runtime context"
 msgstr "실행 컨텍스트"

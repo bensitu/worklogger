@@ -40,6 +40,12 @@ msgstr "（第{week}週）"
 msgid "+"
 msgstr "+"
 
+msgid "A database restore is unfinished. Restart WorkLogger to choose recovery, and preserve the database and its .pre_restore file."
+msgstr "データベースの復元が未完了です。WorkLogger を再起動して復旧方法を選択し、データベースと .pre_restore ファイルを保持してください。"
+
+msgid "A database restore was interrupted. Choose which database to use. Both copies will be retained. Cancel leaves all files unchanged."
+msgstr "データベースの復元が中断されました。使用するデータベースを選択してください。両方のコピーを保持します。キャンセルするとファイルは変更されません。"
+
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr "プライバシーを重視した、AIレポート対応のデスクトップ業務記録アプリ。"
 
@@ -910,6 +916,9 @@ msgstr "6月"
 msgid "Keep draft"
 msgstr "下書きを保持"
 
+msgid "Keep restored database"
+msgstr "復元後のデータベースを使用"
+
 msgid "Keep the current draft and open another date?"
 msgstr "現在の下書きを保持して、別の日付を開きますか？"
 
@@ -1486,6 +1495,9 @@ msgstr "記録開始：{time}"
 msgid "Records"
 msgstr "記録数"
 
+msgid "Recover interrupted restore"
+msgstr "中断された復元の復旧"
+
 msgid "Recovered draft"
 msgstr "復元された下書き"
 
@@ -1608,6 +1620,9 @@ msgstr "書き直しました"
 
 msgid "Role"
 msgstr "権限"
+
+msgid "Roll back to previous database"
+msgstr "元のデータベースに戻す"
 
 msgid "Runtime context"
 msgstr "実行コンテキスト"

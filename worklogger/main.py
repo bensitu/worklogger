@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 import os
+import sqlite3
 import sys
 import tempfile
 from collections.abc import Callable, Sequence
@@ -283,6 +284,28 @@ def _run_desktop(args: Sequence[str]) -> int:
         if not runtime.ok or runtime.value is None:
             if isinstance(runtime.error, CancellationError):
                 return 0
+            if runtime.error is not None and runtime.error.code == "restore_pending":
+                if os.environ.get("QT_QPA_PLATFORM") in {"offscreen", "minimal"}:
+                    _startup_message(display_error_message(runtime.error))
+                    return 1
+                from worklogger.bootstrap import _application
+                from worklogger.infrastructure.language_preferences import LanguagePreferences, initialize_language
+                from worklogger.infrastructure.database.paths import default_database_path
+                from worklogger.infrastructure.database.restore_recovery import inspect_pending_restore, recover_pending_restore
+                from worklogger.presentation.auth.restore_recovery import choose_restore_recovery
+
+                try:
+                    _recovery_application = _application(list(args))
+                    initialize_language(LanguagePreferences())
+                    path = default_database_path()
+                    choice = choose_restore_recovery(inspect_pending_restore(path))
+                    if choice is None:
+                        return 0
+                    recover_pending_restore(path, choice)
+                except (OSError, ValueError, sqlite3.Error):
+                    _startup_message(display_error_message(runtime.error))
+                    return 1
+                continue
             _safe_stdout(_("DESKTOP START FAILED"))
             _startup_message(display_error_message(runtime.error))
             return 1

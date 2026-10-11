@@ -27,6 +27,8 @@ def display_error_code(code: str) -> str:
     """Translate known error codes without displaying raw exception text or logging previews."""
 
     match code:
+        case "restore_pending" | "restore_recovery_unavailable":
+            return _("A database restore is unfinished. Restart WorkLogger to choose recovery, and preserve the database and its .pre_restore file.")
         case "background_image_resolution_low":
             return _("Choose an image with a long edge of at least 1280 pixels and a short edge of at least 720 pixels.")
         case "background_image_too_large" | "background_animation_too_large":
