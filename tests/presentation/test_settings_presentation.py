@@ -35,6 +35,7 @@ from worklogger.domain.auth.models import User
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _, available_languages, get_language, set_language
+from worklogger.infrastructure.calendar.holidays_provider import validate_holiday_region
 from worklogger.presentation.settings import SettingsDialog, SettingsPage
 from worklogger.presentation.settings_capabilities import SettingsCapabilities
 from worklogger.presentation.viewmodels import SettingsViewModel
@@ -67,7 +68,7 @@ def _view_model(repository: MemorySettingsRepository) -> SettingsViewModel:
     return SettingsViewModel(
         user_id=1,
         get_handler=GetSettingHandler(repository),
-        set_handler=SetSettingHandler(repository),
+        set_handler=SetSettingHandler(repository, holiday_region_validator=validate_holiday_region),
     )
 
 

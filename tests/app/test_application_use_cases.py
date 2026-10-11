@@ -273,6 +273,21 @@ class MemoryLoginFailures:
 
 
 class ApplicationUseCaseTests(unittest.TestCase):
+    def test_holiday_region_settings_use_injected_validation_before_storage(self):
+        from functools import partial
+        from worklogger.domain.calendar.regions import validate_holiday_region
+        repository = MemorySettingsRepository()
+        handler = SetSettingHandler(repository, holiday_region_validator=partial(
+            validate_holiday_region, supported={"JP": (), "US": ("CA",)}))
+        self.assertTrue(handler.handle(SetSettingCommand(1, "holiday_region", "us/ca")).ok)
+        self.assertEqual(repository.get(1, "holiday_region"), "US/CA")
+        for command in (SetSettingCommand(1, "holiday_region", "US/INVALID"),
+                        SetSettingCommand(1, "holiday_region", "ZZ")):
+            self.assertEqual(handler.handle(command).error.code, "holiday_region_invalid")
+        self.assertEqual(repository.get(1, "holiday_region"), "US/CA")
+        self.assertFalse(SetSettingHandler(repository).handle(SetSettingCommand(1, "holiday_region", "JP")).ok)
+        self.assertTrue(handler.handle(SetSettingCommand(1, "holiday_region", "")).ok)
+
     def test_settings_reject_missing_values_instead_of_storing_none_as_text(self):
         repository = MemorySettingsRepository()
         result = SetSettingHandler(repository).handle(SetSettingCommand(1, "theme", None))

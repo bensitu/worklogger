@@ -29,6 +29,14 @@ callbacks; workflow controllers coordinate dialogs and jobs. The calendar
 coordinator connects query results to views. The main window owns navigation,
 themes, and lifecycle rather than database algorithms.
 
+`bootstrap.py` prepares the application, database, and authentication boundary.
+`composition/desktop.py` assembles an account-scoped session and its window.
+Composition factories use `build_` names and receive lifecycle dependencies
+explicitly; feature modules must not import bootstrap to obtain services.
+Preference defaults and normalization belong to `domain/settings`, and holiday
+region validation uses an injected catalog rather than loading a provider from
+the view model.
+
 ## Recording and Reporting
 
 Record editors use view-model operations and the `TimeEntryOperations` contract.
@@ -82,8 +90,9 @@ button roles, icons, and fonts. Icon-only actions need tooltips and accessible
 names. Strings use gettext; date labels use presentation helpers.
 
 One shared stylesheet uses semantic colors from an immutable `ColorPalette`.
-Bounded caches reuse palettes and rendered stylesheet strings; Qt widgets and
-mutable `QPalette` instances are not cached. Background-image transparency rules
+Bounded caches reuse resolved colors, stylesheet strings, and Qt palette
+templates. Callers receive independent palette copies; widgets are not cached.
+Background-image transparency rules
 are appended after component styles to preserve their selector priority.
 Ancestor-property changes refresh only the affected widget tree, not the global
 application stylesheet.

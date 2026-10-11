@@ -10,6 +10,7 @@ from typing import Any
 
 from worklogger.config.constants import TZ_COUNTRY
 from worklogger.domain.calendar.models import Holiday
+from worklogger.domain.calendar.regions import validate_holiday_region as validate_region
 
 
 class PythonHolidaysProvider:
@@ -63,14 +64,7 @@ def supported_holiday_regions() -> dict[str, tuple[str, ...]]:
 
 
 def validate_holiday_region(value: str) -> str:
-    cleaned = str(value or "").strip().upper()
-    if not cleaned:
-        return ""
-    country, separator, subdivision = cleaned.partition("/")
-    regions = supported_holiday_regions()
-    if country not in regions or (separator and subdivision not in regions[country]):
-        raise ValueError("holiday_region_invalid")
-    return cleaned
+    return validate_region(value, supported_holiday_regions())
 
 
 def detect_country(default: str = "") -> str:

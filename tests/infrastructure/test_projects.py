@@ -20,7 +20,7 @@ from worklogger.infrastructure.export.worklog_csv import WorkLogCsvExporter
 from worklogger.infrastructure.export.worklog_csv_import import WorkLogCsvImporter
 from worklogger.app.use_cases.data_portability import ImportWorkLogsCsvHandler
 from worklogger.app.commands.data_portability_commands import ImportWorkLogsCsvCommand
-from worklogger.app.use_cases.reports import _template_values
+from worklogger.app.use_cases.report_generation import _template_values
 
 
 class ProjectTests(unittest.TestCase):

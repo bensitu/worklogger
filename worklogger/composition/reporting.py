@@ -7,23 +7,23 @@ from worklogger.app.use_cases.analytics import (
     GetAnalyticsDashboardHandler,
 )
 from worklogger.app.use_cases.notes import DailyNotesService
-from worklogger.app.use_cases.timesheets import ExportTimesheetHandler
 from worklogger.app.use_cases.project_analytics import ProjectAnalyticsHandler
-from worklogger.infrastructure.export.timesheets import TimesheetXlsxExporter, TimesheetPdfExporter
 from worklogger.app.use_cases.reports import (
     DeleteReportHandler,
     GenerateReportHandler,
     GetReportForPeriodHandler,
     ListReportsHandler,
-    SaveReportHandler,
     ReportRevisionService,
+    SaveReportHandler,
 )
+from worklogger.app.use_cases.timesheets import ExportTimesheetHandler
 from worklogger.composition.context import RuntimeHandlers, RuntimeRepositories
 from worklogger.domain.auth.models import User
 from worklogger.infrastructure.export import (
     AnalyticsCsvExporter,
     AnalyticsPdfExporter,
 )
+from worklogger.infrastructure.export.timesheets import TimesheetPdfExporter, TimesheetXlsxExporter
 from worklogger.infrastructure.i18n import _, get_language
 from worklogger.presentation.analytics import AnalyticsWorkflowController
 from worklogger.presentation.notes import NotesWorkflowController
@@ -35,7 +35,7 @@ from worklogger.presentation.viewmodels import (
 )
 
 
-def _build_analytics_workflow(
+def build_analytics_workflow(
     user: User,
     repositories: RuntimeRepositories,
 ) -> AnalyticsWorkflowController:
@@ -53,7 +53,7 @@ def _build_analytics_workflow(
     )
 
 
-def _build_notes_workflow(
+def build_notes_workflow(
     user: User,
     repositories: RuntimeRepositories,
     handlers: RuntimeHandlers,
@@ -75,7 +75,7 @@ def _build_notes_workflow(
     )
 
 
-def _build_reports_workflow(
+def build_reports_workflow(
     user: User,
     repositories: RuntimeRepositories,
     handlers: RuntimeHandlers,

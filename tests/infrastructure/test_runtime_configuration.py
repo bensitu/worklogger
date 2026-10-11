@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from worklogger.bootstrap import _window_config_for_user
+from worklogger.composition.desktop import _window_config_for_user
 from worklogger.domain.auth.models import User
 from worklogger.infrastructure.runtime_config import (
     CONFIG_FILENAME,

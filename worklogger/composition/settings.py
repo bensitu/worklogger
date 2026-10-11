@@ -23,21 +23,20 @@ from worklogger.app.use_cases.identity import (
     ListLinkedIdentitiesHandler,
     UnlinkIdentityHandler,
 )
+from worklogger.app.use_cases.projects import ProjectService
 from worklogger.app.use_cases.updates import CheckForUpdatesHandler
+from worklogger.app.use_cases.user_profile import UserProfileService
 from worklogger.app.use_cases.work_logs import (
     GetAllWorkLogsHandler,
 )
 from worklogger.app.use_cases.work_types import WorkTypeService
-from worklogger.app.use_cases.projects import ProjectService
-from worklogger.presentation.viewmodels.projects import ProjectManagerViewModel
-from worklogger.app.use_cases.user_profile import UserProfileService
-from worklogger.presentation.viewmodels.work_types import WorkTypeManagerViewModel
 from worklogger.composition.context import (
     RuntimeAuthRepository,
     RuntimeHandlers,
     RuntimeRepositories,
 )
-from worklogger.composition.models import _build_local_models_workflow
+from worklogger.composition.identity import identity_providers
+from worklogger.composition.models import build_local_models_workflow
 from worklogger.config.constants import (
     GITHUB_LATEST_RELEASE_API_URL,
 )
@@ -56,14 +55,14 @@ from worklogger.infrastructure.export import (
     WorkLogIcsExporter,
 )
 from worklogger.infrastructure.i18n import get_language
-from worklogger.composition.identity import identity_providers
 from worklogger.infrastructure.identity.config import IdentityConfigurationStore
-from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
 from worklogger.infrastructure.runtime_config import load_runtime_configuration
 from worklogger.infrastructure.security.account_credentials import cleanup_account_credentials
+from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
 from worklogger.presentation.auth.controller import RememberSessionStore
 from worklogger.presentation.identity import IdentityWorkflowController
 from worklogger.presentation.settings import SettingsWorkflowController
+from worklogger.presentation.settings_capabilities import SettingsCapabilities
 from worklogger.presentation.viewmodels import (
     AuthViewModel,
     DataManagementViewModel,
@@ -71,10 +70,11 @@ from worklogger.presentation.viewmodels import (
     SettingsViewModel,
     UserManagementViewModel,
 )
-from worklogger.presentation.settings_capabilities import SettingsCapabilities
+from worklogger.presentation.viewmodels.projects import ProjectManagerViewModel
+from worklogger.presentation.viewmodels.work_types import WorkTypeManagerViewModel
 
 
-def _build_settings_workflow(
+def build_settings_workflow(
     *,
     user: User,
     database_path: Path,
@@ -118,7 +118,7 @@ def _build_settings_workflow(
         job_runner=job_runner,
         identity_workflow=_build_identity_workflow(user, repositories, auth_repository, job_runner=job_runner,
             opener=handlers.network_transport.opener(public_only=True, allow_redirects=False) if handlers.network_transport else None),
-        local_models_workflow=_build_local_models_workflow(
+        local_models_workflow=build_local_models_workflow(
             user=user,
             database_path=database_path,
             repositories=repositories,

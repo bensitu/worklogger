@@ -2,35 +2,35 @@
 
 from __future__ import annotations
 
+import base64
+import math
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-import math
-import base64
-from worklogger.config.constants import PROFILE_AVATAR_SETTING_KEY
 from typing import Protocol
 
 from worklogger.app.commands.settings_commands import SetSettingCommand
 from worklogger.app.queries.settings_queries import GetSettingQuery
+from worklogger.app.use_cases.settings import ProxyPasswordSettings
 from worklogger.config.constants import (
     AI_ASSIST_ENABLED_SETTING_KEY,
     AI_PRIVACY_INCLUDE_CALENDAR_SETTING_KEY,
     AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY,
     AI_PRIVACY_INCLUDE_QUICK_LOGS_SETTING_KEY,
+    CONTINUOUS_TIMER_REMINDER_HOURS_SETTING_KEY,
     CUSTOM_THEME_COLOR_SETTING_KEY,
     DARK_MODE_SETTING_KEY,
     DEFAULT_BREAK_HOURS_SETTING_KEY,
-    TIMER_REMINDER_HOURS_SETTING_KEY,
-    CONTINUOUS_TIMER_REMINDER_HOURS_SETTING_KEY,
     ENABLE_MENU_BAR_SETTING_KEY,
     ENABLE_TRAY_SETTING_KEY,
     EXTERNAL_MODEL_BASE_URL_SETTING_KEY,
-    EXTERNAL_MODEL_NAME_SETTING_KEY,
     EXTERNAL_MODEL_ENABLED_SETTING_KEY,
+    EXTERNAL_MODEL_NAME_SETTING_KEY,
+    HOLIDAY_REGION_SETTING_KEY,
     LANGUAGE_SETTING_KEY,
     LAST_BACKUP_AT_SETTING_KEY,
-    LOCAL_MODEL_ENABLED_SETTING_KEY,
     LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY,
+    LOCAL_MODEL_ENABLED_SETTING_KEY,
     MINIMAL_MODE_SETTING_KEY,
     MONTHLY_TARGET_HOURS_SETTING_KEY,
     NETWORK_PROXY_ADDRESS_SETTING_KEY,
@@ -39,25 +39,35 @@ from worklogger.config.constants import (
     NETWORK_PROXY_PASSWORD_SETTING_KEY,
     NETWORK_PROXY_PORT_SETTING_KEY,
     NETWORK_PROXY_USERNAME_SETTING_KEY,
+    PROFILE_AVATAR_SETTING_KEY,
     SHOW_HOLIDAYS_SETTING_KEY,
-    HOLIDAY_REGION_SETTING_KEY,
     SHOW_NOTE_MARKERS_SETTING_KEY,
     SHOW_OVERNIGHT_INDICATOR_SETTING_KEY,
     SHOW_RECENT_CONTEXT_SETTING_KEY,
     STANDARD_WORK_HOURS_SETTING_KEY,
     THEME_SETTING_KEY,
+    TIMER_REMINDER_HOURS_SETTING_KEY,
     WEEK_START_MONDAY_SETTING_KEY,
 )
-from worklogger.domain.shared.errors import InfrastructureError, ValidationError
-from worklogger.domain.shared.result import Result
-from worklogger.app.use_cases.settings import ProxyPasswordSettings
-from worklogger.domain.shared.languages import normalize_language
-from worklogger.infrastructure.calendar.holidays_provider import validate_holiday_region
-from worklogger.domain.settings.appearance import DEFAULT_CUSTOM_COLOR, normalize_hex_color, normalize_theme
-from worklogger.domain.settings.values import setting_bool as _bool
 from worklogger.domain.local_model.preferences import (
-    DEFAULT_RUNTIME_CONTEXT_TOKENS, normalize_runtime_context, runtime_context_preference,
+    DEFAULT_RUNTIME_CONTEXT_TOKENS,
+    normalize_runtime_context,
+    runtime_context_preference,
 )
+from worklogger.domain.settings.appearance import normalize_hex_color, normalize_theme
+from worklogger.domain.settings.preferences import (
+    BOOLEAN_SETTING_KEYS,
+    NUMERIC_SETTING_LIMITS,
+    SETTINGS_DEFAULTS,
+    TEXT_SETTING_KEYS,
+    bounded_number,
+    format_setting_number,
+    normalize_proxy_port,
+)
+from worklogger.domain.settings.values import setting_bool, setting_text
+from worklogger.domain.shared.errors import InfrastructureError, ValidationError
+from worklogger.domain.shared.languages import normalize_language
+from worklogger.domain.shared.result import Result
 
 
 class SettingsGetHandler(Protocol):
@@ -149,11 +159,11 @@ class SettingsViewModel:
         values: dict[str, str | None] = {}
         batch = None
         if getattr(type(self._get_handler), "get_many", None) is not None:
-            result = self._get_handler.get_many(self._user_id, tuple(_DEFAULTS))
+            result = self._get_handler.get_many(self._user_id, tuple(SETTINGS_DEFAULTS))
             if not result.ok:
                 return Result.failure(result.error)
             batch = result.value
-        for key, default in _DEFAULTS.items():
+        for key, default in SETTINGS_DEFAULTS.items():
             if key == LANGUAGE_SETTING_KEY:
                 default = self._default_language
             if key == NETWORK_PROXY_PASSWORD_SETTING_KEY:
@@ -173,80 +183,80 @@ class SettingsViewModel:
             SettingsState(
                 theme=normalize_theme(values[THEME_SETTING_KEY]),
                 custom_color=normalize_hex_color(values[CUSTOM_THEME_COLOR_SETTING_KEY]),
-                dark_mode=_bool(values[DARK_MODE_SETTING_KEY], False),
+                dark_mode=setting_bool(values[DARK_MODE_SETTING_KEY], False),
                 language=normalize_language(values[LANGUAGE_SETTING_KEY]),
-                ai_assist_enabled=_bool(values[AI_ASSIST_ENABLED_SETTING_KEY], True),
-                ai_privacy_include_notes=_bool(
+                ai_assist_enabled=setting_bool(values[AI_ASSIST_ENABLED_SETTING_KEY], True),
+                ai_privacy_include_notes=setting_bool(
                     values[AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY],
                     True,
                 ),
-                ai_privacy_include_calendar=_bool(
+                ai_privacy_include_calendar=setting_bool(
                     values[AI_PRIVACY_INCLUDE_CALENDAR_SETTING_KEY],
                     True,
                 ),
-                ai_privacy_include_quick_logs=_bool(
+                ai_privacy_include_quick_logs=setting_bool(
                     values[AI_PRIVACY_INCLUDE_QUICK_LOGS_SETTING_KEY],
                     True,
                 ),
-                external_model_base_url=_text(
+                external_model_base_url=setting_text(
                     values[EXTERNAL_MODEL_BASE_URL_SETTING_KEY],
                     "",
                 ),
-                external_model_name=_text(
+                external_model_name=setting_text(
                     values[EXTERNAL_MODEL_NAME_SETTING_KEY],
                     "",
                 ),
-                external_model_enabled=_bool(values[EXTERNAL_MODEL_ENABLED_SETTING_KEY], False),
-                minimal_mode=_bool(values[MINIMAL_MODE_SETTING_KEY], False),
-                local_model_enabled=_bool(values[LOCAL_MODEL_ENABLED_SETTING_KEY], True),
+                external_model_enabled=setting_bool(values[EXTERNAL_MODEL_ENABLED_SETTING_KEY], False),
+                minimal_mode=setting_bool(values[MINIMAL_MODE_SETTING_KEY], False),
+                local_model_enabled=setting_bool(values[LOCAL_MODEL_ENABLED_SETTING_KEY], True),
                 local_model_context_tokens=runtime_context_preference(values[LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY]),
-                timer_reminder_hours=_number(values[TIMER_REMINDER_HOURS_SETTING_KEY], 10.0, minimum=0.0, maximum=16.0),
-                continuous_timer_reminder_hours=_number(values[CONTINUOUS_TIMER_REMINDER_HOURS_SETTING_KEY], 0.0, minimum=0.0, maximum=16.0),
-                standard_work_hours=_number(
+                timer_reminder_hours=bounded_number(values[TIMER_REMINDER_HOURS_SETTING_KEY], 10.0, minimum=0.0, maximum=16.0),
+                continuous_timer_reminder_hours=bounded_number(values[CONTINUOUS_TIMER_REMINDER_HOURS_SETTING_KEY], 0.0, minimum=0.0, maximum=16.0),
+                standard_work_hours=bounded_number(
                     values[STANDARD_WORK_HOURS_SETTING_KEY],
                     8.0,
                     minimum=1.0,
                     maximum=24.0,
                 ),
-                default_break_hours=_number(
+                default_break_hours=bounded_number(
                     values[DEFAULT_BREAK_HOURS_SETTING_KEY],
                     1.0,
                     minimum=0.0,
                     maximum=4.0,
                 ),
-                monthly_target_hours=_number(
+                monthly_target_hours=bounded_number(
                     values[MONTHLY_TARGET_HOURS_SETTING_KEY],
                     168.0,
                     minimum=0.0,
                     maximum=400.0,
                 ),
-                show_holidays=_bool(values[SHOW_HOLIDAYS_SETTING_KEY], True),
-                show_note_markers=_bool(values[SHOW_NOTE_MARKERS_SETTING_KEY], True),
-                show_recent_context=_bool(values[SHOW_RECENT_CONTEXT_SETTING_KEY], True),
-                show_overnight_indicator=_bool(
+                show_holidays=setting_bool(values[SHOW_HOLIDAYS_SETTING_KEY], True),
+                show_note_markers=setting_bool(values[SHOW_NOTE_MARKERS_SETTING_KEY], True),
+                show_recent_context=setting_bool(values[SHOW_RECENT_CONTEXT_SETTING_KEY], True),
+                show_overnight_indicator=setting_bool(
                     values[SHOW_OVERNIGHT_INDICATOR_SETTING_KEY],
                     True,
                 ),
-                week_start_monday=_bool(values[WEEK_START_MONDAY_SETTING_KEY], False),
-                enable_tray=_bool(values[ENABLE_TRAY_SETTING_KEY], False),
-                enable_menu_bar=_bool(values[ENABLE_MENU_BAR_SETTING_KEY], False),
-                network_proxy_enabled=_bool(
+                week_start_monday=setting_bool(values[WEEK_START_MONDAY_SETTING_KEY], False),
+                enable_tray=setting_bool(values[ENABLE_TRAY_SETTING_KEY], False),
+                enable_menu_bar=setting_bool(values[ENABLE_MENU_BAR_SETTING_KEY], False),
+                network_proxy_enabled=setting_bool(
                     values[NETWORK_PROXY_ENABLED_SETTING_KEY],
                     False,
                 ),
-                network_proxy_address=_text(values[NETWORK_PROXY_ADDRESS_SETTING_KEY], ""),
-                network_proxy_port=_text(values[NETWORK_PROXY_PORT_SETTING_KEY], "0"),
-                network_proxy_username=_text(values[NETWORK_PROXY_USERNAME_SETTING_KEY], ""),
+                network_proxy_address=setting_text(values[NETWORK_PROXY_ADDRESS_SETTING_KEY], ""),
+                network_proxy_port=setting_text(values[NETWORK_PROXY_PORT_SETTING_KEY], "0"),
+                network_proxy_username=setting_text(values[NETWORK_PROXY_USERNAME_SETTING_KEY], ""),
                 network_proxy_password=str(password.value or "") if password is not None and password.ok else "",
-                network_proxy_domain=_text(values[NETWORK_PROXY_DOMAIN_SETTING_KEY], ""),
+                network_proxy_domain=setting_text(values[NETWORK_PROXY_DOMAIN_SETTING_KEY], ""),
                 proxy_password_available=_can_replace_credential(password),
                 external_api_key=str(api_key.value or "") if api_key is not None and api_key.ok else "",
                 external_api_key_available=_can_replace_credential(api_key),
                 external_api_key_error=api_key.error.code if api_key is not None and api_key.error else "",
                 proxy_password_error=password.error.code if password is not None and password.error else "",
-                last_backup_at=_text(values[LAST_BACKUP_AT_SETTING_KEY], ""),
-                holiday_region=_text(values[HOLIDAY_REGION_SETTING_KEY], ""),
-                profile_avatar_png=_text(values[PROFILE_AVATAR_SETTING_KEY], ""),
+                last_backup_at=setting_text(values[LAST_BACKUP_AT_SETTING_KEY], ""),
+                holiday_region=setting_text(values[HOLIDAY_REGION_SETTING_KEY], ""),
+                profile_avatar_png=setting_text(values[PROFILE_AVATAR_SETTING_KEY], ""),
             )
         )
 
@@ -291,7 +301,7 @@ class SettingsViewModel:
         return result
 
     def set_bool(self, key: str, enabled: bool) -> Result[None]:
-        if key not in _BOOLEAN_KEYS:
+        if key not in BOOLEAN_SETTING_KEYS:
             return Result.failure(ValidationError("unknown_boolean_setting", "unknown_boolean_setting"))
         return self._set(key, "1" if enabled else "0")
 
@@ -301,20 +311,20 @@ class SettingsViewModel:
                 return self._set(key, str(normalize_runtime_context(value)))
             except ValueError as exc:
                 return Result.failure(ValidationError(str(exc), str(exc)))
-        limits = _NUMBER_LIMITS.get(key)
+        limits = NUMERIC_SETTING_LIMITS.get(key)
         if limits is None:
             return Result.failure(ValidationError("unknown_numeric_setting", "unknown_numeric_setting"))
         minimum, maximum = limits
         try:
             if not math.isfinite(float(value)):
                 raise ValueError("invalid_numeric_setting")
-            numeric = _number(str(value), value, minimum=minimum, maximum=maximum)
+            numeric = bounded_number(str(value), value, minimum=minimum, maximum=maximum)
         except (ValueError, TypeError):
             return Result.failure(ValidationError("invalid_numeric_setting", "invalid_numeric_setting"))
-        return self._set(key, _format_number(numeric))
+        return self._set(key, format_setting_number(numeric))
 
     def set_text(self, key: str, value: str) -> Result[None]:
-        if key not in _TEXT_KEYS:
+        if key not in TEXT_SETTING_KEYS:
             return Result.failure(ValidationError("unknown_text_setting", "unknown_text_setting"))
         if key == NETWORK_PROXY_PASSWORD_SETTING_KEY:
             if self._proxy_password_settings is None:
@@ -324,14 +334,9 @@ class SettingsViewModel:
                 self._cached_password = Result.success(str(value or ""))
             return result
         cleaned = str(value or "").strip()
-        if key == HOLIDAY_REGION_SETTING_KEY:
-            try:
-                cleaned = validate_holiday_region(cleaned)
-            except ValueError:
-                return Result.failure(ValidationError("holiday_region_invalid", "holiday_region_invalid"))
         if key == NETWORK_PROXY_PORT_SETTING_KEY:
             try:
-                cleaned = _proxy_port(cleaned)
+                cleaned = normalize_proxy_port(cleaned)
             except ValueError:
                 return Result.failure(ValidationError("invalid_proxy_port", "invalid_proxy_port"))
         return self._set(key, cleaned)
@@ -357,122 +362,6 @@ class SettingsViewModel:
         return Result.success(None)
 
 
-_DEFAULTS = {
-    PROFILE_AVATAR_SETTING_KEY: "",
-    THEME_SETTING_KEY: "blue",
-    CUSTOM_THEME_COLOR_SETTING_KEY: DEFAULT_CUSTOM_COLOR,
-    DARK_MODE_SETTING_KEY: "0",
-    LANGUAGE_SETTING_KEY: "en_US",
-    AI_ASSIST_ENABLED_SETTING_KEY: "1",
-    AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY: "1",
-    AI_PRIVACY_INCLUDE_CALENDAR_SETTING_KEY: "1",
-    AI_PRIVACY_INCLUDE_QUICK_LOGS_SETTING_KEY: "1",
-    EXTERNAL_MODEL_BASE_URL_SETTING_KEY: "",
-    EXTERNAL_MODEL_NAME_SETTING_KEY: "",
-    EXTERNAL_MODEL_ENABLED_SETTING_KEY: "0",
-    MINIMAL_MODE_SETTING_KEY: "0",
-    LOCAL_MODEL_ENABLED_SETTING_KEY: "1",
-    LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY: str(DEFAULT_RUNTIME_CONTEXT_TOKENS),
-    STANDARD_WORK_HOURS_SETTING_KEY: "8.0",
-    DEFAULT_BREAK_HOURS_SETTING_KEY: "1.0",
-    TIMER_REMINDER_HOURS_SETTING_KEY: "10.0",
-    CONTINUOUS_TIMER_REMINDER_HOURS_SETTING_KEY: "0.0",
-    MONTHLY_TARGET_HOURS_SETTING_KEY: "168.0",
-    SHOW_HOLIDAYS_SETTING_KEY: "1",
-    HOLIDAY_REGION_SETTING_KEY: "",
-    SHOW_NOTE_MARKERS_SETTING_KEY: "1",
-    SHOW_OVERNIGHT_INDICATOR_SETTING_KEY: "1",
-    SHOW_RECENT_CONTEXT_SETTING_KEY: "1",
-    WEEK_START_MONDAY_SETTING_KEY: "0",
-    ENABLE_TRAY_SETTING_KEY: "0",
-    ENABLE_MENU_BAR_SETTING_KEY: "0",
-    NETWORK_PROXY_ENABLED_SETTING_KEY: "0",
-    NETWORK_PROXY_ADDRESS_SETTING_KEY: "",
-    NETWORK_PROXY_PORT_SETTING_KEY: "0",
-    NETWORK_PROXY_USERNAME_SETTING_KEY: "",
-    NETWORK_PROXY_PASSWORD_SETTING_KEY: "",
-    NETWORK_PROXY_DOMAIN_SETTING_KEY: "",
-    LAST_BACKUP_AT_SETTING_KEY: "",
-}
-
-
 def _can_replace_credential(result):
     return bool(result is not None and (result.ok or result.error.code in {
         "secret_authentication_failed", "secret_key_missing", "secret_key_invalid", "credential_reentry_required"}))
-
-_BOOLEAN_KEYS = frozenset(
-    {
-        EXTERNAL_MODEL_ENABLED_SETTING_KEY,
-        DARK_MODE_SETTING_KEY,
-        AI_ASSIST_ENABLED_SETTING_KEY,
-        AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY,
-        AI_PRIVACY_INCLUDE_CALENDAR_SETTING_KEY,
-        AI_PRIVACY_INCLUDE_QUICK_LOGS_SETTING_KEY,
-        MINIMAL_MODE_SETTING_KEY,
-        LOCAL_MODEL_ENABLED_SETTING_KEY,
-        SHOW_HOLIDAYS_SETTING_KEY,
-        SHOW_NOTE_MARKERS_SETTING_KEY,
-        SHOW_OVERNIGHT_INDICATOR_SETTING_KEY,
-        SHOW_RECENT_CONTEXT_SETTING_KEY,
-        WEEK_START_MONDAY_SETTING_KEY,
-        ENABLE_TRAY_SETTING_KEY,
-        ENABLE_MENU_BAR_SETTING_KEY,
-        NETWORK_PROXY_ENABLED_SETTING_KEY,
-    }
-)
-
-_TEXT_KEYS = frozenset(
-    {
-        HOLIDAY_REGION_SETTING_KEY,
-        EXTERNAL_MODEL_BASE_URL_SETTING_KEY,
-        EXTERNAL_MODEL_NAME_SETTING_KEY,
-        NETWORK_PROXY_ADDRESS_SETTING_KEY,
-        NETWORK_PROXY_PORT_SETTING_KEY,
-        NETWORK_PROXY_USERNAME_SETTING_KEY,
-        NETWORK_PROXY_PASSWORD_SETTING_KEY,
-        NETWORK_PROXY_DOMAIN_SETTING_KEY,
-    }
-)
-
-_NUMBER_LIMITS = {
-    TIMER_REMINDER_HOURS_SETTING_KEY: (0.0, 16.0),
-    CONTINUOUS_TIMER_REMINDER_HOURS_SETTING_KEY: (0.0, 16.0),
-    STANDARD_WORK_HOURS_SETTING_KEY: (1.0, 24.0),
-    DEFAULT_BREAK_HOURS_SETTING_KEY: (0.0, 4.0),
-    MONTHLY_TARGET_HOURS_SETTING_KEY: (0.0, 400.0),
-}
-
-
-def _number(
-    value: str | None,
-    default: float,
-    *,
-    minimum: float,
-    maximum: float,
-) -> float:
-    try:
-        numeric = float(str(value))
-    except (TypeError, ValueError):
-        numeric = default
-    if not math.isfinite(numeric):
-        numeric = default
-    return max(minimum, min(maximum, numeric))
-
-
-def _text(value: str | None, default: str) -> str:
-    text = str(value if value is not None else default).strip()
-    return text
-
-
-def _format_number(value: float) -> str:
-    return f"{float(value):.2f}".rstrip("0").rstrip(".")
-
-
-def _proxy_port(value: str) -> str:
-    try:
-        port = int(str(value).strip())
-    except (TypeError, ValueError):
-        raise ValueError("invalid_proxy_port") from None
-    if not 0 <= port <= 65535:
-        raise ValueError("invalid_proxy_port")
-    return str(port)

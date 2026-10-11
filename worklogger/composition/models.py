@@ -27,7 +27,7 @@ from worklogger.presentation.viewmodels import (
 )
 
 
-def _build_local_models_workflow(
+def build_local_models_workflow(
     *,
     user: User,
     database_path: Path,

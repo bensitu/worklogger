@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Protocol
 
 from worklogger.app.commands.settings_commands import (
@@ -10,11 +11,15 @@ from worklogger.app.commands.settings_commands import (
 )
 from worklogger.app.event_bus import EventBus, SettingsChanged
 from worklogger.app.queries.settings_queries import GetSettingQuery
-from worklogger.config.constants import LOCAL_MODEL_ACTIVE_ID_SETTING_KEY, NETWORK_PROXY_PASSWORD_SETTING_KEY
+from worklogger.app.use_cases._errors import storage_boundary
+from worklogger.config.constants import (
+    HOLIDAY_REGION_SETTING_KEY,
+    LOCAL_MODEL_ACTIVE_ID_SETTING_KEY,
+    NETWORK_PROXY_PASSWORD_SETTING_KEY,
+)
 from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
-from worklogger.app.use_cases._errors import storage_boundary
 
 
 class CredentialStore(Protocol):
@@ -89,9 +94,12 @@ class SetSettingHandler:
         self,
         repository: SettingsRepository,
         event_bus: EventBus | None = None,
+        *,
+        holiday_region_validator: Callable[[str], str] | None = None,
     ) -> None:
         self._repository = repository
         self._event_bus = event_bus
+        self._holiday_region_validator = holiday_region_validator
 
     def handle(self, command: SetSettingCommand) -> Result[None]:
         try:
@@ -99,6 +107,13 @@ class SetSettingHandler:
             if command.value is None:
                 raise ValueError("setting_value_invalid")
             value = str(command.value)
+            if key == HOLIDAY_REGION_SETTING_KEY:
+                if not value.strip():
+                    value = ""
+                elif self._holiday_region_validator is None:
+                    raise ValueError("holiday_region_invalid")
+                else:
+                    value = self._holiday_region_validator(value)
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
         try:

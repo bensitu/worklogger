@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Protocol
 
 from worklogger.app.use_cases.ai import (
@@ -13,22 +15,28 @@ from worklogger.app.use_cases.reports import (
     ResetReportTemplateHandler,
     SaveReportTemplateHandler,
 )
-from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandler
+from worklogger.app.use_cases.settings import GetSettingHandler, ProxyPasswordSettings, SetSettingHandler
 from worklogger.app.use_cases.work_logs import (
     GetMonthRecordsHandler,
 )
+from worklogger.config.feature_flags import FeatureFlags
 from worklogger.domain.auth.models import User
-from worklogger.domain.auth.repositories import AuthCredentialRepository
-from worklogger.domain.auth.repositories import UserProfileRepository
+from worklogger.domain.auth.repositories import AuthCredentialRepository, UserProfileRepository
+from worklogger.infrastructure.ai.account import AccountAIGateway
+from worklogger.infrastructure.ai.runtime import LocalInferenceRuntime
 from worklogger.infrastructure.calendar import (
     PythonHolidaysProvider,
 )
+from worklogger.infrastructure.calendar.holidays_provider import validate_holiday_region
 from worklogger.infrastructure.database import (
     SQLiteConnectionFactory,
 )
 from worklogger.infrastructure.export import (
     MarkdownExporter,
 )
+from worklogger.infrastructure.local_model import JsonLocalModelStore, bundled_model_catalog_path
+from worklogger.infrastructure.local_model.store import HttpRangeDownloader
+from worklogger.infrastructure.network import AccountHTTPTransport
 from worklogger.infrastructure.repositories import (
     SQLiteCalendarEventRepository,
     SQLiteDailyNoteRepository,
@@ -39,26 +47,21 @@ from worklogger.infrastructure.repositories import (
     SQLiteSettingsRepository,
     SQLiteWorkLogRepository,
 )
+from worklogger.infrastructure.repositories.background_sqlite import SQLiteBackgroundRepository
+from worklogger.infrastructure.repositories.project_sqlite import SQLiteProjectRepository
 from worklogger.infrastructure.repositories.work_type_sqlite import (
     SQLiteWorkTypeRepository,
+)
+from worklogger.infrastructure.security.account_credentials import account_credential_namespaces
+from worklogger.infrastructure.security.key_store import (
+    EncryptedSettingsKeyStore,
+    FernetSecretBox,
+    SystemCredentialStore,
 )
 from worklogger.infrastructure.templates import (
     BuiltInTemplateProvider,
     UserTemplateProvider,
 )
-from worklogger.infrastructure.ai.runtime import LocalInferenceRuntime
-from worklogger.infrastructure.local_model import JsonLocalModelStore, bundled_model_catalog_path
-from worklogger.config.feature_flags import FeatureFlags
-from pathlib import Path
-import os
-from worklogger.app.use_cases.settings import ProxyPasswordSettings
-from worklogger.infrastructure.network import AccountHTTPTransport
-from worklogger.infrastructure.ai.account import AccountAIGateway
-from worklogger.infrastructure.repositories.project_sqlite import SQLiteProjectRepository
-from worklogger.infrastructure.repositories.background_sqlite import SQLiteBackgroundRepository
-from worklogger.infrastructure.security.key_store import EncryptedSettingsKeyStore, SystemCredentialStore, FernetSecretBox
-from worklogger.infrastructure.security.account_credentials import account_credential_namespaces
-from worklogger.infrastructure.local_model.store import HttpRangeDownloader
 
 
 class RuntimeAuthRepository(AuthCredentialRepository, UserProfileRepository, Protocol):
@@ -101,7 +104,7 @@ class RuntimeHandlers:
     user_profiles: UserProfileRepository | None = None
 
 
-def _runtime_repositories(
+def build_runtime_repositories(
     connection_factory: SQLiteConnectionFactory,
 ) -> RuntimeRepositories:
     return RuntimeRepositories(
@@ -119,7 +122,7 @@ def _runtime_repositories(
     )
 
 
-def _runtime_handlers(
+def build_runtime_handlers(
     repositories: RuntimeRepositories, *, holiday_country: str, user_id=None, database_path=None,
     user_profiles: UserProfileRepository | None = None,
 ) -> RuntimeHandlers:
@@ -153,7 +156,7 @@ def _runtime_handlers(
             repositories.report_templates
         ),
         settings_get_handler=GetSettingHandler(repositories.settings),
-        settings_set_handler=SetSettingHandler(repositories.settings),
+        settings_set_handler=SetSettingHandler(repositories.settings, holiday_region_validator=validate_holiday_region),
         month_records_handler=GetMonthRecordsHandler(repositories.work_logs),
         holiday_provider=PythonHolidaysProvider(),
         holiday_country=holiday_country,
