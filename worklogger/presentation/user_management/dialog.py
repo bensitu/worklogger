@@ -160,10 +160,10 @@ class UserManagementDialog(QDialog):
         body.setSpacing(20)
         users = QVBoxLayout()
         toolbar = QHBoxLayout()
-        toolbar.addWidget(QLabel(_("Manage users")), 1)
         self.new_user_button = QPushButton(_("Create user"))
         set_button_icon(self.new_user_button, "plus")
         toolbar.addWidget(self.new_user_button)
+        toolbar.addStretch(1)
         users.addLayout(toolbar)
 
         self.user_table = QTableWidget(0, 4)
