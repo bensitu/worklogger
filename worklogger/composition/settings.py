@@ -59,6 +59,7 @@ from worklogger.infrastructure.i18n import get_language
 from worklogger.composition.identity import identity_providers
 from worklogger.infrastructure.identity.config import IdentityConfigurationStore
 from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
+from worklogger.infrastructure.runtime_config import load_runtime_configuration
 from worklogger.presentation.auth.controller import RememberSessionStore
 from worklogger.presentation.identity import IdentityWorkflowController
 from worklogger.presentation.settings import SettingsWorkflowController
@@ -136,7 +137,8 @@ def _build_settings_workflow(
         local_inference=handlers.local_inference,
         ai_gateway=handlers.ai_gateway,
         capabilities=SettingsCapabilities(external_generation=features.enable_ai,
-            proxy_routing=handlers.network_transport is not None, model_management=features.enable_local_models),
+            proxy_routing=handlers.network_transport is not None, model_management=features.enable_local_models,
+            minimal_view=load_runtime_configuration().features.minimal_view),
     )
 
 

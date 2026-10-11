@@ -124,6 +124,8 @@ class SettingsSectionState:
             self.set_state(self._state)
 
     def _apply_capabilities(self) -> None:
+        self.minimal_view_row.setVisible(self._capabilities.minimal_view)
+        self.minimal_switch.setEnabled(self._capabilities.minimal_view)
         available = (
             self._capabilities.external_generation
             or self._capabilities.local_generation

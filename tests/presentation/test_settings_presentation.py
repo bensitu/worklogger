@@ -72,6 +72,28 @@ def _view_model(repository: MemorySettingsRepository) -> SettingsViewModel:
 
 
 class SettingsPresentationTests(unittest.TestCase):
+    def test_minimal_view_preference_is_available_only_when_enabled_by_deployment(self):
+        repository = MemorySettingsRepository()
+        repository.set(1, MINIMAL_MODE_SETTING_KEY, "1")
+        page = SettingsPage(_view_model(repository))
+        self.addCleanup(page.deleteLater)
+        page.refresh()
+        self.assertTrue(page.minimal_view_row.isHidden())
+        self.assertFalse(page.minimal_switch.isEnabled())
+        self.assertEqual(repository.get(1, MINIMAL_MODE_SETTING_KEY), "1")
+        page.set_capabilities(SettingsCapabilities(minimal_view=True))
+        self.assertFalse(page.minimal_view_row.isHidden())
+        self.assertTrue(page.minimal_switch.isEnabled())
+        page.minimal_switch.click()
+        self.assertEqual(repository.get(1, MINIMAL_MODE_SETTING_KEY), "0")
+        self.assertIn("restarting", page.status_label.text())
+        page.minimal_switch.click()
+        self.assertEqual(repository.get(1, MINIMAL_MODE_SETTING_KEY), "1")
+        page.set_capabilities(SettingsCapabilities(minimal_view=False))
+        self.assertTrue(page.minimal_view_row.isHidden())
+        self.assertTrue(page.state.minimal_mode)
+        self.assertEqual(repository.get(1, MINIMAL_MODE_SETTING_KEY), "1")
+
     def test_timer_reminder_preferences_validate_and_persist_without_starting_recording(self):
         from worklogger.config.constants import TIMER_REMINDER_HOURS_SETTING_KEY, CONTINUOUS_TIMER_REMINDER_HOURS_SETTING_KEY
         repository = MemorySettingsRepository()

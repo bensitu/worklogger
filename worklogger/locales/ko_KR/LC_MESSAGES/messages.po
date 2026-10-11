@@ -1084,6 +1084,9 @@ msgstr "이전 기록과 병합"
 msgid "Microsoft tenant ID"
 msgstr "Microsoft 테넌트 ID"
 
+msgid "Minimal view"
+msgstr "간소화 보기"
+
 msgid "Minutes from the record start to the break start"
 msgstr "기록 시작부터 휴식 시작까지의 분 수"
 
@@ -1713,6 +1716,9 @@ msgstr "이 계정에 저장된 보고서이며, 열린 보고서의 변경 이�
 
 msgid "Saved. Language changes apply after restarting."
 msgstr "저장되었습니다. 언어 변경은 다시 시작한 후 적용됩니다."
+
+msgid "Saved. View changes apply after restarting or signing in again."
+msgstr "저장했습니다. 보기 변경 사항은 다시 시작하거나 다시 로그인한 후에 적용됩니다."
 
 msgid "Schedule / Records"
 msgstr "일정 / 기록"
@@ -2367,6 +2373,9 @@ msgstr "버전 {number}"
 
 msgid "Version {version}"
 msgstr "버전 {version}"
+
+msgid "View changes apply after restarting or signing in again."
+msgstr "보기 변경 사항은 다시 시작하거나 다시 로그인한 후에 적용됩니다."
 
 msgid "View records"
 msgstr "기록 보기"

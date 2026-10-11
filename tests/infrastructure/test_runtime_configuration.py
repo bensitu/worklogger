@@ -25,13 +25,20 @@ class RuntimeConfigurationTests(unittest.TestCase):
 
     def test_flags_are_strict_booleans_and_invalid_or_missing_files_fail_closed(self):
         self.assertFalse(load_runtime_configuration(self.path).features.background_images)
+        self.assertFalse(load_runtime_configuration(self.path).features.minimal_view)
         for enabled in (True, False):
-            self.path.write_text(json.dumps({"features": {"background_images": enabled}}), encoding="utf-8-sig")
+            self.path.write_text(json.dumps({"features": {"background_images": enabled, "minimal_view": enabled}}), encoding="utf-8-sig")
             self.assertEqual(load_runtime_configuration(self.path).features.background_images, enabled)
-        for value in ('{"features":{"background_images":"true"}}', '{"features":[]}', '[]', 'invalid', ' ' * 65537):
+            self.assertEqual(load_runtime_configuration(self.path).features.minimal_view, enabled)
+        self.path.write_text('{"features":{"background_images":true}}', encoding="utf-8")
+        self.assertTrue(load_runtime_configuration(self.path).features.background_images)
+        self.assertFalse(load_runtime_configuration(self.path).features.minimal_view)
+        for value in ('{"features":{"background_images":"true"}}', '{"features":{"minimal_view":1}}',
+                      '{"features":{"minimal_view":"true"}}', '{"features":[]}', '[]', 'invalid', ' ' * 65537):
             self.path.write_text(value, encoding="utf-8")
             with self.assertLogs("worklogger.infrastructure.runtime_config", level="WARNING"):
                 self.assertFalse(load_runtime_configuration(self.path).features.background_images)
+                self.assertFalse(load_runtime_configuration(self.path).features.minimal_view)
 
     def test_source_and_frozen_paths_prioritize_an_explicit_adjacent_file(self):
         self.assertEqual(configuration_path(frozen=False, source_root=self.directory), self.path)

@@ -465,6 +465,19 @@ class RuntimeBootstrapTests(unittest.TestCase):
             self.assertEqual(runtime.value.window.date_label.text(), day_label(date(2026, 4, 20)))
             self.assertEqual(runtime.value.window.account_label.text(), "Signed in: local")
             runtime.value.window.close()
+            configuration = database_path.parent / "worklogger.config.json"
+            configuration.write_text('{"features":{"background_images":true,"minimal_view":false}}', encoding="utf-8")
+            with patch("worklogger.infrastructure.runtime_config.configuration_path", return_value=configuration):
+                fallback = build_desktop_runtime(DesktopRuntimeConfig(database_path=database_path, minimal_mode=True,
+                                                   password_iterations=1_000), argv=[])
+                self.assertTrue(fallback.ok, fallback.error)
+                try:
+                    self.assertNotIsInstance(fallback.value.window, MinimalView)
+                    self.assertTrue(fallback.value.window.settings_page.minimal_view_row.isHidden())
+                    self.assertEqual(SQLiteSettingsRepository(fallback.value.connection_factory).get(
+                        fallback.value.user.id, MINIMAL_MODE_SETTING_KEY), "1")
+                finally:
+                    fallback.value.window.close()
 
     def test_runtime_bootstrap_rejects_empty_database_without_bootstrap_user(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

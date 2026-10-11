@@ -3,7 +3,7 @@
 import json
 import logging
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
@@ -14,6 +14,7 @@ MAX_CONFIG_BYTES = 64 * 1024
 @dataclass(frozen=True)
 class FeatureFlags:
     background_images: bool = False
+    minimal_view: bool = False
 
 
 @dataclass(frozen=True)
@@ -41,10 +42,13 @@ def load_runtime_configuration(path=None):
         value = json.loads(data.decode("utf-8-sig"))
         if not isinstance(value, dict) or not isinstance(value.get("features", {}), dict):
             raise TypeError("runtime_configuration_invalid")
-        enabled = value.get("features", {}).get("background_images", False)
-        if type(enabled) is not bool:
-            raise TypeError("runtime_configuration_invalid")
-        return RuntimeConfiguration(FeatureFlags(background_images=enabled))
+        flags = {}
+        for field in fields(FeatureFlags):
+            enabled = value.get("features", {}).get(field.name, False)
+            if type(enabled) is not bool:
+                raise TypeError("runtime_configuration_invalid")
+            flags[field.name] = enabled
+        return RuntimeConfiguration(FeatureFlags(**flags))
     except FileNotFoundError:
         return RuntimeConfiguration()
     except (OSError, UnicodeError, ValueError, TypeError):

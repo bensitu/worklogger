@@ -1084,6 +1084,9 @@ msgstr "與前一筆紀錄合併"
 msgid "Microsoft tenant ID"
 msgstr "Microsoft 租用戶 ID"
 
+msgid "Minimal view"
+msgstr "精簡檢視"
+
 msgid "Minutes from the record start to the break start"
 msgstr "從紀錄開始到休息開始的分鐘數"
 
@@ -1713,6 +1716,9 @@ msgstr "本帳戶已儲存的報表，不是目前報表的修改歷史。"
 
 msgid "Saved. Language changes apply after restarting."
 msgstr "已儲存。重新啟動後語言設定生效。"
+
+msgid "Saved. View changes apply after restarting or signing in again."
+msgstr "已儲存。重新啟動軟體或重新登入後，檢視變更生效。"
 
 msgid "Schedule / Records"
 msgstr "日程 / 記錄"
@@ -2367,6 +2373,9 @@ msgstr "版本 {number}"
 
 msgid "Version {version}"
 msgstr "版本 {version}"
+
+msgid "View changes apply after restarting or signing in again."
+msgstr "重新啟動軟體或重新登入後，檢視變更生效。"
 
 msgid "View records"
 msgstr "檢視記錄"

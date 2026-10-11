@@ -1084,6 +1084,9 @@ msgstr "Merge with previous record"
 msgid "Microsoft tenant ID"
 msgstr "Microsoft tenant ID"
 
+msgid "Minimal view"
+msgstr "Minimal view"
+
 msgid "Minutes from the record start to the break start"
 msgstr "Minutes from the record start to the break start"
 
@@ -1713,6 +1716,9 @@ msgstr "Saved reports for this account, not revisions of the open report."
 
 msgid "Saved. Language changes apply after restarting."
 msgstr "Saved. Language changes apply after restarting."
+
+msgid "Saved. View changes apply after restarting or signing in again."
+msgstr "Saved. View changes apply after restarting or signing in again."
 
 msgid "Schedule / Records"
 msgstr "Schedule / Records"
@@ -2367,6 +2373,9 @@ msgstr "Version {number}"
 
 msgid "Version {version}"
 msgstr "Version {version}"
+
+msgid "View changes apply after restarting or signing in again."
+msgstr "View changes apply after restarting or signing in again."
 
 msgid "View records"
 msgstr "View records"

@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
     QPushButton,
+    QVBoxLayout,
     QWidget,
 )
 
@@ -19,6 +20,8 @@ from worklogger.presentation.settings.sections.background import BackgroundSetti
 from worklogger.presentation.settings.sections.common import (
     _card_with_form,
     _language_label,
+    _secondary_label,
+    _switch_line,
     _SettingsScrollPage,
 )
 from worklogger.presentation.widgets import SwitchButton
@@ -32,6 +35,7 @@ class AppearanceSection(_SettingsScrollPage):
         "dark_switch",
         "language_combo",
         "minimal_switch",
+        "minimal_view_row",
         "mode_combo",
         "theme_combo",
     )
@@ -95,11 +99,18 @@ class AppearanceSection(_SettingsScrollPage):
             lambda enabled: actions.set_bool(DARK_MODE_SETTING_KEY, enabled)
         )
         self.minimal_switch = SwitchButton()
-        self.minimal_switch.setEnabled(False)
-        self.minimal_switch.setVisible(False)
+        self.minimal_switch.setAccessibleName(_("Minimal view"))
         self.minimal_switch.toggled.connect(
             lambda enabled: actions.set_bool(MINIMAL_MODE_SETTING_KEY, enabled)
         )
+        self.minimal_view_row = QWidget()
+        self.minimal_view_row.setObjectName("settings_switch_row_widget")
+        minimal_layout = QVBoxLayout(self.minimal_view_row)
+        minimal_layout.setContentsMargins(0, 0, 0, 0)
+        minimal_layout.setSpacing(6)
+        minimal_layout.addWidget(_switch_line(_("Minimal view"), self.minimal_switch))
+        minimal_layout.addWidget(_secondary_label(_("View changes apply after restarting or signing in again.")))
+        form.addRow(self.minimal_view_row)
         page.layout().addWidget(card)
         self.background_settings = BackgroundSettings()
         page.layout().addWidget(self.background_settings)

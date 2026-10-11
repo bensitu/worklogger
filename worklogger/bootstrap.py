@@ -576,6 +576,10 @@ def _minimal_mode_enabled(
     user: User,
     config: DesktopRuntimeConfig,
 ) -> bool:
+    from worklogger.infrastructure.runtime_config import load_runtime_configuration
+
+    if not load_runtime_configuration().features.minimal_view:
+        return False
     if config.minimal_mode is not None:
         return bool(config.minimal_mode)
     settings = SQLiteSettingsRepository(connection_factory)

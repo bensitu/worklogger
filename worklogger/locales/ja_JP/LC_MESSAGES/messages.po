@@ -1084,6 +1084,9 @@ msgstr "前の記録と結合"
 msgid "Microsoft tenant ID"
 msgstr "Microsoft テナント ID"
 
+msgid "Minimal view"
+msgstr "シンプル表示"
+
 msgid "Minutes from the record start to the break start"
 msgstr "記録開始から休憩開始までの分数"
 
@@ -1713,6 +1716,9 @@ msgstr "このアカウントの保存済みレポートです。編集中のレ
 
 msgid "Saved. Language changes apply after restarting."
 msgstr "保存しました。言語設定は再起動後に適用されます。"
+
+msgid "Saved. View changes apply after restarting or signing in again."
+msgstr "保存しました。表示モードの変更は再起動または再ログイン後に適用されます。"
 
 msgid "Schedule / Records"
 msgstr "予定 / 記録"
@@ -2367,6 +2373,9 @@ msgstr "バージョン {number}"
 
 msgid "Version {version}"
 msgstr "バージョン {version}"
+
+msgid "View changes apply after restarting or signing in again."
+msgstr "表示モードの変更は再起動または再ログイン後に適用されます。"
 
 msgid "View records"
 msgstr "記録を表示"

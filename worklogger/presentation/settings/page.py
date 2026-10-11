@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 
 from worklogger.config.constants import (
     DARK_MODE_SETTING_KEY,
+    MINIMAL_MODE_SETTING_KEY,
 )
 from worklogger.domain.auth.models import User
 from worklogger.domain.shared.errors import AppError
@@ -456,7 +457,11 @@ class SettingsPage(QWidget, SettingsSectionState):
     def _set_bool(self, key: str, enabled: bool) -> None:
         if self._updating:
             return
+        if key == MINIMAL_MODE_SETTING_KEY and not self._capabilities.minimal_view:
+            return
         self._handle_save_result(self._view_model.set_bool(key, enabled))
+        if key == MINIMAL_MODE_SETTING_KEY and self._last_error is None:
+            self.set_operation_status(_("Saved. View changes apply after restarting or signing in again."))
 
     def _set_number(self, key: str, value: float) -> None:
         if self._updating:

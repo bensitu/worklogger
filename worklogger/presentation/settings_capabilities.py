@@ -9,3 +9,4 @@ class SettingsCapabilities:
     local_generation: bool = False
     proxy_routing: bool = False
     model_management: bool = True
+    minimal_view: bool = False
