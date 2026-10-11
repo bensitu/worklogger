@@ -68,7 +68,7 @@ class GlassThemeController(QObject):
         if self._disposed or colors == self._colors:
             return
         self._generation += 1
-        self._enabled, self._colors = colors.theme == "liquid_glass", colors
+        self._enabled, self._colors = colors.material == "glass", colors
         self._software_failed = False
         self._timer.stop()
         self._pending.clear()

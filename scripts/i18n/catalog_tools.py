@@ -66,7 +66,7 @@ def extract_source_messages(source_root: Path = SOURCE_ROOT) -> set[str]:
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
                 continue
-            if isinstance(node.func, ast.Name) and node.func.id == "_":
+            if isinstance(node.func, ast.Name) and node.func.id in ("_", "N_"):
                 if node.args:
                     message = _constant_string(node.args[0])
                     if message:

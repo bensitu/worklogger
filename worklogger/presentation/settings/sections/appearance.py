@@ -14,6 +14,7 @@ from worklogger.config.constants import (
     DARK_MODE_SETTING_KEY,
     MINIMAL_MODE_SETTING_KEY,
 )
+from worklogger.config.themes import THEME_DEFINITIONS
 from worklogger.infrastructure.i18n import _, available_languages
 from worklogger.presentation.settings.sections.actions import SectionActions
 from worklogger.presentation.settings.sections.background import BackgroundSettings
@@ -63,15 +64,8 @@ class AppearanceSection(_SettingsScrollPage):
         self.theme_combo.setFixedWidth(320)
         theme_row.setFixedWidth(370)
         self.theme_combo.setObjectName("theme_combo")
-        for key, label in (
-            ("blue", _("Blue")),
-            ("pink", _("Pink")),
-            ("green", _("Green")),
-            ("purple", _("Purple")),
-            ("liquid_glass", _("Liquid Glass")),
-            ("custom", _("Custom")),
-        ):
-            self.theme_combo.addItem(label, key)
+        for definition in THEME_DEFINITIONS:
+            self.theme_combo.addItem(_(definition.label), definition.key)
         self.theme_combo.currentIndexChanged.connect(actions.theme_changed)
         self.custom_color_button = QPushButton()
         self.custom_color_button.setFixedSize(40, 40)

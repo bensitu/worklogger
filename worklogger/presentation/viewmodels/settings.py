@@ -53,7 +53,7 @@ from worklogger.domain.shared.result import Result
 from worklogger.app.use_cases.settings import ProxyPasswordSettings
 from worklogger.domain.shared.languages import normalize_language
 from worklogger.infrastructure.calendar.holidays_provider import validate_holiday_region
-from worklogger.domain.settings.appearance import DEFAULT_CUSTOM_COLOR, THEME_KEYS, normalize_hex_color
+from worklogger.domain.settings.appearance import DEFAULT_CUSTOM_COLOR, normalize_hex_color, normalize_theme
 from worklogger.domain.settings.values import setting_bool as _bool
 from worklogger.domain.local_model.preferences import (
     DEFAULT_RUNTIME_CONTEXT_TOKENS, normalize_runtime_context, runtime_context_preference,
@@ -171,7 +171,7 @@ class SettingsViewModel:
         password, api_key = self._cached_password, self._cached_api_key
         return Result.success(
             SettingsState(
-                theme=_theme(values[THEME_SETTING_KEY]),
+                theme=normalize_theme(values[THEME_SETTING_KEY]),
                 custom_color=normalize_hex_color(values[CUSTOM_THEME_COLOR_SETTING_KEY]),
                 dark_mode=_bool(values[DARK_MODE_SETTING_KEY], False),
                 language=normalize_language(values[LANGUAGE_SETTING_KEY]),
@@ -251,7 +251,7 @@ class SettingsViewModel:
         )
 
     def set_theme(self, theme: str) -> Result[None]:
-        return self._set(THEME_SETTING_KEY, _theme(theme))
+        return self._set(THEME_SETTING_KEY, normalize_theme(theme))
 
     def set_avatar(self, encoded: str) -> Result[None]:
         try:
@@ -462,11 +462,6 @@ def _number(
 def _text(value: str | None, default: str) -> str:
     text = str(value if value is not None else default).strip()
     return text
-
-
-def _theme(value: str | None) -> str:
-    theme = str(value or "blue").strip().lower()
-    return theme if theme in THEME_KEYS else "blue"
 
 
 def _format_number(value: float) -> str:

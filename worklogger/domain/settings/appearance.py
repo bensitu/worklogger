@@ -2,8 +2,9 @@
 
 import re
 
+from worklogger.config.themes import THEME_KEYS as THEME_KEYS, normalize_theme as normalize_theme
+
 DEFAULT_CUSTOM_COLOR = "#4f8ef7"
-THEME_KEYS = ("blue", "pink", "green", "purple", "liquid_glass", "custom")
 
 
 def normalize_hex_color(value: str | None) -> str:

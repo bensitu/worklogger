@@ -36,7 +36,7 @@ class MainBackgroundWidget(QWidget):
         self.update()
 
     def set_glass_colors(self, colors):
-        value = colors if colors.theme == "liquid_glass" else None
+        value = colors if colors.material == "glass" else None
         if value == self._glass_colors:
             return
         self._glass_colors = value
