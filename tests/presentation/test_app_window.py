@@ -545,7 +545,7 @@ class AppWindowTests(unittest.TestCase):
 
         self.assertTrue(view.refresh())
         from worklogger.presentation.date_labels import day_label
-        self.assertEqual(view.date_label.text(), day_label(date(2026, 4, 20)))
+        self.assertEqual(view.date_button.text(), day_label(date(2026, 4, 20)))
         self.assertEqual(view.account_label.text(), "Signed in: alice")
 
         self.assertTrue(view.status_label.isHidden())
@@ -581,7 +581,57 @@ class AppWindowTests(unittest.TestCase):
 
         self.assertTrue(view.next_day())
         self.assertEqual(view.selected_day, date(2026, 4, 21))
-        self.assertEqual(view.date_label.text(), day_label(date(2026, 4, 21)))
+        self.assertEqual(view.date_button.text(), day_label(date(2026, 4, 21)))
+
+    def test_minimal_calendar_selection_preserves_drafts_and_respects_pending_operations(self):
+        from PySide6.QtCore import QDate, Qt
+        from PySide6.QtTest import QTest
+        allow_discard = False
+        original = date(2026, 4, 20)
+        chosen = QDate(2026, 3, 12)
+        view = MinimalView(time_entry_view_model=_entry_model(MemoryWorkLogRepository()),
+                           job_runner=ImmediateJobRunner(), config=MinimalViewConfig(selected_day=original,
+                               week_start_monday=True, confirm_discard_changes=lambda: allow_discard))
+        self.addCleanup(view.deleteLater)
+        view.refresh()
+        view.show()
+        self._app.processEvents()
+        view.date_button.setFocus()
+        QTest.keyClick(view.date_button, Qt.Key.Key_Space)
+        self._app.processEvents()
+        picker = view.date_button
+        self.assertTrue(picker.calendar.isVisible())
+        self.assertEqual(picker.calendar.selectedDate().toPython(), original)
+        self.assertEqual(picker.calendar.firstDayOfWeek(), Qt.DayOfWeek.Monday)
+        QTest.keyClick(picker.calendar, Qt.Key.Key_Escape)
+        self._app.processEvents()
+        self.assertFalse(picker.calendar.isVisible())
+        self.assertEqual(view.selected_day, original)
+        view.entry_panel.content_input.setPlainText("Unsaved record content")
+        picker.click()
+        picker.calendar.setCurrentPage(chosen.year(), chosen.month())
+        picker.calendar.clicked.emit(chosen)
+        self.assertEqual(view.selected_day, original)
+        self.assertEqual(view.entry_panel.content_input.toPlainText(), "Unsaved record content")
+        self.assertFalse(picker.calendar.isVisible())
+        picker.click()
+        self.assertEqual(picker.calendar.selectedDate().toPython(), original)
+        allow_discard = True
+        picker.calendar.setSelectedDate(chosen)
+        QTest.keyClick(picker.calendar, Qt.Key.Key_Return)
+        self.assertEqual(view.selected_day, chosen.toPython())
+        self.assertFalse(view.has_unsaved_changes)
+        picker.click()
+        view.entry_panel.is_busy = True
+        view._set_entry_busy(True)
+        self.assertFalse(picker.isEnabled())
+        self.assertFalse(picker.calendar.isVisible())
+        picker.click()
+        self.assertFalse(picker.calendar.isVisible())
+        self.assertEqual(view.selected_day, chosen.toPython())
+        view.entry_panel.is_busy = False
+        view._set_entry_busy(False)
+        view.close()
 
     def test_minimal_view_opens_settings_workflow_when_available(self) -> None:
         class FakeSettingsWorkflow:

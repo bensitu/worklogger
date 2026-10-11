@@ -307,6 +307,7 @@ QFrame#settings_navigation_frame {
 }
 
 QLabel[role="section_heading"],
+QPushButton#date_picker_button,
 QLabel#settings_section_title_label,
 QLabel#report_title_label,
 QLabel#report_history_title_label {
@@ -738,6 +739,43 @@ QTextEdit#report_revision_preview {
   border: none;
   border-radius: 6px;
   padding: 0;
+}
+
+QFrame#date_picker_popup_frame {
+  background: {{ surface }};
+  border: 1px solid {{ border_strong }};
+  border-radius: 8px;
+}
+
+QCalendarWidget#date_picker_calendar_widget QWidget#qt_calendar_navigationbar {
+  background: {{ surface }};
+}
+
+QCalendarWidget#date_picker_calendar_widget QToolButton {
+  min-width: 24px;
+  min-height: 24px;
+  padding: 4px 6px;
+}
+
+QCalendarWidget#date_picker_calendar_widget QToolButton#qt_calendar_monthbutton {
+  padding-right: 18px;
+}
+
+QCalendarWidget#date_picker_calendar_widget QToolButton::menu-indicator {
+  subcontrol-origin: padding;
+  subcontrol-position: right center;
+  right: 4px;
+  image: url("{{ icons_root }}/chevron-down.svg");
+  width: 10px;
+  height: 10px;
+}
+
+QCalendarWidget#date_picker_calendar_widget QTableView {
+  background: {{ surface }};
+  alternate-background-color: {{ surface_alt }};
+  border: none;
+  selection-background-color: {{ accent }};
+  selection-color: {{ highlighted_text }};
 }
 
 QLabel#calendar_month_title_label,

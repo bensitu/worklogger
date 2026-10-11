@@ -24,7 +24,6 @@ from PySide6.QtWidgets import (
 from worklogger.domain.shared.errors import AppError
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
-from worklogger.presentation.date_labels import day_label
 from worklogger.presentation.settings import SettingsWorkflow
 from worklogger.presentation.shell.background_controller import BackgroundController
 from worklogger.presentation.shell.residency import QtResidencyController
@@ -35,6 +34,7 @@ from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets._style import refresh_style_tree
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
+from worklogger.presentation.widgets.date_picker import DatePickerButton
 from worklogger.presentation.widgets.time_entries import TimeEntryPanel
 from worklogger.presentation.widgets.time_entry_history import TimeEntryHistory
 
@@ -50,6 +50,7 @@ class MinimalViewConfig:
     dark: bool = False
     custom_color: str | None = None
     background_images_available: bool = True
+    week_start_monday: bool = False
 
 
 class MinimalView(QWidget):
@@ -132,7 +133,7 @@ class MinimalView(QWidget):
             return False
         self._refresh_pending = False
         self._last_error = None
-        self.date_label.setText(day_label(self._selected_day))
+        self.date_button.set_date(self._selected_day)
         self.account_label.setText(self._account_text())
         result = self.entry_panel.load_day(self._selected_day)
         self._entry_dirty = self.entry_panel.is_dirty
@@ -190,11 +191,7 @@ class MinimalView(QWidget):
         self.next_button.setFixedWidth(40)
         set_button_icon(self.next_button, "chevron-right")
         self.next_button.setText("")
-        self.date_label = QLabel("")
-        self.date_label.setProperty("role", "section_heading")
-        self.date_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.date_label.setWordWrap(True)
-        self.date_label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        self.date_button = DatePickerButton(week_start_monday=self._config.week_start_monday)
         self.account_label = QLabel("")
         self.account_label.setTextFormat(Qt.TextFormat.PlainText)
         self.account_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
@@ -213,7 +210,7 @@ class MinimalView(QWidget):
         date_navigation.setContentsMargins(0, 0, 0, 0)
         date_navigation.setSpacing(8)
         date_navigation.addWidget(self.previous_button)
-        date_navigation.addWidget(self.date_label)
+        date_navigation.addWidget(self.date_button)
         date_navigation.addWidget(self.next_button)
         nav.addWidget(self.date_navigation_widget, 0, 1)
         self.notes_button = QPushButton(_("Notes"))
@@ -253,6 +250,7 @@ class MinimalView(QWidget):
         self.previous_button.clicked.connect(self.previous_day)
         self.today_button.clicked.connect(self.go_today)
         self.next_button.clicked.connect(self.next_day)
+        self.date_button.date_selected.connect(self.select_day)
         self.settings_button.clicked.connect(self.open_settings)
         self.notes_button.clicked.connect(self.open_notes)
         self.new_record_button.clicked.connect(self.entry_panel.new_record)
@@ -266,7 +264,7 @@ class MinimalView(QWidget):
 
     def _set_entry_busy(self, busy):
         self.history_widget.setDisabled(busy)
-        for button in (self.previous_button, self.today_button, self.next_button, self.new_record_button,
+        for button in (self.previous_button, self.today_button, self.next_button, self.date_button, self.new_record_button,
                        self.notes_button, self.settings_button):
             button.setEnabled(not busy)
         if not busy and self._refresh_pending:
@@ -454,7 +452,9 @@ class MinimalView(QWidget):
     def _apply_recording_settings(self, state):
         self._time_entry_view_model.set_default_break_hours(state.default_break_hours)
         self._config = replace(self._config, show_recent_context=state.show_recent_context,
-                               theme=state.theme, dark=state.dark_mode, custom_color=state.custom_color)
+                               theme=state.theme, dark=state.dark_mode, custom_color=state.custom_color,
+                               week_start_monday=state.week_start_monday)
+        self.date_button.set_week_start_monday(state.week_start_monday)
         self.entry_panel.context_picker.recent_button.setVisible(state.show_recent_context)
         self._time_entry_view_model.set_timer_reminders(state.timer_reminder_hours, state.continuous_timer_reminder_hours)
         self.apply_theme()

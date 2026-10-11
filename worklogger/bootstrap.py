@@ -498,6 +498,7 @@ def _build_minimal_view(
             custom_color=window_config.custom_color,
             background_images_available=window_config.background_images_available,
             show_recent_context=window_config.show_recent_context,
+            week_start_monday=window_config.calendar_options.week_start_monday,
             confirm_discard_changes=window_config.confirm_discard_changes,
         ),
         settings_workflow=settings_workflow,

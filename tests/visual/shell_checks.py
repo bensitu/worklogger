@@ -104,7 +104,7 @@ class ShellLayoutChecks(unittest.TestCase):
                                 view.entry_panel.time_tabs.setCurrentIndex(mode)
                                 self.app.processEvents()
                                 self.assertEqual((view.width(), view.height()), (width, height))
-                                date_center = view.date_label.mapTo(view, view.date_label.rect().center())
+                                date_center = view.date_button.mapTo(view, view.date_button.rect().center())
                                 self.assertLessEqual(abs(date_center.x() - view.rect().center().x()), 1)
                                 today = view.today_button.rect().translated(view.today_button.mapTo(view, QPoint()))
                                 previous = view.previous_button.rect().translated(view.previous_button.mapTo(view, QPoint()))
@@ -125,7 +125,7 @@ class ShellLayoutChecks(unittest.TestCase):
                                                    panel.discard_timer_button):
                                         self.assertTrue(panel.time_tabs.rect().contains(button.rect().translated(
                                             button.mapTo(panel.time_tabs, QPoint()))))
-                                for field in (view.date_label, view.account_label, view.new_record_button,
+                                for field in (view.date_button, view.account_label, view.new_record_button,
                                               view.notes_button, view.settings_button, view.entry_panel.content_input,
                                               view.entry_panel.context_picker.project_combo,
                                               view.entry_panel.context_picker.work_item_combo,
@@ -135,6 +135,14 @@ class ShellLayoutChecks(unittest.TestCase):
                                 rendered = view._background_surface.grab().toImage()
                                 self.assertNotEqual(rendered.pixelColor(2, 2).name(), ThemeEngine().palette("green", dark=dark).surface)
                                 self.capture(view, f"minimal-{'dark' if dark else 'light'}-{width}-{mode}")
+                        view.date_button.click()
+                        self.app.processEvents()
+                        popup = view.date_button.calendar.window()
+                        self.assertTrue(popup.isVisible())
+                        self.assertTrue(view.screen().availableGeometry().contains(popup.frameGeometry()))
+                        self.assertEqual(view.date_button.calendar.locale().name(), language)
+                        self.capture(popup, f"minimal-calendar-{'dark' if dark else 'light'}")
+                        popup.hide()
                         dialog = workflow.create_dialog(view)
                         dialog.background_settings.bind(view.background_controller)
                         view.background_controller.reload()

@@ -487,7 +487,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             self.assertTrue(first.ok, first.error)
             settings = SQLiteSettingsRepository(first.value.connection_factory)
             for key, value in ((MINIMAL_MODE_SETTING_KEY, "1"), ("theme", "green"), ("dark_mode", "1"),
-                               ("language", "ja_JP")):
+                               ("language", "ja_JP"), ("week_start_monday", "1")):
                 settings.set(first.value.user.id, key, value)
             started = first.value.window.entry_panel.view_model.start("break", "Ongoing record")
             self.assertTrue(started.ok, started.error)
@@ -514,6 +514,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 self.assertTrue(window.refresh())
                 self.assertEqual(window._config.theme, "green")
                 self.assertTrue(window._config.dark)
+                self.assertTrue(window._config.week_start_monday)
                 self.assertEqual(get_language(), "ja_JP")
                 self.assertEqual(window.entry_panel.view_model.timer.capture_id, started.value.capture_id)
                 window.entry_panel.time_tabs.setCurrentIndex(1)
