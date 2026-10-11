@@ -61,15 +61,19 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
             self.app.setPalette(old_palette)
 
     def test_button_states_remain_distinct_across_themes_and_action_variants(self):
+        from PySide6.QtCore import QPoint
         from PySide6.QtGui import QPalette
-        from PySide6.QtWidgets import QGridLayout, QPushButton, QWidget
+        from PySide6.QtTest import QTest
+        from PySide6.QtWidgets import QGridLayout, QPushButton, QToolButton, QWidget
         from worklogger.presentation.widgets.icons import set_button_icon
         from worklogger.presentation.widgets.record_summary import RecordSummaryButton
+        from worklogger.presentation.widgets.switch_button import SwitchButton
         variants = ({}, {"variant": "primary"}, {"variant": "outline"}, {"variant": "ghost"},
                     {"variant": "danger"}, {"nav_item": True, "active": True},
                     {"settings_nav_item": True, "active": True}, {"segment": True, "checked": True},
                     {"page_tab": True, "checked": True}, {"object_name": "report_history_item_button", "active": True},
-                    {"object_name": "calendar_time_entry_button"})
+                    {"object_name": "calendar_time_entry_button"}, {"variant": "outline", "tool_button": True},
+                    {"nav_item": True}, {"settings_nav_item": True}, {"segment": True}, {"page_tab": True})
         old_style, old_palette = self.app.styleSheet(), self.app.palette()
         engine = ThemeEngine()
         try:
@@ -84,7 +88,10 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                         pair = []
                         for column, enabled in enumerate((True, False)):
                             is_record = properties.get("object_name") == "calendar_time_entry_button"
-                            button = RecordSummaryButton("Action") if is_record else QPushButton("Action")
+                            button = (RecordSummaryButton("Action") if is_record else
+                                      QToolButton() if properties.get("tool_button") else QPushButton("Action"))
+                            if properties.get("tool_button"):
+                                button.setText("Action")
                             if properties.get("checked"):
                                 button.setCheckable(True)
                             for key, value in properties.items():
@@ -99,6 +106,15 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                             grid.addWidget(button, row, column)
                             pair.append(button)
                         pairs.append(pair)
+                    switch_pairs = []
+                    for checked in (False, True):
+                        pair = []
+                        for column, enabled in enumerate((True, False)):
+                            button = SwitchButton(checked=checked)
+                            button.setEnabled(enabled)
+                            grid.addWidget(button, len(pairs) + len(switch_pairs), column)
+                            pair.append(button)
+                        switch_pairs.append(pair)
                     panel.show()
                     self.app.processEvents()
                     panel.adjustSize()
@@ -111,8 +127,9 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                         if enabled.property("variant") in ("outline", "ghost"):
                             self.assertEqual(enabled.palette().color(QPalette.ColorRole.ButtonText).name(),
                                              engine.palette(theme, dark=dark, custom_color="#168078").text)
-                        expected_weight = (600 if enabled.property("variant") == "primary" or enabled.property("nav_item") or
-                                           enabled.property("settings_nav_item") or enabled.property("segment") or enabled.property("page_tab")
+                        expected_weight = (600 if enabled.property("variant") == "primary" or
+                                           ((enabled.property("nav_item") or enabled.property("settings_nav_item")) and enabled.property("active")) or
+                                           ((enabled.property("segment") or enabled.property("page_tab")) and enabled.isChecked())
                                            else 400 if enabled.property("variant") == "ghost" or isinstance(enabled, RecordSummaryButton)
                                            else 500)
                         self.assertEqual(enabled.font().weight(), expected_weight)
@@ -131,6 +148,22 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                                              engine.palette(theme, dark=dark, custom_color="#168078").text)
                             self.assertEqual(disabled.label.palette().color(QPalette.ColorRole.WindowText).name(),
                                              "#6f7699" if dark else "#9aa3bb")
+                    for enabled, disabled in pairs + switch_pairs:
+                        with self.subTest(theme=theme, dark=dark, name=enabled.objectName(), variant=enabled.property("variant")):
+                            QTest.mouseMove(panel, QPoint(1, 1))
+                            self.app.processEvents()
+                            original = enabled.grab().toImage()
+                            geometry, weight, checked = enabled.geometry(), enabled.font().weight(), enabled.isChecked()
+                            QTest.mouseMove(enabled, enabled.rect().center())
+                            self.app.processEvents()
+                            self.assertNotEqual(enabled.grab().toImage(), original)
+                            self.assertEqual((enabled.geometry(), enabled.font().weight(), enabled.isChecked()),
+                                             (geometry, weight, checked))
+                            original = disabled.grab().toImage()
+                            QTest.mouseMove(disabled, disabled.rect().center())
+                            self.app.processEvents()
+                            self.assertEqual(disabled.grab().toImage(), original)
+                    QTest.mouseMove(panel, QPoint(1, 1))
                     self.capture(panel, f"{theme}-button-states-{dark}")
                     panel.close()
         finally:

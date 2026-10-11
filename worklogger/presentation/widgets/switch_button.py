@@ -30,6 +30,14 @@ class SwitchButton(QCheckBox):
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.toggled.connect(lambda _checked: self.update())
 
+    def enterEvent(self, event) -> None:
+        super().enterEvent(event)
+        self.update()
+
+    def leaveEvent(self, event) -> None:
+        super().leaveEvent(event)
+        self.update()
+
     def is_checked(self) -> bool:
         return super().isChecked()
 
@@ -60,6 +68,8 @@ class SwitchButton(QCheckBox):
             track = QColor("#d9dfef")
             thumb = QColor("#f5f7fb")
             border = QColor("#aab1c5")
+        elif self.underMouse():
+            track = track.lighter(115) if track.lightness() < 128 else track.darker(110)
 
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(track))

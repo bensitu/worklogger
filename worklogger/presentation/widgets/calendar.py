@@ -64,8 +64,9 @@ class CalendarDayButton(QPushButton):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        border_color = cell.style.hover_border if self.underMouse() else cell.style.border
-        border_width = 2 if self.underMouse() else cell.style.border_width
+        hovered = self.isEnabled() and self.underMouse()
+        border_color = cell.style.hover_border if hovered else cell.style.border
+        border_width = 2 if hovered else cell.style.border_width
         foreground = cell.style.foreground if cell.in_month else "#8a8f9c"
         rect = QRectF(1, 1, self.width() - 2, self.height() - 2)
         painter.setPen(QPen(QColor(border_color), border_width))

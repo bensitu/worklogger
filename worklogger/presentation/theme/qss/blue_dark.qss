@@ -159,6 +159,15 @@ QPushButton#calendar_time_entry_button:checked {
   background: {{ card_hover }};
 }
 
+QPushButton#calendar_time_entry_button:hover:enabled {
+  background: {{ card_hover }};
+  border-color: {{ accent }};
+}
+
+QPushButton#calendar_time_entry_button:checked:hover:enabled {
+  background: {{ button_hover }};
+}
+
 QToolButton#clear_time_entry_button, QToolButton#undo_record_change_button {
   padding: 5px 8px;
   min-width: 20px;
@@ -195,7 +204,7 @@ QToolButton#delete_record_button, QToolButton#record_actions_button {
   max-height: 16px;
   border-radius: 4px;
 }
-QToolButton#delete_record_button:hover, QToolButton#record_actions_button:hover {
+QToolButton#delete_record_button:hover:enabled, QToolButton#record_actions_button:hover:enabled {
   background: {{ button_hover }};
 }
 QLabel#calendar_record_marker_label {
@@ -308,8 +317,8 @@ QToolButton {
   padding: 5px 14px;
 }
 
-QPushButton:hover,
-QToolButton:hover {
+QPushButton:hover:enabled,
+QToolButton:hover:enabled {
   background: {{ button_hover }};
   border-color: {{ accent }};
 }
@@ -322,8 +331,8 @@ QToolButton[variant="primary"] {
   font-weight: 600;
 }
 
-QPushButton[variant="primary"]:hover,
-QToolButton[variant="primary"]:hover {
+QPushButton[variant="primary"]:hover:enabled,
+QToolButton[variant="primary"]:hover:enabled {
   background: {{ hover }};
   border-color: {{ hover }};
 }
@@ -336,8 +345,8 @@ QToolButton[variant="ghost"] {
   font-weight: 400;
 }
 
-QPushButton[variant="ghost"]:hover,
-QToolButton[variant="ghost"]:hover {
+QPushButton[variant="ghost"]:hover:enabled,
+QToolButton[variant="ghost"]:hover:enabled {
   background: {{ button_hover }};
   border-color: transparent;
 }
@@ -350,10 +359,21 @@ QToolButton[variant="outline"] {
   font-weight: 500;
 }
 
+QPushButton[variant="outline"]:hover:enabled,
+QToolButton[variant="outline"]:hover:enabled {
+  background: {{ button_hover }};
+  border-color: {{ accent }};
+}
+
 QPushButton[variant="danger"],
 QToolButton[variant="danger"] {
   color: {{ danger }};
   font-weight: 500;
+}
+
+QPushButton[variant="danger"]:hover:enabled,
+QToolButton[variant="danger"]:hover:enabled {
+  border-color: {{ danger }};
 }
 
 QPushButton[nav_item="true"],
@@ -366,8 +386,8 @@ QPushButton[settings_nav_item="true"] {
   font-weight: 500;
 }
 
-QPushButton[nav_item="true"]:hover,
-QPushButton[settings_nav_item="true"]:hover {
+QPushButton[nav_item="true"]:hover:enabled,
+QPushButton[settings_nav_item="true"]:hover:enabled {
   background: {{ surface_alt }};
   border-color: {{ border }};
 }
@@ -378,6 +398,13 @@ QPushButton[settings_nav_item="true"][active="true"] {
   border-left: 3px solid {{ accent }};
   color: {{ accent }};
   font-weight: 600;
+}
+
+QPushButton[nav_item="true"][active="true"]:hover:enabled,
+QPushButton[settings_nav_item="true"][active="true"]:hover:enabled {
+  background: {{ button_hover }};
+  border-color: transparent;
+  border-left-color: {{ accent }};
 }
 
 QPushButton[segment="true"] {
@@ -392,6 +419,11 @@ QPushButton[segment="true"][checked="true"] {
   color: {{ accent }};
   border-color: {{ accent }};
   font-weight: 600;
+}
+
+QPushButton[segment="true"]:hover:enabled {
+  background: {{ button_hover }};
+  border-color: {{ accent }};
 }
 
 QLineEdit,
@@ -422,6 +454,10 @@ QLineEdit QToolButton {
   border-radius: 0;
   min-height: 0;
   padding: 0;
+}
+
+QLineEdit QToolButton:hover:enabled {
+  background: {{ button_hover }};
 }
 
 QLineEdit:focus,
@@ -514,7 +550,7 @@ QTabBar#worklog_mode_selector_widget::tab {
   font-weight: 500;
 }
 
-QTabBar#worklog_mode_selector_widget::tab:hover {
+QTabBar#worklog_mode_selector_widget::tab:hover:enabled {
   color: {{ text }};
   background: {{ card_hover }};
 }
@@ -524,6 +560,10 @@ QTabBar#worklog_mode_selector_widget::tab:selected {
   color: {{ accent }};
   border-color: {{ border_strong }};
   font-weight: 600;
+}
+
+QTabBar#worklog_mode_selector_widget::tab:selected:hover:enabled {
+  color: {{ accent }};
 }
 
 QMenu {
@@ -642,6 +682,10 @@ QTabBar::tab:selected {
 }
 
 
+QTabBar::tab:hover:enabled {
+  background: {{ card_hover }};
+}
+
 QLabel#calendar_month_title_label, QLabel#report_period_label {
   font-size: 18px;
   font-weight: 600;
@@ -661,6 +705,11 @@ QPushButton[page_tab="true"][checked="true"] {
   color: {{ accent }};
   border-bottom: 3px solid {{ accent }};
   font-weight: 600;
+}
+
+QPushButton[page_tab="true"]:hover:enabled {
+  background: {{ button_hover }};
+  border-bottom-color: {{ accent }};
 }
 
 QFrame#report_period_separator_frame {
@@ -694,8 +743,13 @@ QPushButton#report_history_item_button[active="true"] {
   color: {{ accent }};
 }
 
-QPushButton#report_history_item_button:hover {
+QPushButton#report_history_item_button:hover:enabled {
+  background: {{ card_hover }};
   border-color: {{ accent }};
+}
+
+QPushButton#report_history_item_button[active="true"]:hover:enabled {
+  background: {{ button_hover }};
 }
 
 QLabel#donut_value_label, QLabel#dot_value_label, QLabel#overtime_value_label,
