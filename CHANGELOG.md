@@ -77,12 +77,12 @@ layers. Back up your database before upgrading.
 
 ### Added
 
-- Added PyInstaller service-module hook coverage, strict internal import checks, and packaged `--smoke-import` validation.
+- Added PyInstaller service-module hook coverage, application-module import checks, and packaged `--smoke-import` validation.
 
 ### Changed
 
 - Password login lockouts now escalate across repeated failures and stale login-attempt rows are pruned after seven days.
-- Platform build scripts now verify required service imports, check PyInstaller warnings for missing report services, and smoke-test packaged imports.
+- Platform build scripts now verify required service imports, check PyInstaller warnings for missing report services, and validate packaged imports.
 - PyInstaller warning filtering now suppresses known optional Jython and setuptools-distutils probes.
 - Platform build scripts now rebuild stale build virtual environments when compiled extensions belong to a different Python ABI.
 - Windows builds now log artifact path, timestamp, and SHA-256.

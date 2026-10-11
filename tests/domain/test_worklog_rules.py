@@ -81,7 +81,7 @@ class WorkLogRuleTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             shift_datetimes(date(2026, 3, 8), "02:30", "06:00", zone)
 
-    def test_parse_time_accepts_baseline_flexible_inputs(self) -> None:
+    def test_parse_time_accepts_supported_input_formats(self) -> None:
         self.assertEqual(parse_time("9"), "09:00")
         self.assertEqual(parse_time("930"), "09:30")
         self.assertEqual(parse_time("16:30"), "16:30")

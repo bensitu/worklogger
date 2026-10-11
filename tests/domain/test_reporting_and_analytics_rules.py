@@ -92,7 +92,7 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             analytics_period(2026, 1, "invalid")
 
-    def test_report_periods_match_baseline_week_and_month_boundaries(self) -> None:
+    def test_report_periods_match_calendar_week_and_month_boundaries(self) -> None:
         for day, offset, expected in (
             (date(2026, 1, 31), -1, date(2025, 12, 1)),
             (date(2026, 12, 15), 1, date(2027, 1, 1)),

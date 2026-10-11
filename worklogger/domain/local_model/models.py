@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 class DownloadProgress:
     received_bytes: int
     total_bytes: int | None
-    phase: str = "download"
+    operation: str = "download"
 
 
 @dataclass(frozen=True)

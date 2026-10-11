@@ -229,7 +229,7 @@ class LocalModelInfrastructureTests(unittest.TestCase):
             self.assertEqual((models_dir / "remote.gguf").read_bytes(), payload)
             self.assertEqual(progress[0].received_bytes, 0)
             self.assertEqual(progress[0].total_bytes, len(payload))
-            self.assertEqual(progress[-1].phase, "verification")
+            self.assertEqual(progress[-1].operation, "verification")
             self.assertEqual(progress[-1].received_bytes, len(payload))
 
     def test_downloader_recovers_from_http_416_by_resetting_temp_file(self) -> None:

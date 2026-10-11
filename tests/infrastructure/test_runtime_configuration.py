@@ -43,7 +43,7 @@ class RuntimeConfigurationTests(unittest.TestCase):
         adjacent.write_text("{}", encoding="utf-8")
         self.assertEqual(configuration_path(frozen=True, executable=executable, bundle_root=bundle), adjacent)
 
-    def test_global_flag_gates_user_window_without_changing_account_preferences(self):
+    def test_deployment_flag_controls_window_availability_without_changing_account_preferences(self):
         user = User(id=1, username="sample", is_admin=False)
         for enabled in (True, False):
             configuration = RuntimeConfiguration(FeatureFlags(background_images=enabled))

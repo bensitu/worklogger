@@ -47,6 +47,8 @@ Run the smallest relevant tests first. Maintain durable behavior and integration
 coverage rather than duplicating implementation details or retaining temporary
 diagnostic reproductions. Expand verification when shared behavior, persistence,
 or compatibility changes; the complete suite is not required for every small edit.
+Review documentation and naming conventions directly rather than adding unit tests
+for editorial rules.
 
 The default suite excludes visual checks. Run the relevant optional checks for
 layout, theme, font, image, or Qt rendering changes. See [testing](docs/testing.md)

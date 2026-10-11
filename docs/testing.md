@@ -4,8 +4,8 @@
 
 Keep tests for business rules, authorization, data integrity, compatibility,
 error recovery, and workflows across layers. Prefer observable behavior over
-private painter calls or fixed pixel offsets. A regression test should protect a
-general contract, not preserve a one-off diagnostic exercise.
+private painter calls or fixed pixel offsets. A regression test should protect an
+observable behavior or compatibility contract.
 
 Use synthetic accounts, injected clocks/transports, and temporary files.
 Never mutate a personal database or send paid provider requests in the default suite.

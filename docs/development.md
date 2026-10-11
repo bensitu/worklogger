@@ -29,6 +29,7 @@ Use explicit dependencies, immutable commands/queries, repository contracts,
 Keep calculations out of widgets and storage algorithms out of composition.
 Do not introduce speculative abstractions or duplicate established helpers.
 Use descriptive English identifiers/comments and standard Python naming.
+Describe responsibilities and behavior with neutral, professional terminology.
 Remove unused scaffolding rather than preserving it for an unspecified feature.
 
 Keep long operations off the UI thread. Honor cancellation, ownership, optimistic
@@ -76,7 +77,7 @@ and artifact checks, not just a successful import.
 ## Documentation
 
 Write user procedures or durable contributor contracts in English.
-Keep deployment-specific paths, credentials, incident reports, development
-milestones, one-off test results, and roadmaps out of public guides.
+Describe supported behavior and operating procedures in neutral, professional
+language. Exclude deployment-specific paths, credentials, and temporary records.
 Add a guide only when its audience and responsibility cannot fit an existing one.
 Published release history belongs in the changelog.

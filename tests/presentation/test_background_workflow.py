@@ -1,4 +1,4 @@
-"""Background capability gating, responsive loading and animation lifetime."""
+"""Background availability, responsive loading, and animation lifetime."""
 
 import os
 import threading

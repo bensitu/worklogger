@@ -368,7 +368,7 @@ class LocalModelsDialog(QDialog):
     def _show_download_progress(self, progress):
         if not self._download_active:
             return
-        if progress.phase == "verification":
+        if progress.operation == "verification":
             self.progress_bar.setRange(0, 0)
             self.status_label.setText(_("Verifying downloaded file..."))
         elif progress.total_bytes:

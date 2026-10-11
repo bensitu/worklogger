@@ -275,7 +275,7 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
             SQLiteWorkLogRepository(self.factory).get_for_day(user_id, date(2026, 4, 20))
         )
 
-    def test_worklog_csv_export_uses_stable_baseline_schema(self) -> None:
+    def test_worklog_csv_export_preserves_column_contract(self) -> None:
         destination = Path(self._tempdir.name) / "exports" / "worklogs.csv"
         rows = (
             WorkLog(

@@ -72,8 +72,8 @@ Provider authentication validates request binding and signed tokens before
 resolving a local identity. Keep credentials out of generic configuration,
 representations, exception text, and logs.
 
-Deployment availability and account preferences are distinct. A deployment
-feature gate must not destroy saved account state when disabled.
+Deployment availability and account preferences are distinct. Disabling a feature
+in deployment configuration must preserve saved account preferences.
 
 ## Resources and Presentation
 

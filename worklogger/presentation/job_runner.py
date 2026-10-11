@@ -137,7 +137,7 @@ def _run_job(job: JobCallable[object], token: CancellationToken) -> Result[objec
 
 
 class ImmediateJobRunner:
-    """Synchronous JobRunner implementation for tests and non-interactive smoke checks."""
+    """Synchronous JobRunner implementation for tests and non-interactive diagnostics."""
 
     def submit(
         self,

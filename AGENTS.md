@@ -8,6 +8,7 @@ Universal instructions for AI coding agents.
 - Keep it simple. Implement the smallest solution that solves the requested problem.
 - Change surgically. Touch only files and lines directly related to the task.
 - Verify by goals. Define success criteria, run relevant checks, and fix failures before finishing.
+- Use neutral, professional English for comments, documentation, identifiers, and test descriptions. Describe responsibilities and observable behavior using established technical terminology.
 
 ## Before coding
 
@@ -38,6 +39,7 @@ Universal instructions for AI coding agents.
 - Add or update tests when behavior changes, if the project has suitable tests.
 - Prefer durable behavior and integration coverage; avoid duplicate checks of implementation details.
 - Do not retain temporary diagnostic tests that only reproduce a single incident.
+- Review documentation and naming conventions directly; do not add unit tests that enforce editorial rules.
 - Keep visual, screenshot, and native GUI checks opt-in. Run them only when changes affect the interface or platform rendering.
 - Do not repeat the complete suite for every small change; match verification to the affected behavior and risk.
 - If a check cannot be run, explain why and state what was verified instead.
