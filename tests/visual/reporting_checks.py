@@ -1,5 +1,5 @@
 from dataclasses import replace
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 import os
 from pathlib import Path
 import unittest
@@ -44,7 +44,8 @@ class ReportingLayoutChecks(unittest.TestCase):
         install_bundled_fonts()
         class Model:
             def list_revisions(self, state):
-                return Result.success((ReportRevision(1, "Updated report", None), ReportRevision(0, "Original report", None)))
+                return Result.success((ReportRevision(1, "Updated report", datetime(2026, 10, 10, tzinfo=timezone.utc)),
+                                       ReportRevision(0, "Original report", None)))
         old_style, old_palette = self.app.styleSheet(), self.app.palette()
         try:
             for language in available_languages():
@@ -57,12 +58,26 @@ class ReportingLayoutChecks(unittest.TestCase):
                     dialog = ReportRevisionsDialog(Model(), state, job_runner=ImmediateJobRunner())
                     dialog.show()
                     self.app.processEvents()
-                    dialog.versions.setCurrentRow(1)
-                    self.assertTrue(dialog.restore_button.isEnabled())
-                    self.assertEqual(dialog.preview.toPlainText(), "Original report")
-                    for field in (dialog.versions, dialog.preview, dialog.restore_button, dialog.status_label):
-                        self.assertTrue(dialog.rect().contains(field.mapTo(dialog, field.rect().bottomRight())))
-                    self.capture(dialog, "report-versions-" + str(dark), language)
+                    self.assertFalse(dialog.restore_button.isEnabled())
+                    for width, height in ((780, 520), (950, 620)):
+                        dialog.resize(width, height)
+                        self.app.processEvents()
+                        for row in (0, 1):
+                            dialog.versions.setCurrentRow(row)
+                            self.assertEqual(dialog.restore_button.isEnabled(), row == 1)
+                            self.assertEqual(dialog.preview.toPlainText(), "Original report" if row else "Updated report")
+                            item = dialog.versions.item(row)
+                            self.assertGreaterEqual(dialog.versions.visualItemRect(item).height(),
+                                                    len(item.text().splitlines()) * dialog.versions.fontMetrics().height() + 20)
+                        for tab, field in enumerate((dialog.preview, dialog.sources)):
+                            dialog.preview_tabs.setCurrentIndex(tab)
+                            self.app.processEvents()
+                            self.assertTrue(dialog.rect().contains(field.mapTo(dialog, field.rect().bottomRight())))
+                        dialog.preview_tabs.setCurrentIndex(0)
+                        for field in (dialog.versions, dialog.preview, dialog.restore_button, dialog.status_label):
+                            self.assertTrue(dialog.rect().contains(field.mapTo(dialog, field.rect().bottomRight())))
+                        self.assertEqual(dialog.versions.horizontalScrollBar().maximum(), 0)
+                        self.capture(dialog, f"report-versions-{dark}-{width}", language)
                     dialog.close()
         finally:
             self.app.setStyleSheet(old_style)

@@ -166,14 +166,24 @@ class CalendarLayoutChecks(unittest.TestCase):
             self.app.setPalette(old_palette)
             self.app.setStyleSheet(old_style)
 
-    def test_project_management_and_context_fit_supported_languages_and_window_sizes(self):
+    def _project_context_service(self):
         import tempfile
-        from tests.presentation.test_app_window import _entry_model
         from worklogger.app.use_cases.projects import ProjectService
         from worklogger.infrastructure.database import SQLiteConnectionFactory, MigrationRunner
         from worklogger.infrastructure.repositories import SQLiteAuthRepository
         from worklogger.infrastructure.repositories.project_sqlite import SQLiteProjectRepository
         from worklogger.infrastructure.security import PBKDF2PasswordHasher
+        directory = self.enterContext(tempfile.TemporaryDirectory())
+        factory = SQLiteConnectionFactory(Path(directory) / "projects.db")
+        MigrationRunner(factory).run_pending()
+        user = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000)).create_user(
+            "sample", "synthetic-password", recovery_key=None, is_admin=False)
+        service = ProjectService(user.id, SQLiteProjectRepository(factory))
+        project = service.save_project("International research and development", "R1").value
+        item = service.save_work_item(project.id, "Review the collected source material", "https://example.test/issue/1").value
+        return service, project, item
+
+    def test_project_management_fits_supported_languages_and_window_sizes(self):
         from worklogger.presentation.viewmodels.projects import ProjectManagerViewModel
         from worklogger.presentation.widgets.project_manager import ProjectManagerDialog
         from worklogger.presentation.job_runner import ImmediateJobRunner
@@ -181,63 +191,88 @@ class CalendarLayoutChecks(unittest.TestCase):
         configure_application_style()
         install_bundled_fonts()
         engine = ThemeEngine()
+        service, _project, _item = self._project_context_service()
         old_style, old_palette = self.app.styleSheet(), self.app.palette()
         try:
-            with tempfile.TemporaryDirectory() as directory:
-                factory = SQLiteConnectionFactory(Path(directory) / "projects.db")
-                MigrationRunner(factory).run_pending()
-                user = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000)).create_user(
-                    "sample", "synthetic-password", recovery_key=None, is_admin=False)
-                service = ProjectService(user.id, SQLiteProjectRepository(factory))
-                project = service.save_project("International research and development", "R1").value
-                item = service.save_work_item(project.id, "Review the collected source material", "https://example.test/issue/1").value
-                def model(repository):
-                    view_model = _entry_model(repository)
-                    view_model.service.projects = service
-                    return view_model
-                for language in available_languages():
-                    set_language(language)
-                    for dark in (False, True):
-                        self.app.setPalette(engine.qt_palette(dark=dark))
-                        self.app.setStyleSheet(engine.application_stylesheet(dark=dark))
-                        dialog = ProjectManagerDialog(ProjectManagerViewModel(service), job_runner=ImmediateJobRunner())
-                        with patch("tests.presentation.test_app_window._entry_model", side_effect=model):
-                            window = _window(MemoryWorkLogRepository())
-                        try:
-                            self.assertTrue(window.refresh())
-                            dialog.editor_tabs.setCurrentIndex(1)
-                            dialog.work_item_list.setCurrentRow(0)
-                            dialog.show()
-                            self.app.processEvents()
-                            for field in (dialog.project_list, dialog.work_item_list, dialog.work_item_title_input,
-                                          dialog.work_item_url_input, dialog.work_item_save_button, dialog.work_item_new_button,
-                                          dialog.work_item_archive_button, dialog.close_button):
-                                self.assertTrue(dialog.rect().contains(field.rect().translated(field.mapTo(dialog, QPoint()))))
-                            picker = window.entry_panel.context_picker
-                            picker.project_combo.setCurrentIndex(picker.project_combo.findData(project.id))
-                            picker.work_item_combo.setCurrentIndex(picker.work_item_combo.findData(item.id))
-                            window.show()
-                            for width, height in ((880, 580), (1100, 700)):
-                                window.resize(width, height)
+            for language in available_languages():
+                set_language(language)
+                for dark in (False, True):
+                    self.app.setPalette(engine.qt_palette(dark=dark))
+                    self.app.setStyleSheet(engine.application_stylesheet(dark=dark))
+                    dialog = ProjectManagerDialog(ProjectManagerViewModel(service), job_runner=ImmediateJobRunner())
+                    try:
+                        dialog.show()
+                        for width, height in ((780, 580), (840, 640)):
+                            dialog.resize(width, height)
+                            for tab in (0, 1):
+                                dialog.editor_tabs.setCurrentIndex(tab)
+                                if tab:
+                                    dialog.work_item_list.setCurrentRow(0)
                                 self.app.processEvents()
-                                self.assertEqual((window.width(), window.height()), (width, height))
-                                self.assertEqual(window.calendar_page.details_scroll.horizontalScrollBar().maximum(), 0)
-                                self.assertGreaterEqual(window.calendar_page.records_scroll.height(), 96)
-                                for field in (picker.project_combo, picker.work_item_combo, window.entry_panel.save_button):
-                                    self.assertTrue(window.calendar_page.rect().contains(field.rect().translated(field.mapTo(window.calendar_page, QPoint()))))
-                                viewport = window.calendar_page.details_scroll.viewport()
-                                content = window.entry_panel.content_input
-                                self.assertTrue(viewport.rect().contains(content.rect().translated(content.mapTo(viewport, QPoint()))))
+                                self.assertEqual((dialog.width(), dialog.height()), (width, height))
+                                fields = ((dialog.project_name_input, dialog.project_code_input,
+                                           dialog.project_archive_button, dialog.project_save_button) if not tab else
+                                          (dialog.work_item_list, dialog.work_item_title_input, dialog.work_item_url_input,
+                                           dialog.work_item_save_button, dialog.work_item_new_button, dialog.work_item_archive_button))
+                                for field in (dialog.project_list, dialog.project_new_button, dialog.close_button, *fields):
+                                    self.assertTrue(dialog.rect().contains(field.rect().translated(field.mapTo(dialog, QPoint()))))
+                                self.assertEqual(dialog.project_list.horizontalScrollBar().maximum(), 0)
+                                self.assertFalse(dialog.project_new_button.geometry().intersects(dialog.project_list.geometry()))
                                 target = os.environ.get("WORKLOGGER_SCREENSHOTS")
                                 if target:
                                     Path(target).mkdir(parents=True, exist_ok=True)
-                                    self.assertTrue(window.grab().save(str(Path(target) / f"{language}-projects-calendar-{'dark' if dark else 'light'}-{width}.png")))
+                                    self.assertTrue(dialog.grab().save(str(Path(target) /
+                                        f"{language}-projects-manager-{dark}-{width}-{tab}.png")))
+                    finally:
+                        dialog.close()
+                        dialog.deleteLater()
+        finally:
+            self.app.setPalette(old_palette)
+            self.app.setStyleSheet(old_style)
+
+    def test_project_context_fits_supported_languages_and_window_sizes(self):
+        from tests.presentation.test_app_window import _entry_model
+        from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
+        configure_application_style()
+        install_bundled_fonts()
+        engine = ThemeEngine()
+        old_style, old_palette = self.app.styleSheet(), self.app.palette()
+        try:
+            service, project, item = self._project_context_service()
+            def model(repository):
+                view_model = _entry_model(repository)
+                view_model.service.projects = service
+                return view_model
+            for language in available_languages():
+                set_language(language)
+                for dark in (False, True):
+                    self.app.setPalette(engine.qt_palette(dark=dark))
+                    self.app.setStyleSheet(engine.application_stylesheet(dark=dark))
+                    with patch("tests.presentation.test_app_window._entry_model", side_effect=model):
+                        window = _window(MemoryWorkLogRepository())
+                    try:
+                        self.assertTrue(window.refresh())
+                        picker = window.entry_panel.context_picker
+                        picker.project_combo.setCurrentIndex(picker.project_combo.findData(project.id))
+                        picker.work_item_combo.setCurrentIndex(picker.work_item_combo.findData(item.id))
+                        window.show()
+                        for width, height in ((880, 580), (1100, 700)):
+                            window.resize(width, height)
+                            self.app.processEvents()
+                            self.assertEqual((window.width(), window.height()), (width, height))
+                            self.assertEqual(window.calendar_page.details_scroll.horizontalScrollBar().maximum(), 0)
+                            self.assertGreaterEqual(window.calendar_page.records_scroll.height(), 96)
+                            for field in (picker.project_combo, picker.work_item_combo, window.entry_panel.save_button):
+                                self.assertTrue(window.calendar_page.rect().contains(field.rect().translated(field.mapTo(window.calendar_page, QPoint()))))
+                            viewport = window.calendar_page.details_scroll.viewport()
+                            content = window.entry_panel.content_input
+                            self.assertTrue(viewport.rect().contains(content.rect().translated(content.mapTo(viewport, QPoint()))))
+                            target = os.environ.get("WORKLOGGER_SCREENSHOTS")
                             if target:
-                                self.assertTrue(dialog.grab().save(str(Path(target) / f"{language}-projects-manager-{'dark' if dark else 'light'}.png")))
-                        finally:
-                            window.close()
-                            dialog.hide()
-                            dialog.deleteLater()
+                                Path(target).mkdir(parents=True, exist_ok=True)
+                                self.assertTrue(window.grab().save(str(Path(target) / f"{language}-projects-calendar-{'dark' if dark else 'light'}-{width}.png")))
+                    finally:
+                        window.close()
         finally:
             self.app.setPalette(old_palette)
             self.app.setStyleSheet(old_style)

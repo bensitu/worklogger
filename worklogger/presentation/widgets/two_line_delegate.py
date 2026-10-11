@@ -6,7 +6,16 @@ from PySide6.QtWidgets import QApplication, QStyle, QStyledItemDelegate, QStyleO
 
 
 class TwoLineItemDelegate(QStyledItemDelegate):
+    def __init__(self, parent=None, *, soft_selection=False, detail_lines=1):
+        super().__init__(parent)
+        self._soft_selection = soft_selection
+        self._detail_lines = detail_lines
+
     def sizeHint(self, option, index):
+        if self._soft_selection:
+            lines = min(self._detail_lines, str(index.data(Qt.ItemDataRole.DisplayRole) or "").count("\n"))
+            height = QFontMetrics(option.font).height()
+            return QSize(190, (lines + 1) * height + lines * 6 + 24)
         return QSize(190, max(64, 2 * QFontMetrics(option.font).height() + 28))
 
     def paint(self, painter, option, index):
@@ -14,14 +23,17 @@ class TwoLineItemDelegate(QStyledItemDelegate):
         self.initStyleOption(styled, index)
         title, _separator, preview = str(index.data(Qt.ItemDataRole.DisplayRole) or "").partition("\n")
         styled.text = ""
+        if self._soft_selection:
+            styled.state &= ~QStyle.StateFlag.State_HasFocus
         style = styled.widget.style() if styled.widget else QApplication.style()
         painter.save()
         painter.setClipRect(styled.rect)
         style.drawControl(QStyle.ControlElement.CE_ItemViewItem, styled, painter, styled.widget)
         selected = bool(styled.state & QStyle.StateFlag.State_Selected)
-        color = styled.palette.color(QPalette.ColorRole.HighlightedText if selected else QPalette.ColorRole.Text)
+        color = styled.palette.color(QPalette.ColorRole.HighlightedText
+                                     if selected and not self._soft_selection else QPalette.ColorRole.Text)
         font = QFont(styled.font)
-        font.setBold(True)
+        font.setWeight(QFont.Weight.DemiBold if self._soft_selection else QFont.Weight.Bold)
         metrics = QFontMetrics(font)
         text_rect = styled.rect.adjusted(12, 10, -12, -10)
         painter.setFont(font)
@@ -31,11 +43,15 @@ class TwoLineItemDelegate(QStyledItemDelegate):
                          metrics.elidedText(title, Qt.TextElideMode.ElideRight, text_rect.width()))
         font.setBold(False)
         painter.setFont(font)
-        if not selected:
+        if not selected or self._soft_selection:
             color.setAlphaF(0.72)
         painter.setPen(color)
-        preview_rect = QRect(text_rect.x(), text_rect.y() + metrics.height() + 6,
-                             text_rect.width(), QFontMetrics(font).height())
-        painter.drawText(preview_rect, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-                         QFontMetrics(font).elidedText(preview, Qt.TextElideMode.ElideRight, text_rect.width()))
+        detail_metrics = QFontMetrics(font)
+        details = preview.split("\n")[:self._detail_lines] if self._soft_selection else (preview,)
+        for line, text in enumerate(details):
+            preview_rect = QRect(text_rect.x(), text_rect.y() + metrics.height() + 6
+                                 + line * (detail_metrics.height() + 6),
+                                 text_rect.width(), detail_metrics.height())
+            painter.drawText(preview_rect, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                             detail_metrics.elidedText(text, Qt.TextElideMode.ElideRight, text_rect.width()))
         painter.restore()

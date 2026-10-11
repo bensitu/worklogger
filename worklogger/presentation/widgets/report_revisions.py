@@ -1,7 +1,7 @@
 """Version preview, source references and deliberate report recovery."""
 
 from datetime import timezone
-from PySide6.QtCore import Qt, QTimer, Signal, QSize
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import QDialog, QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QTabWidget, QTextEdit, QVBoxLayout
 from shiboken6 import isValid
 from worklogger.domain.shared.result import Result
@@ -10,6 +10,7 @@ from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.widgets.two_line_delegate import TwoLineItemDelegate
 from worklogger.presentation.report_source_labels import provenance_text
 
 
@@ -27,29 +28,44 @@ class ReportRevisionsDialog(QDialog):
         self.resize(950, 620)
         root = QVBoxLayout(self)
         root.setContentsMargins(20, 20, 20, 16)
+        root.setSpacing(16)
         types = {"daily": _("Daily Report"), "weekly": _("Weekly Report"), "monthly": _("Monthly Report")}
         self.scope_label = QLabel(_("{type} #{id} | {start} - {end}").format(type=types[state.report_type],
             id=state.report_id, start=state.period_start.isoformat(), end=state.period_end.isoformat()))
         self.scope_label.setWordWrap(True)
+        self.scope_label.setTextFormat(Qt.TextFormat.PlainText)
+        self.scope_label.setProperty("role", "section_heading")
         root.addWidget(self.scope_label)
         body = QHBoxLayout()
+        body.setSpacing(20)
         self.versions = QListWidget()
         self.versions.setObjectName("report_versions_list_view")
+        self.versions.setProperty("management_list", True)
+        self.versions.setAccessibleName(_("Report versions"))
+        self.versions.setItemDelegate(TwoLineItemDelegate(self.versions, soft_selection=True, detail_lines=2))
         self.versions.setSpacing(4)
         self.versions.setWordWrap(True)
-        self.versions.setMaximumWidth(320)
+        self.versions.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.versions.setMinimumWidth(230)
+        self.versions.setMaximumWidth(300)
         body.addWidget(self.versions, 1)
-        tabs = QTabWidget()
+        self.preview_tabs = QTabWidget()
+        self.preview_tabs.setObjectName("report_revision_tab_widget")
+        self.preview_tabs.tabBar().setObjectName("management_tab_bar")
+        self.preview_tabs.tabBar().setDrawBase(False)
         self.preview, self.sources = QTextEdit(), QTextEdit()
         for field in (self.preview, self.sources):
             field.setReadOnly(True)
             field.setAcceptRichText(False)
-        tabs.addTab(self.preview, _("Content"))
-        tabs.addTab(self.sources, _("Sources"))
-        body.addWidget(tabs, 2)
+            field.setObjectName("report_revision_preview")
+            field.document().setDocumentMargin(16)
+        self.preview_tabs.addTab(self.preview, _("Content"))
+        self.preview_tabs.addTab(self.sources, _("Sources"))
+        body.addWidget(self.preview_tabs, 2)
         root.addLayout(body, 1)
         self.status_label = QLabel(_("The latest 50 saved versions are retained. Restoring creates a new version."))
         self.status_label.setWordWrap(True)
+        self.status_label.setProperty("role", "secondary")
         root.addWidget(self.status_label)
         footer = QHBoxLayout()
         footer.addStretch()
@@ -104,7 +120,7 @@ class ReportRevisionsDialog(QDialog):
                 if version.revision == self._state.revision:
                     text += "\n" + _("Current saved version")
                 item = QListWidgetItem(text)
-                item.setSizeHint(QSize(250, 80))
+                item.setToolTip(text)
                 item.setData(Qt.ItemDataRole.UserRole, version)
                 self.versions.addItem(item)
             if self.versions.count():
