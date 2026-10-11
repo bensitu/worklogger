@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import base64
 import hashlib
+import logging
 import os
 import secrets
 import portalocker
@@ -27,6 +28,23 @@ from worklogger.domain.shared.result import Result
 _ENC_PREFIX = "enc1:"
 _FERNET_PREFIX = "enc2:"
 _KEY_BYTES = 32
+LOGGER = logging.getLogger(__name__)
+
+
+def trusted_keyring_backend():
+    import keyring
+
+    backend = keyring.get_keyring()
+    candidates = getattr(backend, "backends", (backend,))
+    secure_modules = {
+        "keyring.backends.Windows", "keyring.backends.macOS",
+        "keyring.backends.SecretService", "keyring.backends.libsecret",
+        "keyring.backends.kwallet",
+    }
+    for candidate in candidates:
+        if type(candidate).__module__ in secure_modules and candidate.priority > 0:
+            return candidate
+    raise RuntimeError("credential_storage_unavailable")
 
 
 class KeyringBackend(Protocol):
@@ -43,27 +61,25 @@ class KeyringBackend(Protocol):
 class OptionalKeyringBackend:
     def get_password(self, service: str, name: str) -> str | None:
         try:
-            import keyring
-
-            return keyring.get_password(service, name)
+            return trusted_keyring_backend().get_password(service, name)
         except Exception:
+            LOGGER.warning("credential_storage_unavailable")
             return None
 
     def set_password(self, service: str, name: str, value: str) -> None:
         try:
-            import keyring
-
-            keyring.set_password(service, name, value)
+            trusted_keyring_backend().set_password(service, name, value)
         except Exception as exc:
             raise RuntimeError("keyring_unavailable") from exc
 
     def delete_password(self, service: str, name: str) -> None:
         try:
-            import keyring
-
-            keyring.delete_password(service, name)
-        except Exception:
-            pass
+            backend = trusted_keyring_backend()
+            if backend.get_password(service, name) is not None:
+                backend.delete_password(service, name)
+        except Exception as exc:
+            LOGGER.warning("credential_delete_failed")
+            raise RuntimeError("credential_storage_unavailable") from exc
 
 
 class NoKeyringBackend:
@@ -87,19 +103,7 @@ class SystemCredentialStore:
     def _keyring(self):
         if self._backend is not None:
             return self._backend
-        import keyring
-
-        backend = keyring.get_keyring()
-        candidates = getattr(backend, "backends", (backend,))
-        secure_modules = {
-            "keyring.backends.Windows", "keyring.backends.macOS",
-            "keyring.backends.SecretService", "keyring.backends.libsecret",
-            "keyring.backends.kwallet",
-        }
-        for candidate in candidates:
-            if type(candidate).__module__ in secure_modules and candidate.priority > 0:
-                return candidate
-        raise RuntimeError("credential_storage_unavailable")
+        return trusted_keyring_backend()
 
     def _name(self, name: str) -> str:
         return f"{self._namespace}:{name}"
@@ -188,16 +192,6 @@ def _load_previous_machine_key() -> bytes | None:
         return None
 
 
-def _decrypt_released_fernet(stored: str) -> str:
-    import platform
-    import uuid
-    key = hashlib.sha256(f"{platform.node()}|{uuid.getnode()}".encode("utf-8")).digest()
-    try:
-        return Fernet(base64.urlsafe_b64encode(key)).decrypt(stored[len(_ENC_PREFIX):].encode("ascii")).decode("utf-8")
-    except (InvalidToken, UnicodeError, ValueError) as exc:
-        raise ValueError("secret_authentication_failed") from exc
-
-
 class FernetSecretBox:
     """Fernet encryption with read compatibility for earlier encrypted values."""
 
@@ -209,25 +203,13 @@ class FernetSecretBox:
         return _FERNET_PREFIX + Fernet(base64.urlsafe_b64encode(key)).encrypt(value.encode("utf-8")).decode("ascii")
 
     def decrypt(self, stored: str) -> str:
-        if stored.startswith(_FERNET_PREFIX):
-            key = self._key_provider.load()
-            try:
-                return Fernet(base64.urlsafe_b64encode(key)).decrypt(stored[len(_FERNET_PREFIX):].encode("ascii")).decode("utf-8")
-            except (InvalidToken, UnicodeError) as exc:
-                raise ValueError("secret_authentication_failed") from exc
-        if not stored.startswith(_ENC_PREFIX):
+        if not stored.startswith((_ENC_PREFIX, _FERNET_PREFIX)):
             raise ValueError("secret_not_encrypted")
-        try:
-            key = self._key_provider.load()
-        except ValueError as exc:
-            if str(exc) != "secret_key_missing":
-                raise
-            return _decrypt_released_fernet(stored)
+        key = self._key_provider.load()
         try:
             return Fernet(base64.urlsafe_b64encode(key)).decrypt(stored[len(_ENC_PREFIX):].encode("ascii")).decode("utf-8")
-        except (InvalidToken, UnicodeError, ValueError):
-            pass
-        return _decrypt_released_fernet(stored)
+        except (InvalidToken, UnicodeError, ValueError) as exc:
+            raise ValueError("secret_authentication_failed") from exc
 
 
 def protect_legacy_proxy_passwords(connection_factory, secret_box: FernetSecretBox) -> None:
@@ -293,20 +275,32 @@ class EncryptedSettingsKeyStore:
             return self.delete_secret(key)
         try:
             self._keyring.set_password(self._service_name, key, value)
-        except RuntimeError:
+        except Exception:
             try:
                 encrypted = self._secret_box.encrypt(value)
                 self._settings.set(self._user_id, self._setting_key(key), encrypted)
+                if key == "ai_api_key":
+                    self._settings.delete(self._user_id, key)
                 return Result.success(None)
             except Exception:
                 return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
-        self._settings.delete(self._user_id, self._setting_key(key))
+        try:
+            self._settings.delete(self._user_id, self._setting_key(key))
+            if key == "ai_api_key":
+                self._settings.delete(self._user_id, key)
+        except Exception:
+            return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
         return Result.success(None)
 
     def delete_secret(self, name: str) -> Result[None]:
         key = self._normalize_name(name)
-        self._keyring.delete_password(self._service_name, key)
-        self._settings.delete(self._user_id, self._setting_key(key))
+        try:
+            self._keyring.delete_password(self._service_name, key)
+            self._settings.delete(self._user_id, self._setting_key(key))
+            if key == "ai_api_key":
+                self._settings.delete(self._user_id, key)
+        except Exception:
+            return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
         return Result.success(None)
 
     def _normalize_name(self, name: str) -> str:

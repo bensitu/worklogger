@@ -97,6 +97,12 @@ class DatabaseUpgradeTests(unittest.TestCase):
                 settings.set(17,"ai_api_key",encoded)
                 store = EncryptedSettingsKeyStore(settings,user_id=17,keyring_backend=NoKeyringBackend(),secret_box=FernetSecretBox(key_provider))
                 result = store.get_secret("ai_api_key")
+                if deterministic:
+                    self.assertFalse(result.ok)
+                    self.assertEqual(settings.get(17,"ai_api_key"), encoded)
+                    self.assertIsNone(settings.get(17,"secret:ai_api_key"))
+                    self.assertEqual(key_provider.load(), current_key)
+                    continue
                 self.assertTrue(result.ok,result.error)
                 self.assertEqual(result.value,"example-secret")
                 self.assertIsNone(settings.get(17,"ai_api_key"))

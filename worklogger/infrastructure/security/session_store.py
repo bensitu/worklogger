@@ -70,7 +70,7 @@ class FileRememberTokenSessionStore:
                 InfrastructureError(
                     "remember_session_load_failed",
                     "remember_session_load_failed",
-                    {"reason": str(exc)},
+                    {"error_type": type(exc).__name__},
                 )
             )
 
@@ -86,7 +86,7 @@ class FileRememberTokenSessionStore:
                 InfrastructureError(
                     "remember_session_save_failed",
                     "remember_session_save_failed",
-                    {"reason": str(exc)},
+                    {"error_type": type(exc).__name__},
                 )
             )
         return Result.success(None)
@@ -101,7 +101,7 @@ class FileRememberTokenSessionStore:
                 InfrastructureError(
                     "remember_session_clear_failed",
                     "remember_session_clear_failed",
-                    {"reason": str(exc)},
+                    {"error_type": type(exc).__name__},
                 )
             )
         return Result.success(None)

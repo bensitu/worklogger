@@ -43,6 +43,13 @@ Machine keys are protected with current-user DPAPI on Windows or a private local
 key file on other platforms. Protect the containing OS profile.
 Changing machine or database path may require re-entering credentials.
 
+Only approved OS keyring backends are used; plaintext-file backends are rejected.
+Earlier encrypted values require their original random machine key. WorkLogger
+does not reconstruct a key from host names or network identifiers. If that key is
+unavailable, re-enter the credential; stored ciphertext is retained. Rotate old
+API keys or proxy passwords if historical backups may have been exposed.
+Failed credential deletion is reported instead of treated as a successful removal.
+
 Do not regenerate or delete an unreadable key to silence a warning; preserve it
 before recovery. Database backup does not transfer OS keyring entries or session
 files. New backups exclude proxy passwords, but private pre-change snapshots can

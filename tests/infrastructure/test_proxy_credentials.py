@@ -170,6 +170,35 @@ class ProxyCredentialTests(unittest.TestCase):
             store = SystemCredentialStore(namespace="test")
             self.assertFalse(store.set_secret("proxy_password", "synthetic password").ok)
 
+    def test_external_secret_uses_encryption_instead_of_an_untrusted_keyring(self):
+        import keyring
+        from unittest.mock import Mock
+
+        insecure = Mock(priority=10)
+        store = EncryptedSettingsKeyStore(self.repository, user_id=self.user_id, secret_box=self.secret_box)
+        with patch.object(keyring, "get_keyring", return_value=insecure):
+            self.assertTrue(store.set_secret("ai_api_key", "synthetic key").ok)
+            self.assertEqual(store.get_secret("ai_api_key").value, "synthetic key")
+        insecure.set_password.assert_not_called()
+        insecure.get_password.assert_not_called()
+        stored = self.repository.get(self.user_id, "secret:ai_api_key")
+        self.assertTrue(stored.startswith("enc2:"))
+        self.assertNotIn("synthetic key", stored)
+
+    def test_failed_secret_removal_is_reported_and_keeps_fallback_content(self):
+        store = EncryptedSettingsKeyStore(self.repository, user_id=self.user_id,
+                                         keyring_backend=self.backend, secret_box=self.secret_box)
+        encrypted = self.secret_box.encrypt("synthetic key")
+        self.repository.set(self.user_id, "secret:ai_api_key", encrypted)
+        self.backend.values[("WorkLogger", "ai_api_key")] = "synthetic key"
+        with patch.object(self.backend, "delete_password", side_effect=OSError("synthetic failure")):
+            self.assertFalse(store.delete_secret("ai_api_key").ok)
+        self.assertEqual(self.repository.get(self.user_id, "secret:ai_api_key"), encrypted)
+        self.repository.set(self.user_id, "ai_api_key", "synthetic previous key")
+        self.assertTrue(store.delete_secret("ai_api_key").ok)
+        self.assertIsNone(self.repository.get(self.user_id, "secret:ai_api_key"))
+        self.assertIsNone(self.repository.get(self.user_id, "ai_api_key"))
+
     def test_invalid_ports_report_failure_without_changing_saved_port(self):
         self.assertTrue(self.model.set_text(NETWORK_PROXY_PORT_SETTING_KEY, "8080").ok)
         for value in ("abc", "", "-1", "65536", "70000", "80.5"):
