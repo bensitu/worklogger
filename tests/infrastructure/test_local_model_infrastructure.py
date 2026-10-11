@@ -13,7 +13,7 @@ from worklogger.app.ports import AIRequest
 from worklogger.domain.local_model.models import LocalModelEntry
 from worklogger.infrastructure.ai.local import LocalModelGateway, strip_thinking
 from worklogger.infrastructure.local_model import JsonLocalModelStore, bundled_model_catalog_path, sha256_of_file
-from worklogger.infrastructure.local_model.store import _entry_from_json
+from worklogger.infrastructure.local_model.catalog import model_entry_from_mapping
 
 
 class FakeResponse:
@@ -40,6 +40,10 @@ class FakeResponse:
 class LocalModelInfrastructureTests(unittest.TestCase):
     def test_download_limits_headers_and_streaming_without_replacing_existing_files(self):
         from worklogger.infrastructure.local_model.store import HttpRangeDownloader
+        for options in ({"chunk_size": 0}, {"chunk_size": -1}, {"timeout_seconds": 0},
+                        {"timeout_seconds": float("nan")}, {"max_bytes": 0}):
+            with self.assertRaisesRegex(ValueError, "local_model_download_limit_invalid"):
+                HttpRangeDownloader(**options)
         payload = b"x" * 16
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "model.gguf"
@@ -63,8 +67,8 @@ class LocalModelInfrastructureTests(unittest.TestCase):
             }]}), encoding="utf-8")
             models = root / "models"
             store = JsonLocalModelStore(models, bundled_catalog_path=bundled)
-            with patch("worklogger.infrastructure.local_model.store._entry_from_json",
-                       wraps=_entry_from_json) as parse:
+            with patch("worklogger.infrastructure.local_model.catalog.model_entry_from_mapping",
+                       wraps=model_entry_from_mapping) as parse:
                 for _ in range(3):
                     entry = store.list_models().value[0]
                     self.assertEqual(entry.description, "Bundled description")

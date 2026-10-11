@@ -2,21 +2,19 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from collections.abc import Callable
-from dataclasses import replace
 import sqlite3
+from dataclasses import replace
+from datetime import datetime, timezone
 
 from worklogger.domain.auth.models import LinkedIdentity, User
-from worklogger.domain.auth.profile import normalize_display_name
 from worklogger.domain.auth.policies import (
-    generate_recovery_key,
     generate_initial_password,
-    lockout_until_for_failure_count,
+    generate_recovery_key,
     normalize_username,
-    username_key,
     remember_token_is_expired,
+    username_key,
 )
+from worklogger.domain.auth.profile import normalize_display_name
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
 from worklogger.infrastructure.repositories._mapping import (
     bool_from_row,
@@ -27,6 +25,13 @@ from worklogger.infrastructure.security.password_hasher import PBKDF2PasswordHas
 
 _DUMMY_PASSWORD_SALT = "00" * 16
 _DUMMY_PASSWORD_HASH = "00" * 32
+
+
+from worklogger.infrastructure.repositories.identity_sqlite import SQLiteIdentityRepository as SQLiteIdentityRepository
+from worklogger.infrastructure.repositories.identity_sqlite import identity_from_row
+from worklogger.infrastructure.repositories.login_failures_sqlite import (
+    SQLiteLoginFailureRepository as SQLiteLoginFailureRepository,
+)
 
 
 class SQLiteAuthRepository:
@@ -111,7 +116,7 @@ class SQLiteAuthRepository:
             if len(existing) > 1:
                 raise ValueError("identity_subject_ambiguous")
             if existing:
-                linked = SQLiteIdentityRepository._identity_from_row(existing[0])
+                linked = identity_from_row(existing[0])
                 if profile.issuer and linked.issuer != profile.issuer:
                     raise ValueError("identity_issuer_mismatch")
                 row = connection.execute("SELECT * FROM users WHERE id=?", (linked.user_id,)).fetchone()
@@ -434,160 +439,4 @@ class SQLiteAuthRepository:
             recovery_key_created_at=parse_datetime(row["recovery_key_created_at"]),
             last_login_at=parse_datetime(row["last_login_at"]),
             local_password_enabled=bool_from_row(row, "local_password_enabled"),
-        )
-
-
-class SQLiteLoginFailureRepository:
-    def __init__(self, connection_factory: SQLiteConnectionFactory, *, clock: Callable[[], datetime] | None = None) -> None:
-        self._connection_factory = connection_factory
-        self._clock = clock or (lambda: datetime.now(timezone.utc))
-        self.prune()
-
-    def prune(self) -> None:
-        cutoff = (self._clock() - timedelta(days=7)).isoformat()
-        with self._connection_factory.transaction() as connection:
-            column = "username_key"
-            connection.execute(f"DELETE FROM login_attempts WHERE last_failed_at<? OR NOT EXISTS (SELECT 1 FROM users WHERE users.{column}=login_attempts.username)", (cutoff,))
-
-    def lockout_until(self, username: str) -> datetime | None:
-        try:
-            username = username_key(username)
-        except (TypeError, ValueError):
-            return None
-        with self._connection_factory.connection() as connection:
-            row = connection.execute(
-                "SELECT locked_until FROM login_attempts WHERE username=?",
-                (username,),
-            ).fetchone()
-        locked_until = parse_datetime(row["locked_until"]) if row else None
-        if locked_until is None:
-            return None
-        if locked_until <= self._clock():
-            with self._connection_factory.transaction(write=True) as connection:
-                connection.execute(
-                    "UPDATE login_attempts SET locked_until=NULL WHERE username=?",
-                    (username,),
-                )
-            return None
-        return locked_until
-
-    def record_failure(self, username: str) -> tuple[int, datetime | None]:
-        username = username_key(username)
-        now = self._clock()
-        with self._connection_factory.transaction(write=True) as connection:
-            column = "username_key"
-            if not connection.execute(f"SELECT 1 FROM users WHERE {column}=?", (username,)).fetchone():
-                return 0, None
-            row = connection.execute(
-                "SELECT failed_count, last_failed_at FROM login_attempts WHERE username=?",
-                (username,),
-            ).fetchone()
-            recent = row is not None and (parse_datetime(row["last_failed_at"]) or datetime.min.replace(tzinfo=timezone.utc)) > now - timedelta(hours=24)
-            failed_count = min(int(row["failed_count"]) + 1, 20) if recent else 1
-            locked_until = lockout_until_for_failure_count(failed_count, now=now)
-            locked_until_raw = locked_until.isoformat(timespec="seconds") if locked_until else None
-            connection.execute(
-                """
-                INSERT INTO login_attempts(username, failed_count, locked_until, last_failed_at)
-                VALUES(?, ?, ?, ?)
-                ON CONFLICT(username) DO UPDATE SET
-                    failed_count=excluded.failed_count,
-                    locked_until=excluded.locked_until,
-                    last_failed_at=excluded.last_failed_at
-                """,
-                (username, failed_count, locked_until_raw, now.isoformat(timespec="seconds")),
-            )
-        return failed_count, locked_until
-
-    def clear_failures(self, username: str) -> None:
-        try:
-            username = username_key(username)
-        except (TypeError, ValueError):
-            return
-        with self._connection_factory.transaction(write=True) as connection:
-            connection.execute(
-                "DELETE FROM login_attempts WHERE username=?",
-                (username,),
-            )
-
-
-class SQLiteIdentityRepository:
-    def __init__(self, connection_factory: SQLiteConnectionFactory) -> None:
-        self._connection_factory = connection_factory
-
-    def list_for_user(self, user_id: int) -> tuple[LinkedIdentity, ...]:
-        with self._connection_factory.connection() as connection:
-            rows = connection.execute(
-                "SELECT * FROM external_identities WHERE user_id=? ORDER BY provider, id",
-                (user_id,),
-            ).fetchall()
-        return tuple(self._identity_from_row(row) for row in rows)
-
-    def get_by_provider_subject(
-        self,
-        provider: str,
-        subject: str,
-    ) -> LinkedIdentity | None:
-        with self._connection_factory.connection() as connection:
-            rows = connection.execute(
-                """
-                SELECT * FROM external_identities
-                WHERE provider=? AND subject=? LIMIT 2
-                """,
-                (str(provider), str(subject)),
-            ).fetchall()
-        if len(rows) > 1:
-            raise ValueError("identity_subject_ambiguous")
-        return self._identity_from_row(rows[0]) if rows else None
-
-    def add(self, identity: LinkedIdentity) -> LinkedIdentity:
-        now = utc_now_iso()
-        with self._connection_factory.transaction(write=True) as connection:
-            cursor = connection.execute(
-                """
-                INSERT INTO external_identities(
-                    user_id, provider, subject, email, display_name, created_at, updated_at, broker, issuer
-                )
-                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    identity.user_id,
-                    identity.provider,
-                    identity.subject,
-                    identity.email,
-                    identity.display_name,
-                    now,
-                    now,
-                    "direct_oidc",
-                    identity.issuer or identity.provider,
-                ),
-            )
-            identity_id = int(cursor.lastrowid)
-        return LinkedIdentity(
-            id=identity_id,
-            user_id=identity.user_id,
-            provider=identity.provider,
-            subject=identity.subject,
-            email=identity.email,
-            display_name=identity.display_name,
-            issuer=identity.issuer or identity.provider,
-        )
-
-    def remove(self, user_id: int, identity_id: int) -> None:
-        with self._connection_factory.transaction(write=True) as connection:
-            connection.execute(
-                "DELETE FROM external_identities WHERE user_id=? AND id=?",
-                (user_id, identity_id),
-            )
-
-    @staticmethod
-    def _identity_from_row(row: sqlite3.Row) -> LinkedIdentity:
-        return LinkedIdentity(
-            id=int(row["id"]),
-            user_id=int(row["user_id"]),
-            provider=str(row["provider"]),
-            subject=str(row["subject"]),
-            email=row["email"],
-            display_name=row["display_name"],
-            issuer=str(row["issuer"] or ""),
         )

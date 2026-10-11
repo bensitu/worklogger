@@ -1,10 +1,8 @@
 """SQLite repository adapters."""
 
-from worklogger.infrastructure.repositories.auth_sqlite import (
-    SQLiteAuthRepository,
-    SQLiteIdentityRepository,
-    SQLiteLoginFailureRepository,
-)
+from worklogger.infrastructure.repositories.auth_sqlite import SQLiteAuthRepository
+from worklogger.infrastructure.repositories.identity_sqlite import SQLiteIdentityRepository
+from worklogger.infrastructure.repositories.login_failures_sqlite import SQLiteLoginFailureRepository
 from worklogger.infrastructure.repositories.calendar_sqlite import SQLiteCalendarEventRepository
 from worklogger.infrastructure.repositories.note_sqlite import SQLiteDailyNoteRepository
 from worklogger.infrastructure.repositories.quicklog_sqlite import SQLiteQuickLogRepository

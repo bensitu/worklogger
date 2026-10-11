@@ -2,103 +2,33 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import asdict
 import hashlib
 import json
 import os
-from pathlib import Path, PureWindowsPath
 import re
 import shutil
-import portalocker
+from collections.abc import Callable
+from dataclasses import asdict
+from pathlib import Path
 from threading import RLock
-from urllib.error import HTTPError, URLError
 from urllib.request import Request
 
-from worklogger.domain.local_model.models import LocalModelEntry, LocalModelFileStatus, DownloadProgress
+from worklogger.domain.local_model.models import LocalModelEntry, LocalModelFileStatus, is_sha256_digest
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
-from worklogger.domain.shared.errors import CancellationError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.files import atomic_destination
-from worklogger.infrastructure.http import https_opener, validate_https_url
+from worklogger.infrastructure.http import https_opener
 
 CATALOG_FILENAME = "catalog.json"
 MANIFEST_FILENAME = "manifest.json"
-_SHA_RE = re.compile(r"^[0-9a-f]{64}$")
-_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
 
-UrlOpen = Callable[..., object]
 
 
-class HttpRangeDownloader:
-    def __init__(
-        self,
-        *,
-        opener: UrlOpen | None = None,
-        timeout_seconds: float = 30.0,
-        chunk_size: int = 64 * 1024,
-        max_bytes: int = 32 * 1024 ** 3,
-    ) -> None:
-        self._opener = opener or https_opener(public_only=True)
-        self._timeout_seconds = timeout_seconds
-        self._chunk_size = chunk_size
-        self._max_bytes = int(max_bytes)
-        if self._max_bytes < 1:
-            raise ValueError("local_model_download_limit_invalid")
-
-    def download(
-        self,
-        *,
-        url: str,
-        destination: Path,
-        expected_sha256: str = "",
-        is_cancelled: Callable[[], bool] | None = None,
-        progress=None,
-    ) -> Result[Path]:
-        try:
-            safe_url = safe_model_url(url)
-            expected = str(expected_sha256 or "").strip().lower()
-            if not _SHA_RE.fullmatch(expected):
-                return Result.failure(ValidationError("local_model_hash_required", "local_model_hash_required"))
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            temp_path = destination.with_suffix(destination.suffix + ".tmp")
-            if temp_path.is_symlink() or (temp_path.exists() and not temp_path.is_file()):
-                raise ValueError("local_model_filename_invalid")
-            with portalocker.Lock(str(destination) + ".lock", timeout=0):
-                _download_to_temp(
-                    opener=self._opener, url=safe_url, destination=temp_path,
-                    timeout_seconds=self._timeout_seconds, chunk_size=self._chunk_size,
-                    is_cancelled=is_cancelled,
-                    progress=progress,
-                    max_bytes=self._max_bytes,
-                )
-                if progress is not None:
-                    progress(DownloadProgress(temp_path.stat().st_size, temp_path.stat().st_size, "verification"))
-                actual_sha = sha256_of_file(temp_path, is_cancelled=is_cancelled)
-                if actual_sha != expected:
-                    temp_path.unlink(missing_ok=True)
-                    return Result.failure(
-                        ValidationError("local_model_hash_mismatch", "local_model_hash_mismatch")
-                    )
-                _check_cancelled(is_cancelled)
-                os.replace(temp_path, destination)
-            return Result.success(destination)
-        except InterruptedError:
-            return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
-        except ValueError as exc:
-            if str(exc) == "local_model_file_too_large":
-                temp_path.unlink(missing_ok=True)
-                return Result.failure(ValidationError(str(exc), str(exc)))
-            return Result.failure(InfrastructureError("local_model_download_failed", "local_model_download_failed"))
-        except Exception as exc:
-            return Result.failure(
-                InfrastructureError(
-                    "local_model_download_failed",
-                    "local_model_download_failed",
-                    {"reason": str(exc)},
-                )
-            )
+from worklogger.infrastructure.local_model.catalog import bundled_model_catalog_path as bundled_model_catalog_path
+from worklogger.infrastructure.local_model.catalog import catalog_entries
+from worklogger.infrastructure.local_model.download import HttpRangeDownloader, UrlOpen
+from worklogger.infrastructure.local_model.files import safe_model_filename, safe_model_url, sha256_of_file
 
 
 class JsonLocalModelStore:
@@ -116,7 +46,9 @@ class JsonLocalModelStore:
         self._remote_catalog_url = remote_catalog_url
         self._catalog_opener = catalog_opener or https_opener(public_only=True)
         self._downloader = downloader or HttpRangeDownloader()
-        self._max_catalog_bytes = max_catalog_bytes
+        self._max_catalog_bytes = int(max_catalog_bytes)
+        if self._max_catalog_bytes < 1:
+            raise ValueError("local_model_catalog_invalid")
         self._bundled_catalog_path = bundled_catalog_path
         self._verified_files = {}
         self._catalog_cache = {}
@@ -253,7 +185,7 @@ class JsonLocalModelStore:
                     LocalModelFileStatus(model_id, available=True, verified=False, reason="local_model_empty")
                 )
             expected = str(entry.value.sha256 or "").strip().lower()
-            if not _SHA_RE.fullmatch(expected):
+            if not is_sha256_digest(expected):
                 return Result.success(LocalModelFileStatus(model_id, available=True, verified=False, reason="local_model_hash_required"))
             stat = path.stat()
             key = (str(path), stat.st_mtime_ns, stat.st_ctime_ns, stat.st_size, expected)
@@ -360,7 +292,7 @@ class JsonLocalModelStore:
             raw_entries = data.get("models") if isinstance(data, dict) else data
             if not isinstance(raw_entries, list):
                 raise ValueError("local_model_catalog_invalid")
-            entries = tuple(_catalog_entries(raw_entries))
+            entries = tuple(catalog_entries(raw_entries))
             self._catalog_cache[path] = (key, entries)
             return entries
 
@@ -381,7 +313,7 @@ class JsonLocalModelStore:
         data = json.loads(raw.decode("utf-8"))
         if not isinstance(data, dict) or not isinstance(data.get("models"), list):
             raise ValueError("local_model_catalog_invalid")
-        return _catalog_entries(data["models"])
+        return catalog_entries(data["models"])
 
     def _sync_manifest(self, entries: list[LocalModelEntry]) -> None:
         manifest = {
@@ -455,89 +387,9 @@ class JsonLocalModelStore:
         return candidate, False
 
 
-def safe_model_filename(filename: str) -> str:
-    name = str(filename or "").strip()
-    win_path = PureWindowsPath(name)
-    if (
-        not name
-        or "/" in name
-        or "\\" in name
-        or ":" in name
-        or Path(name).is_absolute()
-        or win_path.is_absolute()
-        or win_path.drive
-        or name in {".", ".."}
-        or ".." in Path(name).parts
-        or any(ord(character) < 32 for character in name)
-        or not name.lower().endswith((".gguf", ".gguf.tmp"))
-    ):
-        raise ValueError("local_model_filename_invalid")
-    return name
-
-
-def safe_model_url(url: str) -> str:
-    try:
-        return validate_https_url(url, public_only=True)
-    except ValueError:
-        raise ValueError("local_model_url_invalid")
-
-
-def sha256_of_file(path: Path, *, is_cancelled: Callable[[], bool] | None = None) -> str:
-    digest = hashlib.sha256()
-    with Path(path).open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            _check_cancelled(is_cancelled)
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def _entry_from_json(raw: object) -> LocalModelEntry:
-    if not isinstance(raw, dict):
-        raise ValueError("local_model_catalog_invalid")
-    model_id = str(raw.get("id") or "").strip()
-    if not _ID_RE.fullmatch(model_id):
-        raise ValueError("local_model_catalog_invalid")
-    sha = str(raw.get("sha256") or "").strip().lower()
-    if sha and not _SHA_RE.fullmatch(sha):
-        raise ValueError("local_model_catalog_invalid")
-    download_url = str(raw.get("download_url") or "").strip()
-    if download_url:
-        download_url = safe_model_url(download_url)
-    description = raw.get("description") or ""
-    translations = raw.get("description_translations") or {}
-    if isinstance(description, dict):
-        translations = description
-        description = description.get("en_US", "")
-    if not isinstance(description, str) or not isinstance(translations, dict):
-        raise ValueError("local_model_catalog_invalid")
-    return LocalModelEntry(
-        id=model_id,
-        display_name=str(raw.get("display_name") or model_id).strip() or model_id,
-        filename=safe_model_filename(str(raw.get("filename") or "")),
-        status=str(raw.get("status") or "stable").strip() or "stable",
-        sha256=sha,
-        download_url=download_url,
-        estimated_size_mb=max(0, _int(raw.get("estimated_size_mb"))),
-        min_ram_gb=max(0, _int(raw.get("min_ram_gb"))),
-        context_length=max(1, _int(raw.get("context_length"), 8192)),
-        max_output_tokens=max(1, _int(raw.get("max_output_tokens"), 2048)),
-        description=description.strip(),
-        description_translations={key: value.strip() for key, value in translations.items()
-                                  if isinstance(key, str) and isinstance(value, str)},
-        license=str(raw.get("license") or "").strip(),
-    )
-
-
 def _safe_model_id(stem: str, digest: str) -> str:
     cleaned = re.sub(r"[^A-Za-z0-9_.-]+", "_", str(stem or "model")).strip("._-")
     return f"local_{cleaned or 'model'}_{digest[:8]}"
-
-
-def _int(value: object, default: int = 0) -> int:
-    try:
-        return int(float(str(value)))
-    except (TypeError, ValueError, OverflowError):
-        return default
 
 
 def _read_json_list(path: Path) -> list[object]:
@@ -547,108 +399,6 @@ def _read_json_list(path: Path) -> list[object]:
     return data if isinstance(data, list) else []
 
 
-def bundled_model_catalog_path() -> Path:
-    package = Path(__file__).resolve().parents[2]
-    bundled = package / "assets/models/model_catalog.json"
-    return bundled if bundled.is_file() else package.parent / "model_catalog.json"
-
-
 def _write_json_atomic(path: Path, data: object) -> None:
     with atomic_destination(path) as temporary:
         temporary.write_text(json.dumps(data, indent=2, ensure_ascii=False, allow_nan=False), encoding="utf-8")
-
-
-def _download_to_temp(
-    *,
-    opener: UrlOpen,
-    url: str,
-    destination: Path,
-    timeout_seconds: float,
-    chunk_size: int,
-    is_cancelled: Callable[[], bool] | None = None,
-    progress=None,
-    max_bytes: int = 32 * 1024 ** 3,
-) -> None:
-    _check_cancelled(is_cancelled)
-    resume_from = destination.stat().st_size if destination.exists() else 0
-    if resume_from > max_bytes:
-        raise ValueError("local_model_file_too_large")
-    headers = {"Range": f"bytes={resume_from}-"} if resume_from > 0 else {}
-    request = Request(url, headers=headers)
-    try:
-        response = opener(request, timeout=timeout_seconds)
-    except HTTPError as exc:
-        if exc.code == 416 and destination.exists():
-            destination.unlink(missing_ok=True)
-            resume_from = 0
-            exc.close()
-            response = opener(Request(url), timeout=timeout_seconds)
-        else:
-            raise
-    except URLError:
-        raise
-    with response:
-        status = getattr(response, "status", 200)
-        headers = getattr(response, "headers", {})
-        if status == 200:
-            resume_from = 0
-        elif status == 206:
-            content_range = headers.get("Content-Range", "")
-            match = re.fullmatch(r"bytes (\d+)-(\d+)/(\d+)", content_range)
-            if not match or int(match[1]) != resume_from or int(match[2]) < int(match[1]) or int(match[2]) >= int(match[3]):
-                raise ValueError("local_model_range_invalid")
-        else:
-            raise ValueError("local_model_response_invalid")
-        length = headers.get("Content-Length")
-        expected_bytes = int(length) if length is not None else None
-        if expected_bytes is not None and expected_bytes < 0:
-            raise ValueError("local_model_response_invalid")
-        if status == 206:
-            range_length = int(match[2]) - int(match[1]) + 1
-            if expected_bytes is not None and expected_bytes != range_length:
-                raise ValueError("local_model_range_invalid")
-            expected_bytes = range_length
-        received = 0
-        from time import monotonic
-        last_progress = monotonic()
-        total = int(match[3]) if status == 206 else expected_bytes
-        if total is not None and total > max_bytes:
-            raise ValueError("local_model_file_too_large")
-        if progress is not None:
-            progress(DownloadProgress(resume_from, total))
-        mode = "ab" if resume_from > 0 else "wb"
-        with destination.open(mode) as handle:
-            while True:
-                _check_cancelled(is_cancelled)
-                chunk = response.read(chunk_size)
-                if not chunk:
-                    break
-                if resume_from + received + len(chunk) > max_bytes:
-                    raise ValueError("local_model_file_too_large")
-                handle.write(chunk)
-                received += len(chunk)
-                if progress is not None and monotonic() - last_progress >= 0.1:
-                    progress(DownloadProgress(resume_from + received, total))
-                    last_progress = monotonic()
-            handle.flush()
-            os.fsync(handle.fileno())
-        if expected_bytes is not None and received != expected_bytes:
-            raise ValueError("local_model_response_incomplete")
-        if progress is not None:
-            progress(DownloadProgress(resume_from + received, total))
-
-
-def _check_cancelled(is_cancelled: Callable[[], bool] | None):
-    if is_cancelled is not None and is_cancelled():
-        raise InterruptedError("job_cancelled")
-
-
-def _catalog_entries(items: list[object]) -> list[LocalModelEntry]:
-    entries = {}
-    for item in items:
-        try:
-            entry = _entry_from_json(item)
-        except (ValueError, TypeError):
-            continue
-        entries.setdefault(entry.id, entry)
-    return list(entries.values())

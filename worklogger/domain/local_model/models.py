@@ -3,6 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import re
+
+
+def is_sha256_digest(value: str) -> bool:
+    return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
 
 
 @dataclass(frozen=True)
