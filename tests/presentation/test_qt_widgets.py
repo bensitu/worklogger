@@ -242,6 +242,13 @@ class QtWidgetTests(unittest.TestCase):
 
         self.assertEqual(values, ["annual"])
         self.assertEqual(segmented.value, "annual")
+        segmented._buttons["monthly"].click()
+        self.assertEqual(segmented.value, "monthly")
+        self.assertTrue(segmented._buttons["monthly"].isChecked())
+        self.assertFalse(segmented._buttons["annual"].isChecked())
+        segmented._buttons["monthly"].click()
+        self.assertTrue(segmented._buttons["monthly"].isChecked())
+        self.assertEqual(values, ["annual", "monthly"])
 
         settings_nav = SettingsNav((("appearance", "Appearance"), ("about", "About")))
         categories: list[str] = []

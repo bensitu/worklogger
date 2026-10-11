@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QVBoxLayout, QWidget, QSizePolicy
 
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.widgets._style import refresh_style
+from worklogger.presentation.widgets._style import set_style_property
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.avatar import avatar_pixmap
 
@@ -49,8 +49,7 @@ class SidebarWidget(QFrame):
             normalized = "calendar"
         self._active_route = normalized
         for key, button in self._buttons.items():
-            button.setProperty("active", key == normalized)
-            refresh_style(button)
+            set_style_property(button, "active", key == normalized)
 
     def set_avatar(self, encoded=""):
         self.profile_avatar_label.setPixmap(avatar_pixmap(encoded))

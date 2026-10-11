@@ -65,7 +65,7 @@ class BuildResourceTests(unittest.TestCase):
         self.assertIn("worklogger/assets/icons/ui/LICENSE", paths)
         self.assertIn("worklogger/assets/icons/ui/pencil.svg", paths)
         self.assertIn("worklogger/assets/icons/ui/x.svg", paths)
-        self.assertIn("worklogger/presentation/theme/qss/blue_dark.qss", paths)
+        self.assertIn("worklogger/presentation/theme/qss/application.qss", paths)
         self.assertIn("worklogger/presentation/theme/qss/background_images.qss", paths)
         self.assertEqual(sum(path.endswith(".otf") for path in paths), 5)
         self.assertEqual(sum(path.endswith(".mo") for path in paths), 5)

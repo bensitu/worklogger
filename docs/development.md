@@ -40,6 +40,12 @@ updates, and disposal. Treat error codes as stable diagnostic identifiers.
 Use shared theme tokens, controls, fonts, and Lucide icons. Apply QSS at the
 application boundary, not on individual widgets.
 
+Shared rules live in `presentation/theme/qss/application.qss`; background-image
+transparency overrides live in `background_images.qss`. Define light/dark colors
+in `ColorPalette`, not in separate copies of component styles. Keep role and state
+selectors explicit where their priority is needed. Hover, selection, and disabled
+states must preserve control dimensions and typography.
+
 Ordinary framed actions use neutral text and outlines; primary actions use accent
 backgrounds and white text. Destructive actions use the danger role.
 Disabled states retain geometry and weight while using muted colors.

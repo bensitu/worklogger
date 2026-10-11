@@ -1,3 +1,5 @@
+/* Application defaults and shared surfaces. */
+
 QWidget {
   background: {{ background }};
   color: {{ text }};
@@ -6,14 +8,27 @@ QWidget {
   font-family: "Noto Sans", "Segoe UI", sans-serif;
 }
 
-QLabel {
+QLabel,
+QWidget#settings_theme_row_widget,
+QWidget#account_avatar_row_widget,
+QWidget#account_display_name_editor_widget,
+QWidget#time_entry_actions_widget,
+QWidget#processing_progress_widget,
+QWidget#time_entry_content_heading_widget,
+QStackedWidget#time_entry_content_heading_stack_widget,
+QStackedWidget#authentication_feedback_stack_widget,
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical,
+QWidget#settings_switch_row_widget,
+QWidget#settings_about_widget,
+QSlider#background_opacity_slider_widget {
   background: transparent;
 }
 
 QTableView,
 QTreeView {
   background: {{ surface }};
-  alternate-background-color: {{ surface_alt }};
+  alternate-background-color: {{ table_alternate }};
   border: 1px solid {{ border }};
 }
 
@@ -39,19 +54,7 @@ QListWidget#custom_work_type_list_widget::item:hover {
 QListWidget#local_model_list_widget::item:selected,
 QListWidget#custom_work_type_list_widget::item:selected {
   background: {{ accent }};
-  color: #ffffff;
-}
-
-
-QWidget#settings_theme_row_widget,
-QWidget#account_avatar_row_widget,
-QWidget#account_display_name_editor_widget,
-QWidget#time_entry_actions_widget,
-QWidget#processing_progress_widget,
-QWidget#time_entry_content_heading_widget,
-QStackedWidget#time_entry_content_heading_stack_widget,
-QStackedWidget#authentication_feedback_stack_widget {
-  background: transparent;
+  color: {{ highlighted_text }};
 }
 
 QToolButton#configure_identity_button {
@@ -109,19 +112,21 @@ QWidget#calendar_page_widget,
 QWidget#analytics_page_widget,
 QWidget#analytics_content_widget,
 QWidget#reports_page_widget QWidget#report_history_content_widget,
-QWidget#reports_page_widget {
-  background: {{ surface }};
-}
-
+QWidget#reports_page_widget,
 QFrame#calendar_grid_frame,
 QWidget#calendar_scroll_viewport_widget,
 QWidget#calendar_records_widget,
 QWidget#worklog_manual_tab_widget,
 QWidget#worklog_auto_tab_widget,
 QTabWidget#worklog_mode_tab_widget,
-QTabWidget#worklog_mode_tab_widget QStackedWidget {
+QTabWidget#worklog_mode_tab_widget QStackedWidget,
+QFrame#login_form_frame,
+QWidget#settings_page_widget,
+QWidget#settings_scroll_content_widget {
   background: {{ surface }};
 }
+
+/* Calendar controls and compact recording layout. */
 
 QFrame#calendar_right_panel_frame {
   background: {{ surface }};
@@ -145,7 +150,6 @@ QFrame#calendar_record_frame {
   border-radius: 4px;
 }
 
-
 QPushButton#calendar_time_entry_button {
   font-weight: 400;
   background: {{ surface }};
@@ -159,16 +163,22 @@ QPushButton#calendar_time_entry_button:checked {
   background: {{ card_hover }};
 }
 
-QPushButton#calendar_time_entry_button:hover:enabled {
+QPushButton#calendar_time_entry_button:hover:enabled,
+QPushButton#report_history_item_button:hover:enabled {
   background: {{ card_hover }};
   border-color: {{ accent }};
 }
 
-QPushButton#calendar_time_entry_button:checked:hover:enabled {
+QPushButton#calendar_time_entry_button:checked:hover:enabled,
+QPushButton#report_history_item_button[active="true"]:hover:enabled,
+QToolButton#delete_record_button:hover:enabled,
+QToolButton#record_actions_button:hover:enabled,
+QLineEdit QToolButton:hover:enabled {
   background: {{ button_hover }};
 }
 
-QToolButton#clear_time_entry_button, QToolButton#undo_record_change_button {
+QToolButton#clear_time_entry_button,
+QToolButton#undo_record_change_button {
   padding: 5px 8px;
   min-width: 20px;
   max-width: 20px;
@@ -176,11 +186,15 @@ QToolButton#clear_time_entry_button, QToolButton#undo_record_change_button {
   max-height: 28px;
   border-radius: 4px;
 }
-QPushButton#save_worklog_button {
+
+QPushButton#save_worklog_button,
+QPushButton#add_entry_button,
+QPushButton#daily_notes_button {
   min-height: 28px;
   max-height: 28px;
   padding: 5px 8px;
 }
+
 QWidget#worklog_entry_panel_widget[compact="true"] QPushButton#save_worklog_button,
 QWidget#worklog_entry_panel_widget[compact="true"] QToolButton#clear_time_entry_button,
 QWidget#worklog_entry_panel_widget[compact="true"] QToolButton#undo_record_change_button {
@@ -188,13 +202,9 @@ QWidget#worklog_entry_panel_widget[compact="true"] QToolButton#undo_record_chang
   max-height: 24px;
   padding: 2px 8px;
 }
-QPushButton#add_entry_button,
-QPushButton#daily_notes_button {
-  min-height: 28px;
-  max-height: 28px;
-  padding: 5px 8px;
-}
-QToolButton#delete_record_button, QToolButton#record_actions_button {
+
+QToolButton#delete_record_button,
+QToolButton#record_actions_button {
   background: transparent;
   border: none;
   padding: 4px;
@@ -204,15 +214,14 @@ QToolButton#delete_record_button, QToolButton#record_actions_button {
   max-height: 16px;
   border-radius: 4px;
 }
-QToolButton#delete_record_button:hover:enabled, QToolButton#record_actions_button:hover:enabled {
-  background: {{ button_hover }};
-}
+
 QLabel#calendar_record_marker_label {
   background: {{ accent }};
   border-radius: 3px;
 }
 
-QLabel#week_header_label[weekend="true"] {
+QLabel#week_header_label[weekend="true"],
+QTabBar#worklog_mode_selector_widget::tab:selected:hover:enabled {
   color: {{ accent }};
 }
 
@@ -231,16 +240,19 @@ QWidget#worklog_entry_panel_widget[compact="true"] QDoubleSpinBox QLineEdit {
 }
 
 QToolButton#recent_work_context_button {
-    padding: 0px;
+  padding: 0px;
 }
+
 QToolButton#recent_work_context_button::menu-indicator {
-    image: none;
-    width: 0px;
+  image: none;
+  width: 0px;
 }
+
 QToolButton#cancel_processing_button {
-    padding: 0px;
-    min-height: 0;
+  padding: 0px;
+  min-height: 0;
 }
+
 QToolButton#polish_time_entry_button {
   min-height: 16px;
   max-height: 16px;
@@ -255,17 +267,10 @@ QTabWidget#worklog_mode_tab_widget QWidget#worklog_auto_tab_widget QPushButton {
   padding: 6px 8px;
 }
 
-QTabWidget#worklog_mode_tab_widget::pane {
-  border: none;
-}
-
-
-QFrame#login_form_frame {
-  background: {{ surface }};
-}
+/* Authentication and semantic text roles. */
 
 QFrame#login_hero_frame {
-  background: #111827;
+  background: {{ login_hero_background }};
 }
 
 QFrame#login_divider_left_frame,
@@ -281,7 +286,10 @@ QFrame#settings_navigation_frame {
   border-radius: 8px;
 }
 
-QLabel[role="section_heading"] {
+QLabel[role="section_heading"],
+QLabel#settings_section_title_label,
+QLabel#report_title_label,
+QLabel#report_history_title_label {
   font-size: 16px;
   font-weight: 600;
 }
@@ -306,9 +314,11 @@ QLabel[badge="true"] {
   padding: 2px 8px;
 }
 
+/* Action roles and interaction states. */
+
 QPushButton,
 QToolButton {
-  background: {{ button_background }};
+  background: {{ surface }};
   border: 1px solid {{ border_strong }};
   color: {{ text }};
   font-weight: 500;
@@ -318,7 +328,10 @@ QToolButton {
 }
 
 QPushButton:hover:enabled,
-QToolButton:hover:enabled {
+QToolButton:hover:enabled,
+QPushButton[variant="outline"]:hover:enabled,
+QToolButton[variant="outline"]:hover:enabled,
+QPushButton[segment="true"]:hover:enabled {
   background: {{ button_hover }};
   border-color: {{ accent }};
 }
@@ -326,7 +339,7 @@ QToolButton:hover:enabled {
 QPushButton[variant="primary"],
 QToolButton[variant="primary"] {
   background: {{ accent }};
-  color: #ffffff;
+  color: {{ highlighted_text }};
   border: 1px solid {{ accent }};
   font-weight: 600;
 }
@@ -357,12 +370,6 @@ QToolButton[variant="outline"] {
   border: 1px solid {{ border_strong }};
   color: {{ text }};
   font-weight: 500;
-}
-
-QPushButton[variant="outline"]:hover:enabled,
-QToolButton[variant="outline"]:hover:enabled {
-  background: {{ button_hover }};
-  border-color: {{ accent }};
 }
 
 QPushButton[variant="danger"],
@@ -421,10 +428,7 @@ QPushButton[segment="true"][checked="true"] {
   font-weight: 600;
 }
 
-QPushButton[segment="true"]:hover:enabled {
-  background: {{ button_hover }};
-  border-color: {{ accent }};
-}
+/* Input fields, popup indicators, and tabs. */
 
 QLineEdit,
 QTextEdit,
@@ -456,10 +460,6 @@ QLineEdit QToolButton {
   padding: 0;
 }
 
-QLineEdit QToolButton:hover:enabled {
-  background: {{ button_hover }};
-}
-
 QLineEdit:focus,
 QTextEdit:focus,
 QPlainTextEdit:focus,
@@ -477,46 +477,51 @@ QComboBox::drop-down {
   width: 26px;
 }
 
-QComboBox::down-arrow {
+QComboBox::down-arrow,
+QDateEdit::down-arrow,
+QDateTimeEdit::down-arrow {
   image: url("{{ icons_root }}/chevron-down.svg");
   width: 14px;
   height: 14px;
 }
 
-QDateEdit::drop-down, QDateTimeEdit::drop-down {
+QDateEdit::drop-down,
+QDateTimeEdit::drop-down {
   subcontrol-origin: padding;
   subcontrol-position: top right;
   border: none;
   width: 26px;
 }
 
-QDateEdit::down-arrow, QDateTimeEdit::down-arrow {
-  image: url("{{ icons_root }}/chevron-down.svg");
-  width: 14px;
-  height: 14px;
-}
-
-QDoubleSpinBox::up-button, QSpinBox::up-button, QTimeEdit::up-button {
+QDoubleSpinBox::up-button,
+QSpinBox::up-button,
+QTimeEdit::up-button {
   subcontrol-origin: border;
   subcontrol-position: top right;
   width: 22px;
   border: none;
 }
 
-QDoubleSpinBox::down-button, QSpinBox::down-button, QTimeEdit::down-button {
+QDoubleSpinBox::down-button,
+QSpinBox::down-button,
+QTimeEdit::down-button {
   subcontrol-origin: border;
   subcontrol-position: bottom right;
   width: 22px;
   border: none;
 }
 
-QDoubleSpinBox::up-arrow, QSpinBox::up-arrow, QTimeEdit::up-arrow {
+QDoubleSpinBox::up-arrow,
+QSpinBox::up-arrow,
+QTimeEdit::up-arrow {
   image: url("{{ icons_root }}/chevron-up.svg");
   width: 12px;
   height: 12px;
 }
 
-QDoubleSpinBox::down-arrow, QSpinBox::down-arrow, QTimeEdit::down-arrow {
+QDoubleSpinBox::down-arrow,
+QSpinBox::down-arrow,
+QTimeEdit::down-arrow {
   image: url("{{ icons_root }}/chevron-down.svg");
   width: 12px;
   height: 12px;
@@ -562,9 +567,7 @@ QTabBar#worklog_mode_selector_widget::tab:selected {
   font-weight: 600;
 }
 
-QTabBar#worklog_mode_selector_widget::tab:selected:hover:enabled {
-  color: {{ accent }};
-}
+/* Menus and scrolling. */
 
 QMenu {
   background: {{ surface }};
@@ -599,27 +602,14 @@ QScrollBar::handle:vertical {
   min-height: 24px;
 }
 
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
   height: 0;
   border: none;
   background: transparent;
 }
 
-QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-  background: transparent;
-}
-
-QWidget#settings_page_widget, QWidget#settings_scroll_content_widget {
-  background: {{ surface }};
-}
-
-QWidget#settings_switch_row_widget, QWidget#settings_about_widget {
-  background: transparent;
-}
-
-QSlider#background_opacity_slider_widget {
-  background: transparent;
-}
+/* Settings and reporting components. */
 
 QSlider#background_opacity_slider_widget::groove:horizontal {
   height: 4px;
@@ -650,12 +640,9 @@ QSlider#background_opacity_slider_widget::handle:horizontal:disabled {
   border-color: {{ border }};
 }
 
-QLabel#settings_section_title_label {
-  font-size: 16px;
-  font-weight: 600;
-}
-
-QLineEdit#account_name_line_edit, QLineEdit#account_id_line_edit, QLineEdit#account_role_line_edit {
+QLineEdit#account_name_line_edit,
+QLineEdit#account_id_line_edit,
+QLineEdit#account_role_line_edit {
   background: {{ surface_alt }};
 }
 
@@ -681,12 +668,12 @@ QTabBar::tab:selected {
   border-bottom: 2px solid {{ accent }};
 }
 
-
 QTabBar::tab:hover:enabled {
   background: {{ card_hover }};
 }
 
-QLabel#calendar_month_title_label, QLabel#report_period_label {
+QLabel#calendar_month_title_label,
+QLabel#report_period_label {
   font-size: 18px;
   font-weight: 600;
 }
@@ -717,13 +704,11 @@ QFrame#report_period_separator_frame {
   border: none;
 }
 
-QLabel#report_title_label, QLabel#report_history_title_label {
-  font-size: 16px;
-  font-weight: 600;
-}
-
-QLabel#report_history_month_label, QLabel#analytics_chart_title_label,
-QLabel#donut_title_label, QLabel#dot_title_label, QLabel#overtime_title_label {
+QLabel#report_history_month_label,
+QLabel#analytics_chart_title_label,
+QLabel#donut_title_label,
+QLabel#dot_title_label,
+QLabel#overtime_title_label {
   font-weight: 600;
 }
 
@@ -743,27 +728,25 @@ QPushButton#report_history_item_button[active="true"] {
   color: {{ accent }};
 }
 
-QPushButton#report_history_item_button:hover:enabled {
-  background: {{ card_hover }};
-  border-color: {{ accent }};
-}
-
-QPushButton#report_history_item_button[active="true"]:hover:enabled {
-  background: {{ button_hover }};
-}
-
-QLabel#donut_value_label, QLabel#dot_value_label, QLabel#overtime_value_label,
+QLabel#donut_value_label,
+QLabel#dot_value_label,
+QLabel#overtime_value_label,
 QLabel#daily_average_value_label {
   font-size: 21px;
   font-weight: 600;
 }
 
-QLabel#donut_caption_label, QLabel#dot_caption_label, QLabel#overtime_caption_label,
+QLabel#donut_caption_label,
+QLabel#dot_caption_label,
+QLabel#overtime_caption_label,
 QLabel#daily_average_comparison_label {
   font-size: 11px;
 }
 
-QToolButton#copy_report_button {
+QToolButton#copy_report_button,
+QToolButton#note_copy_button,
+QToolButton#note_export_button,
+QToolButton#note_reload_button {
   min-width: 20px;
   max-width: 20px;
   min-height: 28px;
@@ -792,15 +775,7 @@ QToolButton#analytics_export_button {
   padding-bottom: 6px;
 }
 
-QToolButton#note_copy_button,
-QToolButton#note_export_button,
-QToolButton#note_reload_button {
-  min-width: 20px;
-  max-width: 20px;
-  min-height: 28px;
-  max-height: 28px;
-  padding: 5px 9px;
-}
+/* Disabled states preserve control geometry and role typography. */
 
 QPushButton:disabled,
 QToolButton:disabled,

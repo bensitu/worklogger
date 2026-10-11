@@ -362,8 +362,12 @@ class MinimalView(QWidget):
         application = QApplication.instance()
         if application is not None:
             engine = ThemeEngine()
-            application.setPalette(engine.qt_palette(state.theme, dark=state.dark_mode, custom_color=state.custom_color))
-            application.setStyleSheet(engine.application_stylesheet(state.theme, dark=state.dark_mode, custom_color=state.custom_color))
+            palette = engine.qt_palette(state.theme, dark=state.dark_mode, custom_color=state.custom_color)
+            stylesheet = engine.application_stylesheet(state.theme, dark=state.dark_mode, custom_color=state.custom_color)
+            if application.palette() != palette:
+                application.setPalette(palette)
+            if application.styleSheet() != stylesheet:
+                application.setStyleSheet(stylesheet)
 
     def _restore_from_residency(self) -> None:
         self.showNormal()

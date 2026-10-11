@@ -58,6 +58,7 @@ from worklogger.presentation.widgets import (
     StatsPanel,
 )
 from worklogger.presentation.widgets.assets import apply_window_icon
+from worklogger.presentation.widgets._style import refresh_style_tree
 from worklogger.presentation.widgets.time_entries import TimeEntryPanel
 
 
@@ -160,7 +161,7 @@ class AppWindow(QMainWindow):
         )
         if hasattr(self.settings_page, "background_settings"):
             self.settings_page.background_settings.bind(self.background_controller)
-        self._background_surface.active_changed.connect(lambda _active: self.apply_theme(force=True))
+        self._background_surface.active_changed.connect(lambda _active: refresh_style_tree(self._background_surface))
         self._calendar_coordinator = CalendarCoordinator(
             calendar_view_model=self._calendar_view_model,
             stats_view_model=self._stats_panel_view_model,

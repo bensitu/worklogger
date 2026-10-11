@@ -81,6 +81,13 @@ Apply palettes and QSS at the application boundary. Reuse shared controls,
 button roles, icons, and fonts. Icon-only actions need tooltips and accessible
 names. Strings use gettext; date labels use presentation helpers.
 
+One shared stylesheet uses semantic colors from an immutable `ColorPalette`.
+Bounded caches reuse palettes and rendered stylesheet strings; Qt widgets and
+mutable `QPalette` instances are not cached. Background-image transparency rules
+are appended after component styles to preserve their selector priority.
+Ancestor-property changes refresh only the affected widget tree, not the global
+application stylesheet.
+
 The resource manifest owns assets, QSS, catalogs, and public configuration.
 Add new resources there and verify their packaged paths.
 See [localization](localization.md), [packaging](packaging.md), and

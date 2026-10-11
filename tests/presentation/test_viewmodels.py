@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import date
-from pathlib import Path
 import unittest
 
 from PySide6.QtGui import QPalette
@@ -310,14 +309,17 @@ class PresentationViewModelTests(unittest.TestCase):
 
     def test_theme_engine_uses_shared_templates_and_resolved_palettes(self) -> None:
         engine = ThemeEngine()
-        qss_root = Path("worklogger/presentation/theme/qss")
 
         for theme in ("blue", "pink", "green", "purple", "custom"):
             for mode in ("light", "dark"):
-                self.assertTrue((qss_root / f"blue_{mode}.qss").exists())
                 stylesheet = engine.application_stylesheet(theme, dark=mode == "dark")
                 self.assertIn("QPushButton", stylesheet)
                 self.assertNotIn("{{", stylesheet)
+                colors = engine.palette(theme, dark=mode == "dark")
+                qt_palette = engine.qt_palette(theme, dark=mode == "dark")
+                self.assertEqual(qt_palette.color(QPalette.ColorRole.AlternateBase).name(), colors.table_alternate)
+                self.assertEqual(qt_palette.color(QPalette.ColorGroup.Disabled, QPalette.ColorRole.ButtonText).name(),
+                                 colors.disabled_text)
 
         stylesheet = engine.application_stylesheet("custom", custom_color="#123456")
         self.assertIn("#123456", stylesheet)

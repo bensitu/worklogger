@@ -235,11 +235,22 @@ def _window(
 
 class AppWindowTests(unittest.TestCase):
     def test_unchanged_theme_does_not_reapply_the_global_stylesheet(self):
+        from tests.background_samples import still_background_bytes
+        from worklogger.domain.settings.background import BackgroundState
+        from worklogger.infrastructure.images.background import prepare_background, validate_background_data
+
         window = _window(MemoryWorkLogRepository())
         with patch.object(self._app, "setStyleSheet", wraps=self._app.setStyleSheet) as apply:
             window.apply_theme()
             apply.assert_not_called()
             window.apply_theme(force=True)
+            apply.assert_called_once()
+            state, frame = prepare_background(BackgroundState(validate_background_data(still_background_bytes()), True)).value
+            window._background_surface.set_background(state, frame)
+            self.assertTrue(window._background_surface.background_active)
+            state, frame = prepare_background(replace(state, enabled=False)).value
+            window._background_surface.set_background(state, frame)
+            self.assertFalse(window._background_surface.background_active)
             apply.assert_called_once()
 
     def setUp(self) -> None:

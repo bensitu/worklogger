@@ -49,10 +49,13 @@ class SegmentedControl(QWidget):
         if normalized not in self._buttons:
             return
         changed = normalized != self._value
+        previous = self._value
         self._value = normalized
         for key, button in self._buttons.items():
-            button.setChecked(key == normalized)
-            refresh_style(button)
+            checked = key == normalized
+            if not previous or button.isChecked() != checked or (key == previous) != checked:
+                button.setChecked(checked)
+                refresh_style(button)
         if changed and emit:
             self.value_changed.emit(normalized)
 

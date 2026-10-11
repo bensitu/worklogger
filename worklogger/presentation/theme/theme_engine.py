@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from functools import lru_cache
+import re
 
 from PySide6.QtGui import QColor, QPalette
 
@@ -13,6 +14,7 @@ from worklogger.domain.worklog.models import CustomWorkType, WorkType
 from worklogger.domain.settings.appearance import DEFAULT_CUSTOM_COLOR, THEME_KEYS, normalize_hex_color
 STYLE_PRIORITY = ("weekend", "holiday", "today", "selected")
 _QSS_ROOT = Path(__file__).with_name("qss")
+_QSS_TOKEN_RE = re.compile(r"\{\{\s*([a-z_]+)\s*\}\}")
 
 _THEMES: dict[str, dict[bool, tuple[str, str, str, str, str]]] = {
     "blue": {
@@ -80,6 +82,12 @@ class ColorPalette:
     background: str
     surface: str
     surface_alt: str
+    table_alternate: str
+    button_hover: str
+    disabled_text: str
+    disabled_background: str
+    highlighted_text: str
+    login_hero_background: str
     card: str
     card_hover: str
     border: str
@@ -114,49 +122,8 @@ class ThemeEngine:
         custom_color: str | None = None,
     ) -> ColorPalette:
         theme_key = _normalize_theme(theme)
-        colors = _theme_colors(theme_key, dark, custom_color)
-        accent, hover, accent_dim, stat_background, stat_border = colors
-        if dark:
-            background, surface, surface_alt = "#111827", "#182033", "#202a42"
-            card, card_hover = "#1b2438", "#22304b"
-            border, border_strong = "#303b56", "#4b5a78"
-            text, muted = "#c8cde8", "#8890b8"
-            input_background, input_border = "#181928", "#33365a"
-            sidebar_background, sidebar_active = "#141d2d", "#172f58"
-            danger, success, warning = "#ff6b6b", "#45c97a", "#ffb84d"
-        else:
-            background, surface, surface_alt = "#f5f7fb", "#ffffff", "#f8fafc"
-            card, card_hover = "#ffffff", "#f3f7ff"
-            border, border_strong = "#dce3ef", "#c7d0df"
-            text, muted = "#1e2035", "#606888"
-            input_background, input_border = "#ffffff", "#d0d5e8"
-            sidebar_background, sidebar_active = "#ffffff", "#eaf2ff"
-            danger, success, warning = "#ef4444", "#16a34a", "#f59e0b"
-        return ColorPalette(
-            theme=theme_key,
-            dark=bool(dark),
-            accent=accent,
-            hover=hover,
-            accent_dim=accent_dim,
-            stat_background=stat_background,
-            stat_border=stat_border,
-            background=background,
-            surface=surface,
-            surface_alt=surface_alt,
-            card=card,
-            card_hover=card_hover,
-            border=border,
-            border_strong=border_strong,
-            text=text,
-            muted_text=muted,
-            input_background=input_background,
-            input_border=input_border,
-            sidebar_background=sidebar_background,
-            sidebar_active_background=sidebar_active,
-            danger=danger,
-            success=success,
-            warning=warning,
-        )
+        accent = normalize_hex_color(custom_color or DEFAULT_CUSTOM_COLOR) if theme_key == "custom" else None
+        return _color_palette(theme_key, bool(dark), accent)
 
     def calendar_cell_style(
         self,
@@ -174,7 +141,7 @@ class ThemeEngine:
         if key == "selected":
             background, foreground, border, width = (
                 palette.accent,
-                "#ffffff",
+                palette.highlighted_text,
                 palette.accent,
                 "2",
             )
@@ -208,40 +175,7 @@ class ThemeEngine:
         dark: bool = False,
         custom_color: str | None = None,
     ) -> str:
-        palette = self.palette(theme, dark=dark, custom_color=custom_color)
-        mode = "dark" if palette.dark else "light"
-        template = _read_qss_template(mode)
-        return _render_qss(
-            template,
-            {
-                "accent": palette.accent,
-                "accent_dim": palette.accent_dim,
-                "background": palette.background,
-                "border": palette.border,
-                "border_strong": palette.border_strong,
-                "button_background": palette.surface,
-                "button_hover": "#2c2e50" if palette.dark else "#e8ecf8",
-                "card": palette.card,
-                "card_hover": palette.card_hover,
-                "danger": palette.danger,
-                "disabled_text": "#6f7699" if palette.dark else "#9aa3bb",
-                "disabled_background": "#111827" if palette.dark else "#edf0f5",
-                "hover": palette.hover,
-                "input_background": palette.input_background,
-                "input_border": palette.input_border,
-                "muted_text": palette.muted_text,
-                "sidebar_active_background": palette.sidebar_active_background,
-                "sidebar_background": palette.sidebar_background,
-                "stat_background": palette.stat_background,
-                "stat_border": palette.stat_border,
-                "success": palette.success,
-                "surface": palette.surface,
-                "surface_alt": palette.surface_alt,
-                "text": palette.text,
-                "warning": palette.warning,
-                "icons_root": (Path(__file__).resolve().parents[2] / "assets" / "icons" / "ui").as_posix(),
-            },
-        )
+        return _application_stylesheet(self.palette(theme, dark=dark, custom_color=custom_color))
 
     def qt_palette(
         self,
@@ -252,35 +186,90 @@ class ThemeEngine:
     ) -> QPalette:
         palette = self.palette(theme, dark=dark, custom_color=custom_color)
         qt_palette = QPalette()
-        button_background = palette.surface
-        disabled_text = "#6f7699" if palette.dark else "#9aa3bb"
 
         _set_palette_color(qt_palette, QPalette.ColorRole.Window, palette.background)
         _set_palette_color(qt_palette, QPalette.ColorRole.WindowText, palette.text)
         _set_palette_color(qt_palette, QPalette.ColorRole.Base, palette.input_background)
-        _set_palette_color(qt_palette, QPalette.ColorRole.AlternateBase, palette.surface)
+        _set_palette_color(qt_palette, QPalette.ColorRole.AlternateBase, palette.table_alternate)
         _set_palette_color(qt_palette, QPalette.ColorRole.Text, palette.text)
-        _set_palette_color(qt_palette, QPalette.ColorRole.Button, button_background)
+        _set_palette_color(qt_palette, QPalette.ColorRole.Button, palette.surface)
         _set_palette_color(qt_palette, QPalette.ColorRole.ButtonText, palette.text)
         _set_palette_color(qt_palette, QPalette.ColorRole.Highlight, palette.accent)
-        _set_palette_color(qt_palette, QPalette.ColorRole.HighlightedText, "#ffffff")
+        _set_palette_color(qt_palette, QPalette.ColorRole.HighlightedText, palette.highlighted_text)
         _set_palette_color(qt_palette, QPalette.ColorRole.Link, palette.accent)
         qt_palette.setColor(
             QPalette.ColorGroup.Disabled,
             QPalette.ColorRole.WindowText,
-            QColor(disabled_text),
+            QColor(palette.disabled_text),
         )
         qt_palette.setColor(
             QPalette.ColorGroup.Disabled,
             QPalette.ColorRole.Text,
-            QColor(disabled_text),
+            QColor(palette.disabled_text),
         )
         qt_palette.setColor(
             QPalette.ColorGroup.Disabled,
             QPalette.ColorRole.ButtonText,
-            QColor(disabled_text),
+            QColor(palette.disabled_text),
         )
         return qt_palette
+
+
+@lru_cache(maxsize=32)
+def _color_palette(theme_key: str, dark: bool, custom_color: str | None) -> ColorPalette:
+    colors = _theme_colors(theme_key, dark, custom_color)
+    accent, hover, accent_dim, stat_background, stat_border = colors
+    if dark:
+        background, surface, surface_alt = "#111827", "#182033", "#202a42"
+        card, card_hover = "#1b2438", "#22304b"
+        border, border_strong = "#303b56", "#4b5a78"
+        text, muted = "#c8cde8", "#8890b8"
+        input_background, input_border = "#181928", "#33365a"
+        sidebar_background, sidebar_active = "#141d2d", "#172f58"
+        danger, success, warning = "#ff6b6b", "#45c97a", "#ffb84d"
+        table_alternate, button_hover = surface_alt, "#2c2e50"
+        disabled_text, disabled_background = "#6f7699", background
+    else:
+        background, surface, surface_alt = "#f5f7fb", "#ffffff", "#f8fafc"
+        card, card_hover = "#ffffff", "#f3f7ff"
+        border, border_strong = "#dce3ef", "#c7d0df"
+        text, muted = "#1e2035", "#606888"
+        input_background, input_border = "#ffffff", "#d0d5e8"
+        sidebar_background, sidebar_active = "#ffffff", "#eaf2ff"
+        danger, success, warning = "#ef4444", "#16a34a", "#f59e0b"
+        table_alternate, button_hover = surface, "#e8ecf8"
+        disabled_text, disabled_background = "#9aa3bb", "#edf0f5"
+    return ColorPalette(
+        theme=theme_key,
+        dark=bool(dark),
+        accent=accent,
+        hover=hover,
+        accent_dim=accent_dim,
+        stat_background=stat_background,
+        stat_border=stat_border,
+        background=background,
+        surface=surface,
+        surface_alt=surface_alt,
+        table_alternate=table_alternate,
+        button_hover=button_hover,
+        disabled_text=disabled_text,
+        disabled_background=disabled_background,
+        highlighted_text="#ffffff",
+        login_hero_background="#111827",
+        card=card,
+        card_hover=card_hover,
+        border=border,
+        border_strong=border_strong,
+        text=text,
+        muted_text=muted,
+        input_background=input_background,
+        input_border=input_border,
+        sidebar_background=sidebar_background,
+        sidebar_active_background=sidebar_active,
+        danger=danger,
+        success=success,
+        warning=warning,
+    )
 
 
 def _normalize_theme(theme: str) -> str:
@@ -298,10 +287,17 @@ def _theme_colors(
     return _THEMES.get(theme, _THEMES["blue"])[bool(dark)]
 
 
-@lru_cache(maxsize=2)
-def _read_qss_template(mode: str) -> str:
-    path = _QSS_ROOT / f"blue_{mode}.qss"
-    return path.read_text(encoding="utf-8") + "\n" + (_QSS_ROOT / "background_images.qss").read_text(encoding="utf-8")
+@lru_cache(maxsize=1)
+def _read_qss_template() -> str:
+    return "\n".join((_QSS_ROOT / name).read_text(encoding="utf-8")
+                     for name in ("application.qss", "background_images.qss"))
+
+
+@lru_cache(maxsize=32)
+def _application_stylesheet(palette: ColorPalette) -> str:
+    tokens = {name: color for name, color in asdict(palette).items() if isinstance(color, str)}
+    tokens["icons_root"] = (Path(__file__).resolve().parents[2] / "assets" / "icons" / "ui").as_posix()
+    return _render_qss(_read_qss_template(), tokens)
 
 
 def contrasting_text_color(background: QColor) -> QColor:
@@ -313,10 +309,7 @@ def contrasting_text_color(background: QColor) -> QColor:
 
 
 def _render_qss(template: str, replacements: dict[str, str]) -> str:
-    rendered = template
-    for key, value in replacements.items():
-        rendered = rendered.replace("{{ " + key + " }}", value)
-    return rendered
+    return _QSS_TOKEN_RE.sub(lambda match: replacements[match.group(1)], template)
 
 
 def _set_palette_color(qt_palette: QPalette, role: QPalette.ColorRole, color: str) -> None:
