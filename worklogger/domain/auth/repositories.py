@@ -32,6 +32,10 @@ class UserProfileRepository(Protocol):
 
 
 class AuthCredentialRepository(Protocol):
+    def register_user(self, username: str, password: str, *, recovery_key: str) -> User:
+        """Register a standard account, granting administration only on an empty database."""
+        ...
+
     def create_identity_account(self, username: str, profile: ExternalIdentityProfile) -> tuple[User, LinkedIdentity]:
         ...
 

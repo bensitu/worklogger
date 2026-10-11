@@ -9,9 +9,6 @@ from dataclasses import dataclass
 class RegisterUserCommand:
     username: str
     password: str
-    is_admin: bool = False
-    recovery_key: str | None = None
-    must_change_password: bool = False
 
 
 @dataclass(frozen=True)

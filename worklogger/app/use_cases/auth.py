@@ -69,14 +69,11 @@ class RegisterUserHandler:
         try:
             username = normalize_username(command.username)
             password = require_password(command.password)
-            recovery_key = command.recovery_key or generate_recovery_key()
-            is_first_user = self._credentials.user_count() == 0
-            user = self._credentials.create_user(
+            recovery_key = generate_recovery_key()
+            user = self._credentials.register_user(
                 username,
                 password,
                 recovery_key=recovery_key,
-                is_admin=is_first_user or bool(command.is_admin),
-                must_change_password=bool(command.must_change_password),
             )
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))

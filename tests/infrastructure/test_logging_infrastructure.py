@@ -18,6 +18,13 @@ def _close_worklogger_handlers() -> None:
 
 
 class LoggingInfrastructureTests(unittest.TestCase):
+    def setUp(self):
+        import sys
+        import threading
+        self.enterContext(patch.object(sys, "excepthook", sys.excepthook))
+        self.enterContext(patch.object(threading, "excepthook", threading.excepthook))
+        self.enterContext(patch("worklogger.infrastructure.exception_hooks._previous_hook", sys.excepthook))
+
     def test_default_log_location_does_not_follow_the_launch_directory(self):
         from worklogger.infrastructure.logging import _resolve_log_path
         from worklogger.infrastructure.database.paths import default_database_path
@@ -62,6 +69,9 @@ class LoggingInfrastructureTests(unittest.TestCase):
                 except ValueError:
                     logger.exception("credential_storage_failed")
                 logger.error("safe diagnostic")
+                logger.error('Authorization: Basic encoded-basic-secret')
+                logger.error('{"api_key": "json-secret", "password": "escaped\\\"secret"}')
+                logger.error("https://user:private-userinfo@example.com/?%74oken=url-secret&code=authorization-secret&request_id=safe-request")
                 for handler in logging.getLogger().handlers:
                     handler.flush()
 
@@ -70,8 +80,33 @@ class LoggingInfrastructureTests(unittest.TestCase):
                 self.assertIn("remember_token_load_failed", content)
                 self.assertIn("credential_storage_failed", content)
                 self.assertIn("ValueError", content)
-                for secret in ("synthetic-secret", "sensitive-value", "private exception payload"):
+                self.assertIn("safe-request", content)
+                for secret in ("synthetic-secret", "sensitive-value", "private exception payload",
+                               "encoded-basic-secret", "json-secret", "escaped", "private-userinfo", "url-secret", "authorization-secret"):
                     self.assertNotIn(secret, content)
+            finally:
+                _close_worklogger_handlers()
+
+    def test_uncaught_failures_are_logged_without_private_exception_payloads(self):
+        import sys
+        import threading
+        from types import SimpleNamespace
+        with tempfile.TemporaryDirectory() as directory, patch.object(sys, "excepthook"), patch.object(threading, "excepthook"):
+            try:
+                path = Path(directory) / "exceptions.log"
+                setup_logging(path)
+                try:
+                    raise ValueError("private exception payload")
+                except ValueError as error:
+                    sys.excepthook(type(error), error, error.__traceback__)
+                    threading.excepthook(SimpleNamespace(exc_type=type(error), exc_value=error, exc_traceback=error.__traceback__))
+                for handler in logging.getLogger().handlers:
+                    handler.flush()
+                content = path.read_text(encoding="utf-8")
+                self.assertIn("Unhandled application exception", content)
+                self.assertIn("Unhandled thread exception", content)
+                self.assertIn("ValueError", content)
+                self.assertNotIn("private exception payload", content)
             finally:
                 _close_worklogger_handlers()
 

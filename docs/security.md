@@ -22,13 +22,16 @@ credentials expire and are invalidated by password workflows.
 Logout revokes the account's remembered credential before removing the device
 session file. A file-removal failure is reported, and the next sign-in is manual.
 If revocation itself fails, logout reports failure rather than claiming success.
-The first registered account is an administrator; administrative operations check
-permissions independently of visible controls.
+Only the first self-registered account is an administrator. Later self-registration
+cannot request administrator privileges; administrator-created accounts use a
+separate authorized workflow. Administrative operations check permissions
+independently of visible controls.
 
 Password changes replace recovery keys. Save or copy a displayed key privately.
 Clipboard contents and exported key/temporary-password files are not encrypted.
 An administrator reset invalidates recovery and remembered credentials and requires
-the user to change the temporary password.
+the user to change the temporary password. Successful password workflows clear
+the account's local lockout state.
 
 Provider sign-in uses signed token validation, PKCE, state/nonce binding, and
 loopback callbacks. Linking requires an authenticated session; email/name matching
@@ -81,7 +84,7 @@ See [configuration](configuration.md).
 
 ## Sharing Diagnostics
 
-Logging redacts registered credential values, but this is not a guarantee that
+Logging redacts credential fields and authorization material, but this is not a guarantee that
 all arbitrary text is safe to publish. Review logs, screenshots, and exports.
 Never share passwords, recovery keys, tokens, authorization headers, provider
 codes, personal databases, machine keys, or private prompts.

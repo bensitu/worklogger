@@ -44,7 +44,17 @@ class SQLiteAuthRepository:
             row = connection.execute("SELECT COUNT(*) FROM users").fetchone()
             return int(row[0])
 
-    def create_user(
+    def register_user(self, username: str, password: str, *, recovery_key: str) -> User:
+        return self._create_user(username, password, recovery_key=recovery_key, is_admin=False,
+                                 self_registration=True)
+
+    def create_user(self, username: str, password: str, *, recovery_key: str | None,
+                    is_admin: bool, must_change_password: bool = False,
+                    local_password_enabled: bool = True) -> User:
+        return self._create_user(username, password, recovery_key=recovery_key, is_admin=is_admin,
+            must_change_password=must_change_password, local_password_enabled=local_password_enabled)
+
+    def _create_user(
         self,
         username: str,
         password: str,
@@ -53,6 +63,7 @@ class SQLiteAuthRepository:
         is_admin: bool,
         must_change_password: bool = False,
         local_password_enabled: bool = True,
+        self_registration: bool = False,
     ) -> User:
         username = normalize_username(username)
         password_hash = self._password_hasher.hash_password(password)
@@ -75,6 +86,8 @@ class SQLiteAuthRepository:
         values.update(username_key=username_key(username), local_password_enabled=int(local_password_enabled))
         try:
             with self._connection_factory.transaction(write=True) as connection:
+                if self_registration:
+                    values["is_admin"] = int(connection.execute("SELECT 1 FROM users LIMIT 1").fetchone() is None)
                 cursor = connection.execute(
                     f"INSERT INTO users({', '.join(values)}) VALUES({', '.join('?' for _ in values)})",
                     tuple(values.values()),
@@ -405,6 +418,7 @@ class SQLiteAuthRepository:
             )
             if cursor.rowcount:
                 connection.execute("UPDATE users SET local_password_enabled=1 WHERE id=?", (user_id,))
+                connection.execute("DELETE FROM login_attempts WHERE username=(SELECT username_key FROM users WHERE id=?)", (user_id,))
         return (recovery_key if issue_recovery_key else new_password) if cursor.rowcount else None
 
     @staticmethod

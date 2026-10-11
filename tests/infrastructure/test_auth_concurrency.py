@@ -11,6 +11,28 @@ from worklogger.infrastructure.security import PBKDF2PasswordHasher
 
 
 class AuthConcurrencyTests(unittest.TestCase):
+    def test_successful_administrator_reset_clears_the_account_lockout(self):
+        with self.factory.transaction() as connection:
+            connection.execute("INSERT INTO login_attempts(username,failed_count,locked_until) VALUES('sample',8,'2099-01-01T00:00:00+00:00')")
+        self.assertTrue(self.auth.reset_password_by_admin(self.user.id, "administrator-password", must_change_password=True))
+        with self.factory.connection() as connection:
+            self.assertIsNone(connection.execute("SELECT 1 FROM login_attempts WHERE username='sample'").fetchone())
+
+    def test_simultaneous_initial_registration_grants_only_one_administrator(self):
+        from concurrent.futures import ThreadPoolExecutor
+        from threading import Barrier
+        with self.factory.transaction() as connection:
+            connection.execute("DELETE FROM users")
+        barrier = Barrier(2)
+        def register(name):
+            barrier.wait(timeout=5)
+            return self.auth.register_user(name, "example-password", recovery_key="synthetic-recovery")
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            users = tuple(executor.map(register, ("first-registration", "other-registration")))
+        self.assertEqual(sum(user.is_admin for user in users), 1)
+        self.assertFalse(self.auth.register_user("later-registration", "example-password",
+                                                recovery_key="synthetic-recovery").is_admin)
+
     def setUp(self):
         directory = self.enterContext(tempfile.TemporaryDirectory())
         self.factory = SQLiteConnectionFactory(Path(directory) / "accounts.db")

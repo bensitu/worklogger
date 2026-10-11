@@ -48,6 +48,9 @@ def _app() -> QApplication:
 
 
 class MemoryAuthRepository:
+    def register_user(self, username, password, *, recovery_key):
+        return self.create_user(username, password, recovery_key=recovery_key, is_admin=self.user_count() == 0)
+
     def __init__(self) -> None:
         self.users: dict[str, tuple[User, str, str]] = {}
         self.remember_tokens: dict[int, tuple[str | None, datetime | None]] = {}

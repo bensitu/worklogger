@@ -2,6 +2,10 @@
 
 ## Startup
 
+Uncaught application and background-thread failures are recorded in the rotating
+diagnostic log. Exception records include types and source locations rather than
+arbitrary exception messages. Review logs for private data before sharing them.
+
 Run with the same Python interpreter used to install dependencies. Use
 `python -m pip` rather than an unrelated pip executable. Compile translations for
 source runs:

@@ -8,6 +8,7 @@ import logging as std_logging
 import os
 import re
 import traceback
+from urllib.parse import unquote_plus
 
 from worklogger.config.constants import (
     LOG_BACKUP_COUNT,
@@ -22,8 +23,12 @@ _HANDLER_MARKER = "_worklogger_file_handler"
 class SensitiveDataFilter(std_logging.Filter):
     """Redact explicit credentials while retaining diagnostic identifiers."""
 
-    _CREDENTIAL = re.compile(r"(?i)(\b(?:api[_-]?key|password|recovery[_-]?key|refresh[_-]?token|remember[_-]?token|access[_-]?token|token|client_secret|code_verifier|authorization|pkce|auth code)\b\s*[=:]\s*)(?:\"[^\"]*\"|'[^']*'|[^\s,;&]+)")
-    _BEARER = re.compile(r"(?i)\bBearer\s+[^\s,;]+")
+    _NAMES = r"(?:api[_-]?key|password|recovery[_-]?key|refresh[_-]?token|remember[_-]?token|access[_-]?token|id[_-]?token|token|client[_-]?secret|code[_-]?verifier|authorization|pkce|auth code)"
+    _CREDENTIAL = re.compile(r'''(["']?\b''' + _NAMES + r'''\b["']?\s*[=:]\s*)(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^\s,;&]+)''', re.IGNORECASE)
+    _AUTHORIZATION = re.compile(r"\b(?:Bearer|Basic)\s+[^\s\"',;&]+", re.IGNORECASE)
+    _USERINFO = re.compile(r"(https?://)[^/\s?#]*@", re.IGNORECASE)
+    _QUERY_VALUE = re.compile(r"([?&])([^=\s&#]+)=([^\s&#\"']*)")
+    _QUERY_NAME = re.compile(_NAMES + r"|code", re.IGNORECASE)
 
     def filter(self, record: std_logging.LogRecord) -> bool:
         record.msg = self._redact(record.getMessage())
@@ -38,7 +43,14 @@ class SensitiveDataFilter(std_logging.Filter):
 
     @classmethod
     def _redact(cls, message: str) -> str:
-        return cls._CREDENTIAL.sub(r"\1[redacted]", cls._BEARER.sub("Bearer [redacted]", message))
+        def redact_query(match):
+            if cls._QUERY_NAME.fullmatch(unquote_plus(match[2])):
+                return match[1] + match[2] + "=[redacted]"
+            return match[0]
+        message = cls._QUERY_VALUE.sub(redact_query, message)
+        message = cls._USERINFO.sub(r"\1[redacted]@", message)
+        message = cls._AUTHORIZATION.sub("Authorization [redacted]", message)
+        return cls._CREDENTIAL.sub(r"\1[redacted]", message)
 
 
 class DiagnosticFormatter(std_logging.Formatter):
@@ -66,6 +78,8 @@ def setup_logging(
     level = std_logging.DEBUG if _debug_enabled(debug) else std_logging.INFO
     root = std_logging.getLogger()
     root.setLevel(level)
+    from worklogger.infrastructure.exception_hooks import install_exception_hooks
+    install_exception_hooks()
 
     existing = _existing_worklogger_handler(root)
     if existing is not None:
