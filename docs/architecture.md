@@ -1,199 +1,87 @@
 # Architecture
 
-## Structure
+## Layers
 
-WorkLogger is a single-process Qt Widgets desktop application. SQLite is local
-storage, not a network service. The code separates domain rules, application
-operations, infrastructure implementations, and presentation.
-
-```text
-main.py -> bootstrap.py -> composition/
-               | constructs repositories, handlers, view models, and controllers
-               v
-presentation -> app -> domain
-      |           ^      ^
-      +---- infrastructure
-```
-
-The diagram describes principal responsibilities, not an absolute import rule:
-presentation also uses infrastructure translation/resource helpers, and existing
-domain defaults are defined in `config/constants.py`. Application code cannot
-import Qt or implementation adapters. Record widgets use view-model operations,
-not business-service internals. Language and appearance normalization are pure
-domain rules. See [architecture quality](architecture-quality.md) for the dependency review.
-
-| Location | Responsibility |
+| Directory | Responsibility |
 | --- | --- |
-| `worklogger/main.py` | Desktop entry point and non-interactive checks |
-| `worklogger/bootstrap.py` | Startup orchestration, account resolution, window lifecycle, resource setup |
-| `worklogger/composition/` | Feature-specific repository, handler, and workflow construction |
-| `worklogger/config/` | Application constants and optional feature-switch definitions |
-| `worklogger/domain/` | Data models, calculations, validation, repository protocols |
-| `worklogger/app/commands/` | Immutable write-operation inputs |
-| `worklogger/app/queries/` | Immutable read-operation inputs |
-| `worklogger/app/use_cases/` | Validation and coordination through repository/service contracts |
-| `worklogger/app/ports.py` | AI, export, backup, credential, and model service contracts |
-| `worklogger/infrastructure/` | SQLite, files, HTTP clients, identity, models, translations, logging |
-| `worklogger/presentation/viewmodels/` | UI-independent presentation state and operation results |
-| `worklogger/presentation/shell/` | Navigation, pages, main window, compact window, tray behavior |
-| `worklogger/presentation/widgets/` | Reusable visual controls and painting |
-| `worklogger/presentation/theme/` | Palette tokens, QSS generation, font registration |
+| `domain/` | Models, rules, validation, repository contracts |
+| `app/` | Commands, queries, use cases, service ports, job contracts |
+| `infrastructure/` | SQLite, files, credentials, networking, external adapters |
+| `presentation/` | Qt widgets, view models, controllers, themes |
+| `composition/` | Feature-specific dependency assembly |
+| `bootstrap.py` | Runtime assembly and lifecycle |
+| `config/` | Shared constants and deployment feature definitions |
 
-The [architecture tests](../tests/architecture/test_layer_boundaries.py) check
-import boundaries, filenames, Qt object names, and stylesheet placement.
+Domain code must not import Qt, storage, or infrastructure.
+Application handlers depend on contracts, not concrete widgets or adapters.
+Infrastructure implements those contracts. Presentation handles interaction and
+state display; business calculations belong to the domain/application layers.
 
-## Startup and Authentication
+## Composition and Lifecycle
 
-1. `main()` handles command-line checks or starts the desktop loop.
-2. `build_authenticated_desktop_runtime()` configures logging, resolves the
-   database, and applies pending migrations.
-3. A `QApplication` is created or reused; bundled fonts and the application icon
-   are installed. Language preferences are resolved before authentication.
-4. `AuthController` restores a valid remembered session or displays account
-   registration/login and, when required, password-change dialogs.
-5. `bootstrap.py` constructs repositories, use-case handlers, view models,
-   workflow controllers, and the application window for the authenticated user.
-6. Account settings determine language, appearance, working-hour defaults, and
-   calendar options. The window is refreshed before the Qt event loop runs.
-7. Logout clears the local remembered session, closes the current window, and
-   returns to the authentication loop.
+The entry point resolves language, logging, database paths, and instance locking.
+Authentication creates or restores a local session. Bootstrap and composition
+functions assemble account-scoped services, repositories, view models, workflows,
+and a window. Logout disposes the session and returns to authentication.
 
-`build_desktop_runtime()` is a separate programmatic construction path used by
-tests and runtime checks. Its explicit `create_user_if_empty` option is not the
-normal interactive registration flow.
+Dependencies are passed explicitly through constructors. Settings sections receive
+callbacks; workflow controllers coordinate dialogs and jobs. The calendar
+coordinator connects query results to views. The main window owns navigation,
+themes, and lifecycle rather than database algorithms.
 
-## Application Operations
+## Recording and Reporting
 
-A manual save follows this path:
+Record editors use view-model operations and the `TimeEntryOperations` contract.
+Normalization, elapsed time, type accounting, overlaps, and limits are validated
+outside widgets. Writes use account ownership and expected revisions.
 
-```text
-TimeEntryPanel
-  -> QtJobRunner
-  -> TimeEntryViewModel
-  -> TimeEntryService
-  -> normalize_work_log
-  -> SQLiteWorkLogRepository
-  -> calendar, totals, and record-detail refresh
-```
+Timer completion and persistence of its next state share a transaction.
+Daily summaries aggregate records, while editing and exports retain individual
+identities. Custom type and project labels are historical snapshots.
 
-Repositories scope records by user ID. Domain validation owns time normalization,
-overnight detection, shift-length limits, and break constraints. The UI must not
-reimplement these calculations independently.
+Daily notes are separate memos. Their sharing choices and drafts are account/date
+scoped. Reports retain saved versions and generation references; regeneration
+does not mutate recorded time. See [storage contracts](database.md).
 
-Calendar, report, and analytics navigation share month arithmetic from
-`domain/shared/dates.py`. Entry editors and summary views share localized work-type
-labels; reports, notes, and quick logs share clock-range labels. Manual and
-automatic time entry share visual controls while keeping separate editable drafts.
-Completed periods have independent IDs and revisions. Automatic time completion
-and its timer-state transition share one database transaction. The UI disables
-conflicting edits and closing while a storage operation runs off the UI thread.
-Daily summary reads aggregate periods; editing and exports retain individual rows.
-`TimeEntryOperations` is the recorder contract. View models expose elapsed-time
-state, delete operations, and capability flags rather than exposing repositories
-to widgets. Public view-model types are loaded on demand, allowing editing and
-settings imports without loading Qt.
-Only Reports manages report templates. Memos and time-entry content use optional
-text rewriting without modifying saved durations or inserting work rows. Memo
-sharing and recovered drafts are isolated by account and date. Update checks use
-the application-level service contract rather than a duplicate use-case definition.
+## Results and Background Work
 
-Quick logs, daily notes, reports, calendar events, accounts, and settings follow
-the same command/query and handler pattern. Daily notes have independent storage,
-and period content does not overwrite an independent daily note. Editor saves use
-optimistic content and sharing checks to prevent overwriting another editor's
-changes.
-Both desktop windows depend directly on the period editor and reuse the same
-record history widget. No presentation path falls back to the previous daily
-shift editor; compatibility daily reads remain derived summaries only.
+`Result[T]` contains a value or an `AppError`.
+Presentation maps stable error codes to gettext messages without exposing raw
+exception payloads. Follow each adapter's documented return/exception contract.
 
-## Results and Errors
+Long-running I/O, authorization, exports, and inference use `JobRunner`.
+`QtJobRunner` runs workers and delivers completion on the UI thread.
+Qt widgets must only be read or changed on that thread.
 
-`Result[T]` represents either a value or an `AppError`. Error types include
-validation, authentication, authorization, conflict, infrastructure, cancellation,
-and not-found conditions. Infrastructure adapters may catch external exceptions
-and return structured failures; some repository methods deliberately raise to
-their callers. Do not assume every method returns `Result`.
+Cancellation is cooperative. Controllers reject stale results and completions
+for disposed owners; cancellation does not forcibly stop a native call.
+`ImmediateJobRunner` supplies deterministic behavior for isolated tests.
 
-`presentation/errors.py` translates stable error codes into user-facing messages.
-Controllers/pages follow existing dialog and status behavior. Empty status labels
-occupy no space when `StatusLabel` is used. Saving ordinary time entries refreshes
-the view without a success popup.
+SQLite connections are short-lived. The connection factory serializes writes;
+repositories enforce optimistic updates and atomic operations.
+The optional application event bus publishes handler events independently of Qt.
 
-## Concurrency
+## Optional Services
 
-`JobRunner` is the application contract for long operations. `QtJobRunner` executes
-jobs in `QThreadPool` and delivers completion through a Qt signal on the UI thread.
-`ImmediateJobRunner` provides deterministic synchronous behavior for tests.
+AI service selection is account-scoped. Explicit external selection uses its
+configured endpoint and credentials; local selection uses a verified model and
+native backend. Failed requests do not silently choose another provider.
 
-Cancellation is cooperative: cancellation does not forcibly terminate Python or a
-network request. Controllers must ignore obsolete completions and avoid updating
-closed dialogs. Widgets must only be read or changed on the GUI thread.
+HTTP transports enforce certificate validation and account proxy policy.
+Provider authentication validates request binding and signed tokens before
+resolving a local identity. Keep credentials out of generic configuration,
+representations, exception text, and logs.
 
-`SQLiteConnectionFactory` opens short-lived connections and serializes writes
-through its instance lock. File databases use foreign keys, WAL, and a busy
-timeout. Its `:memory:` connections are not a shared persistent in-memory database;
-use temporary files for repository tests spanning multiple connections.
+Deployment availability and account preferences are distinct. A deployment
+feature gate must not destroy saved account state when disabled.
 
-## Composition Boundaries
+## Resources and Presentation
 
-`AppContainer` and `EventBus` are reusable, tested utilities. The standard desktop
-currently constructs dependencies directly in `bootstrap.py` and connects Qt
-signals through feature-specific functions in `composition/`; it is not assembled
-through a global container or event bus.
+Apply palettes and QSS at the application boundary. Reuse shared controls,
+button roles, icons, and fonts. Icon-only actions need tooltips and accessible
+names. Strings use gettext; date labels use presentation helpers.
 
-Settings controls live in independent `settings/sections/` widgets, injected with
-explicit `SectionActions` callbacks. `SettingsPage` coordinates account state,
-capabilities, and change signals; it does not construct every section inline.
-Data, account, and update operations have separate `settings/workflows/` components
-with their own dependencies and pending-job state. The controller binds surfaces
-and delegates to those components without sharing all its state through mixins.
-
-`CalendarCoordinator` owns calendar/entry/statistics query-to-view updates. The
-main window owns composition, navigation, themes, and lifecycle. The worklog
-repository facade composes read queries and transactional writes using one schema
-mapping object; optimistic updates, overlap checks, and timer transitions remain
-inside the write transaction. Custom-type operations use an application protocol,
-and historical accounting depends on immutable record snapshots, not catalog joins.
-
-`UserProfileService` binds display-name writes to the signed-in account. Its
-repository update checks the previously loaded value within one transaction.
-The Account section uses an inline editor; the controller submits reads/writes to
-the background runner and discards stale profile-load results. Profile change
-signals update identity labels without rebuilding recording or report drafts.
-AI and report generation read the current profile through an injected repository;
-they do not rely on the immutable user snapshot held at login. `User.username`
-remains the login identifier, while `effective_display_name` centralizes fallback.
-
-Feature switches control assistant, model-management, and update-check composition,
-but do not supply missing native dependencies. AI handlers share an account-scoped
-local inference service through `AccountAIGateway`; weights load only on background
-rewrite requests. Explicit external opt-in selects a configured HTTPS provider,
-without automatic fallback. Shared account credential stores feed settings and
-runtime adapters. `AccountHTTPTransport` supplies proxy-aware HTTPS openers to
-updates, model downloads, and external AI. Model management updates selection and
-verification state; stale inventory results cannot replace newer selections.
-Identity-provider desktop login remains disconnected. See
-[integrations](integrations.md) for the implemented boundaries.
-
-## Presentation and Resources
-
-The shell exposes Calendar, Reports, Analytics, and Settings. Each feature uses
-existing reusable controls. Calendar cells and charts use `QPainter`; reports use
-Markdown-backed editors and history. Theme tokens render the shared QSS templates.
-The Qt palette and QSS are applied at the application boundary.
-Calendar, Analytics, and Reports have separate implementation modules. The shell
-page facade preserves existing imports without combining their implementations.
-Button icons follow consistent operation meanings: an eraser clears unsaved input,
-circular arrows refresh data, a single backward arrow restores saved or default
-data, and file arrows indicate local import or export. Network model downloads
-retain the download icon. Icon-only actions include tooltips and accessible names.
-Information feedback in the note editor uses a shared dialog layout with a readable
-minimum width, explicit saved-date text, and translated controls.
-
-Database copying, schema inspection, and ordered upgrades belong to infrastructure
-adapters rather than startup assembly. See [database upgrade](database-upgrade.md).
-
-Fonts, SVG icons, WebP imagery, platform icons, and compiled gettext catalogs are
-runtime resources. Source and frozen path handling is defined in the resource,
-database-path, and translation helpers. A new asset must be covered by the
-[packaging manifest](../scripts/build_resources.py) and rendering tests.
+The resource manifest owns assets, QSS, catalogs, and public configuration.
+Add new resources there and verify their packaged paths.
+See [localization](localization.md), [packaging](packaging.md), and
+[contributing](../CONTRIBUTING.md).

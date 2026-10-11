@@ -10,21 +10,34 @@ from worklogger.infrastructure.database import MigrationRunner, SQLiteConnection
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-GUIDES = (
-    "README", "architecture", "configuration", "database", "data-formats",
-    "development", "integrations", "localization", "packaging", "security",
-    "templates", "testing", "troubleshooting", "user-guide", "reliability",
-)
+PRIVATE_DOCUMENTS = {"WORKLOGGER_DEVELOPMENT_RULES.md", "ui_acceptance.md"}
 DOCUMENTS = (
     *(PROJECT_ROOT / name for name in (
         "README.md", "CONTRIBUTING.md", "CHANGELOG.md", "SECURITY.md",
         "CODE_OF_CONDUCT.md",
     )),
-    *(PROJECT_ROOT / "docs" / f"{name}.md" for name in GUIDES),
+    *(path for path in sorted((PROJECT_ROOT / "docs").glob("*.md"))
+      if path.name not in PRIVATE_DOCUMENTS),
 )
 
 
 class DocumentationTests(unittest.TestCase):
+    def test_guides_are_english_and_free_of_machine_specific_paths(self):
+        non_english = re.compile(r"[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]")
+        machine_path = re.compile(r"(?<!\w)[A-Za-z]:[\\/]|[\\/]Users[\\/][^\s/\\]+")
+        for path in DOCUMENTS:
+            with self.subTest(document=path.name):
+                content = path.read_text(encoding="utf-8")
+                self.assertIsNone(non_english.search(content))
+                self.assertIsNone(machine_path.search(content))
+
+    def test_documentation_index_links_every_public_guide(self):
+        index = (PROJECT_ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+        for path in DOCUMENTS:
+            if path.parent.name == "docs" and path.name != "README.md":
+                with self.subTest(document=path.name):
+                    self.assertIn(f"]({path.name})", index)
+
     def test_local_markdown_links_resolve(self):
         for path in DOCUMENTS:
             content = path.read_text(encoding="utf-8")

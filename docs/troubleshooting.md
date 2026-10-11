@@ -1,179 +1,107 @@
 # Troubleshooting
 
-## Collect Basic Information
+## Startup
 
-Run from the same shell/interpreter used to start the application:
+Run with the same Python interpreter used to install dependencies. Use
+`python -m pip` rather than an unrelated pip executable. Compile translations for
+source runs:
 
 ```sh
-python -c "import sys, PySide6; from PySide6.QtCore import qVersion; print(sys.executable); print(sys.version); print(PySide6.__version__); print(qVersion())"
+python scripts/i18n/i18n_compile.py
 python -m worklogger.main --smoke-import
 ```
 
-Include the application version, OS, reproduction steps, and sanitized error text
-when reporting a defect. Never attach your database, session files, recovery keys,
-or credentials to a public issue.
+A separately installed Qt SDK does not replace PySide6's Qt runtime. Do not mix
+Qt bindings or copy DLLs from other applications into a package.
 
-## Startup and Dependencies
+Closing login without signing in is normal cancellation. A second desktop instance
+does not replace the running instance. If no window appears, check tray/menu-bar
+residency and remove `QT_QPA_PLATFORM=offscreen` from an interactive environment.
 
-Closing the login, registration, or password-reset window without signing in is
-a normal cancellation. WorkLogger exits with code `0` and prints no startup
-failure. Closing the login window after logging out behaves the same way. Actual
-startup failures still return code `1` and display a translated error message.
+## Missing Data or Database Errors
 
-User-facing errors use translated descriptions rather than internal error codes
-or raw exception text. Logs retain diagnostic codes for troubleshooting. Cancelling
-an operation is not logged as an error and does not trigger an error dialog.
+Check the active account, selected date, and Settings > Data > Data location.
+Source and packaged applications use different locations.
 
-If a module is missing, install dependencies using the same interpreter, preferably
-inside the documented virtual environment. `python -m pip` avoids selecting an
-unrelated pip executable. A separately installed Qt SDK does not change the Qt
-runtime bundled with PySide6.
+Do not delete a database to fix a schema or integrity error. Close the application,
+preserve the database and any journal files or backups, and inspect a copy.
+Unsupported layouts are rejected without resetting data. See [database handling](database.md).
 
-If PyInstaller reports missing native libraries, rebuild from the intended
-environment and inspect its warnings. Do not copy individual DLLs from unrelated
-applications or mix PySide6 with another Qt binding's libraries.
+Restore requires administrator permission and the same login ID/account ID in
+the backup. It replaces the whole database and ends the session.
+A `.pre_restore` file means replacement needs recovery; preserve it before taking
+any action. CSV and PDF exports are not database backups.
 
-The `llama-cpp-python` dependency may require a native toolchain. For desktop work
-without connected inference, use the [desktop-only dependency setup](development.md).
+## Sign-In and Credentials
 
-## Fonts, Images, and Layout
+Wait for a temporary lockout to expire or use an authorized administrator reset.
+Recovery requires the saved recovery key; editing credential rows is not recovery.
 
-Check that the bundled fonts, WebP login image, SVG icons, and platform icons exist
-in the source or packaged resources. Run `python scripts/build.py --check` before
-building. Do not reintroduce AVIF assets.
+For provider sign-in, check application registration, tenant/audience, consent,
+and the network. Configure the provider from its settings icon.
+See [browser sign-in](identity-signin.md).
 
-For font-size warnings or clipped text, record the Qt version, language, display
-scaling, and affected control. Compare against the verified environment and run
-the visual tests. Do not suppress Qt warnings instead of identifying their source.
+After moving data to a different machine or directory, re-enter credentials that
+cannot be decrypted or found in the new credential namespace.
+Do not remove machine-key files to silence an error.
+See [security](security.md).
 
-Qt 6.11.0's Windows 11 style assumes point-sized fonts when drawing menu
-indicators and combo-box popups. Pixel-sized QSS fonts can therefore produce
-`QFont::setPointSize: Point size <= 0 (-1)` when a window or dropdown first
-appears. The style caches some font calculations, so opening another dropdown
-in the same process may not repeat the warning.
+## AI and Models
 
-Application initialization replaces the Windows 11 base style with Qt's Fusion
-style before applying QSS. This covers business controls and Qt-generated
-dropdowns, including the non-native file dialog. Existing palettes, fonts, QSS,
-and native file dialogs are retained; macOS/Linux and other Windows base styles
-are unchanged. No Qt warning handler is installed by this compatibility logic.
-When investigating a rendering problem, use the optional layout checks:
+For local processing, check AI Assist, Local Model, the optional native dependency,
+and a verified selected model. Downloading alone is insufficient.
+Restart after installing native dependencies.
+
+For external processing, check explicit enablement, HTTPS base address, model ID,
+and the saved API key. Test sends sample text. Disable external processing when
+you want local processing; failures do not silently fall back.
+
+The first local request loads the model. For memory failures, reduce Runtime
+context or select a smaller file. A context-capacity warning is not by itself a
+failure. Oversized input must be shortened. See [local models](local-models.md).
+
+## Network
+
+An enabled proxy needs a host, port, and valid authentication if required.
+Invalid settings are not bypassed. If password editing is disabled, check the OS
+credential-store backend instead of using plaintext storage.
+
+The browser and pre-login provider requests have network settings separate from
+the authenticated account proxy. Keep TLS verification enabled.
+
+## Appearance and Language
+
+For background images, check the deployment flag and the account switch.
+An enabled switch with no image keeps the normal theme. Upload must satisfy the
+size, resolution, and format limits in [configuration](configuration.md).
+
+For missing translations, compile the catalogs and review `WORKLOGGER_LANG` and
+account language. Restart or sign in again. Holiday names come from the holiday
+data source and may differ from the interface language.
+
+For clipped text or rendering warnings, report the language, display scaling,
+Qt/PySide6 versions, and affected control. Contributors should use the optional
+checks in [testing](testing.md). Do not suppress warnings without finding their cause.
+
+## Imports and Exports
+
+Review the preview before importing. Duplicate or overlapping periods and
+unsupported calendar recurrences are rejected. Imported events do not count as
+worked time. Check the selected account/date range and [data formats](data-formats.md).
+
+Choose a writable export destination. If export fails, existing files are retained.
+Large tables or text may exceed format limits. Backup/restore uses SQLite files,
+not report, analytics, or timesheet exports.
+
+## Reporting a Problem
+
+Include application/OS versions, steps, expected and actual behavior, and sanitized
+error text. Source users can collect interpreter information:
 
 ```sh
-python -m unittest tests.visual.shell_checks -v
+python -c "import sys, PySide6; from PySide6.QtCore import qVersion; print(sys.version); print(PySide6.__version__); print(qVersion())"
 ```
 
-These checks use synthetic records and offscreen rendering. For a native font
-warning, also reproduce the affected control on the target OS in a fresh process
-with a temporary database and isolated preferences. Check startup, login, and the
-affected popup while collecting Qt messages. Such diagnostic reproductions are
-not part of routine test runs. See [testing](testing.md).
-
-Remove `QT_QPA_PLATFORM=offscreen` from an interactive shell if the application
-appears to run without a visible window. Check the system tray/menu bar when
-residency is enabled.
-
-## Language
-
-Compile the catalogs with `python scripts/i18n/i18n_compile.py`. An absent `.mo`
-file results in English fallback even when the source `.po` file is translated.
-Review `WORKLOGGER_LANG`, the native pre-login preference, and the signed-in
-account's language. Restart or log in again after changing the language.
-
-The dropdown uses each language's native name. Holiday names come from the holiday
-data library and are not necessarily in the application language.
-
-## Console Encoding
-
-Command-line output replaces characters that the terminal encoding cannot
-represent. This does not change localized GUI text or operation results.
-For diagnostic checks in PowerShell:
-
-```powershell
-$env:WORKLOGGER_LANG = "en_US"
-python -m worklogger.main --smoke-startup
-```
-
-Desktop startup failures also display a translated dialog when a graphical
-platform is available, including packaged applications without a console.
-Starting a second instance displays an informational message and leaves the
-running instance and its data unchanged.
-
-## Missing Records or Login Failures
-
-Confirm which database path is active. Source and packaged runs use different
-locations; moving the working directory does not move the source database.
-Check the selected account and date before importing data again.
-
-Do not delete the database to resolve a schema error. Preserve it and any `.bak_*`
-files. Older authentication storage is migrated at startup. Activity-name
-conflicts deliberately stop migration rather than combining populated tables;
-see [compatibility behavior](database.md).
-
-Repeated invalid credentials cause a temporary lockout. Use the correct account
-and wait for the lockout interval. Password recovery requires the saved recovery
-key or an authorized administrator workflow, not manual editing of credential rows.
-
-## Holidays and Calendar Imports
-
-Check Settings > General > holiday display, the country/state selection, the system
-timezone, the selected month, and the installed `holidays`/`tzlocal`/`tzdata` packages.
-System region does not guess a country for unknown or country-neutral timezones.
-iCalendar import converts UTC and named timezones, expands finite recurrence, and
-rejects recurrence without a count or end date. Verify the original file before
-treating missing occurrences as lost work records.
-
-## Unavailable Services
-
-External login remains disconnected. External rewriting requires explicit Use
-external model, AI Assist, an HTTPS API base address, a model identifier, and a
-securely saved API key. Test checks with sample text only. Disable external
-processing to select local processing; there is no silent remote fallback.
-Local rewriting
-requires the optional native dependency, a verified selected model, Local Model,
-and AI Assist. Check the service message under Settings > AI; a downloaded file
-must be selected with Use model. After installing `requirements-ai.txt` into the
-Python environment used to start WorkLogger, restart it. Packaged applications
-must be built with native inference included. See [local models](local-models.md).
-
-Loading is lazy, so the first rewrite takes longer. An out-of-memory/load failure
-does not change the draft; reduce Runtime context under Settings > AI > Local Model
-or select a smaller model. A native message that configured context is lower than
-training context describes the selected runtime window, not a damaged model. The
-default is 8,192 tokens, and the effective value is limited by the selected model's
-declared catalog capacity. Editing the catalog does not change GGUF training
-metadata or configure context extension. Oversized content must be shortened;
-timeouts can be retried
-with less text or a smaller model. Avatar upload rejects unsupported, invalid,
-oversized, or excessively high-resolution images without changing the saved picture.
-
-If proxy password entry is disabled, inspect system credential-store availability.
-Do not work around it by storing passwords in a plain-text configuration. Saved
-proxy preferences configure subsequent adapter requests. Use a host or HTTP proxy
-address and port; unsupported proxy schemes/authentication must be handled by a
-separate supported network service, not by disabling certificate checks.
-
-When encrypted credentials cannot be read after moving a database to a new device,
-re-enter the credential in Settings. Do not delete a damaged machine-key file to
-make the warning disappear; preserve it and seek recovery first.
-
-## Restore and Build Failures
-
-Confirmed database corruption stops startup without replacing any files. With the
-application closed, preserve the main database and its `-wal`/`-shm` sidecars
-together. Validate and upgrade a known-good backup into a new destination using
-`python scripts/upgrade_database.py <backup> <new-destination>`. Keep the original
-files outside the active database directory, then use the validated copy at the
-documented database location. Never copy a live main database without its WAL or
-use automatic empty-database creation as a recovery substitute.
-
-Restore requires administrator permission and a compatible SQLite file containing
-the current username with the same account ID. Successful restore ends the current
-session. A retained `.pre_restore` file blocks replacement until it is recovered;
-never delete it without preserving its contents. Close other
-application processes and keep an independent backup. CSV and PDF exports cannot
-be restored as databases.
-
-Before building, close any executable running from `dist/` and move user data out
-of generated output directories. Build on the target OS; signing, installers, and
-release upload are separate operations. See [packaging](packaging.md).
+Review logs before sharing them. Never publish databases, recovery keys, session
+files, private images, or API/proxy credentials. Report sensitive issues through
+[the security policy](../SECURITY.md).

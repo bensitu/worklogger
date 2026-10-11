@@ -4,9 +4,8 @@
 
 Security fixes are applied to the latest published version of WorkLogger.
 
-The version in source metadata may not yet correspond to a published release.
-See the [changelog](CHANGELOG.md) for current behavior and
-[security and privacy](docs/security.md) for storage and credential limitations.
+See the [release history](CHANGELOG.md) and
+[security and privacy](docs/security.md) for data and credential handling.
 
 Dependencies are pinned for reproducible installations, not automatic security
 updates. Check direct and transitive dependency advisories before publishing a

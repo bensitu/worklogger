@@ -1,180 +1,120 @@
 # Data Formats
 
-## Timesheet Delivery
-
-Reports > Export report > Timesheet exports the selected date or its entire month
-as XLSX or a paginated table PDF. These outputs read account-owned time records,
-not saved report text, and neither save nor replace the report editor's draft.
-Individual periods remain separate; gaps are never implied to be worked time.
-Days without records are included without inventing work. Work, recorded rest,
-historical deductions and leave have separate columns. Overtime is computed once
-per date using the existing standard-hour definition.
-
-Exports are recorded-time snapshots, not legal or payroll verification. Future
-timestamped periods are marked Scheduled; clock-only legacy records remain
-Historical, with no invented timezone offsets. Declared rest duration can include
-a future portion. Snapshot totals align with the current recorded accounting;
-they do not establish that scheduled rest has already elapsed.
-
-XLSX provides an editable period table and a Record references worksheet containing
-IDs, revisions, available offsets, deduction and context identifiers. User text is
-explicitly typed as text, including content beginning with spreadsheet formula
-characters. The table freezes its header, supports filtering and print layout,
-and contains stored snapshot totals rather than a live recalculating model. Edits
-in the exported workbook do not write back to the application. User-provided XLSX
-template import is not supported.
-
-PDF uses the bundled-font-aware Qt pipeline, landscape A4 tables and repeated
-column headers. User content is HTML-escaped before rendering. Large content can
-continue across pages. Both formats atomically replace the selected destination
-only after successful generation. A rejected or failed export preserves existing
-files. Limits are 50,000 entries and two million text characters per snapshot;
-XLSX additionally rejects a cell exceeding Excel's 32,767-character limit rather
-than silently truncating it.
-
-When records have project context, CSV appends optional `project_label` and
-`work_item_label` columns. Imports preserve these historical labels but do not
-reuse another database's project IDs or create projects implicitly. Association
-with a local project is a separate explicit operation. Database backups retain
-complete project/work-item identities and associations. Records without context
-retain the existing six-column format and other optional columns unchanged.
-
 ## Work-Log CSV
 
-Export writes UTF-8 with a byte-order mark and these columns:
+Work-log export writes UTF-8 with a byte-order mark:
 
 ```csv
 date,start,end,break,note,work_type
-2026-05-21,09:00,18:00,1.0,Documentation,normal
-2026-05-22,22:00,06:00,0.5,Maintenance,remote
-2026-05-23,,,0,Personal leave,paid_leave
+2030-01-15,09:00,18:00,1.0,Documentation,normal
+2030-01-16,22:00,06:00,0.5,Maintenance,remote
 ```
 
 | Column | Meaning |
 | --- | --- |
-| `date` | ISO date `YYYY-MM-DD` |
-| `start`, `end` | Local clock times; blank together for an untimed record |
-| `break` | Decimal hours, not minutes |
-| `note` | Text; CSV quoting preserves commas and line breaks on export |
-| `work_type` | `normal`, `remote`, `business_trip`, `meeting`, `training`, `break`, `paid_leave`, `comp_leave`, `sick_leave`, `other` |
+| `date` | ISO date, `YYYY-MM-DD` |
+| `start`, `end` | Local clock boundaries |
+| `break` | Historical deducted hours, not minutes |
+| `note` | Record content; quoting preserves commas and line breaks |
+| `work_type` | Built-in type ID or a custom classification ID |
 
-Time entry accepts `HH:mm` and compact hour/minute digits. Legacy `HH.MM` requires
-two minute digits; ambiguous decimal-looking input such as `1.5` is rejected,
-not interpreted as either decimal hours or `01:05`. Break values remain decimal hours.
+Built-in IDs are `normal`, `remote`, `business_trip`, `meeting`, `training`,
+`break`, `paid_leave`, `comp_leave`, `sick_leave`, and `other`.
+Custom records also need `work_type_label` and `work_type_category`, with category
+`work`, `break`, or `leave`. Import preserves that snapshot without editing the
+account's type catalog.
 
-When records contain offset-aware timestamps, export appends `started_at` and
-`ended_at` ISO timestamp columns. Import accepts these optional columns and verifies
-that dates and clock times agree. Files containing only older clock-based records
-keep the six-column format. Timestamp offsets preserve elapsed hours across daylight
-saving changes; importing older files does not guess their original timezone.
+Optional `started_at` and `ended_at` carry offset-aware ISO timestamps and must
+agree with dates and clock boundaries. Clock-only records retain their wall-clock
+meaning; import does not invent offsets.
+Optional `project_label` and `work_item_label` preserve labels, not another
+database's identifiers. Link them to local catalogs explicitly.
 
-If any record uses a custom type, export also appends `work_type_label` and
-`work_type_category`. The type ID is `custom:` followed by a UUID in hexadecimal
-form; its saved label and `work`, `break`, or `leave` category are required on
-import. Built-in rows leave these optional fields empty. Import preserves the
-record snapshot without modifying the receiving account's editable type catalog.
-Imported custom records remain editable with their saved classification; select
-an active account type explicitly when assigning a different classification.
+Import accepts `d` as a date alias and `lunch` as a break alias. Missing breaks
+default to zero; missing types default to normal. Clock fields accept `HH:mm`
+and compact hour/minute digits. Decimal-looking ambiguous values are rejected.
+Breaks remain decimal hours.
 
-Import also accepts `d` for the date and `lunch` for the break. Missing break values
-default to zero; missing work types default to `normal`, and unknown types are
-reported as invalid rows. Both ISO dates and year-first slash dates are accepted. The
-importer trims field boundaries, so it is not a byte-for-byte archive of note text.
+Review the preview before confirmation. Multiple nonoverlapping periods may share
+a date. Explicit note-only rows import independent memos; ordinary record content
+does not overwrite them. Duplicate note-only dates and overlapping periods are
+invalid. Replacing existing dates requires explicit permission.
+Valid rows commit together or roll back together.
 
-Each valid row is normalized using the work-log rules and saved to the currently
-selected account. The import preview shows valid rows, existing dates, and invalid
-rows before confirmation. Valid rows are written in one transaction; storage
-failure rolls back the entire batch. Existing dates require explicit replacement
-permission. Nonoverlapping timed rows may share a date; overlapping periods are
-reported as invalid rows. An independent note-only row may share a date with timed
-rows, but duplicate note-only rows are rejected. Files are
-limited to 10 MiB and 50,000 rows. UTF-8 is preferred, with the selected language's
-legacy Windows encoding used when UTF-8 decoding fails. The adapter also accepts
-an explicit encoding. Invalid encoding and CSV syntax return an import error.
-
-Spreadsheet-sensitive text is prefixed with an apostrophe to prevent formula
-execution. The prefix is part of the exported text. Generated files replace their
-destination atomically after successful writing; failed exports preserve the
-existing destination.
+Imports are limited to 10 MiB and 50,000 rows. UTF-8 is preferred, with the selected
+language's legacy encoding as a fallback. Field boundaries are trimmed.
+Spreadsheet-sensitive exported text receives an apostrophe prefix.
+CSV is an exchange format, not a byte-for-byte database archive.
 
 ## iCalendar
 
-Work-log export emits UTF-8 iCalendar text with CRLF endings, escaped text, and
-75-byte line folding. Timed non-leave records become events; untimed and leave
-records are omitted. Overnight shifts end on the following date. Event summaries
-include worked hours, and descriptions include up to 500 characters of the note.
-Records with captured timestamps export UTC event times. Older clock-only records
-export local floating times, without a timezone definition.
+Work-log export emits UTF-8 iCalendar with CRLF endings and folded lines. Timed
+non-leave periods become individual events. Overnight periods end the next day.
+Captured offsets export as UTC; clock-only records use floating local times.
 
-Calendar import uses `icalendar` and `recurring-ical-events`. Files are limited to
-10 MiB and 10,000 expanded daily entries. UTC and named timezones are converted to
-system local time; floating times retain their local clock values. Event properties
-are kept separate from nested alarm properties. Only the source filename is stored.
+Calendar import accepts files up to 10 MiB and 10,000 expanded daily entries.
+UTC/named zones convert to system local time; floating times keep their clocks.
+Finite recurrence, exclusions, and cancellations are handled.
+Recurrence without an end date or count is rejected.
 
-Imports remain independent calendar records, not work-log entries or hours worked:
+Multi-day events expand by occupied date; all-day end dates are exclusive.
+Append deduplicates matching events; replace is transactional.
+Imported events are separate from worked time, and the source file is unchanged.
+Review representative files before importing a large calendar.
 
-- Finite recurrence rules, recurrence exclusions, and cancelled occurrences are handled.
-- A recurrence without an end date or occurrence count is rejected, not truncated.
-- Multi-day events expand across occupied dates; an all-day end date is exclusive.
-- Replacement is transactional. Appending deduplicates matching date, time, and content.
+## Reports and Notes
 
-Do not use this import/export pair as a lossless round trip for an arbitrary
-calendar provider. Review a small representative file before importing a large one.
+Markdown export writes UTF-8 text. Current-report export can include unsaved edits.
+Saved-daily-report aggregation selects the newest daily report per date and orders
+dates chronologically. It does not save the open draft.
 
-Time-entry export emits each period separately, with distinct identifiers based on
-the stored entry ID. Break events retain their duration and are labelled as breaks.
-CSV export also retains individual periods and independent daily notes. Neither
-export flattens a multi-entry day into its first-to-last clock span. CSV replacement
-replaces all imported dates only after confirmation; entry IDs are local and are
-not portable identifiers across CSV imports.
+Report exports can include generation-source references. These describe inputs,
+not validation of later edits. See [templates](templates.md) and the [user guide](user-guide.md).
 
-## Markdown
+## Timesheets
 
-Daily notes and reports are text content. Markdown export writes UTF-8. Saved
-reports retain their content; the renderer does not reevaluate them when source
-work logs change. See [template variables](templates.md).
+Timesheet export reads the selected day's or month's time records, not narrative
+report content. XLSX and PDF separate work, recorded rest, historical deductions,
+and leave. Multiple periods remain separate; unrecorded gaps do not become work.
 
-## Analytics Exports
+XLSX includes a period table and reference worksheet. User text is typed as text.
+The workbook contains snapshot totals; edits do not update WorkLogger.
 
-Analytics CSV and PDF are presentation outputs from chart/statistics data. They
-are different from the six-column work-log CSV. The analytics CSV header is:
+PDF contains paginated landscape tables with repeated headings. It is separate
+from an analytics summary PDF.
+
+Limits are 50,000 entries and two million text characters per snapshot.
+XLSX rejects cells exceeding 32,767 characters rather than truncating them.
+Exports publish only after successful generation and retain existing files on
+failure. They are records of captured data, not payroll or legal certification.
+
+## Analytics
+
+Analytics CSV has this header:
 
 ```csv
 label,bar_value,line_value,leave_hours,leave_marker
 ```
 
-Numeric values use two decimal places, and the leave marker is `1` or `0`.
-The file uses UTF-8 with a byte-order mark.
-Export appends the required extension when another suffix is present; a destination
-such as `summary.v2` becomes `summary.v2.csv` or `summary.v2.pdf`.
+Values use two decimal places; leave markers are 1 or 0. Files use UTF-8 with a
+byte-order mark. This is not the work-log import format.
+Analytics PDF is a paginated text summary rather than an image of the charts.
 
-The PDF adapter uses Qt's text and PDF rendering with Unicode text, font fallback,
-and automatic A4 pagination. It requires the desktop GUI application to be
-initialized, but does not open a window or use an external PDF application.
-It contains the complete text summary, not a rendered chart.
+## Database Backups
 
-## Database Files
-
-Database backups are SQLite files, not CSV or document exports. They include
-accounts, credentials, work logs, notes, reports, settings, and related tables.
-Treat them as sensitive data. Restore replaces the entire database and validates
-the signed-in administrator's username and account ID. Proxy passwords are excluded
-from new backups; re-enter them after moving an installation. See [backup details](database.md).
+SQLite backups contain all accounts, records, notes, reports, settings, background
+media, and stored history. They replace the whole database when restored.
+OS credentials, remembered-session files, language preferences, and model files
+need separate handling. Proxy passwords are excluded from newly created backups.
+Protect backups as sensitive, unencrypted files. See [database handling](database.md).
 
 ## Model Metadata
 
-Local model storage uses `catalog.json` and `manifest.json` beside shared GGUF
-files. The desktop also reads the bundled `model_catalog.json`; persistent entries
-override bundled entries with the same ID. The root JSON object contains a
-`models` list. Each entry follows `LocalModelEntry`: `id`, `display_name`,
-`filename`, `status`, `sha256`, `download_url`, `estimated_size_mb` (MiB),
-`min_ram_gb`, `context_length`, `max_output_tokens`, `description`,
-`description_translations`, and `license`. The description is English text;
-translations map locale IDs to text. Older localized `description` objects and
-bare entry lists remain readable. Invalid individual entries are skipped.
+The public `model_catalog.json` contains a `models` list. Entries describe IDs,
+display names, filenames, checksums, download URLs, estimated sizes, RAM estimates,
+context/output limits, descriptions, translated descriptions, and licenses.
 
-Catalog reads are limited to 1 MiB and cached by path, timestamps, and file size;
-changes invalidate the parsed metadata. Metadata writes are serialized within a
-store instance. Metadata and models are not part of database backups. Bundled
-entries do not automatically download, select, or load a model. See
-[model choices and configuration](local-models.md).
+Persistent `models/catalog.json` and `manifest.json` accompany shared GGUF files.
+Catalog reads are bounded to 1 MiB. Metadata never automatically downloads or
+selects weights, and database backup does not copy this directory.
+See [local models](local-models.md).

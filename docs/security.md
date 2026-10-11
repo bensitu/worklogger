@@ -1,141 +1,88 @@
 # Security and Privacy
 
-This document describes implemented boundaries and limitations. It is not a claim
-of certification or a guarantee against a compromised operating-system account.
-Report vulnerabilities through [the security policy](../SECURITY.md).
+## Local Data
 
-## Local Data Boundary
+Accounts provide application-level separation, not protection against someone
+who can read or modify the SQLite file. Database data, backups, notes, reports,
+images, and exported documents are unencrypted. Use OS permissions and disk
+encryption and protect backups as carefully as live data.
 
-WorkLogger stores application data in a local SQLite file. Accounts provide
-application-level separation, not isolation from someone who can read or modify
-the database file directly. Use operating-system permissions and disk encryption
-where needed. Backups contain all accounts and are equally sensitive.
+Background images may retain metadata in their encoded bytes. Avatars are saved
+as normalized cropped PNGs. Private images and exports should not enter source
+control or diagnostic attachments.
 
-Reports, notes, CSV, iCalendar, and PDF exports are unencrypted. Imported or
-generated content must be treated as untrusted text. Inspect spreadsheet exports
-before opening them in software that interprets formulas. Spreadsheet-sensitive
-exported text is prefixed with an apostrophe; exports are still unencrypted.
+## Accounts and Recovery
 
-## Authentication
+Passwords require at least eight characters. Password and recovery verification
+uses salted hashes. Login IDs use canonical Unicode comparison; display aliases
+do not affect authentication or ownership.
 
-- New passwords require at least eight characters.
-- Account identifiers are compared using NFKC normalization and Unicode casefolding.
-  The original display name and user ID remain stable when existing data is migrated.
-- Password hashes use PBKDF2-HMAC-SHA256 with 600,000 iterations and a random
-  16-byte salt. Supported older hashes are upgraded after successful verification.
-- Recovery keys are generated separately and stored as hashes with separate salts.
-  Recovery attempts share the account login failure limits. Successful recovery
-  clears the counter; a locked account must wait for its lockout or use an
-  administrator reset. Unknown account attempts do not create persistent counters.
-  After registration, recovery, account creation, or a password change, a new key can be explicitly copied to the system
-  clipboard or saved as a plain-text file. Export uses atomic replacement and
-  does not log the key. The clipboard and exported file are outside application
-  encryption; keep them private. Failed or cancelled exports leave the displayed
-  key available and do not overwrite an existing file with an incomplete result.
-  Administrator resets use separately labeled temporary-password copy/save
-  actions, with the same explicit, unencrypted export behavior. Changing account
-  selection or returning to account editing clears the visible credential.
-- Administrator password resets invalidate recovery credentials and remembered
-  sessions, return only the supplied temporary password, and always require a
-  password change. The user receives a new recovery key only after changing the
-  temporary password. No periodic password expiry is enforced.
-- The first registered user is an administrator. Administrator operations check
-  permissions and protect required account relationships in their handlers.
-- Failed login counts are stored per canonical account key. Lockout thresholds are 5, 10, 15,
-  and 20 failures, with delays of 30 seconds, 5 minutes, 30 minutes, and 24 hours.
-  Counts restart after 24 hours without a failure. Unknown usernames are not
-  stored, and records older than seven days are removed when the repository opens.
-  Successful password and remembered-token authentication update the last login time.
-- Remembered login tokens are stored as SHA-256-derived values in the database
-  and expire after 30 days. Password workflows invalidate remembered credentials.
-- Google and configured-tenant Microsoft sign-in use the system browser, PKCE,
-  request-bound state and nonce, loopback-only callbacks, and verified RS256 ID
-  tokens. Provider access and refresh tokens are not persisted. Linking requires
-  an authenticated local session and does not merge accounts based on email.
-  Removing the last usable sign-in method is rejected. Existing issuer information
-  is checked before opening a linked local session. See [browser sign-in](identity-signin.md).
+Repeated login/recovery failures cause temporary lockouts. Remembered local
+credentials expire and are invalidated by password workflows.
+The first registered account is an administrator; administrative operations check
+permissions independently of visible controls.
 
-Do not use the reduced hashing iterations supplied by test fixtures in production.
-There is no default administrator password or email-based account recovery.
+Password changes replace recovery keys. Save or copy a displayed key privately.
+Clipboard contents and exported key/temporary-password files are not encrypted.
+An administrator reset invalidates recovery and remembered credentials and requires
+the user to change the temporary password.
 
-## Credential Storage
+Provider sign-in uses signed token validation, PKCE, state/nonce binding, and
+loopback callbacks. Linking requires an authenticated session; email/name matching
+does not merge accounts. Provider access/refresh tokens are not persisted.
+See [browser sign-in](identity-signin.md).
 
-Proxy passwords use `SystemCredentialStore`, which selects an approved OS keyring
-backend and namespaces entries using the database path. There is no plaintext
-fallback. If secure storage is unavailable, password entry is disabled and
-existing values are retained in authenticated encrypted form until keyring storage
-becomes available. Startup protects legacy plaintext for all accounts; an encryption
-failure stops startup without discarding the original. Proxy passwords are excluded
-from newly created backups, including SQLite free-page content. Private pre-change
-migration snapshots may retain the original data and must be protected accordingly.
-Moving the database can change the namespace and
-require re-entering the proxy password.
+## Stored Credentials
 
-Remembered login uses `FileRememberTokenSessionStore`. New values use Fernet from
-`cryptography`; earlier authenticated ciphertext remains readable and is upgraded
-after a successful read. Windows machine keys are protected by current-user DPAPI.
-Other platforms use a private local key file, so access to both files can recover
-the credential. Key creation is process-locked, and encrypted values are replaced
-atomically. Missing or corrupt keys are reported rather than silently replaced.
-File permissions remain best effort; protect the containing user profile.
+API keys use OS keyring-first storage with authenticated encrypted fallback.
+Proxy passwords require an approved system credential backend without a plaintext
+fallback. Credential namespaces include account/database context.
 
-Locally saved provider registrations use the same authenticated encryption in
-`identity-config.enc`. They apply to the current operating-system user's installation.
-Externally supplied registration files are not encrypted by WorkLogger and must
-be protected by the deployment administrator. Registration secrets are not an
-alternative to PKCE or proof that a desktop client can keep a confidential secret.
+Remembered-session and provider-registration files use authenticated encryption.
+Machine keys are protected with current-user DPAPI on Windows or a private local
+key file on other platforms. Protect the containing OS profile.
+Changing machine or database path may require re-entering credentials.
 
-The external API-key form uses `EncryptedSettingsKeyStore`, with keyring-first
-behavior and encrypted-settings fallback. Its namespace includes the resolved
-database path and account ID. Saving a key does not make a service request or
-connect an inference engine. This does not mean that all application secrets or
-the database are encrypted. The proxy workflow uses the stricter system-only
-store instead.
+Do not regenerate or delete an unreadable key to silence a warning; preserve it
+before recovery. Database backup does not transfer OS keyring entries or session
+files. New backups exclude proxy passwords, but private pre-change snapshots can
+contain older credential material.
 
-## Network Exposure
+Keep secrets out of public deployment configuration, model catalogs, logs,
+representations, and exception messages.
 
-Display names are presentation data, not login identifiers or authorization keys.
-They are stored in the user row and included in database backups. Editing a name
-does not rotate credentials, invalidate sessions, or change record ownership.
-AI requests include the preferred name, or login ID when no alias is set; explicit
-external processing sends this name to the selected provider alongside permitted
-context. Names are quoted as data, not concatenated as user instructions, and
-rewriting preserves existing names in source text and historical messages.
+## Network and AI
 
-Normal work recording does not require a network service. Manual update checks
-contact GitHub. Model downloads contact the selected catalog URL. A connected
-external AI adapter transmits its supplied context and messages only after explicit
-account opt-in. New and existing accounts default to local processing. Saving an
-API credential or selecting an unavailable local model never initiates remote
-requests. Synthetic connection tests exclude work records.
+Ordinary recording is local. Update checks contact the release service; model
+downloads contact selected catalog/file hosts.
 
-Privacy switches default to including notes, calendar events, and quick logs in
-built AI context. A failed settings read stops context construction, and categories
-disabled by the user are not queried. Oversized context is rejected before sending.
-The external switch is the account's explicit remote-processing selection. Context
-privacy settings still apply. A configured HTTP CONNECT proxy routes adapter
-traffic without disabling TLS verification. Trust the proxy and its network before
-using Basic proxy credentials. See [integrations](integrations.md) for supported
-proxy authentication and destination-validation boundaries.
+External AI sends selected content only after explicit account enablement.
+Saving a credential alone makes no request. Sample connection tests exclude work
+records. Local failures do not trigger remote fallback.
 
-Cross-device restores can retain encrypted credentials that cannot be decrypted
-on the new device. Settings show an explicit re-entry message and allow successful
-replacement where secure storage is available. Work records remain unaffected;
-unreadable machine keys are never silently regenerated or removed.
+Review account privacy controls and per-date note sharing.
+The preferred account name accompanies AI requests. Approved context and generated
+responses can contain private work information.
 
-## Diagnostics
+The HTTP CONNECT proxy preserves destination TLS verification. Trust the proxy
+and network before using authentication. Pre-login provider requests and browser
+traffic are separate from account proxy configuration.
+See [configuration](configuration.md).
 
-Runtime logging uses UTF-8 rotating files, up to 1,000,000 bytes per file with five
-backups. Explicit credential values are redacted while diagnostic identifiers
-remain visible. Exception formatting retains types and source locations but omits
-arbitrary exception payloads. This is not sanitization of all possible private text.
-Review logs before sharing them. Do not log passwords, recovery keys, tokens,
-authorization headers, prompts containing private records, or downloaded secrets.
+## Sharing Diagnostics
 
-## Operational Precautions
+Logging redacts registered credential values, but this is not a guarantee that
+all arbitrary text is safe to publish. Review logs, screenshots, and exports.
+Never share passwords, recovery keys, tokens, authorization headers, provider
+codes, personal databases, machine keys, or private prompts.
 
-Keep tested backups outside generated output directories. Verify database upgrades
-on copies before using personal records. Restrict write access to application
-resources and model catalogs. Do not package private files. Keep dependency
-versions and native binaries consistent, and validate any dependency update before
-shipping it. See [database handling](database.md) and [packaging](packaging.md).
+Use synthetic records when reporting defects and follow
+[the security policy](../SECURITY.md) for sensitive reports.
+
+## Contributor Responsibilities
+
+Preserve authorization, input bounds, credential validation, and storage safety.
+Use parameterized SQL, bounded file/network reads, atomic writes, and explicit
+account ownership. Maintain supported-data migration/rollback coverage.
+Review dependencies and native binaries before distribution.
+See [database](database.md), [testing](testing.md), and [packaging](packaging.md).

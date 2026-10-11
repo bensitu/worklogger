@@ -1,46 +1,35 @@
 # Localization
 
-Catalogs are activated explicitly at startup or when a language changes; importing
-the translation module does not read assets or select a language. Explicit-language
-lookups reuse parsed catalogs. Cache entries include the file timestamp and size,
-so a newly compiled catalog is loaded on the next explicit lookup or activation.
-
 ## Catalogs
 
-Application strings use gettext through `worklogger.infrastructure.i18n`.
-Supported catalogs are `en_US`, `ja_JP`, `ko_KR`, `zh_CN`, and `zh_TW` under
-`worklogger/locales/<language>/LC_MESSAGES/`.
+User-visible strings use gettext through `worklogger.infrastructure.i18n`.
+Supported catalogs are `en_US`, `ja_JP`, `ko_KR`, `zh_CN`, and `zh_TW`.
 
-- `messages.pot`: extracted message template, tracked in Git.
-- `messages.po`: translated source catalog, tracked in Git.
-- `messages.mo`: compiled runtime catalog, generated and excluded from Git.
+- Track `messages.pot` and the translated `messages.po` source files.
+- Generate `messages.mo` for runtime use; do not commit compiled catalogs.
+- Use literal English message keys and named placeholders.
+- Use `ngettext()` for plural selection.
 
-`_()` translates a single message and `ngettext()` selects a plural form. Use a
-literal English message as the extraction key. Format named values after
-translation rather than constructing a translated message dynamically.
-
-Error codes are diagnostic identifiers, not translation keys. The presentation
-helpers in `worklogger/presentation/errors.py` map them to literal English gettext
-messages. Unknown errors use a neutral fallback without exposing exception text.
-Validation previews use the same messages without logging every input change.
+Format after translation:
 
 ```python
 from worklogger.infrastructure.i18n import _
 
-message = _("Last backup: {time}").format(time="2026-05-21 09:00")
+message = _("Last backup: {time}").format(time="2030-01-15 09:00")
 ```
 
-## Updating Strings
+Presentation maps error codes to translated messages. Do not expose raw exception
+payloads or use dynamically constructed extraction keys.
 
-Run the scripts directly from the repository root:
+## Updating Strings
 
 ```sh
 python scripts/i18n/i18n_extract.py
 python scripts/i18n/i18n_sync.py
 ```
 
-Translate new entries in all supported PO files, preserving named formatting
-fields, plural forms, and any Qt position parameters such as `%1`. Then:
+Translate new entries in all supported PO files. Preserve named placeholders,
+plural forms, and Qt parameters such as `%1`. Then:
 
 ```sh
 python scripts/i18n/i18n_compile.py
@@ -48,41 +37,20 @@ python scripts/i18n/i18n_check.py
 python -m unittest tests.i18n.test_gettext_foundation -v
 ```
 
-The compiler is provided by the repository; GNU gettext executables are not needed
-for these commands. Synchronization preserves existing translations but does not
-translate new messages automatically. Empty or missing translations fall back to
-the source string at runtime.
+The repository compiler does not need a separate GNU gettext installation.
+Synchronization preserves translations but does not translate new messages.
+Missing runtime translations fall back to the English source.
 
-## Language Selection
+## Activation and Qt
 
-Pre-login preference handling is in `infrastructure/language_preferences.py`.
-System language matching uses Qt locale information, including Chinese region and
-script variants. The login preference is separate from the account language in
-SQLite. See [resolution order](configuration.md).
+Startup and language changes explicitly activate catalogs. Account language and
+device login language are separate; see [configuration](configuration.md).
+The dropdown displays each language's own name.
 
-The language dropdown always displays the language's own name, independently of
-the current interface language. Changing the preference does not rebuild all
-existing widgets: restart or log in again to apply the translated interface.
+The color picker uses a scoped Qt translator backed by the same catalogs.
+Remove it when the dialog closes. Qt's built-in dialog strings and platform-native
+dialogs need their own target checks.
 
-Calendar labels and period descriptions use presentation date helpers. Holiday
-names are supplied by the holiday provider and are not translated by the
-application's gettext catalogs.
-
-## Qt Controls
-
-Application translations do not automatically translate Qt's built-in dialogs.
-The color picker uses a scoped `QTranslator` adapter whose values come from the
-same gettext catalogs, and selects the Qt-rendered dialog so the OS language does
-not override the chosen interface language. The adapter is removed when the modal
-dialog closes. It does not introduce a second translation catalog format.
-
-When upgrading Qt, verify color-field labels, standard buttons, and screen-color
-selection instructions. Their source texts and translation contexts are defined
-by Qt and may need corresponding adapter changes.
-
-## Rendering
-
-Bundled Noto fonts are installed before constructing the interface. Verify text
-widths and heights in every language, including input fields, dropdowns, buttons,
-calendar holidays, and dialogs. Do not assume that English measurements cover
-Japanese, Korean, or Chinese. See [visual tests](testing.md).
+Use bundled fonts and localized date helpers. Holiday names come from their data
+provider. Check long labels, input fields, menus, and error text in representative
+languages and themes. See [testing](testing.md).
