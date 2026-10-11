@@ -13,6 +13,7 @@ from worklogger.domain.calendar.repositories import CalendarEventRepository
 from worklogger.domain.shared.errors import ConflictError, InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.entry_repository import TimeEntryRepository
+from worklogger.domain.worklog.timer_state import timer_payload
 from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType
 from worklogger.domain.worklog.rules import decode_work_type, entry_interval, normalize_work_log, parse_time, shift_datetimes, timestamp_span_hours
 from worklogger.app.ports import WorkTypeOperations, ProjectOperations
@@ -67,9 +68,7 @@ class TimeEntryService:
         try:
             self._timer_raw = self.settings.get(self.user_id, "time_entry_timer")
             if self._timer_raw:
-                if len(self._timer_raw) > 128 * 1024:
-                    raise ValueError("auto_record_restore_failed")
-                data = json.loads(self._timer_raw)
+                data = timer_payload(self._timer_raw)
                 data["context"] = WorkContext(**data.get("context", {}))
                 for key in ("started_at", "break_until", "pending_end"):
                     data[key] = datetime.fromisoformat(data[key]) if data.get(key) else None

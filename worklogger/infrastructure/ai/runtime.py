@@ -190,6 +190,7 @@ class LocalInferenceRuntime:
                         ),
                         add_bos=False,
                     )
+                    check_deadline(None, None)
                     budget = context - len(tokens) - 256
                     if budget <= 0:
                         failure.append("local_inference_context_limit")
@@ -207,6 +208,7 @@ class LocalInferenceRuntime:
                         temperature=0.2,
                         logits_processor=Processors([check_deadline]),
                     )
+                    check_deadline(None, None)
                     return result["choices"][0]["message"]["content"]
 
                 result = LocalModelGateway(

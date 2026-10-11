@@ -283,6 +283,27 @@ class SettingsWorkflowTests(unittest.TestCase):
         finally:
             dialog.deleteLater()
 
+    def test_destroyed_data_owner_skips_ui_but_keeps_backup_and_restore_side_effects(self):
+        from shiboken6 import delete
+
+        repository = MemorySettingsRepository()
+        success, error, reload_data = Mock(), Mock(), Mock()
+        controller = SettingsWorkflowController(
+            settings_view_model=_settings_view_model(repository), auth_view_model=FakeAuthViewModel(),
+            user=User(id=1, username="alice", is_admin=True), data_management_view_model=FakeDataManagementViewModel(),
+            notify_success=success, notify_error=error, reload_after_restore=reload_data,
+        )
+        dialog = SettingsDialog(_settings_view_model(repository))
+        delete(dialog)
+        workflow = controller._data_workflow
+        for action in ("backup", "restore"):
+            result = Result.success(DataManagementActionState(action, Path("sample.db")))
+            workflow._complete_data_job(dialog, "Data", result, lambda state: "Done")
+        self.assertIsNotNone(repository.get(1, LAST_BACKUP_AT_SETTING_KEY))
+        reload_data.assert_called_once()
+        success.assert_not_called()
+        error.assert_not_called()
+
     def test_backup_timestamp_records_only_success_and_update_status_is_inline(self):
         repository = MemorySettingsRepository()
         data = FakeDataManagementViewModel()

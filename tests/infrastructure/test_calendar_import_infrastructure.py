@@ -34,6 +34,17 @@ class FakeHolidaysModule:
 
 
 class CalendarImportInfrastructureTests(unittest.TestCase):
+    def test_excessive_recurrence_count_is_rejected_before_expansion(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "bounded.ics"
+            path.write_text("BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:sample\n"
+                            "DTSTART:20300101T090000Z\nRRULE:FREQ=DAILY;COUNT=1000000000\n"
+                            "SUMMARY:Sample\nEND:VEVENT\nEND:VCALENDAR\n", encoding="utf-8")
+            with patch("recurring_ical_events.of") as expand:
+                result = IcsCalendarImporter(max_events=10).read_events(path, user_id=1)
+                self.assertEqual(result.error.code, "ics_file_too_large")
+                expand.assert_not_called()
+
     def test_holiday_country_detection_and_subdivision_selection(self) -> None:
         for zone, country in (("Asia/Manila", "PH"), ("Europe/Dublin", "IE"),
                               ("Asia/Ho_Chi_Minh", "VN"), ("America/Argentina/Buenos_Aires", "AR"), ("Etc/UTC", "")):

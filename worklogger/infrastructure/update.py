@@ -42,8 +42,12 @@ class GitHubReleaseUpdateChecker:
             data = json.loads(payload.decode("utf-8"))
             if not isinstance(data, dict):
                 raise ValueError("update_response_invalid")
+            if data.get("draft") or data.get("prerelease"):
+                return Result.success(None)
             latest = _normalize_version(str(data.get("tag_name") or data.get("name") or ""))
             current = _normalize_version(current_version)
+            if "-" in latest.split("+", 1)[0]:
+                return Result.success(None)
             if latest and _version_tuple(latest) > _version_tuple(current):
                 return Result.success(latest)
             return Result.success(None)
@@ -60,11 +64,23 @@ class GitHubReleaseUpdateChecker:
 
 
 def _normalize_version(value: str) -> str:
-    match = re.search(r"(\d+(?:\.\d+){0,3})", str(value or ""))
-    return match.group(1) if match else "0"
+    match = re.fullmatch(
+        r"[vV]?((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)"
+        r"(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?)",
+        str(value or "").strip(),
+        flags=re.ASCII,
+    )
+    if not match:
+        raise ValueError("update_response_invalid")
+    normalized = match.group(1)
+    core = normalized.split("+", 1)[0]
+    if "-" in core and any(part.isdecimal() and len(part) > 1 and part.startswith("0") for part in core.split("-", 1)[1].split(".")):
+        raise ValueError("update_response_invalid")
+    return normalized
 
 
-def _version_tuple(value: str) -> tuple[int, ...]:
-    parts = [int(part) for part in _normalize_version(value).split(".")]
-    return tuple(parts + [0] * (4 - len(parts)))
+def _version_tuple(value: str) -> tuple:
+    core, separator, pre = _normalize_version(value).split("+", 1)[0].partition("-")
+    identifiers = tuple((0, int(part)) if part.isdecimal() else (1, part) for part in pre.split(".")) if separator else ()
+    return (*map(int, core.split(".")), not separator, identifiers)
 

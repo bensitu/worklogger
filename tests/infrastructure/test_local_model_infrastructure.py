@@ -281,6 +281,10 @@ class LocalModelInfrastructureTests(unittest.TestCase):
             self.assertEqual(result.value.text, "visible")
             self.assertEqual("/no_think" in seen["messages"][-1]["content"], needs_directive)
         self.assertEqual(strip_thinking("<thinking>x</thinking>answer"), "answer")
+        for marker in ("<think>", "< thinking >", "<|begin_of_thought|>"):
+            self.assertEqual(strip_thinking(marker + "truncated reasoning"), "")
+            self.assertEqual(strip_thinking("visible" + marker + "truncated reasoning"), "visible")
+        self.assertEqual(strip_thinking("orphan reasoning</think>Final answer: visible"), "visible")
 
 
 if __name__ == "__main__":

@@ -25,6 +25,19 @@ from worklogger.infrastructure.security.password_hasher import PBKDF2PasswordHas
 
 
 class TimeEntryTests(unittest.TestCase):
+    def test_invalid_timer_blocks_writes_with_a_specific_error_and_can_be_discarded(self):
+        for raw in ("invalid", "[]", "{}", '{"capture_id":"sample","started_at":"2030-01-01T09:00:00"}'):
+            with self.subTest(raw=raw):
+                self.settings.set(self.user.id, "time_entry_timer", raw)
+                result = self.service.save_manual(self.now.date(), "09:00", "10:00", "normal", "New record")
+                self.assertFalse(result.ok)
+                self.assertEqual(result.error.code, "auto_record_restore_failed")
+                self.assertEqual(self.settings.get(self.user.id, "time_entry_timer"), raw)
+                recovered = TimeEntryService(user_id=self.user.id, repository=self.repository,
+                                             settings=self.settings, local_timezone=timezone.utc)
+                self.assertTrue(recovered.discard_timer().ok)
+                self.assertIsNone(self.settings.get(self.user.id, "time_entry_timer"))
+
     def test_split_merge_and_undo_preserve_time_identity_and_revisions(self):
         saved = self.service.save_manual(self.now.date(), "09:00", "12:00", "meeting", "Review").value
         split = self.service.split(saved, 60)

@@ -32,6 +32,10 @@ the backup. It replaces the whole database and ends the session.
 A `.pre_restore` file means replacement needs recovery; preserve it before taking
 any action. CSV and PDF exports are not database backups.
 
+If an invalid saved timer prevents recording, review its state in Auto Record and
+use Discard timer deliberately. The invalid state is retained until that action;
+do not remove unrelated work records or settings to repair it.
+
 ## Sign-In and Credentials
 
 Wait for a temporary lockout to expire or use an authorized administrator reset.

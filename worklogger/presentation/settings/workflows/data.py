@@ -289,6 +289,8 @@ class DataSettingsWorkflow:
         success_message: Callable[[DataManagementActionState], str],
     ) -> bool:
         if not result.ok or result.value is None:
+            if not isValid(dialog):
+                return False
             message = _error_message(result.error)
             _set_status(dialog, message, "data")
             if not isinstance(result.error, CancellationError):
@@ -302,15 +304,16 @@ class DataSettingsWorkflow:
                 if (
                     loaded.ok
                     and loaded.value is not None
-                    and hasattr(dialog, "set_backup_time")
+                    and isValid(dialog) and hasattr(dialog, "set_backup_time")
                 ):
                     dialog.set_backup_time(loaded.value.last_backup_at)
             else:
                 message += "\n" + _(
                     "Backup succeeded, but its timestamp could not be saved."
                 )
-        _set_status(dialog, message, "data")
-        self._notify_success(dialog, title, message)
+        if isValid(dialog):
+            _set_status(dialog, message, "data")
+            self._notify_success(dialog, title, message)
         return True
 
     def _run_data_job(
@@ -357,7 +360,8 @@ class DataSettingsWorkflow:
         success_message: Callable[[DataManagementActionState], str],
     ) -> None:
         self._data_job_handle = None
-        _set_busy(dialog, "data", False)
+        if isValid(dialog):
+            _set_busy(dialog, "data", False)
         completed = self._handle_data_result(dialog, title, result, success_message)
         if (
             completed

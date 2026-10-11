@@ -3,6 +3,7 @@
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 from worklogger.app.ports import AIRequest
 from worklogger.app.use_cases.ai import RewriteTextHandler
@@ -13,6 +14,17 @@ from worklogger.infrastructure.ai.runtime import LocalInferenceRuntime
 
 
 class LocalInferenceTests(unittest.TestCase):
+    def test_tokenization_deadline_prevents_starting_completion(self):
+        self.select()
+        self.assertTrue(self.handler.handle(RewriteTextCommand(1, "Warm up")).ok)
+        engine = self.engines[-1]
+        with patch("worklogger.infrastructure.ai.runtime.monotonic", side_effect=[0, 0, 2]), \
+             patch.object(engine, "create_chat_completion") as completion:
+            result = self.service.generate(AIRequest(messages=({"role": "user", "content": "Sample"},),
+                                                     model="sample", timeout_seconds=1))
+        self.assertEqual(result.error.code, "local_inference_timeout")
+        completion.assert_not_called()
+
     def setUp(self):
         self.values = {"local_model_active_id": "sample", "local_model_enabled": "1", "ai_assist_enabled": "1"}
         self.settings = SimpleNamespace(get=lambda user, key, default=None: self.values.get(key, default))

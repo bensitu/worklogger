@@ -41,6 +41,9 @@ timezone. Saved type/context labels preserve historical meaning.
 Startup checks the stored structure and ledger against supported contracts.
 Missing keys/columns, unknown layouts, executable schema objects, and unknown
 future versions are rejected rather than reset.
+Canonical source baselines are ledger versions 14, 15, and 16, with the full
+required structure. Earlier ledger entries may remain as history but do not make
+an incomplete or unsupported source eligible for conversion.
 
 Released unversioned layouts compatible with v3.3.3 use the released import
 adapter. Credentials, account IDs, work content, report identities, and historical

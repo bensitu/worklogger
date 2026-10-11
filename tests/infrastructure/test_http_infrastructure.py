@@ -52,3 +52,18 @@ class HTTPInfrastructureTests(unittest.TestCase):
         result = GitHubReleaseUpdateChecker(api_url="https://example.com", opener=lambda *a, **k: io.BytesIO(
             b'{"tag_name":"v4.1.0"}')).check_latest_version("4.0.0")
         self.assertEqual(result.value, "4.1.0")
+
+    def test_updates_ignore_prereleases_and_recognize_their_final_release(self):
+        for tag, flags, current, expected in (
+            ("v4.1.0-beta.1", {}, "4.0.0", None),
+            ("v4.1.0", {"prerelease": True}, "4.0.0", None),
+            ("v4.1.0", {"draft": True}, "4.0.0", None),
+            ("v4.1.0", {}, "4.1.0-beta.1", "4.1.0"),
+            ("v4.1.0+build.2", {}, "4.1.0+build.1", None),
+        ):
+            with self.subTest(tag=tag, flags=flags):
+                payload = json.dumps(dict(tag_name=tag, **flags)).encode()
+                checker = GitHubReleaseUpdateChecker(api_url="https://example.com", opener=lambda *a, **k: io.BytesIO(payload))
+                result = checker.check_latest_version(current)
+                self.assertTrue(result.ok, result.error)
+                self.assertEqual(result.value, expected)

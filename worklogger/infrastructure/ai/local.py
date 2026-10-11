@@ -10,8 +10,8 @@ from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 
 _THINKING_RE = re.compile(
-    r"(<\|begin_of_thought\|>.*?<\|end_of_thought\|>|<think>.*?</think>|"
-    r"<thinking>.*?</thinking>)",
+    r"(<\|begin_of_thought\|>.*?(?:<\|end_of_thought\|>|$)|<\s*think\s*>.*?(?:</\s*think\s*>|$)|"
+    r"<\s*thinking\s*>.*?(?:</\s*thinking\s*>|$))",
     re.DOTALL | re.IGNORECASE,
 )
 _THINKING_MARKER_RE = re.compile(
@@ -70,13 +70,16 @@ class LocalModelGateway:
                 InfrastructureError(
                     "local_model_generation_failed",
                     "local_model_generation_failed",
-                    {"reason": str(exc)},
+                    {"error_type": type(exc).__name__},
                 )
             )
 
 
 def strip_thinking(text: str) -> str:
     cleaned = _THINKING_RE.sub("", str(text or ""))
+    orphan = list(re.finditer(r"</\s*(?:think|thinking)\s*>|<\|end_of_thought\|>", cleaned, re.IGNORECASE))
+    if orphan:
+        cleaned = cleaned[orphan[-1].end():]
     cleaned = _THINKING_MARKER_RE.sub("", cleaned)
     cleaned = _FINAL_PREFIX_RE.sub("", cleaned)
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)

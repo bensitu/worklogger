@@ -38,6 +38,10 @@ class IcsCalendarImporter:
                 rule = component.get("RRULE")
                 if rule and "COUNT" not in rule and "UNTIL" not in rule:
                     raise ValueError("ics_recurrence_unbounded")
+                if rule and "COUNT" in rule:
+                    counts = rule["COUNT"]
+                    if len(counts) != 1 or not 1 <= int(counts[0]) <= self._max_events:
+                        raise ValueError("ics_file_too_large")
                 if component.errors or "DTSTART" not in component:
                     raise ValueError("ics_import_failed")
                 for field in ("DTSTART", "DTEND"):
