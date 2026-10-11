@@ -618,7 +618,8 @@ class AppWindowTests(unittest.TestCase):
         self.assertEqual(picker.calendar.selectedDate().toPython(), original)
         allow_discard = True
         picker.calendar.setSelectedDate(chosen)
-        QTest.keyClick(picker.calendar, Qt.Key.Key_Return)
+        self._app.processEvents()
+        QTest.keyClick(self._app.focusWidget(), Qt.Key.Key_Return)
         self.assertEqual(view.selected_day, chosen.toPython())
         self.assertFalse(view.has_unsaved_changes)
         picker.click()
