@@ -75,6 +75,10 @@ class GlassLayoutChecks(unittest.TestCase):
                             layers = [layer for layer in window.findChildren(GlassLayer) if layer.isVisible()]
                             self.assertTrue(layers)
                             self.assertTrue(any(not layer.image.isNull() for layer in layers))
+                            sidebar = window.sidebar.findChild(GlassLayer, options=Qt.FindChildOption.FindDirectChildrenOnly)
+                            self.assertIsNotNone(sidebar)
+                            self.assertTrue(sidebar.isVisible())
+                            self.assertFalse(sidebar.image.isNull())
                             for layer in layers:
                                 self.assertEqual(layer.geometry(), layer.parentWidget().rect())
                                 self.assertEqual(layer.parentWidget().property("glass_surface"), True)

@@ -9,7 +9,6 @@ from shiboken6 import isValid
 
 from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.presentation.theme.glass_renderer import GLASS_PADDING, render_geometry, render_glass
-from worklogger.presentation.theme.native_glass import NativeGlassAdapter
 from worklogger.presentation.widgets._style import set_style_property
 
 _SURFACE_NAMES = {"app_main_content_widget", "app_sidebar_frame",
@@ -42,10 +41,9 @@ class GlassLayer(QWidget):
 
 
 class GlassThemeController(QObject):
-    def __init__(self, window, source, *, job_runner=None, native_target=None):
+    def __init__(self, window, source, *, job_runner=None):
         super().__init__(window)
         self._window, self._source, self._runner = window, source, job_runner
-        self._native = NativeGlassAdapter(native_target) if native_target is not None else None
         self._layers, self._jobs, self._pending = {}, {}, OrderedDict()
         self._scrollbars = set()
         self._windows = {window}
@@ -76,8 +74,6 @@ class GlassThemeController(QObject):
             if handle is not None:
                 handle.cancel()
         self._source.set_glass_colors(colors)
-        if not self._enabled and self._native is not None:
-            self._native.remove()
         for target, layer in tuple(self._layers.items()):
             if not isValid(target):
                 del self._layers[target]
@@ -137,9 +133,7 @@ class GlassThemeController(QObject):
         if not self._enabled or self._disposed or self._software_failed:
             return False
         if watched in self._windows:
-            if watched is self._window and event.type() == QEvent.Type.Hide and self._native is not None:
-                self._native.remove()
-            elif event.type() in (QEvent.Type.Show, QEvent.Type.Resize, QEvent.Type.Move):
+            if event.type() in (QEvent.Type.Show, QEvent.Type.Resize, QEvent.Type.Move):
                 self._queue_all()
         elif watched in self._layers:
             layer = self._layers[watched]
@@ -158,8 +152,6 @@ class GlassThemeController(QObject):
     def _dispatch(self):
         if not self._enabled or self._disposed or self._software_failed:
             return
-        if self._native is not None and self._window.isVisible():
-            self._native.apply(dark=self._colors.dark)
         if self._runner is None:
             self._runner = QtJobRunner(QCoreApplication.instance())
         while self._pending and len(self._jobs) < 2:
@@ -168,9 +160,6 @@ class GlassThemeController(QObject):
                 continue
             target = layer.parentWidget()
             if not target.isVisible() or target.visibleRegion().isEmpty() or target.width() < 2 or target.height() < 2:
-                continue
-            if self._native is not None and self._native.active and target is self._native.target:
-                layer.hide()
                 continue
             layer.show()
             width, height = target.width(), target.height()
@@ -217,5 +206,3 @@ class GlassThemeController(QObject):
                 handle.cancel()
         self._jobs.clear()
         self._pending.clear()
-        if self._native is not None:
-            self._native.remove()

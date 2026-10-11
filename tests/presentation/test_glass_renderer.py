@@ -37,6 +37,28 @@ class GlassRendererTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             render_glass(QImage(), width, height, "#ffffff")
 
+    def test_glass_softens_structured_backgrounds_beyond_a_flat_tint(self):
+        width, height = 200, 100
+        source = QImage(width + 2 * GLASS_PADDING, height + 2 * GLASS_PADDING, QImage.Format.Format_ARGB32)
+        source.fill(QColor("#ffffff"))
+        painter = QPainter(source)
+        for x in range(0, source.width(), 8):
+            painter.fillRect(x, 0, 4, source.height(), QColor("#000000"))
+        painter.end()
+        tint = QColor("#eef5f7")
+        baseline = source.copy(GLASS_PADDING, GLASS_PADDING, width, height)
+        tint.setAlpha(160)
+        painter = QPainter(baseline)
+        painter.fillRect(baseline.rect(), tint)
+        painter.end()
+        rendered = render_glass(source, width, height, "#eef5f7")
+        def contrast(image):
+            values = [image.pixelColor(x, height // 2).lightnessF() for x in range(40, 160)]
+            return max(values) - min(values)
+        self.assertLess(contrast(rendered), contrast(baseline))
+        source.fill(QColor("#000000"))
+        self.assertNotEqual(rendered, render_glass(source, width, height, "#eef5f7"))
+
     def test_glass_tint_keeps_text_readable_over_extreme_backgrounds(self):
         def luminance(color):
             channels = (color.redF(), color.greenF(), color.blueF())

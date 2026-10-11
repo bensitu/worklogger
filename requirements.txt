@@ -13,4 +13,3 @@ portalocker==4.4.0
 openpyxl==3.1.5
 et-xmlfile==2.0.0
 numpy==2.4.6
-pyqt-liquidglass==0.1.0; sys_platform == "darwin" and python_version >= "3.12"

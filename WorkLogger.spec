@@ -16,10 +16,6 @@ datas += [(str(root / "build/build-info.json"), "."), (str(root / "LICENSE"), ".
 hiddenimports = collect_submodules("worklogger") + collect_submodules("holidays")
 hiddenimports += collect_submodules("keyring.backends")
 hiddenimports += collect_submodules("openpyxl") + collect_submodules("et_xmlfile")
-if sys.platform == "darwin" and sys.version_info >= (3, 12):
-    hiddenimports += collect_submodules("pyqt_liquidglass")
-    hiddenimports += ["AppKit", "Foundation", "Quartz", "objc"]
-    datas += copy_metadata("pyqt-liquidglass")
 runtime_module = lambda name: not any(part in {"test", "tests"} for part in name.split("."))
 hiddenimports += collect_submodules("icalendar", filter=runtime_module)
 hiddenimports += collect_submodules("recurring_ical_events", filter=runtime_module)

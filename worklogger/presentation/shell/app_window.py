@@ -175,8 +175,7 @@ class AppWindow(QMainWindow):
         if hasattr(self._residency_controller, "notify_timer_reminder"):
             self.entry_panel.reminder.connect(self._residency_controller.notify_timer_reminder)
         self.sidebar.set_avatar(self._config.profile_avatar_png)
-        self.glass_controller = GlassThemeController(self, self._background_surface, job_runner=self._job_runner,
-                                                     native_target=self.sidebar)
+        self.glass_controller = GlassThemeController(self, self._background_surface, job_runner=self._job_runner)
         self.apply_theme()
         self.background_controller.reload()
         self._date_timer = QTimer(self)

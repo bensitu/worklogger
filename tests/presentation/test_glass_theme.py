@@ -2,11 +2,10 @@ import os
 from dataclasses import replace
 import time
 import unittest
-from types import SimpleNamespace
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize
 from PySide6.QtGui import QColor, QImage, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout
@@ -19,7 +18,6 @@ from worklogger.config.themes import THEME_CATALOG
 from worklogger.presentation.theme.palettes import build_palette
 from worklogger.presentation.theme.background import MainBackgroundWidget
 from worklogger.presentation.theme.glass_surfaces import GlassThemeController
-from worklogger.presentation.theme.native_glass import NativeGlassAdapter
 from worklogger.presentation.widgets.card import CardFrame
 from worklogger.presentation.settings import SettingsPage
 from tests.presentation.test_settings_presentation import _view_model, MemorySettingsRepository
@@ -78,31 +76,6 @@ class GlassThemeTests(unittest.TestCase):
         runner.jobs[0][1](Result.success(result))
         self.assertFalse(target.findChild(QWidget, "glass_surface_layer_widget").isVisible())
         controller.dispose()
-
-    def test_native_adapter_removes_effects_and_restores_widget_state(self):
-        target = QWidget()
-        self.addCleanup(target.deleteLater)
-        self.addCleanup(target.close)
-        target.show()
-        original = target.testAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        removed = []
-        backend = SimpleNamespace(GlassOptions=lambda **options: options,
-            BlendingMode=SimpleNamespace(WITHIN_WINDOW=1),
-            prepare_widget_for_glass=lambda widget: widget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground),
-            apply_glass_to_widget=lambda widget, **options: setattr(widget, "resizeEvent", lambda _event: None) or 7,
-            remove_glass_effect=lambda effect: removed.append(effect))
-        def native_window(widget):
-            widget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-            return None
-        adapter = NativeGlassAdapter(target, backend_factory=lambda: (backend, native_window))
-        self.assertTrue(adapter.apply())
-        self.assertIn("resizeEvent", target.__dict__)
-        adapter.remove()
-        self.assertEqual(removed, [7])
-        self.assertNotIn("resizeEvent", target.__dict__)
-        self.assertEqual(target.testAttribute(Qt.WidgetAttribute.WA_TranslucentBackground), original)
-        unsupported = NativeGlassAdapter(target, backend_factory=lambda: None)
-        self.assertFalse(unsupported.apply())
 
     def test_render_failures_leave_readable_surfaces_without_repeated_jobs(self):
         window = QWidget()

@@ -163,8 +163,8 @@ or signing in again. Most other settings save when changed.
 
 Liquid Glass adds frosted, refractive panel backgrounds in light and dark mode.
 It uses the application's own background, not desktop screenshots. Text editors
-and tables retain readable surfaces. macOS with Python 3.12 or newer can use native
-glass for the sidebar; other environments use the PySide6 software renderer.
+and tables retain readable surfaces. All platforms use the same PyGlass rendering
+core adapted for PySide6, including the sidebar.
 Glass surfaces retain a tint for text contrast even at full background opacity.
 
 Minimal view provides time recording, the selected day's records, Notes, and the

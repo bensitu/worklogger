@@ -72,7 +72,6 @@ class BuildResourceTests(unittest.TestCase):
         self.assertIn("worklogger/assets/icons/ui/x.svg", paths)
         for name in (*COMMON_TEMPLATES, *(name for files in MATERIAL_TEMPLATES.values() for name in files)):
             self.assertIn(f"worklogger/presentation/theme/qss/{name}", paths)
-        self.assertIn("worklogger/assets/licenses/pyqt-liquidglass.txt", paths)
         self.assertEqual(sum(path.endswith(".otf") for path in paths), 5)
         self.assertEqual(sum(path.endswith(".mo") for path in paths), 5)
         self.assertFalse(any(path.endswith((".avif", ".db", ".gguf")) for path in paths))
