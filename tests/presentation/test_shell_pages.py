@@ -10,6 +10,8 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from PySide6.QtCore import QEvent, QObject
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QMessageBox, QLabel, QFileDialog
 from worklogger.presentation.job_runner import ImmediateJobRunner
 
@@ -39,6 +41,90 @@ class ReportsViewModel:
 
 
 class ShellPagesTests(unittest.TestCase):
+    def test_fast_report_and_history_loads_preserve_control_states(self):
+        class Model(ReportsViewModel):
+            revisions_available = True
+            content = "Saved report"
+
+            def load(self, kind, day):
+                return Result.success(ReportEditorState(1, kind, day, day, self.content,
+                                                       saved=True, report_id=42))
+
+        class Runner:
+            def submit(self, name, job, *, on_complete):
+                self.name, self.job, self.complete = name, job, on_complete
+                return JobHandle("pending", lambda: None)
+
+        class Observer(QObject):
+            def __init__(self, parent):
+                super().__init__(parent)
+                self.changes = []
+
+            def eventFilter(self, watched, event):
+                if event.type() == QEvent.Type.EnabledChange:
+                    self.changes.append(watched)
+                return False
+
+        model = Model()
+        page = ReportsPage(model, date(2026, 10, 11), job_runner=ImmediateJobRunner())
+        self.addCleanup(page.deleteLater)
+        page.refresh()
+        controls = (page.report_type_control, page.previous_period_button, page.next_period_button,
+                    page.templates_button, page.generate_button, page.versions_button,
+                    page.ai_assist_button, page.ai_hint_line_edit, page.save_button,
+                    page.copy_button, page.export_current_button, page.history_panel)
+        enabled = tuple(control.isEnabled() for control in controls)
+        observer = Observer(page)
+        for control in controls:
+            control.installEventFilter(observer)
+        runner = Runner()
+        page._job_runner = runner
+        model.content = "Updated report"
+        self.assertTrue(page.refresh())
+        self.assertTrue(page.is_busy)
+        self.assertTrue(page.editor.isReadOnly())
+        self.assertEqual(tuple(control.isEnabled() for control in controls), enabled)
+        page.generate_button.click()
+        page.templates_button.click()
+        self.assertEqual(runner.name, "load_reports")
+        runner.complete(runner.job(CancellationToken()))
+        self.assertEqual(page.editor.toPlainText(), "Updated report")
+        self.assertFalse(page.has_unsaved_changes)
+        self.assertFalse(page.editor.isReadOnly())
+        page._refresh_history()
+        runner.complete(runner.job(CancellationToken()))
+        self.assertEqual(tuple(control.isEnabled() for control in controls), enabled)
+        self.assertEqual(observer.changes, [])
+
+    def test_slow_report_load_protects_editor_and_recovers_after_failure(self):
+        class Runner:
+            def submit(self, name, job, *, on_complete):
+                self.job, self.complete = job, on_complete
+                return JobHandle("pending", lambda: None)
+
+        page = ReportsPage(ReportsViewModel(), date(2026, 10, 11), job_runner=ImmediateJobRunner())
+        self.addCleanup(page.deleteLater)
+        page.refresh()
+        runner = Runner()
+        page._job_runner = runner
+        self.assertTrue(page.refresh())
+        self.assertTrue(page.editor.isReadOnly())
+        QTest.qWait(200)
+        self.assertFalse(page.previous_period_button.isEnabled())
+        self.assertFalse(page.templates_button.isEnabled())
+        self.assertFalse(page.copy_button.isEnabled())
+        runner.complete(Result.failure(ValidationError("report_load_failed", "report_load_failed")))
+        self.assertFalse(page.is_busy)
+        self.assertFalse(page.editor.isReadOnly())
+        self.assertEqual(page.editor.toPlainText(), "Original daily")
+        self.assertTrue(page.copy_button.isEnabled())
+        self.assertTrue(page.previous_period_button.isEnabled())
+        self.assertTrue(page.refresh())
+        runner.complete(runner.job(CancellationToken()))
+        QTest.qWait(200)
+        self.assertTrue(page.copy_button.isEnabled())
+        self.assertTrue(page.previous_period_button.isEnabled())
+
     def test_failed_background_submission_retains_draft_and_recovers_controls(self):
         class Model(ReportsViewModel):
             rewrite_available = True

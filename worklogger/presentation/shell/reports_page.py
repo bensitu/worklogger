@@ -8,7 +8,7 @@ from dataclasses import replace
 from datetime import date, timedelta
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSignalBlocker, QTimer, Qt
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -84,21 +84,43 @@ class ReportsPage(QWidget):
         self._delete_busy = False
         self._generate_busy = False
         self._io_busy = False
+        self._io_feedback_visible = False
+        self._io_feedback_timer = QTimer(self)
+        self._io_feedback_timer.setSingleShot(True)
+        self._io_feedback_timer.setInterval(150)
+        self._io_feedback_timer.timeout.connect(self._show_io_feedback)
         self._build_ui()
 
     @property
     def is_busy(self):
         return self._rewrite_busy or self._delete_busy or self._generate_busy or self._io_busy
 
-    def _run_io(self, name, operation, complete):
+    @property
+    def _controls_busy(self):
+        return (self._rewrite_busy or self._delete_busy or self._generate_busy
+                or (self._io_busy and self._io_feedback_visible))
+
+    def _show_io_feedback(self):
+        if self._io_busy:
+            self._io_feedback_visible = True
+            self._update_busy_controls()
+
+    def _run_io(self, name, operation, complete, *, defer_busy_feedback=False):
         if self.is_busy:
             return False
         self._io_busy = True
+        self._io_feedback_visible = not defer_busy_feedback
+        if defer_busy_feedback:
+            self._io_feedback_timer.start()
         self._update_busy_controls()
         def finished(result):
+            self._io_feedback_timer.stop()
             self._io_busy = False
-            self._update_busy_controls()
-            complete(result)
+            self._io_feedback_visible = False
+            try:
+                complete(result)
+            finally:
+                self._update_busy_controls()
         try:
             self._job_runner.submit(name, lambda _token: operation(), on_complete=owned_callback(self, finished))
         except Exception:
@@ -165,9 +187,11 @@ class ReportsPage(QWidget):
             self._render_current(refresh_history=False)
             self._set_history(history)
             self._set_status("")
-        return self._run_io("load_reports", load, complete)
+        return self._run_io("load_reports", load, complete, defer_busy_feedback=True)
 
     def copy_markdown(self) -> None:
+        if self.is_busy:
+            return
         QApplication.clipboard().setText(self.editor.toPlainText())
         self._set_status(_("Copied"))
 
@@ -347,7 +371,7 @@ class ReportsPage(QWidget):
         if not hasattr(self, "save_button"):
             return
         state = self._states.get(self._current_type())
-        self.versions_button.setEnabled(not self.is_busy and state is not None and state.report_id is not None
+        self.versions_button.setEnabled(not self._controls_busy and state is not None and state.report_id is not None
             and bool(getattr(self._view_model, "revisions_available", False)))
         if state is None:
             self.report_state_label.clear()
@@ -355,6 +379,7 @@ class ReportsPage(QWidget):
             self.export_current_button.setEnabled(False)
             self.copy_button.setEnabled(False)
             self.generate_button.setEnabled(False)
+            self._update_ai_controls()
             return
         modified = self.editor.toPlainText() != self._saved_content.get(self._current_type(), state.content)
         identity = (_("Saved report #{report_id}").format(report_id=state.report_id)
@@ -365,7 +390,7 @@ class ReportsPage(QWidget):
         if state.report_id is not None:
             self.report_state_label.setText(self.report_state_label.text() + " | " + _("Version {number}").format(number=state.revision + 1))
         self.save_button.setText(_("Save changes") if state.report_id is not None else _("Save Report"))
-        busy = self.is_busy
+        busy = self._controls_busy
         has_content = bool(self.editor.toPlainText().strip())
         self.save_button.setEnabled(not busy and has_content and (state.report_id is None or modified))
         saved_export = bool(getattr(self._view_model, "saved_export_available", False))
@@ -388,7 +413,7 @@ class ReportsPage(QWidget):
 
     def _update_ai_controls(self):
         available = self._ai_ready
-        busy = self.is_busy
+        busy = self._controls_busy
         self.ai_assist_button.setEnabled(available and not busy and bool(self.editor.toPlainText().strip()))
         self.ai_hint_line_edit.setEnabled(available and not busy)
         self.ai_assist_button.setToolTip("" if available else _("AI Assist is not configured."))
@@ -486,8 +511,9 @@ class ReportsPage(QWidget):
             return
         self._rendered_type = report_type
         self.period_title_label.setText(_period_label(state))
-        self.editor.setPlainText(state.content)
-        self._saved_content[report_type] = self.editor.toPlainText()
+        with QSignalBlocker(self.editor):
+            self.editor.setPlainText(state.content)
+            self._saved_content[report_type] = self.editor.toPlainText()
         self._update_report_status()
         if refresh_history:
             self._refresh_history()
@@ -534,13 +560,10 @@ class ReportsPage(QWidget):
         self._update_busy_controls()
 
     def _update_busy_controls(self):
-        busy = self.is_busy
-        self.editor.setReadOnly(busy)
-        for widget in (self.report_type_control, self.previous_period_button, self.next_period_button, self.templates_button, self.ai_hint_line_edit, self.save_button, self.history_panel):
+        busy = self._controls_busy
+        self.editor.setReadOnly(self.is_busy)
+        for widget in (self.report_type_control, self.previous_period_button, self.next_period_button, self.templates_button, self.history_panel):
             widget.setEnabled(not busy)
-        self.ai_assist_button.setEnabled(not busy and self._ai_ready)
-        self.ai_hint_line_edit.setEnabled(self.ai_assist_button.isEnabled())
-        self.generate_button.setEnabled(not busy)
         self._update_report_status()
 
     def _delete_history_item(self, item: ReportHistoryDisplayItem) -> None:
@@ -599,7 +622,8 @@ class ReportsPage(QWidget):
                 self._set_error(result.error)
             else:
                 self._set_history(result.value)
-        self._run_io("load_report_history", lambda: self._view_model.list_history(report_type), complete)
+        self._run_io("load_report_history", lambda: self._view_model.list_history(report_type), complete,
+                     defer_busy_feedback=True)
 
     def _set_history(self, items):
         self.history_panel.set_report_type(self._current_type())
