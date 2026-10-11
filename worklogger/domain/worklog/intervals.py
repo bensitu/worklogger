@@ -6,6 +6,8 @@ from worklogger.domain.worklog.rules import entry_interval, wall_interval
 
 
 class _IntervalIndex:
+    """Coordinate-compressed Fenwick tree of maximum accepted end boundaries."""
+
     def __init__(self, starts):
         self._starts = sorted(set(starts))
         self._ends = [None] * (len(self._starts) + 1)
@@ -29,6 +31,8 @@ class _IntervalIndex:
 
 
 class EntryIntervalIndex:
+    """Use UTC for captured pairs and conservative clock ranges for mixed pairs."""
+
     def __init__(self, records):
         self._intervals = {}
         wall_starts, utc_starts = [], []

@@ -43,6 +43,8 @@ layers. Back up your database before upgrading.
 
 - Automatic conversion of unsupported development database layouts. Released
   v3.3.3 imports and supported canonical database upgrades remain available.
+- Credential decryption based on predictable host/network identifiers. Affected
+  stored credentials require re-entry; their ciphertext is retained.
 
 ### Fixed
 
@@ -56,6 +58,8 @@ layers. Back up your database before upgrading.
 
 - Rechecked verified credentials within write transactions so concurrent password
   resets or recovery-key use cannot be overwritten by stale authentication results.
+- Restricted credential storage to approved OS backends and reported removal
+  failures. Logout revokes remembered credentials before clearing the device file.
 
 ## [3.3.3] - 2026-05-11
 
