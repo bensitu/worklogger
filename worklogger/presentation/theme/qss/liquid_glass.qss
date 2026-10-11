@@ -43,8 +43,6 @@ QHeaderView::section {
 
 QFrame[glass_surface="true"],
 QFrame#app_sidebar_frame[glass_surface="true"],
-QFrame#calendar_right_panel_frame[glass_surface="true"],
-QFrame#calendar_grid_frame[glass_surface="true"],
 QFrame#stat_card_frame[glass_surface="true"],
 QFrame#report_editor_frame[glass_surface="true"],
 QFrame#report_history_frame[glass_surface="true"],
@@ -55,6 +53,18 @@ QWidget#worklog_entry_panel_widget[glass_surface="true"] {
   background: transparent;
   border: 1px solid {{ glass_border }};
   border-radius: 8px;
+}
+
+QFrame#calendar_grid_frame {
+  background: transparent;
+  border: none;
+}
+
+QFrame#calendar_right_panel_frame {
+  background: transparent;
+  border: none;
+  border-left: 1px solid {{ glass_border }};
+  border-radius: 0;
 }
 
 QFrame[glass_surface="true"]:hover {

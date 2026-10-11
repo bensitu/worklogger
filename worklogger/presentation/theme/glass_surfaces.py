@@ -12,7 +12,7 @@ from worklogger.presentation.theme.glass_renderer import GLASS_PADDING, render_g
 from worklogger.presentation.theme.native_glass import NativeGlassAdapter
 from worklogger.presentation.widgets._style import set_style_property
 
-_SURFACE_NAMES = {"app_main_content_widget", "app_sidebar_frame", "calendar_right_panel_frame", "calendar_grid_frame",
+_SURFACE_NAMES = {"app_main_content_widget", "app_sidebar_frame",
                   "settings_navigation_frame", "worklog_entry_panel_widget"}
 
 
@@ -92,6 +92,8 @@ class GlassThemeController(QObject):
         if not self._enabled or self._disposed or self._software_failed:
             return
         for target in self._window.findChildren(QWidget):
+            if target.property("glass_surface_eligible") is False:
+                continue
             if (isinstance(target, QFrame) and target.property("card")) or target.objectName() in _SURFACE_NAMES:
                 if target not in self._layers:
                     layer = GlassLayer(target, self._colors)

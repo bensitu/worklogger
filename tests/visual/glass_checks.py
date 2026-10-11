@@ -6,7 +6,7 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QBuffer, QIODevice
+from PySide6.QtCore import QBuffer, QIODevice, QPoint, Qt
 from PySide6.QtGui import QColor, QImage, QPainter
 from PySide6.QtWidgets import QApplication
 
@@ -43,6 +43,19 @@ class GlassLayoutChecks(unittest.TestCase):
                             window._switch_route(route)
                             self.app.processEvents()
                             self.wait_for_render(window)
+                            if route == "calendar":
+                                page = window.calendar_page
+                                self.assertEqual(window.calendar_view.grid_frame.frameWidth(), 0)
+                                self.assertFalse(page.right_panel.findChildren(GlassLayer, options=Qt.FindChildOption.FindDirectChildrenOnly))
+                                self.assertFalse(window.entry_panel.findChildren(GlassLayer, options=Qt.FindChildOption.FindDirectChildrenOnly))
+                                self.assertFalse(window.calendar_view.grid_frame.findChildren(GlassLayer, options=Qt.FindChildOption.FindDirectChildrenOnly))
+                                margins = page.right_panel.layout().contentsMargins()
+                                self.assertEqual((margins.left(), margins.right()), (12, 12))
+                                for field in (page.selected_date_label, window.entry_panel.time_tabs,
+                                              page.details_scroll, window.entry_panel.actions_widget, page.records_scroll):
+                                    bounds = field.rect().translated(field.mapTo(page.right_panel, QPoint()))
+                                    self.assertGreaterEqual(bounds.left(), 12)
+                                    self.assertLessEqual(bounds.right(), page.right_panel.width() - 13)
                             layers = [layer for layer in window.findChildren(GlassLayer) if layer.isVisible()]
                             self.assertTrue(layers)
                             self.assertTrue(any(not layer.image.isNull() for layer in layers))
