@@ -4,38 +4,37 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
-from calendar import monthrange
-from worklogger.infrastructure.i18n import _
-from worklogger.domain.reporting.export_selection import latest_daily_reports
 from pathlib import Path
 from typing import Protocol
 
 from worklogger.app.commands.ai_commands import RewriteTextCommand
 from worklogger.app.commands.report_commands import (
-    GenerateReportCommand,
     DeleteReportCommand,
+    GenerateReportCommand,
     ResetReportTemplateCommand,
     SaveReportCommand,
     SaveReportTemplateCommand,
 )
-from worklogger.app.queries.report_queries import GetReportForPeriodQuery, ListReportsQuery
 from worklogger.app.ports import (
     MarkdownExporter,
     ResetTemplateHandlerProtocol,
     RewriteTextHandlerProtocol,
     SaveTemplateHandlerProtocol,
 )
+from worklogger.app.queries.report_queries import GetReportForPeriodQuery, ListReportsQuery
 from worklogger.app.use_cases.reports import GeneratedReport, TemplateProvider
+from worklogger.domain.reporting.export_selection import latest_daily_reports
 from worklogger.domain.reporting.models import Report, ReportProvenance
 from worklogger.domain.reporting.periods import (
     daily_period,
     monthly_period,
     normalize_report_type,
-    weekly_period,
+    period_for_day,
 )
 from worklogger.domain.reporting.templates import ReportTemplate
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
+from worklogger.infrastructure.i18n import _
 
 
 class GenerateReportHandlerProtocol(Protocol):
@@ -216,7 +215,7 @@ class ReportEditorViewModel:
 
     def load(self, report_type: str, selected_day: date) -> Result[ReportEditorState]:
         try:
-            period = _period_for(report_type, selected_day, self._week_start_monday)
+            period = period_for_day(report_type, selected_day, self._week_start_monday)
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
         saved = self._get_report_handler.handle(
@@ -347,8 +346,8 @@ class ReportEditorViewModel:
     def export_saved_daily(self, destination: Path, selected_day: date, *, whole_month=False):
         if self._list_reports_handler is None:
             return Result.failure(_validation("report_history_failed"))
-        start = selected_day.replace(day=1) if whole_month else selected_day
-        end = selected_day.replace(day=monthrange(selected_day.year, selected_day.month)[1]) if whole_month else selected_day
+        period = monthly_period(selected_day.year, selected_day.month) if whole_month else daily_period(selected_day)
+        start, end = period.start, period.end
         result = self._list_reports_handler.handle(ListReportsQuery(self._user_id, "daily", start, end))
         if not result.ok:
             return Result.failure(result.error)
@@ -402,17 +401,6 @@ class ReportEditorViewModel:
         if not result.ok or result.value is None:
             return Result.failure(result.error or _validation("rewrite_failed"))
         return Result.success(result.value.content)
-
-
-def _period_for(report_type: str, selected_day: date, week_start_monday: bool = False):
-    normalized = str(report_type or "").strip().lower()
-    if normalized == "daily":
-        return daily_period(selected_day)
-    if normalized == "weekly":
-        return weekly_period(selected_day, week_start_monday)
-    if normalized == "monthly":
-        return monthly_period(selected_day.year, selected_day.month)
-    raise ValueError("invalid_report_type")
 
 
 def _validation(code: str) -> ValidationError:

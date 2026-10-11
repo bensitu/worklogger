@@ -10,6 +10,8 @@ from worklogger.app.queries.work_log_queries import GetAllWorkLogsQuery, GetMont
 from worklogger.app.queries.quick_log_queries import GetQuickLogsForDayQuery, GetQuickLogsForRangeQuery
 from worklogger.app.queries.calendar_queries import GetCalendarEventsForDayQuery, GetCalendarEventsForRangeQuery
 from worklogger.app.queries.local_model_queries import ListLocalModelsQuery
+from worklogger.app.queries.report_queries import GetReportForPeriodQuery, ListReportsQuery
+from worklogger.app.use_cases.reports import GetReportForPeriodHandler, ListReportsHandler
 from worklogger.app.use_cases.work_logs import GetAllWorkLogsHandler, GetMonthRecordsHandler, GetWorkLogHandler
 from worklogger.app.use_cases.quick_logs import AddQuickLogHandler, GetQuickLogsForDayHandler, GetQuickLogsForRangeHandler
 from worklogger.app.use_cases.calendar import GetCalendarEventsForDayHandler, GetCalendarEventsForRangeHandler
@@ -39,7 +41,7 @@ class StorageFailureTests(unittest.TestCase):
     def test_queries_and_commands_return_safe_storage_errors(self):
         day = date(2026, 10, 10)
         repository = Mock()
-        for name in ("add", "get_for_day", "list_for_month", "list_all", "list_for_day", "list_for_range", "get"):
+        for name in ("add", "get_for_day", "get_for_period", "list_for_month", "list_all", "list_for_day", "list_for_range", "get"):
             getattr(repository, name).side_effect = sqlite3.OperationalError("private diagnostic")
         cases = (
             (GetWorkLogHandler(repository), GetWorkLogQuery(1, day)),
@@ -50,6 +52,7 @@ class StorageFailureTests(unittest.TestCase):
             (GetQuickLogsForRangeHandler(repository), GetQuickLogsForRangeQuery(1, day, day)),
             (GetCalendarEventsForDayHandler(repository), GetCalendarEventsForDayQuery(1, day)),
             (GetCalendarEventsForRangeHandler(repository), GetCalendarEventsForRangeQuery(1, day, day)),
+            (GetReportForPeriodHandler(repository), GetReportForPeriodQuery(1, "daily", day, day)),
         )
         for handler, request in cases:
             with self.subTest(handler=type(handler).__name__):
@@ -62,3 +65,13 @@ class StorageFailureTests(unittest.TestCase):
         for handler in (ListLocalModelsHandler(store=store, settings=repository),
                         GetLocalModelRuntimeStatusHandler(store=store, settings=repository)):
             self.assertIsInstance(handler.handle(ListLocalModelsQuery(1)).error, InfrastructureError)
+
+    def test_report_history_rejects_partial_or_reversed_ranges_before_reading(self):
+        repository = Mock()
+        handler = ListReportsHandler(repository)
+        start, end = date(2026, 10, 1), date(2026, 10, 12)
+        for bounds in ((start, None), (None, end), (end, start)):
+            result = handler.handle(ListReportsQuery(1, "daily", *bounds))
+            self.assertEqual(result.error.code, "report_period_invalid")
+        repository.list_range.assert_not_called()
+        repository.list_by_type.assert_not_called()

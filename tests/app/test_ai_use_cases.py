@@ -169,9 +169,13 @@ class AiUseCaseTests(unittest.TestCase):
         notes.list_range.assert_not_called()
         quick_logs.handle.assert_not_called()
         calendar.handle.assert_not_called()
+        for day, end in ((date(2024, 2, 9), date(2024, 2, 29)), (date.max, date.max)):
+            self.assertTrue(handler.handle(BuildAiContextQuery(1, day, "monthly")).ok)
+            logs.list_range.assert_called_with(1, day.replace(day=1), end)
+        count = logs.list_range.call_count
         settings.handle = Mock(return_value=Result.failure(InfrastructureError("settings_load_failed", "settings_load_failed")))
         self.assertFalse(handler.handle(query).ok)
-        self.assertEqual(logs.list_range.call_count, 1)
+        self.assertEqual(logs.list_range.call_count, count)
         self.assertEqual(AiChatHandler(FakeGateway()).handle(SendAiChatMessageCommand(1, "hello"),
             cancellation_token=type("Token", (), {"is_cancelled": True})()).error.code, "ai_chat_cancelled")
 

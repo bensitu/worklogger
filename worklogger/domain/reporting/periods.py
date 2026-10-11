@@ -28,8 +28,11 @@ def normalize_report_type(report_type: str) -> str:
 
 def weekly_period(selected_day: date, week_start_monday: bool = False) -> ReportPeriod:
     offset = selected_day.weekday() if week_start_monday else (selected_day.weekday() + 1) % 7
-    start = selected_day - timedelta(days=offset)
-    return ReportPeriod("weekly", start, start + timedelta(days=6))
+    try:
+        start = selected_day - timedelta(days=offset)
+        return ReportPeriod("weekly", start, start + timedelta(days=6))
+    except OverflowError:
+        raise ValueError("report_period_invalid") from None
 
 
 def daily_period(selected_day: date) -> ReportPeriod:
@@ -45,6 +48,17 @@ def monthly_period(year: int, month: int) -> ReportPeriod:
         date(int(year), int(month), 1),
         date(int(year), int(month), days),
     )
+
+
+def period_for_day(report_type: str, selected_day: date, week_start_monday: bool = False) -> ReportPeriod:
+    normalized = normalize_report_type(report_type)
+    if not isinstance(selected_day, date):
+        raise ValueError("report_period_invalid")
+    if normalized == "daily":
+        return daily_period(selected_day)
+    if normalized == "weekly":
+        return weekly_period(selected_day, week_start_monday)
+    return monthly_period(selected_day.year, selected_day.month)
 
 
 def validate_report_period(report_type: str, start: date, end: date) -> ReportPeriod:

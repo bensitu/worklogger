@@ -65,6 +65,11 @@ class MarkdownExporter(Protocol):
         ...
 
 
+class TemplateProvider(Protocol):
+    def get_template(self, language: str, template_type: str,
+                     user_id: int | None = None) -> Result[str]: ...
+
+
 class TimesheetExporter(Protocol):
     def export_timesheet(self, destination: Path, snapshot: Timesheet) -> Result[Path]: ...
 

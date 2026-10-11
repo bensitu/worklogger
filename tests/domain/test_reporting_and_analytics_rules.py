@@ -13,6 +13,7 @@ from worklogger.domain.analytics.rules import (
 )
 from worklogger.domain.reporting.periods import (
     monthly_period,
+    period_for_day,
     validate_report_period,
     weekly_period,
 )
@@ -41,6 +42,15 @@ def _record(
 
 
 class ReportingAndAnalyticsRuleTests(unittest.TestCase):
+    def test_period_selection_handles_leap_months_and_rejects_unrepresentable_weeks(self):
+        for day in (date(2024, 2, 29), date(9999, 12, 31)):
+            period = period_for_day("monthly", day)
+            self.assertEqual(period, monthly_period(day.year, day.month))
+            self.assertEqual(period_for_day("daily", day).end, day)
+        for day, monday in ((date.min, False), (date.max, True)):
+            with self.assertRaisesRegex(ValueError, "report_period_invalid"):
+                period_for_day("weekly", day, monday)
+
     def test_rest_days_count_recorded_break_dates_and_exclude_leave_and_missing_dates(self):
         day = date(2026, 5, 4)
         periods = (WorkLog(1, day, "09:00", "12:00"),
