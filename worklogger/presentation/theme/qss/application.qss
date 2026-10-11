@@ -770,6 +770,25 @@ QCalendarWidget#date_picker_calendar_widget QToolButton::menu-indicator {
   height: 10px;
 }
 
+QCalendarWidget#date_picker_calendar_widget QSpinBox#qt_calendar_yearedit {
+  min-width: 42px;
+  max-width: 56px;
+  min-height: 24px;
+  max-height: 24px;
+  padding: 4px 6px;
+}
+
+QCalendarWidget#date_picker_calendar_widget QSpinBox#qt_calendar_yearedit::up-button,
+QCalendarWidget#date_picker_calendar_widget QSpinBox#qt_calendar_yearedit::down-button {
+  width: 16px;
+}
+
+QCalendarWidget#date_picker_calendar_widget QSpinBox#qt_calendar_yearedit::up-arrow,
+QCalendarWidget#date_picker_calendar_widget QSpinBox#qt_calendar_yearedit::down-arrow {
+  width: 10px;
+  height: 10px;
+}
+
 QCalendarWidget#date_picker_calendar_widget QTableView {
   background: {{ surface }};
   alternate-background-color: {{ surface_alt }};

@@ -11,6 +11,15 @@ from worklogger.presentation.date_labels import day_label
 from worklogger.presentation.widgets.icons import set_button_icon
 
 
+class MonthCalendar(QCalendarWidget):
+    def paintCell(self, painter, rect, day):
+        painter.save()
+        if (day.year(), day.month()) != (self.yearShown(), self.monthShown()) and day != self.selectedDate():
+            painter.setOpacity(painter.opacity() * 0.45)
+        super().paintCell(painter, rect, day)
+        painter.restore()
+
+
 class DatePickerButton(QPushButton):
     date_selected = Signal(object)
 
@@ -42,7 +51,7 @@ class DatePickerButton(QPushButton):
             self._popup.setObjectName("date_picker_popup_frame")
             layout = QVBoxLayout(self._popup)
             layout.setContentsMargins(8, 8, 8, 8)
-            self.calendar = QCalendarWidget(self._popup)
+            self.calendar = MonthCalendar(self._popup)
             self.calendar.setObjectName("date_picker_calendar_widget")
             self.calendar.setVerticalHeaderFormat(QCalendarWidget.VerticalHeaderFormat.NoVerticalHeader)
             self.calendar.setMinimumDate(QDate(1, 1, 1))

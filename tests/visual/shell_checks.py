@@ -52,7 +52,7 @@ class ShellLayoutChecks(unittest.TestCase):
     def test_minimal_view_and_shared_settings_fit_supported_languages(self):
         from types import SimpleNamespace
         from PySide6.QtCore import QCoreApplication, QEvent, QPoint, Qt
-        from PySide6.QtWidgets import QLabel
+        from PySide6.QtWidgets import QLabel, QSpinBox
         from tests.presentation.test_app_window import _entry_model
         from tests.background_samples import still_background_bytes
         from worklogger.domain.settings.background import BackgroundState
@@ -141,7 +141,18 @@ class ShellLayoutChecks(unittest.TestCase):
                         self.assertTrue(popup.isVisible())
                         self.assertTrue(view.screen().availableGeometry().contains(popup.frameGeometry()))
                         self.assertEqual(view.date_button.calendar.locale().name(), language)
+                        calendar = view.date_button.calendar
+                        calendar.setCurrentPage(2026, 10)
+                        self.app.processEvents()
                         self.capture(popup, f"minimal-calendar-{'dark' if dark else 'light'}")
+                        calendar.findChild(QToolButton, "qt_calendar_yearbutton").click()
+                        self.app.processEvents()
+                        year_editor = calendar.findChild(QSpinBox, "qt_calendar_yearedit")
+                        month_button = calendar.findChild(QToolButton, "qt_calendar_monthbutton")
+                        self.assertTrue(year_editor.isVisible())
+                        self.assertLessEqual(year_editor.width(), 90)
+                        self.assertLessEqual(abs(year_editor.height() - month_button.height()), 2)
+                        self.capture(popup, f"minimal-calendar-year-{'dark' if dark else 'light'}")
                         popup.hide()
                         dialog = workflow.create_dialog(view)
                         dialog.background_settings.bind(view.background_controller)
