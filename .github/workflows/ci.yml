@@ -1,6 +1,7 @@
 name: Continuous Integration
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches: [main, master, dev-v4]
@@ -20,17 +21,22 @@ jobs:
         include:
           - os: windows-latest
             python: '3.11'
+            architecture: x64
           - os: ubuntu-latest
             python: '3.11'
+            architecture: x64
           - os: ubuntu-latest
             python: '3.12'
+            architecture: x64
+          - os: macos-15
+            python: '3.11'
+            architecture: arm64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     env:
       QT_QPA_PLATFORM: offscreen
       TZ: UTC
       WORKLOGGER_LANG: en_US
-      WORKLOGGER_LOG_PATH: ${{ runner.temp }}/worklogger.log
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -38,13 +44,24 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: ${{ matrix.python }}
+          architecture: ${{ matrix.architecture }}
           cache: pip
           cache-dependency-path: |
             requirements.txt
             requirements-build.txt
             requirements-dev.txt
+            requirements-ai.txt
       - name: Install dependencies
         run: python -m pip install -r requirements.txt -r requirements-build.txt -r requirements-dev.txt
+      - name: Install native inference dependencies
+        run: python scripts/install_native_dependencies.py
+      - name: Configure diagnostic logging
+        shell: bash
+        env:
+          WORKLOGGER_LOG_PATH: ${{ runner.temp }}/worklogger.log
+        run: echo "WORKLOGGER_LOG_PATH=$WORKLOGGER_LOG_PATH" >> "$GITHUB_ENV"
+      - name: Validate installed dependencies
+        run: python -m pip check
       - name: Compile translations
         run: python scripts/i18n/i18n_compile.py
       - name: Validate translations
@@ -55,6 +72,78 @@ jobs:
         run: python -m unittest discover -s tests -t . -p "test_*.py"
       - name: Import verification
         run: python -m worklogger.main --smoke-import
+      - name: Runtime and workflow verification
+        run: |
+          python -m worklogger.main --smoke-startup
+          python -m worklogger.main --smoke-workflows
+          python -m worklogger.main --smoke-local-model-runtime
+      - name: Validate build resources
+        run: python scripts/build.py --check
+
+  builds:
+    needs: tests
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            architecture: x64
+            artifact: Windows-x64
+          - os: ubuntu-latest
+            architecture: x64
+            artifact: Linux-x64
+          - os: macos-15
+            architecture: arm64
+            artifact: macOS-arm64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      QT_QPA_PLATFORM: offscreen
+      TZ: UTC
+      WORKLOGGER_LANG: en_US
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.11'
+          architecture: ${{ matrix.architecture }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-build.txt
+            requirements-ai.txt
+      - name: Create isolated build environment
+        shell: bash
+        run: |
+          python -m venv .venv-release
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          scripts = Path(".venv-release").resolve() / ("Scripts" if os.name == "nt" else "bin")
+          with open(os.environ["GITHUB_PATH"], "a", encoding="utf-8") as path:
+              path.write(str(scripts) + "\n")
+          PY
+      - name: Install build dependencies
+        run: python -m pip install -r requirements.txt -r requirements-build.txt
+      - name: Install native inference dependencies
+        run: python scripts/install_native_dependencies.py
+      - name: Validate installed dependencies
+        run: python -m pip check
+      - name: Capture target dependency lock
+        run: python scripts/lock_environment.py release/target.lock.json --capture
+      - name: Build application
+        run: python scripts/build.py --lock release/target.lock.json
+      - name: Verify application and extracted archive
+        run: |
+          python scripts/release_artifact.py --lock release/target.lock.json --output release/WorkLogger-${{ matrix.artifact }}.json --archive
+      - name: Upload verified build artifacts
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: WorkLogger-${{ matrix.artifact }}
+          path: release/
+          if-no-files-found: error
 
   dependencies:
     runs-on: ubuntu-latest
@@ -69,4 +158,4 @@ jobs:
       - name: Audit dependency vulnerabilities
         uses: pypa/gh-action-pip-audit@1220774d901786e6f652ae159f7b6bc8fea6d266 # v1.1.0
         with:
-          inputs: requirements.txt requirements-build.txt requirements-dev.txt
+          inputs: requirements.txt requirements-build.txt requirements-dev.txt requirements-ai.txt

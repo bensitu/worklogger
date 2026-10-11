@@ -57,7 +57,7 @@ class BuildResourceTests(unittest.TestCase):
         self.assertNotIn("poppler", environment["PATH"])
         self.assertIn("System32", environment["PATH"])
         self.assertEqual(environment["WORKLOGGER_BUILD_CONSOLE"], "1")
-        self.assertEqual(environment["WORKLOGGER_BUILD_LOCAL_INFERENCE"], "0")
+        self.assertEqual(environment["WORKLOGGER_BUILD_LOCAL_INFERENCE"], "1")
         self.assertEqual(build_environment(False, True)["WORKLOGGER_BUILD_LOCAL_INFERENCE"], "1")
 
     def test_resource_manifest_contains_fonts_icons_qss_and_catalogs_without_user_data(self):
@@ -88,3 +88,23 @@ class BuildResourceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             with self.assertRaises(FileNotFoundError):
                 bundled_resources(Path(directory))
+
+    def test_resource_manifest_excludes_finder_metadata(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            assets = root / "worklogger/assets"
+            assets.mkdir(parents=True)
+            (assets / ".DS_Store").write_bytes(b"Synthetic Finder metadata")
+            icon = assets / "icon.svg"
+            icon.write_text("<svg/>", encoding="utf-8")
+            for language in ("en_US", "zh_CN", "zh_TW", "ja_JP", "ko_KR"):
+                catalog = root / "worklogger/locales" / language / "LC_MESSAGES/messages.mo"
+                catalog.parent.mkdir(parents=True)
+                catalog.write_bytes(b"Synthetic catalog")
+            for relative in ("model_catalog.json", "worklogger.config.json", "worklogger/_vendor/pyglass/LICENSE"):
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("Synthetic resource", encoding="utf-8")
+            paths = {Path(source) for source, _destination in bundled_resources(root)}
+            self.assertIn(icon, paths)
+            self.assertNotIn(assets / ".DS_Store", paths)

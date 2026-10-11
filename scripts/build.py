@@ -18,7 +18,7 @@ from scripts.lock_environment import verify_lock
 from scripts.release_artifact import write_build_info
 
 
-def build_environment(console: bool, with_local_inference: bool = False) -> dict[str, str]:
+def build_environment(console: bool, with_local_inference: bool = True) -> dict[str, str]:
     environment = os.environ.copy()
     environment["WORKLOGGER_BUILD_CONSOLE"] = "1" if console else "0"
     environment["WORKLOGGER_BUILD_LOCAL_INFERENCE"] = "1" if with_local_inference else "0"
@@ -36,7 +36,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="Validate without running PyInstaller")
     parser.add_argument("--console", action="store_true", help="Build with a console for startup diagnostics")
-    parser.add_argument("--with-local-inference", action="store_true", help="Include optional native inference libraries")
+    parser.add_argument("--with-local-inference", action="store_true", default=True,
+                        help="Retained for compatibility; distributions always include native inference")
     parser.add_argument("--lock", type=Path, help="Require the exact target-specific dependency environment")
     args = parser.parse_args()
     if args.lock is not None:

@@ -37,20 +37,26 @@ class RestoreRecoveryTests(unittest.TestCase):
         with closing(sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True)) as connection:
             return connection.execute("SELECT value FROM settings WHERE key='sample'").fetchone()[0]
 
+    def archived_database(self, category):
+        paths = [path for path in self.directory.glob(f"*.bak_{category}_*")
+                 if not path.name.endswith(("-wal", "-shm"))]
+        self.assertEqual(len(paths), 1)
+        return paths[0]
+
     def test_explicit_choices_keep_both_database_contents(self):
         self.assertTrue(inspect_pending_restore(self.path).restored_available)
         recover_pending_restore(self.path, "rollback")
         self.assertEqual(self.value(self.path), "original")
         self.assertFalse(self.previous.exists())
-        self.assertEqual(self.value(next(self.directory.glob("*.bak_recovery_*"))), "restored")
-        self.assertEqual(self.value(next(self.directory.glob("*.bak_restore_*"))), "original")
+        self.assertEqual(self.value(self.archived_database("recovery")), "restored")
+        self.assertEqual(self.value(self.archived_database("restore")), "original")
         with self.assertRaisesRegex(ValueError, "restore_pending"):
             recover_pending_restore(self.path, "rollback")
 
     def test_keep_does_not_change_active_database_and_missing_target_can_roll_back(self):
         recover_pending_restore(self.path, "keep")
         self.assertEqual(self.value(self.path), "restored")
-        archived = next(self.directory.glob("*.bak_restore_*"))
+        archived = self.archived_database("restore")
         os.replace(archived, self.previous)
         self.path.unlink()
         options = inspect_pending_restore(self.path)
@@ -66,7 +72,7 @@ class RestoreRecoveryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "restore_recovery_unavailable"):
             recover_pending_restore(self.path, "keep")
         recover_pending_restore(self.path, "rollback")
-        self.assertEqual(next(self.directory.glob("*.bak_recovery_*")).read_bytes(), b"synthetic damaged candidate")
+        self.assertEqual(self.archived_database("recovery").read_bytes(), b"synthetic damaged candidate")
         self.assertEqual(self.value(self.path), "original")
 
     def test_archiving_failure_leaves_pending_marker_and_all_copies_recoverable(self):
@@ -83,7 +89,7 @@ class RestoreRecoveryTests(unittest.TestCase):
         self.assertTrue(self.previous.exists())
         self.assertEqual(self.value(self.previous), "original")
         self.assertEqual(self.value(self.path), "original")
-        self.assertEqual(self.value(next(self.directory.glob("*.bak_recovery_*"))), "restored")
+        self.assertEqual(self.value(self.archived_database("recovery")), "restored")
         recover_pending_restore(self.path, "keep")
         self.assertFalse(self.previous.exists())
 

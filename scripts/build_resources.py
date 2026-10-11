@@ -10,7 +10,7 @@ def bundled_resources(root: Path) -> list[tuple[str, str]]:
     resources: list[tuple[str, str]] = []
     for directory in (package / "assets", package / "presentation/theme/qss"):
         for path in sorted(directory.rglob("*")):
-            if path.is_file():
+            if path.is_file() and path.name != ".DS_Store":
                 if path.suffix.lower() == ".avif":
                     raise ValueError("AVIF is not a supported runtime asset")
                 resources.append((str(path), path.parent.relative_to(root).as_posix()))

@@ -20,7 +20,7 @@ from worklogger.presentation.shell.app_window import AppWindowConfig
 
 class RuntimeConfigurationTests(unittest.TestCase):
     def setUp(self):
-        self.directory = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        self.directory = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
         self.path = self.directory / CONFIG_FILENAME
 
     def test_flags_are_strict_booleans_and_invalid_or_missing_files_fail_closed(self):

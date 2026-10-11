@@ -12,12 +12,14 @@ python -m venv .venv
 ```
 
 On macOS/Linux, use `.venv/bin/python`. Activation is optional.
-Install `requirements-ai.txt` only for native local inference and
-`requirements-build.txt` for packaging.
+For packaging, install `requirements-build.txt`, then run
+`python scripts/install_native_dependencies.py`. Every distribution includes
+the pinned native inference backend and its dependencies. Source development
+can omit the backend when local inference is not used.
 Install `requirements-dev.txt` for contributor lint tooling; it is not a runtime
 or release-build dependency.
 
-The runtime, optional inference, and build lists have separate responsibilities.
+The runtime, native inference, and build lists have separate responsibilities.
 The `requirements/` JSON locks identify target environments, input fingerprints,
 packages, and wheel hashes; companion TXT files install those exact wheels.
 Do not merge them into normal runtime dependencies. See [packaging](packaging.md).
@@ -119,8 +121,10 @@ git diff --check
 See [testing](testing.md) for discovery, visual checks, and fixture isolation.
 Changing Python/Qt/native dependencies also requires a consistent target build
 and artifact checks, not just a successful import.
-Continuous integration checks supported Python versions on Windows and Linux,
-validates translations, runs ordinary tests and audits dependency vulnerabilities.
+Continuous integration checks supported Python versions on Windows, Linux and
+macOS ARM64, validates translations, runs ordinary tests and audits dependency
+vulnerabilities. Separate build jobs verify platform archives after extraction
+and upload the verified artifacts with dependency locks and checksum inventories.
 Native visual checks remain opt-in.
 
 ## Documentation

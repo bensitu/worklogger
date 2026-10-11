@@ -234,6 +234,15 @@ def main(
 ) -> int:
     set_language(os.environ.get("WORKLOGGER_LANG"))
     args = list(sys.argv[1:] if argv is None else argv)
+    if "--smoke-local-model-runtime" in args:
+        from worklogger.diagnostics import check_local_model_runtime
+        try:
+            check_local_model_runtime()
+        except Exception as error:
+            _safe_stdout(_("RUNTIME SMOKE FAILED") + " " + type(error).__name__)
+            return 1
+        _safe_stdout(_("RUNTIME SMOKE OK"))
+        return 0
     if "--smoke-workflows" in args:
         os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
         from worklogger.diagnostics import check_workflows
@@ -251,6 +260,8 @@ def main(
         _safe_stdout("--smoke-import")
         _safe_stdout("--smoke-runtime")
         _safe_stdout("--smoke-startup")
+        _safe_stdout("--smoke-local-model-runtime")
+        _safe_stdout("--smoke-workflows")
         return 0
     if "--smoke-import" in args:
         return smoke_import_check()

@@ -6,6 +6,17 @@ from pathlib import Path
 import tempfile
 
 
+def check_local_model_runtime():
+    import llama_cpp
+
+    llama_cpp.llama_backend_init()
+    try:
+        if not llama_cpp.llama_print_system_info():
+            raise RuntimeError("local_inference_dependency_missing")
+    finally:
+        llama_cpp.llama_backend_free()
+
+
 def require_value(result):
     if not result.ok:
         raise RuntimeError(result.error.code if result.error else "operation_failed")

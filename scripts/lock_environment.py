@@ -11,6 +11,7 @@ import platform
 import subprocess
 import sys
 from packaging.requirements import Requirement
+from packaging.tags import sys_tags
 from packaging.utils import canonicalize_name, parse_wheel_filename
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -71,18 +72,27 @@ def verify_lock(path, *, installed=None, current_target=None):
     return value
 
 
+def compatible_wheels(directory, name, version):
+    compatible = set(sys_tags())
+    matches = []
+    for path in directory.glob("*.whl"):
+        wheel_name, wheel_version, _build, tags = parse_wheel_filename(path.name)
+        if wheel_name == canonicalize_name(name) and str(wheel_version) == version and tags & compatible:
+            matches.append(path)
+    return matches
+
+
 def capture_lock(output, requirement_files, wheel_directory):
     versions = dependency_closure(requirement_files)
     wheel_directory.mkdir(parents=True, exist_ok=True)
-    subprocess.run([sys.executable, "-m", "pip", "download", "--only-binary=:all:", "--no-deps", "--dest", str(wheel_directory),
-                    *(f"{name}=={version}" for name, version in sorted(versions.items()))], check=True)
+    missing = [f"{name}=={version}" for name, version in sorted(versions.items())
+               if not compatible_wheels(wheel_directory, name, version)]
+    if missing:
+        subprocess.run([sys.executable, "-m", "pip", "download", "--only-binary=:all:", "--no-deps", "--dest", str(wheel_directory),
+                        *missing], check=True)
     packages = []
     for name, version in sorted(versions.items()):
-        matches = []
-        for path in wheel_directory.glob("*.whl"):
-            wheel_name, wheel_version, _build, _tags = parse_wheel_filename(path.name)
-            if wheel_name == name and str(wheel_version) == version:
-                matches.append(path)
+        matches = compatible_wheels(wheel_directory, name, version)
         if len(matches) != 1:
             raise ValueError(f"Expected one target wheel for {name}")
         packages.append({"name": name, "version": version, "wheel": matches[0].name, "sha256": digest(matches[0])})
@@ -99,7 +109,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("lock", type=Path)
     parser.add_argument("--capture", action="store_true")
-    parser.add_argument("--with-local-inference", action="store_true")
+    parser.add_argument("--with-local-inference", action="store_true", default=True,
+                        help="Retained for compatibility; distribution locks always include native inference")
     parser.add_argument("--wheels", type=Path, default=ROOT / "build/wheels")
     args = parser.parse_args()
     if args.capture:

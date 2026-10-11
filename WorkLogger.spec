@@ -22,9 +22,7 @@ hiddenimports += collect_submodules("recurring_ical_events", filter=runtime_modu
 datas += collect_data_files("icalendar", excludes=["tests/**"])
 datas += collect_data_files("tzlocal") + collect_data_files("certifi")
 binaries = []
-packages = ["tzdata"]
-if os.environ.get("WORKLOGGER_BUILD_LOCAL_INFERENCE") == "1":
-    packages.append("llama_cpp")
+packages = ["tzdata", "llama_cpp"]
 for package in packages:
     package_data, package_binaries, package_imports = collect_all(package)
     datas += package_data
@@ -35,13 +33,14 @@ analysis = Analysis(
     [str(root / "worklogger/main.py")],
     pathex=[str(root)], binaries=binaries, datas=datas,
     hiddenimports=hiddenimports, hookspath=[], runtime_hooks=[],
-    excludes=["PyQt5", "PyQt6", "PySide2"] + ([] if "llama_cpp" in packages else ["llama_cpp"]), noarchive=False,
+    excludes=["PyQt5", "PyQt6", "PySide2"], noarchive=False,
 )
 archive = PYZ(analysis.pure)
 executable = EXE(
     archive, analysis.scripts, [], exclude_binaries=True, name="WorkLogger",
     debug=False, strip=False, upx=False,
     console=os.environ.get("WORKLOGGER_BUILD_CONSOLE") == "1",
+    target_arch="arm64" if sys.platform == "darwin" else None,
     icon=executable_icon(root, sys.platform),
     version=windows_version_resource() if sys.platform == "win32" else None,
     codesign_identity=os.environ.get("WORKLOGGER_CODESIGN_IDENTITY") or None,
