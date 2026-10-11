@@ -1969,6 +1969,9 @@ msgstr "CSV ファイルが対応するサイズまたは行数の上限を超�
 msgid "The ID or password is incorrect."
 msgstr "IDまたはパスワードが正しくありません。"
 
+msgid "The account's remembered session was revoked, but its device file could not be removed. Sign in manually and check storage permissions."
+msgstr "このアカウントのログイン記憶情報を無効にしましたが、端末のセッションファイルを削除できませんでした。手動でログインし、保存先の権限を確認してください。"
+
 msgid "The data directory is unavailable."
 msgstr "データフォルダーを利用できません。"
 

@@ -356,3 +356,14 @@ def _require_admin(
 
 def _admin_count(users: tuple[User, ...]) -> int:
     return sum(1 for user in users if user.is_admin)
+
+
+class RevokeRememberedSessionHandler:
+    def __init__(self, credentials: AuthCredentialRepository, *, user_id: int):
+        self._credentials = credentials
+        self._user_id = user_id
+
+    @storage_boundary("auth_state_failed")
+    def handle(self) -> Result[None]:
+        self._credentials.set_remember_token(self._user_id, None, None)
+        return Result.success(None)

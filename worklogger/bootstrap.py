@@ -23,6 +23,7 @@ from worklogger.app.use_cases.auth import (
     LoginWithRememberTokenHandler,
     RegisterUserHandler,
     ResetPasswordHandler,
+    RevokeRememberedSessionHandler,
 )
 from worklogger.app.use_cases.calendar import (
     GetCalendarEventsForRangeHandler,
@@ -120,6 +121,7 @@ class DesktopRuntimeConfig:
     database_path: Path | str | None = None
     user_id: int | None = None
     create_user_if_empty: bool = False
+    skip_remembered_session: bool = False
     bootstrap_username: str = "local"
     minimal_mode: bool | None = None
     password_iterations: int | None = None
@@ -137,6 +139,7 @@ class DesktopRuntime:
     job_runner: JobRunner | None = None
     auth_session: AuthSession | None = None
     local_inference: object | None = None
+    revoke_remembered_session: Callable[[], Result[None]] | None = None
 
 
 class DesktopAuthenticator(Protocol):
@@ -208,6 +211,7 @@ def build_authenticated_desktop_runtime(
                 auth_view_model,
                 job_runner=job_runner,
                 remember_session_store=remember_session_store,
+                allow_remembered_session=not config.skip_remembered_session,
             )
         )
         auth_result = authenticator.authenticate()
@@ -418,6 +422,7 @@ def _build_runtime_for_user(
             auth_session=auth_session,
             local_inference=handlers.local_inference,
             job_runner=job_runner,
+            revoke_remembered_session=RevokeRememberedSessionHandler(auth_repository, user_id=user.id).handle,
         )
 
     return _runtime_result(
@@ -439,6 +444,7 @@ def _build_runtime_for_user(
         auth_session=auth_session,
         local_inference=handlers.local_inference,
         job_runner=job_runner,
+        revoke_remembered_session=RevokeRememberedSessionHandler(auth_repository, user_id=user.id).handle,
     )
 
 
@@ -544,6 +550,7 @@ def _runtime_result(
     auth_session: AuthSession | None,
     job_runner: JobRunner | None,
     local_inference=None,
+    revoke_remembered_session=None,
 ) -> Result[DesktopRuntime]:
     settings_workflow = getattr(window, "_settings_workflow", None)
     if settings_workflow is not None:
@@ -559,6 +566,7 @@ def _runtime_result(
             job_runner=job_runner,
             auth_session=auth_session,
             local_inference=local_inference,
+            revoke_remembered_session=revoke_remembered_session,
         )
     )
 

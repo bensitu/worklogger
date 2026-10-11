@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from worklogger.infrastructure.logging import setup_logging
 
@@ -17,6 +18,13 @@ def _close_worklogger_handlers() -> None:
 
 
 class LoggingInfrastructureTests(unittest.TestCase):
+    def test_default_log_location_does_not_follow_the_launch_directory(self):
+        from worklogger.infrastructure.logging import _resolve_log_path
+        from worklogger.infrastructure.database.paths import default_database_path
+
+        with patch.dict("os.environ", {"WORKLOGGER_LOG_PATH": ""}):
+            self.assertEqual(_resolve_log_path(None, frozen=False), default_database_path(frozen=False).parent / "worklogger.log")
+
     def test_setup_logging_writes_rotating_file_without_duplicate_handlers(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             try:

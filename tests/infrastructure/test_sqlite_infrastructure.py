@@ -257,6 +257,9 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         self.assertTrue(remembered.ok)
         assert remembered.value is not None
         self.assertEqual(remembered.value.username, "alice")
+        from worklogger.app.use_cases.auth import RevokeRememberedSessionHandler
+        self.assertTrue(RevokeRememberedSessionHandler(auth, user_id=registered.value.user.id).handle().ok)
+        self.assertFalse(LoginWithRememberTokenHandler(auth).handle(logged_in.value.token or "").ok)
 
         changed = ChangePasswordHandler(auth).handle(
             ChangePasswordCommand(registered.value.user.id, "secret123", "secret456")

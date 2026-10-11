@@ -6,7 +6,6 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 import logging as std_logging
 import os
-import sys
 import re
 import traceback
 
@@ -102,10 +101,8 @@ def _resolve_log_path(
     env_path = os.environ.get("WORKLOGGER_LOG_PATH", "").strip()
     if env_path:
         return Path(env_path)
-    if bool(getattr(sys, "frozen", False) if frozen is None else frozen):
-        from worklogger.infrastructure.database.paths import default_database_path
-        return default_database_path(frozen=True).parent / LOG_FILENAME
-    return Path.cwd() / LOG_FILENAME
+    from worklogger.infrastructure.database.paths import default_database_path
+    return default_database_path(frozen=frozen).parent / LOG_FILENAME
 
 
 def _debug_enabled(debug: bool | None) -> bool:

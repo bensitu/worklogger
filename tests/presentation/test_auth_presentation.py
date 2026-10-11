@@ -570,6 +570,15 @@ class AuthPresentationTests(unittest.TestCase):
         assert authenticated.value is not None
         self.assertEqual(authenticated.value.user.username, "alice")
 
+    def test_explicit_reauthentication_does_not_read_a_remaining_session_file(self):
+        from unittest.mock import Mock
+
+        store = Mock()
+        controller = AuthController(Mock(), job_runner=ImmediateJobRunner(), remember_session_store=store,
+                                    allow_remembered_session=False)
+        self.assertIsNone(controller._authenticate_remembered_session().value)
+        store.load_token.assert_not_called()
+
     def test_auth_controller_clears_invalid_remembered_session(self) -> None:
         repository = MemoryAuthRepository()
         view_model = self.auth_view_model(repository)

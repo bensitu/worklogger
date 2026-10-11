@@ -1969,6 +1969,9 @@ msgstr "CSV 檔案超出支援的大小或列數限制。"
 msgid "The ID or password is incorrect."
 msgstr "ID 或密碼不正確。"
 
+msgid "The account's remembered session was revoked, but its device file could not be removed. Sign in manually and check storage permissions."
+msgstr "已撤銷此帳戶的記住登入憑證，但無法移除裝置上的工作階段檔案。請手動登入並檢查儲存權限。"
+
 msgid "The data directory is unavailable."
 msgstr "資料目錄無法使用。"
 

@@ -100,3 +100,11 @@ class DatabaseConcurrencyTests(unittest.TestCase):
                 pass
             with self.assertRaisesRegex(RuntimeError, "database_maintenance_during_connection"), self.factory.maintenance():
                 pass
+
+    def test_disappearing_prepared_database_is_not_recreated_as_an_empty_file(self):
+        path = Path(self.factory.database_path)
+        path.unlink()
+        with self.assertRaises(FileNotFoundError):
+            with self.factory.connection():
+                pass
+        self.assertFalse(path.exists())

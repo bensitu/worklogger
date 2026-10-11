@@ -19,6 +19,9 @@ do not affect authentication or ownership.
 
 Repeated login/recovery failures cause temporary lockouts. Remembered local
 credentials expire and are invalidated by password workflows.
+Logout revokes the account's remembered credential before removing the device
+session file. A file-removal failure is reported, and the next sign-in is manual.
+If revocation itself fails, logout reports failure rather than claiming success.
 The first registered account is an administrator; administrative operations check
 permissions independently of visible controls.
 

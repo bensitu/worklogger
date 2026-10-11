@@ -276,9 +276,10 @@ def _run_desktop(args: Sequence[str]) -> int:
     )
 
     exit_code = 0
+    skip_remembered_session = False
     while True:
         runtime = build_authenticated_desktop_runtime(
-            DesktopRuntimeConfig(),
+            DesktopRuntimeConfig(skip_remembered_session=skip_remembered_session),
             argv=list(args),
         )
         if not runtime.ok or runtime.value is None:
@@ -314,9 +315,21 @@ def _run_desktop(args: Sequence[str]) -> int:
         current = runtime.value
 
         def request_logout(current=current) -> None:
-            nonlocal logged_out
+            nonlocal logged_out, skip_remembered_session
+            revoke = getattr(current, "revoke_remembered_session", None)
+            if revoke is not None:
+                revoked = revoke()
+                if not revoked.ok:
+                    _startup_message(display_error_message(revoked.error))
+                    return
+            cleared = current.remember_session_store.clear_token()
+            if cleared is not None and not cleared.ok:
+                if revoke is None:
+                    _startup_message(display_error_message(cleared.error))
+                    return
+                _startup_message(_("The account's remembered session was revoked, but its device file could not be removed. Sign in manually and check storage permissions."), error=False)
             logged_out = True
-            current.remember_session_store.clear_token()
+            skip_remembered_session = True
             current.window.close()
             current.application.quit()
 

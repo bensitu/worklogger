@@ -1967,6 +1967,9 @@ msgstr ""
 msgid "The ID or password is incorrect."
 msgstr ""
 
+msgid "The account's remembered session was revoked, but its device file could not be removed. Sign in manually and check storage permissions."
+msgstr ""
+
 msgid "The data directory is unavailable."
 msgstr ""
 

@@ -15,6 +15,40 @@ from worklogger.main import DesktopAlreadyRunningError, _acquire_instance_lock, 
 
 
 class DesktopExitTests(unittest.TestCase):
+    def test_session_file_failure_after_revocation_returns_to_manual_authentication(self):
+        runtime = SimpleNamespace(application=Mock(), window=Mock(), remember_session_store=Mock(),
+                                  revoke_remembered_session=Mock(return_value=Result.success(None)))
+        callbacks = []
+        runtime.window.logout_requested.connect.side_effect = callbacks.append
+        runtime.application.exec.side_effect = lambda: callbacks[0]() or 0
+        runtime.remember_session_store.clear_token.return_value = Result.failure(
+            InfrastructureError("remember_session_clear_failed", "remember_session_clear_failed"))
+        captured = []
+
+        def build(config, **_kwargs):
+            captured.append(config)
+            return Result.success(runtime) if len(captured) == 1 else Result.failure(CancellationError("auth_cancelled", "auth_cancelled"))
+
+        with (patch("worklogger.main._acquire_instance_lock"), patch("worklogger.main._startup_message") as feedback,
+              patch("worklogger.bootstrap.build_authenticated_desktop_runtime", side_effect=build)):
+            self.assertEqual(run_desktop([]), 0)
+        runtime.revoke_remembered_session.assert_called_once()
+        self.assertTrue(captured[1].skip_remembered_session)
+        feedback.assert_called_once()
+        runtime.window.close.assert_called_once()
+
+    def test_failed_session_revocation_does_not_claim_logout_success(self):
+        runtime = SimpleNamespace(application=Mock(), window=Mock(), remember_session_store=Mock(),
+                                  revoke_remembered_session=Mock(return_value=Result.failure(
+                                      InfrastructureError("auth_state_failed", "auth_state_failed"))))
+        callbacks = []
+        runtime.window.logout_requested.connect.side_effect = callbacks.append
+        runtime.application.exec.side_effect = lambda: callbacks[0]() or 0
+        self.run_with_results(Result.success(runtime))
+        runtime.remember_session_store.clear_token.assert_not_called()
+        runtime.window.close.assert_not_called()
+        runtime.application.quit.assert_not_called()
+
     def test_pending_restore_choice_recovers_before_retrying_authentication(self):
         from worklogger.domain.shared.recovery import RestoreRecoveryChoices
 

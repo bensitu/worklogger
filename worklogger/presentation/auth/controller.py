@@ -71,6 +71,7 @@ class AuthController:
         remember_session_store: RememberSessionStore | None = None,
         reset_password_dialog_factory: ResetPasswordDialogFactory | None = None,
         job_runner=None,
+        allow_remembered_session=True,
     ) -> None:
         self._view_model = view_model
         self._job_runner = job_runner or QtJobRunner(parent)
@@ -81,6 +82,7 @@ class AuthController:
         self._login_dialog_factory = login_dialog_factory or LoginDialog
         self._register_dialog_factory = register_dialog_factory or RegisterDialog
         self._remember_session_store = remember_session_store
+        self._allow_remembered_session = allow_remembered_session
         self._reset_password_dialog_factory = (
             reset_password_dialog_factory or ResetPasswordDialog
         )
@@ -212,7 +214,7 @@ class AuthController:
         return self._remember_session_store.clear_token()
 
     def _authenticate_remembered_session(self) -> Result[AuthSession | None]:
-        if self._remember_session_store is None:
+        if self._remember_session_store is None or not self._allow_remembered_session:
             return Result.success(None)
         token = self._remember_session_store.load_token()
         if not token.ok:

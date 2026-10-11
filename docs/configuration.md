@@ -96,7 +96,7 @@ and network; do not put passwords in configuration files.
 | --- | --- | --- |
 | Database | `worklogger/worklog.db` | `worklog.db` in Qt's application-local user-data directory |
 | Models | `models/` beside the database | Same |
-| Runtime log | `worklogger.log` in the working directory | Beside the database |
+| Runtime log | `worklogger.log` beside the database | Same |
 | Deployment flags | Repository-root `worklogger.config.json` | Adjacent override or bundled copy |
 | Assets/catalogs | Package resources | Bundled resources |
 
@@ -121,5 +121,8 @@ and `zh_TW`.
 logging for the same true values listed above.
 `WORKLOGGER_MODEL_CATALOG_URL` supplies an HTTPS URL for model catalog refresh.
 Provider registration overrides are described in [browser sign-in](identity-signin.md).
+Tray residency uses the Windows/macOS platform mapping when Qt reports a tray
+service. On other platforms, closing the main window exits normally; saved timer
+state remains available after signing in again.
 Build and test environment options belong in [packaging](packaging.md) and
 [testing](testing.md), not ordinary account configuration.

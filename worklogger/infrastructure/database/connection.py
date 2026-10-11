@@ -39,6 +39,7 @@ class SQLiteConnectionFactory:
         self._maintenance_owner: int | None = None
         self._maintenance_depth = 0
         self._integrity_checked = False
+        self._allow_create = True
 
     def open(self) -> sqlite3.Connection:
         with self._initialization_lock:
@@ -52,10 +53,13 @@ class SQLiteConnectionFactory:
                 quarantine_corrupt_database(self.database_path, keep=self.corrupt_backup_retention)
                 connection = self._open_once(check_integrity=True)
             self._integrity_checked = True
+            self._allow_create = False
             return connection
 
     def _open_once(self, *, check_integrity: bool) -> sqlite3.Connection:
         if self.database_path != ":memory:":
+            if not self._allow_create and not Path(self.database_path).is_file():
+                raise FileNotFoundError(self.database_path)
             Path(self.database_path).parent.mkdir(parents=True, exist_ok=True, mode=0o700)
             try:
                 descriptor = os.open(self.database_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)

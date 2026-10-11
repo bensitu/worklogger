@@ -1969,6 +1969,9 @@ msgstr "CSV 파일이 지원되는 크기 또는 행 수 제한을 초과했습�
 msgid "The ID or password is incorrect."
 msgstr "ID 또는 비밀번호가 올바르지 않습니다."
 
+msgid "The account's remembered session was revoked, but its device file could not be removed. Sign in manually and check storage permissions."
+msgstr "이 계정의 로그인 기억 자격 증명은 무효화되었지만 기기의 세션 파일을 삭제할 수 없습니다. 수동으로 로그인하고 저장소 권한을 확인하세요."
+
 msgid "The data directory is unavailable."
 msgstr "데이터 폴더를 사용할 수 없습니다."
 
