@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QFormLayout,
     QHBoxLayout,
@@ -17,8 +17,11 @@ from PySide6.QtWidgets import (
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.auth.dialog_base import RecoveryKeyDialog
 from worklogger.presentation.auth.models import ChangePasswordDraft, RegisterDraft, ResetPasswordDraft
+from worklogger.presentation.theme.widget_style import set_style_property
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.credential_actions import fit_credential_result
+from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.widgets.password_input import PasswordLineEdit
 
 
 class RegisterDialog(RecoveryKeyDialog):
@@ -33,7 +36,7 @@ class RegisterDialog(RecoveryKeyDialog):
         self.setWindowTitle(_("Create account"))
         apply_window_icon(self)
         self._build_ui()
-        self.resize(480, 360)
+        self.resize(440, self.sizeHint().height())
         self.setMinimumWidth(440)
 
     def draft(self) -> RegisterDraft:
@@ -45,6 +48,7 @@ class RegisterDialog(RecoveryKeyDialog):
 
     def mark_complete(self, recovery_key: str) -> None:
         self._registration_complete = True
+        self._show_credential_completion(_("Account created"))
         self.set_recovery_key(recovery_key)
         self.username_input.setEnabled(False)
         self.password_input.setEnabled(False)
@@ -54,60 +58,49 @@ class RegisterDialog(RecoveryKeyDialog):
         self.password_input.clear()
         self.confirm_input.clear()
         self.password_fields.hide()
-        self.login_button.setEnabled(False)
         self.register_button.setText(_("Continue"))
         self.register_button.setEnabled(True)
+        set_button_icon(self.register_button, "chevron-right")
         fit_credential_result(self)
+
+    def set_error(self, message: str) -> None:
+        super().set_error(message)
+        set_style_property(self.status_label, "role", "secondary" if self._registration_complete else "error")
 
     def set_busy(self, busy: bool) -> None:
         self.register_button.setEnabled(not busy)
         self.login_button.setEnabled(False if self._registration_complete else not busy)
+        self._set_credential_busy(busy, completed=self._registration_complete)
 
     def _build_ui(self) -> None:
-        root = QVBoxLayout(self)
-        root.setContentsMargins(16, 16, 16, 16)
-        root.setSpacing(10)
-
-        title = QLabel(_("Create account"))
-        title.setObjectName("register_title_label")
-        root.addWidget(title)
-
-        self.account_label = QLabel()
-        self.account_label.setTextFormat(Qt.TextFormat.PlainText)
-        self.account_label.setWordWrap(True)
-        self.account_label.hide()
-        root.addWidget(self.account_label)
-        self.password_fields = QWidget()
-        form = QFormLayout(self.password_fields)
-        form.setContentsMargins(0, 0, 0, 0)
-        root.addWidget(self.password_fields)
+        root, form = self._build_credential_form(_("Create account"))
         self.username_input = QLineEdit()
         self.username_input.setObjectName("username_line_edit")
-        form.addRow(_("Username"), self.username_input)
+        form.addRow(_("Login ID"), self.username_input)
 
-        self.password_input = QLineEdit()
+        self.password_input = PasswordLineEdit()
         self.password_input.setObjectName("password_line_edit")
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
         form.addRow(_("Password"), self.password_input)
+        self._add_password_hint(form)
 
-        self.confirm_input = QLineEdit()
+        self.confirm_input = PasswordLineEdit()
         self.confirm_input.setObjectName("confirm_password_line_edit")
         self.confirm_input.setEchoMode(QLineEdit.EchoMode.Password)
         form.addRow(_("Confirm password"), self.confirm_input)
 
-        self.status_label = QLabel("")
-        self.status_label.setObjectName("auth_status_label")
-        self.status_label.setWordWrap(True)
-        root.addWidget(self.status_label)
-
         self._add_recovery_display(root, caption=_("Recovery key"),
                                    caption_name="recovery_key_caption_label")
+        root.addStretch(1)
 
         buttons = QHBoxLayout()
         self.login_button = QPushButton(_("Back to login"))
         self.register_button = QPushButton(_("Create account"))
         self.register_button.setObjectName("register_button")
         self.register_button.setProperty("variant", "primary")
+        self.register_button.setDefault(True)
+        set_button_icon(self.login_button, "chevron-left")
+        set_button_icon(self.register_button, "plus")
         buttons.addWidget(self.login_button)
         buttons.addStretch(1)
         buttons.addWidget(self.register_button)
@@ -135,7 +128,7 @@ class ResetPasswordDialog(RecoveryKeyDialog):
         self.setWindowTitle(_("Reset password"))
         apply_window_icon(self)
         self._build_ui()
-        self.resize(480, 400)
+        self.resize(440, self.sizeHint().height())
         self.setMinimumWidth(440)
 
     def draft(self) -> ResetPasswordDraft:
@@ -148,6 +141,7 @@ class ResetPasswordDialog(RecoveryKeyDialog):
 
     def mark_complete(self, recovery_key: str) -> None:
         self._reset_complete = True
+        self._show_credential_completion(_("Password changed successfully."))
         self.set_recovery_key(recovery_key)
         self.username_input.setEnabled(False)
         self.recovery_key_input.setEnabled(False)
@@ -159,65 +153,50 @@ class ResetPasswordDialog(RecoveryKeyDialog):
         self.confirm_input.clear()
         self.recovery_key_input.clear()
         self.password_fields.hide()
-        self.login_button.setEnabled(False)
         self.reset_button.setText(_("Back to login"))
+        set_button_icon(self.reset_button, "chevron-left")
         self.reset_button.setEnabled(True)
         fit_credential_result(self)
 
     def set_busy(self, busy: bool) -> None:
         self.reset_button.setEnabled(not busy)
         self.login_button.setEnabled(False if self._reset_complete else not busy)
+        self._set_credential_busy(busy, completed=self._reset_complete)
 
     def _build_ui(self) -> None:
-        root = QVBoxLayout(self)
-        root.setContentsMargins(16, 16, 16, 16)
-        root.setSpacing(10)
-
-        title = QLabel(_("Reset password"))
-        title.setObjectName("reset_password_title_label")
-        root.addWidget(title)
-
-        self.account_label = QLabel()
-        self.account_label.setTextFormat(Qt.TextFormat.PlainText)
-        self.account_label.setWordWrap(True)
-        self.account_label.hide()
-        root.addWidget(self.account_label)
-        self.password_fields = QWidget()
-        form = QFormLayout(self.password_fields)
-        form.setContentsMargins(0, 0, 0, 0)
-        root.addWidget(self.password_fields)
+        root, form = self._build_credential_form(_("Reset password"))
         self.username_input = QLineEdit()
         self.username_input.setObjectName("username_line_edit")
-        form.addRow(_("Username"), self.username_input)
+        form.addRow(_("Login ID"), self.username_input)
 
         self.recovery_key_input = QLineEdit()
         self.recovery_key_input.setObjectName("recovery_key_line_edit")
         form.addRow(_("Recovery key"), self.recovery_key_input)
 
-        self.password_input = QLineEdit()
+        self.password_input = PasswordLineEdit()
         self.password_input.setObjectName("new_password_line_edit")
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
         form.addRow(_("New password"), self.password_input)
+        self._add_password_hint(form)
 
-        self.confirm_input = QLineEdit()
+        self.confirm_input = PasswordLineEdit()
         self.confirm_input.setObjectName("confirm_password_line_edit")
         self.confirm_input.setEchoMode(QLineEdit.EchoMode.Password)
         form.addRow(_("Confirm password"), self.confirm_input)
-
-        self.status_label = QLabel("")
-        self.status_label.setObjectName("auth_status_label")
-        self.status_label.setWordWrap(True)
-        root.addWidget(self.status_label)
 
         self._add_recovery_display(root, caption=_("New recovery key"),
                                    caption_name="new_recovery_key_caption_label")
         self.recovery_key_result_label = self.recovery_key_label
 
+        root.addStretch(1)
         buttons = QHBoxLayout()
         self.login_button = QPushButton(_("Back to login"))
         self.reset_button = QPushButton(_("Reset password"))
         self.reset_button.setObjectName("reset_password_button")
         self.reset_button.setProperty("variant", "primary")
+        self.reset_button.setDefault(True)
+        set_button_icon(self.login_button, "chevron-left")
+        set_button_icon(self.reset_button, "rotate-ccw")
         buttons.addWidget(self.login_button)
         buttons.addStretch(1)
         buttons.addWidget(self.reset_button)

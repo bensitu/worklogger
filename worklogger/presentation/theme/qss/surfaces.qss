@@ -9,6 +9,9 @@ QWidget {
 }
 
 QLabel,
+QWidget#credential_header_widget,
+QWidget#credential_form_widget,
+QStackedWidget#credential_feedback_stack_widget,
 QWidget#minimal_date_navigation_widget,
 QWidget#settings_theme_row_widget,
 QWidget#account_avatar_row_widget,
@@ -34,6 +37,10 @@ QWidget#settings_switch_row_widget,
 QWidget#settings_about_widget,
 QSlider#background_opacity_slider_widget {
   background: transparent;
+}
+
+QDialog[credential_form="true"] {
+  background: {{ surface }};
 }
 
 QTableView,

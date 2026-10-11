@@ -85,6 +85,9 @@ msgstr "このアプリについて"
 msgid "Account"
 msgstr "アカウント"
 
+msgid "Account created"
+msgstr "アカウントを作成しました"
+
 msgid "Account: {username}"
 msgstr "アカウント: {username}"
 

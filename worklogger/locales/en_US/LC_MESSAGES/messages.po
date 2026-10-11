@@ -85,6 +85,9 @@ msgstr "About"
 msgid "Account"
 msgstr "Account"
 
+msgid "Account created"
+msgstr "Account created"
+
 msgid "Account: {username}"
 msgstr "Account: {username}"
 

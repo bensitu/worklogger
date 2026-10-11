@@ -353,6 +353,31 @@ class AuthPresentationTests(unittest.TestCase):
         self.assertEqual(QApplication.clipboard().text(), "AAAA-BBBB")
         QApplication.clipboard().clear()
 
+    def test_registration_and_recovery_password_actions_and_busy_state_preserve_inputs(self):
+        for dialog_type in (RegisterDialog, ResetPasswordDialog):
+            dialog = dialog_type()
+            self.addCleanup(dialog.deleteLater)
+            dialog.password_input.setText("test-password-only")
+            dialog.confirm_input.setText("test-password-only")
+            for field in (dialog.password_input, dialog.confirm_input):
+                field.visibility_action.trigger()
+                self.assertEqual(field.echoMode(), QLineEdit.EchoMode.Normal)
+                field.visibility_action.trigger()
+                self.assertEqual(field.echoMode(), QLineEdit.EchoMode.Password)
+            dialog.set_busy(True)
+            self.assertFalse(dialog.password_fields.isEnabled())
+            self.assertEqual(dialog.feedback_stack.currentWidget(), dialog.credential_progress)
+            self.assertEqual(dialog.password_input.text(), "test-password-only")
+            dialog.set_busy(False)
+            self.assertTrue(dialog.password_fields.isEnabled())
+            self.assertEqual(dialog.feedback_stack.currentWidget(), dialog.status_label)
+            dialog.mark_complete("test-recovery-key-not-a-credential")
+            self.assertEqual(dialog.password_input.text(), "")
+            self.assertEqual(dialog.confirm_input.text(), "")
+            self.assertTrue(dialog.login_button.isHidden())
+            self.assertFalse(dialog.login_button.isEnabled())
+            self.assertEqual(dialog.subtitle_label.property("role"), "credential_success")
+
     def test_reset_password_dialog_emits_draft_and_shows_new_key(self) -> None:
         dialog = ResetPasswordDialog()
         resets: list[ResetPasswordDraft] = []

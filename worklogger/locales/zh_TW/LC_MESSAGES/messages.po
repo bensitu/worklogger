@@ -85,6 +85,9 @@ msgstr "關於"
 msgid "Account"
 msgstr "帳戶"
 
+msgid "Account created"
+msgstr "帳戶已建立"
+
 msgid "Account: {username}"
 msgstr "帳戶：{username}"
 

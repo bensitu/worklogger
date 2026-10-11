@@ -167,6 +167,17 @@ class ModelAccountLayoutChecks(unittest.TestCase):
         try:
             dialog.show()
             self.app.processEvents()
+            if isinstance(dialog, (RegisterDialog, ResetPasswordDialog)):
+                self.assertFalse(dialog.brand_icon_label.pixmap().isNull())
+                self.assertEqual(dialog.title_label.font().pixelSize(), 24)
+                for field in (dialog.username_input, dialog.password_input, dialog.confirm_input):
+                    self.assertTrue(dialog.rect().contains(field.rect().translated(field.mapTo(dialog, QPoint()))))
+                dialog.set_busy(True)
+                self.app.processEvents()
+                self.assertFalse(dialog.password_fields.isEnabled())
+                self.assertTrue(dialog.rect().contains(dialog.credential_progress.rect().translated(
+                    dialog.credential_progress.mapTo(dialog, QPoint()))))
+                dialog.set_busy(False)
             self.capture(
                 dialog,
                 f"{language}-{dialog_type.__name__}-{'dark' if dark else 'light'}",
@@ -187,6 +198,7 @@ class ModelAccountLayoutChecks(unittest.TestCase):
                 if isinstance(dialog, ResetPasswordDialog)
                 else dialog.register_button
             )
+            self.assertGreater(dialog.recovery_key_caption.font().pixelSize(), dialog.recovery_actions.warning_label.font().pixelSize())
             for widget in (
                 key_label,
                 dialog.recovery_actions.copy_button,

@@ -18,12 +18,41 @@ QFrame#settings_navigation_frame {
 }
 
 QLabel[role="section_heading"],
+QLabel[role="credential_success"],
 QPushButton#date_picker_button,
 QLabel#settings_section_title_label,
 QLabel#report_title_label,
 QLabel#report_history_title_label {
   font-size: 16px;
   font-weight: 600;
+}
+
+QLabel[role="credential_success"] {
+  color: {{ success }};
+}
+
+QLabel[role="error"] {
+  color: {{ danger }};
+}
+
+QLabel[role="account_identity"] {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+QLabel#recovery_key_label {
+  background: {{ input_fill }};
+  border: 1px solid {{ field_border }};
+  border-radius: 8px;
+  padding: 10px;
+  font-family: "Consolas", "Menlo", monospace;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+QDialog[credential_form="true"] QLabel[role="caption"],
+QDialog[credential_form="true"] QWidget > QLabel[role="secondary"] {
+  font-size: 12px;
 }
 
 QLabel[role="title"] {

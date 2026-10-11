@@ -85,6 +85,9 @@ msgstr "정보"
 msgid "Account"
 msgstr "계정"
 
+msgid "Account created"
+msgstr "계정이 생성되었습니다"
+
 msgid "Account: {username}"
 msgstr "계정: {username}"
 
