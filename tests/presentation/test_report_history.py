@@ -25,6 +25,7 @@ from worklogger.app.use_cases.reports import (
 from worklogger.domain.reporting.models import Report
 from worklogger.domain.reporting.periods import daily_period, monthly_period, weekly_period
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
+from worklogger.infrastructure.database.current_schema import CURRENT_SCHEMA_VERSION
 from worklogger.infrastructure.export import MarkdownExporter
 from worklogger.infrastructure.i18n import _, set_language
 from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteReportRepository
@@ -213,7 +214,7 @@ class ReportHistoryTests(unittest.TestCase):
         with factory.transaction(write=True) as connection:
             connection.execute("INSERT INTO reports(user_id,type,period_start,period_end,content,created_at) VALUES(?,'daily',?,?,?,?)",
                 (user_id, self.day.isoformat(), self.day.isoformat(), "Existing content", self.stamp.isoformat()))
-        self.assertEqual(MigrationRunner(factory).run_pending(), (15,))
+        self.assertEqual(MigrationRunner(factory).run_pending(), (CURRENT_SCHEMA_VERSION,))
         self.assertEqual(MigrationRunner(factory).run_pending(), ())
         repository = SQLiteReportRepository(factory)
         report = repository.get_for_period(user_id, "daily", self.day, self.day)

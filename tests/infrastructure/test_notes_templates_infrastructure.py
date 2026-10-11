@@ -28,6 +28,7 @@ from worklogger.domain.worklog.models import WorkType
 from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.notes.models import DailyNote
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
+from worklogger.infrastructure.database.current_schema import CURRENT_SCHEMA_VERSION
 from worklogger.infrastructure.export import MarkdownExporter
 from worklogger.infrastructure.repositories import (
     SQLiteAuthRepository,
@@ -150,7 +151,7 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
                                    (user_id, day.isoformat(), "09:00", "18:00", 1.0, "original"))
                 connection.execute('INSERT INTO worklog(user_id,d,"break",note) VALUES(?,?,0,?)',
                                    (user_id, note_day.isoformat(), "standalone"))
-            self.assertEqual(MigrationRunner(factory).run_pending(), (15,))
+            self.assertEqual(MigrationRunner(factory).run_pending(), (CURRENT_SCHEMA_VERSION,))
             user = SQLiteAuthRepository(factory).get_by_id(user_id)
             self.assertEqual(MigrationRunner(factory).run_pending(), ())
             work_logs = SQLiteWorkLogRepository(factory)

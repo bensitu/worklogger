@@ -52,6 +52,8 @@ class BackgroundSettingsTests(unittest.TestCase):
         self.controls = self.window.settings_page.background_settings
 
     def upload(self, data):
+        if not self.controls.enabled_switch.isChecked():
+            self.controls.enabled_switch.setChecked(True)
         path = self.directory / "image"
         path.write_bytes(data)
         with patch("worklogger.presentation.settings.sections.background.QFileDialog.getOpenFileName",
@@ -61,11 +63,19 @@ class BackgroundSettingsTests(unittest.TestCase):
     def test_entry_is_enabled_by_default_and_media_preferences_survive_reload(self):
         self.assertTrue(AppWindowConfig().background_images_available)
         self.assertFalse(self.controls.isHidden())
-        self.assertFalse(self.controls.enabled_switch.isEnabled())
+        self.assertTrue(self.controls.enabled_switch.isEnabled())
+        self.assertTrue(self.controls.options_widget.isHidden())
+        self.assertFalse(self.controls.upload_button.isEnabled())
+        self.controls.enabled_switch.setChecked(True)
+        self.assertFalse(self.controls.options_widget.isHidden())
         self.assertTrue(self.controls.upload_button.isEnabled())
+        self.assertTrue(self.service.load().value.enabled)
+        self.assertFalse(self.window._background_surface.background_active)
+        self.window.background_controller.reload()
+        self.assertTrue(self.controls.enabled_switch.isChecked())
         self.upload(still_background_bytes())
         self.assertTrue(self.controls.enabled_switch.isEnabled())
-        self.assertFalse(self.window._background_surface.background_active)
+        self.assertTrue(self.window._background_surface.background_active)
         self.controls.enabled_switch.setChecked(True)
         self.assertTrue(self.window._background_surface.background_active)
         self.controls.opacity_slider.setValue(70)
@@ -77,6 +87,7 @@ class BackgroundSettingsTests(unittest.TestCase):
         self.assertEqual(self.controls.opacity_label.text(), "70%")
         self.assertEqual(self.controls.image_label.text(), "PNG | 1280 x 720")
         self.controls.enabled_switch.setChecked(False)
+        self.assertTrue(self.controls.options_widget.isHidden())
         self.assertFalse(self.window._background_surface.background_active)
         self.assertIsNotNone(self.service.load().value.image)
 
@@ -92,7 +103,10 @@ class BackgroundSettingsTests(unittest.TestCase):
                    return_value=QMessageBox.StandardButton.Yes):
             self.controls.remove_button.click()
         self.assertIsNone(self.service.load().value.image)
-        self.assertFalse(self.controls.enabled_switch.isEnabled())
+        self.assertTrue(self.controls.enabled_switch.isEnabled())
+        self.assertTrue(self.controls.enabled_switch.isChecked())
+        self.assertFalse(self.controls.options_widget.isHidden())
+        self.assertTrue(self.controls.upload_button.isEnabled())
         self.assertFalse(self.window._background_surface.background_active)
 
     def test_invalid_upload_retains_previous_media_and_reports_error(self):
@@ -107,6 +121,7 @@ class BackgroundSettingsTests(unittest.TestCase):
         self.assertTrue(self.controls.upload_button.isEnabled())
 
     def test_cancelled_picker_does_not_change_preferences(self):
+        self.controls.enabled_switch.setChecked(True)
         with patch("worklogger.presentation.settings.sections.background.QFileDialog.getOpenFileName",
                    return_value=("", "")):
             self.controls.upload_button.click()
@@ -120,6 +135,7 @@ class BackgroundSettingsTests(unittest.TestCase):
                 return JobHandle(name, lambda: None)
 
         runner = DeferredRunner()
+        self.controls.enabled_switch.setChecked(True)
         self.window.background_controller._runner = runner
         self.upload(still_background_bytes())
         self.assertTrue(self.window.background_controller.is_busy)

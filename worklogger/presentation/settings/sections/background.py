@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QSlider,
+    QVBoxLayout,
     QWidget,
 )
 
@@ -33,8 +34,15 @@ class BackgroundSettings(CardFrame):
         self.enabled_switch = SwitchButton()
         self.enabled_switch.setAccessibleName(_("Enable background image"))
         self.content_layout.addWidget(_switch_line(_("Enable background image"), self.enabled_switch))
+        self.options_widget = QWidget()
+        self.options_widget.setObjectName("settings_switch_row_widget")
+        options_layout = QVBoxLayout(self.options_widget)
+        options_layout.setContentsMargins(0, 0, 0, 0)
+        options_layout.setSpacing(12)
+        self.options_widget.hide()
+        self.content_layout.addWidget(self.options_widget)
         self.image_label = _secondary_label(_("No background image"))
-        self.content_layout.addWidget(self.image_label)
+        options_layout.addWidget(self.image_label)
 
         opacity_row = QWidget()
         opacity_row.setObjectName("settings_switch_row_widget")
@@ -53,7 +61,6 @@ class BackgroundSettings(CardFrame):
         self.opacity_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         opacity_layout.addWidget(self.opacity_slider, 1)
         opacity_layout.addWidget(self.opacity_label)
-        self.content_layout.addWidget(opacity_row)
 
         buttons = QHBoxLayout()
         self.upload_button = QPushButton(_("Upload image"))
@@ -64,7 +71,8 @@ class BackgroundSettings(CardFrame):
         buttons.addWidget(self.upload_button)
         buttons.addWidget(self.remove_button)
         buttons.addStretch(1)
-        self.content_layout.addLayout(buttons)
+        options_layout.addLayout(buttons)
+        options_layout.addWidget(opacity_row)
         self.status_label = _secondary_label("")
         self.status_label.hide()
         self.content_layout.addWidget(self.status_label)
@@ -92,12 +100,13 @@ class BackgroundSettings(CardFrame):
             self.status_label.show()
         available = self._controller is not None and self._controller.available and not busy
         has_image = self._loaded and self._state.image is not None
-        self.upload_button.setEnabled(available)
-        self.remove_button.setEnabled(available and has_image)
-        self.enabled_switch.setEnabled(available and has_image)
-        self.opacity_slider.setEnabled(available and has_image)
+        self.upload_button.setEnabled(available and self._state.enabled)
+        self.remove_button.setEnabled(available and self._state.enabled and has_image)
+        self.enabled_switch.setEnabled(available and self._loaded)
+        self.opacity_slider.setEnabled(available and self._state.enabled)
 
     def _sync_state(self):
+        self.options_widget.setVisible(self._state.enabled)
         with QSignalBlocker(self.enabled_switch), QSignalBlocker(self.opacity_slider):
             self.enabled_switch.setChecked(self._state.enabled)
             self.opacity_slider.setValue(self._state.opacity)
@@ -124,10 +133,12 @@ class BackgroundSettings(CardFrame):
 
     def _save_options(self):
         self._save_timer.stop()
-        if self._controller is not None and self._state.image is not None:
+        if self._controller is not None and self._loaded:
             self._controller.set_options(enabled=self.enabled_switch.isChecked(), opacity=self.opacity_slider.value())
 
     def _upload(self):
+        if self._controller is None or not self._state.enabled:
+            return
         path, _filter = QFileDialog.getOpenFileName(
             self, _("Upload image"), "", _("Images (*.png *.jpg *.jpeg *.gif *.webp)")
         )
@@ -135,6 +146,8 @@ class BackgroundSettings(CardFrame):
             self._controller.import_image(path)
 
     def _remove(self):
+        if self._controller is None or not self._state.enabled or self._state.image is None:
+            return
         if QMessageBox.question(self, _("Remove image"), _("Remove background image?"),
                                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                 QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:

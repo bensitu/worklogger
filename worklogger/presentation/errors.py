@@ -31,7 +31,7 @@ def display_error_code(code: str) -> str:
             return _("Choose an image with a long edge of at least 1280 pixels and a short edge of at least 720 pixels.")
         case "background_image_too_large" | "background_animation_too_large":
             return _("This image or animation exceeds the background size limits. Choose a smaller file or fewer frames.")
-        case "background_image_invalid" | "background_image_required":
+        case "background_image_invalid":
             return _("Choose a valid PNG, JPEG, GIF or WebP background image.")
         case "background_load_failed" | "background_storage_failed" | "background_opacity_invalid" | "background_animation_unsupported":
             return _("Unable to load or save the background. The previous background has been retained.")

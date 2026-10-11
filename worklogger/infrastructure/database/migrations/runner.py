@@ -16,7 +16,7 @@ from worklogger.infrastructure.database.released_import import (
     validate_released_schema,
 )
 
-MIGRATION_MODULES = ("worklogger.infrastructure.database.migrations.migration_015_current_schema",)
+MIGRATION_MODULES = ("worklogger.infrastructure.database.migrations.migration_016_background_preferences",)
 MIGRATION_VERSIONS = (CURRENT_SCHEMA_VERSION,)
 SUPPORTED_VERSIONS = frozenset(range(1, CURRENT_SCHEMA_VERSION + 1))
 
@@ -30,7 +30,7 @@ def database_kind(connection, *, check_data=True):
         return "empty"
     if "schema_migrations" in tables:
         versions = {row[0] for row in connection.execute("SELECT version FROM schema_migrations")}
-        if versions - SUPPORTED_VERSIONS or not versions & {PREVIOUS_CURRENT_VERSION, CURRENT_SCHEMA_VERSION}:
+        if versions - SUPPORTED_VERSIONS or not versions & set(range(PREVIOUS_CURRENT_VERSION, CURRENT_SCHEMA_VERSION + 1)):
             raise ValueError("database_version_unsupported")
         validate_current_schema(connection, check_data=check_data)
         return "current" if CURRENT_SCHEMA_VERSION in versions else "current_previous_ledger"

@@ -27,9 +27,6 @@ class SQLiteBackgroundRepository:
     def set_options(self, user_id: int, *, enabled: bool, opacity: int) -> BackgroundState:
         validate_opacity(opacity)
         with self._factory.transaction() as connection:
-            state = self._load(connection, user_id)
-            if enabled and state.image is None:
-                raise ValueError("background_image_required")
             connection.execute("INSERT OR IGNORE INTO background_images(user_id) VALUES(?)", (user_id,))
             connection.execute("UPDATE background_images SET enabled=?,opacity=? WHERE user_id=?",
                                (int(enabled), opacity, user_id))
@@ -38,7 +35,7 @@ class SQLiteBackgroundRepository:
     def clear(self, user_id: int) -> BackgroundState:
         with self._factory.transaction() as connection:
             connection.execute("""UPDATE background_images SET data=NULL,format=NULL,width=NULL,
-                height=NULL,frames=NULL,enabled=0 WHERE user_id=?""", (user_id,))
+                height=NULL,frames=NULL WHERE user_id=?""", (user_id,))
             return self._load(connection, user_id)
 
     @staticmethod

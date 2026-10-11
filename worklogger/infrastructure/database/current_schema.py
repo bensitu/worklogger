@@ -4,7 +4,7 @@ import sqlite3
 from contextlib import closing
 from functools import lru_cache
 
-CURRENT_SCHEMA_VERSION = 15
+CURRENT_SCHEMA_VERSION = 16
 PREVIOUS_CURRENT_VERSION = 14
 
 TABLE_STATEMENTS = {
@@ -81,7 +81,7 @@ TABLE_STATEMENTS = {
         user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
         data BLOB, format TEXT, width INTEGER, height INTEGER, frames INTEGER,
         enabled INTEGER NOT NULL DEFAULT 0 CHECK(enabled IN (0,1)),
-        opacity INTEGER NOT NULL DEFAULT 50 CHECK(opacity BETWEEN 0 AND 100), CHECK(data IS NOT NULL OR enabled=0),
+        opacity INTEGER NOT NULL DEFAULT 50 CHECK(opacity BETWEEN 0 AND 100),
         CHECK((data IS NULL AND format IS NULL AND width IS NULL AND height IS NULL AND frames IS NULL)
             OR (data IS NOT NULL AND format IS NOT NULL AND width IS NOT NULL AND height IS NOT NULL AND frames IS NOT NULL
             AND length(data) BETWEEN 1 AND 20971520 AND format IN ('png','jpeg','webp','gif')

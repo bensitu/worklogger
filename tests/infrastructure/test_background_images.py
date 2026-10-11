@@ -2,6 +2,8 @@
 
 import tempfile
 import unittest
+import sqlite3
+from contextlib import closing
 from pathlib import Path
 from unittest.mock import patch
 
@@ -12,6 +14,7 @@ from worklogger.app.use_cases.backgrounds import BackgroundService
 from worklogger.domain.settings.background import BackgroundState
 from worklogger.infrastructure.backup.sqlite_backup import SQLiteBackupService
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
+from worklogger.infrastructure.database.current_schema import CURRENT_SCHEMA_VERSION, TABLE_STATEMENTS
 from worklogger.infrastructure.database.inspection import validate_database_file
 from worklogger.infrastructure.images.background import (
     QtBackgroundImageLoader,
@@ -47,9 +50,9 @@ class BackgroundImageTests(unittest.TestCase):
 
     def test_import_preferences_replacement_and_clear_are_account_scoped(self):
         self.assertEqual(self.service.load().value, BackgroundState())
-        self.assertEqual(self.service.set_options(enabled=True, opacity=50).error.code, "background_image_required")
+        self.assertEqual(self.service.set_options(enabled=True, opacity=50).value, BackgroundState(enabled=True))
         imported = self.service.import_image(str(self.source_image())).value
-        self.assertFalse(imported.enabled)
+        self.assertTrue(imported.enabled)
         self.assertEqual(imported.opacity, 50)
         self.assertNotIn("data=", repr(imported.image))
         self.assertEqual(self.repository.load(self.users[1].id), BackgroundState())
@@ -62,7 +65,7 @@ class BackgroundImageTests(unittest.TestCase):
         self.assertTrue(replacement.value.enabled)
         self.assertEqual(replacement.value.opacity, 100)
         self.assertEqual(replacement.value.image.format, "jpeg")
-        self.assertEqual(self.service.clear().value, BackgroundState(opacity=100))
+        self.assertEqual(self.service.clear().value, BackgroundState(enabled=True, opacity=100))
         self.assertEqual(self.repository.load(self.users[1].id), BackgroundState())
 
     def test_invalid_images_and_failed_writes_preserve_previous_content(self):
@@ -121,8 +124,51 @@ class BackgroundImageTests(unittest.TestCase):
         with factory.transaction() as connection:
             connection.execute("DELETE FROM schema_migrations")
             connection.execute("INSERT INTO schema_migrations VALUES(14,'previous','2026-10-10')")
-        self.assertEqual(MigrationRunner(factory).run_pending(), (15,))
+        self.assertEqual(MigrationRunner(factory).run_pending(), (CURRENT_SCHEMA_VERSION,))
         self.assertEqual(MigrationRunner(factory).run_pending(), ())
         self.assertEqual(settings.get(user.id, "theme"), "green")
         self.assertEqual(SQLiteBackgroundRepository(factory).load(user.id), BackgroundState())
         self.assertEqual(len(list(self.directory.glob("previous.db.bak_upgrade_*"))), 1)
+
+    def previous_background_schema(self):
+        image = validate_background_data(animated_background_bytes())
+        self.repository.replace_image(self.users[0].id, image)
+        expected = self.service.set_options(enabled=True, opacity=65).value
+        with self.factory.transaction() as connection:
+            old = TABLE_STATEMENTS["background_images"].replace(
+                "IF NOT EXISTS background_images(", "background_images_previous("
+            ).replace("CHECK(opacity BETWEEN 0 AND 100),", "CHECK(opacity BETWEEN 0 AND 100), CHECK(data IS NOT NULL OR enabled=0),")
+            connection.execute(old)
+            connection.execute("INSERT INTO background_images_previous SELECT * FROM background_images")
+            connection.execute("DROP TABLE background_images")
+            connection.execute("ALTER TABLE background_images_previous RENAME TO background_images")
+            connection.execute("DELETE FROM schema_migrations")
+            connection.execute("INSERT INTO schema_migrations VALUES(15,'previous','2026-10-11')")
+        return expected
+
+    def test_previous_constraint_upgrade_preserves_media_and_backs_up_original(self):
+        expected = self.previous_background_schema()
+        self.assertEqual(MigrationRunner(self.factory).run_pending(), (CURRENT_SCHEMA_VERSION,))
+        self.assertEqual(self.service.load().value, expected)
+        self.assertEqual(self.repository.set_options(self.users[1].id, enabled=True, opacity=35),
+                         BackgroundState(enabled=True, opacity=35))
+        backups = list(self.directory.glob("source.db.bak_upgrade_*"))
+        self.assertEqual(len(backups), 1)
+        with closing(sqlite3.connect(backups[0])) as original:
+            self.assertEqual(original.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0], 15)
+            self.assertEqual(original.execute("SELECT data FROM background_images").fetchone()[0], expected.image.data)
+            with self.assertRaises(sqlite3.IntegrityError):
+                original.execute("INSERT INTO background_images(user_id,enabled) VALUES(?,1)", (self.users[1].id,))
+        self.assertEqual(MigrationRunner(self.factory).run_pending(), ())
+
+    def test_failed_constraint_upgrade_rolls_back_media_table_and_version(self):
+        expected = self.previous_background_schema()
+        with patch("worklogger.infrastructure.database.migrations.migration_016_background_preferences.create_current_schema",
+                   side_effect=sqlite3.OperationalError("interrupted")):
+            with self.assertRaises(sqlite3.OperationalError):
+                MigrationRunner(self.factory).run_pending()
+        self.assertEqual(self.service.load().value, expected)
+        with self.factory.connection() as connection:
+            self.assertEqual(connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0], 15)
+            self.assertIsNone(connection.execute("SELECT 1 FROM sqlite_master WHERE name='background_images_next'").fetchone())
+        self.assertEqual(len(list(self.directory.glob("source.db.bak_upgrade_*"))), 1)

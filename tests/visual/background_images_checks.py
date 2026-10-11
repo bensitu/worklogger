@@ -121,7 +121,7 @@ class BackgroundImagesLayoutChecks(unittest.TestCase):
                                     self.assertFalse(controls.isHidden())
                                     self.assertGreaterEqual(controls.opacity_slider.width(), 80)
                                     for button in (controls.upload_button, controls.remove_button):
-                                        self.assertTrue(controls.rect().contains(button.geometry()))
+                                        self.assertTrue(controls.options_widget.rect().contains(button.geometry()))
                                         self.assertGreaterEqual(button.width(), button.fontMetrics().horizontalAdvance(button.text()) + 40)
                                 surface = window._background_surface
                                 rendered = surface.grab().toImage()
@@ -159,3 +159,41 @@ class BackgroundImagesLayoutChecks(unittest.TestCase):
             path = Path(destination)
             path.mkdir(parents=True, exist_ok=True)
             self.assertTrue(widget.grab().save(str(path / f"{name}.png")))
+
+    def test_background_options_collapse_and_enabled_empty_state_keep_theme_surface(self):
+        old_language, old_style, old_palette = get_language(), self.app.styleSheet(), self.app.palette()
+        try:
+            for language in ("en_US", "zh_CN"):
+                set_language(language)
+                for dark in (False, True):
+                    service = SimpleNamespace(load=lambda: Result.success(BackgroundState()))
+                    workflow = SimpleNamespace(create_page=lambda parent: SettingsPage(_view_model(MemorySettingsRepository()), parent))
+                    window = _window(MemoryWorkLogRepository(), settings_workflow=workflow,
+                                     background_service=service, background_images_available=True)
+                    try:
+                        window._config = replace(window._config, dark=dark)
+                        window.apply_theme()
+                        window.resize(880, 580)
+                        window.show()
+                        window.page_stack.setCurrentWidget(window.settings_page)
+                        controls = window.settings_page.background_settings
+                        section = window.settings_page.category_stack.currentWidget()
+                        for enabled in (False, True):
+                            service.load = lambda enabled=enabled: Result.success(BackgroundState(enabled=enabled))
+                            window.background_controller.reload()
+                            section.ensureWidgetVisible(controls)
+                            self.app.processEvents()
+                            self.assertEqual(controls.options_widget.isHidden(), not enabled)
+                            self.assertTrue(controls.enabled_switch.isEnabled())
+                            self.assertEqual(controls.upload_button.isEnabled(), enabled)
+                            self.assertFalse(window._background_surface.background_active)
+                            base = ThemeEngine().palette(dark=dark).surface
+                            self.assertEqual(window._background_surface.grab().toImage().pixelColor(3, 3).name(), base)
+                            self.capture(window, f"{language}-{'dark' if dark else 'light'}-empty-{'enabled' if enabled else 'disabled'}")
+                    finally:
+                        window.close()
+                        window.deleteLater()
+        finally:
+            set_language(old_language)
+            self.app.setPalette(old_palette)
+            self.app.setStyleSheet(old_style)

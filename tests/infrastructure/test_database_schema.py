@@ -89,14 +89,14 @@ class DatabaseSchemaTests(unittest.TestCase):
 
     def test_failed_initialization_rolls_back_the_entire_schema(self):
         from worklogger.infrastructure.database.migrations import (
-            migration_015_current_schema,
+            migration_016_background_preferences,
         )
 
         def interrupted(connection):
             connection.execute(TABLE_STATEMENTS["users"])
             raise sqlite3.OperationalError("interrupted")
 
-        with patch.object(migration_015_current_schema, "up", side_effect=interrupted), self.assertRaises(sqlite3.OperationalError):
+        with patch.object(migration_016_background_preferences, "up", side_effect=interrupted), self.assertRaises(sqlite3.OperationalError):
             MigrationRunner(self.factory).run_pending()
         with self.factory.connection() as connection:
             self.assertEqual(connection.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='table'").fetchone()[0], 0)
