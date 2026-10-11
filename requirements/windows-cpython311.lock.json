@@ -7,7 +7,7 @@
     "implementation": "CPython"
   },
   "inputs": {
-    "requirements.txt": "2d833f27bac1b24c34d9c39c574b463a41b86a1d2456bc84f9e8786a337ed1da",
+    "requirements.txt": "93136928cd8b6c80aed5ce5f268373c78d37e30f3b17b7277d8caa749e9feba3",
     "requirements-build.txt": "4439c693c19271e4b0bdc56c641c36b3b06010b1b22eae6733cd244d752e85d5"
   },
   "packages": [
@@ -163,21 +163,33 @@
     },
     {
       "name": "pyside6",
-      "version": "6.11.0",
-      "wheel": "pyside6-6.11.0-cp310-abi3-win_amd64.whl",
-      "sha256": "9092cb002ca43c64006afb2e0d0f6f51aef17aa737c33a45e502326a081ddcbc"
+      "version": "6.12.0",
+      "wheel": "pyside6-6.12.0-cp310-abi3-win_amd64.whl",
+      "sha256": "31a8d2893f2f28ab483b1534dde0438f27af6e234593de30425cb4729052d8f8"
     },
     {
       "name": "pyside6-addons",
-      "version": "6.11.0",
-      "wheel": "pyside6_addons-6.11.0-cp310-abi3-win_amd64.whl",
-      "sha256": "413e6121c24f5ffdce376298059eddecff74aa6d638e94e0f6015b33d29b889e"
+      "version": "6.12.0",
+      "wheel": "pyside6_addons-6.12.0-cp310-abi3-win_amd64.whl",
+      "sha256": "98d8d62010da6605344cee83e5c96fb846170a1f2d924523f10f5d92078b02b0"
     },
     {
       "name": "pyside6-essentials",
-      "version": "6.11.0",
-      "wheel": "pyside6_essentials-6.11.0-cp310-abi3-win_amd64.whl",
-      "sha256": "3b3362882ad9389357a80504e600180006a957731fec05786fced7b038461fdf"
+      "version": "6.12.0",
+      "wheel": "pyside6_essentials-6.12.0-cp310-abi3-win_amd64.whl",
+      "sha256": "c9a95102aa23c1f86516a30d5a9be37552d324eee7e567eb7508973f1218cb42"
+    },
+    {
+      "name": "pyside6-pdf",
+      "version": "6.12.0.140",
+      "wheel": "pyside6_pdf-6.12.0.140-cp310-abi3-win_amd64.whl",
+      "sha256": "4971ba1a0ca15e7c29cfd808e9600aeb46b2305dad01456eb09fa3197166268e"
+    },
+    {
+      "name": "pyside6-webengine",
+      "version": "6.12.0.140",
+      "wheel": "pyside6_webengine-6.12.0.140-cp310-abi3-win_amd64.whl",
+      "sha256": "f9b61b1d457a591ee590a6b80515f25a3e61e2576a2a0a70566380f9d9de4ab0"
     },
     {
       "name": "python-dateutil",
@@ -211,9 +223,9 @@
     },
     {
       "name": "shiboken6",
-      "version": "6.11.0",
-      "wheel": "shiboken6-6.11.0-cp310-abi3-win_amd64.whl",
-      "sha256": "483ff78a73c7b3189ca924abc694318084f078bcfeaffa68e32024ff2d025ee1"
+      "version": "6.12.0",
+      "wheel": "shiboken6-6.12.0-cp310-abi3-win_amd64.whl",
+      "sha256": "a1906cb8116869178c64b6bab52623bbc8b4ceed7b30bfc3c9aa0f6e67f6438e"
     },
     {
       "name": "six",

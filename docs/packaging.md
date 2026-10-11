@@ -61,6 +61,12 @@ PyInstaller also collects required holiday/timezone/certificate/keyring resource
 and selected optional native libraries. Keep a consistent PySide6/Shiboken/Qt set;
 do not replace individual DLLs.
 
+Use a new virtual environment when upgrading the Qt dependency set. PySide6 6.12
+distributes Qt PDF and Qt WebEngine as separate packages, which are included in
+the target lock. In-place upgrades from older releases can remove overlapping
+module files during package uninstallation. Verify `PySide6.QtPdf` imports before
+building.
+
 Windows/Linux builds produce an executable directory under `dist/WorkLogger/`.
 The macOS specification creates `WorkLogger.app`.
 Version resources use application metadata. On macOS,
