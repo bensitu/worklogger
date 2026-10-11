@@ -212,14 +212,16 @@ class DataSettingsWorkflow:
                 dialog, _("Import CSV"), Result.failure(result.error), lambda _state: ""
             )
         preview = result.value
-        if not self._csv_confirmation(dialog, preview):
+        mode = self._csv_confirmation(dialog, preview)
+        if not mode:
             _set_status(dialog, _("Import cancelled"))
             return False
         return self._run_data_job(
             dialog,
             _("Import CSV"),
             lambda: self._data_management_view_model.import_csv(
-                path, preview=preview, overwrite=preview.existing_count > 0
+                path, preview=preview, overwrite=preview.existing_date_count > 0,
+                replace_dates=mode == "replace_dates",
             ),
             lambda state: _("Imported {count} records.").format(
                 count=state.record_count

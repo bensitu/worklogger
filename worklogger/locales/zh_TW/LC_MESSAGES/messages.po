@@ -874,8 +874,8 @@ msgstr "將工作記錄匯入或匯出為 CSV 檔案，用於備份、移轉或�
 msgid "Import your .ics file to let AI read your meetings when generating reports."
 msgstr "匯入 .ics 檔案，讓 AI 產生報表時參考您的會議。"
 
-msgid "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
-msgstr "匯入 {count} 筆記錄，取代 {existing} 筆現有記錄，並略過 {errors} 個無效列？"
+msgid "Import {count} records and skip {errors} invalid rows?"
+msgstr "匯入 {count} 筆記錄並略過 {errors} 列無效資料？"
 
 msgid "Imported {count} calendar events."
 msgstr "已匯入 {count} 個行事曆事件。"
@@ -1068,6 +1068,9 @@ msgstr "3月"
 
 msgid "Markdown files (*.md)"
 msgstr "Markdown files (*.md)"
+
+msgid "Matching periods preserves other records; different overlapping periods cancel the import. Replacing dates removes all time records on those dates. Back up data before replacing dates or importing memos."
+msgstr "僅取代相同時段會保留其他記錄；重疊但起訖不同則取消整個匯入。整日取代會刪除這些日期的所有時間記錄。整日取代或匯入獨立筆記前，請先備份資料。"
 
 msgid "May"
 msgstr "5月"
@@ -1548,6 +1551,12 @@ msgstr "移除圖片"
 
 msgid "Replace"
 msgstr "取代"
+
+msgid "Replace affected dates"
+msgstr "取代涉及日期的全部記錄"
+
+msgid "Replace matching periods"
+msgstr "僅取代相同時段"
 
 msgid "Replace the saved content of this report? Previous versions remain available in report versions."
 msgstr "取代此報表已儲存的內容？舊版本仍可在報表版本中檢視和還原。"
@@ -2526,6 +2535,9 @@ msgstr "較上期 {change:+.1f}h"
 
 msgid "{change:+d} days vs previous period"
 msgstr "較上期 {change:+d} 天"
+
+msgid "{count} dates already contain data."
+msgstr "已有 {count} 個日期包含資料。"
 
 msgid "{count} event"
 msgstr "{count} 個事件"

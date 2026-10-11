@@ -872,7 +872,7 @@ msgstr ""
 msgid "Import your .ics file to let AI read your meetings when generating reports."
 msgstr ""
 
-msgid "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
+msgid "Import {count} records and skip {errors} invalid rows?"
 msgstr ""
 
 msgid "Imported {count} calendar events."
@@ -1065,6 +1065,9 @@ msgid "March"
 msgstr ""
 
 msgid "Markdown files (*.md)"
+msgstr ""
+
+msgid "Matching periods preserves other records; different overlapping periods cancel the import. Replacing dates removes all time records on those dates. Back up data before replacing dates or importing memos."
 msgstr ""
 
 msgid "May"
@@ -1545,6 +1548,12 @@ msgid "Remove image"
 msgstr ""
 
 msgid "Replace"
+msgstr ""
+
+msgid "Replace affected dates"
+msgstr ""
+
+msgid "Replace matching periods"
 msgstr ""
 
 msgid "Replace the saved content of this report? Previous versions remain available in report versions."
@@ -2523,6 +2532,9 @@ msgid "{change:+.1f}h vs previous period"
 msgstr ""
 
 msgid "{change:+d} days vs previous period"
+msgstr ""
+
+msgid "{count} dates already contain data."
 msgstr ""
 
 msgid "{count} event"

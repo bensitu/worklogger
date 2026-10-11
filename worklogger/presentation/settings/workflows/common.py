@@ -113,24 +113,25 @@ def _save_path(
     return Path(path) if path else None
 
 
-def _confirm_csv_import(parent: QWidget, preview: WorkLogCsvImportPreview) -> bool:
-    message = _(
-        "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
-    ).format(
-        count=len(preview.rows),
-        existing=preview.existing_count,
-        errors=len(preview.errors),
-    )
-    return (
-        QMessageBox.question(
-            parent,
-            _("Import CSV"),
-            message,
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
-        )
-        == QMessageBox.StandardButton.Yes
-    )
+def _confirm_csv_import(parent: QWidget, preview: WorkLogCsvImportPreview) -> str | None:
+    message = _("Import {count} records and skip {errors} invalid rows?").format(
+        count=len(preview.rows), errors=len(preview.errors))
+    if not preview.existing_date_count:
+        answer = QMessageBox.question(parent, _("Import CSV"), message,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+        return "matching_periods" if answer == QMessageBox.StandardButton.Yes else None
+    box = QMessageBox(parent)
+    box.setWindowTitle(_("Import CSV"))
+    box.setIcon(QMessageBox.Icon.Warning)
+    box.setText(message + "\n\n" + _("{count} dates already contain data.").format(count=preview.existing_date_count))
+    box.setInformativeText(_("Matching periods preserves other records; different overlapping periods cancel the import. Replacing dates removes all time records on those dates. Back up data before replacing dates or importing memos."))
+    matching = box.addButton(_("Replace matching periods"), QMessageBox.ButtonRole.AcceptRole)
+    dates = box.addButton(_("Replace affected dates"), QMessageBox.ButtonRole.DestructiveRole)
+    cancel = box.addButton(QMessageBox.StandardButton.Cancel)
+    box.setDefaultButton(cancel)
+    box.setEscapeButton(cancel)
+    box.exec()
+    return "replace_dates" if box.clickedButton() is dates else "matching_periods" if box.clickedButton() is matching else None
 
 
 def _confirm_restore(parent: QWidget | None) -> bool:

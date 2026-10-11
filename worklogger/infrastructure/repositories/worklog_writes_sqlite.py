@@ -18,6 +18,7 @@ from worklogger.infrastructure.repositories._mapping import map_rows
 from worklogger.infrastructure.repositories.note_sqlite import save_note
 from worklogger.infrastructure.repositories.project_sqlite import validate_record_context
 from worklogger.infrastructure.repositories.entry_changes_sqlite import SQLiteEntryChanges
+from worklogger.infrastructure.repositories.import_conflicts_sqlite import remove_import_targets
 from worklogger.infrastructure.repositories.recent_context_sqlite import remember_context
 from worklogger.infrastructure.repositories.worklog_mapping_sqlite import WorkLogStorage
 from worklogger.infrastructure.repositories.worklog_queries_sqlite import (
@@ -34,8 +35,10 @@ class SQLiteWorkLogWrites:
     def save(self, work_log: WorkLog, *, expected_note: str | None = None) -> None:
         self._import_entries((normalize_work_log(work_log),), overwrite=True, expected_note=expected_note, daily_replacement=True)
 
-    def import_many(self, rows: tuple[WorkLog, ...], *, overwrite: bool = False, expected_note: str | None = None) -> None:
-        self._import_entries(tuple(normalize_work_log(row) for row in rows), overwrite=overwrite, expected_note=expected_note)
+    def import_many(self, rows: tuple[WorkLog, ...], *, overwrite: bool = False,
+                    replace_dates: bool = False, expected_note: str | None = None) -> None:
+        self._import_entries(tuple(normalize_work_log(row) for row in rows), overwrite=overwrite,
+                             replace_dates=replace_dates, expected_note=expected_note)
 
     def remove(self, user_id: int, day: date) -> None:
         with self._storage.connection_factory.transaction(write=True) as connection:
@@ -229,6 +232,7 @@ class SQLiteWorkLogWrites:
         overwrite: bool,
         expected_note: str | None,
         daily_replacement: bool = False,
+        replace_dates: bool = False,
     ) -> None:
         grouped = {}
         for record in records:
@@ -243,6 +247,7 @@ class SQLiteWorkLogWrites:
             ):
                 raise ValueError("worklog_entry_overlap")
         with self._storage.connection_factory.transaction() as connection:
+            before = {}
             for (user_id, day), entries in grouped.items():
                 if (
                     daily_replacement
@@ -267,11 +272,12 @@ class SQLiteWorkLogWrites:
                 if daily_replacement and len(entries) == 1:
                     save_note(connection, user_id, day, entries[0].note, expected_note)
                 if overwrite:
-                    connection.execute(
-                        "DELETE FROM worklog WHERE user_id=? AND d=?",
-                        (user_id, day.isoformat()),
-                    )
+                    if daily_replacement:
+                        connection.execute("DELETE FROM worklog WHERE user_id=? AND d=?", (user_id, day.isoformat()))
+                    else:
+                        before[user_id, day] = remove_import_targets(connection, self._storage, user_id, day, entries, replace_dates)
             cached_rows = {}
+            after = {}
             for record in records:
                 if not record.is_note_only:
                     self._check_overlap(connection, record, cached_rows=cached_rows)
@@ -289,7 +295,15 @@ class SQLiteWorkLogWrites:
                         expected_note,
                     )
                     continue
-                self._insert_entry(connection, record)
+                identity = self._insert_entry(connection, record)
+                after.setdefault((record.user_id, record.day), []).append(identity)
+            if overwrite and not daily_replacement:
+                for key, previous in before.items():
+                    current = self.changes.rows(connection, key[0], after.get(key, ()))
+                    if len(current) > 250:
+                        raise ValueError("record_change_too_large")
+                    if previous or current:
+                        self.changes.remember(connection, key[0], "import", previous, current)
 
     def _insert_entry(self, connection, record: WorkLog, *, historical=False, preserve_identity=False) -> int:
         columns = (

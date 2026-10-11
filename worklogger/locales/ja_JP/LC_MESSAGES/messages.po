@@ -874,8 +874,8 @@ msgstr "業務記録をCSVでインポート・エクスポートして、バッ
 msgid "Import your .ics file to let AI read your meetings when generating reports."
 msgstr ".icsファイルをインポートすると、AIがレポート作成時に会議情報を参照できます。"
 
-msgid "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
-msgstr "{count} 件を取り込み、既存の {existing} 件を置き換え、無効な {errors} 行をスキップしますか？"
+msgid "Import {count} records and skip {errors} invalid rows?"
+msgstr "{count} 件の記録をインポートし、無効な {errors} 行をスキップしますか？"
 
 msgid "Imported {count} calendar events."
 msgstr "{count}件のカレンダーの予定をインポートしました。"
@@ -1068,6 +1068,9 @@ msgstr "3月"
 
 msgid "Markdown files (*.md)"
 msgstr "Markdown files (*.md)"
+
+msgid "Matching periods preserves other records; different overlapping periods cancel the import. Replacing dates removes all time records on those dates. Back up data before replacing dates or importing memos."
+msgstr "同じ時間帯のみを置換すると他の記録は保持されます。開始・終了時刻が異なる重複がある場合はインポート全体を中止します。日付単位の置換は対象日のすべての時間記録を削除します。日付単位の置換や独立したメモのインポートの前に、データをバックアップしてください。"
 
 msgid "May"
 msgstr "5月"
@@ -1548,6 +1551,12 @@ msgstr "画像を削除"
 
 msgid "Replace"
 msgstr "置換"
+
+msgid "Replace affected dates"
+msgstr "対象日の全記録を置換"
+
+msgid "Replace matching periods"
+msgstr "同じ時間帯のみを置換"
 
 msgid "Replace the saved content of this report? Previous versions remain available in report versions."
 msgstr "保存済みの内容を置き換えますか？以前のバージョンは報告書のバージョンから確認・復元できます。"
@@ -2526,6 +2535,9 @@ msgstr "前期比 {change:+.1f}h"
 
 msgid "{change:+d} days vs previous period"
 msgstr "前期比 {change:+d} 日"
+
+msgid "{count} dates already contain data."
+msgstr "{count} 日に既存のデータがあります。"
 
 msgid "{count} event"
 msgstr "予定 {count} 件"

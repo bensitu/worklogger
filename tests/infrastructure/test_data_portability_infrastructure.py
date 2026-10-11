@@ -355,9 +355,9 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         handler = ImportWorkLogsCsvHandler(importer=WorkLogCsvImporter(), repository=repository)
         command = ImportWorkLogsCsvCommand(user, source)
         preview = handler.preview(command).value
-        self.assertEqual((len(preview.rows), len(preview.errors), preview.existing_count), (1, 2, 0))
+        self.assertEqual((len(preview.rows), len(preview.errors), preview.existing_date_count), (1, 2, 0))
         self.assertTrue(handler.apply(preview).ok)
-        self.assertEqual(handler.preview(command).value.existing_count, 1)
+        self.assertEqual(handler.preview(command).value.existing_date_count, 1)
         self.assertEqual(handler.handle(command).error.code, "csv_import_conflict")
         self.assertTrue(handler.handle(ImportWorkLogsCsvCommand(user, source, overwrite_existing=True)).ok)
         with self.assertRaises(sqlite3.IntegrityError):
@@ -382,6 +382,43 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
 
         self.assertFalse(exporter.export_work_logs(path, broken_rows()).ok)
         self.assertEqual(path.read_bytes(), original)
+
+    def test_csv_protected_text_round_trips_without_guessing_unmarked_apostrophes(self):
+        from worklogger.domain.projects.models import WorkContext
+        from worklogger.domain.worklog.models import CustomWorkType
+        path = Path(self._tempdir.name) / "protected.csv"
+        notes = ("- Task", "=1+1", "+Review", "@Owner", "'=literal", "'ordinary", "Line one\nLine two")
+        records = tuple(WorkLog(1, date(2026, 4, index + 1), "09:00", "10:00", note=note,
+            work_type=CustomWorkType("custom:" + "a" * 32, "+Research", "work"),
+            context=WorkContext(project_label="=Project", work_item_label="'Item")) for index, note in enumerate(notes))
+        self.assertTrue(WorkLogCsvExporter().export_work_logs(path, records).ok)
+        parsed = WorkLogCsvImporter().parse(path, 1).value
+        self.assertEqual(parsed.errors, ())
+        self.assertEqual(tuple(row.note for row in parsed.rows), notes)
+        self.assertTrue(all((row.work_type_label, row.project_label, row.work_item_label) ==
+                            ("+Research", "=Project", "'Item") for row in parsed.rows))
+        path.write_text("DATE,NOTE\n2026-04-20,'=literal\n", encoding="utf-8")
+        self.assertEqual(WorkLogCsvImporter().parse(path, 1).value.rows[0].note, "'=literal")
+
+    def test_csv_replacement_modes_preserve_other_periods_and_allow_record_undo(self):
+        user = self.register_user("csv-user")
+        repository = SQLiteWorkLogRepository(self.factory)
+        day = date(2026, 4, 20)
+        first = repository.save_entry(WorkLog(user, day, "09:00", "10:00", note="Original"))
+        second = repository.save_entry(WorkLog(user, day, "11:00", "12:00", note="Other period"))
+        replacement = WorkLog(user, day, "09:00", "10:00", note="Imported")
+        repository.import_many((replacement,), overwrite=True)
+        self.assertEqual([row.note for row in repository.list_for_day(user, day)], ["Imported", "Other period"])
+        change = repository.latest_change(user)
+        repository.undo_change(user, change.id)
+        self.assertEqual([row.id for row in repository.list_for_day(user, day)], [first.id, second.id])
+        with self.assertRaises(ValueError):
+            repository.import_many((WorkLog(user, day, "09:30", "10:30"),), overwrite=True)
+        self.assertEqual([row.id for row in repository.list_for_day(user, day)], [first.id, second.id])
+        repository.import_many((replacement,), overwrite=True, replace_dates=True)
+        self.assertEqual([row.note for row in repository.list_for_day(user, day)], ["Imported"])
+        repository.undo_change(user, repository.latest_change(user).id)
+        self.assertEqual([row.id for row in repository.list_for_day(user, day)], [first.id, second.id])
 
     def test_worklog_ics_export_escapes_folds_and_skips_leave_records(self) -> None:
         destination = Path(self._tempdir.name) / "exports" / "worklogs.ics"

@@ -38,12 +38,22 @@ Breaks remain decimal hours.
 Review the preview before confirmation. Multiple nonoverlapping periods may share
 a date. Explicit note-only rows import independent memos; ordinary record content
 does not overwrite them. Duplicate note-only dates and overlapping periods are
-invalid. Replacing existing dates requires explicit permission.
+invalid. When dates already contain data, choose either matching-period replacement
+or replacement of all time records on the affected dates. Matching-period
+replacement retains other periods and rejects different overlapping boundaries.
+Back up data before replacing dates or importing independent memos.
 Valid rows commit together or roll back together.
+Recent time-record replacements use the normal bounded undo history. A replaced
+date may contain at most 250 records, and each history snapshot is limited to
+1,048,576 serialized characters. Independent memo changes are not part of
+time-record undo.
 
 Imports are limited to 10 MiB and 50,000 rows. UTF-8 is preferred, with the selected
 language's legacy encoding as a fallback. Field boundaries are trimmed.
 Spreadsheet-sensitive exported text receives an apostrophe prefix.
+Exports containing protected text include `text_format=spreadsheet-safe-v1`.
+This marker allows import to restore formula-like text and literal apostrophes
+without guessing. Files without the marker retain their literal text.
 CSV is an exchange format, not a byte-for-byte database archive.
 
 ## iCalendar

@@ -15,6 +15,7 @@ from worklogger.app.use_cases.data_portability import (
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import get_language
+from worklogger.infrastructure.export.csv_text import decode_text
 
 
 class WorkLogCsvImporter:
@@ -42,7 +43,10 @@ class WorkLogCsvImporter:
                 text = data.decode(encoding)
             with io.StringIO(text, newline="") as handle:
                 reader = csv.DictReader(handle, strict=True)
-                headers = reader.fieldnames or []
+                headers = [str(header).strip().casefold() for header in (reader.fieldnames or [])]
+                if len(headers) != len(set(headers)):
+                    return Result.failure(ValidationError("csv_import_failed", "csv_import_failed"))
+                reader.fieldnames = headers
                 if not ({"date", "d"} & set(headers)):
                     return Result.failure(ValidationError("csv_import_failed", "csv_import_failed"))
                 for row_number, row in enumerate(reader, start=2):
@@ -84,17 +88,21 @@ def _parse_row(
             start_time=_optional(_field(row, "start")),
             end_time=_optional(_field(row, "end")),
             break_hours=float(break_text),
-            note=_field(row, "note"),
-            work_type=_field(row, "work_type") or "normal",
+            note=_text_field(row, "note"),
+            work_type=_text_field(row, "work_type") or "normal",
             started_at=datetime.fromisoformat(_field(row, "started_at")) if _field(row, "started_at") else None,
             ended_at=datetime.fromisoformat(_field(row, "ended_at")) if _field(row, "ended_at") else None,
-            work_type_label=_field(row, "work_type_label"),
+            work_type_label=_text_field(row, "work_type_label"),
             work_type_category=_field(row, "work_type_category"),
-            project_label=_field(row, "project_label"),
-            work_item_label=_field(row, "work_item_label"),
+            project_label=_text_field(row, "project_label"),
+            work_item_label=_text_field(row, "work_item_label"),
         )
-    except Exception as exc:
-        return WorkLogCsvRowError(row_number, str(exc))
+    except (TypeError, ValueError, OverflowError):
+        return WorkLogCsvRowError(row_number, "csv_import_failed")
+
+
+def _text_field(row: dict[str, str | None], key: str) -> str:
+    return decode_text(_field(row, key), _field(row, "text_format"))
 
 
 def _field(row: dict[str, str | None], key: str) -> str:

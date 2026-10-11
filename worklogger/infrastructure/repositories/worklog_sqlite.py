@@ -49,8 +49,9 @@ class SQLiteWorkLogRepository:
     def list_export_rows(self, user_id: int) -> tuple[WorkLog, ...]:
         return self._queries.list_export_rows(user_id)
 
-    def import_many(self, rows: tuple[WorkLog, ...], *, overwrite: bool = False, expected_note: str | None = None) -> None:
-        return self._writes.import_many(rows, overwrite=overwrite, expected_note=expected_note)
+    def import_many(self, rows: tuple[WorkLog, ...], *, overwrite: bool = False,
+                    replace_dates: bool = False, expected_note: str | None = None) -> None:
+        return self._writes.import_many(rows, overwrite=overwrite, replace_dates=replace_dates, expected_note=expected_note)
 
     def remove(self, user_id: int, day: date) -> None:
         return self._writes.remove(user_id, day)

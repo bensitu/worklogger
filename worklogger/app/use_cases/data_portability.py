@@ -56,7 +56,7 @@ class WorkLogCsvImportResult:
 class WorkLogCsvImportPreview:
     rows: tuple[WorkLog, ...]
     errors: tuple[WorkLogCsvRowError, ...] = ()
-    existing_count: int = 0
+    existing_date_count: int = 0
 
 
 class WorkLogCsvImporter(Protocol):
@@ -78,7 +78,7 @@ class ImportWorkLogsCsvHandler:
         preview = self.preview(command)
         if not preview.ok or preview.value is None:
             return Result.failure(preview.error)
-        return self.apply(preview.value, overwrite=command.overwrite_existing)
+        return self.apply(preview.value, overwrite=command.overwrite_existing, replace_dates=command.replace_dates)
 
     def preview(self, command: ImportWorkLogsCsvCommand) -> Result[WorkLogCsvImportPreview]:
         parsed = self._importer.parse(Path(command.source_path), command.user_id)
@@ -139,9 +139,10 @@ class ImportWorkLogsCsvHandler:
             return Result.failure(InfrastructureError("csv_import_failed", "csv_import_failed"))
         return Result.success(WorkLogCsvImportPreview(tuple(rows), tuple(errors), len(existing & dates)))
 
-    def apply(self, preview: WorkLogCsvImportPreview, *, overwrite: bool = False) -> Result[WorkLogCsvImportResult]:
+    def apply(self, preview: WorkLogCsvImportPreview, *, overwrite: bool = False,
+              replace_dates: bool = False) -> Result[WorkLogCsvImportResult]:
         try:
-            self._repository.import_many(preview.rows, overwrite=overwrite)
+            self._repository.import_many(preview.rows, overwrite=overwrite, replace_dates=replace_dates)
         except ValueError as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
         except Exception:

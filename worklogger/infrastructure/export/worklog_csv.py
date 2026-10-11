@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections.abc import Iterable
 from pathlib import Path
 import csv
-from worklogger.infrastructure.files import atomic_destination, spreadsheet_text
+from worklogger.infrastructure.files import atomic_destination
+from worklogger.infrastructure.export.csv_text import TEXT_FORMAT, encode_text, requires_encoding
 
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
@@ -26,11 +27,15 @@ class WorkLogCsvExporter:
             timestamps = any(row.started_at is not None or row.ended_at is not None for row in records)
             custom_types = any(isinstance(row.work_type, CustomWorkType) for row in records)
             work_context = any(row.context.label for row in records)
+            encoded = any(requires_encoding((row.note, _work_type_value(row.work_type),
+                row.work_type.label if isinstance(row.work_type, CustomWorkType) else "",
+                row.context.project_label, row.context.work_item_label)) for row in records)
             with atomic_destination(destination) as temporary, temporary.open("w", encoding="utf-8-sig", newline="") as handle:
                 writer = csv.writer(handle)
                 writer.writerow(self.HEADER + (("started_at", "ended_at") if timestamps else ())
                     + (("work_type_label", "work_type_category") if custom_types else ())
-                    + (("project_label", "work_item_label") if work_context else ()))
+                    + (("project_label", "work_item_label") if work_context else ())
+                    + (("text_format",) if encoded else ()))
                 for row in records:
                     writer.writerow(
                         [
@@ -38,12 +43,13 @@ class WorkLogCsvExporter:
                             row.start_time or "",
                             row.end_time or "",
                             row.break_hours,
-                            spreadsheet_text(row.note),
-                            spreadsheet_text(_work_type_value(row.work_type)),
+                            encode_text(row.note),
+                            encode_text(_work_type_value(row.work_type)),
                         ] + ([row.started_at.isoformat() if row.started_at else "", row.ended_at.isoformat() if row.ended_at else ""] if timestamps else [])
-                        + ([spreadsheet_text(row.work_type.label), row.work_type.category] if isinstance(row.work_type, CustomWorkType)
+                        + ([encode_text(row.work_type.label), row.work_type.category] if isinstance(row.work_type, CustomWorkType)
                            else ["", ""] if custom_types else [])
-                        + ([spreadsheet_text(row.context.project_label), spreadsheet_text(row.context.work_item_label)] if work_context else [])
+                        + ([encode_text(row.context.project_label), encode_text(row.context.work_item_label)] if work_context else [])
+                        + ([TEXT_FORMAT] if encoded else [])
                     )
         except Exception as exc:
             return Result.failure(

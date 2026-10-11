@@ -93,6 +93,8 @@ class WorkLogRuleTests(unittest.TestCase):
         self.assertEqual(parse_time("１２：３０"), "12:30")
         self.assertEqual(parse_time("９３０"), "09:30")
         self.assertEqual(parse_time("９．３０"), "09:30")
+        for value in ("1:2:3", "12::30", "１：２：３"):
+            self.assertIsNone(parse_time(value))
 
     def test_overnight_calculation_and_shift_datetimes(self) -> None:
         self.assertTrue(is_overnight_shift("22:00", "09:00"))

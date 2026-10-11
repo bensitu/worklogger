@@ -874,8 +874,8 @@ msgstr "Import or export worklog records as CSV files for backup, migration, or 
 msgid "Import your .ics file to let AI read your meetings when generating reports."
 msgstr "Import your .ics file to let AI read your meetings when generating reports."
 
-msgid "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
-msgstr "Import {count} records, replace {existing} existing records, and skip {errors} invalid rows?"
+msgid "Import {count} records and skip {errors} invalid rows?"
+msgstr "Import {count} records and skip {errors} invalid rows?"
 
 msgid "Imported {count} calendar events."
 msgstr "Imported {count} calendar events."
@@ -1068,6 +1068,9 @@ msgstr "March"
 
 msgid "Markdown files (*.md)"
 msgstr "Markdown files (*.md)"
+
+msgid "Matching periods preserves other records; different overlapping periods cancel the import. Replacing dates removes all time records on those dates. Back up data before replacing dates or importing memos."
+msgstr "Matching periods preserves other records; different overlapping periods cancel the import. Replacing dates removes all time records on those dates. Back up data before replacing dates or importing memos."
 
 msgid "May"
 msgstr "May"
@@ -1548,6 +1551,12 @@ msgstr "Remove image"
 
 msgid "Replace"
 msgstr "Replace"
+
+msgid "Replace affected dates"
+msgstr "Replace affected dates"
+
+msgid "Replace matching periods"
+msgstr "Replace matching periods"
 
 msgid "Replace the saved content of this report? Previous versions remain available in report versions."
 msgstr "Replace the saved content of this report? Previous versions remain available in report versions."
@@ -2526,6 +2535,9 @@ msgstr "{change:+.1f}h vs previous period"
 
 msgid "{change:+d} days vs previous period"
 msgstr "{change:+d} days vs previous period"
+
+msgid "{count} dates already contain data."
+msgstr "{count} dates already contain data."
 
 msgid "{count} event"
 msgstr "{count} event"

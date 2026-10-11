@@ -39,7 +39,7 @@ class IcsImportHandler(Protocol):
 
 class WorkLogCsvImportHandler(Protocol):
     def preview(self, command: ImportWorkLogsCsvCommand) -> Result[WorkLogCsvImportPreview]: ...
-    def apply(self, preview: WorkLogCsvImportPreview, *, overwrite: bool = False) -> Result[WorkLogCsvImportResult]: ...
+    def apply(self, preview: WorkLogCsvImportPreview, *, overwrite: bool = False, replace_dates: bool = False) -> Result[WorkLogCsvImportResult]: ...
     def handle(self, command: ImportWorkLogsCsvCommand) -> Result[WorkLogCsvImportResult]:
         ...
 
@@ -177,16 +177,17 @@ class DataManagementViewModel:
         return self._csv_import_handler.preview(ImportWorkLogsCsvCommand(self._user_id, Path(source)))
 
     def import_csv(self, source: Path, *, preview: WorkLogCsvImportPreview | None = None,
-                   overwrite: bool = False) -> Result[DataManagementActionState]:
+                   overwrite: bool = False, replace_dates: bool = False) -> Result[DataManagementActionState]:
         if self._csv_import_handler is None:
             return Result.failure(
                 ValidationError("csv_import_unavailable", "csv_import_unavailable")
             )
-        result = self._csv_import_handler.apply(preview, overwrite=overwrite) if preview is not None else self._csv_import_handler.handle(
+        result = self._csv_import_handler.apply(preview, overwrite=overwrite, replace_dates=replace_dates) if preview is not None else self._csv_import_handler.handle(
             ImportWorkLogsCsvCommand(
                 user_id=self._user_id,
                 source_path=Path(source),
                 overwrite_existing=overwrite,
+                replace_dates=replace_dates,
             )
         )
         if not result.ok or result.value is None:

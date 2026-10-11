@@ -14,6 +14,8 @@ def parse_time(raw: str | None) -> str | None:
     if raw is None or not str(raw).strip():
         return None
     text = str(raw).strip().translate(str.maketrans("０１２３４５６７８９：．", "0123456789:."))
+    if text.count(":") > 1:
+        return None
     if "." in text:
         hour_text, _separator, minute_text = text.partition(".")
         if not hour_text.isdecimal() or len(minute_text) != 2 or not minute_text.isdecimal():
