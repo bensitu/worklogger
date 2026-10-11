@@ -56,6 +56,7 @@ class ShellLayoutChecks(unittest.TestCase):
         from tests.presentation.test_app_window import _entry_model
         from tests.background_samples import still_background_bytes
         from worklogger.domain.settings.background import BackgroundState
+        from worklogger.domain.calendar.models import Holiday
         from worklogger.domain.shared.result import Result
         from worklogger.infrastructure.images.background import validate_background_data
         from worklogger.presentation.job_runner import ImmediateJobRunner
@@ -69,6 +70,11 @@ class ShellLayoutChecks(unittest.TestCase):
         media = BackgroundState(validate_background_data(still_background_bytes()), True, 50)
         service = SimpleNamespace(load=lambda: Result.success(media))
         projects = SimpleNamespace(catalog=lambda: Result.success(((), {})), recent_contexts=lambda: Result.success(()))
+
+        class Holidays:
+            def handle(self, query):
+                return Result.success(tuple(Holiday(day, "Sample holiday") for day in
+                    (date(2026, 9, 28), date(2026, 10, 12), date(2026, 11, 2)) if query.start_day <= day <= query.end_day))
 
         class Settings:
             def create_dialog(self, parent):
@@ -90,6 +96,7 @@ class ShellLayoutChecks(unittest.TestCase):
                     entry_model.service.projects = projects
                     view = MinimalView(time_entry_view_model=entry_model, settings_workflow=workflow,
                         notes_workflow=SimpleNamespace(open=lambda *_args: None), job_runner=ImmediateJobRunner(),
+                        holidays_handler=Holidays(), holiday_country="JP",
                         background_service=service, config=MinimalViewConfig(selected_day=date(2026, 4, 20),
                             today=date(2026, 4, 20), account_name="Alex Morgan", theme="green", dark=dark))
                     dialog = None

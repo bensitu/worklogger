@@ -412,6 +412,8 @@ def _build_runtime_for_user(
                 ),
                 window_config=window_config,
                 background_service=BackgroundService(user.id, repositories.background_images, QtBackgroundImageLoader()),
+                holidays_handler=GetHolidaysForRangeHandler(handlers.holiday_provider),
+                holiday_country=handlers.holiday_country,
                 settings_workflow=settings_workflow,
                 residency_controller=residency_controller,
                 job_runner=job_runner,
@@ -486,6 +488,8 @@ def _build_minimal_view(
     residency_controller: QtResidencyController,
     job_runner: JobRunner | None,
     background_service: BackgroundService,
+    holidays_handler: GetHolidaysForRangeHandler,
+    holiday_country: str,
 ) -> MinimalView:
     return MinimalView(
         time_entry_view_model=time_entry_view_model,
@@ -499,6 +503,8 @@ def _build_minimal_view(
             background_images_available=window_config.background_images_available,
             show_recent_context=window_config.show_recent_context,
             week_start_monday=window_config.calendar_options.week_start_monday,
+            show_holidays=window_config.calendar_options.show_holidays,
+            holiday_region=window_config.calendar_options.holiday_region,
             confirm_discard_changes=window_config.confirm_discard_changes,
         ),
         settings_workflow=settings_workflow,
@@ -506,6 +512,8 @@ def _build_minimal_view(
         residency_controller=residency_controller,
         job_runner=job_runner,
         background_service=background_service,
+        holidays_handler=holidays_handler,
+        holiday_country=holiday_country,
     )
 
 

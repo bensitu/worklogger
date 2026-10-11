@@ -751,6 +751,11 @@ QCalendarWidget#date_picker_calendar_widget QWidget#qt_calendar_navigationbar {
   background: {{ surface }};
 }
 
+QLabel#date_picker_holiday_status_label {
+  color: {{ danger }};
+  padding: 2px 4px;
+}
+
 QCalendarWidget#date_picker_calendar_widget QToolButton {
   min-width: 24px;
   min-height: 24px;

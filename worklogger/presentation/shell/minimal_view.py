@@ -35,6 +35,7 @@ from worklogger.presentation.widgets._style import refresh_style_tree
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
 from worklogger.presentation.widgets.date_picker import DatePickerButton
+from worklogger.presentation.widgets.date_picker_holidays import DatePickerHolidaysController
 from worklogger.presentation.widgets.time_entries import TimeEntryPanel
 from worklogger.presentation.widgets.time_entry_history import TimeEntryHistory
 
@@ -51,6 +52,8 @@ class MinimalViewConfig:
     custom_color: str | None = None
     background_images_available: bool = True
     week_start_monday: bool = False
+    show_holidays: bool = True
+    holiday_region: str = ""
 
 
 class MinimalView(QWidget):
@@ -66,6 +69,8 @@ class MinimalView(QWidget):
         residency_controller: QtResidencyController | None = None,
         job_runner=None,
         background_service=None,
+        holidays_handler=None,
+        holiday_country="",
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -88,6 +93,9 @@ class MinimalView(QWidget):
         self.setWindowTitle(_("WorkLogger"))
         apply_window_icon(self)
         self._build_ui()
+        self.date_picker_holidays = DatePickerHolidaysController(self.date_button, holidays_handler,
+            country=holiday_country, enabled=self._config.show_holidays, region=self._config.holiday_region,
+            job_runner=self._job_runner)
         self.apply_theme()
         self.background_controller = BackgroundController(self._background_surface, background_service,
             available=self._config.background_images_available, job_runner=self._job_runner)
@@ -276,6 +284,8 @@ class MinimalView(QWidget):
 
     def apply_theme(self):
         engine = ThemeEngine()
+        self.date_button.set_colors(engine.palette(self._config.theme, dark=self._config.dark,
+                                                  custom_color=self._config.custom_color))
         self._background_surface.set_base_color(engine.palette(self._config.theme, dark=self._config.dark,
                                                               custom_color=self._config.custom_color).surface)
         application = QApplication.instance()
@@ -311,6 +321,7 @@ class MinimalView(QWidget):
         if isinstance(self.entry_panel, TimeEntryPanel):
             self.entry_panel.auto_timer.stop()
         self.background_controller.dispose()
+        self.date_picker_holidays.dispose()
         self._background_surface.shutdown()
         self._date_timer.stop()
         super().closeEvent(event)
@@ -453,8 +464,10 @@ class MinimalView(QWidget):
         self._time_entry_view_model.set_default_break_hours(state.default_break_hours)
         self._config = replace(self._config, show_recent_context=state.show_recent_context,
                                theme=state.theme, dark=state.dark_mode, custom_color=state.custom_color,
-                               week_start_monday=state.week_start_monday)
+                               week_start_monday=state.week_start_monday, show_holidays=state.show_holidays,
+                               holiday_region=state.holiday_region)
         self.date_button.set_week_start_monday(state.week_start_monday)
+        self.date_picker_holidays.configure(enabled=state.show_holidays, region=state.holiday_region)
         self.entry_panel.context_picker.recent_button.setVisible(state.show_recent_context)
         self._time_entry_view_model.set_timer_reminders(state.timer_reminder_hours, state.continuous_timer_reminder_hours)
         self.apply_theme()
