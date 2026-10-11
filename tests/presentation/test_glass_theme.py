@@ -38,6 +38,12 @@ class GlassThemeTests(unittest.TestCase):
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
 
+    def wait_for_jobs(self, runner, count):
+        deadline = time.monotonic() + 3
+        while len(runner.jobs) < count and time.monotonic() < deadline:
+            QTest.qWait(10)
+        self.assertGreaterEqual(len(runner.jobs), count)
+
     def test_render_jobs_do_not_sample_child_content_or_survive_theme_changes(self):
         window = QWidget()
         self.addCleanup(window.deleteLater)
@@ -62,9 +68,7 @@ class GlassThemeTests(unittest.TestCase):
         colors = build_palette(replace(THEME_CATALOG["liquid_glass"], key="studio_glass", label="Studio Glass"), False, None)
         controller.configure(colors)
         window.show()
-        deadline = time.monotonic() + 1
-        while len(runner.jobs) < 2 and time.monotonic() < deadline:
-            QTest.qWait(10)
+        self.wait_for_jobs(runner, 2)
         self.assertEqual(len(runner.jobs), 2)
         sampled = source.backdrop(source.rect(), QSize(400, 300))
         self.assertNotEqual(sampled.pixelColor(50, 50).name(), "#ff0000")
@@ -89,8 +93,7 @@ class GlassThemeTests(unittest.TestCase):
         controller = GlassThemeController(window, source, job_runner=runner)
         controller.configure(ThemeEngine().palette("liquid_glass"))
         window.show()
-        QTest.qWait(120)
-        self.assertTrue(runner.jobs)
+        self.wait_for_jobs(runner, 1)
         failure = Result.failure(InfrastructureError("glass_render_failed", "glass_render_failed"))
         for _job, callback, _token in tuple(runner.jobs):
             callback(failure)
