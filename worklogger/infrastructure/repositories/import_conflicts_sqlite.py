@@ -1,12 +1,15 @@
 """Select CSV replacement targets without deleting unrelated time records."""
 
+from datetime import timezone
+
 def matching_period(left, right):
     if left.is_note_only or right.is_note_only:
         return False
     if (left.start_time, left.end_time) != (right.start_time, right.end_time):
         return False
     if all(moment is not None for moment in (left.started_at, left.ended_at, right.started_at, right.ended_at)):
-        return (left.started_at, left.ended_at) == (right.started_at, right.ended_at)
+        return (left.started_at.astimezone(timezone.utc), left.ended_at.astimezone(timezone.utc)) == (
+            right.started_at.astimezone(timezone.utc), right.ended_at.astimezone(timezone.utc))
     return True
 
 

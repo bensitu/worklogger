@@ -317,8 +317,9 @@ class SetPasswordChangeRequiredHandler:
 
 
 class DeleteManagedUserHandler:
-    def __init__(self, credentials: AuthCredentialRepository) -> None:
+    def __init__(self, credentials: AuthCredentialRepository, *, cleanup_credentials=None) -> None:
         self._credentials = credentials
+        self._cleanup_credentials = cleanup_credentials
 
     @storage_boundary("auth_state_failed")
     def handle(self, command: DeleteManagedUserCommand) -> Result[None]:
@@ -336,6 +337,10 @@ class DeleteManagedUserHandler:
             return Result.failure(
                 ConflictError("cannot_delete_last_admin", "cannot_delete_last_admin")
             )
+        if self._cleanup_credentials is not None:
+            cleared = self._cleanup_credentials(target.id)
+            if not cleared.ok:
+                return Result.failure(cleared.error)
         if not self._credentials.delete_user(target.id):
             return Result.failure(NotFoundError("user_not_found", "user_not_found"))
         return Result.success(None)

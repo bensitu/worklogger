@@ -55,6 +55,9 @@ does not reconstruct a key from host names or network identifiers. If that key i
 unavailable, re-enter the credential; stored ciphertext is retained. Rotate old
 API keys or proxy passwords if historical backups may have been exposed.
 Failed credential deletion is reported instead of treated as a successful removal.
+Account deletion clears system credentials first; if the credential backend is
+unavailable, deletion is refused and the account is retained. Credential names
+remain stable for existing accounts.
 
 Do not regenerate or delete an unreadable key to silence a warning; preserve it
 before recovery. Database backup does not transfer OS keyring entries or session

@@ -60,6 +60,7 @@ from worklogger.composition.identity import identity_providers
 from worklogger.infrastructure.identity.config import IdentityConfigurationStore
 from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
 from worklogger.infrastructure.runtime_config import load_runtime_configuration
+from worklogger.infrastructure.security.account_credentials import cleanup_account_credentials
 from worklogger.presentation.auth.controller import RememberSessionStore
 from worklogger.presentation.identity import IdentityWorkflowController
 from worklogger.presentation.settings import SettingsWorkflowController
@@ -130,6 +131,7 @@ def _build_settings_workflow(
         user_management_view_model=_build_user_management_view_model(
             user,
             auth_repository,
+            database_path=database_path,
         ),
         remember_session_store=remember_session_store,
         work_types_view_model=WorkTypeManagerViewModel(WorkTypeService(user.id, repositories.work_types)),
@@ -178,6 +180,7 @@ def _build_data_management_view_model(
 def _build_user_management_view_model(
     user: User,
     auth_repository: RuntimeAuthRepository | None,
+    *, database_path,
 ) -> UserManagementViewModel | None:
     if auth_repository is None or not user.is_admin:
         return None
@@ -189,7 +192,8 @@ def _build_user_management_view_model(
         set_password_change_required_handler=SetPasswordChangeRequiredHandler(
             auth_repository
         ),
-        delete_user_handler=DeleteManagedUserHandler(auth_repository),
+        delete_user_handler=DeleteManagedUserHandler(auth_repository, cleanup_credentials=lambda user_id:
+            cleanup_account_credentials(user_id, database_path)),
     )
 
 

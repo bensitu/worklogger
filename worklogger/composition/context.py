@@ -51,13 +51,13 @@ from worklogger.infrastructure.local_model import JsonLocalModelStore, bundled_m
 from worklogger.config.feature_flags import FeatureFlags
 from pathlib import Path
 import os
-import hashlib
 from worklogger.app.use_cases.settings import ProxyPasswordSettings
 from worklogger.infrastructure.network import AccountHTTPTransport
 from worklogger.infrastructure.ai.account import AccountAIGateway
 from worklogger.infrastructure.repositories.project_sqlite import SQLiteProjectRepository
 from worklogger.infrastructure.repositories.background_sqlite import SQLiteBackgroundRepository
 from worklogger.infrastructure.security.key_store import EncryptedSettingsKeyStore, SystemCredentialStore, FernetSecretBox
+from worklogger.infrastructure.security.account_credentials import account_credential_namespaces
 from worklogger.infrastructure.local_model.store import HttpRangeDownloader
 
 
@@ -126,9 +126,9 @@ def _runtime_handlers(
     inference = None
     transport = gateway = external_keys = proxy_password = None
     if user_id is not None and database_path is not None:
-        namespace = str(Path(database_path).resolve())
+        external_service, namespace = account_credential_namespaces(user_id, database_path)
         external_keys = EncryptedSettingsKeyStore(repositories.settings, user_id=user_id,
-            service_name="worklogger.external." + hashlib.sha256((namespace + ":" + str(user_id)).encode()).hexdigest())
+            service_name=external_service)
         proxy_password = ProxyPasswordSettings(repositories.settings, SystemCredentialStore(namespace=namespace),
                                                user_id=user_id, secret_box=FernetSecretBox())
         transport = AccountHTTPTransport(settings=repositories.settings, user_id=user_id, proxy_password=proxy_password)

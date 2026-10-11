@@ -32,6 +32,21 @@ from worklogger.infrastructure.security import PBKDF2PasswordHasher
 
 
 class DataPortabilityInfrastructureTests(unittest.TestCase):
+    def test_csv_matching_uses_captured_instants_for_repeated_clock_hours(self):
+        from datetime import datetime
+        user = self.register_user("repeated-hour")
+        repository = SQLiteWorkLogRepository(self.factory)
+        day, zone = date(2026, 11, 1), ZoneInfo("America/New_York")
+        records = [WorkLog(user, day, "01:15", "01:45", note=f"Occurrence {fold}",
+            started_at=datetime(2026, 11, 1, 1, 15, tzinfo=zone, fold=fold),
+            ended_at=datetime(2026, 11, 1, 1, 45, tzinfo=zone, fold=fold)) for fold in (0, 1)]
+        for record in records:
+            repository.save_entry(record)
+        from dataclasses import replace
+        repository.import_many((replace(records[1], note="Imported second occurrence"),), overwrite=True)
+        self.assertEqual([record.note for record in repository.list_for_day(user, day)],
+                         ["Occurrence 0", "Imported second occurrence"])
+
     def test_restore_requires_confirmed_delete_journal_mode(self):
         from unittest.mock import Mock
         connection = Mock()
