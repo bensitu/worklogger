@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from contextlib import ExitStack
+from contextlib import contextmanager
 from datetime import date
 import os
 from pathlib import Path
@@ -76,7 +76,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
         from worklogger.infrastructure.local_model import JsonLocalModelStore
         from worklogger.app.use_cases.local_models import ListLocalModelsHandler
         from worklogger.app.queries.local_model_queries import ListLocalModelsQuery
-        with tempfile.TemporaryDirectory() as directory:
+        with self.runtime_directory() as directory:
             root = Path(directory)
             source = root / "sample.gguf"
             source.write_bytes(b"synthetic model fixture")
@@ -139,6 +139,23 @@ class RuntimeBootstrapTests(unittest.TestCase):
             "worklogger.infrastructure.language_preferences.detect_system_language", return_value="en_US"))
         self.addCleanup(set_language, "en_US")
 
+    @contextmanager
+    def runtime_directory(self):
+        from PySide6.QtWidgets import QApplication
+        from worklogger.presentation.job_runner import QtJobRunner
+
+        application = QApplication.instance()
+        existing = set(application.findChildren(QtJobRunner)) if application else set()
+        with tempfile.TemporaryDirectory() as directory:
+            try:
+                yield directory
+            finally:
+                application = QApplication.instance()
+                if application is not None:
+                    for runner in application.findChildren(QtJobRunner):
+                        if runner not in existing:
+                            runner.shutdown(wait=True)
+
     def new_preferences(self):
         return LanguagePreferences(QSettings(str(self.preferences_path), QSettings.Format.IniFormat))
 
@@ -146,7 +163,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
         with patch.dict(os.environ, {
             "WORKLOGGER_FEATURE_AI": "0", "WORKLOGGER_FEATURE_LOCAL_MODELS": "0",
             "WORKLOGGER_FEATURE_UPDATE_CHECK": "0",
-        }), tempfile.TemporaryDirectory() as directory:
+        }), self.runtime_directory() as directory:
             result = build_authenticated_desktop_runtime(
                 DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db", password_iterations=1_000),
                 argv=[], auth_controller_factory=AutoRegisterAuthenticator,
@@ -163,7 +180,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 result.value.window.close()
 
     def test_first_login_is_translated_before_authentication(self):
-        with tempfile.TemporaryDirectory() as directory:
+        with self.runtime_directory() as directory:
             for language in ("en_US", "ja_JP", "ko_KR", "zh_CN", "zh_TW"):
                 self.system_language.return_value = language
 
@@ -185,7 +202,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
 
     def test_first_account_inherits_language_and_manual_choice_reaches_next_login(self):
         self.system_language.return_value = "ja_JP"
-        with tempfile.TemporaryDirectory() as directory:
+        with self.runtime_directory() as directory:
             config = DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db", password_iterations=1_000)
             first = build_authenticated_desktop_runtime(config, argv=[], auth_controller_factory=AutoRegisterAuthenticator)
             self.assertTrue(first.ok, first.error)
@@ -214,7 +231,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
         expected = {holiday.day: holiday.name for holiday in PythonHolidaysProvider().list_for_range(
             "JP", date(2026, 5, 1), date(2026, 5, 31))}
         self.assertIn(date(2026, 5, 4), expected)
-        with tempfile.TemporaryDirectory() as directory, patch("worklogger.bootstrap.detect_country", return_value="JP"), patch.object(QMessageBox, "information"):
+        with self.runtime_directory() as directory, patch("worklogger.bootstrap.detect_country", return_value="JP"), patch.object(QMessageBox, "information"):
             config = DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db",
                 create_user_if_empty=True, password_iterations=1_000,
                 window=AppWindowConfig(selected_day=date(2026, 5, 4), today=date(2026, 5, 15)))
@@ -269,7 +286,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 window.close()
 
     def test_minimal_mode_logout_remains_available_only_in_settings_account(self):
-        with tempfile.TemporaryDirectory() as directory:
+        with self.runtime_directory() as directory:
             config = DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db",
                                           create_user_if_empty=True, password_iterations=1_000)
             first = build_desktop_runtime(config, argv=[])
@@ -300,7 +317,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 window.close()
 
     def test_legacy_admin_can_authenticate_after_startup_migration(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
+        with self.runtime_directory() as directory:
             path = Path(directory) / "worklog.db"
             _, _, admin_id = released_database(path)
 
@@ -331,7 +348,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                     runtime.value.window.close()
 
     def test_saved_settings_apply_on_restart(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
+        with self.runtime_directory() as directory:
             config = DesktopRuntimeConfig(
                 database_path=Path(directory) / "worklog.db",
                 create_user_if_empty=True, password_iterations=1_000,
@@ -370,7 +387,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 set_language("en_US")
 
     def test_runtime_bootstrap_builds_sqlite_backed_app_window(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
+        with self.runtime_directory() as directory:
             database_path = Path(directory) / "worklog.db"
 
             runtime = build_desktop_runtime(
@@ -423,7 +440,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             runtime.value.window.close()
 
     def test_runtime_bootstrap_switches_to_minimal_view_from_user_setting(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
+        with self.runtime_directory() as directory:
             database_path = Path(directory) / "worklog.db"
             first = build_desktop_runtime(
                 DesktopRuntimeConfig(
@@ -481,7 +498,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                     fallback.value.window.close()
 
     def test_minimal_runtime_restores_theme_timer_and_full_settings(self):
-        with tempfile.TemporaryDirectory() as directory:
+        with self.runtime_directory() as directory:
             configuration = DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db",
                                                   create_user_if_empty=True, password_iterations=1_000)
             first = build_desktop_runtime(configuration, argv=[])
@@ -528,7 +545,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 restored.value.job_runner.shutdown(wait=True)
 
     def test_runtime_bootstrap_rejects_empty_database_without_bootstrap_user(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
+        with self.runtime_directory() as directory:
             runtime = build_desktop_runtime(
                 DesktopRuntimeConfig(
                     database_path=Path(directory) / "worklog.db",
@@ -542,7 +559,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             self.assertEqual(runtime.error.code if runtime.error else "", "runtime_user_required")
 
     def test_authenticated_runtime_registers_first_user_before_window(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
+        with self.runtime_directory() as directory:
             runtime = build_authenticated_desktop_runtime(
                 DesktopRuntimeConfig(
                     database_path=Path(directory) / "worklog.db",
@@ -567,7 +584,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             runtime.value.window.close()
 
     def test_runtime_builders_share_remember_session_store_instance(self) -> None:
-        with tempfile.TemporaryDirectory() as first_directory, ExitStack() as first_cleanup:
+        with self.runtime_directory() as first_directory:
             first = build_desktop_runtime(
                 DesktopRuntimeConfig(
                     database_path=Path(first_directory) / "worklog.db",
@@ -578,10 +595,8 @@ class RuntimeBootstrapTests(unittest.TestCase):
             )
             self.assertTrue(first.ok, first.error)
             assert first.value is not None
-            first_cleanup.callback(first.value.job_runner.shutdown, wait=True)
-            first_cleanup.callback(first.value.window.close)
 
-            with tempfile.TemporaryDirectory() as second_directory, ExitStack() as second_cleanup:
+            with self.runtime_directory() as second_directory:
                 second = build_authenticated_desktop_runtime(
                     DesktopRuntimeConfig(
                         database_path=Path(second_directory) / "worklog.db",
@@ -592,8 +607,6 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 )
                 self.assertTrue(second.ok, second.error)
                 assert second.value is not None
-                second_cleanup.callback(second.value.job_runner.shutdown, wait=True)
-                second_cleanup.callback(second.value.window.close)
 
                 self.assertIs(
                     first.value.remember_session_store,
@@ -603,9 +616,11 @@ class RuntimeBootstrapTests(unittest.TestCase):
                     getattr(second.value.window, "_settings_workflow")._account_workflow._remember_session_store,
                     second.value.remember_session_store,
                 )
+                second.value.window.close()
+            first.value.window.close()
 
     def test_update_checker_url_comes_from_constants(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
+        with self.runtime_directory() as directory:
             runtime = build_authenticated_desktop_runtime(
                 DesktopRuntimeConfig(
                     database_path=Path(directory) / "worklog.db",
@@ -623,7 +638,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             runtime.value.window.close()
 
     def test_authenticated_runtime_stops_when_auth_is_cancelled(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
+        with self.runtime_directory() as directory:
             runtime = build_authenticated_desktop_runtime(
                 DesktopRuntimeConfig(
                     database_path=Path(directory) / "worklog.db",

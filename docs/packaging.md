@@ -34,12 +34,19 @@ python scripts/lock_environment.py requirements/target.lock.json --capture
 
 Install native inference with `scripts/install_native_dependencies.py` before
 capturing a lock. The installer selects the pinned Metal wheel on macOS and the
-pinned CPU wheel on Windows/Linux. Lock capture retains compatible prefetched
+pinned CPU wheel on Windows. On Linux it builds the pinned source distribution
+against the target system's C library, using a portable CPU configuration.
+Linux builds require a C++ compiler and build tools (`build-essential` on Ubuntu).
+Lock capture retains compatible prefetched
 wheels and records their hashes; publish those wheels with the lock when an
 offline or hash-pinned rebuild is required. Legacy locks that omit
 `requirements-ai.txt` must be regenerated on the target before distribution.
 Review dependency updates and advisories; hashes establish artifact identity,
 not security.
+
+CI runs tests, native runtime verification, packaging, and extracted-archive
+verification on Windows x64, Linux x64, and macOS ARM64 with Python 3.11 and 3.12.
+Artifact names include the Python version to distinguish build environments.
 
 ## Build Commands
 
