@@ -1,4 +1,4 @@
-QFrame#date_picker_popup_frame {
+QWidget#date_picker_popup_frame {
   background: {{ surface }};
   border: 1px solid {{ border_strong }};
   border-radius: 8px;

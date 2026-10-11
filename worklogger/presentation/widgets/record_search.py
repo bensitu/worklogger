@@ -15,6 +15,7 @@ from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_code, display_error_message
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.widgets.date_picker import configure_calendar_popup
 from worklogger.presentation.work_type_labels import work_type_label
 from worklogger.presentation.date_labels import duration_label
 
@@ -51,7 +52,7 @@ class RecordSearchDialog(QDialog):
         for field, caption, value in ((self.start_input, _("From"), selected_day.replace(day=1)),
                                      (self.end_input, _("To"), selected_day)):
             field.setDisplayFormat("yyyy-MM-dd")
-            field.setCalendarPopup(True)
+            configure_calendar_popup(field)
             field.setDateRange(date.min, date.max)
             field.setDate(value)
             field.setAccessibleName(caption)

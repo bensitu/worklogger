@@ -3,13 +3,14 @@
 from datetime import date
 from html import escape
 
-from PySide6.QtCore import QDate, QEvent, QLocale, QPoint, QRect, Qt, Signal
-from PySide6.QtGui import QColor, QKeySequence, QPainter, QPalette, QShortcut, QTextCharFormat
+from PySide6.QtCore import QDate, QEvent, QLocale, QPoint, QRect, Qt, QTimer, Signal, Slot
+from PySide6.QtGui import QColor, QKeySequence, QPainter, QShortcut, QTextCharFormat
 from PySide6.QtWidgets import QCalendarWidget, QFrame, QPushButton, QSizePolicy, QSpinBox, QTableView, QToolButton, QToolTip, QVBoxLayout
 
 from worklogger.infrastructure.i18n import _, get_language
 from worklogger.presentation.date_labels import day_label
 from worklogger.presentation.theme import ThemeEngine
+from worklogger.presentation.theme.context import current_colors
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets._style import apply_numeric_input_padding
 from worklogger.presentation.widgets.status_label import StatusLabel
@@ -18,18 +19,55 @@ from worklogger.presentation.widgets.status_label import StatusLabel
 class MonthCalendar(QCalendarWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._colors = current_colors()
+        self._follow_application_theme = True
+        self._holidays = {}
+        self._cell_rects = {}
+        self._appearance_timer = QTimer(self)
+        self._appearance_timer.setSingleShot(True)
+        self._appearance_timer.timeout.connect(self._sync_appearance)
+        self.setObjectName("date_picker_calendar_widget")
+        self.setVerticalHeaderFormat(QCalendarWidget.VerticalHeaderFormat.NoVerticalHeader)
+        self.setLocale(QLocale(get_language()))
         year_editor = self.findChild(QSpinBox, "qt_calendar_yearedit")
         if year_editor is not None:
             apply_numeric_input_padding(year_editor)
-        self._colors = ThemeEngine().palette()
-        self._holidays = {}
-        self._cell_rects = {}
+        for name, icon, caption in (("qt_calendar_prevmonth", "chevron-left", _("Previous month")),
+                                    ("qt_calendar_nextmonth", "chevron-right", _("Next month"))):
+            button = self.findChild(QToolButton, name)
+            if button is not None:
+                set_button_icon(button, icon)
+                button.setToolTip(caption)
+                button.setAccessibleName(caption)
         self.findChild(QTableView).viewport().installEventFilter(self)
         self.currentPageChanged.connect(lambda *_args: self._cell_rects.clear())
+        self._sync_appearance()
 
     def set_colors(self, colors):
+        self._follow_application_theme = False
         self._colors = colors
+        self._sync_appearance()
+
+    @Slot()
+    def _sync_appearance(self):
+        if self._follow_application_theme:
+            self._colors = current_colors()
+        weekend = QTextCharFormat()
+        weekend.setForeground(QColor(self._colors.accent))
+        for day in (Qt.DayOfWeek.Saturday, Qt.DayOfWeek.Sunday):
+            self.setWeekdayTextFormat(day, weekend)
         self.updateCells()
+
+    def showEvent(self, event):
+        self.setLocale(QLocale(get_language()))
+        self._sync_appearance()
+        super().showEvent(event)
+
+    def changeEvent(self, event):
+        super().changeEvent(event)
+        if (event.type() in (QEvent.Type.PaletteChange, QEvent.Type.StyleChange)
+                and hasattr(self, "_appearance_timer")):
+            self._appearance_timer.start(0)
 
     def set_holidays(self, holidays):
         self._holidays = dict(holidays)
@@ -38,19 +76,21 @@ class MonthCalendar(QCalendarWidget):
     def visible_range(self):
         first = QDate(self.yearShown(), self.monthShown(), 1)
         offset = (first.dayOfWeek() - self.firstDayOfWeek().value) % 7 or 7
-        start, end = first.addDays(-offset), first.addDays(41 - offset)
-        return ((start if start.isValid() else self.minimumDate()).toPython(),
-                (end if end.isValid() else self.maximumDate()).toPython())
+        start = max(first.addDays(-offset), self.minimumDate())
+        end = min(first.addDays(41 - offset), self.maximumDate())
+        return start.toPython(), end.toPython()
 
     def paintCell(self, painter, rect, day):
-        value = day.toPython()
-        self._cell_rects[value] = QRect(rect)
+        value = day.toPython() if day.isValid() and 1 <= day.year() <= 9999 else None
+        if value is not None:
+            self._cell_rects[value] = QRect(rect)
         selected = day == self.selectedDate()
         holiday = value in self._holidays
         colors = self._colors
         painter.save()
         painter.fillRect(rect, QColor(colors.accent if selected else colors.surface))
-        if (day.year(), day.month()) != (self.yearShown(), self.monthShown()) and not selected:
+        if (day < self.minimumDate() or day > self.maximumDate()
+                or (day.year(), day.month()) != (self.yearShown(), self.monthShown())) and not selected:
             painter.setOpacity(painter.opacity() * 0.45)
         foreground = (colors.highlighted_text if selected else colors.danger if holiday
                       else colors.accent if day.dayOfWeek() >= 6 else colors.text)
@@ -73,6 +113,19 @@ class MonthCalendar(QCalendarWidget):
                 QToolTip.hideText()
             return True
         return super().eventFilter(watched, event)
+
+
+def configure_calendar_popup(field):
+    field.setCalendarPopup(True)
+    first_day = field.calendarWidget().firstDayOfWeek()
+    calendar = MonthCalendar(field)
+    calendar.setFirstDayOfWeek(first_day)
+    field.setCalendarWidget(calendar)
+    popup = calendar.parentWidget()
+    popup.setObjectName("date_picker_popup_frame")
+    popup.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
+    popup.layout().setContentsMargins(8, 8, 8, 8)
+    return calendar
 
 
 class DatePickerButton(QPushButton):
@@ -133,21 +186,12 @@ class DatePickerButton(QPushButton):
             layout = QVBoxLayout(self._popup)
             layout.setContentsMargins(8, 8, 8, 8)
             self.calendar = MonthCalendar(self._popup)
-            self.calendar.setObjectName("date_picker_calendar_widget")
-            self.calendar.setVerticalHeaderFormat(QCalendarWidget.VerticalHeaderFormat.NoVerticalHeader)
             self.calendar.setMinimumDate(QDate(1, 1, 1))
             self.calendar.setMaximumDate(QDate(9999, 12, 31))
             self.calendar.set_colors(self._colors)
             self.calendar.currentPageChanged.connect(self.request_holidays)
             self.calendar.clicked.connect(self._choose_date)
             self.calendar.activated.connect(self._choose_date)
-            for name, icon, caption in (("qt_calendar_prevmonth", "chevron-left", _("Previous month")),
-                                        ("qt_calendar_nextmonth", "chevron-right", _("Next month"))):
-                button = self.calendar.findChild(QToolButton, name)
-                if button is not None:
-                    set_button_icon(button, icon)
-                    button.setToolTip(caption)
-                    button.setAccessibleName(caption)
             layout.addWidget(self.calendar)
             self.holiday_status_label = StatusLabel()
             self.holiday_status_label.setObjectName("date_picker_holiday_status_label")
@@ -159,10 +203,6 @@ class DatePickerButton(QPushButton):
             shortcut.activated.connect(self._popup.hide)
         self.calendar.setLocale(QLocale(get_language()))
         self.calendar.setFirstDayOfWeek(Qt.DayOfWeek.Monday if self._week_start_monday else Qt.DayOfWeek.Sunday)
-        weekend = QTextCharFormat()
-        weekend.setForeground(self.palette().color(QPalette.ColorRole.Link))
-        for day in (Qt.DayOfWeek.Saturday, Qt.DayOfWeek.Sunday):
-            self.calendar.setWeekdayTextFormat(day, weekend)
         self.calendar.setSelectedDate(QDate(self._day.year, self._day.month, self._day.day))
         self.calendar.setCurrentPage(self._day.year, self._day.month)
         self._popup.adjustSize()

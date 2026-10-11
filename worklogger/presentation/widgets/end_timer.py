@@ -10,6 +10,7 @@ from worklogger.presentation.date_labels import duration_label
 from worklogger.presentation.errors import display_error_code
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.widgets.date_picker import configure_calendar_popup
 
 
 class EndTimerDialog(QDialog):
@@ -35,7 +36,7 @@ class EndTimerDialog(QDialog):
         self.end_input = QDateTimeEdit()
         self.end_input.setObjectName("timer_end_date_time_widget")
         self.end_input.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
-        self.end_input.setCalendarPopup(True)
+        configure_calendar_popup(self.end_input)
         self.end_input.setDateTime(initial.replace(tzinfo=None))
         self.end_input.setAccessibleName(_("End"))
         self.offset_combo = QComboBox()

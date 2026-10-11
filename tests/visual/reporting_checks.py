@@ -35,6 +35,70 @@ class WeeklyReports(ReportsViewModel):
 
 
 class ReportingLayoutChecks(unittest.TestCase):
+    def test_date_popups_share_navigation_and_calendar_styles(self):
+        from types import SimpleNamespace
+        from PySide6.QtCore import QPoint, Qt
+        from PySide6.QtTest import QTest
+        from PySide6.QtWidgets import QSpinBox, QToolButton
+        from worklogger.domain.worklog.search import EntryPage
+        from worklogger.presentation.job_runner import ImmediateJobRunner
+        from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
+        from worklogger.presentation.widgets.date_picker import MonthCalendar
+        from worklogger.presentation.widgets.end_timer import EndTimerDialog
+        from worklogger.presentation.widgets.project_analytics import ProjectAnalyticsDialog
+        from worklogger.presentation.widgets.record_search import RecordSearchDialog
+        from worklogger.infrastructure.i18n import get_language
+        configure_application_style()
+        install_bundled_fonts()
+        old_language, old_style, old_palette = get_language(), self.app.styleSheet(), self.app.palette()
+        records = SimpleNamespace(list_work_types=lambda: Result.success(()),
+            project_inventory=lambda: Result.success(((), {})),
+            search=lambda *_args, **_kwargs: Result.success(EntryPage(())))
+        analytics = SimpleNamespace(load_projects=lambda *_args: Result.success(()))
+        started = datetime(2026, 10, 11, 9, tzinfo=timezone.utc)
+        try:
+            for language in ("en_US", "zh_CN"):
+                set_language(language)
+                for theme in ("blue", "liquid_glass"):
+                    for dark in (False, True):
+                        colors = ThemeEngine().apply_to(self.app, theme, dark=dark)
+                        dialogs = (ProjectAnalyticsDialog(analytics, records, started.date()),
+                                   RecordSearchDialog(records, started.date(), job_runner=ImmediateJobRunner()),
+                                   EndTimerDialog(started, started + timedelta(hours=2), timezone.utc))
+                        for dialog in dialogs:
+                            try:
+                                dialog.show()
+                                fields = ((dialog.end_input,) if isinstance(dialog, EndTimerDialog)
+                                          else (dialog.start_input, dialog.end_input))
+                                for index, field in enumerate(fields):
+                                    QTest.mouseClick(field, Qt.MouseButton.LeftButton,
+                                                     pos=QPoint(field.width() - 12, field.height() // 2))
+                                    QTest.qWait(1)
+                                    calendar = field.calendarWidget()
+                                    self.assertIsInstance(calendar, MonthCalendar)
+                                    self.assertTrue(calendar.isVisible())
+                                    self.assertEqual(calendar.locale().name(), language)
+                                    self.assertEqual(calendar.weekdayTextFormat(Qt.DayOfWeek.Saturday).foreground().color().name(), colors.accent)
+                                    for name in ("qt_calendar_prevmonth", "qt_calendar_nextmonth"):
+                                        self.assertFalse(calendar.findChild(QToolButton, name).icon().isNull())
+                                    month = calendar.findChild(QToolButton, "qt_calendar_monthbutton")
+                                    year = calendar.findChild(QToolButton, "qt_calendar_yearbutton")
+                                    self.assertLessEqual(abs(month.height() - year.height()), 2)
+                                    year.click()
+                                    QTest.qWait(1)
+                                    editor = calendar.findChild(QSpinBox, "qt_calendar_yearedit")
+                                    self.assertLessEqual(editor.width(), 90)
+                                    self.assertLessEqual(abs(editor.height() - month.height()), 2)
+                                    self.capture(calendar.window(), f"date-popup-{type(dialog).__name__}-{index}-{theme}-{dark}", language)
+                                    calendar.window().hide()
+                            finally:
+                                dialog.close()
+                                dialog.deleteLater()
+        finally:
+            set_language(old_language)
+            self.app.setStyleSheet(old_style)
+            self.app.setPalette(old_palette)
+
     def test_report_versions_preview_fits_localized_dialogs(self):
         from worklogger.presentation.widgets.report_revisions import ReportRevisionsDialog
         from worklogger.domain.reporting.models import ReportRevision

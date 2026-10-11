@@ -11,6 +11,7 @@ from worklogger.presentation.date_labels import duration_label
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.widgets.date_picker import configure_calendar_popup
 from worklogger.presentation.widgets.record_search import RecordSearchDialog
 
 
@@ -30,7 +31,7 @@ class ProjectAnalyticsDialog(QDialog):
         self.start_input, self.end_input = QDateEdit(), QDateEdit()
         for field, caption, value in ((self.start_input, _("From"), day.replace(day=1)), (self.end_input, _("To"), day)):
             field.setDisplayFormat("yyyy-MM-dd")
-            field.setCalendarPopup(True)
+            configure_calendar_popup(field)
             field.setDate(value)
             field.setAccessibleName(caption)
             label = QLabel(caption)
