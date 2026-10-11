@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import sys
 
-from PyInstaller.utils.hooks import collect_all, collect_data_files, collect_submodules
+from PyInstaller.utils.hooks import collect_all, collect_data_files, collect_submodules, copy_metadata
 
 root = Path(SPECPATH)
 sys.path.insert(0, str(root))
@@ -11,6 +11,7 @@ from scripts.build_resources import bundled_resources, executable_icon, windows_
 from worklogger.__about__ import APP_ID, APP_VERSION
 
 datas = bundled_resources(root)
+datas += copy_metadata("numpy")
 datas += [(str(root / "build/build-info.json"), "."), (str(root / "LICENSE"), ".")]
 hiddenimports = collect_submodules("worklogger") + collect_submodules("holidays")
 hiddenimports += collect_submodules("keyring.backends")

@@ -27,6 +27,10 @@ def bundled_resources(root: Path) -> list[tuple[str, str]]:
     if not configuration.is_file():
         raise FileNotFoundError(f"Runtime configuration is missing: {configuration}")
     resources.append((str(configuration), "."))
+    glass_license = package / "_vendor/pyglass/LICENSE"
+    if not glass_license.is_file():
+        raise FileNotFoundError(f"Glass renderer license is missing: {glass_license}")
+    resources.append((str(glass_license), "worklogger/_vendor/pyglass"))
     return resources
 
 
