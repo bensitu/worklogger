@@ -462,7 +462,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             self.assertIsInstance(runtime.value.window, MinimalView)
             self.assertTrue(runtime.value.window.refresh())
             from worklogger.presentation.date_labels import day_label
-            self.assertEqual(runtime.value.window.date_label.text(), day_label(date(2026, 4, 20)))
+            self.assertEqual(runtime.value.window.date_button.text(), day_label(date(2026, 4, 20)))
             self.assertEqual(runtime.value.window.account_label.text(), "Signed in: local")
             runtime.value.window.close()
             configuration = database_path.parent / "worklogger.config.json"

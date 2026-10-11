@@ -10,7 +10,7 @@ from worklogger.bootstrap import _window_config_for_user
 from worklogger.domain.auth.models import User
 from worklogger.infrastructure.runtime_config import (
     CONFIG_FILENAME,
-    FeatureFlags,
+    DeploymentFeatures,
     RuntimeConfiguration,
     configuration_path,
     load_runtime_configuration,
@@ -34,7 +34,8 @@ class RuntimeConfigurationTests(unittest.TestCase):
         self.assertTrue(load_runtime_configuration(self.path).features.background_images)
         self.assertFalse(load_runtime_configuration(self.path).features.minimal_view)
         for value in ('{"features":{"background_images":"true"}}', '{"features":{"minimal_view":1}}',
-                      '{"features":{"minimal_view":"true"}}', '{"features":[]}', '[]', 'invalid', ' ' * 65537):
+                      '{"features":{"minimal_view":"true"}}', '{"features":[]}', '[]', 'invalid', ' ' * 65537,
+                      '[' * 1500 + ']' * 1500):
             self.path.write_text(value, encoding="utf-8")
             with self.assertLogs("worklogger.infrastructure.runtime_config", level="WARNING"):
                 self.assertFalse(load_runtime_configuration(self.path).features.background_images)
@@ -53,7 +54,7 @@ class RuntimeConfigurationTests(unittest.TestCase):
     def test_deployment_flag_controls_window_availability_without_changing_account_preferences(self):
         user = User(id=1, username="sample", is_admin=False)
         for enabled in (True, False):
-            configuration = RuntimeConfiguration(FeatureFlags(background_images=enabled))
+            configuration = RuntimeConfiguration(DeploymentFeatures(background_images=enabled))
             with patch("worklogger.infrastructure.runtime_config.load_runtime_configuration", return_value=configuration):
                 self.assertEqual(_window_config_for_user(AppWindowConfig(), user).background_images_available, enabled)
                 self.assertFalse(_window_config_for_user(AppWindowConfig(background_images_available=False), user).background_images_available)

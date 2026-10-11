@@ -46,8 +46,6 @@ from worklogger.infrastructure.database import (
 )
 from worklogger.infrastructure.database.paths import prune_corrupt_backups
 from worklogger.infrastructure.repositories import (
-    ActivityEvent,
-    SQLiteActivityRepository,
     SQLiteAuthRepository,
     SQLiteCalendarEventRepository,
     SQLiteIdentityRepository,
@@ -397,7 +395,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         )
         self.assertEqual(fetched_report.value, saved_report.value)
 
-    def test_calendar_identity_and_activity_repositories(self) -> None:
+    def test_calendar_and_identity_repositories(self) -> None:
         auth = self.auth_repository()
         registered = RegisterUserHandler(auth).handle(RegisterUserCommand("alice", "secret123"))
         assert registered.value is not None
@@ -433,16 +431,6 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         self.assertEqual(identities.list_for_user(user_id), (identity,))
         identities.remove(user_id, identity.id)
         self.assertEqual(identities.list_for_user(user_id), ())
-
-        activity = SQLiteActivityRepository(self.factory)
-        activity.record(ActivityEvent(user_id=user_id, event_type="login", details={"ok": True}))
-        with self.factory.connection() as connection:
-            row = connection.execute(
-                "SELECT event_type, details FROM activity_events WHERE user_id=?",
-                (user_id,),
-            ).fetchone()
-        self.assertEqual(row["event_type"], "login")
-        self.assertIn('"ok": true', row["details"])
 
     def test_encrypted_key_store_uses_keyring_when_available(self) -> None:
         auth = self.auth_repository()

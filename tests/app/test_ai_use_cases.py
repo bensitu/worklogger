@@ -28,7 +28,6 @@ from worklogger.domain.shared.result import Result
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.worklog.models import WorkLog, WorkType
 from worklogger.infrastructure.ai.external import OpenAICompatibleGateway
-from worklogger.infrastructure.ai.router import RoutingAIGateway
 
 
 class FakeGateway:
@@ -258,31 +257,6 @@ class AiUseCaseTests(unittest.TestCase):
         self.assertEqual(result.value.text, "remote answer")
         self.assertEqual(seen["url"], "https://example.test/v1/chat/completions")
         self.assertEqual(seen["body"]["model"], "model-a")
-
-    def test_routing_gateway_uses_secondary_and_falls_back_to_primary(self) -> None:
-        primary = FakeGateway("primary")
-        secondary = FakeGateway("secondary")
-        routed = RoutingAIGateway(primary=primary, secondary=secondary)
-
-        secondary_result = routed.generate(
-            AIRequest(
-                messages=({"role": "user", "content": "hi"},),
-                model="secondary:model-b",
-                timeout_seconds=1,
-            )
-        )
-        fallback_result = RoutingAIGateway(primary=primary).generate(
-            AIRequest(
-                messages=({"role": "user", "content": "hi"},),
-                model="secondary:model-c",
-                timeout_seconds=1,
-            )
-        )
-
-        self.assertEqual(secondary_result.value.text if secondary_result.value else "", "secondary")
-        self.assertEqual(secondary.requests[0].model, "model-b")
-        self.assertEqual(fallback_result.value.text if fallback_result.value else "", "primary")
-        self.assertEqual(primary.requests[-1].model, "model-c")
 
 
 if __name__ == "__main__":

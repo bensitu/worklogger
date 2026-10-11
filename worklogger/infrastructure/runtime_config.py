@@ -12,14 +12,14 @@ MAX_CONFIG_BYTES = 64 * 1024
 
 
 @dataclass(frozen=True)
-class FeatureFlags:
+class DeploymentFeatures:
     background_images: bool = False
     minimal_view: bool = False
 
 
 @dataclass(frozen=True)
 class RuntimeConfiguration:
-    features: FeatureFlags = FeatureFlags()
+    features: DeploymentFeatures = DeploymentFeatures()
 
 
 def configuration_path(*, frozen=None, executable=None, bundle_root=None, source_root=None):
@@ -43,14 +43,14 @@ def load_runtime_configuration(path=None):
         if not isinstance(value, dict) or not isinstance(value.get("features", {}), dict):
             raise TypeError("runtime_configuration_invalid")
         flags = {}
-        for field in fields(FeatureFlags):
+        for field in fields(DeploymentFeatures):
             enabled = value.get("features", {}).get(field.name, False)
             if type(enabled) is not bool:
                 raise TypeError("runtime_configuration_invalid")
             flags[field.name] = enabled
-        return RuntimeConfiguration(FeatureFlags(**flags))
+        return RuntimeConfiguration(DeploymentFeatures(**flags))
     except FileNotFoundError:
         return RuntimeConfiguration()
-    except (OSError, UnicodeError, ValueError, TypeError):
+    except (OSError, UnicodeError, ValueError, TypeError, RecursionError):
         LOGGER.warning("runtime_configuration_invalid")
         return RuntimeConfiguration()

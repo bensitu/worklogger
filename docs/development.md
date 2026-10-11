@@ -14,6 +14,8 @@ python -m venv .venv
 On macOS/Linux, use `.venv/bin/python`. Activation is optional.
 Install `requirements-ai.txt` only for native local inference and
 `requirements-build.txt` for packaging.
+Install `requirements-dev.txt` for contributor lint tooling; it is not a runtime
+or release-build dependency.
 
 The runtime, optional inference, and build lists have separate responsibilities.
 The `requirements/` JSON locks identify target environments, input fingerprints,
@@ -91,6 +93,7 @@ Run the smallest relevant tests first, then broader checks as warranted:
 
 ```sh
 python -m unittest tests.domain.test_worklog_rules -v
+python -m ruff check worklogger scripts tests
 python scripts/i18n/i18n_check.py
 python scripts/build.py --check
 git diff --check
@@ -99,6 +102,9 @@ git diff --check
 See [testing](testing.md) for discovery, visual checks, and fixture isolation.
 Changing Python/Qt/native dependencies also requires a consistent target build
 and artifact checks, not just a successful import.
+Continuous integration checks supported Python versions on Windows and Linux,
+validates translations, runs ordinary tests and audits dependency vulnerabilities.
+Native visual checks remain opt-in.
 
 ## Documentation
 
