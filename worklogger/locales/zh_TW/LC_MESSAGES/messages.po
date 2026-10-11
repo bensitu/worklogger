@@ -232,6 +232,9 @@ msgstr "返回登入"
 msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
 msgstr "定期備份資料庫，保護本機工作記錄、報表、設定及帳戶資料。"
 
+msgid "Background image"
+msgstr "背景圖片"
+
 msgid "Backing up data..."
 msgstr "正在備份資料..."
 
@@ -334,6 +337,9 @@ msgstr "請選擇不同於目前資料庫的備份位置。"
 msgid "Choose a split duration strictly inside the recorded interval."
 msgstr "請選擇位於紀錄區間內部的分割時長。"
 
+msgid "Choose a valid PNG, JPEG, GIF or WebP background image."
+msgstr "請選擇有效的 PNG、JPEG、GIF 或 WebP 背景圖片。"
+
 msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
 msgstr "請選擇有效的 PNG、JPEG、WebP 或 BMP 圖片。"
 
@@ -345,6 +351,9 @@ msgstr "請選擇更早的結束時間以儲存此計時。"
 
 msgid "Choose an image smaller than 10 MB and 20 million pixels."
 msgstr "請選擇不超過10 MB及2000萬像素的圖片。"
+
+msgid "Choose an image with a long edge of at least 1280 pixels and a short edge of at least 720 pixels."
+msgstr "請選擇長邊至少 1280 像素、短邊至少 720 像素的圖片。"
 
 msgid "Choose custom color"
 msgstr "選擇自訂色彩"
@@ -579,6 +588,9 @@ msgstr "實際上下文：{count} tokens。"
 
 msgid "Enable AI Assist to use text processing."
 msgstr "請啟用 AI 助手以使用文字處理。"
+
+msgid "Enable background image"
+msgstr "啟用背景圖片"
 
 msgid "Enable local model"
 msgstr "啟用本機模型"
@@ -822,6 +834,12 @@ msgstr "身分管理尚未設定。"
 
 msgid "Identity unlinked."
 msgstr "身分連結已解除。"
+
+msgid "Image opacity"
+msgstr "圖片不透明度"
+
+msgid "Images (*.png *.jpg *.jpeg *.gif *.webp)"
+msgstr "圖片 (*.png *.jpg *.jpeg *.gif *.webp)"
 
 msgid "Images (*.png *.jpg *.jpeg *.webp *.bmp)"
 msgstr "圖片 (*.png *.jpg *.jpeg *.webp *.bmp)"
@@ -1152,6 +1170,9 @@ msgstr "下一期間"
 
 msgid "No arguments start the desktop application."
 msgstr "不帶參數執行將啟動桌面應用程式。"
+
+msgid "No background image"
+msgstr "尚未設定背景圖片"
 
 msgid "No backup in {days} days. Back up your data."
 msgstr "已有 {days} 天未備份，請備份資料。"
@@ -1497,6 +1518,12 @@ msgstr "記住我"
 
 msgid "Remote"
 msgstr "遠端工作"
+
+msgid "Remove background image?"
+msgstr "移除目前的背景圖片？"
+
+msgid "Remove image"
+msgstr "移除圖片"
 
 msgid "Replace"
 msgstr "取代"
@@ -2011,6 +2038,9 @@ msgstr "這項歷史扣除無法用整分鐘表示，原紀錄未改變。"
 msgid "This identity is already linked to an account."
 msgstr "此身分已連結至帳戶。"
 
+msgid "This image or animation exceeds the background size limits. Choose a smaller file or fewer frames."
+msgstr "此圖片或動畫超過背景大小限制，請選擇較小的檔案或影格較少的動畫。"
+
 msgid "This item has changed. Reload it before saving; your input has been retained."
 msgstr "此項目已發生變更。儲存前請重新載入，輸入內容已保留。"
 
@@ -2140,6 +2170,9 @@ msgstr "無法載入資料，請重試。"
 msgid "Unable to load or save project data. Your input has been retained."
 msgstr "無法載入或儲存專案資料，輸入內容已保留。"
 
+msgid "Unable to load or save the background. The previous background has been retained."
+msgstr "無法載入或儲存背景，已保留原背景。"
+
 msgid "Unable to load the selected model. Check available memory or choose a smaller model."
 msgstr "無法載入所選模型。請檢查可用記憶體或選擇較小的模型。"
 
@@ -2250,6 +2283,9 @@ msgstr "有可用更新：{version}"
 
 msgid "Update check is not configured."
 msgstr "更新檢查尚未設定。"
+
+msgid "Upload image"
+msgstr "上傳圖片"
 
 msgid "Use a single-line display name without control characters."
 msgstr "顯示名稱必須為單行，且不能包含控制字元。"

@@ -88,7 +88,7 @@ class AppWindowConfig:
     account_role: str = "Admin"
     profile_avatar_png: str = field(default="", repr=False)
     show_recent_context: bool = True
-    background_images_available: bool = False
+    background_images_available: bool = True
     confirm_discard_changes: Callable[[], bool] | None = None
 
 
@@ -158,6 +158,8 @@ class AppWindow(QMainWindow):
             self._background_surface, background_service,
             available=self._config.background_images_available, job_runner=self._job_runner,
         )
+        if hasattr(self.settings_page, "background_settings"):
+            self.settings_page.background_settings.bind(self.background_controller)
         self._background_surface.active_changed.connect(lambda _active: self.apply_theme(force=True))
         self._calendar_coordinator = CalendarCoordinator(
             calendar_view_model=self._calendar_view_model,

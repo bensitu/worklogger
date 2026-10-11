@@ -113,6 +113,16 @@ class BackgroundImagesLayoutChecks(unittest.TestCase):
                                 window.page_stack.setCurrentIndex(index)
                                 self.app.processEvents()
                                 page = window.page_stack.currentWidget()
+                                if route == "settings":
+                                    controls = window.settings_page.background_settings
+                                    section = window.settings_page.category_stack.currentWidget()
+                                    section.ensureWidgetVisible(controls)
+                                    self.app.processEvents()
+                                    self.assertFalse(controls.isHidden())
+                                    self.assertGreaterEqual(controls.opacity_slider.width(), 80)
+                                    for button in (controls.upload_button, controls.remove_button):
+                                        self.assertTrue(controls.rect().contains(button.geometry()))
+                                        self.assertGreaterEqual(button.width(), button.fontMetrics().horizontalAdvance(button.text()) + 40)
                                 surface = window._background_surface
                                 rendered = surface.grab().toImage()
                                 pixel = rendered.pixelColor(3, 3)

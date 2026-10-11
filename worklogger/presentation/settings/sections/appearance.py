@@ -15,6 +15,7 @@ from worklogger.config.constants import (
 )
 from worklogger.infrastructure.i18n import _, available_languages
 from worklogger.presentation.settings.sections.actions import SectionActions
+from worklogger.presentation.settings.sections.background import BackgroundSettings
 from worklogger.presentation.settings.sections.common import (
     _card_with_form,
     _language_label,
@@ -26,6 +27,7 @@ from worklogger.presentation.widgets.icons import set_button_icon
 
 class AppearanceSection(_SettingsScrollPage):
     control_names = (
+        "background_settings",
         "custom_color_button",
         "dark_switch",
         "language_combo",
@@ -99,4 +101,6 @@ class AppearanceSection(_SettingsScrollPage):
             lambda enabled: actions.set_bool(MINIMAL_MODE_SETTING_KEY, enabled)
         )
         page.layout().addWidget(card)
+        self.background_settings = BackgroundSettings()
+        page.layout().addWidget(self.background_settings)
         page.layout().addStretch(1)

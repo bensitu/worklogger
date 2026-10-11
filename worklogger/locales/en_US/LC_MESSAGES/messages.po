@@ -232,6 +232,9 @@ msgstr "Back to login"
 msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
 msgstr "Back up your database regularly to protect your local work logs, reports, settings, and account data."
 
+msgid "Background image"
+msgstr "Background image"
+
 msgid "Backing up data..."
 msgstr "Backing up data..."
 
@@ -334,6 +337,9 @@ msgstr "Choose a backup destination different from the active database."
 msgid "Choose a split duration strictly inside the recorded interval."
 msgstr "Choose a split duration strictly inside the recorded interval."
 
+msgid "Choose a valid PNG, JPEG, GIF or WebP background image."
+msgstr "Choose a valid PNG, JPEG, GIF or WebP background image."
+
 msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
 msgstr "Choose a valid PNG, JPEG, WebP, or BMP image."
 
@@ -345,6 +351,9 @@ msgstr "Choose an earlier end time to save this timer."
 
 msgid "Choose an image smaller than 10 MB and 20 million pixels."
 msgstr "Choose an image smaller than 10 MB and 20 million pixels."
+
+msgid "Choose an image with a long edge of at least 1280 pixels and a short edge of at least 720 pixels."
+msgstr "Choose an image with a long edge of at least 1280 pixels and a short edge of at least 720 pixels."
 
 msgid "Choose custom color"
 msgstr "Choose custom color"
@@ -579,6 +588,9 @@ msgstr "Effective context: {count} tokens."
 
 msgid "Enable AI Assist to use text processing."
 msgstr "Enable AI Assist to use text processing."
+
+msgid "Enable background image"
+msgstr "Enable background image"
 
 msgid "Enable local model"
 msgstr "Enable local model"
@@ -822,6 +834,12 @@ msgstr "Identity management is not configured."
 
 msgid "Identity unlinked."
 msgstr "Identity unlinked."
+
+msgid "Image opacity"
+msgstr "Image opacity"
+
+msgid "Images (*.png *.jpg *.jpeg *.gif *.webp)"
+msgstr "Images (*.png *.jpg *.jpeg *.gif *.webp)"
 
 msgid "Images (*.png *.jpg *.jpeg *.webp *.bmp)"
 msgstr "Images (*.png *.jpg *.jpeg *.webp *.bmp)"
@@ -1152,6 +1170,9 @@ msgstr "Next period"
 
 msgid "No arguments start the desktop application."
 msgstr "No arguments start the desktop application."
+
+msgid "No background image"
+msgstr "No background image"
 
 msgid "No backup in {days} days. Back up your data."
 msgstr "No backup in {days} days. Back up your data."
@@ -1497,6 +1518,12 @@ msgstr "Remember me"
 
 msgid "Remote"
 msgstr "Remote"
+
+msgid "Remove background image?"
+msgstr "Remove background image?"
+
+msgid "Remove image"
+msgstr "Remove image"
 
 msgid "Replace"
 msgstr "Replace"
@@ -2011,6 +2038,9 @@ msgstr "This historical deduction cannot be represented in whole minutes. The or
 msgid "This identity is already linked to an account."
 msgstr "This identity is already linked to an account."
 
+msgid "This image or animation exceeds the background size limits. Choose a smaller file or fewer frames."
+msgstr "This image or animation exceeds the background size limits. Choose a smaller file or fewer frames."
+
 msgid "This item has changed. Reload it before saving; your input has been retained."
 msgstr "This item has changed. Reload it before saving; your input has been retained."
 
@@ -2140,6 +2170,9 @@ msgstr "Unable to load data. Please try again."
 msgid "Unable to load or save project data. Your input has been retained."
 msgstr "Unable to load or save project data. Your input has been retained."
 
+msgid "Unable to load or save the background. The previous background has been retained."
+msgstr "Unable to load or save the background. The previous background has been retained."
+
 msgid "Unable to load the selected model. Check available memory or choose a smaller model."
 msgstr "Unable to load the selected model. Check available memory or choose a smaller model."
 
@@ -2250,6 +2283,9 @@ msgstr "Update available: {version}"
 
 msgid "Update check is not configured."
 msgstr "Update check is not configured."
+
+msgid "Upload image"
+msgstr "Upload image"
 
 msgid "Use a single-line display name without control characters."
 msgstr "Use a single-line display name without control characters."

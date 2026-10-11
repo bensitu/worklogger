@@ -232,6 +232,9 @@ msgstr "ログインに戻る"
 msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
 msgstr "業務記録、レポート、設定、アカウント情報を保護するため、データベースを定期的にバックアップしてください。"
 
+msgid "Background image"
+msgstr "背景画像"
+
 msgid "Backing up data..."
 msgstr "データをバックアップ中..."
 
@@ -334,6 +337,9 @@ msgstr "使用中のデータベースとは異なるバックアップ先を選
 msgid "Choose a split duration strictly inside the recorded interval."
 msgstr "記録区間の内側になる分割時間を選択してください。"
 
+msgid "Choose a valid PNG, JPEG, GIF or WebP background image."
+msgstr "有効なPNG、JPEG、GIF、WebPの背景画像を選択してください。"
+
 msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
 msgstr "有効なPNG、JPEG、WebP、BMP画像を選択してください。"
 
@@ -345,6 +351,9 @@ msgstr "このタイマーを保存するには、より早い終了時刻を選
 
 msgid "Choose an image smaller than 10 MB and 20 million pixels."
 msgstr "10MB以下、2,000万画素以下の画像を選択してください。"
+
+msgid "Choose an image with a long edge of at least 1280 pixels and a short edge of at least 720 pixels."
+msgstr "長辺が1280ピクセル以上、短辺が720ピクセル以上の画像を選択してください。"
 
 msgid "Choose custom color"
 msgstr "カスタム色を選択"
@@ -579,6 +588,9 @@ msgstr "実効コンテキスト: {count} トークン。"
 
 msgid "Enable AI Assist to use text processing."
 msgstr "テキスト処理を使うにはAI支援を有効にしてください。"
+
+msgid "Enable background image"
+msgstr "背景画像を有効にする"
 
 msgid "Enable local model"
 msgstr "ローカルモデルを有効にする"
@@ -822,6 +834,12 @@ msgstr "アカウント連携の管理は未設定です。"
 
 msgid "Identity unlinked."
 msgstr "IDの連携を解除しました。"
+
+msgid "Image opacity"
+msgstr "画像の不透明度"
+
+msgid "Images (*.png *.jpg *.jpeg *.gif *.webp)"
+msgstr "画像 (*.png *.jpg *.jpeg *.gif *.webp)"
 
 msgid "Images (*.png *.jpg *.jpeg *.webp *.bmp)"
 msgstr "画像 (*.png *.jpg *.jpeg *.webp *.bmp)"
@@ -1152,6 +1170,9 @@ msgstr "次の期間"
 
 msgid "No arguments start the desktop application."
 msgstr "引数を指定しない場合はデスクトップアプリを起動します。"
+
+msgid "No background image"
+msgstr "背景画像なし"
 
 msgid "No backup in {days} days. Back up your data."
 msgstr "{days}日間バックアップしていません。データをバックアップしてください。"
@@ -1497,6 +1518,12 @@ msgstr "ログイン状態を保持"
 
 msgid "Remote"
 msgstr "リモート"
+
+msgid "Remove background image?"
+msgstr "背景画像を削除しますか？"
+
+msgid "Remove image"
+msgstr "画像を削除"
 
 msgid "Replace"
 msgstr "置換"
@@ -2011,6 +2038,9 @@ msgstr "この過去の控除は分単位で表せません。元の記録は変
 msgid "This identity is already linked to an account."
 msgstr "このIDはすでにアカウントに連携されています。"
 
+msgid "This image or animation exceeds the background size limits. Choose a smaller file or fewer frames."
+msgstr "画像またはアニメーションが背景のサイズ制限を超えています。ファイルサイズまたはフレーム数を減らしてください。"
+
 msgid "This item has changed. Reload it before saving; your input has been retained."
 msgstr "この項目は変更されています。保存前に再読み込みしてください。入力内容は保持されています。"
 
@@ -2140,6 +2170,9 @@ msgstr "データを読み込めませんでした。もう一度お試しくだ
 msgid "Unable to load or save project data. Your input has been retained."
 msgstr "プロジェクトデータを読み込みまたは保存できません。入力内容は保持されています。"
 
+msgid "Unable to load or save the background. The previous background has been retained."
+msgstr "背景を読み込むか保存できませんでした。元の背景は保持されています。"
+
 msgid "Unable to load the selected model. Check available memory or choose a smaller model."
 msgstr "選択したモデルを読み込めません。空きメモリを確認するか、小さいモデルを選択してください。"
 
@@ -2250,6 +2283,9 @@ msgstr "更新があります：{version}"
 
 msgid "Update check is not configured."
 msgstr "更新確認は未設定です。"
+
+msgid "Upload image"
+msgstr "画像をアップロード"
 
 msgid "Use a single-line display name without control characters."
 msgstr "表示名は制御文字を含まない1行の文字列にしてください。"

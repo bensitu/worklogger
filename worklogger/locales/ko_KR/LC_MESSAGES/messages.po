@@ -232,6 +232,9 @@ msgstr "로그인으로 돌아가기"
 msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
 msgstr "로컬 근무 기록, 보고서, 설정 및 계정 데이터를 보호하도록 데이터베이스를 정기적으로 백업하세요."
 
+msgid "Background image"
+msgstr "배경 이미지"
+
 msgid "Backing up data..."
 msgstr "데이터 백업 중..."
 
@@ -334,6 +337,9 @@ msgstr "현재 데이터베이스와 다른 백업 위치를 선택하세요."
 msgid "Choose a split duration strictly inside the recorded interval."
 msgstr "기록된 구간 안에 있는 분할 시간을 선택하세요."
 
+msgid "Choose a valid PNG, JPEG, GIF or WebP background image."
+msgstr "유효한 PNG, JPEG, GIF 또는 WebP 배경 이미지를 선택하세요."
+
 msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
 msgstr "올바른 PNG, JPEG, WebP 또는 BMP 이미지를 선택하세요."
 
@@ -345,6 +351,9 @@ msgstr "이 타이머를 저장하려면 더 이른 종료 시간을 선택하�
 
 msgid "Choose an image smaller than 10 MB and 20 million pixels."
 msgstr "10MB 및 2천만 화소 이하의 이미지를 선택하세요."
+
+msgid "Choose an image with a long edge of at least 1280 pixels and a short edge of at least 720 pixels."
+msgstr "긴 변이 1280픽셀 이상이고 짧은 변이 720픽셀 이상인 이미지를 선택하세요."
 
 msgid "Choose custom color"
 msgstr "사용자 지정 색상 선택"
@@ -579,6 +588,9 @@ msgstr "실제 컨텍스트: {count} 토큰."
 
 msgid "Enable AI Assist to use text processing."
 msgstr "텍스트 처리를 사용하려면 AI 지원을 켜세요."
+
+msgid "Enable background image"
+msgstr "배경 이미지 사용"
 
 msgid "Enable local model"
 msgstr "로컬 모델 사용"
@@ -822,6 +834,12 @@ msgstr "계정 연결 관리가 설정되지 않았습니다."
 
 msgid "Identity unlinked."
 msgstr "ID 연결이 해제되었습니다."
+
+msgid "Image opacity"
+msgstr "이미지 불투명도"
+
+msgid "Images (*.png *.jpg *.jpeg *.gif *.webp)"
+msgstr "이미지 (*.png *.jpg *.jpeg *.gif *.webp)"
 
 msgid "Images (*.png *.jpg *.jpeg *.webp *.bmp)"
 msgstr "이미지 (*.png *.jpg *.jpeg *.webp *.bmp)"
@@ -1152,6 +1170,9 @@ msgstr "다음 기간"
 
 msgid "No arguments start the desktop application."
 msgstr "인수 없이 실행하면 데스크톱 앱이 시작됩니다."
+
+msgid "No background image"
+msgstr "배경 이미지 없음"
 
 msgid "No backup in {days} days. Back up your data."
 msgstr "{days}일 동안 백업하지 않았습니다. 데이터를 백업하세요."
@@ -1497,6 +1518,12 @@ msgstr "로그인 상태 유지"
 
 msgid "Remote"
 msgstr "원격 근무"
+
+msgid "Remove background image?"
+msgstr "배경 이미지를 삭제하시겠습니까?"
+
+msgid "Remove image"
+msgstr "이미지 삭제"
 
 msgid "Replace"
 msgstr "바꾸기"
@@ -2011,6 +2038,9 @@ msgstr "이전 공제 시간을 정수 분으로 표현할 수 없습니다. 원
 msgid "This identity is already linked to an account."
 msgstr "이 ID는 이미 계정에 연결되어 있습니다."
 
+msgid "This image or animation exceeds the background size limits. Choose a smaller file or fewer frames."
+msgstr "이미지 또는 애니메이션이 배경 크기 제한을 초과합니다. 더 작은 파일이나 프레임 수가 적은 파일을 선택하세요."
+
 msgid "This item has changed. Reload it before saving; your input has been retained."
 msgstr "이 항목이 변경되었습니다. 저장하기 전에 다시 불러오세요. 입력 내용은 유지됩니다."
 
@@ -2140,6 +2170,9 @@ msgstr "데이터를 불러오지 못했습니다. 다시 시도하세요."
 msgid "Unable to load or save project data. Your input has been retained."
 msgstr "프로젝트 데이터를 불러오거나 저장할 수 없습니다. 입력 내용은 유지됩니다."
 
+msgid "Unable to load or save the background. The previous background has been retained."
+msgstr "배경을 불러오거나 저장할 수 없습니다. 이전 배경은 유지됩니다."
+
 msgid "Unable to load the selected model. Check available memory or choose a smaller model."
 msgstr "선택한 모델을 불러올 수 없습니다. 사용 가능한 메모리를 확인하거나 더 작은 모델을 선택하세요."
 
@@ -2250,6 +2283,9 @@ msgstr "업데이트 있음: {version}"
 
 msgid "Update check is not configured."
 msgstr "업데이트 확인이 설정되지 않았습니다."
+
+msgid "Upload image"
+msgstr "이미지 업로드"
 
 msgid "Use a single-line display name without control characters."
 msgstr "표시 이름은 제어 문자 없이 한 줄로 입력하세요."

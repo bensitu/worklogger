@@ -577,6 +577,39 @@ QWidget#settings_switch_row_widget, QWidget#settings_about_widget {
   background: transparent;
 }
 
+QSlider#background_opacity_slider_widget {
+  background: transparent;
+}
+
+QSlider#background_opacity_slider_widget::groove:horizontal {
+  height: 4px;
+  border-radius: 2px;
+  background: {{ border }};
+}
+
+QSlider#background_opacity_slider_widget::sub-page:horizontal {
+  background: {{ accent }};
+  border-radius: 2px;
+}
+
+QSlider#background_opacity_slider_widget::handle:horizontal {
+  width: 16px;
+  margin: -6px 0;
+  border: 1px solid {{ accent }};
+  border-radius: 8px;
+  background: {{ surface }};
+}
+
+QSlider#background_opacity_slider_widget::handle:horizontal:focus {
+  border: 2px solid {{ accent }};
+}
+
+QSlider#background_opacity_slider_widget::sub-page:horizontal:disabled,
+QSlider#background_opacity_slider_widget::handle:horizontal:disabled {
+  background: {{ border }};
+  border-color: {{ border }};
+}
+
 QLabel#settings_section_title_label {
   font-size: 16px;
   font-weight: 600;

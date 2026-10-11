@@ -1,4 +1,4 @@
-"""Background import and preferences without exposing a desktop entry point."""
+"""Account background import and preferences."""
 
 from typing import Protocol
 

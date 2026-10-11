@@ -27,6 +27,14 @@ def display_error_code(code: str) -> str:
     """Translate known error codes without displaying raw exception text or logging previews."""
 
     match code:
+        case "background_image_resolution_low":
+            return _("Choose an image with a long edge of at least 1280 pixels and a short edge of at least 720 pixels.")
+        case "background_image_too_large" | "background_animation_too_large":
+            return _("This image or animation exceeds the background size limits. Choose a smaller file or fewer frames.")
+        case "background_image_invalid" | "background_image_required":
+            return _("Choose a valid PNG, JPEG, GIF or WebP background image.")
+        case "background_load_failed" | "background_storage_failed" | "background_opacity_invalid" | "background_animation_unsupported":
+            return _("Unable to load or save the background. The previous background has been retained.")
         case "database_version_unsupported" | "database_schema_unsupported" | "restore_schema_invalid":
             return _("This database version or structure is not supported. Keep the original file and use a compatible version to export your data.")
         case "database_foreign_key_invalid" | "username_normalization_conflict" | "identity_subject_ambiguous":

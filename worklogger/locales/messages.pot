@@ -230,6 +230,9 @@ msgstr ""
 msgid "Back up your database regularly to protect your local work logs, reports, settings, and account data."
 msgstr ""
 
+msgid "Background image"
+msgstr ""
+
 msgid "Backing up data..."
 msgstr ""
 
@@ -332,6 +335,9 @@ msgstr ""
 msgid "Choose a split duration strictly inside the recorded interval."
 msgstr ""
 
+msgid "Choose a valid PNG, JPEG, GIF or WebP background image."
+msgstr ""
+
 msgid "Choose a valid PNG, JPEG, WebP, or BMP image."
 msgstr ""
 
@@ -342,6 +348,9 @@ msgid "Choose an earlier end time to save this timer."
 msgstr ""
 
 msgid "Choose an image smaller than 10 MB and 20 million pixels."
+msgstr ""
+
+msgid "Choose an image with a long edge of at least 1280 pixels and a short edge of at least 720 pixels."
 msgstr ""
 
 msgid "Choose custom color"
@@ -576,6 +585,9 @@ msgid "Effective context: {count} tokens."
 msgstr ""
 
 msgid "Enable AI Assist to use text processing."
+msgstr ""
+
+msgid "Enable background image"
 msgstr ""
 
 msgid "Enable local model"
@@ -819,6 +831,12 @@ msgid "Identity management is not configured."
 msgstr ""
 
 msgid "Identity unlinked."
+msgstr ""
+
+msgid "Image opacity"
+msgstr ""
+
+msgid "Images (*.png *.jpg *.jpeg *.gif *.webp)"
 msgstr ""
 
 msgid "Images (*.png *.jpg *.jpeg *.webp *.bmp)"
@@ -1149,6 +1167,9 @@ msgid "Next period"
 msgstr ""
 
 msgid "No arguments start the desktop application."
+msgstr ""
+
+msgid "No background image"
 msgstr ""
 
 msgid "No backup in {days} days. Back up your data."
@@ -1494,6 +1515,12 @@ msgid "Remember me"
 msgstr ""
 
 msgid "Remote"
+msgstr ""
+
+msgid "Remove background image?"
+msgstr ""
+
+msgid "Remove image"
 msgstr ""
 
 msgid "Replace"
@@ -2009,6 +2036,9 @@ msgstr ""
 msgid "This identity is already linked to an account."
 msgstr ""
 
+msgid "This image or animation exceeds the background size limits. Choose a smaller file or fewer frames."
+msgstr ""
+
 msgid "This item has changed. Reload it before saving; your input has been retained."
 msgstr ""
 
@@ -2138,6 +2168,9 @@ msgstr ""
 msgid "Unable to load or save project data. Your input has been retained."
 msgstr ""
 
+msgid "Unable to load or save the background. The previous background has been retained."
+msgstr ""
+
 msgid "Unable to load the selected model. Check available memory or choose a smaller model."
 msgstr ""
 
@@ -2247,6 +2280,9 @@ msgid "Update available: {version}"
 msgstr ""
 
 msgid "Update check is not configured."
+msgstr ""
+
+msgid "Upload image"
 msgstr ""
 
 msgid "Use a single-line display name without control characters."

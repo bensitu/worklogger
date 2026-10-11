@@ -1,4 +1,4 @@
-"""Dormant desktop composition, responsive loading and animation lifetime."""
+"""Background capability gating, responsive loading and animation lifetime."""
 
 import os
 import threading
@@ -49,7 +49,7 @@ class BackgroundWorkflowTests(unittest.TestCase):
             QTest.qWait(10)
         self.assertTrue(condition())
 
-    def test_release_window_does_not_load_or_enable_stored_media(self):
+    def test_explicitly_disabled_window_does_not_load_or_enable_stored_media(self):
         service = Mock()
         service.load.return_value = Result.success(BackgroundState(validate_background_data(animated_background_bytes()), True))
         window = _window(MemoryWorkLogRepository(), background_service=service)

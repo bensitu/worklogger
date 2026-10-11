@@ -1,4 +1,4 @@
-"""Dormant background workflow with asynchronous validation and storage."""
+"""Background workflow with asynchronous validation and storage."""
 
 from PySide6.QtCore import QCoreApplication, QObject, Signal
 from shiboken6 import isValid
