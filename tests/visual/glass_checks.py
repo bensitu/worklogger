@@ -8,7 +8,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QBuffer, QIODevice, QPoint, Qt
 from PySide6.QtGui import QColor, QImage, QPainter
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QWidget
 
 from worklogger.infrastructure.i18n import set_language
 from worklogger.presentation.theme.glass_surfaces import GlassLayer
@@ -56,26 +56,46 @@ class GlassLayoutChecks(unittest.TestCase):
                                     bounds = field.rect().translated(field.mapTo(page.right_panel, QPoint()))
                                     self.assertGreaterEqual(bounds.left(), 12)
                                     self.assertLessEqual(bounds.right(), page.right_panel.width() - 13)
+                            elif route == "reports":
+                                history = window.reports_page.history_panel
+                                self.assertEqual(history.scroll_widget.palette().color(history.scroll_widget.backgroundRole()).alpha(), 0)
+                            elif route == "settings":
+                                settings = window.settings_page
+                                for category in settings._category_pages:
+                                    settings.category_nav.set_category(category)
+                                    self.app.processEvents()
+                                    self.wait_for_render(window)
+                                    self.assertEqual(settings.category_stack.currentWidget().horizontalScrollBar().maximum(), 0)
+                                    title = settings.findChild(QWidget, "settings_title_label")
+                                    self.assertTrue(settings.rect().contains(title.geometry()))
+                                    self.capture(window, f"{language}-glass-{dark}-settings-{category}-{width}")
+                                settings.category_nav.set_category("appearance")
+                                self.app.processEvents()
+                                self.wait_for_render(window)
                             layers = [layer for layer in window.findChildren(GlassLayer) if layer.isVisible()]
                             self.assertTrue(layers)
                             self.assertTrue(any(not layer.image.isNull() for layer in layers))
                             for layer in layers:
                                 self.assertEqual(layer.geometry(), layer.parentWidget().rect())
                                 self.assertEqual(layer.parentWidget().property("glass_surface"), True)
-                            directory = os.environ.get("WORKLOGGER_SCREENSHOTS")
-                            if directory:
-                                Path(directory).mkdir(parents=True, exist_ok=True)
-                                self.assertTrue(window.grab().save(str(Path(directory) /
-                                    f"{language}-glass-{dark}-{route}-{width}.png")))
+                            self.capture(window, f"{language}-glass-{dark}-{route}-{width}")
                     window._config = replace(window._config, theme="blue")
                     window.apply_theme()
                     self.app.processEvents()
                     self.wait_for_render(window)
                     self.assertFalse(any(layer.isVisible() for layer in window.findChildren(GlassLayer)))
+                    history = window.reports_page.history_panel
+                    self.assertEqual(history.scroll_widget.palette().color(history.scroll_widget.backgroundRole()).alpha(), 0)
                 finally:
                     window.close()
                     window.deleteLater()
         set_language("en_US")
+
+    def capture(self, window, name):
+        directory = os.environ.get("WORKLOGGER_SCREENSHOTS")
+        if directory:
+            Path(directory).mkdir(parents=True, exist_ok=True)
+            self.assertTrue(window.grab().save(str(Path(directory) / f"{name}.png")))
 
     def test_minimal_glass_view_uses_user_backgrounds_without_blurring_editors(self):
         from datetime import date
