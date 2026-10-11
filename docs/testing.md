@@ -16,7 +16,7 @@ Never mutate a personal database or send paid provider requests in the default s
 | `tests/app/` | Use cases and service contracts |
 | `tests/infrastructure/` | Persistence, credentials, files, networking |
 | `tests/presentation/` | View models, signals, workflows, jobs |
-| `tests/architecture/` | Layer boundaries and public documentation |
+| `tests/architecture/` | Dependency boundaries and application contracts |
 | `tests/i18n/` | Catalog extraction and localization |
 | `tests/visual/` | Opt-in layout/rendering checks |
 
@@ -76,8 +76,9 @@ Migration tests use realistic supported layouts and verify IDs, credentials,
 content, rollback, and repeat startup. Backup tests include committed WAL data.
 Integrity checks alone do not prove the newest records were copied.
 
-Documentation checks cover local links, Python examples, table names, English
-prose, and machine-path hygiene. Review procedures against code as well.
+Review documentation procedures, examples, and links against the implementation
+when editing a guide. Do not add unit tests that enforce documentation wording,
+file naming, or other editorial conventions.
 
 Executable import/startup/workflow checks use isolated data.
 See [packaging](packaging.md). Record what a contribution tested and what it skipped

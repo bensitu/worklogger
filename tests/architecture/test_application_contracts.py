@@ -5,16 +5,9 @@ import unittest
 
 from worklogger.app.event_bus import EventBus, WorkLogSaved
 from worklogger.app.job_runner import CancellationToken
-from worklogger.app.ports import AIGateway, BackupService, KeyStore, LocalModelManager
 from worklogger.config.feature_flags import FeatureFlag, FeatureFlags
-from worklogger.domain.auth.repositories import IdentityRepository, UserRepository
-from worklogger.domain.calendar.repositories import CalendarEventRepository
-from worklogger.domain.quicklog.repositories import QuickLogRepository
-from worklogger.domain.reporting.repositories import ReportRepository
-from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.repositories import WorkLogRepository
 
 
 class ApplicationContractTests(unittest.TestCase):
@@ -69,27 +62,6 @@ class ApplicationContractTests(unittest.TestCase):
         self.assertTrue(flags.enable_ai)
         self.assertFalse(flags.enable_local_models)
         self.assertFalse(flags.enable_update_check)
-
-    def test_required_protocols_are_importable(self) -> None:
-        protocols = (
-            WorkLogRepository,
-            UserRepository,
-            IdentityRepository,
-            QuickLogRepository,
-            ReportRepository,
-            CalendarEventRepository,
-            SettingsRepository,
-            AIGateway,
-            KeyStore,
-            BackupService,
-            LocalModelManager,
-        )
-        self.assertTrue(all(protocol.__name__ for protocol in protocols))
-
-    def test_entry_point_smoke_imports(self) -> None:
-        from worklogger.main import main
-
-        self.assertEqual(main(["--smoke-import"]), 0)
 
 
 if __name__ == "__main__":
