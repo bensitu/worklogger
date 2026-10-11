@@ -173,8 +173,12 @@ class BackgroundWorkflowTests(unittest.TestCase):
         colors = {frames.at(index)[1].pixelColor(0, 0).name() for index in range(frames.count())}
         self.assertEqual(colors, {"#e84376", "#36b5a1"})
         surface.hide()
-        QTest.qWait(120)
         count = frames.count()
+        player = surface._player
+        version = frames.at(count - 1)[0]
+        player._mailbox.offer(version, frame)
+        player._take_frame()
+        self.assertEqual(frames.count(), count)
         QTest.qWait(200)
         self.assertEqual(frames.count(), count)
         surface.show()
@@ -186,10 +190,17 @@ class BackgroundWorkflowTests(unittest.TestCase):
         still, still_frame = prepare_background(BackgroundState(validate_background_data(still_background_bytes()), True)).value
         surface.set_background(still, still_frame)
         QTest.qWait(180)
+        count = frames.count()
+        player._mailbox.offer(version, frame)
+        player._take_frame()
+        self.assertEqual(frames.count(), count)
         self.assertFalse(surface._state.image.animated)
         self.assertTrue(surface.background_active)
         surface.shutdown()
         surface.shutdown()
+        player._mailbox.offer(version, frame)
+        player._take_frame()
+        self.assertEqual(frames.count(), count)
         self.assertIsNone(surface._player)
         self.app.sendPostedEvents(None, QEvent.Type.DeferredDelete)
 

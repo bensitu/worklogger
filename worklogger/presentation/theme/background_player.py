@@ -106,6 +106,9 @@ class BackgroundMoviePlayer(QObject):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._playing = False
+        self._closed = False
+        self._version = None
         self._mailbox = _FrameMailbox()
         self._thread = QThread(self)
         self._worker = _MovieWorker(self._mailbox)
@@ -123,16 +126,30 @@ class BackgroundMoviePlayer(QObject):
     @Slot()
     def _take_frame(self):
         frame = self._mailbox.take()
-        if frame is not None:
+        if not self._closed and self._playing and frame is not None and frame[0] == self._version:
             self.frame_ready.emit(*frame)
 
     def set_source(self, image, version):
+        if self._closed:
+            return
+        self._version = version
+        self._mailbox.take()
         self.source_requested.emit(image, version)
 
     def set_playing(self, playing):
-        self.playing_requested.emit(playing)
+        if self._closed:
+            return
+        # Stop delivery immediately, even while the worker processes queued frames.
+        self._playing = bool(playing)
+        if not self._playing:
+            self._mailbox.take()
+        self.playing_requested.emit(self._playing)
 
     def shutdown(self):
+        if self._closed:
+            return
+        self._closed = True
+        self._playing = False
         _join_thread(self._thread)
         self._mailbox.take()
 
