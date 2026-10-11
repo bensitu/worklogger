@@ -23,7 +23,6 @@ DesktopRunner = Callable[[Sequence[str]], int]
 SMOKE_IMPORT_MODULES = (
     "worklogger.__about__",
     "worklogger.bootstrap",
-    "worklogger.app.container",
     "worklogger.app.commands.ai_commands",
     "worklogger.app.commands.calendar_commands",
     "worklogger.app.commands.data_portability_commands",

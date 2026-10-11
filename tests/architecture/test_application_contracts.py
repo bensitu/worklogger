@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import date
 import unittest
 
-from worklogger.app.container import AppContainer, DependencyNotRegisteredError
 from worklogger.app.event_bus import EventBus, WorkLogSaved
 from worklogger.app.job_runner import CancellationToken
 from worklogger.app.ports import AIGateway, BackupService, KeyStore, LocalModelManager
@@ -34,27 +33,6 @@ class ApplicationContractTests(unittest.TestCase):
             Result(ok=True, error=error)
         with self.assertRaises(ValueError):
             Result(ok=False)
-
-    def test_container_resolves_registered_instances_and_factories(self) -> None:
-        container = AppContainer()
-        token = object()
-        container.register_instance(token, "stored")
-        self.assertEqual(container.resolve(token), "stored")
-
-        other_token = object()
-        calls: list[int] = []
-        container.register_factory(
-            other_token,
-            lambda _container: calls.append(1) or {"value": len(calls)},
-            singleton=True,
-        )
-        first = container.resolve(other_token)
-        second = container.resolve(other_token)
-        self.assertIs(first, second)
-        self.assertEqual(first, {"value": 1})
-
-        with self.assertRaises(DependencyNotRegisteredError):
-            container.resolve(object())
 
     def test_event_bus_publish_and_unsubscribe(self) -> None:
         bus = EventBus()

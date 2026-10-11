@@ -41,8 +41,7 @@ Handler = Callable[[EventT], None]
 class EventBus:
     """Synchronous in-process event bus.
 
-    UI adapters may bridge events to Qt signals later. The application bus
-    itself has no Qt dependency.
+    Handler subscribers receive events independently of Qt signals.
     """
 
     def __init__(self) -> None:
