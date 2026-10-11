@@ -1,4 +1,6 @@
-PySide6==6.12.0
+# Linux 6.12.0 signals corrupt singleton reference counts on Python < 3.12 (PYSIDE-3477).
+PySide6==6.11.2; sys_platform == "linux" and python_version < "3.12"
+PySide6==6.12.0; sys_platform != "linux" or python_version >= "3.12"
 tzlocal==5.4.4
 tzdata==2026.5
 holidays==0.106

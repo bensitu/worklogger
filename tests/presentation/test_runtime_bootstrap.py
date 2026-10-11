@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import ExitStack
 from datetime import date
 import os
 from pathlib import Path
@@ -566,7 +567,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             runtime.value.window.close()
 
     def test_runtime_builders_share_remember_session_store_instance(self) -> None:
-        with tempfile.TemporaryDirectory() as first_directory:
+        with tempfile.TemporaryDirectory() as first_directory, ExitStack() as first_cleanup:
             first = build_desktop_runtime(
                 DesktopRuntimeConfig(
                     database_path=Path(first_directory) / "worklog.db",
@@ -577,8 +578,10 @@ class RuntimeBootstrapTests(unittest.TestCase):
             )
             self.assertTrue(first.ok, first.error)
             assert first.value is not None
+            first_cleanup.callback(first.value.job_runner.shutdown, wait=True)
+            first_cleanup.callback(first.value.window.close)
 
-            with tempfile.TemporaryDirectory() as second_directory:
+            with tempfile.TemporaryDirectory() as second_directory, ExitStack() as second_cleanup:
                 second = build_authenticated_desktop_runtime(
                     DesktopRuntimeConfig(
                         database_path=Path(second_directory) / "worklog.db",
@@ -589,6 +592,8 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 )
                 self.assertTrue(second.ok, second.error)
                 assert second.value is not None
+                second_cleanup.callback(second.value.job_runner.shutdown, wait=True)
+                second_cleanup.callback(second.value.window.close)
 
                 self.assertIs(
                     first.value.remember_session_store,
@@ -598,8 +603,6 @@ class RuntimeBootstrapTests(unittest.TestCase):
                     getattr(second.value.window, "_settings_workflow")._account_workflow._remember_session_store,
                     second.value.remember_session_store,
                 )
-                second.value.window.close()
-            first.value.window.close()
 
     def test_update_checker_url_comes_from_constants(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

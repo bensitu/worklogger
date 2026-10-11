@@ -173,3 +173,6 @@ jobs:
         uses: pypa/gh-action-pip-audit@1220774d901786e6f652ae159f7b6bc8fea6d266 # v1.1.0
         with:
           inputs: requirements.txt requirements-build.txt requirements-dev.txt requirements-ai.txt
+          # Temporary exception: no fixed release; WorkLogger does not enable disk-backed inference caching.
+          # Remove when the backend supports a patched DiskCache release.
+          ignore-vulns: PYSEC-2026-2447

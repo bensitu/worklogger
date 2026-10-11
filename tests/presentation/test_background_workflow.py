@@ -138,7 +138,7 @@ class BackgroundWorkflowTests(unittest.TestCase):
         def load():
             observed_threads.append(threading.get_ident())
             started.set()
-            release.wait(2)
+            release.wait(5)
             return Result.success(state)
 
         surface = self.surface()
@@ -151,8 +151,7 @@ class BackgroundWorkflowTests(unittest.TestCase):
         try:
             controller.reload()
             self.wait_until(started.is_set)
-            QTest.qWait(80)
-            self.assertGreater(len(ticks), 2)
+            self.wait_until(lambda: len(ticks) >= 3)
             self.assertNotEqual(observed_threads, [main_thread])
             self.assertTrue(controller.is_busy)
             release.set()

@@ -71,6 +71,11 @@ PyInstaller also collects required holiday/timezone/certificate/keyring resource
 and the native inference libraries. Keep a consistent PySide6/Shiboken/Qt set;
 do not replace individual DLLs.
 
+Linux with Python 3.11 uses PySide6 6.11.2 because the 6.12.0 Linux bindings can
+corrupt singleton reference counts when emitting signals on Python below 3.12
+([upstream report](https://qt-project.atlassian.net/browse/PYSIDE-3477)).
+Other supported platform/Python combinations use PySide6 6.12.0.
+
 Use a new virtual environment when upgrading the Qt dependency set. PySide6 6.12
 distributes Qt PDF and Qt WebEngine as separate packages, which are included in
 the target lock. In-place upgrades from older releases can remove overlapping
