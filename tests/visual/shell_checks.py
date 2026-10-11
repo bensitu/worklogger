@@ -51,7 +51,7 @@ def sample_window():
 class ShellLayoutChecks(unittest.TestCase):
     def test_minimal_view_and_shared_settings_fit_supported_languages(self):
         from types import SimpleNamespace
-        from PySide6.QtCore import QCoreApplication, QEvent, QPoint
+        from PySide6.QtCore import QCoreApplication, QEvent, QPoint, Qt
         from PySide6.QtWidgets import QLabel
         from tests.presentation.test_app_window import _entry_model
         from tests.background_samples import still_background_bytes
@@ -68,6 +68,7 @@ class ShellLayoutChecks(unittest.TestCase):
         repository.save(WorkLog(1, date(2026, 4, 20), "09:00", "10:00", 0, "Recorded review"))
         media = BackgroundState(validate_background_data(still_background_bytes()), True, 50)
         service = SimpleNamespace(load=lambda: Result.success(media))
+        projects = SimpleNamespace(catalog=lambda: Result.success(((), {})), recent_contexts=lambda: Result.success(()))
 
         class Settings:
             def create_dialog(self, parent):
@@ -85,7 +86,9 @@ class ShellLayoutChecks(unittest.TestCase):
                 set_language(language)
                 for dark in (False, True):
                     workflow = Settings()
-                    view = MinimalView(time_entry_view_model=_entry_model(repository), settings_workflow=workflow,
+                    entry_model = _entry_model(repository)
+                    entry_model.service.projects = projects
+                    view = MinimalView(time_entry_view_model=entry_model, settings_workflow=workflow,
                         notes_workflow=SimpleNamespace(open=lambda *_args: None), job_runner=ImmediateJobRunner(),
                         background_service=service, config=MinimalViewConfig(selected_day=date(2026, 4, 20),
                             today=date(2026, 4, 20), account_name="Alex Morgan", theme="green", dark=dark))
@@ -93,12 +96,26 @@ class ShellLayoutChecks(unittest.TestCase):
                     try:
                         view.refresh()
                         view.show()
-                        for width, height in ((640, 840), (900, 920)):
+                        self.app.processEvents()
+                        self.assertEqual(view.width(), 680)
+                        for width, height in ((640, 840), (680, 760), (900, 920)):
                             view.resize(width, height)
                             for mode in (0, 1):
                                 view.entry_panel.time_tabs.setCurrentIndex(mode)
                                 self.app.processEvents()
                                 self.assertEqual((view.width(), view.height()), (width, height))
+                                date_center = view.date_label.mapTo(view, view.date_label.rect().center())
+                                self.assertLessEqual(abs(date_center.x() - view.rect().center().x()), 1)
+                                today = view.today_button.rect().translated(view.today_button.mapTo(view, QPoint()))
+                                previous = view.previous_button.rect().translated(view.previous_button.mapTo(view, QPoint()))
+                                following = view.next_button.rect().translated(view.next_button.mapTo(view, QPoint()))
+                                account = view.account_label.rect().translated(view.account_label.mapTo(view, QPoint()))
+                                self.assertLess(today.right(), previous.left())
+                                self.assertLess(previous.right(), date_center.x())
+                                self.assertLess(date_center.x(), following.left())
+                                self.assertLess(following.right(), account.left())
+                                self.assertEqual(account.right(), width - 13)
+                                self.assertTrue(view.account_label.alignment() & Qt.AlignmentFlag.AlignRight)
                                 panel = view.entry_panel
                                 caption = next(label for label in panel.findChildren(QLabel)
                                                if label.buddy() is panel.work_type_combo)
@@ -110,6 +127,8 @@ class ShellLayoutChecks(unittest.TestCase):
                                             button.mapTo(panel.time_tabs, QPoint()))))
                                 for field in (view.date_label, view.account_label, view.new_record_button,
                                               view.notes_button, view.settings_button, view.entry_panel.content_input,
+                                              view.entry_panel.context_picker.project_combo,
+                                              view.entry_panel.context_picker.work_item_combo,
                                               view.entry_panel.save_button, view.records_scroll):
                                     bounds = field.rect().translated(field.mapTo(view, QPoint()))
                                     self.assertTrue(view.rect().contains(bounds), (language, dark, width, mode, field))
@@ -124,6 +143,10 @@ class ShellLayoutChecks(unittest.TestCase):
                             dialog.category_nav.set_category(category)
                             self.app.processEvents()
                             self.assertEqual(dialog.category_stack.currentWidget().horizontalScrollBar().maximum(), 0)
+                            close = dialog.close_button.rect().translated(dialog.close_button.mapTo(dialog, QPoint()))
+                            self.assertLess(close.width(), dialog.width() / 3)
+                            self.assertEqual(close.right(), dialog.width() - 25)
+                            self.assertLess(dialog.page.geometry().bottom(), close.top())
                         self.capture(dialog, f"minimal-settings-{'dark' if dark else 'light'}")
                     finally:
                         if dialog is not None:

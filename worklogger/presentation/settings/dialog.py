@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QDialog, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QDialog, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.settings.page import SettingsPage
@@ -20,10 +20,16 @@ class SettingsDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 12)
         self.page = SettingsPage(view_model, self)
-        layout.addWidget(self.page)
+        layout.addWidget(self.page, 1)
         self.close_button = QPushButton(_("Close"))
+        self.close_button.setAutoDefault(False)
+        self.close_button.setProperty("variant", "outline")
         self.close_button.clicked.connect(self.accept)
-        layout.addWidget(self.close_button)
+        footer = QHBoxLayout()
+        footer.setContentsMargins(24, 0, 24, 0)
+        footer.addStretch()
+        footer.addWidget(self.close_button)
+        layout.addLayout(footer)
 
     def __getattr__(self, name: str):
         page = self.__dict__.get("page")

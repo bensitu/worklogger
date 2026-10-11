@@ -9,6 +9,7 @@ QWidget {
 }
 
 QLabel,
+QWidget#minimal_date_navigation_widget,
 QWidget#settings_theme_row_widget,
 QWidget#account_avatar_row_widget,
 QWidget#account_display_name_editor_widget,

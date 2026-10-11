@@ -10,6 +10,7 @@ from PySide6.QtCore import QEvent, QTimer, Qt, Signal
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QApplication,
+    QGridLayout,
     QHBoxLayout,
     QLabel,
     QMessageBox,
@@ -92,7 +93,7 @@ class MinimalView(QWidget):
         self._background_surface.active_changed.connect(lambda _active: refresh_style_tree(self._background_surface))
         self.background_controller.reload()
         self._connect_signals()
-        self.resize(760, 760)
+        self.resize(680, 760)
         self.setMinimumSize(640, 640)
         if hasattr(self._residency_controller, "notify_timer_reminder"):
             self.entry_panel.reminder.connect(self._residency_controller.notify_timer_reminder)
@@ -171,7 +172,9 @@ class MinimalView(QWidget):
         root.setContentsMargins(12, 12, 12, 12)
         root.setSpacing(8)
 
-        nav = QHBoxLayout()
+        nav = QGridLayout()
+        nav.setColumnStretch(0, 1)
+        nav.setColumnStretch(2, 1)
         self.previous_button = QPushButton("<")
         self.previous_button.setToolTip(_("Previous day"))
         self.previous_button.setAccessibleName(_("Previous day"))
@@ -191,9 +194,10 @@ class MinimalView(QWidget):
         self.date_label.setProperty("role", "section_heading")
         self.date_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.date_label.setWordWrap(True)
-        self.date_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        self.date_label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         self.account_label = QLabel("")
         self.account_label.setTextFormat(Qt.TextFormat.PlainText)
+        self.account_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.account_label.setWordWrap(True)
         self.account_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         self.account_label.setObjectName("minimal_account_label")
@@ -202,17 +206,20 @@ class MinimalView(QWidget):
         self.settings_button.setObjectName("minimal_settings_button")
         self.settings_button.setToolTip(_("Settings"))
         set_button_icon(self.settings_button, "settings")
-        nav.addWidget(self.previous_button)
-        nav.addWidget(self.today_button)
-        nav.addWidget(self.next_button)
-        nav.addWidget(self.date_label, 1)
+        nav.addWidget(self.today_button, 0, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.date_navigation_widget = QWidget()
+        self.date_navigation_widget.setObjectName("minimal_date_navigation_widget")
+        date_navigation = QHBoxLayout(self.date_navigation_widget)
+        date_navigation.setContentsMargins(0, 0, 0, 0)
+        date_navigation.setSpacing(8)
+        date_navigation.addWidget(self.previous_button)
+        date_navigation.addWidget(self.date_label)
+        date_navigation.addWidget(self.next_button)
+        nav.addWidget(self.date_navigation_widget, 0, 1)
         self.notes_button = QPushButton(_("Notes"))
         set_button_icon(self.notes_button, "notebook-text")
         self.notes_button.setVisible(self._notes_workflow is not None)
-        if self._config.account_name:
-            nav.addWidget(self.account_label, 1)
-        else:
-            self.account_label.hide()
+        nav.addWidget(self.account_label, 0, 2)
         self.settings_button.setVisible(self._settings_workflow is not None)
         root.addLayout(nav)
         actions = QHBoxLayout()
