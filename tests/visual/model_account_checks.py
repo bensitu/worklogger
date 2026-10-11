@@ -73,6 +73,7 @@ class ModelAccountLayoutChecks(unittest.TestCase):
                     self.check_credential_dialog(dialog_type, language, dark)
 
     def test_browser_sign_in_and_registration_controls_fit_supported_languages(self):
+        from PySide6.QtWidgets import QFormLayout
         from worklogger.presentation.auth import LoginDialog
         from worklogger.presentation.identity.dialogs import IdentityConfigurationDialog
         from worklogger.presentation.identity import IdentityDialog
@@ -110,6 +111,16 @@ class ModelAccountLayoutChecks(unittest.TestCase):
                                     (dialog.client_id_input, dialog.tenant_input if index == 3 else dialog.secret_input, dialog.save_button))
                         for field in controls:
                             self.assertTrue(dialog.rect().contains(field.rect().translated(field.mapTo(dialog, QPoint()))))
+                        if index >= 2:
+                            form = dialog.findChild(QFormLayout)
+                            fields = (dialog.client_id_input, dialog.tenant_input if index == 3 else dialog.secret_input)
+                            for field in fields:
+                                label = form.labelForField(field)
+                                label_bounds = label.rect().translated(label.mapTo(dialog, QPoint()))
+                                field_bounds = field.rect().translated(field.mapTo(dialog, QPoint()))
+                                self.assertLess(label_bounds.bottom(), field_bounds.top())
+                                self.assertEqual(label_bounds.left(), field_bounds.left())
+                            self.assertEqual(fields[0].width(), fields[1].width())
                         self.capture(dialog, f"{language}-identity-{index}-{'dark' if dark else 'light'}")
                     finally:
                         dialog.hide()
