@@ -84,7 +84,7 @@ class AuthSchemaMigrationTests(unittest.TestCase):
     def test_snapshot_includes_committed_wal_content(self):
         with tempfile.TemporaryDirectory() as directory:
             factory, _, _ = released_database(Path(directory) / "accounts.db")
-            with factory.connection() as live:
+            with factory.connection(write=True) as live:
                 live.execute("PRAGMA wal_autocheckpoint=0")
                 live.execute("UPDATE worklog SET note='Committed WAL content'")
                 MigrationRunner(factory).run_pending()

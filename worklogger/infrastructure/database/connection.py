@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from contextlib import contextmanager
-from pathlib import Path
-import sqlite3
 import os
-from threading import RLock
-from typing import Iterator
+import sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager, nullcontext
+from pathlib import Path
+from threading import Condition, RLock, get_ident
 
 from worklogger.config.constants import DB_CORRUPT_BACKUP_RETENTION
 from worklogger.infrastructure.database.paths import (
@@ -32,16 +32,22 @@ class SQLiteConnectionFactory:
         self.recover_corrupt = bool(recover_corrupt)
         self.corrupt_backup_retention = int(corrupt_backup_retention)
         self.write_lock = RLock()
+        self._initialization_lock = RLock()
+        self._activity = Condition(RLock())
+        self._readers: dict[int, int] = {}
+        self._writers: dict[int, int] = {}
+        self._maintenance_owner: int | None = None
+        self._maintenance_depth = 0
         self._integrity_checked = False
 
     def open(self) -> sqlite3.Connection:
-        with self.write_lock:
+        with self._initialization_lock:
             try:
                 connection = self._open_once(check_integrity=not self._integrity_checked)
             except sqlite3.DatabaseError as exc:
                 code = getattr(exc, "sqlite_errorcode", 0) & 0xFF
                 corrupt = isinstance(exc, DatabaseIntegrityError) or code in (sqlite3.SQLITE_CORRUPT, sqlite3.SQLITE_NOTADB)
-                if not corrupt or not self.recover_corrupt or self.database_path == ":memory:":
+                if self._integrity_checked or not corrupt or not self.recover_corrupt or self.database_path == ":memory:":
                     raise
                 quarantine_corrupt_database(self.database_path, keep=self.corrupt_backup_retention)
                 connection = self._open_once(check_integrity=True)
@@ -67,9 +73,11 @@ class SQLiteConnectionFactory:
         try:
             connection.execute("PRAGMA foreign_keys=ON")
             if self.database_path != ":memory:":
-                connection.execute("PRAGMA journal_mode=WAL")
+                if check_integrity:
+                    connection.execute("PRAGMA journal_mode=WAL")
                 connection.execute("PRAGMA synchronous=NORMAL")
-                secure_database_files(self.database_path)
+                if check_integrity:
+                    secure_database_files(self.database_path)
             if check_integrity and self.database_path != ":memory:":
                 row = connection.execute("PRAGMA integrity_check").fetchone()
                 if not row or row[0] != "ok":
@@ -80,13 +88,61 @@ class SQLiteConnectionFactory:
             raise
 
     @contextmanager
-    def connection(self) -> Iterator[sqlite3.Connection]:
-        with self.write_lock:
-            connection = self.open()
+    def connection(self, *, write: bool = False) -> Iterator[sqlite3.Connection]:
+        identity = get_ident()
+        with self._activity:
+            if write and self._readers.get(identity) and not self._writers.get(identity):
+                raise RuntimeError("database_write_during_read")
+        with self.write_lock if write else nullcontext():
+            with self._activity:
+                while self._maintenance_owner not in (None, identity):
+                    self._activity.wait()
+                active = self._writers if write else self._readers
+                active[identity] = active.get(identity, 0) + 1
+            connection = None
             try:
+                connection = self.open()
+                if not write:
+                    connection.execute("PRAGMA query_only=ON")
                 yield connection
             finally:
-                connection.close()
+                if connection is not None:
+                    connection.close()
+                with self._activity:
+                    active[identity] -= 1
+                    if not active[identity]:
+                        del active[identity]
+                    self._activity.notify_all()
+
+    @contextmanager
+    def maintenance(self):
+        identity = get_ident()
+        with self._activity:
+            if self._readers.get(identity) or self._writers.get(identity):
+                raise RuntimeError("database_maintenance_during_connection")
+        with self.write_lock:
+            with self._activity:
+                if self._maintenance_owner == identity:
+                    self._maintenance_depth += 1
+                else:
+                    self._maintenance_owner = identity
+                    self._maintenance_depth = 1
+                    while self._readers or self._writers:
+                        self._activity.wait()
+            try:
+                yield
+            finally:
+                with self._activity:
+                    self._maintenance_depth -= 1
+                    if not self._maintenance_depth:
+                        self._maintenance_owner = None
+                        self._activity.notify_all()
+
+    def invalidate(self):
+        if self._maintenance_owner != get_ident():
+            raise RuntimeError("database_invalidation_requires_maintenance")
+        with self._initialization_lock:
+            self._integrity_checked = False
 
     @contextmanager
     def transaction(
@@ -94,7 +150,7 @@ class SQLiteConnectionFactory:
         *,
         write: bool = True,
     ) -> Iterator[sqlite3.Connection]:
-        with self.connection() as connection:
+        with self.connection(write=write) as connection:
             try:
                 connection.execute("BEGIN IMMEDIATE" if write else "BEGIN")
                 yield connection

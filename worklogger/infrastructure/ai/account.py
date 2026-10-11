@@ -11,6 +11,10 @@ from worklogger.domain.shared.result import Result
 from worklogger.domain.settings.values import setting_bool
 from worklogger.infrastructure.ai.external import OpenAICompatibleGateway
 from worklogger.infrastructure.http import validate_https_url
+from worklogger.infrastructure.settings_reads import selected_settings
+
+_CONFIGURATION_KEYS = (AI_ASSIST_ENABLED_SETTING_KEY, EXTERNAL_MODEL_ENABLED_SETTING_KEY,
+                       EXTERNAL_MODEL_BASE_URL_SETTING_KEY, EXTERNAL_MODEL_NAME_SETTING_KEY)
 
 
 class AccountAIGateway:
@@ -30,7 +34,7 @@ class AccountAIGateway:
     @property
     def available(self):
         try:
-            values = self._settings.get_all(self._user_id)
+            values = selected_settings(self._settings, self._user_id, _CONFIGURATION_KEYS)
             if not self._enabled or not setting_bool(values.get(AI_ASSIST_ENABLED_SETTING_KEY), True):
                 return False
             if setting_bool(values.get(EXTERNAL_MODEL_ENABLED_SETTING_KEY)):
@@ -49,7 +53,7 @@ class AccountAIGateway:
 
     def generate(self, request):
         try:
-            values = self._settings.get_all(self._user_id)
+            values = selected_settings(self._settings, self._user_id, _CONFIGURATION_KEYS)
             if not self._enabled or not setting_bool(values.get(AI_ASSIST_ENABLED_SETTING_KEY), True):
                 return Result.failure(ValidationError("ai_assist_disabled", "ai_assist_disabled"))
             if not setting_bool(values.get(EXTERNAL_MODEL_ENABLED_SETTING_KEY)):

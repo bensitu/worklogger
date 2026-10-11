@@ -6,6 +6,8 @@ import re
 import ssl
 import socket
 import base64
+from functools import lru_cache
+from pathlib import Path
 from urllib.error import HTTPError
 from urllib.parse import urlparse, unquote
 from urllib.request import HTTPSHandler, HTTPRedirectHandler, ProxyHandler, build_opener
@@ -83,8 +85,15 @@ class _ValidatedRedirect(HTTPRedirectHandler):
         return super().redirect_request(request, response, code, message, headers, new_url)
 
 
+@lru_cache(maxsize=2)
+def _certificate_context(path: str, modified: int, size: int):
+    return ssl.create_default_context(cafile=path)
+
+
 def https_opener(*, public_only: bool = False, allow_redirects: bool = True, proxy_url: str | None = None):
-    context = ssl.create_default_context(cafile=certifi.where())
+    certificate = Path(certifi.where())
+    stat = certificate.stat()
+    context = _certificate_context(str(certificate), stat.st_mtime_ns, stat.st_size)
     handler = _PublicHTTPSHandler(context=context) if public_only else HTTPSHandler(context=context)
     proxy = _ExplicitProxyHandler({"https": proxy_url}) if proxy_url else ProxyHandler({})
     opener = build_opener(proxy, handler, _ValidatedRedirect(allow=allow_redirects, public_only=public_only))

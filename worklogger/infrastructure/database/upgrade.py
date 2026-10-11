@@ -62,7 +62,7 @@ def upgrade_database(source: Path, destination: Path, *, template_file: Path | N
             versions = MigrationRunner(factory).run_pending()
             if template_file is not None:
                 _import_template(factory, template_file, template_user, template_language)
-            with factory.connection() as connection:
+            with factory.connection(write=True) as connection:
                 if connection.execute("PRAGMA foreign_key_check").fetchone() is not None:
                     raise ValueError("database_foreign_key_invalid")
                 counts = tuple(connection.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()[0]

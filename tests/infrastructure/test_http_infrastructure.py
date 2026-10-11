@@ -12,6 +12,17 @@ from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
 
 
 class HTTPInfrastructureTests(unittest.TestCase):
+    def test_certificate_context_is_shared_without_caching_proxy_credentials(self):
+        from worklogger.infrastructure.http import _certificate_context, https_opener
+        import ssl
+
+        _certificate_context.cache_clear()
+        with patch("worklogger.infrastructure.http.ssl.create_default_context", wraps=ssl.create_default_context) as create:
+            https_opener(proxy_url="http://first:synthetic@proxy.example:8080")
+            https_opener(proxy_url="http://second:replacement@proxy.example:8080")
+            self.assertEqual(create.call_count, 1)
+        _certificate_context.cache_clear()
+
     def test_public_transport_validates_urls_redirects_and_connected_peers(self):
         for url in ("http://example.com", "https://user:secret@example.com", "https://127.0.0.1",
                     "https://localhost", "https://0x7f000001", "https://[::1]", "https://169.254.169.254"):

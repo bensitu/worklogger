@@ -65,7 +65,12 @@ class LocalModelInfrastructureTests(unittest.TestCase):
                 self.assertEqual(store.list_models().value[0].filename, "shared.gguf")
             source = root / "import.gguf"
             source.write_bytes(b"model")
-            imported = store.import_model(source).value
+            with patch("worklogger.infrastructure.local_model.store.sha256_of_file", wraps=sha256_of_file) as hashing:
+                imported = store.import_model(source).value
+                self.assertEqual(hashing.call_count, 1)
+                duplicate = store.import_model(source).value
+                self.assertEqual(duplicate.id, imported.id)
+                self.assertEqual(hashing.call_count, 3)
             restored = JsonLocalModelStore(models, bundled_catalog_path=bundled)
             self.assertEqual({item.id for item in restored.list_models().value}, {"shared", imported.id})
             self.assertTrue(restored.delete_model(imported.id).ok)

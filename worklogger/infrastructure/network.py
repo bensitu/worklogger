@@ -9,6 +9,10 @@ from worklogger.config.constants import (
 )
 from worklogger.infrastructure.http import https_opener
 from worklogger.domain.settings.values import setting_bool
+from worklogger.infrastructure.settings_reads import selected_settings
+
+_PROXY_KEYS = (NETWORK_PROXY_ENABLED_SETTING_KEY, NETWORK_PROXY_ADDRESS_SETTING_KEY,
+               NETWORK_PROXY_PORT_SETTING_KEY, NETWORK_PROXY_USERNAME_SETTING_KEY, NETWORK_PROXY_DOMAIN_SETTING_KEY)
 
 
 class AccountHTTPTransport:
@@ -26,7 +30,7 @@ class AccountHTTPTransport:
         return open_request
 
     def _proxy_url(self):
-        values = self._settings.get_all(self._user_id)
+        values = selected_settings(self._settings, self._user_id, _PROXY_KEYS)
         if not setting_bool(values.get(NETWORK_PROXY_ENABLED_SETTING_KEY)):
             return None
         address = str(values.get(NETWORK_PROXY_ADDRESS_SETTING_KEY) or "").strip()

@@ -189,7 +189,7 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         self.assertTrue(service.backup_database(source).ok)
         source_factory = SQLiteConnectionFactory(source, recover_corrupt=False)
 
-        with source_factory.connection() as live:
+        with source_factory.connection(write=True) as live:
             live.execute("PRAGMA wal_autocheckpoint=0")
             live.execute("PRAGMA wal_checkpoint(TRUNCATE)")
             main_file = source.read_bytes()

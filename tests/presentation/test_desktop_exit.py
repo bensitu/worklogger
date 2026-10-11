@@ -25,7 +25,7 @@ class DesktopExitTests(unittest.TestCase):
               patch("worklogger.infrastructure.language_preferences.initialize_language"),
               patch("worklogger.infrastructure.database.restore_recovery.inspect_pending_restore",
                     return_value=RestoreRecoveryChoices(True, True)),
-              patch("worklogger.presentation.auth.restore_recovery.choose_restore_recovery", return_value="rollback"),
+              patch("worklogger.presentation.widgets.restore_recovery.choose_restore_recovery", return_value="rollback"),
               patch("worklogger.infrastructure.database.restore_recovery.recover_pending_restore") as recover):
             self.assertEqual(self.run_with_results(pending, cancelled), (0, "", 2))
             self.assertEqual(recover.call_args.args[1], "rollback")
@@ -39,7 +39,7 @@ class DesktopExitTests(unittest.TestCase):
               patch("worklogger.infrastructure.language_preferences.initialize_language"),
               patch("worklogger.infrastructure.database.restore_recovery.inspect_pending_restore",
                     return_value=RestoreRecoveryChoices(True, False)),
-              patch("worklogger.presentation.auth.restore_recovery.choose_restore_recovery", return_value=None),
+              patch("worklogger.presentation.widgets.restore_recovery.choose_restore_recovery", return_value=None),
               patch("worklogger.infrastructure.database.restore_recovery.recover_pending_restore") as recover):
             self.assertEqual(self.run_with_results(pending), (0, "", 1))
             recover.assert_not_called()

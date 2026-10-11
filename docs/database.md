@@ -77,6 +77,12 @@ The connection factory enables foreign keys, WAL, a busy timeout, and short-live
 connections. Writes use `BEGIN IMMEDIATE` and the factory's lock. The desktop also
 holds a database-specific process lock.
 
+Read contexts use independent WAL snapshots and query-only connections; they do
+not hold the writer lock. Use `transaction(write=True)` for mutations and close
+a read context before starting a write. File replacement pauses new connections,
+waits for existing contexts to close, and reinitializes the factory afterward.
+Integrity verification remains mandatory during initial preparation and replacement.
+
 Record writes recheck ownership, revisions, and overlaps inside the transaction.
 Timer completion persists its record and timer state together. Note saves persist
 sharing/draft changes atomically. Report saves and restoration create versions

@@ -139,6 +139,10 @@ class JsonLocalModelStore:
             return Result.failure(InfrastructureError("local_model_catalog_failed", "local_model_catalog_failed"))
 
     def import_model(self, source: Path) -> Result[LocalModelEntry]:
+        with self._metadata_lock:
+            return self._import_model(source)
+
+    def _import_model(self, source: Path) -> Result[LocalModelEntry]:
         try:
             source = Path(source)
             if not source.is_file():
@@ -150,19 +154,24 @@ class JsonLocalModelStore:
             self._models_dir.mkdir(parents=True, exist_ok=True)
             digest = sha256_of_file(source)
             filename = safe_model_filename(source.name)
-            destination = self._unique_destination(filename, digest)
-            if not destination.exists() or sha256_of_file(destination) != digest:
+            destination, existing_verified = self._unique_destination(filename, digest)
+            if not existing_verified:
                 with atomic_destination(destination) as temporary:
-                    shutil.copy2(source, temporary)
-                    if sha256_of_file(temporary) != digest:
+                    copied = hashlib.sha256()
+                    with source.open("rb") as reader, temporary.open("wb") as writer:
+                        for chunk in iter(lambda: reader.read(1024 * 1024), b""):
+                            writer.write(chunk)
+                            copied.update(chunk)
+                    if copied.hexdigest() != digest:
                         raise ValueError("local_model_hash_mismatch")
+                    shutil.copystat(source, temporary)
             entry = LocalModelEntry(
                 id=_safe_model_id(destination.stem, digest),
                 display_name=source.stem,
                 filename=destination.name,
                 status="local",
                 sha256=digest,
-                estimated_size_mb=max(1, int(source.stat().st_size / 1_048_576)),
+                estimated_size_mb=max(1, int(destination.stat().st_size / 1_048_576)),
                 description=destination.name,
             )
             with self._metadata_lock:
@@ -420,13 +429,18 @@ class JsonLocalModelStore:
             raise ValueError("local_model_filename_invalid")
         return resolved
 
-    def _unique_destination(self, filename: str, digest: str) -> Path:
+    def _unique_destination(self, filename: str, digest: str) -> tuple[Path, bool]:
         destination = self._resolve(filename)
         if not destination.exists():
-            return destination
+            return destination, False
         if sha256_of_file(destination) == digest:
-            return destination
-        return self._resolve(f"{Path(filename).stem}-{digest[:8]}.gguf")
+            return destination, True
+        candidate = self._resolve(f"{Path(filename).stem}-{digest[:8]}.gguf")
+        if candidate.exists():
+            if sha256_of_file(candidate) != digest:
+                raise ValueError("local_model_hash_mismatch")
+            return candidate, True
+        return candidate, False
 
 
 def safe_model_filename(filename: str) -> str:

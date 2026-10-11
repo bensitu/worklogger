@@ -106,7 +106,6 @@ class SQLiteBackupService:
         snapshot = None
         previous = target.with_name(target.name + ".pre_restore")
         retained = None
-        replacement_started = False
         try:
             with self._connection_factory.write_lock:
                 self._authorize()
@@ -119,12 +118,26 @@ class SQLiteBackupService:
                     snapshot = create_database_snapshot(connection, target)
                 staged = SQLiteConnectionFactory(snapshot)
                 MigrationRunner(staged).run_pending()
-                with staged.connection() as connection:
+                with staged.connection(write=True) as connection:
                     _ensure_integrity(connection, "restore_integrity_failed")
                     connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
                     connection.execute("PRAGMA journal_mode=DELETE")
-                # Refuse replacement while another process has the live database open.
-                with self._connection_factory.connection() as connection:
+                retained = self._publish_restore(snapshot, target, previous)
+        except ValueError as exc:
+            return Result.failure(ValidationError(str(exc), str(exc)))
+        except Exception as exc:
+            return Result.failure(InfrastructureError("restore_failed", "restore_failed", {"reason": str(exc)}))
+        finally:
+            if snapshot:
+                _remove_if_exists(snapshot)
+        prune_restore_backups(target, preserve=retained)
+        return Result.success(None)
+
+    def _publish_restore(self, snapshot, target, previous):
+        retained, replacement_started = None, False
+        with self._connection_factory.maintenance():
+            try:
+                with self._connection_factory.connection(write=True) as connection:
                     checkpoint = connection.execute("PRAGMA wal_checkpoint(TRUNCATE)").fetchone()
                     if checkpoint and checkpoint[0]:
                         raise ValueError("restore_database_busy")
@@ -142,21 +155,13 @@ class SQLiteBackupService:
                         os.utime(retained, None)
                     except OSError:
                         LOGGER.warning("restore_backup_timestamp_failed")
-        except ValueError as exc:
-            if replacement_started and previous.exists():
-                if not _rollback_replacement(previous, target):
-                    return Result.failure(InfrastructureError("restore_pending", "restore_pending"))
-            return Result.failure(ValidationError(str(exc), str(exc)))
-        except Exception as exc:
-            if replacement_started and previous.exists():
-                if not _rollback_replacement(previous, target):
-                    return Result.failure(InfrastructureError("restore_pending", "restore_pending"))
-            return Result.failure(InfrastructureError("restore_failed", "restore_failed", {"reason": str(exc)}))
-        finally:
-            if snapshot:
-                _remove_if_exists(snapshot)
-        prune_restore_backups(target, preserve=retained)
-        return Result.success(None)
+            except Exception:
+                if replacement_started and previous.exists() and not _rollback_replacement(previous, target):
+                    raise ValueError("restore_pending") from None
+                raise
+            finally:
+                self._connection_factory.invalidate()
+        return retained
 
     def _validate_restore_source(self, source: Path) -> None:
         expected_id = None

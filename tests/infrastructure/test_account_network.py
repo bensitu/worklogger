@@ -16,10 +16,22 @@ from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
 
 
 class AccountNetworkTests(unittest.TestCase):
+    def test_runtime_reads_do_not_load_unrelated_drafts_or_avatar_values(self):
+        self.values.update(ai_assist_enabled="1", daily_note_draft="private draft", profile_avatar_png="private image")
+        gateway = AccountAIGateway(local=Mock(available=True), settings=self.settings,
+                                   user_id=1, key_store=self.keys, transport=self.transport)
+        self.assertTrue(gateway.available)
+        self.assertIsNone(self.transport._proxy_url())
+        self.settings.get_all.assert_not_called()
+        for call in self.settings.get_many.call_args_list:
+            self.assertNotIn("daily_note_draft", call.args[1])
+            self.assertNotIn("profile_avatar_png", call.args[1])
+
     def setUp(self):
         self.values = {}
         self.settings = Mock()
         self.settings.get_all.side_effect = lambda _user: dict(self.values)
+        self.settings.get_many.side_effect = lambda _user, keys: {key: self.values[key] for key in keys if key in self.values}
         self.keys = Mock()
         self.keys.get_secret.return_value = Result.success("synthetic-api-key")
         self.password = Mock()

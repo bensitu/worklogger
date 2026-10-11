@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 
 from worklogger.domain.shared.recovery import RestoreRecoveryChoices
 from worklogger.infrastructure.i18n import get_language, set_language
-from worklogger.presentation.auth.restore_recovery import choose_restore_recovery
+from worklogger.presentation.widgets.restore_recovery import choose_restore_recovery
 from worklogger.presentation.theme import ThemeEngine, install_bundled_fonts
 
 

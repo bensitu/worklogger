@@ -292,7 +292,7 @@ def _run_desktop(args: Sequence[str]) -> int:
                 from worklogger.infrastructure.language_preferences import LanguagePreferences, initialize_language
                 from worklogger.infrastructure.database.paths import default_database_path
                 from worklogger.infrastructure.database.restore_recovery import inspect_pending_restore, recover_pending_restore
-                from worklogger.presentation.auth.restore_recovery import choose_restore_recovery
+                from worklogger.presentation.widgets.restore_recovery import choose_restore_recovery
 
                 try:
                     _recovery_application = _application(list(args))

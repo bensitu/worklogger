@@ -330,12 +330,19 @@ class GenerateReportHandler:
                 work_logs += tuple(WorkLog(command.user_id, note.day, note=note.content)
                                    for note in notes if note.content and (note.day, note.content) not in recorded_notes)
             quick_logs = self._quick_logs.list_for_range(command.user_id, period.start, period.end)
-            quick_logs = tuple(entry for entry in quick_logs if not any(note.day == entry.day
-                and contains_quick_log_reference(note.content, entry) for note in notes))
+            notes_by_day = {}
+            for note in notes:
+                notes_by_day.setdefault(note.day, []).append(note.content)
+            quick_logs = tuple(entry for entry in quick_logs if not any(
+                contains_quick_log_reference(content, entry) for content in notes_by_day.get(entry.day, ())))
             events = self._calendar_events.list_for_range(command.user_id, period.start, period.end)
             template = self._templates.get_template(
                 command.language, period.report_type, user_id=command.user_id,
             )
+        except ValueError as exc:
+            if str(exc) == "record_range_too_large":
+                return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(InfrastructureError("report_load_failed", "report_load_failed"))
         except Exception:
             return Result.failure(InfrastructureError("report_load_failed", "report_load_failed"))
         translate = partial(self._translator, language=command.language)
