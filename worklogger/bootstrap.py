@@ -459,8 +459,12 @@ def _window_config_for_user(
     window_config: AppWindowConfig,
     user: User,
 ) -> AppWindowConfig:
+    from worklogger.infrastructure.runtime_config import load_runtime_configuration
+
+    features = load_runtime_configuration().features
     return replace(
         window_config,
+        background_images_available=window_config.background_images_available and features.background_images,
         account_name=window_config.account_name or user.effective_display_name,
         account_role=_("Admin") if user.is_admin else _("User"),
     )

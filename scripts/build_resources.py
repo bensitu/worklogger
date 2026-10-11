@@ -23,6 +23,10 @@ def bundled_resources(root: Path) -> list[tuple[str, str]]:
     if not model_catalog.is_file():
         raise FileNotFoundError(f"Model catalog is missing: {model_catalog}")
     resources.append((str(model_catalog), "worklogger/assets/models"))
+    configuration = root / "worklogger.config.json"
+    if not configuration.is_file():
+        raise FileNotFoundError(f"Runtime configuration is missing: {configuration}")
+    resources.append((str(configuration), "."))
     return resources
 
 
