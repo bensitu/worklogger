@@ -100,9 +100,6 @@ msgstr "Active"
 msgid "Active model updated."
 msgstr "Active model updated."
 
-msgid "Add"
-msgstr "Add"
-
 msgid "Add another sign-in method before unlinking this identity."
 msgstr "Add another sign-in method before unlinking this identity."
 
@@ -546,9 +543,6 @@ msgstr "Delete user"
 
 msgid "Delete user {username} and their data?"
 msgstr "Delete user {username} and their data?"
-
-msgid "Description"
-msgstr "Description"
 
 msgid "Desktop client secret (optional)"
 msgstr "Desktop client secret (optional)"
@@ -1465,18 +1459,6 @@ msgstr "Quarterly"
 msgid "Quarterly Hours"
 msgstr "Quarterly Hours"
 
-msgid "Quick Log"
-msgstr "Quick Log"
-
-msgid "Quick Log added."
-msgstr "Quick Log added."
-
-msgid "Quick Log deleted."
-msgstr "Quick Log deleted."
-
-msgid "Quick Log updated."
-msgstr "Quick Log updated."
-
 msgid "Quit"
 msgstr "Quit"
 
@@ -1795,9 +1777,6 @@ msgstr "Select a model first."
 msgid "Select a provider first."
 msgstr "Select a provider first."
 
-msgid "Select a quick log first."
-msgstr "Select a quick log first."
-
 msgid "Select a supported holiday country and state or province."
 msgstr "Select a supported holiday country and state or province."
 
@@ -2062,9 +2041,6 @@ msgstr "The password must contain at least {length} characters."
 msgid "The passwords do not match."
 msgstr "The passwords do not match."
 
-msgid "The quick log is no longer available. Reload the records and try again."
-msgstr "The quick log is no longer available. Reload the records and try again."
-
 msgid "The records have changed. Reload them before undoing this operation."
 msgstr "The records have changed. Reload them before undoing this operation."
 
@@ -2320,9 +2296,6 @@ msgstr "Unable to update automatic recording state. Your saved data has been ret
 msgid "Unable to update saved sign-in information."
 msgstr "Unable to update saved sign-in information."
 
-msgid "Unable to update the quick log. Your changes have been retained."
-msgstr "Unable to update the quick log. Your changes have been retained."
-
 msgid "Unable to update work types. Your records have not changed."
 msgstr "Unable to update work types. Your records have not changed."
 
@@ -2358,9 +2331,6 @@ msgstr "Unsaved changes"
 
 msgid "Unsaved edits to this report will also be discarded."
 msgstr "Unsaved edits to this report will also be discarded."
-
-msgid "Update"
-msgstr "Update"
 
 msgid "Update available: {version}"
 msgstr "Update available: {version}"

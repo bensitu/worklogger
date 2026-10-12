@@ -100,9 +100,6 @@ msgstr "已啟用"
 msgid "Active model updated."
 msgstr "目前模型已更新。"
 
-msgid "Add"
-msgstr "新增"
-
 msgid "Add another sign-in method before unlinking this identity."
 msgstr "解除此身分連結前，請新增其他登入方式。"
 
@@ -546,9 +543,6 @@ msgstr "刪除使用者"
 
 msgid "Delete user {username} and their data?"
 msgstr "刪除使用者 {username} 及其資料嗎？"
-
-msgid "Description"
-msgstr "說明"
 
 msgid "Desktop client secret (optional)"
 msgstr "桌面用戶端密鑰（選填）"
@@ -1465,18 +1459,6 @@ msgstr "季度"
 msgid "Quarterly Hours"
 msgstr "季度工時"
 
-msgid "Quick Log"
-msgstr "快速記錄"
-
-msgid "Quick Log added."
-msgstr "快速記錄已新增。"
-
-msgid "Quick Log deleted."
-msgstr "快速記錄已刪除。"
-
-msgid "Quick Log updated."
-msgstr "快速記錄已更新。"
-
 msgid "Quit"
 msgstr "結束"
 
@@ -1795,9 +1777,6 @@ msgstr "請先選取模型。"
 msgid "Select a provider first."
 msgstr "請先選取提供者。"
 
-msgid "Select a quick log first."
-msgstr "請先選擇一筆快速記錄。"
-
 msgid "Select a supported holiday country and state or province."
 msgstr "請選擇支援的假日國家及州或省。"
 
@@ -2062,9 +2041,6 @@ msgstr "密碼至少需要 {length} 個字元。"
 msgid "The passwords do not match."
 msgstr "兩次輸入的密碼不一致。"
 
-msgid "The quick log is no longer available. Reload the records and try again."
-msgstr "該速記已不存在。請重新載入記錄後重試。"
-
 msgid "The records have changed. Reload them before undoing this operation."
 msgstr "紀錄已發生變更，復原前請重新載入。"
 
@@ -2320,9 +2296,6 @@ msgstr "無法更新自動記錄狀態。已儲存的資料已保留。"
 msgid "Unable to update saved sign-in information."
 msgstr "無法更新已儲存的登入資訊。"
 
-msgid "Unable to update the quick log. Your changes have been retained."
-msgstr "無法更新速記。您的修改已保留。"
-
 msgid "Unable to update work types. Your records have not changed."
 msgstr "無法更新工作類型。您的記錄未改變。"
 
@@ -2358,9 +2331,6 @@ msgstr "未儲存的變更"
 
 msgid "Unsaved edits to this report will also be discarded."
 msgstr "對該報表尚未儲存的修改也將被放棄。"
-
-msgid "Update"
-msgstr "更新"
 
 msgid "Update available: {version}"
 msgstr "有可用更新：{version}"

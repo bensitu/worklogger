@@ -29,6 +29,7 @@ from worklogger.app.use_cases.reports import (
     SaveReportTemplateHandler,
 )
 from worklogger.domain.quicklog.models import QuickLog
+from tests.quick_log_samples import insert_previous_entry
 from worklogger.domain.reporting.models import Report
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog, WorkType
@@ -150,12 +151,12 @@ class NotesReportsPresentationTests(unittest.TestCase):
         user = auth.create_user("memo.user", "example-password", recovery_key=None, is_admin=False)
         notes, quick = SQLiteDailyNoteRepository(factory), SQLiteQuickLogRepository(factory)
         service = DailyNotesService(user_id=user.id, notes=notes, settings=SQLiteSettingsRepository(factory), previous_entries=quick)
-        return NoteEditorViewModel(service, markdown_exporter=MarkdownExporter(), rewrite_handler=RewriteTextHandler()), notes, quick
+        return NoteEditorViewModel(service, markdown_exporter=MarkdownExporter(), rewrite_handler=RewriteTextHandler()), notes, quick, factory
 
     def test_memos_preserve_previous_entries_drafts_and_sharing_choices(self):
-        model, notes, quick = self._note_model()
+        model, notes, quick, factory = self._note_model()
         day = date(2026, 5, 14)
-        quick.add(QuickLog(None, model.service.user_id, day, "Standup", "09:30", "10:00"))
+        insert_previous_entry(factory, QuickLog(None, model.service.user_id, day, "Standup", "09:30", "10:00"))
         notes.save(DailyNote(model.service.user_id, day, "Existing note"))
         dialog = NoteEditorDialog(model, day, job_runner=ImmediateJobRunner())
         self.addCleanup(dialog.deleteLater)
@@ -204,7 +205,7 @@ class NotesReportsPresentationTests(unittest.TestCase):
         restored._draft_timer.stop()
 
     def test_memo_conflicts_and_cancelled_close_keep_the_draft(self):
-        model, notes, _quick = self._note_model()
+        model, notes, _quick, _factory = self._note_model()
         day = date(2026, 5, 14)
         notes.save(DailyNote(model.service.user_id, day, "Original"))
         dialog = NoteEditorDialog(model, day, job_runner=ImmediateJobRunner())
@@ -227,7 +228,7 @@ class NotesReportsPresentationTests(unittest.TestCase):
         dialog._draft_timer.stop()
 
     def test_note_navigation_keeps_date_selection_and_content_actions_in_sync(self):
-        model, notes, _quick = self._note_model()
+        model, notes, _quick, _factory = self._note_model()
         saved_day, empty_day = date(2026, 10, 8), date(2026, 10, 9)
         notes.save(DailyNote(model.service.user_id, saved_day, "Meeting summary\nFollow up tomorrow"))
         dialog = NoteEditorDialog(model, empty_day, job_runner=ImmediateJobRunner())
@@ -266,7 +267,7 @@ class NotesReportsPresentationTests(unittest.TestCase):
         dialog._search_timer.stop()
 
     def test_search_keeps_inputs_available_and_discards_obsolete_results(self):
-        model, notes, _quick = self._note_model()
+        model, notes, _quick, _factory = self._note_model()
         day = date(2026, 10, 9)
         notes.save(DailyNote(model.service.user_id, day, "Planning and meeting"))
 
@@ -376,7 +377,7 @@ class NotesReportsPresentationTests(unittest.TestCase):
         quick_logs = MemoryQuickLogRepository(())
         calendar = MemoryCalendarRepository(())
         template_repository = MemoryTemplateRepository()
-        note_view_model, _notes, _quick = self._note_model()
+        note_view_model, _notes, _quick, _factory = self._note_model()
         note_dialog = NoteEditorDialog(note_view_model, date(2026, 5, 14),
             confirm_discard_changes=lambda: False, job_runner=ImmediateJobRunner())
         self.addCleanup(note_dialog.deleteLater)

@@ -1,4 +1,4 @@
-"""Quick log repository Protocols."""
+"""Read-only contracts for historical quick log entries."""
 
 from __future__ import annotations
 
@@ -9,15 +9,6 @@ from worklogger.domain.quicklog.models import QuickLog
 
 
 class QuickLogRepository(Protocol):
-    def add(self, quick_log: QuickLog) -> QuickLog:
-        ...
-
-    def update(self, quick_log: QuickLog) -> None:
-        ...
-
-    def remove(self, user_id: int, quick_log_id: int) -> None:
-        ...
-
     def list_for_day(self, user_id: int, day: date) -> tuple[QuickLog, ...]:
         ...
 

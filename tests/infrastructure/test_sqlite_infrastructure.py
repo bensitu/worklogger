@@ -15,7 +15,6 @@ from worklogger.app.commands.auth_commands import (
     RegisterUserCommand,
     ResetPasswordCommand,
 )
-from worklogger.app.commands.quick_log_commands import AddQuickLogCommand, UpdateQuickLogCommand, DeleteQuickLogCommand
 from worklogger.app.commands.report_commands import SaveReportCommand
 from worklogger.app.commands.settings_commands import SetActiveLocalModelCommand
 from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
@@ -30,13 +29,15 @@ from worklogger.app.use_cases.auth import (
     RegisterUserHandler,
     ResetPasswordHandler,
 )
-from worklogger.app.use_cases.quick_logs import AddQuickLogHandler, GetQuickLogsForRangeHandler, UpdateQuickLogHandler, DeleteQuickLogHandler
+from worklogger.app.use_cases.quick_logs import GetQuickLogsForRangeHandler
 from worklogger.app.use_cases.reports import GetReportForPeriodHandler, SaveReportHandler
 from worklogger.app.use_cases.settings import SetActiveLocalModelHandler
 from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
 from worklogger.config.constants import LOCAL_MODEL_ACTIVE_ID_SETTING_KEY
 from worklogger.domain.auth.models import LinkedIdentity
 from worklogger.domain.calendar.models import CalendarEvent
+from worklogger.domain.quicklog.models import QuickLog
+from tests.quick_log_samples import insert_previous_entry
 from worklogger.domain.worklog.models import WorkType
 from worklogger.infrastructure.database import (
     MigrationRunner,
@@ -106,12 +107,11 @@ class SQLiteInfrastructureTests(unittest.TestCase):
             ),
         )
 
-    def test_collection_reads_preserve_valid_records_and_mutations_require_ownership(self) -> None:
+    def test_collection_reads_preserve_valid_records_and_isolate_accounts(self) -> None:
         user = self.auth_repository().create_user("collection-user", "test-password", recovery_key=None, is_admin=False)
         day = date(2026, 5, 1)
         repository = SQLiteQuickLogRepository(self.factory)
-        added = AddQuickLogHandler(repository).handle(AddQuickLogCommand(user.id, day, "Valid record"))
-        record_id = added.value.id
+        record_id = insert_previous_entry(self.factory, QuickLog(None, user.id, day, "Valid record")).id
         with self.factory.transaction(write=True) as connection:
             connection.execute("UPDATE quick_logs SET created_at='invalid' WHERE id=?", (record_id,))
             connection.execute("INSERT INTO worklog(user_id,d,\"break\",note,work_type) VALUES(?, '2026-05-15X', 0, '', 'normal')", (user.id,))
@@ -125,10 +125,8 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         with self.assertLogs("worklogger.infrastructure.repositories._mapping", level="WARNING"):
             with self.assertRaisesRegex(ValueError, "stored_records_invalid"):
                 SQLiteWorkLogRepository(self.factory).list_export_rows(user.id)
-        self.assertFalse(UpdateQuickLogHandler(repository).handle(UpdateQuickLogCommand(user.id + 1, record_id, day, "Not owned")).ok)
-        self.assertFalse(DeleteQuickLogHandler(repository).handle(DeleteQuickLogCommand(user.id + 1, record_id)).ok)
-        self.assertTrue(DeleteQuickLogHandler(repository).handle(DeleteQuickLogCommand(user.id, record_id)).ok)
-        self.assertFalse(DeleteQuickLogHandler(repository).handle(DeleteQuickLogCommand(user.id, record_id)).ok)
+        self.assertEqual(repository.list_for_day(user.id + 1, day), ())
+        self.assertEqual(repository.list_for_range(user.id + 1, day, day), ())
         with self.factory.connection() as connection:
             self.assertEqual(connection.execute("SELECT COUNT(*) FROM worklog").fetchone()[0], 2)
 
@@ -349,16 +347,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         self.assertEqual(analytics.value.leave_line_data[3], 8.0)
 
         quick_logs = SQLiteQuickLogRepository(self.factory)
-        added = AddQuickLogHandler(quick_logs).handle(
-            AddQuickLogCommand(
-                user_id=user_id,
-                day=date(2026, 4, 20),
-                description="Meeting",
-                start_time="930",
-                end_time="1000",
-            )
-        )
-        self.assertTrue(added.ok)
+        insert_previous_entry(self.factory, QuickLog(None, user_id, date(2026, 4, 20), "Meeting", "09:30", "10:00"))
         listed = GetQuickLogsForRangeHandler(quick_logs).handle(
             GetQuickLogsForRangeQuery(
                 user_id=user_id,

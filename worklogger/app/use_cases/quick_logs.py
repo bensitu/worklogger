@@ -1,89 +1,15 @@
-"""Quick log command and query use cases."""
+"""Read-only queries for historical quick log entries."""
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
-from worklogger.app.commands.quick_log_commands import (
-    AddQuickLogCommand,
-    DeleteQuickLogCommand,
-    UpdateQuickLogCommand,
-)
 from worklogger.app.queries.quick_log_queries import (
     GetQuickLogsForDayQuery,
     GetQuickLogsForRangeQuery,
 )
 from worklogger.domain.quicklog.models import QuickLog
 from worklogger.domain.quicklog.repositories import QuickLogRepository
-from worklogger.domain.quicklog.rules import normalize_quick_log
-from worklogger.domain.shared.errors import ValidationError, NotFoundError, InfrastructureError
+from worklogger.domain.shared.errors import ValidationError, InfrastructureError
 from worklogger.domain.shared.result import Result
-
-
-class AddQuickLogHandler:
-    def __init__(self, repository: QuickLogRepository) -> None:
-        self._repository = repository
-
-    def handle(self, command: AddQuickLogCommand) -> Result[QuickLog]:
-        try:
-            quick_log = normalize_quick_log(
-                QuickLog(
-                    id=None,
-                    user_id=command.user_id,
-                    day=command.day,
-                    description=command.description,
-                    start_time=command.start_time,
-                    end_time=command.end_time,
-                    created_at=datetime.now(timezone.utc),
-                )
-            )
-        except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
-        try:
-            return Result.success(self._repository.add(quick_log))
-        except Exception:
-            return Result.failure(InfrastructureError("quick_log_save_failed", "quick_log_save_failed"))
-
-
-class UpdateQuickLogHandler:
-    def __init__(self, repository: QuickLogRepository) -> None:
-        self._repository = repository
-
-    def handle(self, command: UpdateQuickLogCommand) -> Result[QuickLog]:
-        try:
-            quick_log = normalize_quick_log(
-                QuickLog(
-                    id=command.quick_log_id,
-                    user_id=command.user_id,
-                    day=command.day,
-                    description=command.description,
-                    start_time=command.start_time,
-                    end_time=command.end_time,
-                )
-            )
-        except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
-        try:
-            self._repository.update(quick_log)
-        except ValueError as exc:
-            return Result.failure(NotFoundError(str(exc), str(exc)))
-        except Exception:
-            return Result.failure(InfrastructureError("quick_log_save_failed", "quick_log_save_failed"))
-        return Result.success(quick_log)
-
-
-class DeleteQuickLogHandler:
-    def __init__(self, repository: QuickLogRepository) -> None:
-        self._repository = repository
-
-    def handle(self, command: DeleteQuickLogCommand) -> Result[None]:
-        try:
-            self._repository.remove(command.user_id, command.quick_log_id)
-        except ValueError as exc:
-            return Result.failure(NotFoundError(str(exc), str(exc)))
-        except Exception:
-            return Result.failure(InfrastructureError("quick_log_delete_failed", "quick_log_delete_failed"))
-        return Result.success(None)
 
 
 class GetQuickLogsForDayHandler:

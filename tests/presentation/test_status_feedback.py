@@ -18,7 +18,6 @@ from worklogger.presentation.ai.dialog import AiAssistDialog
 from worklogger.presentation.analytics.dialog import AnalyticsDialog
 from worklogger.presentation.identity.dialog import IdentityDialog
 from worklogger.presentation.local_models.dialog import LocalModelsDialog
-from worklogger.presentation.quick_logs.dialog import QuickLogDialog
 from worklogger.presentation.reporting.dialog import ReportDialog, ReportTemplateDialog
 from worklogger.presentation.user_management.dialog import UserManagementDialog
 from worklogger.presentation.widgets.status_label import StatusLabel
@@ -83,7 +82,6 @@ class StatusFeedbackTests(unittest.TestCase):
             lambda model: AnalyticsDialog(model, day),
             lambda model: IdentityDialog(model),
             lambda model: LocalModelsDialog(model, job_runner=ImmediateJobRunner()),
-            lambda model: QuickLogDialog(model, day),
             lambda model: UserManagementDialog(model, job_runner=ImmediateJobRunner()),
             lambda model: ReportDialog(model, day),
         )

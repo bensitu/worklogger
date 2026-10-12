@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from datetime import date
-from dataclasses import replace
 import tempfile
 import unittest
 from unittest.mock import patch
 from worklogger.app.use_cases.notes import DailyNotesService
 from worklogger.domain.notes.preferences import NoteSharing, note_draft_key
 from worklogger.domain.quicklog.models import QuickLog
+from tests.quick_log_samples import insert_previous_entry
 from worklogger.domain.quicklog.rules import quick_log_reference
 from worklogger.domain.shared.dates import time_range_label
 from worklogger.app.commands.report_commands import GenerateReportCommand
@@ -52,13 +52,15 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
             service = DailyNotesService(user_id=user.id, notes=notes, settings=settings, previous_entries=quick)
             day = date(2026, 10, 9)
             notes.save(DailyNote(user.id, day, "Original note"))
-            first = quick.add(QuickLog(None, user.id, day, "Planning\nPrepare the agenda", "09:00", "10:00"))
-            second = quick.add(QuickLog(None, user.id, day, "Follow up", "10:00", "11:00"))
-            unrelated = quick.add(QuickLog(None, other.id, day, "Private entry"))
+            first = insert_previous_entry(factory, QuickLog(None, user.id, day, "Planning\nPrepare the agenda", "09:00", "10:00"))
+            second = insert_previous_entry(factory, QuickLog(None, user.id, day, "Follow up", "10:00", "11:00"))
+            unrelated = insert_previous_entry(factory, QuickLog(None, other.id, day, "Private entry"))
             original = service.load(day).value
             content = "Original note\n" + "\n".join(quick_log_reference(entry) for entry in original.previous_entries)
             service.save_draft(day, content, "Original note", NoteSharing(True, False))
-            quick.update(replace(second, description="Updated follow up"))
+            with factory.transaction(write=True) as connection:
+                connection.execute("UPDATE quick_logs SET description=? WHERE id=? AND user_id=?",
+                                   ("Updated follow up", second.id, user.id))
             rejected = service.save(day, content, original.expected_content, NoteSharing(True, False),
                                     original.expected_sharing, previous_entries_to_remove=original.previous_entries)
             self.assertEqual(rejected.error.code, "note_conflict")
@@ -100,7 +102,7 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
             notes, settings, quick = SQLiteDailyNoteRepository(factory), SQLiteSettingsRepository(factory), SQLiteQuickLogRepository(factory)
             service = DailyNotesService(user_id=user.id, notes=notes, settings=settings, previous_entries=quick)
             day = date(2026, 5, 14)
-            quick.add(QuickLog(None, user.id, day, "100% complete", "09:00", "10:00"))
+            insert_previous_entry(factory, QuickLog(None, user.id, day, "100% complete", "09:00", "10:00"))
             notes.save(DailyNote(other.id, day, "private 100%"))
             self.assertEqual([note.user_id for note in service.search("100%").value], [user.id])
             self.assertFalse(service.load(day).value.sharing.reports)

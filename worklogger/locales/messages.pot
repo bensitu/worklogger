@@ -98,9 +98,6 @@ msgstr ""
 msgid "Active model updated."
 msgstr ""
 
-msgid "Add"
-msgstr ""
-
 msgid "Add another sign-in method before unlinking this identity."
 msgstr ""
 
@@ -543,9 +540,6 @@ msgid "Delete user"
 msgstr ""
 
 msgid "Delete user {username} and their data?"
-msgstr ""
-
-msgid "Description"
 msgstr ""
 
 msgid "Desktop client secret (optional)"
@@ -1463,18 +1457,6 @@ msgstr ""
 msgid "Quarterly Hours"
 msgstr ""
 
-msgid "Quick Log"
-msgstr ""
-
-msgid "Quick Log added."
-msgstr ""
-
-msgid "Quick Log deleted."
-msgstr ""
-
-msgid "Quick Log updated."
-msgstr ""
-
 msgid "Quit"
 msgstr ""
 
@@ -1793,9 +1775,6 @@ msgstr ""
 msgid "Select a provider first."
 msgstr ""
 
-msgid "Select a quick log first."
-msgstr ""
-
 msgid "Select a supported holiday country and state or province."
 msgstr ""
 
@@ -2060,9 +2039,6 @@ msgstr ""
 msgid "The passwords do not match."
 msgstr ""
 
-msgid "The quick log is no longer available. Reload the records and try again."
-msgstr ""
-
 msgid "The records have changed. Reload them before undoing this operation."
 msgstr ""
 
@@ -2318,9 +2294,6 @@ msgstr ""
 msgid "Unable to update saved sign-in information."
 msgstr ""
 
-msgid "Unable to update the quick log. Your changes have been retained."
-msgstr ""
-
 msgid "Unable to update work types. Your records have not changed."
 msgstr ""
 
@@ -2355,9 +2328,6 @@ msgid "Unsaved changes"
 msgstr ""
 
 msgid "Unsaved edits to this report will also be discarded."
-msgstr ""
-
-msgid "Update"
 msgstr ""
 
 msgid "Update available: {version}"

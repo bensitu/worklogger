@@ -1,4 +1,4 @@
-"""SQLite quick log repository."""
+"""Read-only SQLite access to historical quick log entries."""
 
 from __future__ import annotations
 
@@ -6,12 +6,10 @@ from datetime import date
 import sqlite3
 
 from worklogger.domain.quicklog.models import QuickLog
-from worklogger.domain.quicklog.rules import normalize_quick_log
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
 from worklogger.infrastructure.repositories._mapping import (
     parse_date,
     parse_datetime,
-    utc_now_iso,
     map_rows,
 )
 
@@ -19,71 +17,6 @@ from worklogger.infrastructure.repositories._mapping import (
 class SQLiteQuickLogRepository:
     def __init__(self, connection_factory: SQLiteConnectionFactory) -> None:
         self._connection_factory = connection_factory
-
-    def add(self, quick_log: QuickLog) -> QuickLog:
-        normalized = normalize_quick_log(quick_log)
-        created_at = (
-            normalized.created_at.isoformat(timespec="seconds")
-            if normalized.created_at
-            else utc_now_iso()
-        )
-        with self._connection_factory.transaction(write=True) as connection:
-            cursor = connection.execute(
-                """
-                INSERT INTO quick_logs(user_id, date, time, end_time, description, created_at)
-                VALUES(?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    normalized.user_id,
-                    normalized.day.isoformat(),
-                    normalized.start_time,
-                    normalized.end_time,
-                    normalized.description,
-                    created_at,
-                ),
-            )
-            quick_log_id = int(cursor.lastrowid)
-        return QuickLog(
-            id=quick_log_id,
-            user_id=normalized.user_id,
-            day=normalized.day,
-            description=normalized.description,
-            start_time=normalized.start_time,
-            end_time=normalized.end_time,
-            created_at=parse_datetime(created_at),
-        )
-
-    def update(self, quick_log: QuickLog) -> None:
-        if quick_log.id is None:
-            raise ValueError("quick_log_id_required")
-        normalized = normalize_quick_log(quick_log)
-        with self._connection_factory.transaction(write=True) as connection:
-            cursor = connection.execute(
-                """
-                UPDATE quick_logs
-                SET date=?, time=?, end_time=?, description=?
-                WHERE user_id=? AND id=?
-                """,
-                (
-                    normalized.day.isoformat(),
-                    normalized.start_time,
-                    normalized.end_time,
-                    normalized.description,
-                    normalized.user_id,
-                    normalized.id,
-                ),
-            )
-            if cursor.rowcount != 1:
-                raise ValueError("quick_log_not_found")
-
-    def remove(self, user_id: int, quick_log_id: int) -> None:
-        with self._connection_factory.transaction(write=True) as connection:
-            cursor = connection.execute(
-                "DELETE FROM quick_logs WHERE user_id=? AND id=?",
-                (user_id, quick_log_id),
-            )
-            if cursor.rowcount != 1:
-                raise ValueError("quick_log_not_found")
 
     def list_for_day(self, user_id: int, day: date) -> tuple[QuickLog, ...]:
         with self._connection_factory.connection() as connection:

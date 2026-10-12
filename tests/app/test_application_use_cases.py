@@ -10,11 +10,6 @@ from worklogger.app.commands.auth_commands import (
     RegisterUserCommand,
     ResetPasswordCommand,
 )
-from worklogger.app.commands.quick_log_commands import (
-    AddQuickLogCommand,
-    DeleteQuickLogCommand,
-    UpdateQuickLogCommand,
-)
 from worklogger.app.commands.report_commands import SaveReportCommand
 from worklogger.app.commands.settings_commands import (
     SetActiveLocalModelCommand,
@@ -34,12 +29,7 @@ from worklogger.app.use_cases.auth import (
     RegisterUserHandler,
     ResetPasswordHandler,
 )
-from worklogger.app.use_cases.quick_logs import (
-    AddQuickLogHandler,
-    DeleteQuickLogHandler,
-    GetQuickLogsForRangeHandler,
-    UpdateQuickLogHandler,
-)
+from worklogger.app.use_cases.quick_logs import GetQuickLogsForRangeHandler
 from worklogger.app.use_cases.reports import GetReportForPeriodHandler, SaveReportHandler
 from worklogger.app.use_cases.settings import (
     GetSettingHandler,
@@ -86,33 +76,14 @@ class MemoryWorkLogRepository:
 
 
 class MemoryQuickLogRepository:
-    def __init__(self) -> None:
-        self.logs: dict[int, QuickLog] = {}
-        self.next_id = 1
-
-    def add(self, quick_log: QuickLog) -> QuickLog:
-        stored = replace(quick_log, id=self.next_id)
-        self.logs[self.next_id] = stored
-        self.next_id += 1
-        return stored
-
-    def update(self, quick_log: QuickLog) -> None:
-        assert quick_log.id is not None
-        self.logs[quick_log.id] = quick_log
-
-    def remove(self, user_id: int, quick_log_id: int) -> None:
-        if self.logs.get(quick_log_id, None) and self.logs[quick_log_id].user_id == user_id:
-            self.logs.pop(quick_log_id)
+    def __init__(self, logs=()) -> None:
+        self.logs = logs
 
     def list_for_day(self, user_id: int, day: date) -> tuple[QuickLog, ...]:
-        return tuple(log for log in self.logs.values() if log.user_id == user_id and log.day == day)
+        return tuple(log for log in self.logs if log.user_id == user_id and log.day == day)
 
     def list_for_range(self, user_id: int, start_day: date, end_day: date) -> tuple[QuickLog, ...]:
-        return tuple(
-            log
-            for log in self.logs.values()
-            if log.user_id == user_id and start_day <= log.day <= end_day
-        )
+        return tuple(log for log in self.logs if log.user_id == user_id and start_day <= log.day <= end_day)
 
 
 class MemorySettingsRepository:
@@ -390,48 +361,20 @@ class ApplicationUseCaseTests(unittest.TestCase):
         self.assertFalse(result.ok)
         self.assertEqual(result.error.code if result.error else "", "invalid_credentials")
 
-    def test_quick_log_handlers_validate_and_query_ranges(self) -> None:
-        repository = MemoryQuickLogRepository()
-        added = AddQuickLogHandler(repository).handle(
-            AddQuickLogCommand(
-                user_id=1,
-                day=date(2026, 4, 20),
-                description="  Standup  ",
-                start_time="930",
-                end_time="1000",
-            )
-        )
-        self.assertTrue(added.ok)
-        assert added.value is not None
-        self.assertEqual(added.value.description, "Standup")
-        self.assertEqual(added.value.start_time, "09:30")
-
-        updated = UpdateQuickLogHandler(repository).handle(
-            UpdateQuickLogCommand(
-                user_id=1,
-                quick_log_id=added.value.id or 0,
-                day=date(2026, 4, 20),
-                description="Planning",
-                start_time="10:00",
-                end_time="11:00",
-            )
-        )
-        self.assertTrue(updated.ok)
-
-        listed = GetQuickLogsForRangeHandler(repository).handle(
-            GetQuickLogsForRangeQuery(
-                user_id=1,
-                start_day=date(2026, 4, 1),
-                end_day=date(2026, 4, 30),
-            )
-        )
+    def test_historical_quick_log_ranges_preserve_entries_and_isolate_accounts(self) -> None:
+        entry = QuickLog(1, 1, date(2026, 4, 20), "Standup", "09:30", "10:00")
+        repository = MemoryQuickLogRepository((
+            entry,
+            QuickLog(2, 2, entry.day, "Other account"),
+            QuickLog(3, 1, date(2026, 3, 31), "Outside range"),
+        ))
+        handler = GetQuickLogsForRangeHandler(repository)
+        listed = handler.handle(GetQuickLogsForRangeQuery(1, date(2026, 4, 1), date(2026, 4, 30)))
         self.assertTrue(listed.ok)
-        self.assertEqual(len(listed.value or ()), 1)
-
-        DeleteQuickLogHandler(repository).handle(
-            DeleteQuickLogCommand(user_id=1, quick_log_id=added.value.id or 0)
-        )
-        self.assertEqual(repository.logs, {})
+        self.assertEqual(listed.value, (entry,))
+        invalid = handler.handle(GetQuickLogsForRangeQuery(1, date(2026, 4, 30), date(2026, 4, 1)))
+        self.assertEqual(invalid.error.code, "date_range_invalid")
+        self.assertEqual(len(repository.logs), 3)
 
     def test_settings_handlers_set_get_clear_and_publish_events(self) -> None:
         repository = MemorySettingsRepository()

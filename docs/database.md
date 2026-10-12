@@ -27,6 +27,10 @@ SQL identifiers are storage contracts, not localized UI captions.
 | `activity_events` | Activity records with optional user association |
 | `background_images` | Account image bytes, enablement, and opacity |
 
+Historical quick logs are accessed through a read-only repository. Transferring
+them into daily notes saves the note and removes the matching source entries in
+one transaction, with account, date, and content conflict checks.
+
 `users.username` is the login ID; `username_key` is its canonical lookup key.
 `display_name` is an editable alias and never an ownership identifier.
 

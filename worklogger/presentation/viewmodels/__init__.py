@@ -76,14 +76,6 @@ _EXPORTS = {
         "worklogger.presentation.viewmodels.notes",
         "NoteEditorViewModel"
     ],
-    "QuickLogEditorState": [
-        "worklogger.presentation.viewmodels.quick_logs",
-        "QuickLogEditorState"
-    ],
-    "QuickLogEditorViewModel": [
-        "worklogger.presentation.viewmodels.quick_logs",
-        "QuickLogEditorViewModel"
-    ],
     "ReportEditorState": [
         "worklogger.presentation.viewmodels.reports",
         "ReportEditorState"

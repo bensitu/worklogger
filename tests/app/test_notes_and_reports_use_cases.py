@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import replace
 from datetime import date
 import unittest
 from unittest.mock import patch
@@ -85,15 +84,6 @@ class MemoryWorkLogRepository:
 class MemoryQuickLogRepository:
     def __init__(self, logs: tuple[QuickLog, ...] = ()) -> None:
         self.logs = logs
-
-    def add(self, quick_log: QuickLog) -> QuickLog:
-        return replace(quick_log, id=quick_log.id or len(self.logs) + 1)
-
-    def update(self, quick_log: QuickLog) -> None:
-        return None
-
-    def remove(self, user_id: int, quick_log_id: int) -> None:
-        return None
 
     def list_for_day(self, user_id: int, day: date) -> tuple[QuickLog, ...]:
         return tuple(log for log in self.logs if log.user_id == user_id and log.day == day)
