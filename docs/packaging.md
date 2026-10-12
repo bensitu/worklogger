@@ -48,6 +48,34 @@ CI runs tests, native runtime verification, packaging, and extracted-archive
 verification on Windows x64, Linux x64, and macOS ARM64 with Python 3.11 and 3.12.
 Artifact names include the Python version to distinguish build environments.
 
+## GitHub Releases
+
+The **Build and Release WorkLogger** workflow is started manually from GitHub
+Actions. Once the workflow is present on the repository's default branch,
+choose **Run workflow**, select the source branch (normally `main`), and enter
+the tag matching `APP_VERSION` in `worklogger/__about__.py`, such as `v4.0.0`.
+Enable **validate_only** to run the full verification and prepare release files
+without creating a tag or release.
+
+The workflow reuses CI's six Python/platform combinations. It selects the
+verified Python 3.12 Windows x64, Linux x64, and macOS ARM64 archives for
+distribution. Before creating a tag, it checks the source commit, version,
+dependency locks, native backend inclusion, runtime verification results, and
+archive checksums. Release files include the archives, verification reports,
+platform-specific dependency locks, and `SHA256SUMS`.
+
+Only the publication job has repository write permission. It creates a draft
+release with generated release notes; ordinary pushes and pull requests do not
+create releases. Review the draft and platform signing requirements before
+publishing it. Do not publish or modify assets while the workflow is running.
+
+Runs for the same tag are serialized. A failed upload can be rerun for the same
+commit without creating another draft. Artifact names distinguish run attempts;
+partial reruns select the latest available platform artifacts from that run and
+revalidate their commit identity. If required artifacts have expired, rerun the
+complete workflow. A tag pointing elsewhere, an already published release, or
+unexpected draft assets cause a failure rather than destructive replacement.
+
 ## Build Commands
 
 ```sh

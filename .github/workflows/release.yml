@@ -1,0 +1,132 @@
+name: Build and Release WorkLogger
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release tag matching the application version, such as v4.0.0
+        required: true
+        type: string
+      validate_only:
+        description: Verify all builds and release files without creating a tag or release
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.repository }}-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate Release Version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - name: Validate version and existing release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.version }}
+        run: python scripts/github_release.py validate --tag "$RELEASE_TAG" --commit "$GITHUB_SHA"
+
+  verify:
+    name: Verify and Build Applications
+    needs: validate
+    uses: ./.github/workflows/ci.yml
+    with:
+      release_tag: ${{ inputs.version }}
+
+  prepare:
+    name: Prepare Verified Release Files
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - name: Select verified platform artifacts
+        id: artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.version }}
+        run: python scripts/github_release.py select --tag "$RELEASE_TAG" --commit "$GITHUB_SHA" --kind builds --run-id "$GITHUB_RUN_ID" --attempt "$GITHUB_RUN_ATTEMPT"
+      - name: Download Windows build
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          artifact-ids: ${{ steps.artifacts.outputs.windows }}
+          github-token: ${{ github.token }}
+          path: release/builds/Windows-x64
+      - name: Download Linux build
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          artifact-ids: ${{ steps.artifacts.outputs.linux }}
+          github-token: ${{ github.token }}
+          path: release/builds/Linux-x64
+      - name: Download macOS build
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          artifact-ids: ${{ steps.artifacts.outputs.macos }}
+          github-token: ${{ github.token }}
+          path: release/builds/macOS-arm64
+      - name: Validate build identity and prepare checksums
+        env:
+          RELEASE_TAG: ${{ inputs.version }}
+        run: python scripts/release_assets.py --tag "$RELEASE_TAG" --commit "$GITHUB_SHA" --input release/builds --output release/assets
+      - name: Upload verified release files
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: WorkLogger-Release-Files-Attempt-${{ github.run_attempt }}
+          path: release/assets/
+          if-no-files-found: error
+
+  release:
+    name: Create Draft GitHub Release
+    needs: prepare
+    if: ${{ !inputs.validate_only }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - name: Select verified release artifact
+        id: artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.version }}
+        run: python scripts/github_release.py select --tag "$RELEASE_TAG" --commit "$GITHUB_SHA" --kind release --run-id "$GITHUB_RUN_ID" --attempt "$GITHUB_RUN_ATTEMPT"
+      - name: Download verified release files
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          artifact-ids: ${{ steps.artifact.outputs.release }}
+          github-token: ${{ github.token }}
+          path: release/assets
+      - name: Create tag and draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.version }}
+        run: python scripts/github_release.py publish --tag "$RELEASE_TAG" --commit "$GITHUB_SHA" --assets release/assets
