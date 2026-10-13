@@ -133,11 +133,11 @@ class CalendarViewModel:
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
 
-        grid_start = _month_grid_start(
-            first_day,
-            week_start_monday=options.week_start_monday,
-        )
-        grid_end = grid_start + timedelta(days=41)
+        try:
+            grid_start = _month_grid_start(first_day, week_start_monday=options.week_start_monday)
+            grid_end = grid_start + timedelta(days=41)
+        except OverflowError:
+            return Result.failure(ValidationError("date_range_invalid", "date_range_invalid"))
         record_result = self._month_records_handler.list_range(self._user_id, grid_start, grid_end)
         if not record_result.ok:
             return Result.failure(

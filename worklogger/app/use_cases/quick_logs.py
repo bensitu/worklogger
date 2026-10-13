@@ -1,6 +1,7 @@
 """Read-only queries for historical quick log entries."""
 
 from __future__ import annotations
+from datetime import date
 
 from worklogger.app.queries.quick_log_queries import (
     GetQuickLogsForDayQuery,
@@ -17,6 +18,8 @@ class GetQuickLogsForDayHandler:
         self._repository = repository
 
     def handle(self, query: GetQuickLogsForDayQuery) -> Result[tuple[QuickLog, ...]]:
+        if type(query.day) is not date:
+            return Result.failure(ValidationError("date_range_invalid", "date_range_invalid"))
         try:
             return Result.success(self._repository.list_for_day(query.user_id, query.day))
         except Exception:
@@ -28,7 +31,7 @@ class GetQuickLogsForRangeHandler:
         self._repository = repository
 
     def handle(self, query: GetQuickLogsForRangeQuery) -> Result[tuple[QuickLog, ...]]:
-        if query.end_day < query.start_day:
+        if type(query.start_day) is not date or type(query.end_day) is not date or query.end_day < query.start_day:
             return Result.failure(ValidationError("date_range_invalid", "date_range_invalid"))
         try:
             return Result.success(self._repository.list_for_range(query.user_id, query.start_day, query.end_day))

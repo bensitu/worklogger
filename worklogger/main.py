@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import importlib
+import logging
 import os
-import sqlite3
 import sys
 import tempfile
 from collections.abc import Callable, Sequence
@@ -20,6 +20,7 @@ from worklogger.infrastructure.i18n import _, set_language
 from worklogger.presentation.errors import display_error_message
 
 DesktopRunner = Callable[[Sequence[str]], int]
+LOGGER = logging.getLogger(__name__)
 
 SMOKE_IMPORT_MODULES = (
     "worklogger.bootstrap",
@@ -175,7 +176,8 @@ def _run_desktop(args: Sequence[str]) -> int:
                     if choice is None:
                         return 0
                     recover_pending_restore(path, choice)
-                except (OSError, ValueError, sqlite3.Error):
+                except Exception as error:
+                    LOGGER.error("restore_recovery_failed: %s", type(error).__name__)
                     _startup_message(display_error_message(runtime.error))
                     return 1
                 continue

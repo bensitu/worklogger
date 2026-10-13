@@ -89,6 +89,10 @@ class GetMonthRecordsHandler:
 
     def handle(self, query: GetMonthRecordsQuery) -> Result[tuple[WorkLog, ...]]:
         try:
+            date(query.year, query.month, 1)
+        except (TypeError, ValueError):
+            return Result.failure(ValidationError("date_range_invalid", "date_range_invalid"))
+        try:
             return Result.success(self._repository.list_for_month(query.user_id, query.year, query.month))
         except Exception:
             return Result.failure(InfrastructureError("worklog_load_failed", "worklog_load_failed"))

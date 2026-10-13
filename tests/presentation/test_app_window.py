@@ -234,6 +234,28 @@ def _window(
 
 
 class AppWindowTests(unittest.TestCase):
+    def test_calendar_navigation_rejects_stale_background_results(self):
+        from worklogger.app.job_runner import JobHandle, CancellationToken
+        class Runner:
+            def __init__(self):
+                self.jobs = []
+            def submit(self, name, operation, *, on_complete):
+                self.jobs.append((operation, on_complete))
+                return JobHandle(name, lambda: None)
+        window = _window(MemoryWorkLogRepository())
+        runner = Runner()
+        window._job_runner = runner
+        self.assertTrue(window.next_month(asynchronous=True))
+        operation, complete = runner.jobs[0]
+        old_result = Result.success(operation(CancellationToken()))
+        self.assertTrue(window.previous_month())
+        complete(old_result)
+        self.assertEqual(window.calendar_view.state.month, 4)
+        self.assertTrue(window.next_month(asynchronous=True))
+        operation, complete = runner.jobs[-1]
+        complete(Result.success(operation(CancellationToken())))
+        self.assertEqual(window.calendar_view.state.month, 5)
+
     def test_unchanged_theme_does_not_reapply_the_global_stylesheet(self):
         from tests.background_samples import still_background_bytes
         from worklogger.domain.settings.background import BackgroundState

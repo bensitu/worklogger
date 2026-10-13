@@ -1,10 +1,13 @@
 """Coordinate calendar queries, entry editing, and account preferences."""
 
 from dataclasses import replace
+from copy import copy
 from datetime import date
 
 from worklogger.domain.shared.result import Result
 from worklogger.presentation.date_labels import month_label
+from worklogger.presentation.job_runner import owned_callback
+from worklogger.domain.shared.errors import InfrastructureError
 
 
 class CalendarCoordinator:
@@ -22,8 +25,56 @@ class CalendarCoordinator:
         self._page = calendar_page
         self._entries = entry_panel
         self._stats_panel = stats_panel
+        self._revision = 0
+        self._handle = None
+
+    def invalidate(self):
+        self._revision += 1
+        if self._handle is not None:
+            self._handle.cancel()
+        self._handle = None
+
+    def refresh_overview(self, runner, *, config, month, selected_day, today, holidays, on_error):
+        self._revision += 1
+        revision = self._revision
+        if self._handle is not None:
+            self._handle.cancel()
+        calendar, stats = copy(self._calendar), copy(self._stats)
+        holidays = dict(holidays) if holidays is not None else None
+        self._page.set_month_title(month_label(month))
+        def work(_token):
+            calendar_result = calendar.build_month(year=month.year, month=month.month,
+                selected_day=selected_day, today=today, holidays=holidays,
+                options=replace(config.calendar_options, standard_work_hours=float(config.standard_work_hours)),
+                theme=config.theme, dark=config.dark, custom_color=config.custom_color)
+            stats_result = stats.build_month(year=month.year, month=month.month,
+                standard_work_hours=config.standard_work_hours, monthly_target_hours=config.monthly_target_hours)
+            return calendar_result, stats_result
+        def complete(result):
+            if revision != self._revision:
+                return
+            self._handle = None
+            if not result.ok:
+                on_error(result.error)
+                return
+            calendar_result, stats_result = result.value
+            if calendar_result.ok and calendar_result.value is not None:
+                self._page.calendar_view.set_state(calendar_result.value)
+            else:
+                on_error(calendar_result.error)
+            if stats_result.ok and stats_result.value is not None:
+                self._stats_panel.set_state(stats_result.value)
+            else:
+                on_error(stats_result.error)
+        try:
+            self._handle = runner.submit("load_calendar_overview", work, on_complete=owned_callback(self._page, complete))
+            return True
+        except Exception:
+            on_error(InfrastructureError("calendar_load_failed", "calendar_load_failed"))
+            return False
 
     def refresh_calendar(self, *, config, month, selected_day, today, holidays):
+        self.invalidate()
         options = replace(
             config.calendar_options,
             standard_work_hours=float(config.standard_work_hours),

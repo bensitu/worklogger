@@ -150,6 +150,11 @@ class AiUseCaseTests(unittest.TestCase):
         self.assertNotIn("private note", content)
         settings.values[note_sharing_key(day)] = NoteSharing(False, True).encode()
         self.assertIn("private note", handler.handle(query).value.content)
+        settings.get_many = Mock(side_effect=lambda user_id, keys: Result.success(
+            {key: settings.values.get(key) for key in keys}))
+        self.assertIn("private note", handler.handle(query).value.content)
+        self.assertEqual(settings.get_many.call_count, 2)
+        del settings.get_many
         settings.values[AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY] = "0"
         content = handler.handle(query).value.content
         self.assertNotIn("Planning", content)

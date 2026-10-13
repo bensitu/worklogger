@@ -97,14 +97,12 @@ class BuildAiContextHandler:
         if not notes.ok or notes.value is None:
             return Result.failure(notes.error or InfrastructureError("ai_context_failed", "ai_context_failed"))
         approved_notes = []
+        permissions = _settings_values(self._settings_handler, query.user_id,
+                                       {note_sharing_key(note.day): None for note in notes.value})
+        if not permissions.ok:
+            return Result.failure(permissions.error)
         for note in notes.value:
-            try:
-                permission = self._settings_handler.handle(GetSettingQuery(query.user_id, note_sharing_key(note.day), None))
-            except Exception:
-                return Result.failure(InfrastructureError("ai_context_settings_failed", "ai_context_settings_failed"))
-            if not permission.ok:
-                return Result.failure(permission.error)
-            if NoteSharing.decode(permission.value).ai:
+            if NoteSharing.decode(permissions.value.get(note_sharing_key(note.day))).ai:
                 approved_notes.append(note)
         quick_logs = self._quick_logs_handler.handle(
             GetQuickLogsForRangeQuery(query.user_id, start_day, end_day)
@@ -147,21 +145,40 @@ def _context_range(selected_day: date, period_type: str, week_start_monday: bool
 
 
 def _context_options(handler: SettingReader, user_id: int) -> Result[dict[str, bool]]:
-    options = {}
-    for name, key, default in (
+    definitions = (
         ("notes", AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY, "1"),
         ("calendar", AI_PRIVACY_INCLUDE_CALENDAR_SETTING_KEY, "1"),
         ("quick_logs", AI_PRIVACY_INCLUDE_QUICK_LOGS_SETTING_KEY, "1"),
         ("week_start_monday", WEEK_START_MONDAY_SETTING_KEY, "0"),
-    ):
-        try:
+    )
+    values = _settings_values(handler, user_id, {key: default for _name, key, default in definitions})
+    if not values.ok:
+        return Result.failure(values.error)
+    return Result.success({name: str(values.value.get(key) or "").strip().lower() in {"1", "true", "yes", "on"}
+                           for name, key, _default in definitions})
+
+
+def _settings_values(handler, user_id, defaults):
+    if not defaults:
+        return Result.success({})
+    try:
+        reader = getattr(handler, "get_many", None)
+        batch = reader(user_id, tuple(defaults)) if reader is not None else None
+        if batch is not None:
+            if not batch.ok:
+                return Result.failure(batch.error)
+            if batch.value is not None:
+                return Result.success({key: batch.value.get(key) if batch.value.get(key) is not None else default
+                                       for key, default in defaults.items()})
+        values = {}
+        for key, default in defaults.items():
             result = handler.handle(GetSettingQuery(user_id, key, default))
-        except Exception:
-            return Result.failure(InfrastructureError("ai_context_settings_failed", "ai_context_settings_failed"))
-        if not result.ok:
-            return Result.failure(InfrastructureError("ai_context_settings_failed", "ai_context_settings_failed"))
-        options[name] = str(result.value or "").strip().lower() in {"1", "true", "yes", "on"}
-    return Result.success(options)
+            if not result.ok:
+                return Result.failure(result.error)
+            values[key] = result.value
+        return Result.success(values)
+    except Exception:
+        return Result.failure(InfrastructureError("ai_context_settings_failed", "ai_context_settings_failed"))
 
 
 def _notes_for_range(

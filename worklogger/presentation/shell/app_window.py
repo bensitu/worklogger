@@ -147,6 +147,7 @@ class AppWindow(QMainWindow):
         self._refreshing = False
         self._entry_dirty = False
         self._record_search_dialog = None
+        self._records_refresh_pending = False
 
         self.setObjectName("app_window")
         self.setWindowTitle(_("WorkLogger"))
@@ -254,7 +255,13 @@ class AppWindow(QMainWindow):
         if self._residency_controller is not None:
             self._residency_controller.refresh()
 
-    def refresh(self) -> bool:
+    def refresh(self, *, asynchronous=False) -> bool:
+        if asynchronous and self._job_runner is not None:
+            entry_ok = self._refresh_entry()
+            overview_ok = self._calendar_coordinator.refresh_overview(self._job_runner,
+                config=self._config, month=self._current_month, selected_day=self._selected_day,
+                today=self._today, holidays=self._holidays, on_error=self._set_error)
+            return entry_ok and overview_ok
         self._last_error = None
         self._refreshing = True
         try:
@@ -269,26 +276,26 @@ class AppWindow(QMainWindow):
         self._set_error(self._last_error)
         return False
 
-    def select_day(self, day: date) -> bool:
+    def select_day(self, day: date, *, asynchronous=False) -> bool:
         if day != self._selected_day and not self._confirm_discard_changes_if_needed():
             return False
         self._selected_day = day
         self._current_month = day.replace(day=1)
-        return self.refresh()
+        return self.refresh(asynchronous=asynchronous)
 
-    def previous_month(self) -> bool:
+    def previous_month(self, *, asynchronous=False) -> bool:
         if not self._confirm_discard_changes_if_needed():
             return False
         self._current_month = add_months(self._current_month, -1)
-        return self.refresh()
+        return self.refresh(asynchronous=asynchronous)
 
-    def next_month(self) -> bool:
+    def next_month(self, *, asynchronous=False) -> bool:
         if not self._confirm_discard_changes_if_needed():
             return False
         self._current_month = add_months(self._current_month, 1)
-        return self.refresh()
+        return self.refresh(asynchronous=asynchronous)
 
-    def go_today(self) -> bool:
+    def go_today(self, *, asynchronous=False) -> bool:
         self._update_today()
         if (
             self._today != self._selected_day
@@ -297,7 +304,7 @@ class AppWindow(QMainWindow):
             return False
         self._selected_day = self._today
         self._current_month = self._today.replace(day=1)
-        return self.refresh()
+        return self.refresh(asynchronous=asynchronous)
 
     def _update_today(self) -> None:
         current = self._config.today or date.today()
@@ -390,9 +397,9 @@ class AppWindow(QMainWindow):
 
     def _connect_signals(self) -> None:
         self.sidebar.route_changed.connect(self._switch_route)
-        self.calendar_page.previous_month_requested.connect(self.previous_month)
-        self.calendar_page.today_requested.connect(self.go_today)
-        self.calendar_page.next_month_requested.connect(self.next_month)
+        self.calendar_page.previous_month_requested.connect(lambda: self.previous_month(asynchronous=True))
+        self.calendar_page.today_requested.connect(lambda: self.go_today(asynchronous=True))
+        self.calendar_page.next_month_requested.connect(lambda: self.next_month(asynchronous=True))
         self.calendar_page.search_requested.connect(self.open_record_search)
         self.analytics_page.projects_requested.connect(self.open_project_analytics)
         self.notes_button.clicked.connect(self.open_notes)
@@ -408,7 +415,7 @@ class AppWindow(QMainWindow):
             self.settings_page.projects_changed.connect(self.entry_panel.refresh_projects)
         if hasattr(self.settings_page, "ai_availability_changed"):
             self.settings_page.ai_availability_changed.connect(self._refresh_ai_availability)
-        self.calendar_view.day_selected.connect(self.select_day)
+        self.calendar_view.day_selected.connect(lambda day: self.select_day(day, asynchronous=True))
         self.entry_panel.records_changed.connect(self._entries_changed)
         self.entry_panel.dirty_changed.connect(
             lambda dirty: setattr(self, "_entry_dirty", dirty)
@@ -416,6 +423,7 @@ class AppWindow(QMainWindow):
         self.entry_panel.busy_changed.connect(
             self.calendar_page.records_widget.setDisabled
         )
+        self.entry_panel.busy_changed.connect(self._record_update_state)
         self.calendar_page.entry_selected.connect(self.entry_panel.edit_entry)
         self.calendar_page.entry_delete_requested.connect(self.entry_panel.delete_entry)
         self.calendar_page.entry_actions_requested.connect(self.entry_panel.record_actions)
@@ -455,12 +463,18 @@ class AppWindow(QMainWindow):
 
     def _records_associated(self):
         if self.entry_panel.is_busy:
+            self._records_refresh_pending = True
             return
         self._refresh_calendar()
         self._refresh_stats()
         if not self.entry_panel.is_dirty:
             self._refresh_entry()
         self.entry_panel.refresh_projects()
+
+    def _record_update_state(self, busy):
+        if not busy and self._records_refresh_pending:
+            self._records_refresh_pending = False
+            QTimer.singleShot(0, self, self._records_associated)
 
     def _open_found_entry(self, record):
         if self.entry_panel.is_busy or not self._switch_route("calendar") or not self.select_day(record.day):
