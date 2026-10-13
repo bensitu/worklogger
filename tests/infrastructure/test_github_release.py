@@ -70,7 +70,7 @@ class GitHubReleaseTests(unittest.TestCase):
             inputs = {}
             for filename in ("requirements.txt", "requirements-build.txt", "requirements-ai.txt", "requirements/native-artifacts.json"):
                 data = (release_assets.ROOT / filename).read_bytes()
-                inputs[filename] = hashlib.sha256(data.replace(b"\r\n", b"\n") if filename.endswith(".txt") else data).hexdigest()
+                inputs[filename] = hashlib.sha256(data.replace(b"\r\n", b"\n")).hexdigest()
             lock = folder / "target.lock.json"
             lock.write_text(json.dumps({"format_version": 1, "target": target, "inputs": inputs, "packages": packages}), encoding="utf-8")
             (folder / "target.lock.txt").write_text("llama-cpp-python==0.3.36 --hash=sha256:" + "b" * 64 + "\n", encoding="utf-8")

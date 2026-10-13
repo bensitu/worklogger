@@ -1,5 +1,18 @@
 # Testing
 
+Native dependency verification can include real model generation and cancellation:
+
+```powershell
+python scripts/prepare_native_model.py
+$env:WORKLOGGER_VERIFY_MODEL_PATH = "$PWD/build/native-verification/stories260K.gguf"
+python -m worklogger.main --smoke-local-model-runtime
+```
+
+The small public model is downloaded from an immutable revision and checked against
+its SHA-256 digest. CI performs this check for source runs and extracted application
+archives. The model stays outside distributed artifacts. Omit the environment variable
+to verify only native library initialization and availability.
+
 ## Durable Coverage
 
 Keep tests for business rules, authorization, data integrity, compatibility,

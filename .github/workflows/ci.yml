@@ -82,6 +82,8 @@ jobs:
         run: python -m unittest discover -s tests -t . -p "test_*.py"
       - name: Import verification
         run: python -m worklogger.main --smoke-import
+      - name: Prepare native inference verification
+        run: python scripts/prepare_native_model.py
       - name: Runtime and workflow verification
         run: |
           python -m worklogger.main --smoke-startup
@@ -156,6 +158,8 @@ jobs:
         run: python scripts/lock_environment.py release/target.lock.json --capture
       - name: Build application
         run: python scripts/build.py --lock release/target.lock.json
+      - name: Prepare native inference verification
+        run: python scripts/prepare_native_model.py
       - name: Verify application and extracted archive
         run: |
           python scripts/release_artifact.py --lock release/target.lock.json --output release/WorkLogger-${{ matrix.artifact }}.json --archive

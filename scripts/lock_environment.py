@@ -29,6 +29,12 @@ def digest(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+def input_digest(path):
+    if path.suffix == ".json":
+        return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    return digest(path)
+
+
 def dependency_closure(requirement_files):
     pending = ["pip", "setuptools"]
     for path in requirement_files:
@@ -61,7 +67,7 @@ def verify_lock(path, *, installed=None, current_target=None):
     if value.get("format_version") != 1 or value["target"] != (current_target or target()):
         raise ValueError("Dependency lock belongs to a different target environment")
     for relative, expected in value["inputs"].items():
-        if digest(ROOT / relative) != expected:
+        if input_digest(ROOT / relative) != expected:
             raise ValueError(f"Dependency input changed: {relative}")
     installed = installed if installed is not None else {canonicalize_name(d.metadata["Name"]): d.version for d in metadata.distributions()}
     expected = {row["name"]: row["version"] for row in value["packages"]}
@@ -96,10 +102,10 @@ def capture_lock(output, requirement_files, wheel_directory):
         if len(matches) != 1:
             raise ValueError(f"Expected one target wheel for {name}")
         packages.append({"name": name, "version": version, "wheel": matches[0].name, "sha256": digest(matches[0])})
-    inputs = {path.relative_to(ROOT).as_posix(): digest(path) for path in requirement_files}
+    inputs = {path.relative_to(ROOT).as_posix(): input_digest(path) for path in requirement_files}
     native_manifest = ROOT / "requirements/native-artifacts.json"
     if native_manifest.exists():
-        inputs[native_manifest.relative_to(ROOT).as_posix()] = digest(native_manifest)
+        inputs[native_manifest.relative_to(ROOT).as_posix()] = input_digest(native_manifest)
     value = {"format_version": 1, "target": target(), "inputs": inputs, "packages": packages}
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")

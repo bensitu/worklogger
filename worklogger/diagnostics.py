@@ -3,6 +3,7 @@
 from dataclasses import replace
 from datetime import date
 from pathlib import Path
+import os
 import tempfile
 
 
@@ -13,8 +14,47 @@ def check_local_model_runtime():
     try:
         if not llama_cpp.llama_print_system_info():
             raise RuntimeError("local_inference_dependency_missing")
+        model = os.environ.get("WORKLOGGER_VERIFY_MODEL_PATH", "").strip()
+        if model:
+            _check_native_generation(Path(model))
     finally:
         llama_cpp.llama_backend_free()
+
+
+def _check_native_generation(path):
+    from llama_cpp import Llama
+    from worklogger.app.job_runner import CancellationToken
+    from worklogger.app.ports import AIRequest
+    from worklogger.infrastructure.ai.execution import InferenceControl
+
+    def load():
+        return Llama(model_path=str(path), n_ctx=128, n_batch=32, n_gpu_layers=0,
+                     n_threads=2, seed=1, verbose=False)
+    engine = load()
+    try:
+        result = engine("Once upon a", max_tokens=8, temperature=0)
+        if result["usage"]["completion_tokens"] < 1:
+            raise RuntimeError("local_model_generation_failed")
+        engine.reset()
+        token = CancellationToken()
+        control = InferenceControl(AIRequest((), "verification", 30, token))
+        token.cancel()
+        with control.native_callback(engine):
+            try:
+                engine.eval(engine.tokenize(b"A different story"))
+            except RuntimeError:
+                if not control.reason:
+                    raise
+        if not control.reason:
+            raise RuntimeError("local_model_cancellation_failed")
+    finally:
+        engine.close()
+    engine = load()
+    try:
+        if engine("Once upon a", max_tokens=1, temperature=0)["usage"]["completion_tokens"] < 1:
+            raise RuntimeError("local_model_generation_failed")
+    finally:
+        engine.close()
 
 
 def require_value(result):

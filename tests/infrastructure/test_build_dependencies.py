@@ -90,6 +90,9 @@ class BuildDependencyTests(unittest.TestCase):
             root = Path(directory)
             requirements = root / "requirements-ai.txt"
             requirements.write_text("llama-cpp-python==0.3.36\n", encoding="utf-8")
+            manifest = root / "requirements/native-artifacts.json"
+            manifest.parent.mkdir()
+            manifest.write_bytes(b'{"version":"0.3.36"}\r\n')
             wheels = root / "wheels"
             wheels.mkdir()
             tag = next(sys_tags())
@@ -100,6 +103,7 @@ class BuildDependencyTests(unittest.TestCase):
                   patch.object(lock_environment, "dependency_closure", return_value={"llama-cpp-python": "0.3.36"}),
                   patch.object(lock_environment.subprocess, "run", side_effect=AssertionError("unexpected_index_access"))):
                 captured = lock_environment.capture_lock(root / "target.lock.json", [requirements], wheels)
+                manifest.write_bytes(b'{"version":"0.3.36"}\n')
                 verified = lock_environment.verify_lock(root / "target.lock.json", installed={"llama-cpp-python": "0.3.36"})
             self.assertEqual(captured, verified)
             self.assertEqual(captured["packages"][0]["wheel"], wheel.name)

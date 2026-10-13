@@ -1,6 +1,6 @@
 # Packaging
 
-Requirements-file fingerprints normalize text line endings. Wheel hashes remain
+Dependency-input fingerprints normalize text line endings. Wheel hashes remain
 byte-for-byte checksums for the declared target platform.
 
 ## Dependencies
