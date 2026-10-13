@@ -81,6 +81,31 @@ class MemoryKeyringBackend:
 
 
 class SQLiteInfrastructureTests(unittest.TestCase):
+    def test_encrypted_fallback_remains_authoritative_after_keyring_recovers(self):
+        from unittest.mock import patch
+        user = self.auth_repository().create_user("fallback-owner", "example-password", recovery_key=None, is_admin=False)
+        backend = MemoryKeyringBackend()
+        backend.values[("WorkLogger", "ai_api_key")] = "old-key"
+        settings = SQLiteSettingsRepository(self.factory)
+        store = EncryptedSettingsKeyStore(settings, user_id=user.id, keyring_backend=backend,
+            secret_box=FernetSecretBox(FileMachineKeyProvider(Path(self._tempdir.name) / "key.bin")))
+        with patch.object(backend, "set_password", side_effect=RuntimeError("unavailable")):
+            self.assertTrue(store.set_secret("ai_api_key", "new-key").ok)
+        self.assertEqual(store.get_secret("ai_api_key").value, "new-key")
+        self.assertTrue(store.set_secret("ai_api_key", "latest-key").ok)
+        self.assertIsNone(settings.get(user.id, "secret:ai_api_key"))
+        self.assertEqual(store.get_secret("ai_api_key").value, "latest-key")
+
+    def test_previous_machine_key_is_persisted_for_subsequent_reads(self):
+        from unittest.mock import Mock
+        path = Path(self._tempdir.name) / "persisted.key"
+        loader = Mock(return_value=b"x" * 32)
+        provider = FileMachineKeyProvider(path, loader)
+        self.assertEqual(provider.load_or_create(), b"x" * 32)
+        self.assertTrue(path.is_file())
+        loader.side_effect = RuntimeError("unavailable")
+        self.assertEqual(provider.load(), b"x" * 32)
+
     def test_missing_or_weakened_named_indexes_are_rejected_without_repairing_data(self):
         with self.factory.transaction() as connection:
             connection.execute("DROP INDEX idx_users_username_key")

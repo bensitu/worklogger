@@ -31,6 +31,8 @@ def _transform(data: bytes, *, decrypt: bool) -> bytes:
     if not function(ctypes.byref(source), None, None, None, None, 1, ctypes.byref(result)):
         raise OSError("credential_protection_failed")
     try:
+        if not result.size or not result.data:
+            raise OSError("credential_protection_empty_result")
         return ctypes.string_at(result.data, result.size)
     finally:
         kernel32.LocalFree(result.data)

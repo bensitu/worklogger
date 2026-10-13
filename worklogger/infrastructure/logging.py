@@ -90,7 +90,7 @@ def setup_logging(
         root.removeHandler(existing)
         existing.close()
 
-    handler = RotatingFileHandler(
+    handler = _PrivateRotatingFileHandler(
         path,
         maxBytes=LOG_MAX_BYTES,
         backupCount=LOG_BACKUP_COUNT,
@@ -103,6 +103,18 @@ def setup_logging(
     root.addHandler(handler)
     std_logging.captureWarnings(True)
     return path
+
+
+class _PrivateRotatingFileHandler(RotatingFileHandler):
+    def _open(self):
+        descriptor = os.open(self.baseFilename, os.O_CREAT | os.O_APPEND | os.O_WRONLY, 0o600)
+        try:
+            if os.name != "nt":
+                os.fchmod(descriptor, 0o600)
+            return os.fdopen(descriptor, self.mode, encoding=self.encoding, errors=self.errors)
+        except Exception:
+            os.close(descriptor)
+            raise
 
 
 def _resolve_log_path(

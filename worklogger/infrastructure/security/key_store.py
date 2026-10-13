@@ -164,7 +164,13 @@ class FileMachineKeyProvider:
             else:
                 key = base64.urlsafe_b64decode(raw.encode("ascii"))
         except FileNotFoundError:
-            return self.previous_key_loader() if self.previous_key_loader is not None else None
+            key = self.previous_key_loader() if self.previous_key_loader is not None else None
+            if key is not None:
+                if len(key) != _KEY_BYTES:
+                    raise ValueError("secret_key_invalid")
+                with atomic_destination(self.path) as temporary:
+                    temporary.write_text(_encode_machine_key(key), encoding="ascii")
+            return key
         except Exception as exc:
             raise ValueError("secret_key_invalid") from exc
         if len(key) != _KEY_BYTES:
@@ -207,12 +213,18 @@ class FernetSecretBox:
             raise ValueError("secret_not_encrypted")
         key = self._key_provider.load()
         try:
-            return Fernet(base64.urlsafe_b64encode(key)).decrypt(stored[len(_ENC_PREFIX):].encode("ascii")).decode("utf-8")
+            prefix = _ENC_PREFIX if stored.startswith(_ENC_PREFIX) else _FERNET_PREFIX
+            return Fernet(base64.urlsafe_b64encode(key)).decrypt(stored[len(prefix):].encode("ascii")).decode("utf-8")
         except (InvalidToken, UnicodeError, ValueError) as exc:
             raise ValueError("secret_authentication_failed") from exc
 
 
 def protect_legacy_proxy_passwords(connection_factory, secret_box: FernetSecretBox) -> None:
+    with connection_factory.connection() as connection:
+        rows = connection.execute("SELECT value FROM settings WHERE key=? AND value<>''",
+                                  (NETWORK_PROXY_PASSWORD_SETTING_KEY,)).fetchall()
+    if all(value.startswith((_ENC_PREFIX, _FERNET_PREFIX)) for (value,) in rows):
+        return
     with connection_factory.transaction(write=True) as connection:
         connection.execute("PRAGMA secure_delete=ON")
         rows = connection.execute("SELECT user_id,value FROM settings WHERE key=? AND value<>''",
@@ -245,12 +257,16 @@ class EncryptedSettingsKeyStore:
     def get_secret(self, name: str) -> Result[str | None]:
         key = self._normalize_name(name)
         try:
-            keyring_value = self._keyring.get_password(self._service_name, key)
+            stored = self._settings.get(self._user_id, self._setting_key(key), None)
         except Exception:
-            keyring_value = None
-        if keyring_value is not None:
-            return Result.success(keyring_value)
-        stored = self._settings.get(self._user_id, self._setting_key(key), None)
+            return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
+        if not stored:
+            try:
+                keyring_value = self._keyring.get_password(self._service_name, key)
+            except Exception:
+                return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
+            if keyring_value is not None:
+                return Result.success(keyring_value)
         previous_value = False
         if not stored and key == "ai_api_key":
             stored = self._settings.get(self._user_id, key, None)

@@ -41,6 +41,9 @@ See [browser sign-in](identity-signin.md).
 ## Stored Credentials
 
 API keys use OS keyring-first storage with authenticated encrypted fallback.
+When a keyring update fails, the successfully saved encrypted fallback remains
+authoritative until a later keyring update succeeds. Previous machine keys are
+persisted locally when read so subsequent keyring outages do not change them.
 Proxy passwords require an approved system credential backend without a plaintext
 fallback. Credential namespaces include account/database context.
 

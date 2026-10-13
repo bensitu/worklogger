@@ -30,7 +30,7 @@ def validate_https_url(url: str, *, public_only: bool = False) -> str:
         try:
             address = ipaddress.ip_address(host)
         except ValueError:
-            if re.fullmatch(r"(?:0x[0-9a-f]+|[0-9.]+)", host):
+            if re.fullmatch(r"(?:0x[0-9a-f]+|[0-9]+)(?:\.(?:0x[0-9a-f]+|[0-9]+))*", host):
                 raise ValueError("https_url_invalid")
         else:
             if not address.is_global:
@@ -42,10 +42,26 @@ class _PublicHTTPSConnection(http.client.HTTPSConnection):
     def connect(self):
         if self._tunnel_host:
             _validate_public_host(self._tunnel_host, self._tunnel_port)
+        else:
+            self._create_connection = _connect_public
         super().connect()
         if self.sock is None or (not self._tunnel_host and not ipaddress.ip_address(self.sock.getpeername()[0]).is_global):
             self.close()
             raise OSError("http_address_not_public")
+
+
+def _connect_public(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, source_address=None):
+    host, port = address
+    addresses = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+    if not addresses or any(not ipaddress.ip_address(item[4][0]).is_global for item in addresses):
+        raise OSError("http_address_not_public")
+    error = None
+    for _family, _kind, _protocol, _name, resolved in addresses:
+        try:
+            return socket.create_connection((resolved[0], port), timeout, source_address)
+        except OSError as failure:
+            error = failure
+    raise error or OSError("http_address_not_public")
 
 
 def _validate_public_host(host, port):

@@ -9,7 +9,7 @@ from worklogger.config.constants import MACHINE_KEY_FILENAME, REMEMBER_SESSION_F
 
 def credential_directory() -> Path:
     appdata = os.environ.get("APPDATA", "").strip()
-    if appdata:
+    if sys.platform == "win32" and appdata:
         return Path(appdata) / "WorkLogger"
     previous = Path.home() / ".config" / "worklogger"
     if sys.platform == "darwin" and not any((previous / name).exists() for name in

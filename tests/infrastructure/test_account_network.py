@@ -16,6 +16,23 @@ from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
 
 
 class AccountNetworkTests(unittest.TestCase):
+    def test_public_connections_resolve_once_and_connect_only_to_validated_addresses(self):
+        import socket
+        from worklogger.infrastructure.http import _connect_public, validate_https_url
+        for url in ("https://0x7f.0.0.1", "https://0x7f.0x0.0x0.0x1"):
+            with self.assertRaises(ValueError):
+                validate_https_url(url, public_only=True)
+        addresses = [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))]
+        with patch("socket.getaddrinfo", return_value=addresses) as resolve, patch("socket.create_connection") as connect:
+            _connect_public(("example.com", 443), 5)
+            resolve.assert_called_once()
+            connect.assert_called_once_with(("93.184.216.34", 443), 5, None)
+        addresses.append((socket.AF_INET, socket.SOCK_STREAM, 6, "", ("127.0.0.1", 443)))
+        with patch("socket.getaddrinfo", return_value=addresses), patch("socket.create_connection") as connect:
+            with self.assertRaises(OSError):
+                _connect_public(("example.com", 443), 5)
+            connect.assert_not_called()
+
     def test_runtime_reads_do_not_load_unrelated_drafts_or_avatar_values(self):
         self.values.update(ai_assist_enabled="1", daily_note_draft="private draft", profile_avatar_png="private image")
         gateway = AccountAIGateway(local=Mock(available=True), settings=self.settings,
