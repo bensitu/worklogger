@@ -90,9 +90,9 @@ def apply_recording_preferences(
     )
     time_entries.set_default_break_hours(state.default_break_hours)
     time_entries.set_timer_reminders(state.timer_reminder_hours, state.continuous_timer_reminder_hours)
-    if hasattr(reports, "set_standard_work_hours"):
-        reports.set_standard_work_hours(state.standard_work_hours)
     for model in (reports, analytics):
+        if hasattr(model, "set_standard_work_hours"):
+            model.set_standard_work_hours(state.standard_work_hours)
         if hasattr(model, "set_week_start_monday"):
             model.set_week_start_monday(state.week_start_monday)
     return updated

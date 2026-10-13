@@ -1,6 +1,7 @@
 """Automatic recording transitions, break handling and reminder presentation."""
 
 from PySide6.QtCore import QTimer
+from time import monotonic
 from PySide6.QtWidgets import QMessageBox
 
 from worklogger.config.constants import MAX_SHIFT_HOURS
@@ -56,7 +57,7 @@ class AutomaticRecordingActions:
     def _start_with_content(self, work_type, content):
         self._polish_task.cancel()
         moment = self.view_model.now()
-        self._submit(lambda: self.view_model.start(work_type, content, now=moment), refresh=False,
+        self._submit(lambda model: model.start(work_type, content, now=moment), refresh=False,
                      on_complete=lambda result: self._complete_start(result, work_type, content, moment))
 
     def _complete_start(self, result, work_type, content, moment):
@@ -72,8 +73,11 @@ class AutomaticRecordingActions:
         answer = dialog.exec()
         dialog.deleteLater()
         if answer == QMessageBox.StandardButton.Yes:
-            record = result.error.details["break_entry"]
-            self._submit(lambda: self.view_model.start(work_type, content, now=moment, break_entry=record))
+            record = result.error.details.get("break_entry")
+            if record is None:
+                self._apply_result(result, refresh=False)
+                return
+            self._submit(lambda model: model.start(work_type, content, now=moment, break_entry=record))
 
     def _finish(self):
         self._polish_task.cancel()
@@ -89,20 +93,20 @@ class AutomaticRecordingActions:
             capture_id = timer.capture_id
             def accepted():
                 end = dialog.chosen_end()
-                def finish_corrected():
-                    current = self.view_model.timer
+                def finish_corrected(model):
+                    current = model.timer
                     if current is None or current.capture_id != capture_id:
                         return Result.failure(ConflictError("time_entry_timer_conflict", "time_entry_timer_conflict"))
-                    return self.view_model.finish(now=end)
+                    return model.finish(now=end)
                 self._submit(finish_corrected)
             dialog.accepted.connect(accepted)
             dialog.finished.connect(lambda: setattr(self, "_end_dialog", None))
             dialog.finished.connect(dialog.deleteLater)
             dialog.open()
             return
-        def finish():
-            advanced = self.view_model.advance(now=moment)
-            return self.view_model.finish(now=moment) if advanced.ok else advanced
+        def finish(model):
+            advanced = model.advance(now=moment)
+            return model.finish(now=moment) if advanced.ok else advanced
         self._submit(finish)
 
     def _break(self):
@@ -110,17 +114,17 @@ class AutomaticRecordingActions:
         if self.view_model.restore_failed:
             return
         moment = self.view_model.now()
-        self._submit(lambda: self.view_model.take_break(now=moment))
+        self._submit(lambda model: model.take_break(now=moment))
 
     def _tick(self):
         if self.is_busy:
             return
-        if self.view_model.resume_due:
-            self._submit(self.view_model.advance, automatic=True)
+        if self.view_model.resume_due and monotonic() >= self._timer_retry_after:
+            self._submit(lambda model: model.advance(), automatic=True)
         else:
             self._update_elapsed_label()
 
     def _discard_timer(self):
         if QMessageBox.question(self, _("Discard timer"), _("Discard the saved timer without creating a record?"),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
-            self._submit(self.view_model.discard_timer)
+            self._submit(lambda model: model.discard_timer())

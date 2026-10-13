@@ -1,6 +1,7 @@
 """Compact editor for individually recorded work periods."""
 
 from datetime import date
+from time import monotonic
 
 from PySide6.QtCore import QEvent, QTimer, Qt, Signal
 from PySide6.QtWidgets import (QComboBox, QHBoxLayout, QLabel, QLineEdit,
@@ -8,6 +9,7 @@ from PySide6.QtWidgets import (QComboBox, QHBoxLayout, QLabel, QLineEdit,
     QTabWidget, QTextEdit, QToolButton, QVBoxLayout, QWidget, QStackedWidget)
 
 from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType
+from worklogger.domain.worklog.rules import calc_shift_span_hours
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.errors import CancellationError
 from worklogger.domain.shared.result import Result
@@ -47,6 +49,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         self.is_busy = False
         self._updating = False
         self._timer_failed = False
+        self._timer_retry_after = 0
         self._reminder_capture = None
         self._notified_reminders = set()
         self._end_dialog = None
@@ -279,8 +282,10 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
 
     def refresh_work_types(self):
         self._updating = True
-        result = self._reload_work_types()
-        self._updating = False
+        try:
+            result = self._reload_work_types()
+        finally:
+            self._updating = False
         if not result.ok:
             self._apply_result(result, refresh=False)
         self._render_editor()
@@ -296,21 +301,25 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             if result.ok:
                 self._context_error = None
                 self._updating = True
-                self.context_picker.set_inventory(*result.value)
-                recent = self.view_model.recent_contexts()
-                if recent.ok:
-                    self.context_picker.set_recent(recent.value)
-                self._updating = False
+                try:
+                    self.context_picker.set_inventory(*result.value)
+                    recent = self.view_model.recent_contexts()
+                    if recent.ok:
+                        self.context_picker.set_recent(recent.value)
+                finally:
+                    self._updating = False
                 self._render_editor()
             else:
                 self._apply_result(result, refresh=False)
-        self._submit(self.view_model.project_inventory, refresh=False, on_complete=completed)
+        self._submit(lambda model: model.project_inventory(), refresh=False, on_complete=completed)
 
     @property
     def is_dirty(self):
         return self.view_model.manual_dirty or self.view_model.auto_dirty
 
     def load_day(self, day: date):
+        if self.is_busy:
+            return Result.failure(InfrastructureError("worklog_entry_conflict", "worklog_entry_conflict"))
         if day != self._day:
             self._polish_task.cancel()
         self._day = day
@@ -342,7 +351,10 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         self._polish_task.cancel()
         self.view_model.new(event.day)
         self.time_tabs.setCurrentIndex(0)
-        self.view_model.update(start=event.start_time or "", end="00:00" if event.end_time == "24:00" else event.end_time or "", work_type="meeting",
+        start, end = event.start_time or "", "00:00" if event.end_time == "24:00" else event.end_time or ""
+        if start and end and calc_shift_span_hours(start, end) is None:
+            start, end = "", ""
+        self.view_model.update(start=start, end=end, work_type="meeting",
                                content="\n".join(part for part in (event.summary, event.description, event.location) if part))
         self._render_editor()
 
@@ -441,7 +453,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
                                     and self.view_model.latest_change_info is not None)
         tick = getattr(self, "auto_timer", None)
         if tick is not None:
-            if timer and not self._timer_failed and not tick.isActive():
+            if timer and not self.is_busy and not tick.isActive():
                 tick.start()
             elif not timer and tick.isActive():
                 tick.stop()
@@ -532,30 +544,42 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             return
         self._polish_task.cancel()
         if self._job_runner is None:
-            result = operation()
+            result = operation(self.view_model)
             if on_complete is None:
                 self._apply_result(result, refresh=refresh)
             else:
                 on_complete(result)
+            self._update_actions()
             return
+        snapshot = self.view_model.operation_copy()
         self.is_busy = True
         self.auto_timer.stop()
         self.setEnabled(False)
         self.busy_changed.emit(True)
 
         def complete(result):
+            if result.ok:
+                result, state = result.value
+                self.view_model.apply_operation_state(state)
             self.is_busy = False
             self.setEnabled(True)
             self.busy_changed.emit(False)
+            repeated_failure = automatic and not result.ok and self._timer_failed
             if automatic and not result.ok:
                 self._timer_failed = True
-            if on_complete is None:
-                self._apply_result(result, refresh=refresh and (not automatic or result.value is not None))
-            else:
-                on_complete(result)
+                self._timer_retry_after = monotonic() + 5
+            try:
+                if on_complete is None:
+                    if not repeated_failure:
+                        self._apply_result(result, refresh=refresh and (not automatic or result.value is not None))
+                else:
+                    on_complete(result)
+            finally:
+                self._update_actions()
 
         try:
-            self._job_runner.submit("time_entry_update", lambda _token: operation(), on_complete=owned_callback(self, complete))
+            self._job_runner.submit("time_entry_update", lambda _token: Result.success((operation(snapshot), snapshot)),
+                                    on_complete=owned_callback(self, complete))
         except Exception:
             self.is_busy = False
             self.setEnabled(True)
@@ -564,7 +588,8 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             self._apply_result(Result.failure(InfrastructureError("worklog_save_failed", "worklog_save_failed")), refresh=False)
 
     def _save(self):
-        self._submit(self.view_model.save_content if self.time_tabs.currentIndex() == 1 or self.view_model.editing_active_timer else self.view_model.save_manual)
+        content_only = self.time_tabs.currentIndex() == 1 or self.view_model.editing_active_timer
+        self._submit(lambda model: model.save_content() if content_only else model.save_manual())
 
     def _polish_content(self):
         if self.is_busy or self._polish_task.is_running:
@@ -622,7 +647,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             return
         if QMessageBox.question(self, _("Delete record"), _("Delete this time record?"),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
-            self._submit(lambda: self.view_model.delete_entry(record))
+            self._submit(lambda model: model.delete_entry(record))
 
 
 
@@ -636,7 +661,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             return
         if QMessageBox.question(self, _("Delete record"), _("Delete this calendar event?"),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
-            self._submit(lambda: self.view_model.delete_event(event))
+            self._submit(lambda model: model.delete_event(event))
 
     def discard_changes(self):
         self._polish_task.cancel()

@@ -2017,6 +2017,9 @@ msgstr "数据库包含冲突的账户标识或记录关联。请保留原文件
 msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 msgstr "无法读取数据库，原始文件已保留。请按照数据库恢复说明恢复经过验证的备份。"
 
+msgid "The draft could not be read. Your saved note is shown. Reload to discard the unreadable draft."
+msgstr "无法读取草稿，当前显示已保存的笔记。重新加载可丢弃无法读取的草稿。"
+
 msgid "The file contains conflicting records for the same date."
 msgstr "文件中存在同一日期的冲突记录。"
 

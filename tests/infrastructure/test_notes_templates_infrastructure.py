@@ -41,6 +41,25 @@ from worklogger.infrastructure.templates import BuiltInTemplateProvider, UserTem
 
 
 class NotesTemplatesInfrastructureTests(unittest.TestCase):
+    def test_unreadable_draft_preserves_raw_data_and_loads_saved_note(self):
+        with tempfile.TemporaryDirectory() as directory:
+            factory = SQLiteConnectionFactory(f"{directory}/notes.db")
+            MigrationRunner(factory).run_pending()
+            user = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000)).create_user(
+                "draft.owner", "example-password", recovery_key=None, is_admin=False)
+            notes, settings = SQLiteDailyNoteRepository(factory), SQLiteSettingsRepository(factory)
+            day = date(2026, 10, 9)
+            notes.save(DailyNote(user.id, day, "Saved content"))
+            service = DailyNotesService(user_id=user.id, notes=notes, settings=settings, previous_entries=SQLiteQuickLogRepository(factory))
+            for raw in ('{broken', '{"content":42}', '[]'):
+                settings.set(user.id, note_draft_key(day), raw)
+                with self.assertLogs("worklogger.app.use_cases.notes", level="WARNING"):
+                    result = service.load(day)
+                self.assertTrue(result.ok)
+                self.assertEqual(result.value.content, "Saved content")
+                self.assertTrue(result.value.draft_unavailable)
+                self.assertEqual(settings.get(user.id, note_draft_key(day)), raw)
+
     def test_previous_entry_transfer_is_atomic_and_requires_unchanged_complete_content(self):
         with tempfile.TemporaryDirectory() as directory:
             factory = SQLiteConnectionFactory(f"{directory}/notes.db")
@@ -163,10 +182,10 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
             notes.save(DailyNote(user.id, day, "edited"), expected_content="original")
             stale = SaveWorkLogHandler(work_logs).handle(SaveWorkLogCommand(
                 user.id, day, "08:00", "18:00", 1.0, "stale", "normal", expected_note="original"))
-            self.assertFalse(stale.ok)
-            self.assertEqual(stale.error.code, "note_conflict")
-            self.assertEqual(work_logs.get_for_day(user.id, day).start_time, "09:00")
-            self.assertEqual(work_logs.get_for_day(user.id, day).note, "original")
+            self.assertTrue(stale.ok, stale.error)
+            self.assertEqual(work_logs.get_for_day(user.id, day).start_time, "08:00")
+            self.assertEqual(work_logs.get_for_day(user.id, day).note, "stale")
+            self.assertEqual(notes.get_for_day(user.id, day).content, "edited")
             rejected = SaveDailyNoteHandler(notes).handle(SaveDailyNoteCommand(
                 user.id, day, "other editor", expected_content="original"))
             self.assertFalse(rejected.ok)

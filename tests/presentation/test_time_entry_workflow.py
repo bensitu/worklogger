@@ -26,6 +26,42 @@ from PySide6.QtCore import QTime
 
 
 class TimeEntryWorkflowTests(unittest.TestCase):
+    def test_worker_editor_changes_are_applied_only_on_completion_and_failures_restart_display(self):
+        from worklogger.app.job_runner import CancellationToken, JobHandle
+        from worklogger.domain.shared.errors import InfrastructureError
+        class DeferredRunner:
+            def submit(self, name, operation, *, on_complete):
+                self.operation, self.complete = operation, on_complete
+                return JobHandle(name, lambda: None)
+        panel = self.panel
+        runner = DeferredRunner()
+        panel._job_runner = runner
+        panel.start_input.setText("09:00")
+        panel.end_input.setText("10:00")
+        panel.content_input.setPlainText("Pending content")
+        panel._save()
+        before = panel.view_model.draft
+        result = runner.operation(CancellationToken())
+        self.assertEqual(panel.view_model.draft, before)
+        self.assertIsNone(panel.view_model.draft.original)
+        runner.complete(result)
+        self.assertIsNotNone(panel.view_model.draft.original)
+        panel._job_runner = ImmediateJobRunner()
+        panel.view_model.clear(self.now.date())
+        self.now += timedelta(hours=2)
+        panel._start_with_content("normal", "Active timer")
+        self.assertIsNotNone(panel.view_model.timer)
+        panel._job_runner = runner
+        panel._submit(lambda model: Result.failure(InfrastructureError("worklog_save_failed", "worklog_save_failed")))
+        runner.complete(runner.operation(CancellationToken()))
+        self.assertFalse(panel.is_busy)
+        self.assertTrue(panel.auto_timer.isActive())
+
+    def test_full_day_calendar_event_requires_an_explicit_work_period(self):
+        self.panel.copy_event(CalendarEvent(None, self.runtime.user.id, self.now.date(), "Trip", "00:00", "24:00"))
+        self.assertEqual((self.panel.start_input.text(), self.panel.end_input.text()), ("", ""))
+        self.assertEqual(self.panel.content_input.toPlainText(), "Trip")
+
     def test_record_modes_share_content_classification_and_saved_identity(self):
         panel = self.panel
         panel.start_input.setText("09:00")

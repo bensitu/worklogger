@@ -125,6 +125,23 @@ class RuntimeBootstrapTests(unittest.TestCase):
             self.assertFalse(notes.rewrite_available)
             self.assertFalse(panel.polish_button.isEnabled())
             panel.clear_button.click()
+            settings.set(runtime.user.id, "local_model_enabled", "1")
+            settings.set(runtime.user.id, MINIMAL_MODE_SETTING_KEY, "1")
+            runtime.window.close()
+            with patch("worklogger.composition.context.LocalInferenceRuntime", side_effect=inference):
+                restarted = build_desktop_runtime(DesktopRuntimeConfig(database_path=root / "worklog.db",
+                    password_iterations=1000), argv=[])
+            self.assertTrue(restarted.ok, restarted.error)
+            self.addCleanup(restarted.value.window.close)
+            self.addCleanup(restarted.value.local_inference.close)
+            minimal = restarted.value.window
+            self.assertIsInstance(minimal, MinimalView)
+            minimal.entry_panel.content_input.setPlainText("A local record description")
+            deadline = time.monotonic() + 3
+            while not minimal.entry_panel.polish_button.isEnabled() and time.monotonic() < deadline:
+                restarted.value.application.processEvents()
+                time.sleep(0.005)
+            self.assertTrue(minimal.entry_panel.polish_button.isEnabled())
 
     def setUp(self):
         from tests.presentation.qt_support import dispose_test_windows

@@ -1,6 +1,7 @@
 """Presentation state for manual and automatic time-entry editing."""
 
 from dataclasses import dataclass, replace
+from copy import copy
 from datetime import date
 
 from worklogger.app.ports import TimeEntryOperations
@@ -26,6 +27,20 @@ class TimeEntryDraft:
 
 
 class TimeEntryViewModel:
+    def operation_copy(self):
+        snapshot = copy(self)
+        snapshot.service = copy(self.service)
+        return snapshot
+
+    def apply_operation_state(self, snapshot):
+        for name in ("draft", "_baseline", "entries", "auto_completed", "auto_content", "auto_work_type",
+                     "auto_context", "latest_change_info", "_timer_origin", "_timer_shares_draft"):
+            if name in snapshot.__dict__:
+                setattr(self, name, getattr(snapshot, name))
+        for name in ("timer", "_timer_raw", "restore_failed", "last_error"):
+            if hasattr(snapshot.service, name):
+                setattr(self.service, name, getattr(snapshot.service, name))
+
     def __init__(self, service: TimeEntryOperations, *, default_break_hours: float = 1,
                  rewrite_handler=None, language="en_US") -> None:
         self.service = service

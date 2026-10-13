@@ -126,6 +126,8 @@ class AppWindow(QMainWindow):
                 self._config.calendar_options.week_start_monday
             )
         analytics_model = getattr(analytics_workflow, "view_model", None)
+        if hasattr(analytics_model, "set_standard_work_hours"):
+            analytics_model.set_standard_work_hours(self._config.standard_work_hours)
         if hasattr(analytics_model, "set_week_start_monday"):
             analytics_model.set_week_start_monday(
                 self._config.calendar_options.week_start_monday
@@ -451,6 +453,8 @@ class AppWindow(QMainWindow):
         dialog.open()
 
     def _records_associated(self):
+        if self.entry_panel.is_busy:
+            return
         self._refresh_calendar()
         self._refresh_stats()
         if not self.entry_panel.is_dirty:

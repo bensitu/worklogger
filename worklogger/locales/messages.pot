@@ -2015,6 +2015,9 @@ msgstr ""
 msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 msgstr ""
 
+msgid "The draft could not be read. Your saved note is shown. Reload to discard the unreadable draft."
+msgstr ""
+
 msgid "The file contains conflicting records for the same date."
 msgstr ""
 

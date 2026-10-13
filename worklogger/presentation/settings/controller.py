@@ -63,7 +63,7 @@ from worklogger.presentation.viewmodels.work_types import WorkTypeManagerViewMod
 from worklogger.presentation.widgets.work_type_manager import WorkTypeManagerDialog
 from worklogger.presentation.widgets.project_manager import ProjectManagerDialog
 from worklogger.app.ports import AIRequest
-from worklogger.presentation.job_runner import QtJobRunner
+from worklogger.presentation.job_runner import QtJobRunner, owned_callback
 from worklogger.app.use_cases.user_profile import UserProfileService
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.errors import CancellationError
@@ -72,6 +72,29 @@ from worklogger.presentation.processing import TextProcessingTask
 
 
 class SettingsWorkflowController:
+    def initialize_processing(self, owner, callback):
+        def load():
+            settings = self._settings_view_model.load()
+            model = getattr(self._local_models_workflow, "view_model", None)
+            inventory = model.load() if model is not None else None
+            return settings, inventory
+
+        def complete(result):
+            if not result.ok:
+                return
+            settings, inventory = result.value
+            if settings.ok and settings.value is not None and self._ai_gateway is not None:
+                self._ai_gateway.update_configuration(settings.value)
+            if inventory is not None and inventory.ok and self._local_inference is not None:
+                self._local_inference.update_inventory(inventory.value.inventory)
+            callback()
+
+        if self._job_runner is None:
+            complete(Result.success(load()))
+        else:
+            self._job_runner.submit("initialize_text_processing", lambda _token: load(),
+                                    on_complete=owned_callback(owner, complete))
+
     def __init__(
         self,
         *,

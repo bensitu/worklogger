@@ -49,13 +49,13 @@ class TimeEntryRecordActions:
                 QMessageBox.warning(self, _("Split record"), display_error_code(str(error)))
                 return
             if self._confirm_periods(_("Split record"), preview):
-                self._submit(lambda: self.view_model.split(record, minutes))
+                self._submit(lambda model: model.split(record, minutes))
 
     def _merge_record(self, previous, record):
         if previous is not None and self._changes_confirmed() and QMessageBox.question(self, _("Merge records"),
                 _("Merge these adjacent records? Their content will be combined."), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
-            self._submit(lambda: self.view_model.merge(previous, record))
+            self._submit(lambda model: model.merge(previous, record))
 
     def _place_break(self, record):
         if not self._changes_confirmed():
@@ -71,7 +71,7 @@ class TimeEntryRecordActions:
                 QMessageBox.warning(self, _("Place historical break"), display_error_code(str(error)))
                 return
             if self._confirm_periods(_("Place historical break"), preview):
-                self._submit(lambda: self.view_model.convert_break(record, minutes))
+                self._submit(lambda model: model.convert_break(record, minutes))
 
     def _confirm_periods(self, title, periods):
         lines = []
@@ -104,5 +104,5 @@ class TimeEntryRecordActions:
                     count=len(change.entries), start=min(days).isoformat(), end=max(days).isoformat())
             if QMessageBox.question(self, _("Undo latest record change"), question,
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
-                self._submit(lambda: self.view_model.undo(change.id))
-        self._submit(self.view_model.latest_change, refresh=False, on_complete=ready)
+                self._submit(lambda model: model.undo(change.id))
+        self._submit(lambda model: model.latest_change(), refresh=False, on_complete=ready)

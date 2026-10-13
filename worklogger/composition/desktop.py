@@ -340,6 +340,8 @@ def _runtime_result(
     settings_workflow = getattr(window, "_settings_workflow", None)
     if settings_workflow is not None:
         settings_workflow.set_restore_handler(window.logout_requested.emit)
+        if isinstance(window, MinimalView):
+            settings_workflow.initialize_processing(window, window.entry_panel.refresh_ai_availability)
     return Result.success(
         DesktopRuntime(
             application=application,

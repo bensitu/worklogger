@@ -94,7 +94,9 @@ class NoteEditorDialog(QDialog):
             self.editor.setPlainText(state.content)
             self.report_checkbox.setChecked(state.sharing.reports)
             self.ai_checkbox.setChecked(state.sharing.ai)
-            self.recovery_label.setVisible(state.recovered_draft)
+            self.recovery_label.setText(_("The draft could not be read. Your saved note is shown. Reload to discard the unreadable draft.")
+                                       if state.draft_unavailable else _("Recovered draft"))
+            self.recovery_label.setVisible(state.recovered_draft or state.draft_unavailable)
             self.previous_list.clear()
             for entry in state.previous_entries:
                 span = " - ".join(part for part in (entry.start_time, entry.end_time) if part)

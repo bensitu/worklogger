@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 import json
+import logging
 from worklogger.app.commands.note_commands import SaveDailyNoteCommand
 from worklogger.app.queries.note_queries import GetDailyNoteQuery
 from worklogger.domain.notes.models import DailyNote
@@ -74,6 +75,7 @@ class NoteWorkspace:
     recovered_draft: bool = False
     saved_sharing: NoteSharing = NoteSharing()
     expected_sharing: NoteSharing = NoteSharing()
+    draft_unavailable: bool = False
 
 
 class DailyNotesService:
@@ -99,18 +101,24 @@ class DailyNotesService:
             expected_sharing = sharing
             draft_raw = self.settings.get(self.user_id, note_draft_key(day)) if recover_draft else None
             content, expected, recovered = note.content, note.content, False
+            unavailable = False
             if draft_raw:
-                if len(draft_raw) > 4 * 1024 * 1024:
-                    raise ValueError("note_load_failed")
-                draft = json.loads(draft_raw)
-                content, expected = draft["content"], draft["expected_content"]
-                if not isinstance(content, str) or not isinstance(expected, str):
-                    raise ValueError("note_load_failed")
-                sharing = NoteSharing.decode(json.dumps(draft.get("sharing", {})))
-                expected_sharing = NoteSharing.decode(json.dumps(draft.get("expected_sharing", {})))
-                recovered = content != note.content or sharing != NoteSharing.decode(self.settings.get(self.user_id, note_sharing_key(day)))
+                try:
+                    if len(draft_raw) > 4 * 1024 * 1024:
+                        raise ValueError("note_load_failed")
+                    draft = json.loads(draft_raw)
+                    content, expected = draft["content"], draft["expected_content"]
+                    if not isinstance(content, str) or not isinstance(expected, str):
+                        raise ValueError("note_load_failed")
+                    sharing = NoteSharing.decode(json.dumps(draft.get("sharing", {})))
+                    expected_sharing = NoteSharing.decode(json.dumps(draft.get("expected_sharing", {})))
+                    recovered = content != note.content or sharing != saved_sharing
+                except (ValueError, TypeError, KeyError):
+                    content, expected, sharing, expected_sharing = note.content, note.content, saved_sharing, saved_sharing
+                    unavailable = True
+                    logging.getLogger(__name__).warning("note_draft_unavailable")
             return NoteWorkspace(note, content, expected, sharing,
-                                 self.previous_entries.list_for_day(self.user_id, day), recovered, saved_sharing, expected_sharing)
+                                 self.previous_entries.list_for_day(self.user_id, day), recovered, saved_sharing, expected_sharing, unavailable)
         return self._run(load, error_code="note_load_failed")
 
     def save(self, day: date, content: str, expected_content: str, sharing: NoteSharing,

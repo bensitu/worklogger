@@ -62,6 +62,8 @@ Input to correct time boundaries.
 The timer retains its start and account across restarts. Editing another date
 does not move it. Discard timer asks for confirmation before removing it.
 Clearing content does not stop or discard the timer.
+If an automatic save fails, the elapsed-time display continues and the timer
+retries after a short delay. Unsaved timer state is retained.
 
 Break creates a separate rest record for the default break duration. Finish an
 active timer first. Starting work during a shortcut-created break asks whether to
@@ -90,7 +92,14 @@ restore.
 
 Imported calendar events are separate from worked time. Selecting one creates a
 time-entry draft. Editing or deleting the local copy does not alter its source file.
+All-day events require explicit start and end times before saving as worked time.
 Holiday display and the first day of the week are controlled in General settings.
+
+Calendar imports are bounded before recurrence expansion. Repeated events must
+use daily or less frequent rules and fit within ten years of their start.
+Event titles, descriptions, and locations are limited to 1 KiB, 64 KiB, and
+4 KiB respectively; the expanded event content is limited to 16 MiB. Imports
+that exceed these limits are rejected without changing existing events.
 
 ## Notes
 
@@ -101,6 +110,8 @@ open note; Reload saved note discards its local draft.
 Drafts are retained after a typing pause. Closing edited text offers Keep draft,
 Discard, or Cancel. Conflicting saves preserve your input; reload and compare
 before replacing someone else's changes.
+If a draft cannot be read, the saved note is displayed without removing the
+draft. Reload explicitly discards it; saving edited content replaces it.
 
 **Allow in reports** and **Allow in AI context** are separate per-date choices and
 default to off. AI sharing also requires the account privacy setting.
@@ -111,12 +122,6 @@ memo and removes those source entries together; cancellation or failure retains
 them. It does not create worked-time records.
 
 ## Reports
-
-Calendar imports are bounded before recurrence expansion. Repeated events must
-use daily or less frequent rules and fit within ten years of their start.
-Event titles, descriptions, and locations are limited to 1 KiB, 64 KiB, and
-4 KiB respectively; the expanded event content is limited to 16 MiB. Imports
-that exceed these limits are rejected without changing existing events.
 
 Choose a daily, weekly, or monthly period. Weekly periods follow the week-start
 preference. Generate from records builds a draft from records, calendar events,

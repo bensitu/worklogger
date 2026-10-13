@@ -2017,6 +2017,9 @@ msgstr "データベースに競合するアカウント識別子または記録
 msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 msgstr "データベースを読み込めませんでした。元のファイルは保持されています。データベースの復元手順に従って、検証済みのバックアップを復元してください。"
 
+msgid "The draft could not be read. Your saved note is shown. Reload to discard the unreadable draft."
+msgstr "下書きを読み込めませんでした。保存済みのノートを表示しています。再読み込みすると、読み込めない下書きを破棄します。"
+
 msgid "The file contains conflicting records for the same date."
 msgstr "ファイル内に同じ日付の競合する記録があります。"
 

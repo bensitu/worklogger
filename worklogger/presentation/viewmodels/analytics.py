@@ -80,6 +80,9 @@ class AnalyticsViewModel:
     def set_week_start_monday(self, enabled: bool) -> None:
         self._week_start_monday = bool(enabled)
 
+    def set_standard_work_hours(self, hours: float) -> None:
+        self._standard_leave_hours = max(1.0, min(float(hours), 24.0))
+
     @property
     def user_id(self) -> int:
         return self._user_id
