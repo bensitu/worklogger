@@ -32,6 +32,36 @@ from worklogger.infrastructure.security import PBKDF2PasswordHasher
 
 
 class DataPortabilityInfrastructureTests(unittest.TestCase):
+    def test_daily_saves_keep_record_content_separate_from_notes_and_check_previous_content(self):
+        from worklogger.infrastructure.repositories import SQLiteDailyNoteRepository
+        user = self.register_user("content-owner")
+        repository = SQLiteWorkLogRepository(self.factory)
+        notes = SQLiteDailyNoteRepository(self.factory)
+        day = date(2026, 5, 1)
+        repository.save(WorkLog(user, day, note="First"))
+        repository.save(WorkLog(user, day, note="Second"), expected_note="First")
+        self.assertEqual(notes.get_for_day(user, day).content, "Second")
+        repository.save(WorkLog(user, day, "09:00", "10:00", note="Record content"))
+        repository.save(WorkLog(user, day, "09:00", "10:00", note="Edited"), expected_note="Record content")
+        self.assertEqual(notes.get_for_day(user, day).content, "Second")
+        self.assertEqual([row.note for row in repository.list_export_rows(user)], ["Edited", "Second"])
+        with self.assertRaisesRegex(ValueError, "note_conflict"):
+            repository.save(WorkLog(user, day, "09:00", "10:00", note="Stale"), expected_note="Record content")
+        self.assertEqual(repository.get_for_day(user, day).note, "Edited")
+
+    def test_untimed_csv_records_retain_deducted_break_hours(self):
+        from worklogger.infrastructure.repositories import SQLiteDailyNoteRepository
+        user = self.register_user("deduction-owner")
+        path = Path(self._tempdir.name) / "deductions.csv"
+        path.write_text("date,start,end,break,note,work_type\n2026-05-01,,,1.5,Historical deduction,normal\n", encoding="utf-8")
+        repository = SQLiteWorkLogRepository(self.factory)
+        result = ImportWorkLogsCsvHandler(importer=WorkLogCsvImporter(), repository=repository).handle(
+            ImportWorkLogsCsvCommand(user, path))
+        self.assertTrue(result.ok, result.error)
+        self.assertEqual(result.value.imported_count, 1)
+        self.assertEqual(repository.list_for_day(user, date(2026, 5, 1))[0].break_hours, 1.5)
+        self.assertEqual(SQLiteDailyNoteRepository(self.factory).get_for_day(user, date(2026, 5, 1)).content, "")
+
     def test_csv_matching_uses_captured_instants_for_repeated_clock_hours(self):
         from datetime import datetime
         user = self.register_user("repeated-hour")
@@ -197,7 +227,7 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         self.assertTrue(service.restore_database(source).ok)
         retained = next(Path(self._tempdir.name).glob("worklog.db.bak_restore_*"))
         with closing(sqlite3.connect(retained)) as connection:
-            self.assertEqual(connection.execute("SELECT content FROM daily_notes").fetchone()[0], "Recent")
+            self.assertEqual(connection.execute("SELECT note FROM worklog").fetchone()[0], "Recent")
         previous = Path(self.db_path + ".pre_restore")
         previous.write_bytes(retained.read_bytes())
         self.assertEqual(service.restore_database(source).error.code, "restore_pending")

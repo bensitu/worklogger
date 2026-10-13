@@ -6,6 +6,11 @@ The database is local SQLite. Canonical DDL lives in
 `infrastructure/database/current_schema.py`.
 SQL identifiers are storage contracts, not localized UI captions.
 
+Connection factories require a file-backed database. Reads can nest on their
+owning thread while maintenance waits for existing connections to finish.
+New connections and writes respect the configured busy timeout; a busy failure
+leaves the transaction unchanged and can be retried after the other operation.
+
 | Table | Purpose |
 | --- | --- |
 | `schema_migrations` | Applied versions and timestamps |

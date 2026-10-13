@@ -269,8 +269,11 @@ class SQLiteWorkLogWrites:
                         (user_id, day.isoformat()),
                     ).fetchone():
                         raise ValueError("csv_import_conflict")
-                if daily_replacement and len(entries) == 1:
-                    save_note(connection, user_id, day, entries[0].note, expected_note)
+                if daily_replacement and expected_note is not None and not entries[0].is_note_only:
+                    previous = connection.execute("SELECT note FROM worklog WHERE user_id=? AND d=?",
+                                                  (user_id, day.isoformat())).fetchone()
+                    if (str(previous[0] or "") if previous else "") != expected_note:
+                        raise ValueError("note_conflict")
                 if overwrite:
                     if daily_replacement:
                         connection.execute("DELETE FROM worklog WHERE user_id=? AND d=?", (user_id, day.isoformat()))
@@ -282,11 +285,7 @@ class SQLiteWorkLogWrites:
                 if not record.is_note_only:
                     self._check_overlap(connection, record, cached_rows=cached_rows)
             for record in records:
-                if (
-                    not record.has_times
-                    and record.work_type.value == "normal"
-                    and record.note
-                ):
+                if record.is_note_only:
                     save_note(
                         connection,
                         record.user_id,

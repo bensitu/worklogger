@@ -28,6 +28,8 @@ class SQLiteConnectionFactory:
         corrupt_backup_retention: int = DB_CORRUPT_BACKUP_RETENTION,
     ) -> None:
         self.database_path = str(database_path)
+        if self.database_path == ":memory:":
+            raise ValueError("A connection factory requires a persistent database path")
         self.busy_timeout_ms = max(0, int(busy_timeout_ms))
         self.recover_corrupt = bool(recover_corrupt)
         self.corrupt_backup_retention = int(corrupt_backup_retention)
@@ -92,15 +94,26 @@ class SQLiteConnectionFactory:
             raise
 
     @contextmanager
+    def _write_access(self):
+        if not self.write_lock.acquire(timeout=self.busy_timeout_ms / 1000):
+            raise sqlite3.OperationalError("database is busy")
+        try:
+            yield
+        finally:
+            self.write_lock.release()
+
+    @contextmanager
     def connection(self, *, write: bool = False) -> Iterator[sqlite3.Connection]:
         identity = get_ident()
         with self._activity:
             if write and self._readers.get(identity) and not self._writers.get(identity):
                 raise RuntimeError("database_write_during_read")
-        with self.write_lock if write else nullcontext():
+        with self._write_access() if write else nullcontext():
             with self._activity:
-                while self._maintenance_owner not in (None, identity):
-                    self._activity.wait()
+                ready = lambda: (self._maintenance_owner in (None, identity)
+                                 or self._readers.get(identity) or self._writers.get(identity))
+                if not self._activity.wait_for(ready, timeout=self.busy_timeout_ms / 1000):
+                    raise sqlite3.OperationalError("database is busy")
                 active = self._writers if write else self._readers
                 active[identity] = active.get(identity, 0) + 1
             connection = None
@@ -124,13 +137,14 @@ class SQLiteConnectionFactory:
         with self._activity:
             if self._readers.get(identity) or self._writers.get(identity):
                 raise RuntimeError("database_maintenance_during_connection")
-        with self.write_lock:
+        with self._write_access():
             with self._activity:
                 if self._maintenance_owner == identity:
                     self._maintenance_depth += 1
                 else:
                     self._maintenance_owner = identity
                     self._maintenance_depth = 1
+                    self._activity.notify_all()
                     while self._readers or self._writers:
                         self._activity.wait()
             try:

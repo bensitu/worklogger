@@ -27,6 +27,8 @@ class ExportTimesheetHandler:
         try:
             reader = getattr(self._records, "list_entries_range", None)
             rows = reader(user_id, start, end, limit=MAX_TIMESHEET_ENTRIES + 1) if reader else self._records.list_range(user_id, start, end)
+            if len(rows) > MAX_TIMESHEET_ENTRIES:
+                return Result.failure(ValidationError("timesheet_too_large", "timesheet_too_large"))
             entries = tuple(entry for record in rows for entry in (record.entries or (record,)) if not entry.is_note_only)
             author = profile_display_name(self._profiles, user_id)
         except Exception:

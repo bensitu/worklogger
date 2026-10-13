@@ -108,3 +108,45 @@ class DatabaseConcurrencyTests(unittest.TestCase):
             with self.factory.connection():
                 pass
         self.assertFalse(path.exists())
+
+    def test_nested_reader_can_finish_while_maintenance_waits_for_it(self):
+        entered, finished = threading.Event(), threading.Event()
+        errors = []
+
+        def maintenance():
+            try:
+                with self.factory.maintenance():
+                    finished.set()
+            except Exception as error:
+                errors.append(error)
+
+        with self.factory.connection():
+            worker = threading.Thread(target=maintenance)
+            worker.start()
+            with self.factory._activity:
+                self.assertTrue(self.factory._activity.wait_for(lambda: self.factory._maintenance_owner is not None, timeout=2))
+            with self.factory.connection() as connection:
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM sample").fetchone()[0], 1)
+                entered.set()
+        worker.join(3)
+        self.assertTrue(entered.is_set() and finished.is_set())
+        self.assertFalse(errors)
+
+    def test_write_lock_timeout_keeps_changes_atomic(self):
+        held, release = threading.Event(), threading.Event()
+
+        def writer():
+            with self.factory.transaction():
+                held.set()
+                release.wait(3)
+
+        worker = threading.Thread(target=writer)
+        worker.start()
+        try:
+            self.assertTrue(held.wait(2))
+            self.factory.busy_timeout_ms = 20
+            with self.assertRaisesRegex(sqlite3.OperationalError, "database is busy"), self.factory.transaction():
+                pass
+        finally:
+            release.set()
+            worker.join(3)

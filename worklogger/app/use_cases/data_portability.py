@@ -120,8 +120,10 @@ class ImportWorkLogsCsvHandler:
                         raise ValueError("duplicate_date")
                     untimed_dates.add(row.day)
                 else:
-                    if row.day in untimed_dates or not intervals.add(work_log):
+                    if row.day in untimed_dates:
                         raise ValueError("duplicate_date")
+                    if not intervals.add(work_log):
+                        raise ValueError("worklog_entry_overlap")
                     timed_dates.add(row.day)
                 dates.add(row.day)
             except (TypeError, ValueError) as exc:
