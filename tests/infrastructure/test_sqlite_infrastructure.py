@@ -132,7 +132,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
             ),
         )
 
-    def test_collection_reads_preserve_valid_records_and_isolate_accounts(self) -> None:
+    def test_invalid_collection_records_are_rejected_without_changing_storage(self) -> None:
         user = self.auth_repository().create_user("collection-user", "test-password", recovery_key=None, is_admin=False)
         day = date(2026, 5, 1)
         repository = SQLiteQuickLogRepository(self.factory)

@@ -297,5 +297,3 @@ def _tooltip_for_cell(cell: CalendarDayCell) -> str:
     if cell.event_count:
         details.append(event_count_label(cell.event_count))
     return "\n".join(details)
-
-

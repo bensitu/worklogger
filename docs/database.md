@@ -2,6 +2,8 @@
 
 Collection reads reject undecodable stored records instead of returning incomplete
 totals or reports. A read failure does not delete or rewrite the affected rows.
+Invalid optional timezone metadata is logged; valid clock boundaries remain
+readable using historical wall-clock accounting rather than invented offsets.
 Restore and recovery snapshots share the same bounded retention policy.
 
 ## Structure and Semantics

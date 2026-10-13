@@ -180,11 +180,11 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
             self.assertEqual(notes.get_for_day(user.id, note_day).content, "standalone")
             self.assertIsNone(work_logs.get_for_day(user.id, note_day))
             notes.save(DailyNote(user.id, day, "edited"), expected_content="original")
-            stale = SaveWorkLogHandler(work_logs).handle(SaveWorkLogCommand(
-                user.id, day, "08:00", "18:00", 1.0, "stale", "normal", expected_note="original"))
-            self.assertTrue(stale.ok, stale.error)
+            saved_record = SaveWorkLogHandler(work_logs).handle(SaveWorkLogCommand(
+                user.id, day, "08:00", "18:00", 1.0, "edited record", "normal", expected_note="original"))
+            self.assertTrue(saved_record.ok, saved_record.error)
             self.assertEqual(work_logs.get_for_day(user.id, day).start_time, "08:00")
-            self.assertEqual(work_logs.get_for_day(user.id, day).note, "stale")
+            self.assertEqual(work_logs.get_for_day(user.id, day).note, "edited record")
             self.assertEqual(notes.get_for_day(user.id, day).content, "edited")
             rejected = SaveDailyNoteHandler(notes).handle(SaveDailyNoteCommand(
                 user.id, day, "other editor", expected_content="original"))

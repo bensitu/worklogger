@@ -53,6 +53,16 @@ layers. Back up your database before upgrading.
   and duplicated record content in independent memos during CSV import.
 - Inconsistent export indicators, button states, settings alignment, and busy feedback.
 - Loss of pending editor content after failed or conflicting saves and exports.
+- Lost CSV break deductions, duplicate day-note writes, and incomplete totals
+  caused by silently skipping undecodable stored records.
+- Nested database-read deadlocks and unbounded waits for serialized writes.
+- Unbounded calendar recurrence expansion and excessive event-content allocation.
+- Unavailable text processing after starting in the compact view, stalled timer
+  displays after failed saves, and unreadable note drafts blocking saved notes.
+- Blocking analytics operations, repeated calendar-widget creation, and stale
+  background results overwriting newer selections.
+- Unreadable provider registrations preventing explicit reconfiguration with a
+  retained backup of the original encrypted file.
 
 ### Security
 
@@ -60,6 +70,10 @@ layers. Back up your database before upgrading.
   resets or recovery-key use cannot be overwritten by stale authentication results.
 - Restricted credential storage to approved OS backends and reported removal
   failures. Logout revokes remembered credentials before clearing the device file.
+- Preserved newer encrypted credential values and migrated machine keys, isolated
+  remembered credentials by database, and restricted rotated-log permissions.
+- Validated public connection destinations before TLS and verified approved native
+  dependency checksums before installation.
 
 ## [3.3.3] - 2026-05-11
 
