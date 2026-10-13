@@ -4,7 +4,6 @@ from dataclasses import asdict
 from importlib.util import find_spec
 import os
 from threading import RLock
-from time import monotonic
 
 from worklogger.config.constants import (
     AI_ASSIST_ENABLED_SETTING_KEY,
@@ -16,9 +15,10 @@ from worklogger.domain.local_model.preferences import (
     DEFAULT_RUNTIME_CONTEXT_TOKENS, MIN_RUNTIME_CONTEXT_TOKENS,
     effective_runtime_context, runtime_context_preference,
 )
-from worklogger.domain.shared.errors import InfrastructureError, ValidationError
+from worklogger.domain.shared.errors import CancellationError, InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.ai.local import LocalModelGateway
+from worklogger.infrastructure.ai.execution import InferenceControl
 
 
 class LocalInferenceRuntime:
@@ -120,13 +120,15 @@ class LocalInferenceRuntime:
         return True
 
     def generate(self, request):
+        control = InferenceControl(request)
         try:
-            with self._lock:
+            with control.acquire(self._lock):
                 if not self.available:
                     return Result.failure(ValidationError(self.reason, self.reason))
                 with self._state_lock:
                     entry = self._entry
-                verified = self.store.verify_model(entry.id)
+                verified = self.store.verify_model(entry.id, is_cancelled=control.interrupted)
+                control.check()
                 if not verified.ok or not verified.value.verified:
                     code = (
                         verified.value.reason
@@ -139,8 +141,7 @@ class LocalInferenceRuntime:
                 requested_context = runtime_context_preference(self._settings.get(
                     self._user_id, LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY, str(DEFAULT_RUNTIME_CONTEXT_TOKENS)))
                 context = effective_runtime_context(requested_context, entry.context_length)
-                key = (entry.id, stat.st_mtime_ns, stat.st_size, entry.sha256, context)
-                started = monotonic()
+                key = (entry.id, stat.st_mtime_ns, stat.st_ctime_ns, stat.st_size, entry.sha256, context)
                 if self._engine_key != key:
                     self._close_engine()
                     factory = self._engine_factory
@@ -149,7 +150,7 @@ class LocalInferenceRuntime:
                             from llama_cpp import Llama
 
                             factory = Llama
-                        except (ImportError, OSError):
+                        except (ImportError, OSError, RuntimeError):
                             self.backend_available = False
                             return Result.failure(
                                 InfrastructureError(
@@ -178,9 +179,7 @@ class LocalInferenceRuntime:
 
                 def generate(messages, output_limit):
                     def check_deadline(_tokens, scores):
-                        if monotonic() - started > request.timeout_seconds:
-                            failure.append("local_inference_timeout")
-                            raise TimeoutError("local_inference_timeout")
+                        control.check()
                         return scores
 
                     check_deadline(None, None)
@@ -202,12 +201,13 @@ class LocalInferenceRuntime:
                                 scores = processor(tokens, scores)
                             return scores
 
-                    result = self._engine.create_chat_completion(
-                        messages=list(messages),
-                        max_tokens=min(output_limit, budget),
-                        temperature=0.2,
-                        logits_processor=Processors([check_deadline]),
-                    )
+                    with control.native_callback(self._engine):
+                        result = self._engine.create_chat_completion(
+                            messages=list(messages),
+                            max_tokens=min(output_limit, budget),
+                            temperature=0.2,
+                            logits_processor=Processors([check_deadline]),
+                        )
                     check_deadline(None, None)
                     return result["choices"][0]["message"]["content"]
 
@@ -217,6 +217,9 @@ class LocalInferenceRuntime:
                     catalog_entry=asdict(entry),
                     max_output_tokens=min(2048, max(1, entry.max_output_tokens)),
                 ).generate(request)
+                if control.interrupted():
+                    self._close_engine()
+                control.check()
                 if failure:
                     return Result.failure(InfrastructureError(failure[0], failure[0]))
                 if not result.ok:
@@ -224,6 +227,9 @@ class LocalInferenceRuntime:
                         InfrastructureError(result.error.code, result.error.code)
                     )
                 return result
+        except InterruptedError:
+            error = CancellationError if control.reason == "ai_rewrite_cancelled" else InfrastructureError
+            return Result.failure(error(control.reason, control.reason))
         except Exception:
             return Result.failure(
                 InfrastructureError(

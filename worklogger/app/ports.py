@@ -9,6 +9,7 @@ from datetime import date, datetime
 from typing import Protocol, TYPE_CHECKING
 
 from worklogger.app.commands.ai_commands import RewriteTextCommand
+from worklogger.app.job_runner import CancellationToken
 from worklogger.app.commands.report_commands import ResetReportTemplateCommand, SaveReportTemplateCommand
 from worklogger.domain.reporting.templates import ReportTemplate
 from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType
@@ -26,6 +27,7 @@ class AIRequest:
     messages: tuple[Mapping[str, str], ...]
     model: str
     timeout_seconds: float
+    cancellation_token: CancellationToken | None = None
 
 
 @dataclass(frozen=True)
@@ -85,7 +87,7 @@ class ResetTemplateHandlerProtocol(Protocol):
 
 
 class RewriteTextHandlerProtocol(Protocol):
-    def handle(self, command: RewriteTextCommand) -> Result[RewriteTextResult]:
+    def handle(self, command: RewriteTextCommand, cancellation_token: CancellationToken | None = None) -> Result[RewriteTextResult]:
         ...
 
 

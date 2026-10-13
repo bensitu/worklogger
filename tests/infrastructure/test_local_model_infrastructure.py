@@ -4,6 +4,7 @@ import hashlib
 from dataclasses import fields
 import json
 import tempfile
+import threading
 from pathlib import Path
 import unittest
 from unittest.mock import patch
@@ -38,6 +39,32 @@ class FakeResponse:
 
 
 class LocalModelInfrastructureTests(unittest.TestCase):
+    def test_file_verification_does_not_block_catalog_reads(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "model.gguf"
+            source.write_bytes(b"model")
+            store = JsonLocalModelStore(root / "models")
+            entry = store.import_model(source).value
+            entered, release = threading.Event(), threading.Event()
+            results = []
+            def hash_file(path, **kwargs):
+                entered.set()
+                if not release.wait(3):
+                    raise TimeoutError()
+                return sha256_of_file(path, **kwargs)
+            with patch("worklogger.infrastructure.local_model.store.sha256_of_file", side_effect=hash_file):
+                worker = threading.Thread(target=lambda: results.append(store.verify_model(entry.id)))
+                worker.start()
+                try:
+                    self.assertTrue(entered.wait(3))
+                    self.assertTrue(store.list_models().ok)
+                finally:
+                    release.set()
+                    worker.join(3)
+                self.assertFalse(worker.is_alive())
+            self.assertTrue(results[0].value.verified)
+
     def test_download_limits_headers_and_streaming_without_replacing_existing_files(self):
         from worklogger.infrastructure.local_model.store import HttpRangeDownloader
         for options in ({"chunk_size": 0}, {"chunk_size": -1}, {"timeout_seconds": 0},

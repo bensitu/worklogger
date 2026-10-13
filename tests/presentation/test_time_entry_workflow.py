@@ -130,7 +130,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
             def available(self):
                 availability_reads.append(True)
                 return True
-            def handle(self, command):
+            def handle(self, command, cancellation_token=None):
                 entered.set()
                 release.wait(3)
                 return Result.success(RewriteTextResult("Processed text"))
@@ -557,7 +557,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         commands = []
         class Rewriter:
             available = True
-            def handle(self, command):
+            def handle(self, command, cancellation_token=None):
                 commands.append(command)
                 return Result.success(RewriteTextResult("Prepared agenda"))
         panel.view_model._rewrite_handler = Rewriter()

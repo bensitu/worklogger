@@ -552,7 +552,7 @@ class ReportsPage(QWidget):
         instructions = self.ai_hint_line_edit.text()
         self._set_rewrite_busy(True)
         self._set_status(_("Rewriting report..."), notify=False)
-        self._rewrite_task.run("rewrite_report", lambda _token: self._view_model.rewrite(state, content, instructions),
+        self._rewrite_task.run("rewrite_report", lambda token: self._view_model.rewrite(state, content, instructions, cancellation_token=token),
                                on_complete=self._complete_rewrite)
 
     def _set_rewrite_busy(self, busy: bool) -> None:

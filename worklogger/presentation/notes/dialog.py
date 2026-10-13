@@ -435,7 +435,7 @@ class NoteEditorDialog(QDialog):
             if not isinstance(result.error, CancellationError):
                 self._ai_ready = self._view_model.rewrite_available
             self._update_actions()
-        self._rewrite_task.run("rewrite_note", lambda _token: self._view_model.rewrite(content), on_complete=completed)
+        self._rewrite_task.run("rewrite_note", lambda token: self._view_model.rewrite(content, cancellation_token=token), on_complete=completed)
 
     def export_markdown(self, destination: Path):
         content = self.editor.toPlainText()

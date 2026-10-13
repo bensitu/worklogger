@@ -14,11 +14,36 @@ from worklogger.infrastructure.ai.runtime import LocalInferenceRuntime
 
 
 class LocalInferenceTests(unittest.TestCase):
+    def test_cancellation_reaches_verification_and_generation(self):
+        from worklogger.app.job_runner import CancellationToken
+        from worklogger.domain.shared.errors import CancellationError
+        self.select()
+        token = CancellationToken()
+        def verify(model, *, is_cancelled):
+            token.cancel()
+            self.assertTrue(is_cancelled())
+            return Result.success(LocalModelFileStatus(model, True, True))
+        self.store.verify_model = verify
+        result = self.handler.handle(RewriteTextCommand(1, "Original note"), cancellation_token=token)
+        self.assertIsInstance(result.error, CancellationError)
+        self.assertEqual(self.engines, [])
+        token = CancellationToken()
+        self.store.verify_model = lambda model, **kwargs: Result.success(LocalModelFileStatus(model, True, True))
+        self.assertTrue(self.handler.handle(RewriteTextCommand(1, "Warm up")).ok)
+        engine = self.engines[-1]
+        def completion(**kwargs):
+            token.cancel()
+            kwargs["logits_processor"]([], [])
+        engine.create_chat_completion = completion
+        result = self.handler.handle(RewriteTextCommand(1, "Original note"), cancellation_token=token)
+        self.assertIsInstance(result.error, CancellationError)
+        self.assertTrue(engine.closed)
+
     def test_tokenization_deadline_prevents_starting_completion(self):
         self.select()
         self.assertTrue(self.handler.handle(RewriteTextCommand(1, "Warm up")).ok)
         engine = self.engines[-1]
-        with patch("worklogger.infrastructure.ai.runtime.monotonic", side_effect=[0, 0, 2]), \
+        with patch("worklogger.infrastructure.ai.execution.monotonic", side_effect=[0, 0, 0, 0, 0, 2, 2, 2]), \
              patch.object(engine, "create_chat_completion") as completion:
             result = self.service.generate(AIRequest(messages=({"role": "user", "content": "Sample"},),
                                                      model="sample", timeout_seconds=1))
@@ -29,7 +54,7 @@ class LocalInferenceTests(unittest.TestCase):
         self.values = {"local_model_active_id": "sample", "local_model_enabled": "1", "ai_assist_enabled": "1"}
         self.settings = SimpleNamespace(get=lambda user, key, default=None: self.values.get(key, default))
         self.entry = LocalModelEntry("sample", "Sample", "sample.gguf", context_length=512, max_output_tokens=64)
-        self.store = SimpleNamespace(verify_model=lambda model: Result.success(LocalModelFileStatus(model, True, True)),
+        self.store = SimpleNamespace(verify_model=lambda model, **kwargs: Result.success(LocalModelFileStatus(model, True, True)),
             model_path=lambda model: Path(__file__))
         self.engines = []
         class Engine:
@@ -106,18 +131,19 @@ class LocalInferenceTests(unittest.TestCase):
         request = AIRequest(({"role": "user", "content": "Private example"},), "default", -1)
         result = self.service.generate(request)
         self.assertEqual(result.error.code, "local_inference_timeout")
-        self.engines[0].token_count = 10000
+        self.assertTrue(self.handler.handle(RewriteTextCommand(1, "Warm up")).ok)
+        self.engines[-1].token_count = 10000
         result = self.service.generate(AIRequest(request.messages, "default", 30))
         self.assertEqual(result.error.code, "local_inference_context_limit")
         self.assertNotIn("Private example", repr(result.error))
 
     def test_verification_or_loading_failure_cannot_produce_a_result(self):
         self.select()
-        self.store.verify_model = lambda model: Result.success(LocalModelFileStatus(model, True, False, "local_model_hash_mismatch"))
+        self.store.verify_model = lambda model, **kwargs: Result.success(LocalModelFileStatus(model, True, False, "local_model_hash_mismatch"))
         result = self.handler.handle(RewriteTextCommand(1, "Original note"))
         self.assertEqual(result.error.code, "local_model_hash_mismatch")
         self.assertEqual(self.engines, [])
-        self.store.verify_model = lambda model: Result.success(LocalModelFileStatus(model, True, True))
+        self.store.verify_model = lambda model, **kwargs: Result.success(LocalModelFileStatus(model, True, True))
         self.service._engine_factory = lambda **kwargs: (_ for _ in ()).throw(OSError("Private diagnostic"))
         result = self.handler.handle(RewriteTextCommand(1, "Original note"))
         self.assertEqual(result.error.code, "local_model_load_failed")

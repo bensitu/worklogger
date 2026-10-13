@@ -606,7 +606,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             if not isinstance(result.error, CancellationError):
                 self._ai_ready = self.view_model.rewrite_available
             self._update_actions()
-        self._polish_task.run("polish_record_content", lambda _token: self.view_model.rewrite_content(content), on_complete=complete)
+        self._polish_task.run("polish_record_content", lambda token: self.view_model.rewrite_content(content, cancellation_token=token), on_complete=complete)
         self._update_actions()
 
 

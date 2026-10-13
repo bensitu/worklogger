@@ -388,7 +388,7 @@ class ReportEditorViewModel:
             )
         )
 
-    def rewrite(self, state: ReportEditorState, content: str, instructions: str = "") -> Result[str]:
+    def rewrite(self, state: ReportEditorState, content: str, instructions: str = "", cancellation_token=None) -> Result[str]:
         result = self._rewrite_handler.handle(
             RewriteTextCommand(
                 user_id=self._user_id,
@@ -396,7 +396,7 @@ class ReportEditorViewModel:
                 context=f"{state.report_type}_report",
                 language=self._language,
                 instructions=instructions,
-            )
+            ), cancellation_token=cancellation_token,
         )
         if not result.ok or result.value is None:
             return Result.failure(result.error or _validation("rewrite_failed"))

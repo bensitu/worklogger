@@ -183,11 +183,11 @@ class TimeEntryViewModel:
     def rewrite_available(self):
         return self._rewrite_handler is not None and bool(getattr(self._rewrite_handler, "available", True))
 
-    def rewrite_content(self, content: str):
+    def rewrite_content(self, content: str, cancellation_token=None):
         if not self.rewrite_available:
             return Result.failure(ValidationError("ai_rewrite_not_configured", "ai_rewrite_not_configured"))
         result = self._rewrite_handler.handle(RewriteTextCommand(self.service.user_id, content,
-                                               context="time_entry", language=self._language))
+                                               context="time_entry", language=self._language), cancellation_token=cancellation_token)
         if not result.ok:
             return result
         if result.value is None or len(result.value.content) > 16000:

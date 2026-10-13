@@ -355,7 +355,7 @@ class ReportDialog(QDialog):
                 return
             editor.setPlainText(result.value)
             self.status_label.setText(_("Rewritten"))
-        self._rewrite_task.run("rewrite_report", lambda _token: self._view_model.rewrite(state, content), on_complete=completed)
+        self._rewrite_task.run("rewrite_report", lambda token: self._view_model.rewrite(state, content, cancellation_token=token), on_complete=completed)
 
     def _set_error(self, error: AppError | None) -> None:
         self._last_error = None if isinstance(error, CancellationError) else error

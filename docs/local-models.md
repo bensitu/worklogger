@@ -56,8 +56,10 @@ necessarily a damaged file.
 
 The engine loads on the first request and is reused in that session. Loading can
 take longer than subsequent rewriting. Review generated text before saving.
-Cancellation prevents a late result from replacing your draft but may not stop a
-native call immediately.
+Cancellation is checked while verifying the model and during generation, including
+CPU prompt evaluation. The request deadline includes verification and model loading.
+Native model initialization must return before cancellation can complete. Cancelled
+results never replace the editor's content.
 
 ## Catalog Files
 

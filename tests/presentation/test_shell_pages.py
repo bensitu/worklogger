@@ -236,7 +236,7 @@ class ShellPagesTests(unittest.TestCase):
     def test_report_rewrite_uses_job_runner_instructions_and_protects_active_state(self) -> None:
         class ViewModel(ReportsViewModel):
             rewrite_available = True
-            def rewrite(self, state, content, instructions):
+            def rewrite(self, state, content, instructions, cancellation_token=None):
                 self.arguments = (state, content, instructions)
                 return Result.success("Rewritten text")
 

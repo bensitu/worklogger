@@ -14,7 +14,7 @@ from threading import RLock
 from urllib.request import Request
 
 from worklogger.domain.local_model.models import LocalModelEntry, LocalModelFileStatus, is_sha256_digest
-from worklogger.domain.shared.errors import InfrastructureError, ValidationError
+from worklogger.domain.shared.errors import CancellationError, InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.files import atomic_destination
 from worklogger.infrastructure.http import https_opener
@@ -170,7 +170,7 @@ class JsonLocalModelStore:
             return Result.failure(InfrastructureError("local_model_catalog_failed", "local_model_catalog_failed"))
         return entry
 
-    def verify_model(self, model_id: str) -> Result[LocalModelFileStatus]:
+    def verify_model(self, model_id: str, *, is_cancelled=None) -> Result[LocalModelFileStatus]:
         entry = self._entry(model_id)
         if not entry.ok or entry.value is None:
             return Result.failure(entry.error or ValidationError("local_model_missing", "local_model_missing"))
@@ -191,8 +191,12 @@ class JsonLocalModelStore:
             key = (str(path), stat.st_mtime_ns, stat.st_ctime_ns, stat.st_size, expected)
             with self._cache_lock:
                 actual = self._verified_files.get(key)
-                if actual is None:
-                    actual = sha256_of_file(path)
+            if actual is None:
+                actual = sha256_of_file(path, is_cancelled=is_cancelled)
+                current = path.stat()
+                if (current.st_mtime_ns, current.st_ctime_ns, current.st_size) != key[1:4]:
+                    return Result.success(LocalModelFileStatus(model_id, True, False, "local_model_hash_mismatch"))
+                with self._cache_lock:
                     self._verified_files = {old: digest for old, digest in self._verified_files.items() if old[0] != str(path)}
                     self._verified_files[key] = actual
             if actual != expected:
@@ -202,6 +206,8 @@ class JsonLocalModelStore:
             return Result.success(
                 LocalModelFileStatus(model_id, available=True, verified=True, reason="")
             )
+        except InterruptedError:
+            return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
         except PermissionError:
             return Result.success(
                 LocalModelFileStatus(model_id, available=True, verified=False, reason="local_model_permission_denied")

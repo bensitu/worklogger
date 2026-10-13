@@ -74,6 +74,7 @@ class RewriteTextHandler:
                     ),
                     model=self._model,
                     timeout_seconds=self._timeout_seconds,
+                    cancellation_token=cancellation_token,
                 )
             )
         except Exception as exc:
@@ -198,6 +199,7 @@ class AiChatHandler:
                     messages=request_messages,
                     model=self._model,
                     timeout_seconds=self._timeout_seconds,
+                    cancellation_token=cancellation_token,
                 )
             )
         except Exception as exc:
