@@ -383,13 +383,21 @@ class ApplicationUseCaseTests(unittest.TestCase):
         bus.subscribe(SettingsChanged, events.append)
 
         set_result = SetSettingHandler(repository, bus).handle(
-            SetSettingCommand(user_id=1, key="theme", value="dark")
+            SetSettingCommand(user_id=1, key="theme", value="blue")
         )
         self.assertTrue(set_result.ok)
         got = GetSettingHandler(repository).handle(
             GetSettingQuery(user_id=1, key="theme")
         )
-        self.assertEqual(got.value, "dark")
+        self.assertEqual(got.value, "blue")
+
+        for key, value in (("time_entry_timer", "{}"), ("unknown", "value"),
+                           ("standard_work_hours", "nan"), ("standard_work_hours", "25"),
+                           ("show_holidays", "maybe"), ("network_proxy_port", "65536")):
+            self.assertFalse(SetSettingHandler(repository).handle(SetSettingCommand(1, key, value)).ok)
+            self.assertIsNone(repository.get(1, key))
+        self.assertTrue(SetSettingHandler(repository).handle(SetSettingCommand(1, "show_holidays", " true ")).ok)
+        self.assertEqual(repository.get(1, "show_holidays"), "1")
 
         SetActiveLocalModelHandler(repository, bus).handle(
             SetActiveLocalModelCommand(user_id=1, model_id="model-a")

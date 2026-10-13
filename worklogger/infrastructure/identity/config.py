@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
+from uuid import uuid4
 import portalocker
 from pathlib import Path
 from functools import lru_cache
@@ -70,7 +72,7 @@ class IdentityConfigurationStore:
         except Exception:
             return Result.failure(ValidationError("identity_configuration_invalid", "identity_configuration_invalid"))
 
-    def save(self, provider, registration):
+    def save(self, provider, registration, *, replace_unreadable=False):
         try:
             provider = normalize_provider(provider)
             _validate_registration(provider, registration)
@@ -78,7 +80,15 @@ class IdentityConfigurationStore:
                 return Result.failure(ValidationError("identity_configuration_managed", "identity_configuration_managed"))
             self._path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
             with self._lock, portalocker.Lock(str(self._path) + ".lock", timeout=5):
-                values = self._local()
+                try:
+                    values = self._local()
+                except (ValueError, UnicodeError):
+                    if not replace_unreadable:
+                        raise
+                    backup = self._path.with_name(self._path.name + ".backup-" + uuid4().hex)
+                    with atomic_destination(backup, overwrite=False) as temporary:
+                        shutil.copyfile(self._path, temporary)
+                    values = {}
                 values[f"{provider}_client_id"] = registration.client_id.strip()
                 values[f"{provider}_login_enabled"] = "1"
                 if provider == "google":

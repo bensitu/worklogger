@@ -2053,6 +2053,9 @@ msgstr "報表尚未載入，請重新載入後繼續。"
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr "已儲存的報表已無法使用。請重新載入報表後再試。"
 
+msgid "The saved sign-in configuration cannot be read. Replace the local Google and Microsoft registrations? The original encrypted file will be retained as a backup."
+msgstr "無法讀取已儲存的登入設定。是否取代本機 Google 和 Microsoft 應用程式註冊設定？原加密檔案將保留為備份。"
+
 msgid "The selected context is too large. Choose a shorter period or exclude optional content."
 msgstr "所選上下文過大。請選擇更短的時間範圍或排除選用內容。"
 

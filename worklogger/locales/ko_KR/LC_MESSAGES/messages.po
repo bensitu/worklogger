@@ -2053,6 +2053,9 @@ msgstr "보고서가 로드되지 않았습니다. 다시 불러온 후 계속�
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr "저장된 보고서를 사용할 수 없습니다. 보고서를 다시 불러온 후 다시 시도하세요."
 
+msgid "The saved sign-in configuration cannot be read. Replace the local Google and Microsoft registrations? The original encrypted file will be retained as a backup."
+msgstr "저장된 로그인 설정을 읽을 수 없습니다. 로컬 Google 및 Microsoft 앱 등록 설정을 교체하시겠습니까? 원본 암호화 파일은 백업으로 보관됩니다."
+
 msgid "The selected context is too large. Choose a shorter period or exclude optional content."
 msgstr "선택한 컨텍스트가 너무 큽니다. 더 짧은 기간을 선택하거나 선택적 내용을 제외하세요."
 

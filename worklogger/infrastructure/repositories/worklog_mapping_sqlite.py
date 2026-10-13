@@ -10,6 +10,7 @@ from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.rules import (
     decode_work_type,
     normalize_work_log,
+    calc_shift_span_hours,
     parse_time,
 )
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
@@ -66,6 +67,13 @@ class WorkLogStorage:
             started_at=start, ended_at=end, id=int(row["id"]), revision=int(row["revision"]), capture_id=row["capture_id"],
             context=WorkContext(row["project_id"], row["work_item_id"], row["project_label"], row["work_item_label"]),
         )
+        if ((row["start"] and not record.start_time) or (row["end"] and not record.end_time)
+                or (row["started_at"] and start is None) or (row["ended_at"] and end is None)):
+            raise ValueError("stored_work_log_invalid")
+        if bool(record.start_time) != bool(record.end_time) or (
+                record.has_times and record.started_at is None
+                and calc_shift_span_hours(record.start_time, record.end_time) is None):
+            raise ValueError("stored_work_log_invalid")
         return (
             normalize_work_log(record)
             if record.started_at is not None or record.ended_at is not None

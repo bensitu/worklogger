@@ -6,13 +6,14 @@ import json
 import errno
 import socket
 import time
+from http.client import HTTPException
 from collections.abc import Callable
 from urllib.error import HTTPError, URLError
 from urllib.request import Request
 from worklogger.infrastructure.http import https_opener, validate_https_url
 
 from worklogger.app.ports import AIRequest, AIResponse
-from worklogger.domain.shared.errors import InfrastructureError, ValidationError
+from worklogger.domain.shared.errors import CancellationError, InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 
 
@@ -62,10 +63,20 @@ class OpenAICompatibleGateway:
         )
         last_error: Exception | None = None
         error_code = None
+        deadline = time.monotonic() + max(0.0, request.timeout_seconds)
         for attempt in range(self._retries + 1):
+            if request.cancellation_token is not None and request.cancellation_token.is_cancelled():
+                return Result.failure(CancellationError("ai_rewrite_cancelled", "ai_rewrite_cancelled"))
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
             try:
-                with self._opener(url_request, timeout=request.timeout_seconds) as response:
+                with self._opener(url_request, timeout=remaining) as response:
                     raw = response.read(self._max_response_bytes + 1)
+                if request.cancellation_token is not None and request.cancellation_token.is_cancelled():
+                    return Result.failure(CancellationError("ai_rewrite_cancelled", "ai_rewrite_cancelled"))
+                if time.monotonic() >= deadline:
+                    raise TimeoutError("ai_request_timeout")
                 if len(raw) > self._max_response_bytes:
                     raise ValueError("ai_response_too_large")
                 data = json.loads(raw.decode("utf-8"))
@@ -73,7 +84,7 @@ class OpenAICompatibleGateway:
                 if not text:
                     raise ValueError("ai_response_empty")
                 return Result.success(AIResponse(text=text, provider=self._provider))
-            except (HTTPError, URLError, TimeoutError, OSError, ValueError, json.JSONDecodeError) as exc:
+            except (HTTPError, URLError, HTTPException, TimeoutError, OSError, ValueError, json.JSONDecodeError) as exc:
                 last_error = exc
                 reason = exc.reason if isinstance(exc, URLError) else exc
                 retryable = isinstance(reason, socket.gaierror) or (
@@ -85,7 +96,7 @@ class OpenAICompatibleGateway:
                         value = body.get("error", {}).get("code") if isinstance(body, dict) and isinstance(body.get("error"), dict) else None
                         if value in ("invalid_api_key", "rate_limit_exceeded", "insufficient_quota", "model_not_found"):
                             error_code = value
-                    except (OSError, ValueError):
+                    except (OSError, HTTPException, ValueError):
                         pass
                     finally:
                         exc.close()

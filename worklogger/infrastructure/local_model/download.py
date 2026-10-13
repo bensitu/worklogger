@@ -88,7 +88,7 @@ class HttpRangeDownloader:
                 InfrastructureError(
                     "local_model_download_failed",
                     "local_model_download_failed",
-                    {"reason": str(exc)},
+                    {"reason": type(exc).__name__},
                 )
             )
 

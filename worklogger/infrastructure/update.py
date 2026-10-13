@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from http.client import HTTPException
 from urllib.error import HTTPError, URLError
 from urllib.request import Request
 from worklogger.infrastructure.http import https_opener
@@ -51,7 +52,7 @@ class GitHubReleaseUpdateChecker:
             if latest and _version_tuple(latest) > _version_tuple(current):
                 return Result.success(latest)
             return Result.success(None)
-        except (HTTPError, URLError, TimeoutError, OSError, ValueError, json.JSONDecodeError) as exc:
+        except (HTTPError, URLError, HTTPException, TimeoutError, OSError, ValueError, json.JSONDecodeError) as exc:
             if isinstance(exc, HTTPError):
                 exc.close()
             return Result.failure(

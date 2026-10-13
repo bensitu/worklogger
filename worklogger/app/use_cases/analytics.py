@@ -105,9 +105,9 @@ class GetAnalyticsDashboardHandler:
         try:
             start, end = analytics_period(query.year, query.month, query.scope)
             previous_index = start.year * 12 + start.month - 1 - (end.month - start.month + 1)
-            previous_start = date(previous_index // 12, previous_index % 12 + 1, 1)
+            previous_start = date(previous_index // 12, previous_index % 12 + 1, 1) if previous_index >= 12 else start
             trend_index = end.year * 12 + end.month - 1 - 5
-            trend_start = date(trend_index // 12, trend_index % 12 + 1, 1)
+            trend_start = date(trend_index // 12, trend_index % 12 + 1, 1) if trend_index >= 12 else date.min
             range_start = min(previous_start, trend_start if query.scope == "monthly" else date(query.year, 1, 1))
             range_end = end if query.scope == "monthly" else date(query.year, 12, 31)
             standard = self._number(query.user_id, STANDARD_WORK_HOURS_SETTING_KEY, 8.0, 1.0, 24.0)

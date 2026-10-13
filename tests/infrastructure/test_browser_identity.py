@@ -52,6 +52,18 @@ class BrowserIdentityTests(unittest.TestCase):
             self.assertFalse(self.store.save("google", registration).ok)
         self.assertFalse(self.store.save("microsoft", ProviderRegistration("client", "common")).ok)
 
+    def test_unreadable_registration_requires_explicit_replacement_and_keeps_original(self):
+        original = "Unreadable encrypted registration"
+        self.store._path.write_text(original, encoding="utf-8")
+        registration = ProviderRegistration("client-id")
+        self.assertFalse(self.store.save("google", registration).ok)
+        self.assertEqual(self.store._path.read_text(), original)
+        self.assertTrue(self.store.save("google", registration, replace_unreadable=True).ok)
+        backups = list(self.store._path.parent.glob(self.store._path.name + ".backup-*"))
+        self.assertEqual(len(backups), 1)
+        self.assertEqual(backups[0].read_text(), original)
+        self.assertEqual(self.store.load("google").value[0], registration)
+
     def test_loopback_rejects_unbound_and_duplicate_callbacks_and_closes_listener(self):
         with LoopbackAuthorization(state="expected", timeout=0.02) as callback:
             self.assertEqual(callback.server.server_address[0], "127.0.0.1")

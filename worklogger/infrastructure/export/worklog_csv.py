@@ -56,7 +56,7 @@ class WorkLogCsvExporter:
                 InfrastructureError(
                     "csv_export_failed",
                     "csv_export_failed",
-                    {"reason": str(exc)},
+                    {"reason": type(exc).__name__},
                 )
             )
         return Result.success(destination)

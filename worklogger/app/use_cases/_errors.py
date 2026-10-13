@@ -1,6 +1,7 @@
 """Safe infrastructure boundaries for application operations."""
 
 from functools import wraps
+import logging
 
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
@@ -12,7 +13,8 @@ def storage_boundary(code: str):
         def guarded(*args, **kwargs):
             try:
                 return operation(*args, **kwargs)
-            except Exception:
+            except Exception as error:
+                logging.getLogger(operation.__module__).error("%s: %s", code, type(error).__name__)
                 return Result.failure(InfrastructureError(code, code))
         return guarded
     return decorate

@@ -56,7 +56,7 @@ class SQLiteBackupService:
             return Result.failure(ValidationError("backup_same_path", "backup_same_path"))
         snapshot = None
         try:
-            with self._connection_factory.write_lock:
+            with self._connection_factory.write_access():
                 self._authorize()
                 if any(Path(str(destination) + suffix).exists() for suffix in ("-wal", "-shm")):
                     raise ValueError("backup_destination_busy")
@@ -74,7 +74,7 @@ class SQLiteBackupService:
         except ValueError as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
         except Exception as exc:
-            return Result.failure(InfrastructureError("backup_failed", "backup_failed", {"reason": str(exc)}))
+            return Result.failure(InfrastructureError("backup_failed", "backup_failed", {"reason": type(exc).__name__}))
         finally:
             if snapshot:
                 _remove_if_exists(snapshot)
@@ -82,7 +82,7 @@ class SQLiteBackupService:
 
     def validate_restore_database(self, source: Path) -> Result[None]:
         try:
-            with self._connection_factory.write_lock:
+            with self._connection_factory.write_access():
                 self._authorize()
                 self._validate_restore_source(Path(source))
         except FileNotFoundError:
@@ -91,12 +91,15 @@ class SQLiteBackupService:
             return Result.failure(ValidationError(str(exc), str(exc)))
         except Exception as exc:
             return Result.failure(InfrastructureError("restore_validation_failed", "restore_validation_failed",
-                                                       {"reason": str(exc)}))
+                                                       {"reason": type(exc).__name__}))
         return Result.success(None)
 
     def restore_database(self, source: Path) -> Result[None]:
-        with self._connection_factory.write_lock:
-            return self._restore_database(source)
+        try:
+            with self._connection_factory.write_access():
+                return self._restore_database(source)
+        except Exception as error:
+            return Result.failure(InfrastructureError("restore_failed", "restore_failed", {"reason": type(error).__name__}))
 
     def _restore_database(self, source: Path) -> Result[None]:
         source = Path(source)
@@ -107,7 +110,7 @@ class SQLiteBackupService:
         previous = target.with_name(target.name + ".pre_restore")
         retained = None
         try:
-            with self._connection_factory.write_lock:
+            with self._connection_factory.write_access():
                 self._authorize()
                 self._validate_restore_source(source)
                 if previous.exists():
@@ -126,7 +129,7 @@ class SQLiteBackupService:
         except ValueError as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
         except Exception as exc:
-            return Result.failure(InfrastructureError("restore_failed", "restore_failed", {"reason": str(exc)}))
+            return Result.failure(InfrastructureError("restore_failed", "restore_failed", {"reason": type(exc).__name__}))
         finally:
             if snapshot:
                 _remove_if_exists(snapshot)

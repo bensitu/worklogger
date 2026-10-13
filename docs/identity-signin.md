@@ -1,5 +1,11 @@
 # Browser Sign-In
 
+If the encrypted local registration cannot be read, saving a replacement asks for
+confirmation. Both local provider registrations are reset, and the original
+encrypted file is retained beside the configuration as a uniquely named backup.
+Managed registrations remain read-only. This operation does not delete accounts
+or linked identities.
+
 ## Linking an Account
 
 Create the initial local administrator before using Google or Microsoft sign-in.

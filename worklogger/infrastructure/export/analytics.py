@@ -42,7 +42,7 @@ class AnalyticsCsvExporter:
                 InfrastructureError(
                     "analytics_csv_export_failed",
                     "analytics_csv_export_failed",
-                    {"reason": str(exc)},
+                    {"reason": type(exc).__name__},
                 )
             )
         return Result.success(path)
@@ -76,7 +76,7 @@ class AnalyticsPdfExporter:
                 InfrastructureError(
                     "analytics_pdf_export_failed",
                     "analytics_pdf_export_failed",
-                    {"reason": str(exc)},
+                    {"reason": type(exc).__name__},
                 )
             )
         return Result.success(path)

@@ -1,6 +1,6 @@
 """Desktop application registration settings for a selected identity provider."""
 
-from PySide6.QtWidgets import QDialog, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout
+from PySide6.QtWidgets import QDialog, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout, QMessageBox
 from worklogger.infrastructure.i18n import _
 from worklogger.infrastructure.identity.config import ProviderRegistration
 from worklogger.presentation.errors import display_error_message
@@ -63,6 +63,7 @@ class IdentityConfigurationDialog(QDialog):
         row.addWidget(self.save_button)
         root.addLayout(row)
         loaded = store.load(provider)
+        self._unreadable = not loaded.ok
         if loaded.ok:
             registration = loaded.value[0]
             self.client_id_input.setText(registration.client_id)
@@ -80,7 +81,13 @@ class IdentityConfigurationDialog(QDialog):
         registration = ProviderRegistration(self.client_id_input.text().strip(),
             self.tenant_input.text().strip() if self._provider == "microsoft" else "",
             self.secret_input.text().strip() if self._provider == "google" else "")
-        result = self._store.save(self._provider, registration)
+        if self._unreadable:
+            answer = QMessageBox.question(self, _("Configure sign-in"),
+                _("The saved sign-in configuration cannot be read. Replace the local Google and Microsoft registrations? The original encrypted file will be retained as a backup."),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+            if answer != QMessageBox.StandardButton.Yes:
+                return
+        result = self._store.save(self._provider, registration, replace_unreadable=self._unreadable)
         if result.ok:
             self.accept()
         else:

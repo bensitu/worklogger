@@ -25,7 +25,7 @@ class WorkLogIcsExporter:
                 InfrastructureError(
                     "ics_export_failed",
                     "ics_export_failed",
-                    {"reason": str(exc)},
+                    {"reason": type(exc).__name__},
                 )
             )
 
@@ -45,7 +45,7 @@ class WorkLogIcsExporter:
                 InfrastructureError(
                     "ics_export_failed",
                     "ics_export_failed",
-                    {"reason": str(exc)},
+                    {"reason": type(exc).__name__},
                 )
             )
         return Result.success(destination)

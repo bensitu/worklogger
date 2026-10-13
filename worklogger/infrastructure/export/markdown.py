@@ -22,7 +22,7 @@ class MarkdownExporter:
                 InfrastructureError(
                     "markdown_export_failed",
                     "markdown_export_failed",
-                    {"reason": str(exc)},
+                    {"reason": type(exc).__name__},
                 )
             )
         return Result.success(path)

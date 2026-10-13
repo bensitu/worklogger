@@ -63,7 +63,7 @@ class JsonLocalModelStore:
                 InfrastructureError(
                     "local_model_catalog_failed",
                     "local_model_catalog_failed",
-                    {"reason": str(exc)},
+                    {"reason": type(exc).__name__},
                 )
             )
 
@@ -129,7 +129,7 @@ class JsonLocalModelStore:
                 InfrastructureError(
                     "local_model_import_failed",
                     "local_model_import_failed",
-                    {"reason": str(exc)},
+                    {"reason": type(exc).__name__},
                 )
             )
 
@@ -217,7 +217,7 @@ class JsonLocalModelStore:
                 InfrastructureError(
                     "local_model_verify_failed",
                     "local_model_verify_failed",
-                    {"reason": str(exc)},
+                    {"reason": type(exc).__name__},
                 )
             )
 
@@ -239,7 +239,7 @@ class JsonLocalModelStore:
                 InfrastructureError(
                     "local_model_delete_failed",
                     "local_model_delete_failed",
-                    {"reason": str(exc)},
+                    {"reason": type(exc).__name__},
                 )
             )
 

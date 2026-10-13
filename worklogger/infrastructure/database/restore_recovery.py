@@ -84,7 +84,7 @@ def prune_restore_backups(path: Path, *, keep: int = RESTORE_BACKUP_RETENTION, p
     if keep < 1:
         return
     path = Path(path)
-    pattern = re.compile(re.escape(path.name) + r"\.bak_restore_[0-9a-f]{32}$")
+    pattern = re.compile(re.escape(path.name) + r"\.bak_(?:restore|recovery)_[0-9a-f]{32}$")
     try:
         backups = [candidate for candidate in path.parent.iterdir()
                    if candidate.is_file() and not candidate.is_symlink() and pattern.fullmatch(candidate.name)]

@@ -94,7 +94,7 @@ class SQLiteConnectionFactory:
             raise
 
     @contextmanager
-    def _write_access(self):
+    def write_access(self):
         if not self.write_lock.acquire(timeout=self.busy_timeout_ms / 1000):
             raise sqlite3.OperationalError("database is busy")
         try:
@@ -108,7 +108,7 @@ class SQLiteConnectionFactory:
         with self._activity:
             if write and self._readers.get(identity) and not self._writers.get(identity):
                 raise RuntimeError("database_write_during_read")
-        with self._write_access() if write else nullcontext():
+        with self.write_access() if write else nullcontext():
             with self._activity:
                 ready = lambda: (self._maintenance_owner in (None, identity)
                                  or self._readers.get(identity) or self._writers.get(identity))
@@ -137,7 +137,7 @@ class SQLiteConnectionFactory:
         with self._activity:
             if self._readers.get(identity) or self._writers.get(identity):
                 raise RuntimeError("database_maintenance_during_connection")
-        with self._write_access():
+        with self.write_access():
             with self._activity:
                 if self._maintenance_owner == identity:
                     self._maintenance_depth += 1
@@ -145,8 +145,12 @@ class SQLiteConnectionFactory:
                     self._maintenance_owner = identity
                     self._maintenance_depth = 1
                     self._activity.notify_all()
-                    while self._readers or self._writers:
-                        self._activity.wait()
+                    if not self._activity.wait_for(lambda: not self._readers and not self._writers,
+                                                   timeout=self.busy_timeout_ms / 1000):
+                        self._maintenance_owner = None
+                        self._maintenance_depth = 0
+                        self._activity.notify_all()
+                        raise sqlite3.OperationalError("database is busy")
             try:
                 yield
             finally:

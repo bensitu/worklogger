@@ -62,7 +62,7 @@ class WorkLogCsvImporter:
                 InfrastructureError(
                     "csv_import_failed",
                     "csv_import_failed",
-                    {"reason": str(exc)},
+                    {"reason": type(exc).__name__},
                 )
             )
         return Result.success(

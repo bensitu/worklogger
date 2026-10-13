@@ -18,6 +18,7 @@ from worklogger.config.constants import (
     NETWORK_PROXY_PASSWORD_SETTING_KEY,
 )
 from worklogger.domain.settings.repositories import SettingsRepository
+from worklogger.domain.settings.validation import normalize_setting
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 
@@ -104,9 +105,7 @@ class SetSettingHandler:
     def handle(self, command: SetSettingCommand) -> Result[None]:
         try:
             key = _normalize_key(command.key)
-            if command.value is None:
-                raise ValueError("setting_value_invalid")
-            value = str(command.value)
+            value = normalize_setting(key, command.value)
             if key == HOLIDAY_REGION_SETTING_KEY:
                 if not value.strip():
                     value = ""

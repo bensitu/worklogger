@@ -2051,6 +2051,9 @@ msgstr ""
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr ""
 
+msgid "The saved sign-in configuration cannot be read. Replace the local Google and Microsoft registrations? The original encrypted file will be retained as a backup."
+msgstr ""
+
 msgid "The selected context is too large. Choose a shorter period or exclude optional content."
 msgstr ""
 

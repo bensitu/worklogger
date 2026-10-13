@@ -66,11 +66,10 @@ def dashboard_data(
 ) -> AnalyticsDashboard:
     start, end = analytics_period(year, month, scope)
     month_count = end.month - start.month + 1
-    previous_end = start - timedelta(days=1)
     previous_index = start.year * 12 + start.month - 1 - month_count
-    previous_start = date(previous_index // 12, previous_index % 12 + 1, 1)
+    previous_start = date(previous_index // 12, previous_index % 12 + 1, 1) if previous_index >= 12 else None
     current = tuple(row for row in records if start <= row.day <= end)
-    previous = tuple(row for row in records if previous_start <= row.day <= previous_end)
+    previous = tuple(row for row in records if previous_start is not None and previous_start <= row.day < start)
     stats = month_stats(current, standard_hours)
 
     if scope == "monthly":
@@ -108,14 +107,14 @@ def dashboard_data(
             daily.append((f"Q{quarter}", month_stats(rows, standard_hours).average_hours))
     else:
         last_month_index = end.year * 12 + end.month - 1
-        first_month_index = last_month_index - 5 if scope == "monthly" else year * 12
+        first_month_index = max(12, last_month_index - 5) if scope == "monthly" else year * 12
         for index in range(first_month_index, last_month_index + 1):
             selected_year, selected_month = index // 12, index % 12 + 1
             rows = tuple(row for row in records if row.day.year == selected_year and row.day.month == selected_month)
             daily.append((f"{selected_month:02d}", month_stats(rows, standard_hours).average_hours))
     return AnalyticsDashboard(
         start, end, stats, month_stats(previous, standard_hours), monthly_target * month_count,
-        (end - start).days + 1, (previous_end - previous_start).days + 1,
+        (end - start).days + 1, (start - previous_start).days if previous_start is not None else 0,
         trend, average, tuple(modes.items()), ChartDataBundle(tuple(daily), tuple(daily), frozenset(), (), ()),
         tuple(mode_labels.items()),
     )
@@ -199,6 +198,8 @@ def monthly_chart_data(
                 if leave_value > 0:
                     leave_hours[row] += leave_value
                     leave_unit_counts[row] += 1
+        if current == end:
+            break
         current += timedelta(days=1)
 
     return _bundle(

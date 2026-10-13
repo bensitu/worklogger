@@ -42,7 +42,10 @@ class WorkTypeService:
         if isinstance(original, CustomWorkType) and original.value == value:
             return original
         if not value.startswith("custom:"):
-            return WorkType(value)
+            try:
+                return WorkType(value)
+            except ValueError:
+                raise ValueError("work_type_unavailable") from None
         result = self.list_types()
         if not result.ok:
             raise ValueError("work_types_load_failed")

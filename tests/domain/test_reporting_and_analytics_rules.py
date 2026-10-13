@@ -42,6 +42,14 @@ def _record(
 
 
 class ReportingAndAnalyticsRuleTests(unittest.TestCase):
+    def test_dashboard_handles_the_supported_date_boundaries(self):
+        for day in (date.min, date.max):
+            for scope in ("monthly", "quarterly", "annual"):
+                value = dashboard_data((), year=day.year, month=day.month, scope=scope,
+                                       standard_hours=8, monthly_target=168)
+                self.assertEqual(value.stats.total_hours, 0)
+                self.assertGreaterEqual(value.previous_total_days, 0)
+
     def test_period_selection_handles_leap_months_and_rejects_unrepresentable_weeks(self):
         for day in (date(2024, 2, 29), date(9999, 12, 31)):
             period = period_for_day("monthly", day)

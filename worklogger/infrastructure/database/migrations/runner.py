@@ -48,7 +48,7 @@ class MigrationRunner:
         self._connection_factory = connection_factory
 
     def run_pending(self):
-        with self._connection_factory.write_lock:
+        with self._connection_factory.write_access():
             path = Path(self._connection_factory.database_path)
             if path.is_file() and path.stat().st_size:
                 try:

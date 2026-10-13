@@ -212,7 +212,10 @@ class DatePickerButton(QPushButton):
         self.request_holidays()
 
     def _position_popup(self):
-        bounds = self.screen().availableGeometry()
+        screen = self.screen()
+        if screen is None:
+            return
+        bounds = screen.availableGeometry()
         anchor = self.mapToGlobal(QPoint(self.width() // 2, self.height()))
         x = max(bounds.left(), min(anchor.x() - self._popup.width() // 2, bounds.right() - self._popup.width() + 1))
         y = anchor.y() + 4

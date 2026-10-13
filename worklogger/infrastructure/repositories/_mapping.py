@@ -12,7 +12,7 @@ _T = TypeVar("_T")
 _logger = logging.getLogger(__name__)
 
 
-def map_rows(rows: Iterable[sqlite3.Row], mapper: Callable[[sqlite3.Row], _T], *, strict: bool = False) -> tuple[_T, ...]:
+def map_rows(rows: Iterable[sqlite3.Row], mapper: Callable[[sqlite3.Row], _T], *, strict: bool = True) -> tuple[_T, ...]:
     records = []
     invalid = 0
     for row in rows:

@@ -2053,6 +2053,9 @@ msgstr "レポートが読み込まれていません。再度読み込んでか
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr "保存済みレポートを利用できません。レポートを再読み込みして、もう一度お試しください。"
 
+msgid "The saved sign-in configuration cannot be read. Replace the local Google and Microsoft registrations? The original encrypted file will be retained as a backup."
+msgstr "保存済みのサインイン設定を読み込めません。ローカルの Google と Microsoft のアプリ登録設定を置き換えますか？元の暗号化ファイルはバックアップとして保持されます。"
+
 msgid "The selected context is too large. Choose a shorter period or exclude optional content."
 msgstr "選択したコンテキストが大きすぎます。期間を短くするか、任意の内容を除外してください。"
 
