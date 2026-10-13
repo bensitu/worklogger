@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 
-from PySide6.QtCore import QEvent, QSize, Qt, Signal
+from PySide6.QtCore import QEvent, QSize, Qt, Signal, QTimer
 from PySide6.QtGui import QAbstractTextDocumentLayout, QAction, QPainter, QPalette, QTextDocument
 from PySide6.QtWidgets import (
     QApplication, QLabel, QLayout, QLineEdit, QPushButton, QScrollArea, QSizePolicy,
@@ -31,6 +31,9 @@ class ReportHistoryButton(HoverDeleteButton):
         self._document = QTextDocument(self)
         self._document.setDocumentMargin(0)
         self._document.setPlainText(self.text())
+        self._measurement_document = QTextDocument(self)
+        self._measurement_document.setDocumentMargin(0)
+        self._height_cache = {}
         policy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         policy.setHeightForWidth(True)
         self.setSizePolicy(policy)
@@ -48,12 +51,18 @@ class ReportHistoryButton(HoverDeleteButton):
 
     def heightForWidth(self, width: int) -> int:
         # Layout probes must not reflow the document used for painting.
-        document = QTextDocument()
-        document.setDocumentMargin(0)
+        key = (width, self.font().toString(), self.text(), self._text_margins())
+        if key in self._height_cache:
+            return self._height_cache[key]
+        document = self._measurement_document
         document.setDefaultFont(self.font())
         document.setPlainText(self.text())
         document.setTextWidth(max(1, width - self._text_margins()))
-        return max(60, round(document.size().height()) + 20)
+        height = max(60, round(document.size().height()) + 20)
+        if len(self._height_cache) >= 8:
+            self._height_cache.clear()
+        self._height_cache[key] = height
+        return height
 
     def resizeEvent(self, event: object) -> None:
         super().resizeEvent(event)
@@ -137,7 +146,11 @@ class ReportHistoryPanel(CardFrame):
             QAction(ui_icon("search"), _("Search reports..."), self.search_line_edit),
             QLineEdit.ActionPosition.LeadingPosition,
         )
-        self.search_line_edit.textChanged.connect(self._render)
+        self._search_timer = QTimer(self)
+        self._search_timer.setSingleShot(True)
+        self._search_timer.setInterval(150)
+        self._search_timer.timeout.connect(self._render)
+        self.search_line_edit.textChanged.connect(lambda _text: self._search_timer.start())
         self.content_layout.addWidget(self.search_line_edit)
 
         self.scroll_area = QScrollArea()
@@ -184,6 +197,7 @@ class ReportHistoryPanel(CardFrame):
             button.set_current(selected)
 
     def _render(self) -> None:
+        self._search_timer.stop()
         self._hovered_button = None
         while self.scroll_layout.count():
             item = self.scroll_layout.takeAt(0)

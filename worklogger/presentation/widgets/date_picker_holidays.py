@@ -43,8 +43,8 @@ class DatePickerHolidaysController(QObject):
         if self._disposed:
             return
         self._cancel()
-        self._picker.set_holidays({})
         if not self._enabled or self._handler is None:
+            self._picker.set_holidays({})
             return
         country, _separator, subdivision = self._region.partition("/")
         query = GetHolidaysForRangeQuery(country or self._country, start, end, subdivision or None)

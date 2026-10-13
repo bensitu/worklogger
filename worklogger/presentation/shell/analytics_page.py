@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from copy import copy
 from datetime import date
 from pathlib import Path
 from PySide6.QtCore import Qt
@@ -20,6 +21,9 @@ from PySide6.QtWidgets import (
 )
 
 from worklogger.domain.shared.errors import AppError
+from worklogger.domain.shared.errors import InfrastructureError
+from worklogger.domain.shared.result import Result
+from worklogger.presentation.job_runner import owned_callback
 from worklogger.domain.shared.dates import add_months
 from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBundle
 from worklogger.infrastructure.i18n import _
@@ -52,6 +56,7 @@ class AnalyticsPage(QWidget):
         view_model: AnalyticsViewModel | None,
         selected_day: date,
         parent: QWidget | None = None,
+        *, job_runner=None, today=None,
     ) -> None:
         super().__init__(parent)
         self.setObjectName("analytics_page_widget")
@@ -61,6 +66,11 @@ class AnalyticsPage(QWidget):
         self._state: AnalyticsState | None = None
         self._dashboard: AnalyticsDashboard | None = None
         self._last_error: AppError | None = None
+        self._job_runner = job_runner
+        self._today = today or date.today()
+        self._load_revision = 0
+        self._loading = False
+        self._exporting = False
         self._build_ui()
 
     @property
@@ -75,22 +85,47 @@ class AnalyticsPage(QWidget):
             self._set_status(_("Analytics is not configured."), error=True)
             return False
         scope = self.scope_control.value or "monthly"
+        self._load_revision += 1
+        revision, day = self._load_revision, self._selected_day
+        if self._job_runner is not None:
+            self._loading = True
+            self.export_button.setEnabled(False)
+            model = copy(self._view_model)
+            def complete(result):
+                if revision != self._load_revision:
+                    return
+                self._loading = False
+                self.export_button.setEnabled(not self._exporting and result.ok)
+                self._apply_dashboard(result, day, scope)
+            try:
+                self._job_runner.submit("load_analytics", lambda _token: model.load_dashboard(
+                    year=day.year, month=day.month, scope=scope), on_complete=owned_callback(self, complete))
+            except Exception:
+                complete(Result.failure(InfrastructureError("analytics_load_failed", "analytics_load_failed")))
+                return False
+            return True
         result = self._view_model.load_dashboard(
             year=self._selected_day.year,
             month=self._selected_day.month,
             scope=scope,
         )
+        return self._apply_dashboard(result, day, scope)
+
+    def _apply_dashboard(self, result, day, scope):
         if not result.ok or result.value is None:
             self._last_error = result.error
             self._set_status(display_error_message(result.error), error=True)
             return False
         self._dashboard = result.value
-        self._state = AnalyticsState(self._view_model.user_id, self._selected_day.year, self._selected_day.month, scope, "hours", "bar", True, result.value.trend)
+        self._last_error = None
+        self._state = AnalyticsState(self._view_model.user_id, day.year, day.month, scope, "hours", "bar", True, result.value.trend)
         self._set_state(result.value)
         self._set_status("")
         return True
 
     def export_csv(self, destination: Path) -> bool:
+        if self._job_runner is not None:
+            return self._export_async(destination, "csv")
         if self._view_model is None:
             return False
         if self._state is None and not self.refresh():
@@ -105,6 +140,8 @@ class AnalyticsPage(QWidget):
         return True
 
     def export_pdf(self, destination: Path) -> bool:
+        if self._job_runner is not None:
+            return self._export_async(destination, "pdf")
         if self._view_model is None:
             return False
         if self._state is None and not self.refresh():
@@ -116,6 +153,29 @@ class AnalyticsPage(QWidget):
             self._set_status(display_error_message(result.error), error=True)
             return False
         self._set_status(_("Exported PDF"))
+        return True
+
+    def _export_async(self, destination, kind):
+        if self._view_model is None or self._state is None or self._loading or self._exporting:
+            return False
+        state = self._state
+        exporter = self._view_model.export_csv if kind == "csv" else self._view_model.export_pdf
+        self._exporting = True
+        self.export_button.setEnabled(False)
+        def complete(result):
+            self._exporting = False
+            self.export_button.setEnabled(not self._loading and self._state is not None)
+            if result.ok:
+                self._set_status(_("Exported CSV") if kind == "csv" else _("Exported PDF"))
+            else:
+                self._last_error = result.error
+                self._set_status(display_error_message(result.error), error=True)
+        try:
+            self._job_runner.submit("export_analytics", lambda _token: exporter(destination, state),
+                                    on_complete=owned_callback(self, complete))
+        except Exception:
+            complete(Result.failure(InfrastructureError("analytics_export_failed", "analytics_export_failed")))
+            return False
         return True
 
     def _build_ui(self) -> None:
@@ -228,10 +288,9 @@ class AnalyticsPage(QWidget):
 
     def _set_status(self, message: str, *, error: bool = False) -> None:
         self.status_label.setText(message)
-        self.status_label.hide()
-        if message:
-            show = QMessageBox.warning if error else QMessageBox.information
-            show(self, _("Analytics"), message)
+        self.status_label.setVisible(bool(message))
+        if message and error:
+            QMessageBox.warning(self, _("Analytics"), message)
 
     def _chart_card(self, title: str, *, donut: bool = False) -> CardFrame:
         card = CardFrame(object_name="analytics_chart_frame")
@@ -281,17 +340,22 @@ class AnalyticsPage(QWidget):
     def _populate_periods(self) -> None:
         scope = self.scope_control.value or "monthly"
         selected = self._selected_day.replace(day=1)
-        latest = max(date.today().replace(day=1), selected)
+        latest = max(self._today.replace(day=1), selected)
         self.period_combo.blockSignals(True)
         self.period_combo.clear()
         if scope == "annual":
-            values = [date(year, 1, 1) for year in range(latest.year + 1, latest.year - 10, -1)]
+            values = [date(year, 1, 1) for year in range(min(9999, latest.year + 1), max(0, latest.year - 10), -1)]
         else:
             step = 3 if scope == "quarterly" else 1
             if step == 3:
                 selected = selected.replace(month=((selected.month - 1) // 3) * 3 + 1)
                 latest = latest.replace(month=((latest.month - 1) // 3) * 3 + 1)
-            values = [add_months(latest, offset * step) for offset in range(1, -36, -1)]
+            values = []
+            for offset in range(1, -36, -1):
+                try:
+                    values.append(add_months(latest, offset * step))
+                except ValueError:
+                    continue
         target = selected.replace(month=1) if scope == "annual" else selected
         if target not in values:
             values.append(target)

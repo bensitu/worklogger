@@ -346,6 +346,7 @@ class AppWindow(QMainWindow):
         self.analytics_page = AnalyticsPage(
             getattr(self._analytics_workflow, "view_model", None),
             self._selected_day,
+            job_runner=self._job_runner, today=self._today,
         )
         self.reports_page = ReportsPage(
             getattr(self._reports_workflow, "view_model", None),

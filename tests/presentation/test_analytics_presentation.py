@@ -67,6 +67,36 @@ class MemoryWorkLogRepository:
 
 
 class AnalyticsPresentationTests(unittest.TestCase):
+    def test_background_queries_ignore_superseded_periods_and_export_current_snapshot(self):
+        from worklogger.app.job_runner import JobHandle, CancellationToken
+        class Runner:
+            jobs = []
+            def submit(self, name, operation, *, on_complete):
+                self.jobs.append((operation, on_complete))
+                return JobHandle(name, lambda: None)
+        runner = Runner()
+        model = AnalyticsViewModel(user_id=1, bundle_handler=GetAnalyticsBundleHandler(MemoryWorkLogRepository()),
+            dashboard_handler=GetAnalyticsDashboardHandler(MemoryWorkLogRepository()),
+            csv_exporter=AnalyticsCsvExporter(), pdf_exporter=AnalyticsPdfExporter())
+        page = AnalyticsPage(model, date(2026, 5, 1), job_runner=runner, today=date(2026, 5, 1))
+        self.addCleanup(page.close)
+        self.assertTrue(page.refresh())
+        self.assertTrue(page.refresh(date(2026, 6, 1)))
+        self.assertIsNone(page._dashboard)
+        operation, complete = runner.jobs[1]
+        complete(operation(CancellationToken()))
+        operation, complete = runner.jobs[0]
+        complete(operation(CancellationToken()))
+        self.assertEqual(page._dashboard.period_start, date(2026, 6, 1))
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "analytics.csv"
+            self.assertTrue(page.export_csv(path))
+            self.assertFalse(path.exists())
+            operation, complete = runner.jobs[-1]
+            complete(operation(CancellationToken()))
+            self.assertTrue(path.is_file())
+            self.assertTrue(page.export_button.isEnabled())
+
     def test_pdf_export_preserves_unicode_and_all_summary_rows(self):
         bundle = ChartDataBundle(bar_data=tuple((f"Work {index}", 8.0) for index in range(100)), line_data=(),
                                  leave_indices=(), leave_line_data=(), leave_hours_data=())

@@ -464,9 +464,17 @@ class ReportHistoryTests(unittest.TestCase):
                 selected = page._states[report_type].report_id
                 self.assertEqual(sum(bool(button.property("active")) for button in buttons), 1)
                 page.history_panel.search_line_edit.setText(f"#{selected}")
+                deadline = time.monotonic() + 1
+                while page.history_panel._search_timer.isActive() and time.monotonic() < deadline:
+                    self.app.processEvents()
+                    time.sleep(0.005)
                 self.assertEqual(len(page.history_panel._buttons), 1)
                 self.assertTrue(page.history_panel._buttons[0].property("active"))
                 page.history_panel.search_line_edit.clear()
+                deadline = time.monotonic() + 1
+                while page.history_panel._search_timer.isActive() and time.monotonic() < deadline:
+                    self.app.processEvents()
+                    time.sleep(0.005)
                 self.assertEqual(sum(bool(button.property("active")) for button in page.history_panel._buttons.values()), 1)
 
     def test_saved_daily_exports_use_latest_owned_report_per_day_without_changing_editor(self):

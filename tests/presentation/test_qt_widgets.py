@@ -188,6 +188,9 @@ class QtWidgetTests(unittest.TestCase):
 
         self.assertEqual(view.month_title.text(), "2026/04")
         self.assertEqual(len(view.day_buttons()), 42)
+        buttons = view.day_buttons()
+        view.set_state(state)
+        self.assertEqual(view.day_buttons(), buttons)
         self.assertEqual(view.week_total_labels()[3].text(), "10.0h")
         selected_button = next(
             button

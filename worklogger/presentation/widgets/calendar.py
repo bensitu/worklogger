@@ -30,6 +30,7 @@ class CalendarDayButton(QPushButton):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._cell: CalendarDayCell | None = None
+        self._overnight_icons = (ui_icon("moon"), ui_icon("moon", primary=True))
         self.setObjectName("calendar_day_button")
         self.setMinimumHeight(90)
         self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Expanding)
@@ -129,7 +130,7 @@ class CalendarDayButton(QPushButton):
 
         marker_top = 19 if cell.has_note_marker else 8
         if cell.show_overnight_marker:
-            icon = ui_icon("moon", primary=cell.is_selected)
+            icon = self._overnight_icons[bool(cell.is_selected)]
             icon.paint(painter, QRect(self.width() - 22, marker_top, 14, 14), Qt.AlignmentFlag.AlignCenter, QIcon.Mode.Normal)
 
         if cell.event_count > 0:
@@ -155,6 +156,8 @@ class CalendarView(QWidget):
         self._state: CalendarMonthViewState | None = None
         self._buttons: list[CalendarDayButton] = []
         self._week_total_labels: list[QLabel] = []
+        self._week_headers: list[QLabel] = []
+        self._total_header = None
         self._month_only = False
 
         layout = QVBoxLayout(self)
@@ -208,9 +211,6 @@ class CalendarView(QWidget):
     def set_state(self, state: CalendarMonthViewState) -> None:
         self._state = state
         self.month_title.setText(f"{state.year}/{state.month:02d}")
-        _clear_layout(self.grid)
-        self._buttons = []
-        self._week_total_labels = []
         visible_weeks = max(index // 7 + 1 for index, cell in enumerate(state.cells) if cell.in_month)
         for column in range(8):
             self.grid.setColumnStretch(column, 1 if column < 7 else 0)
@@ -218,34 +218,52 @@ class CalendarView(QWidget):
             self.grid.setRowStretch(row, 1 if not self._month_only or row <= visible_weeks else 0)
 
         for column, header in enumerate(state.week_headers):
-            label = QLabel(header)
-            label.setObjectName("week_header_label")
-            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            if column >= len(self._week_headers):
+                label = QLabel()
+                label.setObjectName("week_header_label")
+                label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.grid.addWidget(label, 0, column)
+                self._week_headers.append(label)
+            label = self._week_headers[column]
+            label.setText(header)
             label.setProperty("weekend", header in (_("Sat"), _("Sun")))
-            self.grid.addWidget(label, 0, column)
-        total_header = QLabel(_("Total"))
-        total_header.setObjectName("week_header_label")
-        total_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.grid.addWidget(total_header, 0, 7)
+            label.style().unpolish(label)
+            label.style().polish(label)
+        if self._total_header is None:
+            self._total_header = QLabel()
+            self._total_header.setObjectName("week_header_label")
+            self._total_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.grid.addWidget(self._total_header, 0, 7)
+        total_header = self._total_header
+        total_header.setText(_("Total"))
         total_header.setVisible(not self._month_only)
 
         for index, cell in enumerate(state.cells):
             row = index // 7 + 1
             column = index % 7
-            button = CalendarDayButton()
+            if index >= len(self._buttons):
+                button = CalendarDayButton()
+                button.clicked.connect(lambda _checked=False, button=button: self.day_selected.emit(button.cell.day))
+                self.grid.addWidget(button, row, column)
+                self._buttons.append(button)
+            button = self._buttons[index]
             button.set_cell(cell)
-            button.clicked.connect(lambda _checked=False, day=cell.day: self.day_selected.emit(day))
-            self.grid.addWidget(button, row, column)
             button.setVisible(not self._month_only or cell.in_month)
-            self._buttons.append(button)
+        for button in self._buttons[len(state.cells):]:
+            button.hide()
 
         for week_index, total in enumerate(state.weekly_totals):
-            label = QLabel(f"{total:.1f}{_('h')}" if total > 0 else "")
-            label.setObjectName("week_total_label")
-            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.grid.addWidget(label, week_index + 1, 7)
+            if week_index >= len(self._week_total_labels):
+                label = QLabel()
+                label.setObjectName("week_total_label")
+                label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.grid.addWidget(label, week_index + 1, 7)
+                self._week_total_labels.append(label)
+            label = self._week_total_labels[week_index]
+            label.setText(f"{total:.1f}{_('h')}" if total > 0 else "")
             label.setVisible(not self._month_only)
-            self._week_total_labels.append(label)
+        for label in self._week_total_labels[len(state.weekly_totals):]:
+            label.hide()
         self._update_grid_height()
 
 
@@ -281,10 +299,3 @@ def _tooltip_for_cell(cell: CalendarDayCell) -> str:
     return "\n".join(details)
 
 
-def _clear_layout(layout: QGridLayout) -> None:
-    while layout.count():
-        item = layout.takeAt(0)
-        widget = item.widget()
-        if widget is not None:
-            widget.setParent(None)
-            widget.deleteLater()

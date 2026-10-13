@@ -1,5 +1,11 @@
 # Architecture
 
+Analytics queries and exports use the session's background runner. Requests
+capture their period and preferences before dispatch, and only the newest query
+can update the displayed dashboard. Exports retain their original data snapshot
+when the user changes periods. Calendar cells are reused across refreshes, and
+report-history search is debounced with bounded text-measurement caching.
+
 ## Layers
 
 | Directory | Responsibility |
