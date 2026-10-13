@@ -17,7 +17,10 @@ from scripts.lock_environment import compatible_wheels
 from scripts.native_artifacts import select_artifact, verified_artifact
 
 
-def install_native_dependencies(wheels: Path):
+def install_native_dependencies(wheels: Path, *, from_source: bool = False):
+    if from_source and sys.platform not in {"linux", "darwin"}:
+        raise ValueError("Source builds are supported only on Linux and macOS")
+    build_from_source = from_source or sys.platform == "darwin"
     requirements = ROOT / "requirements-ai.txt"
     entries = [Requirement(line.strip()) for line in requirements.read_text(encoding="utf-8").splitlines()
                if line.strip() and not line.lstrip().startswith("#")]
@@ -27,29 +30,43 @@ def install_native_dependencies(wheels: Path):
         raise ValueError("Native inference must specify one exact version")
     wheels.mkdir(parents=True, exist_ok=True)
     artifact = select_artifact(ROOT / "requirements/native-artifacts.json", pins[0].version,
-                               source=sys.platform == "linux")
+                               source=build_from_source)
     distribution = verified_artifact(artifact, wheels)
-    if sys.platform == "linux":
-        # Build against the target libc; the upstream Linux wheels use musl.
-        environment = os.environ | {
-            "CMAKE_ARGS": "-DGGML_NATIVE=OFF -DGGML_AVX=OFF -DGGML_AVX2=OFF "
-                          "-DGGML_AVX512=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF -DGGML_BACKEND_DL=OFF",
-            "CMAKE_BUILD_PARALLEL_LEVEL": "2",
-        }
-        subprocess.run([sys.executable, "-m", "pip", "wheel", "--no-deps",
+    if build_from_source:
+        environment = source_build_environment(sys.platform)
+        subprocess.run([sys.executable, "-m", "pip", "wheel", "--no-deps", "--no-cache-dir",
                         "--wheel-dir", str(wheels), str(distribution)], check=True, env=environment)
-    matches = compatible_wheels(wheels, native.name, pins[0].version)
+    matches = compatible_wheels(wheels, native.name, pins[0].version) if build_from_source else [distribution]
     if len(matches) != 1:
         raise ValueError("Expected one compatible native inference wheel")
     subprocess.run([sys.executable, "-m", "pip", "install", "--only-binary=:all:",
                     str(matches[0]), "-r", str(requirements)], check=True)
 
 
+def source_build_environment(platform):
+    environment = os.environ | {"CMAKE_BUILD_PARALLEL_LEVEL": "2"}
+    if platform == "darwin":
+        environment.update(
+            CMAKE_ARGS="-DGGML_NATIVE=OFF -DGGML_METAL=ON -DCMAKE_OSX_ARCHITECTURES=arm64 "
+                       "-DCMAKE_OSX_DEPLOYMENT_TARGET=11.0",
+            MACOSX_DEPLOYMENT_TARGET="11.0",
+        )
+    elif platform == "linux":
+        environment["CMAKE_ARGS"] = (
+            "-DGGML_NATIVE=OFF -DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_AVX512=OFF "
+            "-DGGML_FMA=OFF -DGGML_F16C=OFF -DGGML_SSE42=OFF -DGGML_BMI2=OFF -DGGML_BACKEND_DL=OFF"
+        )
+    else:
+        raise ValueError("Source builds are supported only on Linux and macOS")
+    return environment
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--wheels", type=Path, default=ROOT / "build/wheels")
+    parser.add_argument("--from-source", action="store_true", help="Build the verified source distribution on Linux or macOS")
     args = parser.parse_args()
-    install_native_dependencies(args.wheels.resolve())
+    install_native_dependencies(args.wheels.resolve(), from_source=args.from_source)
     return 0
 
 

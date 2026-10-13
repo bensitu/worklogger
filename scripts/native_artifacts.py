@@ -4,6 +4,8 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import zipfile
+import zlib
 from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
@@ -49,12 +51,24 @@ def verified_artifact(item, directory, *, opener=urlopen):
                         if total > 256 * 1024 * 1024:
                             raise ValueError("Native dependency artifact exceeds the size limit")
                         stream.write(block)
-            _verify_digest(temporary, item["sha256"])
+            _verify_artifact(temporary, item["sha256"], wheel=destination.suffix == ".whl")
             temporary.replace(destination)
         finally:
             temporary.unlink(missing_ok=True)
-    _verify_digest(destination, item["sha256"])
+    else:
+        _verify_artifact(destination, item["sha256"], wheel=destination.suffix == ".whl")
     return destination
+
+
+def _verify_artifact(path, expected, *, wheel):
+    _verify_digest(path, expected)
+    if wheel:
+        try:
+            with zipfile.ZipFile(path) as archive:
+                if archive.testzip() is not None:
+                    raise ValueError("Native dependency wheel archive is invalid")
+        except (zipfile.BadZipFile, zlib.error):
+            raise ValueError("Native dependency wheel archive is invalid") from None
 
 
 def _verify_digest(path, expected):

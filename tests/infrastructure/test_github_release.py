@@ -66,12 +66,14 @@ class GitHubReleaseTests(unittest.TestCase):
             archive = folder / (prefix + extension)
             archive.write_bytes(b"Synthetic verified archive")
             target = {"system": system, "machine": machine, "python": "3.12.7", "implementation": "CPython"}
-            packages = [{"name": "llama-cpp-python", "version": "0.3.19", "sha256": "b" * 64}]
-            inputs = {filename: hashlib.sha256((release_assets.ROOT / filename).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
-                      for filename in ("requirements.txt", "requirements-build.txt", "requirements-ai.txt")}
+            packages = [{"name": "llama-cpp-python", "version": "0.3.36", "sha256": "b" * 64}]
+            inputs = {}
+            for filename in ("requirements.txt", "requirements-build.txt", "requirements-ai.txt", "requirements/native-artifacts.json"):
+                data = (release_assets.ROOT / filename).read_bytes()
+                inputs[filename] = hashlib.sha256(data.replace(b"\r\n", b"\n") if filename.endswith(".txt") else data).hexdigest()
             lock = folder / "target.lock.json"
             lock.write_text(json.dumps({"format_version": 1, "target": target, "inputs": inputs, "packages": packages}), encoding="utf-8")
-            (folder / "target.lock.txt").write_text("llama-cpp-python==0.3.19 --hash=sha256:" + "b" * 64 + "\n", encoding="utf-8")
+            (folder / "target.lock.txt").write_text("llama-cpp-python==0.3.36 --hash=sha256:" + "b" * 64 + "\n", encoding="utf-8")
             checks = sorted(release_assets.CHECKS | ({"cocoa-startup"} if system == "Darwin" else set()))
             report = {"format_version": 1, "build": {"format_version": 1, "application_version": APP_VERSION,
                 "source_revision": COMMIT, "source_dirty": False, "local_inference": True, "target": target,

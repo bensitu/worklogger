@@ -1,4 +1,5 @@
 from pathlib import Path
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -12,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class BuildResourceTests(unittest.TestCase):
+    @unittest.skipUnless(sys.platform == "win32", "Windows version resources require Windows packaging dependencies")
     def test_windows_version_resource_accepts_prerelease_versions(self):
         from scripts.build_resources import windows_version_resource
         with patch("scripts.build_resources.APP_VERSION", "4.0.0-rc.1+build.2"):

@@ -2,7 +2,7 @@
 
 ## Setup
 
-Use Python 3.11 and a virtual environment. Run from the repository checkout:
+Use Python 3.11 through 3.14 and a virtual environment. Run from the repository checkout:
 
 ```powershell
 python -m venv .venv
@@ -20,9 +20,11 @@ Install `requirements-dev.txt` for contributor lint tooling; it is not a runtime
 or release-build dependency.
 
 The runtime, native inference, and build lists have separate responsibilities.
-The `requirements/` JSON locks identify target environments, input fingerprints,
+Generated JSON locks identify target environments, input fingerprints,
 packages, and wheel hashes; companion TXT files install those exact wheels.
-Do not merge them into normal runtime dependencies. See [packaging](packaging.md).
+Do not merge them into normal runtime dependencies. The approved native artifacts
+are listed separately in `requirements/native-artifacts.json`.
+See [packaging](packaging.md).
 
 ## Code Conventions
 

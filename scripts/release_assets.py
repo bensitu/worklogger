@@ -70,11 +70,13 @@ def checked_files(directory, tag, commit, *, source_root=ROOT, staged=False):
         if not required.issubset(report["checks"]) or not required.issubset(packaged["checks"]):
             raise ValueError(f"Release runtime verification is incomplete for {name}")
         inputs = lock["inputs"]
-        expected_inputs = {"requirements.txt", "requirements-build.txt", "requirements-ai.txt"}
+        expected_inputs = {"requirements.txt", "requirements-build.txt", "requirements-ai.txt", "requirements/native-artifacts.json"}
         if set(inputs) != expected_inputs:
             raise ValueError("Release dependency lock must include runtime, build and native dependencies")
         for relative, expected in inputs.items():
-            data = (source_root / relative).read_bytes().replace(b"\r\n", b"\n")
+            data = (source_root / relative).read_bytes()
+            if Path(relative).suffix == ".txt":
+                data = data.replace(b"\r\n", b"\n")
             if hashlib.sha256(data).hexdigest() != expected:
                 raise ValueError(f"Release dependency input differs: {relative}")
         if not any(row["name"] == "llama-cpp-python" for row in lock["packages"]):

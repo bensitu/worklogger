@@ -38,6 +38,8 @@ layers. Back up your database before upgrading.
   to supported requests without silent provider or proxy fallback.
 - Changed Google sign-in to direct browser authorization with request-bound
   provider-token validation.
+- Updated native inference to llama-cpp-python 0.3.36 with Python-version-independent
+  wheels and expanded cross-platform build coverage to Python 3.11 through 3.14.
 
 ### Removed
 

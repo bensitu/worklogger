@@ -1,6 +1,6 @@
 # Packaging
 
-Dependency input fingerprints normalize text line endings. Wheel hashes remain
+Requirements-file fingerprints normalize text line endings. Wheel hashes remain
 byte-for-byte checksums for the declared target platform.
 
 ## Dependencies
@@ -10,7 +10,7 @@ Build on the target operating system and architecture in a clean environment.
 supplies the pinned installer and build tools, and `requirements-ai.txt` supplies
 the native inference dependencies required in every distribution.
 
-Target locks under `requirements/` contain the exact Python/OS/architecture,
+Generated target locks contain the exact Python/OS/architecture,
 input hashes, package versions, and wheel hashes. The adjacent TXT is the
 hash-pinned installation file. Use a lock matching the actual target; do not
 reuse Windows wheels or a lock from another Python version.
@@ -29,14 +29,21 @@ python -m venv .venv-release
 To capture a different target after reviewing its dependencies:
 
 ```sh
-python scripts/lock_environment.py requirements/target.lock.json --capture
+python scripts/lock_environment.py release/target.lock.json --capture
 ```
 
 Install native inference with `scripts/install_native_dependencies.py` before
-capturing a lock. The installer selects the pinned Metal wheel on macOS and the
-pinned CPU wheel on Windows. On Linux it builds the pinned source distribution
-against the target system's C library, using a portable CPU configuration.
-Linux builds require a C++ compiler and build tools (`build-essential` on Ubuntu).
+capturing a lock. The installer selects the pinned CPU wheel on Windows and the
+glibc-compatible CPU wheel on Linux. On macOS ARM64 it compiles the verified
+source distribution with Metal enabled; Xcode command-line tools are required.
+The native wheels use Python-version-independent `py3-none` tags; OS,
+architecture, and minimum platform requirements still apply. Linux x64 wheels
+require glibc 2.17 or later. Artifact selection uses the interpreter's supported
+tags and never substitutes a musl wheel for a glibc environment.
+For an explicit portable Linux source build, pass `--from-source`; this requires
+a C++ compiler and build tools (`build-essential` on Ubuntu). Source compilation
+is not an automatic fallback when an approved wheel is unavailable. Use separate
+wheel directories for different native build profiles.
 Lock capture retains compatible prefetched
 wheels and records their hashes; publish those wheels with the lock when an
 offline or hash-pinned rebuild is required. Legacy locks that omit
@@ -45,7 +52,9 @@ Review dependency updates and advisories; hashes establish artifact identity,
 not security.
 
 CI runs tests, native runtime verification, packaging, and extracted-archive
-verification on Windows x64, Linux x64, and macOS ARM64 with Python 3.11 and 3.12.
+verification on Windows x64, Linux x64, and macOS ARM64 with Python 3.11 through 3.14.
+Linux tests exercise the approved wheel; Linux distribution builds compile a
+portable CPU backend without AVX, FMA, F16C, SSE4.2, or BMI2 requirements.
 Artifact names include the Python version to distinguish build environments.
 
 ## GitHub Releases
@@ -57,7 +66,7 @@ the tag matching `APP_VERSION` in `worklogger/__about__.py`, such as `v4.0.0`.
 Enable **validate_only** to run the full verification and prepare release files
 without creating a tag or release.
 
-The workflow reuses CI's six Python/platform combinations. It selects the
+The workflow reuses CI's twelve Python/platform combinations. It selects the
 verified Python 3.12 Windows x64, Linux x64, and macOS ARM64 archives for
 distribution. Before creating a tag, it checks the source commit, version,
 dependency locks, native backend inclusion, runtime verification results, and
@@ -95,8 +104,11 @@ Build options set `WORKLOGGER_BUILD_CONSOLE`. Close executables under `dist/` be
 rebuilding and keep user data out of generated directories.
 
 Native dependencies are selected from `requirements/native-artifacts.json` and
-checked against its SHA-256 digests before pip processes them. Linux builds use
-the verified source distribution; Windows and macOS use target-compatible wheels.
+checked against its SHA-256 digests before pip processes them. Wheels also pass
+archive-integrity validation. Windows and Linux use approved wheels by default;
+macOS builds its Metal backend from source. `--from-source` selects portable
+source compilation on Linux. Native artifact inputs are included in target-lock
+validation before release publication.
 Update this manifest with publisher-provided checksums when changing the pinned
 native dependency version. Generated target locks record the complete resolved
 environment; they are build records, not a replacement for approved input hashes.

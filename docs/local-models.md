@@ -6,11 +6,14 @@ Local rewriting requires the optional native inference dependency in the Python
 environment that starts WorkLogger:
 
 ```sh
-python -m pip install -r requirements-ai.txt
+python scripts/install_native_dependencies.py
 ```
 
-Use a wheel or native build appropriate to the target platform, following the
-dependency's installation instructions. Restart after installing it. Packaged
+The installer verifies approved CPU wheels on Windows/Linux and compiles a Metal
+backend from verified source on macOS ARM64. Native compilation on macOS requires
+Xcode command-line tools. Python-version-independent wheels must still match the
+operating system, architecture, and CPU requirements; use `--from-source` on Linux
+for a portable CPU build. Restart after installing it. Packaged
 applications must include that dependency when built; see [packaging](packaging.md).
 
 Open **Settings > AI > Local Model > Manage models**. Download a catalog entry or
