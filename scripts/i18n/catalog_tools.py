@@ -8,6 +8,10 @@ import struct
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+_metadata = ast.parse((PROJECT_ROOT / "worklogger/__about__.py").read_text(encoding="utf-8"))
+APP_VERSION = next(ast.literal_eval(node.value) for node in _metadata.body
+                   if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == "APP_VERSION"
+                                                          for target in node.targets))
 SOURCE_ROOT = PROJECT_ROOT / "worklogger"
 LOCALES_ROOT = SOURCE_ROOT / "locales"
 POT_PATH = LOCALES_ROOT / "messages.pot"
@@ -102,7 +106,7 @@ def write_pot(messages: set[str], path: Path = POT_PATH) -> None:
     lines = [
         'msgid ""',
         'msgstr ""',
-        '"Project-Id-Version: WorkLogger 4.0.0\\n"',
+        f'"Project-Id-Version: WorkLogger {APP_VERSION}\\n"',
         '"Content-Type: text/plain; charset=UTF-8\\n"',
         '"Content-Transfer-Encoding: 8bit\\n"',
         '"MIME-Version: 1.0\\n"',
@@ -122,7 +126,7 @@ def write_po(language: str, messages: set[str], locales_root: Path = LOCALES_ROO
     lines = [
         'msgid ""',
         'msgstr ""',
-        '"Project-Id-Version: WorkLogger 4.0.0\\n"',
+        f'"Project-Id-Version: WorkLogger {APP_VERSION}\\n"',
         '"Content-Type: text/plain; charset=UTF-8\\n"',
         '"Content-Transfer-Encoding: 8bit\\n"',
         f'"Language: {language}\\n"',

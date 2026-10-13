@@ -1,0 +1,30 @@
+{
+  "version": "0.3.19",
+  "artifacts": [
+    {
+      "filename": "llama_cpp_python-0.3.19-cp311-cp311-win_amd64.whl",
+      "url": "https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.19/llama_cpp_python-0.3.19-cp311-cp311-win_amd64.whl",
+      "sha256": "6ac5093812742a5b7c6836a7507404be6c143b60aa1281644039256abbbfd12a"
+    },
+    {
+      "filename": "llama_cpp_python-0.3.19-cp312-cp312-win_amd64.whl",
+      "url": "https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.19/llama_cpp_python-0.3.19-cp312-cp312-win_amd64.whl",
+      "sha256": "1843b30d90e35296dbd9bd0b2b753b42f0fafa6aec6d2b1c0fff352f801bc89b"
+    },
+    {
+      "filename": "llama_cpp_python-0.3.19-cp311-cp311-macosx_11_0_arm64.whl",
+      "url": "https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.19-metal/llama_cpp_python-0.3.19-cp311-cp311-macosx_11_0_arm64.whl",
+      "sha256": "afc2e082ab4ae1af07444f356f02ee5b3fd908cff01924989b8ed37d932ca790"
+    },
+    {
+      "filename": "llama_cpp_python-0.3.19-cp312-cp312-macosx_11_0_arm64.whl",
+      "url": "https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.19-metal/llama_cpp_python-0.3.19-cp312-cp312-macosx_11_0_arm64.whl",
+      "sha256": "a8a744bc6369938f8b31344db74fd62abc76a1da5251c211dd1593c424e5befe"
+    },
+    {
+      "filename": "llama_cpp_python-0.3.19.tar.gz",
+      "url": "https://files.pythonhosted.org/packages/d7/0f/b26ceec20294f5d592ac137ccc2f10e91fa1f35bb8555906b5718a625ac1/llama_cpp_python-0.3.19.tar.gz",
+      "sha256": "6816e4a0a74ae9a356e7a0546e13147543f01f695c86a28d940e4b86519acf13"
+    }
+  ]
+}

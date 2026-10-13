@@ -12,6 +12,15 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class BuildResourceTests(unittest.TestCase):
+    def test_windows_version_resource_accepts_prerelease_versions(self):
+        from scripts.build_resources import windows_version_resource
+        with patch("scripts.build_resources.APP_VERSION", "4.0.0-rc.1+build.2"):
+            resource = windows_version_resource()
+        self.assertEqual(resource.ffi.fileVersionMS, 4 << 16)
+        self.assertEqual(resource.ffi.fileVersionLS, 0)
+        with patch("scripts.build_resources.APP_VERSION", "65536.0.0"), self.assertRaises(ValueError):
+            windows_version_resource()
+
     def test_locked_environment_rejects_target_input_and_package_mismatches(self):
         import json
         from scripts.lock_environment import verify_lock, digest
@@ -57,8 +66,7 @@ class BuildResourceTests(unittest.TestCase):
         self.assertNotIn("poppler", environment["PATH"])
         self.assertIn("System32", environment["PATH"])
         self.assertEqual(environment["WORKLOGGER_BUILD_CONSOLE"], "1")
-        self.assertEqual(environment["WORKLOGGER_BUILD_LOCAL_INFERENCE"], "1")
-        self.assertEqual(build_environment(False, True)["WORKLOGGER_BUILD_LOCAL_INFERENCE"], "1")
+        self.assertEqual(build_environment(False)["WORKLOGGER_BUILD_CONSOLE"], "0")
 
     def test_resource_manifest_contains_fonts_icons_qss_and_catalogs_without_user_data(self):
         for po in locale_po_paths():

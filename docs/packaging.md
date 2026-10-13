@@ -91,9 +91,15 @@ locked environment. The native backend is always included;
 `--with-local-inference` remains accepted for command compatibility. Add
 `--console` for a diagnostic console.
 
-Build options set `WORKLOGGER_BUILD_CONSOLE` and
-`WORKLOGGER_BUILD_LOCAL_INFERENCE`. Close executables under `dist/` before
+Build options set `WORKLOGGER_BUILD_CONSOLE`. Close executables under `dist/` before
 rebuilding and keep user data out of generated directories.
+
+Native dependencies are selected from `requirements/native-artifacts.json` and
+checked against its SHA-256 digests before pip processes them. Linux builds use
+the verified source distribution; Windows and macOS use target-compatible wheels.
+Update this manifest with publisher-provided checksums when changing the pinned
+native dependency version. Generated target locks record the complete resolved
+environment; they are build records, not a replacement for approved input hashes.
 
 ## Resources and Outputs
 

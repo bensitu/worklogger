@@ -1,6 +1,7 @@
 """Explicit resource manifest excluding private application data."""
 
 from pathlib import Path
+import re
 
 from worklogger.__about__ import APP_AUTHOR, APP_NAME, APP_VERSION
 
@@ -48,7 +49,12 @@ def windows_version_resource():
         VarFileInfo, VarStruct, VSVersionInfo,
     )
 
-    version = tuple(int(part) for part in APP_VERSION.split(".")) + (0,)
+    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?", APP_VERSION)
+    if match is None:
+        raise ValueError("Application version must use semantic versioning")
+    version = tuple(int(part) for part in match.groups()) + (0,)
+    if any(part > 65535 for part in version):
+        raise ValueError("Windows version components must fit unsigned 16-bit integers")
     fields = {
         "CompanyName": APP_AUTHOR, "FileDescription": APP_NAME,
         "FileVersion": APP_VERSION, "InternalName": APP_NAME,

@@ -21,7 +21,6 @@ from scripts.release_artifact import write_build_info
 def build_environment(console: bool, with_local_inference: bool = True) -> dict[str, str]:
     environment = os.environ.copy()
     environment["WORKLOGGER_BUILD_CONSOLE"] = "1" if console else "0"
-    environment["WORKLOGGER_BUILD_LOCAL_INFERENCE"] = "1" if with_local_inference else "0"
     if sys.platform == "win32":
         python_root = Path(sys.executable).parent
         windows_root = Path(environment.get("SystemRoot", r"C:\Windows"))

@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT))
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 from scripts.lock_environment import compatible_wheels
+from scripts.native_artifacts import select_artifact, verified_artifact
 
 
 def install_native_dependencies(wheels: Path):
@@ -25,6 +26,9 @@ def install_native_dependencies(wheels: Path):
     if len(pins) != 1 or pins[0].operator != "==" or "*" in pins[0].version:
         raise ValueError("Native inference must specify one exact version")
     wheels.mkdir(parents=True, exist_ok=True)
+    artifact = select_artifact(ROOT / "requirements/native-artifacts.json", pins[0].version,
+                               source=sys.platform == "linux")
+    distribution = verified_artifact(artifact, wheels)
     if sys.platform == "linux":
         # Build against the target libc; the upstream Linux wheels use musl.
         environment = os.environ | {
@@ -32,13 +36,8 @@ def install_native_dependencies(wheels: Path):
                           "-DGGML_AVX512=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF -DGGML_BACKEND_DL=OFF",
             "CMAKE_BUILD_PARALLEL_LEVEL": "2",
         }
-        subprocess.run([sys.executable, "-m", "pip", "wheel", "--no-deps", "--no-binary=llama-cpp-python",
-                        "--wheel-dir", str(wheels), str(native)], check=True, env=environment)
-    else:
-        index = "metal" if sys.platform == "darwin" else "cpu"
-        subprocess.run([sys.executable, "-m", "pip", "download", "--only-binary=:all:", "--no-deps",
-                        "--index-url", f"https://abetlen.github.io/llama-cpp-python/whl/{index}",
-                        "--dest", str(wheels), str(native)], check=True)
+        subprocess.run([sys.executable, "-m", "pip", "wheel", "--no-deps",
+                        "--wheel-dir", str(wheels), str(distribution)], check=True, env=environment)
     matches = compatible_wheels(wheels, native.name, pins[0].version)
     if len(matches) != 1:
         raise ValueError("Expected one compatible native inference wheel")

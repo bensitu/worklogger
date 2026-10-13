@@ -96,7 +96,11 @@ def capture_lock(output, requirement_files, wheel_directory):
         if len(matches) != 1:
             raise ValueError(f"Expected one target wheel for {name}")
         packages.append({"name": name, "version": version, "wheel": matches[0].name, "sha256": digest(matches[0])})
-    value = {"format_version": 1, "target": target(), "inputs": {path.relative_to(ROOT).as_posix(): digest(path) for path in requirement_files}, "packages": packages}
+    inputs = {path.relative_to(ROOT).as_posix(): digest(path) for path in requirement_files}
+    native_manifest = ROOT / "requirements/native-artifacts.json"
+    if native_manifest.exists():
+        inputs[native_manifest.relative_to(ROOT).as_posix()] = digest(native_manifest)
+    value = {"format_version": 1, "target": target(), "inputs": inputs, "packages": packages}
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
     lines = ["# Target-specific dependencies; verify the adjacent JSON lock before building."]
