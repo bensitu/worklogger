@@ -596,11 +596,12 @@ class RuntimeBootstrapTests(unittest.TestCase):
             self.assertEqual(runtime.value.window.account_label.text(), "Signed in: alice")
             self.assertIsNotNone(runtime.value.auth_session)
             assert runtime.value.auth_session is not None
-            self.assertTrue(runtime.value.auth_session.recovery_key)
+            self.assertIsNone(runtime.value.auth_session.recovery_key)
+            self.assertIsNone(runtime.value.auth_session.remember_token)
             self.assertTrue(runtime.value.window.refresh())
             runtime.value.window.close()
 
-    def test_runtime_builders_share_remember_session_store_instance(self) -> None:
+    def test_runtime_builders_isolate_remembered_credentials_by_database(self) -> None:
         with self.runtime_directory() as first_directory:
             first = build_desktop_runtime(
                 DesktopRuntimeConfig(
@@ -625,10 +626,11 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 self.assertTrue(second.ok, second.error)
                 assert second.value is not None
 
-                self.assertIs(
+                self.assertIsNot(
                     first.value.remember_session_store,
                     second.value.remember_session_store,
                 )
+                self.assertNotEqual(first.value.remember_session_store._path, second.value.remember_session_store._path)
                 self.assertIs(
                     getattr(second.value.window, "_settings_workflow")._account_workflow._remember_session_store,
                     second.value.remember_session_store,

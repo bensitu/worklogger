@@ -128,7 +128,7 @@ def _run_job(job: JobCallable[object], token: CancellationToken) -> Result[objec
             InfrastructureError(
                 "background_job_failed",
                 "background_job_failed",
-                {"reason": str(exc)},
+                {"reason": type(exc).__name__},
             )
         )
     if isinstance(value, Result):

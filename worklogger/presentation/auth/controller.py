@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, replace, field
 from typing import Protocol
 
 from PySide6.QtWidgets import QWidget
@@ -37,8 +37,8 @@ ResetPasswordDialogFactory = Callable[[QWidget | None], ResetPasswordDialog]
 @dataclass(frozen=True)
 class AuthSession:
     user: User
-    remember_token: str | None = None
-    recovery_key: str | None = None
+    remember_token: str | None = field(default=None, repr=False)
+    recovery_key: str | None = field(default=None, repr=False)
 
 
 class RememberSessionStore(Protocol):

@@ -127,6 +127,7 @@ def build_runtime_handlers(
     user_profiles: UserProfileRepository | None = None,
 ) -> RuntimeHandlers:
     inference = None
+    features = FeatureFlags.from_env()
     transport = gateway = external_keys = proxy_password = None
     if user_id is not None and database_path is not None:
         external_service, namespace = account_credential_namespaces(user_id, database_path)
@@ -140,9 +141,9 @@ def build_runtime_handlers(
             catalog_opener=opener, downloader=HttpRangeDownloader(opener=opener),
             remote_catalog_url=os.environ.get("WORKLOGGER_MODEL_CATALOG_URL", "").strip() or None)
         inference = LocalInferenceRuntime(store=store, settings=repositories.settings, user_id=user_id,
-            enabled=FeatureFlags.from_env().enable_ai)
+            enabled=features.enable_ai)
         gateway = AccountAIGateway(local=inference, settings=repositories.settings, user_id=user_id,
-            key_store=external_keys, transport=transport, enabled=FeatureFlags.from_env().enable_ai)
+            key_store=external_keys, transport=transport, enabled=features.enable_ai)
     return RuntimeHandlers(
         templates=UserTemplateProvider(
             repositories.report_templates,

@@ -351,7 +351,7 @@ def _runtime_result(
             database_path=database_path,
             remember_session_store=remember_session_store,
             job_runner=job_runner,
-            auth_session=auth_session,
+            auth_session=replace(auth_session, remember_token=None, recovery_key=None) if auth_session is not None else None,
             local_inference=local_inference,
             revoke_remembered_session=revoke_remembered_session,
         )

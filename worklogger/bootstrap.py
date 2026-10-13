@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from functools import lru_cache
 import secrets
 import sqlite3
 import sys
@@ -84,8 +85,6 @@ class DesktopAuthenticator(Protocol):
 AuthControllerFactory = Callable[[AuthViewModel], DesktopAuthenticator]
 
 
-_remember_session_store_instance: RememberSessionStore | None = None
-
 
 def build_desktop_runtime(
     config: DesktopRuntimeConfig | None = None,
@@ -107,7 +106,7 @@ def build_desktop_runtime(
         initialize_language(LanguagePreferences())
         job_runner = QtJobRunner(application)
         auth_view_model = _auth_view_model(auth_repository, connection_factory)
-        remember_session_store = _remember_session_store()
+        remember_session_store = _remember_session_store(database_path)
         return build_user_runtime(
             application=application,
             connection_factory=connection_factory,
@@ -140,7 +139,7 @@ def build_authenticated_desktop_runtime(
         initialize_language(LanguagePreferences())
         job_runner = QtJobRunner(application)
         auth_view_model = _auth_view_model(auth_repository, connection_factory)
-        remember_session_store = _remember_session_store()
+        remember_session_store = _remember_session_store(database_path)
         authenticator = (
             auth_controller_factory(auth_view_model)
             if auth_controller_factory is not None
@@ -208,11 +207,14 @@ def _application(argv: Sequence[str] | None) -> QApplication:
     return application
 
 
-def _remember_session_store() -> RememberSessionStore:
-    global _remember_session_store_instance
-    if _remember_session_store_instance is None:
-        _remember_session_store_instance = FileRememberTokenSessionStore()
-    return _remember_session_store_instance
+def _remember_session_store(database_path) -> RememberSessionStore:
+    from worklogger.infrastructure.security.session_store import session_path_for_database
+    return _session_store(str(session_path_for_database(database_path)))
+
+
+@lru_cache(maxsize=16)
+def _session_store(path) -> RememberSessionStore:
+    return FileRememberTokenSessionStore(Path(path))
 
 
 def _password_hasher(iterations: int | None) -> PBKDF2PasswordHasher:

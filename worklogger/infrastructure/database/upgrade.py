@@ -93,5 +93,6 @@ def _import_template(factory, path, username, language):
         user = connection.execute("SELECT id FROM users WHERE username_key=?", (username_key(username),)).fetchone()
         if user is None:
             raise ValueError("template_import_user_missing")
-        connection.execute("INSERT INTO report_templates(user_id,language,type,content,updated_at) VALUES(?,?,?,?,datetime('now'))",
+        connection.execute("INSERT INTO report_templates(user_id,language,type,content,updated_at) VALUES(?,?,?,?,datetime('now')) "
+                           "ON CONFLICT(user_id,language,type) DO UPDATE SET content=excluded.content,updated_at=excluded.updated_at",
                            (user[0], language, kind, content))

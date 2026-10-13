@@ -1,5 +1,11 @@
 # Security and Privacy
 
+Remembered-login files are scoped to the resolved database path. The default
+database retains its existing session-file location; other databases use separate
+encrypted files. Opening or signing out of one database does not remove another
+database's local credential. Authentication tokens and recovery keys are excluded
+from session representations and are not retained in the desktop runtime.
+
 ## Local Data
 
 Accounts provide application-level separation, not protection against someone

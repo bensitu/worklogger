@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+import hashlib
+import os
 from typing import Protocol
 from worklogger.config.constants import REMEMBER_SESSION_FILENAME
 
@@ -111,3 +113,13 @@ def _default_session_path() -> Path:
     from worklogger.infrastructure.security.paths import credential_directory
     base = credential_directory()
     return base / REMEMBER_SESSION_FILENAME
+
+
+def session_path_for_database(database_path):
+    from worklogger.infrastructure.database.paths import default_database_path
+    path = _default_session_path()
+    canonical = os.path.normcase(str(Path(database_path).resolve()))
+    if canonical == os.path.normcase(str(default_database_path().resolve())):
+        return path
+    namespace = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    return path.with_name(f"{path.stem}-{namespace}{path.suffix}")
