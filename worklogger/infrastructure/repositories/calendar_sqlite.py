@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 import sqlite3
+import hashlib
 
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
@@ -79,14 +80,14 @@ class SQLiteCalendarEventRepository:
     ) -> int:
         count = 0
         existing = {
-            tuple(row) for row in connection.execute(
+            _event_identity(tuple(row)) for row in connection.execute(
                 "SELECT date, start_time, end_time, summary, description, location, all_day FROM calendar_events WHERE user_id=?",
                 (user_id,),
             )
         }
         for event in events:
-            identity = (event.day.isoformat(), event.start_time, event.end_time, event.summary,
-                        event.description, event.location, int(event.all_day))
+            identity = _event_identity((event.day.isoformat(), event.start_time, event.end_time, event.summary,
+                                        event.description, event.location, int(event.all_day)))
             if identity in existing:
                 continue
             connection.execute(
@@ -134,3 +135,8 @@ class SQLiteCalendarEventRepository:
             all_day=bool(int(row["all_day"] or 0)),
             source_file=str(row["source_file"] or ""),
         )
+
+
+def _event_identity(values):
+    day, start, end, summary, description, location, all_day = values
+    return day, start, end, summary, hashlib.sha256((description or "").encode("utf-8")).digest(), location or "", all_day

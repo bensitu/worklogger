@@ -31,17 +31,22 @@ class PythonHolidaysProvider:
         if module is None:
             return ()
         years = tuple(range(start_day.year, end_day.year + 1))
-        options = {"years": years}
-        if subdivision:
-            options["subdiv"] = subdivision
-        raw_holidays = module.country_holidays(country, **options)
+        raw_holidays = _holiday_items(module, country, years, subdivision)
         holidays: list[Holiday] = []
-        for day_value, name in raw_holidays.items():
+        for day_value, name in raw_holidays:
             day = _coerce_date(day_value)
             if day is None or day < start_day or day > end_day:
                 continue
             holidays.append(Holiday(day=day, name=str(name)))
         return tuple(sorted(holidays, key=lambda holiday: holiday.day))
+
+
+@lru_cache(maxsize=64)
+def _holiday_items(module, country, years, subdivision):
+    options = {"years": years}
+    if subdivision:
+        options["subdiv"] = subdivision
+    return tuple(module.country_holidays(country, **options).items())
 
 
 @lru_cache(maxsize=1)

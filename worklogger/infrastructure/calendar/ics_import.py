@@ -36,6 +36,9 @@ class IcsCalendarImporter:
             if calendar.name != "VCALENDAR":
                 raise ValueError("ics_import_failed")
             for component in calendar.walk("VEVENT"):
+                for field, maximum in (("SUMMARY", 1024), ("DESCRIPTION", 65536), ("LOCATION", 4096)):
+                    if len(str(component.get(field, "")).encode("utf-8")) > maximum:
+                        raise ValueError("ics_file_too_large")
                 rule = component.get("RRULE")
                 if rule and "COUNT" not in rule and "UNTIL" not in rule:
                     raise ValueError("ics_recurrence_unbounded")
@@ -71,6 +74,8 @@ class IcsCalendarImporter:
 
 def _daily_events(component, user_id: int, source: str, zone: tzinfo):
     summary = str(component.get("SUMMARY", "")).strip()
+    description = str(component.get("DESCRIPTION", ""))
+    location = str(component.get("LOCATION", ""))
     if not summary:
         return
     start = component.decoded("DTSTART")
@@ -93,7 +98,7 @@ def _daily_events(component, user_id: int, source: str, zone: tzinfo):
             id=None, user_id=user_id, day=day, summary=summary,
             start_time=None if all_day else (start.strftime("%H:%M") if day == start.date() else "00:00"),
             end_time=None if all_day else (end.strftime("%H:%M") if day == end.date() else "24:00"),
-            description=str(component.get("DESCRIPTION", "")),
-            location=str(component.get("LOCATION", "")), all_day=all_day, source_file=source,
+            description=description,
+            location=location, all_day=all_day, source_file=source,
         )
         day += timedelta(days=1)

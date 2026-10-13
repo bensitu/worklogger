@@ -112,6 +112,12 @@ them. It does not create worked-time records.
 
 ## Reports
 
+Calendar imports are bounded before recurrence expansion. Repeated events must
+use daily or less frequent rules and fit within ten years of their start.
+Event titles, descriptions, and locations are limited to 1 KiB, 64 KiB, and
+4 KiB respectively; the expanded event content is limited to 16 MiB. Imports
+that exceed these limits are rejected without changing existing events.
+
 Choose a daily, weekly, or monthly period. Weekly periods follow the week-start
 preference. Generate from records builds a draft from records, calendar events,
 and notes approved for reports. Edit and save it. Templates selects the language

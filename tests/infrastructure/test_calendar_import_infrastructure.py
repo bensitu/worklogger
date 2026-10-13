@@ -34,6 +34,28 @@ class FakeHolidaysModule:
 
 
 class CalendarImportInfrastructureTests(unittest.TestCase):
+    def test_recurrence_horizon_and_expanded_text_are_bounded(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "bounded.ics"
+            for rule, description in (("FREQ=DAILY;BYMONTH=2;BYMONTHDAY=30;UNTIL=99991231T000000Z", "Text"),
+                                      ("FREQ=DAILY;COUNT=3", "x" * 65537),
+                                      ("FREQ=DAILY;COUNT=1000", "x" * 20000)):
+                path.write_text("BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:sample\nDTSTART:20260501T090000Z\n"
+                    f"RRULE:{rule}\nSUMMARY:Meeting\nDESCRIPTION:{description}\nEND:VEVENT\nEND:VCALENDAR\n", encoding="utf-8")
+                result = IcsCalendarImporter().read_events(path, user_id=1)
+                self.assertFalse(result.ok)
+                self.assertEqual(result.error.code, "ics_file_too_large")
+
+    def test_multiday_events_share_description_and_keep_midnight_boundary(self):
+        from icalendar import Calendar
+        from worklogger.infrastructure.calendar.ics_import import _daily_events
+        calendar = Calendar.from_ical("BEGIN:VCALENDAR\nBEGIN:VEVENT\nDTSTART:20260501T220000Z\n"
+            "DTEND:20260503T100000Z\nSUMMARY:Trip\nDESCRIPTION:Shared description\nEND:VEVENT\nEND:VCALENDAR\n")
+        events = tuple(_daily_events(calendar.walk("VEVENT")[0], 1, "trip.ics", ZoneInfo("UTC")))
+        self.assertEqual(len(events), 3)
+        self.assertEqual((events[1].start_time, events[1].end_time), ("00:00", "24:00"))
+        self.assertIs(events[0].description, events[1].description)
+
     def test_date_bounded_and_combined_recurrences_are_limited_before_expansion(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "bounded.ics"
