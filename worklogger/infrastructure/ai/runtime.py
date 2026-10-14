@@ -2,6 +2,7 @@
 
 from dataclasses import asdict
 from importlib.util import find_spec
+import logging
 from threading import RLock
 
 from worklogger.config.constants import (
@@ -19,6 +20,8 @@ from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.ai.local import LocalModelGateway
 from worklogger.infrastructure.ai.execution import InferenceControl
 from worklogger.infrastructure.ai.runtime_options import engine_options, is_apple_silicon
+
+LOGGER = logging.getLogger(__name__)
 
 
 class LocalInferenceRuntime:
@@ -39,6 +42,8 @@ class LocalInferenceRuntime:
         )
         self._engine = None
         self._engine_key = None
+        self._loaded_factory = None
+        self._engine_configuration = None
         self._lock = RLock()
         self._state_lock = RLock()
 
@@ -151,8 +156,6 @@ class LocalInferenceRuntime:
                             from llama_cpp import Llama, llama_supports_gpu_offload
 
                             factory = Llama
-                            if is_apple_silicon():
-                                gpu_offload_supported = llama_supports_gpu_offload()
                         except (ImportError, OSError, RuntimeError):
                             self.backend_available = False
                             return Result.failure(
@@ -161,14 +164,21 @@ class LocalInferenceRuntime:
                                     "local_inference_dependency_missing",
                                 )
                             )
+                        if is_apple_silicon():
+                            try:
+                                gpu_offload_supported = llama_supports_gpu_offload()
+                            except Exception:
+                                control.check()
+                                LOGGER.warning("local_inference_metal_detection_failed_using_cpu")
                     try:
-                        self._engine = factory(
-                            model_path=str(path),
-                            n_ctx=context,
-                            **engine_options(gpu_offload_supported=gpu_offload_supported),
-                            verbose=False,
-                        )
-                        self._engine_key = key
+                        self._load_engine(factory, dict(
+                            model_path=str(path), n_ctx=context,
+                            **engine_options(gpu_offload_supported=gpu_offload_supported), verbose=False,
+                        ), key, control)
+                    except InterruptedError:
+                        if control.reason:
+                            raise
+                        return Result.failure(InfrastructureError("local_model_load_failed", "local_model_load_failed"))
                     except Exception:
                         self._close_engine()
                         return Result.failure(
@@ -178,8 +188,10 @@ class LocalInferenceRuntime:
                         )
 
                 failure = []
+                execution_failed = False
 
                 def generate(messages, output_limit):
+                    nonlocal execution_failed
                     def check_deadline(_tokens, scores):
                         control.check()
                         return scores
@@ -203,22 +215,47 @@ class LocalInferenceRuntime:
                                 scores = processor(tokens, scores)
                             return scores
 
-                    with control.native_callback(self._engine):
-                        result = self._engine.create_chat_completion(
-                            messages=list(messages),
-                            max_tokens=min(output_limit, budget),
-                            temperature=0.2,
-                            logits_processor=Processors([check_deadline]),
-                        )
+                    try:
+                        with control.native_callback(self._engine):
+                            result = self._engine.create_chat_completion(
+                                messages=list(messages),
+                                max_tokens=min(output_limit, budget),
+                                temperature=0.2,
+                                logits_processor=Processors([check_deadline]),
+                            )
+                    except InterruptedError:
+                        raise
+                    except Exception:
+                        execution_failed = True
+                        raise
                     check_deadline(None, None)
                     return result["choices"][0]["message"]["content"]
 
-                result = LocalModelGateway(
+                gateway = LocalModelGateway(
                     generator=generate,
                     model_id=entry.id,
                     catalog_entry=asdict(entry),
                     max_output_tokens=min(2048, max(1, entry.max_output_tokens)),
-                ).generate(request)
+                )
+                result = gateway.generate(request)
+                if execution_failed and self._engine_configuration["n_gpu_layers"] != 0 and not control.interrupted():
+                    factory = self._loaded_factory
+                    configuration = self._engine_configuration | {"n_gpu_layers": 0}
+                    self._close_engine()
+                    control.check()
+                    LOGGER.warning("local_inference_metal_execution_failed_using_cpu")
+                    try:
+                        self._load_engine(factory, configuration, key, control)
+                    except InterruptedError:
+                        if control.reason:
+                            raise
+                        return Result.failure(InfrastructureError("local_model_load_failed", "local_model_load_failed"))
+                    except Exception:
+                        self._close_engine()
+                        return Result.failure(InfrastructureError("local_model_load_failed", "local_model_load_failed"))
+                    result = gateway.generate(request)
+                    if not result.ok:
+                        self._close_engine()
                 if control.interrupted():
                     self._close_engine()
                 control.check()
@@ -239,9 +276,39 @@ class LocalInferenceRuntime:
                 )
             )
 
+    def _load_engine(self, factory, configuration, key, control):
+        control.check()
+        retry_cpu = False
+        try:
+            engine = factory(**configuration)
+        except InterruptedError:
+            raise
+        except Exception:
+            control.check()
+            if configuration["n_gpu_layers"] == 0:
+                raise
+            configuration = configuration | {"n_gpu_layers": 0}
+            retry_cpu = True
+        if retry_cpu:
+            # Leave the exception scope before retrying so failed initialization can release its resources.
+            LOGGER.warning("local_inference_metal_initialization_failed_using_cpu")
+            control.check()
+            engine = factory(**configuration)
+        self._engine = engine
+        self._engine_key = key
+        self._loaded_factory = factory
+        self._engine_configuration = configuration
+        try:
+            control.check()
+        except InterruptedError:
+            self._close_engine()
+            raise
+
     def _close_engine(self):
         engine, self._engine = self._engine, None
         self._engine_key = None
+        self._loaded_factory = None
+        self._engine_configuration = None
         if engine is not None:
             engine.close()
 

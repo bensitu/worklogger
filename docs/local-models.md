@@ -62,6 +62,11 @@ take longer than subsequent rewriting. Review generated text before saving.
 On Apple Silicon, a usable native GPU backend selects Metal layer offloading by
 default. If no GPU device is available, including some virtualized environments,
 CPU inference is used. Windows and Linux distributions use CPU inference.
+Recoverable Metal initialization or execution failures retry the same request on
+CPU once. The CPU engine is reused until it is released or the model/context changes;
+account preferences are unchanged. Cancellation, deadlines, and input limits do
+not trigger retries. If CPU also fails, the request reports an error without
+replacing the editor's content. Native process crashes cannot be recovered this way.
 Generation uses at most eight available CPU threads; prompt processing uses at
 most sixteen. Each reserves one when possible. Increasing context does not
 increase these limits.
