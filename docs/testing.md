@@ -1,5 +1,37 @@
 # Testing
 
+## Native Inference Measurements
+
+Use verified catalog models already downloaded to the model directory:
+
+```sh
+python scripts/benchmark_local_models.py --quality --output build/native-models.json
+```
+
+The command verifies model checksums, skips absent files, and does not change
+account preferences or records. It measures 2, 4, and 8 threads at 2,048 and 8,192
+context tokens, with two repetitions after warming the model. Model load times can
+include operating-system file caching; they are not cold-start measurements.
+Generation uses a fixed 32-token budget with EOS suppression, reports actual token
+counts, and records native prompt/evaluation rates separately from wall time.
+Each request sets a fixed seed; results can still differ across hardware/backends.
+Optional quality samples use synthetic work content rather than account data.
+Inspect outputs manually; timing measurements do not establish factual accuracy.
+
+Use `--model-id` to select a catalog entry, `--threads` and `--contexts` to narrow
+measurements, and `--batch-threads` to compare prompt-processing thread counts.
+Apple Silicon selects GPU offloading only when available; `--gpu-layers 0` forces
+CPU for comparison. The JSON records requested offloading and detected availability
+separately. Do not report CPU-only virtualized runs as Metal measurements.
+
+On Linux, compare the approved official wheel with a portable source build on the
+same host. Install each with `scripts/install_native_dependencies.py`, using
+`--from-source` and a separate `--wheels` directory for the portable build. Keep
+model files, prompts, thread counts, and token budgets identical, and record the
+system information from each run. Official wheels can require CPU instructions
+that are disabled in the portable source profile. Results from different hosts
+are not a controlled backend comparison.
+
 Native dependency verification can include real model generation and cancellation:
 
 ```powershell

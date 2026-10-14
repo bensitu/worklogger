@@ -22,19 +22,27 @@ def check_local_model_runtime():
 
 
 def _check_native_generation(path):
-    from llama_cpp import Llama
+    from llama_cpp import Llama, llama_supports_gpu_offload
     from worklogger.app.job_runner import CancellationToken
     from worklogger.app.ports import AIRequest
     from worklogger.infrastructure.ai.execution import InferenceControl
+    from worklogger.infrastructure.ai.runtime_options import engine_options, is_apple_silicon
 
-    def load():
-        return Llama(model_path=str(path), n_ctx=128, n_batch=32, n_gpu_layers=0,
-                     n_threads=2, seed=1, verbose=False)
+    options = engine_options(gpu_offload_supported=is_apple_silicon() and llama_supports_gpu_offload(), cpu_count=3)
+    print("NATIVE BACKEND:", "metal" if options["n_gpu_layers"] == -1 else "cpu", flush=True)
+
+    def load(*, cpu=False):
+        selected = options | {"n_gpu_layers": 0} if cpu else options
+        return Llama(model_path=str(path), n_ctx=128, n_batch=32, **selected, seed=1, verbose=False)
     engine = load()
     try:
         result = engine("Once upon a", max_tokens=8, temperature=0)
         if result["usage"]["completion_tokens"] < 1:
             raise RuntimeError("local_model_generation_failed")
+        if options["n_gpu_layers"] != 0:
+            # The native abort callback supports CPU evaluation, not GPU batches.
+            engine.close()
+            engine = load(cpu=True)
         engine.reset()
         token = CancellationToken()
         control = InferenceControl(AIRequest((), "verification", 30, token))

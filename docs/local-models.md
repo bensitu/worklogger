@@ -59,10 +59,18 @@ necessarily a damaged file.
 
 The engine loads on the first request and is reused in that session. Loading can
 take longer than subsequent rewriting. Review generated text before saving.
+On Apple Silicon, a usable native GPU backend selects Metal layer offloading by
+default. If no GPU device is available, including some virtualized environments,
+CPU inference is used. Windows and Linux distributions use CPU inference.
+Generation uses at most eight available CPU threads; prompt processing uses at
+most sixteen. Each reserves one when possible. Increasing context does not
+increase these limits.
 Cancellation is checked while verifying the model and during generation, including
 CPU prompt evaluation. The request deadline includes verification and model loading.
 Native model initialization must return before cancellation can complete. Cancelled
 results never replace the editor's content.
+GPU evaluation must finish its current native evaluation before Python cancellation
+checks can run; the native prompt-evaluation abort callback applies to CPU only.
 
 ## Catalog Files
 

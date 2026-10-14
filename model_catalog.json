@@ -32,12 +32,12 @@
       "context_length": 32768,
       "max_output_tokens": 1024,
       "license": "Apache-2.0",
-      "description": "Smaller multilingual instruction model for short notes on memory-constrained computers. More limited capacity than the larger options.",
+      "description": "Small multilingual model for brief notes on memory-constrained computers. Review completion status, lists, and report sections carefully; it can alter structure or add unsupported details.",
       "description_translations": {
-        "zh_CN": "较小的多语言指令模型，适合在内存有限的电脑上处理简短笔记。能力较大模型更有限。",
-        "zh_TW": "較小的多語言指令模型，適合在記憶體有限的電腦上處理簡短筆記。能力較大型模型更有限。",
-        "ja_JP": "メモリが限られた端末で短いメモを処理する小型の多言語指示モデル。大型モデルより処理能力が限られます。",
-        "ko_KR": "메모리가 제한된 컴퓨터에서 짧은 메모를 처리하는 소형 다국어 지시 모델입니다. 큰 모델보다 처리 능력이 제한됩니다."
+        "zh_CN": "适合在内存有限的电脑上处理简短笔记的小型多语言模型。请仔细核对完成状态、列表及报告栏目；模型可能改变结构或补写没有依据的内容。",
+        "zh_TW": "適合在記憶體有限的電腦上處理簡短筆記的小型多語言模型。請仔細核對完成狀態、清單及報告欄目；模型可能改變結構或補寫沒有依據的內容。",
+        "ja_JP": "メモリが限られた端末で短いメモを処理する小型の多言語モデル。完了状態、リスト、報告の各項目を確認してください。構造の変更や根拠のない内容の追加が生じる場合があります。",
+        "ko_KR": "메모리가 제한된 컴퓨터에서 짧은 메모를 처리하는 소형 다국어 모델입니다. 완료 상태, 목록 및 보고서 항목을 확인하세요. 구조가 바뀌거나 근거 없는 내용이 추가될 수 있습니다."
       }
     },
     {
@@ -72,12 +72,12 @@
       "context_length": 131072,
       "max_output_tokens": 4096,
       "license": "MIT",
-      "description": "Compact multilingual instruction model from Microsoft. An alternative for drafting work summaries; compare results in your working language.",
+      "description": "Compact multilingual instruction model from Microsoft. An alternative for work summaries; compare results in your working language and verify task status, checklist markers, and empty report sections.",
       "description_translations": {
-        "zh_CN": "Microsoft 提供的小型多语言指令模型。可作为起草工作摘要的另一种模型选择，请比较其在工作语言中的输出。",
-        "zh_TW": "Microsoft 提供的小型多語言指令模型。可作為起草工作摘要的另一種模型選擇，請比較其在工作語言中的輸出。",
-        "ja_JP": "Microsoft の小型多言語指示モデル。業務要約の下書きに向けた別の選択肢です。使用言語での出力を比較してください。",
-        "ko_KR": "Microsoft의 소형 다국어 지시 모델입니다. 업무 요약 초안을 위한 다른 선택지이며, 업무 언어의 결과를 비교하세요."
+        "zh_CN": "Microsoft 提供的小型多语言指令模型，可作为工作摘要的另一种选择。请比较其在工作语言中的输出，并核对任务状态、清单勾选标记及空白报告栏目。",
+        "zh_TW": "Microsoft 提供的小型多語言指令模型，可作為工作摘要的另一種選擇。請比較其在工作語言中的輸出，並核對任務狀態、清單勾選標記及空白報告欄目。",
+        "ja_JP": "Microsoft の小型多言語指示モデル。業務要約向けの別の選択肢です。使用言語での出力を比較し、作業状態、チェックリストの印、空の報告項目を確認してください。",
+        "ko_KR": "Microsoft의 소형 다국어 지시 모델로 업무 요약을 위한 다른 선택지입니다. 업무 언어의 결과를 비교하고 작업 상태, 체크리스트 표시 및 빈 보고서 항목을 확인하세요."
       }
     },
     {

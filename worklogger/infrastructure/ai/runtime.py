@@ -2,7 +2,6 @@
 
 from dataclasses import asdict
 from importlib.util import find_spec
-import os
 from threading import RLock
 
 from worklogger.config.constants import (
@@ -19,6 +18,7 @@ from worklogger.domain.shared.errors import CancellationError, InfrastructureErr
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.ai.local import LocalModelGateway
 from worklogger.infrastructure.ai.execution import InferenceControl
+from worklogger.infrastructure.ai.runtime_options import engine_options, is_apple_silicon
 
 
 class LocalInferenceRuntime:
@@ -145,11 +145,14 @@ class LocalInferenceRuntime:
                 if self._engine_key != key:
                     self._close_engine()
                     factory = self._engine_factory
+                    gpu_offload_supported = False
                     if factory is None:
                         try:
-                            from llama_cpp import Llama
+                            from llama_cpp import Llama, llama_supports_gpu_offload
 
                             factory = Llama
+                            if is_apple_silicon():
+                                gpu_offload_supported = llama_supports_gpu_offload()
                         except (ImportError, OSError, RuntimeError):
                             self.backend_available = False
                             return Result.failure(
@@ -162,8 +165,7 @@ class LocalInferenceRuntime:
                         self._engine = factory(
                             model_path=str(path),
                             n_ctx=context,
-                            n_gpu_layers=0,
-                            n_threads=max(1, min(8, (os.cpu_count() or 2) - 1)),
+                            **engine_options(gpu_offload_supported=gpu_offload_supported),
                             verbose=False,
                         )
                         self._engine_key = key

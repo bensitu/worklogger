@@ -14,6 +14,39 @@ from worklogger.infrastructure.ai.runtime import LocalInferenceRuntime
 
 
 class LocalInferenceTests(unittest.TestCase):
+    def test_runtime_options_use_metal_only_on_supported_apple_silicon_devices(self):
+        from worklogger.infrastructure.ai.runtime_options import engine_options
+        for platform, architecture, supported, expected in (
+            ("darwin", "arm64", True, -1), ("darwin", "arm64", False, 0),
+            ("darwin", "x86_64", True, 0), ("linux", "aarch64", True, 0),
+            ("win32", "AMD64", False, 0),
+        ):
+            with self.subTest(platform=platform, architecture=architecture, supported=supported):
+                options = engine_options(platform_name=platform, architecture=architecture,
+                                         gpu_offload_supported=supported, cpu_count=20)
+                self.assertEqual(options, dict(n_gpu_layers=expected, n_threads=8, n_threads_batch=16))
+        self.assertEqual(engine_options(cpu_count=1)["n_threads"], 1)
+        self.assertEqual(engine_options(cpu_count=4)["n_threads"], 3)
+        with (patch("worklogger.infrastructure.ai.runtime_options.os.process_cpu_count", return_value=4, create=True),
+              patch("worklogger.infrastructure.ai.runtime_options.os.sched_getaffinity", return_value={0, 1}, create=True)):
+            self.assertEqual(engine_options()["n_threads_batch"], 1)
+
+    def test_engine_loading_uses_detected_gpu_capability_and_falls_back_without_a_device(self):
+        from unittest.mock import Mock
+        self.select()
+        native = SimpleNamespace(Llama=self.service._engine_factory, llama_supports_gpu_offload=Mock(return_value=True))
+        self.service._engine_factory = None
+        with (patch.dict("sys.modules", {"llama_cpp": native}),
+              patch("worklogger.infrastructure.ai.runtime_options.sys.platform", "darwin"),
+              patch("worklogger.infrastructure.ai.runtime_options.platform.machine", return_value="arm64")):
+            self.assertTrue(self.handler.handle(RewriteTextCommand(1, "Original note")).ok)
+            self.assertEqual(self.engines[-1].configuration["n_gpu_layers"], -1)
+            self.service.close()
+            native.llama_supports_gpu_offload.return_value = False
+            self.assertTrue(self.handler.handle(RewriteTextCommand(1, "Original note")).ok)
+            self.assertEqual(self.engines[-1].configuration["n_gpu_layers"], 0)
+        self.assertEqual(native.llama_supports_gpu_offload.call_count, 2)
+
     def test_cancellation_reaches_verification_and_generation(self):
         from worklogger.app.job_runner import CancellationToken
         from worklogger.domain.shared.errors import CancellationError
