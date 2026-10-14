@@ -222,6 +222,40 @@ class RuntimeBootstrapTests(unittest.TestCase):
         finally:
             application.removeEventFilter(observer)
 
+    def test_external_ai_initializes_without_creating_settings_page(self):
+        self.enterContext(patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes))
+        with self.runtime_directory() as directory, patch(
+            "worklogger.infrastructure.security.key_store.EncryptedSettingsKeyStore.get_secret",
+            return_value=Result.success("synthetic-credential"),
+        ):
+            config = DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db",
+                                          create_user_if_empty=True, password_iterations=1_000)
+            initial = build_desktop_runtime(config, argv=[])
+            self.assertTrue(initial.ok, initial.error)
+            initial.value.window.close()
+            initial.value.job_runner.shutdown(wait=True)
+            initial.value.local_inference.close()
+            settings = SQLiteSettingsRepository(initial.value.connection_factory)
+            for key, value in {"external_model_enabled": "1", "external_model_base_url": "https://example.com/v1",
+                               "external_model_name": "test-model"}.items():
+                settings.set(initial.value.user.id, key, value)
+            result = build_desktop_runtime(config, argv=[])
+            self.assertTrue(result.ok, result.error)
+            runtime = result.value
+            try:
+                runtime.window.entry_panel.content_input.setPlainText("Current work")
+                deadline = time.monotonic() + 3
+                while not runtime.window.entry_panel.polish_button.isEnabled() and time.monotonic() < deadline:
+                    runtime.application.processEvents()
+                    time.sleep(0.005)
+                self.assertTrue(runtime.window.entry_panel.polish_button.isEnabled())
+                self.assertTrue(runtime.window.reports_page._ai_ready)
+                self.assertTrue(runtime.window._notes_workflow._view_model.rewrite_available)
+                self.assertIsNone(runtime.window.findChild(QWidget, "settings_page_widget"))
+            finally:
+                runtime.window.close()
+                runtime.local_inference.close()
+
     def test_disabled_optional_features_are_not_composed(self):
         with patch.dict(os.environ, {
             "WORKLOGGER_FEATURE_AI": "0", "WORKLOGGER_FEATURE_LOCAL_MODELS": "0",

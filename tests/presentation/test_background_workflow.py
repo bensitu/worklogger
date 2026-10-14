@@ -67,6 +67,29 @@ class BackgroundWorkflowTests(unittest.TestCase):
         self.assertFalse(window._background_surface.background_active)
         service.load.assert_not_called()
 
+    def test_opening_settings_reuses_loaded_background_without_restarting_animation(self):
+        from worklogger.presentation.settings import SettingsPage
+        from tests.presentation.test_settings_presentation import MemorySettingsRepository, _view_model
+
+        state = BackgroundState(validate_background_data(animated_background_bytes()), True, 70)
+        service = Mock()
+        service.load.return_value = Result.success(state)
+        workflow = SimpleNamespace(create_page=lambda parent: SettingsPage(_view_model(MemorySettingsRepository()), parent))
+        window = _window(MemoryWorkLogRepository(), settings_workflow=workflow,
+                         background_service=service, background_images_available=True)
+        self.addCleanup(window.deleteLater)
+        self.addCleanup(window.close)
+        player = window._background_surface._player
+        version = window._background_surface._version
+        self.assertTrue(window.open_settings())
+        service.load.assert_called_once()
+        self.assertIs(window._background_surface._player, player)
+        self.assertEqual(window._background_surface._version, version)
+        controls = window.settings_page.background_settings
+        self.assertTrue(controls.enabled_switch.isChecked())
+        self.assertTrue(controls.enabled_switch.isEnabled())
+        self.assertEqual(controls.opacity_slider.value(), 70)
+
     def test_window_appearance_keeps_media_across_material_changes_and_disposes_playback(self):
         old_palette, old_style = self.app.palette(), self.app.styleSheet()
         old_context = self.app.property("worklogger_theme_context")

@@ -209,7 +209,12 @@ def _run_desktop(args: Sequence[str]) -> int:
 
         if hasattr(current.window, "logout_requested"):
             current.window.logout_requested.connect(request_logout)
-        current.window.refresh()
+        from worklogger.presentation.shell import AppWindow
+
+        if isinstance(current.window, AppWindow):
+            current.window.refresh(asynchronous=True)
+        else:
+            current.window.refresh()
         current.window.show()
         exit_code = int(current.application.exec())
         runner = getattr(current, "job_runner", None)

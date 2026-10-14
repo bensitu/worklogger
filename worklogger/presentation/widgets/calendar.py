@@ -169,6 +169,12 @@ class CalendarView(QWidget):
         self.month_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.month_title)
 
+        self.loading_label = QLabel(_("Loading..."), self)
+        self.loading_label.setProperty("role", "secondary")
+        self.loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.loading_label.hide()
+        layout.addWidget(self.loading_label)
+
         self.grid_frame = QFrame()
         self.grid_frame.setObjectName("calendar_grid_frame")
         self.grid = QGridLayout(self.grid_frame)
@@ -176,6 +182,9 @@ class CalendarView(QWidget):
         self.grid.setHorizontalSpacing(6)
         self.grid.setVerticalSpacing(6)
         layout.addWidget(self.grid_frame, 1)
+
+    def set_loading(self, loading: bool) -> None:
+        self.loading_label.setVisible(loading and self._state is None)
 
     def set_month_only(self, enabled: bool) -> None:
         self._month_only = enabled
@@ -210,6 +219,7 @@ class CalendarView(QWidget):
 
     def set_state(self, state: CalendarMonthViewState) -> None:
         self._state = state
+        self.loading_label.hide()
         self.month_title.setText(f"{state.year}/{state.month:02d}")
         visible_weeks = max(index // 7 + 1 for index, cell in enumerate(state.cells) if cell.in_month)
         for column in range(8):

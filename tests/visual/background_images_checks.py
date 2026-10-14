@@ -110,7 +110,8 @@ class BackgroundImagesLayoutChecks(unittest.TestCase):
                             self.app.processEvents()
                             before = window.entry_panel.content_input.size()
                             for route, index in window._page_routes.items():
-                                window.page_stack.setCurrentIndex(index)
+                                page = window.settings_page if route == "settings" else window.page_stack.widget(index)
+                                window.page_stack.setCurrentWidget(page)
                                 self.app.processEvents()
                                 page = window.page_stack.currentWidget()
                                 if route == "settings":

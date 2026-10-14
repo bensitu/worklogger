@@ -22,11 +22,16 @@ class BackgroundController(QObject):
         self._disposed = False
         self._version = 0
         self._handle = None
+        self._last_result = None
         surface.destroyed.connect(self.dispose)
 
     @property
     def is_busy(self):
         return self._busy
+
+    @property
+    def last_result(self):
+        return self._last_result
 
     def reload(self):
         return self._submit("background_load", self._service.load if self.available else None)
@@ -68,6 +73,7 @@ class BackgroundController(QObject):
                 self._surface.set_background(state, frame)
                 result = Result.success(state)
             self._busy, self._handle = False, None
+            self._last_result = result
             self.completed.emit(result)
             if isValid(self) and version == self._version:
                 self.busy_changed.emit(False)

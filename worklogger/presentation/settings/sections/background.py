@@ -91,6 +91,8 @@ class BackgroundSettings(CardFrame):
         self.setVisible(controller.available)
         controller.busy_changed.connect(self._set_busy)
         controller.completed.connect(self._complete)
+        if controller.last_result is not None:
+            self._complete(controller.last_result)
         self._set_busy(controller.is_busy)
 
     def _set_busy(self, busy):

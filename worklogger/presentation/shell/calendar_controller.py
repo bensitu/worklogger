@@ -33,6 +33,7 @@ class CalendarCoordinator:
         if self._handle is not None:
             self._handle.cancel()
         self._handle = None
+        self._page.calendar_view.set_loading(False)
 
     def refresh_overview(self, runner, *, config, month, selected_day, today, holidays, on_error):
         self._revision += 1
@@ -42,6 +43,7 @@ class CalendarCoordinator:
         calendar, stats = copy(self._calendar), copy(self._stats)
         holidays = dict(holidays) if holidays is not None else None
         self._page.set_month_title(month_label(month))
+        self._page.calendar_view.set_loading(True)
         def work(_token):
             calendar_result = calendar.build_month(year=month.year, month=month.month,
                 selected_day=selected_day, today=today, holidays=holidays,
@@ -54,6 +56,7 @@ class CalendarCoordinator:
             if revision != self._revision:
                 return
             self._handle = None
+            self._page.calendar_view.set_loading(False)
             if not result.ok:
                 on_error(result.error)
                 return
@@ -70,6 +73,7 @@ class CalendarCoordinator:
             self._handle = runner.submit("load_calendar_overview", work, on_complete=owned_callback(self._page, complete))
             return True
         except Exception:
+            self._page.calendar_view.set_loading(False)
             on_error(InfrastructureError("calendar_load_failed", "calendar_load_failed"))
             return False
 

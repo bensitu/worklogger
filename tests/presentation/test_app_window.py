@@ -234,6 +234,30 @@ def _window(
 
 
 class AppWindowTests(unittest.TestCase):
+    def test_initial_overview_load_preserves_record_editing(self):
+        from worklogger.app.job_runner import CancellationToken, JobHandle
+
+        class Runner:
+            def submit(self, name, operation, *, on_complete):
+                self.operation, self.complete = operation, on_complete
+                return JobHandle(name, lambda: None)
+
+        window = _window(MemoryWorkLogRepository())
+        runner = Runner()
+        window._job_runner = runner
+        self.assertTrue(window.refresh(asynchronous=True))
+        self.assertIsNone(window.calendar_view.state)
+        self.assertFalse(window.calendar_view.loading_label.isHidden())
+        self.assertTrue(window.entry_panel.content_input.isEnabled())
+        window.entry_panel.start_input.setText("09:00")
+        window.entry_panel.content_input.setPlainText("Current work")
+        runner.complete(Result.success(runner.operation(CancellationToken())))
+        self.assertEqual(window.calendar_view.state.month, window.current_month.month)
+        self.assertTrue(window.calendar_view.loading_label.isHidden())
+        self.assertEqual(window.entry_panel.start_input.text(), "09:00")
+        self.assertEqual(window.entry_panel.content_input.toPlainText(), "Current work")
+        self.assertTrue(window.has_unsaved_changes)
+
     def test_calendar_navigation_rejects_stale_background_results(self):
         from worklogger.app.job_runner import JobHandle, CancellationToken
         class Runner:
@@ -423,14 +447,46 @@ class AppWindowTests(unittest.TestCase):
         logouts: list[bool] = []
         window.logout_requested.connect(lambda: logouts.append(True))
 
+        self.assertTrue(window.refresh())
+        self.assertTrue(window._confirm_discard_changes_if_needed())
+        self.assertEqual(workflow.created, [])
         window.settings_button.click()
-        workflow.created[0][1].logout_requested.emit()
 
         self.assertEqual(workflow.created[0][0], window)
         self.assertIs(window.page_stack.currentWidget(), workflow.created[0][1])
         self.assertEqual(workflow.opened, [])
         self.assertEqual(workflow.created[0][1].refreshes, 1)
+        self.assertTrue(window._switch_route("calendar"))
+        window.settings_button.click()
+        self.assertEqual(len(workflow.created), 1)
+        self.assertEqual(workflow.created[0][1].refreshes, 2)
+        workflow.created[0][1].logout_requested.emit()
         self.assertEqual(logouts, [True])
+
+    def test_settings_creation_failure_preserves_navigation_and_allows_retry(self):
+        class Page(QWidget):
+            def refresh(self):
+                return True
+
+        class Workflow:
+            attempts = 0
+
+            def create_page(self, parent):
+                self.attempts += 1
+                if self.attempts == 1:
+                    raise RuntimeError("Settings are unavailable")
+                return Page(parent)
+
+        workflow = Workflow()
+        window = _window(MemoryWorkLogRepository(), settings_workflow=workflow)
+        with patch.object(QMessageBox, "warning"):
+            window.settings_button.click()
+        self.assertIs(window.page_stack.currentWidget(), window.calendar_page)
+        self.assertEqual(window.sidebar.active_route, "calendar")
+        self.assertEqual(window.last_error.code, "settings_load_failed")
+        self.assertTrue(window.open_settings())
+        self.assertIs(window.page_stack.currentWidget(), window.settings_page)
+        self.assertEqual(workflow.attempts, 2)
 
     def test_daily_notes_and_routes_have_direct_actions(self):
         class DayWorkflow:

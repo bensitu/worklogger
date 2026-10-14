@@ -33,6 +33,10 @@ Authentication creates or restores a local session. Bootstrap and composition
 functions assemble account-scoped services, repositories, view models, workflows,
 and a window. Logout disposes the session and returns to authentication.
 
+The main window creates its settings page on first access and reuses it during
+the session. Initial calendar overviews, holiday loading, and AI configuration
+use background jobs; the record editor is available before those jobs finish.
+
 Dependencies are passed explicitly through constructors. Settings sections receive
 callbacks; workflow controllers coordinate dialogs and jobs. The calendar
 coordinator connects query results to views. The main window owns navigation,

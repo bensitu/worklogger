@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
 from worklogger.app.job_runner import JobRunner
 from worklogger.app.use_cases.backgrounds import BackgroundService
 from worklogger.domain.shared.dates import add_months
-from worklogger.domain.shared.errors import AppError, CancellationError
+from worklogger.domain.shared.errors import AppError, CancellationError, InfrastructureError
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.settings import SettingsWorkflow
@@ -159,8 +159,6 @@ class AppWindow(QMainWindow):
         )
         self.background_controller = self.appearance_controller.background
         self.glass_controller = self.appearance_controller.glass
-        if hasattr(self.settings_page, "background_settings"):
-            self.settings_page.background_settings.bind(self.background_controller)
         self._calendar_coordinator = CalendarCoordinator(
             calendar_view_model=self._calendar_view_model,
             stats_view_model=self._stats_panel_view_model,
@@ -169,7 +167,7 @@ class AppWindow(QMainWindow):
             stats_panel=self.stats_panel,
         )
         self._connect_signals()
-        self._refresh_ai_availability()
+        self.refresh_ai_availability()
         if hasattr(self._residency_controller, "notify_timer_reminder"):
             self.entry_panel.reminder.connect(self._residency_controller.notify_timer_reminder)
         self.sidebar.set_avatar(self._config.profile_avatar_png)
@@ -226,6 +224,23 @@ class AppWindow(QMainWindow):
     @property
     def last_error(self) -> AppError | None:
         return self._last_error
+
+    @property
+    def settings_page(self) -> QWidget:
+        if self._settings_page is None:
+            page = self._settings_workflow.create_page(self)
+            self._settings_page = page
+            index = self._page_routes["settings"]
+            placeholder = self.page_stack.widget(index)
+            self.page_stack.insertWidget(index, page)
+            self.page_stack.removeWidget(placeholder)
+            placeholder.deleteLater()
+            self._connect_settings_page(page)
+            if hasattr(page, "background_settings"):
+                page.background_settings.bind(self.background_controller)
+            self.glass_controller.refresh_surfaces()
+            self.refresh_ai_availability()
+        return self._settings_page
 
     @property
     def has_unsaved_changes(self) -> bool:
@@ -362,15 +377,17 @@ class AppWindow(QMainWindow):
             confirm_discard=self._config.confirm_discard_changes,
         )
         if hasattr(self._settings_workflow, "create_page"):
-            self.settings_page = self._settings_workflow.create_page(self)
+            self._settings_page = None
+            settings_placeholder = QWidget(self.page_stack)
         else:
-            self.settings_page = UnavailableSettingsPage()
+            self._settings_page = UnavailableSettingsPage()
+            settings_placeholder = self._settings_page
 
         self._page_routes = {
             "calendar": self.page_stack.addWidget(self.calendar_page),
             "analytics": self.page_stack.addWidget(self.analytics_page),
             "reports": self.page_stack.addWidget(self.reports_page),
-            "settings": self.page_stack.addWidget(self.settings_page),
+            "settings": self.page_stack.addWidget(settings_placeholder),
         }
 
         self.previous_month_button = self.calendar_page.previous_month_button
@@ -403,18 +420,6 @@ class AppWindow(QMainWindow):
         self.calendar_page.search_requested.connect(self.open_record_search)
         self.analytics_page.projects_requested.connect(self.open_project_analytics)
         self.notes_button.clicked.connect(self.open_notes)
-        if hasattr(self.settings_page, "logout_requested"):
-            self.settings_page.logout_requested.connect(self._request_logout)
-        if hasattr(self.settings_page, "settings_changed"):
-            self.settings_page.settings_changed.connect(self.apply_settings)
-        if hasattr(self.settings_page, "profile_changed"):
-            self.settings_page.profile_changed.connect(self.apply_user_profile)
-        if hasattr(self.settings_page, "work_types_changed"):
-            self.settings_page.work_types_changed.connect(self.entry_panel.refresh_work_types)
-        if hasattr(self.settings_page, "projects_changed"):
-            self.settings_page.projects_changed.connect(self.entry_panel.refresh_projects)
-        if hasattr(self.settings_page, "ai_availability_changed"):
-            self.settings_page.ai_availability_changed.connect(self._refresh_ai_availability)
         self.calendar_view.day_selected.connect(lambda day: self.select_day(day, asynchronous=True))
         self.entry_panel.records_changed.connect(self._entries_changed)
         self.entry_panel.dirty_changed.connect(
@@ -432,6 +437,19 @@ class AppWindow(QMainWindow):
         )
         self.calendar_page.event_selected.connect(self.entry_panel.copy_event)
         self.calendar_page.event_delete_requested.connect(self.entry_panel.delete_event)
+
+    def _connect_settings_page(self, page) -> None:
+        for name, callback in (
+            ("logout_requested", self._request_logout),
+            ("settings_changed", self.apply_settings),
+            ("profile_changed", self.apply_user_profile),
+            ("work_types_changed", self.entry_panel.refresh_work_types),
+            ("projects_changed", self.entry_panel.refresh_projects),
+            ("ai_availability_changed", self.refresh_ai_availability),
+        ):
+            signal = getattr(page, name, None)
+            if signal is not None:
+                signal.connect(callback)
 
     def open_project_analytics(self):
         from worklogger.presentation.widgets.project_analytics import ProjectAnalyticsDialog
@@ -490,7 +508,7 @@ class AppWindow(QMainWindow):
             self._current_month = day.replace(day=1)
         self.refresh()
 
-    def _refresh_ai_availability(self):
+    def refresh_ai_availability(self):
         self.entry_panel.refresh_ai_availability()
         self.reports_page.refresh_ai_availability()
         if hasattr(self._notes_workflow, "refresh_ai_availability"):
@@ -640,7 +658,15 @@ class AppWindow(QMainWindow):
         index = self._page_routes.get(normalized)
         if index is None:
             return False
-        self.page_stack.setCurrentIndex(index)
+        try:
+            page = self.settings_page if normalized == "settings" else self.page_stack.widget(index)
+        except Exception:
+            current = next(key for key, value in self._page_routes.items()
+                           if value == self.page_stack.currentIndex())
+            self.sidebar.set_active_route(current)
+            self._set_error(InfrastructureError("settings_load_failed", "settings_load_failed"))
+            return False
+        self.page_stack.setCurrentWidget(page)
         self.sidebar.set_active_route(normalized)
         if normalized == "analytics":
             self.analytics_page.refresh(self._selected_day)
@@ -702,10 +728,10 @@ class AppWindow(QMainWindow):
         if isinstance(self.entry_panel, TimeEntryPanel) and self.entry_panel.is_busy:
             self._set_status(_("Please wait for the current operation."), notify=True)
             return False
-        if getattr(self.settings_page, "is_busy", False):
+        if getattr(self._settings_page, "is_busy", False):
             self._set_status(_("Please wait for the current operation."), notify=True)
             return False
-        if hasattr(self.settings_page, "confirm_profile_leave") and not self.settings_page.confirm_profile_leave():
+        if hasattr(self._settings_page, "confirm_profile_leave") and not self._settings_page.confirm_profile_leave():
             return False
         if self._entry_dirty:
             confirmed = (
