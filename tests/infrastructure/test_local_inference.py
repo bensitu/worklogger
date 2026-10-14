@@ -100,6 +100,18 @@ class LocalInferenceTests(unittest.TestCase):
         self.select(verified=False)
         self.assertFalse(self.handler.available)
 
+    def test_rewriting_uses_compact_prompts_without_changing_generation_limits(self):
+        from worklogger.app.use_cases.text_prompts import rewrite_messages
+        self.select()
+        source = "- [x] Reviewed ticket T-12\n- [ ] Follow up"
+        result = self.handler.handle(RewriteTextCommand(1, source, "daily_note", "en_US"))
+        self.assertTrue(result.ok, result.error)
+        request = self.engines[-1].last_request
+        self.assertEqual(tuple(request["messages"]), rewrite_messages(
+            content=source, context="daily_note", language="en_US", compact=True))
+        self.assertEqual(request["temperature"], 0.2)
+        self.assertEqual(request["max_tokens"], 64)
+
     def test_runtime_context_preference_reloads_only_when_effective_capacity_changes(self):
         from dataclasses import replace
         self.select(replace(self.entry, context_length=131072, max_output_tokens=8192))

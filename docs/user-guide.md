@@ -209,6 +209,14 @@ Review the proposed text before using it; polishing does not save records or
 change recorded hours. See [local models](local-models.md) and
 [AI configuration](configuration.md#ai).
 
+Polishing keeps time records concise, preserves lists and checklists in notes,
+and retains Markdown structure in reports. Instructions require preserving facts
+and completion status without inventing achievements, risks, or plans. Local
+models receive compact instructions; external services receive more detailed
+instructions. These constraints do not guarantee factual accuracy, so compare
+the result with the original before saving. Generate from records uses templates,
+not an AI request.
+
 Network settings apply an account HTTP CONNECT proxy to supported HTTPS requests.
 They do not change the operating system or browser proxy.
 

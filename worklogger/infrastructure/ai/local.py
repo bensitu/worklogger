@@ -56,7 +56,9 @@ class LocalModelGateway:
             return Result.failure(ValidationError("local_model_id_required", "local_model_id_required"))
         try:
             messages = _messages_with_no_think(
-                tuple(dict(message) for message in request.messages),
+                tuple(dict(message) for message in (
+                    request.local_messages if request.local_messages is not None else request.messages
+                )),
                 self._model_id,
                 self._catalog_entry,
             )

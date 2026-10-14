@@ -11,6 +11,7 @@ from collections.abc import Callable
 from urllib.error import HTTPError, URLError
 from urllib.request import Request
 from worklogger.infrastructure.http import https_opener, validate_https_url
+from worklogger.infrastructure.ai.generation_options import ExternalGenerationOptions
 
 from worklogger.app.ports import AIRequest, AIResponse
 from worklogger.domain.shared.errors import CancellationError, InfrastructureError, ValidationError
@@ -30,6 +31,7 @@ class OpenAICompatibleGateway:
         max_response_bytes: int = 512 * 1024,
         retries: int = 1,
         opener: UrlOpen | None = None,
+        generation_options: ExternalGenerationOptions | None = None,
     ) -> None:
         self._api_key = api_key
         self._base_url = base_url.rstrip("/")
@@ -37,6 +39,7 @@ class OpenAICompatibleGateway:
         self._max_response_bytes = max_response_bytes
         self._retries = max(0, int(retries))
         self._opener = opener or https_opener(allow_redirects=False)
+        self._generation_options = generation_options or ExternalGenerationOptions()
 
     def generate(self, request: AIRequest) -> Result[AIResponse]:
         if not str(self._api_key or "").strip():
@@ -49,6 +52,7 @@ class OpenAICompatibleGateway:
             {
                 "model": request.model,
                 "messages": list(request.messages),
+                **self._generation_options.payload(),
             }
         ).encode("utf-8")
         url_request = Request(

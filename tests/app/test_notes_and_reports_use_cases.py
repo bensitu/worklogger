@@ -385,6 +385,32 @@ class NotesReportsUseCaseTests(unittest.TestCase):
         self.assertFalse(disabled.ok)
         self.assertEqual(disabled.error.code if disabled.error else "", "ai_rewrite_not_configured")
 
+    def test_rewriting_preserves_task_constraints_in_standard_and_compact_requests(self):
+        gateway = FakeGateway("Revised text")
+        handler = RewriteTextHandler(gateway)
+        cases = (
+            ("time_entry", "Review ticket T-12 for 30 minutes.", ("short sentences",)),
+            ("daily_note", "- [x] Reviewed T-12\n- [ ] Follow up", ("lists", "checklist")),
+            ("daily_report", "# Work\n- Reviewed T-12\n## Risks\n- \n## Plan\n- ", ("Markdown", "empty sections")),
+            ("weekly_report", "# Summary\n| Task | Time |\n| --- | --- |\n| T-12 | 1h |", ("Markdown", "tables")),
+            ("monthly_report", "# Progress\n- T-12 is ongoing.", ("Markdown", "completion status")),
+        )
+        for context, source, constraints in cases:
+            with self.subTest(context=context):
+                result = handler.handle(RewriteTextCommand(1, source, context, "ja_JP", "Use a professional tone."))
+                self.assertTrue(result.ok, result.error)
+                request = gateway.requests[-1]
+                for messages in (request.messages, request.local_messages):
+                    system = messages[0]["content"]
+                    self.assertIn("Do not invent achievements, risks, or plans", system)
+                    self.assertIn("Write in Japanese", system)
+                    for constraint in constraints:
+                        self.assertIn(constraint, system)
+                    self.assertIn(source.strip(), messages[1]["content"])
+                    self.assertIn("ja_JP", messages[1]["content"])
+                    self.assertIn("Use a professional tone.", messages[1]["content"])
+                self.assertLess(len(request.local_messages[0]["content"]), len(request.messages[0]["content"]))
+
 
 if __name__ == "__main__":
     unittest.main()

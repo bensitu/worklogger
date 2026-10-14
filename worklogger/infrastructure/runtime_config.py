@@ -6,6 +6,8 @@ import sys
 from dataclasses import dataclass, fields
 from pathlib import Path
 
+from worklogger.infrastructure.ai.generation_options import ExternalModelProfile, external_model_profiles
+
 LOGGER = logging.getLogger(__name__)
 CONFIG_FILENAME = "worklogger.config.json"
 MAX_CONFIG_BYTES = 64 * 1024
@@ -20,6 +22,7 @@ class DeploymentFeatures:
 @dataclass(frozen=True)
 class RuntimeConfiguration:
     features: DeploymentFeatures = DeploymentFeatures()
+    external_model_profiles: tuple[ExternalModelProfile, ...] = ()
 
 
 def configuration_path(*, frozen=None, executable=None, bundle_root=None, source_root=None):
@@ -48,7 +51,13 @@ def load_runtime_configuration(path=None):
             if type(enabled) is not bool:
                 raise TypeError("runtime_configuration_invalid")
             flags[field.name] = enabled
-        return RuntimeConfiguration(DeploymentFeatures(**flags))
+        features = DeploymentFeatures(**flags)
+        try:
+            profiles = external_model_profiles(value.get("external_model_profiles", []))
+        except (ValueError, TypeError):
+            LOGGER.warning("ai_model_profiles_invalid")
+            profiles = ()
+        return RuntimeConfiguration(features, profiles)
     except FileNotFoundError:
         return RuntimeConfiguration()
     except (OSError, UnicodeError, ValueError, TypeError, RecursionError):

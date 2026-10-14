@@ -91,6 +91,43 @@ external request does not silently choose another provider. Review privacy choic
 before sending content. Secrets are stored through credential adapters, not this
 deployment file. See [security](security.md).
 
+### External Generation Parameters
+
+Optional `external_model_profiles` in `worklogger.config.json` configure generation
+parameters for an exact API base address and model ID. They do not enable external
+processing or change account credentials. For example, add this top-level property
+alongside `features`:
+
+```json
+"external_model_profiles": [
+  {
+    "base_url": "https://api.example.com/v1",
+    "model": "your-model-id",
+    "temperature": 0.2,
+    "max_output_tokens": 2048,
+    "token_limit_parameter": "max_tokens"
+  }
+]
+```
+
+Use only parameters supported by the selected service and model. Temperature is
+optional and ranges from 0 to 2; omit it for models that do not accept adjustable
+sampling. The optional output limit is an integer from 1 to 131,072, subject to the
+service's lower limits. `token_limit_parameter` accepts `max_tokens` (default) or
+`max_completion_tokens`; only the selected parameter is sent. With
+`max_completion_tokens`, the service can include reasoning tokens in the limit.
+See the [Chat Completions reference](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create)
+and your provider's model documentation.
+
+Without a matching profile, generation parameters are omitted and the service's
+defaults apply. Base addresses match after trimming surrounding whitespace and
+trailing slashes; model IDs are case-sensitive. Profiles apply to both rewriting
+and AI Assist conversations. They never apply to local models. Restart or sign in
+again to reload profiles. Invalid profiles are ignored with a diagnostic warning
+without changing feature flags or account preferences. Duplicate endpoint/model
+pairs and unknown profile fields invalidate the profile list. At most 128 profiles
+are accepted within the configuration file's existing 64 KiB limit.
+
 ## Network
 
 Enable the proxy switch before configuring its host and port. The address accepts
@@ -113,7 +150,7 @@ and network; do not put passwords in configuration files.
 | Database | `worklogger/worklog.db` | `worklog.db` in Qt's application-local user-data directory |
 | Models | `models/` beside the database | Same |
 | Runtime log | `worklogger.log` beside the database | Same |
-| Deployment flags | Repository-root `worklogger.config.json` | Adjacent override or bundled copy |
+| Deployment configuration | Repository-root `worklogger.config.json` | Adjacent override or bundled copy |
 | Assets/catalogs | Package resources | Bundled resources |
 
 Open Settings > Data > Data location to see the active path. Model files are shared

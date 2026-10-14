@@ -28,6 +28,7 @@ class AIRequest:
     model: str
     timeout_seconds: float
     cancellation_token: CancellationToken | None = None
+    local_messages: tuple[Mapping[str, str], ...] | None = None
 
 
 @dataclass(frozen=True)

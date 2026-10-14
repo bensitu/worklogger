@@ -51,6 +51,30 @@ class RuntimeConfigurationTests(unittest.TestCase):
         adjacent.write_text("{}", encoding="utf-8")
         self.assertEqual(configuration_path(frozen=True, executable=executable, bundle_root=bundle), adjacent)
 
+    def test_external_profiles_validate_capabilities_without_changing_feature_flags(self):
+        profile = {"base_url": "https://example.com/v1/", "model": "sample-model",
+                   "temperature": 0.2, "max_output_tokens": 2048,
+                   "token_limit_parameter": "max_completion_tokens"}
+        def load(profiles):
+            self.path.write_text(json.dumps({"features": {"minimal_view": True},
+                                            "external_model_profiles": profiles}), encoding="utf-8")
+            return load_runtime_configuration(self.path)
+        configuration = load([profile])
+        parsed = configuration.external_model_profiles[0]
+        self.assertEqual((parsed.base_url, parsed.model), ("https://example.com/v1", "sample-model"))
+        self.assertEqual(parsed.options.payload(), {"temperature": 0.2, "max_completion_tokens": 2048})
+        for key, value in (("temperature", True), ("temperature", float("nan")), ("temperature", 10**400),
+                           ("max_output_tokens", 0), ("max_output_tokens", True), ("max_output_tokens", 1.5),
+                           ("token_limit_parameter", "model"), ("model", ""), ("base_url", "http://example.com"),
+                           ("base_url", None), ("api_key", "synthetic")):
+            with self.subTest(key=key, value=value), self.assertLogs("worklogger.infrastructure.runtime_config", level="WARNING"):
+                configuration = load([dict(profile, **{key: value})])
+                self.assertTrue(configuration.features.minimal_view)
+                self.assertEqual(configuration.external_model_profiles, ())
+        for profiles in ({}, [profile, profile], [profile] * 129):
+            with self.assertLogs("worklogger.infrastructure.runtime_config", level="WARNING"):
+                self.assertEqual(load(profiles).external_model_profiles, ())
+
     def test_deployment_flag_controls_window_availability_without_changing_account_preferences(self):
         user = User(id=1, username="sample", is_admin=False)
         for enabled in (True, False):

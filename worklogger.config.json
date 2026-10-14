@@ -2,5 +2,6 @@
   "features": {
     "background_images": true,
     "minimal_view": true
-  }
+  },
+  "external_model_profiles": []
 }

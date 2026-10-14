@@ -7,11 +7,29 @@ from urllib.request import Request
 
 from worklogger.app.ports import AIRequest
 from worklogger.infrastructure.ai.external import OpenAICompatibleGateway
+from worklogger.infrastructure.ai.generation_options import ExternalGenerationOptions
 from worklogger.infrastructure.http import _PublicHTTPSConnection, _ValidatedRedirect, validate_https_url
 from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
 
 
 class HTTPInfrastructureTests(unittest.TestCase):
+    def test_external_payload_includes_only_explicit_generation_parameters(self):
+        for options, expected in (
+            (ExternalGenerationOptions(), {}),
+            (ExternalGenerationOptions(temperature=0, max_output_tokens=512), {"temperature": 0, "max_tokens": 512}),
+            (ExternalGenerationOptions(max_output_tokens=2048, token_limit_parameter="max_completion_tokens"),
+             {"max_completion_tokens": 2048}),
+        ):
+            with self.subTest(options=options):
+                opener = Mock(side_effect=lambda *args, **kwargs: io.BytesIO(
+                    b'{"choices":[{"message":{"content":"Revised text"}}]}'))
+                result = OpenAICompatibleGateway(api_key="synthetic", opener=opener,
+                                                generation_options=options).generate(
+                    AIRequest(({"role": "user", "content": "Source"},), "model", 30))
+                self.assertTrue(result.ok, result.error)
+                payload = json.loads(opener.call_args.args[0].data)
+                self.assertEqual(payload, dict(model="model", messages=[{"role": "user", "content": "Source"}], **expected))
+
     def test_certificate_context_is_shared_without_caching_proxy_credentials(self):
         from worklogger.infrastructure.http import _certificate_context, https_opener
         import ssl

@@ -10,6 +10,7 @@ from urllib.request import Request
 from worklogger.app.ports import AIRequest
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.ai.account import AccountAIGateway
+from worklogger.infrastructure.ai.generation_options import ExternalGenerationOptions, ExternalModelProfile
 from worklogger.infrastructure.network import AccountHTTPTransport
 from worklogger.infrastructure.http import _ExplicitProxyHandler, _PublicHTTPSConnection
 from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
@@ -102,6 +103,35 @@ class AccountNetworkTests(unittest.TestCase):
         result = checker.check_latest_version("4.0.0")
         self.assertFalse(result.ok)
         self.assertNotIn("synthetic", str(result.error))
+
+    def test_external_generation_options_match_only_the_configured_endpoint_and_model(self):
+        local = Mock(available=True)
+        options = ExternalGenerationOptions(max_output_tokens=4096, token_limit_parameter="max_completion_tokens")
+        gateway = AccountAIGateway(local=local, settings=self.settings, user_id=1, key_store=self.keys,
+                                   transport=self.transport, model_profiles=(
+                                       ExternalModelProfile("https://example.com/v1/", "configured-model", options),))
+        request = AIRequest(({"role": "user", "content": "Full instructions"},), "default", 30,
+                            local_messages=({"role": "user", "content": "Compact instructions"},))
+        self.values.update(external_model_enabled="1", external_model_base_url="https://example.com/v1",
+                           external_model_name="configured-model")
+        self.assertTrue(gateway.generate(request).ok)
+        payload = json.loads(self.requests[-1].data)
+        self.assertEqual(payload["messages"], list(request.messages))
+        self.assertEqual(payload["max_completion_tokens"], 4096)
+        self.assertNotIn("max_tokens", payload)
+        self.assertNotIn("temperature", payload)
+        for key, value in (("external_model_name", "other-model"),
+                           ("external_model_base_url", "https://other.example.com/v1")):
+            previous = self.values[key]
+            self.values[key] = value
+            self.assertTrue(gateway.generate(request).ok)
+            payload = json.loads(self.requests[-1].data)
+            self.assertNotIn("max_completion_tokens", payload)
+            self.assertNotIn("temperature", payload)
+            self.values[key] = previous
+        self.values["external_model_enabled"] = "0"
+        gateway.generate(request)
+        local.generate.assert_called_once_with(request)
 
     def test_explicit_proxy_ignores_environment_bypass_but_rejects_private_destinations(self):
         request = Request("https://example.com/file")

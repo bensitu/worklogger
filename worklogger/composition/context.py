@@ -37,6 +37,7 @@ from worklogger.infrastructure.export import (
 from worklogger.infrastructure.local_model import JsonLocalModelStore, bundled_model_catalog_path
 from worklogger.infrastructure.local_model.store import HttpRangeDownloader
 from worklogger.infrastructure.network import AccountHTTPTransport
+from worklogger.infrastructure.runtime_config import load_runtime_configuration
 from worklogger.infrastructure.repositories import (
     SQLiteCalendarEventRepository,
     SQLiteDailyNoteRepository,
@@ -143,7 +144,8 @@ def build_runtime_handlers(
         inference = LocalInferenceRuntime(store=store, settings=repositories.settings, user_id=user_id,
             enabled=features.enable_ai)
         gateway = AccountAIGateway(local=inference, settings=repositories.settings, user_id=user_id,
-            key_store=external_keys, transport=transport, enabled=features.enable_ai)
+            key_store=external_keys, transport=transport, enabled=features.enable_ai,
+            model_profiles=load_runtime_configuration().external_model_profiles)
     return RuntimeHandlers(
         templates=UserTemplateProvider(
             repositories.report_templates,

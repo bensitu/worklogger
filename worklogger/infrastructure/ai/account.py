@@ -10,6 +10,7 @@ from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.settings.values import setting_bool
 from worklogger.infrastructure.ai.external import OpenAICompatibleGateway
+from worklogger.infrastructure.ai.generation_options import ExternalModelProfile
 from worklogger.infrastructure.http import validate_https_url
 from worklogger.infrastructure.settings_reads import selected_settings
 
@@ -18,7 +19,8 @@ _CONFIGURATION_KEYS = (AI_ASSIST_ENABLED_SETTING_KEY, EXTERNAL_MODEL_ENABLED_SET
 
 
 class AccountAIGateway:
-    def __init__(self, *, local, settings, user_id, key_store, transport, enabled=True, gateway_factory=OpenAICompatibleGateway):
+    def __init__(self, *, local, settings, user_id, key_store, transport, enabled=True,
+                 gateway_factory=OpenAICompatibleGateway, model_profiles: tuple[ExternalModelProfile, ...] = ()):
         self._local = local
         self._settings = settings
         self._user_id = user_id
@@ -26,6 +28,7 @@ class AccountAIGateway:
         self._transport = transport
         self._enabled = enabled
         self._factory = gateway_factory
+        self._model_profiles = model_profiles
         self._external_ready = False
 
     def update_configuration(self, state):
@@ -66,8 +69,13 @@ class AccountAIGateway:
                 return Result.failure(key.error)
             if not key.value:
                 return Result.failure(ValidationError("ai_api_key_required", "ai_api_key_required"))
-            gateway = self._factory(api_key=key.value, base_url=endpoint,
-                                    opener=self._transport.opener(allow_redirects=False))
+            options = next((profile.options for profile in self._model_profiles
+                            if profile.base_url == endpoint.rstrip("/") and profile.model == model), None)
+            configuration = dict(api_key=key.value, base_url=endpoint,
+                                 opener=self._transport.opener(allow_redirects=False))
+            if options is not None:
+                configuration["generation_options"] = options
+            gateway = self._factory(**configuration)
             return gateway.generate(replace(request, model=model))
         except ValueError:
             return Result.failure(ValidationError("ai_configuration_invalid", "ai_configuration_invalid"))
