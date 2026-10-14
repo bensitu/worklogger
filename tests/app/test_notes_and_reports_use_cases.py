@@ -403,13 +403,38 @@ class NotesReportsUseCaseTests(unittest.TestCase):
                 for messages in (request.messages, request.local_messages):
                     system = messages[0]["content"]
                     self.assertIn("Do not invent achievements, risks, or plans", system)
-                    self.assertIn("Write in Japanese", system)
+                    self.assertIn("Keep the source text's language", system)
                     for constraint in constraints:
                         self.assertIn(constraint, system)
                     self.assertIn(source.strip(), messages[1]["content"])
-                    self.assertIn("ja_JP", messages[1]["content"])
-                    self.assertIn("Use a professional tone.", messages[1]["content"])
+                    self.assertNotIn("ja_JP", messages[1]["content"])
+                    self.assertIn("Use a professional tone.", system)
                 self.assertLess(len(request.local_messages[0]["content"]), len(request.messages[0]["content"]))
+
+    def test_rewriting_uses_source_language_unless_output_language_is_explicit(self):
+        gateway = FakeGateway("Revised text")
+        handler = RewriteTextHandler(gateway)
+        source = "\u30c6\u30b9\u30c8\u3084\u308b"
+        for context in ("time_entry", "daily_note", "daily_report"):
+            for locale in ("en_US", "ja_JP", "zh_CN"):
+                with self.subTest(context=context, locale=locale):
+                    self.assertTrue(handler.handle(RewriteTextCommand(1, source, context, locale)).ok)
+                    request = gateway.requests[-1]
+                    for messages in (request.messages, request.local_messages):
+                        self.assertIn("Do not translate unless", messages[0]["content"])
+                        self.assertNotIn("Write in English", messages[0]["content"])
+                        self.assertEqual(source, messages[-1]["content"])
+                        self.assertNotIn("Language:", messages[-1]["content"])
+        handler.handle(RewriteTextCommand(1, source, output_language="en_US"))
+        for messages in (gateway.requests[-1].messages, gateway.requests[-1].local_messages):
+            self.assertIn("Write in English, as explicitly requested", messages[0]["content"])
+        handler.handle(RewriteTextCommand(1, source, instructions="Translate into English."))
+        self.assertIn("Translate into English.", gateway.requests[-1].messages[0]["content"])
+        self.assertIn("additional instructions explicitly request", gateway.requests[-1].messages[0]["content"])
+        handler.handle(RewriteTextCommand(1, source, instructions="Use a professional tone."))
+        for messages in (gateway.requests[-1].messages, gateway.requests[-1].local_messages):
+            self.assertEqual(source, messages[-1]["content"])
+            self.assertIn("Keep the original language when preferences concern only tone or clarity", messages[0]["content"])
 
 
 if __name__ == "__main__":

@@ -132,6 +132,23 @@ class FakeHttpResponse:
 
 
 class AiUseCaseTests(unittest.TestCase):
+    def test_chat_generation_uses_notes_language_without_using_the_interface_locale(self):
+        gateway = FakeGateway()
+        handler = AiChatHandler(gateway)
+        source = "Work notes:\n\u30c6\u30b9\u30c8\u3084\u308b"
+        for locale in ("en_US", "ja_JP", "zh_CN"):
+            with self.subTest(locale=locale):
+                self.assertTrue(handler.handle(SendAiChatMessageCommand(
+                    1, "Generate a short report.", context=source, language=locale)).ok)
+                messages = gateway.requests[-1].messages
+                self.assertIn("use the language of those notes", messages[0]["content"])
+                self.assertIn("only when the user explicitly requests", messages[0]["content"])
+                self.assertIn(source, messages[-1]["content"])
+                self.assertNotIn("Language:", messages[-1]["content"])
+        handler.handle(SendAiChatMessageCommand(1, "Generate a short report.", context=source,
+                                               output_language="en_US"))
+        self.assertIn("Write in English, as explicitly requested", gateway.requests[-1].messages[0]["content"])
+
     def test_context_expands_time_periods_and_requires_memo_permission(self):
         day = date(2026, 5, 4)
         entries = (WorkLog(1, day, "09:00", "10:00", note="Planning", work_type=WorkType.MEETING),

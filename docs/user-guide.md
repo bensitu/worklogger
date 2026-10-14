@@ -217,6 +217,12 @@ instructions. These constraints do not guarantee factual accuracy, so compare
 the result with the original before saving. Generate from records uses templates,
 not an AI request.
 
+AI rewriting keeps the source text's language regardless of the interface
+language. AI-generated summaries and reports also follow the supplied notes'
+language. To translate, explicitly request the output language in the report's
+extra instructions or your AI Assist message. Mixed-language passages are
+preserved when no translation is requested.
+
 Network settings apply an account HTTP CONNECT proxy to supported HTTPS requests.
 They do not change the operating system or browser proxy.
 

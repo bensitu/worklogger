@@ -108,7 +108,7 @@ class LocalInferenceTests(unittest.TestCase):
         self.assertTrue(result.ok, result.error)
         request = self.engines[-1].last_request
         self.assertEqual(tuple(request["messages"]), rewrite_messages(
-            content=source, context="daily_note", language="en_US", compact=True))
+            content=source, context="daily_note", compact=True))
         self.assertEqual(request["temperature"], 0.2)
         self.assertEqual(request["max_tokens"], 64)
 

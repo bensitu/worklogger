@@ -10,7 +10,7 @@ from worklogger.app.ports import AIGateway, AIRequest
 from worklogger.app.use_cases.ai_context import AiContextResult as AiContextResult
 from worklogger.app.use_cases.ai_context import BuildAiContextHandler as BuildAiContextHandler
 from worklogger.app.use_cases.user_profile import profile_display_name
-from worklogger.app.use_cases.text_prompts import profile_instruction, rewrite_messages
+from worklogger.app.use_cases.text_prompts import output_language_instruction, profile_instruction, rewrite_messages
 from worklogger.domain.auth.repositories import UserProfileRepository
 from worklogger.domain.shared.errors import CancellationError, InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
@@ -64,7 +64,7 @@ class RewriteTextHandler:
             )
         try:
             display_name = profile_display_name(self._profiles, command.user_id)
-            prompt_values = dict(content=content, context=command.context, language=command.language,
+            prompt_values = dict(content=content, context=command.context, output_language=command.output_language,
                                  instructions=command.instructions, display_name=display_name)
             response = self._gateway.generate(
                 AIRequest(
@@ -138,6 +138,7 @@ class AiChatHandler:
                 "content": (
                     "You are WorkLogger AI Assist. Help with work log analysis, notes, "
                     "and reports. Preserve facts and avoid inventing records."
+                    + output_language_instruction(command.output_language, conversation=True)
                     + profile_instruction(display_name)
                 ),
             },
@@ -147,7 +148,6 @@ class AiChatHandler:
                 "content": _chat_user_content(
                     message=message,
                     context=command.context,
-                    language=command.language,
                 ),
             },
         )
@@ -205,13 +205,11 @@ def _chat_user_content(
     *,
     message: str,
     context: str,
-    language: str,
 ) -> str:
     context_text = str(context or "").strip()
-    language_text = str(language or "en_US").strip() or "en_US"
     if context_text:
-        return f"Language: {language_text}\nContext:\n{context_text}\n\nUser:\n{message}"
-    return f"Language: {language_text}\n\nUser:\n{message}"
+        return f"Context:\n{context_text}\n\nUser:\n{message}"
+    return message
 
 
 def _cancelled(cancellation_token: CancellationToken | None) -> bool:
