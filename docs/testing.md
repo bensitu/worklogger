@@ -45,6 +45,27 @@ its SHA-256 digest. CI performs this check for source runs and extracted applica
 archives. The model stays outside distributed artifacts. Omit the environment variable
 to verify only native library initialization and availability.
 
+After building on macOS, check the packaged application directly:
+
+```sh
+python scripts/prepare_native_model.py
+WORKLOGGER_VERIFY_MODEL_PATH="$PWD/build/native-verification/stories260K.gguf" \
+  ./dist/WorkLogger.app/Contents/MacOS/WorkLogger --smoke-local-model-runtime
+```
+
+The environment variable applies only to this executable invocation. For a
+representative catalog model, replace the path with its checksum-verified GGUF
+file. The check does not change account preferences or records, or copy weights
+into the application bundle.
+
+`NATIVE BACKEND: metal` identifies GPU offloading on a supported Apple Silicon
+device; `cpu` identifies CPU inference. A successful check includes real native
+text generation and model reloading. Cancellation uses a separate CPU context
+because the native abort callback does not interrupt GPU evaluation.
+Backend detection alone does not establish successful Metal inference. Recovery
+tests simulate Metal detection, initialization, and execution failures; they do
+not establish behavior under a native process crash or a physical GPU failure.
+
 ## Durable Coverage
 
 Keep tests for business rules, authorization, data integrity, compatibility,

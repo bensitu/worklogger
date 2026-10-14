@@ -156,13 +156,18 @@ verification extracts them and repeats resource, import, startup and workflow
 checks before delivery. macOS checks also require the ARM64 architecture, matching
 bundle metadata, a valid signature, and Cocoa startup. Internal relative symbolic
 links are retained; broken and external links are rejected.
+Signature integrity checks accept ad-hoc signing; they do not establish Developer
+ID signing or Apple notarization.
 
 CI runs these checks on Windows, Linux and macOS ARM64. It uploads the verified
 archive, checksum inventory and captured target dependency lock. The default
 build includes native inference. Both the build and extracted archive must pass
-`--smoke-local-model-runtime`, which loads and initializes the real backend
-without model weights. A distribution missing the backend cannot pass delivery
-verification.
+`--smoke-local-model-runtime`. CI supplies a small checksum-verified model through
+`WORKLOGGER_VERIFY_MODEL_PATH` to check native text generation, CPU cancellation,
+and model reloading. The model remains outside the distributed artifacts. Without
+that variable, the command checks only backend initialization and availability.
+A distribution missing the backend cannot pass delivery verification. See
+[native inference checks](testing.md#native-inference-measurements) for local commands.
 
 Check the executable directly when appropriate:
 
