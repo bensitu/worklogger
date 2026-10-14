@@ -103,7 +103,7 @@ class CalendarPage(QWidget):
         self.today_button = QPushButton(_("Today"))
         self.today_button.setObjectName("today_button")
         self.today_button.clicked.connect(self.today_requested.emit)
-        self.search_button = QPushButton()
+        self.search_button = QPushButton(self)
         self.search_button.setObjectName("search_records_button")
         self.search_button.setToolTip(_("Search records"))
         self.search_button.setAccessibleName(_("Search records"))

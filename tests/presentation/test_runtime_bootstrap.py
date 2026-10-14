@@ -13,8 +13,8 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QSettings, QTimer
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtCore import QEvent, QObject, QSettings, QTimer
+from PySide6.QtWidgets import QApplication, QMessageBox, QWidget
 
 from tests.infrastructure.test_auth_schema_migration import released_database
 from worklogger.bootstrap import (
@@ -175,6 +175,52 @@ class RuntimeBootstrapTests(unittest.TestCase):
 
     def new_preferences(self):
         return LanguagePreferences(QSettings(str(self.preferences_path), QSettings.Format.IniFormat))
+
+    def test_authenticated_window_is_hidden_until_explicitly_shown(self):
+        class WindowObserver(QObject):
+            def __init__(self):
+                super().__init__()
+                self.shown = []
+
+            def eventFilter(self, watched, event):
+                if event.type() == QEvent.Type.Show and isinstance(watched, QWidget) and watched.isWindow():
+                    self.shown.append((type(watched).__name__, watched.objectName()))
+                return False
+
+        application = QApplication.instance() or QApplication([])
+        observer = WindowObserver()
+        application.installEventFilter(observer)
+        try:
+            for minimal_mode in (False, True):
+                with self.subTest(minimal_mode=minimal_mode), self.runtime_directory() as directory:
+                    observer.shown.clear()
+                    result = build_authenticated_desktop_runtime(
+                        DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db",
+                                             password_iterations=1_000, minimal_mode=minimal_mode),
+                        argv=[], auth_controller_factory=AutoRegisterAuthenticator,
+                    )
+                    self.assertTrue(result.ok, result.error)
+                    runtime = result.value
+                    try:
+                        self.assertFalse(runtime.window.isVisible())
+                        self.assertTrue(runtime.window.refresh())
+                        self.assertEqual(observer.shown, [])
+                        runtime.window.show()
+                        application.processEvents()
+                        self.assertEqual(observer.shown, [
+                            (type(runtime.window).__name__, runtime.window.objectName())
+                        ])
+                        self.assertTrue(runtime.window.entry_panel.undo_button.isVisible())
+                        if minimal_mode:
+                            self.assertTrue(runtime.window.notes_button.isVisible())
+                            self.assertTrue(runtime.window.settings_button.isVisible())
+                        else:
+                            self.assertTrue(runtime.window.calendar_page.search_button.isVisible())
+                    finally:
+                        runtime.window.close()
+                        runtime.local_inference.close()
+        finally:
+            application.removeEventFilter(observer)
 
     def test_disabled_optional_features_are_not_composed(self):
         with patch.dict(os.environ, {
