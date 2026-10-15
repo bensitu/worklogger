@@ -41,6 +41,52 @@ class ReportsViewModel:
 
 
 class ShellPagesTests(unittest.TestCase):
+    def test_background_exports_retain_content_and_dates_and_restore_controls(self):
+        class Model(ReportsViewModel):
+            timesheet_available = True
+            saved_export_available = True
+
+            def export_markdown(self, destination, content):
+                self.exported = (destination, content)
+                return Result.success(destination)
+
+            def export_saved_daily(self, destination, day, *, whole_month):
+                self.exported = (destination, day, whole_month)
+                return Result.success(destination)
+
+            def export_timesheet(self, destination, day, *, whole_month, format):
+                self.exported = (destination, day, whole_month, format)
+                return Result.success(destination)
+
+        class Runner:
+            def submit(self, name, job, *, on_complete):
+                self.job, self.complete = job, on_complete
+                return JobHandle(name, lambda: None)
+
+        day, destination = date(2026, 10, 16), Path("report-export")
+        model = Model()
+        page = ReportsPage(model, day, job_runner=ImmediateJobRunner())
+        self.addCleanup(page.deleteLater)
+        page.refresh()
+        runner = Runner()
+        page._job_runner = runner
+        for scope, expected in (("current", (destination, "Visible draft")),
+                                ("month", (destination, day, True)),
+                                ("timesheet_day_pdf", (destination, day, False, "pdf"))):
+            page._selected_day = day
+            page.editor.setPlainText("Visible draft")
+            with patch.object(QFileDialog, "getSaveFileName", return_value=(str(destination), "")):
+                page._choose_export_scope(scope)
+            self.assertTrue(page.is_busy)
+            self.assertTrue(page.editor.isReadOnly())
+            page._selected_day = date(2027, 1, 1)
+            page.editor.setPlainText("Later content")
+            runner.complete(runner.job(CancellationToken()))
+            self.assertEqual(model.exported, expected)
+            self.assertFalse(page.is_busy)
+            self.assertFalse(page.editor.isReadOnly())
+            self.assertEqual(page.editor.toPlainText(), "Later content")
+
     def test_fast_report_and_history_loads_preserve_control_states(self):
         class Model(ReportsViewModel):
             revisions_available = True

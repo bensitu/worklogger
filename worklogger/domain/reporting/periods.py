@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from calendar import monthrange
 
+from worklogger.domain.shared.dates import add_months
+
 
 REPORT_TYPES = frozenset({"daily", "weekly", "monthly"})
 
@@ -59,6 +61,19 @@ def period_for_day(report_type: str, selected_day: date, week_start_monday: bool
     if normalized == "weekly":
         return weekly_period(selected_day, week_start_monday)
     return monthly_period(selected_day.year, selected_day.month)
+
+
+def shift_report_period(day: date, report_type: str, direction: int) -> date:
+    report_type = normalize_report_type(report_type)
+    try:
+        if report_type == "daily":
+            return day + timedelta(days=direction)
+        if report_type == "weekly":
+            return day + timedelta(days=direction * 7)
+        shifted = add_months(day, direction)
+        return shifted.replace(day=min(day.day, monthrange(shifted.year, shifted.month)[1]))
+    except (OverflowError, ValueError):
+        raise ValueError("report_period_invalid") from None
 
 
 def validate_report_period(report_type: str, start: date, end: date) -> ReportPeriod:

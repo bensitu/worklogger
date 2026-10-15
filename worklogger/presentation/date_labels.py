@@ -35,3 +35,10 @@ def duration_label(hours: float) -> str:
     minutes = round(abs(hours) * 60)
     label = _("{hours}h {minutes}m").format(hours=minutes // 60, minutes=minutes % 60)
     return "-" + label if hours < 0 and minutes else label
+
+
+def report_period_label(report_type: str, start: date, end: date) -> str:
+    label = period_range_label(start, end)
+    if report_type == "weekly":
+        label += " " + _("(Week {week})").format(week=start.isocalendar().week)
+    return label

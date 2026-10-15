@@ -14,6 +14,7 @@ from worklogger.domain.analytics.rules import (
 from worklogger.domain.reporting.periods import (
     monthly_period,
     period_for_day,
+    shift_report_period,
     validate_report_period,
     weekly_period,
 )
@@ -58,6 +59,13 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
         for day, monday in ((date.min, False), (date.max, True)):
             with self.assertRaisesRegex(ValueError, "report_period_invalid"):
                 period_for_day("weekly", day, monday)
+        self.assertEqual(shift_report_period(date(2024, 1, 31), "monthly", 1), date(2024, 2, 29))
+        self.assertEqual(shift_report_period(date(2026, 1, 31), "monthly", 1), date(2026, 2, 28))
+        self.assertEqual(shift_report_period(date(2026, 12, 28), "weekly", 1), date(2027, 1, 4))
+        for report_type in ("daily", "weekly", "monthly"):
+            for day, offset in ((date.min, -1), (date.max, 1)):
+                with self.assertRaisesRegex(ValueError, "report_period_invalid"):
+                    shift_report_period(day, report_type, offset)
 
     def test_rest_days_count_recorded_break_dates_and_exclude_leave_and_missing_dates(self):
         day = date(2026, 5, 4)

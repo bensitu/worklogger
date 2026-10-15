@@ -58,7 +58,7 @@ class ReportHistoryTests(unittest.TestCase):
         page = self.page()
         page.editor.setPlainText("Unsaved report draft")
         target = Path(self.factory.database_path).parent / "timesheet.xlsx"
-        with patch("worklogger.presentation.shell.reports_page.QFileDialog.getSaveFileName", return_value=(str(target), "")):
+        with patch("worklogger.presentation.reporting.exports.QFileDialog.getSaveFileName", return_value=(str(target), "")):
             page._choose_export_scope("timesheet_day_xlsx")
         self.assertTrue(target.is_file())
         book = load_workbook(target, data_only=False)

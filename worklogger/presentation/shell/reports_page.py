@@ -2,30 +2,23 @@
 
 from __future__ import annotations
 
-from calendar import monthrange
 from collections.abc import Callable
 from dataclasses import replace
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 
 from PySide6.QtCore import QSignalBlocker, QTimer, Qt
 from PySide6.QtWidgets import (
     QApplication,
-    QFileDialog,
-    QFrame,
     QHBoxLayout,
     QLabel,
-    QLineEdit,
     QMessageBox,
-    QPushButton,
-    QTextEdit,
-    QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
 from worklogger.app.job_runner import JobRunner
-from worklogger.domain.shared.dates import add_months
+from worklogger.domain.reporting.periods import shift_report_period
 from worklogger.domain.shared.errors import (
     AppError,
     CancellationError,
@@ -34,27 +27,25 @@ from worklogger.domain.shared.errors import (
 )
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.date_labels import period_range_label
+from worklogger.presentation.date_labels import period_range_label, report_period_label
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.job_runner import QtJobRunner, owned_callback
 from worklogger.presentation.reporting.dialog import (
     ReportTemplateDialog,
     confirm_report_overwrite,
 )
+from worklogger.presentation.reporting.exports import ReportExportController, ReportExportSnapshot
 from worklogger.presentation.viewmodels import (
     ReportEditorState,
     ReportEditorViewModel,
 )
 from worklogger.presentation.widgets import (
-    CardFrame,
-    ExportMenuButton,
     ReportHistoryDisplayItem,
     ReportHistoryPanel,
     SegmentedControl,
 )
-from worklogger.presentation.widgets.icons import IconLabel, set_button_icon
+from worklogger.presentation.widgets.report_editor import ReportEditorPanel
 from worklogger.presentation.processing import TextProcessingTask
-from worklogger.presentation.widgets.processing_progress import ProcessingProgress
 
 
 class ReportsPage(QWidget):
@@ -90,6 +81,10 @@ class ReportsPage(QWidget):
         self._io_feedback_timer.setInterval(150)
         self._io_feedback_timer.timeout.connect(self._show_io_feedback)
         self._build_ui()
+        self._exports = ReportExportController(
+            self, view_model, run_request=self._run_io, is_busy=lambda: self.is_busy,
+            show_status=self._set_status, show_error=self._set_error,
+        )
 
     @property
     def is_busy(self):
@@ -105,7 +100,8 @@ class ReportsPage(QWidget):
             self._io_feedback_visible = True
             self._update_busy_controls()
 
-    def _run_io(self, name, operation, complete, *, defer_busy_feedback=False):
+    def _run_io(self, name, operation, complete, *, defer_busy_feedback=False,
+                error_code="report_request_failed"):
         if self.is_busy:
             return False
         self._io_busy = True
@@ -124,7 +120,7 @@ class ReportsPage(QWidget):
         try:
             self._job_runner.submit(name, lambda _token: operation(), on_complete=owned_callback(self, finished))
         except Exception:
-            finished(Result.failure(InfrastructureError("report_request_failed", "report_request_failed")))
+            finished(Result.failure(InfrastructureError(error_code, error_code)))
             return False
         return True
 
@@ -196,19 +192,12 @@ class ReportsPage(QWidget):
         self._set_status(_("Copied"))
 
     def export_markdown(self, destination: Path) -> bool:
-        if self._view_model is None:
-            return False
-        content = self.editor.toPlainText()
-        state = self._states.get(self._current_type())
-        period = _period_label(state) if state is not None else period_range_label(self._selected_day, self._selected_day)
-        def complete(result):
-            if not result.ok:
-                self._set_error(result.error)
-            else:
-                self._set_status(_("Current report exported for {period}.").format(period=period))
-        exporter = getattr(self._view_model, "export_with_sources", None)
-        return self._run_io("export_report", lambda: exporter(destination, state, content) if exporter and state
-                            else self._view_model.export_markdown(destination, content), complete)
+        return self._exports.export_markdown(destination, self._export_snapshot())
+
+    def _export_snapshot(self) -> ReportExportSnapshot:
+        report_type = self._current_type()
+        return ReportExportSnapshot(report_type, self._selected_day, self._states.get(report_type),
+                                    self.editor.toPlainText())
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
@@ -229,132 +218,26 @@ class ReportsPage(QWidget):
         content.setSpacing(16)
         root.addLayout(content, 1)
 
-        editor_card = CardFrame(object_name="report_editor_frame")
-        period_row = QHBoxLayout()
-        self.period_title_label = QLabel("")
-        self.period_title_label.setObjectName("report_period_label")
-        self.period_title_label.setProperty("role", "title")
-        self.previous_period_button = QPushButton("<")
-        self.previous_period_button.setObjectName("previous_report_period_button")
-        self.previous_period_button.setProperty("variant", "outline")
+        self.editor_panel = ReportEditorPanel(
+            ai_ready=self._ai_ready,
+            timesheet_available=bool(getattr(self._view_model, "timesheet_available", False)),
+        )
+        for name in self.editor_panel.control_names:
+            setattr(self, name, getattr(self.editor_panel, name))
         self.previous_period_button.clicked.connect(lambda: self._shift_period(-1))
-        self.previous_period_button.setToolTip(_("Previous period"))
-        self.previous_period_button.setAccessibleName(_("Previous period"))
-        set_button_icon(self.previous_period_button, "chevron-left")
-        self.previous_period_button.setText("")
-        self.next_period_button = QPushButton(">")
-        self.next_period_button.setObjectName("next_report_period_button")
-        self.next_period_button.setProperty("variant", "outline")
         self.next_period_button.clicked.connect(lambda: self._shift_period(1))
-        self.next_period_button.setToolTip(_("Next period"))
-        self.next_period_button.setAccessibleName(_("Next period"))
-        set_button_icon(self.next_period_button, "chevron-right")
-        self.next_period_button.setText("")
-        period_row.addWidget(IconLabel("calendar-days"))
-        self.period_title_label.setWordWrap(True)
-        period_row.addWidget(self.period_title_label, 1)
-        self.previous_period_button.setFixedWidth(34)
-        self.next_period_button.setFixedWidth(34)
-        period_row.addWidget(self.previous_period_button)
-        period_row.addWidget(self.next_period_button)
-        editor_card.content_layout.addLayout(period_row)
-        divider = QFrame()
-        divider.setObjectName("report_period_separator_frame")
-        divider.setFixedHeight(1)
-        editor_card.content_layout.addWidget(divider)
-
-        report_row = QHBoxLayout()
-        report_title = QLabel(_("Report"))
-        report_title.setObjectName("report_title_label")
-        self.templates_button = QPushButton(_("Templates"))
-        self.templates_button.setObjectName("templates_button")
-        self.templates_button.setProperty("variant", "outline")
         self.templates_button.clicked.connect(self._open_templates)
-        set_button_icon(self.templates_button, "file-text")
-        report_row.addWidget(report_title, 1)
-        self.generate_button = QPushButton(_("Generate from records"))
-        self.generate_button.setObjectName("generate_report_button")
-        set_button_icon(self.generate_button, "file-plus-2")
         self.generate_button.clicked.connect(self._generate_current)
-        report_row.addWidget(self.generate_button)
-        report_row.addWidget(self.templates_button)
-        editor_card.content_layout.addLayout(report_row)
-
-        self.editor = QTextEdit()
-        self.editor.setObjectName("report_text_edit")
-        self.editor.setAcceptRichText(False)
         self.editor.textChanged.connect(self._update_report_status)
-        self.report_state_label = QLabel()
-        self.report_state_label.setObjectName("report_state_label")
-        self.report_state_label.setProperty("role", "secondary")
-        self.report_state_label.setWordWrap(True)
-        editor_card.content_layout.addWidget(self.report_state_label)
-        editor_card.content_layout.addWidget(self.editor, 1)
-
-        self.ai_hint_line_edit = QLineEdit()
-        self.ai_hint_line_edit.setObjectName("ai_hint_line_edit")
-        self.ai_hint_line_edit.setPlaceholderText(_("AI Assist Hint / extra instructions (optional)"))
-        editor_card.content_layout.addWidget(self.ai_hint_line_edit)
-
-        ai_row = QHBoxLayout()
-        self.ai_assist_button = QPushButton(_("Polish text"))
-        self.ai_assist_button.setObjectName("report_ai_assist_button")
-        self.ai_assist_button.setProperty("variant", "outline")
         self.ai_assist_button.clicked.connect(self._rewrite_current)
-        set_button_icon(self.ai_assist_button, "sparkles")
-        if not self._ai_ready:
-            self.ai_assist_button.setEnabled(False)
-            self.ai_assist_button.setToolTip(_("AI Assist is not configured."))
-            self.ai_hint_line_edit.setEnabled(False)
-        ai_row.addWidget(self.ai_assist_button)
-        ai_row.addStretch(1)
-        self.versions_button = QPushButton(_("Report versions"))
-        set_button_icon(self.versions_button, "history")
         self.versions_button.clicked.connect(self._open_versions)
-        ai_row.addWidget(self.versions_button)
-        editor_card.content_layout.addLayout(ai_row)
-        self.processing_progress = ProcessingProgress()
         self.processing_progress.cancel_requested.connect(self._rewrite_task.cancel)
         self._rewrite_task.started.connect(lambda: self.processing_progress.start(_("Polishing text...")))
         self._rewrite_task.finished.connect(self.processing_progress.finish)
-        editor_card.content_layout.addWidget(self.processing_progress)
-
-        bottom = QHBoxLayout()
-        self.copy_button = QToolButton()
-        self.copy_button.setProperty("variant", "outline")
-        self.copy_button.setToolTip(_("Copy Markdown"))
-        self.copy_button.setAccessibleName(_("Copy Markdown"))
-        self.copy_button.setFixedSize(40, 40)
-        self.copy_button.setObjectName("copy_report_button")
         self.copy_button.clicked.connect(self.copy_markdown)
-        set_button_icon(self.copy_button, "copy", format_label="MD")
-        self.save_button = QPushButton(_("Save Report"))
-        self.save_button.setObjectName("save_report_button")
-        self.save_button.setProperty("variant", "primary")
         self.save_button.clicked.connect(self._save_current)
-        set_button_icon(self.save_button, "save")
-        bottom.addWidget(self.copy_button)
-        self.export_current_button = ExportMenuButton(_("Export report"),
-            (("current", _("Current visible report (Markdown)")), ("day", _("Saved daily report (Markdown)")),
-             ("month", _("Saved daily reports for this month (Markdown)"))))
-        self.export_current_button.setObjectName("export_current_report_button")
-        self.export_current_button.setProperty("variant", "outline")
-        self.export_current_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        set_button_icon(self.export_current_button, "file-output")
-        self.export_current_button.setMinimumWidth(self.export_current_button.fontMetrics().horizontalAdvance(self.export_current_button.text()) + 56)
         self.export_current_button.export_requested.connect(self._choose_export_scope)
-        if bool(getattr(self._view_model, "timesheet_available", False)):
-            menu = self.export_current_button.menu().addMenu(_("Timesheet"))
-            for key, caption in (("timesheet_day_xlsx", _("Selected day (Excel)")), ("timesheet_month_xlsx", _("Selected month (Excel)")),
-                                 ("timesheet_day_pdf", _("Selected day (PDF)")), ("timesheet_month_pdf", _("Selected month (PDF)"))):
-                action = menu.addAction(caption)
-                action.setData(key)
-                action.triggered.connect(lambda _checked=False, key=key: self._choose_export_scope(key))
-        bottom.addWidget(self.export_current_button)
-        bottom.addStretch(1)
-        bottom.addWidget(self.save_button)
-        editor_card.content_layout.addLayout(bottom)
-        content.addWidget(editor_card, 2)
+        content.addWidget(self.editor_panel, 2)
 
         self.history_panel = ReportHistoryPanel(allow_delete=bool(getattr(self._view_model, "delete_available", False)), show_export=False)
         self.history_panel.item_selected.connect(self._select_history_item)
@@ -446,7 +329,7 @@ class ReportsPage(QWidget):
             else:
                 self._set_error(result.error or ValidationError("report_generate_failed", "report_generate_failed"))
         try:
-            generator = getattr(self._view_model, "generate_with_sources", self._view_model.generate_draft)
+            generator = getattr(self._view_model, "generate_with_sources", None) or self._view_model.generate_draft
             self._job_runner.submit("generate_report", lambda _token: generator(state), on_complete=owned_callback(self, complete))
         except Exception:
             self._generate_busy = False
@@ -490,7 +373,12 @@ class ReportsPage(QWidget):
     def _shift_period(self, direction: int) -> None:
         state = self._states.get(self._current_type())
         day = state.period_start if state is not None else self._selected_day
-        self.refresh(shift_period(day, self._current_type(), direction))
+        try:
+            target = shift_report_period(day, self._current_type(), direction)
+        except (TypeError, ValueError):
+            self._set_error(ValidationError("report_period_invalid", "report_period_invalid"))
+            return
+        self.refresh(target)
 
     def _open_templates(self) -> None:
         if self._view_model is None or self.is_busy:
@@ -511,7 +399,7 @@ class ReportsPage(QWidget):
         if state is None:
             return
         self._rendered_type = report_type
-        self.period_title_label.setText(_period_label(state))
+        self.period_title_label.setText(report_period_label(state.report_type, state.period_start, state.period_end))
         with QSignalBlocker(self.editor):
             self.editor.setPlainText(state.content)
             self._saved_content[report_type] = self.editor.toPlainText()
@@ -671,73 +559,11 @@ class ReportsPage(QWidget):
         self.history_panel.set_selected_report(item.report_id)
         self.editor.setPlainText(state.content)
         self._saved_content[item.report_type] = self.editor.toPlainText()
-        self.period_title_label.setText(_period_label(state))
+        self.period_title_label.setText(report_period_label(state.report_type, state.period_start, state.period_end))
         self._update_report_status()
 
     def _choose_export_scope(self, scope: str) -> None:
-        if scope.startswith("timesheet_"):
-            self._export_timesheet(scope)
-            return
-        if scope not in {"current", "day", "month"} or self._view_model is None or self.is_busy:
-            return
-        state = self._states.get(self._current_type())
-        suffix = state.period_start.isoformat() if state is not None else self._selected_day.isoformat()
-        identity = str(state.report_id) if state is not None and state.report_id is not None else "draft"
-        filename = f"{self._current_type()}-report-{suffix}-{identity}.md"
-        if scope != "current":
-            filename = "daily-reports-" + (self._selected_day.strftime("%Y-%m") if scope == "month" else self._selected_day.isoformat()) + ".md"
-        path, _selected = QFileDialog.getSaveFileName(
-            self,
-            _("Export Markdown"),
-            filename,
-            _("Markdown files (*.md)"),
-        )
-        if path:
-            if scope == "current":
-                self.export_markdown(Path(path))
-            else:
-                day = self._selected_day
-                self._generate_busy = True
-                self._update_busy_controls()
-                def complete(result):
-                    self._generate_busy = False
-                    self._update_busy_controls()
-                    if result.ok:
-                        self._set_status(_("Saved daily reports exported."))
-                    else:
-                        self._set_error(result.error)
-                try:
-                    self._job_runner.submit("export_saved_reports", lambda _token: self._view_model.export_saved_daily(
-                        Path(path), day, whole_month=scope == "month"), on_complete=owned_callback(self, complete))
-                except Exception:
-                    complete(Result.failure(InfrastructureError("report_export_failed", "report_export_failed")))
-
-    def _export_timesheet(self, scope):
-        options = {"timesheet_day_xlsx": (False, "xlsx"), "timesheet_month_xlsx": (True, "xlsx"),
-                   "timesheet_day_pdf": (False, "pdf"), "timesheet_month_pdf": (True, "pdf")}
-        if scope not in options or self.is_busy or not bool(getattr(self._view_model, "timesheet_available", False)):
-            return
-        whole_month, format = options[scope]
-        day = self._selected_day
-        suffix = day.strftime("%Y-%m") if whole_month else day.isoformat()
-        path, _selected = QFileDialog.getSaveFileName(self, _("Export timesheet"), f"timesheet-{suffix}.{format}",
-            _("Excel files (*.xlsx)") if format == "xlsx" else _("PDF files (*.pdf)"))
-        if not path:
-            return
-        self._generate_busy = True
-        self._update_busy_controls()
-        def completed(result):
-            self._generate_busy = False
-            self._update_busy_controls()
-            if result.ok:
-                self._set_status(_("Timesheet exported."))
-            else:
-                self._set_error(result.error)
-        try:
-            self._job_runner.submit("export_timesheet", lambda _token: self._view_model.export_timesheet(
-                Path(path), day, whole_month=whole_month, format=format), on_complete=owned_callback(self, completed))
-        except Exception:
-            completed(Result.failure(InfrastructureError("timesheet_export_failed", "timesheet_export_failed")))
+        self._exports.choose_scope(scope, self._export_snapshot())
 
     def _set_error(self, error: AppError | None) -> None:
         if isinstance(error, CancellationError):
@@ -746,18 +572,3 @@ class ReportsPage(QWidget):
             return
         self._last_error = error
         self._set_status(display_error_message(error), error=True)
-
-def _period_label(state: ReportEditorState) -> str:
-    label = period_range_label(state.period_start, state.period_end)
-    if state.report_type == "weekly":
-        label += " " + _("(Week {week})").format(week=state.period_start.isocalendar().week)
-    return label
-
-def shift_period(day: date, report_type: str, direction: int) -> date:
-    if report_type == "daily":
-        return day + timedelta(days=direction)
-    if report_type == "weekly":
-        return day + timedelta(days=direction * 7)
-    shifted = add_months(day.replace(day=1), direction)
-    last = monthrange(shifted.year, shifted.month)[1]
-    return shifted.replace(day=min(day.day, last))

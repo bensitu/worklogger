@@ -67,6 +67,11 @@ Daily notes are separate memos. Their sharing choices and drafts are account/dat
 scoped. Reports retain saved versions and generation references; regeneration
 does not mutate recorded time. See [storage contracts](database.md).
 
+The report page coordinates state and requests. `widgets/report_editor.py` owns
+editor controls without persistence dependencies; `reporting/exports.py` handles
+export selection using immutable content and date snapshots. Period navigation
+belongs to domain reporting rules and rejects dates outside the supported range.
+
 ## Results and Background Work
 
 `Result[T]` contains a value or an `AppError`.
