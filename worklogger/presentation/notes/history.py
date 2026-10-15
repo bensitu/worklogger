@@ -5,7 +5,7 @@ from datetime import date
 
 from PySide6.QtCore import QDate, QLocale, QSignalBlocker, QTimer, Qt, Signal
 from PySide6.QtWidgets import (QComboBox, QDateEdit, QFrame, QGridLayout, QHBoxLayout,
-    QLabel, QLineEdit, QListWidget, QListWidgetItem, QPushButton, QToolButton,
+    QLabel, QLineEdit, QListWidget, QListWidgetItem, QProgressBar, QPushButton, QToolButton,
     QVBoxLayout, QWidget)
 
 from worklogger.domain.notes.models import NoteHistoryFilter
@@ -86,12 +86,6 @@ class NoteHistoryBrowser(QWidget):
             dates.addWidget(label, row, 0)
             dates.addWidget(field, row, 1)
         layout.addWidget(self.range_widget)
-        self.search_scope_input = QComboBox()
-        self.search_scope_input.addItem(_("Search current range"), "current")
-        self.search_scope_input.addItem(_("Search all dates"), "all")
-        self.search_scope_input.setAccessibleName(_("Search scope"))
-        self.search_scope_input.setToolTip(_("Search scope"))
-        layout.addWidget(self.search_scope_input)
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText(_("Search notes"))
         self.search_input.setAccessibleName(_("Search notes"))
@@ -104,7 +98,18 @@ class NoteHistoryBrowser(QWidget):
         for label in (self.range_label, self.count_label, self.empty_label):
             label.setProperty("role", "secondary")
             label.setWordWrap(True)
-            layout.addWidget(label)
+        layout.addWidget(self.range_label)
+        status = QHBoxLayout()
+        status.addWidget(self.count_label, 1)
+        self.loading_bar = QProgressBar()
+        self.loading_bar.setRange(0, 0)
+        self.loading_bar.setTextVisible(False)
+        self.loading_bar.setFixedSize(72, 6)
+        self.loading_bar.setAccessibleName(_("Loading..."))
+        self.loading_bar.hide()
+        status.addWidget(self.loading_bar)
+        layout.addLayout(status)
+        layout.addWidget(self.empty_label)
         self.empty_label.hide()
         self.history_list = QListWidget()
         self.history_list.setObjectName("note_history_list_widget")
@@ -125,18 +130,12 @@ class NoteHistoryBrowser(QWidget):
         self.start_input.dateChanged.connect(self._filters_changed)
         self.end_input.dateChanged.connect(self._filters_changed)
         self.search_input.textChanged.connect(self._filters_changed)
-        self.search_scope_input.currentIndexChanged.connect(self._filters_changed)
         self.more_button.clicked.connect(lambda: self._load(append=True))
 
     def _sync_controls(self):
         mode = self.mode_input.currentData()
-        has_query = bool(self.search_input.text().strip())
-        global_search = has_query and self.search_scope_input.currentData() == "all"
-        self.mode_input.setEnabled(not global_search)
         self.period_widget.setVisible(mode in ("month", "year"))
         self.range_widget.setVisible(mode == "custom")
-        self.period_widget.setEnabled(not global_search)
-        self.range_widget.setEnabled(not global_search)
         self.period_button.set_date(self._period)
         pattern = "yyyy" if mode == "year" else "yyyy-MM"
         self.period_button.setText(QLocale(get_language()).toString(QDate(self._period), pattern))
@@ -151,7 +150,7 @@ class NoteHistoryBrowser(QWidget):
     def _filters(self):
         text = self.search_input.text().strip()
         mode = self.mode_input.currentData()
-        if mode == "all" or (text and self.search_scope_input.currentData() == "all"):
+        if mode == "all":
             start, end = date.min, date.max
         elif mode == "custom":
             start, end = self.start_input.date().toPython(), self.end_input.date().toPython()
@@ -177,6 +176,7 @@ class NoteHistoryBrowser(QWidget):
         self._next_before = None
         self.more_button.hide()
         self._sync_controls()
+        self._set_loading(self._filters() is not None)
         self._timer.start()
 
     def refresh(self):
@@ -186,6 +186,15 @@ class NoteHistoryBrowser(QWidget):
     def stop(self, *_args):
         self._closed = True
         self._timer.stop()
+        self._set_loading(False)
+
+    def _set_loading(self, loading):
+        self.loading_bar.setVisible(loading)
+        self.more_button.setEnabled(not loading)
+        self.more_button.setText(_("Loading...") if loading else _("Load more"))
+        if loading:
+            self.count_label.setText(_("Loading..."))
+            self.empty_label.hide()
 
     def set_active_day(self, day):
         self._active_day = day
@@ -206,6 +215,7 @@ class NoteHistoryBrowser(QWidget):
             return
         filters = self._filters()
         if filters is None:
+            self._set_loading(False)
             self._loaded_filter = None
             self.history_list.clear()
             self.count_label.clear()
@@ -216,8 +226,7 @@ class NoteHistoryBrowser(QWidget):
         request = replace(filters, before=self._next_before) if append else filters
         revision = self._revision
         self._busy = True
-        self.count_label.setText(_("Loading..."))
-        self.more_button.setEnabled(False)
+        self._set_loading(True)
 
         def done(result):
             self._busy = False
@@ -226,9 +235,9 @@ class NoteHistoryBrowser(QWidget):
             if revision != self._revision:
                 self._timer.start()
                 return
+            self._set_loading(False)
             if not result.ok:
                 self.count_label.setText(_("Could not load notes"))
-                self.more_button.setEnabled(True)
                 self.error_occurred.emit(result.error)
                 return
             page = result.value
@@ -246,7 +255,6 @@ class NoteHistoryBrowser(QWidget):
                 shown=self.history_list.count(), total=page.total))
             self.empty_label.setVisible(not self.history_list.count())
             self.more_button.setVisible(page.next_before is not None)
-            self.more_button.setEnabled(True)
             self.set_active_day(self._active_day)
             if append:
                 self.history_list.verticalScrollBar().setValue(scroll_position)

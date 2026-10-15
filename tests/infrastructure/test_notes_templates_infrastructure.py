@@ -51,7 +51,8 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
             notes = SQLiteDailyNoteRepository(factory)
             start = date(2024, 1, 1)
             for offset in range(70):
-                notes.save(DailyNote(owner.id, start + timedelta(days=offset), "Summary\n" + "x" * 10000))
+                content = "Summary\n" + "x" * 10000 + (" Archived reference" if offset == 0 else "")
+                notes.save(DailyNote(owner.id, start + timedelta(days=offset), content))
             notes.save(DailyNote(other.id, start + timedelta(days=100), "Private summary"))
             notes.save(DailyNote(owner.id, date(2023, 12, 31), ""))
             legacy_day = date(2023, 12, 30)
@@ -61,6 +62,12 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
             page = notes.browse(owner.id, NoteHistoryFilter())
             self.assertEqual((len(page.notes), page.total), (50, 71))
             self.assertTrue(all(len(note.text) <= 160 and "\n" not in note.text for note in page.notes))
+            self.assertNotIn(start, [note.day for note in page.notes])
+            archived = notes.browse(owner.id, NoteHistoryFilter(text="Archived reference"))
+            self.assertEqual((archived.total, [note.day for note in archived.notes]), (1, [start]))
+            matches = notes.browse(owner.id, NoteHistoryFilter(text="Summary"))
+            more_matches = notes.browse(owner.id, NoteHistoryFilter(text="Summary", before=matches.next_before))
+            self.assertEqual((len(matches.notes), len(more_matches.notes), more_matches.total), (50, 20, 70))
             remaining = notes.browse(owner.id, NoteHistoryFilter(before=page.next_before))
             self.assertEqual((len(remaining.notes), remaining.total, remaining.next_before), (21, 71, None))
             days = [note.day for note in page.notes + remaining.notes]

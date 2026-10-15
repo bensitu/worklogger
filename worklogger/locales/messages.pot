@@ -1769,12 +1769,6 @@ msgstr ""
 msgid "Scheduled"
 msgstr ""
 
-msgid "Search all dates"
-msgstr ""
-
-msgid "Search current range"
-msgstr ""
-
 msgid "Search notes"
 msgstr ""
 
@@ -1782,9 +1776,6 @@ msgid "Search records"
 msgstr ""
 
 msgid "Search reports..."
-msgstr ""
-
-msgid "Search scope"
 msgstr ""
 
 msgid "Searching..."

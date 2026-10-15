@@ -135,16 +135,12 @@ class NotesLayoutChecks(unittest.TestCase):
                                     if mode == "custom":
                                         self.assertEqual(browser.start_input.x(), browser.end_input.x())
                                         self.assertEqual(browser.start_input.size(), browser.end_input.size())
-                                    controls = [browser.mode_input, browser.search_input, browser.search_scope_input,
+                                    controls = [browser.mode_input, browser.search_input,
                                                 browser.range_label, browser.count_label, browser.history_list,
                                                 browser.more_button]
                                     controls += ([browser.start_input, browser.end_input] if mode == "custom" else
                                                  [browser.period_button] if mode == "year" else [])
                                     rectangles = []
-                                    scope = browser.search_scope_input
-                                    for index in range(scope.count()):
-                                        self.assertLessEqual(scope.fontMetrics().horizontalAdvance(scope.itemText(index)) + 40,
-                                                             scope.width(), (language_code, scope.itemText(index)))
                                     for widget in controls:
                                         rect = widget.rect().translated(widget.mapTo(dialog, widget.rect().topLeft()))
                                         self.assertTrue(dialog.rect().contains(rect), (language_code, mode, widget))
@@ -152,6 +148,19 @@ class NotesLayoutChecks(unittest.TestCase):
                                                         (language_code, mode, widget))
                                         rectangles.append(rect)
                                     self.capture(dialog, f"{capture_prefix}-notes-{'dark' if dark else 'light'}-{width}-{mode}")
+                                    if mode == "all":
+                                        count_text = browser.count_label.text()
+                                        browser._set_loading(True)
+                                        self.app.processEvents()
+                                        self.assertTrue(browser.loading_bar.isVisible())
+                                        self.assertTrue(browser.mode_input.isEnabled())
+                                        self.assertTrue(browser.search_input.isEnabled())
+                                        self.assertTrue(dialog.editor.isEnabled())
+                                        self.assertFalse(browser.more_button.isEnabled())
+                                        self.assertLess(browser.count_label.geometry().right(), browser.loading_bar.x())
+                                        self.capture(dialog, f"{capture_prefix}-notes-{'dark' if dark else 'light'}-{width}-loading")
+                                        browser._set_loading(False)
+                                        browser.count_label.setText(count_text)
                                 scrollbar = browser.history_list.verticalScrollBar()
                                 scrollbar.setValue(scrollbar.maximum())
                                 scroll_position = scrollbar.value()

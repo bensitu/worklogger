@@ -1771,12 +1771,6 @@ msgstr "일정 / 기록"
 msgid "Scheduled"
 msgstr "예정됨"
 
-msgid "Search all dates"
-msgstr "모든 날짜 검색"
-
-msgid "Search current range"
-msgstr "현재 범위 검색"
-
 msgid "Search notes"
 msgstr "메모 검색"
 
@@ -1785,9 +1779,6 @@ msgstr "기록 검색"
 
 msgid "Search reports..."
 msgstr "보고서 검색..."
-
-msgid "Search scope"
-msgstr "검색 범위"
 
 msgid "Searching..."
 msgstr "검색 중..."

@@ -1771,12 +1771,6 @@ msgstr "日程 / 记录"
 msgid "Scheduled"
 msgstr "预定"
 
-msgid "Search all dates"
-msgstr "搜索全部日期"
-
-msgid "Search current range"
-msgstr "搜索当前范围"
-
 msgid "Search notes"
 msgstr "搜索笔记"
 
@@ -1785,9 +1779,6 @@ msgstr "检索记录"
 
 msgid "Search reports..."
 msgstr "搜索报表..."
-
-msgid "Search scope"
-msgstr "搜索范围"
 
 msgid "Searching..."
 msgstr "正在检索..."

@@ -110,12 +110,16 @@ to select another month or year. Results are newest first; Load more retrieves
 the next 50 dates for longer ranges.
 
 Search finds saved notes and retained previous entries within the selected
-range. The search scope menu offers **Search current range** and
-**Search all dates**, and can be set before typing. Clearing the search restores
-the browsing range without resetting the chosen search scope. Filtering never
-replaces the open note. Opening another date offers to keep any unsaved draft.
-Copy and export operate on the open note; Reload saved note discards its local
-draft.
+date range. Matching uses the full saved content before pagination, not just
+the previews already loaded. Select **All dates** to browse or search across
+years. Changing the range keeps the search text; clearing the search keeps the
+selected range.
+A loading indicator appears while results are being retrieved. Range selection,
+search, and note editing remain available during loading.
+
+Filtering never replaces the open note. Opening another date offers to keep
+any unsaved draft. Copy and export operate on the open note; Reload saved note
+discards its local draft.
 
 Dates with saved note content show a calendar dot even when they also contain
 time records or scheduled events. When an overnight moon icon is present, the
