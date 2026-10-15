@@ -72,6 +72,7 @@ class NotesLayoutChecks(unittest.TestCase):
                                 dialog.resize(width, height)
                                 self.app.processEvents()
                                 self.assertEqual((dialog.width(), dialog.height()), (width, height))
+                                self.assert_period_controls_aligned(dialog.history_browser)
                                 self.assertEqual(dialog.history_list.horizontalScrollBarPolicy(), Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
                                 for row in range(dialog.history_list.count()):
                                     self.assertGreaterEqual(dialog.history_list.visualItemRect(dialog.history_list.item(row)).height(), 64)
@@ -158,6 +159,8 @@ class NotesLayoutChecks(unittest.TestCase):
                                     self.app.processEvents()
                                     self.assertEqual((dialog.width(), dialog.height()), (width, height))
                                     self.assertGreaterEqual(browser.history_list.height(), 64)
+                                    if mode == "year":
+                                        self.assert_period_controls_aligned(browser)
                                     if mode == "custom":
                                         self.assertEqual(browser.start_input.x(), browser.end_input.x())
                                         self.assertEqual(browser.start_input.size(), browser.end_input.size())
@@ -223,6 +226,11 @@ class NotesLayoutChecks(unittest.TestCase):
             set_language(language)
             self.app.setPalette(palette)
             self.app.setStyleSheet(stylesheet)
+
+    def assert_period_controls_aligned(self, browser):
+        bounds = {(button.y(), button.height()) for button in
+                  (browser.previous_button, browser.period_button, browser.next_button)}
+        self.assertEqual(len(bounds), 1, bounds)
 
     def hover_item(self, widget, row):
         viewport = widget.viewport()

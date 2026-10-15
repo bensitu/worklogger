@@ -5,7 +5,7 @@ from datetime import date
 
 from PySide6.QtCore import QDate, QLocale, QSignalBlocker, QTimer, Qt, Signal
 from PySide6.QtWidgets import (QComboBox, QDateEdit, QFrame, QGridLayout, QHBoxLayout,
-    QLabel, QLineEdit, QListWidget, QListWidgetItem, QProgressBar, QPushButton, QToolButton,
+    QLabel, QLineEdit, QListWidget, QListWidgetItem, QProgressBar, QPushButton, QSizePolicy, QToolButton,
     QVBoxLayout, QWidget)
 
 from worklogger.domain.notes.models import NoteHistoryFilter
@@ -64,6 +64,8 @@ class NoteHistoryBrowser(QWidget):
             set_button_icon(button, icon)
         self.period_button = DatePickerButton()
         self.period_button.set_colors(current_colors())
+        for button in (self.previous_button, self.period_button, self.next_button):
+            button.setSizePolicy(button.sizePolicy().horizontalPolicy(), QSizePolicy.Policy.Minimum)
         period.addWidget(self.previous_button)
         period.addWidget(self.period_button, 1)
         period.addWidget(self.next_button)
