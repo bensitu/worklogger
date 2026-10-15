@@ -469,8 +469,8 @@ msgstr "{period}의 현재 보고서를 내보냈습니다."
 msgid "Current saved version"
 msgstr "현재 저장된 버전"
 
-msgid "Current visible report"
-msgstr "현재 표시된 보고서"
+msgid "Current visible report (Markdown)"
+msgstr "현재 표시된 보고서 (Markdown)"
 
 msgid "Cursor at %1, %2\nPress ESC to cancel"
 msgstr "커서 위치: %1, %2\nESC 키를 눌러 취소"
@@ -1735,11 +1735,17 @@ msgstr "저장됨"
 msgid "Saved daily report"
 msgstr "저장된 일간 보고서"
 
+msgid "Saved daily report (Markdown)"
+msgstr "저장된 일일 보고서 (Markdown)"
+
 msgid "Saved daily reports exported."
 msgstr "저장된 일간 보고서를 내보냈습니다."
 
 msgid "Saved daily reports for this month"
 msgstr "이번 달의 저장된 일간 보고서"
+
+msgid "Saved daily reports for this month (Markdown)"
+msgstr "이번 달에 저장된 일일 보고서 (Markdown)"
 
 msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
 msgstr "저장된 설정: {requested} 토큰. 실제 컨텍스트: {effective} 토큰."

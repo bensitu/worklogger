@@ -469,8 +469,8 @@ msgstr "{period}の現在のレポートを出力しました。"
 msgid "Current saved version"
 msgstr "現在の保存済みバージョン"
 
-msgid "Current visible report"
-msgstr "表示中のレポート"
+msgid "Current visible report (Markdown)"
+msgstr "現在表示中のレポート（Markdown）"
 
 msgid "Cursor at %1, %2\nPress ESC to cancel"
 msgstr "カーソル位置: %1, %2\nESC キーでキャンセル"
@@ -1735,11 +1735,17 @@ msgstr "保存しました"
 msgid "Saved daily report"
 msgstr "保存済みの日報"
 
+msgid "Saved daily report (Markdown)"
+msgstr "保存済みの日報（Markdown）"
+
 msgid "Saved daily reports exported."
 msgstr "保存済みの日報を出力しました。"
 
 msgid "Saved daily reports for this month"
 msgstr "この月の保存済み日報"
+
+msgid "Saved daily reports for this month (Markdown)"
+msgstr "今月の保存済み日報（Markdown）"
 
 msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
 msgstr "保存された設定: {requested} トークン。実効コンテキスト: {effective} トークン。"

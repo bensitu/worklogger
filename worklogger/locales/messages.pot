@@ -467,7 +467,7 @@ msgstr ""
 msgid "Current saved version"
 msgstr ""
 
-msgid "Current visible report"
+msgid "Current visible report (Markdown)"
 msgstr ""
 
 msgid "Cursor at %1, %2\nPress ESC to cancel"
@@ -1733,10 +1733,16 @@ msgstr ""
 msgid "Saved daily report"
 msgstr ""
 
+msgid "Saved daily report (Markdown)"
+msgstr ""
+
 msgid "Saved daily reports exported."
 msgstr ""
 
 msgid "Saved daily reports for this month"
+msgstr ""
+
+msgid "Saved daily reports for this month (Markdown)"
 msgstr ""
 
 msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."

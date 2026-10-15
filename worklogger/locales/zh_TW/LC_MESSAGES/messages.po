@@ -469,8 +469,8 @@ msgstr "已匯出 {period} 的目前報表。"
 msgid "Current saved version"
 msgstr "目前已儲存版本"
 
-msgid "Current visible report"
-msgstr "目前顯示的報表"
+msgid "Current visible report (Markdown)"
+msgstr "目前顯示的報表（Markdown）"
 
 msgid "Cursor at %1, %2\nPress ESC to cancel"
 msgstr "游標位置：%1, %2\n按 ESC 取消"
@@ -1735,11 +1735,17 @@ msgstr "已儲存"
 msgid "Saved daily report"
 msgstr "已儲存日報"
 
+msgid "Saved daily report (Markdown)"
+msgstr "已儲存的日報（Markdown）"
+
 msgid "Saved daily reports exported."
 msgstr "已匯出儲存的日報。"
 
 msgid "Saved daily reports for this month"
 msgstr "本月已儲存日報"
+
+msgid "Saved daily reports for this month (Markdown)"
+msgstr "本月已儲存的日報（Markdown）"
 
 msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
 msgstr "已儲存的偏好：{requested} tokens；實際上下文：{effective} tokens。"

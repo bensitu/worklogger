@@ -7,6 +7,7 @@ import unittest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import qInstallMessageHandler
+from PySide6.QtTest import QSignalSpy
 from PySide6.QtWidgets import QApplication, QScrollArea
 
 from worklogger.domain.shared.result import Result
@@ -317,8 +318,10 @@ class ReportingLayoutChecks(unittest.TestCase):
                                     self.assertIn("\n", button.text())
                                     self.assertLessEqual(button._document.size().height(), button.height() - 20)
                                     page.history_panel.search_line_edit.setText("11")
+                                    self.assertTrue(QSignalSpy(page.history_panel._search_timer.timeout).wait(1000))
                                     self.assertEqual(len(page.history_panel._buttons), 1)
                                     page.history_panel.search_line_edit.clear()
+                                    self.assertTrue(QSignalSpy(page.history_panel._search_timer.timeout).wait(1000))
                                     self.app.processEvents()
                                     self.assertTrue(all(button.isVisible() for button in page.history_panel._buttons.values()))
                                     buttons = tuple(page.history_panel._buttons.values())

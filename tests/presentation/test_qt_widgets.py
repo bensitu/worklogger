@@ -93,7 +93,7 @@ class QtWidgetTests(unittest.TestCase):
         try:
             for button_type in (QPushButton, QToolButton):
                 button = button_type()
-                set_button_icon(button, "file-text")
+                set_button_icon(button, "file-text", format_label="MD" if button_type is QToolButton else "")
                 for theme, dark in (("blue", False), ("blue", True), ("green", False), ("green", True)):
                     app.setPalette(engine.qt_palette(theme, dark=dark))
                     app.setStyleSheet(engine.application_stylesheet(theme, dark=dark))
@@ -156,6 +156,17 @@ class QtWidgetTests(unittest.TestCase):
         width = max(x for x, _y in points) - min(x for x, _y in points) + 1
         height = max(y for _x, y in points) - min(y for _x, y in points) + 1
         self.assertLessEqual(abs(width - height), 1)
+        marked = ui_icon("copy", format_label="MD")
+        first_marked = marked.pixmap(QSize(24, 24))
+        self.assertNotEqual(first_marked.cacheKey(), ui_icon("copy").pixmap(QSize(24, 24)).cacheKey())
+        self.assertEqual(first_marked.cacheKey(), marked.pixmap(QSize(24, 24)).cacheKey())
+        for ratio in (1.0, 1.5, 2.0):
+            scaled_marked = marked.pixmap(QSize(24, 24), ratio)
+            self.assertEqual(scaled_marked.devicePixelRatio(), ratio)
+            self.assertEqual(scaled_marked.size(), QSize(round(24 * ratio), round(24 * ratio)))
+            image = scaled_marked.toImage()
+            self.assertTrue(any(image.pixelColor(x, y).alpha() for x in range(image.width())
+                                for y in range(round(7 * ratio))))
         changed = QPalette(original)
         changed.setColor(QPalette.ColorRole.ButtonText, QColor("#dc2626"))
         try:

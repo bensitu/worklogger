@@ -100,11 +100,11 @@ QToolButton#copy_report_button,
 QToolButton#note_copy_button,
 QToolButton#note_export_button,
 QToolButton#note_reload_button {
-  min-width: 20px;
-  max-width: 20px;
+  min-width: 24px;
+  max-width: 24px;
   min-height: 28px;
   max-height: 28px;
-  padding: 5px 9px;
+  padding: 5px 7px;
 }
 
 QToolButton[export_menu="true"] {
