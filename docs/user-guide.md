@@ -80,6 +80,10 @@ Manage work types and projects in **Settings > General**. Custom types have Work
 Break, or Leave accounting. Saved records retain their original classification
 and labels when catalog entries are renamed or archived.
 
+Calendar work-type markers use cyan for Remote, blue for Meeting, gold for
+Training, and gray for Other. Business trip and leave types retain their
+distinct colors. Normal work and Break have no colored marker.
+
 Use record search to filter dates, content, types, projects, or work items, then
 open a result in Calendar. Recent context reuses an active project/work-item
 selection. Batch assignment requires an explicit selection and confirmation.

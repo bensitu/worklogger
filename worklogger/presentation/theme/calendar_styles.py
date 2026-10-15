@@ -9,19 +9,27 @@ STYLE_PRIORITY = ("weekend", "holiday", "today", "selected")
 _WORK_TYPE_MARKERS: dict[bool, dict[str, str | None]] = {
     False: {
         WorkType.NORMAL.value: None,
-        WorkType.REMOTE.value: None,
+        WorkType.REMOTE.value: "#168a9b",
         WorkType.BUSINESS_TRIP.value: "#e07800",
         WorkType.PAID_LEAVE.value: "#2a9a2a",
         WorkType.COMP_LEAVE.value: "#8844cc",
         WorkType.SICK_LEAVE.value: "#cc3333",
+        WorkType.MEETING.value: "#2563b8",
+        WorkType.TRAINING.value: "#b38b00",
+        WorkType.BREAK.value: None,
+        WorkType.OTHER.value: "#737b87",
     },
     True: {
         WorkType.NORMAL.value: None,
-        WorkType.REMOTE.value: None,
+        WorkType.REMOTE.value: "#59c9d7",
         WorkType.BUSINESS_TRIP.value: "#ffaa44",
         WorkType.PAID_LEAVE.value: "#66cc66",
         WorkType.COMP_LEAVE.value: "#bb88ff",
         WorkType.SICK_LEAVE.value: "#ff6666",
+        WorkType.MEETING.value: "#80b3ff",
+        WorkType.TRAINING.value: "#e8c65b",
+        WorkType.BREAK.value: None,
+        WorkType.OTHER.value: "#aeb6c2",
     },
 }
 

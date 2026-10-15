@@ -69,6 +69,52 @@ def may_records():
 
 
 class CalendarLayoutChecks(unittest.TestCase):
+    def test_work_type_markers_render_in_light_dark_and_selected_cells(self):
+        from PySide6.QtGui import QColor
+        from tests.presentation.test_qt_widgets import _calendar_state
+        from worklogger.presentation.theme import ThemeEngine
+        from worklogger.presentation.widgets.calendar import CalendarDayButton
+
+        engine = ThemeEngine()
+        base = next(cell for cell in _calendar_state().cells if cell.is_selected)
+        old_style, old_palette = self.app.styleSheet(), self.app.palette()
+        old_context = self.app.property("worklogger_theme_context")
+        button = CalendarDayButton()
+        button.setFixedSize(84, 110)
+        types = (WorkType.NORMAL, WorkType.REMOTE, WorkType.MEETING, WorkType.TRAINING,
+                 WorkType.BREAK, WorkType.OTHER)
+        try:
+            for theme, dark, selected in product(("blue", "liquid_glass"), (False, True), (False, True)):
+                engine.apply_to(self.app, theme, dark=dark)
+                style = engine.calendar_cell_style({"selected"} if selected else set(), theme=theme, dark=dark)
+                for work_type in types:
+                    marker = engine.work_type_marker_color(work_type, dark=dark)
+                    cell = replace(base, work_type=work_type.value, work_type_marker_color=marker,
+                                   is_selected=selected, style=style)
+                    button.set_cell(replace(cell, work_type_marker_color=None))
+                    before = button.grab().toImage().scaled(button.size())
+                    button.set_cell(cell)
+                    after = button.grab().toImage().scaled(button.size())
+                    if marker:
+                        self.assertEqual(after.pixelColor(3, 55), QColor(marker))
+                        self.assertNotEqual(before.pixelColor(3, 55), after.pixelColor(3, 55))
+                        self.assertNotEqual(before.pixelColor(6, 4), after.pixelColor(6, 4))
+                        self.assertNotEqual(before.pixelColor(6, 105), after.pixelColor(6, 105))
+                        self.assertEqual(before.pixelColor(0, 55), after.pixelColor(0, 55))
+                    else:
+                        self.assertEqual(before, after)
+                    directory = os.environ.get("WORKLOGGER_SCREENSHOTS")
+                    if directory:
+                        target = Path(directory)
+                        target.mkdir(parents=True, exist_ok=True)
+                        self.assertTrue(button.grab().save(str(target /
+                            f"work-type-{theme}-{dark}-{selected}-{work_type.value}.png")))
+        finally:
+            button.deleteLater()
+            self.app.setStyleSheet(old_style)
+            self.app.setPalette(old_palette)
+            self.app.setProperty("worklogger_theme_context", old_context)
+
     def test_note_markers_align_with_overnight_icons_and_preserve_event_badges(self):
         from tests.presentation.test_qt_widgets import _calendar_state
         from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts

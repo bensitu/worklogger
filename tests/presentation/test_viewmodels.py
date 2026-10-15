@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date
 import unittest
 
-from PySide6.QtGui import QPalette
+from PySide6.QtGui import QColor, QPalette
 
 from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
 from worklogger.app.queries.work_log_queries import GetMonthRecordsQuery
@@ -306,6 +306,17 @@ class PresentationViewModelTests(unittest.TestCase):
             engine.work_type_marker_color(WorkType.BUSINESS_TRIP),
             "#e07800",
         )
+        for dark in (False, True):
+            colors = []
+            for work_type in WorkType:
+                marker = engine.work_type_marker_color(work_type, dark=dark)
+                if work_type in (WorkType.NORMAL, WorkType.BREAK):
+                    self.assertIsNone(marker)
+                else:
+                    self.assertIsNotNone(marker)
+                    self.assertTrue(QColor(marker).isValid())
+                    colors.append(marker)
+            self.assertEqual(len(colors), len(set(colors)))
 
     def test_theme_engine_uses_shared_templates_and_resolved_palettes(self) -> None:
         engine = ThemeEngine()

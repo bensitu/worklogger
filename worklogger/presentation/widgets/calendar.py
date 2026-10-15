@@ -4,7 +4,7 @@ from __future__ import annotations
 
 
 from PySide6.QtCore import QRect, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPen, QTextLayout, QTextOption
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPainterPath, QPen, QTextLayout, QTextOption
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -130,9 +130,15 @@ class CalendarDayButton(QPushButton):
             )
 
         if cell.work_type_marker_color:
-            painter.setPen(Qt.PenStyle.NoPen)
-            painter.setBrush(QColor(cell.work_type_marker_color))
-            painter.drawRoundedRect(QRectF(2, 4, 3, self.height() - 8), 1.5, 1.5)
+            stripe = QPainterPath()
+            stripe.moveTo(7, 3.5)
+            stripe.quadTo(3.5, 3.5, 3.5, 7)
+            stripe.lineTo(3.5, self.height() - 7)
+            stripe.quadTo(3.5, self.height() - 3.5, 7, self.height() - 3.5)
+            painter.setPen(QPen(QColor(cell.work_type_marker_color), 3, Qt.PenStyle.SolidLine,
+                                Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawPath(stripe)
 
         if cell.has_note_marker:
             painter.setPen(Qt.PenStyle.NoPen)
