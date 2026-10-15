@@ -20,7 +20,7 @@ from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 from worklogger.presentation.widgets.time_picker import TimePickerDialog
 from worklogger.presentation.widgets.work_context_picker import WorkContextPicker
-from worklogger.presentation.work_type_labels import work_type_label
+from worklogger.presentation.widgets.work_type_options import add_work_type_option, work_type_icon
 from worklogger.presentation.processing import TextProcessingTask
 from worklogger.presentation.job_runner import owned_callback
 from worklogger.presentation.widgets.processing_progress import ProcessingProgress
@@ -274,11 +274,11 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         for definition in (WorkType.NORMAL, WorkType.REMOTE, WorkType.BUSINESS_TRIP,
                 WorkType.MEETING, WorkType.TRAINING, WorkType.BREAK,
                 WorkType.PAID_LEAVE, WorkType.COMP_LEAVE, WorkType.SICK_LEAVE):
-            self.work_type_combo.addItem(work_type_label(definition), definition.value)
+            add_work_type_option(self.work_type_combo, definition)
         for definition in self._custom_types:
             if not definition.archived:
-                self.work_type_combo.addItem(definition.label, definition.value)
-        self.work_type_combo.addItem(work_type_label(WorkType.OTHER), WorkType.OTHER.value)
+                add_work_type_option(self.work_type_combo, definition)
+        add_work_type_option(self.work_type_combo, WorkType.OTHER)
 
     def refresh_work_types(self):
         self._updating = True
@@ -402,9 +402,10 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             if snapshot is None:
                 snapshot = next((definition for definition in self._custom_types if definition.value == work_type), None)
             if isinstance(snapshot, CustomWorkType) and self.work_type_combo.findData(work_type) < 0:
-                self.work_type_combo.insertItem(self.work_type_combo.count() - 1, snapshot.label, snapshot.value)
+                add_work_type_option(self.work_type_combo, snapshot, index=self.work_type_combo.count() - 1)
             elif isinstance(snapshot, CustomWorkType):
                 self.work_type_combo.setItemText(self.work_type_combo.findData(work_type), snapshot.label)
+                self.work_type_combo.setItemIcon(self.work_type_combo.findData(work_type), work_type_icon(snapshot))
             self.work_type_combo.setCurrentIndex(max(0, self.work_type_combo.findData(work_type)))
             self.work_type_combo.setToolTip(self.work_type_combo.currentText())
             content = self.view_model.auto_content if auto else draft.content

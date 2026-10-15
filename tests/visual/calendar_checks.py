@@ -69,6 +69,51 @@ def may_records():
 
 
 class CalendarLayoutChecks(unittest.TestCase):
+    def test_work_type_popup_previews_match_calendar_colors_across_languages_and_themes(self):
+        from PySide6.QtWidgets import QComboBox
+        from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
+        from worklogger.presentation.widgets.work_type_options import add_work_type_option
+
+        configure_application_style()
+        install_bundled_fonts()
+        engine = ThemeEngine()
+        old_style, old_palette = self.app.styleSheet(), self.app.palette()
+        old_context = self.app.property("worklogger_theme_context")
+        try:
+            for language, theme, dark in product(available_languages(), ("blue", "liquid_glass"), (False, True)):
+                set_language(language)
+                engine.apply_to(self.app, theme, dark=dark)
+                combo = QComboBox()
+                try:
+                    for definition in WorkType:
+                        add_work_type_option(combo, definition)
+                    combo.setCurrentIndex(combo.findData("remote"))
+                    combo.resize(max(220, combo.sizeHint().width()), combo.sizeHint().height())
+                    combo.show()
+                    combo.showPopup()
+                    self.app.processEvents()
+                    popup = combo.view().window()
+                    image = popup.grab().toImage()
+                    colors = {image.pixelColor(x, y).name()
+                              for x in range(image.width()) for y in range(image.height())}
+                    for definition in WorkType:
+                        marker = engine.work_type_marker_color(definition, dark=dark)
+                        if marker:
+                            self.assertIn(marker, colors)
+                    directory = os.environ.get("WORKLOGGER_SCREENSHOTS")
+                    if directory:
+                        target = Path(directory)
+                        target.mkdir(parents=True, exist_ok=True)
+                        self.assertTrue(popup.grab().save(str(target / f"work-types-{language}-{theme}-{dark}.png")))
+                finally:
+                    combo.hidePopup()
+                    combo.close()
+                    combo.deleteLater()
+        finally:
+            self.app.setStyleSheet(old_style)
+            self.app.setPalette(old_palette)
+            self.app.setProperty("worklogger_theme_context", old_context)
+
     def test_work_type_markers_render_in_light_dark_and_selected_cells(self):
         from PySide6.QtGui import QColor
         from tests.presentation.test_qt_widgets import _calendar_state

@@ -83,6 +83,46 @@ def _calendar_state() -> CalendarMonthViewState:
 
 
 class QtWidgetTests(unittest.TestCase):
+    def test_work_type_options_preserve_values_and_follow_calendar_marker_colors(self):
+        from PySide6.QtWidgets import QComboBox
+        from worklogger.domain.worklog.models import CustomWorkType, WorkType
+        from worklogger.presentation.widgets.work_type_options import add_work_type_option
+
+        app = _app()
+        old_style, old_palette = app.styleSheet(), app.palette()
+        old_context = app.property("worklogger_theme_context")
+        combo = QComboBox()
+        definitions = (*WorkType, *(CustomWorkType(f"custom:{index:032x}", category, category)
+                                    for index, category in enumerate(("work", "break", "leave"), 1)))
+        for definition in definitions:
+            add_work_type_option(combo, definition)
+        combo.setCurrentIndex(combo.findData("meeting"))
+        engine = ThemeEngine()
+        try:
+            for dark in (False, True):
+                engine.apply_to(app, dark=dark)
+                for index, definition in enumerate(definitions):
+                    self.assertEqual(combo.itemData(index), definition.value)
+                    icon = combo.itemIcon(index)
+                    image = icon.pixmap(combo.iconSize()).toImage()
+                    opaque_colors = {image.pixelColor(x, y).name()
+                                     for x in range(image.width()) for y in range(image.height())
+                                     if image.pixelColor(x, y).alpha() == 255}
+                    expected = engine.work_type_marker_color(definition, dark=dark)
+                    self.assertEqual(opaque_colors, {expected} if expected else set())
+                    scaled = QIcon(icon).pixmap(combo.iconSize(), 2.0)
+                    self.assertEqual(scaled.devicePixelRatio(), 2.0)
+                    disabled = icon.pixmap(combo.iconSize(), QIcon.Mode.Disabled).toImage()
+                    self.assertLessEqual(max(disabled.pixelColor(x, y).alpha()
+                                             for x in range(disabled.width())
+                                             for y in range(disabled.height())), 115)
+                self.assertEqual(combo.currentData(), "meeting")
+        finally:
+            combo.deleteLater()
+            app.setStyleSheet(old_style)
+            app.setPalette(old_palette)
+            app.setProperty("worklogger_theme_context", old_context)
+
     def test_button_icons_follow_text_through_role_theme_and_enabled_changes(self):
         from PySide6.QtWidgets import QPushButton, QToolButton
         from worklogger.presentation.widgets.icons import set_button_icon

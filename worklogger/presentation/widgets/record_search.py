@@ -15,6 +15,7 @@ from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_code, display_error_message
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
+from worklogger.presentation.widgets.work_type_options import add_work_type_option
 from worklogger.presentation.widgets.date_picker import configure_calendar_popup
 from worklogger.presentation.work_type_labels import work_type_label
 from worklogger.presentation.date_labels import duration_label
@@ -72,11 +73,11 @@ class RecordSearchDialog(QDialog):
         self.item_combo = QComboBox()
         self.type_combo.addItem(_("All work types"), None)
         for value in WorkType:
-            self.type_combo.addItem(work_type_label(value), value.value)
+            add_work_type_option(self.type_combo, value)
         types = view_model.list_work_types()
         if types.ok:
             for value in types.value:
-                self.type_combo.addItem(value.label, value.value)
+                add_work_type_option(self.type_combo, value)
         self.project_combo.addItem(_("All projects"), None)
         inventory = view_model.project_inventory()
         if inventory.ok:

@@ -83,6 +83,7 @@ and labels when catalog entries are renamed or archived.
 Calendar work-type markers use cyan for Remote, blue for Meeting, gold for
 Training, and gray for Other. Business trip and leave types retain their
 distinct colors. Normal work and Break have no colored marker.
+Work-type menus show the same colors beside each option.
 
 Use record search to filter dates, content, types, projects, or work items, then
 open a result in Calendar. Recent context reuses an active project/work-item
