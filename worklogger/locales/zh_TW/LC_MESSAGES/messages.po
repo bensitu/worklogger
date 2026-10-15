@@ -118,6 +118,9 @@ msgstr "管理員"
 msgid "Administrator permission is required."
 msgstr "需要管理員權限。"
 
+msgid "All dates"
+msgstr "全部日期"
+
 msgid "All day"
 msgstr "全天"
 
@@ -442,6 +445,9 @@ msgstr "複製復原金鑰"
 msgid "Copy temporary password"
 msgstr "複製臨時密碼"
 
+msgid "Could not load notes"
+msgstr "無法載入筆記"
+
 msgid "Create account"
 msgstr "建立帳戶"
 
@@ -471,6 +477,9 @@ msgstr "游標位置：%1, %2\n按 ESC 取消"
 
 msgid "Custom"
 msgstr "自訂"
+
+msgid "Custom range"
+msgstr "自訂範圍"
 
 msgid "Cut"
 msgstr "剪下"
@@ -507,6 +516,9 @@ msgstr "資料庫備份"
 
 msgid "Date"
 msgstr "日期"
+
+msgid "Date range"
+msgstr "日期範圍"
 
 msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
 msgstr "包含休息類型記錄的日期。工作天數與休息天數可以重疊，請假另行統計。"
@@ -913,6 +925,9 @@ msgstr "包含工作內容"
 msgid "Install the native inference dependency from requirements-ai.txt, then restart WorkLogger."
 msgstr "請安裝 requirements-ai.txt 中的本機推論相依套件，然後重新啟動 WorkLogger。"
 
+msgid "Invalid date range"
+msgstr "日期範圍無效"
+
 msgid "January"
 msgstr "1月"
 
@@ -990,6 +1005,9 @@ msgstr "連結的身分"
 
 msgid "Liquid Glass"
 msgstr "液態玻璃"
+
+msgid "Load more"
+msgstr "載入更多"
 
 msgid "Loading models..."
 msgstr "正在載入模型..."
@@ -1227,9 +1245,6 @@ msgstr "未選取模型。"
 
 msgid "No models found"
 msgstr "找不到模型"
-
-msgid "No note yet"
-msgstr "尚無筆記"
 
 msgid "No notes found"
 msgstr "找不到筆記"
@@ -1749,6 +1764,9 @@ msgstr "日程 / 記錄"
 
 msgid "Scheduled"
 msgstr "預定"
+
+msgid "Search all dates"
+msgstr "搜尋全部日期"
 
 msgid "Search notes"
 msgstr "搜尋筆記"
@@ -2589,6 +2607,9 @@ msgstr "{ram} GB"
 
 msgid "{received} MB of {total} MB"
 msgstr "{received} MB / {total} MB"
+
+msgid "{shown} of {total} dates"
+msgstr "已顯示 {shown} / {total} 個日期"
 
 msgid "{size} MB"
 msgstr "{size} MB"

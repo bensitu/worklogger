@@ -118,6 +118,9 @@ msgstr "Admin"
 msgid "Administrator permission is required."
 msgstr "Administrator permission is required."
 
+msgid "All dates"
+msgstr "All dates"
+
 msgid "All day"
 msgstr "All day"
 
@@ -442,6 +445,9 @@ msgstr "Copy recovery key"
 msgid "Copy temporary password"
 msgstr "Copy temporary password"
 
+msgid "Could not load notes"
+msgstr "Could not load notes"
+
 msgid "Create account"
 msgstr "Create account"
 
@@ -471,6 +477,9 @@ msgstr "Cursor at %1, %2\nPress ESC to cancel"
 
 msgid "Custom"
 msgstr "Custom"
+
+msgid "Custom range"
+msgstr "Custom range"
 
 msgid "Cut"
 msgstr "Cut"
@@ -507,6 +516,9 @@ msgstr "Database Backup"
 
 msgid "Date"
 msgstr "Date"
+
+msgid "Date range"
+msgstr "Date range"
 
 msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
 msgstr "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
@@ -913,6 +925,9 @@ msgstr "Include work content"
 msgid "Install the native inference dependency from requirements-ai.txt, then restart WorkLogger."
 msgstr "Install the native inference dependency from requirements-ai.txt, then restart WorkLogger."
 
+msgid "Invalid date range"
+msgstr "Invalid date range"
+
 msgid "January"
 msgstr "January"
 
@@ -990,6 +1005,9 @@ msgstr "Linked identities"
 
 msgid "Liquid Glass"
 msgstr "Liquid Glass"
+
+msgid "Load more"
+msgstr "Load more"
 
 msgid "Loading models..."
 msgstr "Loading models..."
@@ -1227,9 +1245,6 @@ msgstr "No model selected."
 
 msgid "No models found"
 msgstr "No models found"
-
-msgid "No note yet"
-msgstr "No note yet"
 
 msgid "No notes found"
 msgstr "No notes found"
@@ -1749,6 +1764,9 @@ msgstr "Schedule / Records"
 
 msgid "Scheduled"
 msgstr "Scheduled"
+
+msgid "Search all dates"
+msgstr "Search all dates"
 
 msgid "Search notes"
 msgstr "Search notes"
@@ -2589,6 +2607,9 @@ msgstr "{ram} GB"
 
 msgid "{received} MB of {total} MB"
 msgstr "{received} MB of {total} MB"
+
+msgid "{shown} of {total} dates"
+msgstr "{shown} of {total} dates"
 
 msgid "{size} MB"
 msgstr "{size} MB"

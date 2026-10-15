@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 import os
 from pathlib import Path
 import tempfile
@@ -32,6 +32,7 @@ from worklogger.domain.quicklog.models import QuickLog
 from tests.quick_log_samples import insert_previous_entry
 from worklogger.domain.reporting.models import Report
 from worklogger.domain.shared.result import Result
+from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.worklog.models import WorkLog, WorkType
 from worklogger.infrastructure.export import MarkdownExporter
 from worklogger.presentation.notes import NoteEditorDialog
@@ -41,7 +42,7 @@ from worklogger.presentation.job_runner import ImmediateJobRunner
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
 from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteDailyNoteRepository, SQLiteQuickLogRepository, SQLiteSettingsRepository
 from worklogger.infrastructure.security import PBKDF2PasswordHasher
-from worklogger.domain.notes.models import DailyNote
+from worklogger.domain.notes.models import DailyNote, NoteHistoryFilter
 from worklogger.infrastructure.i18n import get_language
 
 
@@ -194,7 +195,7 @@ class NotesReportsPresentationTests(unittest.TestCase):
         self.assertFalse(model.load(day).value.recovered_draft)
         self.assertTrue(model.load(day).value.sharing.reports)
         self.assertFalse(model.load(day).value.sharing.ai)
-        self.assertEqual(model.search("Recoverable").value[0].day, day)
+        self.assertEqual(model.browse(NoteHistoryFilter(text="Recoverable")).value.notes[0].day, day)
         restored.copy_button.click()
         self.assertEqual(QApplication.clipboard().text(), "Recoverable draft")
         with tempfile.TemporaryDirectory() as directory, patch("worklogger.presentation.notes.dialog.show_information"):
@@ -229,8 +230,9 @@ class NotesReportsPresentationTests(unittest.TestCase):
 
     def test_note_navigation_keeps_date_selection_and_content_actions_in_sync(self):
         model, notes, _quick, _factory = self._note_model()
-        saved_day, empty_day = date(2026, 10, 8), date(2026, 10, 9)
+        saved_day, other_day, empty_day = date(2026, 10, 8), date(2026, 10, 9), date(2026, 10, 10)
         notes.save(DailyNote(model.service.user_id, saved_day, "Meeting summary\nFollow up tomorrow"))
+        notes.save(DailyNote(model.service.user_id, other_day, "Another note"))
         dialog = NoteEditorDialog(model, empty_day, job_runner=ImmediateJobRunner())
         self.addCleanup(dialog.deleteLater)
         self.assertTrue(dialog.refresh())
@@ -239,7 +241,7 @@ class NotesReportsPresentationTests(unittest.TestCase):
         self.assertFalse(dialog.copy_button.isEnabled())
         self.assertFalse(dialog.export_button.isEnabled())
         self.assertFalse(dialog.rewrite_button.isEnabled())
-        self.assertEqual(dialog.history_list.currentItem().data(Qt.ItemDataRole.UserRole), empty_day)
+        self.assertIsNone(dialog.history_list.currentItem())
         saved_item = dialog.history_list.item(1)
         dialog.history_list.setCurrentItem(saved_item)
         self.assertEqual(dialog.editor.toPlainText(), "Meeting summary\nFollow up tomorrow")
@@ -256,15 +258,15 @@ class NotesReportsPresentationTests(unittest.TestCase):
         with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
             dialog.history_list.setCurrentItem(dialog.history_list.item(0))
         self.assertEqual(model.load(saved_day).value.content, "Keep this draft")
-        self.assertEqual(dialog.editor.toPlainText(), "")
-        self.assertFalse(dialog.copy_button.isEnabled())
+        self.assertEqual(dialog.editor.toPlainText(), "Another note")
+        self.assertTrue(dialog.copy_button.isEnabled())
         dialog.search_input.setText("no matching content")
-        dialog._search()
+        dialog.history_browser.refresh()
         self.assertEqual(dialog.history_list.count(), 0)
         self.assertFalse(dialog.empty_label.isHidden())
-        self.assertEqual(dialog._day, empty_day)
+        self.assertEqual(dialog._day, other_day)
         dialog._draft_timer.stop()
-        dialog._search_timer.stop()
+        dialog.history_browser.stop()
 
     def test_search_keeps_inputs_available_and_discards_obsolete_results(self):
         model, notes, _quick, _factory = self._note_model()
@@ -281,9 +283,9 @@ class NotesReportsPresentationTests(unittest.TestCase):
                     return None
                 return super().submit(name, job, on_complete=on_complete)
 
-            def complete(self):
+            def complete(self, result=None):
                 job, callback = self.pending.pop(0)
-                callback(job(None))
+                callback(job(None) if result is None else result)
 
         runner = DeferredSearchRunner()
         dialog = NoteEditorDialog(model, day, job_runner=runner)
@@ -292,23 +294,93 @@ class NotesReportsPresentationTests(unittest.TestCase):
         runner.complete()
         dialog.editor.setPlainText("Keep the current draft")
         dialog.search_input.setText("Planning")
-        dialog._search()
+        dialog.history_browser.refresh()
         self.assertTrue(dialog.search_input.isEnabled())
         self.assertTrue(dialog.editor.isEnabled())
         self.assertTrue(dialog._draft_timer.isActive())
         dialog.search_input.setText("no matching content")
         runner.complete()
         self.assertEqual(dialog.history_list.count(), 1)
-        dialog._search()
+        dialog.history_browser.refresh()
         runner.complete()
         self.assertEqual(dialog.history_list.count(), 0)
         self.assertEqual(dialog.editor.toPlainText(), "Keep the current draft")
         self.assertEqual(dialog._day, day)
-        dialog.search_input.clear()
-        dialog._search()
-        dialog._stop_search()
+        dialog.search_input.setText("Planning")
+        dialog.history_browser.refresh()
+        with patch.object(QMessageBox, "warning"):
+            runner.complete(Result.failure(InfrastructureError("note_load_failed", "note_load_failed")))
+        self.assertEqual(dialog.last_error.code, "note_load_failed")
+        self.assertEqual(dialog.editor.toPlainText(), "Keep the current draft")
+        dialog.history_browser.refresh()
         runner.complete()
-        self.assertFalse(dialog._search_timer.isActive())
+        self.assertEqual(dialog.history_list.count(), 1)
+        dialog.search_input.clear()
+        dialog.history_browser.refresh()
+        dialog.history_browser.stop()
+        runner.complete()
+        self.assertFalse(dialog.history_browser._timer.isActive())
+        dialog._draft_timer.stop()
+
+    def test_note_history_ranges_search_and_pagination_preserve_the_editor(self):
+        model, notes, quick, factory = self._note_model()
+        day = date(2024, 2, 29)
+        for offset in range(90):
+            note_day = date(2024, 1, 1) + timedelta(days=offset)
+            notes.save(DailyNote(model.service.user_id, note_day, "Meeting notes"))
+        notes.save(DailyNote(model.service.user_id, date(2023, 12, 31), "Older meeting"))
+        insert_previous_entry(factory, QuickLog(None, model.service.user_id, date(2023, 12, 30), "Previous meeting"))
+        dialog = NoteEditorDialog(model, day, job_runner=ImmediateJobRunner())
+        self.addCleanup(dialog.deleteLater)
+        self.assertTrue(dialog.refresh())
+        browser = dialog.history_browser
+        self.assertEqual(browser.history_list.count(), 29)
+        self.assertEqual(browser.history_list.currentItem().data(Qt.ItemDataRole.UserRole), day)
+        dialog.editor.setPlainText("Unfinished work")
+        browser.previous_button.click()
+        browser.refresh()
+        self.assertEqual(browser.history_list.count(), 31)
+        self.assertIsNone(browser.history_list.currentItem())
+        browser.next_button.click()
+        browser.refresh()
+        self.assertEqual(browser.history_list.count(), 29)
+        browser.mode_input.setCurrentIndex(browser.mode_input.findData("year"))
+        browser.refresh()
+        self.assertEqual(browser.history_list.count(), 50)
+        self.assertFalse(browser.more_button.isHidden())
+        browser.more_button.click()
+        self.assertEqual(browser.history_list.count(), 90)
+        self.assertTrue(browser.more_button.isHidden())
+        self.assertEqual(len({browser.history_list.item(row).data(Qt.ItemDataRole.UserRole)
+                              for row in range(90)}), 90)
+        browser.mode_input.setCurrentIndex(browser.mode_input.findData("custom"))
+        browser.start_input.setDate(date(2023, 12, 30))
+        browser.end_input.setDate(date(2023, 12, 31))
+        browser.refresh()
+        self.assertEqual(browser.history_list.count(), 2)
+        browser.start_input.setDate(date(2024, 1, 1))
+        browser.refresh()
+        self.assertEqual(browser.history_list.count(), 0)
+        self.assertTrue(browser.more_button.isHidden())
+        browser.mode_input.setCurrentIndex(browser.mode_input.findData("month"))
+        browser.search_input.setText("Older")
+        browser.refresh()
+        self.assertEqual(browser.history_list.count(), 0)
+        browser.all_dates_checkbox.setChecked(True)
+        browser.refresh()
+        self.assertEqual(browser.history_list.count(), 1)
+        browser.search_input.clear()
+        browser.refresh()
+        self.assertEqual(browser.history_list.count(), 29)
+        self.assertFalse(browser.all_dates_checkbox.isChecked())
+        browser.mode_input.setCurrentIndex(browser.mode_input.findData("all"))
+        browser.refresh()
+        self.assertEqual(browser.history_list.count(), 50)
+        browser.more_button.click()
+        self.assertEqual(browser.history_list.count(), 92)
+        self.assertEqual(dialog.editor.toPlainText(), "Unfinished work")
+        self.assertEqual(dialog._day, day)
+        browser.stop()
         dialog._draft_timer.stop()
 
     def test_report_viewmodel_and_dialog_generate_then_save_report(self) -> None:

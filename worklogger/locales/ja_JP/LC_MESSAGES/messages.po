@@ -118,6 +118,9 @@ msgstr "管理者"
 msgid "Administrator permission is required."
 msgstr "管理者権限が必要です。"
 
+msgid "All dates"
+msgstr "すべての日付"
+
 msgid "All day"
 msgstr "終日"
 
@@ -442,6 +445,9 @@ msgstr "復旧キーをコピー"
 msgid "Copy temporary password"
 msgstr "一時パスワードをコピー"
 
+msgid "Could not load notes"
+msgstr "ノートを読み込めませんでした"
+
 msgid "Create account"
 msgstr "アカウントを作成"
 
@@ -471,6 +477,9 @@ msgstr "カーソル位置: %1, %2\nESC キーでキャンセル"
 
 msgid "Custom"
 msgstr "カスタム"
+
+msgid "Custom range"
+msgstr "期間を指定"
 
 msgid "Cut"
 msgstr "切り取り"
@@ -507,6 +516,9 @@ msgstr "データベースのバックアップ"
 
 msgid "Date"
 msgstr "日付"
+
+msgid "Date range"
+msgstr "日付範囲"
 
 msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
 msgstr "休憩記録がある日付。勤務日と休憩日は重複できます。休暇は別に集計します。"
@@ -913,6 +925,9 @@ msgstr "作業内容を含める"
 msgid "Install the native inference dependency from requirements-ai.txt, then restart WorkLogger."
 msgstr "requirements-ai.txtの推論依存パッケージをインストールして、WorkLoggerを再起動してください。"
 
+msgid "Invalid date range"
+msgstr "日付範囲が正しくありません"
+
 msgid "January"
 msgstr "1月"
 
@@ -990,6 +1005,9 @@ msgstr "連携アカウント"
 
 msgid "Liquid Glass"
 msgstr "リキッドグラス"
+
+msgid "Load more"
+msgstr "さらに読み込む"
 
 msgid "Loading models..."
 msgstr "モデルを読み込み中..."
@@ -1227,9 +1245,6 @@ msgstr "モデルが選択されていません。"
 
 msgid "No models found"
 msgstr "モデルが見つかりません"
-
-msgid "No note yet"
-msgstr "メモはまだありません"
 
 msgid "No notes found"
 msgstr "メモが見つかりません"
@@ -1749,6 +1764,9 @@ msgstr "予定 / 記録"
 
 msgid "Scheduled"
 msgstr "予定"
+
+msgid "Search all dates"
+msgstr "すべての日付を検索"
 
 msgid "Search notes"
 msgstr "メモを検索"
@@ -2589,6 +2607,9 @@ msgstr "{ram} GB"
 
 msgid "{received} MB of {total} MB"
 msgstr "{received} MB / {total} MB"
+
+msgid "{shown} of {total} dates"
+msgstr "{total} 日中 {shown} 日を表示"
 
 msgid "{size} MB"
 msgstr "{size} MB"

@@ -46,8 +46,8 @@ class NoteEditorViewModel:
         cleared = self.service.discard_draft(day)
         return loaded if cleared.ok else Result.failure(cleared.error)
 
-    def search(self, query: str):
-        return self.service.search(query)
+    def browse(self, filters):
+        return self.service.browse(filters)
 
     def insert_previous_entries(self, state: NoteWorkspace, content: str) -> str:
         lines = []

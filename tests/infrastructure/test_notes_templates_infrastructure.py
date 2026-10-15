@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -26,7 +26,7 @@ from worklogger.app.use_cases.reports import SaveReportTemplateHandler
 from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
 from worklogger.domain.worklog.models import WorkType
 from worklogger.domain.worklog.models import WorkLog
-from worklogger.domain.notes.models import DailyNote
+from worklogger.domain.notes.models import DailyNote, NoteHistoryFilter
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
 from worklogger.infrastructure.database.current_schema import CURRENT_SCHEMA_VERSION
 from worklogger.infrastructure.export import MarkdownExporter
@@ -41,6 +41,40 @@ from worklogger.infrastructure.templates import BuiltInTemplateProvider, UserTem
 
 
 class NotesTemplatesInfrastructureTests(unittest.TestCase):
+    def test_note_history_filters_pages_and_returns_bounded_account_scoped_previews(self):
+        with tempfile.TemporaryDirectory() as directory:
+            factory = SQLiteConnectionFactory(f"{directory}/notes.db")
+            MigrationRunner(factory).run_pending()
+            auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
+            owner = auth.create_user("history.owner", "example-password", recovery_key=None, is_admin=False)
+            other = auth.create_user("history.other", "example-password", recovery_key=None, is_admin=False)
+            notes = SQLiteDailyNoteRepository(factory)
+            start = date(2024, 1, 1)
+            for offset in range(70):
+                notes.save(DailyNote(owner.id, start + timedelta(days=offset), "Summary\n" + "x" * 10000))
+            notes.save(DailyNote(other.id, start + timedelta(days=100), "Private summary"))
+            notes.save(DailyNote(owner.id, date(2023, 12, 31), ""))
+            legacy_day = date(2023, 12, 30)
+            for text in ("100%_complete\\done", "Another previous entry"):
+                insert_previous_entry(factory, QuickLog(None, owner.id, legacy_day, text))
+            insert_previous_entry(factory, QuickLog(None, owner.id, start, "Matching previous entry"))
+            page = notes.browse(owner.id, NoteHistoryFilter())
+            self.assertEqual((len(page.notes), page.total), (50, 71))
+            self.assertTrue(all(len(note.text) <= 160 and "\n" not in note.text for note in page.notes))
+            remaining = notes.browse(owner.id, NoteHistoryFilter(before=page.next_before))
+            self.assertEqual((len(remaining.notes), remaining.total, remaining.next_before), (21, 71, None))
+            days = [note.day for note in page.notes + remaining.notes]
+            self.assertEqual(days, sorted(set(days), reverse=True))
+            self.assertEqual(remaining.notes[-1].text, "100%_complete\\done")
+            bounded = notes.browse(owner.id, NoteHistoryFilter(date(2024, 2, 1), date(2024, 2, 29)))
+            self.assertEqual((len(bounded.notes), bounded.total), (29, 29))
+            exact = notes.browse(owner.id, NoteHistoryFilter(start, start, "previous"))
+            self.assertEqual([note.day for note in exact.notes], [start])
+            escaped = notes.browse(owner.id, NoteHistoryFilter(text="100%_complete\\"))
+            self.assertEqual([note.day for note in escaped.notes], [legacy_day])
+            self.assertEqual(notes.browse(owner.id, NoteHistoryFilter(text="Private")).total, 0)
+            self.assertEqual(notes.browse(owner.id, NoteHistoryFilter(text="missing")).notes, ())
+
     def test_unreadable_draft_preserves_raw_data_and_loads_saved_note(self):
         with tempfile.TemporaryDirectory() as directory:
             factory = SQLiteConnectionFactory(f"{directory}/notes.db")
@@ -123,7 +157,8 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
             day = date(2026, 5, 14)
             insert_previous_entry(factory, QuickLog(None, user.id, day, "100% complete", "09:00", "10:00"))
             notes.save(DailyNote(other.id, day, "private 100%"))
-            self.assertEqual([note.user_id for note in service.search("100%").value], [user.id])
+            self.assertEqual([note.text for note in service.browse(NoteHistoryFilter(text="100%")).value.notes],
+                             ["100% complete"])
             self.assertFalse(service.load(day).value.sharing.reports)
             self.assertTrue(service.save_draft(day, "Draft", "", NoteSharing(True, False)).ok)
             with patch("worklogger.infrastructure.repositories.note_sqlite.note_sharing_key", side_effect=OSError("storage unavailable")):

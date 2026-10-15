@@ -11,3 +11,29 @@ class DailyNote:
     user_id: int
     day: date
     content: str = ""
+
+
+@dataclass(frozen=True)
+class NoteHistoryFilter:
+    start: date = date.min
+    end: date = date.max
+    text: str = ""
+    before: date | None = None
+    limit: int = 50
+
+    def __post_init__(self):
+        if self.start > self.end or not 1 <= self.limit <= 100:
+            raise ValueError("Invalid note history range or page size")
+
+
+@dataclass(frozen=True)
+class NotePreview:
+    day: date
+    text: str
+
+
+@dataclass(frozen=True)
+class NoteHistoryPage:
+    notes: tuple[NotePreview, ...]
+    total: int
+    next_before: date | None = None

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from worklogger.domain.notes.models import DailyNote
+from worklogger.domain.notes.models import DailyNote, NoteHistoryFilter, NoteHistoryPage, NotePreview
 from worklogger.domain.notes.preferences import NoteSharing, note_draft_key, note_sharing_key
 from worklogger.domain.quicklog.models import QuickLog
 from worklogger.domain.quicklog.rules import contains_quick_log_reference
@@ -49,16 +49,34 @@ class SQLiteDailyNoteRepository:
                                       (user_id, start.isoformat(), end.isoformat())).fetchall()
         return map_rows(rows, lambda row: DailyNote(user_id, parse_date(row["d"]), str(row["content"])))
 
-    def search(self, user_id: int, query: str, *, limit: int = 50) -> tuple[DailyNote, ...]:
-        term = "%" + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
-        with self._connection_factory.connection() as connection:
-            rows = connection.execute("""SELECT d, content FROM daily_notes
-                WHERE user_id=? AND content<>'' AND content LIKE ? ESCAPE '\\'
-                UNION SELECT q.date AS d, COALESCE(n.content, '') AS content FROM quick_logs q
-                LEFT JOIN daily_notes n ON n.user_id=q.user_id AND n.d=q.date
-                WHERE q.user_id=? AND q.description LIKE ? ESCAPE '\\'
-                ORDER BY d DESC LIMIT ?""", (user_id, term, user_id, term, max(1, min(limit, 100)))).fetchall()
-        return map_rows(rows, lambda row: DailyNote(user_id, parse_date(row["d"]), str(row["content"])))
+    def browse(self, user_id: int, filters: NoteHistoryFilter) -> NoteHistoryPage:
+        text = filters.text.strip()[:256]
+        term = "%" + text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+        note_match = " AND content LIKE ? ESCAPE '\\'" if text else ""
+        entry_match = " AND description LIKE ? ESCAPE '\\'" if text else ""
+        bounds = (user_id, filters.start.isoformat(), filters.end.isoformat())
+        parameters = (*bounds, *((term,) if text else ()),
+                      *bounds, *((term,) if text else ()))
+        matching_dates = f"""WITH matched(d) AS (
+            SELECT d FROM daily_notes WHERE user_id=? AND d BETWEEN ? AND ?
+                AND content<>'' {note_match}
+            UNION SELECT date FROM quick_logs WHERE user_id=? AND date BETWEEN ? AND ?
+                AND description<>'' {entry_match}
+        ) """
+        cursor_clause = "WHERE m.d < ?" if filters.before else ""
+        cursor = (filters.before.isoformat(),) if filters.before else ()
+        with self._connection_factory.transaction(write=False) as connection:
+            total = connection.execute(matching_dates + "SELECT COUNT(*) FROM matched", parameters).fetchone()[0]
+            rows = connection.execute(matching_dates + f"""
+                SELECT m.d, substr(COALESCE(NULLIF(n.content, ''),
+                    (SELECT description FROM quick_logs WHERE user_id=? AND date=m.d
+                     AND description<>'' ORDER BY id LIMIT 1), ''), 1, 512) AS preview
+                FROM matched m LEFT JOIN daily_notes n ON n.user_id=? AND n.d=m.d
+                {cursor_clause} ORDER BY m.d DESC LIMIT ?
+                """, (*parameters, user_id, user_id, *cursor, filters.limit + 1)).fetchall()
+        notes = map_rows(rows[:filters.limit], lambda row: NotePreview(
+            parse_date(row["d"]), " ".join(str(row["preview"]).split())[:160]))
+        return NoteHistoryPage(notes, total, notes[-1].day if len(rows) > filters.limit else None)
 
     def save(self, note: DailyNote, *, expected_content: str | None = None,
              sharing: NoteSharing | None = None, clear_draft: bool = False,

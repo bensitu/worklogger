@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Protocol
 
-from worklogger.domain.notes.models import DailyNote
+from worklogger.domain.notes.models import DailyNote, NoteHistoryFilter, NoteHistoryPage
 from worklogger.domain.notes.preferences import NoteSharing
 from worklogger.domain.quicklog.models import QuickLog
 
@@ -23,5 +23,5 @@ class DailyNoteRepository(Protocol):
     def list_range(self, user_id: int, start: date, end: date) -> tuple[DailyNote, ...]:
         ...
 
-    def search(self, user_id: int, query: str, *, limit: int = 50) -> tuple[DailyNote, ...]:
+    def browse(self, user_id: int, filters: NoteHistoryFilter) -> NoteHistoryPage:
         ...

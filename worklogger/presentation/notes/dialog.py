@@ -3,16 +3,16 @@
 from datetime import date
 from pathlib import Path
 
-from PySide6.QtCore import QDate, QLocale, QSignalBlocker, QTimer, Signal, Qt
+from PySide6.QtCore import QDate, QLocale, QTimer, Signal, Qt
 from PySide6.QtWidgets import (QApplication, QCheckBox, QDialog, QFileDialog,
-    QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMessageBox,
+    QHBoxLayout, QLabel, QListWidget, QMessageBox,
     QPushButton, QTextEdit, QToolButton, QVBoxLayout, QWidget)
 
 from worklogger.domain.notes.preferences import NoteSharing
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.errors import CancellationError
 from worklogger.infrastructure.i18n import _, get_language
-from worklogger.presentation.widgets.two_line_delegate import TwoLineItemDelegate
+from worklogger.presentation.notes.history import NoteHistoryBrowser
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.job_runner import QtJobRunner, owned_callback
 from worklogger.presentation.widgets.assets import apply_window_icon
@@ -36,9 +36,6 @@ class NoteEditorDialog(QDialog):
         self._last_error = None
         self._busy = False
         self._draft_busy = False
-        self._search_busy = False
-        self._search_revision = 0
-        self._closed = False
         self._after_draft = None
         self._version = 0
         self._updating = False
@@ -54,11 +51,7 @@ class NoteEditorDialog(QDialog):
         self._draft_timer.setSingleShot(True)
         self._draft_timer.setInterval(800)
         self._draft_timer.timeout.connect(self._persist_draft)
-        self._search_timer = QTimer(self)
-        self._search_timer.setSingleShot(True)
-        self._search_timer.setInterval(650)
-        self._search_timer.timeout.connect(self._search)
-        self.finished.connect(self._stop_search)
+        self.finished.connect(self.history_browser.stop)
 
     @property
     def last_error(self):
@@ -77,12 +70,11 @@ class NoteEditorDialog(QDialog):
         day = self._day
         def complete(state):
             self.set_state(state)
-            self._search()
+            self.history_browser.refresh()
         self._run("load_note", lambda: self._view_model.load(day), complete)
         return True
 
     def set_state(self, state):
-        self._search_revision += 1
         self._updating = True
         try:
             self._state = state
@@ -114,30 +106,12 @@ class NoteEditorDialog(QDialog):
         root.setSpacing(16)
         body = QHBoxLayout()
         body.setSpacing(20)
-        sidebar = QWidget()
-        sidebar.setMinimumWidth(190)
-        sidebar.setMaximumWidth(250)
-        history = QVBoxLayout(sidebar)
-        history.setContentsMargins(0, 0, 0, 0)
-        history.setSpacing(12)
-        self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText(_("Search notes"))
-        self.search_input.setClearButtonEnabled(True)
-        history.addWidget(self.search_input)
-        self.history_list = QListWidget()
-        self.history_list.setObjectName("note_history_list_widget")
-        self.history_list.setAccessibleName(_("Notes"))
-        self.history_list.setItemDelegate(TwoLineItemDelegate(self.history_list))
-        self.history_list.setSpacing(4)
-        self.history_list.setFrameShape(QFrame.Shape.NoFrame)
-        self.history_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.empty_label = QLabel(_("No notes found"))
-        self.empty_label.setProperty("role", "secondary")
-        self.empty_label.setWordWrap(True)
-        self.empty_label.hide()
-        history.addWidget(self.empty_label)
-        history.addWidget(self.history_list, 1)
-        body.addWidget(sidebar, 1)
+        self.history_browser = NoteHistoryBrowser(self._view_model, self._day, job_runner=self._job_runner)
+        self.search_input = self.history_browser.search_input
+        self.history_list = self.history_browser.history_list
+        self.empty_label = self.history_browser.empty_label
+        self.history_browser.error_occurred.connect(self._set_error)
+        body.addWidget(self.history_browser, 1)
         content = QVBoxLayout()
         content.setSpacing(12)
         heading = QHBoxLayout()
@@ -223,7 +197,6 @@ class NoteEditorDialog(QDialog):
         self.editor.textChanged.connect(self._changed)
         self.report_checkbox.toggled.connect(self._changed)
         self.ai_checkbox.toggled.connect(self._changed)
-        self.search_input.textChanged.connect(self._schedule_search)
         self.history_list.currentItemChanged.connect(
             lambda current, _previous: self._select_note(current) if current is not None else None)
         self.insert_button.clicked.connect(self._transfer_previous_entries)
@@ -246,13 +219,7 @@ class NoteEditorDialog(QDialog):
         self._update_actions()
 
     def _sync_history_selection(self):
-        with QSignalBlocker(self.history_list):
-            self.history_list.setCurrentRow(-1)
-            for row in range(self.history_list.count()):
-                item = self.history_list.item(row)
-                if item.data(Qt.ItemDataRole.UserRole) == self._day:
-                    self.history_list.setCurrentItem(item)
-                    break
+        self.history_browser.set_active_day(self._day)
 
     def _changed(self, *_args):
         self._update_actions()
@@ -308,51 +275,6 @@ class NoteEditorDialog(QDialog):
             self._draft_busy = False
             self._set_error(InfrastructureError("note_save_failed", "note_save_failed"))
 
-    def _schedule_search(self, *_args):
-        self._search_revision += 1
-        self._search_timer.start()
-
-    def _stop_search(self, *_args):
-        self._closed = True
-        self._search_timer.stop()
-
-    def _search(self):
-        if self._closed:
-            return
-        if self._busy or self._search_busy:
-            self._search_timer.start()
-            return
-        query, day, revision = self.search_input.text(), self._day, self._search_revision
-        def render(notes):
-            previews = {note.day: " ".join(note.content.split()) for note in notes}
-            if not query.strip() and self._state is not None:
-                previews.setdefault(self._day, " ".join(self._state.content.split()))
-            with QSignalBlocker(self.history_list):
-                self.history_list.clear()
-                for day, preview in sorted(previews.items(), reverse=True):
-                    item = QListWidgetItem(day.isoformat() + "\n" + (preview[:160] or _("No note yet")))
-                    item.setData(Qt.ItemDataRole.UserRole, day)
-                    self.history_list.addItem(item)
-            self.empty_label.setVisible(not previews)
-            self._sync_history_selection()
-        self._search_busy = True
-        def done(result):
-            self._search_busy = False
-            if self._closed:
-                return
-            if revision != self._search_revision or day != self._day or self._busy:
-                self._search_timer.start()
-                return
-            if result.ok:
-                render(result.value)
-            else:
-                self._set_error(result.error)
-        try:
-            self._job_runner.submit("search_notes", lambda _token: self._view_model.search(query), on_complete=owned_callback(self, done))
-        except Exception:
-            self._search_busy = False
-            self._set_error(InfrastructureError("note_load_failed", "note_load_failed"))
-
     def _transfer_previous_entries(self):
         if self._state is None or not self._state.previous_entries or self._busy:
             return
@@ -402,7 +324,7 @@ class NoteEditorDialog(QDialog):
         self.saved.emit()
         show_information(self, _("Notes"), _("Note saved."),
                          detail=_("Your changes have been saved for {date}.").format(date=workspace.note.day.isoformat()))
-        self._search()
+        self.history_browser.refresh()
 
     def _rewrite(self):
         if self._busy or self._rewrite_task.is_running:
@@ -415,7 +337,7 @@ class NoteEditorDialog(QDialog):
         self._busy = True
         self.editor.setReadOnly(True)
         self._last_error = None
-        for field in (self.history_list, self.search_input, self.reload_button, self.save_button,
+        for field in (self.history_browser, self.reload_button, self.save_button,
                       self.insert_button, self.report_checkbox, self.ai_checkbox):
             field.setEnabled(False)
         self.rewrite_button.setEnabled(False)
@@ -423,7 +345,7 @@ class NoteEditorDialog(QDialog):
         def completed(result):
             self._busy = False
             self.editor.setReadOnly(False)
-            for field in (self.history_list, self.search_input, self.reload_button, self.save_button,
+            for field in (self.history_browser, self.reload_button, self.save_button,
                           self.insert_button, self.report_checkbox, self.ai_checkbox, self.close_button):
                 field.setEnabled(True)
             if result.ok:

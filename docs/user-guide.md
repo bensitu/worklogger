@@ -103,8 +103,16 @@ that exceed these limits are rejected without changing existing events.
 
 ## Notes
 
-Notes are independent date-specific memos and do not contribute hours. Search
-finds saved notes and retained previous entries. Copy and export operate on the
+Notes are independent date-specific memos and do not contribute hours. The
+history opens at the month selected in the main calendar. Browse by month,
+year, custom date range, or all dates. Use the period arrows or click the period
+to select another month or year. Results are newest first; Load more retrieves
+the next 50 dates for longer ranges.
+
+Search finds saved notes and retained previous entries within the selected
+range. Select **Search all dates** to search across years; clearing the search
+restores the browsing range. Filtering never replaces the open note. Opening
+another date offers to keep any unsaved draft. Copy and export operate on the
 open note; Reload saved note discards its local draft.
 
 Dates with saved note content show a calendar dot even when they also contain

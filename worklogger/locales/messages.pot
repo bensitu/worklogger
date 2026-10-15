@@ -116,6 +116,9 @@ msgstr ""
 msgid "Administrator permission is required."
 msgstr ""
 
+msgid "All dates"
+msgstr ""
+
 msgid "All day"
 msgstr ""
 
@@ -440,6 +443,9 @@ msgstr ""
 msgid "Copy temporary password"
 msgstr ""
 
+msgid "Could not load notes"
+msgstr ""
+
 msgid "Create account"
 msgstr ""
 
@@ -468,6 +474,9 @@ msgid "Cursor at %1, %2\nPress ESC to cancel"
 msgstr ""
 
 msgid "Custom"
+msgstr ""
+
+msgid "Custom range"
 msgstr ""
 
 msgid "Cut"
@@ -504,6 +513,9 @@ msgid "Database Backup"
 msgstr ""
 
 msgid "Date"
+msgstr ""
+
+msgid "Date range"
 msgstr ""
 
 msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
@@ -911,6 +923,9 @@ msgstr ""
 msgid "Install the native inference dependency from requirements-ai.txt, then restart WorkLogger."
 msgstr ""
 
+msgid "Invalid date range"
+msgstr ""
+
 msgid "January"
 msgstr ""
 
@@ -987,6 +1002,9 @@ msgid "Linked identities"
 msgstr ""
 
 msgid "Liquid Glass"
+msgstr ""
+
+msgid "Load more"
 msgstr ""
 
 msgid "Loading models..."
@@ -1224,9 +1242,6 @@ msgid "No model selected."
 msgstr ""
 
 msgid "No models found"
-msgstr ""
-
-msgid "No note yet"
 msgstr ""
 
 msgid "No notes found"
@@ -1746,6 +1761,9 @@ msgid "Schedule / Records"
 msgstr ""
 
 msgid "Scheduled"
+msgstr ""
+
+msgid "Search all dates"
 msgstr ""
 
 msgid "Search notes"
@@ -2586,6 +2604,9 @@ msgid "{ram} GB"
 msgstr ""
 
 msgid "{received} MB of {total} MB"
+msgstr ""
+
+msgid "{shown} of {total} dates"
 msgstr ""
 
 msgid "{size} MB"

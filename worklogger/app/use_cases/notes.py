@@ -8,7 +8,7 @@ import json
 import logging
 from worklogger.app.commands.note_commands import SaveDailyNoteCommand
 from worklogger.app.queries.note_queries import GetDailyNoteQuery
-from worklogger.domain.notes.models import DailyNote
+from worklogger.domain.notes.models import DailyNote, NoteHistoryFilter, NoteHistoryPage
 from worklogger.domain.notes.preferences import NoteSharing, note_draft_key, note_sharing_key
 from worklogger.domain.notes.repositories import DailyNoteRepository
 from worklogger.domain.quicklog.models import QuickLog
@@ -149,5 +149,5 @@ class DailyNotesService:
     def discard_draft(self, day: date):
         return self._run(lambda: self.settings.delete(self.user_id, note_draft_key(day)))
 
-    def search(self, query: str):
-        return self._run(lambda: self.notes.search(self.user_id, query.strip()[:256]), error_code="note_load_failed")
+    def browse(self, filters: NoteHistoryFilter) -> Result[NoteHistoryPage]:
+        return self._run(lambda: self.notes.browse(self.user_id, filters), error_code="note_load_failed")

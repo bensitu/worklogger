@@ -1,6 +1,6 @@
 """Opt-in layout checks for the note workspace across languages and themes."""
 
-from datetime import date
+from datetime import date, timedelta
 import os
 from pathlib import Path
 import tempfile
@@ -49,15 +49,20 @@ class NotesLayoutChecks(unittest.TestCase):
                 notes = SQLiteDailyNoteRepository(factory)
                 for day in (8, 7, 5, 2):
                     notes.save(DailyNote(user.id, date(2026, 10, day), "Meeting notes and follow-up tasks " * 12))
+                for offset in range(62):
+                    notes.save(DailyNote(user.id, date(2026, 1, 1) + timedelta(days=offset), "Saved meeting notes"))
                 service = DailyNotesService(user_id=user.id, notes=notes, settings=SQLiteSettingsRepository(factory),
                                            previous_entries=SQLiteQuickLogRepository(factory))
                 model = NoteEditorViewModel(service, markdown_exporter=MarkdownExporter(), rewrite_handler=RewriteTextHandler())
                 engine = ThemeEngine()
                 for language_code in available_languages():
                     set_language(language_code)
-                    for dark in (False, True):
-                        self.app.setPalette(engine.qt_palette(dark=dark))
-                        self.app.setStyleSheet(engine.application_stylesheet(dark=dark))
+                    variants = (("blue", False), ("blue", True))
+                    if language_code == "en_US":
+                        variants += (("liquid_glass", False), ("liquid_glass", True))
+                    for theme, dark in variants:
+                        engine.apply_to(self.app, theme, dark=dark)
+                        capture_prefix = f"{language_code}-{theme}"
                         dialog = NoteEditorDialog(model, date(2026, 10, 9), job_runner=ImmediateJobRunner())
                         try:
                             self.assertTrue(dialog.refresh())
@@ -93,44 +98,81 @@ class NotesLayoutChecks(unittest.TestCase):
                                                             rendered.pixelColor(4, tool.height() // 2))
                                         self.assertEqual((tool.width(), tool.height()), (40, 40))
                                     tool.setEnabled(enabled)
-                                self.capture(dialog, f"{language_code}-notes-{'dark' if dark else 'light'}-{width}-empty")
+                                self.capture(dialog, f"{capture_prefix}-notes-{'dark' if dark else 'light'}-{width}-empty")
                             dialog.activateWindow()
                             dialog.search_input.setFocus()
                             self.app.processEvents()
                             QTest.keyClicks(dialog.search_input, "Meeting")
-                            dialog._search_timer.stop()
-                            dialog._search()
+                            dialog.history_browser.refresh()
                             self.app.processEvents()
                             self.assertTrue(dialog.search_input.hasFocus())
                             QTest.keyClicks(dialog.search_input, " notes")
                             self.assertEqual(dialog.search_input.text(), "Meeting notes")
                             dialog.search_input.setText("no matching note")
-                            dialog._search_timer.stop()
-                            dialog._search()
+                            dialog.history_browser.refresh()
                             self.app.processEvents()
                             self.assertTrue(dialog.empty_label.isVisible())
-                            self.assertLessEqual(dialog.empty_label.y() - dialog.search_input.geometry().bottom(), 24)
-                            self.capture(dialog, f"{language_code}-notes-{'dark' if dark else 'light'}-no-results")
+                            self.assertLess(dialog.empty_label.geometry().bottom(), dialog.history_list.y())
+                            self.capture(dialog, f"{capture_prefix}-notes-{'dark' if dark else 'light'}-no-results")
                             dialog.search_input.clear()
-                            dialog._search_timer.stop()
-                            dialog._search()
+                            dialog.history_browser.refresh()
                             dialog._select_note(dialog.history_list.item(1))
                             self.app.processEvents()
                             self.assertTrue(dialog.copy_button.isEnabled())
-                            self.capture(dialog, f"{language_code}-notes-{'dark' if dark else 'light'}-content")
+                            self.capture(dialog, f"{capture_prefix}-notes-{'dark' if dark else 'light'}-content")
+                            browser = dialog.history_browser
+                            for mode in ("year", "custom", "all"):
+                                browser.mode_input.setCurrentIndex(browser.mode_input.findData(mode))
+                                browser.start_input.setDate(date(2026, 1, 1))
+                                browser.end_input.setDate(date(2026, 12, 31))
+                                browser.refresh()
+                                self.assertEqual(browser.history_list.count(), 50)
+                                for width, height in ((760, 520), (1000, 720)):
+                                    dialog.resize(width, height)
+                                    self.app.processEvents()
+                                    self.assertEqual((dialog.width(), dialog.height()), (width, height))
+                                    self.assertGreaterEqual(browser.history_list.height(), 64)
+                                    controls = [browser.mode_input, browser.search_input, browser.all_dates_checkbox,
+                                                browser.range_label, browser.count_label, browser.history_list,
+                                                browser.more_button]
+                                    controls += ([browser.start_input, browser.end_input] if mode == "custom" else
+                                                 [browser.period_button] if mode == "year" else [])
+                                    rectangles = []
+                                    for widget in controls:
+                                        rect = widget.rect().translated(widget.mapTo(dialog, widget.rect().topLeft()))
+                                        self.assertTrue(dialog.rect().contains(rect), (language_code, mode, widget))
+                                        self.assertTrue(all(not rect.intersects(other) for other in rectangles),
+                                                        (language_code, mode, widget))
+                                        rectangles.append(rect)
+                                    self.capture(dialog, f"{capture_prefix}-notes-{'dark' if dark else 'light'}-{width}-{mode}")
+                                scrollbar = browser.history_list.verticalScrollBar()
+                                scrollbar.setValue(scrollbar.maximum())
+                                scroll_position = scrollbar.value()
+                                browser.more_button.click()
+                                self.app.processEvents()
+                                self.assertEqual(browser.history_list.count(), 66)
+                                self.assertTrue(browser.more_button.isHidden())
+                                self.assertEqual(scrollbar.value(), scroll_position)
+                            browser.mode_input.setCurrentIndex(browser.mode_input.findData("custom"))
+                            browser.start_input.setDate(date(2027, 1, 1))
+                            browser.refresh()
+                            self.app.processEvents()
+                            self.assertEqual(browser.history_list.count(), 0)
+                            self.assertTrue(browser.more_button.isHidden())
+                            self.capture(dialog, f"{capture_prefix}-notes-{'dark' if dark else 'light'}-invalid-range")
                             feedback = information_dialog(dialog, _("Notes"), _("Note saved."),
                                 detail=_("Your changes have been saved for {date}.").format(date="2026-10-08"))
                             try:
                                 feedback.show()
                                 self.app.processEvents()
                                 self.assertGreaterEqual(feedback.width(), 360)
-                                self.capture(feedback, f"{language_code}-note-saved-{'dark' if dark else 'light'}")
+                                self.capture(feedback, f"{capture_prefix}-note-saved-{'dark' if dark else 'light'}")
                             finally:
                                 feedback.hide()
                                 feedback.deleteLater()
                         finally:
                             dialog._draft_timer.stop()
-                            dialog._search_timer.stop()
+                            dialog.history_browser.stop()
                             dialog.hide()
                             dialog.deleteLater()
                 self.assertFalse(any("Point size <= 0" in warning for warning in warnings), warnings)
