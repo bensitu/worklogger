@@ -49,6 +49,9 @@ explicitly; feature modules must not import bootstrap to obtain services.
 Preference defaults and normalization belong to `domain/settings`, and holiday
 region validation uses an injected catalog rather than loading a provider from
 the view model.
+Settings composition supplies lazy readers for supported holiday regions and the
+system country. The view model captures an immutable catalog on first access;
+controls render it without importing optional holiday or timezone providers.
 `app/settings.py` reads named preferences with optional batching and consistent
 defaults. Callers use the same reader contract whether a store supports batch
 queries or individual reads; secure credentials remain on their separate ports.

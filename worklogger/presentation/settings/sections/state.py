@@ -13,10 +13,6 @@ from worklogger.domain.local_model.preferences import (
     MAX_RUNTIME_CONTEXT_TOKENS,
     MIN_RUNTIME_CONTEXT_TOKENS,
 )
-from worklogger.infrastructure.calendar.holidays_provider import (
-    detect_country,
-    supported_holiday_regions,
-)
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_code
 from worklogger.presentation.settings_capabilities import SettingsCapabilities
@@ -77,7 +73,7 @@ class SettingsSectionState:
             index = self.holiday_country_combo.findData(country)
             self.holiday_country_combo.setCurrentIndex(max(index, 0))
             self._populate_holiday_subdivisions(
-                country or detect_country(), subdivision
+                country or self._view_model.system_holiday_country, subdivision
             )
             self.note_markers_switch.set_checked(state.show_note_markers)
             self.overnight_switch.set_checked(state.show_overnight_indicator)
@@ -328,7 +324,7 @@ class SettingsSectionState:
         try:
             self.holiday_subdivision_combo.clear()
             self.holiday_subdivision_combo.addItem(_("National holidays"), "")
-            for code in sorted(supported_holiday_regions().get(country, ())):
+            for code in sorted(self._view_model.holiday_regions.get(country, ())):
                 self.holiday_subdivision_combo.addItem(code, code)
             self.holiday_subdivision_combo.setCurrentIndex(
                 max(0, self.holiday_subdivision_combo.findData(subdivision))
@@ -349,7 +345,7 @@ class SettingsSectionState:
         if self._updating:
             return
         subdivision = str(self.holiday_subdivision_combo.currentData() or "")
-        country = str(self.holiday_country_combo.currentData() or detect_country())
+        country = str(self.holiday_country_combo.currentData() or self._view_model.system_holiday_country)
         self._set_text(
             HOLIDAY_REGION_SETTING_KEY,
             f"{country}/{subdivision}" if subdivision else country,

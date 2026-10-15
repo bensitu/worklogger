@@ -24,9 +24,6 @@ from worklogger.config.constants import (
 from worklogger.config.themes import get_theme
 from worklogger.domain.auth.models import User
 from worklogger.domain.shared.errors import AppError
-from worklogger.infrastructure.calendar.holidays_provider import (
-    detect_country,
-)
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.settings.sections.about import AboutSection
@@ -306,10 +303,11 @@ class SettingsPage(QWidget, SettingsSectionState):
         return section
 
     def _build_general_page(self) -> QWidget:
-        section = GeneralSection(self._section_actions())
+        section = GeneralSection(self._section_actions(), holiday_regions=self._view_model.holiday_regions,
+                                 system_country=self._view_model.system_holiday_country)
         for name in section.control_names:
             setattr(self, name, getattr(section, name))
-        self._populate_holiday_subdivisions(detect_country())
+        self._populate_holiday_subdivisions(self._view_model.system_holiday_country)
         return section
 
     def _build_ai_page(self) -> QWidget:

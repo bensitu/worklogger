@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from PySide6.QtWidgets import (
     QComboBox,
     QPushButton,
@@ -19,10 +21,6 @@ from worklogger.config.constants import (
     SHOW_RECENT_CONTEXT_SETTING_KEY,
     STANDARD_WORK_HOURS_SETTING_KEY,
     WEEK_START_MONDAY_SETTING_KEY,
-)
-from worklogger.infrastructure.calendar.holidays_provider import (
-    detect_country,
-    supported_holiday_regions,
 )
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.settings.sections.actions import SectionActions
@@ -55,7 +53,8 @@ class GeneralSection(_SettingsScrollPage):
         "continuous_timer_reminder_input",
     )
 
-    def __init__(self, actions: SectionActions):
+    def __init__(self, actions: SectionActions, *, holiday_regions: Mapping[str, tuple[str, ...]],
+                 system_country: str):
         super().__init__()
         page = self
         card = _card_with_form(_("Work and recording"))
@@ -120,9 +119,9 @@ class GeneralSection(_SettingsScrollPage):
         self.holiday_country_combo = QComboBox()
         self.holiday_country_combo.setFixedWidth(320)
         self.holiday_country_combo.addItem(
-            _("System region") + f" ({detect_country() or '-'})", ""
+            _("System region") + f" ({system_country or '-'})", ""
         )
-        for country in sorted(supported_holiday_regions()):
+        for country in sorted(holiday_regions):
             self.holiday_country_combo.addItem(country, country)
         self.holiday_country_combo.currentIndexChanged.connect(
             actions.holiday_country_changed

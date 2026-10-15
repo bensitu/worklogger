@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import base64
 import math
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from functools import cached_property
 from typing import Protocol
+from types import MappingProxyType
 
 from worklogger.app.commands.settings_commands import SetSettingCommand
 from worklogger.app.ports import KeyStore
@@ -132,6 +134,8 @@ class SettingsViewModel:
         default_language: str = "en_US",
         save_login_language: Callable[[str], Result[None]] | None = None,
         external_key_store: KeyStore | None = None,
+        holiday_regions: Mapping[str, tuple[str, ...]] | Callable[[], Mapping[str, tuple[str, ...]]] | None = None,
+        system_holiday_country: str | Callable[[], str] = "",
     ) -> None:
         self._user_id = user_id
         self._get_handler = get_handler
@@ -140,9 +144,23 @@ class SettingsViewModel:
         self._default_language = normalize_language(default_language)
         self._save_login_language = save_login_language
         self._external_key_store = external_key_store
+        self._holiday_regions_source = (holiday_regions if callable(holiday_regions) else
+            MappingProxyType({country: tuple(subdivisions) for country, subdivisions in (holiday_regions or {}).items()}))
+        self._system_country_source = system_holiday_country
         self._cached_password = None
         self._cached_api_key = None
         self._credentials_loaded = False
+
+    @cached_property
+    def holiday_regions(self) -> Mapping[str, tuple[str, ...]]:
+        source = self._holiday_regions_source
+        regions = source() if callable(source) else source
+        return MappingProxyType({country: tuple(subdivisions) for country, subdivisions in regions.items()})
+
+    @cached_property
+    def system_holiday_country(self) -> str:
+        source = self._system_country_source
+        return source() if callable(source) else source
 
     def load(self, *, refresh_credentials=True) -> Result[SettingsState]:
         try:

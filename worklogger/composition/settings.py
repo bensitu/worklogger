@@ -46,6 +46,7 @@ from worklogger.infrastructure.backup import SQLiteBackupService
 from worklogger.infrastructure.calendar import (
     IcsCalendarImporter,
 )
+from worklogger.infrastructure.calendar.holidays_provider import detect_country, supported_holiday_regions
 from worklogger.infrastructure.database import (
     SQLiteConnectionFactory,
 )
@@ -99,6 +100,8 @@ def build_settings_workflow(
             save_login_language=save_login_language,
             external_key_store=handlers.external_keys,
             proxy_password_settings=handlers.proxy_password,
+            holiday_regions=supported_holiday_regions,
+            system_holiday_country=detect_country,
         ),
         auth_view_model=auth_view_model,
         database_path=database_path,

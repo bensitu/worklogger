@@ -35,7 +35,7 @@ from worklogger.domain.auth.models import User
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _, available_languages, get_language, set_language
-from worklogger.infrastructure.calendar.holidays_provider import validate_holiday_region
+from worklogger.infrastructure.calendar.holidays_provider import detect_country, supported_holiday_regions, validate_holiday_region
 from worklogger.presentation.settings import SettingsDialog, SettingsPage
 from worklogger.presentation.settings_capabilities import SettingsCapabilities
 from worklogger.presentation.viewmodels import SettingsViewModel
@@ -69,10 +69,53 @@ def _view_model(repository: MemorySettingsRepository) -> SettingsViewModel:
         user_id=1,
         get_handler=GetSettingHandler(repository),
         set_handler=SetSettingHandler(repository, holiday_region_validator=validate_holiday_region),
+        holiday_regions=supported_holiday_regions(),
+        system_holiday_country=detect_country(),
     )
 
 
 class SettingsPresentationTests(unittest.TestCase):
+    def test_holiday_metadata_readers_are_lazy_and_cached(self):
+        catalog = Mock(return_value={"JP": ()})
+        country = Mock(return_value="JP")
+        repository = MemorySettingsRepository()
+        model = SettingsViewModel(user_id=1, get_handler=GetSettingHandler(repository),
+            set_handler=SetSettingHandler(repository), holiday_regions=catalog, system_holiday_country=country)
+        self.assertTrue(model.load().ok)
+        catalog.assert_not_called()
+        country.assert_not_called()
+        page = SettingsPage(model)
+        self.addCleanup(page.deleteLater)
+        page.refresh()
+        page.refresh()
+        catalog.assert_called_once_with()
+        country.assert_called_once_with()
+
+    def test_holiday_choices_use_the_injected_catalog_and_system_country(self):
+        from worklogger.config.constants import HOLIDAY_REGION_SETTING_KEY
+        from worklogger.domain.calendar.regions import validate_holiday_region as validate_region
+
+        catalog = {"JP": (), "US": ("CA", "NY")}
+        regions = dict(catalog)
+        repository = MemorySettingsRepository()
+        model = SettingsViewModel(user_id=1, get_handler=GetSettingHandler(repository),
+            set_handler=SetSettingHandler(repository, holiday_region_validator=lambda value: validate_region(value, catalog)),
+            holiday_regions=regions, system_holiday_country="US")
+        regions["US"] = ()
+        page = SettingsPage(model)
+        self.addCleanup(page.deleteLater)
+        self.assertTrue(page.refresh())
+        self.assertEqual([page.holiday_country_combo.itemData(index)
+                          for index in range(page.holiday_country_combo.count())], ["", "JP", "US"])
+        self.assertIn("US", page.holiday_country_combo.itemText(0))
+        self.assertEqual([page.holiday_subdivision_combo.itemData(index)
+                          for index in range(page.holiday_subdivision_combo.count())], ["", "CA", "NY"])
+        page.holiday_subdivision_combo.setCurrentIndex(page.holiday_subdivision_combo.findData("NY"))
+        self.assertEqual(repository.get(1, HOLIDAY_REGION_SETTING_KEY), "US/NY")
+        page.holiday_country_combo.setCurrentIndex(page.holiday_country_combo.findData("JP"))
+        self.assertEqual(repository.get(1, HOLIDAY_REGION_SETTING_KEY), "JP")
+        self.assertFalse(page.holiday_subdivision_combo.isEnabled())
+
     def setUp(self):
         from tests.presentation.qt_support import dispose_test_windows
         self.addCleanup(dispose_test_windows)
