@@ -39,7 +39,7 @@ QPushButton[settings_nav_item="true"]:hover:enabled {
 
 QPushButton[nav_item="true"][active="true"],
 QPushButton[settings_nav_item="true"][active="true"] {
-  background: {{ sidebar_active_background }};
+  background: {{ navigation_active_fill }};
   border-left: 3px solid {{ accent }};
   color: {{ accent }};
   font-weight: 600;

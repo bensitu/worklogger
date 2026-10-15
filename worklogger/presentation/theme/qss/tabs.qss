@@ -1,13 +1,14 @@
 /* Shared tabs with recording and management variants. */
 
 QTabWidget::pane {
-  border: 1px solid {{ border }};
+  background: {{ tab_pane_fill }};
+  border: 1px solid {{ panel_border }};
   border-radius: 8px;
 }
 
 QTabBar::tab {
-  background: {{ surface }};
-  border: 1px solid {{ border }};
+  background: {{ tab_fill }};
+  border: 1px solid {{ panel_border }};
   padding: 8px 16px;
 }
 
@@ -17,7 +18,7 @@ QTabBar::tab:selected {
 }
 
 QTabBar::tab:hover:enabled {
-  background: {{ card_hover }};
+  background: {{ tab_hover_fill }};
 }
 
 QTabWidget#worklog_mode_tab_widget::pane {
@@ -61,14 +62,15 @@ QTabBar#worklog_mode_selector_widget::tab:selected:hover:enabled {
 
 QTabWidget#project_editor_tab_widget::pane,
 QTabWidget#report_revision_tab_widget::pane {
-  background: {{ surface }};
-  border: 1px solid {{ border }};
+  background: {{ editor_pane_fill }};
+  border: 1px solid {{ panel_border }};
   border-radius: 6px;
   top: 8px;
 }
 
 QWidget#management_editor_page {
-  background: {{ surface }};
+  background: {{ editor_fill }};
+  border-color: {{ panel_border }};
   border-radius: 6px;
 }
 

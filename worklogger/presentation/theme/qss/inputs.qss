@@ -25,6 +25,10 @@ QLineEdit QToolButton {
   padding: 0;
 }
 
+QLineEdit QToolButton:hover:enabled {
+  background: {{ button_hover }};
+}
+
 QLineEdit:focus,
 QTextEdit:focus,
 QPlainTextEdit:focus,
@@ -96,4 +100,3 @@ QSpinBox#local_context_spin_box {
   min-height: 18px;
   padding: 2px 8px;
 }
-

@@ -7,6 +7,14 @@ QTreeView {
   border: 1px solid {{ table_border }};
 }
 
+QHeaderView::section {
+  background: {{ header_fill }};
+  border: none;
+  border-bottom: 1px solid {{ table_border }};
+  border-right: 1px solid {{ table_border }};
+  padding: 4px 6px;
+}
+
 QListWidget#local_model_list_widget,
 QListWidget#custom_work_type_list_widget,
 QListWidget[management_list="true"] {

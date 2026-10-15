@@ -134,7 +134,7 @@ _GLASS = MaterialProfile(_GLASS_LIGHT, _GLASS_DARK,
         ("weekend", CalendarColors("accent_dim", "accent", "border", alpha=180)),
         ("holiday", CalendarColors("#5b292e", "danger", "border", alpha=180)),
     ),
-    translucent=True, refraction=True, stylesheet_fragments=("materials.qss",),
+    translucent=True, refraction=True,
     backdrop_light=("#d0e0eb", "#eff2f5", "#d3e7df"),
     backdrop_dark=("#26333b", "#343c43", "#24413f"), holiday_foreground="danger",
 )

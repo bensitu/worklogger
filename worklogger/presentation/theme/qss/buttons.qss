@@ -57,3 +57,13 @@ QToolButton[variant="danger"]:hover:enabled {
   border-color: {{ danger }};
 }
 
+QPushButton#calendar_time_entry_button:hover:enabled,
+QPushButton#report_history_item_button:hover:enabled {
+  background: {{ row_hover_fill }};
+  border-color: {{ accent }};
+}
+
+QPushButton#calendar_time_entry_button:checked:hover:enabled,
+QPushButton#report_history_item_button[active="true"]:hover:enabled {
+  background: {{ button_hover }};
+}

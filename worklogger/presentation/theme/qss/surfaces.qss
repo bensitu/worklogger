@@ -61,6 +61,17 @@ QFrame[card="true"]:hover {
   border-color: {{ border_strong }};
 }
 
+QWidget#calendar_view_widget,
+QStackedWidget#settings_category_stack_widget {
+  background: {{ canvas_fill }};
+}
+
+QWidget#worklog_entry_panel_widget[glass_surface="true"] {
+  background: transparent;
+  border: 1px solid {{ panel_border }};
+  border-radius: 8px;
+}
+
 QWidget#app_main_content_widget,
 QStackedWidget#app_page_stack_widget,
 QWidget#calendar_page_widget,

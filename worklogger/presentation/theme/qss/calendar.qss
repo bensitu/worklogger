@@ -29,17 +29,8 @@ QPushButton#calendar_time_entry_button:checked {
   background: {{ record_selected_fill }};
 }
 
-QPushButton#calendar_time_entry_button:hover:enabled,
-QPushButton#report_history_item_button:hover:enabled {
-  background: {{ row_hover_fill }};
-  border-color: {{ accent }};
-}
-
-QPushButton#calendar_time_entry_button:checked:hover:enabled,
-QPushButton#report_history_item_button[active="true"]:hover:enabled,
 QToolButton#delete_record_button:hover:enabled,
-QToolButton#record_actions_button:hover:enabled,
-QLineEdit QToolButton:hover:enabled {
+QToolButton#record_actions_button:hover:enabled {
   background: {{ button_hover }};
 }
 
