@@ -5,10 +5,8 @@ import unittest
 
 from worklogger.domain.analytics.models import ChartDataBundle
 from worklogger.infrastructure.i18n import set_language
-from worklogger.presentation.date_labels import duration_label, period_range_label
+from worklogger.presentation.date_labels import duration_label, period_range_label, report_period_label
 from worklogger.presentation.shell.analytics_page import _month_chart_labels
-from worklogger.presentation.shell.reports_page import _period_label
-from worklogger.presentation.viewmodels.reports import ReportEditorState
 from worklogger.presentation.widgets.combo_chart import chart_tick_step
 
 
@@ -24,7 +22,7 @@ class DisplayValueTests(unittest.TestCase):
             self.assertEqual(duration_label(hours), label)
         self.assertEqual(period_range_label(date(2026, 5, 18), date(2026, 5, 24)), "May 18 - May 24, 2026")
         self.assertEqual(period_range_label(date(2025, 12, 29), date(2026, 1, 4)), "December 29, 2025 - January 4, 2026")
-        self.assertIn("Week 1", _period_label(ReportEditorState(1, "weekly", date(2025, 12, 29), date(2026, 1, 4), "")))
+        self.assertIn("Week 1", report_period_label("weekly", date(2025, 12, 29), date(2026, 1, 4)))
 
     def test_chart_labels_preserve_values_and_scale(self):
         bundle = ChartDataBundle((("12", 8.5), ("01", 7.25)), (("12", 8.5), ("01", 7.25)), frozenset({1}), (None, 8), (("01", 8),))
