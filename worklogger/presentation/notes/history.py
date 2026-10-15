@@ -4,7 +4,7 @@ from dataclasses import replace
 from datetime import date
 
 from PySide6.QtCore import QDate, QLocale, QSignalBlocker, QTimer, Qt, Signal
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QDateEdit, QFrame, QHBoxLayout,
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QDateEdit, QFrame, QGridLayout, QHBoxLayout,
     QLabel, QLineEdit, QListWidget, QListWidgetItem, QPushButton, QToolButton,
     QVBoxLayout, QWidget)
 
@@ -69,12 +69,13 @@ class NoteHistoryBrowser(QWidget):
         period.addWidget(self.next_button)
         layout.addWidget(self.period_widget)
         self.range_widget = QWidget()
-        dates = QVBoxLayout(self.range_widget)
+        dates = QGridLayout(self.range_widget)
         dates.setContentsMargins(0, 0, 0, 0)
         dates.setSpacing(4)
+        dates.setColumnStretch(1, 1)
         self.start_input, self.end_input = QDateEdit(), QDateEdit()
-        for field, caption, value in ((self.start_input, _("From"), self._period),
-                                      (self.end_input, _("To"), day)):
+        for row, (field, caption, value) in enumerate(((self.start_input, _("From"), self._period),
+                                                     (self.end_input, _("To"), day))):
             field.setDateRange(QDate(1, 1, 1), QDate(9999, 12, 31))
             field.setDisplayFormat("yyyy-MM-dd")
             configure_calendar_popup(field)
@@ -82,10 +83,8 @@ class NoteHistoryBrowser(QWidget):
             field.setAccessibleName(caption)
             label = QLabel(caption)
             label.setBuddy(field)
-            row = QHBoxLayout()
-            row.addWidget(label)
-            row.addWidget(field, 1)
-            dates.addLayout(row)
+            dates.addWidget(label, row, 0)
+            dates.addWidget(field, row, 1)
         layout.addWidget(self.range_widget)
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText(_("Search notes"))

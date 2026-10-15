@@ -132,6 +132,9 @@ class NotesLayoutChecks(unittest.TestCase):
                                     self.app.processEvents()
                                     self.assertEqual((dialog.width(), dialog.height()), (width, height))
                                     self.assertGreaterEqual(browser.history_list.height(), 64)
+                                    if mode == "custom":
+                                        self.assertEqual(browser.start_input.x(), browser.end_input.x())
+                                        self.assertEqual(browser.start_input.size(), browser.end_input.size())
                                     controls = [browser.mode_input, browser.search_input, browser.all_dates_checkbox,
                                                 browser.range_label, browser.count_label, browser.history_list,
                                                 browser.more_button]
