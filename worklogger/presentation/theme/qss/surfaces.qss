@@ -31,80 +31,12 @@ QWidget#worklog_entry_panel_widget,
 QScrollArea > QWidget,
 QStackedWidget#time_entry_content_heading_stack_widget,
 QStackedWidget#authentication_feedback_stack_widget,
-QScrollBar::add-page:vertical,
-QScrollBar::sub-page:vertical,
 QWidget#settings_switch_row_widget,
 QWidget#settings_about_widget,
+QWidget#data_browser_summary_widget,
+QCheckBox#work_item_completed_check,
 QSlider#background_opacity_slider_widget {
   background: transparent;
-}
-
-QDialog[credential_form="true"] {
-  background: {{ surface }};
-}
-
-QTableView,
-QTreeView {
-  background: {{ table_fill }};
-  alternate-background-color: {{ table_alternate }};
-  border: 1px solid {{ table_border }};
-}
-
-QListWidget#local_model_list_widget,
-QListWidget#custom_work_type_list_widget,
-QListWidget[management_list="true"] {
-  background: {{ surface }};
-  border: 1px solid {{ border }};
-  border-radius: 6px;
-  padding: 6px;
-}
-
-QListWidget#local_model_list_widget::item,
-QListWidget#custom_work_type_list_widget::item,
-QListWidget[management_list="true"]::item {
-  border-radius: 4px;
-  border: 1px solid transparent;
-}
-
-QListWidget#local_model_list_widget::item:hover,
-QListWidget#custom_work_type_list_widget::item:hover,
-QListWidget#note_history_list_widget::item:hover:enabled:!selected,
-QListWidget[management_list="true"]::item:hover:enabled {
-  background: {{ accent_dim }};
-}
-
-QListWidget#local_model_list_widget::item:selected,
-QListWidget#custom_work_type_list_widget::item:selected {
-  background: {{ accent }};
-  color: {{ highlighted_text }};
-}
-
-QListWidget[management_list="true"]::item:selected {
-  background: {{ accent_dim }};
-  border-color: {{ accent }};
-  color: {{ text }};
-}
-
-QListWidget[management_list="true"]:focus {
-  border-color: {{ accent }};
-}
-
-QListWidget[management_list="true"]::item:selected:disabled {
-  background: {{ disabled_background }};
-  border-color: {{ border }};
-  color: {{ disabled_text }};
-}
-
-QToolButton#configure_identity_button {
-  padding: 0;
-}
-
-QToolButton#display_name_action_button {
-  padding: 8px;
-  min-width: 22px;
-  max-width: 22px;
-  min-height: 22px;
-  max-height: 22px;
 }
 
 QDialog,
@@ -127,21 +59,6 @@ QFrame#settings_content_frame {
 QFrame[card="true"]:hover {
   background: {{ card_hover_fill }};
   border-color: {{ border_strong }};
-}
-
-QFrame#app_sidebar_frame {
-  background: {{ sidebar_fill }};
-  border-right: 1px solid {{ panel_border }};
-}
-
-QLabel#sidebar_avatar_label {
-  background: {{ surface_alt }};
-  border-radius: 36px;
-}
-
-QFrame#app_sidebar_frame QPushButton[nav_item="true"] {
-  padding: 10px 8px;
-  font-size: 12px;
 }
 
 QWidget#app_main_content_widget,

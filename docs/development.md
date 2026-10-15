@@ -47,12 +47,16 @@ Use shared theme tokens, controls, fonts, and Lucide icons. Apply QSS at the
 application boundary, not on individual widgets.
 
 Shared rules live in responsibility-specific fragments under
-`presentation/theme/qss`. `stylesheets.py` defines their cascade order;
-`background_images.qss` handles uploaded backgrounds and `materials.qss` contains
-glass-specific effects. Define colors through theme tokens, not separate copies
-of component styles. Keep role and state selectors explicit where their priority
-is needed. Hover, selection, and disabled states must preserve dimensions and
-typography.
+`presentation/theme/qss`. `stylesheets.py` defines their cascade order: application
+surfaces and text roles, shared controls, component variants, disabled states,
+then background overrides. Navigation, item views, menus, tabs, and authentication
+each have a dedicated fragment. Keep page-specific layout rules in their component
+fragment, not in shared typography or settings rules. `background_images.qss`
+handles uploaded backgrounds; material fragments supplement shared controls.
+Define colors through theme tokens, not separate copies of component styles.
+Keep role and state selectors explicit where their priority is needed. Hover,
+selection, and disabled states must preserve dimensions and typography. List hover
+feedback must not replace selection or disabled feedback.
 
 Ordinary framed actions use neutral text and outlines; primary actions use accent
 backgrounds and the highlighted text role. Destructive actions use the danger role.

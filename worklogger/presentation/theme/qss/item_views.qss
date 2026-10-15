@@ -1,0 +1,99 @@
+/* Tables, trees, lists, and scrolling. */
+
+QTableView,
+QTreeView {
+  background: {{ table_fill }};
+  alternate-background-color: {{ table_alternate }};
+  border: 1px solid {{ table_border }};
+}
+
+QListWidget#local_model_list_widget,
+QListWidget#custom_work_type_list_widget,
+QListWidget[management_list="true"] {
+  background: {{ surface }};
+  border: 1px solid {{ border }};
+  border-radius: 6px;
+  padding: 6px;
+}
+
+QListWidget#local_model_list_widget::item,
+QListWidget#custom_work_type_list_widget::item,
+QListWidget[management_list="true"]::item {
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+
+QListWidget#local_model_list_widget::item:hover:enabled:!selected,
+QListWidget#custom_work_type_list_widget::item:hover:enabled:!selected,
+QListWidget#note_history_list_widget::item:hover:enabled:!selected,
+QListWidget[management_list="true"]::item:hover:enabled:!selected,
+QTreeWidget[data_browser="true"]::item:hover:enabled:!selected {
+  background: {{ accent_dim }};
+}
+
+QListWidget#local_model_list_widget::item:selected,
+QListWidget#custom_work_type_list_widget::item:selected,
+QTreeWidget[data_browser="true"]::item:selected {
+  background: {{ accent }};
+  color: {{ highlighted_text }};
+}
+
+QListWidget[management_list="true"]::item:selected {
+  background: {{ accent_dim }};
+  border-color: {{ accent }};
+  color: {{ text }};
+}
+
+QListWidget[management_list="true"]:focus {
+  border-color: {{ accent }};
+}
+
+QListWidget[management_list="true"]::item:selected:disabled {
+  background: {{ disabled_background }};
+  border-color: {{ border }};
+  color: {{ disabled_text }};
+}
+
+QTreeWidget[data_browser="true"]::item {
+  min-height: 18px;
+  padding: 6px 8px;
+  border-bottom: 1px solid {{ table_border }};
+}
+
+QTreeWidget[data_browser="true"] QHeaderView::section {
+  background: {{ surface_alt }};
+  color: {{ muted_text }};
+  border: none;
+  border-bottom: 1px solid {{ table_border }};
+  padding: 8px 10px;
+  font-weight: 500;
+}
+
+QScrollArea {
+  border: none;
+  background: transparent;
+}
+
+QScrollBar:vertical {
+  background: transparent;
+  width: 10px;
+  margin: 4px 2px;
+}
+
+QScrollBar::handle:vertical {
+  background: {{ border_strong }};
+  border-radius: 4px;
+  min-height: 24px;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+  height: 0;
+  border: none;
+  background: transparent;
+}
+
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+  background: transparent;
+}

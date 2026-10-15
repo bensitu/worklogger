@@ -1,4 +1,4 @@
-/* Settings and reporting components. */
+/* Settings controls, account fields, and separators. */
 
 QSlider#background_opacity_slider_widget::groove:horizontal {
   height: 4px;
@@ -41,70 +41,10 @@ QFrame#settings_separator_frame {
   max-height: 1px;
 }
 
-QTabWidget::pane {
-  border: 1px solid {{ border }};
-  border-radius: 8px;
-}
-
-QTabBar::tab {
-  background: {{ surface }};
-  border: 1px solid {{ border }};
-  padding: 8px 16px;
-}
-
-QTabBar::tab:selected {
-  color: {{ accent }};
-  border-bottom: 2px solid {{ accent }};
-}
-
-QTabBar::tab:hover:enabled {
-  background: {{ card_hover }};
-}
-
-QTabWidget#project_editor_tab_widget::pane,
-QTabWidget#report_revision_tab_widget::pane {
-  background: {{ surface }};
-  border: 1px solid {{ border }};
-  border-radius: 6px;
-  top: 8px;
-}
-
-QWidget#management_editor_page {
-  background: {{ surface }};
-  border-radius: 6px;
-}
-
-QCheckBox#work_item_completed_check {
-  background: transparent;
-}
-
-QTabBar#management_tab_bar::tab {
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  padding: 8px 18px;
-  margin-right: 8px;
-  color: {{ muted_text }};
-  font-weight: 500;
-}
-
-QTabBar#management_tab_bar::tab:selected {
-  color: {{ accent }};
-  border-bottom-color: {{ accent }};
-  font-weight: 600;
-}
-
-QTabBar#management_tab_bar::tab:hover:enabled {
-  background: {{ button_hover }};
-}
-
-QTabBar#management_tab_bar::tab:disabled {
-  color: {{ disabled_text }};
-}
-
-QTextEdit#report_revision_preview {
-  background: {{ surface }};
-  border: none;
-  border-radius: 6px;
-  padding: 0;
+QToolButton#display_name_action_button {
+  padding: 8px;
+  min-width: 22px;
+  max-width: 22px;
+  min-height: 22px;
+  max-height: 22px;
 }

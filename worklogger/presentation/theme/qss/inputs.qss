@@ -1,4 +1,4 @@
-/* Input fields, popup indicators, and tabs. */
+/* Input fields, focus states, and popup indicators. */
 
 QLineEdit,
 QTextEdit,
@@ -15,11 +15,6 @@ QDoubleSpinBox {
   border-radius: 8px;
   min-height: 28px;
   padding: 5px 10px;
-}
-
-QDialog#login_dialog QLineEdit,
-QDialog#login_dialog QPushButton {
-  min-height: 32px;
 }
 
 QLineEdit QToolButton {
@@ -102,37 +97,3 @@ QSpinBox#local_context_spin_box {
   padding: 2px 8px;
 }
 
-QTabWidget#worklog_mode_tab_widget::pane {
-  border: none;
-  padding-top: 8px;
-}
-
-QTabBar#worklog_mode_selector_widget {
-  background: {{ surface_alt }};
-  border: 1px solid {{ border }};
-  border-radius: 8px;
-}
-
-QTabBar#worklog_mode_selector_widget::tab {
-  background: transparent;
-  color: {{ muted_text }};
-  border: 1px solid transparent;
-  border-radius: 5px;
-  margin: 3px;
-  min-height: 20px;
-  padding: 4px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-QTabBar#worklog_mode_selector_widget::tab:hover:enabled {
-  color: {{ text }};
-  background: {{ card_hover }};
-}
-
-QTabBar#worklog_mode_selector_widget::tab:selected {
-  background: {{ button_fill }};
-  color: {{ accent }};
-  border-color: {{ button_border }};
-  font-weight: 600;
-}

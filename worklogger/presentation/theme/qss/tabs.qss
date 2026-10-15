@@ -1,0 +1,97 @@
+/* Shared tabs with recording and management variants. */
+
+QTabWidget::pane {
+  border: 1px solid {{ border }};
+  border-radius: 8px;
+}
+
+QTabBar::tab {
+  background: {{ surface }};
+  border: 1px solid {{ border }};
+  padding: 8px 16px;
+}
+
+QTabBar::tab:selected {
+  color: {{ accent }};
+  border-bottom: 2px solid {{ accent }};
+}
+
+QTabBar::tab:hover:enabled {
+  background: {{ card_hover }};
+}
+
+QTabWidget#worklog_mode_tab_widget::pane {
+  border: none;
+  padding-top: 8px;
+}
+
+QTabBar#worklog_mode_selector_widget {
+  background: {{ surface_alt }};
+  border: 1px solid {{ border }};
+  border-radius: 8px;
+}
+
+QTabBar#worklog_mode_selector_widget::tab {
+  background: transparent;
+  color: {{ muted_text }};
+  border: 1px solid transparent;
+  border-radius: 5px;
+  margin: 3px;
+  min-height: 20px;
+  padding: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+QTabBar#worklog_mode_selector_widget::tab:hover:enabled {
+  color: {{ text }};
+  background: {{ card_hover }};
+}
+
+QTabBar#worklog_mode_selector_widget::tab:selected {
+  background: {{ button_fill }};
+  color: {{ accent }};
+  border-color: {{ button_border }};
+  font-weight: 600;
+}
+
+QTabBar#worklog_mode_selector_widget::tab:selected:hover:enabled {
+  color: {{ accent }};
+}
+
+QTabWidget#project_editor_tab_widget::pane,
+QTabWidget#report_revision_tab_widget::pane {
+  background: {{ surface }};
+  border: 1px solid {{ border }};
+  border-radius: 6px;
+  top: 8px;
+}
+
+QWidget#management_editor_page {
+  background: {{ surface }};
+  border-radius: 6px;
+}
+
+QTabBar#management_tab_bar::tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 8px 18px;
+  margin-right: 8px;
+  color: {{ muted_text }};
+  font-weight: 500;
+}
+
+QTabBar#management_tab_bar::tab:selected {
+  color: {{ accent }};
+  border-bottom-color: {{ accent }};
+  font-weight: 600;
+}
+
+QTabBar#management_tab_bar::tab:hover:enabled {
+  background: {{ button_hover }};
+}
+
+QTabBar#management_tab_bar::tab:disabled {
+  color: {{ disabled_text }};
+}

@@ -1,72 +1,8 @@
-QLabel#calendar_month_title_label,
-QLabel#report_period_label {
-  font-size: 18px;
-  font-weight: 600;
-}
-
-QPushButton[page_tab="true"] {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid {{ border }};
-  border-radius: 0;
-  padding: 10px 16px;
-  color: {{ muted_text }};
-}
-
-QPushButton[page_tab="true"][checked="true"] {
-  background: transparent;
-  color: {{ accent }};
-  border-bottom: 3px solid {{ accent }};
-  font-weight: 600;
-}
-
-QPushButton[page_tab="true"]:hover:enabled {
-  background: {{ button_hover }};
-  border-bottom-color: {{ accent }};
-}
+/* Report history, previews, and reporting actions. */
 
 QFrame#report_period_separator_frame {
   background: {{ panel_border }};
   border: none;
-}
-
-QWidget#data_browser_summary_widget {
-  background: transparent;
-}
-
-QLabel[data_metric="true"] {
-  font-size: 18px;
-  font-weight: 600;
-}
-
-QTreeWidget[data_browser="true"]::item {
-  min-height: 18px;
-  padding: 6px 8px;
-  border-bottom: 1px solid {{ table_border }};
-}
-
-QTreeWidget[data_browser="true"]::item:hover:!selected {
-  background: {{ accent_dim }};
-}
-
-QTreeWidget[data_browser="true"]::item:selected {
-  background: {{ accent }};
-  color: {{ highlighted_text }};
-}
-
-QTreeWidget[data_browser="true"] QHeaderView::section {
-  background: {{ surface_alt }};
-  color: {{ muted_text }};
-  border: none;
-  border-bottom: 1px solid {{ table_border }};
-  padding: 8px 10px;
-  font-weight: 500;
-}
-
-QLabel#report_history_month_label,
-QLabel#analytics_chart_title_label,
-QLabel[role="metric_title"] {
-  font-weight: 600;
 }
 
 QPushButton#report_history_item_button {
@@ -85,15 +21,11 @@ QPushButton#report_history_item_button[active="true"] {
   color: {{ accent }};
 }
 
-QLabel[role="metric_value"],
-QLabel#daily_average_value_label {
-  font-size: 21px;
-  font-weight: 600;
-}
-
-QLabel[role="metric_caption"],
-QLabel#daily_average_comparison_label {
-  font-size: 11px;
+QTextEdit#report_revision_preview {
+  background: {{ surface }};
+  border: none;
+  border-radius: 6px;
+  padding: 0;
 }
 
 QToolButton#copy_report_button,

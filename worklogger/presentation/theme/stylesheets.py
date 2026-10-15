@@ -12,8 +12,9 @@ from worklogger.presentation.theme.materials import MATERIAL_PROFILES, material_
 _QSS_ROOT = Path(__file__).with_name("qss")
 _QSS_TOKEN_RE = re.compile(r"\{\{\s*([a-z_]+)\s*\}\}")
 COMMON_TEMPLATES = (
-    "surfaces.qss", "calendar.qss", "typography.qss", "buttons.qss",
-    "inputs.qss", "scrolling.qss", "settings.qss", "date_picker.qss",
+    "surfaces.qss", "typography.qss", "buttons.qss", "navigation.qss",
+    "inputs.qss", "item_views.qss", "menus.qss", "tabs.qss",
+    "calendar.qss", "settings.qss", "authentication.qss", "date_picker.qss",
     "reporting.qss", "disabled.qss", "background_images.qss",
 )
 MATERIAL_TEMPLATES = MappingProxyType({key: profile.stylesheet_fragments for key, profile in MATERIAL_PROFILES.items()})

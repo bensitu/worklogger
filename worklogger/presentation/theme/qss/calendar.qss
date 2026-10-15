@@ -16,12 +16,6 @@ QLabel#schedule_records_label {
   border-top: 1px solid {{ panel_border }};
 }
 
-QFrame#calendar_record_frame {
-  background: {{ row_fill }};
-  border: 1px solid {{ row_border }};
-  border-radius: 4px;
-}
-
 QPushButton#calendar_time_entry_button {
   font-weight: 400;
   background: {{ row_fill }};
@@ -92,8 +86,7 @@ QLabel#calendar_record_marker_label {
   border-radius: 3px;
 }
 
-QLabel#week_header_label[weekend="true"],
-QTabBar#worklog_mode_selector_widget::tab:selected:hover:enabled {
+QLabel#week_header_label[weekend="true"] {
   color: {{ accent }};
 }
 

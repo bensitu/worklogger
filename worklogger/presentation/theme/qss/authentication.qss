@@ -1,0 +1,40 @@
+/* Sign-in surfaces and credential feedback. */
+
+QDialog[credential_form="true"] {
+  background: {{ surface }};
+}
+
+QFrame#login_hero_frame {
+  background: {{ login_hero_background }};
+}
+
+QFrame#login_divider_left_frame,
+QFrame#login_divider_right_frame {
+  color: {{ border }};
+  background: {{ border }};
+  max-height: 1px;
+}
+
+QDialog#login_dialog QLineEdit,
+QDialog#login_dialog QPushButton {
+  min-height: 32px;
+}
+
+QToolButton#configure_identity_button {
+  padding: 0;
+}
+
+QLabel#recovery_key_label {
+  background: {{ input_fill }};
+  border: 1px solid {{ field_border }};
+  border-radius: 8px;
+  padding: 10px;
+  font-family: "Consolas", "Menlo", monospace;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+QDialog[credential_form="true"] QLabel[role="caption"],
+QDialog[credential_form="true"] QWidget > QLabel[role="secondary"] {
+  font-size: 12px;
+}

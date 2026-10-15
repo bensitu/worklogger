@@ -1,0 +1,87 @@
+/* Application navigation, settings navigation, and page selectors. */
+
+QFrame#app_sidebar_frame {
+  background: {{ sidebar_fill }};
+  border-right: 1px solid {{ panel_border }};
+}
+
+QLabel#sidebar_avatar_label {
+  background: {{ surface_alt }};
+  border-radius: 36px;
+}
+
+QFrame#settings_navigation_frame {
+  background: {{ navigation_fill }};
+  border: 1px solid {{ panel_border }};
+  border-radius: 8px;
+}
+
+QPushButton[nav_item="true"],
+QPushButton[settings_nav_item="true"] {
+  background: transparent;
+  border: 1px solid transparent;
+  color: {{ text }};
+  text-align: left;
+  padding: 10px 14px;
+  font-weight: 500;
+}
+
+QFrame#app_sidebar_frame QPushButton[nav_item="true"] {
+  padding: 10px 8px;
+  font-size: 12px;
+}
+
+QPushButton[nav_item="true"]:hover:enabled,
+QPushButton[settings_nav_item="true"]:hover:enabled {
+  background: {{ navigation_hover_fill }};
+  border-color: {{ border }};
+}
+
+QPushButton[nav_item="true"][active="true"],
+QPushButton[settings_nav_item="true"][active="true"] {
+  background: {{ sidebar_active_background }};
+  border-left: 3px solid {{ accent }};
+  color: {{ accent }};
+  font-weight: 600;
+}
+
+QPushButton[nav_item="true"][active="true"]:hover:enabled,
+QPushButton[settings_nav_item="true"][active="true"]:hover:enabled {
+  background: {{ button_hover_fill }};
+  border-color: transparent;
+  border-left-color: {{ accent }};
+}
+
+QPushButton[segment="true"] {
+  background: {{ surface }};
+  border: 1px solid {{ border }};
+  border-radius: 0;
+  padding: 7px 18px;
+}
+
+QPushButton[segment="true"][checked="true"] {
+  background: {{ accent_dim }};
+  color: {{ accent }};
+  border-color: {{ accent }};
+  font-weight: 600;
+}
+
+QPushButton[page_tab="true"] {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid {{ border }};
+  border-radius: 0;
+  padding: 10px 16px;
+  color: {{ muted_text }};
+}
+
+QPushButton[page_tab="true"][checked="true"] {
+  color: {{ accent }};
+  border-bottom: 3px solid {{ accent }};
+  font-weight: 600;
+}
+
+QPushButton[page_tab="true"]:hover:enabled {
+  background: {{ button_hover }};
+  border-bottom-color: {{ accent }};
+}

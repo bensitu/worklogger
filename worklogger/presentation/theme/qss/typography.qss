@@ -1,21 +1,4 @@
-/* Authentication and semantic text roles. */
-
-QFrame#login_hero_frame {
-  background: {{ login_hero_background }};
-}
-
-QFrame#login_divider_left_frame,
-QFrame#login_divider_right_frame {
-  color: {{ border }};
-  background: {{ border }};
-  max-height: 1px;
-}
-
-QFrame#settings_navigation_frame {
-  background: {{ navigation_fill }};
-  border: 1px solid {{ panel_border }};
-  border-radius: 8px;
-}
+/* Semantic text roles and shared heading sizes. */
 
 QLabel[role="section_heading"],
 QLabel[role="credential_success"],
@@ -40,21 +23,6 @@ QLabel[role="account_identity"] {
   font-weight: 500;
 }
 
-QLabel#recovery_key_label {
-  background: {{ input_fill }};
-  border: 1px solid {{ field_border }};
-  border-radius: 8px;
-  padding: 10px;
-  font-family: "Consolas", "Menlo", monospace;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-QDialog[credential_form="true"] QLabel[role="caption"],
-QDialog[credential_form="true"] QWidget > QLabel[role="secondary"] {
-  font-size: 12px;
-}
-
 QLabel[role="title"] {
   color: {{ text }};
   font-size: 24px;
@@ -74,4 +42,28 @@ QLabel[badge="true"] {
   border: 1px solid {{ border_strong }};
   border-radius: 6px;
   padding: 2px 8px;
+}
+
+QLabel#calendar_month_title_label,
+QLabel#report_period_label,
+QLabel[data_metric="true"] {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+QLabel#report_history_month_label,
+QLabel#analytics_chart_title_label,
+QLabel[role="metric_title"] {
+  font-weight: 600;
+}
+
+QLabel[role="metric_value"],
+QLabel#daily_average_value_label {
+  font-size: 21px;
+  font-weight: 600;
+}
+
+QLabel[role="metric_caption"],
+QLabel#daily_average_comparison_label {
+  font-size: 11px;
 }
