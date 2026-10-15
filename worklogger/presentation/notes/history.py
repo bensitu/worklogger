@@ -4,7 +4,7 @@ from dataclasses import replace
 from datetime import date
 
 from PySide6.QtCore import QDate, QLocale, QSignalBlocker, QTimer, Qt, Signal
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QDateEdit, QFrame, QGridLayout, QHBoxLayout,
+from PySide6.QtWidgets import (QComboBox, QDateEdit, QFrame, QGridLayout, QHBoxLayout,
     QLabel, QLineEdit, QListWidget, QListWidgetItem, QPushButton, QToolButton,
     QVBoxLayout, QWidget)
 
@@ -86,14 +86,18 @@ class NoteHistoryBrowser(QWidget):
             dates.addWidget(label, row, 0)
             dates.addWidget(field, row, 1)
         layout.addWidget(self.range_widget)
+        self.search_scope_input = QComboBox()
+        self.search_scope_input.addItem(_("Search current range"), "current")
+        self.search_scope_input.addItem(_("Search all dates"), "all")
+        self.search_scope_input.setAccessibleName(_("Search scope"))
+        self.search_scope_input.setToolTip(_("Search scope"))
+        layout.addWidget(self.search_scope_input)
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText(_("Search notes"))
         self.search_input.setAccessibleName(_("Search notes"))
         self.search_input.setClearButtonEnabled(True)
         self.search_input.setMaxLength(256)
         layout.addWidget(self.search_input)
-        self.all_dates_checkbox = QCheckBox(_("Search all dates"))
-        layout.addWidget(self.all_dates_checkbox)
         self.range_label = QLabel()
         self.count_label = QLabel()
         self.empty_label = QLabel(_("No notes found"))
@@ -121,17 +125,13 @@ class NoteHistoryBrowser(QWidget):
         self.start_input.dateChanged.connect(self._filters_changed)
         self.end_input.dateChanged.connect(self._filters_changed)
         self.search_input.textChanged.connect(self._filters_changed)
-        self.all_dates_checkbox.toggled.connect(self._filters_changed)
+        self.search_scope_input.currentIndexChanged.connect(self._filters_changed)
         self.more_button.clicked.connect(lambda: self._load(append=True))
 
     def _sync_controls(self):
         mode = self.mode_input.currentData()
         has_query = bool(self.search_input.text().strip())
-        if not has_query:
-            with QSignalBlocker(self.all_dates_checkbox):
-                self.all_dates_checkbox.setChecked(False)
-        global_search = has_query and self.all_dates_checkbox.isChecked()
-        self.all_dates_checkbox.setEnabled(has_query and mode != "all")
+        global_search = has_query and self.search_scope_input.currentData() == "all"
         self.mode_input.setEnabled(not global_search)
         self.period_widget.setVisible(mode in ("month", "year"))
         self.range_widget.setVisible(mode == "custom")
@@ -151,7 +151,7 @@ class NoteHistoryBrowser(QWidget):
     def _filters(self):
         text = self.search_input.text().strip()
         mode = self.mode_input.currentData()
-        if mode == "all" or (text and self.all_dates_checkbox.isChecked()):
+        if mode == "all" or (text and self.search_scope_input.currentData() == "all"):
             start, end = date.min, date.max
         elif mode == "custom":
             start, end = self.start_input.date().toPython(), self.end_input.date().toPython()

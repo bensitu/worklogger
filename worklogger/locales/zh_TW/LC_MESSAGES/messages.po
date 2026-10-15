@@ -1768,6 +1768,9 @@ msgstr "預定"
 msgid "Search all dates"
 msgstr "搜尋全部日期"
 
+msgid "Search current range"
+msgstr "搜尋目前範圍"
+
 msgid "Search notes"
 msgstr "搜尋筆記"
 
@@ -1776,6 +1779,9 @@ msgstr "檢索紀錄"
 
 msgid "Search reports..."
 msgstr "搜尋報表..."
+
+msgid "Search scope"
+msgstr "搜尋範圍"
 
 msgid "Searching..."
 msgstr "正在檢索..."

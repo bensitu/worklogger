@@ -135,12 +135,16 @@ class NotesLayoutChecks(unittest.TestCase):
                                     if mode == "custom":
                                         self.assertEqual(browser.start_input.x(), browser.end_input.x())
                                         self.assertEqual(browser.start_input.size(), browser.end_input.size())
-                                    controls = [browser.mode_input, browser.search_input, browser.all_dates_checkbox,
+                                    controls = [browser.mode_input, browser.search_input, browser.search_scope_input,
                                                 browser.range_label, browser.count_label, browser.history_list,
                                                 browser.more_button]
                                     controls += ([browser.start_input, browser.end_input] if mode == "custom" else
                                                  [browser.period_button] if mode == "year" else [])
                                     rectangles = []
+                                    scope = browser.search_scope_input
+                                    for index in range(scope.count()):
+                                        self.assertLessEqual(scope.fontMetrics().horizontalAdvance(scope.itemText(index)) + 40,
+                                                             scope.width(), (language_code, scope.itemText(index)))
                                     for widget in controls:
                                         rect = widget.rect().translated(widget.mapTo(dialog, widget.rect().topLeft()))
                                         self.assertTrue(dialog.rect().contains(rect), (language_code, mode, widget))
