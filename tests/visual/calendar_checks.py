@@ -470,10 +470,29 @@ class CalendarLayoutChecks(unittest.TestCase):
                 window._today = date(2026, 5, 15)
                 window._holidays = {date(2026, 5, 21): "International Workers Memorial Day"}
                 window.apply_theme()
-                self.assertTrue(window.refresh())
+                window.calendar_view.set_loading(True)
                 window.show()
                 try:
                     sizes = ((880, 580), (1100, 700), (1800, 1000)) if language == "en_US" else ((880, 580),)
+                    for width, height in sizes:
+                        window.resize(width, height)
+                        self.app.processEvents()
+                        calendar = window.calendar_view
+                        center = calendar.loading_label.mapTo(calendar, calendar.loading_label.rect().center())
+                        self.assertLessEqual(abs(center.x() - calendar.rect().center().x()), 1)
+                        self.assertLessEqual(abs(center.y() - calendar.rect().center().y()), 1)
+                        self.assertTrue(calendar.loading_label.isVisible())
+                        self.assertTrue(calendar.grid_frame.isHidden())
+                        directory = os.environ.get("WORKLOGGER_SCREENSHOTS")
+                        if directory:
+                            target = Path(directory)
+                            target.mkdir(parents=True, exist_ok=True)
+                            self.assertTrue(window.grab().save(str(target /
+                                f"{language}-calendar-loading-{'dark' if dark else 'light'}-{width}.png")))
+                    self.assertTrue(window.refresh())
+                    self.app.processEvents()
+                    self.assertTrue(window.calendar_view.loading_label.isHidden())
+                    self.assertTrue(window.calendar_view.grid_frame.isVisible())
                     for width, height in sizes:
                         with self.subTest(language=language, dark=dark, width=width):
                             window.resize(width, height)
