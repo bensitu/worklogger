@@ -10,7 +10,9 @@ from datetime import datetime, timezone
 from typing import Protocol
 
 from worklogger.app.commands.settings_commands import SetSettingCommand
+from worklogger.app.ports import KeyStore
 from worklogger.app.queries.settings_queries import GetSettingQuery
+from worklogger.app.settings import SettingsReader, read_setting_values
 from worklogger.app.use_cases.settings import ProxyPasswordSettings
 from worklogger.config.constants import (
     AI_ASSIST_ENABLED_SETTING_KEY,
@@ -70,11 +72,6 @@ from worklogger.domain.shared.languages import normalize_language
 from worklogger.domain.shared.result import Result
 
 
-class SettingsGetHandler(Protocol):
-    def handle(self, query: GetSettingQuery) -> Result[str | None]:
-        ...
-
-
 class SettingsSetHandler(Protocol):
     def handle(self, command: SetSettingCommand) -> Result[None]:
         ...
@@ -129,12 +126,12 @@ class SettingsViewModel:
         self,
         *,
         user_id: int,
-        get_handler: SettingsGetHandler,
+        get_handler: SettingsReader,
         set_handler: SettingsSetHandler,
         proxy_password_settings: ProxyPasswordSettings | None = None,
         default_language: str = "en_US",
         save_login_language: Callable[[str], Result[None]] | None = None,
-        external_key_store=None,
+        external_key_store: KeyStore | None = None,
     ) -> None:
         self._user_id = user_id
         self._get_handler = get_handler
@@ -156,24 +153,13 @@ class SettingsViewModel:
             return Result.failure(InfrastructureError("settings_load_failed", "settings_load_failed"))
 
     def _load(self, *, refresh_credentials=True) -> Result[SettingsState]:
-        values: dict[str, str | None] = {}
-        batch = None
-        if getattr(type(self._get_handler), "get_many", None) is not None:
-            result = self._get_handler.get_many(self._user_id, tuple(SETTINGS_DEFAULTS))
-            if not result.ok:
-                return Result.failure(result.error)
-            batch = result.value
-        for key, default in SETTINGS_DEFAULTS.items():
-            if key == LANGUAGE_SETTING_KEY:
-                default = self._default_language
-            if key == NETWORK_PROXY_PASSWORD_SETTING_KEY:
-                continue
-            result = Result.success(batch.get(key) if batch.get(key) is not None else default) if batch is not None else self._get_handler.handle(GetSettingQuery(self._user_id, key, default))
-            if not result.ok:
-                return Result.failure(
-                    result.error or ValidationError("settings_load_failed", "settings_load_failed")
-                )
-            values[key] = result.value
+        defaults = {key: default for key, default in SETTINGS_DEFAULTS.items()
+                    if key != NETWORK_PROXY_PASSWORD_SETTING_KEY}
+        defaults[LANGUAGE_SETTING_KEY] = self._default_language
+        loaded = read_setting_values(self._get_handler, self._user_id, defaults)
+        if not loaded.ok:
+            return Result.failure(loaded.error)
+        values = loaded.value
         if refresh_credentials or not self._credentials_loaded:
             self._cached_password = self._proxy_password_settings.load() if self._proxy_password_settings is not None else None
             self._cached_api_key = self._external_key_store.get_secret("ai_api_key") if self._external_key_store is not None else None

@@ -109,21 +109,6 @@ class WorkLogIcsExporter(Protocol):
         ...
 
 
-class IdentityProvider(Protocol):
-    provider_id: str
-
-    def authenticate(self) -> Result[object]:
-        ...
-
-
-class LocalModelManager(Protocol):
-    def refresh_catalog(self) -> Result[tuple[object, ...]]:
-        ...
-
-    def import_model(self, source: Path) -> Result[object]:
-        ...
-
-
 class WorkTypeOperations(Protocol):
     def list_types(self) -> Result[tuple[CustomWorkType, ...]]: ...
     def save(self, label: str, category: str, previous: CustomWorkType | None = None) -> Result[CustomWorkType]: ...

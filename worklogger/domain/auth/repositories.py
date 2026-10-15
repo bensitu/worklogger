@@ -9,20 +9,6 @@ from worklogger.domain.auth.models import LinkedIdentity, User
 from worklogger.domain.identity.models import ExternalIdentityProfile
 
 
-class UserRepository(Protocol):
-    def get_by_id(self, user_id: int) -> User | None:
-        ...
-
-    def get_by_username(self, username: str) -> User | None:
-        ...
-
-    def add(self, user: User) -> User:
-        ...
-
-    def list_users(self) -> tuple[User, ...]:
-        ...
-
-
 class UserProfileRepository(Protocol):
     def get_by_id(self, user_id: int) -> User | None:
         ...

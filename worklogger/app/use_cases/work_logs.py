@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from worklogger.app.commands.work_log_commands import DeleteWorkLogCommand, SaveWorkLogCommand
+from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
 from worklogger.app.event_bus import EventBus, WorkLogSaved
 from worklogger.app.queries.work_log_queries import (
     GetAllWorkLogsQuery,
@@ -58,18 +58,6 @@ class SaveWorkLogHandler:
         if self._event_bus is not None:
             self._event_bus.publish(WorkLogSaved(user_id=work_log.user_id, day=work_log.day))
         return Result.success(work_log)
-
-
-class DeleteWorkLogHandler:
-    def __init__(self, repository: WorkLogRepository) -> None:
-        self._repository = repository
-
-    def handle(self, command: DeleteWorkLogCommand) -> Result[None]:
-        try:
-            self._repository.remove(command.user_id, command.day)
-        except Exception:
-            return Result.failure(InfrastructureError("worklog_delete_failed", "worklog_delete_failed"))
-        return Result.success(None)
 
 
 class GetWorkLogHandler:

@@ -10,6 +10,7 @@ from worklogger.app.commands.settings_commands import (
     SetSettingCommand,
 )
 from worklogger.app.event_bus import EventBus, SettingsChanged
+from worklogger.app.ports import KeyStore
 from worklogger.app.queries.settings_queries import GetSettingQuery
 from worklogger.app.use_cases._errors import storage_boundary
 from worklogger.config.constants import (
@@ -23,11 +24,6 @@ from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 
 
-class CredentialStore(Protocol):
-    def get_secret(self, name: str) -> Result[str | None]: ...
-    def set_secret(self, name: str, value: str) -> Result[None]: ...
-
-
 class SecretBox(Protocol):
     def encrypt(self, value: str) -> str: ...
     def decrypt(self, stored: str) -> str: ...
@@ -36,7 +32,7 @@ class SecretBox(Protocol):
 class ProxyPasswordSettings:
     """Migrate a legacy password only after secure storage has succeeded."""
 
-    def __init__(self, repository: SettingsRepository, credentials: CredentialStore, *, user_id: int, secret_box: SecretBox) -> None:
+    def __init__(self, repository: SettingsRepository, credentials: KeyStore, *, user_id: int, secret_box: SecretBox) -> None:
         self._repository = repository
         self._credentials = credentials
         self._user_id = user_id

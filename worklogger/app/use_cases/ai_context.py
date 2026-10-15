@@ -9,7 +9,7 @@ from typing import Protocol
 from worklogger.app.queries.ai_queries import BuildAiContextQuery
 from worklogger.app.queries.calendar_queries import GetCalendarEventsForRangeQuery
 from worklogger.app.queries.quick_log_queries import GetQuickLogsForRangeQuery
-from worklogger.app.queries.settings_queries import GetSettingQuery
+from worklogger.app.settings import SettingsReader, read_setting_values
 from worklogger.config.constants import (
     AI_PRIVACY_INCLUDE_CALENDAR_SETTING_KEY,
     AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY,
@@ -49,11 +49,6 @@ class CalendarEventsRangeReader(Protocol):
         ...
 
 
-class SettingReader(Protocol):
-    def handle(self, query: GetSettingQuery) -> Result[str | None]:
-        ...
-
-
 @dataclass(frozen=True)
 class AiContextResult:
     content: str
@@ -67,7 +62,7 @@ class BuildAiContextHandler:
         note_handler: DailyNoteReader,
         quick_logs_handler: QuickLogsRangeReader,
         calendar_events_handler: CalendarEventsRangeReader,
-        settings_handler: SettingReader,
+        settings_handler: SettingsReader,
     ) -> None:
         self._work_logs_handler = work_logs_handler
         self._note_handler = note_handler
@@ -97,8 +92,9 @@ class BuildAiContextHandler:
         if not notes.ok or notes.value is None:
             return Result.failure(notes.error or InfrastructureError("ai_context_failed", "ai_context_failed"))
         approved_notes = []
-        permissions = _settings_values(self._settings_handler, query.user_id,
-                                       {note_sharing_key(note.day): None for note in notes.value})
+        permissions = read_setting_values(self._settings_handler, query.user_id,
+                                          {note_sharing_key(note.day): None for note in notes.value},
+                                          error_code="ai_context_settings_failed")
         if not permissions.ok:
             return Result.failure(permissions.error)
         for note in notes.value:
@@ -144,41 +140,19 @@ def _context_range(selected_day: date, period_type: str, week_start_monday: bool
     return period.start, period.end
 
 
-def _context_options(handler: SettingReader, user_id: int) -> Result[dict[str, bool]]:
+def _context_options(handler: SettingsReader, user_id: int) -> Result[dict[str, bool]]:
     definitions = (
         ("notes", AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY, "1"),
         ("calendar", AI_PRIVACY_INCLUDE_CALENDAR_SETTING_KEY, "1"),
         ("quick_logs", AI_PRIVACY_INCLUDE_QUICK_LOGS_SETTING_KEY, "1"),
         ("week_start_monday", WEEK_START_MONDAY_SETTING_KEY, "0"),
     )
-    values = _settings_values(handler, user_id, {key: default for _name, key, default in definitions})
+    values = read_setting_values(handler, user_id, {key: default for _name, key, default in definitions},
+                                 error_code="ai_context_settings_failed")
     if not values.ok:
         return Result.failure(values.error)
     return Result.success({name: str(values.value.get(key) or "").strip().lower() in {"1", "true", "yes", "on"}
                            for name, key, _default in definitions})
-
-
-def _settings_values(handler, user_id, defaults):
-    if not defaults:
-        return Result.success({})
-    try:
-        reader = getattr(handler, "get_many", None)
-        batch = reader(user_id, tuple(defaults)) if reader is not None else None
-        if batch is not None:
-            if not batch.ok:
-                return Result.failure(batch.error)
-            if batch.value is not None:
-                return Result.success({key: batch.value.get(key) if batch.value.get(key) is not None else default
-                                       for key, default in defaults.items()})
-        values = {}
-        for key, default in defaults.items():
-            result = handler.handle(GetSettingQuery(user_id, key, default))
-            if not result.ok:
-                return Result.failure(result.error)
-            values[key] = result.value
-        return Result.success(values)
-    except Exception:
-        return Result.failure(InfrastructureError("ai_context_settings_failed", "ai_context_settings_failed"))
 
 
 def _notes_for_range(

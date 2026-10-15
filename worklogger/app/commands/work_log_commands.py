@@ -18,10 +18,3 @@ class SaveWorkLogCommand:
     expected_note: str | None = None
     started_at: datetime | None = None
     ended_at: datetime | None = None
-
-
-@dataclass(frozen=True)
-class DeleteWorkLogCommand:
-    user_id: int
-    day: date
-

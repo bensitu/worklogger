@@ -28,12 +28,6 @@ class SettingsChanged(AppEvent):
     value: object
 
 
-@dataclass(frozen=True)
-class ThemeChanged(AppEvent):
-    theme: str
-    dark: bool
-
-
 EventT = TypeVar("EventT", bound=AppEvent)
 Handler = Callable[[EventT], None]
 
