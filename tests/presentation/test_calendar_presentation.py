@@ -6,6 +6,7 @@ import unittest
 from worklogger.app.queries.calendar_queries import GetHolidaysForRangeQuery
 from worklogger.app.queries.work_log_queries import GetMonthRecordsQuery
 from worklogger.domain.calendar.models import Holiday
+from worklogger.domain.notes.models import DailyNote
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
 from worklogger.presentation.viewmodels import CalendarDisplayOptions, CalendarViewModel
@@ -36,6 +37,48 @@ class RecordingHolidaysHandler:
 
 
 class CalendarPresentationTests(unittest.TestCase):
+    def test_daily_note_markers_remain_visible_with_work_and_calendar_events(self):
+        from types import SimpleNamespace
+
+        from worklogger.domain.calendar.models import CalendarEvent
+
+        day = date(2026, 5, 4)
+        note = DailyNote(1, day, "Greenery Day")
+        notes = SimpleNamespace(list_range=lambda *_args: Result.success((note,)))
+        for record in (None, WorkLog(1, day, "09:00", "17:00", note="Work description"),
+                       WorkLog(1, day, "22:00", "06:00", note="Night shift")):
+            for events in ((), (CalendarEvent(1, 1, day, "Planning"),)):
+                for enabled in (False, True):
+                    with self.subTest(record=record, events=events, enabled=enabled):
+                        records = SimpleNamespace(list_range=lambda *_args: Result.success((record,) if record else ()))
+                        model = CalendarViewModel(user_id=1, month_records_handler=records, notes_handler=notes,
+                            calendar_events_handler=SimpleNamespace(handle=lambda _query: Result.success(events)))
+                        result = model.build_month(year=2026, month=5, selected_day=day,
+                            holidays={day: note.content}, options=CalendarDisplayOptions(show_note_markers=enabled))
+                        self.assertTrue(result.ok, result.error)
+                        cell = next(cell for cell in result.value.cells if cell.day == day)
+                        self.assertEqual(cell.has_note_marker, enabled)
+                        self.assertEqual(cell.note_tooltip, note.content if enabled else "")
+                        self.assertEqual(cell.event_count, len(events))
+                        self.assertEqual(cell.show_overnight_marker, bool(record and record.is_overnight))
+
+    def test_work_descriptions_and_empty_daily_notes_do_not_create_note_markers(self):
+        from types import SimpleNamespace
+
+        day = date(2026, 5, 4)
+        records = SimpleNamespace(list_range=lambda *_args: Result.success((
+            WorkLog(1, day, "09:00", "17:00", note="Work description"),)))
+        for content in (None, "", "   "):
+            with self.subTest(content=content):
+                notes = SimpleNamespace(list_range=lambda *_args: Result.success(
+                    () if content is None else (DailyNote(1, day, content),)))
+                model = CalendarViewModel(user_id=1, month_records_handler=records, notes_handler=notes)
+                result = model.build_month(year=2026, month=5, selected_day=day)
+                self.assertTrue(result.ok, result.error)
+                cell = next(cell for cell in result.value.cells if cell.day == day)
+                self.assertFalse(cell.has_note_marker)
+                self.assertEqual(cell.note_tooltip, "")
+
     def test_visible_grid_includes_adjacent_month_records_and_week_totals(self):
         from worklogger.app.use_cases.work_logs import GetMonthRecordsHandler
         from tests.app.test_application_use_cases import MemoryWorkLogRepository

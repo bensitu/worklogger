@@ -107,6 +107,10 @@ Notes are independent date-specific memos and do not contribute hours. Search
 finds saved notes and retained previous entries. Copy and export operate on the
 open note; Reload saved note discards its local draft.
 
+Dates with saved note content show a calendar dot even when they also contain
+time records or scheduled events. When an overnight moon icon is present, the
+dot appears to its left on the same row.
+
 Drafts are retained after a typing pause. Closing edited text offers Keep draft,
 Discard, or Cancel. Conflicting saves preserve your input; reload and compare
 before replacing someone else's changes.

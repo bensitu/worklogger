@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 from dataclasses import replace
 from datetime import date
+from itertools import product
 import os
 from pathlib import Path
 import sqlite3
@@ -68,6 +69,55 @@ def may_records():
 
 
 class CalendarLayoutChecks(unittest.TestCase):
+    def test_note_markers_align_with_overnight_icons_and_preserve_event_badges(self):
+        from tests.presentation.test_qt_widgets import _calendar_state
+        from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
+        from worklogger.presentation.widgets.calendar import CalendarDayButton
+
+        configure_application_style()
+        install_bundled_fonts()
+        engine = ThemeEngine()
+        old_style, old_palette = self.app.styleSheet(), self.app.palette()
+        old_context = self.app.property("worklogger_theme_context")
+        base = next(cell for cell in _calendar_state().cells if cell.is_selected)
+        button = CalendarDayButton()
+        try:
+            for theme in ("blue", "liquid_glass"):
+                for dark in (False, True):
+                    engine.apply_to(self.app, theme, dark=dark)
+                    for selected, width in product((False, True), (48, 84)):
+                        button.setFixedSize(width, 110)
+                        for overnight in (False, True):
+                            with self.subTest(theme=theme, dark=dark, selected=selected, overnight=overnight, width=width):
+                                cell = replace(base, is_selected=selected, has_note_marker=False,
+                                    show_overnight_marker=overnight, event_count=2,
+                                    text_lines=("20", "8.0h", "+0.0h"),
+                                    style=engine.calendar_cell_style({"selected"} if selected else set(),
+                                                                    theme=theme, dark=dark))
+                                button.set_cell(cell)
+                                before = button.grab().toImage().scaled(button.size())
+                                button.set_cell(replace(cell, has_note_marker=True))
+                                after = button.grab().toImage().scaled(button.size())
+                                changed = [(x, y) for y in range(after.height()) for x in range(after.width())
+                                           if after.pixel(x, y) != before.pixel(x, y)]
+                                self.assertTrue(changed)
+                                left, right = min(x for x, _y in changed), max(x for x, _y in changed)
+                                top, bottom = min(y for _x, y in changed), max(y for _x, y in changed)
+                                self.assertLess(right, button.width() - (22 if overnight else 26))
+                                self.assertLessEqual(abs((top + bottom) / 2 - (32 if width == 48 else 15)), 1)
+                                self.assertLessEqual(right - left, 5)
+                                self.assertLessEqual(bottom - top, 5)
+                                target = os.environ.get("WORKLOGGER_SCREENSHOTS")
+                                if target:
+                                    Path(target).mkdir(parents=True, exist_ok=True)
+                                    self.assertTrue(after.save(str(Path(target) /
+                                        f"note-marker-{theme}-{dark}-{selected}-{overnight}-{width}.png")))
+        finally:
+            button.deleteLater()
+            self.app.setStyleSheet(old_style)
+            self.app.setPalette(old_palette)
+            self.app.setProperty("worklogger_theme_context", old_context)
+
     def test_batch_context_and_recent_controls_fit_localized_layouts(self):
         from worklogger.presentation.widgets.batch_context import BatchContextDialog
         from worklogger.domain.projects.models import Project, WorkItem, WorkContext

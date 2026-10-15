@@ -304,12 +304,12 @@ class CalendarViewModel:
             else 0.0
         )
         leave_hours = record.leave_hours() if record else 0.0
-        note_text = (note_content if note_content is not None else record.note if record else "").strip()
+        legacy_note = record.note if record and not record.has_times else ""
+        note_text = (note_content if note_content is not None else legacy_note).strip()
         has_note_marker = (
             bool(options.show_note_markers)
             and bool(note_text)
-            and (record is None or not record.has_times)
-            and note_text != holiday_name
+            and (note_content is not None or note_text != holiday_name)
         )
         text_lines = _cell_text_lines(cell_day, holiday_name, worked_hours, overtime_hours)
         return CalendarDayCell(

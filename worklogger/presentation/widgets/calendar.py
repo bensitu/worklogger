@@ -80,10 +80,17 @@ class CalendarDayButton(QPushButton):
         font.setWeight(QFont.Weight.DemiBold if cell.is_selected else QFont.Weight.Normal)
         painter.setFont(font)
         painter.setPen(QColor(foreground))
+        note_offset = 20 if cell.show_overnight_marker else 24 if cell.event_count else 0
+        marker_left = (self.width() - 13 - note_offset if cell.has_note_marker else
+                       self.width() - 22 if cell.show_overnight_marker else
+                       self.width() - 26 if cell.event_count else self.width() - 8)
+        marker_top = 8
         if lines:
             day_font = painter.font()
             day_font.setPixelSize(14)
             painter.setFont(day_font)
+            if 10 + QFontMetrics(day_font).horizontalAdvance(lines[0]) + 4 > marker_left:
+                marker_top = 25
             painter.drawText(
                 QRectF(10, 6, self.width() - (30 if cell.event_count else 20), 18),
                 Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
@@ -95,6 +102,8 @@ class CalendarDayButton(QPushButton):
             painter.setFont(holiday_font)
             painter.setPen(QColor(cell.style.holiday_foreground if not cell.is_selected else cell.style.highlighted_foreground))
             holiday_width = self.width() - (40 if cell.event_count else 36 if cell.show_overnight_marker else 20)
+            if marker_top > 8:
+                holiday_width = max(1, min(holiday_width, marker_left - 14))
             for index, line in enumerate(_holiday_lines(cell.holiday_name, holiday_font, int(holiday_width))):
                 painter.drawText(
                     QRectF(10, 22 + index * 14, holiday_width, 14),
@@ -106,6 +115,8 @@ class CalendarDayButton(QPushButton):
         metric_lines = lines[-2:] if len(lines) >= 2 else ()
         # Reserve two holiday lines in every cell so the hour rows stay aligned.
         metric_top = max(50, (self.height() - 28) / 2 - 4)
+        if cell.event_count:
+            metric_top = max(metric_top, marker_top + (17 if cell.show_overnight_marker else 0) + 17)
         for index, line in enumerate(metric_lines):
             metric_width = self.width() - 16
             metric_font = painter.font()
@@ -125,10 +136,9 @@ class CalendarDayButton(QPushButton):
 
         if cell.has_note_marker:
             painter.setPen(Qt.PenStyle.NoPen)
-            painter.setBrush(QColor(cell.style.hover_border))
-            painter.drawEllipse(self.width() - 13, 8, 5, 5)
+            painter.setBrush(QColor(cell.style.highlighted_foreground if cell.is_selected else cell.style.hover_border))
+            painter.drawEllipse(QRectF(self.width() - 13 - note_offset, marker_top + 4.5, 5, 5))
 
-        marker_top = 19 if cell.has_note_marker else 8
         if cell.show_overnight_marker:
             icon = self._overnight_icons[bool(cell.is_selected)]
             icon.paint(painter, QRect(self.width() - 22, marker_top, 14, 14), Qt.AlignmentFlag.AlignCenter, QIcon.Mode.Normal)
