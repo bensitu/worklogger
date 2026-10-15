@@ -131,10 +131,10 @@ class CalendarDayButton(QPushButton):
 
         if cell.work_type_marker_color:
             stripe = QPainterPath()
-            stripe.moveTo(7, 3.5)
-            stripe.quadTo(3.5, 3.5, 3.5, 7)
-            stripe.lineTo(3.5, self.height() - 7)
-            stripe.quadTo(3.5, self.height() - 3.5, 7, self.height() - 3.5)
+            stripe.moveTo(6, 3.5)
+            stripe.quadTo(3.5, 3.5, 3.5, 6)
+            stripe.lineTo(3.5, self.height() - 6)
+            stripe.quadTo(3.5, self.height() - 3.5, 6, self.height() - 3.5)
             painter.setPen(QPen(QColor(cell.work_type_marker_color), 3, Qt.PenStyle.SolidLine,
                                 Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
             painter.setBrush(Qt.BrushStyle.NoBrush)
