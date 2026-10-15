@@ -114,6 +114,7 @@ class NoteHistoryBrowser(QWidget):
         self.history_list = QListWidget()
         self.history_list.setObjectName("note_history_list_widget")
         self.history_list.setAccessibleName(_("Notes"))
+        self.history_list.setMouseTracking(True)
         self.history_list.setItemDelegate(TwoLineItemDelegate(self.history_list))
         self.history_list.setSpacing(4)
         self.history_list.setFrameShape(QFrame.Shape.NoFrame)

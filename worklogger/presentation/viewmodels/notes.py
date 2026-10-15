@@ -39,6 +39,9 @@ class NoteEditorViewModel:
     def discard_draft(self, day: date):
         return self.service.discard_draft(day)
 
+    def delete(self, state: NoteWorkspace):
+        return self.service.delete(state.note.day, state.expected_content, state.expected_sharing)
+
     def reload(self, day: date):
         loaded = self.service.load(day, recover_draft=False)
         if not loaded.ok:

@@ -533,6 +533,9 @@ msgstr ""
 msgid "Delete model {model}?"
 msgstr ""
 
+msgid "Delete note"
+msgstr ""
+
 msgid "Delete record"
 msgstr ""
 
@@ -540,6 +543,9 @@ msgid "Delete report"
 msgstr ""
 
 msgid "Delete report #{report_id}? This cannot be undone."
+msgstr ""
+
+msgid "Delete the note and its draft for {date}? This cannot be undone. Time records, calendar events, and previous entries will be kept."
 msgstr ""
 
 msgid "Delete this calendar event?"
@@ -2126,7 +2132,7 @@ msgstr ""
 msgid "This model is in use by another user and cannot be deleted."
 msgstr ""
 
-msgid "This note was changed in another editor. Reload it before saving. Your changes have been retained."
+msgid "This note was changed in another editor. Reload it before trying again. Your changes have been retained."
 msgstr ""
 
 msgid "This record changed elsewhere. Reload it before saving. Your changes have been retained."
@@ -2229,6 +2235,9 @@ msgid "Unable to complete the AI request. Check your model settings and try agai
 msgstr ""
 
 msgid "Unable to contact the sign-in provider. Check your network connection and try again."
+msgstr ""
+
+msgid "Unable to delete the note. Your saved data has been retained."
 msgstr ""
 
 msgid "Unable to delete the report. Your saved data has been retained."

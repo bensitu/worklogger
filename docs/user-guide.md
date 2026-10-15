@@ -121,6 +121,12 @@ Filtering never replaces the open note. Opening another date offers to keep
 any unsaved draft. Copy and export operate on the open note; Reload saved note
 discards its local draft.
 
+Use **Delete note** to remove the open date's note and its draft after
+confirmation. Its sharing choices are also removed. Time records, calendar
+events, and retained previous entries are not deleted. A date may remain in
+the list if it still has previous entries. Changes made in another editor
+prevent deletion until the note is reloaded.
+
 Dates with saved note content show a calendar dot even when they also contain
 time records or scheduled events. When an overnight moon icon is present, the
 dot appears to its left on the same row.

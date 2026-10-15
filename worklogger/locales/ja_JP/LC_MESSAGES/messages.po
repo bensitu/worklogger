@@ -535,6 +535,9 @@ msgstr "削除"
 msgid "Delete model {model}?"
 msgstr "モデル {model} を削除しますか？"
 
+msgid "Delete note"
+msgstr "ノートを削除"
+
 msgid "Delete record"
 msgstr "記録を削除"
 
@@ -543,6 +546,9 @@ msgstr "レポートを削除"
 
 msgid "Delete report #{report_id}? This cannot be undone."
 msgstr "レポート #{report_id} を削除しますか？この操作は取り消せません。"
+
+msgid "Delete the note and its draft for {date}? This cannot be undone. Time records, calendar events, and previous entries will be kept."
+msgstr "{date} のノートと下書きを削除しますか？この操作は元に戻せません。時間記録、予定、以前の記録は保持されます。"
 
 msgid "Delete this calendar event?"
 msgstr "この予定を削除しますか？"
@@ -2128,8 +2134,8 @@ msgstr "この項目は変更されています。保存前に再読み込みし
 msgid "This model is in use by another user and cannot be deleted."
 msgstr "このモデルは他のユーザーが使用しているため削除できません。"
 
-msgid "This note was changed in another editor. Reload it before saving. Your changes have been retained."
-msgstr "このメモは別の編集画面で変更されました。再読み込みしてから保存してください。変更内容は保持されています。"
+msgid "This note was changed in another editor. Reload it before trying again. Your changes have been retained."
+msgstr "このノートは別のエディターで変更されました。再試行する前に再読み込みしてください。入力内容は保持されています。"
 
 msgid "This record changed elsewhere. Reload it before saving. Your changes have been retained."
 msgstr "この記録は別の場所で変更されました。再読み込みしてから保存してください。入力内容は保持されています。"
@@ -2232,6 +2238,9 @@ msgstr "AIリクエストを完了できませんでした。モデル設定を�
 
 msgid "Unable to contact the sign-in provider. Check your network connection and try again."
 msgstr "サインインプロバイダーに接続できません。ネットワーク接続を確認して再試行してください。"
+
+msgid "Unable to delete the note. Your saved data has been retained."
+msgstr "ノートを削除できませんでした。保存済みのデータは保持されています。"
 
 msgid "Unable to delete the report. Your saved data has been retained."
 msgstr "レポートを削除できません。保存済みデータは保持されています。"

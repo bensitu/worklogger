@@ -535,6 +535,9 @@ msgstr "Delete"
 msgid "Delete model {model}?"
 msgstr "Delete model {model}?"
 
+msgid "Delete note"
+msgstr "Delete note"
+
 msgid "Delete record"
 msgstr "Delete record"
 
@@ -543,6 +546,9 @@ msgstr "Delete report"
 
 msgid "Delete report #{report_id}? This cannot be undone."
 msgstr "Delete report #{report_id}? This cannot be undone."
+
+msgid "Delete the note and its draft for {date}? This cannot be undone. Time records, calendar events, and previous entries will be kept."
+msgstr "Delete the note and its draft for {date}? This cannot be undone. Time records, calendar events, and previous entries will be kept."
 
 msgid "Delete this calendar event?"
 msgstr "Delete this calendar event?"
@@ -2128,8 +2134,8 @@ msgstr "This item has changed. Reload it before saving; your input has been reta
 msgid "This model is in use by another user and cannot be deleted."
 msgstr "This model is in use by another user and cannot be deleted."
 
-msgid "This note was changed in another editor. Reload it before saving. Your changes have been retained."
-msgstr "This note was changed in another editor. Reload it before saving. Your changes have been retained."
+msgid "This note was changed in another editor. Reload it before trying again. Your changes have been retained."
+msgstr "This note was changed in another editor. Reload it before trying again. Your changes have been retained."
 
 msgid "This record changed elsewhere. Reload it before saving. Your changes have been retained."
 msgstr "This record changed elsewhere. Reload it before saving. Your changes have been retained."
@@ -2232,6 +2238,9 @@ msgstr "Unable to complete the AI request. Check your model settings and try aga
 
 msgid "Unable to contact the sign-in provider. Check your network connection and try again."
 msgstr "Unable to contact the sign-in provider. Check your network connection and try again."
+
+msgid "Unable to delete the note. Your saved data has been retained."
+msgstr "Unable to delete the note. Your saved data has been retained."
 
 msgid "Unable to delete the report. Your saved data has been retained."
 msgstr "Unable to delete the report. Your saved data has been retained."

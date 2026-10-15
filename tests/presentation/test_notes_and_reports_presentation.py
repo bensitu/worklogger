@@ -268,6 +268,63 @@ class NotesReportsPresentationTests(unittest.TestCase):
         dialog._draft_timer.stop()
         dialog.history_browser.stop()
 
+    def test_note_deletion_confirms_waits_for_drafts_and_preserves_conflicting_edits(self):
+        model, notes, _quick, _factory = self._note_model()
+        day = date(2026, 5, 14)
+        notes.save(DailyNote(model.service.user_id, day, "Saved note"))
+        notes.save(DailyNote(model.service.user_id, date(2026, 5, 15), "Another note"))
+
+        class DeferredDraftRunner(ImmediateJobRunner):
+            def submit(self, name, job, *, on_complete=None):
+                if name == "save_note_draft":
+                    self.pending = (job, on_complete)
+                    return None
+                return super().submit(name, job, on_complete=on_complete)
+
+            def complete(self):
+                job, callback = self.pending
+                callback(job(None))
+
+        runner = DeferredDraftRunner()
+        dialog = NoteEditorDialog(model, day, job_runner=runner)
+        self.addCleanup(dialog.deleteLater)
+        self.assertTrue(dialog.refresh())
+        changes = []
+        dialog.saved.connect(lambda: changes.append(day))
+        dialog.editor.setPlainText("Current draft")
+        dialog._persist_draft()
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.No):
+            dialog.delete_button.click()
+        self.assertEqual(dialog.editor.toPlainText(), "Current draft")
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+            dialog.delete_button.click()
+        self.assertEqual(notes.get_for_day(model.service.user_id, day).content, "Saved note")
+        runner.complete()
+        self.assertEqual(dialog.editor.toPlainText(), "")
+        self.assertFalse(dialog.has_unsaved_changes)
+        self.assertFalse(dialog.delete_button.isEnabled())
+        self.assertEqual(changes, [day])
+        self.assertEqual(dialog.history_list.count(), 1)
+        self.assertEqual(model.load(day).value.content, "")
+        self.assertFalse(model.load(day).value.recovered_draft)
+        notes.save(DailyNote(model.service.user_id, day, "Restored note"))
+        dialog.refresh()
+        dialog.editor.setPlainText("Unsubmitted changes")
+        notes.save(DailyNote(model.service.user_id, day, "Changed in another editor"))
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes), \
+                patch.object(QMessageBox, "warning"):
+            dialog.delete_button.click()
+        self.assertEqual(dialog.last_error.code, "note_conflict")
+        self.assertEqual(dialog.editor.toPlainText(), "Unsubmitted changes")
+        self.assertEqual(notes.get_for_day(model.service.user_id, day).content, "Changed in another editor")
+        self.assertEqual(changes, [day])
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+            dialog.reload_button.click()
+        self.assertEqual(dialog.editor.toPlainText(), "Changed in another editor")
+        self.assertIn("Changed in another editor", dialog.history_list.currentItem().text())
+        dialog._draft_timer.stop()
+        dialog.history_browser.stop()
+
     def test_search_keeps_inputs_available_and_discards_obsolete_results(self):
         model, notes, _quick, _factory = self._note_model()
         day = date(2026, 10, 9)

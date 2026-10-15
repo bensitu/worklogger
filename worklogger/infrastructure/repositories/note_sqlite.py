@@ -109,3 +109,18 @@ class SQLiteDailyNoteRepository:
                     (entry.id, note.user_id, note.day.isoformat(), entry.description, entry.start_time, entry.end_time))
                 if cursor.rowcount != 1:
                     raise ValueError("note_conflict")
+
+    def delete(self, user_id: int, day: date, *, expected_content: str,
+               expected_sharing: NoteSharing) -> None:
+        with self._connection_factory.transaction(write=True) as connection:
+            row = connection.execute("SELECT content FROM daily_notes WHERE user_id=? AND d=?",
+                                     (user_id, day.isoformat())).fetchone()
+            if (row[0] if row else "") != expected_content:
+                raise ValueError("note_conflict")
+            sharing = connection.execute("SELECT value FROM settings WHERE user_id=? AND key=?",
+                                         (user_id, note_sharing_key(day))).fetchone()
+            if NoteSharing.decode(sharing[0] if sharing else None) != expected_sharing:
+                raise ValueError("note_conflict")
+            connection.execute("DELETE FROM daily_notes WHERE user_id=? AND d=?", (user_id, day.isoformat()))
+            connection.execute("DELETE FROM settings WHERE user_id=? AND key IN (?, ?)",
+                               (user_id, note_draft_key(day), note_sharing_key(day)))

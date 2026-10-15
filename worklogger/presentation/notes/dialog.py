@@ -178,12 +178,17 @@ class NoteEditorDialog(QDialog):
         body.addLayout(content, 3)
         root.addLayout(body, 1)
         tools = QHBoxLayout()
+        self.delete_button = QPushButton(_("Delete note"))
+        self.delete_button.setAutoDefault(False)
+        self.delete_button.setProperty("variant", "danger")
+        set_button_icon(self.delete_button, "trash")
+        tools.addWidget(self.delete_button)
         self.close_button = QPushButton(_("Close"))
         self.save_button = QPushButton(_("Save"))
         self.save_button.setProperty("variant", "primary")
         set_button_icon(self.save_button, "save")
         for button in (self.rewrite_button, self.copy_button, self.export_button, self.reload_button,
-                       self.close_button, self.save_button):
+                       self.close_button, self.save_button, self.delete_button):
             button.setMinimumHeight(36)
         for button in (self.copy_button, self.export_button, self.reload_button):
             button.setMinimumWidth(36)
@@ -206,6 +211,7 @@ class NoteEditorDialog(QDialog):
         self.export_button.clicked.connect(self._choose_export_path)
         self.close_button.clicked.connect(self.reject)
         self.save_button.clicked.connect(self._save)
+        self.delete_button.clicked.connect(self._delete)
         self._update_actions()
 
     def _update_actions(self):
@@ -213,6 +219,8 @@ class NoteEditorDialog(QDialog):
         self.rewrite_button.setEnabled(not self._busy and has_content and self._ai_ready)
         self.copy_button.setEnabled(has_content)
         self.export_button.setEnabled(has_content)
+        self.delete_button.setEnabled(not self._busy and self._state is not None and (
+            bool(self._saved_content) or self.has_unsaved_changes or self._state.draft_unavailable))
 
     def refresh_ai_availability(self):
         self._ai_ready = self._view_model.rewrite_available
@@ -311,7 +319,10 @@ class NoteEditorDialog(QDialog):
             _("You have unsaved note changes. Discard them?"), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
             return
-        self._run("reload_note", lambda: self._view_model.reload(self._day), self.set_state)
+        def complete(workspace):
+            self.set_state(workspace)
+            self.history_browser.refresh()
+        self._run("reload_note", lambda: self._view_model.reload(self._day), complete)
 
     def _save(self):
         if self._state is None:
@@ -326,6 +337,21 @@ class NoteEditorDialog(QDialog):
                          detail=_("Your changes have been saved for {date}.").format(date=workspace.note.day.isoformat()))
         self.history_browser.refresh()
 
+    def _delete(self):
+        if self._busy or self._state is None or not self.delete_button.isEnabled():
+            return
+        if QMessageBox.question(self, _("Delete note"),
+            _("Delete the note and its draft for {date}? This cannot be undone. Time records, calendar events, and previous entries will be kept.").format(date=self._day.isoformat()),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
+            return
+        state = self._state
+        def complete(workspace):
+            self.set_state(workspace)
+            self.saved.emit()
+            self.history_browser.refresh()
+        self._run("delete_note", lambda: self._view_model.delete(state), complete)
+
     def _rewrite(self):
         if self._busy or self._rewrite_task.is_running:
             return
@@ -337,7 +363,7 @@ class NoteEditorDialog(QDialog):
         self._busy = True
         self.editor.setReadOnly(True)
         self._last_error = None
-        for field in (self.history_browser, self.reload_button, self.save_button,
+        for field in (self.history_browser, self.reload_button, self.save_button, self.delete_button,
                       self.insert_button, self.report_checkbox, self.ai_checkbox):
             field.setEnabled(False)
         self.rewrite_button.setEnabled(False)
@@ -345,7 +371,7 @@ class NoteEditorDialog(QDialog):
         def completed(result):
             self._busy = False
             self.editor.setReadOnly(False)
-            for field in (self.history_browser, self.reload_button, self.save_button,
+            for field in (self.history_browser, self.reload_button, self.save_button, self.delete_button,
                           self.insert_button, self.report_checkbox, self.ai_checkbox, self.close_button):
                 field.setEnabled(True)
             if result.ok:

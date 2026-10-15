@@ -535,6 +535,9 @@ msgstr "刪除"
 msgid "Delete model {model}?"
 msgstr "刪除模型 {model} 嗎？"
 
+msgid "Delete note"
+msgstr "刪除筆記"
+
 msgid "Delete record"
 msgstr "刪除記錄"
 
@@ -543,6 +546,9 @@ msgstr "刪除報表"
 
 msgid "Delete report #{report_id}? This cannot be undone."
 msgstr "刪除報表 #{report_id}？此操作無法復原。"
+
+msgid "Delete the note and its draft for {date}? This cannot be undone. Time records, calendar events, and previous entries will be kept."
+msgstr "確定刪除 {date} 的筆記及草稿嗎？此操作無法復原。時間記錄、行程和歷史項目將保留。"
 
 msgid "Delete this calendar event?"
 msgstr "刪除這筆行事曆日程？"
@@ -2128,8 +2134,8 @@ msgstr "此項目已發生變更。儲存前請重新載入，輸入內容已保
 msgid "This model is in use by another user and cannot be deleted."
 msgstr "此模型正被其他使用者使用，無法刪除。"
 
-msgid "This note was changed in another editor. Reload it before saving. Your changes have been retained."
-msgstr "此備註已在其他編輯視窗中修改。請重新載入後再儲存。您的修改已保留。"
+msgid "This note was changed in another editor. Reload it before trying again. Your changes have been retained."
+msgstr "此筆記已在其他編輯視窗中變更。請重新載入後再試。您的修改已保留。"
 
 msgid "This record changed elsewhere. Reload it before saving. Your changes have been retained."
 msgstr "該記錄已在其他位置修改，請重新載入後儲存。您的修改已保留。"
@@ -2232,6 +2238,9 @@ msgstr "無法完成 AI 請求，請檢查模型設定後重試。"
 
 msgid "Unable to contact the sign-in provider. Check your network connection and try again."
 msgstr "無法連線至登入服務。請檢查網路連線後重試。"
+
+msgid "Unable to delete the note. Your saved data has been retained."
+msgstr "無法刪除筆記。已儲存的資料保持不變。"
 
 msgid "Unable to delete the report. Your saved data has been retained."
 msgstr "無法刪除報表，已儲存的資料仍然保留。"

@@ -149,5 +149,12 @@ class DailyNotesService:
     def discard_draft(self, day: date):
         return self._run(lambda: self.settings.delete(self.user_id, note_draft_key(day)))
 
+    def delete(self, day: date, expected_content: str, expected_sharing: NoteSharing) -> Result[NoteWorkspace]:
+        def delete():
+            entries = self.previous_entries.list_for_day(self.user_id, day)
+            self.notes.delete(self.user_id, day, expected_content=expected_content, expected_sharing=expected_sharing)
+            return NoteWorkspace(DailyNote(self.user_id, day), "", "", NoteSharing(), entries)
+        return self._run(delete, error_code="note_delete_failed")
+
     def browse(self, filters: NoteHistoryFilter) -> Result[NoteHistoryPage]:
         return self._run(lambda: self.notes.browse(self.user_id, filters), error_code="note_load_failed")

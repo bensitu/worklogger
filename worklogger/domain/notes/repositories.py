@@ -25,3 +25,7 @@ class DailyNoteRepository(Protocol):
 
     def browse(self, user_id: int, filters: NoteHistoryFilter) -> NoteHistoryPage:
         ...
+
+    def delete(self, user_id: int, day: date, *, expected_content: str,
+               expected_sharing: NoteSharing) -> None:
+        ...

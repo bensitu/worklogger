@@ -68,6 +68,7 @@ QListWidget[management_list="true"]::item {
 
 QListWidget#local_model_list_widget::item:hover,
 QListWidget#custom_work_type_list_widget::item:hover,
+QListWidget#note_history_list_widget::item:hover:enabled:!selected,
 QListWidget[management_list="true"]::item:hover:enabled {
   background: {{ accent_dim }};
 }

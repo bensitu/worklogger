@@ -5,7 +5,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 from worklogger.app.use_cases.notes import DailyNotesService
-from worklogger.domain.notes.preferences import NoteSharing, note_draft_key
+from worklogger.domain.notes.preferences import NoteSharing, note_draft_key, note_sharing_key
+from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.quicklog.models import QuickLog
 from tests.quick_log_samples import insert_previous_entry
 from worklogger.domain.quicklog.rules import quick_log_reference
@@ -41,6 +42,57 @@ from worklogger.infrastructure.templates import BuiltInTemplateProvider, UserTem
 
 
 class NotesTemplatesInfrastructureTests(unittest.TestCase):
+    def test_note_deletion_is_atomic_scoped_and_preserves_other_records(self):
+        with tempfile.TemporaryDirectory() as directory:
+            factory = SQLiteConnectionFactory(f"{directory}/notes.db")
+            MigrationRunner(factory).run_pending()
+            auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
+            owner = auth.create_user("notes.owner", "example-password", recovery_key=None, is_admin=False)
+            other = auth.create_user("notes.other", "example-password", recovery_key=None, is_admin=False)
+            notes, settings, quick = SQLiteDailyNoteRepository(factory), SQLiteSettingsRepository(factory), SQLiteQuickLogRepository(factory)
+            service = DailyNotesService(user_id=owner.id, notes=notes, settings=settings, previous_entries=quick)
+            day, another_day = date(2026, 10, 9), date(2026, 10, 8)
+            notes.save(DailyNote(owner.id, day, "Saved note"), sharing=NoteSharing(True, False))
+            notes.save(DailyNote(other.id, day, "Other account"))
+            notes.save(DailyNote(owner.id, another_day, "Other date"))
+            entry = insert_previous_entry(factory, QuickLog(None, owner.id, day, "Previous entry"))
+            work = SQLiteWorkLogRepository(factory)
+            work.save_entry(WorkLog(owner.id, day, "09:00", "10:00", note="Work record"))
+            calendar = SQLiteCalendarEventRepository(factory)
+            calendar.add_many(owner.id, (CalendarEvent(None, owner.id, day, "Appointment", "10:00", "11:00"),))
+            events = calendar.list_for_day(owner.id, day)
+            original = service.load(day).value
+            service.save_draft(day, "Draft", "Saved note", original.sharing)
+            notes.save(DailyNote(owner.id, day, "Changed elsewhere"))
+            result = service.delete(day, original.expected_content, original.expected_sharing)
+            self.assertEqual(result.error.code, "note_conflict")
+            current = service.load(day, recover_draft=False).value
+            notes.save(current.note, sharing=NoteSharing())
+            result = service.delete(day, current.expected_content, current.expected_sharing)
+            self.assertEqual(result.error.code, "note_conflict")
+            current = service.load(day, recover_draft=False).value
+            with factory.transaction() as connection:
+                connection.execute("CREATE TRIGGER protect_preferences BEFORE DELETE ON settings "
+                                   "BEGIN SELECT RAISE(ABORT, 'storage unavailable'); END")
+            result = service.delete(day, current.expected_content, current.expected_sharing)
+            self.assertEqual(result.error.code, "note_delete_failed")
+            self.assertEqual(notes.get_for_day(owner.id, day).content, "Changed elsewhere")
+            self.assertIsNotNone(settings.get(owner.id, note_draft_key(day)))
+            with factory.transaction() as connection:
+                connection.execute("DROP TRIGGER protect_preferences")
+            result = service.delete(day, current.expected_content, current.expected_sharing)
+            self.assertTrue(result.ok, result.error)
+            self.assertEqual((result.value.content, result.value.sharing), ("", NoteSharing()))
+            self.assertEqual(result.value.previous_entries, (entry,))
+            self.assertIsNone(settings.get(owner.id, note_draft_key(day)))
+            self.assertIsNone(settings.get(owner.id, note_sharing_key(day)))
+            self.assertEqual(notes.get_for_day(owner.id, day).content, "")
+            self.assertEqual(notes.get_for_day(other.id, day).content, "Other account")
+            self.assertEqual(notes.get_for_day(owner.id, another_day).content, "Other date")
+            self.assertEqual(work.get_for_day(owner.id, day).note, "Work record")
+            self.assertEqual(calendar.list_for_day(owner.id, day), events)
+            self.assertEqual(quick.list_for_day(owner.id, day), (entry,))
+
     def test_note_history_filters_pages_and_returns_bounded_account_scoped_previews(self):
         with tempfile.TemporaryDirectory() as directory:
             factory = SQLiteConnectionFactory(f"{directory}/notes.db")

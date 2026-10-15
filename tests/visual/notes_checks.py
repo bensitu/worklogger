@@ -8,7 +8,8 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import Qt, qInstallMessageHandler
+from PySide6.QtCore import QEvent, QPoint, Qt, qInstallMessageHandler
+from PySide6.QtGui import QEnterEvent, QHoverEvent
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
@@ -78,7 +79,7 @@ class NotesLayoutChecks(unittest.TestCase):
                                                 dialog.editor.mapTo(dialog, dialog.editor.rect().topLeft()).y())
                                 controls = (dialog.search_input, dialog.editor, dialog.date_label, dialog.rewrite_button,
                                             dialog.copy_button, dialog.export_button, dialog.reload_button, dialog.save_button,
-                                            dialog.close_button, dialog.report_checkbox, dialog.ai_checkbox)
+                                            dialog.close_button, dialog.delete_button, dialog.report_checkbox, dialog.ai_checkbox)
                                 for widget in controls:
                                     rect = widget.rect().translated(widget.mapTo(dialog, widget.rect().topLeft()))
                                     self.assertTrue(dialog.rect().contains(rect), (language_code, dark, widget.objectName()))
@@ -100,6 +101,22 @@ class NotesLayoutChecks(unittest.TestCase):
                                     tool.setEnabled(enabled)
                                 self.capture(dialog, f"{capture_prefix}-notes-{'dark' if dark else 'light'}-{width}-empty")
                             dialog.activateWindow()
+                            self.app.processEvents()
+                            viewport = dialog.history_list.viewport()
+                            first_rect = dialog.history_list.visualItemRect(dialog.history_list.item(0))
+                            sample = QPoint(first_rect.left() + 3, first_rect.center().y())
+                            self.app.sendEvent(viewport, QEvent(QEvent.Type.Leave))
+                            self.app.processEvents()
+                            before = viewport.grab().toImage().scaled(viewport.size()).pixelColor(sample)
+                            self.hover_item(dialog.history_list, 0)
+                            self.app.processEvents()
+                            after = viewport.grab().toImage().scaled(viewport.size()).pixelColor(sample)
+                            self.assertNotEqual(before, after, (language_code, theme, dark))
+                            self.assertIsNone(dialog.history_list.currentItem())
+                            self.assertEqual(dialog.editor.toPlainText(), "")
+                            self.capture(dialog, f"{capture_prefix}-notes-{'dark' if dark else 'light'}-hover")
+                            self.app.sendEvent(viewport, QEvent(QEvent.Type.Leave))
+                            dialog.activateWindow()
                             dialog.search_input.setFocus()
                             self.app.processEvents()
                             QTest.keyClicks(dialog.search_input, "Meeting")
@@ -119,6 +136,15 @@ class NotesLayoutChecks(unittest.TestCase):
                             dialog._select_note(dialog.history_list.item(1))
                             self.app.processEvents()
                             self.assertTrue(dialog.copy_button.isEnabled())
+                            selected_row = dialog.history_list.currentRow()
+                            selected_rect = dialog.history_list.visualItemRect(dialog.history_list.currentItem())
+                            sample = QPoint(selected_rect.left() + 3, selected_rect.center().y())
+                            before = viewport.grab().toImage().scaled(viewport.size()).pixelColor(sample)
+                            self.hover_item(dialog.history_list, selected_row)
+                            self.app.processEvents()
+                            after = viewport.grab().toImage().scaled(viewport.size()).pixelColor(sample)
+                            self.assertEqual(before, after)
+                            self.app.sendEvent(viewport, QEvent(QEvent.Type.Leave))
                             self.capture(dialog, f"{capture_prefix}-notes-{'dark' if dark else 'light'}-content")
                             browser = dialog.history_browser
                             for mode in ("year", "custom", "all"):
@@ -197,6 +223,13 @@ class NotesLayoutChecks(unittest.TestCase):
             set_language(language)
             self.app.setPalette(palette)
             self.app.setStyleSheet(stylesheet)
+
+    def hover_item(self, widget, row):
+        viewport = widget.viewport()
+        point = widget.visualItemRect(widget.item(row)).center()
+        global_point = viewport.mapToGlobal(point)
+        self.app.sendEvent(viewport, QEnterEvent(point, viewport.mapTo(viewport.window(), point), global_point))
+        self.app.sendEvent(viewport, QHoverEvent(QEvent.Type.HoverMove, point, global_point, QPoint(-1, -1)))
 
     def capture(self, widget, name):
         directory = os.environ.get("WORKLOGGER_SCREENSHOTS")
