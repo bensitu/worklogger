@@ -35,6 +35,9 @@ independently of visible controls.
 
 Password changes replace recovery keys. Save or copy a displayed key privately.
 Clipboard contents and exported key/temporary-password files are not encrypted.
+Copied recovery keys and temporary passwords are cleared after 60 seconds if
+the clipboard still contains the copied text. Other copied content is not cleared.
+Clipboard history or synchronization services may retain their own copies.
 An administrator reset invalidates recovery and remembered credentials and requires
 the user to change the temporary password. Successful password workflows clear
 the account's local lockout state.
@@ -50,6 +53,12 @@ API keys use OS keyring-first storage with authenticated encrypted fallback.
 When a keyring update fails, the successfully saved encrypted fallback remains
 authoritative until a later keyring update succeeds. Previous machine keys are
 persisted locally when read so subsequent keyring outages do not change them.
+Existing fallback values are updated before replacing a keyring entry, so a
+failed cleanup cannot restore an older credential. When the keyring cannot be
+cleared, an encrypted empty value disables the local credential until it is
+replaced or cleanup can complete. This uses the existing encrypted format and
+requires no database migration. It does not erase copies held by an unavailable
+OS credential service; clear those separately when that service becomes available.
 Proxy passwords require an approved system credential backend without a plaintext
 fallback. Credential namespaces include account/database context.
 
@@ -63,14 +72,15 @@ Earlier encrypted values require their original random machine key. WorkLogger
 does not reconstruct a key from host names or network identifiers. If that key is
 unavailable, re-enter the credential; stored ciphertext is retained. Rotate old
 API keys or proxy passwords if historical backups may have been exposed.
-Failed credential deletion is reported instead of treated as a successful removal.
+Failures to clear both the local credential and its fallback are reported.
 Account deletion clears system credentials first; if the credential backend is
 unavailable, deletion is refused and the account is retained. Credential names
 remain stable for existing accounts.
 
 Do not regenerate or delete an unreadable key to silence a warning; preserve it
 before recovery. Database backup does not transfer OS keyring entries or session
-files. New backups exclude proxy passwords, but private pre-change snapshots can
+files. New backups exclude proxy passwords and API-key settings, including
+encrypted fallback values, but private pre-change snapshots can
 contain older credential material.
 
 Keep secrets out of public deployment configuration, model catalogs, logs,
@@ -101,6 +111,9 @@ responses can contain private work information.
 The HTTP CONNECT proxy preserves destination TLS verification. Trust the proxy
 and network before using authentication. Pre-login provider requests and browser
 traffic are separate from account proxy configuration.
+HTTP proxy authentication uses Basic credentials on the connection to the proxy;
+destination TLS does not encrypt that proxy-authentication exchange. Use only a
+trusted proxy over a trusted network.
 Transport loads default SSL trust roots together with certifi; certificate and
 hostname checks remain enabled. Restart after changing trust configuration.
 See [configuration](configuration.md).

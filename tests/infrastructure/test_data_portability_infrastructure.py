@@ -165,11 +165,21 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         self.save_work_log(user_id, date(2026, 4, 20), note="Before backup")
         service = SQLiteBackupService(self.factory, expected_username="alice")
         backup_path = Path(self._tempdir.name) / "backup" / "worklog-backup.db"
+        with self.factory.transaction() as connection:
+            connection.executemany("INSERT INTO settings(user_id,key,value) VALUES(?,?,?)", (
+                (user_id, "secret:ai_api_key", "encrypted test value"),
+                (user_id, "ai_api_key", "previous test value"),
+                (user_id, "dark_mode", "1")))
 
         backed_up = service.backup_database(backup_path)
 
         self.assertTrue(backed_up.ok, backed_up.error)
         self.assertTrue(backup_path.is_file())
+        with closing(sqlite3.connect(backup_path)) as snapshot:
+            settings = dict(snapshot.execute("SELECT key,value FROM settings WHERE user_id=?", (user_id,)))
+            self.assertNotIn("secret:ai_api_key", settings)
+            self.assertNotIn("ai_api_key", settings)
+            self.assertEqual(settings["dark_mode"], "1")
         self.assertTrue(service.validate_restore_database(backup_path).ok)
 
         self.save_work_log(user_id, date(2026, 4, 21), note="After backup")

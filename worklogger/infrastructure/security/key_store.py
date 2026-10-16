@@ -62,9 +62,9 @@ class OptionalKeyringBackend:
     def get_password(self, service: str, name: str) -> str | None:
         try:
             return trusted_keyring_backend().get_password(service, name)
-        except Exception:
+        except Exception as exc:
             LOGGER.warning("credential_storage_unavailable")
-            return None
+            raise RuntimeError("credential_storage_unavailable") from exc
 
     def set_password(self, service: str, name: str, value: str) -> None:
         try:
@@ -279,7 +279,7 @@ class EncryptedSettingsKeyStore:
                 self._settings.set(self._user_id, self._setting_key(key), self._secret_box.encrypt(value))
                 if previous_value:
                     self._settings.delete(self._user_id, key)
-            return Result.success(value)
+            return Result.success(value or None)
         except ValueError as exc:
             return Result.failure(InfrastructureError(str(exc), str(exc)))
         except Exception:
@@ -289,12 +289,20 @@ class EncryptedSettingsKeyStore:
         key = self._normalize_name(name)
         if not value:
             return self.delete_secret(key)
+        fallback_updated = False
+        try:
+            if self._settings.get(self._user_id, self._setting_key(key), None):
+                self._settings.set(self._user_id, self._setting_key(key), self._secret_box.encrypt(value))
+                fallback_updated = True
+        except Exception:
+            return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
         try:
             self._keyring.set_password(self._service_name, key, value)
         except Exception:
             try:
-                encrypted = self._secret_box.encrypt(value)
-                self._settings.set(self._user_id, self._setting_key(key), encrypted)
+                if not fallback_updated:
+                    encrypted = self._secret_box.encrypt(value)
+                    self._settings.set(self._user_id, self._setting_key(key), encrypted)
                 if key == "ai_api_key":
                     self._settings.delete(self._user_id, key)
                 return Result.success(None)
@@ -305,14 +313,24 @@ class EncryptedSettingsKeyStore:
             if key == "ai_api_key":
                 self._settings.delete(self._user_id, key)
         except Exception:
-            return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
+            LOGGER.warning("credential_fallback_cleanup_failed")
+            if not fallback_updated:
+                return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
         return Result.success(None)
 
     def delete_secret(self, name: str) -> Result[None]:
         key = self._normalize_name(name)
+        keyring_deleted = True
         try:
             self._keyring.delete_password(self._service_name, key)
-            self._settings.delete(self._user_id, self._setting_key(key))
+        except Exception:
+            keyring_deleted = False
+            LOGGER.warning("credential_delete_deferred")
+        try:
+            if keyring_deleted:
+                self._settings.delete(self._user_id, self._setting_key(key))
+            else:
+                self._settings.set(self._user_id, self._setting_key(key), self._secret_box.encrypt(""))
             if key == "ai_api_key":
                 self._settings.delete(self._user_id, key)
         except Exception:

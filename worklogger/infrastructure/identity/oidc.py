@@ -128,7 +128,7 @@ def google_oidc_config(client_id: str) -> OidcProviderConfig:
 
 
 def microsoft_oidc_config(client_id: str, tenant_id: str) -> OidcProviderConfig:
-    if not tenant_id or not all(char.isalnum() or char == "-" for char in tenant_id) or tenant_id.lower() in {"common", "organizations", "consumers"}:
+    if not tenant_id or not tenant_id.isascii() or not all(char.isalnum() or char == "-" for char in tenant_id) or tenant_id.lower() in {"common", "organizations", "consumers"}:
         raise ValueError("identity_tenant_required")
     return OidcProviderConfig(
         provider="microsoft",

@@ -185,19 +185,35 @@ class ProxyCredentialTests(unittest.TestCase):
         self.assertTrue(stored.startswith("enc2:"))
         self.assertNotIn("synthetic key", stored)
 
-    def test_failed_secret_removal_is_reported_and_keeps_fallback_content(self):
+    def test_unavailable_keyring_removal_prevents_stale_credentials_from_returning(self):
         store = EncryptedSettingsKeyStore(self.repository, user_id=self.user_id,
                                          keyring_backend=self.backend, secret_box=self.secret_box)
         encrypted = self.secret_box.encrypt("synthetic key")
         self.repository.set(self.user_id, "secret:ai_api_key", encrypted)
         self.backend.values[("WorkLogger", "ai_api_key")] = "synthetic key"
         with patch.object(self.backend, "delete_password", side_effect=OSError("synthetic failure")):
-            self.assertFalse(store.delete_secret("ai_api_key").ok)
-        self.assertEqual(self.repository.get(self.user_id, "secret:ai_api_key"), encrypted)
+            self.assertTrue(store.delete_secret("ai_api_key").ok)
+        self.assertIsNone(store.get_secret("ai_api_key").value)
+        self.assertEqual(self.secret_box.decrypt(self.repository.get(self.user_id, "secret:ai_api_key")), "")
         self.repository.set(self.user_id, "ai_api_key", "synthetic previous key")
         self.assertTrue(store.delete_secret("ai_api_key").ok)
         self.assertIsNone(self.repository.get(self.user_id, "secret:ai_api_key"))
         self.assertIsNone(self.repository.get(self.user_id, "ai_api_key"))
+
+    def test_keyring_update_retains_current_fallback_when_cleanup_fails(self):
+        store = EncryptedSettingsKeyStore(self.repository, user_id=self.user_id,
+                                         keyring_backend=self.backend, secret_box=self.secret_box)
+        self.repository.set(self.user_id, "secret:ai_api_key", self.secret_box.encrypt("previous key"))
+        with patch.object(self.repository, "delete", side_effect=OSError("database busy")):
+            self.assertTrue(store.set_secret("ai_api_key", "replacement key").ok)
+        self.assertEqual(store.get_secret("ai_api_key").value, "replacement key")
+
+    def test_keyring_read_errors_are_distinct_from_missing_credentials(self):
+        from worklogger.infrastructure.security.key_store import OptionalKeyringBackend
+        self.backend.unavailable = True
+        with patch("worklogger.infrastructure.security.key_store.trusted_keyring_backend", return_value=self.backend):
+            with self.assertRaisesRegex(RuntimeError, "credential_storage_unavailable"):
+                OptionalKeyringBackend().get_password("service", "name")
 
     def test_invalid_ports_report_failure_without_changing_saved_port(self):
         self.assertTrue(self.model.set_text(NETWORK_PROXY_PORT_SETTING_KEY, "8080").ok)

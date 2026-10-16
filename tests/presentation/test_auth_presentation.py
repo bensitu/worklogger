@@ -167,6 +167,19 @@ class MemoryRememberSessionStore:
 
 
 class AuthPresentationTests(unittest.TestCase):
+    def test_sensitive_clipboard_expires_without_clearing_replacement_text(self):
+        from worklogger.presentation.widgets.clipboard import copy_sensitive_text
+        clipboard = self._app.clipboard()
+        previous = clipboard.text()
+        self.addCleanup(clipboard.setText, previous)
+        copy_sensitive_text("synthetic recovery key", timeout_ms=1)
+        QTest.qWait(30)
+        self.assertEqual(clipboard.text(), "")
+        copy_sensitive_text("synthetic temporary password", timeout_ms=1)
+        clipboard.setText("Other copied content")
+        QTest.qWait(30)
+        self.assertEqual(clipboard.text(), "Other copied content")
+
     def test_form_drafts_keep_credentials_out_of_representations(self):
         drafts = (LoginDraft("alice", "private-test-secret", False),
                   RegisterDraft("alice", "private-test-secret", "private-test-secret"),

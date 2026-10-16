@@ -2,12 +2,13 @@
 
 from pathlib import Path
 
-from PySide6.QtWidgets import QApplication, QFileDialog, QHBoxLayout, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFileDialog, QHBoxLayout, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget
 
 from worklogger.infrastructure.i18n import _
 from worklogger.infrastructure.security.credential_export import export_credential
 from worklogger.presentation.widgets.feedback import show_information
 from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.widgets.clipboard import copy_sensitive_text
 
 
 class CredentialActions(QWidget):
@@ -30,7 +31,7 @@ class CredentialActions(QWidget):
             button.setMinimumHeight(36)
             buttons.addWidget(button)
         layout.addLayout(buttons)
-        self.copy_button.clicked.connect(lambda: QApplication.clipboard().setText(self._key_provider()))
+        self.copy_button.clicked.connect(lambda: copy_sensitive_text(self._key_provider()))
         self.save_button.clicked.connect(self._choose_destination)
         self.set_temporary_password(temporary_password)
 

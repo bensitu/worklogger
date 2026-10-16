@@ -8,8 +8,11 @@ import stat
 import sys
 import time
 import uuid
+import logging
 
 from worklogger.config.constants import DB_CORRUPT_BACKUP_RETENTION, DB_FILENAME
+
+LOGGER = logging.getLogger(__name__)
 
 
 def package_root() -> Path:
@@ -48,7 +51,7 @@ def secure_database_files(path: str | Path) -> None:
             if candidate.exists():
                 os.chmod(candidate, stat.S_IRUSR | stat.S_IWUSR)
         except OSError:
-            pass
+            LOGGER.warning("database_permissions_unavailable")
 
 
 def quarantine_corrupt_database(

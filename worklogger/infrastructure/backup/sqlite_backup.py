@@ -12,7 +12,7 @@ from uuid import uuid4
 
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
-from worklogger.config.constants import NETWORK_PROXY_PASSWORD_SETTING_KEY
+from worklogger.config.constants import NETWORK_PROXY_PASSWORD_SETTING_KEY, SECRET_SETTING_PREFIX
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
 from worklogger.infrastructure.database.paths import secure_database_files
 from worklogger.infrastructure.database.migrations.runner import MigrationRunner
@@ -65,7 +65,8 @@ class SQLiteBackupService:
                     snapshot = create_database_snapshot(connection, destination)
                 with closing(sqlite3.connect(snapshot)) as backup:
                     backup.execute("PRAGMA secure_delete=ON")
-                    backup.execute("DELETE FROM settings WHERE key=?", (NETWORK_PROXY_PASSWORD_SETTING_KEY,))
+                    backup.execute("DELETE FROM settings WHERE key IN (?, ?) OR key LIKE ?",
+                                   (NETWORK_PROXY_PASSWORD_SETTING_KEY, "ai_api_key", SECRET_SETTING_PREFIX + "%"))
                     backup.commit()
                     backup.execute("VACUUM")
                     _ensure_integrity(backup, "backup_integrity_failed")
