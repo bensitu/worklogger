@@ -10,8 +10,8 @@ import tempfile
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import Qt
-from PySide6.QtTest import QTest
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtTest import QSignalSpy, QTest
 from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QWidget, QFileDialog, QMessageBox
 
 from worklogger.__about__ import APP_NAME
@@ -173,11 +173,13 @@ class AuthPresentationTests(unittest.TestCase):
         previous = clipboard.text()
         self.addCleanup(clipboard.setText, previous)
         copy_sensitive_text("synthetic recovery key", timeout_ms=1)
-        QTest.qWait(30)
+        timer = self._app.findChild(QTimer, "credential_clipboard_timer")
+        expired = QSignalSpy(timer.timeout)
+        self.assertTrue(expired.wait(1000), "Clipboard expiration timer did not fire")
         self.assertEqual(clipboard.text(), "")
         copy_sensitive_text("synthetic temporary password", timeout_ms=1)
         clipboard.setText("Other copied content")
-        QTest.qWait(30)
+        self.assertTrue(expired.wait(1000), "Clipboard expiration timer did not fire")
         self.assertEqual(clipboard.text(), "Other copied content")
 
     def test_form_drafts_keep_credentials_out_of_representations(self):
