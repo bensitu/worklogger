@@ -23,6 +23,7 @@ class MonthCalendar(QCalendarWidget):
         self._follow_application_theme = True
         self._holidays = {}
         self._cell_rects = {}
+        self._hovered_day = None
         self._appearance_timer = QTimer(self)
         self._appearance_timer.setSingleShot(True)
         self._appearance_timer.timeout.connect(self._sync_appearance)
@@ -39,8 +40,10 @@ class MonthCalendar(QCalendarWidget):
                 set_button_icon(button, icon)
                 button.setToolTip(caption)
                 button.setAccessibleName(caption)
-        self.findChild(QTableView).viewport().installEventFilter(self)
-        self.currentPageChanged.connect(lambda *_args: self._cell_rects.clear())
+        viewport = self.findChild(QTableView).viewport()
+        viewport.setMouseTracking(True)
+        viewport.installEventFilter(self)
+        self.currentPageChanged.connect(self._clear_cell_tracking)
         self._sync_appearance()
 
     def set_colors(self, colors):
@@ -65,6 +68,8 @@ class MonthCalendar(QCalendarWidget):
 
     def changeEvent(self, event):
         super().changeEvent(event)
+        if event.type() == QEvent.Type.EnabledChange and not self.isEnabled():
+            self._set_hovered_day(None)
         if (event.type() in (QEvent.Type.PaletteChange, QEvent.Type.StyleChange, QEvent.Type.EnabledChange)
                 and hasattr(self, "_appearance_timer")):
             self._appearance_timer.start(0)
@@ -72,6 +77,21 @@ class MonthCalendar(QCalendarWidget):
     def set_holidays(self, holidays):
         self._holidays = dict(holidays)
         self.updateCells()
+
+    def _clear_cell_tracking(self, *_args):
+        self._cell_rects.clear()
+        self._hovered_day = None
+
+    def _set_hovered_day(self, day):
+        if day is not None and not self.minimumDate() <= QDate(day.year, day.month, day.day) <= self.maximumDate():
+            day = None
+        previous = self._hovered_day
+        if day == previous:
+            return
+        self._hovered_day = day
+        for value in (previous, day):
+            if value is not None:
+                self.updateCell(QDate(value.year, value.month, value.day))
 
     def visible_range(self):
         first = QDate(self.yearShown(), self.monthShown(), 1)
@@ -88,7 +108,9 @@ class MonthCalendar(QCalendarWidget):
         holiday = value in self._holidays
         colors = self._colors
         painter.save()
-        background = colors.accent if selected else colors.surface
+        hovered = self.isEnabled() and self.minimumDate() <= day <= self.maximumDate() and value == self._hovered_day
+        background = (colors.hover if hovered else colors.accent) if selected else (
+            colors.accent_dim if hovered else colors.surface)
         painter.fillRect(rect, QColor(background if self.isEnabled() else colors.disabled_background))
         if (day < self.minimumDate() or day > self.maximumDate()
                 or (day.year(), day.month()) != (self.yearShown(), self.monthShown())) and not selected:
@@ -107,6 +129,13 @@ class MonthCalendar(QCalendarWidget):
         painter.restore()
 
     def eventFilter(self, watched, event):
+        if event.type() == QEvent.Type.MouseMove and self.isEnabled():
+            position = event.position().toPoint()
+            hovered = next((day for day, rect in self._cell_rects.items()
+                            if rect.contains(position)), None)
+            self._set_hovered_day(hovered)
+        elif event.type() in (QEvent.Type.Leave, QEvent.Type.Hide):
+            self._set_hovered_day(None)
         if event.type() == QEvent.Type.ToolTip:
             name = next((self._holidays.get(day, "") for day, rect in self._cell_rects.items()
                          if rect.contains(event.pos())), "")

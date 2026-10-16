@@ -9,12 +9,14 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QDate, QPoint, QRect, Qt
-from PySide6.QtGui import QColor, QImage, QPainter, QPalette
+from PySide6.QtCore import QDate, QEvent, QPoint, QPointF, QRect, Qt
+from PySide6.QtGui import QColor, QImage, QMouseEvent, QPainter, QPalette
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QDateEdit, QDateTimeEdit, QDoubleSpinBox,
-    QGridLayout, QLabel, QLineEdit, QListWidget, QMenu, QPlainTextEdit, QRadioButton,
-    QSlider, QSpinBox, QStyle, QStyleOptionMenuItem, QTabBar, QTextEdit, QTimeEdit, QTreeWidget, QTreeWidgetItem, QWidget,
+    QGridLayout, QHeaderView, QLabel, QLineEdit, QListWidget, QMenu, QPlainTextEdit, QRadioButton,
+    QScrollBar, QSlider, QSpinBox, QStyle, QStyleOptionButton, QStyleOptionComboBox, QStyleOptionFrame,
+    QStyleOptionHeader, QStyleOptionMenuItem,
+    QStyleOptionSlider, QStyleOptionSpinBox, QTabBar, QTableView, QTextEdit, QTimeEdit, QTreeWidget, QTreeWidgetItem, QWidget,
 )
 
 from worklogger.presentation.theme import THEME_KEYS, ThemeEngine, configure_application_style, install_bundled_fonts
@@ -43,6 +45,126 @@ class ControlStateChecks(unittest.TestCase):
         self.app.setStyleSheet(self.old_style)
         self.app.setPalette(self.old_palette)
         self.app.setProperty("worklogger_theme_context", self.old_context)
+
+    def test_hover_feedback_preserves_focus_disabled_states_and_control_geometry(self):
+        controls = ((QLineEdit, QStyleOptionFrame, QStyle.PrimitiveElement.PE_PanelLineEdit),
+                    (QCheckBox, QStyleOptionButton, QStyle.ControlElement.CE_CheckBox),
+                    (QRadioButton, QStyleOptionButton, QStyle.ControlElement.CE_RadioButton),
+                    (QHeaderView, QStyleOptionHeader, QStyle.ControlElement.CE_HeaderSection),
+                    (QComboBox, QStyleOptionComboBox, QStyle.ComplexControl.CC_ComboBox),
+                    (QDoubleSpinBox, QStyleOptionSpinBox, QStyle.ComplexControl.CC_SpinBox),
+                    (QSlider, QStyleOptionSlider, QStyle.ComplexControl.CC_Slider),
+                    (QScrollBar, QStyleOptionSlider, QStyle.ComplexControl.CC_ScrollBar),
+                    (lambda: QScrollBar(Qt.Orientation.Horizontal), QStyleOptionSlider,
+                     QStyle.ComplexControl.CC_ScrollBar))
+        for theme, dark in product(THEME_KEYS, (False, True)):
+            self.engine.apply_to(self.app, theme, dark=dark, custom_color="#168078")
+            for factory, option_type, element in controls:
+                field = factory(Qt.Orientation.Horizontal) if factory is QHeaderView else factory()
+                if isinstance(field, QHeaderView):
+                    field.setSectionsClickable(True)
+                if isinstance(field, QComboBox):
+                    field.addItem("Selection")
+                elif isinstance(field, (QCheckBox, QRadioButton)):
+                    field.setText("Option")
+                if type(field) is QSlider:
+                    field.setOrientation(Qt.Orientation.Horizontal)
+                control_name = type(field).__name__
+                if isinstance(field, QScrollBar):
+                    control_name += "-" + field.orientation().name
+                    if field.orientation() == Qt.Orientation.Horizontal:
+                        field.resize(240, 16)
+                    else:
+                        field.resize(16, 200)
+                else:
+                    field.resize(240, 44)
+                field.ensurePolished()
+                def render(hovered, focused=False):
+                    option = option_type()
+                    field.initStyleOption(option)
+                    if isinstance(field, QSlider):
+                        option.subControls = QStyle.SubControl.SC_SliderGroove | QStyle.SubControl.SC_SliderHandle
+                    elif isinstance(field, QScrollBar):
+                        option.subControls = QStyle.SubControl.SC_All
+                        slider = field.style().subControlRect(element, option, QStyle.SubControl.SC_ScrollBarSlider, field)
+                        for part in (QStyle.SubControl.SC_ScrollBarAddLine, QStyle.SubControl.SC_ScrollBarSubLine):
+                            button = field.style().subControlRect(element, option, part, field)
+                            self.assertFalse(slider.intersects(button), (theme, dark, control_name))
+                    option.state &= ~(QStyle.StateFlag.State_MouseOver | QStyle.StateFlag.State_HasFocus)
+                    if hovered:
+                        option.state |= QStyle.StateFlag.State_MouseOver
+                        if isinstance(field, QSlider):
+                            option.activeSubControls = QStyle.SubControl.SC_SliderHandle
+                        elif isinstance(field, QScrollBar):
+                            option.activeSubControls = QStyle.SubControl.SC_ScrollBarSlider
+                    if focused:
+                        option.state |= QStyle.StateFlag.State_HasFocus
+                    image = QImage(field.size(), QImage.Format.Format_ARGB32_Premultiplied)
+                    image.fill(Qt.GlobalColor.transparent)
+                    painter = QPainter(image)
+                    try:
+                        if isinstance(field, QLineEdit):
+                            field.style().drawPrimitive(element, option, painter, field)
+                        elif isinstance(field, (QCheckBox, QRadioButton)):
+                            field.style().drawControl(element, option, painter, field)
+                        elif isinstance(field, QHeaderView):
+                            field.style().drawControl(element, option, painter, field)
+                        else:
+                            field.style().drawComplexControl(element, option, painter, field)
+                    finally:
+                        painter.end()
+                    return image
+                try:
+                    geometry, font = field.geometry(), field.font()
+                    normal, hovered = render(False), render(True)
+                    self.assertNotEqual(normal, hovered, (theme, dark, control_name))
+                    self.capture(normal, f"{theme}-{dark}-{control_name}-normal")
+                    self.capture(hovered, f"{theme}-{dark}-{control_name}-hover")
+                    if isinstance(field, QLineEdit):
+                        self.assertEqual(render(False, True), render(True, True))
+                        field.setReadOnly(True)
+                        self.assertEqual(render(False), render(True))
+                    field.setEnabled(False)
+                    self.assertEqual(render(False), render(True), (theme, dark, control_name))
+                    self.assertEqual((field.geometry(), field.font()), (geometry, font))
+                finally:
+                    field.deleteLater()
+
+    def test_calendar_hover_preserves_selected_dates_and_clears_on_leave_or_disable(self):
+        for theme, dark in product(THEME_KEYS, (False, True)):
+            colors = self.engine.apply_to(self.app, theme, dark=dark, custom_color="#168078")
+            calendar = MonthCalendar()
+            calendar.setSelectedDate(QDate(2026, 10, 16))
+            calendar.resize(380, 300)
+            calendar.show()
+            self.app.processEvents()
+            viewport = calendar.findChild(QTableView).viewport()
+            try:
+                rect = calendar._cell_rects[date(2026, 10, 17)]
+                def sample(bounds):
+                    image = viewport.grab().toImage().scaled(viewport.size())
+                    return image.pixelColor(bounds.topLeft() + QPoint(4, 4)).name()
+                point = rect.center()
+                event = QMouseEvent(QEvent.Type.MouseMove, QPointF(point), QPointF(viewport.mapToGlobal(point)),
+                                    Qt.MouseButton.NoButton, Qt.MouseButton.NoButton, Qt.KeyboardModifier.NoModifier)
+                self.app.sendEvent(viewport, event)
+                self.app.processEvents()
+                self.assertEqual(sample(rect), colors.accent_dim)
+                self.assertEqual(calendar.selectedDate(), QDate(2026, 10, 16))
+                self.capture(calendar, f"{theme}-{dark}-calendar-hover")
+                self.app.sendEvent(viewport, QEvent(QEvent.Type.Leave))
+                self.app.processEvents()
+                self.assertEqual(sample(rect), colors.surface)
+                calendar.setEnabled(False)
+                self.app.processEvents()
+                self.app.sendEvent(viewport, event)
+                self.app.processEvents()
+                self.assertEqual(sample(rect), colors.disabled_background)
+                self.assertEqual(calendar.selectedDate(), QDate(2026, 10, 16))
+                self.capture(calendar, f"{theme}-{dark}-calendar-disabled")
+            finally:
+                calendar.close()
+                calendar.deleteLater()
 
     def test_input_fields_preserve_geometry_and_mute_disabled_text_and_background(self):
         factories = (QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QSpinBox,
@@ -200,9 +322,10 @@ class ControlStateChecks(unittest.TestCase):
                 panel.close()
                 panel.deleteLater()
 
-    def capture(self, widget, name):
+    def capture(self, source, name):
         directory = os.environ.get("WORKLOGGER_SCREENSHOTS")
         if directory:
             target = Path(directory)
             target.mkdir(parents=True, exist_ok=True)
-            self.assertTrue(widget.grab().save(str(target / f"{name}.png")))
+            snapshot = source if isinstance(source, QImage) else source.grab()
+            self.assertTrue(snapshot.save(str(target / f"{name}.png")))

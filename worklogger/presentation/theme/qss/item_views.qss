@@ -15,6 +15,11 @@ QHeaderView::section {
   padding: 4px 6px;
 }
 
+QHeaderView[sectionsClickable="true"]::section:hover:enabled {
+  background: {{ button_hover_fill }};
+  border-bottom-color: {{ accent }};
+}
+
 QListWidget#local_model_list_widget,
 QListWidget#custom_work_type_list_widget,
 QListWidget[management_list="true"] {
@@ -31,11 +36,7 @@ QListWidget[management_list="true"]::item {
   border: 1px solid transparent;
 }
 
-QListWidget#local_model_list_widget::item:hover:enabled:!selected,
-QListWidget#custom_work_type_list_widget::item:hover:enabled:!selected,
-QListWidget#note_history_list_widget::item:hover:enabled:!selected,
-QListWidget[management_list="true"]::item:hover:enabled:!selected,
-QTreeWidget[data_browser="true"]::item:hover:enabled:!selected {
+QAbstractItemView::item:hover:enabled:!selected {
   background: {{ accent_dim }};
 }
 
@@ -82,10 +83,39 @@ QScrollBar:vertical {
   margin: 4px 2px;
 }
 
-QScrollBar::handle:vertical {
+QScrollBar:horizontal {
+  margin: 0 12px;
+}
+
+QScrollBar::sub-line:horizontal {
+  width: 12px;
+  subcontrol-origin: margin;
+  subcontrol-position: left;
+}
+
+QScrollBar::add-line:horizontal {
+  width: 12px;
+  subcontrol-origin: margin;
+  subcontrol-position: right;
+}
+
+QScrollBar::handle:vertical,
+QScrollBar::handle:horizontal {
   background: {{ border_strong }};
   border-radius: 4px;
+}
+
+QScrollBar::handle:vertical {
   min-height: 24px;
+}
+
+QScrollBar::handle:horizontal {
+  min-width: 24px;
+}
+
+QScrollBar::handle:vertical:hover:enabled,
+QScrollBar::handle:horizontal:hover:enabled {
+  background: {{ muted_text }};
 }
 
 QScrollBar::add-line:vertical,

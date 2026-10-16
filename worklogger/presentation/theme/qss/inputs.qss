@@ -29,6 +29,14 @@ QLineEdit QToolButton:hover:enabled {
   background: {{ button_hover }};
 }
 
+QLineEdit:hover:enabled:!read-only:!focus,
+QTextEdit:hover:enabled:!read-only:!focus,
+QPlainTextEdit:hover:enabled:!read-only:!focus,
+QComboBox:hover:enabled:!focus,
+QAbstractSpinBox:hover:enabled:!read-only:!focus {
+  border-color: {{ border_strong }};
+}
+
 QLineEdit:focus,
 QTextEdit:focus,
 QPlainTextEdit:focus,
@@ -39,6 +47,11 @@ QDateTimeEdit:focus,
 QTimeEdit:focus,
 QDoubleSpinBox:focus {
   border-color: {{ accent }};
+}
+
+QCheckBox:hover:enabled,
+QRadioButton:hover:enabled {
+  color: {{ accent }};
 }
 
 QComboBox::drop-down {
@@ -131,4 +144,9 @@ QSlider::handle:horizontal {
 
 QSlider::handle:horizontal:focus:enabled {
   border: 2px solid {{ accent }};
+}
+
+QSlider::handle:horizontal:hover:enabled {
+  background: {{ accent_dim }};
+  border-color: {{ hover }};
 }

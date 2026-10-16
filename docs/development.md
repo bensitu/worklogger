@@ -101,6 +101,10 @@ disabled color roles. Custom painters and item delegates must honor the effectiv
 enabled state, including a disabled parent. Preserve values, selection, geometry,
 and typography when disabling controls; suppress hover feedback and restore the
 normal appearance when they are enabled again.
+Use shared component rules for hover feedback. Keep focused and selected states
+distinct, avoid layout changes on hover, and limit active header styling to
+headers that accept clicks. Custom date cells should repaint only the old and
+new hovered cells without changing the selected date.
 
 Full and minimal windows share `shell/appearance_controller.py` for theme
 application, background styling, effects, and cleanup. Keep navigation and
