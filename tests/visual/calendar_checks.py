@@ -70,7 +70,7 @@ def may_records():
 
 class CalendarLayoutChecks(unittest.TestCase):
     def test_work_type_popup_previews_match_calendar_colors_across_languages_and_themes(self):
-        from PySide6.QtWidgets import QComboBox
+        from PySide6.QtWidgets import QComboBox, QStyle, QStyleOptionComboBox, QStyleOptionViewItem
         from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
         from worklogger.presentation.widgets.work_type_options import add_work_type_option
 
@@ -83,15 +83,50 @@ class CalendarLayoutChecks(unittest.TestCase):
             for language, theme, dark in product(available_languages(), ("blue", "liquid_glass"), (False, True)):
                 set_language(language)
                 engine.apply_to(self.app, theme, dark=dark)
-                combo = QComboBox()
+                panel = QWidget()
+                panel.setObjectName("worklog_entry_panel_widget")
+                panel.setProperty("compact", True)
+                panel.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
+                layout = QVBoxLayout(panel)
+                combo = QComboBox(panel)
+                layout.addWidget(combo)
                 try:
                     for definition in WorkType:
                         add_work_type_option(combo, definition)
+                    combo.setFixedWidth(88)
+                    panel.show()
+                    for value in ("normal", "remote"):
+                        combo.setCurrentIndex(combo.findData(value))
+                        self.app.processEvents()
+                        option = QStyleOptionComboBox()
+                        combo.initStyleOption(option)
+                        text_rect = combo.style().subControlRect(QStyle.ComplexControl.CC_ComboBox, option,
+                            QStyle.SubControl.SC_ComboBoxEditField, combo)
+                        reserved = 0 if option.currentIcon.isNull() else option.iconSize.width() + 4
+                        if language == "en_US":
+                            self.assertLessEqual(combo.fontMetrics().horizontalAdvance(combo.currentText()),
+                                                 text_rect.width() - reserved, (theme, dark, value))
+                        directory = os.environ.get("WORKLOGGER_SCREENSHOTS")
+                        if directory:
+                            target = Path(directory)
+                            target.mkdir(parents=True, exist_ok=True)
+                            self.assertTrue(combo.grab().save(str(target /
+                                f"work-type-closed-{language}-{theme}-{dark}-{value}.png")))
                     combo.setCurrentIndex(combo.findData("remote"))
-                    combo.resize(max(220, combo.sizeHint().width()), combo.sizeHint().height())
-                    combo.show()
+                    combo.setFixedWidth(max(220, combo.sizeHint().width()))
                     combo.showPopup()
                     self.app.processEvents()
+                    text_offsets = set()
+                    for row in range(combo.count()):
+                        index = combo.model().index(row, combo.modelColumn(), combo.rootModelIndex())
+                        item_option = QStyleOptionViewItem()
+                        item_option.initFrom(combo.view())
+                        combo.itemDelegate().initStyleOption(item_option, index)
+                        item_option.rect = combo.view().visualRect(index)
+                        text_rect = combo.view().style().subElementRect(
+                            QStyle.SubElement.SE_ItemViewItemText, item_option, combo.view())
+                        text_offsets.add(text_rect.left() - item_option.rect.left())
+                    self.assertEqual(len(text_offsets), 1, (language, theme, dark, text_offsets))
                     popup = combo.view().window()
                     image = popup.grab().toImage()
                     colors = {image.pixelColor(x, y).name()
@@ -107,8 +142,8 @@ class CalendarLayoutChecks(unittest.TestCase):
                         self.assertTrue(popup.grab().save(str(target / f"work-types-{language}-{theme}-{dark}.png")))
                 finally:
                     combo.hidePopup()
-                    combo.close()
-                    combo.deleteLater()
+                    panel.close()
+                    panel.deleteLater()
         finally:
             self.app.setStyleSheet(old_style)
             self.app.setPalette(old_palette)

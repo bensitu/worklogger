@@ -104,12 +104,15 @@ class QtWidgetTests(unittest.TestCase):
                 for index, definition in enumerate(definitions):
                     self.assertEqual(combo.itemData(index), definition.value)
                     icon = combo.itemIcon(index)
+                    expected = engine.work_type_marker_color(definition, dark=dark)
+                    self.assertEqual(icon.isNull(), expected is None)
+                    if expected is None:
+                        continue
                     image = icon.pixmap(combo.iconSize()).toImage()
                     opaque_colors = {image.pixelColor(x, y).name()
                                      for x in range(image.width()) for y in range(image.height())
                                      if image.pixelColor(x, y).alpha() == 255}
-                    expected = engine.work_type_marker_color(definition, dark=dark)
-                    self.assertEqual(opaque_colors, {expected} if expected else set())
+                    self.assertEqual(opaque_colors, {expected})
                     scaled = QIcon(icon).pixmap(combo.iconSize(), 2.0)
                     self.assertEqual(scaled.devicePixelRatio(), 2.0)
                     disabled = icon.pixmap(combo.iconSize(), QIcon.Mode.Disabled).toImage()

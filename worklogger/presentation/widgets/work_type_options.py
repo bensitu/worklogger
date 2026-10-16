@@ -6,7 +6,7 @@ import math
 
 from PySide6.QtCore import QRect, QRectF, QSize, Qt
 from PySide6.QtGui import QColor, QIcon, QIconEngine, QPainter, QPixmap
-from PySide6.QtWidgets import QComboBox
+from PySide6.QtWidgets import QComboBox, QStyledItemDelegate, QStyleOptionViewItem
 
 from worklogger.domain.worklog.models import CustomWorkType, WorkType
 from worklogger.presentation.theme import ThemeEngine
@@ -56,12 +56,24 @@ class _WorkTypeMarkerIconEngine(QIconEngine):
         return pixmap
 
 
+class _WorkTypeOptionDelegate(QStyledItemDelegate):
+    def initStyleOption(self, option, index) -> None:
+        super().initStyleOption(option, index)
+        option.features |= QStyleOptionViewItem.ViewItemFeature.HasDecoration
+        option.decorationSize = QSize(4, 20)
+
+
 def work_type_icon(definition: WorkType | CustomWorkType) -> QIcon:
+    if ThemeEngine().work_type_marker_color(definition) is None:
+        return QIcon()
     return QIcon(_WorkTypeMarkerIconEngine(definition))
 
 
 def add_work_type_option(combo: QComboBox, definition: WorkType | CustomWorkType,
                          *, index: int | None = None) -> None:
-    combo.setIconSize(QSize(12, 20))
+    if combo.property("work_type_picker") is not True:
+        combo.setProperty("work_type_picker", True)
+        combo.setItemDelegate(_WorkTypeOptionDelegate(combo))
+    combo.setIconSize(QSize(4, 20))
     combo.insertItem(combo.count() if index is None else index,
                      work_type_icon(definition), work_type_label(definition), definition.value)

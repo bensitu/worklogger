@@ -46,6 +46,15 @@ QComboBox::drop-down {
   width: 26px;
 }
 
+QComboBox[work_type_picker="true"],
+QWidget#worklog_entry_panel_widget[compact="true"] QComboBox[work_type_picker="true"] {
+  padding-right: 2px;
+}
+
+QComboBox[work_type_picker="true"]::drop-down {
+  width: 18px;
+}
+
 QComboBox::down-arrow,
 QDateEdit::down-arrow,
 QDateTimeEdit::down-arrow {
