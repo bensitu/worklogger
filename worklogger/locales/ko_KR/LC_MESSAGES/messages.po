@@ -313,6 +313,9 @@ msgstr "달력 표시"
 msgid "Calendar event"
 msgstr "캘린더 일정"
 
+msgid "Calendar events"
+msgstr "캘린더 일정"
+
 msgid "Cancel"
 msgstr "취소"
 
@@ -856,6 +859,9 @@ msgstr "과거 항목"
 msgid "Holiday country"
 msgstr "공휴일 국가"
 
+msgid "Hours summary"
+msgstr "시간 요약"
+
 msgid "Hu&e:"
 msgstr "색상(&E):"
 
@@ -1279,6 +1285,9 @@ msgstr "검증된 모델 파일이 선택되지 않았습니다."
 msgid "No work item"
 msgstr "작업 항목 없음"
 
+msgid "No work records for this period."
+msgstr "이 기간의 근무 기록이 없습니다."
+
 msgid "Normal"
 msgstr "일반"
 
@@ -1458,6 +1467,9 @@ msgstr "프로젝트 기록"
 
 msgid "Project statistics"
 msgstr "프로젝트 통계"
+
+msgid "Project summary"
+msgstr "프로젝트 요약"
 
 msgid "Projects"
 msgstr "프로젝트"
@@ -2496,6 +2508,9 @@ msgstr "작업 항목 ID"
 
 msgid "Work items"
 msgstr "작업 항목"
+
+msgid "Work records"
+msgstr "근무 기록"
 
 msgid "Work type"
 msgstr "근무 형태"

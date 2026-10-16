@@ -311,6 +311,9 @@ msgstr ""
 msgid "Calendar event"
 msgstr ""
 
+msgid "Calendar events"
+msgstr ""
+
 msgid "Cancel"
 msgstr ""
 
@@ -854,6 +857,9 @@ msgstr ""
 msgid "Holiday country"
 msgstr ""
 
+msgid "Hours summary"
+msgstr ""
+
 msgid "Hu&e:"
 msgstr ""
 
@@ -1277,6 +1283,9 @@ msgstr ""
 msgid "No work item"
 msgstr ""
 
+msgid "No work records for this period."
+msgstr ""
+
 msgid "Normal"
 msgstr ""
 
@@ -1455,6 +1464,9 @@ msgid "Project records"
 msgstr ""
 
 msgid "Project statistics"
+msgstr ""
+
+msgid "Project summary"
 msgstr ""
 
 msgid "Projects"
@@ -2493,6 +2505,9 @@ msgid "Work item ID"
 msgstr ""
 
 msgid "Work items"
+msgstr ""
+
+msgid "Work records"
 msgstr ""
 
 msgid "Work type"

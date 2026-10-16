@@ -253,6 +253,8 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
             approved = report.handle(command).value.content
             self.assertIn("Approved memo", approved)
             self.assertEqual(approved.count("100% complete"), 1)
+            self.assertNotIn("Quick Logs", approved)
+            self.assertNotIn("## Calendar events", approved)
 
     def test_note_storage_migration_conflicts_deletion_and_export_preserve_content(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -345,7 +347,14 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
         self.assertTrue(weekly.ok, weekly.error)
         self.assertIn("{{date_range}}", weekly.value or "")
         self.assertTrue(fallback.ok, fallback.error)
-        self.assertIn("{{year}}", fallback.value or "")
+        self.assertIn("{{year}}-{{month}}", fallback.value or "")
+        for language, title in (("en_US", "Daily Report"), ("ja_JP", "日報"),
+                                ("ko_KR", "일일 보고서"), ("zh_CN", "日报"), ("zh_TW", "日報")):
+            with self.subTest(language=language):
+                content = provider.get_template(language, "daily").value
+                self.assertIn(title, content)
+                self.assertIn("{{notes_section}}", content)
+                self.assertNotIn("Quick Logs", content)
 
     def test_sqlite_custom_template_provider_overrides_builtin_template(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -378,7 +387,7 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
         self.assertTrue(custom.ok, custom.error)
         self.assertEqual(custom.value, "# Custom weekly {{date_range}}")
         self.assertTrue(fallback.ok, fallback.error)
-        self.assertIn("Weekly Work Report", fallback.value or "")
+        self.assertIn("Weekly Report", fallback.value or "")
 
     def test_markdown_exporter_writes_utf8_markdown_file(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

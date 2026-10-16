@@ -313,6 +313,9 @@ msgstr "Calendar display"
 msgid "Calendar event"
 msgstr "Calendar event"
 
+msgid "Calendar events"
+msgstr "Calendar events"
+
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -856,6 +859,9 @@ msgstr "Historical items"
 msgid "Holiday country"
 msgstr "Holiday country"
 
+msgid "Hours summary"
+msgstr "Hours summary"
+
 msgid "Hu&e:"
 msgstr "Hu&e:"
 
@@ -1279,6 +1285,9 @@ msgstr "No verified model file selected."
 msgid "No work item"
 msgstr "No work item"
 
+msgid "No work records for this period."
+msgstr "No work records for this period."
+
 msgid "Normal"
 msgstr "Normal"
 
@@ -1458,6 +1467,9 @@ msgstr "Project records"
 
 msgid "Project statistics"
 msgstr "Project statistics"
+
+msgid "Project summary"
+msgstr "Project summary"
 
 msgid "Projects"
 msgstr "Projects"
@@ -2496,6 +2508,9 @@ msgstr "Work item ID"
 
 msgid "Work items"
 msgstr "Work items"
+
+msgid "Work records"
+msgstr "Work records"
 
 msgid "Work type"
 msgstr "Work type"

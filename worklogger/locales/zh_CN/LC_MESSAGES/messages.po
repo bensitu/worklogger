@@ -313,6 +313,9 @@ msgstr "日历显示"
 msgid "Calendar event"
 msgstr "日历日程"
 
+msgid "Calendar events"
+msgstr "日历日程"
+
 msgid "Cancel"
 msgstr "取消"
 
@@ -856,6 +859,9 @@ msgstr "历史事项"
 msgid "Holiday country"
 msgstr "假日国家"
 
+msgid "Hours summary"
+msgstr "工时汇总"
+
 msgid "Hu&e:"
 msgstr "色相(&E)："
 
@@ -1279,6 +1285,9 @@ msgstr "未选择已验证的模型文件。"
 msgid "No work item"
 msgstr "未指定工作项"
 
+msgid "No work records for this period."
+msgstr "此期间没有工作记录。"
+
 msgid "Normal"
 msgstr "常规"
 
@@ -1458,6 +1467,9 @@ msgstr "项目记录"
 
 msgid "Project statistics"
 msgstr "项目统计"
+
+msgid "Project summary"
+msgstr "项目汇总"
 
 msgid "Projects"
 msgstr "项目"
@@ -2496,6 +2508,9 @@ msgstr "工作项 ID"
 
 msgid "Work items"
 msgstr "工作项"
+
+msgid "Work records"
+msgstr "工作记录"
 
 msgid "Work type"
 msgstr "工作类型"

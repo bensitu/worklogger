@@ -313,6 +313,9 @@ msgstr "カレンダー表示"
 msgid "Calendar event"
 msgstr "カレンダーの予定"
 
+msgid "Calendar events"
+msgstr "カレンダーの予定"
+
 msgid "Cancel"
 msgstr "キャンセル"
 
@@ -856,6 +859,9 @@ msgstr "過去の項目"
 msgid "Holiday country"
 msgstr "祝日の国"
 
+msgid "Hours summary"
+msgstr "時間集計"
+
 msgid "Hu&e:"
 msgstr "色相(&E):"
 
@@ -1279,6 +1285,9 @@ msgstr "検証済みモデルファイルが選択されていません。"
 msgid "No work item"
 msgstr "作業項目なし"
 
+msgid "No work records for this period."
+msgstr "この期間の勤務記録はありません。"
+
 msgid "Normal"
 msgstr "通常"
 
@@ -1458,6 +1467,9 @@ msgstr "プロジェクトの記録"
 
 msgid "Project statistics"
 msgstr "プロジェクト統計"
+
+msgid "Project summary"
+msgstr "プロジェクト集計"
 
 msgid "Projects"
 msgstr "プロジェクト"
@@ -2496,6 +2508,9 @@ msgstr "作業項目 ID"
 
 msgid "Work items"
 msgstr "作業項目"
+
+msgid "Work records"
+msgstr "勤務記録"
 
 msgid "Work type"
 msgstr "勤務形態"

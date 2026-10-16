@@ -11,6 +11,19 @@ Generation replaces the visible draft only after any required confirmation.
 Changing a template affects subsequent generation, not saved report text.
 Review the generated draft before saving.
 
+Built-in daily, weekly, and monthly templates share a localized structure in
+English, Japanese, Korean, Simplified Chinese, and Traditional Chinese. They show
+work records and hours, with notes, calendar events, and project summaries only
+when those sources contain content. They do not insert unsupported risks or
+plans. Retained previous entries appear under Notes rather than a separate
+Quick Logs heading. Sharing permissions and duplicate-source filtering still
+apply.
+
+Account templates and saved reports are not rewritten. Use Reset template to
+adopt the new default for a selected language and report type. Explicit output
+language preferences and custom template text remain authoritative during text
+processing.
+
 ## Syntax
 
 Variables use double braces. Whitespace around a name is ignored.
@@ -45,6 +58,10 @@ Overtime: {{overtime_hours}}
 | `month` | Period-start month; two digits for monthly reports |
 | `display_name` | Preferred display name, falling back to login ID |
 | `task_list` | Work-record content |
+| `work_records` | Work records without note-only content |
+| `notes_section` | Optional localized Notes section, including retained previous entries |
+| `calendar_section` | Optional localized calendar-event section |
+| `projects_section` | Optional localized project-hours section |
 | `calendar_events` | Imported events in the period |
 | `quick_logs` | Retained previous entries |
 | `total_hours` | Worked hours to one decimal place |

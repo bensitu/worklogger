@@ -1,106 +1,29 @@
-"""Built-in Markdown templates."""
+"""Localized built-in Markdown templates with shared report structure."""
 
-from __future__ import annotations
-
+from worklogger.domain.shared.languages import normalize_language
 from worklogger.domain.shared.result import Result
+from worklogger.infrastructure.i18n import _
 
 
 class BuiltInTemplateProvider:
-    def get_template(
-        self,
-        language: str,
-        template_type: str,
-        user_id: int | None = None,
-    ) -> Result[str]:
-        del user_id
-        language_key = _language_key(language)
-        template_key = str(template_type or "").strip().lower()
-        template = _TEMPLATES.get((language_key, template_key))
-        if template is None:
-            template = _TEMPLATES.get(("en_US", template_key), "")
-        return Result.success(template)
-
-
-def _language_key(language: str) -> str:
-    cleaned = str(language or "en_US").replace("-", "_")
-    return cleaned if cleaned in _LANGUAGES else "en_US"
-
-
-_LANGUAGES = frozenset({"en_US", "ja_JP", "ko_KR", "zh_CN", "zh_TW"})
-
-_WEEKLY = """# Weekly Work Report  {{date_range}}
-
-## Work Completed
-{{task_list}}
-
-## Calendar Events
-{{calendar_events}}
-
-## Quick Logs
-{{quick_logs}}
-
-## Hours Summary
-- Total: {{total_hours}}h
-- Overtime: {{overtime_hours}}h
-
-## Issues / Risks
-{{issues}}
-
-## Plan for Next Week
-{{next_plan}}
-"""
-
-_MONTHLY = """# Monthly Work Report  {{year}}-{{month}}
-
-## Summary of Work
-{{task_list}}
-
-## Calendar Events
-{{calendar_events}}
-
-## Quick Logs
-{{quick_logs}}
-
-## Hours Summary
-- Total: {{total_hours}}h
-- Overtime: {{overtime_hours}}h
-
-## Issues / Risks
-{{issues}}
-
-## Plan for Next Month
-{{next_plan}}
-"""
-
-_DAILY = """# Daily Report ({{date}})
-
-## Today's work
-{{task_list}}
-
-## Calendar Events
-{{calendar_events}}
-
-## Quick Logs
-{{quick_logs}}
-
-## Hours
-- Total: {{total_hours}}h
-- Overtime: {{overtime_hours}}h
-
-## Issues / Risks
-{{issues}}
-
-## Plan for tomorrow
-{{next_plan}}
-"""
-
-_TEMPLATES = {
-    (language, "daily"): _DAILY
-    for language in _LANGUAGES
-} | {
-    (language, "weekly"): _WEEKLY
-    for language in _LANGUAGES
-} | {
-    (language, "monthly"): _MONTHLY
-    for language in _LANGUAGES
-}
+    def get_template(self, language: str, template_type: str,
+                     user_id: int | None = None) -> Result[str]:
+        language = normalize_language(language)
+        titles = {
+            "daily": _("Daily Report", language=language),
+            "weekly": _("Weekly Report", language=language),
+            "monthly": _("Monthly Report", language=language),
+        }
+        template_type = str(template_type or "").strip().lower()
+        title = titles.get(template_type)
+        if title is None:
+            return Result.success("")
+        period = "{{date}}" if template_type == "daily" else "{{year}}-{{month}}" if template_type == "monthly" else "{{date_range}}"
+        return Result.success(
+            f"# {title} ({period})\n\n"
+            f"## {_('Work records', language=language)}\n{{{{work_records}}}}\n\n"
+            "{{notes_section}}{{calendar_section}}{{projects_section}}"
+            f"## {_('Hours summary', language=language)}\n"
+            f"- {_('Total', language=language)}: {{{{total_hours}}}}h\n"
+            f"- {_('Overtime', language=language)}: {{{{overtime_hours}}}}h\n"
+        )

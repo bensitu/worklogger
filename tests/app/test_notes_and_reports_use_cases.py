@@ -203,6 +203,28 @@ class CancelledToken:
 
 
 class NotesReportsUseCaseTests(unittest.TestCase):
+    def test_report_sections_separate_notes_from_work_and_omit_empty_optional_content(self):
+        from worklogger.app.use_cases.report_generation import _template_values
+        from worklogger.domain.worklog.rules import aggregate_days
+        from worklogger.infrastructure.templates import BuiltInTemplateProvider
+
+        day = date(2026, 10, 16)
+        rows = aggregate_days((WorkLog(1, day, note="Meeting memo"),
+                               WorkLog(1, day, "09:00", "17:00", note="Implemented filters")))
+        values = _template_values(report_type="daily", start=day, end=day, work_logs=rows,
+            quick_logs=(), events=(), standard_hours=8, translate=lambda message: message)
+        content = render_template(BuiltInTemplateProvider().get_template("en_US", "daily").value, values)
+        self.assertIn("09:00", content)
+        self.assertIn("Implemented filters", values["work_records"])
+        self.assertNotIn("Meeting memo", values["work_records"])
+        self.assertEqual(content.count("Meeting memo"), 1)
+        self.assertIn("## Notes", content)
+        self.assertNotIn("## Calendar events", content)
+        self.assertIn("## Project summary", content)
+        self.assertIn("Unclassified: 8.0h", content)
+        self.assertNotIn("Quick Logs", content)
+        self.assertEqual(values["total_hours"], "8.0")
+
     def test_daily_note_handlers_persist_note_content(self) -> None:
         repository = MemoryDailyNoteRepository()
         saved = SaveDailyNoteHandler(repository).handle(

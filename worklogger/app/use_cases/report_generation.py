@@ -30,6 +30,7 @@ from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.worklog.repositories import WorkLogRepository
+from worklogger.domain.worklog.rules import aggregate_days
 
 
 @dataclass(frozen=True)
@@ -166,6 +167,10 @@ def _template_values(
     translate: Callable[[str], str],
     display_name: str = "",
 ) -> dict[str, object]:
+    _ = translate
+    entries = tuple(entry for record in work_logs for entry in (record.entries or (record,)))
+    work_records = aggregate_days(tuple(entry for entry in entries if not entry.is_note_only))
+    note_records = sorted((entry for entry in entries if entry.is_note_only), key=lambda entry: entry.day)
     total = sum(work_log.worked_hours() for work_log in work_logs if not work_log.is_leave)
     overtime = sum(
         max(work_log.worked_hours() - standard_hours, 0.0)
@@ -181,6 +186,12 @@ def _template_values(
         "year": start.year,
         "month": f"{start.month:02d}" if report_type == "monthly" else start.month,
         "task_list": _work_log_lines(work_logs, standard_hours, translate),
+        "work_records": _work_log_lines(work_records, standard_hours, translate) if work_records else "- " + _("No work records for this period."),
+        "notes_section": _optional_section(_("Notes"), "\n".join(
+            [_list_item(f"{row.day.isoformat()} - {row.note}") for row in note_records]
+            + ([_quick_log_lines(quick_logs)] if quick_logs else []))),
+        "calendar_section": _optional_section(_("Calendar events"), _event_lines(events, translate) if events else ""),
+        "projects_section": _optional_section(_("Project summary"), _project_summary(work_logs, translate)),
         "calendar_events": _event_lines(events, translate),
         "quick_logs": _quick_log_lines(quick_logs),
         "total_hours": f"{total:.1f}",
@@ -189,6 +200,10 @@ def _template_values(
         "issues": "- ",
         "next_plan": "- ",
     }
+
+
+def _optional_section(title: str, content: str) -> str:
+    return f"## {title}\n{content}\n\n" if content.strip() else ""
 
 
 def _project_summary(work_logs, _):
@@ -212,7 +227,7 @@ def _work_log_lines(work_logs: tuple[WorkLog, ...], standard_hours: float, _: Ca
               "paid_leave": _("Paid leave"), "comp_leave": _("Compensatory leave"), "sick_leave": _("Sick leave")}
     lines = []
     for record in sorted(work_logs, key=lambda item: item.day):
-        if record.is_note_only:
+        if record.is_note_only and not record.entries:
             lines.append(_list_item(f"{record.day.isoformat()} - {record.note}"))
             continue
         hours = record.worked_hours()
