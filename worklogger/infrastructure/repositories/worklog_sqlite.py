@@ -14,6 +14,7 @@ from worklogger.infrastructure.repositories.worklog_writes_sqlite import (
     SQLiteWorkLogWrites,
 )
 from worklogger.infrastructure.repositories.entry_operations_sqlite import SQLiteEntryOperations
+from worklogger.infrastructure.repositories.entry_changes_sqlite import SQLiteEntryChanges
 
 
 class SQLiteWorkLogRepository:
@@ -22,8 +23,9 @@ class SQLiteWorkLogRepository:
         self.supports_entries = True
         self.changes_available = True
         self._queries = SQLiteWorkLogQueries(storage)
-        self._writes = SQLiteWorkLogWrites(storage, self._queries)
-        self._operations = SQLiteEntryOperations(storage, self._writes)
+        self._changes = SQLiteEntryChanges(storage)
+        self._writes = SQLiteWorkLogWrites(storage, self._queries, self._changes)
+        self._operations = SQLiteEntryOperations(storage, self._changes)
 
     def get_for_day(self, user_id: int, day: date) -> WorkLog | None:
         return self._queries.get_for_day(user_id, day)
@@ -75,7 +77,7 @@ class SQLiteWorkLogRepository:
         return self._writes.change_timer(user_id, expected, value)
 
     def latest_change(self, user_id):
-        return self._writes.changes.latest(user_id)
+        return self._changes.latest(user_id)
 
     def split_entry(self, user_id, record, first_minutes):
         return self._operations.split(user_id, record, first_minutes)

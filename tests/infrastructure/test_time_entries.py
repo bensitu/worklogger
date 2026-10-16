@@ -18,6 +18,7 @@ from worklogger.infrastructure.database.migrations.runner import MigrationRunner
 from worklogger.infrastructure.repositories.auth_sqlite import SQLiteAuthRepository
 from worklogger.infrastructure.repositories.settings_sqlite import SQLiteSettingsRepository
 from worklogger.infrastructure.repositories.worklog_sqlite import SQLiteWorkLogRepository
+from worklogger.infrastructure.repositories.entry_write_session_sqlite import EntryWriteSession
 from worklogger.infrastructure.repositories.note_sqlite import SQLiteDailyNoteRepository
 from worklogger.infrastructure.export.worklog_csv import WorkLogCsvExporter
 from worklogger.infrastructure.export.worklog_csv_import import WorkLogCsvImporter
@@ -133,6 +134,28 @@ class TimeEntryTests(unittest.TestCase):
         self.assertTrue(self.service.undo(self.service.latest_change().value.id).ok)
         self.assertEqual(self.repository.list_for_day(self.user.id, saved.day), ())
         self.assertIsNone(self.service.latest_change().value)
+
+    def test_failed_transformations_preserve_records_and_reversible_history(self):
+        saved = self.service.save_manual(self.now.date(), "09:00", "12:00", "normal", "Original").value
+        insert = EntryWriteSession.insert
+
+        def interrupted(session, record, **options):
+            insert(session, record, **options)
+            raise OSError("storage unavailable")
+
+        def assert_preserved(operation):
+            before = self.repository.list_for_day(self.user.id, saved.day)
+            history = self.service.latest_change().value
+            with patch.object(EntryWriteSession, "insert", autospec=True, side_effect=interrupted):
+                result = operation()
+            self.assertFalse(result.ok)
+            self.assertEqual(self.repository.list_for_day(self.user.id, saved.day), before)
+            self.assertEqual(self.service.latest_change().value, history)
+
+        assert_preserved(lambda: self.service.split(saved, 60))
+        self.assertTrue(self.service.split(saved, 60).ok)
+        change_id = self.service.latest_change().value.id
+        assert_preserved(lambda: self.service.undo(change_id))
 
     def test_reversible_record_changes_reject_conflicts_and_preserve_active_timing(self):
         saved = self.service.save_manual(self.now.date(), "07:00", "08:00", "normal", "Original").value
@@ -322,7 +345,7 @@ class TimeEntryTests(unittest.TestCase):
         self.assertEqual(self.make_service().timer.work_type, WorkType.MEETING)
         self.now += timedelta(hours=1)
         self.assertTrue(self.service.finish("Completed").ok)
-        with patch.object(self.repository._writes, "_change_timer", side_effect=OSError("storage unavailable")):
+        with patch.object(EntryWriteSession, "change_timer", side_effect=OSError("storage unavailable")):
             self.assertFalse(self.service.take_break(1, "Rest").ok)
         self.assertEqual(len(self.repository.list_for_day(self.user.id, self.now.date())), 1)
         self.assertIsNone(self.make_service().timer)
@@ -349,7 +372,7 @@ class TimeEntryTests(unittest.TestCase):
             offered = self.service.start("meeting", "Work", now=clicked)
             self.assertEqual(offered.error.code, "fixed_break_active")
             self.assertEqual(offered.error.details["break_entry"], record)
-            with patch.object(self.repository._writes, "_change_timer", side_effect=OSError("storage unavailable")):
+            with patch.object(EntryWriteSession, "change_timer", side_effect=OSError("storage unavailable")):
                 self.assertFalse(self.service.start("meeting", "Work", now=clicked, break_entry=record).ok)
             self.assertEqual(self.repository.get_entry(self.user.id, record.id), record)
             self.assertIsNone(self.make_service().timer)
@@ -369,7 +392,7 @@ class TimeEntryTests(unittest.TestCase):
     def test_failed_automatic_transition_rolls_back_record_and_preserves_timer(self):
         self.service.start("normal", "Retained")
         self.now += timedelta(hours=1)
-        with patch.object(self.repository._writes, "_change_timer", side_effect=OSError("storage unavailable")):
+        with patch.object(EntryWriteSession, "change_timer", side_effect=OSError("storage unavailable")):
             self.assertFalse(self.service.finish("Changed").ok)
         self.assertEqual(self.repository.list_for_day(self.user.id, self.now.date()), ())
         self.assertEqual(self.make_service().timer.content, "Retained")

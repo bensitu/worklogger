@@ -78,10 +78,17 @@ editor request and use an independent service session initialized from explicit
 `RecordingState`. Completion returns a typed result containing the editor and
 recording state, not a view model or service. Only completion updates the displayed
 editor; failed operations also return their validation and recovery state. Timer
-compare-and-update values remain unchanged. `domain/worklog/content.py` defines the content limit
-shared by editing, recovery, and rewriting.
+compare-and-update values remain unchanged. `domain/worklog/content.py` defines
+the content limit shared by editing, recovery, and rewriting.
 Daily summaries aggregate records, while editing and exports retain individual
 identities. Custom type and project labels are historical snapshots.
+
+Ordinary saves, imports, and interval transformations share `EntryWriteSession`
+for overlap validation, insertion, and timer compare-and-update. The component
+uses its caller's active SQLite transaction and never commits independently.
+Bulk validation caches are limited to a single validation pass. Reversible change
+history is a separate shared collaborator; transformations do not depend on the
+ordinary write repository or call its private methods.
 
 Daily notes are separate memos. Their sharing choices and drafts are account/date
 scoped. Reports retain saved versions and generation references; regeneration

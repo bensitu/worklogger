@@ -3,21 +3,17 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import date, datetime, timedelta, timezone
+from datetime import date
 
-from worklogger.config.constants import MAX_SHIFT_HOURS
 from worklogger.domain.worklog.models import WorkLog
-from worklogger.domain.worklog.timer_state import timer_payload
-from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.rules import (
-    entries_overlap,
     normalize_work_log,
 )
 from worklogger.domain.worklog.intervals import EntryIntervalIndex
-from worklogger.infrastructure.repositories._mapping import map_rows
 from worklogger.infrastructure.repositories.note_sqlite import save_note
 from worklogger.infrastructure.repositories.project_sqlite import validate_record_context
 from worklogger.infrastructure.repositories.entry_changes_sqlite import SQLiteEntryChanges
+from worklogger.infrastructure.repositories.entry_write_session_sqlite import EntryWriteSession
 from worklogger.infrastructure.repositories.import_conflicts_sqlite import remove_import_targets
 from worklogger.infrastructure.repositories.recent_context_sqlite import remember_context
 from worklogger.infrastructure.repositories.worklog_mapping_sqlite import WorkLogStorage
@@ -27,10 +23,10 @@ from worklogger.infrastructure.repositories.worklog_queries_sqlite import (
 
 
 class SQLiteWorkLogWrites:
-    def __init__(self, storage: WorkLogStorage, queries: SQLiteWorkLogQueries):
+    def __init__(self, storage: WorkLogStorage, queries: SQLiteWorkLogQueries, changes: SQLiteEntryChanges):
         self._storage = storage
         self._queries = queries
-        self.changes = SQLiteEntryChanges(storage)
+        self.changes = changes
 
     def save(self, work_log: WorkLog, *, expected_note: str | None = None) -> None:
         self._import_entries((normalize_work_log(work_log),), overwrite=True, expected_note=expected_note, daily_replacement=True)
@@ -63,6 +59,7 @@ class SQLiteWorkLogWrites:
             if previous is None or previous.has_times or not record.is_leave:
                 raise ValueError("time_range_incomplete")
         with self._storage.connection_factory.transaction() as connection:
+            session = EntryWriteSession(connection, self._storage)
             before = self.changes.rows(connection, record.user_id, (record.id,)) if record.id is not None else []
             if record.capture_id:
                 existing = connection.execute(
@@ -95,14 +92,12 @@ class SQLiteWorkLogWrites:
                         ):
                             raise ValueError("worklog_entry_conflict")
                         if timer_change is not None:
-                            self._change_timer(
-                                connection, record.user_id, *timer_change
-                            )
+                            session.change_timer(record.user_id, *timer_change)
                         return stored
             validate_record_context(connection, record)
-            self._check_overlap(connection, record)
+            session.check_overlap(record)
             if record.id is None:
-                entry_id = self._insert_entry(connection, record)
+                entry_id = session.insert(record)
                 record = replace(record, id=entry_id)
             else:
                 snapshots = ",work_type_label=?,work_type_category=?,project_id=?,work_item_id=?,project_label=?,work_item_label=?"
@@ -122,7 +117,7 @@ class SQLiteWorkLogWrites:
                     raise ValueError("worklog_entry_conflict")
                 record = replace(record, revision=record.revision + 1)
             if timer_change is not None:
-                self._change_timer(connection, record.user_id, *timer_change)
+                session.change_timer(record.user_id, *timer_change)
             self.changes.remember(connection, record.user_id, "update" if before else "create", before,
                                   self.changes.rows(connection, record.user_id, (record.id,)))
             remember_context(connection, record.user_id, record.context)
@@ -137,6 +132,7 @@ class SQLiteWorkLogWrites:
         timer_change: tuple[str | None, str | None] | None = None,
     ) -> None:
         with self._storage.connection_factory.transaction() as connection:
+            session = EntryWriteSession(connection, self._storage)
             before = self.changes.rows(connection, user_id, (entry_id,))
             cursor = connection.execute(
                 "DELETE FROM worklog WHERE user_id=? AND id=? AND revision=?",
@@ -145,90 +141,14 @@ class SQLiteWorkLogWrites:
             if cursor.rowcount != 1:
                 raise ValueError("worklog_entry_conflict")
             if timer_change is not None:
-                self._change_timer(connection, user_id, *timer_change)
+                session.change_timer(user_id, *timer_change)
             self.changes.remember(connection, user_id, "delete", before, [])
 
     def change_timer(
         self, user_id: int, expected: str | None, value: str | None
     ) -> None:
         with self._storage.connection_factory.transaction() as connection:
-            self._change_timer(connection, user_id, expected, value)
-
-    def _change_timer(
-        self, connection, user_id: int, expected: str | None, value: str | None
-    ) -> None:
-        row = connection.execute(
-            "SELECT value FROM settings WHERE user_id=? AND key='time_entry_timer'",
-            (user_id,),
-        ).fetchone()
-        if (row[0] if row else None) != expected:
-            raise ValueError("time_entry_timer_conflict")
-        if value is not None:
-            data = timer_payload(value)
-            previous = timer_payload(row[0]) if row else {}
-            if data.get("context"):
-                validate_record_context(connection, WorkLog(user_id, date.fromisoformat(data["started_at"][:10]),
-                    capture_id=previous.get("capture_id"), context=WorkContext(**data["context"])))
-            if data["capture_id"] != previous.get("capture_id"):
-                start = datetime.fromisoformat(data["started_at"])
-                try:
-                    end = (start.astimezone(timezone.utc) + timedelta(microseconds=1)).astimezone(start.tzinfo)
-                except OverflowError as exc:
-                    raise ValueError("auto_record_restore_failed") from exc
-                point = WorkLog(user_id, start.date(), start.strftime("%H:%M"), end.strftime("%H:%M"),
-                                started_at=start, ended_at=end, capture_id=previous.get("capture_id"))
-                self._check_overlap(connection, point)
-        connection.execute(
-            "DELETE FROM settings WHERE user_id=? AND key='previous_auto_record_state'",
-            (user_id,),
-        )
-        if value is None:
-            connection.execute(
-                "DELETE FROM settings WHERE user_id=? AND key='time_entry_timer'",
-                (user_id,),
-            )
-        else:
-            connection.execute(
-                "INSERT INTO settings(user_id,key,value) VALUES(?,'time_entry_timer',?) ON CONFLICT(user_id,key) DO UPDATE SET value=excluded.value",
-                (user_id, value),
-            )
-
-    def _check_overlap(self, connection, record: WorkLog, *, cached_rows=None, cached_timers=None) -> None:
-        if cached_timers is not None and record.user_id in cached_timers:
-            timer = cached_timers[record.user_id]
-        else:
-            timer = connection.execute(
-                "SELECT value FROM settings WHERE user_id=? AND key='time_entry_timer'",
-                (record.user_id,),
-            ).fetchone()
-            if cached_timers is not None:
-                cached_timers[record.user_id] = timer
-        if timer and record.has_times:
-            state = timer_payload(timer[0])
-            if state["capture_id"] != record.capture_id:
-                start = datetime.fromisoformat(state["started_at"])
-                try:
-                    end = (start.astimezone(timezone.utc) + timedelta(hours=MAX_SHIFT_HOURS)).astimezone(start.tzinfo)
-                except OverflowError as exc:
-                    raise ValueError("auto_record_restore_failed") from exc
-                reserved = WorkLog(record.user_id, start.date(), start.strftime("%H:%M"), end.strftime("%H:%M"),
-                                   started_at=start, ended_at=end)
-                if entries_overlap(record, reserved):
-                    raise ValueError("worklog_entry_overlap")
-        key = (record.user_id, record.day)
-        if cached_rows is None or key not in cached_rows:
-            start = max(record.day.toordinal() - 3, date.min.toordinal())
-            end = min(record.day.toordinal() + 3, date.max.toordinal())
-            rows = connection.execute(self._storage.select + "WHERE w.user_id=? AND w.d BETWEEN ? AND ?",
-                                      (record.user_id, date.fromordinal(start).isoformat(), date.fromordinal(end).isoformat())).fetchall()
-            others = map_rows(rows, self._storage.from_row)
-            if cached_rows is not None:
-                cached_rows[key] = others
-        else:
-            others = cached_rows[key]
-        for other in others:
-            if other.id != record.id and entries_overlap(record, other):
-                raise ValueError("worklog_entry_overlap")
+            EntryWriteSession(connection, self._storage).change_timer(user_id, expected, value)
 
     def _import_entries(
         self,
@@ -252,6 +172,7 @@ class SQLiteWorkLogWrites:
             ):
                 raise ValueError("worklog_entry_overlap")
         with self._storage.connection_factory.transaction() as connection:
+            session = EntryWriteSession(connection, self._storage)
             before = {}
             for (user_id, day), entries in grouped.items():
                 if (
@@ -284,12 +205,8 @@ class SQLiteWorkLogWrites:
                         connection.execute("DELETE FROM worklog WHERE user_id=? AND d=?", (user_id, day.isoformat()))
                     else:
                         before[user_id, day] = remove_import_targets(connection, self._storage, user_id, day, entries, replace_dates)
-            cached_rows = {}
-            cached_timers = {}
             after = {}
-            for record in records:
-                if not record.is_note_only:
-                    self._check_overlap(connection, record, cached_rows=cached_rows, cached_timers=cached_timers)
+            session.check_overlaps(record for record in records if not record.is_note_only)
             for record in records:
                 if record.is_note_only:
                     save_note(
@@ -300,7 +217,7 @@ class SQLiteWorkLogWrites:
                         expected_note,
                     )
                     continue
-                identity = self._insert_entry(connection, record)
+                identity = session.insert(record)
                 after.setdefault((record.user_id, record.day), []).append(identity)
             if overwrite and not daily_replacement:
                 for key, previous in before.items():
@@ -309,21 +226,3 @@ class SQLiteWorkLogWrites:
                         raise ValueError("record_change_too_large")
                     if previous or current:
                         self.changes.remember(connection, key[0], "import", previous, current)
-
-    def _insert_entry(self, connection, record: WorkLog, *, historical=False, preserve_identity=False) -> int:
-        columns = (
-            'user_id,d,start,end,"break",note,work_type,overnight,started_at,ended_at'
-        )
-        columns += ",work_type_label,work_type_category"
-        validate_record_context(connection, record, historical=historical)
-        columns += ",project_id,work_item_id,project_label,work_item_label"
-        values = (*self._storage.entry_values(record), record.capture_id)
-        columns += ",capture_id"
-        if preserve_identity:
-            columns += ",id,revision"
-            values += (record.id, record.revision)
-        cursor = connection.execute(
-            f"INSERT INTO worklog({columns}) VALUES({','.join('?' for _ in values)})",
-            values,
-        )
-        return cursor.lastrowid

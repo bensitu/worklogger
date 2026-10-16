@@ -6,11 +6,14 @@ from worklogger.domain.worklog.rules import normalize_work_log
 from worklogger.domain.projects.models import WorkContext
 from worklogger.infrastructure.repositories.project_sqlite import validate_record_context
 from worklogger.infrastructure.repositories.recent_context_sqlite import remember_context
+from worklogger.infrastructure.repositories.entry_changes_sqlite import SQLiteEntryChanges
+from worklogger.infrastructure.repositories.entry_write_session_sqlite import EntryWriteSession
+from worklogger.infrastructure.repositories.worklog_mapping_sqlite import WorkLogStorage
 
 
 class SQLiteEntryOperations:
-    def __init__(self, storage, writes):
-        self.storage, self.writes = storage, writes
+    def __init__(self, storage: WorkLogStorage, changes: SQLiteEntryChanges):
+        self.storage, self.changes = storage, changes
 
     @staticmethod
     def _ensure_idle(connection, user_id):
@@ -29,6 +32,7 @@ class SQLiteEntryOperations:
         return stored
 
     def _replace(self, connection, user_id, before, targets):
+        session = EntryWriteSession(connection, self.storage)
         previous = {row["id"]: row for row in before}
         for row in before:
             connection.execute("DELETE FROM worklog WHERE user_id=? AND id=?", (user_id, row["id"]))
@@ -40,8 +44,8 @@ class SQLiteEntryOperations:
             if record.id is not None:
                 current = previous.get(record.id)
                 record = replace(record, revision=max(record.revision, current["revision"] if current else record.revision) + 1)
-            self.writes._check_overlap(connection, record)
-            identity = self.writes._insert_entry(connection, record, historical=True, preserve_identity=record.id is not None)
+            session.check_overlap(record)
+            identity = session.insert(record, historical=True, preserve_identity=record.id is not None)
             result.append(replace(record, id=identity))
         return tuple(result)
 
@@ -50,10 +54,10 @@ class SQLiteEntryOperations:
             self._ensure_idle(connection, user_id)
             record = self._load(connection, user_id, expected)
             targets = transformation(record)
-            before = self.writes.changes.rows(connection, user_id, (record.id,))
+            before = self.changes.rows(connection, user_id, (record.id,))
             result = self._replace(connection, user_id, before, targets)
-            self.writes.changes.remember(connection, user_id, operation, before,
-                self.writes.changes.rows(connection, user_id, [record.id for record in result]))
+            self.changes.remember(connection, user_id, operation, before,
+                self.changes.rows(connection, user_id, [record.id for record in result]))
             return result
 
     def split(self, user_id, expected, first_minutes):
@@ -81,7 +85,7 @@ class SQLiteEntryOperations:
             elif context.project_label or context.work_item_label:
                 raise ValueError("record_batch_invalid")
             targets = tuple(replace(record, context=context) for record in records if record.context != context)
-            before = self.writes.changes.rows(connection, user_id, [record.id for record in targets])
+            before = self.changes.rows(connection, user_id, [record.id for record in targets])
             result = []
             for record in targets:
                 validate_record_context(connection, record)
@@ -90,8 +94,8 @@ class SQLiteEntryOperations:
                     context.work_item_label, user_id, record.id, record.revision))
                 result.append(replace(record, revision=record.revision + 1))
             if targets:
-                self.writes.changes.remember(connection, user_id, "associate", before,
-                    self.writes.changes.rows(connection, user_id, [record.id for record in result]))
+                self.changes.remember(connection, user_id, "associate", before,
+                    self.changes.rows(connection, user_id, [record.id for record in result]))
                 remember_context(connection, user_id, context)
             return tuple(result)
 
@@ -106,18 +110,18 @@ class SQLiteEntryOperations:
             left = self._load(connection, user_id, expected_left)
             right = self._load(connection, user_id, expected_right)
             target = merge_entries(left, right)
-            before = self.writes.changes.rows(connection, user_id, (left.id, right.id))
+            before = self.changes.rows(connection, user_id, (left.id, right.id))
             result = self._replace(connection, user_id, before, (target,))
-            self.writes.changes.remember(connection, user_id, "merge", before,
-                self.writes.changes.rows(connection, user_id, (result[0].id,)))
+            self.changes.remember(connection, user_id, "merge", before,
+                self.changes.rows(connection, user_id, (result[0].id,)))
             return result[0]
 
     def undo(self, user_id, change_id):
         with self.storage.connection_factory.transaction() as connection:
             self._ensure_idle(connection, user_id)
-            before, after = self.writes.changes.load(connection, user_id, change_id)
+            before, after = self.changes.load(connection, user_id, change_id)
             targets = tuple(self.storage.from_row(row) for row in before)
             restored = self._replace(connection, user_id, after, targets)
-            self.writes.changes.complete_undo(connection, user_id, change_id,
-                self.writes.changes.rows(connection, user_id, [record.id for record in restored]))
+            self.changes.complete_undo(connection, user_id, change_id,
+                self.changes.rows(connection, user_id, [record.id for record in restored]))
             return restored
