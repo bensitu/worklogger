@@ -104,6 +104,11 @@ class ThemeSystemTests(unittest.TestCase):
                 first, second = qt_palette(colors), qt_palette(colors)
                 self.assertEqual(first.color(QPalette.ColorRole.Highlight).name(), colors.accent)
                 self.assertEqual(first.color(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text).name(), colors.disabled_text)
+                for role in (QPalette.ColorRole.PlaceholderText, QPalette.ColorRole.HighlightedText):
+                    self.assertEqual(first.color(QPalette.ColorGroup.Disabled, role).name(), colors.disabled_text)
+                for role in (QPalette.ColorRole.Base, QPalette.ColorRole.Button, QPalette.ColorRole.AlternateBase):
+                    self.assertEqual(first.color(QPalette.ColorGroup.Disabled, role).name(), colors.disabled_background)
+                self.assertEqual(first.color(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Highlight).name(), colors.border)
                 first.setColor(QPalette.ColorRole.Highlight, QColor("#012345"))
                 self.assertEqual(second.color(QPalette.ColorRole.Highlight).name(), colors.accent)
                 self.assertEqual(qt_palette(colors), second)

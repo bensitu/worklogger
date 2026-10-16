@@ -29,7 +29,12 @@ class HoverDeleteButton(QPushButton):
     def update_delete_visibility(self, position=None):
         focused = self._keyboard_focus and (self.hasFocus() or self.delete_button.hasFocus())
         hovered = self.rect().contains(self.mapFromGlobal(position or QCursor.pos()))
-        self.delete_button.setVisible(self._deletable and (hovered or focused))
+        self.delete_button.setVisible(self.isEnabled() and self._deletable and (hovered or focused))
+
+    def changeEvent(self, event):
+        super().changeEvent(event)
+        if event.type() == QEvent.Type.EnabledChange and hasattr(self, "delete_button"):
+            self.update_delete_visibility()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

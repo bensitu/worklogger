@@ -56,7 +56,7 @@ QFrame#settings_content_frame {
   border-radius: 8px;
 }
 
-QFrame[card="true"]:hover {
+QFrame[card="true"]:hover:enabled {
   background: {{ card_hover_fill }};
   border-color: {{ border_strong }};
 }

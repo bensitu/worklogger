@@ -114,7 +114,7 @@ class IconLabel(QWidget):
 
     def paintEvent(self, _event: object) -> None:
         painter = QPainter(self)
-        self._icon.paint(painter, self.rect())
+        self._icon.paint(painter, self.rect(), mode=QIcon.Mode.Normal if self.isEnabled() else QIcon.Mode.Disabled)
         painter.end()
 
 

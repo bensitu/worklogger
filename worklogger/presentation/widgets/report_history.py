@@ -78,8 +78,8 @@ class ReportHistoryButton(HoverDeleteButton):
         self.style().drawControl(QStyle.ControlElement.CE_PushButton, option, painter, self)
         context = QAbstractTextDocumentLayout.PaintContext()
         context.palette = self.palette()
-        if self.property("active"):
-            context.palette.setColor(QPalette.ColorRole.Text, self.palette().color(QPalette.ColorRole.Highlight))
+        group = QPalette.ColorGroup.Active if self.isEnabled() else QPalette.ColorGroup.Disabled
+        context.palette.setColor(QPalette.ColorRole.Text, self.palette().color(group, QPalette.ColorRole.ButtonText))
         painter.save()
         painter.translate(12, (self.height() - self._document.size().height()) / 2)
         self._document.documentLayout().draw(painter, context)

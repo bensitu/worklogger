@@ -11,7 +11,7 @@ from PySide6.QtTest import QTest
 from PySide6.QtGui import QAccessible
 from worklogger.presentation.widgets.switch_button import SwitchButton
 from PySide6.QtGui import QFont, QIcon, QPalette, QColor
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QWidget
 
 from worklogger.presentation.theme import ThemeEngine
 from worklogger.presentation.theme.fonts import _application_font
@@ -166,7 +166,8 @@ class QtWidgetTests(unittest.TestCase):
             app.setPalette(original_palette)
 
     def test_switch_supports_keyboard_checked_state_and_accessible_name(self):
-        switch = SwitchButton()
+        parent = QWidget()
+        switch = SwitchButton(parent=parent)
         switch.setAccessibleName("Public holidays")
         changes = []
         switch.toggled.connect(changes.append)
@@ -176,12 +177,19 @@ class QtWidgetTests(unittest.TestCase):
         self.assertEqual(interface.role(), QAccessible.Role.CheckBox)
         self.assertEqual(interface.text(QAccessible.Text.Name), "Public holidays")
         self.assertTrue(interface.state().checked)
+        parent.setEnabled(False)
+        self.assertFalse(switch.isEnabled())
+        self.assertEqual(switch.cursor().shape(), Qt.CursorShape.ArrowCursor)
+        QTest.keyClick(switch, Qt.Key.Key_Space)
+        self.assertTrue(switch.is_checked())
+        parent.setEnabled(True)
+        self.assertEqual(switch.cursor().shape(), Qt.CursorShape.PointingHandCursor)
         switch.setEnabled(False)
         QTest.keyClick(switch, Qt.Key.Key_Space)
         self.assertTrue(switch.is_checked())
         switch.set_checked(False)
         self.assertEqual(changes, [True, False])
-        switch.deleteLater()
+        parent.deleteLater()
 
     def test_icons_reuse_rendering_and_follow_palette_and_pixel_ratio(self) -> None:
         app = _app()

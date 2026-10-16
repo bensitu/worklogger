@@ -56,12 +56,6 @@ QListWidget[management_list="true"]:focus {
   border-color: {{ accent }};
 }
 
-QListWidget[management_list="true"]::item:selected:disabled {
-  background: {{ disabled_background }};
-  border-color: {{ border }};
-  color: {{ disabled_text }};
-}
-
 QTreeWidget[data_browser="true"]::item {
   min-height: 18px;
   padding: 6px 8px;

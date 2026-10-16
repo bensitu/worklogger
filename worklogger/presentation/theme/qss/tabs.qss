@@ -93,7 +93,3 @@ QTabBar#management_tab_bar::tab:selected {
 QTabBar#management_tab_bar::tab:hover:enabled {
   background: {{ button_hover }};
 }
-
-QTabBar#management_tab_bar::tab:disabled {
-  color: {{ disabled_text }};
-}

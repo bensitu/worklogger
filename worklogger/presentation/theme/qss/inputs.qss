@@ -109,3 +109,26 @@ QSpinBox#local_context_spin_box {
   min-height: 18px;
   padding: 2px 8px;
 }
+
+QSlider::groove:horizontal {
+  height: 4px;
+  border-radius: 2px;
+  background: {{ border }};
+}
+
+QSlider::sub-page:horizontal {
+  background: {{ accent }};
+  border-radius: 2px;
+}
+
+QSlider::handle:horizontal {
+  width: 16px;
+  margin: -6px 0;
+  border: 1px solid {{ accent }};
+  border-radius: 8px;
+  background: {{ surface }};
+}
+
+QSlider::handle:horizontal:focus:enabled {
+  border: 2px solid {{ accent }};
+}

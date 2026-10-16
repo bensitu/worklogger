@@ -26,6 +26,11 @@ def _build_palette(colors: ColorPalette) -> QPalette:
         palette.setColor(role, QColor(color))
     for role in (QPalette.ColorRole.WindowText, QPalette.ColorRole.Text, QPalette.ColorRole.ButtonText):
         palette.setColor(QPalette.ColorGroup.Disabled, role, QColor(colors.disabled_text))
+    for role in (QPalette.ColorRole.Base, QPalette.ColorRole.Button, QPalette.ColorRole.AlternateBase):
+        palette.setColor(QPalette.ColorGroup.Disabled, role, QColor(colors.disabled_background))
+    palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.PlaceholderText, QColor(colors.disabled_text))
+    palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Highlight, QColor(colors.border))
+    palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.HighlightedText, QColor(colors.disabled_text))
     return palette
 
 

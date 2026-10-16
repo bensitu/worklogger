@@ -96,6 +96,12 @@ widget backgrounds, which can be transparent.
 Check both color modes, contrast, interaction states, theme switching and
 resource packaging when changing a theme or material.
 
+Keep disabled control rules in `theme/qss/disabled.qss` and use the shared
+disabled color roles. Custom painters and item delegates must honor the effective
+enabled state, including a disabled parent. Preserve values, selection, geometry,
+and typography when disabling controls; suppress hover feedback and restore the
+normal appearance when they are enabled again.
+
 Full and minimal windows share `shell/appearance_controller.py` for theme
 application, background styling, effects, and cleanup. Keep navigation and
 account preferences in their respective shell controllers. Theme rendering must

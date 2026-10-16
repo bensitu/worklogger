@@ -92,7 +92,7 @@ class RecordSummaryButton(HoverDeleteButton):
         if hasattr(self, "actions_button"):
             hovered = self.rect().contains(self.mapFromGlobal(position or QCursor.pos()))
             focused = self._keyboard_focus and (self.hasFocus() or self.delete_button.hasFocus() or self.actions_button.hasFocus())
-            self.actions_button.setVisible(self._actions_enabled and (hovered or focused))
+            self.actions_button.setVisible(self.isEnabled() and self._actions_enabled and (hovered or focused))
 
     def eventFilter(self, watched, event):
         actions_button = getattr(self, "actions_button", None)

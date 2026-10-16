@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QRectF, Qt
+from PySide6.QtCore import QEvent, QRectF, Qt
 from PySide6.QtGui import QBrush, QColor, QPainter, QPen
 from PySide6.QtWidgets import QCheckBox, QSizePolicy, QWidget
 
@@ -46,14 +46,11 @@ class SwitchButton(QCheckBox):
     def set_checked(self, checked: bool) -> None:
         super().setChecked(bool(checked))
 
-    def setEnabled(self, enabled: bool) -> None:
-        super().setEnabled(enabled)
-        self.setCursor(
-            Qt.CursorShape.PointingHandCursor
-            if enabled
-            else Qt.CursorShape.ArrowCursor
-        )
-        self.update()
+    def changeEvent(self, event) -> None:
+        super().changeEvent(event)
+        if event.type() == QEvent.Type.EnabledChange:
+            self.setCursor(Qt.CursorShape.PointingHandCursor if self.isEnabled() else Qt.CursorShape.ArrowCursor)
+            self.update()
 
     def hitButton(self, position) -> bool:
         return self.rect().contains(position)

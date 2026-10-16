@@ -1,6 +1,14 @@
 /* Disabled states preserve control geometry and role typography. */
 
 QComboBox:disabled,
+QLineEdit:disabled,
+QTextEdit:disabled,
+QPlainTextEdit:disabled,
+QAbstractSpinBox:disabled,
+QLineEdit#account_name_line_edit:disabled,
+QLineEdit#account_id_line_edit:disabled,
+QLineEdit#account_role_line_edit:disabled,
+QTextEdit#report_revision_preview:disabled,
 QPushButton:disabled,
 QToolButton:disabled,
 QPushButton[variant]:disabled,
@@ -10,6 +18,7 @@ QPushButton[settings_nav_item]:disabled,
 QPushButton[segment]:disabled,
 QPushButton[page_tab]:disabled,
 QPushButton#report_history_item_button:disabled,
+QPushButton#report_history_item_button[active]:disabled,
 QPushButton#calendar_time_entry_button:disabled {
   color: {{ disabled_text }};
   background: {{ disabled_background }};
@@ -22,8 +31,66 @@ QToolButton[variant="ghost"]:disabled {
   border-color: transparent;
 }
 
-QPushButton QLabel:disabled {
+QLabel:disabled,
+QLabel[role]:disabled,
+QLabel[badge]:disabled,
+QLabel#week_header_label:disabled,
+QLabel#date_picker_holiday_status_label:disabled,
+QCheckBox:disabled,
+QRadioButton:disabled {
   color: {{ disabled_text }};
+}
+
+QAbstractItemView:disabled,
+QListWidget#local_model_list_widget:disabled,
+QListWidget#custom_work_type_list_widget:disabled,
+QListWidget[management_list]:disabled {
+  color: {{ disabled_text }};
+  background: {{ disabled_background }};
+  alternate-background-color: {{ disabled_background }};
+  border-color: {{ border }};
+}
+
+QAbstractItemView::item:selected:disabled,
+QListWidget#local_model_list_widget::item:selected:disabled,
+QListWidget#custom_work_type_list_widget::item:selected:disabled,
+QListWidget[management_list]::item:selected:disabled,
+QTreeWidget[data_browser]::item:selected:disabled {
+  color: {{ disabled_text }};
+  background: {{ border }};
+  border-color: {{ border }};
+}
+
+QTabBar::tab:disabled,
+QTabBar#worklog_mode_selector_widget::tab:disabled,
+QTabBar#worklog_mode_selector_widget::tab:selected:disabled,
+QTabBar#management_tab_bar::tab:disabled,
+QTabBar#management_tab_bar::tab:selected:disabled {
+  color: {{ disabled_text }};
+  background: {{ disabled_background }};
+  border-color: {{ border }};
+}
+
+QMenu::item:disabled,
+QMenu::item:selected:disabled {
+  color: {{ disabled_text }};
+  background: transparent;
+}
+
+QSlider::sub-page:horizontal:disabled {
+  background: {{ border }};
+}
+
+QSlider::handle:horizontal:disabled {
+  background: {{ disabled_background }};
+  border-color: {{ border_strong }};
+}
+
+QHeaderView::section:disabled,
+QTreeWidget[data_browser] QHeaderView::section:disabled {
+  color: {{ disabled_text }};
+  background: {{ disabled_background }};
+  border-color: {{ border }};
 }
 
 QLabel#calendar_record_marker_label:disabled {

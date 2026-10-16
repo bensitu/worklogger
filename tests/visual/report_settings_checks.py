@@ -148,6 +148,7 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
         from PySide6.QtWidgets import QGridLayout, QPushButton, QToolButton, QWidget
         from worklogger.presentation.widgets.icons import set_button_icon
         from worklogger.presentation.widgets.record_summary import RecordSummaryButton
+        from worklogger.presentation.widgets.report_history import ReportHistoryButton, ReportHistoryDisplayItem
         from worklogger.presentation.widgets.switch_button import SwitchButton
         variants = ({}, {"variant": "primary"}, {"variant": "outline"}, {"variant": "ghost"},
                     {"variant": "danger"}, {"nav_item": True, "active": True},
@@ -169,7 +170,10 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                         pair = []
                         for column, enabled in enumerate((True, False)):
                             is_record = properties.get("object_name") == "calendar_time_entry_button"
+                            is_history = properties.get("object_name") == "report_history_item_button"
                             button = (RecordSummaryButton("Action") if is_record else
+                                      ReportHistoryButton(ReportHistoryDisplayItem(1, 1, "daily", date(2026, 10, 1),
+                                          date(2026, 10, 1), "Action")) if is_history else
                                       QToolButton() if properties.get("tool_button") else QPushButton("Action"))
                             if properties.get("tool_button"):
                                 button.setText("Action")

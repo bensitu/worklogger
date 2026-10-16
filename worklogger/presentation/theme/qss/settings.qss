@@ -1,34 +1,5 @@
 /* Settings controls, account fields, and separators. */
 
-QSlider#background_opacity_slider_widget::groove:horizontal {
-  height: 4px;
-  border-radius: 2px;
-  background: {{ border }};
-}
-
-QSlider#background_opacity_slider_widget::sub-page:horizontal {
-  background: {{ accent }};
-  border-radius: 2px;
-}
-
-QSlider#background_opacity_slider_widget::handle:horizontal {
-  width: 16px;
-  margin: -6px 0;
-  border: 1px solid {{ accent }};
-  border-radius: 8px;
-  background: {{ surface }};
-}
-
-QSlider#background_opacity_slider_widget::handle:horizontal:focus {
-  border: 2px solid {{ accent }};
-}
-
-QSlider#background_opacity_slider_widget::sub-page:horizontal:disabled,
-QSlider#background_opacity_slider_widget::handle:horizontal:disabled {
-  background: {{ border }};
-  border-color: {{ border }};
-}
-
 QLineEdit#account_name_line_edit,
 QLineEdit#account_id_line_edit,
 QLineEdit#account_role_line_edit {

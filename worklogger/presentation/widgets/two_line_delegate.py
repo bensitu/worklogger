@@ -30,7 +30,9 @@ class TwoLineItemDelegate(QStyledItemDelegate):
         painter.setClipRect(styled.rect)
         style.drawControl(QStyle.ControlElement.CE_ItemViewItem, styled, painter, styled.widget)
         selected = bool(styled.state & QStyle.StateFlag.State_Selected)
-        color = styled.palette.color(QPalette.ColorRole.HighlightedText
+        group = (QPalette.ColorGroup.Normal if styled.state & QStyle.StateFlag.State_Enabled
+                 else QPalette.ColorGroup.Disabled)
+        color = styled.palette.color(group, QPalette.ColorRole.HighlightedText
                                      if selected and not self._soft_selection else QPalette.ColorRole.Text)
         font = QFont(styled.font)
         font.setWeight(QFont.Weight.DemiBold if self._soft_selection else QFont.Weight.Bold)

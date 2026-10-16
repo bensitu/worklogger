@@ -53,7 +53,7 @@ class MonthCalendar(QCalendarWidget):
         if self._follow_application_theme:
             self._colors = current_colors()
         weekend = QTextCharFormat()
-        weekend.setForeground(QColor(self._colors.accent))
+        weekend.setForeground(QColor(self._colors.accent if self.isEnabled() else self._colors.disabled_text))
         for day in (Qt.DayOfWeek.Saturday, Qt.DayOfWeek.Sunday):
             self.setWeekdayTextFormat(day, weekend)
         self.updateCells()
@@ -65,7 +65,7 @@ class MonthCalendar(QCalendarWidget):
 
     def changeEvent(self, event):
         super().changeEvent(event)
-        if (event.type() in (QEvent.Type.PaletteChange, QEvent.Type.StyleChange)
+        if (event.type() in (QEvent.Type.PaletteChange, QEvent.Type.StyleChange, QEvent.Type.EnabledChange)
                 and hasattr(self, "_appearance_timer")):
             self._appearance_timer.start(0)
 
@@ -88,12 +88,15 @@ class MonthCalendar(QCalendarWidget):
         holiday = value in self._holidays
         colors = self._colors
         painter.save()
-        painter.fillRect(rect, QColor(colors.accent if selected else colors.surface))
+        background = colors.accent if selected else colors.surface
+        painter.fillRect(rect, QColor(background if self.isEnabled() else colors.disabled_background))
         if (day < self.minimumDate() or day > self.maximumDate()
                 or (day.year(), day.month()) != (self.yearShown(), self.monthShown())) and not selected:
             painter.setOpacity(painter.opacity() * 0.45)
         foreground = (colors.highlighted_text if selected else colors.danger if holiday
                       else colors.accent if day.dayOfWeek() >= 6 else colors.text)
+        if not self.isEnabled():
+            foreground = colors.disabled_text
         painter.setPen(QColor(foreground))
         painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, self.locale().toString(day.day()))
         if holiday:

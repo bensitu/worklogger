@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 
 from PySide6.QtCore import QRect, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPainterPath, QPen, QTextLayout, QTextOption
@@ -17,6 +18,7 @@ from PySide6.QtWidgets import (
 
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets.icons import ui_icon
+from worklogger.presentation.theme.context import current_colors
 from worklogger.presentation.viewmodels.calendar import (
     CalendarDayCell,
     CalendarMonthViewState,
@@ -65,13 +67,22 @@ class CalendarDayButton(QPushButton):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        hovered = self.isEnabled() and self.underMouse()
-        border_color = cell.style.hover_border if hovered else cell.style.border
-        border_width = 2 if hovered else cell.style.border_width
-        foreground = cell.style.foreground if cell.in_month else "#8a8f9c"
+        style = cell.style
+        marker_color = cell.work_type_marker_color
+        enabled = self.isEnabled()
+        if not enabled:
+            colors = current_colors()
+            style = replace(style, background=colors.disabled_background, foreground=colors.disabled_text,
+                            border=colors.border, hover_border=colors.border,
+                            holiday_foreground=colors.disabled_text, highlighted_foreground=colors.disabled_text)
+            marker_color = colors.disabled_text if marker_color else None
+        hovered = enabled and self.underMouse()
+        border_color = style.hover_border if hovered else style.border
+        border_width = 2 if hovered else style.border_width
+        foreground = style.foreground if cell.in_month or not enabled else "#8a8f9c"
         rect = QRectF(1, 1, self.width() - 2, self.height() - 2)
         painter.setPen(QPen(QColor(border_color), border_width))
-        painter.setBrush(QColor(cell.style.background))
+        painter.setBrush(QColor(style.background))
         painter.drawRoundedRect(rect, 6, 6)
 
         lines = list(cell.text_lines)
@@ -100,7 +111,7 @@ class CalendarDayButton(QPushButton):
             holiday_font = painter.font()
             holiday_font.setPixelSize(11)
             painter.setFont(holiday_font)
-            painter.setPen(QColor(cell.style.holiday_foreground if not cell.is_selected else cell.style.highlighted_foreground))
+            painter.setPen(QColor(style.holiday_foreground if not cell.is_selected else style.highlighted_foreground))
             holiday_width = self.width() - (40 if cell.event_count else 36 if cell.show_overnight_marker else 20)
             if marker_top > 8:
                 holiday_width = max(1, min(holiday_width, marker_left - 14))
@@ -129,32 +140,34 @@ class CalendarDayButton(QPushButton):
                 line,
             )
 
-        if cell.work_type_marker_color:
+        if marker_color:
             stripe = QPainterPath()
             stripe.moveTo(6, 3.5)
             stripe.quadTo(3.5, 3.5, 3.5, 6)
             stripe.lineTo(3.5, self.height() - 6)
             stripe.quadTo(3.5, self.height() - 3.5, 6, self.height() - 3.5)
-            painter.setPen(QPen(QColor(cell.work_type_marker_color), 3, Qt.PenStyle.SolidLine,
+            painter.setPen(QPen(QColor(marker_color), 3, Qt.PenStyle.SolidLine,
                                 Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawPath(stripe)
 
         if cell.has_note_marker:
             painter.setPen(Qt.PenStyle.NoPen)
-            painter.setBrush(QColor(cell.style.highlighted_foreground if cell.is_selected else cell.style.hover_border))
+            note_color = style.highlighted_foreground if cell.is_selected else style.hover_border
+            painter.setBrush(QColor(note_color if enabled else style.foreground))
             painter.drawEllipse(QRectF(self.width() - 13 - note_offset, marker_top + 4.5, 5, 5))
 
         if cell.show_overnight_marker:
             icon = self._overnight_icons[bool(cell.is_selected)]
-            icon.paint(painter, QRect(self.width() - 22, marker_top, 14, 14), Qt.AlignmentFlag.AlignCenter, QIcon.Mode.Normal)
+            icon.paint(painter, QRect(self.width() - 22, marker_top, 14, 14), Qt.AlignmentFlag.AlignCenter,
+                       QIcon.Mode.Normal if enabled else QIcon.Mode.Disabled)
 
         if cell.event_count > 0:
             badge = QRectF(self.width() - 26, marker_top + (17 if cell.show_overnight_marker else 0), 18, 14)
             painter.setPen(Qt.PenStyle.NoPen)
-            painter.setBrush(QColor(cell.style.hover_border))
+            painter.setBrush(QColor(style.hover_border))
             painter.drawRoundedRect(badge, 6, 6)
-            painter.setPen(QColor(cell.style.highlighted_foreground))
+            painter.setPen(QColor(style.highlighted_foreground))
             painter.drawText(
                 badge,
                 Qt.AlignmentFlag.AlignCenter,

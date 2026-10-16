@@ -120,6 +120,7 @@ translations, or display scaling:
 ```sh
 python -m unittest tests.visual.calendar_checks -v
 python -m unittest tests.visual.report_settings_checks -v
+python -m unittest tests.visual.control_states_checks -v
 python -m unittest tests.visual.background_images_checks -v
 ```
 
