@@ -153,9 +153,11 @@ class SettingsSectionState:
         self.external_model_enabled_switch.setEnabled(self._capabilities.external_generation)
         self.external_model_enabled_switch.setAccessibleName(_("Use external model"))
         for widget in (self.manage_local_models_button,):
-            widget.setEnabled(self._capabilities.model_management)
+            widget.setEnabled(self._capabilities.model_management and self._model_management_available)
             widget.setToolTip(
-                ""
+                _("Local model management is not configured.")
+                if not self._model_management_available
+                else ""
                 if self._capabilities.model_management
                 else _("Model file management is unavailable.")
             )

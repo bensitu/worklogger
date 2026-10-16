@@ -92,6 +92,7 @@ class SettingsPage(QWidget, SettingsSectionState):
         self._account_is_admin = False
         self._manage_users_available = True
         self._update_checks_available = True
+        self._model_management_available = True
         self._updating = False
         self._last_error: AppError | None = None
         self._busy_jobs: set[str] = set()
@@ -213,6 +214,10 @@ class SettingsPage(QWidget, SettingsSectionState):
         self._update_checks_available = available
         self.check_updates_button.setEnabled(available and "update" not in self._busy_jobs)
         self.check_updates_button.setToolTip("" if available else _("Update check is not configured."))
+
+    def set_model_management_available(self, available: bool) -> None:
+        self._model_management_available = available
+        self._apply_capabilities()
 
     def set_profile_busy(self, busy: bool) -> None:
         self.set_busy("user_profile", busy)

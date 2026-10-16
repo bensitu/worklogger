@@ -230,8 +230,8 @@ class SettingsWorkflowController:
         surface.set_projects_available(self._projects_view_model is not None)
         if self._projects_view_model is not None:
             surface.manage_projects_requested.connect(lambda: self._manage_projects(surface))
-        surface.set_capabilities(replace(self._capabilities,
-            model_management=self._capabilities.model_management and self._local_models_workflow is not None))
+        surface.set_capabilities(self._capabilities)
+        surface.set_model_management_available(self._local_models_workflow is not None)
         surface.set_account(self._user)
         surface.set_manage_users_available(self._user_management_view_model is not None and self._user.is_admin)
         surface.set_identity_management_available(self._identity_workflow is not None)
