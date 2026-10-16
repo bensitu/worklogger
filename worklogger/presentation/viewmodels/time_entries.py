@@ -7,7 +7,7 @@ from collections.abc import Callable
 from datetime import date
 from typing import TypeVar
 
-from worklogger.app.ports import TimeEntryOperations
+from worklogger.app.recording_ports import TimeEntryOperations
 from worklogger.app.commands.ai_commands import RewriteTextCommand
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
@@ -84,7 +84,7 @@ class TimeEntryViewModel:
 
     @property
     def projects_available(self):
-        return getattr(self.service, "projects", None) is not None
+        return self.service.projects is not None
 
     def project_inventory(self):
         if not self.projects_available:
@@ -99,14 +99,14 @@ class TimeEntryViewModel:
 
     @property
     def search_available(self):
-        return bool(getattr(self.service, "search_available", False))
+        return self.service.search_available
 
     def search(self, criteria, *, cursor=None):
         return self.service.search(criteria, cursor=cursor)
 
     @property
     def changes_available(self):
-        return bool(getattr(self.service, "changes_available", False))
+        return self.service.changes_available
 
     def merge_candidate(self, record):
         index = next((index for index, entry in enumerate(self.entries) if entry.id == record.id), -1)
@@ -158,7 +158,7 @@ class TimeEntryViewModel:
 
     @property
     def custom_types_available(self):
-        return getattr(self.service, "work_types", None) is not None
+        return self.service.work_types is not None
 
     def list_work_types(self):
         return self.service.work_types.list_types() if self.custom_types_available else Result.success(())

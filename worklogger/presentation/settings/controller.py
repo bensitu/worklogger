@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import replace
 from typing import Protocol
 from pathlib import Path
+from weakref import WeakKeyDictionary
 from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices
 
@@ -40,6 +41,7 @@ from worklogger.presentation.viewmodels import (
     DataManagementViewModel,
     SettingsViewModel,
     UserManagementViewModel,
+    LocalModelManagerViewModel,
 )
 
 
@@ -48,6 +50,8 @@ class SettingsWorkflow(Protocol):
 
 
 class LocalModelsWorkflow(Protocol):
+    @property
+    def view_model(self) -> LocalModelManagerViewModel | None: ...
     def open(self, parent: QWidget | None = None) -> object: ...
 
 
@@ -75,7 +79,7 @@ class SettingsWorkflowController:
     def initialize_processing(self, owner, callback):
         def load():
             settings = self._settings_view_model.load()
-            model = getattr(self._local_models_workflow, "view_model", None)
+            model = self._local_models_workflow.view_model if self._local_models_workflow is not None else None
             inventory = model.load() if model is not None else None
             return settings, inventory
 
@@ -153,6 +157,8 @@ class SettingsWorkflowController:
         self._profile_revision = 0
         self._projects_view_model = projects_view_model
         self._project_dialog = None
+        self._profile_runners: WeakKeyDictionary[SettingsPage, QtJobRunner] = WeakKeyDictionary()
+        self._connection_tests: WeakKeyDictionary[SettingsPage, TextProcessingTask] = WeakKeyDictionary()
         if local_inference is not None:
             self._capabilities = replace(self._capabilities, local_generation=local_inference.backend_available)
 
@@ -192,9 +198,9 @@ class SettingsWorkflowController:
 
     def create_dialog(self, parent: QWidget | None = None) -> SettingsDialog:
         dialog = self._dialog_factory(self._settings_view_model, parent)
-        self._bind_surface(dialog)
-        dialog.refresh()
-        self._sync_inference(dialog)
+        self._bind_surface(dialog.page)
+        dialog.page.refresh()
+        self._sync_inference(dialog.page)
         return dialog
 
     def set_restore_handler(self, handler: ReloadHandler) -> None:
@@ -207,12 +213,10 @@ class SettingsWorkflowController:
         self._sync_inference(page)
         return page
 
-    def _bind_surface(self, surface: QWidget) -> None:
-        if hasattr(surface, "set_data_directory"):
-            surface.set_data_directory(self._data_directory)
-            surface.open_data_directory_requested.connect(lambda: self._open_data_directory(surface))
-        if hasattr(surface, "set_profile_available"):
-            surface.set_profile_available(self._profile_service is not None)
+    def _bind_surface(self, surface: SettingsPage) -> None:
+        surface.set_data_directory(self._data_directory)
+        surface.open_data_directory_requested.connect(lambda: self._open_data_directory(surface))
+        surface.set_profile_available(self._profile_service is not None)
         if self._profile_service is not None:
             surface.profile_save_requested.connect(lambda value, expected: self._save_profile(surface, value, expected))
             surface.profile_refresh_requested.connect(lambda: self._refresh_profile(surface))
@@ -220,22 +224,18 @@ class SettingsWorkflowController:
             surface.settings_changed.connect(lambda _state: self._sync_inference(surface))
         if self._ai_gateway is not None:
             surface.test_external_model_requested.connect(lambda: self._test_external_model(surface))
-        if hasattr(surface, "set_work_types_available"):
-            surface.set_work_types_available(self._work_types_view_model is not None)
+        surface.set_work_types_available(self._work_types_view_model is not None)
         if self._work_types_view_model is not None:
             surface.manage_work_types_requested.connect(lambda: self._manage_work_types(surface))
-        if hasattr(surface, "set_projects_available"):
-            surface.set_projects_available(self._projects_view_model is not None)
-        if self._projects_view_model is not None and hasattr(surface, "manage_projects_requested"):
+        surface.set_projects_available(self._projects_view_model is not None)
+        if self._projects_view_model is not None:
             surface.manage_projects_requested.connect(lambda: self._manage_projects(surface))
-        if hasattr(surface, "set_capabilities"):
-            surface.set_capabilities(self._capabilities)
-        if hasattr(surface, "set_account"):
-            surface.set_account(self._user)
-        if hasattr(surface, "set_manage_users_available"):
-            surface.set_manage_users_available(
-                self._user_management_view_model is not None and self._user.is_admin
-            )
+        surface.set_capabilities(replace(self._capabilities,
+            model_management=self._capabilities.model_management and self._local_models_workflow is not None))
+        surface.set_account(self._user)
+        surface.set_manage_users_available(self._user_management_view_model is not None and self._user.is_admin)
+        surface.set_identity_management_available(self._identity_workflow is not None)
+        surface.set_update_check_available(self._update_check_handler is not None)
         surface.change_password_requested.connect(
             lambda: self._change_password(surface)
         )
@@ -245,11 +245,6 @@ class SettingsWorkflowController:
             surface.manage_identities_requested.connect(
                 lambda: self._identity_workflow.open(surface)
             )
-        elif hasattr(surface, "manage_identities_button"):
-            surface.manage_identities_button.setEnabled(False)
-            surface.manage_identities_button.setToolTip(
-                _("Identity management is not configured.")
-            )
         surface.backup_requested.connect(lambda: self._backup_database(surface))
         surface.restore_requested.connect(lambda: self._restore_database(surface))
         surface.export_csv_requested.connect(lambda: self._export_csv(surface))
@@ -257,35 +252,23 @@ class SettingsWorkflowController:
         surface.import_ics_requested.connect(lambda: self._import_ics(surface))
         surface.export_ics_requested.connect(lambda: self._export_ics(surface))
         surface.update_check_requested.connect(lambda: self._check_updates(surface))
-        if self._update_check_handler is None and hasattr(
-            surface, "check_updates_button"
-        ):
-            surface.check_updates_button.setEnabled(False)
-            surface.check_updates_button.setToolTip(
-                _("Update check is not configured.")
-            )
         if self._local_models_workflow is not None:
             surface.manage_local_models_requested.connect(
                 lambda: self._open_local_models(surface)
             )
             self._refresh_local_models_status(surface)
-        elif hasattr(surface, "manage_local_models_button"):
-            surface.manage_local_models_button.setEnabled(False)
-            surface.manage_local_models_button.setToolTip(
-                _("Local model management is not configured.")
-            )
 
-    def _open_local_models(self, surface: QWidget) -> None:
+    def _open_local_models(self, surface: SettingsPage) -> None:
         self._local_models_workflow.open(surface)
         self._refresh_local_models_status(surface)
 
-    def _manage_work_types(self, surface: QWidget) -> None:
+    def _manage_work_types(self, surface: SettingsPage) -> None:
         dialog = WorkTypeManagerDialog(self._work_types_view_model, surface)
         dialog.exec()
         dialog.deleteLater()
         surface.work_types_changed.emit()
 
-    def _manage_projects(self, surface):
+    def _manage_projects(self, surface: SettingsPage):
         if self._project_dialog is not None and isValid(self._project_dialog):
             self._project_dialog.raise_()
             self._project_dialog.activateWindow()
@@ -297,7 +280,7 @@ class SettingsWorkflowController:
         dialog.finished.connect(dialog.deleteLater)
         dialog.open()
 
-    def _open_data_directory(self, surface):
+    def _open_data_directory(self, surface: SettingsPage):
         if self._data_directory is None or not self._data_directory.is_dir():
             self._data_workflow._notify_error(surface, _("Data location"), _("The data directory is unavailable."))
             return False
@@ -306,17 +289,16 @@ class SettingsWorkflowController:
             return False
         return True
 
-    def _refresh_local_models_status(self, surface: QWidget) -> None:
-        view_model = getattr(self._local_models_workflow, "view_model", None)
-        label = getattr(surface, "local_model_status_label", None)
-        if view_model is None or label is None:
+    def _refresh_local_models_status(self, surface: SettingsPage) -> None:
+        view_model = self._local_models_workflow.view_model if self._local_models_workflow is not None else None
+        if view_model is None:
             return
 
         def complete(result: object) -> None:
-            if not isValid(label):
+            if not isValid(surface):
                 return
             if not result.ok or result.value is None:
-                label.setText(_error_message(result.error))
+                surface.set_local_model_error(result.error)
                 return
             inventory = result.value.inventory
             if self._local_inference is not None:
@@ -331,13 +313,11 @@ class SettingsWorkflowController:
                 ),
                 None,
             )
-            if hasattr(surface, "set_local_model_status"):
-                surface.set_local_model_status(
-                    ready=active is not None and active.verified,
-                    name=active.entry.display_name if active is not None else "",
-                )
-            if hasattr(surface, "set_local_model_context_limit"):
-                surface.set_local_model_context_limit(active.entry.context_length if active is not None else None)
+            surface.set_local_model_status(
+                ready=active is not None and active.verified,
+                name=active.entry.display_name if active is not None else "",
+            )
+            surface.set_local_model_context_limit(active.entry.context_length if active is not None else None)
             self._sync_inference(surface)
 
         if self._job_runner is None:
@@ -354,15 +334,15 @@ class SettingsWorkflowController:
         dialog.exec()
         return dialog
 
-    def _sync_inference(self, surface):
+    def _sync_inference(self, surface: SettingsPage):
         if self._ai_gateway is not None and surface.state is not None:
             self._ai_gateway.update_configuration(surface.state)
-        if self._local_inference is not None and hasattr(surface, "set_local_runtime_status"):
+        if self._local_inference is not None:
             surface.set_local_runtime_status(ready=self._local_inference.available, reason=self._local_inference.reason)
         if self._local_inference is not None or self._ai_gateway is not None:
             surface.ai_availability_changed.emit()
 
-    def _refresh_profile(self, surface):
+    def _refresh_profile(self, surface: SettingsPage):
         if surface.is_busy:
             return
         self._profile_revision += 1
@@ -380,31 +360,30 @@ class SettingsWorkflowController:
         except Exception:
             complete(Result.failure(InfrastructureError("user_profile_load_failed", "user_profile_load_failed")))
 
-    def _apply_profile(self, surface, user):
+    def _apply_profile(self, surface: SettingsPage, user: User):
         self._user = user
         surface.set_account(user)
         surface.profile_changed.emit(user)
 
-    def _profile_runner(self, surface):
+    def _profile_runner(self, surface: SettingsPage):
         if self._job_runner is not None:
             return self._job_runner
-        runner = getattr(surface, "_profile_job_runner", None)
+        runner = self._profile_runners.get(surface)
         if runner is None:
             runner = QtJobRunner(surface)
-            surface._profile_job_runner = runner
+            self._profile_runners[surface] = runner
+            surface.destroyed.connect(lambda: self._profile_runners.pop(surface, None))
         return runner
 
-    def _save_profile(self, surface, value, expected):
+    def _save_profile(self, surface: SettingsPage, value: str, expected: str):
         if surface.is_busy:
             return
         self._profile_revision += 1
-        surface.set_busy("user_profile", True)
-        surface.display_name_editor.set_busy(True)
+        surface.set_profile_busy(True)
         def complete(result):
             if not isValid(surface):
                 return
-            surface.set_busy("user_profile", False)
-            surface.display_name_editor.set_busy(False)
+            surface.set_profile_busy(False)
             if result.ok and result.value is not None:
                 surface.complete_profile_save(result.value)
                 self._apply_profile(surface, result.value)
@@ -419,27 +398,22 @@ class SettingsWorkflowController:
         except Exception:
             complete(Result.failure(InfrastructureError("user_profile_save_failed", "user_profile_save_failed")))
 
-    def _test_external_model(self, surface):
+    def _test_external_model(self, surface: SettingsPage):
         if surface.is_busy or self._ai_gateway is None:
             return
         surface.set_busy("external_model_test", True)
-        surface.external_model_status_label.setText(_("Testing connection..."))
-        if hasattr(surface, "external_processing_progress"):
-            surface.external_model_status_label.clear()
-        task = getattr(surface, "_connection_test_task", None)
+        surface.set_external_test_status("")
+        task = self._connection_tests.get(surface)
         if task is None:
             task = TextProcessingTask(surface, job_runner=self._job_runner)
-            surface._connection_test_task = task
-            if hasattr(surface, "external_processing_progress"):
-                progress = surface.external_processing_progress
-                task.started.connect(lambda: progress.start(_("Testing connection...")))
-                task.finished.connect(progress.finish)
-                progress.cancel_requested.connect(task.cancel)
+            self._connection_tests[surface] = task
+            surface.destroyed.connect(lambda: self._connection_tests.pop(surface, None))
+            surface.bind_external_test_progress(task)
         def complete(result):
             if not isValid(surface):
                 return
             surface.set_busy("external_model_test", False)
-            surface.external_model_status_label.setText(_("Connection succeeded.") if result.ok else
+            surface.set_external_test_status(_("Connection succeeded.") if result.ok else
                 _("Operation cancelled.") if isinstance(result.error, CancellationError) else _error_message(result.error))
         task.run("test_external_model", lambda _token: self._ai_gateway.generate(AIRequest(
             messages=({"role": "user", "content": "Reply with OK."},), model="default", timeout_seconds=30)), on_complete=complete)

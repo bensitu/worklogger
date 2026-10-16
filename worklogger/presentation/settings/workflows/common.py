@@ -12,20 +12,15 @@ from worklogger.app.use_cases.updates import UpdateCheckResult
 from worklogger.domain.shared.errors import AppError
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
+from worklogger.presentation.settings.page import SettingsPage
 
 
-def _set_status(dialog: QWidget, message: str, category: str | None = None) -> None:
-    if hasattr(dialog, "set_operation_status"):
-        if category is None:
-            category = "data"
-        dialog.set_operation_status(message, category)
-    else:
-        dialog.status_label.setText(message)
+def _set_status(dialog: SettingsPage, message: str, category: str | None = None) -> None:
+    dialog.set_operation_status(message, category or "data")
 
 
-def _set_busy(surface: QWidget, job: str, busy: bool) -> None:
-    if hasattr(surface, "set_busy"):
-        surface.set_busy(job, busy)
+def _set_busy(surface: SettingsPage, job: str, busy: bool) -> None:
+    surface.set_busy(job, busy)
 
 
 def _error_message(error: AppError | None) -> str:

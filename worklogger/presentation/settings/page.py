@@ -91,6 +91,7 @@ class SettingsPage(QWidget, SettingsSectionState):
         self._state: SettingsState | None = None
         self._account_is_admin = False
         self._manage_users_available = True
+        self._update_checks_available = True
         self._updating = False
         self._last_error: AppError | None = None
         self._busy_jobs: set[str] = set()
@@ -127,6 +128,8 @@ class SettingsPage(QWidget, SettingsSectionState):
         else:
             self._busy_jobs.discard(job)
         self.category_stack.setEnabled(not self._busy_jobs.difference({"external_model_test", "update"}))
+        if job == "update":
+            self.check_updates_button.setEnabled(self._update_checks_available and not busy)
         if job == "external_model_test":
             fields = (self.external_model_enabled_switch, self.external_api_key_line_edit,
                       self.external_base_url_line_edit, self.external_model_line_edit, self.test_external_model_button)
@@ -201,6 +204,30 @@ class SettingsPage(QWidget, SettingsSectionState):
 
     def set_projects_available(self, available: bool) -> None:
         self.manage_projects_button.setEnabled(available)
+
+    def set_identity_management_available(self, available: bool) -> None:
+        self.manage_identities_button.setEnabled(available)
+        self.manage_identities_button.setToolTip("" if available else _("Identity management is not configured."))
+
+    def set_update_check_available(self, available: bool) -> None:
+        self._update_checks_available = available
+        self.check_updates_button.setEnabled(available and "update" not in self._busy_jobs)
+        self.check_updates_button.setToolTip("" if available else _("Update check is not configured."))
+
+    def set_profile_busy(self, busy: bool) -> None:
+        self.set_busy("user_profile", busy)
+        self.display_name_editor.set_busy(busy)
+
+    def set_local_model_error(self, error: AppError | None) -> None:
+        self.local_model_status_label.setText(display_error_message(error))
+
+    def set_external_test_status(self, message: str) -> None:
+        self.external_model_status_label.setText(message)
+
+    def bind_external_test_progress(self, task) -> None:
+        task.started.connect(lambda: self.external_processing_progress.start(_("Testing connection...")))
+        task.finished.connect(self.external_processing_progress.finish)
+        self.external_processing_progress.cancel_requested.connect(task.cancel)
 
 
 

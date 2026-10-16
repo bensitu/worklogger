@@ -334,6 +334,7 @@ class SettingsWorkflowTests(unittest.TestCase):
     def test_model_management_uses_a_single_settings_entry(self):
         calls = []
         workflow = type("LocalWorkflow", (), {
+            "view_model": None,
             "open": lambda _self, parent: calls.append("manage"),
         })()
         controller = SettingsWorkflowController(
@@ -341,9 +342,17 @@ class SettingsWorkflowTests(unittest.TestCase):
             auth_view_model=FakeAuthViewModel(), user=User(id=1, username="alice"),
             data_management_view_model=FakeDataManagementViewModel(), local_models_workflow=workflow,
         )
-        page = controller.create_page()
-        page.manage_local_models_button.click()
-        self.assertEqual(calls, ["manage"])
+        for host in (controller.create_page(), controller.create_dialog()):
+            with self.subTest(host=type(host).__name__):
+                page = host.page if isinstance(host, SettingsDialog) else host
+                self.addCleanup(host.deleteLater)
+                self.assertTrue(page.manage_local_models_button.isEnabled())
+                self.assertFalse(page.manage_identities_button.isEnabled())
+                self.assertFalse(page.check_updates_button.isEnabled())
+                page.refresh()
+                self.assertFalse(page.check_updates_button.isEnabled())
+                page.manage_local_models_button.click()
+        self.assertEqual(calls, ["manage", "manage"])
 
     @classmethod
     def setUpClass(cls) -> None:

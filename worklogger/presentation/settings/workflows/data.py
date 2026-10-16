@@ -306,7 +306,7 @@ class DataSettingsWorkflow:
                 if (
                     loaded.ok
                     and loaded.value is not None
-                    and isValid(dialog) and hasattr(dialog, "set_backup_time")
+                    and isValid(dialog)
                 ):
                     dialog.set_backup_time(loaded.value.last_backup_at)
             else:

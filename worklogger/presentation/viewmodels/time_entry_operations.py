@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Generic, TYPE_CHECKING, TypeVar
 
-from worklogger.app.ports import TimeEntryOperations
+from worklogger.app.recording_ports import TimeEntryOperations
 from worklogger.app.time_entry_state import RecordingState
 from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.shared.result import Result

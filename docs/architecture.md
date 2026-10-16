@@ -42,6 +42,12 @@ callbacks; workflow controllers coordinate dialogs and jobs. The calendar
 coordinator connects query results to views. The main window owns navigation,
 themes, and lifecycle rather than database algorithms.
 
+Settings workflows bind directly to `SettingsPage`, including the page hosted by
+`SettingsDialog`. The shared page exposes named methods for service availability,
+busy states, and processing feedback. Controllers do not probe widget attributes
+to discover these capabilities. Dialog attribute forwarding remains available to
+existing callers, but is not used to assemble or bind settings workflows.
+
 `bootstrap.py` prepares the application, database, and authentication boundary.
 `composition/desktop.py` assembles an account-scoped session and its window.
 Composition factories use `build_` names and receive lifecycle dependencies
@@ -58,7 +64,9 @@ queries or individual reads; secure credentials remain on their separate ports.
 
 ## Recording and Reporting
 
-Record editors use view-model operations and the `TimeEntryOperations` contract.
+Record editors use view-model operations and the contracts in `app/recording_ports.py`.
+Query, editing, and automatic recording operations have separate typed contracts;
+`TimeEntryOperations` combines them for the editor's account-scoped session.
 Normalization, elapsed time, type accounting, overlaps, and limits are validated
 outside widgets. Writes use account ownership and expected revisions.
 

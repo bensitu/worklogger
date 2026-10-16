@@ -10,9 +10,12 @@ from collections.abc import Callable
 
 from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.calendar.repositories import CalendarEventRepository
+from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.shared.errors import ConflictError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.entry_repository import TimeEntryRepository
+from worklogger.domain.worklog.editing import EntryChangeInfo
+from worklogger.domain.worklog.search import EntryCursor, EntryFilter, EntryPage
 from worklogger.domain.worklog.timer_state import EntryTimer, decode_timer, encode_timer, timer_payload
 from worklogger.domain.worklog.content import require_entry_content
 from worklogger.domain.worklog.rules import wall_interval, wall_position
@@ -116,10 +119,10 @@ class TimeEntryService:
         return self._run(lambda: self.repository.list_for_day(self.user_id, day))
 
     @property
-    def search_available(self):
+    def search_available(self) -> bool:
         return callable(getattr(self.repository, "search_entries", None))
 
-    def search(self, criteria, *, cursor=None):
+    def search(self, criteria: EntryFilter, *, cursor: EntryCursor | None = None) -> Result[EntryPage]:
         if not self.search_available:
             return Result.failure(ValidationError("record_search_unavailable", "record_search_unavailable"))
         try:
@@ -130,25 +133,25 @@ class TimeEntryService:
             return Result.failure(infrastructure_failure("record_search_failed", error, logger_name=__name__))
 
     @property
-    def changes_available(self):
+    def changes_available(self) -> bool:
         return bool(getattr(self.repository, "changes_available", False))
 
-    def latest_change(self):
+    def latest_change(self) -> Result[EntryChangeInfo | None]:
         return self._run(lambda: self.repository.latest_change(self.user_id), error_code="record_change_failed")
 
-    def split(self, record, first_minutes):
+    def split(self, record: WorkLog, first_minutes: int) -> Result[tuple[WorkLog, ...]]:
         return self._run(lambda: self.repository.split_entry(self.user_id, record, first_minutes), error_code="record_change_failed")
 
-    def merge(self, left, right):
+    def merge(self, left: WorkLog, right: WorkLog) -> Result[WorkLog]:
         return self._run(lambda: self.repository.merge_entries(self.user_id, left, right), error_code="record_change_failed")
 
-    def convert_break(self, record, first_minutes):
+    def convert_break(self, record: WorkLog, first_minutes: int) -> Result[tuple[WorkLog, ...]]:
         return self._run(lambda: self.repository.convert_historical_break(self.user_id, record, first_minutes), error_code="record_change_failed")
 
-    def undo(self, change_id):
+    def undo(self, change_id: int) -> Result[tuple[WorkLog, ...]]:
         return self._run(lambda: self.repository.undo_change(self.user_id, change_id), error_code="record_change_failed")
 
-    def associate(self, records, context):
+    def associate(self, records: tuple[WorkLog, ...], context: WorkContext) -> Result[tuple[WorkLog, ...]]:
         return self._run(lambda: self.repository.associate_entries(self.user_id, records, context), error_code="record_change_failed")
 
     def get_entry(self, entry_id: int) -> Result[WorkLog]:
@@ -202,7 +205,7 @@ class TimeEntryService:
     def delete(self, record: WorkLog) -> Result[None]:
         return self._run(lambda: self.repository.delete_entry(self.user_id, record.id, record.revision))
 
-    def delete_event(self, event) -> Result[None]:
+    def delete_event(self, event: CalendarEvent) -> Result[None]:
         return self._run(lambda: self.calendar_events.remove(self.user_id, event))
 
     def start(self, work_type: str, content: str, *, now: datetime | None = None,

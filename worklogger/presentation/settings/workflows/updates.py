@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QWidget
+from worklogger.presentation.settings.page import SettingsPage
 
 from worklogger.__about__ import APP_VERSION
 from worklogger.app.job_runner import JobHandle
@@ -29,7 +29,7 @@ class UpdatesSettingsWorkflow:
         self._notify_error = notify_error or _notify_error
         self._update_check_handle = None
 
-    def check_updates(self, dialog: QWidget) -> bool:
+    def check_updates(self, dialog: SettingsPage) -> bool:
         if self._update_check_handler is None:
             _set_status(dialog, _("Update check is not configured."), "update")
             return False
@@ -41,8 +41,6 @@ class UpdatesSettingsWorkflow:
                 return False
             _set_status(dialog, _("Checking for updates..."), "update")
             _set_busy(dialog, "update", True)
-            if hasattr(dialog, "check_updates_button"):
-                dialog.check_updates_button.setEnabled(False)
             self._update_check_handle = JobHandle(
                 job_id="check_updates_pending",
                 cancel=lambda: None,
@@ -60,14 +58,12 @@ class UpdatesSettingsWorkflow:
         result = self._update_check_handler.handle(CheckForUpdatesQuery(APP_VERSION))
         return self._handle_update_result(dialog, result)
 
-    def _complete_update_check(self, dialog: QWidget, result: object) -> None:
+    def _complete_update_check(self, dialog: SettingsPage, result: object) -> None:
         self._update_check_handle = None
         _set_busy(dialog, "update", False)
-        if hasattr(dialog, "check_updates_button"):
-            dialog.check_updates_button.setEnabled(True)
         self._handle_update_result(dialog, result)
 
-    def _handle_update_result(self, dialog: QWidget, result: object) -> bool:
+    def _handle_update_result(self, dialog: SettingsPage, result: object) -> bool:
         if not result.ok or result.value is None:
             message = _error_message(result.error)
             _set_status(dialog, message, "update")
