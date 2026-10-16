@@ -1,5 +1,6 @@
 /* Disabled states preserve control geometry and role typography. */
 
+QComboBox:disabled,
 QPushButton:disabled,
 QToolButton:disabled,
 QPushButton[variant]:disabled,

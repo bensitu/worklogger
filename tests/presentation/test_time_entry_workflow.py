@@ -369,7 +369,16 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         dialog.work_item_save_button.click()
         item = service.list_work_items(project.id).value[0]
         picker = panel.context_picker
+        self.assertIsNone(picker.project_combo.currentData())
+        self.assertFalse(picker.work_item_combo.isEnabled())
         picker.project_combo.setCurrentIndex(picker.project_combo.findData(project.id))
+        self.assertTrue(picker.work_item_combo.isEnabled())
+        picker.work_item_combo.setCurrentIndex(picker.work_item_combo.findData(item.id))
+        picker.project_combo.setCurrentIndex(picker.project_combo.findData(None))
+        self.assertFalse(picker.work_item_combo.isEnabled())
+        self.assertIsNone(picker.work_item_combo.currentData())
+        picker.project_combo.setCurrentIndex(picker.project_combo.findData(project.id))
+        self.assertTrue(picker.work_item_combo.isEnabled())
         picker.work_item_combo.setCurrentIndex(picker.work_item_combo.findData(item.id))
         panel.start_input.setText("09:00")
         panel.end_input.setText("10:00")
