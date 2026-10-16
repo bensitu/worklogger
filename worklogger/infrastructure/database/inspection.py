@@ -5,6 +5,7 @@ from pathlib import Path
 import sqlite3
 from worklogger.infrastructure.database.schema import SUPPORTED_TABLES
 from worklogger.infrastructure.database.migrations.runner import database_kind
+from worklogger.domain.auth.policies import username_key
 
 def validate_database_file(path: Path, *, expected_username: str | None = None,
                           expected_user_id: int | None = None) -> None:
@@ -20,7 +21,8 @@ def validate_database_file(path: Path, *, expected_username: str | None = None,
             raise ValueError("restore_missing_users")
         database_kind(connection)
         if expected_username:
-            row = connection.execute("SELECT id FROM users WHERE username=?", (expected_username,)).fetchone()
+            row = next((row for row in connection.execute("SELECT id,username FROM users")
+                        if username_key(row[1]) == username_key(expected_username)), None)
             if row is None or (expected_user_id is not None and row[0] != expected_user_id):
                 raise ValueError("restore_user_mismatch")
 

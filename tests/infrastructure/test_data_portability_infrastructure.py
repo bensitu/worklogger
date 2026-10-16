@@ -163,7 +163,7 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
     def test_sqlite_backup_and_restore_round_trip_preserves_backup_snapshot(self) -> None:
         user_id = self.register_user("alice")
         self.save_work_log(user_id, date(2026, 4, 20), note="Before backup")
-        service = SQLiteBackupService(self.factory, expected_username="alice")
+        service = SQLiteBackupService(self.factory, expected_username="ALICE")
         backup_path = Path(self._tempdir.name) / "backup" / "worklog-backup.db"
         with self.factory.transaction() as connection:
             connection.executemany("INSERT INTO settings(user_id,key,value) VALUES(?,?,?)", (

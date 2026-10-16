@@ -357,7 +357,18 @@ class TimeEntryService:
         return Result.success(None)
 
     def discard_timer(self) -> Result[None]:
-        result = self._run(lambda: self._persist(None))
+        def discard():
+            if self.restore_failed and self._timer_raw is None:
+                current = self.settings.get(self.user_id, "time_entry_timer")
+                if current:
+                    try:
+                        timer_payload(current)
+                    except ValueError:
+                        self._timer_raw = current
+                    else:
+                        raise ValueError("time_entry_timer_conflict")
+            self._persist(None)
+        result = self._run(discard)
         if result.ok:
             self.restore_failed = False
         return result

@@ -70,8 +70,15 @@ Declared recurrence counts above the event limit are rejected before expansion,
 even if exclusions would reduce the final selection.
 Date-bounded recurrence and combined rules are also counted before expansion;
 the capacity budget includes additional dates and exclusion rules.
+Long-running annual series are supported within the event budget; there is no
+fixed ten-year cutoff. Expansion also limits candidate recurrence periods and
+estimated output size, so sparse or excessive rules may still be rejected.
+An end date before the first occurrence produces no events.
 
 Multi-day events expand by occupied date; all-day end dates are exclusive.
+Daily calendar segments may end at `24:00`, meaning the exclusive boundary at
+the following midnight. This calendar representation is separate from manual
+time-entry clock fields, which use `00:00` and an overnight date boundary.
 Append deduplicates matching events; replace is transactional.
 Imported events are separate from worked time, and the source file is unchanged.
 Review representative files before importing a large calendar.
@@ -119,7 +126,8 @@ Analytics PDF is a paginated text summary rather than an image of the charts.
 SQLite backups contain all accounts, records, notes, reports, settings, background
 media, and stored history. They replace the whole database when restored.
 OS credentials, remembered-session files, language preferences, and model files
-need separate handling. Proxy passwords are excluded from newly created backups.
+need separate handling. Proxy passwords and API-key settings are excluded from
+newly created backups.
 Protect backups as sensitive, unencrypted files. See [database handling](database.md).
 
 ## Model Metadata

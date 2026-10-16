@@ -34,6 +34,33 @@ class FakeHolidaysModule:
 
 
 class CalendarImportInfrastructureTests(unittest.TestCase):
+    def test_finite_annual_recurrences_preserve_date_types_and_source_components(self):
+        from icalendar import Calendar
+        from worklogger.infrastructure.calendar.recurrence import prepare_recurrence_calendar
+        starts = ("DTSTART;VALUE=DATE:20260101", "DTSTART:20260101T090000",
+                  "DTSTART:20260101T090000Z", "DTSTART;TZID=America/New_York:20260101T090000")
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "annual.ics"
+            for start in starts:
+                with self.subTest(start=start):
+                    text = f"BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:annual\n{start}\nRRULE:FREQ=YEARLY;COUNT=20\nSUMMARY:Annual event\nEND:VEVENT\nEND:VCALENDAR\n"
+                    calendar = Calendar.from_ical(text)
+                    original = calendar.to_ical()
+                    prepared = prepare_recurrence_calendar(calendar, 100)
+                    self.assertEqual(calendar.to_ical(), original)
+                    until = prepared.walk("VEVENT")[0]["RRULE"]["UNTIL"][0]
+                    self.assertEqual(type(until), type(calendar.walk("VEVENT")[0].decoded("DTSTART")))
+                    path.write_text(text, encoding="utf-8")
+                    result = IcsCalendarImporter().read_events(path, user_id=1)
+                    self.assertTrue(result.ok, result.error)
+                    self.assertEqual(len(result.value), 20)
+            for rule, expected in (("FREQ=YEARLY;UNTIL=20991231T090000Z", 74),
+                                   ("FREQ=DAILY;UNTIL=20250101T090000Z", 0)):
+                path.write_text(f"BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:finite\nDTSTART:20260101T090000Z\nRRULE:{rule}\nSUMMARY:Event\nEND:VEVENT\nEND:VCALENDAR\n", encoding="utf-8")
+                result = IcsCalendarImporter().read_events(path, user_id=1)
+                self.assertTrue(result.ok, result.error)
+                self.assertEqual(len(result.value), expected)
+
     def test_recurrence_horizon_and_expanded_text_are_bounded(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "bounded.ics"

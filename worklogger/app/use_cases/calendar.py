@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from datetime import date
 from typing import Protocol
 
 from worklogger.app.commands.calendar_commands import ImportCalendarEventsCommand
@@ -52,7 +53,7 @@ class GetCalendarEventsForRangeHandler:
         self,
         query: GetCalendarEventsForRangeQuery,
     ) -> Result[tuple[CalendarEvent, ...]]:
-        if query.end_day < query.start_day:
+        if not isinstance(query.start_day, date) or not isinstance(query.end_day, date) or query.end_day < query.start_day:
             return Result.failure(ValidationError("date_range_invalid", "date_range_invalid"))
         try:
             return Result.success(self._repository.list_for_range(query.user_id, query.start_day, query.end_day))
@@ -65,7 +66,7 @@ class GetHolidaysForRangeHandler:
         self._provider = provider
 
     def handle(self, query: GetHolidaysForRangeQuery) -> Result[tuple[Holiday, ...]]:
-        if query.end_day < query.start_day:
+        if not isinstance(query.start_day, date) or not isinstance(query.end_day, date) or query.end_day < query.start_day:
             return Result.failure(ValidationError("date_range_invalid", "date_range_invalid"))
         country = str(query.country or "").strip().upper()
         if not country:

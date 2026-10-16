@@ -25,6 +25,20 @@ from worklogger.infrastructure.security.password_hasher import PBKDF2PasswordHas
 
 
 class TimeEntryTests(unittest.TestCase):
+    def test_timer_discard_retries_failed_reads_without_removing_a_new_valid_timer(self):
+        self.settings.set(self.user.id, "time_entry_timer", "invalid")
+        with patch.object(self.settings, "get", side_effect=OSError("unavailable")):
+            service = self.make_service()
+        self.assertTrue(service.restore_failed)
+        self.assertTrue(service.discard_timer().ok)
+        self.assertIsNone(self.settings.get(self.user.id, "time_entry_timer"))
+        with patch.object(self.settings, "get", side_effect=OSError("unavailable")):
+            service = self.make_service()
+        self.assertTrue(self.service.start("normal", "Current recording").ok)
+        raw = self.settings.get(self.user.id, "time_entry_timer")
+        self.assertEqual(service.discard_timer().error.code, "time_entry_timer_conflict")
+        self.assertEqual(self.settings.get(self.user.id, "time_entry_timer"), raw)
+
     def test_timer_start_rechecks_occupied_time_within_its_write_transaction(self):
         start = self.now
         self.repository.save_entry(WorkLog(self.user.id, start.date(), start.strftime("%H:%M"),

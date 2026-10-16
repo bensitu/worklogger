@@ -193,11 +193,16 @@ class SQLiteWorkLogWrites:
                 (user_id, value),
             )
 
-    def _check_overlap(self, connection, record: WorkLog, *, cached_rows=None) -> None:
-        timer = connection.execute(
-            "SELECT value FROM settings WHERE user_id=? AND key='time_entry_timer'",
-            (record.user_id,),
-        ).fetchone()
+    def _check_overlap(self, connection, record: WorkLog, *, cached_rows=None, cached_timers=None) -> None:
+        if cached_timers is not None and record.user_id in cached_timers:
+            timer = cached_timers[record.user_id]
+        else:
+            timer = connection.execute(
+                "SELECT value FROM settings WHERE user_id=? AND key='time_entry_timer'",
+                (record.user_id,),
+            ).fetchone()
+            if cached_timers is not None:
+                cached_timers[record.user_id] = timer
         if timer and record.has_times:
             state = timer_payload(timer[0])
             if state["capture_id"] != record.capture_id:
@@ -280,10 +285,11 @@ class SQLiteWorkLogWrites:
                     else:
                         before[user_id, day] = remove_import_targets(connection, self._storage, user_id, day, entries, replace_dates)
             cached_rows = {}
+            cached_timers = {}
             after = {}
             for record in records:
                 if not record.is_note_only:
-                    self._check_overlap(connection, record, cached_rows=cached_rows)
+                    self._check_overlap(connection, record, cached_rows=cached_rows, cached_timers=cached_timers)
             for record in records:
                 if record.is_note_only:
                     save_note(

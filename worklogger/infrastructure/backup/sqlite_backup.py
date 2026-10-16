@@ -12,6 +12,7 @@ from uuid import uuid4
 
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
+from worklogger.domain.auth.policies import username_key
 from worklogger.config.constants import NETWORK_PROXY_PASSWORD_SETTING_KEY, SECRET_SETTING_PREFIX
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
 from worklogger.infrastructure.database.paths import secure_database_files
@@ -44,7 +45,7 @@ class SQLiteBackupService:
         with self._connection_factory.connection() as connection:
             user = connection.execute("SELECT username, is_admin FROM users WHERE id=?",
                                       (self._requesting_user_id,)).fetchone()
-        if not user or not user["is_admin"] or user["username"] != self._expected_username:
+        if not user or not user["is_admin"] or not self._expected_username or username_key(user["username"]) != username_key(self._expected_username):
             raise ValueError("admin_required")
 
     def backup_database(self, destination: Path) -> Result[Path]:
@@ -171,7 +172,7 @@ class SQLiteBackupService:
         expected_id = None
         if self._expected_username:
             with self._connection_factory.connection() as connection:
-                user = connection.execute("SELECT id FROM users WHERE username=?", (self._expected_username,)).fetchone()
+                user = connection.execute("SELECT id FROM users WHERE username_key=?", (username_key(self._expected_username),)).fetchone()
                 if not user:
                     raise ValueError("restore_user_mismatch")
                 expected_id = user[0]

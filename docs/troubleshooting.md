@@ -1,5 +1,16 @@
 # Troubleshooting
 
+## Saved Timer Recovery
+
+An unreadable saved timer blocks time-record writes to avoid creating overlaps
+with work that may still be in progress. Open automatic recording and choose
+**Discard timer** only if the saved timer is no longer needed. Confirmation clears
+the saved timer without creating or deleting time records. A temporary settings
+read failure can be retried; a valid timer created by another window is protected
+by the normal concurrent-change check. Saved records are not silently skipped
+when invalid stored data prevents a range from loading; restore a verified backup
+or retain a copy of the database before requesting recovery assistance.
+
 ## Startup
 
 Uncaught application and background-thread failures are recorded in the rotating
