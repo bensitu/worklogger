@@ -1,8 +1,11 @@
 """Presentation state for manual and automatic time-entry editing."""
 
-from dataclasses import dataclass, replace
-from copy import copy
+from __future__ import annotations
+
+from dataclasses import replace
+from collections.abc import Callable
 from datetime import date
+from typing import TypeVar
 
 from worklogger.app.ports import TimeEntryOperations
 from worklogger.app.commands.ai_commands import RewriteTextCommand
@@ -15,37 +18,43 @@ from worklogger.domain.worklog.rules import timestamp_span_hours
 from worklogger.domain.worklog.editing import merge_entries
 from worklogger.domain.worklog.reminders import timer_reminders
 from worklogger.presentation.viewmodels.time_entry_editor import TimeEntryEditorState, editor_state
+from worklogger.presentation.viewmodels.time_entry_operations import (
+    TimeEntryDraft as TimeEntryDraft, TimeEntryEditState, TimeEntryOperationRequest, TimeEntryOperationResult,
+)
 
-
-@dataclass(frozen=True)
-class TimeEntryDraft:
-    day: date
-    start: str = ""
-    end: str = ""
-    work_type: str = "normal"
-    content: str = ""
-    original: WorkLog | None = None
-    context: WorkContext = WorkContext()
+T = TypeVar("T")
 
 
 class TimeEntryViewModel:
     def editor_state(self, *, automatic: bool) -> TimeEntryEditorState:
         return editor_state(self, automatic=automatic)
 
-    def operation_copy(self):
-        snapshot = copy(self)
-        snapshot.service = self.service.operation_copy()
-        return snapshot
+    def snapshot_state(self) -> TimeEntryEditState:
+        return TimeEntryEditState(draft=self.draft, baseline=self._baseline, entries=self.entries,
+            auto_completed=self.auto_completed, auto_content=self.auto_content,
+            auto_work_type=self.auto_work_type, auto_context=self.auto_context,
+            latest_change=self.latest_change_info, timer_origin=self._timer_origin,
+            timer_shares_draft=self._timer_shares_draft)
 
-    def apply_operation_state(self, snapshot):
-        for name in ("draft", "_baseline", "entries", "auto_completed", "auto_content", "auto_work_type",
-                     "auto_context", "latest_change_info", "_timer_origin", "_timer_shares_draft"):
-            if name in snapshot.__dict__:
-                setattr(self, name, getattr(snapshot, name))
-        self.service.apply_operation_state(snapshot.service)
+    def _apply_editor_state(self, state: TimeEntryEditState) -> None:
+        self.draft, self._baseline, self.entries = state.draft, state.baseline, state.entries
+        self.auto_completed, self.auto_content = state.auto_completed, state.auto_content
+        self.auto_work_type, self.auto_context = state.auto_work_type, state.auto_context
+        self.latest_change_info = state.latest_change
+        self._timer_origin, self._timer_shares_draft = state.timer_origin, state.timer_shares_draft
+
+    def prepare_operation(self, operation: Callable[[TimeEntryViewModel], Result[T]]) -> Callable[[], Result[TimeEntryOperationResult[T]]]:
+        request = TimeEntryOperationRequest(self.snapshot_state(), self.default_break_hours)
+        service = self.service.new_session(self.service.snapshot_state())
+        return lambda: request.execute(service, operation)
+
+    def apply_operation_result(self, result: TimeEntryOperationResult[T]) -> Result[T]:
+        self._apply_editor_state(result.editor)
+        self.service.apply_state(result.recording)
+        return result.outcome
 
     def __init__(self, service: TimeEntryOperations, *, default_break_hours: float = 1,
-                 rewrite_handler=None, language="en_US") -> None:
+                 rewrite_handler=None, language="en_US", initial_state: TimeEntryEditState | None = None) -> None:
         self.service = service
         self._rewrite_handler, self._language = rewrite_handler, language
         self.default_break_hours = default_break_hours
@@ -59,6 +68,10 @@ class TimeEntryViewModel:
         self.latest_change_info = None
         self.timer_reminder_hours = 10.0
         self.continuous_timer_reminder_hours = 0.0
+        self._timer_origin: TimeEntryDraft | None = None
+        self._timer_shares_draft = False
+        if initial_state is not None:
+            self._apply_editor_state(initial_state)
 
     def set_timer_reminders(self, long_hours, continuous_hours):
         self.timer_reminder_hours = long_hours

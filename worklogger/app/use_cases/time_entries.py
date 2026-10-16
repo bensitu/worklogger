@@ -1,12 +1,12 @@
 """Time-entry editing and persistent automatic recording."""
 
-from copy import copy
+from __future__ import annotations
+
 from dataclasses import replace
 from datetime import date, datetime, timedelta, timezone, tzinfo
 import math
 from uuid import uuid4
 from collections.abc import Callable
-from typing import Self
 
 from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.calendar.repositories import CalendarEventRepository
@@ -19,6 +19,7 @@ from worklogger.domain.worklog.rules import wall_interval, wall_position
 from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType
 from worklogger.domain.worklog.rules import entry_interval, normalize_work_log, parse_time, shift_datetimes
 from worklogger.app.ports import WorkTypeOperations, ProjectOperations
+from worklogger.app.time_entry_state import RecordingState
 from worklogger.app.use_cases._errors import infrastructure_failure
 from worklogger.domain.projects.models import WorkContext
 
@@ -31,7 +32,8 @@ class TimeEntryService:
                  local_timezone: tzinfo, clock: Callable[[], datetime] | None = None,
                  calendar_events: CalendarEventRepository | None = None,
                  work_types: WorkTypeOperations | None = None,
-                 projects: ProjectOperations | None = None) -> None:
+                 projects: ProjectOperations | None = None,
+                 initial_state: RecordingState | None = None) -> None:
         self.user_id = user_id
         self.repository = repository
         self.settings = settings
@@ -44,19 +46,28 @@ class TimeEntryService:
         self._timer_raw: str | None = None
         self.last_error = None
         self.restore_failed = False
-        self._restore()
+        if initial_state is None:
+            self._restore()
+        else:
+            self.apply_state(initial_state)
 
     def now(self) -> datetime:
         return self._clock().astimezone(self.local_timezone)
 
-    def operation_copy(self) -> Self:
-        return copy(self)
+    def snapshot_state(self) -> RecordingState:
+        return RecordingState(self.timer, self._timer_raw, self.restore_failed, self.last_error)
 
-    def apply_operation_state(self, operation: Self) -> None:
-        self.timer = operation.timer
-        self._timer_raw = operation._timer_raw
-        self.restore_failed = operation.restore_failed
-        self.last_error = operation.last_error
+    def apply_state(self, state: RecordingState) -> None:
+        self.timer = state.timer
+        self._timer_raw = state.persisted_timer
+        self.restore_failed = state.restore_failed
+        self.last_error = state.error
+
+    def new_session(self, state: RecordingState) -> TimeEntryService:
+        return TimeEntryService(user_id=self.user_id, repository=self.repository,
+            settings=self.settings, local_timezone=self.local_timezone, clock=self._clock,
+            calendar_events=self.calendar_events, work_types=self.work_types,
+            projects=self.projects, initial_state=state)
 
     @property
     def events_deletable(self) -> bool:

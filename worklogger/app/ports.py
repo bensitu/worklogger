@@ -6,7 +6,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from datetime import date, datetime
-from typing import Protocol, Self, TYPE_CHECKING
+from typing import Protocol, TYPE_CHECKING
 
 from worklogger.app.commands.ai_commands import RewriteTextCommand
 from worklogger.app.job_runner import CancellationToken
@@ -17,6 +17,7 @@ from worklogger.domain.projects.models import WorkContext, Project, WorkItem
 from worklogger.domain.reporting.timesheets import Timesheet
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.timer_state import EntryTimer
+from worklogger.app.time_entry_state import RecordingState
 
 if TYPE_CHECKING:
     from worklogger.app.use_cases.ai import RewriteTextResult
@@ -142,8 +143,9 @@ class TimeEntryOperations(Protocol):
     search_available: bool
     changes_available: bool
 
-    def operation_copy(self) -> Self: ...
-    def apply_operation_state(self, operation: Self) -> None: ...
+    def snapshot_state(self) -> RecordingState: ...
+    def apply_state(self, state: RecordingState) -> None: ...
+    def new_session(self, state: RecordingState) -> TimeEntryOperations: ...
     def now(self) -> datetime: ...
     def list_for_day(self, day: date) -> Result[tuple[WorkLog, ...]]: ...
     def search(self, criteria, *, cursor=None): ...

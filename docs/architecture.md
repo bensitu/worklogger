@@ -65,9 +65,12 @@ outside widgets. Writes use account ownership and expected revisions.
 Timer completion and persistence of its next state share a transaction.
 `domain/worklog/timer_state.py` owns timer models, persisted representation, and
 recovery validation, including historical break fields. Application services own
-storage access and context authorization. The recording service creates operation
-copies and applies their state; presentation must not copy private persistence
-fields between services. `domain/worklog/content.py` defines the content limit
+storage access and context authorization. Recording operations capture an immutable
+editor request and use an independent service session initialized from explicit
+`RecordingState`. Completion returns a typed result containing the editor and
+recording state, not a view model or service. Only completion updates the displayed
+editor; failed operations also return their validation and recovery state. Timer
+compare-and-update values remain unchanged. `domain/worklog/content.py` defines the content limit
 shared by editing, recovery, and rewriting.
 Daily summaries aggregate records, while editing and exports retain individual
 identities. Custom type and project labels are historical snapshots.

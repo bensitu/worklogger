@@ -26,6 +26,26 @@ from worklogger.infrastructure.security.password_hasher import PBKDF2PasswordHas
 
 
 class TimeEntryTests(unittest.TestCase):
+    def test_recording_sessions_apply_state_explicitly_and_reject_stale_timer_updates(self):
+        initial = self.service.snapshot_state()
+        session = self.service.new_session(initial)
+        started = session.start("normal", "Recording")
+        self.assertTrue(started.ok, started.error)
+        self.assertEqual(self.service.snapshot_state(), initial)
+        self.service.apply_state(session.snapshot_state())
+        self.assertEqual(self.service.timer, started.value)
+        stale = self.service.new_session(self.service.snapshot_state())
+        current = self.service.new_session(self.service.snapshot_state())
+        self.assertTrue(current.save_content("Updated recording").ok)
+        rejected = stale.finish("Stale recording", now=self.now + timedelta(hours=1))
+        self.assertEqual(rejected.error.code, "time_entry_timer_conflict")
+        self.assertEqual(self.repository.list_for_day(self.user.id, self.now.date()), ())
+        finished = current.finish("Updated recording", now=self.now + timedelta(hours=1))
+        self.assertTrue(finished.ok, finished.error)
+        self.service.apply_state(current.snapshot_state())
+        self.assertIsNone(self.service.timer)
+        self.assertEqual(self.repository.list_for_day(self.user.id, self.now.date()), (finished.value,))
+
     def test_timer_discard_retries_failed_reads_without_removing_a_new_valid_timer(self):
         self.settings.set(self.user.id, "time_entry_timer", "invalid")
         with patch.object(self.settings, "get", side_effect=OSError("unavailable")):

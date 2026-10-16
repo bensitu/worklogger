@@ -535,15 +535,15 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         if self.is_busy:
             return
         self._polish_task.cancel()
+        work = self.view_model.prepare_operation(operation)
         if self._job_runner is None:
-            result = operation(self.view_model)
+            result = self.view_model.apply_operation_result(work().value)
             if on_complete is None:
                 self._apply_result(result, refresh=refresh)
             else:
                 on_complete(result)
             self._update_actions()
             return
-        snapshot = self.view_model.operation_copy()
         self.is_busy = True
         self.auto_timer.stop()
         self.setEnabled(False)
@@ -551,8 +551,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
 
         def complete(result):
             if result.ok:
-                result, state = result.value
-                self.view_model.apply_operation_state(state)
+                result = self.view_model.apply_operation_result(result.value)
             self.is_busy = False
             self.setEnabled(True)
             self.busy_changed.emit(False)
@@ -570,7 +569,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
                 self._update_actions()
 
         try:
-            self._job_runner.submit("time_entry_update", lambda _token: Result.success((operation(snapshot), snapshot)),
+            self._job_runner.submit("time_entry_update", lambda _token: work(),
                                     on_complete=owned_callback(self, complete))
         except Exception:
             self.is_busy = False
