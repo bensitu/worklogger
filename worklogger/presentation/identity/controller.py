@@ -29,6 +29,9 @@ class IdentityWorkflowController:
 
     def open(self, parent: QWidget | None = None) -> IdentityDialog:
         dialog = self._dialog_factory(self._view_model, parent)
-        dialog.refresh()
-        dialog.exec()
+        try:
+            dialog.refresh()
+            dialog.exec()
+        finally:
+            dialog.deleteLater()
         return dialog

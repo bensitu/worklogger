@@ -40,5 +40,8 @@ class AiAssistWorkflowController:
             )
         else:
             dialog = self._dialog_factory(self._view_model, day, parent)
-        dialog.exec()
+        try:
+            dialog.exec()
+        finally:
+            dialog.deleteLater()
         return dialog

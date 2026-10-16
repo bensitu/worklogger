@@ -80,6 +80,7 @@ class QtJobRunner(QObject):
         self._closed = True
         for token in self._tokens.values():
             token.cancel()
+        self._tokens.clear()
         self._callbacks.clear()
         self._pool.clear()
         if wait:

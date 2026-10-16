@@ -352,11 +352,11 @@ class ReportsPage(QWidget):
         dialog.finished.connect(dialog.deleteLater)
         dialog.open()
 
-    def _set_status(self, message: str, *, notify: bool = True, error: bool = False) -> None:
+    def _set_status(self, message: str, *, notify: bool = False, error: bool = False) -> None:
         if not error:
             self._last_error = None
         self.status_label.setText(message)
-        self.status_label.hide()
+        self.status_label.setVisible(bool(message) and not notify)
         if message and notify:
             show = QMessageBox.warning if error else QMessageBox.information
             show(self, _("Reports"), message)
@@ -571,4 +571,4 @@ class ReportsPage(QWidget):
             self._set_status(display_error_message(error), notify=False)
             return
         self._last_error = error
-        self._set_status(display_error_message(error), error=True)
+        self._set_status(display_error_message(error), notify=True, error=True)

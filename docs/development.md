@@ -40,6 +40,9 @@ Remove unused scaffolding rather than preserving it for an unspecified feature.
 
 Keep long operations off the UI thread. Honor cancellation, ownership, optimistic
 updates, and disposal. Treat error codes as stable diagnostic identifiers.
+Schedule modal workflow dialogs for deletion when their execution ends, including
+when loading fails. Keep successful routine actions nonmodal and show their status
+inline; reserve message boxes for errors or decisions requiring user input.
 
 ## Interface Conventions
 

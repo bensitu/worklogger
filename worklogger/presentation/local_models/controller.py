@@ -42,6 +42,9 @@ class LocalModelsWorkflowController:
             )
         else:
             dialog = self._dialog_factory(self._view_model, parent)
-        dialog.refresh()
-        dialog.exec()
+        try:
+            dialog.refresh()
+            dialog.exec()
+        finally:
+            dialog.deleteLater()
         return dialog

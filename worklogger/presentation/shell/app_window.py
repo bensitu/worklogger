@@ -509,7 +509,7 @@ class AppWindow(QMainWindow):
         if not preserve_day and (self.entry_panel.time_tabs.currentIndex() == 1 or self._time_entry_view_model.editing_active_timer):
             self._selected_day = day
             self._current_month = day.replace(day=1)
-        self.refresh()
+        self.refresh(asynchronous=self._job_runner is not None)
 
     def refresh_ai_availability(self):
         self.entry_panel.refresh_ai_availability()
@@ -559,7 +559,7 @@ class AppWindow(QMainWindow):
         self, message: str, *, notify: bool = False, error: bool = False
     ) -> None:
         self.status_label.setText(message)
-        self.status_label.hide()
+        self.status_label.setVisible(bool(message) and not notify)
         if message and notify:
             show = QMessageBox.warning if error else QMessageBox.information
             show(self, _("WorkLogger"), message)

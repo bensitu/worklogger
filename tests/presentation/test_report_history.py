@@ -368,6 +368,9 @@ class ReportHistoryTests(unittest.TestCase):
         state = page._states["daily"]
         self.assertIsNotNone(state.report_id)
         self.assertIsNotNone(state.created_at)
+        self.assertTrue(page.status_label.text())
+        self.assertFalse(page.status_label.isHidden())
+        self.information.assert_not_called()
         page.editor.setPlainText("Updated report")
         with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
             page.save_button.click()

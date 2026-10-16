@@ -32,6 +32,9 @@ class AnalyticsWorkflowController:
 
     def open(self, day: date, parent: QWidget | None = None) -> AnalyticsDialog:
         dialog = self._dialog_factory(self._view_model, day, parent)
-        dialog.refresh()
-        dialog.exec()
+        try:
+            dialog.refresh()
+            dialog.exec()
+        finally:
+            dialog.deleteLater()
         return dialog
