@@ -29,11 +29,6 @@ QPushButton#calendar_time_entry_button:checked {
   background: {{ record_selected_fill }};
 }
 
-QToolButton#delete_record_button:hover:enabled,
-QToolButton#record_actions_button:hover:enabled {
-  background: {{ button_hover }};
-}
-
 QToolButton#clear_time_entry_button,
 QToolButton#undo_record_change_button {
   padding: 5px 8px;

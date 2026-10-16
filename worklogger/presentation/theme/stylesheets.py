@@ -15,7 +15,7 @@ COMMON_TEMPLATES = (
     "surfaces.qss", "typography.qss", "buttons.qss", "navigation.qss",
     "inputs.qss", "item_views.qss", "menus.qss", "tabs.qss",
     "calendar.qss", "settings.qss", "authentication.qss", "date_picker.qss",
-    "reporting.qss", "disabled.qss", "background_images.qss",
+    "reporting.qss", "interaction_states.qss", "disabled.qss", "background_images.qss",
 )
 MATERIAL_TEMPLATES = MappingProxyType({key: profile.stylesheet_fragments for key, profile in MATERIAL_PROFILES.items()})
 

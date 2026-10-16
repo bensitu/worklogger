@@ -18,6 +18,7 @@ from worklogger.presentation.theme.stylesheets import application_stylesheet
 from worklogger.presentation.theme.context import current_colors
 from worklogger.presentation.theme.materials import CalendarColors, material_profile
 from worklogger.presentation.theme.qt_palette import qt_palette
+from worklogger.presentation.theme.color_contrast import contrast_ratio, contrasting_foreground, mix_colors, scale_color
 
 
 class ThemeSystemTests(unittest.TestCase):
@@ -118,3 +119,13 @@ class ThemeSystemTests(unittest.TestCase):
         self.assertEqual(normalize_theme(" BLUE "), "blue")
         self.assertEqual(engine.palette("missing"), engine.palette("blue"))
         self.assertEqual(engine.palette("custom", custom_color="invalid"), engine.palette("custom"))
+
+    def test_color_helpers_use_linear_srgb_and_bounded_mixing(self):
+        self.assertEqual(contrast_ratio("#000000", "#ffffff"), 21.0)
+        self.assertAlmostEqual(contrast_ratio("#777777", "#ffffff"), 4.478, places=3)
+        self.assertEqual(contrasting_foreground("#ffffff"), "#000000")
+        self.assertEqual(contrasting_foreground("#000000"), "#ffffff")
+        self.assertEqual(mix_colors("#123456", "#abcdef", -1), "#123456")
+        self.assertEqual(mix_colors("#123456", "#abcdef", 2), "#abcdef")
+        self.assertEqual(scale_color("#123456", 0.5), "#091a2b")
+        self.assertEqual(scale_color("#ffffff", 2), "#ffffff")

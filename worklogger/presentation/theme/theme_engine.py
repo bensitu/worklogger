@@ -82,8 +82,5 @@ class ThemeEngine:
 
 def contrasting_text_color(background: QColor) -> QColor:
     from PySide6.QtGui import QColor
-    def linear(channel):
-        return channel / 12.92 if channel <= 0.04045 else ((channel + 0.055) / 1.055) ** 2.4
-    luminance = sum(weight * linear(channel) for weight, channel in zip(
-        (0.2126, 0.7152, 0.0722), (background.redF(), background.greenF(), background.blueF())))
-    return QColor("#000000" if luminance > 0.179 else "#ffffff")
+    from worklogger.presentation.theme.color_contrast import contrasting_foreground
+    return QColor(contrasting_foreground(background.name()))

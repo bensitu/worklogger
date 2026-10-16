@@ -53,10 +53,6 @@ QListWidget[management_list="true"]::item:selected {
   color: {{ text }};
 }
 
-QListWidget[management_list="true"]:focus {
-  border-color: {{ accent }};
-}
-
 QTreeWidget[data_browser="true"]::item {
   min-height: 18px;
   padding: 6px 8px;

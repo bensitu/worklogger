@@ -4,11 +4,7 @@ QLineEdit,
 QTextEdit,
 QPlainTextEdit,
 QComboBox,
-QSpinBox,
-QDateEdit,
-QDateTimeEdit,
-QTimeEdit,
-QDoubleSpinBox {
+QAbstractSpinBox {
   background: {{ input_fill }};
   border: 1px solid {{ field_border }};
   color: {{ text }};
@@ -25,28 +21,12 @@ QLineEdit QToolButton {
   padding: 0;
 }
 
-QLineEdit QToolButton:hover:enabled {
-  background: {{ button_hover }};
-}
-
 QLineEdit:hover:enabled:!read-only:!focus,
 QTextEdit:hover:enabled:!read-only:!focus,
 QPlainTextEdit:hover:enabled:!read-only:!focus,
 QComboBox:hover:enabled:!focus,
 QAbstractSpinBox:hover:enabled:!read-only:!focus {
   border-color: {{ border_strong }};
-}
-
-QLineEdit:focus,
-QTextEdit:focus,
-QPlainTextEdit:focus,
-QComboBox:focus,
-QSpinBox:focus,
-QDateEdit:focus,
-QDateTimeEdit:focus,
-QTimeEdit:focus,
-QDoubleSpinBox:focus {
-  border-color: {{ accent }};
 }
 
 QCheckBox:hover:enabled,
@@ -72,8 +52,7 @@ QRadioButton#work_schedule_choice_button::indicator:checked {
   border-color: {{ accent }};
 }
 
-QRadioButton#work_schedule_choice_button::indicator:hover:enabled,
-QRadioButton#work_schedule_choice_button::indicator:focus:enabled {
+QRadioButton#work_schedule_choice_button::indicator:hover:enabled {
   border-color: {{ accent }};
 }
 

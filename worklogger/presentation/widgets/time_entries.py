@@ -258,6 +258,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         field.setMinimumWidth(0)
         field.setPlaceholderText("HH:mm")
         action = field.addAction(ui_icon("clock"), QLineEdit.ActionPosition.TrailingPosition)
+        action.setText(title)
         action.setToolTip(title)
         action.triggered.connect(lambda: self._pick_time(field, title))
         return field

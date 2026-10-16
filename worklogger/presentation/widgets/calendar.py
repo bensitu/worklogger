@@ -19,6 +19,8 @@ from PySide6.QtWidgets import (
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets.icons import ui_icon
 from worklogger.presentation.theme.context import current_colors
+from worklogger.presentation.date_labels import day_label
+from worklogger.presentation.work_type_labels import work_type_label
 from worklogger.presentation.viewmodels.calendar import (
     CalendarDayCell,
     CalendarMonthViewState,
@@ -46,6 +48,8 @@ class CalendarDayButton(QPushButton):
         self._cell = cell
         self.setText("\n".join(cell.text_lines))
         self.setToolTip(_tooltip_for_cell(cell))
+        self.setAccessibleName("\n".join((day_label(cell.day), *cell.text_lines[1:])))
+        self.setAccessibleDescription(self.toolTip())
         self.setProperty("day", cell.day.isoformat())
         self.setProperty("in_month", cell.in_month)
         self.setProperty("style_key", cell.style.key)
@@ -332,6 +336,11 @@ def _holiday_lines(text: str, font: QFont, width: int) -> tuple[str, ...]:
 
 def _tooltip_for_cell(cell: CalendarDayCell) -> str:
     details: list[str] = []
+    type_label = work_type_label(cell.work_type)
+    if cell.work_type_marker_color and type_label:
+        details.append(_("Work type") + ": " + type_label)
+    if cell.show_overnight_marker:
+        details.append(_("Overnight"))
     if cell.holiday_name:
         details.append(cell.holiday_name)
     if cell.note_tooltip:

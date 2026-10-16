@@ -36,7 +36,17 @@ class ComboChart(QWidget):
         self._bundle = bundle
         self._mode = mode if mode in {"bar", "line"} else "bar"
         self._average = average
-        self.setToolTip("\n".join(f"{label.replace(chr(10), ' ')}: {duration_label(value)}" for label, value in bundle.bar_data))
+        values = bundle.line_data if self._mode == "line" else bundle.bar_data
+        leave = dict(bundle.leave_hours_data)
+        details = []
+        for label, value in values:
+            description = f"{label.replace(chr(10), ' ')}: {duration_label(value)}"
+            if leave.get(label, 0) > 0:
+                description += f"; {_('Leave')}: {duration_label(leave[label])}"
+            details.append(description)
+        self.setAccessibleName(_("Average") if average else _("Work hours"))
+        self.setAccessibleDescription("\n".join(details) or _("No data"))
+        self.setToolTip(self.accessibleDescription())
         self.update()
 
     def paintEvent(self, _event: object) -> None:
@@ -122,6 +132,8 @@ class DonutChart(QWidget):
         self._segments = tuple((label, value) for label, value in segments if value > 0)
         self._keys = tuple(keys[index] if index < len(keys) else "" for index, (_label, value) in enumerate(segments) if value > 0)
         self.setToolTip("\n".join(f"{label}: {duration_label(value)}" for label, value in self._segments))
+        self.setAccessibleName(_("Work type"))
+        self.setAccessibleDescription(self.toolTip() or _("No data"))
         self.update()
 
     def paintEvent(self, _event: object) -> None:

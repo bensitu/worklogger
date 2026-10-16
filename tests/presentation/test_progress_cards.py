@@ -8,14 +8,17 @@ import unittest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QAccessible
 
 from tests.presentation.test_analytics_presentation import MemoryWorkLogRepository
 from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler, GetAnalyticsDashboardHandler
+from worklogger.domain.analytics.models import ChartDataBundle
 from worklogger.infrastructure.export import AnalyticsCsvExporter, AnalyticsPdfExporter
 from worklogger.infrastructure.i18n import _, set_language
 from worklogger.presentation.shell.pages import AnalyticsPage
 from worklogger.presentation.viewmodels import AnalyticsViewModel
 from worklogger.presentation.widgets.progress_cards import DonutGauge, OvertimeComparisonChart
+from worklogger.presentation.widgets.combo_chart import ComboChart, DonutChart
 
 
 class ProgressCardTests(unittest.TestCase):
@@ -86,6 +89,27 @@ class ProgressCardTests(unittest.TestCase):
                 self.assertIn(f"{previous:.1f}h", chart.toolTip())
                 self.assertIn(f"{current:.1f}h", chart.toolTip())
                 self.assertEqual(chart.toolTip(), chart.accessibleName())
+
+    def test_chart_descriptions_follow_displayed_series_and_empty_results(self):
+        chart, donut = ComboChart(), DonutChart()
+        self.addCleanup(chart.deleteLater)
+        self.addCleanup(donut.deleteLater)
+        bundle = ChartDataBundle((("Daily total", 8.0),), (("Daily average", 4.0),),
+                                 frozenset(), (), (("Daily total", 2.0),))
+        for language in ("en_US", "ja_JP"):
+            set_language(language)
+            chart.set_data(bundle)
+            self.assertIn("Daily total", chart.accessibleDescription())
+            self.assertIn(_("Leave"), chart.accessibleDescription())
+            chart.set_data(bundle, mode="line", average=True)
+            interface = QAccessible.queryAccessibleInterface(chart)
+            self.assertEqual(interface.text(QAccessible.Text.Name), _("Average"))
+            self.assertIn("Daily average", interface.text(QAccessible.Text.Description))
+            self.assertNotIn("Daily total", interface.text(QAccessible.Text.Description))
+            donut.set_segments((("Remote", 8.0),))
+            self.assertIn("Remote", donut.accessibleDescription())
+            donut.set_segments(())
+            self.assertEqual(donut.accessibleDescription(), _("No data"))
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QDate, QEvent, QPoint, QPointF, QRect, Qt
 from PySide6.QtGui import QColor, QImage, QMouseEvent, QPainter, QPalette
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QDateEdit, QDateTimeEdit, QDoubleSpinBox,
     QGridLayout, QHeaderView, QLabel, QLineEdit, QListWidget, QMenu, QPlainTextEdit, QRadioButton,
@@ -329,3 +330,39 @@ class ControlStateChecks(unittest.TestCase):
             target.mkdir(parents=True, exist_ok=True)
             snapshot = source if isinstance(source, QImage) else source.grab()
             self.assertTrue(snapshot.save(str(target / f"{name}.png")))
+
+    def test_switches_distinguish_keyboard_focus_from_mouse_focus(self):
+        for theme, dark in product(THEME_KEYS, (False, True)):
+            self.engine.apply_to(self.app, theme, dark=dark)
+            panel = QWidget()
+            panel.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+            layout = QGridLayout(panel)
+            controls = [SwitchButton(), SwitchButton(checked=True)]
+            for row, control in enumerate(controls):
+                layout.addWidget(control, row // 2, row % 2)
+            panel.show()
+            panel.activateWindow()
+            self.app.processEvents()
+            try:
+                for index, control in enumerate(controls):
+                    QTest.mouseClick(control, Qt.MouseButton.LeftButton)
+                    self.app.processEvents()
+                    before, geometry = control.grab().toImage(), control.geometry()
+                    self.assertTrue(control.hasFocus())
+                    self.capture(control, f"{theme}-{dark}-mouse-focus-{index}")
+                    QTest.keyClick(control, Qt.Key.Key_Tab)
+                    QTest.keyClick(self.app.focusWidget(), Qt.Key.Key_Backtab)
+                    self.app.processEvents()
+                    self.assertTrue(control.hasFocus())
+                    self.assertNotEqual(before, control.grab().toImage(), (theme, dark, index))
+                    self.assertEqual(geometry, control.geometry())
+                    self.capture(control, f"{theme}-{dark}-keyboard-focus-{index}")
+                    checked = control.isChecked()
+                    QTest.mouseClick(control, Qt.MouseButton.LeftButton)
+                    control.setChecked(checked)
+                    self.app.processEvents()
+                    self.assertTrue(control.hasFocus())
+                    self.assertEqual(before, control.grab().toImage(), (theme, dark, index))
+            finally:
+                panel.close()
+                panel.deleteLater()

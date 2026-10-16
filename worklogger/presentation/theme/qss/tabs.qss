@@ -89,7 +89,3 @@ QTabBar#management_tab_bar::tab:selected {
   border-bottom-color: {{ accent }};
   font-weight: 600;
 }
-
-QTabBar#management_tab_bar::tab:hover:enabled {
-  background: {{ button_hover }};
-}

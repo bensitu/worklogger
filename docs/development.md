@@ -106,6 +106,30 @@ distinct, avoid layout changes on hover, and limit active header styling to
 headers that accept clicks. Custom date cells should repaint only the old and
 new hovered cells without changing the selected date.
 
+Shared hover and input focus rules live in `theme/qss/interaction_states.qss`,
+after component rules and before disabled overrides. Preserve existing navigation
+and selection styling; do not add a second outline to every focused control.
+Retain native focus behavior where possible. Custom switches distinguish keyboard
+focus from mouse focus and clear keyboard indicators when clicked. Focus feedback
+must not change padding, dimensions, or the global palette.
+Shared sRGB calculations and color mixing belong to
+`theme/color_contrast.py`, not individual widgets or theme definitions.
+
+Apply accessibility improvements proportionately. Prefer descriptive control
+names, keyboard focus feedback, and text alternatives that preserve the existing
+layout and theme. WCAG 2.2 and the W3C WCAG2ICT guidance provide useful evaluation
+criteria for this native application, but do not imply conformance. Some theme
+color pairs and faded adjacent-month dates have insufficient contrast for those
+criteria. Do not automatically recolor themes or change the application layout
+solely to meet a numeric threshold; evaluate substantial visual changes separately.
+Disabled controls are excluded from the WCAG minimum contrast requirements.
+
+Check names and descriptions through Qt accessibility interfaces. Verify actual
+screen-reader announcements, keyboard order, high-contrast mode, and text scaling
+on the target OS. Screenshots alone cannot establish accessibility support.
+See [WCAG2ICT](https://www.w3.org/TR/wcag2ict-22/) and
+[text contrast](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html).
+
 Full and minimal windows share `shell/appearance_controller.py` for theme
 application, background styling, effects, and cleanup. Keep navigation and
 account preferences in their respective shell controllers. Theme rendering must

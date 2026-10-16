@@ -1,0 +1,19 @@
+/* Shared hover and focus feedback preserves control geometry and selection. */
+
+QPushButton#calendar_time_entry_button:checked:hover:enabled,
+QPushButton#report_history_item_button[active="true"]:hover:enabled,
+QToolButton#delete_record_button:hover:enabled,
+QToolButton#record_actions_button:hover:enabled,
+QLineEdit QToolButton:hover:enabled,
+QTabBar#management_tab_bar::tab:hover:enabled {
+  background: {{ button_hover }};
+}
+
+QLineEdit:focus:enabled,
+QTextEdit:focus:enabled,
+QPlainTextEdit:focus:enabled,
+QComboBox:focus:enabled,
+QAbstractSpinBox:focus:enabled,
+QListWidget[management_list="true"]:focus:enabled {
+  border-color: {{ accent }};
+}

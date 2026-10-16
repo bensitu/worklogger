@@ -261,7 +261,9 @@ class QtWidgetTests(unittest.TestCase):
         )
         self.assertIn("20", selected_button.text())
         self.assertEqual(selected_button.property("style_key"), "selected")
-        self.assertEqual(selected_button.toolTip(), "Night shift\n2 events")
+        self.assertEqual(selected_button.toolTip(), "Overnight\nNight shift\n2 events")
+        self.assertIn("2026", selected_button.accessibleName())
+        self.assertEqual(selected_button.accessibleDescription(), selected_button.toolTip())
 
         selected_button.click()
 

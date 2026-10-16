@@ -26,6 +26,7 @@ class SwitchButton(QCheckBox):
         super().setChecked(bool(checked))
         self._color_on = QColor(color_on) if color_on is not None else None
         self._color_off = QColor(color_off) if color_off is not None else None
+        self._keyboard_focus = False
         self.setFixedSize(self._WIDTH, self._HEIGHT)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
@@ -38,6 +39,20 @@ class SwitchButton(QCheckBox):
 
     def leaveEvent(self, event) -> None:
         super().leaveEvent(event)
+        self.update()
+
+    def focusInEvent(self, event) -> None:
+        self._keyboard_focus = event.reason() in (
+            Qt.FocusReason.TabFocusReason, Qt.FocusReason.BacktabFocusReason, Qt.FocusReason.ShortcutFocusReason)
+        super().focusInEvent(event)
+
+    def focusOutEvent(self, event) -> None:
+        self._keyboard_focus = False
+        super().focusOutEvent(event)
+
+    def mousePressEvent(self, event) -> None:
+        self._keyboard_focus = False
+        super().mousePressEvent(event)
         self.update()
 
     def is_checked(self) -> bool:
@@ -94,8 +109,8 @@ class SwitchButton(QCheckBox):
         x = self._WIDTH - self._HEIGHT + padding if checked else padding
         painter.setBrush(QBrush(thumb))
         painter.drawEllipse(QRectF(x, padding, diameter, diameter))
-        if self.hasFocus():
+        if self.hasFocus() and self.isEnabled() and self._keyboard_focus:
             painter.setBrush(Qt.BrushStyle.NoBrush)
-            painter.setPen(QPen(self.palette().highlight().color(), 2, Qt.PenStyle.DotLine))
+            painter.setPen(QPen(self.palette().highlight().color(), 1, Qt.PenStyle.DotLine))
             painter.drawRoundedRect(QRectF(1, 1, self._WIDTH - 2, self._HEIGHT - 2), 10, 10)
         painter.end()
