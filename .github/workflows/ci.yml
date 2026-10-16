@@ -80,6 +80,16 @@ jobs:
         run: python -m ruff check worklogger scripts tests
       - name: Unit and integration tests
         run: python -m unittest discover -s tests -t . -p "test_*.py"
+      - name: Time zone and language compatibility
+        if: runner.os == 'Linux' && matrix.python == '3.12'
+        env:
+          TZ: America/New_York
+          WORKLOGGER_LANG: ja_JP
+        run: >-
+          python -m unittest tests.domain.test_worklog_rules
+          tests.infrastructure.test_calendar_import_infrastructure
+          tests.infrastructure.test_language_preferences
+          tests.i18n.test_gettext_foundation
       - name: Import verification
         run: python -m worklogger.main --smoke-import
       - name: Prepare native inference verification
@@ -171,6 +181,10 @@ jobs:
           if-no-files-found: error
 
   dependencies:
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.12']
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -180,7 +194,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
-          python-version: '3.11'
+          python-version: ${{ matrix.python }}
       - name: Audit dependency vulnerabilities
         uses: pypa/gh-action-pip-audit@1220774d901786e6f652ae159f7b6bc8fea6d266 # v1.1.0
         with:
