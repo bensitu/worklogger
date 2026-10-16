@@ -1,6 +1,8 @@
 """Distribution resource integrity and archive compatibility checks."""
 
 from pathlib import Path
+from contextlib import redirect_stderr
+import io
 import json
 import os
 import plistlib
@@ -16,6 +18,21 @@ from worklogger.__about__ import APP_ID, APP_VERSION
 
 
 class ReleaseArtifactTests(unittest.TestCase):
+    def test_process_failure_reports_exit_code_and_redacted_diagnostics(self):
+        log = self.root / "application.log"
+        log.write_text("startup_failed password=synthetic-private-value", encoding="utf-8")
+        output = io.StringIO()
+        completed = subprocess.CompletedProcess([], -6, stdout=b"Starting application",
+                                                stderr=b"access_token=synthetic-token-value")
+        with patch.object(release_artifact.subprocess, "run", return_value=completed), redirect_stderr(output):
+            with self.assertRaisesRegex(RuntimeError, "exit code -6"):
+                release_artifact._run_artifact_check(self.artifact, "--smoke-startup", label="startup",
+                    directory=self.root, environment={"WORKLOGGER_LOG_PATH": str(log)})
+        self.assertIn("Starting application", output.getvalue())
+        self.assertIn("startup_failed", output.getvalue())
+        self.assertNotIn("synthetic-private-value", output.getvalue())
+        self.assertNotIn("synthetic-token-value", output.getvalue())
+
     def setUp(self):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)

@@ -56,6 +56,8 @@ verification on Windows x64, Linux x64, and macOS ARM64 with Python 3.11 through
 Linux tests exercise the approved wheel; Linux distribution builds compile a
 portable CPU backend without AVX, FMA, F16C, SSE4.2, or BMI2 requirements.
 Artifact names include the Python version to distinguish build environments.
+Failed artifact checks report the exit code, captured process output, and the
+application log with credential redaction. Timeouts retain the same diagnostics.
 
 ## GitHub Releases
 

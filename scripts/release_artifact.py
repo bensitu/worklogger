@@ -14,6 +14,7 @@ import tarfile
 import tempfile
 import zipfile
 import hashlib
+import logging
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -21,6 +22,7 @@ from scripts.lock_environment import digest, verify_lock, target
 from scripts.build_resources import bundled_resources
 from worklogger.__about__ import APP_VERSION
 from worklogger.infrastructure.files import atomic_destination
+from worklogger.infrastructure.logging import SensitiveDataFilter
 
 
 def source_digest():
@@ -62,6 +64,33 @@ def artifact_files(directory):
     return paths
 
 
+def _run_artifact_check(executable, option, *, label, directory, environment):
+    try:
+        completed = subprocess.run([str(executable), option], cwd=directory, env=environment,
+                                   timeout=180, capture_output=True)
+    except subprocess.TimeoutExpired as error:
+        _print_check_diagnostics(error.stdout, error.stderr, environment)
+        raise RuntimeError(f"Artifact check timed out: {label}") from error
+    if completed.returncode != 0:
+        _print_check_diagnostics(completed.stdout, completed.stderr, environment)
+        raise RuntimeError(f"Artifact check failed: {label} (exit code {completed.returncode})")
+
+
+def _print_check_diagnostics(stdout, stderr, environment):
+    messages = []
+    for name, value in (("stdout", stdout), ("stderr", stderr)):
+        if value:
+            messages.append(f"{name}:\n" + (value.decode("utf-8", errors="replace") if isinstance(value, bytes) else value))
+    path = Path(environment["WORKLOGGER_LOG_PATH"])
+    if path.is_file():
+        messages.append("Application log:\n" + path.read_text(encoding="utf-8", errors="replace"))
+    redactor = SensitiveDataFilter()
+    for message in messages:
+        record = logging.LogRecord(__name__, logging.ERROR, __file__, 0, message, (), None)
+        redactor.filter(record)
+        print(record.getMessage()[-16_000:], file=sys.stderr)
+
+
 def artifact_checks(executable, directory, *, native_macos=False):
     checks = []
     with tempfile.TemporaryDirectory() as temporary:
@@ -69,16 +98,12 @@ def artifact_checks(executable, directory, *, native_macos=False):
         environment.update(QT_QPA_PLATFORM="offscreen", WORKLOGGER_LANG="en_US",
                            WORKLOGGER_LOG_PATH=str(Path(temporary) / "worklogger.log"))
         for option in ("--smoke-import", "--smoke-startup", "--smoke-workflows", "--smoke-local-model-runtime"):
-            completed = subprocess.run([str(executable), option], cwd=temporary, env=environment, timeout=180, capture_output=True)
-            if completed.returncode != 0:
-                raise RuntimeError(f"Artifact check failed: {option}")
+            _run_artifact_check(executable, option, label=option, directory=temporary, environment=environment)
             checks.append(option)
         if native_macos:
             environment["QT_QPA_PLATFORM"] = "cocoa"
-            completed = subprocess.run([str(executable), "--smoke-startup"], cwd=temporary,
-                                       env=environment, timeout=180, capture_output=True)
-            if completed.returncode != 0:
-                raise RuntimeError("Artifact check failed: Cocoa startup")
+            _run_artifact_check(executable, "--smoke-startup", label="Cocoa startup",
+                                directory=temporary, environment=environment)
             checks.append("cocoa-startup")
     return checks
 
