@@ -32,6 +32,9 @@ The entry point resolves language, logging, database paths, and instance locking
 Authentication creates or restores a local session. Bootstrap and composition
 functions assemble account-scoped services, repositories, view models, workflows,
 and a window. Logout disposes the session and returns to authentication.
+`composition/lifecycle.py` supplies the same resource disposal order for desktop
+exit and installed-application checks: stop and join jobs, close inference, then
+dispose the window before temporary storage or Qt application teardown.
 
 The main window creates its settings page on first access and reuses it during
 the session. Initial calendar overviews, holiday loading, and AI configuration

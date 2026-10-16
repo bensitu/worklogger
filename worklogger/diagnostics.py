@@ -73,6 +73,7 @@ def require_value(result):
 
 def check_workflows():
     from worklogger.bootstrap import DesktopRuntimeConfig, build_desktop_runtime
+    from worklogger.composition.lifecycle import dispose_runtime
     from worklogger.domain.projects.models import WorkContext
     from worklogger.infrastructure.backup import SQLiteBackupService
     from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
@@ -147,9 +148,5 @@ def check_workflows():
             if SQLiteReportRepository(backup_factory).get_for_period(previous.id, "daily", day, day).content != restored.content:
                 raise RuntimeError("backup_verification_failed")
         finally:
-            if runtime.job_runner is not None:
-                runtime.job_runner.shutdown(wait=True)
-            if runtime.local_inference is not None:
-                runtime.local_inference.close()
             runtime.window.close()
-            runtime.window.deleteLater()
+            dispose_runtime(runtime)

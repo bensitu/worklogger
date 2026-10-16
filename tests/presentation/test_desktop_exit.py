@@ -6,7 +6,7 @@ from pathlib import Path
 import tempfile
 from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 from worklogger.domain.shared.errors import CancellationError, InfrastructureError
 from worklogger.domain.shared.result import Result
@@ -15,6 +15,24 @@ from worklogger.main import DesktopAlreadyRunningError, _acquire_instance_lock, 
 
 
 class DesktopExitTests(unittest.TestCase):
+    def test_startup_verification_releases_workers_before_inference_resources(self):
+        from worklogger.main import smoke_runtime_check
+
+        for refreshed in (True, False):
+            with self.subTest(refreshed=refreshed):
+                resources = Mock()
+                resources.window.refresh.return_value = refreshed
+                resources.window.last_error = None
+                runtime = SimpleNamespace(window=resources.window, job_runner=resources.runner,
+                                          local_inference=resources.inference)
+                with patch("worklogger.bootstrap.build_desktop_runtime", return_value=Result.success(runtime)), redirect_stdout(io.StringIO()):
+                    self.assertEqual(smoke_runtime_check(), 0 if refreshed else 1)
+                resources.assert_has_calls([
+                    call.window.close(),
+                    call.runner.shutdown(wait=True),
+                    call.inference.close(),
+                ])
+
     def test_logout_disposes_resident_window_before_authenticating_again(self):
         from shiboken6 import isValid
         from tests.presentation.test_app_window import _app, _entry_model, MemoryWorkLogRepository

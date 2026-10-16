@@ -101,6 +101,7 @@ def smoke_import_check() -> int:
 def smoke_runtime_check() -> int:
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     from worklogger.bootstrap import DesktopRuntimeConfig, build_desktop_runtime
+    from worklogger.composition.lifecycle import dispose_runtime
 
     with tempfile.TemporaryDirectory() as directory:
         runtime = build_desktop_runtime(
@@ -116,13 +117,16 @@ def smoke_runtime_check() -> int:
             if runtime.error:
                 _safe_stdout(display_error_message(runtime.error))
             return 1
-        refreshed = runtime.value.window.refresh()
-        runtime.value.window.close()
-        if not refreshed:
-            _safe_stdout(_("RUNTIME SMOKE FAILED"))
-            if runtime.value.window.last_error:
-                _safe_stdout(display_error_message(runtime.value.window.last_error))
-            return 1
+        try:
+            refreshed = runtime.value.window.refresh()
+            if not refreshed:
+                _safe_stdout(_("RUNTIME SMOKE FAILED"))
+                if runtime.value.window.last_error:
+                    _safe_stdout(display_error_message(runtime.value.window.last_error))
+                return 1
+        finally:
+            runtime.value.window.close()
+            dispose_runtime(runtime.value)
     _safe_stdout(_("RUNTIME SMOKE OK"))
     return 0
 
@@ -217,19 +221,8 @@ def _run_desktop(args: Sequence[str]) -> int:
             current.window.refresh()
         current.window.show()
         exit_code = int(current.application.exec())
-        runner = getattr(current, "job_runner", None)
-        if runner is not None:
-            runner.shutdown(wait=True)
-        inference = getattr(current, "local_inference", None)
-        if inference is not None:
-            inference.close()
-        from PySide6.QtCore import QCoreApplication, QEvent
-        from PySide6.QtWidgets import QWidget
-        from shiboken6 import isValid
-
-        if isinstance(current.window, QWidget) and isValid(current.window):
-            current.window.deleteLater()
-            QCoreApplication.sendPostedEvents(current.window, QEvent.Type.DeferredDelete)
+        from worklogger.composition.lifecycle import dispose_runtime
+        dispose_runtime(current)
         if not logged_out:
             return exit_code
 
