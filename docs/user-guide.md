@@ -76,7 +76,7 @@ deliberately. Reminders do not certify compliance with working-time regulations.
 
 ### Types, Projects, and Corrections
 
-Manage work types and projects in **Settings > General**. Custom types have Work,
+Manage work types and projects in **Settings > General > Classification**. Custom types have Work,
 Break, or Leave accounting. Saved records retain their original classification
 and labels when catalog entries are renamed or archived.
 
@@ -85,8 +85,18 @@ Training, and gray for Other. Business trip and leave types retain their
 distinct colors. Normal work and Break have no colored marker.
 Work-type menus show the same colors beside each option.
 
-Use record search to filter dates, content, types, projects, or work items, then
-open a result in Calendar. Recent context reuses an active project/work-item
+Click the calendar month heading to jump to another month or year using the
+shared date picker. Calendar dates continue to show worked hours, including
+`0.0h`; the extra overtime line appears only when the displayed overtime is positive.
+
+Record search opens with all records in the month currently displayed in Calendar,
+newest first. Choose Month, Year, Custom range, or All dates; content and context
+filters apply to the entire selected range before paging, not just visible rows.
+The Project menu includes No linked project, which selects only records without
+a linked project, including imported records that retain a historical project
+label. All projects includes both linked and unlinked records. Work-item filtering
+is available when the selected project has work items.
+Open a result in Calendar. Recent context reuses an active project/work-item
 selection. Batch assignment requires an explicit selection and confirmation.
 
 Record actions can split a period, merge adjacent compatible periods, place a
@@ -183,12 +193,25 @@ Choose a month, quarter, or year. Worked hours exclude recorded rest and leave.
 Overtime uses the daily standard-hours threshold. Daily average is worked hours
 divided by dates with positive worked hours, not all dates in the period.
 
+Actual attendance shows dates with positive worked hours and retains the dot
+visualization. Planned work is shown separately, based on the weekly schedule in
+General settings, with half days counted as 0.5. The dots are a calendar-period
+overview, not a percentage of planned attendance. Work on a planned day off still
+counts as attendance. Comparisons use the previous full calendar period; week
+labels include their in-month date ranges. See [configuration](configuration.md)
+for schedule options and holiday handling. Enabled regional holidays are excluded
+from planned work; disabling holiday display also disables this exclusion.
+
 Rest Days counts distinct dates with a positive-duration Break record. Multiple
 breaks count once; a date can count as both a work day and a rest day. Missing
 records do not imply rest, and leave is counted separately. Historical deducted
 breaks are not separate rest-day records.
 
-The monthly target is multiplied by the number of months in the selected period.
+Custom monthly goals are multiplied by the number of months in the selected period.
+Automatic goals use the period's planned workdays, excluding enabled regional
+holidays, multiplied by daily standard hours. Configure the mode under General >
+Hours goal; switching modes retains the custom value. Unavailable holiday data is
+reported without replacing the automatic target with an unadjusted estimate.
 Project statistics separates work, rest, and leave by project and work item.
 Distinct-day counts cannot be added across groups; overtime is a whole-day measure.
 

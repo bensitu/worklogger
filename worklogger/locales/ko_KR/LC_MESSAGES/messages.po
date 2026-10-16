@@ -40,6 +40,9 @@ msgstr "({week}주차)"
 msgid "+"
 msgstr "+"
 
+msgid "2.5 days off per week"
+msgstr "주 2.5일 휴무"
+
 msgid "A database restore is unfinished. Restart WorkLogger to choose recovery, and preserve the database and its .pre_restore file."
 msgstr "데이터베이스 복원이 완료되지 않았습니다. WorkLogger를 다시 시작해 복구 방법을 선택하고 데이터베이스와 .pre_restore 파일을 보존하세요."
 
@@ -100,6 +103,9 @@ msgstr "활성"
 msgid "Active model updated."
 msgstr "현재 모델이 업데이트되었습니다."
 
+msgid "Actual attendance"
+msgstr "실제 출근일"
+
 msgid "Add another sign-in method before unlinking this identity."
 msgstr "이 연결을 해제하기 전에 다른 로그인 방법을 추가하세요."
 
@@ -111,6 +117,9 @@ msgstr "메모에 추가"
 
 msgid "Address"
 msgstr "주소"
+
+msgid "Adjust schedule"
+msgstr "근무 일정 조정"
 
 msgid "Admin"
 msgstr "관리자"
@@ -202,8 +211,8 @@ msgstr "선택한 기록 {count}개에 {context}을(를) 연결할까요? 기존
 msgid "Assistant"
 msgstr "어시스턴트"
 
-msgid "Attendance Days"
-msgstr "출근 일수"
+msgid "Attendance counts dates with positive worked hours, including scheduled days off. Planned work follows the weekly schedule and enabled regional public holidays. This is not an attendance rate."
+msgstr "실제 출근일은 예정 휴무일을 포함해 근무 시간이 있는 날짜 수입니다. 예정 근무일에는 주간 일정과 활성화된 지역 공휴일이 반영됩니다. 출근율이 아닙니다."
 
 msgid "August"
 msgstr "8월"
@@ -219,6 +228,9 @@ msgstr "인증 응답을 받았습니다. WorkLogger로 돌아가 계속하세�
 
 msgid "Auto Record"
 msgstr "자동 기록"
+
+msgid "Automatic goals use planned workdays and daily standard hours. Enabled public holidays follow the selected region."
+msgstr "자동 목표는 예정 근무일과 일일 기준 시간으로 계산합니다. 공휴일을 활성화하면 선택한 지역의 공휴일을 반영합니다."
 
 msgid "Avatar"
 msgstr "아바타"
@@ -298,6 +310,9 @@ msgstr "CSV 데이터 관리"
 msgid "CSV files (*.csv)"
 msgstr "CSV files (*.csv)"
 
+msgid "Calculated from work schedule and holiday settings."
+msgstr "근무 일정 및 공휴일 설정에 따른 계산입니다."
+
 msgid "Calendar"
 msgstr "달력"
 
@@ -346,6 +361,9 @@ msgstr "업데이트 확인 중..."
 msgid "Choose a backup destination different from the active database."
 msgstr "현재 데이터베이스와 다른 백업 위치를 선택하세요."
 
+msgid "Choose a holiday region to calculate planned work and automatic goals."
+msgstr "예정 근무와 자동 목표를 계산하려면 공휴일 지역을 선택하세요."
+
 msgid "Choose a split duration strictly inside the recorded interval."
 msgstr "기록된 구간 안에 있는 분할 시간을 선택하세요."
 
@@ -369,6 +387,9 @@ msgstr "긴 변이 1280픽셀 이상이고 짧은 변이 720픽셀 이상인 이
 
 msgid "Choose custom color"
 msgstr "사용자 지정 색상 선택"
+
+msgid "Classification"
+msgstr "분류 관리"
 
 msgid "Clear Calendar Events"
 msgstr "달력 일정 지우기"
@@ -481,8 +502,14 @@ msgstr "커서 위치: %1, %2\nESC 키를 눌러 취소"
 msgid "Custom"
 msgstr "사용자 지정"
 
+msgid "Custom monthly goal."
+msgstr "사용자 지정 월간 목표입니다."
+
 msgid "Custom range"
 msgstr "사용자 지정 기간"
+
+msgid "Custom target"
+msgstr "사용자 지정 목표"
 
 msgid "Cut"
 msgstr "잘라내기"
@@ -498,6 +525,9 @@ msgstr "일평균"
 
 msgid "Daily Report"
 msgstr "일일 보고서"
+
+msgid "Daily standard hours (h)"
+msgstr "일일 기준 시간(h)"
 
 msgid "Dark mode"
 msgstr "다크 모드"
@@ -525,6 +555,12 @@ msgstr "날짜 범위"
 
 msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
 msgstr "휴식 기록이 있는 날짜입니다. 근무일과 휴식일은 겹칠 수 있으며 휴가는 별도로 집계합니다."
+
+msgid "Day off"
+msgstr "휴무"
+
+msgid "Days off: {days}"
+msgstr "휴무: {days}"
 
 msgid "December"
 msgstr "12월"
@@ -709,6 +745,15 @@ msgstr "예상 메모리: {ram} GB"
 msgid "Estimated size"
 msgstr "예상 크기"
 
+msgid "Exactly one day off is required."
+msgstr "휴무일을 정확히 1일로 설정하세요."
+
+msgid "Exactly two days off and one half day are required."
+msgstr "휴무 2일과 반일 근무 1일을 설정하세요."
+
+msgid "Exactly two days off are required."
+msgstr "휴무일을 정확히 2일로 설정하세요."
+
 msgid "Excel files (*.xlsx)"
 msgstr "Excel 파일 (*.xlsx)"
 
@@ -799,6 +844,15 @@ msgstr "금"
 msgid "From"
 msgstr "시작일"
 
+msgid "From work schedule"
+msgstr "근무 일정으로 계산"
+
+msgid "Full day"
+msgstr "종일 근무"
+
+msgid "Full month"
+msgstr "월 전체"
+
 msgid "GGUF Model (*.gguf)"
 msgstr "GGUF Model (*.gguf)"
 
@@ -823,8 +877,20 @@ msgstr "생성: {time}"
 msgid "GitHub"
 msgstr "GitHub"
 
+msgid "Goal calculation"
+msgstr "목표 계산 방식"
+
+msgid "Goal unavailable"
+msgstr "목표를 계산할 수 없음"
+
 msgid "Green"
 msgstr "초록"
+
+msgid "Half day"
+msgstr "반일 근무"
+
+msgid "Half days: {days}"
+msgstr "반일 근무: {days}"
 
 msgid "Help"
 msgstr "도움말"
@@ -858,6 +924,12 @@ msgstr "과거 항목"
 
 msgid "Holiday country"
 msgstr "공휴일 국가"
+
+msgid "Holiday data could not be loaded. Planned work and automatic goals are unavailable; recorded hours are unchanged."
+msgstr "공휴일 데이터를 불러올 수 없습니다. 예정 근무와 자동 목표를 사용할 수 없으며 기록된 시간은 변경되지 않습니다."
+
+msgid "Hours goal"
+msgstr "근무 시간 목표"
 
 msgid "Hours summary"
 msgstr "시간 요약"
@@ -939,6 +1011,9 @@ msgstr "requirements-ai.txt의 추론 의존성을 설치한 후 WorkLogger를 �
 
 msgid "Invalid date range"
 msgstr "날짜 범위가 올바르지 않습니다"
+
+msgid "Invalid work schedule"
+msgstr "잘못된 근무 일정"
 
 msgid "January"
 msgstr "1월"
@@ -1324,6 +1399,9 @@ msgstr "10월"
 msgid "Off"
 msgstr "꺼짐"
 
+msgid "One day off per week"
+msgstr "주 1일 휴무"
+
 msgid "Only adjacent records with matching types and context can be merged."
 msgstr "유형과 맥락이 일치하는 인접 기록만 병합할 수 있습니다."
 
@@ -1410,6 +1488,12 @@ msgstr "이전 휴식 위치 지정"
 
 msgid "Place the historical break before splitting this record."
 msgstr "이 기록을 나누기 전에 이전 휴식 위치를 지정하세요."
+
+msgid "Planned work unavailable"
+msgstr "예정 근무를 계산할 수 없음"
+
+msgid "Planned work: {days:g} days"
+msgstr "예정 근무: {days:g}일"
 
 msgid "Please sign in to continue."
 msgstr "계속하려면 로그인하세요."
@@ -1536,6 +1620,9 @@ msgstr "기록 시간: {duration}"
 
 msgid "Recorded totals at export. Editing this file does not change WorkLogger records."
 msgstr "내보내기 시점의 기록 합계입니다. 이 파일을 편집해도 WorkLogger 기록은 변경되지 않습니다."
+
+msgid "Recording and reminders"
+msgstr "기록 및 알림"
 
 msgid "Recording or a break is already active."
 msgstr "기록 또는 휴식이 이미 진행 중입니다."
@@ -1963,9 +2050,6 @@ msgstr "날짜를 넘는 분할은 일별 및 기간별 합계를 변경합니�
 msgid "Standard daily hours: {hours:g}"
 msgstr "일일 기준 근무 시간: {hours:g}"
 
-msgid "Standard hours (h)"
-msgstr "표준 근무 시간"
-
 msgid "Start"
 msgstr "시작"
 
@@ -2236,6 +2320,9 @@ msgstr "교육"
 msgid "Tue"
 msgstr "화"
 
+msgid "Two days off per week"
+msgstr "주 2일 휴무"
+
 msgid "UTC offset"
 msgstr "UTC 오프셋"
 
@@ -2476,6 +2563,9 @@ msgstr "주간"
 msgid "Weekly Report"
 msgstr "주간 보고서"
 
+msgid "Weekly planned work: {days:g} days"
+msgstr "주간 예정 근무: {days:g}일"
+
 msgid "Welcome!"
 msgstr "환영합니다!"
 
@@ -2494,9 +2584,6 @@ msgstr "근무 형태 분포"
 msgid "Work Report"
 msgstr "업무 보고서"
 
-msgid "Work and recording"
-msgstr "근무 및 기록"
-
 msgid "Work days"
 msgstr "근무 일수"
 
@@ -2512,8 +2599,14 @@ msgstr "작업 항목 ID"
 msgid "Work items"
 msgstr "작업 항목"
 
+msgid "Work plan"
+msgstr "근무 계획"
+
 msgid "Work records"
 msgstr "근무 기록"
+
+msgid "Work schedule"
+msgstr "근무 일정"
 
 msgid "Work type"
 msgstr "근무 형태"
@@ -2616,6 +2709,9 @@ msgstr "일정 {count}개"
 
 msgid "{count} tokens"
 msgstr "{count} 토큰"
+
+msgid "{days} days"
+msgstr "{days}일"
 
 msgid "{duration} ({percent:.0f}%)"
 msgstr "{duration} ({percent:.0f}%)"

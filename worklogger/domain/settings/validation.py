@@ -7,12 +7,15 @@ from worklogger.config.constants import (
     CUSTOM_THEME_COLOR_SETTING_KEY, LANGUAGE_SETTING_KEY,
     LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY, NETWORK_PROXY_PASSWORD_SETTING_KEY,
     NETWORK_PROXY_PORT_SETTING_KEY, PROFILE_AVATAR_SETTING_KEY, THEME_SETTING_KEY,
+    WORK_SCHEDULE_SETTING_KEY,
+    WORK_TARGET_MODE_SETTING_KEY,
 )
 from worklogger.domain.local_model.preferences import normalize_runtime_context
 from worklogger.domain.settings.appearance import normalize_hex_color, normalize_theme
 from worklogger.domain.settings.preferences import BOOLEAN_SETTING_KEYS, NUMERIC_SETTING_LIMITS, SETTINGS_DEFAULTS, format_setting_number, normalize_proxy_port
 from worklogger.domain.settings.values import setting_bool
 from worklogger.domain.shared.languages import normalize_language
+from worklogger.domain.settings.work_schedule import WorkSchedule
 
 
 def normalize_setting(key, value):
@@ -21,6 +24,12 @@ def normalize_setting(key, value):
     if value is None:
         raise ValueError("setting_value_invalid")
     text = str(value).strip()
+    if key == WORK_SCHEDULE_SETTING_KEY:
+        return WorkSchedule.decode(text).encode()
+    if key == WORK_TARGET_MODE_SETTING_KEY:
+        if text not in {"manual", "schedule"}:
+            raise ValueError("setting_value_invalid")
+        return text
     if key in BOOLEAN_SETTING_KEYS:
         if text.lower() not in {"1", "0", "true", "false", "yes", "no", "on", "off"}:
             raise ValueError("setting_value_invalid")

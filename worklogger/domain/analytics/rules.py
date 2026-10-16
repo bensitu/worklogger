@@ -10,6 +10,7 @@ from worklogger.config.constants import DEFAULT_LEAVE_HOURS
 from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBundle, MonthStats
 from worklogger.domain.worklog.models import CustomWorkType, WorkLog
 from worklogger.domain.reporting.periods import weekly_period
+from worklogger.domain.settings.work_schedule import WorkSchedule
 
 
 def month_stats(month_rows: Iterable[WorkLog], standard_work_hours: float) -> MonthStats:
@@ -63,6 +64,7 @@ def dashboard_data(
     standard_hours: float,
     monthly_target: float,
     week_start_monday: bool = False,
+    work_schedule: WorkSchedule = WorkSchedule(),
 ) -> AnalyticsDashboard:
     start, end = analytics_period(year, month, scope)
     month_count = end.month - start.month + 1
@@ -117,6 +119,7 @@ def dashboard_data(
         (end - start).days + 1, (start - previous_start).days if previous_start is not None else 0,
         trend, average, tuple(modes.items()), ChartDataBundle(tuple(daily), tuple(daily), frozenset(), (), ()),
         tuple(mode_labels.items()),
+        work_schedule.planned_days(start, end),
     )
 
 
@@ -178,7 +181,11 @@ def monthly_chart_data(
     first_weekday, days = monthrange(start.year, start.month)
     first = first_weekday if week_start_monday else (first_weekday + 1) % 7
     max_row = (days + first - 1) // 7
-    labels = [f"W{row + 1}" for row in range(max_row + 1)]
+    labels = []
+    for row in range(max_row + 1):
+        first_day = max(1, row * 7 - first + 1)
+        last_day = min(days, (row + 1) * 7 - first)
+        labels.append(f"W{row + 1}\n{start.month}/{first_day}-{last_day}")
     totals = [0.0 for _label in labels]
     unit_counts = [0 for _label in labels]
     leave_hours = [0.0 for _label in labels]

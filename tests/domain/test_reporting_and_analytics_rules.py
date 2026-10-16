@@ -21,6 +21,9 @@ from worklogger.domain.reporting.periods import (
 from worklogger.domain.worklog.models import WorkLog, WorkType
 from worklogger.domain.shared.dates import add_months
 from worklogger.domain.worklog.rules import normalize_work_log
+from worklogger.domain.settings.work_schedule import WorkSchedule
+from worklogger.domain.settings.validation import normalize_setting
+from worklogger.config.constants import WORK_SCHEDULE_SETTING_KEY
 
 
 def _record(
@@ -43,6 +46,35 @@ def _record(
 
 
 class ReportingAndAnalyticsRuleTests(unittest.TestCase):
+    def test_weekly_plans_count_leap_months_and_preserve_actual_attendance(self):
+        start, end = date(2024, 2, 1), date(2024, 2, 29)
+        for mode, expected in (("full_month", 29), ("one_day_off", 25),
+                               ("two_days_off", 21), ("two_and_a_half_days_off", 19)):
+            plan = WorkSchedule.preset(mode)
+            self.assertEqual(plan.planned_days(start, end), expected)
+            self.assertEqual(WorkSchedule.decode(normalize_setting(WORK_SCHEDULE_SETTING_KEY, plan.encode())), plan)
+        custom = WorkSchedule("custom", (0.5, 1, 0, 1, 0, 1, 0))
+        self.assertEqual(custom.planned_days(date(2026, 10, 12), date(2026, 10, 18)), 3.5)
+        self.assertEqual(WorkSchedule.preset("two_days_off").planned_days(date(2024, 1, 1), date(2024, 12, 31)), 262)
+        rows = (_record(date(2024, 2, 3), "09:00", "10:00", 0, WorkType.NORMAL),)
+        data = dashboard_data(rows, year=2024, month=2, scope="monthly", standard_hours=8,
+                              monthly_target=168, work_schedule=WorkSchedule.preset("two_and_a_half_days_off"))
+        self.assertEqual((data.stats.work_days, data.planned_work_days, data.target_hours), (1, 19, 168))
+        self.assertEqual(data.trend.bar_data[0][0], "W1\n2/1-3")
+        monday = monthly_chart_data(start, end, "hours", False, lambda _day: None, week_start_monday=True)
+        self.assertEqual(monday.bar_data[0][0], "W1\n2/1-4")
+        self.assertEqual(monday.bar_data[-1][0], "W5\n2/26-29")
+
+    def test_invalid_weekly_plans_are_rejected_and_missing_preferences_use_calendar_days(self):
+        for value in ('{}', 'null', '{"mode":"custom","days":[1]}',
+                      '{"mode":"one_day_off","days":[1,1,1,1,1,1,1]}',
+                      '{"mode":"custom","days":[true,1,1,1,1,0,0]}'):
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "work_schedule_invalid"):
+                normalize_setting(WORK_SCHEDULE_SETTING_KEY, value)
+            self.assertEqual(WorkSchedule.from_setting(value), WorkSchedule())
+        self.assertEqual(WorkSchedule.from_setting(None).planned_days(date.min, date.min), 1)
+        self.assertEqual(WorkSchedule().planned_days(date.max, date.max), 1)
+
     def test_dashboard_handles_the_supported_date_boundaries(self):
         for day in (date.min, date.max):
             for scope in ("monthly", "quarterly", "annual"):
@@ -213,10 +245,10 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
             records.get,
             standard_leave_hours=8.0,
         )
-        self.assertEqual(bundle.bar_data[1], ("W2", 8.0))
+        self.assertEqual(bundle.bar_data[1], ("W2\n4/5-11", 8.0))
         self.assertEqual(bundle.leave_indices, frozenset({1}))
         self.assertEqual(bundle.leave_line_data[1], 6.0)
-        self.assertEqual(bundle.leave_hours_data[1], ("W2", 6.0))
+        self.assertEqual(bundle.leave_hours_data[1], ("W2\n4/5-11", 6.0))
 
     def test_quarterly_and_annual_data_are_pure_domain_preparation(self) -> None:
         by_month = {

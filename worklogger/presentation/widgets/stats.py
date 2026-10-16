@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QFrame, QGridLayout, QLabel, QProgressBar, QVBoxLa
 
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.viewmodels.stats import StatsPanelState
+from worklogger.presentation.errors import display_error_code
 
 
 class StatsPanel(QWidget):
@@ -59,6 +60,8 @@ class StatsPanel(QWidget):
         self._values["work_days"].setText(str(state.work_days))
         self._values["leave_days"].setText(str(state.leave_days))
         self._values["monthly_target_hours"].setText(
-            f"{state.monthly_target_hours:.1f}{_('h')}"
+            _("Goal unavailable") if state.monthly_target_hours is None else f"{state.monthly_target_hours:.1f}{_('h')}"
         )
+        self._values["monthly_target_hours"].setToolTip(display_error_code(state.target_error) if state.target_error else "")
+        self.progress.setVisible(state.monthly_target_hours is not None)
         self.progress.setValue(round(state.target_progress * 100))

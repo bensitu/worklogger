@@ -37,6 +37,8 @@ from worklogger.config.constants import (
     LOCAL_MODEL_ENABLED_SETTING_KEY,
     MINIMAL_MODE_SETTING_KEY,
     MONTHLY_TARGET_HOURS_SETTING_KEY,
+    WORK_SCHEDULE_SETTING_KEY,
+    WORK_TARGET_MODE_SETTING_KEY,
     NETWORK_PROXY_ADDRESS_SETTING_KEY,
     NETWORK_PROXY_DOMAIN_SETTING_KEY,
     NETWORK_PROXY_ENABLED_SETTING_KEY,
@@ -69,6 +71,7 @@ from worklogger.domain.settings.preferences import (
     normalize_proxy_port,
 )
 from worklogger.domain.settings.values import setting_bool, setting_text
+from worklogger.domain.settings.work_schedule import WorkSchedule
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.languages import normalize_language
 from worklogger.domain.shared.result import Result
@@ -121,6 +124,8 @@ class SettingsState:
     timer_reminder_hours: float = 10.0
     continuous_timer_reminder_hours: float = 0.0
     show_recent_context: bool = True
+    work_schedule: WorkSchedule = WorkSchedule()
+    work_target_mode: str = "manual"
 
 
 class SettingsViewModel:
@@ -186,6 +191,8 @@ class SettingsViewModel:
         return Result.success(
             SettingsState(
                 theme=normalize_theme(values[THEME_SETTING_KEY]),
+                work_schedule=WorkSchedule.from_setting(values[WORK_SCHEDULE_SETTING_KEY]),
+                work_target_mode="schedule" if values[WORK_TARGET_MODE_SETTING_KEY] == "schedule" else "manual",
                 custom_color=normalize_hex_color(values[CUSTOM_THEME_COLOR_SETTING_KEY]),
                 dark_mode=setting_bool(values[DARK_MODE_SETTING_KEY], False),
                 language=normalize_language(values[LANGUAGE_SETTING_KEY]),

@@ -9,6 +9,7 @@ from pathlib import Path
 from PySide6.QtWidgets import QApplication
 
 from worklogger.app.job_runner import JobRunner
+from worklogger.app.use_cases.work_planning import WorkPlanningService
 from worklogger.app.use_cases.auth import (
     RevokeRememberedSessionHandler,
 )
@@ -312,10 +313,11 @@ def _build_app_window(
         stats_panel_view_model=StatsPanelViewModel(
             user_id=user.id,
             month_records_handler=handlers.month_records_handler,
+            planning=WorkPlanningService(repositories.settings, handlers.holiday_provider, country=handlers.holiday_country),
         ),
         config=window_config,
         settings_workflow=settings_workflow,
-        analytics_workflow=build_analytics_workflow(user, repositories),
+        analytics_workflow=build_analytics_workflow(user, repositories, handlers),
         notes_workflow=build_notes_workflow(user, repositories, handlers, job_runner),
         reports_workflow=build_reports_workflow(user, repositories, handlers),
         residency_controller=residency_controller,

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from calendar import monthrange
 from datetime import date
+from dataclasses import replace
 import math
 
 from worklogger.app.queries.analytics_queries import GetAnalyticsBundleQuery, GetAnalyticsDashboardQuery
@@ -23,6 +24,7 @@ from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.worklog.repositories import WorkLogRepository
+from worklogger.app.use_cases.work_planning import WorkPlanningService
 
 
 class GetAnalyticsBundleHandler:
@@ -97,9 +99,11 @@ class GetAnalyticsBundleHandler:
 
 
 class GetAnalyticsDashboardHandler:
-    def __init__(self, repository: WorkLogRepository, settings: SettingsRepository | None = None) -> None:
+    def __init__(self, repository: WorkLogRepository, settings: SettingsRepository | None = None,
+                 *, planning: WorkPlanningService | None = None) -> None:
         self._repository = repository
         self._settings = settings
+        self._planning = planning or WorkPlanningService(settings)
 
     def handle(self, query: GetAnalyticsDashboardQuery) -> Result[AnalyticsDashboard]:
         try:
@@ -117,6 +121,9 @@ class GetAnalyticsDashboardHandler:
                 scope=query.scope, standard_hours=standard, monthly_target=target,
                 week_start_monday=self._settings is not None and setting_bool(self._settings.get(query.user_id, WEEK_START_MONDAY_SETTING_KEY)),
             )
+            plan = self._planning.summarize(query.user_id, start, end, standard_hours=standard, monthly_target=target)
+            value = replace(value, target_hours=plan.target_hours, planned_work_days=plan.planned_days,
+                            target_mode=plan.target_mode, planning_error=plan.error_code)
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
         except Exception:

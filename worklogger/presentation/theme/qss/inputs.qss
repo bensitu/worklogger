@@ -54,6 +54,38 @@ QRadioButton:hover:enabled {
   color: {{ accent }};
 }
 
+QRadioButton#work_schedule_choice_button {
+  spacing: 0;
+  padding-left: 6px;
+}
+
+QRadioButton#work_schedule_choice_button::indicator {
+  width: 14px;
+  height: 14px;
+  background: {{ input_fill }};
+  border: 1px solid {{ field_border }};
+  border-radius: 8px;
+}
+
+QRadioButton#work_schedule_choice_button::indicator:checked {
+  background: {{ accent }};
+  border-color: {{ accent }};
+}
+
+QRadioButton#work_schedule_choice_button::indicator:hover:enabled,
+QRadioButton#work_schedule_choice_button::indicator:focus:enabled {
+  border-color: {{ accent }};
+}
+
+QRadioButton#work_schedule_choice_button::indicator:disabled {
+  background: {{ disabled_background }};
+  border-color: {{ border }};
+}
+
+QRadioButton#work_schedule_choice_button::indicator:checked:disabled {
+  background: {{ disabled_text }};
+}
+
 QComboBox::drop-down {
   border: none;
   width: 26px;

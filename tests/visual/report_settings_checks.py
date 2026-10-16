@@ -22,6 +22,49 @@ from worklogger.infrastructure.i18n import _
 
 
 class ReportSettingsLayoutChecks(unittest.TestCase):
+    def test_weekly_schedule_controls_fit_supported_languages_and_themes(self):
+        from PySide6.QtWidgets import QStyle, QStyleOptionComboBox
+
+        old_language, old_style, old_palette = get_language(), self.app.styleSheet(), self.app.palette()
+        try:
+            for language in available_languages():
+                set_language(language)
+                for theme, dark in (("blue", False), ("liquid_glass", True)):
+                    ThemeEngine().apply_to(self.app, theme, dark=dark)
+                    page = SettingsPage(_view_model(MemorySettingsRepository()))
+                    try:
+                        self.assertTrue(page.refresh())
+                        page.resize(880, 650)
+                        page.category_nav.set_category("general")
+                        editor = page.work_schedule_editor
+                        editor.mode_input.setCurrentIndex(editor.mode_input.findData("two_and_a_half_days_off"))
+                        page.show()
+                        self.app.processEvents()
+                        self.capture(editor, f"{language}-work-schedule-collapsed-{theme}-{dark}")
+                        editor.expand_button.click()
+                        self.app.processEvents()
+                        self.assertEqual(page.category_stack.currentWidget().horizontalScrollBar().maximum(), 0)
+                        for field in (editor.mode_input,):
+                            option = QStyleOptionComboBox()
+                            field.initStyleOption(option)
+                            rect = field.style().subControlRect(QStyle.ComplexControl.CC_ComboBox, option,
+                                QStyle.SubControl.SC_ComboBoxEditField, field)
+                            self.assertLessEqual(field.fontMetrics().horizontalAdvance(field.currentText()), rect.width())
+                        for label in (*editor.weekday_labels, *editor.state_labels):
+                            self.assertLessEqual(label.fontMetrics().horizontalAdvance(label.text()), label.width())
+                        for group in editor.day_groups:
+                            self.assertEqual(sum(button.isChecked() for button in group.buttons()), 1)
+                        self.capture(editor, f"{language}-work-schedule-{theme}-{dark}")
+                        self.capture(editor.parentWidget(), f"{language}-work-schedule-form-{theme}-{dark}")
+                    finally:
+                        page.hide()
+                        page.deleteLater()
+                        self.app.processEvents()
+        finally:
+            set_language(old_language)
+            self.app.setStyleSheet(old_style)
+            self.app.setPalette(old_palette)
+
     def test_external_model_fields_use_available_form_width(self):
         from PySide6.QtCore import QPoint
         engine = ThemeEngine()

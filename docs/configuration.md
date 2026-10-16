@@ -1,15 +1,68 @@
 # Configuration
 
+## Work Schedule
+
+Settings > General > Work plan contains an account-specific weekly
+work schedule. Full month plans every calendar day. One day off defaults to
+Sunday; two days off defaults to Saturday and Sunday. The 2.5-day option defaults
+to Saturday and Sunday off with Friday as a half day. The weekdays can be changed;
+custom schedules allow each weekday to be a full day, half day, or day off.
+The compact weekly table shows one column per weekday with a single choice in
+each column. Abbreviated weekday headings have full weekday names in tooltips;
+each choice also has a weekday-specific accessible name.
+Presets initially show a summary. Use Adjust schedule to expand the weekly table;
+Custom keeps the table expanded.
+Use Save within the schedule editor to apply the selection.
+
+Analytics displays actual attendance and planned work separately. Attendance
+counts distinct dates with positive worked hours, including work on planned
+days off; a half-day plan contributes 0.5 to planned work, not to attendance.
+Plans cover the entire selected month, quarter, or year. Comparisons use the
+previous complete calendar period, rather than matching elapsed days. Weekly
+charts show the in-month date range for each calendar week.
+
+The current recurring schedule is used when viewing any period. With Public
+holidays enabled, plans exclude holidays in the selected country and subdivision,
+or the system region when selected. With Public holidays disabled, no holiday
+dates are excluded and no holiday provider is queried. A holiday on a scheduled
+day off is not deducted twice; a holiday on a half day excludes only 0.5 day.
+Actual attendance, saved records, leave rules, and daily overtime are unchanged.
+Missing or invalid
+schedule settings fall back to Full month. The `work_schedule` setting is a
+validated JSON object in the existing account settings table; no database schema
+change or stored-record migration is required.
+
+## Hours Goal
+
+General > Hours goal offers From work schedule and Custom target. Automatic
+targets multiply the selected period's holiday-adjusted planned workdays by
+daily standard hours. Quarter and year targets use their actual dates, not a
+single month's target multiplied by three or twelve. Custom targets retain a
+monthly hours value and are multiplied by the selected number of months.
+
+Existing targets remain custom, including the 168-hour default. Switching to
+automatic calculation hides the monthly hours input without deleting its saved
+value. Switching back restores it. Work schedules affect goals, not overtime
+classification; working a holiday still counts as actual work.
+
+If enabled holiday data or its region is unavailable, planned days and automatic
+targets show an unavailable state, while recorded hours and custom targets remain
+visible. No unadjusted target is substituted. `work_target_mode` is an account
+setting with `manual` and `schedule` values. A missing value retains manual
+behavior; the existing settings table requires no schema change or record migration.
+
 ## Account Preferences
 
-Use Settings for ordinary preferences. General separates work/recording,
-calendar display, and application behavior. Account settings belong to the signed-in
+Use Settings for ordinary preferences. General separates work plans, hours goals,
+recording and reminders, classification, calendar display, and application behavior.
+Account settings belong to the signed-in
 user; provider registrations belong to the operating-system user's installation.
 
 | Group | Important defaults |
 | --- | --- |
 | Appearance | Blue accent, light mode, full view; language inherits startup selection |
-| Work/recording | 8 standard hours, 1-hour default break, 168-hour monthly target |
+| Work plan and goal | 8 daily standard hours, full-month schedule, custom 168-hour monthly target |
+| Recording | 1-hour default break |
 | Reminders | Long timer: 10 hours; continuous-work reminder: off |
 | Calendar | Holidays and overnight indicators on; Sunday first; recent context on |
 | AI | AI Assist and local-model preference on; external processing off |

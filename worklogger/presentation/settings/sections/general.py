@@ -15,6 +15,8 @@ from worklogger.config.constants import (
     CONTINUOUS_TIMER_REMINDER_HOURS_SETTING_KEY,
     ENABLE_TRAY_SETTING_KEY,
     MONTHLY_TARGET_HOURS_SETTING_KEY,
+    WORK_SCHEDULE_SETTING_KEY,
+    WORK_TARGET_MODE_SETTING_KEY,
     SHOW_HOLIDAYS_SETTING_KEY,
     SHOW_NOTE_MARKERS_SETTING_KEY,
     SHOW_OVERNIGHT_INDICATOR_SETTING_KEY,
@@ -32,6 +34,7 @@ from worklogger.presentation.settings.sections.common import (
 )
 from worklogger.presentation.widgets import SwitchButton
 from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.widgets.work_schedule import WorkScheduleEditor
 
 
 class GeneralSection(_SettingsScrollPage):
@@ -41,6 +44,8 @@ class GeneralSection(_SettingsScrollPage):
         "holiday_subdivision_combo",
         "holidays_switch",
         "monthly_target_input",
+        "target_mode_combo",
+        "work_schedule_editor",
         "note_markers_switch",
         "overnight_switch",
         "recent_context_switch",
@@ -57,14 +62,43 @@ class GeneralSection(_SettingsScrollPage):
                  system_country: str):
         super().__init__()
         page = self
-        card = _card_with_form(_("Work and recording"))
+        card = _card_with_form(_("Work plan"))
         form = card.form_layout
 
         self.standard_hours_input = _hours_input(1.0, 24.0, 0.5)
         self.standard_hours_input.valueChanged.connect(
             lambda value: actions.set_number(STANDARD_WORK_HOURS_SETTING_KEY, value)
         )
-        form.addRow(_("Standard hours (h)"), self.standard_hours_input)
+        form.addRow(_("Daily standard hours (h)"), self.standard_hours_input)
+
+        self.work_schedule_editor = WorkScheduleEditor()
+        self.work_schedule_editor.schedule_changed.connect(lambda value: actions.set_text(WORK_SCHEDULE_SETTING_KEY, value))
+        form.addRow(_("Work schedule"), self.work_schedule_editor)
+        page.layout().addWidget(card)
+
+        card = _card_with_form(_("Hours goal"))
+        form = card.form_layout
+        self.target_mode_combo = QComboBox()
+        self.target_mode_combo.setFixedWidth(320)
+        self.target_mode_combo.setAccessibleName(_("Goal calculation"))
+        self.target_mode_combo.addItem(_("From work schedule"), "schedule")
+        self.target_mode_combo.addItem(_("Custom target"), "manual")
+        self.target_mode_combo.setToolTip(_("Automatic goals use planned workdays and daily standard hours. Enabled public holidays follow the selected region."))
+        form.addRow(_("Goal calculation"), self.target_mode_combo)
+        self.monthly_target_input = _hours_input(0.0, 400.0, 8.0)
+        self.monthly_target_input.valueChanged.connect(
+            lambda value: actions.set_number(MONTHLY_TARGET_HOURS_SETTING_KEY, value)
+        )
+        form.addRow(_("Monthly target (h)"), self.monthly_target_input)
+        self._target_form = form
+        self.target_mode_combo.currentIndexChanged.connect(self._update_target_visibility)
+        self.target_mode_combo.currentIndexChanged.connect(
+            lambda: actions.set_text(WORK_TARGET_MODE_SETTING_KEY, self.target_mode_combo.currentData()))
+        self._update_target_visibility()
+        page.layout().addWidget(card)
+
+        card = _card_with_form(_("Recording and reminders"))
+        form = card.form_layout
 
         self.default_break_input = _hours_input(0.0, 4.0, 0.25)
         self.default_break_input.valueChanged.connect(
@@ -82,11 +116,9 @@ class GeneralSection(_SettingsScrollPage):
             field.valueChanged.connect(lambda value, key=key: actions.set_number(key, value))
             form.addRow(caption, field)
 
-        self.monthly_target_input = _hours_input(0.0, 400.0, 8.0)
-        self.monthly_target_input.valueChanged.connect(
-            lambda value: actions.set_number(MONTHLY_TARGET_HOURS_SETTING_KEY, value)
-        )
-        form.addRow(_("Monthly target (h)"), self.monthly_target_input)
+        page.layout().addWidget(card)
+        card = _card_with_form(_("Classification"))
+        form = card.form_layout
 
         self.manage_work_types_button = QPushButton(_("Manage work types"))
         self.manage_work_types_button.setObjectName("manage_work_types_button")
@@ -176,3 +208,6 @@ class GeneralSection(_SettingsScrollPage):
             form.addRow(label, _switch_row(self.residency_switch))
             page.layout().addWidget(card)
         page.layout().addStretch(1)
+
+    def _update_target_visibility(self, *_args):
+        self._target_form.setRowVisible(self.monthly_target_input, self.target_mode_combo.currentData() == "manual")

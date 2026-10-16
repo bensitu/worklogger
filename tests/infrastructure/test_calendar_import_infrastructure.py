@@ -235,6 +235,10 @@ class CalendarImportInfrastructureTests(unittest.TestCase):
         self.assertEqual(module.country, "jp")
         self.assertEqual(module.years, (2026,))
 
+        with patch("worklogger.infrastructure.calendar.holidays_provider._load_holidays_module", return_value=None):
+            with self.assertRaisesRegex(RuntimeError, "holiday_provider_unavailable"):
+                PythonHolidaysProvider().list_for_range("JP", date(2026, 1, 1), date(2026, 1, 31))
+
 
 def _event(user_id: int, day: date, summary: str):
     from worklogger.domain.calendar.models import CalendarEvent

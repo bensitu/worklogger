@@ -9,6 +9,9 @@ def N_(message: str) -> str:
 
 
 _MESSAGE_GROUPS = (
+    (("work_plan_region_required",), N_("Choose a holiday region to calculate planned work and automatic goals.")),
+    (("work_plan_holidays_failed",), N_("Holiday data could not be loaded. Planned work and automatic goals are unavailable; recorded hours are unchanged.")),
+    (("work_schedule_invalid",), N_("Invalid work schedule")),
     (("restore_pending", "restore_recovery_unavailable"), N_("A database restore is unfinished. Restart WorkLogger to choose recovery, and preserve the database and its .pre_restore file.")),
     (("background_image_resolution_low",), N_("Choose an image with a long edge of at least 1280 pixels and a short edge of at least 720 pixels.")),
     (("background_image_too_large", "background_animation_too_large"), N_("This image or animation exceeds the background size limits. Choose a smaller file or fewer frames.")),

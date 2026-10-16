@@ -29,7 +29,7 @@ class PythonHolidaysProvider:
             return ()
         module = self._holidays_module or _load_holidays_module()
         if module is None:
-            return ()
+            raise RuntimeError("holiday_provider_unavailable")
         years = tuple(range(start_day.year, end_day.year + 1))
         raw_holidays = _holiday_items(module, country, years, subdivision)
         holidays: list[Holiday] = []

@@ -6,6 +6,7 @@ from worklogger.app.use_cases.analytics import (
     GetAnalyticsBundleHandler,
     GetAnalyticsDashboardHandler,
 )
+from worklogger.app.use_cases.work_planning import WorkPlanningService
 from worklogger.app.use_cases.notes import DailyNotesService
 from worklogger.app.use_cases.project_analytics import ProjectAnalyticsHandler
 from worklogger.app.use_cases.reports import (
@@ -38,13 +39,15 @@ from worklogger.presentation.viewmodels import (
 def build_analytics_workflow(
     user: User,
     repositories: RuntimeRepositories,
+    handlers: RuntimeHandlers,
 ) -> AnalyticsWorkflowController:
     return AnalyticsWorkflowController(
         AnalyticsViewModel(
             user_id=user.id,
             bundle_handler=GetAnalyticsBundleHandler(repositories.work_logs),
             dashboard_handler=GetAnalyticsDashboardHandler(
-                repositories.work_logs, repositories.settings
+                repositories.work_logs, repositories.settings,
+                planning=WorkPlanningService(repositories.settings, handlers.holiday_provider, country=handlers.holiday_country),
             ),
             csv_exporter=AnalyticsCsvExporter(),
             pdf_exporter=AnalyticsPdfExporter(),

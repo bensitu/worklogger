@@ -38,6 +38,9 @@ msgstr ""
 msgid "+"
 msgstr ""
 
+msgid "2.5 days off per week"
+msgstr ""
+
 msgid "A database restore is unfinished. Restart WorkLogger to choose recovery, and preserve the database and its .pre_restore file."
 msgstr ""
 
@@ -98,6 +101,9 @@ msgstr ""
 msgid "Active model updated."
 msgstr ""
 
+msgid "Actual attendance"
+msgstr ""
+
 msgid "Add another sign-in method before unlinking this identity."
 msgstr ""
 
@@ -108,6 +114,9 @@ msgid "Add to note"
 msgstr ""
 
 msgid "Address"
+msgstr ""
+
+msgid "Adjust schedule"
 msgstr ""
 
 msgid "Admin"
@@ -200,7 +209,7 @@ msgstr ""
 msgid "Assistant"
 msgstr ""
 
-msgid "Attendance Days"
+msgid "Attendance counts dates with positive worked hours, including scheduled days off. Planned work follows the weekly schedule and enabled regional public holidays. This is not an attendance rate."
 msgstr ""
 
 msgid "August"
@@ -216,6 +225,9 @@ msgid "Authorization response received. Return to WorkLogger to continue."
 msgstr ""
 
 msgid "Auto Record"
+msgstr ""
+
+msgid "Automatic goals use planned workdays and daily standard hours. Enabled public holidays follow the selected region."
 msgstr ""
 
 msgid "Avatar"
@@ -296,6 +308,9 @@ msgstr ""
 msgid "CSV files (*.csv)"
 msgstr ""
 
+msgid "Calculated from work schedule and holiday settings."
+msgstr ""
+
 msgid "Calendar"
 msgstr ""
 
@@ -344,6 +359,9 @@ msgstr ""
 msgid "Choose a backup destination different from the active database."
 msgstr ""
 
+msgid "Choose a holiday region to calculate planned work and automatic goals."
+msgstr ""
+
 msgid "Choose a split duration strictly inside the recorded interval."
 msgstr ""
 
@@ -366,6 +384,9 @@ msgid "Choose an image with a long edge of at least 1280 pixels and a short edge
 msgstr ""
 
 msgid "Choose custom color"
+msgstr ""
+
+msgid "Classification"
 msgstr ""
 
 msgid "Clear Calendar Events"
@@ -479,7 +500,13 @@ msgstr ""
 msgid "Custom"
 msgstr ""
 
+msgid "Custom monthly goal."
+msgstr ""
+
 msgid "Custom range"
+msgstr ""
+
+msgid "Custom target"
 msgstr ""
 
 msgid "Cut"
@@ -495,6 +522,9 @@ msgid "Daily Average"
 msgstr ""
 
 msgid "Daily Report"
+msgstr ""
+
+msgid "Daily standard hours (h)"
 msgstr ""
 
 msgid "Dark mode"
@@ -522,6 +552,12 @@ msgid "Date range"
 msgstr ""
 
 msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
+msgstr ""
+
+msgid "Day off"
+msgstr ""
+
+msgid "Days off: {days}"
 msgstr ""
 
 msgid "December"
@@ -707,6 +743,15 @@ msgstr ""
 msgid "Estimated size"
 msgstr ""
 
+msgid "Exactly one day off is required."
+msgstr ""
+
+msgid "Exactly two days off and one half day are required."
+msgstr ""
+
+msgid "Exactly two days off are required."
+msgstr ""
+
 msgid "Excel files (*.xlsx)"
 msgstr ""
 
@@ -797,6 +842,15 @@ msgstr ""
 msgid "From"
 msgstr ""
 
+msgid "From work schedule"
+msgstr ""
+
+msgid "Full day"
+msgstr ""
+
+msgid "Full month"
+msgstr ""
+
 msgid "GGUF Model (*.gguf)"
 msgstr ""
 
@@ -821,7 +875,19 @@ msgstr ""
 msgid "GitHub"
 msgstr ""
 
+msgid "Goal calculation"
+msgstr ""
+
+msgid "Goal unavailable"
+msgstr ""
+
 msgid "Green"
+msgstr ""
+
+msgid "Half day"
+msgstr ""
+
+msgid "Half days: {days}"
 msgstr ""
 
 msgid "Help"
@@ -855,6 +921,12 @@ msgid "Historical items"
 msgstr ""
 
 msgid "Holiday country"
+msgstr ""
+
+msgid "Holiday data could not be loaded. Planned work and automatic goals are unavailable; recorded hours are unchanged."
+msgstr ""
+
+msgid "Hours goal"
 msgstr ""
 
 msgid "Hours summary"
@@ -936,6 +1008,9 @@ msgid "Install the native inference dependency from requirements-ai.txt, then re
 msgstr ""
 
 msgid "Invalid date range"
+msgstr ""
+
+msgid "Invalid work schedule"
 msgstr ""
 
 msgid "January"
@@ -1322,6 +1397,9 @@ msgstr ""
 msgid "Off"
 msgstr ""
 
+msgid "One day off per week"
+msgstr ""
+
 msgid "Only adjacent records with matching types and context can be merged."
 msgstr ""
 
@@ -1407,6 +1485,12 @@ msgid "Place historical break"
 msgstr ""
 
 msgid "Place the historical break before splitting this record."
+msgstr ""
+
+msgid "Planned work unavailable"
+msgstr ""
+
+msgid "Planned work: {days:g} days"
 msgstr ""
 
 msgid "Please sign in to continue."
@@ -1533,6 +1617,9 @@ msgid "Recorded duration: {duration}"
 msgstr ""
 
 msgid "Recorded totals at export. Editing this file does not change WorkLogger records."
+msgstr ""
+
+msgid "Recording and reminders"
 msgstr ""
 
 msgid "Recording or a break is already active."
@@ -1961,9 +2048,6 @@ msgstr ""
 msgid "Standard daily hours: {hours:g}"
 msgstr ""
 
-msgid "Standard hours (h)"
-msgstr ""
-
 msgid "Start"
 msgstr ""
 
@@ -2234,6 +2318,9 @@ msgstr ""
 msgid "Tue"
 msgstr ""
 
+msgid "Two days off per week"
+msgstr ""
+
 msgid "UTC offset"
 msgstr ""
 
@@ -2474,6 +2561,9 @@ msgstr ""
 msgid "Weekly Report"
 msgstr ""
 
+msgid "Weekly planned work: {days:g} days"
+msgstr ""
+
 msgid "Welcome!"
 msgstr ""
 
@@ -2492,9 +2582,6 @@ msgstr ""
 msgid "Work Report"
 msgstr ""
 
-msgid "Work and recording"
-msgstr ""
-
 msgid "Work days"
 msgstr ""
 
@@ -2510,7 +2597,13 @@ msgstr ""
 msgid "Work items"
 msgstr ""
 
+msgid "Work plan"
+msgstr ""
+
 msgid "Work records"
+msgstr ""
+
+msgid "Work schedule"
 msgstr ""
 
 msgid "Work type"
@@ -2613,6 +2706,9 @@ msgid "{count} events"
 msgstr ""
 
 msgid "{count} tokens"
+msgstr ""
+
+msgid "{days} days"
 msgstr ""
 
 msgid "{duration} ({percent:.0f}%)"

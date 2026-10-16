@@ -40,6 +40,9 @@ msgstr "（第{week}週）"
 msgid "+"
 msgstr "+"
 
+msgid "2.5 days off per week"
+msgstr "週休2.5日"
+
 msgid "A database restore is unfinished. Restart WorkLogger to choose recovery, and preserve the database and its .pre_restore file."
 msgstr "データベースの復元が未完了です。WorkLogger を再起動して復旧方法を選択し、データベースと .pre_restore ファイルを保持してください。"
 
@@ -100,6 +103,9 @@ msgstr "有効"
 msgid "Active model updated."
 msgstr "使用中のモデルを更新しました。"
 
+msgid "Actual attendance"
+msgstr "実出勤日数"
+
 msgid "Add another sign-in method before unlinking this identity."
 msgstr "この連携を解除する前に、別のログイン方法を追加してください。"
 
@@ -111,6 +117,9 @@ msgstr "メモに追加"
 
 msgid "Address"
 msgstr "アドレス"
+
+msgid "Adjust schedule"
+msgstr "勤務予定を調整"
 
 msgid "Admin"
 msgstr "管理者"
@@ -202,8 +211,8 @@ msgstr "選択した{count}件の記録を{context}に関連付けますか？�
 msgid "Assistant"
 msgstr "アシスタント"
 
-msgid "Attendance Days"
-msgstr "出勤日数"
+msgid "Attendance counts dates with positive worked hours, including scheduled days off. Planned work follows the weekly schedule and enabled regional public holidays. This is not an attendance rate."
+msgstr "実出勤は、休日を含め実働時間がある日の日数です。予定勤務日数は週間勤務予定と有効な地域の祝日に基づきます。出勤率ではありません。"
 
 msgid "August"
 msgstr "8月"
@@ -219,6 +228,9 @@ msgstr "認証応答を受信しました。WorkLogger に戻って続行して�
 
 msgid "Auto Record"
 msgstr "自動記録"
+
+msgid "Automatic goals use planned workdays and daily standard hours. Enabled public holidays follow the selected region."
+msgstr "自動目標は予定勤務日数と1日の標準時間から算出します。祝日を有効にすると、選択地域の祝日を反映します。"
 
 msgid "Avatar"
 msgstr "アバター"
@@ -298,6 +310,9 @@ msgstr "CSVデータ管理"
 msgid "CSV files (*.csv)"
 msgstr "CSV files (*.csv)"
 
+msgid "Calculated from work schedule and holiday settings."
+msgstr "勤務予定と祝日設定に基づく計算。"
+
 msgid "Calendar"
 msgstr "カレンダー"
 
@@ -346,6 +361,9 @@ msgstr "更新を確認中..."
 msgid "Choose a backup destination different from the active database."
 msgstr "使用中のデータベースとは異なるバックアップ先を選択してください。"
 
+msgid "Choose a holiday region to calculate planned work and automatic goals."
+msgstr "予定勤務と自動目標を計算するには、祝日の地域を選択してください。"
+
 msgid "Choose a split duration strictly inside the recorded interval."
 msgstr "記録区間の内側になる分割時間を選択してください。"
 
@@ -369,6 +387,9 @@ msgstr "長辺が1280ピクセル以上、短辺が720ピクセル以上の画�
 
 msgid "Choose custom color"
 msgstr "カスタム色を選択"
+
+msgid "Classification"
+msgstr "分類管理"
 
 msgid "Clear Calendar Events"
 msgstr "カレンダーの予定を消去"
@@ -481,8 +502,14 @@ msgstr "カーソル位置: %1, %2\nESC キーでキャンセル"
 msgid "Custom"
 msgstr "カスタム"
 
+msgid "Custom monthly goal."
+msgstr "カスタム月間目標。"
+
 msgid "Custom range"
 msgstr "期間を指定"
+
+msgid "Custom target"
+msgstr "カスタム目標"
 
 msgid "Cut"
 msgstr "切り取り"
@@ -498,6 +525,9 @@ msgstr "1日平均"
 
 msgid "Daily Report"
 msgstr "日報"
+
+msgid "Daily standard hours (h)"
+msgstr "1日の標準時間（h）"
 
 msgid "Dark mode"
 msgstr "ダークモード"
@@ -525,6 +555,12 @@ msgstr "日付範囲"
 
 msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
 msgstr "休憩記録がある日付。勤務日と休憩日は重複できます。休暇は別に集計します。"
+
+msgid "Day off"
+msgstr "休み"
+
+msgid "Days off: {days}"
+msgstr "休み：{days}"
 
 msgid "December"
 msgstr "12月"
@@ -709,6 +745,15 @@ msgstr "推定メモリ：{ram} GB"
 msgid "Estimated size"
 msgstr "推定サイズ"
 
+msgid "Exactly one day off is required."
+msgstr "休みを1日設定してください。"
+
+msgid "Exactly two days off and one half day are required."
+msgstr "休み2日と半日勤務1日を設定してください。"
+
+msgid "Exactly two days off are required."
+msgstr "休みを2日設定してください。"
+
 msgid "Excel files (*.xlsx)"
 msgstr "Excel ファイル (*.xlsx)"
 
@@ -799,6 +844,15 @@ msgstr "金"
 msgid "From"
 msgstr "開始日"
 
+msgid "From work schedule"
+msgstr "勤務予定から計算"
+
+msgid "Full day"
+msgstr "全日勤務"
+
+msgid "Full month"
+msgstr "全日勤務（月全日）"
+
 msgid "GGUF Model (*.gguf)"
 msgstr "GGUF Model (*.gguf)"
 
@@ -823,8 +877,20 @@ msgstr "生成日時：{time}"
 msgid "GitHub"
 msgstr "GitHub"
 
+msgid "Goal calculation"
+msgstr "目標の計算方法"
+
+msgid "Goal unavailable"
+msgstr "目標を計算できません"
+
 msgid "Green"
 msgstr "緑"
+
+msgid "Half day"
+msgstr "半日勤務"
+
+msgid "Half days: {days}"
+msgstr "半日勤務：{days}"
 
 msgid "Help"
 msgstr "ヘルプ"
@@ -858,6 +924,12 @@ msgstr "過去の項目"
 
 msgid "Holiday country"
 msgstr "祝日の国"
+
+msgid "Holiday data could not be loaded. Planned work and automatic goals are unavailable; recorded hours are unchanged."
+msgstr "祝日データを読み込めません。予定勤務と自動目標は利用できません。記録済みの時間は変更されません。"
+
+msgid "Hours goal"
+msgstr "時間目標"
 
 msgid "Hours summary"
 msgstr "時間集計"
@@ -939,6 +1011,9 @@ msgstr "requirements-ai.txtの推論依存パッケージをインストール�
 
 msgid "Invalid date range"
 msgstr "日付範囲が正しくありません"
+
+msgid "Invalid work schedule"
+msgstr "勤務予定が無効です"
 
 msgid "January"
 msgstr "1月"
@@ -1324,6 +1399,9 @@ msgstr "10月"
 msgid "Off"
 msgstr "オフ"
 
+msgid "One day off per week"
+msgstr "週休1日"
+
 msgid "Only adjacent records with matching types and context can be merged."
 msgstr "種別と関連付けが一致する隣接記録だけを結合できます。"
 
@@ -1410,6 +1488,12 @@ msgstr "過去の休憩位置を指定"
 
 msgid "Place the historical break before splitting this record."
 msgstr "この記録を分割する前に過去の休憩位置を指定してください。"
+
+msgid "Planned work unavailable"
+msgstr "予定勤務を計算できません"
+
+msgid "Planned work: {days:g} days"
+msgstr "予定勤務：{days:g}日"
 
 msgid "Please sign in to continue."
 msgstr "続行するにはログインしてください。"
@@ -1536,6 +1620,9 @@ msgstr "記録時間：{duration}"
 
 msgid "Recorded totals at export. Editing this file does not change WorkLogger records."
 msgstr "エクスポート時点の記録合計です。このファイルを編集しても WorkLogger の記録は変更されません。"
+
+msgid "Recording and reminders"
+msgstr "記録とリマインダー"
 
 msgid "Recording or a break is already active."
 msgstr "記録または休憩はすでに開始されています。"
@@ -1963,9 +2050,6 @@ msgstr "日付をまたぐ分割は日別・期間別の合計を変更します
 msgid "Standard daily hours: {hours:g}"
 msgstr "標準の一日勤務時間：{hours:g}"
 
-msgid "Standard hours (h)"
-msgstr "標準労働時間"
-
 msgid "Start"
 msgstr "開始"
 
@@ -2236,6 +2320,9 @@ msgstr "研修"
 msgid "Tue"
 msgstr "火"
 
+msgid "Two days off per week"
+msgstr "週休2日"
+
 msgid "UTC offset"
 msgstr "UTC オフセット"
 
@@ -2476,6 +2563,9 @@ msgstr "週報"
 msgid "Weekly Report"
 msgstr "週報"
 
+msgid "Weekly planned work: {days:g} days"
+msgstr "週の予定勤務：{days:g}日"
+
 msgid "Welcome!"
 msgstr "ようこそ！"
 
@@ -2494,9 +2584,6 @@ msgstr "勤務形態の内訳"
 msgid "Work Report"
 msgstr "業務レポート"
 
-msgid "Work and recording"
-msgstr "勤務と記録"
-
 msgid "Work days"
 msgstr "勤務日数"
 
@@ -2512,8 +2599,14 @@ msgstr "作業項目 ID"
 msgid "Work items"
 msgstr "作業項目"
 
+msgid "Work plan"
+msgstr "勤務計画"
+
 msgid "Work records"
 msgstr "勤務記録"
+
+msgid "Work schedule"
+msgstr "勤務予定"
 
 msgid "Work type"
 msgstr "勤務形態"
@@ -2616,6 +2709,9 @@ msgstr "予定 {count} 件"
 
 msgid "{count} tokens"
 msgstr "{count} トークン"
+
+msgid "{days} days"
+msgstr "{days}日"
 
 msgid "{duration} ({percent:.0f}%)"
 msgstr "{duration}（{percent:.0f}%）"

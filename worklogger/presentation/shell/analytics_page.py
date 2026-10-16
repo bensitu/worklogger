@@ -27,7 +27,7 @@ from worklogger.presentation.job_runner import owned_callback
 from worklogger.domain.shared.dates import add_months
 from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBundle
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.errors import display_error_message
+from worklogger.presentation.errors import display_error_code, display_error_message
 from worklogger.presentation.date_labels import month_label, month_name, duration_label
 from worklogger.presentation.work_type_labels import work_type_label
 from worklogger.presentation.viewmodels import (
@@ -234,7 +234,8 @@ class AnalyticsPage(QWidget):
         self.overtime_title_label = self.overtime_card.title_label
         self.overtime_value_label = self.overtime_card.value_label
         self.overtime_caption_label = self.overtime_card.caption_label
-        self.attendance_card = DotProgressCard(_("Attendance Days"), color_role="success")
+        self.attendance_card = DotProgressCard(_("Actual attendance"), color_role="success")
+        self.attendance_card.setToolTip(_("Attendance counts dates with positive worked hours, including scheduled days off. Planned work follows the weekly schedule and enabled regional public holidays. This is not an attendance rate."))
         self.rest_card = DotProgressCard(_("Rest Days"), color_role="muted_text")
         self.rest_card.setToolTip(_("Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."))
         summary_grid.addWidget(self.monthly_hours_card, 0, 0)
@@ -304,7 +305,7 @@ class AnalyticsPage(QWidget):
 
     def _set_state(self, state: AnalyticsDashboard) -> None:
         total = state.stats.total_hours
-        progress = total / state.target_hours if state.target_hours > 0 else 0.0
+        progress = total / state.target_hours if state.target_hours is not None and state.target_hours > 0 else 0.0
         titles = {
             "monthly": _("Monthly Hours"),
             "quarterly": _("Quarterly Hours"),
@@ -313,15 +314,23 @@ class AnalyticsPage(QWidget):
         self.monthly_hours_card.title_label.setText(titles.get(self.scope_control.value, titles["monthly"]))
         self.monthly_hours_card.set_value(
             duration_label(total),
-            _("of {hours:.1f}h goal").format(hours=state.target_hours),
+            _("Goal unavailable") if state.target_hours is None else _("of {hours:.1f}h goal").format(hours=state.target_hours),
             progress,
         )
+        self.monthly_hours_card.gauge.setVisible(state.target_hours is not None)
+        planning_error = display_error_code(state.planning_error) if state.planning_error else ""
+        self.monthly_hours_card.setToolTip(planning_error if state.target_hours is None else
+            _("Calculated from work schedule and holiday settings.") if state.target_mode == "schedule" else _("Custom monthly goal."))
+        self.attendance_card.setToolTip(planning_error or _("Attendance counts dates with positive worked hours, including scheduled days off. Planned work follows the weekly schedule and enabled regional public holidays. This is not an attendance rate."))
         self.overtime_value_label.setText(duration_label(state.stats.overtime_hours))
         self.overtime_chart.set_hours(state.stats.overtime_hours, state.previous_stats.overtime_hours)
         self.overtime_caption_label.setText(_("{change:+.1f}h vs previous period").format(change=state.stats.overtime_hours - state.previous_stats.overtime_hours))
         days = state.stats.work_days
         rest = state.stats.rest_days
-        self.attendance_card.set_value(f"{days} / {state.total_days}", _("{change:+d} days vs previous period").format(change=days - state.previous_stats.work_days), days, state.total_days)
+        self.attendance_card.set_value(_("{days} days").format(days=days),
+            (_("Planned work unavailable") if state.planned_work_days is None else _("Planned work: {days:g} days").format(days=state.planned_work_days))
+            + "\n" + _("{change:+d} days vs previous period").format(change=days - state.previous_stats.work_days),
+            days, state.total_days)
         self.rest_card.set_value(str(rest), _("{change:+d} days vs previous period").format(change=rest - state.previous_stats.rest_days), rest, state.total_days)
         monthly = self.scope_control.value == "monthly"
         self.trend_chart.chart.set_data(state.trend if monthly else _month_chart_labels(state.trend), mode="bar")

@@ -36,6 +36,7 @@ class ComboChart(QWidget):
         self._bundle = bundle
         self._mode = mode if mode in {"bar", "line"} else "bar"
         self._average = average
+        self.setToolTip("\n".join(f"{label.replace(chr(10), ' ')}: {duration_label(value)}" for label, value in bundle.bar_data))
         self.update()
 
     def paintEvent(self, _event: object) -> None:
@@ -45,8 +46,9 @@ class ComboChart(QWidget):
         font.setPixelSize(10)
         painter.setFont(font)
         colors = current_colors()
-        rect = QRectF(34, 25, max(1, self.width() - 44), max(1, self.height() - 48))
         values = self._bundle.line_data if self._mode == "line" else self._bundle.bar_data
+        multiline = any("\n" in label for label, _value in values)
+        rect = QRectF(34, 25, max(1, self.width() - 44), max(1, self.height() - (62 if multiline else 48)))
         leave_values = dict(self._bundle.leave_hours_data)
         if not values or not any(value > 0 or leave_values.get(label, 0) > 0 for label, value in values):
             painter.setPen(QColor(colors.muted_text))
@@ -87,7 +89,8 @@ class ComboChart(QWidget):
                     painter.drawText(QRectF(x - step / 2, top + 3 if inside else top - 18, step, 16), Qt.AlignmentFlag.AlignCenter, f"{value:.1f}")
             points.append((x, top))
             painter.setPen(QColor(colors.muted_text))
-            painter.drawText(QRectF(x - step / 2, rect.bottom() + 5, step, 16), Qt.AlignmentFlag.AlignCenter, painter.fontMetrics().elidedText(str(label), Qt.TextElideMode.ElideRight, int(step)))
+            for row, text in enumerate(str(label).splitlines()):
+                painter.drawText(QRectF(x - step / 2, rect.bottom() + 5 + row * 14, step, 16), Qt.AlignmentFlag.AlignCenter, painter.fontMetrics().elidedText(text, Qt.TextElideMode.ElideRight, int(step)))
         if self._mode == "line":
             area = QPainterPath()
             area.moveTo(points[0][0], rect.bottom())

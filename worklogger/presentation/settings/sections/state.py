@@ -68,6 +68,8 @@ class SettingsSectionState:
             self.timer_reminder_input.setValue(state.timer_reminder_hours)
             self.continuous_timer_reminder_input.setValue(state.continuous_timer_reminder_hours)
             self.monthly_target_input.setValue(state.monthly_target_hours)
+            self.target_mode_combo.setCurrentIndex(max(0, self.target_mode_combo.findData(state.work_target_mode)))
+            self.work_schedule_editor.set_schedule(state.work_schedule)
             self.holidays_switch.set_checked(state.show_holidays)
             country, _separator, subdivision = state.holiday_region.partition("/")
             index = self.holiday_country_combo.findData(country)

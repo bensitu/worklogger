@@ -59,6 +59,19 @@ class ProgressCardTests(unittest.TestCase):
             self.assertEqual(page.monthly_hours_card.gauge.percentage_text, "127%")
             page._set_state(replace(state, target_hours=0))
             self.assertEqual(page.monthly_hours_card.gauge.percentage_text, "0%")
+            page._set_state(replace(state, planned_work_days=19.5, stats=replace(state.stats, work_days=12)))
+            self.assertEqual(page.attendance_card.value_label.text(), _("{days} days").format(days=12))
+            self.assertIn(_("Planned work: {days:g} days").format(days=19.5), page.attendance_card.caption_label.text())
+            self.assertFalse(page.attendance_card.dots_widget.isHidden())
+            page._set_state(replace(state, target_hours=None, planned_work_days=None, target_mode="schedule",
+                                    planning_error="work_plan_holidays_failed"))
+            self.assertTrue(page.monthly_hours_card.gauge.isHidden())
+            self.assertEqual(page.monthly_hours_card.caption_label.text(), _("Goal unavailable"))
+            self.assertIn(_("Planned work unavailable"), page.attendance_card.caption_label.text())
+            from worklogger.presentation.date_labels import duration_label
+            self.assertEqual(page.monthly_hours_card.value_label.text(), duration_label(213.5))
+            page._set_state(state)
+            self.assertFalse(page.monthly_hours_card.gauge.isHidden())
 
     def test_overtime_comparison_exposes_both_periods_accessibly(self):
         chart = OvertimeComparisonChart()

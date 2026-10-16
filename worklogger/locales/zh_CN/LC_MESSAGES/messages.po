@@ -40,6 +40,9 @@ msgstr "（第{week}周）"
 msgid "+"
 msgstr "+"
 
+msgid "2.5 days off per week"
+msgstr "每周休 2.5 天"
+
 msgid "A database restore is unfinished. Restart WorkLogger to choose recovery, and preserve the database and its .pre_restore file."
 msgstr "数据库恢复尚未完成。请重启 WorkLogger 选择恢复方式，并保留数据库及其 .pre_restore 文件。"
 
@@ -100,6 +103,9 @@ msgstr "已启用"
 msgid "Active model updated."
 msgstr "当前模型已更新。"
 
+msgid "Actual attendance"
+msgstr "实际出勤"
+
 msgid "Add another sign-in method before unlinking this identity."
 msgstr "解除此身份关联前，请添加其他登录方式。"
 
@@ -111,6 +117,9 @@ msgstr "加入笔记"
 
 msgid "Address"
 msgstr "地址"
+
+msgid "Adjust schedule"
+msgstr "调整工作安排"
 
 msgid "Admin"
 msgstr "管理员"
@@ -202,8 +211,8 @@ msgstr "将 {context} 关联到选中的 {count} 条记录？已有的关联将�
 msgid "Assistant"
 msgstr "助手"
 
-msgid "Attendance Days"
-msgstr "出勤天数"
+msgid "Attendance counts dates with positive worked hours, including scheduled days off. Planned work follows the weekly schedule and enabled regional public holidays. This is not an attendance rate."
+msgstr "实际出勤按有正工时的日期计数，包含休息日出勤。计划工作按每周安排及已启用地区的节假日计算。这不是出勤率。"
 
 msgid "August"
 msgstr "8月"
@@ -219,6 +228,9 @@ msgstr "已收到授权响应。请返回 WorkLogger 继续。"
 
 msgid "Auto Record"
 msgstr "自动记录"
+
+msgid "Automatic goals use planned workdays and daily standard hours. Enabled public holidays follow the selected region."
+msgstr "自动目标根据计划工作日与每日标准工时计算；启用节假日时，采用所选地区的节假日。"
 
 msgid "Avatar"
 msgstr "头像"
@@ -298,6 +310,9 @@ msgstr "CSV 数据管理"
 msgid "CSV files (*.csv)"
 msgstr "CSV files (*.csv)"
 
+msgid "Calculated from work schedule and holiday settings."
+msgstr "根据工作安排与节假日设置计算。"
+
 msgid "Calendar"
 msgstr "日历"
 
@@ -346,6 +361,9 @@ msgstr "正在检查更新..."
 msgid "Choose a backup destination different from the active database."
 msgstr "请选择不同于当前数据库的备份位置。"
 
+msgid "Choose a holiday region to calculate planned work and automatic goals."
+msgstr "请选择节假日地区，以计算计划工作与自动目标。"
+
 msgid "Choose a split duration strictly inside the recorded interval."
 msgstr "请选择位于记录区间内部的拆分时长。"
 
@@ -369,6 +387,9 @@ msgstr "请选择长边至少 1280 像素、短边至少 720 像素的图片。"
 
 msgid "Choose custom color"
 msgstr "选择自定义颜色"
+
+msgid "Classification"
+msgstr "分类管理"
 
 msgid "Clear Calendar Events"
 msgstr "清空日历事件"
@@ -481,8 +502,14 @@ msgstr "光标位置：%1, %2\n按 ESC 取消"
 msgid "Custom"
 msgstr "自定义"
 
+msgid "Custom monthly goal."
+msgstr "自定义月度目标。"
+
 msgid "Custom range"
 msgstr "自定义范围"
+
+msgid "Custom target"
+msgstr "自定义目标"
 
 msgid "Cut"
 msgstr "剪切"
@@ -498,6 +525,9 @@ msgstr "日均工时"
 
 msgid "Daily Report"
 msgstr "日报"
+
+msgid "Daily standard hours (h)"
+msgstr "每日标准工时（小时）"
 
 msgid "Dark mode"
 msgstr "深色模式"
@@ -525,6 +555,12 @@ msgstr "日期范围"
 
 msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
 msgstr "包含休息类型记录的日期。工作天数与休息天数可以重叠，请假单独统计。"
+
+msgid "Day off"
+msgstr "休息"
+
+msgid "Days off: {days}"
+msgstr "休息：{days}"
 
 msgid "December"
 msgstr "12月"
@@ -709,6 +745,15 @@ msgstr "估算内存：{ram} GB"
 msgid "Estimated size"
 msgstr "预计大小"
 
+msgid "Exactly one day off is required."
+msgstr "需要设置恰好一天休息。"
+
+msgid "Exactly two days off and one half day are required."
+msgstr "需要设置两天休息和一天半天工作。"
+
+msgid "Exactly two days off are required."
+msgstr "需要设置恰好两天休息。"
+
 msgid "Excel files (*.xlsx)"
 msgstr "Excel 文件 (*.xlsx)"
 
@@ -799,6 +844,15 @@ msgstr "五"
 msgid "From"
 msgstr "开始日期"
 
+msgid "From work schedule"
+msgstr "按工作计划计算"
+
+msgid "Full day"
+msgstr "全天工作"
+
+msgid "Full month"
+msgstr "全月"
+
 msgid "GGUF Model (*.gguf)"
 msgstr "GGUF Model (*.gguf)"
 
@@ -823,8 +877,20 @@ msgstr "生成时间：{time}"
 msgid "GitHub"
 msgstr "GitHub"
 
+msgid "Goal calculation"
+msgstr "目标方式"
+
+msgid "Goal unavailable"
+msgstr "目标暂不可用"
+
 msgid "Green"
 msgstr "绿色"
+
+msgid "Half day"
+msgstr "半天工作"
+
+msgid "Half days: {days}"
+msgstr "半天：{days}"
 
 msgid "Help"
 msgstr "帮助"
@@ -858,6 +924,12 @@ msgstr "历史事项"
 
 msgid "Holiday country"
 msgstr "假日国家"
+
+msgid "Holiday data could not be loaded. Planned work and automatic goals are unavailable; recorded hours are unchanged."
+msgstr "无法加载节假日数据，计划工作与自动目标暂不可用；已记录工时保持不变。"
+
+msgid "Hours goal"
+msgstr "工时目标"
 
 msgid "Hours summary"
 msgstr "工时汇总"
@@ -939,6 +1011,9 @@ msgstr "请安装 requirements-ai.txt 中的本地推理依赖，然后重启 Wo
 
 msgid "Invalid date range"
 msgstr "日期范围无效"
+
+msgid "Invalid work schedule"
+msgstr "工作安排无效"
 
 msgid "January"
 msgstr "1月"
@@ -1324,6 +1399,9 @@ msgstr "10月"
 msgid "Off"
 msgstr "关闭"
 
+msgid "One day off per week"
+msgstr "单休"
+
 msgid "Only adjacent records with matching types and context can be merged."
 msgstr "仅可合并工作类型和关联一致的相邻记录。"
 
@@ -1410,6 +1488,12 @@ msgstr "指定历史休息位置"
 
 msgid "Place the historical break before splitting this record."
 msgstr "拆分此记录前，请先指定历史休息的位置。"
+
+msgid "Planned work unavailable"
+msgstr "计划工作暂不可用"
+
+msgid "Planned work: {days:g} days"
+msgstr "计划工作：{days:g} 天"
 
 msgid "Please sign in to continue."
 msgstr "请登录后继续。"
@@ -1536,6 +1620,9 @@ msgstr "记录时长：{duration}"
 
 msgid "Recorded totals at export. Editing this file does not change WorkLogger records."
 msgstr "合计为导出时的记录快照。编辑此文件不会改变 WorkLogger 中的记录。"
+
+msgid "Recording and reminders"
+msgstr "记录与提醒"
 
 msgid "Recording or a break is already active."
 msgstr "记录或休息已开始。"
@@ -1963,9 +2050,6 @@ msgstr "跨日期拆分会改变每日和各期间的合计。"
 msgid "Standard daily hours: {hours:g}"
 msgstr "标准每日工时：{hours:g}"
 
-msgid "Standard hours (h)"
-msgstr "标准工时（小时）"
-
 msgid "Start"
 msgstr "开始"
 
@@ -2236,6 +2320,9 @@ msgstr "培训"
 msgid "Tue"
 msgstr "二"
 
+msgid "Two days off per week"
+msgstr "双休"
+
 msgid "UTC offset"
 msgstr "UTC 偏移"
 
@@ -2476,6 +2563,9 @@ msgstr "周报"
 msgid "Weekly Report"
 msgstr "周报"
 
+msgid "Weekly planned work: {days:g} days"
+msgstr "每周计划工作：{days:g} 天"
+
 msgid "Welcome!"
 msgstr "欢迎！"
 
@@ -2494,9 +2584,6 @@ msgstr "工作方式分布"
 msgid "Work Report"
 msgstr "工作报表"
 
-msgid "Work and recording"
-msgstr "工作与记录"
-
 msgid "Work days"
 msgstr "工作天数"
 
@@ -2512,8 +2599,14 @@ msgstr "工作项 ID"
 msgid "Work items"
 msgstr "工作项"
 
+msgid "Work plan"
+msgstr "工作计划"
+
 msgid "Work records"
 msgstr "工作记录"
+
+msgid "Work schedule"
+msgstr "工作安排"
 
 msgid "Work type"
 msgstr "工作类型"
@@ -2616,6 +2709,9 @@ msgstr "{count} 个事件"
 
 msgid "{count} tokens"
 msgstr "{count} tokens"
+
+msgid "{days} days"
+msgstr "{days} 天"
 
 msgid "{duration} ({percent:.0f}%)"
 msgstr "{duration}（{percent:.0f}%）"

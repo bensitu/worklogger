@@ -31,7 +31,7 @@ class AnalyticsDashboard:
     period_end: date
     stats: MonthStats
     previous_stats: MonthStats
-    target_hours: float
+    target_hours: float | None
     total_days: int
     previous_total_days: int
     trend: ChartDataBundle
@@ -39,3 +39,6 @@ class AnalyticsDashboard:
     work_modes: tuple[tuple[str, float], ...]
     daily_average_trend: ChartDataBundle
     work_mode_labels: tuple[tuple[str, str], ...] = ()
+    planned_work_days: float | None = 0.0
+    target_mode: str = "manual"
+    planning_error: str = ""

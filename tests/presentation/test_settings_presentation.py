@@ -75,6 +75,56 @@ def _view_model(repository: MemorySettingsRepository) -> SettingsViewModel:
 
 
 class SettingsPresentationTests(unittest.TestCase):
+    def test_target_modes_retain_custom_hours_and_presets_expand_only_when_requested(self):
+        from worklogger.config.constants import MONTHLY_TARGET_HOURS_SETTING_KEY, WORK_TARGET_MODE_SETTING_KEY
+
+        repository = MemorySettingsRepository()
+        repository.set(1, MONTHLY_TARGET_HOURS_SETTING_KEY, "152")
+        page = SettingsPage(_view_model(repository))
+        self.addCleanup(page.deleteLater)
+        self.assertTrue(page.refresh())
+        self.assertEqual(page.target_mode_combo.currentData(), "manual")
+        self.assertFalse(page.monthly_target_input.isHidden())
+        page.target_mode_combo.setCurrentIndex(page.target_mode_combo.findData("schedule"))
+        self.assertTrue(page.monthly_target_input.isHidden())
+        self.assertEqual(repository.get(1, MONTHLY_TARGET_HOURS_SETTING_KEY), "152")
+        self.assertEqual(repository.get(1, WORK_TARGET_MODE_SETTING_KEY), "schedule")
+        page.target_mode_combo.setCurrentIndex(page.target_mode_combo.findData("manual"))
+        self.assertEqual(page.monthly_target_input.value(), 152)
+        editor = page.work_schedule_editor
+        editor.mode_input.setCurrentIndex(editor.mode_input.findData("one_day_off"))
+        self.assertTrue(editor.week_widget.isHidden())
+        editor.expand_button.click()
+        self.assertFalse(editor.week_widget.isHidden())
+        editor.mode_input.setCurrentIndex(editor.mode_input.findData("custom"))
+        self.assertFalse(editor.week_widget.isHidden())
+        page.default_break_input.setValue(0.5)
+        self.assertEqual(editor.mode_input.currentData(), "custom")
+        self.assertTrue(editor.save_button.isEnabled())
+
+    def test_weekly_schedule_is_validated_saved_and_reloaded_without_changing_hour_targets(self):
+        from worklogger.config.constants import WORK_SCHEDULE_SETTING_KEY
+        from worklogger.domain.settings.work_schedule import WorkSchedule
+
+        repository = MemorySettingsRepository()
+        page = SettingsPage(_view_model(repository))
+        self.addCleanup(page.deleteLater)
+        self.assertTrue(page.refresh())
+        editor = page.work_schedule_editor
+        editor.mode_input.setCurrentIndex(editor.mode_input.findData("two_and_a_half_days_off"))
+        self.assertTrue(editor.save_button.isEnabled())
+        editor.day_groups[4].button(2).click()
+        self.assertFalse(editor.save_button.isEnabled())
+        editor.day_groups[2].button(1).click()
+        self.assertTrue(editor.save_button.isEnabled())
+        editor.save_button.click()
+        saved = WorkSchedule.decode(repository.get(1, WORK_SCHEDULE_SETTING_KEY))
+        self.assertEqual(saved.days, (1, 1, 0.5, 1, 1, 0, 0))
+        self.assertFalse(editor.save_button.isEnabled())
+        self.assertTrue(page.refresh())
+        self.assertEqual(page.state.work_schedule, saved)
+        self.assertEqual(page.state.monthly_target_hours, 168)
+
     def test_holiday_metadata_readers_are_lazy_and_cached(self):
         catalog = Mock(return_value={"JP": ()})
         country = Mock(return_value="JP")
