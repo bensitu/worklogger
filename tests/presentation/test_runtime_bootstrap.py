@@ -79,7 +79,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
         with self.runtime_directory() as directory:
             root = Path(directory)
             source = root / "sample.gguf"
-            source.write_bytes(b"synthetic model fixture")
+            source.write_bytes(b"GGUF\x03\x00\x00\x00" + bytes(16) + b"synthetic model fixture")
             store = JsonLocalModelStore(root / "models")
             entry = store.import_model(source).value
 

@@ -6,7 +6,6 @@ import hashlib
 import json
 import os
 import re
-import shutil
 from collections.abc import Callable
 from dataclasses import asdict
 from pathlib import Path
@@ -28,7 +27,7 @@ MANIFEST_FILENAME = "manifest.json"
 from worklogger.infrastructure.local_model.catalog import bundled_model_catalog_path as bundled_model_catalog_path
 from worklogger.infrastructure.local_model.catalog import catalog_entries
 from worklogger.infrastructure.local_model.download import HttpRangeDownloader, UrlOpen
-from worklogger.infrastructure.local_model.files import safe_model_filename, safe_model_url, sha256_of_file
+from worklogger.infrastructure.local_model.files import has_gguf_header, safe_model_filename, safe_model_url, sha256_of_file
 
 
 class JsonLocalModelStore:
@@ -95,6 +94,8 @@ class JsonLocalModelStore:
                 return Result.failure(ValidationError("local_model_file_must_be_gguf", "local_model_file_must_be_gguf"))
             if source.stat().st_size <= 0:
                 return Result.failure(ValidationError("local_model_file_empty", "local_model_file_empty"))
+            if not has_gguf_header(source):
+                return Result.failure(ValidationError("local_model_file_must_be_gguf", "local_model_file_must_be_gguf"))
             self._models_dir.mkdir(parents=True, exist_ok=True)
             digest = sha256_of_file(source)
             filename = safe_model_filename(source.name)
@@ -108,7 +109,6 @@ class JsonLocalModelStore:
                             copied.update(chunk)
                     if copied.hexdigest() != digest:
                         raise ValueError("local_model_hash_mismatch")
-                    shutil.copystat(source, temporary)
             entry = LocalModelEntry(
                 id=_safe_model_id(destination.stem, digest),
                 display_name=source.stem,
@@ -184,6 +184,8 @@ class JsonLocalModelStore:
                 return Result.success(
                     LocalModelFileStatus(model_id, available=True, verified=False, reason="local_model_empty")
                 )
+            if not has_gguf_header(path):
+                return Result.success(LocalModelFileStatus(model_id, True, False, "local_model_file_must_be_gguf"))
             expected = str(entry.value.sha256 or "").strip().lower()
             if not is_sha256_digest(expected):
                 return Result.success(LocalModelFileStatus(model_id, available=True, verified=False, reason="local_model_hash_required"))

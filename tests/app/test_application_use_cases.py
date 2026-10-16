@@ -470,7 +470,7 @@ class ApplicationUseCaseTests(unittest.TestCase):
         )
         self.assertTrue(bundle.ok)
         assert bundle.value is not None
-        self.assertEqual(bundle.value.bar_data[1], ("W2", 8.0))
+        self.assertEqual(bundle.value.bar_data[1], ("W2\n4/5-11", 8.0))
         self.assertEqual(bundle.value.leave_line_data[1], 8.0)
 
 

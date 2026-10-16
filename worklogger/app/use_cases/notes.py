@@ -8,13 +8,14 @@ import json
 import logging
 from worklogger.app.commands.note_commands import SaveDailyNoteCommand
 from worklogger.app.queries.note_queries import GetDailyNoteQuery
+from worklogger.app.use_cases._errors import infrastructure_failure
 from worklogger.domain.notes.models import DailyNote, NoteHistoryFilter, NoteHistoryPage
 from worklogger.domain.notes.preferences import NoteSharing, note_draft_key, note_sharing_key
 from worklogger.domain.notes.repositories import DailyNoteRepository
 from worklogger.domain.quicklog.models import QuickLog
 from worklogger.domain.quicklog.repositories import QuickLogRepository
 from worklogger.domain.settings.repositories import SettingsRepository
-from worklogger.domain.shared.errors import ConflictError, InfrastructureError, ValidationError
+from worklogger.domain.shared.errors import ConflictError, ValidationError
 from worklogger.domain.shared.result import Result
 
 
@@ -25,14 +26,14 @@ class GetDailyNoteHandler:
     def handle(self, query: GetDailyNoteQuery) -> Result[DailyNote]:
         try:
             return Result.success(self._repository.get_for_day(query.user_id, query.day))
-        except Exception:
-            return Result.failure(InfrastructureError("note_load_failed", "note_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure("note_load_failed", error, logger_name=__name__))
 
     def list_range(self, user_id, start, end) -> Result[tuple[DailyNote, ...]]:
         try:
             return Result.success(self._repository.list_range(user_id, start, end))
-        except Exception:
-            return Result.failure(InfrastructureError("note_load_failed", "note_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure("note_load_failed", error, logger_name=__name__))
 
 
 class SaveDailyNoteHandler:
@@ -60,8 +61,8 @@ class SaveDailyNoteHandler:
             if str(exc) == "note_conflict":
                 return Result.failure(ConflictError("note_conflict", "note_conflict"))
             return Result.failure(ValidationError(str(exc), str(exc)))
-        except Exception:
-            return Result.failure(InfrastructureError("note_save_failed", "note_save_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure("note_save_failed", error, logger_name=__name__))
         return Result.success(note)
 
 
@@ -90,8 +91,8 @@ class DailyNotesService:
             if str(exc) == "note_conflict":
                 return Result.failure(ConflictError("note_conflict", "note_conflict"))
             return Result.failure(ValidationError(error_code, error_code))
-        except Exception:
-            return Result.failure(InfrastructureError(error_code, error_code))
+        except Exception as error:
+            return Result.failure(infrastructure_failure(error_code, error, logger_name=__name__))
 
     def load(self, day: date, *, recover_draft: bool = True) -> Result[NoteWorkspace]:
         def load():
@@ -139,7 +140,7 @@ class DailyNotesService:
                    expected_sharing: NoteSharing = NoteSharing()):
         def save():
             if len(content.encode("utf-8")) > 1024 * 1024 or len(expected_content.encode("utf-8")) > 1024 * 1024:
-                raise ValueError("note_load_failed")
+                raise ValueError("note_save_failed")
             raw = json.dumps({"content": content, "expected_content": expected_content,
                               "sharing": {"reports": sharing.reports, "ai": sharing.ai},
                               "expected_sharing": {"reports": expected_sharing.reports, "ai": expected_sharing.ai}}, ensure_ascii=False)

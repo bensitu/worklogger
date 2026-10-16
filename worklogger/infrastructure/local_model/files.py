@@ -45,6 +45,13 @@ def sha256_of_file(path: Path, *, is_cancelled: Callable[[], bool] | None = None
     return digest.hexdigest()
 
 
+def has_gguf_header(path: Path) -> bool:
+    with Path(path).open("rb") as handle:
+        header = handle.read(24)
+    return (len(header) == 24 and header[:4] == b"GGUF"
+            and any(int.from_bytes(header[4:8], order) in {2, 3} for order in ("little", "big")))
+
+
 def check_download_cancelled(is_cancelled: Callable[[], bool] | None):
     if is_cancelled is not None and is_cancelled():
         raise InterruptedError("job_cancelled")

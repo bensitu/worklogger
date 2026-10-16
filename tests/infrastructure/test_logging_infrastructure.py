@@ -69,6 +69,9 @@ class LoggingInfrastructureTests(unittest.TestCase):
                 except ValueError:
                     logger.exception("credential_storage_failed")
                 logger.error("safe diagnostic")
+                from worklogger.app.use_cases._errors import infrastructure_failure
+                failure = infrastructure_failure("worklog_save_failed", OSError("private storage payload"), logger_name="worklogger.test")
+                self.assertEqual(failure.details, {"reason": "OSError"})
                 logger.error('Authorization: Basic encoded-basic-secret')
                 logger.error('{"api_key": "json-secret", "password": "escaped\\\"secret"}')
                 logger.error("https://user:private-userinfo@example.com/?%74oken=url-secret&code=authorization-secret&request_id=safe-request")
@@ -81,6 +84,8 @@ class LoggingInfrastructureTests(unittest.TestCase):
                 self.assertIn("credential_storage_failed", content)
                 self.assertIn("ValueError", content)
                 self.assertIn("safe-request", content)
+                self.assertIn("worklog_save_failed: OSError", content)
+                self.assertNotIn("private storage payload", content)
                 for secret in ("synthetic-secret", "sensitive-value", "private exception payload",
                                "encoded-basic-secret", "json-secret", "escaped", "private-userinfo", "url-secret", "authorization-secret"):
                     self.assertNotIn(secret, content)

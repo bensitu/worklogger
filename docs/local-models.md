@@ -33,8 +33,11 @@ partial download for retry. Only verified complete files replace a destination.
 Downloads have a 32 GiB size limit, including resumed bytes. An oversized response
 is rejected even when it does not declare its length.
 
-Import requires a nonempty GGUF file. Keep its source and license. Verification
-checks file integrity, not the accuracy or suitability of generated text.
+Import checks the GGUF signature, supported format version, and complete fixed
+header before copying a file. Copied files keep private destination permissions
+instead of inheriting the source file's permissions. Keep the source and license.
+These checks and checksum verification do not validate the full model structure,
+the accuracy of generated text, or the safety of native parsing.
 Use files from publishers you trust; a checksum is not a publisher signature.
 Deletion asks for confirmation and checks selections made by other accounts.
 

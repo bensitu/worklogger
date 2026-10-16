@@ -7,6 +7,11 @@ from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
 
 
+def infrastructure_failure(code: str, error: Exception, *, logger_name: str) -> InfrastructureError:
+    logging.getLogger(logger_name).error("%s: %s", code, type(error).__name__)
+    return InfrastructureError(code, code, {"reason": type(error).__name__})
+
+
 def storage_boundary(code: str):
     def decorate(operation):
         @wraps(operation)
@@ -14,7 +19,6 @@ def storage_boundary(code: str):
             try:
                 return operation(*args, **kwargs)
             except Exception as error:
-                logging.getLogger(operation.__module__).error("%s: %s", code, type(error).__name__)
-                return Result.failure(InfrastructureError(code, code))
+                return Result.failure(infrastructure_failure(code, error, logger_name=operation.__module__))
         return guarded
     return decorate

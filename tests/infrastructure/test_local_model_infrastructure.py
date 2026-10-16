@@ -43,7 +43,7 @@ class LocalModelInfrastructureTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             source = root / "model.gguf"
-            source.write_bytes(b"model")
+            source.write_bytes(b"GGUF\x03\x00\x00\x00" + bytes(16) + b"model")
             store = JsonLocalModelStore(root / "models")
             entry = store.import_model(source).value
             entered, release = threading.Event(), threading.Event()
@@ -110,7 +110,7 @@ class LocalModelInfrastructureTests(unittest.TestCase):
                 catalog.unlink()
                 self.assertEqual(store.list_models().value[0].filename, "shared.gguf")
             source = root / "import.gguf"
-            source.write_bytes(b"model")
+            source.write_bytes(b"GGUF\x03\x00\x00\x00" + bytes(16) + b"model")
             with patch("worklogger.infrastructure.local_model.store.sha256_of_file", wraps=sha256_of_file) as hashing:
                 imported = store.import_model(source).value
                 self.assertEqual(hashing.call_count, 1)
@@ -172,21 +172,21 @@ class LocalModelInfrastructureTests(unittest.TestCase):
     def test_model_verification_cache_invalidates_when_file_changes(self):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "model.gguf"
-            source.write_bytes(b"model")
+            source.write_bytes(b"GGUF\x03\x00\x00\x00" + bytes(16) + b"model")
             store = JsonLocalModelStore(Path(directory) / "models")
             entry = store.import_model(source).value
             with patch("worklogger.infrastructure.local_model.store.sha256_of_file", wraps=sha256_of_file) as hashing:
                 self.assertTrue(store.verify_model(entry.id).value.verified)
                 self.assertTrue(store.verify_model(entry.id).value.verified)
                 self.assertEqual(hashing.call_count, 1)
-                (Path(directory) / "models" / entry.filename).write_bytes(b"changed model")
+                (Path(directory) / "models" / entry.filename).write_bytes(b"GGUF\x03\x00\x00\x00" + bytes(16) + b"changed model")
                 self.assertFalse(store.verify_model(entry.id).value.verified)
                 self.assertEqual(hashing.call_count, 2)
 
     def test_import_model_creates_catalog_manifest_and_verifies_sha(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "demo.gguf"
-            source.write_bytes(b"GGUF demo")
+            source.write_bytes(b"GGUF\x03\x00\x00\x00" + bytes(16) + b"demo")
             store = JsonLocalModelStore(Path(directory) / "models")
 
             imported = store.import_model(source)
@@ -199,6 +199,21 @@ class LocalModelInfrastructureTests(unittest.TestCase):
             self.assertTrue(status.ok)
             assert status.value is not None
             self.assertTrue(status.value.verified)
+
+    def test_import_rejects_invalid_headers_without_creating_catalog_entries(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "model.gguf"
+            store = JsonLocalModelStore(root / "models")
+            for payload in (b"text file", b"GGUF", b"GGUF" + bytes(20), b"GGUF\x04\x00\x00\x00" + bytes(16)):
+                with self.subTest(payload=payload):
+                    source.write_bytes(payload)
+                    result = store.import_model(source)
+                    self.assertEqual(result.error.code, "local_model_file_must_be_gguf")
+                    self.assertEqual(store.list_models().value, ())
+            for version, order in ((2, "little"), (3, "little"), (3, "big")):
+                source.write_bytes(b"GGUF" + version.to_bytes(4, order) + bytes(16))
+                self.assertTrue(store.import_model(source).ok)
 
     def test_catalog_failures_preserve_cached_models_and_return_results(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

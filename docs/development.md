@@ -43,6 +43,8 @@ updates, and disposal. Treat error codes as stable diagnostic identifiers.
 Schedule modal workflow dialogs for deletion when their execution ends, including
 when loading fails. Keep successful routine actions nonmodal and show their status
 inline; reserve message boxes for errors or decisions requiring user input.
+Use the shared application error boundary for unexpected storage failures. Log a
+stable error code and exception type, not exception messages or user content.
 
 ## Interface Conventions
 

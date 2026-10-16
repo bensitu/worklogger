@@ -15,7 +15,7 @@ from worklogger.app.queries.report_queries import (
     ListReportsQuery,
     ListReportTemplatesQuery,
 )
-from worklogger.app.use_cases._errors import storage_boundary
+from worklogger.app.use_cases._errors import infrastructure_failure, storage_boundary
 from worklogger.app.use_cases.report_generation import GeneratedReport as GeneratedReport
 from worklogger.app.use_cases.report_generation import GenerateReportHandler as GenerateReportHandler
 from worklogger.domain.reporting.models import Report
@@ -63,8 +63,8 @@ class SaveReportHandler:
             if str(exc) == "report_not_found":
                 return Result.failure(NotFoundError("report_not_found", "report_not_found"))
             return Result.failure(ValidationError(str(exc), str(exc)))
-        except Exception:
-            return Result.failure(InfrastructureError("report_save_failed", "report_save_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure("report_save_failed", error, logger_name=__name__))
 
 
 class DeleteReportHandler:
@@ -87,8 +87,8 @@ class DeleteReportHandler:
             if str(exc) == "report_conflict":
                 return Result.failure(ConflictError("report_conflict", "report_conflict"))
             return Result.failure(InfrastructureError("report_delete_failed", "report_delete_failed"))
-        except Exception:
-            return Result.failure(InfrastructureError("report_delete_failed", "report_delete_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure("report_delete_failed", error, logger_name=__name__))
 
 
 class ReportRevisionService:
@@ -117,8 +117,8 @@ class ReportRevisionService:
             if str(error) == "report_not_found":
                 return Result.failure(NotFoundError("report_not_found", "report_not_found"))
             return Result.failure(InfrastructureError("report_history_failed", "report_history_failed"))
-        except Exception:
-            return Result.failure(InfrastructureError("report_history_failed", "report_history_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure("report_history_failed", error, logger_name=__name__))
 
 
 class GetReportForPeriodHandler:
@@ -166,8 +166,8 @@ class ListReportsHandler:
                 return Result.success(tuple(row for row in self._repository.list_by_type(query.user_id, report_type)
                                             if query.period_start <= row.period_start <= query.period_end))
             return Result.success(self._repository.list_by_type(query.user_id, report_type))
-        except Exception:
-            return Result.failure(InfrastructureError("report_history_failed", "report_history_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure("report_history_failed", error, logger_name=__name__))
 
 
 class SaveReportTemplateHandler:
@@ -193,8 +193,8 @@ class SaveReportTemplateHandler:
         )
         try:
             return Result.success(self._repository.save(template))
-        except Exception:
-            return Result.failure(InfrastructureError("template_save_failed", "template_save_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure("template_save_failed", error, logger_name=__name__))
 
 
 class ResetReportTemplateHandler:
@@ -209,8 +209,8 @@ class ResetReportTemplateHandler:
             return Result.failure(ValidationError(str(exc), str(exc)))
         try:
             self._repository.remove(command.user_id, language, template_type)
-        except Exception:
-            return Result.failure(InfrastructureError("template_save_failed", "template_save_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure("template_save_failed", error, logger_name=__name__))
         return Result.success(None)
 
 
@@ -226,8 +226,8 @@ class GetReportTemplateHandler:
             return Result.failure(ValidationError(str(exc), str(exc)))
         try:
             return Result.success(self._repository.get(query.user_id, language, template_type))
-        except Exception:
-            return Result.failure(InfrastructureError("template_load_failed", "template_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure("template_load_failed", error, logger_name=__name__))
 
 
 class ListReportTemplatesHandler:
@@ -240,5 +240,5 @@ class ListReportTemplatesHandler:
             return Result.success(self._repository.list_for_user(query.user_id, language))
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
-        except Exception:
-            return Result.failure(InfrastructureError("template_load_failed", "template_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure("template_load_failed", error, logger_name=__name__))

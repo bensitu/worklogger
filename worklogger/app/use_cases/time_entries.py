@@ -10,7 +10,7 @@ from worklogger.config.constants import MAX_SHIFT_HOURS
 
 from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.calendar.repositories import CalendarEventRepository
-from worklogger.domain.shared.errors import ConflictError, InfrastructureError, ValidationError
+from worklogger.domain.shared.errors import ConflictError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.entry_repository import TimeEntryRepository
 from worklogger.domain.worklog.timer_state import timer_payload
@@ -18,6 +18,7 @@ from worklogger.domain.worklog.rules import wall_interval, wall_position
 from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType
 from worklogger.domain.worklog.rules import decode_work_type, entry_interval, normalize_work_log, parse_time, shift_datetimes, timestamp_span_hours
 from worklogger.app.ports import WorkTypeOperations, ProjectOperations
+from worklogger.app.use_cases._errors import infrastructure_failure
 from worklogger.domain.projects.models import WorkContext
 
 
@@ -95,9 +96,9 @@ class TimeEntryService:
             else:
                 if self.settings.get(self.user_id, "previous_auto_record_state"):
                     raise ValueError("auto_record_restore_failed")
-        except Exception:
+        except Exception as error:
             self.restore_failed = True
-            self.last_error = InfrastructureError("auto_record_restore_failed", "auto_record_restore_failed")
+            self.last_error = infrastructure_failure("auto_record_restore_failed", error, logger_name=__name__)
 
 
     @staticmethod
@@ -140,8 +141,8 @@ class TimeEntryService:
                 self.restore_failed = True
             error_type = ConflictError if code in {"worklog_entry_conflict", "time_entry_timer_conflict", "record_change_conflict"} else ValidationError
             self.last_error = error_type(code, code)
-        except Exception:
-            self.last_error = InfrastructureError(error_code, error_code)
+        except Exception as error:
+            self.last_error = infrastructure_failure(error_code, error, logger_name=__name__)
         return Result.failure(self.last_error)
 
     def list_for_day(self, day: date) -> Result[tuple[WorkLog, ...]]:
@@ -158,8 +159,8 @@ class TimeEntryService:
             return Result.success(self.repository.search_entries(self.user_id, criteria, cursor=cursor))
         except ValueError:
             return Result.failure(ValidationError("record_search_invalid", "record_search_invalid"))
-        except Exception:
-            return Result.failure(InfrastructureError("record_search_failed", "record_search_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure("record_search_failed", error, logger_name=__name__))
 
     @property
     def changes_available(self):

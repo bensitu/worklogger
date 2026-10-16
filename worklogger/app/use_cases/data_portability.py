@@ -8,7 +8,8 @@ from pathlib import Path
 from typing import Protocol
 
 from worklogger.app.commands.data_portability_commands import ImportWorkLogsCsvCommand
-from worklogger.domain.shared.errors import InfrastructureError, ValidationError
+from worklogger.app.use_cases._errors import infrastructure_failure
+from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.projects.models import WorkContext
@@ -137,8 +138,8 @@ class ImportWorkLogsCsvHandler:
             else:
                 reader = getattr(self._repository, "list_export_rows", self._repository.list_all)
                 existing = {row.day for row in reader(command.user_id)}
-        except Exception:
-            return Result.failure(InfrastructureError("csv_import_failed", "csv_import_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure("csv_import_failed", error, logger_name=__name__))
         return Result.success(WorkLogCsvImportPreview(tuple(rows), tuple(errors), len(existing & dates)))
 
     def apply(self, preview: WorkLogCsvImportPreview, *, overwrite: bool = False,
@@ -147,8 +148,8 @@ class ImportWorkLogsCsvHandler:
             self._repository.import_many(preview.rows, overwrite=overwrite, replace_dates=replace_dates)
         except ValueError as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
-        except Exception:
-            return Result.failure(InfrastructureError("csv_import_failed", "csv_import_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure("csv_import_failed", error, logger_name=__name__))
         return Result.success(
             WorkLogCsvImportResult(
                 imported_count=len(preview.rows),
