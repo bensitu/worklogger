@@ -585,6 +585,12 @@ class NotesReportsPresentationTests(unittest.TestCase):
 
         self.assertTrue(report_dialog.has_unsaved_changes)
         self.assertEqual(report_dialog.status_label.text(), "Unsaved changes")
+        baseline = dict(report_dialog._saved_content)
+        report_dialog._confirm_discard_changes = lambda: True
+        report_dialog.reject()
+        self.assertFalse(report_dialog.has_unsaved_changes)
+        self.assertEqual(report_dialog.daily_editor.toPlainText(), baseline["daily"])
+        self.assertEqual(report_dialog._saved_content, baseline)
 
 
 if __name__ == "__main__":

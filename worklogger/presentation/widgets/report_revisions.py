@@ -84,6 +84,8 @@ class ReportRevisionsDialog(QDialog):
         QTimer.singleShot(0, self._load)
 
     def _run(self, name, operation, complete):
+        if self._busy:
+            return
         self._busy = True
         self.close_button.setEnabled(False)
         self.restore_button.setEnabled(False)
@@ -129,11 +131,17 @@ class ReportRevisionsDialog(QDialog):
         self._run("report_versions", lambda: reader(self._state), completed)
 
     def _preview(self, current, _previous=None):
+        if self._busy:
+            return
         if current is None:
             self.restore_button.setEnabled(False)
             return
         version = current.data(Qt.ItemDataRole.UserRole)
         def display(result):
+            selected = self.versions.currentItem()
+            if selected is None or selected.data(Qt.ItemDataRole.UserRole).revision != version.revision:
+                self._preview(selected)
+                return
             if not result.ok:
                 self.status_label.setText(display_error_message(result.error))
                 return

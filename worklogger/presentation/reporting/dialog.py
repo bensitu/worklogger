@@ -387,10 +387,8 @@ class ReportDialog(QDialog):
         if not confirmed:
             self.status_label.setText(_("Unsaved changes"))
             return False
-        self._saved_content = {
-            report_type: editor.toPlainText()
-            for report_type, editor in self._editors().items()
-        }
+        for report_type, editor in self._editors().items():
+            editor.setPlainText(self._saved_content.get(report_type, ""))
         return True
 
     def _ask_discard_changes(self) -> bool:

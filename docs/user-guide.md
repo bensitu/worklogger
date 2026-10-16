@@ -8,6 +8,8 @@ key, so copy or save it privately when it is displayed.
 
 Sign in with your login ID and password. **Remember me** retains a local session
 credential for up to 30 days. Repeated failed attempts cause temporary lockouts.
+The sign-in window can be resized. On smaller screens, scroll the form to reach
+provider sign-in and account recovery actions.
 
 **Settings > Account** groups personal profile, sign-in/security, and user
 administration separately:

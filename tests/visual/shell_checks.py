@@ -206,6 +206,7 @@ class ShellLayoutChecks(unittest.TestCase):
             for language in available_languages():
                 set_language(language)
                 dialog = LoginDialog()
+                dialog.resize(880, 640)
                 dialog.show()
                 self.app.processEvents()
                 self.assertEqual(dialog.hero_frame.width(), dialog.form_frame.width())
@@ -215,6 +216,19 @@ class ShellLayoutChecks(unittest.TestCase):
                         self.assertTrue(field.rect().contains(button.geometry()), language)
                         self.assertLessEqual(abs(button.geometry().center().y() - field.rect().center().y()), 1)
                 self.capture(dialog, "login")
+                for width, height in ((600, 480), (420, 320)):
+                    dialog.resize(width, height)
+                    self.app.processEvents()
+                    self.assertTrue(dialog.hero_frame.isHidden())
+                    self.assertEqual(dialog.form_scroll.width(), dialog.width())
+                    self.assertEqual(dialog.form_scroll.horizontalScrollBar().maximum(), 0)
+                    for button in (dialog.login_button, dialog.microsoft_login_button, dialog.reset_password_button):
+                        dialog.form_scroll.ensureWidgetVisible(button)
+                        self.app.processEvents()
+                        position = button.mapTo(dialog.form_scroll.viewport(), button.rect().center())
+                        self.assertTrue(dialog.form_scroll.viewport().rect().contains(position), (language, width, button.text()))
+                        self.assertGreaterEqual(button.width(), button.minimumSizeHint().width())
+                    self.capture(dialog, f"login-{width}")
                 dialog.close()
             for asset in (ASSETS_ROOT / "icons/ui").glob("*.svg"):
                 rendered = ui_icon(asset.stem).pixmap(20, 20).toImage()

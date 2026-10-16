@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QScrollArea,
     QSizePolicy,
     QStackedWidget,
     QToolButton,
@@ -43,14 +44,20 @@ class LoginDialog(AuthDialog):
         self._identity_availability = {}
         self._busy = False
         self.form_frame: QFrame | None = None
+        self.form_scroll: QScrollArea | None = None
         self.setObjectName("login_dialog")
         self.setWindowTitle(APP_NAME)
         apply_window_icon(self)
-        self.setFixedSize(880, 640)
+        self.setMinimumSize(420, 320)
         configure_application_style()
         install_bundled_fonts()
         self._apply_default_theme()
         self._build_ui()
+        screen = self.screen()
+        bounds = screen.availableGeometry() if screen is not None else None
+        self.resize(min(880, max(420, bounds.width() - 48)) if bounds is not None else 880,
+                    min(640, max(320, bounds.height() - 48)) if bounds is not None else 640)
+        self._sync_column_widths()
 
     def draft(self) -> LoginDraft:
         return LoginDraft(
@@ -116,7 +123,13 @@ class LoginDialog(AuthDialog):
         form_root = QVBoxLayout(form_frame)
         form_root.setContentsMargins(68, 44, 68, 28)
         form_root.setSpacing(10)
-        root.addWidget(form_frame, 1)
+        self.form_scroll = QScrollArea()
+        self.form_scroll.setObjectName("login_form_scroll_area_widget")
+        self.form_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.form_scroll.setWidgetResizable(True)
+        self.form_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.form_scroll.setWidget(form_frame)
+        root.addWidget(self.form_scroll, 1)
 
         title = QLabel(_("Welcome!"))
         title.setObjectName("login_title_label")
@@ -291,11 +304,15 @@ class LoginDialog(AuthDialog):
             button.setMinimumHeight(36)
 
     def _sync_column_widths(self) -> None:
-        if self.hero_frame is None or self.form_frame is None:
+        if self.hero_frame is None or self.form_frame is None or self.form_scroll is None:
             return
-        left_width = self.width() // 2
+        wide = self.width() >= 840
+        self.hero_frame.setVisible(wide)
+        left_width = self.width() // 2 if wide else 0
         self.hero_frame.setFixedWidth(left_width)
-        self.form_frame.setFixedWidth(self.width() - left_width)
+        self.form_scroll.setFixedWidth(self.width() - left_width)
+        margin = 68 if wide else 24
+        self.form_frame.layout().setContentsMargins(margin, 44, margin, 28)
 
     def _apply_default_theme(self) -> None:
         application = QApplication.instance()
