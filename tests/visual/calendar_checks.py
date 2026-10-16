@@ -488,8 +488,18 @@ class CalendarLayoutChecks(unittest.TestCase):
                             for field in (dialog.search_input, dialog.start_input, dialog.end_input,
                                           dialog.type_combo, dialog.project_combo, dialog.item_combo,
                                           dialog.open_button, dialog.more_button, dialog.close_button):
-                                self.assertTrue(dialog.rect().contains(field.rect().translated(field.mapTo(dialog, QPoint()))))
+                                if field.isVisible():
+                                    self.assertTrue(dialog.rect().contains(field.rect().translated(field.mapTo(dialog, QPoint()))))
                             self.assertEqual(dialog.results.topLevelItemCount(), 1)
+                            for mode in ("month", "year", "custom", "all"):
+                                dialog.date_range.mode_input.setCurrentIndex(dialog.date_range.mode_input.findData(mode))
+                                self.app.processEvents()
+                                for field in (dialog.date_range.mode_input, dialog.date_range.period_button,
+                                              dialog.start_input, dialog.end_input):
+                                    if field.isVisible():
+                                        self.assertTrue(dialog.rect().contains(field.rect().translated(field.mapTo(dialog, QPoint()))))
+                            dialog.date_range.mode_input.setCurrentIndex(0)
+                            self.app.processEvents()
                             target = os.environ.get("WORKLOGGER_SCREENSHOTS")
                             if target:
                                 Path(target).mkdir(parents=True, exist_ok=True)

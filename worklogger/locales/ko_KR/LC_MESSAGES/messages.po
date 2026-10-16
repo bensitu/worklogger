@@ -1249,6 +1249,9 @@ msgstr "데이터 없음"
 msgid "No events found."
 msgstr "일정을 찾을 수 없습니다."
 
+msgid "No linked project"
+msgstr "연결된 프로젝트 없음"
+
 msgid "No matching records."
 msgstr "일치하는 기록이 없습니다."
 

@@ -42,7 +42,8 @@ class CalendarCoordinator:
             self._handle.cancel()
         calendar, stats = copy(self._calendar), copy(self._stats)
         holidays = dict(holidays) if holidays is not None else None
-        self._page.set_month_title(month_label(month))
+        self._page.set_month_title(month_label(month), month)
+        self._page.month_title_label.set_week_start_monday(config.calendar_options.week_start_monday)
         self._page.calendar_view.set_loading(True)
         def work(_token):
             calendar_result = calendar.build_month(year=month.year, month=month.month,
@@ -98,8 +99,9 @@ class CalendarCoordinator:
             return result
         self._page.calendar_view.set_state(result.value)
         self._page.set_month_title(
-            month_label(date(result.value.year, result.value.month, 1))
+            month_label(date(result.value.year, result.value.month, 1)), month
         )
+        self._page.month_title_label.set_week_start_monday(config.calendar_options.week_start_monday)
         return Result.success(None)
 
     def refresh_entries(self, day):

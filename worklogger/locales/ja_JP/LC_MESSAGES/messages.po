@@ -1249,6 +1249,9 @@ msgstr "データがありません"
 msgid "No events found."
 msgstr "予定が見つかりません。"
 
+msgid "No linked project"
+msgstr "プロジェクトの関連付けなし"
+
 msgid "No matching records."
 msgstr "一致する記録がありません。"
 

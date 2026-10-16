@@ -123,7 +123,7 @@ class CalendarDayButton(QPushButton):
                 )
         painter.setFont(font)
         painter.setPen(QColor(foreground))
-        metric_lines = lines[-2:] if len(lines) >= 2 else ()
+        metric_lines = lines[2:] if cell.holiday_name else lines[1:]
         # Reserve two holiday lines in every cell so the hour rows stay aligned.
         metric_top = max(50, (self.height() - 28) / 2 - 4)
         if cell.event_count:

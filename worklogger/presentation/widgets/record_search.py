@@ -1,9 +1,8 @@
 """Debounced, paged record search that preserves keyboard focus and draft editing."""
 
-from datetime import date
 from PySide6.QtCore import Qt, QTimer, Signal, QSignalBlocker
 from PySide6.QtGui import QKeySequence, QShortcut
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QDateEdit, QDialog, QHBoxLayout,
+from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout)
 from shiboken6 import isValid
 
@@ -16,10 +15,13 @@ from worklogger.presentation.errors import display_error_code, display_error_mes
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 from worklogger.presentation.widgets.work_type_options import add_work_type_option
-from worklogger.presentation.widgets.date_picker import configure_calendar_popup
+from worklogger.presentation.widgets.date_range import DateRangeControls
 from worklogger.presentation.work_type_labels import work_type_label
 from worklogger.presentation.date_labels import duration_label
 from worklogger.presentation.widgets.data_tree import configure_data_tree, set_data_tooltips
+
+
+_UNLINKED_PROJECT = "unlinked_project"
 
 
 class RecordSearchDialog(QDialog):
@@ -53,20 +55,9 @@ class RecordSearchDialog(QDialog):
         search_action.triggered.connect(lambda _checked: self.search_input.setFocus())
         self.search_input.setMaxLength(512)
         root.addWidget(self.search_input)
-        dates = QHBoxLayout()
-        self.start_input, self.end_input = QDateEdit(), QDateEdit()
-        for field, caption, value in ((self.start_input, _("From"), selected_day.replace(day=1)),
-                                     (self.end_input, _("To"), selected_day)):
-            field.setDisplayFormat("yyyy-MM-dd")
-            configure_calendar_popup(field)
-            field.setDateRange(date.min, date.max)
-            field.setDate(value)
-            field.setAccessibleName(caption)
-            label = QLabel(caption)
-            label.setBuddy(field)
-            dates.addWidget(label)
-            dates.addWidget(field, 1)
-        root.addLayout(dates)
+        self.date_range = DateRangeControls(selected_day, horizontal=True)
+        self.start_input, self.end_input = self.date_range.start_input, self.date_range.end_input
+        root.addWidget(self.date_range)
         filters = QHBoxLayout()
         self.type_combo = QComboBox()
         self.project_combo = QComboBox()
@@ -79,6 +70,7 @@ class RecordSearchDialog(QDialog):
             for value in types.value:
                 add_work_type_option(self.type_combo, value)
         self.project_combo.addItem(_("All projects"), None)
+        self.project_combo.addItem(_("No linked project"), _UNLINKED_PROJECT)
         inventory = view_model.project_inventory()
         if inventory.ok:
             projects, self._items = inventory.value
@@ -86,6 +78,7 @@ class RecordSearchDialog(QDialog):
             for project in projects:
                 self.project_combo.addItem(project.name + (" (" + _("Archived") + ")" if project.archived else ""), project.id)
         self.item_combo.addItem(_("All work items"), None)
+        self.item_combo.setEnabled(False)
         for field, caption in ((self.type_combo, _("Work type")), (self.project_combo, _("Project")), (self.item_combo, _("Work item"))):
             field.setMinimumWidth(0)
             field.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
@@ -93,9 +86,6 @@ class RecordSearchDialog(QDialog):
             field.setAccessibleName(caption)
             filters.addWidget(field, 1)
         root.addLayout(filters)
-        self.unclassified_check = QCheckBox(_("Unclassified"))
-        self.unclassified_check.setObjectName("unclassified_records_check")
-        root.addWidget(self.unclassified_check)
         self.results = QTreeWidget()
         self.results.setObjectName("record_search_tree_view")
         self.results.setHeaderLabels([_("Date"), _("Time"), _("Work type"), _("Project"), _("Work item"), _("Content")])
@@ -132,12 +122,10 @@ class RecordSearchDialog(QDialog):
         self._debounce.setSingleShot(True)
         self._debounce.setInterval(350)
         self._debounce.timeout.connect(self._reload)
-        for field in (self.start_input, self.end_input):
-            field.dateChanged.connect(self._schedule)
+        self.date_range.range_changed.connect(self._schedule)
         self.type_combo.currentIndexChanged.connect(self._schedule)
         self.project_combo.currentIndexChanged.connect(self._project_changed)
         self.item_combo.currentIndexChanged.connect(self._schedule)
-        self.unclassified_check.toggled.connect(self._unclassified_changed)
         self.search_input.textChanged.connect(self._schedule)
         self.search_input.returnPressed.connect(self._reload)
         self.more_button.clicked.connect(lambda: self._reload(append=True))
@@ -147,14 +135,16 @@ class RecordSearchDialog(QDialog):
         self.results.itemSelectionChanged.connect(self._actions)
         self.results.itemActivated.connect(lambda *_args: self._open())
         if criteria is not None:
-            self.start_input.setDate(criteria.start)
-            self.end_input.setDate(criteria.end)
-            with QSignalBlocker(self.project_combo), QSignalBlocker(self.item_combo), QSignalBlocker(self.unclassified_check):
-                project_index = self.project_combo.findData(criteria.project_id) if criteria.project_id is not None else -1
+            self.date_range.set_custom_range(criteria.start, criteria.end)
+            self.date_range.setEnabled(False)
+            with QSignalBlocker(self.project_combo), QSignalBlocker(self.item_combo):
+                project_index = self.project_combo.findData(criteria.project_id) if criteria.project_id is not None else (
+                    self.project_combo.findData(_UNLINKED_PROJECT) if criteria.unclassified and not criteria.project_label else -1)
                 if project_index >= 0:
                     self.project_combo.setCurrentIndex(project_index)
                 elif criteria.project_label or criteria.unclassified:
-                    self.project_combo.addItem(criteria.project_label or _("Unclassified"), criteria.project_id)
+                    self.project_combo.addItem(criteria.project_label or _("No linked project"),
+                                               _UNLINKED_PROJECT if criteria.unclassified else criteria.project_id)
                     self.project_combo.setCurrentIndex(self.project_combo.count() - 1)
                 self.item_combo.clear()
                 self.item_combo.addItem(_("All work items"), None)
@@ -166,8 +156,7 @@ class RecordSearchDialog(QDialog):
                 elif criteria.work_item_label is not None:
                     self.item_combo.addItem(criteria.work_item_label or _("No work item"), criteria.work_item_id)
                     self.item_combo.setCurrentIndex(self.item_combo.count() - 1)
-                self.unclassified_check.setChecked(criteria.unclassified)
-            for field in (self.start_input, self.end_input, self.project_combo, self.item_combo, self.unclassified_check):
+            for field in (self.start_input, self.end_input, self.project_combo, self.item_combo):
                 field.setEnabled(False)
             self.setWindowTitle(_("Project records"))
         shortcut = QShortcut(QKeySequence.StandardKey.Find, self)
@@ -181,11 +170,7 @@ class RecordSearchDialog(QDialog):
             self.item_combo.addItem(_("All work items"), None)
             for item in self._items.get(self.project_combo.currentData(), ()):
                 self.item_combo.addItem(item.title + (" (" + _("Archived") + ")" if item.archived else ""), item.id)
-        self._schedule()
-
-    def _unclassified_changed(self, checked):
-        self.project_combo.setEnabled(not checked)
-        self.item_combo.setEnabled(not checked)
+        self.item_combo.setEnabled(self.item_combo.count() > 1)
         self._schedule()
 
     def _schedule(self, *_args):
@@ -198,9 +183,11 @@ class RecordSearchDialog(QDialog):
         if self._fixed_criteria is not None:
             from dataclasses import replace
             return replace(self._fixed_criteria, text=self.search_input.text(), work_type=self.type_combo.currentData())
-        return EntryFilter(self.start_input.date().toPython(), self.end_input.date().toPython(), self.search_input.text(),
-                           self.type_combo.currentData(), self.project_combo.currentData() if not self.unclassified_check.isChecked() else None,
-                           self.item_combo.currentData() if not self.unclassified_check.isChecked() else None, self.unclassified_check.isChecked())
+        project_id = self.project_combo.currentData()
+        unlinked = project_id == _UNLINKED_PROJECT
+        return EntryFilter(*self.date_range.bounds(), text=self.search_input.text(),
+                           work_type=self.type_combo.currentData(), project_id=None if unlinked else project_id,
+                           work_item_id=None if unlinked else self.item_combo.currentData(), unclassified=unlinked)
 
     def _reload(self, *, append=False):
         self._debounce.stop()
@@ -232,7 +219,7 @@ class RecordSearchDialog(QDialog):
                 self.results.clear()
             for entry in result.value.entries:
                 span = f"{entry.start_time} - {entry.end_time}" if entry.has_times else _("All day")
-                project_label = entry.context.project_label or _("Unclassified")
+                project_label = entry.context.project_label or _("No linked project")
                 if entry.context.project_label and entry.context.project_id is None:
                     project_label += " (" + _("Unlinked") + ")"
                 preview = entry.note.replace("\n", " ")

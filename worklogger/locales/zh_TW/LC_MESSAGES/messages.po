@@ -1249,6 +1249,9 @@ msgstr "尚無資料"
 msgid "No events found."
 msgstr "未找到事件。"
 
+msgid "No linked project"
+msgstr "未關聯專案"
+
 msgid "No matching records."
 msgstr "沒有符合條件的紀錄。"
 

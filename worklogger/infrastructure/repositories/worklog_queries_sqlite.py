@@ -35,11 +35,11 @@ class SQLiteWorkLogQueries:
             conditions.append("(w.note LIKE ? ESCAPE '\\' OR w.project_label LIKE ? ESCAPE '\\' OR w.work_item_label LIKE ? ESCAPE '\\')")
             parameters.extend((pattern, pattern, pattern))
         if cursor is not None:
-            conditions.append("(w.d,COALESCE(w.start,''),w.id)>(?,?,?)")
+            conditions.append("(w.d,COALESCE(w.start,''),w.id)<(?,?,?)")
             parameters.extend((cursor.day, cursor.start, cursor.entry_id))
         with self._storage.connection_factory.connection() as connection:
             rows = connection.execute(self._storage.select + " WHERE " + " AND ".join(conditions)
-                + " ORDER BY w.d,COALESCE(w.start,''),w.id LIMIT ?", (*parameters, limit + 1)).fetchall()
+                + " ORDER BY w.d DESC,COALESCE(w.start,'') DESC,w.id DESC LIMIT ?", (*parameters, limit + 1)).fetchall()
         next_cursor = EntryCursor(rows[limit - 1]["d"], rows[limit - 1]["start"] or "", rows[limit - 1]["id"]) if len(rows) > limit else None
         return EntryPage(map_rows(rows[:limit], self._storage.from_row), next_cursor)
 

@@ -1249,6 +1249,9 @@ msgstr "No data"
 msgid "No events found."
 msgstr "No events found."
 
+msgid "No linked project"
+msgstr "No linked project"
+
 msgid "No matching records."
 msgstr "No matching records."
 

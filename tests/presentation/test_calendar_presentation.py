@@ -37,6 +37,17 @@ class RecordingHolidaysHandler:
 
 
 class CalendarPresentationTests(unittest.TestCase):
+    def test_calendar_keeps_zero_hours_but_only_shows_positive_overtime(self):
+        from worklogger.presentation.viewmodels.calendar import _cell_text_lines
+        from worklogger.infrastructure.i18n import _
+
+        day = date(2026, 10, 16)
+        for holiday in ("", "Holiday"):
+            for worked, overtime in ((0, 0), (8, 0), (9, 1)):
+                lines = _cell_text_lines(day, holiday, worked, overtime)
+                self.assertIn(f"{worked:.1f}{_('h')}", lines)
+                self.assertEqual(any(line.startswith(_('+')) for line in lines), overtime > 0)
+
     def test_daily_note_markers_remain_visible_with_work_and_calendar_events(self):
         from types import SimpleNamespace
 

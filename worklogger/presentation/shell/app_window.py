@@ -247,10 +247,12 @@ class AppWindow(QMainWindow):
         return self._entry_dirty or self.reports_page.has_unsaved_changes
 
     def apply_theme(self, *, force: bool = False) -> None:
-        self.appearance_controller.apply(
+        colors = self.appearance_controller.apply(
             self._config.theme, dark=self._config.dark, custom_color=self._config.custom_color,
             force=force,
         )
+        if colors is not None:
+            self.calendar_page.month_title_label.set_colors(colors)
 
     def apply_settings(self, state: SettingsState) -> None:
         self.sidebar.set_avatar(state.profile_avatar_png)
@@ -418,6 +420,7 @@ class AppWindow(QMainWindow):
         self.calendar_page.today_requested.connect(lambda: self.go_today(asynchronous=True))
         self.calendar_page.next_month_requested.connect(lambda: self.next_month(asynchronous=True))
         self.calendar_page.search_requested.connect(self.open_record_search)
+        self.calendar_page.date_selected.connect(lambda day: self.select_day(day, asynchronous=True))
         self.analytics_page.projects_requested.connect(self.open_project_analytics)
         self.notes_button.clicked.connect(self.open_notes)
         self.calendar_view.day_selected.connect(lambda day: self.select_day(day, asynchronous=True))
@@ -471,7 +474,7 @@ class AppWindow(QMainWindow):
             self._record_search_dialog.raise_()
             self._record_search_dialog.activateWindow()
             return
-        dialog = RecordSearchDialog(self._time_entry_view_model, self._selected_day, self,
+        dialog = RecordSearchDialog(self._time_entry_view_model, self._current_month, self,
                                     job_runner=self._job_runner, selection_handler=self._open_found_entry)
         dialog.records_changed.connect(self._records_associated)
         self._record_search_dialog = dialog

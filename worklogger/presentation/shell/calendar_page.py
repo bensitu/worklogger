@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 from PySide6.QtCore import QEvent, Qt, QTimer, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
@@ -23,6 +25,7 @@ from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.time_entries import TimeEntryPanel
 from worklogger.presentation.widgets.time_entry_history import TimeEntryHistory
 from worklogger.presentation.date_labels import day_label
+from worklogger.presentation.widgets.date_picker import DatePickerButton
 
 
 class CalendarPage(QWidget):
@@ -30,6 +33,7 @@ class CalendarPage(QWidget):
     next_month_requested = Signal()
     today_requested = Signal()
     search_requested = Signal()
+    date_selected = Signal(object)
     entry_selected = Signal(object)
     event_selected = Signal(object)
     entry_delete_requested = Signal(object)
@@ -52,7 +56,11 @@ class CalendarPage(QWidget):
         self.stats_panel = stats_panel
         self._build_ui()
 
-    def set_month_title(self, title: str) -> None:
+    def set_month_title(self, title: str, day=None) -> None:
+        if day is not None:
+            self.month_title_label.set_date(day)
+            self.previous_month_button.setEnabled(day > date.min)
+            self.next_month_button.setEnabled(day < date(9999, 12, 1))
         self.month_title_label.setText(title)
         QTimer.singleShot(0, self, self._ensure_selected_day_visible)
 
@@ -88,10 +96,10 @@ class CalendarPage(QWidget):
         set_button_icon(self.previous_month_button, "chevron-left")
         self.previous_month_button.setText("")
         self.previous_month_button.clicked.connect(self.previous_month_requested.emit)
-        self.month_title_label = QLabel("")
+        self.month_title_label = DatePickerButton()
         self.month_title_label.setObjectName("calendar_month_title_label")
         self.month_title_label.setProperty("role", "title")
-        self.month_title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.month_title_label.date_selected.connect(self.date_selected.emit)
         self.next_month_button = QPushButton(">")
         self.next_month_button.setObjectName("next_month_button")
         self.next_month_button.setProperty("variant", "outline")

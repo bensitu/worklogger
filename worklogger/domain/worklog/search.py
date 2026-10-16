@@ -1,4 +1,4 @@
-"""Bounded individual-record queries and stable chronological paging."""
+"""Bounded individual-record queries and stable newest-first paging."""
 
 from dataclasses import dataclass
 from datetime import date

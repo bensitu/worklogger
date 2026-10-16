@@ -26,6 +26,75 @@ from PySide6.QtCore import QTime
 
 
 class TimeEntryWorkflowTests(unittest.TestCase):
+    def test_project_menu_distinguishes_all_records_from_unlinked_records_and_preserves_fixed_filters(self):
+        from worklogger.domain.projects.models import WorkContext
+        from worklogger.domain.worklog.models import WorkLog
+        from worklogger.domain.worklog.search import EntryFilter
+        from worklogger.infrastructure.i18n import _
+        from worklogger.presentation.widgets.record_search import RecordSearchDialog
+
+        service, day = self.panel.view_model.service, self.now.date()
+        project = service.projects.save_project("Research").value
+        item = service.projects.save_work_item(project.id, "Review").value
+        service.save_manual(day, "09:00", "10:00", "normal", "Linked", context=WorkContext(project.id, item.id))
+        service.save_manual(day, "10:00", "11:00", "normal", "Plain")
+        self.repository.save_entry(WorkLog(self.runtime.user.id, day, "11:00", "12:00", note="Imported",
+                                          context=WorkContext(project_label="Previous", work_item_label="Task")))
+        dialog = RecordSearchDialog(self.panel.view_model, day, self.window, job_runner=ImmediateJobRunner())
+        self.addCleanup(dialog.deleteLater)
+        self.assertEqual(dialog.results.topLevelItemCount(), 3)
+        self.assertFalse(dialog.item_combo.isEnabled())
+        dialog.project_combo.setCurrentIndex(dialog.project_combo.findData(project.id))
+        self.assertTrue(dialog.item_combo.isEnabled())
+        dialog.item_combo.setCurrentIndex(dialog.item_combo.findData(item.id))
+        dialog._reload()
+        self.assertEqual(dialog.results.topLevelItemCount(), 1)
+        dialog.project_combo.setCurrentIndex(dialog.project_combo.findText(_("No linked project")))
+        self.assertTrue(dialog.project_combo.isEnabled())
+        self.assertFalse(dialog.item_combo.isEnabled())
+        self.assertIsNone(dialog._criteria().project_id)
+        self.assertIsNone(dialog._criteria().work_item_id)
+        self.assertTrue(dialog._criteria().unclassified)
+        dialog._reload()
+        self.assertEqual(dialog.results.topLevelItemCount(), 2)
+        dialog.project_combo.setCurrentIndex(0)
+        dialog._reload()
+        self.assertFalse(dialog._criteria().unclassified)
+        self.assertEqual(dialog.results.topLevelItemCount(), 3)
+        dialog.reject()
+        criteria = EntryFilter(day, day, unclassified=True, project_label="Previous", work_item_label="Task")
+        fixed = RecordSearchDialog(self.panel.view_model, day, self.window,
+                                   job_runner=ImmediateJobRunner(), criteria=criteria)
+        self.addCleanup(fixed.deleteLater)
+        self.assertFalse(fixed.project_combo.isEnabled())
+        self.assertFalse(fixed.item_combo.isEnabled())
+        self.assertEqual(fixed._criteria(), criteria)
+        self.assertEqual(fixed.results.topLevelItemCount(), 1)
+        fixed.reject()
+
+    def test_record_search_uses_the_visible_month_and_shared_date_ranges(self):
+        from worklogger.presentation.widgets.date_range import DateRangeControls
+
+        self.window.next_month()
+        month = self.window.current_month
+        self.window.open_record_search()
+        dialog = self.window._record_search_dialog
+        self.assertIsInstance(dialog.date_range, DateRangeControls)
+        self.assertEqual(dialog._criteria().start, month)
+        self.assertEqual(dialog._criteria().end.month, month.month)
+        self.assertGreater(dialog._criteria().end.day, 27)
+        for mode, start, end in (("year", date(month.year, 1, 1), date(month.year, 12, 31)),
+                                 ("all", date.min, date.max)):
+            dialog.date_range.mode_input.setCurrentIndex(dialog.date_range.mode_input.findData(mode))
+            self.assertEqual((dialog._criteria().start, dialog._criteria().end), (start, end))
+        dialog.date_range.set_custom_range(date(2024, 2, 1), date(2024, 2, 29))
+        self.assertEqual(dialog._criteria().end, date(2024, 2, 29))
+        dialog.reject()
+        self.window._job_runner = ImmediateJobRunner()
+        self.window.calendar_page.date_selected.emit(date(2024, 2, 29))
+        self.assertEqual(self.window.current_month, date(2024, 2, 1))
+        self.assertEqual(self.window.selected_day, date(2024, 2, 29))
+
     def test_worker_editor_changes_are_applied_only_on_completion_and_failures_restart_display(self):
         from worklogger.app.job_runner import CancellationToken, JobHandle
         from worklogger.domain.shared.errors import InfrastructureError
