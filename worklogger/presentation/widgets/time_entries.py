@@ -365,11 +365,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         self._render_editor()
 
     def _processing_target(self):
-        auto = self.time_tabs.currentIndex() == 1
-        if (auto or self.view_model.editing_active_timer) and self.view_model.timer:
-            return ("timer", self.view_model.timer.capture_id)
-        selected = self.view_model.auto_completed if auto else self.view_model.draft.original
-        return ("entry", selected.id) if selected else ("draft", self.view_model.draft.day)
+        return self.view_model.editor_state(automatic=self.time_tabs.currentIndex() == 1).processing_target
 
     def _draft_changed(self, *_args):
         if self._updating:
@@ -388,18 +384,18 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         self._updating = True
         try:
             auto = self.time_tabs.currentIndex() == 1
+            state = self.view_model.editor_state(automatic=auto)
             variant = "outline" if auto else "primary"
             if self.save_button.property("variant") != variant:
                 self.save_button.setProperty("variant", variant)
                 refresh_style(self.save_button)
-            draft = self.view_model.draft
-            linked_timer = self.view_model.editing_active_timer
+            draft = state.draft
+            linked_timer = state.linked_timer
             self.start_input.setText(draft.start)
             self.end_input.setText(draft.end)
-            work_type = self.view_model.auto_work_type if auto else draft.work_type
+            work_type = state.work_type
             self._populate_work_types()
-            selected_snapshot = self.view_model.auto_completed if auto else draft.original
-            snapshot = self.view_model.timer.work_type if (auto or linked_timer) and self.view_model.timer else selected_snapshot.work_type if selected_snapshot else None
+            snapshot = state.type_snapshot
             if snapshot is None:
                 snapshot = next((definition for definition in self._custom_types if definition.value == work_type), None)
             if isinstance(snapshot, CustomWorkType) and self.work_type_combo.findData(work_type) < 0:
@@ -409,10 +405,10 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
                 self.work_type_combo.setItemIcon(self.work_type_combo.findData(work_type), work_type_icon(snapshot))
             self.work_type_combo.setCurrentIndex(max(0, self.work_type_combo.findData(work_type)))
             self.work_type_combo.setToolTip(self.work_type_combo.currentText())
-            content = self.view_model.auto_content if auto else draft.content
+            content = state.content
             if self.content_input.toPlainText() != content:
                 self.content_input.setPlainText(content)
-            selected = self.view_model.auto_completed if auto and self.view_model.timer is None else draft.original if not auto else None
+            selected = state.selected_record
             self.selected_record_label.setText(_("Editing record: {date} {start} - {end}").format(
                 date=day_label(selected.day), start=selected.start_time or "", end=selected.end_time or "") if selected else "")
             self.selected_record_label.setVisible(selected is not None)
@@ -425,11 +421,10 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             self.end_input.setReadOnly(linked_timer)
             self.start_input.setEnabled(not linked_timer)
             self.end_input.setEnabled(not linked_timer)
-            self.work_type_combo.setEnabled(not ((auto or linked_timer) and self.view_model.timer))
-            self.context_picker.set_context(self.view_model.timer.context if (auto or linked_timer) and self.view_model.timer else
-                                           self.view_model.auto_context if auto else draft.context)
-            self.context_picker.setEnabled(self._context_error is None and not ((auto or linked_timer) and self.view_model.timer))
-            legacy = draft.original.break_hours if not auto and draft.original else 0
+            self.work_type_combo.setEnabled(state.active_timer is None)
+            self.context_picker.set_context(state.context)
+            self.context_picker.setEnabled(self._context_error is None and state.active_timer is None)
+            legacy = state.historical_break_hours
             self.history_label.setText(_("Historical break deduction: {hours}").format(hours=duration_label(legacy)) if legacy else "")
             if self._context_error is not None:
                 self.history_label.setText(display_error_message(self._context_error))
@@ -437,7 +432,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         finally:
             self._updating = False
         self._update_actions()
-        selected = self.view_model.auto_completed if auto and self.view_model.timer is None else self.view_model.draft.original if not auto else None
+        selected = state.selected_record
         self._fit_mode_height()
         self.selection_changed.emit(selected.id if selected else None)
         self.dirty_changed.emit(self.is_dirty)
@@ -449,7 +444,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         self.polish_button.setEnabled(not self.is_busy and not rewriting and ready and bool(self.content_input.toPlainText().strip()))
         self.polish_button.setToolTip(_("Polish text") if ready or rewriting else _("Text processing is not ready. Check AI settings."))
         self.content_input.setReadOnly(rewriting)
-        auto = self.time_tabs.currentIndex() == 1
+        state = self.view_model.editor_state(automatic=self.time_tabs.currentIndex() == 1)
         timer = self.view_model.timer
         self.undo_button.setEnabled(not self.is_busy and timer is None and not self.view_model.restore_failed
                                     and self.view_model.latest_change_info is not None)
@@ -464,14 +459,9 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         self.discard_timer_button.setEnabled(timer is not None or self.view_model.restore_failed)
         self.break_button.setText(_("Break {hours}").format(hours=duration_label(self.view_model.default_break_hours)))
         self.break_button.setEnabled(timer is None and not self.view_model.restore_failed and self.view_model.default_break_hours > 0)
-        self.save_button.setText(_("Save content") if auto and timer else _("Save changes") if
-            (self.view_model.auto_completed if auto else self.view_model.draft.original) else _("Save"))
-        self.save_button.setEnabled(self.view_model.auto_dirty and bool(timer or self.view_model.auto_completed) if auto else self.view_model.manual_dirty)
-        if not auto and self.view_model.editing_active_timer:
-            self.save_button.setText(_("Save content"))
-            self.save_button.setEnabled(self.view_model.auto_dirty)
-        if rewriting:
-            self.save_button.setEnabled(False)
+        captions = {"new": _("Save"), "changes": _("Save changes"), "content": _("Save content")}
+        self.save_button.setText(captions[state.save_action])
+        self.save_button.setEnabled(state.can_save and not rewriting)
         if timer and timer.pending_end:
             self.clock_out_button.setText(_("Save"))
             self.break_button.setEnabled(False)

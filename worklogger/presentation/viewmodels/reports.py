@@ -167,12 +167,12 @@ class ReportEditorViewModel:
     def timesheet_available(self):
         return self._timesheet_export_handler is not None
 
-    def export_timesheet(self, destination, selected_day, *, whole_month=False, format="xlsx"):
+    def export_timesheet(self, destination, selected_day, *, whole_month=False, file_format="xlsx"):
         if not self.timesheet_available:
             return Result.failure(_validation("timesheet_format_invalid"))
         period = monthly_period(selected_day.year, selected_day.month) if whole_month else daily_period(selected_day)
         return self._timesheet_export_handler.handle(self._user_id, period.start, period.end, destination,
-                                                     format=format, standard_hours=self._standard_work_hours)
+                                                     file_format=file_format, standard_hours=self._standard_work_hours)
 
     @property
     def delete_available(self) -> bool:

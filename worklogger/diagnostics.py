@@ -133,7 +133,7 @@ def check_workflows():
             require_value(reports.export_timesheet(root / "timesheet.xlsx", day))
             workbook = load_workbook(root / "timesheet.xlsx", read_only=True)
             workbook.close()
-            require_value(reports.export_timesheet(root / "timesheet.pdf", day, format="pdf"))
+            require_value(reports.export_timesheet(root / "timesheet.pdf", day, file_format="pdf"))
             document = QPdfDocument()
             if document.load(str(root / "timesheet.pdf")) != QPdfDocument.Error.None_ or document.pageCount() < 1:
                 raise RuntimeError("pdf_verification_failed")

@@ -5,6 +5,7 @@ from datetime import timedelta
 from worklogger.domain.worklog.models import WorkLog, WorkType, TimeRange
 from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.rules import entry_interval, normalize_work_log
+from worklogger.domain.worklog.content import require_entry_content
 
 
 @dataclass(frozen=True)
@@ -40,8 +41,7 @@ def merge_entries(left: WorkLog, right: WorkLog) -> WorkLog:
             or bool(left.started_at) != bool(right.started_at)):
         raise ValueError("record_merge_invalid")
     content = left.note if left.note == right.note else "\n\n".join(value for value in (left.note, right.note) if value)
-    if len(content) > 16000:
-        raise ValueError("time_entry_content_too_long")
+    content = require_entry_content(content)
     return normalize_work_log(replace(left, end_time=right.end_time, ended_at=right.ended_at,
                                      note=content, break_hours=left.break_hours + right.break_hours))
 

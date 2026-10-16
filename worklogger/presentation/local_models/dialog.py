@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
-    QListWidget,
     QListWidgetItem,
     QMessageBox,
     QPushButton,
@@ -38,7 +37,7 @@ from worklogger.presentation.viewmodels import (
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
 from worklogger.presentation.widgets.icons import set_button_icon
-from worklogger.presentation.widgets.two_line_delegate import TwoLineItemDelegate
+from worklogger.presentation.widgets.preview_list import PreviewListWidget
 
 
 class LocalModelsDialog(QDialog):
@@ -153,13 +152,10 @@ class LocalModelsDialog(QDialog):
         body = QHBoxLayout()
         body.setSpacing(20)
 
-        self.model_list = QListWidget()
+        self.model_list = PreviewListWidget()
         self.model_list.setObjectName("local_model_list_widget")
         self.model_list.setMinimumWidth(280)
-        self.model_list.setItemDelegate(TwoLineItemDelegate(self.model_list))
-        self.model_list.setSpacing(4)
         self.model_list.setFrameShape(QFrame.Shape.StyledPanel)
-        self.model_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         body.addWidget(self.model_list, 1)
         details = QVBoxLayout()
         details.setSpacing(12)

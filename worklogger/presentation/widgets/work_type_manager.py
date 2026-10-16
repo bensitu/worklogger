@@ -2,14 +2,14 @@
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QAbstractItemView, QComboBox, QDialog, QFormLayout,
-    QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMessageBox,
+    QHBoxLayout, QLabel, QLineEdit, QListWidgetItem, QMessageBox,
     QPushButton, QVBoxLayout)
 
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon
-from worklogger.presentation.widgets.two_line_delegate import TwoLineItemDelegate
+from worklogger.presentation.widgets.preview_list import PreviewListWidget
 
 
 class WorkTypeManagerDialog(QDialog):
@@ -24,11 +24,9 @@ class WorkTypeManagerDialog(QDialog):
         root = QVBoxLayout(self)
         root.setContentsMargins(20, 20, 20, 16)
         body = QHBoxLayout()
-        self.type_list = QListWidget()
+        self.type_list = PreviewListWidget(spacing=0)
         self.type_list.setObjectName("custom_work_type_list_widget")
         self.type_list.setMinimumWidth(240)
-        self.type_list.setItemDelegate(TwoLineItemDelegate(self.type_list))
-        self.type_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.type_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         body.addWidget(self.type_list, 1)
         editor = QVBoxLayout()

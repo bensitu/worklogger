@@ -16,8 +16,8 @@ class ExportTimesheetHandler:
         self._records, self._exporters, self._profiles = records, exporters, profiles
         self._clock = clock or (lambda: datetime.now().astimezone())
 
-    def handle(self, user_id, start, end, destination: Path, *, format="xlsx", standard_hours=8):
-        if format not in self._exporters:
+    def handle(self, user_id, start, end, destination: Path, *, file_format="xlsx", standard_hours=8):
+        if file_format not in self._exporters:
             return Result.failure(ValidationError("timesheet_format_invalid", "timesheet_format_invalid"))
         try:
             if end < start or (end - start).days > 366:
@@ -43,6 +43,6 @@ class ExportTimesheetHandler:
         except Exception:
             return Result.failure(InfrastructureError("timesheet_load_failed", "timesheet_load_failed"))
         path = Path(destination)
-        if path.suffix.lower() != "." + format:
-            path = path.with_name(path.name + "." + format)
-        return self._exporters[format].export_timesheet(path, snapshot)
+        if path.suffix.lower() != "." + file_format:
+            path = path.with_name(path.name + "." + file_format)
+        return self._exporters[file_format].export_timesheet(path, snapshot)

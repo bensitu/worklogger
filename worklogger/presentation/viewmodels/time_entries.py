@@ -9,10 +9,12 @@ from worklogger.app.commands.ai_commands import RewriteTextCommand
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
+from worklogger.domain.worklog.content import require_entry_content
 from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.rules import timestamp_span_hours
 from worklogger.domain.worklog.editing import merge_entries
 from worklogger.domain.worklog.reminders import timer_reminders
+from worklogger.presentation.viewmodels.time_entry_editor import TimeEntryEditorState, editor_state
 
 
 @dataclass(frozen=True)
@@ -27,9 +29,12 @@ class TimeEntryDraft:
 
 
 class TimeEntryViewModel:
+    def editor_state(self, *, automatic: bool) -> TimeEntryEditorState:
+        return editor_state(self, automatic=automatic)
+
     def operation_copy(self):
         snapshot = copy(self)
-        snapshot.service = copy(self.service)
+        snapshot.service = self.service.operation_copy()
         return snapshot
 
     def apply_operation_state(self, snapshot):
@@ -37,9 +42,7 @@ class TimeEntryViewModel:
                      "auto_context", "latest_change_info", "_timer_origin", "_timer_shares_draft"):
             if name in snapshot.__dict__:
                 setattr(self, name, getattr(snapshot, name))
-        for name in ("timer", "_timer_raw", "restore_failed", "last_error"):
-            if hasattr(snapshot.service, name):
-                setattr(self.service, name, getattr(snapshot.service, name))
+        self.service.apply_operation_state(snapshot.service)
 
     def __init__(self, service: TimeEntryOperations, *, default_break_hours: float = 1,
                  rewrite_handler=None, language="en_US") -> None:
@@ -190,9 +193,12 @@ class TimeEntryViewModel:
                                                context="time_entry", language=self._language), cancellation_token=cancellation_token)
         if not result.ok:
             return result
-        if result.value is None or len(result.value.content) > 16000:
+        if result.value is None:
             return Result.failure(ValidationError("time_entry_content_too_long", "time_entry_content_too_long"))
-        return Result.success(result.value.content)
+        try:
+            return Result.success(require_entry_content(result.value.content))
+        except ValueError:
+            return Result.failure(ValidationError("time_entry_content_too_long", "time_entry_content_too_long"))
 
     @property
     def manual_dirty(self) -> bool:

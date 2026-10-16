@@ -4,7 +4,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from worklogger.app.use_cases.time_entries import EntryTimer, TimeEntryService
+from worklogger.app.use_cases.time_entries import TimeEntryService
+from worklogger.domain.worklog.timer_state import EntryTimer, encode_timer
 from worklogger.app.use_cases.work_types import WorkTypeService
 from worklogger.infrastructure.repositories.work_type_sqlite import SQLiteWorkTypeRepository
 from worklogger.app.use_cases.data_portability import ImportWorkLogsCsvHandler
@@ -44,7 +45,7 @@ class TimeEntryTests(unittest.TestCase):
         self.repository.save_entry(WorkLog(self.user.id, start.date(), start.strftime("%H:%M"),
                                           (start + timedelta(hours=1)).strftime("%H:%M"),
                                           started_at=start, ended_at=start + timedelta(hours=1)))
-        raw = TimeEntryService._encode(EntryTimer("new-capture", start + timedelta(minutes=15), WorkType.NORMAL))
+        raw = encode_timer(EntryTimer("new-capture", start + timedelta(minutes=15), WorkType.NORMAL))
         with self.assertRaisesRegex(ValueError, "worklog_entry_overlap"):
             self.repository.change_timer(self.user.id, None, raw)
         self.assertIsNone(self.settings.get(self.user.id, "time_entry_timer"))
@@ -264,7 +265,7 @@ class TimeEntryTests(unittest.TestCase):
         deadline = clicked_end + timedelta(hours=1)
         scheduled = EntryTimer("saved-break", clicked_end, WorkType.BREAK, break_until=deadline,
                                resume_type=WorkType.REMOTE, resume_content="Continued work")
-        self.repository.change_timer(self.user.id, None, TimeEntryService._encode(scheduled))
+        self.repository.change_timer(self.user.id, None, encode_timer(scheduled))
         restored = self.make_service()
         self.now = deadline + timedelta(minutes=15)
         self.assertTrue(restored.advance().ok)

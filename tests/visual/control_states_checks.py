@@ -27,7 +27,7 @@ from worklogger.presentation.widgets.icons import IconLabel
 from worklogger.presentation.widgets.report_history import ReportHistoryButton, ReportHistoryDisplayItem
 from worklogger.presentation.widgets.record_summary import RecordSummaryButton
 from worklogger.presentation.widgets.switch_button import SwitchButton
-from worklogger.presentation.widgets.two_line_delegate import TwoLineItemDelegate
+from worklogger.presentation.widgets.preview_list import PreviewItemDelegate
 
 
 class ControlStateChecks(unittest.TestCase):
@@ -260,7 +260,7 @@ class ControlStateChecks(unittest.TestCase):
                 field.addItems(("Selected title\nDetails", "Another item"))
                 field.setCurrentRow(0)
                 if name == "note_history_list_widget":
-                    field.setItemDelegate(TwoLineItemDelegate(field))
+                    field.setItemDelegate(PreviewItemDelegate(field))
                 controls.append(field)
             controls[0].setProperty("management_list", True)
             tree = QTreeWidget()

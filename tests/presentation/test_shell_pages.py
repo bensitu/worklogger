@@ -54,8 +54,8 @@ class ShellPagesTests(unittest.TestCase):
                 self.exported = (destination, day, whole_month)
                 return Result.success(destination)
 
-            def export_timesheet(self, destination, day, *, whole_month, format):
-                self.exported = (destination, day, whole_month, format)
+            def export_timesheet(self, destination, day, *, whole_month, file_format):
+                self.exported = (destination, day, whole_month, file_format)
                 return Result.success(destination)
 
         class Runner:

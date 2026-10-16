@@ -5,7 +5,7 @@ from datetime import date
 
 from PySide6.QtCore import QSignalBlocker, QTimer, Qt, Signal
 from PySide6.QtWidgets import (QFrame, QHBoxLayout,
-    QLabel, QLineEdit, QListWidget, QListWidgetItem, QProgressBar, QPushButton,
+    QLabel, QLineEdit, QListWidgetItem, QProgressBar, QPushButton,
     QVBoxLayout, QWidget)
 
 from worklogger.domain.notes.models import NoteHistoryFilter
@@ -15,7 +15,7 @@ from worklogger.infrastructure.i18n import _
 from worklogger.presentation.job_runner import owned_callback
 from worklogger.presentation.widgets.date_range import DateRangeControls
 from worklogger.presentation.widgets.icons import set_button_icon
-from worklogger.presentation.widgets.two_line_delegate import TwoLineItemDelegate
+from worklogger.presentation.widgets.preview_list import PreviewListWidget
 
 
 class NoteHistoryBrowser(QWidget):
@@ -73,14 +73,11 @@ class NoteHistoryBrowser(QWidget):
         layout.addLayout(status)
         layout.addWidget(self.empty_label)
         self.empty_label.hide()
-        self.history_list = QListWidget()
+        self.history_list = PreviewListWidget()
         self.history_list.setObjectName("note_history_list_widget")
         self.history_list.setAccessibleName(_("Notes"))
         self.history_list.setMouseTracking(True)
-        self.history_list.setItemDelegate(TwoLineItemDelegate(self.history_list))
-        self.history_list.setSpacing(4)
         self.history_list.setFrameShape(QFrame.Shape.NoFrame)
-        self.history_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         layout.addWidget(self.history_list, 1)
         self.more_button = QPushButton(_("Load more"))
         set_button_icon(self.more_button, "chevron-down")

@@ -40,7 +40,6 @@ class AiAssistDialog(QDialog):
         self._selected_day = selected_day
         self._state = view_model.initial_state()
         self._last_error: AppError | None = None
-        self._job_runner = job_runner
         self._processing_task = TextProcessingTask(self, job_runner=job_runner)
         self._pending_handle: JobHandle[object] | None = None
         self.setObjectName("ai_assist_dialog")

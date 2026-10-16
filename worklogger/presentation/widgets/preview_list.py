@@ -1,11 +1,11 @@
-"""Readable, width-constrained title and secondary text for compact lists."""
+"""Shared lists and delegates for titles with bounded secondary text."""
 
 from PySide6.QtCore import QRect, QSize, Qt
 from PySide6.QtGui import QFont, QFontMetrics, QPalette
-from PySide6.QtWidgets import QApplication, QStyle, QStyledItemDelegate, QStyleOptionViewItem
+from PySide6.QtWidgets import QApplication, QListWidget, QStyle, QStyledItemDelegate, QStyleOptionViewItem
 
 
-class TwoLineItemDelegate(QStyledItemDelegate):
+class PreviewItemDelegate(QStyledItemDelegate):
     def __init__(self, parent=None, *, soft_selection=False, detail_lines=1):
         super().__init__(parent)
         self._soft_selection = soft_selection
@@ -57,3 +57,13 @@ class TwoLineItemDelegate(QStyledItemDelegate):
             painter.drawText(preview_rect, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                              detail_metrics.elidedText(text, Qt.TextElideMode.ElideRight, text_rect.width()))
         painter.restore()
+
+
+class PreviewListWidget(QListWidget):
+    def __init__(self, parent=None, *, soft_selection=False, detail_lines=1, spacing=4):
+        super().__init__(parent)
+        self.setItemDelegate(PreviewItemDelegate(self, soft_selection=soft_selection, detail_lines=detail_lines))
+        self.setSpacing(spacing)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        if soft_selection:
+            self.setProperty("management_list", True)

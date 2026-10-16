@@ -2,7 +2,7 @@
 
 from datetime import timezone
 from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtWidgets import QDialog, QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QTabWidget, QTextEdit, QVBoxLayout
+from PySide6.QtWidgets import QDialog, QHBoxLayout, QLabel, QListWidgetItem, QMessageBox, QPushButton, QTabWidget, QTextEdit, QVBoxLayout
 from shiboken6 import isValid
 from worklogger.domain.shared.result import Result
 from worklogger.domain.shared.errors import InfrastructureError
@@ -10,7 +10,7 @@ from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon
-from worklogger.presentation.widgets.two_line_delegate import TwoLineItemDelegate
+from worklogger.presentation.widgets.preview_list import PreviewListWidget
 from worklogger.presentation.report_source_labels import provenance_text
 
 
@@ -38,14 +38,10 @@ class ReportRevisionsDialog(QDialog):
         root.addWidget(self.scope_label)
         body = QHBoxLayout()
         body.setSpacing(20)
-        self.versions = QListWidget()
+        self.versions = PreviewListWidget(soft_selection=True, detail_lines=2)
         self.versions.setObjectName("report_versions_list_view")
-        self.versions.setProperty("management_list", True)
         self.versions.setAccessibleName(_("Report versions"))
-        self.versions.setItemDelegate(TwoLineItemDelegate(self.versions, soft_selection=True, detail_lines=2))
-        self.versions.setSpacing(4)
         self.versions.setWordWrap(True)
-        self.versions.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.versions.setMinimumWidth(230)
         self.versions.setMaximumWidth(300)
         body.addWidget(self.versions, 1)

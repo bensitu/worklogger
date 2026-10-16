@@ -74,7 +74,7 @@ class ReportExportController:
         if not path:
             return False
         return self._submit("export_timesheet", lambda: self._view_model.export_timesheet(
-            Path(path), day, whole_month=whole_month, format=file_format), _("Timesheet exported."),
+            Path(path), day, whole_month=whole_month, file_format=file_format), _("Timesheet exported."),
             error_code="timesheet_export_failed")
 
     def _submit(self, name, operation, success_message, *, error_code="report_request_failed") -> bool:

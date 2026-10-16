@@ -74,7 +74,7 @@ class ReportHistoryTests(unittest.TestCase):
         finally:
             book.close()
         pdf = target.with_suffix(".pdf")
-        self.assertTrue(self.model.export_timesheet(pdf, self.day, whole_month=True, format="pdf").ok)
+        self.assertTrue(self.model.export_timesheet(pdf, self.day, whole_month=True, file_format="pdf").ok)
         document = QPdfDocument()
         self.assertEqual(document.load(str(pdf)), QPdfDocument.Error.None_)
         try:

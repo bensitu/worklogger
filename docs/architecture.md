@@ -63,12 +63,24 @@ Normalization, elapsed time, type accounting, overlaps, and limits are validated
 outside widgets. Writes use account ownership and expected revisions.
 
 Timer completion and persistence of its next state share a transaction.
+`domain/worklog/timer_state.py` owns timer models, persisted representation, and
+recovery validation, including historical break fields. Application services own
+storage access and context authorization. The recording service creates operation
+copies and applies their state; presentation must not copy private persistence
+fields between services. `domain/worklog/content.py` defines the content limit
+shared by editing, recovery, and rewriting.
 Daily summaries aggregate records, while editing and exports retain individual
 identities. Custom type and project labels are historical snapshots.
 
 Daily notes are separate memos. Their sharing choices and drafts are account/date
 scoped. Reports retain saved versions and generation references; regeneration
 does not mutate recorded time. See [storage contracts](database.md).
+
+The record view model exposes an immutable `TimeEntryEditorState` for both
+rendering and action availability. It resolves manual, automatic, and linked-timer
+selection without accessing Qt controls. Widgets retain responsibility for text
+translation, layout, and signal delivery. Backup and file-export adapters implement
+the shared contracts in `app/ports.py`, not parallel view-model definitions.
 
 The report page coordinates state and requests. `widgets/report_editor.py` owns
 editor controls without persistence dependencies; `reporting/exports.py` handles
@@ -112,6 +124,11 @@ in deployment configuration must preserve saved account preferences.
 Apply palettes and QSS at the application boundary. Reuse shared controls,
 button roles, icons, and fonts. Icon-only actions need tooltips and accessible
 names. Strings use gettext; date labels use presentation helpers.
+
+`widgets/preview_list.py` provides shared lists and delegates for a title with
+bounded secondary lines. Notes, local models, projects, work types, and report
+versions reuse its sizing and horizontal elision. Selection profiles remain
+explicit so existing component appearance is preserved.
 
 One shared stylesheet uses semantic colors from an immutable `ColorPalette`.
 Bounded caches reuse resolved colors, stylesheet strings, and Qt palette

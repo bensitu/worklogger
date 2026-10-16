@@ -2,7 +2,7 @@
 
 from PySide6.QtCore import Qt, Signal, QSignalBlocker
 from PySide6.QtWidgets import (QCheckBox, QDialog, QFormLayout, QHBoxLayout, QLabel,
-    QLineEdit, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QTabWidget, QVBoxLayout, QWidget)
+    QLineEdit, QListWidgetItem, QMessageBox, QPushButton, QTabWidget, QVBoxLayout, QWidget)
 from shiboken6 import isValid
 
 from worklogger.domain.shared.errors import InfrastructureError
@@ -11,7 +11,7 @@ from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon
-from worklogger.presentation.widgets.two_line_delegate import TwoLineItemDelegate
+from worklogger.presentation.widgets.preview_list import PreviewListWidget
 
 
 class ProjectManagerDialog(QDialog):
@@ -120,12 +120,8 @@ class ProjectManagerDialog(QDialog):
 
     @staticmethod
     def _list(name):
-        widget = QListWidget()
+        widget = PreviewListWidget(soft_selection=True)
         widget.setObjectName(name)
-        widget.setProperty("management_list", True)
-        widget.setSpacing(4)
-        widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        widget.setItemDelegate(TwoLineItemDelegate(widget, soft_selection=True))
         return widget
 
     @staticmethod

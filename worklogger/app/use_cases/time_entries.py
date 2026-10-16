@@ -1,42 +1,29 @@
 """Time-entry editing and persistent automatic recording."""
 
-from dataclasses import asdict, dataclass, replace
+from copy import copy
+from dataclasses import replace
 from datetime import date, datetime, timedelta, timezone, tzinfo
-import json
 import math
 from uuid import uuid4
 from collections.abc import Callable
-from worklogger.config.constants import MAX_SHIFT_HOURS
+from typing import Self
 
 from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.calendar.repositories import CalendarEventRepository
 from worklogger.domain.shared.errors import ConflictError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.entry_repository import TimeEntryRepository
-from worklogger.domain.worklog.timer_state import timer_payload
+from worklogger.domain.worklog.timer_state import EntryTimer, decode_timer, encode_timer, timer_payload
+from worklogger.domain.worklog.content import require_entry_content
 from worklogger.domain.worklog.rules import wall_interval, wall_position
 from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType
-from worklogger.domain.worklog.rules import decode_work_type, entry_interval, normalize_work_log, parse_time, shift_datetimes, timestamp_span_hours
+from worklogger.domain.worklog.rules import entry_interval, normalize_work_log, parse_time, shift_datetimes
 from worklogger.app.ports import WorkTypeOperations, ProjectOperations
 from worklogger.app.use_cases._errors import infrastructure_failure
 from worklogger.domain.projects.models import WorkContext
 
 
 FIXED_BREAK_CAPTURE_PREFIX = "fixed-break:"
-
-
-@dataclass(frozen=True)
-class EntryTimer:
-    capture_id: str
-    started_at: datetime
-    work_type: WorkType | CustomWorkType
-    content: str = ""
-    break_until: datetime | None = None
-    resume_type: WorkType | CustomWorkType | None = None
-    resume_content: str = ""
-    legacy_break_hours: float = 0.0
-    pending_end: datetime | None = None
-    context: WorkContext = WorkContext()
 
 
 class TimeEntryService:
@@ -62,6 +49,15 @@ class TimeEntryService:
     def now(self) -> datetime:
         return self._clock().astimezone(self.local_timezone)
 
+    def operation_copy(self) -> Self:
+        return copy(self)
+
+    def apply_operation_state(self, operation: Self) -> None:
+        self.timer = operation.timer
+        self._timer_raw = operation._timer_raw
+        self.restore_failed = operation.restore_failed
+        self.last_error = operation.last_error
+
     @property
     def events_deletable(self) -> bool:
         return self.calendar_events is not None
@@ -70,28 +66,9 @@ class TimeEntryService:
         try:
             self._timer_raw = self.settings.get(self.user_id, "time_entry_timer")
             if self._timer_raw:
-                data = timer_payload(self._timer_raw)
-                data["context"] = WorkContext(**data.get("context", {}))
-                for key in ("started_at", "break_until", "pending_end"):
-                    data[key] = datetime.fromisoformat(data[key]) if data.get(key) else None
-                for key in ("work_type", "resume_type"):
-                    label = data.pop(key + "_label", "")
-                    category = data.pop(key + "_category", "")
-                    data[key] = decode_work_type(data[key], label=label, category=category, strict=True) if data.get(key) else None
-                timer = EntryTimer(**data)
+                timer = decode_timer(self._timer_raw)
                 if self.projects is not None:
                     self.projects.resolve(timer.context, timer.context)
-                if (not isinstance(timer.capture_id, str) or not timer.capture_id or len(timer.capture_id) > 64 or timer.started_at is None
-                    or any(moment.tzinfo is None for moment in (timer.started_at, timer.break_until, timer.pending_end) if moment)
-                    or not math.isfinite(timer.legacy_break_hours) or not 0 <= timer.legacy_break_hours <= MAX_SHIFT_HOURS
-                    or bool(timer.break_until) != bool(timer.resume_type)):
-                    raise ValueError("auto_record_restore_failed")
-                self._content(timer.content)
-                self._content(timer.resume_content)
-                if timer.break_until and not 0 < timestamp_span_hours(timer.started_at, timer.break_until) <= 4:
-                    raise ValueError("auto_record_restore_failed")
-                if timer.break_until and (timer.work_type != WorkType.BREAK or timer.resume_type == WorkType.BREAK or timer.pending_end):
-                    raise ValueError("auto_record_restore_failed")
                 self.timer = timer
             else:
                 if self.settings.get(self.user_id, "previous_auto_record_state"):
@@ -101,31 +78,10 @@ class TimeEntryService:
             self.last_error = infrastructure_failure("auto_record_restore_failed", error, logger_name=__name__)
 
 
-    @staticmethod
-    def _encode(timer: EntryTimer | None) -> str | None:
-        if timer is None:
-            return None
-        data = asdict(timer)
-        for key in ("work_type", "resume_type"):
-            definition = getattr(timer, key)
-            data[key] = definition.value if definition is not None else None
-            if isinstance(definition, CustomWorkType):
-                data[key + "_label"] = definition.label
-                data[key + "_category"] = definition.category
-        for key in ("started_at", "break_until", "pending_end"):
-            data[key] = data[key].isoformat() if data[key] else None
-        return json.dumps(data, allow_nan=False, ensure_ascii=False)
-
     def _persist(self, timer: EntryTimer | None) -> None:
-        raw = self._encode(timer)
+        raw = encode_timer(timer)
         self.repository.change_timer(self.user_id, self._timer_raw, raw)
         self.timer, self._timer_raw = timer, raw
-
-    @staticmethod
-    def _content(content: str) -> str:
-        if not isinstance(content, str) or len(content) > 16000:
-            raise ValueError("time_entry_content_too_long")
-        return content
 
     def _run(self, operation, *, error_code="worklog_save_failed"):
         try:
@@ -201,7 +157,7 @@ class TimeEntryService:
             association = self._resolve_context(context if context is not None else original.context if original else WorkContext(),
                                                 original.context if original else None)
             if original and original.is_leave and not original.has_times and not start.strip() and not end.strip() and replace(original, work_type=definition).is_leave:
-                return self.repository.save_entry(replace(original, note=self._content(content), work_type=definition, context=association))
+                return self.repository.save_entry(replace(original, note=require_entry_content(content), work_type=definition, context=association))
             start_time, end_time = parse_time(start), parse_time(end)
             if not start_time or not end_time:
                 raise ValueError("time_range_incomplete")
@@ -210,7 +166,7 @@ class TimeEntryService:
             timestamps = (original.started_at, original.ended_at) if original and (
                 original.day, original.start_time, original.end_time) == (day, start_time, end_time) else shift_datetimes(day, start_time, end_time, self.local_timezone)
             record = normalize_work_log(WorkLog(self.user_id, day, start_time, end_time,
-                original.break_hours if original else 0, self._content(content), definition,
+                original.break_hours if original else 0, require_entry_content(content), definition,
                 started_at=timestamps[0], ended_at=timestamps[1], id=original.id if original else None,
                 revision=original.revision if original else 0, capture_id=original.capture_id if original else None, context=association))
             return self.repository.save_entry(record)
@@ -275,12 +231,12 @@ class TimeEntryService:
                             raise ValueError("worklog_entry_overlap")
             if active_break is not None:
                 return Result.failure(ConflictError("fixed_break_active", "fixed_break_active", {"break_entry": active_break}))
-            timer = EntryTimer(uuid4().hex, moment, self._resolve_type(work_type), self._content(content),
+            timer = EntryTimer(uuid4().hex, moment, self._resolve_type(work_type), require_entry_content(content),
                                context=self._resolve_context(context or WorkContext()))
             if break_entry is None:
                 self._persist(timer)
             else:
-                raw = self._encode(timer)
+                raw = encode_timer(timer)
                 change = (self._timer_raw, raw)
                 if instant == break_interval[0]:
                     self.repository.delete_entry(self.user_id, break_entry.id, break_entry.revision, timer_change=change)
@@ -297,12 +253,12 @@ class TimeEntryService:
     def save_content(self, content: str, completed: WorkLog | None = None) -> Result[WorkLog | EntryTimer]:
         def save():
             if self.timer:
-                timer = replace(self.timer, content=self._content(content))
+                timer = replace(self.timer, content=require_entry_content(content))
                 self._persist(timer)
                 return timer
             if completed is None:
                 raise ValueError("auto_record_not_started")
-            return self.repository.save_entry(replace(completed, note=self._content(content)))
+            return self.repository.save_entry(replace(completed, note=require_entry_content(content)))
         return self._run(save)
 
     def _finish(self, end: datetime, content: str, next_timer: EntryTimer | None) -> WorkLog:
@@ -310,9 +266,9 @@ class TimeEntryService:
         if timer is None:
             raise ValueError("auto_record_not_started")
         record = normalize_work_log(WorkLog(self.user_id, timer.started_at.date(), timer.started_at.strftime("%H:%M"),
-            end.strftime("%H:%M"), timer.legacy_break_hours, self._content(content), timer.work_type,
+            end.strftime("%H:%M"), timer.legacy_break_hours, require_entry_content(content), timer.work_type,
             started_at=timer.started_at, ended_at=end, capture_id=timer.capture_id, context=timer.context))
-        raw = self._encode(next_timer)
+        raw = encode_timer(next_timer)
         saved = self.repository.save_entry(record, timer_change=(self._timer_raw, raw))
         self.timer, self._timer_raw = next_timer, raw
         return saved
@@ -338,7 +294,7 @@ class TimeEntryService:
             moment = moment.astimezone(self.local_timezone)
             deadline = (moment.astimezone(timezone.utc) + timedelta(hours=hours)).astimezone(self.local_timezone)
             record = normalize_work_log(WorkLog(self.user_id, moment.date(), moment.strftime("%H:%M"),
-                deadline.strftime("%H:%M"), 0, self._content(content), WorkType.BREAK,
+                deadline.strftime("%H:%M"), 0, require_entry_content(content), WorkType.BREAK,
                 started_at=moment, ended_at=deadline, capture_id=FIXED_BREAK_CAPTURE_PREFIX + uuid4().hex))
             return self.repository.save_entry(record, timer_change=(self._timer_raw, None))
         return self._run(take_break)

@@ -2,17 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
 from worklogger.app.commands.calendar_commands import ImportCalendarEventsCommand
+from worklogger.app.ports import BackupService, WorkLogCsvExporter, WorkLogIcsExporter
 from worklogger.app.commands.data_portability_commands import ImportWorkLogsCsvCommand
-from worklogger.app.queries.calendar_queries import GetCalendarEventsForRangeQuery
 from worklogger.app.queries.work_log_queries import GetAllWorkLogsQuery
 from worklogger.app.use_cases.data_portability import WorkLogCsvImportResult, WorkLogCsvImportPreview
-from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
@@ -23,14 +21,8 @@ class WorkLogListHandler(Protocol):
         ...
 
 
-class CalendarEventsForRangeHandler(Protocol):
+class CalendarEventCounter(Protocol):
     def count(self, user_id: int) -> Result[int]:
-        ...
-
-    def handle(
-        self,
-        query: GetCalendarEventsForRangeQuery,
-    ) -> Result[tuple[CalendarEvent, ...]]:
         ...
 
 
@@ -43,27 +35,6 @@ class WorkLogCsvImportHandler(Protocol):
     def preview(self, command: ImportWorkLogsCsvCommand) -> Result[WorkLogCsvImportPreview]: ...
     def apply(self, preview: WorkLogCsvImportPreview, *, overwrite: bool = False, replace_dates: bool = False) -> Result[WorkLogCsvImportResult]: ...
     def handle(self, command: ImportWorkLogsCsvCommand) -> Result[WorkLogCsvImportResult]:
-        ...
-
-
-class BackupService(Protocol):
-    def backup_database(self, destination: Path) -> Result[Path]:
-        ...
-
-    def validate_restore_database(self, source: Path) -> Result[None]:
-        ...
-
-    def restore_database(self, source: Path) -> Result[None]:
-        ...
-
-
-class CsvExportService(Protocol):
-    def export_work_logs(self, destination: Path, rows: Iterable[WorkLog]) -> Result[Path]:
-        ...
-
-
-class IcsExportService(Protocol):
-    def write_work_logs(self, destination: Path, rows: Iterable[WorkLog]) -> Result[Path]:
         ...
 
 
@@ -82,9 +53,9 @@ class DataManagementViewModel:
         user_id: int,
         work_logs_handler: WorkLogListHandler,
         backup_service: BackupService,
-        csv_exporter: CsvExportService,
-        ics_exporter: IcsExportService,
-        calendar_events_handler: CalendarEventsForRangeHandler | None = None,
+        csv_exporter: WorkLogCsvExporter,
+        ics_exporter: WorkLogIcsExporter,
+        calendar_events_handler: CalendarEventCounter | None = None,
         ics_import_handler: IcsImportHandler | None = None,
         csv_import_handler: WorkLogCsvImportHandler | None = None,
         can_manage_database: bool = False,
