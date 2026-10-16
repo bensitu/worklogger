@@ -45,6 +45,9 @@ when loading fails. Keep successful routine actions nonmodal and show their stat
 inline; reserve message boxes for errors or decisions requiring user input.
 Use the shared application error boundary for unexpected storage failures. Log a
 stable error code and exception type, not exception messages or user content.
+Repository construction must not perform database maintenance. Invoke cleanup
+explicitly from composition, and keep optional retention failures separate from
+authentication and validation failures.
 
 ## Interface Conventions
 

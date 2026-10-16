@@ -8,6 +8,7 @@ from pathlib import Path
 import tempfile
 import sqlite3
 import unittest
+from unittest.mock import patch
 
 from worklogger.app.commands.auth_commands import (
     ChangePasswordCommand,
@@ -572,7 +573,9 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         auth = self.auth_repository()
         user = auth.create_user("alice", "secret123", recovery_key=None, is_admin=True)
         now = datetime(2026, 5, 1, tzinfo=timezone.utc)
-        failures = SQLiteLoginFailureRepository(self.factory, clock=lambda: now)
+        with patch.object(self.factory, "transaction", side_effect=AssertionError("unexpected write transaction")):
+            failures = SQLiteLoginFailureRepository(self.factory, clock=lambda: now)
+            failures.prune()
         self.assertEqual(failures.record_failure("unknown"), (0, None))
         for _ in range(4):
             failures.record_failure("alice")

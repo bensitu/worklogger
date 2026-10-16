@@ -255,16 +255,21 @@ def _auth_view_model(
 ) -> AuthViewModel:
     configuration = IdentityConfigurationStore()
     providers = identity_providers(configuration=configuration)
+    login_failures = SQLiteLoginFailureRepository(connection_factory)
+    try:
+        login_failures.prune()
+    except Exception as error:
+        LOGGER.warning("login_history_cleanup_failed: %s", type(error).__name__)
     return AuthViewModel(
         state_handler=GetAuthBootstrapStateHandler(auth_repository),
         login_handler=LoginHandler(
             auth_repository,
-            SQLiteLoginFailureRepository(connection_factory),
+            login_failures,
         ),
         register_handler=RegisterUserHandler(auth_repository),
         change_password_handler=ChangePasswordHandler(auth_repository),
         remember_token_handler=LoginWithRememberTokenHandler(auth_repository),
-        reset_password_handler=ResetPasswordHandler(auth_repository, SQLiteLoginFailureRepository(connection_factory)),
+        reset_password_handler=ResetPasswordHandler(auth_repository, login_failures),
         identity_login_handler=LoginWithIdentityHandler(identities=SQLiteIdentityRepository(connection_factory),
             auth=auth_repository, providers=providers),
         identity_providers_handler=GetIdentityProvidersHandler(providers),

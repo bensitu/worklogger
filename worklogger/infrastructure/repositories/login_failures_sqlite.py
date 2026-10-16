@@ -9,18 +9,21 @@ from worklogger.domain.auth.policies import lockout_until_for_failure_count, use
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
 from worklogger.infrastructure.repositories._mapping import parse_datetime
 
+_STALE_ATTEMPTS = "last_failed_at<? OR NOT EXISTS (SELECT 1 FROM users WHERE users.username_key=login_attempts.username)"
+
 
 class SQLiteLoginFailureRepository:
     def __init__(self, connection_factory: SQLiteConnectionFactory, *, clock: Callable[[], datetime] | None = None) -> None:
         self._connection_factory = connection_factory
         self._clock = clock or (lambda: datetime.now(timezone.utc))
-        self.prune()
 
     def prune(self) -> None:
         cutoff = (self._clock() - timedelta(days=7)).isoformat()
-        with self._connection_factory.transaction() as connection:
-            column = "username_key"
-            connection.execute(f"DELETE FROM login_attempts WHERE last_failed_at<? OR NOT EXISTS (SELECT 1 FROM users WHERE users.{column}=login_attempts.username)", (cutoff,))
+        with self._connection_factory.connection() as connection:
+            if connection.execute("SELECT 1 FROM login_attempts WHERE " + _STALE_ATTEMPTS + " LIMIT 1", (cutoff,)).fetchone() is None:
+                return
+        with self._connection_factory.transaction(write=True) as connection:
+            connection.execute("DELETE FROM login_attempts WHERE " + _STALE_ATTEMPTS, (cutoff,))
 
     def lockout_until(self, username: str) -> datetime | None:
         try:
