@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import date
 from pathlib import Path
 from typing import Protocol
 
@@ -25,6 +24,9 @@ class WorkLogListHandler(Protocol):
 
 
 class CalendarEventsForRangeHandler(Protocol):
+    def count(self, user_id: int) -> Result[int]:
+        ...
+
     def handle(
         self,
         query: GetCalendarEventsForRangeQuery,
@@ -207,16 +209,7 @@ class DataManagementViewModel:
     def calendar_event_count(self) -> Result[int]:
         if self._calendar_events_handler is None:
             return Result.success(0)
-        result = self._calendar_events_handler.handle(
-            GetCalendarEventsForRangeQuery(
-                user_id=self._user_id,
-                start_day=date.min,
-                end_day=date.max,
-            )
-        )
-        if not result.ok or result.value is None:
-            return Result.failure(result.error or _error("calendar_event_count_failed"))
-        return Result.success(len(result.value))
+        return self._calendar_events_handler.count(self._user_id)
 
     def import_ics(
         self,

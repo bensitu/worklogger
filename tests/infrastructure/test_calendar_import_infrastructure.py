@@ -231,6 +231,8 @@ class CalendarImportInfrastructureTests(unittest.TestCase):
             )
             duplicate = handler.handle(ImportCalendarEventsCommand(user_id, path))
             self.assertEqual(duplicate.value, 0)
+            self.assertEqual(repository.count(user_id), 2)
+            self.assertEqual(repository.count(user_id + 1), 0)
             original = repository.list_for_day(user_id, date(2026, 5, 1))
             with self.assertRaises(AttributeError):
                 repository.replace_all(user_id, (replace(original[0], day=None),))

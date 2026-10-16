@@ -15,6 +15,10 @@ class SQLiteCalendarEventRepository:
     def __init__(self, connection_factory: SQLiteConnectionFactory) -> None:
         self._connection_factory = connection_factory
 
+    def count(self, user_id: int) -> int:
+        with self._connection_factory.connection() as connection:
+            return int(connection.execute("SELECT COUNT(*) FROM calendar_events WHERE user_id=?", (user_id,)).fetchone()[0])
+
     def list_for_day(self, user_id: int, day: date) -> tuple[CalendarEvent, ...]:
         with self._connection_factory.connection() as connection:
             rows = connection.execute(

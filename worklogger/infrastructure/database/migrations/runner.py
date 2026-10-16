@@ -10,7 +10,7 @@ from worklogger.infrastructure.database.current_schema import (
     PREVIOUS_CURRENT_VERSION,
     validate_current_schema,
 )
-from worklogger.infrastructure.database.migrations.snapshot import save_snapshot
+from worklogger.infrastructure.database.migrations.snapshot import prune_upgrade_snapshots, save_snapshot
 from worklogger.infrastructure.database.released_import import (
     import_released_schema,
     validate_released_schema,
@@ -48,6 +48,7 @@ class MigrationRunner:
         self._connection_factory = connection_factory
 
     def run_pending(self):
+        snapshot = None
         with self._connection_factory.write_access():
             path = Path(self._connection_factory.database_path)
             if path.is_file() and path.stat().st_size:
@@ -69,7 +70,7 @@ class MigrationRunner:
                         for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name<>'schema_migrations'")):
                     # The writer lock prevents changes while a separate reader snapshots committed data.
                     with closing(sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True)) as source:
-                        save_snapshot(source, self._connection_factory.database_path, "upgrade")
+                        snapshot = save_snapshot(source, self._connection_factory.database_path, "upgrade")
                 if kind == "released":
                     import_released_schema(connection)
                 for module_name in MIGRATION_MODULES:
@@ -78,4 +79,5 @@ class MigrationRunner:
                     connection.execute("INSERT INTO schema_migrations(version,description,applied_at) VALUES(?,?,datetime('now'))",
                                        (migration.VERSION, migration.DESCRIPTION))
                 validate_current_schema(connection)
+            prune_upgrade_snapshots(self._connection_factory.database_path, preserve=snapshot)
         return MIGRATION_VERSIONS

@@ -1,13 +1,24 @@
 """Short-lived OAuth callback listener bound exclusively to IPv4 loopback."""
 
 import hmac
+import errno
+import logging
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from socketserver import TCPServer
 import time
 from urllib.parse import parse_qs, urlsplit
 
 from worklogger.domain.shared.errors import AuthenticationError, CancellationError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
+
+LOGGER = logging.getLogger(__name__)
+
+
+class _LoopbackServer(HTTPServer):
+    def server_bind(self):
+        TCPServer.server_bind(self)
+        self.server_name, self.server_port = self.server_address
 
 
 class LoopbackAuthorization:
@@ -39,7 +50,7 @@ class LoopbackAuthorization:
                     self.wfile.write(text.encode("utf-8"))
                 except OSError:
                     pass
-        self.server = HTTPServer(("127.0.0.1", 0), Handler)
+        self.server = _LoopbackServer(("127.0.0.1", 0), Handler)
         self.server.timeout = 0.1
         self.authority = f"{hostname}:{self.server.server_port}"
         self.redirect_uri = f"http://{self.authority}/callback"
@@ -77,7 +88,12 @@ class LoopbackAuthorization:
                 return Result.failure(CancellationError("identity_authorization_cancelled", "identity_authorization_cancelled"))
             if time.monotonic() >= deadline:
                 return Result.failure(AuthenticationError("identity_authorization_timeout", "identity_authorization_timeout"))
-            self.server.handle_request()
+            try:
+                self.server.handle_request()
+            except OSError as error:
+                LOGGER.warning("identity_callback_listener_failed: %s", type(error).__name__)
+                if error.errno not in {errno.EINTR, errno.ECONNABORTED, errno.ECONNRESET}:
+                    return Result.failure(AuthenticationError("identity_auth_failed", "identity_auth_failed"))
         return self.result
 
     def __enter__(self):

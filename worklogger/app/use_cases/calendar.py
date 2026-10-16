@@ -7,6 +7,7 @@ from datetime import date
 from typing import Protocol
 
 from worklogger.app.commands.calendar_commands import ImportCalendarEventsCommand
+from worklogger.app.use_cases._errors import storage_boundary
 from worklogger.app.queries.calendar_queries import (
     GetCalendarEventsForDayQuery,
     GetCalendarEventsForRangeQuery,
@@ -48,6 +49,10 @@ class GetCalendarEventsForDayHandler:
 class GetCalendarEventsForRangeHandler:
     def __init__(self, repository: CalendarEventRepository) -> None:
         self._repository = repository
+
+    @storage_boundary("calendar_event_count_failed")
+    def count(self, user_id: int) -> Result[int]:
+        return Result.success(self._repository.count(user_id))
 
     def handle(
         self,

@@ -21,6 +21,9 @@ class HolidayProvider(Protocol):
 
 
 class CalendarEventRepository(Protocol):
+    def count(self, user_id: int) -> int:
+        ...
+
     def list_for_day(self, user_id: int, day: date) -> tuple[CalendarEvent, ...]:
         ...
 

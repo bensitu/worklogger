@@ -1,6 +1,7 @@
 """Browser authorization, callback isolation, token verification and registration storage."""
 
 import io
+import errno
 from http.client import HTTPConnection
 import json
 import os
@@ -79,6 +80,14 @@ class BrowserIdentityTests(unittest.TestCase):
         self.assertEqual(callback.server.socket.fileno(), -1)
         with LoopbackAuthorization(state="expected", timeout=0.01) as callback:
             self.assertEqual(callback.wait(None).error.code, "identity_authorization_timeout")
+        with patch("socket.getfqdn", side_effect=AssertionError("unexpected DNS lookup")), LoopbackAuthorization(state="expected") as callback:
+            attempts = iter((False, True))
+            def handle_request():
+                if not next(attempts):
+                    raise OSError(errno.ECONNRESET, "reset")
+                callback._accept("/callback?state=expected&code=c", callback.authority)
+            with patch.object(callback.server, "handle_request", side_effect=handle_request):
+                self.assertEqual(callback.wait(None).value, "c")
         token = CancellationToken()
         token.cancel()
         with LoopbackAuthorization(state="expected") as callback:

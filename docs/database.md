@@ -75,6 +75,9 @@ A populated compatible database receives a complete private `.bak_upgrade_*`
 snapshot before conversion. It includes committed WAL data. Schema changes,
 copied rows, and the ledger commit together; failure rolls back.
 Fresh/current databases do not need repeated upgrade snapshots.
+After a successful conversion, the latest three automatic upgrade snapshots are
+retained. A failed conversion does not prune snapshots. Files with other names,
+manual backups, and symbolic links are not removed by this retention policy.
 There is no automatic downgrade.
 
 To upgrade a copy explicitly, close the application and run from the repository:

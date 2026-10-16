@@ -374,7 +374,7 @@ class SettingsWorkflowController:
                 self._apply_profile(surface, result.value)
             else:
                 surface.set_profile_error(result.error)
-        runner = self._job_runner or QtJobRunner(surface)
+        runner = self._profile_runner(surface)
         try:
             runner.submit("load_user_profile", lambda _token: self._profile_service.load(), on_complete=complete)
         except Exception:
@@ -384,6 +384,15 @@ class SettingsWorkflowController:
         self._user = user
         surface.set_account(user)
         surface.profile_changed.emit(user)
+
+    def _profile_runner(self, surface):
+        if self._job_runner is not None:
+            return self._job_runner
+        runner = getattr(surface, "_profile_job_runner", None)
+        if runner is None:
+            runner = QtJobRunner(surface)
+            surface._profile_job_runner = runner
+        return runner
 
     def _save_profile(self, surface, value, expected):
         if surface.is_busy:
@@ -403,7 +412,7 @@ class SettingsWorkflowController:
                 surface.set_profile_error(result.error)
                 if result.error is not None and result.error.code == "user_profile_conflict":
                     self._refresh_profile(surface)
-        runner = self._job_runner or QtJobRunner(surface)
+        runner = self._profile_runner(surface)
         try:
             runner.submit("save_user_profile", lambda _token: self._profile_service.save_display_name(
                 value, expected_display_name=expected), on_complete=complete)

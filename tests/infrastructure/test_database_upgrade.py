@@ -23,6 +23,26 @@ from worklogger.infrastructure.database.migrations.runner import MIGRATION_VERSI
 
 
 class DatabaseUpgradeTests(unittest.TestCase):
+    def test_upgrade_retains_snapshots_on_failure_and_bounds_them_after_success(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "source.db"
+            self.create_source(path, SCHEMAS[1])
+            for number in range(5):
+                path.with_name(f"source.db.bak_upgrade_20200101T00000{number}Z_{uuid.uuid4().hex}").write_bytes(b"previous snapshot")
+            manual = path.with_name("source.db.bak_manual")
+            manual.write_bytes(b"manual backup")
+            other = path.with_name(f"other.db.bak_upgrade_20200101T000000Z_{uuid.uuid4().hex}")
+            other.write_bytes(b"other database")
+            factory = SQLiteConnectionFactory(path)
+            with patch("worklogger.infrastructure.database.migrations.runner.import_released_schema", side_effect=OSError("unavailable")):
+                with self.assertRaises(OSError):
+                    MigrationRunner(factory).run_pending()
+            self.assertEqual(len(list(path.parent.glob("source.db.bak_upgrade_*"))), 6)
+            MigrationRunner(factory).run_pending()
+            self.assertEqual(len(list(path.parent.glob("source.db.bak_upgrade_*"))), 3)
+            self.assertEqual(manual.read_bytes(), b"manual backup")
+            self.assertEqual(other.read_bytes(), b"other database")
+
     def test_unversioned_current_layout_preserves_periods_classifications_and_memos(self):
         from datetime import date
         from worklogger.domain.worklog.models import WorkLog
