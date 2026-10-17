@@ -41,12 +41,13 @@ class RecordEditingLayoutChecks(unittest.TestCase):
                     prefix = f"{language}-{theme}"
                     overlap = OverlapReplacementDialog(EntryReplacement(incoming, (morning, afternoon)))
                     boundary = RecordBoundaryDialog(morning)
-                    overnight = RecordBoundaryDialog(replace(morning, start_time="22:00", end_time="06:00"))
-                    for dialog, name in ((boundary, "split"), (overnight, "overnight"), (overlap, "overlap")):
+                    overnight = RecordBoundaryDialog(replace(morning, start_time="22:00", end_time="06:00", work_type=WorkType.BREAK))
+                    historical = OverlapReplacementDialog(EntryReplacement(incoming, (replace(morning, break_hours=1), afternoon)))
+                    for dialog, name in ((boundary, "split"), (overnight, "overnight"), (overlap, "overlap"), (historical, "historical")):
                         try:
                             dialog.show()
                             self.app.processEvents()
-                            self.assertTrue(dialog.confirm_button.isEnabled())
+                            self.assertEqual(dialog.confirm_button.isEnabled(), dialog is not historical)
                             self.assertTrue(dialog.rect().contains(dialog.confirm_button.geometry()))
                             if dialog is overlap:
                                 self.assertEqual(overlap.keep_button.y(), overlap.whole_button.y())
@@ -59,7 +60,16 @@ class RecordEditingLayoutChecks(unittest.TestCase):
                                 self.assertLess(left.right(), right.left())
                                 self.assertLess(new.bottom(), left.top())
                                 before = timeline.grab().toImage().scaled(timeline.size())
+                                stable_bounds = self.overlap_geometry(dialog)
+                                self.assert_message_fit(dialog)
                                 self.capture(dialog, prefix + "-overlap-partial")
+                                overlap.whole_button.click()
+                                self.app.processEvents()
+                                self.assertEqual(self.overlap_geometry(dialog), stable_bounds)
+                                self.assert_message_fit(dialog)
+                                overlap.keep_button.click()
+                                self.app.processEvents()
+                                self.assertEqual(self.overlap_geometry(dialog), stable_bounds)
                                 overlap.whole_button.click()
                                 self.app.processEvents()
                                 after = timeline.grab().toImage().scaled(timeline.size())
@@ -67,7 +77,25 @@ class RecordEditingLayoutChecks(unittest.TestCase):
                                                     after.pixelColor(left.topLeft().toPoint() + QPoint(5, 5)))
                                 self.assertEqual(before.pixelColor(new.topLeft().toPoint() + QPoint(5, 5)),
                                                  after.pixelColor(new.topLeft().toPoint() + QPoint(5, 5)))
+                            elif dialog is historical:
+                                stable_bounds = self.overlap_geometry(dialog)
+                                self.assert_message_fit(dialog)
+                                historical.whole_button.click()
+                                self.app.processEvents()
+                                self.assertTrue(dialog.confirm_button.isEnabled())
+                                self.assertEqual(self.overlap_geometry(dialog), stable_bounds)
+                                self.assert_message_fit(dialog)
+                                historical.keep_button.click()
+                                self.app.processEvents()
+                                self.assertFalse(dialog.confirm_button.isEnabled())
+                                self.assertEqual(self.overlap_geometry(dialog), stable_bounds)
                             else:
+                                fields = (dialog.time_input, dialog.apply_time_button, dialog.reset_time_button)
+                                if dialog is overnight:
+                                    fields += (dialog.date_combo,)
+                                self.assertEqual({widget.height() for widget in fields}, {dialog.apply_time_button.height()})
+                                self.assertEqual({widget.y() for widget in fields}, {dialog.apply_time_button.y()})
+                                self.assertEqual(dialog.status_label.text(), "")
                                 for control in (dialog.time_input, dialog.apply_time_button, dialog.reset_time_button):
                                     bounds = control.rect().translated(control.mapTo(dialog, control.rect().topLeft()))
                                     self.assertTrue(dialog.rect().contains(bounds))
@@ -81,6 +109,16 @@ class RecordEditingLayoutChecks(unittest.TestCase):
             self.app.setPalette(old_palette)
             self.app.setStyleSheet(old_style)
             self.app.setProperty("worklogger_theme_context", old_context)
+
+    def assert_message_fit(self, dialog):
+        for stack in (dialog.message_stack, dialog.status_stack):
+            for index in range(stack.count()):
+                self.assertLessEqual(stack.widget(index).heightForWidth(stack.width()), stack.height())
+
+    @staticmethod
+    def overlap_geometry(dialog):
+        return tuple(widget.geometry() for widget in (
+            dialog.message_stack, dialog.timeline, dialog.preview, dialog.status_stack, dialog.confirm_button))
 
     @staticmethod
     def capture(dialog, name):

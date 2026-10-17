@@ -4,7 +4,7 @@ from datetime import date, datetime, timedelta
 
 from PySide6.QtCore import QEvent, QTime, Qt, QSignalBlocker
 from PySide6.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QRadioButton, QToolButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout)
+    QPushButton, QRadioButton, QStackedWidget, QToolButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout)
 
 from worklogger.domain.worklog.editing import split_entry_at, place_historical_break
 from worklogger.domain.worklog.models import TimeRange
@@ -29,7 +29,7 @@ def _period_tree():
     return tree
 
 
-def _show_periods(tree, periods):
+def _show_periods(tree, periods, *, minimum_rows=1):
     tree.clear()
     for record in sorted(periods, key=lambda item: (item.day, item.start_time or "")):
         span = f"{record.start_time} - {record.end_time}" if record.has_times else _("All day")
@@ -44,14 +44,23 @@ def _show_periods(tree, periods):
                         if record.started_at else span)
         set_data_tooltips(row, {0: day_label(record.day), 1: precise_span, 3: content})
         tree.addTopLevelItem(row)
-    visible_rows = max(1, min(3, tree.topLevelItemCount()))
+    visible_rows = max(minimum_rows, min(3, tree.topLevelItemCount()))
     row_height = max(24, tree.sizeHintForRow(0))
-    tree.setMinimumHeight(tree.header().sizeHint().height() + visible_rows * row_height + 4)
+    height = tree.header().sizeHint().height() + visible_rows * row_height + 4
+    tree.setMinimumHeight(max(tree.minimumHeight(), height) if minimum_rows > 1 else height)
 
 
 def _section(text):
     label = QLabel(text)
     label.setProperty("role", "section_heading")
+    return label
+
+
+def _message_page(text):
+    label = QLabel(text)
+    label.setTextFormat(Qt.TextFormat.PlainText)
+    label.setWordWrap(True)
+    label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
     return label
 
 
@@ -136,6 +145,8 @@ class RecordBoundaryDialog(QDialog):
             button.setAccessibleName(caption)
             button.setProperty("icon_only", True)
             button.setFixedSize(40, 40)
+        for field in (self.time_input, self.date_combo):
+            field.setFixedHeight(self.apply_time_button.height())
         time_row = QHBoxLayout()
         time_row.setSpacing(8)
         time_row.addWidget(self.date_combo)
@@ -155,6 +166,7 @@ class RecordBoundaryDialog(QDialog):
         root.addWidget(self.preview, 1)
         self.status_label = QLabel()
         self.status_label.setWordWrap(True)
+        self.status_label.setMinimumHeight(self.status_label.fontMetrics().lineSpacing())
         root.addWidget(self.status_label)
         self.confirm_button = _footer(self, root, _("Save") if historical_break else _("Split record"), "check")
         self.time_input.textChanged.connect(self._pending_changed)
@@ -269,8 +281,7 @@ class RecordBoundaryDialog(QDialog):
             self._periods = (place_historical_break(self.record, self.chosen_minutes()) if self.historical_break
                              else split_entry_at(self.record, boundary))
             _show_periods(self.preview, self._periods)
-            self.status_label.setText(_("Worked: {hours}").format(
-                hours=duration_label(sum(record.worked_hours() for record in self._periods))))
+            self.status_label.clear()
             self.confirm_button.setEnabled(True)
         except ValueError as error:
             self._periods = ()
@@ -316,17 +327,27 @@ class OverlapReplacementDialog(QDialog):
         choices.addWidget(self.whole_button)
         choices.addStretch()
         root.addLayout(choices)
-        self.message_label = QLabel()
-        self.message_label.setWordWrap(True)
-        root.addWidget(self.message_label)
+        self.message_stack = QStackedWidget()
+        self.message_stack.addWidget(_message_page(_("Time outside the new period is preserved. Existing records may be split.")))
+        self.message_stack.addWidget(_message_page(_("Entire overlapping records will be removed, including time outside the new period.")))
+        root.addWidget(self.message_stack)
         self.timeline = RecordReplacementTimeline(plan, self)
         root.addWidget(self.timeline)
         root.addWidget(_section(_("Result")))
         self.preview = _period_tree()
         root.addWidget(self.preview, 1)
-        self.status_label = QLabel()
-        self.status_label.setWordWrap(True)
-        root.addWidget(self.status_label)
+        self.status_stack = QStackedWidget()
+        self._previews = {}
+        for keep_outside in (True, False):
+            try:
+                periods = self.plan.periods(keep_outside=keep_outside)
+                status = _("Worked: {hours}").format(hours=duration_label(sum(item.worked_hours() for item in periods)))
+            except ValueError as error:
+                periods, status = (), display_error_code(str(error))
+            self._previews[keep_outside] = periods
+            self.status_stack.addWidget(_message_page(status))
+        _show_periods(self.preview, self._previews[False], minimum_rows=3)
+        root.addWidget(self.status_stack)
         self.confirm_button = _footer(self, root, _("Replace and save"), "save")
         self.keep_button.toggled.connect(self._refresh)
         self._refresh()
@@ -338,17 +359,12 @@ class OverlapReplacementDialog(QDialog):
 
     def _refresh(self, *_args):
         self.timeline.set_keep_outside(self.keep_outside)
-        self.message_label.setText(_("Time outside the new period is preserved. Existing records may be split.")
-            if self.keep_outside else _("Entire overlapping records will be removed, including time outside the new period."))
-        try:
-            periods = self.plan.periods(keep_outside=self.keep_outside)
-            _show_periods(self.preview, periods)
-            self.status_label.setText(_("Worked: {hours}").format(hours=duration_label(sum(item.worked_hours() for item in periods))))
-            self._valid = True
-        except ValueError as error:
-            self.preview.clear()
-            self.status_label.setText(display_error_code(str(error)))
-            self._valid = False
+        index = 0 if self.keep_outside else 1
+        self.message_stack.setCurrentIndex(index)
+        self.status_stack.setCurrentIndex(index)
+        periods = self._previews[self.keep_outside]
+        _show_periods(self.preview, periods, minimum_rows=3)
+        self._valid = bool(periods)
         self.confirm_button.setEnabled(self._valid)
 
     def accept(self):
