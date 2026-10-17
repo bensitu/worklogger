@@ -11,6 +11,10 @@ QToolButton {
   padding: 5px 14px;
 }
 
+QToolButton[icon_only="true"] {
+  padding: 5px;
+}
+
 QPushButton:hover:enabled,
 QToolButton:hover:enabled,
 QPushButton[segment="true"]:hover:enabled {

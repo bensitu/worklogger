@@ -181,6 +181,9 @@ msgstr "應用程式用戶端 ID"
 msgid "Apply"
 msgstr "套用"
 
+msgid "Apply time"
+msgstr "確認時間"
+
 msgid "April"
 msgstr "4月"
 
@@ -618,6 +621,9 @@ msgstr "捨棄變更？"
 
 msgid "Discard the saved timer without creating a record?"
 msgstr "放棄已儲存的計時狀態，不建立記錄？"
+
+msgid "Discard time change"
+msgstr "還原未確認的時間"
 
 msgid "Discard timer"
 msgstr "放棄計時"
@@ -1291,6 +1297,9 @@ msgstr "網路"
 msgid "New password"
 msgstr "新密碼"
 
+msgid "New period"
+msgstr "新時段"
+
 msgid "New project"
 msgstr "新增專案"
 
@@ -1951,6 +1960,9 @@ msgstr "請選擇當天的一筆時間記錄進行編輯。"
 msgid "Select between 1 and 250 distinct records and an available project context."
 msgstr "請選取 1 至 250 筆不同的記錄和可用的專案關聯。"
 
+msgid "Select time"
+msgstr "選擇時間"
+
 msgid "Selected day (Excel)"
 msgstr "所選日期（Excel）"
 
@@ -2305,6 +2317,9 @@ msgstr "時間記錄"
 msgid "Time records"
 msgstr "時間記錄"
 
+msgid "Time replacement preview"
+msgstr "時段取代預覽"
+
 msgid "Time zone: {zone}"
 msgstr "時區：{zone}"
 
@@ -2466,6 +2481,9 @@ msgstr "無法更新工作類型。您的記錄未改變。"
 
 msgid "Unclassified"
 msgstr "未分類"
+
+msgid "Unconfirmed time change"
+msgstr "時間變更待確認"
 
 msgid "Undo"
 msgstr "復原"

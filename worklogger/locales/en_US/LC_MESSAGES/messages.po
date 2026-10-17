@@ -181,6 +181,9 @@ msgstr "Application client ID"
 msgid "Apply"
 msgstr "Apply"
 
+msgid "Apply time"
+msgstr "Apply time"
+
 msgid "April"
 msgstr "April"
 
@@ -618,6 +621,9 @@ msgstr "Discard changes?"
 
 msgid "Discard the saved timer without creating a record?"
 msgstr "Discard the saved timer without creating a record?"
+
+msgid "Discard time change"
+msgstr "Discard time change"
 
 msgid "Discard timer"
 msgstr "Discard timer"
@@ -1291,6 +1297,9 @@ msgstr "Network"
 msgid "New password"
 msgstr "New password"
 
+msgid "New period"
+msgstr "New period"
+
 msgid "New project"
 msgstr "New project"
 
@@ -1951,6 +1960,9 @@ msgstr "Select an individual time record to edit this day."
 msgid "Select between 1 and 250 distinct records and an available project context."
 msgstr "Select between 1 and 250 distinct records and an available project context."
 
+msgid "Select time"
+msgstr "Select time"
+
 msgid "Selected day (Excel)"
 msgstr "Selected day (Excel)"
 
@@ -2305,6 +2317,9 @@ msgstr "Time record"
 msgid "Time records"
 msgstr "Time records"
 
+msgid "Time replacement preview"
+msgstr "Time replacement preview"
+
 msgid "Time zone: {zone}"
 msgstr "Time zone: {zone}"
 
@@ -2466,6 +2481,9 @@ msgstr "Unable to update work types. Your records have not changed."
 
 msgid "Unclassified"
 msgstr "Unclassified"
+
+msgid "Unconfirmed time change"
+msgstr "Unconfirmed time change"
 
 msgid "Undo"
 msgstr "Undo"

@@ -181,6 +181,9 @@ msgstr "애플리케이션 클라이언트 ID"
 msgid "Apply"
 msgstr "적용"
 
+msgid "Apply time"
+msgstr "시간 적용"
+
 msgid "April"
 msgstr "4월"
 
@@ -618,6 +621,9 @@ msgstr "변경 사항을 취소할까요?"
 
 msgid "Discard the saved timer without creating a record?"
 msgstr "기록을 만들지 않고 저장된 타이머를 삭제하시겠습니까?"
+
+msgid "Discard time change"
+msgstr "미확정 시간 변경 취소"
 
 msgid "Discard timer"
 msgstr "타이머 삭제"
@@ -1291,6 +1297,9 @@ msgstr "네트워크"
 msgid "New password"
 msgstr "새 비밀번호"
 
+msgid "New period"
+msgstr "새 시간대"
+
 msgid "New project"
 msgstr "새 프로젝트"
 
@@ -1951,6 +1960,9 @@ msgstr "해당 날짜의 시간 기록을 선택하여 편집하세요."
 msgid "Select between 1 and 250 distinct records and an available project context."
 msgstr "서로 다른 기록 1~250개와 사용 가능한 프로젝트를 선택하세요."
 
+msgid "Select time"
+msgstr "시간 선택"
+
 msgid "Selected day (Excel)"
 msgstr "선택한 날짜(Excel)"
 
@@ -2305,6 +2317,9 @@ msgstr "시간 기록"
 msgid "Time records"
 msgstr "시간 기록"
 
+msgid "Time replacement preview"
+msgstr "시간대 대체 미리보기"
+
 msgid "Time zone: {zone}"
 msgstr "시간대: {zone}"
 
@@ -2466,6 +2481,9 @@ msgstr "근무 유형을 업데이트할 수 없습니다. 기록은 변경되�
 
 msgid "Unclassified"
 msgstr "미분류"
+
+msgid "Unconfirmed time change"
+msgstr "시간 변경 미확정"
 
 msgid "Undo"
 msgstr "실행 취소"

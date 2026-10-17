@@ -181,6 +181,9 @@ msgstr "应用客户端 ID"
 msgid "Apply"
 msgstr "应用"
 
+msgid "Apply time"
+msgstr "确认时间"
+
 msgid "April"
 msgstr "4月"
 
@@ -618,6 +621,9 @@ msgstr "放弃修改？"
 
 msgid "Discard the saved timer without creating a record?"
 msgstr "放弃已保存的计时状态，不创建记录？"
+
+msgid "Discard time change"
+msgstr "还原未确认的时间"
 
 msgid "Discard timer"
 msgstr "放弃计时"
@@ -1291,6 +1297,9 @@ msgstr "网络"
 msgid "New password"
 msgstr "新密码"
 
+msgid "New period"
+msgstr "新时段"
+
 msgid "New project"
 msgstr "新建项目"
 
@@ -1951,6 +1960,9 @@ msgstr "请选择当天的一条时间记录进行编辑。"
 msgid "Select between 1 and 250 distinct records and an available project context."
 msgstr "请选择 1 至 250 条不同的记录和可用的项目关联。"
 
+msgid "Select time"
+msgstr "选择时间"
+
 msgid "Selected day (Excel)"
 msgstr "所选日期（Excel）"
 
@@ -2305,6 +2317,9 @@ msgstr "时间记录"
 msgid "Time records"
 msgstr "时间记录"
 
+msgid "Time replacement preview"
+msgstr "时段替换预览"
+
 msgid "Time zone: {zone}"
 msgstr "时区：{zone}"
 
@@ -2466,6 +2481,9 @@ msgstr "无法更新工作类型。您的记录未改变。"
 
 msgid "Unclassified"
 msgstr "未分类"
+
+msgid "Unconfirmed time change"
+msgstr "时间变更待确认"
 
 msgid "Undo"
 msgstr "撤销"

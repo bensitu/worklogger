@@ -114,8 +114,11 @@ selection. Batch assignment requires an explicit selection and confirmation.
 
 Record actions can split a period, merge adjacent compatible periods, place a
 historical break deduction, or undo a supported change. **Split record** accepts
-a date and clock time and previews both resulting periods. To split an overnight
-record after midnight, choose the following date. Historical deductions have no
+a clock time and previews both resulting periods. Confirm an edited time with
+the check icon or Enter before applying the split; the restore icon discards an
+unconfirmed time change. The clock icon opens time selection. A date selector
+appears only when the original period spans dates; choose the following date
+to split an overnight record after midnight. Historical deductions have no
 known break position until you assign one: choose **Place historical break** and
 set its start time before splitting or partially replacing that record. Confirm
 the preview before applying a correction. **Undo latest record change** can
@@ -131,6 +134,12 @@ totaling seven worked hours. A break that itself crosses midnight, such as
 23:30-00:30, starts on October 31. Each resulting record belongs to its start
 date; daily and monthly totals are recalculated accordingly. Month and year
 boundaries use the same rules.
+
+The overlap preview aligns the new period above the existing records on a shared
+time scale. Segment colors follow work types; Normal uses the theme accent and
+Break uses a neutral color. Gaps remain visible. Whole-record replacement fades
+the existing segments, while the new period remains opaque. The result table is
+the complete list of records to save.
 
 Imported calendar events are separate from worked time. Selecting one creates a
 time-entry draft. Editing or deleting the local copy does not alter its source file.

@@ -181,6 +181,9 @@ msgstr "アプリケーションのクライアント ID"
 msgid "Apply"
 msgstr "適用"
 
+msgid "Apply time"
+msgstr "時刻を確定"
+
 msgid "April"
 msgstr "4月"
 
@@ -618,6 +621,9 @@ msgstr "変更を破棄しますか？"
 
 msgid "Discard the saved timer without creating a record?"
 msgstr "記録を作成せずに保存済みのタイマーを破棄しますか？"
+
+msgid "Discard time change"
+msgstr "未確定の時刻を元に戻す"
 
 msgid "Discard timer"
 msgstr "タイマーを破棄"
@@ -1291,6 +1297,9 @@ msgstr "ネットワーク"
 msgid "New password"
 msgstr "新しいパスワード"
 
+msgid "New period"
+msgstr "新しい時間帯"
+
 msgid "New project"
 msgstr "新しいプロジェクト"
 
@@ -1951,6 +1960,9 @@ msgstr "編集する日の時間記録を選択してください。"
 msgid "Select between 1 and 250 distinct records and an available project context."
 msgstr "異なる記録を1～250件選択し、利用可能なプロジェクトを指定してください。"
 
+msgid "Select time"
+msgstr "時刻を選択"
+
 msgid "Selected day (Excel)"
 msgstr "選択日（Excel）"
 
@@ -2305,6 +2317,9 @@ msgstr "時間記録"
 msgid "Time records"
 msgstr "時間記録"
 
+msgid "Time replacement preview"
+msgstr "時間帯の置き換えプレビュー"
+
 msgid "Time zone: {zone}"
 msgstr "タイムゾーン：{zone}"
 
@@ -2466,6 +2481,9 @@ msgstr "勤務種別を更新できません。記録は変更されていませ
 
 msgid "Unclassified"
 msgstr "未分類"
+
+msgid "Unconfirmed time change"
+msgstr "時刻の変更は未確定です"
 
 msgid "Undo"
 msgstr "元に戻す"

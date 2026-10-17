@@ -25,6 +25,12 @@ from worklogger.domain.shared.result import Result
 from PySide6.QtCore import QTime
 
 
+def apply_boundary(dialog, wall):
+    dialog.date_combo.setCurrentIndex(dialog.date_combo.findData(wall.date().isoformat()))
+    dialog.time_input.setText(wall.strftime("%H:%M"))
+    dialog.apply_time_button.click()
+
+
 class TimeEntryWorkflowTests(unittest.TestCase):
     def test_project_menu_distinguishes_all_records_from_unlinked_records_and_preserves_fixed_filters(self):
         from worklogger.domain.projects.models import WorkContext
@@ -381,7 +387,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertTrue(panel.undo_button.isEnabled())
         panel._split_record(original)
         dialog = panel._record_boundary_dialog
-        dialog.time_input.setDateTime(datetime.combine(original.day, datetime.min.time()).replace(hour=10))
+        apply_boundary(dialog, datetime.combine(original.day, datetime.min.time()).replace(hour=10))
         self.assertEqual(dialog.preview.topLevelItemCount(), 2)
         dialog.confirm_button.click()
         records = self.repository.list_for_day(self.runtime.user.id, self.now.date())
@@ -444,10 +450,10 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         dialog = RecordBoundaryDialog(historical, self.panel, historical_break=True)
         self.addCleanup(dialog.deleteLater)
         wall = datetime.combine(historical.day, datetime.min.time())
-        dialog.time_input.setDateTime(wall.replace(hour=12))
+        apply_boundary(dialog, wall.replace(hour=12))
         self.assertEqual(dialog.chosen_minutes(), 180)
         self.assertEqual(dialog.preview.topLevelItemCount(), 3)
-        dialog.time_input.setDateTime(wall.replace(hour=18))
+        apply_boundary(dialog, wall.replace(hour=18))
         self.assertFalse(dialog.confirm_button.isEnabled())
         self.assertEqual(dialog.preview.topLevelItemCount(), 0)
         zone = ZoneInfo("America/New_York")
@@ -456,12 +462,13 @@ class TimeEntryWorkflowTests(unittest.TestCase):
                          started_at=start, ended_at=start.replace(hour=3))
         split = RecordBoundaryDialog(record, self.panel, zone=zone)
         self.addCleanup(split.deleteLater)
-        split.time_input.setDateTime(datetime(2026, 11, 1, 1, 30))
+        self.assertEqual(split.chosen_minutes(), 120)
+        apply_boundary(split, datetime(2026, 11, 1, 1, 30))
         self.assertEqual(split.offset_combo.count(), 2)
         split.offset_combo.setCurrentIndex(1)
         self.assertEqual(split.chosen_minutes(), 120)
         self.assertTrue(split.confirm_button.isEnabled())
-        split.time_input.setDateTime(datetime(2026, 11, 1, 3, 30))
+        apply_boundary(split, datetime(2026, 11, 1, 3, 30))
         self.assertFalse(split.confirm_button.isEnabled())
 
     def test_overnight_edits_refresh_both_calendar_dates_and_undo_across_years(self):
@@ -470,9 +477,9 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertTrue(self.window.select_day(day))
         panel._split_record(old)
         dialog = panel._record_boundary_dialog
-        dialog.time_input.setDateTime(datetime(2026, 12, 31, 0))
+        apply_boundary(dialog, datetime(2026, 12, 31, 0))
         self.assertFalse(dialog.confirm_button.isEnabled())
-        dialog.time_input.setDateTime(datetime(2027, 1, 1, 0))
+        apply_boundary(dialog, datetime(2027, 1, 1, 0))
         self.assertTrue(dialog.confirm_button.isEnabled())
         self.assertEqual([(dialog.preview.topLevelItem(index).text(0), dialog.preview.topLevelItem(index).text(1))
                           for index in range(2)],
