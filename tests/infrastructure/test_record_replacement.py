@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 import tempfile
 import unittest
@@ -19,6 +19,7 @@ class RecordReplacementTests(unittest.TestCase):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         factory = SQLiteConnectionFactory(Path(directory.name) / "records.db")
+        self.factory = factory
         MigrationRunner(factory).run_pending()
         auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
         self.user = auth.create_user("sample", "example-password", recovery_key=None, is_admin=False)
@@ -70,6 +71,41 @@ class RecordReplacementTests(unittest.TestCase):
         self.assertEqual(result.value.id, original.id)
         self.assertTrue(self.service.undo(self.service.latest_change().value.id).ok)
         self.assertEqual({item.id for item in self.records()}, {first.id, second.id, original.id})
+
+    def test_overnight_split_replacement_and_undo_preserve_dates_across_calendar_boundaries(self):
+        for day, offset, start, end, expected in (
+            (date(2026, 10, 31), 1, "00:00", "01:00", [(0, "22:00", "00:00"), (1, "01:00", "06:00")]),
+            (date(2026, 12, 31), 0, "23:30", "00:30", [(0, "22:00", "23:30"), (1, "00:30", "06:00")]),
+            (date(2028, 2, 29), 1, "01:00", "02:00", [(0, "22:00", "01:00"), (1, "02:00", "06:00")]),
+        ):
+            with self.subTest(day=day):
+                tomorrow = day + timedelta(days=1)
+                old = self.service.save_manual(day, "22:00", "06:00", "meeting", "Night work").value
+                midnight = datetime.combine(tomorrow, datetime.min.time(), timezone.utc)
+                split = self.service.split_at(old, midnight)
+                self.assertTrue(split.ok, split.error)
+                self.assertEqual([(item.day, item.start_time, item.end_time) for item in split.value],
+                                 [(day, "22:00", "00:00"), (tomorrow, "00:00", "06:00")])
+                self.assertEqual([item.worked_hours() for item in split.value], [2, 6])
+                self.assertTrue(self.service.undo(self.service.latest_change().value.id).ok)
+                offered = self.service.save_manual(day + timedelta(days=offset), start, end, "break", "Rest")
+                self.assertFalse(offered.ok)
+                plan = offered.error.details["replacement"]
+                self.assertEqual([item.id for item in plan.conflicts], [old.id])
+                result = self.service.replace_overlap(plan, keep_outside=True)
+                self.assertTrue(result.ok, result.error)
+                reopened = SQLiteWorkLogRepository(self.factory)
+                records = reopened.list_entries_range(self.user.id, day, tomorrow)
+                self.assertEqual(len(records), 3)
+                self.assertEqual([(item.day, item.start_time, item.end_time) for item in records if not item.is_break],
+                                 [(day + timedelta(days=days), left, right) for days, left, right in expected])
+                self.assertEqual(sum(item.worked_hours() for item in records), 7)
+                self.assertEqual(sum(item.raw_hours() for item in records if item.is_break), 1)
+                self.assertTrue(self.service.undo(self.service.latest_change().value.id).ok)
+                restored, = reopened.list_entries_range(self.user.id, day, tomorrow)
+                self.assertEqual((restored.id, restored.day, restored.start_time, restored.end_time, restored.note),
+                                 (old.id, day, "22:00", "06:00", "Night work"))
+                self.assertEqual(restored.worked_hours(), 8)
 
     def test_stale_preview_and_new_conflicts_leave_records_unchanged(self):
         old = self.service.save_manual(self.day, "09:00", "12:00", "meeting", "Planning").value

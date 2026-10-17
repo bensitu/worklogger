@@ -464,6 +464,47 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         split.time_input.setDateTime(datetime(2026, 11, 1, 3, 30))
         self.assertFalse(split.confirm_button.isEnabled())
 
+    def test_overnight_edits_refresh_both_calendar_dates_and_undo_across_years(self):
+        panel, day, tomorrow = self.panel, date(2026, 12, 31), date(2027, 1, 1)
+        old = panel.view_model.service.save_manual(day, "22:00", "06:00", "meeting", "Night work").value
+        self.assertTrue(self.window.select_day(day))
+        panel._split_record(old)
+        dialog = panel._record_boundary_dialog
+        dialog.time_input.setDateTime(datetime(2026, 12, 31, 0))
+        self.assertFalse(dialog.confirm_button.isEnabled())
+        dialog.time_input.setDateTime(datetime(2027, 1, 1, 0))
+        self.assertTrue(dialog.confirm_button.isEnabled())
+        self.assertEqual([(dialog.preview.topLevelItem(index).text(0), dialog.preview.topLevelItem(index).text(1))
+                          for index in range(2)],
+                         [("2026-12-31", "22:00 - 00:00 (+1)"), ("2027-01-01", "00:00 - 06:00")])
+        dialog.confirm_button.click()
+        cells = {cell.day: cell for cell in self.window.calendar_page.calendar_view.state.cells}
+        self.assertEqual((cells[day].worked_hours, cells[tomorrow].worked_hours), (2, 6))
+        with patch("worklogger.presentation.widgets.time_entries.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes):
+            panel.undo_button.click()
+        self.assertTrue(self.window.select_day(tomorrow))
+        self.assertTrue(panel.new_record())
+        panel.start_input.setText("00:00")
+        panel.end_input.setText("01:00")
+        panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData("break"))
+        panel.content_input.setPlainText("Rest")
+        panel.save_button.click()
+        replacement = panel._replacement_dialog
+        self.assertIsNotNone(replacement)
+        self.assertEqual(replacement.preview.topLevelItemCount(), 3)
+        replacement.confirm_button.click()
+        cells = {cell.day: cell for cell in self.window.calendar_page.calendar_view.state.cells}
+        self.assertEqual((cells[day].worked_hours, cells[tomorrow].worked_hours), (2, 5))
+        records = self.repository.list_entries_range(self.runtime.user.id, day, tomorrow)
+        self.assertEqual(len(records), 3)
+        with patch("worklogger.presentation.widgets.time_entries.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes):
+            panel.undo_button.click()
+        cells = {cell.day: cell for cell in self.window.calendar_page.calendar_view.state.cells}
+        self.assertEqual((cells[day].worked_hours, cells[tomorrow].worked_hours), (8, 0))
+        restored, = self.repository.list_entries_range(self.runtime.user.id, day, tomorrow)
+        self.assertEqual((restored.id, restored.day, restored.start_time, restored.end_time), (old.id, day, "22:00", "06:00"))
+        self.warning.assert_not_called()
+
     def test_record_search_filters_preserve_focus_and_open_the_owned_entry(self):
         from worklogger.presentation.widgets.record_search import RecordSearchDialog
         first = self.panel.view_model.service.save_manual(self.now.date(), "09:00", "10:00", "meeting", "Planning").value

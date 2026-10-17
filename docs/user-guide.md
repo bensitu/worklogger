@@ -122,6 +122,16 @@ the preview before applying a correction. **Undo latest record change** can
 restore an overlap replacement, including all affected records. Record undo does
 not cover CSV replacement or database restore.
 
+For an overnight period such as October 31, 22:00 to November 1, 06:00, choose
+November 1, 00:00 as the split time to create two periods of two and six hours.
+To insert a 00:00-01:00 break, select November 1 in Calendar, start a new time
+record, enter the break, and choose **Replace overlapping time only**. The
+remaining work periods are October 31, 22:00-00:00 and November 1, 01:00-06:00,
+totaling seven worked hours. A break that itself crosses midnight, such as
+23:30-00:30, starts on October 31. Each resulting record belongs to its start
+date; daily and monthly totals are recalculated accordingly. Month and year
+boundaries use the same rules.
+
 Imported calendar events are separate from worked time. Selecting one creates a
 time-entry draft. Editing or deleting the local copy does not alter its source file.
 All-day events require explicit start and end times before saving as worked time.

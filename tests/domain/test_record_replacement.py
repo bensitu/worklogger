@@ -35,12 +35,30 @@ class RecordReplacementTests(unittest.TestCase):
                 self.assertEqual(plan.periods(keep_outside=False), (incoming,))
 
     def test_overnight_replacement_keeps_the_correct_dates(self):
-        old = replace(self.old, start_time="22:00", end_time="06:00")
-        incoming = WorkLog(1, self.day + timedelta(days=1), "00:00", "01:00", work_type=WorkType.BREAK)
-        _, left, right = EntryReplacement(incoming, (old,)).periods(keep_outside=True)
-        self.assertEqual((left.day, left.start_time, left.end_time), (self.day, "22:00", "00:00"))
-        self.assertEqual((right.day, right.start_time, right.end_time), (incoming.day, "01:00", "06:00"))
-        self.assertEqual(left.worked_hours() + right.worked_hours(), 7)
+        from worklogger.domain.worklog.rules import shift_datetimes
+
+        for day in (date(2026, 10, 31), date(2026, 12, 31), date(2028, 2, 29)):
+            tomorrow = day + timedelta(days=1)
+            for zone in (None, timezone.utc):
+                old_start, old_end = shift_datetimes(day, "22:00", "06:00", zone)
+                old = replace(self.old, day=day, start_time="22:00", end_time="06:00",
+                              started_at=old_start if zone else None, ended_at=old_end if zone else None)
+                for offset, start, end, expected, hours in (
+                    (0, "23:00", "23:30", [(day, "22:00", "23:00"), (day, "23:30", "06:00")], 7.5),
+                    (0, "23:30", "00:30", [(day, "22:00", "23:30"), (tomorrow, "00:30", "06:00")], 7),
+                    (1, "00:00", "01:00", [(day, "22:00", "00:00"), (tomorrow, "01:00", "06:00")], 7),
+                    (1, "05:00", "07:00", [(day, "22:00", "05:00")], 7),
+                    (0, "21:00", "23:00", [(day, "23:00", "06:00")], 7),
+                    (0, "22:00", "06:00", [], 0),
+                ):
+                    with self.subTest(day=day, zone=zone, start=start, end=end):
+                        incoming_day = day + timedelta(days=offset)
+                        cut_start, cut_end = shift_datetimes(incoming_day, start, end, zone)
+                        incoming = WorkLog(1, incoming_day, start, end, work_type=WorkType.BREAK,
+                                           started_at=cut_start if zone else None, ended_at=cut_end if zone else None)
+                        _, *remaining = EntryReplacement(incoming, (old,)).periods(keep_outside=True)
+                        self.assertEqual([(item.day, item.start_time, item.end_time) for item in remaining], expected)
+                        self.assertEqual(sum(item.worked_hours() for item in remaining), hours)
 
     def test_historical_deductions_and_full_day_records_are_not_guessed(self):
         incoming = WorkLog(1, self.day, "12:00", "13:00", work_type=WorkType.BREAK)
