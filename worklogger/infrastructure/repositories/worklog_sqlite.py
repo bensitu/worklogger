@@ -82,6 +82,15 @@ class SQLiteWorkLogRepository:
     def split_entry(self, user_id, record, first_minutes):
         return self._operations.split(user_id, record, first_minutes)
 
+    def split_entry_at(self, user_id, record, cut):
+        return self._operations.split_at(user_id, record, cut)
+
+    def preview_replacement(self, user_id, incoming, original=None):
+        return self._operations.preview_replacement(user_id, incoming, original)
+
+    def replace_overlap(self, user_id, plan, *, keep_outside):
+        return self._operations.replace_overlap(user_id, plan, keep_outside=keep_outside)
+
     def merge_entries(self, user_id, left, right):
         return self._operations.merge(user_id, left, right)
 

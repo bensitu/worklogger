@@ -93,6 +93,14 @@ Bulk validation caches are limited to a single validation pass. Reversible chang
 history is a separate shared collaborator; transformations do not depend on the
 ordinary write repository or call its private methods.
 
+Overlap replacement uses immutable `EntryReplacement` values. Domain rules
+calculate the new record and preserved fragments; the presentation layer previews
+them without writing. Persistence rechecks ownership, expected revisions,
+active timers, and overlaps in one transaction before saving records and undo
+snapshots. Replacement never infers the position of a historical break deduction.
+Clock-based splitting and replacement share interval slicing, preserving captured
+instants, classification, content, and project metadata.
+
 Daily notes are separate memos. Their sharing choices and drafts are account/date
 scoped. Reports retain saved versions and generation references; regeneration
 does not mutate recorded time. See [storage contracts](database.md).

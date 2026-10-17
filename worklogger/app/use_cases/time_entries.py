@@ -25,6 +25,7 @@ from worklogger.app.ports import WorkTypeOperations, ProjectOperations
 from worklogger.app.time_entry_state import RecordingState
 from worklogger.app.use_cases._errors import infrastructure_failure
 from worklogger.domain.projects.models import WorkContext
+from worklogger.domain.worklog.replacement import EntryReplacement
 
 
 FIXED_BREAK_CAPTURE_PREFIX = "fixed-break:"
@@ -142,6 +143,19 @@ class TimeEntryService:
     def split(self, record: WorkLog, first_minutes: int) -> Result[tuple[WorkLog, ...]]:
         return self._run(lambda: self.repository.split_entry(self.user_id, record, first_minutes), error_code="record_change_failed")
 
+    def split_at(self, record: WorkLog, cut: datetime) -> Result[tuple[WorkLog, ...]]:
+        return self._run(lambda: self.repository.split_entry_at(self.user_id, record, cut), error_code="record_change_failed")
+
+    def replace_overlap(self, plan: EntryReplacement, *, keep_outside: bool) -> Result[WorkLog]:
+        def save():
+            record = plan.incoming
+            if record.user_id != self.user_id:
+                raise ValueError("worklog_entry_conflict")
+            self._resolve_type(record.work_type.value, plan.original.work_type if plan.original else None)
+            self._resolve_context(record.context, plan.original.context if plan.original else None)
+            return self.repository.replace_overlap(self.user_id, plan, keep_outside=keep_outside)
+        return self._run(save)
+
     def merge(self, left: WorkLog, right: WorkLog) -> Result[WorkLog]:
         return self._run(lambda: self.repository.merge_entries(self.user_id, left, right), error_code="record_change_failed")
 
@@ -183,7 +197,15 @@ class TimeEntryService:
                 original.break_hours if original else 0, require_entry_content(content), definition,
                 started_at=timestamps[0], ended_at=timestamps[1], id=original.id if original else None,
                 revision=original.revision if original else 0, capture_id=original.capture_id if original else None, context=association))
-            return self.repository.save_entry(record)
+            try:
+                return self.repository.save_entry(record)
+            except ValueError as error:
+                if str(error) != "worklog_entry_overlap" or not self.changes_available:
+                    raise
+                plan = self.repository.preview_replacement(self.user_id, record, original)
+                if not plan.conflicts:
+                    raise
+                return Result.failure(ConflictError("worklog_entry_overlap", "worklog_entry_overlap", {"replacement": plan}))
         return self._run(save)
 
     def _resolve_type(self, value: str, original=None):

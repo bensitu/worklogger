@@ -92,6 +92,19 @@ def timestamp_span_hours(start: datetime, end: datetime) -> float:
     return (end.astimezone(timezone.utc) - start.astimezone(timezone.utc)).total_seconds() / 3600
 
 
+def wall_time_candidates(wall: datetime, zone: tzinfo) -> tuple[datetime, ...]:
+    choices = []
+    for fold in (0, 1):
+        try:
+            candidate = wall.replace(tzinfo=zone, fold=fold)
+            utc = candidate.astimezone(timezone.utc)
+            if utc.astimezone(zone).replace(tzinfo=None) == wall and not any(utc == item.astimezone(timezone.utc) for item in choices):
+                choices.append(candidate)
+        except (OverflowError, ValueError):
+            continue
+    return tuple(choices)
+
+
 def shift_datetimes(day: date, start: str, end: str, local_timezone: tzinfo | None = None) -> tuple[datetime, datetime] | None:
     start_time = parse_time(start)
     end_time = parse_time(end)
@@ -197,6 +210,18 @@ def normalize_work_log(
         overnight=(work_log.ended_at.date() > work_log.started_at.date()) if work_log.started_at and work_log.ended_at
         else is_overnight_shift(start, end) if start and end else False,
     )
+
+
+def slice_entry(record: WorkLog, start: datetime, end: datetime, *, keep_identity: bool) -> WorkLog:
+    if record.started_at is not None:
+        start = (record.started_at if start.astimezone(timezone.utc) == record.started_at.astimezone(timezone.utc)
+                 else start.astimezone(record.started_at.tzinfo))
+        end = (record.ended_at if end.astimezone(timezone.utc) == record.ended_at.astimezone(timezone.utc)
+               else end.astimezone(record.started_at.tzinfo))
+    return normalize_work_log(replace(record, day=start.date(), start_time=start.strftime("%H:%M"),
+        end_time=end.strftime("%H:%M"), started_at=start if record.started_at else None,
+        ended_at=end if record.started_at else None, id=record.id if keep_identity else None,
+        revision=record.revision if keep_identity else 0, capture_id=record.capture_id if keep_identity else None))
 
 
 def aggregate_days(records) -> tuple[WorkLog, ...]:

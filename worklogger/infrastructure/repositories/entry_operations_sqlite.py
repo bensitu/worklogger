@@ -1,7 +1,8 @@
 """Atomic interval transformations and conflict-aware compensating changes."""
 
 from dataclasses import replace
-from worklogger.domain.worklog.editing import split_entry, merge_entries, place_historical_break
+from worklogger.domain.worklog.editing import split_entry, split_entry_at, merge_entries, place_historical_break
+from worklogger.domain.worklog.replacement import EntryReplacement
 from worklogger.domain.worklog.rules import normalize_work_log
 from worklogger.domain.projects.models import WorkContext
 from worklogger.infrastructure.repositories.project_sqlite import validate_record_context
@@ -9,6 +10,7 @@ from worklogger.infrastructure.repositories.recent_context_sqlite import remembe
 from worklogger.infrastructure.repositories.entry_changes_sqlite import SQLiteEntryChanges
 from worklogger.infrastructure.repositories.entry_write_session_sqlite import EntryWriteSession
 from worklogger.infrastructure.repositories.worklog_mapping_sqlite import WorkLogStorage
+from worklogger.infrastructure.repositories.entry_conflicts_sqlite import overlapping_entries
 
 
 class SQLiteEntryOperations:
@@ -16,10 +18,10 @@ class SQLiteEntryOperations:
         self.storage, self.changes = storage, changes
 
     @staticmethod
-    def _ensure_idle(connection, user_id):
+    def _ensure_idle(connection, user_id, *, error_code="auto_record_already_active"):
         row = connection.execute("SELECT value FROM settings WHERE user_id=? AND key='time_entry_timer'", (user_id,)).fetchone()
         if row is not None and row[0]:
-            raise ValueError("auto_record_already_active")
+            raise ValueError(error_code)
 
     def _load(self, connection, user_id, expected):
         row = connection.execute(self.storage.select + " WHERE w.user_id=? AND w.id=?", (user_id, expected.id)).fetchone()
@@ -62,6 +64,34 @@ class SQLiteEntryOperations:
 
     def split(self, user_id, expected, first_minutes):
         return self._transform(user_id, expected, lambda record: split_entry(record, first_minutes), "split")
+
+    def split_at(self, user_id, expected, cut):
+        return self._transform(user_id, expected, lambda record: split_entry_at(record, cut), "split")
+
+    def preview_replacement(self, user_id, incoming, original=None):
+        if incoming.user_id != user_id or (original is not None and original.user_id != user_id):
+            raise ValueError("worklog_entry_conflict")
+        with self.storage.connection_factory.transaction(write=False) as connection:
+            self._ensure_idle(connection, user_id, error_code="record_replacement_timer_active")
+            if original is not None:
+                self._load(connection, user_id, original)
+            return EntryReplacement(incoming, overlapping_entries(connection, self.storage, incoming), original)
+
+    def replace_overlap(self, user_id, plan, *, keep_outside):
+        if plan.incoming.user_id != user_id:
+            raise ValueError("worklog_entry_conflict")
+        targets = plan.periods(keep_outside=keep_outside)
+        with self.storage.connection_factory.transaction() as connection:
+            self._ensure_idle(connection, user_id, error_code="record_replacement_timer_active")
+            for expected in plan.affected:
+                self._load(connection, user_id, expected)
+            validate_record_context(connection, plan.incoming)
+            before = self.changes.rows(connection, user_id, [record.id for record in plan.affected])
+            result = self._replace(connection, user_id, before, targets)
+            self.changes.remember(connection, user_id, "replace", before,
+                self.changes.rows(connection, user_id, [record.id for record in result]))
+            remember_context(connection, user_id, plan.incoming.context)
+            return result[0]
 
     def associate(self, user_id, expected, context):
         if (not 1 <= len(expected) <= 250
