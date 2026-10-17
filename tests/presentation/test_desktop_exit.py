@@ -46,7 +46,7 @@ class DesktopExitTests(unittest.TestCase):
         model = _entry_model(MemoryWorkLogRepository())
         window = MinimalView(time_entry_view_model=model, residency_controller=residency, job_runner=ImmediateJobRunner())
         window.refresh()
-        self.assertTrue(model.start("break", "Ongoing record").ok)
+        self.assertTrue(model.start("normal", "Ongoing record").ok)
         window.entry_panel.time_tabs.setCurrentIndex(1)
         timer = window.entry_panel.auto_timer
         self.assertTrue(timer.isActive())

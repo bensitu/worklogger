@@ -160,6 +160,25 @@ class TimeEntryWorkflowTests(unittest.TestCase):
             self.assertEqual(editor_state(panel).entry_type, "normal")
             panel.show()
 
+    def test_classification_language_change_discards_pending_selection_and_refreshes_labels(self):
+        from PySide6.QtCore import QEvent
+        from worklogger.infrastructure.i18n import _, get_language, set_language
+
+        self.addCleanup(set_language, get_language())
+        panel = self.panel
+        before = panel.view_model.draft
+        previous = open_classification(panel)
+        previous.period_type_combo.setCurrentIndex(previous.period_type_combo.findData("meeting"))
+        set_language("ja_JP")
+        QApplication.sendEvent(panel, QEvent(QEvent.Type.LanguageChange))
+        self.assertFalse(previous.isVisible())
+        popup = open_classification(panel)
+        self.assertIsNot(popup, previous)
+        self.assertEqual(popup.cancel_button.text(), _("Cancel"))
+        self.assertEqual(popup.work_mode_combo.itemText(popup.work_mode_combo.findData(WorkMode.REMOTE)), _("Remote"))
+        self.assertEqual(panel.view_model.draft, before)
+        popup.cancel_button.click()
+
     def test_manual_break_and_leave_clear_work_metadata_only_on_apply(self):
         panel = self.panel
         project = panel.view_model.service.projects.save_project("Platform").value

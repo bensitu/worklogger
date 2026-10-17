@@ -532,6 +532,9 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         super().changeEvent(event)
         if event.type() in (QEvent.Type.EnabledChange, QEvent.Type.StyleChange, QEvent.Type.LanguageChange):
             self._close_classification_picker()
+        if event.type() == QEvent.Type.LanguageChange and self._classification_popup is not None:
+            self._classification_popup.deleteLater()
+            self._classification_popup = None
 
     def _fit_mode_height(self):
         self._mode_height_pending = False

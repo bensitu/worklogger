@@ -4,6 +4,8 @@ Collection reads reject undecodable stored records instead of returning incomple
 totals or reports. A read failure does not delete or rewrite the affected rows.
 Invalid optional timezone metadata is logged; valid clock boundaries remain
 readable using historical wall-clock accounting rather than invented offsets.
+Break and leave records cannot contain a work arrangement or project context;
+this validation also applies to clock-only records and historical snapshots.
 Restore and recovery snapshots share the same bounded retention policy.
 
 ## Structure and Semantics

@@ -527,3 +527,19 @@ class TimeEntryTests(unittest.TestCase):
         self.assertIsNone(loaded.ended_at)
         with self.factory.connection() as connection:
             self.assertEqual(connection.execute("SELECT started_at FROM worklog WHERE id=?", (record.id,)).fetchone()[0], "invalid")
+
+    def test_stored_nonwork_metadata_is_rejected_without_changing_the_record(self):
+        record = self.service.save_manual(self.now.date(), "09:00", "10:00", "normal", "Retained content").value
+        for entry_type, work_mode, project_label in (
+            ("break", "remote", ""), ("break", None, "Platform"), ("sick_leave", None, "Platform"),
+        ):
+            with self.subTest(entry_type=entry_type, work_mode=work_mode, project_label=project_label):
+                with self.factory.transaction(write=True) as connection:
+                    connection.execute("UPDATE worklog SET entry_type=?,work_mode=?,project_label=? WHERE id=?",
+                                       (entry_type, work_mode, project_label, record.id))
+                with self.assertRaisesRegex(ValueError, "stored_records_invalid"):
+                    self.repository.list_for_day(self.user.id, record.day)
+                with self.factory.connection() as connection:
+                    stored = connection.execute("SELECT entry_type,work_mode,project_label,note FROM worklog WHERE id=?",
+                                                (record.id,)).fetchone()
+                self.assertEqual(tuple(stored), (entry_type, work_mode, project_label, "Retained content"))

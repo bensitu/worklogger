@@ -71,7 +71,8 @@ class WorkLogStorage:
             context=WorkContext(row["project_id"], row["work_item_id"], row["project_label"], row["work_item_label"]),
             work_mode=WorkMode(row["work_mode"]) if row["work_mode"] is not None else None,
         )
-        if record.entry_type.category != EntryCategory.WORK and record.work_mode is not None:
+        if record.entry_type.category != EntryCategory.WORK and (
+                record.work_mode is not None or record.context != WorkContext()):
             raise ValueError("stored_work_log_invalid")
         if (row["start"] and not record.start_time) or (row["end"] and not record.end_time):
             raise ValueError("stored_work_log_invalid")
