@@ -42,13 +42,22 @@ Select a date in Calendar. The right panel shows its editor and saved records.
 ### Manual Input
 
 1. Enter start and end times.
-2. Choose a work type and optionally a project and work item.
+2. Open Classification. Under Work, choose a period type, optional work
+   arrangement, project, and work item; use Leave for a leave type.
 3. Enter Content and save.
 
 Each date can contain multiple nonoverlapping records. After saving, the record
-remains selected in both input modes. Content, type, and project are shared between
-manual and automatic views. Use New time record or Clear input before starting a
-different record.
+remains selected for editing. Classification selections remain temporary until
+Apply; Cancel, Esc, and clicking outside the popup leave the draft unchanged.
+Apply updates only the draft; Save writes the record. Break and leave use the
+same start/end fields and do not carry a work arrangement or project. Untimed
+historical leave remains editable without invented time boundaries.
+
+New work records default to the account's last successfully saved work arrangement,
+or Not specified. Selecting Not specified and saving a new work record clears
+that default. Editing an existing record never changes another record's arrangement
+or the new-record default. Historical remote and business-trip classifications
+retain their original meaning until explicitly changed to a current period type.
 
 If a manually entered period overlaps saved records, review the replacement
 preview. **Replace overlapping time only** preserves time outside the new period,
@@ -67,14 +76,18 @@ and are rejected. Timed records require both boundaries.
 
 ### Auto Record
 
-Choose a type and optional content, then Start. End saves the finished period and
+Choose a work period type, optional arrangement/context, and content, then Start.
+Leave is entered manually; Break remains the separate fixed-duration action.
+Classification and project associations are locked while a timer runs.
+End saves the finished period and
 its content. Save content updates an active timer without ending it. When idle,
 Save changes updates the selected record's content and classification; use Manual
 Input to correct time boundaries.
 
 The timer retains its start and account across restarts. Editing another date
 does not move it. Discard timer asks for confirmation before removing it.
-Clearing content does not stop or discard the timer.
+Clearing content does not stop or discard the timer. A completed work timer remembers
+its arrangement for new work records; starting or discarding a timer does not.
 If an automatic save fails, the elapsed-time display continues and the timer
 retries after a short delay. Unsaved timer state is retained.
 

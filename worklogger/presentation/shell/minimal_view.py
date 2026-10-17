@@ -249,7 +249,7 @@ class MinimalView(QWidget):
         root.addLayout(actions)
 
         self.entry_panel = TimeEntryPanel(self._time_entry_view_model, compact=False, job_runner=self._job_runner)
-        self.entry_panel.context_picker.recent_button.setVisible(self._config.show_recent_context)
+        self.entry_panel.set_recent_context_visible(self._config.show_recent_context)
         root.addWidget(self.entry_panel)
         self.records_title_label = QLabel(_("Time records"))
         self.records_title_label.setProperty("role", "section_heading")
@@ -468,7 +468,7 @@ class MinimalView(QWidget):
                                holiday_region=state.holiday_region)
         self.date_button.set_week_start_monday(state.week_start_monday)
         self.date_picker_holidays.configure(enabled=state.show_holidays, region=state.holiday_region)
-        self.entry_panel.context_picker.recent_button.setVisible(state.show_recent_context)
+        self.entry_panel.set_recent_context_visible(state.show_recent_context)
         self._time_entry_view_model.set_timer_reminders(state.timer_reminder_hours, state.continuous_timer_reminder_hours)
         self.apply_theme()
 

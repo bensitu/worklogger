@@ -474,7 +474,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 self.assertEqual(window._config.monthly_target_hours, 150)
                 self.assertFalse(window._config.calendar_options.show_holidays)
                 self.assertTrue(window._config.calendar_options.week_start_monday)
-                self.assertTrue(window.entry_panel.context_picker.recent_button.isHidden())
+                self.assertFalse(window.entry_panel.recent_context_visible)
                 self.assertTrue(window.refresh())
                 self.assertEqual(window.entry_panel.view_model.default_break_hours, 0.75)
                 self.assertFalse(window.entry_panel.view_model.rewrite_available)
@@ -604,7 +604,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             for key, value in ((MINIMAL_MODE_SETTING_KEY, "1"), ("theme", "green"), ("dark_mode", "1"),
                                ("language", "ja_JP"), ("week_start_monday", "1")):
                 settings.set(first.value.user.id, key, value)
-            started = first.value.window.entry_panel.view_model.start("break", "Ongoing record")
+            started = first.value.window.entry_panel.view_model.start("meeting", "Ongoing record")
             self.assertTrue(started.ok, started.error)
             first.value.window.close()
             restored = build_desktop_runtime(configuration, argv=[])

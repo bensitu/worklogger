@@ -235,6 +235,24 @@ class TimeEntryService:
             raise ValueError("entry_type_unavailable")
         return definition
 
+    def validate_selection(self, entry_type: str, work_mode: WorkMode | None, context: WorkContext,
+                           original: WorkLog | None = None, *, automatic: bool = False
+                           ) -> Result[tuple[EntryType | CustomEntryType, WorkMode | None, WorkContext]]:
+        def resolve():
+            if original is not None and original.user_id != self.user_id:
+                raise ValueError("worklog_entry_conflict")
+            definition = self._resolve_type(entry_type, original.entry_type if original else None)
+            try:
+                arrangement = WorkMode(work_mode) if work_mode is not None else None
+            except (ValueError, TypeError):
+                raise ValueError("work_mode_invalid") from None
+            if definition.category != EntryCategory.WORK and (arrangement is not None or context != WorkContext()):
+                raise ValueError("entry_classification_invalid")
+            if automatic and definition.category != EntryCategory.WORK:
+                raise ValueError("auto_record_work_required")
+            return definition, arrangement, self._resolve_context(context, original.context if original else None)
+        return self._run(resolve, error_code="entry_types_load_failed")
+
     def _resolve_context(self, context, original=None):
         if not isinstance(context, WorkContext):
             raise ValueError("work_context_invalid")

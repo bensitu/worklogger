@@ -10,7 +10,7 @@ from unittest.mock import patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QSettings, Qt
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QApplication, QMessageBox
 from PySide6.QtGui import QCloseEvent
 
 from worklogger.bootstrap import DesktopRuntimeConfig, build_desktop_runtime
@@ -32,7 +32,283 @@ def apply_boundary(dialog, wall):
     dialog.apply_time_button.click()
 
 
+def editor_state(panel):
+    return panel.view_model.editor_state(automatic=panel.time_tabs.currentIndex() == 1)
+
+
+def open_classification(panel):
+    panel.window().show()
+    QApplication.processEvents()
+    panel.classification_button.click()
+    popup = panel._classification_popup
+    assert popup is not None and popup.isVisible()
+    return popup
+
+
+def apply_classification(panel, entry_type):
+    popup = open_classification(panel)
+    combo = popup.period_type_combo
+    if combo.findData(entry_type) < 0:
+        combo = popup.leave_type_combo
+        popup.section_tabs.setCurrentIndex(1)
+    assert combo.findData(entry_type) >= 0
+    combo.setCurrentIndex(combo.findData(entry_type))
+    popup.apply_button.click()
+    assert not popup.isVisible(), popup.error_label.text()
+    return popup
+
+
 class TimeEntryWorkflowTests(unittest.TestCase):
+    def test_classification_stages_all_fields_and_applies_one_validated_draft_update(self):
+        from worklogger.domain.projects.models import WorkContext
+
+        panel = self.panel
+        projects = panel.view_model.service.projects
+        project = projects.save_project("Platform").value
+        item = projects.save_work_item(project.id, "Authentication").value
+        panel.refresh_projects()
+        record = panel.view_model.service.save_manual(self.now.date(), "09:00", "10:00", "normal", "Planning").value
+        panel.edit_entry(record)
+        before = panel.view_model.draft
+        dirty = []
+        panel.dirty_changed.connect(dirty.append)
+        with patch.object(panel.view_model, "validate_selection", wraps=panel.view_model.validate_selection) as validate:
+            popup = open_classification(panel)
+            popup.period_type_combo.setCurrentIndex(popup.period_type_combo.findData("meeting"))
+            popup.work_mode_combo.setCurrentIndex(popup.work_mode_combo.findData(WorkMode.REMOTE))
+            popup.context_picker.project_combo.setCurrentIndex(popup.context_picker.project_combo.findData(project.id))
+            popup.context_picker.work_item_combo.setCurrentIndex(popup.context_picker.work_item_combo.findData(item.id))
+            popup.period_type_combo.setCurrentIndex(popup.period_type_combo.findData("break"))
+            self.assertTrue(popup.work_metadata.isHidden())
+            popup.section_tabs.setCurrentIndex(1)
+            popup.section_tabs.setCurrentIndex(0)
+            popup.period_type_combo.setCurrentIndex(popup.period_type_combo.findData("meeting"))
+            self.assertEqual(popup.work_mode_combo.currentData(), WorkMode.REMOTE)
+            self.assertEqual(popup.context_picker.context().work_item_id, item.id)
+            self.assertEqual(panel.view_model.draft, before)
+            self.assertFalse(panel.is_dirty)
+            validate.assert_not_called()
+            dirty.clear()
+            with patch.object(panel.view_model, "update", wraps=panel.view_model.update) as update:
+                popup.apply_button.click()
+                update.assert_called_once()
+            validate.assert_called_once()
+        self.assertFalse(popup.isVisible())
+        self.assertEqual(dirty, [True])
+        state = editor_state(panel)
+        self.assertEqual((state.entry_type, state.work_mode, state.context),
+                         ("meeting", WorkMode.REMOTE, WorkContext(project.id, item.id, "Platform", "Authentication")))
+        self.assertEqual(self.repository.list_for_day(self.runtime.user.id, self.now.date()), (record,))
+        self.assertIn("Meeting", panel.classification_button.accessibleDescription())
+        self.assertIn("Platform / Authentication", panel.classification_button.accessibleDescription())
+
+    def test_classification_cancel_keyboard_and_outside_click_preserve_the_draft(self):
+        from PySide6.QtCore import QPoint
+        from PySide6.QtTest import QTest
+
+        panel = self.panel
+        baseline = panel.view_model.draft
+        for dismissal in ("cancel", "escape", "outside"):
+            with self.subTest(dismissal=dismissal):
+                popup = open_classification(panel)
+                popup.period_type_combo.setCurrentIndex(popup.period_type_combo.findData("meeting"))
+                popup.work_mode_combo.setCurrentIndex(popup.work_mode_combo.findData(WorkMode.REMOTE))
+                if dismissal == "cancel":
+                    popup.cancel_button.click()
+                elif dismissal == "escape":
+                    QTest.keyClick(popup.period_type_combo, Qt.Key.Key_Escape)
+                else:
+                    QTest.mouseClick(self.window.windowHandle(), Qt.MouseButton.LeftButton,
+                                     Qt.KeyboardModifier.NoModifier, QPoint(10, 10))
+                QApplication.processEvents()
+                self.assertFalse(popup.isVisible())
+                self.assertEqual(panel.view_model.draft, baseline)
+                self.assertFalse(panel.is_dirty)
+                popup.apply_button.click()
+                self.assertEqual(panel.view_model.draft, baseline)
+        popup = open_classification(panel)
+        popup.period_type_combo.setCurrentIndex(popup.period_type_combo.findData("training"))
+        for _ in range(12):
+            if QApplication.focusWidget() is popup.apply_button:
+                break
+            QTest.keyClick(QApplication.focusWidget(), Qt.Key.Key_Tab)
+        self.assertIs(QApplication.focusWidget(), popup.apply_button)
+        QTest.keyClick(popup.apply_button, Qt.Key.Key_Return)
+        self.assertFalse(popup.isVisible())
+        self.assertEqual(editor_state(panel).entry_type, "training")
+
+    def test_classification_popup_invalidates_on_editor_and_operation_changes(self):
+        from worklogger.domain.shared.errors import InfrastructureError
+
+        panel = self.panel
+        for change in (
+            lambda: panel.load_day(self.now.date() + timedelta(days=1)),
+            lambda: panel.time_tabs.setCurrentIndex(1 - panel.time_tabs.currentIndex()),
+            lambda: panel.content_input.setPlainText(panel.content_input.toPlainText() + "Changed"),
+            panel.refresh_entry_types,
+            panel.refresh_projects,
+            lambda: panel._submit(lambda model: Result.failure(InfrastructureError("worklog_save_failed", "worklog_save_failed"))),
+            panel.hide,
+        ):
+            popup = open_classification(panel)
+            popup.period_type_combo.setCurrentIndex(popup.period_type_combo.findData("meeting"))
+            change()
+            self.assertFalse(popup.isVisible())
+            current = panel.view_model.draft
+            popup.apply_button.click()
+            self.assertEqual(panel.view_model.draft, current)
+            self.assertEqual(editor_state(panel).entry_type, "normal")
+            panel.show()
+
+    def test_manual_break_and_leave_clear_work_metadata_only_on_apply(self):
+        panel = self.panel
+        project = panel.view_model.service.projects.save_project("Platform").value
+        panel.refresh_projects()
+        for index, kind in enumerate(("break", "sick_leave")):
+            with self.subTest(entry_type=kind):
+                panel.new_record()
+                popup = open_classification(panel)
+                popup.work_mode_combo.setCurrentIndex(popup.work_mode_combo.findData(WorkMode.REMOTE))
+                popup.context_picker.project_combo.setCurrentIndex(popup.context_picker.project_combo.findData(project.id))
+                popup.apply_button.click()
+                self.assertEqual(editor_state(panel).work_mode, WorkMode.REMOTE)
+                panel.start_input.setText(f"{9 + index:02d}:00")
+                panel.end_input.setText(f"{10 + index:02d}:00")
+                apply_classification(panel, kind)
+                self.assertIsNone(editor_state(panel).work_mode)
+                self.assertFalse(editor_state(panel).context.project_id)
+                panel.save_button.click()
+                saved = self.repository.list_for_day(self.runtime.user.id, self.now.date())[-1]
+                self.assertEqual(saved.entry_type.value, kind)
+                self.assertEqual(saved.worked_hours(), 0)
+                self.assertIsNone(saved.work_mode)
+                self.assertIsNone(saved.context.project_id)
+        self.assertEqual(len(self.repository.list_for_day(self.runtime.user.id, self.now.date())), 2)
+        self.warning.assert_not_called()
+
+    def test_automatic_classification_disables_nonwork_and_locks_during_timer(self):
+        panel = self.panel
+        panel.time_tabs.setCurrentIndex(1)
+        popup = open_classification(panel)
+        self.assertFalse(popup.section_tabs.isTabEnabled(1))
+        index = popup.period_type_combo.findData("break")
+        self.assertGreaterEqual(index, 0)
+        self.assertFalse(popup.period_type_combo.model().item(index).isEnabled())
+        self.assertTrue(popup.auto_help_label.isVisible())
+        popup.work_mode_combo.setCurrentIndex(popup.work_mode_combo.findData(WorkMode.BUSINESS_TRIP))
+        popup.apply_button.click()
+        panel.clock_in_button.click()
+        self.assertEqual(panel.view_model.timer.work_mode, WorkMode.BUSINESS_TRIP)
+        self.assertFalse(panel.classification_button.isEnabled())
+        popup.apply_button.click()
+        self.assertEqual(panel.view_model.timer.work_mode, WorkMode.BUSINESS_TRIP)
+        self.now += timedelta(hours=1)
+        panel.clock_out_button.click()
+        self.assertTrue(panel.classification_button.isEnabled())
+        self.assertEqual(editor_state(panel).work_mode, WorkMode.BUSINESS_TRIP)
+
+    def test_historical_untimed_leave_keeps_empty_clock_boundaries_after_classification_edit(self):
+        from worklogger.domain.worklog.models import EntryType
+
+        panel = self.panel
+        with self.runtime.connection_factory.transaction(write=True) as connection:
+            cursor = connection.execute("INSERT INTO worklog(user_id,d,entry_type,note) VALUES(?,?,?,?)",
+                (self.runtime.user.id, self.now.date().isoformat(), "paid_leave", "Historical leave"))
+            record_id = cursor.lastrowid
+        record = self.repository.get_entry(self.runtime.user.id, record_id)
+        panel.edit_entry(record)
+        apply_classification(panel, "sick_leave")
+        self.assertEqual((panel.start_input.text(), panel.end_input.text()), ("", ""))
+        panel.save_button.click()
+        saved = self.repository.get_entry(self.runtime.user.id, record.id)
+        self.assertEqual(saved.entry_type, EntryType.SICK_LEAVE)
+        self.assertFalse(saved.has_times)
+        self.assertEqual(saved.leave_hours(), record.leave_hours())
+        self.warning.assert_not_called()
+
+    def test_classification_rejects_stale_custom_catalog_but_preserves_historical_snapshots(self):
+        panel = self.panel
+        catalog = panel.view_model.service.entry_types
+        definition = catalog.save("Research", "work").value
+        definition = catalog.save("Study", "work", definition).value
+        panel.refresh_entry_types()
+        apply_classification(panel, definition.value)
+        panel.start_input.setText("09:00")
+        panel.end_input.setText("10:00")
+        panel.save_button.click()
+        original = panel.view_model.draft.original
+        panel.new_record()
+        before = panel.view_model.draft
+        popup = open_classification(panel)
+        popup.period_type_combo.setCurrentIndex(popup.period_type_combo.findData(definition.value))
+        changed = catalog.save("Rest", "break", definition).value
+        popup.apply_button.click()
+        self.assertTrue(popup.isVisible())
+        self.assertTrue(popup.error_label.isVisible())
+        self.assertEqual(panel.view_model.draft, before)
+        self.assertFalse(panel.is_dirty)
+        popup.cancel_button.click()
+        panel.refresh_entry_types()
+        panel.edit_entry(original)
+        popup = open_classification(panel)
+        self.assertEqual(popup.period_type_combo.currentText(), "Study")
+        self.assertFalse(popup.work_metadata.isHidden())
+        popup.apply_button.click()
+        self.assertFalse(popup.isVisible())
+        self.assertFalse(panel.is_dirty)
+        panel.new_record()
+        popup = open_classification(panel)
+        popup.period_type_combo.setCurrentIndex(popup.period_type_combo.findData(changed.value))
+        catalog.archive(changed)
+        popup.apply_button.click()
+        self.assertTrue(popup.isVisible())
+        self.assertTrue(popup.error_label.isVisible())
+        self.assertFalse(panel.is_dirty)
+
+    def test_classification_validates_archived_projects_and_refreshes_new_context_labels(self):
+        panel = self.panel
+        projects = panel.view_model.service.projects
+        project = projects.save_project("Platform").value
+        panel.refresh_projects()
+        popup = open_classification(panel)
+        popup.context_picker.project_combo.setCurrentIndex(popup.context_picker.project_combo.findData(project.id))
+        renamed = projects.save_project("Payments", previous=project).value
+        popup.apply_button.click()
+        self.assertFalse(popup.isVisible())
+        self.assertEqual(editor_state(panel).context.project_label, "Payments")
+        panel.new_record()
+        popup = open_classification(panel)
+        popup.context_picker.project_combo.setCurrentIndex(popup.context_picker.project_combo.findData(project.id))
+        projects.archive_project(renamed)
+        popup.apply_button.click()
+        self.assertTrue(popup.isVisible())
+        self.assertTrue(popup.error_label.isVisible())
+        self.assertFalse(panel.is_dirty)
+
+    def test_legacy_classification_is_preserved_for_editing_but_cannot_start_an_idle_timer(self):
+        from worklogger.domain.worklog.models import EntryType, WorkLog
+
+        panel = self.panel
+        record = self.repository.save_entry(WorkLog(self.runtime.user.id, self.now.date(), "09:00", "10:00",
+                                                   entry_type=EntryType.REMOTE, work_mode=WorkMode.REMOTE))
+        panel.edit_entry(record)
+        popup = open_classification(panel)
+        self.assertEqual(popup.period_type_combo.currentData(), "remote")
+        self.assertTrue(popup.legacy_label.isVisible())
+        popup.apply_button.click()
+        self.assertFalse(panel.is_dirty)
+        panel.time_tabs.setCurrentIndex(1)
+        self.assertFalse(panel.clock_in_button.isEnabled())
+        self.assertFalse(panel.recording_action_state()[0])
+        popup = open_classification(panel)
+        popup.apply_button.click()
+        self.assertFalse(popup.isVisible())
+        panel.content_input.setPlainText("Historic description")
+        panel.save_button.click()
+        self.assertEqual(self.repository.get_entry(self.runtime.user.id, record.id).entry_type, EntryType.REMOTE)
+        apply_classification(panel, "meeting")
+        self.assertTrue(panel.clock_in_button.isEnabled())
+
     def test_project_menu_distinguishes_all_records_from_unlinked_records_and_preserves_fixed_filters(self):
         from worklogger.domain.projects.models import WorkContext
         from worklogger.domain.worklog.models import WorkLog
@@ -149,23 +425,25 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertTrue(panel.auto_timer.isActive())
 
     def test_full_day_calendar_event_requires_an_explicit_work_period(self):
-        self.panel.copy_event(CalendarEvent(None, self.runtime.user.id, self.now.date(), "Trip", "00:00", "24:00"))
+        with patch.object(self.panel.view_model.service, "default_work_mode", return_value=WorkMode.REMOTE):
+            self.panel.copy_event(CalendarEvent(None, self.runtime.user.id, self.now.date(), "Trip", "00:00", "24:00"))
         self.assertEqual((self.panel.start_input.text(), self.panel.end_input.text()), ("", ""))
         self.assertEqual(self.panel.content_input.toPlainText(), "Trip")
+        self.assertIsNone(self.panel.view_model.draft.work_mode)
 
     def test_record_modes_share_content_classification_and_saved_identity(self):
         panel = self.panel
         panel.view_model.update(start="", end="", entry_type="normal", content="", work_mode=WorkMode.REMOTE)
         panel.start_input.setText("09:00")
         panel.end_input.setText("10:00")
-        panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData("meeting"))
+        apply_classification(panel, "meeting")
         panel.content_input.setPlainText("Agenda")
         panel.save_button.click()
         saved = self.repository.list_for_day(self.runtime.user.id, self.now.date())[0]
         self.assertEqual(saved.work_mode, WorkMode.REMOTE)
         panel.time_tabs.setCurrentIndex(1)
         self.assertEqual(panel.content_input.toPlainText(), "Agenda")
-        self.assertEqual(panel.entry_type_combo.currentData(), "meeting")
+        self.assertEqual(editor_state(panel).entry_type, "meeting")
         self.assertEqual(panel.view_model.auto_completed.id, saved.id)
         self.assertEqual(panel.view_model.editor_state(automatic=True).work_mode, WorkMode.REMOTE)
         panel.view_model.update_auto(content="Agenda", entry_type="meeting", context=saved.context,
@@ -176,7 +454,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertEqual(panel.view_model.auto_work_mode, WorkMode.REMOTE)
         panel.view_model.update_auto(content="Agenda", entry_type="meeting", context=saved.context, work_mode=None)
         self.assertTrue(panel.view_model.auto_dirty)
-        panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData("training"))
+        apply_classification(panel, "training")
         panel.content_input.setPlainText("Training agenda")
         panel.save_button.click()
         edited = self.repository.get_entry(self.runtime.user.id, saved.id)
@@ -198,7 +476,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.clear_button.click()
         panel.time_tabs.setCurrentIndex(1)
         self.assertEqual(panel.content_input.toPlainText(), "")
-        self.assertEqual(panel.entry_type_combo.currentData(), "normal")
+        self.assertEqual(editor_state(panel).entry_type, "normal")
         self.assertIsNone(panel.view_model.auto_completed)
 
     def test_active_timer_content_is_shared_without_editable_manual_boundaries(self):
@@ -213,7 +491,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.time_tabs.setCurrentIndex(0)
         self.assertEqual(panel.content_input.toPlainText(), "Active description")
         self.assertFalse(panel.start_input.isEnabled())
-        self.assertFalse(panel.entry_type_combo.isEnabled())
+        self.assertFalse(panel.classification_button.isEnabled())
         self.assertEqual(panel.view_model.editor_state(automatic=False).work_mode, WorkMode.BUSINESS_TRIP)
         panel.content_input.setPlainText("Revised description")
         panel.save_button.click()
@@ -314,10 +592,13 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         records = self.repository.list_for_day(self.runtime.user.id, self.now.date())
         self.assertTrue(all(record.context.label == "Research / Review" for record in records))
         self.assertEqual(self.panel.content_input.toPlainText(), "Unsaved editor content")
-        picker = self.panel.context_picker
+        popup = open_classification(self.panel)
+        picker = popup.context_picker
         self.assertTrue(picker.recent_button.isEnabled())
         picker.recent_menu.actions()[0].trigger()
         self.assertEqual(picker.context().work_item_id, item.id)
+        popup.apply_button.click()
+        self.assertEqual(editor_state(self.panel).context.work_item_id, item.id)
         self.assertEqual(self.panel.content_input.toPlainText(), "Unsaved editor content")
         dialog.close()
 
@@ -444,7 +725,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.window.refresh()
         panel.start_input.setText("12:00")
         panel.end_input.setText("13:00")
-        panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData("break"))
+        apply_classification(panel, "break")
         panel.content_input.setPlainText("Lunch")
         panel.save_button.click()
         dialog = panel._replacement_dialog
@@ -518,7 +799,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertTrue(panel.new_record())
         panel.start_input.setText("00:00")
         panel.end_input.setText("01:00")
-        panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData("break"))
+        apply_classification(panel, "break")
         panel.content_input.setPlainText("Rest")
         panel.save_button.click()
         replacement = panel._replacement_dialog
@@ -579,7 +860,8 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         dialog.work_item_url_input.setText("https://example.test/issue/1")
         dialog.work_item_save_button.click()
         item = service.list_work_items(project.id).value[0]
-        picker = panel.context_picker
+        popup = open_classification(panel)
+        picker = popup.context_picker
         self.assertIsNone(picker.project_combo.currentData())
         self.assertFalse(picker.work_item_combo.isEnabled())
         picker.project_combo.setCurrentIndex(picker.project_combo.findData(project.id))
@@ -591,6 +873,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         picker.project_combo.setCurrentIndex(picker.project_combo.findData(project.id))
         self.assertTrue(picker.work_item_combo.isEnabled())
         picker.work_item_combo.setCurrentIndex(picker.work_item_combo.findData(item.id))
+        popup.apply_button.click()
         panel.start_input.setText("09:00")
         panel.end_input.setText("10:00")
         panel.content_input.setPlainText("Completed review")
@@ -599,20 +882,26 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertEqual(record.context.label, "Research / Review")
         self.assertIn(record.context.label, self.window.calendar_page.records_widget.entry_buttons[record.id].label.text())
         panel.edit_entry(record)
+        popup = open_classification(panel)
+        picker = popup.context_picker
         self.assertEqual(picker.work_item_combo.currentData(), item.id)
+        popup.cancel_button.click()
         panel.clear_button.click()
         panel.time_tabs.setCurrentIndex(1)
+        popup = open_classification(panel)
+        picker = popup.context_picker
         picker.project_combo.setCurrentIndex(picker.project_combo.findData(project.id))
         picker.work_item_combo.setCurrentIndex(picker.work_item_combo.findData(item.id))
+        popup.apply_button.click()
         self.now += timedelta(hours=1)
         panel.clock_in_button.click()
-        self.assertFalse(picker.isEnabled())
+        self.assertFalse(panel.classification_button.isEnabled())
         self.now += timedelta(hours=1)
         panel.clock_out_button.click()
-        self.assertTrue(picker.isEnabled())
+        self.assertTrue(panel.classification_button.isEnabled())
         timed = self.repository.list_for_day(self.runtime.user.id, self.now.date())[-1]
         self.assertEqual(timed.context, record.context)
-        self.assertEqual(panel.entry_type_combo.currentData(), "normal")
+        self.assertEqual(editor_state(panel).entry_type, "normal")
         dialog.work_item_title_input.setText("Unsaved rename")
         with patch("worklogger.presentation.widgets.project_manager.QMessageBox.question", return_value=QMessageBox.StandardButton.No):
             dialog.editor_tabs.setCurrentIndex(0)
@@ -622,7 +911,10 @@ class TimeEntryWorkflowTests(unittest.TestCase):
             dialog.editor_tabs.setCurrentIndex(0)
             dialog.project_archive_button.click()
         panel.edit_entry(record)
+        popup = open_classification(panel)
+        picker = popup.context_picker
         self.assertEqual(picker.context().project_id, project.id)
+        popup.cancel_button.click()
         panel.content_input.setPlainText("Corrected description")
         panel.save_button.click()
         self.assertEqual(self.repository.get_entry(self.runtime.user.id, record.id).context, record.context)
@@ -703,7 +995,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         with patch.object(EntryTypeManagerDialog, "exec", create_type):
             settings.manage_entry_types_button.click()
         definition = definitions[0]
-        panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData(definition.value))
+        apply_classification(panel, definition.value)
         panel.start_input.setText("09:00")
         panel.end_input.setText("10:00")
         catalog = panel.view_model.service.entry_types
@@ -714,12 +1006,12 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.save_button.click()
         first = self.repository.list_for_day(self.runtime.user.id, self.now.date())[0]
         self.assertEqual((first.entry_type.label, first.worked_hours()), ("Research", 1))
-        self.assertEqual(panel.entry_type_combo.currentData(), definition.value)
+        self.assertEqual(editor_state(panel).entry_type, definition.value)
         self.assertTrue(panel.new_record())
-        self.assertEqual(panel.entry_type_combo.currentData(), "normal")
+        self.assertEqual(editor_state(panel).entry_type, "normal")
         panel.time_tabs.setCurrentIndex(1)
         self.now += timedelta(hours=1)
-        panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData(definition.value))
+        apply_classification(panel, definition.value)
         panel.clock_in_button.click()
         panel.content_input.setPlainText("Ongoing research")
 
@@ -732,7 +1024,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
 
         with patch.object(EntryTypeManagerDialog, "exec", edit_type):
             settings.manage_entry_types_button.click()
-        self.assertEqual(panel.entry_type_combo.currentText(), "Research")
+        self.assertIn("Research", panel.classification_button.accessibleDescription())
         self.assertEqual(panel.content_input.toPlainText(), "Ongoing research")
         self.assertEqual(panel.view_model.timer.entry_type.category, "work")
         self.now += timedelta(hours=1)
@@ -851,7 +1143,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel = self.panel
         panel.start_input.setText("09:00")
         panel.end_input.setText("10:00")
-        panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData("meeting"))
+        apply_classification(panel, "meeting")
         panel.content_input.setPlainText("Draft description")
         from worklogger.presentation.widgets.time_picker import TimePickerDialog
         panel.start_input.actions()[0].trigger()
@@ -868,23 +1160,27 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.refresh_ai_availability()
         panel.polish_button.click()
         self.assertEqual(panel.content_input.toPlainText(), "Prepared agenda")
-        self.assertEqual((panel.start_input.text(), panel.end_input.text(), panel.entry_type_combo.currentData()), ("09:15", "10:00", "meeting"))
+        self.assertEqual((panel.start_input.text(), panel.end_input.text(), editor_state(panel).entry_type), ("09:15", "10:00", "meeting"))
         self.assertEqual(commands[0].context, "time_entry")
         self.assertEqual(self.repository.list_for_day(self.runtime.user.id, self.now.date()), ())
         panel.clear_button.click()
 
     def test_manual_create_select_update_and_delete_periods(self):
         panel = self.panel
-        self.assertEqual(panel.entry_type_combo.itemData(panel.entry_type_combo.count() - 1), "other")
+        popup = open_classification(panel)
+        self.assertGreaterEqual(popup.period_type_combo.findData("other"), 0)
+        self.assertEqual(popup.period_type_combo.findData("remote"), -1)
+        self.assertEqual(popup.period_type_combo.findData("business_trip"), -1)
+        popup.cancel_button.click()
         for start, end, kind, content in (("09:00", "11:00", "meeting", "Planning"),
                                          ("11:00", "12:00", "training", "Practice")):
             self.assertTrue(panel.new_record())
             panel.start_input.setText(start)
             panel.end_input.setText(end)
-            panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData(kind))
+            apply_classification(panel, kind)
             panel.content_input.setPlainText(content)
             panel.save_button.click()
-            self.assertEqual(panel.entry_type_combo.currentData(), kind)
+            self.assertEqual(editor_state(panel).entry_type, kind)
             self.assertEqual(panel.start_input.text(), start)
             self.assertEqual(panel.content_input.toPlainText(), content)
         entries = self.repository.list_for_day(self.runtime.user.id, self.now.date())
@@ -895,11 +1191,11 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         current = records[entries[0].id]
         current.click()
         self.assertEqual(panel.view_model.draft.original.id, entries[0].id)
-        self.assertEqual(panel.entry_type_combo.currentData(), "meeting")
+        self.assertEqual(editor_state(panel).entry_type, "meeting")
         panel.content_input.setPlainText("Updated planning")
         panel.save_button.click()
         self.assertEqual(len(self.repository.list_for_day(self.runtime.user.id, self.now.date())), 2)
-        self.assertEqual(panel.entry_type_combo.currentData(), "meeting")
+        self.assertEqual(editor_state(panel).entry_type, "meeting")
         saved = self.repository.get_entry(self.runtime.user.id, entries[0].id)
         self.assertEqual(saved.note, "Updated planning")
         panel.edit_entry(saved)
@@ -956,7 +1252,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
     def test_automatic_recording_and_fixed_breaks_have_distinct_effects(self):
         panel = self.panel
         panel.time_tabs.setCurrentIndex(1)
-        panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData("meeting"))
+        apply_classification(panel, "meeting")
         panel.content_input.setPlainText("Planning")
         panel.clock_in_button.click()
         self.assertFalse(panel.break_button.isEnabled())
@@ -966,7 +1262,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.save_button.click()
         self.assertEqual(self.repository.list_for_day(self.runtime.user.id, self.now.date()), ())
         self.assertEqual(panel.view_model.service.timer.content, "Agenda")
-        self.assertEqual(panel.entry_type_combo.currentData(), "meeting")
+        self.assertEqual(editor_state(panel).entry_type, "meeting")
         panel.clear_button.click()
         self.assertIsNotNone(panel.view_model.service.timer)
         self.assertEqual(panel.view_model.service.timer.content, "Agenda")
@@ -981,20 +1277,20 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertEqual(len(entries), 2)
         self.assertEqual((entries[-1].entry_type.value, entries[-1].start_time, entries[-1].end_time), ("break", "12:00", "13:00"))
         self.assertIsNone(panel.view_model.service.timer)
-        self.assertEqual(panel.entry_type_combo.currentData(), "normal")
+        self.assertEqual(editor_state(panel).entry_type, "normal")
         self.assertEqual(panel.view_model.draft.entry_type, "break")
         panel.clear_button.click()
-        self.assertEqual(panel.entry_type_combo.currentData(), "normal")
+        self.assertEqual(editor_state(panel).entry_type, "normal")
         self.now += timedelta(hours=1)
         panel._tick()
         self.assertIsNone(panel.view_model.service.timer)
-        panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData("meeting"))
+        apply_classification(panel, "meeting")
         panel.clock_in_button.click()
         self.assertEqual(panel.view_model.service.timer.entry_type.value, "meeting")
         self.now = self.now.replace(hour=16, minute=0)
         panel.content_input.setPlainText("Review")
         panel.clock_out_button.click()
-        self.assertEqual(panel.entry_type_combo.currentData(), "meeting")
+        self.assertEqual(editor_state(panel).entry_type, "meeting")
         entries = self.repository.list_for_day(self.runtime.user.id, self.now.date())
         self.assertEqual(len(entries), 3)
         self.assertEqual([entry.entry_type.value for entry in entries], ["meeting", "break", "meeting"])
@@ -1003,9 +1299,9 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.save_button.click()
         self.assertEqual(self.repository.get_entry(self.runtime.user.id, entries[-1].id).note, "Updated review")
         self.assertEqual(len(self.repository.list_for_day(self.runtime.user.id, self.now.date())), 3)
-        self.assertEqual(panel.entry_type_combo.currentData(), "meeting")
+        self.assertEqual(editor_state(panel).entry_type, "meeting")
         panel.clear_button.click()
-        self.assertEqual(panel.entry_type_combo.currentData(), "normal")
+        self.assertEqual(editor_state(panel).entry_type, "normal")
         panel.clock_in_button.click()
         self.assertEqual(panel.view_model.service.timer.entry_type.value, "normal")
         self.warning.assert_not_called()
@@ -1028,7 +1324,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.save_button.click()
         self.assertEqual(self.repository.get_entry(self.runtime.user.id, entries[0].id).note, "Updated lunch")
         panel.time_tabs.setCurrentIndex(1)
-        self.assertEqual(panel.entry_type_combo.currentData(), "normal")
+        self.assertEqual(editor_state(panel).entry_type, "normal")
         self.now += timedelta(minutes=1)
         original = self.repository.get_entry(self.runtime.user.id, entries[0].id)
         panel.content_input.setPlainText("Back to work")

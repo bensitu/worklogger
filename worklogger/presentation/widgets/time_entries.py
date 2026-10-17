@@ -4,14 +4,14 @@ from datetime import date
 from time import monotonic
 
 from PySide6.QtCore import QEvent, QTimer, Qt, Signal
-from PySide6.QtWidgets import (QComboBox, QHBoxLayout, QLabel, QLineEdit,
+from PySide6.QtWidgets import (QHBoxLayout, QLabel, QLineEdit,
     QMessageBox, QPushButton, QSizePolicy, QStyle, QStyleOptionTabWidgetFrame,
     QTabWidget, QTextEdit, QToolButton, QVBoxLayout, QWidget, QStackedWidget)
 
-from worklogger.domain.worklog.models import CustomEntryType, WorkLog, EntryType
+from worklogger.domain.worklog.models import WorkLog, EntryType
 from worklogger.domain.worklog.replacement import EntryReplacement
 from worklogger.domain.worklog.rules import calc_shift_span_hours
-from worklogger.domain.shared.errors import InfrastructureError
+from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.errors import CancellationError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
@@ -20,8 +20,8 @@ from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 from worklogger.presentation.widgets.time_picker import TimePickerDialog
-from worklogger.presentation.widgets.work_context_picker import WorkContextPicker
-from worklogger.presentation.widgets.entry_type_options import add_entry_type_option, entry_type_icon
+from worklogger.presentation.widgets.classification_picker import ClassificationButton, ClassificationPicker
+from worklogger.presentation.entry_type_labels import classification_label
 from worklogger.presentation.processing import TextProcessingTask
 from worklogger.presentation.job_runner import owned_callback
 from worklogger.presentation.widgets.processing_progress import ProcessingProgress
@@ -56,13 +56,16 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         self._end_dialog = None
         self._record_boundary_dialog = None
         self._replacement_dialog = None
+        self._classification_popup = None
+        self._classification_origin = None
+        self._recent_context_visible = True
         self._day = view_model.draft.day
         self.setObjectName("worklog_entry_panel_widget")
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.setProperty("compact", compact)
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(6)
+        root.setSpacing(4)
         root.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.time_tabs = QTabWidget()
         self.time_tabs.setObjectName("worklog_mode_tab_widget")
@@ -128,38 +131,22 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         auto_layout.addWidget(self.auto_status_label)
         self.time_tabs.addTab(auto, _("Auto Record"))
 
-        self.entry_type_combo = QComboBox()
-        self.entry_type_combo.setObjectName("entry_type_combo")
-        self.entry_type_combo.setMinimumWidth(0)
-        self.entry_type_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
-        self.entry_type_combo.setMinimumContentsLength(1)
         self._custom_types = ()
         self._reload_entry_types()
-        classification_row = QHBoxLayout()
-        classification_row.setContentsMargins(0, 0, 0, 0)
-        classification_row.setSpacing(8)
-        classification_row.setAlignment(Qt.AlignmentFlag.AlignTop)
-        type_column = QVBoxLayout()
-        type_column.setSpacing(3)
-        type_column.setAlignment(Qt.AlignmentFlag.AlignTop)
-        type_caption = QLabel(_("Work type"))
-        type_caption.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        type_caption.setBuddy(self.entry_type_combo)
-        type_caption.setMinimumHeight(28)
-        type_column.addWidget(type_caption)
-        type_column.addWidget(self.entry_type_combo)
-        classification_row.addLayout(type_column, 1)
-        self.context_picker = WorkContextPicker(self)
-        self.context_picker.setVisible(view_model.projects_available)
-        classification_row.addWidget(self.context_picker, 2)
-        root.addLayout(classification_row)
+        classification_column = QVBoxLayout()
+        classification_column.setSpacing(2)
+        classification_caption = QLabel(_("Classification"))
+        self.classification_button = ClassificationButton(self)
+        classification_caption.setBuddy(self.classification_button)
+        classification_column.addWidget(classification_caption)
+        classification_column.addWidget(self.classification_button)
+        root.addLayout(classification_column)
+        self.classification_button.clicked.connect(self._open_classification_picker)
         inventory = view_model.project_inventory()
         self._context_error = inventory.error
-        if inventory.ok:
-            self.context_picker.set_inventory(*inventory.value)
+        self._project_inventory = inventory.value if inventory.ok else ((), {})
         recent = view_model.recent_contexts()
-        if recent.ok:
-            self.context_picker.set_recent(recent.value)
+        self._recent_contexts = recent.value if recent.ok else ()
         self.content_heading = QWidget()
         self.content_heading.setObjectName("time_entry_content_heading_widget")
         content_heading = QHBoxLayout(self.content_heading)
@@ -239,8 +226,6 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         self.time_tabs.currentChanged.connect(self._mode_changed)
         for field in (self.start_input, self.end_input):
             field.textChanged.connect(self._draft_changed)
-        self.entry_type_combo.currentIndexChanged.connect(self._draft_changed)
-        self.context_picker.changed.connect(self._draft_changed)
         self.content_input.textChanged.connect(self._draft_changed)
         self.clock_in_button.clicked.connect(self._start)
         self.clock_out_button.clicked.connect(self._finish)
@@ -270,21 +255,69 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         result = self.view_model.list_entry_types()
         if result.ok:
             self._custom_types = result.value
-        self._populate_entry_types()
         return result
 
-    def _populate_entry_types(self):
-        self.entry_type_combo.clear()
-        for definition in (EntryType.NORMAL, EntryType.REMOTE, EntryType.BUSINESS_TRIP,
-                EntryType.MEETING, EntryType.TRAINING, EntryType.BREAK,
-                EntryType.PAID_LEAVE, EntryType.COMP_LEAVE, EntryType.SICK_LEAVE):
-            add_entry_type_option(self.entry_type_combo, definition)
-        for definition in self._custom_types:
-            if not definition.archived:
-                add_entry_type_option(self.entry_type_combo, definition)
-        add_entry_type_option(self.entry_type_combo, EntryType.OTHER)
+    @property
+    def recent_context_visible(self):
+        return self._recent_context_visible
+
+    def set_recent_context_visible(self, enabled):
+        self._recent_context_visible = bool(enabled)
+        self._close_classification_picker()
+
+    def _classification_definition(self, state):
+        if state.type_snapshot is not None and state.type_snapshot.value == state.entry_type:
+            return state.type_snapshot
+        definition = next((item for item in self._custom_types if item.value == state.entry_type), None)
+        return definition if definition is not None else EntryType(state.entry_type)
+
+    def _close_classification_picker(self):
+        self._classification_origin = None
+        if self._classification_popup is not None:
+            self._classification_popup.hide()
+
+    def _open_classification_picker(self):
+        if self.is_busy or not self.classification_button.isEnabled():
+            return
+        automatic = self.time_tabs.currentIndex() == 1
+        state = self.view_model.editor_state(automatic=automatic)
+        if state.active_timer is not None:
+            return
+        self._classification_origin = (automatic, state)
+        if self._classification_popup is None:
+            self._classification_popup = ClassificationPicker(self, validator=self._validate_classification)
+            self._classification_popup.selection_applied.connect(self._apply_classification)
+        self._classification_popup.open_for(self.classification_button,
+            definition=self._classification_definition(state), work_mode=state.work_mode,
+            context=state.context, custom_types=self._custom_types, inventory=self._project_inventory,
+            recent=self._recent_contexts, automatic=automatic,
+            projects_available=self.view_model.projects_available, context_available=self._context_error is None,
+            recent_context_visible=self.recent_context_visible)
+
+    def _validate_classification(self, entry_type, work_mode, context):
+        automatic = self.time_tabs.currentIndex() == 1
+        state = self.view_model.editor_state(automatic=automatic)
+        if (self.is_busy or not self.isEnabled() or self._classification_origin != (automatic, state)
+                or state.active_timer is not None):
+            self._close_classification_picker()
+            return Result.failure(ValidationError("worklog_entry_conflict", "worklog_entry_conflict"))
+        return self.view_model.validate_selection(entry_type, work_mode, context, automatic=automatic)
+
+    def _apply_classification(self, selection):
+        if self._classification_origin is None:
+            return
+        automatic, state = self._classification_origin
+        definition, work_mode, context = selection
+        if automatic:
+            self.view_model.update_auto(content=state.content, entry_type=definition.value,
+                context=context, work_mode=work_mode)
+        else:
+            self.view_model.update(start=state.draft.start, end=state.draft.end,
+                content=state.content, entry_type=definition.value, context=context, work_mode=work_mode)
+        self._render_editor()
 
     def refresh_entry_types(self):
+        self._close_classification_picker()
         self._updating = True
         try:
             result = self._reload_entry_types()
@@ -301,15 +334,16 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         dialog.open()
 
     def refresh_projects(self):
+        self._close_classification_picker()
         def completed(result):
             if result.ok:
                 self._context_error = None
                 self._updating = True
                 try:
-                    self.context_picker.set_inventory(*result.value)
+                    self._project_inventory = result.value
                     recent = self.view_model.recent_contexts()
                     if recent.ok:
-                        self.context_picker.set_recent(recent.value)
+                        self._recent_contexts = recent.value
                 finally:
                     self._updating = False
                 self._render_editor()
@@ -322,6 +356,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         return self.view_model.manual_dirty or self.view_model.auto_dirty
 
     def load_day(self, day: date):
+        self._close_classification_picker()
         if self.is_busy:
             return Result.failure(InfrastructureError("worklog_entry_conflict", "worklog_entry_conflict"))
         if day != self._day:
@@ -334,6 +369,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         return result
 
     def edit_entry(self, record: WorkLog):
+        self._close_classification_picker()
         if self.is_busy:
             return
         if self.view_model.manual_dirty and not self._confirm_discard():
@@ -350,6 +386,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         self.start_input.setFocus()
 
     def copy_event(self, event):
+        self._close_classification_picker()
         if self.is_busy or self.view_model.manual_dirty and not self._confirm_discard():
             return
         self._polish_task.cancel()
@@ -358,11 +395,12 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         start, end = event.start_time or "", "00:00" if event.end_time == "24:00" else event.end_time or ""
         if start and end and calc_shift_span_hours(start, end) is None:
             start, end = "", ""
-        self.view_model.update(start=start, end=end, entry_type="meeting",
+        self.view_model.update(start=start, end=end, entry_type="meeting", work_mode=None,
                                content="\n".join(part for part in (event.summary, event.description, event.location) if part))
         self._render_editor()
 
     def _mode_changed(self, *_args):
+        self._close_classification_picker()
         if self._polish_task.is_running and self._processing_target() != self._polish_target:
             self._polish_task.cancel()
         self._render_editor()
@@ -373,17 +411,20 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
     def _draft_changed(self, *_args):
         if self._updating:
             return
+        self._close_classification_picker()
+        state = self.view_model.editor_state(automatic=self.time_tabs.currentIndex() == 1)
         if self.time_tabs.currentIndex() == 0:
             self.view_model.update(start=self.start_input.text(), end=self.end_input.text(),
-                                   entry_type=str(self.entry_type_combo.currentData()), content=self.content_input.toPlainText(),
-                                   context=self.context_picker.context())
+                                   entry_type=state.entry_type, content=self.content_input.toPlainText(),
+                                   context=state.context)
         else:
             self.view_model.update_auto(content=self.content_input.toPlainText(),
-                entry_type=str(self.entry_type_combo.currentData()), context=self.context_picker.context())
+                entry_type=state.entry_type, context=state.context)
         self._update_actions()
         self.dirty_changed.emit(self.is_dirty)
 
     def _render_editor(self):
+        self._close_classification_picker()
         self._updating = True
         try:
             auto = self.time_tabs.currentIndex() == 1
@@ -396,18 +437,9 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             linked_timer = state.linked_timer
             self.start_input.setText(draft.start)
             self.end_input.setText(draft.end)
-            entry_type = state.entry_type
-            self._populate_entry_types()
-            snapshot = state.type_snapshot
-            if snapshot is None:
-                snapshot = next((definition for definition in self._custom_types if definition.value == entry_type), None)
-            if isinstance(snapshot, CustomEntryType) and self.entry_type_combo.findData(entry_type) < 0:
-                add_entry_type_option(self.entry_type_combo, snapshot, index=self.entry_type_combo.count() - 1)
-            elif isinstance(snapshot, CustomEntryType):
-                self.entry_type_combo.setItemText(self.entry_type_combo.findData(entry_type), snapshot.label)
-                self.entry_type_combo.setItemIcon(self.entry_type_combo.findData(entry_type), entry_type_icon(snapshot))
-            self.entry_type_combo.setCurrentIndex(max(0, self.entry_type_combo.findData(entry_type)))
-            self.entry_type_combo.setToolTip(self.entry_type_combo.currentText())
+            definition = self._classification_definition(state)
+            self.classification_button.set_summary(classification_label(definition, state.work_mode),
+                state.context.label if definition.category == "work" else "")
             content = state.content
             if self.content_input.toPlainText() != content:
                 self.content_input.setPlainText(content)
@@ -424,9 +456,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             self.end_input.setReadOnly(linked_timer)
             self.start_input.setEnabled(not linked_timer)
             self.end_input.setEnabled(not linked_timer)
-            self.entry_type_combo.setEnabled(state.active_timer is None)
-            self.context_picker.set_context(state.context)
-            self.context_picker.setEnabled(self._context_error is None and state.active_timer is None)
+            self.classification_button.setEnabled(state.active_timer is None)
             legacy = state.historical_break_hours
             self.history_label.setText(_("Historical break deduction: {hours}").format(hours=duration_label(legacy)) if legacy else "")
             if self._context_error is not None:
@@ -457,7 +487,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
                 tick.start()
             elif not timer and tick.isActive():
                 tick.stop()
-        self.clock_in_button.setEnabled(timer is None and not self.view_model.restore_failed)
+        self.clock_in_button.setEnabled(self.recording_action_state()[0])
         self.clock_out_button.setEnabled(timer is not None)
         self.discard_timer_button.setEnabled(timer is not None or self.view_model.restore_failed)
         self.break_button.setText(_("Break {hours}").format(hours=duration_label(self.view_model.default_break_hours)))
@@ -494,6 +524,15 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
                 QTimer.singleShot(0, self, self._fit_mode_height)
         return super().eventFilter(watched, event)
 
+    def hideEvent(self, event):
+        self._close_classification_picker()
+        super().hideEvent(event)
+
+    def changeEvent(self, event):
+        super().changeEvent(event)
+        if event.type() in (QEvent.Type.EnabledChange, QEvent.Type.StyleChange, QEvent.Type.LanguageChange):
+            self._close_classification_picker()
+
     def _fit_mode_height(self):
         self._mode_height_pending = False
         if self.time_tabs.currentWidget() is None:
@@ -519,6 +558,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             self.layout().activate()
 
     def _apply_result(self, result, *, refresh=True):
+        self._close_classification_picker()
         if not result.ok:
             plan = result.error.details.get("replacement")
             if isinstance(plan, EntryReplacement):
@@ -529,7 +569,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         self._timer_failed = False
         recent = self.view_model.recent_contexts()
         if recent.ok:
-            self.context_picker.set_recent(recent.value)
+            self._recent_contexts = recent.value
         self._render_editor()
         if refresh:
             record = result.value
@@ -539,6 +579,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         return True
 
     def _submit(self, operation, *, refresh=True, automatic=False, on_complete=None):
+        self._close_classification_picker()
         if self.is_busy:
             return
         self._polish_task.cancel()

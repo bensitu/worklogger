@@ -10,7 +10,7 @@ from worklogger.presentation.widgets.icons import set_button_icon
 class WorkContextPicker(QWidget):
     changed = Signal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, *, vertical=False):
         super().__init__(parent)
         self.setObjectName("work_context_picker_widget")
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -18,7 +18,7 @@ class WorkContextPicker(QWidget):
         self._snapshot = WorkContext()
         self.project_combo = QComboBox()
         self.work_item_combo = QComboBox()
-        row = QHBoxLayout(self)
+        row = QVBoxLayout(self) if vertical else QHBoxLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(8)
         for field, label, name in ((self.project_combo, _("Project"), "project_combo"),

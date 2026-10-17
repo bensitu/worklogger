@@ -125,7 +125,7 @@ class ShellLayoutChecks(unittest.TestCase):
                                 self.assertTrue(view.account_label.alignment() & Qt.AlignmentFlag.AlignRight)
                                 panel = view.entry_panel
                                 caption = next(label for label in panel.findChildren(QLabel)
-                                               if label.buddy() is panel.entry_type_combo)
+                                               if label.buddy() is panel.classification_button)
                                 self.assertLess(panel.time_tabs.geometry().bottom(), caption.mapTo(panel, QPoint()).y())
                                 if mode == 1:
                                     for button in (panel.clock_in_button, panel.clock_out_button, panel.break_button,
@@ -134,8 +134,7 @@ class ShellLayoutChecks(unittest.TestCase):
                                             button.mapTo(panel.time_tabs, QPoint()))))
                                 for field in (view.date_button, view.account_label, view.new_record_button,
                                               view.notes_button, view.settings_button, view.entry_panel.content_input,
-                                              view.entry_panel.context_picker.project_combo,
-                                              view.entry_panel.context_picker.work_item_combo,
+                                              view.entry_panel.classification_button,
                                               view.entry_panel.save_button, view.records_scroll):
                                     bounds = field.rect().translated(field.mapTo(view, QPoint()))
                                     self.assertTrue(view.rect().contains(bounds), (language, dark, width, mode, field))

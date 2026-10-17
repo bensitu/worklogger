@@ -123,6 +123,12 @@ selection without accessing Qt controls. Widgets retain responsibility for text
 translation, layout, and signal delivery. Backup and file-export adapters implement
 the shared contracts in `app/ports.py`, not parallel view-model definitions.
 
+The shared Classification control opens an anchored top-level Qt popup outside
+the editor's scroll area. Its selection is isolated from the immutable editor
+draft until Apply. Application services revalidate type and project availability
+before the widget updates that draft; only the main recording action persists
+data. Context changes dismiss the popup instead of applying an old selection.
+
 The report page coordinates state and requests. `widgets/report_editor.py` owns
 editor controls without persistence dependencies; `reporting/exports.py` handles
 export selection using immutable content and date snapshots. Period navigation

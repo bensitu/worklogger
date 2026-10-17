@@ -256,7 +256,7 @@ class AppWindow(QMainWindow):
 
     def apply_settings(self, state: SettingsState) -> None:
         self.sidebar.set_avatar(state.profile_avatar_png)
-        self.entry_panel.context_picker.recent_button.setVisible(state.show_recent_context)
+        self.entry_panel.set_recent_context_visible(state.show_recent_context)
         self._config = apply_recording_preferences(
             self._config,
             state,
@@ -360,7 +360,7 @@ class AppWindow(QMainWindow):
         self.entry_panel = TimeEntryPanel(
             self._time_entry_view_model, job_runner=self._job_runner
         )
-        self.entry_panel.context_picker.recent_button.setVisible(self._config.show_recent_context)
+        self.entry_panel.set_recent_context_visible(self._config.show_recent_context)
         self.stats_panel = StatsPanel()
         self.calendar_page = CalendarPage(
             calendar_view=self.calendar_view,

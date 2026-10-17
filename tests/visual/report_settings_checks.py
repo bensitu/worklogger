@@ -398,7 +398,6 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                     window.refresh()
                     panel = window.entry_panel
                     panel.view_model.service.projects = SimpleNamespace(catalog=lambda: Result.success(((), {})), recent_contexts=lambda: Result.success(()))
-                    panel.context_picker.show()
                     panel.view_model._rewrite_handler = SimpleNamespace(available=True)
                     panel.refresh_ai_availability()
                     panel._polish_task._runner = DeferredRunner()

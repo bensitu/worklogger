@@ -517,7 +517,10 @@ class AppWindowTests(unittest.TestCase):
         window.entry_panel.content_input.setPlainText("Keep this draft")
         for enabled in (False, True):
             window.apply_settings(replace(state, show_recent_context=enabled))
-            self.assertEqual(window.entry_panel.context_picker.recent_button.isHidden(), not enabled)
+            window.entry_panel.classification_button.click()
+            popup = window.entry_panel._classification_popup
+            self.assertEqual(popup.context_picker.recent_button.isHidden(), not enabled)
+            popup.hide()
             self.assertEqual(window.entry_panel.start_input.text(), "09:00")
             self.assertEqual(window.entry_panel.content_input.toPlainText(), "Keep this draft")
             self.assertTrue(window.has_unsaved_changes)
@@ -644,7 +647,10 @@ class AppWindowTests(unittest.TestCase):
         self.assertIsNone(view.entry_panel.view_model.draft.original)
         view.entry_panel.start_input.setText("1000")
         view.entry_panel.end_input.setText("1200")
-        view.entry_panel.entry_type_combo.setCurrentIndex(view.entry_panel.entry_type_combo.findData("meeting"))
+        view.entry_panel.classification_button.click()
+        popup = view.entry_panel._classification_popup
+        popup.period_type_combo.setCurrentIndex(popup.period_type_combo.findData("meeting"))
+        popup.apply_button.click()
         view.entry_panel.save_button.click()
         entries = repository.list_for_day(1, date(2026, 4, 20))
         self.assertEqual(len(entries), 2)

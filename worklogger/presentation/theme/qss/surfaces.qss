@@ -27,6 +27,11 @@ QWidget#donut_gauge_widget,
 QWidget#overtime_comparison_widget,
 QWidget#dots_progress_widget,
 QWidget#work_context_picker_widget,
+QWidget#classification_picker_content_widget,
+QWidget#classification_work_page_widget,
+QWidget#classification_leave_page_widget,
+QWidget#classification_work_metadata_widget,
+QTabWidget#classification_section_tab_widget QStackedWidget,
 QWidget#worklog_entry_panel_widget,
 QScrollArea > QWidget,
 QStackedWidget#time_entry_content_heading_stack_widget,
@@ -62,6 +67,12 @@ QFrame#settings_content_frame {
 QFrame[card="true"]:hover:enabled {
   background: {{ card_hover_fill }};
   border-color: {{ border_strong }};
+}
+
+QFrame#classification_popup_frame {
+  background: {{ surface }};
+  border: 1px solid {{ border_strong }};
+  border-radius: 8px;
 }
 
 QWidget#calendar_view_widget,

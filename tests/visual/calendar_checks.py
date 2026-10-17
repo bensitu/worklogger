@@ -428,9 +428,12 @@ class CalendarLayoutChecks(unittest.TestCase):
                         window = _window(MemoryWorkLogRepository())
                     try:
                         self.assertTrue(window.refresh())
-                        picker = window.entry_panel.context_picker
+                        window.entry_panel.classification_button.click()
+                        popup = window.entry_panel._classification_popup
+                        picker = popup.context_picker
                         picker.project_combo.setCurrentIndex(picker.project_combo.findData(project.id))
                         picker.work_item_combo.setCurrentIndex(picker.work_item_combo.findData(item.id))
+                        popup.apply_button.click()
                         window.show()
                         for width, height in ((880, 580), (1100, 700)):
                             window.resize(width, height)
@@ -438,7 +441,7 @@ class CalendarLayoutChecks(unittest.TestCase):
                             self.assertEqual((window.width(), window.height()), (width, height))
                             self.assertEqual(window.calendar_page.details_scroll.horizontalScrollBar().maximum(), 0)
                             self.assertGreaterEqual(window.calendar_page.records_scroll.height(), 96)
-                            for field in (picker.project_combo, picker.work_item_combo, window.entry_panel.save_button):
+                            for field in (window.entry_panel.classification_button, window.entry_panel.save_button):
                                 self.assertTrue(window.calendar_page.rect().contains(field.rect().translated(field.mapTo(window.calendar_page, QPoint()))))
                             viewport = window.calendar_page.details_scroll.viewport()
                             content = window.entry_panel.content_input

@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QMessageBox
 from worklogger.config.constants import MAX_SHIFT_HOURS
 from worklogger.domain.shared.errors import ConflictError
 from worklogger.domain.shared.result import Result
+from worklogger.domain.worklog.models import EntryType, EntryCategory
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.date_labels import day_label, duration_label
 from worklogger.presentation.widgets.end_timer import EndTimerDialog
@@ -38,7 +39,11 @@ class AutomaticRecordingActions:
                 self.selected_record_label.setText(status)
 
     def recording_action_state(self):
-        can_start = not self.is_busy and self.view_model.timer is None and not self.view_model.restore_failed
+        state = self.view_model.editor_state(automatic=True)
+        definition = self._classification_definition(state)
+        can_start = (not self.is_busy and self.view_model.timer is None and not self.view_model.restore_failed
+                     and definition.category == EntryCategory.WORK
+                     and not (isinstance(definition, EntryType) and definition.is_legacy))
         can_end = not self.is_busy and self.view_model.timer is not None
         return can_start, can_end
 
@@ -51,8 +56,9 @@ class AutomaticRecordingActions:
             self._finish()
 
     def _start(self):
-        entry_type, content = str(self.entry_type_combo.currentData()), self.content_input.toPlainText()
-        self._start_with_content(entry_type, content)
+        if self.recording_action_state()[0]:
+            state = self.view_model.editor_state(automatic=True)
+            self._start_with_content(state.entry_type, state.content)
 
     def _start_with_content(self, entry_type, content):
         self._polish_task.cancel()

@@ -105,6 +105,12 @@ class TimeEntryViewModel:
     def recent_contexts(self):
         return self.service.projects.recent_contexts() if self.projects_available else Result.success(())
 
+    def validate_selection(self, entry_type, work_mode, context, *, automatic=False):
+        state = self.editor_state(automatic=automatic)
+        if state.active_timer is not None:
+            return Result.failure(ValidationError("auto_record_already_active", "auto_record_already_active"))
+        return self.service.validate_selection(entry_type, work_mode, context, state.selected_record, automatic=automatic)
+
     def associate(self, records, context):
         return self.service.associate(records, context)
 

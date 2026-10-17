@@ -11,7 +11,7 @@ from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.editing import EntryChangeInfo
-from worklogger.domain.worklog.models import WorkLog, WorkMode
+from worklogger.domain.worklog.models import WorkLog, WorkMode, EntryType, CustomEntryType
 from worklogger.domain.worklog.search import EntryCursor, EntryFilter, EntryPage
 from worklogger.domain.worklog.timer_state import EntryTimer
 from worklogger.domain.worklog.replacement import EntryReplacement
@@ -29,6 +29,9 @@ class TimeEntryQueries(Protocol):
 
 
 class TimeEntryEdits(Protocol):
+    def validate_selection(self, entry_type: str, work_mode: WorkMode | None, context: WorkContext,
+                           original: WorkLog | None = None, *, automatic: bool = False
+                           ) -> Result[tuple[EntryType | CustomEntryType, WorkMode | None, WorkContext]]: ...
     @property
     def events_deletable(self) -> bool: ...
     def save_manual(self, day: date, start: str, end: str, entry_type: str, content: str,
