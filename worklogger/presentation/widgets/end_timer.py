@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from PySide6.QtCore import Qt, QSignalBlocker
 from PySide6.QtWidgets import QComboBox, QDateTimeEdit, QDialog, QFormLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
 from worklogger.config.constants import MAX_SHIFT_HOURS
-from worklogger.domain.worklog.rules import timestamp_span_hours
+from worklogger.domain.worklog.rules import timestamp_span_hours, wall_time_candidates
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.date_labels import duration_label
 from worklogger.presentation.errors import display_error_code
@@ -72,15 +72,7 @@ class EndTimerDialog(QDialog):
 
     def _refresh(self, *_args):
         wall = datetime.combine(self.end_input.date().toPython(), self.end_input.time().toPython())
-        choices = []
-        for fold in (0, 1):
-            try:
-                candidate = wall.replace(tzinfo=self.zone, fold=fold)
-                utc = candidate.astimezone(timezone.utc)
-                if utc.astimezone(self.zone).replace(tzinfo=None) == wall and not any(utc == item.astimezone(timezone.utc) for item in choices):
-                    choices.append(candidate)
-            except (OverflowError, ValueError):
-                continue
+        choices = wall_time_candidates(wall, self.zone)
         self._candidates = choices
         with QSignalBlocker(self.offset_combo):
             self.offset_combo.clear()

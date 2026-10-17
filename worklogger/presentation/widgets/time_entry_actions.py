@@ -1,15 +1,10 @@
 """Record transformations and undo prompts shared by recording panels."""
 
-import math
-
-from PySide6.QtWidgets import QInputDialog, QMenu, QMessageBox
-
-from worklogger.domain.worklog.editing import place_historical_break, split_entry
-from worklogger.domain.worklog.models import TimeRange
+from PySide6.QtWidgets import QMenu, QMessageBox
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.date_labels import day_label, duration_label
+from worklogger.presentation.date_labels import day_label
 from worklogger.presentation.widgets.icons import ui_icon
-from worklogger.presentation.work_type_labels import work_type_label
+from worklogger.presentation.widgets.record_edit_dialogs import RecordBoundaryDialog, OverlapReplacementDialog
 
 
 class TimeEntryRecordActions:
@@ -37,19 +32,38 @@ class TimeEntryRecordActions:
         return not self.is_dirty or self._confirm_discard()
 
     def _split_record(self, record):
-        if not self._changes_confirmed():
+        self._open_boundary_dialog(record)
+
+    def _open_boundary_dialog(self, record, *, historical_break=False):
+        if not self._changes_confirmed() or self._record_boundary_dialog is not None:
             return
-        minutes, confirmed = QInputDialog.getInt(self, _("Split record"), _("First part duration (minutes)"),
-            max(1, math.floor(record.raw_hours() * 30)), 1, max(1, math.ceil(record.raw_hours() * 60) - 1))
-        if confirmed:
-            try:
-                preview = split_entry(record, minutes)
-            except ValueError as error:
-                from worklogger.presentation.errors import display_error_code
-                QMessageBox.warning(self, _("Split record"), display_error_code(str(error)))
-                return
-            if self._confirm_periods(_("Split record"), preview):
-                self._submit(lambda model: model.split(record, minutes))
+        dialog = RecordBoundaryDialog(record, self, zone=self.view_model.now().tzinfo, historical_break=historical_break)
+        self._record_boundary_dialog = dialog
+        def accepted():
+            if historical_break:
+                minutes = dialog.chosen_minutes()
+                self._submit(lambda model: model.convert_break(record, minutes))
+            else:
+                boundary = dialog.chosen_boundary()
+                self._submit(lambda model: model.split_at(record, boundary))
+        dialog.accepted.connect(accepted)
+        dialog.finished.connect(lambda: setattr(self, "_record_boundary_dialog", None))
+        dialog.finished.connect(dialog.deleteLater)
+        dialog.open()
+
+    def _offer_replacement(self, plan):
+        if self._replacement_dialog is not None:
+            self._replacement_dialog.raise_()
+            return
+        dialog = OverlapReplacementDialog(plan, self)
+        self._replacement_dialog = dialog
+        def accepted():
+            keep_outside = dialog.keep_outside
+            self._submit(lambda model: model.replace_overlap(plan, keep_outside=keep_outside))
+        dialog.accepted.connect(accepted)
+        dialog.finished.connect(lambda: setattr(self, "_replacement_dialog", None))
+        dialog.finished.connect(dialog.deleteLater)
+        dialog.open()
 
     def _merge_record(self, previous, record):
         if previous is not None and self._changes_confirmed() and QMessageBox.question(self, _("Merge records"),
@@ -58,31 +72,7 @@ class TimeEntryRecordActions:
             self._submit(lambda model: model.merge(previous, record))
 
     def _place_break(self, record):
-        if not self._changes_confirmed():
-            return
-        maximum = max(0, math.floor(record.raw_hours() * 60))
-        minutes, confirmed = QInputDialog.getInt(self, _("Place historical break"),
-            _("Minutes from the record start to the break start"), min(180, maximum), 0, maximum)
-        if confirmed:
-            try:
-                preview = place_historical_break(record, minutes)
-            except ValueError as error:
-                from worklogger.presentation.errors import display_error_code
-                QMessageBox.warning(self, _("Place historical break"), display_error_code(str(error)))
-                return
-            if self._confirm_periods(_("Place historical break"), preview):
-                self._submit(lambda model: model.convert_break(record, minutes))
-
-    def _confirm_periods(self, title, periods):
-        lines = []
-        for period in periods:
-            start, end = (period.started_at, period.ended_at) if period.started_at else TimeRange(period.start_time, period.end_time).as_datetimes(period.day)
-            lines.append(f"{start.isoformat(timespec='minutes')} - {end.isoformat(timespec='minutes')} [{work_type_label(period.work_type)}]")
-        lines.append(_("Worked: {hours}").format(hours=duration_label(sum(period.worked_hours() for period in periods))))
-        if len({period.day for period in periods}) > 1:
-            lines.append(_("Splitting across dates changes daily and period totals."))
-        return QMessageBox.question(self, title, _("Save these periods?") + "\n\n" + "\n".join(lines),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes
+        self._open_boundary_dialog(record, historical_break=True)
 
     def _undo_record_change(self):
         if not self._changes_confirmed():
@@ -102,6 +92,8 @@ class TimeEntryRecordActions:
                 days = [record.day for record in change.entries]
                 question = _("Undo project associations for {count} records from {start} to {end}?").format(
                     count=len(change.entries), start=min(days).isoformat(), end=max(days).isoformat())
+            elif change.operation == "replace":
+                question = _("Undo the replacement and restore the previous records?")
             if QMessageBox.question(self, _("Undo latest record change"), question,
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
                 self._submit(lambda model: model.undo(change.id))

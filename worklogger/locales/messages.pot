@@ -50,6 +50,9 @@ msgstr ""
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr ""
 
+msgid "A record without start and end times cannot be split. Choose entire-record replacement or cancel."
+msgstr ""
+
 msgid "A work type with this name already exists."
 msgstr ""
 
@@ -284,6 +287,9 @@ msgstr ""
 msgid "Break duration must be greater than zero and no more than four hours."
 msgstr ""
 
+msgid "Break starts"
+msgstr ""
+
 msgid "Break time must be nonnegative and shorter than the work period."
 msgstr ""
 
@@ -362,7 +368,7 @@ msgstr ""
 msgid "Choose a holiday region to calculate planned work and automatic goals."
 msgstr ""
 
-msgid "Choose a split duration strictly inside the recorded interval."
+msgid "Choose a split time strictly inside the recorded interval."
 msgstr ""
 
 msgid "Choose a valid PNG, JPEG, GIF or WebP background image."
@@ -731,6 +737,9 @@ msgstr ""
 msgid "Enter your password."
 msgstr ""
 
+msgid "Entire overlapping records will be removed, including time outside the new period."
+msgstr ""
+
 msgid "Error"
 msgstr ""
 
@@ -753,6 +762,9 @@ msgid "Exactly two days off are required."
 msgstr ""
 
 msgid "Excel files (*.xlsx)"
+msgstr ""
+
+msgid "Existing records"
 msgstr ""
 
 msgid "Export"
@@ -827,7 +839,7 @@ msgstr ""
 msgid "File"
 msgstr ""
 
-msgid "First part duration (minutes)"
+msgid "Finish or discard the active timer before replacing overlapping records."
 msgstr ""
 
 msgid "First saved: {time}"
@@ -1208,9 +1220,6 @@ msgstr ""
 msgid "Minimize"
 msgstr ""
 
-msgid "Minutes from the record start to the break start"
-msgstr ""
-
 msgid "Mode"
 msgstr ""
 
@@ -1418,6 +1427,9 @@ msgstr ""
 msgid "Other"
 msgstr ""
 
+msgid "Overlapping records"
+msgstr ""
+
 msgid "Overnight"
 msgstr ""
 
@@ -1484,7 +1496,7 @@ msgstr ""
 msgid "Place historical break"
 msgstr ""
 
-msgid "Place the historical break before splitting this record."
+msgid "Place the historical break before splitting or trimming this record."
 msgstr ""
 
 msgid "Planned work unavailable"
@@ -1685,7 +1697,16 @@ msgstr ""
 msgid "Replace affected dates"
 msgstr ""
 
+msgid "Replace and save"
+msgstr ""
+
+msgid "Replace entire overlapping records"
+msgstr ""
+
 msgid "Replace matching periods"
+msgstr ""
+
+msgid "Replace overlapping time only"
 msgstr ""
 
 msgid "Replace the saved content of this report? Previous versions remain available in report versions."
@@ -1757,6 +1778,9 @@ msgstr ""
 msgid "Restoring data..."
 msgstr ""
 
+msgid "Result"
+msgstr ""
+
 msgid "Revision"
 msgstr ""
 
@@ -1821,9 +1845,6 @@ msgid "Save temporary password"
 msgstr ""
 
 msgid "Save the completed automatic record before starting another."
-msgstr ""
-
-msgid "Save these periods?"
 msgstr ""
 
 msgid "Save this recovery key before continuing."
@@ -2039,10 +2060,10 @@ msgstr ""
 msgid "Sources describe the last generation, not verification of later text edits."
 msgstr ""
 
-msgid "Split record"
+msgid "Split at"
 msgstr ""
 
-msgid "Splitting across dates changes daily and period totals."
+msgid "Split record"
 msgstr ""
 
 msgid "Standard daily hours: {hours:g}"
@@ -2201,6 +2222,9 @@ msgstr ""
 msgid "Theme"
 msgstr ""
 
+msgid "These records do not have compatible time-zone information. Choose entire-record replacement or cancel."
+msgstr ""
+
 msgid "These times overlap another record or the active timer. Choose a different period."
 msgstr ""
 
@@ -2268,6 +2292,9 @@ msgid "Thu"
 msgstr ""
 
 msgid "Time"
+msgstr ""
+
+msgid "Time outside the new period is preserved. Existing records may be split."
 msgstr ""
 
 msgid "Time record"
@@ -2448,6 +2475,9 @@ msgid "Undo project associations for {count} records from {start} to {end}?"
 msgstr ""
 
 msgid "Undo the latest record change for {date}, {start} - {end}? This does not restart a timer."
+msgstr ""
+
+msgid "Undo the replacement and restore the previous records?"
 msgstr ""
 
 msgid "Unknown"

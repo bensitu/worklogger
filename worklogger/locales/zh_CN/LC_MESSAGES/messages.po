@@ -52,6 +52,9 @@ msgstr "数据库恢复被中断。请选择使用哪个数据库，两份副本
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr "注重隐私的桌面工时记录工具，支持 AI 报表。"
 
+msgid "A record without start and end times cannot be split. Choose entire-record replacement or cancel."
+msgstr "没有开始和结束时间的记录无法拆分。请选择替换整条记录，或取消操作。"
+
 msgid "A work type with this name already exists."
 msgstr "已存在同名工作类型。"
 
@@ -286,6 +289,9 @@ msgstr "休息"
 msgid "Break duration must be greater than zero and no more than four hours."
 msgstr "休息时长必须大于零且不超过四小时。"
 
+msgid "Break starts"
+msgstr "休息开始时间"
+
 msgid "Break time must be nonnegative and shorter than the work period."
 msgstr "休息时间不能为负数，且必须短于工作时段。"
 
@@ -364,8 +370,8 @@ msgstr "请选择不同于当前数据库的备份位置。"
 msgid "Choose a holiday region to calculate planned work and automatic goals."
 msgstr "请选择节假日地区，以计算计划工作与自动目标。"
 
-msgid "Choose a split duration strictly inside the recorded interval."
-msgstr "请选择位于记录区间内部的拆分时长。"
+msgid "Choose a split time strictly inside the recorded interval."
+msgstr "请选择记录时段内的拆分时间，不能选择开始或结束时间。"
 
 msgid "Choose a valid PNG, JPEG, GIF or WebP background image."
 msgstr "请选择有效的 PNG、JPEG、GIF 或 WebP 背景图片。"
@@ -733,6 +739,9 @@ msgstr "输入您的密码"
 msgid "Enter your password."
 msgstr "请输入密码。"
 
+msgid "Entire overlapping records will be removed, including time outside the new period."
+msgstr "将删除重叠的整条记录，包括新时段以外的部分。"
+
 msgid "Error"
 msgstr "错误"
 
@@ -756,6 +765,9 @@ msgstr "需要设置恰好两天休息。"
 
 msgid "Excel files (*.xlsx)"
 msgstr "Excel 文件 (*.xlsx)"
+
+msgid "Existing records"
+msgstr "现有记录"
 
 msgid "Export"
 msgstr "导出"
@@ -829,8 +841,8 @@ msgstr "2月"
 msgid "File"
 msgstr "文件"
 
-msgid "First part duration (minutes)"
-msgstr "前一段时长（分钟）"
+msgid "Finish or discard the active timer before replacing overlapping records."
+msgstr "请先结束或放弃正在运行的计时，再替换重叠记录。"
 
 msgid "First saved: {time}"
 msgstr "首次保存：{time}"
@@ -1210,9 +1222,6 @@ msgstr "精简视图"
 msgid "Minimize"
 msgstr "最小化"
 
-msgid "Minutes from the record start to the break start"
-msgstr "从记录开始到休息开始的分钟数"
-
 msgid "Mode"
 msgstr "模式"
 
@@ -1420,6 +1429,9 @@ msgstr "操作已取消。"
 msgid "Other"
 msgstr "其他"
 
+msgid "Overlapping records"
+msgstr "时段重叠"
+
 msgid "Overnight"
 msgstr "跨日"
 
@@ -1486,8 +1498,8 @@ msgstr "粉色"
 msgid "Place historical break"
 msgstr "指定历史休息位置"
 
-msgid "Place the historical break before splitting this record."
-msgstr "拆分此记录前，请先指定历史休息的位置。"
+msgid "Place the historical break before splitting or trimming this record."
+msgstr "请先指定历史休息的位置，再拆分或缩短这条记录。"
 
 msgid "Planned work unavailable"
 msgstr "计划工作暂不可用"
@@ -1687,8 +1699,17 @@ msgstr "替换"
 msgid "Replace affected dates"
 msgstr "替换涉及日期的全部记录"
 
+msgid "Replace and save"
+msgstr "替换并保存"
+
+msgid "Replace entire overlapping records"
+msgstr "替换重叠的整条记录"
+
 msgid "Replace matching periods"
 msgstr "仅替换相同时段"
+
+msgid "Replace overlapping time only"
+msgstr "仅替换重叠时段"
 
 msgid "Replace the saved content of this report? Previous versions remain available in report versions."
 msgstr "替换此报表已保存的内容？旧版本仍可在报表版本中查看和恢复。"
@@ -1759,6 +1780,9 @@ msgstr "恢复会替换当前数据库文件。继续？"
 msgid "Restoring data..."
 msgstr "正在恢复数据..."
 
+msgid "Result"
+msgstr "变更结果"
+
 msgid "Revision"
 msgstr "修订号"
 
@@ -1824,9 +1848,6 @@ msgstr "保存临时密码"
 
 msgid "Save the completed automatic record before starting another."
 msgstr "开始新的自动记录前，请先保存已结束的记录。"
-
-msgid "Save these periods?"
-msgstr "保存这些时段？"
 
 msgid "Save this recovery key before continuing."
 msgstr "继续前请保存此恢复密钥。"
@@ -2041,11 +2062,11 @@ msgstr "来源"
 msgid "Sources describe the last generation, not verification of later text edits."
 msgstr "来源描述最近一次生成时使用的信息，不代表已验证后续编辑的文字。"
 
+msgid "Split at"
+msgstr "拆分时间"
+
 msgid "Split record"
 msgstr "拆分记录"
-
-msgid "Splitting across dates changes daily and period totals."
-msgstr "跨日期拆分会改变每日和各期间的合计。"
 
 msgid "Standard daily hours: {hours:g}"
 msgstr "标准每日工时：{hours:g}"
@@ -2203,6 +2224,9 @@ msgstr "该用户账户已不可用。"
 msgid "Theme"
 msgstr "主题"
 
+msgid "These records do not have compatible time-zone information. Choose entire-record replacement or cancel."
+msgstr "这些记录的时区信息不兼容。请选择替换整条记录，或取消操作。"
+
 msgid "These times overlap another record or the active timer. Choose a different period."
 msgstr "该时段与其他记录或正在运行的计时重叠，请选择其他时段。"
 
@@ -2271,6 +2295,9 @@ msgstr "四"
 
 msgid "Time"
 msgstr "时间"
+
+msgid "Time outside the new period is preserved. Existing records may be split."
+msgstr "保留新时段以外的时间，必要时会自动拆分原记录。"
 
 msgid "Time record"
 msgstr "时间记录"
@@ -2451,6 +2478,9 @@ msgstr "撤销 {start} 至 {end} 的 {count} 条记录的项目关联？"
 
 msgid "Undo the latest record change for {date}, {start} - {end}? This does not restart a timer."
 msgstr "撤销 {date}、{start} - {end} 的最近记录更改？这不会重新开始计时。"
+
+msgid "Undo the replacement and restore the previous records?"
+msgstr "撤销此次替换并恢复原有记录吗？"
 
 msgid "Unknown"
 msgstr "未知"

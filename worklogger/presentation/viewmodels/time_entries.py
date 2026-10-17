@@ -132,6 +132,15 @@ class TimeEntryViewModel:
     def split(self, record, first_minutes):
         return self._changed(self.service.split(record, first_minutes))
 
+    def split_at(self, record, cut):
+        return self._changed(self.service.split_at(record, cut))
+
+    def replace_overlap(self, plan, *, keep_outside):
+        result = self.service.replace_overlap(plan, keep_outside=keep_outside)
+        if result.ok:
+            self.select(result.value)
+        return result
+
     def merge(self, left, right):
         return self._changed(self.service.merge(left, right))
 

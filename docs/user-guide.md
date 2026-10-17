@@ -50,6 +50,17 @@ remains selected in both input modes. Content, type, and project are shared betw
 manual and automatic views. Use New time record or Clear input before starting a
 different record.
 
+If a manually entered period overlaps saved records, review the replacement
+preview. **Replace overlapping time only** preserves time outside the new period,
+splitting existing records when necessary. For example, adding a 12:00-13:00
+break to a 09:00-18:00 meeting produces 09:00-12:00 meeting, 12:00-13:00 break,
+and 13:00-18:00 meeting, with eight worked hours. Preserved parts retain their
+type, content, and project. **Replace entire overlapping records** removes the
+complete conflicting records, including time outside the new period. Confirm
+with **Replace and save**, or cancel to keep existing records and the current input.
+Finish or discard any active timer before replacing records. A changed record
+or a new conflict prevents replacement; reload and review it again.
+
 An end time earlier than the start means the following day, such as 22:00 to
 06:00. A period cannot exceed 16 hours. Equal start/end times represent 24 hours
 and are rejected. Timed records require both boundaries.
@@ -102,10 +113,14 @@ Open a result in Calendar. Recent context reuses an active project/work-item
 selection. Batch assignment requires an explicit selection and confirmation.
 
 Record actions can split a period, merge adjacent compatible periods, place a
-historical break deduction, or undo a supported change. Historical deductions
-have no known break position until you assign one. Confirm the preview before
-applying a correction. Record undo does not cover CSV replacement or database
-restore.
+historical break deduction, or undo a supported change. **Split record** accepts
+a date and clock time and previews both resulting periods. To split an overnight
+record after midnight, choose the following date. Historical deductions have no
+known break position until you assign one: choose **Place historical break** and
+set its start time before splitting or partially replacing that record. Confirm
+the preview before applying a correction. **Undo latest record change** can
+restore an overlap replacement, including all affected records. Record undo does
+not cover CSV replacement or database restore.
 
 Imported calendar events are separate from worked time. Selecting one creates a
 time-entry draft. Editing or deleting the local copy does not alter its source file.

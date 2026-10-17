@@ -52,6 +52,9 @@ msgstr "A database restore was interrupted. Choose which database to use. Both c
 msgid "A privacy-first desktop work tracker with AI-powered reporting."
 msgstr "A privacy-first desktop work tracker with AI-powered reporting."
 
+msgid "A record without start and end times cannot be split. Choose entire-record replacement or cancel."
+msgstr "A record without start and end times cannot be split. Choose entire-record replacement or cancel."
+
 msgid "A work type with this name already exists."
 msgstr "A work type with this name already exists."
 
@@ -286,6 +289,9 @@ msgstr "Break"
 msgid "Break duration must be greater than zero and no more than four hours."
 msgstr "Break duration must be greater than zero and no more than four hours."
 
+msgid "Break starts"
+msgstr "Break starts"
+
 msgid "Break time must be nonnegative and shorter than the work period."
 msgstr "Break time must be nonnegative and shorter than the work period."
 
@@ -364,8 +370,8 @@ msgstr "Choose a backup destination different from the active database."
 msgid "Choose a holiday region to calculate planned work and automatic goals."
 msgstr "Choose a holiday region to calculate planned work and automatic goals."
 
-msgid "Choose a split duration strictly inside the recorded interval."
-msgstr "Choose a split duration strictly inside the recorded interval."
+msgid "Choose a split time strictly inside the recorded interval."
+msgstr "Choose a split time strictly inside the recorded interval."
 
 msgid "Choose a valid PNG, JPEG, GIF or WebP background image."
 msgstr "Choose a valid PNG, JPEG, GIF or WebP background image."
@@ -733,6 +739,9 @@ msgstr "Enter your password"
 msgid "Enter your password."
 msgstr "Enter your password."
 
+msgid "Entire overlapping records will be removed, including time outside the new period."
+msgstr "Entire overlapping records will be removed, including time outside the new period."
+
 msgid "Error"
 msgstr "Error"
 
@@ -756,6 +765,9 @@ msgstr "Exactly two days off are required."
 
 msgid "Excel files (*.xlsx)"
 msgstr "Excel files (*.xlsx)"
+
+msgid "Existing records"
+msgstr "Existing records"
 
 msgid "Export"
 msgstr "Export"
@@ -829,8 +841,8 @@ msgstr "February"
 msgid "File"
 msgstr "File"
 
-msgid "First part duration (minutes)"
-msgstr "First part duration (minutes)"
+msgid "Finish or discard the active timer before replacing overlapping records."
+msgstr "Finish or discard the active timer before replacing overlapping records."
 
 msgid "First saved: {time}"
 msgstr "First saved: {time}"
@@ -1210,9 +1222,6 @@ msgstr "Minimal view"
 msgid "Minimize"
 msgstr "Minimize"
 
-msgid "Minutes from the record start to the break start"
-msgstr "Minutes from the record start to the break start"
-
 msgid "Mode"
 msgstr "Mode"
 
@@ -1420,6 +1429,9 @@ msgstr "Operation cancelled."
 msgid "Other"
 msgstr "Other"
 
+msgid "Overlapping records"
+msgstr "Overlapping records"
+
 msgid "Overnight"
 msgstr "Overnight"
 
@@ -1486,8 +1498,8 @@ msgstr "Pink"
 msgid "Place historical break"
 msgstr "Place historical break"
 
-msgid "Place the historical break before splitting this record."
-msgstr "Place the historical break before splitting this record."
+msgid "Place the historical break before splitting or trimming this record."
+msgstr "Place the historical break before splitting or trimming this record."
 
 msgid "Planned work unavailable"
 msgstr "Planned work unavailable"
@@ -1687,8 +1699,17 @@ msgstr "Replace"
 msgid "Replace affected dates"
 msgstr "Replace affected dates"
 
+msgid "Replace and save"
+msgstr "Replace and save"
+
+msgid "Replace entire overlapping records"
+msgstr "Replace entire overlapping records"
+
 msgid "Replace matching periods"
 msgstr "Replace matching periods"
+
+msgid "Replace overlapping time only"
+msgstr "Replace overlapping time only"
 
 msgid "Replace the saved content of this report? Previous versions remain available in report versions."
 msgstr "Replace the saved content of this report? Previous versions remain available in report versions."
@@ -1759,6 +1780,9 @@ msgstr "Restore will replace the current database file. Continue?"
 msgid "Restoring data..."
 msgstr "Restoring data..."
 
+msgid "Result"
+msgstr "Result"
+
 msgid "Revision"
 msgstr "Revision"
 
@@ -1824,9 +1848,6 @@ msgstr "Save temporary password"
 
 msgid "Save the completed automatic record before starting another."
 msgstr "Save the completed automatic record before starting another."
-
-msgid "Save these periods?"
-msgstr "Save these periods?"
 
 msgid "Save this recovery key before continuing."
 msgstr "Save this recovery key before continuing."
@@ -2041,11 +2062,11 @@ msgstr "Sources"
 msgid "Sources describe the last generation, not verification of later text edits."
 msgstr "Sources describe the last generation, not verification of later text edits."
 
+msgid "Split at"
+msgstr "Split at"
+
 msgid "Split record"
 msgstr "Split record"
-
-msgid "Splitting across dates changes daily and period totals."
-msgstr "Splitting across dates changes daily and period totals."
 
 msgid "Standard daily hours: {hours:g}"
 msgstr "Standard daily hours: {hours:g}"
@@ -2203,6 +2224,9 @@ msgstr "The user account is no longer available."
 msgid "Theme"
 msgstr "Theme"
 
+msgid "These records do not have compatible time-zone information. Choose entire-record replacement or cancel."
+msgstr "These records do not have compatible time-zone information. Choose entire-record replacement or cancel."
+
 msgid "These times overlap another record or the active timer. Choose a different period."
 msgstr "These times overlap another record or the active timer. Choose a different period."
 
@@ -2271,6 +2295,9 @@ msgstr "Thu"
 
 msgid "Time"
 msgstr "Time"
+
+msgid "Time outside the new period is preserved. Existing records may be split."
+msgstr "Time outside the new period is preserved. Existing records may be split."
 
 msgid "Time record"
 msgstr "Time record"
@@ -2451,6 +2478,9 @@ msgstr "Undo project associations for {count} records from {start} to {end}?"
 
 msgid "Undo the latest record change for {date}, {start} - {end}? This does not restart a timer."
 msgstr "Undo the latest record change for {date}, {start} - {end}? This does not restart a timer."
+
+msgid "Undo the replacement and restore the previous records?"
+msgstr "Undo the replacement and restore the previous records?"
 
 msgid "Unknown"
 msgstr "Unknown"

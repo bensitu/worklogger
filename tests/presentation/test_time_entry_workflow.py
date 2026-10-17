@@ -379,9 +379,11 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         original = panel.view_model.service.save_manual(self.now.date(), "09:00", "12:00", "normal", "Work").value
         self.window.refresh()
         self.assertTrue(panel.undo_button.isEnabled())
-        with patch("worklogger.presentation.widgets.time_entry_actions.QInputDialog.getInt", return_value=(60, True)), \
-                patch("worklogger.presentation.widgets.time_entries.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes):
-            panel._split_record(original)
+        panel._split_record(original)
+        dialog = panel._record_boundary_dialog
+        dialog.time_input.setDateTime(datetime.combine(original.day, datetime.min.time()).replace(hour=10))
+        self.assertEqual(dialog.preview.topLevelItemCount(), 2)
+        dialog.confirm_button.click()
         records = self.repository.list_for_day(self.runtime.user.id, self.now.date())
         self.assertEqual(len(records), 2)
         self.assertEqual(sum(record.worked_hours() for record in records), 3)
@@ -404,6 +406,63 @@ class TimeEntryWorkflowTests(unittest.TestCase):
             panel.undo_button.click()
         self.assertEqual(self.repository.list_for_day(self.runtime.user.id, self.now.date())[0].id, original.id)
         self.warning.assert_not_called()
+
+    def test_overlap_dialog_preserves_cancelled_input_and_saves_the_selected_replacement(self):
+        panel = self.panel
+        original = panel.view_model.service.save_manual(self.now.date(), "09:00", "18:00", "meeting", "Work").value
+        self.window.refresh()
+        panel.start_input.setText("12:00")
+        panel.end_input.setText("13:00")
+        panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData("break"))
+        panel.content_input.setPlainText("Lunch")
+        panel.save_button.click()
+        dialog = panel._replacement_dialog
+        self.assertIsNotNone(dialog)
+        self.assertEqual(dialog.preview.topLevelItemCount(), 3)
+        dialog.whole_button.click()
+        self.assertEqual(dialog.preview.topLevelItemCount(), 1)
+        dialog.reject()
+        self.assertEqual(self.repository.list_for_day(self.runtime.user.id, self.now.date()), (original,))
+        self.assertEqual((panel.start_input.text(), panel.end_input.text(), panel.content_input.toPlainText()),
+                         ("12:00", "13:00", "Lunch"))
+        panel.save_button.click()
+        panel._replacement_dialog.confirm_button.click()
+        records = self.repository.list_for_day(self.runtime.user.id, self.now.date())
+        self.assertEqual(len(records), 3)
+        self.assertEqual(sum(record.worked_hours() for record in records), 8)
+        with patch("worklogger.presentation.widgets.time_entries.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes):
+            panel.undo_button.click()
+        self.assertEqual(len(self.repository.list_for_day(self.runtime.user.id, self.now.date())), 1)
+        self.warning.assert_not_called()
+
+    def test_record_boundary_preview_validates_clock_times_and_historical_breaks(self):
+        from zoneinfo import ZoneInfo
+        from worklogger.domain.worklog.models import WorkLog
+        from worklogger.presentation.widgets.record_edit_dialogs import RecordBoundaryDialog
+
+        historical = WorkLog(self.runtime.user.id, self.now.date(), "09:00", "18:00", 1, "Previous work")
+        dialog = RecordBoundaryDialog(historical, self.panel, historical_break=True)
+        self.addCleanup(dialog.deleteLater)
+        wall = datetime.combine(historical.day, datetime.min.time())
+        dialog.time_input.setDateTime(wall.replace(hour=12))
+        self.assertEqual(dialog.chosen_minutes(), 180)
+        self.assertEqual(dialog.preview.topLevelItemCount(), 3)
+        dialog.time_input.setDateTime(wall.replace(hour=18))
+        self.assertFalse(dialog.confirm_button.isEnabled())
+        self.assertEqual(dialog.preview.topLevelItemCount(), 0)
+        zone = ZoneInfo("America/New_York")
+        start = datetime(2026, 11, 1, 0, 30, tzinfo=zone)
+        record = WorkLog(self.runtime.user.id, start.date(), "00:30", "03:30",
+                         started_at=start, ended_at=start.replace(hour=3))
+        split = RecordBoundaryDialog(record, self.panel, zone=zone)
+        self.addCleanup(split.deleteLater)
+        split.time_input.setDateTime(datetime(2026, 11, 1, 1, 30))
+        self.assertEqual(split.offset_combo.count(), 2)
+        split.offset_combo.setCurrentIndex(1)
+        self.assertEqual(split.chosen_minutes(), 120)
+        self.assertTrue(split.confirm_button.isEnabled())
+        split.time_input.setDateTime(datetime(2026, 11, 1, 3, 30))
+        self.assertFalse(split.confirm_button.isEnabled())
 
     def test_record_search_filters_preserve_focus_and_open_the_owned_entry(self):
         from worklogger.presentation.widgets.record_search import RecordSearchDialog

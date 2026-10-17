@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (QComboBox, QHBoxLayout, QLabel, QLineEdit,
     QTabWidget, QTextEdit, QToolButton, QVBoxLayout, QWidget, QStackedWidget)
 
 from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType
+from worklogger.domain.worklog.replacement import EntryReplacement
 from worklogger.domain.worklog.rules import calc_shift_span_hours
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.errors import CancellationError
@@ -53,6 +54,8 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         self._reminder_capture = None
         self._notified_reminders = set()
         self._end_dialog = None
+        self._record_boundary_dialog = None
+        self._replacement_dialog = None
         self._day = view_model.draft.day
         self.setObjectName("worklog_entry_panel_widget")
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -517,6 +520,10 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
 
     def _apply_result(self, result, *, refresh=True):
         if not result.ok:
+            plan = result.error.details.get("replacement")
+            if isinstance(plan, EntryReplacement):
+                self._offer_replacement(plan)
+                return False
             QMessageBox.warning(self, _("WorkLogger"), display_error_message(result.error))
             return False
         self._timer_failed = False
