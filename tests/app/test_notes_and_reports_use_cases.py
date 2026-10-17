@@ -29,7 +29,7 @@ from worklogger.domain.quicklog.models import QuickLog
 from worklogger.domain.reporting.templates import ReportTemplate
 from worklogger.domain.reporting.templates import render_template
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.models import WorkLog, EntryType
+from worklogger.domain.worklog.models import WorkLog, EntryType, WorkMode
 
 
 class MemoryDailyNoteRepository:
@@ -251,6 +251,7 @@ class NotesReportsUseCaseTests(unittest.TestCase):
                     break_hours=1.0,
                     note="Implemented notes\nContinued implementation",
                     entry_type=EntryType.NORMAL,
+                    work_mode=WorkMode.REMOTE,
                 ),
                 WorkLog(
                     user_id=1,
@@ -321,6 +322,12 @@ class NotesReportsUseCaseTests(unittest.TestCase):
         self.assertIn("Customer sync", content)
         self.assertIn("Design review", content)
         self.assertIn("Total 18.0 OT 2.0", content)
+        self.assertIn("Normal \u00b7 Remote", content)
+        with patch.object(handler, "_translator", side_effect=lambda message, **kwargs: f"{kwargs['language']}:{message}"):
+            translated = handler.handle(GenerateReportCommand(1, "weekly", date(2026, 5, 11), date(2026, 5, 17),
+                                                              language="ja_JP"))
+        self.assertTrue(translated.ok, translated.error)
+        self.assertIn("ja_JP:Normal \u00b7 ja_JP:Remote", translated.value.content)
         for repository, method in ((work_logs, "list_range"), (quick_logs, "list_for_range"), (calendar, "list_for_range")):
             with self.subTest(repository=type(repository).__name__), patch.object(repository, method, side_effect=OSError("unavailable")):
                 failed = handler.handle(GenerateReportCommand(1, "daily", date(2026, 5, 11), date(2026, 5, 11)))

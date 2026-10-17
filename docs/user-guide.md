@@ -102,7 +102,7 @@ deliberately. Reminders do not certify compliance with working-time regulations.
 
 ### Types, Projects, and Corrections
 
-Manage work types and projects in **Settings > General > Classification**. Custom types have Work,
+Manage entry types and projects in **Settings > General > Classification**. Custom types have Work,
 Break, or Leave accounting. Saved records retain their original classification
 and labels when catalog entries are renamed or archived.
 
@@ -152,7 +152,7 @@ date; daily and monthly totals are recalculated accordingly. Month and year
 boundaries use the same rules.
 
 The overlap preview aligns the new period above the existing records on a shared
-time scale. Segment colors follow work types; Normal uses the theme accent and
+time scale. Segment colors follow entry types; Normal uses gray and
 Break uses a neutral color. Gaps remain visible. Whole-record replacement fades
 the existing segments, while the new period remains opaque. The result table is
 the complete list of records to save.
@@ -254,6 +254,12 @@ labels include their in-month date ranges. See [configuration](configuration.md)
 for schedule options and holiday handling. Enabled regional holidays are excluded
 from planned work; disabling holiday display also disables this exclusion.
 
+Classification breakdown uses each recorded type's duration, including recorded
+breaks and leave. Switch that chart to Work arrangement to group only actual
+worked hours; unspecified arrangements remain separate. These are independent
+views of the same records, not totals to add together. A two-hour remote meeting
+is two worked hours, two hours classified as Meeting, and two hours under Remote.
+
 Rest Days counts distinct dates with a positive-duration Break record. Multiple
 breaks count once; a date can count as both a work day and a rest day. Missing
 records do not imply rest, and leave is counted separately. Historical deducted
@@ -265,6 +271,7 @@ holidays, multiplied by daily standard hours. Configure the mode under General >
 Hours goal; switching modes retains the custom value. Unavailable holiday data is
 reported without replacing the automatic target with an unadjusted estimate.
 Project statistics separates work, rest, and leave by project and work item.
+Only work records can be linked to a project; break and leave remain unlinked.
 Distinct-day counts cannot be added across groups; overtime is a whole-day measure.
 
 CSV and PDF export calculated summaries. They are not work-log import files or

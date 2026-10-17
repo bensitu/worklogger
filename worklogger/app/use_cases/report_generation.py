@@ -11,6 +11,7 @@ from functools import partial
 from hashlib import sha256
 
 from worklogger.app.commands.report_commands import GenerateReportCommand
+from worklogger.app.entry_labels import classification_label
 from worklogger.app.ports import TemplateProvider
 from worklogger.app.use_cases.user_profile import profile_display_name
 from worklogger.domain.auth.repositories import UserProfileRepository
@@ -222,9 +223,6 @@ def _project_summary(work_logs, _):
 def _work_log_lines(work_logs: tuple[WorkLog, ...], standard_hours: float, _: Callable[[str], str]) -> str:
     if not work_logs:
         return "- " + _("No notes recorded for this period.")
-    labels = {"normal": _("Normal"), "remote": _("Remote"), "business_trip": _("Business trip"),
-              "meeting": _("Meeting"), "training": _("Training"), "break": _("Break"), "other": _("Other"),
-              "paid_leave": _("Paid leave"), "comp_leave": _("Compensatory leave"), "sick_leave": _("Sick leave")}
     lines = []
     for record in sorted(work_logs, key=lambda item: item.day):
         if record.is_note_only and not record.entries:
@@ -238,7 +236,7 @@ def _work_log_lines(work_logs: tuple[WorkLog, ...], standard_hours: float, _: Ca
         lines.append(_list_item(heading))
         for entry in record.entries or (record,):
             span = time_range_label(entry.start_time, entry.end_time) if entry.has_times else _("All day")
-            label = getattr(entry.entry_type, "label", None) or labels.get(entry.entry_type.value, entry.entry_type.value)
+            label = classification_label(entry.entry_type, entry.work_mode, _)
             description = f"{span} [{label}]"
             if entry.context.label:
                 description += " [" + entry.context.label + "]"

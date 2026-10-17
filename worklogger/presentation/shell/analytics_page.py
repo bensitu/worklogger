@@ -26,10 +26,11 @@ from worklogger.domain.shared.result import Result
 from worklogger.presentation.job_runner import owned_callback
 from worklogger.domain.shared.dates import add_months
 from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBundle
+from worklogger.domain.worklog.models import EntryType, WorkMode
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_code, display_error_message
 from worklogger.presentation.date_labels import month_label, month_name, duration_label
-from worklogger.presentation.entry_type_labels import entry_type_label
+from worklogger.presentation.entry_type_labels import classification_label, work_mode_label
 from worklogger.presentation.viewmodels import (
     AnalyticsState,
     AnalyticsViewModel,
@@ -251,7 +252,15 @@ class AnalyticsPage(QWidget):
         charts.setVerticalSpacing(12)
         self.trend_chart = self._chart_card(_("Work Hours Trend"))
         self.average_chart = self._chart_card(_("Average Work Hours"))
-        self.breakdown_chart = self._chart_card(_("Work Mode Breakdown"), donut=True)
+        self.breakdown_chart = self._chart_card(_("Classification breakdown"), donut=True)
+        self.breakdown_dimension_control = SegmentedControl(
+            (("entry_type", _("Classification")), ("work_mode", _("Work arrangement"))))
+        self.breakdown_dimension_control.value_changed.connect(self._set_breakdown)
+        self.breakdown_chart.content_layout.insertWidget(1, self.breakdown_dimension_control)
+        self.breakdown_caption = QLabel(_("Classified duration"))
+        self.breakdown_caption.setProperty("role", "secondary")
+        self.breakdown_caption.setWordWrap(True)
+        self.breakdown_chart.content_layout.insertWidget(2, self.breakdown_caption)
         self.daily_average_chart = self._chart_card(_("Daily Average"))
         self.daily_average_value_label = QLabel("")
         self.daily_average_value_label.setObjectName("daily_average_value_label")
@@ -335,16 +344,32 @@ class AnalyticsPage(QWidget):
         monthly = self.scope_control.value == "monthly"
         self.trend_chart.chart.set_data(state.trend if monthly else _month_chart_labels(state.trend), mode="bar")
         self.average_chart.chart.set_data(state.average if monthly else _month_chart_labels(state.average), mode="bar", average=True)
-        mode_order = {"normal": 0, "remote": 1, "business_trip": 2, "meeting": 3, "training": 4, "leave": 5, "other": 6}
-        work_modes = sorted(state.work_modes, key=lambda item: mode_order.get(item[0], 4))
-        self.breakdown_chart.chart.set_segments(
-            tuple((dict(state.work_mode_labels).get(key) or entry_type_label(key) or key, value) for key, value in work_modes),
-            keys=tuple(key for key, _value in work_modes),
-        )
+        self._set_breakdown()
         self.daily_average_value_label.setText(duration_label(state.stats.average_hours))
         self.daily_average_comparison_label.setText(_("{change:+.1f}h vs previous period").format(change=state.stats.average_hours - state.previous_stats.average_hours))
         daily_labels = _quarter_chart_labels if self.scope_control.value == "quarterly" else _month_chart_labels
         self.daily_average_chart.chart.set_data(daily_labels(state.daily_average_trend), mode="line", average=True)
+
+    def _set_breakdown(self, *_args) -> None:
+        state = self._dashboard
+        if state is None:
+            return
+        arrangement = self.breakdown_dimension_control.value == "work_mode"
+        if arrangement:
+            order = {mode.value: index for index, mode in enumerate(WorkMode)}
+            values = sorted(state.work_modes, key=lambda item: order.get(item[0], len(order)))
+            segments = tuple((work_mode_label(key), hours) for key, hours in values)
+            caption = _("Work hours by arrangement")
+        else:
+            order = {definition.value: index for index, definition in enumerate(EntryType)}
+            values = sorted(state.entry_types, key=lambda item: (order.get(item[0], len(order)), item[0]))
+            labels = dict(state.entry_type_labels)
+            segments = tuple((labels[key] if key in labels else classification_label(EntryType(key)), hours)
+                             for key, hours in values)
+            caption = _("Classified duration")
+        self.breakdown_caption.setText(caption)
+        self.breakdown_chart.chart.set_segments(segments, keys=tuple(key or "" for key, _hours in values),
+                                               caption=_("Work arrangement") if arrangement else _("Classification"))
 
     def _populate_periods(self) -> None:
         scope = self.scope_control.value or "monthly"

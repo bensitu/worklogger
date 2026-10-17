@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from worklogger.presentation.theme.theme_engine import contrasting_text_color
+from worklogger.presentation.theme.theme_engine import ThemeEngine, contrasting_text_color
 
-from math import floor, log10
+from math import ceil, floor, log10
 
-from PySide6.QtCore import QRectF, Qt
-from PySide6.QtGui import QBrush, QColor, QPainter, QPainterPath, QPen
+from PySide6.QtCore import QEvent, QRectF, Qt
+from PySide6.QtGui import QBrush, QColor, QFont, QFontMetrics, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from worklogger.domain.analytics.models import ChartDataBundle
@@ -122,19 +122,49 @@ class ComboChart(QWidget):
 class DonutChart(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setObjectName("work_mode_chart_widget")
+        self.setObjectName("distribution_chart_widget")
         self._segments: tuple[tuple[str, float], ...] = ()
         self._keys: tuple[str, ...] = ()
         self.setMinimumSize(180, 144)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
-    def set_segments(self, segments: tuple[tuple[str, float], ...], *, keys: tuple[str, ...] = ()) -> None:
+    def set_segments(self, segments: tuple[tuple[str, float], ...], *, keys: tuple[str, ...] = (),
+                     caption: str = "") -> None:
         self._segments = tuple((label, value) for label, value in segments if value > 0)
         self._keys = tuple(keys[index] if index < len(keys) else "" for index, (_label, value) in enumerate(segments) if value > 0)
         self.setToolTip("\n".join(f"{label}: {duration_label(value)}" for label, value in self._segments))
-        self.setAccessibleName(_("Work type"))
+        self.setAccessibleName(caption or _("Classification"))
         self.setAccessibleDescription(self.toolTip() or _("No data"))
+        self._fit_legend()
         self.update()
+
+    def _legend_layout(self):
+        font = QFont(self.font())
+        font.setPixelSize(11)
+        metrics = QFontMetrics(font)
+        diameter = min(self.width() * 0.36, 140)
+        x = diameter + 27
+        available = max(0, self.width() - x - 16)
+        total = sum(value for _, value in self._segments)
+        details = tuple(_("{duration} ({percent:.0f}%)").format(duration=duration_label(value), percent=value / total * 100)
+                        for _label, value in self._segments) if total else ()
+        inline = all(metrics.horizontalAdvance(label + "  " + detail) <= available
+                     for (label, _value), detail in zip(self._segments, details))
+        row_height = max(28, metrics.height() + 8) if inline else max(34, 2 * metrics.height() + 6)
+        return font, diameter, x, available, details, inline, row_height
+
+    def _fit_legend(self):
+        _font, diameter, _x, _available, _details, _inline, row_height = self._legend_layout()
+        self.setMinimumHeight(ceil(max(144, diameter + 20, len(self._segments) * row_height + 20)))
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._fit_legend()
+
+    def changeEvent(self, event):
+        super().changeEvent(event)
+        if event.type() in (QEvent.Type.FontChange, QEvent.Type.StyleChange) and hasattr(self, "_segments"):
+            self._fit_legend()
 
     def paintEvent(self, _event: object) -> None:
         painter = QPainter(self)
@@ -145,24 +175,16 @@ class DonutChart(QWidget):
         if total <= 0:
             painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, _("No data"))
             return
-        diameter = min(self.height() - 20, self.width() * 0.36, 140)
+        font, diameter, x, available, details, inline, row_height = self._legend_layout()
         ring = QRectF(12, (self.height() - diameter) / 2, diameter, diameter)
         segment_colors = (colors.accent, colors.success, colors.warning, colors.danger, colors.muted_text)
         start = 90 * 16
-        font = painter.font()
-        font.setPixelSize(11)
         painter.setFont(font)
-        x = ring.right() + 15
-        available = max(0, self.width() - x - 16)
-        details = tuple(_("{duration} ({percent:.0f}%)").format(duration=duration_label(value), percent=value / total * 100) for _label, value in self._segments)
-        inline = all(painter.fontMetrics().horizontalAdvance(label + "  " + detail) <= available for (label, _value), detail in zip(self._segments, details))
-        row_height = 28 if inline else 34
-        keyed_colors = {
-            "normal": colors.accent, "remote": QColor(colors.accent).lighter(145).name(),
-            "business_trip": colors.warning, "leave": colors.danger,
-        }
+        engine = ThemeEngine()
         for index, (label, value) in enumerate(self._segments):
-            color = QColor(keyed_colors.get(self._keys[index], segment_colors[index % len(segment_colors)]))
+            key = self._keys[index]
+            color = QColor(engine.entry_type_color("normal" if key == "onsite" else key, dark=colors.dark)
+                           if key else segment_colors[index % len(segment_colors)])
             span = round(360 * 16 * value / total)
             painter.setPen(QPen(color, 15))
             painter.drawArc(ring.adjusted(9, 9, -9, -9), start, -span)

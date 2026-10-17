@@ -18,7 +18,7 @@ class EntryTypeManagerDialog(QDialog):
         self._view_model = view_model
         self._selected = None
         self.setObjectName("entry_type_manager_dialog")
-        self.setWindowTitle(_("Work types"))
+        self.setWindowTitle(_("Entry types"))
         apply_window_icon(self)
         self.resize(700, 420)
         root = QVBoxLayout(self)
@@ -125,5 +125,5 @@ class EntryTypeManagerDialog(QDialog):
 
     def _check(self, result):
         if not result.ok:
-            QMessageBox.warning(self, _("Work types"), display_error_message(result.error))
+            QMessageBox.warning(self, _("Entry types"), display_error_message(result.error))
         return result.ok

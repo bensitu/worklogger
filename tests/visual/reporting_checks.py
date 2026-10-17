@@ -333,7 +333,7 @@ class ReportingLayoutChecks(unittest.TestCase):
                                     self.assertEqual(page._summary_grid.itemAtPosition(0, 0).widget(), page.monthly_hours_card)
                                     self.assertIsNotNone(page._summary_grid.itemAtPosition(1, 0) if width == 880 else page._summary_grid.itemAtPosition(0, 3))
                                     self.assertEqual(len(page.breakdown_chart.chart._segments), 4)
-                                    self.assertEqual(page.breakdown_chart.chart._keys, ("normal", "remote", "business_trip", "leave"))
+                                    self.assertEqual(page.breakdown_chart.chart._keys, ("normal", "remote", "business_trip", "paid_leave"))
                                 self.capture(window, f"filled-{route}-{'dark' if dark else 'light'}-{width}", language)
                     finally:
                         window.close()

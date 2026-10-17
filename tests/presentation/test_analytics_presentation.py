@@ -6,6 +6,7 @@ from pathlib import Path
 import tempfile
 import unittest
 import unicodedata
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -15,7 +16,8 @@ from PySide6.QtPdf import QPdfDocument
 from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
 from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler, GetAnalyticsDashboardHandler
 from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
-from worklogger.domain.worklog.models import WorkLog, EntryType
+from worklogger.domain.worklog.models import CustomEntryType, WorkLog, EntryType, WorkMode
+from worklogger.domain.worklog.rules import aggregate_days
 from worklogger.domain.analytics.models import ChartDataBundle
 from worklogger.infrastructure.export import AnalyticsCsvExporter, AnalyticsPdfExporter
 from worklogger.infrastructure.i18n import set_language
@@ -96,6 +98,36 @@ class AnalyticsPresentationTests(unittest.TestCase):
             complete(operation(CancellationToken()))
             self.assertTrue(path.is_file())
             self.assertTrue(page.export_button.isEnabled())
+
+    def test_breakdown_switches_between_classified_duration_and_work_arrangement(self):
+        repository = MemoryWorkLogRepository()
+        day = date(2026, 5, 4)
+        leave = CustomEntryType("custom:" + "a" * 32, "Study leave", "leave")
+        for record in aggregate_days((
+            WorkLog(1, day, "09:00", "11:00", entry_type=EntryType.MEETING, work_mode=WorkMode.REMOTE),
+            WorkLog(1, day, "11:00", "12:00"),
+            WorkLog(1, day, "12:00", "13:00", entry_type=EntryType.BREAK),
+            WorkLog(1, date(2026, 5, 5), entry_type=leave),
+        )):
+            repository.save(record)
+        model = AnalyticsViewModel(user_id=1, bundle_handler=GetAnalyticsBundleHandler(repository),
+            dashboard_handler=GetAnalyticsDashboardHandler(repository),
+            csv_exporter=AnalyticsCsvExporter(), pdf_exporter=AnalyticsPdfExporter())
+        page = AnalyticsPage(model, day)
+        self.addCleanup(page.close)
+        self.assertTrue(page.refresh())
+        chart = page.breakdown_chart.chart
+        self.assertEqual(sum(value for _label, value in chart._segments), 12)
+        self.assertIn(("Study leave", 8), chart._segments)
+        self.assertEqual(page._dashboard.stats.total_hours, 3)
+        with patch.object(model, "load_dashboard", wraps=model.load_dashboard) as loads:
+            page.breakdown_dimension_control.set_value("work_mode")
+            self.assertEqual(dict(chart._segments), {"Remote": 2, "Not specified": 1})
+            self.assertEqual(chart.accessibleName(), "Work arrangement")
+            page.breakdown_dimension_control.set_value("entry_type")
+            self.assertEqual(sum(value for _label, value in chart._segments), 12)
+            self.assertEqual(chart.accessibleName(), "Classification")
+            loads.assert_not_called()
 
     def test_pdf_export_preserves_unicode_and_all_summary_rows(self):
         bundle = ChartDataBundle(bar_data=tuple((f"Work {index}", 8.0) for index in range(100)), line_data=(),

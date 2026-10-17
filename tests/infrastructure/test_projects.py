@@ -8,7 +8,7 @@ import unittest
 from worklogger.app.use_cases.projects import ProjectService
 from worklogger.app.use_cases.time_entries import TimeEntryService
 from worklogger.domain.projects.models import WorkContext
-from worklogger.domain.worklog.models import WorkLog
+from worklogger.domain.worklog.models import WorkLog, WorkMode
 from worklogger.domain.worklog.search import EntryFilter
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
 from worklogger.infrastructure.repositories.auth_sqlite import SQLiteAuthRepository
@@ -202,7 +202,8 @@ class ProjectTests(unittest.TestCase):
         item = self.projects.save_work_item(project.id, "Review").value
         recorder = self.recorder()
         day = self.now.date()
-        first = recorder.save_manual(day, "09:00", "11:00", "normal", "Reading", context=WorkContext(project.id, item.id)).value
+        first = recorder.save_manual(day, "09:00", "11:00", "normal", "Reading",
+            context=WorkContext(project.id, item.id), work_mode=WorkMode.REMOTE).value
         recorder.save_manual(day, "11:00", "12:00", "break", "Rest")
         recorder.save_manual(day, "13:00", "14:00", "normal", "Other")
         rows = self.records.list_range(self.user.id, day, day)
@@ -212,12 +213,14 @@ class ProjectTests(unittest.TestCase):
         self.assertIn("Research: 2.0h", values["projects_summary"])
         self.assertIn("Unclassified: 1.0h", values["projects_summary"])
         self.assertIn("Research / Review", values["task_list"])
+        self.assertIn("Normal \u00b7 Remote", values["task_list"])
         path = Path(self.factory.database_path).parent / "context.csv"
         self.assertTrue(WorkLogCsvExporter().export_work_logs(path, (first,)).ok)
         handler = ImportWorkLogsCsvHandler(importer=WorkLogCsvImporter(), repository=self.records)
         preview = handler.preview(ImportWorkLogsCsvCommand(self.other.id, str(path))).value
         self.assertEqual(preview.errors, ())
         self.assertEqual(preview.rows[0].context.label, first.context.label)
+        self.assertEqual(preview.rows[0].work_mode, WorkMode.REMOTE)
         self.assertIsNone(preview.rows[0].context.project_id)
         self.assertTrue(handler.apply(preview).ok)
         self.assertEqual(self.records.list_for_day(self.other.id, day)[0].worked_hours(), 2)

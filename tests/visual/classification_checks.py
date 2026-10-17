@@ -15,7 +15,7 @@ from PySide6.QtWidgets import QApplication
 from worklogger.domain.projects.models import Project, WorkContext, WorkItem
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import EntryType, WorkLog, WorkMode
-from worklogger.infrastructure.i18n import get_language, set_language
+from worklogger.infrastructure.i18n import available_languages, get_language, set_language
 from worklogger.presentation.job_runner import ImmediateJobRunner
 from worklogger.presentation.shell.minimal_view import MinimalView, MinimalViewConfig
 from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
@@ -39,7 +39,7 @@ class ClassificationLayoutChecks(unittest.TestCase):
         projects = SimpleNamespace(catalog=lambda: Result.success(((project,), {project.id: (item,)})),
                                    recent_contexts=lambda: Result.success((context,)))
         try:
-            for language in ("en_US", "zh_CN", "ja_JP"):
+            for language in available_languages():
                 set_language(language)
                 for dark in (False, True):
                     for minimal in (False, True):

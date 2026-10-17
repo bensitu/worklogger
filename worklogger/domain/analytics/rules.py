@@ -91,15 +91,20 @@ def dashboard_data(
         trend = _bundle(labels, totals, counts, leaves, leave_counts, "hours", True)
         average = _bundle(labels, totals, counts, leaves, leave_counts, "average", True)
 
-    modes: dict[str, float] = {}
-    mode_labels: dict[str, str] = {}
+    entry_types: dict[str, float] = {}
+    type_labels: dict[str, str] = {}
+    work_modes: dict[str | None, float] = {}
     for row in (entry for record in current for entry in (record.entries or (record,))):
-        key = "leave" if row.is_leave else row.entry_type.value
-        hours = row.leave_hours(standard_hours=standard_hours) if row.is_leave else row.worked_hours()
+        key = row.entry_type.value
+        hours = row.classified_hours(standard_leave_hours=standard_hours)
         if hours > 0:
-            modes[key] = modes.get(key, 0.0) + hours
-            if isinstance(row.entry_type, CustomEntryType) and not row.is_leave:
-                mode_labels[key] = row.entry_type.label
+            entry_types[key] = entry_types.get(key, 0.0) + hours
+            if isinstance(row.entry_type, CustomEntryType):
+                type_labels.setdefault(key, row.entry_type.label)
+        worked = row.worked_hours()
+        if worked > 0:
+            mode = row.work_mode.value if row.work_mode is not None else None
+            work_modes[mode] = work_modes.get(mode, 0.0) + worked
 
     daily = []
     if scope == "quarterly":
@@ -117,9 +122,10 @@ def dashboard_data(
     return AnalyticsDashboard(
         start, end, stats, month_stats(previous, standard_hours), monthly_target * month_count,
         (end - start).days + 1, (start - previous_start).days if previous_start is not None else 0,
-        trend, average, tuple(modes.items()), ChartDataBundle(tuple(daily), tuple(daily), frozenset(), (), ()),
-        tuple(mode_labels.items()),
+        trend, average, tuple(entry_types.items()), ChartDataBundle(tuple(daily), tuple(daily), frozenset(), (), ()),
+        tuple(type_labels.items()),
         work_schedule.planned_days(start, end),
+        work_modes=tuple(work_modes.items()),
     )
 
 

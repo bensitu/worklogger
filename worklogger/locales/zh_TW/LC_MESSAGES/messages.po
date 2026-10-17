@@ -55,9 +55,6 @@ msgstr "注重隱私的桌面工時記錄工具，支援 AI 報表。"
 msgid "A record without start and end times cannot be split. Choose entire-record replacement or cancel."
 msgstr "沒有開始與結束時間的記錄無法拆分。請選擇取代整筆記錄，或取消操作。"
 
-msgid "A work type with this name already exists."
-msgstr "已存在同名工作類型。"
-
 msgid "A&lpha channel:"
 msgstr "透明度(&L)："
 
@@ -136,14 +133,14 @@ msgstr "全部日期"
 msgid "All day"
 msgstr "全天"
 
+msgid "All entry types"
+msgstr "所有記錄類型"
+
 msgid "All projects"
 msgstr "所有專案"
 
 msgid "All work items"
 msgstr "所有工作項目"
-
-msgid "All work types"
-msgstr "所有工作類型"
 
 msgid "Allow in AI context"
 msgstr "允許用於 AI 上下文"
@@ -153,6 +150,9 @@ msgstr "允許用於報表"
 
 msgid "An active item with this name already exists."
 msgstr "已存在同名的未封存項目。"
+
+msgid "An entry type with this name already exists."
+msgstr "已存在同名記錄類型。"
 
 msgid "Analytics"
 msgstr "統計分析"
@@ -237,6 +237,9 @@ msgstr "自動記錄"
 
 msgid "Automatic goals use planned workdays and daily standard hours. Enabled public holidays follow the selected region."
 msgstr "自動目標根據計畫工作日與每日標準工時計算；啟用假日時，採用所選地區的假日。"
+
+msgid "Automatic recording requires a work classification. Enter leave manually and use the Break action for a timed break."
+msgstr "自動錄入僅支援工作分類。休假請手動錄入，定時休息請使用「休息」操作。"
 
 msgid "Avatar"
 msgstr "頭像"
@@ -398,7 +401,16 @@ msgid "Choose custom color"
 msgstr "選擇自訂色彩"
 
 msgid "Classification"
-msgstr "分類管理"
+msgstr "記錄分類"
+
+msgid "Classification breakdown"
+msgstr "分類時長分布"
+
+msgid "Classification label"
+msgstr "分類名稱"
+
+msgid "Classified duration"
+msgstr "分類記錄時長"
 
 msgid "Clear Calendar Events"
 msgstr "清除行事曆事件"
@@ -420,9 +432,6 @@ msgstr "關閉視窗"
 
 msgid "Code"
 msgstr "編號"
-
-msgid "Comp leave"
-msgstr "補休"
 
 msgid "Compensatory leave"
 msgstr "補休"
@@ -730,6 +739,12 @@ msgstr "請輸入不含內嵌認證資料的 HTTP 或 HTTPS 來源連結。"
 msgid "Enter content before continuing."
 msgstr "請先輸入內容。"
 
+msgid "Enter leave in Manual Input."
+msgstr "休假請在「手動輸入」中錄入。"
+
+msgid "Enter leave in Manual Input. Use the Break action to record a break."
+msgstr "休假請手動錄入，休息請使用「休息」操作。"
+
 msgid "Enter valid start and end times in HH:mm format."
 msgstr "請以 HH:mm 格式輸入有效的開始和結束時間。"
 
@@ -747,6 +762,12 @@ msgstr "請輸入密碼。"
 
 msgid "Entire overlapping records will be removed, including time outside the new period."
 msgstr "將刪除重疊的整筆記錄，包括新時段以外的部分。"
+
+msgid "Entry type"
+msgstr "記錄類型"
+
+msgid "Entry types"
+msgstr "記錄類型"
 
 msgid "Error"
 msgstr "錯誤"
@@ -1090,6 +1111,12 @@ msgstr "休假天數"
 msgid "Leave hours"
 msgstr "請假時長"
 
+msgid "Leave type"
+msgstr "休假類型"
+
+msgid "Legacy classification"
+msgstr "歷史分類"
+
 msgid "License"
 msgstr "授權條款"
 
@@ -1180,6 +1207,9 @@ msgstr "管理目前資料庫中的所有使用者帳戶。"
 msgid "Manage downloaded and imported GGUF models."
 msgstr "管理已下載和匯入的 GGUF 模型。"
 
+msgid "Manage entry types"
+msgstr "管理記錄類型"
+
 msgid "Manage models"
 msgstr "管理模型"
 
@@ -1188,9 +1218,6 @@ msgstr "管理專案"
 
 msgid "Manage users"
 msgstr "管理使用者"
-
-msgid "Manage work types"
-msgstr "管理工作類型"
 
 msgid "Manual Input"
 msgstr "手動輸入"
@@ -1396,6 +1423,9 @@ msgstr "尚未下載"
 msgid "Not required"
 msgstr "不需要"
 
+msgid "Not specified"
+msgstr "未指定"
+
 msgid "Not verified"
 msgstr "尚未驗證"
 
@@ -1416,6 +1446,9 @@ msgstr "10月"
 
 msgid "Off"
 msgstr "關閉"
+
+msgid "On-site"
+msgstr "現場辦公"
 
 msgid "One day off per week"
 msgstr "單休"
@@ -1498,6 +1531,9 @@ msgstr "密碼已重設。"
 msgid "Paste"
 msgstr "貼上"
 
+msgid "Period type"
+msgstr "時段類型"
+
 msgid "Personal profile"
 msgstr "個人資料"
 
@@ -1566,6 +1602,9 @@ msgstr "專案／工作項目"
 
 msgid "Project ID"
 msgstr "專案 ID"
+
+msgid "Project assignment is available for work records only."
+msgstr "僅工作記錄可以關聯專案。"
 
 msgid "Project homepage"
 msgstr "專案首頁"
@@ -1942,6 +1981,9 @@ msgstr "請選擇支援的假日國家及州或省。"
 msgid "Select a user."
 msgstr "請選取使用者。"
 
+msgid "Select a valid classification. Break and leave cannot have a work arrangement or project."
+msgstr "請選擇有效分類。休息和休假不能設定工作方式或關聯專案。"
+
 msgid "Select a valid date or date range."
 msgstr "請選擇有效的日期或日期範圍。"
 
@@ -2058,6 +2100,9 @@ msgstr "簡體中文"
 
 msgid "Some dates already have records. Review the import and confirm replacement."
 msgstr "部分日期已有記錄。請檢查匯入內容並確認是否取代。"
+
+msgid "Some stored records could not be converted safely. The original data and upgrade backup have been preserved."
+msgstr "部分記錄無法安全轉換。原始資料和升級備份均已保留。"
 
 msgid "Source URL"
 msgstr "來源連結"
@@ -2254,6 +2299,9 @@ msgstr "此授權回應無效。請返回 WorkLogger。"
 msgid "This database version or structure is not supported. Keep the original file and use a compatible version to export your data."
 msgstr "不支援此資料庫版本或結構。請保留原始檔案，使用相容版本匯出資料。"
 
+msgid "This entry type changed or is no longer available. Reload the types and try again."
+msgstr "該記錄類型已變更或無法使用。請重新載入類型後再試。"
+
 msgid "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
 msgstr "這項歷史扣除無法用整分鐘表示，原紀錄未改變。"
 
@@ -2298,9 +2346,6 @@ msgstr "此工時表過大，請選擇更短的期間。目標檔案未改變。
 
 msgid "This work timer has reached your continuous-work reminder duration."
 msgstr "此工作計時已達到連續工作提醒時長。"
-
-msgid "This work type changed or is no longer available. Reload the types and try again."
-msgstr "此工作類型已變更或無法使用。請重新載入類型後重試。"
 
 msgid "Thu"
 msgstr "四"
@@ -2473,11 +2518,11 @@ msgstr "無法啟動 WorkLogger，請查看應用程式日誌以了解詳情。"
 msgid "Unable to update automatic recording state. Your saved data has been retained."
 msgstr "無法更新自動記錄狀態。已儲存的資料已保留。"
 
+msgid "Unable to update entry types. Your records have not changed."
+msgstr "無法更新記錄類型。您的記錄未變更。"
+
 msgid "Unable to update saved sign-in information."
 msgstr "無法更新已儲存的登入資訊。"
-
-msgid "Unable to update work types. Your records have not changed."
-msgstr "無法更新工作類型。您的記錄未改變。"
 
 msgid "Unclassified"
 msgstr "未分類"
@@ -2626,17 +2671,20 @@ msgstr "工作"
 msgid "Work Hours Trend"
 msgstr "工時趨勢"
 
-msgid "Work Mode Breakdown"
-msgstr "工作方式分布"
-
 msgid "Work Report"
 msgstr "工作報表"
+
+msgid "Work arrangement"
+msgstr "工作方式"
 
 msgid "Work days"
 msgstr "工作天數"
 
 msgid "Work hours"
 msgstr "工時"
+
+msgid "Work hours by arrangement"
+msgstr "各工作方式的工作時長"
 
 msgid "Work item"
 msgstr "工作項目"
@@ -2655,12 +2703,6 @@ msgstr "工作紀錄"
 
 msgid "Work schedule"
 msgstr "工作安排"
-
-msgid "Work type"
-msgstr "工作類型"
-
-msgid "Work types"
-msgstr "工作類型"
 
 msgid "Work {hours:.1f}h"
 msgstr "工作 {hours:.1f}h"

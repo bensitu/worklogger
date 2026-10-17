@@ -9,11 +9,11 @@ from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.files import atomic_destination
 from worklogger.infrastructure.i18n import _
-from worklogger.infrastructure.entry_type_labels import entry_type_label
+from worklogger.infrastructure.entry_type_labels import classification_label, entry_type_label
 
 
 def _headers():
-    return (_("Date"), _("Start"), _("End"), _("Work type"), _("Project"), _("Work item"), _("Content"),
+    return (_("Date"), _("Start"), _("End"), _("Classification"), _("Project"), _("Work item"), _("Content"),
             _("Worked hours"), _("Rest hours"), _("Leave hours"), _("Record status"))
 
 
@@ -29,7 +29,7 @@ def _rows(sheet):
             yield (day.isoformat(), "", "", "", "", "", "", 0.0, 0.0, 0.0, _("No records")), None
         for entry in entries:
             rest = entry.raw_hours() if entry.is_break else entry.break_hours
-            yield (day.isoformat(), entry.start_time or "", entry.end_time or "", entry_type_label(entry.entry_type),
+            yield (day.isoformat(), entry.start_time or "", entry.end_time or "", classification_label(entry.entry_type, entry.work_mode),
                 entry.context.project_label, entry.context.work_item_label, entry.note, entry.worked_hours(), rest,
                 entry.leave_hours(standard_hours=sheet.standard_hours), statuses[sheet.record_status(entry)]), entry
 
@@ -66,6 +66,7 @@ class TimesheetXlsxExporter:
             border = Border(bottom=Side(style="hair", color="CDD5F0"))
             record_font = Font(name="Arial", size=10, color="1E2035")
             record_alignment = Alignment(wrap_text=True, vertical="top")
+            widths = (13, 9, 9, 25, 22, 25, 60, 14, 14, 14, 15)
             row_index = 7
             metadata = []
             for values, entry in _rows(sheet):
@@ -79,11 +80,18 @@ class TimesheetXlsxExporter:
                     cell.alignment = record_alignment
                     cell.border = border
                     cell.font = record_font
-                page.row_dimensions[row_index].height = max(26, min(160, 14 * max(2, math.ceil(len(str(values[6])) / 55))))
+                wrapped_lines = max(
+                    sum(max(1, math.ceil(len(line) / (widths[column] - 5)))
+                        for line in str(values[column]).splitlines())
+                    for column in (3, 4, 5, 6)
+                )
+                page.row_dimensions[row_index].height = max(26, min(160, 14 * max(2, wrapped_lines)))
                 if entry is not None:
                     metadata.append((entry.id, entry.revision, entry.day.isoformat(),
                         entry.started_at.isoformat() if entry.started_at else "", entry.ended_at.isoformat() if entry.ended_at else "",
-                        entry.break_hours, entry.entry_type.value, entry.context.project_id or "", entry.context.work_item_id or ""))
+                        entry.break_hours, entry.entry_type.value, entry.context.project_id or "", entry.context.work_item_id or "",
+                        entry.work_mode.value if entry.work_mode is not None else "",
+                        entry_type_label(entry.entry_type), entry.entry_type.category.value))
                 row_index += 1
             page.auto_filter.ref = f"A6:K{row_index - 1}"
             page.freeze_panes = "A7"
@@ -95,7 +103,6 @@ class TimesheetXlsxExporter:
             page.merge_cells(start_row=row_index, start_column=1, end_row=row_index, end_column=11)
             page.cell(row_index, 1, _("Recorded totals at export. Editing this file does not change WorkLogger records."))
             page.cell(row_index, 1).alignment = Alignment(wrap_text=True)
-            widths = (13, 9, 9, 17, 22, 25, 60, 14, 14, 14, 15)
             for column, width in enumerate(widths, 1):
                 page.column_dimensions[get_column_letter(column)].width = width
             page.sheet_properties.pageSetUpPr.fitToPage = True
@@ -106,11 +113,13 @@ class TimesheetXlsxExporter:
             page.print_area = f"A1:K{row_index}"
             sources = workbook.create_sheet(_("Record references")[:31])
             sources.append([_("Record ID"), _("Revision"), _("Date"), _("Started at"), _("Ended at"),
-                            _("Historical break deduction"), _("Work type"), _("Project ID"), _("Work item ID")])
+                            _("Historical break deduction"), _("Classification"), _("Project ID"), _("Work item ID"),
+                            _("Work arrangement"), _("Classification label"), _("Accounting category")])
             for values in metadata:
                 sources.append(values)
+                _text(sources.cell(sources.max_row, 11), values[10])
             sources.freeze_panes = "A2"
-            for column in range(1, 10):
+            for column in range(1, 13):
                 sources.column_dimensions[get_column_letter(column)].width = 25
             with atomic_destination(Path(destination)) as temporary:
                 workbook.save(temporary)
@@ -140,9 +149,9 @@ class TimesheetPdfExporter:
                 "<p>" + escape(sheet.start.isoformat() + " - " + sheet.end.isoformat()) + "<br>"
                 + escape(_("Prepared by: {name}").format(name=sheet.author)) + "<br>"
                 + escape(_("Generated at: {time}").format(time=sheet.generated_at.isoformat(timespec="seconds"))) + "</p>"]
-            headings = (_("Date"), _("Time"), _("Work type"), _("Project / work item"),
+            headings = (_("Date"), _("Time"), _("Classification"), _("Project / work item"),
                         _("Worked hours"), _("Rest hours"), _("Leave hours"), _("Content"))
-            widths = (10, 12, 10, 16, 7, 7, 7, 31)
+            widths = (10, 12, 16, 16, 7, 7, 7, 25)
             html.append('<table border="1" cellspacing="0" cellpadding="3" width="100%"><thead><tr bgcolor="#e8f0fe">')
             html.extend(f'<th width="{width}%">' + escape(value) + "</th>" for width, value in zip(widths, headings))
             html.append("</tr></thead><tbody>")

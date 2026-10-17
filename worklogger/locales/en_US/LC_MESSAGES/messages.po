@@ -55,9 +55,6 @@ msgstr "A privacy-first desktop work tracker with AI-powered reporting."
 msgid "A record without start and end times cannot be split. Choose entire-record replacement or cancel."
 msgstr "A record without start and end times cannot be split. Choose entire-record replacement or cancel."
 
-msgid "A work type with this name already exists."
-msgstr "A work type with this name already exists."
-
 msgid "A&lpha channel:"
 msgstr "A&lpha channel:"
 
@@ -136,14 +133,14 @@ msgstr "All dates"
 msgid "All day"
 msgstr "All day"
 
+msgid "All entry types"
+msgstr "All entry types"
+
 msgid "All projects"
 msgstr "All projects"
 
 msgid "All work items"
 msgstr "All work items"
-
-msgid "All work types"
-msgstr "All work types"
 
 msgid "Allow in AI context"
 msgstr "Allow in AI context"
@@ -153,6 +150,9 @@ msgstr "Allow in reports"
 
 msgid "An active item with this name already exists."
 msgstr "An active item with this name already exists."
+
+msgid "An entry type with this name already exists."
+msgstr "An entry type with this name already exists."
 
 msgid "Analytics"
 msgstr "Analytics"
@@ -237,6 +237,9 @@ msgstr "Auto Record"
 
 msgid "Automatic goals use planned workdays and daily standard hours. Enabled public holidays follow the selected region."
 msgstr "Automatic goals use planned workdays and daily standard hours. Enabled public holidays follow the selected region."
+
+msgid "Automatic recording requires a work classification. Enter leave manually and use the Break action for a timed break."
+msgstr "Automatic recording requires a work classification. Enter leave manually and use the Break action for a timed break."
 
 msgid "Avatar"
 msgstr "Avatar"
@@ -400,6 +403,15 @@ msgstr "Choose custom color"
 msgid "Classification"
 msgstr "Classification"
 
+msgid "Classification breakdown"
+msgstr "Classification breakdown"
+
+msgid "Classification label"
+msgstr "Classification label"
+
+msgid "Classified duration"
+msgstr "Classified duration"
+
 msgid "Clear Calendar Events"
 msgstr "Clear Calendar Events"
 
@@ -420,9 +432,6 @@ msgstr "Close window"
 
 msgid "Code"
 msgstr "Code"
-
-msgid "Comp leave"
-msgstr "Comp leave"
 
 msgid "Compensatory leave"
 msgstr "Compensatory leave"
@@ -730,6 +739,12 @@ msgstr "Enter an HTTP or HTTPS source URL without embedded credentials."
 msgid "Enter content before continuing."
 msgstr "Enter content before continuing."
 
+msgid "Enter leave in Manual Input."
+msgstr "Enter leave in Manual Input."
+
+msgid "Enter leave in Manual Input. Use the Break action to record a break."
+msgstr "Enter leave in Manual Input. Use the Break action to record a break."
+
 msgid "Enter valid start and end times in HH:mm format."
 msgstr "Enter valid start and end times in HH:mm format."
 
@@ -747,6 +762,12 @@ msgstr "Enter your password."
 
 msgid "Entire overlapping records will be removed, including time outside the new period."
 msgstr "Entire overlapping records will be removed, including time outside the new period."
+
+msgid "Entry type"
+msgstr "Entry type"
+
+msgid "Entry types"
+msgstr "Entry types"
 
 msgid "Error"
 msgstr "Error"
@@ -1090,6 +1111,12 @@ msgstr "Leave days"
 msgid "Leave hours"
 msgstr "Leave hours"
 
+msgid "Leave type"
+msgstr "Leave type"
+
+msgid "Legacy classification"
+msgstr "Legacy classification"
+
 msgid "License"
 msgstr "License"
 
@@ -1180,6 +1207,9 @@ msgstr "Manage all user accounts in this database."
 msgid "Manage downloaded and imported GGUF models."
 msgstr "Manage downloaded and imported GGUF models."
 
+msgid "Manage entry types"
+msgstr "Manage entry types"
+
 msgid "Manage models"
 msgstr "Manage models"
 
@@ -1188,9 +1218,6 @@ msgstr "Manage projects"
 
 msgid "Manage users"
 msgstr "Manage users"
-
-msgid "Manage work types"
-msgstr "Manage work types"
 
 msgid "Manual Input"
 msgstr "Manual Input"
@@ -1396,6 +1423,9 @@ msgstr "Not downloaded"
 msgid "Not required"
 msgstr "Not required"
 
+msgid "Not specified"
+msgstr "Not specified"
+
 msgid "Not verified"
 msgstr "Not verified"
 
@@ -1416,6 +1446,9 @@ msgstr "October"
 
 msgid "Off"
 msgstr "Off"
+
+msgid "On-site"
+msgstr "On-site"
 
 msgid "One day off per week"
 msgstr "One day off per week"
@@ -1498,6 +1531,9 @@ msgstr "Password reset."
 msgid "Paste"
 msgstr "Paste"
 
+msgid "Period type"
+msgstr "Period type"
+
 msgid "Personal profile"
 msgstr "Personal profile"
 
@@ -1566,6 +1602,9 @@ msgstr "Project / work item"
 
 msgid "Project ID"
 msgstr "Project ID"
+
+msgid "Project assignment is available for work records only."
+msgstr "Project assignment is available for work records only."
 
 msgid "Project homepage"
 msgstr "Project homepage"
@@ -1942,6 +1981,9 @@ msgstr "Select a supported holiday country and state or province."
 msgid "Select a user."
 msgstr "Select a user."
 
+msgid "Select a valid classification. Break and leave cannot have a work arrangement or project."
+msgstr "Select a valid classification. Break and leave cannot have a work arrangement or project."
+
 msgid "Select a valid date or date range."
 msgstr "Select a valid date or date range."
 
@@ -2058,6 +2100,9 @@ msgstr "Simplified Chinese"
 
 msgid "Some dates already have records. Review the import and confirm replacement."
 msgstr "Some dates already have records. Review the import and confirm replacement."
+
+msgid "Some stored records could not be converted safely. The original data and upgrade backup have been preserved."
+msgstr "Some stored records could not be converted safely. The original data and upgrade backup have been preserved."
 
 msgid "Source URL"
 msgstr "Source URL"
@@ -2254,6 +2299,9 @@ msgstr "This authorization response is invalid. Return to WorkLogger."
 msgid "This database version or structure is not supported. Keep the original file and use a compatible version to export your data."
 msgstr "This database version or structure is not supported. Keep the original file and use a compatible version to export your data."
 
+msgid "This entry type changed or is no longer available. Reload the types and try again."
+msgstr "This entry type changed or is no longer available. Reload the types and try again."
+
 msgid "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
 msgstr "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
 
@@ -2298,9 +2346,6 @@ msgstr "This timesheet is too large. Choose a shorter period; the destination fi
 
 msgid "This work timer has reached your continuous-work reminder duration."
 msgstr "This work timer has reached your continuous-work reminder duration."
-
-msgid "This work type changed or is no longer available. Reload the types and try again."
-msgstr "This work type changed or is no longer available. Reload the types and try again."
 
 msgid "Thu"
 msgstr "Thu"
@@ -2473,11 +2518,11 @@ msgstr "Unable to start WorkLogger. Check the application log for details."
 msgid "Unable to update automatic recording state. Your saved data has been retained."
 msgstr "Unable to update automatic recording state. Your saved data has been retained."
 
+msgid "Unable to update entry types. Your records have not changed."
+msgstr "Unable to update entry types. Your records have not changed."
+
 msgid "Unable to update saved sign-in information."
 msgstr "Unable to update saved sign-in information."
-
-msgid "Unable to update work types. Your records have not changed."
-msgstr "Unable to update work types. Your records have not changed."
 
 msgid "Unclassified"
 msgstr "Unclassified"
@@ -2626,17 +2671,20 @@ msgstr "Work"
 msgid "Work Hours Trend"
 msgstr "Work Hours Trend"
 
-msgid "Work Mode Breakdown"
-msgstr "Work Mode Breakdown"
-
 msgid "Work Report"
 msgstr "Work Report"
+
+msgid "Work arrangement"
+msgstr "Work arrangement"
 
 msgid "Work days"
 msgstr "Work days"
 
 msgid "Work hours"
 msgstr "Work hours"
+
+msgid "Work hours by arrangement"
+msgstr "Work hours by arrangement"
 
 msgid "Work item"
 msgstr "Work item"
@@ -2655,12 +2703,6 @@ msgstr "Work records"
 
 msgid "Work schedule"
 msgstr "Work schedule"
-
-msgid "Work type"
-msgstr "Work type"
-
-msgid "Work types"
-msgstr "Work types"
 
 msgid "Work {hours:.1f}h"
 msgstr "Work {hours:.1f}h"

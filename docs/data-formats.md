@@ -24,6 +24,18 @@ Custom records also need `entry_type_label` and `entry_type_category`, with cate
 `work`, `break`, or `leave`. Import preserves that snapshot without editing the
 account's type catalog.
 
+The original v3.3.3 six-column CSV remains accepted with `work_type` in place of
+`entry_type`. New exports use `entry_type`; legacy files cannot represent a
+separate work arrangement or custom classification snapshots. Historical
+`remote` and `business_trip` IDs remain readable without guessing a work activity.
+
+Optional `work_mode` stores `onsite`, `remote`, `business_trip`, or `other`.
+Missing or empty values mean unspecified and never inherit an account preference.
+Exports include the column when at least one record has an arrangement. Break
+and leave cannot carry a work arrangement or project/work-item context; invalid
+combinations are rejected in the import preview. Import does not change the
+arrangement remembered for new records.
+
 Optional `started_at` and `ended_at` carry offset-aware ISO timestamps and must
 agree with dates and clock boundaries. Clock-only records retain their wall-clock
 meaning; import does not invent offsets.
@@ -61,6 +73,10 @@ CSV is an exchange format, not a byte-for-byte database archive.
 Work-log export emits UTF-8 iCalendar with CRLF endings and folded lines. Timed
 non-leave periods become individual events. Overnight periods end the next day.
 Captured offsets export as UTC; clock-only records use floating local times.
+Event descriptions include classification, an optional arrangement, project
+context, and condensed record content. Leave records remain excluded. iCalendar
+is an event exchange, not a lossless record backup; use CSV or a database backup
+for complete supported record data.
 
 Calendar import accepts files up to 10 MiB and 10,000 expanded daily entries.
 UTC/named zones convert to system local time; floating times keep their clocks.

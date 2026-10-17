@@ -36,9 +36,10 @@ class AnalyticsDashboard:
     previous_total_days: int
     trend: ChartDataBundle
     average: ChartDataBundle
-    work_modes: tuple[tuple[str, float], ...]
+    entry_types: tuple[tuple[str, float], ...]
     daily_average_trend: ChartDataBundle
-    work_mode_labels: tuple[tuple[str, str], ...] = ()
+    entry_type_labels: tuple[tuple[str, str], ...] = ()
     planned_work_days: float | None = 0.0
     target_mode: str = "manual"
     planning_error: str = ""
+    work_modes: tuple[tuple[str | None, float], ...] = ()

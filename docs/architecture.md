@@ -137,6 +137,13 @@ classification tooltip. An explicit `CalendarDimension` separates allocation fro
 drawing. Entry type is the visible default; work-arrangement allocation retains
 unknown values as unspecified and has no user-facing switch.
 
+Analytics exposes independent entry-type and work-arrangement distributions.
+Classification duration uses the same domain accounting as calendar allocation;
+arrangement totals include only actual work. Report classification labels use
+an injected translator, while UI/export adapters use the configured locale.
+Neither path mutates historical labels or derives an arrangement from an account
+default when reading existing records or importing CSV.
+
 The report page coordinates state and requests. `widgets/report_editor.py` owns
 editor controls without persistence dependencies; `reporting/exports.py` handles
 export selection using immutable content and date snapshots. Period navigation
@@ -181,7 +188,7 @@ button roles, icons, and fonts. Icon-only actions need tooltips and accessible
 names. Strings use gettext; date labels use presentation helpers.
 
 `widgets/preview_list.py` provides shared lists and delegates for a title with
-bounded secondary lines. Notes, local models, projects, work types, and report
+bounded secondary lines. Notes, local models, projects, entry types, and report
 versions reuse its sizing and horizontal elision. Selection profiles remain
 explicit so existing component appearance is preserved.
 

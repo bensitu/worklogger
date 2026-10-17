@@ -14,7 +14,7 @@ from worklogger.infrastructure.i18n import _
 from worklogger.presentation.theme import ThemeEngine
 from worklogger.presentation.theme.context import current_colors
 from worklogger.presentation.theme.theme_engine import contrasting_text_color
-from worklogger.presentation.entry_type_labels import entry_type_label
+from worklogger.presentation.entry_type_labels import classification_label
 
 
 @dataclass(frozen=True)
@@ -68,7 +68,8 @@ class RecordReplacementTimeline(QWidget):
         return moment.astimezone(self._zone) if self._zone is not None else moment
 
     def _description(self, period):
-        return f"{entry_type_label(period.record.entry_type)}: {self._local(period.start).isoformat(' ')} - {self._local(period.end).isoformat(' ')}"
+        label = classification_label(period.record.entry_type, period.record.work_mode)
+        return f"{label}: {self._local(period.start).isoformat(' ')} - {self._local(period.end).isoformat(' ')}"
 
     def _time_label(self, moment):
         first, last, value = (self._local(item) for item in (self._start, self._end, moment))
@@ -97,9 +98,7 @@ class RecordReplacementTimeline(QWidget):
         return QRectF(lane.left() + lane.width() * left, lane.top(), max(1, lane.width() * (right - left)), lane.height())
 
     def _color(self, record):
-        colors = current_colors()
-        return QColor(ThemeEngine().entry_type_color(record.entry_type, dark=colors.dark)
-                      or (colors.muted_text if record.is_break else colors.accent))
+        return QColor(ThemeEngine().entry_type_color(record.entry_type, dark=current_colors().dark))
 
     def _draw_period(self, painter, period, *, incoming=False):
         rect = self.period_rect(period, incoming=incoming)
@@ -107,7 +106,7 @@ class RecordReplacementTimeline(QWidget):
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(color)
         painter.drawRoundedRect(rect, 3, 3)
-        caption = entry_type_label(period.record.entry_type)
+        caption = classification_label(period.record.entry_type, period.record.work_mode)
         if self.fontMetrics().horizontalAdvance(caption) + 12 < rect.width():
             painter.setPen(contrasting_text_color(color))
             painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, caption)

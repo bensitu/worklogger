@@ -42,16 +42,19 @@ class ReportHistoryTests(unittest.TestCase):
         from openpyxl import load_workbook
         from PySide6.QtPdf import QPdfDocument
         import unicodedata
-        from worklogger.domain.worklog.models import WorkLog, EntryType
+        from worklogger.domain.worklog.models import CustomEntryType, WorkLog, EntryType, WorkMode
         from worklogger.domain.projects.models import WorkContext
         from worklogger.infrastructure.repositories.worklog_sqlite import SQLiteWorkLogRepository
         from worklogger.infrastructure.export.timesheets import TimesheetXlsxExporter, TimesheetPdfExporter
         from worklogger.app.use_cases.timesheets import ExportTimesheetHandler
         records = SQLiteWorkLogRepository(self.factory)
+        classification = "=Research and development planning for distributed authentication services"
         original = records.save_entry(WorkLog(self.user.id, self.day, "09:00", "12:00", 0.5, "=SUM(A1:A2)\n\u5de5\u4f5c\u5185\u5bb9",
+            entry_type=CustomEntryType("custom:" + "a" * 32, classification, "work"), work_mode=WorkMode.REMOTE,
             context=WorkContext(project_label="Research", work_item_label="Review")))
         records.save_entry(WorkLog(self.user.id, self.day, "12:00", "13:00", entry_type=EntryType.BREAK))
-        records.save_entry(WorkLog(self.user.id, self.day, "14:00", "16:00", note="Afternoon"))
+        records.save_entry(WorkLog(self.user.id, self.day, "14:00", "16:00", note="Afternoon",
+            context=WorkContext(project_label="Research", work_item_label="Authentication and authorization integration review")))
         records.save_entry(WorkLog(self.other_user.id, self.day, "09:00", "10:00", note="Other account"))
         handler = ExportTimesheetHandler(records=records, exporters={"xlsx": TimesheetXlsxExporter(), "pdf": TimesheetPdfExporter()}, clock=lambda: self.stamp)
         self.model._timesheet_export_handler = handler
@@ -66,10 +69,19 @@ class ReportHistoryTests(unittest.TestCase):
             sheet = book.worksheets[0]
             self.assertEqual(sheet["G7"].value, original.note)
             self.assertEqual(sheet["G7"].data_type, "s")
+            self.assertEqual(sheet["D7"].value, classification + " \u00b7 Remote")
+            self.assertEqual(sheet["D7"].data_type, "s")
+            self.assertGreater(sheet.row_dimensions[7].height, sheet.row_dimensions[8].height)
+            self.assertGreater(sheet.row_dimensions[9].height, sheet.row_dimensions[8].height)
             self.assertEqual([sheet.cell(row, 2).value for row in range(7, 10)], ["09:00", "12:00", "14:00"])
             self.assertEqual(sum(sheet.cell(row, 8).value for row in range(7, 10)), 4.5)
             self.assertEqual(sum(sheet.cell(row, 9).value for row in range(7, 10)), 1.5)
             self.assertEqual(book.worksheets[1].max_row, 4)
+            reference = book.worksheets[1]
+            self.assertEqual(reference["J2"].value, "remote")
+            self.assertEqual(reference["K2"].value, classification)
+            self.assertEqual(reference["K2"].data_type, "s")
+            self.assertEqual(reference["L2"].value, "work")
             self.assertNotIn("Other account", str(tuple(sheet.values)))
         finally:
             book.close()
@@ -80,6 +92,8 @@ class ReportHistoryTests(unittest.TestCase):
         try:
             text = "\n".join(document.getAllText(index).text() for index in range(document.pageCount()))
             self.assertIn("Afternoon", text)
+            self.assertIn("=Research", text)
+            self.assertIn("Remote", text)
             self.assertIn("\u5de5\u4f5c\u5185\u5bb9", "".join(unicodedata.normalize("NFKC", text).split()))
             self.assertNotIn("Other account", text)
             self.assertGreater(document.pageCount(), 0)

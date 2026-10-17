@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import date
 from zoneinfo import ZoneInfo
 from contextlib import closing
@@ -16,7 +17,7 @@ from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
 from worklogger.app.use_cases.auth import RegisterUserHandler
 from worklogger.app.use_cases.data_portability import ImportWorkLogsCsvHandler
 from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
-from worklogger.domain.worklog.models import WorkLog, EntryType
+from worklogger.domain.worklog.models import WorkLog, EntryType, WorkMode
 from worklogger.domain.worklog.rules import shift_datetimes
 from worklogger.infrastructure.backup import SQLiteBackupService
 from worklogger.infrastructure.backup import sqlite_backup
@@ -371,6 +372,13 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
                 ["2026-04-21", "", "", "0.0", "Leave", "paid_leave"],
             ],
         )
+        self.assertTrue(WorkLogCsvExporter().export_work_logs(destination, (replace(rows[0], work_mode=WorkMode.REMOTE), rows[1])).ok)
+        with destination.open("r", encoding="utf-8-sig", newline="") as handle:
+            extended = list(csv.reader(handle))
+        self.assertEqual(extended[0], exported[0] + ["work_mode"])
+        self.assertEqual([row[-1] for row in extended[1:]], ["remote", ""])
+        parsed = WorkLogCsvImporter().parse(destination, 1).value
+        self.assertEqual(tuple(row.work_mode for row in parsed.rows), (WorkMode.REMOTE, None))
 
     def test_worklog_csv_import_streams_valid_rows_and_reports_row_errors(self) -> None:
         user_id = self.register_user("alice")
@@ -378,7 +386,7 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         source.write_text(
             "\n".join(
                 [
-                    "date,start,end,break,note,entry_type",
+                    "date,start,end,break,note,work_type",
                     "2026-04-20,09:00,18:00,1.0,Imported,normal",
                     "bad-date,09:00,18:00,1.0,Bad,normal",
                     "2026-04-21,,,0.0,Leave,paid_leave",
@@ -404,20 +412,24 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         assert imported is not None
         assert leave is not None
         self.assertEqual(imported.note, "Imported")
+        self.assertIsNone(imported.work_mode)
         self.assertEqual(leave.entry_type, EntryType.PAID_LEAVE)
 
     def test_csv_validation_limits_conflicts_and_atomic_import(self):
         user = self.register_user("alice")
         repository = SQLiteWorkLogRepository(self.factory)
         source = Path(self._tempdir.name) / "import.csv"
-        source.write_text("date,start,end,break,note,entry_type\n"
-                          "2026/4/20,09:00,18:00,1,Valid,normal\n"
-                          "2026-04-21,09:00,18:00,nan,Invalid,normal\n"
-                          "2026-04-22,,,0,Invalid,unknown\n", encoding="utf-8")
+        source.write_text("date,start,end,break,note,entry_type,work_mode\n"
+                          "2026/4/20,09:00,18:00,1,Valid,normal,remote\n"
+                          "2026-04-21,09:00,18:00,nan,Invalid,normal,\n"
+                          "2026-04-22,,,0,Invalid,unknown,\n"
+                          "2026-04-23,09:00,10:00,0,Invalid,normal,hybrid\n"
+                          "2026-04-24,09:00,10:00,0,Invalid,paid_leave,remote\n", encoding="utf-8")
         handler = ImportWorkLogsCsvHandler(importer=WorkLogCsvImporter(), repository=repository)
         command = ImportWorkLogsCsvCommand(user, source)
         preview = handler.preview(command).value
-        self.assertEqual((len(preview.rows), len(preview.errors), preview.existing_date_count), (1, 2, 0))
+        self.assertEqual((len(preview.rows), len(preview.errors), preview.existing_date_count), (1, 4, 0))
+        self.assertEqual(preview.rows[0].work_mode, WorkMode.REMOTE)
         self.assertTrue(handler.apply(preview).ok)
         self.assertEqual(handler.preview(command).value.existing_date_count, 1)
         self.assertEqual(handler.handle(command).error.code, "csv_import_conflict")
@@ -452,11 +464,13 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         notes = ("- Task", "=1+1", "+Review", "@Owner", "'=literal", "'ordinary", "Line one\nLine two")
         records = tuple(WorkLog(1, date(2026, 4, index + 1), "09:00", "10:00", note=note,
             entry_type=CustomEntryType("custom:" + "a" * 32, "+Research", "work"),
-            context=WorkContext(project_label="=Project", work_item_label="'Item")) for index, note in enumerate(notes))
+            context=WorkContext(project_label="=Project", work_item_label="'Item"), work_mode=WorkMode.REMOTE)
+            for index, note in enumerate(notes))
         self.assertTrue(WorkLogCsvExporter().export_work_logs(path, records).ok)
         parsed = WorkLogCsvImporter().parse(path, 1).value
         self.assertEqual(parsed.errors, ())
         self.assertEqual(tuple(row.note for row in parsed.rows), notes)
+        self.assertTrue(all(row.work_mode == WorkMode.REMOTE for row in parsed.rows))
         self.assertTrue(all((row.entry_type_label, row.project_label, row.work_item_label) ==
                             ("+Research", "=Project", "'Item") for row in parsed.rows))
         path.write_text("DATE,NOTE\n2026-04-20,'=literal\n", encoding="utf-8")
@@ -493,6 +507,7 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
                 break_hours=1.0,
                 note="Alpha; Beta, Gamma\\Delta\nNext",
                 entry_type=EntryType.NORMAL,
+                work_mode=WorkMode.REMOTE,
             ),
             WorkLog(
                 user_id=1,
@@ -522,8 +537,10 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         self.assertIn("DTSTART:20260420T220000", ics)
         self.assertIn("DTEND:20260421T090000", ics)
         self.assertIn("SUMMARY:Work 10.0h", ics)
-        self.assertIn("DESCRIPTION:Alpha\\; Beta\\, Gamma\\\\Delta\\nNext", ics)
-        self.assertNotIn("worklogger-2026-04-22", ics)
+        unfolded = ics.replace("\r\n ", "")
+        self.assertIn("DESCRIPTION:Normal \u00b7 Remote\\nAlpha\\; Beta\\, Gamma\\\\Delta\\nNext", unfolded)
+        self.assertIn("Legacy classification \u00b7 Remote", unfolded)
+        self.assertNotIn("worklogger-1-2026-04-22", ics)
         self.assertIn("\r\n ", ics)
         for line in ics.split("\r\n"):
             if line:

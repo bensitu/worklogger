@@ -27,6 +27,7 @@ class WorkLogCsvExporter:
             timestamps = any(row.started_at is not None or row.ended_at is not None for row in records)
             custom_types = any(isinstance(row.entry_type, CustomEntryType) for row in records)
             work_context = any(row.context.label for row in records)
+            work_modes = any(row.work_mode is not None for row in records)
             encoded = any(requires_encoding((row.note, _entry_type_value(row.entry_type),
                 row.entry_type.label if isinstance(row.entry_type, CustomEntryType) else "",
                 row.context.project_label, row.context.work_item_label)) for row in records)
@@ -35,6 +36,7 @@ class WorkLogCsvExporter:
                 writer.writerow(self.HEADER + (("started_at", "ended_at") if timestamps else ())
                     + (("entry_type_label", "entry_type_category") if custom_types else ())
                     + (("project_label", "work_item_label") if work_context else ())
+                    + (("work_mode",) if work_modes else ())
                     + (("text_format",) if encoded else ()))
                 for row in records:
                     writer.writerow(
@@ -49,6 +51,7 @@ class WorkLogCsvExporter:
                         + ([encode_text(row.entry_type.label), row.entry_type.category] if isinstance(row.entry_type, CustomEntryType)
                            else ["", ""] if custom_types else [])
                         + ([encode_text(row.context.project_label), encode_text(row.context.work_item_label)] if work_context else [])
+                        + ([row.work_mode.value if row.work_mode is not None else ""] if work_modes else [])
                         + ([TEXT_FORMAT] if encoded else [])
                     )
         except Exception as exc:

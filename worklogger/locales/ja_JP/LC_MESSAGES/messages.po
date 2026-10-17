@@ -55,9 +55,6 @@ msgstr "プライバシーを重視した、AIレポート対応のデスクト�
 msgid "A record without start and end times cannot be split. Choose entire-record replacement or cancel."
 msgstr "開始・終了時刻のない記録は分割できません。記録全体を置き換えるか、キャンセルしてください。"
 
-msgid "A work type with this name already exists."
-msgstr "同じ名前の勤務種別が既にあります。"
-
 msgid "A&lpha channel:"
 msgstr "アルファ値(&L):"
 
@@ -136,14 +133,14 @@ msgstr "すべての日付"
 msgid "All day"
 msgstr "終日"
 
+msgid "All entry types"
+msgstr "すべての記録タイプ"
+
 msgid "All projects"
 msgstr "すべてのプロジェクト"
 
 msgid "All work items"
 msgstr "すべての作業項目"
-
-msgid "All work types"
-msgstr "すべての作業種別"
 
 msgid "Allow in AI context"
 msgstr "AI の参照を許可"
@@ -153,6 +150,9 @@ msgstr "レポートへの使用を許可"
 
 msgid "An active item with this name already exists."
 msgstr "同じ名前の有効な項目が既にあります。"
+
+msgid "An entry type with this name already exists."
+msgstr "同じ名前の記録タイプが既に存在します。"
 
 msgid "Analytics"
 msgstr "分析"
@@ -237,6 +237,9 @@ msgstr "自動記録"
 
 msgid "Automatic goals use planned workdays and daily standard hours. Enabled public holidays follow the selected region."
 msgstr "自動目標は予定勤務日数と1日の標準時間から算出します。祝日を有効にすると、選択地域の祝日を反映します。"
+
+msgid "Automatic recording requires a work classification. Enter leave manually and use the Break action for a timed break."
+msgstr "自動記録には仕事の分類が必要です。休暇は手動入力し、時間を指定した休憩は「休憩」操作を使用してください。"
 
 msgid "Avatar"
 msgstr "アバター"
@@ -398,7 +401,16 @@ msgid "Choose custom color"
 msgstr "カスタム色を選択"
 
 msgid "Classification"
-msgstr "分類管理"
+msgstr "記録の分類"
+
+msgid "Classification breakdown"
+msgstr "分類別の時間"
+
+msgid "Classification label"
+msgstr "分類名"
+
+msgid "Classified duration"
+msgstr "分類された記録の時間"
 
 msgid "Clear Calendar Events"
 msgstr "カレンダーの予定を消去"
@@ -420,9 +432,6 @@ msgstr "ウィンドウを閉じる"
 
 msgid "Code"
 msgstr "コード"
-
-msgid "Comp leave"
-msgstr "代休"
 
 msgid "Compensatory leave"
 msgstr "代休"
@@ -730,6 +739,12 @@ msgstr "認証情報を含まない HTTP または HTTPS の参照 URL を入力
 msgid "Enter content before continuing."
 msgstr "続行する前に内容を入力してください。"
 
+msgid "Enter leave in Manual Input."
+msgstr "休暇は「手動入力」で記録してください。"
+
+msgid "Enter leave in Manual Input. Use the Break action to record a break."
+msgstr "休暇は手動入力し、休憩の記録には「休憩」操作を使用してください。"
+
 msgid "Enter valid start and end times in HH:mm format."
 msgstr "開始時刻と終了時刻を HH:mm 形式で正しく入力してください。"
 
@@ -747,6 +762,12 @@ msgstr "パスワードを入力してください。"
 
 msgid "Entire overlapping records will be removed, including time outside the new period."
 msgstr "新しい時間帯の外側も含め、重複する記録全体を削除します。"
+
+msgid "Entry type"
+msgstr "記録タイプ"
+
+msgid "Entry types"
+msgstr "記録タイプ"
 
 msgid "Error"
 msgstr "エラー"
@@ -1090,6 +1111,12 @@ msgstr "休暇日数"
 msgid "Leave hours"
 msgstr "休暇時間"
 
+msgid "Leave type"
+msgstr "休暇の種類"
+
+msgid "Legacy classification"
+msgstr "従来の分類"
+
 msgid "License"
 msgstr "ライセンス"
 
@@ -1180,6 +1207,9 @@ msgstr "このデータベース内のすべてのユーザーアカウントを
 msgid "Manage downloaded and imported GGUF models."
 msgstr "ダウンロード・インポートしたGGUFモデルを管理します。"
 
+msgid "Manage entry types"
+msgstr "記録タイプを管理"
+
 msgid "Manage models"
 msgstr "モデルを管理"
 
@@ -1188,9 +1218,6 @@ msgstr "プロジェクト管理"
 
 msgid "Manage users"
 msgstr "ユーザーを管理"
-
-msgid "Manage work types"
-msgstr "勤務種別を管理"
 
 msgid "Manual Input"
 msgstr "手動入力"
@@ -1396,6 +1423,9 @@ msgstr "未ダウンロード"
 msgid "Not required"
 msgstr "不要"
 
+msgid "Not specified"
+msgstr "指定なし"
+
 msgid "Not verified"
 msgstr "未検証"
 
@@ -1416,6 +1446,9 @@ msgstr "10月"
 
 msgid "Off"
 msgstr "オフ"
+
+msgid "On-site"
+msgstr "出社"
 
 msgid "One day off per week"
 msgstr "週休1日"
@@ -1498,6 +1531,9 @@ msgstr "パスワードをリセットしました。"
 msgid "Paste"
 msgstr "貼り付け"
 
+msgid "Period type"
+msgstr "時間帯の種類"
+
 msgid "Personal profile"
 msgstr "個人プロフィール"
 
@@ -1566,6 +1602,9 @@ msgstr "プロジェクト / 作業項目"
 
 msgid "Project ID"
 msgstr "プロジェクト ID"
+
+msgid "Project assignment is available for work records only."
+msgstr "プロジェクトを関連付けられるのは仕事の記録のみです。"
 
 msgid "Project homepage"
 msgstr "プロジェクトのホームページ"
@@ -1942,6 +1981,9 @@ msgstr "対応する祝日の国と州または都道府県を選択してくだ
 msgid "Select a user."
 msgstr "ユーザーを選択してください。"
 
+msgid "Select a valid classification. Break and leave cannot have a work arrangement or project."
+msgstr "有効な分類を選択してください。休憩と休暇には勤務形態やプロジェクトを設定できません。"
+
 msgid "Select a valid date or date range."
 msgstr "有効な日付または日付範囲を選択してください。"
 
@@ -2058,6 +2100,9 @@ msgstr "簡体字中国語"
 
 msgid "Some dates already have records. Review the import and confirm replacement."
 msgstr "一部の日付には記録があります。取り込み内容を確認し、置き換えを承認してください。"
+
+msgid "Some stored records could not be converted safely. The original data and upgrade backup have been preserved."
+msgstr "一部の記録を安全に変換できませんでした。元のデータと更新前のバックアップは保持されています。"
 
 msgid "Source URL"
 msgstr "参照 URL"
@@ -2254,6 +2299,9 @@ msgstr "この認証応答は無効です。WorkLogger に戻ってください�
 msgid "This database version or structure is not supported. Keep the original file and use a compatible version to export your data."
 msgstr "このデータベースのバージョンまたは構造はサポートされていません。元のファイルを保持し、互換性のあるバージョンでデータをエクスポートしてください。"
 
+msgid "This entry type changed or is no longer available. Reload the types and try again."
+msgstr "この記録タイプは変更されたか、利用できなくなりました。タイプを再読み込みしてからやり直してください。"
+
 msgid "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
 msgstr "この過去の控除は分単位で表せません。元の記録は変更されていません。"
 
@@ -2298,9 +2346,6 @@ msgstr "勤務表が大きすぎます。短い期間を選択してください
 
 msgid "This work timer has reached your continuous-work reminder duration."
 msgstr "作業タイマーが連続作業の通知時間に達しました。"
-
-msgid "This work type changed or is no longer available. Reload the types and try again."
-msgstr "この勤務種別は変更されたか利用できません。種別を再読み込みして再試行してください。"
 
 msgid "Thu"
 msgstr "木"
@@ -2473,11 +2518,11 @@ msgstr "WorkLoggerを起動できませんでした。詳細はアプリケー�
 msgid "Unable to update automatic recording state. Your saved data has been retained."
 msgstr "自動記録の状態を更新できません。保存済みデータは保持されています。"
 
+msgid "Unable to update entry types. Your records have not changed."
+msgstr "記録タイプを更新できません。記録は変更されていません。"
+
 msgid "Unable to update saved sign-in information."
 msgstr "保存済みのログイン情報を更新できませんでした。"
-
-msgid "Unable to update work types. Your records have not changed."
-msgstr "勤務種別を更新できません。記録は変更されていません。"
 
 msgid "Unclassified"
 msgstr "未分類"
@@ -2626,17 +2671,20 @@ msgstr "勤務"
 msgid "Work Hours Trend"
 msgstr "労働時間の推移"
 
-msgid "Work Mode Breakdown"
-msgstr "勤務形態の内訳"
-
 msgid "Work Report"
 msgstr "業務レポート"
+
+msgid "Work arrangement"
+msgstr "勤務形態"
 
 msgid "Work days"
 msgstr "勤務日数"
 
 msgid "Work hours"
 msgstr "労働時間"
+
+msgid "Work hours by arrangement"
+msgstr "勤務形態別の実労働時間"
 
 msgid "Work item"
 msgstr "作業項目"
@@ -2655,12 +2703,6 @@ msgstr "勤務記録"
 
 msgid "Work schedule"
 msgstr "勤務予定"
-
-msgid "Work type"
-msgstr "勤務形態"
-
-msgid "Work types"
-msgstr "勤務種別"
 
 msgid "Work {hours:.1f}h"
 msgstr "勤務 {hours:.1f}h"

@@ -286,7 +286,7 @@ class TimeEntryTests(unittest.TestCase):
         summary = self.repository.list_all(self.user.id)
         data = dashboard_data(summary, year=2026, month=5, scope="monthly", standard_hours=8, monthly_target=160)
         self.assertEqual((data.stats.total_hours, data.stats.rest_days), (1, 1))
-        self.assertEqual(dict(data.work_mode_labels)[work.value], "Research")
+        self.assertEqual(dict(data.entry_type_labels)[work.value], "Research")
         other = EntryTypeService(self.user.id + 1, SQLiteEntryTypeRepository(self.factory))
         self.assertEqual(other.list_types().value, ())
         self.assertFalse(other.archive(changed).ok)
@@ -295,10 +295,11 @@ class TimeEntryTests(unittest.TestCase):
 
     def test_custom_types_survive_timer_restore_and_csv_round_trip(self):
         definition = self.service.entry_types.save("Research", "work").value
-        self.assertTrue(self.service.start(definition.value, "Draft").ok)
+        self.assertTrue(self.service.start(definition.value, "Draft", work_mode=WorkMode.REMOTE).ok)
         self.assertTrue(self.service.entry_types.save("Lunch", "break", definition).ok)
         restored = self.make_service()
         self.assertEqual((restored.timer.entry_type.label, restored.timer.entry_type.category), ("Research", "work"))
+        self.assertEqual(restored.timer.work_mode, WorkMode.REMOTE)
         self.now += timedelta(hours=1)
         saved = restored.finish("Completed").value
         csv_path = Path(self.directory.name) / "custom.csv"
@@ -308,8 +309,13 @@ class TimeEntryTests(unittest.TestCase):
         self.assertEqual(preview.errors, ())
         self.assertEqual(preview.rows[0].entry_type.label, "Research")
         self.assertEqual(preview.rows[0].worked_hours(), 1)
+        self.assertEqual(preview.rows[0].work_mode, WorkMode.REMOTE)
+        self.settings.set(self.user.id, "last_used_work_mode", WorkMode.ONSITE.value)
         self.assertTrue(importer.apply(preview, overwrite=True).ok)
-        self.assertEqual(self.repository.list_for_day(self.user.id, saved.day)[0].entry_type.category, "work")
+        imported = self.repository.list_for_day(self.user.id, saved.day)[0]
+        self.assertEqual(imported.entry_type.category, "work")
+        self.assertEqual(imported.work_mode, WorkMode.REMOTE)
+        self.assertEqual(restored.default_work_mode(), WorkMode.ONSITE)
 
     def test_multiple_entries_edit_delete_and_daily_statistics(self):
         first = self.service.save_manual(self.now.date(), "09:00", "12:00", "meeting", "Planning").value
@@ -320,7 +326,8 @@ class TimeEntryTests(unittest.TestCase):
         self.assertEqual(summary.worked_hours(), 8)
         data = dashboard_data(self.repository.list_all(self.user.id), year=2026, month=5, scope="monthly", standard_hours=7, monthly_target=160)
         self.assertEqual((data.stats.total_hours, data.stats.work_days, data.stats.overtime_hours), (8, 1, 1))
-        self.assertEqual(dict(data.work_modes), {"meeting": 3, "training": 5})
+        self.assertEqual(dict(data.entry_types), {"meeting": 3, "break": 1, "training": 5})
+        self.assertEqual(dict(data.work_modes), {None: 8})
         updated = self.service.save_manual(first.day, "09:00", "11:00", "meeting", "Updated", first).value
         self.assertEqual(updated.id, first.id)
         self.assertEqual(updated.revision, 1)

@@ -8,7 +8,7 @@ from shiboken6 import isValid
 
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.models import EntryType
+from worklogger.domain.worklog.models import EntryType, EntryCategory
 from worklogger.domain.worklog.search import EntryFilter
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_code, display_error_message
@@ -16,7 +16,7 @@ from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 from worklogger.presentation.widgets.entry_type_options import add_entry_type_option
 from worklogger.presentation.widgets.date_range import DateRangeControls
-from worklogger.presentation.entry_type_labels import entry_type_label
+from worklogger.presentation.entry_type_labels import classification_label
 from worklogger.presentation.date_labels import duration_label
 from worklogger.presentation.widgets.data_tree import configure_data_tree, set_data_tooltips
 
@@ -62,7 +62,7 @@ class RecordSearchDialog(QDialog):
         self.type_combo = QComboBox()
         self.project_combo = QComboBox()
         self.item_combo = QComboBox()
-        self.type_combo.addItem(_("All work types"), None)
+        self.type_combo.addItem(_("All entry types"), None)
         for value in EntryType:
             add_entry_type_option(self.type_combo, value)
         types = view_model.list_entry_types()
@@ -79,7 +79,7 @@ class RecordSearchDialog(QDialog):
                 self.project_combo.addItem(project.name + (" (" + _("Archived") + ")" if project.archived else ""), project.id)
         self.item_combo.addItem(_("All work items"), None)
         self.item_combo.setEnabled(False)
-        for field, caption in ((self.type_combo, _("Work type")), (self.project_combo, _("Project")), (self.item_combo, _("Work item"))):
+        for field, caption in ((self.type_combo, _("Entry type")), (self.project_combo, _("Project")), (self.item_combo, _("Work item"))):
             field.setMinimumWidth(0)
             field.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
             field.setMinimumContentsLength(8)
@@ -88,10 +88,10 @@ class RecordSearchDialog(QDialog):
         root.addLayout(filters)
         self.results = QTreeWidget()
         self.results.setObjectName("record_search_tree_view")
-        self.results.setHeaderLabels([_("Date"), _("Time"), _("Work type"), _("Project"), _("Work item"), _("Content")])
+        self.results.setHeaderLabels([_("Date"), _("Time"), _("Classification"), _("Project"), _("Work item"), _("Content")])
         self.results.setRootIsDecorated(False)
         self.results.setSelectionMode(QTreeWidget.SelectionMode.ExtendedSelection)
-        configure_data_tree(self.results, (100, 160, 85, 100, 110, 220), stretch_column=5)
+        configure_data_tree(self.results, (100, 160, 150, 100, 110, 180), stretch_column=5)
         root.addWidget(self.results, 1)
         self.status_label = QLabel()
         self.status_label.setObjectName("record_search_status_label")
@@ -226,7 +226,8 @@ class RecordSearchDialog(QDialog):
                 if len(preview) > 120:
                     preview = preview[:120] + "..."
                 row = QTreeWidgetItem([entry.day.isoformat(), span + "  " + duration_label(entry.raw_hours()),
-                    entry_type_label(entry.entry_type), project_label, entry.context.work_item_label or _("No work item"), preview])
+                    classification_label(entry.entry_type, entry.work_mode), project_label,
+                    entry.context.work_item_label or _("No work item"), preview])
                 row.setData(0, Qt.ItemDataRole.UserRole, entry)
                 set_data_tooltips(row, {5: entry.note})
                 self.results.addTopLevelItem(row)
@@ -246,10 +247,14 @@ class RecordSearchDialog(QDialog):
                 completed(Result.failure(InfrastructureError("record_search_failed", "record_search_failed")))
 
     def _actions(self):
-        count = len(self.results.selectedItems())
+        selected = self.results.selectedItems()
+        count = len(selected)
+        entries = (row.data(0, Qt.ItemDataRole.UserRole) for row in selected)
+        work_only = all(entry.entry_type.category == EntryCategory.WORK for entry in entries)
         self.open_button.setEnabled(not self._loading and count == 1)
-        self.associate_button.setEnabled(not self._loading and 1 <= count <= 250
+        self.associate_button.setEnabled(not self._loading and 1 <= count <= 250 and work_only
             and bool(getattr(self._model, "projects_available", False)) and bool(getattr(self._model, "changes_available", False)))
+        self.associate_button.setToolTip(_("Project assignment is available for work records only.") if not work_only else "")
         self.more_button.setEnabled(not self._loading and self._cursor is not None)
 
     def _associate(self):

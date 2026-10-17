@@ -55,9 +55,6 @@ msgstr "注重隐私的桌面工时记录工具，支持 AI 报表。"
 msgid "A record without start and end times cannot be split. Choose entire-record replacement or cancel."
 msgstr "没有开始和结束时间的记录无法拆分。请选择替换整条记录，或取消操作。"
 
-msgid "A work type with this name already exists."
-msgstr "已存在同名工作类型。"
-
 msgid "A&lpha channel:"
 msgstr "透明度(&L)："
 
@@ -136,14 +133,14 @@ msgstr "全部日期"
 msgid "All day"
 msgstr "全天"
 
+msgid "All entry types"
+msgstr "全部记录类型"
+
 msgid "All projects"
 msgstr "所有项目"
 
 msgid "All work items"
 msgstr "所有工作项"
-
-msgid "All work types"
-msgstr "所有工作类型"
 
 msgid "Allow in AI context"
 msgstr "允许用于 AI 上下文"
@@ -153,6 +150,9 @@ msgstr "允许用于报表"
 
 msgid "An active item with this name already exists."
 msgstr "已存在同名的未归档项目。"
+
+msgid "An entry type with this name already exists."
+msgstr "已存在同名记录类型。"
 
 msgid "Analytics"
 msgstr "统计分析"
@@ -237,6 +237,9 @@ msgstr "自动记录"
 
 msgid "Automatic goals use planned workdays and daily standard hours. Enabled public holidays follow the selected region."
 msgstr "自动目标根据计划工作日与每日标准工时计算；启用节假日时，采用所选地区的节假日。"
+
+msgid "Automatic recording requires a work classification. Enter leave manually and use the Break action for a timed break."
+msgstr "自动录入仅支持工作分类。休假请手动录入，定时休息请使用“休息”操作。"
 
 msgid "Avatar"
 msgstr "头像"
@@ -398,7 +401,16 @@ msgid "Choose custom color"
 msgstr "选择自定义颜色"
 
 msgid "Classification"
-msgstr "分类管理"
+msgstr "记录分类"
+
+msgid "Classification breakdown"
+msgstr "分类时长分布"
+
+msgid "Classification label"
+msgstr "分类名称"
+
+msgid "Classified duration"
+msgstr "分类记录时长"
 
 msgid "Clear Calendar Events"
 msgstr "清空日历事件"
@@ -420,9 +432,6 @@ msgstr "关闭窗口"
 
 msgid "Code"
 msgstr "编号"
-
-msgid "Comp leave"
-msgstr "补休"
 
 msgid "Compensatory leave"
 msgstr "调休"
@@ -730,6 +739,12 @@ msgstr "请输入不含嵌入式凭据的 HTTP 或 HTTPS 来源链接。"
 msgid "Enter content before continuing."
 msgstr "请先输入内容。"
 
+msgid "Enter leave in Manual Input."
+msgstr "休假请在“手动输入”中录入。"
+
+msgid "Enter leave in Manual Input. Use the Break action to record a break."
+msgstr "休假请手动录入，休息请使用“休息”操作。"
+
 msgid "Enter valid start and end times in HH:mm format."
 msgstr "请按 HH:mm 格式输入有效的开始和结束时间。"
 
@@ -747,6 +762,12 @@ msgstr "请输入密码。"
 
 msgid "Entire overlapping records will be removed, including time outside the new period."
 msgstr "将删除重叠的整条记录，包括新时段以外的部分。"
+
+msgid "Entry type"
+msgstr "记录类型"
+
+msgid "Entry types"
+msgstr "记录类型"
 
 msgid "Error"
 msgstr "错误"
@@ -1090,6 +1111,12 @@ msgstr "休假天数"
 msgid "Leave hours"
 msgstr "请假时长"
 
+msgid "Leave type"
+msgstr "休假类型"
+
+msgid "Legacy classification"
+msgstr "历史分类"
+
 msgid "License"
 msgstr "许可证"
 
@@ -1180,6 +1207,9 @@ msgstr "管理当前数据库中的所有用户账户。"
 msgid "Manage downloaded and imported GGUF models."
 msgstr "管理已下载和导入的 GGUF 模型。"
 
+msgid "Manage entry types"
+msgstr "管理记录类型"
+
 msgid "Manage models"
 msgstr "管理模型"
 
@@ -1188,9 +1218,6 @@ msgstr "管理项目"
 
 msgid "Manage users"
 msgstr "管理用户"
-
-msgid "Manage work types"
-msgstr "管理工作类型"
 
 msgid "Manual Input"
 msgstr "手动输入"
@@ -1396,6 +1423,9 @@ msgstr "未下载"
 msgid "Not required"
 msgstr "不需要"
 
+msgid "Not specified"
+msgstr "未指定"
+
 msgid "Not verified"
 msgstr "未验证"
 
@@ -1416,6 +1446,9 @@ msgstr "10月"
 
 msgid "Off"
 msgstr "关闭"
+
+msgid "On-site"
+msgstr "现场办公"
 
 msgid "One day off per week"
 msgstr "单休"
@@ -1498,6 +1531,9 @@ msgstr "密码已重置。"
 msgid "Paste"
 msgstr "粘贴"
 
+msgid "Period type"
+msgstr "时段类型"
+
 msgid "Personal profile"
 msgstr "个人资料"
 
@@ -1566,6 +1602,9 @@ msgstr "项目／工作项"
 
 msgid "Project ID"
 msgstr "项目 ID"
+
+msgid "Project assignment is available for work records only."
+msgstr "仅工作记录可以关联项目。"
 
 msgid "Project homepage"
 msgstr "项目主页"
@@ -1942,6 +1981,9 @@ msgstr "请选择支持的假日国家及州或省。"
 msgid "Select a user."
 msgstr "请选择用户。"
 
+msgid "Select a valid classification. Break and leave cannot have a work arrangement or project."
+msgstr "请选择有效分类。休息和休假不能设置工作方式或关联项目。"
+
 msgid "Select a valid date or date range."
 msgstr "请选择有效的日期或日期范围。"
 
@@ -2058,6 +2100,9 @@ msgstr "简体中文"
 
 msgid "Some dates already have records. Review the import and confirm replacement."
 msgstr "部分日期已有记录。请检查导入内容并确认是否替换。"
+
+msgid "Some stored records could not be converted safely. The original data and upgrade backup have been preserved."
+msgstr "部分记录无法安全转换。原始数据和升级备份均已保留。"
 
 msgid "Source URL"
 msgstr "来源链接"
@@ -2254,6 +2299,9 @@ msgstr "此授权响应无效。请返回 WorkLogger。"
 msgid "This database version or structure is not supported. Keep the original file and use a compatible version to export your data."
 msgstr "不支持此数据库版本或结构。请保留原文件，使用兼容版本导出数据。"
 
+msgid "This entry type changed or is no longer available. Reload the types and try again."
+msgstr "该记录类型已更改或不可用。请重新加载类型后重试。"
+
 msgid "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
 msgstr "这项历史扣除无法用整分钟表示，原记录未改变。"
 
@@ -2298,9 +2346,6 @@ msgstr "此工时表过大，请选择更短的期间。目标文件未改变。
 
 msgid "This work timer has reached your continuous-work reminder duration."
 msgstr "此工作计时已达到连续工作提醒时长。"
-
-msgid "This work type changed or is no longer available. Reload the types and try again."
-msgstr "此工作类型已更改或不可用。请重新加载类型后重试。"
 
 msgid "Thu"
 msgstr "四"
@@ -2473,11 +2518,11 @@ msgstr "无法启动 WorkLogger，请查看应用日志以了解详情。"
 msgid "Unable to update automatic recording state. Your saved data has been retained."
 msgstr "无法更新自动记录状态。已保存的数据已保留。"
 
+msgid "Unable to update entry types. Your records have not changed."
+msgstr "无法更新记录类型。您的记录未更改。"
+
 msgid "Unable to update saved sign-in information."
 msgstr "无法更新已保存的登录信息。"
-
-msgid "Unable to update work types. Your records have not changed."
-msgstr "无法更新工作类型。您的记录未改变。"
 
 msgid "Unclassified"
 msgstr "未分类"
@@ -2626,17 +2671,20 @@ msgstr "工作"
 msgid "Work Hours Trend"
 msgstr "工时趋势"
 
-msgid "Work Mode Breakdown"
-msgstr "工作方式分布"
-
 msgid "Work Report"
 msgstr "工作报表"
+
+msgid "Work arrangement"
+msgstr "工作方式"
 
 msgid "Work days"
 msgstr "工作天数"
 
 msgid "Work hours"
 msgstr "工时"
+
+msgid "Work hours by arrangement"
+msgstr "各工作方式的工作时长"
 
 msgid "Work item"
 msgstr "工作项"
@@ -2655,12 +2703,6 @@ msgstr "工作记录"
 
 msgid "Work schedule"
 msgstr "工作安排"
-
-msgid "Work type"
-msgstr "工作类型"
-
-msgid "Work types"
-msgstr "工作类型"
 
 msgid "Work {hours:.1f}h"
 msgstr "工作 {hours:.1f}h"

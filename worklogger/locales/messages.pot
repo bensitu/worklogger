@@ -53,9 +53,6 @@ msgstr ""
 msgid "A record without start and end times cannot be split. Choose entire-record replacement or cancel."
 msgstr ""
 
-msgid "A work type with this name already exists."
-msgstr ""
-
 msgid "A&lpha channel:"
 msgstr ""
 
@@ -134,13 +131,13 @@ msgstr ""
 msgid "All day"
 msgstr ""
 
+msgid "All entry types"
+msgstr ""
+
 msgid "All projects"
 msgstr ""
 
 msgid "All work items"
-msgstr ""
-
-msgid "All work types"
 msgstr ""
 
 msgid "Allow in AI context"
@@ -150,6 +147,9 @@ msgid "Allow in reports"
 msgstr ""
 
 msgid "An active item with this name already exists."
+msgstr ""
+
+msgid "An entry type with this name already exists."
 msgstr ""
 
 msgid "Analytics"
@@ -234,6 +234,9 @@ msgid "Auto Record"
 msgstr ""
 
 msgid "Automatic goals use planned workdays and daily standard hours. Enabled public holidays follow the selected region."
+msgstr ""
+
+msgid "Automatic recording requires a work classification. Enter leave manually and use the Break action for a timed break."
 msgstr ""
 
 msgid "Avatar"
@@ -398,6 +401,15 @@ msgstr ""
 msgid "Classification"
 msgstr ""
 
+msgid "Classification breakdown"
+msgstr ""
+
+msgid "Classification label"
+msgstr ""
+
+msgid "Classified duration"
+msgstr ""
+
 msgid "Clear Calendar Events"
 msgstr ""
 
@@ -417,9 +429,6 @@ msgid "Close window"
 msgstr ""
 
 msgid "Code"
-msgstr ""
-
-msgid "Comp leave"
 msgstr ""
 
 msgid "Compensatory leave"
@@ -728,6 +737,12 @@ msgstr ""
 msgid "Enter content before continuing."
 msgstr ""
 
+msgid "Enter leave in Manual Input."
+msgstr ""
+
+msgid "Enter leave in Manual Input. Use the Break action to record a break."
+msgstr ""
+
 msgid "Enter valid start and end times in HH:mm format."
 msgstr ""
 
@@ -744,6 +759,12 @@ msgid "Enter your password."
 msgstr ""
 
 msgid "Entire overlapping records will be removed, including time outside the new period."
+msgstr ""
+
+msgid "Entry type"
+msgstr ""
+
+msgid "Entry types"
 msgstr ""
 
 msgid "Error"
@@ -1088,6 +1109,12 @@ msgstr ""
 msgid "Leave hours"
 msgstr ""
 
+msgid "Leave type"
+msgstr ""
+
+msgid "Legacy classification"
+msgstr ""
+
 msgid "License"
 msgstr ""
 
@@ -1178,6 +1205,9 @@ msgstr ""
 msgid "Manage downloaded and imported GGUF models."
 msgstr ""
 
+msgid "Manage entry types"
+msgstr ""
+
 msgid "Manage models"
 msgstr ""
 
@@ -1185,9 +1215,6 @@ msgid "Manage projects"
 msgstr ""
 
 msgid "Manage users"
-msgstr ""
-
-msgid "Manage work types"
 msgstr ""
 
 msgid "Manual Input"
@@ -1394,6 +1421,9 @@ msgstr ""
 msgid "Not required"
 msgstr ""
 
+msgid "Not specified"
+msgstr ""
+
 msgid "Not verified"
 msgstr ""
 
@@ -1413,6 +1443,9 @@ msgid "October"
 msgstr ""
 
 msgid "Off"
+msgstr ""
+
+msgid "On-site"
 msgstr ""
 
 msgid "One day off per week"
@@ -1496,6 +1529,9 @@ msgstr ""
 msgid "Paste"
 msgstr ""
 
+msgid "Period type"
+msgstr ""
+
 msgid "Personal profile"
 msgstr ""
 
@@ -1563,6 +1599,9 @@ msgid "Project / work item"
 msgstr ""
 
 msgid "Project ID"
+msgstr ""
+
+msgid "Project assignment is available for work records only."
 msgstr ""
 
 msgid "Project homepage"
@@ -1940,6 +1979,9 @@ msgstr ""
 msgid "Select a user."
 msgstr ""
 
+msgid "Select a valid classification. Break and leave cannot have a work arrangement or project."
+msgstr ""
+
 msgid "Select a valid date or date range."
 msgstr ""
 
@@ -2055,6 +2097,9 @@ msgid "Simplified Chinese"
 msgstr ""
 
 msgid "Some dates already have records. Review the import and confirm replacement."
+msgstr ""
+
+msgid "Some stored records could not be converted safely. The original data and upgrade backup have been preserved."
 msgstr ""
 
 msgid "Source URL"
@@ -2252,6 +2297,9 @@ msgstr ""
 msgid "This database version or structure is not supported. Keep the original file and use a compatible version to export your data."
 msgstr ""
 
+msgid "This entry type changed or is no longer available. Reload the types and try again."
+msgstr ""
+
 msgid "This historical deduction cannot be represented in whole minutes. The original record is unchanged."
 msgstr ""
 
@@ -2295,9 +2343,6 @@ msgid "This timesheet is too large. Choose a shorter period; the destination fil
 msgstr ""
 
 msgid "This work timer has reached your continuous-work reminder duration."
-msgstr ""
-
-msgid "This work type changed or is no longer available. Reload the types and try again."
 msgstr ""
 
 msgid "Thu"
@@ -2471,10 +2516,10 @@ msgstr ""
 msgid "Unable to update automatic recording state. Your saved data has been retained."
 msgstr ""
 
-msgid "Unable to update saved sign-in information."
+msgid "Unable to update entry types. Your records have not changed."
 msgstr ""
 
-msgid "Unable to update work types. Your records have not changed."
+msgid "Unable to update saved sign-in information."
 msgstr ""
 
 msgid "Unclassified"
@@ -2624,16 +2669,19 @@ msgstr ""
 msgid "Work Hours Trend"
 msgstr ""
 
-msgid "Work Mode Breakdown"
+msgid "Work Report"
 msgstr ""
 
-msgid "Work Report"
+msgid "Work arrangement"
 msgstr ""
 
 msgid "Work days"
 msgstr ""
 
 msgid "Work hours"
+msgstr ""
+
+msgid "Work hours by arrangement"
 msgstr ""
 
 msgid "Work item"
@@ -2652,12 +2700,6 @@ msgid "Work records"
 msgstr ""
 
 msgid "Work schedule"
-msgstr ""
-
-msgid "Work type"
-msgstr ""
-
-msgid "Work types"
 msgstr ""
 
 msgid "Work {hours:.1f}h"

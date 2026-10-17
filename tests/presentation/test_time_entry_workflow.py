@@ -568,6 +568,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertEqual(Path(opened.call_args.args[0].toLocalFile()).resolve(), directory)
 
     def test_multi_record_assignment_and_recent_selection_preserve_editor_content(self):
+        from worklogger.domain.projects.models import WorkContext
         from worklogger.presentation.widgets.record_search import RecordSearchDialog
         from worklogger.presentation.widgets.batch_context import BatchContextDialog
         service = self.panel.view_model.service
@@ -600,6 +601,16 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         popup.apply_button.click()
         self.assertEqual(editor_state(self.panel).context.work_item_id, item.id)
         self.assertEqual(self.panel.content_input.toPlainText(), "Unsaved editor content")
+        rest = service.save_manual(self.now.date(), "11:00", "12:00", "break", "Rest").value
+        dialog._reload()
+        dialog.results.clearSelection()
+        rest_row = next(dialog.results.topLevelItem(index) for index in range(dialog.results.topLevelItemCount())
+                        if dialog.results.topLevelItem(index).data(0, Qt.ItemDataRole.UserRole).id == rest.id)
+        rest_row.setSelected(True)
+        self.assertFalse(dialog.associate_button.isEnabled())
+        self.assertTrue(dialog.associate_button.toolTip())
+        self.assertFalse(service.associate((rest,), WorkContext(project.id)).ok)
+        self.assertEqual(self.repository.get_entry(self.runtime.user.id, rest.id).context, WorkContext())
         dialog.close()
 
     def test_project_records_display_and_preserve_the_fixed_context(self):
@@ -820,7 +831,10 @@ class TimeEntryWorkflowTests(unittest.TestCase):
 
     def test_record_search_filters_preserve_focus_and_open_the_owned_entry(self):
         from worklogger.presentation.widgets.record_search import RecordSearchDialog
-        first = self.panel.view_model.service.save_manual(self.now.date(), "09:00", "10:00", "meeting", "Planning").value
+        from worklogger.presentation.entry_type_labels import work_mode_label
+
+        first = self.panel.view_model.service.save_manual(self.now.date(), "09:00", "10:00", "meeting", "Planning",
+                                                         work_mode=WorkMode.REMOTE).value
         self.panel.view_model.service.save_manual(self.now.date(), "10:00", "11:00", "normal", "Review")
         selected = []
         dialog = RecordSearchDialog(self.panel.view_model, self.now.date(), self.window, job_runner=ImmediateJobRunner())
@@ -833,6 +847,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         dialog.search_input.setText("Plan")
         dialog._reload()
         self.assertEqual(dialog.results.topLevelItemCount(), 1)
+        self.assertIn(work_mode_label(WorkMode.REMOTE), dialog.results.topLevelItem(0).text(2))
         self.assertTrue(dialog.search_input.hasFocus())
         dialog.results.setCurrentItem(dialog.results.topLevelItem(0))
         dialog.open_button.click()

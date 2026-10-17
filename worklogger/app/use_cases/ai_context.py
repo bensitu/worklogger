@@ -7,6 +7,7 @@ from datetime import date
 from typing import Protocol
 
 from worklogger.app.queries.ai_queries import BuildAiContextQuery
+from worklogger.app.entry_labels import classification_label
 from worklogger.app.queries.calendar_queries import GetCalendarEventsForRangeQuery
 from worklogger.app.queries.quick_log_queries import GetQuickLogsForRangeQuery
 from worklogger.app.settings import SettingsReader, read_setting_values
@@ -191,7 +192,7 @@ def _format_context(
     if work_logs:
         for record in sorted(work_logs, key=lambda item: item.day):
             for entry in record.entries or (record,):
-                type_label = getattr(entry.entry_type, "label", None) or entry.entry_type.value
+                type_label = classification_label(entry.entry_type, entry.work_mode, str)
                 category = getattr(entry.entry_type, "category", "")
                 if category:
                     type_label += f" ({category})"
@@ -199,6 +200,7 @@ def _format_context(
                     f"- {entry.day.isoformat()} | {type_label} | "
                     f"{entry.start_time or '-'}-{entry.end_time or '-'} | "
                     f"break {entry.break_hours:.2f}h | worked {entry.worked_hours():.2f}h"
+                    + (f" | project / work item: {_single_line(entry.context.label)}" if entry.context.label else "")
                     + (f" | content: {_single_line(entry.note)}" if include_notes and entry.note else "")
                 )
     else:

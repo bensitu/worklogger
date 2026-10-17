@@ -26,7 +26,8 @@ from worklogger.domain.worklog.rules import aggregate_days
 from worklogger.domain.quicklog.models import QuickLog
 from worklogger.domain.shared.result import Result
 from worklogger.domain.shared.errors import InfrastructureError
-from worklogger.domain.worklog.models import WorkLog, EntryType
+from worklogger.domain.worklog.models import WorkLog, EntryType, WorkMode
+from worklogger.domain.projects.models import WorkContext
 from worklogger.infrastructure.ai.external import OpenAICompatibleGateway
 
 
@@ -63,6 +64,8 @@ class FakeWorkLogs:
                     break_hours=1.0,
                     note="private note",
                     entry_type=EntryType.NORMAL,
+                    work_mode=WorkMode.REMOTE,
+                    context=WorkContext(project_label="Research", work_item_label="Review"),
                 ),
             )
         )
@@ -250,6 +253,9 @@ class AiUseCaseTests(unittest.TestCase):
         self.assertTrue(result.ok)
         assert result.value is not None
         self.assertIn("Notes excluded by privacy settings.", result.value.content)
+        self.assertIn("Normal \u00b7 Remote", result.value.content)
+        self.assertIn("Research / Review", result.value.content)
+        self.assertNotIn("content: private note", result.value.content)
         self.assertIn("Implement feature", result.value.content)
         self.assertIn("Private meeting title", result.value.content)
         self.assertNotIn("- 2026-05-04: private note", result.value.content)

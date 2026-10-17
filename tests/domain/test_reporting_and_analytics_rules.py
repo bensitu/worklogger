@@ -18,9 +18,9 @@ from worklogger.domain.reporting.periods import (
     validate_report_period,
     weekly_period,
 )
-from worklogger.domain.worklog.models import WorkLog, EntryType
+from worklogger.domain.worklog.models import CustomEntryType, WorkLog, EntryType, WorkMode
 from worklogger.domain.shared.dates import add_months
-from worklogger.domain.worklog.rules import normalize_work_log
+from worklogger.domain.worklog.rules import aggregate_days, normalize_work_log
 from worklogger.domain.settings.work_schedule import WorkSchedule
 from worklogger.domain.settings.validation import normalize_setting
 from worklogger.config.constants import WORK_SCHEDULE_SETTING_KEY
@@ -133,9 +133,27 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
         self.assertEqual(data.stats.overtime_hours, 2)
         self.assertEqual(data.previous_stats.total_hours, 7)
         self.assertEqual(data.target_hours, 120)
-        self.assertEqual(dict(data.work_modes), {"normal": 9, "remote": 8, "leave": 7.5})
+        self.assertEqual(dict(data.entry_types), {"normal": 9, "remote": 8, "paid_leave": 7.5})
+        self.assertEqual(dict(data.work_modes), {None: 17})
         self.assertNotEqual(data.trend.bar_data, data.average.bar_data)
         self.assertEqual(data.daily_average_trend.bar_data[-1], ("04", 8.5))
+
+    def test_dashboard_keeps_classified_duration_and_arrangement_hours_independent(self):
+        day = date(2026, 4, 6)
+        leave = CustomEntryType("custom:" + "a" * 32, "Study leave", "leave")
+        records = aggregate_days((
+            WorkLog(1, day, "09:00", "11:00", entry_type=EntryType.MEETING, work_mode=WorkMode.REMOTE),
+            WorkLog(1, day, "11:00", "12:00"),
+            WorkLog(1, day, "12:00", "12:30", entry_type=EntryType.BREAK),
+            WorkLog(1, day, "13:00", "14:00", entry_type=leave),
+            WorkLog(1, date(2026, 4, 7), entry_type=leave),
+        ))
+        data = dashboard_data(records, year=2026, month=4, scope="monthly", standard_hours=7.5, monthly_target=120)
+        self.assertEqual(data.stats.total_hours, 3)
+        self.assertEqual(dict(data.entry_types), {"meeting": 2, "normal": 1, "break": 0.5, leave.value: 8.5})
+        self.assertEqual(dict(data.entry_type_labels), {leave.value: "Study leave"})
+        self.assertEqual(dict(data.work_modes), {"remote": 2, None: 1})
+        self.assertEqual(sum(dict(data.work_modes).values()), data.stats.total_hours)
 
     def test_dashboard_quarter_and_year_boundaries(self) -> None:
         self.assertEqual(analytics_period(2024, 2, "monthly"), (date(2024, 2, 1), date(2024, 2, 29)))
