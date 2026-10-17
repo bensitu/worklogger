@@ -10,7 +10,7 @@ from worklogger.domain.worklog.editing import split_entry_at, place_historical_b
 from worklogger.domain.worklog.models import TimeRange
 from worklogger.domain.worklog.rules import entry_interval, parse_time, wall_time_candidates
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.date_labels import day_label, duration_label
+from worklogger.presentation.date_labels import day_label
 from worklogger.presentation.errors import display_error_code
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.data_tree import configure_data_tree, set_data_tooltips
@@ -57,7 +57,8 @@ def _section(text):
 
 
 def _message_page(text):
-    label = QLabel(text)
+    # Keep blank pages measurable alongside wrapping error messages.
+    label = QLabel(text or " ")
     label.setTextFormat(Qt.TextFormat.PlainText)
     label.setWordWrap(True)
     label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
@@ -341,7 +342,7 @@ class OverlapReplacementDialog(QDialog):
         for keep_outside in (True, False):
             try:
                 periods = self.plan.periods(keep_outside=keep_outside)
-                status = _("Worked: {hours}").format(hours=duration_label(sum(item.worked_hours() for item in periods)))
+                status = ""
             except ValueError as error:
                 periods, status = (), display_error_code(str(error))
             self._previews[keep_outside] = periods

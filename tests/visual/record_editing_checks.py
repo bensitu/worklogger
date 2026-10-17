@@ -50,6 +50,8 @@ class RecordEditingLayoutChecks(unittest.TestCase):
                             self.assertEqual(dialog.confirm_button.isEnabled(), dialog is not historical)
                             self.assertTrue(dialog.rect().contains(dialog.confirm_button.geometry()))
                             if dialog is overlap:
+                                self.assertTrue(all(not dialog.status_stack.widget(index).text().strip()
+                                                    for index in range(dialog.status_stack.count())))
                                 self.assertEqual(overlap.keep_button.y(), overlap.whole_button.y())
                                 for choice in (overlap.keep_button, overlap.whole_button):
                                     self.assertLessEqual(choice.fontMetrics().horizontalAdvance(choice.text()) + 24, choice.width())
@@ -83,6 +85,7 @@ class RecordEditingLayoutChecks(unittest.TestCase):
                                 historical.whole_button.click()
                                 self.app.processEvents()
                                 self.assertTrue(dialog.confirm_button.isEnabled())
+                                self.assertEqual(dialog.status_stack.currentWidget().text().strip(), "")
                                 self.assertEqual(self.overlap_geometry(dialog), stable_bounds)
                                 self.assert_message_fit(dialog)
                                 historical.keep_button.click()
