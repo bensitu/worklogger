@@ -18,6 +18,7 @@ _MESSAGE_GROUPS = (
     (("background_image_invalid",), N_("Choose a valid PNG, JPEG, GIF or WebP background image.")),
     (("background_load_failed", "background_storage_failed", "background_opacity_invalid", "background_animation_unsupported"), N_("Unable to load or save the background. The previous background has been retained.")),
     (("database_version_unsupported", "database_schema_unsupported", "database_entry_type_unsupported", "restore_schema_invalid"), N_("This database version or structure is not supported. Keep the original file and use a compatible version to export your data.")),
+    (("database_record_invalid", "database_record_count_invalid"), N_("Some stored records could not be converted safely. The original data and upgrade backup have been preserved.")),
     (("database_foreign_key_invalid", "username_normalization_conflict", "identity_subject_ambiguous"), N_("The database contains conflicting account identifiers or record links. Keep the original file and resolve these conflicts on a copy.")),
     (("record_batch_invalid",), N_("Select between 1 and 250 distinct records and an available project context.")),
     (("report_content_too_long",), N_("This report is too large to save. Your current content has been retained.")),

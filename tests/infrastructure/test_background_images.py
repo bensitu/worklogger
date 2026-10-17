@@ -109,4 +109,3 @@ class BackgroundImageTests(unittest.TestCase):
         with self.factory.transaction() as connection:
             connection.execute("DELETE FROM users WHERE id=?", (self.users[0].id,))
         self.assertEqual(self.service.load().value, BackgroundState())
-
