@@ -52,13 +52,13 @@ class ThemeEngine:
         palette = self.palette(theme, dark=dark, custom_color=custom_color)
         return calendar_styles.calendar_cell_style(flags, palette)
 
-    def entry_type_marker_color(
+    def entry_type_color(
         self,
         entry_type: EntryType | CustomEntryType | str,
         *,
         dark: bool = False,
     ) -> str | None:
-        return calendar_styles.entry_type_marker_color(entry_type, dark=dark)
+        return calendar_styles.entry_type_color(entry_type, dark=dark)
 
     def application_stylesheet(
         self,

@@ -17,7 +17,7 @@ from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.calendar.repositories import CalendarEventRepository
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.models import WorkLog, EntryType
+from worklogger.domain.worklog.models import WorkLog, EntryType, CustomEntryType
 from worklogger.presentation.theme import ThemeEngine, normalize_hex_color
 from worklogger.presentation.viewmodels import (
     CalendarDisplayOptions,
@@ -195,16 +195,19 @@ class PresentationViewModelTests(unittest.TestCase):
         self.assertEqual(selected.text_lines, ("20", "10.0h", "+2.0h"))
         self.assertTrue(selected.show_overnight_marker)
         self.assertEqual(selected.event_count, 1)
-        self.assertEqual(selected.entry_type_marker_color, None)
+        self.assertEqual([(segment.key, segment.duration) for segment in selected.segments], [("normal", 10.0)])
+        self.assertEqual(selected.segments[0].color, ThemeEngine().entry_type_color(EntryType.NORMAL))
 
         leave = next(cell for cell in state.cells if cell.day == date(2026, 4, 21))
         self.assertTrue(leave.is_leave)
         self.assertEqual(leave.leave_hours, 8.0)
-        self.assertEqual(leave.entry_type_marker_color, "#2a9a2a")
+        self.assertEqual([(segment.key, segment.duration) for segment in leave.segments], [("paid_leave", 8.0)])
+        self.assertEqual(leave.segments[0].color, ThemeEngine().entry_type_color(EntryType.PAID_LEAVE))
 
         note = next(cell for cell in state.cells if cell.day == date(2026, 4, 22))
         self.assertTrue(note.has_note_marker)
         self.assertEqual(note.note_tooltip, "Standalone note")
+        self.assertEqual(note.segments, ())
 
         holiday = next(cell for cell in state.cells if cell.day == date(2026, 4, 29))
         self.assertTrue(holiday.is_holiday)
@@ -303,20 +306,39 @@ class PresentationViewModelTests(unittest.TestCase):
         self.assertEqual(style.key, "selected")
         self.assertEqual(style.background, "#4f8ef7")
         self.assertEqual(
-            engine.entry_type_marker_color(EntryType.BUSINESS_TRIP),
+            engine.entry_type_color(EntryType.BUSINESS_TRIP),
             "#e07800",
         )
         for dark in (False, True):
             colors = []
             for entry_type in EntryType:
-                marker = engine.entry_type_marker_color(entry_type, dark=dark)
-                if entry_type in (EntryType.NORMAL, EntryType.BREAK):
-                    self.assertIsNone(marker)
-                else:
-                    self.assertIsNotNone(marker)
-                    self.assertTrue(QColor(marker).isValid())
-                    colors.append(marker)
+                color = engine.entry_type_color(entry_type, dark=dark)
+                self.assertIsNotNone(color)
+                self.assertTrue(QColor(color).isValid())
+                colors.append(color)
             self.assertEqual(len(colors), len(set(colors)))
+            for entry_type in (EntryType.NORMAL, EntryType.BREAK):
+                color = QColor(engine.entry_type_color(entry_type, dark=dark))
+                self.assertEqual(color.red(), color.green())
+                self.assertEqual(color.green(), color.blue())
+
+    def test_custom_classification_colors_follow_stable_identity_not_catalog_metadata(self):
+        from dataclasses import replace
+
+        engine = ThemeEngine()
+        definitions = tuple(CustomEntryType(f"custom:{index:032x}", "Research") for index in range(1, 17))
+        for dark in (False, True):
+            colors = []
+            for definition in definitions:
+                expected = engine.entry_type_color(definition, dark=dark)
+                self.assertTrue(QColor(expected).isValid())
+                self.assertEqual(engine.entry_type_color(definition.value, dark=dark), expected)
+                self.assertEqual(ThemeEngine().entry_type_color(definition, dark=dark), expected)
+                for category in ("work", "break", "leave"):
+                    changed = replace(definition, label="Revised", category=category, revision=3, archived=True)
+                    self.assertEqual(engine.entry_type_color(changed, dark=dark), expected)
+                colors.append(expected)
+            self.assertGreater(len(set(colors)), 1)
 
     def test_theme_engine_uses_shared_templates_and_resolved_palettes(self) -> None:
         engine = ThemeEngine()

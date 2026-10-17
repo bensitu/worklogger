@@ -37,6 +37,30 @@ class RecordingHolidaysHandler:
 
 
 class CalendarPresentationTests(unittest.TestCase):
+    def test_calendar_uses_original_records_for_segmented_classification_with_one_range_read(self):
+        from types import SimpleNamespace
+        from unittest.mock import Mock
+        from worklogger.domain.worklog.models import EntryType
+        from worklogger.domain.worklog.rules import aggregate_days
+
+        day = date(2026, 5, 4)
+        records = aggregate_days((WorkLog(1, day, "09:00", "11:00"),
+            WorkLog(1, day, "11:00", "12:00", entry_type=EntryType.MEETING),
+            WorkLog(1, day, "12:00", "12:30", entry_type=EntryType.BREAK),
+            WorkLog(1, day, "12:30", "13:30", entry_type=EntryType.PAID_LEAVE)))
+        reader = Mock(return_value=Result.success(records))
+        model = CalendarViewModel(user_id=1, month_records_handler=SimpleNamespace(list_range=reader))
+        result = model.build_month(year=2026, month=5, selected_day=day,
+                                   options=CalendarDisplayOptions(show_holidays=False))
+        self.assertTrue(result.ok, result.error)
+        reader.assert_called_once()
+        cell = next(cell for cell in result.value.cells if cell.day == day)
+        self.assertEqual({segment.key: segment.duration for segment in cell.segments},
+                         {"normal": 2, "meeting": 1, "break": 0.5, "paid_leave": 1})
+        self.assertEqual((cell.worked_hours, cell.leave_hours), (3, 1))
+        self.assertTrue(all(segment.color for segment in cell.segments))
+        self.assertTrue(all(not cell.segments for cell in result.value.cells if cell.day != day))
+
     def test_calendar_keeps_zero_hours_but_only_shows_positive_overtime(self):
         from worklogger.presentation.viewmodels.calendar import _cell_text_lines
         from worklogger.infrastructure.i18n import _

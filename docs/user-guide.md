@@ -106,10 +106,13 @@ Manage work types and projects in **Settings > General > Classification**. Custo
 Break, or Leave accounting. Saved records retain their original classification
 and labels when catalog entries are renamed or archived.
 
-Calendar work-type markers use cyan for Remote, blue for Meeting, gold for
-Training, and gray for Other. Business trip and leave types retain their
-distinct colors. Normal work and Break have no colored marker.
-Work-type menus show the same colors beside each option.
+Calendar dates use one thin indicator along the bottom. A single type occupies
+the line; mixed types share it in proportion to their classified durations.
+Regular work is gray. Work uses effective worked hours, break uses recorded
+duration, and leave uses its leave-hour calculation, including historical untimed
+leave. Historical deductions are not counted again as break records. Custom type
+colors remain stable when renamed. Type menus use the same theme-aware colors.
+The indicator does not add another click target or a classification hover panel.
 
 Click the calendar month heading to jump to another month or year using the
 shared date picker. Calendar dates continue to show worked hours, including

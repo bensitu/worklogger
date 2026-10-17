@@ -20,7 +20,6 @@ from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets.icons import ui_icon
 from worklogger.presentation.theme.context import current_colors
 from worklogger.presentation.date_labels import day_label
-from worklogger.presentation.entry_type_labels import entry_type_label
 from worklogger.presentation.viewmodels.calendar import (
     CalendarDayCell,
     CalendarMonthViewState,
@@ -72,14 +71,12 @@ class CalendarDayButton(QPushButton):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         style = cell.style
-        marker_color = cell.entry_type_marker_color
         enabled = self.isEnabled()
         if not enabled:
             colors = current_colors()
             style = replace(style, background=colors.disabled_background, foreground=colors.disabled_text,
                             border=colors.border, hover_border=colors.border,
                             holiday_foreground=colors.disabled_text, highlighted_foreground=colors.disabled_text)
-            marker_color = colors.disabled_text if marker_color else None
         hovered = enabled and self.underMouse()
         border_color = style.hover_border if hovered else style.border
         border_width = 2 if hovered else style.border_width
@@ -144,16 +141,7 @@ class CalendarDayButton(QPushButton):
                 line,
             )
 
-        if marker_color:
-            stripe = QPainterPath()
-            stripe.moveTo(6, 3.5)
-            stripe.quadTo(3.5, 3.5, 3.5, 6)
-            stripe.lineTo(3.5, self.height() - 6)
-            stripe.quadTo(3.5, self.height() - 3.5, 6, self.height() - 3.5)
-            painter.setPen(QPen(QColor(marker_color), 3, Qt.PenStyle.SolidLine,
-                                Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
-            painter.setBrush(Qt.BrushStyle.NoBrush)
-            painter.drawPath(stripe)
+        self._paint_classification(painter, cell, style.foreground)
 
         if cell.has_note_marker:
             painter.setPen(Qt.PenStyle.NoPen)
@@ -178,6 +166,35 @@ class CalendarDayButton(QPushButton):
                 str(min(cell.event_count, 9)),
             )
         painter.end()
+
+    def _paint_classification(self, painter, cell, disabled_color):
+        if not cell.segments or self.width() <= 16:
+            return
+        bounds = QRectF(8, self.height() - 10, self.width() - 16, 3)
+        total = sum(segment.duration for segment in cell.segments)
+        if total <= 0:
+            return
+        widths = [bounds.width() * segment.duration / total for segment in cell.segments]
+        # Keep small contributions visible when the available width allows it.
+        if bounds.width() >= 2 * len(widths):
+            extra = sum(max(2 - width, 0) for width in widths)
+            capacity = sum(max(width - 2, 0) for width in widths)
+            if extra and capacity:
+                widths = [2 if width < 2 else width - extra * (width - 2) / capacity for width in widths]
+        painter.save()
+        try:
+            clip = QPainterPath()
+            clip.addRoundedRect(bounds, 1.5, 1.5)
+            painter.setClipPath(clip)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setOpacity(1 if cell.in_month else 0.6)
+            position = bounds.left()
+            for segment, width in zip(cell.segments, widths):
+                painter.fillRect(QRectF(position, bounds.top(), width, bounds.height()),
+                                 QColor(segment.color if self.isEnabled() else disabled_color))
+                position += width
+        finally:
+            painter.restore()
 
 
 class CalendarView(QWidget):
@@ -336,9 +353,6 @@ def _holiday_lines(text: str, font: QFont, width: int) -> tuple[str, ...]:
 
 def _tooltip_for_cell(cell: CalendarDayCell) -> str:
     details: list[str] = []
-    type_label = entry_type_label(cell.entry_type)
-    if cell.entry_type_marker_color and type_label:
-        details.append(_("Work type") + ": " + type_label)
     if cell.show_overnight_marker:
         details.append(_("Overnight"))
     if cell.holiday_name:

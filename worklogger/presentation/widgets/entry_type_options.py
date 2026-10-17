@@ -1,4 +1,4 @@
-"""Work-type choices with theme-aware calendar marker previews."""
+"""Classification choices with shared, theme-aware color previews."""
 
 from __future__ import annotations
 
@@ -14,16 +14,16 @@ from worklogger.presentation.theme.context import current_colors
 from worklogger.presentation.entry_type_labels import entry_type_label
 
 
-class _EntryTypeMarkerIconEngine(QIconEngine):
+class _EntryTypeColorIconEngine(QIconEngine):
     def __init__(self, definition: EntryType | CustomEntryType) -> None:
         super().__init__()
         self._definition = definition
 
     def clone(self) -> QIconEngine:
-        return _EntryTypeMarkerIconEngine(self._definition)
+        return _EntryTypeColorIconEngine(self._definition)
 
     def paint(self, painter: QPainter, rect: QRect, mode: QIcon.Mode, state: QIcon.State) -> None:
-        color = ThemeEngine().entry_type_marker_color(self._definition, dark=current_colors().dark)
+        color = ThemeEngine().entry_type_color(self._definition, dark=current_colors().dark)
         if color is None:
             return
         painter.save()
@@ -64,9 +64,9 @@ class _EntryTypeOptionDelegate(QStyledItemDelegate):
 
 
 def entry_type_icon(definition: EntryType | CustomEntryType) -> QIcon:
-    if ThemeEngine().entry_type_marker_color(definition) is None:
+    if ThemeEngine().entry_type_color(definition) is None:
         return QIcon()
-    return QIcon(_EntryTypeMarkerIconEngine(definition))
+    return QIcon(_EntryTypeColorIconEngine(definition))
 
 
 def add_entry_type_option(combo: QComboBox, definition: EntryType | CustomEntryType,

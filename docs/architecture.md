@@ -129,6 +129,14 @@ draft until Apply. Application services revalidate type and project availability
 before the widget updates that draft; only the main recording action persists
 data. Context changes dismiss the popup instead of applying an old selection.
 
+Calendar allocation is a pure domain calculation over the original records in
+each daily summary. Immutable segments carry their contributed hours and semantic
+color IDs; the calendar view model resolves theme colors once per refresh. The
+single bottom indicator renders those segments without storage access or a
+classification tooltip. An explicit `CalendarDimension` separates allocation from
+drawing. Entry type is the visible default; work-arrangement allocation retains
+unknown values as unspecified and has no user-facing switch.
+
 The report page coordinates state and requests. `widgets/report_editor.py` owns
 editor controls without persistence dependencies; `reporting/exports.py` handles
 export selection using immutable content and date snapshots. Period navigation

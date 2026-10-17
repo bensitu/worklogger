@@ -21,6 +21,36 @@ from worklogger.domain.worklog.rules import (
 
 
 class WorkLogRuleTests(unittest.TestCase):
+    def test_classification_allocations_keep_recorded_duration_and_unknown_arrangements_distinct(self):
+        from worklogger.domain.calendar.allocation import allocation_segments, CalendarDimension
+
+        day = date(2026, 10, 18)
+        work = WorkLog(1, day, "09:00", "12:00", 1, entry_type=EntryType.MEETING, work_mode=WorkMode.REMOTE)
+        rest = WorkLog(1, day, "12:00", "13:00", entry_type=EntryType.BREAK)
+        leave = WorkLog(1, day, "13:00", "15:00", entry_type=EntryType.PAID_LEAVE)
+        unknown = WorkLog(1, day, "15:00", "16:00")
+        records = (work, rest, leave, unknown)
+        types = allocation_segments(records)
+        self.assertEqual({segment.key: segment.duration for segment in types},
+                         {"meeting": 2, "break": 1, "paid_leave": 2, "normal": 1})
+        modes = allocation_segments(records, dimension=CalendarDimension.WORK_MODE)
+        self.assertEqual({segment.key: segment.duration for segment in modes}, {"remote": 2, "unspecified": 1})
+        self.assertEqual(sum(segment.duration for segment in modes), sum(record.worked_hours() for record in records))
+        self.assertEqual(allocation_segments(reversed(records)), types)
+
+    def test_classification_allocations_use_historical_leave_fallback_and_stable_custom_ids(self):
+        from worklogger.domain.calendar.allocation import allocation_segments
+
+        day = date(2026, 10, 18)
+        definition = CustomEntryType("custom:" + "1" * 32, "Research")
+        work = WorkLog(1, day, "09:00", "10:00", entry_type=definition)
+        renamed = replace(work, start_time="10:00", end_time="11:00", entry_type=replace(definition, label="Study"))
+        segment, = allocation_segments((work, renamed))
+        self.assertEqual((segment.key, segment.semantic_color_id, segment.duration), (definition.value, definition.value, 2))
+        leave = WorkLog(1, day, entry_type=EntryType.SICK_LEAVE)
+        self.assertEqual(allocation_segments((leave,), standard_leave_hours=7.5)[0].duration, 7.5)
+        self.assertEqual(allocation_segments((WorkLog(1, day, note="Memo"),)), ())
+
     def test_classification_keeps_accounting_and_optional_work_metadata_separate(self):
         base = WorkLog(1, date(2026, 10, 18), "09:00", "11:00", entry_type=EntryType.MEETING,
                        work_mode=WorkMode.REMOTE)

@@ -98,7 +98,7 @@ class RecordReplacementTimeline(QWidget):
 
     def _color(self, record):
         colors = current_colors()
-        return QColor(ThemeEngine().entry_type_marker_color(record.entry_type, dark=colors.dark)
+        return QColor(ThemeEngine().entry_type_color(record.entry_type, dark=colors.dark)
                       or (colors.muted_text if record.is_break else colors.accent))
 
     def _draw_period(self, painter, period, *, incoming=False):

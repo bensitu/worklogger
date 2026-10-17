@@ -13,10 +13,11 @@ from worklogger.app.queries.calendar_queries import (
     GetHolidaysForRangeQuery,
 )
 from worklogger.domain.calendar.models import CalendarEvent, Holiday
+from worklogger.domain.calendar.allocation import CalendarDimension, allocation_segments
 from worklogger.domain.notes.models import DailyNote
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.models import WorkLog, EntryType
+from worklogger.domain.worklog.models import WorkLog
 from worklogger.infrastructure.i18n import _, ngettext
 from worklogger.presentation.theme import CalendarCellStyle, ThemeEngine
 
@@ -55,6 +56,14 @@ class CalendarDisplayOptions:
     week_start_monday: bool = False
     standard_work_hours: float = 8.0
     holiday_region: str = ""
+    classification_dimension: CalendarDimension = CalendarDimension.ENTRY_TYPE
+
+
+@dataclass(frozen=True)
+class CalendarIndicatorSegment:
+    key: str
+    duration: float
+    color: str
 
 
 @dataclass(frozen=True)
@@ -68,7 +77,6 @@ class CalendarDayCell:
     is_weekend: bool
     is_holiday: bool
     holiday_name: str
-    entry_type: str
     is_leave: bool
     worked_hours: float
     overtime_hours: float
@@ -76,7 +84,7 @@ class CalendarDayCell:
     weekly_total_hours: float
     has_note_marker: bool
     note_tooltip: str
-    entry_type_marker_color: str | None
+    segments: tuple[CalendarIndicatorSegment, ...]
     show_overnight_marker: bool
     event_count: int
 
@@ -296,14 +304,13 @@ class CalendarViewModel:
         if holiday_name:
             flags.add("holiday")
 
-        entry_type = record.entry_type.value if record else EntryType.NORMAL.value
         worked_hours = record.worked_hours() if record else 0.0
         overtime_hours = (
             max(worked_hours - float(options.standard_work_hours), 0.0)
             if record and not record.is_leave
             else 0.0
         )
-        leave_hours = record.leave_hours() if record else 0.0
+        leave_hours = record.leave_hours(standard_hours=options.standard_work_hours) if record else 0.0
         legacy_note = record.note if record and not record.has_times else ""
         note_text = (note_content if note_content is not None else legacy_note).strip()
         has_note_marker = (
@@ -327,7 +334,6 @@ class CalendarViewModel:
             is_weekend=cell_day.weekday() >= 5,
             is_holiday=bool(holiday_name),
             holiday_name=holiday_name,
-            entry_type=entry_type,
             is_leave=bool(record and record.is_leave),
             worked_hours=worked_hours,
             overtime_hours=overtime_hours,
@@ -335,10 +341,10 @@ class CalendarViewModel:
             weekly_total_hours=weekly_total_hours,
             has_note_marker=has_note_marker,
             note_tooltip=note_text[:200] if has_note_marker else "",
-            entry_type_marker_color=self._theme_engine.entry_type_marker_color(
-                record.entry_type if record else entry_type,
-                dark=dark,
-            ),
+            segments=tuple(CalendarIndicatorSegment(segment.key, segment.duration,
+                self._theme_engine.entry_type_color(segment.semantic_color_id, dark=dark))
+                for segment in allocation_segments((record,) if record else (),
+                    dimension=options.classification_dimension, standard_leave_hours=options.standard_work_hours)),
             show_overnight_marker=bool(
                 options.show_overnight_indicator and record and record.is_overnight
             ),

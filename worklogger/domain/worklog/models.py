@@ -193,3 +193,11 @@ class WorkLog:
             return 0.0
         raw = self.raw_hours()
         return raw if raw > 0 else max(float(standard_hours or DEFAULT_LEAVE_HOURS), 0.0)
+
+    def classified_hours(self, *, standard_leave_hours: float = DEFAULT_LEAVE_HOURS) -> float:
+        """Return classified duration without treating break or leave as work."""
+        if self.entries:
+            return sum(entry.classified_hours(standard_leave_hours=standard_leave_hours) for entry in self.entries)
+        if self.is_leave:
+            return self.leave_hours(standard_hours=standard_leave_hours)
+        return self.raw_hours() if self.is_break else self.worked_hours()

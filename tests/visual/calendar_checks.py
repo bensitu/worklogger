@@ -14,7 +14,7 @@ from PySide6.QtCore import QPoint, Qt
 from PySide6.QtWidgets import QApplication, QFrame, QVBoxLayout, QWidget
 
 from worklogger.domain.calendar.models import CalendarEvent
-from worklogger.domain.worklog.models import WorkLog, EntryType
+from worklogger.domain.worklog.models import WorkLog, EntryType, CustomEntryType
 from worklogger.infrastructure.i18n import available_languages, set_language
 from worklogger.infrastructure.repositories import SQLiteCalendarEventRepository, SQLiteWorkLogRepository
 from tests.presentation.test_app_window import MemoryWorkLogRepository, _window
@@ -132,9 +132,8 @@ class CalendarLayoutChecks(unittest.TestCase):
                     colors = {image.pixelColor(x, y).name()
                               for x in range(image.width()) for y in range(image.height())}
                     for definition in EntryType:
-                        marker = engine.entry_type_marker_color(definition, dark=dark)
-                        if marker:
-                            self.assertIn(marker, colors)
+                        color = engine.entry_type_color(definition, dark=dark)
+                        self.assertIn(color, colors)
                     directory = os.environ.get("WORKLOGGER_SCREENSHOTS")
                     if directory:
                         target = Path(directory)
@@ -149,10 +148,10 @@ class CalendarLayoutChecks(unittest.TestCase):
             self.app.setPalette(old_palette)
             self.app.setProperty("worklogger_theme_context", old_context)
 
-    def test_entry_type_markers_render_in_light_dark_and_selected_cells(self):
-        from PySide6.QtGui import QColor
+    def test_classification_segments_render_at_the_bottom_in_light_dark_and_selected_cells(self):
         from tests.presentation.test_qt_widgets import _calendar_state
         from worklogger.presentation.theme import ThemeEngine
+        from worklogger.presentation.viewmodels.calendar import CalendarIndicatorSegment
         from worklogger.presentation.widgets.calendar import CalendarDayButton
 
         engine = ThemeEngine()
@@ -161,39 +160,67 @@ class CalendarLayoutChecks(unittest.TestCase):
         old_context = self.app.property("worklogger_theme_context")
         button = CalendarDayButton()
         button.setFixedSize(84, 110)
-        types = (EntryType.NORMAL, EntryType.REMOTE, EntryType.MEETING, EntryType.TRAINING,
-                 EntryType.BREAK, EntryType.OTHER)
+        types = (*EntryType, CustomEntryType("custom:00000000000000000000000000000001", "Research"))
         try:
             for theme, dark, selected in product(("blue", "liquid_glass"), (False, True), (False, True)):
                 engine.apply_to(self.app, theme, dark=dark)
                 style = engine.calendar_cell_style({"selected"} if selected else set(), theme=theme, dark=dark)
                 for entry_type in types:
-                    marker = engine.entry_type_marker_color(entry_type, dark=dark)
-                    cell = replace(base, entry_type=entry_type.value, entry_type_marker_color=marker,
+                    color = engine.entry_type_color(entry_type, dark=dark)
+                    cell = replace(base, segments=(CalendarIndicatorSegment(entry_type.value, 1.0, color),),
                                    is_selected=selected, style=style)
-                    button.set_cell(replace(cell, entry_type_marker_color=None))
+                    button.set_cell(replace(cell, segments=()))
                     before = button.grab().toImage().scaled(button.size())
                     button.set_cell(cell)
                     after = button.grab().toImage().scaled(button.size())
-                    if marker:
-                        self.assertEqual(after.pixelColor(3, 55), QColor(marker))
-                        self.assertNotEqual(before.pixelColor(3, 55), after.pixelColor(3, 55))
-                        self.assertNotEqual(before.pixelColor(6, 4), after.pixelColor(6, 4))
-                        self.assertNotEqual(before.pixelColor(6, 105), after.pixelColor(6, 105))
-                        self.assertEqual(before.pixelColor(0, 55), after.pixelColor(0, 55))
-                    else:
-                        self.assertEqual(before, after)
+                    indicator_y, row = self._classification_row(after, {color})
+                    self.assertGreater(indicator_y, after.height() * 3 / 4)
+                    self.assertIn(color, row)
+                    changed = [(x, y) for y in range(after.height()) for x in range(after.width())
+                               if after.pixel(x, y) != before.pixel(x, y)]
+                    self.assertTrue(changed)
+                    self.assertTrue(all(0 < x < button.width() - 1
+                                        and y > button.height() * 3 / 4
+                                        for x, y in changed))
                     directory = os.environ.get("WORKLOGGER_SCREENSHOTS")
                     if directory:
                         target = Path(directory)
                         target.mkdir(parents=True, exist_ok=True)
                         self.assertTrue(button.grab().save(str(target /
-                            f"work-type-{theme}-{dark}-{selected}-{entry_type.value}.png")))
+                            f"classification-{theme}-{dark}-{selected}-{entry_type.value.replace(':', '-')}.png")))
+                segments = tuple(CalendarIndicatorSegment(definition.value, duration,
+                    engine.entry_type_color(definition, dark=dark)) for definition, duration in
+                    ((EntryType.NORMAL, 3.0), (EntryType.MEETING, 1.0), (EntryType.PAID_LEAVE, 2.0)))
+                for width in (48, 84):
+                    button.setFixedSize(width, 110)
+                    button.set_cell(replace(base, segments=segments, is_selected=selected, style=style))
+                    image = button.grab().toImage().scaled(button.size())
+                    indicator_y, row = self._classification_row(image, {segment.color for segment in segments})
+                    self.assertGreater(indicator_y, image.height() * 3 / 4)
+                    colored_width = sum(row.count(segment.color) for segment in segments)
+                    self.assertGreater(colored_width, 0)
+                    for segment in segments:
+                        self.assertAlmostEqual(row.count(segment.color) / colored_width,
+                            segment.duration / sum(item.duration for item in segments),
+                            delta=1 / colored_width + 0.03)
+                    directory = os.environ.get("WORKLOGGER_SCREENSHOTS")
+                    if directory:
+                        target = Path(directory)
+                        target.mkdir(parents=True, exist_ok=True)
+                        self.assertTrue(button.grab().save(str(target /
+                            f"classification-mixed-{theme}-{dark}-{selected}-{width}.png")))
+                button.setFixedSize(84, 110)
         finally:
             button.deleteLater()
             self.app.setStyleSheet(old_style)
             self.app.setPalette(old_palette)
             self.app.setProperty("worklogger_theme_context", old_context)
+
+    @staticmethod
+    def _classification_row(image, colors):
+        rows = ((y, [image.pixelColor(x, y).name() for x in range(image.width())])
+                for y in range(image.height() // 2, image.height()))
+        return max(rows, key=lambda item: sum(color in colors for color in item[1]))
 
     def test_note_markers_align_with_overnight_icons_and_preserve_event_badges(self):
         from tests.presentation.test_qt_widgets import _calendar_state
@@ -284,7 +311,11 @@ class CalendarLayoutChecks(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        from worklogger.presentation.theme import configure_application_style, install_bundled_fonts
+
         cls.app = QApplication.instance() or QApplication([])
+        configure_application_style()
+        install_bundled_fonts()
 
     def tearDown(self):
         set_language("en_US")

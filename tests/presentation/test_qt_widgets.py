@@ -15,7 +15,7 @@ from PySide6.QtWidgets import QApplication, QWidget
 
 from worklogger.presentation.theme import ThemeEngine
 from worklogger.presentation.theme.fonts import _application_font
-from worklogger.presentation.viewmodels.calendar import CalendarDayCell, CalendarMonthViewState
+from worklogger.presentation.viewmodels.calendar import CalendarDayCell, CalendarIndicatorSegment, CalendarMonthViewState
 from worklogger.presentation.viewmodels.stats import StatsPanelState
 from worklogger.presentation.widgets.assets import application_icon_path, asset_path
 from worklogger.presentation.widgets.icons import ui_icon
@@ -60,7 +60,6 @@ def _calendar_state() -> CalendarMonthViewState:
                 is_weekend=day.weekday() >= 5,
                 is_holiday=False,
                 holiday_name="",
-                entry_type="normal",
                 is_leave=False,
                 worked_hours=10.0 if is_selected else 0.0,
                 overtime_hours=2.0 if is_selected else 0.0,
@@ -68,7 +67,7 @@ def _calendar_state() -> CalendarMonthViewState:
                 weekly_total_hours=10.0 if is_selected else 0.0,
                 has_note_marker=is_selected,
                 note_tooltip="Night shift",
-                entry_type_marker_color=None,
+                segments=(CalendarIndicatorSegment("normal", 10.0, engine.entry_type_color("normal")),) if is_selected else (),
                 show_overnight_marker=is_selected,
                 event_count=2 if is_selected else 0,
             )
@@ -83,7 +82,7 @@ def _calendar_state() -> CalendarMonthViewState:
 
 
 class QtWidgetTests(unittest.TestCase):
-    def test_entry_type_options_preserve_values_and_follow_calendar_marker_colors(self):
+    def test_entry_type_options_preserve_values_and_follow_shared_classification_colors(self):
         from PySide6.QtWidgets import QComboBox
         from worklogger.domain.worklog.models import CustomEntryType, EntryType
         from worklogger.presentation.widgets.entry_type_options import add_entry_type_option
@@ -104,7 +103,7 @@ class QtWidgetTests(unittest.TestCase):
                 for index, definition in enumerate(definitions):
                     self.assertEqual(combo.itemData(index), definition.value)
                     icon = combo.itemIcon(index)
-                    expected = engine.entry_type_marker_color(definition, dark=dark)
+                    expected = engine.entry_type_color(definition, dark=dark)
                     self.assertEqual(icon.isNull(), expected is None)
                     if expected is None:
                         continue
