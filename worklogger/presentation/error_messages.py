@@ -106,6 +106,7 @@ _MESSAGE_GROUPS = (
     (("avatar_image_too_large",), N_("Choose an image smaller than 10 MB and 20 million pixels.")),
     (("entry_type_invalid",), N_("Enter a name of up to 80 characters and select an accounting category.")),
     (("work_mode_invalid", "entry_classification_invalid"), N_("Select a valid classification. Break and leave cannot have a work arrangement or project.")),
+    (("auto_record_work_required",), N_("Automatic recording requires a work classification. Enter leave manually and use the Break action for a timed break.")),
     (("entry_type_name_exists",), N_("A work type with this name already exists.")),
     (("entry_type_unavailable", "entry_type_conflict"), N_("This work type changed or is no longer available. Reload the types and try again.")),
     (("entry_types_load_failed", "entry_types_save_failed"), N_("Unable to update work types. Your records have not changed.")),

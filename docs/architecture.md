@@ -93,6 +93,10 @@ project association. Historical remote and business-trip types retain their
 original identities; a known arrangement does not imply a particular activity.
 Interval slicing preserves classification and arrangement; merging requires
 both to match along with the project context.
+New manual work saves and completed work timers remember the account's last
+selected arrangement in the same transaction as the record. An explicit
+unspecified arrangement clears that preference. Historical edits, imports,
+project reassignment, break/leave saves, and undo do not change it.
 
 Ordinary saves, imports, and interval transformations share `EntryWriteSession`
 for overlap validation, insertion, and timer compare-and-update. The component

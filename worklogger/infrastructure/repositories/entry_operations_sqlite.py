@@ -77,7 +77,7 @@ class SQLiteEntryOperations:
                 self._load(connection, user_id, original)
             return EntryReplacement(incoming, overlapping_entries(connection, self.storage, incoming), original)
 
-    def replace_overlap(self, user_id, plan, *, keep_outside):
+    def replace_overlap(self, user_id, plan, *, keep_outside, remember_work_mode=False):
         if plan.incoming.user_id != user_id:
             raise ValueError("worklog_entry_conflict")
         targets = plan.periods(keep_outside=keep_outside)
@@ -91,6 +91,8 @@ class SQLiteEntryOperations:
             self.changes.remember(connection, user_id, "replace", before,
                 self.changes.rows(connection, user_id, [record.id for record in result]))
             remember_context(connection, user_id, plan.incoming.context)
+            if remember_work_mode and plan.original is None:
+                EntryWriteSession(connection, self.storage).remember_work_mode(plan.incoming)
             return result[0]
 
     def associate(self, user_id, expected, context):
@@ -101,6 +103,8 @@ class SQLiteEntryOperations:
         with self.storage.connection_factory.transaction() as connection:
             self._ensure_idle(connection, user_id)
             records = tuple(self._load(connection, user_id, entry) for entry in expected)
+            if context != WorkContext() and any(record.is_break or record.is_leave for record in records):
+                raise ValueError("entry_classification_invalid")
             if context.project_id is not None:
                 project = connection.execute("SELECT name,archived FROM projects WHERE user_id=? AND id=?", (user_id, context.project_id)).fetchone()
                 if project is None or project["archived"]:

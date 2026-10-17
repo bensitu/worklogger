@@ -84,7 +84,7 @@ class MemoryWorkLogRepository:
         return next((entry for record in self.list_all(user_id)
                      for entry in record.entries or (record,) if entry.id == entry_id), None)
 
-    def save_entry(self, record, *, timer_change=None):
+    def save_entry(self, record, *, timer_change=None, remember_work_mode=False):
         record = normalize_work_log(record)
         entries = list(self.list_for_day(record.user_id, record.day))
         if any(entry.id != record.id and entries_overlap(entry, record) for entry in entries):

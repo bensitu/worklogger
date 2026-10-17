@@ -67,8 +67,9 @@ class SQLiteWorkLogRepository:
     def existing_dates(self, user_id: int, dates) -> set[date]:
         return self._queries.existing_dates(user_id, dates)
 
-    def save_entry(self, record: WorkLog, *, timer_change: tuple[str | None, str | None] | None = None) -> WorkLog:
-        return self._writes.save_entry(record, timer_change=timer_change)
+    def save_entry(self, record: WorkLog, *, timer_change: tuple[str | None, str | None] | None = None,
+                   remember_work_mode: bool = False) -> WorkLog:
+        return self._writes.save_entry(record, timer_change=timer_change, remember_work_mode=remember_work_mode)
 
     def delete_entry(self, user_id: int, entry_id: int, revision: int, *, timer_change: tuple[str | None, str | None] | None = None) -> None:
         return self._writes.delete_entry(user_id, entry_id, revision, timer_change=timer_change)
@@ -88,8 +89,8 @@ class SQLiteWorkLogRepository:
     def preview_replacement(self, user_id, incoming, original=None):
         return self._operations.preview_replacement(user_id, incoming, original)
 
-    def replace_overlap(self, user_id, plan, *, keep_outside):
-        return self._operations.replace_overlap(user_id, plan, keep_outside=keep_outside)
+    def replace_overlap(self, user_id, plan, *, keep_outside, remember_work_mode=False):
+        return self._operations.replace_overlap(user_id, plan, keep_outside=keep_outside, remember_work_mode=remember_work_mode)
 
     def merge_entries(self, user_id, left, right):
         return self._operations.merge(user_id, left, right)

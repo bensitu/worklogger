@@ -48,6 +48,7 @@ class SQLiteWorkLogWrites:
         record: WorkLog,
         *,
         timer_change: tuple[str | None, str | None] | None = None,
+        remember_work_mode: bool = False,
     ) -> WorkLog:
         record = normalize_work_log(record)
         if not record.has_times:
@@ -123,6 +124,8 @@ class SQLiteWorkLogWrites:
             self.changes.remember(connection, record.user_id, "update" if before else "create", before,
                                   self.changes.rows(connection, record.user_id, (record.id,)))
             remember_context(connection, record.user_id, record.context)
+            if remember_work_mode and not before:
+                session.remember_work_mode(record)
             return record
 
     def delete_entry(

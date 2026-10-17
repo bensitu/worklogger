@@ -4,8 +4,8 @@ import unittest
 from zoneinfo import ZoneInfo
 
 from worklogger.domain.projects.models import WorkContext
-from worklogger.domain.worklog.editing import split_entry_at
-from worklogger.domain.worklog.models import WorkLog, EntryType
+from worklogger.domain.worklog.editing import split_entry_at, merge_entries
+from worklogger.domain.worklog.models import WorkLog, EntryType, WorkMode
 from worklogger.domain.worklog.replacement import EntryReplacement
 
 
@@ -13,7 +13,7 @@ class RecordReplacementTests(unittest.TestCase):
     def setUp(self):
         self.day = date(2026, 10, 5)
         self.old = WorkLog(1, self.day, "09:00", "18:00", note="Planning", entry_type=EntryType.MEETING,
-                           id=10, revision=2, context=WorkContext(project_label="Research"))
+                           id=10, revision=2, context=WorkContext(project_label="Research"), work_mode=WorkMode.REMOTE)
 
     def test_replacement_preserves_unaffected_periods_and_metadata(self):
         for start, end, expected in (
@@ -29,10 +29,16 @@ class RecordReplacementTests(unittest.TestCase):
                 self.assertEqual(first, incoming)
                 self.assertEqual([(item.start_time, item.end_time) for item in remaining], expected)
                 for index, item in enumerate(remaining):
-                    self.assertEqual((item.note, item.context, item.entry_type),
-                                     (self.old.note, self.old.context, self.old.entry_type))
+                    self.assertEqual((item.note, item.context, item.entry_type, item.work_mode),
+                                     (self.old.note, self.old.context, self.old.entry_type, self.old.work_mode))
                     self.assertEqual(item.id, self.old.id if index == 0 else None)
                 self.assertEqual(plan.periods(keep_outside=False), (incoming,))
+
+    def test_merging_requires_matching_arrangement(self):
+        left, right = split_entry_at(self.old, datetime(2026, 10, 5, 12))
+        self.assertEqual(merge_entries(left, right).work_mode, WorkMode.REMOTE)
+        with self.assertRaisesRegex(ValueError, "record_merge_invalid"):
+            merge_entries(left, replace(right, work_mode=WorkMode.ONSITE))
 
     def test_overnight_replacement_keeps_the_correct_dates(self):
         from worklogger.domain.worklog.rules import shift_datetimes
@@ -63,7 +69,8 @@ class RecordReplacementTests(unittest.TestCase):
     def test_historical_deductions_and_full_day_records_are_not_guessed(self):
         incoming = WorkLog(1, self.day, "12:00", "13:00", entry_type=EntryType.BREAK)
         for old, code in ((replace(self.old, break_hours=1), "historical_break_placement_required"),
-                          (replace(self.old, start_time=None, end_time=None, entry_type=EntryType.PAID_LEAVE),
+                          (replace(self.old, start_time=None, end_time=None, entry_type=EntryType.PAID_LEAVE,
+                                   context=WorkContext(), work_mode=None),
                            "record_replacement_requires_times")):
             plan = EntryReplacement(incoming, (old,))
             with self.assertRaisesRegex(ValueError, code):

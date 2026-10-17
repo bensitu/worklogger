@@ -18,6 +18,7 @@ from worklogger.infrastructure.language_preferences import LanguagePreferences
 from worklogger.infrastructure.repositories.worklog_sqlite import SQLiteWorkLogRepository
 from worklogger.infrastructure.repositories.calendar_sqlite import SQLiteCalendarEventRepository
 from worklogger.domain.calendar.models import CalendarEvent
+from worklogger.domain.worklog.models import WorkMode
 from worklogger.presentation.shell.app_window import AppWindowConfig
 from worklogger.presentation.job_runner import ImmediateJobRunner, QtJobRunner
 from worklogger.app.use_cases.ai import RewriteTextResult
@@ -114,13 +115,18 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.start_input.setText("09:00")
         panel.end_input.setText("10:00")
         panel.content_input.setPlainText("Pending content")
+        panel.view_model.update(start="09:00", end="10:00", entry_type="normal", content="Pending content",
+                                work_mode=WorkMode.REMOTE)
         panel._save()
         before = panel.view_model.draft
         result = runner.operation(CancellationToken())
         self.assertEqual(panel.view_model.draft, before)
         self.assertIsNone(panel.view_model.draft.original)
+        self.assertEqual(result.value.editor.draft.work_mode, WorkMode.REMOTE)
         runner.complete(result)
         self.assertIsNotNone(panel.view_model.draft.original)
+        self.assertEqual(panel.view_model.draft.original.work_mode, WorkMode.REMOTE)
+        self.assertEqual(panel.view_model.auto_work_mode, WorkMode.REMOTE)
         panel._job_runner = ImmediateJobRunner()
         panel.view_model.clear(self.now.date())
         self.now += timedelta(hours=2)
@@ -149,21 +155,34 @@ class TimeEntryWorkflowTests(unittest.TestCase):
 
     def test_record_modes_share_content_classification_and_saved_identity(self):
         panel = self.panel
+        panel.view_model.update(start="", end="", entry_type="normal", content="", work_mode=WorkMode.REMOTE)
         panel.start_input.setText("09:00")
         panel.end_input.setText("10:00")
         panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData("meeting"))
         panel.content_input.setPlainText("Agenda")
         panel.save_button.click()
         saved = self.repository.list_for_day(self.runtime.user.id, self.now.date())[0]
+        self.assertEqual(saved.work_mode, WorkMode.REMOTE)
         panel.time_tabs.setCurrentIndex(1)
         self.assertEqual(panel.content_input.toPlainText(), "Agenda")
         self.assertEqual(panel.entry_type_combo.currentData(), "meeting")
         self.assertEqual(panel.view_model.auto_completed.id, saved.id)
+        self.assertEqual(panel.view_model.editor_state(automatic=True).work_mode, WorkMode.REMOTE)
+        panel.view_model.update_auto(content="Agenda", entry_type="meeting", context=saved.context,
+                                     work_mode=WorkMode.ONSITE)
+        self.assertTrue(panel.view_model.auto_dirty)
+        panel.view_model.discard_changes()
+        self.assertFalse(panel.view_model.auto_dirty)
+        self.assertEqual(panel.view_model.auto_work_mode, WorkMode.REMOTE)
+        panel.view_model.update_auto(content="Agenda", entry_type="meeting", context=saved.context, work_mode=None)
+        self.assertTrue(panel.view_model.auto_dirty)
         panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData("training"))
         panel.content_input.setPlainText("Training agenda")
         panel.save_button.click()
         edited = self.repository.get_entry(self.runtime.user.id, saved.id)
         self.assertEqual((edited.note, edited.entry_type.value), ("Training agenda", "training"))
+        self.assertIsNone(edited.work_mode)
+        self.assertIsNone(panel.view_model.draft.work_mode)
         panel.time_tabs.setCurrentIndex(0)
         self.assertEqual(panel.content_input.toPlainText(), edited.note)
         panel.start_input.setText("09:15")
@@ -184,17 +203,22 @@ class TimeEntryWorkflowTests(unittest.TestCase):
 
     def test_active_timer_content_is_shared_without_editable_manual_boundaries(self):
         panel = self.panel
+        panel.view_model.update(start="", end="", entry_type="normal", content="", work_mode=WorkMode.BUSINESS_TRIP)
         panel.content_input.setPlainText("Initial description")
         panel.time_tabs.setCurrentIndex(1)
         panel.clock_in_button.click()
+        self.assertEqual(panel.view_model.timer.work_mode, WorkMode.BUSINESS_TRIP)
+        self.assertEqual(panel.view_model.editor_state(automatic=True).work_mode, WorkMode.BUSINESS_TRIP)
         panel.content_input.setPlainText("Active description")
         panel.time_tabs.setCurrentIndex(0)
         self.assertEqual(panel.content_input.toPlainText(), "Active description")
         self.assertFalse(panel.start_input.isEnabled())
         self.assertFalse(panel.entry_type_combo.isEnabled())
+        self.assertEqual(panel.view_model.editor_state(automatic=False).work_mode, WorkMode.BUSINESS_TRIP)
         panel.content_input.setPlainText("Revised description")
         panel.save_button.click()
         self.assertEqual(panel.view_model.timer.content, "Revised description")
+        self.assertEqual(panel.view_model.timer.work_mode, WorkMode.BUSINESS_TRIP)
         panel.time_tabs.setCurrentIndex(1)
         self.assertEqual(panel.content_input.toPlainText(), "Revised description")
         self.now += timedelta(hours=1)
@@ -202,6 +226,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.time_tabs.setCurrentIndex(0)
         self.assertEqual(panel.content_input.toPlainText(), "Revised description")
         self.assertEqual(panel.view_model.draft.original.note, "Revised description")
+        self.assertEqual(panel.view_model.draft.original.work_mode, WorkMode.BUSINESS_TRIP)
         self.assertTrue(panel.start_input.isEnabled())
         self.assertEqual(len(self.repository.list_for_day(self.runtime.user.id, self.now.date())), 1)
         self.warning.assert_not_called()
@@ -623,6 +648,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.content_input.setPlainText("Unsaved manual description")
         panel.view_model.auto_entry_type = "meeting"
         panel.view_model.auto_content = "Timed meeting"
+        panel.view_model.auto_work_mode = WorkMode.OTHER
         draft = panel.view_model.draft
         self.window.hide()
         self.assertTrue(controller._start_action.isEnabled())
@@ -631,6 +657,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertFalse(controller._start_action.isEnabled())
         self.assertTrue(controller._end_action.isEnabled())
         self.assertEqual(panel.view_model.timer.entry_type.value, "meeting")
+        self.assertEqual(panel.view_model.timer.work_mode, WorkMode.OTHER)
         self.assertEqual(panel.view_model.draft, draft)
         panel.time_tabs.setCurrentIndex(1)
         panel.is_busy = True
@@ -644,6 +671,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertFalse(controller._end_action.isEnabled())
         entry = self.repository.list_for_day(self.runtime.user.id, self.now.date())[0]
         self.assertEqual((entry.note, entry.entry_type.value, entry.worked_hours()), ("Timed meeting", "meeting", 1))
+        self.assertEqual(entry.work_mode, WorkMode.OTHER)
         self.assertEqual(panel.view_model.draft, draft)
         self.assertTrue(self.window.isHidden())
         panel.clear_button.click()
@@ -678,6 +706,11 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData(definition.value))
         panel.start_input.setText("09:00")
         panel.end_input.setText("10:00")
+        catalog = panel.view_model.service.entry_types
+        with patch.object(catalog, "list_types", wraps=catalog.list_types) as reads:
+            panel.content_input.setPlainText("Research draft")
+            panel.content_input.setPlainText("Research details")
+            reads.assert_not_called()
         panel.save_button.click()
         first = self.repository.list_for_day(self.runtime.user.id, self.now.date())[0]
         self.assertEqual((first.entry_type.label, first.worked_hours()), ("Research", 1))
@@ -711,6 +744,80 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertEqual(self.repository.get_entry(self.runtime.user.id, first.id).entry_type.label, "Research")
         self.assertEqual(sum(entry.worked_hours() for entry in self.repository.list_for_day(self.runtime.user.id, self.now.date())), 2)
         self.warning.assert_not_called()
+
+    def test_work_mode_defaults_do_not_replace_historical_values_or_explicit_absence(self):
+        model = self.panel.view_model
+        with patch.object(model.service, "default_work_mode", return_value=WorkMode.REMOTE):
+            model.new(self.now.date())
+            self.assertEqual(model.draft.work_mode, WorkMode.REMOTE)
+            self.assertEqual(model.auto_work_mode, WorkMode.REMOTE)
+            model.update(start="07:00", end="08:00", entry_type="meeting", content="Planning")
+            self.assertEqual(model.draft.work_mode, WorkMode.REMOTE)
+            self.assertTrue(model.save_manual().ok)
+            historical = model.draft.original
+            model.new(self.now.date())
+            model.select(historical)
+            model.update(start="07:00", end="08:00", entry_type="meeting", content="Planning", work_mode=None)
+            self.assertTrue(model.manual_dirty)
+            model.discard_changes()
+            self.assertFalse(model.manual_dirty)
+            self.assertEqual(model.draft.work_mode, WorkMode.REMOTE)
+            model.update(start="07:00", end="08:00", entry_type="meeting", content="Planning", work_mode=None)
+            self.assertTrue(model.save_manual().ok)
+            unspecified = model.draft.original
+            model.new(self.now.date())
+            self.assertEqual(model.draft.work_mode, WorkMode.REMOTE)
+            model.select(unspecified)
+            self.assertIsNone(model.draft.work_mode)
+            self.assertIsNone(model.editor_state(automatic=False).work_mode)
+
+            model.new(self.now.date())
+            model.update(start="09:00", end="", entry_type="normal", content="Independent work")
+            draft = model.draft
+            model.auto_work_mode = WorkMode.ONSITE
+            self.assertTrue(model.start("normal", "Independent work").ok)
+            self.assertEqual(model.draft, draft)
+            self.assertFalse(model.editing_active_timer)
+            self.assertEqual(model.timer.work_mode, WorkMode.ONSITE)
+            self.now += timedelta(hours=1)
+            self.assertTrue(model.finish().ok)
+            self.assertEqual(model.draft, draft)
+            self.assertEqual(model.auto_completed.work_mode, WorkMode.ONSITE)
+
+    def test_manual_nonwork_records_remain_independent_of_automatic_work(self):
+        from worklogger.domain.projects.models import WorkContext
+
+        model = self.panel.view_model
+        custom_break = model.service.entry_types.save("Rest", "break").value
+        custom_leave = model.service.entry_types.save("Leave", "leave").value
+        from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
+        model = TimeEntryViewModel(model.service)
+        with patch.object(model.service, "default_work_mode", return_value=WorkMode.REMOTE):
+            for entry_type in ("break", "paid_leave", custom_break.value, custom_leave.value):
+                with self.subTest(entry_type=entry_type):
+                    model.new(self.now.date())
+                    model.update(start="07:00", end="08:00", entry_type=entry_type, content="Manual record")
+                    self.assertIsNone(model.draft.work_mode)
+                    self.assertTrue(model.save_manual().ok)
+                    draft = model.draft
+                    self.assertFalse(model.manual_dirty)
+                    self.assertIsNone(model.auto_completed)
+                    self.assertEqual(model.auto_entry_type, "normal")
+                    self.assertEqual(model.auto_work_mode, WorkMode.REMOTE)
+                    model.update_auto(content="Automatic work", entry_type="normal", context=WorkContext())
+                    self.assertEqual(model.draft, draft)
+                    self.assertTrue(model.start("normal", model.auto_content).ok)
+                    self.assertFalse(model.editing_active_timer)
+                    self.now += timedelta(hours=1)
+                    self.assertTrue(model.finish().ok)
+                    self.assertEqual(model.draft, draft)
+                    self.assertEqual(model.auto_completed.work_mode, WorkMode.REMOTE)
+                    model.update_auto(content="Updated work", entry_type="normal", context=WorkContext(), work_mode=None)
+                    self.assertTrue(model.auto_dirty)
+                    self.assertTrue(model.save_content().ok)
+                    self.assertIsNone(model.auto_completed.work_mode)
+                    self.assertEqual(model.draft, draft)
+                    self.now = (self.now + timedelta(days=1)).replace(hour=9)
 
     def setUp(self):
         from tests.presentation.qt_support import dispose_test_windows
@@ -874,7 +981,8 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertEqual(len(entries), 2)
         self.assertEqual((entries[-1].entry_type.value, entries[-1].start_time, entries[-1].end_time), ("break", "12:00", "13:00"))
         self.assertIsNone(panel.view_model.service.timer)
-        self.assertEqual(panel.entry_type_combo.currentData(), "break")
+        self.assertEqual(panel.entry_type_combo.currentData(), "normal")
+        self.assertEqual(panel.view_model.draft.entry_type, "break")
         panel.clear_button.click()
         self.assertEqual(panel.entry_type_combo.currentData(), "normal")
         self.now += timedelta(hours=1)
@@ -915,9 +1023,12 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertFalse(panel.clock_out_button.isEnabled())
         card = self.window.calendar_page.records_widget.entry_buttons[entries[0].id]
         self.assertIn("09:00 - 10:00", card.label.text())
+        panel.edit_entry(entries[0])
         panel.content_input.setPlainText("Updated lunch")
         panel.save_button.click()
         self.assertEqual(self.repository.get_entry(self.runtime.user.id, entries[0].id).note, "Updated lunch")
+        panel.time_tabs.setCurrentIndex(1)
+        self.assertEqual(panel.entry_type_combo.currentData(), "normal")
         self.now += timedelta(minutes=1)
         original = self.repository.get_entry(self.runtime.user.id, entries[0].id)
         panel.content_input.setPlainText("Back to work")

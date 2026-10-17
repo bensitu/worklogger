@@ -6,9 +6,9 @@ from collections.abc import Iterable
 from datetime import date, datetime, timedelta, timezone
 from sqlite3 import Connection
 
-from worklogger.config.constants import MAX_SHIFT_HOURS
+from worklogger.config.constants import MAX_SHIFT_HOURS, LAST_USED_WORK_MODE_SETTING_KEY
 from worklogger.domain.projects.models import WorkContext
-from worklogger.domain.worklog.models import WorkLog
+from worklogger.domain.worklog.models import WorkLog, EntryCategory
 from worklogger.domain.worklog.rules import entries_overlap
 from worklogger.domain.worklog.timer_state import timer_payload
 from worklogger.infrastructure.repositories._mapping import map_rows
@@ -27,6 +27,13 @@ class EntryWriteSession:
 
     def check_overlap(self, record: WorkLog) -> None:
         self._check_overlap(record)
+
+    def remember_work_mode(self, record: WorkLog) -> None:
+        if record.entry_type.category == EntryCategory.WORK:
+            self._connection.execute(
+                "INSERT INTO settings(user_id,key,value) VALUES(?,?,?) ON CONFLICT(user_id,key) DO UPDATE SET value=excluded.value",
+                (record.user_id, LAST_USED_WORK_MODE_SETTING_KEY, record.work_mode.value if record.work_mode else ""),
+            )
 
     def check_overlaps(self, records: Iterable[WorkLog]) -> None:
         """Validate against stored rows, reusing reads only during this pass."""

@@ -27,6 +27,53 @@ from worklogger.infrastructure.security.password_hasher import PBKDF2PasswordHas
 
 
 class TimeEntryTests(unittest.TestCase):
+    def test_work_arrangement_defaults_change_only_with_successful_new_work(self):
+        from dataclasses import replace
+
+        day = self.now.date()
+        self.assertIsNone(self.service.default_work_mode())
+        saved = self.service.save_manual(day, "06:00", "07:00", "meeting", "Planning", work_mode=WorkMode.REMOTE).value
+        self.assertEqual(self.service.default_work_mode(), WorkMode.REMOTE)
+        edited = self.service.save_manual(day, "06:00", "07:00", "meeting", "Edited", saved, work_mode=WorkMode.ONSITE).value
+        self.assertEqual(self.repository.get_entry(self.user.id, saved.id).work_mode, WorkMode.ONSITE)
+        self.assertEqual(self.service.default_work_mode(), WorkMode.REMOTE)
+        overlap = self.service.save_manual(day, "06:30", "07:30", "training", "Overlap", work_mode=WorkMode.BUSINESS_TRIP)
+        self.assertFalse(overlap.ok)
+        self.assertEqual(self.service.default_work_mode(), WorkMode.REMOTE)
+        self.assertTrue(self.service.save_manual(day, "07:00", "08:00", "break", "Rest").ok)
+        self.assertTrue(self.service.save_manual(day, "08:00", "09:00", "paid_leave", "Leave").ok)
+        self.assertEqual(self.service.default_work_mode(), WorkMode.REMOTE)
+        self.assertTrue(self.service.start("training", "Practice", work_mode=WorkMode.BUSINESS_TRIP).ok)
+        self.assertEqual(self.service.default_work_mode(), WorkMode.REMOTE)
+        restored = self.make_service()
+        self.assertEqual(restored.timer.work_mode, WorkMode.BUSINESS_TRIP)
+        self.assertTrue(restored.finish("Practice", now=self.now + timedelta(hours=1)).ok)
+        self.assertEqual(restored.default_work_mode(), WorkMode.BUSINESS_TRIP)
+        self.repository.import_many((replace(edited, day=day + timedelta(days=2), id=None, revision=0,
+                                             started_at=None, ended_at=None, work_mode=WorkMode.REMOTE),))
+        self.assertEqual(restored.default_work_mode(), WorkMode.BUSINESS_TRIP)
+        self.assertTrue(restored.save_manual(day, "11:00", "12:00", "normal", "Unspecified", work_mode=None).ok)
+        self.assertIsNone(restored.default_work_mode())
+        other = TimeEntryService(user_id=self.user.id + 1, repository=self.repository, settings=self.settings,
+                                 local_timezone=timezone.utc)
+        self.assertIsNone(other.default_work_mode())
+
+    def test_failed_arrangement_persistence_rolls_back_the_record_and_timer(self):
+        self.assertTrue(self.service.save_manual(self.now.date(), "07:00", "08:00", "normal", "Earlier", work_mode=WorkMode.REMOTE).ok)
+        before = self.repository.list_for_day(self.user.id, self.now.date())
+        with patch.object(EntryWriteSession, "remember_work_mode", side_effect=OSError("storage unavailable")):
+            self.assertFalse(self.service.save_manual(self.now.date(), "08:00", "09:00", "normal", "New", work_mode=WorkMode.ONSITE).ok)
+        self.assertEqual(self.repository.list_for_day(self.user.id, self.now.date()), before)
+        self.assertEqual(self.service.default_work_mode(), WorkMode.REMOTE)
+        for definition in ("break", "paid_leave", self.service.entry_types.save("Personal rest", "break").value.value):
+            self.assertEqual(self.service.start(definition, "Invalid").error.code, "auto_record_work_required")
+        self.assertTrue(self.service.start("meeting", "Work", work_mode=WorkMode.ONSITE).ok)
+        with patch.object(EntryWriteSession, "remember_work_mode", side_effect=OSError("storage unavailable")):
+            self.assertFalse(self.service.finish("Work", now=self.now + timedelta(hours=1)).ok)
+        self.assertEqual(self.make_service().timer.work_mode, WorkMode.ONSITE)
+        self.assertEqual(self.repository.list_for_day(self.user.id, self.now.date()), before)
+        self.assertEqual(self.service.default_work_mode(), WorkMode.REMOTE)
+
     def test_recording_sessions_apply_state_explicitly_and_reject_stale_timer_updates(self):
         initial = self.service.snapshot_state()
         session = self.service.new_session(initial)
@@ -110,18 +157,20 @@ class TimeEntryTests(unittest.TestCase):
                 self.assertIsNone(self.settings.get(self.user.id, "time_entry_timer"))
 
     def test_split_merge_and_undo_preserve_time_identity_and_revisions(self):
-        saved = self.service.save_manual(self.now.date(), "09:00", "12:00", "meeting", "Review").value
+        saved = self.service.save_manual(self.now.date(), "09:00", "12:00", "meeting", "Review", work_mode=WorkMode.REMOTE).value
         split = self.service.split(saved, 60)
         self.assertTrue(split.ok, split.error)
         left, right = split.value
         self.assertEqual(left.id, saved.id)
         self.assertEqual((left.worked_hours(), right.worked_hours()), (1, 2))
+        self.assertEqual((left.work_mode, right.work_mode), (WorkMode.REMOTE, WorkMode.REMOTE))
         self.assertFalse(self.service.split(saved, 30).ok)
         self.assertFalse(self.service.merge(right, left).ok)
         merged = self.service.merge(left, right)
         self.assertTrue(merged.ok, merged.error)
         self.assertEqual((merged.value.id, merged.value.worked_hours()), (saved.id, 3))
         self.assertEqual(merged.value.note, saved.note)
+        self.assertEqual(merged.value.work_mode, WorkMode.REMOTE)
         self.assertEqual(self.service.latest_change().value.operation, "merge")
         restored = self.service.undo(self.service.latest_change().value.id)
         self.assertTrue(restored.ok, restored.error)
@@ -130,6 +179,7 @@ class TimeEntryTests(unittest.TestCase):
         self.assertTrue(self.service.undo(self.service.latest_change().value.id).ok)
         original = self.repository.get_entry(self.user.id, saved.id)
         self.assertEqual((original.start_time, original.end_time, original.worked_hours()), ("09:00", "12:00", 3))
+        self.assertEqual(original.work_mode, WorkMode.REMOTE)
         self.assertGreater(original.revision, merged.value.revision)
         self.assertTrue(self.service.undo(self.service.latest_change().value.id).ok)
         self.assertEqual(self.repository.list_for_day(self.user.id, saved.day), ())

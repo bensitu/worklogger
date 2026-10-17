@@ -63,7 +63,9 @@ def decode_timer(raw: str) -> EntryTimer:
     elif data["work_mode"] is not None:
         data["work_mode"] = WorkMode(data["work_mode"])
     timer = EntryTimer(**data)
-    if timer.entry_type.category != EntryCategory.WORK and (timer.work_mode is not None or timer.context != WorkContext()):
+    if timer.entry_type.category == EntryCategory.LEAVE or (timer.entry_type.category == EntryCategory.BREAK and not timer.break_until):
+        raise ValueError("auto_record_restore_failed")
+    if timer.entry_type.category != EntryCategory.WORK and timer.work_mode is not None:
         raise ValueError("auto_record_restore_failed")
     if (not math.isfinite(timer.legacy_break_hours) or not 0 <= timer.legacy_break_hours <= MAX_SHIFT_HOURS
             or bool(timer.break_until) != bool(timer.resume_type)):
@@ -73,7 +75,7 @@ def decode_timer(raw: str) -> EntryTimer:
     if timer.break_until:
         if not 0 < timestamp_span_hours(timer.started_at, timer.break_until) <= 4:
             raise ValueError("auto_record_restore_failed")
-        if timer.entry_type != EntryType.BREAK or timer.resume_type == EntryType.BREAK or timer.pending_end:
+        if timer.entry_type != EntryType.BREAK or timer.resume_type.category != EntryCategory.WORK or timer.pending_end:
             raise ValueError("auto_record_restore_failed")
     return timer
 

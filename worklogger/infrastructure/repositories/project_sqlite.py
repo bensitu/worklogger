@@ -95,6 +95,8 @@ class SQLiteProjectRepository:
 
 def validate_record_context(connection, record, *, historical=False):
     context = record.context
+    if (record.is_break or record.is_leave) and context != WorkContext():
+        raise ValueError("entry_classification_invalid")
     previous = connection.execute("SELECT project_id,work_item_id FROM worklog WHERE user_id=? AND id=?",
                                   (record.user_id, record.id or 0)).fetchone()
     unchanged = previous is not None and (previous["project_id"], previous["work_item_id"]) == (context.project_id, context.work_item_id)

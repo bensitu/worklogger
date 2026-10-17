@@ -43,9 +43,12 @@ class EntryTypeService:
             return original
         if not value.startswith("custom:"):
             try:
-                return EntryType(value)
+                definition = EntryType(value)
             except ValueError:
                 raise ValueError("entry_type_unavailable") from None
+            if definition.is_legacy and definition != original:
+                raise ValueError("entry_type_unavailable")
+            return definition
         result = self.list_types()
         if not result.ok:
             raise ValueError("entry_types_load_failed")

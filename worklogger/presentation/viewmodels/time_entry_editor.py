@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal
 
 from worklogger.domain.projects.models import WorkContext
-from worklogger.domain.worklog.models import CustomEntryType, WorkLog, EntryType
+from worklogger.domain.worklog.models import CustomEntryType, WorkLog, EntryType, WorkMode
 from worklogger.domain.worklog.timer_state import EntryTimer
 
 if TYPE_CHECKING:
@@ -26,6 +26,7 @@ class TimeEntryEditorState:
     historical_break_hours: float
     save_action: Literal["new", "changes", "content"]
     can_save: bool
+    work_mode: WorkMode | None = None
 
     @property
     def processing_target(self) -> tuple[str, object]:
@@ -55,6 +56,7 @@ def editor_state(model: TimeEntryViewModel, *, automatic: bool) -> TimeEntryEdit
         entry_type=model.auto_entry_type if automatic else draft.entry_type,
         type_snapshot=snapshot, content=model.auto_content if automatic else draft.content,
         context=active_timer.context if active_timer else model.auto_context if automatic else draft.context,
+        work_mode=active_timer.work_mode if active_timer else model.auto_work_mode if automatic else draft.work_mode,
         historical_break_hours=draft.original.break_hours if not automatic and draft.original else 0,
         save_action=save_action, can_save=can_save,
     )

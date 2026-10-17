@@ -40,6 +40,7 @@ class SaveWorkLogHandler:
                     entry_type=normalize_entry_type(command.entry_type),
                     started_at=command.started_at,
                     ended_at=command.ended_at,
+                    work_mode=command.work_mode,
                 )
             )
         except (TypeError, ValueError) as exc:
