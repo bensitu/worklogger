@@ -1,5 +1,5 @@
 from __future__ import annotations
-from worklogger.infrastructure.database.migrations.runner import MIGRATION_MODULES, MIGRATION_VERSIONS
+from worklogger.infrastructure.database.migrations.runner import MIGRATION_VERSIONS
 
 import base64
 from contextlib import closing
@@ -39,7 +39,7 @@ from worklogger.domain.auth.models import LinkedIdentity
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.quicklog.models import QuickLog
 from tests.quick_log_samples import insert_previous_entry
-from worklogger.domain.worklog.models import WorkType
+from worklogger.domain.worklog.models import EntryType
 from worklogger.infrastructure.database import (
     MigrationRunner,
     SQLiteConnectionFactory,
@@ -140,8 +140,8 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         record_id = insert_previous_entry(self.factory, QuickLog(None, user.id, day, "Valid record")).id
         with self.factory.transaction(write=True) as connection:
             connection.execute("UPDATE quick_logs SET created_at='invalid' WHERE id=?", (record_id,))
-            connection.execute("INSERT INTO worklog(user_id,d,\"break\",note,work_type) VALUES(?, '2026-05-15X', 0, '', 'normal')", (user.id,))
-            connection.execute("INSERT INTO worklog(user_id,d,\"break\",note,work_type) VALUES(?, '2026-05-01', 0, '', 'normal')", (user.id,))
+            connection.execute("INSERT INTO worklog(user_id,d,\"break\",note,entry_type) VALUES(?, '2026-05-15X', 0, '', 'normal')", (user.id,))
+            connection.execute("INSERT INTO worklog(user_id,d,\"break\",note,entry_type) VALUES(?, '2026-05-01', 0, '', 'normal')", (user.id,))
         with self.assertLogs("worklogger.infrastructure.repositories._mapping", level="WARNING"):
             with self.assertRaisesRegex(ValueError, "stored_records_invalid"):
                 SQLiteWorkLogRepository(self.factory).list_for_month(user.id, 2026, 5)
@@ -195,7 +195,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         with SQLiteUnitOfWork(self.factory).transaction(write=False) as connection:
             self.assertEqual(
                 connection.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0],
-                len(MIGRATION_MODULES),
+                len(MIGRATION_VERSIONS),
             )
 
     def test_database_path_rules_for_source_and_frozen_modes(self) -> None:
@@ -339,7 +339,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
                 end_time="0900",
                 break_hours=1.0,
                 note="Night shift",
-                work_type=WorkType.NORMAL.value,
+                entry_type=EntryType.NORMAL.value,
             )
         )
         self.assertTrue(saved_work_log.ok)
@@ -357,7 +357,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
                 end_time=None,
                 break_hours=0.0,
                 note="Leave",
-                work_type=WorkType.PAID_LEAVE.value,
+                entry_type=EntryType.PAID_LEAVE.value,
             )
         )
         analytics = GetAnalyticsBundleHandler(work_logs).handle(

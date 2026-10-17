@@ -14,7 +14,7 @@ from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.repositories import WorkLogRepository
-from worklogger.domain.worklog.rules import decode_work_type, normalize_work_log
+from worklogger.domain.worklog.rules import decode_entry_type, normalize_work_log
 from worklogger.domain.worklog.intervals import EntryIntervalIndex
 
 
@@ -26,11 +26,11 @@ class WorkLogCsvRowDraft:
     end_time: str | None
     break_hours: float
     note: str
-    work_type: str
+    entry_type: str
     started_at: datetime | None = None
     ended_at: datetime | None = None
-    work_type_label: str = ""
-    work_type_category: str = ""
+    entry_type_label: str = ""
+    entry_type_category: str = ""
     project_label: str = ""
     work_item_label: str = ""
 
@@ -100,7 +100,7 @@ class ImportWorkLogsCsvHandler:
                         end_time=row.end_time,
                         break_hours=row.break_hours,
                         note=row.note,
-                        work_type=decode_work_type(row.work_type, label=row.work_type_label, category=row.work_type_category, strict=True),
+                        entry_type=decode_entry_type(row.entry_type, label=row.entry_type_label, category=row.entry_type_category, strict=True),
                         started_at=row.started_at,
                         ended_at=row.ended_at,
                         context=WorkContext(project_label=row.project_label, work_item_label=row.work_item_label),

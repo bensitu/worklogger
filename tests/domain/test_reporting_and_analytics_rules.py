@@ -18,7 +18,7 @@ from worklogger.domain.reporting.periods import (
     validate_report_period,
     weekly_period,
 )
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import WorkLog, EntryType
 from worklogger.domain.shared.dates import add_months
 from worklogger.domain.worklog.rules import normalize_work_log
 from worklogger.domain.settings.work_schedule import WorkSchedule
@@ -31,7 +31,7 @@ def _record(
     start: str | None,
     end: str | None,
     break_hours: float,
-    work_type: WorkType,
+    entry_type: EntryType,
 ) -> WorkLog:
     return normalize_work_log(
         WorkLog(
@@ -40,7 +40,7 @@ def _record(
             start_time=start,
             end_time=end,
             break_hours=break_hours,
-            work_type=work_type,
+            entry_type=entry_type,
         )
     )
 
@@ -56,7 +56,7 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
         custom = WorkSchedule("custom", (0.5, 1, 0, 1, 0, 1, 0))
         self.assertEqual(custom.planned_days(date(2026, 10, 12), date(2026, 10, 18)), 3.5)
         self.assertEqual(WorkSchedule.preset("two_days_off").planned_days(date(2024, 1, 1), date(2024, 12, 31)), 262)
-        rows = (_record(date(2024, 2, 3), "09:00", "10:00", 0, WorkType.NORMAL),)
+        rows = (_record(date(2024, 2, 3), "09:00", "10:00", 0, EntryType.NORMAL),)
         data = dashboard_data(rows, year=2024, month=2, scope="monthly", standard_hours=8,
                               monthly_target=168, work_schedule=WorkSchedule.preset("two_and_a_half_days_off"))
         self.assertEqual((data.stats.work_days, data.planned_work_days, data.target_hours), (1, 19, 168))
@@ -102,14 +102,14 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
     def test_rest_days_count_recorded_break_dates_and_exclude_leave_and_missing_dates(self):
         day = date(2026, 5, 4)
         periods = (WorkLog(1, day, "09:00", "12:00"),
-                   WorkLog(1, day, "12:00", "13:00", work_type=WorkType.BREAK),
-                   WorkLog(1, day, "15:00", "15:30", work_type=WorkType.BREAK))
+                   WorkLog(1, day, "12:00", "13:00", entry_type=EntryType.BREAK),
+                   WorkLog(1, day, "15:00", "15:30", entry_type=EntryType.BREAK))
         rows = (WorkLog(1, day, entries=periods),
-                WorkLog(1, date(2026, 5, 5), "12:00", "13:00", work_type=WorkType.BREAK),
-                WorkLog(1, date(2026, 5, 6), work_type=WorkType.PAID_LEAVE),
+                WorkLog(1, date(2026, 5, 5), "12:00", "13:00", entry_type=EntryType.BREAK),
+                WorkLog(1, date(2026, 5, 6), entry_type=EntryType.PAID_LEAVE),
                 WorkLog(1, date(2026, 5, 7), "09:00", "18:00", break_hours=1),
-                WorkLog(1, date(2026, 4, 3), "12:00", "13:00", work_type=WorkType.BREAK),
-                WorkLog(1, date(2025, 7, 3), "12:00", "13:00", work_type=WorkType.BREAK))
+                WorkLog(1, date(2026, 4, 3), "12:00", "13:00", entry_type=EntryType.BREAK),
+                WorkLog(1, date(2025, 7, 3), "12:00", "13:00", entry_type=EntryType.BREAK))
         for scope in ("monthly", "quarterly", "annual"):
             data = dashboard_data(rows, year=2026, month=5, scope=scope, standard_hours=8, monthly_target=168)
             self.assertEqual(data.stats.rest_days, 2 if scope == "monthly" else 3)
@@ -120,10 +120,10 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
 
     def test_dashboard_uses_real_days_targets_modes_and_comparison(self) -> None:
         records = (
-            _record(date(2026, 3, 6), "09:00", "17:00", 1.0, WorkType.NORMAL),
-            _record(date(2026, 4, 6), "09:00", "19:00", 1.0, WorkType.NORMAL),
-            _record(date(2026, 4, 7), "09:00", "18:00", 1.0, WorkType.REMOTE),
-            _record(date(2026, 4, 8), None, None, 0.0, WorkType.PAID_LEAVE),
+            _record(date(2026, 3, 6), "09:00", "17:00", 1.0, EntryType.NORMAL),
+            _record(date(2026, 4, 6), "09:00", "19:00", 1.0, EntryType.NORMAL),
+            _record(date(2026, 4, 7), "09:00", "18:00", 1.0, EntryType.REMOTE),
+            _record(date(2026, 4, 8), None, None, 0.0, EntryType.PAID_LEAVE),
         )
         data = dashboard_data(records, year=2026, month=4, scope="monthly", standard_hours=7.5, monthly_target=120)
         self.assertEqual(data.total_days, 30)
@@ -177,15 +177,15 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
 
     def test_daily_average_quarters_use_work_days_across_the_selected_year(self) -> None:
         records = (
-            _record(date(2026, 1, 5), "09:00", "17:00", 0, WorkType.NORMAL),
-            _record(date(2026, 1, 6), "09:00", "17:00", 0, WorkType.REMOTE),
-            _record(date(2026, 2, 5), "06:00", "20:00", 0, WorkType.NORMAL),
-            _record(date(2026, 3, 5), None, None, 0, WorkType.PAID_LEAVE),
-            _record(date(2026, 3, 6), None, None, 0, WorkType.NORMAL),
-            _record(date(2026, 7, 5), "09:00", "15:00", 0, WorkType.NORMAL),
-            _record(date(2026, 12, 5), "09:00", "19:00", 0, WorkType.NORMAL),
-            _record(date(2025, 1, 5), "06:00", "21:00", 0, WorkType.NORMAL),
-            _record(date(2027, 1, 5), "06:00", "21:00", 0, WorkType.NORMAL),
+            _record(date(2026, 1, 5), "09:00", "17:00", 0, EntryType.NORMAL),
+            _record(date(2026, 1, 6), "09:00", "17:00", 0, EntryType.REMOTE),
+            _record(date(2026, 2, 5), "06:00", "20:00", 0, EntryType.NORMAL),
+            _record(date(2026, 3, 5), None, None, 0, EntryType.PAID_LEAVE),
+            _record(date(2026, 3, 6), None, None, 0, EntryType.NORMAL),
+            _record(date(2026, 7, 5), "09:00", "15:00", 0, EntryType.NORMAL),
+            _record(date(2026, 12, 5), "09:00", "19:00", 0, EntryType.NORMAL),
+            _record(date(2025, 1, 5), "06:00", "21:00", 0, EntryType.NORMAL),
+            _record(date(2027, 1, 5), "06:00", "21:00", 0, EntryType.NORMAL),
         )
         for month in (1, 5, 12):
             data = dashboard_data(records, year=2026, month=month, scope="quarterly", standard_hours=8, monthly_target=168)
@@ -196,12 +196,12 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
 
     def test_daily_average_annual_scope_includes_all_twelve_months(self) -> None:
         records = (
-            _record(date(2026, 1, 5), "09:00", "17:00", 0, WorkType.NORMAL),
-            _record(date(2026, 1, 6), "08:00", "20:00", 0, WorkType.NORMAL),
-            _record(date(2026, 6, 5), "09:00", "15:00", 0, WorkType.NORMAL),
-            _record(date(2026, 12, 5), "09:00", "16:00", 0, WorkType.NORMAL),
-            _record(date(2026, 12, 6), None, None, 0, WorkType.PAID_LEAVE),
-            _record(date(2025, 1, 5), "06:00", "21:00", 0, WorkType.NORMAL),
+            _record(date(2026, 1, 5), "09:00", "17:00", 0, EntryType.NORMAL),
+            _record(date(2026, 1, 6), "08:00", "20:00", 0, EntryType.NORMAL),
+            _record(date(2026, 6, 5), "09:00", "15:00", 0, EntryType.NORMAL),
+            _record(date(2026, 12, 5), "09:00", "16:00", 0, EntryType.NORMAL),
+            _record(date(2026, 12, 6), None, None, 0, EntryType.PAID_LEAVE),
+            _record(date(2025, 1, 5), "06:00", "21:00", 0, EntryType.NORMAL),
         )
         data = dashboard_data(records, year=2026, month=5, scope="annual", standard_hours=8, monthly_target=168)
         expected = tuple((f"{month:02d}", {1: 10, 6: 6, 12: 7}.get(month, 0)) for month in range(1, 13))
@@ -210,7 +210,7 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
 
     def test_daily_average_monthly_scope_keeps_six_months_across_year_boundary(self) -> None:
         records = tuple(
-            _record(day, "09:00", end, 0, WorkType.NORMAL)
+            _record(day, "09:00", end, 0, EntryType.NORMAL)
             for day, end in ((date(2025, 8, 5), "20:00"), (date(2025, 12, 5), "14:00"),
                              (date(2026, 1, 5), "16:00"), (date(2026, 2, 5), "19:00"),
                              (date(2026, 3, 5), "20:00"))
@@ -221,8 +221,8 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
 
     def test_month_stats_excludes_leave_from_work_and_overtime(self) -> None:
         records = (
-            _record(date(2026, 4, 6), "09:00", "19:00", 1.0, WorkType.COMP_LEAVE),
-            _record(date(2026, 4, 7), "09:00", "18:00", 1.0, WorkType.NORMAL),
+            _record(date(2026, 4, 6), "09:00", "19:00", 1.0, EntryType.COMP_LEAVE),
+            _record(date(2026, 4, 7), "09:00", "18:00", 1.0, EntryType.NORMAL),
         )
         stats = month_stats(records, 8.0)
         self.assertEqual(stats.total_hours, 8.0)
@@ -233,9 +233,9 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
 
     def test_chart_bundle_preserves_leave_overlay_average_semantics(self) -> None:
         records = {
-            date(2026, 4, 6): _record(date(2026, 4, 6), None, None, 0.0, WorkType.PAID_LEAVE),
-            date(2026, 4, 7): _record(date(2026, 4, 7), "09:00", "13:00", 0.0, WorkType.COMP_LEAVE),
-            date(2026, 4, 8): _record(date(2026, 4, 8), "09:00", "18:00", 1.0, WorkType.NORMAL),
+            date(2026, 4, 6): _record(date(2026, 4, 6), None, None, 0.0, EntryType.PAID_LEAVE),
+            date(2026, 4, 7): _record(date(2026, 4, 7), "09:00", "13:00", 0.0, EntryType.COMP_LEAVE),
+            date(2026, 4, 8): _record(date(2026, 4, 8), "09:00", "18:00", 1.0, EntryType.NORMAL),
         }
         bundle = monthly_chart_data(
             date(2026, 4, 1),
@@ -253,12 +253,12 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
     def test_quarterly_and_annual_data_are_pure_domain_preparation(self) -> None:
         by_month = {
             1: (
-                _record(date(2026, 1, 5), None, None, 0.0, WorkType.PAID_LEAVE),
-                _record(date(2026, 1, 6), "09:00", "13:00", 0.0, WorkType.COMP_LEAVE),
+                _record(date(2026, 1, 5), None, None, 0.0, EntryType.PAID_LEAVE),
+                _record(date(2026, 1, 6), "09:00", "13:00", 0.0, EntryType.COMP_LEAVE),
             ),
             4: (
-                _record(date(2026, 4, 6), None, None, 0.0, WorkType.PAID_LEAVE),
-                _record(date(2026, 4, 13), "09:00", "13:00", 0.0, WorkType.COMP_LEAVE),
+                _record(date(2026, 4, 6), None, None, 0.0, EntryType.PAID_LEAVE),
+                _record(date(2026, 4, 13), "09:00", "13:00", 0.0, EntryType.COMP_LEAVE),
             ),
         }
 

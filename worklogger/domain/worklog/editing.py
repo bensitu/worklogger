@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
-from worklogger.domain.worklog.models import WorkLog, WorkType, TimeRange
+from worklogger.domain.worklog.models import WorkLog, EntryType, TimeRange
 from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.rules import entry_interval, normalize_work_log, slice_entry
 from worklogger.domain.worklog.content import require_entry_content
@@ -42,7 +42,7 @@ def merge_entries(left: WorkLog, right: WorkLog) -> WorkLog:
     first = entry_interval(left) if left.started_at else TimeRange(left.start_time, left.end_time).as_datetimes(left.day) if left.has_times else None
     second = entry_interval(right) if right.started_at else TimeRange(right.start_time, right.end_time).as_datetimes(right.day) if right.has_times else None
     if (left.entries or right.entries or first is None or second is None or first[1] != second[0]
-            or left.work_type != right.work_type or left.context != right.context
+            or left.entry_type != right.entry_type or left.work_mode != right.work_mode or left.context != right.context
             or bool(left.started_at) != bool(right.started_at)):
         raise ValueError("record_merge_invalid")
     content = left.note if left.note == right.note else "\n\n".join(value for value in (left.note, right.note) if value)
@@ -72,7 +72,8 @@ def place_historical_break(record: WorkLog, first_minutes: int) -> tuple[WorkLog
         entry = replace(record, id=record.id if not result else None, revision=record.revision if not result else 0,
             capture_id=record.capture_id if not result else None, day=left.date(), start_time=left.strftime("%H:%M"), end_time=right.strftime("%H:%M"),
             started_at=left if record.started_at else None, ended_at=right if record.started_at else None,
-            break_hours=0, work_type=WorkType.BREAK if is_break else record.work_type,
-            note="" if is_break else record.note, context=WorkContext() if is_break else record.context)
+            break_hours=0, entry_type=EntryType.BREAK if is_break else record.entry_type,
+            note="" if is_break else record.note, context=WorkContext() if is_break else record.context,
+            work_mode=None if is_break else record.work_mode)
         result.append(normalize_work_log(entry))
     return tuple(result)

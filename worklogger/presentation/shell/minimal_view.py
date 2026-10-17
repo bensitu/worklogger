@@ -418,8 +418,8 @@ class MinimalView(QWidget):
                 self.background_controller.reload()
             if hasattr(dialog, "profile_changed"):
                 dialog.profile_changed.connect(self.apply_user_profile)
-            if hasattr(dialog, "work_types_changed"):
-                dialog.work_types_changed.connect(self.entry_panel.refresh_work_types)
+            if hasattr(dialog, "entry_types_changed"):
+                dialog.entry_types_changed.connect(self.entry_panel.refresh_entry_types)
             if hasattr(dialog, "projects_changed"):
                 dialog.projects_changed.connect(self.entry_panel.refresh_projects)
             if hasattr(dialog, "settings_changed"):

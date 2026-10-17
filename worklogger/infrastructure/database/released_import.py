@@ -16,6 +16,10 @@ RELEASED_REQUIRED_COLUMNS = {
     "reports": {"id", "user_id", "type", "period_start", "period_end", "content", "created_at"},
 }
 RELEASED_TABLES = frozenset((*RELEASED_REQUIRED_COLUMNS, "login_attempts", "external_identities", "oauth_identities"))
+RELEASED_ENTRY_TYPES = (
+    "normal", "remote", "business_trip", "paid_leave", "comp_leave", "sick_leave",
+    "meeting", "training", "break", "other",
+)
 SETTING_RENAMES = (
     ("lang", "language"), ("dark", "dark_mode"), ("work_hours", "standard_work_hours"),
     ("default_break", "default_break_hours"), ("default_lunch", "default_break_hours"),
@@ -33,10 +37,19 @@ def validate_released_schema(connection, tables):
         columns = {row[1] for row in connection.execute(f'PRAGMA table_info("{table}")')}
         if not required.issubset(columns) or table == "worklog" and columns - required:
             raise ValueError("database_schema_unsupported")
+    for table, expected in (("users", ("id",)), ("worklog", ("user_id", "d")), ("settings", ("user_id", "key"))):
+        primary_key = tuple(row[1] for row in sorted(connection.execute(f'PRAGMA table_info("{table}")'), key=lambda row: row[5]) if row[5])
+        if primary_key != expected:
+            raise ValueError("database_schema_unsupported")
     if {row[1] for row in connection.execute("PRAGMA table_info(users)")} & {"username_key", "display_name", "local_password_enabled"}:
         raise ValueError("database_schema_unsupported")
     if connection.execute("PRAGMA foreign_key_check").fetchone() is not None:
         raise ValueError("database_foreign_key_invalid")
+    if connection.execute(
+        f"SELECT 1 FROM worklog WHERE work_type IS NOT NULL AND work_type NOT IN ({','.join('?' for _ in RELEASED_ENTRY_TYPES)}) LIMIT 1",
+        RELEASED_ENTRY_TYPES,
+    ).fetchone() is not None:
+        raise ValueError("database_entry_type_unsupported")
 
 
 def import_released_schema(connection):
@@ -64,11 +77,17 @@ def import_released_schema(connection):
         connection.execute("DELETE FROM settings WHERE key=?", (previous,))
     _normalize_login_attempts(connection)
     connection.execute(TABLE_STATEMENTS["worklog"].replace("IF NOT EXISTS worklog(", "worklog_import(", 1))
+    source_count = connection.execute("SELECT COUNT(*) FROM worklog").fetchone()[0]
+    note_only_count = connection.execute('''SELECT COUNT(*) FROM worklog
+        WHERE COALESCE(start,'')='' AND COALESCE(end,'')='' AND COALESCE("break",0)=0
+            AND COALESCE(work_type,'normal')='normal' AND COALESCE(note,'')<>'' ''').fetchone()[0]
     connection.execute("INSERT INTO daily_notes(user_id,d,content) SELECT user_id,d,note FROM worklog WHERE COALESCE(note,'')<>''")
-    connection.execute('''INSERT INTO worklog_import(user_id,d,start,end,"break",note,work_type,overnight)
-        SELECT user_id,d,start,end,COALESCE("break",0),COALESCE(note,''),COALESCE(work_type,'normal'),COALESCE(overnight,0)
+    connection.execute('''INSERT INTO worklog_import(user_id,d,start,end,"break",note,entry_type,overnight,work_mode)
+        SELECT user_id,d,start,end,COALESCE("break",0),COALESCE(note,''),COALESCE(work_type,'normal'),COALESCE(overnight,0),
+            CASE work_type WHEN 'remote' THEN 'remote' WHEN 'business_trip' THEN 'business_trip' ELSE NULL END
         FROM worklog WHERE NOT (COALESCE(start,'')='' AND COALESCE(end,'')='' AND COALESCE("break",0)=0
             AND COALESCE(work_type,'normal')='normal' AND COALESCE(note,'')<>'')''')
+    _validate_imported_worklog(connection, expected_count=source_count - note_only_count)
     connection.execute("DROP TABLE worklog")
     connection.execute("ALTER TABLE worklog_import RENAME TO worklog")
     for name, declaration in (("revision", "INTEGER NOT NULL DEFAULT 0"), ("updated_at", "TEXT"),
@@ -77,6 +96,25 @@ def import_released_schema(connection):
     connection.execute("INSERT INTO report_revisions(report_id,revision,content,saved_at,provenance) "
                        "SELECT id,revision,content,created_at,provenance FROM reports")
     create_current_schema(connection)
+
+
+def _validate_imported_worklog(connection, *, expected_count):
+    from datetime import date
+
+    from worklogger.domain.worklog.rules import normalize_work_log
+    from worklogger.infrastructure.repositories.worklog_mapping_sqlite import WorkLogStorage
+
+    if connection.execute("SELECT COUNT(*) FROM worklog_import").fetchone()[0] != expected_count:
+        raise ValueError("database_record_count_invalid")
+    try:
+        for row in connection.execute("SELECT * FROM worklog_import"):
+            record = WorkLogStorage.from_row(row)
+            # Validate deductions against the interval without rewriting historical values.
+            normalize_work_log(record)
+        for day, in connection.execute("SELECT d FROM daily_notes"):
+            date.fromisoformat(day)
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError("database_record_invalid") from None
 
 
 def _normalize_login_attempts(connection):

@@ -32,14 +32,14 @@ class TimeEntryViewModel:
     def snapshot_state(self) -> TimeEntryEditState:
         return TimeEntryEditState(draft=self.draft, baseline=self._baseline, entries=self.entries,
             auto_completed=self.auto_completed, auto_content=self.auto_content,
-            auto_work_type=self.auto_work_type, auto_context=self.auto_context,
+            auto_entry_type=self.auto_entry_type, auto_context=self.auto_context,
             latest_change=self.latest_change_info, timer_origin=self._timer_origin,
             timer_shares_draft=self._timer_shares_draft)
 
     def _apply_editor_state(self, state: TimeEntryEditState) -> None:
         self.draft, self._baseline, self.entries = state.draft, state.baseline, state.entries
         self.auto_completed, self.auto_content = state.auto_completed, state.auto_content
-        self.auto_work_type, self.auto_context = state.auto_work_type, state.auto_context
+        self.auto_entry_type, self.auto_context = state.auto_entry_type, state.auto_context
         self.latest_change_info = state.latest_change
         self._timer_origin, self._timer_shares_draft = state.timer_origin, state.timer_shares_draft
 
@@ -63,7 +63,7 @@ class TimeEntryViewModel:
         self.entries = ()
         self.auto_completed: WorkLog | None = None
         self.auto_content = service.timer.content if service.timer else ""
-        self.auto_work_type = service.timer.work_type.value if service.timer else "normal"
+        self.auto_entry_type = service.timer.entry_type.value if service.timer else "normal"
         self.auto_context = service.timer.context if service.timer else WorkContext()
         self.latest_change_info = None
         self.timer_reminder_hours = 10.0
@@ -79,7 +79,7 @@ class TimeEntryViewModel:
 
     def reminder_reasons(self):
         timer = self.timer
-        return timer_reminders(timer.started_at, self.now(), timer.work_type, long_hours=self.timer_reminder_hours,
+        return timer_reminders(timer.started_at, self.now(), timer.entry_type, long_hours=self.timer_reminder_hours,
                                continuous_hours=self.continuous_timer_reminder_hours) if timer else ()
 
     @property
@@ -167,10 +167,10 @@ class TimeEntryViewModel:
 
     @property
     def custom_types_available(self):
-        return self.service.work_types is not None
+        return self.service.entry_types is not None
 
-    def list_work_types(self):
-        return self.service.work_types.list_types() if self.custom_types_available else Result.success(())
+    def list_entry_types(self):
+        return self.service.entry_types.list_types() if self.custom_types_available else Result.success(())
 
     def elapsed_hours(self):
         return max(0, timestamp_span_hours(self.timer.started_at, self.now())) if self.timer else 0
@@ -237,7 +237,7 @@ class TimeEntryViewModel:
     def auto_dirty(self) -> bool:
         baseline = self.service.timer.content if self.service.timer else self.auto_completed.note if self.auto_completed else ""
         return (self.auto_content != baseline or (self.service.timer is None and self.auto_completed is not None
-            and (self.auto_work_type != self.auto_completed.work_type.value or self.auto_context != self.auto_completed.context)))
+            and (self.auto_entry_type != self.auto_completed.entry_type.value or self.auto_context != self.auto_completed.context)))
 
     def new(self, day: date, *, start: str = "") -> None:
         self.draft = TimeEntryDraft(day, start=start)
@@ -251,19 +251,19 @@ class TimeEntryViewModel:
         if self.service.timer is None:
             self.auto_completed = completed
             self.auto_content = self.draft.content
-            self.auto_work_type = self.draft.work_type
+            self.auto_entry_type = self.draft.entry_type
             self.auto_context = self.draft.context
 
-    def update_auto(self, *, content, work_type, context):
+    def update_auto(self, *, content, entry_type, context):
         self.auto_content = content
         if self.editing_active_timer:
             self.draft = replace(self.draft, content=content)
         if self.service.timer is None:
-            self.auto_work_type, self.auto_context = work_type, context
+            self.auto_entry_type, self.auto_context = entry_type, context
             if (self.auto_completed is not None and self.manual_dirty
                     and (self.draft.original is None or self.draft.original.id != self.auto_completed.id)):
                 return
-            self.update(start=self.draft.start, end=self.draft.end, work_type=work_type, content=content, context=context)
+            self.update(start=self.draft.start, end=self.draft.end, entry_type=entry_type, content=content, context=context)
 
     def discard_changes(self) -> None:
         self.draft = self._baseline
@@ -286,13 +286,13 @@ class TimeEntryViewModel:
         if self.service.timer is not None:
             self._timer_shares_draft = False
         self.draft = TimeEntryDraft(record.day, record.start_time or "", record.end_time or "",
-                                    record.work_type.value, record.note, original=record, context=record.context)
+                                    record.entry_type.value, record.note, original=record, context=record.context)
         self._baseline = self.draft
         self._share_idle_fields(completed=record)
 
-    def update(self, *, start: str, end: str, work_type: str, content: str, context: WorkContext | None = None) -> None:
+    def update(self, *, start: str, end: str, entry_type: str, content: str, context: WorkContext | None = None) -> None:
         linked = self.editing_active_timer
-        self.draft = replace(self.draft, start=start, end=end, work_type=work_type, content=content,
+        self.draft = replace(self.draft, start=start, end=end, entry_type=entry_type, content=content,
                              context=context if context is not None else self.draft.context)
         self._share_idle_fields(completed=self.draft.original)
         if linked and self.editing_active_timer:
@@ -301,23 +301,23 @@ class TimeEntryViewModel:
     def save_manual(self):
         draft = self.draft
         options = {"context": draft.context} if self.projects_available or draft.context != WorkContext() else {}
-        saved = self.service.save_manual(draft.day, draft.start, draft.end, draft.work_type, draft.content, draft.original, **options)
+        saved = self.service.save_manual(draft.day, draft.start, draft.end, draft.entry_type, draft.content, draft.original, **options)
         if saved.ok:
             self.select(saved.value)
         return saved
 
-    def start(self, work_type: str, content: str, *, now=None, break_entry=None):
+    def start(self, entry_type: str, content: str, *, now=None, break_entry=None):
         original_draft = self.draft
-        shared = (original_draft.work_type == work_type and original_draft.content == content
+        shared = (original_draft.entry_type == entry_type and original_draft.content == content
                   and original_draft.context == self.auto_context)
         options = {"context": self.auto_context} if self.projects_available else {}
-        result = self.service.start(work_type, content, now=now, break_entry=break_entry, **options)
+        result = self.service.start(entry_type, content, now=now, break_entry=break_entry, **options)
         if result.ok:
             self._timer_shares_draft = shared
             if shared:
                 timer = self.service.timer
                 self.draft = TimeEntryDraft(timer.started_at.date(), timer.started_at.strftime("%H:%M"),
-                    work_type=timer.work_type.value, content=timer.content, context=timer.context)
+                    entry_type=timer.entry_type.value, content=timer.content, context=timer.context)
                 self._baseline = self.draft
             self._timer_origin = self.draft
             self.auto_completed = None
@@ -329,7 +329,7 @@ class TimeEntryViewModel:
         if result.ok:
             self.auto_completed = result.value
             self.auto_content = result.value.note
-            self.auto_work_type = result.value.work_type.value
+            self.auto_entry_type = result.value.entry_type.value
             self.auto_context = result.value.context
             origin = getattr(self, "_timer_origin", None)
             linked = bool(getattr(self, "_timer_shares_draft", False) and origin and self.draft.original is None
@@ -343,18 +343,18 @@ class TimeEntryViewModel:
             original = self.auto_completed
             options = {"context": self.auto_context} if self.projects_available or self.auto_context != WorkContext() else {}
             result = self.service.save_manual(original.day, original.start_time or "", original.end_time or "",
-                self.auto_work_type, self.auto_content, original, **options)
+                self.auto_entry_type, self.auto_content, original, **options)
             if result.ok:
                 record = result.value
                 if self.draft.original is not None and self.draft.original.id == record.id:
-                    self.draft = replace(self.draft, content=record.note, work_type=record.work_type.value, context=record.context, original=record)
+                    self.draft = replace(self.draft, content=record.note, entry_type=record.entry_type.value, context=record.context, original=record)
                     self._baseline = TimeEntryDraft(record.day, record.start_time or "", record.end_time or "",
-                        record.work_type.value, record.note, record, record.context)
+                        record.entry_type.value, record.note, record, record.context)
                     self._share_idle_fields(completed=record)
                 else:
                     if self.manual_dirty:
                         self.auto_completed = record
-                        self.auto_content, self.auto_work_type, self.auto_context = record.note, record.work_type.value, record.context
+                        self.auto_content, self.auto_entry_type, self.auto_context = record.note, record.entry_type.value, record.context
                     else:
                         self.select(record)
             return result
@@ -382,6 +382,6 @@ class TimeEntryViewModel:
 
     def _sync_auto(self) -> None:
         if self.service.timer:
-            self.auto_work_type = self.service.timer.work_type.value
+            self.auto_entry_type = self.service.timer.entry_type.value
             self.auto_content = self.service.timer.content
             self.auto_context = self.service.timer.context

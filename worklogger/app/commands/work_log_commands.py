@@ -14,7 +14,7 @@ class SaveWorkLogCommand:
     end_time: str | None
     break_hours: float
     note: str
-    work_type: str
+    entry_type: str
     expected_note: str | None = None
     started_at: datetime | None = None
     ended_at: datetime | None = None

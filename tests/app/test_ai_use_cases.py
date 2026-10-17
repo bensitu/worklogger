@@ -26,7 +26,7 @@ from worklogger.domain.worklog.rules import aggregate_days
 from worklogger.domain.quicklog.models import QuickLog
 from worklogger.domain.shared.result import Result
 from worklogger.domain.shared.errors import InfrastructureError
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import WorkLog, EntryType
 from worklogger.infrastructure.ai.external import OpenAICompatibleGateway
 
 
@@ -62,7 +62,7 @@ class FakeWorkLogs:
                     end_time="18:00",
                     break_hours=1.0,
                     note="private note",
-                    work_type=WorkType.NORMAL,
+                    entry_type=EntryType.NORMAL,
                 ),
             )
         )
@@ -151,8 +151,8 @@ class AiUseCaseTests(unittest.TestCase):
 
     def test_context_expands_time_periods_and_requires_memo_permission(self):
         day = date(2026, 5, 4)
-        entries = (WorkLog(1, day, "09:00", "10:00", note="Planning", work_type=WorkType.MEETING),
-                   WorkLog(1, day, "10:00", "11:00", note="Learning", work_type=WorkType.TRAINING))
+        entries = (WorkLog(1, day, "09:00", "10:00", note="Planning", entry_type=EntryType.MEETING),
+                   WorkLog(1, day, "10:00", "11:00", note="Learning", entry_type=EntryType.TRAINING))
         reader = Mock()
         reader.list_range.return_value = Result.success(aggregate_days(entries))
         settings = FakeSettings()

@@ -26,7 +26,7 @@ leaves the transaction unchanged and can be retried after the other operation.
 | `worklog` | Individual time records with IDs and revisions |
 | `daily_notes` | Independent account/date memos |
 | `quick_logs` | Retained previous entries |
-| `work_types` | Account-owned Work/Break/Leave catalog |
+| `entry_types` | Account-owned Work/Break/Leave catalog |
 | `projects` | Account-owned project catalog |
 | `work_items` | Project-specific work items |
 | `entry_changes` | Reversible record snapshots |
@@ -62,18 +62,36 @@ Missing keys/columns, unknown layouts, executable schema objects, and unknown
 future versions are rejected rather than reset.
 Required named indexes are checked for their columns, uniqueness and partial
 index attributes; incomplete constraints are not silently repaired during startup.
-Canonical source baselines are ledger versions 14, 15, and 16, with the full
-required structure. Earlier ledger entries may remain as history but do not make
-an incomplete or unsupported source eligible for conversion.
+The only versioned contract is schema version 17, with its complete required
+structure and a ledger containing only version 17. Unreleased development
+versions, including 14, 15, and 16, and unversioned development layouts are rejected
+before writable initialization. They are never reset, relabeled, or upgraded by
+production startup. Preserve developer-local files and use fresh test data or a
+separately reviewed, explicitly approved one-time conversion outside production.
 
 Released unversioned layouts compatible with v3.3.3 use the released import
 adapter. Credentials, account IDs, work content, report identities, and historical
 deductions are preserved. Import does not invent offsets, source references,
-or break positions. Supported canonical predecessors upgrade transactionally.
+or break positions. The released SQL column is `work_type`; import maps it to
+`entry_type` and rejects unknown non-null codes rather than guessing regular work.
+Historical `remote` and `business_trip` retain those classification identities and
+also populate the matching optional `work_mode`. Other released types receive no
+inferred arrangement. Historical untimed leave and deducted breaks remain intact.
+
+`worklog.work_mode` stores `onsite`, `remote`, `business_trip`, `other`, or NULL.
+It is independent of classification and is only applicable to work-category
+entries. `entry_types` retains account-owned custom definitions; historical labels
+and categories are stored in `entry_type_label` and `entry_type_category` snapshots.
+Fresh databases and released imports initialize version 17 directly; there is no
+unreleased intermediate migration chain or unversioned-current fallback.
 
 A populated compatible database receives a complete private `.bak_upgrade_*`
 snapshot before conversion. It includes committed WAL data. Schema changes,
 copied rows, and the ledger commit together; failure rolls back.
+Converted record counts, dates, clock ranges, and deductions are validated through
+the stored-record reader and domain rules before the released worklog is dropped.
+Note-only rows become daily notes; empty historical regular rows are retained.
+Invalid values abort conversion without committing an unreadable target.
 Fresh/current databases do not need repeated upgrade snapshots.
 After a successful conversion, the latest three automatic upgrade snapshots are
 retained. A failed conversion does not prune snapshots. Files with other names,

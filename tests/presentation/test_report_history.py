@@ -42,7 +42,7 @@ class ReportHistoryTests(unittest.TestCase):
         from openpyxl import load_workbook
         from PySide6.QtPdf import QPdfDocument
         import unicodedata
-        from worklogger.domain.worklog.models import WorkLog, WorkType
+        from worklogger.domain.worklog.models import WorkLog, EntryType
         from worklogger.domain.projects.models import WorkContext
         from worklogger.infrastructure.repositories.worklog_sqlite import SQLiteWorkLogRepository
         from worklogger.infrastructure.export.timesheets import TimesheetXlsxExporter, TimesheetPdfExporter
@@ -50,7 +50,7 @@ class ReportHistoryTests(unittest.TestCase):
         records = SQLiteWorkLogRepository(self.factory)
         original = records.save_entry(WorkLog(self.user.id, self.day, "09:00", "12:00", 0.5, "=SUM(A1:A2)\n\u5de5\u4f5c\u5185\u5bb9",
             context=WorkContext(project_label="Research", work_item_label="Review")))
-        records.save_entry(WorkLog(self.user.id, self.day, "12:00", "13:00", work_type=WorkType.BREAK))
+        records.save_entry(WorkLog(self.user.id, self.day, "12:00", "13:00", entry_type=EntryType.BREAK))
         records.save_entry(WorkLog(self.user.id, self.day, "14:00", "16:00", note="Afternoon"))
         records.save_entry(WorkLog(self.other_user.id, self.day, "09:00", "10:00", note="Other account"))
         handler = ExportTimesheetHandler(records=records, exporters={"xlsx": TimesheetXlsxExporter(), "pdf": TimesheetPdfExporter()}, clock=lambda: self.stamp)
@@ -91,12 +91,12 @@ class ReportHistoryTests(unittest.TestCase):
 
     def test_timesheet_export_failures_preserve_destinations_and_classify_future_rest(self):
         from worklogger.domain.reporting.timesheets import Timesheet
-        from worklogger.domain.worklog.models import WorkLog, WorkType
+        from worklogger.domain.worklog.models import WorkLog, EntryType
         from worklogger.infrastructure.export.timesheets import TimesheetXlsxExporter
         from datetime import timedelta
         start = self.stamp.replace(hour=12, minute=0, second=0)
         end = start + timedelta(hours=1)
-        rest = WorkLog(self.user.id, start.date(), "12:00", "13:00", work_type=WorkType.BREAK,
+        rest = WorkLog(self.user.id, start.date(), "12:00", "13:00", entry_type=EntryType.BREAK,
                        started_at=start, ended_at=end)
         snapshot = Timesheet(self.day, self.day, "Mary", start + timedelta(minutes=5), 8, (rest,))
         self.assertEqual(snapshot.record_status(rest), "scheduled")

@@ -39,8 +39,8 @@ class ProjectTests(unittest.TestCase):
         assigned = recorder.associate(current, context).value
         self.assertEqual(len(assigned), 5)
         for before, after in zip(current, assigned):
-            self.assertEqual((before.start_time, before.end_time, before.note, before.work_type, before.break_hours),
-                             (after.start_time, after.end_time, after.note, after.work_type, after.break_hours))
+            self.assertEqual((before.start_time, before.end_time, before.note, before.entry_type, before.break_hours),
+                             (after.start_time, after.end_time, after.note, after.entry_type, after.break_hours))
             self.assertEqual(after.context.label, "Research / Review")
         change = self.records.latest_change(self.user.id)
         self.assertEqual((change.operation, len(change.entries)), ("associate", 5))
@@ -109,14 +109,15 @@ class ProjectTests(unittest.TestCase):
 
     def test_project_range_accounting_and_exact_detail_filters(self):
         from worklogger.app.use_cases.project_analytics import ProjectAnalyticsHandler
-        from worklogger.domain.worklog.models import WorkType
+        from worklogger.domain.worklog.models import EntryType
         project = self.projects.save_project("Research").value
         item = self.projects.save_work_item(project.id, "Review").value
         context = WorkContext(project.id, item.id, project.name, item.title)
         day = self.now.date()
-        for start, end, kind in (("09:00", "11:00", WorkType.NORMAL), ("11:00", "12:00", WorkType.BREAK),
-                                 ("12:00", "13:00", WorkType.PAID_LEAVE)):
-            self.records.save_entry(WorkLog(self.user.id, day, start, end, work_type=kind, context=context))
+        for start, end, kind in (("09:00", "11:00", EntryType.NORMAL), ("11:00", "12:00", EntryType.BREAK),
+                                 ("12:00", "13:00", EntryType.PAID_LEAVE)):
+            self.records.save_entry(WorkLog(self.user.id, day, start, end, entry_type=kind,
+                                           context=context if kind == EntryType.NORMAL else WorkContext()))
         self.records.save_entry(WorkLog(self.user.id, day, "13:00", "14:00", context=WorkContext(project_label="Imported")))
         self.records.save_entry(WorkLog(self.user.id, day, "14:00", "15:00", context=WorkContext(project_label=project.id, work_item_label=item.id)))
         another = self.projects.save_work_item(project.id, "Implementation").value
@@ -125,11 +126,11 @@ class ProjectTests(unittest.TestCase):
         handler = ProjectAnalyticsHandler(self.records, self.settings)
         groups = handler.handle(self.user.id, day, day).value
         group = next(value for value in groups if value.context.project_id == project.id)
-        self.assertEqual((group.work_hours, group.rest_hours, group.leave_hours, group.work_days, group.record_count), (3, 1, 1, 1, 4))
+        self.assertEqual((group.work_hours, group.rest_hours, group.leave_hours, group.work_days, group.record_count), (3, 0, 0, 1, 2))
         self.assertEqual(len(group.children), 2)
         self.assertEqual(sum(child.work_days for child in group.children), 2)
         self.assertEqual(sum(value.work_hours for value in groups), self.records.get_for_day(self.user.id, day).worked_hours())
-        self.assertEqual(len(self.records.search_entries(self.user.id, EntryFilter(day, day, project_id=project.id, work_item_id=item.id)).entries), 3)
+        self.assertEqual(len(self.records.search_entries(self.user.id, EntryFilter(day, day, project_id=project.id, work_item_id=item.id)).entries), 1)
         self.assertEqual(len(self.records.search_entries(self.user.id, EntryFilter(day, day, unclassified=True, project_label="Imported", work_item_label="")).entries), 1)
         self.assertFalse(handler.handle(self.user.id, day, day.replace(day=1)).ok)
 
@@ -255,7 +256,7 @@ class ProjectTests(unittest.TestCase):
         self.assertIsNone(last.next_cursor)
         self.assertEqual(self.records.search_entries(self.user.id, EntryFilter(day, day, text="100%")).entries, (first,))
         self.assertEqual(self.records.search_entries(self.user.id, EntryFilter(day, day, text="100_")).entries, ())
-        self.assertEqual(self.records.search_entries(self.user.id, EntryFilter(day, day, project_id=project.id, work_item_id=item.id, work_type="meeting")).entries, (first,))
+        self.assertEqual(self.records.search_entries(self.user.id, EntryFilter(day, day, project_id=project.id, work_item_id=item.id, entry_type="meeting")).entries, (first,))
         self.assertEqual(self.records.search_entries(self.user.id, EntryFilter(day, day, unclassified=True)).entries, (second,))
         with self.assertRaises(ValueError):
             self.records.search_entries(self.user.id, criteria, limit=1000)

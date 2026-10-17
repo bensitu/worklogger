@@ -15,7 +15,7 @@ from PySide6.QtPdf import QPdfDocument
 from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
 from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler, GetAnalyticsDashboardHandler
 from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import WorkLog, EntryType
 from worklogger.domain.analytics.models import ChartDataBundle
 from worklogger.infrastructure.export import AnalyticsCsvExporter, AnalyticsPdfExporter
 from worklogger.infrastructure.i18n import set_language
@@ -134,7 +134,7 @@ class AnalyticsPresentationTests(unittest.TestCase):
                 end_time="18:00",
                 break_hours=1.0,
                 note="Feature work",
-                work_type=WorkType.NORMAL.value,
+                entry_type=EntryType.NORMAL.value,
             )
         )
         save.handle(
@@ -145,7 +145,7 @@ class AnalyticsPresentationTests(unittest.TestCase):
                 end_time=None,
                 break_hours=0.0,
                 note="Leave",
-                work_type=WorkType.PAID_LEAVE.value,
+                entry_type=EntryType.PAID_LEAVE.value,
             )
         )
         view_model = AnalyticsViewModel(
@@ -234,7 +234,7 @@ class AnalyticsPresentationTests(unittest.TestCase):
     def test_daily_average_chart_uses_localized_scope_specific_points(self) -> None:
         repository = MemoryWorkLogRepository()
         for month in (1, 4, 7, 12):
-            repository.save(WorkLog(1, date(2026, month, 5), "09:00", "17:00", 0, "", WorkType.NORMAL))
+            repository.save(WorkLog(1, date(2026, month, 5), "09:00", "17:00", 0, "", EntryType.NORMAL))
         model = AnalyticsViewModel(
             user_id=1, bundle_handler=GetAnalyticsBundleHandler(repository),
             dashboard_handler=GetAnalyticsDashboardHandler(repository),

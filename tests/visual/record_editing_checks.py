@@ -11,7 +11,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint
 from PySide6.QtWidgets import QApplication
 
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import WorkLog, EntryType
 from worklogger.domain.worklog.replacement import EntryReplacement
 from worklogger.infrastructure.i18n import available_languages, get_language, set_language
 from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
@@ -30,9 +30,9 @@ class RecordEditingLayoutChecks(unittest.TestCase):
         old_palette, old_style = self.app.palette(), self.app.styleSheet()
         old_context = self.app.property("worklogger_theme_context")
         day = date(2026, 12, 31)
-        morning = WorkLog(1, day, "09:00", "12:00", note="Planning", work_type=WorkType.MEETING, id=1)
-        afternoon = WorkLog(1, day, "13:00", "18:00", note="Review", work_type=WorkType.REMOTE, id=2)
-        incoming = WorkLog(1, day, "11:00", "14:00", note="Rest", work_type=WorkType.BREAK)
+        morning = WorkLog(1, day, "09:00", "12:00", note="Planning", entry_type=EntryType.MEETING, id=1)
+        afternoon = WorkLog(1, day, "13:00", "18:00", note="Review", entry_type=EntryType.REMOTE, id=2)
+        incoming = WorkLog(1, day, "11:00", "14:00", note="Rest", entry_type=EntryType.BREAK)
         try:
             for language in available_languages():
                 set_language(language)
@@ -41,7 +41,7 @@ class RecordEditingLayoutChecks(unittest.TestCase):
                     prefix = f"{language}-{theme}"
                     overlap = OverlapReplacementDialog(EntryReplacement(incoming, (morning, afternoon)))
                     boundary = RecordBoundaryDialog(morning)
-                    overnight = RecordBoundaryDialog(replace(morning, start_time="22:00", end_time="06:00", work_type=WorkType.BREAK))
+                    overnight = RecordBoundaryDialog(replace(morning, start_time="22:00", end_time="06:00", entry_type=EntryType.BREAK))
                     historical = OverlapReplacementDialog(EntryReplacement(incoming, (replace(morning, break_hours=1), afternoon)))
                     for dialog, name in ((boundary, "split"), (overnight, "overnight"), (overlap, "overlap"), (historical, "historical")):
                         try:

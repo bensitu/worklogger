@@ -5,14 +5,14 @@ from zoneinfo import ZoneInfo
 
 from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.editing import split_entry_at
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import WorkLog, EntryType
 from worklogger.domain.worklog.replacement import EntryReplacement
 
 
 class RecordReplacementTests(unittest.TestCase):
     def setUp(self):
         self.day = date(2026, 10, 5)
-        self.old = WorkLog(1, self.day, "09:00", "18:00", note="Planning", work_type=WorkType.MEETING,
+        self.old = WorkLog(1, self.day, "09:00", "18:00", note="Planning", entry_type=EntryType.MEETING,
                            id=10, revision=2, context=WorkContext(project_label="Research"))
 
     def test_replacement_preserves_unaffected_periods_and_metadata(self):
@@ -23,14 +23,14 @@ class RecordReplacementTests(unittest.TestCase):
             ("09:00", "18:00", []),
         ):
             with self.subTest(start=start, end=end):
-                incoming = WorkLog(1, self.day, start, end, work_type=WorkType.BREAK)
+                incoming = WorkLog(1, self.day, start, end, entry_type=EntryType.BREAK)
                 plan = EntryReplacement(incoming, (self.old,))
                 first, *remaining = plan.periods(keep_outside=True)
                 self.assertEqual(first, incoming)
                 self.assertEqual([(item.start_time, item.end_time) for item in remaining], expected)
                 for index, item in enumerate(remaining):
-                    self.assertEqual((item.note, item.context, item.work_type),
-                                     (self.old.note, self.old.context, self.old.work_type))
+                    self.assertEqual((item.note, item.context, item.entry_type),
+                                     (self.old.note, self.old.context, self.old.entry_type))
                     self.assertEqual(item.id, self.old.id if index == 0 else None)
                 self.assertEqual(plan.periods(keep_outside=False), (incoming,))
 
@@ -54,16 +54,16 @@ class RecordReplacementTests(unittest.TestCase):
                     with self.subTest(day=day, zone=zone, start=start, end=end):
                         incoming_day = day + timedelta(days=offset)
                         cut_start, cut_end = shift_datetimes(incoming_day, start, end, zone)
-                        incoming = WorkLog(1, incoming_day, start, end, work_type=WorkType.BREAK,
+                        incoming = WorkLog(1, incoming_day, start, end, entry_type=EntryType.BREAK,
                                            started_at=cut_start if zone else None, ended_at=cut_end if zone else None)
                         _, *remaining = EntryReplacement(incoming, (old,)).periods(keep_outside=True)
                         self.assertEqual([(item.day, item.start_time, item.end_time) for item in remaining], expected)
                         self.assertEqual(sum(item.worked_hours() for item in remaining), hours)
 
     def test_historical_deductions_and_full_day_records_are_not_guessed(self):
-        incoming = WorkLog(1, self.day, "12:00", "13:00", work_type=WorkType.BREAK)
+        incoming = WorkLog(1, self.day, "12:00", "13:00", entry_type=EntryType.BREAK)
         for old, code in ((replace(self.old, break_hours=1), "historical_break_placement_required"),
-                          (replace(self.old, start_time=None, end_time=None, work_type=WorkType.PAID_LEAVE),
+                          (replace(self.old, start_time=None, end_time=None, entry_type=EntryType.PAID_LEAVE),
                            "record_replacement_requires_times")):
             plan = EntryReplacement(incoming, (old,))
             with self.assertRaisesRegex(ValueError, code):
@@ -77,7 +77,7 @@ class RecordReplacementTests(unittest.TestCase):
         start = datetime(2026, 11, 1, 0, 30, tzinfo=zone)
         old = replace(self.old, day=start.date(), start_time="00:30", end_time="03:30",
                       started_at=start, ended_at=start.replace(hour=3))
-        incoming = WorkLog(1, start.date(), "01:15", "01:45", work_type=WorkType.BREAK,
+        incoming = WorkLog(1, start.date(), "01:15", "01:45", entry_type=EntryType.BREAK,
                            started_at=start.replace(hour=1, minute=15, fold=1),
                            ended_at=start.replace(hour=1, minute=45, fold=1))
         _, left, right = EntryReplacement(incoming, (old,)).periods(keep_outside=True)

@@ -44,23 +44,23 @@ class AutomaticRecordingActions:
 
     def start_recording(self):
         if self.recording_action_state()[0]:
-            self._start_with_content(self.view_model.auto_work_type, self.view_model.auto_content)
+            self._start_with_content(self.view_model.auto_entry_type, self.view_model.auto_content)
 
     def end_recording(self):
         if self.recording_action_state()[1]:
             self._finish()
 
     def _start(self):
-        work_type, content = str(self.work_type_combo.currentData()), self.content_input.toPlainText()
-        self._start_with_content(work_type, content)
+        entry_type, content = str(self.entry_type_combo.currentData()), self.content_input.toPlainText()
+        self._start_with_content(entry_type, content)
 
-    def _start_with_content(self, work_type, content):
+    def _start_with_content(self, entry_type, content):
         self._polish_task.cancel()
         moment = self.view_model.now()
-        self._submit(lambda model: model.start(work_type, content, now=moment), refresh=False,
-                     on_complete=lambda result: self._complete_start(result, work_type, content, moment))
+        self._submit(lambda model: model.start(entry_type, content, now=moment), refresh=False,
+                     on_complete=lambda result: self._complete_start(result, entry_type, content, moment))
 
-    def _complete_start(self, result, work_type, content, moment):
+    def _complete_start(self, result, entry_type, content, moment):
         if result.error is None or result.error.code != "fixed_break_active":
             self._apply_result(result, refresh=False)
             return
@@ -77,7 +77,7 @@ class AutomaticRecordingActions:
             if record is None:
                 self._apply_result(result, refresh=False)
                 return
-            self._submit(lambda model: model.start(work_type, content, now=moment, break_entry=record))
+            self._submit(lambda model: model.start(entry_type, content, now=moment, break_entry=record))
 
     def _finish(self):
         self._polish_task.cancel()

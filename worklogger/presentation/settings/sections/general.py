@@ -52,7 +52,7 @@ class GeneralSection(_SettingsScrollPage):
         "residency_switch",
         "standard_hours_input",
         "week_start_switch",
-        "manage_work_types_button",
+        "manage_entry_types_button",
         "manage_projects_button",
         "timer_reminder_input",
         "continuous_timer_reminder_input",
@@ -120,14 +120,14 @@ class GeneralSection(_SettingsScrollPage):
         card = _card_with_form(_("Classification"))
         form = card.form_layout
 
-        self.manage_work_types_button = QPushButton(_("Manage work types"))
-        self.manage_work_types_button.setObjectName("manage_work_types_button")
-        self.manage_work_types_button.setFixedWidth(320)
-        self.manage_work_types_button.setProperty("variant", "outline")
-        self.manage_work_types_button.setEnabled(False)
-        set_button_icon(self.manage_work_types_button, "settings")
-        self.manage_work_types_button.clicked.connect(actions.manage_work_types_requested)
-        form.addRow(_("Work types"), self.manage_work_types_button)
+        self.manage_entry_types_button = QPushButton(_("Manage work types"))
+        self.manage_entry_types_button.setObjectName("manage_entry_types_button")
+        self.manage_entry_types_button.setFixedWidth(320)
+        self.manage_entry_types_button.setProperty("variant", "outline")
+        self.manage_entry_types_button.setEnabled(False)
+        set_button_icon(self.manage_entry_types_button, "settings")
+        self.manage_entry_types_button.clicked.connect(actions.manage_entry_types_requested)
+        form.addRow(_("Work types"), self.manage_entry_types_button)
 
         self.manage_projects_button = QPushButton(_("Manage projects"))
         self.manage_projects_button.setObjectName("manage_projects_button")

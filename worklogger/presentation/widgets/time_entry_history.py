@@ -4,7 +4,7 @@ from PySide6.QtCore import QEvent, Signal
 from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.date_labels import duration_label
-from worklogger.presentation.work_type_labels import work_type_label
+from worklogger.presentation.entry_type_labels import entry_type_label
 from worklogger.presentation.widgets.record_summary import RecordSummaryButton
 
 
@@ -51,7 +51,7 @@ class TimeEntryHistory(QWidget):
             first_line = entry.note.splitlines()[0] if entry.note else ""
             content = first_line[:64] + ("..." if len(first_line) > 64 else "")
             span = f"{entry.start_time} - {entry.end_time}" if entry.has_times else _("All day")
-            text = f"{span}  {duration_label(entry.raw_hours())}\n{work_type_label(entry.work_type)}"
+            text = f"{span}  {duration_label(entry.raw_hours())}\n{entry_type_label(entry.entry_type)}"
             if entry.context.label:
                 text += "\n" + entry.context.label
             if content:
@@ -63,7 +63,7 @@ class TimeEntryHistory(QWidget):
             button.setCheckable(True)
             button.setAutoExclusive(True)
             button.setChecked(bool(selected and selected.id == entry.id))
-            button.setToolTip(entry.note or work_type_label(entry.work_type))
+            button.setToolTip(entry.note or entry_type_label(entry.entry_type))
             button.setAccessibleName(_("Edit record") + ": " + text)
             button.clicked.connect(lambda _checked=False, entry=entry: self.entry_selected.emit(entry))
             button.delete_requested.connect(lambda entry=entry: self.entry_delete_requested.emit(entry))

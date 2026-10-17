@@ -9,7 +9,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandler
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import WorkLog, EntryType
 from PySide6.QtWidgets import QApplication
 
 from worklogger.app.use_cases.data_portability import WorkLogCsvImportResult
@@ -104,7 +104,7 @@ class AutoRecordDataManagementPresentationTests(unittest.TestCase):
             end_time="18:00",
             break_hours=1.0,
             note="Focused work",
-            work_type=WorkType.NORMAL,
+            entry_type=EntryType.NORMAL,
         )
         rows = StaticRowsHandler((row,))
         backup = FakeBackupService()

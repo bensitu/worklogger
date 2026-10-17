@@ -6,8 +6,9 @@ from dataclasses import replace
 from datetime import date, datetime, timedelta, timezone, tzinfo
 import math
 
-from worklogger.config.constants import MAX_SHIFT_HOURS, WORK_TYPE_KEYS
-from worklogger.domain.worklog.models import WorkLog, WorkType, CustomWorkType
+from worklogger.config.constants import MAX_SHIFT_HOURS
+from worklogger.domain.projects.models import WorkContext
+from worklogger.domain.worklog.models import WorkLog, EntryType, CustomEntryType, EntryCategory, WorkMode
 
 
 def parse_time(raw: str | None) -> str | None:
@@ -145,19 +146,19 @@ def calc_hours(
     return max(span - break_value, 0.0)
 
 
-def normalize_work_type(raw: str | WorkType | CustomWorkType | None) -> WorkType | CustomWorkType:
-    if isinstance(raw, (WorkType, CustomWorkType)):
+def normalize_entry_type(raw: str | EntryType | CustomEntryType | None) -> EntryType | CustomEntryType:
+    if isinstance(raw, (EntryType, CustomEntryType)):
         return raw
-    value = str(raw or WorkType.NORMAL.value)
-    if value not in WORK_TYPE_KEYS:
-        return WorkType.NORMAL
-    return WorkType(value)
+    try:
+        return EntryType(raw or EntryType.NORMAL.value)
+    except (TypeError, ValueError):
+        raise ValueError("entry_type_invalid") from None
 
 
-def decode_work_type(value: str, label: str = "", category: str = "", *, strict: bool = False):
+def decode_entry_type(value: str, label: str = "", category: str = "", *, strict: bool = False):
     if isinstance(value, str) and value.startswith("custom:"):
-        return CustomWorkType(value, label, category)
-    return WorkType(value) if strict else normalize_work_type(value)
+        return CustomEntryType(value, label, category)
+    return EntryType(value) if strict else normalize_entry_type(value)
 
 
 def normalize_work_log(
@@ -167,13 +168,20 @@ def normalize_work_log(
 ) -> WorkLog:
     if work_log.entries:
         raise ValueError("worklog_summary_not_editable")
+    definition = normalize_entry_type(work_log.entry_type)
+    try:
+        work_mode = WorkMode(work_log.work_mode) if work_log.work_mode is not None else None
+    except (TypeError, ValueError):
+        raise ValueError("work_mode_invalid") from None
+    if definition.category != EntryCategory.WORK and (work_mode is not None or work_log.context != WorkContext()):
+        raise ValueError("entry_classification_invalid")
     start = parse_time(work_log.start_time)
     end = parse_time(work_log.end_time)
     if (work_log.start_time and not start) or (work_log.end_time and not end):
         raise ValueError("time_range_invalid")
     if bool(start) != bool(end):
         raise ValueError("time_range_incomplete")
-    if not start and ((isinstance(work_log.work_type, CustomWorkType) and work_log.work_type.category != "leave") or normalize_work_type(work_log.work_type) in {WorkType.MEETING, WorkType.TRAINING, WorkType.BREAK, WorkType.OTHER}):
+    if not start and ((isinstance(work_log.entry_type, CustomEntryType) and work_log.entry_type.category != "leave") or normalize_entry_type(work_log.entry_type) in {EntryType.MEETING, EntryType.TRAINING, EntryType.BREAK, EntryType.OTHER}):
         raise ValueError("time_range_incomplete")
 
     break_hours = float(work_log.break_hours or 0)
@@ -206,7 +214,8 @@ def normalize_work_log(
         start_time=start,
         end_time=end,
         break_hours=break_hours,
-        work_type=normalize_work_type(work_log.work_type),
+        entry_type=definition,
+        work_mode=work_mode,
         overnight=(work_log.ended_at.date() > work_log.started_at.date()) if work_log.started_at and work_log.ended_at
         else is_overnight_shift(start, end) if start and end else False,
     )
@@ -237,7 +246,7 @@ def aggregate_days(records) -> tuple[WorkLog, ...]:
         result.append(WorkLog(user_id, day, entries[0].start_time, entries[-1].end_time,
                               sum(entry.break_hours for entry in entries),
                               "\n".join(entry.note for entry in entries if entry.note),
-                              entries[0].work_type if all(entry.is_leave for entry in entries) else WorkType.NORMAL,
+                              entries[0].entry_type if all(entry.is_leave for entry in entries) else EntryType.NORMAL,
                               entries=tuple(entries)))
     return tuple(result)
 

@@ -50,8 +50,8 @@ from worklogger.infrastructure.repositories import (
 )
 from worklogger.infrastructure.repositories.background_sqlite import SQLiteBackgroundRepository
 from worklogger.infrastructure.repositories.project_sqlite import SQLiteProjectRepository
-from worklogger.infrastructure.repositories.work_type_sqlite import (
-    SQLiteWorkTypeRepository,
+from worklogger.infrastructure.repositories.entry_type_sqlite import (
+    SQLiteEntryTypeRepository,
 )
 from worklogger.infrastructure.security.account_credentials import account_credential_namespaces
 from worklogger.infrastructure.security.key_store import (
@@ -79,7 +79,7 @@ class RuntimeRepositories:
     reports: SQLiteReportRepository
     report_templates: SQLiteReportTemplateRepository
     settings: SQLiteSettingsRepository
-    work_types: SQLiteWorkTypeRepository
+    entry_types: SQLiteEntryTypeRepository
     projects: SQLiteProjectRepository
     background_images: SQLiteBackgroundRepository
 
@@ -117,7 +117,7 @@ def build_runtime_repositories(
         reports=SQLiteReportRepository(connection_factory),
         report_templates=SQLiteReportTemplateRepository(connection_factory),
         settings=SQLiteSettingsRepository(connection_factory),
-        work_types=SQLiteWorkTypeRepository(connection_factory),
+        entry_types=SQLiteEntryTypeRepository(connection_factory),
         projects=SQLiteProjectRepository(connection_factory),
         background_images=SQLiteBackgroundRepository(connection_factory),
     )

@@ -16,7 +16,7 @@ from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
 from worklogger.app.use_cases.auth import RegisterUserHandler
 from worklogger.app.use_cases.data_portability import ImportWorkLogsCsvHandler
 from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import WorkLog, EntryType
 from worklogger.domain.worklog.rules import shift_datetimes
 from worklogger.infrastructure.backup import SQLiteBackupService
 from worklogger.infrastructure.backup import sqlite_backup
@@ -53,7 +53,7 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         from worklogger.infrastructure.repositories import SQLiteDailyNoteRepository
         user = self.register_user("deduction-owner")
         path = Path(self._tempdir.name) / "deductions.csv"
-        path.write_text("date,start,end,break,note,work_type\n2026-05-01,,,1.5,Historical deduction,normal\n", encoding="utf-8")
+        path.write_text("date,start,end,break,note,entry_type\n2026-05-01,,,1.5,Historical deduction,normal\n", encoding="utf-8")
         repository = SQLiteWorkLogRepository(self.factory)
         result = ImportWorkLogsCsvHandler(importer=WorkLogCsvImporter(), repository=repository).handle(
             ImportWorkLogsCsvCommand(user, path))
@@ -145,7 +145,7 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         start_time: str | None = "09:00",
         end_time: str | None = "18:00",
         break_hours: float = 1.0,
-        work_type: str = WorkType.NORMAL.value,
+        entry_type: str = EntryType.NORMAL.value,
     ) -> None:
         saved = SaveWorkLogHandler(SQLiteWorkLogRepository(self.factory)).handle(
             SaveWorkLogCommand(
@@ -155,7 +155,7 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
                 end_time=end_time,
                 break_hours=break_hours,
                 note=note,
-                work_type=work_type,
+                entry_type=entry_type,
             )
         )
         self.assertTrue(saved.ok, saved.error)
@@ -257,7 +257,7 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
             main_file = source.read_bytes()
             live.execute("UPDATE worklog SET note='Committed update'")
             live.execute(
-                'INSERT INTO worklog(user_id, d, start, end, "break", note, work_type) '
+                'INSERT INTO worklog(user_id, d, start, end, "break", note, entry_type) '
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (user_id, "2026-04-21", "09:00", "18:00", 1.0, "Committed insert", "normal"),
             )
@@ -347,14 +347,14 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
                 end_time="09:00",
                 break_hours=1.0,
                 note="Night, shift",
-                work_type=WorkType.NORMAL,
+                entry_type=EntryType.NORMAL,
             ),
             WorkLog(
                 user_id=1,
                 day=date(2026, 4, 21),
                 break_hours=0.0,
                 note="Leave",
-                work_type=WorkType.PAID_LEAVE,
+                entry_type=EntryType.PAID_LEAVE,
             ),
         )
 
@@ -366,7 +366,7 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         self.assertEqual(
             exported,
             [
-                ["date", "start", "end", "break", "note", "work_type"],
+                ["date", "start", "end", "break", "note", "entry_type"],
                 ["2026-04-20", "22:00", "09:00", "1.0", "Night, shift", "normal"],
                 ["2026-04-21", "", "", "0.0", "Leave", "paid_leave"],
             ],
@@ -378,7 +378,7 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         source.write_text(
             "\n".join(
                 [
-                    "date,start,end,break,note,work_type",
+                    "date,start,end,break,note,entry_type",
                     "2026-04-20,09:00,18:00,1.0,Imported,normal",
                     "bad-date,09:00,18:00,1.0,Bad,normal",
                     "2026-04-21,,,0.0,Leave,paid_leave",
@@ -404,13 +404,13 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         assert imported is not None
         assert leave is not None
         self.assertEqual(imported.note, "Imported")
-        self.assertEqual(leave.work_type, WorkType.PAID_LEAVE)
+        self.assertEqual(leave.entry_type, EntryType.PAID_LEAVE)
 
     def test_csv_validation_limits_conflicts_and_atomic_import(self):
         user = self.register_user("alice")
         repository = SQLiteWorkLogRepository(self.factory)
         source = Path(self._tempdir.name) / "import.csv"
-        source.write_text("date,start,end,break,note,work_type\n"
+        source.write_text("date,start,end,break,note,entry_type\n"
                           "2026/4/20,09:00,18:00,1,Valid,normal\n"
                           "2026-04-21,09:00,18:00,nan,Invalid,normal\n"
                           "2026-04-22,,,0,Invalid,unknown\n", encoding="utf-8")
@@ -447,17 +447,17 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
 
     def test_csv_protected_text_round_trips_without_guessing_unmarked_apostrophes(self):
         from worklogger.domain.projects.models import WorkContext
-        from worklogger.domain.worklog.models import CustomWorkType
+        from worklogger.domain.worklog.models import CustomEntryType
         path = Path(self._tempdir.name) / "protected.csv"
         notes = ("- Task", "=1+1", "+Review", "@Owner", "'=literal", "'ordinary", "Line one\nLine two")
         records = tuple(WorkLog(1, date(2026, 4, index + 1), "09:00", "10:00", note=note,
-            work_type=CustomWorkType("custom:" + "a" * 32, "+Research", "work"),
+            entry_type=CustomEntryType("custom:" + "a" * 32, "+Research", "work"),
             context=WorkContext(project_label="=Project", work_item_label="'Item")) for index, note in enumerate(notes))
         self.assertTrue(WorkLogCsvExporter().export_work_logs(path, records).ok)
         parsed = WorkLogCsvImporter().parse(path, 1).value
         self.assertEqual(parsed.errors, ())
         self.assertEqual(tuple(row.note for row in parsed.rows), notes)
-        self.assertTrue(all((row.work_type_label, row.project_label, row.work_item_label) ==
+        self.assertTrue(all((row.entry_type_label, row.project_label, row.work_item_label) ==
                             ("+Research", "=Project", "'Item") for row in parsed.rows))
         path.write_text("DATE,NOTE\n2026-04-20,'=literal\n", encoding="utf-8")
         self.assertEqual(WorkLogCsvImporter().parse(path, 1).value.rows[0].note, "'=literal")
@@ -492,13 +492,13 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
                 end_time="09:00",
                 break_hours=1.0,
                 note="Alpha; Beta, Gamma\\Delta\nNext",
-                work_type=WorkType.NORMAL,
+                entry_type=EntryType.NORMAL,
             ),
             WorkLog(
                 user_id=1,
                 day=date(2026, 4, 22),
                 note="Leave",
-                work_type=WorkType.PAID_LEAVE,
+                entry_type=EntryType.PAID_LEAVE,
             ),
             WorkLog(
                 user_id=1,
@@ -507,7 +507,7 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
                 end_time="18:00",
                 break_hours=1.0,
                 note="x" * 90,
-                work_type=WorkType.REMOTE,
+                entry_type=EntryType.REMOTE,
             ),
         )
         exporter = WorkLogIcsExporter()

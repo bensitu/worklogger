@@ -17,6 +17,7 @@ from worklogger.infrastructure.database import MigrationRunner, SQLiteConnection
 from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteSettingsRepository, SQLiteWorkLogRepository, SQLiteIdentityRepository
 from worklogger.infrastructure.security import PBKDF2PasswordHasher
 from worklogger.domain.auth.models import LinkedIdentity
+from worklogger.domain.worklog.models import EntryType, WorkMode
 from worklogger.infrastructure.security.key_store import EncryptedSettingsKeyStore, FileMachineKeyProvider, FernetSecretBox, NoKeyringBackend
 from worklogger.infrastructure.database.upgrade import upgrade_database
 from worklogger.infrastructure.database.migrations.runner import MIGRATION_VERSIONS
@@ -43,11 +44,11 @@ class DatabaseUpgradeTests(unittest.TestCase):
             self.assertEqual(manual.read_bytes(), b"manual backup")
             self.assertEqual(other.read_bytes(), b"other database")
 
-    def test_unversioned_current_layout_preserves_periods_classifications_and_memos(self):
+    def test_unversioned_development_layout_is_rejected_without_changing_data(self):
         from datetime import date
         from worklogger.domain.worklog.models import WorkLog
-        from worklogger.app.use_cases.work_types import WorkTypeService
-        from worklogger.infrastructure.repositories.work_type_sqlite import SQLiteWorkTypeRepository
+        from worklogger.app.use_cases.entry_types import EntryTypeService
+        from worklogger.infrastructure.repositories.entry_type_sqlite import SQLiteEntryTypeRepository
         from worklogger.infrastructure.repositories.note_sqlite import SQLiteDailyNoteRepository
         with tempfile.TemporaryDirectory() as directory:
             factory = SQLiteConnectionFactory(Path(directory) / "current.db")
@@ -55,22 +56,23 @@ class DatabaseUpgradeTests(unittest.TestCase):
             auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
             user = auth.create_user("sample", "example-password", recovery_key=None, is_admin=False)
             auth.set_display_name(user.id, "Mary", expected_display_name="")
-            types = WorkTypeService(user.id, SQLiteWorkTypeRepository(factory))
+            types = EntryTypeService(user.id, SQLiteEntryTypeRepository(factory))
             definition = types.save("Research", "work").value
             records = SQLiteWorkLogRepository(factory)
             day = date(2026, 5, 20)
-            first = records.save_entry(WorkLog(user.id, day, "09:00", "10:00", note="Entry content", work_type=definition))
+            first = records.save_entry(WorkLog(user.id, day, "09:00", "10:00", note="Entry content", entry_type=definition))
             edited = records.save_entry(replace(first, note="Revised content"))
             second = records.save_entry(WorkLog(user.id, day, "10:00", "11:00", note="Another period"))
             with factory.transaction() as connection:
                 connection.execute("INSERT INTO daily_notes(user_id,d,content) VALUES(?,?,?)", (user.id, day.isoformat(), "Independent memo"))
                 connection.execute("DROP TABLE schema_migrations")
-            self.assertEqual(MigrationRunner(factory).run_pending(), MIGRATION_VERSIONS)
+            with self.assertRaisesRegex(ValueError, "database_schema_unsupported"):
+                MigrationRunner(factory).run_pending()
             self.assertEqual(auth.get_by_id(user.id).display_name, "Mary")
             self.assertEqual(records.list_for_day(user.id, day), (edited, second))
             self.assertEqual(types.list_types().value, (definition,))
             self.assertEqual(SQLiteDailyNoteRepository(factory).get_for_day(user.id, day).content, "Independent memo")
-            self.assertEqual(MigrationRunner(factory).run_pending(), ())
+            self.assertFalse(list(Path(directory).glob("*.bak_upgrade_*")))
 
     def test_explicit_upgrade_keeps_source_and_publishes_only_complete_results(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -175,6 +177,9 @@ class DatabaseUpgradeTests(unittest.TestCase):
                 self.assertEqual(records[0].worked_hours(),7)
                 self.assertEqual(records[1].worked_hours(),1)
                 self.assertEqual(records[0].note,"Original work")
+                self.assertEqual(records[0].entry_type, EntryType.REMOTE)
+                self.assertEqual(records[0].work_mode, WorkMode.REMOTE)
+                self.assertIsNone(records[1].work_mode)
                 identities = SQLiteIdentityRepository(factory)
                 linked = identities.add(LinkedIdentity(0,17,"google","new-subject"))
                 self.assertEqual(linked.user_id,17)
@@ -190,3 +195,53 @@ class DatabaseUpgradeTests(unittest.TestCase):
                     self.assertIn("salt",{row[1] for row in backup.execute("PRAGMA table_info(users)")})
                     self.assertEqual(backup.execute("SELECT COUNT(*) FROM worklog").fetchone()[0],2)
                     self.assertEqual(backup.execute("PRAGMA integrity_check").fetchone()[0],"ok")
+
+    def test_released_classifications_and_note_only_rows_preserve_historical_semantics(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "released.db"
+            self.create_source(path, SCHEMAS[-1])
+            with closing(sqlite3.connect(path)) as connection, connection:
+                connection.executemany('INSERT INTO worklog(user_id,d,start,end,"break",note,work_type,overnight) VALUES(17,?,?,?,?,?,?,0)', (
+                    ("2026-05-16", "09:00", "11:00", 0.5, "Trip", "business_trip"),
+                    ("2026-05-17", None, None, 0, "Leave", "paid_leave"),
+                    ("2026-05-18", "12:00", "12:30", 0, "Break", "break"),
+                    ("2026-05-19", None, None, 0, "Memo", "normal"),
+                    ("2026-05-20", None, None, 0, "", "normal"),
+                ))
+            factory = SQLiteConnectionFactory(path)
+            MigrationRunner(factory).run_pending()
+            records = SQLiteWorkLogRepository(factory).list_all(17)
+            self.assertEqual(len(records), 6)
+            trip, leave, pause, empty = records[2:]
+            self.assertEqual((trip.entry_type, trip.work_mode, trip.worked_hours()),
+                             (EntryType.BUSINESS_TRIP, WorkMode.BUSINESS_TRIP, 1.5))
+            self.assertFalse(leave.has_times)
+            self.assertEqual((leave.worked_hours(), leave.leave_hours(), leave.work_mode), (0, 8, None))
+            self.assertEqual((pause.worked_hours(), pause.raw_hours(), pause.work_mode), (0, 0.5, None))
+            self.assertFalse(empty.has_times)
+            self.assertEqual(empty.entry_type, EntryType.NORMAL)
+            with factory.connection() as connection:
+                self.assertEqual(connection.execute("SELECT content FROM daily_notes WHERE d='2026-05-19'").fetchone()[0], "Memo")
+            self.assertEqual(MigrationRunner(factory).run_pending(), ())
+
+    def test_invalid_released_records_roll_back_and_unknown_types_fail_before_writes(self):
+        cases = (("d", "2026-02-30"), ("start", "25:00"), ("end", None),
+                 ("break", -1), ("break", 8), ("break", float("inf")),
+                 ("work_type", "unknown"), ("work_type", ""))
+        for column, value in cases:
+            with self.subTest(column=column, value=value), tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / "invalid.db"
+                self.create_source(path, SCHEMAS[-1])
+                with closing(sqlite3.connect(path)) as connection, connection:
+                    connection.execute(f'UPDATE worklog SET "{column}"=? WHERE d=?', (value, "2026-05-14"))
+                    original = tuple(connection.execute("SELECT * FROM worklog ORDER BY d"))
+                factory = SQLiteConnectionFactory(path)
+                expected = "database_entry_type_unsupported" if column == "work_type" else "database_record_invalid"
+                with self.assertRaisesRegex(ValueError, expected):
+                    MigrationRunner(factory).run_pending()
+                with closing(sqlite3.connect(path)) as connection:
+                    self.assertEqual(tuple(connection.execute("SELECT * FROM worklog ORDER BY d")), original)
+                    self.assertIn("salt", {row[1] for row in connection.execute("PRAGMA table_info(users)")})
+                    self.assertIsNone(connection.execute("SELECT 1 FROM sqlite_master WHERE name='worklog_import'").fetchone())
+                    self.assertIsNone(connection.execute("SELECT 1 FROM sqlite_master WHERE name='schema_migrations'").fetchone())
+                self.assertEqual(len(list(Path(directory).glob("*.bak_upgrade_*"))), 0 if column == "work_type" else 1)

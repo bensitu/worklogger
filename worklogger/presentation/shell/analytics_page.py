@@ -29,7 +29,7 @@ from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBund
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_code, display_error_message
 from worklogger.presentation.date_labels import month_label, month_name, duration_label
-from worklogger.presentation.work_type_labels import work_type_label
+from worklogger.presentation.entry_type_labels import entry_type_label
 from worklogger.presentation.viewmodels import (
     AnalyticsState,
     AnalyticsViewModel,
@@ -338,7 +338,7 @@ class AnalyticsPage(QWidget):
         mode_order = {"normal": 0, "remote": 1, "business_trip": 2, "meeting": 3, "training": 4, "leave": 5, "other": 6}
         work_modes = sorted(state.work_modes, key=lambda item: mode_order.get(item[0], 4))
         self.breakdown_chart.chart.set_segments(
-            tuple((dict(state.work_mode_labels).get(key) or work_type_label(key) or key, value) for key, value in work_modes),
+            tuple((dict(state.work_mode_labels).get(key) or entry_type_label(key) or key, value) for key, value in work_modes),
             keys=tuple(key for key, _value in work_modes),
         )
         self.daily_average_value_label.setText(duration_label(state.stats.average_hours))

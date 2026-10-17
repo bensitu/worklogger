@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta, timezone
+from dataclasses import replace
 from zoneinfo import ZoneInfo
 from random import Random
 import unittest
 
-from worklogger.domain.worklog.models import TimeRange, WorkLog, WorkType
+from worklogger.domain.worklog.models import TimeRange, WorkLog, EntryType, EntryCategory, CustomEntryType, WorkMode
+from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.intervals import EntryIntervalIndex
 from worklogger.domain.worklog.rules import (
     calc_hours,
@@ -19,6 +21,23 @@ from worklogger.domain.worklog.rules import (
 
 
 class WorkLogRuleTests(unittest.TestCase):
+    def test_classification_keeps_accounting_and_optional_work_metadata_separate(self):
+        base = WorkLog(1, date(2026, 10, 18), "09:00", "11:00", entry_type=EntryType.MEETING,
+                       work_mode=WorkMode.REMOTE)
+        self.assertEqual(normalize_work_log(base).worked_hours(), 2)
+        self.assertEqual(base.entry_type.category, EntryCategory.WORK)
+        for definition in (EntryType.BREAK, EntryType.PAID_LEAVE,
+                           CustomEntryType("custom:" + "1" * 32, "Rest", "break")):
+            record = replace(base, entry_type=definition, work_mode=None)
+            self.assertEqual(normalize_work_log(record).worked_hours(), 0)
+            for changes in ({"work_mode": WorkMode.ONSITE}, {"context": WorkContext(project_label="Project")}):
+                with self.assertRaisesRegex(ValueError, "entry_classification_invalid"):
+                    normalize_work_log(replace(record, **changes))
+        with self.assertRaisesRegex(ValueError, "work_mode_invalid"):
+            normalize_work_log(replace(base, work_mode="invalid"))
+        with self.assertRaisesRegex(ValueError, "entry_type_invalid"):
+            normalize_work_log(replace(base, entry_type="unknown"))
+
     def test_incremental_interval_index_matches_pairwise_rules_in_source_order(self):
         random = Random(17)
         records = []
@@ -62,11 +81,11 @@ class WorkLogRuleTests(unittest.TestCase):
         zone = ZoneInfo("America/New_York")
         start = datetime(2026, 11, 1, 0, 30, tzinfo=zone)
         end = datetime(2026, 11, 1, 1, 30, tzinfo=zone, fold=1)
-        self.assertEqual(timer_reminders(start, end, WorkType.NORMAL, long_hours=2, continuous_hours=1), ("long_timer", "continuous_timer"))
-        self.assertEqual(timer_reminders(start, end, WorkType.BREAK, long_hours=0, continuous_hours=1), ())
-        self.assertEqual(timer_reminders(start, end, WorkType.PAID_LEAVE, long_hours=0, continuous_hours=1), ())
+        self.assertEqual(timer_reminders(start, end, EntryType.NORMAL, long_hours=2, continuous_hours=1), ("long_timer", "continuous_timer"))
+        self.assertEqual(timer_reminders(start, end, EntryType.BREAK, long_hours=0, continuous_hours=1), ())
+        self.assertEqual(timer_reminders(start, end, EntryType.PAID_LEAVE, long_hours=0, continuous_hours=1), ())
         late = start.astimezone(timezone.utc) + timedelta(hours=17)
-        self.assertEqual(timer_reminders(start, late, WorkType.NORMAL, long_hours=0), ("duration_limit",))
+        self.assertEqual(timer_reminders(start, late, EntryType.NORMAL, long_hours=0), ("duration_limit",))
 
     def test_offset_aware_shifts_preserve_elapsed_hours_across_clock_changes(self) -> None:
         zone = ZoneInfo("America/New_York")
@@ -120,7 +139,7 @@ class WorkLogRuleTests(unittest.TestCase):
                 start_time="2200",
                 end_time="0900",
                 break_hours=1.0,
-                work_type=WorkType.NORMAL,
+                entry_type=EntryType.NORMAL,
             )
         )
         self.assertEqual(record.start_time, "22:00")
@@ -157,7 +176,7 @@ class WorkLogRuleTests(unittest.TestCase):
                 start_time="09:00",
                 end_time="13:00",
                 break_hours=0.0,
-                work_type=WorkType.PAID_LEAVE,
+                entry_type=EntryType.PAID_LEAVE,
             )
         )
         self.assertTrue(leave.is_leave)
@@ -168,7 +187,7 @@ class WorkLogRuleTests(unittest.TestCase):
             WorkLog(
                 user_id=1,
                 day=date(2026, 4, 22),
-                work_type=WorkType.SICK_LEAVE,
+                entry_type=EntryType.SICK_LEAVE,
             )
         )
         self.assertEqual(full_day_leave.leave_hours(standard_hours=8.0), 8.0)

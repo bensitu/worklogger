@@ -17,7 +17,7 @@ from worklogger.presentation.widgets.data_tree import configure_data_tree, set_d
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 from worklogger.presentation.widgets.record_timeline import RecordReplacementTimeline
 from worklogger.presentation.widgets.time_picker import TimePickerDialog
-from worklogger.presentation.work_type_labels import work_type_label
+from worklogger.presentation.entry_type_labels import entry_type_label
 
 
 def _period_tree():
@@ -38,7 +38,7 @@ def _show_periods(tree, periods, *, minimum_rows=1):
         if record.is_overnight:
             span += " (+1)"
         content = "\n".join(value for value in (record.context.label, record.note) if value)
-        row = QTreeWidgetItem([record.day.isoformat(), span, work_type_label(record.work_type),
+        row = QTreeWidgetItem([record.day.isoformat(), span, entry_type_label(record.entry_type),
                               content.splitlines()[0] if content else ""])
         precise_span = (f"{record.started_at.isoformat()} - {record.ended_at.isoformat()}"
                         if record.started_at else span)

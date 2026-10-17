@@ -65,8 +65,8 @@ class SettingsPage(QWidget, SettingsSectionState):
     manage_identities_requested = Signal()
     manage_local_models_requested = Signal()
     manage_users_requested = Signal()
-    manage_work_types_requested = Signal()
-    work_types_changed = Signal()
+    manage_entry_types_requested = Signal()
+    entry_types_changed = Signal()
     manage_projects_requested = Signal()
     projects_changed = Signal()
     ai_availability_changed = Signal()
@@ -200,8 +200,8 @@ class SettingsPage(QWidget, SettingsSectionState):
         self.manage_users_button.setVisible(allowed)
         self.manage_users_button.setEnabled(allowed)
 
-    def set_work_types_available(self, available: bool) -> None:
-        self.manage_work_types_button.setEnabled(available)
+    def set_entry_types_available(self, available: bool) -> None:
+        self.manage_entry_types_button.setEnabled(available)
 
     def set_projects_available(self, available: bool) -> None:
         self.manage_projects_button.setEnabled(available)
@@ -314,7 +314,7 @@ class SettingsPage(QWidget, SettingsSectionState):
             manage_identities_requested=self.manage_identities_requested.emit,
             manage_local_models_requested=self.manage_local_models_requested.emit,
             manage_users_requested=self.manage_users_requested.emit,
-            manage_work_types_requested=self.manage_work_types_requested.emit,
+            manage_entry_types_requested=self.manage_entry_types_requested.emit,
             manage_projects_requested=self.manage_projects_requested.emit,
             mode_changed=self._mode_changed,
             residency_key=self._residency_key,

@@ -25,7 +25,7 @@ from worklogger.app.use_cases.auth import RegisterUserHandler
 from worklogger.app.use_cases.notes import GetDailyNoteHandler, SaveDailyNoteHandler
 from worklogger.app.use_cases.reports import SaveReportTemplateHandler
 from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
-from worklogger.domain.worklog.models import WorkType
+from worklogger.domain.worklog.models import EntryType
 from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.notes.models import DailyNote, NoteHistoryFilter
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
@@ -237,8 +237,8 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
             self.assertEqual(rejected.error.code, "note_conflict")
             self.assertEqual(service.load(day).value.sharing, NoteSharing())
             work = SQLiteWorkLogRepository(factory)
-            work.save_entry(WorkLog(user.id, day, "08:00", "09:00", note="Planning", work_type=WorkType.MEETING))
-            work.save_entry(WorkLog(user.id, day, "10:00", "11:00", note="Practice", work_type=WorkType.TRAINING))
+            work.save_entry(WorkLog(user.id, day, "08:00", "09:00", note="Planning", entry_type=EntryType.MEETING))
+            work.save_entry(WorkLog(user.id, day, "10:00", "11:00", note="Practice", entry_type=EntryType.TRAINING))
             report = GenerateReportHandler(work_logs=work, notes=notes, note_settings=settings,
                 quick_logs=quick, calendar_events=SQLiteCalendarEventRepository(factory), templates=BuiltInTemplateProvider())
             command = GenerateReportCommand(user.id, "daily", day, day)
@@ -316,7 +316,7 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
                     end_time="18:00",
                     break_hours=1.0,
                     note="old",
-                    work_type=WorkType.REMOTE.value,
+                    entry_type=EntryType.REMOTE.value,
                 )
             )
             notes = SQLiteDailyNoteRepository(factory)
@@ -336,7 +336,7 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
         self.assertIsNotNone(work_log)
         assert work_log is not None
         self.assertEqual(work_log.start_time, "09:00")
-        self.assertEqual(work_log.work_type, WorkType.REMOTE)
+        self.assertEqual(work_log.entry_type, EntryType.REMOTE)
 
     def test_builtin_template_provider_returns_locale_or_english_fallback(self) -> None:
         provider = BuiltInTemplateProvider()

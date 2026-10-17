@@ -21,7 +21,7 @@ QHeaderView[sectionsClickable="true"]::section:hover:enabled {
 }
 
 QListWidget#local_model_list_widget,
-QListWidget#custom_work_type_list_widget,
+QListWidget#custom_entry_type_list_widget,
 QListWidget[management_list="true"] {
   background: {{ surface }};
   border: 1px solid {{ border }};
@@ -30,7 +30,7 @@ QListWidget[management_list="true"] {
 }
 
 QListWidget#local_model_list_widget::item,
-QListWidget#custom_work_type_list_widget::item,
+QListWidget#custom_entry_type_list_widget::item,
 QListWidget[management_list="true"]::item {
   border-radius: 4px;
   border: 1px solid transparent;
@@ -41,7 +41,7 @@ QAbstractItemView::item:hover:enabled:!selected {
 }
 
 QListWidget#local_model_list_widget::item:selected,
-QListWidget#custom_work_type_list_widget::item:selected,
+QListWidget#custom_entry_type_list_widget::item:selected,
 QTreeWidget[data_browser="true"]::item:selected {
   background: {{ accent }};
   color: {{ highlighted_text }};

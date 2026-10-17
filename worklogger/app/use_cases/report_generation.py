@@ -238,7 +238,7 @@ def _work_log_lines(work_logs: tuple[WorkLog, ...], standard_hours: float, _: Ca
         lines.append(_list_item(heading))
         for entry in record.entries or (record,):
             span = time_range_label(entry.start_time, entry.end_time) if entry.has_times else _("All day")
-            label = getattr(entry.work_type, "label", None) or labels.get(entry.work_type.value, entry.work_type.value)
+            label = getattr(entry.entry_type, "label", None) or labels.get(entry.entry_type.value, entry.entry_type.value)
             description = f"{span} [{label}]"
             if entry.context.label:
                 description += " [" + entry.context.label + "]"

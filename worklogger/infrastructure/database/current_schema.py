@@ -4,8 +4,7 @@ import sqlite3
 from contextlib import closing
 from functools import lru_cache
 
-CURRENT_SCHEMA_VERSION = 16
-PREVIOUS_CURRENT_VERSION = 14
+CURRENT_SCHEMA_VERSION = 17
 
 TABLE_STATEMENTS = {
     "schema_migrations": """CREATE TABLE IF NOT EXISTS schema_migrations(
@@ -31,18 +30,19 @@ TABLE_STATEMENTS = {
         source_url TEXT NOT NULL DEFAULT '', completed INTEGER NOT NULL DEFAULT 0,
         revision INTEGER NOT NULL DEFAULT 0, archived INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY(user_id,project_id) REFERENCES projects(user_id,id))""",
-    "work_types": """CREATE TABLE IF NOT EXISTS work_types(
+    "entry_types": """CREATE TABLE IF NOT EXISTS entry_types(
         id TEXT PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         name TEXT NOT NULL, normalized_name TEXT NOT NULL, category TEXT NOT NULL CHECK(category IN ('work','break','leave')),
         revision INTEGER NOT NULL DEFAULT 0, archived INTEGER NOT NULL DEFAULT 0)""",
     "worklog": """CREATE TABLE IF NOT EXISTS worklog(
         id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         d TEXT NOT NULL, start TEXT, end TEXT, "break" REAL NOT NULL DEFAULT 0,
-        note TEXT NOT NULL DEFAULT '', work_type TEXT NOT NULL DEFAULT 'normal', overnight INTEGER NOT NULL DEFAULT 0,
+        note TEXT NOT NULL DEFAULT '', entry_type TEXT NOT NULL DEFAULT 'normal', overnight INTEGER NOT NULL DEFAULT 0,
         started_at TEXT, ended_at TEXT, revision INTEGER NOT NULL DEFAULT 0, capture_id TEXT,
-        work_type_label TEXT NOT NULL DEFAULT '', work_type_category TEXT NOT NULL DEFAULT '',
+        entry_type_label TEXT NOT NULL DEFAULT '', entry_type_category TEXT NOT NULL DEFAULT '',
         project_id TEXT REFERENCES projects(id), work_item_id TEXT REFERENCES work_items(id),
-        project_label TEXT NOT NULL DEFAULT '', work_item_label TEXT NOT NULL DEFAULT '')""",
+        project_label TEXT NOT NULL DEFAULT '', work_item_label TEXT NOT NULL DEFAULT '',
+        work_mode TEXT CHECK(work_mode IN ('onsite','remote','business_trip','other')))""",
     "daily_notes": """CREATE TABLE IF NOT EXISTS daily_notes(
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, d TEXT NOT NULL,
         content TEXT NOT NULL DEFAULT '', PRIMARY KEY(user_id,d))""",
@@ -99,8 +99,8 @@ INDEX_STATEMENTS = (
     "CREATE INDEX IF NOT EXISTS worklog_work_item_dates ON worklog(user_id,work_item_id,d,id)",
     "CREATE UNIQUE INDEX IF NOT EXISTS projects_active_name ON projects(user_id,normalized_name) WHERE archived=0",
     "CREATE UNIQUE INDEX IF NOT EXISTS work_items_active_title ON work_items(user_id,project_id,normalized_title) WHERE archived=0",
-    "CREATE UNIQUE INDEX IF NOT EXISTS work_types_active_name ON work_types(user_id,normalized_name) WHERE archived=0",
-    "CREATE INDEX IF NOT EXISTS work_types_account ON work_types(user_id,archived)",
+    "CREATE UNIQUE INDEX IF NOT EXISTS entry_types_active_name ON entry_types(user_id,normalized_name) WHERE archived=0",
+    "CREATE INDEX IF NOT EXISTS entry_types_account ON entry_types(user_id,archived)",
     "CREATE INDEX IF NOT EXISTS idx_quick_logs_user_date ON quick_logs(user_id,date)",
     "CREATE INDEX IF NOT EXISTS idx_calendar_events_user_date ON calendar_events(user_id,date)",
     "CREATE INDEX IF NOT EXISTS idx_reports_user_type_period ON reports(user_id,type,period_start,period_end)",
@@ -147,13 +147,11 @@ def foreign_key_contract(connection, table):
                      for (_identity, target, update, delete), columns in groups.items())
 
 
-def validate_current_schema(connection, *, ledger_required=True, check_data=True):
+def validate_current_schema(connection, *, check_data=True):
     tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")}
     if tables - set(TABLE_STATEMENTS) - {"oauth_identities"}:
         raise ValueError("database_schema_unsupported")
     for table, (required, foreign_keys, indexes) in schema_columns().items():
-        if table == "schema_migrations" and not ledger_required:
-            continue
         actual = {row[1]: (row[2], row[5]) for row in connection.execute(f'PRAGMA table_info("{table}")')}
         if any(actual.get(name) != (declaration, primary_key) for name, declaration, primary_key in required):
             raise ValueError("database_schema_unsupported")

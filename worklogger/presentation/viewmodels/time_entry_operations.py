@@ -25,7 +25,7 @@ class TimeEntryDraft:
     day: date
     start: str = ""
     end: str = ""
-    work_type: str = "normal"
+    entry_type: str = "normal"
     content: str = ""
     original: WorkLog | None = None
     context: WorkContext = WorkContext()
@@ -38,7 +38,7 @@ class TimeEntryEditState:
     entries: tuple[WorkLog, ...] = ()
     auto_completed: WorkLog | None = None
     auto_content: str = ""
-    auto_work_type: str = "normal"
+    auto_entry_type: str = "normal"
     auto_context: WorkContext = WorkContext()
     latest_change: EntryChangeInfo | None = None
     timer_origin: TimeEntryDraft | None = None

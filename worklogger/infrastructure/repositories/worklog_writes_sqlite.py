@@ -77,8 +77,9 @@ class SQLiteWorkLogWrites:
                             stored.started_at,
                             stored.ended_at,
                             stored.note,
-                            stored.work_type,
+                            stored.entry_type,
                             stored.context,
+                            stored.work_mode,
                         ) != (
                             record.day,
                             record.start_time,
@@ -87,8 +88,9 @@ class SQLiteWorkLogWrites:
                             record.started_at,
                             record.ended_at,
                             record.note,
-                            record.work_type,
+                            record.entry_type,
                             record.context,
+                            record.work_mode,
                         ):
                             raise ValueError("worklog_entry_conflict")
                         if timer_change is not None:
@@ -100,9 +102,9 @@ class SQLiteWorkLogWrites:
                 entry_id = session.insert(record)
                 record = replace(record, id=entry_id)
             else:
-                snapshots = ",work_type_label=?,work_type_category=?,project_id=?,work_item_id=?,project_label=?,work_item_label=?"
+                snapshots = ",entry_type_label=?,entry_type_category=?,project_id=?,work_item_id=?,project_label=?,work_item_label=?,work_mode=?"
                 cursor = connection.execute(
-                    """UPDATE worklog SET d=?,start=?,end=?,"break"=?,note=?,work_type=?,overnight=?,
+                    """UPDATE worklog SET d=?,start=?,end=?,"break"=?,note=?,entry_type=?,overnight=?,
                     started_at=?,ended_at=?"""
                     + snapshots
                     + """,revision=revision+1 WHERE user_id=? AND id=? AND revision=?""",

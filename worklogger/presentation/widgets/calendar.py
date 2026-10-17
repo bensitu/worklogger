@@ -20,7 +20,7 @@ from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets.icons import ui_icon
 from worklogger.presentation.theme.context import current_colors
 from worklogger.presentation.date_labels import day_label
-from worklogger.presentation.work_type_labels import work_type_label
+from worklogger.presentation.entry_type_labels import entry_type_label
 from worklogger.presentation.viewmodels.calendar import (
     CalendarDayCell,
     CalendarMonthViewState,
@@ -72,7 +72,7 @@ class CalendarDayButton(QPushButton):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         style = cell.style
-        marker_color = cell.work_type_marker_color
+        marker_color = cell.entry_type_marker_color
         enabled = self.isEnabled()
         if not enabled:
             colors = current_colors()
@@ -336,8 +336,8 @@ def _holiday_lines(text: str, font: QFont, width: int) -> tuple[str, ...]:
 
 def _tooltip_for_cell(cell: CalendarDayCell) -> str:
     details: list[str] = []
-    type_label = work_type_label(cell.work_type)
-    if cell.work_type_marker_color and type_label:
+    type_label = entry_type_label(cell.entry_type)
+    if cell.entry_type_marker_color and type_label:
         details.append(_("Work type") + ": " + type_label)
     if cell.show_overnight_marker:
         details.append(_("Overnight"))

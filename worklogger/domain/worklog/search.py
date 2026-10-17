@@ -11,7 +11,7 @@ class EntryFilter:
     start: date
     end: date
     text: str = ""
-    work_type: str | None = None
+    entry_type: str | None = None
     project_id: str | None = None
     work_item_id: str | None = None
     unclassified: bool = False
@@ -23,7 +23,7 @@ class EntryFilter:
                 or not isinstance(self.text, str) or len(self.text) > 512
                 or any(ord(char) < 32 for char in self.text)):
             raise ValueError("record_search_invalid")
-        if self.work_type is not None and (not isinstance(self.work_type, str) or len(self.work_type) > 80):
+        if self.entry_type is not None and (not isinstance(self.entry_type, str) or len(self.entry_type) > 80):
             raise ValueError("record_search_invalid")
         for identifier in (self.project_id, self.work_item_id):
             if identifier is not None:

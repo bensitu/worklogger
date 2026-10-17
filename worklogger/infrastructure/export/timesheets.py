@@ -9,7 +9,7 @@ from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.files import atomic_destination
 from worklogger.infrastructure.i18n import _
-from worklogger.infrastructure.work_type_labels import work_type_label
+from worklogger.infrastructure.entry_type_labels import entry_type_label
 
 
 def _headers():
@@ -29,7 +29,7 @@ def _rows(sheet):
             yield (day.isoformat(), "", "", "", "", "", "", 0.0, 0.0, 0.0, _("No records")), None
         for entry in entries:
             rest = entry.raw_hours() if entry.is_break else entry.break_hours
-            yield (day.isoformat(), entry.start_time or "", entry.end_time or "", work_type_label(entry.work_type),
+            yield (day.isoformat(), entry.start_time or "", entry.end_time or "", entry_type_label(entry.entry_type),
                 entry.context.project_label, entry.context.work_item_label, entry.note, entry.worked_hours(), rest,
                 entry.leave_hours(standard_hours=sheet.standard_hours), statuses[sheet.record_status(entry)]), entry
 
@@ -83,7 +83,7 @@ class TimesheetXlsxExporter:
                 if entry is not None:
                     metadata.append((entry.id, entry.revision, entry.day.isoformat(),
                         entry.started_at.isoformat() if entry.started_at else "", entry.ended_at.isoformat() if entry.ended_at else "",
-                        entry.break_hours, entry.work_type.value, entry.context.project_id or "", entry.context.work_item_id or ""))
+                        entry.break_hours, entry.entry_type.value, entry.context.project_id or "", entry.context.work_item_id or ""))
                 row_index += 1
             page.auto_filter.ref = f"A6:K{row_index - 1}"
             page.freeze_panes = "A7"

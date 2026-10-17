@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal
 
 from worklogger.domain.projects.models import WorkContext
-from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType
+from worklogger.domain.worklog.models import CustomEntryType, WorkLog, EntryType
 from worklogger.domain.worklog.timer_state import EntryTimer
 
 if TYPE_CHECKING:
@@ -19,8 +19,8 @@ class TimeEntryEditorState:
     active_timer: EntryTimer | None
     selected_record: WorkLog | None
     linked_timer: bool
-    work_type: str
-    type_snapshot: WorkType | CustomWorkType | None
+    entry_type: str
+    type_snapshot: EntryType | CustomEntryType | None
     content: str
     context: WorkContext
     historical_break_hours: float
@@ -41,7 +41,7 @@ def editor_state(model: TimeEntryViewModel, *, automatic: bool) -> TimeEntryEdit
     linked_timer = model.editing_active_timer
     active_timer = model.timer if automatic or linked_timer else None
     selected = model.auto_completed if automatic and model.timer is None else draft.original if not automatic else None
-    snapshot = active_timer.work_type if active_timer else selected.work_type if selected else None
+    snapshot = active_timer.entry_type if active_timer else selected.entry_type if selected else None
     if active_timer is not None:
         save_action = "content"
     elif selected is not None:
@@ -52,7 +52,7 @@ def editor_state(model: TimeEntryViewModel, *, automatic: bool) -> TimeEntryEdit
                 else model.auto_dirty if linked_timer else model.manual_dirty)
     return TimeEntryEditorState(
         draft=draft, active_timer=active_timer, selected_record=selected, linked_timer=linked_timer,
-        work_type=model.auto_work_type if automatic else draft.work_type,
+        entry_type=model.auto_entry_type if automatic else draft.entry_type,
         type_snapshot=snapshot, content=model.auto_content if automatic else draft.content,
         context=active_timer.context if active_timer else model.auto_context if automatic else draft.context,
         historical_break_hours=draft.original.break_hours if not automatic and draft.original else 0,

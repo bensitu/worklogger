@@ -86,6 +86,14 @@ the content limit shared by editing, recovery, and rewriting.
 Daily summaries aggregate records, while editing and exports retain individual
 identities. Custom type and project labels are historical snapshots.
 
+`EntryType` and `CustomEntryType` define an accounting category: work, break, or
+leave. `WorkMode` is optional metadata on work records and timers, not an
+additional source of hours. Break and leave records cannot carry a work mode or
+project association. Historical remote and business-trip types retain their
+original identities; a known arrangement does not imply a particular activity.
+Interval slicing preserves classification and arrangement; merging requires
+both to match along with the project context.
+
 Ordinary saves, imports, and interval transformations share `EntryWriteSession`
 for overlap validation, insertion, and timer compare-and-update. The component
 uses its caller's active SQLite transaction and never commits independently.

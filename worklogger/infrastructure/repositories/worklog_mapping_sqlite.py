@@ -5,10 +5,10 @@ from __future__ import annotations
 import math
 import sqlite3
 
-from worklogger.domain.worklog.models import CustomWorkType, WorkLog
+from worklogger.domain.worklog.models import CustomEntryType, EntryCategory, WorkLog, WorkMode
 from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.rules import (
-    decode_work_type,
+    decode_entry_type,
     normalize_work_log,
     calc_shift_span_hours,
     parse_time,
@@ -20,9 +20,9 @@ from worklogger.infrastructure.repositories._mapping import parse_date, parse_of
 class WorkLogStorage:
     def __init__(self, connection_factory: SQLiteConnectionFactory) -> None:
         self.connection_factory = connection_factory
-        self.select = ('SELECT w.user_id,w.d,w.start,w.end,w."break",w.note,w.work_type,w.overnight,'
-                       'w.started_at,w.ended_at,w.id,w.revision,w.capture_id,w.work_type_label,w.work_type_category,'
-                       'w.project_id,w.work_item_id,w.project_label,w.work_item_label FROM worklog AS w ')
+        self.select = ('SELECT w.user_id,w.d,w.start,w.end,w."break",w.note,w.entry_type,w.overnight,'
+                       'w.started_at,w.ended_at,w.id,w.revision,w.capture_id,w.entry_type_label,w.entry_type_category,'
+                       'w.project_id,w.work_item_id,w.project_label,w.work_item_label,w.work_mode FROM worklog AS w ')
 
     @staticmethod
     def values(record: WorkLog) -> tuple:
@@ -33,16 +33,19 @@ class WorkLogStorage:
             record.end_time,
             record.break_hours,
             record.note,
-            record.work_type.value,
+            record.entry_type.value,
             int(record.is_overnight),
             record.started_at.isoformat() if record.started_at else None,
             record.ended_at.isoformat() if record.ended_at else None,
         )
 
     def entry_values(self, record: WorkLog) -> tuple:
-        definition, context = record.work_type, record.context
-        snapshot = (definition.label, definition.category) if isinstance(definition, CustomWorkType) else ("", "")
-        return self.values(record) + snapshot + (context.project_id, context.work_item_id, context.project_label, context.work_item_label)
+        definition, context = record.entry_type, record.context
+        snapshot = (definition.label, definition.category) if isinstance(definition, CustomEntryType) else ("", "")
+        return self.values(record) + snapshot + (
+            context.project_id, context.work_item_id, context.project_label, context.work_item_label,
+            record.work_mode.value if record.work_mode is not None else None,
+        )
 
     @staticmethod
     def from_row(row: sqlite3.Row) -> WorkLog:
@@ -59,14 +62,17 @@ class WorkLogStorage:
             end_time=parse_time(row["end"]),
             break_hours=break_hours,
             note=str(row["note"] or ""),
-            work_type=decode_work_type(
-                row["work_type"],
-                label=row["work_type_label"], category=row["work_type_category"],
+            entry_type=decode_entry_type(
+                row["entry_type"],
+                label=row["entry_type_label"], category=row["entry_type_category"], strict=True,
             ),
             overnight=bool(int(row["overnight"] or 0)),
             started_at=start, ended_at=end, id=int(row["id"]), revision=int(row["revision"]), capture_id=row["capture_id"],
             context=WorkContext(row["project_id"], row["work_item_id"], row["project_label"], row["work_item_label"]),
+            work_mode=WorkMode(row["work_mode"]) if row["work_mode"] is not None else None,
         )
+        if record.entry_type.category != EntryCategory.WORK and record.work_mode is not None:
+            raise ValueError("stored_work_log_invalid")
         if (row["start"] and not record.start_time) or (row["end"] and not record.end_time):
             raise ValueError("stored_work_log_invalid")
         if bool(record.start_time) != bool(record.end_time) or (

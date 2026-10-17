@@ -45,7 +45,7 @@ from worklogger.domain.auth.models import User
 from worklogger.domain.auth.policies import generate_recovery_key
 from worklogger.domain.quicklog.models import QuickLog
 from worklogger.domain.reporting.models import Report
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import WorkLog, EntryType
 
 
 class MemoryWorkLogRepository:
@@ -298,7 +298,7 @@ class ApplicationUseCaseTests(unittest.TestCase):
                 end_time="0900",
                 break_hours=1.0,
                 note="Night shift",
-                work_type="normal",
+                entry_type="normal",
             )
         )
 
@@ -444,7 +444,7 @@ class ApplicationUseCaseTests(unittest.TestCase):
                 end_time="18:00",
                 break_hours=1.0,
                 note="",
-                work_type="normal",
+                entry_type="normal",
             )
         )
         SaveWorkLogHandler(work_logs).handle(
@@ -455,7 +455,7 @@ class ApplicationUseCaseTests(unittest.TestCase):
                 end_time=None,
                 break_hours=0.0,
                 note="",
-                work_type=WorkType.PAID_LEAVE.value,
+                entry_type=EntryType.PAID_LEAVE.value,
             )
         )
         bundle = GetAnalyticsBundleHandler(work_logs).handle(

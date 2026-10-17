@@ -5,7 +5,7 @@
 Work-log export writes UTF-8 with a byte-order mark:
 
 ```csv
-date,start,end,break,note,work_type
+date,start,end,break,note,entry_type
 2030-01-15,09:00,18:00,1.0,Documentation,normal
 2030-01-16,22:00,06:00,0.5,Maintenance,remote
 ```
@@ -16,11 +16,11 @@ date,start,end,break,note,work_type
 | `start`, `end` | Local clock boundaries |
 | `break` | Historical deducted hours, not minutes |
 | `note` | Record content; quoting preserves commas and line breaks |
-| `work_type` | Built-in type ID or a custom classification ID |
+| `entry_type` | Built-in type ID or a custom classification ID |
 
 Built-in IDs are `normal`, `remote`, `business_trip`, `meeting`, `training`,
 `break`, `paid_leave`, `comp_leave`, `sick_leave`, and `other`.
-Custom records also need `work_type_label` and `work_type_category`, with category
+Custom records also need `entry_type_label` and `entry_type_category`, with category
 `work`, `break`, or `leave`. Import preserves that snapshot without editing the
 account's type catalog.
 

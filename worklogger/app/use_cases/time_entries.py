@@ -19,9 +19,9 @@ from worklogger.domain.worklog.search import EntryCursor, EntryFilter, EntryPage
 from worklogger.domain.worklog.timer_state import EntryTimer, decode_timer, encode_timer, timer_payload
 from worklogger.domain.worklog.content import require_entry_content
 from worklogger.domain.worklog.rules import wall_interval, wall_position
-from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType
+from worklogger.domain.worklog.models import CustomEntryType, WorkLog, EntryType
 from worklogger.domain.worklog.rules import entry_interval, normalize_work_log, parse_time, shift_datetimes
-from worklogger.app.ports import WorkTypeOperations, ProjectOperations
+from worklogger.app.ports import EntryTypeOperations, ProjectOperations
 from worklogger.app.time_entry_state import RecordingState
 from worklogger.app.use_cases._errors import infrastructure_failure
 from worklogger.domain.projects.models import WorkContext
@@ -35,14 +35,14 @@ class TimeEntryService:
     def __init__(self, *, user_id: int, repository: TimeEntryRepository, settings: SettingsRepository,
                  local_timezone: tzinfo, clock: Callable[[], datetime] | None = None,
                  calendar_events: CalendarEventRepository | None = None,
-                 work_types: WorkTypeOperations | None = None,
+                 entry_types: EntryTypeOperations | None = None,
                  projects: ProjectOperations | None = None,
                  initial_state: RecordingState | None = None) -> None:
         self.user_id = user_id
         self.repository = repository
         self.settings = settings
         self.calendar_events = calendar_events
-        self.work_types = work_types
+        self.entry_types = entry_types
         self.projects = projects
         self.local_timezone = local_timezone
         self._clock = clock or (lambda: datetime.now().astimezone())
@@ -70,7 +70,7 @@ class TimeEntryService:
     def new_session(self, state: RecordingState) -> TimeEntryService:
         return TimeEntryService(user_id=self.user_id, repository=self.repository,
             settings=self.settings, local_timezone=self.local_timezone, clock=self._clock,
-            calendar_events=self.calendar_events, work_types=self.work_types,
+            calendar_events=self.calendar_events, entry_types=self.entry_types,
             projects=self.projects, initial_state=state)
 
     @property
@@ -151,7 +151,7 @@ class TimeEntryService:
             record = plan.incoming
             if record.user_id != self.user_id:
                 raise ValueError("worklog_entry_conflict")
-            self._resolve_type(record.work_type.value, plan.original.work_type if plan.original else None)
+            self._resolve_type(record.entry_type.value, plan.original.entry_type if plan.original else None)
             self._resolve_context(record.context, plan.original.context if plan.original else None)
             return self.repository.replace_overlap(self.user_id, plan, keep_outside=keep_outside)
         return self._run(save)
@@ -176,16 +176,16 @@ class TimeEntryService:
             return record
         return self._run(load)
 
-    def save_manual(self, day: date, start: str, end: str, work_type: str, content: str,
+    def save_manual(self, day: date, start: str, end: str, entry_type: str, content: str,
                     original: WorkLog | None = None, *, context: WorkContext | None = None) -> Result[WorkLog]:
         def save():
             if original and original.user_id != self.user_id:
                 raise ValueError("worklog_entry_conflict")
-            definition = self._resolve_type(work_type, original.work_type if original else None)
+            definition = self._resolve_type(entry_type, original.entry_type if original else None)
             association = self._resolve_context(context if context is not None else original.context if original else WorkContext(),
                                                 original.context if original else None)
-            if original and original.is_leave and not original.has_times and not start.strip() and not end.strip() and replace(original, work_type=definition).is_leave:
-                return self.repository.save_entry(replace(original, note=require_entry_content(content), work_type=definition, context=association))
+            if original and original.is_leave and not original.has_times and not start.strip() and not end.strip() and replace(original, entry_type=definition).is_leave:
+                return self.repository.save_entry(replace(original, note=require_entry_content(content), entry_type=definition, context=association))
             start_time, end_time = parse_time(start), parse_time(end)
             if not start_time or not end_time:
                 raise ValueError("time_range_incomplete")
@@ -209,11 +209,11 @@ class TimeEntryService:
         return self._run(save)
 
     def _resolve_type(self, value: str, original=None):
-        if self.work_types is not None:
-            return self.work_types.resolve(value, original)
-        if isinstance(original, CustomWorkType) and original.value == value:
+        if self.entry_types is not None:
+            return self.entry_types.resolve(value, original)
+        if isinstance(original, CustomEntryType) and original.value == value:
             return original
-        return WorkType(value)
+        return EntryType(value)
 
     def _resolve_context(self, context, original=None):
         if not isinstance(context, WorkContext):
@@ -230,7 +230,7 @@ class TimeEntryService:
     def delete_event(self, event: CalendarEvent) -> Result[None]:
         return self._run(lambda: self.calendar_events.remove(self.user_id, event))
 
-    def start(self, work_type: str, content: str, *, now: datetime | None = None,
+    def start(self, entry_type: str, content: str, *, now: datetime | None = None,
               break_entry: WorkLog | None = None, context: WorkContext | None = None) -> Result[EntryTimer]:
         def start():
             if self.restore_failed:
@@ -267,7 +267,7 @@ class TimeEntryService:
                             raise ValueError("worklog_entry_overlap")
             if active_break is not None:
                 return Result.failure(ConflictError("fixed_break_active", "fixed_break_active", {"break_entry": active_break}))
-            timer = EntryTimer(uuid4().hex, moment, self._resolve_type(work_type), require_entry_content(content),
+            timer = EntryTimer(uuid4().hex, moment, self._resolve_type(entry_type), require_entry_content(content),
                                context=self._resolve_context(context or WorkContext()))
             if break_entry is None:
                 self._persist(timer)
@@ -284,7 +284,7 @@ class TimeEntryService:
 
     @staticmethod
     def _is_fixed_break(record: WorkLog) -> bool:
-        return record.work_type == WorkType.BREAK and bool(record.capture_id and record.capture_id.startswith(FIXED_BREAK_CAPTURE_PREFIX))
+        return record.entry_type == EntryType.BREAK and bool(record.capture_id and record.capture_id.startswith(FIXED_BREAK_CAPTURE_PREFIX))
 
     def save_content(self, content: str, completed: WorkLog | None = None) -> Result[WorkLog | EntryTimer]:
         def save():
@@ -302,7 +302,7 @@ class TimeEntryService:
         if timer is None:
             raise ValueError("auto_record_not_started")
         record = normalize_work_log(WorkLog(self.user_id, timer.started_at.date(), timer.started_at.strftime("%H:%M"),
-            end.strftime("%H:%M"), timer.legacy_break_hours, require_entry_content(content), timer.work_type,
+            end.strftime("%H:%M"), timer.legacy_break_hours, require_entry_content(content), timer.entry_type,
             started_at=timer.started_at, ended_at=end, capture_id=timer.capture_id, context=timer.context))
         raw = encode_timer(next_timer)
         saved = self.repository.save_entry(record, timer_change=(self._timer_raw, raw))
@@ -330,7 +330,7 @@ class TimeEntryService:
             moment = moment.astimezone(self.local_timezone)
             deadline = (moment.astimezone(timezone.utc) + timedelta(hours=hours)).astimezone(self.local_timezone)
             record = normalize_work_log(WorkLog(self.user_id, moment.date(), moment.strftime("%H:%M"),
-                deadline.strftime("%H:%M"), 0, require_entry_content(content), WorkType.BREAK,
+                deadline.strftime("%H:%M"), 0, require_entry_content(content), EntryType.BREAK,
                 started_at=moment, ended_at=deadline, capture_id=FIXED_BREAK_CAPTURE_PREFIX + uuid4().hex))
             return self.repository.save_entry(record, timer_change=(self._timer_raw, None))
         return self._run(take_break)

@@ -151,19 +151,19 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel = self.panel
         panel.start_input.setText("09:00")
         panel.end_input.setText("10:00")
-        panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData("meeting"))
+        panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData("meeting"))
         panel.content_input.setPlainText("Agenda")
         panel.save_button.click()
         saved = self.repository.list_for_day(self.runtime.user.id, self.now.date())[0]
         panel.time_tabs.setCurrentIndex(1)
         self.assertEqual(panel.content_input.toPlainText(), "Agenda")
-        self.assertEqual(panel.work_type_combo.currentData(), "meeting")
+        self.assertEqual(panel.entry_type_combo.currentData(), "meeting")
         self.assertEqual(panel.view_model.auto_completed.id, saved.id)
-        panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData("training"))
+        panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData("training"))
         panel.content_input.setPlainText("Training agenda")
         panel.save_button.click()
         edited = self.repository.get_entry(self.runtime.user.id, saved.id)
-        self.assertEqual((edited.note, edited.work_type.value), ("Training agenda", "training"))
+        self.assertEqual((edited.note, edited.entry_type.value), ("Training agenda", "training"))
         panel.time_tabs.setCurrentIndex(0)
         self.assertEqual(panel.content_input.toPlainText(), edited.note)
         panel.start_input.setText("09:15")
@@ -179,7 +179,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.clear_button.click()
         panel.time_tabs.setCurrentIndex(1)
         self.assertEqual(panel.content_input.toPlainText(), "")
-        self.assertEqual(panel.work_type_combo.currentData(), "normal")
+        self.assertEqual(panel.entry_type_combo.currentData(), "normal")
         self.assertIsNone(panel.view_model.auto_completed)
 
     def test_active_timer_content_is_shared_without_editable_manual_boundaries(self):
@@ -191,7 +191,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.time_tabs.setCurrentIndex(0)
         self.assertEqual(panel.content_input.toPlainText(), "Active description")
         self.assertFalse(panel.start_input.isEnabled())
-        self.assertFalse(panel.work_type_combo.isEnabled())
+        self.assertFalse(panel.entry_type_combo.isEnabled())
         panel.content_input.setPlainText("Revised description")
         panel.save_button.click()
         self.assertEqual(panel.view_model.timer.content, "Revised description")
@@ -419,7 +419,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.window.refresh()
         panel.start_input.setText("12:00")
         panel.end_input.setText("13:00")
-        panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData("break"))
+        panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData("break"))
         panel.content_input.setPlainText("Lunch")
         panel.save_button.click()
         dialog = panel._replacement_dialog
@@ -493,7 +493,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertTrue(panel.new_record())
         panel.start_input.setText("00:00")
         panel.end_input.setText("01:00")
-        panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData("break"))
+        panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData("break"))
         panel.content_input.setPlainText("Rest")
         panel.save_button.click()
         replacement = panel._replacement_dialog
@@ -587,7 +587,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertTrue(picker.isEnabled())
         timed = self.repository.list_for_day(self.runtime.user.id, self.now.date())[-1]
         self.assertEqual(timed.context, record.context)
-        self.assertEqual(panel.work_type_combo.currentData(), "normal")
+        self.assertEqual(panel.entry_type_combo.currentData(), "normal")
         dialog.work_item_title_input.setText("Unsaved rename")
         with patch("worklogger.presentation.widgets.project_manager.QMessageBox.question", return_value=QMessageBox.StandardButton.No):
             dialog.editor_tabs.setCurrentIndex(0)
@@ -621,7 +621,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.start_input.setText("07:00")
         panel.end_input.setText("08:00")
         panel.content_input.setPlainText("Unsaved manual description")
-        panel.view_model.auto_work_type = "meeting"
+        panel.view_model.auto_entry_type = "meeting"
         panel.view_model.auto_content = "Timed meeting"
         draft = panel.view_model.draft
         self.window.hide()
@@ -630,7 +630,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         controller._start_action.trigger()
         self.assertFalse(controller._start_action.isEnabled())
         self.assertTrue(controller._end_action.isEnabled())
-        self.assertEqual(panel.view_model.timer.work_type.value, "meeting")
+        self.assertEqual(panel.view_model.timer.entry_type.value, "meeting")
         self.assertEqual(panel.view_model.draft, draft)
         panel.time_tabs.setCurrentIndex(1)
         panel.is_busy = True
@@ -643,26 +643,26 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertTrue(controller._start_action.isEnabled())
         self.assertFalse(controller._end_action.isEnabled())
         entry = self.repository.list_for_day(self.runtime.user.id, self.now.date())[0]
-        self.assertEqual((entry.note, entry.work_type.value, entry.worked_hours()), ("Timed meeting", "meeting", 1))
+        self.assertEqual((entry.note, entry.entry_type.value, entry.worked_hours()), ("Timed meeting", "meeting", 1))
         self.assertEqual(panel.view_model.draft, draft)
         self.assertTrue(self.window.isHidden())
         panel.clear_button.click()
         self.warning.assert_not_called()
 
     def test_custom_type_management_and_manual_automatic_recording_preserve_saved_categories(self):
-        from worklogger.presentation.widgets.work_type_manager import WorkTypeManagerDialog
+        from worklogger.presentation.widgets.entry_type_manager import EntryTypeManagerDialog
         from worklogger.presentation.settings import SettingsWorkflowController
-        from worklogger.presentation.viewmodels.work_types import WorkTypeManagerViewModel
+        from worklogger.presentation.viewmodels.entry_types import EntryTypeManagerViewModel
         from tests.presentation.test_settings_presentation import _view_model, MemorySettingsRepository
         from tests.presentation.test_settings_workflow import FakeAuthViewModel, FakeDataManagementViewModel
         panel = self.panel
         controller = SettingsWorkflowController(settings_view_model=_view_model(MemorySettingsRepository()),
             auth_view_model=FakeAuthViewModel(), user=self.runtime.user,
             data_management_view_model=FakeDataManagementViewModel(),
-            work_types_view_model=WorkTypeManagerViewModel(panel.view_model.service.work_types))
+            entry_types_view_model=EntryTypeManagerViewModel(panel.view_model.service.entry_types))
         settings = controller.create_page()
         self.addCleanup(settings.deleteLater)
-        settings.work_types_changed.connect(panel.refresh_work_types)
+        settings.entry_types_changed.connect(panel.refresh_entry_types)
         definitions = []
 
         def create_type(dialog):
@@ -672,21 +672,21 @@ class TimeEntryWorkflowTests(unittest.TestCase):
             definitions.append(dialog.type_list.currentItem().data(256))
             return 1
 
-        with patch.object(WorkTypeManagerDialog, "exec", create_type):
-            settings.manage_work_types_button.click()
+        with patch.object(EntryTypeManagerDialog, "exec", create_type):
+            settings.manage_entry_types_button.click()
         definition = definitions[0]
-        panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData(definition.value))
+        panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData(definition.value))
         panel.start_input.setText("09:00")
         panel.end_input.setText("10:00")
         panel.save_button.click()
         first = self.repository.list_for_day(self.runtime.user.id, self.now.date())[0]
-        self.assertEqual((first.work_type.label, first.worked_hours()), ("Research", 1))
-        self.assertEqual(panel.work_type_combo.currentData(), definition.value)
+        self.assertEqual((first.entry_type.label, first.worked_hours()), ("Research", 1))
+        self.assertEqual(panel.entry_type_combo.currentData(), definition.value)
         self.assertTrue(panel.new_record())
-        self.assertEqual(panel.work_type_combo.currentData(), "normal")
+        self.assertEqual(panel.entry_type_combo.currentData(), "normal")
         panel.time_tabs.setCurrentIndex(1)
         self.now += timedelta(hours=1)
-        panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData(definition.value))
+        panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData(definition.value))
         panel.clock_in_button.click()
         panel.content_input.setPlainText("Ongoing research")
 
@@ -697,18 +697,18 @@ class TimeEntryWorkflowTests(unittest.TestCase):
             dialog.save_button.click()
             return 1
 
-        with patch.object(WorkTypeManagerDialog, "exec", edit_type):
-            settings.manage_work_types_button.click()
-        self.assertEqual(panel.work_type_combo.currentText(), "Research")
+        with patch.object(EntryTypeManagerDialog, "exec", edit_type):
+            settings.manage_entry_types_button.click()
+        self.assertEqual(panel.entry_type_combo.currentText(), "Research")
         self.assertEqual(panel.content_input.toPlainText(), "Ongoing research")
-        self.assertEqual(panel.view_model.timer.work_type.category, "work")
+        self.assertEqual(panel.view_model.timer.entry_type.category, "work")
         self.now += timedelta(hours=1)
         panel.clock_out_button.click()
         self.assertEqual(len(self.repository.list_for_day(self.runtime.user.id, self.now.date())), 2)
         panel.edit_entry(first)
         panel.content_input.setPlainText("Revised description")
         panel.save_button.click()
-        self.assertEqual(self.repository.get_entry(self.runtime.user.id, first.id).work_type.label, "Research")
+        self.assertEqual(self.repository.get_entry(self.runtime.user.id, first.id).entry_type.label, "Research")
         self.assertEqual(sum(entry.worked_hours() for entry in self.repository.list_for_day(self.runtime.user.id, self.now.date())), 2)
         self.warning.assert_not_called()
 
@@ -744,7 +744,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel = self.panel
         panel.start_input.setText("09:00")
         panel.end_input.setText("10:00")
-        panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData("meeting"))
+        panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData("meeting"))
         panel.content_input.setPlainText("Draft description")
         from worklogger.presentation.widgets.time_picker import TimePickerDialog
         panel.start_input.actions()[0].trigger()
@@ -761,38 +761,38 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.refresh_ai_availability()
         panel.polish_button.click()
         self.assertEqual(panel.content_input.toPlainText(), "Prepared agenda")
-        self.assertEqual((panel.start_input.text(), panel.end_input.text(), panel.work_type_combo.currentData()), ("09:15", "10:00", "meeting"))
+        self.assertEqual((panel.start_input.text(), panel.end_input.text(), panel.entry_type_combo.currentData()), ("09:15", "10:00", "meeting"))
         self.assertEqual(commands[0].context, "time_entry")
         self.assertEqual(self.repository.list_for_day(self.runtime.user.id, self.now.date()), ())
         panel.clear_button.click()
 
     def test_manual_create_select_update_and_delete_periods(self):
         panel = self.panel
-        self.assertEqual(panel.work_type_combo.itemData(panel.work_type_combo.count() - 1), "other")
+        self.assertEqual(panel.entry_type_combo.itemData(panel.entry_type_combo.count() - 1), "other")
         for start, end, kind, content in (("09:00", "11:00", "meeting", "Planning"),
                                          ("11:00", "12:00", "training", "Practice")):
             self.assertTrue(panel.new_record())
             panel.start_input.setText(start)
             panel.end_input.setText(end)
-            panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData(kind))
+            panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData(kind))
             panel.content_input.setPlainText(content)
             panel.save_button.click()
-            self.assertEqual(panel.work_type_combo.currentData(), kind)
+            self.assertEqual(panel.entry_type_combo.currentData(), kind)
             self.assertEqual(panel.start_input.text(), start)
             self.assertEqual(panel.content_input.toPlainText(), content)
         entries = self.repository.list_for_day(self.runtime.user.id, self.now.date())
         self.assertEqual(len(entries), 2)
-        self.assertEqual([entry.work_type.value for entry in entries], ["meeting", "training"])
+        self.assertEqual([entry.entry_type.value for entry in entries], ["meeting", "training"])
         records = self.window.calendar_page.records_widget.entry_buttons
         self.assertEqual(len(records), 2)
         current = records[entries[0].id]
         current.click()
         self.assertEqual(panel.view_model.draft.original.id, entries[0].id)
-        self.assertEqual(panel.work_type_combo.currentData(), "meeting")
+        self.assertEqual(panel.entry_type_combo.currentData(), "meeting")
         panel.content_input.setPlainText("Updated planning")
         panel.save_button.click()
         self.assertEqual(len(self.repository.list_for_day(self.runtime.user.id, self.now.date())), 2)
-        self.assertEqual(panel.work_type_combo.currentData(), "meeting")
+        self.assertEqual(panel.entry_type_combo.currentData(), "meeting")
         saved = self.repository.get_entry(self.runtime.user.id, entries[0].id)
         self.assertEqual(saved.note, "Updated planning")
         panel.edit_entry(saved)
@@ -849,7 +849,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
     def test_automatic_recording_and_fixed_breaks_have_distinct_effects(self):
         panel = self.panel
         panel.time_tabs.setCurrentIndex(1)
-        panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData("meeting"))
+        panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData("meeting"))
         panel.content_input.setPlainText("Planning")
         panel.clock_in_button.click()
         self.assertFalse(panel.break_button.isEnabled())
@@ -859,7 +859,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.save_button.click()
         self.assertEqual(self.repository.list_for_day(self.runtime.user.id, self.now.date()), ())
         self.assertEqual(panel.view_model.service.timer.content, "Agenda")
-        self.assertEqual(panel.work_type_combo.currentData(), "meeting")
+        self.assertEqual(panel.entry_type_combo.currentData(), "meeting")
         panel.clear_button.click()
         self.assertIsNotNone(panel.view_model.service.timer)
         self.assertEqual(panel.view_model.service.timer.content, "Agenda")
@@ -872,34 +872,34 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.break_button.click()
         entries = self.repository.list_for_day(self.runtime.user.id, self.now.date())
         self.assertEqual(len(entries), 2)
-        self.assertEqual((entries[-1].work_type.value, entries[-1].start_time, entries[-1].end_time), ("break", "12:00", "13:00"))
+        self.assertEqual((entries[-1].entry_type.value, entries[-1].start_time, entries[-1].end_time), ("break", "12:00", "13:00"))
         self.assertIsNone(panel.view_model.service.timer)
-        self.assertEqual(panel.work_type_combo.currentData(), "break")
+        self.assertEqual(panel.entry_type_combo.currentData(), "break")
         panel.clear_button.click()
-        self.assertEqual(panel.work_type_combo.currentData(), "normal")
+        self.assertEqual(panel.entry_type_combo.currentData(), "normal")
         self.now += timedelta(hours=1)
         panel._tick()
         self.assertIsNone(panel.view_model.service.timer)
-        panel.work_type_combo.setCurrentIndex(panel.work_type_combo.findData("meeting"))
+        panel.entry_type_combo.setCurrentIndex(panel.entry_type_combo.findData("meeting"))
         panel.clock_in_button.click()
-        self.assertEqual(panel.view_model.service.timer.work_type.value, "meeting")
+        self.assertEqual(panel.view_model.service.timer.entry_type.value, "meeting")
         self.now = self.now.replace(hour=16, minute=0)
         panel.content_input.setPlainText("Review")
         panel.clock_out_button.click()
-        self.assertEqual(panel.work_type_combo.currentData(), "meeting")
+        self.assertEqual(panel.entry_type_combo.currentData(), "meeting")
         entries = self.repository.list_for_day(self.runtime.user.id, self.now.date())
         self.assertEqual(len(entries), 3)
-        self.assertEqual([entry.work_type.value for entry in entries], ["meeting", "break", "meeting"])
+        self.assertEqual([entry.entry_type.value for entry in entries], ["meeting", "break", "meeting"])
         self.assertEqual(self.repository.get_for_day(self.runtime.user.id, self.now.date()).worked_hours(), 6)
         panel.content_input.setPlainText("Updated review")
         panel.save_button.click()
         self.assertEqual(self.repository.get_entry(self.runtime.user.id, entries[-1].id).note, "Updated review")
         self.assertEqual(len(self.repository.list_for_day(self.runtime.user.id, self.now.date())), 3)
-        self.assertEqual(panel.work_type_combo.currentData(), "meeting")
+        self.assertEqual(panel.entry_type_combo.currentData(), "meeting")
         panel.clear_button.click()
-        self.assertEqual(panel.work_type_combo.currentData(), "normal")
+        self.assertEqual(panel.entry_type_combo.currentData(), "normal")
         panel.clock_in_button.click()
-        self.assertEqual(panel.view_model.service.timer.work_type.value, "normal")
+        self.assertEqual(panel.view_model.service.timer.entry_type.value, "normal")
         self.warning.assert_not_called()
 
     def test_break_shortcut_records_without_starting_a_timer(self):
@@ -910,7 +910,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.break_button.click()
         entries = self.repository.list_for_day(self.runtime.user.id, self.now.date())
         self.assertEqual(len(entries), 1)
-        self.assertEqual((entries[0].work_type.value, entries[0].start_time, entries[0].end_time), ("break", "09:00", "10:00"))
+        self.assertEqual((entries[0].entry_type.value, entries[0].start_time, entries[0].end_time), ("break", "09:00", "10:00"))
         self.assertIsNone(panel.view_model.service.timer)
         self.assertFalse(panel.clock_out_button.isEnabled())
         card = self.window.calendar_page.records_widget.entry_buttons[entries[0].id]

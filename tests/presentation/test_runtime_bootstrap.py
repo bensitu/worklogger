@@ -29,7 +29,7 @@ from worklogger.config.constants import (
 )
 from worklogger.domain.shared.errors import CancellationError
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.models import WorkType
+from worklogger.domain.worklog.models import EntryType
 from worklogger.infrastructure.repositories import SQLiteSettingsRepository, SQLiteWorkLogRepository
 from worklogger.infrastructure.i18n import _, get_language, set_language
 from worklogger.infrastructure.language_preferences import LanguagePreferences
@@ -306,7 +306,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             try:
                 self.assertEqual(get_language(), "ja_JP")
                 page = first.value.window.settings_page
-                self.assertTrue(page.manage_work_types_button.isEnabled())
+                self.assertTrue(page.manage_entry_types_button.isEnabled())
                 self.assertEqual(page.language_combo.currentData(), "ja_JP")
                 self.assertIsNone(self.preferences.load())
                 page.language_combo.setCurrentIndex(page.language_combo.findData("en_US"))
@@ -532,7 +532,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             ).get_for_day(runtime.value.user.id, date(2026, 4, 20))
             self.assertIsNotNone(saved)
             assert saved is not None
-            self.assertEqual(saved.work_type, WorkType.NORMAL)
+            self.assertEqual(saved.entry_type, EntryType.NORMAL)
             self.assertEqual(saved.note, "SQLite backed")
             runtime.value.window.close()
 

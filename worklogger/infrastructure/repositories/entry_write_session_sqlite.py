@@ -73,10 +73,10 @@ class EntryWriteSession:
                 raise ValueError("worklog_entry_overlap")
 
     def insert(self, record: WorkLog, *, historical: bool = False, preserve_identity: bool = False) -> int:
-        columns = 'user_id,d,start,end,"break",note,work_type,overnight,started_at,ended_at'
-        columns += ",work_type_label,work_type_category"
+        columns = 'user_id,d,start,end,"break",note,entry_type,overnight,started_at,ended_at'
+        columns += ",entry_type_label,entry_type_category"
         validate_record_context(self._connection, record, historical=historical)
-        columns += ",project_id,work_item_id,project_label,work_item_label"
+        columns += ",project_id,work_item_id,project_label,work_item_label,work_mode"
         values = (*self._storage.entry_values(record), record.capture_id)
         columns += ",capture_id"
         if preserve_identity:

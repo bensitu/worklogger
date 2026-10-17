@@ -644,7 +644,7 @@ class AppWindowTests(unittest.TestCase):
         self.assertIsNone(view.entry_panel.view_model.draft.original)
         view.entry_panel.start_input.setText("1000")
         view.entry_panel.end_input.setText("1200")
-        view.entry_panel.work_type_combo.setCurrentIndex(view.entry_panel.work_type_combo.findData("meeting"))
+        view.entry_panel.entry_type_combo.setCurrentIndex(view.entry_panel.entry_type_combo.findData("meeting"))
         view.entry_panel.save_button.click()
         entries = repository.list_for_day(1, date(2026, 4, 20))
         self.assertEqual(len(entries), 2)

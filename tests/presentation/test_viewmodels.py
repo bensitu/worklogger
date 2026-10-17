@@ -17,7 +17,7 @@ from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.calendar.repositories import CalendarEventRepository
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import WorkLog, EntryType
 from worklogger.presentation.theme import ThemeEngine, normalize_hex_color
 from worklogger.presentation.viewmodels import (
     CalendarDisplayOptions,
@@ -113,7 +113,7 @@ class PresentationViewModelTests(unittest.TestCase):
         end_time: str | None,
         break_hours: float,
         note: str,
-        work_type: WorkType,
+        entry_type: EntryType,
     ) -> WorkLog:
         result = self.save_handler.handle(
             SaveWorkLogCommand(
@@ -123,7 +123,7 @@ class PresentationViewModelTests(unittest.TestCase):
                 end_time=end_time,
                 break_hours=break_hours,
                 note=note,
-                work_type=work_type.value,
+                entry_type=entry_type.value,
             )
         )
         self.assertTrue(result.ok, result.error)
@@ -137,7 +137,7 @@ class PresentationViewModelTests(unittest.TestCase):
             end_time="09:00",
             break_hours=1.0,
             note="Night shift",
-            work_type=WorkType.NORMAL,
+            entry_type=EntryType.NORMAL,
         )
         self.save_work_log(
             date(2026, 4, 21),
@@ -145,14 +145,14 @@ class PresentationViewModelTests(unittest.TestCase):
             end_time=None,
             break_hours=0.0,
             note="Leave",
-            work_type=WorkType.PAID_LEAVE,
+            entry_type=EntryType.PAID_LEAVE,
         )
         self.work_logs.save(
             WorkLog(
                 user_id=1,
                 day=date(2026, 4, 22),
                 note="Standalone note",
-                work_type=WorkType.NORMAL,
+                entry_type=EntryType.NORMAL,
             )
         )
         events = GetCalendarEventsForRangeHandler(
@@ -195,12 +195,12 @@ class PresentationViewModelTests(unittest.TestCase):
         self.assertEqual(selected.text_lines, ("20", "10.0h", "+2.0h"))
         self.assertTrue(selected.show_overnight_marker)
         self.assertEqual(selected.event_count, 1)
-        self.assertEqual(selected.work_type_marker_color, None)
+        self.assertEqual(selected.entry_type_marker_color, None)
 
         leave = next(cell for cell in state.cells if cell.day == date(2026, 4, 21))
         self.assertTrue(leave.is_leave)
         self.assertEqual(leave.leave_hours, 8.0)
-        self.assertEqual(leave.work_type_marker_color, "#2a9a2a")
+        self.assertEqual(leave.entry_type_marker_color, "#2a9a2a")
 
         note = next(cell for cell in state.cells if cell.day == date(2026, 4, 22))
         self.assertTrue(note.has_note_marker)
@@ -249,7 +249,7 @@ class PresentationViewModelTests(unittest.TestCase):
             end_time="18:00",
             break_hours=1.0,
             note="",
-            work_type=WorkType.NORMAL,
+            entry_type=EntryType.NORMAL,
         )
         self.save_work_log(
             date(2026, 4, 21),
@@ -257,7 +257,7 @@ class PresentationViewModelTests(unittest.TestCase):
             end_time="20:00",
             break_hours=1.0,
             note="",
-            work_type=WorkType.REMOTE,
+            entry_type=EntryType.REMOTE,
         )
         self.save_work_log(
             date(2026, 4, 22),
@@ -265,7 +265,7 @@ class PresentationViewModelTests(unittest.TestCase):
             end_time=None,
             break_hours=0.0,
             note="Leave",
-            work_type=WorkType.PAID_LEAVE,
+            entry_type=EntryType.PAID_LEAVE,
         )
         view_model = StatsPanelViewModel(
             user_id=1,
@@ -303,14 +303,14 @@ class PresentationViewModelTests(unittest.TestCase):
         self.assertEqual(style.key, "selected")
         self.assertEqual(style.background, "#4f8ef7")
         self.assertEqual(
-            engine.work_type_marker_color(WorkType.BUSINESS_TRIP),
+            engine.entry_type_marker_color(EntryType.BUSINESS_TRIP),
             "#e07800",
         )
         for dark in (False, True):
             colors = []
-            for work_type in WorkType:
-                marker = engine.work_type_marker_color(work_type, dark=dark)
-                if work_type in (WorkType.NORMAL, WorkType.BREAK):
+            for entry_type in EntryType:
+                marker = engine.entry_type_marker_color(entry_type, dark=dark)
+                if entry_type in (EntryType.NORMAL, EntryType.BREAK):
                     self.assertIsNone(marker)
                 else:
                     self.assertIsNotNone(marker)

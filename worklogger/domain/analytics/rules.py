@@ -8,7 +8,7 @@ from collections.abc import Callable, Iterable, Sequence
 
 from worklogger.config.constants import DEFAULT_LEAVE_HOURS
 from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBundle, MonthStats
-from worklogger.domain.worklog.models import CustomWorkType, WorkLog
+from worklogger.domain.worklog.models import CustomEntryType, WorkLog
 from worklogger.domain.reporting.periods import weekly_period
 from worklogger.domain.settings.work_schedule import WorkSchedule
 
@@ -94,12 +94,12 @@ def dashboard_data(
     modes: dict[str, float] = {}
     mode_labels: dict[str, str] = {}
     for row in (entry for record in current for entry in (record.entries or (record,))):
-        key = "leave" if row.is_leave else row.work_type.value
+        key = "leave" if row.is_leave else row.entry_type.value
         hours = row.leave_hours(standard_hours=standard_hours) if row.is_leave else row.worked_hours()
         if hours > 0:
             modes[key] = modes.get(key, 0.0) + hours
-            if isinstance(row.work_type, CustomWorkType) and not row.is_leave:
-                mode_labels[key] = row.work_type.label
+            if isinstance(row.entry_type, CustomEntryType) and not row.is_leave:
+                mode_labels[key] = row.entry_type.label
 
     daily = []
     if scope == "quarterly":

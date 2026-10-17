@@ -4,14 +4,27 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
-from enum import Enum
+from enum import Enum, StrEnum
 from uuid import UUID
 from worklogger.domain.projects.models import WorkContext
 from worklogger.config.constants import DEFAULT_LEAVE_HOURS, LEAVE_TYPES, MAX_SHIFT_HOURS
 
 
+class EntryCategory(StrEnum):
+    WORK = "work"
+    BREAK = "break"
+    LEAVE = "leave"
+
+
+class WorkMode(StrEnum):
+    ONSITE = "onsite"
+    REMOTE = "remote"
+    BUSINESS_TRIP = "business_trip"
+    OTHER = "other"
+
+
 @dataclass(frozen=True)
-class CustomWorkType:
+class CustomEntryType:
     value: str
     label: str
     category: str = "work"
@@ -20,17 +33,18 @@ class CustomWorkType:
 
     def __post_init__(self):
         if not isinstance(self.value, str) or len(self.value) != 39 or not self.value.startswith("custom:"):
-            raise ValueError("work_type_invalid")
+            raise ValueError("entry_type_invalid")
         try:
             valid_id = UUID(self.value[7:]).hex == self.value[7:]
         except ValueError:
             valid_id = False
         if not valid_id or not isinstance(self.label, str) or not self.label.strip() or len(self.label) > 80 or any(ord(char) < 32 for char in self.label):
-            raise ValueError("work_type_invalid")
+            raise ValueError("entry_type_invalid")
         if self.category not in {"work", "break", "leave"} or not isinstance(self.revision, int) or self.revision < 0:
-            raise ValueError("work_type_invalid")
+            raise ValueError("entry_type_invalid")
+        object.__setattr__(self, "category", EntryCategory(self.category))
 
-class WorkType(str, Enum):
+class EntryType(str, Enum):
     NORMAL = "normal"
     REMOTE = "remote"
     BUSINESS_TRIP = "business_trip"
@@ -41,6 +55,16 @@ class WorkType(str, Enum):
     TRAINING = "training"
     BREAK = "break"
     OTHER = "other"
+
+    @property
+    def category(self) -> EntryCategory:
+        if self.value in LEAVE_TYPES:
+            return EntryCategory.LEAVE
+        return EntryCategory.BREAK if self == EntryType.BREAK else EntryCategory.WORK
+
+    @property
+    def is_legacy(self) -> bool:
+        return self in {EntryType.REMOTE, EntryType.BUSINESS_TRIP}
 
 
 @dataclass(frozen=True)
@@ -77,7 +101,7 @@ class WorkLog:
     end_time: str | None = None
     break_hours: float = 0.0
     note: str = ""
-    work_type: WorkType | CustomWorkType = WorkType.NORMAL
+    entry_type: EntryType | CustomEntryType = EntryType.NORMAL
     overnight: bool = False
     started_at: datetime | None = None
     ended_at: datetime | None = None
@@ -86,6 +110,7 @@ class WorkLog:
     capture_id: str | None = None
     entries: tuple[WorkLog, ...] = ()
     context: WorkContext = WorkContext()
+    work_mode: WorkMode | None = None
 
     @property
     def has_times(self) -> bool:
@@ -93,23 +118,23 @@ class WorkLog:
 
     @property
     def is_note_only(self) -> bool:
-        return not self.has_times and self.work_type == WorkType.NORMAL and self.break_hours == 0 and bool(self.note)
+        return not self.has_times and self.entry_type == EntryType.NORMAL and self.break_hours == 0 and bool(self.note)
 
     @property
     def is_leave(self) -> bool:
         if self.entries:
             return all(entry.is_leave for entry in self.entries)
-        if isinstance(self.work_type, CustomWorkType):
-            return self.work_type.category == "leave"
-        from worklogger.domain.worklog.rules import normalize_work_type
+        from worklogger.domain.worklog.rules import normalize_entry_type
 
-        return normalize_work_type(self.work_type).value in LEAVE_TYPES
+        return normalize_entry_type(self.entry_type).category == EntryCategory.LEAVE
 
     @property
     def is_break(self) -> bool:
         if self.entries:
             return all(entry.is_break for entry in self.entries)
-        return self.work_type.category == "break" if isinstance(self.work_type, CustomWorkType) else self.work_type == WorkType.BREAK
+        from worklogger.domain.worklog.rules import normalize_entry_type
+
+        return normalize_entry_type(self.entry_type).category == EntryCategory.BREAK
 
     @property
     def is_overnight(self) -> bool:

@@ -12,12 +12,12 @@ from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.preview_list import PreviewListWidget
 
 
-class WorkTypeManagerDialog(QDialog):
+class EntryTypeManagerDialog(QDialog):
     def __init__(self, view_model, parent=None):
         super().__init__(parent)
         self._view_model = view_model
         self._selected = None
-        self.setObjectName("work_type_manager_dialog")
+        self.setObjectName("entry_type_manager_dialog")
         self.setWindowTitle(_("Work types"))
         apply_window_icon(self)
         self.resize(700, 420)
@@ -25,7 +25,7 @@ class WorkTypeManagerDialog(QDialog):
         root.setContentsMargins(20, 20, 20, 16)
         body = QHBoxLayout()
         self.type_list = PreviewListWidget(spacing=0)
-        self.type_list.setObjectName("custom_work_type_list_widget")
+        self.type_list.setObjectName("custom_entry_type_list_widget")
         self.type_list.setMinimumWidth(240)
         self.type_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         body.addWidget(self.type_list, 1)
@@ -76,7 +76,7 @@ class WorkTypeManagerDialog(QDialog):
         self._new()
 
     def _reload(self):
-        result = self._view_model.list_work_types()
+        result = self._view_model.list_entry_types()
         if not self._check(result):
             return
         self.type_list.clear()
@@ -104,7 +104,7 @@ class WorkTypeManagerDialog(QDialog):
         self.archive_button.setEnabled(self._selected is not None)
 
     def _save(self):
-        result = self._view_model.save_work_type(self.name_input.text(), self.category_combo.currentData(), self._selected)
+        result = self._view_model.save_entry_type(self.name_input.text(), self.category_combo.currentData(), self._selected)
         if self._check(result):
             self._reload()
             for row in range(self.type_list.count()):
@@ -119,7 +119,7 @@ class WorkTypeManagerDialog(QDialog):
             _("Hide this type from new records? Existing records will not change."),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
             return
-        if self._check(self._view_model.archive_work_type(self._selected)):
+        if self._check(self._view_model.archive_entry_type(self._selected)):
             self._reload()
             self._new()
 

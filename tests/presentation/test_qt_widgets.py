@@ -60,7 +60,7 @@ def _calendar_state() -> CalendarMonthViewState:
                 is_weekend=day.weekday() >= 5,
                 is_holiday=False,
                 holiday_name="",
-                work_type="normal",
+                entry_type="normal",
                 is_leave=False,
                 worked_hours=10.0 if is_selected else 0.0,
                 overtime_hours=2.0 if is_selected else 0.0,
@@ -68,7 +68,7 @@ def _calendar_state() -> CalendarMonthViewState:
                 weekly_total_hours=10.0 if is_selected else 0.0,
                 has_note_marker=is_selected,
                 note_tooltip="Night shift",
-                work_type_marker_color=None,
+                entry_type_marker_color=None,
                 show_overnight_marker=is_selected,
                 event_count=2 if is_selected else 0,
             )
@@ -83,19 +83,19 @@ def _calendar_state() -> CalendarMonthViewState:
 
 
 class QtWidgetTests(unittest.TestCase):
-    def test_work_type_options_preserve_values_and_follow_calendar_marker_colors(self):
+    def test_entry_type_options_preserve_values_and_follow_calendar_marker_colors(self):
         from PySide6.QtWidgets import QComboBox
-        from worklogger.domain.worklog.models import CustomWorkType, WorkType
-        from worklogger.presentation.widgets.work_type_options import add_work_type_option
+        from worklogger.domain.worklog.models import CustomEntryType, EntryType
+        from worklogger.presentation.widgets.entry_type_options import add_entry_type_option
 
         app = _app()
         old_style, old_palette = app.styleSheet(), app.palette()
         old_context = app.property("worklogger_theme_context")
         combo = QComboBox()
-        definitions = (*WorkType, *(CustomWorkType(f"custom:{index:032x}", category, category)
+        definitions = (*EntryType, *(CustomEntryType(f"custom:{index:032x}", category, category)
                                     for index, category in enumerate(("work", "break", "leave"), 1)))
         for definition in definitions:
-            add_work_type_option(combo, definition)
+            add_entry_type_option(combo, definition)
         combo.setCurrentIndex(combo.findData("meeting"))
         engine = ThemeEngine()
         try:
@@ -104,7 +104,7 @@ class QtWidgetTests(unittest.TestCase):
                 for index, definition in enumerate(definitions):
                     self.assertEqual(combo.itemData(index), definition.value)
                     icon = combo.itemIcon(index)
-                    expected = engine.work_type_marker_color(definition, dark=dark)
+                    expected = engine.entry_type_marker_color(definition, dark=dark)
                     self.assertEqual(icon.isNull(), expected is None)
                     if expected is None:
                         continue

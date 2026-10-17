@@ -351,7 +351,7 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
     def test_settings_groups_and_processing_feedback_fit_localized_pages(self):
         from PySide6.QtWidgets import QLabel
         from worklogger.app.job_runner import JobHandle
-        from worklogger.domain.worklog.models import WorkLog, WorkType
+        from worklogger.domain.worklog.models import WorkLog, EntryType
         from tests.presentation.test_app_window import _window, MemoryWorkLogRepository
         from types import SimpleNamespace
         class DeferredRunner:
@@ -402,7 +402,7 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                     panel.view_model._rewrite_handler = SimpleNamespace(available=True)
                     panel.refresh_ai_availability()
                     panel._polish_task._runner = DeferredRunner()
-                    panel.view_model.select(WorkLog(1, window._selected_day, "09:00", "10:00", note="Meeting agenda", work_type=WorkType.MEETING, id=1))
+                    panel.view_model.select(WorkLog(1, window._selected_day, "09:00", "10:00", note="Meeting agenda", entry_type=EntryType.MEETING, id=1))
                     panel._render_editor()
                     window.show()
                     panel.polish_button.click()
@@ -471,7 +471,7 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
         from PySide6.QtGui import QImage, QPainter
         from PySide6.QtPdf import QPdfDocument
         from worklogger.domain.reporting.timesheets import Timesheet
-        from worklogger.domain.worklog.models import WorkLog, WorkType
+        from worklogger.domain.worklog.models import WorkLog, EntryType
         from worklogger.domain.projects.models import WorkContext
         from worklogger.infrastructure.export.timesheets import TimesheetXlsxExporter, TimesheetPdfExporter
         old_language = get_language()
@@ -485,7 +485,7 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                     day = date(2026, 10, number)
                     entries.extend((WorkLog(1, day, "09:00", "12:00", note="Planning and research / \u5de5\u4f5c\u5185\u5bb9 / \u52e4\u52d9",
                         context=WorkContext(project_label="Research", work_item_label="Review")),
-                        WorkLog(1, day, "12:00", "13:00", work_type=WorkType.BREAK),
+                        WorkLog(1, day, "12:00", "13:00", entry_type=EntryType.BREAK),
                         WorkLog(1, day, "14:00", "18:00", note="Implementation and validation")))
                 snapshot = Timesheet(date(2026, 10, 1), date(2026, 10, 31), "Mary", datetime(2026, 11, 1, tzinfo=timezone.utc), 8, tuple(entries))
                 for language in available_languages():

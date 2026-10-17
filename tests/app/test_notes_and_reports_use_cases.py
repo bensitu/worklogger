@@ -29,7 +29,7 @@ from worklogger.domain.quicklog.models import QuickLog
 from worklogger.domain.reporting.templates import ReportTemplate
 from worklogger.domain.reporting.templates import render_template
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import WorkLog, EntryType
 
 
 class MemoryDailyNoteRepository:
@@ -250,7 +250,7 @@ class NotesReportsUseCaseTests(unittest.TestCase):
                     end_time="18:00",
                     break_hours=1.0,
                     note="Implemented notes\nContinued implementation",
-                    work_type=WorkType.NORMAL,
+                    entry_type=EntryType.NORMAL,
                 ),
                 WorkLog(
                     user_id=1,
@@ -259,13 +259,13 @@ class NotesReportsUseCaseTests(unittest.TestCase):
                     end_time="20:00",
                     break_hours=1.0,
                     note="Release support",
-                    work_type=WorkType.REMOTE,
+                    entry_type=EntryType.REMOTE,
                 ),
                 WorkLog(
                     user_id=1,
                     day=date(2026, 5, 13),
                     note="Vacation",
-                    work_type=WorkType.PAID_LEAVE,
+                    entry_type=EntryType.PAID_LEAVE,
                 ),
             )
         )

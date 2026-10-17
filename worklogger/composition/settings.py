@@ -29,7 +29,7 @@ from worklogger.app.use_cases.user_profile import UserProfileService
 from worklogger.app.use_cases.work_logs import (
     GetAllWorkLogsHandler,
 )
-from worklogger.app.use_cases.work_types import WorkTypeService
+from worklogger.app.use_cases.entry_types import EntryTypeService
 from worklogger.composition.context import (
     RuntimeAuthRepository,
     RuntimeHandlers,
@@ -72,7 +72,7 @@ from worklogger.presentation.viewmodels import (
     UserManagementViewModel,
 )
 from worklogger.presentation.viewmodels.projects import ProjectManagerViewModel
-from worklogger.presentation.viewmodels.work_types import WorkTypeManagerViewModel
+from worklogger.presentation.viewmodels.entry_types import EntryTypeManagerViewModel
 
 
 def build_settings_workflow(
@@ -137,7 +137,7 @@ def build_settings_workflow(
             database_path=database_path,
         ),
         remember_session_store=remember_session_store,
-        work_types_view_model=WorkTypeManagerViewModel(WorkTypeService(user.id, repositories.work_types)),
+        entry_types_view_model=EntryTypeManagerViewModel(EntryTypeService(user.id, repositories.entry_types)),
         projects_view_model=ProjectManagerViewModel(ProjectService(user.id, repositories.projects)),
         local_inference=handlers.local_inference,
         ai_gateway=handlers.ai_gateway,

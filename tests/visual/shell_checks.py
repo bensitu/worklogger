@@ -12,7 +12,7 @@ from PySide6.QtCore import qInstallMessageHandler
 from PySide6.QtWidgets import QApplication, QToolButton, QPushButton
 
 from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler, GetAnalyticsDashboardHandler
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import WorkLog, EntryType
 from worklogger.domain.auth.models import User
 from worklogger.infrastructure.export import AnalyticsCsvExporter, AnalyticsPdfExporter
 from worklogger.infrastructure.i18n import set_language, get_language, available_languages
@@ -37,7 +37,7 @@ class SampleSettingsWorkflow:
 def sample_window():
     records = MemoryWorkLogRepository()
     for index in range(1, 21):
-        records.save(WorkLog(1, date(2026, 4, index), "09:00", "18:30", 1.0, "Feature work", WorkType.REMOTE if index % 3 == 0 else WorkType.NORMAL))
+        records.save(WorkLog(1, date(2026, 4, index), "09:00", "18:30", 1.0, "Feature work", EntryType.REMOTE if index % 3 == 0 else EntryType.NORMAL))
     model = AnalyticsViewModel(
         user_id=1, bundle_handler=GetAnalyticsBundleHandler(records),
         dashboard_handler=GetAnalyticsDashboardHandler(records),
@@ -125,7 +125,7 @@ class ShellLayoutChecks(unittest.TestCase):
                                 self.assertTrue(view.account_label.alignment() & Qt.AlignmentFlag.AlignRight)
                                 panel = view.entry_panel
                                 caption = next(label for label in panel.findChildren(QLabel)
-                                               if label.buddy() is panel.work_type_combo)
+                                               if label.buddy() is panel.entry_type_combo)
                                 self.assertLess(panel.time_tabs.geometry().bottom(), caption.mapTo(panel, QPoint()).y())
                                 if mode == 1:
                                     for button in (panel.clock_in_button, panel.clock_out_button, panel.break_button,

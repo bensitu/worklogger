@@ -191,8 +191,8 @@ def _format_context(
     if work_logs:
         for record in sorted(work_logs, key=lambda item: item.day):
             for entry in record.entries or (record,):
-                type_label = getattr(entry.work_type, "label", None) or entry.work_type.value
-                category = getattr(entry.work_type, "category", "")
+                type_label = getattr(entry.entry_type, "label", None) or entry.entry_type.value
+                category = getattr(entry.entry_type, "category", "")
                 if category:
                     type_label += f" ({category})"
                 lines.append(

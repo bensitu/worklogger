@@ -16,7 +16,7 @@ from worklogger.domain.calendar.models import CalendarEvent, Holiday
 from worklogger.domain.notes.models import DailyNote
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import WorkLog, EntryType
 from worklogger.infrastructure.i18n import _, ngettext
 from worklogger.presentation.theme import CalendarCellStyle, ThemeEngine
 
@@ -68,7 +68,7 @@ class CalendarDayCell:
     is_weekend: bool
     is_holiday: bool
     holiday_name: str
-    work_type: str
+    entry_type: str
     is_leave: bool
     worked_hours: float
     overtime_hours: float
@@ -76,7 +76,7 @@ class CalendarDayCell:
     weekly_total_hours: float
     has_note_marker: bool
     note_tooltip: str
-    work_type_marker_color: str | None
+    entry_type_marker_color: str | None
     show_overnight_marker: bool
     event_count: int
 
@@ -296,7 +296,7 @@ class CalendarViewModel:
         if holiday_name:
             flags.add("holiday")
 
-        work_type = record.work_type.value if record else WorkType.NORMAL.value
+        entry_type = record.entry_type.value if record else EntryType.NORMAL.value
         worked_hours = record.worked_hours() if record else 0.0
         overtime_hours = (
             max(worked_hours - float(options.standard_work_hours), 0.0)
@@ -327,7 +327,7 @@ class CalendarViewModel:
             is_weekend=cell_day.weekday() >= 5,
             is_holiday=bool(holiday_name),
             holiday_name=holiday_name,
-            work_type=work_type,
+            entry_type=entry_type,
             is_leave=bool(record and record.is_leave),
             worked_hours=worked_hours,
             overtime_hours=overtime_hours,
@@ -335,8 +335,8 @@ class CalendarViewModel:
             weekly_total_hours=weekly_total_hours,
             has_note_marker=has_note_marker,
             note_tooltip=note_text[:200] if has_note_marker else "",
-            work_type_marker_color=self._theme_engine.work_type_marker_color(
-                record.work_type if record else work_type,
+            entry_type_marker_color=self._theme_engine.entry_type_marker_color(
+                record.entry_type if record else entry_type,
                 dark=dark,
             ),
             show_overnight_marker=bool(

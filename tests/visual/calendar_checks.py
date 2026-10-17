@@ -14,7 +14,7 @@ from PySide6.QtCore import QPoint, Qt
 from PySide6.QtWidgets import QApplication, QFrame, QVBoxLayout, QWidget
 
 from worklogger.domain.calendar.models import CalendarEvent
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import WorkLog, EntryType
 from worklogger.infrastructure.i18n import available_languages, set_language
 from worklogger.infrastructure.repositories import SQLiteCalendarEventRepository, SQLiteWorkLogRepository
 from tests.presentation.test_app_window import MemoryWorkLogRepository, _window
@@ -42,9 +42,9 @@ def may_records():
     for day in range(1, 32):
         if date(2026, 5, day).weekday() < 5:
             records.save(WorkLog(1, date(2026, 5, day), "09:00", "18:30", 1.0,
-                                 "Feature work", WorkType.NORMAL))
+                                 "Feature work", EntryType.NORMAL))
     records.save(WorkLog(1, date(2026, 5, 21), "22:00", "07:30", 1.0,
-                         "Night shift", WorkType.BUSINESS_TRIP))
+                         "Night shift", EntryType.BUSINESS_TRIP))
     selected = date(2026, 5, 21)
     database = os.environ.get("WORKLOGGER_QA_DATABASE")
     if database:
@@ -69,10 +69,10 @@ def may_records():
 
 
 class CalendarLayoutChecks(unittest.TestCase):
-    def test_work_type_popup_previews_match_calendar_colors_across_languages_and_themes(self):
+    def test_entry_type_popup_previews_match_calendar_colors_across_languages_and_themes(self):
         from PySide6.QtWidgets import QComboBox, QStyle, QStyleOptionComboBox, QStyleOptionViewItem
         from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
-        from worklogger.presentation.widgets.work_type_options import add_work_type_option
+        from worklogger.presentation.widgets.entry_type_options import add_entry_type_option
 
         configure_application_style()
         install_bundled_fonts()
@@ -91,8 +91,8 @@ class CalendarLayoutChecks(unittest.TestCase):
                 combo = QComboBox(panel)
                 layout.addWidget(combo)
                 try:
-                    for definition in WorkType:
-                        add_work_type_option(combo, definition)
+                    for definition in EntryType:
+                        add_entry_type_option(combo, definition)
                     combo.setFixedWidth(88)
                     panel.show()
                     for value in ("normal", "remote"):
@@ -131,8 +131,8 @@ class CalendarLayoutChecks(unittest.TestCase):
                     image = popup.grab().toImage()
                     colors = {image.pixelColor(x, y).name()
                               for x in range(image.width()) for y in range(image.height())}
-                    for definition in WorkType:
-                        marker = engine.work_type_marker_color(definition, dark=dark)
+                    for definition in EntryType:
+                        marker = engine.entry_type_marker_color(definition, dark=dark)
                         if marker:
                             self.assertIn(marker, colors)
                     directory = os.environ.get("WORKLOGGER_SCREENSHOTS")
@@ -149,7 +149,7 @@ class CalendarLayoutChecks(unittest.TestCase):
             self.app.setPalette(old_palette)
             self.app.setProperty("worklogger_theme_context", old_context)
 
-    def test_work_type_markers_render_in_light_dark_and_selected_cells(self):
+    def test_entry_type_markers_render_in_light_dark_and_selected_cells(self):
         from PySide6.QtGui import QColor
         from tests.presentation.test_qt_widgets import _calendar_state
         from worklogger.presentation.theme import ThemeEngine
@@ -161,17 +161,17 @@ class CalendarLayoutChecks(unittest.TestCase):
         old_context = self.app.property("worklogger_theme_context")
         button = CalendarDayButton()
         button.setFixedSize(84, 110)
-        types = (WorkType.NORMAL, WorkType.REMOTE, WorkType.MEETING, WorkType.TRAINING,
-                 WorkType.BREAK, WorkType.OTHER)
+        types = (EntryType.NORMAL, EntryType.REMOTE, EntryType.MEETING, EntryType.TRAINING,
+                 EntryType.BREAK, EntryType.OTHER)
         try:
             for theme, dark, selected in product(("blue", "liquid_glass"), (False, True), (False, True)):
                 engine.apply_to(self.app, theme, dark=dark)
                 style = engine.calendar_cell_style({"selected"} if selected else set(), theme=theme, dark=dark)
-                for work_type in types:
-                    marker = engine.work_type_marker_color(work_type, dark=dark)
-                    cell = replace(base, work_type=work_type.value, work_type_marker_color=marker,
+                for entry_type in types:
+                    marker = engine.entry_type_marker_color(entry_type, dark=dark)
+                    cell = replace(base, entry_type=entry_type.value, entry_type_marker_color=marker,
                                    is_selected=selected, style=style)
-                    button.set_cell(replace(cell, work_type_marker_color=None))
+                    button.set_cell(replace(cell, entry_type_marker_color=None))
                     before = button.grab().toImage().scaled(button.size())
                     button.set_cell(cell)
                     after = button.grab().toImage().scaled(button.size())
@@ -188,7 +188,7 @@ class CalendarLayoutChecks(unittest.TestCase):
                         target = Path(directory)
                         target.mkdir(parents=True, exist_ok=True)
                         self.assertTrue(button.grab().save(str(target /
-                            f"work-type-{theme}-{dark}-{selected}-{work_type.value}.png")))
+                            f"work-type-{theme}-{dark}-{selected}-{entry_type.value}.png")))
         finally:
             button.deleteLater()
             self.app.setStyleSheet(old_style)
@@ -469,7 +469,7 @@ class CalendarLayoutChecks(unittest.TestCase):
         item = WorkItem("2" * 32, project.id, "Review", archived=True)
         record = WorkLog(1, date(2026, 10, 10), "09:00", "10:00", note="Source material", id=1,
                          context=WorkContext(project.id, item.id, project.name, item.title))
-        model = SimpleNamespace(list_work_types=lambda: Result.success(()),
+        model = SimpleNamespace(list_entry_types=lambda: Result.success(()),
             project_inventory=lambda: Result.success(((project,), {project.id: (item,)})),
             search=lambda _criteria, **_options: Result.success(EntryPage((record,))))
         try:
@@ -513,12 +513,12 @@ class CalendarLayoutChecks(unittest.TestCase):
 
     def test_custom_type_manager_fits_long_names_and_accounting_controls(self):
         import tempfile
-        from worklogger.app.use_cases.work_types import WorkTypeService
+        from worklogger.app.use_cases.entry_types import EntryTypeService
         from worklogger.infrastructure.database import SQLiteConnectionFactory, MigrationRunner
         from worklogger.infrastructure.repositories import SQLiteAuthRepository
-        from worklogger.infrastructure.repositories.work_type_sqlite import SQLiteWorkTypeRepository
+        from worklogger.infrastructure.repositories.entry_type_sqlite import SQLiteEntryTypeRepository
         from worklogger.infrastructure.security import PBKDF2PasswordHasher
-        from worklogger.presentation.widgets.work_type_manager import WorkTypeManagerDialog
+        from worklogger.presentation.widgets.entry_type_manager import EntryTypeManagerDialog
         from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
 
         configure_application_style()
@@ -529,17 +529,17 @@ class CalendarLayoutChecks(unittest.TestCase):
             MigrationRunner(factory).run_pending()
             user = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000)).create_user(
                 "sample", "example-password", recovery_key=None, is_admin=False)
-            service = WorkTypeService(user.id, SQLiteWorkTypeRepository(factory))
+            service = EntryTypeService(user.id, SQLiteEntryTypeRepository(factory))
             service.save("Research and development across international product teams", "work")
             service.save("Lunch", "break")
             service.save("Personal leave", "leave")
 
             class Model:
-                def list_work_types(self):
+                def list_entry_types(self):
                     return service.list_types()
-                def save_work_type(self, label, category, previous=None):
+                def save_entry_type(self, label, category, previous=None):
                     return service.save(label, category, previous)
-                def archive_work_type(self, definition):
+                def archive_entry_type(self, definition):
                     return service.archive(definition)
 
             engine = ThemeEngine()
@@ -547,7 +547,7 @@ class CalendarLayoutChecks(unittest.TestCase):
                 set_language(language)
                 self.app.setPalette(engine.qt_palette(dark=dark))
                 self.app.setStyleSheet(engine.application_stylesheet(dark=dark))
-                dialog = WorkTypeManagerDialog(Model())
+                dialog = EntryTypeManagerDialog(Model())
                 try:
                     dialog.show()
                     self.app.processEvents()

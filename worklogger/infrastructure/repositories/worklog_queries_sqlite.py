@@ -20,7 +20,7 @@ class SQLiteWorkLogQueries:
             raise ValueError("record_search_invalid")
         conditions = ["w.user_id=?", "w.d BETWEEN ? AND ?", "date(w.d,'+0 days')=w.d"]
         parameters = [user_id, criteria.start.isoformat(), criteria.end.isoformat()]
-        for column, value in (("work_type", criteria.work_type), ("project_id", criteria.project_id), ("work_item_id", criteria.work_item_id)):
+        for column, value in (("entry_type", criteria.entry_type), ("project_id", criteria.project_id), ("work_item_id", criteria.work_item_id)):
             if value is not None:
                 conditions.append(f"w.{column}=?")
                 parameters.append(value)

@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (QComboBox, QHBoxLayout, QLabel, QLineEdit,
     QMessageBox, QPushButton, QSizePolicy, QStyle, QStyleOptionTabWidgetFrame,
     QTabWidget, QTextEdit, QToolButton, QVBoxLayout, QWidget, QStackedWidget)
 
-from worklogger.domain.worklog.models import CustomWorkType, WorkLog, WorkType
+from worklogger.domain.worklog.models import CustomEntryType, WorkLog, EntryType
 from worklogger.domain.worklog.replacement import EntryReplacement
 from worklogger.domain.worklog.rules import calc_shift_span_hours
 from worklogger.domain.shared.errors import InfrastructureError
@@ -21,7 +21,7 @@ from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 from worklogger.presentation.widgets.time_picker import TimePickerDialog
 from worklogger.presentation.widgets.work_context_picker import WorkContextPicker
-from worklogger.presentation.widgets.work_type_options import add_work_type_option, work_type_icon
+from worklogger.presentation.widgets.entry_type_options import add_entry_type_option, entry_type_icon
 from worklogger.presentation.processing import TextProcessingTask
 from worklogger.presentation.job_runner import owned_callback
 from worklogger.presentation.widgets.processing_progress import ProcessingProgress
@@ -128,13 +128,13 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         auto_layout.addWidget(self.auto_status_label)
         self.time_tabs.addTab(auto, _("Auto Record"))
 
-        self.work_type_combo = QComboBox()
-        self.work_type_combo.setObjectName("work_type_combo")
-        self.work_type_combo.setMinimumWidth(0)
-        self.work_type_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
-        self.work_type_combo.setMinimumContentsLength(1)
+        self.entry_type_combo = QComboBox()
+        self.entry_type_combo.setObjectName("entry_type_combo")
+        self.entry_type_combo.setMinimumWidth(0)
+        self.entry_type_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        self.entry_type_combo.setMinimumContentsLength(1)
         self._custom_types = ()
-        self._reload_work_types()
+        self._reload_entry_types()
         classification_row = QHBoxLayout()
         classification_row.setContentsMargins(0, 0, 0, 0)
         classification_row.setSpacing(8)
@@ -144,10 +144,10 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         type_column.setAlignment(Qt.AlignmentFlag.AlignTop)
         type_caption = QLabel(_("Work type"))
         type_caption.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        type_caption.setBuddy(self.work_type_combo)
+        type_caption.setBuddy(self.entry_type_combo)
         type_caption.setMinimumHeight(28)
         type_column.addWidget(type_caption)
-        type_column.addWidget(self.work_type_combo)
+        type_column.addWidget(self.entry_type_combo)
         classification_row.addLayout(type_column, 1)
         self.context_picker = WorkContextPicker(self)
         self.context_picker.setVisible(view_model.projects_available)
@@ -239,7 +239,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         self.time_tabs.currentChanged.connect(self._mode_changed)
         for field in (self.start_input, self.end_input):
             field.textChanged.connect(self._draft_changed)
-        self.work_type_combo.currentIndexChanged.connect(self._draft_changed)
+        self.entry_type_combo.currentIndexChanged.connect(self._draft_changed)
         self.context_picker.changed.connect(self._draft_changed)
         self.content_input.textChanged.connect(self._draft_changed)
         self.clock_in_button.clicked.connect(self._start)
@@ -266,28 +266,28 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         action.triggered.connect(lambda: self._pick_time(field, title))
         return field
 
-    def _reload_work_types(self):
-        result = self.view_model.list_work_types()
+    def _reload_entry_types(self):
+        result = self.view_model.list_entry_types()
         if result.ok:
             self._custom_types = result.value
-        self._populate_work_types()
+        self._populate_entry_types()
         return result
 
-    def _populate_work_types(self):
-        self.work_type_combo.clear()
-        for definition in (WorkType.NORMAL, WorkType.REMOTE, WorkType.BUSINESS_TRIP,
-                WorkType.MEETING, WorkType.TRAINING, WorkType.BREAK,
-                WorkType.PAID_LEAVE, WorkType.COMP_LEAVE, WorkType.SICK_LEAVE):
-            add_work_type_option(self.work_type_combo, definition)
+    def _populate_entry_types(self):
+        self.entry_type_combo.clear()
+        for definition in (EntryType.NORMAL, EntryType.REMOTE, EntryType.BUSINESS_TRIP,
+                EntryType.MEETING, EntryType.TRAINING, EntryType.BREAK,
+                EntryType.PAID_LEAVE, EntryType.COMP_LEAVE, EntryType.SICK_LEAVE):
+            add_entry_type_option(self.entry_type_combo, definition)
         for definition in self._custom_types:
             if not definition.archived:
-                add_work_type_option(self.work_type_combo, definition)
-        add_work_type_option(self.work_type_combo, WorkType.OTHER)
+                add_entry_type_option(self.entry_type_combo, definition)
+        add_entry_type_option(self.entry_type_combo, EntryType.OTHER)
 
-    def refresh_work_types(self):
+    def refresh_entry_types(self):
         self._updating = True
         try:
-            result = self._reload_work_types()
+            result = self._reload_entry_types()
         finally:
             self._updating = False
         if not result.ok:
@@ -358,7 +358,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         start, end = event.start_time or "", "00:00" if event.end_time == "24:00" else event.end_time or ""
         if start and end and calc_shift_span_hours(start, end) is None:
             start, end = "", ""
-        self.view_model.update(start=start, end=end, work_type="meeting",
+        self.view_model.update(start=start, end=end, entry_type="meeting",
                                content="\n".join(part for part in (event.summary, event.description, event.location) if part))
         self._render_editor()
 
@@ -375,11 +375,11 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             return
         if self.time_tabs.currentIndex() == 0:
             self.view_model.update(start=self.start_input.text(), end=self.end_input.text(),
-                                   work_type=str(self.work_type_combo.currentData()), content=self.content_input.toPlainText(),
+                                   entry_type=str(self.entry_type_combo.currentData()), content=self.content_input.toPlainText(),
                                    context=self.context_picker.context())
         else:
             self.view_model.update_auto(content=self.content_input.toPlainText(),
-                work_type=str(self.work_type_combo.currentData()), context=self.context_picker.context())
+                entry_type=str(self.entry_type_combo.currentData()), context=self.context_picker.context())
         self._update_actions()
         self.dirty_changed.emit(self.is_dirty)
 
@@ -396,18 +396,18 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             linked_timer = state.linked_timer
             self.start_input.setText(draft.start)
             self.end_input.setText(draft.end)
-            work_type = state.work_type
-            self._populate_work_types()
+            entry_type = state.entry_type
+            self._populate_entry_types()
             snapshot = state.type_snapshot
             if snapshot is None:
-                snapshot = next((definition for definition in self._custom_types if definition.value == work_type), None)
-            if isinstance(snapshot, CustomWorkType) and self.work_type_combo.findData(work_type) < 0:
-                add_work_type_option(self.work_type_combo, snapshot, index=self.work_type_combo.count() - 1)
-            elif isinstance(snapshot, CustomWorkType):
-                self.work_type_combo.setItemText(self.work_type_combo.findData(work_type), snapshot.label)
-                self.work_type_combo.setItemIcon(self.work_type_combo.findData(work_type), work_type_icon(snapshot))
-            self.work_type_combo.setCurrentIndex(max(0, self.work_type_combo.findData(work_type)))
-            self.work_type_combo.setToolTip(self.work_type_combo.currentText())
+                snapshot = next((definition for definition in self._custom_types if definition.value == entry_type), None)
+            if isinstance(snapshot, CustomEntryType) and self.entry_type_combo.findData(entry_type) < 0:
+                add_entry_type_option(self.entry_type_combo, snapshot, index=self.entry_type_combo.count() - 1)
+            elif isinstance(snapshot, CustomEntryType):
+                self.entry_type_combo.setItemText(self.entry_type_combo.findData(entry_type), snapshot.label)
+                self.entry_type_combo.setItemIcon(self.entry_type_combo.findData(entry_type), entry_type_icon(snapshot))
+            self.entry_type_combo.setCurrentIndex(max(0, self.entry_type_combo.findData(entry_type)))
+            self.entry_type_combo.setToolTip(self.entry_type_combo.currentText())
             content = state.content
             if self.content_input.toPlainText() != content:
                 self.content_input.setPlainText(content)
@@ -424,7 +424,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             self.end_input.setReadOnly(linked_timer)
             self.start_input.setEnabled(not linked_timer)
             self.end_input.setEnabled(not linked_timer)
-            self.work_type_combo.setEnabled(state.active_timer is None)
+            self.entry_type_combo.setEnabled(state.active_timer is None)
             self.context_picker.set_context(state.context)
             self.context_picker.setEnabled(self._context_error is None and state.active_timer is None)
             legacy = state.historical_break_hours

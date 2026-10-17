@@ -43,7 +43,7 @@ class AuthSchemaMigrationTests(unittest.TestCase):
             self.assertIsNone(auth.verify_user("admin", "wrong-password"))
             with factory.connection() as connection:
                 self.assertEqual(tuple(connection.execute("SELECT password_hash,password_salt FROM users").fetchone()), credentials)
-                self.assertEqual(tuple(connection.execute('SELECT user_id,d,start,end,"break",note,work_type,overnight FROM worklog').fetchone()), work)
+                self.assertEqual(tuple(connection.execute('SELECT user_id,d,start,end,"break",note,entry_type,overnight FROM worklog').fetchone()), work)
             snapshot = next(path.parent.glob("*.bak_upgrade_*"))
             with closing(sqlite3.connect(snapshot)) as connection:
                 self.assertEqual(tuple(connection.execute("SELECT password_hash,salt FROM users").fetchone()), credentials)

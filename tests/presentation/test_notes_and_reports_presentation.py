@@ -33,7 +33,7 @@ from tests.quick_log_samples import insert_previous_entry
 from worklogger.domain.reporting.models import Report
 from worklogger.domain.shared.result import Result
 from worklogger.domain.shared.errors import InfrastructureError
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import WorkLog, EntryType
 from worklogger.infrastructure.export import MarkdownExporter
 from worklogger.presentation.notes import NoteEditorDialog
 from worklogger.presentation.reporting import ReportDialog
@@ -493,7 +493,7 @@ class NotesReportsPresentationTests(unittest.TestCase):
                     end_time="18:00",
                     break_hours=1.0,
                     note="Report work",
-                    work_type=WorkType.NORMAL,
+                    entry_type=EntryType.NORMAL,
                 ),
             )
         )

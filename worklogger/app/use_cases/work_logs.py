@@ -15,7 +15,7 @@ from worklogger.domain.shared.errors import ConflictError, InfrastructureError, 
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.worklog.repositories import WorkLogRepository
-from worklogger.domain.worklog.rules import normalize_work_log, normalize_work_type
+from worklogger.domain.worklog.rules import normalize_work_log, normalize_entry_type
 
 
 class SaveWorkLogHandler:
@@ -37,7 +37,7 @@ class SaveWorkLogHandler:
                     end_time=command.end_time,
                     break_hours=command.break_hours,
                     note=command.note,
-                    work_type=normalize_work_type(command.work_type),
+                    entry_type=normalize_entry_type(command.entry_type),
                     started_at=command.started_at,
                     ended_at=command.ended_at,
                 )

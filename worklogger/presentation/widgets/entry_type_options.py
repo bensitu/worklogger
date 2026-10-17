@@ -8,22 +8,22 @@ from PySide6.QtCore import QRect, QRectF, QSize, Qt
 from PySide6.QtGui import QColor, QIcon, QIconEngine, QPainter, QPixmap
 from PySide6.QtWidgets import QComboBox, QStyledItemDelegate, QStyleOptionViewItem
 
-from worklogger.domain.worklog.models import CustomWorkType, WorkType
+from worklogger.domain.worklog.models import CustomEntryType, EntryType
 from worklogger.presentation.theme import ThemeEngine
 from worklogger.presentation.theme.context import current_colors
-from worklogger.presentation.work_type_labels import work_type_label
+from worklogger.presentation.entry_type_labels import entry_type_label
 
 
-class _WorkTypeMarkerIconEngine(QIconEngine):
-    def __init__(self, definition: WorkType | CustomWorkType) -> None:
+class _EntryTypeMarkerIconEngine(QIconEngine):
+    def __init__(self, definition: EntryType | CustomEntryType) -> None:
         super().__init__()
         self._definition = definition
 
     def clone(self) -> QIconEngine:
-        return _WorkTypeMarkerIconEngine(self._definition)
+        return _EntryTypeMarkerIconEngine(self._definition)
 
     def paint(self, painter: QPainter, rect: QRect, mode: QIcon.Mode, state: QIcon.State) -> None:
-        color = ThemeEngine().work_type_marker_color(self._definition, dark=current_colors().dark)
+        color = ThemeEngine().entry_type_marker_color(self._definition, dark=current_colors().dark)
         if color is None:
             return
         painter.save()
@@ -56,24 +56,24 @@ class _WorkTypeMarkerIconEngine(QIconEngine):
         return pixmap
 
 
-class _WorkTypeOptionDelegate(QStyledItemDelegate):
+class _EntryTypeOptionDelegate(QStyledItemDelegate):
     def initStyleOption(self, option, index) -> None:
         super().initStyleOption(option, index)
         option.features |= QStyleOptionViewItem.ViewItemFeature.HasDecoration
         option.decorationSize = QSize(4, 20)
 
 
-def work_type_icon(definition: WorkType | CustomWorkType) -> QIcon:
-    if ThemeEngine().work_type_marker_color(definition) is None:
+def entry_type_icon(definition: EntryType | CustomEntryType) -> QIcon:
+    if ThemeEngine().entry_type_marker_color(definition) is None:
         return QIcon()
-    return QIcon(_WorkTypeMarkerIconEngine(definition))
+    return QIcon(_EntryTypeMarkerIconEngine(definition))
 
 
-def add_work_type_option(combo: QComboBox, definition: WorkType | CustomWorkType,
+def add_entry_type_option(combo: QComboBox, definition: EntryType | CustomEntryType,
                          *, index: int | None = None) -> None:
-    if combo.property("work_type_picker") is not True:
-        combo.setProperty("work_type_picker", True)
-        combo.setItemDelegate(_WorkTypeOptionDelegate(combo))
+    if combo.property("entry_type_picker") is not True:
+        combo.setProperty("entry_type_picker", True)
+        combo.setItemDelegate(_EntryTypeOptionDelegate(combo))
     combo.setIconSize(QSize(4, 20))
     combo.insertItem(combo.count() if index is None else index,
-                     work_type_icon(definition), work_type_label(definition), definition.value)
+                     entry_type_icon(definition), entry_type_label(definition), definition.value)

@@ -446,7 +446,7 @@ class AppWindow(QMainWindow):
             ("logout_requested", self._request_logout),
             ("settings_changed", self.apply_settings),
             ("profile_changed", self.apply_user_profile),
-            ("work_types_changed", self.entry_panel.refresh_work_types),
+            ("entry_types_changed", self.entry_panel.refresh_entry_types),
             ("projects_changed", self.entry_panel.refresh_projects),
             ("ai_availability_changed", self.refresh_ai_availability),
         ):

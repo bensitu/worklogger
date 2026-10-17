@@ -8,15 +8,15 @@ from shiboken6 import isValid
 
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.models import WorkType
+from worklogger.domain.worklog.models import EntryType
 from worklogger.domain.worklog.search import EntryFilter
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_code, display_error_message
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
-from worklogger.presentation.widgets.work_type_options import add_work_type_option
+from worklogger.presentation.widgets.entry_type_options import add_entry_type_option
 from worklogger.presentation.widgets.date_range import DateRangeControls
-from worklogger.presentation.work_type_labels import work_type_label
+from worklogger.presentation.entry_type_labels import entry_type_label
 from worklogger.presentation.date_labels import duration_label
 from worklogger.presentation.widgets.data_tree import configure_data_tree, set_data_tooltips
 
@@ -63,12 +63,12 @@ class RecordSearchDialog(QDialog):
         self.project_combo = QComboBox()
         self.item_combo = QComboBox()
         self.type_combo.addItem(_("All work types"), None)
-        for value in WorkType:
-            add_work_type_option(self.type_combo, value)
-        types = view_model.list_work_types()
+        for value in EntryType:
+            add_entry_type_option(self.type_combo, value)
+        types = view_model.list_entry_types()
         if types.ok:
             for value in types.value:
-                add_work_type_option(self.type_combo, value)
+                add_entry_type_option(self.type_combo, value)
         self.project_combo.addItem(_("All projects"), None)
         self.project_combo.addItem(_("No linked project"), _UNLINKED_PROJECT)
         inventory = view_model.project_inventory()
@@ -182,11 +182,11 @@ class RecordSearchDialog(QDialog):
     def _criteria(self):
         if self._fixed_criteria is not None:
             from dataclasses import replace
-            return replace(self._fixed_criteria, text=self.search_input.text(), work_type=self.type_combo.currentData())
+            return replace(self._fixed_criteria, text=self.search_input.text(), entry_type=self.type_combo.currentData())
         project_id = self.project_combo.currentData()
         unlinked = project_id == _UNLINKED_PROJECT
         return EntryFilter(*self.date_range.bounds(), text=self.search_input.text(),
-                           work_type=self.type_combo.currentData(), project_id=None if unlinked else project_id,
+                           entry_type=self.type_combo.currentData(), project_id=None if unlinked else project_id,
                            work_item_id=None if unlinked else self.item_combo.currentData(), unclassified=unlinked)
 
     def _reload(self, *, append=False):
@@ -226,7 +226,7 @@ class RecordSearchDialog(QDialog):
                 if len(preview) > 120:
                     preview = preview[:120] + "..."
                 row = QTreeWidgetItem([entry.day.isoformat(), span + "  " + duration_label(entry.raw_hours()),
-                    work_type_label(entry.work_type), project_label, entry.context.work_item_label or _("No work item"), preview])
+                    entry_type_label(entry.entry_type), project_label, entry.context.work_item_label or _("No work item"), preview])
                 row.setData(0, Qt.ItemDataRole.UserRole, entry)
                 set_data_tooltips(row, {5: entry.note})
                 self.results.addTopLevelItem(row)

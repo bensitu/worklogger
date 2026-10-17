@@ -2,12 +2,11 @@
 
 import sqlite3
 from contextlib import closing
-from importlib import import_module
 from pathlib import Path
 
 from worklogger.infrastructure.database.current_schema import (
     CURRENT_SCHEMA_VERSION,
-    PREVIOUS_CURRENT_VERSION,
+    create_current_schema,
     validate_current_schema,
 )
 from worklogger.infrastructure.database.migrations.snapshot import prune_upgrade_snapshots, save_snapshot
@@ -16,10 +15,7 @@ from worklogger.infrastructure.database.released_import import (
     validate_released_schema,
 )
 
-MIGRATION_MODULES = ("worklogger.infrastructure.database.migrations.migration_016_background_preferences",)
 MIGRATION_VERSIONS = (CURRENT_SCHEMA_VERSION,)
-KNOWN_LEDGER_VERSIONS = frozenset(range(1, CURRENT_SCHEMA_VERSION + 1))
-SUPPORTED_BASELINES = frozenset(range(PREVIOUS_CURRENT_VERSION, CURRENT_SCHEMA_VERSION + 1))
 
 
 def database_kind(connection, *, check_data=True):
@@ -31,16 +27,12 @@ def database_kind(connection, *, check_data=True):
         return "empty"
     if "schema_migrations" in tables:
         versions = {row[0] for row in connection.execute("SELECT version FROM schema_migrations")}
-        if versions - KNOWN_LEDGER_VERSIONS or not versions & SUPPORTED_BASELINES:
+        if versions != {CURRENT_SCHEMA_VERSION}:
             raise ValueError("database_version_unsupported")
         validate_current_schema(connection, check_data=check_data)
-        return "current" if CURRENT_SCHEMA_VERSION in versions else "current_previous_ledger"
-    try:
-        validate_current_schema(connection, ledger_required=False, check_data=check_data)
-    except ValueError:
-        validate_released_schema(connection, tables)
-        return "released"
-    return "current_unversioned"
+        return "current"
+    validate_released_schema(connection, tables)
+    return "released"
 
 
 class MigrationRunner:
@@ -73,11 +65,10 @@ class MigrationRunner:
                         snapshot = save_snapshot(source, self._connection_factory.database_path, "upgrade")
                 if kind == "released":
                     import_released_schema(connection)
-                for module_name in MIGRATION_MODULES:
-                    migration = import_module(module_name)
-                    migration.up(connection)
-                    connection.execute("INSERT INTO schema_migrations(version,description,applied_at) VALUES(?,?,datetime('now'))",
-                                       (migration.VERSION, migration.DESCRIPTION))
+                else:
+                    create_current_schema(connection)
+                connection.execute("INSERT INTO schema_migrations(version,description,applied_at) VALUES(?,?,datetime('now'))",
+                                   (CURRENT_SCHEMA_VERSION, "entry_classification_and_work_modes"))
                 validate_current_schema(connection)
             prune_upgrade_snapshots(self._connection_factory.database_path, preserve=snapshot)
         return MIGRATION_VERSIONS

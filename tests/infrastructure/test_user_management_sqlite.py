@@ -20,7 +20,7 @@ from worklogger.app.use_cases.auth import (
     RegisterUserHandler,
 )
 from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
-from worklogger.domain.worklog.models import WorkType
+from worklogger.domain.worklog.models import EntryType
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
 from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteWorkLogRepository
 from worklogger.infrastructure.security import PBKDF2PasswordHasher
@@ -122,7 +122,7 @@ class SQLiteUserManagementTests(unittest.TestCase):
                 end_time="18:00",
                 break_hours=1.0,
                 note="",
-                work_type=WorkType.NORMAL.value,
+                entry_type=EntryType.NORMAL.value,
             )
         )
         self.assertTrue(saved.ok, saved.error)

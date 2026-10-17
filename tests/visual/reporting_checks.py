@@ -11,7 +11,7 @@ from PySide6.QtTest import QSignalSpy
 from PySide6.QtWidgets import QApplication, QScrollArea
 
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.models import WorkLog, WorkType
+from worklogger.domain.worklog.models import WorkLog, EntryType
 from worklogger.infrastructure.i18n import available_languages, set_language
 from worklogger.presentation.viewmodels.reports import ReportEditorState
 from worklogger.presentation.widgets.report_history import ReportHistoryDisplayItem
@@ -59,7 +59,7 @@ class ReportingLayoutChecks(unittest.TestCase):
                                "Reviewed calendar interactions and navigation. " * 4,
                                id=day, context=context) for day in range(1, 9))
         groups = context_summaries(entries)
-        records = SimpleNamespace(list_work_types=lambda: Result.success(()),
+        records = SimpleNamespace(list_entry_types=lambda: Result.success(()),
             project_inventory=lambda: Result.success(((project,), {project.id: (item,)})),
             search=lambda *_args, **_kwargs: Result.success(EntryPage(entries)))
         analytics = SimpleNamespace(load_projects=lambda *_args: Result.success(groups))
@@ -126,7 +126,7 @@ class ReportingLayoutChecks(unittest.TestCase):
         configure_application_style()
         install_bundled_fonts()
         old_language, old_style, old_palette = get_language(), self.app.styleSheet(), self.app.palette()
-        records = SimpleNamespace(list_work_types=lambda: Result.success(()),
+        records = SimpleNamespace(list_entry_types=lambda: Result.success(()),
             project_inventory=lambda: Result.success(((), {})),
             search=lambda *_args, **_kwargs: Result.success(EntryPage(())))
         analytics = SimpleNamespace(load_projects=lambda *_args: Result.success(()))
@@ -293,7 +293,7 @@ class ReportingLayoutChecks(unittest.TestCase):
                     window.reports_page._view_model = WeeklyReports()
                     window._config = replace(window._config, dark=dark)
                     records = window.analytics_page._view_model._dashboard_handler._repository
-                    for day, mode in ((5, WorkType.REMOTE), (12, WorkType.BUSINESS_TRIP), (19, WorkType.PAID_LEAVE), (20, WorkType.NORMAL)):
+                    for day, mode in ((5, EntryType.REMOTE), (12, EntryType.BUSINESS_TRIP), (19, EntryType.PAID_LEAVE), (20, EntryType.NORMAL)):
                         records.save(WorkLog(1, date(2026, 5, day), "09:00", "18:30", 1, "Test record", mode))
                     window.apply_theme()
                     window.refresh()

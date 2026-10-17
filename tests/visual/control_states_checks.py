@@ -254,7 +254,7 @@ class ControlStateChecks(unittest.TestCase):
             panel = QWidget()
             layout = QGridLayout(panel)
             controls = []
-            for name in ("", "local_model_list_widget", "custom_work_type_list_widget", "note_history_list_widget"):
+            for name in ("", "local_model_list_widget", "custom_entry_type_list_widget", "note_history_list_widget"):
                 field = QListWidget()
                 field.setObjectName(name)
                 field.addItems(("Selected title\nDetails", "Another item"))

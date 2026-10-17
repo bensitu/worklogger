@@ -43,7 +43,7 @@ QRadioButton:disabled {
 
 QAbstractItemView:disabled,
 QListWidget#local_model_list_widget:disabled,
-QListWidget#custom_work_type_list_widget:disabled,
+QListWidget#custom_entry_type_list_widget:disabled,
 QListWidget[management_list]:disabled {
   color: {{ disabled_text }};
   background: {{ disabled_background }};
@@ -53,7 +53,7 @@ QListWidget[management_list]:disabled {
 
 QAbstractItemView::item:selected:disabled,
 QListWidget#local_model_list_widget::item:selected:disabled,
-QListWidget#custom_work_type_list_widget::item:selected:disabled,
+QListWidget#custom_entry_type_list_widget::item:selected:disabled,
 QListWidget[management_list]::item:selected:disabled,
 QTreeWidget[data_browser]::item:selected:disabled {
   color: {{ disabled_text }};

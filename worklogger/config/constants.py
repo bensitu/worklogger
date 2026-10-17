@@ -5,7 +5,7 @@ from __future__ import annotations
 MAX_SHIFT_HOURS = 16.0
 DEFAULT_LEAVE_HOURS = 8.0
 
-WORK_TYPE_KEYS = (
+ENTRY_TYPE_KEYS = (
     "normal",
     "remote",
     "business_trip",
