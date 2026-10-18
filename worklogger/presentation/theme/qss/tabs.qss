@@ -79,6 +79,12 @@ QWidget[editor_page="true"] {
   border-radius: 6px;
 }
 
+QTabBar[tab_style="underline"] {
+  qproperty-drawBase: 0;
+  background: transparent;
+  border: none;
+}
+
 QTabBar[tab_style="underline"]::tab {
   background: transparent;
   border: none;

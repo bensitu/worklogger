@@ -307,7 +307,7 @@ class PresentationViewModelTests(unittest.TestCase):
         self.assertEqual(style.background, "#4f8ef7")
         self.assertEqual(
             engine.entry_type_color(EntryType.BUSINESS_TRIP),
-            "#7166ae",
+            "#7865b6",
         )
         for dark in (False, True):
             colors = []
@@ -353,7 +353,7 @@ class PresentationViewModelTests(unittest.TestCase):
                     color = QColor(engine.entry_type_color(definition, dark=dark))
                     hue, saturation, _lightness, _alpha = color.getHsl()
                     self.assertTrue(minimum <= hue <= maximum, (category, color.name(), hue))
-                    self.assertLess(saturation, 140)
+                    self.assertLess(saturation, 170)
 
     def test_theme_engine_uses_shared_templates_and_resolved_palettes(self) -> None:
         engine = ThemeEngine()

@@ -39,6 +39,8 @@ layers. Back up your database before upgrading.
 
 ### Changed
 
+- Removed native baseline artifacts from underline tabs and increased classification
+  color separation, with more stable color variations for custom types.
 - Preserved pending daily-record loads across preference and date refreshes and
   avoided hiding windows when the system tray becomes unavailable.
 - Limited new account IDs to 120 characters while preserving sign-in and

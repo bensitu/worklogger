@@ -88,12 +88,15 @@ class ClassificationLayoutChecks(unittest.TestCase):
                                     self.assertTrue(popup.rect().contains(bounds), (prefix, field.objectName()))
                                 self.assertTrue(popup.section_tabs.isTabEnabled(0))
                                 self.assertEqual(popup.section_tabs.isTabEnabled(1), not automatic)
+                                bar = popup.section_tabs.tabBar()
+                                tab_top = bar.grab().toImage().copy(0, 0, bar.width(), 2)
                                 self.capture(popup, prefix + ("-auto" if automatic else "-work"))
                                 if not automatic:
                                     popup.section_tabs.setCurrentIndex(1)
                                     self.app.processEvents()
                                     self.assertTrue(popup.leave_type_combo.isVisible())
                                     self.assertFalse(popup.work_mode_combo.isVisible())
+                                    self.assertEqual(tab_top, bar.grab().toImage().copy(0, 0, bar.width(), 2))
                                     self.capture(popup, prefix + "-leave")
                                 popup.cancel_button.click()
                         finally:
