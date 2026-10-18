@@ -502,6 +502,16 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertEqual(self.window.current_month, date(2024, 2, 1))
         self.assertEqual(self.window.selected_day, date(2024, 2, 29))
 
+    def test_project_statistics_reuses_the_open_dialog_and_releases_it_on_close(self):
+        from worklogger.presentation.widgets.project_analytics import ProjectAnalyticsDialog
+        self.window.open_project_analytics()
+        dialog = self.window.findChild(ProjectAnalyticsDialog)
+        self.assertIsNotNone(dialog)
+        self.window.open_project_analytics()
+        self.assertEqual(len(self.window.findChildren(ProjectAnalyticsDialog)), 1)
+        dialog.reject()
+        self.assertIsNone(self.window.record_dialogs._project_dialog)
+
     def test_worker_editor_changes_are_applied_only_on_completion_and_failures_restart_display(self):
         from worklogger.app.job_runner import CancellationToken, JobHandle
         from worklogger.domain.shared.errors import InfrastructureError

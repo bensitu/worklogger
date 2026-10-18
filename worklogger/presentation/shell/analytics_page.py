@@ -409,6 +409,11 @@ class AnalyticsPage(QWidget):
         self.period_combo.setCurrentIndex(values.index(target))
         self.period_combo.blockSignals(False)
 
+    def set_today(self, today: date) -> None:
+        if today != self._today:
+            self._today = today
+            self._populate_periods()
+
     def _scope_changed(self, _scope: str) -> None:
         self._populate_periods()
         self.refresh()

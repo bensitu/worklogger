@@ -325,7 +325,7 @@ class SettingsWorkflowController:
             return False
         return True
 
-    def _refresh_local_models_status(self, surface: SettingsPage) -> None:
+    def _refresh_local_models_status(self, surface: SettingsPage, *, retry=True) -> None:
         view_model = self._local_models_workflow.view_model if self._local_models_workflow is not None else None
         if view_model is None:
             return
@@ -339,7 +339,10 @@ class SettingsWorkflowController:
             inventory = result.value.inventory
             if self._local_inference is not None:
                 if self._local_inference.update_inventory(inventory) is False:
-                    self._refresh_local_models_status(surface)
+                    if retry:
+                        self._refresh_local_models_status(surface, retry=False)
+                    else:
+                        surface.set_local_model_error(InfrastructureError("local_model_list_failed", "local_model_list_failed"))
                     return
             active = next(
                 (

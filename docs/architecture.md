@@ -45,6 +45,11 @@ and a window. Logout disposes the session and returns to authentication.
 exit and installed-application checks: stop and join jobs, close inference, then
 dispose the window before temporary storage or Qt application teardown.
 
+Presentation helpers without an injected session runner reuse one application-owned
+fallback runner. Closing a helper cancels its requests without creating another
+thread pool for each interaction. Report reads capture preference snapshots before
+dispatch, and repeated project-statistics actions reuse the open dialog.
+
 The main window creates its settings page on first access and reuses it during
 the session. Initial calendar overviews, holiday loading, and AI configuration
 use background jobs; the record editor is available before those jobs finish.

@@ -108,12 +108,20 @@ class AiAssistDialog(QDialog):
             self.status_label.setText(_("Please wait for the current request."))
             return False
         message = self.message_input.text()
+        if not message.strip():
+            return False
         state, selected_day = self._state, self._selected_day
         self._set_busy(True)
         self.status_label.setText(_("Sending..."))
         self._pending_handle = JobHandle(job_id="ai_chat_pending", cancel=self._processing_task.cancel)
-        return self._processing_task.run("ai_chat", lambda _token: self._view_model.send(
+        started = self._processing_task.run("ai_chat", lambda _token: self._view_model.send(
             state, message, selected_day=selected_day, period_type="daily"), on_complete=self._complete_send)
+        if not started:
+            self._pending_handle = None
+            self._set_busy(False)
+            self.processing_progress.finish()
+            self.status_label.clear()
+        return started
 
     def _complete_send(self, result: object) -> None:
         self._pending_handle = None

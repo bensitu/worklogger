@@ -2,14 +2,14 @@
 
 from collections import OrderedDict
 
-from PySide6.QtCore import QCoreApplication, QObject, Slot
+from PySide6.QtCore import QObject, Slot
 from shiboken6 import isValid
 
 from worklogger.app.queries.calendar_queries import GetHolidaysForRangeQuery
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
 from worklogger.presentation.errors import display_error_message
-from worklogger.presentation.job_runner import QtJobRunner
+from worklogger.presentation.job_runner import shared_job_runner
 
 
 class DatePickerHolidaysController(QObject):
@@ -54,7 +54,7 @@ class DatePickerHolidaysController(QObject):
             return
         version = self._version
         if self._runner is None:
-            self._runner = QtJobRunner(QCoreApplication.instance())
+            self._runner = shared_job_runner()
 
         def complete(result):
             if not isValid(self) or self._disposed or version != self._version:

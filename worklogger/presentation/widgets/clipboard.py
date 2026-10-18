@@ -22,6 +22,7 @@ def copy_sensitive_text(text: str, *, timeout_ms: int = 60_000) -> None:
                 clipboard.clear()
 
         timer.timeout.connect(clear_owned_text)
+        application.aboutToQuit.connect(clear_owned_text)
     clipboard.setText(text)
     timer.setProperty("content_digest", sha256(text.encode("utf-8")).hexdigest())
     timer.start(timeout_ms)

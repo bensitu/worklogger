@@ -1,12 +1,12 @@
 """Background workflow with asynchronous validation and storage."""
 
-from PySide6.QtCore import QCoreApplication, QObject, Signal
+from PySide6.QtCore import QObject, Signal
 from shiboken6 import isValid
 
 from worklogger.domain.shared.errors import CancellationError, InfrastructureError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.images.background import prepare_background
-from worklogger.presentation.job_runner import QtJobRunner
+from worklogger.presentation.job_runner import shared_job_runner
 
 
 class BackgroundController(QObject):
@@ -49,7 +49,7 @@ class BackgroundController(QObject):
         if not self.available or self._busy or self._disposed:
             return False
         if self._runner is None:
-            self._runner = QtJobRunner(QCoreApplication.instance())
+            self._runner = shared_job_runner()
         self._version += 1
         version = self._version
         self._busy = True

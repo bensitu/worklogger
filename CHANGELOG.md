@@ -37,6 +37,10 @@ layers. Back up your database before upgrading.
 
 ### Changed
 
+- Reused project-statistics windows, released closed template dialogs, captured
+  report preferences before background reads, and bounded model-status retries.
+- Shared fallback background runners and cleared owned sensitive clipboard text
+  during application shutdown.
 - Hardened timer recovery, record cursors, classification values, and malformed
   imports with stable validation errors; preserved work arrangements when
   resuming saved break timers and added safe translation-catalog fallback.

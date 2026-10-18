@@ -1,10 +1,10 @@
 """Cooperative browser authorization requests on the Qt background runner."""
 
-from PySide6.QtCore import QObject, Signal, QCoreApplication
+from PySide6.QtCore import QObject, Signal
 from shiboken6 import isValid
 from worklogger.domain.shared.errors import CancellationError, InfrastructureError
 from worklogger.domain.shared.result import Result
-from worklogger.presentation.job_runner import QtJobRunner
+from worklogger.presentation.job_runner import shared_job_runner
 
 
 class IdentityAuthorizationRequest(QObject):
@@ -13,7 +13,7 @@ class IdentityAuthorizationRequest(QObject):
 
     def __init__(self, parent=None, *, job_runner=None):
         super().__init__(parent)
-        self._runner = job_runner or QtJobRunner(QCoreApplication.instance())
+        self._runner = job_runner or shared_job_runner()
         self.is_running = False
         self._handle = None
         self._cancelled = False

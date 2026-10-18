@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from copy import copy
 from dataclasses import replace
 from datetime import date
 from pathlib import Path
@@ -29,7 +30,7 @@ from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.date_labels import report_period_label
 from worklogger.presentation.errors import display_error_message
-from worklogger.presentation.job_runner import QtJobRunner, owned_callback
+from worklogger.presentation.job_runner import shared_job_runner, owned_callback
 from worklogger.presentation.reporting.dialog import (
     ReportTemplateDialog,
     confirm_report_overwrite,
@@ -78,7 +79,7 @@ class ReportsPage(QWidget):
         self._rendered_type = "daily"
         self._rendered_report_key = None
         self._confirm_discard = confirm_discard
-        self._job_runner = job_runner or QtJobRunner(self)
+        self._job_runner = job_runner or shared_job_runner()
         self._rewrite_task = TextProcessingTask(self, job_runner=self._job_runner)
         self._rewrite_busy = False
         self._delete_busy = False
@@ -182,10 +183,11 @@ class ReportsPage(QWidget):
             self._set_status(_("Reports are not configured."), error=True)
             return False
         day = self._selected_day
+        model = copy(self._view_model)
         def load():
             states = {}
             for kind in ("daily", "weekly", "monthly"):
-                result = self._view_model.load(kind, day)
+                result = model.load(kind, day)
                 if not result.ok:
                     return result
                 states[kind] = result.value
@@ -413,6 +415,7 @@ class ReportsPage(QWidget):
             dialog.exec()
         else:
             self._set_status(dialog.status_label.text(), error=True)
+        dialog.deleteLater()
 
     def _apply_template(self) -> None:
         self._generate_current()

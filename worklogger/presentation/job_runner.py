@@ -21,6 +21,17 @@ from worklogger.domain.shared.result import Result
 LOGGER = logging.getLogger(__name__)
 
 
+def shared_job_runner() -> QtJobRunner:
+    application = QCoreApplication.instance()
+    if application is None:
+        raise RuntimeError("qt_application_required")
+    runner = getattr(application, "_worklogger_job_runner", None)
+    if runner is None or not isValid(runner) or runner._closed:
+        runner = QtJobRunner(application)
+        application._worklogger_job_runner = runner
+    return runner
+
+
 def owned_callback(owner: QObject, callback):
     reference = ref(owner)
 

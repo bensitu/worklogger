@@ -216,7 +216,6 @@ class QtResidencyController:
         return state.value
 
     def should_keep_resident(self) -> bool:
-        self.refresh()
         return self._last_keep_resident
 
     def request_quit(self) -> None:

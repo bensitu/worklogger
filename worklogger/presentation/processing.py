@@ -1,10 +1,10 @@
 """Cancellable presentation requests with stale-result protection."""
 
-from PySide6.QtCore import QObject, Signal, QCoreApplication
+from PySide6.QtCore import QObject, Signal
 from shiboken6 import isValid
 from worklogger.domain.shared.errors import CancellationError, InfrastructureError
 from worklogger.domain.shared.result import Result
-from worklogger.presentation.job_runner import QtJobRunner
+from worklogger.presentation.job_runner import shared_job_runner
 
 
 class TextProcessingTask(QObject):
@@ -13,7 +13,7 @@ class TextProcessingTask(QObject):
 
     def __init__(self, parent=None, *, job_runner=None):
         super().__init__(parent)
-        self._runner = job_runner or QtJobRunner(QCoreApplication.instance())
+        self._runner = job_runner or shared_job_runner()
         self._version, self._running = 0, False
         self._handle, self._callback = None, None
 

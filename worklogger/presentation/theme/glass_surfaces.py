@@ -2,12 +2,12 @@
 
 from collections import OrderedDict
 
-from PySide6.QtCore import QCoreApplication, QEvent, QPoint, QRectF, QSize, QTimer, Qt, QObject, Slot
+from PySide6.QtCore import QEvent, QPoint, QRectF, QSize, QTimer, Qt, QObject, Slot
 from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath
 from PySide6.QtWidgets import QFrame, QScrollArea, QWidget
 from shiboken6 import isValid
 
-from worklogger.presentation.job_runner import QtJobRunner
+from worklogger.presentation.job_runner import shared_job_runner
 from worklogger.presentation.theme.glass_renderer import GLASS_PADDING, render_geometry, render_glass
 from worklogger.presentation.theme.materials import material_profile
 from worklogger.presentation.theme.widget_style import set_style_property
@@ -154,7 +154,7 @@ class GlassThemeController(QObject):
         if not self._enabled or self._disposed or self._software_failed:
             return
         if self._runner is None:
-            self._runner = QtJobRunner(QCoreApplication.instance())
+            self._runner = shared_job_runner()
         while self._pending and len(self._jobs) < 2:
             layer, _value = self._pending.popitem(last=False)
             if not isValid(layer):

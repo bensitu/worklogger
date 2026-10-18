@@ -90,6 +90,19 @@ class AiAssistPresentationTests(unittest.TestCase):
         dialog.close()
         self.assertFalse(dialog.isVisible())
 
+    def test_rejected_request_start_leaves_the_dialog_usable(self):
+        from unittest.mock import patch
+        dialog = AiAssistDialog(AiAssistViewModel(user_id=1, chat_handler=FakeChatHandler()),
+                                date(2026, 5, 4))
+        dialog.message_input.setText("Summarize")
+        with patch.object(dialog._processing_task, "run", return_value=False):
+            self.assertFalse(dialog.send_current_message())
+        self.assertTrue(dialog.send_button.isEnabled())
+        self.assertIsNone(dialog._pending_handle)
+        dialog.show()
+        dialog.close()
+        self.assertFalse(dialog.isVisible())
+
     def test_dialog_sends_selected_day_context(self) -> None:
         chat = FakeChatHandler()
         context = FakeContextHandler()

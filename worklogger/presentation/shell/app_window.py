@@ -319,6 +319,7 @@ class AppWindow(QMainWindow):
         current = self._config.today or date.today()
         if self._today != current:
             self._today = current
+            self.analytics_page.set_today(current)
             self._refresh_calendar()
 
     def _build_ui(self) -> None:

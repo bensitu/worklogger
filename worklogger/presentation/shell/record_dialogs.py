@@ -31,6 +31,7 @@ class RecordDialogController(QObject):
         self._select_record, self._records_changed = select_record, records_changed
         self._job_runner = job_runner
         self._search_dialog: RecordSearchDialog | None = None
+        self._project_dialog = None
 
     @property
     def search_dialog(self) -> RecordSearchDialog | None:
@@ -64,8 +65,17 @@ class RecordDialogController(QObject):
 
         if self._analytics is None or not self._records.search_available:
             return
+        if self._project_dialog is not None and isValid(self._project_dialog):
+            self._project_dialog.raise_()
+            self._project_dialog.activateWindow()
+            return
         dialog = ProjectAnalyticsDialog(self._analytics, self._records, self._selected_day(), self._window,
             job_runner=self._job_runner, selection_handler=self._select_record)
         dialog.records_changed.connect(self._records_changed)
+        self._project_dialog = dialog
+        dialog.finished.connect(self._project_finished)
         dialog.finished.connect(dialog.deleteLater)
         dialog.open()
+
+    def _project_finished(self):
+        self._project_dialog = None
