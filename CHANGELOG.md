@@ -15,6 +15,9 @@ layers. Back up your database before upgrading.
 
 ### Added
 
+- Personal WebDAV and S3-compatible cloud backups with encrypted account
+  snapshots, configurable schedules and retention, version confirmations,
+  failure notifications, and offline local recovery.
 - Custom work arrangements with account-specific management and historical names
   preserved in records, timers, and exports.
 - Account-owned custom work types, projects, and work items, with historical

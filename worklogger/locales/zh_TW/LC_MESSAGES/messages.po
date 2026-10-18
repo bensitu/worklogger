@@ -1162,6 +1162,9 @@ msgstr "保留目前草稿並開啟其他日期嗎？"
 msgid "Keep this draft for later?"
 msgstr "保留這份草稿以便稍後繼續嗎？"
 
+msgid "Keep this independent passphrase safe. If it is lost, encrypted backups cannot be restored."
+msgstr "請妥善保管獨立備份密語，遺失後將無法還原加密備份。"
+
 msgid "Keep this recovery key private. The saved file is not encrypted."
 msgstr "請妥善保管此復原金鑰，不要分享給他人。儲存的檔案未加密。"
 
@@ -1185,6 +1188,9 @@ msgstr "最近備份：{time}"
 
 msgid "Last cloud backup: {time}"
 msgstr "上次雲端備份：{time}"
+
+msgid "Last restore: {time}"
+msgstr "上次還原：{time}"
 
 msgid "Last saved: {time}"
 msgstr "最近儲存：{time}"
@@ -1651,6 +1657,9 @@ msgstr "貼上"
 msgid "Period type"
 msgstr "時段類型"
 
+msgid "Personal backup files (*.wlbackup)"
+msgstr "個人備份檔案 (*.wlbackup)"
+
 msgid "Personal cloud backup"
 msgstr "個人雲端備份"
 
@@ -1822,6 +1831,9 @@ msgstr "處理未完成的還原"
 msgid "Recovered draft"
 msgstr "已復原草稿"
 
+msgid "Recovery file: {path}"
+msgstr "復原檔案：{path}"
+
 msgid "Recovery key"
 msgstr "復原金鑰"
 
@@ -1869,6 +1881,9 @@ msgstr "取代涉及日期的全部記錄"
 
 msgid "Replace and save"
 msgstr "取代並儲存"
+
+msgid "Replace current account data"
+msgstr "取代目前帳戶資料"
 
 msgid "Replace entire overlapping records"
 msgstr "取代重疊的整筆記錄"
@@ -1938,6 +1953,9 @@ msgstr "還原資料"
 
 msgid "Restore cancelled"
 msgstr "已取消還原"
+
+msgid "Restore local recovery copy"
+msgstr "還原本機復原副本"
 
 msgid "Restore this version as the current report? Any unsaved editor content will be replaced after successful recovery."
 msgstr "將此版本還原為目前報表？還原成功後將取代編輯器中未儲存的內容。"
@@ -2043,6 +2061,9 @@ msgstr "儲存臨時密碼"
 
 msgid "Save the completed automatic record before starting another."
 msgstr "開始新的自動記錄前，請先儲存已結束的記錄。"
+
+msgid "Save the settings before connecting or transferring backups."
+msgstr "請先儲存設定，再連線或傳輸備份。"
 
 msgid "Save this recovery key before continuing."
 msgstr "繼續前請儲存此復原金鑰。"
@@ -2775,6 +2796,9 @@ msgstr "顯示名稱必須為單行，且不能包含控制字元。"
 
 msgid "Use a web proxy for this application."
 msgstr "為此應用程式使用網頁代理。"
+
+msgid "Use an S3 session token"
+msgstr "使用 S3 工作階段權杖"
 
 msgid "Use an application registration supplied by your distributor or administrator. This is not your account password."
 msgstr "使用發行方或管理員提供的應用程式註冊資訊。這裡不是帳戶密碼。"

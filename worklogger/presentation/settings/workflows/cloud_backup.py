@@ -5,7 +5,7 @@ from time import monotonic
 from weakref import WeakSet
 
 from PySide6.QtCore import QObject, QTimer, Qt
-from PySide6.QtWidgets import QCheckBox, QComboBox, QDialog, QDialogButtonBox, QLabel, QLineEdit, QMessageBox, QProgressBar, QVBoxLayout
+from PySide6.QtWidgets import QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QLabel, QLineEdit, QMessageBox, QProgressBar, QVBoxLayout
 from shiboken6 import isValid
 from tzlocal import get_localzone
 
@@ -22,29 +22,31 @@ def _local_time(value):
 
 
 class BackupTransferDialog(QDialog):
-    def __init__(self, overview, *, restore, parent=None):
+    def __init__(self, overview, *, restore, parent=None, local_path=None):
         super().__init__(parent)
-        self.setWindowTitle(_("Download and restore") if restore else _("Upload backup"))
+        self.setWindowTitle(_("Restore local recovery copy") if local_path else _("Download and restore") if restore else _("Upload backup"))
         self.setMinimumWidth(360)
         root = QVBoxLayout(self)
-        latest = overview.versions[0] if overview.versions else None
-        text = (_("Latest cloud backup: {time}").format(time=_local_time(latest.created_at)) if latest else _("No cloud backups found."))
+        versions = () if local_path else overview.versions
+        latest = versions[0] if versions else None
+        text = (_("Recovery file: {path}").format(path=local_path) if local_path else
+            _("Latest cloud backup: {time}").format(time=_local_time(latest.created_at)) if latest else _("No cloud backups found."))
         label = QLabel(text)
         label.setWordWrap(True)
         label.setTextFormat(Qt.TextFormat.PlainText)
         root.addWidget(label)
         self.versions = QComboBox()
-        for version in overview.versions:
+        for version in versions:
             self.versions.addItem(_local_time(version.created_at) + " · " + version.revision[:12], version.revision)
         self.versions.setAccessibleName(_("Backup version"))
-        self.versions.setVisible(restore)
+        self.versions.setVisible(restore and not local_path)
         root.addWidget(self.versions)
         if restore:
             warning = QLabel(_("Restoring replaces this account's portable data. Other accounts and login credentials are unchanged. A local recovery copy is saved first; sign in again afterwards."))
             warning.setWordWrap(True)
             root.addWidget(warning)
-        self.force = QCheckBox(_("Overwrite despite version differences"))
-        needs_force = overview.local_changed if restore else overview.remote_changed
+        self.force = QCheckBox(_("Replace current account data") if local_path else _("Overwrite despite version differences"))
+        needs_force = True if local_path else overview.local_changed if restore else overview.remote_changed
         self.force.setVisible(needs_force)
         root.addWidget(self.force)
         self.passphrase = QLineEdit()
@@ -97,6 +99,7 @@ class CloudBackupWorkflow(QObject):
         self._last_notification = ""
         self._message = ""
         self._restore_handler = None
+        self._confirming = False
         self._startup_delay_seconds = startup_delay_seconds
         self._startup_ready_at = float("inf")
         self._timer = QTimer(self)
@@ -120,6 +123,7 @@ class CloudBackupWorkflow(QObject):
         panel.test_requested.connect(lambda: self._run(self.service.test_connection, success=_("Connection verified.")))
         panel.upload_requested.connect(lambda: self._prepare(panel, restore=False))
         panel.restore_requested.connect(lambda: self._prepare(panel, restore=True))
+        panel.local_restore_requested.connect(lambda: self._prepare_local(panel))
         if self._configuration is not None:
             panel.set_configuration(self._configuration, self._credentials)
         self._update()
@@ -133,6 +137,8 @@ class CloudBackupWorkflow(QObject):
         status = self._message
         if self._state.get("last_success"):
             status += ("\n" if status else "") + _("Last cloud backup: {time}").format(time=_local_time(self._state["last_success"]))
+        if self._state.get("last_restore"):
+            status += ("\n" if status else "") + _("Last restore: {time}").format(time=_local_time(self._state["last_restore"]))
         if self._state.get("last_error"):
             status += ("\n" if status else "") + display_error_message(ValidationError(self._state["last_error"], self._state["last_error"]))
         if self._state.get("pending_deletions"):
@@ -158,15 +164,17 @@ class CloudBackupWorkflow(QObject):
             if settings.ok and settings.value is not None:
                 self._configuration, self._credentials, self._state = settings.value
                 self._loaded = True
-                if configured or refresh:
+                if (configured and result.ok) or refresh:
                     for panel in tuple(self._panels):
-                        if isValid(panel) and self._configuration is not None:
+                        if isValid(panel) and self._configuration is not None and (configured and result.ok or not panel.has_unsaved_changes):
                             panel.set_configuration(self._configuration, self._credentials)
-            if not settings.ok and result.ok and refresh:
+            if not settings.ok and result.ok and (refresh or configured):
                 result = settings
             if result.ok:
                 self._message = success
                 self._failures, self._last_notification = 0, ""
+                if not refresh:
+                    self._retry_at = 0
             else:
                 self._failures += 1
                 self._retry_at = monotonic() + min(3600, 300 * 2 ** min(self._failures - 1, 4))
@@ -196,14 +204,16 @@ class CloudBackupWorkflow(QObject):
         dialog.open()
 
     def _prepare(self, panel, *, restore):
-        if restore and self._owner is not None and (self._owner.has_unsaved_changes or self._owner.entry_panel.is_busy):
+        if self._busy or panel.has_unsaved_changes:
+            return
+        if restore and not self._restore_allowed():
             self._message = _("Save or discard unsaved edits before restoring a cloud backup.")
             self._update()
             return
         def ready(result):
             if not result.ok or not isValid(panel):
                 return
-            if restore and self._owner is not None and self._owner.has_unsaved_changes:
+            if restore and not self._restore_allowed():
                 self._message = _("Save or discard unsaved edits before restoring a cloud backup.")
                 self._update()
                 return
@@ -213,6 +223,7 @@ class CloudBackupWorkflow(QObject):
                 self._update()
                 return
             dialog = BackupTransferDialog(overview, restore=restore, parent=panel)
+            self._confirming = True
             try:
                 if dialog.exec() != QDialog.DialogCode.Accepted:
                     return
@@ -221,32 +232,77 @@ class CloudBackupWorkflow(QObject):
                     revision, force, passphrase = dialog.versions.currentData(), dialog.force.isChecked(), dialog.passphrase.text() or None
                     operation = lambda: self.service.download(revision, expected_revision=latest,
                         expected_local_digest=overview.local_digest, force=force, passphrase=passphrase)
-                    progress = RestoreProgressDialog(panel.window())
-                    progress.show()
-                    def restored(value):
-                        progress.accept()
-                        progress.deleteLater()
-                        if value.ok:
-                            QMessageBox.information(panel, _("Download and restore"),
-                                _("Data restored. Recovery copy: {path}").format(path=value.value.recovery_path))
-                            if self._restore_handler is not None:
-                                self._restore_handler()
-                    self._run(operation, callback=restored)
+                    self._restore(panel, operation)
                 else:
                     force = dialog.force.isChecked()
                     self._run(lambda: self.service.upload(expected_revision=latest, force=force), success=_("Cloud backup uploaded."))
             finally:
+                self._confirming = False
                 dialog.deleteLater()
         self._run(self.service.overview, callback=ready)
 
+    def _restore(self, panel, operation):
+        if not self._restore_allowed():
+            return
+        progress = RestoreProgressDialog(panel.window())
+        progress.show()
+        def restored(value):
+            progress.accept()
+            progress.deleteLater()
+            if value.ok:
+                QMessageBox.information(panel, _("Download and restore"),
+                    _("Data restored. Recovery copy: {path}").format(path=value.value.recovery_path))
+                if self._restore_handler is not None:
+                    self._restore_handler()
+        self._run(operation, callback=restored)
+
+    def _prepare_local(self, panel):
+        if self._busy:
+            return
+        if not self._restore_allowed():
+            self._message = _("Save or discard unsaved edits before restoring a cloud backup.")
+            self._update()
+            return
+        path, _filter = QFileDialog.getOpenFileName(panel, _("Restore local recovery copy"), "", _("Personal backup files (*.wlbackup)"))
+        if not path:
+            return
+        def ready(result):
+            if not result.ok or not isValid(panel):
+                return
+            if not self._restore_allowed():
+                return
+            dialog = BackupTransferDialog(result.value, restore=True, parent=panel, local_path=path)
+            self._confirming = True
+            try:
+                if dialog.exec() == QDialog.DialogCode.Accepted:
+                    passphrase = dialog.passphrase.text()
+                    self._restore(panel, lambda: self.service.restore_local(path, expected_local_digest=result.value.local_digest,
+                        expected_archive_digest=result.value.archive_digest, passphrase=passphrase))
+            finally:
+                self._confirming = False
+                dialog.deleteLater()
+        self._run(lambda: self.service.preview_local(path), callback=ready)
+
+    def _owner_busy(self):
+        if self._owner is None:
+            return False
+        settings = getattr(self._owner, "_settings_page", None)
+        dialog = getattr(self._owner, "_settings_dialog", None)
+        if dialog is not None:
+            settings = dialog.page
+        return any(bool(getattr(part, "is_busy", False)) for part in (
+            self._owner.entry_panel, getattr(self._owner, "reports_page", None), settings))
+
+    def _restore_allowed(self):
+        return not self._owner_busy() and (self._owner is None or not self._owner.has_unsaved_changes)
+
     def _tick(self):
-        if (self._busy or self._configuration is None
+        if (self._busy or self._confirming or self._configuration is None
                 or monotonic() < max(self._retry_at, self._startup_ready_at)):
             return
-        if self._owner is not None and (self._owner.entry_panel.is_busy
-                or bool(getattr(getattr(self._owner, "reports_page", None), "is_busy", False))):
+        if self._owner_busy():
             return
-        if self._state.get("last_error") in {"cloud_conflict", "cloud_local_changed"}:
+        if self._state.get("last_error") in {"cloud_conflict", "cloud_local_changed", "cloud_configuration_invalid"}:
             return
         last = self._state.get("last_success")
         previous = datetime.fromisoformat(last) if last else None

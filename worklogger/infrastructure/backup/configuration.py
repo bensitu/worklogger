@@ -2,6 +2,9 @@
 
 from dataclasses import asdict
 import json
+import logging
+import re
+from datetime import datetime
 
 from worklogger.domain.cloud_backup import BackupConfiguration, BackupCredentials, CONFIG_KEY, STATE_KEY
 
@@ -27,7 +30,10 @@ class CloudBackupConfigurationStore:
             raise ValueError("cloud_credentials_invalid")
         if configuration.encrypted and not 12 <= len(credentials.passphrase) <= 1024:
             raise ValueError("cloud_passphrase_invalid")
-        previous = self.load()
+        try:
+            previous = self.load()
+        except (ValueError, TypeError):
+            previous = None
         old_credentials = self.credentials.get_secret(self._secret_name)
         if not old_credentials.ok:
             raise ValueError("credential_storage_unavailable")
@@ -35,20 +41,33 @@ class CloudBackupConfigurationStore:
         if not saved.ok:
             raise ValueError("credential_storage_unavailable")
         try:
-            self.settings.set(self.user_id, CONFIG_KEY, json.dumps(asdict(configuration)))
+            values = {CONFIG_KEY: json.dumps(asdict(configuration))}
+            if previous is None or previous.destination != configuration.destination:
+                values[STATE_KEY] = "{}"
+            self.settings.set_many(self.user_id, values)
         except Exception:
             self.credentials.set_secret(self._secret_name, old_credentials.value or "")
             raise
-        if previous is None or previous.destination != configuration.destination:
-            self.save_state({})
 
     def state(self):
-        return json.loads(self.settings.get(self.user_id, STATE_KEY) or "{}")
+        try:
+            state = json.loads(self.settings.get(self.user_id, STATE_KEY) or "{}")
+            if not isinstance(state, dict):
+                raise ValueError
+            for key in ("last_success", "last_restore", "last_attempt"):
+                if state.get(key) and datetime.fromisoformat(state[key]).tzinfo is None:
+                    raise ValueError
+            for key, pattern in (("remote_revision", r"[0-9a-f]{32}"), ("local_digest", r"[0-9a-f]{64}"),
+                                 ("last_error", r"(?:cloud|credential)_[a-z_]+")):
+                if state.get(key) and not re.fullmatch(pattern, state[key]):
+                    raise ValueError
+            pending = state.get("pending_deletions", [])
+            if not isinstance(pending, list) or any(not re.fullmatch(r"[0-9a-f]{32}", item) for item in pending):
+                raise ValueError
+            return state
+        except (ValueError, TypeError, OverflowError, RecursionError):
+            logging.getLogger(__name__).warning("cloud_backup_state_invalid")
+            return {"last_error": "cloud_configuration_invalid"}
 
     def save_state(self, state):
         self.settings.set(self.user_id, STATE_KEY, json.dumps(state))
-
-    def remove_credentials(self):
-        result = self.credentials.set_secret(self._secret_name, "")
-        if not result.ok:
-            raise ValueError("credential_storage_unavailable")

@@ -25,8 +25,10 @@ def _key(value):
 class ConditionalObjectStore:
     def test_connection(self):
         name = "probe-" + uuid4().hex
+        created = False
         try:
             self.put(name, b"connection-test", expected_etag=None)
+            created = True
             found = self.get(name, limit=64)
             if found is None or found.data != b"connection-test":
                 raise ValueError("cloud_connection_failed")
@@ -40,7 +42,8 @@ class ConditionalObjectStore:
                     raise
                 raise ValueError("cloud_conditional_unsupported")
         finally:
-            self.delete(name)
+            if created:
+                self.delete(name)
 
 
 class WebDAVBackupStore(ConditionalObjectStore):

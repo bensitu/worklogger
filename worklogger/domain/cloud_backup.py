@@ -1,7 +1,7 @@
 """Personal backup configuration, schedules, and transfer metadata."""
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 import calendar
 import hashlib
 import json
@@ -32,7 +32,12 @@ class BackupConfiguration:
     month_day: int = 1
 
     def validate(self):
-        address = urlsplit(self.endpoint)
+        try:
+            address = urlsplit(self.endpoint)
+            if address.port is not None and not 1 <= address.port <= 65535:
+                raise ValueError
+        except (TypeError, ValueError, AttributeError):
+            raise ValueError("cloud_configuration_invalid") from None
         if (self.provider not in {"webdav", "s3"} or address.scheme != "https" or not address.hostname
                 or address.username is not None or address.password is not None or address.query or address.fragment
                 or any(ord(char) < 32 for char in self.endpoint)):
@@ -87,6 +92,12 @@ class BackupOverview:
     local_changed: bool
 
 
+@dataclass(frozen=True)
+class LocalBackupOverview:
+    local_digest: str
+    archive_digest: str
+
+
 def backup_due(configuration, last_success: datetime | None, now: datetime):
     if configuration.schedule == "off":
         return False
@@ -95,18 +106,20 @@ def backup_due(configuration, last_success: datetime | None, now: datetime):
     if configuration.schedule == "interval":
         return now.timestamp() >= last_success.timestamp() + configuration.interval_hours * 3600
     hour, minute = map(int, configuration.time.split(":"))
-    local = now.replace(hour=hour, minute=minute, second=0, microsecond=0, fold=0)
-    local = datetime.fromtimestamp(local.timestamp(), now.tzinfo)
-    if configuration.schedule == "daily":
-        if local > now:
-            local -= timedelta(days=1)
-    elif configuration.schedule == "weekly":
-        local -= timedelta(days=(local.weekday() - configuration.weekday) % 7)
-        if local > now:
-            local -= timedelta(days=7)
-    else:
-        local = local.replace(day=min(configuration.month_day, calendar.monthrange(local.year, local.month)[1]))
-        if local > now:
-            first = local.replace(day=1) - timedelta(days=1)
-            local = first.replace(day=min(configuration.month_day, first.day))
+    day = now.date()
+    if configuration.schedule == "weekly":
+        day -= timedelta(days=(day.weekday() - configuration.weekday) % 7)
+    elif configuration.schedule == "monthly":
+        day = day.replace(day=min(configuration.month_day, calendar.monthrange(day.year, day.month)[1]))
+    def slot(day):
+        value = datetime.combine(day, time(hour, minute), tzinfo=now.tzinfo)
+        return datetime.fromtimestamp(value.timestamp(), now.tzinfo)
+    local = slot(day)
+    if local.timestamp() > now.timestamp():
+        if configuration.schedule == "monthly":
+            previous = day.replace(day=1) - timedelta(days=1)
+            day = previous.replace(day=min(configuration.month_day, previous.day))
+        else:
+            day -= timedelta(days=7 if configuration.schedule == "weekly" else 1)
+        local = slot(day)
     return last_success.timestamp() < local.timestamp()

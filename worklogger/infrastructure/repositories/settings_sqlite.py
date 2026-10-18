@@ -54,6 +54,12 @@ class SQLiteSettingsRepository:
                 (user_id, key),
             )
 
+    def set_many(self, user_id: int, values) -> None:
+        with self._connection_factory.transaction(write=True) as connection:
+            connection.executemany("INSERT INTO settings(user_id,key,value) VALUES(?,?,?) "
+                "ON CONFLICT(user_id,key) DO UPDATE SET value=excluded.value",
+                ((user_id, key, str(value)) for key, value in values.items()))
+
     def list_user_ids_for_key_value(self, key: str, value: str) -> tuple[int, ...]:
         with self._connection_factory.connection() as connection:
             rows = connection.execute(

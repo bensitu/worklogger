@@ -2,6 +2,7 @@
 
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 import hashlib
 import unittest
 
@@ -117,3 +118,47 @@ class CloudBackupTests(unittest.TestCase):
             self.assertFalse(backup_due(configuration, self.now, self.now))
         with self.assertRaises(ValueError):
             replace(self.settings.configuration, endpoint="http://insecure.example").validate()
+
+    def test_schedules_handle_month_ends_and_daylight_saving_transitions(self):
+        zone = ZoneInfo("America/New_York")
+        configuration = replace(self.settings.configuration, schedule="daily", time="02:30")
+        previous = datetime(2026, 3, 7, 3, 30, tzinfo=zone)
+        self.assertFalse(backup_due(configuration, previous, datetime(2026, 3, 8, 3, 29, tzinfo=zone)))
+        self.assertTrue(backup_due(configuration, previous, datetime(2026, 3, 8, 3, 30, tzinfo=zone)))
+        configuration = replace(configuration, time="01:30")
+        first = datetime(2026, 11, 1, 1, 30, tzinfo=zone, fold=0)
+        self.assertFalse(backup_due(configuration, first, first.replace(fold=1)))
+        monthly = replace(configuration, schedule="monthly", month_day=31, time="10:00")
+        self.assertTrue(backup_due(monthly, datetime(2026, 1, 31, 10, tzinfo=zone), datetime(2026, 2, 28, 10, tzinfo=zone)))
+        for endpoint in ("https://storage.example:invalid", "https://storage.example:65536", "https://storage.example:0"):
+            with self.assertRaisesRegex(ValueError, "cloud_configuration_invalid"):
+                replace(monthly, endpoint=endpoint).validate()
+
+    def test_failed_retention_cleanup_is_recorded_and_retried_after_publication(self):
+        self.settings.configuration = replace(self.settings.configuration, keep_count=1)
+        self.assertTrue(self.service.upload().ok)
+        original_delete = self.remote.delete
+        self.remote.delete = lambda _key: (_ for _ in ()).throw(OSError("unavailable"))
+        result = self.service.upload()
+        self.assertTrue(result.ok, result.error)
+        self.assertTrue(result.value.retention_pending)
+        self.assertTrue(self.settings.value["pending_deletions"])
+        self.remote.delete = original_delete
+        self.assertTrue(self.service.upload().ok)
+        self.assertEqual(self.settings.value["pending_deletions"], [])
+        self.assertEqual(len(self.remote.objects), 2)
+
+    def test_restore_rechecks_the_manifest_after_fetch_and_rejects_changed_content(self):
+        self.assertTrue(self.service.upload().ok)
+        overview = self.service.overview().value
+        latest = overview.versions[0].revision
+        original_get = self.remote.get
+        def changed_head(key, *, limit):
+            found = original_get(key, limit=limit)
+            if key.startswith("objects/"):
+                self.remote.objects["head.json"] += b" "
+            return found
+        self.remote.get = changed_head
+        result = self.service.download(latest, expected_revision=latest, expected_local_digest=overview.local_digest)
+        self.assertEqual(result.error.code, "cloud_conflict")
+        self.assertEqual(self.recovery, [])

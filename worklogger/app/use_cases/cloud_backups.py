@@ -10,7 +10,7 @@ import re
 from threading import RLock
 from uuid import uuid4
 
-from worklogger.domain.cloud_backup import BackupCredentials, BackupOverview, BackupVersion, MAX_BACKUP_BYTES
+from worklogger.domain.cloud_backup import BackupCredentials, BackupOverview, BackupVersion, LocalBackupOverview, MAX_BACKUP_BYTES
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.app.cloud_backup_ports import BackupArchive, BackupObjectStore, PersonalDataStore
@@ -143,7 +143,7 @@ class CloudBackupService:
     @_result
     def download(self, revision, *, expected_revision, expected_local_digest, force=False, passphrase=None):
         configuration, credentials, store = self._context()
-        versions, _etag = self._head(store)
+        versions, etag = self._head(store)
         if not versions or versions[0].revision != expected_revision:
             raise ValueError("cloud_conflict")
         selected = next((row for row in versions if row.revision == revision), None)
@@ -156,14 +156,41 @@ class CloudBackupService:
         if found is None or len(found.data) != selected.size or _digest(found.data) != selected.sha256:
             raise ValueError("cloud_backup_invalid")
         document = self.archive.decode(found.data, passphrase=credentials.passphrase if passphrase is None else passphrase)
+        _current, current_etag = self._head(store)
+        if current_etag != etag:
+            raise ValueError("cloud_conflict")
+        return self._restore_document(document, expected_local_digest=expected_local_digest,
+            encrypted=configuration.encrypted, passphrase=credentials.passphrase, revision=selected.revision,
+            sync_state={**state, "remote_revision": versions[0].revision, "last_restore": self.now().isoformat(), "last_error": ""})
+
+    def _restore_document(self, document, *, expected_local_digest, encrypted, passphrase, sync_state, revision=""):
         recovery_path = ""
         def before_replace(previous):
             nonlocal recovery_path
-            recovery = self.archive.encode(previous, encrypted=configuration.encrypted, passphrase=credentials.passphrase)
+            recovery = self.archive.encode(previous, encrypted=encrypted, passphrase=passphrase)
             recovery_path = str(self.recovery_store(recovery))
         self.personal_data.restore(document, expected_digest=expected_local_digest, before_replace=before_replace,
-            sync_state={**state, "remote_revision": versions[0].revision, "last_restore": self.now().isoformat(), "last_error": ""})
-        return BackupTransfer(selected.revision, recovery_path)
+            sync_state=sync_state)
+        return BackupTransfer(revision, recovery_path)
+
+    @_result
+    def preview_local(self, path):
+        content = self.recovery_store.read(path)
+        return LocalBackupOverview(_digest(self.personal_data.capture()), _digest(content))
+
+    @_result
+    def restore_local(self, path, *, expected_local_digest, expected_archive_digest, passphrase=""):
+        content = self.recovery_store.read(path)
+        if _digest(content) != expected_archive_digest:
+            raise ValueError("cloud_local_changed")
+        credentials = self.configuration.secrets() if not passphrase else BackupCredentials(passphrase=passphrase)
+        document = self.archive.decode(content, passphrase=passphrase or credentials.passphrase)
+        configuration = self.configuration.load()
+        encrypted = configuration.encrypted if configuration is not None else True
+        state = self.configuration.state()
+        return self._restore_document(document, expected_local_digest=expected_local_digest,
+            encrypted=encrypted, passphrase=passphrase or credentials.passphrase,
+            sync_state={**state, "remote_revision": "", "last_restore": self.now().isoformat(), "last_error": "cloud_local_changed"})
 
     @_result
     def record_failure(self, code):

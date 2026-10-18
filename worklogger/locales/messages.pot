@@ -1160,6 +1160,9 @@ msgstr ""
 msgid "Keep this draft for later?"
 msgstr ""
 
+msgid "Keep this independent passphrase safe. If it is lost, encrypted backups cannot be restored."
+msgstr ""
+
 msgid "Keep this recovery key private. The saved file is not encrypted."
 msgstr ""
 
@@ -1182,6 +1185,9 @@ msgid "Last backup: {time}"
 msgstr ""
 
 msgid "Last cloud backup: {time}"
+msgstr ""
+
+msgid "Last restore: {time}"
 msgstr ""
 
 msgid "Last saved: {time}"
@@ -1649,6 +1655,9 @@ msgstr ""
 msgid "Period type"
 msgstr ""
 
+msgid "Personal backup files (*.wlbackup)"
+msgstr ""
+
 msgid "Personal cloud backup"
 msgstr ""
 
@@ -1820,6 +1829,9 @@ msgstr ""
 msgid "Recovered draft"
 msgstr ""
 
+msgid "Recovery file: {path}"
+msgstr ""
+
 msgid "Recovery key"
 msgstr ""
 
@@ -1866,6 +1878,9 @@ msgid "Replace affected dates"
 msgstr ""
 
 msgid "Replace and save"
+msgstr ""
+
+msgid "Replace current account data"
 msgstr ""
 
 msgid "Replace entire overlapping records"
@@ -1935,6 +1950,9 @@ msgid "Restore Data"
 msgstr ""
 
 msgid "Restore cancelled"
+msgstr ""
+
+msgid "Restore local recovery copy"
 msgstr ""
 
 msgid "Restore this version as the current report? Any unsaved editor content will be replaced after successful recovery."
@@ -2040,6 +2058,9 @@ msgid "Save temporary password"
 msgstr ""
 
 msgid "Save the completed automatic record before starting another."
+msgstr ""
+
+msgid "Save the settings before connecting or transferring backups."
 msgstr ""
 
 msgid "Save this recovery key before continuing."
@@ -2772,6 +2793,9 @@ msgid "Use a single-line display name without control characters."
 msgstr ""
 
 msgid "Use a web proxy for this application."
+msgstr ""
+
+msgid "Use an S3 session token"
 msgstr ""
 
 msgid "Use an application registration supplied by your distributor or administrator. This is not your account password."

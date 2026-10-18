@@ -13,6 +13,46 @@ from worklogger.domain.worklog.models import WorkLog
 
 
 class PersonalBackupTests(unittest.TestCase):
+    def test_cloud_and_local_recovery_round_trip_current_account_without_replacing_other_accounts(self):
+        from pathlib import Path
+        from tests.app.test_cloud_backups import MemoryObjects
+        from tests.infrastructure.test_proxy_credentials import FakeKeyring
+        from worklogger.app.use_cases.cloud_backups import CloudBackupService
+        from worklogger.domain.cloud_backup import BackupConfiguration, BackupCredentials
+        from worklogger.infrastructure.backup.configuration import CloudBackupConfigurationStore
+        from worklogger.infrastructure.backup.recovery import PersonalRecoveryStore
+        from worklogger.infrastructure.repositories import SQLiteSettingsRepository
+        from worklogger.infrastructure.security.key_store import SystemCredentialStore
+        configuration = CloudBackupConfigurationStore(SQLiteSettingsRepository(self.factory),
+            SystemCredentialStore(namespace="synthetic-personal-recovery", backend=FakeKeyring()), self.owner)
+        remote = MemoryObjects()
+        recovery = PersonalRecoveryStore(Path(self.factory.database_path).parent / "personal-recovery")
+        service = CloudBackupService(configuration=configuration, personal_data=self.personal,
+            archive=PersonalBackupArchive(), store_factory=lambda *_args: remote, recovery_store=recovery)
+        password = "independent-backup-passphrase"
+        self.assertTrue(service.configure(BackupConfiguration(endpoint="https://storage.example"),
+            BackupCredentials("user", "secret", passphrase=password)).ok)
+        self.assertTrue(service.upload().ok)
+        record = self.repository.list_for_day(self.owner, date(2026, 10, 18))[0]
+        self.repository.save_entry(replace(record, note="After upload"))
+        overview = service.overview().value
+        latest = overview.versions[0].revision
+        result = service.download(latest, expected_revision=latest, expected_local_digest=overview.local_digest, force=True)
+        self.assertTrue(result.ok, result.error)
+        self.assertEqual(self.repository.list_for_day(self.owner, record.day)[0].note, "Personal work")
+        self.assertNotIn(b"After upload", recovery.read(result.value.recovery_path))
+        preview = service.preview_local(result.value.recovery_path).value
+        restored = service.restore_local(result.value.recovery_path, expected_local_digest=preview.local_digest,
+            expected_archive_digest=preview.archive_digest, passphrase=password)
+        self.assertTrue(restored.ok, restored.error)
+        self.assertEqual(self.repository.list_for_day(self.owner, record.day)[0].note, "After upload")
+        self.assertEqual(self.repository.list_for_day(self.other, record.day)[0].note, "Private other work")
+        self.assertEqual(configuration.state()["last_error"], "cloud_local_changed")
+        changed = Path(result.value.recovery_path)
+        changed.write_bytes(changed.read_bytes() + b"changed")
+        self.assertEqual(service.restore_local(changed, expected_local_digest=preview.local_digest,
+            expected_archive_digest=preview.archive_digest, passphrase=password).error.code, "cloud_local_changed")
+
     def test_personal_restore_remaps_arrangement_catalogs_and_reads_predecessor_snapshots(self):
         from worklogger.app.use_cases.work_modes import WorkModeService
         from worklogger.infrastructure.repositories.entry_type_sqlite import SQLiteWorkModeRepository

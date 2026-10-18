@@ -9,7 +9,9 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication, QDialog, QWidget
 
-from worklogger.domain.cloud_backup import BackupConfiguration, BackupCredentials, BackupOverview
+from worklogger.domain.cloud_backup import BackupConfiguration, BackupCredentials, BackupOverview, LocalBackupOverview
+from worklogger.app.use_cases.cloud_backups import BackupTransfer
+from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.presentation.job_runner import ImmediateJobRunner
 from worklogger.presentation.settings.sections.cloud_backup import CloudBackupPanel
@@ -28,6 +30,7 @@ class CloudBackupWorkflowTests(unittest.TestCase):
         self.service.settings.return_value = Result.success((
             BackupConfiguration(endpoint="https://storage.example", schedule="daily"), BackupCredentials(), {}))
         self.service.upload.return_value = Result.success(None)
+        self.service.record_failure.return_value = Result.success(None)
         self.service.overview.return_value = Result.success(BackupOverview((), "local-digest", False, False))
         self.owner = QWidget()
         self.owner.entry_panel = SimpleNamespace(is_busy=False)
@@ -80,3 +83,75 @@ class CloudBackupWorkflowTests(unittest.TestCase):
             self.assertTrue(panel.upload_button.isEnabled())
             panel.upload_button.click()
         self.service.upload.assert_called_once_with(expected_revision="", force=False)
+
+    def test_unsaved_fields_disable_transfers_and_failed_save_preserves_the_draft(self):
+        workflow = self.workflow(86400)
+        workflow._notify = Mock()
+        panel = CloudBackupPanel(self.owner)
+        workflow.bind(panel)
+        panel.endpoint.setText("https://changed-storage.example")
+        self.assertFalse(panel.upload_button.isEnabled())
+        self.assertFalse(panel.test_button.isEnabled())
+        self.assertFalse(panel.restore_button.isEnabled())
+        self.service.configure.return_value = Result.failure(ValidationError("cloud_credentials_invalid", "cloud_credentials_invalid"))
+        panel.save_button.click()
+        self.assertEqual(panel.endpoint.text(), "https://changed-storage.example")
+        self.assertTrue(panel.has_unsaved_changes)
+        self.service.upload.assert_not_called()
+
+    def test_saved_s3_session_tokens_can_be_cleared_explicitly(self):
+        from dataclasses import replace
+        configuration = replace(self.service.settings.return_value.value[0], provider="s3", bucket="personal-backups")
+        credentials = BackupCredentials("user", "password", "temporary-token", "example-backup-passphrase")
+        panel = CloudBackupPanel(self.owner)
+        panel.set_configuration(configuration, credentials)
+        panel.set_busy(False, configured=True)
+        saved = []
+        panel.save_requested.connect(lambda configuration, credentials: saved.append(credentials))
+        panel.temporary_credentials.setChecked(False)
+        panel.save_button.click()
+        self.assertEqual(saved[0].session_token, "")
+        self.assertEqual(saved[0].password, "password")
+        self.assertTrue(panel.session_token.isHidden())
+
+    def test_automatic_failures_are_reported_and_backoff_without_repeated_notifications(self):
+        workflow = self.workflow(0)
+        workflow._notify = Mock()
+        self.service.upload.return_value = Result.failure(ValidationError("cloud_connection_failed", "cloud_connection_failed"))
+        workflow.reload()
+        self.assertEqual(self.service.upload.call_count, 1)
+        workflow._tick()
+        self.assertEqual(self.service.upload.call_count, 1)
+        self.clock.return_value = 401
+        workflow._tick()
+        self.assertEqual(self.service.upload.call_count, 2)
+        workflow._notify.assert_called_once()
+        self.assertEqual(self.service.record_failure.call_count, 2)
+        self.service.upload.return_value = Result.success(None)
+        self.clock.return_value = 1002
+        workflow._tick()
+        self.assertEqual(self.service.upload.call_count, 3)
+        self.assertEqual(workflow._failures, 0)
+
+    def test_confirmation_blocks_automatic_uploads_and_local_recovery_requires_no_cloud_request(self):
+        workflow = self.workflow(17)
+        workflow.set_restore_handler(Mock())
+        panel = CloudBackupPanel(self.owner)
+        workflow.bind(panel)
+        self.clock.return_value = 117
+        self.service.preview_local.return_value = Result.success(LocalBackupOverview("local", "archive"))
+        self.service.restore_local.return_value = Result.success(BackupTransfer("", "recovery-copy.wlbackup"))
+        with patch("worklogger.presentation.settings.workflows.cloud_backup.QFileDialog.getOpenFileName", return_value=("local.wlbackup", "")), \
+                patch("worklogger.presentation.settings.workflows.cloud_backup.BackupTransferDialog") as dialog_factory, \
+                patch("worklogger.presentation.settings.workflows.cloud_backup.QMessageBox.information"):
+            def confirm():
+                workflow._tick()
+                self.service.upload.assert_not_called()
+                return QDialog.DialogCode.Accepted
+            dialog_factory.return_value.exec.side_effect = confirm
+            dialog_factory.return_value.passphrase.text.return_value = "recovery-passphrase"
+            panel.local_restore_button.click()
+        self.service.restore_local.assert_called_once_with("local.wlbackup", expected_local_digest="local",
+            expected_archive_digest="archive", passphrase="recovery-passphrase")
+        workflow._restore_handler.assert_called_once()
+        self.service.overview.assert_not_called()

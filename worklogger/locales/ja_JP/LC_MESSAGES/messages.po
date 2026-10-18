@@ -1162,6 +1162,9 @@ msgstr "現在の下書きを保持して、別の日付を開きますか？"
 msgid "Keep this draft for later?"
 msgstr "この下書きを後で使えるように保持しますか？"
 
+msgid "Keep this independent passphrase safe. If it is lost, encrypted backups cannot be restored."
+msgstr "この独立したパスフレーズを安全に保管してください。紛失すると暗号化バックアップを復元できません。"
+
 msgid "Keep this recovery key private. The saved file is not encrypted."
 msgstr "この復旧キーを他人に知らせないでください。保存ファイルは暗号化されません。"
 
@@ -1185,6 +1188,9 @@ msgstr "最終バックアップ：{time}"
 
 msgid "Last cloud backup: {time}"
 msgstr "前回のクラウドバックアップ: {time}"
+
+msgid "Last restore: {time}"
+msgstr "前回の復元: {time}"
 
 msgid "Last saved: {time}"
 msgstr "最終保存：{time}"
@@ -1651,6 +1657,9 @@ msgstr "貼り付け"
 msgid "Period type"
 msgstr "時間帯の種類"
 
+msgid "Personal backup files (*.wlbackup)"
+msgstr "個人用バックアップファイル (*.wlbackup)"
+
 msgid "Personal cloud backup"
 msgstr "個人用クラウドバックアップ"
 
@@ -1822,6 +1831,9 @@ msgstr "中断された復元の復旧"
 msgid "Recovered draft"
 msgstr "復元された下書き"
 
+msgid "Recovery file: {path}"
+msgstr "復旧用ファイル: {path}"
+
 msgid "Recovery key"
 msgstr "復旧キー"
 
@@ -1869,6 +1881,9 @@ msgstr "対象日の全記録を置換"
 
 msgid "Replace and save"
 msgstr "置き換えて保存"
+
+msgid "Replace current account data"
+msgstr "現在のアカウントのデータを置換"
 
 msgid "Replace entire overlapping records"
 msgstr "重複する記録全体を置き換える"
@@ -1938,6 +1953,9 @@ msgstr "データを復元"
 
 msgid "Restore cancelled"
 msgstr "復元をキャンセルしました"
+
+msgid "Restore local recovery copy"
+msgstr "ローカルの復旧用コピーを復元"
 
 msgid "Restore this version as the current report? Any unsaved editor content will be replaced after successful recovery."
 msgstr "このバージョンを現在の報告書として復元しますか？復元に成功すると未保存の編集内容が置き換わります。"
@@ -2043,6 +2061,9 @@ msgstr "一時パスワードを保存"
 
 msgid "Save the completed automatic record before starting another."
 msgstr "新しい記録を開始する前に、終了した自動記録を保存してください。"
+
+msgid "Save the settings before connecting or transferring backups."
+msgstr "接続またはバックアップの転送前に設定を保存してください。"
 
 msgid "Save this recovery key before continuing."
 msgstr "続行する前に、この復旧キーを保存してください。"
@@ -2775,6 +2796,9 @@ msgstr "表示名は制御文字を含まない1行の文字列にしてくだ�
 
 msgid "Use a web proxy for this application."
 msgstr "このアプリでWebプロキシを使用します。"
+
+msgid "Use an S3 session token"
+msgstr "S3 セッショントークンを使用"
 
 msgid "Use an application registration supplied by your distributor or administrator. This is not your account password."
 msgstr "配布元または管理者が提供したアプリケーション登録情報を使用します。アカウントのパスワードではありません。"

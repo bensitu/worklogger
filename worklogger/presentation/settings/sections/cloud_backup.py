@@ -23,9 +23,11 @@ class CloudBackupPanel(QWidget):
     test_requested = Signal()
     upload_requested = Signal()
     restore_requested = Signal()
+    local_restore_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._loading, self._dirty, self._busy, self._configured = True, False, False, False
         from PySide6.QtWidgets import QVBoxLayout
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -43,6 +45,9 @@ class CloudBackupPanel(QWidget):
         for text in (self.endpoint, self.username, self.prefix, self.bucket, self.region):
             text.setMaxLength(1024)
         self.encrypted = QCheckBox(_("Client-side encryption"))
+        self.temporary_credentials = QCheckBox(_("Use an S3 session token"))
+        self.passphrase.setMaxLength(1024)
+        self.passphrase.setToolTip(_("Keep this independent passphrase safe. If it is lost, encrypted backups cannot be restored."))
         self.keep_count, self.keep_days = _number(1, 200), _number(1, 3650)
         self.schedule = QComboBox()
         for caption, key in ((_("Off"), "off"), (_("Every N hours"), "interval"), (_("Every day"), "daily"),
@@ -59,23 +64,27 @@ class CloudBackupPanel(QWidget):
         labels = (("provider", _("Storage provider")), ("endpoint", _("HTTPS endpoint")),
                   ("prefix", _("Backup directory / prefix")), ("username", _("Username / access key ID")),
                   ("password", _("Password / secret access key")), ("bucket", _("S3 bucket")),
-                  ("region", _("S3 region")), ("session_token", _("S3 session token")),
+                  ("region", _("S3 region")), ("temporary_credentials", ""), ("session_token", _("S3 session token")),
                   ("encrypted", ""), ("passphrase", _("Backup passphrase")),
                   ("keep_count", _("Maximum retained backups")), ("keep_days", _("Retention days")),
                   ("schedule", _("Automatic backup")), ("interval_hours", _("Interval (hours)")),
                   ("time", _("Local time")), ("weekday", _("Day of week")), ("month_day", _("Day of month")))
         for name, caption in labels:
             field = getattr(self, name)
-            field.setAccessibleName(caption or _("Client-side encryption"))
+            field.setAccessibleName(caption or field.text())
             card.form_layout.addRow(caption, field)
             self._rows[name] = (card.form_layout.labelForField(field), field)
         self.save_button, self.test_button = QPushButton(_("Save")), QPushButton(_("Test connection"))
         self.upload_button, self.restore_button = QPushButton(_("Upload backup")), QPushButton(_("Download and restore"))
+        self.local_restore_button = QPushButton(_("Restore local recovery copy"))
         for button, icon in ((self.save_button, "save"), (self.test_button, "link"),
                              (self.upload_button, "upload"), (self.restore_button, "download")):
             button.setProperty("variant", "outline")
             set_button_icon(button, icon)
         _add_action_buttons(card, self.save_button, self.test_button, self.upload_button, self.restore_button, columns=2)
+        set_button_icon(self.local_restore_button, "rotate-ccw")
+        self.local_restore_button.setProperty("variant", "outline")
+        _add_action_buttons(card, self.local_restore_button)
         self.status_label = _secondary_label("")
         self.status_label.setTextFormat(Qt.TextFormat.PlainText)
         card.content_layout.addWidget(self.status_label)
@@ -83,18 +92,48 @@ class CloudBackupPanel(QWidget):
         self.test_button.clicked.connect(self.test_requested.emit)
         self.upload_button.clicked.connect(self.upload_requested.emit)
         self.restore_button.clicked.connect(self.restore_requested.emit)
+        self.local_restore_button.clicked.connect(self.local_restore_requested.emit)
         self.provider.currentIndexChanged.connect(self._sync_rows)
         self.schedule.currentIndexChanged.connect(self._sync_rows)
         self.encrypted.toggled.connect(self._sync_rows)
+        self.temporary_credentials.toggled.connect(self._sync_rows)
         self._saved_configuration = None
         self._credentials = BackupCredentials()
         self.set_configuration(BackupConfiguration(prefix="worklogger/" + uuid4().hex), self._credentials)
         self._saved_configuration = None
+        for name in (*[field.name for field in fields(BackupConfiguration)], "username", "password", "passphrase", "session_token", "temporary_credentials"):
+            control = getattr(self, name)
+            if isinstance(control, QComboBox):
+                control.currentIndexChanged.connect(self._mark_changed)
+            elif isinstance(control, QCheckBox):
+                control.toggled.connect(self._mark_changed)
+            elif isinstance(control, QSpinBox):
+                control.valueChanged.connect(self._mark_changed)
+            elif isinstance(control, QTimeEdit):
+                control.timeChanged.connect(self._mark_changed)
+            else:
+                control.textChanged.connect(self._mark_changed)
         self.setEnabled(False)
+
+    @property
+    def has_unsaved_changes(self):
+        return self._dirty
+
+    def _mark_changed(self, *_args):
+        if not self._loading:
+            self._dirty = True
+            self._refresh_actions()
+
+    def _refresh_actions(self):
+        for button in (self.upload_button, self.restore_button, self.test_button):
+            button.setEnabled(not self._busy and self._configured and not self._dirty)
+            button.setToolTip(_("Save the settings before connecting or transferring backups.") if self._dirty else "")
+        self.local_restore_button.setEnabled(not self._busy)
 
     def _sync_rows(self, *_args):
         provider, schedule = self.provider.currentData(), self.schedule.currentData()
-        visible = {"bucket": provider == "s3", "region": provider == "s3", "session_token": provider == "s3",
+        visible = {"bucket": provider == "s3", "region": provider == "s3", "temporary_credentials": provider == "s3",
+                   "session_token": provider == "s3" and self.temporary_credentials.isChecked(),
                    "passphrase": self.encrypted.isChecked(), "interval_hours": schedule == "interval",
                    "time": schedule in {"daily", "weekly", "monthly"}, "weekday": schedule == "weekly",
                    "month_day": schedule == "monthly"}
@@ -105,6 +144,7 @@ class CloudBackupPanel(QWidget):
                 label.setVisible(shown)
 
     def set_configuration(self, configuration, credentials):
+        self._loading = True
         self._saved_configuration, self._credentials = configuration, credentials
         for field in fields(configuration):
             control, value = getattr(self, field.name), getattr(configuration, field.name)
@@ -119,11 +159,14 @@ class CloudBackupPanel(QWidget):
             else:
                 control.setText(value)
         self.username.setText(credentials.username)
+        self.temporary_credentials.setChecked(bool(credentials.session_token))
         for name in ("password", "passphrase", "session_token"):
             control = getattr(self, name)
             control.clear()
             control.setPlaceholderText(_("Stored securely") if getattr(credentials, name) else "")
         self._sync_rows()
+        self._loading, self._dirty = False, False
+        self._refresh_actions()
 
     def _save(self):
         from PySide6.QtWidgets import QMessageBox
@@ -138,10 +181,11 @@ class CloudBackupPanel(QWidget):
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
                 return
         credentials = BackupCredentials(self.username.text().strip(), self.password.text() or self._credentials.password,
-            self.session_token.text() or self._credentials.session_token, self.passphrase.text() or self._credentials.passphrase)
+            (self.session_token.text() or self._credentials.session_token) if configuration.provider == "s3" and self.temporary_credentials.isChecked() else "",
+            self.passphrase.text() or self._credentials.passphrase)
         self.save_requested.emit(configuration, credentials)
 
     def set_busy(self, busy, *, configured):
+        self._busy, self._configured = busy, configured
         self.setEnabled(not busy)
-        for button in (self.upload_button, self.restore_button, self.test_button):
-            button.setEnabled(not busy and configured)
+        self._refresh_actions()

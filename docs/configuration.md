@@ -218,8 +218,12 @@ and network; do not put passwords in configuration files.
 | Deployment configuration | Repository-root `worklogger.config.json` | Adjacent override or bundled copy |
 | Assets/catalogs | Package resources | Bundled resources |
 
-Open Settings > Data > Data location to see the active path. Model files are shared
+Open Settings > Data > Local data location to see the active path. Model files are shared
 by accounts using that database directory; model selection is per account.
+
+Configure account-scoped WebDAV or S3-compatible storage separately under
+**Personal cloud backup**. See [personal cloud backups](cloud-backups.md) for
+credentials, encryption, schedules, version checks, retention, and restoration.
 
 Session and installation credential files use `%APPDATA%/WorkLogger/` on Windows,
 `~/Library/Application Support/WorkLogger/` for new macOS installations, and

@@ -39,7 +39,7 @@ class AccountNetworkTests(unittest.TestCase):
         gateway = AccountAIGateway(local=Mock(available=True), settings=self.settings,
                                    user_id=1, key_store=self.keys, transport=self.transport)
         self.assertTrue(gateway.available)
-        self.assertIsNone(self.transport._proxy_url())
+        self.assertIsNone(self.transport.proxy_url())
         self.settings.get_all.assert_not_called()
         for call in self.settings.get_many.call_args_list:
             self.assertNotIn("daily_note_draft", call.args[1])
@@ -154,8 +154,8 @@ class AccountNetworkTests(unittest.TestCase):
             self.values.update(ai_assist_enabled=enabled, network_proxy_enabled=enabled,
                                network_proxy_address="127.0.0.1", network_proxy_port="8080")
             self.assertTrue(gateway.available)
-            self.assertEqual(self.transport._proxy_url(), "http://127.0.0.1:8080")
+            self.assertEqual(self.transport.proxy_url(), "http://127.0.0.1:8080")
         for disabled in ("0", "false", "off"):
             self.values.update(ai_assist_enabled=disabled, network_proxy_enabled=disabled)
             self.assertFalse(gateway.available)
-            self.assertIsNone(self.transport._proxy_url())
+            self.assertIsNone(self.transport.proxy_url())

@@ -33,6 +33,9 @@ open **Linked identities**, and link the provider. Signing in with an unlinked
 identity creates a separate account; matching names or emails do not merge data.
 See [browser sign-in](identity-signin.md) for provider registration.
 
+For current-account cloud storage, schedules, encryption, and recovery, see
+[personal cloud backups](cloud-backups.md).
+
 ## Recording Time
 
 Select a date in Calendar. The right panel shows its editor and saved records.

@@ -1162,6 +1162,9 @@ msgstr "保留当前草稿并打开其他日期吗？"
 msgid "Keep this draft for later?"
 msgstr "保留这份草稿以便稍后继续吗？"
 
+msgid "Keep this independent passphrase safe. If it is lost, encrypted backups cannot be restored."
+msgstr "请妥善保管独立备份口令，遗失后将无法恢复加密备份。"
+
 msgid "Keep this recovery key private. The saved file is not encrypted."
 msgstr "请妥善保管此恢复密钥，不要分享给他人。保存的文件未加密。"
 
@@ -1185,6 +1188,9 @@ msgstr "最近备份：{time}"
 
 msgid "Last cloud backup: {time}"
 msgstr "上次云备份：{time}"
+
+msgid "Last restore: {time}"
+msgstr "上次恢复：{time}"
 
 msgid "Last saved: {time}"
 msgstr "最近保存：{time}"
@@ -1651,6 +1657,9 @@ msgstr "粘贴"
 msgid "Period type"
 msgstr "时段类型"
 
+msgid "Personal backup files (*.wlbackup)"
+msgstr "个人备份文件 (*.wlbackup)"
+
 msgid "Personal cloud backup"
 msgstr "个人云备份"
 
@@ -1822,6 +1831,9 @@ msgstr "处理未完成的恢复"
 msgid "Recovered draft"
 msgstr "已恢复草稿"
 
+msgid "Recovery file: {path}"
+msgstr "恢复文件：{path}"
+
 msgid "Recovery key"
 msgstr "恢复密钥"
 
@@ -1869,6 +1881,9 @@ msgstr "替换涉及日期的全部记录"
 
 msgid "Replace and save"
 msgstr "替换并保存"
+
+msgid "Replace current account data"
+msgstr "替换当前账户数据"
 
 msgid "Replace entire overlapping records"
 msgstr "替换重叠的整条记录"
@@ -1938,6 +1953,9 @@ msgstr "恢复数据"
 
 msgid "Restore cancelled"
 msgstr "已取消恢复"
+
+msgid "Restore local recovery copy"
+msgstr "恢复本地恢复副本"
 
 msgid "Restore this version as the current report? Any unsaved editor content will be replaced after successful recovery."
 msgstr "将此版本恢复为当前报表？恢复成功后将替换编辑器中未保存的内容。"
@@ -2043,6 +2061,9 @@ msgstr "保存临时密码"
 
 msgid "Save the completed automatic record before starting another."
 msgstr "开始新的自动记录前，请先保存已结束的记录。"
+
+msgid "Save the settings before connecting or transferring backups."
+msgstr "请先保存设置，再连接或传输备份。"
 
 msgid "Save this recovery key before continuing."
 msgstr "继续前请保存此恢复密钥。"
@@ -2775,6 +2796,9 @@ msgstr "显示名称必须为单行，且不能包含控制字符。"
 
 msgid "Use a web proxy for this application."
 msgstr "为此应用使用网页代理。"
+
+msgid "Use an S3 session token"
+msgstr "使用 S3 会话令牌"
 
 msgid "Use an application registration supplied by your distributor or administrator. This is not your account password."
 msgstr "使用发行方或管理员提供的应用注册信息。这里不是账户密码。"
