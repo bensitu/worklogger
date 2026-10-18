@@ -28,7 +28,15 @@ Passwords require at least eight characters. Password and recovery verification
 uses salted hashes. Login IDs use canonical Unicode comparison; display aliases
 do not affect authentication or ownership.
 
-Repeated login/recovery failures cause temporary lockouts. Remembered local
+Repeated login/recovery failures cause temporary lockouts of at most 30 minutes.
+Password and recovery-key attempts have independent counters; a password lockout
+does not prevent recovery with the correct key. The sign-in window reports the
+remaining delay without extending it when a locked attempt is retried.
+Recovery keys accept uppercase hexadecimal and differences in spaces or hyphens.
+New IDs reject invisible control/formatting characters, and passwords are limited
+to 1024 UTF-8 bytes. Passwords retain their exact Unicode representation so that
+existing password hashes do not change meaning during an upgrade.
+Remembered local
 credentials expire and are invalidated by password workflows.
 Logout revokes the account's remembered credential before removing the device
 session file. A file-removal failure is reported, and the next sign-in is manual.

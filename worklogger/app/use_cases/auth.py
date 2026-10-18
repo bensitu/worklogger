@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import secrets
+import math
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
@@ -102,8 +103,10 @@ class LoginHandler:
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
 
-        if self._is_locked(username):
-            return Result.failure(AuthenticationError("invalid_credentials", "invalid_credentials"))
+        remaining = _locked_seconds(self._failures, username)
+        if remaining:
+            self._credentials.verify_dummy_password(password)
+            return Result.failure(AuthenticationError("account_locked", "account_locked", {"seconds": remaining}))
 
         user = self._credentials.verify_user(username, password)
         if user is None:
@@ -125,17 +128,6 @@ class LoginHandler:
         else:
             self._credentials.set_remember_token(user.id, None, None)
         return Result.success(RememberedLogin(user=user, token=remember_token))
-
-    def _is_locked(self, username: str) -> bool:
-        if self._failures is None:
-            return False
-        locked_until = self._failures.lockout_until(username)
-        if locked_until is None:
-            return False
-        if locked_until.tzinfo is None:
-            locked_until = locked_until.replace(tzinfo=timezone.utc)
-        return locked_until > datetime.now(timezone.utc)
-
 
 class LoginWithRememberTokenHandler:
     def __init__(self, credentials: AuthCredentialRepository) -> None:
@@ -204,10 +196,10 @@ class ResetPasswordHandler:
             )
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
-        if self._failures is not None:
-            until = self._failures.lockout_until(username)
-            if until is not None and until.replace(tzinfo=until.tzinfo or timezone.utc) > datetime.now(timezone.utc):
-                return Result.failure(AuthenticationError("invalid_recovery_key", "invalid_recovery_key"))
+        remaining = _locked_seconds(self._failures, username)
+        if remaining:
+            self._credentials.verify_dummy_password(recovery_key)
+            return Result.failure(AuthenticationError("account_locked", "account_locked", {"seconds": remaining}))
         reset = self._credentials.reset_password_with_recovery(
             username,
             recovery_key,
@@ -365,6 +357,13 @@ def _require_admin(
 
 def _admin_count(users: tuple[User, ...]) -> int:
     return sum(1 for user in users if user.is_admin)
+
+
+def _locked_seconds(failures, username):
+    until = failures.lockout_until(username) if failures is not None else None
+    if until is None:
+        return 0
+    return max(0, math.ceil((until.replace(tzinfo=until.tzinfo or timezone.utc) - datetime.now(timezone.utc)).total_seconds()))
 
 
 class RevokeRememberedSessionHandler:

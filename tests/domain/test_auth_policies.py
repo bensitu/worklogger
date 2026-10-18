@@ -28,6 +28,12 @@ class AuthPolicyTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "username_too_long"):
             require_new_username("a" * 121)
         self.assertEqual(normalize_username("a" * 121), "a" * 121)
+        for name in ("admin\u200b", "admin\nname", "admin\u202e"):
+            with self.assertRaisesRegex(ValueError, "username_invalid"):
+                require_new_username(name)
+        with self.assertRaisesRegex(ValueError, "password_too_long"):
+            require_password("a" * 1025)
+        self.assertEqual(require_password("e\u0301" * 8), "e\u0301" * 8)
 
     def test_recovery_key_is_grouped_hex_material(self) -> None:
         key = generate_recovery_key(token_bytes=4, group_size=2)

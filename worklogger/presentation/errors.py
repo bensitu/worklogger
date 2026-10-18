@@ -21,6 +21,8 @@ def display_error_message(error: AppError | None) -> str:
         return _("Operation cancelled.")
     if error is not None and logging.getLogger().handlers:
         LOGGER.error("app_error_displayed", extra={"error_code": error.code})
+    if error is not None and error.code == "account_locked":
+        return _(ERROR_MESSAGES[error.code]).format(seconds=max(1, int(error.details.get("seconds", 1))))
     return display_error_code(error.code) if error is not None else _("Unknown error")
 
 

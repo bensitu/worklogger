@@ -12,6 +12,7 @@ from worklogger.domain.auth.policies import (
     generate_recovery_key,
     normalize_username,
     require_new_username,
+    recovery_key_candidates,
     remember_token_is_expired,
     username_key,
 )
@@ -100,7 +101,9 @@ class SQLiteAuthRepository:
                 )
                 user_id = int(cursor.lastrowid)
         except sqlite3.IntegrityError as exc:
-            raise ValueError("username_exists") from exc
+            if getattr(exc, "sqlite_errorname", "") == "SQLITE_CONSTRAINT_UNIQUE":
+                raise ValueError("username_exists") from exc
+            raise
         user = self.get_by_id(user_id)
         if user is None:
             raise RuntimeError("created_user_not_found")
@@ -130,7 +133,9 @@ class SQLiteAuthRepository:
                     "must_change_password,created_at,password_changed_at,local_password_enabled) VALUES(?,?,?,?,0,0,?,?,0)",
                     (username, username_key(username), material.hash_hex, material.salt_hex, now, now))
             except sqlite3.IntegrityError as exc:
-                raise ValueError("username_exists") from exc
+                if getattr(exc, "sqlite_errorname", "") == "SQLITE_CONSTRAINT_UNIQUE":
+                    raise ValueError("username_exists") from exc
+                raise
             user_id = int(cursor.lastrowid)
             cursor = connection.execute(
                 "INSERT INTO external_identities(user_id,provider,subject,email,display_name,created_at,updated_at,broker,issuer) "
@@ -180,6 +185,9 @@ class SQLiteAuthRepository:
             return None
         return self._complete_password_login(row, password, upgrade=verification.needs_upgrade)
 
+    def verify_dummy_password(self, password: str) -> None:
+        self._password_hasher.verify(password, _DUMMY_PASSWORD_HASH, _DUMMY_PASSWORD_SALT)
+
     def change_password(
         self,
         user_id: int,
@@ -225,12 +233,8 @@ class SQLiteAuthRepository:
                 _DUMMY_PASSWORD_SALT,
             )
             return None
-        verification = self._password_hasher.verify(
-            cleaned_key,
-            str(row["recovery_key_hash"]),
-            str(row["recovery_salt"]),
-        )
-        if not verification.matched:
+        if not any(self._password_hasher.verify(candidate, str(row["recovery_key_hash"]),
+                   str(row["recovery_salt"])).matched for candidate in recovery_key_candidates(cleaned_key)):
             return None
         user_id = int(row["id"])
         new_recovery_key = self._reset_password(
@@ -256,7 +260,7 @@ class SQLiteAuthRepository:
         return self._reset_password(
             user_id,
             new_password,
-            must_change_password=True,
+            must_change_password=bool(must_change_password),
             issue_recovery_key=False,
         )
 
@@ -290,8 +294,8 @@ class SQLiteAuthRepository:
         with self._connection_factory.transaction(write=True) as connection:
             if username is not None:
                 connection.execute(
-                    "DELETE FROM login_attempts WHERE username=?",
-                    (username_key(username),),
+                    "DELETE FROM login_attempts WHERE username IN (?,?)",
+                    (username_key(username), "\0recovery:" + username_key(username)),
                 )
             connection.execute("UPDATE activity_events SET user_id=NULL WHERE user_id=?", (user_id,))
             cursor = connection.execute(
@@ -424,7 +428,8 @@ class SQLiteAuthRepository:
             )
             if cursor.rowcount:
                 connection.execute("UPDATE users SET local_password_enabled=1 WHERE id=?", (user_id,))
-                connection.execute("DELETE FROM login_attempts WHERE username=(SELECT username_key FROM users WHERE id=?)", (user_id,))
+                connection.execute("DELETE FROM login_attempts WHERE username=(SELECT username_key FROM users WHERE id=?) "
+                    "OR username=char(0)||'recovery:'||(SELECT username_key FROM users WHERE id=?)", (user_id, user_id))
         return (recovery_key if issue_recovery_key else new_password) if cursor.rowcount else None
 
     @staticmethod

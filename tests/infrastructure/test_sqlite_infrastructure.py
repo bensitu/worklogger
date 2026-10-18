@@ -322,7 +322,7 @@ class SQLiteInfrastructureTests(unittest.TestCase):
 
         blocked = LoginHandler(auth, failures).handle(LoginCommand("alice", "secret123"))
         self.assertFalse(blocked.ok)
-        self.assertEqual(blocked.error.code if blocked.error else "", "invalid_credentials")
+        self.assertEqual(blocked.error.code if blocked.error else "", "account_locked")
 
     def test_worklog_quicklog_settings_report_and_analytics_repositories(self) -> None:
         auth = self.auth_repository()

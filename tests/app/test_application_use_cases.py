@@ -141,6 +141,9 @@ class MemoryReportRepository:
 
 
 class MemoryAuthRepository:
+    def verify_dummy_password(self, password):
+        self.dummy_password = password
+
     def register_user(self, username, password, *, recovery_key):
         return self.create_user(username, password, recovery_key=recovery_key, is_admin=self.user_count() == 0)
 
@@ -359,7 +362,9 @@ class ApplicationUseCaseTests(unittest.TestCase):
         )
 
         self.assertFalse(result.ok)
-        self.assertEqual(result.error.code if result.error else "", "invalid_credentials")
+        self.assertEqual(result.error.code if result.error else "", "account_locked")
+        self.assertEqual(credentials.dummy_password, "secret123")
+        self.assertGreater(result.error.details["seconds"], 0)
 
     def test_historical_quick_log_ranges_preserve_entries_and_isolate_accounts(self) -> None:
         entry = QuickLog(1, 1, date(2026, 4, 20), "Standup", "09:30", "10:00")

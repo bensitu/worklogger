@@ -2506,6 +2506,9 @@ msgstr "操作を完了できませんでした。もう一度お試しくださ
 msgid "The password must contain at least {length} characters."
 msgstr "パスワードは{length}文字以上で入力してください。"
 
+msgid "The password must not exceed 1024 UTF-8 bytes."
+msgstr "パスワードは UTF-8 で 1024 バイト以内にしてください。"
+
 msgid "The passwords do not match."
 msgstr "入力したパスワードが一致しません。"
 
@@ -2536,8 +2539,14 @@ msgstr "選択したプロジェクトまたは作業項目は新しい記録に
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr "保存された認証情報をこのデバイスで復号できません。再入力してください。既存の作業記録には影響しません。"
 
+msgid "The system clock differs from the sign-in provider. Check your device date and time, then try again."
+msgstr "システム時刻がログインプロバイダーと異なります。端末の日時を確認してから再試行してください。"
+
 msgid "The timesheet contains content that cannot be represented in this format. The destination file is unchanged."
 msgstr "勤務表にこの形式で表せない内容があります。出力先ファイルは変更されていません。"
+
+msgid "The user ID cannot contain invisible formatting or control characters."
+msgstr "ユーザー ID に不可視の書式文字や制御文字は使用できません。"
 
 msgid "The user account is no longer available."
 msgstr "このユーザーアカウントは利用できなくなりました。"
@@ -2652,6 +2661,9 @@ msgstr "終了日"
 
 msgid "Today"
 msgstr "今日"
+
+msgid "Too many attempts. Try again in {seconds} seconds, or use another sign-in method."
+msgstr "試行回数が多すぎます。{seconds} 秒後に再試行するか、別のログイン方法を使用してください。"
 
 msgid "Too many records. Choose a shorter date range to calculate complete totals."
 msgstr "記録が多すぎます。完全な合計を計算するには、日付範囲を短くしてください。"

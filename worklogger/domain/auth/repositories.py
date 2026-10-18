@@ -18,6 +18,9 @@ class UserProfileRepository(Protocol):
 
 
 class AuthCredentialRepository(Protocol):
+    def verify_dummy_password(self, password: str) -> None:
+        ...
+
     def register_user(self, username: str, password: str, *, recovery_key: str) -> User:
         """Register a standard account, granting administration only on an empty database."""
         ...

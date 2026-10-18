@@ -2506,6 +2506,9 @@ msgstr "The operation could not be completed. Please try again."
 msgid "The password must contain at least {length} characters."
 msgstr "The password must contain at least {length} characters."
 
+msgid "The password must not exceed 1024 UTF-8 bytes."
+msgstr "The password must not exceed 1024 UTF-8 bytes."
+
 msgid "The passwords do not match."
 msgstr "The passwords do not match."
 
@@ -2536,8 +2539,14 @@ msgstr "The selected project or work item is unavailable for new records."
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 
+msgid "The system clock differs from the sign-in provider. Check your device date and time, then try again."
+msgstr "The system clock differs from the sign-in provider. Check your device date and time, then try again."
+
 msgid "The timesheet contains content that cannot be represented in this format. The destination file is unchanged."
 msgstr "The timesheet contains content that cannot be represented in this format. The destination file is unchanged."
+
+msgid "The user ID cannot contain invisible formatting or control characters."
+msgstr "The user ID cannot contain invisible formatting or control characters."
 
 msgid "The user account is no longer available."
 msgstr "The user account is no longer available."
@@ -2652,6 +2661,9 @@ msgstr "To"
 
 msgid "Today"
 msgstr "Today"
+
+msgid "Too many attempts. Try again in {seconds} seconds, or use another sign-in method."
+msgstr "Too many attempts. Try again in {seconds} seconds, or use another sign-in method."
 
 msgid "Too many records. Choose a shorter date range to calculate complete totals."
 msgstr "Too many records. Choose a shorter date range to calculate complete totals."

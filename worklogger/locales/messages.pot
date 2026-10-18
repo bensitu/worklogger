@@ -2504,6 +2504,9 @@ msgstr ""
 msgid "The password must contain at least {length} characters."
 msgstr ""
 
+msgid "The password must not exceed 1024 UTF-8 bytes."
+msgstr ""
+
 msgid "The passwords do not match."
 msgstr ""
 
@@ -2534,7 +2537,13 @@ msgstr ""
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr ""
 
+msgid "The system clock differs from the sign-in provider. Check your device date and time, then try again."
+msgstr ""
+
 msgid "The timesheet contains content that cannot be represented in this format. The destination file is unchanged."
+msgstr ""
+
+msgid "The user ID cannot contain invisible formatting or control characters."
 msgstr ""
 
 msgid "The user account is no longer available."
@@ -2649,6 +2658,9 @@ msgid "To"
 msgstr ""
 
 msgid "Today"
+msgstr ""
+
+msgid "Too many attempts. Try again in {seconds} seconds, or use another sign-in method."
 msgstr ""
 
 msgid "Too many records. Choose a shorter date range to calculate complete totals."

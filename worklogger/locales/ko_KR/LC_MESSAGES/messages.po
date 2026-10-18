@@ -2506,6 +2506,9 @@ msgstr "작업을 완료하지 못했습니다. 다시 시도하세요."
 msgid "The password must contain at least {length} characters."
 msgstr "비밀번호는 {length}자 이상이어야 합니다."
 
+msgid "The password must not exceed 1024 UTF-8 bytes."
+msgstr "비밀번호는 UTF-8 기준 1024바이트 이하여야 합니다."
+
 msgid "The passwords do not match."
 msgstr "입력한 비밀번호가 일치하지 않습니다."
 
@@ -2536,8 +2539,14 @@ msgstr "선택한 프로젝트 또는 작업 항목은 새 기록에 사용할 �
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr "이 기기에서 저장된 자격 증명을 복호화할 수 없습니다. 다시 입력하세요. 기존 작업 기록에는 영향이 없습니다."
 
+msgid "The system clock differs from the sign-in provider. Check your device date and time, then try again."
+msgstr "시스템 시간이 로그인 제공자와 다릅니다. 기기의 날짜와 시간을 확인한 후 다시 시도하세요."
+
 msgid "The timesheet contains content that cannot be represented in this format. The destination file is unchanged."
 msgstr "근무 기록표에 이 형식으로 표현할 수 없는 내용이 있습니다. 대상 파일은 변경되지 않았습니다."
+
+msgid "The user ID cannot contain invisible formatting or control characters."
+msgstr "사용자 ID에는 보이지 않는 서식 문자나 제어 문자를 사용할 수 없습니다."
 
 msgid "The user account is no longer available."
 msgstr "이 사용자 계정은 더 이상 사용할 수 없습니다."
@@ -2652,6 +2661,9 @@ msgstr "종료일"
 
 msgid "Today"
 msgstr "오늘"
+
+msgid "Too many attempts. Try again in {seconds} seconds, or use another sign-in method."
+msgstr "시도 횟수가 너무 많습니다. {seconds}초 후에 다시 시도하거나 다른 로그인 방법을 사용하세요."
 
 msgid "Too many records. Choose a shorter date range to calculate complete totals."
 msgstr "기록이 너무 많습니다. 전체 합계를 계산하려면 날짜 범위를 줄이세요."

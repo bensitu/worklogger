@@ -9,13 +9,16 @@ from worklogger.domain.auth.policies import lockout_until_for_failure_count, use
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
 from worklogger.infrastructure.repositories._mapping import parse_datetime
 
-_STALE_ATTEMPTS = "last_failed_at<? OR NOT EXISTS (SELECT 1 FROM users WHERE users.username_key=login_attempts.username)"
+_STALE_ATTEMPTS = ("last_failed_at<? OR NOT EXISTS (SELECT 1 FROM users WHERE "
+                   "users.username_key=login_attempts.username OR char(0)||'recovery:'||users.username_key=login_attempts.username)")
 
 
 class SQLiteLoginFailureRepository:
-    def __init__(self, connection_factory: SQLiteConnectionFactory, *, clock: Callable[[], datetime] | None = None) -> None:
+    def __init__(self, connection_factory: SQLiteConnectionFactory, *, clock: Callable[[], datetime] | None = None,
+                 recovery: bool = False) -> None:
         self._connection_factory = connection_factory
         self._clock = clock or (lambda: datetime.now(timezone.utc))
+        self._prefix = "\0recovery:" if recovery else ""
 
     def prune(self) -> None:
         cutoff = (self._clock() - timedelta(days=7)).isoformat()
@@ -32,17 +35,20 @@ class SQLiteLoginFailureRepository:
             return None
         with self._connection_factory.connection() as connection:
             row = connection.execute(
-                "SELECT locked_until FROM login_attempts WHERE username=?",
-                (username,),
+                "SELECT locked_until,last_failed_at FROM login_attempts WHERE username=?",
+                (self._prefix + username,),
             ).fetchone()
         locked_until = parse_datetime(row["locked_until"]) if row else None
         if locked_until is None:
             return None
+        failed_at = parse_datetime(row["last_failed_at"])
+        if failed_at is not None:
+            locked_until = min(locked_until, failed_at + timedelta(minutes=30))
         if locked_until <= self._clock():
             with self._connection_factory.transaction(write=True) as connection:
                 connection.execute(
                     "UPDATE login_attempts SET locked_until=NULL WHERE username=?",
-                    (username,),
+                    (self._prefix + username,),
                 )
             return None
         return locked_until
@@ -56,7 +62,7 @@ class SQLiteLoginFailureRepository:
                 return 0, None
             row = connection.execute(
                 "SELECT failed_count, last_failed_at FROM login_attempts WHERE username=?",
-                (username,),
+                (self._prefix + username,),
             ).fetchone()
             recent = row is not None and (parse_datetime(row["last_failed_at"]) or datetime.min.replace(tzinfo=timezone.utc)) > now - timedelta(hours=24)
             failed_count = min(int(row["failed_count"]) + 1, 20) if recent else 1
@@ -71,7 +77,7 @@ class SQLiteLoginFailureRepository:
                     locked_until=excluded.locked_until,
                     last_failed_at=excluded.last_failed_at
                 """,
-                (username, failed_count, locked_until_raw, now.isoformat(timespec="seconds")),
+                (self._prefix + username, failed_count, locked_until_raw, now.isoformat(timespec="seconds")),
             )
         return failed_count, locked_until
 
@@ -83,5 +89,5 @@ class SQLiteLoginFailureRepository:
         with self._connection_factory.transaction(write=True) as connection:
             connection.execute(
                 "DELETE FROM login_attempts WHERE username=?",
-                (username,),
+                (self._prefix + username,),
             )

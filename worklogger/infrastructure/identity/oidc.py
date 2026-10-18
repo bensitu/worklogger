@@ -163,7 +163,7 @@ def _verified_claims(token: str, *, issuer: str, audience: str, jwks: Mapping[st
         if len(keys) != 1:
             raise ValueError("identity_signing_key_invalid")
         accepted_issuers = (issuer, "accounts.google.com") if issuer == "https://accounts.google.com" else issuer
-        claims = jwt.decode(token, keys[0].key, algorithms=["RS256"], issuer=accepted_issuers, audience=audience,
+        claims = jwt.decode(token, keys[0].key, algorithms=["RS256"], issuer=accepted_issuers, audience=audience, leeway=120,
                             options={"require": ["iss", "aud", "exp", "iat", "sub"]})
         authorized_party = claims.get("azp")
         if (authorized_party is not None and authorized_party != audience
@@ -172,6 +172,8 @@ def _verified_claims(token: str, *, issuer: str, audience: str, jwks: Mapping[st
         if not isinstance(claims.get("sub"), str) or not claims["sub"].strip():
             raise ValueError("identity_subject_missing")
         return Result.success(claims)
+    except jwt.ImmatureSignatureError:
+        return Result.failure(AuthenticationError("identity_clock_invalid", "identity_clock_invalid"))
     except (jwt.PyJWTError, TypeError, ValueError, KeyError):
         return Result.failure(AuthenticationError("identity_token_invalid", "identity_token_invalid"))
 

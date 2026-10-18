@@ -276,7 +276,7 @@ def _auth_view_model(
         register_handler=RegisterUserHandler(auth_repository, enabled=features.self_registration),
         change_password_handler=ChangePasswordHandler(auth_repository),
         remember_token_handler=LoginWithRememberTokenHandler(auth_repository),
-        reset_password_handler=ResetPasswordHandler(auth_repository, login_failures),
+        reset_password_handler=ResetPasswordHandler(auth_repository, SQLiteLoginFailureRepository(connection_factory, recovery=True)),
         identity_login_handler=LoginWithIdentityHandler(identities=SQLiteIdentityRepository(connection_factory),
             auth=auth_repository, providers=providers, enabled=features.oidc,
             self_registration_enabled=features.self_registration),

@@ -33,7 +33,7 @@ LOGIN_LOCKOUT_SCHEDULE = (
     (5, 30),
     (10, 300),
     (15, 1800),
-    (20, 86400),
+    (20, 1800),
 )
 
 LOCAL_MODEL_ACTIVE_ID_SETTING_KEY = "local_model_active_id"

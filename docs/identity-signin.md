@@ -101,6 +101,9 @@ source control, or logs.
 
 The flow uses authorization code exchange, PKCE, request-bound state/nonce,
 a loopback-only callback, and verified provider ID tokens.
+Token timestamps allow up to two minutes of clock skew. Larger future timestamps
+produce a device-clock message; issuer, audience, signature, nonce, and recent
+authentication checks remain required.
 Refusal, cancellation, timeout, and network failure leave sign-in available for
 another attempt.
 

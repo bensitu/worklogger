@@ -2506,6 +2506,9 @@ msgstr "無法完成操作，請重試。"
 msgid "The password must contain at least {length} characters."
 msgstr "密碼至少需要 {length} 個字元。"
 
+msgid "The password must not exceed 1024 UTF-8 bytes."
+msgstr "密碼不得超過 1024 個 UTF-8 位元組。"
+
 msgid "The passwords do not match."
 msgstr "兩次輸入的密碼不一致。"
 
@@ -2536,8 +2539,14 @@ msgstr "所選專案或工作項目不可用於新紀錄。"
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr "無法在此裝置上解密已存憑證。請重新輸入，現有工作記錄不受影響。"
 
+msgid "The system clock differs from the sign-in provider. Check your device date and time, then try again."
+msgstr "系統時間與登入提供者不一致。請檢查裝置的日期和時間後重試。"
+
 msgid "The timesheet contains content that cannot be represented in this format. The destination file is unchanged."
 msgstr "工時表含有此格式無法表示的內容，目標檔案未改變。"
+
+msgid "The user ID cannot contain invisible formatting or control characters."
+msgstr "使用者 ID 不能包含不可見的格式字元或控制字元。"
 
 msgid "The user account is no longer available."
 msgstr "該使用者帳戶已無法使用。"
@@ -2652,6 +2661,9 @@ msgstr "結束日期"
 
 msgid "Today"
 msgstr "今天"
+
+msgid "Too many attempts. Try again in {seconds} seconds, or use another sign-in method."
+msgstr "嘗試次數過多。請在 {seconds} 秒後重試，或使用其他登入方式。"
 
 msgid "Too many records. Choose a shorter date range to calculate complete totals."
 msgstr "記錄過多。請選擇較短的日期範圍，以計算完整合計。"

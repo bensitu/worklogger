@@ -128,5 +128,3 @@ def _normalize_login_attempts(connection):
                        max(previous[2] or "", failed or "") or None)
     connection.execute("DELETE FROM login_attempts")
     connection.executemany("INSERT INTO login_attempts VALUES(?,?,?,?)", [(key, *value) for key, value in merged.items()])
-
-

@@ -27,6 +27,18 @@ from worklogger.infrastructure.security import PBKDF2PasswordHasher
 
 
 class SQLiteUserManagementTests(unittest.TestCase):
+    def test_administrator_reset_respects_the_password_change_requirement(self):
+        user = self.auth.create_user("person", "example-password", recovery_key=None, is_admin=False)
+        self.auth.reset_password_by_admin(user.id, "replacement-password", must_change_password=False)
+        self.assertFalse(self.auth.verify_user("person", "replacement-password").must_change_password)
+
+    def test_unrelated_account_constraints_are_not_reported_as_duplicate_names(self):
+        import sqlite3
+        with self.factory.transaction() as connection:
+            connection.execute("CREATE TRIGGER reject_user BEFORE INSERT ON users BEGIN SELECT RAISE(ABORT,'unavailable'); END")
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.auth.create_user("person", "example-password", recovery_key=None, is_admin=False)
+
     def test_external_account_and_identity_commit_or_roll_back_together(self):
         from worklogger.domain.identity.models import ExternalIdentityProfile
         profile = ExternalIdentityProfile("google", "subject", "person@example.test", "Person", "https://accounts.google.com")
@@ -46,22 +58,26 @@ class SQLiteUserManagementTests(unittest.TestCase):
         self.assertEqual(repeated[1].id, linked.id)
         self.assertEqual(self.auth.user_count(), 1)
 
-    def test_recovery_attempts_share_account_lockout_and_preserve_credentials(self):
+    def test_recovery_attempts_are_independent_of_password_lockouts_and_preserve_credentials(self):
         from worklogger.app.commands.auth_commands import ResetPasswordCommand
         from worklogger.app.use_cases.auth import ResetPasswordHandler
         from worklogger.infrastructure.repositories.auth_sqlite import SQLiteLoginFailureRepository
         registered = RegisterUserHandler(self.auth).handle(RegisterUserCommand("person", "secret123"))
         failures = SQLiteLoginFailureRepository(self.factory)
-        handler = ResetPasswordHandler(self.auth, failures)
+        recovery_failures = SQLiteLoginFailureRepository(self.factory, recovery=True)
+        handler = ResetPasswordHandler(self.auth, recovery_failures)
         for _attempt in range(5):
-            self.assertFalse(handler.handle(ResetPasswordCommand("person", "invalid", "secret456")).ok)
+            failures.record_failure("person")
         self.assertIsNotNone(failures.lockout_until("person"))
-        valid = ResetPasswordCommand("person", registered.value.recovery_key, "secret456")
-        self.assertFalse(handler.handle(valid).ok)
-        self.assertIsNotNone(self.auth.verify_user("person", "secret123"))
-        failures.clear_failures("person")
+        valid = ResetPasswordCommand("person", registered.value.recovery_key.upper().replace("-", " \n"), "secret456")
         self.assertTrue(handler.handle(valid).ok)
         self.assertIsNone(failures.lockout_until("person"))
+        for _attempt in range(5):
+            self.assertFalse(handler.handle(ResetPasswordCommand("person", "invalid", "secret789")).ok)
+        self.assertIsNotNone(recovery_failures.lockout_until("person"))
+        self.assertFalse(handler.handle(valid).ok)
+        self.assertIsNone(failures.lockout_until("person"))
+        self.assertIsNotNone(self.auth.verify_user("person", "secret456"))
 
     def setUp(self) -> None:
         self._tempdir = tempfile.TemporaryDirectory()

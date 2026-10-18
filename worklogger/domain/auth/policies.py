@@ -38,6 +38,8 @@ def require_new_username(username: str) -> str:
     cleaned = normalize_username(username)
     if len(cleaned) > 120:
         raise ValueError("username_too_long")
+    if any(unicodedata.category(character) in {"Cc", "Cf"} for character in cleaned):
+        raise ValueError("username_invalid")
     return cleaned
 
 
@@ -53,7 +55,18 @@ def require_password(
         raise ValueError(f"{field_name}_required")
     if len(password) < int(min_length):
         raise ValueError("password_too_short")
+    if len(password.encode("utf-8")) > 1024:
+        raise ValueError("password_too_long")
     return password
+
+
+def recovery_key_candidates(value: str) -> tuple[str, ...]:
+    original = value.strip()
+    compact = "".join(character for character in original if not character.isspace() and character != "-").lower()
+    if len(compact) != RECOVERY_KEY_BYTES * 2 or any(character not in "0123456789abcdef" for character in compact):
+        return (original,)
+    grouped = "-".join(compact[index:index + RECOVERY_KEY_GROUP_SIZE] for index in range(0, len(compact), RECOVERY_KEY_GROUP_SIZE))
+    return tuple(dict.fromkeys((original, grouped)))
 
 
 def generate_initial_password(token_bytes: int = GENERATED_PASSWORD_TOKEN_BYTES) -> str:

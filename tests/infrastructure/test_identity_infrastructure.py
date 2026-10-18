@@ -38,7 +38,7 @@ class IdentityInfrastructureTests(unittest.TestCase):
 
     def test_oidc_rejects_invalid_signatures_claims_and_nonce(self):
         for overrides in ({"iss": "https://other.example.com"}, {"aud": "other-client"},
-                          {"exp": int(time.time()) - 1}, {"nonce": "other"}, {"sub": ""},
+                          {"exp": int(time.time()) - 121}, {"nonce": "other"}, {"sub": ""},
                           {"aud": ["client-id", "other-client"]}, {"azp": "other-client"}):
             result = profile_from_oidc_token("google", self.token(**overrides), issuer="https://accounts.google.com",
                                             audience="client-id", jwks=self.jwks, expected_nonce="nonce")
@@ -47,6 +47,14 @@ class IdentityInfrastructureTests(unittest.TestCase):
                                                 audience="client-id", jwks={"keys": []}, expected_nonce="nonce").ok)
         self.assertFalse(profile_from_oidc_token("google", self.token(), issuer="https://accounts.google.com",
                                                 audience="client-id", jwks=self.jwks, expected_nonce="").ok)
+
+    def test_oidc_accepts_small_clock_skew_and_identifies_larger_future_timestamps(self):
+        for offset, accepted in ((30, True), (300, False)):
+            result = profile_from_oidc_token("google", self.token(iat=int(time.time()) + offset),
+                issuer="https://accounts.google.com", audience="client-id", jwks=self.jwks, expected_nonce="nonce")
+            self.assertEqual(result.ok, accepted)
+            if not accepted:
+                self.assertEqual(result.error.code, "identity_clock_invalid")
 
     def test_identity_confirmation_requires_recent_signed_authentication_time(self):
         now = time.time()
