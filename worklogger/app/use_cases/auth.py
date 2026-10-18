@@ -33,6 +33,7 @@ from worklogger.domain.shared.errors import (
     AuthenticationError,
     AuthorizationError,
     ConflictError,
+    InfrastructureError,
     NotFoundError,
     ValidationError,
 )
@@ -330,6 +331,8 @@ class DeleteManagedUserHandler:
             )
         target = self._credentials.get_by_id(command.target_user_id)
         if target is None:
+            if self._cleanup_credentials is not None and command.target_user_id != admin.value.id:
+                return self._cleanup_credentials(command.target_user_id)
             return Result.failure(NotFoundError("user_not_found", "user_not_found"))
         if target.id == admin.value.id:
             return Result.failure(ConflictError("cannot_delete_self", "cannot_delete_self"))
@@ -337,12 +340,12 @@ class DeleteManagedUserHandler:
             return Result.failure(
                 ConflictError("cannot_delete_last_admin", "cannot_delete_last_admin")
             )
+        if not self._credentials.delete_user(target.id):
+            return Result.failure(NotFoundError("user_not_found", "user_not_found"))
         if self._cleanup_credentials is not None:
             cleared = self._cleanup_credentials(target.id)
             if not cleared.ok:
-                return Result.failure(cleared.error)
-        if not self._credentials.delete_user(target.id):
-            return Result.failure(NotFoundError("user_not_found", "user_not_found"))
+                return Result.failure(cleared.error or InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
         return Result.success(None)
 
 

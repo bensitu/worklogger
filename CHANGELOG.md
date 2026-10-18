@@ -37,6 +37,9 @@ layers. Back up your database before upgrading.
 
 ### Changed
 
+- Preserved retriable cloud cleanup after failed publication, normalized malformed
+  backup configuration errors, and retained readable machine keys when protection
+  upgrades cannot be written.
 - Required current-account verification before linking or unlinking sign-in
   identities and included project labels in AI note-sharing permission.
 - Redacted complete unquoted credential values containing spaces from logs.

@@ -129,7 +129,7 @@ class SQLitePersonalData:
                     _json(row)
                     self._validate_row(table, row)
             return tables
-        except (KeyError, TypeError, UnicodeError, OverflowError, RecursionError):
+        except (KeyError, TypeError, ValueError, UnicodeError, OverflowError, RecursionError):
             raise ValueError("cloud_backup_invalid") from None
 
     def _validate_row(self, table, row):

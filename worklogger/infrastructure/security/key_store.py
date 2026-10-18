@@ -149,8 +149,7 @@ class FileMachineKeyProvider:
             return key
 
     def load(self) -> bytes:
-        with portalocker.Lock(str(self.path) + ".lock", timeout=5):
-            key = self._load()
+        key = self._load()
         if key is None:
             raise ValueError("secret_key_missing")
         return key
@@ -176,8 +175,11 @@ class FileMachineKeyProvider:
         if len(key) != _KEY_BYTES:
             raise ValueError("secret_key_invalid")
         if os.name == "nt" and not raw.startswith("dpapi:"):
-            with atomic_destination(self.path) as temporary:
-                temporary.write_text(_encode_machine_key(key), encoding="ascii")
+            try:
+                with atomic_destination(self.path) as temporary:
+                    temporary.write_text(_encode_machine_key(key), encoding="ascii")
+            except OSError:
+                LOGGER.warning("secret_key_protection_deferred")
         return key
 
 

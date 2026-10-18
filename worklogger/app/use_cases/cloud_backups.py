@@ -11,9 +11,10 @@ from threading import RLock
 from uuid import uuid4
 
 from worklogger.domain.cloud_backup import BackupCredentials, BackupOverview, BackupVersion, LocalBackupOverview, MAX_BACKUP_BYTES
-from worklogger.domain.shared.errors import InfrastructureError, ValidationError
+from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.app.cloud_backup_ports import BackupArchive, BackupObjectStore, PersonalDataStore
+from worklogger.app.use_cases._errors import infrastructure_failure
 
 
 @dataclass(frozen=True)
@@ -34,8 +35,8 @@ def _result(method):
                 if not code.startswith(("cloud_", "credential_")):
                     code = "cloud_backup_invalid"
                 return Result.failure(ValidationError(code, code))
-            except Exception:
-                return Result.failure(InfrastructureError("cloud_operation_failed", "cloud_operation_failed"))
+            except Exception as error:
+                return Result.failure(infrastructure_failure("cloud_operation_failed", error, logger_name=__name__))
     return run
 
 
@@ -122,19 +123,32 @@ class CloudBackupService:
         content = self.archive.encode(document, encrypted=configuration.encrypted, passphrase=credentials.passphrase)
         now = self.now()
         version = BackupVersion(uuid4().hex, now.isoformat(), _digest(content), len(content), configuration.encrypted)
+        pending = set(state.get("pending_deletions", ())) | {version.revision}
+        self.configuration.save_state({**state, "pending_deletions": sorted(pending)})
         store.put("objects/" + version.revision + ".wlbackup", content, expected_etag=None)
         cutoff = now - timedelta(days=configuration.keep_days)
         kept = (version,) + tuple(row for row in versions if datetime.fromisoformat(row.created_at) >= cutoff)[:configuration.keep_count - 1]
         head = json.dumps({"format": 1, "versions": [asdict(row) for row in kept]}, separators=(",", ":")).encode()
-        store.put("head.json", head, expected_etag=etag)
-        pending = set(state.get("pending_deletions", ())) | {row.revision for row in versions if row not in kept}
+        try:
+            store.put("head.json", head, expected_etag=etag)
+        except ValueError as error:
+            if str(error) == "cloud_conflict":
+                try:
+                    store.delete("objects/" + version.revision + ".wlbackup")
+                    pending.discard(version.revision)
+                    self.configuration.save_state({**state, "pending_deletions": sorted(pending)})
+                except Exception as cleanup_error:
+                    infrastructure_failure("cloud_cleanup_failed", cleanup_error, logger_name=__name__)
+            raise
+        pending |= {row.revision for row in versions if row not in kept}
         remaining = []
         for revision in sorted(pending):
             if not re.fullmatch(r"[0-9a-f]{32}", revision) or revision in {row.revision for row in kept}:
                 continue
             try:
                 store.delete("objects/" + revision + ".wlbackup")
-            except Exception:
+            except Exception as error:
+                infrastructure_failure("cloud_cleanup_failed", error, logger_name=__name__)
                 remaining.append(revision)
         self.configuration.save_state({**state, "remote_revision": version.revision, "local_digest": _digest(document),
             "last_success": now.isoformat(), "last_error": "", "pending_deletions": remaining})

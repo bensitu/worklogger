@@ -32,6 +32,11 @@ state display; business calculations belong to the domain/application layers.
 
 ## Composition and Lifecycle
 
+Managed-account deletion commits database removal before deleting external
+service credentials. Database failure leaves those credentials untouched.
+Credential cleanup can be retried for a deleted account by an administrator;
+cleanup failure does not recreate the account or its removed business data.
+
 The entry point resolves language, logging, database paths, and instance locking.
 Authentication creates or restores a local session. Bootstrap and composition
 functions assemble account-scoped services, repositories, view models, workflows,

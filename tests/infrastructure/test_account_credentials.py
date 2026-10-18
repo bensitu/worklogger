@@ -2,6 +2,7 @@
 
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from worklogger.app.commands.auth_commands import DeleteManagedUserCommand
@@ -54,7 +55,7 @@ class AccountCredentialTests(unittest.TestCase):
         new_store = EncryptedSettingsKeyStore(self.settings, user_id=replacement.id, service_name=new_service, keyring_backend=self.keyring)
         self.assertIsNone(new_store.get_secret("ai_api_key").value)
 
-    def test_cleanup_clears_both_stores_and_failure_preserves_the_account(self):
+    def test_account_deletion_preserves_credentials_on_database_failure_and_allows_cleanup_retry(self):
         admin = self.auth.create_user("admin", "example-password", recovery_key=None, is_admin=True)
         user = self.auth.create_user("target", "example-password", recovery_key=None, is_admin=False)
         service, namespace = account_credential_namespaces(user.id, self.path)
@@ -64,9 +65,14 @@ class AccountCredentialTests(unittest.TestCase):
         self.assertTrue(proxy.set_secret(f"proxy_password:{user.id}", "synthetic-password").ok)
         handler = DeleteManagedUserHandler(self.auth, cleanup_credentials=lambda identity:
             cleanup_account_credentials(identity, self.path, backend=self.keyring))
+        before = dict(self.keyring.values)
+        with patch.object(self.auth, "delete_user", side_effect=OSError("database unavailable")):
+            self.assertFalse(handler.handle(DeleteManagedUserCommand(admin.id, user.id)).ok)
+        self.assertEqual(self.keyring.values, before)
+        self.assertIsNotNone(self.auth.get_by_id(user.id))
         self.keyring.fail_delete = True
         self.assertFalse(handler.handle(DeleteManagedUserCommand(admin.id, user.id)).ok)
-        self.assertIsNotNone(self.auth.get_by_id(user.id))
+        self.assertIsNone(self.auth.get_by_id(user.id))
         self.keyring.fail_delete = False
         self.assertTrue(handler.handle(DeleteManagedUserCommand(admin.id, user.id)).ok)
         self.assertEqual(self.keyring.values, {})

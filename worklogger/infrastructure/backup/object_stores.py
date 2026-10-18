@@ -1,6 +1,7 @@
 """Conditional HTTPS object access for WebDAV and S3-compatible storage."""
 
 import base64
+import logging
 from urllib.error import HTTPError
 from urllib.parse import quote
 from urllib.request import Request
@@ -26,6 +27,7 @@ class ConditionalObjectStore:
     def test_connection(self):
         name = "probe-" + uuid4().hex
         created = False
+        failed = False
         try:
             self.put(name, b"connection-test", expected_etag=None)
             created = True
@@ -41,9 +43,17 @@ class ConditionalObjectStore:
                         continue
                     raise
                 raise ValueError("cloud_conditional_unsupported")
+        except Exception:
+            failed = True
+            raise
         finally:
             if created:
-                self.delete(name)
+                try:
+                    self.delete(name)
+                except Exception as error:
+                    if not failed:
+                        raise
+                    logging.getLogger(__name__).warning("cloud_probe_cleanup_failed: %s", type(error).__name__)
 
 
 class WebDAVBackupStore(ConditionalObjectStore):

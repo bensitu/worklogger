@@ -16,13 +16,19 @@ class CloudBackupConfigurationStore:
 
     def load(self):
         raw = self.settings.get(self.user_id, CONFIG_KEY)
-        return BackupConfiguration(**json.loads(raw)).validate() if raw else None
+        try:
+            return BackupConfiguration(**json.loads(raw)).validate() if raw else None
+        except (ValueError, TypeError, OverflowError, RecursionError, AttributeError):
+            raise ValueError("cloud_configuration_invalid") from None
 
     def secrets(self):
         value = self.credentials.get_secret(self._secret_name)
         if not value.ok:
             raise ValueError("credential_storage_unavailable")
-        return BackupCredentials(**json.loads(value.value)) if value.value else BackupCredentials()
+        try:
+            return BackupCredentials(**json.loads(value.value)) if value.value else BackupCredentials()
+        except (ValueError, TypeError, RecursionError):
+            raise ValueError("cloud_credentials_invalid") from None
 
     def save(self, configuration, credentials):
         configuration.validate()

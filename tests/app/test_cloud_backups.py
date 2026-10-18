@@ -108,6 +108,22 @@ class CloudBackupTests(unittest.TestCase):
         self.remote.race = lambda: self.remote.objects.__setitem__("head.json", before + b" ")
         self.assertEqual(self.service.upload().error.code, "cloud_conflict")
         self.assertEqual(self.remote.objects["head.json"], before + b" ")
+        self.assertEqual(len(self.remote.objects), 2)
+
+    def test_failed_publication_keeps_cleanup_retriable_without_deleting_an_accepted_object(self):
+        original_put = self.remote.put
+        def accepted_then_disconnected(key, data, *, expected_etag):
+            original_put(key, data, expected_etag=expected_etag)
+            if key == "head.json":
+                raise OSError("connection lost")
+        self.remote.put = accepted_then_disconnected
+        self.assertFalse(self.service.upload().ok)
+        self.assertEqual(len(self.remote.objects), 2)
+        self.assertTrue(self.settings.value["pending_deletions"])
+        self.remote.put = original_put
+        overview = self.service.overview().value
+        self.assertTrue(self.service.upload(expected_revision=overview.versions[0].revision, force=True).ok)
+        self.assertEqual(self.settings.value["pending_deletions"], [])
 
     def test_backup_schedules_catch_up_without_repeating_the_same_calendar_period(self):
         for mode in ("daily", "weekly", "monthly", "interval"):

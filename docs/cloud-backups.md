@@ -1,5 +1,10 @@
 # Personal Cloud Backups
 
+Failed uploads retain local cleanup information. An explicit remote version
+conflict removes the unpublished object when possible; an uncertain network
+result retains it until a later successful publication can safely reconcile
+retention. Objects still referenced by the published manifest are not deleted.
+
 Personal backups copy the signed-in account's records, notes, saved reports and
 report versions, templates, classifications, work arrangements, projects, work
 items, calendar events, background images, and portable preferences. They do not
