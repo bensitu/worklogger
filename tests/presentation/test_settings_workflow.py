@@ -206,6 +206,25 @@ def _settings_view_model(repository: MemorySettingsRepository) -> SettingsViewMo
 
 
 class SettingsWorkflowTests(unittest.TestCase):
+    def test_external_connection_test_uses_its_configured_timeout(self):
+        from types import SimpleNamespace
+
+        gateway = Mock()
+        gateway.generate.return_value = Result.success(SimpleNamespace(text="OK"))
+        controller = SettingsWorkflowController(
+            settings_view_model=_settings_view_model(MemorySettingsRepository()),
+            auth_view_model=FakeAuthViewModel(), user=User(1, "alice"),
+            data_management_view_model=FakeDataManagementViewModel(),
+            job_runner=ImmediateJobRunner(), ai_gateway=gateway, ai_connection_test_timeout_seconds=7,
+        )
+        page = controller.create_page()
+        try:
+            controller._test_external_model(page)
+            self.assertEqual(gateway.generate.call_args.args[0].timeout_seconds, 7)
+            self.assertFalse(page.is_busy)
+        finally:
+            page.deleteLater()
+
     def test_update_check_preserves_about_availability_and_prevents_duplicate_requests(self):
         from worklogger.app.job_runner import JobHandle, CancellationToken
         from PySide6.QtWidgets import QLabel

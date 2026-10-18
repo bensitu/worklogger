@@ -29,10 +29,25 @@ class CloudBackupRuntimeConfiguration:
 
 
 @dataclass(frozen=True)
+class AiRuntimeConfiguration:
+    rewrite_timeout_seconds: int = 180
+    chat_timeout_seconds: int = 180
+    connection_test_timeout_seconds: int = 30
+
+
+@dataclass(frozen=True)
+class LocalModelsRuntimeConfiguration:
+    download_timeout_seconds: int = 30
+    catalog_timeout_seconds: int = 15
+
+
+@dataclass(frozen=True)
 class RuntimeConfiguration:
     features: DeploymentFeatures = DeploymentFeatures()
     external_model_profiles: tuple[ExternalModelProfile, ...] = ()
     cloud_backup: CloudBackupRuntimeConfiguration = CloudBackupRuntimeConfiguration()
+    ai: AiRuntimeConfiguration = AiRuntimeConfiguration()
+    local_models: LocalModelsRuntimeConfiguration = LocalModelsRuntimeConfiguration()
 
 
 def configuration_path(*, frozen=None, executable=None, bundle_root=None, source_root=None):
@@ -95,7 +110,15 @@ def load_runtime_configuration(path=None):
             defaults = CloudBackupRuntimeConfiguration()
             backup = replace(backup, retry_initial_seconds=defaults.retry_initial_seconds,
                              retry_max_seconds=defaults.retry_max_seconds)
-        return RuntimeConfiguration(features, profiles, backup)
+        ai = _integer_configuration(value, "ai", AiRuntimeConfiguration, {
+            "rewrite_timeout_seconds": (1, 3600), "chat_timeout_seconds": (1, 3600),
+            "connection_test_timeout_seconds": (1, 300),
+        })
+        local_models = _integer_configuration(value, "local_models", LocalModelsRuntimeConfiguration, {
+            "download_timeout_seconds": (1, 600), "catalog_timeout_seconds": (1, 300),
+        })
+        return RuntimeConfiguration(features=features, external_model_profiles=profiles,
+            cloud_backup=backup, ai=ai, local_models=local_models)
     except FileNotFoundError:
         return RuntimeConfiguration()
     except (OSError, UnicodeError, ValueError, TypeError, RecursionError):

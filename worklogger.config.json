@@ -4,6 +4,15 @@
     "minimal_view": true
   },
   "external_model_profiles": [],
+  "ai": {
+    "rewrite_timeout_seconds": 180,
+    "chat_timeout_seconds": 180,
+    "connection_test_timeout_seconds": 30
+  },
+  "local_models": {
+    "download_timeout_seconds": 30,
+    "catalog_timeout_seconds": 15
+  },
   "cloud_backup": {
     "startup_delay_seconds": 300,
     "check_interval_seconds": 60,

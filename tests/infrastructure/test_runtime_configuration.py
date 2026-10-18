@@ -4,7 +4,8 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 from worklogger.composition.desktop import _window_config_for_user
 from worklogger.domain.auth.models import User
@@ -114,6 +115,38 @@ class RuntimeConfigurationTests(unittest.TestCase):
         for profiles in ({}, [profile, profile], [profile] * 129):
             with self.assertLogs("worklogger.infrastructure.runtime_config", level="WARNING"):
                 self.assertEqual(load(profiles).external_model_profiles, ())
+
+    def test_processing_timeouts_validate_per_field_and_reach_ai_requests(self):
+        from worklogger.app.commands.ai_commands import RewriteTextCommand, SendAiChatMessageCommand
+        from worklogger.composition.context import build_runtime_handlers
+        from worklogger.domain.shared.result import Result
+
+        options = {"features": {"minimal_view": True},
+                   "ai": {"rewrite_timeout_seconds": 47, "chat_timeout_seconds": 89, "connection_test_timeout_seconds": 7},
+                   "local_models": {"download_timeout_seconds": 91, "catalog_timeout_seconds": 23}}
+        self.path.write_text(json.dumps(options), encoding="utf-8")
+        configuration = load_runtime_configuration(self.path)
+        gateway = Mock()
+        gateway.generate.return_value = Result.success(SimpleNamespace(text="Synthetic reply"))
+        with patch("worklogger.composition.context.load_runtime_configuration", return_value=configuration), \
+                patch("worklogger.composition.context.AccountAIGateway", return_value=gateway):
+            handlers = build_runtime_handlers(Mock(), holiday_country="JP", user_id=1, database_path=self.directory / "worklog.db")
+        self.assertTrue(handlers.rewrite_handler.handle(RewriteTextCommand(1, "Synthetic content")).ok)
+        self.assertTrue(handlers.ai_chat_handler.handle(SendAiChatMessageCommand(1, "Synthetic message")).ok)
+        self.assertEqual([call.args[0].timeout_seconds for call in gateway.generate.call_args_list], [47, 89])
+        for section, key, invalid, default in (
+            ("ai", "rewrite_timeout_seconds", True, 180), ("ai", "chat_timeout_seconds", 0, 180),
+            ("ai", "connection_test_timeout_seconds", 301, 30),
+            ("local_models", "download_timeout_seconds", "91", 30),
+            ("local_models", "catalog_timeout_seconds", 301, 15),
+        ):
+            with self.subTest(section=section, key=key):
+                changed = {**options, section: {**options[section], key: invalid}}
+                self.path.write_text(json.dumps(changed), encoding="utf-8")
+                with self.assertLogs("worklogger.infrastructure.runtime_config", level="WARNING"):
+                    parsed = load_runtime_configuration(self.path)
+                self.assertEqual(getattr(getattr(parsed, section), key), default)
+                self.assertTrue(parsed.features.minimal_view)
 
     def test_deployment_flag_controls_window_availability_without_changing_account_preferences(self):
         user = User(id=1, username="sample", is_admin=False)

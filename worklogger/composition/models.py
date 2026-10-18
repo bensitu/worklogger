@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 from worklogger.app.job_runner import JobRunner
@@ -15,12 +14,8 @@ from worklogger.app.use_cases.local_models import (
     SelectLocalModelHandler,
     VerifyLocalModelHandler,
 )
-from worklogger.composition.context import RuntimeRepositories
+from worklogger.composition.context import RuntimeRepositories, build_local_model_store
 from worklogger.domain.auth.models import User
-from worklogger.infrastructure.local_model import (
-    JsonLocalModelStore,
-    bundled_model_catalog_path,
-)
 from worklogger.presentation.local_models import LocalModelsWorkflowController
 from worklogger.presentation.viewmodels import (
     LocalModelManagerViewModel,
@@ -36,12 +31,7 @@ def build_local_models_workflow(
     store=None,
     before_delete=None,
 ) -> LocalModelsWorkflowController:
-    local_model_store = store or JsonLocalModelStore(
-        database_path.parent / "models",
-        bundled_catalog_path=bundled_model_catalog_path(),
-        remote_catalog_url=os.environ.get("WORKLOGGER_MODEL_CATALOG_URL", "").strip()
-        or None,
-    )
+    local_model_store = store or build_local_model_store(database_path)
     return LocalModelsWorkflowController(
         LocalModelManagerViewModel(
             user_id=user.id,

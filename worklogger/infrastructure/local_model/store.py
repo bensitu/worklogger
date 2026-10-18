@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import re
 from collections.abc import Callable
@@ -39,6 +40,7 @@ class JsonLocalModelStore:
         catalog_opener: UrlOpen | None = None,
         downloader: HttpRangeDownloader | None = None,
         max_catalog_bytes: int = 1024 * 1024,
+        catalog_timeout_seconds: float = 15.0,
         bundled_catalog_path: Path | None = None,
     ) -> None:
         self._models_dir = Path(models_dir)
@@ -46,7 +48,9 @@ class JsonLocalModelStore:
         self._catalog_opener = catalog_opener or https_opener(public_only=True)
         self._downloader = downloader or HttpRangeDownloader()
         self._max_catalog_bytes = int(max_catalog_bytes)
-        if self._max_catalog_bytes < 1:
+        self._catalog_timeout_seconds = float(catalog_timeout_seconds)
+        if (self._max_catalog_bytes < 1 or not math.isfinite(self._catalog_timeout_seconds)
+                or self._catalog_timeout_seconds <= 0):
             raise ValueError("local_model_catalog_invalid")
         self._bundled_catalog_path = bundled_catalog_path
         self._verified_files = {}
@@ -314,7 +318,7 @@ class JsonLocalModelStore:
             safe_model_url(str(self._remote_catalog_url)),
             headers={"User-Agent": "WorkLogger"},
         )
-        with self._catalog_opener(request, timeout=15.0) as response:
+        with self._catalog_opener(request, timeout=self._catalog_timeout_seconds) as response:
             raw = response.read(self._max_catalog_bytes + 1)
         if len(raw) > self._max_catalog_bytes:
             raise ValueError("local_model_catalog_too_large")

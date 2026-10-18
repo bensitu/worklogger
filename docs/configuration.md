@@ -87,6 +87,15 @@ Changes apply after restarting.
     "background_images": true,
     "minimal_view": true
   },
+  "ai": {
+    "rewrite_timeout_seconds": 180,
+    "chat_timeout_seconds": 180,
+    "connection_test_timeout_seconds": 30
+  },
+  "local_models": {
+    "download_timeout_seconds": 30,
+    "catalog_timeout_seconds": 15
+  },
   "cloud_backup": {
     "startup_delay_seconds": 300,
     "check_interval_seconds": 60,
@@ -128,6 +137,23 @@ can start a retry later than its minimum delay. Version conflicts still require
 manual review. The maximum must be at least the initial delay; otherwise both
 retry values revert to their defaults. Invalid fields use their own defaults
 without discarding valid scheduling fields or other configuration sections.
+
+Processing and model network timeouts also accept integer seconds:
+
+| Key | Default | Allowed range |
+| --- | --- | --- |
+| `ai.rewrite_timeout_seconds` | 180 | 1 to 3600 |
+| `ai.chat_timeout_seconds` | 180 | 1 to 3600 |
+| `ai.connection_test_timeout_seconds` | 30 | 1 to 300 |
+| `local_models.download_timeout_seconds` | 30 | 1 to 600 |
+| `local_models.catalog_timeout_seconds` | 15 | 1 to 300 |
+
+Rewrite and chat deadlines apply to both local and external processing. The
+connection-test timeout applies only to the sample request in Settings.
+Download and catalog timeouts apply to network operations, not a total duration
+limit for downloading an entire model. Existing size limits, integrity checks,
+proxy routing, and cancellation behavior remain in effect. Invalid timeout
+fields independently use their defaults. Restart to apply changes.
 
 Assistant, model-management, and update-check workflows also honor
 `WORKLOGGER_FEATURE_AI`, `WORKLOGGER_FEATURE_LOCAL_MODELS`, and

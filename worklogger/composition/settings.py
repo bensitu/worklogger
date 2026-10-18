@@ -151,6 +151,7 @@ def build_settings_workflow(
         projects_view_model=ProjectManagerViewModel(ProjectService(user.id, repositories.projects)),
         local_inference=handlers.local_inference,
         ai_gateway=handlers.ai_gateway,
+        ai_connection_test_timeout_seconds=runtime_configuration.ai.connection_test_timeout_seconds,
         capabilities=SettingsCapabilities(external_generation=features.enable_ai,
             proxy_routing=handlers.network_transport is not None, model_management=features.enable_local_models,
             minimal_view=runtime_configuration.features.minimal_view),

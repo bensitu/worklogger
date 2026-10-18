@@ -39,6 +39,29 @@ class FakeResponse:
 
 
 class LocalModelInfrastructureTests(unittest.TestCase):
+    def test_runtime_model_storage_applies_catalog_and_download_timeouts(self):
+        from types import SimpleNamespace
+        from worklogger.composition.context import build_local_model_store
+        from worklogger.infrastructure.runtime_config import LocalModelsRuntimeConfiguration
+
+        payload = b"GGUF\x03\x00\x00\x00" + bytes(16) + b"Synthetic model"
+        catalog = {"models": [{"id": "configured-model", "filename": "configured.gguf", "status": "stable",
+                               "download_url": "https://example.test/configured.gguf",
+                               "sha256": hashlib.sha256(payload).hexdigest()}]}
+        requests = []
+        def opener(request, *, timeout):
+            requests.append((request.full_url, timeout))
+            content = json.dumps(catalog).encode() if request.full_url.endswith("catalog.json") else payload
+            return FakeResponse(content, headers={"Content-Length": str(len(content))})
+        with tempfile.TemporaryDirectory() as directory, \
+                patch.dict("os.environ", {"WORKLOGGER_MODEL_CATALOG_URL": "https://example.test/catalog.json"}):
+            store = build_local_model_store(Path(directory) / "worklog.db",
+                transport=SimpleNamespace(opener=lambda **_options: opener),
+                configuration=LocalModelsRuntimeConfiguration(download_timeout_seconds=19, catalog_timeout_seconds=7))
+            self.assertTrue(store.refresh_catalog().ok)
+            self.assertTrue(store.download_model("configured-model").ok)
+            self.assertEqual(requests, [("https://example.test/catalog.json", 7), ("https://example.test/configured.gguf", 19)])
+
     def test_file_verification_does_not_block_catalog_reads(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

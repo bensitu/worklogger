@@ -135,6 +135,7 @@ class SettingsWorkflowController:
         work_modes_view_model: ClassificationManagerViewModel | None = None,
         local_inference=None,
         ai_gateway=None,
+        ai_connection_test_timeout_seconds: int = 30,
         profile_service: UserProfileService | None = None,
         projects_view_model=None,
         database_path: Path | None = None,
@@ -161,6 +162,7 @@ class SettingsWorkflowController:
         self._work_modes_view_model = work_modes_view_model
         self._local_inference = local_inference
         self._ai_gateway = ai_gateway
+        self._ai_connection_test_timeout_seconds = ai_connection_test_timeout_seconds
         self._profile_service = profile_service
         self._profile_revision = 0
         self._cloud_workflow = None
@@ -444,7 +446,8 @@ class SettingsWorkflowController:
             surface.set_external_test_status(_("Connection succeeded.") if result.ok else
                 _("Operation cancelled.") if isinstance(result.error, CancellationError) else _error_message(result.error))
         task.run("test_external_model", lambda _token: self._ai_gateway.generate(AIRequest(
-            messages=({"role": "user", "content": "Reply with OK."},), model="default", timeout_seconds=30)), on_complete=complete)
+            messages=({"role": "user", "content": "Reply with OK."},), model="default",
+            timeout_seconds=self._ai_connection_test_timeout_seconds)), on_complete=complete)
 
     def _change_password(self, parent: QWidget | None) -> bool:
         return self._account_workflow.change_password(parent)

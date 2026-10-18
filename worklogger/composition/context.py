@@ -126,11 +126,21 @@ def build_runtime_repositories(
     )
 
 
+def build_local_model_store(database_path, *, transport=None, configuration=None):
+    configuration = configuration or load_runtime_configuration().local_models
+    opener = transport.opener(public_only=True) if transport is not None else None
+    return JsonLocalModelStore(Path(database_path).parent / "models", bundled_catalog_path=bundled_model_catalog_path(),
+        catalog_opener=opener, catalog_timeout_seconds=configuration.catalog_timeout_seconds,
+        downloader=HttpRangeDownloader(opener=opener, timeout_seconds=configuration.download_timeout_seconds),
+        remote_catalog_url=os.environ.get("WORKLOGGER_MODEL_CATALOG_URL", "").strip() or None)
+
+
 def build_runtime_handlers(
     repositories: RuntimeRepositories, *, holiday_country: str, user_id=None, database_path=None,
     user_profiles: UserProfileRepository | None = None,
 ) -> RuntimeHandlers:
     inference = None
+    configuration = load_runtime_configuration()
     features = FeatureFlags.from_env()
     transport = gateway = external_keys = proxy_password = None
     if user_id is not None and database_path is not None:
@@ -140,23 +150,20 @@ def build_runtime_handlers(
         proxy_password = ProxyPasswordSettings(repositories.settings, SystemCredentialStore(namespace=namespace),
                                                user_id=user_id, secret_box=FernetSecretBox())
         transport = AccountHTTPTransport(settings=repositories.settings, user_id=user_id, proxy_password=proxy_password)
-        opener = transport.opener(public_only=True)
-        store = JsonLocalModelStore(Path(database_path).parent / "models", bundled_catalog_path=bundled_model_catalog_path(),
-            catalog_opener=opener, downloader=HttpRangeDownloader(opener=opener),
-            remote_catalog_url=os.environ.get("WORKLOGGER_MODEL_CATALOG_URL", "").strip() or None)
+        store = build_local_model_store(database_path, transport=transport, configuration=configuration.local_models)
         inference = LocalInferenceRuntime(store=store, settings=repositories.settings, user_id=user_id,
             enabled=features.enable_ai)
         gateway = AccountAIGateway(local=inference, settings=repositories.settings, user_id=user_id,
             key_store=external_keys, transport=transport, enabled=features.enable_ai,
-            model_profiles=load_runtime_configuration().external_model_profiles)
+            model_profiles=configuration.external_model_profiles)
     return RuntimeHandlers(
         templates=UserTemplateProvider(
             repositories.report_templates,
             BuiltInTemplateProvider(),
         ),
         markdown_exporter=MarkdownExporter(),
-        rewrite_handler=RewriteTextHandler(gateway, timeout_seconds=180, profiles=user_profiles),
-        ai_chat_handler=AiChatHandler(gateway, timeout_seconds=180, profiles=user_profiles),
+        rewrite_handler=RewriteTextHandler(gateway, timeout_seconds=configuration.ai.rewrite_timeout_seconds, profiles=user_profiles),
+        ai_chat_handler=AiChatHandler(gateway, timeout_seconds=configuration.ai.chat_timeout_seconds, profiles=user_profiles),
         save_template_handler=SaveReportTemplateHandler(repositories.report_templates),
         reset_template_handler=ResetReportTemplateHandler(
             repositories.report_templates
