@@ -6,14 +6,14 @@ from worklogger.domain.worklog.models import EntryCategory
 
 _CUSTOM_COLORS = {
     False: {
-        "work": ("#75818b", "#527e91", "#6576a4", "#4c78a0", "#6b7790", "#687f8c", "#7e8893", "#597d88"),
-        "leave": ("#ba8656", "#b8934d", "#b87473", "#b18c69", "#ac7760", "#af846e", "#b59b60", "#b37e79"),
-        "break": ("#719680", "#608b78", "#7a967d", "#689184", "#839a7e", "#6e8f75", "#799987", "#64877a"),
+        "work": ("#75818b", "#328b9e", "#7166ae", "#3f7fb1", "#575a95", "#567da0", "#64717f", "#438e9c"),
+        "leave": ("#c18a4b", "#b09b3e", "#be6963", "#bf8d65", "#b77952", "#b16c57", "#aa963e", "#b87b6d"),
+        "break": ("#4d9b76", "#448b80", "#789d56", "#529b8b", "#8b9e5e", "#639753", "#65a489", "#4a8672"),
     },
     True: {
-        "work": ("#a1adb6", "#82adbe", "#9ba8cf", "#89afd0", "#a2adbf", "#92acb9", "#acb5c0", "#8fadb7"),
-        "leave": ("#d9ad80", "#d3b67b", "#d49a98", "#ccad90", "#ce9d86", "#cda892", "#d0bc8d", "#d0a19c"),
-        "break": ("#9cbea9", "#8fb5a2", "#a3bda6", "#97baad", "#adbea7", "#9ab6a0", "#a0bfaf", "#94b3a5"),
+        "work": ("#a1adb6", "#66b6c9", "#aaa0d6", "#85b3d5", "#989bd0", "#81aec7", "#869eb6", "#75bcc8"),
+        "leave": ("#d3a770", "#cdb25d", "#d58c85", "#d3a17a", "#d59b78", "#cc9282", "#c5b16b", "#d39a8b"),
+        "break": ("#82b99d", "#72aea2", "#a0bb7b", "#80bba9", "#adbd84", "#90b57e", "#8bc4aa", "#7bad96"),
     },
 }
 _BUILTIN_COLORS = {

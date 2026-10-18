@@ -307,7 +307,7 @@ class PresentationViewModelTests(unittest.TestCase):
         self.assertEqual(style.background, "#4f8ef7")
         self.assertEqual(
             engine.entry_type_color(EntryType.BUSINESS_TRIP),
-            "#6576a4",
+            "#7166ae",
         )
         for dark in (False, True):
             colors = []
@@ -344,7 +344,7 @@ class PresentationViewModelTests(unittest.TestCase):
         from worklogger.domain.worklog.models import CustomWorkMode
         engine = ThemeEngine()
         for dark in (False, True):
-            for category, minimum, maximum in (("work", 185, 235), ("leave", 0, 50), ("break", 90, 165)):
+            for category, minimum, maximum in (("work", 185, 255), ("leave", 0, 50), ("break", 75, 175)):
                 definitions = [item for item in EntryType if item.category == category]
                 definitions.extend(CustomEntryType(f"custom:{index:032x}", "Example", category) for index in range(1, 65))
                 if category == "work":
