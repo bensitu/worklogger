@@ -37,6 +37,8 @@ layers. Back up your database before upgrading.
 
 ### Changed
 
+- Isolated manual record construction and shared classification resolution from
+  persistent timer coordination without changing storage or historical snapshots.
 - Separated record-search and project-statistics dialog management from desktop
   navigation while preserving the viewed month and open-search reuse.
 - Shared full/minimal window residency and date-polling lifecycle, including

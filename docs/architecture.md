@@ -89,6 +89,14 @@ Query, editing, and automatic recording operations have separate typed contracts
 Normalization, elapsed time, type accounting, overlaps, and limits are validated
 outside widgets. Writes use account ownership and expected revisions.
 
+`app/use_cases/manual_entries.py` constructs manual records and requests overlap
+replacement previews through the repository contract. `app/entry_selection.py`
+resolves classifications and project associations for manual editing, selection
+validation, and timer startup using the same account-scoped service ports.
+`TimeEntryService` retains the recording state, error translation, and transaction
+coordination for automatic recording. Manual edits preserve stored timestamps
+when the displayed interval is unchanged, including historical timezone offsets.
+
 Timer completion and persistence of its next state share a transaction.
 Work and break classifications support start/end timers; leave remains manual.
 The preset-break shortcut writes a bounded rest record without starting a timer.

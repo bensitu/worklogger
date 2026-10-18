@@ -305,6 +305,25 @@ class TimeEntryTests(unittest.TestCase):
         self.assertEqual(sum(record.worked_hours() for record in split.value), 4)
         self.assertEqual(split.value[1].day, day + timedelta(days=1))
         self.assertEqual(split.value[0].ended_at, split.value[1].started_at)
+
+    def test_manual_edits_preserve_captured_offsets_until_the_interval_changes(self):
+        start = self.now.replace(hour=22, tzinfo=timezone(timedelta(hours=9)))
+        end = start + timedelta(hours=8)
+        original = self.repository.save_entry(WorkLog(self.user.id, start.date(), "22:00", "06:00",
+            note="Night work", started_at=start, ended_at=end, capture_id="captured-interval"))
+        result = self.service.save_manual(original.day, "22:00", "06:00", "normal", "Updated", original)
+        self.assertTrue(result.ok, result.error)
+        edited = result.value
+        self.assertEqual((edited.started_at.isoformat(), edited.ended_at.isoformat()),
+                         (start.isoformat(), end.isoformat()))
+        self.assertEqual((edited.id, edited.capture_id, edited.worked_hours()),
+                         (original.id, original.capture_id, 8))
+        changed = self.service.save_manual(edited.day, "22:00", "07:00", "normal", "Extended", edited)
+        self.assertTrue(changed.ok, changed.error)
+        self.assertEqual(changed.value.started_at.utcoffset(), timedelta(0))
+        self.assertEqual(changed.value.ended_at.date(), original.day + timedelta(days=1))
+        self.assertEqual(changed.value.worked_hours(), 9)
+
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
