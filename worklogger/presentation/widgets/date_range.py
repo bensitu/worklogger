@@ -9,7 +9,6 @@ from PySide6.QtWidgets import (QComboBox, QDateEdit, QGridLayout, QHBoxLayout,
 from worklogger.infrastructure.i18n import _, get_language
 from worklogger.presentation.widgets.date_picker import DatePickerButton, configure_calendar_popup
 from worklogger.presentation.widgets.icons import set_button_icon
-from worklogger.presentation.theme.context import current_colors
 
 
 class DateRangeControls(QWidget):
@@ -45,7 +44,6 @@ class DateRangeControls(QWidget):
             button.setAccessibleName(caption)
             set_button_icon(button, icon)
         self.period_button = DatePickerButton()
-        self.period_button.set_colors(current_colors())
         for button in (self.previous_button, self.period_button, self.next_button):
             button.setSizePolicy(button.sizePolicy().horizontalPolicy(), QSizePolicy.Policy.Minimum)
         period.addWidget(self.previous_button)

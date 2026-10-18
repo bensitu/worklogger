@@ -9,7 +9,6 @@ from PySide6.QtWidgets import QCalendarWidget, QFrame, QPushButton, QSizePolicy,
 
 from worklogger.infrastructure.i18n import _, get_language
 from worklogger.presentation.date_labels import day_label
-from worklogger.presentation.theme import ThemeEngine
 from worklogger.presentation.theme.context import current_colors
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.numeric_input import apply_numeric_input_padding
@@ -174,7 +173,7 @@ class DatePickerButton(QPushButton):
         self._day = date.today()
         self._week_start_monday = week_start_monday
         self._popup = None
-        self._colors = ThemeEngine().palette()
+        self._colors = None
         self.calendar = None
         self.clicked.connect(self.open_calendar)
 
@@ -215,12 +214,14 @@ class DatePickerButton(QPushButton):
         if self._popup is None:
             self._popup = QFrame(self, Qt.WindowType.Popup)
             self._popup.setObjectName("date_picker_popup_frame")
+            self._popup.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
             layout = QVBoxLayout(self._popup)
             layout.setContentsMargins(8, 8, 8, 8)
             self.calendar = MonthCalendar(self._popup)
             self.calendar.setMinimumDate(QDate(1, 1, 1))
             self.calendar.setMaximumDate(QDate(9999, 12, 31))
-            self.calendar.set_colors(self._colors)
+            if self._colors is not None:
+                self.calendar.set_colors(self._colors)
             self.calendar.currentPageChanged.connect(self.request_holidays)
             self.calendar.clicked.connect(self._choose_date)
             self.calendar.activated.connect(self._choose_date)
