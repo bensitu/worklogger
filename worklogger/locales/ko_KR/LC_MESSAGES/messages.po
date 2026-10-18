@@ -463,6 +463,9 @@ msgstr "클라우드 인증에 실패했습니다. 저장소 자격 증명과 �
 msgid "Cloud backup failed. Check the network, storage service, and available space."
 msgstr "클라우드 백업에 실패했습니다. 네트워크, 저장소 서비스 및 여유 공간을 확인하세요."
 
+msgid "Cloud backup is disabled for this installation."
+msgstr "이 설치에서는 클라우드 백업이 비활성화되어 있습니다."
+
 msgid "Cloud backup operation in progress..."
 msgstr "클라우드 백업 처리 중..."
 

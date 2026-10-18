@@ -93,6 +93,7 @@ class CloudBackupPanel(QWidget):
         super().__init__(parent)
         self.setObjectName("cloud_backup_panel_widget")
         self._loading, self._dirty, self._busy, self._configured = True, False, False, False
+        self._available, self._ready = True, False
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         card = _card_with_form(_("Personal cloud backup"))
@@ -284,5 +285,15 @@ class CloudBackupPanel(QWidget):
 
     def set_busy(self, busy, *, configured):
         self._busy, self._configured = busy, configured
-        self.setEnabled(not busy)
+        self._ready = True
+        self.setEnabled(self._available and not busy)
         self._refresh_actions()
+
+    def set_available(self, available):
+        was_available = self._available
+        self._available = available
+        self.setEnabled(available and self._ready and not self._busy)
+        message = "" if available else _("Cloud backup is disabled for this installation.")
+        self.setToolTip(message)
+        if not available or not was_available:
+            self.status_label.setText(message)

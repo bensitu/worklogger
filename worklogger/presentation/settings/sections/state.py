@@ -120,6 +120,7 @@ class SettingsSectionState:
             self.set_state(self._state)
 
     def _apply_capabilities(self) -> None:
+        self.cloud_backup_panel.set_available(self._capabilities.cloud_backup_enabled)
         ai_section = self.category_stack.widget(self._category_pages["ai"])
         ai_section.content_widget.setEnabled(self._capabilities.ai_enabled)
         self.minimal_view_row.setVisible(self._capabilities.minimal_view)

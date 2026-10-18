@@ -463,6 +463,9 @@ msgstr "Cloud authentication failed. Check the storage credentials and permissio
 msgid "Cloud backup failed. Check the network, storage service, and available space."
 msgstr "Cloud backup failed. Check the network, storage service, and available space."
 
+msgid "Cloud backup is disabled for this installation."
+msgstr "Cloud backup is disabled for this installation."
+
 msgid "Cloud backup operation in progress..."
 msgstr "Cloud backup operation in progress..."
 

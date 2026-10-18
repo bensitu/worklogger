@@ -341,6 +341,50 @@ class RuntimeBootstrapTests(unittest.TestCase):
             finally:
                 result.value.window.close()
 
+    def test_cloud_policy_controls_service_and_scheduler_in_full_and_minimal_views(self):
+        import json
+        from worklogger.domain.cloud_backup import BackupCredentials
+
+        for minimal in (False, True):
+            for allowed in (True, False):
+                with self.subTest(minimal=minimal, allowed=allowed), self.runtime_directory() as directory:
+                    root = Path(directory)
+                    configuration = root / "worklogger.config.json"
+                    configuration.write_text(json.dumps({"features": {
+                        "ai": False, "cloud_backup": allowed, "minimal_view": True}}), encoding="utf-8")
+                    with patch("worklogger.infrastructure.runtime_config.configuration_path", return_value=configuration), \
+                            patch("worklogger.composition.settings.CloudBackupService") as service:
+                        service.return_value.settings.return_value = Result.success((None, BackupCredentials(), {}))
+                        result = build_desktop_runtime(DesktopRuntimeConfig(database_path=root / "worklog.db",
+                            create_user_if_empty=True, password_iterations=1000, minimal_mode=minimal), argv=[])
+                        self.assertTrue(result.ok, result.error)
+                        runtime = result.value
+                        page = None
+                        try:
+                            workflow = runtime.window._settings_workflow
+                            workflow.start_cloud_backups(runtime.window)
+                            page = workflow.create_page()
+                            panel = page.cloud_backup_panel
+                            self.assertFalse(panel.isHidden())
+                            self.assertTrue(page.export_csv_button.isEnabled())
+                            if allowed:
+                                service.assert_called_once()
+                                self.assertTrue(workflow._cloud_workflow._timer.isActive())
+                            else:
+                                self.assertIsNone(workflow._cloud_workflow)
+                                for button in (panel.save_button, panel.test_button, panel.upload_button,
+                                               panel.restore_button, panel.local_restore_button):
+                                    self.assertFalse(button.isEnabled())
+                                    button.click()
+                                QApplication.instance().processEvents()
+                                service.assert_not_called()
+                                self.assertEqual(service.return_value.mock_calls, [])
+                        finally:
+                            if page is not None:
+                                page.deleteLater()
+                            runtime.window.close()
+                            runtime.job_runner.shutdown(wait=True)
+
     def test_first_login_is_translated_before_authentication(self):
         with self.runtime_directory() as directory:
             for language in ("en_US", "ja_JP", "ko_KR", "zh_CN", "zh_TW"):

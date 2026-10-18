@@ -11,3 +11,4 @@ class SettingsCapabilities:
     model_management: bool = True
     minimal_view: bool = False
     ai_enabled: bool = True
+    cloud_backup_enabled: bool = True

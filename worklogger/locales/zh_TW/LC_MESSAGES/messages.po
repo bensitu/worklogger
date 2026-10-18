@@ -463,6 +463,9 @@ msgstr "雲端儲存驗證失敗。請檢查憑證與權限。"
 msgid "Cloud backup failed. Check the network, storage service, and available space."
 msgstr "雲端備份失敗。請檢查網路、儲存服務與可用空間。"
 
+msgid "Cloud backup is disabled for this installation."
+msgstr "此安裝已停用雲端備份。"
+
 msgid "Cloud backup operation in progress..."
 msgstr "正在處理雲端備份…"
 

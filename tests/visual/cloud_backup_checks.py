@@ -58,6 +58,16 @@ class CloudBackupLayoutChecks(unittest.TestCase):
                                                panel.save_button, panel.restore_button, panel.local_restore_button):
                                     self.assertTrue(panel.rect().contains(widget.rect().translated(widget.mapTo(panel, QPoint()))))
                                 self.capture(scroll, f"{language}-{'dark' if dark else 'light'}-{provider}-{width}")
+                                panel.set_available(False)
+                                self.app.processEvents()
+                                for field in (panel.provider, panel.endpoint, panel.encrypted, panel.keep_count,
+                                              panel.save_button, panel.restore_button, panel.local_restore_button):
+                                    self.assertTrue(field.isVisible())
+                                    self.assertFalse(field.isEnabled())
+                                self.assertTrue(scroll.isEnabled())
+                                self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)
+                                self.capture(scroll, f"{language}-{'dark' if dark else 'light'}-{provider}-{width}-disabled")
+                                panel.set_available(True)
                                 panel.encrypted.setChecked(False)
                                 for _pass in range(4):
                                     self.app.processEvents()

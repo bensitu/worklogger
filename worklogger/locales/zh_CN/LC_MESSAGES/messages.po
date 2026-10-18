@@ -463,6 +463,9 @@ msgstr "云存储身份验证失败。请检查凭据与权限。"
 msgid "Cloud backup failed. Check the network, storage service, and available space."
 msgstr "云备份失败。请检查网络、存储服务与可用空间。"
 
+msgid "Cloud backup is disabled for this installation."
+msgstr "此安装已禁用云备份。"
+
 msgid "Cloud backup operation in progress..."
 msgstr "正在处理云备份…"
 

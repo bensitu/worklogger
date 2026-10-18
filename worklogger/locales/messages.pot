@@ -461,6 +461,9 @@ msgstr ""
 msgid "Cloud backup failed. Check the network, storage service, and available space."
 msgstr ""
 
+msgid "Cloud backup is disabled for this installation."
+msgstr ""
+
 msgid "Cloud backup operation in progress..."
 msgstr ""
 

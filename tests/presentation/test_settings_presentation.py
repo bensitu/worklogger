@@ -539,6 +539,44 @@ class SettingsPresentationTests(unittest.TestCase):
         self.assertFalse(page.proxy_address_line_edit.isEnabled())
         self.assertEqual(model.load().value.network_proxy_address, "proxy.example.test")
 
+    def test_cloud_policy_preserves_configuration_and_disables_controls_after_refreshes(self):
+        from worklogger.domain.cloud_backup import BackupConfiguration, BackupCredentials
+
+        repository = MemorySettingsRepository()
+        page = SettingsPage(_view_model(repository), capabilities=SettingsCapabilities(cloud_backup_enabled=False))
+        self.addCleanup(page.deleteLater)
+        panel = page.cloud_backup_panel
+        configuration = BackupConfiguration(endpoint="https://storage.example", schedule="weekly")
+        credentials = BackupCredentials("synthetic-user", "synthetic-password", passphrase="synthetic-passphrase")
+        panel.set_configuration(configuration, credentials)
+        before = dict(repository.values)
+        signals = []
+        for signal in (panel.save_requested, panel.test_requested, panel.upload_requested,
+                       panel.restore_requested, panel.local_restore_requested):
+            signal.connect(lambda *_args: signals.append(True))
+        for _refresh in range(2):
+            page.refresh()
+            panel.set_busy(True, configured=True)
+            panel.set_busy(False, configured=True)
+            for field in (panel.provider, panel.endpoint, panel.encrypted, panel.keep_count, panel.schedule,
+                          panel.save_button, panel.test_button, panel.upload_button,
+                          panel.restore_button, panel.local_restore_button):
+                self.assertFalse(field.isEnabled())
+                self.assertFalse(field.isHidden())
+            for button in (panel.save_button, panel.test_button, panel.upload_button,
+                           panel.restore_button, panel.local_restore_button):
+                button.click()
+            self.assertFalse(panel.isHidden())
+            self.assertTrue(page.export_csv_button.isEnabled())
+            self.assertIn("disabled for this installation", panel.status_label.text())
+        self.assertEqual(signals, [])
+        self.assertEqual(repository.values, before)
+        page.set_capabilities(SettingsCapabilities())
+        self.assertTrue(panel.upload_button.isEnabled())
+        self.assertEqual(panel.endpoint.text(), configuration.endpoint)
+        self.assertEqual(panel._credentials, credentials)
+        self.assertEqual(panel.status_label.text(), "")
+
     def test_ai_policy_disables_visible_controls_across_state_refreshes_without_changing_preferences(self):
         repository = MemorySettingsRepository()
         repository.set(1, LOCAL_MODEL_ENABLED_SETTING_KEY, "1")

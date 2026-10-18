@@ -169,7 +169,7 @@ class SettingsWorkflowController:
         self._profile_service = profile_service
         self._profile_revision = 0
         self._cloud_workflow = None
-        if cloud_backup_service is not None:
+        if self._capabilities.cloud_backup_enabled and cloud_backup_service is not None:
             from worklogger.presentation.settings.workflows.cloud_backup import CloudBackupWorkflow
             self._cloud_workflow = CloudBackupWorkflow(cloud_backup_service, job_runner=job_runner,
                 startup_delay_seconds=cloud_backup_startup_delay_seconds,

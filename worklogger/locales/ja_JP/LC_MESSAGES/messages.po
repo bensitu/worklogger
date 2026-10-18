@@ -463,6 +463,9 @@ msgstr "クラウド認証に失敗しました。ストレージの認証情報
 msgid "Cloud backup failed. Check the network, storage service, and available space."
 msgstr "クラウドバックアップに失敗しました。ネットワーク、ストレージサービス、空き容量を確認してください。"
 
+msgid "Cloud backup is disabled for this installation."
+msgstr "このインストールではクラウドバックアップが無効になっています。"
+
 msgid "Cloud backup operation in progress..."
 msgstr "クラウドバックアップを処理中..."
 

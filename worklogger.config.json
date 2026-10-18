@@ -1,6 +1,7 @@
 {
   "features": {
     "ai": true,
+    "cloud_backup": true,
     "background_images": true,
     "minimal_view": true
   },

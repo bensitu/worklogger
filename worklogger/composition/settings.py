@@ -153,6 +153,7 @@ def build_settings_workflow(
         ai_gateway=handlers.ai_gateway,
         ai_connection_test_timeout_seconds=runtime_configuration.ai.connection_test_timeout_seconds,
         capabilities=SettingsCapabilities(ai_enabled=features.enable_ai, external_generation=features.enable_ai,
+            cloud_backup_enabled=runtime_configuration.features.cloud_backup,
             proxy_routing=handlers.network_transport is not None, model_management=features.enable_local_models,
             minimal_view=runtime_configuration.features.minimal_view),
         cloud_backup_startup_delay_seconds=runtime_configuration.cloud_backup.startup_delay_seconds,
@@ -166,7 +167,8 @@ def build_settings_workflow(
             store_factory=lambda configuration, credentials: backup_store(configuration, credentials,
                 opener=handlers.network_transport.opener(allow_redirects=False) if handlers.network_transport else None,
                 proxy_url=handlers.network_transport.proxy_url() if handlers.network_transport else None),
-            recovery_store=PersonalRecoveryStore(database_path.parent / "personal-recovery" / str(user.id))),
+            recovery_store=PersonalRecoveryStore(database_path.parent / "personal-recovery" / str(user.id)))
+        if runtime_configuration.features.cloud_backup else None,
     )
 
 

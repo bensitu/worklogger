@@ -15,6 +15,8 @@ layers. Back up your database before upgrading.
 
 ### Added
 
+- An installation-wide personal cloud backup policy that keeps configuration
+  and transfer controls visible but disabled and prevents background backups.
 - An installation-wide AI policy that keeps related controls visible but
   disabled and prevents local and external processing and model management.
 - Deployment configuration for cloud backup polling and retries, AI request

@@ -85,6 +85,7 @@ Changes apply after restarting.
 {
   "features": {
     "ai": true,
+    "cloud_backup": true,
     "background_images": true,
     "minimal_view": true
   },
@@ -134,6 +135,19 @@ preferences cannot override `features.ai: false`. Protect the configuration and
 installation files with deployment permissions; this client-side switch is not
 an enforcement boundary against someone who can replace those files or the
 application itself.
+
+`features.cloud_backup` is the installation-wide personal cloud backup policy
+and defaults to `true` when the file or property is absent. Set it to `false` to
+disable WebDAV and S3-compatible backup configuration, connection tests, uploads,
+downloads, and cloud backup recovery, including local recovery copies created by
+this feature. Controls remain visible but disabled. No cloud backup service,
+background schedule, startup catch-up, or retry workflow is started. Saved
+configuration, credentials, and existing local and remote backups are retained.
+Restart to apply changes. This policy is independent of the AI policy and does
+not disable local database backups, CSV/ICS operations, updates, or external
+sign-in. Account settings cannot override it. It accepts only JSON booleans;
+invalid values or malformed or unreadable files disable cloud backups. Protect
+the configuration file with deployment permissions as described above.
 
 `cloud_backup.startup_delay_seconds` is the minimum delay before automatic cloud
 backups may run after signing in. It defaults to 300 seconds and accepts integers
