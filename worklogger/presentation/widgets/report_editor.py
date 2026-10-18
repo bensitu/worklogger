@@ -1,7 +1,7 @@
 """Report editing controls independent of persistence and background workflows."""
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QToolButton
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QLineEdit, QProgressBar, QPushButton, QTextEdit, QToolButton
 
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets.card import CardFrame
@@ -19,6 +19,7 @@ class ReportEditorPanel(CardFrame):
         "generate_button",
         "editor",
         "report_state_label",
+        "load_progress",
         "ai_hint_line_edit",
         "ai_assist_button",
         "versions_button",
@@ -83,7 +84,19 @@ class ReportEditorPanel(CardFrame):
         self.report_state_label.setObjectName("report_state_label")
         self.report_state_label.setProperty("role", "secondary")
         self.report_state_label.setWordWrap(True)
-        self.content_layout.addWidget(self.report_state_label)
+        state_row = QHBoxLayout()
+        state_row.addWidget(self.report_state_label, 1)
+        self.load_progress = QProgressBar()
+        self.load_progress.setRange(0, 0)
+        self.load_progress.setTextVisible(False)
+        self.load_progress.setFixedSize(48, 6)
+        self.load_progress.setAccessibleName(_("Loading..."))
+        policy = self.load_progress.sizePolicy()
+        policy.setRetainSizeWhenHidden(True)
+        self.load_progress.setSizePolicy(policy)
+        self.load_progress.hide()
+        state_row.addWidget(self.load_progress)
+        self.content_layout.addLayout(state_row)
         self.content_layout.addWidget(self.editor, 1)
 
         self.ai_hint_line_edit = QLineEdit()

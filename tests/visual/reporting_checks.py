@@ -420,14 +420,27 @@ class ReportingLayoutChecks(unittest.TestCase):
                                         self.assertEqual(panel.scroll_area.geometry(), geometry)
                                         self.assertEqual(panel.scroll_area.verticalScrollBar().value(), position)
                                         self.assertTrue(panel.loading_bar.isHidden())
-                                    if language == "zh_CN" and width == 1100:
+                                    if width == 1100:
                                         from unittest.mock import patch
                                         from worklogger.app.job_runner import CancellationToken
 
-                                        with patch.object(page._history.runner, "submit") as submit:
-                                            page._history.refresh()
+                                        editor_geometry = page.editor.geometry()
+                                        with patch.object(page._job_runner, "submit") as submit:
+                                            self.assertTrue(page.refresh())
                                             QTest.qWait(200)
+                                            self.assertFalse(page.load_progress.isHidden())
+                                            self.assertTrue(page.templates_button.isEnabled())
+                                            self.assertTrue(panel.isEnabled())
+                                            self.assertEqual(page.editor.geometry(), editor_geometry)
+                                            self.assertEqual(panel.scroll_area.geometry(), geometry)
+                                            self.capture(window, f"reports-editor-loading-{'dark' if dark else 'light'}", language)
+                                            request = submit.call_args
+                                            request.kwargs["on_complete"](request.args[1](CancellationToken()))
+                                            QTest.qWait(200)
+                                            self.assertTrue(page.load_progress.isHidden())
                                             self.assertFalse(panel.loading_bar.isHidden())
+                                            self.assertTrue(panel.scroll_widget.isEnabled())
+                                            self.assertEqual(page.editor.geometry(), editor_geometry)
                                             self.assertEqual(panel.scroll_area.geometry(), geometry)
                                             self.capture(window, f"reports-loading-{'dark' if dark else 'light'}", language)
                                             request = submit.call_args

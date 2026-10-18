@@ -7,7 +7,7 @@ from dataclasses import replace
 from datetime import date
 from pathlib import Path
 
-from PySide6.QtCore import QSignalBlocker, QTimer, Qt
+from PySide6.QtCore import QEvent, QSignalBlocker, QTimer, Qt
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -49,6 +49,13 @@ from worklogger.presentation.widgets.report_editor import ReportEditorPanel
 from worklogger.presentation.processing import TextProcessingTask
 
 
+_READ_BLOCKED_EVENTS = frozenset((
+    QEvent.Type.MouseButtonPress, QEvent.Type.MouseButtonRelease, QEvent.Type.MouseButtonDblClick,
+    QEvent.Type.KeyPress, QEvent.Type.KeyRelease, QEvent.Type.Shortcut, QEvent.Type.ShortcutOverride,
+    QEvent.Type.Wheel, QEvent.Type.ContextMenu, QEvent.Type.InputMethod, QEvent.Type.Drop,
+))
+
+
 class ReportsPage(QWidget):
     def __init__(
         self,
@@ -77,6 +84,7 @@ class ReportsPage(QWidget):
         self._delete_busy = False
         self._generate_busy = False
         self._io_busy = False
+        self._loading_report = False
         self._io_feedback_visible = False
         self._io_feedback_timer = QTimer(self)
         self._io_feedback_timer.setSingleShot(True)
@@ -96,25 +104,34 @@ class ReportsPage(QWidget):
     @property
     def _controls_busy(self):
         return (self._rewrite_busy or self._delete_busy or self._generate_busy
-                or (self._io_busy and self._io_feedback_visible))
+                or (self._io_busy and not self._loading_report))
+
+    def eventFilter(self, watched, event):
+        # Read requests block input without changing the enabled palette.
+        if self._loading_report and event.type() in _READ_BLOCKED_EVENTS:
+            event.accept()
+            return True
+        return super().eventFilter(watched, event)
 
     def _show_io_feedback(self):
         if self._io_busy:
             self._io_feedback_visible = True
             self._update_busy_controls()
 
-    def _run_io(self, name, operation, complete, *, defer_busy_feedback=False,
+    def _run_io(self, name, operation, complete, *, read_only=False,
                 error_code="report_request_failed"):
         if self.is_busy:
             return False
         self._io_busy = True
-        self._io_feedback_visible = not defer_busy_feedback
-        if defer_busy_feedback:
+        self._loading_report = read_only
+        self._io_feedback_visible = not read_only
+        if read_only:
             self._io_feedback_timer.start()
         self._update_busy_controls()
         def finished(result):
             self._io_feedback_timer.stop()
             self._io_busy = False
+            self._loading_report = False
             self._io_feedback_visible = False
             try:
                 complete(result)
@@ -183,7 +200,7 @@ class ReportsPage(QWidget):
             self._render_current(refresh_history=False)
             self._refresh_history(reset=True)
             self._set_status("")
-        return self._run_io("load_reports", load, complete, defer_busy_feedback=True)
+        return self._run_io("load_reports", load, complete, read_only=True)
 
     def copy_markdown(self) -> None:
         if self.is_busy:
@@ -250,6 +267,8 @@ class ReportsPage(QWidget):
         self.status_label.setProperty("role", "secondary")
         self.status_label.hide()
         root.addWidget(self.status_label)
+        for widget in self.findChildren(QWidget):
+            widget.installEventFilter(self)
         self._update_report_status()
 
     def _update_report_status(self):
@@ -269,11 +288,13 @@ class ReportsPage(QWidget):
         modified = self.editor.toPlainText() != self._saved_content.get(self._current_type(), state.content)
         identity = (_("Saved report #{report_id}").format(report_id=state.report_id)
                     if state.report_id is not None else _("Generated draft"))
-        self.report_state_label.setText(identity + (" | " + _("Unsaved changes") if modified else ""))
+        status = identity + (" | " + _("Unsaved changes") if modified else "")
+        if state.report_id is not None:
+            status += " | " + _("Version {number}").format(number=state.revision + 1)
+        if self.report_state_label.text() != status:
+            self.report_state_label.setText(status)
         from worklogger.presentation.report_source_labels import provenance_text
         self.report_state_label.setToolTip(provenance_text(state.provenance, include_references=False))
-        if state.report_id is not None:
-            self.report_state_label.setText(self.report_state_label.text() + " | " + _("Version {number}").format(number=state.revision + 1))
         self.save_button.setText(_("Save changes") if state.report_id is not None else _("Save Report"))
         busy = self._controls_busy
         has_content = bool(self.editor.toPlainText().strip())
@@ -366,12 +387,14 @@ class ReportsPage(QWidget):
         return self.report_type_control.value or "daily"
 
     def _change_report_type(self, report_type: str) -> None:
-        if not self.confirm_leave():
+        if self.is_busy or not self.confirm_leave():
             self.report_type_control.set_value(self._rendered_type, emit=False)
             return
         self._render_current()
 
     def _shift_period(self, direction: int) -> None:
+        if self.is_busy:
+            return
         state = self._states.get(self._current_type())
         day = state.period_start if state is not None else self._selected_day
         try:
@@ -454,7 +477,11 @@ class ReportsPage(QWidget):
 
     def _update_busy_controls(self):
         busy = self._controls_busy
+        self.load_progress.setVisible(self._loading_report and self._io_feedback_visible)
         self.editor.setReadOnly(self.is_busy)
+        for field in (self.ai_hint_line_edit, self.history_panel.search_line_edit,
+                      self.history_panel.date_range.start_input, self.history_panel.date_range.end_input):
+            field.setReadOnly(self._loading_report)
         for widget in (self.report_type_control, self.previous_period_button, self.next_period_button, self.templates_button, self.history_panel):
             widget.setEnabled(not busy)
         self._update_report_status()
@@ -512,6 +539,8 @@ class ReportsPage(QWidget):
         self._history.refresh()
 
     def _select_history_item(self, item: ReportHistoryDisplayItem) -> None:
+        if self.is_busy:
+            return
         if not self._view_model or not self.confirm_leave():
             state = self._states.get(self._rendered_type)
             self.history_panel.set_selected_report(state.report_id if state else None)
@@ -522,7 +551,7 @@ class ReportsPage(QWidget):
                 return
             self._show_history_report(result.value)
         self._run_io("load_saved_report", lambda: self._view_model.load_history_report(item.report_id), complete,
-                     defer_busy_feedback=True)
+                     read_only=True)
 
     def _show_history_report(self, state):
         self._states[state.report_type] = state

@@ -147,7 +147,10 @@ class ReportHistoryTests(unittest.TestCase):
         panel.query_requested.emit()
         QTest.qWait(200)
         self.assertFalse(panel.loading_bar.isHidden())
-        self.assertFalse(panel.scroll_widget.isEnabled())
+        self.assertTrue(panel.scroll_widget.isEnabled())
+        buttons[0].click()
+        buttons[0].delete_button.click()
+        self.assertEqual((selection.count(), deletion.count()), (0, 0))
         operation, complete = runner.jobs[0]
         complete(operation(CancellationToken()))
         self.assertEqual(panel._items, items)

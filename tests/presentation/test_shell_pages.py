@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QEvent, QObject
+from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QMessageBox, QLabel, QFileDialog
 from worklogger.presentation.job_runner import ImmediateJobRunner
@@ -80,6 +80,7 @@ class ShellPagesTests(unittest.TestCase):
                 page._choose_export_scope(scope)
             self.assertTrue(page.is_busy)
             self.assertTrue(page.editor.isReadOnly())
+            self.assertFalse(page.previous_period_button.isEnabled())
             page._selected_day = date(2027, 1, 1)
             page.editor.setPlainText("Later content")
             runner.complete(runner.job(CancellationToken()))
@@ -88,7 +89,7 @@ class ShellPagesTests(unittest.TestCase):
             self.assertFalse(page.editor.isReadOnly())
             self.assertEqual(page.editor.toPlainText(), "Later content")
 
-    def test_fast_report_and_history_loads_preserve_control_states(self):
+    def test_report_and_history_loads_preserve_control_states(self):
         class Model(ReportsViewModel):
             revisions_available = True
             content = "Saved report"
@@ -131,6 +132,9 @@ class ShellPagesTests(unittest.TestCase):
         self.assertTrue(page.is_busy)
         self.assertTrue(page.editor.isReadOnly())
         self.assertEqual(tuple(control.isEnabled() for control in controls), enabled)
+        QTest.qWait(200)
+        self.assertFalse(page.load_progress.isHidden())
+        self.assertEqual(tuple(control.isEnabled() for control in controls), enabled)
         page.generate_button.click()
         page.templates_button.click()
         self.assertEqual(runner.name, "load_reports")
@@ -138,6 +142,7 @@ class ShellPagesTests(unittest.TestCase):
         self.assertEqual(page.editor.toPlainText(), "Updated report")
         self.assertFalse(page.has_unsaved_changes)
         self.assertFalse(page.editor.isReadOnly())
+        self.assertTrue(page.load_progress.isHidden())
         page._refresh_history()
         runner.complete(runner.job(CancellationToken()))
         self.assertEqual(tuple(control.isEnabled() for control in controls), enabled)
@@ -157,12 +162,28 @@ class ShellPagesTests(unittest.TestCase):
         self.assertTrue(page.refresh())
         self.assertTrue(page.editor.isReadOnly())
         QTest.qWait(200)
-        self.assertFalse(page.previous_period_button.isEnabled())
-        self.assertFalse(page.templates_button.isEnabled())
-        self.assertFalse(page.copy_button.isEnabled())
+        self.assertFalse(page.load_progress.isHidden())
+        self.assertTrue(page.previous_period_button.isEnabled())
+        self.assertTrue(page.templates_button.isEnabled())
+        self.assertTrue(page.copy_button.isEnabled())
+        self.assertTrue(page.history_panel.search_line_edit.isReadOnly())
+        self.assertTrue(page.ai_hint_line_edit.isReadOnly())
+        QTest.mouseClick(page.next_period_button, Qt.MouseButton.LeftButton)
+        QTest.mouseClick(page.report_type_control._buttons["monthly"], Qt.MouseButton.LeftButton)
+        QTest.keyClicks(page.history_panel.search_line_edit, "query")
+        QTest.keyClick(page.history_panel.sort_input, Qt.Key.Key_Down)
+        QTest.keyClicks(page.editor, "draft")
+        self.assertEqual(page._selected_day, date(2026, 10, 11))
+        self.assertEqual(page._current_type(), "daily")
+        self.assertEqual(page.history_panel.search_line_edit.text(), "")
+        self.assertEqual(page.history_panel.sort_input.currentIndex(), 0)
+        self.assertEqual(page.editor.toPlainText(), "Original daily")
         runner.complete(Result.failure(ValidationError("report_load_failed", "report_load_failed")))
         self.assertFalse(page.is_busy)
         self.assertFalse(page.editor.isReadOnly())
+        self.assertTrue(page.load_progress.isHidden())
+        self.assertFalse(page.history_panel.search_line_edit.isReadOnly())
+        self.assertFalse(page.ai_hint_line_edit.isReadOnly())
         self.assertEqual(page.editor.toPlainText(), "Original daily")
         self.assertTrue(page.copy_button.isEnabled())
         self.assertTrue(page.previous_period_button.isEnabled())

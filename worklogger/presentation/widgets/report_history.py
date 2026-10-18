@@ -258,14 +258,12 @@ class ReportHistoryPanel(CardFrame):
         else:
             self._loading_timer.stop()
             self.loading_bar.hide()
-            self.scroll_widget.setEnabled(True)
             self.more_button.setText(_("Load more"))
             self.count_label.setText(self._count_text)
 
     def _show_loading(self):
         if self._loading:
             self.loading_bar.show()
-            self.scroll_widget.setEnabled(False)
             self.more_button.setText(_("Loading..."))
             self.count_label.setText(_("Loading..."))
 
