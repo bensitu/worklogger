@@ -20,7 +20,7 @@ move the local database.
 3. For WebDAV, enter the username and password or service-specific application
    password. The endpoint's root collection must exist; WorkLogger creates the
    configured child collections. For S3, supply an existing bucket, its region,
-   access key ID, secret access key, and an optional session token. Uncheck
+   access key ID, secret access key, and an optional session token. Turn off
    **Use an S3 session token** to remove a saved token. S3 uses path-style requests
    signed with Signature Version 4. The configured account proxy applies to both
    providers; TLS verification remains enabled.

@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtWidgets import QApplication, QDialog, QWidget
+from PySide6.QtWidgets import QApplication, QDialog, QMessageBox, QWidget
 
 from worklogger.domain.cloud_backup import BackupConfiguration, BackupCredentials, BackupOverview, LocalBackupOverview
 from worklogger.app.use_cases.cloud_backups import BackupTransfer
@@ -113,6 +113,30 @@ class CloudBackupWorkflowTests(unittest.TestCase):
         self.assertEqual(saved[0].session_token, "")
         self.assertEqual(saved[0].password, "password")
         self.assertTrue(panel.session_token.isHidden())
+
+    def test_encryption_switch_preserves_passphrase_and_requires_confirmation_before_saving_without_encryption(self):
+        panel = CloudBackupPanel(self.owner)
+        configuration = BackupConfiguration(endpoint="https://storage.example")
+        credentials = BackupCredentials("user", "password", passphrase="example-backup-passphrase")
+        panel.set_configuration(configuration, credentials)
+        panel.set_busy(False, configured=True)
+        saved = []
+        panel.save_requested.connect(lambda configuration, credentials: saved.append((configuration, credentials)))
+        self.assertTrue(panel.encrypted.isChecked())
+        self.assertFalse(panel.passphrase.isHidden())
+        panel.encrypted.click()
+        self.assertTrue(panel.passphrase.isHidden())
+        self.assertTrue(panel.has_unsaved_changes)
+        self.assertFalse(panel.upload_button.isEnabled())
+        with patch("PySide6.QtWidgets.QMessageBox.warning", return_value=QMessageBox.StandardButton.No):
+            panel.save_button.click()
+        self.assertFalse(saved)
+        with patch("PySide6.QtWidgets.QMessageBox.warning", return_value=QMessageBox.StandardButton.Yes):
+            panel.save_button.click()
+        self.assertFalse(saved[0][0].encrypted)
+        self.assertEqual(saved[0][1].passphrase, credentials.passphrase)
+        panel.encrypted.click()
+        self.assertFalse(panel.passphrase.isHidden())
 
     def test_automatic_failures_are_reported_and_backoff_without_repeated_notifications(self):
         workflow = self.workflow(0)

@@ -1,26 +1,4 @@
-/* Settings controls and account editing actions. */
-
-QWidget#cloud_backup_panel_widget QCheckBox::indicator {
-  width: 14px;
-  height: 14px;
-  border: 1px solid {{ field_border }};
-  border-radius: 3px;
-  background: {{ input_fill }};
-}
-
-QWidget#cloud_backup_panel_widget QCheckBox::indicator:checked {
-  image: url("{{ icons_root }}/check.svg");
-  border-color: {{ accent }};
-  background: {{ accent }};
-}
-
-QWidget#cloud_backup_panel_widget QCheckBox::indicator:hover:enabled {
-  border-color: {{ accent }};
-}
-
-QWidget#cloud_backup_panel_widget QCheckBox::indicator:disabled {
-  border-color: {{ border }};
-}
+/* Account editing actions. */
 
 QToolButton#display_name_action_button {
   padding: 8px;

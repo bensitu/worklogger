@@ -4,12 +4,13 @@ from dataclasses import fields
 from uuid import uuid4
 
 from PySide6.QtCore import QLocale, QSize, QTime, Signal, Qt
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QGridLayout, QLabel, QLayout,
+from PySide6.QtWidgets import (QComboBox, QGridLayout, QLabel, QLayout,
     QLineEdit, QPushButton, QSizePolicy, QSpinBox, QTimeEdit, QVBoxLayout, QWidget)
 
 from worklogger.domain.cloud_backup import BackupConfiguration, BackupCredentials
 from worklogger.infrastructure.i18n import _, get_language
-from worklogger.presentation.settings.sections.common import _card_with_form, _add_action_buttons, _secondary_label
+from worklogger.presentation.settings.sections.common import _card_with_form, _add_action_buttons, _secondary_label, _switch_line
+from worklogger.presentation.widgets import SwitchButton
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.numeric_input import apply_numeric_input_padding
 
@@ -107,8 +108,8 @@ class CloudBackupPanel(QWidget):
             secret.setMaxLength(4096)
         for text in (self.endpoint, self.username, self.prefix, self.bucket, self.region):
             text.setMaxLength(1024)
-        self.encrypted = QCheckBox(_("Client-side encryption"))
-        self.temporary_credentials = QCheckBox(_("Use an S3 session token"))
+        self.encrypted = SwitchButton()
+        self.temporary_credentials = SwitchButton()
         self.passphrase.setMaxLength(1024)
         self.passphrase.setToolTip(_("Keep this independent passphrase safe. If it is lost, encrypted backups cannot be restored."))
         self.keep_count, self.keep_days = _number(1, 200), _number(1, 3650)
@@ -125,20 +126,25 @@ class CloudBackupPanel(QWidget):
         for weekday in range(1, 8):
             self.weekday.addItem(locale.dayName(weekday), weekday - 1)
         self._rows = {}
+        self._switch_rows = {}
         labels = (("provider", _("Storage provider")), ("endpoint", _("HTTPS endpoint")),
                   ("prefix", _("Backup directory / prefix")), ("username", _("Username / access key ID")),
                   ("password", _("Password / secret access key")), ("bucket", _("S3 bucket")),
-                  ("region", _("S3 region")), ("temporary_credentials", ""), ("session_token", _("S3 session token")),
-                  ("encrypted", ""), ("passphrase", _("Backup passphrase")),
+                  ("region", _("S3 region")), ("temporary_credentials", _("Use an S3 session token")), ("session_token", _("S3 session token")),
+                  ("encrypted", _("Client-side encryption")), ("passphrase", _("Backup passphrase")),
                   ("keep_count", _("Maximum retained backups")), ("keep_days", _("Retention days")),
                   ("schedule", _("Automatic backup")), ("interval_hours", _("Interval (hours)")),
                   ("time", _("Local time")), ("weekday", _("Day of week")), ("month_day", _("Day of month")))
         for name, caption in labels:
             field = getattr(self, name)
-            field.setAccessibleName(caption or field.text())
-            label = QLabel(caption) if caption else None
-            if label is not None:
-                label.setBuddy(field)
+            field.setAccessibleName(caption)
+            if isinstance(field, SwitchButton):
+                row = _switch_line(caption, field)
+                self._switch_rows[name] = row
+                label = row.findChild(QLabel)
+            else:
+                label = QLabel(caption)
+            label.setBuddy(field)
             self._rows[name] = (label, field)
         grouped = {"bucket": ("bucket", "region"), "keep_count": ("keep_count", "keep_days"),
                    "schedule": ("schedule", "interval_hours", "time", "weekday", "month_day")}
@@ -147,14 +153,14 @@ class CloudBackupPanel(QWidget):
         for name, (label, field) in self._rows.items():
             if name in self._group_for_field:
                 continue
-            if name in grouped:
+            if name in self._switch_rows:
+                card.form_layout.addRow(self._switch_rows[name])
+            elif name in grouped:
                 names = grouped[name]
                 group = _BackupFieldGroup([(key, *self._rows[key]) for key in names])
                 self._field_groups.append(group)
                 self._group_for_field.update((key, group) for key in names)
                 card.form_layout.addRow(group)
-            elif label is None:
-                card.form_layout.addRow(field)
             else:
                 card.form_layout.addRow(label, field)
         self.save_button, self.test_button = QPushButton(_("Save")), QPushButton(_("Test connection"))
@@ -188,7 +194,7 @@ class CloudBackupPanel(QWidget):
             control = getattr(self, name)
             if isinstance(control, QComboBox):
                 control.currentIndexChanged.connect(self._mark_changed)
-            elif isinstance(control, QCheckBox):
+            elif isinstance(control, SwitchButton):
                 control.toggled.connect(self._mark_changed)
             elif isinstance(control, QSpinBox):
                 control.valueChanged.connect(self._mark_changed)
@@ -225,6 +231,9 @@ class CloudBackupPanel(QWidget):
             field.setVisible(shown)
             if label is not None:
                 label.setVisible(shown)
+            switch_row = self._switch_rows.get(name)
+            if switch_row is not None:
+                switch_row.setVisible(shown)
             group = self._group_for_field.get(name)
             if group is not None:
                 group.set_field_visible(name, shown)
@@ -238,7 +247,7 @@ class CloudBackupPanel(QWidget):
             control, value = getattr(self, field.name), getattr(configuration, field.name)
             if isinstance(control, QComboBox):
                 control.setCurrentIndex(control.findData(value))
-            elif isinstance(control, QCheckBox):
+            elif isinstance(control, SwitchButton):
                 control.setChecked(value)
             elif isinstance(control, QSpinBox):
                 control.setValue(value)
