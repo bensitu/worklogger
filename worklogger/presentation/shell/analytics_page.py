@@ -373,7 +373,7 @@ class AnalyticsPage(QWidget):
         else:
             order = {definition.value: index for index, definition in enumerate(EntryType)}
             values = sorted(state.entry_types, key=lambda item: (order.get(item[0].value, len(order)), item[0].value, item[0].category, classification_label(item[0])))
-            segments = tuple((classification_label(definition), hours) for definition, hours in values)
+            segments = tuple((getattr(definition, "label", None) or classification_label(definition), hours) for definition, hours in values)
             caption = _("Classified duration")
         self.breakdown_caption.setText(caption)
         self.breakdown_chart.chart.set_segments(segments, keys=tuple(definition.value if definition is not None else "unspecified" for definition, _hours in values),
