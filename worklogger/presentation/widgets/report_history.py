@@ -143,13 +143,10 @@ class ReportHistoryPanel(CardFrame):
         self._loading_timer.setInterval(150)
         self._loading_timer.timeout.connect(self._show_loading)
 
-        title = QLabel(_("Saved reports"))
-        title.setObjectName("report_history_title_label")
-        self.content_layout.addWidget(title)
-        self.scope_label = QLabel()
-        self.scope_label.setProperty("role", "secondary")
-        self.scope_label.setWordWrap(True)
-        self.content_layout.addWidget(self.scope_label)
+        self.title_label = QLabel()
+        self.title_label.setObjectName("report_history_title_label")
+        self.title_label.setWordWrap(True)
+        self.content_layout.addWidget(self.title_label)
 
         self.search_line_edit = QLineEdit()
         self.search_line_edit.setObjectName("report_search_line_edit")
@@ -283,9 +280,8 @@ class ReportHistoryPanel(CardFrame):
         self.more_button.setVisible(page.next_cursor is not None)
 
     def set_report_type(self, report_type):
-        caption = {"daily": _("Daily"), "weekly": _("Weekly"), "monthly": _("Monthly")}[report_type]
-        self.scope_label.setText(_("{type} | This account").format(type=caption))
-        self.scope_label.setToolTip(_("Saved reports for this account, not revisions of the open report."))
+        self.title_label.setText({"daily": _("Saved daily reports"), "weekly": _("Saved weekly reports"),
+                                  "monthly": _("Saved monthly reports")}[report_type])
 
     def set_selected_report(self, report_id: int | None) -> None:
         self._selected_report_id = report_id

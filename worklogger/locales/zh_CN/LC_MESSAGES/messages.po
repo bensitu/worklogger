@@ -535,9 +535,6 @@ msgstr "剪切"
 msgid "DESKTOP START FAILED"
 msgstr "桌面应用启动失败"
 
-msgid "Daily"
-msgstr "日报"
-
 msgid "Daily Average"
 msgstr "日均工时"
 
@@ -1924,6 +1921,9 @@ msgstr "已保存日报"
 msgid "Saved daily report (Markdown)"
 msgstr "已保存的日报（Markdown）"
 
+msgid "Saved daily reports"
+msgstr "已保存日报"
+
 msgid "Saved daily reports exported."
 msgstr "已导出保存的日报。"
 
@@ -1933,17 +1933,17 @@ msgstr "本月已保存日报"
 msgid "Saved daily reports for this month (Markdown)"
 msgstr "本月已保存的日报（Markdown）"
 
+msgid "Saved monthly reports"
+msgstr "已保存月报"
+
 msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
 msgstr "已保存的偏好：{requested} tokens；实际上下文：{effective} tokens。"
 
 msgid "Saved report #{report_id}"
 msgstr "已保存报表 #{report_id}"
 
-msgid "Saved reports"
-msgstr "已保存报表"
-
-msgid "Saved reports for this account, not revisions of the open report."
-msgstr "本账户已保存的报表，不是当前报表的修改历史。"
+msgid "Saved weekly reports"
+msgstr "已保存周报"
 
 msgid "Saved. Language changes apply after restarting."
 msgstr "已保存。重启后语言设置生效。"
@@ -2662,9 +2662,6 @@ msgstr "三"
 msgid "Week"
 msgstr "周"
 
-msgid "Weekly"
-msgstr "周报"
-
 msgid "Weekly Report"
 msgstr "周报"
 
@@ -2853,6 +2850,3 @@ msgstr "{start} - {end}"
 
 msgid "{type} #{id} | {start} - {end}"
 msgstr "{type} #{id} | {start} - {end}"
-
-msgid "{type} | This account"
-msgstr "{type} | 本账户"

@@ -535,9 +535,6 @@ msgstr "剪下"
 msgid "DESKTOP START FAILED"
 msgstr "桌面應用程式啟動失敗"
 
-msgid "Daily"
-msgstr "日報"
-
 msgid "Daily Average"
 msgstr "每日平均工時"
 
@@ -1924,6 +1921,9 @@ msgstr "已儲存日報"
 msgid "Saved daily report (Markdown)"
 msgstr "已儲存的日報（Markdown）"
 
+msgid "Saved daily reports"
+msgstr "已儲存日報"
+
 msgid "Saved daily reports exported."
 msgstr "已匯出儲存的日報。"
 
@@ -1933,17 +1933,17 @@ msgstr "本月已儲存日報"
 msgid "Saved daily reports for this month (Markdown)"
 msgstr "本月已儲存的日報（Markdown）"
 
+msgid "Saved monthly reports"
+msgstr "已儲存月報"
+
 msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
 msgstr "已儲存的偏好：{requested} tokens；實際上下文：{effective} tokens。"
 
 msgid "Saved report #{report_id}"
 msgstr "已儲存報表 #{report_id}"
 
-msgid "Saved reports"
-msgstr "已儲存報表"
-
-msgid "Saved reports for this account, not revisions of the open report."
-msgstr "本帳戶已儲存的報表，不是目前報表的修改歷史。"
+msgid "Saved weekly reports"
+msgstr "已儲存週報"
 
 msgid "Saved. Language changes apply after restarting."
 msgstr "已儲存。重新啟動後語言設定生效。"
@@ -2662,9 +2662,6 @@ msgstr "三"
 msgid "Week"
 msgstr "週"
 
-msgid "Weekly"
-msgstr "週報"
-
 msgid "Weekly Report"
 msgstr "週報"
 
@@ -2853,6 +2850,3 @@ msgstr "{start} - {end}"
 
 msgid "{type} #{id} | {start} - {end}"
 msgstr "{type} #{id} | {start} - {end}"
-
-msgid "{type} | This account"
-msgstr "{type} | 本帳戶"

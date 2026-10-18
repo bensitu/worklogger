@@ -535,9 +535,6 @@ msgstr "잘라내기"
 msgid "DESKTOP START FAILED"
 msgstr "데스크톱 앱 시작 실패"
 
-msgid "Daily"
-msgstr "일간"
-
 msgid "Daily Average"
 msgstr "일평균"
 
@@ -1924,6 +1921,9 @@ msgstr "저장된 일간 보고서"
 msgid "Saved daily report (Markdown)"
 msgstr "저장된 일일 보고서 (Markdown)"
 
+msgid "Saved daily reports"
+msgstr "저장된 일일 보고서"
+
 msgid "Saved daily reports exported."
 msgstr "저장된 일간 보고서를 내보냈습니다."
 
@@ -1933,17 +1933,17 @@ msgstr "이번 달의 저장된 일간 보고서"
 msgid "Saved daily reports for this month (Markdown)"
 msgstr "이번 달에 저장된 일일 보고서 (Markdown)"
 
+msgid "Saved monthly reports"
+msgstr "저장된 월간 보고서"
+
 msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
 msgstr "저장된 설정: {requested} 토큰. 실제 컨텍스트: {effective} 토큰."
 
 msgid "Saved report #{report_id}"
 msgstr "저장된 보고서 #{report_id}"
 
-msgid "Saved reports"
-msgstr "저장된 보고서"
-
-msgid "Saved reports for this account, not revisions of the open report."
-msgstr "이 계정에 저장된 보고서이며, 열린 보고서의 변경 이력이 아닙니다."
+msgid "Saved weekly reports"
+msgstr "저장된 주간 보고서"
 
 msgid "Saved. Language changes apply after restarting."
 msgstr "저장되었습니다. 언어 변경은 다시 시작한 후 적용됩니다."
@@ -2662,9 +2662,6 @@ msgstr "수"
 msgid "Week"
 msgstr "주"
 
-msgid "Weekly"
-msgstr "주간"
-
 msgid "Weekly Report"
 msgstr "주간 보고서"
 
@@ -2853,6 +2850,3 @@ msgstr "{start} - {end}"
 
 msgid "{type} #{id} | {start} - {end}"
 msgstr "{type} #{id} | {start} - {end}"
-
-msgid "{type} | This account"
-msgstr "{type} | 현재 계정"

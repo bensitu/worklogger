@@ -535,9 +535,6 @@ msgstr "切り取り"
 msgid "DESKTOP START FAILED"
 msgstr "デスクトップアプリの起動に失敗"
 
-msgid "Daily"
-msgstr "日報"
-
 msgid "Daily Average"
 msgstr "1日平均"
 
@@ -1924,6 +1921,9 @@ msgstr "保存済みの日報"
 msgid "Saved daily report (Markdown)"
 msgstr "保存済みの日報（Markdown）"
 
+msgid "Saved daily reports"
+msgstr "保存済みの日報"
+
 msgid "Saved daily reports exported."
 msgstr "保存済みの日報を出力しました。"
 
@@ -1933,17 +1933,17 @@ msgstr "この月の保存済み日報"
 msgid "Saved daily reports for this month (Markdown)"
 msgstr "今月の保存済み日報（Markdown）"
 
+msgid "Saved monthly reports"
+msgstr "保存済みの月報"
+
 msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
 msgstr "保存された設定: {requested} トークン。実効コンテキスト: {effective} トークン。"
 
 msgid "Saved report #{report_id}"
 msgstr "保存済みレポート #{report_id}"
 
-msgid "Saved reports"
-msgstr "保存済みレポート"
-
-msgid "Saved reports for this account, not revisions of the open report."
-msgstr "このアカウントの保存済みレポートです。編集中のレポートの変更履歴ではありません。"
+msgid "Saved weekly reports"
+msgstr "保存済みの週報"
 
 msgid "Saved. Language changes apply after restarting."
 msgstr "保存しました。言語設定は再起動後に適用されます。"
@@ -2662,9 +2662,6 @@ msgstr "水"
 msgid "Week"
 msgstr "週"
 
-msgid "Weekly"
-msgstr "週報"
-
 msgid "Weekly Report"
 msgstr "週報"
 
@@ -2853,6 +2850,3 @@ msgstr "{start} - {end}"
 
 msgid "{type} #{id} | {start} - {end}"
 msgstr "{type} #{id} | {start} - {end}"
-
-msgid "{type} | This account"
-msgstr "{type} | このアカウント"

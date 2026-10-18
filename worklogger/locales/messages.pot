@@ -533,9 +533,6 @@ msgstr ""
 msgid "DESKTOP START FAILED"
 msgstr ""
 
-msgid "Daily"
-msgstr ""
-
 msgid "Daily Average"
 msgstr ""
 
@@ -1922,6 +1919,9 @@ msgstr ""
 msgid "Saved daily report (Markdown)"
 msgstr ""
 
+msgid "Saved daily reports"
+msgstr ""
+
 msgid "Saved daily reports exported."
 msgstr ""
 
@@ -1931,16 +1931,16 @@ msgstr ""
 msgid "Saved daily reports for this month (Markdown)"
 msgstr ""
 
+msgid "Saved monthly reports"
+msgstr ""
+
 msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
 msgstr ""
 
 msgid "Saved report #{report_id}"
 msgstr ""
 
-msgid "Saved reports"
-msgstr ""
-
-msgid "Saved reports for this account, not revisions of the open report."
+msgid "Saved weekly reports"
 msgstr ""
 
 msgid "Saved. Language changes apply after restarting."
@@ -2660,9 +2660,6 @@ msgstr ""
 msgid "Week"
 msgstr ""
 
-msgid "Weekly"
-msgstr ""
-
 msgid "Weekly Report"
 msgstr ""
 
@@ -2850,7 +2847,4 @@ msgid "{start} - {end}"
 msgstr ""
 
 msgid "{type} #{id} | {start} - {end}"
-msgstr ""
-
-msgid "{type} | This account"
 msgstr ""

@@ -535,9 +535,6 @@ msgstr "Cut"
 msgid "DESKTOP START FAILED"
 msgstr "DESKTOP START FAILED"
 
-msgid "Daily"
-msgstr "Daily"
-
 msgid "Daily Average"
 msgstr "Daily Average"
 
@@ -1924,6 +1921,9 @@ msgstr "Saved daily report"
 msgid "Saved daily report (Markdown)"
 msgstr "Saved daily report (Markdown)"
 
+msgid "Saved daily reports"
+msgstr "Saved daily reports"
+
 msgid "Saved daily reports exported."
 msgstr "Saved daily reports exported."
 
@@ -1933,17 +1933,17 @@ msgstr "Saved daily reports for this month"
 msgid "Saved daily reports for this month (Markdown)"
 msgstr "Saved daily reports for this month (Markdown)"
 
+msgid "Saved monthly reports"
+msgstr "Saved monthly reports"
+
 msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
 msgstr "Saved preference: {requested} tokens; effective context: {effective} tokens."
 
 msgid "Saved report #{report_id}"
 msgstr "Saved report #{report_id}"
 
-msgid "Saved reports"
-msgstr "Saved reports"
-
-msgid "Saved reports for this account, not revisions of the open report."
-msgstr "Saved reports for this account, not revisions of the open report."
+msgid "Saved weekly reports"
+msgstr "Saved weekly reports"
 
 msgid "Saved. Language changes apply after restarting."
 msgstr "Saved. Language changes apply after restarting."
@@ -2662,9 +2662,6 @@ msgstr "Wed"
 msgid "Week"
 msgstr "Week"
 
-msgid "Weekly"
-msgstr "Weekly"
-
 msgid "Weekly Report"
 msgstr "Weekly Report"
 
@@ -2853,6 +2850,3 @@ msgstr "{start} - {end}"
 
 msgid "{type} #{id} | {start} - {end}"
 msgstr "{type} #{id} | {start} - {end}"
-
-msgid "{type} | This account"
-msgstr "{type} | This account"
