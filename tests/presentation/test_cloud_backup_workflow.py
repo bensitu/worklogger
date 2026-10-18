@@ -38,8 +38,8 @@ class CloudBackupWorkflowTests(unittest.TestCase):
         self.owner.has_unsaved_changes = False
         self.addCleanup(self.owner.deleteLater)
 
-    def workflow(self, delay):
-        workflow = CloudBackupWorkflow(self.service, startup_delay_seconds=delay, job_runner=ImmediateJobRunner())
+    def workflow(self, delay, **options):
+        workflow = CloudBackupWorkflow(self.service, startup_delay_seconds=delay, job_runner=ImmediateJobRunner(), **options)
         workflow.start(self.owner)
         self.addCleanup(workflow._timer.stop)
         return workflow
@@ -179,3 +179,21 @@ class CloudBackupWorkflowTests(unittest.TestCase):
             expected_archive_digest="archive", passphrase="recovery-passphrase")
         workflow._restore_handler.assert_called_once()
         self.service.overview.assert_not_called()
+
+    def test_custom_check_interval_and_retry_bounds_control_automatic_retries(self):
+        workflow = self.workflow(0, check_interval_seconds=17, retry_initial_seconds=7, retry_max_seconds=10)
+        workflow._notify = Mock()
+        self.service.upload.return_value = Result.failure(ValidationError("cloud_connection_failed", "cloud_connection_failed"))
+        self.assertEqual(workflow._timer.interval(), 17000)
+        workflow.reload()
+        self.assertEqual(workflow._retry_at, 107)
+        self.clock.return_value = 106
+        workflow._tick()
+        self.assertEqual(self.service.upload.call_count, 1)
+        self.clock.return_value = 107
+        workflow._tick()
+        self.assertEqual(self.service.upload.call_count, 2)
+        self.assertEqual(workflow._retry_at, 117)
+        self.clock.return_value = 117
+        workflow._tick()
+        self.assertEqual(workflow._retry_at, 127)

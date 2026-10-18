@@ -70,6 +70,27 @@ class RuntimeConfigurationTests(unittest.TestCase):
                 self.assertEqual(configuration.cloud_backup.startup_delay_seconds, 300)
                 self.assertTrue(configuration.features.minimal_view)
 
+    def test_cloud_backup_schedule_options_validate_independently_and_reject_inverted_retry_bounds(self):
+        options = {"startup_delay_seconds": 17, "check_interval_seconds": 11,
+                   "retry_initial_seconds": 7, "retry_max_seconds": 21}
+        self.path.write_text(json.dumps({"cloud_backup": options}), encoding="utf-8")
+        backup = load_runtime_configuration(self.path).cloud_backup
+        self.assertEqual((backup.startup_delay_seconds, backup.check_interval_seconds,
+                          backup.retry_initial_seconds, backup.retry_max_seconds), (17, 11, 7, 21))
+        for key, invalid, default in (("check_interval_seconds", True, 60), ("check_interval_seconds", 0, 60),
+                                      ("retry_initial_seconds", "7", 300), ("retry_max_seconds", 86401, 3600)):
+            with self.subTest(key=key, invalid=invalid):
+                self.path.write_text(json.dumps({"cloud_backup": {**options, key: invalid}}), encoding="utf-8")
+                with self.assertLogs("worklogger.infrastructure.runtime_config", level="WARNING"):
+                    backup = load_runtime_configuration(self.path).cloud_backup
+                self.assertEqual(getattr(backup, key), default)
+                self.assertEqual(backup.startup_delay_seconds, 17)
+        self.path.write_text(json.dumps({"cloud_backup": {**options, "retry_initial_seconds": 60}}), encoding="utf-8")
+        with self.assertLogs("worklogger.infrastructure.runtime_config", level="WARNING"):
+            backup = load_runtime_configuration(self.path).cloud_backup
+        self.assertEqual((backup.retry_initial_seconds, backup.retry_max_seconds), (300, 3600))
+        self.assertEqual(backup.check_interval_seconds, 11)
+
     def test_external_profiles_validate_capabilities_without_changing_feature_flags(self):
         profile = {"base_url": "https://example.com/v1/", "model": "sample-model",
                    "temperature": 0.2, "max_output_tokens": 2048,

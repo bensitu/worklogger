@@ -88,7 +88,10 @@ Changes apply after restarting.
     "minimal_view": true
   },
   "cloud_backup": {
-    "startup_delay_seconds": 300
+    "startup_delay_seconds": 300,
+    "check_interval_seconds": 60,
+    "retry_initial_seconds": 300,
+    "retry_max_seconds": 3600
   }
 }
 ```
@@ -108,8 +111,23 @@ from 0 to 86400 inclusive. Zero removes this delay; invalid values use the defau
 without changing valid feature flags or model profiles. Manual uploads and
 restores are not delayed. After the delay, automatic backups still wait while
 recording controls or the reports page are busy. Scheduled checks run once per
-minute, so the configured delay is a minimum, not an exact execution time. This
+minute by default, so the configured delay is a minimum, not an exact execution time. This
 setting does not enable automatic backups or change the account's schedule.
+
+Cloud backup scheduling accepts these additional integer values in seconds:
+
+| Key | Default | Allowed range |
+| --- | --- | --- |
+| `cloud_backup.check_interval_seconds` | 60 | 5 to 3600 |
+| `cloud_backup.retry_initial_seconds` | 300 | 5 to 86400 |
+| `cloud_backup.retry_max_seconds` | 3600 | 5 to 86400 |
+
+The check interval controls due-work polling, not the account's backup frequency.
+Transient failures double the retry delay up to the configured maximum; checks
+can start a retry later than its minimum delay. Version conflicts still require
+manual review. The maximum must be at least the initial delay; otherwise both
+retry values revert to their defaults. Invalid fields use their own defaults
+without discarding valid scheduling fields or other configuration sections.
 
 Assistant, model-management, and update-check workflows also honor
 `WORKLOGGER_FEATURE_AI`, `WORKLOGGER_FEATURE_LOCAL_MODELS`, and

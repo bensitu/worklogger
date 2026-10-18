@@ -5,6 +5,9 @@
   },
   "external_model_profiles": [],
   "cloud_backup": {
-    "startup_delay_seconds": 300
+    "startup_delay_seconds": 300,
+    "check_interval_seconds": 60,
+    "retry_initial_seconds": 300,
+    "retry_max_seconds": 3600
   }
 }

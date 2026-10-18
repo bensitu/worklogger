@@ -66,7 +66,8 @@ are eligible after the next sign-in's startup delay, which defaults to 300
 seconds. Configure `cloud_backup.startup_delay_seconds` in
 [deployment configuration](configuration.md#deployment-configuration). Busy
 record, report, or data operations delay automatic work further. Checks run
-once per minute; there is no exact-second execution guarantee or background
+once per minute by default, configurable with `cloud_backup.check_interval_seconds`;
+there is no exact-second execution guarantee or background
 service after the application exits. A never-backed-up enabled destination is
 eligible after the delay. Manual operations do not wait for the startup delay.
 
@@ -74,7 +75,9 @@ Network, encryption, and remote I/O run through background jobs. The settings
 panel displays the operation state, last successful upload, last restore, and
 failures. Failures also produce a tray notification when available, otherwise a
 non-blocking warning. Transient failures use increasing retry delays, from five
-minutes to one hour, without repeating the same notification on every retry.
+minutes to one hour by default, without repeating the same notification on every retry.
+Configure `cloud_backup.retry_initial_seconds` and `cloud_backup.retry_max_seconds`
+to change those retry bounds, independently of the account's backup schedule.
 Version conflicts stop automatic uploads until a manual transfer resolves them.
 
 ## Versions and Retention

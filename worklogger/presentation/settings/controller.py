@@ -140,6 +140,9 @@ class SettingsWorkflowController:
         database_path: Path | None = None,
         cloud_backup_service=None,
         cloud_backup_startup_delay_seconds: int = DEFAULT_CLOUD_BACKUP_STARTUP_DELAY_SECONDS,
+        cloud_backup_check_interval_seconds: int = 60,
+        cloud_backup_retry_initial_seconds: int = 300,
+        cloud_backup_retry_max_seconds: int = 3600,
     ) -> None:
         self._settings_view_model = settings_view_model
         self._data_directory = Path(database_path).resolve().parent if database_path is not None else None
@@ -164,7 +167,10 @@ class SettingsWorkflowController:
         if cloud_backup_service is not None:
             from worklogger.presentation.settings.workflows.cloud_backup import CloudBackupWorkflow
             self._cloud_workflow = CloudBackupWorkflow(cloud_backup_service, job_runner=job_runner,
-                startup_delay_seconds=cloud_backup_startup_delay_seconds)
+                startup_delay_seconds=cloud_backup_startup_delay_seconds,
+                check_interval_seconds=cloud_backup_check_interval_seconds,
+                retry_initial_seconds=cloud_backup_retry_initial_seconds,
+                retry_max_seconds=cloud_backup_retry_max_seconds)
         self._projects_view_model = projects_view_model
         self._project_dialog = None
         self._profile_runners: WeakKeyDictionary[SettingsPage, QtJobRunner] = WeakKeyDictionary()

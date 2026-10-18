@@ -87,7 +87,8 @@ class RestoreProgressDialog(QDialog):
 
 
 class CloudBackupWorkflow(QObject):
-    def __init__(self, service, *, startup_delay_seconds, job_runner=None):
+    def __init__(self, service, *, startup_delay_seconds, check_interval_seconds=60,
+                 retry_initial_seconds=300, retry_max_seconds=3600, job_runner=None):
         super().__init__()
         self.service = service
         self.runner = job_runner or QtJobRunner(self)
@@ -101,9 +102,11 @@ class CloudBackupWorkflow(QObject):
         self._restore_handler = None
         self._confirming = False
         self._startup_delay_seconds = startup_delay_seconds
+        self._retry_initial_seconds = retry_initial_seconds
+        self._retry_max_seconds = retry_max_seconds
         self._startup_ready_at = float("inf")
         self._timer = QTimer(self)
-        self._timer.setInterval(60000)
+        self._timer.setInterval(check_interval_seconds * 1000)
         self._timer.timeout.connect(self._tick)
 
     def start(self, owner):
@@ -177,7 +180,8 @@ class CloudBackupWorkflow(QObject):
                     self._retry_at = 0
             else:
                 self._failures += 1
-                self._retry_at = monotonic() + min(3600, 300 * 2 ** min(self._failures - 1, 4))
+                self._retry_at = monotonic() + min(self._retry_max_seconds,
+                    self._retry_initial_seconds * 2 ** min(self._failures - 1, 15))
                 self._message = display_error_message(result.error)
                 code = result.error.code if result.error else "cloud_operation_failed"
                 if not automatic or code != self._last_notification:

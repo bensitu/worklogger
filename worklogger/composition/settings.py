@@ -155,6 +155,9 @@ def build_settings_workflow(
             proxy_routing=handlers.network_transport is not None, model_management=features.enable_local_models,
             minimal_view=runtime_configuration.features.minimal_view),
         cloud_backup_startup_delay_seconds=runtime_configuration.cloud_backup.startup_delay_seconds,
+        cloud_backup_check_interval_seconds=runtime_configuration.cloud_backup.check_interval_seconds,
+        cloud_backup_retry_initial_seconds=runtime_configuration.cloud_backup.retry_initial_seconds,
+        cloud_backup_retry_max_seconds=runtime_configuration.cloud_backup.retry_max_seconds,
         cloud_backup_service=CloudBackupService(
             configuration=CloudBackupConfigurationStore(repositories.settings,
                 SystemCredentialStore(namespace=str(database_path.resolve())), user.id),

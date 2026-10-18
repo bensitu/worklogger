@@ -3,7 +3,7 @@
 import json
 import logging
 import sys
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, replace
 from pathlib import Path
 
 from worklogger.config.constants import DEFAULT_CLOUD_BACKUP_STARTUP_DELAY_SECONDS
@@ -23,6 +23,9 @@ class DeploymentFeatures:
 @dataclass(frozen=True)
 class CloudBackupRuntimeConfiguration:
     startup_delay_seconds: int = DEFAULT_CLOUD_BACKUP_STARTUP_DELAY_SECONDS
+    check_interval_seconds: int = 60
+    retry_initial_seconds: int = 300
+    retry_max_seconds: int = 3600
 
 
 @dataclass(frozen=True)
@@ -40,6 +43,25 @@ def configuration_path(*, frozen=None, executable=None, bundle_root=None, source
     if adjacent.exists():
         return adjacent
     return Path(bundle_root or getattr(sys, "_MEIPASS", adjacent.parent)) / CONFIG_FILENAME
+
+
+def _integer_configuration(value, key, configuration_type, bounds):
+    defaults = configuration_type()
+    options = value.get(key, {})
+    if not isinstance(options, dict):
+        LOGGER.warning("%s_runtime_configuration_invalid", key)
+        return defaults
+    parsed, invalid = {}, False
+    for name, (minimum, maximum) in bounds.items():
+        default = getattr(defaults, name)
+        candidate = options.get(name, default)
+        if type(candidate) is int and minimum <= candidate <= maximum:
+            parsed[name] = candidate
+        else:
+            parsed[name], invalid = default, True
+    if invalid:
+        LOGGER.warning("%s_runtime_configuration_invalid", key)
+    return configuration_type(**parsed)
 
 
 def load_runtime_configuration(path=None):
@@ -64,16 +86,15 @@ def load_runtime_configuration(path=None):
         except (ValueError, TypeError):
             LOGGER.warning("ai_model_profiles_invalid")
             profiles = ()
-        backup = CloudBackupRuntimeConfiguration()
-        backup_options = value.get("cloud_backup", {})
-        if isinstance(backup_options, dict):
-            delay = backup_options.get("startup_delay_seconds", backup.startup_delay_seconds)
-            if type(delay) is int and 0 <= delay <= 86400:
-                backup = CloudBackupRuntimeConfiguration(startup_delay_seconds=delay)
-            else:
-                LOGGER.warning("cloud_backup_runtime_configuration_invalid")
-        else:
+        backup = _integer_configuration(value, "cloud_backup", CloudBackupRuntimeConfiguration, {
+            "startup_delay_seconds": (0, 86400), "check_interval_seconds": (5, 3600),
+            "retry_initial_seconds": (5, 86400), "retry_max_seconds": (5, 86400),
+        })
+        if backup.retry_max_seconds < backup.retry_initial_seconds:
             LOGGER.warning("cloud_backup_runtime_configuration_invalid")
+            defaults = CloudBackupRuntimeConfiguration()
+            backup = replace(backup, retry_initial_seconds=defaults.retry_initial_seconds,
+                             retry_max_seconds=defaults.retry_max_seconds)
         return RuntimeConfiguration(features, profiles, backup)
     except FileNotFoundError:
         return RuntimeConfiguration()
