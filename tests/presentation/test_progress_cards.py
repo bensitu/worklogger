@@ -14,7 +14,7 @@ from tests.presentation.test_analytics_presentation import MemoryWorkLogReposito
 from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler, GetAnalyticsDashboardHandler
 from worklogger.domain.analytics.models import ChartDataBundle
 from worklogger.infrastructure.export import AnalyticsCsvExporter, AnalyticsPdfExporter
-from worklogger.infrastructure.i18n import _, set_language
+from worklogger.infrastructure.i18n import _, available_languages, set_language
 from worklogger.presentation.shell.pages import AnalyticsPage
 from worklogger.presentation.viewmodels import AnalyticsViewModel
 from worklogger.presentation.widgets.progress_cards import DonutGauge, OvertimeComparisonChart
@@ -49,7 +49,7 @@ class ProgressCardTests(unittest.TestCase):
             csv_exporter=AnalyticsCsvExporter(), pdf_exporter=AnalyticsPdfExporter(),
         ), date(2026, 4, 21))
         self.addCleanup(page.deleteLater)
-        for language in ("en_US", "zh_CN"):
+        for language in available_languages():
             set_language(language)
             for scope, title in (("monthly", "Monthly Hours"), ("quarterly", "Quarterly Hours"),
                                  ("annual", "Annual Hours")):
@@ -64,13 +64,16 @@ class ProgressCardTests(unittest.TestCase):
             self.assertEqual(page.monthly_hours_card.gauge.percentage_text, "0%")
             page._set_state(replace(state, planned_work_days=19.5, stats=replace(state.stats, work_days=12)))
             self.assertEqual(page.attendance_card.value_label.text(), _("{days} days").format(days=12))
-            self.assertIn(_("Planned work: {days:g} days").format(days=19.5), page.attendance_card.caption_label.text())
+            comparison = _("{change:+d} days vs previous period").format(change=12 - state.previous_stats.work_days)
+            self.assertEqual(page.attendance_card.caption_label.text(),
+                             _("Planned work: {days:g} days").format(days=19.5) + " \u00b7 " + comparison)
             self.assertFalse(page.attendance_card.dots_widget.isHidden())
             page._set_state(replace(state, target_hours=None, planned_work_days=None, target_mode="schedule",
                                     planning_error="work_plan_holidays_failed"))
             self.assertTrue(page.monthly_hours_card.gauge.isHidden())
             self.assertEqual(page.monthly_hours_card.caption_label.text(), _("Goal unavailable"))
-            self.assertIn(_("Planned work unavailable"), page.attendance_card.caption_label.text())
+            comparison = _("{change:+d} days vs previous period").format(change=state.stats.work_days - state.previous_stats.work_days)
+            self.assertEqual(page.attendance_card.caption_label.text(), _("Planned work unavailable") + " \u00b7 " + comparison)
             from worklogger.presentation.date_labels import duration_label
             self.assertEqual(page.monthly_hours_card.value_label.text(), duration_label(213.5))
             page._set_state(state)

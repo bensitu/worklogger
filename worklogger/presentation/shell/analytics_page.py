@@ -348,7 +348,7 @@ class AnalyticsPage(QWidget):
         rest = state.stats.rest_days
         self.attendance_card.set_value(_("{days} days").format(days=days),
             (_("Planned work unavailable") if state.planned_work_days is None else _("Planned work: {days:g} days").format(days=state.planned_work_days))
-            + "\n" + _("{change:+d} days vs previous period").format(change=days - state.previous_stats.work_days),
+            + " \u00b7 " + _("{change:+d} days vs previous period").format(change=days - state.previous_stats.work_days),
             days, state.total_days)
         self.rest_card.set_value(str(rest), _("{change:+d} days vs previous period").format(change=rest - state.previous_stats.rest_days), rest, state.total_days)
         monthly = self.scope_control.value == "monthly"
