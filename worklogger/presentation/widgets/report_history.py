@@ -135,6 +135,13 @@ class ReportHistoryPanel(CardFrame):
         self._hovered_button = None
         self._report_type = None
         self.next_cursor = None
+        self._render_key = None
+        self._loading = False
+        self._count_text = ""
+        self._loading_timer = QTimer(self)
+        self._loading_timer.setSingleShot(True)
+        self._loading_timer.setInterval(150)
+        self._loading_timer.timeout.connect(self._show_loading)
 
         title = QLabel(_("Saved reports"))
         title.setObjectName("report_history_title_label")
@@ -181,6 +188,9 @@ class ReportHistoryPanel(CardFrame):
         self.loading_bar.setTextVisible(False)
         self.loading_bar.setFixedHeight(6)
         self.loading_bar.setAccessibleName(_("Loading..."))
+        policy = self.loading_bar.sizePolicy()
+        policy.setRetainSizeWhenHidden(True)
+        self.loading_bar.setSizePolicy(policy)
         self.loading_bar.hide()
         self.content_layout.addWidget(self.loading_bar)
 
@@ -239,11 +249,24 @@ class ReportHistoryPanel(CardFrame):
         self.set_report_type(report_type)
 
     def set_loading(self, loading):
-        self.loading_bar.setVisible(loading)
-        self.scroll_widget.setEnabled(not loading)
+        if self._loading == loading:
+            return
+        self._loading = loading
         self.more_button.setEnabled(not loading)
-        self.more_button.setText(_("Loading...") if loading else _("Load more"))
         if loading:
+            self._loading_timer.start()
+        else:
+            self._loading_timer.stop()
+            self.loading_bar.hide()
+            self.scroll_widget.setEnabled(True)
+            self.more_button.setText(_("Load more"))
+            self.count_label.setText(self._count_text)
+
+    def _show_loading(self):
+        if self._loading:
+            self.loading_bar.show()
+            self.scroll_widget.setEnabled(False)
+            self.more_button.setText(_("Loading..."))
             self.count_label.setText(_("Loading..."))
 
     def set_page(self, page, *, append=False):
@@ -253,8 +276,12 @@ class ReportHistoryPanel(CardFrame):
             for item in page.reports)
         self._items = self._items + items if append else items
         self.next_cursor = page.next_cursor
-        self._render(append_from=len(self._buttons) if append else 0)
-        self.count_label.setText(_("{shown} of {total} reports").format(shown=len(self._items), total=page.total))
+        render_key = (self._items, tuple(self._month(item) for item in self._items))
+        if render_key != self._render_key:
+            self._render(append_from=len(self._buttons) if append else 0)
+            self._render_key = render_key
+        self._count_text = _("{shown} of {total} reports").format(shown=len(self._items), total=page.total)
+        self.count_label.setText(self._count_text)
         self.more_button.setVisible(page.next_cursor is not None)
 
     def set_report_type(self, report_type):
@@ -305,12 +332,16 @@ class ReportHistoryPanel(CardFrame):
             button.set_current(item.report_id is not None and item.report_id == self._selected_report_id)
             button.setCursor(Qt.CursorShape.PointingHandCursor)
             button.setMinimumHeight(button.heightForWidth(self.scroll_area.viewport().width()))
-            button.clicked.connect(lambda _checked=False, selected=item: self.item_selected.emit(selected))
-            button.delete_requested.connect(lambda selected=item: self.delete_requested.emit(selected))
+            button.clicked.connect(lambda _checked=False, selected=item: self._emit_item_action(self.item_selected, selected))
+            button.delete_requested.connect(lambda selected=item: self._emit_item_action(self.delete_requested, selected))
             button.hovered.connect(self._track_hover)
             self._buttons[index] = button
             self.scroll_layout.addWidget(button)
         self.scroll_layout.addStretch(1)
+
+    def _emit_item_action(self, signal, item):
+        if not self._loading:
+            signal.emit(item)
 
     def _month(self, item):
         if self.sort_input.currentData() in (ReportSort.DATE_ASC, ReportSort.DATE_DESC):

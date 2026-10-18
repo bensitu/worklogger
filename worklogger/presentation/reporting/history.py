@@ -23,7 +23,6 @@ class ReportHistoryController(QObject):
 
     def _invalidate(self):
         self._revision += 1
-        self.panel.set_page(ReportHistoryPage())
         self.panel.set_loading(True)
 
     def refresh(self):
@@ -55,12 +54,13 @@ class ReportHistoryController(QObject):
                 self._pending = False
                 self._load()
                 return
-            self.panel.set_loading(False)
             if not result.ok or result.value is None:
+                self.panel.set_loading(False)
                 self.panel.count_label.setText(_("Could not load reports"))
                 self.show_error(result.error)
                 return
             self.panel.set_page(result.value, append=append)
+            self.panel.set_loading(False)
             if append:
                 self.panel.scroll_area.verticalScrollBar().setValue(position)
 

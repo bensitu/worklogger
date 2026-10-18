@@ -7,7 +7,7 @@ import unittest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QCoreApplication, QEvent, qInstallMessageHandler
-from PySide6.QtTest import QSignalSpy
+from PySide6.QtTest import QSignalSpy, QTest
 from PySide6.QtWidgets import QApplication, QScrollArea
 
 from worklogger.domain.shared.result import Result
@@ -408,6 +408,34 @@ class ReportingLayoutChecks(unittest.TestCase):
                                         self.assertLess(first.geometry().bottom(), second.geometry().top())
                                     for button in buttons:
                                         self.assertLessEqual(button._document.size().height(), button.height() - 20)
+                                    panel = page.history_panel
+                                    geometry = panel.scroll_area.geometry()
+                                    position = panel.scroll_area.verticalScrollBar().value()
+                                    window._selected_day = date(2026, 5, 21)
+                                    for _ in range(3):
+                                        self.assertTrue(window._switch_route("calendar"))
+                                        self.assertTrue(window._switch_route("reports"))
+                                        self.app.processEvents()
+                                        self.assertEqual(tuple(panel._buttons.values()), buttons)
+                                        self.assertEqual(panel.scroll_area.geometry(), geometry)
+                                        self.assertEqual(panel.scroll_area.verticalScrollBar().value(), position)
+                                        self.assertTrue(panel.loading_bar.isHidden())
+                                    if language == "zh_CN" and width == 1100:
+                                        from unittest.mock import patch
+                                        from worklogger.app.job_runner import CancellationToken
+
+                                        with patch.object(page._history.runner, "submit") as submit:
+                                            page._history.refresh()
+                                            QTest.qWait(200)
+                                            self.assertFalse(panel.loading_bar.isHidden())
+                                            self.assertEqual(panel.scroll_area.geometry(), geometry)
+                                            self.capture(window, f"reports-loading-{'dark' if dark else 'light'}", language)
+                                            request = submit.call_args
+                                            request.kwargs["on_complete"](request.args[1](CancellationToken()))
+                                        self.app.processEvents()
+                                        self.assertEqual(panel.scroll_area.geometry(), geometry)
+                                        self.assertEqual(tuple(panel._buttons.values()), buttons)
+                                        self.assertTrue(panel.loading_bar.isHidden())
                                 else:
                                     self.assertEqual(page._summary_grid.itemAtPosition(0, 0).widget(), page.monthly_hours_card)
                                     self.assertIsNotNone(page._summary_grid.itemAtPosition(1, 0) if width == 880 else page._summary_grid.itemAtPosition(0, 3))

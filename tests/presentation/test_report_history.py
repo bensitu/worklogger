@@ -11,6 +11,7 @@ from unittest.mock import patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtTest import QSignalSpy, QTest
 
 from tests.app.test_notes_and_reports_use_cases import (
     MemoryCalendarRepository, MemoryQuickLogRepository, MemoryTemplateProvider,
@@ -131,18 +132,66 @@ class ReportHistoryTests(unittest.TestCase):
                 return JobHandle(name, lambda: None)
         runner = Runner()
         page._history.runner = runner
+        panel = page.history_panel
+        items = panel._items
+        buttons = tuple(panel._buttons.values())
+        selection = QSignalSpy(panel.item_selected)
+        deletion = QSignalSpy(panel.delete_requested)
         page._refresh_history()
-        page.history_panel.search_line_edit.setText("Absent")
-        page.history_panel.query_requested.emit()
+        self.assertEqual(panel._items, items)
+        self.assertTrue(panel.loading_bar.isHidden())
+        buttons[0].click()
+        buttons[0].delete_button.click()
+        self.assertEqual((selection.count(), deletion.count()), (0, 0))
+        panel.search_line_edit.setText("Absent")
+        panel.query_requested.emit()
+        QTest.qWait(200)
+        self.assertFalse(panel.loading_bar.isHidden())
+        self.assertFalse(panel.scroll_widget.isEnabled())
         operation, complete = runner.jobs[0]
         complete(operation(CancellationToken()))
-        self.assertEqual(page.history_panel._items, ())
-        self.assertFalse(page.history_panel.loading_bar.isHidden())
+        self.assertEqual(panel._items, items)
+        self.assertEqual(tuple(panel._buttons.values()), buttons)
+        self.assertFalse(panel.loading_bar.isHidden())
         operation, complete = runner.jobs[1]
         complete(operation(CancellationToken()))
-        self.assertEqual(page.history_panel._items, ())
-        self.assertTrue(page.history_panel.loading_bar.isHidden())
-        self.assertEqual(page.history_panel.count_label.text(), _("{shown} of {total} reports").format(shown=0, total=0))
+        self.assertEqual(panel._items, ())
+        self.assertTrue(panel.loading_bar.isHidden())
+        self.assertTrue(panel.scroll_widget.isEnabled())
+        self.assertEqual(panel.count_label.text(), _("{shown} of {total} reports").format(shown=0, total=0))
+
+    def test_refresh_reuses_unchanged_history_and_editor_content(self):
+        self.seed("daily", "Saved content")
+        page = self.page()
+        panel = page.history_panel
+        buttons = tuple(panel._buttons.values())
+        cursor = page.editor.textCursor()
+        cursor.setPosition(3)
+        page.editor.setTextCursor(cursor)
+        changes = QSignalSpy(page.editor.textChanged)
+        with patch.object(panel, "_render", wraps=panel._render) as render, \
+                patch.object(self.model, "browse_history", wraps=self.model.browse_history) as browse:
+            for _ in range(3):
+                self.assertTrue(page.refresh())
+                self.assertEqual(tuple(panel._buttons.values()), buttons)
+                self.assertTrue(panel.loading_bar.isHidden())
+                self.assertFalse(panel._loading_timer.isActive())
+                self.assertTrue(panel.scroll_widget.isEnabled())
+            render.assert_not_called()
+            self.assertEqual(browse.call_count, 3)
+        self.assertEqual(changes.count(), 0)
+        self.assertEqual(page.editor.textCursor().position(), 3)
+        report = self.repository.get_by_id(self.user.id, panel._items[0].report_id)
+        self.repository.save(replace(report, content="Updated content"))
+        self.assertTrue(page.refresh())
+        self.assertEqual(page.editor.toPlainText(), "Updated content")
+        self.assertNotEqual(tuple(panel._buttons.values()), buttons)
+        self.seed("daily", "Updated content")
+        page.editor.insertPlainText(" draft")
+        page.editor.undo()
+        self.assertTrue(page.editor.document().isRedoAvailable())
+        self.assertTrue(page.refresh())
+        self.assertFalse(page.editor.document().isRedoAvailable())
 
     def test_timesheet_exports_preserve_periods_unicode_and_report_drafts(self):
         from openpyxl import load_workbook

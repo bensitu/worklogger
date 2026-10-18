@@ -69,6 +69,7 @@ class ReportsPage(QWidget):
         self._saved_content: dict[str, str] = {}
         self._last_error: AppError | None = None
         self._rendered_type = "daily"
+        self._rendered_report_key = None
         self._confirm_discard = confirm_discard
         self._job_runner = job_runner or QtJobRunner(self)
         self._rewrite_task = TextProcessingTask(self, job_runner=self._job_runner)
@@ -398,11 +399,14 @@ class ReportsPage(QWidget):
         state = self._states.get(report_type)
         if state is None:
             return
+        report_key = (report_type, state.period_start, state.period_end, state.report_id)
         self._rendered_type = report_type
         self.period_title_label.setText(report_period_label(state.report_type, state.period_start, state.period_end))
         with QSignalBlocker(self.editor):
-            self.editor.setPlainText(state.content)
+            if self._rendered_report_key != report_key or self.editor.toPlainText() != state.content:
+                self.editor.setPlainText(state.content)
             self._saved_content[report_type] = self.editor.toPlainText()
+        self._rendered_report_key = report_key
         self._update_report_status()
         if refresh_history:
             self._refresh_history()
@@ -528,6 +532,7 @@ class ReportsPage(QWidget):
         self.report_type_control.set_value(state.report_type, emit=False)
         self.history_panel.set_selected_report(state.report_id)
         self.editor.setPlainText(state.content)
+        self._rendered_report_key = (state.report_type, state.period_start, state.period_end, state.report_id)
         self._saved_content[state.report_type] = self.editor.toPlainText()
         self.period_title_label.setText(report_period_label(state.report_type, state.period_start, state.period_end))
         self._update_report_status()
