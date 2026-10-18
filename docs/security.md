@@ -1,5 +1,31 @@
 # Security and Privacy
 
+Credential reads can defer format-upgrade writes when storage is temporarily
+unavailable without discarding a value already decrypted successfully. A failed
+proxy credential conversion does not prevent local sign-in; the network settings
+report that the password needs to be entered again. Plaintext fallback is not
+used for outgoing authenticated requests when protection fails.
+
+Larger OS-protected credentials are split into bounded values. A new set becomes
+visible only after its parts are stored; replacing or removing it also removes
+the previous parts when the OS credential service permits cleanup.
+
+New Windows credential files use the local application-data directory. Existing
+credential directories remain in use when they hold an earlier machine key,
+session, or provider registration, avoiding accidental key replacement. Exclude
+those existing directories from roaming or cloud profile synchronization.
+
+Long-running model and network jobs use a separate bounded thread pool from
+calendar/list requests. Shutdown cancels queued work and keeps processing UI
+events while active operations finish. If they take longer than five seconds,
+a stopping indicator remains visible. Account resources are not released and a
+different account is not opened while previous work can still access them.
+
+Only load models from sources you trust. GGUF files are processed by native code
+in the application process; checksums detect changed bytes, not a malicious
+publisher. Remote catalog updates cannot replace bundled model IDs or filenames.
+Use the deployment AI switch to disable model execution where required.
+
 Database files are not encrypted. On Windows they inherit directory access-control
 rules; POSIX file modes do not establish Windows access control. Keep custom data
 locations and backups in directories restricted to the intended operating-system

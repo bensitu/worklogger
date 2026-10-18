@@ -2380,6 +2380,9 @@ msgstr "州 / 都道府県"
 msgid "Stop automatic recording before restoring a cloud backup."
 msgstr "クラウドバックアップを復元する前に自動記録を終了してください。"
 
+msgid "Stopping background tasks..."
+msgstr "バックグラウンド処理を停止しています..."
+
 msgid "Storage provider"
 msgstr "ストレージサービス"
 
@@ -2536,6 +2539,9 @@ msgstr "選択したモデルのコンテキスト上限が小さすぎるため
 msgid "The selected project or work item is unavailable for new records."
 msgstr "選択したプロジェクトまたは作業項目は新しい記録に使用できません。"
 
+msgid "The storage certificate could not be verified. Check the endpoint and trusted certificate configuration."
+msgstr "ストレージの証明書を検証できませんでした。接続先と信頼済み証明書の設定を確認してください。"
+
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr "保存された認証情報をこのデバイスで復号できません。再入力してください。既存の作業記録には影響しません。"
 
@@ -2553,6 +2559,9 @@ msgstr "このユーザーアカウントは利用できなくなりました。
 
 msgid "Theme"
 msgstr "テーマ"
+
+msgid "There is not enough free space to download this model. Free disk space and try again."
+msgstr "このモデルをダウンロードする空き容量が不足しています。ディスクの空き容量を確保して再試行してください。"
 
 msgid "These records do not have compatible time-zone information. Choose entire-record replacement or cancel."
 msgstr "これらの記録のタイムゾーン情報には互換性がありません。記録全体を置き換えるか、キャンセルしてください。"

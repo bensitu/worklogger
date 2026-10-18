@@ -6,6 +6,8 @@ import re
 import ssl
 import socket
 import base64
+import os
+import tempfile
 from functools import lru_cache
 from pathlib import Path
 from urllib.error import HTTPError
@@ -106,6 +108,27 @@ def _certificate_context(path: str, modified: int, size: int):
     context = ssl.create_default_context()
     context.load_verify_locations(cafile=path)
     return context
+
+
+@lru_cache(maxsize=1)
+def _certificate_bundle():
+    certificate = Path(certifi.where())
+    stat = certificate.stat()
+    context = _certificate_context(str(certificate), stat.st_mtime_ns, stat.st_size)
+    additional = os.environ.get("AWS_CA_BUNDLE", "").strip()
+    if additional:
+        context = ssl.create_default_context()
+        context.load_verify_locations(cafile=str(certificate))
+        context.load_verify_locations(cafile=additional)
+    directory = tempfile.TemporaryDirectory(prefix="worklogger-certificates-")
+    path = Path(directory.name) / "trusted.pem"
+    path.write_text("".join(ssl.DER_cert_to_PEM_cert(value) for value in context.get_ca_certs(binary_form=True)), encoding="ascii")
+    return directory, str(path)
+
+
+def certificate_bundle() -> str:
+    """Provide S3 with the system and bundled certificate roots used by HTTPS."""
+    return _certificate_bundle()[1]
 
 
 def https_opener(*, public_only: bool = False, allow_redirects: bool = True, proxy_url: str | None = None):

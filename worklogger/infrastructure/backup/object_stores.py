@@ -3,12 +3,14 @@
 import base64
 import logging
 from urllib.error import HTTPError
+from urllib.error import URLError
+import ssl
 from urllib.parse import quote
 from urllib.request import Request
 from uuid import uuid4
 
 from worklogger.domain.cloud_backup import StoredObject
-from worklogger.infrastructure.http import https_opener
+from worklogger.infrastructure.http import certificate_bundle, https_opener
 
 
 def _etag(value):
@@ -84,6 +86,10 @@ class WebDAVBackupStore(ConditionalObjectStore):
             if status == 405 and method == "MKCOL":
                 return None
             raise ValueError("cloud_authentication_failed" if status in {401, 403} else "cloud_connection_failed") from None
+        except URLError as error:
+            if isinstance(error.reason, ssl.SSLCertVerificationError):
+                raise ValueError("cloud_certificate_invalid") from None
+            raise
 
     def get(self, key, *, limit):
         return self._request("GET", key, limit=limit)
@@ -123,6 +129,7 @@ class S3BackupStore(ConditionalObjectStore):
             import boto3
             from botocore.config import Config
             client = boto3.client("s3", endpoint_url=configuration.endpoint,
+                verify=certificate_bundle(),
                 region_name=configuration.region, aws_access_key_id=credentials.username,
                 aws_secret_access_key=credentials.password, aws_session_token=credentials.session_token or None,
                 config=Config(signature_version="s3v4", connect_timeout=10, read_timeout=30,
@@ -132,7 +139,7 @@ class S3BackupStore(ConditionalObjectStore):
         self.client, self.bucket, self.prefix = client, configuration.bucket, configuration.prefix
 
     def _call(self, method, key, **kwargs):
-        from botocore.exceptions import ClientError
+        from botocore.exceptions import ClientError, SSLError
         _key(key)
         try:
             return getattr(self.client, method)(Bucket=self.bucket, Key=self.prefix + "/" + key, **kwargs)
@@ -143,6 +150,8 @@ class S3BackupStore(ConditionalObjectStore):
             if status in {409, 412}:
                 raise ValueError("cloud_conflict") from None
             raise ValueError("cloud_authentication_failed" if status in {401, 403} else "cloud_connection_failed") from None
+        except SSLError:
+            raise ValueError("cloud_certificate_invalid") from None
 
     def get(self, key, *, limit):
         response = self._call("get_object", key)

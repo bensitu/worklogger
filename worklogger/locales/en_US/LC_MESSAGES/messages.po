@@ -2380,6 +2380,9 @@ msgstr "State / province"
 msgid "Stop automatic recording before restoring a cloud backup."
 msgstr "Stop automatic recording before restoring a cloud backup."
 
+msgid "Stopping background tasks..."
+msgstr "Stopping background tasks..."
+
 msgid "Storage provider"
 msgstr "Storage provider"
 
@@ -2536,6 +2539,9 @@ msgstr "The selected model's context limit is too small for text processing."
 msgid "The selected project or work item is unavailable for new records."
 msgstr "The selected project or work item is unavailable for new records."
 
+msgid "The storage certificate could not be verified. Check the endpoint and trusted certificate configuration."
+msgstr "The storage certificate could not be verified. Check the endpoint and trusted certificate configuration."
+
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 
@@ -2553,6 +2559,9 @@ msgstr "The user account is no longer available."
 
 msgid "Theme"
 msgstr "Theme"
+
+msgid "There is not enough free space to download this model. Free disk space and try again."
+msgstr "There is not enough free space to download this model. Free disk space and try again."
 
 msgid "These records do not have compatible time-zone information. Choose entire-record replacement or cancel."
 msgstr "These records do not have compatible time-zone information. Choose entire-record replacement or cancel."

@@ -39,6 +39,52 @@ class FakeResponse:
 
 
 class LocalModelInfrastructureTests(unittest.TestCase):
+    def test_remote_catalog_cannot_replace_bundled_model_identity_or_filename(self):
+        bundled_entry = {"id": "bundled", "filename": "trusted.gguf", "sha256": "a" * 64,
+                         "download_url": "https://trusted.example/model.gguf"}
+        remote = {"models": [{**bundled_entry, "download_url": "https://changed.example/model.gguf", "sha256": "b" * 64},
+                             {**bundled_entry, "id": "alias"}, {"id": "additional", "filename": "additional.gguf"}]}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            bundled = root / "bundled.json"
+            bundled.write_text(json.dumps({"models": [bundled_entry]}), encoding="utf-8")
+            store = JsonLocalModelStore(root / "models", bundled_catalog_path=bundled,
+                remote_catalog_url="https://catalog.example/models.json",
+                catalog_opener=lambda *_args, **_kwargs: FakeResponse(json.dumps(remote).encode()))
+            result = store.refresh_catalog()
+            self.assertTrue(result.ok, result.error)
+            entries = {entry.id: entry for entry in result.value}
+            self.assertEqual(set(entries), {"bundled", "additional"})
+            self.assertEqual(entries["bundled"].sha256, bundled_entry["sha256"])
+            self.assertEqual(entries["bundled"].download_url, bundled_entry["download_url"])
+
+    def test_completed_partial_download_is_verified_without_downloading_again_after_range_rejection(self):
+        from unittest.mock import Mock
+        from worklogger.infrastructure.local_model.download import HttpRangeDownloader
+        payload = b"GGUF" + b"verified model"
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "model.gguf"
+            path.with_suffix(".gguf.tmp").write_bytes(payload)
+            opener = Mock(side_effect=HTTPError("https://example.test/model.gguf", 416, "range", {}, None))
+            result = HttpRangeDownloader(opener=opener).download(url="https://example.test/model.gguf", destination=path,
+                expected_sha256=hashlib.sha256(payload).hexdigest())
+            self.assertTrue(result.ok, result.error)
+            self.assertEqual(path.read_bytes(), payload)
+            opener.assert_called_once()
+
+    def test_download_checks_available_space_before_writing_a_response(self):
+        from types import SimpleNamespace
+        from worklogger.infrastructure.local_model.download import HttpRangeDownloader
+        payload = b"GGUF" + b"model"
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "model.gguf"
+            downloader = HttpRangeDownloader(opener=lambda *_args, **_kwargs: FakeResponse(payload, headers={"Content-Length": str(len(payload))}))
+            with patch("worklogger.infrastructure.local_model.download.shutil.disk_usage", return_value=SimpleNamespace(free=1)):
+                result = downloader.download(url="https://example.test/model.gguf", destination=path,
+                    expected_sha256=hashlib.sha256(payload).hexdigest())
+            self.assertEqual(result.error.code, "local_model_disk_full")
+            self.assertFalse(path.exists())
+
     def test_runtime_model_storage_applies_catalog_and_download_timeouts(self):
         from unittest.mock import Mock
         from worklogger.composition.context import build_local_model_store
@@ -143,7 +189,7 @@ class LocalModelInfrastructureTests(unittest.TestCase):
                 models.mkdir()
                 catalog = models / "catalog.json"
                 catalog.write_text(json.dumps({"models": [{"id": "shared", "filename": "replacement.gguf"}]}), encoding="utf-8")
-                self.assertEqual(store.list_models().value[0].filename, "replacement.gguf")
+                self.assertEqual(store.list_models().value[0].filename, "shared.gguf")
                 catalog.unlink()
                 self.assertEqual(store.list_models().value[0].filename, "shared.gguf")
             source = root / "import.gguf"

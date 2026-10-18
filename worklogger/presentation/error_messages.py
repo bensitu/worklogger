@@ -100,6 +100,8 @@ _MESSAGE_GROUPS = (
     (("account_locked",), N_("Too many attempts. Try again in {seconds} seconds, or use another sign-in method.")),
     (("username_invalid",), N_("The user ID cannot contain invisible formatting or control characters.")),
     (("password_too_long",), N_("The password must not exceed 1024 UTF-8 bytes.")),
+    (("local_model_disk_full",), N_("There is not enough free space to download this model. Free disk space and try again.")),
+    (("cloud_certificate_invalid",), N_("The storage certificate could not be verified. Check the endpoint and trusted certificate configuration.")),
     (("identity_clock_invalid",), N_("The system clock differs from the sign-in provider. Check your device date and time, then try again.")),
     (("identity_relink_required",), N_("An existing account needs its external sign-in linked again. Sign in with its local password or recover the account before linking this provider in Settings.")),
     (("username_exists",), N_("This ID is already in use. Choose a different ID.")),

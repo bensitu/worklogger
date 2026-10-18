@@ -2380,6 +2380,9 @@ msgstr "州 / 省"
 msgid "Stop automatic recording before restoring a cloud backup."
 msgstr "恢复云备份前，请先结束自动记录。"
 
+msgid "Stopping background tasks..."
+msgstr "正在停止后台任务..."
+
 msgid "Storage provider"
 msgstr "存储服务"
 
@@ -2536,6 +2539,9 @@ msgstr "所选模型的上下文上限过小，无法用于文本处理。"
 msgid "The selected project or work item is unavailable for new records."
 msgstr "所选项目或工作项不可用于新记录。"
 
+msgid "The storage certificate could not be verified. Check the endpoint and trusted certificate configuration."
+msgstr "无法验证存储服务的证书。请检查服务地址和受信任证书配置。"
+
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr "无法在此设备上解密已存凭据。请重新输入，现有工作记录不受影响。"
 
@@ -2553,6 +2559,9 @@ msgstr "该用户账户已不可用。"
 
 msgid "Theme"
 msgstr "主题"
+
+msgid "There is not enough free space to download this model. Free disk space and try again."
+msgstr "没有足够的可用空间下载此模型。请释放磁盘空间后重试。"
 
 msgid "These records do not have compatible time-zone information. Choose entire-record replacement or cancel."
 msgstr "这些记录的时区信息不兼容。请选择替换整条记录，或取消操作。"

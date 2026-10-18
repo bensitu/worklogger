@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import logging
 import uuid
+from time import monotonic
 from weakref import ref
 
-from PySide6.QtCore import QCoreApplication, QObject, QRunnable, QThreadPool, Signal
+from PySide6.QtCore import QCoreApplication, QEventLoop, QObject, QRunnable, QThread, QThreadPool, Signal
 from shiboken6 import isValid
 
 from worklogger.app.job_runner import (
@@ -78,6 +79,9 @@ class QtJobRunner(QObject):
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._pool = QThreadPool(self)
+        self._pool.setMaxThreadCount(max(2, self._pool.maxThreadCount()))
+        self._long_pool = QThreadPool(self)
+        self._long_pool.setMaxThreadCount(2)
         self._closed = False
         self._callbacks: dict[str, JobCallback[object] | None] = {}
         self._tokens: dict[str, CancellationToken] = {}
@@ -87,15 +91,27 @@ class QtJobRunner(QObject):
         if application is not None:
             application.aboutToQuit.connect(self.shutdown)
 
-    def shutdown(self, *, wait: bool = False) -> None:
+    def shutdown(self, *, wait: bool = False, timeout_ms: int = 5000) -> bool:
         self._closed = True
         for token in self._tokens.values():
             token.cancel()
         self._tokens.clear()
         self._callbacks.clear()
         self._pool.clear()
+        self._long_pool.clear()
         if wait:
-            self._pool.waitForDone()
+            deadline = monotonic() + max(0, timeout_ms) / 1000
+            application = QCoreApplication.instance()
+            while True:
+                if self._pool.waitForDone(0) and self._long_pool.waitForDone(0):
+                    return True
+                if monotonic() >= deadline:
+                    return False
+                if application is not None and QThread.currentThread() == application.thread():
+                    application.processEvents(QEventLoop.ProcessEventsFlag.ExcludeUserInputEvents, 10)
+                self._pool.waitForDone(10)
+                self._long_pool.waitForDone(10)
+        return not (self._pool.activeThreadCount() or self._long_pool.activeThreadCount())
 
     def submit(
         self,
@@ -110,7 +126,11 @@ class QtJobRunner(QObject):
         token = CancellationToken()
         self._tokens[job_id] = token
         self._callbacks[job_id] = on_complete
-        self._pool.start(
+        long_running = name.startswith(("ai_", "local_model_")) or name in {
+            "cloud_backup", "generate_report", "check_updates", "identity_authorization", "initialize_text_processing",
+        }
+        pool = self._long_pool if long_running else self._pool
+        pool.start(
             _JobRunnable(
                 job_id=job_id,
                 token=token,

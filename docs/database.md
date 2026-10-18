@@ -72,10 +72,13 @@ Missing keys/columns, unknown layouts, executable schema objects, and unknown
 future versions are rejected rather than reset.
 Required named indexes are checked for their columns, uniqueness and partial
 index attributes; incomplete constraints are not silently repaired during startup.
-The current contract is schema version 18, with its complete required structure
-and a ledger containing only version 18. Version 17 upgrades transactionally to
-18 after a complete backup: the worklog constraint accepts custom arrangements,
-each record gains `work_mode_label`, and `work_modes` stores the account catalog.
+The current contract is schema version 19, with its complete required structure
+and a ledger containing only version 19. Versions 17 and 18 upgrade transactionally
+after a complete backup. Composite foreign keys enforce record/project/work-item
+account ownership and project membership. Identity bindings are normalized into
+the same uniqueness contract as new databases; conflicting ownership aborts the
+upgrade. Version 17 also gains custom work arrangements, `work_mode_label`, and
+the `work_modes` account catalog.
 Existing IDs, revisions, timers, and reversible snapshots are preserved. Unreleased development
 versions, including 14, 15, and 16, and unversioned development layouts are rejected
 before writable initialization. They are never reset, relabeled, or upgraded by

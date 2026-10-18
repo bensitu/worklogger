@@ -2378,6 +2378,9 @@ msgstr ""
 msgid "Stop automatic recording before restoring a cloud backup."
 msgstr ""
 
+msgid "Stopping background tasks..."
+msgstr ""
+
 msgid "Storage provider"
 msgstr ""
 
@@ -2534,6 +2537,9 @@ msgstr ""
 msgid "The selected project or work item is unavailable for new records."
 msgstr ""
 
+msgid "The storage certificate could not be verified. Check the endpoint and trusted certificate configuration."
+msgstr ""
+
 msgid "The stored credential cannot be decrypted on this device. Enter it again; existing work records are unaffected."
 msgstr ""
 
@@ -2550,6 +2556,9 @@ msgid "The user account is no longer available."
 msgstr ""
 
 msgid "Theme"
+msgstr ""
+
+msgid "There is not enough free space to download this model. Free disk space and try again."
 msgstr ""
 
 msgid "These records do not have compatible time-zone information. Choose entire-record replacement or cancel."

@@ -24,6 +24,7 @@ from worklogger.config.constants import (
 from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
+from worklogger.infrastructure.security.credential_values import read_credential, write_credential
 
 _ENC_PREFIX = "enc1:"
 _FERNET_PREFIX = "enc2:"
@@ -110,17 +111,13 @@ class SystemCredentialStore:
 
     def get_secret(self, name: str) -> Result[str | None]:
         try:
-            return Result.success(self._keyring().get_password(KEYRING_SERVICE_NAME, self._name(name)))
+            return Result.success(read_credential(self._keyring(), KEYRING_SERVICE_NAME, self._name(name)))
         except Exception:
             return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
 
     def set_secret(self, name: str, value: str) -> Result[None]:
         try:
-            backend = self._keyring()
-            if value:
-                backend.set_password(KEYRING_SERVICE_NAME, self._name(name), value)
-            elif backend.get_password(KEYRING_SERVICE_NAME, self._name(name)) is not None:
-                backend.delete_password(KEYRING_SERVICE_NAME, self._name(name))
+            write_credential(self._keyring(), KEYRING_SERVICE_NAME, self._name(name), value)
             return Result.success(None)
         except Exception:
             return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
@@ -139,6 +136,8 @@ class FileMachineKeyProvider:
 
     def load_or_create(self) -> bytes:
         self.path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        if os.name != "nt":
+            self.path.parent.chmod(0o700)
         with portalocker.Lock(str(self.path) + ".lock", timeout=5):
             loaded = self._load()
             if loaded is not None:
@@ -271,21 +270,27 @@ class EncryptedSettingsKeyStore:
                 return Result.success(keyring_value)
         previous_value = False
         if not stored and key == "ai_api_key":
-            stored = self._settings.get(self._user_id, key, None)
+            try:
+                stored = self._settings.get(self._user_id, key, None)
+            except Exception:
+                return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
             previous_value = bool(stored)
         if not stored:
             return Result.success(None)
         try:
             value = stored if previous_value and not stored.startswith((_ENC_PREFIX, _FERNET_PREFIX)) else self._secret_box.decrypt(stored)
-            if stored.startswith(_ENC_PREFIX) or previous_value:
-                self._settings.set(self._user_id, self._setting_key(key), self._secret_box.encrypt(value))
-                if previous_value:
-                    self._settings.delete(self._user_id, key)
-            return Result.success(value or None)
         except ValueError as exc:
             return Result.failure(InfrastructureError(str(exc), str(exc)))
         except Exception:
             return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
+        if stored.startswith(_ENC_PREFIX) or previous_value:
+            try:
+                self._settings.set(self._user_id, self._setting_key(key), self._secret_box.encrypt(value))
+                if previous_value:
+                    self._settings.delete(self._user_id, key)
+            except Exception:
+                LOGGER.warning("credential_upgrade_deferred")
+        return Result.success(value or None)
 
     def set_secret(self, name: str, value: str) -> Result[None]:
         key = self._normalize_name(name)

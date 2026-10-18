@@ -77,8 +77,12 @@ class JsonLocalModelStore:
             remote = self._fetch_remote_catalog()
             with self._metadata_lock:
                 local = [entry for entry in self._load_catalog() if entry.status in {"local", "preserved"}]
-                local_ids = {entry.id for entry in local}
-                merged = [entry for entry in remote if entry.id not in local_ids] + local
+                bundled = self._load_catalog_file(Path(self._bundled_catalog_path)) if self._bundled_catalog_path is not None else ()
+                protected_ids = {entry.id for entry in (*bundled, *local)}
+                protected_files = {entry.filename.casefold() for entry in (*bundled, *local)}
+                merged = list(bundled) + [entry for entry in remote if entry.id not in protected_ids
+                    and entry.filename.casefold() not in protected_files] + [entry for entry in local
+                        if entry.id not in {item.id for item in bundled}]
                 self._save_catalog(merged)
                 self._sync_manifest(merged)
                 return self.list_models()
@@ -283,7 +287,7 @@ class JsonLocalModelStore:
         for path in paths:
             if path is not None:
                 for entry in self._load_catalog_file(Path(path)):
-                    entries[entry.id] = entry
+                    entries.setdefault(entry.id, entry)
         return list(entries.values())
 
     def _load_catalog_file(self, path: Path) -> tuple[LocalModelEntry, ...]:

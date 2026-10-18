@@ -9,8 +9,14 @@ from worklogger.config.constants import MACHINE_KEY_FILENAME, REMEMBER_SESSION_F
 
 def credential_directory() -> Path:
     appdata = os.environ.get("APPDATA", "").strip()
-    if sys.platform == "win32" and appdata:
-        return Path(appdata) / "WorkLogger"
+    local = os.environ.get("LOCALAPPDATA", "").strip()
+    if sys.platform == "win32":
+        previous = Path(appdata) / "WorkLogger" if appdata else None
+        if previous is not None and any((previous / name).exists() for name in
+                (MACHINE_KEY_FILENAME, REMEMBER_SESSION_FILENAME, "identity-config.enc")):
+            return previous
+        if local or appdata:
+            return Path(local or appdata) / "WorkLogger"
     previous = Path.home() / ".config" / "worklogger"
     if sys.platform == "darwin" and not any((previous / name).exists() for name in
                                            (MACHINE_KEY_FILENAME, REMEMBER_SESSION_FILENAME)):

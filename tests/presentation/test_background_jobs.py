@@ -22,6 +22,31 @@ def _app() -> QApplication:
 
 
 class BackgroundJobTests(unittest.TestCase):
+    def test_slow_tasks_do_not_block_short_work_or_shutdown_events(self):
+        from PySide6.QtCore import QTimer
+        runner = QtJobRunner()
+        started, release = threading.Event(), threading.Event()
+        completed, responsive = [], []
+        runner._long_pool.setMaxThreadCount(1)
+        def slow(_token):
+            started.set()
+            release.wait(3)
+        runner.submit("local_model_download", slow)
+        self.assertTrue(started.wait(3))
+        try:
+            runner.submit("load_calendar_overview", lambda _token: 42, on_complete=completed.append)
+            deadline = time.monotonic() + 3
+            while not completed and time.monotonic() < deadline:
+                self._app.processEvents()
+                time.sleep(0.001)
+            self.assertEqual(completed[0].value, 42)
+            QTimer.singleShot(0, lambda: responsive.append(True))
+            self.assertFalse(runner.shutdown(wait=True, timeout_ms=20))
+            self.assertTrue(responsive)
+        finally:
+            release.set()
+            self.assertTrue(runner.shutdown(wait=True))
+
     def test_processing_completion_ignores_results_replaced_by_finished_signal(self):
         from worklogger.app.job_runner import JobHandle
         from worklogger.presentation.processing import TextProcessingTask

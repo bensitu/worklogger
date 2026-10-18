@@ -13,6 +13,16 @@ from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
 
 
 class HTTPInfrastructureTests(unittest.TestCase):
+    def test_s3_certificate_bundle_contains_the_same_trusted_roots_as_https(self):
+        import certifi
+        from pathlib import Path
+        import ssl
+        from worklogger.infrastructure.http import certificate_bundle, _certificate_context
+        path = Path(certifi.where())
+        stat = path.stat()
+        context = _certificate_context(str(path), stat.st_mtime_ns, stat.st_size)
+        bundled = ssl.create_default_context(cafile=certificate_bundle())
+        self.assertTrue(set(context.get_ca_certs(binary_form=True)).issubset(bundled.get_ca_certs(binary_form=True)))
     def test_external_payload_includes_only_explicit_generation_parameters(self):
         for options, expected in (
             (ExternalGenerationOptions(), {}),

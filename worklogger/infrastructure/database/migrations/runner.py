@@ -82,7 +82,7 @@ class MigrationRunner:
                 else:
                     create_current_schema(connection)
                 connection.execute("INSERT INTO schema_migrations(version,description,applied_at) VALUES(?,?,datetime('now'))",
-                                   (CURRENT_SCHEMA_VERSION, "entry_classification_and_work_modes"))
+                                   (CURRENT_SCHEMA_VERSION, "account_owned_record_associations"))
                 validate_current_schema(connection)
             prune_upgrade_snapshots(self._connection_factory.database_path, preserve=snapshot)
         return MIGRATION_VERSIONS

@@ -29,6 +29,14 @@ class Response(io.BytesIO):
 
 
 class BrowserIdentityTests(unittest.TestCase):
+    def test_incomplete_callback_headers_cannot_outlive_the_authorization_deadline(self):
+        import socket
+        with LoopbackAuthorization(state="expected", timeout=0.05) as callback:
+            with socket.create_connection(callback.server.server_address, timeout=2) as connection:
+                connection.sendall(b"GET /callback HTTP/1.1\r\nHost: ")
+                result = callback.wait(None)
+                self.assertEqual(result.error.code, "identity_authorization_timeout")
+                self.assertEqual(connection.recv(1), b"")
     def test_disabled_provider_does_not_read_registration_or_start_authorization(self):
         configuration, browser, opener = Mock(), Mock(), Mock()
         provider = BrowserIdentityProvider("google", "Google", configuration=configuration,

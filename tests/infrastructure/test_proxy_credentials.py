@@ -33,6 +33,32 @@ class FakeKeyring:
 
 
 class ProxyCredentialTests(unittest.TestCase):
+    def test_large_unicode_credentials_fit_system_limits_and_delete_all_parts(self):
+        original = self.backend.set_password
+        def bounded_write(service, name, value):
+            if len(value.encode("utf-16-le")) > 2560:
+                raise ValueError("credential too large")
+            original(service, name, value)
+        self.backend.set_password = bounded_write
+        value = "\U0001f512" * 2048
+        self.assertTrue(self.store.set_secret("large", value).ok)
+        self.assertEqual(self.store.get_secret("large").value, value)
+        self.assertTrue(self.store.set_secret("large", "replacement").ok)
+        self.assertEqual(len(self.backend.values), 1)
+        self.assertTrue(self.store.set_secret("large", "").ok)
+        self.assertEqual(self.backend.values, {})
+
+    def test_credential_read_returns_decrypted_value_when_upgrade_write_is_unavailable(self):
+        from worklogger.infrastructure.security.key_store import NoKeyringBackend
+        self.repository.set(self.user_id, "ai_api_key", "legacy-credential")
+        store = EncryptedSettingsKeyStore(self.repository, user_id=self.user_id,
+            keyring_backend=NoKeyringBackend(), secret_box=self.secret_box)
+        with patch.object(self.repository, "set", side_effect=OSError("read only")), self.assertLogs(level="WARNING"):
+            result = store.get_secret("ai_api_key")
+        self.assertTrue(result.ok, result.error)
+        self.assertEqual(result.value, "legacy-credential")
+        self.assertEqual(self.repository.get(self.user_id, "ai_api_key"), "legacy-credential")
+
     def test_cross_device_credentials_can_be_replaced_without_touching_account_data(self):
         unavailable = FakeKeyring(unavailable=True)
         first = EncryptedSettingsKeyStore(self.repository, user_id=self.user_id, keyring_backend=unavailable,

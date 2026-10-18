@@ -197,14 +197,14 @@ def _application(argv: Sequence[str] | None) -> QApplication:
         install_bundled_fonts()
         apply_application_icon()
         return existing
-    application = QApplication(list(argv or []))
-    application.setApplicationName(APP_NAME)
-    application.setOrganizationName(APP_NAME)
-    application.setApplicationVersion(APP_VERSION)
     if sys.platform == "win32":
         import ctypes
 
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)
+    application = QApplication(list(argv or []))
+    application.setApplicationName(APP_NAME)
+    application.setOrganizationName(APP_NAME)
+    application.setApplicationVersion(APP_VERSION)
     configure_application_style()
     install_bundled_fonts()
     apply_application_icon()
@@ -247,7 +247,10 @@ def _prepare_database(
     if Path(str(database_path) + ".pre_restore").exists():
         raise ValueError("restore_pending")
     MigrationRunner(connection_factory).run_pending()
-    protect_legacy_proxy_passwords(connection_factory, FernetSecretBox())
+    try:
+        protect_legacy_proxy_passwords(connection_factory, FernetSecretBox())
+    except Exception as error:
+        LOGGER.warning("proxy_credential_upgrade_deferred: %s", type(error).__name__)
     auth_repository = SQLiteAuthRepository(
         connection_factory,
         password_hasher=_password_hasher(config.password_iterations),

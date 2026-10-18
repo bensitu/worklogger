@@ -5,6 +5,7 @@ import errno
 import logging
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import TCPServer
+from threading import Timer
 import time
 from urllib.parse import parse_qs, urlsplit
 
@@ -32,6 +33,21 @@ class LoopbackAuthorization:
             def setup(self):
                 self.request.settimeout(2)
                 super().setup()
+                # A total deadline also bounds clients that send one byte at a time.
+                self._deadline_timer = Timer(min(2, max(0.001, owner._deadline - time.monotonic())), self._expire)
+                self._deadline_timer.daemon = True
+                self._deadline_timer.start()
+
+            def _expire(self):
+                import socket
+                try:
+                    self.request.shutdown(socket.SHUT_RDWR)
+                except OSError:
+                    pass
+
+            def finish(self):
+                self._deadline_timer.cancel()
+                super().finish()
 
             def log_message(self, *_args):
                 pass
@@ -51,6 +67,7 @@ class LoopbackAuthorization:
                 except OSError:
                     pass
         self.server = _LoopbackServer(("127.0.0.1", 0), Handler)
+        self._deadline = time.monotonic() + timeout
         self.server.timeout = 0.1
         self.authority = f"{hostname}:{self.server.server_port}"
         self.redirect_uri = f"http://{self.authority}/callback"
@@ -83,6 +100,7 @@ class LoopbackAuthorization:
 
     def wait(self, cancellation):
         deadline = time.monotonic() + self.timeout
+        self._deadline = deadline
         while self.result is None:
             if cancellation is not None and cancellation.is_cancelled():
                 return Result.failure(CancellationError("identity_authorization_cancelled", "identity_authorization_cancelled"))

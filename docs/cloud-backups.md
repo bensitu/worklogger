@@ -29,6 +29,10 @@ move the local database.
    **Use an S3 session token** to remove a saved token. S3 uses path-style requests
    signed with Signature Version 4. The configured account proxy applies to both
    providers; TLS verification remains enabled.
+   Both providers use system certificate roots together with the bundled CA
+   certificates. S3 additionally respects an explicit `AWS_CA_BUNDLE`. Restart
+   WorkLogger after changing trusted certificate roots. Certificate failures are
+   reported separately from authentication failures; verification is never disabled.
 4. Set encryption, retention, and the automatic schedule. Save before testing
    the connection or transferring backups. Unsaved edits disable cloud actions
    so they cannot silently use the previous destination or credentials.

@@ -50,7 +50,10 @@ class ProxyPasswordSettings:
     def _load(self) -> Result[str | None]:
         legacy = self._repository.get(self._user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY)
         if legacy and not legacy.startswith(("enc1:", "enc2:")):
-            encrypted = self._secret_box.encrypt(legacy)
+            try:
+                encrypted = self._secret_box.encrypt(legacy)
+            except ValueError:
+                return Result.failure(InfrastructureError("credential_reentry_required", "credential_reentry_required"))
             self._repository.set(self._user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY, encrypted)
             legacy = encrypted
         stored = self._credentials.get_secret(self._name)
