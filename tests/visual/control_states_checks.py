@@ -266,11 +266,13 @@ class ControlStateChecks(unittest.TestCase):
             tree.addTopLevelItem(QTreeWidgetItem(("Selected item",)))
             tree.setCurrentItem(tree.topLevelItem(0))
             controls.append(tree)
-            for name in ("", "project_editor_tab_bar", "worklog_mode_selector_widget"):
+            for name in ("", "project_editor_tab_bar", "worklog_mode_selector_widget", "classification_section_tab_bar"):
                 tabs = QTabBar()
                 tabs.setObjectName(name)
                 if name == "project_editor_tab_bar":
                     tabs.setProperty("tab_style", "underline")
+                elif name == "classification_section_tab_bar":
+                    tabs.setProperty("tab_style", "segmented")
                 tabs.addTab("Selected")
                 tabs.addTab("Other")
                 controls.append(tabs)

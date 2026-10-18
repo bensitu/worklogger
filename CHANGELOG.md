@@ -39,6 +39,8 @@ layers. Back up your database before upgrading.
 
 ### Changed
 
+- Grouped work and leave selection into equal-width segments with shared control
+  styling and distinct selected, hover, and disabled states.
 - Removed native baseline artifacts from underline tabs and increased classification
   color separation, with more stable color variations for custom types.
 - Preserved pending daily-record loads across preference and date refreshes and

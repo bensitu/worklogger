@@ -24,6 +24,8 @@ QTabBar::tab:disabled,
 QTabBar#worklog_mode_selector_widget::tab:disabled,
 QTabBar#worklog_mode_selector_widget::tab:selected:disabled,
 QTabBar[tab_style="underline"]::tab:disabled,
+QTabBar[tab_style="segmented"]::tab:disabled,
+QTabBar[tab_style="segmented"]::tab:selected:disabled,
 QHeaderView::section:disabled,
 QTreeWidget[data_browser] QHeaderView::section:disabled {
   color: {{ disabled_text }};

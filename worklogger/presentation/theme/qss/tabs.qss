@@ -31,13 +31,16 @@ QTabWidget#classification_section_tab_widget::pane {
   border: none;
 }
 
-QTabBar#worklog_mode_selector_widget {
+QTabBar#worklog_mode_selector_widget,
+QTabBar[tab_style="segmented"] {
+  qproperty-drawBase: 0;
   background: {{ surface_alt }};
   border: 1px solid {{ border }};
   border-radius: {{ control_radius }};
 }
 
-QTabBar#worklog_mode_selector_widget::tab {
+QTabBar#worklog_mode_selector_widget::tab,
+QTabBar[tab_style="segmented"]::tab {
   background: transparent;
   color: {{ muted_text }};
   border: 1px solid transparent;
@@ -49,20 +52,35 @@ QTabBar#worklog_mode_selector_widget::tab {
   font-weight: 500;
 }
 
-QTabBar#worklog_mode_selector_widget::tab:hover:enabled {
+QTabBar#worklog_mode_selector_widget::tab:hover:enabled,
+QTabBar[tab_style="segmented"]::tab:hover:enabled {
   color: {{ text }};
   background: {{ card_hover }};
 }
 
-QTabBar#worklog_mode_selector_widget::tab:selected {
+QTabBar#worklog_mode_selector_widget::tab:selected,
+QTabBar[tab_style="segmented"]::tab:selected {
   background: {{ button_fill }};
   color: {{ accent }};
   border-color: {{ button_border }};
   font-weight: 600;
 }
 
-QTabBar#worklog_mode_selector_widget::tab:selected:hover:enabled {
+QTabBar#worklog_mode_selector_widget::tab:selected:hover:enabled,
+QTabBar[tab_style="segmented"]::tab:selected:hover:enabled {
   color: {{ accent }};
+}
+
+QTabBar[tab_style="segmented"]::tab {
+  min-height: 24px;
+  padding: 4px 14px;
+  font-size: 13px;
+}
+
+QTabBar[tab_style="segmented"]::tab:selected,
+QTabBar[tab_style="segmented"]::tab:selected:hover:enabled {
+  background: {{ accent_dim }};
+  border-color: {{ accent }};
 }
 
 QTabWidget#project_editor_tab_widget::pane,

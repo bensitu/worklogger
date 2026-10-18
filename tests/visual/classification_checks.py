@@ -61,7 +61,7 @@ class ClassificationLayoutChecks(unittest.TestCase):
                             window.entry_panel.refresh_projects()
                             window.resize(1100, 800)
                         try:
-                            ThemeEngine().apply_to(self.app, "green", dark=dark)
+                            ThemeEngine().apply_to(self.app, "green" if minimal else "liquid_glass", dark=dark)
                             window.refresh()
                             window.show()
                             self.app.processEvents()
@@ -89,6 +89,8 @@ class ClassificationLayoutChecks(unittest.TestCase):
                                 self.assertTrue(popup.section_tabs.isTabEnabled(0))
                                 self.assertEqual(popup.section_tabs.isTabEnabled(1), not automatic)
                                 bar = popup.section_tabs.tabBar()
+                                self.assertAlmostEqual(bar.tabRect(0).width(), bar.tabRect(1).width(), delta=1)
+                                self.assertGreater(bar.tabRect(0).width(), bar.width() * 0.4)
                                 tab_top = bar.grab().toImage().copy(0, 0, bar.width(), 2)
                                 self.capture(popup, prefix + ("-auto" if automatic else "-work"))
                                 if not automatic:
