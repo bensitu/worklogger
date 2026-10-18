@@ -3,6 +3,8 @@
 WorkLogger is a local desktop application for recording working hours, keeping
 daily notes, preparing reports, and reviewing work patterns.
 
+![WorkLogger preview](docs/images/demo_1.png)
+
 ## Getting Started
 
 Start the application and create an account. The first registered account is an
