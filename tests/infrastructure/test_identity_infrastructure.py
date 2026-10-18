@@ -50,7 +50,9 @@ class IdentityInfrastructureTests(unittest.TestCase):
 
     def test_identity_confirmation_requires_recent_signed_authentication_time(self):
         now = time.time()
-        for authenticated_at, accepted in ((None, False), (True, False), (now - 3600, False), (now + 3600, False), (now, True)):
+        for authenticated_at, accepted in ((None, False), (True, False), (10 ** 400, False),
+                                           (float("inf"), False), (float("nan"), False),
+                                           (now - 3600, False), (now + 3600, False), (now, True)):
             result = profile_from_oidc_token("google", self.token(auth_time=authenticated_at),
                 issuer="https://accounts.google.com", audience="client-id", jwks=self.jwks,
                 expected_nonce="nonce", authenticated_after=now)

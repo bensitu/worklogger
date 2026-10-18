@@ -12,6 +12,17 @@ Create the initial local administrator before using Google or Microsoft sign-in.
 To retain existing records, sign in locally and open **Settings > Account >
 Linked identities**. Choose Link and complete authorization in the system browser.
 
+Linking and unlinking first require the current local password. Without a local
+password, choose an identity already linked to the account and authenticate again
+in the browser. Cancelling either confirmation leaves the associations unchanged.
+The returned provider, subject, and issuer must match the selected identity.
+
+External confirmation requests `max_age=0` and requires a recent signed `auth_time`,
+as defined by [OpenID Connect](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest).
+Missing or stale authentication time is rejected rather than trusting an existing
+browser session. If the provider cannot confirm recent authentication, an
+administrator can establish local password access before identities are changed.
+
 Later provider sign-in opens that same account. An unlinked identity creates a
 separate non-administrator account. Matching names or email addresses do not
 merge accounts. Unlinking the only usable sign-in method is rejected; establish a

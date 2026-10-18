@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import hmac
-import math
 import time
 import jwt
 from typing import Mapping
@@ -81,7 +80,7 @@ def profile_from_oidc_token(
     claims = verified.value
     if authenticated_after is not None:
         authenticated_at = claims.get("auth_time")
-        if (type(authenticated_at) not in (int, float) or not math.isfinite(authenticated_at)
+        if (type(authenticated_at) not in (int, float)
                 or not authenticated_after - 30 <= authenticated_at <= time.time() + 30):
             return Result.failure(AuthenticationError("identity_auth_failed", "identity_auth_failed"))
     nonce = claims.get("nonce")
