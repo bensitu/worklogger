@@ -43,6 +43,7 @@ from worklogger.infrastructure.database import (
     default_database_path,
 )
 from worklogger.infrastructure.database.connection import DatabaseIntegrityError
+from worklogger.infrastructure.database.startup_recovery import startup_recovery_marker
 from worklogger.infrastructure.database.upgrade import copy_database
 from worklogger.infrastructure.identity.config import IdentityConfigurationStore
 from worklogger.infrastructure.runtime_config import load_runtime_configuration
@@ -182,6 +183,8 @@ def _startup_failure(exc):
     if isinstance(exc, ValueError) and str(exc) in {
         "database_version_unsupported", "database_schema_unsupported", "database_foreign_key_invalid",
         "username_normalization_conflict", "identity_subject_ambiguous", "restore_pending",
+        "startup_recovery_pending",
+        "database_record_invalid", "database_record_count_invalid", "database_entry_type_unsupported",
     }:
         error = str(exc)
     return Result.failure(InfrastructureError(error, error, {"error_type": type(exc).__name__}))
@@ -230,6 +233,8 @@ def _prepare_database(
     database_path = (
         Path(config.database_path) if config.database_path else default_database_path()
     )
+    if startup_recovery_marker(database_path).exists():
+        raise ValueError("startup_recovery_pending")
     if (
         config.database_path is None
         and getattr(sys, "frozen", False)
