@@ -104,6 +104,9 @@ class LoginFailureRepository(Protocol):
 
 
 class IdentityRepository(Protocol):
+    def has_unresolved_provider(self, provider: str) -> bool:
+        ...
+
     def list_for_user(self, user_id: int) -> tuple[LinkedIdentity, ...]:
         ...
 

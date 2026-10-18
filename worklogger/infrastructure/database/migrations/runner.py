@@ -11,6 +11,7 @@ from worklogger.infrastructure.database.current_schema import (
 )
 from worklogger.infrastructure.database.migrations.snapshot import prune_upgrade_snapshots, save_snapshot
 from worklogger.infrastructure.database.migrations.work_modes import extend_work_modes
+from worklogger.infrastructure.database.migrations.ownership import enforce_account_ownership
 from worklogger.infrastructure.database.released_import import (
     import_released_schema,
     validate_released_schema,
@@ -31,6 +32,9 @@ def database_kind(connection, *, check_data=True):
         if versions == {17}:
             validate_current_schema(connection, check_data=check_data, version=17)
             return "previous"
+        if versions == {18}:
+            validate_current_schema(connection, check_data=check_data, version=18)
+            return "previous_ownership"
         if versions != {CURRENT_SCHEMA_VERSION}:
             raise ValueError("database_version_unsupported")
         validate_current_schema(connection, check_data=check_data)
@@ -70,7 +74,11 @@ class MigrationRunner:
                 if kind == "released":
                     import_released_schema(connection)
                 elif kind == "previous":
+                    connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS work_items_owner_project ON work_items(user_id,project_id,id)")
                     extend_work_modes(connection)
+                    enforce_account_ownership(connection)
+                elif kind == "previous_ownership":
+                    enforce_account_ownership(connection)
                 else:
                     create_current_schema(connection)
                 connection.execute("INSERT INTO schema_migrations(version,description,applied_at) VALUES(?,?,datetime('now'))",

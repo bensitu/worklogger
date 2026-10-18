@@ -54,6 +54,9 @@ class MemoryIdentities:
         self.items: list[LinkedIdentity] = []
         self.next_id = 1
 
+    def has_unresolved_provider(self, provider):
+        return False
+
     def list_for_user(self, user_id: int) -> tuple[LinkedIdentity, ...]:
         return tuple(item for item in self.items if item.user_id == user_id)
 

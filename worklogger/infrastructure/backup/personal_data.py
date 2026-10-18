@@ -114,6 +114,8 @@ class SQLitePersonalData:
                     if not isinstance(row, dict) or "work_mode_label" in row:
                         raise ValueError("cloud_backup_invalid")
                     row["work_mode_label"] = ""
+            if isinstance(value, dict) and value.get("schema") == 18:
+                value["schema"] = CURRENT_SCHEMA_VERSION
             if (set(value) != {"format", "schema", "tables"} or value["format"] != 1
                     or value["schema"] != CURRENT_SCHEMA_VERSION or set(value["tables"]) != set(_TABLES)):
                 raise ValueError("cloud_backup_invalid")

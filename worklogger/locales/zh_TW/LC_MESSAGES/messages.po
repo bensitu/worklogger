@@ -157,6 +157,9 @@ msgstr "已存在同名的未封存項目。"
 msgid "An entry type with this name already exists."
 msgstr "已存在同名記錄類型。"
 
+msgid "An existing account needs its external sign-in linked again. Sign in with its local password or recover the account before linking this provider in Settings."
+msgstr "現有帳戶需要重新連結外部登入。請使用本機密碼登入或復原帳戶，然後在設定中重新連結此提供者。"
+
 msgid "Analytics"
 msgstr "統計分析"
 

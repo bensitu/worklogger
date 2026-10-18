@@ -157,6 +157,9 @@ msgstr "An active item with this name already exists."
 msgid "An entry type with this name already exists."
 msgstr "An entry type with this name already exists."
 
+msgid "An existing account needs its external sign-in linked again. Sign in with its local password or recover the account before linking this provider in Settings."
+msgstr "An existing account needs its external sign-in linked again. Sign in with its local password or recover the account before linking this provider in Settings."
+
 msgid "Analytics"
 msgstr "Analytics"
 

@@ -97,6 +97,7 @@ _MESSAGE_GROUPS = (
     (("desktop_runtime_failed", "auth_state_failed"), N_("Unable to start WorkLogger. Check the application log for details.")),
     (("runtime_user_required", "runtime_user_missing", "auth_required"), N_("Please sign in to continue.")),
     (("invalid_credentials",), N_("The ID or password is incorrect.")),
+    (("identity_relink_required",), N_("An existing account needs its external sign-in linked again. Sign in with its local password or recover the account before linking this provider in Settings.")),
     (("username_exists",), N_("This ID is already in use. Choose a different ID.")),
     (("username_too_long",), N_("Enter an ID of 120 characters or fewer.")),
     (("username_required", "username_must_be_string"), N_("Enter your ID.")),

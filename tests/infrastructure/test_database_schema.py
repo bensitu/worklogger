@@ -127,3 +127,22 @@ class DatabaseSchemaTests(unittest.TestCase):
             connection.execute(TABLE_STATEMENTS["worklog"].replace("REFERENCES users(id) ON DELETE CASCADE", ""))
         with self.assertRaisesRegex(ValueError, "database_schema_unsupported"):
             MigrationRunner(self.factory).run_pending()
+
+    def test_record_associations_require_the_same_account_and_work_item_project(self):
+        MigrationRunner(self.factory).run_pending()
+        auth = SQLiteAuthRepository(self.factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
+        first = auth.create_user("first", "example-password", recovery_key=None, is_admin=False)
+        second = auth.create_user("second", "example-password", recovery_key=None, is_admin=False)
+        with self.factory.transaction() as connection:
+            for identifier, owner in (("first-project", first.id), ("other-project", first.id), ("second-project", second.id)):
+                connection.execute("INSERT INTO projects(id,user_id,name,normalized_name) VALUES(?,?,?,?)",
+                                   (identifier, owner, identifier, identifier))
+            connection.execute("INSERT INTO work_items(id,user_id,project_id,title,normalized_title) "
+                               "VALUES('item',?,'first-project','Task','task')", (first.id,))
+            for owner, project, item in ((first.id, "second-project", None),
+                                          (second.id, "first-project", "item"),
+                                          (first.id, "other-project", "item"), (first.id, None, "item")):
+                with self.assertRaises(sqlite3.IntegrityError):
+                    connection.execute("INSERT INTO worklog(user_id,d,project_id,work_item_id) VALUES(?,'2026-10-18',?,?)",
+                                       (owner, project, item))
+            connection.execute("INSERT INTO worklog(user_id,d,project_id,work_item_id) VALUES(?,'2026-10-18','first-project','item')", (first.id,))

@@ -157,6 +157,9 @@ msgstr "同じ名前の有効な項目が既にあります。"
 msgid "An entry type with this name already exists."
 msgstr "同じ名前の記録タイプが既に存在します。"
 
+msgid "An existing account needs its external sign-in linked again. Sign in with its local password or recover the account before linking this provider in Settings."
+msgstr "既存のアカウントで外部ログインの再連携が必要です。ローカルパスワードでログインするかアカウントを復旧してから、設定でこのプロバイダーを連携してください。"
+
 msgid "Analytics"
 msgstr "分析"
 

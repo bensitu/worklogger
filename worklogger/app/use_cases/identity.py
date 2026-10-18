@@ -230,6 +230,8 @@ class LoginWithIdentityHandler:
             return self._session(user, linked, command.remember)
         if not self._self_registration_enabled:
             return Result.failure(AuthorizationError("self_registration_disabled", "self_registration_disabled"))
+        if self._identities.has_unresolved_provider(profile.value.provider):
+            return Result.failure(AuthenticationError("identity_relink_required", "identity_relink_required"))
         base = _username_from_profile(profile.value)
         occupied = {username_key(user.username) for user in self._auth.list_users()}
         for _attempt in range(8):

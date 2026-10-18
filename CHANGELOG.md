@@ -1,5 +1,14 @@
 # Changelog
 
+## Database and Sign-In Compatibility
+
+- Database upgrades retain a pre-upgrade snapshot and apply record ownership
+  constraints transactionally. Unsupported or conflicting data is not discarded.
+- Google bindings imported from 3.3.3 use their stored federated subject when
+  available. Unresolved external bindings require local account recovery and
+  relinking instead of silently creating an empty account.
+- Existing personal backups remain readable after upgrading the stored schema.
+
 All notable changes to this project are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).

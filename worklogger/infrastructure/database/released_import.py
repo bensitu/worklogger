@@ -5,6 +5,7 @@ from worklogger.infrastructure.database.current_schema import (
     TABLE_STATEMENTS,
     create_current_schema,
 )
+from worklogger.infrastructure.database.migrations.ownership import normalize_identities
 
 RELEASED_REQUIRED_COLUMNS = {
     "users": {"id", "username", "password_hash", "salt", "recovery_key_hash", "recovery_salt", "is_admin",
@@ -66,7 +67,8 @@ def import_released_schema(connection):
     for table, statement in TABLE_STATEMENTS.items():
         if table != "worklog":
             connection.execute(statement)
-    _import_identities(connection)
+    normalize_identities(connection)
+    connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS work_items_owner_project ON work_items(user_id,project_id,id)")
     connection.execute("UPDATE users SET local_password_enabled=CASE WHEN COALESCE(password_hash,'')='' THEN 0 ELSE 1 END")
     connection.execute("UPDATE users SET must_change_password=1 WHERE EXISTS (SELECT 1 FROM settings s "
                        "WHERE s.user_id=users.id AND s.key='force_password_change' AND lower(s.value) IN ('1','true','yes','on'))")
@@ -128,14 +130,3 @@ def _normalize_login_attempts(connection):
     connection.executemany("INSERT INTO login_attempts VALUES(?,?,?,?)", [(key, *value) for key, value in merged.items()])
 
 
-def _import_identities(connection):
-    tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-    for identity in connection.execute("SELECT * FROM oauth_identities") if "oauth_identities" in tables else ():
-        existing = connection.execute("SELECT user_id FROM external_identities WHERE provider=? AND subject=?",
-                                      (identity["provider"], identity["subject"])).fetchall()
-        if any(row[0] != identity["user_id"] for row in existing):
-            raise ValueError("identity_subject_ambiguous")
-        if not existing:
-            connection.execute("INSERT INTO external_identities(user_id,provider,subject,email,display_name,created_at,updated_at,broker,issuer) "
-                "VALUES(?,?,?,?,?,?,?,'direct_oidc',?)", (identity["user_id"], identity["provider"], identity["subject"], identity["email"],
-                identity["display_name"], identity["created_at"], identity["updated_at"], identity["provider"]))

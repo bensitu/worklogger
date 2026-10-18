@@ -8,6 +8,15 @@ or linked identities.
 
 ## Linking an Account
 
+Upgrading from 3.3.3 preserves accounts and converts Firebase Google bindings
+when their stored federated subject identifies the Google account. Historical
+direct Google bindings use the canonical Google issuer after conversion.
+If a binding cannot be converted unambiguously, automatic account creation for
+that provider is stopped. Sign in with the existing local password or use
+account recovery, then replace the old binding in Settings. Email addresses are
+never used to infer ownership. Conflicting bindings abort the upgrade and leave
+the original database and its migration snapshot available for recovery.
+
 Create the initial local administrator before using Google or Microsoft sign-in.
 To retain existing records, sign in locally and open **Settings > Account >
 Linked identities**. Choose Link and complete authorization in the system browser.

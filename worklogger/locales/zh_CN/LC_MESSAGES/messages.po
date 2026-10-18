@@ -157,6 +157,9 @@ msgstr "已存在同名的未归档项目。"
 msgid "An entry type with this name already exists."
 msgstr "已存在同名记录类型。"
 
+msgid "An existing account needs its external sign-in linked again. Sign in with its local password or recover the account before linking this provider in Settings."
+msgstr "现有账户需要重新关联外部登录。请使用本地密码登录或恢复账户，然后在设置中重新关联此提供商。"
+
 msgid "Analytics"
 msgstr "统计分析"
 

@@ -4,7 +4,7 @@ import sqlite3
 from contextlib import closing
 from functools import lru_cache
 
-CURRENT_SCHEMA_VERSION = 18
+CURRENT_SCHEMA_VERSION = 19
 
 TABLE_STATEMENTS = {
     "schema_migrations": """CREATE TABLE IF NOT EXISTS schema_migrations(
@@ -48,7 +48,10 @@ TABLE_STATEMENTS = {
         project_label TEXT NOT NULL DEFAULT '', work_item_label TEXT NOT NULL DEFAULT '',
         work_mode TEXT, work_mode_label TEXT NOT NULL DEFAULT '',
         CHECK(work_mode IS NULL OR work_mode IN ('onsite','remote','business_trip','other')
-            OR (work_mode GLOB 'custom:*' AND length(work_mode)=39 AND length(trim(work_mode_label)) BETWEEN 1 AND 80)))""",
+            OR (work_mode GLOB 'custom:*' AND length(work_mode)=39 AND length(trim(work_mode_label)) BETWEEN 1 AND 80)),
+        FOREIGN KEY(user_id,project_id) REFERENCES projects(user_id,id),
+        FOREIGN KEY(user_id,project_id,work_item_id) REFERENCES work_items(user_id,project_id,id),
+        CHECK(work_item_id IS NULL OR project_id IS NOT NULL))""",
     "daily_notes": """CREATE TABLE IF NOT EXISTS daily_notes(
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, d TEXT NOT NULL,
         content TEXT NOT NULL DEFAULT '', PRIMARY KEY(user_id,d))""",
@@ -105,6 +108,7 @@ INDEX_STATEMENTS = (
     "CREATE INDEX IF NOT EXISTS worklog_work_item_dates ON worklog(user_id,work_item_id,d,id)",
     "CREATE UNIQUE INDEX IF NOT EXISTS projects_active_name ON projects(user_id,normalized_name) WHERE archived=0",
     "CREATE UNIQUE INDEX IF NOT EXISTS work_items_active_title ON work_items(user_id,project_id,normalized_title) WHERE archived=0",
+    "CREATE UNIQUE INDEX IF NOT EXISTS work_items_owner_project ON work_items(user_id,project_id,id)",
     "CREATE UNIQUE INDEX IF NOT EXISTS entry_types_active_name ON entry_types(user_id,normalized_name) WHERE archived=0",
     "CREATE INDEX IF NOT EXISTS entry_types_account ON entry_types(user_id,archived)",
     "CREATE UNIQUE INDEX IF NOT EXISTS work_modes_active_name ON work_modes(user_id,normalized_name) WHERE archived=0",
@@ -125,31 +129,41 @@ def create_current_schema(connection):
         connection.execute(statement)
 
 
-@lru_cache(maxsize=2)
+@lru_cache(maxsize=3)
 def schema_columns(version=CURRENT_SCHEMA_VERSION):
     if version == 17:
         return {table: (tuple(column for column in values[0] if table != "worklog" or column[0] != "work_mode_label"),
-                        values[1], values[2]) for table, values in schema_columns().items() if table != "work_modes"}
-    if version != CURRENT_SCHEMA_VERSION:
+                        values[1], values[2]) for table, values in schema_columns(18).items() if table != "work_modes"}
+    if version not in (18, CURRENT_SCHEMA_VERSION):
         raise ValueError("database_version_unsupported")
     with closing(sqlite3.connect(":memory:")) as connection:
-        create_current_schema(connection)
+        if version == 18:
+            for table, statement in TABLE_STATEMENTS.items():
+                if table == "worklog":
+                    statement = statement.split(",\n        FOREIGN KEY(user_id,project_id)")[0] + ")"
+                connection.execute(statement)
+            for statement in INDEX_STATEMENTS:
+                if "work_items_owner_project" not in statement:
+                    connection.execute(statement)
+        else:
+            create_current_schema(connection)
         tables = set(TABLE_STATEMENTS)
         return {table: (tuple((row[1], row[2], row[5]) for row in connection.execute(f'PRAGMA table_info("{table}")')),
-                        foreign_key_contract(connection, table), index_contract(connection, table))
+                        foreign_key_contract(connection, table), index_contract(connection, table, include_unique=version >= 19))
                 for table in tables}
 
 
-def index_contract(connection, table):
+def index_contract(connection, table, *, include_unique=True):
     indexes = {}
     for row in connection.execute(f'PRAGMA index_list("{table}")'):
-        if row[3] != "c":
+        if row[3] != "c" and not (include_unique and row[3] == "u"):
             continue
         name = row[1]
         quoted = name.replace('"', '""')
         columns = tuple((value[2], value[3], value[4], value[5])
                         for value in connection.execute(f'PRAGMA index_xinfo("{quoted}")'))
-        indexes[name] = (row[2], row[3], row[4], columns)
+        key = name if row[3] == "c" else ("unique", columns)
+        indexes[key] = (row[2], row[3], row[4], columns)
     return indexes
 
 
@@ -172,7 +186,7 @@ def validate_current_schema(connection, *, check_data=True, version=CURRENT_SCHE
             raise ValueError("database_schema_unsupported")
         if foreign_key_contract(connection, table) != foreign_keys:
             raise ValueError("database_schema_unsupported")
-        actual_indexes = index_contract(connection, table)
+        actual_indexes = index_contract(connection, table, include_unique=version >= 19)
         if any(actual_indexes.get(name) != definition for name, definition in indexes.items()):
             raise ValueError("database_schema_unsupported")
     if check_data and connection.execute("PRAGMA foreign_key_check").fetchone() is not None:
