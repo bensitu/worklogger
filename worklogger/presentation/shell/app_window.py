@@ -41,6 +41,7 @@ from worklogger.presentation.shell.residency import QtResidencyController
 from worklogger.presentation.shell.appearance_controller import WindowAppearanceController
 from worklogger.presentation.shell.lifecycle_controller import WindowLifecycleController
 from worklogger.presentation.shell.menu_bar import install_application_menu
+from worklogger.presentation.shell.record_dialogs import RecordDialogController
 from worklogger.presentation.theme.background import MainBackgroundWidget
 from worklogger.presentation.theme import ThemeEngine
 from worklogger.presentation.viewmodels import (
@@ -148,7 +149,6 @@ class AppWindow(QMainWindow):
         self._last_error: AppError | None = None
         self._refreshing = False
         self._entry_dirty = False
-        self._record_search_dialog = None
         self._records_refresh_pending = False
 
         self.setObjectName("app_window")
@@ -168,6 +168,10 @@ class AppWindow(QMainWindow):
             entry_panel=self.entry_panel,
             stats_panel=self.stats_panel,
         )
+        self.record_dialogs = RecordDialogController(self, self._time_entry_view_model,
+            analytics=analytics_model, current_month=lambda: self._current_month,
+            selected_day=lambda: self._selected_day, select_record=self._open_found_entry,
+            records_changed=self._records_associated, job_runner=self._job_runner)
         self._connect_signals()
         self.refresh_ai_availability()
         self.sidebar.set_avatar(self._config.profile_avatar_png)
@@ -442,33 +446,11 @@ class AppWindow(QMainWindow):
             if signal is not None:
                 signal.connect(callback)
 
-    def open_project_analytics(self):
-        from worklogger.presentation.widgets.project_analytics import ProjectAnalyticsDialog
-        model = getattr(self._analytics_workflow, "view_model", None)
-        if model is None or not self._time_entry_view_model.search_available:
-            return
-        dialog = ProjectAnalyticsDialog(model, self._time_entry_view_model, self._selected_day, self,
-            job_runner=self._job_runner, selection_handler=self._open_found_entry)
-        dialog.records_changed.connect(self._records_associated)
-        dialog.finished.connect(dialog.deleteLater)
-        dialog.open()
+    def open_project_analytics(self) -> None:
+        self.record_dialogs.open_project_analytics()
 
-    def open_record_search(self):
-        from worklogger.presentation.widgets.record_search import RecordSearchDialog
-        from shiboken6 import isValid
-        if not self._time_entry_view_model.search_available:
-            return
-        if self._record_search_dialog is not None and isValid(self._record_search_dialog):
-            self._record_search_dialog.raise_()
-            self._record_search_dialog.activateWindow()
-            return
-        dialog = RecordSearchDialog(self._time_entry_view_model, self._current_month, self,
-                                    job_runner=self._job_runner, selection_handler=self._open_found_entry)
-        dialog.records_changed.connect(self._records_associated)
-        self._record_search_dialog = dialog
-        dialog.finished.connect(lambda: setattr(self, "_record_search_dialog", None))
-        dialog.finished.connect(dialog.deleteLater)
-        dialog.open()
+    def open_record_search(self) -> None:
+        self.record_dialogs.open_search()
 
     def _records_associated(self):
         if self.entry_panel.is_busy:

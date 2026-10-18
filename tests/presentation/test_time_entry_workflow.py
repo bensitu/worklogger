@@ -476,7 +476,9 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.window.next_month()
         month = self.window.current_month
         self.window.open_record_search()
-        dialog = self.window._record_search_dialog
+        dialog = self.window.record_dialogs.search_dialog
+        self.window.open_record_search()
+        self.assertIs(self.window.record_dialogs.search_dialog, dialog)
         self.assertIsInstance(dialog.date_range, DateRangeControls)
         self.assertEqual(dialog._criteria().start, month)
         self.assertEqual(dialog._criteria().end.month, month.month)
@@ -488,6 +490,13 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         dialog.date_range.set_custom_range(date(2024, 2, 1), date(2024, 2, 29))
         self.assertEqual(dialog._criteria().end, date(2024, 2, 29))
         dialog.reject()
+        self.assertIsNone(self.window.record_dialogs.search_dialog)
+        self.window.next_month()
+        self.window.open_record_search()
+        reopened = self.window.record_dialogs.search_dialog
+        self.assertIsNot(reopened, dialog)
+        self.assertEqual(reopened._criteria().start, self.window.current_month)
+        reopened.reject()
         self.window._job_runner = ImmediateJobRunner()
         self.window.calendar_page.date_selected.emit(date(2024, 2, 29))
         self.assertEqual(self.window.current_month, date(2024, 2, 1))

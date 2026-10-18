@@ -37,6 +37,8 @@ layers. Back up your database before upgrading.
 
 ### Changed
 
+- Separated record-search and project-statistics dialog management from desktop
+  navigation while preserving the viewed month and open-search reuse.
 - Shared full/minimal window residency and date-polling lifecycle, including
   explicit timer cleanup and a common record-discard confirmation.
 - Consolidated selection controls, scrollbars, icon actions, and compact sizing

@@ -56,6 +56,11 @@ polling, showing it refreshes the current date, and accepted closure stops both
 date polling and editor ticks without changing the persisted recording state.
 Record-discard prompts share the presentation feedback helper.
 
+`shell/record_dialogs.py` owns record-search reuse and project-statistics dialog
+lifecycle. The window supplies live date readers, record selection, and refresh
+callbacks; the controller does not access window internals or storage adapters.
+Record selection and unsaved-editor navigation remain window responsibilities.
+
 Settings workflows bind directly to `SettingsPage`, including the page hosted by
 `SettingsDialog`. The shared page exposes named methods for service availability,
 busy states, and processing feedback. Controllers do not probe widget attributes
