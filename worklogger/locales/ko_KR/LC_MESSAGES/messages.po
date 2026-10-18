@@ -487,6 +487,9 @@ msgstr "임시 비밀번호 복사"
 msgid "Could not load notes"
 msgstr "노트를 불러올 수 없습니다"
 
+msgid "Could not load reports"
+msgstr "보고서를 불러올 수 없습니다"
+
 msgid "Create account"
 msgstr "계정 만들기"
 
@@ -864,6 +867,12 @@ msgstr "파일"
 
 msgid "Finish or discard the active timer before replacing overlapping records."
 msgstr "겹치는 기록을 대체하기 전에 실행 중인 타이머를 종료하거나 취소하세요."
+
+msgid "First saved: newest first"
+msgstr "최초 저장: 최신순"
+
+msgid "First saved: oldest first"
+msgstr "최초 저장: 오래된순"
 
 msgid "First saved: {time}"
 msgstr "최초 저장: {time}"
@@ -1768,6 +1777,12 @@ msgstr "보고서 #{report_id}"
 msgid "Report an issue"
 msgstr "문제 보고"
 
+msgid "Report date: newest first"
+msgstr "보고서 날짜: 최신순"
+
+msgid "Report date: oldest first"
+msgstr "보고서 날짜: 오래된순"
+
 msgid "Report saved."
 msgstr "보고서가 저장되었습니다."
 
@@ -2098,6 +2113,9 @@ msgstr "일부 날짜에 기록이 이미 있습니다. 가져올 내용을 검�
 msgid "Some stored records could not be converted safely. The original data and upgrade backup have been preserved."
 msgstr "일부 기록을 안전하게 변환할 수 없습니다. 원본 데이터와 업데이트 백업은 보존되었습니다."
 
+msgid "Sort order"
+msgstr "정렬 순서"
+
 msgid "Source URL"
 msgstr "출처 URL"
 
@@ -2283,9 +2301,6 @@ msgstr "다른 기록 또는 실행 중인 타이머와 시간이 겹칩니다. 
 
 msgid "This ID is already in use. Choose a different ID."
 msgstr "이 ID는 이미 사용 중입니다. 다른 ID를 선택하세요."
-
-msgid "This account | Newest saved first"
-msgstr "현재 계정 | 최신 저장순"
 
 msgid "This authorization response is invalid. Return to WorkLogger."
 msgstr "이 인증 응답은 유효하지 않습니다. WorkLogger로 돌아가세요."
@@ -2644,6 +2659,9 @@ msgstr "웹 프록시가 꺼져 있습니다."
 msgid "Wed"
 msgstr "수"
 
+msgid "Week"
+msgstr "주"
+
 msgid "Weekly"
 msgstr "주간"
 
@@ -2821,6 +2839,9 @@ msgstr "{total} MB 중 {received} MB"
 msgid "{shown} of {total} dates"
 msgstr "{total}일 중 {shown}일 표시"
 
+msgid "{shown} of {total} reports"
+msgstr "전체 {total}개 중 {shown}개 표시"
+
 msgid "{size} MB"
 msgstr "{size} MB"
 
@@ -2833,5 +2854,5 @@ msgstr "{start} - {end}"
 msgid "{type} #{id} | {start} - {end}"
 msgstr "{type} #{id} | {start} - {end}"
 
-msgid "{type} | This account | Newest saved first"
-msgstr "{type} | 현재 계정 | 최신 저장순"
+msgid "{type} | This account"
+msgstr "{type} | 현재 계정"

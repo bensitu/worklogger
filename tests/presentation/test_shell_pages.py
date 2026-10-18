@@ -16,6 +16,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox, QLabel, QFileDialog
 from worklogger.presentation.job_runner import ImmediateJobRunner
 
 from worklogger.domain.shared.result import Result
+from worklogger.domain.reporting.history import ReportHistoryPage
 from worklogger.domain.shared.errors import CancellationError, ValidationError
 from worklogger.app.job_runner import JobHandle, CancellationToken
 from worklogger.presentation.reporting.dialog import ReportTemplateDialog
@@ -33,8 +34,8 @@ class ReportsViewModel:
         self.loads.append((report_type, day))
         return Result.success(ReportEditorState(1, report_type, day, day, "Original " + report_type))
 
-    def list_history(self, report_type: str):
-        return Result.success(())
+    def browse_history(self, criteria, *, cursor=None):
+        return Result.success(ReportHistoryPage())
 
     def save(self, state: ReportEditorState, content: str):
         return Result.success(replace(state, content=content, saved=True))
@@ -366,7 +367,7 @@ class ShellPagesTests(unittest.TestCase):
         page = ReportsPage(ReportsViewModel(), date(2026, 4, 20), job_runner=ImmediateJobRunner(), confirm_discard=lambda: False)
         page.refresh()
         page.editor.setPlainText("Unsaved draft")
-        item = ReportHistoryDisplayItem(2, 1, "daily", date(2026, 4, 19), date(2026, 4, 19), "History", "Saved")
+        item = ReportHistoryDisplayItem(2, 1, "daily", date(2026, 4, 19), date(2026, 4, 19), "History", saved=True)
         page._select_history_item(item)
         self.assertFalse(page.refresh(date(2026, 4, 21)))
         self.assertEqual(page.editor.toPlainText(), "Unsaved draft")

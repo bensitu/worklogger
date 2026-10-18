@@ -107,6 +107,7 @@ _MESSAGE_GROUPS = (
     (("entry_type_invalid",), N_("Enter a name of up to 80 characters and select an accounting category.")),
     (("work_mode_invalid", "entry_classification_invalid"), N_("Select a valid classification. Break and leave cannot have a work arrangement or project.")),
     (("auto_record_leave_not_supported",), N_("Enter leave in Manual Input.")),
+    (("report_history_filter_invalid",), N_("Invalid date range")),
     (("entry_type_name_exists",), N_("An entry type with this name already exists.")),
     (("entry_type_unavailable", "entry_type_conflict"), N_("This entry type changed or is no longer available. Reload the types and try again.")),
     (("entry_types_load_failed", "entry_types_save_failed"), N_("Unable to update entry types. Your records have not changed.")),

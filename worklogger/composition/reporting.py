@@ -18,6 +18,7 @@ from worklogger.app.use_cases.reports import (
     SaveReportHandler,
 )
 from worklogger.app.use_cases.timesheets import ExportTimesheetHandler
+from worklogger.app.use_cases.report_history import ReportHistoryService
 from worklogger.composition.context import RuntimeHandlers, RuntimeRepositories
 from worklogger.domain.auth.models import User
 from worklogger.infrastructure.export import (
@@ -103,6 +104,7 @@ def build_reports_workflow(
             templates=handlers.templates,
             save_report_handler=SaveReportHandler(repositories.reports),
             revision_service=ReportRevisionService(repositories.reports),
+            history_service=ReportHistoryService(user.id, repositories.reports),
             save_template_handler=handlers.save_template_handler,
             reset_template_handler=handlers.reset_template_handler,
             markdown_exporter=handlers.markdown_exporter,

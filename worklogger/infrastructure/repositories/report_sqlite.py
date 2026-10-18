@@ -6,6 +6,7 @@ from datetime import date
 import sqlite3
 
 from worklogger.domain.reporting.models import Report, ReportRevision
+from worklogger.domain.reporting.history import ReportHistoryCursor, ReportHistoryPage, ReportSort, ReportSummary
 from worklogger.infrastructure.repositories.report_provenance_sqlite import encode_provenance, decode_provenance
 from worklogger.domain.reporting.periods import normalize_report_type
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
@@ -20,6 +21,47 @@ from worklogger.infrastructure.repositories._mapping import (
 class SQLiteReportRepository:
     def __init__(self, connection_factory: SQLiteConnectionFactory) -> None:
         self._connection_factory = connection_factory
+
+    def get_by_id(self, user_id: int, report_id: int) -> Report | None:
+        with self._connection_factory.connection() as connection:
+            row = connection.execute("SELECT * FROM reports WHERE user_id=? AND id=?", (user_id, report_id)).fetchone()
+        return self._from_row(row) if row is not None else None
+
+    def search_history(self, user_id, criteria, *, cursor=None, limit=50):
+        if type(limit) is not int or not 1 <= limit <= 250:
+            raise ValueError("report_history_filter_invalid")
+        saved_order = criteria.sort in (ReportSort.SAVED_ASC, ReportSort.SAVED_DESC)
+        ascending = criteria.sort in (ReportSort.DATE_ASC, ReportSort.SAVED_ASC)
+        column = "COALESCE(julianday(created_at),0.0)" if saved_order else "period_start"
+        direction, comparison = ("ASC", ">") if ascending else ("DESC", "<")
+        conditions = ["user_id=?", "type=?", "period_end>=?", "period_start<=?"]
+        parameters = [user_id, criteria.report_type, criteria.start.isoformat(), criteria.end.isoformat()]
+        if criteria.text.strip():
+            pattern = "%" + criteria.text.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+            conditions.append("(content LIKE ? ESCAPE '\\' OR period_start LIKE ? ESCAPE '\\' "
+                              "OR period_end LIKE ? ESCAPE '\\' OR created_at LIKE ? ESCAPE '\\' "
+                              "OR '#'||CAST(id AS TEXT) LIKE ? ESCAPE '\\')")
+            parameters.extend((pattern,) * 5)
+        where = " AND ".join(conditions)
+        with self._connection_factory.transaction(write=False) as connection:
+            total = connection.execute("SELECT COUNT(*) FROM reports WHERE " + where, parameters).fetchone()[0]
+            if cursor is not None:
+                if (not isinstance(cursor, ReportHistoryCursor) or type(cursor.report_id) is not int
+                        or cursor.report_id < 1 or not isinstance(cursor.value, (float, str))):
+                    raise ValueError("report_history_filter_invalid")
+                where += f" AND ({column},id){comparison}(?,?)"
+                parameters.extend((cursor.value, cursor.report_id))
+            rows = connection.execute(
+                "SELECT id,user_id,type,period_start,period_end,created_at,revision,updated_at,"
+                + column + " AS sort_value FROM reports WHERE " + where
+                + f" ORDER BY {column} {direction},id {direction} LIMIT ?", (*parameters, limit + 1),
+            ).fetchall()
+        summaries = map_rows(rows[:limit], lambda row: ReportSummary(
+            int(row["id"]), int(row["user_id"]), row["type"], parse_date(row["period_start"]),
+            parse_date(row["period_end"]), parse_datetime(row["created_at"]), int(row["revision"]),
+            parse_datetime(row["updated_at"])))
+        next_cursor = ReportHistoryCursor(rows[limit - 1]["sort_value"], rows[limit - 1]["id"]) if len(rows) > limit else None
+        return ReportHistoryPage(summaries, next_cursor, total)
 
     def save(self, report: Report) -> Report:
         report_type = normalize_report_type(report.report_type)

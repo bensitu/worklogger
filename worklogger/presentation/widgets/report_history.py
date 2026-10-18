@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 
-from PySide6.QtCore import QEvent, QSize, Qt, Signal, QTimer
+from PySide6.QtCore import QEvent, QSize, Qt, Signal, QTimer, QSignalBlocker
 from PySide6.QtGui import QAbstractTextDocumentLayout, QAction, QPainter, QPalette, QTextDocument
 from PySide6.QtWidgets import (
-    QApplication, QLabel, QLayout, QLineEdit, QPushButton, QScrollArea, QSizePolicy,
+    QApplication, QComboBox, QLabel, QLayout, QLineEdit, QPushButton, QScrollArea, QSizePolicy, QProgressBar,
     QStyle, QStyleOptionButton, QVBoxLayout, QWidget,
 )
 
@@ -19,8 +18,9 @@ from worklogger.presentation.widgets.card import CardFrame
 from worklogger.presentation.date_labels import month_label
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 from worklogger.presentation.widgets.hover_delete_button import HoverDeleteButton
-from worklogger.domain.reporting.export_selection import saved_report_order
-from worklogger.domain.reporting.models import ReportProvenance
+from worklogger.domain.reporting.history import ReportHistoryFilter, ReportSort
+from worklogger.presentation.widgets.date_range import DateRangeControls
+from worklogger.presentation.date_labels import period_range_label
 
 
 class ReportHistoryButton(HoverDeleteButton):
@@ -110,31 +110,35 @@ class ReportHistoryDisplayItem:
     period_start: date
     period_end: date
     label: str
-    content: str = ""
     saved: bool = False
     created_at: datetime | None = None
     revision: int = 0
     updated_at: datetime | None = None
-    provenance: ReportProvenance = ReportProvenance()
 
 
 class ReportHistoryPanel(CardFrame):
     item_selected = Signal(object)
     export_requested = Signal()
     delete_requested = Signal(object)
+    filters_changed = Signal()
+    query_requested = Signal()
+    more_requested = Signal()
 
-    def __init__(self, parent: QWidget | None = None, *, allow_delete=True, show_export=True) -> None:
+    def __init__(self, parent: QWidget | None = None, *, allow_delete=True, show_export=True, day=None) -> None:
         super().__init__(parent, object_name="report_history_frame")
+        self.content_layout.setSpacing(8)
         self._items: tuple[ReportHistoryDisplayItem, ...] = ()
         self._buttons: dict[int, QPushButton] = {}
         self._selected_report_id: int | None = None
         self._allow_delete = allow_delete
         self._hovered_button = None
+        self._report_type = None
+        self.next_cursor = None
 
         title = QLabel(_("Saved reports"))
         title.setObjectName("report_history_title_label")
         self.content_layout.addWidget(title)
-        self.scope_label = QLabel(_("This account | Newest saved first"))
+        self.scope_label = QLabel()
         self.scope_label.setProperty("role", "secondary")
         self.scope_label.setWordWrap(True)
         self.content_layout.addWidget(self.scope_label)
@@ -142,6 +146,9 @@ class ReportHistoryPanel(CardFrame):
         self.search_line_edit = QLineEdit()
         self.search_line_edit.setObjectName("report_search_line_edit")
         self.search_line_edit.setPlaceholderText(_("Search reports..."))
+        self.search_line_edit.setAccessibleName(_("Search reports..."))
+        self.search_line_edit.setClearButtonEnabled(True)
+        self.search_line_edit.setMaxLength(256)
         self.search_line_edit.addAction(
             QAction(ui_icon("search"), _("Search reports..."), self.search_line_edit),
             QLineEdit.ActionPosition.LeadingPosition,
@@ -149,9 +156,32 @@ class ReportHistoryPanel(CardFrame):
         self._search_timer = QTimer(self)
         self._search_timer.setSingleShot(True)
         self._search_timer.setInterval(150)
-        self._search_timer.timeout.connect(self._render)
-        self.search_line_edit.textChanged.connect(lambda _text: self._search_timer.start())
+        self._search_timer.timeout.connect(self.query_requested.emit)
+        self.search_line_edit.textChanged.connect(self._filters_changed)
         self.content_layout.addWidget(self.search_line_edit)
+        self.date_range = DateRangeControls(day or date.today())
+        self.date_range.range_changed.connect(self._filters_changed)
+        self.content_layout.addWidget(self.date_range)
+        self.sort_input = QComboBox()
+        self.sort_input.setAccessibleName(_("Sort order"))
+        for label, value in ((_("Report date: newest first"), ReportSort.DATE_DESC),
+                             (_("Report date: oldest first"), ReportSort.DATE_ASC),
+                             (_("First saved: newest first"), ReportSort.SAVED_DESC),
+                             (_("First saved: oldest first"), ReportSort.SAVED_ASC)):
+            self.sort_input.addItem(label, value)
+        self.sort_input.currentIndexChanged.connect(self._filters_changed)
+        self.content_layout.addWidget(self.sort_input)
+        self.count_label = QLabel()
+        self.count_label.setProperty("role", "secondary")
+        self.count_label.setWordWrap(True)
+        self.content_layout.addWidget(self.count_label)
+        self.loading_bar = QProgressBar()
+        self.loading_bar.setRange(0, 0)
+        self.loading_bar.setTextVisible(False)
+        self.loading_bar.setFixedHeight(6)
+        self.loading_bar.setAccessibleName(_("Loading..."))
+        self.loading_bar.hide()
+        self.content_layout.addWidget(self.loading_bar)
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setObjectName("report_history_scroll_area_widget")
@@ -164,6 +194,11 @@ class ReportHistoryPanel(CardFrame):
         self.scroll_layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
         self.scroll_area.setWidget(self.scroll_widget)
         self.content_layout.addWidget(self.scroll_area, 1)
+        self.more_button = QPushButton(_("Load more"))
+        set_button_icon(self.more_button, "chevron-down")
+        self.more_button.clicked.connect(self.more_requested.emit)
+        self.more_button.hide()
+        self.content_layout.addWidget(self.more_button)
 
         self.export_button = QPushButton(_("Export Reports"))
         self.export_button.setObjectName("export_reports_button")
@@ -172,6 +207,7 @@ class ReportHistoryPanel(CardFrame):
         self.export_button.clicked.connect(self.export_requested.emit)
         self.content_layout.addWidget(self.export_button)
         self.export_button.setVisible(show_export)
+        self.set_context("daily", day or date.today())
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -181,13 +217,48 @@ class ReportHistoryPanel(CardFrame):
         QApplication.instance().removeEventFilter(self)
         super().hideEvent(event)
 
-    def set_items(self, items: Iterable[ReportHistoryDisplayItem]) -> None:
-        self._items = tuple(sorted(items, key=saved_report_order, reverse=True))
-        self._render()
+    def _filters_changed(self, *_args):
+        self.filters_changed.emit()
+        self._search_timer.start()
+
+    def criteria(self):
+        start, end = self.date_range.bounds()
+        return ReportHistoryFilter(self._report_type, start, end, self.search_line_edit.text().strip(),
+                                   self.sort_input.currentData())
+
+    def set_context(self, report_type, day, *, reset=False, week_start_monday=False):
+        if report_type != self._report_type or reset:
+            modes = {"daily": ("week", "month", "year", "custom", "all"),
+                     "weekly": ("month", "year", "custom", "all"),
+                     "monthly": ("year", "custom", "all")}[report_type]
+            with QSignalBlocker(self.date_range):
+                self.date_range.week_start_monday = week_start_monday
+                self.date_range.set_modes(modes, default="year" if report_type == "monthly" else "month", day=day)
+        self._report_type = report_type
+        self.set_report_type(report_type)
+
+    def set_loading(self, loading):
+        self.loading_bar.setVisible(loading)
+        self.scroll_widget.setEnabled(not loading)
+        self.more_button.setEnabled(not loading)
+        self.more_button.setText(_("Loading...") if loading else _("Load more"))
+        if loading:
+            self.count_label.setText(_("Loading..."))
+
+    def set_page(self, page, *, append=False):
+        items = tuple(ReportHistoryDisplayItem(item.id, item.user_id, item.report_type,
+            item.period_start, item.period_end, period_range_label(item.period_start, item.period_end),
+            saved=True, created_at=item.created_at, revision=item.revision, updated_at=item.updated_at)
+            for item in page.reports)
+        self._items = self._items + items if append else items
+        self.next_cursor = page.next_cursor
+        self._render(append_from=len(self._buttons) if append else 0)
+        self.count_label.setText(_("{shown} of {total} reports").format(shown=len(self._items), total=page.total))
+        self.more_button.setVisible(page.next_cursor is not None)
 
     def set_report_type(self, report_type):
         caption = {"daily": _("Daily"), "weekly": _("Weekly"), "monthly": _("Monthly")}[report_type]
-        self.scope_label.setText(_("{type} | This account | Newest saved first").format(type=caption))
+        self.scope_label.setText(_("{type} | This account").format(type=caption))
         self.scope_label.setToolTip(_("Saved reports for this account, not revisions of the open report."))
 
     def set_selected_report(self, report_id: int | None) -> None:
@@ -196,24 +267,21 @@ class ReportHistoryPanel(CardFrame):
             selected = report_id is not None and button.property("report_id") == report_id
             button.set_current(selected)
 
-    def _render(self) -> None:
+    def _render(self, *, append_from=0) -> None:
         self._search_timer.stop()
         self._hovered_button = None
-        while self.scroll_layout.count():
+        while not append_from and self.scroll_layout.count():
             item = self.scroll_layout.takeAt(0)
             widget = item.widget()
             if widget is not None:
                 # Keep ownership until deletion so queued show events cannot create windows.
                 widget.hide()
                 widget.deleteLater()
-        self._buttons = {}
-
-        query = self.search_line_edit.text().strip().lower()
-        visible = [
-            item
-            for item in self._items
-            if not query or query in _history_label(item).lower()
-        ]
+        if not append_from:
+            self._buttons = {}
+        elif self.scroll_layout.count():
+            self.scroll_layout.takeAt(self.scroll_layout.count() - 1)
+        visible = self._items
         if not visible:
             label = QLabel(_("No saved reports"), self.scroll_widget)
             label.setObjectName("empty_report_history_label")
@@ -222,14 +290,9 @@ class ReportHistoryPanel(CardFrame):
             self.scroll_layout.addStretch(1)
             return
 
-        current_month = ""
-        for index, item in enumerate(visible):
-            stamp = item.created_at
-            if stamp is not None:
-                stamp = stamp.replace(tzinfo=timezone.utc) if stamp.tzinfo is None else stamp
-                month = month_label(stamp.astimezone().date())
-            else:
-                month = _("Save time unavailable")
+        current_month = self._month(visible[append_from - 1]) if append_from else ""
+        for index, item in enumerate(visible[append_from:], append_from):
+            month = self._month(item)
             if month != current_month:
                 current_month = month
                 heading = QLabel(month, self.scroll_widget)
@@ -248,6 +311,15 @@ class ReportHistoryPanel(CardFrame):
             self._buttons[index] = button
             self.scroll_layout.addWidget(button)
         self.scroll_layout.addStretch(1)
+
+    def _month(self, item):
+        if self.sort_input.currentData() in (ReportSort.DATE_ASC, ReportSort.DATE_DESC):
+            return month_label(item.period_start)
+        stamp = item.created_at
+        if stamp is None:
+            return _("Save time unavailable")
+        stamp = stamp.replace(tzinfo=timezone.utc) if stamp.tzinfo is None else stamp
+        return month_label(stamp.astimezone().date())
 
     def _track_hover(self, button):
         self._hovered_button = button

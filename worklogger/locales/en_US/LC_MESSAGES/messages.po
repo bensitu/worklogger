@@ -487,6 +487,9 @@ msgstr "Copy temporary password"
 msgid "Could not load notes"
 msgstr "Could not load notes"
 
+msgid "Could not load reports"
+msgstr "Could not load reports"
+
 msgid "Create account"
 msgstr "Create account"
 
@@ -864,6 +867,12 @@ msgstr "File"
 
 msgid "Finish or discard the active timer before replacing overlapping records."
 msgstr "Finish or discard the active timer before replacing overlapping records."
+
+msgid "First saved: newest first"
+msgstr "First saved: newest first"
+
+msgid "First saved: oldest first"
+msgstr "First saved: oldest first"
 
 msgid "First saved: {time}"
 msgstr "First saved: {time}"
@@ -1768,6 +1777,12 @@ msgstr "Report #{report_id}"
 msgid "Report an issue"
 msgstr "Report an issue"
 
+msgid "Report date: newest first"
+msgstr "Report date: newest first"
+
+msgid "Report date: oldest first"
+msgstr "Report date: oldest first"
+
 msgid "Report saved."
 msgstr "Report saved."
 
@@ -2098,6 +2113,9 @@ msgstr "Some dates already have records. Review the import and confirm replaceme
 msgid "Some stored records could not be converted safely. The original data and upgrade backup have been preserved."
 msgstr "Some stored records could not be converted safely. The original data and upgrade backup have been preserved."
 
+msgid "Sort order"
+msgstr "Sort order"
+
 msgid "Source URL"
 msgstr "Source URL"
 
@@ -2283,9 +2301,6 @@ msgstr "These times overlap another record or the active timer. Choose a differe
 
 msgid "This ID is already in use. Choose a different ID."
 msgstr "This ID is already in use. Choose a different ID."
-
-msgid "This account | Newest saved first"
-msgstr "This account | Newest saved first"
 
 msgid "This authorization response is invalid. Return to WorkLogger."
 msgstr "This authorization response is invalid. Return to WorkLogger."
@@ -2644,6 +2659,9 @@ msgstr "Web proxy is disabled."
 msgid "Wed"
 msgstr "Wed"
 
+msgid "Week"
+msgstr "Week"
+
 msgid "Weekly"
 msgstr "Weekly"
 
@@ -2821,6 +2839,9 @@ msgstr "{received} MB of {total} MB"
 msgid "{shown} of {total} dates"
 msgstr "{shown} of {total} dates"
 
+msgid "{shown} of {total} reports"
+msgstr "{shown} of {total} reports"
+
 msgid "{size} MB"
 msgstr "{size} MB"
 
@@ -2833,5 +2854,5 @@ msgstr "{start} - {end}"
 msgid "{type} #{id} | {start} - {end}"
 msgstr "{type} #{id} | {start} - {end}"
 
-msgid "{type} | This account | Newest saved first"
-msgstr "{type} | This account | Newest saved first"
+msgid "{type} | This account"
+msgstr "{type} | This account"

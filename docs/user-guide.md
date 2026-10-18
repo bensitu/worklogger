@@ -224,7 +224,22 @@ and notes approved for reports. Edit and save it. Templates selects the language
 and report type; Save and apply saves the template and regenerates the draft.
 See [template variables](templates.md).
 
-Saved reports lists separate reports, newest first. Selecting one opens it.
+Saved reports lists the current account's reports of the selected type. Daily
+reports support week, month, year, custom, and all-date ranges. Weekly reports
+support month, year, custom, and all-date ranges; monthly reports support year,
+custom, and all-date ranges. Daily and weekly history initially follow the viewed
+month; monthly history initially follows the viewed year. Week ranges follow the
+week-start preference. Ranges match report periods, not save timestamps. A weekly
+report spanning two months appears in both intersecting month ranges.
+
+Choose ascending or descending report dates or first-save times. Report date,
+newest first, is the default. Search matches report content, ISO dates, save
+timestamps, and identifiers, including `#123`, throughout the selected range.
+The list loads 50 summaries at a time; Load more continues the same query.
+Search is not restricted to summaries already loaded. Selecting a summary reads
+the report's latest saved content. Changing history filters does not discard the
+open draft; opening another report still asks about unsaved changes.
+
 Saving edited content asks before replacing that report and creates a new saved
 version. Report versions applies to the open report only. Restoring a version
 creates another version, rather than erasing later versions.

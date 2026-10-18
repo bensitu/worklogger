@@ -27,7 +27,7 @@ from worklogger.domain.shared.errors import (
 )
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.date_labels import period_range_label, report_period_label
+from worklogger.presentation.date_labels import report_period_label
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.job_runner import QtJobRunner, owned_callback
 from worklogger.presentation.reporting.dialog import (
@@ -35,6 +35,7 @@ from worklogger.presentation.reporting.dialog import (
     confirm_report_overwrite,
 )
 from worklogger.presentation.reporting.exports import ReportExportController, ReportExportSnapshot
+from worklogger.presentation.reporting.history import ReportHistoryController
 from worklogger.presentation.viewmodels import (
     ReportEditorState,
     ReportEditorViewModel,
@@ -81,6 +82,7 @@ class ReportsPage(QWidget):
         self._io_feedback_timer.setInterval(150)
         self._io_feedback_timer.timeout.connect(self._show_io_feedback)
         self._build_ui()
+        self._history = ReportHistoryController(self.history_panel, view_model, self._job_runner, self._set_error, self)
         self._exports = ReportExportController(
             self, view_model, run_request=self._run_io, is_busy=lambda: self.is_busy,
             show_status=self._set_status, show_error=self._set_error,
@@ -161,7 +163,7 @@ class ReportsPage(QWidget):
         if self._view_model is None:
             self._set_status(_("Reports are not configured."), error=True)
             return False
-        day, report_type = self._selected_day, self._current_type()
+        day = self._selected_day
         def load():
             states = {}
             for kind in ("daily", "weekly", "monthly"):
@@ -169,19 +171,16 @@ class ReportsPage(QWidget):
                 if not result.ok:
                     return result
                 states[kind] = result.value
-            history = self._view_model.list_history(report_type)
-            if not history.ok:
-                return history
-            return Result.success((states, history.value))
+            return Result.success(states)
         def complete(result):
             if not result.ok or result.value is None:
                 self._set_error(result.error)
                 return
-            states, history = result.value
+            states = result.value
             self._states = states
             self._saved_content = {kind: state.content for kind, state in states.items()}
             self._render_current(refresh_history=False)
-            self._set_history(history)
+            self._refresh_history(reset=True)
             self._set_status("")
         return self._run_io("load_reports", load, complete, defer_busy_feedback=True)
 
@@ -239,7 +238,8 @@ class ReportsPage(QWidget):
         self.export_current_button.export_requested.connect(self._choose_export_scope)
         content.addWidget(self.editor_panel, 2)
 
-        self.history_panel = ReportHistoryPanel(allow_delete=bool(getattr(self._view_model, "delete_available", False)), show_export=False)
+        self.history_panel = ReportHistoryPanel(allow_delete=bool(getattr(self._view_model, "delete_available", False)),
+                                               show_export=False, day=self._selected_day)
         self.history_panel.item_selected.connect(self._select_history_item)
         self.history_panel.delete_requested.connect(self._delete_history_item)
         content.addWidget(self.history_panel, 1)
@@ -500,65 +500,35 @@ class ReportsPage(QWidget):
         self.editor.setPlainText(result.value)
         self._set_status(_("Rewritten"))
 
-    def _refresh_history(self) -> None:
-        self.history_panel.set_report_type(self._current_type())
-        if self._view_model is None:
-            self.history_panel.set_items(())
-            return
-        report_type = self._current_type()
-        def complete(result):
-            if not result.ok or result.value is None:
-                self._set_error(result.error)
-            else:
-                self._set_history(result.value)
-        self._run_io("load_report_history", lambda: self._view_model.list_history(report_type), complete,
-                     defer_busy_feedback=True)
-
-    def _set_history(self, items):
-        self.history_panel.set_report_type(self._current_type())
-        self.history_panel.set_items(
-            ReportHistoryDisplayItem(
-                report_id=item.report_id,
-                user_id=item.user_id,
-                report_type=item.report_type,
-                period_start=item.period_start,
-                period_end=item.period_end,
-                label=period_range_label(item.period_start, item.period_end),
-                content=item.content,
-                saved=item.saved,
-                created_at=item.created_at,
-                revision=getattr(item, "revision", 0), updated_at=getattr(item, "updated_at", None),
-                provenance=getattr(item, "provenance", ReportEditorState.__dataclass_fields__["provenance"].default),
-            )
-            for item in items
-        )
+    def _refresh_history(self, *, reset=False) -> None:
+        self.history_panel.set_context(self._current_type(), self._selected_day, reset=reset,
+                                      week_start_monday=bool(getattr(self._view_model, "week_start_monday", False)))
         state = self._states.get(self._current_type())
         self.history_panel.set_selected_report(state.report_id if state is not None else None)
+        self._history.refresh()
 
     def _select_history_item(self, item: ReportHistoryDisplayItem) -> None:
         if not self._view_model or not self.confirm_leave():
             state = self._states.get(self._rendered_type)
             self.history_panel.set_selected_report(state.report_id if state else None)
             return
-        state = ReportEditorState(
-            user_id=item.user_id,
-            report_type=item.report_type,
-            period_start=item.period_start,
-            period_end=item.period_end,
-            content=item.content,
-            saved=True,
-            report_id=item.report_id,
-            created_at=item.created_at,
-            revision=item.revision, updated_at=item.updated_at, provenance=item.provenance,
-        )
-        self._states[item.report_type] = state
-        self._saved_content[item.report_type] = state.content
-        self._rendered_type = item.report_type
-        self._selected_day = item.period_start
-        self.report_type_control.set_value(item.report_type, emit=False)
-        self.history_panel.set_selected_report(item.report_id)
+        def complete(result):
+            if not result.ok or result.value is None:
+                self._set_error(result.error)
+                return
+            self._show_history_report(result.value)
+        self._run_io("load_saved_report", lambda: self._view_model.load_history_report(item.report_id), complete,
+                     defer_busy_feedback=True)
+
+    def _show_history_report(self, state):
+        self._states[state.report_type] = state
+        self._saved_content[state.report_type] = state.content
+        self._rendered_type = state.report_type
+        self._selected_day = state.period_start
+        self.report_type_control.set_value(state.report_type, emit=False)
+        self.history_panel.set_selected_report(state.report_id)
         self.editor.setPlainText(state.content)
-        self._saved_content[item.report_type] = self.editor.toPlainText()
+        self._saved_content[state.report_type] = self.editor.toPlainText()
         self.period_title_label.setText(report_period_label(state.report_type, state.period_start, state.period_end))
         self._update_report_status()
 

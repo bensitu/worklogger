@@ -11,10 +11,10 @@ from PySide6.QtTest import QSignalSpy
 from PySide6.QtWidgets import QApplication, QScrollArea
 
 from worklogger.domain.shared.result import Result
+from worklogger.domain.reporting.history import ReportHistoryPage, ReportSummary
 from worklogger.domain.worklog.models import WorkLog, EntryType
 from worklogger.infrastructure.i18n import available_languages, set_language
 from worklogger.presentation.viewmodels.reports import ReportEditorState
-from worklogger.presentation.widgets.report_history import ReportHistoryDisplayItem
 from tests.visual.shell_checks import sample_window
 from tests.presentation.test_shell_pages import ReportsViewModel
 
@@ -28,12 +28,17 @@ class WeeklyReports(ReportsViewModel):
             "## Challenges & Solutions\n- Verified layout at different display scales.\n\n"
             "## Plan for Next Week\n- Complete regression testing.", saved=True, report_id=1))
 
-    def list_history(self, report_type):
-        return Result.success(tuple(ReportHistoryDisplayItem(index, 1, report_type, start,
-            start + timedelta(days=6), "", "Saved report", index == 1,
-            created_at=datetime.combine(start, datetime.min.time(), tzinfo=timezone.utc))
+    def browse_history(self, criteria, *, cursor=None):
+        reports = tuple(ReportSummary(index, 1, criteria.report_type, start,
+            start + timedelta(days=6), datetime.combine(start, datetime.min.time(), tzinfo=timezone.utc), 0, None)
             for index, start in enumerate((date(2026, 5, 18), date(2026, 5, 11), date(2026, 5, 4),
-                date(2026, 4, 27), date(2026, 4, 20)), 1)))
+                date(2026, 4, 27), date(2026, 4, 20)), 1)
+            if start <= criteria.end and start + timedelta(days=6) >= criteria.start
+            and (not criteria.text or criteria.text in start.isoformat()))
+        return Result.success(ReportHistoryPage(reports, total=len(reports)))
+
+    def load_history_report(self, report_id):
+        return self.load("weekly", date(2026, 5, 18) - timedelta(days=(report_id - 1) * 7))
 
 
 class ReportingLayoutChecks(unittest.TestCase):
@@ -364,6 +369,7 @@ class ReportingLayoutChecks(unittest.TestCase):
                 for dark in ((False, True) if language == "en_US" else (language in ("ja_JP", "zh_TW"),)):
                     window = sample_window()
                     window.reports_page._view_model = WeeklyReports()
+                    window.reports_page._history.model = window.reports_page._view_model
                     window._config = replace(window._config, dark=dark)
                     records = window.analytics_page._view_model._dashboard_handler._repository
                     for day, mode in ((5, EntryType.REMOTE), (12, EntryType.BUSINESS_TRIP), (19, EntryType.PAID_LEAVE), (20, EntryType.NORMAL)):

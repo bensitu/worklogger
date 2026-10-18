@@ -1,5 +1,5 @@
 from dataclasses import replace
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, timedelta
 import os
 from pathlib import Path
 import tempfile
@@ -18,11 +18,13 @@ from tests.app.test_notes_and_reports_use_cases import (
 )
 from worklogger.app.commands.report_commands import DeleteReportCommand, SaveReportCommand
 from worklogger.app.use_cases.ai import RewriteTextHandler
+from worklogger.app.use_cases.report_history import ReportHistoryService
 from worklogger.app.use_cases.reports import (
     DeleteReportHandler, GenerateReportHandler, GetReportForPeriodHandler, ListReportsHandler,
     ResetReportTemplateHandler, SaveReportHandler, SaveReportTemplateHandler, ReportRevisionService,
 )
 from worklogger.domain.reporting.models import Report
+from worklogger.domain.reporting.history import ReportHistoryFilter, ReportSort
 from worklogger.domain.reporting.periods import daily_period, monthly_period, weekly_period
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
 from worklogger.infrastructure.database.current_schema import CURRENT_SCHEMA_VERSION
@@ -38,6 +40,110 @@ from worklogger.presentation.job_runner import ImmediateJobRunner, QtJobRunner
 
 
 class ReportHistoryTests(unittest.TestCase):
+    def test_report_history_pages_sort_and_search_all_owned_summaries(self):
+        reports = []
+        for index in range(61):
+            day = date(2026, 5, 21) - timedelta(days=index)
+            reports.append(self.repository.save(Report(None, self.user.id, "daily", day, day,
+                "Exact 100%_match" if index == 60 else "Other report", self.stamp + timedelta(minutes=index // 3))))
+        self.seed("daily", "Exact 100%_match", user_id=self.other_user.id)
+        self.seed("weekly", "Exact 100%_match")
+        for order in ReportSort:
+            with self.subTest(order=order):
+                criteria = ReportHistoryFilter("daily", date.min, date.max, sort=order)
+                first = self.model.browse_history(criteria).value
+                self.assertEqual((len(first.reports), first.total), (50, 61))
+                self.assertFalse(hasattr(first.reports[0], "content"))
+                self.assertFalse(hasattr(first.reports[0], "provenance"))
+                second = self.model.browse_history(criteria, cursor=first.next_cursor).value
+                self.assertEqual((len(second.reports), second.total, second.next_cursor), (11, 61, None))
+                key = (lambda row: (row.created_at, row.id)) if order in (ReportSort.SAVED_ASC, ReportSort.SAVED_DESC) else lambda row: (row.period_start, row.id)
+                expected = sorted(reports, key=key, reverse=order in (ReportSort.DATE_DESC, ReportSort.SAVED_DESC))
+                self.assertEqual([row.id for row in (*first.reports, *second.reports)], [row.id for row in expected])
+        criteria = ReportHistoryFilter("daily", date.min, date.max, "100%_match")
+        found = self.model.browse_history(criteria).value
+        self.assertEqual(([row.id for row in found.reports], found.total), ([reports[-1].id], 1))
+        self.assertEqual(self.model.load_history_report(reports[-1].id).value.content, "Exact 100%_match")
+        other = self.repository.list_by_type(self.other_user.id, "daily")[0]
+        self.assertEqual(self.model.load_history_report(other.id).error.code, "report_not_found")
+
+    def test_report_history_ranges_follow_report_periods_and_include_cross_month_weeks(self):
+        boundary = weekly_period(date(2026, 5, 1))
+        saved = self.repository.save(Report(None, self.user.id, "weekly", boundary.start, boundary.end, "April and May", self.stamp))
+        page = self.page()
+        panel = page.history_panel
+        for kind, modes, default, bounds in (
+            ("daily", ("week", "month", "year", "custom", "all"), "month", (date(2026, 5, 1), date(2026, 5, 31))),
+            ("weekly", ("month", "year", "custom", "all"), "month", (date(2026, 5, 1), date(2026, 5, 31))),
+            ("monthly", ("year", "custom", "all"), "year", (date(2026, 1, 1), date(2026, 12, 31))),
+        ):
+            page.report_type_control.set_value(kind)
+            self.assertEqual(tuple(panel.date_range.mode_input.itemData(index) for index in range(panel.date_range.mode_input.count())), modes)
+            self.assertEqual(panel.date_range.mode_input.currentData(), default)
+            self.assertEqual(panel.date_range.bounds(), bounds)
+        self.assertEqual(self.model.browse_history(ReportHistoryFilter("weekly", date(2026, 5, 1), date(2026, 5, 31))).value.reports[0].id, saved.id)
+        page.report_type_control.set_value("daily")
+        panel.date_range.mode_input.setCurrentIndex(panel.date_range.mode_input.findData("week"))
+        self.assertEqual(panel.date_range.bounds(), (date(2026, 5, 17), date(2026, 5, 23)))
+        self.model.set_week_start_monday(True)
+        self.assertTrue(page.refresh())
+        panel.date_range.mode_input.setCurrentIndex(panel.date_range.mode_input.findData("week"))
+        self.assertEqual(panel.date_range.bounds(), (date(2026, 5, 18), date(2026, 5, 24)))
+
+    def test_report_history_load_more_and_lazy_selection_preserve_the_editor(self):
+        for index in range(61):
+            self.seed("daily", f"Report body {index}")
+        with patch.object(self.repository, "get_by_id", wraps=self.repository.get_by_id) as reader:
+            page = self.page()
+            panel = page.history_panel
+            reader.assert_not_called()
+            self.assertEqual(len(panel._items), 50)
+            panel.more_button.click()
+            self.assertEqual(len(panel._items), 61)
+            reader.assert_not_called()
+            item = panel._items[-1]
+            original = self.repository.get_by_id(self.user.id, item.report_id)
+            self.repository.save(replace(original, content="Latest content"))
+            reader.reset_mock()
+            page._select_history_item(item)
+            reader.assert_called_once_with(self.user.id, item.report_id)
+            self.assertEqual(page.editor.toPlainText(), "Latest content")
+            page.editor.setPlainText("Unsaved draft")
+            panel.search_line_edit.setText("Report body 59")
+            panel.query_requested.emit()
+            self.assertEqual(len(panel._items), 1)
+            self.assertEqual(page.editor.toPlainText(), "Unsaved draft")
+            self.assertTrue(page.has_unsaved_changes)
+            page._confirm_discard = lambda: False
+            page._select_history_item(panel._items[0])
+            self.assertEqual(page.editor.toPlainText(), "Unsaved draft")
+
+    def test_report_history_ignores_results_from_replaced_filters(self):
+        from worklogger.app.job_runner import JobHandle, CancellationToken
+
+        self.seed("daily", "Matching body")
+        page = self.page()
+        class Runner:
+            def __init__(self):
+                self.jobs = []
+            def submit(self, name, operation, *, on_complete):
+                self.jobs.append((operation, on_complete))
+                return JobHandle(name, lambda: None)
+        runner = Runner()
+        page._history.runner = runner
+        page._refresh_history()
+        page.history_panel.search_line_edit.setText("Absent")
+        page.history_panel.query_requested.emit()
+        operation, complete = runner.jobs[0]
+        complete(operation(CancellationToken()))
+        self.assertEqual(page.history_panel._items, ())
+        self.assertFalse(page.history_panel.loading_bar.isHidden())
+        operation, complete = runner.jobs[1]
+        complete(operation(CancellationToken()))
+        self.assertEqual(page.history_panel._items, ())
+        self.assertTrue(page.history_panel.loading_bar.isHidden())
+        self.assertEqual(page.history_panel.count_label.text(), _("{shown} of {total} reports").format(shown=0, total=0))
+
     def test_timesheet_exports_preserve_periods_unicode_and_report_drafts(self):
         from openpyxl import load_workbook
         from PySide6.QtPdf import QPdfDocument
@@ -142,6 +248,7 @@ class ReportHistoryTests(unittest.TestCase):
         templates = MemoryTemplateRepository()
         self.model = ReportEditorViewModel(
             user_id=self.user.id,
+            history_service=ReportHistoryService(self.user.id, self.repository),
             generate_handler=GenerateReportHandler(
                 work_logs=MemoryWorkLogRepository(()), quick_logs=MemoryQuickLogRepository(()),
                 calendar_events=MemoryCalendarRepository(()), templates=MemoryTemplateProvider(),
@@ -160,6 +267,8 @@ class ReportHistoryTests(unittest.TestCase):
         self.day = date(2026, 5, 21)
         self.stamp = datetime(2026, 5, 21, 6, 7, 8, tzinfo=timezone.utc)
         set_language("en_US")
+        from tests.presentation.qt_support import dispose_test_windows
+        self.addCleanup(dispose_test_windows)
 
     def tearDown(self):
         set_language("en_US")
@@ -287,7 +396,7 @@ class ReportHistoryTests(unittest.TestCase):
         handler = DeleteReportHandler(self.repository)
         rejected = handler.handle(DeleteReportCommand(self.other_user.id, saved.id, "Changed elsewhere"))
         self.assertEqual(rejected.error.code, "report_not_found")
-        item = replace(stale, content="Changed elsewhere")
+        item = replace(stale, revision=stale.revision + 1)
         for failure in (OSError("storage unavailable"), ValueError("invalid stored data")):
             with patch.object(self.repository, "remove", side_effect=failure), patch.object(
                 QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):

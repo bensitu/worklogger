@@ -25,10 +25,10 @@ from worklogger.app.queries.report_queries import GetReportForPeriodQuery, ListR
 from worklogger.app.use_cases.reports import GeneratedReport, TemplateProvider
 from worklogger.domain.reporting.export_selection import latest_daily_reports
 from worklogger.domain.reporting.models import Report, ReportProvenance
+from worklogger.domain.reporting.history import ReportHistoryPage
 from worklogger.domain.reporting.periods import (
     daily_period,
     monthly_period,
-    normalize_report_type,
     period_for_day,
 )
 from worklogger.domain.reporting.templates import ReportTemplate
@@ -77,21 +77,6 @@ class ReportEditorState:
     provenance: ReportProvenance = ReportProvenance()
 
 
-@dataclass(frozen=True)
-class ReportHistoryItem:
-    report_id: int | None
-    user_id: int
-    report_type: str
-    period_start: date
-    period_end: date
-    content: str
-    saved: bool = True
-    created_at: datetime | None = None
-    revision: int = 0
-    updated_at: datetime | None = None
-    provenance: ReportProvenance = ReportProvenance()
-
-
 class ReportEditorViewModel:
     def __init__(
         self,
@@ -112,6 +97,7 @@ class ReportEditorViewModel:
         delete_report_handler: DeleteReportHandlerProtocol | None = None,
         timesheet_export_handler=None,
         revision_service=None,
+        history_service=None,
     ) -> None:
         self._user_id = user_id
         self._generate_handler = generate_handler
@@ -129,6 +115,7 @@ class ReportEditorViewModel:
         self._delete_report_handler = delete_report_handler
         self._timesheet_export_handler = timesheet_export_handler
         self._revision_service = revision_service
+        self._history_service = history_service
 
     @property
     def revisions_available(self):
@@ -182,12 +169,16 @@ class ReportEditorViewModel:
     def saved_export_available(self) -> bool:
         return self._list_reports_handler is not None
 
-    def delete(self, item: ReportHistoryItem) -> Result[None]:
+    def delete(self, item) -> Result[None]:
         if item.user_id != self._user_id or item.report_id is None:
             return Result.failure(_validation("report_not_found"))
         if self._delete_report_handler is None:
             return Result.failure(_validation("report_delete_failed"))
-        return self._delete_report_handler.handle(DeleteReportCommand(self._user_id, item.report_id, item.content, getattr(item, "revision", None)))
+        return self._delete_report_handler.handle(DeleteReportCommand(self._user_id, item.report_id, expected_revision=item.revision))
+
+    @property
+    def week_start_monday(self):
+        return self._week_start_monday
 
     def set_week_start_monday(self, enabled: bool) -> None:
         self._week_start_monday = bool(enabled)
@@ -357,36 +348,22 @@ class ReportEditorViewModel:
         content = "\n\n".join(self._annotated_content(row, row.content) for row in reports)
         return self._markdown_exporter.export_markdown(destination, content)
 
-    def list_history(self, report_type: str) -> Result[tuple[ReportHistoryItem, ...]]:
-        if self._list_reports_handler is None:
-            return Result.success(())
-        try:
-            normalized = normalize_report_type(report_type)
-        except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
-        result = self._list_reports_handler.handle(
-            ListReportsQuery(self._user_id, normalized)
-        )
-        if not result.ok or result.value is None:
-            return Result.failure(result.error or _validation("report_history_failed"))
-        return Result.success(
-            tuple(
-                ReportHistoryItem(
-                    report_id=report.id,
-                    user_id=report.user_id,
-                    report_type=report.report_type,
-                    period_start=report.period_start,
-                    period_end=report.period_end,
-                    content=report.content,
-                    saved=True,
-                    created_at=report.created_at,
-                    revision=report.revision,
-                    updated_at=report.updated_at,
-                    provenance=report.provenance,
-                )
-                for report in result.value
-            )
-        )
+    def browse_history(self, criteria, *, cursor=None):
+        if self._history_service is None:
+            return Result.success(ReportHistoryPage())
+        return self._history_service.browse(criteria, cursor=cursor)
+
+    def load_history_report(self, report_id):
+        if self._history_service is None:
+            return Result.failure(_validation("report_not_found"))
+        result = self._history_service.get(report_id)
+        if not result.ok:
+            return Result.failure(result.error)
+        report = result.value
+        return Result.success(ReportEditorState(
+            report.user_id, report.report_type, report.period_start, report.period_end, report.content,
+            saved=True, report_id=report.id, created_at=report.created_at, revision=report.revision,
+            updated_at=report.updated_at, provenance=report.provenance))
 
     def rewrite(self, state: ReportEditorState, content: str, instructions: str = "", cancellation_token=None) -> Result[str]:
         result = self._rewrite_handler.handle(

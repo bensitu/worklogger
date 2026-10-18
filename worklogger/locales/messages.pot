@@ -485,6 +485,9 @@ msgstr ""
 msgid "Could not load notes"
 msgstr ""
 
+msgid "Could not load reports"
+msgstr ""
+
 msgid "Create account"
 msgstr ""
 
@@ -861,6 +864,12 @@ msgid "File"
 msgstr ""
 
 msgid "Finish or discard the active timer before replacing overlapping records."
+msgstr ""
+
+msgid "First saved: newest first"
+msgstr ""
+
+msgid "First saved: oldest first"
 msgstr ""
 
 msgid "First saved: {time}"
@@ -1766,6 +1775,12 @@ msgstr ""
 msgid "Report an issue"
 msgstr ""
 
+msgid "Report date: newest first"
+msgstr ""
+
+msgid "Report date: oldest first"
+msgstr ""
+
 msgid "Report saved."
 msgstr ""
 
@@ -2096,6 +2111,9 @@ msgstr ""
 msgid "Some stored records could not be converted safely. The original data and upgrade backup have been preserved."
 msgstr ""
 
+msgid "Sort order"
+msgstr ""
+
 msgid "Source URL"
 msgstr ""
 
@@ -2280,9 +2298,6 @@ msgid "These times overlap another record or the active timer. Choose a differen
 msgstr ""
 
 msgid "This ID is already in use. Choose a different ID."
-msgstr ""
-
-msgid "This account | Newest saved first"
 msgstr ""
 
 msgid "This authorization response is invalid. Return to WorkLogger."
@@ -2642,6 +2657,9 @@ msgstr ""
 msgid "Wed"
 msgstr ""
 
+msgid "Week"
+msgstr ""
+
 msgid "Weekly"
 msgstr ""
 
@@ -2819,6 +2837,9 @@ msgstr ""
 msgid "{shown} of {total} dates"
 msgstr ""
 
+msgid "{shown} of {total} reports"
+msgstr ""
+
 msgid "{size} MB"
 msgstr ""
 
@@ -2831,5 +2852,5 @@ msgstr ""
 msgid "{type} #{id} | {start} - {end}"
 msgstr ""
 
-msgid "{type} | This account | Newest saved first"
+msgid "{type} | This account"
 msgstr ""

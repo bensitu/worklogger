@@ -487,6 +487,9 @@ msgstr "一時パスワードをコピー"
 msgid "Could not load notes"
 msgstr "ノートを読み込めませんでした"
 
+msgid "Could not load reports"
+msgstr "レポートを読み込めませんでした"
+
 msgid "Create account"
 msgstr "アカウントを作成"
 
@@ -864,6 +867,12 @@ msgstr "ファイル"
 
 msgid "Finish or discard the active timer before replacing overlapping records."
 msgstr "重複する記録を置き換える前に、実行中の計時を終了または破棄してください。"
+
+msgid "First saved: newest first"
+msgstr "初回保存日時：新しい順"
+
+msgid "First saved: oldest first"
+msgstr "初回保存日時：古い順"
 
 msgid "First saved: {time}"
 msgstr "初回保存: {time}"
@@ -1768,6 +1777,12 @@ msgstr "レポート #{report_id}"
 msgid "Report an issue"
 msgstr "問題を報告"
 
+msgid "Report date: newest first"
+msgstr "レポート対象日：新しい順"
+
+msgid "Report date: oldest first"
+msgstr "レポート対象日：古い順"
+
 msgid "Report saved."
 msgstr "レポートを保存しました。"
 
@@ -2098,6 +2113,9 @@ msgstr "一部の日付には記録があります。取り込み内容を確認
 msgid "Some stored records could not be converted safely. The original data and upgrade backup have been preserved."
 msgstr "一部の記録を安全に変換できませんでした。元のデータと更新前のバックアップは保持されています。"
 
+msgid "Sort order"
+msgstr "並び順"
+
 msgid "Source URL"
 msgstr "参照 URL"
 
@@ -2283,9 +2301,6 @@ msgstr "他の記録または実行中のタイマーと時間が重複してい
 
 msgid "This ID is already in use. Choose a different ID."
 msgstr "このIDはすでに使用されています。別のIDを選択してください。"
-
-msgid "This account | Newest saved first"
-msgstr "このアカウント | 新しい保存順"
 
 msgid "This authorization response is invalid. Return to WorkLogger."
 msgstr "この認証応答は無効です。WorkLogger に戻ってください。"
@@ -2644,6 +2659,9 @@ msgstr "Webプロキシは無効です。"
 msgid "Wed"
 msgstr "水"
 
+msgid "Week"
+msgstr "週"
+
 msgid "Weekly"
 msgstr "週報"
 
@@ -2821,6 +2839,9 @@ msgstr "{received} MB / {total} MB"
 msgid "{shown} of {total} dates"
 msgstr "{total} 日中 {shown} 日を表示"
 
+msgid "{shown} of {total} reports"
+msgstr "{total} 件中 {shown} 件を表示"
+
 msgid "{size} MB"
 msgstr "{size} MB"
 
@@ -2833,5 +2854,5 @@ msgstr "{start} - {end}"
 msgid "{type} #{id} | {start} - {end}"
 msgstr "{type} #{id} | {start} - {end}"
 
-msgid "{type} | This account | Newest saved first"
-msgstr "{type} | このアカウント | 新しい保存順"
+msgid "{type} | This account"
+msgstr "{type} | このアカウント"

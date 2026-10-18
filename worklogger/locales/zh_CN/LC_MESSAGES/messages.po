@@ -487,6 +487,9 @@ msgstr "复制临时密码"
 msgid "Could not load notes"
 msgstr "无法加载笔记"
 
+msgid "Could not load reports"
+msgstr "无法加载报表"
+
 msgid "Create account"
 msgstr "创建账户"
 
@@ -864,6 +867,12 @@ msgstr "文件"
 
 msgid "Finish or discard the active timer before replacing overlapping records."
 msgstr "请先结束或放弃正在运行的计时，再替换重叠记录。"
+
+msgid "First saved: newest first"
+msgstr "首次保存：从新到旧"
+
+msgid "First saved: oldest first"
+msgstr "首次保存：从旧到新"
 
 msgid "First saved: {time}"
 msgstr "首次保存：{time}"
@@ -1768,6 +1777,12 @@ msgstr "报表 #{report_id}"
 msgid "Report an issue"
 msgstr "问题反馈"
 
+msgid "Report date: newest first"
+msgstr "报表日期：从新到旧"
+
+msgid "Report date: oldest first"
+msgstr "报表日期：从旧到新"
+
 msgid "Report saved."
 msgstr "报表已保存。"
 
@@ -2098,6 +2113,9 @@ msgstr "部分日期已有记录。请检查导入内容并确认是否替换。
 msgid "Some stored records could not be converted safely. The original data and upgrade backup have been preserved."
 msgstr "部分记录无法安全转换。原始数据和升级备份均已保留。"
 
+msgid "Sort order"
+msgstr "排序方式"
+
 msgid "Source URL"
 msgstr "来源链接"
 
@@ -2283,9 +2301,6 @@ msgstr "该时段与其他记录或正在运行的计时重叠，请选择其他
 
 msgid "This ID is already in use. Choose a different ID."
 msgstr "此 ID 已被使用，请选择其他 ID。"
-
-msgid "This account | Newest saved first"
-msgstr "本账户 | 按保存时间倒序"
 
 msgid "This authorization response is invalid. Return to WorkLogger."
 msgstr "此授权响应无效。请返回 WorkLogger。"
@@ -2644,6 +2659,9 @@ msgstr "网页代理已关闭。"
 msgid "Wed"
 msgstr "三"
 
+msgid "Week"
+msgstr "周"
+
 msgid "Weekly"
 msgstr "周报"
 
@@ -2821,6 +2839,9 @@ msgstr "{received} MB / {total} MB"
 msgid "{shown} of {total} dates"
 msgstr "已显示 {shown} / {total} 个日期"
 
+msgid "{shown} of {total} reports"
+msgstr "已显示 {shown} 份，共 {total} 份报表"
+
 msgid "{size} MB"
 msgstr "{size} MB"
 
@@ -2833,5 +2854,5 @@ msgstr "{start} - {end}"
 msgid "{type} #{id} | {start} - {end}"
 msgstr "{type} #{id} | {start} - {end}"
 
-msgid "{type} | This account | Newest saved first"
-msgstr "{type} | 本账户 | 按保存时间倒序"
+msgid "{type} | This account"
+msgstr "{type} | 本账户"

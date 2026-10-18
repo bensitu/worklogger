@@ -1,4 +1,4 @@
-"""Shared month, year, custom, and unrestricted date-range controls."""
+"""Shared week, month, year, custom, and unrestricted date-range controls."""
 
 from datetime import date
 
@@ -15,9 +15,10 @@ from worklogger.presentation.theme.context import current_colors
 class DateRangeControls(QWidget):
     range_changed = Signal()
 
-    def __init__(self, day: date, parent=None, *, horizontal=False):
+    def __init__(self, day: date, parent=None, *, horizontal=False, week_start_monday=False):
         super().__init__(parent)
         self._period = day.replace(day=1)
+        self.week_start_monday = week_start_monday
         root = QGridLayout(self) if horizontal else QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(10 if horizontal else 8)
@@ -93,8 +94,28 @@ class DateRangeControls(QWidget):
             return self.start_input.date().toPython(), self.end_input.date().toPython()
         if mode == "year":
             return date(self._period.year, 1, 1), date(self._period.year, 12, 31)
-        first = QDate(self._period)
-        return self._period, first.addDays(first.daysInMonth() - 1).toPython()
+        if mode == "week":
+            offset = (self._period.weekday() + int(not self.week_start_monday)) % 7
+            first = max(date.min.toordinal(), self._period.toordinal() - offset)
+            last = min(date.max.toordinal(), self._period.toordinal() - offset + 6)
+            return date.fromordinal(first), date.fromordinal(last)
+        first = QDate(self._period.replace(day=1))
+        return first.toPython(), first.addDays(first.daysInMonth() - 1).toPython()
+
+    def set_modes(self, modes, *, default, day):
+        labels = {"week": _("Week"), "month": _("Month"), "year": _("Year"),
+                  "custom": _("Custom range"), "all": _("All dates")}
+        if not modes or default not in modes or any(mode not in labels for mode in modes):
+            raise ValueError("date_range_mode_invalid")
+        with QSignalBlocker(self.mode_input), QSignalBlocker(self.start_input), QSignalBlocker(self.end_input):
+            self.mode_input.clear()
+            for mode in modes:
+                self.mode_input.addItem(labels[mode], mode)
+            self.mode_input.setCurrentIndex(self.mode_input.findData(default))
+            self._period = day
+            self.start_input.setDate(day.replace(day=1))
+            self.end_input.setDate(day)
+        self.sync_controls()
 
     def set_custom_range(self, start: date, end: date):
         with QSignalBlocker(self.mode_input), QSignalBlocker(self.start_input), QSignalBlocker(self.end_input):
@@ -104,12 +125,14 @@ class DateRangeControls(QWidget):
         self._changed()
 
     def select_period(self, day: date):
-        self._period = day.replace(day=1)
+        self._period = day if self.mode_input.currentData() == "week" else day.replace(day=1)
         self._changed()
 
     def _move(self, direction: int):
         current = QDate(self._period)
-        target = current.addYears(direction) if self.mode_input.currentData() == "year" else current.addMonths(direction)
+        mode = self.mode_input.currentData()
+        target = (current.addYears(direction) if mode == "year" else current.addDays(direction * 7)
+                  if mode == "week" else current.addMonths(direction))
         if target.isValid() and 1 <= target.year() <= 9999:
             self.select_period(target.toPython())
 
@@ -119,9 +142,18 @@ class DateRangeControls(QWidget):
 
     def sync_controls(self):
         mode = self.mode_input.currentData()
-        self.period_widget.setVisible(mode in ("month", "year"))
+        self.period_widget.setVisible(mode in ("week", "month", "year"))
         self.range_widget.setVisible(mode == "custom")
+        self.period_button.set_week_start_monday(self.week_start_monday)
         self.period_button.set_date(self._period)
         self.period_button.setText(QLocale(get_language()).toString(QDate(self._period), "yyyy" if mode == "year" else "yyyy-MM"))
-        self.previous_button.setEnabled(self._period.year > 1 if mode == "year" else self._period > date.min)
-        self.next_button.setEnabled(self._period.year < 9999 if mode == "year" else self._period < date(9999, 12, 1))
+        self.period_button.setToolTip(_("Calendar"))
+        if mode == "week":
+            start, end = self.bounds()
+            self.period_button.setText(f"{start.isoformat()}\n{end.isoformat()}")
+            self.period_button.setToolTip(f"{start.isoformat()} - {end.isoformat()}")
+        self.previous_button.setEnabled(self._period.year > 1 if mode == "year" else self._period.replace(day=1) > date.min)
+        self.next_button.setEnabled(self._period.year < 9999 if mode == "year" else self._period.replace(day=1) < date(9999, 12, 1))
+        if mode == "week":
+            self.previous_button.setEnabled(self.bounds()[0] > date.min)
+            self.next_button.setEnabled(self.bounds()[1] < date.max)

@@ -84,10 +84,6 @@ _EXPORTS = {
         "worklogger.presentation.viewmodels.reports",
         "ReportEditorViewModel"
     ],
-    "ReportHistoryItem": [
-        "worklogger.presentation.viewmodels.reports",
-        "ReportHistoryItem"
-    ],
     "SettingsState": [
         "worklogger.presentation.viewmodels.settings",
         "SettingsState"

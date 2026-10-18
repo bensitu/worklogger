@@ -5,6 +5,10 @@ capture their period and preferences before dispatch, and only the newest query
 can update the displayed dashboard. Exports retain their original data snapshot
 when the user changes periods. Calendar cells are reused across refreshes, and
 report-history search is debounced with bounded text-measurement caching.
+Report history queries return cursor-paginated metadata without report bodies or
+source references. Filtering, full-content search, and deterministic sorting run
+in SQLite; selecting an owned report reads its latest body separately. History
+requests reject superseded results without replacing the open editor draft.
 Interactive calendar navigation also loads its overview in the background.
 Synchronous refresh remains available to non-interactive callers and rejects
 pending overview results before applying a newer state.
