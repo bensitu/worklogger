@@ -1,8 +1,4 @@
-QWidget#date_picker_popup_frame {
-  background: {{ surface }};
-  border: 1px solid {{ border_strong }};
-  border-radius: 8px;
-}
+/* Calendar navigation and date-cell presentation. */
 
 QCalendarWidget#date_picker_calendar_widget QWidget#qt_calendar_navigationbar {
   background: {{ surface }};

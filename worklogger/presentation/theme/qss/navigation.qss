@@ -13,7 +13,7 @@ QLabel#sidebar_avatar_label {
 QFrame#settings_navigation_frame {
   background: {{ navigation_fill }};
   border: 1px solid {{ panel_border }};
-  border-radius: 8px;
+  border-radius: {{ panel_radius }};
 }
 
 QPushButton[nav_item="true"],

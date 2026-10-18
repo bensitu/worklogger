@@ -1,0 +1,24 @@
+/* Shared popup surfaces and menu interaction states. */
+
+QWidget#date_picker_popup_frame,
+QFrame#classification_popup_frame {
+  background: {{ surface }};
+  border: 1px solid {{ border_strong }};
+  border-radius: {{ panel_radius }};
+}
+
+QMenu {
+  background: {{ surface }};
+  border: 1px solid {{ border }};
+  border-radius: {{ panel_radius }};
+  padding: 4px;
+}
+
+QMenu::item {
+  padding: 7px 28px 7px 12px;
+}
+
+QMenu::item:selected {
+  background: {{ sidebar_active_background }};
+  color: {{ accent }};
+}

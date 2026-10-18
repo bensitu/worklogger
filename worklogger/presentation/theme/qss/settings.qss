@@ -1,16 +1,4 @@
-/* Settings controls, account fields, and separators. */
-
-QLineEdit#account_name_line_edit,
-QLineEdit#account_id_line_edit,
-QLineEdit#account_role_line_edit {
-  background: {{ readonly_fill }};
-}
-
-QFrame#settings_separator_frame {
-  background: {{ panel_border }};
-  border: none;
-  max-height: 1px;
-}
+/* Account editing actions. */
 
 QToolButton#display_name_action_button {
   padding: 8px;

@@ -58,15 +58,22 @@ Shared rules live in responsibility-specific fragments under
 `presentation/theme/qss`. `stylesheets.py` defines their cascade order: application
 surfaces and text roles, shared controls, component variants, disabled states,
 then background overrides. Navigation, item views, menus, tabs, and authentication
-each have a dedicated fragment. Keep page-specific layout rules in their component
-fragment, not in shared typography or settings rules. `background_images.qss`
+each have a dedicated fragment. `popups.qss` owns popup surfaces and menus;
+`date_controls.qss` owns calendar navigation. Main calendar display, recording,
+reports, and analytics have separate fragments. Keep page-specific layout rules in
+their component fragment, not in shared typography or settings rules. `background_images.qss`
 handles uploaded backgrounds. Shared component tokens resolve solid and translucent
 fills, borders, navigation, and tabs without a second set of control rules.
 Material fragments are only for effects that cannot use these shared rules.
 Define colors through theme tokens, not separate copies of component styles.
 Keep role and state selectors explicit where their priority is needed. Hover,
 selection, and disabled states must preserve dimensions and typography. List hover
-feedback must not replace selection or disabled feedback.
+feedback must not replace selection or disabled feedback. `PreviewListWidget`
+applies the shared `list_style="preview"` role to framed lists and uses
+`selection_style="subtle"` for project and revision selections. Underlined tabs
+use `tab_style="underline"`; object names identify controls rather than defining
+shared appearances. Preserve intentional ID selectors when they protect a
+component variant from a more general hover or disabled rule.
 
 Ordinary framed actions use neutral text and outlines; primary actions use accent
 backgrounds and the highlighted text role. Destructive actions use the danger role.
@@ -93,8 +100,12 @@ to genuine brand requirements and verify their contrast.
 `theme/materials.py` defines reusable surfaces, calendar states, backdrop colors,
 stylesheet fragments, and rendering capabilities. `palettes.py` combines these
 with brand colors; `qt_palette.py` adapts resolved colors to Qt. Color resolution
-and calendar rules do not require Qt. `stylesheets.py` renders shared tokens with
-bounded caches. Identical fragment combinations share one cached template.
+and calendar rules do not require Qt. `component_tokens.py` resolves material
+colors for controls and centralizes shared control heights, padding, and radii.
+Use distinct control, panel, and item metrics rather than unrelated copies of the
+same dimensions. `stylesheets.py` owns cascade order, resource loading, strict
+token substitution, and bounded caches. Identical fragment combinations share one
+cached template.
 Effects depend on material capabilities, not a theme's key.
 Reuse these profiles for
 branded themes rather than copying QSS or adding theme-name checks to widgets.

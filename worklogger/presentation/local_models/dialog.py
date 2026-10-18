@@ -152,7 +152,7 @@ class LocalModelsDialog(QDialog):
         body = QHBoxLayout()
         body.setSpacing(20)
 
-        self.model_list = PreviewListWidget()
+        self.model_list = PreviewListWidget(framed=True)
         self.model_list.setObjectName("local_model_list_widget")
         self.model_list.setMinimumWidth(280)
         self.model_list.setFrameShape(QFrame.Shape.StyledPanel)

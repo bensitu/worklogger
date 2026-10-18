@@ -6,13 +6,13 @@ QToolButton {
   border: 1px solid {{ button_border }};
   color: {{ text }};
   font-weight: 500;
-  border-radius: 8px;
-  min-height: 28px;
-  padding: 5px 14px;
+  border-radius: {{ control_radius }};
+  min-height: {{ control_min_height }};
+  padding: {{ control_padding_vertical }} 14px;
 }
 
 QToolButton[icon_only="true"] {
-  padding: 5px;
+  padding: {{ control_padding_vertical }};
 }
 
 QPushButton:hover:enabled,
@@ -59,6 +59,12 @@ QToolButton[variant="danger"] {
 QPushButton[variant="danger"]:hover:enabled,
 QToolButton[variant="danger"]:hover:enabled {
   border-color: {{ danger }};
+}
+
+QPushButton#calendar_time_entry_button,
+QPushButton#report_history_item_button {
+  font-weight: 400;
+  background: {{ row_fill }};
 }
 
 QPushButton#calendar_time_entry_button:hover:enabled,

@@ -61,7 +61,7 @@ QFrame#analytics_chart_frame,
 QFrame#settings_content_frame {
   background: {{ card_fill }};
   border: 1px solid {{ panel_border }};
-  border-radius: 8px;
+  border-radius: {{ panel_radius }};
 }
 
 QFrame[card="true"]:hover:enabled {
@@ -69,10 +69,14 @@ QFrame[card="true"]:hover:enabled {
   border-color: {{ border_strong }};
 }
 
-QFrame#classification_popup_frame {
-  background: {{ surface }};
-  border: 1px solid {{ border_strong }};
-  border-radius: 8px;
+QFrame#settings_separator_frame,
+QFrame#report_period_separator_frame {
+  background: {{ panel_border }};
+  border: none;
+}
+
+QFrame#settings_separator_frame {
+  max-height: 1px;
 }
 
 QWidget#calendar_view_widget,
@@ -83,7 +87,7 @@ QStackedWidget#settings_category_stack_widget {
 QWidget#worklog_entry_panel_widget[glass_surface="true"] {
   background: transparent;
   border: 1px solid {{ panel_border }};
-  border-radius: 8px;
+  border-radius: {{ panel_radius }};
 }
 
 QWidget#app_main_content_widget,

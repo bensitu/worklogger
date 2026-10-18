@@ -27,7 +27,7 @@ from worklogger.presentation.widgets.icons import IconLabel
 from worklogger.presentation.widgets.report_history import ReportHistoryButton, ReportHistoryDisplayItem
 from worklogger.presentation.widgets.record_summary import RecordSummaryButton
 from worklogger.presentation.widgets.switch_button import SwitchButton
-from worklogger.presentation.widgets.preview_list import PreviewItemDelegate
+from worklogger.presentation.widgets.preview_list import PreviewListWidget
 
 
 class ControlStateChecks(unittest.TestCase):
@@ -254,24 +254,23 @@ class ControlStateChecks(unittest.TestCase):
             panel = QWidget()
             layout = QGridLayout(panel)
             controls = []
-            for name in ("", "local_model_list_widget", "custom_entry_type_list_widget", "note_history_list_widget"):
-                field = QListWidget()
+            for name in ("", "local_model_list_widget", "entry_type_list_widget", "note_history_list_widget"):
+                field = PreviewListWidget(soft_selection=not name, framed=name != "note_history_list_widget")
                 field.setObjectName(name)
                 field.addItems(("Selected title\nDetails", "Another item"))
                 field.setCurrentRow(0)
-                if name == "note_history_list_widget":
-                    field.setItemDelegate(PreviewItemDelegate(field))
                 controls.append(field)
-            controls[0].setProperty("management_list", True)
             tree = QTreeWidget()
             tree.setProperty("data_browser", True)
             tree.setHeaderLabels(("Column",))
             tree.addTopLevelItem(QTreeWidgetItem(("Selected item",)))
             tree.setCurrentItem(tree.topLevelItem(0))
             controls.append(tree)
-            for name in ("", "management_tab_bar", "worklog_mode_selector_widget"):
+            for name in ("", "project_editor_tab_bar", "worklog_mode_selector_widget"):
                 tabs = QTabBar()
                 tabs.setObjectName(name)
+                if name == "project_editor_tab_bar":
+                    tabs.setProperty("tab_style", "underline")
                 tabs.addTab("Selected")
                 tabs.addTab("Other")
                 controls.append(tabs)

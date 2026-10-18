@@ -1,13 +1,6 @@
 /* Report history, previews, and reporting actions. */
 
-QFrame#report_period_separator_frame {
-  background: {{ panel_border }};
-  border: none;
-}
-
 QPushButton#report_history_item_button {
-  font-weight: 400;
-  background: {{ row_fill }};
   border: 1px solid {{ row_border }};
   border-radius: 6px;
   text-align: left;
@@ -21,7 +14,7 @@ QPushButton#report_history_item_button[active="true"] {
   color: {{ accent }};
 }
 
-QTextEdit#report_revision_preview {
+QTextEdit#report_revision_preview_text_edit {
   background: {{ surface }};
   border: none;
   border-radius: 6px;
@@ -34,9 +27,8 @@ QToolButton#note_export_button,
 QToolButton#note_reload_button {
   min-width: 24px;
   max-width: 24px;
-  min-height: 28px;
-  max-height: 28px;
-  padding: 5px 7px;
+  max-height: {{ control_min_height }};
+  padding: {{ control_padding_vertical }} 7px;
 }
 
 QToolButton[export_menu="true"] {
@@ -49,13 +41,4 @@ QToolButton[export_menu="true"]::menu-indicator {
   right: 8px;
   width: 12px;
   height: 12px;
-}
-
-QComboBox#analytics_period_combo,
-QPushButton#analytics_projects_button,
-QToolButton#analytics_export_button {
-  min-height: 30px;
-  max-height: 30px;
-  padding-top: 6px;
-  padding-bottom: 6px;
 }

@@ -8,9 +8,15 @@ QAbstractSpinBox {
   background: {{ input_fill }};
   border: 1px solid {{ field_border }};
   color: {{ text }};
-  border-radius: 8px;
-  min-height: 28px;
-  padding: 5px 10px;
+  border-radius: {{ control_radius }};
+  min-height: {{ control_min_height }};
+  padding: {{ control_padding_vertical }} 10px;
+}
+
+QLineEdit#account_name_line_edit,
+QLineEdit#account_id_line_edit,
+QLineEdit#account_role_line_edit {
+  background: {{ readonly_fill }};
 }
 
 QLineEdit QToolButton {
@@ -59,10 +65,6 @@ QRadioButton#work_schedule_choice_button::indicator:hover:enabled {
 QRadioButton#work_schedule_choice_button::indicator:disabled {
   background: {{ disabled_background }};
   border-color: {{ border }};
-}
-
-QRadioButton#work_schedule_choice_button::indicator:checked:disabled {
-  background: {{ disabled_text }};
 }
 
 QComboBox::drop-down {

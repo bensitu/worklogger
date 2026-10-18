@@ -1,0 +1,10 @@
+/* Aligned analytics toolbar controls. */
+
+QComboBox#analytics_period_combo,
+QPushButton#analytics_projects_button,
+QToolButton#analytics_export_button {
+  min-height: 30px;
+  max-height: 30px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}

@@ -1,0 +1,67 @@
+/* Time-entry actions and compact recording controls. */
+
+QToolButton#clear_time_entry_button,
+QToolButton#undo_record_change_button {
+  padding: {{ control_padding_vertical }} 8px;
+  min-width: 20px;
+  max-width: 20px;
+  max-height: {{ control_min_height }};
+  border-radius: {{ item_radius }};
+}
+
+QPushButton#save_worklog_button,
+QPushButton#add_entry_button,
+QPushButton#daily_notes_button {
+  max-height: {{ control_min_height }};
+  padding: {{ control_padding_vertical }} 8px;
+}
+
+QWidget#worklog_entry_panel_widget[compact="true"] QPushButton#save_worklog_button,
+QWidget#worklog_entry_panel_widget[compact="true"] QToolButton#clear_time_entry_button,
+QWidget#worklog_entry_panel_widget[compact="true"] QToolButton#undo_record_change_button {
+  max-height: 24px;
+}
+
+QWidget#worklog_entry_panel_widget[compact="true"] QLineEdit,
+QWidget#worklog_entry_panel_widget[compact="true"] QComboBox,
+QWidget#worklog_entry_panel_widget[compact="true"] QDoubleSpinBox,
+QWidget#worklog_entry_panel_widget[compact="true"] QPushButton,
+QWidget#worklog_entry_panel_widget[compact="true"] QToolButton#clear_time_entry_button,
+QWidget#worklog_entry_panel_widget[compact="true"] QToolButton#undo_record_change_button {
+  min-height: 24px;
+  padding: 2px 8px;
+}
+
+QWidget#worklog_entry_panel_widget[compact="true"] QDoubleSpinBox QLineEdit {
+  min-height: 0;
+  padding: 0;
+  border: none;
+}
+
+QToolButton#recent_work_context_button {
+  padding: 0;
+}
+
+QToolButton#recent_work_context_button::menu-indicator {
+  image: none;
+  width: 0;
+}
+
+QToolButton#cancel_processing_button {
+  padding: 0;
+  min-height: 0;
+}
+
+QToolButton#polish_time_entry_button {
+  min-height: 16px;
+  max-height: 16px;
+  min-width: 16px;
+  max-width: 16px;
+  padding: 3px;
+}
+
+QTabWidget#worklog_mode_tab_widget QWidget#worklog_auto_tab_widget QPushButton {
+  min-height: 40px;
+  max-height: 40px;
+  padding: 6px 8px;
+}

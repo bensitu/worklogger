@@ -5,7 +5,7 @@ QPushButton#report_history_item_button[active="true"]:hover:enabled,
 QToolButton#delete_record_button:hover:enabled,
 QToolButton#record_actions_button:hover:enabled,
 QLineEdit QToolButton:hover:enabled,
-QTabBar#management_tab_bar::tab:hover:enabled {
+QTabBar[tab_style="underline"]::tab:hover:enabled {
   background: {{ button_hover }};
 }
 
@@ -14,6 +14,6 @@ QTextEdit:focus:enabled,
 QPlainTextEdit:focus:enabled,
 QComboBox:focus:enabled,
 QAbstractSpinBox:focus:enabled,
-QListWidget[management_list="true"]:focus:enabled {
+QListWidget[selection_style="subtle"]:focus:enabled {
   border-color: {{ accent }};
 }

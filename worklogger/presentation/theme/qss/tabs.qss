@@ -3,7 +3,7 @@
 QTabWidget::pane {
   background: {{ tab_pane_fill }};
   border: 1px solid {{ panel_border }};
-  border-radius: 8px;
+  border-radius: {{ panel_radius }};
 }
 
 QTabBar::tab {
@@ -34,7 +34,7 @@ QTabWidget#classification_section_tab_widget::pane {
 QTabBar#worklog_mode_selector_widget {
   background: {{ surface_alt }};
   border: 1px solid {{ border }};
-  border-radius: 8px;
+  border-radius: {{ control_radius }};
 }
 
 QTabBar#worklog_mode_selector_widget::tab {
@@ -73,13 +73,12 @@ QTabWidget#report_revision_tab_widget::pane {
   top: 8px;
 }
 
-QWidget#management_editor_page {
+QWidget[editor_page="true"] {
   background: {{ editor_fill }};
   border-color: {{ panel_border }};
   border-radius: 6px;
 }
 
-QTabBar#management_tab_bar::tab,
 QTabBar[tab_style="underline"]::tab {
   background: transparent;
   border: none;
@@ -90,7 +89,6 @@ QTabBar[tab_style="underline"]::tab {
   font-weight: 500;
 }
 
-QTabBar#management_tab_bar::tab:selected,
 QTabBar[tab_style="underline"]::tab:selected {
   color: {{ accent }};
   border-bottom-color: {{ accent }};

@@ -60,10 +60,11 @@ class PreviewItemDelegate(QStyledItemDelegate):
 
 
 class PreviewListWidget(QListWidget):
-    def __init__(self, parent=None, *, soft_selection=False, detail_lines=1, spacing=4):
+    def __init__(self, parent=None, *, soft_selection=False, framed=False, detail_lines=1, spacing=4):
         super().__init__(parent)
         self.setItemDelegate(PreviewItemDelegate(self, soft_selection=soft_selection, detail_lines=detail_lines))
         self.setSpacing(spacing)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        if soft_selection:
-            self.setProperty("management_list", True)
+        if framed or soft_selection:
+            self.setProperty("list_style", "preview")
+        self.setProperty("selection_style", "subtle" if soft_selection else "accent")
