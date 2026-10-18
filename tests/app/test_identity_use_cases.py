@@ -37,7 +37,7 @@ class FakeProvider:
             configured=True,
         )
 
-    def authenticate(self, *, cancellation=None) -> Result[ExternalIdentityProfile]:
+    def authenticate(self, *, cancellation=None, reauthenticate=False) -> Result[ExternalIdentityProfile]:
         return Result.success(
             ExternalIdentityProfile(
                 provider="google",
@@ -101,6 +101,9 @@ class MemoryAuth:
     def get_by_id(self, user_id: int) -> User | None:
         return self.users.get(user_id)
 
+    def verify_user(self, username, password):
+        return next((user for user in self.users.values() if user.username == username), None) if password == "example-password" else None
+
     def list_users(self) -> tuple[User, ...]:
         return tuple(self.users.values())
 
@@ -127,13 +130,42 @@ class MemoryAuth:
 
 
 class IdentityUseCaseTests(unittest.TestCase):
+    def test_identity_changes_require_the_current_account_password(self):
+        identities, auth = MemoryIdentities(), MemoryAuth()
+        auth.users[1] = User(1, "local")
+        handler = LinkIdentityHandler(repository=identities, providers=(FakeProvider(),), auth=auth)
+        for password in (None, "incorrect"):
+            self.assertFalse(handler.handle(LinkIdentityCommand(1, "google", password)).ok)
+            self.assertEqual(identities.items, [])
+        linked = handler.handle(LinkIdentityCommand(1, "google", "example-password")).value
+        unlink = UnlinkIdentityHandler(identities, auth)
+        for password in (None, "incorrect"):
+            self.assertFalse(unlink.handle(UnlinkIdentityCommand(1, linked.id, password)).ok)
+            self.assertEqual(identities.items, [linked])
+        self.assertTrue(unlink.handle(UnlinkIdentityCommand(1, linked.id, "example-password")).ok)
+
+    def test_external_only_accounts_reverify_an_owned_identity_before_changes(self):
+        identities, auth = MemoryIdentities(), MemoryAuth()
+        auth.users[1] = User(1, "external", local_password_enabled=False)
+        linked = identities.add(LinkedIdentity(0, 1, "google", "sub-1"))
+        other = identities.add(LinkedIdentity(0, 2, "google", "other-subject"))
+        handler = LinkIdentityHandler(repository=identities, providers=(FakeProvider(),), auth=auth)
+        for identifier in (None, other.id):
+            self.assertFalse(handler.handle(LinkIdentityCommand(1, "google", verification_identity_id=identifier)).ok)
+        self.assertTrue(handler.handle(LinkIdentityCommand(1, "google", verification_identity_id=linked.id)).ok)
+        identities.items[0] = replace(linked, subject="changed")
+        self.assertFalse(handler.handle(LinkIdentityCommand(1, "google", verification_identity_id=linked.id)).ok)
+
     def test_link_list_and_unlink_identity_without_tokens(self) -> None:
         identities = MemoryIdentities()
         providers = (FakeProvider(),)
+        auth = MemoryAuth()
+        auth.users[1] = User(id=1, username="local")
         linked = LinkIdentityHandler(
             repository=identities,
             providers=providers,
-        ).handle(LinkIdentityCommand(user_id=1, provider="google"))
+            auth=auth,
+        ).handle(LinkIdentityCommand(1, "google", "example-password"))
 
         self.assertTrue(linked.ok)
         assert linked.value is not None
@@ -148,7 +180,7 @@ class IdentityUseCaseTests(unittest.TestCase):
         auth = MemoryAuth()
         auth.users[1] = User(id=1, username="local")
         unlinked = UnlinkIdentityHandler(identities, auth).handle(
-            UnlinkIdentityCommand(user_id=1, identity_id=linked.value.id)
+            UnlinkIdentityCommand(1, linked.value.id, "example-password")
         )
         self.assertTrue(unlinked.ok)
         self.assertEqual(identities.list_for_user(1), ())
@@ -205,20 +237,21 @@ class IdentityUseCaseTests(unittest.TestCase):
         identities, auth = MemoryIdentities(), MemoryAuth()
         auth.identities = identities
         providers = (CancelProvider(),)
-        for handler, command in ((LinkIdentityHandler(repository=identities, providers=providers), LinkIdentityCommand(1, "google")),
+        auth.users[1] = User(1, "local")
+        for handler, command in ((LinkIdentityHandler(repository=identities, providers=providers, auth=auth), LinkIdentityCommand(1, "google", "example-password")),
                                  (LoginWithIdentityHandler(identities=identities, auth=auth, providers=providers), LoginWithIdentityCommand("google"))):
             result = handler.handle(command, cancellation=token)
             self.assertFalse(result.ok)
             self.assertEqual(result.error.code, "identity_authorization_cancelled")
         self.assertEqual(identities.items, [])
-        self.assertEqual(auth.users, {})
+        self.assertEqual(len(auth.users), 1)
 
     def test_provider_login_remembers_local_session_and_retains_bound_account(self):
         from worklogger.domain.auth.policies import remember_token_storage_value
         identities, auth = MemoryIdentities(), MemoryAuth()
         auth.identities = identities
         auth.users[1] = User(1, "local", display_name="Mary")
-        linked = LinkIdentityHandler(repository=identities, providers=(FakeProvider(),)).handle(LinkIdentityCommand(1, "google"))
+        linked = LinkIdentityHandler(repository=identities, providers=(FakeProvider(),), auth=auth).handle(LinkIdentityCommand(1, "google", "example-password"))
         handler = LoginWithIdentityHandler(identities=identities, auth=auth, providers=(FakeProvider(),))
         login = handler.handle(LoginWithIdentityCommand("google", remember=True))
         self.assertTrue(login.ok)

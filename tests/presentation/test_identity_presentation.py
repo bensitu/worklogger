@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import unittest
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -75,6 +76,9 @@ class IdentityPresentationTests(unittest.TestCase):
     def setUp(self):
         from tests.presentation.qt_support import dispose_test_windows
         self.addCleanup(dispose_test_windows)
+        confirmation = patch("worklogger.presentation.identity.dialog.QInputDialog.getText", return_value=("example-password", True))
+        confirmation.start()
+        self.addCleanup(confirmation.stop)
     @classmethod
     def setUpClass(cls) -> None:
         cls._app = _app()

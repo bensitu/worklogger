@@ -33,6 +33,14 @@ open **Linked identities**, and link the provider. Signing in with an unlinked
 identity creates a separate account; matching names or emails do not merge data.
 See [browser sign-in](identity-signin.md) for provider registration.
 
+Linking or unlinking requires the current local password. Accounts without a
+local password must reauthenticate an already linked identity. The provider must
+confirm a recent authentication time; cancelling leaves identities unchanged.
+
+AI note-sharing permission also controls project and work-item labels in work-log
+context. When disabled, durations and classifications remain available, but
+record content and project labels are excluded.
+
 For current-account cloud storage, schedules, encryption, and recovery, see
 [personal cloud backups](cloud-backups.md).
 

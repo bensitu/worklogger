@@ -236,14 +236,16 @@ def _build_identity_workflow(
     return IdentityWorkflowController(
         IdentityManagementViewModel(
             user_id=user.id,
+            local_password_enabled=user.local_password_enabled,
             list_handler=ListLinkedIdentitiesHandler(repositories.identities),
             providers_handler=GetIdentityProvidersHandler(providers),
             link_handler=LinkIdentityHandler(
                 repository=repositories.identities,
                 providers=providers,
+                auth=auth_repository,
             ),
             unlink_handler=UnlinkIdentityHandler(
-                repositories.identities, auth_repository
+                repositories.identities, auth_repository, providers=providers
             ),
         ), configuration=configuration, job_runner=job_runner,
     )

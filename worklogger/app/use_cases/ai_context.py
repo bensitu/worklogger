@@ -200,7 +200,7 @@ def _format_context(
                     f"- {entry.day.isoformat()} | {type_label} | "
                     f"{entry.start_time or '-'}-{entry.end_time or '-'} | "
                     f"break {entry.break_hours:.2f}h | worked {entry.worked_hours():.2f}h"
-                    + (f" | project / work item: {_single_line(entry.context.label)}" if entry.context.label else "")
+                    + (f" | project / work item: {_single_line(entry.context.label)}" if include_notes and entry.context.label else "")
                     + (f" | content: {_single_line(entry.note)}" if include_notes and entry.note else "")
                 )
     else:

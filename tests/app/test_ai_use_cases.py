@@ -254,7 +254,7 @@ class AiUseCaseTests(unittest.TestCase):
         assert result.value is not None
         self.assertIn("Notes excluded by privacy settings.", result.value.content)
         self.assertIn("Normal \u00b7 Remote", result.value.content)
-        self.assertIn("Research / Review", result.value.content)
+        self.assertNotIn("Research / Review", result.value.content)
         self.assertNotIn("content: private note", result.value.content)
         self.assertIn("Implement feature", result.value.content)
         self.assertIn("Private meeting title", result.value.content)

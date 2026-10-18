@@ -24,7 +24,7 @@ class SensitiveDataFilter(std_logging.Filter):
     """Redact explicit credentials while retaining diagnostic identifiers."""
 
     _NAMES = r"(?:api[_-]?key|password|recovery[_-]?key|refresh[_-]?token|remember[_-]?token|access[_-]?token|id[_-]?token|token|client[_-]?secret|code[_-]?verifier|authorization|pkce|auth code)"
-    _CREDENTIAL = re.compile(r'''(["']?\b''' + _NAMES + r'''\b["']?\s*[=:]\s*)(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^\s,;&]+)''', re.IGNORECASE)
+    _CREDENTIAL = re.compile(r'''(["']?\b''' + _NAMES + r'''\b["']?\s*[=:]\s*)(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^\r\n,;&]+)''', re.IGNORECASE)
     _AUTHORIZATION = re.compile(r"\b(?:Bearer|Basic)\s+[^\s\"',;&]+", re.IGNORECASE)
     _USERINFO = re.compile(r"(https?://)[^/\s?#]*@", re.IGNORECASE)
     _QUERY_VALUE = re.compile(r"([?&])([^=\s&#]+)=([^\s&#\"']*)")

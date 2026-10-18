@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -12,6 +13,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QToolButton,
+    QInputDialog,
+    QLineEdit,
 )
 
 from worklogger.domain.shared.errors import AppError
@@ -64,16 +67,17 @@ class IdentityDialog(QDialog):
         return self._set_state_result(self._view_model.load())
 
     def link_selected_provider(self) -> bool:
+        if self._authorization_request.is_running:
+            return False
         provider = str(self.provider_combo.currentData() or "")
         if not provider:
             self.status_label.setText(_("Select a provider first."))
             return False
-        def complete(result):
-            self._set_state_result(result)
-            if self._pending_close is not None:
-                self.done(self._pending_close)
-        return self._authorization_request.start(lambda token: self._view_model.link(provider, cancellation=token),
-            on_complete=complete)
+        authorization = self._confirmation()
+        if authorization is None:
+            return False
+        return self._authorization_request.start(lambda token: self._view_model.link(
+            provider, cancellation=token, **authorization), on_complete=self._change_completed)
 
     def unlink_selected_identity(self) -> bool:
         if self._authorization_request.is_running:
@@ -82,8 +86,32 @@ class IdentityDialog(QDialog):
         if item is None:
             self.status_label.setText(_("Select an identity first."))
             return False
-        identity_id = int(item.data(256))
-        return self._set_state_result(self._view_model.unlink(identity_id))
+        identity_id = int(item.data(Qt.ItemDataRole.UserRole))
+        authorization = self._confirmation()
+        if authorization is None:
+            return False
+        return self._authorization_request.start(lambda token: self._view_model.unlink(
+            identity_id, cancellation=token, **authorization), on_complete=self._change_completed)
+
+    def _confirmation(self):
+        if self._state is None:
+            return None
+        if self._state.local_password_enabled:
+            password, accepted = QInputDialog.getText(self, _("Linked identities"), _("Current password"),
+                                                     QLineEdit.EchoMode.Password)
+            return {"current_password": password} if accepted else None
+        identities = self._state.identities
+        labels = [f"{row.provider} | {row.email or row.display_name or row.subject}" for row in identities]
+        if not labels:
+            return None
+        choice, accepted = QInputDialog.getItem(self, _("Linked identities"), _("Select an identity first."),
+                                                labels, 0, False)
+        return {"verification_identity_id": identities[labels.index(choice)].id} if accepted else None
+
+    def _change_completed(self, result):
+        self._set_state_result(result)
+        if self._pending_close is not None:
+            self.done(self._pending_close)
 
     def done(self, result):
         if self._authorization_request.is_running:
@@ -187,7 +215,7 @@ class IdentityDialog(QDialog):
             elif identity.display_name:
                 label = f"{label} | {identity.display_name}"
             item = QListWidgetItem(label)
-            item.setData(256, identity.id)
+            item.setData(Qt.ItemDataRole.UserRole, identity.id)
             self.identity_list.addItem(item)
         for provider in self._state.providers:
             label = provider.display_name

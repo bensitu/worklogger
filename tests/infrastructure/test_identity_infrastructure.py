@@ -47,6 +47,18 @@ class IdentityInfrastructureTests(unittest.TestCase):
                                                 audience="client-id", jwks={"keys": []}, expected_nonce="nonce").ok)
         self.assertFalse(profile_from_oidc_token("google", self.token(), issuer="https://accounts.google.com",
                                                 audience="client-id", jwks=self.jwks, expected_nonce="").ok)
+
+    def test_identity_confirmation_requires_recent_signed_authentication_time(self):
+        now = time.time()
+        for authenticated_at, accepted in ((None, False), (True, False), (now - 3600, False), (now + 3600, False), (now, True)):
+            result = profile_from_oidc_token("google", self.token(auth_time=authenticated_at),
+                issuer="https://accounts.google.com", audience="client-id", jwks=self.jwks,
+                expected_nonce="nonce", authenticated_after=now)
+            self.assertEqual(result.ok, accepted)
+        url = OidcAuthorizationBuilder(google_oidc_config("client-id")).authorization_url(
+            redirect_uri="http://127.0.0.1:49152/callback", state="state", nonce="nonce",
+            code_verifier="verifier", reauthenticate=True)
+        self.assertIn("max_age=0", url.value)
     def test_provider_availability_uses_direct_google_registration(self) -> None:
         env = {
             "WORKLOGGER_IDENTITY_ENABLED": "1",

@@ -190,7 +190,7 @@ class BrowserIdentityTests(unittest.TestCase):
             provider_id = "google"
             def authenticate(self, *, cancellation=None):
                 return owner._flow("google")[0]
-        linked = LinkIdentityHandler(repository=identities, providers=(Provider(),)).handle(LinkIdentityCommand(user.id, "google"))
+        linked = LinkIdentityHandler(repository=identities, providers=(Provider(),), auth=auth).handle(LinkIdentityCommand(user.id, "google", "password123"))
         self.assertTrue(linked.ok, linked.error)
         login = LoginWithIdentityHandler(identities=identities, auth=auth, providers=(Provider(),)).handle(
             LoginWithIdentityCommand("google", remember=True))
@@ -200,7 +200,7 @@ class BrowserIdentityTests(unittest.TestCase):
         self.assertEqual(login.value.linked_identity.issuer, "https://accounts.google.com")
         self.assertEqual(auth.user_count(), 1)
         self.assertEqual(auth.get_user_by_remember_token(remember_token_storage_value(login.value.token)).id, user.id)
-        self.assertTrue(UnlinkIdentityHandler(identities, auth).handle(UnlinkIdentityCommand(user.id, linked.value.id)).ok)
+        self.assertTrue(UnlinkIdentityHandler(identities, auth).handle(UnlinkIdentityCommand(user.id, linked.value.id, "password123")).ok)
         self.assertEqual(identities.list_for_user(user.id), ())
         with factory.connection() as connection:
             columns = {row[1] for row in connection.execute("PRAGMA table_info(external_identities)")}

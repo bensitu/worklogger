@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
@@ -15,12 +15,14 @@ class LoginWithIdentityCommand:
 class LinkIdentityCommand:
     user_id: int
     provider: str
-    current_password: str | None = None
+    current_password: str | None = field(default=None, repr=False)
+    verification_identity_id: int | None = None
 
 
 @dataclass(frozen=True)
 class UnlinkIdentityCommand:
     user_id: int
     identity_id: int
-    current_password: str | None = None
+    current_password: str | None = field(default=None, repr=False)
+    verification_identity_id: int | None = None
 

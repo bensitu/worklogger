@@ -37,6 +37,9 @@ layers. Back up your database before upgrading.
 
 ### Changed
 
+- Required current-account verification before linking or unlinking sign-in
+  identities and included project labels in AI note-sharing permission.
+- Redacted complete unquoted credential values containing spaces from logs.
 - Isolated manual record construction and shared classification resolution from
   persistent timer coordination without changing storage or historical snapshots.
 - Separated record-search and project-statistics dialog management from desktop

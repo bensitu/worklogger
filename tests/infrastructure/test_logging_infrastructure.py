@@ -63,6 +63,7 @@ class LoggingInfrastructureTests(unittest.TestCase):
                 setup_logging(log_path, debug=True)
                 logger = logging.getLogger("worklogger.test")
                 logger.error("password=synthetic-secret token=sensitive-value")
+                logger.error("password=secret containing spaces; request_id=retained")
                 logger.error("remember_token_load_failed")
                 try:
                     raise ValueError("private exception payload")
@@ -84,6 +85,8 @@ class LoggingInfrastructureTests(unittest.TestCase):
                 self.assertIn("credential_storage_failed", content)
                 self.assertIn("ValueError", content)
                 self.assertIn("safe-request", content)
+                self.assertIn("request_id=retained", content)
+                self.assertNotIn("containing spaces", content)
                 self.assertIn("worklog_save_failed: OSError", content)
                 self.assertNotIn("private storage payload", content)
                 for secret in ("synthetic-secret", "sensitive-value", "private exception payload",

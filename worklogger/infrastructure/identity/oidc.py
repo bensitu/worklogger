@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import hmac
+import math
+import time
 import jwt
 from typing import Mapping
 from urllib.parse import urlencode
@@ -34,6 +36,7 @@ class OidcAuthorizationBuilder:
         state: str,
         nonce: str,
         code_verifier: str,
+        reauthenticate: bool = False,
     ) -> Result[str]:
         if not self._config.client_id:
             return Result.failure(ValidationError("identity_client_id_required", "identity_client_id_required"))
@@ -55,6 +58,10 @@ class OidcAuthorizationBuilder:
             "code_challenge_method": "S256",
             "prompt": "select_account",
         }
+        if reauthenticate:
+            params["max_age"] = "0"
+            if self._config.provider == "microsoft":
+                params["prompt"] = "login"
         return Result.success(f"{self._config.authorization_endpoint}?{urlencode(params)}")
 
 
@@ -66,11 +73,17 @@ def profile_from_oidc_token(
     audience: str,
     jwks: Mapping[str, object],
     expected_nonce: str,
+    authenticated_after: float | None = None,
 ) -> Result[ExternalIdentityProfile]:
     verified = _verified_claims(token, issuer=issuer, audience=audience, jwks=jwks)
     if not verified.ok or verified.value is None:
         return Result.failure(verified.error)
     claims = verified.value
+    if authenticated_after is not None:
+        authenticated_at = claims.get("auth_time")
+        if (type(authenticated_at) not in (int, float) or not math.isfinite(authenticated_at)
+                or not authenticated_after - 30 <= authenticated_at <= time.time() + 30):
+            return Result.failure(AuthenticationError("identity_auth_failed", "identity_auth_failed"))
     nonce = claims.get("nonce")
     if not expected_nonce or not isinstance(nonce, str) or not hmac.compare_digest(nonce.encode(), expected_nonce.encode()):
         return Result.failure(AuthenticationError("identity_nonce_mismatch", "identity_nonce_mismatch"))

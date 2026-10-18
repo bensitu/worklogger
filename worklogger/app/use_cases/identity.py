@@ -23,7 +23,7 @@ from worklogger.domain.auth.policies import remember_token_expires_at, remember_
 from worklogger.app.job_runner import CancellationToken
 from worklogger.domain.shared.errors import AuthenticationError, InfrastructureError, ValidationError, CancellationError
 from worklogger.domain.shared.result import Result
-from worklogger.app.use_cases._errors import storage_boundary
+from worklogger.app.use_cases._errors import storage_boundary, infrastructure_failure
 
 
 class IdentityProviderClient(Protocol):
@@ -33,7 +33,8 @@ class IdentityProviderClient(Protocol):
     def status(self) -> IdentityProviderStatus:
         ...
 
-    def authenticate(self, *, cancellation: CancellationToken | None = None) -> Result[ExternalIdentityProfile]:
+    def authenticate(self, *, cancellation: CancellationToken | None = None,
+                     reauthenticate: bool = False) -> Result[ExternalIdentityProfile]:
         ...
 
 
@@ -80,12 +81,17 @@ class LinkIdentityHandler:
         *,
         repository: IdentityRepository,
         providers: tuple[IdentityProviderClient, ...],
+        auth: AuthCredentialRepository | None = None,
     ) -> None:
         self._repository = repository
         self._providers = {provider.provider_id: provider for provider in providers}
+        self._auth = auth
 
     @storage_boundary("identity_link_failed")
     def handle(self, command: LinkIdentityCommand, *, cancellation=None) -> Result[LinkedIdentity]:
+        authorized = _authorize_change(command, self._auth, self._repository, self._providers, cancellation)
+        if not authorized.ok:
+            return authorized
         provider = self._provider(command.provider)
         if not provider.ok or provider.value is None:
             return Result.failure(provider.error or _provider_missing_error())
@@ -102,8 +108,8 @@ class LinkIdentityHandler:
             return _cancelled()
         try:
             existing = self._repository.get_by_provider_subject(profile.value.provider, profile.value.subject)
-        except Exception:
-            return Result.failure(AuthenticationError("identity_login_failed", "identity_login_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure("identity_link_failed", error, logger_name=__name__))
         if existing is not None and existing.user_id != command.user_id:
             return Result.failure(
                 ValidationError(
@@ -129,13 +135,8 @@ class LinkIdentityHandler:
                     issuer=profile.value.issuer,
                 )
             )
-        except Exception:
-            return Result.failure(
-                InfrastructureError(
-                    "identity_link_failed",
-                    "identity_link_failed",
-                )
-            )
+        except Exception as error:
+            return Result.failure(infrastructure_failure("identity_link_failed", error, logger_name=__name__))
         return Result.success(linked)
 
     def _provider(self, provider_id: str) -> Result[IdentityProviderClient]:
@@ -150,12 +151,14 @@ class LinkIdentityHandler:
 
 
 class UnlinkIdentityHandler:
-    def __init__(self, repository: IdentityRepository, auth: AuthCredentialRepository | None = None) -> None:
+    def __init__(self, repository: IdentityRepository, auth: AuthCredentialRepository | None = None,
+                 *, providers: tuple[IdentityProviderClient, ...] = ()) -> None:
         self._repository = repository
         self._auth = auth
+        self._providers = {provider.provider_id: provider for provider in providers}
 
     @storage_boundary("identity_unlink_failed")
-    def handle(self, command: UnlinkIdentityCommand) -> Result[None]:
+    def handle(self, command: UnlinkIdentityCommand, *, cancellation=None) -> Result[None]:
         if command.identity_id <= 0:
             return Result.failure(ValidationError("identity_id_required", "identity_id_required"))
         identities = self._repository.list_for_user(command.user_id)
@@ -164,6 +167,11 @@ class UnlinkIdentityHandler:
         user = self._auth.get_by_id(command.user_id) if self._auth else None
         if len(identities) == 1 and (user is None or not user.local_password_enabled):
             return Result.failure(ValidationError("identity_last_login_method", "identity_last_login_method"))
+        authorized = _authorize_change(command, self._auth, self._repository, self._providers, cancellation)
+        if not authorized.ok:
+            return authorized
+        if cancellation and cancellation.is_cancelled():
+            return _cancelled()
         self._repository.remove(command.user_id, command.identity_id)
         return Result.success(None)
 
@@ -247,6 +255,34 @@ def _username_from_profile(profile: ExternalIdentityProfile) -> str:
 
 def _provider_missing_error() -> ValidationError:
     return ValidationError("identity_provider_missing", "identity_provider_missing")
+
+
+def _authorize_change(command, auth, identities, providers, cancellation):
+    if cancellation and cancellation.is_cancelled():
+        return _cancelled()
+    user = auth.get_by_id(command.user_id) if auth is not None else None
+    if user is None:
+        return Result.failure(AuthenticationError("identity_user_missing", "identity_user_missing"))
+    if user.local_password_enabled:
+        if not command.current_password:
+            return Result.failure(ValidationError("current_password_required", "current_password_required"))
+        verified = auth.verify_user(user.username, command.current_password)
+        if verified is None or verified.id != user.id:
+            return Result.failure(AuthenticationError("invalid_credentials", "invalid_credentials"))
+    else:
+        linked = next((row for row in identities.list_for_user(user.id)
+                       if row.id == command.verification_identity_id), None)
+        provider = providers.get(linked.provider) if linked is not None else None
+        if provider is None:
+            return Result.failure(AuthenticationError("identity_auth_failed", "identity_auth_failed"))
+        profile = provider.authenticate(cancellation=cancellation, reauthenticate=True)
+        if not profile.ok or profile.value is None:
+            return Result.failure(profile.error or AuthenticationError("identity_auth_failed", "identity_auth_failed"))
+        if (profile.value.provider, profile.value.subject, profile.value.issuer) != (linked.provider, linked.subject, linked.issuer):
+            return Result.failure(AuthenticationError("identity_issuer_mismatch", "identity_issuer_mismatch"))
+        if linked not in identities.list_for_user(user.id):
+            return Result.failure(AuthenticationError("identity_missing", "identity_missing"))
+    return _cancelled() if cancellation and cancellation.is_cancelled() else Result.success(None)
 
 
 def _authenticate(provider, cancellation):

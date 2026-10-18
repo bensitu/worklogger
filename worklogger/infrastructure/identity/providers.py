@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import secrets
+import time
 import webbrowser
 from urllib.parse import urlencode
 from urllib.request import Request
@@ -38,7 +39,7 @@ class BrowserIdentityProvider:
         message = "" if available else ("identity_provider_not_configured" if loaded.ok else "identity_configuration_invalid")
         return IdentityProviderStatus(self.provider_id, self.display_name, available, configured, message)
 
-    def authenticate(self, *, cancellation=None) -> Result[ExternalIdentityProfile]:
+    def authenticate(self, *, cancellation=None, reauthenticate=False) -> Result[ExternalIdentityProfile]:
         if not self.status().available:
             return Result.failure(InfrastructureError("identity_provider_not_configured", "identity_provider_not_configured"))
         try:
@@ -51,11 +52,12 @@ class BrowserIdentityProvider:
                          f"https://login.microsoftonline.com/{registration.tenant_id}/oauth2/v2.0/token")
             keys_url = ("https://www.googleapis.com/oauth2/v3/certs" if self.provider_id == "google" else
                         f"https://login.microsoftonline.com/{registration.tenant_id}/discovery/v2.0/keys")
+            authenticated_after = time.time() if reauthenticate else None
             state, nonce, verifier = secrets.token_urlsafe(32), secrets.token_urlsafe(32), generate_verifier()
             host = "127.0.0.1" if self.provider_id == "google" else "localhost"
             with LoopbackAuthorization(state=state, hostname=host, timeout=self._timeout) as callback:
                 url = OidcAuthorizationBuilder(config).authorization_url(redirect_uri=callback.redirect_uri,
-                    state=state, nonce=nonce, code_verifier=verifier)
+                    state=state, nonce=nonce, code_verifier=verifier, reauthenticate=reauthenticate)
                 if cancellation and cancellation.is_cancelled():
                     return _cancelled()
                 if not url.ok or not self._browser_open(url.value):
@@ -80,7 +82,7 @@ class BrowserIdentityProvider:
             if cancellation and cancellation.is_cancelled():
                 return _cancelled()
             return profile_from_oidc_token(self.provider_id, token, issuer=config.issuer,
-                audience=registration.client_id, jwks=keys, expected_nonce=nonce)
+                audience=registration.client_id, jwks=keys, expected_nonce=nonce, authenticated_after=authenticated_after)
         except HTTPError as exc:
             exc.close()
             return Result.failure(AuthenticationError("identity_token_exchange_failed", "identity_token_exchange_failed"))
