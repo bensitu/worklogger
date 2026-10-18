@@ -1,8 +1,10 @@
 """Bounded account-owned project summaries for any selected date range."""
 
+from worklogger.app.use_cases._errors import infrastructure_failure
+
 import math
 from worklogger.domain.analytics.projects import context_summaries
-from worklogger.domain.shared.errors import InfrastructureError, ValidationError
+from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.search import EntryFilter
 
@@ -28,5 +30,5 @@ class ProjectAnalyticsHandler:
             return Result.success(context_summaries(entries, hours))
         except ValueError as error:
             return Result.failure(ValidationError(str(error), str(error)))
-        except Exception:
-            return Result.failure(InfrastructureError("analytics_load_failed", "analytics_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('analytics_load_failed', error, logger_name=__name__))

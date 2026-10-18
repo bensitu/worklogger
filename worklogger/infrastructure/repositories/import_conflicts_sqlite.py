@@ -20,8 +20,9 @@ def remove_import_targets(connection, storage, user_id, day, entries, replace_da
         targets = rows
     else:
         targets = []
+        decoded = [(row, storage.from_row(row)) for row in rows]
         for incoming in entries:
-            matches = [row for row in rows if matching_period(incoming, storage.from_row(row))]
+            matches = [row for row, record in decoded if matching_period(incoming, record)]
             if len(matches) > 1:
                 raise ValueError("csv_import_conflict")
             targets.extend(matches)

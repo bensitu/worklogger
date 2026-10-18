@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from worklogger.app.use_cases._errors import infrastructure_failure
+
 from pathlib import Path
 from datetime import date
 from typing import Protocol
@@ -18,7 +20,7 @@ from worklogger.domain.calendar.repositories import (
     CalendarEventRepository,
     HolidayProvider,
 )
-from worklogger.domain.shared.errors import InfrastructureError, ValidationError
+from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 
 
@@ -42,8 +44,8 @@ class GetCalendarEventsForDayHandler:
     ) -> Result[tuple[CalendarEvent, ...]]:
         try:
             return Result.success(self._repository.list_for_day(query.user_id, query.day))
-        except Exception:
-            return Result.failure(InfrastructureError("calendar_load_failed", "calendar_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('calendar_load_failed', error, logger_name=__name__))
 
 
 class GetCalendarEventsForRangeHandler:
@@ -62,8 +64,8 @@ class GetCalendarEventsForRangeHandler:
             return Result.failure(ValidationError("date_range_invalid", "date_range_invalid"))
         try:
             return Result.success(self._repository.list_for_range(query.user_id, query.start_day, query.end_day))
-        except Exception:
-            return Result.failure(InfrastructureError("calendar_load_failed", "calendar_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('calendar_load_failed', error, logger_name=__name__))
 
 
 class GetHolidaysForRangeHandler:
@@ -79,8 +81,8 @@ class GetHolidaysForRangeHandler:
         try:
             options = {"subdivision": query.subdivision} if query.subdivision else {}
             return Result.success(self._provider.list_for_range(country, query.start_day, query.end_day, **options))
-        except Exception:
-            return Result.failure(InfrastructureError("holiday_load_failed", "holiday_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('holiday_load_failed', error, logger_name=__name__))
 
 
 class ImportCalendarEventsHandler:
@@ -104,6 +106,6 @@ class ImportCalendarEventsHandler:
         try:
             operation = self._repository.replace_all if command.replace_existing else self._repository.add_many
             imported = operation(command.user_id, events.value)
-        except Exception:
-            return Result.failure(InfrastructureError("ics_import_failed", "ics_import_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('ics_import_failed', error, logger_name=__name__))
         return Result.success(imported)

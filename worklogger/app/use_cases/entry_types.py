@@ -3,7 +3,8 @@
 from uuid import uuid4
 from worklogger.domain.worklog.models import CustomEntryType, EntryType
 from worklogger.domain.shared.result import Result
-from worklogger.domain.shared.errors import ValidationError, InfrastructureError
+from worklogger.domain.shared.errors import ValidationError
+from worklogger.app.use_cases._errors import infrastructure_failure
 from typing import Generic
 from worklogger.domain.worklog.type_repository import ClassificationRepository, Definition
 
@@ -18,9 +19,9 @@ class ClassificationService(Generic[Definition]):
     def list_types(self) -> Result[tuple[Definition, ...]]:
         try:
             return Result.success(self.repository.list_types(self.user_id))
-        except Exception:
+        except Exception as error:
             code = self.collection_prefix + "_load_failed"
-            return Result.failure(InfrastructureError(code, code))
+            return Result.failure(infrastructure_failure(code, error, logger_name=__name__))
 
     def save(self, label: str, category: str, previous: Definition | None = None) -> Result[Definition]:
         try:
@@ -31,9 +32,9 @@ class ClassificationService(Generic[Definition]):
             return Result.success(self.repository.save_type(self.user_id, definition))
         except ValueError as error:
             return Result.failure(ValidationError(str(error), str(error)))
-        except Exception:
+        except Exception as error:
             code = self.collection_prefix + "_save_failed"
-            return Result.failure(InfrastructureError(code, code))
+            return Result.failure(infrastructure_failure(code, error, logger_name=__name__))
 
     def archive(self, definition: Definition) -> Result[None]:
         try:
@@ -41,9 +42,9 @@ class ClassificationService(Generic[Definition]):
             return Result.success(None)
         except ValueError as error:
             return Result.failure(ValidationError(str(error), str(error)))
-        except Exception:
+        except Exception as error:
             code = self.collection_prefix + "_save_failed"
-            return Result.failure(InfrastructureError(code, code))
+            return Result.failure(infrastructure_failure(code, error, logger_name=__name__))
 
 
 class EntryTypeService(ClassificationService[CustomEntryType]):

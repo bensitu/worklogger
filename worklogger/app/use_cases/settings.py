@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from worklogger.app.use_cases._errors import infrastructure_failure
+
 from collections.abc import Callable
 from typing import Protocol
 
@@ -42,8 +44,8 @@ class ProxyPasswordSettings:
     def load(self) -> Result[str | None]:
         try:
             return self._load()
-        except Exception:
-            return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('credential_storage_unavailable', error, logger_name=__name__))
 
     def _load(self) -> Result[str | None]:
         legacy = self._repository.get(self._user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY)
@@ -73,8 +75,8 @@ class ProxyPasswordSettings:
             if result.ok:
                 self._repository.delete(self._user_id, NETWORK_PROXY_PASSWORD_SETTING_KEY)
             return result
-        except Exception:
-            return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('credential_storage_unavailable', error, logger_name=__name__))
 
 
 def _normalize_key(key: str) -> str:
@@ -113,8 +115,8 @@ class SetSettingHandler:
             return Result.failure(ValidationError(str(exc), str(exc)))
         try:
             self._repository.set(command.user_id, key, value)
-        except Exception:
-            return Result.failure(InfrastructureError("settings_save_failed", "settings_save_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('settings_save_failed', error, logger_name=__name__))
         if self._event_bus is not None:
             self._event_bus.publish(
                 SettingsChanged(user_id=command.user_id, key=key, value=value)
@@ -162,8 +164,8 @@ class GetSettingHandler:
             return Result.failure(ValidationError(str(exc), str(exc)))
         try:
             return Result.success(self._repository.get(query.user_id, key, query.default))
-        except Exception:
-            return Result.failure(InfrastructureError("settings_load_failed", "settings_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('settings_load_failed', error, logger_name=__name__))
 
     def get_all(self, user_id: int) -> Result[dict[str, str | None] | None]:
         reader = getattr(self._repository, "get_all", None)
@@ -171,8 +173,8 @@ class GetSettingHandler:
             return Result.success(None)
         try:
             return Result.success(reader(user_id))
-        except Exception:
-            return Result.failure(InfrastructureError("settings_load_failed", "settings_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('settings_load_failed', error, logger_name=__name__))
 
     def get_many(self, user_id: int, keys) -> Result[dict[str, str | None] | None]:
         reader = getattr(self._repository, "get_many", None)
@@ -180,5 +182,5 @@ class GetSettingHandler:
             return Result.success(None)
         try:
             return Result.success(reader(user_id, keys))
-        except Exception:
-            return Result.failure(InfrastructureError("settings_load_failed", "settings_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('settings_load_failed', error, logger_name=__name__))

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from worklogger.app.use_cases._errors import infrastructure_failure
+
 from calendar import monthrange
 from datetime import date
 from dataclasses import replace
@@ -19,7 +21,6 @@ from worklogger.domain.analytics.rules import (
 from worklogger.config.constants import MONTHLY_TARGET_HOURS_SETTING_KEY, STANDARD_WORK_HOURS_SETTING_KEY, WEEK_START_MONDAY_SETTING_KEY
 from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.settings.values import setting_bool
-from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
@@ -48,8 +49,8 @@ class GetAnalyticsBundleHandler:
                 bundle = self._annual(query)
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
-        except Exception:
-            return Result.failure(InfrastructureError("analytics_load_failed", "analytics_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('analytics_load_failed', error, logger_name=__name__))
         return Result.success(bundle)
 
     def _monthly(self, query: GetAnalyticsBundleQuery) -> ChartDataBundle:
@@ -128,8 +129,8 @@ class GetAnalyticsDashboardHandler:
                             target_mode=plan.target_mode, planning_error=plan.error_code)
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
-        except Exception:
-            return Result.failure(InfrastructureError("analytics_load_failed", "analytics_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('analytics_load_failed', error, logger_name=__name__))
         return Result.success(value)
 
     def _number(self, user_id: int, key: str, default: float, minimum: float, maximum: float) -> float:

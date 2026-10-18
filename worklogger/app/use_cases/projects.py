@@ -1,11 +1,13 @@
 """Account-specific project management and safe record associations."""
 
+from worklogger.app.use_cases._errors import infrastructure_failure
+
 from dataclasses import replace
 from uuid import uuid4
 
 from worklogger.domain.projects.models import Project, WorkContext, WorkItem
 from worklogger.domain.projects.repositories import ProjectRepository
-from worklogger.domain.shared.errors import InfrastructureError, ValidationError
+from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 
 
@@ -19,8 +21,8 @@ class ProjectService:
             return Result.success(operation())
         except ValueError as error:
             return Result.failure(ValidationError(str(error), str(error)))
-        except Exception:
-            return Result.failure(InfrastructureError("work_context_operation_failed", "work_context_operation_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('work_context_operation_failed', error, logger_name=__name__))
 
     def list_projects(self):
         return self._run(lambda: self.repository.list_projects(self.user_id))

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from worklogger.app.use_cases._errors import infrastructure_failure
+
 from dataclasses import dataclass
 
 from worklogger.app.commands.ai_commands import RewriteTextCommand, SendAiChatMessageCommand
@@ -77,11 +79,7 @@ class RewriteTextHandler:
             )
         except Exception as exc:
             return Result.failure(
-                InfrastructureError(
-                    "ai_rewrite_failed",
-                    "ai_rewrite_failed",
-                    {"reason": type(exc).__name__},
-                )
+                infrastructure_failure('ai_rewrite_failed', exc, logger_name=__name__)
             )
         if _cancelled(cancellation_token):
             return Result.failure(_cancelled_error())
@@ -129,8 +127,8 @@ class AiChatHandler:
             )
         try:
             display_name = profile_display_name(self._profiles, command.user_id)
-        except Exception:
-            return Result.failure(InfrastructureError("user_profile_load_failed", "user_profile_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('user_profile_load_failed', error, logger_name=__name__))
         history = _bounded_history(command.history, self._max_history_messages)
         request_messages = (
             {
@@ -162,11 +160,7 @@ class AiChatHandler:
             )
         except Exception as exc:
             return Result.failure(
-                InfrastructureError(
-                    "ai_chat_failed",
-                    "ai_chat_failed",
-                    {"reason": type(exc).__name__},
-                )
+                infrastructure_failure('ai_chat_failed', exc, logger_name=__name__)
             )
         if _cancelled(cancellation_token):
             return Result.failure(_cancelled_error("ai_chat_cancelled"))

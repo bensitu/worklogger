@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from worklogger.app.use_cases._errors import infrastructure_failure
+
 import json
 import math
 from collections.abc import Callable
@@ -106,8 +108,8 @@ class GenerateReportHandler:
             if str(exc) == "record_range_too_large":
                 return Result.failure(ValidationError(str(exc), str(exc)))
             return Result.failure(InfrastructureError("report_load_failed", "report_load_failed"))
-        except Exception:
-            return Result.failure(InfrastructureError("report_load_failed", "report_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('report_load_failed', error, logger_name=__name__))
         translate = partial(self._translator, language=command.language)
         if not template.ok or not template.value:
             content = _fallback_report(period.report_type, period.start, period.end, translate)

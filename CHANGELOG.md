@@ -37,6 +37,8 @@ layers. Back up your database before upgrading.
 
 ### Changed
 
+- Batched reversible-record reads, reused decoded CSV replacement records, and
+  limited calendar-import duplicate queries to the imported dates.
 - Reused project-statistics windows, released closed template dialogs, captured
   report preferences before background reads, and bounded model-status retries.
 - Shared fallback background runners and cleared owned sensitive clipboard text

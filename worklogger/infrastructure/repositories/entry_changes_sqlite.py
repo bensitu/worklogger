@@ -10,12 +10,14 @@ class SQLiteEntryChanges:
 
     @staticmethod
     def rows(connection, user_id, identities):
-        result = []
-        for identity in identities:
-            row = connection.execute("SELECT * FROM worklog WHERE user_id=? AND id=?", (user_id, identity)).fetchone()
-            if row is not None:
-                result.append(dict(row))
-        return result
+        identities = tuple(identities)
+        found = {}
+        for offset in range(0, len(identities), 200):
+            batch = identities[offset:offset + 200]
+            rows = connection.execute("SELECT * FROM worklog WHERE user_id=? AND id IN ("
+                + ",".join("?" for _identity in batch) + ")", (user_id, *batch)).fetchall()
+            found.update((row["id"], dict(row)) for row in rows)
+        return [found[identity] for identity in identities if identity in found]
 
     def remember(self, connection, user_id, operation, before, after):
         before_json, after_json = json.dumps(before, ensure_ascii=False), json.dumps(after, ensure_ascii=False)

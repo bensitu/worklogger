@@ -7,7 +7,9 @@ from datetime import date, datetime, timedelta, timezone, tzinfo
 import math
 from uuid import uuid4
 from collections.abc import Callable
-from worklogger.config.constants import LAST_USED_WORK_MODE_SETTING_KEY
+from worklogger.config.constants import (
+    LAST_USED_WORK_MODE_SETTING_KEY, TIME_ENTRY_TIMER_SETTING_KEY, PREVIOUS_AUTO_RECORD_STATE_SETTING_KEY,
+)
 
 from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.calendar.repositories import CalendarEventRepository
@@ -96,14 +98,14 @@ class TimeEntryService:
 
     def _restore(self) -> None:
         try:
-            self._timer_raw = self.settings.get(self.user_id, "time_entry_timer")
+            self._timer_raw = self.settings.get(self.user_id, TIME_ENTRY_TIMER_SETTING_KEY)
             if self._timer_raw:
                 timer = decode_timer(self._timer_raw)
                 if self.projects is not None:
                     self.projects.resolve(timer.context, timer.context)
                 self.timer = timer
             else:
-                if self.settings.get(self.user_id, "previous_auto_record_state"):
+                if self.settings.get(self.user_id, PREVIOUS_AUTO_RECORD_STATE_SETTING_KEY):
                     raise ValueError("auto_record_restore_failed")
         except Exception as error:
             self.restore_failed = True
@@ -363,7 +365,7 @@ class TimeEntryService:
     def discard_timer(self) -> Result[None]:
         def discard():
             if self.restore_failed and self._timer_raw is None:
-                current = self.settings.get(self.user_id, "time_entry_timer")
+                current = self.settings.get(self.user_id, TIME_ENTRY_TIMER_SETTING_KEY)
                 if current:
                     try:
                         timer_payload(current)

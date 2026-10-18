@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from worklogger.app.use_cases._errors import infrastructure_failure
+
 from datetime import date
 
 from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
@@ -11,11 +13,18 @@ from worklogger.app.queries.work_log_queries import (
     GetMonthRecordsQuery,
     GetWorkLogQuery,
 )
-from worklogger.domain.shared.errors import ConflictError, InfrastructureError, ValidationError
+from worklogger.domain.shared.errors import ConflictError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.worklog.repositories import WorkLogRepository
 from worklogger.domain.worklog.rules import normalize_work_log, normalize_entry_type
+
+
+def _read_work_log_range(repository: WorkLogRepository, user_id: int, start: date, end: date) -> Result[tuple[WorkLog, ...]]:
+    try:
+        return Result.success(repository.list_range(user_id, start, end))
+    except Exception as error:
+        return Result.failure(infrastructure_failure("worklog_load_failed", error, logger_name=__name__))
 
 
 class SaveWorkLogHandler:
@@ -54,8 +63,8 @@ class SaveWorkLogHandler:
             if str(exc) == "note_conflict":
                 return Result.failure(ConflictError("note_conflict", "note_conflict"))
             return Result.failure(ValidationError(str(exc), str(exc)))
-        except Exception:
-            return Result.failure(InfrastructureError("worklog_save_failed", "worklog_save_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('worklog_save_failed', error, logger_name=__name__))
         if self._event_bus is not None:
             self._event_bus.publish(WorkLogSaved(user_id=work_log.user_id, day=work_log.day))
         return Result.success(work_log)
@@ -68,8 +77,8 @@ class GetWorkLogHandler:
     def handle(self, query: GetWorkLogQuery) -> Result[WorkLog | None]:
         try:
             return Result.success(self._repository.get_for_day(query.user_id, query.day))
-        except Exception:
-            return Result.failure(InfrastructureError("worklog_load_failed", "worklog_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('worklog_load_failed', error, logger_name=__name__))
 
 
 class GetMonthRecordsHandler:
@@ -83,14 +92,11 @@ class GetMonthRecordsHandler:
             return Result.failure(ValidationError("date_range_invalid", "date_range_invalid"))
         try:
             return Result.success(self._repository.list_for_month(query.user_id, query.year, query.month))
-        except Exception:
-            return Result.failure(InfrastructureError("worklog_load_failed", "worklog_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('worklog_load_failed', error, logger_name=__name__))
 
     def list_range(self, user_id: int, start: date, end: date) -> Result[tuple[WorkLog, ...]]:
-        try:
-            return Result.success(self._repository.list_range(user_id, start, end))
-        except Exception:
-            return Result.failure(InfrastructureError("worklog_load_failed", "worklog_load_failed"))
+        return _read_work_log_range(self._repository, user_id, start, end)
 
 
 class GetAllWorkLogsHandler:
@@ -102,11 +108,8 @@ class GetAllWorkLogsHandler:
         try:
             reader = getattr(self._repository, "list_export_rows", self._repository.list_all) if self._include_note_only else self._repository.list_all
             return Result.success(reader(query.user_id))
-        except Exception:
-            return Result.failure(InfrastructureError("worklog_load_failed", "worklog_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('worklog_load_failed', error, logger_name=__name__))
 
     def list_range(self, user_id: int, start, end) -> Result[tuple[WorkLog, ...]]:
-        try:
-            return Result.success(self._repository.list_range(user_id, start, end))
-        except Exception:
-            return Result.failure(InfrastructureError("worklog_load_failed", "worklog_load_failed"))
+        return _read_work_log_range(self._repository, user_id, start, end)

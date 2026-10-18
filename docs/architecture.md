@@ -27,6 +27,10 @@ pending overview results before applying a newer state.
 
 Domain code must not import Qt, storage, or infrastructure.
 Application handlers depend on contracts, not concrete widgets or adapters.
+
+Unexpected adapter failures use `infrastructure_failure` to record the operation
+code and exception type without logging exception messages or business payloads.
+Validation and conflict results retain their distinct application contracts.
 Infrastructure implements those contracts. Presentation handles interaction and
 state display; business calculations belong to the domain/application layers.
 

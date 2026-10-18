@@ -206,8 +206,8 @@ class LoginWithIdentityHandler:
             return _cancelled()
         try:
             linked = self._identities.get_by_provider_subject(profile.value.provider, profile.value.subject)
-        except Exception:
-            return Result.failure(AuthenticationError("identity_login_failed", "identity_login_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure("identity_login_failed", error, logger_name=__name__))
         if linked is not None:
             if profile.value.issuer and linked.issuer != profile.value.issuer:
                 return Result.failure(AuthenticationError("identity_issuer_mismatch", "identity_issuer_mismatch"))

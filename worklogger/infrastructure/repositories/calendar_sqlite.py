@@ -83,12 +83,14 @@ class SQLiteCalendarEventRepository:
         events: tuple[CalendarEvent, ...],
     ) -> int:
         count = 0
-        existing = {
-            _event_identity(tuple(row)) for row in connection.execute(
-                "SELECT date, start_time, end_time, summary, description, location, all_day FROM calendar_events WHERE user_id=?",
-                (user_id,),
-            )
-        }
+        days = sorted({event.day.isoformat() for event in events})
+        existing = set()
+        for offset in range(0, len(days), 200):
+            batch = days[offset:offset + 200]
+            rows = connection.execute(
+                "SELECT date, start_time, end_time, summary, description, location, all_day FROM calendar_events "
+                "WHERE user_id=? AND date IN (" + ",".join("?" for _day in batch) + ")", (user_id, *batch))
+            existing.update(_event_identity(tuple(row)) for row in rows)
         for event in events:
             identity = _event_identity((event.day.isoformat(), event.start_time, event.end_time, event.summary,
                                         event.description, event.location, int(event.all_day)))

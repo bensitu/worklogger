@@ -1,5 +1,10 @@
 # Security and Privacy
 
+Database files are not encrypted. On Windows they inherit directory access-control
+rules; POSIX file modes do not establish Windows access control. Keep custom data
+locations and backups in directories restricted to the intended operating-system
+account. Do not place a live database in a public or broadly shared folder.
+
 Remembered-login files are scoped to the resolved database path. The default
 database retains its existing session-file location; other databases use separate
 encrypted files. Opening or signing out of one database does not remove another

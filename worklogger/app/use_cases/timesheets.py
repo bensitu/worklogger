@@ -1,5 +1,7 @@
 """Account-owned timesheet exports that never save or replace report drafts."""
 
+from worklogger.app.use_cases._errors import infrastructure_failure
+
 from datetime import datetime
 from pathlib import Path
 from collections.abc import Mapping
@@ -7,7 +9,7 @@ from worklogger.app.ports import TimesheetExporter
 
 from worklogger.app.use_cases.user_profile import profile_display_name
 from worklogger.domain.reporting.timesheets import Timesheet, MAX_TIMESHEET_ENTRIES
-from worklogger.domain.shared.errors import InfrastructureError, ValidationError
+from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 
 
@@ -31,8 +33,8 @@ class ExportTimesheetHandler:
                 return Result.failure(ValidationError("timesheet_too_large", "timesheet_too_large"))
             entries = tuple(entry for record in rows for entry in (record.entries or (record,)) if not entry.is_note_only)
             author = profile_display_name(self._profiles, user_id)
-        except Exception:
-            return Result.failure(InfrastructureError("timesheet_load_failed", "timesheet_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('timesheet_load_failed', error, logger_name=__name__))
         try:
             if any(entry.user_id != user_id for entry in entries):
                 raise ValueError("timesheet_invalid")
@@ -40,8 +42,8 @@ class ExportTimesheetHandler:
         except (TypeError, ValueError) as error:
             code = "timesheet_too_large" if str(error) == "timesheet_too_large" else "timesheet_invalid"
             return Result.failure(ValidationError(code, code))
-        except Exception:
-            return Result.failure(InfrastructureError("timesheet_load_failed", "timesheet_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('timesheet_load_failed', error, logger_name=__name__))
         path = Path(destination)
         if path.suffix.lower() != "." + file_format:
             path = path.with_name(path.name + "." + file_format)

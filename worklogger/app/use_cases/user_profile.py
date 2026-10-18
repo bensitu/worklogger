@@ -1,9 +1,11 @@
 """Account-scoped profile reads and optimistic display-name updates."""
 
+from worklogger.app.use_cases._errors import infrastructure_failure
+
 from worklogger.domain.auth.models import User
 from worklogger.domain.auth.profile import normalize_display_name
 from worklogger.domain.auth.repositories import UserProfileRepository
-from worklogger.domain.shared.errors import ConflictError, InfrastructureError, NotFoundError, ValidationError
+from worklogger.domain.shared.errors import ConflictError, NotFoundError, ValidationError
 from worklogger.domain.shared.result import Result
 
 
@@ -15,8 +17,8 @@ class UserProfileService:
     def load(self) -> Result[User]:
         try:
             user = self._repository.get_by_id(self._user_id)
-        except Exception:
-            return Result.failure(InfrastructureError("user_profile_load_failed", "user_profile_load_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('user_profile_load_failed', error, logger_name=__name__))
         if user is None or user.id != self._user_id:
             return Result.failure(NotFoundError("user_not_found", "user_not_found"))
         return Result.success(user)
@@ -35,8 +37,8 @@ class UserProfileService:
             if str(exc) == "user_not_found":
                 return Result.failure(NotFoundError("user_not_found", "user_not_found"))
             return Result.failure(ValidationError("display_name_invalid", "display_name_invalid"))
-        except Exception:
-            return Result.failure(InfrastructureError("user_profile_save_failed", "user_profile_save_failed"))
+        except Exception as error:
+            return Result.failure(infrastructure_failure('user_profile_save_failed', error, logger_name=__name__))
 
 
 def profile_display_name(repository: UserProfileRepository | None, user_id: int) -> str:

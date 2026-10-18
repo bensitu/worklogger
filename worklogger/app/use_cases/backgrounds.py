@@ -1,5 +1,7 @@
 """Account background import and preferences."""
 
+from worklogger.app.use_cases._errors import infrastructure_failure
+
 from typing import Protocol
 
 from worklogger.domain.settings.background import (
@@ -8,7 +10,7 @@ from worklogger.domain.settings.background import (
     BackgroundState,
     validate_opacity,
 )
-from worklogger.domain.shared.errors import InfrastructureError, ValidationError
+from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 
 
@@ -51,5 +53,5 @@ class BackgroundService:
             return Result.success(operation())
         except ValueError as error:
             return Result.failure(ValidationError(str(error), str(error)))
-        except Exception:  # noqa: BLE001 - Storage adapters have backend-specific failures.
-            return Result.failure(InfrastructureError("background_storage_failed", "background_storage_failed"))
+        except Exception as error:  # noqa: BLE001 - Storage adapters have backend-specific failures.
+            return Result.failure(infrastructure_failure('background_storage_failed', error, logger_name=__name__))
