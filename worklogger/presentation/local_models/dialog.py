@@ -244,8 +244,9 @@ class LocalModelsDialog(QDialog):
         label.setTextFormat(Qt.TextFormat.PlainText)
         label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         policy = label.sizePolicy()
-        policy.setHorizontalPolicy(QSizePolicy.Policy.Ignored)
+        policy.setHorizontalPolicy(QSizePolicy.Policy.Preferred)
         label.setSizePolicy(policy)
+        label.setMinimumWidth(0)
         return label
 
     def _selected_item(self):

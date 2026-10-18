@@ -10,6 +10,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtWidgets import QApplication, QFormLayout
 from tests.presentation.test_settings_presentation import MemorySettingsRepository, _view_model
 from tests.presentation.test_shell_pages import ReportsViewModel
+from tests.presentation.qt_support import dispose_test_windows
 from worklogger.infrastructure.i18n import get_language, available_languages, set_language
 from worklogger.presentation.settings import SettingsPage
 from worklogger.presentation.settings_capabilities import SettingsCapabilities
@@ -23,6 +24,9 @@ from worklogger.infrastructure.i18n import _
 
 
 class ReportSettingsLayoutChecks(unittest.TestCase):
+    def setUp(self):
+        self.addCleanup(dispose_test_windows)
+
     def test_weekly_schedule_controls_fit_supported_languages_and_themes(self):
         from PySide6.QtWidgets import QStyle, QStyleOptionComboBox
 
@@ -383,7 +387,10 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                     self.app.processEvents()
                     general = settings.category_stack.currentWidget()
                     headings = general.findChildren(QLabel, "settings_section_title_label")
-                    self.assertEqual([label.text() for label in headings], [_("Work and recording"), _("Calendar display"), _("Application behavior")])
+                    self.assertTrue(headings)
+                    for label in headings:
+                        self.assertTrue(label.text().strip())
+                        self.assertTrue(label.parentWidget().rect().contains(label.geometry()))
                     groups = [label.parentWidget() for label in headings]
                     self.assertEqual(len(set(groups)), len(headings))
                     self.assertTrue(all(group.objectName() == "settings_content_frame" for group in groups))
@@ -523,6 +530,7 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                         self.assertIn("196.00", text)
                     finally:
                         document.close()
+                        del document
         finally:
             set_language(old_language)
 

@@ -82,6 +82,43 @@ def _calendar_state() -> CalendarMonthViewState:
 
 
 class QtWidgetTests(unittest.TestCase):
+    def test_settings_navigation_coalesces_label_layout_and_tracks_font_changes(self):
+        class MeasuredNavigation(SettingsNav):
+            wraps = 0
+
+            def _wrap_labels(self):
+                self.wraps += 1
+                super()._wrap_labels()
+
+        navigation = MeasuredNavigation((("appearance", "Appearance and display preferences"),
+                                         ("general", "Work schedules and record settings")))
+        self.addCleanup(navigation.deleteLater)
+        navigation.setFixedWidth(180)
+        navigation.resize(180, 500)
+        navigation.show()
+        for _pass in range(3):
+            self._app.processEvents()
+        before = navigation.wraps
+        for _selection in range(20):
+            navigation.set_category("appearance")
+        self._app.processEvents()
+        self.assertEqual(navigation.wraps, before)
+        navigation.set_category("general")
+        navigation.set_category("appearance")
+        navigation.set_category("general")
+        self._app.processEvents()
+        self.assertEqual(navigation.wraps, before + 1)
+        self.assertEqual(navigation.category, "general")
+        previous_height = navigation._buttons["general"].minimumHeight()
+        original_style = self._app.styleSheet()
+        self.addCleanup(self._app.setStyleSheet, original_style)
+        self._app.setStyleSheet(original_style + "\nQFrame#settings_navigation_frame, "
+            "QFrame#settings_navigation_frame QPushButton { font-size: 22px; }")
+        for _pass in range(3):
+            self._app.processEvents()
+        self.assertGreater(navigation._buttons["general"].minimumHeight(), previous_height)
+        self.assertTrue(navigation._buttons["general"].property("active"))
+
     def test_entry_type_options_preserve_values_and_follow_shared_classification_colors(self):
         from PySide6.QtWidgets import QComboBox
         from worklogger.domain.worklog.models import CustomEntryType, EntryType

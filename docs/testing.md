@@ -119,7 +119,8 @@ deletion, and restore themes/language in fixtures. Keep native interactive check
 sequential. Use temporary file databases when multiple connections must share data.
 
 Run optional visual checks for changes to layout, themes, fonts, images,
-translations, or display scaling:
+translations, or display scaling. Run broad visual coverage in separate module
+processes to keep Qt application state and deferred window deletion isolated:
 
 ```sh
 python -m unittest tests.visual.calendar_checks -v
@@ -129,6 +130,7 @@ python -m unittest tests.visual.control_states_checks -v
 python -m unittest tests.visual.record_editing_checks -v
 python -m unittest tests.visual.background_images_checks -v
 python -m unittest tests.visual.cloud_backup_checks -v
+python -m unittest tests.visual.shell_checks -v
 ```
 
 To retain screenshots:
@@ -141,7 +143,9 @@ python -m unittest tests.visual.shell_checks -v
 ```
 
 Inspect text fit, focus, button states, scrolling, and imagery with representative
-languages/themes/window sizes. Offscreen rendering does not establish native
+languages/themes/window sizes. Compare unchanged surfaces against baseline
+screenshots when reorganizing QSS; keep layout-sensitive checks at both normal
+and scaled display settings. Offscreen rendering does not establish native
 dialog, tray, credential-store, or packaged behavior; check those on the target OS.
 
 ## Persistence and Distribution

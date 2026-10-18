@@ -39,6 +39,8 @@ layers. Back up your database before upgrading.
 
 - Consolidated selection controls, scrollbars, icon actions, and compact sizing
   into shared theme rules while retaining existing colors and interaction states.
+- Coalesced settings navigation text layout during selection, resize, and theme
+  changes without scheduling work for unchanged selections.
 - Unified classification indicators around muted cool work colors, warm leave
   colors, and soft green break colors, including custom types.
 - Organized Calendar, Analytics, Reports, and Settings in a shared desktop workspace,
@@ -65,6 +67,7 @@ layers. Back up your database before upgrading.
 
 ### Fixed
 
+- Clipped wrapped model filenames in compact localized model-management dialogs.
 - UI freezes during long-running authentication, text processing, and data operations.
 - Unsynchronized manual/automatic record content, inconsistent rest-day accounting,
   and duplicated record content in independent memos during CSV import.

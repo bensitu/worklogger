@@ -11,6 +11,7 @@ from PySide6.QtCore import QPoint, Qt
 from PySide6.QtWidgets import QApplication
 
 from tests.presentation.test_local_models_presentation import FakeLocalModelHandlers
+from tests.presentation.qt_support import dispose_test_windows
 from worklogger.app.queries.local_model_queries import ListLocalModelsQuery
 from worklogger.app.use_cases.local_models import LocalModelInventory
 from worklogger.domain.local_model.models import LocalModelEntry, LocalModelListItem
@@ -44,6 +45,7 @@ class ModelAccountLayoutChecks(unittest.TestCase):
         install_bundled_fonts()
 
     def setUp(self):
+        self.addCleanup(dispose_test_windows)
         self.language, self.stylesheet, self.palette = (
             get_language(),
             self.app.styleSheet(),
@@ -286,7 +288,8 @@ class ModelAccountLayoutChecks(unittest.TestCase):
                         dialog.resize(width, height)
                         for row in range(4):
                             dialog.model_list.setCurrentRow(row)
-                            self.app.processEvents()
+                            for _layout_pass in range(3):
+                                self.app.processEvents()
                             self.assertEqual(
                                 (dialog.width(), dialog.height()), (width, height)
                             )
