@@ -98,8 +98,8 @@ def build_settings_workflow(
 ) -> SettingsWorkflowController | None:
     if auth_view_model is None:
         return None
-    features = FeatureFlags.from_env()
     runtime_configuration = load_runtime_configuration()
+    features = FeatureFlags.from_env(ai_allowed=runtime_configuration.features.ai)
     return SettingsWorkflowController(
         settings_view_model=SettingsViewModel(
             user_id=user.id,
@@ -152,7 +152,7 @@ def build_settings_workflow(
         local_inference=handlers.local_inference,
         ai_gateway=handlers.ai_gateway,
         ai_connection_test_timeout_seconds=runtime_configuration.ai.connection_test_timeout_seconds,
-        capabilities=SettingsCapabilities(external_generation=features.enable_ai,
+        capabilities=SettingsCapabilities(ai_enabled=features.enable_ai, external_generation=features.enable_ai,
             proxy_routing=handlers.network_transport is not None, model_management=features.enable_local_models,
             minimal_view=runtime_configuration.features.minimal_view),
         cloud_backup_startup_delay_seconds=runtime_configuration.cloud_backup.startup_delay_seconds,

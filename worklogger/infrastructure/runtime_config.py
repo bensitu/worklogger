@@ -18,6 +18,7 @@ MAX_CONFIG_BYTES = 64 * 1024
 class DeploymentFeatures:
     background_images: bool = False
     minimal_view: bool = False
+    ai: bool = True
 
 
 @dataclass(frozen=True)
@@ -99,7 +100,7 @@ def load_runtime_configuration(path=None):
             raise TypeError("runtime_configuration_invalid")
         flags = {}
         for field in fields(DeploymentFeatures):
-            enabled = value.get("features", {}).get(field.name, False)
+            enabled = value.get("features", {}).get(field.name, field.default)
             if type(enabled) is not bool:
                 raise TypeError("runtime_configuration_invalid")
             flags[field.name] = enabled
@@ -134,4 +135,4 @@ def load_runtime_configuration(path=None):
         return RuntimeConfiguration()
     except (OSError, UnicodeError, ValueError, TypeError, RecursionError):
         LOGGER.warning("runtime_configuration_invalid")
-        return RuntimeConfiguration()
+        return RuntimeConfiguration(features=DeploymentFeatures(ai=False))

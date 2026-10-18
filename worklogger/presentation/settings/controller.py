@@ -78,6 +78,9 @@ from worklogger.presentation.processing import TextProcessingTask
 
 class SettingsWorkflowController:
     def initialize_processing(self, owner, callback):
+        if not self._capabilities.ai_enabled:
+            callback()
+            return
         def load():
             settings = self._settings_view_model.load()
             model = self._local_models_workflow.view_model if self._local_models_workflow is not None else None
@@ -178,7 +181,8 @@ class SettingsWorkflowController:
         self._profile_runners: WeakKeyDictionary[SettingsPage, QtJobRunner] = WeakKeyDictionary()
         self._connection_tests: WeakKeyDictionary[SettingsPage, TextProcessingTask] = WeakKeyDictionary()
         if local_inference is not None:
-            self._capabilities = replace(self._capabilities, local_generation=local_inference.backend_available)
+            self._capabilities = replace(self._capabilities,
+                local_generation=self._capabilities.ai_enabled and local_inference.backend_available)
 
         self._data_workflow = DataSettingsWorkflow(
             data_management_view_model=data_management_view_model,
@@ -288,6 +292,8 @@ class SettingsWorkflowController:
             self._refresh_local_models_status(surface)
 
     def _open_local_models(self, surface: SettingsPage) -> None:
+        if not self._capabilities.ai_enabled or not self._capabilities.model_management or self._local_models_workflow is None:
+            return
         self._local_models_workflow.open(surface)
         self._refresh_local_models_status(surface)
 
@@ -429,7 +435,7 @@ class SettingsWorkflowController:
             complete(Result.failure(InfrastructureError("user_profile_save_failed", "user_profile_save_failed")))
 
     def _test_external_model(self, surface: SettingsPage):
-        if surface.is_busy or self._ai_gateway is None:
+        if not self._capabilities.ai_enabled or surface.is_busy or self._ai_gateway is None:
             return
         surface.set_busy("external_model_test", True)
         surface.set_external_test_status("")

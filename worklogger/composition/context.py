@@ -106,6 +106,7 @@ class RuntimeHandlers:
     proxy_password: object | None = None
     user_profiles: UserProfileRepository | None = None
     pagination: PaginationRuntimeConfiguration = PaginationRuntimeConfiguration()
+    ai_enabled: bool = True
 
 
 def build_runtime_repositories(
@@ -142,7 +143,7 @@ def build_runtime_handlers(
 ) -> RuntimeHandlers:
     inference = None
     configuration = load_runtime_configuration()
-    features = FeatureFlags.from_env()
+    features = FeatureFlags.from_env(ai_allowed=configuration.features.ai)
     transport = gateway = external_keys = proxy_password = None
     if user_id is not None and database_path is not None:
         external_service, namespace = account_credential_namespaces(user_id, database_path)
@@ -181,4 +182,5 @@ def build_runtime_handlers(
         proxy_password=proxy_password,
         user_profiles=user_profiles,
         pagination=configuration.pagination,
+        ai_enabled=features.enable_ai,
     )

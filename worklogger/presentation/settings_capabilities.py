@@ -10,3 +10,4 @@ class SettingsCapabilities:
     proxy_routing: bool = False
     model_management: bool = True
     minimal_view: bool = False
+    ai_enabled: bool = True

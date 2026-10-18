@@ -36,9 +36,11 @@ class AccountAIGateway:
 
     @property
     def available(self):
+        if not self._enabled:
+            return False
         try:
             values = selected_settings(self._settings, self._user_id, _CONFIGURATION_KEYS)
-            if not self._enabled or not setting_bool(values.get(AI_ASSIST_ENABLED_SETTING_KEY), True):
+            if not setting_bool(values.get(AI_ASSIST_ENABLED_SETTING_KEY), True):
                 return False
             if setting_bool(values.get(EXTERNAL_MODEL_ENABLED_SETTING_KEY)):
                 return bool(self._external_ready and self._configuration(values))
@@ -55,9 +57,11 @@ class AccountAIGateway:
         return endpoint, model
 
     def generate(self, request):
+        if not self._enabled:
+            return Result.failure(ValidationError("ai_service_disabled", "ai_service_disabled"))
         try:
             values = selected_settings(self._settings, self._user_id, _CONFIGURATION_KEYS)
-            if not self._enabled or not setting_bool(values.get(AI_ASSIST_ENABLED_SETTING_KEY), True):
+            if not setting_bool(values.get(AI_ASSIST_ENABLED_SETTING_KEY), True):
                 return Result.failure(ValidationError("ai_assist_disabled", "ai_assist_disabled"))
             if not setting_bool(values.get(EXTERNAL_MODEL_ENABLED_SETTING_KEY)):
                 if self._local is None:

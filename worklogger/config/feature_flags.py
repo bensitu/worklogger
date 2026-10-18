@@ -28,11 +28,12 @@ class FeatureFlags:
     enable_update_check: bool = True
 
     @classmethod
-    def from_env(cls, environ: Mapping[str, str] | None = None) -> "FeatureFlags":
+    def from_env(cls, environ: Mapping[str, str] | None = None, *, ai_allowed: bool = True) -> "FeatureFlags":
         source = environ if environ is not None else os.environ
+        ai_enabled = ai_allowed and _env_bool(source, "WORKLOGGER_FEATURE_AI", cls.enable_ai)
         return cls(
-            enable_ai=_env_bool(source, "WORKLOGGER_FEATURE_AI", cls.enable_ai),
-            enable_local_models=_env_bool(
+            enable_ai=ai_enabled,
+            enable_local_models=ai_enabled and _env_bool(
                 source,
                 "WORKLOGGER_FEATURE_LOCAL_MODELS",
                 cls.enable_local_models,

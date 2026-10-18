@@ -87,6 +87,24 @@ class AccountNetworkTests(unittest.TestCase):
         self.assertFalse(gateway.generate(request).ok)
         self.assertEqual(len(self.requests), 1)
 
+    def test_disabled_ai_does_not_read_credentials_or_dispatch_to_any_provider(self):
+        local, factory = Mock(available=True), Mock()
+        gateway = AccountAIGateway(local=local, settings=self.settings, user_id=1,
+            key_store=self.keys, transport=self.transport, enabled=False, gateway_factory=factory)
+        gateway.update_configuration(SimpleNamespace(external_api_key="synthetic-api-key", external_api_key_available=True))
+        for external in ("0", "1"):
+            self.values.update(ai_assist_enabled="1", external_model_enabled=external,
+                external_model_base_url="https://example.com/v1", external_model_name="configured-model")
+            self.assertFalse(gateway.available)
+            result = gateway.generate(AIRequest(messages=({"role": "user", "content": "Synthetic text"},),
+                                                model="default", timeout_seconds=30))
+            self.assertEqual(result.error.code, "ai_service_disabled")
+        self.settings.get_many.assert_not_called()
+        self.keys.get_secret.assert_not_called()
+        local.generate.assert_not_called()
+        factory.assert_not_called()
+        self.assertEqual(self.requests, [])
+
     def test_account_proxy_routes_updates_and_applies_live_configuration(self):
         checker = GitHubReleaseUpdateChecker(api_url="https://example.com/releases", opener=self.transport.opener(public_only=True))
         self.assertEqual(checker.check_latest_version("4.0.0").value, "4.1.0")

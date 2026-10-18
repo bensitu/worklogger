@@ -75,6 +75,7 @@ def build_notes_workflow(
             language=get_language(),
             markdown_exporter=handlers.markdown_exporter,
             rewrite_handler=handlers.rewrite_handler,
+            ai_enabled=handlers.ai_enabled,
         ),
         job_runner=job_runner,
     )

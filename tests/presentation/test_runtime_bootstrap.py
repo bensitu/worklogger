@@ -256,6 +256,71 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 runtime.window.close()
                 runtime.local_inference.close()
 
+    def test_ai_deployment_policy_disables_full_and_minimal_workflows_without_model_or_remote_requests(self):
+        import json
+        from worklogger.app.ports import AIRequest
+        from worklogger.infrastructure.local_model import JsonLocalModelStore
+        from worklogger.presentation.notes.dialog import NoteEditorDialog
+
+        self.enterContext(patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes))
+        with patch.dict(os.environ, {"WORKLOGGER_FEATURE_AI": "1", "WORKLOGGER_FEATURE_LOCAL_MODELS": "1"}):
+            for minimal in (False, True):
+                with self.subTest(minimal=minimal), self.runtime_directory() as directory:
+                    root = Path(directory)
+                    configuration = root / "worklogger.config.json"
+                    configuration.write_text(json.dumps({"features": {"ai": False, "minimal_view": True}}), encoding="utf-8")
+                    model = root / "models" / "retained.gguf"
+                    model.parent.mkdir()
+                    model.write_bytes(b"Synthetic retained model")
+                    with patch("worklogger.infrastructure.runtime_config.configuration_path", return_value=configuration), \
+                            patch.object(JsonLocalModelStore, "list_models") as inventory, \
+                            patch.object(JsonLocalModelStore, "verify_model") as verify, \
+                            patch("worklogger.infrastructure.ai.external.OpenAICompatibleGateway.generate") as external:
+                        result = build_desktop_runtime(DesktopRuntimeConfig(database_path=root / "worklog.db",
+                            create_user_if_empty=True, password_iterations=1000, minimal_mode=minimal), argv=[])
+                        self.assertTrue(result.ok, result.error)
+                        runtime = result.value
+                        page = None
+                        try:
+                            window = runtime.window
+                            window.entry_panel.content_input.setPlainText("Synthetic work description")
+                            self.assertFalse(window.entry_panel.polish_button.isEnabled())
+                            self.assertFalse(window.entry_panel.polish_button.isHidden())
+                            self.assertTrue(window.entry_panel.content_input.isEnabled())
+                            notes = window._notes_workflow._view_model
+                            self.assertFalse(notes.rewrite_available)
+                            self.assertEqual(notes.rewrite("Synthetic note").error.code, "ai_service_disabled")
+                            note_dialog = NoteEditorDialog(notes, date(2026, 10, 18))
+                            try:
+                                self.assertFalse(note_dialog.ai_checkbox.isEnabled())
+                                self.assertFalse(note_dialog.ai_checkbox.isHidden())
+                                self.assertTrue(note_dialog.report_checkbox.isEnabled())
+                            finally:
+                                note_dialog.deleteLater()
+                            request = AIRequest(messages=({"role": "user", "content": "Synthetic message"},),
+                                                model="default", timeout_seconds=1)
+                            self.assertEqual(runtime.local_inference.generate(request).error.code, "ai_service_disabled")
+                            workflow = window._settings_workflow
+                            self.assertIsNone(workflow._local_models_workflow)
+                            page = workflow.create_page()
+                            self.assertFalse(page.manage_local_models_button.isEnabled())
+                            self.assertFalse(page.local_model_enabled_switch.isEnabled())
+                            self.assertFalse(page.external_base_url_line_edit.isEnabled())
+                            workflow._open_local_models(page)
+                            workflow._test_external_model(page)
+                            if not minimal:
+                                self.assertFalse(window.reports_page.ai_assist_button.isEnabled())
+                                self.assertFalse(window.reports_page.ai_assist_button.isHidden())
+                            inventory.assert_not_called()
+                            verify.assert_not_called()
+                            external.assert_not_called()
+                            self.assertEqual(model.read_bytes(), b"Synthetic retained model")
+                        finally:
+                            if page is not None:
+                                page.deleteLater()
+                            runtime.window.close()
+                            runtime.local_inference.close()
+
     def test_disabled_optional_features_are_not_composed(self):
         with patch.dict(os.environ, {
             "WORKLOGGER_FEATURE_AI": "0", "WORKLOGGER_FEATURE_LOCAL_MODELS": "0",

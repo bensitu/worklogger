@@ -539,6 +539,43 @@ class SettingsPresentationTests(unittest.TestCase):
         self.assertFalse(page.proxy_address_line_edit.isEnabled())
         self.assertEqual(model.load().value.network_proxy_address, "proxy.example.test")
 
+    def test_ai_policy_disables_visible_controls_across_state_refreshes_without_changing_preferences(self):
+        repository = MemorySettingsRepository()
+        repository.set(1, LOCAL_MODEL_ENABLED_SETTING_KEY, "1")
+        repository.set(1, EXTERNAL_MODEL_NAME_SETTING_KEY, "retained-model")
+        before = dict(repository.values)
+        capabilities = SettingsCapabilities(ai_enabled=False, external_generation=True,
+                                            local_generation=True, model_management=True)
+        page = SettingsPage(_view_model(repository), capabilities=capabilities)
+        self.addCleanup(page.deleteLater)
+        page.category_nav.set_category("ai")
+        self.assertTrue(page.refresh())
+        fields = (page.ai_enabled_switch, page.ai_notes_switch, page.ai_calendar_switch, page.ai_quick_logs_switch,
+                  page.external_model_enabled_switch, page.external_base_url_line_edit, page.external_model_line_edit,
+                  page.external_api_key_line_edit, page.test_external_model_button, page.local_model_enabled_switch,
+                  page.local_context_spin_box, page.manage_local_models_button)
+        for _refresh in range(2):
+            page.set_local_model_context_limit(16384)
+            page.set_local_runtime_status(ready=True, reason="")
+            page.set_model_management_available(True)
+            page.set_busy("external_model_test", True)
+            page.set_busy("external_model_test", False)
+            for field in fields:
+                self.assertFalse(field.isEnabled(), field.objectName())
+                self.assertFalse(field.isHidden(), field.objectName())
+            page.ai_enabled_switch.click()
+            page.local_model_enabled_switch.click()
+            self.assertEqual(repository.values, before)
+            self.assertIn("disabled for this installation", page.local_runtime_status_label.text())
+            self.assertTrue(page.category_stack.currentWidget().isEnabled())
+            self.assertTrue(page.proxy_enabled_switch.isEnabled())
+            page.refresh()
+        page.set_capabilities(SettingsCapabilities(local_generation=True))
+        self.assertTrue(page.local_model_enabled_switch.isEnabled())
+        self.assertTrue(page.local_model_enabled_switch.is_checked())
+        self.assertEqual(page.external_model_line_edit.text(), "retained-model")
+        self.assertEqual(repository.values, before)
+
     def test_native_settings_expose_unavailable_features_and_busy_state(self) -> None:
         page = SettingsPage(_view_model(MemorySettingsRepository()))
         self.assertFalse(page.external_api_key_line_edit.isEnabled())

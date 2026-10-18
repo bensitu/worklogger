@@ -12,6 +12,7 @@ from tests.presentation.test_settings_presentation import MemorySettingsReposito
 from tests.presentation.test_shell_pages import ReportsViewModel
 from worklogger.infrastructure.i18n import get_language, available_languages, set_language
 from worklogger.presentation.settings import SettingsPage
+from worklogger.presentation.settings_capabilities import SettingsCapabilities
 from worklogger.presentation.shell.reports_page import ReportsPage
 from worklogger.presentation.job_runner import ImmediateJobRunner
 from worklogger.presentation.theme import configure_application_style, install_bundled_fonts, ThemeEngine, THEME_KEYS
@@ -82,16 +83,23 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                         page.show()
                         for width in (900, 1100):
                             page.resize(width, 760)
-                            self.app.processEvents()
-                            fields = (page.external_api_key_line_edit, page.external_base_url_line_edit,
-                                      page.external_model_line_edit)
-                            self.assertEqual(len({field.width() for field in fields}), 1)
-                            for field in fields:
-                                parent = field.parentWidget()
-                                rectangle = field.rect().translated(field.mapTo(parent, QPoint()))
-                                self.assertTrue(parent.contentsRect().contains(rectangle))
-                                self.assertGreater(field.width(), parent.width() / 2)
-                            self.capture(page, f"{language}-external-model-{'dark' if dark else 'light'}-{width}")
+                            for allowed in (True, False):
+                                page.set_capabilities(SettingsCapabilities(ai_enabled=allowed))
+                                self.app.processEvents()
+                                fields = (page.external_api_key_line_edit, page.external_base_url_line_edit,
+                                          page.external_model_line_edit)
+                                self.assertEqual(len({field.width() for field in fields}), 1)
+                                for field in fields:
+                                    parent = field.parentWidget()
+                                    rectangle = field.rect().translated(field.mapTo(parent, QPoint()))
+                                    self.assertTrue(parent.contentsRect().contains(rectangle))
+                                    self.assertGreater(field.width(), parent.width() / 2)
+                                    self.assertTrue(field.isVisible())
+                                    if not allowed:
+                                        self.assertFalse(field.isEnabled())
+                                self.assertEqual(page.external_base_url_line_edit.isEnabled(), allowed)
+                                self.assertTrue(page.category_stack.currentWidget().isEnabled())
+                                self.capture(page, f"{language}-external-model-{'dark' if dark else 'light'}-{width}-{'enabled' if allowed else 'disabled'}")
                     finally:
                         page.close()
                         page.deleteLater()

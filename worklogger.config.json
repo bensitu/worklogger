@@ -1,5 +1,6 @@
 {
   "features": {
+    "ai": true,
     "background_images": true,
     "minimal_view": true
   },

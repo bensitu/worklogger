@@ -62,6 +62,14 @@ class ApplicationContractTests(unittest.TestCase):
         self.assertTrue(flags.enable_ai)
         self.assertFalse(flags.enable_local_models)
         self.assertFalse(flags.enable_update_check)
+        for allowed, environment, expected in (
+            (False, {"WORKLOGGER_FEATURE_AI": "1", "WORKLOGGER_FEATURE_LOCAL_MODELS": "1"}, False),
+            (True, {"WORKLOGGER_FEATURE_AI": "0", "WORKLOGGER_FEATURE_LOCAL_MODELS": "1"}, False),
+            (True, {"WORKLOGGER_FEATURE_AI": "1", "WORKLOGGER_FEATURE_LOCAL_MODELS": "1"}, True),
+        ):
+            flags = FeatureFlags.from_env(environment, ai_allowed=allowed)
+            self.assertEqual((flags.enable_ai, flags.enable_local_models), (expected, expected))
+            self.assertTrue(flags.enable_update_check)
 
 
 if __name__ == "__main__":

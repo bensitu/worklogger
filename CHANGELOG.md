@@ -15,6 +15,8 @@ layers. Back up your database before upgrading.
 
 ### Added
 
+- An installation-wide AI policy that keeps related controls visible but
+  disabled and prevents local and external processing and model management.
 - Deployment configuration for cloud backup polling and retries, AI request
   deadlines, model network timeouts, and note, record, and report page sizes.
 - Personal WebDAV and S3-compatible cloud backups with encrypted account

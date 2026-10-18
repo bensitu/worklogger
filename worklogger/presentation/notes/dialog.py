@@ -13,7 +13,7 @@ from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.errors import CancellationError
 from worklogger.infrastructure.i18n import _, get_language
 from worklogger.presentation.notes.history import NoteHistoryBrowser
-from worklogger.presentation.errors import display_error_message
+from worklogger.presentation.errors import display_error_code, display_error_message
 from worklogger.presentation.job_runner import QtJobRunner, owned_callback
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon
@@ -216,6 +216,8 @@ class NoteEditorDialog(QDialog):
 
     def _update_actions(self):
         has_content = bool(self.editor.toPlainText().strip())
+        self.ai_checkbox.setEnabled(not self._busy and self._view_model.ai_enabled)
+        self.ai_checkbox.setToolTip("" if self._view_model.ai_enabled else display_error_code("ai_service_disabled"))
         self.rewrite_button.setEnabled(not self._busy and has_content and self._ai_ready)
         self.copy_button.setEnabled(has_content)
         self.export_button.setEnabled(has_content)

@@ -120,6 +120,8 @@ class SettingsSectionState:
             self.set_state(self._state)
 
     def _apply_capabilities(self) -> None:
+        ai_section = self.category_stack.widget(self._category_pages["ai"])
+        ai_section.content_widget.setEnabled(self._capabilities.ai_enabled)
         self.minimal_view_row.setVisible(self._capabilities.minimal_view)
         self.minimal_switch.setEnabled(self._capabilities.minimal_view)
         available = (
@@ -222,6 +224,11 @@ class SettingsSectionState:
                 _("Local model is ready. It loads when text processing starts.") if self._local_runtime_ready
                 else display_error_code(self._local_runtime_reason)
             )
+        if not self._capabilities.ai_enabled:
+            message = display_error_code("ai_service_disabled")
+            self.external_runtime_status_label.setText(message)
+            self.local_runtime_status_label.setText(message)
+            self.external_model_status_label.setText(message)
         port = state.network_proxy_port.strip()
         configured = bool(
             state.network_proxy_address.strip()

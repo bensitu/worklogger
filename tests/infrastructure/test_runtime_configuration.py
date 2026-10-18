@@ -52,6 +52,17 @@ class RuntimeConfigurationTests(unittest.TestCase):
         adjacent.write_text("{}", encoding="utf-8")
         self.assertEqual(configuration_path(frozen=True, executable=executable, bundle_root=bundle), adjacent)
 
+    def test_ai_defaults_enabled_but_invalid_configuration_disables_it(self):
+        self.assertTrue(load_runtime_configuration(self.path).features.ai)
+        for features, expected in (({}, True), ({"ai": True}, True), ({"ai": False}, False)):
+            self.path.write_text(json.dumps({"features": features}), encoding="utf-8")
+            self.assertEqual(load_runtime_configuration(self.path).features.ai, expected)
+        for raw in ('{"features":{"ai":"false"}}', '{"features":{"ai":0}}',
+                    '{"features":{"ai":null}}', '{invalid'):
+            self.path.write_text(raw, encoding="utf-8")
+            with self.assertLogs("worklogger.infrastructure.runtime_config", level="WARNING"):
+                self.assertFalse(load_runtime_configuration(self.path).features.ai)
+
     def test_cloud_backup_delay_accepts_bounded_integer_seconds_and_defaults_when_missing(self):
         self.assertEqual(load_runtime_configuration(self.path).cloud_backup.startup_delay_seconds, 300)
         for options, expected in (({}, 300), ({"cloud_backup": {}}, 300),

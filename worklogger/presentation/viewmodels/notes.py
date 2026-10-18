@@ -15,8 +15,10 @@ NoteEditorState = NoteWorkspace
 
 
 class NoteEditorViewModel:
-    def __init__(self, service: DailyNotesService, *, markdown_exporter, rewrite_handler, language="en_US"):
+    def __init__(self, service: DailyNotesService, *, markdown_exporter, rewrite_handler, language="en_US",
+                 ai_enabled=True):
         self.service = service
+        self.ai_enabled = ai_enabled
         self._markdown_exporter, self._rewrite_handler, self._language = markdown_exporter, rewrite_handler, language
 
     @property

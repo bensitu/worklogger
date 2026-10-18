@@ -84,6 +84,7 @@ Changes apply after restarting.
 ```json
 {
   "features": {
+    "ai": true,
     "background_images": true,
     "minimal_view": true
   },
@@ -115,9 +116,24 @@ are available. Disabling it does not delete account images or preferences.
 `features.minimal_view` controls whether the minimal-view preference and startup
 mode are available. Disabling it selects the full view without removing the
 account's saved preference or interrupting its persisted timer.
-Both flags must be JSON booleans. Missing flags default to disabled; invalid
-configuration disables deployment-controlled features. Files are limited to
+Both display flags must be JSON booleans and default to disabled when omitted.
+Invalid configuration disables deployment-controlled features. Files are limited to
 64 KiB. Keep credentials and private data out of this file.
+
+`features.ai` is the installation-wide AI policy and defaults to `true` when the
+file or this property is absent. Set it to `false` to disable local and external
+AI generation, polishing, connection tests, model management, and AI-related
+settings, including per-note AI sharing controls. Buttons and settings remain
+visible but unavailable; navigation and scrolling remain available. Saved account preferences, credentials,
+and model files are retained. Ordinary recording, notes, template-based reports,
+updates, and backups remain available. Restart to apply changes.
+
+The policy accepts only a JSON boolean. An invalid AI value or a malformed or
+unreadable configuration file disables AI. Environment variables and account
+preferences cannot override `features.ai: false`. Protect the configuration and
+installation files with deployment permissions; this client-side switch is not
+an enforcement boundary against someone who can replace those files or the
+application itself.
 
 `cloud_backup.startup_delay_seconds` is the minimum delay before automatic cloud
 backups may run after signing in. It defaults to 300 seconds and accepts integers
@@ -180,7 +196,9 @@ Assistant, model-management, and update-check workflows also honor
 `WORKLOGGER_FEATURE_AI`, `WORKLOGGER_FEATURE_LOCAL_MODELS`, and
 `WORKLOGGER_FEATURE_UPDATE_CHECK`. These default to enabled. Values `1`,
 `true`, `yes`, and `on` enable them; other values disable them.
-Account preferences cannot override a disabled deployment workflow.
+These environment flags can further restrict the JSON policy, not enable AI
+against it. Disabling AI also disables local model management. Account preferences
+cannot override a disabled deployment workflow.
 
 ## Minimal View
 
