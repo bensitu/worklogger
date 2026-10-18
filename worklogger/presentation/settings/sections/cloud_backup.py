@@ -3,19 +3,82 @@
 from dataclasses import fields
 from uuid import uuid4
 
-from PySide6.QtCore import QLocale, QTime, Signal, Qt
-from PySide6.QtWidgets import QCheckBox, QComboBox, QLineEdit, QPushButton, QSpinBox, QTimeEdit, QWidget
+from PySide6.QtCore import QLocale, QSize, QTime, Signal, Qt
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QGridLayout, QLabel, QLayout,
+    QLineEdit, QPushButton, QSizePolicy, QSpinBox, QTimeEdit, QVBoxLayout, QWidget)
 
 from worklogger.domain.cloud_backup import BackupConfiguration, BackupCredentials
 from worklogger.infrastructure.i18n import _, get_language
 from worklogger.presentation.settings.sections.common import _card_with_form, _add_action_buttons, _secondary_label
 from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.widgets.numeric_input import apply_numeric_input_padding
 
 
 def _number(minimum, maximum):
     field = QSpinBox()
+    apply_numeric_input_padding(field)
     field.setRange(minimum, maximum)
     return field
+
+
+class _BackupFieldGroup(QWidget):
+    def __init__(self, rows):
+        super().__init__()
+        self.setObjectName("cloud_backup_field_group_widget")
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        self._grid = QGridLayout(self)
+        self._grid.setContentsMargins(0, 0, 0, 0)
+        self._grid.setHorizontalSpacing(12)
+        self._grid.setVerticalSpacing(8)
+        self._grid.setSizeConstraint(QLayout.SizeConstraint.SetNoConstraint)
+        self._containers = {}
+        self._signature = None
+        for name, label, field in rows:
+            container = QWidget(self)
+            container.setObjectName("cloud_backup_field_widget")
+            layout = QVBoxLayout(container)
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.setSpacing(8)
+            label.setWordWrap(True)
+            label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+            layout.addWidget(label)
+            field.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+            layout.addWidget(field)
+            layout.addStretch(1)
+            self._containers[name] = container
+        self.reflow()
+
+    def minimumSizeHint(self):
+        return QSize(max(container.minimumSizeHint().width() for container in self._containers.values()),
+                     self._grid.minimumSize().height())
+
+    def set_field_visible(self, name, visible):
+        self._containers[name].setVisible(visible)
+
+    def sync_visibility(self):
+        self.setVisible(any(not container.isHidden() for container in self._containers.values()))
+        self.reflow()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.reflow()
+
+    def reflow(self):
+        visible = tuple(name for name, container in self._containers.items() if not container.isHidden())
+        minimum = max(160, self.minimumSizeHint().width())
+        columns = max(1, min(len(visible), (self.width() + 12) // (minimum + 12)))
+        signature = visible, columns
+        if signature == self._signature:
+            return
+        self._signature = signature
+        while self._grid.count():
+            self._grid.takeAt(0)
+        for column in range(self._grid.columnCount()):
+            self._grid.setColumnStretch(column, 0)
+        for index, name in enumerate(visible):
+            self._grid.addWidget(self._containers[name], index // columns, index % columns)
+            self._grid.setColumnStretch(index % columns, 1)
+        self.updateGeometry()
 
 
 class CloudBackupPanel(QWidget):
@@ -27,8 +90,8 @@ class CloudBackupPanel(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setObjectName("cloud_backup_panel_widget")
         self._loading, self._dirty, self._busy, self._configured = True, False, False, False
-        from PySide6.QtWidgets import QVBoxLayout
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         card = _card_with_form(_("Personal cloud backup"))
@@ -55,6 +118,7 @@ class CloudBackupPanel(QWidget):
             self.schedule.addItem(caption, key)
         self.interval_hours, self.month_day = _number(1, 8760), _number(1, 31)
         self.time = QTimeEdit()
+        apply_numeric_input_padding(self.time)
         self.time.setDisplayFormat("HH:mm")
         self.weekday = QComboBox()
         locale = QLocale(get_language())
@@ -72,8 +136,27 @@ class CloudBackupPanel(QWidget):
         for name, caption in labels:
             field = getattr(self, name)
             field.setAccessibleName(caption or field.text())
-            card.form_layout.addRow(caption, field)
-            self._rows[name] = (card.form_layout.labelForField(field), field)
+            label = QLabel(caption) if caption else None
+            if label is not None:
+                label.setBuddy(field)
+            self._rows[name] = (label, field)
+        grouped = {"bucket": ("bucket", "region"), "keep_count": ("keep_count", "keep_days"),
+                   "schedule": ("schedule", "interval_hours", "time", "weekday", "month_day")}
+        self._field_groups = []
+        self._group_for_field = {}
+        for name, (label, field) in self._rows.items():
+            if name in self._group_for_field:
+                continue
+            if name in grouped:
+                names = grouped[name]
+                group = _BackupFieldGroup([(key, *self._rows[key]) for key in names])
+                self._field_groups.append(group)
+                self._group_for_field.update((key, group) for key in names)
+                card.form_layout.addRow(group)
+            elif label is None:
+                card.form_layout.addRow(field)
+            else:
+                card.form_layout.addRow(label, field)
         self.save_button, self.test_button = QPushButton(_("Save")), QPushButton(_("Test connection"))
         self.upload_button, self.restore_button = QPushButton(_("Upload backup")), QPushButton(_("Download and restore"))
         self.local_restore_button = QPushButton(_("Restore local recovery copy"))
@@ -142,6 +225,11 @@ class CloudBackupPanel(QWidget):
             field.setVisible(shown)
             if label is not None:
                 label.setVisible(shown)
+            group = self._group_for_field.get(name)
+            if group is not None:
+                group.set_field_visible(name, shown)
+        for group in self._field_groups:
+            group.sync_visibility()
 
     def set_configuration(self, configuration, credentials):
         self._loading = True

@@ -7,7 +7,7 @@ import unittest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint
-from PySide6.QtWidgets import QApplication, QDialogButtonBox, QScrollArea
+from PySide6.QtWidgets import QApplication, QDialogButtonBox, QScrollArea, QStyle, QStyleOptionComboBox
 
 from worklogger.domain.cloud_backup import BackupConfiguration, BackupCredentials, BackupOverview, BackupVersion
 from worklogger.infrastructure.i18n import available_languages, get_language, set_language
@@ -48,15 +48,22 @@ class CloudBackupLayoutChecks(unittest.TestCase):
                                 for _pass in range(4):
                                     self.app.processEvents()
                                 self.assertEqual(scroll.horizontalScrollBar().maximum(), 0, (language, dark, provider, width))
-                                previous_bottom = 0
-                                for label, field in panel._rows.values():
-                                    if not field.isHidden():
-                                        self.assertGreater(label.y() if label is not None else field.y(), previous_bottom)
-                                        previous_bottom = field.geometry().bottom()
+                                for schedule in ("off", "interval", "daily", "weekly", "monthly"):
+                                    panel.schedule.setCurrentIndex(panel.schedule.findData(schedule))
+                                    for _pass in range(4):
+                                        self.app.processEvents()
+                                    self.check_fields(panel, width)
+                                self.capture(panel, f"{language}-{'dark' if dark else 'light'}-{provider}-{width}-monthly")
                                 for widget in (panel.endpoint, panel.password, panel.time, panel.weekday,
                                                panel.save_button, panel.restore_button, panel.local_restore_button):
                                     self.assertTrue(panel.rect().contains(widget.rect().translated(widget.mapTo(panel, QPoint()))))
                                 self.capture(scroll, f"{language}-{'dark' if dark else 'light'}-{provider}-{width}")
+                                panel.encrypted.setChecked(False)
+                                for _pass in range(4):
+                                    self.app.processEvents()
+                                self.check_fields(panel, width)
+                                self.assertFalse(panel.passphrase.isVisible())
+                                self.capture(panel, f"{language}-{'dark' if dark else 'light'}-{provider}-{width}-unencrypted")
                             finally:
                                 scroll.hide()
                                 scroll.deleteLater()
@@ -85,6 +92,29 @@ class CloudBackupLayoutChecks(unittest.TestCase):
             self.app.setPalette(old_palette)
             self.app.setStyleSheet(old_style)
             self.app.setProperty("worklogger_theme_context", old_context)
+
+    def check_fields(self, panel, width):
+        bounds = []
+        for label, field in panel._rows.values():
+            if field.isVisible():
+                for control in (label, field) if label is not None else (field,):
+                    rectangle = control.rect().translated(control.mapTo(panel, QPoint()))
+                    if not rectangle.isEmpty():
+                        self.assertTrue(panel.rect().contains(rectangle), control.accessibleName())
+                        self.assertFalse(any(rectangle.intersects(other) for other in bounds), control.accessibleName())
+                        bounds.append(rectangle)
+        option = QStyleOptionComboBox()
+        panel.schedule.initStyleOption(option)
+        reference = panel.schedule.style().subControlRect(QStyle.ComplexControl.CC_ComboBox, option,
+            QStyle.SubControl.SC_ComboBoxEditField, panel.schedule)
+        for field in (panel.keep_count, panel.keep_days, panel.interval_hours, panel.time, panel.month_day):
+            if field.isVisible():
+                editor = field.lineEdit()
+                self.assertEqual(editor.x() + editor.textMargins().left(), reference.left())
+        if width == 900:
+            self.assertEqual(panel.keep_count.mapTo(panel, QPoint()).y(), panel.keep_days.mapTo(panel, QPoint()).y())
+            if panel.time.isVisible():
+                self.assertEqual(panel.schedule.mapTo(panel, QPoint()).y(), panel.time.mapTo(panel, QPoint()).y())
 
     @staticmethod
     def capture(widget, name):
