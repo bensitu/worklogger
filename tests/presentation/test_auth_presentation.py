@@ -313,16 +313,18 @@ class AuthPresentationTests(unittest.TestCase):
         dialog.set_error("invalid_credentials")
         self.assertEqual(dialog.status_label.text(), "invalid_credentials")
 
-    def test_login_dialog_submits_with_return_key(self) -> None:
+    def test_login_dialog_supports_keyboard_sign_in_from_initial_focus(self) -> None:
         dialog = LoginDialog()
         logins: list[LoginDraft] = []
         dialog.login_submitted.connect(logins.append)
         dialog.show()
         QApplication.processEvents()
 
-        dialog.username_input.setText("alice")
-        dialog.password_input.setText("secret123")
-        dialog.password_input.setFocus()
+        self.assertIs(QApplication.focusWidget(), dialog.username_input)
+        QTest.keyClicks(QApplication.focusWidget(), "alice")
+        QTest.keyClick(QApplication.focusWidget(), Qt.Key.Key_Tab)
+        self.assertIs(QApplication.focusWidget(), dialog.password_input)
+        QTest.keyClicks(QApplication.focusWidget(), "secret123")
         QTest.keyClick(dialog.password_input, Qt.Key.Key_Return)
 
         self.assertEqual(logins, [LoginDraft("alice", "secret123", False)])

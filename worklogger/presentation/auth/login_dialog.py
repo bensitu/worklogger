@@ -58,6 +58,7 @@ class LoginDialog(AuthDialog):
         self.resize(min(880, max(420, bounds.width() - 48)) if bounds is not None else 880,
                     min(640, max(320, bounds.height() - 48)) if bounds is not None else 640)
         self._sync_column_widths()
+        self.username_input.setFocus(Qt.FocusReason.OtherFocusReason)
 
     def draft(self) -> LoginDraft:
         return LoginDraft(
