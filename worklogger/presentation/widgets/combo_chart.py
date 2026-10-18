@@ -150,12 +150,12 @@ class DonutChart(QWidget):
                         for _label, value in self._segments) if total else ()
         inline = all(metrics.horizontalAdvance(label + "  " + detail) <= available
                      for (label, _value), detail in zip(self._segments, details))
-        row_height = max(28, metrics.height() + 8) if inline else max(34, 2 * metrics.height() + 6)
+        row_height = max(20, metrics.height() + 4) if inline else max(34, 2 * metrics.height() + 6)
         return font, diameter, x, available, details, inline, row_height
 
     def _fit_legend(self):
         _font, diameter, _x, _available, _details, _inline, row_height = self._legend_layout()
-        self.setMinimumHeight(ceil(max(144, diameter + 20, len(self._segments) * row_height + 20)))
+        self.setMinimumHeight(ceil(max(144, diameter + 16, len(self._segments) * row_height + 16)))
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

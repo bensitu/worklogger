@@ -37,6 +37,76 @@ class WeeklyReports(ReportsViewModel):
 
 
 class ReportingLayoutChecks(unittest.TestCase):
+    def test_analytics_overview_fits_default_window_and_scrolls_when_needed(self):
+        from PySide6.QtCore import QCoreApplication, QEvent
+        from worklogger.domain.worklog.models import CustomEntryType
+        from worklogger.presentation.theme import configure_application_style, install_bundled_fonts
+
+        configure_application_style()
+        install_bundled_fonts()
+        old_style, old_palette = self.app.styleSheet(), self.app.palette()
+        old_context = self.app.property("worklogger_theme_context")
+
+        def settle():
+            for _ in range(4):
+                self.app.processEvents()
+
+        try:
+            for language in available_languages():
+                set_language(language)
+                for dark in (False, True):
+                    window = sample_window()
+                    window._config = replace(window._config, theme="blue", dark=dark)
+                    page = window.analytics_page
+                    records = page._view_model._dashboard_handler._repository
+                    for day, entry_type in enumerate(EntryType, 1):
+                        records.save(WorkLog(1, date(2026, 5, day), "09:00", "18:00", entry_type=entry_type))
+                    try:
+                        window.apply_theme()
+                        window.resize(1100, 700)
+                        window.show()
+                        window._switch_route("analytics")
+                        self.assertTrue(page.refresh(date(2026, 5, 21)))
+                        settle()
+                        scroll = page.findChild(QScrollArea, "analytics_scroll_widget")
+                        self.assertEqual(len(page.breakdown_chart.chart._segments), len(EntryType))
+                        self.assertEqual(scroll.verticalScrollBar().maximum(), 0, (language, dark))
+                        self.assertEqual(scroll.horizontalScrollBar().maximum(), 0, (language, dark))
+                        self.capture(window, f"analytics-overview-{'dark' if dark else 'light'}", language)
+                        page.breakdown_dimension_control.set_value("work_mode")
+                        settle()
+                        self.assertEqual(scroll.verticalScrollBar().maximum(), 0, (language, dark))
+                        if language == "en_US" and not dark:
+                            page.breakdown_dimension_control.set_value("entry_type")
+                            for scope in ("quarterly", "annual", "monthly"):
+                                page.scope_control.set_value(scope)
+                                settle()
+                                self.assertEqual(scroll.verticalScrollBar().maximum(), 0, scope)
+                            window.resize(880, 580)
+                            settle()
+                            self.assertGreater(scroll.verticalScrollBar().maximum(), 0)
+                            self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)
+                            self.capture(window, "analytics-compact-window", language)
+                            window.resize(1100, 700)
+                            settle()
+                            self.assertEqual(scroll.verticalScrollBar().maximum(), 0)
+                            for day in range(11, 31):
+                                definition = CustomEntryType(f"custom:{day:032x}", f"Research and development activity {day}", "work")
+                                records.save(WorkLog(1, date(2026, 5, day), "09:00", "10:00", entry_type=definition))
+                            self.assertTrue(page.refresh())
+                            settle()
+                            self.assertEqual(len(page.breakdown_chart.chart._segments), 30)
+                            self.assertGreater(scroll.verticalScrollBar().maximum(), 0)
+                            self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)
+                    finally:
+                        window.hide()
+                        window.deleteLater()
+                        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+        finally:
+            self.app.setStyleSheet(old_style)
+            self.app.setPalette(old_palette)
+            self.app.setProperty("worklogger_theme_context", old_context)
+
     def test_project_hierarchy_and_scoped_record_results_fit_themed_dialogs(self):
         from types import SimpleNamespace
         from PySide6.QtCore import QPoint, Qt

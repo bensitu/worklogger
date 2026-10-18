@@ -181,8 +181,8 @@ class AnalyticsPage(QWidget):
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
-        root.setContentsMargins(18, 18, 18, 18)
-        root.setSpacing(14)
+        root.setContentsMargins(16, 12, 16, 12)
+        root.setSpacing(10)
 
         header = QHBoxLayout()
         self.scope_control = SegmentedControl(
@@ -222,12 +222,12 @@ class AnalyticsPage(QWidget):
         body.setObjectName("analytics_content_widget")
         body_layout = QVBoxLayout(body)
         body_layout.setContentsMargins(0, 0, 0, 0)
-        body_layout.setSpacing(12)
+        body_layout.setSpacing(8)
         scroll.setWidget(body)
         root.addWidget(scroll, 1)
         summary_grid = QGridLayout()
-        summary_grid.setHorizontalSpacing(12)
-        summary_grid.setVerticalSpacing(12)
+        summary_grid.setHorizontalSpacing(8)
+        summary_grid.setVerticalSpacing(8)
         self.monthly_hours_card = DonutProgressCard(_("Monthly Hours"))
         self.overtime_chart = OvertimeComparisonChart()
         self.overtime_card = SummaryCard(_("Overtime Hours"), visual=self.overtime_chart,
@@ -248,19 +248,22 @@ class AnalyticsPage(QWidget):
         body_layout.addLayout(summary_grid)
 
         charts = QGridLayout()
-        charts.setHorizontalSpacing(12)
-        charts.setVerticalSpacing(12)
+        charts.setHorizontalSpacing(8)
+        charts.setVerticalSpacing(8)
+        charts.setColumnStretch(0, 3)
+        charts.setColumnStretch(1, 2)
         self.trend_chart = self._chart_card(_("Work Hours Trend"))
         self.average_chart = self._chart_card(_("Average Work Hours"))
         self.breakdown_chart = self._chart_card(_("Classification breakdown"), donut=True)
         self.breakdown_dimension_control = SegmentedControl(
             (("entry_type", _("Classification")), ("work_mode", _("Work arrangement"))))
+        self.breakdown_dimension_control.setProperty("compact", True)
         self.breakdown_dimension_control.value_changed.connect(self._set_breakdown)
-        self.breakdown_chart.content_layout.insertWidget(1, self.breakdown_dimension_control)
+        self.breakdown_chart.header_layout.addWidget(self.breakdown_dimension_control)
         self.breakdown_caption = QLabel(_("Classified duration"))
         self.breakdown_caption.setProperty("role", "secondary")
         self.breakdown_caption.setWordWrap(True)
-        self.breakdown_chart.content_layout.insertWidget(2, self.breakdown_caption)
+        self.breakdown_chart.content_layout.insertWidget(1, self.breakdown_caption)
         self.daily_average_chart = self._chart_card(_("Daily Average"))
         self.daily_average_value_label = QLabel("")
         self.daily_average_value_label.setObjectName("daily_average_value_label")
@@ -304,11 +307,18 @@ class AnalyticsPage(QWidget):
 
     def _chart_card(self, title: str, *, donut: bool = False) -> CardFrame:
         card = CardFrame(object_name="analytics_chart_frame")
+        card.content_layout.setContentsMargins(14, 10, 14, 10)
+        card.content_layout.setSpacing(6)
         label = QLabel(title)
         label.setObjectName("analytics_chart_title_label")
+        label.setWordWrap(True)
+        label.setMinimumWidth(0)
+        card.header_layout = QHBoxLayout()
+        card.header_layout.setSpacing(8)
+        card.header_layout.addWidget(label, 1)
         chart = DonutChart() if donut else ComboChart()
         card.chart = chart
-        card.content_layout.addWidget(label)
+        card.content_layout.addLayout(card.header_layout)
         card.content_layout.addWidget(chart, 1)
         return card
 

@@ -43,6 +43,8 @@ class SummaryCard(CardFrame):
     def __init__(self, title: str, *, visual: QWidget | None = None, parent: QWidget | None = None,
                  object_name: str = "summary_card_frame") -> None:
         super().__init__(parent, object_name=object_name)
+        self.content_layout.setContentsMargins(14, 10, 14, 10)
+        self.content_layout.setSpacing(6)
         self.content_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.title_label = QLabel(title)
         self.title_label.setProperty("role", "metric_title")
@@ -64,7 +66,7 @@ class SummaryCard(CardFrame):
             row.setSpacing(8)
             text = QVBoxLayout()
             text.setContentsMargins(0, 0, 0, 0)
-            text.setSpacing(12)
+            text.setSpacing(6)
             text.setAlignment(Qt.AlignmentFlag.AlignTop)
             text.addWidget(self.value_label)
             text.addWidget(self.caption_label)
