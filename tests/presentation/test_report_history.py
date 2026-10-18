@@ -11,7 +11,7 @@ from unittest.mock import patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication, QMessageBox
-from PySide6.QtTest import QSignalSpy, QTest
+from PySide6.QtTest import QSignalSpy
 
 from tests.app.test_notes_and_reports_use_cases import (
     MemoryCalendarRepository, MemoryQuickLogRepository, MemoryTemplateProvider,
@@ -151,6 +151,7 @@ class ReportHistoryTests(unittest.TestCase):
         buttons = tuple(panel._buttons.values())
         selection = QSignalSpy(panel.item_selected)
         deletion = QSignalSpy(panel.delete_requested)
+        loading = QSignalSpy(panel._loading_timer.timeout)
         page._refresh_history()
         self.assertEqual(panel._items, items)
         self.assertTrue(panel.loading_bar.isHidden())
@@ -159,7 +160,7 @@ class ReportHistoryTests(unittest.TestCase):
         self.assertEqual((selection.count(), deletion.count()), (0, 0))
         panel.search_line_edit.setText("Absent")
         panel.query_requested.emit()
-        QTest.qWait(200)
+        self.assertTrue(loading.count() or loading.wait(2000), "Report history loading timer did not fire")
         self.assertFalse(panel.loading_bar.isHidden())
         self.assertTrue(panel.scroll_widget.isEnabled())
         buttons[0].click()
