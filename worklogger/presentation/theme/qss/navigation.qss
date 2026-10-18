@@ -64,7 +64,7 @@ QWidget#segmented_control_widget[compact="true"] QPushButton[segment="true"] {
   padding: 2px 10px;
 }
 
-QPushButton[segment="true"][checked="true"] {
+QPushButton[segment="true"]:checked {
   background: {{ accent_dim }};
   color: {{ accent }};
   border-color: {{ accent }};
@@ -80,7 +80,7 @@ QPushButton[page_tab="true"] {
   color: {{ muted_text }};
 }
 
-QPushButton[page_tab="true"][checked="true"] {
+QPushButton[page_tab="true"]:checked {
   color: {{ accent }};
   border-bottom: 3px solid {{ accent }};
   font-weight: 600;

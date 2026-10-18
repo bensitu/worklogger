@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets.icons import ui_icon
 from worklogger.presentation.theme.context import current_colors
+from worklogger.presentation.theme.widget_style import set_style_property
 from worklogger.presentation.date_labels import day_label
 from worklogger.presentation.viewmodels.calendar import (
     CalendarDayCell,
@@ -289,9 +290,7 @@ class CalendarView(QWidget):
                 self._week_headers.append(label)
             label = self._week_headers[column]
             label.setText(header)
-            label.setProperty("weekend", header in (_("Sat"), _("Sun")))
-            label.style().unpolish(label)
-            label.style().polish(label)
+            set_style_property(label, "weekend", header in (_("Sat"), _("Sun")))
         if self._total_header is None:
             self._total_header = QLabel()
             self._total_header.setObjectName("week_header_label")

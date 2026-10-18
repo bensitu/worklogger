@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 )
 
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.theme.widget_style import refresh_style
+from worklogger.presentation.theme.widget_style import set_style_property
 from worklogger.presentation.widgets.card import CardFrame
 from worklogger.presentation.date_labels import month_label
 from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
@@ -90,8 +90,10 @@ class ReportHistoryButton(HoverDeleteButton):
         return 52 if self._deletable else 24
 
     def set_current(self, current):
-        self.setProperty("active", current)
         text = self._base_label + "\n" + (_("Open in editor") if current else _("Saved"))
+        if self.property("active") == current and self.text() == text:
+            return
+        set_style_property(self, "active", current)
         self.setText(text)
         self.setAccessibleName(text)
         self._document.setPlainText(text)
@@ -99,7 +101,6 @@ class ReportHistoryButton(HoverDeleteButton):
         self._document.setTextWidth(max(1, self.width() - self._text_margins()))
         self.setToolTip(text)
         self.setMinimumHeight(self.heightForWidth(max(80, self.width())))
-        refresh_style(self)
 
 
 @dataclass(frozen=True)
@@ -300,7 +301,6 @@ class ReportHistoryPanel(CardFrame):
                 self.scroll_layout.addWidget(heading)
             button = ReportHistoryButton(item, self.scroll_widget, allow_delete=self._allow_delete)
             button.setObjectName("report_history_item_button")
-            button.setProperty("nav_item", True)
             button.setProperty("report_id", item.report_id)
             button.set_current(item.report_id is not None and item.report_id == self._selected_report_id)
             button.setCursor(Qt.CursorShape.PointingHandCursor)

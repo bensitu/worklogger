@@ -25,7 +25,7 @@ from worklogger.presentation.entry_type_labels import classification_label
 from worklogger.presentation.processing import TextProcessingTask
 from worklogger.presentation.job_runner import owned_callback
 from worklogger.presentation.widgets.processing_progress import ProcessingProgress
-from worklogger.presentation.theme.widget_style import refresh_style
+from worklogger.presentation.theme.widget_style import set_style_property
 
 
 from worklogger.presentation.widgets.time_entry_actions import TimeEntryRecordActions
@@ -430,9 +430,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             auto = self.time_tabs.currentIndex() == 1
             state = self.view_model.editor_state(automatic=auto)
             variant = "outline" if auto else "primary"
-            if self.save_button.property("variant") != variant:
-                self.save_button.setProperty("variant", variant)
-                refresh_style(self.save_button)
+            set_style_property(self.save_button, "variant", variant)
             draft = state.draft
             linked_timer = state.linked_timer
             self.start_input.setText(draft.start)

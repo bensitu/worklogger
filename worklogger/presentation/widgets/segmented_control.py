@@ -7,8 +7,6 @@ from collections.abc import Iterable
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QHBoxLayout, QPushButton, QWidget
 
-from worklogger.presentation.theme.widget_style import refresh_style
-
 
 class SegmentedControl(QWidget):
     value_changed = Signal(str)
@@ -49,13 +47,11 @@ class SegmentedControl(QWidget):
         if normalized not in self._buttons:
             return
         changed = normalized != self._value
-        previous = self._value
         self._value = normalized
         for key, button in self._buttons.items():
             checked = key == normalized
-            if not previous or button.isChecked() != checked or (key == previous) != checked:
+            if button.isChecked() != checked:
                 button.setChecked(checked)
-                refresh_style(button)
         if changed and emit:
             self.value_changed.emit(normalized)
 

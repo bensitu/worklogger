@@ -6,7 +6,7 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import qInstallMessageHandler
+from PySide6.QtCore import QCoreApplication, QEvent, qInstallMessageHandler
 from PySide6.QtTest import QSignalSpy
 from PySide6.QtWidgets import QApplication, QScrollArea
 
@@ -366,7 +366,7 @@ class ReportingLayoutChecks(unittest.TestCase):
         try:
             for language in available_languages():
                 set_language(language)
-                for dark in ((False, True) if language == "en_US" else (language in ("ja_JP", "zh_TW"),)):
+                for dark in (False, True):
                     window = sample_window()
                     window.reports_page._view_model = WeeklyReports()
                     window.reports_page._history.model = window.reports_page._view_model
@@ -378,7 +378,7 @@ class ReportingLayoutChecks(unittest.TestCase):
                     window.refresh()
                     window.show()
                     try:
-                        sizes = ((880, 580), (1100, 700)) if language == "en_US" else ((880, 580),)
+                        sizes = ((880, 580), (1100, 700))
                         for width, height in sizes:
                             window.resize(width, height)
                             for route in ("reports", "analytics"):
@@ -416,6 +416,8 @@ class ReportingLayoutChecks(unittest.TestCase):
                                 self.capture(window, f"filled-{route}-{'dark' if dark else 'light'}-{width}", language)
                     finally:
                         window.close()
+                        window.deleteLater()
+                        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
             self.assertFalse([message for message in warnings if "QFont::" in message or "QPainter::" in message or "QSvg" in message], warnings)
         finally:
             qInstallMessageHandler(previous)

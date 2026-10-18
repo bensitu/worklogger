@@ -131,6 +131,9 @@ and selection styling; do not add a second outline to every focused control.
 Retain native focus behavior where possible. Custom switches distinguish keyboard
 focus from mouse focus and clear keyboard indicators when clicked. Focus feedback
 must not change padding, dimensions, or the global palette.
+Use native checked states for segmented controls. Refresh dynamic properties
+through `set_style_property` only when their values change; updating a report
+selection or an unchanged calendar must not repolish every item or header.
 Shared sRGB calculations and color mixing belong to
 `theme/color_contrast.py`, not individual widgets or theme definitions.
 

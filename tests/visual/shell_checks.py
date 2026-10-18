@@ -8,7 +8,7 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import qInstallMessageHandler
+from PySide6.QtCore import QCoreApplication, QEvent, qInstallMessageHandler
 from PySide6.QtWidgets import QApplication, QToolButton, QPushButton
 
 from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler, GetAnalyticsDashboardHandler
@@ -247,14 +247,14 @@ class ShellLayoutChecks(unittest.TestCase):
 
     def check_shell_routes(self):
         language = get_language()
-        for dark in ((False, True) if language == "en_US" else (language in ("ja_JP", "zh_TW"),)):
+        for dark in (False, True):
             window = sample_window()
             window._config = replace(window._config, dark=dark)
             window.apply_theme()
             self.assertTrue(window.refresh())
             window.show()
             try:
-                sizes = ((880, 580), (1100, 700)) if language == "en_US" else ((880, 580),)
+                sizes = ((880, 580), (1100, 700))
                 for width, height in sizes:
                     window.resize(width, height)
                     self.app.processEvents()
@@ -287,6 +287,8 @@ class ShellLayoutChecks(unittest.TestCase):
                             self.assertTrue(window.analytics_page.period_combo.currentText())
             finally:
                 window.close()
+                window.deleteLater()
+                QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
 
 
 if __name__ == "__main__":
