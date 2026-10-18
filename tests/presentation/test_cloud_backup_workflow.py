@@ -197,3 +197,12 @@ class CloudBackupWorkflowTests(unittest.TestCase):
         self.clock.return_value = 117
         workflow._tick()
         self.assertEqual(workflow._retry_at, 127)
+
+    def test_restore_does_not_open_a_progress_window_while_another_operation_is_running(self):
+        workflow = self.workflow(17)
+        workflow._busy = True
+        operation = Mock()
+        with patch("worklogger.presentation.settings.workflows.cloud_backup.RestoreProgressDialog") as progress:
+            workflow._restore(self.owner, operation)
+        progress.assert_not_called()
+        operation.assert_not_called()

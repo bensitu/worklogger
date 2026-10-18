@@ -33,10 +33,12 @@ class PersonalBackupArchive:
             raise ValueError("cloud_backup_too_large")
         return content
 
-    def decode(self, content: bytes, *, passphrase: str = "") -> bytes:
+    def decode(self, content: bytes, *, passphrase: str = "", require_encrypted: bool = False) -> bytes:
         if len(content) > MAX_BACKUP_BYTES or not content.startswith(_MAGIC):
             raise ValueError("cloud_backup_invalid")
         content = content[len(_MAGIC):]
+        if require_encrypted and content[:1] != b"E":
+            raise ValueError("cloud_backup_invalid")
         try:
             if content[:1] == b"E":
                 salt, nonce = content[1:17], content[17:29]

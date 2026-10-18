@@ -52,6 +52,12 @@ Backups use compressed account documents and authenticated AES-256-GCM
 encryption with a random salt and nonce and a scrypt-derived key. Archive input
 and decompressed output are bounded. A wrong passphrase or modified encrypted
 archive is rejected before any account data is replaced.
+When encryption is enabled, restoration also rejects plaintext archives, even
+when the cloud history labels them as unencrypted. To restore a historical
+plaintext backup, explicitly disable encryption after reviewing the warning.
+The cloud history is not a trusted freshness authority: a storage operator can
+delete backups or replay previously valid encrypted versions. Keep independent
+local backups for recovery from storage-side deletion or rollback.
 
 Disabling encryption requires confirmation. Anyone able to read an unencrypted
 cloud object can inspect its content. Changing the passphrase affects new
@@ -99,8 +105,10 @@ server's ETag condition. Downloads verify the archive size, SHA-256 digest, and
 encryption before replacement, and recheck the remote history after download.
 No live multi-device merge or automatic download occurs.
 
-Both the maximum count and retention days apply after a successful upload. At
-least the newly uploaded backup is kept. A cleanup failure does not invalidate
+Both the maximum count and retention days apply after a successful upload. When
+the configured maximum is at least two, the latest upload and one previous
+version are kept regardless of their age, protecting against local clock jumps.
+A maximum of one explicitly retains only the latest version. A cleanup failure does not invalidate
 the completed upload: its status remains visible and deletion is retried after
 a later successful upload. Connection failures during publication can leave an
 unlisted object; objects are not blindly deleted when publication is uncertain.

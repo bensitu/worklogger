@@ -81,11 +81,37 @@ class CloudBackupTests(unittest.TestCase):
         self.assertFalse(overview.remote_changed)
         self.now += timedelta(days=91)
         self.assertTrue(self.service.upload().ok)
-        self.assertEqual(len(self.service.overview().value.versions), 1)
+        self.assertEqual(len(self.service.overview().value.versions), 2)
         self.settings.value["remote_revision"] = "another-device"
         self.assertEqual(self.service.upload().error.code, "cloud_conflict")
         current = self.service.overview().value.versions[0].revision
         self.assertTrue(self.service.upload(expected_revision=current, force=True).ok)
+
+    def test_encrypted_restore_rejects_plaintext_replacement_even_with_a_matching_manifest(self):
+        import json
+        self.settings.configuration = replace(self.settings.configuration, encrypted=True)
+        self.assertTrue(self.service.upload().ok)
+        version = self.service.overview().value.versions[0]
+        forged = PersonalBackupArchive().encode(b"replacement", encrypted=False)
+        self.remote.objects["objects/" + version.revision + ".wlbackup"] = forged
+        head = json.loads(self.remote.objects["head.json"])
+        head["versions"][0].update(sha256=hashlib.sha256(forged).hexdigest(), size=len(forged), encrypted=False)
+        self.remote.objects["head.json"] = json.dumps(head).encode()
+        result = self.service.download(version.revision, expected_revision=version.revision,
+            expected_local_digest=hashlib.sha256(self.data.data).hexdigest())
+        self.assertEqual(result.error.code, "cloud_backup_invalid")
+        self.assertFalse(self.recovery)
+        self.assertEqual(self.data.data, b"personal data")
+
+    def test_connection_capabilities_are_checked_once_per_destination_and_credentials(self):
+        from unittest.mock import Mock
+        self.remote.test_connection = Mock()
+        self.assertTrue(self.service.upload().ok)
+        self.assertTrue(self.service.upload().ok)
+        self.remote.test_connection.assert_called_once()
+        self.settings.configuration = replace(self.settings.configuration, prefix="different")
+        self.assertTrue(self.service.upload().ok)
+        self.assertEqual(self.remote.test_connection.call_count, 2)
 
     def test_restore_checks_both_versions_and_preserves_a_local_recovery_archive(self):
         self.assertTrue(self.service.upload().ok)

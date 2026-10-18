@@ -51,6 +51,7 @@ class CloudBackupService:
         self.configuration, self.personal_data, self.archive = configuration, personal_data, archive
         self.store_factory, self.recovery_store, self.now = store_factory, recovery_store, now
         self._lock = RLock()
+        self._verified_destination = None
 
     def _context(self):
         configuration = self.configuration.load()
@@ -73,8 +74,9 @@ class CloudBackupService:
 
     @_result
     def test_connection(self):
-        _configuration, _credentials, store = self._context()
+        configuration, credentials, store = self._context()
         store.test_connection()
+        self._verified_destination = (configuration.destination, credentials)
 
     def _head(self, store):
         head = store.get("head.json", limit=256 * 1024)
@@ -118,7 +120,10 @@ class CloudBackupService:
         expected = state.get("remote_revision", "") if expected_revision is None else expected_revision
         if latest != expected or (latest != state.get("remote_revision", "") and not force):
             raise ValueError("cloud_conflict")
-        store.test_connection()
+        destination = (configuration.destination, credentials)
+        if destination != self._verified_destination:
+            store.test_connection()
+            self._verified_destination = destination
         document = self.personal_data.capture()
         content = self.archive.encode(document, encrypted=configuration.encrypted, passphrase=credentials.passphrase)
         now = self.now()
@@ -127,7 +132,10 @@ class CloudBackupService:
         self.configuration.save_state({**state, "pending_deletions": sorted(pending)})
         store.put("objects/" + version.revision + ".wlbackup", content, expected_etag=None)
         cutoff = now - timedelta(days=configuration.keep_days)
-        kept = (version,) + tuple(row for row in versions if datetime.fromisoformat(row.created_at) >= cutoff)[:configuration.keep_count - 1]
+        # Preserve a previous recovery point regardless of the local clock.
+        minimum = min(2, configuration.keep_count)
+        kept = tuple(row for index, row in enumerate((version,) + versions)
+                     if index < minimum or datetime.fromisoformat(row.created_at) >= cutoff)[:configuration.keep_count]
         head = json.dumps({"format": 1, "versions": [asdict(row) for row in kept]}, separators=(",", ":")).encode()
         try:
             store.put("head.json", head, expected_etag=etag)
@@ -169,7 +177,8 @@ class CloudBackupService:
         found = store.get("objects/" + selected.revision + ".wlbackup", limit=MAX_BACKUP_BYTES)
         if found is None or len(found.data) != selected.size or _digest(found.data) != selected.sha256:
             raise ValueError("cloud_backup_invalid")
-        document = self.archive.decode(found.data, passphrase=credentials.passphrase if passphrase is None else passphrase)
+        document = self.archive.decode(found.data, passphrase=credentials.passphrase if passphrase is None else passphrase,
+                                       require_encrypted=configuration.encrypted or selected.encrypted)
         _current, current_etag = self._head(store)
         if current_etag != etag:
             raise ValueError("cloud_conflict")
@@ -198,9 +207,10 @@ class CloudBackupService:
         if _digest(content) != expected_archive_digest:
             raise ValueError("cloud_local_changed")
         credentials = self.configuration.secrets() if not passphrase else BackupCredentials(passphrase=passphrase)
-        document = self.archive.decode(content, passphrase=passphrase or credentials.passphrase)
         configuration = self.configuration.load()
         encrypted = configuration.encrypted if configuration is not None else True
+        document = self.archive.decode(content, passphrase=passphrase or credentials.passphrase,
+                                       require_encrypted=encrypted)
         state = self.configuration.state()
         return self._restore_document(document, expected_local_digest=expected_local_digest,
             encrypted=encrypted, passphrase=passphrase or credentials.passphrase,

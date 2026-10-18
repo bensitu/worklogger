@@ -153,7 +153,7 @@ class CloudBackupWorkflow(QObject):
 
     def _run(self, operation, *, success="", callback=None, configured=False, refresh=False, automatic=False):
         if self._busy:
-            return
+            return False
         self._busy = True
         self._update()
         def work(_token):
@@ -196,6 +196,7 @@ class CloudBackupWorkflow(QObject):
             self.runner.submit("cloud_backup", work, on_complete=owned_callback(self, complete))
         except Exception:
             complete(Result.failure(InfrastructureError("cloud_operation_failed", "cloud_operation_failed")))
+        return True
 
     def _notify(self, message):
         if self._owner is None or not isValid(self._owner):
@@ -249,8 +250,10 @@ class CloudBackupWorkflow(QObject):
         if not self._restore_allowed():
             return
         progress = RestoreProgressDialog(panel.window())
-        progress.show()
+        finished = False
         def restored(value):
+            nonlocal finished
+            finished = True
             progress.accept()
             progress.deleteLater()
             if value.ok:
@@ -258,7 +261,10 @@ class CloudBackupWorkflow(QObject):
                     _("Data restored. Recovery copy: {path}").format(path=value.value.recovery_path))
                 if self._restore_handler is not None:
                     self._restore_handler()
-        self._run(operation, callback=restored)
+        if self._run(operation, callback=restored) and not finished:
+            progress.show()
+        elif not finished:
+            progress.deleteLater()
 
     def _prepare_local(self, panel):
         if self._busy:
@@ -298,7 +304,7 @@ class CloudBackupWorkflow(QObject):
             self._owner.entry_panel, getattr(self._owner, "reports_page", None), settings))
 
     def _restore_allowed(self):
-        return not self._owner_busy() and (self._owner is None or not self._owner.has_unsaved_changes)
+        return not self._busy and not self._owner_busy() and (self._owner is None or not self._owner.has_unsaved_changes)
 
     def _tick(self):
         if (self._busy or self._confirming or self._configuration is None
