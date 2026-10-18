@@ -42,7 +42,7 @@ class AutomaticRecordingActions:
         state = self.view_model.editor_state(automatic=True)
         definition = self._classification_definition(state)
         can_start = (not self.is_busy and self.view_model.timer is None and not self.view_model.restore_failed
-                     and definition.category == EntryCategory.WORK
+                     and definition.category in (EntryCategory.WORK, EntryCategory.BREAK)
                      and not (isinstance(definition, EntryType) and definition.is_legacy))
         can_end = not self.is_busy and self.view_model.timer is not None
         return can_start, can_end
@@ -71,7 +71,7 @@ class AutomaticRecordingActions:
             self._apply_result(result, refresh=False)
             return
         dialog = QMessageBox(QMessageBox.Icon.Question, _("End break early?"),
-            _("End the break at {time} and start recording work? The saved break duration will be shortened.").format(time=moment.strftime("%H:%M")),
+            _("End the break at {time} and start recording? The saved break duration will be shortened.").format(time=moment.strftime("%H:%M")),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, self)
         dialog.setDefaultButton(QMessageBox.StandardButton.No)
         dialog.button(QMessageBox.StandardButton.Yes).setText(_("Start"))

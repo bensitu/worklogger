@@ -238,9 +238,6 @@ msgstr "자동 기록"
 msgid "Automatic goals use planned workdays and daily standard hours. Enabled public holidays follow the selected region."
 msgstr "자동 목표는 예정 근무일과 일일 기준 시간으로 계산합니다. 공휴일을 활성화하면 선택한 지역의 공휴일을 반영합니다."
 
-msgid "Automatic recording requires a work classification. Enter leave manually and use the Break action for a timed break."
-msgstr "자동 기록은 업무 분류만 지원합니다. 휴가는 수동으로 입력하고 정해진 시간의 휴식은 휴식 기능을 사용하세요."
-
 msgid "Avatar"
 msgstr "아바타"
 
@@ -706,8 +703,8 @@ msgstr "휴식을 일찍 종료할까요?"
 msgid "End recording"
 msgstr "시간 기록 종료"
 
-msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
-msgstr "휴식 종료 시간을 {time}(으)로 변경하고 근무 기록을 시작할까요? 저장된 휴식 시간이 줄어듭니다."
+msgid "End the break at {time} and start recording? The saved break duration will be shortened."
+msgstr "{time}에 휴식을 끝내고 기록을 시작하시겠습니까? 저장된 휴식 시간이 줄어듭니다."
 
 msgid "Ended at"
 msgstr "종료 시각"
@@ -741,9 +738,6 @@ msgstr "계속하기 전에 내용을 입력하세요."
 
 msgid "Enter leave in Manual Input."
 msgstr "휴가는 수동 입력에서 기록하세요."
-
-msgid "Enter leave in Manual Input. Use the Break action to record a break."
-msgstr "휴가는 수동으로 입력하고 휴식은 휴식 기능으로 기록하세요."
 
 msgid "Enter valid start and end times in HH:mm format."
 msgstr "유효한 시작 및 종료 시간을 HH:mm 형식으로 입력하세요."

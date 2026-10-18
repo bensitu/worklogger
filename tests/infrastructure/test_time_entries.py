@@ -65,14 +65,45 @@ class TimeEntryTests(unittest.TestCase):
             self.assertFalse(self.service.save_manual(self.now.date(), "08:00", "09:00", "normal", "New", work_mode=WorkMode.ONSITE).ok)
         self.assertEqual(self.repository.list_for_day(self.user.id, self.now.date()), before)
         self.assertEqual(self.service.default_work_mode(), WorkMode.REMOTE)
-        for definition in ("break", "paid_leave", self.service.entry_types.save("Personal rest", "break").value.value):
-            self.assertEqual(self.service.start(definition, "Invalid").error.code, "auto_record_work_required")
+        for definition in ("paid_leave", self.service.entry_types.save("Personal leave", "leave").value.value):
+            self.assertEqual(self.service.start(definition, "Invalid").error.code, "auto_record_leave_not_supported")
         self.assertTrue(self.service.start("meeting", "Work", work_mode=WorkMode.ONSITE).ok)
         with patch.object(EntryWriteSession, "remember_work_mode", side_effect=OSError("storage unavailable")):
             self.assertFalse(self.service.finish("Work", now=self.now + timedelta(hours=1)).ok)
         self.assertEqual(self.make_service().timer.work_mode, WorkMode.ONSITE)
         self.assertEqual(self.repository.list_for_day(self.user.id, self.now.date()), before)
         self.assertEqual(self.service.default_work_mode(), WorkMode.REMOTE)
+
+    def test_break_timers_restore_and_finish_across_midnight_without_work_metadata(self):
+        from worklogger.domain.projects.models import WorkContext
+
+        self.assertTrue(self.service.save_manual(self.now.date(), "07:00", "08:00", "normal", "Work", work_mode=WorkMode.REMOTE).ok)
+        custom = self.service.entry_types.save("Personal rest", "break").value
+        for definition in (EntryType.BREAK, custom):
+            with self.subTest(entry_type=definition.value):
+                service = self.make_service()
+                self.now = (self.now + timedelta(days=1)).replace(hour=23, minute=40)
+                for options in ({"work_mode": WorkMode.REMOTE}, {"context": WorkContext(project_label="Previous project")}):
+                    self.assertEqual(service.start(definition.value, "Rest", **options).error.code, "entry_classification_invalid")
+                    self.assertIsNone(service.timer)
+                self.assertTrue(service.validate_selection(definition.value, None, WorkContext(), automatic=True).ok)
+                self.assertTrue(service.start(definition.value, "Rest").ok)
+                restored = self.make_service()
+                self.assertFalse(restored.restore_failed)
+                self.assertEqual(restored.timer.entry_type, definition)
+                self.assertIsNone(restored.timer.break_until)
+                self.assertTrue(restored.advance().ok)
+                self.assertIsNotNone(restored.timer)
+                finished = restored.finish("Rest", now=self.now + timedelta(minutes=45))
+                self.assertTrue(finished.ok, finished.error)
+                record = self.repository.get_entry(self.user.id, finished.value.id)
+                self.assertEqual((record.start_time, record.end_time, record.raw_hours(), record.worked_hours()),
+                                 ("23:40", "00:25", 0.75, 0))
+                self.assertEqual(record.entry_type, definition)
+                self.assertEqual(record.context, WorkContext())
+                self.assertIsNone(record.work_mode)
+                self.assertIsNone(restored.timer)
+                self.assertEqual(restored.default_work_mode(), WorkMode.REMOTE)
 
     def test_recording_sessions_apply_state_explicitly_and_reject_stale_timer_updates(self):
         initial = self.service.snapshot_state()

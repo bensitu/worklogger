@@ -238,9 +238,6 @@ msgstr "自动记录"
 msgid "Automatic goals use planned workdays and daily standard hours. Enabled public holidays follow the selected region."
 msgstr "自动目标根据计划工作日与每日标准工时计算；启用节假日时，采用所选地区的节假日。"
 
-msgid "Automatic recording requires a work classification. Enter leave manually and use the Break action for a timed break."
-msgstr "自动录入仅支持工作分类。休假请手动录入，定时休息请使用“休息”操作。"
-
 msgid "Avatar"
 msgstr "头像"
 
@@ -706,8 +703,8 @@ msgstr "提前结束休息？"
 msgid "End recording"
 msgstr "结束计时"
 
-msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
-msgstr "将休息结束时间改为 {time} 并开始记录工作吗？已保存的休息时长将相应缩短。"
+msgid "End the break at {time} and start recording? The saved break duration will be shortened."
+msgstr "在 {time} 结束休息并开始计时？已保存的休息时长将缩短。"
 
 msgid "Ended at"
 msgstr "结束时间戳"
@@ -741,9 +738,6 @@ msgstr "请先输入内容。"
 
 msgid "Enter leave in Manual Input."
 msgstr "休假请在“手动输入”中录入。"
-
-msgid "Enter leave in Manual Input. Use the Break action to record a break."
-msgstr "休假请手动录入，休息请使用“休息”操作。"
 
 msgid "Enter valid start and end times in HH:mm format."
 msgstr "请按 HH:mm 格式输入有效的开始和结束时间。"

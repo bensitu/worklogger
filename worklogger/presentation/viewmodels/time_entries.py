@@ -273,7 +273,7 @@ class TimeEntryViewModel:
     def _share_idle_fields(self, *, completed=None):
         if self.service.timer is None:
             self.auto_content = self.draft.content
-            if self._is_work_classification(self.draft.entry_type):
+            if self._allows_automatic_recording(self.draft.entry_type):
                 self.auto_completed = completed
                 self.auto_entry_type = self.draft.entry_type
                 self.auto_context = self.draft.context
@@ -284,17 +284,19 @@ class TimeEntryViewModel:
                 self.auto_context = WorkContext()
                 self.auto_work_mode = self.service.default_work_mode()
 
-    def _is_work_classification(self, value: str) -> bool:
+    def _classification_category(self, value: str) -> EntryCategory | None:
         for record in (self.draft.original, self.auto_completed, self.timer):
             if record is not None and record.entry_type.value == value:
-                return record.entry_type.category == EntryCategory.WORK
+                return record.entry_type.category
         try:
-            return EntryType(value).category == EntryCategory.WORK
+            return EntryType(value).category
         except ValueError:
             if self._custom_types is None:
                 self.list_entry_types()
-            return any(definition.value == value and definition.category == EntryCategory.WORK
-                       for definition in self._custom_types or ())
+            return next((definition.category for definition in self._custom_types or () if definition.value == value), None)
+
+    def _allows_automatic_recording(self, value: str) -> bool:
+        return self._classification_category(value) in (EntryCategory.WORK, EntryCategory.BREAK)
 
     def update_auto(self, *, content, entry_type, context,
                     work_mode: WorkMode | None | _Unset = _Unset.WORK_MODE):
@@ -303,11 +305,13 @@ class TimeEntryViewModel:
             self.draft = replace(self.draft, content=content)
         if self.service.timer is None:
             mode = self.auto_work_mode if isinstance(work_mode, _Unset) else work_mode
-            if not self._is_work_classification(entry_type):
+            if not self._allows_automatic_recording(entry_type):
                 entry_type, context, mode = EntryType.NORMAL.value, WorkContext(), self.service.default_work_mode()
+            elif self._classification_category(entry_type) == EntryCategory.BREAK:
+                context, mode = WorkContext(), None
             self.auto_entry_type, self.auto_context = entry_type, context
             self.auto_work_mode = mode
-            if not self._is_work_classification(self.draft.entry_type):
+            if not self._allows_automatic_recording(self.draft.entry_type):
                 return
             if (self.auto_completed is not None and self.manual_dirty
                     and (self.draft.original is None or self.draft.original.id != self.auto_completed.id)):
@@ -349,7 +353,7 @@ class TimeEntryViewModel:
         linked = self.editing_active_timer
         mode = self.draft.work_mode if isinstance(work_mode, _Unset) else work_mode
         association = context if context is not None else self.draft.context
-        if not self._is_work_classification(entry_type):
+        if self._classification_category(entry_type) != EntryCategory.WORK:
             mode, association = None, WorkContext()
         self.draft = replace(self.draft, start=start, end=end, entry_type=entry_type, content=content,
                              context=association, work_mode=mode)
@@ -395,7 +399,7 @@ class TimeEntryViewModel:
             self.auto_entry_type = result.value.entry_type.value
             self.auto_context = result.value.context
             self.auto_work_mode = result.value.work_mode
-            if (not self.manual_dirty and self._is_work_classification(self.draft.entry_type)) or linked:
+            if (not self.manual_dirty and self._allows_automatic_recording(self.draft.entry_type)) or linked:
                 self.select(result.value)
         return result
 
@@ -414,7 +418,7 @@ class TimeEntryViewModel:
                         record.entry_type.value, record.note, record, record.context, record.work_mode)
                     self._share_idle_fields(completed=record)
                 else:
-                    if self.manual_dirty or not self._is_work_classification(self.draft.entry_type):
+                    if self.manual_dirty or not self._allows_automatic_recording(self.draft.entry_type):
                         self.auto_completed = record
                         self.auto_content, self.auto_entry_type, self.auto_context = record.note, record.entry_type.value, record.context
                         self.auto_work_mode = record.work_mode
@@ -432,6 +436,10 @@ class TimeEntryViewModel:
         result = self.service.take_break(self.default_break_hours, self.auto_content, now=now)
         if result.ok:
             self.select(result.value)
+            self.auto_completed = None
+            self.auto_entry_type = EntryType.NORMAL.value
+            self.auto_context = WorkContext()
+            self.auto_work_mode = self.service.default_work_mode()
         return result
 
     def advance(self, *, now=None):

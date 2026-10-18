@@ -236,9 +236,6 @@ msgstr ""
 msgid "Automatic goals use planned workdays and daily standard hours. Enabled public holidays follow the selected region."
 msgstr ""
 
-msgid "Automatic recording requires a work classification. Enter leave manually and use the Break action for a timed break."
-msgstr ""
-
 msgid "Avatar"
 msgstr ""
 
@@ -704,7 +701,7 @@ msgstr ""
 msgid "End recording"
 msgstr ""
 
-msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
+msgid "End the break at {time} and start recording? The saved break duration will be shortened."
 msgstr ""
 
 msgid "Ended at"
@@ -738,9 +735,6 @@ msgid "Enter content before continuing."
 msgstr ""
 
 msgid "Enter leave in Manual Input."
-msgstr ""
-
-msgid "Enter leave in Manual Input. Use the Break action to record a break."
 msgstr ""
 
 msgid "Enter valid start and end times in HH:mm format."

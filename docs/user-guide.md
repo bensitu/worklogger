@@ -76,8 +76,9 @@ and are rejected. Timed records require both boundaries.
 
 ### Auto Record
 
-Choose a work period type, optional arrangement/context, and content, then Start.
-Leave is entered manually; Break remains the separate fixed-duration action.
+Choose a work or break period type and content, then Start. Work can also have
+an arrangement and project context; breaks cannot.
+Leave is entered manually.
 Classification and project associations are locked while a timer runs.
 End saves the finished period and
 its content. Save content updates an active timer without ending it. When idle,
@@ -91,8 +92,11 @@ its arrangement for new work records; starting or discarding a timer does not.
 If an automatic save fails, the elapsed-time display continues and the timer
 retries after a short delay. Unsaved timer state is retained.
 
-Break creates a separate rest record for the default break duration. Finish an
-active timer first. Starting work during a shortcut-created break asks whether to
+The Break shortcut creates a separate rest record for the default break duration;
+it does not start a timer. To measure an actual break, select a break type under
+Classification and use Start and End. Both approaches exclude rest from worked
+hours and leave the remembered work arrangement unchanged. Finish an
+active timer first. Starting a timer during a shortcut-created break asks whether to
 end that break early; ordinary saved records are never shortened automatically.
 A zero default break disables the shortcut.
 

@@ -238,9 +238,6 @@ msgstr "自動記録"
 msgid "Automatic goals use planned workdays and daily standard hours. Enabled public holidays follow the selected region."
 msgstr "自動目標は予定勤務日数と1日の標準時間から算出します。祝日を有効にすると、選択地域の祝日を反映します。"
 
-msgid "Automatic recording requires a work classification. Enter leave manually and use the Break action for a timed break."
-msgstr "自動記録には仕事の分類が必要です。休暇は手動入力し、時間を指定した休憩は「休憩」操作を使用してください。"
-
 msgid "Avatar"
 msgstr "アバター"
 
@@ -706,8 +703,8 @@ msgstr "休憩を早めに終了しますか？"
 msgid "End recording"
 msgstr "計時を終了"
 
-msgid "End the break at {time} and start recording work? The saved break duration will be shortened."
-msgstr "休憩の終了時刻を {time} に変更し、勤務の記録を開始しますか？保存済みの休憩時間が短くなります。"
+msgid "End the break at {time} and start recording? The saved break duration will be shortened."
+msgstr "{time}に休憩を終了して記録を開始しますか？保存済みの休憩時間が短縮されます。"
 
 msgid "Ended at"
 msgstr "終了日時"
@@ -741,9 +738,6 @@ msgstr "続行する前に内容を入力してください。"
 
 msgid "Enter leave in Manual Input."
 msgstr "休暇は「手動入力」で記録してください。"
-
-msgid "Enter leave in Manual Input. Use the Break action to record a break."
-msgstr "休暇は手動入力し、休憩の記録には「休憩」操作を使用してください。"
 
 msgid "Enter valid start and end times in HH:mm format."
 msgstr "開始時刻と終了時刻を HH:mm 形式で正しく入力してください。"

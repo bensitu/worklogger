@@ -14,6 +14,9 @@ class TimerStateTests(unittest.TestCase):
         custom = CustomEntryType("custom:" + "1" * 32, "Research", "work")
         base = EntryTimer("capture", start, EntryType.NORMAL, "Draft")
         for timer in (base, replace(base, entry_type=custom, context=WorkContext(project_label="Previous project")),
+                      replace(base, entry_type=EntryType.BREAK),
+                      replace(base, entry_type=CustomEntryType("custom:" + "2" * 32, "Rest", "break"),
+                              pending_end=start + timedelta(minutes=30)),
                       replace(base, entry_type=EntryType.BREAK, break_until=start + timedelta(hours=1),
                               resume_type=custom, resume_content="Resume draft", legacy_break_hours=0.5),
                       replace(base, pending_end=start + timedelta(hours=2), work_mode=WorkMode.REMOTE)):
@@ -34,6 +37,8 @@ class TimerStateTests(unittest.TestCase):
         self.assertEqual(timer.context, WorkContext())
         self.assertEqual(timer.content, "")
         for changes in ({"started_at": "2026-05-20T09:00:00"}, {"legacy_break_hours": 17},
+                        {"entry_type": "paid_leave"}, {"entry_type": "break", "work_mode": "remote"},
+                        {"entry_type": "break", "context": {"project_label": "Previous project"}},
                         {"break_until": "2026-05-20T10:00:00+09:00"},
                         {"entry_type": "break", "resume_type": "normal", "break_until": "2026-05-20T14:00:00+09:00"}):
             with self.subTest(changes=changes), self.assertRaises(ValueError):

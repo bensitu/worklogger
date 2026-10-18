@@ -205,14 +205,14 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertEqual(len(self.repository.list_for_day(self.runtime.user.id, self.now.date())), 2)
         self.warning.assert_not_called()
 
-    def test_automatic_classification_disables_nonwork_and_locks_during_timer(self):
+    def test_automatic_classification_disables_leave_and_locks_during_timer(self):
         panel = self.panel
         panel.time_tabs.setCurrentIndex(1)
         popup = open_classification(panel)
         self.assertFalse(popup.section_tabs.isTabEnabled(1))
         index = popup.period_type_combo.findData("break")
         self.assertGreaterEqual(index, 0)
-        self.assertFalse(popup.period_type_combo.model().item(index).isEnabled())
+        self.assertTrue(popup.period_type_combo.model().item(index).isEnabled())
         self.assertTrue(popup.auto_help_label.isVisible())
         popup.work_mode_combo.setCurrentIndex(popup.work_mode_combo.findData(WorkMode.BUSINESS_TRIP))
         popup.apply_button.click()
@@ -225,6 +225,52 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.clock_out_button.click()
         self.assertTrue(panel.classification_button.isEnabled())
         self.assertEqual(editor_state(panel).work_mode, WorkMode.BUSINESS_TRIP)
+
+    def test_automatic_break_selection_supports_start_end_and_completed_content_changes(self):
+        from worklogger.domain.projects.models import WorkContext
+
+        panel = self.panel
+        service = panel.view_model.service
+        self.assertTrue(service.save_manual(self.now.date(), "07:00", "08:00", "normal", "Work", work_mode=WorkMode.REMOTE).ok)
+        project = service.projects.save_project("Platform").value
+        custom = service.entry_types.save("Personal rest", "break").value
+        panel.refresh_projects()
+        panel.refresh_entry_types()
+        panel.time_tabs.setCurrentIndex(1)
+        for entry_type in ("break", custom.value):
+            with self.subTest(entry_type=entry_type):
+                panel.new_record()
+                popup = open_classification(panel)
+                popup.work_mode_combo.setCurrentIndex(popup.work_mode_combo.findData(WorkMode.REMOTE))
+                popup.context_picker.project_combo.setCurrentIndex(popup.context_picker.project_combo.findData(project.id))
+                popup.period_type_combo.setCurrentIndex(popup.period_type_combo.findData(entry_type))
+                self.assertTrue(popup.work_metadata.isHidden())
+                popup.apply_button.click()
+                self.assertFalse(popup.isVisible(), popup.error_label.text())
+                self.assertEqual(editor_state(panel).entry_type, entry_type)
+                self.assertEqual(editor_state(panel).context, WorkContext())
+                self.assertIsNone(editor_state(panel).work_mode)
+                self.assertTrue(panel.clock_in_button.isEnabled())
+                panel.content_input.setPlainText("Rest")
+                panel.clock_in_button.click()
+                self.assertEqual(panel.view_model.timer.entry_type.value, entry_type)
+                self.assertFalse(panel.clock_in_button.isEnabled())
+                self.assertTrue(panel.clock_out_button.isEnabled())
+                self.assertFalse(panel.break_button.isEnabled())
+                self.now += timedelta(minutes=30)
+                panel.clock_out_button.click()
+                self.assertIsNone(panel.view_model.timer)
+                record = panel.view_model.auto_completed
+                self.assertIsNotNone(record)
+                self.assertEqual((record.entry_type.value, record.raw_hours(), record.worked_hours()), (entry_type, 0.5, 0))
+                self.assertEqual(editor_state(panel).entry_type, entry_type)
+                panel.content_input.setPlainText("Updated rest")
+                panel.save_button.click()
+                self.assertEqual(self.repository.get_entry(self.runtime.user.id, record.id).note, "Updated rest")
+                self.assertEqual(service.default_work_mode(), WorkMode.REMOTE)
+                self.assertTrue(panel.clock_in_button.isEnabled())
+                self.assertFalse(panel.clock_out_button.isEnabled())
+        self.warning.assert_not_called()
 
     def test_historical_untimed_leave_keeps_empty_clock_boundaries_after_classification_edit(self):
         from worklogger.domain.worklog.models import EntryType
@@ -1110,16 +1156,15 @@ class TimeEntryWorkflowTests(unittest.TestCase):
             self.assertEqual(model.draft, draft)
             self.assertEqual(model.auto_completed.work_mode, WorkMode.ONSITE)
 
-    def test_manual_nonwork_records_remain_independent_of_automatic_work(self):
+    def test_manual_leave_records_remain_independent_of_automatic_work(self):
         from worklogger.domain.projects.models import WorkContext
 
         model = self.panel.view_model
-        custom_break = model.service.entry_types.save("Rest", "break").value
         custom_leave = model.service.entry_types.save("Leave", "leave").value
         from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
         model = TimeEntryViewModel(model.service)
         with patch.object(model.service, "default_work_mode", return_value=WorkMode.REMOTE):
-            for entry_type in ("break", "paid_leave", custom_break.value, custom_leave.value):
+            for entry_type in ("paid_leave", custom_leave.value):
                 with self.subTest(entry_type=entry_type):
                     model.new(self.now.date())
                     model.update(start="07:00", end="08:00", entry_type=entry_type, content="Manual record")
@@ -1358,7 +1403,8 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.save_button.click()
         self.assertEqual(self.repository.get_entry(self.runtime.user.id, entries[0].id).note, "Updated lunch")
         panel.time_tabs.setCurrentIndex(1)
-        self.assertEqual(editor_state(panel).entry_type, "normal")
+        self.assertEqual(editor_state(panel).entry_type, "break")
+        apply_classification(panel, "normal")
         self.now += timedelta(minutes=1)
         original = self.repository.get_entry(self.runtime.user.id, entries[0].id)
         panel.content_input.setPlainText("Back to work")

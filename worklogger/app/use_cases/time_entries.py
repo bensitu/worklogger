@@ -248,8 +248,8 @@ class TimeEntryService:
                 raise ValueError("work_mode_invalid") from None
             if definition.category != EntryCategory.WORK and (arrangement is not None or context != WorkContext()):
                 raise ValueError("entry_classification_invalid")
-            if automatic and definition.category != EntryCategory.WORK:
-                raise ValueError("auto_record_work_required")
+            if automatic and definition.category == EntryCategory.LEAVE:
+                raise ValueError("auto_record_leave_not_supported")
             return definition, arrangement, self._resolve_context(context, original.context if original else None)
         return self._run(resolve, error_code="entry_types_load_failed")
 
@@ -277,12 +277,15 @@ class TimeEntryService:
             if self.timer:
                 raise ValueError("auto_record_already_active")
             definition = self._resolve_type(entry_type)
-            if definition.category != EntryCategory.WORK:
-                raise ValueError("auto_record_work_required")
+            if definition.category == EntryCategory.LEAVE:
+                raise ValueError("auto_record_leave_not_supported")
             try:
                 arrangement = WorkMode(work_mode) if work_mode is not None else None
             except (TypeError, ValueError):
                 raise ValueError("work_mode_invalid") from None
+            association = self._resolve_context(context or WorkContext())
+            if definition.category != EntryCategory.WORK and (arrangement is not None or association != WorkContext()):
+                raise ValueError("entry_classification_invalid")
             moment = now or self.now()
             if not isinstance(moment, datetime) or moment.tzinfo is None:
                 raise ValueError("time_range_invalid")
@@ -314,7 +317,7 @@ class TimeEntryService:
             if active_break is not None:
                 return Result.failure(ConflictError("fixed_break_active", "fixed_break_active", {"break_entry": active_break}))
             timer = EntryTimer(uuid4().hex, moment, definition, require_entry_content(content),
-                               context=self._resolve_context(context or WorkContext()), work_mode=arrangement)
+                               context=association, work_mode=arrangement)
             if break_entry is None:
                 self._persist(timer)
             else:

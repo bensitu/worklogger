@@ -116,7 +116,7 @@ class ClassificationPicker(QFrame):
         work_layout.addWidget(self.work_metadata)
         self.legacy_label = self._message(_("Legacy classification"))
         work_layout.addWidget(self.legacy_label)
-        self.auto_help_label = self._message(_("Enter leave in Manual Input. Use the Break action to record a break."))
+        self.auto_help_label = self._message(_("Enter leave in Manual Input."))
         work_layout.addWidget(self.auto_help_label)
         work_layout.addStretch()
         leave = QWidget()
@@ -210,8 +210,6 @@ class ClassificationPicker(QFrame):
                 if item.category != category:
                     continue
                 add_entry_type_option(combo, item)
-                if automatic and category == EntryCategory.BREAK:
-                    combo.model().item(combo.count() - 1).setEnabled(False)
         self.period_type_combo.setCurrentIndex(max(0, self.period_type_combo.findData(definition.value)))
         self.leave_type_combo.setCurrentIndex(max(0, self.leave_type_combo.findData(definition.value)))
         self.work_mode_combo.setCurrentIndex(max(0, self.work_mode_combo.findData(work_mode)))

@@ -74,6 +74,8 @@ Normalization, elapsed time, type accounting, overlaps, and limits are validated
 outside widgets. Writes use account ownership and expected revisions.
 
 Timer completion and persistence of its next state share a transaction.
+Work and break classifications support start/end timers; leave remains manual.
+The preset-break shortcut writes a bounded rest record without starting a timer.
 `domain/worklog/timer_state.py` owns timer models, persisted representation, and
 recovery validation, including historical break fields. Application services own
 storage access and context authorization. Recording operations capture an immutable
