@@ -342,7 +342,7 @@ class CalendarViewModel:
             has_note_marker=has_note_marker,
             note_tooltip=note_text[:200] if has_note_marker else "",
             segments=tuple(CalendarIndicatorSegment(segment.key, segment.duration,
-                self._theme_engine.entry_type_color(segment.semantic_color_id, dark=dark))
+                self._theme_engine.entry_type_color(segment.semantic_color_id, dark=dark, category=segment.category))
                 for segment in allocation_segments((record,) if record else (),
                     dimension=options.classification_dimension, standard_leave_hours=options.standard_work_hours)),
             show_overnight_marker=bool(

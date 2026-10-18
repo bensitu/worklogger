@@ -12,10 +12,11 @@ from worklogger.domain.settings.preferences import SETTINGS_DEFAULTS
 from worklogger.domain.settings.validation import normalize_setting
 from worklogger.domain.reporting.periods import validate_report_period
 from worklogger.domain.cloud_backup import MAX_DOCUMENT_BYTES, STATE_KEY
+from worklogger.domain.worklog.models import CustomWorkMode
 from worklogger.infrastructure.database.current_schema import CURRENT_SCHEMA_VERSION, schema_columns
 from worklogger.infrastructure.repositories.worklog_mapping_sqlite import WorkLogStorage
 
-_TABLES = ("projects", "work_items", "entry_types", "worklog", "daily_notes", "quick_logs",
+_TABLES = ("projects", "work_items", "entry_types", "work_modes", "worklog", "daily_notes", "quick_logs",
            "calendar_events", "reports", "report_revisions", "report_templates", "settings", "background_images")
 _PORTABLE_SETTINGS = frozenset(key for key in SETTINGS_DEFAULTS
     if not key.startswith(("network_", "external_", "local_model", "enable_tray", "enable_menu_bar"))
@@ -104,6 +105,15 @@ class SQLitePersonalData:
             raise ValueError("cloud_backup_too_large")
         try:
             value = json.loads(document)
+            if isinstance(value, dict) and value.get("schema") == 17 and isinstance(value.get("tables"), dict):
+                if set(value["tables"]) != set(_TABLES) - {"work_modes"}:
+                    raise ValueError("cloud_backup_invalid")
+                value["schema"] = CURRENT_SCHEMA_VERSION
+                value["tables"]["work_modes"] = []
+                for row in value["tables"].get("worklog", []):
+                    if not isinstance(row, dict) or "work_mode_label" in row:
+                        raise ValueError("cloud_backup_invalid")
+                    row["work_mode_label"] = ""
             if (set(value) != {"format", "schema", "tables"} or value["format"] != 1
                     or value["schema"] != CURRENT_SCHEMA_VERSION or set(value["tables"]) != set(_TABLES)):
                 raise ValueError("cloud_backup_invalid")
@@ -123,7 +133,11 @@ class SQLitePersonalData:
             raise ValueError("cloud_backup_invalid") from None
 
     def _validate_row(self, table, row):
-        if table == "settings":
+        if table == "work_modes":
+            if row["category"] != "work" or type(row["archived"]) is not int or row["archived"] not in (0, 1):
+                raise ValueError("cloud_backup_invalid")
+            CustomWorkMode(row["id"], row["name"], row["revision"], bool(row["archived"]))
+        elif table == "settings":
             if not _portable_key(row["key"]):
                 raise ValueError("cloud_backup_invalid")
             if row["key"].startswith("daily_note_sharing:"):
@@ -144,14 +158,14 @@ class SQLitePersonalData:
 
     def _insert(self, connection, tables):
         identifiers = {table: {} for table in _TABLES}
-        for table in ("projects", "work_items", "entry_types"):
+        for table in ("projects", "work_items", "entry_types", "work_modes"):
             for row in tables[table]:
-                identifiers[table][row["id"]] = ("custom:" if table == "entry_types" else "") + uuid4().hex
+                identifiers[table][row["id"]] = ("custom:" if table in {"entry_types", "work_modes"} else "") + uuid4().hex
         for table in _TABLES:
             for original in tables[table]:
                 row = dict(original)
                 old_id = row.get("id")
-                if table in {"projects", "work_items", "entry_types"}:
+                if table in {"projects", "work_items", "entry_types", "work_modes"}:
                     row["id"] = identifiers[table][old_id]
                 if table in _AUTONUMBER:
                     row.pop("id")
@@ -162,6 +176,9 @@ class SQLitePersonalData:
                         row[field] = identifiers[referenced][row[field]]
                 if table == "worklog":
                     row["entry_type"] = identifiers["entry_types"].get(row["entry_type"], row["entry_type"])
+                    row["work_mode"] = identifiers["work_modes"].get(row["work_mode"], row["work_mode"])
+                if table == "settings" and row["key"] == "last_used_work_mode":
+                    row["value"] = identifiers["work_modes"].get(row["value"], row["value"])
                 if table in {"reports", "report_revisions"}:
                     row["provenance"] = _remap_provenance(row["provenance"], identifiers)
                 if table != "report_revisions":

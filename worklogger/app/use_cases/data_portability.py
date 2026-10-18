@@ -11,7 +11,7 @@ from worklogger.app.commands.data_portability_commands import ImportWorkLogsCsvC
 from worklogger.app.use_cases._errors import infrastructure_failure
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.models import WorkLog, WorkMode
+from worklogger.domain.worklog.models import WorkLog, WorkModeValue
 from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.repositories import WorkLogRepository
 from worklogger.domain.worklog.rules import decode_entry_type, normalize_work_log
@@ -33,7 +33,7 @@ class WorkLogCsvRowDraft:
     entry_type_category: str = ""
     project_label: str = ""
     work_item_label: str = ""
-    work_mode: WorkMode | None = None
+    work_mode: WorkModeValue | None = None
 
 
 @dataclass(frozen=True)

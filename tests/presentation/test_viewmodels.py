@@ -307,7 +307,7 @@ class PresentationViewModelTests(unittest.TestCase):
         self.assertEqual(style.background, "#4f8ef7")
         self.assertEqual(
             engine.entry_type_color(EntryType.BUSINESS_TRIP),
-            "#e07800",
+            "#6576a4",
         )
         for dark in (False, True):
             colors = []
@@ -317,12 +317,8 @@ class PresentationViewModelTests(unittest.TestCase):
                 self.assertTrue(QColor(color).isValid())
                 colors.append(color)
             self.assertEqual(len(colors), len(set(colors)))
-            for entry_type in (EntryType.NORMAL, EntryType.BREAK):
-                color = QColor(engine.entry_type_color(entry_type, dark=dark))
-                self.assertEqual(color.red(), color.green())
-                self.assertEqual(color.green(), color.blue())
 
-    def test_custom_classification_colors_follow_stable_identity_not_catalog_metadata(self):
+    def test_custom_classification_colors_follow_stable_identity_within_semantic_categories(self):
         from dataclasses import replace
 
         engine = ThemeEngine()
@@ -336,9 +332,28 @@ class PresentationViewModelTests(unittest.TestCase):
                 self.assertEqual(ThemeEngine().entry_type_color(definition, dark=dark), expected)
                 for category in ("work", "break", "leave"):
                     changed = replace(definition, label="Revised", category=category, revision=3, archived=True)
-                    self.assertEqual(engine.entry_type_color(changed, dark=dark), expected)
+                    color = engine.entry_type_color(changed, dark=dark)
+                    self.assertEqual(color, engine.entry_type_color(definition.value, dark=dark, category=category))
+                    self.assertEqual(color, engine.entry_type_color(replace(changed, label="Renamed"), dark=dark))
+                    if category != "work":
+                        self.assertNotEqual(color, expected)
                 colors.append(expected)
             self.assertGreater(len(set(colors)), 1)
+
+    def test_builtin_and_custom_indicators_use_muted_category_color_families(self):
+        from worklogger.domain.worklog.models import CustomWorkMode
+        engine = ThemeEngine()
+        for dark in (False, True):
+            for category, minimum, maximum in (("work", 185, 235), ("leave", 0, 50), ("break", 90, 165)):
+                definitions = [item for item in EntryType if item.category == category]
+                definitions.extend(CustomEntryType(f"custom:{index:032x}", "Example", category) for index in range(1, 65))
+                if category == "work":
+                    definitions.extend(CustomWorkMode(f"custom:{index:032x}", "Hybrid") for index in range(1, 17))
+                for definition in definitions:
+                    color = QColor(engine.entry_type_color(definition, dark=dark))
+                    hue, saturation, _lightness, _alpha = color.getHsl()
+                    self.assertTrue(minimum <= hue <= maximum, (category, color.name(), hue))
+                    self.assertLess(saturation, 140)
 
     def test_theme_engine_uses_shared_templates_and_resolved_palettes(self) -> None:
         engine = ThemeEngine()

@@ -125,13 +125,15 @@ class DonutChart(QWidget):
         self.setObjectName("distribution_chart_widget")
         self._segments: tuple[tuple[str, float], ...] = ()
         self._keys: tuple[str, ...] = ()
+        self._categories: tuple[str, ...] = ()
         self.setMinimumSize(180, 144)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
-    def set_segments(self, segments: tuple[tuple[str, float], ...], *, keys: tuple[str, ...] = (),
+    def set_segments(self, segments: tuple[tuple[str, float], ...], *, keys: tuple[str, ...] = (), categories: tuple[str, ...] = (),
                      caption: str = "") -> None:
         self._segments = tuple((label, value) for label, value in segments if value > 0)
         self._keys = tuple(keys[index] if index < len(keys) else "" for index, (_label, value) in enumerate(segments) if value > 0)
+        self._categories = tuple(categories[index] if index < len(categories) else "work" for index, (_label, value) in enumerate(segments) if value > 0)
         self.setToolTip("\n".join(f"{label}: {duration_label(value)}" for label, value in self._segments))
         self.setAccessibleName(caption or _("Classification"))
         self.setAccessibleDescription(self.toolTip() or _("No data"))
@@ -186,7 +188,7 @@ class DonutChart(QWidget):
         engine = ThemeEngine()
         for index, (label, value) in enumerate(self._segments):
             key = self._keys[index]
-            color = QColor(engine.entry_type_color("normal" if key == "onsite" else key, dark=colors.dark)
+            color = QColor(engine.entry_type_color(key, dark=colors.dark, category=self._categories[index])
                            if key else segment_colors[index % len(segment_colors)])
             span = round(360 * 16 * value / total)
             painter.setPen(QPen(color, 15))

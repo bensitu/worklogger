@@ -30,6 +30,10 @@ separate work arrangement or custom classification snapshots. Historical
 `remote` and `business_trip` IDs remain readable without guessing a work activity.
 
 Optional `work_mode` stores `onsite`, `remote`, `business_trip`, or `other`.
+Custom arrangements use a `custom:<uuid>` identifier and require the additional
+`work_mode_label` column. Export includes that column when needed and applies the
+same reversible text encoding as other user-supplied labels. Import retains the
+historical name without adding to or modifying the destination account's catalog.
 Missing or empty values mean unspecified and never inherit an account preference.
 Exports include the column when at least one record has an arrangement. Break
 and leave cannot carry a work arrangement or project/work-item context; invalid

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
+from worklogger.domain.worklog.models import CustomEntryType, EntryType, WorkModeValue
 
 
 @dataclass(frozen=True)
@@ -36,10 +37,9 @@ class AnalyticsDashboard:
     previous_total_days: int
     trend: ChartDataBundle
     average: ChartDataBundle
-    entry_types: tuple[tuple[str, float], ...]
+    entry_types: tuple[tuple[EntryType | CustomEntryType, float], ...]
     daily_average_trend: ChartDataBundle
-    entry_type_labels: tuple[tuple[str, str], ...] = ()
     planned_work_days: float | None = 0.0
     target_mode: str = "manual"
     planning_error: str = ""
-    work_modes: tuple[tuple[str | None, float], ...] = ()
+    work_modes: tuple[tuple[WorkModeValue | None, float], ...] = ()

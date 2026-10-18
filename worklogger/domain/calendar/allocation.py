@@ -21,12 +21,13 @@ class AllocationSegment:
     key: str
     duration: float
     semantic_color_id: str
+    category: EntryCategory = EntryCategory.WORK
 
 
 def allocation_segments(records: Iterable[WorkLog], *, dimension: CalendarDimension = CalendarDimension.ENTRY_TYPE,
                         standard_leave_hours: float = DEFAULT_LEAVE_HOURS) -> tuple[AllocationSegment, ...]:
     dimension = CalendarDimension(dimension)
-    totals: dict[str, float] = {}
+    totals: dict[tuple[str, EntryCategory], float] = {}
     for record in records:
         for entry in record.entries or (record,):
             if dimension == CalendarDimension.WORK_MODE:
@@ -38,10 +39,12 @@ def allocation_segments(records: Iterable[WorkLog], *, dimension: CalendarDimens
                 key = entry.entry_type.value
                 hours = entry.classified_hours(standard_leave_hours=standard_leave_hours)
             if math.isfinite(hours) and hours > 0:
-                totals[key] = totals.get(key, 0) + hours
+                category = entry.entry_type.category if dimension == CalendarDimension.ENTRY_TYPE else EntryCategory.WORK
+                identity = key, category
+                totals[identity] = totals.get(identity, 0) + hours
     order = ENTRY_TYPE_KEYS if dimension == CalendarDimension.ENTRY_TYPE else (*[mode.value for mode in WorkMode], "unspecified")
     positions = {key: index for index, key in enumerate(order)}
     mode_colors = {"onsite": "normal", "remote": "remote", "business_trip": "business_trip",
                    "other": "other", "unspecified": "normal"}
-    return tuple(AllocationSegment(key, totals[key], key if dimension == CalendarDimension.ENTRY_TYPE else mode_colors[key])
-                 for key in sorted(totals, key=lambda key: (positions.get(key, len(positions)), key)))
+    return tuple(AllocationSegment(key, totals[(key, category)], key if dimension == CalendarDimension.ENTRY_TYPE else mode_colors.get(key, key), category)
+                 for key, category in sorted(totals, key=lambda identity: (positions.get(identity[0], len(positions)), *identity)))

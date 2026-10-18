@@ -7,7 +7,8 @@ from unittest.mock import patch
 from worklogger.app.use_cases.time_entries import TimeEntryService
 from worklogger.domain.worklog.timer_state import EntryTimer, encode_timer
 from worklogger.app.use_cases.entry_types import EntryTypeService
-from worklogger.infrastructure.repositories.entry_type_sqlite import SQLiteEntryTypeRepository
+from worklogger.app.use_cases.work_modes import WorkModeService
+from worklogger.infrastructure.repositories.entry_type_sqlite import SQLiteEntryTypeRepository, SQLiteWorkModeRepository
 from worklogger.app.use_cases.data_portability import ImportWorkLogsCsvHandler
 from worklogger.app.commands.data_portability_commands import ImportWorkLogsCsvCommand
 from worklogger.domain.notes.models import DailyNote
@@ -298,7 +299,59 @@ class TimeEntryTests(unittest.TestCase):
     def make_service(self):
         return TimeEntryService(user_id=self.user.id, repository=self.repository, settings=self.settings,
                                 local_timezone=timezone.utc, clock=lambda: self.now,
-                                entry_types=EntryTypeService(self.user.id, SQLiteEntryTypeRepository(self.factory)))
+                                entry_types=EntryTypeService(self.user.id, SQLiteEntryTypeRepository(self.factory)),
+                                work_modes=WorkModeService(self.user.id, SQLiteWorkModeRepository(self.factory)))
+
+    def test_custom_work_arrangements_preserve_record_and_timer_snapshots_across_catalog_changes(self):
+        modes = self.service.work_modes
+        original = modes.save("Hybrid", "work").value
+        saved = self.service.save_manual(self.now.date(), "07:00", "08:00", "meeting", "Planning", work_mode=original).value
+        self.assertEqual(self.service.default_work_mode().label, "Hybrid")
+        self.assertTrue(self.service.start("normal", "Ongoing", work_mode=original).ok)
+        renamed = modes.save("Flexible", "work", original).value
+        self.assertEqual(modes.save("Stale", "work", original).error.code, "work_mode_conflict")
+        self.assertEqual(modes.save("FLEXIBLE", "work").error.code, "work_mode_name_exists")
+        self.assertEqual(self.make_service().timer.work_mode.label, "Hybrid")
+        self.assertTrue(modes.archive(renamed).ok)
+        self.assertIsNone(self.service.default_work_mode())
+        restored = self.make_service()
+        self.now += timedelta(hours=1)
+        completed = restored.finish("Completed").value
+        self.assertEqual(completed.work_mode.label, "Hybrid")
+        self.assertEqual(self.repository.get_entry(self.user.id, saved.id).work_mode.label, "Hybrid")
+        edited = restored.save_manual(saved.day, "07:00", "08:00", "meeting", "Edited", saved, work_mode=original)
+        self.assertTrue(edited.ok, edited.error)
+        self.assertEqual(edited.value.work_mode.label, "Hybrid")
+        self.assertEqual(restored.start("normal", "Unavailable", work_mode=renamed).error.code, "work_mode_unavailable")
+        self.assertEqual(restored.save_manual(saved.day, "11:00", "12:00", "normal", "Unavailable", work_mode=renamed).error.code, "work_mode_unavailable")
+        recreated = modes.save("Flexible", "work").value
+        self.assertNotEqual(recreated.value, original.value)
+
+    def test_custom_work_arrangements_survive_split_undo_csv_and_analytics_without_catalog_leakage(self):
+        from worklogger.domain.worklog.search import EntryFilter
+        from worklogger.infrastructure.entry_type_labels import classification_label
+        mode = self.service.work_modes.save("=Hybrid team", "work").value
+        saved = self.service.save_manual(self.now.date(), "09:00", "12:00", "normal", "Team work", work_mode=mode).value
+        split = self.service.split_at(saved, self.now + timedelta(hours=1))
+        self.assertTrue(split.ok, split.error)
+        self.assertEqual([entry.work_mode.label for entry in split.value], [mode.label, mode.label])
+        undone = self.service.undo(self.service.latest_change().value.id)
+        self.assertTrue(undone.ok, undone.error)
+        self.assertEqual(undone.value[0].work_mode.label, mode.label)
+        path = Path(self.directory.name) / "arrangements.csv"
+        self.assertTrue(WorkLogCsvExporter().export_work_logs(path, undone.value).ok)
+        auth = SQLiteAuthRepository(self.factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
+        other = auth.create_user("other-mode-owner", "example-password", recovery_key=None, is_admin=False)
+        importer = ImportWorkLogsCsvHandler(importer=WorkLogCsvImporter(), repository=self.repository)
+        preview = importer.preview(ImportWorkLogsCsvCommand(other.id, path)).value
+        self.assertFalse(preview.errors)
+        self.assertTrue(importer.apply(preview).ok)
+        copied = self.repository.search_entries(other.id, EntryFilter(saved.day, saved.day)).entries[0]
+        self.assertEqual(copied.work_mode.label, mode.label)
+        self.assertIn(mode.label, classification_label(copied.entry_type, copied.work_mode))
+        self.assertEqual(SQLiteWorkModeRepository(self.factory).list_types(other.id), ())
+        data = dashboard_data((copied,), year=2026, month=5, scope="monthly", standard_hours=8, monthly_target=160)
+        self.assertEqual(dict(data.work_modes), {mode: 3})
 
     def test_custom_classifications_keep_accounting_snapshots_across_catalog_changes(self):
         types = self.service.entry_types
@@ -317,7 +370,7 @@ class TimeEntryTests(unittest.TestCase):
         summary = self.repository.list_all(self.user.id)
         data = dashboard_data(summary, year=2026, month=5, scope="monthly", standard_hours=8, monthly_target=160)
         self.assertEqual((data.stats.total_hours, data.stats.rest_days), (1, 1))
-        self.assertEqual(dict(data.entry_type_labels)[work.value], "Research")
+        self.assertEqual({definition.label: hours for definition, hours in data.entry_types}, {"Research": 1, "Personal break": 1})
         other = EntryTypeService(self.user.id + 1, SQLiteEntryTypeRepository(self.factory))
         self.assertEqual(other.list_types().value, ())
         self.assertFalse(other.archive(changed).ok)

@@ -9,7 +9,7 @@ from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.files import atomic_destination
 from worklogger.infrastructure.i18n import _
-from worklogger.infrastructure.entry_type_labels import classification_label, entry_type_label
+from worklogger.infrastructure.entry_type_labels import classification_label, entry_type_label, work_mode_label
 
 
 def _headers():
@@ -91,7 +91,7 @@ class TimesheetXlsxExporter:
                         entry.started_at.isoformat() if entry.started_at else "", entry.ended_at.isoformat() if entry.ended_at else "",
                         entry.break_hours, entry.entry_type.value, entry.context.project_id or "", entry.context.work_item_id or "",
                         entry.work_mode.value if entry.work_mode is not None else "",
-                        entry_type_label(entry.entry_type), entry.entry_type.category.value))
+                        entry_type_label(entry.entry_type), entry.entry_type.category.value, work_mode_label(entry.work_mode)))
                 row_index += 1
             page.auto_filter.ref = f"A6:K{row_index - 1}"
             page.freeze_panes = "A7"
@@ -114,12 +114,13 @@ class TimesheetXlsxExporter:
             sources = workbook.create_sheet(_("Record references")[:31])
             sources.append([_("Record ID"), _("Revision"), _("Date"), _("Started at"), _("Ended at"),
                             _("Historical break deduction"), _("Classification"), _("Project ID"), _("Work item ID"),
-                            _("Work arrangement"), _("Classification label"), _("Accounting category")])
+                            _("Work arrangement"), _("Classification label"), _("Accounting category"), _("Work arrangement label")])
             for values in metadata:
                 sources.append(values)
                 _text(sources.cell(sources.max_row, 11), values[10])
+                _text(sources.cell(sources.max_row, 13), values[12])
             sources.freeze_panes = "A2"
-            for column in range(1, 13):
+            for column in range(1, 14):
                 sources.column_dimensions[get_column_letter(column)].width = 25
             with atomic_destination(Path(destination)) as temporary:
                 workbook.save(temporary)

@@ -55,6 +55,9 @@ msgstr "プライバシーを重視した、AIレポート対応のデスクト�
 msgid "A record without start and end times cannot be split. Choose entire-record replacement or cancel."
 msgstr "開始・終了時刻のない記録は分割できません。記録全体を置き換えるか、キャンセルしてください。"
 
+msgid "A work arrangement with this name already exists."
+msgstr "同じ名前の勤務形態が既に存在します。"
+
 msgid "A&lpha channel:"
 msgstr "アルファ値(&L):"
 
@@ -166,6 +169,9 @@ msgstr "年次"
 msgid "Annual Hours"
 msgstr "年間労働時間"
 
+msgid "Anyone with access to these cloud files can read your data. Continue without encryption?"
+msgstr "クラウド上のファイルにアクセスできる人はデータを読むことができます。暗号化せずに続行しますか？"
+
 msgid "Appearance"
 msgstr "外観"
 
@@ -189,6 +195,9 @@ msgstr "4月"
 
 msgid "Archive"
 msgstr "アーカイブ"
+
+msgid "Archive arrangement"
+msgstr "勤務形態をアーカイブ"
 
 msgid "Archive project"
 msgstr "プロジェクトをアーカイブ"
@@ -235,6 +244,9 @@ msgstr "認証応答を受信しました。WorkLogger に戻って続行して�
 msgid "Auto Record"
 msgstr "自動記録"
 
+msgid "Automatic backup"
+msgstr "自動バックアップ"
+
 msgid "Automatic goals use planned workdays and daily standard hours. Enabled public holidays follow the selected region."
 msgstr "自動目標は予定勤務日数と1日の標準時間から算出します。祝日を有効にすると、選択地域の祝日を反映します。"
 
@@ -271,11 +283,23 @@ msgstr "データをバックアップ"
 msgid "Backup cancelled"
 msgstr "バックアップをキャンセルしました"
 
+msgid "Backup directory / prefix"
+msgstr "バックアップディレクトリ／プレフィックス"
+
+msgid "Backup passphrase"
+msgstr "バックアップ用パスフレーズ"
+
+msgid "Backup passphrase (blank uses the stored passphrase)"
+msgstr "バックアップ用パスフレーズ（空欄なら保存済みのものを使用）"
+
 msgid "Backup saved: {path}"
 msgstr "バックアップを保存しました：{path}"
 
 msgid "Backup succeeded, but its timestamp could not be saved."
 msgstr "バックアップは成功しましたが、日時を保存できませんでした。"
+
+msgid "Backup version"
+msgstr "バックアップのバージョン"
 
 msgid "Bar"
 msgstr "棒グラフ"
@@ -358,6 +382,9 @@ msgstr "パスワードを変更"
 msgid "Changes apply to new records. Existing records keep their saved name and accounting category."
 msgstr "変更は新しい記録に適用されます。既存の記録は保存時の名前と集計区分を保持します。"
 
+msgid "Changes apply to new records. Existing records keep their saved work arrangement name."
+msgstr "変更は新しい記録に適用されます。既存の記録は保存時の勤務形態名を保持します。"
+
 msgid "Changing password will reset the recovery key."
 msgstr "パスワードを変更すると復旧キーがリセットされます。"
 
@@ -418,6 +445,9 @@ msgstr "入力をクリア"
 msgid "Clearing calendar events is not supported yet."
 msgstr "カレンダーの予定の消去はまだ対応していません。"
 
+msgid "Client-side encryption"
+msgstr "クライアント側の暗号化"
+
 msgid "Close"
 msgstr "閉じる"
 
@@ -426,6 +456,21 @@ msgstr "続行する前にノートエディターを閉じてください。"
 
 msgid "Close window"
 msgstr "ウィンドウを閉じる"
+
+msgid "Cloud authentication failed. Check the storage credentials and permissions."
+msgstr "クラウド認証に失敗しました。ストレージの認証情報と権限を確認してください。"
+
+msgid "Cloud backup failed. Check the network, storage service, and available space."
+msgstr "クラウドバックアップに失敗しました。ネットワーク、ストレージサービス、空き容量を確認してください。"
+
+msgid "Cloud backup operation in progress..."
+msgstr "クラウドバックアップを処理中..."
+
+msgid "Cloud backup settings saved."
+msgstr "クラウドバックアップ設定を保存しました。"
+
+msgid "Cloud backup uploaded."
+msgstr "クラウドバックアップをアップロードしました。"
 
 msgid "Code"
 msgstr "コード"
@@ -438,6 +483,9 @@ msgstr "ブラウザーでのサインインを待っています…"
 
 msgid "Completed"
 msgstr "完了"
+
+msgid "Configure a valid HTTPS cloud destination and backup schedule."
+msgstr "有効な HTTPS クラウド保存先とバックアップスケジュールを設定してください。"
 
 msgid "Configure sign-in"
 msgstr "サインインの設定"
@@ -453,6 +501,9 @@ msgstr "パスワードを確認"
 
 msgid "Connection succeeded."
 msgstr "接続に成功しました。"
+
+msgid "Connection verified."
+msgstr "接続を確認しました。"
 
 msgid "Content"
 msgstr "内容"
@@ -559,6 +610,9 @@ msgstr "データの場所"
 msgid "Data restored successfully."
 msgstr "データを復元しました。"
 
+msgid "Data restored. Recovery copy: {path}"
+msgstr "データを復元しました。復旧用コピー: {path}"
+
 msgid "Database Backup"
 msgstr "データベースのバックアップ"
 
@@ -570,6 +624,12 @@ msgstr "日付範囲"
 
 msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
 msgstr "休憩記録がある日付。勤務日と休憩日は重複できます。休暇は別に集計します。"
+
+msgid "Day of month"
+msgstr "毎月の日付"
+
+msgid "Day of week"
+msgstr "曜日"
 
 msgid "Day off"
 msgstr "休み"
@@ -652,8 +712,14 @@ msgstr "ドメイン"
 msgid "Download"
 msgstr "ダウンロード"
 
+msgid "Download and restore"
+msgstr "ダウンロードして復元"
+
 msgid "Download, import, and select a local model."
 msgstr "ローカルモデルをダウンロード、インポート、選択します。"
+
+msgid "Downloading and restoring personal data..."
+msgstr "個人データをダウンロードして復元中..."
 
 msgid "Downloading model..."
 msgstr "モデルをダウンロード中..."
@@ -774,6 +840,18 @@ msgstr "推定メモリ：{ram} GB"
 
 msgid "Estimated size"
 msgstr "推定サイズ"
+
+msgid "Every N hours"
+msgstr "指定時間ごと"
+
+msgid "Every day"
+msgstr "毎日"
+
+msgid "Every month"
+msgstr "毎月"
+
+msgid "Every week"
+msgstr "毎週"
 
 msgid "Exactly one day off is required."
 msgstr "休みを1日設定してください。"
@@ -925,6 +1003,9 @@ msgstr "目標を計算できません"
 msgid "Green"
 msgstr "緑"
 
+msgid "HTTPS endpoint"
+msgstr "HTTPS エンドポイント"
+
 msgid "Half day"
 msgstr "半日勤務"
 
@@ -1048,6 +1129,9 @@ msgstr "作業内容を含める"
 msgid "Install the native inference dependency from requirements-ai.txt, then restart WorkLogger."
 msgstr "requirements-ai.txtの推論依存パッケージをインストールして、WorkLoggerを再起動してください。"
 
+msgid "Interval (hours)"
+msgstr "間隔（時間）"
+
 msgid "Invalid date range"
 msgstr "日付範囲が正しくありません"
 
@@ -1099,8 +1183,14 @@ msgstr "コンテキストを大きくするとメモリ使用量が増え、モ
 msgid "Last backup: {time}"
 msgstr "最終バックアップ：{time}"
 
+msgid "Last cloud backup: {time}"
+msgstr "前回のクラウドバックアップ: {time}"
+
 msgid "Last saved: {time}"
 msgstr "最終保存：{time}"
+
+msgid "Latest cloud backup: {time}"
+msgstr "最新のクラウドバックアップ: {time}"
 
 msgid "Leave"
 msgstr "休暇"
@@ -1153,6 +1243,12 @@ msgstr "ローカルモデル"
 msgid "Local Models"
 msgstr "ローカルモデル"
 
+msgid "Local data changed. Review the current data before confirming a restore."
+msgstr "ローカルデータが変更されています。復元を確定する前に現在のデータを確認してください。"
+
+msgid "Local data location"
+msgstr "ローカルデータの保存先"
+
 msgid "Local model is disabled."
 msgstr "ローカルモデルは無効です。"
 
@@ -1176,6 +1272,9 @@ msgstr "ローカルテキスト処理を利用できます。"
 
 msgid "Local text processing timed out. Try shorter content or a smaller model."
 msgstr "ローカルのテキスト処理が時間切れです。内容を短くするか、小さいモデルを選択してください。"
+
+msgid "Local time"
+msgstr "現地時刻"
 
 msgid "Local user"
 msgstr "ローカルユーザー"
@@ -1219,6 +1318,9 @@ msgstr "プロジェクト管理"
 msgid "Manage users"
 msgstr "ユーザーを管理"
 
+msgid "Manage work arrangements"
+msgstr "勤務形態を管理"
+
 msgid "Manual Input"
 msgstr "手動入力"
 
@@ -1230,6 +1332,9 @@ msgstr "Markdown files (*.md)"
 
 msgid "Matching periods preserves other records; different overlapping periods cancel the import. Replacing dates removes all time records on those dates. Back up data before replacing dates or importing memos."
 msgstr "同じ時間帯のみを置換すると他の記録は保持されます。開始・終了時刻が異なる重複がある場合はインポート全体を中止します。日付単位の置換は対象日のすべての時間記録を削除します。日付単位の置換や独立したメモのインポートの前に、データをバックアップしてください。"
+
+msgid "Maximum retained backups"
+msgstr "バックアップ保持数の上限"
 
 msgid "May"
 msgstr "5月"
@@ -1321,6 +1426,9 @@ msgstr "全国の祝日"
 msgid "Network"
 msgstr "ネットワーク"
 
+msgid "New arrangement"
+msgstr "勤務形態を追加"
+
 msgid "New password"
 msgstr "新しいパスワード"
 
@@ -1362,6 +1470,9 @@ msgstr "{days}日間バックアップしていません。データをバック
 
 msgid "No backup recorded. Back up your data."
 msgstr "バックアップの記録がありません。データをバックアップしてください。"
+
+msgid "No cloud backups found."
+msgstr "クラウドバックアップが見つかりません。"
 
 msgid "No data"
 msgstr "データがありません"
@@ -1492,6 +1603,9 @@ msgstr "残業時間の比較：前期間 {previous:.1f}h、今期間 {current:.
 msgid "Overtime hours"
 msgstr "時間外労働時間"
 
+msgid "Overwrite despite version differences"
+msgstr "バージョンの違いを確認して上書き"
+
 msgid "Overwrite report?"
 msgstr "レポートを上書きしますか？"
 
@@ -1509,6 +1623,9 @@ msgstr "パレット"
 
 msgid "Password"
 msgstr "パスワード"
+
+msgid "Password / secret access key"
+msgstr "パスワード／シークレットアクセスキー"
 
 msgid "Password change"
 msgstr "パスワード変更"
@@ -1533,6 +1650,9 @@ msgstr "貼り付け"
 
 msgid "Period type"
 msgstr "時間帯の種類"
+
+msgid "Personal cloud backup"
+msgstr "個人用クラウドバックアップ"
 
 msgid "Personal profile"
 msgstr "個人プロフィール"
@@ -1834,8 +1954,14 @@ msgstr "復元すると現在のデータベースファイルが置き換わり
 msgid "Restoring data..."
 msgstr "データを復元中..."
 
+msgid "Restoring replaces this account's portable data. Other accounts and login credentials are unchanged. A local recovery copy is saved first; sign in again afterwards."
+msgstr "復元すると、このアカウントの移行可能なデータが置き換わります。他のアカウントやログイン情報は変更されません。最初にローカルの復旧用コピーを保存します。完了後に再ログインしてください。"
+
 msgid "Result"
 msgstr "変更結果"
+
+msgid "Retention days"
+msgstr "保持日数"
 
 msgid "Revision"
 msgstr "更新番号"
@@ -1860,6 +1986,18 @@ msgstr "実行コンテキスト"
 
 msgid "Runtime context must be a whole number of at least 512 tokens."
 msgstr "実行コンテキストは512トークン以上の整数にしてください。"
+
+msgid "S3 bucket"
+msgstr "S3 バケット"
+
+msgid "S3 region"
+msgstr "S3 リージョン"
+
+msgid "S3 session token"
+msgstr "S3 セッショントークン"
+
+msgid "S3-compatible storage"
+msgstr "S3 互換ストレージ"
 
 msgid "SMOKE IMPORT FAILED"
 msgstr "インポートのスモークテストに失敗"
@@ -1890,6 +2028,9 @@ msgstr "内容を保存"
 
 msgid "Save display name"
 msgstr "表示名を保存"
+
+msgid "Save or discard unsaved edits before restoring a cloud backup."
+msgstr "クラウドバックアップを復元する前に、未保存の編集を保存または破棄してください。"
 
 msgid "Save recovery key"
 msgstr "復旧キーを保存"
@@ -2110,6 +2251,9 @@ msgstr "簡体字中国語"
 msgid "Some dates already have records. Review the import and confirm replacement."
 msgstr "一部の日付には記録があります。取り込み内容を確認し、置き換えを承認してください。"
 
+msgid "Some expired backups could not be removed. Cleanup will be retried."
+msgstr "期限切れのバックアップを一部削除できませんでした。後で再試行します。"
+
 msgid "Some stored records could not be converted safely. The original data and upgrade backup have been preserved."
 msgstr "一部の記録を安全に変換できませんでした。元のデータと更新前のバックアップは保持されています。"
 
@@ -2158,6 +2302,15 @@ msgstr "開始日時"
 msgid "State / province"
 msgstr "州 / 都道府県"
 
+msgid "Stop automatic recording before restoring a cloud backup."
+msgstr "クラウドバックアップを復元する前に自動記録を終了してください。"
+
+msgid "Storage provider"
+msgstr "ストレージサービス"
+
+msgid "Stored securely"
+msgstr "安全に保存済み"
+
 msgid "Stored securely; no request is sent when saving."
 msgstr "安全に保存されます。保存時にリクエストは送信されません。"
 
@@ -2197,6 +2350,9 @@ msgstr "一時パスワードを保存しました。"
 msgid "Test"
 msgstr "テスト"
 
+msgid "Test connection"
+msgstr "接続をテスト"
+
 msgid "Test connection using sample text; no work records are included."
 msgstr "サンプルテキストで接続をテストします。作業記録は含まれません。"
 
@@ -2224,6 +2380,18 @@ msgstr "IDまたはパスワードが正しくありません。"
 msgid "The account's remembered session was revoked, but its device file could not be removed. Sign in manually and check storage permissions."
 msgstr "このアカウントのログイン記憶情報を無効にしましたが、端末のセッションファイルを削除できませんでした。手動でログインし、保存先の権限を確認してください。"
 
+msgid "The backup exceeds the supported size limit."
+msgstr "バックアップが対応サイズの上限を超えています。"
+
+msgid "The backup passphrase is incorrect or the encrypted backup was modified."
+msgstr "パスフレーズが正しくないか、暗号化バックアップが変更されています。"
+
+msgid "The cloud backup is missing, damaged, or uses an unsupported format. Local data has not been replaced."
+msgstr "クラウドバックアップが存在しないか、破損しているか、未対応の形式です。ローカルデータは置き換えられていません。"
+
+msgid "The cloud version changed. Review the latest backup and explicitly confirm an overwrite."
+msgstr "クラウドのバージョンが変更されました。最新のバックアップを確認し、上書きを明示的に承認してください。"
+
 msgid "The data directory is unavailable."
 msgstr "データフォルダーを利用できません。"
 
@@ -2244,6 +2412,9 @@ msgstr "過去の休憩は記録区間の内側に収まる必要があります
 
 msgid "The latest 50 saved versions are retained. Restoring creates a new version."
 msgstr "最新の保存済みバージョン50件を保持します。復元すると新しいバージョンが作成されます。"
+
+msgid "The local account changed. Sign in again before continuing."
+msgstr "ローカルアカウントが変更されました。再ログインしてから続行してください。"
 
 msgid "The model exceeds the supported download size limit."
 msgstr "モデルがダウンロードサイズの上限を超えています。"
@@ -2341,6 +2512,9 @@ msgstr "このレポートは別の場所で変更されました。履歴を再
 msgid "This report is too large to save. Your current content has been retained."
 msgstr "報告書が大きすぎて保存できません。現在の内容は保持されています。"
 
+msgid "This server does not support the conditional writes required for safe backups."
+msgstr "このサーバーは安全なバックアップに必要な条件付き書き込みに対応していません。"
+
 msgid "This sign-in configuration is managed outside the application."
 msgstr "このサインイン設定はアプリケーションの外部で管理されています。"
 
@@ -2352,6 +2526,9 @@ msgstr "タイマーが設定した通知時間に達しました。"
 
 msgid "This timesheet is too large. Choose a shorter period; the destination file is unchanged."
 msgstr "勤務表が大きすぎます。短い期間を選択してください。出力先ファイルは変更されていません。"
+
+msgid "This work arrangement changed or is no longer available. Reload the arrangements and try again."
+msgstr "この勤務形態は変更されたか、利用できなくなりました。再読み込みしてやり直してください。"
 
 msgid "This work timer has reached your continuous-work reminder duration."
 msgstr "作業タイマーが連続作業の通知時間に達しました。"
@@ -2533,6 +2710,9 @@ msgstr "記録タイプを更新できません。記録は変更されていま
 msgid "Unable to update saved sign-in information."
 msgstr "保存済みのログイン情報を更新できませんでした。"
 
+msgid "Unable to update work arrangements. Your records have not changed."
+msgstr "勤務形態を更新できません。記録は変更されていません。"
+
 msgid "Unclassified"
 msgstr "未分類"
 
@@ -2553,6 +2733,9 @@ msgstr "{date}、{start} - {end} の直前の記録変更を元に戻します�
 
 msgid "Undo the replacement and restore the previous records?"
 msgstr "置き換えを取り消し、元の記録を復元しますか？"
+
+msgid "Unencrypted backup"
+msgstr "暗号化されていないバックアップ"
 
 msgid "Unknown"
 msgstr "不明"
@@ -2578,8 +2761,14 @@ msgstr "更新があります：{version}"
 msgid "Update check is not configured."
 msgstr "更新確認は未設定です。"
 
+msgid "Upload backup"
+msgstr "バックアップをアップロード"
+
 msgid "Upload image"
 msgstr "画像をアップロード"
+
+msgid "Use a backup passphrase between 12 and 1024 characters."
+msgstr "バックアップ用パスフレーズは 12～1024 文字で入力してください。"
 
 msgid "Use a single-line display name without control characters."
 msgstr "表示名は制御文字を含まない1行の文字列にしてください。"
@@ -2619,6 +2808,9 @@ msgstr "ユーザーを更新しました。"
 
 msgid "Username"
 msgstr "ユーザー名"
+
+msgid "Username / access key ID"
+msgstr "ユーザー名／アクセスキー ID"
 
 msgid "Validating backup..."
 msgstr "バックアップを検証中..."
@@ -2684,6 +2876,12 @@ msgid "Work Report"
 msgstr "業務レポート"
 
 msgid "Work arrangement"
+msgstr "勤務形態"
+
+msgid "Work arrangement label"
+msgstr "勤務形態名"
+
+msgid "Work arrangements"
 msgstr "勤務形態"
 
 msgid "Work days"

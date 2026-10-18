@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
-from worklogger.domain.worklog.models import WorkMode
+from worklogger.domain.worklog.models import WorkModeValue
 
 
 @dataclass(frozen=True)
@@ -19,4 +19,4 @@ class SaveWorkLogCommand:
     expected_note: str | None = None
     started_at: datetime | None = None
     ended_at: datetime | None = None
-    work_mode: WorkMode | None = None
+    work_mode: WorkModeValue | None = None

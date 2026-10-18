@@ -15,6 +15,8 @@ layers. Back up your database before upgrading.
 
 ### Added
 
+- Custom work arrangements with account-specific management and historical names
+  preserved in records, timers, and exports.
 - Account-owned custom work types, projects, and work items, with historical
   classification snapshots, record search, split/merge actions, and conflict-aware undo.
 - Saved report versions, version recovery, generation-source references, and
@@ -26,6 +28,8 @@ layers. Back up your database before upgrading.
 
 ### Changed
 
+- Unified classification indicators around muted cool work colors, warm leave
+  colors, and soft green break colors, including custom types.
 - Organized Calendar, Analytics, Reports, and Settings in a shared desktop workspace,
   with grouped settings and consistent action styling and keyboard access.
 - Stored independently editable time periods and persistent timers; manual and

@@ -8,7 +8,7 @@ from datetime import datetime
 from worklogger.config.constants import MAX_SHIFT_HOURS
 from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.content import require_entry_content
-from worklogger.domain.worklog.models import CustomEntryType, EntryType, EntryCategory, WorkMode
+from worklogger.domain.worklog.models import CustomEntryType, CustomWorkMode, EntryType, EntryCategory, WorkMode, WorkModeValue, decode_work_mode
 from worklogger.domain.worklog.rules import decode_entry_type, timestamp_span_hours
 
 
@@ -24,13 +24,16 @@ class EntryTimer:
     legacy_break_hours: float = 0.0
     pending_end: datetime | None = None
     context: WorkContext = WorkContext()
-    work_mode: WorkMode | None = None
+    work_mode: WorkModeValue | None = None
 
 
 def encode_timer(timer: EntryTimer | None) -> str | None:
     if timer is None:
         return None
     data = asdict(timer)
+    data["work_mode"] = timer.work_mode.value if timer.work_mode is not None else None
+    if isinstance(timer.work_mode, CustomWorkMode):
+        data["work_mode_label"] = timer.work_mode.label
     for key in ("entry_type", "resume_type"):
         definition = getattr(timer, key)
         data[key] = definition.value if definition is not None else None
@@ -60,8 +63,8 @@ def decode_timer(raw: str) -> EntryTimer:
         data[key] = decode_entry_type(data[key], label=label, category=category, strict=True) if data.get(key) else None
     if "work_mode" not in data:
         data["work_mode"] = {EntryType.REMOTE: WorkMode.REMOTE, EntryType.BUSINESS_TRIP: WorkMode.BUSINESS_TRIP}.get(data["entry_type"])
-    elif data["work_mode"] is not None:
-        data["work_mode"] = WorkMode(data["work_mode"])
+    else:
+        data["work_mode"] = decode_work_mode(data["work_mode"], data.pop("work_mode_label", ""))
     timer = EntryTimer(**data)
     if timer.entry_type.category == EntryCategory.LEAVE:
         raise ValueError("auto_record_restore_failed")

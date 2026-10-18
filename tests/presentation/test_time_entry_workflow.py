@@ -59,6 +59,56 @@ def apply_classification(panel, entry_type):
 
 
 class TimeEntryWorkflowTests(unittest.TestCase):
+    def test_work_arrangement_management_reuses_the_editor_and_updates_picker_choices(self):
+        from worklogger.presentation.widgets.classification_manager import ClassificationManagerDialog
+        panel = self.panel
+        page = self.runtime.window.settings_page
+        definitions = []
+        def create_arrangement(dialog):
+            self.assertTrue(dialog.category_combo.isHidden())
+            dialog.name_input.setText("Hybrid team")
+            dialog.save_button.click()
+            definitions.append(dialog.type_list.currentItem().data(Qt.ItemDataRole.UserRole))
+            return 1
+        with patch.object(ClassificationManagerDialog, "exec", create_arrangement):
+            page.manage_work_modes_button.click()
+        definition = definitions[0]
+        popup = open_classification(panel)
+        index = popup.work_mode_combo.findText(definition.label)
+        self.assertGreaterEqual(index, 0)
+        popup.work_mode_combo.setCurrentIndex(index)
+        popup.apply_button.click()
+        self.assertFalse(popup.isVisible(), popup.error_label.text())
+        self.assertIn("Hybrid team", panel.classification_button.accessibleDescription())
+        panel.start_input.setText("09:00")
+        panel.end_input.setText("10:00")
+        panel.content_input.setPlainText("Team work")
+        panel.save_button.click()
+        record = self.repository.list_for_day(self.runtime.user.id, self.now.date())[0]
+        self.assertEqual(record.work_mode.label, "Hybrid team")
+        popup = open_classification(panel)
+        popup.period_type_combo.setCurrentIndex(popup.period_type_combo.findData("break"))
+        popup.apply_button.click()
+        self.assertFalse(popup.isVisible(), popup.error_label.text())
+        self.assertIsNone(editor_state(panel).work_mode)
+        with patch("worklogger.presentation.widgets.time_entries.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes):
+            panel.edit_entry(record)
+        catalog = panel.view_model.service.work_modes
+        renamed = catalog.save("Flexible team", "work", definition).value
+        panel.refresh_entry_types()
+        panel.edit_entry(record)
+        popup = open_classification(panel)
+        self.assertEqual(popup.work_mode_combo.currentText(), "Hybrid team")
+        popup.apply_button.click()
+        self.assertFalse(popup.isVisible(), popup.error_label.text())
+        self.assertTrue(catalog.archive(renamed).ok)
+        panel.refresh_entry_types()
+        self.assertTrue(panel.new_record())
+        popup = open_classification(panel)
+        self.assertFalse(any(getattr(popup.work_mode_combo.itemData(index), "value", None) == definition.value
+                             for index in range(popup.work_mode_combo.count())))
+        popup.cancel_button.click()
+
     def test_classification_stages_all_fields_and_applies_one_validated_draft_update(self):
         from worklogger.domain.projects.models import WorkContext
 
@@ -1050,16 +1100,16 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.warning.assert_not_called()
 
     def test_custom_type_management_and_manual_automatic_recording_preserve_saved_categories(self):
-        from worklogger.presentation.widgets.entry_type_manager import EntryTypeManagerDialog
+        from worklogger.presentation.widgets.classification_manager import ClassificationManagerDialog
         from worklogger.presentation.settings import SettingsWorkflowController
-        from worklogger.presentation.viewmodels.entry_types import EntryTypeManagerViewModel
+        from worklogger.presentation.viewmodels.classifications import ClassificationManagerViewModel
         from tests.presentation.test_settings_presentation import _view_model, MemorySettingsRepository
         from tests.presentation.test_settings_workflow import FakeAuthViewModel, FakeDataManagementViewModel
         panel = self.panel
         controller = SettingsWorkflowController(settings_view_model=_view_model(MemorySettingsRepository()),
             auth_view_model=FakeAuthViewModel(), user=self.runtime.user,
             data_management_view_model=FakeDataManagementViewModel(),
-            entry_types_view_model=EntryTypeManagerViewModel(panel.view_model.service.entry_types))
+            entry_types_view_model=ClassificationManagerViewModel(panel.view_model.service.entry_types))
         settings = controller.create_page()
         self.addCleanup(settings.deleteLater)
         settings.entry_types_changed.connect(panel.refresh_entry_types)
@@ -1072,7 +1122,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
             definitions.append(dialog.type_list.currentItem().data(256))
             return 1
 
-        with patch.object(EntryTypeManagerDialog, "exec", create_type):
+        with patch.object(ClassificationManagerDialog, "exec", create_type):
             settings.manage_entry_types_button.click()
         definition = definitions[0]
         apply_classification(panel, definition.value)
@@ -1102,7 +1152,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
             dialog.save_button.click()
             return 1
 
-        with patch.object(EntryTypeManagerDialog, "exec", edit_type):
+        with patch.object(ClassificationManagerDialog, "exec", edit_type):
             settings.manage_entry_types_button.click()
         self.assertIn("Research", panel.classification_button.accessibleDescription())
         self.assertEqual(panel.content_input.toPlainText(), "Ongoing research")

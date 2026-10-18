@@ -16,7 +16,7 @@ from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import get_language
 from worklogger.infrastructure.export.csv_text import decode_text
-from worklogger.domain.worklog.models import WorkMode
+from worklogger.domain.worklog.models import decode_work_mode
 
 
 class WorkLogCsvImporter:
@@ -97,7 +97,7 @@ def _parse_row(
             entry_type_category=_field(row, "entry_type_category"),
             project_label=_text_field(row, "project_label"),
             work_item_label=_text_field(row, "work_item_label"),
-            work_mode=WorkMode(_field(row, "work_mode")) if _field(row, "work_mode") else None,
+            work_mode=decode_work_mode(_field(row, "work_mode") or None, _text_field(row, "work_mode_label")),
         )
     except (TypeError, ValueError, OverflowError):
         return WorkLogCsvRowError(row_number, "csv_import_failed")

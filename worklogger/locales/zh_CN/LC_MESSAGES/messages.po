@@ -55,6 +55,9 @@ msgstr "注重隐私的桌面工时记录工具，支持 AI 报表。"
 msgid "A record without start and end times cannot be split. Choose entire-record replacement or cancel."
 msgstr "没有开始和结束时间的记录无法拆分。请选择替换整条记录，或取消操作。"
 
+msgid "A work arrangement with this name already exists."
+msgstr "已存在同名工作方式。"
+
 msgid "A&lpha channel:"
 msgstr "透明度(&L)："
 
@@ -166,6 +169,9 @@ msgstr "年度"
 msgid "Annual Hours"
 msgstr "年度工时"
 
+msgid "Anyone with access to these cloud files can read your data. Continue without encryption?"
+msgstr "任何能访问这些云端文件的人都能读取您的数据。是否继续使用未加密备份？"
+
 msgid "Appearance"
 msgstr "外观"
 
@@ -189,6 +195,9 @@ msgstr "4月"
 
 msgid "Archive"
 msgstr "归档"
+
+msgid "Archive arrangement"
+msgstr "归档工作方式"
 
 msgid "Archive project"
 msgstr "归档项目"
@@ -235,6 +244,9 @@ msgstr "已收到授权响应。请返回 WorkLogger 继续。"
 msgid "Auto Record"
 msgstr "自动记录"
 
+msgid "Automatic backup"
+msgstr "自动备份"
+
 msgid "Automatic goals use planned workdays and daily standard hours. Enabled public holidays follow the selected region."
 msgstr "自动目标根据计划工作日与每日标准工时计算；启用节假日时，采用所选地区的节假日。"
 
@@ -271,11 +283,23 @@ msgstr "备份数据"
 msgid "Backup cancelled"
 msgstr "已取消备份"
 
+msgid "Backup directory / prefix"
+msgstr "备份目录／前缀"
+
+msgid "Backup passphrase"
+msgstr "备份口令"
+
+msgid "Backup passphrase (blank uses the stored passphrase)"
+msgstr "备份口令（留空则使用已保存的口令）"
+
 msgid "Backup saved: {path}"
 msgstr "备份已保存：{path}"
 
 msgid "Backup succeeded, but its timestamp could not be saved."
 msgstr "备份成功，但无法保存备份时间。"
+
+msgid "Backup version"
+msgstr "备份版本"
 
 msgid "Bar"
 msgstr "柱状图"
@@ -358,6 +382,9 @@ msgstr "修改密码"
 msgid "Changes apply to new records. Existing records keep their saved name and accounting category."
 msgstr "修改仅用于新记录。既存记录保留保存时的名称和统计口径。"
 
+msgid "Changes apply to new records. Existing records keep their saved work arrangement name."
+msgstr "更改仅用于新记录。已有记录保留保存时的工作方式名称。"
+
 msgid "Changing password will reset the recovery key."
 msgstr "修改密码会重置恢复密钥。"
 
@@ -418,6 +445,9 @@ msgstr "清空"
 msgid "Clearing calendar events is not supported yet."
 msgstr "暂不支持清空日历事件。"
 
+msgid "Client-side encryption"
+msgstr "客户端加密"
+
 msgid "Close"
 msgstr "关闭"
 
@@ -426,6 +456,21 @@ msgstr "请先关闭笔记编辑器再继续。"
 
 msgid "Close window"
 msgstr "关闭窗口"
+
+msgid "Cloud authentication failed. Check the storage credentials and permissions."
+msgstr "云存储身份验证失败。请检查凭据与权限。"
+
+msgid "Cloud backup failed. Check the network, storage service, and available space."
+msgstr "云备份失败。请检查网络、存储服务与可用空间。"
+
+msgid "Cloud backup operation in progress..."
+msgstr "正在处理云备份…"
+
+msgid "Cloud backup settings saved."
+msgstr "云备份设置已保存。"
+
+msgid "Cloud backup uploaded."
+msgstr "云备份已上传。"
 
 msgid "Code"
 msgstr "编号"
@@ -438,6 +483,9 @@ msgstr "正在等待浏览器登录…"
 
 msgid "Completed"
 msgstr "已完成"
+
+msgid "Configure a valid HTTPS cloud destination and backup schedule."
+msgstr "请配置有效的 HTTPS 云存储地址与备份计划。"
 
 msgid "Configure sign-in"
 msgstr "配置登录"
@@ -453,6 +501,9 @@ msgstr "确认密码"
 
 msgid "Connection succeeded."
 msgstr "连接成功。"
+
+msgid "Connection verified."
+msgstr "连接已验证。"
 
 msgid "Content"
 msgstr "内容"
@@ -559,6 +610,9 @@ msgstr "数据位置"
 msgid "Data restored successfully."
 msgstr "数据恢复成功。"
 
+msgid "Data restored. Recovery copy: {path}"
+msgstr "数据已恢复。本地恢复副本：{path}"
+
 msgid "Database Backup"
 msgstr "数据库备份"
 
@@ -570,6 +624,12 @@ msgstr "日期范围"
 
 msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
 msgstr "包含休息类型记录的日期。工作天数与休息天数可以重叠，请假单独统计。"
+
+msgid "Day of month"
+msgstr "每月日期"
+
+msgid "Day of week"
+msgstr "星期"
 
 msgid "Day off"
 msgstr "休息"
@@ -652,8 +712,14 @@ msgstr "域"
 msgid "Download"
 msgstr "下载"
 
+msgid "Download and restore"
+msgstr "下载并恢复"
+
 msgid "Download, import, and select a local model."
 msgstr "下载、导入和选择本地模型。"
+
+msgid "Downloading and restoring personal data..."
+msgstr "正在下载并恢复个人数据…"
 
 msgid "Downloading model..."
 msgstr "正在下载模型..."
@@ -774,6 +840,18 @@ msgstr "估算内存：{ram} GB"
 
 msgid "Estimated size"
 msgstr "预计大小"
+
+msgid "Every N hours"
+msgstr "每隔指定小时"
+
+msgid "Every day"
+msgstr "每天"
+
+msgid "Every month"
+msgstr "每月"
+
+msgid "Every week"
+msgstr "每周"
 
 msgid "Exactly one day off is required."
 msgstr "需要设置恰好一天休息。"
@@ -925,6 +1003,9 @@ msgstr "目标暂不可用"
 msgid "Green"
 msgstr "绿色"
 
+msgid "HTTPS endpoint"
+msgstr "HTTPS 服务地址"
+
 msgid "Half day"
 msgstr "半天工作"
 
@@ -1048,6 +1129,9 @@ msgstr "包含工作内容"
 msgid "Install the native inference dependency from requirements-ai.txt, then restart WorkLogger."
 msgstr "请安装 requirements-ai.txt 中的本地推理依赖，然后重启 WorkLogger。"
 
+msgid "Interval (hours)"
+msgstr "间隔（小时）"
+
 msgid "Invalid date range"
 msgstr "日期范围无效"
 
@@ -1099,8 +1183,14 @@ msgstr "更大的上下文窗口会增加内存占用，可能导致模型无法
 msgid "Last backup: {time}"
 msgstr "最近备份：{time}"
 
+msgid "Last cloud backup: {time}"
+msgstr "上次云备份：{time}"
+
 msgid "Last saved: {time}"
 msgstr "最近保存：{time}"
+
+msgid "Latest cloud backup: {time}"
+msgstr "最新云备份：{time}"
 
 msgid "Leave"
 msgstr "休假"
@@ -1153,6 +1243,12 @@ msgstr "本地模型"
 msgid "Local Models"
 msgstr "本地模型"
 
+msgid "Local data changed. Review the current data before confirming a restore."
+msgstr "本地数据已更改。确认恢复前，请核对当前数据。"
+
+msgid "Local data location"
+msgstr "本地数据位置"
+
 msgid "Local model is disabled."
 msgstr "本地模型已关闭。"
 
@@ -1176,6 +1272,9 @@ msgstr "本地文本处理可用。"
 
 msgid "Local text processing timed out. Try shorter content or a smaller model."
 msgstr "本地文字处理超时。请缩短内容或选择较小的模型。"
+
+msgid "Local time"
+msgstr "本地时间"
 
 msgid "Local user"
 msgstr "本地用户"
@@ -1219,6 +1318,9 @@ msgstr "管理项目"
 msgid "Manage users"
 msgstr "管理用户"
 
+msgid "Manage work arrangements"
+msgstr "管理工作方式"
+
 msgid "Manual Input"
 msgstr "手动输入"
 
@@ -1230,6 +1332,9 @@ msgstr "Markdown files (*.md)"
 
 msgid "Matching periods preserves other records; different overlapping periods cancel the import. Replacing dates removes all time records on those dates. Back up data before replacing dates or importing memos."
 msgstr "仅替换相同时段会保留其他记录；重叠但起止不同则取消整个导入。整日替换会删除这些日期的所有时间记录。整日替换或导入独立笔记前，请先备份数据。"
+
+msgid "Maximum retained backups"
+msgstr "最多保留备份数"
 
 msgid "May"
 msgstr "5月"
@@ -1321,6 +1426,9 @@ msgstr "全国假日"
 msgid "Network"
 msgstr "网络"
 
+msgid "New arrangement"
+msgstr "新增工作方式"
+
 msgid "New password"
 msgstr "新密码"
 
@@ -1362,6 +1470,9 @@ msgstr "已有 {days} 天未备份，请备份数据。"
 
 msgid "No backup recorded. Back up your data."
 msgstr "暂无备份记录，请备份数据。"
+
+msgid "No cloud backups found."
+msgstr "未找到云备份。"
 
 msgid "No data"
 msgstr "暂无数据"
@@ -1492,6 +1603,9 @@ msgstr "加班工时对比：上一周期 {previous:.1f}h，当前周期 {curren
 msgid "Overtime hours"
 msgstr "加班时长"
 
+msgid "Overwrite despite version differences"
+msgstr "确认忽略版本差异并覆盖"
+
 msgid "Overwrite report?"
 msgstr "覆盖报表？"
 
@@ -1509,6 +1623,9 @@ msgstr "调色板"
 
 msgid "Password"
 msgstr "密码"
+
+msgid "Password / secret access key"
+msgstr "密码／访问密钥"
 
 msgid "Password change"
 msgstr "密码修改"
@@ -1533,6 +1650,9 @@ msgstr "粘贴"
 
 msgid "Period type"
 msgstr "时段类型"
+
+msgid "Personal cloud backup"
+msgstr "个人云备份"
 
 msgid "Personal profile"
 msgstr "个人资料"
@@ -1834,8 +1954,14 @@ msgstr "恢复会替换当前数据库文件。继续？"
 msgid "Restoring data..."
 msgstr "正在恢复数据..."
 
+msgid "Restoring replaces this account's portable data. Other accounts and login credentials are unchanged. A local recovery copy is saved first; sign in again afterwards."
+msgstr "恢复将替换本账户的可迁移数据，不更改其他账户和登录凭据。恢复前会保存本地恢复副本；完成后请重新登录。"
+
 msgid "Result"
 msgstr "变更结果"
+
+msgid "Retention days"
+msgstr "保留天数"
 
 msgid "Revision"
 msgstr "修订号"
@@ -1860,6 +1986,18 @@ msgstr "运行上下文"
 
 msgid "Runtime context must be a whole number of at least 512 tokens."
 msgstr "运行上下文必须是至少512 tokens的整数。"
+
+msgid "S3 bucket"
+msgstr "S3 存储桶"
+
+msgid "S3 region"
+msgstr "S3 区域"
+
+msgid "S3 session token"
+msgstr "S3 会话令牌"
+
+msgid "S3-compatible storage"
+msgstr "S3 兼容存储"
 
 msgid "SMOKE IMPORT FAILED"
 msgstr "导入检查失败"
@@ -1890,6 +2028,9 @@ msgstr "保存内容"
 
 msgid "Save display name"
 msgstr "保存显示名称"
+
+msgid "Save or discard unsaved edits before restoring a cloud backup."
+msgstr "恢复云备份前，请保存或放弃未保存的编辑。"
 
 msgid "Save recovery key"
 msgstr "保存恢复密钥"
@@ -2110,6 +2251,9 @@ msgstr "简体中文"
 msgid "Some dates already have records. Review the import and confirm replacement."
 msgstr "部分日期已有记录。请检查导入内容并确认是否替换。"
 
+msgid "Some expired backups could not be removed. Cleanup will be retried."
+msgstr "部分过期备份未能删除，稍后会重试清理。"
+
 msgid "Some stored records could not be converted safely. The original data and upgrade backup have been preserved."
 msgstr "部分记录无法安全转换。原始数据和升级备份均已保留。"
 
@@ -2158,6 +2302,15 @@ msgstr "开始时间戳"
 msgid "State / province"
 msgstr "州 / 省"
 
+msgid "Stop automatic recording before restoring a cloud backup."
+msgstr "恢复云备份前，请先结束自动记录。"
+
+msgid "Storage provider"
+msgstr "存储服务"
+
+msgid "Stored securely"
+msgstr "已安全保存"
+
 msgid "Stored securely; no request is sent when saving."
 msgstr "安全存储，保存时不会发送请求。"
 
@@ -2197,6 +2350,9 @@ msgstr "临时密码已保存。"
 msgid "Test"
 msgstr "测试"
 
+msgid "Test connection"
+msgstr "测试连接"
+
 msgid "Test connection using sample text; no work records are included."
 msgstr "使用示例文本测试连接，不包含任何工作记录。"
 
@@ -2224,6 +2380,18 @@ msgstr "ID 或密码不正确。"
 msgid "The account's remembered session was revoked, but its device file could not be removed. Sign in manually and check storage permissions."
 msgstr "已撤销此账户的记住登录凭据，但无法移除设备上的会话文件。请手动登录并检查存储权限。"
 
+msgid "The backup exceeds the supported size limit."
+msgstr "备份超过了支持的大小限制。"
+
+msgid "The backup passphrase is incorrect or the encrypted backup was modified."
+msgstr "备份口令错误，或加密备份已被修改。"
+
+msgid "The cloud backup is missing, damaged, or uses an unsupported format. Local data has not been replaced."
+msgstr "云备份不存在、已损坏或格式不受支持。本地数据未被替换。"
+
+msgid "The cloud version changed. Review the latest backup and explicitly confirm an overwrite."
+msgstr "云端版本已更改。请核对最新备份并明确确认覆盖。"
+
 msgid "The data directory is unavailable."
 msgstr "数据目录不可用。"
 
@@ -2244,6 +2412,9 @@ msgstr "历史休息必须完整位于记录区间内。"
 
 msgid "The latest 50 saved versions are retained. Restoring creates a new version."
 msgstr "保留最近 50 个已保存版本。恢复将创建新版本。"
+
+msgid "The local account changed. Sign in again before continuing."
+msgstr "本地账户已更改。请重新登录后继续。"
 
 msgid "The model exceeds the supported download size limit."
 msgstr "模型超过支持的下载大小上限。"
@@ -2341,6 +2512,9 @@ msgstr "此报表已在其他位置修改。请重新加载历史列表后再删
 msgid "This report is too large to save. Your current content has been retained."
 msgstr "此报表过大，无法保存。当前内容已保留。"
 
+msgid "This server does not support the conditional writes required for safe backups."
+msgstr "此服务器不支持安全备份所需的条件写入。"
+
 msgid "This sign-in configuration is managed outside the application."
 msgstr "此登录配置由应用外部管理。"
 
@@ -2352,6 +2526,9 @@ msgstr "此计时已达到设定的提醒时长。"
 
 msgid "This timesheet is too large. Choose a shorter period; the destination file is unchanged."
 msgstr "此工时表过大，请选择更短的期间。目标文件未改变。"
+
+msgid "This work arrangement changed or is no longer available. Reload the arrangements and try again."
+msgstr "此工作方式已更改或不可用。请重新加载后重试。"
 
 msgid "This work timer has reached your continuous-work reminder duration."
 msgstr "此工作计时已达到连续工作提醒时长。"
@@ -2533,6 +2710,9 @@ msgstr "无法更新记录类型。您的记录未更改。"
 msgid "Unable to update saved sign-in information."
 msgstr "无法更新已保存的登录信息。"
 
+msgid "Unable to update work arrangements. Your records have not changed."
+msgstr "无法更新工作方式。您的记录未更改。"
+
 msgid "Unclassified"
 msgstr "未分类"
 
@@ -2553,6 +2733,9 @@ msgstr "撤销 {date}、{start} - {end} 的最近记录更改？这不会重新�
 
 msgid "Undo the replacement and restore the previous records?"
 msgstr "撤销此次替换并恢复原有记录吗？"
+
+msgid "Unencrypted backup"
+msgstr "未加密备份"
 
 msgid "Unknown"
 msgstr "未知"
@@ -2578,8 +2761,14 @@ msgstr "有可用更新：{version}"
 msgid "Update check is not configured."
 msgstr "更新检查尚未配置。"
 
+msgid "Upload backup"
+msgstr "上传备份"
+
 msgid "Upload image"
 msgstr "上传图片"
+
+msgid "Use a backup passphrase between 12 and 1024 characters."
+msgstr "备份口令长度应为 12～1024 个字符。"
 
 msgid "Use a single-line display name without control characters."
 msgstr "显示名称必须为单行，且不能包含控制字符。"
@@ -2619,6 +2808,9 @@ msgstr "用户已更新。"
 
 msgid "Username"
 msgstr "用户名"
+
+msgid "Username / access key ID"
+msgstr "用户名／访问密钥 ID"
 
 msgid "Validating backup..."
 msgstr "正在验证备份..."
@@ -2684,6 +2876,12 @@ msgid "Work Report"
 msgstr "工作报表"
 
 msgid "Work arrangement"
+msgstr "工作方式"
+
+msgid "Work arrangement label"
+msgstr "工作方式名称"
+
+msgid "Work arrangements"
 msgstr "工作方式"
 
 msgid "Work days"

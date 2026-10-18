@@ -8,14 +8,15 @@ from PySide6.QtCore import QRect, QRectF, QSize, Qt
 from PySide6.QtGui import QColor, QIcon, QIconEngine, QPainter, QPixmap
 from PySide6.QtWidgets import QComboBox, QStyledItemDelegate, QStyleOptionViewItem
 
-from worklogger.domain.worklog.models import CustomEntryType, EntryType
+from worklogger.domain.worklog.models import CustomEntryType, CustomWorkMode, EntryType, WorkMode
 from worklogger.presentation.theme import ThemeEngine
 from worklogger.presentation.theme.context import current_colors
-from worklogger.presentation.entry_type_labels import entry_type_label
+from worklogger.presentation.entry_type_labels import entry_type_label, work_mode_label
 
+ClassificationDefinition = EntryType | CustomEntryType | WorkMode | CustomWorkMode
 
 class _EntryTypeColorIconEngine(QIconEngine):
-    def __init__(self, definition: EntryType | CustomEntryType) -> None:
+    def __init__(self, definition: ClassificationDefinition) -> None:
         super().__init__()
         self._definition = definition
 
@@ -63,17 +64,26 @@ class _EntryTypeOptionDelegate(QStyledItemDelegate):
         option.decorationSize = QSize(4, 20)
 
 
-def entry_type_icon(definition: EntryType | CustomEntryType) -> QIcon:
+def entry_type_icon(definition: ClassificationDefinition | None) -> QIcon:
     if ThemeEngine().entry_type_color(definition) is None:
         return QIcon()
     return QIcon(_EntryTypeColorIconEngine(definition))
 
 
-def add_entry_type_option(combo: QComboBox, definition: EntryType | CustomEntryType,
-                         *, index: int | None = None) -> None:
+def _prepare_combo(combo):
     if combo.property("entry_type_picker") is not True:
         combo.setProperty("entry_type_picker", True)
         combo.setItemDelegate(_EntryTypeOptionDelegate(combo))
     combo.setIconSize(QSize(4, 20))
+
+
+def add_entry_type_option(combo: QComboBox, definition: EntryType | CustomEntryType,
+                         *, index: int | None = None) -> None:
+    _prepare_combo(combo)
     combo.insertItem(combo.count() if index is None else index,
                      entry_type_icon(definition), entry_type_label(definition), definition.value)
+
+
+def add_work_mode_option(combo: QComboBox, definition: WorkMode | CustomWorkMode | None) -> None:
+    _prepare_combo(combo)
+    combo.addItem(entry_type_icon(definition), work_mode_label(definition), definition)

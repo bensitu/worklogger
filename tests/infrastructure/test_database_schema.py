@@ -77,7 +77,7 @@ class DatabaseSchemaTests(unittest.TestCase):
                                                        (14, False, "database_version_unsupported"),
                                                        (15, True, "database_version_unsupported"),
                                                        (16, False, "database_version_unsupported"),
-                                                       (18, False, "database_version_unsupported"),
+                                                       (CURRENT_SCHEMA_VERSION + 1, False, "database_version_unsupported"),
                                                        (CURRENT_SCHEMA_VERSION, True, "database_schema_unsupported")):
             path = self.directory / f"unsupported-{previous_version}.db"
             factory = SQLiteConnectionFactory(path)

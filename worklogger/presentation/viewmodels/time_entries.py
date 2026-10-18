@@ -12,7 +12,7 @@ from worklogger.app.recording_ports import TimeEntryOperations
 from worklogger.app.commands.ai_commands import RewriteTextCommand
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.models import EntryCategory, EntryType, WorkLog, WorkMode
+from worklogger.domain.worklog.models import EntryCategory, EntryType, WorkLog, WorkModeValue
 from worklogger.domain.worklog.content import require_entry_content
 from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.rules import timestamp_span_hours
@@ -192,6 +192,9 @@ class TimeEntryViewModel:
             self._custom_types = result.value
         return result
 
+    def list_work_modes(self):
+        return self.service.work_modes.list_types() if self.service.work_modes is not None else Result.success(())
+
     def elapsed_hours(self):
         return max(0, timestamp_span_hours(self.timer.started_at, self.now())) if self.timer else 0
 
@@ -299,7 +302,7 @@ class TimeEntryViewModel:
         return self._classification_category(value) in (EntryCategory.WORK, EntryCategory.BREAK)
 
     def update_auto(self, *, content, entry_type, context,
-                    work_mode: WorkMode | None | _Unset = _Unset.WORK_MODE):
+                    work_mode: WorkModeValue | None | _Unset = _Unset.WORK_MODE):
         self.auto_content = content
         if self.editing_active_timer:
             self.draft = replace(self.draft, content=content)
@@ -349,7 +352,7 @@ class TimeEntryViewModel:
         self._share_idle_fields(completed=record)
 
     def update(self, *, start: str, end: str, entry_type: str, content: str, context: WorkContext | None = None,
-               work_mode: WorkMode | None | _Unset = _Unset.WORK_MODE) -> None:
+               work_mode: WorkModeValue | None | _Unset = _Unset.WORK_MODE) -> None:
         linked = self.editing_active_timer
         mode = self.draft.work_mode if isinstance(work_mode, _Unset) else work_mode
         association = context if context is not None else self.draft.context
@@ -371,7 +374,7 @@ class TimeEntryViewModel:
         return saved
 
     def start(self, entry_type: str, content: str, *, now=None, break_entry=None,
-              work_mode: WorkMode | None | _Unset = _Unset.WORK_MODE):
+              work_mode: WorkModeValue | None | _Unset = _Unset.WORK_MODE):
         original_draft = self.draft
         mode = self.auto_work_mode if isinstance(work_mode, _Unset) else work_mode
         shared = (original_draft.entry_type == entry_type and original_draft.content == content

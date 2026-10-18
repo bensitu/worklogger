@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 from worklogger.config.themes import get_theme
 from worklogger.domain.settings.appearance import DEFAULT_CUSTOM_COLOR as DEFAULT_CUSTOM_COLOR, THEME_KEYS as THEME_KEYS, normalize_hex_color
-from worklogger.domain.worklog.models import CustomEntryType, EntryType
+from worklogger.domain.worklog.models import CustomEntryType, EntryType, WorkModeValue
 from worklogger.presentation.theme import calendar_styles
 from worklogger.presentation.theme.models import CalendarCellStyle, ColorPalette
 from worklogger.presentation.theme.palettes import build_palette
@@ -54,11 +54,13 @@ class ThemeEngine:
 
     def entry_type_color(
         self,
-        entry_type: EntryType | CustomEntryType | str,
+        entry_type: EntryType | CustomEntryType | WorkModeValue | str | None,
         *,
         dark: bool = False,
+        category=None,
     ) -> str | None:
-        return calendar_styles.entry_type_color(entry_type, dark=dark)
+        from worklogger.presentation.theme.classification_colors import classification_color
+        return classification_color(entry_type, dark=dark, category=category)
 
     def application_stylesheet(
         self,

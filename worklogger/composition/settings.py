@@ -72,7 +72,8 @@ from worklogger.presentation.viewmodels import (
     UserManagementViewModel,
 )
 from worklogger.presentation.viewmodels.projects import ProjectManagerViewModel
-from worklogger.presentation.viewmodels.entry_types import EntryTypeManagerViewModel
+from worklogger.presentation.viewmodels.classifications import ClassificationManagerViewModel
+from worklogger.app.use_cases.work_modes import WorkModeService
 from worklogger.app.use_cases.cloud_backups import CloudBackupService
 from worklogger.infrastructure.backup.archive import PersonalBackupArchive
 from worklogger.infrastructure.backup.configuration import CloudBackupConfigurationStore
@@ -145,7 +146,8 @@ def build_settings_workflow(
             database_path=database_path,
         ),
         remember_session_store=remember_session_store,
-        entry_types_view_model=EntryTypeManagerViewModel(EntryTypeService(user.id, repositories.entry_types)),
+        entry_types_view_model=ClassificationManagerViewModel(EntryTypeService(user.id, repositories.entry_types)),
+        work_modes_view_model=ClassificationManagerViewModel(WorkModeService(user.id, repositories.work_modes)),
         projects_view_model=ProjectManagerViewModel(ProjectService(user.id, repositories.projects)),
         local_inference=handlers.local_inference,
         ai_gateway=handlers.ai_gateway,

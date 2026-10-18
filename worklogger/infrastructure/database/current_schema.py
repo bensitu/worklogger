@@ -4,7 +4,7 @@ import sqlite3
 from contextlib import closing
 from functools import lru_cache
 
-CURRENT_SCHEMA_VERSION = 17
+CURRENT_SCHEMA_VERSION = 18
 
 TABLE_STATEMENTS = {
     "schema_migrations": """CREATE TABLE IF NOT EXISTS schema_migrations(
@@ -34,6 +34,10 @@ TABLE_STATEMENTS = {
         id TEXT PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         name TEXT NOT NULL, normalized_name TEXT NOT NULL, category TEXT NOT NULL CHECK(category IN ('work','break','leave')),
         revision INTEGER NOT NULL DEFAULT 0, archived INTEGER NOT NULL DEFAULT 0)""",
+    "work_modes": """CREATE TABLE IF NOT EXISTS work_modes(
+        id TEXT PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        name TEXT NOT NULL, normalized_name TEXT NOT NULL, category TEXT NOT NULL DEFAULT 'work' CHECK(category='work'),
+        revision INTEGER NOT NULL DEFAULT 0, archived INTEGER NOT NULL DEFAULT 0)""",
     "worklog": """CREATE TABLE IF NOT EXISTS worklog(
         id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         d TEXT NOT NULL, start TEXT, end TEXT, "break" REAL NOT NULL DEFAULT 0,
@@ -42,7 +46,9 @@ TABLE_STATEMENTS = {
         entry_type_label TEXT NOT NULL DEFAULT '', entry_type_category TEXT NOT NULL DEFAULT '',
         project_id TEXT REFERENCES projects(id), work_item_id TEXT REFERENCES work_items(id),
         project_label TEXT NOT NULL DEFAULT '', work_item_label TEXT NOT NULL DEFAULT '',
-        work_mode TEXT CHECK(work_mode IN ('onsite','remote','business_trip','other')))""",
+        work_mode TEXT, work_mode_label TEXT NOT NULL DEFAULT '',
+        CHECK(work_mode IS NULL OR work_mode IN ('onsite','remote','business_trip','other')
+            OR (work_mode GLOB 'custom:*' AND length(work_mode)=39 AND length(trim(work_mode_label)) BETWEEN 1 AND 80)))""",
     "daily_notes": """CREATE TABLE IF NOT EXISTS daily_notes(
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, d TEXT NOT NULL,
         content TEXT NOT NULL DEFAULT '', PRIMARY KEY(user_id,d))""",
@@ -101,6 +107,8 @@ INDEX_STATEMENTS = (
     "CREATE UNIQUE INDEX IF NOT EXISTS work_items_active_title ON work_items(user_id,project_id,normalized_title) WHERE archived=0",
     "CREATE UNIQUE INDEX IF NOT EXISTS entry_types_active_name ON entry_types(user_id,normalized_name) WHERE archived=0",
     "CREATE INDEX IF NOT EXISTS entry_types_account ON entry_types(user_id,archived)",
+    "CREATE UNIQUE INDEX IF NOT EXISTS work_modes_active_name ON work_modes(user_id,normalized_name) WHERE archived=0",
+    "CREATE INDEX IF NOT EXISTS work_modes_account ON work_modes(user_id,archived)",
     "CREATE INDEX IF NOT EXISTS idx_quick_logs_user_date ON quick_logs(user_id,date)",
     "CREATE INDEX IF NOT EXISTS idx_calendar_events_user_date ON calendar_events(user_id,date)",
     "CREATE INDEX IF NOT EXISTS idx_reports_user_type_period ON reports(user_id,type,period_start,period_end)",
@@ -117,13 +125,19 @@ def create_current_schema(connection):
         connection.execute(statement)
 
 
-@lru_cache(maxsize=1)
-def schema_columns():
+@lru_cache(maxsize=2)
+def schema_columns(version=CURRENT_SCHEMA_VERSION):
+    if version == 17:
+        return {table: (tuple(column for column in values[0] if table != "worklog" or column[0] != "work_mode_label"),
+                        values[1], values[2]) for table, values in schema_columns().items() if table != "work_modes"}
+    if version != CURRENT_SCHEMA_VERSION:
+        raise ValueError("database_version_unsupported")
     with closing(sqlite3.connect(":memory:")) as connection:
         create_current_schema(connection)
+        tables = set(TABLE_STATEMENTS)
         return {table: (tuple((row[1], row[2], row[5]) for row in connection.execute(f'PRAGMA table_info("{table}")')),
                         foreign_key_contract(connection, table), index_contract(connection, table))
-                for table in TABLE_STATEMENTS}
+                for table in tables}
 
 
 def index_contract(connection, table):
@@ -147,11 +161,12 @@ def foreign_key_contract(connection, table):
                      for (_identity, target, update, delete), columns in groups.items())
 
 
-def validate_current_schema(connection, *, check_data=True):
+def validate_current_schema(connection, *, check_data=True, version=CURRENT_SCHEMA_VERSION):
+    contract = schema_columns(version)
     tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")}
-    if tables - set(TABLE_STATEMENTS) - {"oauth_identities"}:
+    if tables - set(contract) - {"oauth_identities"}:
         raise ValueError("database_schema_unsupported")
-    for table, (required, foreign_keys, indexes) in schema_columns().items():
+    for table, (required, foreign_keys, indexes) in contract.items():
         actual = {row[1]: (row[2], row[5]) for row in connection.execute(f'PRAGMA table_info("{table}")')}
         if any(actual.get(name) != (declaration, primary_key) for name, declaration, primary_key in required):
             raise ValueError("database_schema_unsupported")

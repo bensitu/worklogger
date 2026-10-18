@@ -8,7 +8,7 @@ import math
 
 from worklogger.config.constants import MAX_SHIFT_HOURS
 from worklogger.domain.projects.models import WorkContext
-from worklogger.domain.worklog.models import WorkLog, EntryType, CustomEntryType, EntryCategory, WorkMode
+from worklogger.domain.worklog.models import WorkLog, EntryType, CustomEntryType, EntryCategory, decode_work_mode
 
 
 def parse_time(raw: str | None) -> str | None:
@@ -169,10 +169,7 @@ def normalize_work_log(
     if work_log.entries:
         raise ValueError("worklog_summary_not_editable")
     definition = normalize_entry_type(work_log.entry_type)
-    try:
-        work_mode = WorkMode(work_log.work_mode) if work_log.work_mode is not None else None
-    except (TypeError, ValueError):
-        raise ValueError("work_mode_invalid") from None
+    work_mode = decode_work_mode(work_log.work_mode)
     if definition.category != EntryCategory.WORK and (work_mode is not None or work_log.context != WorkContext()):
         raise ValueError("entry_classification_invalid")
     start = parse_time(work_log.start_time)

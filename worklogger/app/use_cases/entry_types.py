@@ -4,39 +4,55 @@ from uuid import uuid4
 from worklogger.domain.worklog.models import CustomEntryType, EntryType
 from worklogger.domain.shared.result import Result
 from worklogger.domain.shared.errors import ValidationError, InfrastructureError
-from worklogger.domain.worklog.type_repository import EntryTypeRepository
+from typing import Generic
+from worklogger.domain.worklog.type_repository import ClassificationRepository, Definition
 
 
-class EntryTypeService:
-    def __init__(self, user_id: int, repository: EntryTypeRepository):
+class ClassificationService(Generic[Definition]):
+    error_prefix: str
+    collection_prefix: str
+
+    def __init__(self, user_id: int, repository: ClassificationRepository[Definition]):
         self.user_id, self.repository = user_id, repository
 
-    def list_types(self) -> Result[tuple[CustomEntryType, ...]]:
+    def list_types(self) -> Result[tuple[Definition, ...]]:
         try:
             return Result.success(self.repository.list_types(self.user_id))
         except Exception:
-            return Result.failure(InfrastructureError("entry_types_load_failed", "entry_types_load_failed"))
+            code = self.collection_prefix + "_load_failed"
+            return Result.failure(InfrastructureError(code, code))
 
-    def save(self, label: str, category: str, previous: CustomEntryType | None = None) -> Result[CustomEntryType]:
+    def save(self, label: str, category: str, previous: Definition | None = None) -> Result[Definition]:
         try:
             if previous is not None and previous.archived:
-                raise ValueError("entry_type_unavailable")
-            definition = CustomEntryType(previous.value if previous else "custom:" + uuid4().hex,
+                raise ValueError(self.error_prefix + "_unavailable")
+            definition = self._definition(previous.value if previous else "custom:" + uuid4().hex,
                 label.strip(), category, previous.revision if previous else 0)
             return Result.success(self.repository.save_type(self.user_id, definition))
         except ValueError as error:
             return Result.failure(ValidationError(str(error), str(error)))
         except Exception:
-            return Result.failure(InfrastructureError("entry_types_save_failed", "entry_types_save_failed"))
+            code = self.collection_prefix + "_save_failed"
+            return Result.failure(InfrastructureError(code, code))
 
-    def archive(self, definition: CustomEntryType) -> Result[None]:
+    def archive(self, definition: Definition) -> Result[None]:
         try:
             self.repository.archive_type(self.user_id, definition)
             return Result.success(None)
         except ValueError as error:
             return Result.failure(ValidationError(str(error), str(error)))
         except Exception:
-            return Result.failure(InfrastructureError("entry_types_save_failed", "entry_types_save_failed"))
+            code = self.collection_prefix + "_save_failed"
+            return Result.failure(InfrastructureError(code, code))
+
+
+class EntryTypeService(ClassificationService[CustomEntryType]):
+    error_prefix = "entry_type"
+    collection_prefix = "entry_types"
+
+    @staticmethod
+    def _definition(value, label, category, revision):
+        return CustomEntryType(value, label, category, revision)
 
     def resolve(self, value: str, original: EntryType | CustomEntryType | None = None) -> EntryType | CustomEntryType:
         if isinstance(original, CustomEntryType) and original.value == value:

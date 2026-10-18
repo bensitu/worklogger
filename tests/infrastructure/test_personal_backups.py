@@ -13,6 +13,35 @@ from worklogger.domain.worklog.models import WorkLog
 
 
 class PersonalBackupTests(unittest.TestCase):
+    def test_personal_restore_remaps_arrangement_catalogs_and_reads_predecessor_snapshots(self):
+        from worklogger.app.use_cases.work_modes import WorkModeService
+        from worklogger.infrastructure.repositories.entry_type_sqlite import SQLiteWorkModeRepository
+        modes = WorkModeService(self.owner, SQLiteWorkModeRepository(self.factory))
+        mode = modes.save("Hybrid", "work").value
+        record = self.repository.list_for_day(self.owner, date(2026, 10, 18))[0]
+        self.repository.save_entry(replace(record, work_mode=mode))
+        document = self.personal.capture()
+        self.personal.restore(document, expected_digest=document_digest(document), before_replace=lambda _data: None)
+        restored = self.repository.list_for_day(self.owner, record.day)[0]
+        self.assertEqual(restored.work_mode.label, "Hybrid")
+        self.assertNotEqual(restored.work_mode.value, mode.value)
+        self.assertEqual(restored.work_mode.value, modes.list_types().value[0].value)
+        invalid = json.loads(self.personal.capture())
+        invalid["tables"]["work_modes"][0]["name"] = ""
+        before = self.personal.capture()
+        with self.assertRaises(ValueError):
+            self.personal.restore(json.dumps(invalid).encode(), expected_digest=document_digest(before), before_replace=lambda _data: None)
+        self.assertEqual(self.personal.capture(), before)
+        value = json.loads(self.personal.capture())
+        value["schema"] = 17
+        value["tables"].pop("work_modes")
+        for row in value["tables"]["worklog"]:
+            row["work_mode"] = "remote"
+            row.pop("work_mode_label")
+        before = self.personal.capture()
+        self.personal.restore(json.dumps(value).encode(), expected_digest=document_digest(before), before_replace=lambda _data: None)
+        self.assertEqual(self.repository.list_for_day(self.owner, record.day)[0].work_mode.value, "remote")
+
     def setUp(self):
         fixture = portability.DataPortabilityInfrastructureTests()
         fixture.setUp()

@@ -53,6 +53,7 @@ class GeneralSection(_SettingsScrollPage):
         "standard_hours_input",
         "week_start_switch",
         "manage_entry_types_button",
+        "manage_work_modes_button",
         "manage_projects_button",
         "timer_reminder_input",
         "continuous_timer_reminder_input",
@@ -128,6 +129,15 @@ class GeneralSection(_SettingsScrollPage):
         set_button_icon(self.manage_entry_types_button, "settings")
         self.manage_entry_types_button.clicked.connect(actions.manage_entry_types_requested)
         form.addRow(_("Entry types"), self.manage_entry_types_button)
+
+        self.manage_work_modes_button = QPushButton(_("Manage work arrangements"))
+        self.manage_work_modes_button.setObjectName("manage_work_modes_button")
+        self.manage_work_modes_button.setFixedWidth(320)
+        self.manage_work_modes_button.setProperty("variant", "outline")
+        self.manage_work_modes_button.setEnabled(False)
+        set_button_icon(self.manage_work_modes_button, "settings")
+        self.manage_work_modes_button.clicked.connect(actions.manage_work_modes_requested)
+        form.addRow(_("Work arrangement"), self.manage_work_modes_button)
 
         self.manage_projects_button = QPushButton(_("Manage projects"))
         self.manage_projects_button.setObjectName("manage_projects_button")

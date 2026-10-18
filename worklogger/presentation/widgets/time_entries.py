@@ -132,6 +132,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         self.time_tabs.addTab(auto, _("Auto Record"))
 
         self._custom_types = ()
+        self._custom_modes = ()
         self._reload_entry_types()
         classification_column = QVBoxLayout()
         classification_column.setSpacing(2)
@@ -255,7 +256,10 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         result = self.view_model.list_entry_types()
         if result.ok:
             self._custom_types = result.value
-        return result
+        modes = self.view_model.list_work_modes()
+        if modes.ok:
+            self._custom_modes = modes.value
+        return result if not result.ok else modes
 
     @property
     def recent_context_visible(self):
@@ -289,10 +293,11 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             self._classification_popup.selection_applied.connect(self._apply_classification)
         self._classification_popup.open_for(self.classification_button,
             definition=self._classification_definition(state), work_mode=state.work_mode,
-            context=state.context, custom_types=self._custom_types, inventory=self._project_inventory,
+            context=state.context, custom_types=self._custom_types, custom_modes=self._custom_modes, inventory=self._project_inventory,
             recent=self._recent_contexts, automatic=automatic,
             projects_available=self.view_model.projects_available, context_available=self._context_error is None,
-            recent_context_visible=self.recent_context_visible)
+            recent_context_visible=self.recent_context_visible,
+            preserve_work_mode=state.selected_record is not None)
 
     def _validate_classification(self, entry_type, work_mode, context):
         automatic = self.time_tabs.currentIndex() == 1

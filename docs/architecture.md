@@ -93,12 +93,19 @@ Daily summaries aggregate records, while editing and exports retain individual
 identities. Custom type and project labels are historical snapshots.
 
 `EntryType` and `CustomEntryType` define an accounting category: work, break, or
-leave. `WorkMode` is optional metadata on work records and timers, not an
+leave. `WorkMode` and `CustomWorkMode` are optional metadata on work records and timers, not an
 additional source of hours. Break and leave records cannot carry a work mode or
 project association. Historical remote and business-trip types retain their
 original identities; a known arrangement does not imply a particular activity.
 Interval slicing preserves classification and arrangement; merging requires
 both to match along with the project context.
+Custom type and arrangement catalogs share classification management operations,
+optimistic storage updates, and a common editor. Arrangement IDs and historical
+labels are carried through timers, record changes, CSV, reports, and personal
+backups. Catalog lookup authorizes new choices against the active account;
+editing an existing record retains its original snapshot. Shared semantic color
+palettes belong to presentation; accounting categories travel with calendar
+allocations and chart data rather than being inferred from a hashed identifier.
 New manual work saves and completed work timers remember the account's last
 selected arrangement in the same transaction as the record. An explicit
 unspecified arrangement clears that preference. Historical edits, imports,

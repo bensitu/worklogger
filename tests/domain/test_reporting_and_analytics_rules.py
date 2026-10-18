@@ -150,8 +150,7 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
         ))
         data = dashboard_data(records, year=2026, month=4, scope="monthly", standard_hours=7.5, monthly_target=120)
         self.assertEqual(data.stats.total_hours, 3)
-        self.assertEqual(dict(data.entry_types), {"meeting": 2, "normal": 1, "break": 0.5, leave.value: 8.5})
-        self.assertEqual(dict(data.entry_type_labels), {leave.value: "Study leave"})
+        self.assertEqual(dict(data.entry_types), {EntryType.MEETING: 2, EntryType.NORMAL: 1, EntryType.BREAK: 0.5, leave: 8.5})
         self.assertEqual(dict(data.work_modes), {"remote": 2, None: 1})
         self.assertEqual(sum(dict(data.work_modes).values()), data.stats.total_hours)
 

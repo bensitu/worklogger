@@ -552,7 +552,7 @@ class CalendarLayoutChecks(unittest.TestCase):
         from worklogger.infrastructure.repositories import SQLiteAuthRepository
         from worklogger.infrastructure.repositories.entry_type_sqlite import SQLiteEntryTypeRepository
         from worklogger.infrastructure.security import PBKDF2PasswordHasher
-        from worklogger.presentation.widgets.entry_type_manager import EntryTypeManagerDialog
+        from worklogger.presentation.widgets.classification_manager import ClassificationManagerDialog
         from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
 
         configure_application_style()
@@ -569,11 +569,11 @@ class CalendarLayoutChecks(unittest.TestCase):
             service.save("Personal leave", "leave")
 
             class Model:
-                def list_entry_types(self):
+                def list_types(self):
                     return service.list_types()
-                def save_entry_type(self, label, category, previous=None):
+                def save_type(self, label, category, previous=None):
                     return service.save(label, category, previous)
-                def archive_entry_type(self, definition):
+                def archive_type(self, definition):
                     return service.archive(definition)
 
             engine = ThemeEngine()
@@ -581,7 +581,7 @@ class CalendarLayoutChecks(unittest.TestCase):
                 set_language(language)
                 self.app.setPalette(engine.qt_palette(dark=dark))
                 self.app.setStyleSheet(engine.application_stylesheet(dark=dark))
-                dialog = EntryTypeManagerDialog(Model())
+                dialog = ClassificationManagerDialog(Model())
                 try:
                     dialog.show()
                     self.app.processEvents()

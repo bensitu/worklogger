@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 
-from worklogger.domain.worklog.models import EntryType, CustomEntryType, WorkMode, EntryCategory
+from worklogger.domain.worklog.models import EntryType, CustomEntryType, CustomWorkMode, WorkModeValue, EntryCategory
 
 
 def N_(message: str) -> str:
@@ -30,12 +30,14 @@ def entry_type_label(entry_type: str | EntryType | CustomEntryType, translate: C
     return translate(message) if message else ""
 
 
-def work_mode_label(work_mode: WorkMode | str | None, translate: Callable[[str], str]) -> str:
+def work_mode_label(work_mode: WorkModeValue | str | None, translate: Callable[[str], str]) -> str:
+    if isinstance(work_mode, CustomWorkMode):
+        return work_mode.label
     message = _WORK_MODE_LABELS.get(work_mode)
     return translate(message) if message else ""
 
 
-def classification_label(entry_type: EntryType | CustomEntryType, work_mode: WorkMode | None,
+def classification_label(entry_type: EntryType | CustomEntryType, work_mode: WorkModeValue | None,
                          translate: Callable[[str], str]) -> str:
     _ = translate
     if isinstance(entry_type, EntryType) and entry_type.is_legacy:

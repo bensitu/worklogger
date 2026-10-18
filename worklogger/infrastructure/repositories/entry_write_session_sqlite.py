@@ -83,7 +83,7 @@ class EntryWriteSession:
         columns = 'user_id,d,start,end,"break",note,entry_type,overnight,started_at,ended_at'
         columns += ",entry_type_label,entry_type_category"
         validate_record_context(self._connection, record, historical=historical)
-        columns += ",project_id,work_item_id,project_label,work_item_label,work_mode"
+        columns += ",project_id,work_item_id,project_label,work_item_label,work_mode,work_mode_label"
         values = (*self._storage.entry_values(record), record.capture_id)
         columns += ",capture_id"
         if preserve_identity:

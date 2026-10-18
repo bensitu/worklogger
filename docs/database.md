@@ -29,6 +29,7 @@ leaves the transaction unchanged and can be retried after the other operation.
 | `daily_notes` | Independent account/date memos |
 | `quick_logs` | Retained previous entries |
 | `entry_types` | Account-owned Work/Break/Leave catalog |
+| `work_modes` | Account-owned custom work arrangements |
 | `projects` | Account-owned project catalog |
 | `work_items` | Project-specific work items |
 | `entry_changes` | Reversible record snapshots |
@@ -64,8 +65,11 @@ Missing keys/columns, unknown layouts, executable schema objects, and unknown
 future versions are rejected rather than reset.
 Required named indexes are checked for their columns, uniqueness and partial
 index attributes; incomplete constraints are not silently repaired during startup.
-The only versioned contract is schema version 17, with its complete required
-structure and a ledger containing only version 17. Unreleased development
+The current contract is schema version 18, with its complete required structure
+and a ledger containing only version 18. Version 17 upgrades transactionally to
+18 after a complete backup: the worklog constraint accepts custom arrangements,
+each record gains `work_mode_label`, and `work_modes` stores the account catalog.
+Existing IDs, revisions, timers, and reversible snapshots are preserved. Unreleased development
 versions, including 14, 15, and 16, and unversioned development layouts are rejected
 before writable initialization. They are never reset, relabeled, or upgraded by
 production startup. Preserve developer-local files and use fresh test data or a
@@ -80,12 +84,14 @@ Historical `remote` and `business_trip` retain those classification identities a
 also populate the matching optional `work_mode`. Other released types receive no
 inferred arrangement. Historical untimed leave and deducted breaks remain intact.
 
-`worklog.work_mode` stores `onsite`, `remote`, `business_trip`, `other`, or NULL.
+`worklog.work_mode` stores `onsite`, `remote`, `business_trip`, `other`, a
+`custom:<uuid>` identifier, or NULL. Custom arrangements retain their saved name
+in `work_mode_label`; renaming or archiving a catalog item does not rewrite records.
 It is independent of classification and is only applicable to work-category
 entries. `entry_types` retains account-owned custom definitions; historical labels
 and categories are stored in `entry_type_label` and `entry_type_category` snapshots.
-Fresh databases and released imports initialize version 17 directly; there is no
-unreleased intermediate migration chain or unversioned-current fallback.
+Fresh databases and released imports initialize version 18 directly. Version 17
+is the only supported versioned predecessor; there is no unversioned-current fallback.
 
 A populated compatible database receives a complete private `.bak_upgrade_*`
 snapshot before conversion. It includes committed WAL data. Schema changes,

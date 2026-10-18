@@ -8,7 +8,7 @@ from collections.abc import Callable, Iterable, Sequence
 
 from worklogger.config.constants import DEFAULT_LEAVE_HOURS
 from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBundle, MonthStats
-from worklogger.domain.worklog.models import CustomEntryType, WorkLog
+from worklogger.domain.worklog.models import CustomEntryType, EntryType, WorkModeValue, WorkLog
 from worklogger.domain.reporting.periods import weekly_period
 from worklogger.domain.settings.work_schedule import WorkSchedule
 
@@ -91,19 +91,16 @@ def dashboard_data(
         trend = _bundle(labels, totals, counts, leaves, leave_counts, "hours", True)
         average = _bundle(labels, totals, counts, leaves, leave_counts, "average", True)
 
-    entry_types: dict[str, float] = {}
-    type_labels: dict[str, str] = {}
-    work_modes: dict[str | None, float] = {}
+    entry_types: dict[EntryType | CustomEntryType, float] = {}
+    work_modes: dict[WorkModeValue | None, float] = {}
     for row in (entry for record in current for entry in (record.entries or (record,))):
-        key = row.entry_type.value
+        key = row.entry_type
         hours = row.classified_hours(standard_leave_hours=standard_hours)
         if hours > 0:
             entry_types[key] = entry_types.get(key, 0.0) + hours
-            if isinstance(row.entry_type, CustomEntryType):
-                type_labels.setdefault(key, row.entry_type.label)
         worked = row.worked_hours()
         if worked > 0:
-            mode = row.work_mode.value if row.work_mode is not None else None
+            mode = row.work_mode
             work_modes[mode] = work_modes.get(mode, 0.0) + worked
 
     daily = []
@@ -123,7 +120,6 @@ def dashboard_data(
         start, end, stats, month_stats(previous, standard_hours), monthly_target * month_count,
         (end - start).days + 1, (start - previous_start).days if previous_start is not None else 0,
         trend, average, tuple(entry_types.items()), ChartDataBundle(tuple(daily), tuple(daily), frozenset(), (), ()),
-        tuple(type_labels.items()),
         work_schedule.planned_days(start, end),
         work_modes=tuple(work_modes.items()),
     )

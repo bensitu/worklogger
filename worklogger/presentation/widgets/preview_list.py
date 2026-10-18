@@ -38,6 +38,9 @@ class PreviewItemDelegate(QStyledItemDelegate):
         font.setWeight(QFont.Weight.DemiBold if self._soft_selection else QFont.Weight.Bold)
         metrics = QFontMetrics(font)
         text_rect = styled.rect.adjusted(12, 10, -12, -10)
+        if not styled.icon.isNull():
+            decoration = style.subElementRect(QStyle.SubElement.SE_ItemViewItemDecoration, styled, styled.widget)
+            text_rect.setLeft(max(text_rect.left(), decoration.right() + 8))
         painter.setFont(font)
         painter.setPen(color)
         painter.drawText(QRect(text_rect.x(), text_rect.y(), text_rect.width(), metrics.height()),

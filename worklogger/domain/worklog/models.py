@@ -23,6 +23,47 @@ class WorkMode(StrEnum):
     OTHER = "other"
 
 
+def _validate_custom_definition(value, label, error_code):
+    try:
+        valid_id = isinstance(value, str) and len(value) == 39 and value.startswith("custom:") and UUID(value[7:]).hex == value[7:]
+    except ValueError:
+        valid_id = False
+    if (not valid_id or not isinstance(label, str) or not label.strip()
+            or len(label) > 80 or any(ord(char) < 32 for char in label)):
+        raise ValueError(error_code)
+
+
+@dataclass(frozen=True)
+class CustomWorkMode:
+    value: str
+    label: str
+    revision: int = 0
+    archived: bool = False
+
+    def __post_init__(self):
+        _validate_custom_definition(self.value, self.label, "work_mode_invalid")
+        if type(self.revision) is not int or self.revision < 0:
+            raise ValueError("work_mode_invalid")
+
+    @property
+    def category(self):
+        return EntryCategory.WORK
+
+
+WorkModeValue = WorkMode | CustomWorkMode
+
+
+def decode_work_mode(value, label="") -> WorkModeValue | None:
+    if isinstance(value, CustomWorkMode):
+        return value
+    if isinstance(value, str) and value.startswith("custom:"):
+        return CustomWorkMode(value, label)
+    try:
+        return WorkMode(value) if value is not None else None
+    except (ValueError, TypeError):
+        raise ValueError("work_mode_invalid") from None
+
+
 @dataclass(frozen=True)
 class CustomEntryType:
     value: str
@@ -32,17 +73,11 @@ class CustomEntryType:
     archived: bool = False
 
     def __post_init__(self):
-        if not isinstance(self.value, str) or len(self.value) != 39 or not self.value.startswith("custom:"):
-            raise ValueError("entry_type_invalid")
-        try:
-            valid_id = UUID(self.value[7:]).hex == self.value[7:]
-        except ValueError:
-            valid_id = False
-        if not valid_id or not isinstance(self.label, str) or not self.label.strip() or len(self.label) > 80 or any(ord(char) < 32 for char in self.label):
-            raise ValueError("entry_type_invalid")
+        _validate_custom_definition(self.value, self.label, "entry_type_invalid")
         if self.category not in {"work", "break", "leave"} or not isinstance(self.revision, int) or self.revision < 0:
             raise ValueError("entry_type_invalid")
         object.__setattr__(self, "category", EntryCategory(self.category))
+
 
 class EntryType(str, Enum):
     NORMAL = "normal"
@@ -110,7 +145,7 @@ class WorkLog:
     capture_id: str | None = None
     entries: tuple[WorkLog, ...] = ()
     context: WorkContext = WorkContext()
-    work_mode: WorkMode | None = None
+    work_mode: WorkModeValue | None = None
 
     @property
     def has_times(self) -> bool:

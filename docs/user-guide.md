@@ -106,13 +106,25 @@ deliberately. Reminders do not certify compliance with working-time regulations.
 
 ### Types, Projects, and Corrections
 
-Manage entry types and projects in **Settings > General > Classification**. Custom types have Work,
+Manage entry types, work arrangements, and projects in **Settings > General > Classification**. Custom types have Work,
 Break, or Leave accounting. Saved records retain their original classification
 and labels when catalog entries are renamed or archived.
+Use **Manage work arrangements** to add, rename, or archive an arrangement. It is
+available in the work classification picker for both manual and automatic input.
+Archived arrangements are hidden for new records; existing records and running
+timers retain their saved name. Work arrangements do not change hour accounting
+and cannot be attached to break or leave records.
 
 Calendar dates use one thin indicator along the bottom. A single type occupies
 the line; mixed types share it in proportion to their classified durations.
-Regular work is gray. Work uses effective worked hours, break uses recorded
+Work classifications and arrangements use gray or muted cool colors, leave uses
+muted warm colors, and break uses soft green colors. Built-in and custom choices
+share these category palettes in menus, calendar indicators, and charts. A custom
+ID selects a stable variation within its category, not a new random color on each
+launch. Renaming does not change its color; changing its accounting category
+changes the color family for new records without changing historical snapshots.
+Color supplements the visible names; it is not a unique identifier for each type.
+Work uses effective worked hours, break uses recorded
 duration, and leave uses its leave-hour calculation, including historical untimed
 leave. Historical deductions are not counted again as break records. Custom type
 colors remain stable when renamed. Type menus use the same theme-aware colors.
@@ -157,7 +169,7 @@ boundaries use the same rules.
 
 The overlap preview aligns the new period above the existing records on a shared
 time scale. Segment colors follow entry types; Normal uses gray and
-Break uses a neutral color. Gaps remain visible. Whole-record replacement fades
+Break uses a soft green color. Gaps remain visible. Whole-record replacement fades
 the existing segments, while the new period remains opaque. The result table is
 the complete list of records to save.
 

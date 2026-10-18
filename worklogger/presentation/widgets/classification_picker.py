@@ -14,11 +14,10 @@ from PySide6.QtWidgets import (
 from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.models import CustomEntryType, EntryCategory, EntryType, WorkMode
+from worklogger.domain.worklog.models import CustomEntryType, CustomWorkMode, EntryCategory, EntryType, WorkMode, WorkModeValue
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.entry_type_labels import work_mode_label
 from worklogger.presentation.errors import display_error_message
-from worklogger.presentation.widgets.entry_type_options import add_entry_type_option
+from worklogger.presentation.widgets.entry_type_options import add_entry_type_option, add_work_mode_option
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.work_context_picker import WorkContextPicker
 
@@ -65,8 +64,8 @@ class ClassificationPicker(QFrame):
     selection_applied = Signal(object)
 
     def __init__(self, parent=None, *, validator: Callable[
-            [str, WorkMode | None, WorkContext],
-            Result[tuple[EntryType | CustomEntryType, WorkMode | None, WorkContext]]]):
+            [str, WorkModeValue | None, WorkContext],
+            Result[tuple[EntryType | CustomEntryType, WorkModeValue | None, WorkContext]]]):
         super().__init__(parent, Qt.WindowType.Popup)
         self.setObjectName("classification_popup_frame")
         self.setAccessibleName(_("Classification"))
@@ -109,7 +108,7 @@ class ClassificationPicker(QFrame):
         metadata.setSpacing(8)
         self.work_mode_combo = self._combo("work_mode_combo")
         for mode in (None, *WorkMode):
-            self.work_mode_combo.addItem(work_mode_label(mode), mode)
+            add_work_mode_option(self.work_mode_combo, mode)
         self._add_field(metadata, _("Work arrangement"), self.work_mode_combo)
         self.context_picker = WorkContextPicker(vertical=True)
         metadata.addWidget(self.context_picker)
@@ -188,9 +187,9 @@ class ClassificationPicker(QFrame):
         column.addWidget(combo)
         layout.addLayout(column)
 
-    def open_for(self, anchor, *, definition, work_mode, context, custom_types=(),
+    def open_for(self, anchor, *, definition, work_mode, context, custom_types=(), custom_modes=(),
                  inventory=((), {}), recent=(), automatic=False, projects_available=True,
-                 context_available=True, recent_context_visible=True):
+                 context_available=True, recent_context_visible=True, preserve_work_mode=True):
         self.hide()
         self._anchor = anchor
         self._definitions = {item.value: item for item in (
@@ -212,7 +211,17 @@ class ClassificationPicker(QFrame):
                 add_entry_type_option(combo, item)
         self.period_type_combo.setCurrentIndex(max(0, self.period_type_combo.findData(definition.value)))
         self.leave_type_combo.setCurrentIndex(max(0, self.leave_type_combo.findData(definition.value)))
-        self.work_mode_combo.setCurrentIndex(max(0, self.work_mode_combo.findData(work_mode)))
+        modes = {item.value: item for item in (*WorkMode, *(item for item in custom_modes if not item.archived))}
+        if work_mode is not None and (preserve_work_mode or not isinstance(work_mode, CustomWorkMode)):
+            modes[work_mode.value] = work_mode
+        self.work_mode_combo.clear()
+        add_work_mode_option(self.work_mode_combo, None)
+        for mode in modes.values():
+            add_work_mode_option(self.work_mode_combo, mode)
+        selected_mode = modes.get(work_mode.value) if work_mode is not None else None
+        selected_key = selected_mode.value if selected_mode is not None else None
+        self.work_mode_combo.setCurrentIndex(next((index for index in range(self.work_mode_combo.count())
+            if getattr(self.work_mode_combo.itemData(index), "value", self.work_mode_combo.itemData(index)) == selected_key), 0))
         self.context_picker.set_context(WorkContext())
         self.context_picker.set_inventory(*inventory)
         self.context_picker.set_context(context)
@@ -263,6 +272,10 @@ class ClassificationPicker(QFrame):
                                  self.context_picker.context() if work else WorkContext())
         if result.ok and self._type_identity(result.value[0]) != self._type_identity(definition):
             result = Result.failure(ValidationError("entry_type_unavailable", "entry_type_unavailable"))
+        selected_mode = self.work_mode_combo.currentData()
+        if (work and result.ok and isinstance(selected_mode, CustomWorkMode)
+                and (getattr(result.value[1], "value", None), getattr(result.value[1], "label", None)) != (selected_mode.value, selected_mode.label)):
+            result = Result.failure(ValidationError("work_mode_unavailable", "work_mode_unavailable"))
         if not result.ok:
             self.error_label.setText(display_error_message(result.error))
             self.error_label.show()

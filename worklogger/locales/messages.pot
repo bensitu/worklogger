@@ -53,6 +53,9 @@ msgstr ""
 msgid "A record without start and end times cannot be split. Choose entire-record replacement or cancel."
 msgstr ""
 
+msgid "A work arrangement with this name already exists."
+msgstr ""
+
 msgid "A&lpha channel:"
 msgstr ""
 
@@ -164,6 +167,9 @@ msgstr ""
 msgid "Annual Hours"
 msgstr ""
 
+msgid "Anyone with access to these cloud files can read your data. Continue without encryption?"
+msgstr ""
+
 msgid "Appearance"
 msgstr ""
 
@@ -186,6 +192,9 @@ msgid "April"
 msgstr ""
 
 msgid "Archive"
+msgstr ""
+
+msgid "Archive arrangement"
 msgstr ""
 
 msgid "Archive project"
@@ -233,6 +242,9 @@ msgstr ""
 msgid "Auto Record"
 msgstr ""
 
+msgid "Automatic backup"
+msgstr ""
+
 msgid "Automatic goals use planned workdays and daily standard hours. Enabled public holidays follow the selected region."
 msgstr ""
 
@@ -269,10 +281,22 @@ msgstr ""
 msgid "Backup cancelled"
 msgstr ""
 
+msgid "Backup directory / prefix"
+msgstr ""
+
+msgid "Backup passphrase"
+msgstr ""
+
+msgid "Backup passphrase (blank uses the stored passphrase)"
+msgstr ""
+
 msgid "Backup saved: {path}"
 msgstr ""
 
 msgid "Backup succeeded, but its timestamp could not be saved."
+msgstr ""
+
+msgid "Backup version"
 msgstr ""
 
 msgid "Bar"
@@ -356,6 +380,9 @@ msgstr ""
 msgid "Changes apply to new records. Existing records keep their saved name and accounting category."
 msgstr ""
 
+msgid "Changes apply to new records. Existing records keep their saved work arrangement name."
+msgstr ""
+
 msgid "Changing password will reset the recovery key."
 msgstr ""
 
@@ -416,6 +443,9 @@ msgstr ""
 msgid "Clearing calendar events is not supported yet."
 msgstr ""
 
+msgid "Client-side encryption"
+msgstr ""
+
 msgid "Close"
 msgstr ""
 
@@ -423,6 +453,21 @@ msgid "Close the note editor before continuing."
 msgstr ""
 
 msgid "Close window"
+msgstr ""
+
+msgid "Cloud authentication failed. Check the storage credentials and permissions."
+msgstr ""
+
+msgid "Cloud backup failed. Check the network, storage service, and available space."
+msgstr ""
+
+msgid "Cloud backup operation in progress..."
+msgstr ""
+
+msgid "Cloud backup settings saved."
+msgstr ""
+
+msgid "Cloud backup uploaded."
 msgstr ""
 
 msgid "Code"
@@ -435,6 +480,9 @@ msgid "Complete sign-in in your browser..."
 msgstr ""
 
 msgid "Completed"
+msgstr ""
+
+msgid "Configure a valid HTTPS cloud destination and backup schedule."
 msgstr ""
 
 msgid "Configure sign-in"
@@ -450,6 +498,9 @@ msgid "Confirm password"
 msgstr ""
 
 msgid "Connection succeeded."
+msgstr ""
+
+msgid "Connection verified."
 msgstr ""
 
 msgid "Content"
@@ -557,6 +608,9 @@ msgstr ""
 msgid "Data restored successfully."
 msgstr ""
 
+msgid "Data restored. Recovery copy: {path}"
+msgstr ""
+
 msgid "Database Backup"
 msgstr ""
 
@@ -567,6 +621,12 @@ msgid "Date range"
 msgstr ""
 
 msgid "Dates with recorded break periods. Work and rest days may overlap; leave is counted separately."
+msgstr ""
+
+msgid "Day of month"
+msgstr ""
+
+msgid "Day of week"
 msgstr ""
 
 msgid "Day off"
@@ -650,7 +710,13 @@ msgstr ""
 msgid "Download"
 msgstr ""
 
+msgid "Download and restore"
+msgstr ""
+
 msgid "Download, import, and select a local model."
+msgstr ""
+
+msgid "Downloading and restoring personal data..."
 msgstr ""
 
 msgid "Downloading model..."
@@ -771,6 +837,18 @@ msgid "Estimated RAM: {ram} GB"
 msgstr ""
 
 msgid "Estimated size"
+msgstr ""
+
+msgid "Every N hours"
+msgstr ""
+
+msgid "Every day"
+msgstr ""
+
+msgid "Every month"
+msgstr ""
+
+msgid "Every week"
 msgstr ""
 
 msgid "Exactly one day off is required."
@@ -923,6 +1001,9 @@ msgstr ""
 msgid "Green"
 msgstr ""
 
+msgid "HTTPS endpoint"
+msgstr ""
+
 msgid "Half day"
 msgstr ""
 
@@ -1046,6 +1127,9 @@ msgstr ""
 msgid "Install the native inference dependency from requirements-ai.txt, then restart WorkLogger."
 msgstr ""
 
+msgid "Interval (hours)"
+msgstr ""
+
 msgid "Invalid date range"
 msgstr ""
 
@@ -1097,7 +1181,13 @@ msgstr ""
 msgid "Last backup: {time}"
 msgstr ""
 
+msgid "Last cloud backup: {time}"
+msgstr ""
+
 msgid "Last saved: {time}"
+msgstr ""
+
+msgid "Latest cloud backup: {time}"
 msgstr ""
 
 msgid "Leave"
@@ -1151,6 +1241,12 @@ msgstr ""
 msgid "Local Models"
 msgstr ""
 
+msgid "Local data changed. Review the current data before confirming a restore."
+msgstr ""
+
+msgid "Local data location"
+msgstr ""
+
 msgid "Local model is disabled."
 msgstr ""
 
@@ -1173,6 +1269,9 @@ msgid "Local text processing is available."
 msgstr ""
 
 msgid "Local text processing timed out. Try shorter content or a smaller model."
+msgstr ""
+
+msgid "Local time"
 msgstr ""
 
 msgid "Local user"
@@ -1217,6 +1316,9 @@ msgstr ""
 msgid "Manage users"
 msgstr ""
 
+msgid "Manage work arrangements"
+msgstr ""
+
 msgid "Manual Input"
 msgstr ""
 
@@ -1227,6 +1329,9 @@ msgid "Markdown files (*.md)"
 msgstr ""
 
 msgid "Matching periods preserves other records; different overlapping periods cancel the import. Replacing dates removes all time records on those dates. Back up data before replacing dates or importing memos."
+msgstr ""
+
+msgid "Maximum retained backups"
 msgstr ""
 
 msgid "May"
@@ -1319,6 +1424,9 @@ msgstr ""
 msgid "Network"
 msgstr ""
 
+msgid "New arrangement"
+msgstr ""
+
 msgid "New password"
 msgstr ""
 
@@ -1359,6 +1467,9 @@ msgid "No backup in {days} days. Back up your data."
 msgstr ""
 
 msgid "No backup recorded. Back up your data."
+msgstr ""
+
+msgid "No cloud backups found."
 msgstr ""
 
 msgid "No data"
@@ -1490,6 +1601,9 @@ msgstr ""
 msgid "Overtime hours"
 msgstr ""
 
+msgid "Overwrite despite version differences"
+msgstr ""
+
 msgid "Overwrite report?"
 msgstr ""
 
@@ -1506,6 +1620,9 @@ msgid "Palette"
 msgstr ""
 
 msgid "Password"
+msgstr ""
+
+msgid "Password / secret access key"
 msgstr ""
 
 msgid "Password change"
@@ -1530,6 +1647,9 @@ msgid "Paste"
 msgstr ""
 
 msgid "Period type"
+msgstr ""
+
+msgid "Personal cloud backup"
 msgstr ""
 
 msgid "Personal profile"
@@ -1832,7 +1952,13 @@ msgstr ""
 msgid "Restoring data..."
 msgstr ""
 
+msgid "Restoring replaces this account's portable data. Other accounts and login credentials are unchanged. A local recovery copy is saved first; sign in again afterwards."
+msgstr ""
+
 msgid "Result"
+msgstr ""
+
+msgid "Retention days"
 msgstr ""
 
 msgid "Revision"
@@ -1857,6 +1983,18 @@ msgid "Runtime context"
 msgstr ""
 
 msgid "Runtime context must be a whole number of at least 512 tokens."
+msgstr ""
+
+msgid "S3 bucket"
+msgstr ""
+
+msgid "S3 region"
+msgstr ""
+
+msgid "S3 session token"
+msgstr ""
+
+msgid "S3-compatible storage"
 msgstr ""
 
 msgid "SMOKE IMPORT FAILED"
@@ -1887,6 +2025,9 @@ msgid "Save content"
 msgstr ""
 
 msgid "Save display name"
+msgstr ""
+
+msgid "Save or discard unsaved edits before restoring a cloud backup."
 msgstr ""
 
 msgid "Save recovery key"
@@ -2108,6 +2249,9 @@ msgstr ""
 msgid "Some dates already have records. Review the import and confirm replacement."
 msgstr ""
 
+msgid "Some expired backups could not be removed. Cleanup will be retried."
+msgstr ""
+
 msgid "Some stored records could not be converted safely. The original data and upgrade backup have been preserved."
 msgstr ""
 
@@ -2156,6 +2300,15 @@ msgstr ""
 msgid "State / province"
 msgstr ""
 
+msgid "Stop automatic recording before restoring a cloud backup."
+msgstr ""
+
+msgid "Storage provider"
+msgstr ""
+
+msgid "Stored securely"
+msgstr ""
+
 msgid "Stored securely; no request is sent when saving."
 msgstr ""
 
@@ -2195,6 +2348,9 @@ msgstr ""
 msgid "Test"
 msgstr ""
 
+msgid "Test connection"
+msgstr ""
+
 msgid "Test connection using sample text; no work records are included."
 msgstr ""
 
@@ -2222,6 +2378,18 @@ msgstr ""
 msgid "The account's remembered session was revoked, but its device file could not be removed. Sign in manually and check storage permissions."
 msgstr ""
 
+msgid "The backup exceeds the supported size limit."
+msgstr ""
+
+msgid "The backup passphrase is incorrect or the encrypted backup was modified."
+msgstr ""
+
+msgid "The cloud backup is missing, damaged, or uses an unsupported format. Local data has not been replaced."
+msgstr ""
+
+msgid "The cloud version changed. Review the latest backup and explicitly confirm an overwrite."
+msgstr ""
+
 msgid "The data directory is unavailable."
 msgstr ""
 
@@ -2241,6 +2409,9 @@ msgid "The historical break must fit inside the recorded interval."
 msgstr ""
 
 msgid "The latest 50 saved versions are retained. Restoring creates a new version."
+msgstr ""
+
+msgid "The local account changed. Sign in again before continuing."
 msgstr ""
 
 msgid "The model exceeds the supported download size limit."
@@ -2339,6 +2510,9 @@ msgstr ""
 msgid "This report is too large to save. Your current content has been retained."
 msgstr ""
 
+msgid "This server does not support the conditional writes required for safe backups."
+msgstr ""
+
 msgid "This sign-in configuration is managed outside the application."
 msgstr ""
 
@@ -2349,6 +2523,9 @@ msgid "This timer has reached your reminder duration."
 msgstr ""
 
 msgid "This timesheet is too large. Choose a shorter period; the destination file is unchanged."
+msgstr ""
+
+msgid "This work arrangement changed or is no longer available. Reload the arrangements and try again."
 msgstr ""
 
 msgid "This work timer has reached your continuous-work reminder duration."
@@ -2531,6 +2708,9 @@ msgstr ""
 msgid "Unable to update saved sign-in information."
 msgstr ""
 
+msgid "Unable to update work arrangements. Your records have not changed."
+msgstr ""
+
 msgid "Unclassified"
 msgstr ""
 
@@ -2550,6 +2730,9 @@ msgid "Undo the latest record change for {date}, {start} - {end}? This does not 
 msgstr ""
 
 msgid "Undo the replacement and restore the previous records?"
+msgstr ""
+
+msgid "Unencrypted backup"
 msgstr ""
 
 msgid "Unknown"
@@ -2576,7 +2759,13 @@ msgstr ""
 msgid "Update check is not configured."
 msgstr ""
 
+msgid "Upload backup"
+msgstr ""
+
 msgid "Upload image"
+msgstr ""
+
+msgid "Use a backup passphrase between 12 and 1024 characters."
 msgstr ""
 
 msgid "Use a single-line display name without control characters."
@@ -2616,6 +2805,9 @@ msgid "User updated."
 msgstr ""
 
 msgid "Username"
+msgstr ""
+
+msgid "Username / access key ID"
 msgstr ""
 
 msgid "Validating backup..."
@@ -2682,6 +2874,12 @@ msgid "Work Report"
 msgstr ""
 
 msgid "Work arrangement"
+msgstr ""
+
+msgid "Work arrangement label"
+msgstr ""
+
+msgid "Work arrangements"
 msgstr ""
 
 msgid "Work days"

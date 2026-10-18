@@ -367,18 +367,17 @@ class AnalyticsPage(QWidget):
         arrangement = self.breakdown_dimension_control.value == "work_mode"
         if arrangement:
             order = {mode.value: index for index, mode in enumerate(WorkMode)}
-            values = sorted(state.work_modes, key=lambda item: order.get(item[0], len(order)))
-            segments = tuple((work_mode_label(key), hours) for key, hours in values)
+            values = sorted(state.work_modes, key=lambda item: (order.get(getattr(item[0], "value", None), len(order)), work_mode_label(item[0])))
+            segments = tuple((work_mode_label(definition), hours) for definition, hours in values)
             caption = _("Work hours by arrangement")
         else:
             order = {definition.value: index for index, definition in enumerate(EntryType)}
-            values = sorted(state.entry_types, key=lambda item: (order.get(item[0], len(order)), item[0]))
-            labels = dict(state.entry_type_labels)
-            segments = tuple((labels[key] if key in labels else classification_label(EntryType(key)), hours)
-                             for key, hours in values)
+            values = sorted(state.entry_types, key=lambda item: (order.get(item[0].value, len(order)), item[0].value, item[0].category, classification_label(item[0])))
+            segments = tuple((classification_label(definition), hours) for definition, hours in values)
             caption = _("Classified duration")
         self.breakdown_caption.setText(caption)
-        self.breakdown_chart.chart.set_segments(segments, keys=tuple(key or "" for key, _hours in values),
+        self.breakdown_chart.chart.set_segments(segments, keys=tuple(definition.value if definition is not None else "unspecified" for definition, _hours in values),
+                                               categories=tuple("work" if arrangement else definition.category for definition, _hours in values),
                                                caption=_("Work arrangement") if arrangement else _("Classification"))
 
     def _populate_periods(self) -> None:

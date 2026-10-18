@@ -10,6 +10,7 @@ from worklogger.infrastructure.database.current_schema import (
     validate_current_schema,
 )
 from worklogger.infrastructure.database.migrations.snapshot import prune_upgrade_snapshots, save_snapshot
+from worklogger.infrastructure.database.migrations.work_modes import extend_work_modes
 from worklogger.infrastructure.database.released_import import (
     import_released_schema,
     validate_released_schema,
@@ -27,6 +28,9 @@ def database_kind(connection, *, check_data=True):
         return "empty"
     if "schema_migrations" in tables:
         versions = {row[0] for row in connection.execute("SELECT version FROM schema_migrations")}
+        if versions == {17}:
+            validate_current_schema(connection, check_data=check_data, version=17)
+            return "previous"
         if versions != {CURRENT_SCHEMA_VERSION}:
             raise ValueError("database_version_unsupported")
         validate_current_schema(connection, check_data=check_data)
@@ -65,6 +69,8 @@ class MigrationRunner:
                         snapshot = save_snapshot(source, self._connection_factory.database_path, "upgrade")
                 if kind == "released":
                     import_released_schema(connection)
+                elif kind == "previous":
+                    extend_work_modes(connection)
                 else:
                     create_current_schema(connection)
                 connection.execute("INSERT INTO schema_migrations(version,description,applied_at) VALUES(?,?,datetime('now'))",

@@ -103,7 +103,7 @@ class SQLiteWorkLogWrites:
                 entry_id = session.insert(record)
                 record = replace(record, id=entry_id)
             else:
-                snapshots = ",entry_type_label=?,entry_type_category=?,project_id=?,work_item_id=?,project_label=?,work_item_label=?,work_mode=?"
+                snapshots = ",entry_type_label=?,entry_type_category=?,project_id=?,work_item_id=?,project_label=?,work_item_label=?,work_mode=?,work_mode_label=?"
                 cursor = connection.execute(
                     """UPDATE worklog SET d=?,start=?,end=?,"break"=?,note=?,entry_type=?,overnight=?,
                     started_at=?,ended_at=?"""

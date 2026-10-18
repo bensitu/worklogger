@@ -20,9 +20,9 @@ from worklogger.domain.worklog.search import EntryCursor, EntryFilter, EntryPage
 from worklogger.domain.worklog.timer_state import EntryTimer, decode_timer, encode_timer, timer_payload
 from worklogger.domain.worklog.content import require_entry_content
 from worklogger.domain.worklog.rules import wall_interval, wall_position
-from worklogger.domain.worklog.models import CustomEntryType, WorkLog, EntryType, EntryCategory, WorkMode
+from worklogger.domain.worklog.models import CustomEntryType, WorkLog, EntryType, EntryCategory, WorkMode, WorkModeValue, decode_work_mode
 from worklogger.domain.worklog.rules import entry_interval, normalize_work_log, parse_time, shift_datetimes
-from worklogger.app.ports import EntryTypeOperations, ProjectOperations
+from worklogger.app.ports import EntryTypeOperations, ProjectOperations, WorkModeOperations
 from worklogger.app.time_entry_state import RecordingState
 from worklogger.app.use_cases._errors import infrastructure_failure
 from worklogger.domain.projects.models import WorkContext
@@ -37,6 +37,7 @@ class TimeEntryService:
                  local_timezone: tzinfo, clock: Callable[[], datetime] | None = None,
                  calendar_events: CalendarEventRepository | None = None,
                  entry_types: EntryTypeOperations | None = None,
+                 work_modes: WorkModeOperations | None = None,
                  projects: ProjectOperations | None = None,
                  initial_state: RecordingState | None = None) -> None:
         self.user_id = user_id
@@ -44,6 +45,7 @@ class TimeEntryService:
         self.settings = settings
         self.calendar_events = calendar_events
         self.entry_types = entry_types
+        self.work_modes = work_modes
         self.projects = projects
         self.local_timezone = local_timezone
         self._clock = clock or (lambda: datetime.now().astimezone())
@@ -59,10 +61,10 @@ class TimeEntryService:
     def now(self) -> datetime:
         return self._clock().astimezone(self.local_timezone)
 
-    def default_work_mode(self) -> WorkMode | None:
+    def default_work_mode(self) -> WorkModeValue | None:
         try:
             raw = self.settings.get(self.user_id, LAST_USED_WORK_MODE_SETTING_KEY)
-            return WorkMode(raw) if raw else None
+            return self._resolve_work_mode(raw) if raw else None
         except ValueError:
             return None
         except Exception as error:
@@ -81,7 +83,7 @@ class TimeEntryService:
     def new_session(self, state: RecordingState) -> TimeEntryService:
         return TimeEntryService(user_id=self.user_id, repository=self.repository,
             settings=self.settings, local_timezone=self.local_timezone, clock=self._clock,
-            calendar_events=self.calendar_events, entry_types=self.entry_types,
+            calendar_events=self.calendar_events, entry_types=self.entry_types, work_modes=self.work_modes,
             projects=self.projects, initial_state=state)
 
     @property
@@ -190,18 +192,19 @@ class TimeEntryService:
 
     def save_manual(self, day: date, start: str, end: str, entry_type: str, content: str,
                     original: WorkLog | None = None, *, context: WorkContext | None = None,
-                    work_mode: WorkMode | None = None) -> Result[WorkLog]:
+                    work_mode: WorkModeValue | None = None) -> Result[WorkLog]:
         def save():
             if original and original.user_id != self.user_id:
                 raise ValueError("worklog_entry_conflict")
             definition = self._resolve_type(entry_type, original.entry_type if original else None)
+            arrangement = self._resolve_work_mode(work_mode, original.work_mode if original else None)
             if original and original.break_hours and definition.category != original.entry_type.category:
                 raise ValueError("historical_break_placement_required")
             association = self._resolve_context(context if context is not None else original.context if original and definition.category == EntryCategory.WORK else WorkContext(),
                                                 original.context if original else None)
             if original and original.is_leave and not original.has_times and not start.strip() and not end.strip() and replace(original, entry_type=definition).is_leave:
                 return self.repository.save_entry(normalize_work_log(replace(original, note=require_entry_content(content),
-                    entry_type=definition, context=association, work_mode=work_mode)))
+                    entry_type=definition, context=association, work_mode=arrangement)))
             start_time, end_time = parse_time(start), parse_time(end)
             if not start_time or not end_time:
                 raise ValueError("time_range_incomplete")
@@ -213,7 +216,7 @@ class TimeEntryService:
                 original.break_hours if original else 0, require_entry_content(content), definition,
                 started_at=timestamps[0], ended_at=timestamps[1], id=original.id if original else None,
                 revision=original.revision if original else 0, capture_id=original.capture_id if original else None,
-                context=association, work_mode=work_mode))
+                context=association, work_mode=arrangement))
             try:
                 return self.repository.save_entry(record, remember_work_mode=original is None)
             except ValueError as error:
@@ -235,17 +238,19 @@ class TimeEntryService:
             raise ValueError("entry_type_unavailable")
         return definition
 
-    def validate_selection(self, entry_type: str, work_mode: WorkMode | None, context: WorkContext,
+    def _resolve_work_mode(self, value, original=None):
+        if self.work_modes is not None:
+            return self.work_modes.resolve(value, original)
+        return decode_work_mode(value)
+
+    def validate_selection(self, entry_type: str, work_mode: WorkModeValue | None, context: WorkContext,
                            original: WorkLog | None = None, *, automatic: bool = False
-                           ) -> Result[tuple[EntryType | CustomEntryType, WorkMode | None, WorkContext]]:
+                           ) -> Result[tuple[EntryType | CustomEntryType, WorkModeValue | None, WorkContext]]:
         def resolve():
             if original is not None and original.user_id != self.user_id:
                 raise ValueError("worklog_entry_conflict")
             definition = self._resolve_type(entry_type, original.entry_type if original else None)
-            try:
-                arrangement = WorkMode(work_mode) if work_mode is not None else None
-            except (ValueError, TypeError):
-                raise ValueError("work_mode_invalid") from None
+            arrangement = self._resolve_work_mode(work_mode, original.work_mode if original else None)
             if definition.category != EntryCategory.WORK and (arrangement is not None or context != WorkContext()):
                 raise ValueError("entry_classification_invalid")
             if automatic and definition.category == EntryCategory.LEAVE:
@@ -270,7 +275,7 @@ class TimeEntryService:
 
     def start(self, entry_type: str, content: str, *, now: datetime | None = None,
               break_entry: WorkLog | None = None, context: WorkContext | None = None,
-              work_mode: WorkMode | None = None) -> Result[EntryTimer]:
+              work_mode: WorkModeValue | None = None) -> Result[EntryTimer]:
         def start():
             if self.restore_failed:
                 raise ValueError("auto_record_restore_failed")
@@ -279,10 +284,7 @@ class TimeEntryService:
             definition = self._resolve_type(entry_type)
             if definition.category == EntryCategory.LEAVE:
                 raise ValueError("auto_record_leave_not_supported")
-            try:
-                arrangement = WorkMode(work_mode) if work_mode is not None else None
-            except (TypeError, ValueError):
-                raise ValueError("work_mode_invalid") from None
+            arrangement = self._resolve_work_mode(work_mode)
             association = self._resolve_context(context or WorkContext())
             if definition.category != EntryCategory.WORK and (arrangement is not None or association != WorkContext()):
                 raise ValueError("entry_classification_invalid")

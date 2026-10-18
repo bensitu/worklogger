@@ -64,8 +64,8 @@ from worklogger.presentation.settings.workflows.account import AccountSettingsWo
 from worklogger.presentation.settings.workflows.common import _error_message
 from worklogger.presentation.settings.workflows.data import DataSettingsWorkflow
 from worklogger.presentation.settings.workflows.updates import UpdatesSettingsWorkflow
-from worklogger.presentation.viewmodels.entry_types import EntryTypeManagerViewModel
-from worklogger.presentation.widgets.entry_type_manager import EntryTypeManagerDialog
+from worklogger.presentation.viewmodels.classifications import ClassificationManagerViewModel
+from worklogger.presentation.widgets.classification_manager import ClassificationManagerDialog
 from worklogger.presentation.widgets.project_manager import ProjectManagerDialog
 from worklogger.app.ports import AIRequest
 from worklogger.presentation.job_runner import QtJobRunner, owned_callback
@@ -131,7 +131,8 @@ class SettingsWorkflowController:
         notify_error: NotificationHandler | None = None,
         reload_after_restore: ReloadHandler | None = None,
         capabilities: SettingsCapabilities | None = None,
-        entry_types_view_model: EntryTypeManagerViewModel | None = None,
+        entry_types_view_model: ClassificationManagerViewModel | None = None,
+        work_modes_view_model: ClassificationManagerViewModel | None = None,
         local_inference=None,
         ai_gateway=None,
         profile_service: UserProfileService | None = None,
@@ -154,6 +155,7 @@ class SettingsWorkflowController:
         self._dialog_factory = dialog_factory or SettingsDialog
         self._page_factory = page_factory or SettingsPage
         self._entry_types_view_model = entry_types_view_model
+        self._work_modes_view_model = work_modes_view_model
         self._local_inference = local_inference
         self._ai_gateway = ai_gateway
         self._profile_service = profile_service
@@ -242,7 +244,10 @@ class SettingsWorkflowController:
             surface.test_external_model_requested.connect(lambda: self._test_external_model(surface))
         surface.set_entry_types_available(self._entry_types_view_model is not None)
         if self._entry_types_view_model is not None:
-            surface.manage_entry_types_requested.connect(lambda: self._manage_entry_types(surface))
+            surface.manage_entry_types_requested.connect(lambda: self._manage_classifications(surface))
+        surface.set_work_modes_available(self._work_modes_view_model is not None)
+        if self._work_modes_view_model is not None:
+            surface.manage_work_modes_requested.connect(lambda: self._manage_classifications(surface, work_modes=True))
         surface.set_projects_available(self._projects_view_model is not None)
         if self._projects_view_model is not None:
             surface.manage_projects_requested.connect(lambda: self._manage_projects(surface))
@@ -278,8 +283,9 @@ class SettingsWorkflowController:
         self._local_models_workflow.open(surface)
         self._refresh_local_models_status(surface)
 
-    def _manage_entry_types(self, surface: SettingsPage) -> None:
-        dialog = EntryTypeManagerDialog(self._entry_types_view_model, surface)
+    def _manage_classifications(self, surface: SettingsPage, *, work_modes=False) -> None:
+        dialog = ClassificationManagerDialog(self._work_modes_view_model if work_modes else self._entry_types_view_model,
+            surface, work_modes=work_modes)
         dialog.exec()
         dialog.deleteLater()
         surface.entry_types_changed.emit()

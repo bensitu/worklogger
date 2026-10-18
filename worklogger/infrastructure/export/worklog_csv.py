@@ -10,7 +10,7 @@ from worklogger.infrastructure.export.csv_text import TEXT_FORMAT, encode_text, 
 
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
-from worklogger.domain.worklog.models import CustomEntryType, WorkLog, EntryType
+from worklogger.domain.worklog.models import CustomEntryType, CustomWorkMode, WorkLog, EntryType
 
 
 class WorkLogCsvExporter:
@@ -28,15 +28,18 @@ class WorkLogCsvExporter:
             custom_types = any(isinstance(row.entry_type, CustomEntryType) for row in records)
             work_context = any(row.context.label for row in records)
             work_modes = any(row.work_mode is not None for row in records)
+            custom_modes = any(isinstance(row.work_mode, CustomWorkMode) for row in records)
             encoded = any(requires_encoding((row.note, _entry_type_value(row.entry_type),
                 row.entry_type.label if isinstance(row.entry_type, CustomEntryType) else "",
-                row.context.project_label, row.context.work_item_label)) for row in records)
+                row.context.project_label, row.context.work_item_label,
+                row.work_mode.label if isinstance(row.work_mode, CustomWorkMode) else "")) for row in records)
             with atomic_destination(destination) as temporary, temporary.open("w", encoding="utf-8-sig", newline="") as handle:
                 writer = csv.writer(handle)
                 writer.writerow(self.HEADER + (("started_at", "ended_at") if timestamps else ())
                     + (("entry_type_label", "entry_type_category") if custom_types else ())
                     + (("project_label", "work_item_label") if work_context else ())
                     + (("work_mode",) if work_modes else ())
+                    + (("work_mode_label",) if custom_modes else ())
                     + (("text_format",) if encoded else ()))
                 for row in records:
                     writer.writerow(
@@ -52,6 +55,7 @@ class WorkLogCsvExporter:
                            else ["", ""] if custom_types else [])
                         + ([encode_text(row.context.project_label), encode_text(row.context.work_item_label)] if work_context else [])
                         + ([row.work_mode.value if row.work_mode is not None else ""] if work_modes else [])
+                        + ([encode_text(row.work_mode.label) if isinstance(row.work_mode, CustomWorkMode) else ""] if custom_modes else [])
                         + ([TEXT_FORMAT] if encoded else [])
                     )
         except Exception as exc:
