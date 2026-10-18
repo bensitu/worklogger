@@ -9,6 +9,18 @@ def N_(message: str) -> str:
 
 
 _MESSAGE_GROUPS = (
+    (("cloud_configuration_invalid", "cloud_not_configured"), N_("Configure a valid HTTPS cloud destination and backup schedule.")),
+    (("cloud_credentials_invalid", "cloud_authentication_failed"), N_("Cloud authentication failed. Check the storage credentials and permissions.")),
+    (("cloud_passphrase_invalid",), N_("Use a backup passphrase between 12 and 1024 characters.")),
+    (("cloud_decryption_failed",), N_("The backup passphrase is incorrect or the encrypted backup was modified.")),
+    (("cloud_conflict",), N_("The cloud version changed. Review the latest backup and explicitly confirm an overwrite.")),
+    (("cloud_local_changed",), N_("Local data changed. Review the current data before confirming a restore.")),
+    (("cloud_conditional_unsupported",), N_("This server does not support the conditional writes required for safe backups.")),
+    (("cloud_backup_invalid", "cloud_backup_missing"), N_("The cloud backup is missing, damaged, or uses an unsupported format. Local data has not been replaced.")),
+    (("cloud_backup_too_large",), N_("The backup exceeds the supported size limit.")),
+    (("cloud_timer_active",), N_("Stop automatic recording before restoring a cloud backup.")),
+    (("cloud_account_missing",), N_("The local account changed. Sign in again before continuing.")),
+    (("cloud_connection_failed", "cloud_operation_failed"), N_("Cloud backup failed. Check the network, storage service, and available space.")),
     (("work_plan_region_required",), N_("Choose a holiday region to calculate planned work and automatic goals.")),
     (("work_plan_holidays_failed",), N_("Holiday data could not be loaded. Planned work and automatic goals are unavailable; recorded hours are unchanged.")),
     (("work_schedule_invalid",), N_("Invalid work schedule")),

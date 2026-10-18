@@ -73,6 +73,13 @@ from worklogger.presentation.viewmodels import (
 )
 from worklogger.presentation.viewmodels.projects import ProjectManagerViewModel
 from worklogger.presentation.viewmodels.entry_types import EntryTypeManagerViewModel
+from worklogger.app.use_cases.cloud_backups import CloudBackupService
+from worklogger.infrastructure.backup.archive import PersonalBackupArchive
+from worklogger.infrastructure.backup.configuration import CloudBackupConfigurationStore
+from worklogger.infrastructure.backup.object_stores import backup_store
+from worklogger.infrastructure.backup.personal_data import SQLitePersonalData
+from worklogger.infrastructure.backup.recovery import PersonalRecoveryStore
+from worklogger.infrastructure.security.key_store import SystemCredentialStore
 
 
 def build_settings_workflow(
@@ -91,6 +98,7 @@ def build_settings_workflow(
     if auth_view_model is None:
         return None
     features = FeatureFlags.from_env()
+    runtime_configuration = load_runtime_configuration()
     return SettingsWorkflowController(
         settings_view_model=SettingsViewModel(
             user_id=user.id,
@@ -143,7 +151,16 @@ def build_settings_workflow(
         ai_gateway=handlers.ai_gateway,
         capabilities=SettingsCapabilities(external_generation=features.enable_ai,
             proxy_routing=handlers.network_transport is not None, model_management=features.enable_local_models,
-            minimal_view=load_runtime_configuration().features.minimal_view),
+            minimal_view=runtime_configuration.features.minimal_view),
+        cloud_backup_startup_delay_seconds=runtime_configuration.cloud_backup.startup_delay_seconds,
+        cloud_backup_service=CloudBackupService(
+            configuration=CloudBackupConfigurationStore(repositories.settings,
+                SystemCredentialStore(namespace=str(database_path.resolve())), user.id),
+            personal_data=SQLitePersonalData(connection_factory, user.id, expected_username=user.username), archive=PersonalBackupArchive(),
+            store_factory=lambda configuration, credentials: backup_store(configuration, credentials,
+                opener=handlers.network_transport.opener(allow_redirects=False) if handlers.network_transport else None,
+                proxy_url=handlers.network_transport.proxy_url() if handlers.network_transport else None),
+            recovery_store=PersonalRecoveryStore(database_path.parent / "personal-recovery" / str(user.id))),
     )
 
 

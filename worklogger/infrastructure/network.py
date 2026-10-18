@@ -24,12 +24,12 @@ class AccountHTTPTransport:
 
     def opener(self, *, public_only=False, allow_redirects=True):
         def open_request(request, *, timeout):
-            proxy = self._proxy_url()
+            proxy = self.proxy_url()
             return self._opener_factory(public_only=public_only, allow_redirects=allow_redirects,
                                        proxy_url=proxy)(request, timeout=timeout)
         return open_request
 
-    def _proxy_url(self):
+    def proxy_url(self):
         values = selected_settings(self._settings, self._user_id, _PROXY_KEYS)
         if not setting_bool(values.get(NETWORK_PROXY_ENABLED_SETTING_KEY)):
             return None

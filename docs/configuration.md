@@ -86,6 +86,9 @@ Changes apply after restarting.
   "features": {
     "background_images": true,
     "minimal_view": true
+  },
+  "cloud_backup": {
+    "startup_delay_seconds": 300
   }
 }
 ```
@@ -98,6 +101,15 @@ account's saved preference or interrupting its persisted timer.
 Both flags must be JSON booleans. Missing flags default to disabled; invalid
 configuration disables deployment-controlled features. Files are limited to
 64 KiB. Keep credentials and private data out of this file.
+
+`cloud_backup.startup_delay_seconds` is the minimum delay before automatic cloud
+backups may run after signing in. It defaults to 300 seconds and accepts integers
+from 0 to 86400 inclusive. Zero removes this delay; invalid values use the default
+without changing valid feature flags or model profiles. Manual uploads and
+restores are not delayed. After the delay, automatic backups still wait while
+recording controls or the reports page are busy. Scheduled checks run once per
+minute, so the configured delay is a minimum, not an exact execution time. This
+setting does not enable automatic backups or change the account's schedule.
 
 Assistant, model-management, and update-check workflows also honor
 `WORKLOGGER_FEATURE_AI`, `WORKLOGGER_FEATURE_LOCAL_MODELS`, and

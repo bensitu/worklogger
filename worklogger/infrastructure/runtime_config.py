@@ -6,6 +6,7 @@ import sys
 from dataclasses import dataclass, fields
 from pathlib import Path
 
+from worklogger.config.constants import DEFAULT_CLOUD_BACKUP_STARTUP_DELAY_SECONDS
 from worklogger.infrastructure.ai.generation_options import ExternalModelProfile, external_model_profiles
 
 LOGGER = logging.getLogger(__name__)
@@ -20,9 +21,15 @@ class DeploymentFeatures:
 
 
 @dataclass(frozen=True)
+class CloudBackupRuntimeConfiguration:
+    startup_delay_seconds: int = DEFAULT_CLOUD_BACKUP_STARTUP_DELAY_SECONDS
+
+
+@dataclass(frozen=True)
 class RuntimeConfiguration:
     features: DeploymentFeatures = DeploymentFeatures()
     external_model_profiles: tuple[ExternalModelProfile, ...] = ()
+    cloud_backup: CloudBackupRuntimeConfiguration = CloudBackupRuntimeConfiguration()
 
 
 def configuration_path(*, frozen=None, executable=None, bundle_root=None, source_root=None):
@@ -57,7 +64,17 @@ def load_runtime_configuration(path=None):
         except (ValueError, TypeError):
             LOGGER.warning("ai_model_profiles_invalid")
             profiles = ()
-        return RuntimeConfiguration(features, profiles)
+        backup = CloudBackupRuntimeConfiguration()
+        backup_options = value.get("cloud_backup", {})
+        if isinstance(backup_options, dict):
+            delay = backup_options.get("startup_delay_seconds", backup.startup_delay_seconds)
+            if type(delay) is int and 0 <= delay <= 86400:
+                backup = CloudBackupRuntimeConfiguration(startup_delay_seconds=delay)
+            else:
+                LOGGER.warning("cloud_backup_runtime_configuration_invalid")
+        else:
+            LOGGER.warning("cloud_backup_runtime_configuration_invalid")
+        return RuntimeConfiguration(features, profiles, backup)
     except FileNotFoundError:
         return RuntimeConfiguration()
     except (OSError, UnicodeError, ValueError, TypeError, RecursionError):

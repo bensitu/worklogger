@@ -3,5 +3,8 @@
     "background_images": true,
     "minimal_view": true
   },
-  "external_model_profiles": []
+  "external_model_profiles": [],
+  "cloud_backup": {
+    "startup_delay_seconds": 300
+  }
 }

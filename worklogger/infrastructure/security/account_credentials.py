@@ -20,6 +20,11 @@ def cleanup_account_credentials(user_id, database_path, *, backend=None):
         backend = backend if backend is not None else trusted_keyring_backend()
         if backend.get_password(external_service, "ai_api_key") is not None:
             backend.delete_password(external_service, "ai_api_key")
-        return SystemCredentialStore(namespace=proxy_namespace, backend=backend).set_secret(f"proxy_password:{user_id}", "")
+        store = SystemCredentialStore(namespace=proxy_namespace, backend=backend)
+        for name in (f"proxy_password:{user_id}", f"cloud_backup:{user_id}"):
+            result = store.set_secret(name, "")
+            if not result.ok:
+                return result
+        return Result.success(None)
     except Exception:
         return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))

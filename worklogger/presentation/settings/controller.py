@@ -16,6 +16,7 @@ from shiboken6 import isValid
 from worklogger.app.job_runner import JobRunner
 from worklogger.app.use_cases.data_portability import WorkLogCsvImportPreview
 from worklogger.app.use_cases.updates import CheckForUpdatesHandler
+from worklogger.config.constants import DEFAULT_CLOUD_BACKUP_STARTUP_DELAY_SECONDS
 from worklogger.domain.auth.models import User
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.auth.controller import (
@@ -136,6 +137,8 @@ class SettingsWorkflowController:
         profile_service: UserProfileService | None = None,
         projects_view_model=None,
         database_path: Path | None = None,
+        cloud_backup_service=None,
+        cloud_backup_startup_delay_seconds: int = DEFAULT_CLOUD_BACKUP_STARTUP_DELAY_SECONDS,
     ) -> None:
         self._settings_view_model = settings_view_model
         self._data_directory = Path(database_path).resolve().parent if database_path is not None else None
@@ -155,6 +158,11 @@ class SettingsWorkflowController:
         self._ai_gateway = ai_gateway
         self._profile_service = profile_service
         self._profile_revision = 0
+        self._cloud_workflow = None
+        if cloud_backup_service is not None:
+            from worklogger.presentation.settings.workflows.cloud_backup import CloudBackupWorkflow
+            self._cloud_workflow = CloudBackupWorkflow(cloud_backup_service, job_runner=job_runner,
+                startup_delay_seconds=cloud_backup_startup_delay_seconds)
         self._projects_view_model = projects_view_model
         self._project_dialog = None
         self._profile_runners: WeakKeyDictionary[SettingsPage, QtJobRunner] = WeakKeyDictionary()
@@ -205,6 +213,12 @@ class SettingsWorkflowController:
 
     def set_restore_handler(self, handler: ReloadHandler) -> None:
         self._data_workflow.set_restore_handler(handler)
+        if self._cloud_workflow is not None:
+            self._cloud_workflow.set_restore_handler(handler)
+
+    def start_cloud_backups(self, owner):
+        if self._cloud_workflow is not None:
+            self._cloud_workflow.start(owner)
 
     def create_page(self, parent: QWidget | None = None) -> SettingsPage:
         page = self._page_factory(self._settings_view_model, parent)
@@ -214,6 +228,8 @@ class SettingsWorkflowController:
         return page
 
     def _bind_surface(self, surface: SettingsPage) -> None:
+        if self._cloud_workflow is not None:
+            self._cloud_workflow.bind(surface.cloud_backup_panel)
         surface.set_data_directory(self._data_directory)
         surface.open_data_directory_requested.connect(lambda: self._open_data_directory(surface))
         surface.set_profile_available(self._profile_service is not None)

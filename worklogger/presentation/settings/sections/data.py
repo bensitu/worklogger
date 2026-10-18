@@ -16,6 +16,7 @@ from worklogger.presentation.settings.sections.common import (
     _SettingsScrollPage,
 )
 from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.settings.sections.cloud_backup import CloudBackupPanel
 
 
 class DataSection(_SettingsScrollPage):
@@ -31,12 +32,13 @@ class DataSection(_SettingsScrollPage):
         "import_csv_button",
         "import_ics_button",
         "restore_button",
+        "cloud_backup_panel",
     )
 
     def __init__(self, actions: SectionActions):
         super().__init__()
         page = self
-        location = _action_card(_("Data location"),
+        location = _action_card(_("Local data location"),
             _("Your local database is stored here. Open this folder to locate it; use Backup Data to create a safe copy."))
         self.data_directory_input = QLineEdit()
         self.data_directory_input.setObjectName("data_directory_line_edit")
@@ -100,6 +102,8 @@ class DataSection(_SettingsScrollPage):
         self.data_status_label.hide()
         backup_card.content_layout.addWidget(self.data_status_label)
         page.layout().addWidget(backup_card)
+        self.cloud_backup_panel = CloudBackupPanel()
+        page.layout().addWidget(self.cloud_backup_panel)
 
         calendar_card = _action_card(
             _("Calendar Data"),

@@ -51,6 +51,25 @@ class RuntimeConfigurationTests(unittest.TestCase):
         adjacent.write_text("{}", encoding="utf-8")
         self.assertEqual(configuration_path(frozen=True, executable=executable, bundle_root=bundle), adjacent)
 
+    def test_cloud_backup_delay_accepts_bounded_integer_seconds_and_defaults_when_missing(self):
+        self.assertEqual(load_runtime_configuration(self.path).cloud_backup.startup_delay_seconds, 300)
+        for options, expected in (({}, 300), ({"cloud_backup": {}}, 300),
+                                  *(({"cloud_backup": {"startup_delay_seconds": delay}}, delay)
+                                    for delay in (0, 1, 17, 300, 86400))):
+            with self.subTest(options=options):
+                self.path.write_text(json.dumps(options), encoding="utf-8")
+                self.assertEqual(load_runtime_configuration(self.path).cloud_backup.startup_delay_seconds, expected)
+
+    def test_invalid_cloud_backup_delay_preserves_other_valid_configuration(self):
+        for options in (None, [], True, "300", *({"startup_delay_seconds": delay}
+                         for delay in (-1, 86401, True, None, "300", 1.5, 300.0, 10**100))):
+            with self.subTest(options=options):
+                self.path.write_text(json.dumps({"features": {"minimal_view": True}, "cloud_backup": options}), encoding="utf-8")
+                with self.assertLogs("worklogger.infrastructure.runtime_config", level="WARNING"):
+                    configuration = load_runtime_configuration(self.path)
+                self.assertEqual(configuration.cloud_backup.startup_delay_seconds, 300)
+                self.assertTrue(configuration.features.minimal_view)
+
     def test_external_profiles_validate_capabilities_without_changing_feature_flags(self):
         profile = {"base_url": "https://example.com/v1/", "model": "sample-model",
                    "temperature": 0.2, "max_output_tokens": 2048,

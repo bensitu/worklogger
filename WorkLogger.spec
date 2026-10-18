@@ -21,6 +21,8 @@ hiddenimports += collect_submodules("icalendar", filter=runtime_module)
 hiddenimports += collect_submodules("recurring_ical_events", filter=runtime_module)
 datas += collect_data_files("icalendar", excludes=["tests/**"])
 datas += collect_data_files("tzlocal") + collect_data_files("certifi")
+datas += collect_data_files("botocore", includes=["data/s3/**", "data/*.json", "cacert.pem"])
+datas += copy_metadata("boto3") + copy_metadata("botocore")
 binaries = []
 packages = ["tzdata", "llama_cpp"]
 for package in packages:
