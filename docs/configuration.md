@@ -319,10 +319,27 @@ Enable the proxy switch before configuring its host and port. The address accept
 a hostname or `http://host`; enter the port separately. Optional authentication
 uses a username/password and, where needed, a domain prefix.
 
-The proxy carries HTTPS requests using HTTP CONNECT without disabling destination
-certificate verification. It applies to update checks, model downloads, external
-AI, and authenticated account-linking requests. Pre-login provider requests use
-direct HTTPS; the system browser follows its own network settings.
+The proxy carries account-scoped HTTPS requests using HTTP CONNECT without
+disabling destination certificate verification:
+
+| Request | Account proxy |
+| --- | --- |
+| Update checks | Yes |
+| Remote model catalogs and model downloads | Yes |
+| External AI generation and connection tests | Yes |
+| WebDAV and S3-compatible backups, including connection tests and restores | Yes |
+| Identity linking and external identity confirmation after sign-in | Yes, for application token and signing-key requests |
+| Provider authentication before sign-in | No; no account is selected, so application requests use direct HTTPS |
+| System browser authorization and external links | No; the browser follows its own network settings |
+| Loopback authorization callback | Local only; never forwarded to the proxy |
+
+This setting is not a system-wide proxy or an outbound firewall. Public destination
+checks can resolve DNS locally even when HTTPS uses the proxy. Local inference,
+holiday calculations, and ordinary local database operations do not require remote
+HTTP requests. Application HTTPS transports do not inherit environment proxy or
+`NO_PROXY` bypass settings. Proxy changes apply to subsequent HTTP requests; an
+S3 client captures the proxy when a backup operation starts. In-progress requests
+are not rerouted.
 
 An invalid enabled proxy fails rather than silently bypassing the proxy.
 Password storage requires an approved OS credential backend. Use a trusted proxy

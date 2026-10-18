@@ -40,8 +40,9 @@ class FakeResponse:
 
 class LocalModelInfrastructureTests(unittest.TestCase):
     def test_runtime_model_storage_applies_catalog_and_download_timeouts(self):
-        from types import SimpleNamespace
+        from unittest.mock import Mock
         from worklogger.composition.context import build_local_model_store
+        from worklogger.infrastructure.network import AccountHTTPTransport
         from worklogger.infrastructure.runtime_config import LocalModelsRuntimeConfiguration
 
         payload = b"GGUF\x03\x00\x00\x00" + bytes(16) + b"Synthetic model"
@@ -49,18 +50,31 @@ class LocalModelInfrastructureTests(unittest.TestCase):
                                "download_url": "https://example.test/configured.gguf",
                                "sha256": hashlib.sha256(payload).hexdigest()}]}
         requests = []
+        routes = []
         def opener(request, *, timeout):
             requests.append((request.full_url, timeout))
             content = json.dumps(catalog).encode() if request.full_url.endswith("catalog.json") else payload
             return FakeResponse(content, headers={"Content-Length": str(len(content))})
+        def opener_factory(**options):
+            routes.append(options)
+            return opener
+        values = {"network_proxy_enabled": "1", "network_proxy_address": "127.0.0.1", "network_proxy_port": "8080"}
+        settings = Mock()
+        settings.get_many.side_effect = lambda _user, keys: {key: values[key] for key in keys if key in values}
+        transport = AccountHTTPTransport(settings=settings, user_id=1, proxy_password=Mock(), opener_factory=opener_factory)
         with tempfile.TemporaryDirectory() as directory, \
                 patch.dict("os.environ", {"WORKLOGGER_MODEL_CATALOG_URL": "https://example.test/catalog.json"}):
             store = build_local_model_store(Path(directory) / "worklog.db",
-                transport=SimpleNamespace(opener=lambda **_options: opener),
+                transport=transport,
                 configuration=LocalModelsRuntimeConfiguration(download_timeout_seconds=19, catalog_timeout_seconds=7))
             self.assertTrue(store.refresh_catalog().ok)
             self.assertTrue(store.download_model("configured-model").ok)
             self.assertEqual(requests, [("https://example.test/catalog.json", 7), ("https://example.test/configured.gguf", 19)])
+            self.assertEqual(routes, [dict(public_only=True, allow_redirects=True,
+                                           proxy_url="http://127.0.0.1:8080")] * 2)
+            values["network_proxy_address"] = "https://invalid-proxy.example"
+            self.assertFalse(store.refresh_catalog().ok)
+            self.assertEqual(len(requests), 2)
 
     def test_file_verification_does_not_block_catalog_reads(self):
         with tempfile.TemporaryDirectory() as directory:

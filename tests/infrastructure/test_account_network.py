@@ -122,6 +122,20 @@ class AccountNetworkTests(unittest.TestCase):
         self.assertFalse(result.ok)
         self.assertNotIn("synthetic", str(result.error))
 
+    def test_external_generation_uses_proxy_and_invalid_settings_never_fall_back_to_direct(self):
+        self.values.update(external_model_enabled="1", external_model_base_url="https://example.com/v1",
+            external_model_name="configured-model", network_proxy_enabled="1",
+            network_proxy_address="127.0.0.1", network_proxy_port="8080")
+        gateway = AccountAIGateway(local=Mock(available=True), settings=self.settings, user_id=1,
+                                  key_store=self.keys, transport=self.transport)
+        request = AIRequest(({"role": "user", "content": "Synthetic text"},), "default", 30)
+        self.assertTrue(gateway.generate(request).ok)
+        self.assertEqual(self.routes[-1], dict(public_only=False, allow_redirects=False,
+                                              proxy_url="http://127.0.0.1:8080"))
+        self.values["network_proxy_port"] = "invalid"
+        self.assertFalse(gateway.generate(request).ok)
+        self.assertEqual(len(self.requests), 1)
+
     def test_external_generation_options_match_only_the_configured_endpoint_and_model(self):
         local = Mock(available=True)
         options = ExternalGenerationOptions(max_output_tokens=4096, token_limit_parameter="max_completion_tokens")

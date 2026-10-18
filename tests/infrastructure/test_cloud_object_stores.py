@@ -4,6 +4,7 @@ from dataclasses import replace
 import hashlib
 import io
 import unittest
+from unittest.mock import Mock, patch
 from urllib.error import HTTPError
 
 import boto3
@@ -12,6 +13,7 @@ from botocore.stub import Stubber
 
 from worklogger.domain.cloud_backup import BackupConfiguration, BackupCredentials
 from worklogger.infrastructure.backup.object_stores import WebDAVBackupStore, S3BackupStore
+from worklogger.infrastructure.network import AccountHTTPTransport
 
 
 class Response(io.BytesIO):
@@ -45,6 +47,29 @@ class WebDAVServer:
 
 
 class CloudObjectStoreTests(unittest.TestCase):
+    def test_cloud_transports_apply_account_proxy_without_environment_overrides(self):
+        settings, password = Mock(), Mock()
+        settings.get_many.return_value = {"network_proxy_enabled": "1", "network_proxy_address": "127.0.0.1",
+                                         "network_proxy_port": "8080"}
+        server, routes = WebDAVServer(), []
+        def opener_factory(**options):
+            routes.append(options)
+            return server
+        transport = AccountHTTPTransport(settings=settings, user_id=1, proxy_password=password, opener_factory=opener_factory)
+        with patch.dict("os.environ", {"HTTPS_PROXY": "http://ignored.example:9999", "NO_PROXY": "*"}):
+            webdav = WebDAVBackupStore(self.configuration, self.credentials, opener=transport.opener(allow_redirects=False))
+            webdav.test_connection()
+            self.assertTrue(routes)
+            self.assertTrue(all(route == dict(public_only=False, allow_redirects=False,
+                                              proxy_url="http://127.0.0.1:8080") for route in routes))
+            configuration = replace(self.configuration, provider="s3", bucket="personal-backups")
+            for enabled, expected in (("1", {"https": "http://127.0.0.1:8080"}), ("0", {})):
+                settings.get_many.return_value["network_proxy_enabled"] = enabled
+                store = S3BackupStore(configuration, self.credentials, proxy_url=transport.proxy_url())
+                self.addCleanup(store.client.close)
+                self.assertEqual(store.client.meta.config.proxies, expected)
+        password.load.assert_not_called()
+
     def setUp(self):
         self.configuration = BackupConfiguration(endpoint="https://storage.example/webdav", prefix="personal/backups")
         self.credentials = BackupCredentials("synthetic-user", "synthetic-password")

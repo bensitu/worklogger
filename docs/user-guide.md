@@ -381,7 +381,10 @@ extra instructions or your AI Assist message. Mixed-language passages are
 preserved when no translation is requested.
 
 Network settings apply an account HTTP CONNECT proxy to supported HTTPS requests.
-They do not change the operating system or browser proxy.
+This includes updates, model catalog refreshes and downloads, external AI, cloud
+backups, and application-side identity requests after sign-in. They do not change
+the operating system or browser proxy; authentication before account selection
+uses direct HTTPS. See [network routing](configuration.md#network) for boundaries.
 
 On supported platforms, enabling tray/menu-bar residency keeps a closed window
 available through its icon. The menu can start a timer when idle or end an active
