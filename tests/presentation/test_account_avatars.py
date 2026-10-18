@@ -48,6 +48,7 @@ class AccountAvatarTests(unittest.TestCase):
 
         with patch.object(QFileDialog, "getOpenFileName", return_value=(str(source), "")), patch.object(AvatarCropDialog, "exec", select_crop):
             page.change_avatar_button.click()
+        self.app.processEvents()
         encoded = model.load().value.profile_avatar_png
         self.assertTrue(encoded)
         decoded = decode_avatar(encoded)
@@ -59,6 +60,7 @@ class AccountAvatarTests(unittest.TestCase):
         page.refresh()
         self.assertTrue(page.reset_avatar_button.isEnabled())
         page.reset_avatar_button.click()
+        self.app.processEvents()
         self.assertEqual(model.load().value.profile_avatar_png, "")
         self.assertFalse(page.reset_avatar_button.isEnabled())
         self.assertFalse(sidebar.profile_avatar_label.pixmap().isNull())

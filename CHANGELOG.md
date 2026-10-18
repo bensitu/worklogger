@@ -37,6 +37,8 @@ layers. Back up your database before upgrading.
 
 ### Changed
 
+- Preserved pending daily-record loads across preference and date refreshes and
+  avoided hiding windows when the system tray becomes unavailable.
 - Limited new account IDs to 120 characters while preserving sign-in and
   recovery for existing account identifiers.
 - Loaded daily records and events with calendar background requests without

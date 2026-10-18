@@ -187,16 +187,20 @@ class AutoRecordDataManagementPresentationTests(unittest.TestCase):
             platform="win32",
             availability_probe=lambda: True,
         )
+        availability = {"tray": True}
         controller = QtResidencyController(
             view_model,
             application=self._app,
-            tray_available=lambda: True,
+            tray_available=lambda: availability["tray"],
         )
 
         state = controller.refresh()
 
         self.assertIsNotNone(state)
         self.assertTrue(controller.should_keep_resident())
+        availability["tray"] = False
+        self.assertFalse(controller.should_keep_resident())
+        self.assertTrue(self._app.quitOnLastWindowClosed())
         controller.request_quit()
         self.assertTrue(controller.quit_requested)
 

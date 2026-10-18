@@ -264,7 +264,7 @@ class AppWindow(QMainWindow):
             if self._job_runner is not None:
                 self._calendar_coordinator.refresh_overview(self._job_runner, config=self._config,
                     month=self._current_month, selected_day=self._selected_day, today=self._today,
-                    holidays=self._holidays, on_error=self._set_error, load_entries=False)
+                    holidays=self._holidays, on_error=self._set_error)
             else:
                 self._refresh_calendar()
                 self._refresh_stats()
@@ -330,7 +330,7 @@ class AppWindow(QMainWindow):
         if self._today != current:
             self._today = current
             self.analytics_page.set_today(current)
-            self._refresh_calendar()
+            self.refresh(asynchronous=self._job_runner is not None)
 
     def _build_ui(self) -> None:
         self.resize(1100, 700)

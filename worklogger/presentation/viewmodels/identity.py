@@ -29,12 +29,12 @@ class IdentityProvidersHandler(Protocol):
 
 
 class IdentityLinkHandler(Protocol):
-    def handle(self, command: LinkIdentityCommand) -> Result[LinkedIdentity]:
+    def handle(self, command: LinkIdentityCommand, *, cancellation=None) -> Result[LinkedIdentity]:
         ...
 
 
 class IdentityUnlinkHandler(Protocol):
-    def handle(self, command: UnlinkIdentityCommand) -> Result[None]:
+    def handle(self, command: UnlinkIdentityCommand, *, cancellation=None) -> Result[None]:
         ...
 
 

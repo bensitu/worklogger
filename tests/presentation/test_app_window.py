@@ -317,6 +317,8 @@ class AppWindowTests(unittest.TestCase):
         self.assertTrue(window.select_day(target, asynchronous=True))
         window.entry_panel.start_input.setText("11:00")
         window.entry_panel.content_input.setPlainText("New input")
+        from tests.presentation.test_settings_presentation import MemorySettingsRepository, _view_model
+        window.apply_settings(_view_model(MemorySettingsRepository()).load().value)
         runner.complete(Result.success(runner.operation(CancellationToken())))
         model = window.entry_panel.view_model
         self.assertEqual((model.draft.day, model.draft.start, model.draft.content), (target, "11:00", "New input"))

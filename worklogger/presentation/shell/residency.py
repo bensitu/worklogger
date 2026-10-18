@@ -216,6 +216,9 @@ class QtResidencyController:
         return state.value
 
     def should_keep_resident(self) -> bool:
+        if self._last_keep_resident and not self._tray_available():
+            self._last_keep_resident = False
+            self._set_quit_on_last_window_closed(True)
         return self._last_keep_resident
 
     def request_quit(self) -> None:

@@ -36,15 +36,15 @@ class CalendarCoordinator:
         self._page.calendar_view.set_loading(False)
 
     def refresh_overview(self, runner, *, config, month, selected_day, today, holidays, on_error,
-                         load_entries=True, on_entries_loaded=None):
+                         on_entries_loaded=None):
         self._revision += 1
         revision = self._revision
         if self._handle is not None:
             self._handle.cancel()
         calendar, stats = copy(self._calendar), copy(self._stats)
-        if load_entries and self._entries.view_model.draft.day != selected_day:
+        if self._entries.view_model.draft.day != selected_day:
             self._page.set_time_entries((), ())
-        entries_request = self._entries.prepare_day_load(selected_day) if load_entries else None
+        entries_request = self._entries.prepare_day_load(selected_day)
         holidays = dict(holidays) if holidays is not None else None
         self._page.set_month_title(month_label(month), month)
         self._page.month_picker_button.set_week_start_monday(config.calendar_options.week_start_monday)
