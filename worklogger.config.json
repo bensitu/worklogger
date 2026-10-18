@@ -2,6 +2,8 @@
   "features": {
     "ai": true,
     "cloud_backup": true,
+    "self_registration": true,
+    "oidc": true,
     "background_images": true,
     "minimal_view": true
   },

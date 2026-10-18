@@ -158,6 +158,17 @@ class MemoryAuthRepository:
 
 
 class UserManagementUseCaseTests(unittest.TestCase):
+    def test_disabled_self_registration_preserves_administrator_managed_creation(self):
+        repository = MemoryAuthRepository()
+        registration = RegisterUserHandler(repository, enabled=False)
+        self.assertEqual(registration.handle(RegisterUserCommand("new-user", "secret123")).error.code,
+                         "self_registration_disabled")
+        self.assertEqual(repository.user_count(), 0)
+        admin = repository.create_user("admin", "secret123", recovery_key=None, is_admin=True)
+        created = CreateManagedUserHandler(repository).handle(CreateManagedUserCommand(admin.id, "managed", "secret456"))
+        self.assertTrue(created.ok, created.error)
+        self.assertEqual(repository.user_count(), 2)
+
     def test_admin_can_create_list_reset_force_change_and_delete_users(self) -> None:
         repository = MemoryAuthRepository()
         registered = RegisterUserHandler(repository).handle(

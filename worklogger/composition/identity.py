@@ -4,7 +4,7 @@ from worklogger.infrastructure.identity.config import IdentityConfigurationStore
 from worklogger.infrastructure.identity.providers import BrowserIdentityProvider
 
 
-def identity_providers(*, configuration=None, opener=None):
+def identity_providers(*, configuration=None, opener=None, enabled=True):
     store = configuration or IdentityConfigurationStore()
-    return tuple(BrowserIdentityProvider(key, name, configuration=store, opener=opener)
+    return tuple(BrowserIdentityProvider(key, name, configuration=store, opener=opener, enabled=enabled)
                  for key, name in (("google", "Google"), ("microsoft", "Microsoft")))

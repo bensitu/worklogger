@@ -86,6 +86,8 @@ Changes apply after restarting.
   "features": {
     "ai": true,
     "cloud_backup": true,
+    "self_registration": true,
+    "oidc": true,
     "background_images": true,
     "minimal_view": true
   },
@@ -148,6 +150,27 @@ not disable local database backups, CSV/ICS operations, updates, or external
 sign-in. Account settings cannot override it. It accepts only JSON booleans;
 invalid values or malformed or unreadable files disable cloud backups. Protect
 the configuration file with deployment permissions as described above.
+
+`features.self_registration` defaults to `true`. Set it to `false` to disable the
+login screen's Register button and reject new self-registered accounts, including
+automatic account creation by an unlinked external identity. Existing local
+accounts can still sign in, and administrators can still create managed users.
+Linked external identities can still sign in when OIDC is enabled. Create the
+initial administrator before disabling registration; an empty database does not
+provide a registration exception.
+
+`features.oidc` defaults to `true`. Set it to `false` to disable Google and
+Microsoft browser authentication, identity linking/unlinking, and provider
+configuration buttons on the login and account settings screens. Controls remain
+visible but disabled. Existing accounts, associations, and provider configuration
+are retained. Establish local password access for external-only accounts before
+disabling OIDC. Local password login, recovery, and existing local remembered
+sessions are not revoked by this setting.
+
+Both policies accept only JSON booleans, apply after restarting, and take
+precedence over provider environment variables and account preferences. Invalid
+configuration disables both features. Protect deployment files with installation
+permissions; these settings do not prevent a local user from replacing the client.
 
 `cloud_backup.startup_delay_seconds` is the minimum delay before automatic cloud
 backups may run after signing in. It defaults to 300 seconds and accepts integers

@@ -15,6 +15,8 @@ layers. Back up your database before upgrading.
 
 ### Added
 
+- Deployment policies for self-registration and OIDC authentication, with visible
+  disabled controls and restrictions on automatic external account creation.
 - An installation-wide personal cloud backup policy that keeps configuration
   and transfer controls visible but disabled and prevents background backups.
 - An installation-wide AI policy that keeps related controls visible but

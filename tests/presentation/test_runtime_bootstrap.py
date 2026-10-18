@@ -70,6 +70,36 @@ class CancellingAuthenticator:
 
 
 class RuntimeBootstrapTests(unittest.TestCase):
+    def test_disabled_authentication_policies_reach_login_and_account_settings(self):
+        import json
+        with self.runtime_directory() as directory:
+            root = Path(directory)
+            configuration = root / "worklogger.config.json"
+            configuration.write_text(json.dumps({"features": {
+                "ai": False, "cloud_backup": False, "self_registration": False, "oidc": False}}), encoding="utf-8")
+            with patch("worklogger.infrastructure.runtime_config.configuration_path", return_value=configuration):
+                def authenticate(model):
+                    self.assertEqual(model.mode().value.mode, "login")
+                    denied = model.register(username="new-user", password="secret123", password_confirm="secret123")
+                    self.assertEqual(denied.error.code, "self_registration_disabled")
+                    self.assertEqual(model.login_with_identity("google").error.code, "oidc_disabled")
+                    return CancellingAuthenticator(model)
+                config = DesktopRuntimeConfig(database_path=root / "worklog.db", password_iterations=1000)
+                self.assertFalse(build_authenticated_desktop_runtime(config, argv=[], auth_controller_factory=authenticate).ok)
+                result = build_desktop_runtime(DesktopRuntimeConfig(database_path=root / "worklog.db",
+                    create_user_if_empty=True, password_iterations=1000), argv=[])
+                self.assertTrue(result.ok, result.error)
+                runtime = result.value
+                try:
+                    page = runtime.window.settings_page
+                    self.assertFalse(page.manage_identities_button.isHidden())
+                    self.assertFalse(page.manage_identities_button.isEnabled())
+                    self.assertIsNone(runtime.window._settings_workflow._identity_workflow)
+                    self.assertTrue(page.manage_users_button.isEnabled())
+                finally:
+                    runtime.window.close()
+                    runtime.job_runner.shutdown(wait=True)
+
     def test_selected_model_connects_record_note_and_report_rewriting(self):
         self.enterContext(patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes))
         from worklogger.infrastructure.ai.runtime import LocalInferenceRuntime

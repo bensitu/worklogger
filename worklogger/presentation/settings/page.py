@@ -216,7 +216,9 @@ class SettingsPage(QWidget, SettingsSectionState):
 
     def set_identity_management_available(self, available: bool) -> None:
         self.manage_identities_button.setEnabled(available)
-        self.manage_identities_button.setToolTip("" if available else _("Identity management is not configured."))
+        self.manage_identities_button.setToolTip(
+            _("Browser sign-in is disabled by deployment configuration.") if not self._capabilities.oidc_enabled else
+            "" if available else _("Identity management is not configured."))
 
     def set_update_check_available(self, available: bool) -> None:
         self._update_checks_available = available

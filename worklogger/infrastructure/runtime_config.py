@@ -20,6 +20,8 @@ class DeploymentFeatures:
     minimal_view: bool = False
     ai: bool = True
     cloud_backup: bool = True
+    self_registration: bool = True
+    oidc: bool = True
 
 
 @dataclass(frozen=True)
@@ -136,4 +138,5 @@ def load_runtime_configuration(path=None):
         return RuntimeConfiguration()
     except (OSError, UnicodeError, ValueError, TypeError, RecursionError):
         LOGGER.warning("runtime_configuration_invalid")
-        return RuntimeConfiguration(features=DeploymentFeatures(ai=False, cloud_backup=False))
+        return RuntimeConfiguration(features=DeploymentFeatures(
+            ai=False, cloud_backup=False, self_registration=False, oidc=False))

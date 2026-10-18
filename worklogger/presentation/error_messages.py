@@ -9,6 +9,8 @@ def N_(message: str) -> str:
 
 
 _MESSAGE_GROUPS = (
+    (("self_registration_disabled",), N_("Self-registration is disabled by deployment configuration. Contact an administrator for an account.")),
+    (("oidc_disabled",), N_("Browser sign-in is disabled by deployment configuration.")),
     (("cloud_configuration_invalid", "cloud_not_configured"), N_("Configure a valid HTTPS cloud destination and backup schedule.")),
     (("cloud_credentials_invalid", "cloud_authentication_failed"), N_("Cloud authentication failed. Check the storage credentials and permissions.")),
     (("cloud_passphrase_invalid",), N_("Use a backup passphrase between 12 and 1024 characters.")),

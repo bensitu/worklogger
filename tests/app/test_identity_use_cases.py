@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import datetime
 import unittest
+from unittest.mock import Mock
 
 from worklogger.app.commands.identity_commands import (
     LinkIdentityCommand,
@@ -130,6 +131,33 @@ class MemoryAuth:
 
 
 class IdentityUseCaseTests(unittest.TestCase):
+    def test_disabled_identity_operations_do_not_access_providers_or_storage(self):
+        identities, auth, provider = Mock(), Mock(), Mock(provider_id="google")
+        operations = (
+            (LoginWithIdentityHandler(identities=identities, auth=auth, providers=(provider,), enabled=False),
+             LoginWithIdentityCommand("google")),
+            (LinkIdentityHandler(repository=identities, auth=auth, providers=(provider,), enabled=False),
+             LinkIdentityCommand(1, "google", "example-password")),
+            (UnlinkIdentityHandler(identities, auth, providers=(provider,), enabled=False),
+             UnlinkIdentityCommand(1, 1, "example-password")),
+        )
+        for handler, command in operations:
+            self.assertEqual(handler.handle(command).error.code, "oidc_disabled")
+        self.assertEqual(identities.mock_calls, [])
+        self.assertEqual(auth.mock_calls, [])
+        provider.authenticate.assert_not_called()
+
+    def test_registration_policy_blocks_new_external_accounts_but_allows_linked_login(self):
+        identities, auth = MemoryIdentities(), MemoryAuth()
+        handler = LoginWithIdentityHandler(identities=identities, auth=auth, providers=(FakeProvider(),),
+                                          self_registration_enabled=False)
+        self.assertEqual(handler.handle(LoginWithIdentityCommand("google")).error.code, "self_registration_disabled")
+        self.assertEqual(auth.users, {})
+        self.assertEqual(identities.items, [])
+        auth.users[1] = User(1, "local")
+        identities.add(LinkedIdentity(0, 1, "google", "sub-1"))
+        self.assertEqual(handler.handle(LoginWithIdentityCommand("google")).value.user.id, 1)
+
     def test_identity_changes_require_the_current_account_password(self):
         identities, auth = MemoryIdentities(), MemoryAuth()
         auth.users[1] = User(1, "local")

@@ -267,14 +267,14 @@ class SettingsWorkflowController:
         surface.set_model_management_available(self._local_models_workflow is not None)
         surface.set_account(self._user)
         surface.set_manage_users_available(self._user_management_view_model is not None and self._user.is_admin)
-        surface.set_identity_management_available(self._identity_workflow is not None)
+        surface.set_identity_management_available(self._capabilities.oidc_enabled and self._identity_workflow is not None)
         surface.set_update_check_available(self._update_check_handler is not None)
         surface.change_password_requested.connect(
             lambda: self._change_password(surface)
         )
         if self._user_management_view_model is not None:
             surface.manage_users_requested.connect(lambda: self._manage_users(surface))
-        if self._identity_workflow is not None:
+        if self._capabilities.oidc_enabled and self._identity_workflow is not None:
             surface.manage_identities_requested.connect(
                 lambda: self._identity_workflow.open(surface)
             )

@@ -24,7 +24,9 @@ browser session. If the provider cannot confirm recent authentication, an
 administrator can establish local password access before identities are changed.
 
 Later provider sign-in opens that same account. An unlinked identity creates a
-separate non-administrator account. Matching names or email addresses do not
+separate non-administrator account when deployment self-registration is enabled.
+When it is disabled, an administrator must create an account, and the user must
+sign in locally and link the external identity first. Matching names or email addresses do not
 merge accounts. Unlinking the only usable sign-in method is rejected; establish a
 local password through an administrator reset or retain another identity.
 
@@ -53,6 +55,12 @@ Manage provider consent and registration policies through the provider's
 administrative tools. WorkLogger does not provision the registration.
 
 ## Managed Configuration
+
+Deployment policies `features.self_registration` and `features.oidc` in
+`worklogger.config.json` both default to `true`. OIDC disabled by this file cannot
+be enabled through provider registration or environment variables. See
+[deployment configuration](configuration.md#deployment-configuration) before
+disabling registration or browser sign-in on an existing installation.
 
 Locally saved registrations use encrypted `identity-config.enc` in the OS user's
 credential directory. This is separate from account preferences and database backup.

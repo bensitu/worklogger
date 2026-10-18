@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 
 from worklogger.__about__ import APP_NAME
 from worklogger.infrastructure.i18n import _
+from worklogger.presentation.errors import display_error_code
 from worklogger.presentation.auth.dialog_base import AuthDialog
 from worklogger.presentation.auth.models import LoginDraft
 from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
@@ -43,6 +44,8 @@ class LoginDialog(AuthDialog):
         self.hero_frame: QFrame | None = None
         self._identity_availability = {}
         self._busy = False
+        self._self_registration_enabled = True
+        self._oidc_enabled = True
         self.form_frame: QFrame | None = None
         self.form_scroll: QScrollArea | None = None
         self.setObjectName("login_dialog")
@@ -76,17 +79,26 @@ class LoginDialog(AuthDialog):
         self.username_input.setEnabled(not busy)
         self.password_input.setEnabled(not busy)
         self.remember_check.setEnabled(not busy)
-        self.register_button.setEnabled(not busy)
+        self.register_button.setEnabled(not busy and self._self_registration_enabled)
         self.reset_password_button.setEnabled(not busy)
         for key, button in (("google", self.google_login_button), ("microsoft", self.microsoft_login_button)):
-            button.setEnabled(not busy and self._identity_availability.get(key, False))
+            button.setEnabled(not busy and self._oidc_enabled and self._identity_availability.get(key, False))
         for button in self.identity_configuration_buttons.values():
-            button.setEnabled(not busy)
+            button.setEnabled(not busy and self._oidc_enabled)
+
+    def set_deployment_policy(self, *, self_registration_enabled: bool, oidc_enabled: bool) -> None:
+        self._self_registration_enabled = self_registration_enabled
+        self._oidc_enabled = oidc_enabled
+        self.register_button.setToolTip("" if self_registration_enabled else display_error_code("self_registration_disabled"))
+        for button in self.identity_configuration_buttons.values():
+            button.setToolTip(_("Configure sign-in") if oidc_enabled else display_error_code("oidc_disabled"))
+        self.set_busy(self._busy)
 
     def set_identity_providers(self, providers):
         self._identity_availability = {provider.provider: provider.available for provider in providers}
         for key, button in (("google", self.google_login_button), ("microsoft", self.microsoft_login_button)):
-            button.setToolTip("" if self._identity_availability.get(key) else _("Configure this sign-in provider before continuing."))
+            button.setToolTip(display_error_code("oidc_disabled") if not self._oidc_enabled else
+                              "" if self._identity_availability.get(key) else _("Configure this sign-in provider before continuing."))
         self.set_busy(self._busy)
 
     def resizeEvent(self, event: QResizeEvent) -> None:

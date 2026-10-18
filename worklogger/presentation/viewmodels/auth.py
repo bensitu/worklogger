@@ -68,6 +68,8 @@ class AuthViewModel:
         identity_login_handler=None,
         identity_providers_handler=None,
         identity_configuration=None,
+        self_registration_enabled: bool = True,
+        oidc_enabled: bool = True,
     ) -> None:
         self._state_handler = state_handler
         self._login_handler = login_handler
@@ -78,6 +80,8 @@ class AuthViewModel:
         self._identity_login_handler = identity_login_handler
         self._identity_providers_handler = identity_providers_handler
         self.identity_configuration = identity_configuration
+        self.self_registration_enabled = self_registration_enabled
+        self.oidc_enabled = oidc_enabled
 
     def identity_providers(self):
         if self._identity_providers_handler is None:
@@ -89,6 +93,8 @@ class AuthViewModel:
         return result.value.providers if result.ok and result.value else ()
 
     def login_with_identity(self, provider, *, remember=False, cancellation=None):
+        if not self.oidc_enabled:
+            return Result.failure(ValidationError("oidc_disabled", "oidc_disabled"))
         state = self._state_handler.handle()
         if not state.ok or not state.value or not state.value.has_users:
             return Result.failure(ValidationError("identity_local_setup_required", "identity_local_setup_required"))
@@ -104,7 +110,7 @@ class AuthViewModel:
             return Result.failure(
                 state.error or ValidationError("auth_state_failed", "auth_state_failed")
             )
-        mode = "login" if state.value.has_users else "register"
+        mode = "register" if not state.value.has_users and self.self_registration_enabled else "login"
         return Result.success(AuthModeState(mode=mode, has_users=state.value.has_users))
 
     def login(

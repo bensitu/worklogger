@@ -167,6 +167,28 @@ class MemoryRememberSessionStore:
 
 
 class AuthPresentationTests(unittest.TestCase):
+    def test_deployment_policy_preserves_disabled_controls_after_busy_and_provider_refresh(self):
+        from worklogger.domain.identity.models import IdentityProviderStatus
+        dialog = LoginDialog()
+        dialog.set_deployment_policy(self_registration_enabled=False, oidc_enabled=False)
+        dialog.set_identity_providers((IdentityProviderStatus("google", "Google", True, True),))
+        dialog.set_busy(True)
+        dialog.set_busy(False)
+        self.assertFalse(dialog.register_button.isEnabled())
+        self.assertFalse(dialog.google_login_button.isEnabled())
+        self.assertFalse(dialog.microsoft_login_button.isEnabled())
+        self.assertTrue(all(not button.isEnabled() for button in dialog.identity_configuration_buttons.values()))
+        self.assertTrue(dialog.login_button.isEnabled())
+        self.assertTrue(dialog.reset_password_button.isEnabled())
+
+    def test_registration_disabled_on_empty_database_opens_login_instead(self):
+        repository = MemoryAuthRepository()
+        view_model = AuthViewModel(state_handler=GetAuthBootstrapStateHandler(repository),
+            login_handler=LoginHandler(repository), register_handler=RegisterUserHandler(repository, enabled=False),
+            self_registration_enabled=False, oidc_enabled=False)
+        self.assertEqual(view_model.mode().value.mode, "login")
+        self.assertEqual(view_model.login_with_identity("google").error.code, "oidc_disabled")
+
     def test_sensitive_clipboard_expires_without_clearing_replacement_text(self):
         from worklogger.presentation.widgets.clipboard import copy_sensitive_text
         clipboard = self._app.clipboard()

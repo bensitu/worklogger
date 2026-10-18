@@ -24,15 +24,19 @@ from worklogger.infrastructure.identity.pkce import generate_verifier
 class BrowserIdentityProvider:
     """Authorization code flow with PKCE; provider tokens are never persisted."""
 
-    def __init__(self, provider_id, display_name, *, configuration=None, browser_open=None, opener=None, timeout=180):
+    def __init__(self, provider_id, display_name, *, configuration=None, browser_open=None, opener=None, timeout=180,
+                 enabled=True):
         self.provider_id = normalize_provider(provider_id)
         self.display_name = display_name
         self._configuration = configuration or IdentityConfigurationStore()
         self._browser_open = browser_open or webbrowser.open
         self._open = opener or https_opener(public_only=True, allow_redirects=False)
         self._timeout = timeout
+        self._enabled = enabled
 
     def status(self):
+        if not self._enabled:
+            return IdentityProviderStatus(self.provider_id, self.display_name, False, False, "oidc_disabled")
         loaded = self._configuration.load(self.provider_id)
         configured = bool(loaded.ok and loaded.value[0].client_id)
         available = bool(configured and loaded.value[1])
@@ -40,6 +44,8 @@ class BrowserIdentityProvider:
         return IdentityProviderStatus(self.provider_id, self.display_name, available, configured, message)
 
     def authenticate(self, *, cancellation=None, reauthenticate=False) -> Result[ExternalIdentityProfile]:
+        if not self._enabled:
+            return Result.failure(AuthenticationError("oidc_disabled", "oidc_disabled"))
         if not self.status().available:
             return Result.failure(InfrastructureError("identity_provider_not_configured", "identity_provider_not_configured"))
         try:

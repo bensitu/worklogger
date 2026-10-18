@@ -328,6 +328,9 @@ msgstr "休息 {hours:.1f}h"
 msgid "Break {hours}"
 msgstr "休息 {hours}"
 
+msgid "Browser sign-in is disabled by deployment configuration."
+msgstr "部署設定已停用外部帳戶登入。"
+
 msgid "Business trip"
 msgstr "出差"
 
@@ -2208,6 +2211,9 @@ msgstr "啟用外部處理後，所選文字與允許的上下文將傳送至此
 
 msgid "Selected user"
 msgstr "選取的使用者"
+
+msgid "Self-registration is disabled by deployment configuration. Contact an administrator for an account."
+msgstr "部署設定已停用自行註冊，請聯絡管理員建立帳戶。"
 
 msgid "Send"
 msgstr "傳送"

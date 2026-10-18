@@ -328,6 +328,9 @@ msgstr "休憩 {hours:.1f}h"
 msgid "Break {hours}"
 msgstr "休憩 {hours}"
 
+msgid "Browser sign-in is disabled by deployment configuration."
+msgstr "デプロイ設定により外部アカウントでのログインは無効になっています。"
+
 msgid "Business trip"
 msgstr "出張"
 
@@ -2208,6 +2211,9 @@ msgstr "外部処理を有効にすると、選択したテキストと許可さ
 
 msgid "Selected user"
 msgstr "選択したユーザー"
+
+msgid "Self-registration is disabled by deployment configuration. Contact an administrator for an account."
+msgstr "デプロイ設定により自己登録は無効になっています。アカウントの作成は管理者にお問い合わせください。"
 
 msgid "Send"
 msgstr "送信"

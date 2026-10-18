@@ -328,6 +328,9 @@ msgstr "Break {hours:.1f}h"
 msgid "Break {hours}"
 msgstr "Break {hours}"
 
+msgid "Browser sign-in is disabled by deployment configuration."
+msgstr "Browser sign-in is disabled by deployment configuration."
+
 msgid "Business trip"
 msgstr "Business trip"
 
@@ -2208,6 +2211,9 @@ msgstr "Selected text and permitted context are sent to this provider when exter
 
 msgid "Selected user"
 msgstr "Selected user"
+
+msgid "Self-registration is disabled by deployment configuration. Contact an administrator for an account."
+msgstr "Self-registration is disabled by deployment configuration. Contact an administrator for an account."
 
 msgid "Send"
 msgstr "Send"

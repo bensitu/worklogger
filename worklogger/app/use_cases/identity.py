@@ -21,7 +21,7 @@ from worklogger.domain.identity.models import ExternalIdentityProfile, IdentityP
 from worklogger.domain.auth.policies import username_key
 from worklogger.domain.auth.policies import remember_token_expires_at, remember_token_storage_value
 from worklogger.app.job_runner import CancellationToken
-from worklogger.domain.shared.errors import AuthenticationError, InfrastructureError, ValidationError, CancellationError
+from worklogger.domain.shared.errors import AuthenticationError, AuthorizationError, InfrastructureError, ValidationError, CancellationError
 from worklogger.domain.shared.result import Result
 from worklogger.app.use_cases._errors import storage_boundary, infrastructure_failure
 
@@ -82,13 +82,17 @@ class LinkIdentityHandler:
         repository: IdentityRepository,
         providers: tuple[IdentityProviderClient, ...],
         auth: AuthCredentialRepository | None = None,
+        enabled: bool = True,
     ) -> None:
         self._repository = repository
         self._providers = {provider.provider_id: provider for provider in providers}
         self._auth = auth
+        self._enabled = enabled
 
     @storage_boundary("identity_link_failed")
     def handle(self, command: LinkIdentityCommand, *, cancellation=None) -> Result[LinkedIdentity]:
+        if not self._enabled:
+            return _disabled()
         authorized = _authorize_change(command, self._auth, self._repository, self._providers, cancellation)
         if not authorized.ok:
             return authorized
@@ -152,13 +156,16 @@ class LinkIdentityHandler:
 
 class UnlinkIdentityHandler:
     def __init__(self, repository: IdentityRepository, auth: AuthCredentialRepository | None = None,
-                 *, providers: tuple[IdentityProviderClient, ...] = ()) -> None:
+                 *, providers: tuple[IdentityProviderClient, ...] = (), enabled: bool = True) -> None:
         self._repository = repository
         self._auth = auth
         self._providers = {provider.provider_id: provider for provider in providers}
+        self._enabled = enabled
 
     @storage_boundary("identity_unlink_failed")
     def handle(self, command: UnlinkIdentityCommand, *, cancellation=None) -> Result[None]:
+        if not self._enabled:
+            return _disabled()
         if command.identity_id <= 0:
             return Result.failure(ValidationError("identity_id_required", "identity_id_required"))
         identities = self._repository.list_for_user(command.user_id)
@@ -183,13 +190,19 @@ class LoginWithIdentityHandler:
         identities: IdentityRepository,
         auth: AuthCredentialRepository,
         providers: tuple[IdentityProviderClient, ...],
+        enabled: bool = True,
+        self_registration_enabled: bool = True,
     ) -> None:
         self._identities = identities
         self._auth = auth
         self._providers = {provider.provider_id: provider for provider in providers}
+        self._enabled = enabled
+        self._self_registration_enabled = self_registration_enabled
 
     @storage_boundary("identity_login_failed")
     def handle(self, command: LoginWithIdentityCommand, *, cancellation=None) -> Result[IdentityLoginResult]:
+        if not self._enabled:
+            return _disabled()
         try:
             provider_key = normalize_provider(command.provider)
         except ValueError as exc:
@@ -215,6 +228,8 @@ class LoginWithIdentityHandler:
             if user is None:
                 return Result.failure(AuthenticationError("identity_user_missing", "identity_user_missing"))
             return self._session(user, linked, command.remember)
+        if not self._self_registration_enabled:
+            return Result.failure(AuthorizationError("self_registration_disabled", "self_registration_disabled"))
         base = _username_from_profile(profile.value)
         occupied = {username_key(user.username) for user in self._auth.list_users()}
         for _attempt in range(8):
@@ -293,3 +308,7 @@ def _authenticate(provider, cancellation):
 
 def _cancelled():
     return Result.failure(CancellationError("identity_authorization_cancelled", "identity_authorization_cancelled"))
+
+
+def _disabled():
+    return Result.failure(AuthorizationError("oidc_disabled", "oidc_disabled"))

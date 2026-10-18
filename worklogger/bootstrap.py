@@ -45,6 +45,7 @@ from worklogger.infrastructure.database import (
 from worklogger.infrastructure.database.connection import DatabaseIntegrityError
 from worklogger.infrastructure.database.upgrade import copy_database
 from worklogger.infrastructure.identity.config import IdentityConfigurationStore
+from worklogger.infrastructure.runtime_config import load_runtime_configuration
 from worklogger.infrastructure.language_preferences import (
     LanguagePreferences,
     initialize_language,
@@ -254,7 +255,8 @@ def _auth_view_model(
     connection_factory: SQLiteConnectionFactory,
 ) -> AuthViewModel:
     configuration = IdentityConfigurationStore()
-    providers = identity_providers(configuration=configuration)
+    features = load_runtime_configuration().features
+    providers = identity_providers(configuration=configuration, enabled=features.oidc)
     login_failures = SQLiteLoginFailureRepository(connection_factory)
     try:
         login_failures.prune()
@@ -266,14 +268,17 @@ def _auth_view_model(
             auth_repository,
             login_failures,
         ),
-        register_handler=RegisterUserHandler(auth_repository),
+        register_handler=RegisterUserHandler(auth_repository, enabled=features.self_registration),
         change_password_handler=ChangePasswordHandler(auth_repository),
         remember_token_handler=LoginWithRememberTokenHandler(auth_repository),
         reset_password_handler=ResetPasswordHandler(auth_repository, login_failures),
         identity_login_handler=LoginWithIdentityHandler(identities=SQLiteIdentityRepository(connection_factory),
-            auth=auth_repository, providers=providers),
+            auth=auth_repository, providers=providers, enabled=features.oidc,
+            self_registration_enabled=features.self_registration),
         identity_providers_handler=GetIdentityProvidersHandler(providers),
         identity_configuration=configuration,
+        self_registration_enabled=features.self_registration,
+        oidc_enabled=features.oidc,
     )
 
 

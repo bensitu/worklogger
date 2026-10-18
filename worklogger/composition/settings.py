@@ -129,7 +129,8 @@ def build_settings_workflow(
         else None,
         job_runner=job_runner,
         identity_workflow=_build_identity_workflow(user, repositories, auth_repository, job_runner=job_runner,
-            opener=handlers.network_transport.opener(public_only=True, allow_redirects=False) if handlers.network_transport else None),
+            opener=handlers.network_transport.opener(public_only=True, allow_redirects=False) if handlers.network_transport else None)
+        if runtime_configuration.features.oidc else None,
         local_models_workflow=build_local_models_workflow(
             user=user,
             database_path=database_path,
@@ -154,6 +155,7 @@ def build_settings_workflow(
         ai_connection_test_timeout_seconds=runtime_configuration.ai.connection_test_timeout_seconds,
         capabilities=SettingsCapabilities(ai_enabled=features.enable_ai, external_generation=features.enable_ai,
             cloud_backup_enabled=runtime_configuration.features.cloud_backup,
+            oidc_enabled=runtime_configuration.features.oidc,
             proxy_routing=handlers.network_transport is not None, model_management=features.enable_local_models,
             minimal_view=runtime_configuration.features.minimal_view),
         cloud_backup_startup_delay_seconds=runtime_configuration.cloud_backup.startup_delay_seconds,

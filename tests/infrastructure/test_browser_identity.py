@@ -10,7 +10,7 @@ import tempfile
 from threading import Thread
 import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from urllib.parse import parse_qs, urlencode, urlsplit
 
 import jwt
@@ -29,6 +29,17 @@ class Response(io.BytesIO):
 
 
 class BrowserIdentityTests(unittest.TestCase):
+    def test_disabled_provider_does_not_read_registration_or_start_authorization(self):
+        configuration, browser, opener = Mock(), Mock(), Mock()
+        provider = BrowserIdentityProvider("google", "Google", configuration=configuration,
+            browser_open=browser, opener=opener, enabled=False)
+        self.assertFalse(provider.status().available)
+        for reauthenticate in (False, True):
+            self.assertEqual(provider.authenticate(reauthenticate=reauthenticate).error.code, "oidc_disabled")
+        configuration.load.assert_not_called()
+        browser.assert_not_called()
+        opener.assert_not_called()
+
     @classmethod
     def setUpClass(cls):
         cls.key = rsa.generate_private_key(public_exponent=65537, key_size=2048)

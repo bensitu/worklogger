@@ -63,11 +63,14 @@ class GetAuthBootstrapStateHandler:
 
 
 class RegisterUserHandler:
-    def __init__(self, credentials: AuthCredentialRepository) -> None:
+    def __init__(self, credentials: AuthCredentialRepository, *, enabled: bool = True) -> None:
         self._credentials = credentials
+        self._enabled = enabled
 
     @storage_boundary("auth_state_failed")
     def handle(self, command: RegisterUserCommand) -> Result[RegisteredUser]:
+        if not self._enabled:
+            return Result.failure(AuthorizationError("self_registration_disabled", "self_registration_disabled"))
         try:
             username = require_new_username(command.username)
             password = require_password(command.password)

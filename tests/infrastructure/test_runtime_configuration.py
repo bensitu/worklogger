@@ -53,9 +53,9 @@ class RuntimeConfigurationTests(unittest.TestCase):
         self.assertEqual(configuration_path(frozen=True, executable=executable, bundle_root=bundle), adjacent)
 
     def test_service_features_default_enabled_and_invalid_values_disable_them(self):
-        for name in ("ai", "cloud_backup"):
+        for name in ("ai", "cloud_backup", "self_registration", "oidc"):
             self.assertTrue(getattr(load_runtime_configuration(self.path).features, name))
-        for name in ("ai", "cloud_backup"):
+        for name in ("ai", "cloud_backup", "self_registration", "oidc"):
             for features, expected in (({}, True), ({name: True}, True), ({name: False}, False)):
                 self.path.write_text(json.dumps({"features": features}), encoding="utf-8")
                 flags = load_runtime_configuration(self.path).features
@@ -70,6 +70,8 @@ class RuntimeConfigurationTests(unittest.TestCase):
             flags = load_runtime_configuration(self.path).features
             self.assertFalse(flags.ai)
             self.assertFalse(flags.cloud_backup)
+            self.assertFalse(flags.self_registration)
+            self.assertFalse(flags.oidc)
 
     def test_cloud_backup_delay_accepts_bounded_integer_seconds_and_defaults_when_missing(self):
         self.assertEqual(load_runtime_configuration(self.path).cloud_backup.startup_delay_seconds, 300)

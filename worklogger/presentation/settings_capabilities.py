@@ -12,3 +12,4 @@ class SettingsCapabilities:
     minimal_view: bool = False
     ai_enabled: bool = True
     cloud_backup_enabled: bool = True
+    oidc_enabled: bool = True

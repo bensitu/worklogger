@@ -22,7 +22,7 @@ from worklogger.presentation.auth.dialogs import (
     ResetPasswordDialog,
     ResetPasswordDraft,
 )
-from worklogger.presentation.errors import display_error_message
+from worklogger.presentation.errors import display_error_code, display_error_message
 from worklogger.presentation.identity.dialogs import IdentityConfigurationDialog
 from worklogger.presentation.identity_authorization import IdentityAuthorizationRequest
 from worklogger.presentation.job_runner import QtJobRunner
@@ -158,6 +158,10 @@ class AuthController:
                 username=draft.username, password=draft.password, remember=draft.remember), complete)
 
         if isinstance(dialog, LoginDialog):
+            dialog.set_deployment_policy(self_registration_enabled=self._view_model.self_registration_enabled,
+                                         oidc_enabled=self._view_model.oidc_enabled)
+            if not self._view_model.self_registration_enabled:
+                dialog.set_error(display_error_code("self_registration_disabled"))
             dialog.set_identity_providers(self._view_model.identity_providers())
             request = IdentityAuthorizationRequest(dialog, job_runner=self._job_runner)
             dialog._authorization_request = request
@@ -187,6 +191,8 @@ class AuthController:
                 request.start(lambda token: self._view_model.login_with_identity(provider, remember=remember,
                     cancellation=token), on_complete=identity_complete)
             def configure(provider):
+                if not self._view_model.oidc_enabled:
+                    return
                 store = self._view_model.identity_configuration
                 if store is not None:
                     IdentityConfigurationDialog(store, provider, dialog).exec()
@@ -195,6 +201,8 @@ class AuthController:
             dialog.identity_configuration_requested.connect(configure)
 
         def switch_to_register() -> None:
+            if not self._view_model.self_registration_enabled:
+                return
             outcome.next_mode = "register"
             dialog.reject()
 

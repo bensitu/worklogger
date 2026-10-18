@@ -328,6 +328,9 @@ msgstr "휴식 {hours:.1f}h"
 msgid "Break {hours}"
 msgstr "휴식 {hours}"
 
+msgid "Browser sign-in is disabled by deployment configuration."
+msgstr "배포 설정에서 외부 계정 로그인이 비활성화되었습니다."
+
 msgid "Business trip"
 msgstr "출장"
 
@@ -2208,6 +2211,9 @@ msgstr "외부 처리가 활성화되면 선택한 텍스트와 허용된 맥락
 
 msgid "Selected user"
 msgstr "선택한 사용자"
+
+msgid "Self-registration is disabled by deployment configuration. Contact an administrator for an account."
+msgstr "배포 설정에서 직접 가입이 비활성화되었습니다. 계정 생성은 관리자에게 문의하세요."
 
 msgid "Send"
 msgstr "보내기"
