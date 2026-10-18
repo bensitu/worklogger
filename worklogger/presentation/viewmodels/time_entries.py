@@ -342,6 +342,20 @@ class TimeEntryViewModel:
                 self.new(day)
         return loaded
 
+    def prepare_day_load(self, day: date):
+        service = self.service.new_session(self.service.snapshot_state())
+        def load():
+            entries = service.list_for_day(day)
+            if not entries.ok:
+                return entries
+            latest = service.latest_change() if service.changes_available else Result.success(None)
+            return Result.success((entries.value, latest.value if latest.ok else None))
+        return load
+
+    def apply_day_records(self, records, latest_change):
+        self.entries = records
+        self.latest_change_info = latest_change
+
     def select(self, record: WorkLog) -> None:
         if self.service.timer is not None:
             self._timer_shares_draft = False

@@ -10,6 +10,12 @@ source references. Filtering, full-content search, and deterministic sorting run
 in SQLite; selecting an owned report reads its latest body separately. History
 requests reject superseded results without replacing the open editor draft.
 Interactive calendar navigation also loads its overview in the background.
+
+Daily records and events travel with the background overview request. Completion
+updates record lists and change-history actions without replacing the live editor
+draft. Superseded requests cannot update a newly selected day. Saved settings are
+persisted immediately; control-state reloads are coalesced within one event-loop
+turn, and unrelated settings do not rebuild calendar statistics.
 Synchronous refresh remains available to non-interactive callers and rejects
 pending overview results before applying a newer state.
 

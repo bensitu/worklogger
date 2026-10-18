@@ -302,6 +302,26 @@ class AppWindowTests(unittest.TestCase):
         complete(Result.success(operation(CancellationToken())))
         self.assertEqual(window.calendar_view.state.month, 5)
 
+    def test_background_day_records_do_not_replace_input_typed_while_loading(self):
+        from worklogger.app.job_runner import JobHandle, CancellationToken
+        class Runner:
+            def submit(self, name, operation, *, on_complete):
+                self.operation, self.complete = operation, on_complete
+                return JobHandle(name, lambda: None)
+        repository = MemoryWorkLogRepository()
+        target = date(2026, 4, 14)
+        repository.save(WorkLog(1, target, "09:00", "10:00", note="Saved record"))
+        window = _window(repository)
+        runner = Runner()
+        window._job_runner = runner
+        self.assertTrue(window.select_day(target, asynchronous=True))
+        window.entry_panel.start_input.setText("11:00")
+        window.entry_panel.content_input.setPlainText("New input")
+        runner.complete(Result.success(runner.operation(CancellationToken())))
+        model = window.entry_panel.view_model
+        self.assertEqual((model.draft.day, model.draft.start, model.draft.content), (target, "11:00", "New input"))
+        self.assertEqual([entry.note for entry in model.entries], ["Saved record"])
+
     def test_unchanged_theme_does_not_reapply_the_global_stylesheet(self):
         from tests.background_samples import still_background_bytes
         from worklogger.domain.settings.background import BackgroundState

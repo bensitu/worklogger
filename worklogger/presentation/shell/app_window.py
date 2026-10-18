@@ -150,6 +150,7 @@ class AppWindow(QMainWindow):
         self._refreshing = False
         self._entry_dirty = False
         self._records_refresh_pending = False
+        self._work_plan_settings = None
 
         self.setObjectName("app_window")
         self.setWindowTitle(_("WorkLogger"))
@@ -249,6 +250,7 @@ class AppWindow(QMainWindow):
     def apply_settings(self, state: SettingsState) -> None:
         self.sidebar.set_avatar(state.profile_avatar_png)
         self.entry_panel.set_recent_context_visible(state.show_recent_context)
+        previous_config = self._config
         self._config = apply_recording_preferences(
             self._config,
             state,
@@ -257,20 +259,26 @@ class AppWindow(QMainWindow):
             analytics=getattr(self._analytics_workflow, "view_model", None),
         )
         self.apply_theme()
-        self._refresh_calendar()
-        self._refresh_stats()
-        if not self._entry_dirty:
-            self._refresh_entry()
+        work_plan = (state.work_schedule, state.work_target_mode)
+        if previous_config != self._config or work_plan != self._work_plan_settings:
+            if self._job_runner is not None:
+                self._calendar_coordinator.refresh_overview(self._job_runner, config=self._config,
+                    month=self._current_month, selected_day=self._selected_day, today=self._today,
+                    holidays=self._holidays, on_error=self._set_error, load_entries=False)
+            else:
+                self._refresh_calendar()
+                self._refresh_stats()
+        self._work_plan_settings = work_plan
         if self._residency_controller is not None:
             self._residency_controller.refresh()
 
-    def refresh(self, *, asynchronous=False) -> bool:
+    def refresh(self, *, asynchronous=False, on_entries_loaded=None) -> bool:
         if asynchronous and self._job_runner is not None:
-            entry_ok = self._refresh_entry()
             overview_ok = self._calendar_coordinator.refresh_overview(self._job_runner,
                 config=self._config, month=self._current_month, selected_day=self._selected_day,
-                today=self._today, holidays=self._holidays, on_error=self._set_error)
-            return entry_ok and overview_ok
+                today=self._today, holidays=self._holidays, on_error=self._set_error,
+                on_entries_loaded=on_entries_loaded)
+            return overview_ok
         self._last_error = None
         self._refreshing = True
         try:
@@ -280,17 +288,19 @@ class AppWindow(QMainWindow):
         finally:
             self._refreshing = False
         if calendar_ok and entry_ok and stats_ok:
+            if on_entries_loaded is not None:
+                on_entries_loaded()
             self._set_status("")
             return True
         self._set_error(self._last_error)
         return False
 
-    def select_day(self, day: date, *, asynchronous=False) -> bool:
+    def select_day(self, day: date, *, asynchronous=False, on_entries_loaded=None) -> bool:
         if day != self._selected_day and not self._confirm_discard_changes_if_needed():
             return False
         self._selected_day = day
         self._current_month = day.replace(day=1)
-        return self.refresh(asynchronous=asynchronous)
+        return self.refresh(asynchronous=asynchronous, on_entries_loaded=on_entries_loaded)
 
     def previous_month(self, *, asynchronous=False) -> bool:
         if not self._confirm_discard_changes_if_needed():
@@ -469,7 +479,12 @@ class AppWindow(QMainWindow):
             QTimer.singleShot(0, self, self._records_associated)
 
     def _open_found_entry(self, record):
-        if self.entry_panel.is_busy or not self._switch_route("calendar") or not self.select_day(record.day):
+        if self.entry_panel.is_busy or not self._switch_route("calendar"):
+            return False
+        if self._job_runner is not None:
+            return self.select_day(record.day, asynchronous=True,
+                                   on_entries_loaded=lambda: self.entry_panel.edit_entry(record))
+        if not self.select_day(record.day):
             return False
         self.entry_panel.edit_entry(record)
         original = self._time_entry_view_model.draft.original

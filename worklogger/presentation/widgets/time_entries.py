@@ -374,6 +374,24 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             self.hours_label.setText(_("Worked: {hours}").format(hours=duration_label(sum(entry.worked_hours() for entry in result.value))))
         return result
 
+    def prepare_day_load(self, day: date):
+        if self.is_busy:
+            return None
+        self._close_classification_picker()
+        if day != self._day:
+            self._polish_task.cancel()
+        self._day = day
+        if self.view_model.draft.day != day:
+            self.view_model.new(day)
+            self.view_model.apply_day_records((), None)
+            self._render_editor()
+        return self.view_model.prepare_day_load(day)
+
+    def apply_day_records(self, records, latest_change):
+        self.view_model.apply_day_records(records, latest_change)
+        self._render_editor()
+        self.hours_label.setText(_("Worked: {hours}").format(hours=duration_label(sum(entry.worked_hours() for entry in records))))
+
     def edit_entry(self, record: WorkLog):
         self._close_classification_picker()
         if self.is_busy:

@@ -121,6 +121,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             self.assertTrue(notes.rewrite_available)
             self.assertEqual(notes.rewrite("Synthetic note").value, "Revised synthetic text")
             runtime.window.settings_page.local_model_enabled_switch.click()
+            runtime.application.processEvents()
             self.assertFalse(reports.ai_assist_button.isEnabled())
             self.assertFalse(notes.rewrite_available)
             self.assertFalse(panel.polish_button.isEnabled())
@@ -451,25 +452,33 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 return {cell.day: cell.holiday_name for cell in window.calendar_view.state.cells
                         if cell.in_month and cell.is_holiday}
 
+            def set_holidays(enabled):
+                window.settings_page.holidays_switch.set_checked(enabled)
+                deadline = time.monotonic() + 3
+                runtime.application.processEvents()
+                while displayed_holidays() != (expected if enabled else {}) and time.monotonic() < deadline:
+                    runtime.application.processEvents()
+                    time.sleep(0.005)
+
             try:
                 self.assertIsNone(window._holidays)
                 self.assertTrue(window.refresh())
                 self.assertEqual(displayed_holidays(), expected)
                 self.assertEqual(window.entry_panel.content_input.toPlainText(), "")
                 self.assertFalse(window.has_unsaved_changes)
-                window.settings_page.holidays_switch.set_checked(False)
+                set_holidays(False)
                 self.assertEqual(displayed_holidays(), {})
                 self.assertEqual(window.entry_panel.content_input.toPlainText(), "")
                 self.assertEqual(settings.get(runtime.user.id, SHOW_HOLIDAYS_SETTING_KEY), "0")
-                window.settings_page.holidays_switch.set_checked(True)
+                set_holidays(True)
                 self.assertEqual(displayed_holidays(), expected)
                 self.assertEqual(settings.get(runtime.user.id, SHOW_HOLIDAYS_SETTING_KEY), "1")
                 window.entry_panel.content_input.setPlainText("Unsubmitted note")
                 self.assertTrue(window.has_unsaved_changes)
-                window.settings_page.holidays_switch.set_checked(False)
+                set_holidays(False)
                 self.assertEqual(displayed_holidays(), {})
                 self.assertEqual(window.entry_panel.content_input.toPlainText(), "Unsubmitted note")
-                window.settings_page.holidays_switch.set_checked(True)
+                set_holidays(True)
                 self.assertEqual(displayed_holidays(), expected)
                 self.assertEqual(window.entry_panel.content_input.toPlainText(), "Unsubmitted note")
                 window.entry_panel.content_input.clear()

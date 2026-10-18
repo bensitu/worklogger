@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QTimer
 from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -96,6 +96,9 @@ class SettingsPage(QWidget, SettingsSectionState):
         self._model_management_available = True
         self._updating = False
         self._last_error: AppError | None = None
+        self._saved_state_timer = QTimer(self)
+        self._saved_state_timer.setSingleShot(True)
+        self._saved_state_timer.timeout.connect(self._reload_saved_state)
         self._busy_jobs: set[str] = set()
         self._residency_key = _residency_setting_key()
         self._category_pages: dict[str, int] = {}
@@ -146,6 +149,7 @@ class SettingsPage(QWidget, SettingsSectionState):
                 self._update_configuration_status()
 
     def refresh(self) -> bool:
+        self._saved_state_timer.stop()
         result = self._view_model.load()
         if not result.ok or result.value is None:
             self._set_error(result.error)
@@ -518,13 +522,16 @@ class SettingsPage(QWidget, SettingsSectionState):
             self._set_error(getattr(result, "error", None))
             return
         self._last_error = None
+        self._saved_state_timer.start(0)
+        self.set_operation_status(_("Saved"))
+
+    def _reload_saved_state(self) -> None:
         loaded = self._view_model.load(refresh_credentials=False)
         if not loaded.ok or loaded.value is None:
             self._set_error(loaded.error)
             return
         self.set_state(loaded.value)
         self.settings_changed.emit(loaded.value)
-        self.set_operation_status(_("Saved"))
 
     def _set_error(self, error: AppError | None) -> None:
         self._last_error = error

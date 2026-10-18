@@ -37,6 +37,8 @@ layers. Back up your database before upgrading.
 
 ### Changed
 
+- Loaded daily records and events with calendar background requests without
+  replacing edits typed while waiting, and coalesced saved-settings refreshes.
 - Batched reversible-record reads, reused decoded CSV replacement records, and
   limited calendar-import duplicate queries to the imported dates.
 - Reused project-statistics windows, released closed template dialogs, captured

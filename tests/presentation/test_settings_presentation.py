@@ -118,6 +118,7 @@ class SettingsPresentationTests(unittest.TestCase):
         editor.day_groups[2].button(1).click()
         self.assertTrue(editor.save_button.isEnabled())
         editor.save_button.click()
+        self._app.processEvents()
         saved = WorkSchedule.decode(repository.get(1, WORK_SCHEDULE_SETTING_KEY))
         self.assertEqual(saved.days, (1, 1, 0.5, 1, 1, 0, 0))
         self.assertFalse(editor.save_button.isEnabled())
@@ -163,6 +164,7 @@ class SettingsPresentationTests(unittest.TestCase):
         page.holiday_subdivision_combo.setCurrentIndex(page.holiday_subdivision_combo.findData("NY"))
         self.assertEqual(repository.get(1, HOLIDAY_REGION_SETTING_KEY), "US/NY")
         page.holiday_country_combo.setCurrentIndex(page.holiday_country_combo.findData("JP"))
+        self._app.processEvents()
         self.assertEqual(repository.get(1, HOLIDAY_REGION_SETTING_KEY), "JP")
         self.assertFalse(page.holiday_subdivision_combo.isEnabled())
 
@@ -485,8 +487,22 @@ class SettingsPresentationTests(unittest.TestCase):
         page.set_local_model_status(ready=True, name="Verified model")
         self.assertIn("Verified model", page.local_model_status_label.text())
         page.local_model_enabled_switch.set_checked(False)
+        self._app.processEvents()
         self.assertIn("Verified model", page.local_model_status_label.text())
         self.assertIn("disabled", page.local_runtime_status_label.text())
+
+    def test_multiple_saved_preferences_share_one_control_state_reload(self):
+        model = _view_model(MemorySettingsRepository())
+        page = SettingsPage(model)
+        self.addCleanup(page.deleteLater)
+        page.refresh()
+        with patch.object(model, "load", wraps=model.load) as load:
+            page.holidays_switch.click()
+            page.recent_context_switch.click()
+            self._app.processEvents()
+            self.assertEqual(load.call_count, 1)
+        self.assertFalse(page.state.show_holidays)
+        self.assertFalse(page.state.show_recent_context)
 
     def test_unavailable_services_preserve_preferences_without_claiming_activation(self):
         repository = MemorySettingsRepository()
@@ -524,6 +540,7 @@ class SettingsPresentationTests(unittest.TestCase):
         self.assertFalse(page.proxy_address_line_edit.isEnabled())
         page.local_model_enabled_switch.click()
         page.proxy_enabled_switch.click()
+        self._app.processEvents()
         self.assertTrue(page.local_model_enabled_switch.is_checked())
         self.assertTrue(page.proxy_address_line_edit.isEnabled())
         self.assertIn("address and port", page.proxy_runtime_status_label.text())
@@ -531,11 +548,13 @@ class SettingsPresentationTests(unittest.TestCase):
         page.proxy_address_line_edit.editingFinished.emit()
         page.proxy_port_line_edit.setText("8080")
         page.proxy_port_line_edit.editingFinished.emit()
+        self._app.processEvents()
         self.assertIn("no proxy transport", page.proxy_runtime_status_label.text())
         page.refresh()
         self.assertTrue(page.local_model_enabled_switch.is_checked())
         self.assertTrue(page.proxy_enabled_switch.is_checked())
         page.proxy_enabled_switch.click()
+        self._app.processEvents()
         self.assertFalse(page.proxy_address_line_edit.isEnabled())
         self.assertEqual(model.load().value.network_proxy_address, "proxy.example.test")
 

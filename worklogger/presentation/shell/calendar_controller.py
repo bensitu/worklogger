@@ -35,12 +35,16 @@ class CalendarCoordinator:
         self._handle = None
         self._page.calendar_view.set_loading(False)
 
-    def refresh_overview(self, runner, *, config, month, selected_day, today, holidays, on_error):
+    def refresh_overview(self, runner, *, config, month, selected_day, today, holidays, on_error,
+                         load_entries=True, on_entries_loaded=None):
         self._revision += 1
         revision = self._revision
         if self._handle is not None:
             self._handle.cancel()
         calendar, stats = copy(self._calendar), copy(self._stats)
+        if load_entries and self._entries.view_model.draft.day != selected_day:
+            self._page.set_time_entries((), ())
+        entries_request = self._entries.prepare_day_load(selected_day) if load_entries else None
         holidays = dict(holidays) if holidays is not None else None
         self._page.set_month_title(month_label(month), month)
         self._page.month_picker_button.set_week_start_monday(config.calendar_options.week_start_monday)
@@ -52,7 +56,9 @@ class CalendarCoordinator:
                 theme=config.theme, dark=config.dark, custom_color=config.custom_color)
             stats_result = stats.build_month(year=month.year, month=month.month,
                 standard_work_hours=config.standard_work_hours, monthly_target_hours=config.monthly_target_hours)
-            return calendar_result, stats_result
+            entries = entries_request() if entries_request is not None else None
+            events = calendar.events_for_day(selected_day) if entries is not None else None
+            return calendar_result, stats_result, entries, events
         def complete(result):
             if revision != self._revision:
                 return
@@ -61,7 +67,7 @@ class CalendarCoordinator:
             if not result.ok:
                 on_error(result.error)
                 return
-            calendar_result, stats_result = result.value
+            calendar_result, stats_result, entries, events = result.value
             if calendar_result.ok and calendar_result.value is not None:
                 self._page.calendar_view.set_state(calendar_result.value)
             else:
@@ -70,6 +76,15 @@ class CalendarCoordinator:
                 self._stats_panel.set_state(stats_result.value)
             else:
                 on_error(stats_result.error)
+            if entries is not None and not self._entries.is_busy:
+                if entries.ok and events.ok:
+                    records, latest_change = entries.value
+                    self._entries.apply_day_records(records, latest_change)
+                    self._page.set_time_entries(records, events.value or ())
+                    if on_entries_loaded is not None:
+                        on_entries_loaded()
+                else:
+                    on_error(entries.error or events.error)
         try:
             self._handle = runner.submit("load_calendar_overview", work, on_complete=owned_callback(self._page, complete))
             return True
