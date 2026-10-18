@@ -72,6 +72,9 @@ class ReportingLayoutChecks(unittest.TestCase):
                         self.assertEqual(len(page.breakdown_chart.chart._segments), len(EntryType))
                         self.assertEqual(scroll.verticalScrollBar().maximum(), 0, (language, dark))
                         self.assertEqual(scroll.horizontalScrollBar().maximum(), 0, (language, dark))
+                        chart_widths = [card.width() for card in (page.trend_chart, page.average_chart,
+                                                                 page.breakdown_chart, page.daily_average_chart)]
+                        self.assertLessEqual(max(chart_widths) - min(chart_widths), 1, (language, dark))
                         self.capture(window, f"analytics-overview-{'dark' if dark else 'light'}", language)
                         page.breakdown_dimension_control.set_value("work_mode")
                         settle()

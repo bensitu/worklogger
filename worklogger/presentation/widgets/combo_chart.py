@@ -142,14 +142,17 @@ class DonutChart(QWidget):
         font = QFont(self.font())
         font.setPixelSize(11)
         metrics = QFontMetrics(font)
-        diameter = min(self.width() * 0.36, 140)
-        x = diameter + 27
-        available = max(0, self.width() - x - 16)
         total = sum(value for _, value in self._segments)
         details = tuple(_("{duration} ({percent:.0f}%)").format(duration=duration_label(value), percent=value / total * 100)
                         for _label, value in self._segments) if total else ()
-        inline = all(metrics.horizontalAdvance(label + "  " + detail) <= available
-                     for (label, _value), detail in zip(self._segments, details))
+        legend_offset, right_margin = 27, 16
+        required_width = max((metrics.horizontalAdvance(label) + metrics.horizontalAdvance(detail) + 8
+                              for (label, _value), detail in zip(self._segments, details)), default=0)
+        diameter = min(self.width() * 0.36, 140,
+                       max(96, self.width() - legend_offset - right_margin - required_width))
+        x = diameter + legend_offset
+        available = max(0, self.width() - x - right_margin)
+        inline = required_width <= available
         row_height = max(20, metrics.height() + 4) if inline else max(34, 2 * metrics.height() + 6)
         return font, diameter, x, available, details, inline, row_height
 
