@@ -151,6 +151,7 @@ def _run_desktop(args: Sequence[str]) -> int:
         DesktopRuntimeConfig,
         build_authenticated_desktop_runtime,
     )
+    from worklogger.app.use_cases.startup_database import DATABASE_RECOVERY_ERROR_CODES
 
     exit_code = 0
     skip_remembered_session = False
@@ -176,15 +177,36 @@ def _run_desktop(args: Sequence[str]) -> int:
                     _recovery_application = _application(list(args))
                     initialize_language(LanguagePreferences())
                     path = default_database_path()
-                    choice = choose_restore_recovery(inspect_pending_restore(path))
+                    choices = inspect_pending_restore(path)
+                    if not choices.rollback_available and not choices.restored_available:
+                        from worklogger.composition.startup_recovery import recover_startup_database
+                        if recover_startup_database(runtime.error, args):
+                            skip_remembered_session = True
+                            continue
+                        return 0
+                    choice = choose_restore_recovery(choices)
                     if choice is None:
                         return 0
                     recover_pending_restore(path, choice)
+                    skip_remembered_session = True
                 except Exception as error:
                     LOGGER.error("restore_recovery_failed: %s", type(error).__name__)
                     _startup_message(display_error_message(runtime.error))
                     return 1
                 continue
+            if (runtime.error is not None and runtime.error.code in DATABASE_RECOVERY_ERROR_CODES
+                    and os.environ.get("QT_QPA_PLATFORM") not in {"offscreen", "minimal"}):
+                from worklogger.composition.startup_recovery import recover_startup_database
+                try:
+                    recovered = recover_startup_database(runtime.error, args)
+                except Exception as error:
+                    LOGGER.error("startup_recovery_dialog_failed: %s", type(error).__name__)
+                    _startup_message(display_error_message(runtime.error))
+                    return 1
+                if recovered:
+                    skip_remembered_session = True
+                    continue
+                return 0
             _safe_stdout(_("DESKTOP START FAILED"))
             _startup_message(display_error_message(runtime.error))
             return 1

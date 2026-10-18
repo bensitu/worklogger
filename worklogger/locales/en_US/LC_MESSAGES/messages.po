@@ -400,6 +400,12 @@ msgstr "Checking for updates..."
 msgid "Choose a backup destination different from the active database."
 msgstr "Choose a backup destination different from the active database."
 
+msgid "Choose a compatible SQLite backup or keep the existing files and create an empty database. Your current files will be retained before replacement."
+msgstr "Choose a compatible SQLite backup or keep the existing files and create an empty database. Your current files will be retained before replacement."
+
+msgid "Choose a compatible SQLite database backup, not the active database or a personal cloud backup archive. No replacement was performed."
+msgstr "Choose a compatible SQLite database backup, not the active database or a personal cloud backup archive. No replacement was performed."
+
 msgid "Choose a holiday region to calculate planned work and automatic goals."
 msgstr "Choose a holiday region to calculate planned work and automatic goals."
 
@@ -550,6 +556,9 @@ msgstr "Could not load reports"
 msgid "Create account"
 msgstr "Create account"
 
+msgid "Create an empty database and set up a new account? Existing database files will be retained; records will not be imported automatically."
+msgstr "Create an empty database and set up a new account? Existing database files will be retained; records will not be imported automatically."
+
 msgid "Create record from event"
 msgstr "Create record from event"
 
@@ -621,6 +630,18 @@ msgstr "Data restored. Recovery copy: {path}"
 
 msgid "Database Backup"
 msgstr "Database Backup"
+
+msgid "Database file"
+msgstr "Database file"
+
+msgid "Database recovery"
+msgstr "Database recovery"
+
+msgid "Database recovery could not be completed. Keep the database-recovery directory and any recovery marker. Check free space, file permissions, and whether another program is using the files before retrying."
+msgstr "Database recovery could not be completed. Keep the database-recovery directory and any recovery marker. Check free space, file permissions, and whether another program is using the files before retrying."
+
+msgid "Database replacement was interrupted. The original files are retained in the database-recovery directory. Choose a backup or create an empty database to continue."
+msgstr "Database replacement was interrupted. The original files are retained in the database-recovery directory. Choose a backup or create an empty database to continue."
 
 msgid "Date"
 msgstr "Date"
@@ -876,6 +897,9 @@ msgstr "Excel files (*.xlsx)"
 
 msgid "Existing records"
 msgstr "Existing records"
+
+msgid "Exit"
+msgstr "Exit"
 
 msgid "Export"
 msgstr "Export"
@@ -1161,6 +1185,9 @@ msgstr "June"
 
 msgid "Keep draft"
 msgstr "Keep draft"
+
+msgid "Keep existing database and create new"
+msgstr "Keep existing database and create new"
 
 msgid "Keep restored database"
 msgstr "Keep restored database"
@@ -1717,6 +1744,9 @@ msgstr "Port"
 msgid "Prepared by: {name}"
 msgstr "Prepared by: {name}"
 
+msgid "Preparing the database. Please wait..."
+msgstr "Preparing the database. Please wait..."
+
 msgid "Previous day"
 msgstr "Previous day"
 
@@ -1867,6 +1897,9 @@ msgstr "Refreshing catalog..."
 msgid "Register"
 msgstr "Register"
 
+msgid "Registration is disabled for this installation. Restore a compatible database backup or contact your administrator."
+msgstr "Registration is disabled for this installation. Restore a compatible database backup or contact your administrator."
+
 msgid "Reload saved note"
 msgstr "Reload saved note"
 
@@ -1963,6 +1996,9 @@ msgstr "Restore Data"
 msgid "Restore cancelled"
 msgstr "Restore cancelled"
 
+msgid "Restore from database backup"
+msgstr "Restore from database backup"
+
 msgid "Restore local recovery copy"
 msgstr "Restore local recovery copy"
 
@@ -2034,6 +2070,9 @@ msgstr "SMOKE IMPORT OK"
 
 msgid "SQLite Database (*.db)"
 msgstr "SQLite Database (*.db)"
+
+msgid "SQLite database (*.db *.sqlite *.sqlite3);;All files (*)"
+msgstr "SQLite database (*.db *.sqlite *.sqlite3);;All files (*)"
 
 msgid "Sat"
 msgstr "Sat"
@@ -2434,6 +2473,9 @@ msgstr "The database contains conflicting account identifiers or record links. K
 msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 msgstr "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 
+msgid "The database is ready. Original files are kept in:\n{path}\n\nContinue to account setup or sign-in."
+msgstr "The database is ready. Original files are kept in:\n{path}\n\nContinue to account setup or sign-in."
+
 msgid "The draft could not be read. Your saved note is shown. Reload to discard the unreadable draft."
 msgstr "The draft could not be read. Your saved note is shown. Reload to discard the unreadable draft."
 
@@ -2475,6 +2517,9 @@ msgstr "The saved report is no longer available. Reload the reports and try agai
 
 msgid "The saved sign-in configuration cannot be read. Replace the local Google and Microsoft registrations? The original encrypted file will be retained as a backup."
 msgstr "The saved sign-in configuration cannot be read. Replace the local Google and Microsoft registrations? The original encrypted file will be retained as a backup."
+
+msgid "The selected backup will replace the active database. Existing database files will be retained. Sign in with an account from the backup after recovery. Continue?"
+msgstr "The selected backup will replace the active database. Existing database files will be retained. Sign in with an account from the backup after recovery. Continue?"
 
 msgid "The selected context is too large. Choose a shorter period or exclude optional content."
 msgstr "The selected context is too large. Choose a shorter period or exclude optional content."
@@ -2691,6 +2736,9 @@ msgstr "Unable to open the browser. Check your default browser and try again."
 
 msgid "Unable to open the data directory."
 msgstr "Unable to open the data directory."
+
+msgid "Unable to open the data directory. Use the database path shown above."
+msgstr "Unable to open the data directory. Use the database path shown above."
 
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "Unable to read the model file. Check its access permissions."
@@ -2955,6 +3003,9 @@ msgstr "WorkLogger"
 
 msgid "WorkLogger command line"
 msgstr "WorkLogger command line"
+
+msgid "WorkLogger could not open the database."
+msgstr "WorkLogger could not open the database."
 
 msgid "WorkLogger is already running."
 msgstr "WorkLogger is already running."

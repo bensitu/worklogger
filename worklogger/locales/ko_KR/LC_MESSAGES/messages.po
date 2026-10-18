@@ -400,6 +400,12 @@ msgstr "업데이트 확인 중..."
 msgid "Choose a backup destination different from the active database."
 msgstr "현재 데이터베이스와 다른 백업 위치를 선택하세요."
 
+msgid "Choose a compatible SQLite backup or keep the existing files and create an empty database. Your current files will be retained before replacement."
+msgstr "호환되는 SQLite 백업을 선택하거나 기존 파일을 보관하고 빈 데이터베이스를 만드세요. 교체 전에 현재 파일을 모두 보관합니다."
+
+msgid "Choose a compatible SQLite database backup, not the active database or a personal cloud backup archive. No replacement was performed."
+msgstr "현재 데이터베이스나 개인 클라우드 백업 파일이 아닌 호환되는 SQLite 데이터베이스 백업을 선택하세요. 교체는 수행되지 않았습니다."
+
 msgid "Choose a holiday region to calculate planned work and automatic goals."
 msgstr "예정 근무와 자동 목표를 계산하려면 공휴일 지역을 선택하세요."
 
@@ -550,6 +556,9 @@ msgstr "보고서를 불러올 수 없습니다"
 msgid "Create account"
 msgstr "계정 만들기"
 
+msgid "Create an empty database and set up a new account? Existing database files will be retained; records will not be imported automatically."
+msgstr "빈 데이터베이스를 만들고 새 계정을 설정할까요? 기존 데이터베이스 파일은 보관되지만 기록은 자동으로 가져오지 않습니다."
+
 msgid "Create record from event"
 msgstr "일정에서 기록 만들기"
 
@@ -621,6 +630,18 @@ msgstr "데이터를 복원했습니다. 복구용 사본: {path}"
 
 msgid "Database Backup"
 msgstr "데이터베이스 백업"
+
+msgid "Database file"
+msgstr "데이터베이스 파일"
+
+msgid "Database recovery"
+msgstr "데이터베이스 복구"
+
+msgid "Database recovery could not be completed. Keep the database-recovery directory and any recovery marker. Check free space, file permissions, and whether another program is using the files before retrying."
+msgstr "데이터베이스 복구를 완료하지 못했습니다. database-recovery 폴더와 복구 표시 파일을 보관하세요. 여유 공간, 파일 권한, 다른 프로그램의 파일 사용 여부를 확인한 후 다시 시도하세요."
+
+msgid "Database replacement was interrupted. The original files are retained in the database-recovery directory. Choose a backup or create an empty database to continue."
+msgstr "데이터베이스 교체가 중단되었습니다. 원본 파일은 database-recovery 폴더에 보관되어 있습니다. 백업을 선택하거나 빈 데이터베이스를 만들어 계속하세요."
 
 msgid "Date"
 msgstr "날짜"
@@ -876,6 +897,9 @@ msgstr "Excel 파일 (*.xlsx)"
 
 msgid "Existing records"
 msgstr "기존 기록"
+
+msgid "Exit"
+msgstr "종료"
 
 msgid "Export"
 msgstr "내보내기"
@@ -1161,6 +1185,9 @@ msgstr "6월"
 
 msgid "Keep draft"
 msgstr "초안 유지"
+
+msgid "Keep existing database and create new"
+msgstr "기존 데이터베이스 보관 후 새로 만들기"
 
 msgid "Keep restored database"
 msgstr "복원된 데이터베이스 유지"
@@ -1717,6 +1744,9 @@ msgstr "포트"
 msgid "Prepared by: {name}"
 msgstr "작성자: {name}"
 
+msgid "Preparing the database. Please wait..."
+msgstr "데이터베이스를 준비하고 있습니다. 잠시 기다려 주세요..."
+
 msgid "Previous day"
 msgstr "이전 날"
 
@@ -1867,6 +1897,9 @@ msgstr "모델 목록 새로 고치는 중..."
 msgid "Register"
 msgstr "가입"
 
+msgid "Registration is disabled for this installation. Restore a compatible database backup or contact your administrator."
+msgstr "이 설치 환경에서는 가입이 비활성화되어 있습니다. 호환되는 데이터베이스 백업을 복원하거나 관리자에게 문의하세요."
+
 msgid "Reload saved note"
 msgstr "저장된 메모 다시 불러오기"
 
@@ -1963,6 +1996,9 @@ msgstr "데이터 복원"
 msgid "Restore cancelled"
 msgstr "복원 취소됨"
 
+msgid "Restore from database backup"
+msgstr "데이터베이스 백업에서 복원"
+
 msgid "Restore local recovery copy"
 msgstr "로컬 복구용 사본 복원"
 
@@ -2034,6 +2070,9 @@ msgstr "가져오기 스모크 테스트 성공"
 
 msgid "SQLite Database (*.db)"
 msgstr "SQLite Database (*.db)"
+
+msgid "SQLite database (*.db *.sqlite *.sqlite3);;All files (*)"
+msgstr "SQLite 데이터베이스 (*.db *.sqlite *.sqlite3);;모든 파일 (*)"
 
 msgid "Sat"
 msgstr "토"
@@ -2434,6 +2473,9 @@ msgstr "데이터베이스에 충돌하는 계정 식별자 또는 기록 연결
 msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 msgstr "데이터베이스를 읽을 수 없습니다. 원본 파일은 보존되었습니다. 데이터베이스 복구 안내에 따라 검증된 백업을 복원하세요."
 
+msgid "The database is ready. Original files are kept in:\n{path}\n\nContinue to account setup or sign-in."
+msgstr "데이터베이스가 준비되었습니다. 원본 파일 보관 위치:\n{path}\n\n계정 설정 또는 로그인으로 진행하세요."
+
 msgid "The draft could not be read. Your saved note is shown. Reload to discard the unreadable draft."
 msgstr "초안을 읽을 수 없어 저장된 노트를 표시합니다. 다시 불러오면 읽을 수 없는 초안이 삭제됩니다."
 
@@ -2475,6 +2517,9 @@ msgstr "저장된 보고서를 사용할 수 없습니다. 보고서를 다시 �
 
 msgid "The saved sign-in configuration cannot be read. Replace the local Google and Microsoft registrations? The original encrypted file will be retained as a backup."
 msgstr "저장된 로그인 설정을 읽을 수 없습니다. 로컬 Google 및 Microsoft 앱 등록 설정을 교체하시겠습니까? 원본 암호화 파일은 백업으로 보관됩니다."
+
+msgid "The selected backup will replace the active database. Existing database files will be retained. Sign in with an account from the backup after recovery. Continue?"
+msgstr "선택한 백업으로 현재 데이터베이스를 교체합니다. 기존 데이터베이스 파일은 보관됩니다. 복원 후에는 백업에 있는 계정으로 로그인하세요. 계속할까요?"
 
 msgid "The selected context is too large. Choose a shorter period or exclude optional content."
 msgstr "선택한 컨텍스트가 너무 큽니다. 더 짧은 기간을 선택하거나 선택적 내용을 제외하세요."
@@ -2691,6 +2736,9 @@ msgstr "브라우저를 열 수 없습니다. 기본 브라우저를 확인하�
 
 msgid "Unable to open the data directory."
 msgstr "데이터 폴더를 열 수 없습니다."
+
+msgid "Unable to open the data directory. Use the database path shown above."
+msgstr "데이터 폴더를 열 수 없습니다. 위에 표시된 데이터베이스 경로를 사용하세요."
 
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "모델 파일을 읽지 못했습니다. 접근 권한을 확인하세요."
@@ -2955,6 +3003,9 @@ msgstr "WorkLogger"
 
 msgid "WorkLogger command line"
 msgstr "WorkLogger 명령줄"
+
+msgid "WorkLogger could not open the database."
+msgstr "WorkLogger에서 데이터베이스를 열지 못했습니다."
 
 msgid "WorkLogger is already running."
 msgstr "WorkLogger가 이미 실행 중입니다."

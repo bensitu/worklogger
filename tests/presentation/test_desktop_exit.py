@@ -15,6 +15,31 @@ from worklogger.main import DesktopAlreadyRunningError, _acquire_instance_lock, 
 
 
 class DesktopExitTests(unittest.TestCase):
+    def test_database_recovery_retries_with_manual_authentication_and_exit_does_not_retry(self):
+        failure = Result.failure(InfrastructureError("database_schema_unsupported", "database_schema_unsupported"))
+        cancelled = Result.failure(CancellationError("auth_cancelled", "auth_cancelled"))
+        with (patch.dict("os.environ", {"QT_QPA_PLATFORM": "interactive-test"}),
+              patch("worklogger.composition.startup_recovery.recover_startup_database", return_value=True),
+              patch("worklogger.main._acquire_instance_lock"),
+              patch("worklogger.bootstrap.build_authenticated_desktop_runtime", side_effect=[failure, cancelled]) as build):
+            self.assertEqual(run_desktop([]), 0)
+            self.assertTrue(build.call_args_list[1].args[0].skip_remembered_session)
+        with (patch.dict("os.environ", {"QT_QPA_PLATFORM": "interactive-test"}),
+              patch("worklogger.composition.startup_recovery.recover_startup_database", return_value=False)):
+            self.assertEqual(self.run_with_results(failure), (0, "", 1))
+
+    def test_unusable_interrupted_restore_offers_backup_or_new_database(self):
+        from worklogger.domain.shared.recovery import RestoreRecoveryChoices
+        failure = Result.failure(InfrastructureError("restore_pending", "restore_pending"))
+        with (patch.dict("os.environ", {"QT_QPA_PLATFORM": "interactive-test"}),
+              patch("worklogger.bootstrap._application"),
+              patch("worklogger.infrastructure.language_preferences.initialize_language"),
+              patch("worklogger.infrastructure.database.restore_recovery.inspect_pending_restore",
+                    return_value=RestoreRecoveryChoices(False, False)),
+              patch("worklogger.composition.startup_recovery.recover_startup_database", return_value=False) as recover):
+            self.assertEqual(self.run_with_results(failure), (0, "", 1))
+            recover.assert_called_once()
+
     def test_startup_verification_releases_workers_before_inference_resources(self):
         from worklogger.main import smoke_runtime_check
 

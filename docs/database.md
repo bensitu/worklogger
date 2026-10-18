@@ -60,6 +60,13 @@ ranges, while two captured occurrences of a repeated DST hour can remain distinc
 
 ## Compatibility
 
+Database startup recovery validates replacements on a separate copy before any
+active files are moved. Original file groups are retained in a unique
+`database-recovery` subdirectory. A replacement marker prevents initialization
+against partially moved files after interruption. Recovery retains the desktop
+instance lock and requires manual account authentication afterward; it does not
+bypass passwords or merge accounts. See [startup recovery](troubleshooting.md#missing-data-or-database-errors).
+
 Startup checks the stored structure and ledger against supported contracts.
 Missing keys/columns, unknown layouts, executable schema objects, and unknown
 future versions are rejected rather than reset.

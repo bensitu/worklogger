@@ -42,6 +42,33 @@ Do not delete a database to fix a schema or integrity error. Close the applicati
 preserve the database and any journal files or backups, and inspect a copy.
 Unsupported layouts are rejected without resetting data. See [database handling](database.md).
 
+If database validation prevents startup, the recovery window shows the database
+path and offers **Open data directory**, **Restore from database backup**,
+**Keep existing database and create new**, and **Exit**. Exit is the default;
+opening the directory or cancelling confirmation does not replace the database.
+
+Restore accepts a compatible SQLite database backup, including a supported
+v3.3.3 database. It validates and upgrades a separate copy before replacement,
+including committed data in the backup's WAL. A personal cloud backup archive is
+not a SQLite database and cannot be restored through this window. After recovery,
+sign in with an account from the backup. Creating a new database opens account
+setup instead; it does not import earlier records. Deployments that disable
+self-registration also disable this creation action; contact the administrator.
+
+Both actions retain the previous database, WAL/SHM files, and any interrupted
+restore files together in a unique subdirectory of **database-recovery**, beside
+the active database. These retained originals are not automatically rotated.
+Keep this directory until the recovered data has been checked. Other backups,
+models, and device credentials are not deleted. If replacement is interrupted,
+`worklog.db.startup-recovery.json` blocks automatic database initialization; the
+next launch returns to recovery. Preserve this marker and all retained files.
+Do not delete the marker as a substitute for recovery.
+
+Packaged applications use the OS user's application-local data directory, not
+normally the executable directory. Changing or extracting the executable again
+does not replace its active database. A prepared new database prevents automatic
+reimport of a legacy database located beside the executable.
+
 Restore requires administrator permission and the same login ID/account ID in
 the backup. It replaces the whole database and ends the session.
 A `.pre_restore` file means replacement needs recovery; preserve it before taking

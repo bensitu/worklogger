@@ -398,6 +398,12 @@ msgstr ""
 msgid "Choose a backup destination different from the active database."
 msgstr ""
 
+msgid "Choose a compatible SQLite backup or keep the existing files and create an empty database. Your current files will be retained before replacement."
+msgstr ""
+
+msgid "Choose a compatible SQLite database backup, not the active database or a personal cloud backup archive. No replacement was performed."
+msgstr ""
+
 msgid "Choose a holiday region to calculate planned work and automatic goals."
 msgstr ""
 
@@ -548,6 +554,9 @@ msgstr ""
 msgid "Create account"
 msgstr ""
 
+msgid "Create an empty database and set up a new account? Existing database files will be retained; records will not be imported automatically."
+msgstr ""
+
 msgid "Create record from event"
 msgstr ""
 
@@ -618,6 +627,18 @@ msgid "Data restored. Recovery copy: {path}"
 msgstr ""
 
 msgid "Database Backup"
+msgstr ""
+
+msgid "Database file"
+msgstr ""
+
+msgid "Database recovery"
+msgstr ""
+
+msgid "Database recovery could not be completed. Keep the database-recovery directory and any recovery marker. Check free space, file permissions, and whether another program is using the files before retrying."
+msgstr ""
+
+msgid "Database replacement was interrupted. The original files are retained in the database-recovery directory. Choose a backup or create an empty database to continue."
 msgstr ""
 
 msgid "Date"
@@ -873,6 +894,9 @@ msgid "Excel files (*.xlsx)"
 msgstr ""
 
 msgid "Existing records"
+msgstr ""
+
+msgid "Exit"
 msgstr ""
 
 msgid "Export"
@@ -1158,6 +1182,9 @@ msgid "June"
 msgstr ""
 
 msgid "Keep draft"
+msgstr ""
+
+msgid "Keep existing database and create new"
 msgstr ""
 
 msgid "Keep restored database"
@@ -1715,6 +1742,9 @@ msgstr ""
 msgid "Prepared by: {name}"
 msgstr ""
 
+msgid "Preparing the database. Please wait..."
+msgstr ""
+
 msgid "Previous day"
 msgstr ""
 
@@ -1865,6 +1895,9 @@ msgstr ""
 msgid "Register"
 msgstr ""
 
+msgid "Registration is disabled for this installation. Restore a compatible database backup or contact your administrator."
+msgstr ""
+
 msgid "Reload saved note"
 msgstr ""
 
@@ -1961,6 +1994,9 @@ msgstr ""
 msgid "Restore cancelled"
 msgstr ""
 
+msgid "Restore from database backup"
+msgstr ""
+
 msgid "Restore local recovery copy"
 msgstr ""
 
@@ -2031,6 +2067,9 @@ msgid "SMOKE IMPORT OK"
 msgstr ""
 
 msgid "SQLite Database (*.db)"
+msgstr ""
+
+msgid "SQLite database (*.db *.sqlite *.sqlite3);;All files (*)"
 msgstr ""
 
 msgid "Sat"
@@ -2432,6 +2471,9 @@ msgstr ""
 msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 msgstr ""
 
+msgid "The database is ready. Original files are kept in:\n{path}\n\nContinue to account setup or sign-in."
+msgstr ""
+
 msgid "The draft could not be read. Your saved note is shown. Reload to discard the unreadable draft."
 msgstr ""
 
@@ -2472,6 +2514,9 @@ msgid "The saved report is no longer available. Reload the reports and try again
 msgstr ""
 
 msgid "The saved sign-in configuration cannot be read. Replace the local Google and Microsoft registrations? The original encrypted file will be retained as a backup."
+msgstr ""
+
+msgid "The selected backup will replace the active database. Existing database files will be retained. Sign in with an account from the backup after recovery. Continue?"
 msgstr ""
 
 msgid "The selected context is too large. Choose a shorter period or exclude optional content."
@@ -2688,6 +2733,9 @@ msgid "Unable to open the browser. Check your default browser and try again."
 msgstr ""
 
 msgid "Unable to open the data directory."
+msgstr ""
+
+msgid "Unable to open the data directory. Use the database path shown above."
 msgstr ""
 
 msgid "Unable to read the model file. Check its access permissions."
@@ -2952,6 +3000,9 @@ msgid "WorkLogger"
 msgstr ""
 
 msgid "WorkLogger command line"
+msgstr ""
+
+msgid "WorkLogger could not open the database."
 msgstr ""
 
 msgid "WorkLogger is already running."

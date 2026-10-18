@@ -400,6 +400,12 @@ msgstr "正在检查更新..."
 msgid "Choose a backup destination different from the active database."
 msgstr "请选择不同于当前数据库的备份位置。"
 
+msgid "Choose a compatible SQLite backup or keep the existing files and create an empty database. Your current files will be retained before replacement."
+msgstr "请选择兼容的 SQLite 备份，或保留现有文件并创建空数据库。替换前会完整保留当前文件。"
+
+msgid "Choose a compatible SQLite database backup, not the active database or a personal cloud backup archive. No replacement was performed."
+msgstr "请选择兼容的 SQLite 数据库备份，而不是当前数据库或个人云备份归档。尚未执行替换。"
+
 msgid "Choose a holiday region to calculate planned work and automatic goals."
 msgstr "请选择节假日地区，以计算计划工作与自动目标。"
 
@@ -550,6 +556,9 @@ msgstr "无法加载报表"
 msgid "Create account"
 msgstr "创建账户"
 
+msgid "Create an empty database and set up a new account? Existing database files will be retained; records will not be imported automatically."
+msgstr "是否创建空数据库并设置新账户？现有数据库文件会保留，但不会自动导入原有记录。"
+
 msgid "Create record from event"
 msgstr "从日程创建记录"
 
@@ -621,6 +630,18 @@ msgstr "数据已恢复。本地恢复副本：{path}"
 
 msgid "Database Backup"
 msgstr "数据库备份"
+
+msgid "Database file"
+msgstr "数据库文件"
+
+msgid "Database recovery"
+msgstr "数据库恢复"
+
+msgid "Database recovery could not be completed. Keep the database-recovery directory and any recovery marker. Check free space, file permissions, and whether another program is using the files before retrying."
+msgstr "无法完成数据库恢复。请保留 database-recovery 目录及恢复标记文件，检查可用空间、文件权限及是否有其他程序占用文件后重试。"
+
+msgid "Database replacement was interrupted. The original files are retained in the database-recovery directory. Choose a backup or create an empty database to continue."
+msgstr "数据库替换已中断。原始文件保留在 database-recovery 目录中，请选择备份或创建空数据库以继续。"
 
 msgid "Date"
 msgstr "日期"
@@ -876,6 +897,9 @@ msgstr "Excel 文件 (*.xlsx)"
 
 msgid "Existing records"
 msgstr "现有记录"
+
+msgid "Exit"
+msgstr "退出"
 
 msgid "Export"
 msgstr "导出"
@@ -1161,6 +1185,9 @@ msgstr "6月"
 
 msgid "Keep draft"
 msgstr "保留草稿"
+
+msgid "Keep existing database and create new"
+msgstr "保留现有数据库并新建"
 
 msgid "Keep restored database"
 msgstr "保留恢复后的数据库"
@@ -1717,6 +1744,9 @@ msgstr "端口"
 msgid "Prepared by: {name}"
 msgstr "编制人：{name}"
 
+msgid "Preparing the database. Please wait..."
+msgstr "正在准备数据库，请稍候……"
+
 msgid "Previous day"
 msgstr "前一天"
 
@@ -1867,6 +1897,9 @@ msgstr "正在刷新模型目录..."
 msgid "Register"
 msgstr "注册"
 
+msgid "Registration is disabled for this installation. Restore a compatible database backup or contact your administrator."
+msgstr "当前部署已关闭注册，请恢复兼容的数据库备份或联系管理员。"
+
 msgid "Reload saved note"
 msgstr "重新加载已保存的便签"
 
@@ -1963,6 +1996,9 @@ msgstr "恢复数据"
 msgid "Restore cancelled"
 msgstr "已取消恢复"
 
+msgid "Restore from database backup"
+msgstr "从数据库备份恢复"
+
 msgid "Restore local recovery copy"
 msgstr "恢复本地恢复副本"
 
@@ -2034,6 +2070,9 @@ msgstr "导入检查通过"
 
 msgid "SQLite Database (*.db)"
 msgstr "SQLite Database (*.db)"
+
+msgid "SQLite database (*.db *.sqlite *.sqlite3);;All files (*)"
+msgstr "SQLite 数据库 (*.db *.sqlite *.sqlite3);;所有文件 (*)"
 
 msgid "Sat"
 msgstr "六"
@@ -2434,6 +2473,9 @@ msgstr "数据库包含冲突的账户标识或记录关联。请保留原文件
 msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 msgstr "无法读取数据库，原始文件已保留。请按照数据库恢复说明恢复经过验证的备份。"
 
+msgid "The database is ready. Original files are kept in:\n{path}\n\nContinue to account setup or sign-in."
+msgstr "数据库已准备就绪。原始文件保留在：\n{path}\n\n接下来请设置账户或登录。"
+
 msgid "The draft could not be read. Your saved note is shown. Reload to discard the unreadable draft."
 msgstr "无法读取草稿，当前显示已保存的笔记。重新加载可丢弃无法读取的草稿。"
 
@@ -2475,6 +2517,9 @@ msgstr "已保存的报表已不可用。请重新加载报表后再试。"
 
 msgid "The saved sign-in configuration cannot be read. Replace the local Google and Microsoft registrations? The original encrypted file will be retained as a backup."
 msgstr "无法读取已保存的登录配置。是否替换本地 Google 和 Microsoft 应用注册配置？原加密文件将保留为备份。"
+
+msgid "The selected backup will replace the active database. Existing database files will be retained. Sign in with an account from the backup after recovery. Continue?"
+msgstr "所选备份将替换当前数据库，现有数据库文件会保留。恢复后请使用备份中的账户登录。是否继续？"
 
 msgid "The selected context is too large. Choose a shorter period or exclude optional content."
 msgstr "所选上下文过大。请选择更短的时间范围或排除可选内容。"
@@ -2691,6 +2736,9 @@ msgstr "无法打开浏览器。请检查默认浏览器设置后重试。"
 
 msgid "Unable to open the data directory."
 msgstr "无法打开数据目录。"
+
+msgid "Unable to open the data directory. Use the database path shown above."
+msgstr "无法打开数据目录，请使用上方显示的数据库路径。"
 
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "无法读取模型文件，请检查访问权限。"
@@ -2955,6 +3003,9 @@ msgstr "WorkLogger"
 
 msgid "WorkLogger command line"
 msgstr "WorkLogger 命令行"
+
+msgid "WorkLogger could not open the database."
+msgstr "WorkLogger 无法打开数据库。"
 
 msgid "WorkLogger is already running."
 msgstr "WorkLogger 已在运行。"

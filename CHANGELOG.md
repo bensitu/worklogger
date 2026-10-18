@@ -15,6 +15,8 @@ layers. Back up your database before upgrading.
 
 ### Added
 
+- Guided database startup recovery with directory access, validated backup
+  restoration, retained originals, and explicit creation of an empty database.
 - Deployment policies for self-registration and OIDC authentication, with visible
   disabled controls and restrictions on automatic external account creation.
 - An installation-wide personal cloud backup policy that keeps configuration

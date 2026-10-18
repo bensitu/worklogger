@@ -400,6 +400,12 @@ msgstr "更新を確認中..."
 msgid "Choose a backup destination different from the active database."
 msgstr "使用中のデータベースとは異なるバックアップ先を選択してください。"
 
+msgid "Choose a compatible SQLite backup or keep the existing files and create an empty database. Your current files will be retained before replacement."
+msgstr "互換性のある SQLite バックアップを選ぶか、既存のファイルを保持して空のデータベースを作成してください。置き換える前に現在のファイルを保持します。"
+
+msgid "Choose a compatible SQLite database backup, not the active database or a personal cloud backup archive. No replacement was performed."
+msgstr "現在のデータベースや個人用クラウドバックアップではなく、互換性のある SQLite データベースのバックアップを選択してください。置き換えは行われていません。"
+
 msgid "Choose a holiday region to calculate planned work and automatic goals."
 msgstr "予定勤務と自動目標を計算するには、祝日の地域を選択してください。"
 
@@ -550,6 +556,9 @@ msgstr "レポートを読み込めませんでした"
 msgid "Create account"
 msgstr "アカウントを作成"
 
+msgid "Create an empty database and set up a new account? Existing database files will be retained; records will not be imported automatically."
+msgstr "空のデータベースを作成して新しいアカウントを設定しますか？既存のデータベースファイルは保持されますが、記録は自動的に取り込まれません。"
+
 msgid "Create record from event"
 msgstr "予定から記録を作成"
 
@@ -621,6 +630,18 @@ msgstr "データを復元しました。復旧用コピー: {path}"
 
 msgid "Database Backup"
 msgstr "データベースのバックアップ"
+
+msgid "Database file"
+msgstr "データベースファイル"
+
+msgid "Database recovery"
+msgstr "データベースの復旧"
+
+msgid "Database recovery could not be completed. Keep the database-recovery directory and any recovery marker. Check free space, file permissions, and whether another program is using the files before retrying."
+msgstr "データベースの復旧を完了できませんでした。database-recovery フォルダーと復旧マーカーファイルを保持してください。空き容量、ファイルの権限、ほかのプログラムによる使用状況を確認して再試行してください。"
+
+msgid "Database replacement was interrupted. The original files are retained in the database-recovery directory. Choose a backup or create an empty database to continue."
+msgstr "データベースの置き換えが中断されました。元のファイルは database-recovery フォルダーに保持されています。バックアップを選ぶか、空のデータベースを作成して続行してください。"
 
 msgid "Date"
 msgstr "日付"
@@ -876,6 +897,9 @@ msgstr "Excel ファイル (*.xlsx)"
 
 msgid "Existing records"
 msgstr "既存の記録"
+
+msgid "Exit"
+msgstr "終了"
 
 msgid "Export"
 msgstr "エクスポート"
@@ -1161,6 +1185,9 @@ msgstr "6月"
 
 msgid "Keep draft"
 msgstr "下書きを保持"
+
+msgid "Keep existing database and create new"
+msgstr "既存のデータベースを保持して新規作成"
 
 msgid "Keep restored database"
 msgstr "復元後のデータベースを使用"
@@ -1717,6 +1744,9 @@ msgstr "ポート"
 msgid "Prepared by: {name}"
 msgstr "作成者：{name}"
 
+msgid "Preparing the database. Please wait..."
+msgstr "データベースを準備しています。お待ちください..."
+
 msgid "Previous day"
 msgstr "前日"
 
@@ -1867,6 +1897,9 @@ msgstr "モデルカタログを更新中..."
 msgid "Register"
 msgstr "登録"
 
+msgid "Registration is disabled for this installation. Restore a compatible database backup or contact your administrator."
+msgstr "この環境ではアカウント登録が無効です。互換性のあるデータベースバックアップを復元するか、管理者にお問い合わせください。"
+
 msgid "Reload saved note"
 msgstr "保存済みメモを再読み込み"
 
@@ -1963,6 +1996,9 @@ msgstr "データを復元"
 msgid "Restore cancelled"
 msgstr "復元をキャンセルしました"
 
+msgid "Restore from database backup"
+msgstr "データベースのバックアップから復元"
+
 msgid "Restore local recovery copy"
 msgstr "ローカルの復旧用コピーを復元"
 
@@ -2034,6 +2070,9 @@ msgstr "インポートのスモークテスト成功"
 
 msgid "SQLite Database (*.db)"
 msgstr "SQLite Database (*.db)"
+
+msgid "SQLite database (*.db *.sqlite *.sqlite3);;All files (*)"
+msgstr "SQLite データベース (*.db *.sqlite *.sqlite3);;すべてのファイル (*)"
 
 msgid "Sat"
 msgstr "土"
@@ -2434,6 +2473,9 @@ msgstr "データベースに競合するアカウント識別子または記録
 msgid "The database could not be read. The original files have been retained. Restore a verified backup using the database recovery instructions."
 msgstr "データベースを読み込めませんでした。元のファイルは保持されています。データベースの復元手順に従って、検証済みのバックアップを復元してください。"
 
+msgid "The database is ready. Original files are kept in:\n{path}\n\nContinue to account setup or sign-in."
+msgstr "データベースの準備ができました。元のファイルの保存先：\n{path}\n\nアカウント設定またはログインに進んでください。"
+
 msgid "The draft could not be read. Your saved note is shown. Reload to discard the unreadable draft."
 msgstr "下書きを読み込めませんでした。保存済みのノートを表示しています。再読み込みすると、読み込めない下書きを破棄します。"
 
@@ -2475,6 +2517,9 @@ msgstr "保存済みレポートを利用できません。レポートを再読
 
 msgid "The saved sign-in configuration cannot be read. Replace the local Google and Microsoft registrations? The original encrypted file will be retained as a backup."
 msgstr "保存済みのサインイン設定を読み込めません。ローカルの Google と Microsoft のアプリ登録設定を置き換えますか？元の暗号化ファイルはバックアップとして保持されます。"
+
+msgid "The selected backup will replace the active database. Existing database files will be retained. Sign in with an account from the backup after recovery. Continue?"
+msgstr "選択したバックアップで現在のデータベースを置き換えます。既存のデータベースファイルは保持されます。復元後はバックアップ内のアカウントでログインしてください。続行しますか？"
 
 msgid "The selected context is too large. Choose a shorter period or exclude optional content."
 msgstr "選択したコンテキストが大きすぎます。期間を短くするか、任意の内容を除外してください。"
@@ -2691,6 +2736,9 @@ msgstr "ブラウザーを開けません。既定のブラウザーを確認し
 
 msgid "Unable to open the data directory."
 msgstr "データフォルダーを開けません。"
+
+msgid "Unable to open the data directory. Use the database path shown above."
+msgstr "データフォルダーを開けません。上に表示されたデータベースのパスを使用してください。"
 
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "モデルファイルを読み込めませんでした。アクセス権限を確認してください。"
@@ -2955,6 +3003,9 @@ msgstr "WorkLogger"
 
 msgid "WorkLogger command line"
 msgstr "WorkLoggerコマンドライン"
+
+msgid "WorkLogger could not open the database."
+msgstr "WorkLogger はデータベースを開けませんでした。"
 
 msgid "WorkLogger is already running."
 msgstr "WorkLogger は既に起動しています。"

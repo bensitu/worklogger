@@ -9,6 +9,9 @@ def N_(message: str) -> str:
 
 
 _MESSAGE_GROUPS = (
+    (("startup_recovery_pending",), N_("Database replacement was interrupted. The original files are retained in the database-recovery directory. Choose a backup or create an empty database to continue.")),
+    (("startup_backup_invalid",), N_("Choose a compatible SQLite database backup, not the active database or a personal cloud backup archive. No replacement was performed.")),
+    (("startup_recovery_failed",), N_("Database recovery could not be completed. Keep the database-recovery directory and any recovery marker. Check free space, file permissions, and whether another program is using the files before retrying.")),
     (("self_registration_disabled",), N_("Self-registration is disabled by deployment configuration. Contact an administrator for an account.")),
     (("oidc_disabled",), N_("Browser sign-in is disabled by deployment configuration.")),
     (("cloud_configuration_invalid", "cloud_not_configured"), N_("Configure a valid HTTPS cloud destination and backup schedule.")),
