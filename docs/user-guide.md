@@ -3,6 +3,8 @@
 ## Accounts
 
 Create a local account on first use. The first account is an administrator.
+New login IDs may contain up to 120 characters. Existing longer IDs remain valid
+for sign-in and account recovery.
 Passwords require at least eight characters. Recovery uses the saved recovery
 key, so copy or save it privately when it is displayed.
 

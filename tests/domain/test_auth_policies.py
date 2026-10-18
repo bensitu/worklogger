@@ -8,6 +8,7 @@ from worklogger.domain.auth.policies import (
     generate_recovery_key,
     lockout_seconds_for_failure_count,
     normalize_username,
+    require_new_username,
     remember_token_expires_at,
     remember_token_is_expired,
     remember_token_storage_value,
@@ -23,6 +24,10 @@ class AuthPolicyTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             require_password("short")
         self.assertEqual(require_password("secret123"), "secret123")
+        self.assertEqual(require_new_username("a" * 120), "a" * 120)
+        with self.assertRaisesRegex(ValueError, "username_too_long"):
+            require_new_username("a" * 121)
+        self.assertEqual(normalize_username("a" * 121), "a" * 121)
 
     def test_recovery_key_is_grouped_hex_material(self) -> None:
         key = generate_recovery_key(token_bytes=4, group_size=2)

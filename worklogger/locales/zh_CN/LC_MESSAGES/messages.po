@@ -802,6 +802,9 @@ msgstr "请输入有效的恢复密钥。"
 msgid "Enter an HTTP or HTTPS source URL without embedded credentials."
 msgstr "请输入不含嵌入式凭据的 HTTP 或 HTTPS 来源链接。"
 
+msgid "Enter an ID of 120 characters or fewer."
+msgstr "请输入不超过 120 个字符的用户 ID。"
+
 msgid "Enter content before continuing."
 msgstr "请先输入内容。"
 

@@ -800,6 +800,9 @@ msgstr ""
 msgid "Enter an HTTP or HTTPS source URL without embedded credentials."
 msgstr ""
 
+msgid "Enter an ID of 120 characters or fewer."
+msgstr ""
+
 msgid "Enter content before continuing."
 msgstr ""
 

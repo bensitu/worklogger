@@ -250,7 +250,7 @@ def _username_from_profile(profile: ExternalIdentityProfile) -> str:
         character if character.isalnum() or character in {"_", ".", "-"} else "_"
         for character in base.strip().lower()
     ).strip("._-")
-    return cleaned or f"{profile.provider}_user"
+    return cleaned[:107] or f"{profile.provider}_user"
 
 
 def _provider_missing_error() -> ValidationError:

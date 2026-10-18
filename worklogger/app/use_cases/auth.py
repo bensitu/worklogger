@@ -21,6 +21,7 @@ from worklogger.domain.auth.models import RememberedLogin, User
 from worklogger.domain.auth.policies import (
     generate_recovery_key,
     normalize_username,
+    require_new_username,
     remember_token_expires_at,
     remember_token_storage_value,
     require_password,
@@ -68,7 +69,7 @@ class RegisterUserHandler:
     @storage_boundary("auth_state_failed")
     def handle(self, command: RegisterUserCommand) -> Result[RegisteredUser]:
         try:
-            username = normalize_username(command.username)
+            username = require_new_username(command.username)
             password = require_password(command.password)
             recovery_key = generate_recovery_key()
             user = self._credentials.register_user(
@@ -248,7 +249,7 @@ class CreateManagedUserHandler:
                 admin.error or AuthorizationError("admin_required", "admin_required")
             )
         try:
-            username = normalize_username(command.username)
+            username = require_new_username(command.username)
             password = require_password(command.password)
             recovery_key = generate_recovery_key()
             user = self._credentials.create_user(

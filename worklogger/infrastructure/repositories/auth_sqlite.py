@@ -11,6 +11,7 @@ from worklogger.domain.auth.policies import (
     generate_initial_password,
     generate_recovery_key,
     normalize_username,
+    require_new_username,
     remember_token_is_expired,
     username_key,
 )
@@ -70,7 +71,7 @@ class SQLiteAuthRepository:
         local_password_enabled: bool = True,
         self_registration: bool = False,
     ) -> User:
-        username = normalize_username(username)
+        username = require_new_username(username)
         password_hash = self._password_hasher.hash_password(password)
         recovery_hash = None
         recovery_salt = None
@@ -106,7 +107,7 @@ class SQLiteAuthRepository:
         return user
 
     def create_identity_account(self, username, profile):
-        username = normalize_username(username)
+        username = require_new_username(username)
         material = self._password_hasher.hash_password(generate_initial_password())
         now = utc_now_iso()
         with self._connection_factory.transaction(write=True) as connection:

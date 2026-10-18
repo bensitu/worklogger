@@ -802,6 +802,9 @@ msgstr "Enter a valid recovery key."
 msgid "Enter an HTTP or HTTPS source URL without embedded credentials."
 msgstr "Enter an HTTP or HTTPS source URL without embedded credentials."
 
+msgid "Enter an ID of 120 characters or fewer."
+msgstr "Enter an ID of 120 characters or fewer."
+
 msgid "Enter content before continuing."
 msgstr "Enter content before continuing."
 

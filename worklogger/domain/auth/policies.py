@@ -34,6 +34,13 @@ def username_key(username: str) -> str:
     return normalize_username(username).casefold()
 
 
+def require_new_username(username: str) -> str:
+    cleaned = normalize_username(username)
+    if len(cleaned) > 120:
+        raise ValueError("username_too_long")
+    return cleaned
+
+
 def require_password(
     password: str,
     *,

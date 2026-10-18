@@ -93,6 +93,7 @@ _MESSAGE_GROUPS = (
     (("runtime_user_required", "runtime_user_missing", "auth_required"), N_("Please sign in to continue.")),
     (("invalid_credentials",), N_("The ID or password is incorrect.")),
     (("username_exists",), N_("This ID is already in use. Choose a different ID.")),
+    (("username_too_long",), N_("Enter an ID of 120 characters or fewer.")),
     (("username_required", "username_must_be_string"), N_("Enter your ID.")),
     (("password_required", "current_password_required", "new_password_required"), N_("Enter your password.")),
     (("password_too_short",), N_("The password must contain at least {length} characters.")),

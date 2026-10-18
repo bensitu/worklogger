@@ -802,6 +802,9 @@ msgstr "유효한 복구 키를 입력하세요."
 msgid "Enter an HTTP or HTTPS source URL without embedded credentials."
 msgstr "인증 정보가 포함되지 않은 HTTP 또는 HTTPS 출처 URL을 입력하세요."
 
+msgid "Enter an ID of 120 characters or fewer."
+msgstr "ID는 120자 이내로 입력하세요."
+
 msgid "Enter content before continuing."
 msgstr "계속하기 전에 내용을 입력하세요."
 

@@ -37,6 +37,8 @@ layers. Back up your database before upgrading.
 
 ### Changed
 
+- Limited new account IDs to 120 characters while preserving sign-in and
+  recovery for existing account identifiers.
 - Loaded daily records and events with calendar background requests without
   replacing edits typed while waiting, and coalesced saved-settings refreshes.
 - Batched reversible-record reads, reused decoded CSV replacement records, and

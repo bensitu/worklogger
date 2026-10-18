@@ -802,6 +802,9 @@ msgstr "有効なリカバリーキーを入力してください。"
 msgid "Enter an HTTP or HTTPS source URL without embedded credentials."
 msgstr "認証情報を含まない HTTP または HTTPS の参照 URL を入力してください。"
 
+msgid "Enter an ID of 120 characters or fewer."
+msgstr "ID は 120 文字以内で入力してください。"
+
 msgid "Enter content before continuing."
 msgstr "続行する前に内容を入力してください。"
 
