@@ -1,6 +1,7 @@
 """Localized date labels shared by calendar and reporting surfaces."""
 
 from datetime import date
+import math
 
 from worklogger.infrastructure.i18n import _
 
@@ -32,6 +33,8 @@ def period_range_label(start: date, end: date) -> str:
 
 
 def duration_label(hours: float) -> str:
+    if not math.isfinite(hours):
+        return "-"
     minutes = round(abs(hours) * 60)
     label = _("{hours}h {minutes}m").format(hours=minutes // 60, minutes=minutes % 60)
     return "-" + label if hours < 0 and minutes else label

@@ -37,6 +37,9 @@ layers. Back up your database before upgrading.
 
 ### Changed
 
+- Hardened timer recovery, record cursors, classification values, and malformed
+  imports with stable validation errors; preserved work arrangements when
+  resuming saved break timers and added safe translation-catalog fallback.
 - Preserved retriable cloud cleanup after failed publication, normalized malformed
   backup configuration errors, and retained readable machine keys when protection
   upgrades cannot be written.

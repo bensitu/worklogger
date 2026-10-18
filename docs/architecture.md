@@ -88,6 +88,11 @@ queries or individual reads; secure credentials remain on their separate ports.
 
 ## Recording and Reporting
 
+Stored timer decoding reports malformed state through `auto_record_restore_failed`
+without discarding the original payload. Record-search cursors require canonical
+ISO calendar dates to preserve keyset ordering. Corrupt translation catalogs
+fall back to source messages without preventing application startup.
+
 Record editors use view-model operations and the contracts in `app/recording_ports.py`.
 Query, editing, and automatic recording operations have separate typed contracts;
 `TimeEntryOperations` combines them for the editor's account-scoped session.

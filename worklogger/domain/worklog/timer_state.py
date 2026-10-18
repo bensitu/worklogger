@@ -46,6 +46,13 @@ def encode_timer(timer: EntryTimer | None) -> str | None:
 
 
 def decode_timer(raw: str) -> EntryTimer:
+    try:
+        return _decode_timer(raw)
+    except (KeyError, TypeError, ValueError, AttributeError, OverflowError, RecursionError) as error:
+        raise ValueError("auto_record_restore_failed") from error
+
+
+def _decode_timer(raw: str) -> EntryTimer:
     data = timer_payload(raw)
     # Released and previously persisted timers use the original classification key.
     for suffix in ("", "_label", "_category"):
@@ -68,11 +75,11 @@ def decode_timer(raw: str) -> EntryTimer:
     timer = EntryTimer(**data)
     if timer.entry_type.category == EntryCategory.LEAVE:
         raise ValueError("auto_record_restore_failed")
-    if timer.entry_type.category != EntryCategory.WORK and timer.work_mode is not None:
+    if timer.entry_type.category != EntryCategory.WORK and timer.work_mode is not None and not timer.break_until:
         raise ValueError("auto_record_restore_failed")
     if timer.entry_type.category == EntryCategory.BREAK and not timer.break_until and timer.context != WorkContext():
         raise ValueError("auto_record_restore_failed")
-    if (not math.isfinite(timer.legacy_break_hours) or not 0 <= timer.legacy_break_hours <= MAX_SHIFT_HOURS
+    if (type(timer.legacy_break_hours) not in (int, float) or not math.isfinite(timer.legacy_break_hours) or not 0 <= timer.legacy_break_hours <= MAX_SHIFT_HOURS
             or bool(timer.break_until) != bool(timer.resume_type)):
         raise ValueError("auto_record_restore_failed")
     require_entry_content(timer.content)

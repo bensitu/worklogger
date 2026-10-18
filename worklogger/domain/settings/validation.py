@@ -56,7 +56,11 @@ def normalize_setting(key, value):
     if key == LANGUAGE_SETTING_KEY:
         return normalize_language(text)
     if key == PROFILE_AVATAR_SETTING_KEY:
-        if len(text) > 512 * 1024 or text and not base64.b64decode(text, validate=True).startswith(b"\x89PNG\r\n\x1a\n"):
+        try:
+            valid = len(text) <= 512 * 1024 and (not text or base64.b64decode(text, validate=True).startswith(b"\x89PNG\r\n\x1a\n"))
+        except ValueError:
+            valid = False
+        if not valid:
             raise ValueError("avatar_image_invalid")
     elif len(text) > 8192:
         raise ValueError("setting_value_invalid")

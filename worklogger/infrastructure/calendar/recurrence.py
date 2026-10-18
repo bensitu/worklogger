@@ -72,6 +72,8 @@ def _bounded_occurrences(rule, start, remaining):
     until = rule.get("UNTIL", [None])[0]
     if until is not None and not isinstance(until, datetime):
         until = datetime.combine(until, time.min).replace(tzinfo=start.tzinfo)
+    if until is not None and (until.tzinfo is None) != (start.tzinfo is None):
+        raise ValueError("ics_import_failed")
     if until is not None and until > boundary:
         raise ValueError("ics_file_too_large")
     recurrence = rrulestr(rule.to_ical().decode("ascii"), dtstart=start)

@@ -46,7 +46,10 @@ def _holiday_items(module, country, years, subdivision):
     options = {"years": years}
     if subdivision:
         options["subdiv"] = subdivision
-    return tuple(module.country_holidays(country, **options).items())
+    try:
+        return tuple(module.country_holidays(country, **options).items())
+    except (KeyError, ValueError, TypeError, NotImplementedError):
+        raise ValueError("holiday_region_invalid") from None
 
 
 @lru_cache(maxsize=1)

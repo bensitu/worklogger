@@ -45,7 +45,7 @@ class Timesheet:
         return sum(entry.leave_hours(standard_hours=self.standard_hours) for entry in self.entries)
 
     def record_status(self, entry):
-        if entry.ended_at is not None:
+        if entry.ended_at is not None and entry.ended_at.tzinfo is not None and entry.ended_at.utcoffset() is not None:
             return "scheduled" if entry.ended_at > self.generated_at else "recorded"
         if entry.day > self.generated_at.date():
             return "scheduled"

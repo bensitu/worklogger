@@ -19,7 +19,7 @@ def validate_https_url(url: str, *, public_only: bool = False) -> str:
     raw = str(url).strip()
     parsed = urlparse(raw)
     if (parsed.scheme.lower() != "https" or not parsed.hostname or parsed.username is not None
-            or parsed.password is not None or parsed.fragment or any(ord(char) < 32 for char in raw)):
+            or parsed.password is not None or parsed.fragment or any(ord(char) < 32 or ord(char) == 127 for char in raw)):
         raise ValueError("https_url_invalid")
     if parsed.port is not None and not 1 <= parsed.port <= 65535:
         raise ValueError("https_url_invalid")

@@ -41,7 +41,7 @@ def split_entry_at(record: WorkLog, cut: datetime) -> tuple[WorkLog, WorkLog]:
 def merge_entries(left: WorkLog, right: WorkLog) -> WorkLog:
     first = entry_interval(left) if left.started_at else TimeRange(left.start_time, left.end_time).as_datetimes(left.day) if left.has_times else None
     second = entry_interval(right) if right.started_at else TimeRange(right.start_time, right.end_time).as_datetimes(right.day) if right.has_times else None
-    if (left.entries or right.entries or first is None or second is None or first[1] != second[0]
+    if (left.user_id != right.user_id or left.entries or right.entries or first is None or second is None or first[1] != second[0]
             or left.entry_type != right.entry_type or left.work_mode != right.work_mode or left.context != right.context
             or bool(left.started_at) != bool(right.started_at)):
         raise ValueError("record_merge_invalid")

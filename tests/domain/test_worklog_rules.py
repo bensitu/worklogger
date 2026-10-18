@@ -21,6 +21,20 @@ from worklogger.domain.worklog.rules import (
 
 
 class WorkLogRuleTests(unittest.TestCase):
+    def test_record_search_requires_canonical_cursor_dates(self):
+        from worklogger.domain.worklog.search import EntryCursor
+        self.assertEqual(EntryCursor("2026-10-18", "09:00", 1).day, "2026-10-18")
+        for value in ("20261018", "2026-W42-7", None, "invalid"):
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "record_search_invalid"):
+                EntryCursor(value, "09:00", 1)
+
+    def test_merge_rejects_records_owned_by_different_accounts(self):
+        from worklogger.domain.worklog.editing import merge_entries
+        first = WorkLog(1, date(2026, 10, 18), "09:00", "10:00")
+        other = WorkLog(2, first.day, "10:00", "11:00")
+        with self.assertRaisesRegex(ValueError, "record_merge_invalid"):
+            merge_entries(first, other)
+
     def test_classification_allocations_keep_recorded_duration_and_unknown_arrangements_distinct(self):
         from worklogger.domain.calendar.allocation import allocation_segments, CalendarDimension
 

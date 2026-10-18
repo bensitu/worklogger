@@ -311,7 +311,8 @@ class TimeEntryService:
         record = normalize_work_log(WorkLog(self.user_id, timer.started_at.date(), timer.started_at.strftime("%H:%M"),
             end.strftime("%H:%M"), timer.legacy_break_hours, require_entry_content(content), timer.entry_type,
             started_at=timer.started_at, ended_at=end, capture_id=timer.capture_id,
-            context=timer.context if timer.entry_type.category == EntryCategory.WORK else WorkContext(), work_mode=timer.work_mode))
+            context=timer.context if timer.entry_type.category == EntryCategory.WORK else WorkContext(),
+            work_mode=timer.work_mode if timer.entry_type.category == EntryCategory.WORK else None))
         raw = encode_timer(next_timer)
         saved = self.repository.save_entry(record, timer_change=(self._timer_raw, raw), remember_work_mode=True)
         self.timer, self._timer_raw = next_timer, raw
@@ -350,7 +351,7 @@ class TimeEntryService:
             moment = self.timer.break_until if at_deadline else min(now or self.now(), self.timer.break_until)
             next_timer = EntryTimer(uuid4().hex, moment, self.timer.resume_type, self.timer.resume_content,
                 context=self.timer.context,
-                work_mode={EntryType.REMOTE: WorkMode.REMOTE, EntryType.BUSINESS_TRIP: WorkMode.BUSINESS_TRIP}.get(self.timer.resume_type))
+                work_mode=self.timer.work_mode or {EntryType.REMOTE: WorkMode.REMOTE, EntryType.BUSINESS_TRIP: WorkMode.BUSINESS_TRIP}.get(self.timer.resume_type))
             return self._finish(moment, content, next_timer)
         return self._run(resume)
 

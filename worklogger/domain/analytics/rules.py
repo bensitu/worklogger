@@ -180,6 +180,9 @@ def monthly_chart_data(
     if end < start:
         return ChartDataBundle((), (), frozenset(), (), ())
 
+    if (start.year, start.month) != (end.year, end.month):
+        raise ValueError("analytics_scope_invalid")
+
     first_weekday, days = monthrange(start.year, start.month)
     first = first_weekday if week_start_monday else (first_weekday + 1) % 7
     max_row = (days + first - 1) // 7

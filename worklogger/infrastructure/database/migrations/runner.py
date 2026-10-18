@@ -62,7 +62,7 @@ class MigrationRunner:
                 kind = database_kind(connection, check_data=False)
                 if kind == "current":
                     return ()
-                if self._connection_factory.database_path != ":memory:" and kind != "empty" and any(connection.execute(f'SELECT 1 FROM "{row[0]}" LIMIT 1').fetchone()
+                if self._connection_factory.database_path != ":memory:" and kind != "empty" and any(connection.execute('SELECT 1 FROM "' + row[0].replace('"', '""') + '" LIMIT 1').fetchone()
                         for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name<>'schema_migrations'")):
                     # The writer lock prevents changes while a separate reader snapshots committed data.
                     with closing(sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True)) as source:

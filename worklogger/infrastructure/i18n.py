@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import gettext
+import logging
+import struct
 from functools import lru_cache
 import sys
 import threading
@@ -69,15 +71,19 @@ def _catalog(language: str) -> gettext.NullTranslations:
     path = locales_dir() / language / "LC_MESSAGES" / f"{DOMAIN}.mo"
     try:
         stat = path.stat()
-    except FileNotFoundError:
+    except OSError:
         return gettext.NullTranslations()
     return _read_catalog(str(path), stat.st_mtime_ns, stat.st_size)
 
 
 @lru_cache(maxsize=32)
-def _read_catalog(path: str, modified: int, size: int) -> gettext.GNUTranslations:
-    with Path(path).open("rb") as source:
-        return gettext.GNUTranslations(source)
+def _read_catalog(path: str, modified: int, size: int) -> gettext.NullTranslations:
+    try:
+        with Path(path).open("rb") as source:
+            return gettext.GNUTranslations(source)
+    except (OSError, EOFError, struct.error, UnicodeError, ValueError):
+        logging.getLogger(__name__).warning("translation_catalog_invalid")
+        return gettext.NullTranslations()
 
 
 def _(message: str, *, language: str | None = None) -> str:

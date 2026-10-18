@@ -498,6 +498,20 @@ class TimeEntryTests(unittest.TestCase):
         self.assertEqual(restored.timer.entry_type, EntryType.REMOTE)
         self.assertEqual(len(self.repository.list_for_day(self.user.id, self.now.date())), 2)
 
+    def test_resuming_a_saved_break_preserves_custom_work_arrangement(self):
+        mode = self.service.work_modes.save("Hybrid", "work").value
+        deadline = self.now + timedelta(hours=1)
+        timer = EntryTimer("saved-break-mode", self.now, EntryType.BREAK, break_until=deadline,
+                           resume_type=EntryType.NORMAL, work_mode=mode)
+        self.repository.change_timer(self.user.id, None, encode_timer(timer))
+        restored = self.make_service()
+        self.now = deadline
+        self.assertTrue(restored.advance().ok)
+        self.assertEqual(restored.timer.work_mode, mode)
+        self.assertEqual(self.make_service().timer.work_mode, mode)
+        self.now += timedelta(hours=1)
+        self.assertEqual(restored.finish("Continued work").value.work_mode, mode)
+
     def test_fixed_break_is_saved_immediately_with_captured_times_and_no_timer(self):
         clicked = self.now.replace(hour=23, minute=30, second=17)
         self.now = clicked + timedelta(minutes=1)

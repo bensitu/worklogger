@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from worklogger.presentation.theme.theme_engine import ThemeEngine, contrasting_text_color
 
-from math import ceil, floor, log10
+from math import ceil, floor, log10, isfinite
 
 from PySide6.QtCore import QEvent, QRectF, Qt
 from PySide6.QtGui import QBrush, QColor, QFont, QFontMetrics, QPainter, QPainterPath, QPen
@@ -17,6 +17,8 @@ from worklogger.presentation.date_labels import duration_label
 
 
 def chart_tick_step(maximum: float) -> float:
+    if not isfinite(maximum):
+        maximum = 1.0
     raw = max(1.0, maximum) / 4
     magnitude = 10 ** floor(log10(raw))
     return next(step * magnitude for step in (1, 2, 2.5, 5, 10) if step * magnitude >= raw)
@@ -33,6 +35,9 @@ class ComboChart(QWidget):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     def set_data(self, bundle: ChartDataBundle, *, mode: str = "bar", average: bool = False) -> None:
+        if any(not isfinite(value) for series in (bundle.bar_data, bundle.line_data, bundle.leave_hours_data)
+               for _label, value in series):
+            bundle = ChartDataBundle((), (), frozenset(), (), ())
         self._bundle = bundle
         self._mode = mode if mode in {"bar", "line"} else "bar"
         self._average = average

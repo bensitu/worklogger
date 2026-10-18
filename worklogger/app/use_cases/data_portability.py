@@ -79,7 +79,7 @@ class ImportWorkLogsCsvHandler:
     def handle(self, command: ImportWorkLogsCsvCommand) -> Result[WorkLogCsvImportResult]:
         preview = self.preview(command)
         if not preview.ok or preview.value is None:
-            return Result.failure(preview.error)
+            return Result.failure(preview.error or ValidationError("csv_import_failed", "csv_import_failed"))
         return self.apply(preview.value, overwrite=command.overwrite_existing, replace_dates=command.replace_dates)
 
     def preview(self, command: ImportWorkLogsCsvCommand) -> Result[WorkLogCsvImportPreview]:

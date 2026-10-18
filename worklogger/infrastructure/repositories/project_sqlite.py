@@ -1,11 +1,11 @@
 """Account-isolated work context with optimistic updates and archival."""
 
 from dataclasses import replace
-import json
 import sqlite3
 import unicodedata
 
 from worklogger.domain.projects.models import Project, WorkItem, WorkContext
+from worklogger.domain.worklog.timer_state import timer_payload
 from worklogger.infrastructure.repositories.recent_context_sqlite import KEY, recent_pairs
 
 
@@ -103,7 +103,7 @@ def validate_record_context(connection, record, *, historical=False):
     if record.capture_id:
         timer = connection.execute("SELECT value FROM settings WHERE user_id=? AND key='time_entry_timer'", (record.user_id,)).fetchone()
         if timer:
-            saved = json.loads(timer[0])
+            saved = timer_payload(timer[0])
             captured = saved.get("context") or {}
             unchanged = unchanged or (saved.get("capture_id") == record.capture_id
                 and (captured.get("project_id"), captured.get("work_item_id")) == (context.project_id, context.work_item_id))

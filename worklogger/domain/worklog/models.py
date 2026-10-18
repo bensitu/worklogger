@@ -74,7 +74,7 @@ class CustomEntryType:
 
     def __post_init__(self):
         _validate_custom_definition(self.value, self.label, "entry_type_invalid")
-        if self.category not in {"work", "break", "leave"} or not isinstance(self.revision, int) or self.revision < 0:
+        if self.category not in {"work", "break", "leave"} or type(self.revision) is not int or self.revision < 0:
             raise ValueError("entry_type_invalid")
         object.__setattr__(self, "category", EntryCategory(self.category))
 
@@ -227,7 +227,7 @@ class WorkLog:
         if not self.is_leave:
             return 0.0
         raw = self.raw_hours()
-        return raw if raw > 0 else max(float(standard_hours or DEFAULT_LEAVE_HOURS), 0.0)
+        return raw if raw > 0 else max(float(DEFAULT_LEAVE_HOURS if standard_hours is None else standard_hours), 0.0)
 
     def classified_hours(self, *, standard_leave_hours: float = DEFAULT_LEAVE_HOURS) -> float:
         """Return classified duration without treating break or leave as work."""

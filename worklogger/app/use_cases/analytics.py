@@ -54,6 +54,8 @@ class GetAnalyticsBundleHandler:
 
     def _monthly(self, query: GetAnalyticsBundleQuery) -> ChartDataBundle:
         month = int(query.month or 0)
+        if not 1 <= month <= 12 or type(query.year) is not int or not 1 <= query.year <= 9999:
+            raise ValueError("analytics_scope_invalid")
         _, days = monthrange(query.year, month)
         records = {
             record.day: record

@@ -54,7 +54,7 @@ def monthly_period(year: int, month: int) -> ReportPeriod:
 
 def period_for_day(report_type: str, selected_day: date, week_start_monday: bool = False) -> ReportPeriod:
     normalized = normalize_report_type(report_type)
-    if not isinstance(selected_day, date):
+    if type(selected_day) is not date:
         raise ValueError("report_period_invalid")
     if normalized == "daily":
         return daily_period(selected_day)
@@ -65,6 +65,8 @@ def period_for_day(report_type: str, selected_day: date, week_start_monday: bool
 
 def shift_report_period(day: date, report_type: str, direction: int) -> date:
     report_type = normalize_report_type(report_type)
+    if type(day) is not date or type(direction) is not int:
+        raise ValueError("report_period_invalid")
     try:
         if report_type == "daily":
             return day + timedelta(days=direction)

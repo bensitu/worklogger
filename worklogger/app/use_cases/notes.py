@@ -140,7 +140,8 @@ class DailyNotesService:
     def save_draft(self, day: date, content: str, expected_content: str, sharing: NoteSharing,
                    expected_sharing: NoteSharing = NoteSharing()):
         def save():
-            if len(content.encode("utf-8")) > 1024 * 1024 or len(expected_content.encode("utf-8")) > 1024 * 1024:
+            if (not isinstance(content, str) or not isinstance(expected_content, str)
+                    or len(content.encode("utf-8")) > 1024 * 1024 or len(expected_content.encode("utf-8")) > 1024 * 1024):
                 raise ValueError("note_save_failed")
             raw = json.dumps({"content": content, "expected_content": expected_content,
                               "sharing": {"reports": sharing.reports, "ai": sharing.ai},

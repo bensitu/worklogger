@@ -35,12 +35,15 @@ class RecordReplacementTimeline(QWidget):
         self._zone = records[0].started_at.tzinfo if captured else None
         def period(record):
             if captured:
-                start, end = entry_interval(record)
+                interval = entry_interval(record)
             elif record.has_times:
-                start, end = shift_datetimes(record.day, record.start_time, record.end_time)
+                interval = shift_datetimes(record.day, record.start_time, record.end_time)
             else:
                 start = datetime.combine(record.day, time())
-                end = start + timedelta(days=1)
+                interval = start, start + timedelta(days=1)
+            if interval is None:
+                raise ValueError("record_replacement_invalid")
+            start, end = interval
             return _Period(record, start, end)
         self._existing = tuple(period(item) for item in plan.affected)
         self._incoming = period(plan.incoming)

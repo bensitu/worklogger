@@ -101,8 +101,11 @@ class RecordBoundaryDialog(QDialog):
         original.setMinimumHeight(80)
         original.setMaximumHeight(105)
         root.addWidget(original)
-        self._start, self._end = (entry_interval(record) if record.started_at else
-                                 TimeRange(record.start_time, record.end_time).as_datetimes(record.day))
+        interval = (entry_interval(record) if record.started_at else
+                    TimeRange(record.start_time, record.end_time).as_datetimes(record.day))
+        if interval is None:
+            raise ValueError("record_split_invalid")
+        self._start, self._end = interval
         initial = self._start + (self._end - self._start) / 2
         if historical_break:
             initial = self._start + timedelta(minutes=min(180, max(0, round(record.raw_hours() * 60) - 1)))

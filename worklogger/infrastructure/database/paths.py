@@ -99,8 +99,14 @@ def prune_corrupt_backups(
         ]
     except OSError:
         return
-    backups.sort(key=lambda candidate: (candidate.stat().st_mtime, candidate.name), reverse=True)
-    for old_backup in backups[keep:]:
+    available = []
+    for candidate in backups:
+        try:
+            available.append((candidate.stat().st_mtime, candidate.name, candidate))
+        except OSError:
+            continue
+    available.sort(reverse=True)
+    for _modified, _name, old_backup in available[keep:]:
         try:
             for suffix in ("-wal", "-shm", ""):
                 Path(str(old_backup) + suffix).unlink(missing_ok=True)

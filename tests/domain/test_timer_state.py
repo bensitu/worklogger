@@ -37,9 +37,11 @@ class TimerStateTests(unittest.TestCase):
         self.assertEqual(timer.context, WorkContext())
         self.assertEqual(timer.content, "")
         for changes in ({"started_at": "2026-05-20T09:00:00"}, {"legacy_break_hours": 17},
+                        {"entry_type": None}, {"unexpected": True}, {"legacy_break_hours": "1"},
+                        {"legacy_break_hours": True}, {"context": {"unknown": "value"}},
                         {"entry_type": "paid_leave"}, {"entry_type": "break", "work_mode": "remote"},
                         {"entry_type": "break", "context": {"project_label": "Previous project"}},
                         {"break_until": "2026-05-20T10:00:00+09:00"},
                         {"entry_type": "break", "resume_type": "normal", "break_until": "2026-05-20T14:00:00+09:00"}):
-            with self.subTest(changes=changes), self.assertRaises(ValueError):
+            with self.subTest(changes=changes), self.assertRaisesRegex(ValueError, "^auto_record_restore_failed$"):
                 decode_timer(json.dumps(payload | changes))

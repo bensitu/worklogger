@@ -21,7 +21,10 @@ class EntrySelectionResolver:
             return self.entry_types.resolve(value, original)
         if isinstance(original, CustomEntryType) and original.value == value:
             return original
-        definition = EntryType(value)
+        try:
+            definition = EntryType(value)
+        except (TypeError, ValueError):
+            raise ValueError("entry_type_unavailable") from None
         if definition.is_legacy and definition != original:
             raise ValueError("entry_type_unavailable")
         return definition

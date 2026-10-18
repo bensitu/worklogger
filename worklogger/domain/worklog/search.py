@@ -40,7 +40,11 @@ class EntryCursor:
     entry_id: int
 
     def __post_init__(self):
-        date.fromisoformat(self.day)
+        try:
+            if date.fromisoformat(self.day).isoformat() != self.day:
+                raise ValueError
+        except (TypeError, ValueError):
+            raise ValueError("record_search_invalid") from None
         if not isinstance(self.start, str) or len(self.start) > 16 or type(self.entry_id) is not int or self.entry_id < 1:
             raise ValueError("record_search_invalid")
 

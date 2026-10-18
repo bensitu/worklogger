@@ -3,6 +3,7 @@
 from datetime import timedelta
 from html import escape
 import math
+import re
 from pathlib import Path
 
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
@@ -48,7 +49,7 @@ class TimesheetXlsxExporter:
             from openpyxl.utils import get_column_letter
             workbook = Workbook()
             page = workbook.active
-            page.title = _("Timesheet")[:31]
+            page.title = re.sub(r"[:\\/?*\[\]]", "_", _("Timesheet")).strip("'")[:31] or "Timesheet"
             page.merge_cells("A1:K1")
             page["A1"] = _("Timesheet")
             page["A1"].font = Font(name="Arial", size=18, bold=True, color="1E2035")
