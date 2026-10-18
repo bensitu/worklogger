@@ -49,6 +49,13 @@ callbacks; workflow controllers coordinate dialogs and jobs. The calendar
 coordinator connects query results to views. The main window owns navigation,
 themes, and lifecycle rather than database algorithms.
 
+Full and minimal windows share `shell/lifecycle_controller.py` for residency,
+restore/quit actions, date polling, and presentation cleanup. Window-specific
+unsaved-change checks remain explicit callbacks. Hiding a window pauses date
+polling, showing it refreshes the current date, and accepted closure stops both
+date polling and editor ticks without changing the persisted recording state.
+Record-discard prompts share the presentation feedback helper.
+
 Settings workflows bind directly to `SettingsPage`, including the page hosted by
 `SettingsDialog`. The shared page exposes named methods for service availability,
 busy states, and processing feedback. Controllers do not probe widget attributes

@@ -1,10 +1,17 @@
-"""Consistent information dialogs with readable text and comfortable spacing."""
+"""Shared information dialogs and record-editing confirmations."""
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox, QSizePolicy, QSpacerItem
 
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets.assets import apply_window_icon
+
+
+def confirm_discard_record_changes(parent) -> bool:
+    return QMessageBox.question(parent, _("Discard changes?"),
+        _("You have unsaved work log changes. Discard them?"),
+        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes
 
 
 def information_dialog(parent, title: str, message: str, *, detail: str = "") -> QMessageBox:

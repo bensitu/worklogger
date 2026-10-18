@@ -25,6 +25,7 @@ from worklogger.presentation.entry_type_labels import classification_label
 from worklogger.presentation.processing import TextProcessingTask
 from worklogger.presentation.job_runner import owned_callback
 from worklogger.presentation.widgets.processing_progress import ProcessingProgress
+from worklogger.presentation.widgets.feedback import confirm_discard_record_changes
 from worklogger.presentation.theme.widget_style import set_style_property
 
 
@@ -683,8 +684,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         return True
 
     def _confirm_discard(self):
-        return QMessageBox.question(self, _("Discard changes?"), _("You have unsaved work log changes. Discard them?"),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes
+        return confirm_discard_record_changes(self)
 
 
     def delete_entry(self, record: WorkLog):

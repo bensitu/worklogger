@@ -37,6 +37,8 @@ layers. Back up your database before upgrading.
 
 ### Changed
 
+- Shared full/minimal window residency and date-polling lifecycle, including
+  explicit timer cleanup and a common record-discard confirmation.
 - Consolidated selection controls, scrollbars, icon actions, and compact sizing
   into shared theme rules while retaining existing colors and interaction states.
 - Coalesced settings navigation text layout during selection, resize, and theme

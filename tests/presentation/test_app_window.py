@@ -188,6 +188,7 @@ def _window(
     calendar_events: tuple[CalendarEvent, ...] | None = None,
     background_service=None,
     background_images_available: bool = False,
+    today: date | None = date(2026, 4, 13),
 ) -> AppWindow:
     month_records = month_handler or GetMonthRecordsHandler(repository)
     calendar_view_model = CalendarViewModel(
@@ -215,7 +216,7 @@ def _window(
         ),
         config=AppWindowConfig(
             selected_day=date(2026, 4, 20),
-            today=date(2026, 4, 13),
+            today=today,
             account_name=account_name,
             confirm_discard_changes=confirm_discard_changes,
             monthly_target_hours=40.0,
@@ -234,6 +235,25 @@ def _window(
 
 
 class AppWindowTests(unittest.TestCase):
+    def test_both_views_pause_date_polling_when_hidden_and_stop_on_close(self):
+        for minimal in (False, True):
+            with self.subTest(minimal=minimal):
+                records = MemoryWorkLogRepository()
+                window = (MinimalView(time_entry_view_model=_entry_model(records)) if minimal else
+                          _window(records, today=None))
+                window.show()
+                self._app.processEvents()
+                timer = window.lifecycle_controller._date_timer
+                self.assertTrue(timer.isActive())
+                window.hide()
+                self.assertFalse(timer.isActive())
+                window.show()
+                self._app.processEvents()
+                self.assertTrue(timer.isActive())
+                window.close()
+                self.assertFalse(timer.isActive())
+                self.assertFalse(window.entry_panel.auto_timer.isActive())
+
     def test_initial_overview_load_preserves_record_editing(self):
         from worklogger.app.job_runner import CancellationToken, JobHandle
 
@@ -836,7 +856,7 @@ class AppWindowTests(unittest.TestCase):
                             confirm_discard_changes=lambda: False))
             view.refresh()
             view.entry_panel.content_input.setPlainText("Keep this draft")
-            view._quit_from_residency()
+            view.lifecycle_controller.request_quit()
             controller.request_quit.assert_not_called()
             self.assertEqual(view.entry_panel.content_input.toPlainText(), "Keep this draft")
             view.entry_panel.discard_changes()

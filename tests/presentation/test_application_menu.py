@@ -164,7 +164,7 @@ class ApplicationMenuTests(unittest.TestCase):
                 menu = window.application_menu or ApplicationMenuController(
                     window, new_record=window.new_record, save_target=lambda: window.entry_panel.save_button,
                     settings=None, routes={"calendar": None, "analytics": None, "reports": None, "settings": None},
-                    quit_app=window._quit_from_residency,
+                    quit_app=window.lifecycle_controller.request_quit,
                 )
                 window.refresh()
                 window.show()

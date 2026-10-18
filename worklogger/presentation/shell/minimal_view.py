@@ -6,14 +6,13 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import date, timedelta
 
-from PySide6.QtCore import QEvent, QTimer, Qt, Signal
+from PySide6.QtCore import QTimer, Qt, Signal
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QApplication,
     QGridLayout,
     QHBoxLayout,
     QLabel,
-    QMessageBox,
     QPushButton,
     QSizePolicy,
     QScrollArea,
@@ -26,11 +25,13 @@ from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.settings import SettingsWorkflow
 from worklogger.presentation.shell.appearance_controller import WindowAppearanceController
+from worklogger.presentation.shell.lifecycle_controller import WindowLifecycleController
 from worklogger.presentation.shell.menu_bar import install_application_menu
 from worklogger.presentation.shell.residency import QtResidencyController
 from worklogger.presentation.theme.background import MainBackgroundWidget
 from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
 from worklogger.presentation.widgets.assets import apply_window_icon
+from worklogger.presentation.widgets.feedback import confirm_discard_record_changes
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
 from worklogger.presentation.widgets.date_picker import DatePickerButton
@@ -105,30 +106,16 @@ class MinimalView(QWidget):
         self._connect_signals()
         self.resize(680, 760)
         self.setMinimumSize(640, 640)
-        if hasattr(self._residency_controller, "notify_timer_reminder"):
-            self.entry_panel.reminder.connect(self._residency_controller.notify_timer_reminder)
-        self._date_timer = QTimer(self)
-        self._date_timer.setInterval(60_000)
-        self._date_timer.timeout.connect(self._update_today)
-        if self._config.today is None:
-            self._date_timer.start()
-        if self._residency_controller is not None:
-            self._residency_controller.attach(
-                self,
-                open_callback=self._restore_from_residency,
-                quit_callback=self._quit_from_residency,
-            )
-            if hasattr(self._residency_controller, "bind_recording"):
-                self._residency_controller.bind_recording(start_callback=self.entry_panel.start_recording,
-                    end_callback=self.entry_panel.end_recording, state_probe=self.entry_panel.recording_action_state)
-                self.entry_panel.recording_changed.connect(self._residency_controller.update_recording_actions)
-                self.entry_panel.busy_changed.connect(lambda _busy: self._residency_controller.update_recording_actions())
+        self.lifecycle_controller = WindowLifecycleController(self, self.entry_panel,
+            residency=self._residency_controller, confirm_close=self._confirm_discard_changes_if_needed,
+            update_today=self._update_today, poll_dates=self._config.today is None,
+            close_callbacks=(self.appearance_controller.dispose, self.date_picker_holidays.dispose))
         self.application_menu = install_application_menu(
             self, new_record=self.new_record, save_target=lambda: self.entry_panel.save_button,
             settings=self.open_settings if self._settings_workflow is not None else None,
             routes={"calendar": None, "analytics": None, "reports": None,
                     "settings": self.open_settings if self._settings_workflow is not None else None},
-            quit_app=self._quit_from_residency,
+            quit_app=self.lifecycle_controller.request_quit,
         )
         if self.application_menu is not None:
             self.entry_panel.busy_changed.connect(self.application_menu.refresh)
@@ -307,43 +294,10 @@ class MinimalView(QWidget):
         self.refresh()
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        if not self._confirm_discard_changes_if_needed():
+        if not self.lifecycle_controller.prepare_close():
             event.ignore()
             return
-        if (
-            self._residency_controller is not None
-            and not self._residency_controller.quit_requested
-            and self._residency_controller.should_keep_resident()
-        ):
-            self.hide()
-            event.ignore()
-            return
-        if isinstance(self.entry_panel, TimeEntryPanel):
-            self.entry_panel.auto_timer.stop()
-        self.appearance_controller.dispose()
-        self.date_picker_holidays.dispose()
-        self._date_timer.stop()
         super().closeEvent(event)
-
-    def changeEvent(self, event: QEvent) -> None:
-        super().changeEvent(event)
-        if (
-            event.type() == QEvent.Type.WindowStateChange
-            and self.isMinimized()
-            and self._residency_controller is not None
-            and self._residency_controller.should_keep_resident()
-        ):
-            self.hide()
-
-    def hideEvent(self, event):
-        self._date_timer.stop()
-        super().hideEvent(event)
-
-    def showEvent(self, event):
-        if self._config.today is None:
-            self._date_timer.start()
-            self._update_today()
-        super().showEvent(event)
 
     def _confirm_discard_changes_if_needed(self) -> bool:
         modal = QApplication.activeModalWidget()
@@ -363,7 +317,7 @@ class MinimalView(QWidget):
         if self._config.confirm_discard_changes is not None:
             confirmed = bool(self._config.confirm_discard_changes())
         else:
-            confirmed = self._ask_discard_changes()
+            confirmed = confirm_discard_record_changes(self)
         if not confirmed:
             self._set_status(_("Unsaved changes"))
             return False
@@ -371,16 +325,6 @@ class MinimalView(QWidget):
             self.entry_panel.discard_changes()
         self._entry_dirty = False
         return True
-
-    def _ask_discard_changes(self) -> bool:
-        answer = QMessageBox.question(
-            self,
-            _("Discard changes?"),
-            _("You have unsaved work log changes. Discard them?"),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
-        )
-        return answer == QMessageBox.StandardButton.Yes
 
     def _set_error(self, error: AppError | None) -> None:
         self._last_error = error
@@ -471,15 +415,3 @@ class MinimalView(QWidget):
         self.entry_panel.set_recent_context_visible(state.show_recent_context)
         self._time_entry_view_model.set_timer_reminders(state.timer_reminder_hours, state.continuous_timer_reminder_hours)
         self.apply_theme()
-
-    def _restore_from_residency(self) -> None:
-        self.showNormal()
-        self.raise_()
-        self.activateWindow()
-
-    def _quit_from_residency(self) -> None:
-        if not self._confirm_discard_changes_if_needed():
-            return
-        if self._residency_controller is not None:
-            self._residency_controller.request_quit()
-        self.close()
