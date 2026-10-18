@@ -41,6 +41,20 @@ from worklogger.presentation.job_runner import ImmediateJobRunner, QtJobRunner
 
 
 class ReportHistoryTests(unittest.TestCase):
+    def test_custom_page_size_keeps_stable_paging_and_searches_the_entire_range(self):
+        reports = [self.seed("daily", "Older matching content" if index == 0 else "Other content") for index in range(5)]
+        service = ReportHistoryService(self.user.id, self.repository, page_size=2)
+        criteria = ReportHistoryFilter("daily", date.min, date.max)
+        first = service.browse(criteria).value
+        second = service.browse(criteria, cursor=first.next_cursor).value
+        third = service.browse(criteria, cursor=second.next_cursor).value
+        self.assertEqual([len(page.reports) for page in (first, second, third)], [2, 2, 1])
+        self.assertEqual([row.id for page in (first, second, third) for row in page.reports],
+                         [row.id for row in reversed(reports)])
+        self.assertIsNone(third.next_cursor)
+        found = service.browse(replace(criteria, text="Older matching")).value
+        self.assertEqual(([row.id for row in found.reports], found.total), ([reports[0].id], 1))
+
     def test_report_history_pages_sort_and_search_all_owned_summaries(self):
         reports = []
         for index in range(61):

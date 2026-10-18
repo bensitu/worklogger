@@ -13,6 +13,11 @@
     "download_timeout_seconds": 30,
     "catalog_timeout_seconds": 15
   },
+  "pagination": {
+    "notes_page_size": 50,
+    "records_page_size": 100,
+    "reports_page_size": 50
+  },
   "cloud_backup": {
     "startup_delay_seconds": 300,
     "check_interval_seconds": 60,

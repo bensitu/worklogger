@@ -39,7 +39,8 @@ class TimeEntryService:
                  entry_types: EntryTypeOperations | None = None,
                  work_modes: WorkModeOperations | None = None,
                  projects: ProjectOperations | None = None,
-                 initial_state: RecordingState | None = None) -> None:
+                 initial_state: RecordingState | None = None,
+                 search_page_size: int = 100) -> None:
         self.user_id = user_id
         self.repository = repository
         self.settings = settings
@@ -47,6 +48,7 @@ class TimeEntryService:
         self.entry_types = entry_types
         self.work_modes = work_modes
         self.projects = projects
+        self._search_page_size = search_page_size
         self.local_timezone = local_timezone
         self._clock = clock or (lambda: datetime.now().astimezone())
         self.timer: EntryTimer | None = None
@@ -84,7 +86,7 @@ class TimeEntryService:
         return TimeEntryService(user_id=self.user_id, repository=self.repository,
             settings=self.settings, local_timezone=self.local_timezone, clock=self._clock,
             calendar_events=self.calendar_events, entry_types=self.entry_types, work_modes=self.work_modes,
-            projects=self.projects, initial_state=state)
+            projects=self.projects, initial_state=state, search_page_size=self._search_page_size)
 
     @property
     def events_deletable(self) -> bool:
@@ -140,7 +142,8 @@ class TimeEntryService:
         if not self.search_available:
             return Result.failure(ValidationError("record_search_unavailable", "record_search_unavailable"))
         try:
-            return Result.success(self.repository.search_entries(self.user_id, criteria, cursor=cursor))
+            return Result.success(self.repository.search_entries(self.user_id, criteria, cursor=cursor,
+                                                               limit=self._search_page_size))
         except ValueError:
             return Result.failure(ValidationError("record_search_invalid", "record_search_invalid"))
         except Exception as error:

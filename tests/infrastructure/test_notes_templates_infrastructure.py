@@ -133,6 +133,13 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
             self.assertEqual([note.day for note in escaped.notes], [legacy_day])
             self.assertEqual(notes.browse(owner.id, NoteHistoryFilter(text="Private")).total, 0)
             self.assertEqual(notes.browse(owner.id, NoteHistoryFilter(text="missing")).notes, ())
+            service = DailyNotesService(user_id=owner.id, notes=notes, settings=SQLiteSettingsRepository(factory),
+                previous_entries=SQLiteQuickLogRepository(factory), history_page_size=60)
+            first = service.browse(NoteHistoryFilter(text="Summary")).value
+            second = service.browse(NoteHistoryFilter(text="Summary", before=first.next_before)).value
+            self.assertEqual((len(first.notes), len(second.notes), second.next_before), (60, 10, None))
+            self.assertEqual(len({note.day for note in first.notes + second.notes}), 70)
+            self.assertEqual(service.browse(NoteHistoryFilter(text="Archived reference")).value.notes[0].day, start)
 
     def test_unreadable_draft_preserves_raw_data_and_loads_saved_note(self):
         with tempfile.TemporaryDirectory() as directory:

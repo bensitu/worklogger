@@ -42,12 +42,20 @@ class LocalModelsRuntimeConfiguration:
 
 
 @dataclass(frozen=True)
+class PaginationRuntimeConfiguration:
+    notes_page_size: int = 50
+    records_page_size: int = 100
+    reports_page_size: int = 50
+
+
+@dataclass(frozen=True)
 class RuntimeConfiguration:
     features: DeploymentFeatures = DeploymentFeatures()
     external_model_profiles: tuple[ExternalModelProfile, ...] = ()
     cloud_backup: CloudBackupRuntimeConfiguration = CloudBackupRuntimeConfiguration()
     ai: AiRuntimeConfiguration = AiRuntimeConfiguration()
     local_models: LocalModelsRuntimeConfiguration = LocalModelsRuntimeConfiguration()
+    pagination: PaginationRuntimeConfiguration = PaginationRuntimeConfiguration()
 
 
 def configuration_path(*, frozen=None, executable=None, bundle_root=None, source_root=None):
@@ -117,8 +125,11 @@ def load_runtime_configuration(path=None):
         local_models = _integer_configuration(value, "local_models", LocalModelsRuntimeConfiguration, {
             "download_timeout_seconds": (1, 600), "catalog_timeout_seconds": (1, 300),
         })
+        pagination = _integer_configuration(value, "pagination", PaginationRuntimeConfiguration, {
+            "notes_page_size": (1, 100), "records_page_size": (1, 250), "reports_page_size": (1, 250),
+        })
         return RuntimeConfiguration(features=features, external_model_profiles=profiles,
-            cloud_backup=backup, ai=ai, local_models=local_models)
+            cloud_backup=backup, ai=ai, local_models=local_models, pagination=pagination)
     except FileNotFoundError:
         return RuntimeConfiguration()
     except (OSError, UnicodeError, ValueError, TypeError, RecursionError):

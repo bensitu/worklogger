@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 import json
 import logging
@@ -81,8 +81,9 @@ class NoteWorkspace:
 
 class DailyNotesService:
     def __init__(self, *, user_id: int, notes: DailyNoteRepository, settings: SettingsRepository,
-                 previous_entries: QuickLogRepository):
+                 previous_entries: QuickLogRepository, history_page_size: int = 50):
         self.user_id, self.notes, self.settings, self.previous_entries = user_id, notes, settings, previous_entries
+        self._history_page_size = history_page_size
 
     def _run(self, operation, *, error_code="note_save_failed"):
         try:
@@ -158,4 +159,5 @@ class DailyNotesService:
         return self._run(delete, error_code="note_delete_failed")
 
     def browse(self, filters: NoteHistoryFilter) -> Result[NoteHistoryPage]:
-        return self._run(lambda: self.notes.browse(self.user_id, filters), error_code="note_load_failed")
+        return self._run(lambda: self.notes.browse(self.user_id, replace(filters, limit=self._history_page_size)),
+                         error_code="note_load_failed")

@@ -148,6 +148,39 @@ class RuntimeConfigurationTests(unittest.TestCase):
                 self.assertEqual(getattr(getattr(parsed, section), key), default)
                 self.assertTrue(parsed.features.minimal_view)
 
+    def test_pagination_values_reach_search_services_and_validate_independently(self):
+        from datetime import date
+        from worklogger.composition.context import build_runtime_handlers
+        from worklogger.composition.recording import build_time_entry_view_model
+        from worklogger.composition.reporting import build_notes_workflow, build_reports_workflow
+        from worklogger.domain.notes.models import NoteHistoryFilter
+        from worklogger.domain.reporting.history import ReportHistoryFilter
+        from worklogger.domain.worklog.search import EntryFilter
+
+        options = {"notes_page_size": 61, "records_page_size": 23, "reports_page_size": 17}
+        self.path.write_text(json.dumps({"pagination": options}), encoding="utf-8")
+        configuration = load_runtime_configuration(self.path)
+        repositories = Mock()
+        repositories.settings.get.return_value = None
+        with patch("worklogger.composition.context.load_runtime_configuration", return_value=configuration):
+            handlers = build_runtime_handlers(repositories, holiday_country="JP")
+        user = User(1, "sample")
+        build_time_entry_view_model(user, repositories, handlers).search(EntryFilter(date.min, date.max))
+        build_notes_workflow(user, repositories, handlers)._view_model.browse(NoteHistoryFilter())
+        build_reports_workflow(user, repositories, handlers).view_model.browse_history(
+            ReportHistoryFilter("daily", date.min, date.max))
+        self.assertEqual(repositories.work_logs.search_entries.call_args.kwargs["limit"], 23)
+        self.assertEqual(repositories.daily_notes.browse.call_args.args[1].limit, 61)
+        self.assertEqual(repositories.reports.search_history.call_args.kwargs["limit"], 17)
+        for key, invalid, default in (("notes_page_size", 101, 50), ("records_page_size", 251, 100),
+                                      ("reports_page_size", True, 50), ("notes_page_size", 0, 50)):
+            self.path.write_text(json.dumps({"pagination": {**options, key: invalid}}), encoding="utf-8")
+            with self.assertLogs("worklogger.infrastructure.runtime_config", level="WARNING"):
+                parsed = load_runtime_configuration(self.path).pagination
+            self.assertEqual(getattr(parsed, key), default)
+            for other in options.keys() - {key}:
+                self.assertEqual(getattr(parsed, other), options[other])
+
     def test_deployment_flag_controls_window_availability_without_changing_account_preferences(self):
         user = User(id=1, username="sample", is_admin=False)
         for enabled in (True, False):

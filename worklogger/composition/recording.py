@@ -27,6 +27,7 @@ def build_time_entry_view_model(
             entry_types=EntryTypeService(user.id, repositories.entry_types),
             work_modes=WorkModeService(user.id, repositories.work_modes),
             projects=ProjectService(user.id, repositories.projects),
+            search_page_size=handlers.pagination.records_page_size,
         ),
         rewrite_handler=handlers.rewrite_handler,
         language=get_language(),

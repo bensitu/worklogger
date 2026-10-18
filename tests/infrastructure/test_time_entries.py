@@ -28,6 +28,28 @@ from worklogger.infrastructure.security.password_hasher import PBKDF2PasswordHas
 
 
 class TimeEntryTests(unittest.TestCase):
+    def test_custom_search_pages_preserve_cursors_and_find_records_outside_the_first_page(self):
+        from dataclasses import replace
+        from datetime import date
+        from worklogger.domain.worklog.search import EntryFilter
+
+        for offset in range(5):
+            saved = self.service.save_manual(self.now.date() + timedelta(days=offset), "07:00", "08:00",
+                                             "normal", "Older matching content" if offset == 0 else "Other content")
+            self.assertTrue(saved.ok, saved.error)
+        service = TimeEntryService(user_id=self.user.id, repository=self.repository, settings=self.settings,
+                                   local_timezone=timezone.utc, search_page_size=2)
+        session = service.new_session(service.snapshot_state())
+        criteria = EntryFilter(date.min, date.max)
+        first = service.search(criteria).value
+        second = session.search(criteria, cursor=first.next_cursor).value
+        third = session.search(criteria, cursor=second.next_cursor).value
+        self.assertEqual([len(page.entries) for page in (first, second, third)], [2, 2, 1])
+        self.assertEqual(len({entry.id for page in (first, second, third) for entry in page.entries}), 5)
+        self.assertIsNone(third.next_cursor)
+        found = service.search(replace(criteria, text="Older matching")).value
+        self.assertEqual([entry.day for entry in found.entries], [self.now.date()])
+
     def test_work_arrangement_defaults_change_only_with_successful_new_work(self):
         from dataclasses import replace
 

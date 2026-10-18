@@ -193,7 +193,8 @@ Notes are independent date-specific memos and do not contribute hours. The
 history opens at the month selected in the main calendar. Browse by month,
 year, custom date range, or all dates. Use the period arrows or click the period
 to select another month or year. Results are newest first; Load more retrieves
-the next 50 dates for longer ranges.
+the next batch of dates for longer ranges, with 50 dates per batch by default.
+Deployment page sizes are described in [configuration](configuration.md#deployment-configuration).
 
 Search finds saved notes and retained previous entries within the selected
 date range. Matching uses the full saved content before pagination, not just
@@ -250,7 +251,8 @@ report spanning two months appears in both intersecting month ranges.
 Choose ascending or descending report dates or first-save times. Report date,
 newest first, is the default. Search matches report content, ISO dates, save
 timestamps, and identifiers, including `#123`, throughout the selected range.
-The list loads 50 summaries at a time; Load more continues the same query.
+The list loads 50 summaries at a time by default; Load more continues the same query.
+The batch size can be changed in the deployment configuration.
 Search is not restricted to summaries already loaded. Selecting a summary reads
 the report's latest saved content. Changing history filters does not discard the
 open draft; opening another report still asks about unsaved changes.

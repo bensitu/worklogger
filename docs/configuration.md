@@ -96,6 +96,11 @@ Changes apply after restarting.
     "download_timeout_seconds": 30,
     "catalog_timeout_seconds": 15
   },
+  "pagination": {
+    "notes_page_size": 50,
+    "records_page_size": 100,
+    "reports_page_size": 50
+  },
   "cloud_backup": {
     "startup_delay_seconds": 300,
     "check_interval_seconds": 60,
@@ -154,6 +159,22 @@ Download and catalog timeouts apply to network operations, not a total duration
 limit for downloading an entire model. Existing size limits, integrity checks,
 proxy routing, and cancellation behavior remain in effect. Invalid timeout
 fields independently use their defaults. Restart to apply changes.
+
+List page sizes accept bounded integers:
+
+| Key | Default | Allowed range |
+| --- | --- | --- |
+| `pagination.notes_page_size` | 50 | 1 to 100 |
+| `pagination.records_page_size` | 100 | 1 to 250 |
+| `pagination.reports_page_size` | 50 | 1 to 250 |
+
+These sizes control each load-more batch in note history, record search, and
+saved reports. Search still evaluates all matching data in the selected range,
+and cursor pagination preserves ordering. Report history continues to read
+summaries first and content only after selection. These settings do not change
+report version retention, undo history, analytics, or exports. Missing or invalid
+fields use their individual defaults; booleans, strings, and fractional values
+are not accepted. Restart to apply changes.
 
 Assistant, model-management, and update-check workflows also honor
 `WORKLOGGER_FEATURE_AI`, `WORKLOGGER_FEATURE_LOCAL_MODELS`, and

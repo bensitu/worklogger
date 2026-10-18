@@ -15,6 +15,8 @@ layers. Back up your database before upgrading.
 
 ### Added
 
+- Deployment configuration for cloud backup polling and retries, AI request
+  deadlines, model network timeouts, and note, record, and report page sizes.
 - Personal WebDAV and S3-compatible cloud backups with encrypted account
   snapshots, configurable schedules and retention, version confirmations,
   failure notifications, and offline local recovery.

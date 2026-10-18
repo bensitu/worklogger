@@ -37,7 +37,7 @@ from worklogger.infrastructure.export import (
 from worklogger.infrastructure.local_model import JsonLocalModelStore, bundled_model_catalog_path
 from worklogger.infrastructure.local_model.store import HttpRangeDownloader
 from worklogger.infrastructure.network import AccountHTTPTransport
-from worklogger.infrastructure.runtime_config import load_runtime_configuration
+from worklogger.infrastructure.runtime_config import PaginationRuntimeConfiguration, load_runtime_configuration
 from worklogger.infrastructure.repositories import (
     SQLiteCalendarEventRepository,
     SQLiteDailyNoteRepository,
@@ -105,6 +105,7 @@ class RuntimeHandlers:
     external_keys: object | None = None
     proxy_password: object | None = None
     user_profiles: UserProfileRepository | None = None
+    pagination: PaginationRuntimeConfiguration = PaginationRuntimeConfiguration()
 
 
 def build_runtime_repositories(
@@ -179,4 +180,5 @@ def build_runtime_handlers(
         external_keys=external_keys,
         proxy_password=proxy_password,
         user_profiles=user_profiles,
+        pagination=configuration.pagination,
     )
