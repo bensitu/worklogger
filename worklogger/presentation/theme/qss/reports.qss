@@ -20,25 +20,3 @@ QTextEdit#report_revision_preview_text_edit {
   border-radius: 6px;
   padding: 0;
 }
-
-QToolButton#copy_report_button,
-QToolButton#note_copy_button,
-QToolButton#note_export_button,
-QToolButton#note_reload_button {
-  min-width: 24px;
-  max-width: 24px;
-  max-height: {{ control_min_height }};
-  padding: {{ control_padding_vertical }} 7px;
-}
-
-QToolButton[export_menu="true"] {
-  padding-right: 28px;
-}
-
-QToolButton[export_menu="true"]::menu-indicator {
-  subcontrol-origin: padding;
-  subcontrol-position: center right;
-  right: 8px;
-  width: 12px;
-  height: 12px;
-}

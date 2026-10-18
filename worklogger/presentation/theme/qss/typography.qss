@@ -44,8 +44,7 @@ QLabel[badge="true"] {
   padding: 2px 8px;
 }
 
-QLabel#calendar_month_title_label,
-QPushButton#calendar_month_title_label,
+QPushButton#calendar_month_picker_button,
 QLabel#report_period_label,
 QLabel[data_metric="true"] {
   font-size: 18px;

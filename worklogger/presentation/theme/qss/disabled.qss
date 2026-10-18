@@ -82,3 +82,8 @@ QLabel#calendar_record_marker_label:disabled,
 QRadioButton#work_schedule_choice_button::indicator:checked:disabled {
   background: {{ disabled_text }};
 }
+
+QRadioButton#work_schedule_choice_button::indicator:disabled {
+  background: {{ disabled_background }};
+  border-color: {{ border }};
+}

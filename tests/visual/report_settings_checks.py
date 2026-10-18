@@ -269,13 +269,15 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                         if enabled.property("variant") in ("outline", "ghost"):
                             self.assertEqual(enabled.palette().color(QPalette.ColorRole.ButtonText).name(),
                                              engine.palette(theme, dark=dark, custom_color="#168078").text)
-                        expected_weight = (600 if enabled.property("variant") == "primary" or
-                                           ((enabled.property("nav_item") or enabled.property("settings_nav_item")) and enabled.property("active")) or
-                                           ((enabled.property("segment") or enabled.property("page_tab")) and enabled.isChecked())
+                        expected_base_weight = (600 if enabled.property("variant") == "primary" or
+                                           ((enabled.property("nav_item") or enabled.property("settings_nav_item")) and enabled.property("active"))
                                            else 400 if enabled.property("variant") == "ghost" or isinstance(enabled, RecordSummaryButton)
                                            else 500)
-                        self.assertEqual(enabled.font().weight(), expected_weight)
-                        self.assertEqual(disabled.font().weight(), expected_weight)
+                        context = (theme, dark, enabled.objectName(), enabled.property("variant"),
+                                   enabled.property("nav_item"), enabled.property("settings_nav_item"),
+                                   enabled.property("segment"), enabled.property("page_tab"), enabled.isChecked())
+                        self.assertEqual(enabled.font().weight(), expected_base_weight, context)
+                        self.assertEqual(disabled.font().weight(), expected_base_weight, context)
                         self.assertEqual(disabled.palette().color(QPalette.ColorRole.ButtonText).name(),
                                          colors.disabled_text)
                         disabled_background = disabled.grab().toImage().pixelColor(8, disabled.height() // 2)

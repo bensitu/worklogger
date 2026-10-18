@@ -27,18 +27,6 @@ QPushButton#calendar_time_entry_button:checked {
   background: {{ record_selected_fill }};
 }
 
-QToolButton#delete_record_button,
-QToolButton#record_actions_button {
-  background: transparent;
-  border: none;
-  padding: 4px;
-  min-width: 16px;
-  max-width: 16px;
-  min-height: 16px;
-  max-height: 16px;
-  border-radius: {{ item_radius }};
-}
-
 QLabel#calendar_record_marker_label {
   background: {{ accent }};
   border-radius: 3px;

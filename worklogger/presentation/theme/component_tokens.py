@@ -11,6 +11,11 @@ CONTROL_METRICS = MappingProxyType({
     "item_radius": "4px",
     "control_min_height": "28px",
     "control_padding_vertical": "5px",
+    "compact_control_min_height": "24px",
+    "compact_control_padding_vertical": "2px",
+    "compact_control_padding_horizontal": "8px",
+    "inline_action_size": "16px",
+    "field_padding_horizontal": "10px",
 })
 
 

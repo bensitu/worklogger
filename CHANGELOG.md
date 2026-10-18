@@ -37,6 +37,8 @@ layers. Back up your database before upgrading.
 
 ### Changed
 
+- Consolidated selection controls, scrollbars, icon actions, and compact sizing
+  into shared theme rules while retaining existing colors and interaction states.
 - Unified classification indicators around muted cool work colors, warm leave
   colors, and soft green break colors, including custom types.
 - Organized Calendar, Analytics, Reports, and Settings in a shared desktop workspace,

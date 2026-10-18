@@ -252,7 +252,7 @@ class AppWindow(QMainWindow):
             force=force,
         )
         if colors is not None:
-            self.calendar_page.month_title_label.set_colors(colors)
+            self.calendar_page.month_picker_button.set_colors(colors)
 
     def apply_settings(self, state: SettingsState) -> None:
         self.sidebar.set_avatar(state.profile_avatar_png)

@@ -10,21 +10,13 @@ QAbstractSpinBox {
   color: {{ text }};
   border-radius: {{ control_radius }};
   min-height: {{ control_min_height }};
-  padding: {{ control_padding_vertical }} 10px;
+  padding: {{ control_padding_vertical }} {{ field_padding_horizontal }};
 }
 
 QLineEdit#account_name_line_edit,
 QLineEdit#account_id_line_edit,
 QLineEdit#account_role_line_edit {
   background: {{ readonly_fill }};
-}
-
-QLineEdit QToolButton {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  min-height: 0;
-  padding: 0;
 }
 
 QLineEdit:hover:enabled:!read-only:!focus,
@@ -35,39 +27,9 @@ QAbstractSpinBox:hover:enabled:!read-only:!focus {
   border-color: {{ border_strong }};
 }
 
-QCheckBox:hover:enabled,
-QRadioButton:hover:enabled {
-  color: {{ accent }};
-}
-
-QRadioButton#work_schedule_choice_button {
-  spacing: 0;
-  padding-left: 6px;
-}
-
-QRadioButton#work_schedule_choice_button::indicator {
-  width: 14px;
-  height: 14px;
-  background: {{ input_fill }};
-  border: 1px solid {{ field_border }};
-  border-radius: 8px;
-}
-
-QRadioButton#work_schedule_choice_button::indicator:checked {
-  background: {{ accent }};
-  border-color: {{ accent }};
-}
-
-QRadioButton#work_schedule_choice_button::indicator:hover:enabled {
-  border-color: {{ accent }};
-}
-
-QRadioButton#work_schedule_choice_button::indicator:disabled {
-  background: {{ disabled_background }};
-  border-color: {{ border }};
-}
-
-QComboBox::drop-down {
+QComboBox::drop-down,
+QDateEdit::drop-down,
+QDateTimeEdit::drop-down {
   border: none;
   width: 26px;
 }
@@ -93,26 +55,29 @@ QDateEdit::drop-down,
 QDateTimeEdit::drop-down {
   subcontrol-origin: padding;
   subcontrol-position: top right;
+}
+
+QDoubleSpinBox::up-button,
+QSpinBox::up-button,
+QTimeEdit::up-button,
+QDoubleSpinBox::down-button,
+QSpinBox::down-button,
+QTimeEdit::down-button {
+  subcontrol-origin: border;
+  width: 22px;
   border: none;
-  width: 26px;
 }
 
 QDoubleSpinBox::up-button,
 QSpinBox::up-button,
 QTimeEdit::up-button {
-  subcontrol-origin: border;
   subcontrol-position: top right;
-  width: 22px;
-  border: none;
 }
 
 QDoubleSpinBox::down-button,
 QSpinBox::down-button,
 QTimeEdit::down-button {
-  subcontrol-origin: border;
   subcontrol-position: bottom right;
-  width: 22px;
-  border: none;
 }
 
 QDoubleSpinBox::up-arrow,
@@ -134,32 +99,4 @@ QTimeEdit::down-arrow {
 QSpinBox#local_context_spin_box {
   min-height: 18px;
   padding: 2px 8px;
-}
-
-QSlider::groove:horizontal {
-  height: 4px;
-  border-radius: 2px;
-  background: {{ border }};
-}
-
-QSlider::sub-page:horizontal {
-  background: {{ accent }};
-  border-radius: 2px;
-}
-
-QSlider::handle:horizontal {
-  width: 16px;
-  margin: -6px 0;
-  border: 1px solid {{ accent }};
-  border-radius: 8px;
-  background: {{ surface }};
-}
-
-QSlider::handle:horizontal:focus:enabled {
-  border: 2px solid {{ accent }};
-}
-
-QSlider::handle:horizontal:hover:enabled {
-  background: {{ accent_dim }};
-  border-color: {{ hover }};
 }

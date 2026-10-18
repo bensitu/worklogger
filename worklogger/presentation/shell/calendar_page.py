@@ -58,10 +58,10 @@ class CalendarPage(QWidget):
 
     def set_month_title(self, title: str, day=None) -> None:
         if day is not None:
-            self.month_title_label.set_date(day)
+            self.month_picker_button.set_date(day)
             self.previous_month_button.setEnabled(day > date.min)
             self.next_month_button.setEnabled(day < date(9999, 12, 1))
-        self.month_title_label.setText(title)
+        self.month_picker_button.setText(title)
         QTimer.singleShot(0, self, self._ensure_selected_day_visible)
 
     def _ensure_selected_day_visible(self) -> None:
@@ -96,10 +96,10 @@ class CalendarPage(QWidget):
         set_button_icon(self.previous_month_button, "chevron-left")
         self.previous_month_button.setText("")
         self.previous_month_button.clicked.connect(self.previous_month_requested.emit)
-        self.month_title_label = DatePickerButton()
-        self.month_title_label.setObjectName("calendar_month_title_label")
-        self.month_title_label.setProperty("role", "title")
-        self.month_title_label.date_selected.connect(self.date_selected.emit)
+        self.month_picker_button = DatePickerButton()
+        self.month_picker_button.setObjectName("calendar_month_picker_button")
+        self.month_picker_button.setProperty("role", "title")
+        self.month_picker_button.date_selected.connect(self.date_selected.emit)
         self.next_month_button = QPushButton(">")
         self.next_month_button.setObjectName("next_month_button")
         self.next_month_button.setProperty("variant", "outline")
@@ -133,7 +133,7 @@ class CalendarPage(QWidget):
         self.add_entry_button.setToolTip(_("New time record"))
         header.addWidget(self.previous_month_button)
         header.addStretch(1)
-        header.addWidget(self.month_title_label)
+        header.addWidget(self.month_picker_button)
         header.addStretch(1)
         header.addWidget(self.next_month_button)
         header.addWidget(self.today_button)

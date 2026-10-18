@@ -1,0 +1,95 @@
+/* Icon action sizing and embedded button variants. */
+
+QToolButton[icon_only="true"] {
+  padding: {{ control_padding_vertical }};
+}
+
+QLineEdit QToolButton {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  min-height: 0;
+  padding: 0;
+}
+
+QToolButton#clear_time_entry_button,
+QToolButton#undo_record_change_button,
+QToolButton#copy_report_button,
+QToolButton#note_copy_button,
+QToolButton#note_export_button,
+QToolButton#note_reload_button {
+  max-height: {{ control_min_height }};
+}
+
+QToolButton#clear_time_entry_button,
+QToolButton#undo_record_change_button {
+  padding: {{ control_padding_vertical }} 8px;
+  min-width: 20px;
+  max-width: 20px;
+  border-radius: {{ item_radius }};
+}
+
+QToolButton#copy_report_button,
+QToolButton#note_copy_button,
+QToolButton#note_export_button,
+QToolButton#note_reload_button {
+  min-width: 24px;
+  max-width: 24px;
+  padding: {{ control_padding_vertical }} 7px;
+}
+
+QToolButton#delete_record_button,
+QToolButton#record_actions_button,
+QToolButton#polish_time_entry_button {
+  min-width: {{ inline_action_size }};
+  max-width: {{ inline_action_size }};
+  min-height: {{ inline_action_size }};
+  max-height: {{ inline_action_size }};
+}
+
+QToolButton#delete_record_button,
+QToolButton#record_actions_button {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  border-radius: {{ item_radius }};
+}
+
+QToolButton#polish_time_entry_button {
+  padding: 3px;
+}
+
+QToolButton#configure_identity_button,
+QToolButton#recent_work_context_button,
+QToolButton#cancel_processing_button {
+  padding: 0;
+}
+
+QToolButton#cancel_processing_button {
+  min-height: 0;
+}
+
+QToolButton#recent_work_context_button::menu-indicator {
+  image: none;
+  width: 0;
+}
+
+QToolButton#display_name_action_button {
+  padding: 8px;
+  min-width: 22px;
+  max-width: 22px;
+  min-height: 22px;
+  max-height: 22px;
+}
+
+QToolButton[export_menu="true"] {
+  padding-right: 28px;
+}
+
+QToolButton[export_menu="true"]::menu-indicator {
+  subcontrol-origin: padding;
+  subcontrol-position: center right;
+  right: 8px;
+  width: 12px;
+  height: 12px;
+}

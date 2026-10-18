@@ -58,7 +58,10 @@ Shared rules live in responsibility-specific fragments under
 `presentation/theme/qss`. `stylesheets.py` defines their cascade order: application
 surfaces and text roles, shared controls, component variants, disabled states,
 then background overrides. Navigation, item views, menus, tabs, and authentication
-each have a dedicated fragment. `popups.qss` owns popup surfaces and menus;
+each have a dedicated fragment. `selection_controls.qss` owns checkboxes, radio
+indicators, and sliders; `scrollbars.qss` owns scroll tracks and handles.
+`tool_buttons.qss` consolidates embedded actions, icon sizing, and export indicators
+across pages. `popups.qss` owns popup surfaces and menus;
 `date_controls.qss` owns calendar navigation. Main calendar display, recording,
 reports, and analytics have separate fragments. Keep page-specific layout rules in
 their component fragment, not in shared typography or settings rules. `background_images.qss`
@@ -103,7 +106,9 @@ with brand colors; `qt_palette.py` adapts resolved colors to Qt. Color resolutio
 and calendar rules do not require Qt. `component_tokens.py` resolves material
 colors for controls and centralizes shared control heights, padding, and radii.
 Use distinct control, panel, and item metrics rather than unrelated copies of the
-same dimensions. `stylesheets.py` owns cascade order, resource loading, strict
+same dimensions. Compact input metrics and inline action sizes also come from this
+shared mapping; do not equate unrelated dimensions merely because they currently
+have the same value. `stylesheets.py` owns cascade order, resource loading, strict
 token substitution, and bounded caches. Identical fragment combinations share one
 cached template.
 Effects depend on material capabilities, not a theme's key.

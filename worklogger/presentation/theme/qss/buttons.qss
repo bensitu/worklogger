@@ -11,10 +11,6 @@ QToolButton {
   padding: {{ control_padding_vertical }} 14px;
 }
 
-QToolButton[icon_only="true"] {
-  padding: {{ control_padding_vertical }};
-}
-
 QPushButton:hover:enabled,
 QToolButton:hover:enabled,
 QPushButton[segment="true"]:hover:enabled {

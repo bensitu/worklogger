@@ -1,0 +1,56 @@
+/* Selection indicators and slider geometry. */
+
+QCheckBox:hover:enabled,
+QRadioButton:hover:enabled {
+  color: {{ accent }};
+}
+
+QRadioButton#work_schedule_choice_button {
+  spacing: 0;
+  padding-left: 6px;
+}
+
+QRadioButton#work_schedule_choice_button::indicator {
+  width: 14px;
+  height: 14px;
+  background: {{ input_fill }};
+  border: 1px solid {{ field_border }};
+  border-radius: 8px;
+}
+
+QRadioButton#work_schedule_choice_button::indicator:checked {
+  background: {{ accent }};
+  border-color: {{ accent }};
+}
+
+QRadioButton#work_schedule_choice_button::indicator:hover:enabled {
+  border-color: {{ accent }};
+}
+
+QSlider::groove:horizontal {
+  height: 4px;
+  border-radius: 2px;
+  background: {{ border }};
+}
+
+QSlider::sub-page:horizontal {
+  background: {{ accent }};
+  border-radius: 2px;
+}
+
+QSlider::handle:horizontal {
+  width: 16px;
+  margin: -6px 0;
+  border: 1px solid {{ accent }};
+  border-radius: 8px;
+  background: {{ surface }};
+}
+
+QSlider::handle:horizontal:focus:enabled {
+  border: 2px solid {{ accent }};
+}
+
+QSlider::handle:horizontal:hover:enabled {
+  background: {{ accent_dim }};
+  border-color: {{ hover }};
+}
