@@ -73,9 +73,10 @@ verified Python 3.12 Windows x64, Linux x64, and macOS ARM64 archives for
 distribution. Before creating a tag, it checks the source commit, version,
 dependency locks, native backend inclusion, runtime verification results, and
 archive checksums. Release files include the archives, verification reports,
-platform-specific dependency locks, and `SHA256SUMS`.
+platform-specific dependency locks, `SHA256SUMS`, a Cosign verification bundle,
+and a build-provenance bundle for that checksum manifest.
 
-Only the publication job has repository write permission. It creates a draft
+Only the publication job has `contents: write` permission. It creates a draft
 release with generated release notes; ordinary pushes and pull requests do not
 create releases. Review the draft and platform signing requirements before
 publishing it. Do not publish or modify assets while the workflow is running.
@@ -86,6 +87,55 @@ partial reruns select the latest available platform artifacts from that run and
 revalidate their commit identity. If required artifacts have expired, rerun the
 complete workflow. A tag pointing elsewhere, an already published release, or
 unexpected draft assets cause a failure rather than destructive replacement.
+
+## Verify Downloaded Files
+
+Trusted-branch CI runs prepare the same signed distribution files without
+creating a tag or release. The signing job receives OIDC and attestation write
+permissions; test/build jobs do not. Pull requests do not sign distributions.
+
+The checksum manifest uses Sigstore/Cosign keyless signing with the GitHub
+workflow identity. Its bundle contains the signature, certificate, and transparency
+log verification material. No persistent signing key is stored in the repository.
+See the [Sigstore CI documentation](https://docs.sigstore.dev/quickstart/quickstart-ci/).
+
+For files produced by the release workflow on `dev-v4`, verify the expected
+workflow identity before checking the archives:
+
+```sh
+cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \
+  --certificate-identity https://github.com/bensitu/worklogger/.github/workflows/release.yml@refs/heads/dev-v4 \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+sha256sum --check SHA256SUMS
+```
+
+For ordinary CI artifacts, use `.github/workflows/ci.yml` instead of `release.yml`.
+Use the branch or tag you explicitly trust; do not take the expected identity
+from an untrusted download. For a known source revision, also supply
+`--certificate-github-workflow-sha <full-commit-sha>`. GitHub CLI can verify the
+separate provenance bundle with `gh attestation verify SHA256SUMS
+--bundle SHA256SUMS.provenance.json --repo bensitu/worklogger`.
+
+These signatures authenticate the manifest independently of the release asset
+download channel. They do not replace Windows Authenticode, macOS Developer ID,
+or notarization, and do not remove operating-system warnings for unsigned apps.
+Local builds are not signed with the GitHub workflow identity.
+
+## Dependency Installation
+
+CI resolves runtime/build dependencies into a temporary wheel set before
+installation. `scripts/install_dependencies.py` writes exact versions and wheel
+SHA-256 hashes, then installs offline with `--require-hashes` and binary-only
+packages. Native runtime dependencies follow the same process after the approved
+native wheel or source artifact has been verified; existing runtime/build pins
+constrain their resolution. Unexpected or duplicate wheel identities are rejected.
+
+The resolved installation lock is in `build/dependencies.lock.txt`; the native
+installation lock is in `build/native-dependencies.lock.txt`. The final captured
+target lock remains the dependency record distributed with each build. Resolution
+still trusts the configured package index, and isolated native source builds
+also trust their build-system dependencies; a freshly generated hash is not an
+independently reviewed publisher signature.
 
 ## Build Commands
 

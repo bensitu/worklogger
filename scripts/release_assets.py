@@ -20,6 +20,7 @@ TARGETS = {
     "macOS-arm64": ("Darwin", "arm64", ".zip"),
 }
 CHECKS = {"--smoke-import", "--smoke-startup", "--smoke-workflows", "--smoke-local-model-runtime"}
+SIGNATURE_FILES = {"SHA256SUMS.sigstore.json", "SHA256SUMS.provenance.json"}
 
 
 def checksum(path):
@@ -98,9 +99,18 @@ def prepare_assets(directory, output, tag, commit, *, source_root=ROOT):
     return validate_assets(output, tag, commit, source_root=source_root)
 
 
-def validate_assets(directory, tag, commit, *, source_root=ROOT):
+def validate_assets(directory, tag, commit, *, source_root=ROOT, require_signatures=False):
     files = checked_files(directory, tag, commit, source_root=source_root, staged=True)
     expected = release_names() | {"SHA256SUMS"}
+    present = {path.name for path in directory.iterdir()} & SIGNATURE_FILES
+    if present or require_signatures:
+        if present != SIGNATURE_FILES:
+            raise ValueError("Release signatures are missing or incomplete")
+        for name in SIGNATURE_FILES:
+            path = directory / name
+            if path.is_symlink() or not path.is_file() or not 0 < path.stat().st_size <= 1024 * 1024:
+                raise ValueError("Release signature file is invalid")
+        expected |= SIGNATURE_FILES
     if {path.name for path in directory.iterdir()} != expected:
         raise ValueError("Release directory contains missing or unexpected files")
     manifest = directory / "SHA256SUMS"
@@ -109,7 +119,7 @@ def validate_assets(directory, tag, commit, *, source_root=ROOT):
     lines = [f"{checksum(directory / name)}  {name}" for name in sorted(release_names())]
     if manifest.read_text(encoding="ascii").splitlines() != lines:
         raise ValueError("Release checksum manifest differs from release files")
-    return sorted([source for source, _name in files] + [manifest])
+    return sorted([source for source, _name in files] + [manifest] + [directory / name for name in present])
 
 
 def main():

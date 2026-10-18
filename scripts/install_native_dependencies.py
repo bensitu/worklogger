@@ -15,6 +15,7 @@ from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 from scripts.lock_environment import compatible_wheels
 from scripts.native_artifacts import select_artifact, verified_artifact
+from scripts.install_dependencies import install_dependencies
 
 
 def install_native_dependencies(wheels: Path, *, from_source: bool = False):
@@ -39,8 +40,8 @@ def install_native_dependencies(wheels: Path, *, from_source: bool = False):
     matches = compatible_wheels(wheels, native.name, pins[0].version) if build_from_source else [distribution]
     if len(matches) != 1:
         raise ValueError("Expected one compatible native inference wheel")
-    subprocess.run([sys.executable, "-m", "pip", "install", "--only-binary=:all:",
-                    str(matches[0]), "-r", str(requirements)], check=True)
+    install_dependencies((requirements,), wheels=(matches[0],), lock_output=ROOT / "build/native-dependencies.lock.txt",
+                         constraints=(ROOT / "requirements.txt", ROOT / "requirements-build.txt"))
 
 
 def source_build_environment(platform):

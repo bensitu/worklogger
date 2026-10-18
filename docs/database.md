@@ -100,8 +100,8 @@ in `work_mode_label`; renaming or archiving a catalog item does not rewrite reco
 It is independent of classification and is only applicable to work-category
 entries. `entry_types` retains account-owned custom definitions; historical labels
 and categories are stored in `entry_type_label` and `entry_type_category` snapshots.
-Fresh databases and released imports initialize version 18 directly. Version 17
-is the only supported versioned predecessor; there is no unversioned-current fallback.
+Fresh databases and released imports initialize version 19 directly. Versions 17
+and 18 are supported versioned predecessors; there is no unversioned-current fallback.
 
 A populated compatible database receives a complete private `.bak_upgrade_*`
 snapshot before conversion. It includes committed WAL data. Schema changes,

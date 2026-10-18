@@ -48,6 +48,7 @@ def require_password(
     *,
     field_name: str = "password",
     min_length: int = PASSWORD_MIN_LENGTH,
+    max_bytes: int | None = 1024,
 ) -> str:
     if not isinstance(password, str):
         raise TypeError(f"{field_name}_must_be_string")
@@ -55,7 +56,7 @@ def require_password(
         raise ValueError(f"{field_name}_required")
     if len(password) < int(min_length):
         raise ValueError("password_too_short")
-    if len(password.encode("utf-8")) > 1024:
+    if max_bytes is not None and len(password.encode("utf-8")) > max_bytes:
         raise ValueError("password_too_long")
     return password
 

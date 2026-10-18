@@ -16,6 +16,8 @@ TAG = f"v{APP_VERSION}"
 
 
 class MemoryGitHub:
+    repository = "example/app"
+
     def __init__(self):
         self.commit = None
         self.release = None
@@ -84,12 +86,16 @@ class GitHubReleaseTests(unittest.TestCase):
             self.reports[name] = (report_path, report)
 
     def prepare(self):
-        return release_assets.prepare_assets(self.builds, self.output, TAG, COMMIT)
+        release_assets.prepare_assets(self.builds, self.output, TAG, COMMIT)
+        for name in release_assets.SIGNATURE_FILES:
+            (self.output / name).write_text('{"synthetic":true}', encoding="utf-8")
+        self.enterContext(patch("scripts.github_release.verify_release_signature"))
+        return release_assets.validate_assets(self.output, TAG, COMMIT, require_signatures=True)
 
     def test_prepare_keeps_platform_locks_separate_and_checksums_every_release_file(self):
         paths = self.prepare()
-        self.assertEqual(len(paths), 13)
-        self.assertEqual(set(path.name for path in paths), release_assets.release_names() | {"SHA256SUMS"})
+        self.assertEqual(len(paths), 15)
+        self.assertEqual(set(path.name for path in paths), release_assets.release_names() | {"SHA256SUMS"} | release_assets.SIGNATURE_FILES)
         self.assertEqual(paths, release_assets.validate_assets(self.output, TAG, COMMIT))
 
     def test_invalid_build_identity_or_verification_creates_no_release_files(self):
@@ -156,9 +162,21 @@ class GitHubReleaseTests(unittest.TestCase):
         self.assertTrue(client.release["draft"])
         url = github_release.publish_draft(client, self.output, TAG, COMMIT)
         self.assertEqual(url, client.release["html_url"])
-        self.assertEqual(len(client.release["assets"]), 13)
+        self.assertEqual(len(client.release["assets"]), 15)
         self.assertEqual([path for path, _body in client.writes], ["git/refs", "releases"])
         self.assertTrue(client.writes[-1][1]["generate_release_notes"])
+
+    def test_unverified_or_incomplete_signatures_abort_before_remote_changes(self):
+        self.prepare()
+        client = MemoryGitHub()
+        with patch("scripts.github_release.verify_release_signature", side_effect=RuntimeError("signature invalid")):
+            with self.assertRaises(RuntimeError):
+                github_release.publish_draft(client, self.output, TAG, COMMIT)
+        self.assertEqual(client.writes, [])
+        (self.output / "SHA256SUMS.sigstore.json").unlink()
+        with self.assertRaises(ValueError):
+            github_release.publish_draft(client, self.output, TAG, COMMIT)
+        self.assertEqual(client.writes, [])
 
     def test_conflicting_tag_and_published_release_are_never_modified(self):
         self.prepare()

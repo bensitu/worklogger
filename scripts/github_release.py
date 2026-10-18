@@ -102,8 +102,21 @@ def select_artifacts(client, run_id, attempt, commit, kind):
     return selected
 
 
+def verify_release_signature(assets, commit, repository):
+    workflow = os.environ.get("GITHUB_WORKFLOW_REF", "")
+    expected_prefix = repository + "/.github/workflows/release.yml@refs/"
+    if not workflow.startswith(expected_prefix) or not workflow[len(expected_prefix):].startswith(("heads/", "tags/")):
+        raise ValueError("Release signing workflow identity is unavailable")
+    subprocess.run(["cosign", "verify-blob", str(assets / "SHA256SUMS"),
+        "--bundle", str(assets / "SHA256SUMS.sigstore.json"),
+        "--certificate-identity", "https://github.com/" + workflow,
+        "--certificate-oidc-issuer", "https://token.actions.githubusercontent.com",
+        "--certificate-github-workflow-sha", commit], check=True, timeout=120)
+
+
 def publish_draft(client, assets, tag, commit):
-    paths = validate_assets(assets, tag, commit)
+    paths = validate_assets(assets, tag, commit, require_signatures=True)
+    verify_release_signature(assets, commit, client.repository)
     expected = {path.name: path for path in paths}
     existing_commit, release = validate_remote(client, tag, commit)
     if release is not None and any(asset["name"] not in expected for asset in release["assets"]):

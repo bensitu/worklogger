@@ -99,7 +99,7 @@ class LoginHandler:
     def handle(self, command: LoginCommand) -> Result[RememberedLogin]:
         try:
             username = normalize_username(command.username)
-            password = require_password(command.password, min_length=1)
+            password = require_password(command.password, min_length=1, max_bytes=None)
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
 
@@ -158,6 +158,7 @@ class ChangePasswordHandler:
                 command.current_password or "",
                 field_name="current_password",
                 min_length=1,
+                max_bytes=None,
             )
             new_password = require_password(
                 command.new_password,

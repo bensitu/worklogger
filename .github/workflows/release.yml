@@ -41,6 +41,11 @@ jobs:
   verify:
     name: Verify and Build Applications
     needs: validate
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+      attestations: write
     uses: ./.github/workflows/ci.yml
     with:
       release_tag: ${{ inputs.version }}
@@ -53,6 +58,8 @@ jobs:
     permissions:
       contents: read
       actions: read
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -61,34 +68,10 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: '3.12'
-      - name: Select verified platform artifacts
-        id: artifacts
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ inputs.version }}
-        run: python scripts/github_release.py select --tag "$RELEASE_TAG" --commit "$GITHUB_SHA" --kind builds --run-id "$GITHUB_RUN_ID" --attempt "$GITHUB_RUN_ATTEMPT"
-      - name: Download Windows build
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+      - name: Prepare and sign verified release files
+        uses: ./.github/actions/prepare-distribution
         with:
-          artifact-ids: ${{ steps.artifacts.outputs.windows }}
-          github-token: ${{ github.token }}
-          path: release/builds/Windows-x64
-      - name: Download Linux build
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          artifact-ids: ${{ steps.artifacts.outputs.linux }}
-          github-token: ${{ github.token }}
-          path: release/builds/Linux-x64
-      - name: Download macOS build
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          artifact-ids: ${{ steps.artifacts.outputs.macos }}
-          github-token: ${{ github.token }}
-          path: release/builds/macOS-arm64
-      - name: Validate build identity and prepare checksums
-        env:
-          RELEASE_TAG: ${{ inputs.version }}
-        run: python scripts/release_assets.py --tag "$RELEASE_TAG" --commit "$GITHUB_SHA" --input release/builds --output release/assets
+          version: ${{ inputs.version }}
       - name: Upload verified release files
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
@@ -125,6 +108,10 @@ jobs:
           artifact-ids: ${{ steps.artifact.outputs.release }}
           github-token: ${{ github.token }}
           path: release/assets
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        with:
+          cosign-release: v3.0.6
       - name: Create tag and draft release
         env:
           GH_TOKEN: ${{ github.token }}

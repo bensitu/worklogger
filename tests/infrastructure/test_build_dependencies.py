@@ -41,11 +41,15 @@ class BuildDependencyTests(unittest.TestCase):
                       patch.object(installer, "select_artifact", return_value={}) as select,
                       patch.object(installer, "verified_artifact", return_value=distribution),
                       patch.object(installer, "compatible_wheels", return_value=[wheel]),
+                      patch.object(installer, "install_dependencies") as install,
                       patch.object(installer.subprocess, "run") as execute):
                     installer.install_native_dependencies(Path(directory), from_source=source)
                 build = source or platform == "darwin"
                 select.assert_called_once_with(root / "requirements/native-artifacts.json", "0.3.36", source=build)
-                self.assertEqual(execute.call_count, 2 if build else 1)
+                self.assertEqual(execute.call_count, 1 if build else 0)
+                install.assert_called_once_with((root / "requirements-ai.txt",), wheels=(wheel if build else distribution,),
+                    lock_output=root / "build/native-dependencies.lock.txt",
+                    constraints=(root / "requirements.txt", root / "requirements-build.txt"))
                 if build:
                     environment = execute.call_args_list[0].kwargs["env"]
                     self.assertIn("-DGGML_NATIVE=OFF", environment["CMAKE_ARGS"])

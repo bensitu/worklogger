@@ -59,8 +59,9 @@ Password and recovery-key attempts have independent counters; a password lockout
 does not prevent recovery with the correct key. The sign-in window reports the
 remaining delay without extending it when a locked attempt is retried.
 Recovery keys accept uppercase hexadecimal and differences in spaces or hyphens.
-New IDs reject invisible control/formatting characters, and passwords are limited
-to 1024 UTF-8 bytes. Passwords retain their exact Unicode representation so that
+New IDs reject invisible control/formatting characters, and new passwords are limited
+to 1024 UTF-8 bytes. Existing passwords remain usable when signing in or changing
+them. Passwords retain their exact Unicode representation so that
 existing password hashes do not change meaning during an upgrade.
 Remembered local
 credentials expire and are invalidated by password workflows.

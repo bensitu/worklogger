@@ -1,0 +1,77 @@
+name: Prepare Verified Distribution
+description: Validate desktop build identities and sign their checksum manifest
+inputs:
+  version:
+    description: Application version tag, or empty to read it from the source
+    required: false
+    default: ''
+runs:
+  using: composite
+  steps:
+    - name: Resolve application version
+      id: version
+      shell: bash
+      env:
+        REQUESTED_VERSION: ${{ inputs.version }}
+      run: |
+        python - <<'PY'
+        import os
+        from worklogger.__about__ import APP_VERSION
+        from scripts.release_assets import validate_identity
+        tag = os.environ["REQUESTED_VERSION"] or "v" + APP_VERSION
+        validate_identity(tag, os.environ["GITHUB_SHA"])
+        with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+            output.write("tag=" + tag + "\n")
+        PY
+    - name: Select verified platform artifacts
+      id: artifacts
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        RELEASE_TAG: ${{ steps.version.outputs.tag }}
+      run: python scripts/github_release.py select --tag "$RELEASE_TAG" --commit "$GITHUB_SHA" --kind builds --run-id "$GITHUB_RUN_ID" --attempt "$GITHUB_RUN_ATTEMPT"
+    - name: Download Windows build
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+      with:
+        artifact-ids: ${{ steps.artifacts.outputs.windows }}
+        github-token: ${{ github.token }}
+        path: release/builds/Windows-x64
+    - name: Download Linux build
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+      with:
+        artifact-ids: ${{ steps.artifacts.outputs.linux }}
+        github-token: ${{ github.token }}
+        path: release/builds/Linux-x64
+    - name: Download macOS build
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+      with:
+        artifact-ids: ${{ steps.artifacts.outputs.macos }}
+        github-token: ${{ github.token }}
+        path: release/builds/macOS-arm64
+    - name: Validate build identities and checksums
+      shell: bash
+      env:
+        RELEASE_TAG: ${{ steps.version.outputs.tag }}
+      run: python scripts/release_assets.py --tag "$RELEASE_TAG" --commit "$GITHUB_SHA" --input release/builds --output release/assets
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      with:
+        cosign-release: v3.0.6
+    - name: Sign and verify checksum manifest
+      shell: bash
+      run: |
+        cosign sign-blob --yes --bundle release/assets/SHA256SUMS.sigstore.json release/assets/SHA256SUMS
+        cosign verify-blob release/assets/SHA256SUMS --bundle release/assets/SHA256SUMS.sigstore.json \
+          --certificate-identity "https://github.com/$GITHUB_WORKFLOW_REF" \
+          --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+          --certificate-github-workflow-sha "$GITHUB_SHA"
+    - name: Attest verified checksum manifest
+      id: provenance
+      uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+      with:
+        subject-path: release/assets/SHA256SUMS
+    - name: Retain verification bundle
+      shell: bash
+      env:
+        BUNDLE_PATH: ${{ steps.provenance.outputs.bundle-path }}
+      run: cp "$BUNDLE_PATH" release/assets/SHA256SUMS.provenance.json
