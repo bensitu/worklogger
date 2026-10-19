@@ -55,6 +55,15 @@ and a window. Logout disposes the session and returns to authentication.
 exit and installed-application checks: stop and join jobs, close inference, then
 dispose the window before temporary storage or Qt application teardown.
 
+Startup retries retain the instance-lock requirement and do not reset storage.
+Infrastructure classifies storage failures in `startup_errors.py`; presentation
+provides retry, read-only file locations, and bounded diagnostic information.
+`composition/startup_assistance.py` assembles that UI without requiring an
+authenticated session. Database replacement remains a separate recovery flow.
+Failed bootstrap attempts stop their jobs and release their runner before another
+authentication attempt; retries skip remembered sign-in. Invalid deployment
+configuration preserves disabled policies and never enables initial registration.
+
 Presentation helpers without an injected session runner reuse one application-owned
 fallback runner. Closing a helper cancels its requests without creating another
 thread pool for each interaction. Report reads capture preference snapshots before
@@ -260,5 +269,8 @@ application stylesheet.
 
 The resource manifest owns assets, QSS, catalogs, and public configuration.
 Add new resources there and verify their packaged paths.
+`widgets/file_location.py` groups a copyable, read-only path with directory access
+for startup assistance and database recovery. It never edits configuration or
+replaces files.
 See [localization](localization.md), [packaging](packaging.md), and
 [contributing](../CONTRIBUTING.md).

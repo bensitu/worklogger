@@ -2,7 +2,10 @@
 
 ## Accounts
 
-Create a local account on first use. The first account is an administrator.
+Create a local account on first use when registration is allowed. The first
+account is an administrator. Managed installations may disable self-registration;
+an empty database then needs administrator-authorized setup or a prepared database.
+Startup assistance provides guidance without enabling registration automatically.
 New login IDs may contain up to 120 characters. Existing longer IDs remain valid
 for sign-in and account recovery.
 Passwords require at least eight characters. Recovery uses the saved recovery
@@ -32,7 +35,9 @@ administration separately:
 
 To retain existing records with Google or Microsoft sign-in, sign in locally,
 open **Linked identities**, and link the provider. Signing in with an unlinked
-identity creates a separate account; matching names or emails do not merge data.
+identity creates a separate account only when self-registration is enabled;
+matching names or emails do not merge data. OIDC can be disabled by deployment
+policy. Link the identity to the existing local account before using it to sign in.
 See [browser sign-in](identity-signin.md) for provider registration.
 
 Linking or unlinking requires the current local password. Accounts without a
@@ -167,8 +172,10 @@ to split an overnight record after midnight. Historical deductions have no
 known break position until you assign one: choose **Place historical break** and
 set its start time before splitting or partially replacing that record. Confirm
 the preview before applying a correction. **Undo latest record change** can
-restore an overlap replacement, including all affected records. Record undo does
-not cover CSV replacement or database restore.
+restore an overlap replacement, including all affected records. CSV replacements
+also record eligible time-record changes for undo, grouped by affected date.
+Independent memo changes and whole-database restoration are not covered. Undo is
+limited to retained changes and rejects records that have changed since the operation.
 
 For an overnight period such as October 31, 22:00 to November 1, 06:00, choose
 November 1, 00:00 as the split time to create two periods of two and six hours.
@@ -192,7 +199,8 @@ All-day events require explicit start and end times before saving as worked time
 Holiday display and the first day of the week are controlled in General settings.
 
 Calendar imports are bounded before recurrence expansion. Repeated events must
-use daily or less frequent rules and fit within ten years of their start.
+use daily or less frequent rules with an end date or count. Finite series can
+span more than ten years when they fit within the event and processing budgets.
 Event titles, descriptions, and locations are limited to 1 KiB, 64 KiB, and
 4 KiB respectively; the expanded event content is limited to 16 MiB. Imports
 that exceed these limits are rejected without changing existing events.
@@ -292,7 +300,8 @@ Overtime uses the daily standard-hours threshold. Daily average is worked hours
 divided by dates with positive worked hours, not all dates in the period.
 
 Actual attendance shows dates with positive worked hours and retains the dot
-visualization. Planned work is shown separately, based on the weekly schedule in
+visualization. Planned work appears beside the previous-period comparison, not
+as an attendance percentage. It is based on the weekly schedule in
 General settings, with half days counted as 0.5. The dots are a calendar-period
 overview, not a percentage of planned attendance. Work on a planned day off still
 counts as attendance. Comparisons use the previous full calendar period; week
@@ -392,7 +401,7 @@ timer.
 
 ## Backups and Updates
 
-**Settings > Data > Data location** identifies the active database directory.
+**Settings > Data > Local data location** identifies the active database directory.
 Opening it does not move data. Use Backup Data instead of copying a live database
 without its journal files.
 
@@ -401,6 +410,12 @@ Restore replaces the database, retains the previous copy, and ends the session.
 The backup must contain the administrator's login ID with the same account ID.
 Model files, OS credentials, and remembered-login files require separate handling.
 See [database safety](database.md).
+
+Startup assistance offers retry and diagnostic actions for permission, storage,
+logging, and initial-account problems. Database recovery separately supports a
+validated backup or retaining existing files and creating an empty database.
+Neither retries nor account cancellation reset data. See
+[startup and database recovery](troubleshooting.md#startup).
 
 **Settings > About > Check for updates** checks published releases. It does not
 install an update. Back up before replacing an installation.

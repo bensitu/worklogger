@@ -157,7 +157,11 @@ automatic account creation by an unlinked external identity. Existing local
 accounts can still sign in, and administrators can still create managed users.
 Linked external identities can still sign in when OIDC is enabled. Create the
 initial administrator before disabling registration; an empty database does not
-provide a registration exception.
+provide a registration exception. Startup assistance explains this condition
+before opening a login form with no available accounts. If unreadable or malformed
+configuration caused the restriction, the guidance identifies the configuration
+file instead of treating it as an intentional policy. Correct it and retry;
+registration is not enabled automatically.
 
 `features.oidc` defaults to `true`. Set it to `false` to disable Google and
 Microsoft browser authentication, identity linking/unlinking, and provider
@@ -362,10 +366,13 @@ Configure account-scoped WebDAV or S3-compatible storage separately under
 **Personal cloud backup**. See [personal cloud backups](cloud-backups.md) for
 credentials, encryption, schedules, version checks, retention, and restoration.
 
-Session and installation credential files use `%APPDATA%/WorkLogger/` on Windows,
-`~/Library/Application Support/WorkLogger/` for new macOS installations, and
-`~/.config/worklogger/` elsewhere. Existing credential pairs can retain their
-original directory. Files include `remember_session.enc`,
+New session and installation credential files use `%LOCALAPPDATA%/WorkLogger/`
+on Windows, falling back to `%APPDATA%/WorkLogger/` when local application data
+is unavailable. An existing roaming directory containing an earlier machine
+key, session, or provider registration remains in use to preserve access.
+On macOS, new installations use `~/Library/Application Support/WorkLogger/`;
+other systems use `~/.config/worklogger/`. Existing credential pairs can retain
+their original directory. Files include `remember_session.enc`,
 `.worklogger_machine_key`, and `identity-config.enc`. Keep them private.
 Moving only the database does not transfer OS credentials or model files.
 

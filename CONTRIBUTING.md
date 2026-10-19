@@ -11,7 +11,8 @@ downloaded models, or generated distributions in a contribution.
 
 - Keep domain calculations independent of Qt, SQLite, and network clients.
 - Put application orchestration in use-case handlers and external integrations in
-  infrastructure adapters. Assemble dependencies in `worklogger/bootstrap.py`.
+  infrastructure adapters. Assemble dependencies in `worklogger/bootstrap.py`
+  and the feature-specific modules under `worklogger/composition/`.
 - Keep widgets responsible for presentation; use view models for state and
   workflow controllers for dialogs and background operations.
 - Follow existing `Result` and error-code handling. Do not silently weaken input

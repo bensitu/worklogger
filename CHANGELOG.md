@@ -24,6 +24,9 @@ layers. Back up your database before upgrading.
 
 ### Added
 
+- Startup assistance for storage, permission, logging, and initial-account
+  configuration failures, with safe retries, directory access, and copyable
+  diagnostics. Retrying failed initialization returns to manual sign-in.
 - Guided database startup recovery with directory access, validated backup
   restoration, retained originals, and explicit creation of an empty database.
 - Deployment policies for self-registration and OIDC authentication, with visible
@@ -50,6 +53,9 @@ layers. Back up your database before upgrading.
 
 ### Changed
 
+- Grouped the copyable database path with its directory action and made startup
+  recovery choices mutually exclusive, with per-action guidance and retained
+  replacement confirmations.
 - Grouped work and leave selection into equal-width segments with shared control
   styling and distinct selected, hover, and disabled states.
 - Removed native baseline artifacts from underline tabs and increased classification

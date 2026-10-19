@@ -3,6 +3,49 @@
 Dependency-input fingerprints normalize text line endings. Wheel hashes remain
 byte-for-byte checksums for the declared target platform.
 
+## Trying a Development Build
+
+For a published application, use [GitHub Releases](https://github.com/bensitu/worklogger/releases/latest)
+and follow that version's release notes. The 4.0.0 development workflow produces
+different archives from earlier releases; do not assume an older download has
+the features documented on this branch.
+
+To try the current development branch without installing Python:
+
+1. Open [Continuous Integration for dev-v4](https://github.com/bensitu/worklogger/actions/workflows/ci.yml?query=branch%3Adev-v4).
+   Choose a successful run and check its source commit. Artifacts represent that
+   commit, not later unpushed local changes.
+2. Under Artifacts, choose the matching platform and Python 3.12 build when
+   available, such as `WorkLogger-Windows-x64-Python-3.12-Attempt-1`. The attempt
+   number varies. Downloading artifacts requires GitHub access, and older
+   artifacts may have expired. They are development builds, not published releases.
+3. Extract the downloaded artifact, then extract the application archive inside
+   it. The JSON verification report and dependency locks are build records, not
+   application launchers. Review the checksum and verification information below.
+4. Launch the application for your platform:
+
+| Target | Application Layout | Launch |
+| --- | --- | --- |
+| Windows x64 | ZIP containing `WorkLogger/` | `WorkLogger/WorkLogger.exe` |
+| Linux x64 | tar.gz containing `WorkLogger/` | `WorkLogger/WorkLogger` on a compatible glibc desktop |
+| macOS Apple Silicon | ZIP containing `WorkLogger.app` | Open the `.app` bundle |
+
+Keep the complete Windows/Linux directory, including `_internal`, together.
+Windows ARM64, macOS Intel, and Universal2 are not current build targets. Native
+inference is included, but model weights must be downloaded or imported separately.
+Linux still needs the system Qt libraries described in [development setup](development.md#setup).
+
+Unsigned Windows builds and ad-hoc-signed macOS builds can trigger OS warnings.
+Checksums and workflow signatures do not replace platform code signing or
+notarization. Use trusted artifacts and follow your organization's installation
+policy; do not disable security software to run them.
+
+Back up an existing database before testing. Use a separate OS profile or machine
+to keep development data separate from an established installation. Replacing an
+executable does not select a fresh database, and database upgrades cannot be
+downgraded. See [data locations](configuration.md#files-and-directories) and
+[recovery](troubleshooting.md#missing-data-or-database-errors).
+
 ## Dependencies
 
 Build on the target operating system and architecture in a clean environment.
@@ -22,8 +65,10 @@ python -m venv .venv-release
 .venv-release\Scripts\python.exe -m pip install -r requirements.txt -r requirements-build.txt
 .venv-release\Scripts\python.exe scripts/install_native_dependencies.py
 .venv-release\Scripts\python.exe scripts/i18n/i18n_compile.py
-.venv-release\Scripts\python.exe scripts/lock_environment.py release/windows-cpython311.lock.json --capture
-.venv-release\Scripts\python.exe scripts/release_artifact.py --lock release/windows-cpython311.lock.json --build --archive
+.venv-release\Scripts\python.exe scripts/lock_environment.py release/windows-current.lock.json --capture
+.venv-release\Scripts\python.exe scripts/prepare_native_model.py
+$env:WORKLOGGER_VERIFY_MODEL_PATH = "$PWD/build/native-verification/stories260K.gguf"
+.venv-release\Scripts\python.exe scripts/release_artifact.py --lock release/windows-current.lock.json --build --archive
 ```
 
 To capture a different target after reviewing its dependencies:
@@ -141,6 +186,7 @@ independently reviewed publisher signature.
 
 ```sh
 python -m pip install -r requirements-build.txt
+python -m pip install -r requirements.txt
 python scripts/install_native_dependencies.py
 python scripts/build.py --check
 python scripts/build.py

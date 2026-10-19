@@ -40,9 +40,13 @@ from session representations and are not retained in the desktop runtime.
 ## Local Data
 
 Accounts provide application-level separation, not protection against someone
-who can read or modify the SQLite file. Database data, backups, notes, reports,
-images, and exported documents are unencrypted. Use OS permissions and disk
-encryption and protect backups as carefully as live data.
+who can read or modify the SQLite file. Local database data, SQLite backups,
+notes, reports, images, and ordinary exported documents are unencrypted. Use OS
+permissions and disk encryption and protect backups as carefully as live data.
+Personal cloud backups use separate account archives and enable client-side
+encryption by default; encryption can be disabled after confirmation. Local
+recovery archives created by that feature follow its encryption setting.
+See [personal cloud backups](cloud-backups.md) for passphrase handling and scope.
 
 Background images may retain metadata in their encoded bytes. Avatars are saved
 as normalized cropped PNGs. Private images and exports should not enter source
@@ -113,9 +117,11 @@ does not reconstruct a key from host names or network identifiers. If that key i
 unavailable, re-enter the credential; stored ciphertext is retained. Rotate old
 API keys or proxy passwords if historical backups may have been exposed.
 Failures to clear both the local credential and its fallback are reported.
-Account deletion clears system credentials first; if the credential backend is
-unavailable, deletion is refused and the account is retained. Credential names
-remain stable for existing accounts.
+Account deletion commits database removal before clearing external service
+credentials. A database failure leaves credentials untouched. If credential
+cleanup fails after deletion, the failure is reported and an administrator can
+retry cleanup for the removed account; the account and its data are not recreated.
+Credential names remain stable for existing accounts.
 
 Do not regenerate or delete an unreadable key to silence a warning; preserve it
 before recovery. Database backup does not transfer OS keyring entries or session

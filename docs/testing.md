@@ -130,6 +130,7 @@ python -m unittest tests.visual.control_states_checks -v
 python -m unittest tests.visual.record_editing_checks -v
 python -m unittest tests.visual.background_images_checks -v
 python -m unittest tests.visual.cloud_backup_checks -v
+python -m unittest tests.visual.restore_recovery_checks -v
 python -m unittest tests.visual.shell_checks -v
 ```
 

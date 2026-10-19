@@ -12,6 +12,16 @@ python -m venv .venv
 ```
 
 On macOS/Linux, use `.venv/bin/python`. Activation is optional.
+On Debian/Ubuntu desktops, install the Qt runtime libraries used by CI if they
+are not already available:
+
+```sh
+sudo apt-get install libegl1 libgl1 libopengl0 libxkbcommon-x11-0 libdbus-1-3 \
+  libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-xinerama0
+```
+
+Other distributions use different package names. For headless checks, set
+`QT_QPA_PLATFORM=offscreen`; leave it unset when launching the interactive app.
 For packaging, install `requirements-build.txt`, then run
 `python scripts/install_native_dependencies.py`. Every distribution includes
 the pinned native inference backend and its dependencies. Source development
@@ -178,6 +188,9 @@ Stored formats need an explicit compatibility/backup plan and regression tests.
 Keep CSV semantics stable and preserve unsupported sources without mutation.
 Add resources to the packaging manifest and check frozen paths.
 Public deployment flags are separate from account settings and secrets.
+New Windows credential files use local application data; retain an existing
+credential directory and its keys when diagnosing a moved installation. See
+[file locations](configuration.md#files-and-directories).
 
 ## Checks
 

@@ -149,8 +149,10 @@ sharing/draft changes atomically. Report saves and restoration create versions
 without changing first-save identity.
 
 Record undo retains up to 50 eligible changes for 30 days and checks expected
-rows before restoring them. It does not restart timers or reverse CSV replacement
-or whole-database restore. Reports retain up to 50 versions per report.
+rows before restoring them. CSV replacements save reversible time-record changes
+per affected date within the same limits; independent memo changes are excluded.
+Undo does not restart timers or reverse whole-database restore. Reports retain
+up to 50 versions per report.
 
 ## Backup and Restore
 
@@ -172,6 +174,8 @@ manual backups and recovery-candidate archives are not rotated by this policy.
 Do not rename/reset a database after a lock, permission,
 or I/O error. Do not copy only the main file while committed data remains in WAL.
 
-Databases and backups are unencrypted. Restrict access and keep independent
-backups. Cross-device credentials may need re-entry.
+Local databases and SQLite database backups are unencrypted. Personal cloud
+backups are separate account documents with client-side encryption enabled by
+default; they cannot be restored as SQLite files. Restrict local access and keep
+independent backups. Cross-device credentials may need re-entry.
 See [security](security.md).

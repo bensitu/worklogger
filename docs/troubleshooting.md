@@ -108,8 +108,11 @@ normally the executable directory. Changing or extracting the executable again
 does not replace its active database. A prepared new database prevents automatic
 reimport of a legacy database located beside the executable.
 
-Restore requires administrator permission and the same login ID/account ID in
-the backup. It replaces the whole database and ends the session.
+The **Restore Data** action in Settings requires administrator permission and the
+same login ID/account ID in the backup. It replaces the whole database and ends
+the session. Startup recovery runs before authentication and requires signing in
+with an account from the selected backup afterward; it does not open an account
+without its credentials.
 A `.pre_restore` file means replacement needs recovery; preserve it before taking
 any action. CSV and PDF exports are not database backups.
 
