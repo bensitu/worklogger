@@ -1184,7 +1184,7 @@ msgstr ""
 msgid "Include calendar"
 msgstr ""
 
-msgid "Include quick logs"
+msgid "Include previous entries"
 msgstr ""
 
 msgid "Include work content"
@@ -2157,9 +2157,6 @@ msgid "Save template"
 msgstr ""
 
 msgid "Save temporary password"
-msgstr ""
-
-msgid "Save the completed automatic record before starting another."
 msgstr ""
 
 msgid "Save the settings before connecting or transferring backups."

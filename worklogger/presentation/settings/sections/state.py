@@ -170,7 +170,7 @@ class SettingsSectionState:
             (self.ai_enabled_switch, _("AI Assist")),
             (self.ai_notes_switch, _("Include work content")),
             (self.ai_calendar_switch, _("Include calendar")),
-            (self.ai_quick_logs_switch, _("Include quick logs")),
+            (self.ai_quick_logs_switch, _("Include previous entries")),
             (self.local_model_enabled_switch, _("Enable local model")),
             (self.proxy_enabled_switch, _("Use a web proxy for this application.")),
             (self.dark_switch, _("Dark mode")),

@@ -1186,8 +1186,8 @@ msgstr "モデルをインポート中..."
 msgid "Include calendar"
 msgstr "カレンダーを含める"
 
-msgid "Include quick logs"
-msgstr "クイックログを含める"
+msgid "Include previous entries"
+msgstr "以前の記録を含める"
 
 msgid "Include work content"
 msgstr "作業内容を含める"
@@ -2160,9 +2160,6 @@ msgstr "テンプレートを保存"
 
 msgid "Save temporary password"
 msgstr "一時パスワードを保存"
-
-msgid "Save the completed automatic record before starting another."
-msgstr "新しい記録を開始する前に、終了した自動記録を保存してください。"
 
 msgid "Save the settings before connecting or transferring backups."
 msgstr "接続またはバックアップの転送前に設定を保存してください。"

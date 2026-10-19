@@ -1186,8 +1186,8 @@ msgstr "正在匯入模型..."
 msgid "Include calendar"
 msgstr "包含行事曆"
 
-msgid "Include quick logs"
-msgstr "包含快速記錄"
+msgid "Include previous entries"
+msgstr "包含歷史事項"
 
 msgid "Include work content"
 msgstr "包含工作內容"
@@ -2160,9 +2160,6 @@ msgstr "儲存範本"
 
 msgid "Save temporary password"
 msgstr "儲存臨時密碼"
-
-msgid "Save the completed automatic record before starting another."
-msgstr "開始新的自動記錄前，請先儲存已結束的記錄。"
 
 msgid "Save the settings before connecting or transferring backups."
 msgstr "請先儲存設定，再連線或傳輸備份。"

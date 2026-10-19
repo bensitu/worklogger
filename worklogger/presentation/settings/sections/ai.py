@@ -229,7 +229,7 @@ class AISection(_SettingsScrollPage):
             )
         )
         privacy.content_layout.addWidget(
-            _switch_line(_("Include quick logs"), self.ai_quick_logs_switch)
+            _switch_line(_("Include previous entries"), self.ai_quick_logs_switch)
         )
         page.layout().addWidget(privacy)
         page.layout().addStretch(1)

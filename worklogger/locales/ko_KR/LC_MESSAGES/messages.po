@@ -1186,8 +1186,8 @@ msgstr "모델 가져오는 중..."
 msgid "Include calendar"
 msgstr "달력 포함"
 
-msgid "Include quick logs"
-msgstr "빠른 기록 포함"
+msgid "Include previous entries"
+msgstr "이전 기록 포함"
 
 msgid "Include work content"
 msgstr "작업 내용 포함"
@@ -2160,9 +2160,6 @@ msgstr "템플릿 저장"
 
 msgid "Save temporary password"
 msgstr "임시 비밀번호 저장"
-
-msgid "Save the completed automatic record before starting another."
-msgstr "새 기록을 시작하기 전에 완료된 자동 기록을 저장하세요."
 
 msgid "Save the settings before connecting or transferring backups."
 msgstr "연결하거나 백업을 전송하기 전에 설정을 저장하세요."

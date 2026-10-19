@@ -1186,8 +1186,8 @@ msgstr "Importing model..."
 msgid "Include calendar"
 msgstr "Include calendar"
 
-msgid "Include quick logs"
-msgstr "Include quick logs"
+msgid "Include previous entries"
+msgstr "Include previous entries"
 
 msgid "Include work content"
 msgstr "Include work content"
@@ -2160,9 +2160,6 @@ msgstr "Save template"
 
 msgid "Save temporary password"
 msgstr "Save temporary password"
-
-msgid "Save the completed automatic record before starting another."
-msgstr "Save the completed automatic record before starting another."
 
 msgid "Save the settings before connecting or transferring backups."
 msgstr "Save the settings before connecting or transferring backups."

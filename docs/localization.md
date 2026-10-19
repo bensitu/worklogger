@@ -38,7 +38,10 @@ python -m unittest tests.i18n.test_gettext_foundation -v
 ```
 
 The repository compiler does not need a separate GNU gettext installation.
-Synchronization preserves translations but does not translate new messages.
+Synchronization preserves translations for current messages, removes unused
+catalog entries, and does not translate new messages. Before removing deferred
+`N_()` markers, check their consumers, including dynamically constructed error
+codes and classification labels.
 Missing runtime translations fall back to the English source.
 
 ## Activation and Qt
