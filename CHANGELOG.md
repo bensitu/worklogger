@@ -1,14 +1,5 @@
 # Changelog
 
-## Database and Sign-In Compatibility
-
-- Database upgrades retain a pre-upgrade snapshot and apply record ownership
-  constraints transactionally. Unsupported or conflicting data is not discarded.
-- Google bindings imported from 3.3.3 use their stored federated subject when
-  available. Unresolved external bindings require local account recovery and
-  relinking instead of silently creating an empty account.
-- Existing personal backups remain readable after upgrading the stored schema.
-
 All notable changes to this project are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
@@ -18,132 +9,91 @@ Historical entries describe their respective releases; see the
 
 ## [Unreleased](https://github.com/bensitu/worklogger/compare/v3.3.3...dev-v4)
 
-**4.0.0: Major application refactor.** The desktop and storage workflows have been
-reorganized around separate domain, application, infrastructure, and presentation
-layers. Back up your database before upgrading.
+**4.0.0: A more connected work history.** Time records, notes, reports, and
+analytics come together in a unified desktop workspace, with flexible
+classification, recoverable editing, and personal cloud backups.
 
 ### Added
 
-- Startup assistance for storage, permission, logging, and initial-account
-  configuration failures, with safe retries, directory access, and copyable
-  diagnostics. Retrying failed initialization returns to manual sign-in.
-- Guided database startup recovery with directory access, validated backup
-  restoration, retained originals, and explicit creation of an empty database.
-- Deployment policies for self-registration and OIDC authentication, with visible
-  disabled controls and restrictions on automatic external account creation.
-- An installation-wide personal cloud backup policy that keeps configuration
-  and transfer controls visible but disabled and prevents background backups.
-- An installation-wide AI policy that keeps related controls visible but
-  disabled and prevents local and external processing and model management.
-- Deployment configuration for cloud backup polling and retries, AI request
-  deadlines, model network timeouts, and note, record, and report page sizes.
-- Personal WebDAV and S3-compatible cloud backups with encrypted account
-  snapshots, configurable schedules and retention, version confirmations,
-  failure notifications, and offline local recovery.
-- Custom work arrangements with account-specific management and historical names
-  preserved in records, timers, and exports.
-- Account-owned custom work types, projects, and work items, with historical
-  classification snapshots, record search, split/merge actions, and conflict-aware undo.
-- Saved report versions, version recovery, generation-source references, and
-  day/month timesheet exports in XLSX and PDF.
-- Editable display names separate from login IDs, circular account avatars, and
-  deployment-controlled static or animated background images.
-- Microsoft browser sign-in and in-application provider registration settings.
-- Adjustable local runtime context and a public deployment configuration file.
+- **Flexible classification:** account-specific activity, break, leave, and work
+  arrangement types, plus projects and work items. Historical names remain
+  available in records and exports after classifications change.
+- **Recoverable record editing:** split at a chosen time, merge adjacent records,
+  preview overlap replacements, and undo eligible changes, including overnight
+  records. Record search supports date ranges and classification filters.
+- **Report history and exports:** saved versions and recovery, generation-source
+  references, date-range search, selectable sorting, and paginated history.
+  Export daily or monthly timesheets as XLSX or PDF.
+- **Personal cloud backups:** WebDAV and S3-compatible storage, client-side
+  encryption enabled by default, configurable schedules and retention, version
+  conflict confirmations, failure notifications, and local recovery archives.
+- **Work plans and goals:** weekly schedules with half days, regional holiday
+  handling, and schedule-based or custom hours targets. Analytics distinguishes
+  actual attendance from planned work and shows weekly date ranges.
+- **Guided startup recovery:** actionable storage and configuration errors,
+  safe retries, directory access, and copyable diagnostics. Database recovery
+  validates backups or preserves existing files before creating a new database.
+- Microsoft browser sign-in and in-application provider registration settings,
+  separate display names and login IDs, account avatars, and configurable static
+  or animated backgrounds.
+- Public `worklogger.config.json` deployment settings for AI, cloud backup,
+  registration, and OIDC policies, along with backup timing, network deadlines,
+  and list page sizes. Disabled features remain visible but unavailable.
 
 ### Changed
 
-- Grouped the copyable database path with its directory action and made startup
-  recovery choices mutually exclusive, with per-action guidance and retained
-  replacement confirmations.
-- Grouped work and leave selection into equal-width segments with shared control
-  styling and distinct selected, hover, and disabled states.
-- Removed native baseline artifacts from underline tabs and increased classification
-  color separation, with more stable color variations for custom types.
-- Preserved pending daily-record loads across preference and date refreshes and
-  avoided hiding windows when the system tray becomes unavailable.
-- Limited new account IDs to 120 characters while preserving sign-in and
-  recovery for existing account identifiers.
-- Loaded daily records and events with calendar background requests without
-  replacing edits typed while waiting, and coalesced saved-settings refreshes.
-- Batched reversible-record reads, reused decoded CSV replacement records, and
-  limited calendar-import duplicate queries to the imported dates.
-- Reused project-statistics windows, released closed template dialogs, captured
-  report preferences before background reads, and bounded model-status retries.
-- Shared fallback background runners and cleared owned sensitive clipboard text
-  during application shutdown.
-- Hardened timer recovery, record cursors, classification values, and malformed
-  imports with stable validation errors; preserved work arrangements when
-  resuming saved break timers and added safe translation-catalog fallback.
-- Preserved retriable cloud cleanup after failed publication, normalized malformed
-  backup configuration errors, and retained readable machine keys when protection
-  upgrades cannot be written.
-- Required current-account verification before linking or unlinking sign-in
-  identities and included project labels in AI note-sharing permission.
-- Redacted complete unquoted credential values containing spaces from logs.
-- Isolated manual record construction and shared classification resolution from
-  persistent timer coordination without changing storage or historical snapshots.
-- Separated record-search and project-statistics dialog management from desktop
-  navigation while preserving the viewed month and open-search reuse.
-- Shared full/minimal window residency and date-polling lifecycle, including
-  explicit timer cleanup and a common record-discard confirmation.
-- Consolidated selection controls, scrollbars, icon actions, and compact sizing
-  into shared theme rules while retaining existing colors and interaction states.
-- Coalesced settings navigation text layout during selection, resize, and theme
-  changes without scheduling work for unchanged selections.
-- Unified classification indicators around muted cool work colors, warm leave
-  colors, and soft green break colors, including custom types.
-- Organized Calendar, Analytics, Reports, and Settings in a shared desktop workspace,
-  with grouped settings and consistent action styling and keyboard access.
-- Stored independently editable time periods and persistent timers; manual and
-  automatic input share the selected record's content and classification.
-- Separated daily memos from time-record content, with recoverable drafts and
-  explicit report/AI sharing choices.
-- Distinguished separate saved reports from versions of the open report and
-  simplified template application and saved-daily-report export.
-- Made external AI an explicit account choice and applied account proxy settings
-  to supported requests without silent provider or proxy fallback.
-- Changed Google sign-in to direct browser authorization with request-bound
-  provider-token validation.
-- Updated native inference to llama-cpp-python 0.3.36 with Python-version-independent
-  wheels and expanded cross-platform build coverage to Python 3.11 through 3.14.
+- Unified Calendar, Analytics, Reports, and Settings navigation, with shared
+  theme controls, clearer hover and disabled states, and distinct work, leave,
+  and break colors across supported languages and light/dark themes.
+- Manual input and persistent timers share record content and classification.
+  Daily notes are independent, with recoverable drafts and explicit report/AI
+  sharing choices. Report templates use localized content.
+- External AI requires an explicit account choice. Supported requests use the
+  account proxy without silent provider or proxy fallback; local AI runtime
+  context is adjustable.
+- Separated domain, application, infrastructure, and presentation responsibilities
+  to improve maintainability and reuse without coupling business rules to Qt.
+- Updated native inference to llama-cpp-python 0.3.36 and expanded cross-platform
+  build coverage to Python 3.11 through 3.14.
+
+### Fixed
+
+- UI freezes, repeated report refreshes, and stale background results during
+  authentication, analytics, text processing, and data operations.
+- Lost pending edits after failed or conflicting saves, stalled timer displays,
+  and unreadable drafts preventing access to saved notes.
+- CSV break deductions, duplicated note content, inconsistent rest-day totals,
+  and database read/write contention. Invalid stored data is reported rather
+  than silently omitted from totals.
+
+### Security
+
+- Direct browser OIDC authorization with request-bound token validation and
+  current-account verification before linking or unlinking identities. Credential
+  changes are rechecked within database transactions.
+- Strengthened credential storage, logout revocation, per-database remembered
+  sessions, log redaction, and sensitive clipboard cleanup.
+- Bounded calendar recurrence and event-content processing, validated public
+  connection destinations, and verified native dependency checksums.
 
 ### Removed
 
 - Automatic conversion of unsupported development database layouts. Released
-  v3.3.3 imports and supported canonical database upgrades remain available.
+  v3.3.3 imports and supported database upgrades remain available.
 - Credential decryption based on predictable host/network identifiers. Affected
   stored credentials require re-entry; their ciphertext is retained.
 
-### Fixed
+### Upgrade Notes
 
-- Clipped wrapped model filenames in compact localized model-management dialogs.
-- UI freezes during long-running authentication, text processing, and data operations.
-- Unsynchronized manual/automatic record content, inconsistent rest-day accounting,
-  and duplicated record content in independent memos during CSV import.
-- Inconsistent export indicators, button states, settings alignment, and busy feedback.
-- Loss of pending editor content after failed or conflicting saves and exports.
-- Lost CSV break deductions, duplicate day-note writes, and incomplete totals
-  caused by silently skipping undecodable stored records.
-- Nested database-read deadlocks and unbounded waits for serialized writes.
-- Unbounded calendar recurrence expansion and excessive event-content allocation.
-- Unavailable text processing after starting in the compact view, stalled timer
-  displays after failed saves, and unreadable note drafts blocking saved notes.
-- Blocking analytics operations, repeated calendar-widget creation, and stale
-  background results overwriting newer selections.
-- Unreadable provider registrations preventing explicit reconfiguration with a
-  retained backup of the original encrypted file.
-
-### Security
-
-- Rechecked verified credentials within write transactions so concurrent password
-  resets or recovery-key use cannot be overwritten by stale authentication results.
-- Restricted credential storage to approved OS backends and reported removal
-  failures. Logout revokes remembered credentials before clearing the device file.
-- Preserved newer encrypted credential values and migrated machine keys, isolated
-  remembered credentials by database, and restricted rotated-log permissions.
-- Validated public connection destinations before TLS and verified approved native
-  dependency checksums before installation.
+- **Back up before upgrading.** Database upgrades retain a pre-upgrade snapshot
+  and apply ownership constraints transactionally. Unsupported or conflicting
+  data is not discarded; upgraded databases cannot be downgraded.
+- Google bindings imported from v3.3.3 use their stored federated subject when
+  available. Unresolved bindings require local account recovery and relinking,
+  rather than silently creating an empty account.
+- Existing personal backups remain readable after schema upgrades. Local
+  databases and SQLite backups remain unencrypted; personal cloud encryption
+  is a separate feature. See the [user guide](docs/user-guide.md) for details.
 
 ## [3.3.3] - 2026-05-11
 
