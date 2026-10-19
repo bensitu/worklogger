@@ -35,12 +35,21 @@ class DatabaseStartupTests(unittest.TestCase):
 
     def test_cancelled_confirmation_or_file_selection_does_not_change_database(self):
         dialog = self.dialog()
-        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Cancel):
-            dialog.new_button.click()
-        with patch("worklogger.presentation.widgets.database_startup.QFileDialog.getOpenFileName", return_value=("", "")):
-            dialog.restore_button.click()
+        self.assertTrue(dialog.exit_choice.isChecked())
+        self.assertTrue(dialog.action_button.isDefault())
+        dialog.new_choice.click()
         self.handler.handle.assert_not_called()
-        self.assertTrue(dialog.exit_button.isDefault())
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Cancel):
+            dialog.action_button.click()
+        dialog.restore_choice.click()
+        self.assertFalse(dialog.new_choice.isChecked())
+        with patch("worklogger.presentation.widgets.database_startup.QFileDialog.getOpenFileName", return_value=("", "")):
+            dialog.action_button.click()
+        self.handler.handle.assert_not_called()
+        dialog.exit_choice.click()
+        dialog.show()
+        dialog.action_button.click()
+        self.assertFalse(dialog.isVisible())
 
     def test_invalid_backup_keeps_dialog_available_and_success_continues(self):
         dialog = self.dialog()
@@ -48,7 +57,7 @@ class DatabaseStartupTests(unittest.TestCase):
         dialog._run(self.path.parent / "backup.db")
         self.assertTrue(dialog.status_label.text())
         self.assertFalse(dialog._busy)
-        self.assertTrue(dialog.restore_button.isEnabled())
+        self.assertTrue(dialog.restore_choice.isEnabled())
         self.handler.handle.return_value = Result.success(self.path.parent / "database-recovery" / "retained")
         with patch.object(QMessageBox, "information") as feedback:
             dialog._run(None)
@@ -64,11 +73,12 @@ class DatabaseStartupTests(unittest.TestCase):
         dialog.show()
         dialog._run(self.path.parent / "backup.db")
         self.assertTrue(all(not button.isEnabled() for button in dialog._buttons))
+        self.assertTrue(all(not choice.isEnabled() for choice in dialog._choices))
         dialog.reject()
         self.assertTrue(dialog.isVisible())
         callbacks[0](Result.failure(InfrastructureError("startup_recovery_failed", "startup_recovery_failed")))
-        self.assertFalse(dialog.new_button.isEnabled())
-        self.assertTrue(dialog.restore_button.isEnabled())
+        self.assertFalse(dialog.new_choice.isEnabled())
+        self.assertTrue(dialog.restore_choice.isEnabled())
         dialog.reject()
         self.assertFalse(dialog.isVisible())
 
@@ -76,8 +86,10 @@ class DatabaseStartupTests(unittest.TestCase):
         dialog = self.dialog()
         with patch("worklogger.presentation.widgets.database_startup.QDesktopServices.openUrl", return_value=False):
             dialog.open_button.click()
-        self.assertTrue(dialog.path_input.isReadOnly())
-        self.assertEqual(dialog.path_input.text(), str(self.path))
+        self.assertEqual(dialog.path_view.toPlainText(), str(self.path))
+        self.assertTrue(dialog.path_view.isReadOnly())
+        dialog.path_view.selectAll()
+        self.assertEqual(dialog.path_view.textCursor().selectedText(), str(self.path))
         self.assertTrue(dialog.status_label.text())
         self.handler.handle.assert_not_called()
 
@@ -92,7 +104,8 @@ class DatabaseStartupTests(unittest.TestCase):
         self.addCleanup(self.app.setPalette, palette)
         self.addCleanup(self.app.setStyleSheet, style)
         def execute(dialog):
-            QTimer.singleShot(0, dialog.new_button.click)
+            dialog.new_choice.click()
+            QTimer.singleShot(0, dialog.action_button.click)
             return QDialog.exec(dialog)
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "worklog.db"

@@ -9,7 +9,7 @@ from unittest.mock import patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint, QRect
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QApplication, QMessageBox, QScrollArea
 
 from worklogger.domain.shared.recovery import RestoreRecoveryChoices
 from worklogger.domain.shared.errors import InfrastructureError
@@ -33,20 +33,31 @@ class RestoreRecoveryLayoutChecks(unittest.TestCase):
                 set_language(language)
                 for dark in (False, True):
                     ThemeEngine().apply_to(self.app, "liquid_glass", dark=dark)
-                    for width in (520, 640):
-                        dialog = DatabaseStartupDialog(Path("example/WorkLogger/worklog.db").absolute(),
+                    for width in (420, 640):
+                        dialog = DatabaseStartupDialog(Path("example/WorkLogger/" + "LongDirectoryName" * 4 + "/worklog.db").absolute(),
                             InfrastructureError("database_schema_unsupported", "database_schema_unsupported"),
                             SimpleNamespace(allow_new_database=width == 640))
                         try:
-                            dialog.resize(width, dialog.sizeHint().height())
+                            dialog.resize(width, 540 if width == 420 else 620)
                             dialog.show()
                             self.app.processEvents()
-                            self.assertTrue(dialog.exit_button.isDefault())
-                            self.assertEqual(dialog.new_button.isEnabled(), width == 640)
+                            self.assertTrue(dialog.action_button.isDefault())
+                            self.assertTrue(dialog.exit_choice.isChecked())
+                            self.assertEqual(dialog.new_choice.isEnabled(), width == 640)
                             for button in dialog._buttons:
                                 bounds = QRect(button.mapTo(dialog, QPoint()), button.size())
                                 self.assertTrue(dialog.rect().contains(bounds))
                                 self.assertGreaterEqual(button.width(), button.fontMetrics().horizontalAdvance(button.text()) + 44)
+                            for choice in dialog._choices:
+                                self.assertGreaterEqual(choice.width(), choice.fontMetrics().horizontalAdvance(choice.text()) + 24)
+                            scroll = dialog.findChild(QScrollArea)
+                            self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)
+                            original_size = dialog.size()
+                            for choice in dialog._choices:
+                                if choice.isEnabled():
+                                    choice.click()
+                                    self.app.processEvents()
+                                    self.assertEqual(dialog.size(), original_size)
                             destination = os.environ.get("WORKLOGGER_SCREENSHOTS")
                             if destination:
                                 directory = Path(destination)

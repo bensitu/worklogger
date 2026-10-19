@@ -403,14 +403,14 @@ msgstr "正在檢查更新..."
 msgid "Choose a backup destination different from the active database."
 msgstr "請選擇不同於目前資料庫的備份位置。"
 
-msgid "Choose a compatible SQLite backup or keep the existing files and create an empty database. Your current files will be retained before replacement."
-msgstr "請選擇相容的 SQLite 備份，或保留現有檔案並建立空白資料庫。替換前會完整保留目前檔案。"
-
 msgid "Choose a compatible SQLite database backup, not the active database or a personal cloud backup archive. No replacement was performed."
 msgstr "請選擇相容的 SQLite 資料庫備份，而非目前資料庫或個人雲端備份封存檔。尚未執行替換。"
 
 msgid "Choose a holiday region to calculate planned work and automatic goals."
 msgstr "請選擇假日地區，以計算計畫工作與自動目標。"
+
+msgid "Choose a local SQLite backup (.db, .sqlite or .sqlite3), not a CSV or personal cloud archive. WorkLogger checks a copy before replacement, keeps the current files, then opens sign-in for an account from the backup."
+msgstr "選擇本機 SQLite 資料庫備份（.db、.sqlite 或 .sqlite3），而非 CSV 或個人雲端備份封存檔。軟體會先檢查備份副本，保留目前檔案後再取代。完成後請使用備份中的帳戶登入。"
 
 msgid "Choose a split time strictly inside the recorded interval."
 msgstr "請選擇記錄時段內的拆分時間，不能選擇開始或結束時間。"
@@ -433,8 +433,14 @@ msgstr "請選擇不超過10 MB及2000萬像素的圖片。"
 msgid "Choose an image with a long edge of at least 1280 pixels and a short edge of at least 720 pixels."
 msgstr "請選擇長邊至少 1280 像素、短邊至少 720 像素的圖片。"
 
+msgid "Choose backup..."
+msgstr "選擇備份…"
+
 msgid "Choose custom color"
 msgstr "選擇自訂色彩"
+
+msgid "Choose one action"
+msgstr "請選擇一種操作"
 
 msgid "Classification"
 msgstr "記錄分類"
@@ -462,6 +468,9 @@ msgstr "用戶端加密"
 
 msgid "Close"
 msgstr "關閉"
+
+msgid "Close WorkLogger without changing any files. Use this if you need help from your administrator or a compatible version to access the existing database."
+msgstr "關閉 WorkLogger，不變更任何檔案。若需要管理員協助，或需要使用相容版本開啟原資料庫，請選擇此項。"
 
 msgid "Close the note editor before continuing."
 msgstr "請先關閉筆記編輯器再繼續。"
@@ -562,6 +571,9 @@ msgstr "建立帳戶"
 msgid "Create an empty database and set up a new account? Existing database files will be retained; records will not be imported automatically."
 msgstr "是否建立空白資料庫並設定新帳戶？現有資料庫檔案會保留，但不會自動匯入原有記錄。"
 
+msgid "Create new database..."
+msgstr "新增資料庫…"
+
 msgid "Create record from event"
 msgstr "從日程建立記錄"
 
@@ -634,8 +646,8 @@ msgstr "資料已還原。本機復原副本：{path}"
 msgid "Database Backup"
 msgstr "資料庫備份"
 
-msgid "Database file"
-msgstr "資料庫檔案"
+msgid "Database file (read-only)"
+msgstr "資料庫檔案（唯讀，可複製）"
 
 msgid "Database recovery"
 msgstr "資料庫復原"
@@ -903,6 +915,9 @@ msgstr "現有記錄"
 
 msgid "Exit"
 msgstr "結束"
+
+msgid "Exit without making changes"
+msgstr "退出，不變更檔案"
 
 msgid "Export"
 msgstr "匯出"
@@ -1189,11 +1204,14 @@ msgstr "6月"
 msgid "Keep draft"
 msgstr "保留草稿"
 
-msgid "Keep existing database and create new"
-msgstr "保留現有資料庫並新建"
+msgid "Keep files and create a new database"
+msgstr "保留原檔案並建立新資料庫"
 
 msgid "Keep restored database"
 msgstr "保留還原後的資料庫"
+
+msgid "Keep the current database and its journal files in a separate recovery folder, then start with an empty database and create a new account. Existing records are not imported."
+msgstr "將目前資料庫及其日誌檔案保留在獨立的復原資料夾中，再建立空白資料庫並設定新帳戶。原有記錄不會自動匯入。"
 
 msgid "Keep the current draft and open another date?"
 msgstr "保留目前草稿並開啟其他日期嗎？"

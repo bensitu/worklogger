@@ -403,14 +403,14 @@ msgstr "更新を確認中..."
 msgid "Choose a backup destination different from the active database."
 msgstr "使用中のデータベースとは異なるバックアップ先を選択してください。"
 
-msgid "Choose a compatible SQLite backup or keep the existing files and create an empty database. Your current files will be retained before replacement."
-msgstr "互換性のある SQLite バックアップを選ぶか、既存のファイルを保持して空のデータベースを作成してください。置き換える前に現在のファイルを保持します。"
-
 msgid "Choose a compatible SQLite database backup, not the active database or a personal cloud backup archive. No replacement was performed."
 msgstr "現在のデータベースや個人用クラウドバックアップではなく、互換性のある SQLite データベースのバックアップを選択してください。置き換えは行われていません。"
 
 msgid "Choose a holiday region to calculate planned work and automatic goals."
 msgstr "予定勤務と自動目標を計算するには、祝日の地域を選択してください。"
+
+msgid "Choose a local SQLite backup (.db, .sqlite or .sqlite3), not a CSV or personal cloud archive. WorkLogger checks a copy before replacement, keeps the current files, then opens sign-in for an account from the backup."
+msgstr "ローカルの SQLite バックアップ（.db、.sqlite、.sqlite3）を選択してください。CSV や個人用クラウドバックアップは使用できません。コピーを検証し、現在のファイルを保持してから置き換えます。完了後はバックアップ内のアカウントでサインインしてください。"
 
 msgid "Choose a split time strictly inside the recorded interval."
 msgstr "記録の開始・終了時刻を除く、区間内の分割時刻を選択してください。"
@@ -433,8 +433,14 @@ msgstr "10MB以下、2,000万画素以下の画像を選択してください。
 msgid "Choose an image with a long edge of at least 1280 pixels and a short edge of at least 720 pixels."
 msgstr "長辺が1280ピクセル以上、短辺が720ピクセル以上の画像を選択してください。"
 
+msgid "Choose backup..."
+msgstr "バックアップを選択…"
+
 msgid "Choose custom color"
 msgstr "カスタム色を選択"
+
+msgid "Choose one action"
+msgstr "操作を1つ選択"
 
 msgid "Classification"
 msgstr "記録の分類"
@@ -462,6 +468,9 @@ msgstr "クライアント側の暗号化"
 
 msgid "Close"
 msgstr "閉じる"
+
+msgid "Close WorkLogger without changing any files. Use this if you need help from your administrator or a compatible version to access the existing database."
+msgstr "ファイルを変更せずに WorkLogger を終了します。管理者への相談や、互換性のあるバージョンで既存のデータベースを開く必要がある場合に選択してください。"
 
 msgid "Close the note editor before continuing."
 msgstr "続行する前にノートエディターを閉じてください。"
@@ -562,6 +571,9 @@ msgstr "アカウントを作成"
 msgid "Create an empty database and set up a new account? Existing database files will be retained; records will not be imported automatically."
 msgstr "空のデータベースを作成して新しいアカウントを設定しますか？既存のデータベースファイルは保持されますが、記録は自動的に取り込まれません。"
 
+msgid "Create new database..."
+msgstr "データベースを新規作成…"
+
 msgid "Create record from event"
 msgstr "予定から記録を作成"
 
@@ -634,8 +646,8 @@ msgstr "データを復元しました。復旧用コピー: {path}"
 msgid "Database Backup"
 msgstr "データベースのバックアップ"
 
-msgid "Database file"
-msgstr "データベースファイル"
+msgid "Database file (read-only)"
+msgstr "データベースファイル（読み取り専用・コピー可）"
 
 msgid "Database recovery"
 msgstr "データベースの復旧"
@@ -903,6 +915,9 @@ msgstr "既存の記録"
 
 msgid "Exit"
 msgstr "終了"
+
+msgid "Exit without making changes"
+msgstr "変更せずに終了"
 
 msgid "Export"
 msgstr "エクスポート"
@@ -1189,11 +1204,14 @@ msgstr "6月"
 msgid "Keep draft"
 msgstr "下書きを保持"
 
-msgid "Keep existing database and create new"
-msgstr "既存のデータベースを保持して新規作成"
+msgid "Keep files and create a new database"
+msgstr "元のファイルを保持して新規作成"
 
 msgid "Keep restored database"
 msgstr "復元後のデータベースを使用"
+
+msgid "Keep the current database and its journal files in a separate recovery folder, then start with an empty database and create a new account. Existing records are not imported."
+msgstr "現在のデータベースとジャーナルファイルを別の復旧フォルダーに保持し、空のデータベースと新しいアカウントを作成します。既存の記録は自動で取り込まれません。"
 
 msgid "Keep the current draft and open another date?"
 msgstr "現在の下書きを保持して、別の日付を開きますか？"

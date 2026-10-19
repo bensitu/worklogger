@@ -35,17 +35,28 @@ residency and remove `QT_QPA_PLATFORM=offscreen` from an interactive environment
 
 ## Missing Data or Database Errors
 
-Check the active account, selected date, and Settings > Data > Data location.
+Check the active account, selected date, and Settings > Data > Local data location.
 Source and packaged applications use different locations.
 
 Do not delete a database to fix a schema or integrity error. Close the application,
 preserve the database and any journal files or backups, and inspect a copy.
 Unsupported layouts are rejected without resetting data. See [database handling](database.md).
 
-If database validation prevents startup, the recovery window shows the database
-path and offers **Open data directory**, **Restore from database backup**,
-**Keep existing database and create new**, and **Exit**. Exit is the default;
-opening the directory or cancelling confirmation does not replace the database.
+If database validation prevents startup, the recovery window groups the read-only,
+copyable database path with **Open data directory**. Opening the directory does
+not change files. Under **Choose one action**, select one of the following:
+
+- **Restore from database backup**: choose **Choose backup...**, select a local
+  SQLite backup, and confirm replacement. WorkLogger checks a separate copy,
+  retains the existing files, and opens sign-in for an account from the backup.
+- **Keep files and create a new database**: choose **Create new database...**
+  and confirm. WorkLogger retains the existing files and opens new account setup.
+  Previous records are not imported.
+- **Exit without making changes**: choose **Exit** to close WorkLogger and seek
+  help or use a compatible application version. This is the default selection.
+
+Selecting an option alone does not change the database. Cancelling backup
+selection or confirmation also leaves the database unchanged.
 
 Restore accepts a compatible SQLite database backup, including a supported
 v3.3.3 database. It validates and upgrades a separate copy before replacement,

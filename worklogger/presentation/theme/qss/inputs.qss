@@ -19,6 +19,15 @@ QLineEdit#account_role_line_edit {
   background: {{ readonly_fill }};
 }
 
+QPlainTextEdit[role="readonly_location_path"] {
+  background: transparent;
+  color: {{ muted_text }};
+  border: none;
+  border-radius: 0;
+  min-height: 0;
+  padding: 0;
+}
+
 QLineEdit:hover:enabled:!read-only:!focus,
 QTextEdit:hover:enabled:!read-only:!focus,
 QPlainTextEdit:hover:enabled:!read-only:!focus,

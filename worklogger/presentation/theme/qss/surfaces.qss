@@ -11,6 +11,7 @@ QWidget {
 QLabel,
 QWidget#credential_header_widget,
 QWidget#credential_form_widget,
+QWidget#database_recovery_content_widget,
 QStackedWidget#credential_feedback_stack_widget,
 QWidget#minimal_date_navigation_widget,
 QWidget#settings_theme_row_widget,
@@ -43,6 +44,7 @@ QWidget#cloud_backup_field_widget,
 QWidget#work_schedule_editor_widget,
 QWidget#work_schedule_week_widget,
 QRadioButton#work_schedule_choice_button,
+QRadioButton#database_recovery_choice_button,
 QWidget#settings_about_widget,
 QWidget#data_browser_summary_widget,
 QCheckBox#work_item_completed_check,
@@ -70,6 +72,12 @@ QFrame#settings_content_frame {
 QFrame[card="true"]:hover:enabled {
   background: {{ card_hover_fill }};
   border-color: {{ border_strong }};
+}
+
+QFrame[role="readonly_location"] {
+  background: {{ readonly_fill }};
+  border: 1px solid {{ panel_border }};
+  border-radius: {{ panel_radius }};
 }
 
 QFrame#settings_separator_frame,

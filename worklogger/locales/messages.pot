@@ -401,13 +401,13 @@ msgstr ""
 msgid "Choose a backup destination different from the active database."
 msgstr ""
 
-msgid "Choose a compatible SQLite backup or keep the existing files and create an empty database. Your current files will be retained before replacement."
-msgstr ""
-
 msgid "Choose a compatible SQLite database backup, not the active database or a personal cloud backup archive. No replacement was performed."
 msgstr ""
 
 msgid "Choose a holiday region to calculate planned work and automatic goals."
+msgstr ""
+
+msgid "Choose a local SQLite backup (.db, .sqlite or .sqlite3), not a CSV or personal cloud archive. WorkLogger checks a copy before replacement, keeps the current files, then opens sign-in for an account from the backup."
 msgstr ""
 
 msgid "Choose a split time strictly inside the recorded interval."
@@ -431,7 +431,13 @@ msgstr ""
 msgid "Choose an image with a long edge of at least 1280 pixels and a short edge of at least 720 pixels."
 msgstr ""
 
+msgid "Choose backup..."
+msgstr ""
+
 msgid "Choose custom color"
+msgstr ""
+
+msgid "Choose one action"
 msgstr ""
 
 msgid "Classification"
@@ -459,6 +465,9 @@ msgid "Client-side encryption"
 msgstr ""
 
 msgid "Close"
+msgstr ""
+
+msgid "Close WorkLogger without changing any files. Use this if you need help from your administrator or a compatible version to access the existing database."
 msgstr ""
 
 msgid "Close the note editor before continuing."
@@ -560,6 +569,9 @@ msgstr ""
 msgid "Create an empty database and set up a new account? Existing database files will be retained; records will not be imported automatically."
 msgstr ""
 
+msgid "Create new database..."
+msgstr ""
+
 msgid "Create record from event"
 msgstr ""
 
@@ -632,7 +644,7 @@ msgstr ""
 msgid "Database Backup"
 msgstr ""
 
-msgid "Database file"
+msgid "Database file (read-only)"
 msgstr ""
 
 msgid "Database recovery"
@@ -900,6 +912,9 @@ msgid "Existing records"
 msgstr ""
 
 msgid "Exit"
+msgstr ""
+
+msgid "Exit without making changes"
 msgstr ""
 
 msgid "Export"
@@ -1187,10 +1202,13 @@ msgstr ""
 msgid "Keep draft"
 msgstr ""
 
-msgid "Keep existing database and create new"
+msgid "Keep files and create a new database"
 msgstr ""
 
 msgid "Keep restored database"
+msgstr ""
+
+msgid "Keep the current database and its journal files in a separate recovery folder, then start with an empty database and create a new account. Existing records are not imported."
 msgstr ""
 
 msgid "Keep the current draft and open another date?"
