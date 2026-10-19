@@ -8,9 +8,9 @@ Record time and prepare reports locally, with no hosted service required.
 AI assistance and personal cloud backups are optional, so you can use only
 what you need.
 
-**[📥 Download WorkLogger](https://github.com/bensitu/worklogger/releases/latest)**
+📥 **[Download WorkLogger](https://github.com/bensitu/worklogger/releases/latest)**
 
-[📖 Explore the user guide](docs/user-guide.md)
+📖 [Explore the user guide](docs/user-guide.md)
 
 ![WorkLogger calendar showing daily hours, classification colors, notes, and individual time records](docs/images/demo_1.png)
 
