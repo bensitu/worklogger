@@ -33,6 +33,34 @@ Closing login without signing in is normal cancellation. A second desktop instan
 does not replace the running instance. If no window appears, check tray/menu-bar
 residency and remove `QT_QPA_PLATFORM=offscreen` from an interactive environment.
 
+If startup fails before the main window opens, **Startup assistance** explains
+storage, permission, logging, or initial account configuration problems. Correct
+the reported condition and choose **Retry**; **Exit** is the default. The file
+location is read-only and can be copied. Its directory button opens the nearest
+existing parent if the intended directory has not been created yet.
+
+- For read-only storage or access restrictions, check directory permissions and
+  security software policies with the administrator. SQLite also needs write
+  access for journal and lock files; do not delete those files to bypass an error.
+- For insufficient space or an exhausted storage quota, free space on the
+  affected drive without deleting databases, recovery files, or backups.
+- For a busy database, finish other operations or close external database tools,
+  then retry. WorkLogger still requires its instance lock before opening data.
+- If logging cannot start, the window shows the configured log path. Correct
+  directory permissions and retry; diagnostics remain available without a log.
+  Changing `WORKLOGGER_LOG_PATH` outside the running process requires a restart.
+- An empty database with registration disabled needs a prepared database or
+  administrator-authorized initial setup. Invalid configuration does not enable
+  registration or external sign-in. Correct `worklogger.config.json`, then retry.
+
+**Copy diagnostics** includes the application version, platform, error code, and
+database, log, and deployment configuration paths. It does not include file
+contents, exception messages, account records, or credentials. Paths can contain
+an OS username, so review them before sharing. Retrying after authentication or
+initialization fails returns to manual sign-in without resetting the database.
+Background work from the unsuccessful attempt is stopped before another attempt.
+Ordinary sign-in validation errors remain in the sign-in form.
+
 ## Missing Data or Database Errors
 
 Check the active account, selected date, and Settings > Data > Local data location.

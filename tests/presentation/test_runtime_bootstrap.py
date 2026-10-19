@@ -85,6 +85,13 @@ class RuntimeBootstrapTests(unittest.TestCase):
                     self.assertEqual(model.login_with_identity("google").error.code, "oidc_disabled")
                     return CancellingAuthenticator(model)
                 config = DesktopRuntimeConfig(database_path=root / "worklog.db", password_iterations=1000)
+                from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
+                from worklogger.infrastructure.repositories import SQLiteAuthRepository
+                from worklogger.infrastructure.security import PBKDF2PasswordHasher
+                factory = SQLiteConnectionFactory(config.database_path)
+                MigrationRunner(factory).run_pending()
+                SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000)).create_user(
+                    "managed-user", "secret123", recovery_key=None, is_admin=True)
                 self.assertFalse(build_authenticated_desktop_runtime(config, argv=[], auth_controller_factory=authenticate).ok)
                 result = build_desktop_runtime(DesktopRuntimeConfig(database_path=root / "worklog.db",
                     create_user_if_empty=True, password_iterations=1000), argv=[])
@@ -99,6 +106,40 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 finally:
                     runtime.window.close()
                     runtime.job_runner.shutdown(wait=True)
+
+    def test_logging_failure_does_not_open_database_and_failed_session_workers_are_stopped(self):
+        from worklogger.domain.shared.errors import InfrastructureError
+
+        with (patch("worklogger.bootstrap.setup_logging", side_effect=PermissionError()),
+              patch("worklogger.bootstrap._prepare_database") as prepare):
+            result = build_authenticated_desktop_runtime(argv=[])
+        self.assertEqual(result.error.code, "startup_permission_denied")
+        self.assertEqual(result.error.details["resource"], "logging")
+        prepare.assert_not_called()
+        with self.runtime_directory() as directory:
+            from worklogger.presentation.job_runner import QtJobRunner
+            application = QApplication.instance()
+            previous = set(application.findChildren(QtJobRunner)) if application else set()
+            result = Result.failure(InfrastructureError("settings_load_failed", "settings_load_failed"))
+            with patch("worklogger.bootstrap.build_user_runtime", return_value=result):
+                failure = build_authenticated_desktop_runtime(
+                    DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db", password_iterations=1000),
+                    argv=[], auth_controller_factory=AutoRegisterAuthenticator)
+            self.assertEqual(failure.error.code, "settings_load_failed")
+            created = set(QApplication.instance().findChildren(QtJobRunner)) - previous
+            self.assertTrue(created)
+            self.assertTrue(all(runner._closed for runner in created))
+
+    def test_empty_database_requires_valid_registration_configuration(self):
+        from worklogger.infrastructure.runtime_config import DeploymentFeatures, RuntimeConfiguration
+
+        with self.runtime_directory() as directory:
+            config = DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db", password_iterations=1000)
+            for valid, expected in ((False, "startup_configuration_invalid"), (True, "startup_account_setup_required")):
+                with self.subTest(valid=valid), patch("worklogger.bootstrap.load_runtime_configuration",
+                    return_value=RuntimeConfiguration(features=DeploymentFeatures(self_registration=False), valid=valid)):
+                    result = build_authenticated_desktop_runtime(config, argv=[], auth_controller_factory=AutoRegisterAuthenticator)
+                    self.assertEqual(result.error.code, expected)
 
     def test_selected_model_connects_record_note_and_report_rewriting(self):
         self.enterContext(patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes))

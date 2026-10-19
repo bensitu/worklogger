@@ -9,6 +9,14 @@ def N_(message: str) -> str:
 
 
 _MESSAGE_GROUPS = (
+    (("startup_storage_readonly",), N_("The indicated location is read-only. Restore write access, then retry. A database also needs a writable directory for journal and lock files. Do not delete existing database files.")),
+    (("startup_storage_full",), N_("There is not enough space on the affected drive, or its storage quota is exhausted. Free space without deleting database or recovery files, then retry.")),
+    (("startup_storage_busy",), N_("The database is temporarily in use. Finish other database operations or close tools accessing it, then retry. Do not delete journal or lock files.")),
+    (("startup_permission_denied",), N_("WorkLogger does not have permission to access the file or directory shown below. Check folder permissions and security software restrictions with your administrator, then retry.")),
+    (("startup_storage_unavailable",), N_("The required file or storage location is unavailable. Check that the drive is connected and the directory is accessible, then retry.")),
+    (("startup_logging_failed",), N_("The application log could not be opened. Check the log directory and its permissions, then retry. Diagnostics can be copied even when no log file was created.")),
+    (("startup_configuration_invalid",), N_("The deployment configuration could not be read, so registration and external sign-in are disabled. No initial account is available. Ask your administrator to correct worklogger.config.json, then retry; do not delete the database.")),
+    (("startup_account_setup_required",), N_("This database has no accounts, and self-registration is disabled. Ask your administrator to provide a prepared database or temporarily allow initial account setup in worklogger.config.json, then retry.")),
     (("startup_recovery_pending",), N_("Database replacement was interrupted. The original files are retained in the database-recovery directory. Choose a backup or create an empty database to continue.")),
     (("startup_backup_invalid",), N_("Choose a compatible SQLite database backup, not the active database or a personal cloud backup archive. No replacement was performed.")),
     (("startup_recovery_failed",), N_("Database recovery could not be completed. Keep the database-recovery directory and any recovery marker. Check free space, file permissions, and whether another program is using the files before retrying.")),

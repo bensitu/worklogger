@@ -84,12 +84,12 @@ class DatabaseStartupTests(unittest.TestCase):
 
     def test_unavailable_directory_opener_keeps_copyable_path(self):
         dialog = self.dialog()
-        with patch("worklogger.presentation.widgets.database_startup.QDesktopServices.openUrl", return_value=False):
-            dialog.open_button.click()
-        self.assertEqual(dialog.path_view.toPlainText(), str(self.path))
-        self.assertTrue(dialog.path_view.isReadOnly())
-        dialog.path_view.selectAll()
-        self.assertEqual(dialog.path_view.textCursor().selectedText(), str(self.path))
+        with patch("worklogger.presentation.widgets.file_location.QDesktopServices.openUrl", return_value=False):
+            dialog.location.open_button.click()
+        self.assertEqual(dialog.location.path_view.toPlainText(), str(self.path))
+        self.assertTrue(dialog.location.path_view.isReadOnly())
+        dialog.location.path_view.selectAll()
+        self.assertEqual(dialog.location.path_view.textCursor().selectedText(), str(self.path))
         self.assertTrue(dialog.status_label.text())
         self.handler.handle.assert_not_called()
 
@@ -120,3 +120,23 @@ class DatabaseStartupTests(unittest.TestCase):
             validate_database_file(path)
             preserved = next((path.parent / "database-recovery").glob("*/worklog.db"))
             self.assertEqual(preserved.read_bytes(), b"Original incompatible database")
+
+    def test_startup_assistance_keeps_diagnostics_private_and_retries_only_on_request(self):
+        from worklogger.presentation.widgets.startup_error import StartupErrorDialog
+
+        error = InfrastructureError("startup_configuration_invalid", "startup_configuration_invalid",
+                                    {"resource": "configuration", "reason": "private diagnostic payload"})
+        dialog = StartupErrorDialog(error, database_path=self.path,
+            log_path=self.path.parent / "worklogger.log", configuration_path=self.path.parent / "worklogger.config.json")
+        dialog.show()
+        self.assertTrue(dialog.exit_button.isDefault())
+        self.assertEqual(dialog.location.path.name, "worklogger.config.json")
+        dialog.copy_button.click()
+        copied = self.app.clipboard().text()
+        self.assertIn("startup_configuration_invalid", copied)
+        self.assertIn(str(self.path), copied)
+        self.assertNotIn("private diagnostic payload", copied)
+        self.assertTrue(dialog.isVisible())
+        dialog.retry_button.click()
+        self.assertEqual(dialog.result(), QDialog.DialogCode.Accepted)
+        self.handler.handle.assert_not_called()

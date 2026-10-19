@@ -25,6 +25,7 @@ class RuntimeConfigurationTests(unittest.TestCase):
         self.path = self.directory / CONFIG_FILENAME
 
     def test_flags_are_strict_booleans_and_invalid_or_missing_files_fail_closed(self):
+        self.assertTrue(load_runtime_configuration(self.path).valid)
         self.assertFalse(load_runtime_configuration(self.path).features.background_images)
         self.assertFalse(load_runtime_configuration(self.path).features.minimal_view)
         for enabled in (True, False):
@@ -39,6 +40,7 @@ class RuntimeConfigurationTests(unittest.TestCase):
                       '[' * 1500 + ']' * 1500):
             self.path.write_text(value, encoding="utf-8")
             with self.assertLogs("worklogger.infrastructure.runtime_config", level="WARNING"):
+                self.assertFalse(load_runtime_configuration(self.path).valid)
                 self.assertFalse(load_runtime_configuration(self.path).features.background_images)
                 self.assertFalse(load_runtime_configuration(self.path).features.minimal_view)
 

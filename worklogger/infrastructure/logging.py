@@ -117,6 +117,11 @@ class _PrivateRotatingFileHandler(RotatingFileHandler):
             raise
 
 
+def log_file_path() -> Path:
+    """Return the configured log destination without creating files."""
+    return _resolve_log_path(None, frozen=None)
+
+
 def _resolve_log_path(
     log_path: Path | str | None,
     *,

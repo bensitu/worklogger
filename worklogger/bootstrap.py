@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from functools import lru_cache
 import secrets
-import sqlite3
 import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
@@ -42,7 +41,6 @@ from worklogger.infrastructure.database import (
     SQLiteConnectionFactory,
     default_database_path,
 )
-from worklogger.infrastructure.database.connection import DatabaseIntegrityError
 from worklogger.infrastructure.database.startup_recovery import startup_recovery_marker
 from worklogger.infrastructure.database.upgrade import copy_database
 from worklogger.infrastructure.identity.config import IdentityConfigurationStore
@@ -52,6 +50,7 @@ from worklogger.infrastructure.language_preferences import (
     initialize_language,
 )
 from worklogger.infrastructure.logging import setup_logging
+from worklogger.infrastructure.startup_errors import startup_error
 from worklogger.infrastructure.repositories import (
     SQLiteAuthRepository,
     SQLiteIdentityRepository,
@@ -94,8 +93,12 @@ def build_desktop_runtime(
     argv: Sequence[str] | None = None,
 ) -> Result[DesktopRuntime]:
     config = config or DesktopRuntimeConfig()
+    job_runner = None
+    runtime = None
     try:
-        setup_logging()
+        logging_result = _initialize_logging()
+        if not logging_result.ok:
+            return logging_result
         LOGGER.info("desktop_runtime_build_started")
         database_path, connection_factory, auth_repository = _prepare_database(config)
         user_result = _resolve_runtime_user(auth_repository, config)
@@ -109,7 +112,7 @@ def build_desktop_runtime(
         job_runner = QtJobRunner(application)
         auth_view_model = _auth_view_model(auth_repository, connection_factory)
         remember_session_store = _remember_session_store(database_path)
-        return build_user_runtime(
+        runtime = build_user_runtime(
             application=application,
             connection_factory=connection_factory,
             database_path=database_path,
@@ -122,8 +125,14 @@ def build_desktop_runtime(
             holiday_country=detect_country(),
             job_runner=job_runner,
         )
+        return runtime
     except Exception as exc:
         return _startup_failure(exc)
+    finally:
+        if job_runner is not None and (runtime is None or not runtime.ok):
+            from worklogger.composition.lifecycle import stop_background_tasks
+            stop_background_tasks(job_runner)
+            job_runner.deleteLater()
 
 
 def build_authenticated_desktop_runtime(
@@ -133,12 +142,20 @@ def build_authenticated_desktop_runtime(
     auth_controller_factory: AuthControllerFactory | None = None,
 ) -> Result[DesktopRuntime]:
     config = config or DesktopRuntimeConfig()
+    job_runner = None
+    runtime = None
     try:
-        setup_logging()
+        logging_result = _initialize_logging()
+        if not logging_result.ok:
+            return logging_result
         LOGGER.info("authenticated_desktop_runtime_build_started")
         database_path, connection_factory, auth_repository = _prepare_database(config)
         application = _application(argv)
         initialize_language(LanguagePreferences())
+        deployment = load_runtime_configuration()
+        if not deployment.features.self_registration and auth_repository.user_count() == 0:
+            code = "startup_account_setup_required" if deployment.valid else "startup_configuration_invalid"
+            return Result.failure(InfrastructureError(code, code, {"resource": "configuration"}))
         job_runner = QtJobRunner(application)
         auth_view_model = _auth_view_model(auth_repository, connection_factory)
         remember_session_store = _remember_session_store(database_path)
@@ -157,7 +174,7 @@ def build_authenticated_desktop_runtime(
             return Result.failure(
                 auth_result.error or ValidationError("auth_required", "auth_required")
             )
-        return build_user_runtime(
+        runtime = build_user_runtime(
             application=application,
             connection_factory=connection_factory,
             database_path=database_path,
@@ -171,23 +188,27 @@ def build_authenticated_desktop_runtime(
             holiday_country=detect_country(),
             job_runner=job_runner,
         )
+        return runtime
     except Exception as exc:
         return _startup_failure(exc)
+    finally:
+        if job_runner is not None and (runtime is None or not runtime.ok):
+            from worklogger.composition.lifecycle import stop_background_tasks
+            stop_background_tasks(job_runner)
+            job_runner.deleteLater()
+
+
+def _initialize_logging():
+    try:
+        setup_logging()
+        return Result.success(None)
+    except OSError as error:
+        return Result.failure(startup_error(error, fallback="startup_logging_failed", resource="logging"))
 
 
 def _startup_failure(exc):
     LOGGER.exception("desktop_runtime_failed")
-    code = getattr(exc, "sqlite_errorcode", 0) & 0xFF
-    corrupt = isinstance(exc, DatabaseIntegrityError) or code in {sqlite3.SQLITE_CORRUPT, sqlite3.SQLITE_NOTADB}
-    error = "database_corrupt" if corrupt else "desktop_runtime_failed"
-    if isinstance(exc, ValueError) and str(exc) in {
-        "database_version_unsupported", "database_schema_unsupported", "database_foreign_key_invalid",
-        "username_normalization_conflict", "identity_subject_ambiguous", "restore_pending",
-        "startup_recovery_pending",
-        "database_record_invalid", "database_record_count_invalid", "database_entry_type_unsupported",
-    }:
-        error = str(exc)
-    return Result.failure(InfrastructureError(error, error, {"error_type": type(exc).__name__}))
+    return Result.failure(startup_error(exc))
 
 
 def _application(argv: Sequence[str] | None) -> QApplication:

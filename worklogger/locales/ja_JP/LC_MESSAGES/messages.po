@@ -508,6 +508,12 @@ msgstr "ブラウザーでのサインインを待っています…"
 msgid "Completed"
 msgstr "完了"
 
+msgid "Configuration file (read-only)"
+msgstr "設定ファイル（読み取り専用・コピー可）"
+
+msgid "Configuration: {path}"
+msgstr "設定：{path}"
+
 msgid "Configure a valid HTTPS cloud destination and backup schedule."
 msgstr "有効な HTTPS クラウド保存先とバックアップスケジュールを設定してください。"
 
@@ -552,6 +558,9 @@ msgstr "コピー"
 
 msgid "Copy Markdown"
 msgstr "Markdownをコピー"
+
+msgid "Copy diagnostics"
+msgstr "診断情報をコピー"
 
 msgid "Copy recovery key"
 msgstr "復旧キーをコピー"
@@ -658,6 +667,9 @@ msgstr "データベースの復旧を完了できませんでした。database-
 msgid "Database replacement was interrupted. The original files are retained in the database-recovery directory. Choose a backup or create an empty database to continue."
 msgstr "データベースの置き換えが中断されました。元のファイルは database-recovery フォルダーに保持されています。バックアップを選ぶか、空のデータベースを作成して続行してください。"
 
+msgid "Database: {path}"
+msgstr "データベース：{path}"
+
 msgid "Date"
 msgstr "日付"
 
@@ -720,6 +732,9 @@ msgstr "ユーザー {username} とそのデータを削除しますか？"
 
 msgid "Desktop client secret (optional)"
 msgstr "デスクトップクライアントのシークレット（任意）"
+
+msgid "Diagnostics copied. Review the file paths before sharing them with support."
+msgstr "診断情報をコピーしました。サポートに送信する前に、ファイルパスを確認してください。"
 
 msgid "Discard"
 msgstr "破棄"
@@ -1345,8 +1360,14 @@ msgstr "ローカルユーザー"
 msgid "Log Out"
 msgstr "ログアウト"
 
+msgid "Log file (read-only)"
+msgstr "ログファイル（読み取り専用・コピー可）"
+
 msgid "Log out of your account?"
 msgstr "アカウントからログアウトしますか？"
+
+msgid "Log: {path}"
+msgstr "ログ：{path}"
 
 msgid "Login"
 msgstr "ログイン"
@@ -1633,11 +1654,17 @@ msgstr "種別と関連付けが一致する隣接記録だけを結合できま
 msgid "Open"
 msgstr "開く"
 
+msgid "Open configuration directory"
+msgstr "設定フォルダーを開く"
+
 msgid "Open data directory"
 msgstr "データフォルダーを開く"
 
 msgid "Open in editor"
 msgstr "編集中"
+
+msgid "Open log directory"
+msgstr "ログフォルダーを開く"
 
 msgid "Operation cancelled."
 msgstr "操作をキャンセルしました。"
@@ -2005,6 +2032,9 @@ msgstr "テンプレートをリセット"
 msgid "Reset this template to its default?"
 msgstr "このテンプレートを既定の内容に戻しますか？"
 
+msgid "Resolve the issue, then choose Retry. Retrying does not reset your database. Choose Exit to close WorkLogger."
+msgstr "問題を解決してから「再試行」を選んでください。再試行でデータベースがリセットされることはありません。「終了」で WorkLogger を閉じます。"
+
 msgid "Rest Days"
 msgstr "休日数"
 
@@ -2046,6 +2076,9 @@ msgstr "変更結果"
 
 msgid "Retention days"
 msgstr "保持日数"
+
+msgid "Retry"
+msgstr "再試行"
 
 msgid "Revision"
 msgstr "更新番号"
@@ -2392,6 +2425,9 @@ msgstr "月曜始まり"
 msgid "Started at"
 msgstr "開始日時"
 
+msgid "Startup assistance"
+msgstr "起動時のサポート"
+
 msgid "State / province"
 msgstr "州 / 都道府県"
 
@@ -2476,6 +2512,9 @@ msgstr "IDまたはパスワードが正しくありません。"
 msgid "The account's remembered session was revoked, but its device file could not be removed. Sign in manually and check storage permissions."
 msgstr "このアカウントのログイン記憶情報を無効にしましたが、端末のセッションファイルを削除できませんでした。手動でログインし、保存先の権限を確認してください。"
 
+msgid "The application log could not be opened. Check the log directory and its permissions, then retry. Diagnostics can be copied even when no log file was created."
+msgstr "アプリケーションログを開けませんでした。ログフォルダーとアクセス権を確認し、再試行してください。ログファイルが作成されていなくても診断情報をコピーできます。"
+
 msgid "The backup exceeds the supported size limit."
 msgstr "バックアップが対応サイズの上限を超えています。"
 
@@ -2500,6 +2539,12 @@ msgstr "データベースを読み込めませんでした。元のファイル
 msgid "The database is ready. Original files are kept in:\n{path}\n\nContinue to account setup or sign-in."
 msgstr "データベースの準備ができました。元のファイルの保存先：\n{path}\n\nアカウント設定またはログインに進んでください。"
 
+msgid "The database is temporarily in use. Finish other database operations or close tools accessing it, then retry. Do not delete journal or lock files."
+msgstr "データベースは一時的に使用中です。他の操作が完了するまで待つか、アクセスしているツールを閉じて再試行してください。ジャーナルファイルやロックファイルは削除しないでください。"
+
+msgid "The deployment configuration could not be read, so registration and external sign-in are disabled. No initial account is available. Ask your administrator to correct worklogger.config.json, then retry; do not delete the database."
+msgstr "配布設定を読み取れないため、登録と外部認証が無効になっています。初期アカウントもありません。管理者に worklogger.config.json の修正を依頼し、再試行してください。データベースは削除しないでください。"
+
 msgid "The draft could not be read. Your saved note is shown. Reload to discard the unreadable draft."
 msgstr "下書きを読み込めませんでした。保存済みのノートを表示しています。再読み込みすると、読み込めない下書きを破棄します。"
 
@@ -2508,6 +2553,9 @@ msgstr "ファイル内に同じ日付の競合する記録があります。"
 
 msgid "The historical break must fit inside the recorded interval."
 msgstr "過去の休憩は記録区間の内側に収まる必要があります。"
+
+msgid "The indicated location is read-only. Restore write access, then retry. A database also needs a writable directory for journal and lock files. Do not delete existing database files."
+msgstr "表示された場所は読み取り専用です。書き込み権限を復元し、再試行してください。データベースのフォルダーにはジャーナルファイルやロックファイルの作成権限も必要です。既存のデータベースは削除しないでください。"
 
 msgid "The latest 50 saved versions are retained. Restoring creates a new version."
 msgstr "最新の保存済みバージョン50件を保持します。復元すると新しいバージョンが作成されます。"
@@ -2538,6 +2586,9 @@ msgstr "記録が変更されています。元に戻す前に再読み込みし
 
 msgid "The report has not loaded. Reload it before continuing."
 msgstr "レポートが読み込まれていません。再度読み込んでから続行してください。"
+
+msgid "The required file or storage location is unavailable. Check that the drive is connected and the directory is accessible, then retry."
+msgstr "必要なファイルまたは保存先を利用できません。ドライブの接続とフォルダーへのアクセスを確認し、再試行してください。"
 
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr "保存済みレポートを利用できません。レポートを再読み込みして、もう一度お試しください。"
@@ -2581,6 +2632,9 @@ msgstr "テーマ"
 msgid "There is not enough free space to download this model. Free disk space and try again."
 msgstr "このモデルをダウンロードする空き容量が不足しています。ディスクの空き容量を確保して再試行してください。"
 
+msgid "There is not enough space on the affected drive, or its storage quota is exhausted. Free space without deleting database or recovery files, then retry."
+msgstr "対象ドライブの空き容量が不足しているか、保存容量の上限に達しています。データベースや復旧ファイルを削除せずに空き容量を確保し、再試行してください。"
+
 msgid "These records do not have compatible time-zone information. Choose entire-record replacement or cancel."
 msgstr "これらの記録のタイムゾーン情報には互換性がありません。記録全体を置き換えるか、キャンセルしてください。"
 
@@ -2592,6 +2646,9 @@ msgstr "このIDはすでに使用されています。別のIDを選択して�
 
 msgid "This authorization response is invalid. Return to WorkLogger."
 msgstr "この認証応答は無効です。WorkLogger に戻ってください。"
+
+msgid "This database has no accounts, and self-registration is disabled. Ask your administrator to provide a prepared database or temporarily allow initial account setup in worklogger.config.json, then retry."
+msgstr "このデータベースにはアカウントがなく、自己登録も無効です。管理者に設定済みのデータベースを依頼するか、worklogger.config.json で初期設定を一時的に許可してもらい、再試行してください。"
 
 msgid "This database version or structure is not supported. Keep the original file and use a compatible version to export your data."
 msgstr "このデータベースのバージョンまたは構造はサポートされていません。元のファイルを保持し、互換性のあるバージョンでデータをエクスポートしてください。"
@@ -2781,6 +2838,9 @@ msgstr "データフォルダーを開けません。"
 
 msgid "Unable to open the data directory. Use the database path shown above."
 msgstr "データフォルダーを開けません。上に表示されたデータベースのパスを使用してください。"
+
+msgid "Unable to open the directory. Use the file path shown above."
+msgstr "フォルダーを開けません。上に表示されたファイルパスを使用してください。"
 
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "モデルファイルを読み込めませんでした。アクセス権限を確認してください。"
@@ -3046,8 +3106,14 @@ msgstr "WorkLogger"
 msgid "WorkLogger command line"
 msgstr "WorkLoggerコマンドライン"
 
+msgid "WorkLogger could not finish starting."
+msgstr "WorkLogger の起動を完了できませんでした。"
+
 msgid "WorkLogger could not open the database."
 msgstr "WorkLogger はデータベースを開けませんでした。"
+
+msgid "WorkLogger does not have permission to access the file or directory shown below. Check folder permissions and security software restrictions with your administrator, then retry."
+msgstr "下に表示されたファイルまたはフォルダーへのアクセス権がありません。管理者とフォルダーの権限やセキュリティソフトの制限を確認し、再試行してください。"
 
 msgid "WorkLogger is already running."
 msgstr "WorkLogger は既に起動しています。"

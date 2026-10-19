@@ -508,6 +508,12 @@ msgstr "正在等待浏览器登录…"
 msgid "Completed"
 msgstr "已完成"
 
+msgid "Configuration file (read-only)"
+msgstr "配置文件（只读，可复制）"
+
+msgid "Configuration: {path}"
+msgstr "配置：{path}"
+
 msgid "Configure a valid HTTPS cloud destination and backup schedule."
 msgstr "请配置有效的 HTTPS 云存储地址与备份计划。"
 
@@ -552,6 +558,9 @@ msgstr "复制"
 
 msgid "Copy Markdown"
 msgstr "复制 Markdown"
+
+msgid "Copy diagnostics"
+msgstr "复制诊断信息"
 
 msgid "Copy recovery key"
 msgstr "复制恢复密钥"
@@ -658,6 +667,9 @@ msgstr "无法完成数据库恢复。请保留 database-recovery 目录及恢�
 msgid "Database replacement was interrupted. The original files are retained in the database-recovery directory. Choose a backup or create an empty database to continue."
 msgstr "数据库替换已中断。原始文件保留在 database-recovery 目录中，请选择备份或创建空数据库以继续。"
 
+msgid "Database: {path}"
+msgstr "数据库：{path}"
+
 msgid "Date"
 msgstr "日期"
 
@@ -720,6 +732,9 @@ msgstr "删除用户 {username} 及其数据吗？"
 
 msgid "Desktop client secret (optional)"
 msgstr "桌面客户端密钥（可选）"
+
+msgid "Diagnostics copied. Review the file paths before sharing them with support."
+msgstr "诊断信息已复制。向支持人员发送前，请检查其中的文件路径。"
 
 msgid "Discard"
 msgstr "放弃"
@@ -1345,8 +1360,14 @@ msgstr "本地用户"
 msgid "Log Out"
 msgstr "退出登录"
 
+msgid "Log file (read-only)"
+msgstr "日志文件（只读，可复制）"
+
 msgid "Log out of your account?"
 msgstr "确定退出当前账户吗？"
+
+msgid "Log: {path}"
+msgstr "日志：{path}"
 
 msgid "Login"
 msgstr "登录"
@@ -1633,11 +1654,17 @@ msgstr "仅可合并工作类型和关联一致的相邻记录。"
 msgid "Open"
 msgstr "打开"
 
+msgid "Open configuration directory"
+msgstr "打开配置目录"
+
 msgid "Open data directory"
 msgstr "打开数据目录"
 
 msgid "Open in editor"
 msgstr "正在编辑"
+
+msgid "Open log directory"
+msgstr "打开日志目录"
 
 msgid "Operation cancelled."
 msgstr "操作已取消。"
@@ -2005,6 +2032,9 @@ msgstr "重置模板"
 msgid "Reset this template to its default?"
 msgstr "将此模板恢复为默认内容？"
 
+msgid "Resolve the issue, then choose Retry. Retrying does not reset your database. Choose Exit to close WorkLogger."
+msgstr "解决问题后，点击“重试”。重试不会重置数据库。点击“退出”可关闭 WorkLogger。"
+
 msgid "Rest Days"
 msgstr "休息天数"
 
@@ -2046,6 +2076,9 @@ msgstr "变更结果"
 
 msgid "Retention days"
 msgstr "保留天数"
+
+msgid "Retry"
+msgstr "重试"
 
 msgid "Revision"
 msgstr "修订号"
@@ -2392,6 +2425,9 @@ msgstr "每周从周一开始"
 msgid "Started at"
 msgstr "开始时间戳"
 
+msgid "Startup assistance"
+msgstr "启动帮助"
+
 msgid "State / province"
 msgstr "州 / 省"
 
@@ -2476,6 +2512,9 @@ msgstr "ID 或密码不正确。"
 msgid "The account's remembered session was revoked, but its device file could not be removed. Sign in manually and check storage permissions."
 msgstr "已撤销此账户的记住登录凭据，但无法移除设备上的会话文件。请手动登录并检查存储权限。"
 
+msgid "The application log could not be opened. Check the log directory and its permissions, then retry. Diagnostics can be copied even when no log file was created."
+msgstr "无法打开应用日志。请检查日志目录及其访问权限，然后重试。即使日志文件尚未创建，也可以复制诊断信息。"
+
 msgid "The backup exceeds the supported size limit."
 msgstr "备份超过了支持的大小限制。"
 
@@ -2500,6 +2539,12 @@ msgstr "无法读取数据库，原始文件已保留。请按照数据库恢复
 msgid "The database is ready. Original files are kept in:\n{path}\n\nContinue to account setup or sign-in."
 msgstr "数据库已准备就绪。原始文件保留在：\n{path}\n\n接下来请设置账户或登录。"
 
+msgid "The database is temporarily in use. Finish other database operations or close tools accessing it, then retry. Do not delete journal or lock files."
+msgstr "数据库暂时被占用。请等待其他数据库操作完成，或关闭正在访问数据库的工具，然后重试。不要删除日志文件或锁文件。"
+
+msgid "The deployment configuration could not be read, so registration and external sign-in are disabled. No initial account is available. Ask your administrator to correct worklogger.config.json, then retry; do not delete the database."
+msgstr "无法读取部署配置，注册和外部身份登录已被禁用，且目前没有可用的初始账户。请联系管理员修正 worklogger.config.json 后重试，不要删除数据库。"
+
 msgid "The draft could not be read. Your saved note is shown. Reload to discard the unreadable draft."
 msgstr "无法读取草稿，当前显示已保存的笔记。重新加载可丢弃无法读取的草稿。"
 
@@ -2508,6 +2553,9 @@ msgstr "文件中存在同一日期的冲突记录。"
 
 msgid "The historical break must fit inside the recorded interval."
 msgstr "历史休息必须完整位于记录区间内。"
+
+msgid "The indicated location is read-only. Restore write access, then retry. A database also needs a writable directory for journal and lock files. Do not delete existing database files."
+msgstr "所示位置为只读。请恢复写入权限后重试。数据库所在目录也需要允许创建日志文件和锁文件。不要删除现有数据库文件。"
 
 msgid "The latest 50 saved versions are retained. Restoring creates a new version."
 msgstr "保留最近 50 个已保存版本。恢复将创建新版本。"
@@ -2538,6 +2586,9 @@ msgstr "记录已发生更改，撤销前请重新加载。"
 
 msgid "The report has not loaded. Reload it before continuing."
 msgstr "报表尚未加载，请重新加载后继续。"
+
+msgid "The required file or storage location is unavailable. Check that the drive is connected and the directory is accessible, then retry."
+msgstr "所需文件或存储位置不可用。请确认磁盘已连接，且目录可以访问，然后重试。"
 
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr "已保存的报表已不可用。请重新加载报表后再试。"
@@ -2581,6 +2632,9 @@ msgstr "主题"
 msgid "There is not enough free space to download this model. Free disk space and try again."
 msgstr "没有足够的可用空间下载此模型。请释放磁盘空间后重试。"
 
+msgid "There is not enough space on the affected drive, or its storage quota is exhausted. Free space without deleting database or recovery files, then retry."
+msgstr "相关磁盘空间不足，或存储配额已用尽。请释放空间后重试，不要删除数据库或恢复文件。"
+
 msgid "These records do not have compatible time-zone information. Choose entire-record replacement or cancel."
 msgstr "这些记录的时区信息不兼容。请选择替换整条记录，或取消操作。"
 
@@ -2592,6 +2646,9 @@ msgstr "此 ID 已被使用，请选择其他 ID。"
 
 msgid "This authorization response is invalid. Return to WorkLogger."
 msgstr "此授权响应无效。请返回 WorkLogger。"
+
+msgid "This database has no accounts, and self-registration is disabled. Ask your administrator to provide a prepared database or temporarily allow initial account setup in worklogger.config.json, then retry."
+msgstr "此数据库没有账户，且自注册已关闭。请联系管理员提供已设置账户的数据库，或在 worklogger.config.json 中临时允许初始账户设置，然后重试。"
 
 msgid "This database version or structure is not supported. Keep the original file and use a compatible version to export your data."
 msgstr "不支持此数据库版本或结构。请保留原文件，使用兼容版本导出数据。"
@@ -2781,6 +2838,9 @@ msgstr "无法打开数据目录。"
 
 msgid "Unable to open the data directory. Use the database path shown above."
 msgstr "无法打开数据目录，请使用上方显示的数据库路径。"
+
+msgid "Unable to open the directory. Use the file path shown above."
+msgstr "无法打开目录。请使用上方显示的文件路径。"
 
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "无法读取模型文件，请检查访问权限。"
@@ -3046,8 +3106,14 @@ msgstr "WorkLogger"
 msgid "WorkLogger command line"
 msgstr "WorkLogger 命令行"
 
+msgid "WorkLogger could not finish starting."
+msgstr "WorkLogger 未能完成启动。"
+
 msgid "WorkLogger could not open the database."
 msgstr "WorkLogger 无法打开数据库。"
+
+msgid "WorkLogger does not have permission to access the file or directory shown below. Check folder permissions and security software restrictions with your administrator, then retry."
+msgstr "WorkLogger 无权访问下方显示的文件或目录。请联系管理员检查文件夹权限及安全软件的限制，然后重试。"
 
 msgid "WorkLogger is already running."
 msgstr "WorkLogger 已在运行。"

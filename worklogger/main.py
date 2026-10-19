@@ -132,18 +132,33 @@ def smoke_runtime_check() -> int:
 
 
 def run_desktop(args: Sequence[str]) -> int:
-    try:
-        lock = _acquire_instance_lock()
-    except DesktopAlreadyRunningError:
-        _startup_message(_("WorkLogger is already running."), error=False)
-        return 0
-    except OSError:
-        _startup_message(_("Unable to start WorkLogger. Check the application log for details."))
-        return 1
+    from worklogger.infrastructure.startup_errors import startup_error
+
+    while True:
+        try:
+            lock = _acquire_instance_lock()
+            break
+        except DesktopAlreadyRunningError:
+            _startup_message(_("WorkLogger is already running."), error=False)
+            return 0
+        except OSError as error:
+            if not _retry_startup(startup_error(error), args):
+                return 1
     try:
         return _run_desktop(args)
     finally:
         lock.unlock()
+
+
+def _retry_startup(error, args) -> bool:
+    if os.environ.get("QT_QPA_PLATFORM") not in {"offscreen", "minimal"}:
+        from worklogger.composition.startup_assistance import offer_startup_retry
+        try:
+            return offer_startup_retry(error, args)
+        except Exception as failure:
+            LOGGER.error("startup_assistance_failed: %s", type(failure).__name__)
+    _startup_message(display_error_message(error))
+    return False
 
 
 def _run_desktop(args: Sequence[str]) -> int:
@@ -191,7 +206,10 @@ def _run_desktop(args: Sequence[str]) -> int:
                     skip_remembered_session = True
                 except Exception as error:
                     LOGGER.error("restore_recovery_failed: %s", type(error).__name__)
-                    _startup_message(display_error_message(runtime.error))
+                    from worklogger.infrastructure.startup_errors import startup_error
+                    if _retry_startup(startup_error(error, fallback="startup_recovery_failed"), args):
+                        skip_remembered_session = True
+                        continue
                     return 1
                 continue
             if (runtime.error is not None and runtime.error.code in DATABASE_RECOVERY_ERROR_CODES
@@ -201,14 +219,19 @@ def _run_desktop(args: Sequence[str]) -> int:
                     recovered = recover_startup_database(runtime.error, args)
                 except Exception as error:
                     LOGGER.error("startup_recovery_dialog_failed: %s", type(error).__name__)
-                    _startup_message(display_error_message(runtime.error))
+                    from worklogger.infrastructure.startup_errors import startup_error
+                    if _retry_startup(startup_error(error, fallback="startup_recovery_failed"), args):
+                        skip_remembered_session = True
+                        continue
                     return 1
                 if recovered:
                     skip_remembered_session = True
                     continue
                 return 0
             _safe_stdout(_("DESKTOP START FAILED"))
-            _startup_message(display_error_message(runtime.error))
+            if _retry_startup(runtime.error, args):
+                skip_remembered_session = True
+                continue
             return 1
 
         logged_out = False

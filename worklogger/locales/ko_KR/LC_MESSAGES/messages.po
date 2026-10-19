@@ -508,6 +508,12 @@ msgstr "브라우저 로그인을 기다리는 중…"
 msgid "Completed"
 msgstr "완료"
 
+msgid "Configuration file (read-only)"
+msgstr "설정 파일 (읽기 전용, 복사 가능)"
+
+msgid "Configuration: {path}"
+msgstr "설정: {path}"
+
 msgid "Configure a valid HTTPS cloud destination and backup schedule."
 msgstr "유효한 HTTPS 클라우드 저장소 주소와 백업 일정을 설정하세요."
 
@@ -552,6 +558,9 @@ msgstr "복사"
 
 msgid "Copy Markdown"
 msgstr "Markdown 복사"
+
+msgid "Copy diagnostics"
+msgstr "진단 정보 복사"
 
 msgid "Copy recovery key"
 msgstr "복구 키 복사"
@@ -658,6 +667,9 @@ msgstr "데이터베이스 복구를 완료하지 못했습니다. database-reco
 msgid "Database replacement was interrupted. The original files are retained in the database-recovery directory. Choose a backup or create an empty database to continue."
 msgstr "데이터베이스 교체가 중단되었습니다. 원본 파일은 database-recovery 폴더에 보관되어 있습니다. 백업을 선택하거나 빈 데이터베이스를 만들어 계속하세요."
 
+msgid "Database: {path}"
+msgstr "데이터베이스: {path}"
+
 msgid "Date"
 msgstr "날짜"
 
@@ -720,6 +732,9 @@ msgstr "사용자 {username} 및 해당 사용자의 데이터를 삭제할까�
 
 msgid "Desktop client secret (optional)"
 msgstr "데스크톱 클라이언트 비밀 값(선택)"
+
+msgid "Diagnostics copied. Review the file paths before sharing them with support."
+msgstr "진단 정보를 복사했습니다. 지원 담당자에게 보내기 전에 파일 경로를 확인하세요."
 
 msgid "Discard"
 msgstr "버리기"
@@ -1345,8 +1360,14 @@ msgstr "로컬 사용자"
 msgid "Log Out"
 msgstr "로그아웃"
 
+msgid "Log file (read-only)"
+msgstr "로그 파일 (읽기 전용, 복사 가능)"
+
 msgid "Log out of your account?"
 msgstr "계정에서 로그아웃할까요?"
+
+msgid "Log: {path}"
+msgstr "로그: {path}"
 
 msgid "Login"
 msgstr "로그인"
@@ -1633,11 +1654,17 @@ msgstr "유형과 맥락이 일치하는 인접 기록만 병합할 수 있습�
 msgid "Open"
 msgstr "열기"
 
+msgid "Open configuration directory"
+msgstr "설정 폴더 열기"
+
 msgid "Open data directory"
 msgstr "데이터 폴더 열기"
 
 msgid "Open in editor"
 msgstr "편집 중"
+
+msgid "Open log directory"
+msgstr "로그 폴더 열기"
 
 msgid "Operation cancelled."
 msgstr "작업이 취소되었습니다."
@@ -2005,6 +2032,9 @@ msgstr "템플릿 재설정"
 msgid "Reset this template to its default?"
 msgstr "이 템플릿을 기본 내용으로 되돌릴까요?"
 
+msgid "Resolve the issue, then choose Retry. Retrying does not reset your database. Choose Exit to close WorkLogger."
+msgstr "문제를 해결한 후 다시 시도를 선택하세요. 다시 시도해도 데이터베이스가 초기화되지 않습니다. 종료를 선택하면 WorkLogger가 닫힙니다."
+
 msgid "Rest Days"
 msgstr "휴무 일수"
 
@@ -2046,6 +2076,9 @@ msgstr "변경 결과"
 
 msgid "Retention days"
 msgstr "보관 일수"
+
+msgid "Retry"
+msgstr "다시 시도"
 
 msgid "Revision"
 msgstr "변경 번호"
@@ -2392,6 +2425,9 @@ msgstr "월요일부터 한 주 시작"
 msgid "Started at"
 msgstr "시작 시각"
 
+msgid "Startup assistance"
+msgstr "시작 도움말"
+
 msgid "State / province"
 msgstr "주 / 도"
 
@@ -2476,6 +2512,9 @@ msgstr "ID 또는 비밀번호가 올바르지 않습니다."
 msgid "The account's remembered session was revoked, but its device file could not be removed. Sign in manually and check storage permissions."
 msgstr "이 계정의 로그인 기억 자격 증명은 무효화되었지만 기기의 세션 파일을 삭제할 수 없습니다. 수동으로 로그인하고 저장소 권한을 확인하세요."
 
+msgid "The application log could not be opened. Check the log directory and its permissions, then retry. Diagnostics can be copied even when no log file was created."
+msgstr "애플리케이션 로그를 열 수 없습니다. 로그 폴더와 접근 권한을 확인한 후 다시 시도하세요. 로그 파일이 생성되지 않았어도 진단 정보를 복사할 수 있습니다."
+
 msgid "The backup exceeds the supported size limit."
 msgstr "백업이 지원되는 크기 제한을 초과했습니다."
 
@@ -2500,6 +2539,12 @@ msgstr "데이터베이스를 읽을 수 없습니다. 원본 파일은 보존�
 msgid "The database is ready. Original files are kept in:\n{path}\n\nContinue to account setup or sign-in."
 msgstr "데이터베이스가 준비되었습니다. 원본 파일 보관 위치:\n{path}\n\n계정 설정 또는 로그인으로 진행하세요."
 
+msgid "The database is temporarily in use. Finish other database operations or close tools accessing it, then retry. Do not delete journal or lock files."
+msgstr "데이터베이스가 일시적으로 사용 중입니다. 다른 작업이 끝날 때까지 기다리거나 접근 중인 도구를 닫은 후 다시 시도하세요. 저널 파일이나 잠금 파일을 삭제하지 마세요."
+
+msgid "The deployment configuration could not be read, so registration and external sign-in are disabled. No initial account is available. Ask your administrator to correct worklogger.config.json, then retry; do not delete the database."
+msgstr "배포 설정을 읽을 수 없어 등록과 외부 로그인이 비활성화되었으며 초기 계정도 없습니다. 관리자에게 worklogger.config.json 수정을 요청한 후 다시 시도하세요. 데이터베이스를 삭제하지 마세요."
+
 msgid "The draft could not be read. Your saved note is shown. Reload to discard the unreadable draft."
 msgstr "초안을 읽을 수 없어 저장된 노트를 표시합니다. 다시 불러오면 읽을 수 없는 초안이 삭제됩니다."
 
@@ -2508,6 +2553,9 @@ msgstr "파일에 같은 날짜의 충돌하는 기록이 있습니다."
 
 msgid "The historical break must fit inside the recorded interval."
 msgstr "이전 휴식은 기록된 구간 안에 있어야 합니다."
+
+msgid "The indicated location is read-only. Restore write access, then retry. A database also needs a writable directory for journal and lock files. Do not delete existing database files."
+msgstr "표시된 위치는 읽기 전용입니다. 쓰기 권한을 복구한 후 다시 시도하세요. 데이터베이스 폴더에는 저널 파일과 잠금 파일을 생성할 권한도 필요합니다. 기존 데이터베이스 파일을 삭제하지 마세요."
 
 msgid "The latest 50 saved versions are retained. Restoring creates a new version."
 msgstr "최근 저장된 버전 50개를 보관합니다. 복원하면 새 버전이 생성됩니다."
@@ -2538,6 +2586,9 @@ msgstr "기록이 변경되었습니다. 되돌리기 전에 다시 불러오세
 
 msgid "The report has not loaded. Reload it before continuing."
 msgstr "보고서가 로드되지 않았습니다. 다시 불러온 후 계속하세요."
+
+msgid "The required file or storage location is unavailable. Check that the drive is connected and the directory is accessible, then retry."
+msgstr "필요한 파일이나 저장 위치를 사용할 수 없습니다. 드라이브 연결과 폴더 접근 권한을 확인한 후 다시 시도하세요."
 
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr "저장된 보고서를 사용할 수 없습니다. 보고서를 다시 불러온 후 다시 시도하세요."
@@ -2581,6 +2632,9 @@ msgstr "테마"
 msgid "There is not enough free space to download this model. Free disk space and try again."
 msgstr "이 모델을 다운로드할 여유 공간이 부족합니다. 디스크 공간을 확보한 후 다시 시도하세요."
 
+msgid "There is not enough space on the affected drive, or its storage quota is exhausted. Free space without deleting database or recovery files, then retry."
+msgstr "해당 드라이브의 공간이 부족하거나 저장 용량 할당량을 모두 사용했습니다. 데이터베이스나 복구 파일을 삭제하지 않고 공간을 확보한 후 다시 시도하세요."
+
 msgid "These records do not have compatible time-zone information. Choose entire-record replacement or cancel."
 msgstr "이 기록들의 시간대 정보가 호환되지 않습니다. 전체 기록을 대체하거나 취소하세요."
 
@@ -2592,6 +2646,9 @@ msgstr "이 ID는 이미 사용 중입니다. 다른 ID를 선택하세요."
 
 msgid "This authorization response is invalid. Return to WorkLogger."
 msgstr "이 인증 응답은 유효하지 않습니다. WorkLogger로 돌아가세요."
+
+msgid "This database has no accounts, and self-registration is disabled. Ask your administrator to provide a prepared database or temporarily allow initial account setup in worklogger.config.json, then retry."
+msgstr "이 데이터베이스에는 계정이 없고 직접 등록도 비활성화되어 있습니다. 관리자에게 계정이 설정된 데이터베이스를 요청하거나 worklogger.config.json에서 초기 계정 설정을 임시 허용하도록 요청한 후 다시 시도하세요."
 
 msgid "This database version or structure is not supported. Keep the original file and use a compatible version to export your data."
 msgstr "이 데이터베이스 버전 또는 구조는 지원되지 않습니다. 원본 파일을 보존하고 호환되는 버전으로 데이터를 내보내세요."
@@ -2781,6 +2838,9 @@ msgstr "데이터 폴더를 열 수 없습니다."
 
 msgid "Unable to open the data directory. Use the database path shown above."
 msgstr "데이터 폴더를 열 수 없습니다. 위에 표시된 데이터베이스 경로를 사용하세요."
+
+msgid "Unable to open the directory. Use the file path shown above."
+msgstr "폴더를 열 수 없습니다. 위에 표시된 파일 경로를 사용하세요."
 
 msgid "Unable to read the model file. Check its access permissions."
 msgstr "모델 파일을 읽지 못했습니다. 접근 권한을 확인하세요."
@@ -3046,8 +3106,14 @@ msgstr "WorkLogger"
 msgid "WorkLogger command line"
 msgstr "WorkLogger 명령줄"
 
+msgid "WorkLogger could not finish starting."
+msgstr "WorkLogger 시작을 완료하지 못했습니다."
+
 msgid "WorkLogger could not open the database."
 msgstr "WorkLogger에서 데이터베이스를 열지 못했습니다."
+
+msgid "WorkLogger does not have permission to access the file or directory shown below. Check folder permissions and security software restrictions with your administrator, then retry."
+msgstr "아래에 표시된 파일이나 폴더에 접근할 권한이 없습니다. 관리자와 폴더 권한 및 보안 소프트웨어 제한을 확인한 후 다시 시도하세요."
 
 msgid "WorkLogger is already running."
 msgstr "WorkLogger가 이미 실행 중입니다."

@@ -506,6 +506,12 @@ msgstr ""
 msgid "Completed"
 msgstr ""
 
+msgid "Configuration file (read-only)"
+msgstr ""
+
+msgid "Configuration: {path}"
+msgstr ""
+
 msgid "Configure a valid HTTPS cloud destination and backup schedule."
 msgstr ""
 
@@ -549,6 +555,9 @@ msgid "Copy"
 msgstr ""
 
 msgid "Copy Markdown"
+msgstr ""
+
+msgid "Copy diagnostics"
 msgstr ""
 
 msgid "Copy recovery key"
@@ -656,6 +665,9 @@ msgstr ""
 msgid "Database replacement was interrupted. The original files are retained in the database-recovery directory. Choose a backup or create an empty database to continue."
 msgstr ""
 
+msgid "Database: {path}"
+msgstr ""
+
 msgid "Date"
 msgstr ""
 
@@ -717,6 +729,9 @@ msgid "Delete user {username} and their data?"
 msgstr ""
 
 msgid "Desktop client secret (optional)"
+msgstr ""
+
+msgid "Diagnostics copied. Review the file paths before sharing them with support."
 msgstr ""
 
 msgid "Discard"
@@ -1343,7 +1358,13 @@ msgstr ""
 msgid "Log Out"
 msgstr ""
 
+msgid "Log file (read-only)"
+msgstr ""
+
 msgid "Log out of your account?"
+msgstr ""
+
+msgid "Log: {path}"
 msgstr ""
 
 msgid "Login"
@@ -1631,10 +1652,16 @@ msgstr ""
 msgid "Open"
 msgstr ""
 
+msgid "Open configuration directory"
+msgstr ""
+
 msgid "Open data directory"
 msgstr ""
 
 msgid "Open in editor"
+msgstr ""
+
+msgid "Open log directory"
 msgstr ""
 
 msgid "Operation cancelled."
@@ -2003,6 +2030,9 @@ msgstr ""
 msgid "Reset this template to its default?"
 msgstr ""
 
+msgid "Resolve the issue, then choose Retry. Retrying does not reset your database. Choose Exit to close WorkLogger."
+msgstr ""
+
 msgid "Rest Days"
 msgstr ""
 
@@ -2043,6 +2073,9 @@ msgid "Result"
 msgstr ""
 
 msgid "Retention days"
+msgstr ""
+
+msgid "Retry"
 msgstr ""
 
 msgid "Revision"
@@ -2390,6 +2423,9 @@ msgstr ""
 msgid "Started at"
 msgstr ""
 
+msgid "Startup assistance"
+msgstr ""
+
 msgid "State / province"
 msgstr ""
 
@@ -2474,6 +2510,9 @@ msgstr ""
 msgid "The account's remembered session was revoked, but its device file could not be removed. Sign in manually and check storage permissions."
 msgstr ""
 
+msgid "The application log could not be opened. Check the log directory and its permissions, then retry. Diagnostics can be copied even when no log file was created."
+msgstr ""
+
 msgid "The backup exceeds the supported size limit."
 msgstr ""
 
@@ -2498,6 +2537,12 @@ msgstr ""
 msgid "The database is ready. Original files are kept in:\n{path}\n\nContinue to account setup or sign-in."
 msgstr ""
 
+msgid "The database is temporarily in use. Finish other database operations or close tools accessing it, then retry. Do not delete journal or lock files."
+msgstr ""
+
+msgid "The deployment configuration could not be read, so registration and external sign-in are disabled. No initial account is available. Ask your administrator to correct worklogger.config.json, then retry; do not delete the database."
+msgstr ""
+
 msgid "The draft could not be read. Your saved note is shown. Reload to discard the unreadable draft."
 msgstr ""
 
@@ -2505,6 +2550,9 @@ msgid "The file contains conflicting records for the same date."
 msgstr ""
 
 msgid "The historical break must fit inside the recorded interval."
+msgstr ""
+
+msgid "The indicated location is read-only. Restore write access, then retry. A database also needs a writable directory for journal and lock files. Do not delete existing database files."
 msgstr ""
 
 msgid "The latest 50 saved versions are retained. Restoring creates a new version."
@@ -2535,6 +2583,9 @@ msgid "The records have changed. Reload them before undoing this operation."
 msgstr ""
 
 msgid "The report has not loaded. Reload it before continuing."
+msgstr ""
+
+msgid "The required file or storage location is unavailable. Check that the drive is connected and the directory is accessible, then retry."
 msgstr ""
 
 msgid "The saved report is no longer available. Reload the reports and try again."
@@ -2579,6 +2630,9 @@ msgstr ""
 msgid "There is not enough free space to download this model. Free disk space and try again."
 msgstr ""
 
+msgid "There is not enough space on the affected drive, or its storage quota is exhausted. Free space without deleting database or recovery files, then retry."
+msgstr ""
+
 msgid "These records do not have compatible time-zone information. Choose entire-record replacement or cancel."
 msgstr ""
 
@@ -2589,6 +2643,9 @@ msgid "This ID is already in use. Choose a different ID."
 msgstr ""
 
 msgid "This authorization response is invalid. Return to WorkLogger."
+msgstr ""
+
+msgid "This database has no accounts, and self-registration is disabled. Ask your administrator to provide a prepared database or temporarily allow initial account setup in worklogger.config.json, then retry."
 msgstr ""
 
 msgid "This database version or structure is not supported. Keep the original file and use a compatible version to export your data."
@@ -2778,6 +2835,9 @@ msgid "Unable to open the data directory."
 msgstr ""
 
 msgid "Unable to open the data directory. Use the database path shown above."
+msgstr ""
+
+msgid "Unable to open the directory. Use the file path shown above."
 msgstr ""
 
 msgid "Unable to read the model file. Check its access permissions."
@@ -3044,7 +3104,13 @@ msgstr ""
 msgid "WorkLogger command line"
 msgstr ""
 
+msgid "WorkLogger could not finish starting."
+msgstr ""
+
 msgid "WorkLogger could not open the database."
+msgstr ""
+
+msgid "WorkLogger does not have permission to access the file or directory shown below. Check folder permissions and security software restrictions with your administrator, then retry."
 msgstr ""
 
 msgid "WorkLogger is already running."

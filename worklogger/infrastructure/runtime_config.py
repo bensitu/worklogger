@@ -60,6 +60,7 @@ class RuntimeConfiguration:
     ai: AiRuntimeConfiguration = AiRuntimeConfiguration()
     local_models: LocalModelsRuntimeConfiguration = LocalModelsRuntimeConfiguration()
     pagination: PaginationRuntimeConfiguration = PaginationRuntimeConfiguration()
+    valid: bool = True
 
 
 def configuration_path(*, frozen=None, executable=None, bundle_root=None, source_root=None):
@@ -139,4 +140,4 @@ def load_runtime_configuration(path=None):
     except (OSError, UnicodeError, ValueError, TypeError, RecursionError):
         LOGGER.warning("runtime_configuration_invalid")
         return RuntimeConfiguration(features=DeploymentFeatures(
-            ai=False, cloud_backup=False, self_registration=False, oidc=False))
+            ai=False, cloud_backup=False, self_registration=False, oidc=False), valid=False)

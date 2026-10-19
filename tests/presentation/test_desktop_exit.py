@@ -2,11 +2,14 @@
 
 from contextlib import redirect_stdout
 import io
+import os
 from pathlib import Path
 import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, call, patch
+
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from worklogger.domain.shared.errors import CancellationError, InfrastructureError
 from worklogger.domain.shared.result import Result
@@ -15,6 +18,33 @@ from worklogger.main import DesktopAlreadyRunningError, _acquire_instance_lock, 
 
 
 class DesktopExitTests(unittest.TestCase):
+    def test_startup_assistance_retries_with_manual_sign_in_and_releases_lock_on_exit(self):
+        failed = Result.failure(InfrastructureError("settings_load_failed", "settings_load_failed"))
+        cancelled = Result.failure(CancellationError("auth_cancelled", "auth_cancelled"))
+        with (patch.dict("os.environ", {"QT_QPA_PLATFORM": "interactive-test"}),
+              patch("worklogger.composition.startup_assistance.offer_startup_retry", return_value=True) as assist,
+              patch("worklogger.main._acquire_instance_lock") as acquire,
+              patch("worklogger.bootstrap.build_authenticated_desktop_runtime", side_effect=[failed, cancelled]) as build):
+            self.assertEqual(run_desktop([]), 0)
+            self.assertTrue(build.call_args_list[1].args[0].skip_remembered_session)
+            acquire.return_value.unlock.assert_called_once()
+            assist.assert_called_once_with(failed.error, [])
+        with (patch.dict("os.environ", {"QT_QPA_PLATFORM": "interactive-test"}),
+              patch("worklogger.composition.startup_assistance.offer_startup_retry", return_value=False)):
+            self.assertEqual(self.run_with_results(failed), (1, "DESKTOP START FAILED\n", 1))
+
+    def test_instance_lock_permission_failure_can_be_retried_without_starting_unlocked(self):
+        cancelled = Result.failure(CancellationError("auth_cancelled", "auth_cancelled"))
+        lock = Mock()
+        with (patch.dict("os.environ", {"QT_QPA_PLATFORM": "interactive-test"}),
+              patch("worklogger.composition.startup_assistance.offer_startup_retry", return_value=True),
+              patch("worklogger.main._acquire_instance_lock", side_effect=[PermissionError(), lock]) as acquire,
+              patch("worklogger.bootstrap.build_authenticated_desktop_runtime", return_value=cancelled) as build):
+            self.assertEqual(run_desktop([]), 0)
+            self.assertEqual(acquire.call_count, 2)
+            build.assert_called_once()
+            lock.unlock.assert_called_once()
+
     def test_database_recovery_retries_with_manual_authentication_and_exit_does_not_retry(self):
         failure = Result.failure(InfrastructureError("database_schema_unsupported", "database_schema_unsupported"))
         cancelled = Result.failure(CancellationError("auth_cancelled", "auth_cancelled"))

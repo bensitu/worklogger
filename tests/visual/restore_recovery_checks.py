@@ -17,6 +17,7 @@ from worklogger.infrastructure.i18n import get_language, set_language
 from worklogger.presentation.widgets.restore_recovery import choose_restore_recovery
 from worklogger.presentation.theme import ThemeEngine, install_bundled_fonts
 from worklogger.presentation.widgets.database_startup import DatabaseStartupDialog
+from worklogger.presentation.widgets.startup_error import StartupErrorDialog
 
 
 class RestoreRecoveryLayoutChecks(unittest.TestCase):
@@ -63,6 +64,44 @@ class RestoreRecoveryLayoutChecks(unittest.TestCase):
                                 directory = Path(destination)
                                 directory.mkdir(parents=True, exist_ok=True)
                                 self.assertTrue(dialog.grab().save(str(directory / f"{language}-database-{'dark' if dark else 'light'}-{width}.png")))
+                        finally:
+                            dialog.close()
+                            dialog.deleteLater()
+                            QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+        finally:
+            set_language(old_language)
+            self.app.setPalette(old_palette)
+            self.app.setStyleSheet(old_style)
+            self.app.setProperty("worklogger_theme_context", old_context)
+
+    def test_startup_assistance_fits_locales_themes_and_narrow_windows(self):
+        old_language, old_style, old_palette = get_language(), self.app.styleSheet(), self.app.palette()
+        old_context = self.app.property("worklogger_theme_context")
+        try:
+            for language in ("en_US", "zh_CN", "zh_TW", "ja_JP", "ko_KR"):
+                set_language(language)
+                for dark in (False, True):
+                    ThemeEngine().apply_to(self.app, "liquid_glass", dark=dark)
+                    for width in (420, 640):
+                        path = Path("example/WorkLogger/" + "LongDirectoryName" * 4).absolute()
+                        error = InfrastructureError("startup_permission_denied", "startup_permission_denied") if width == 640 else InfrastructureError(
+                            "startup_configuration_invalid", "startup_configuration_invalid", {"resource": "configuration"})
+                        dialog = StartupErrorDialog(error, database_path=path / "worklog.db",
+                            log_path=path / "worklogger.log", configuration_path=path / "worklogger.config.json")
+                        try:
+                            dialog.resize(width, dialog.sizeHint().height())
+                            dialog.show()
+                            self.app.processEvents()
+                            self.assertTrue(dialog.exit_button.isDefault())
+                            for button in (dialog.location.open_button, dialog.copy_button, dialog.exit_button, dialog.retry_button):
+                                bounds = QRect(button.mapTo(dialog, QPoint()), button.size())
+                                self.assertTrue(dialog.rect().contains(bounds))
+                                self.assertGreaterEqual(button.width(), button.fontMetrics().horizontalAdvance(button.text()) + 44)
+                            destination = os.environ.get("WORKLOGGER_SCREENSHOTS")
+                            if destination:
+                                directory = Path(destination)
+                                directory.mkdir(parents=True, exist_ok=True)
+                                self.assertTrue(dialog.grab().save(str(directory / f"{language}-startup-{'dark' if dark else 'light'}-{width}.png")))
                         finally:
                             dialog.close()
                             dialog.deleteLater()

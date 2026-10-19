@@ -2,11 +2,10 @@
 
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QUrl
-from PySide6.QtGui import QDesktopServices, QTextOption
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QButtonGroup, QDialog, QFileDialog, QFrame, QHBoxLayout, QLabel,
-    QMessageBox, QPlainTextEdit, QProgressBar, QPushButton, QRadioButton, QScrollArea,
+    QMessageBox, QProgressBar, QPushButton, QRadioButton, QScrollArea,
     QVBoxLayout, QWidget,
 )
 
@@ -17,6 +16,7 @@ from worklogger.presentation.errors import display_error_code, display_error_mes
 from worklogger.presentation.job_runner import QtJobRunner, owned_callback
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.widgets.file_location import FileLocationPanel
 from worklogger.presentation.widgets.status_label import StatusLabel
 
 
@@ -53,30 +53,10 @@ class DatabaseStartupDialog(QDialog):
         reason.setWordWrap(True)
         body.addWidget(reason)
 
-        location = QFrame()
-        location.setProperty("role", "readonly_location")
-        location_layout = QVBoxLayout(location)
-        location_layout.setContentsMargins(12, 12, 12, 12)
-        location_header = QHBoxLayout()
-        caption = QLabel(_("Database file (read-only)"))
-        caption.setWordWrap(True)
-        location_header.addWidget(caption, 1)
-        self.open_button = QPushButton(_("Open data directory"))
-        self.open_button.setProperty("variant", "outline")
-        self.open_button.setAutoDefault(False)
-        set_button_icon(self.open_button, "folder-open")
-        location_header.addWidget(self.open_button)
-        location_layout.addLayout(location_header)
-        self.path_view = QPlainTextEdit(str(path))
-        self.path_view.setReadOnly(True)
-        self.path_view.setWordWrapMode(QTextOption.WrapMode.WrapAnywhere)
-        self.path_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.path_view.setFixedHeight(self.path_view.fontMetrics().lineSpacing() * 3 + 8)
-        self.path_view.setToolTip(str(path))
-        self.path_view.setAccessibleName(caption.text())
-        self.path_view.setProperty("role", "readonly_location_path")
-        location_layout.addWidget(self.path_view)
-        body.addWidget(location)
+        self.location = FileLocationPanel(path, _("Database file (read-only)"), _("Open data directory"))
+        self.location.open_failed.connect(lambda: self.status_label.setText(
+            _("Unable to open the data directory. Use the database path shown above.")))
+        body.addWidget(self.location)
 
         choices = QVBoxLayout()
         choices.setSpacing(12)
@@ -130,8 +110,7 @@ class DatabaseStartupDialog(QDialog):
         self.action_button.setDefault(True)
         actions.addWidget(self.action_button)
         layout.addLayout(actions)
-        self._buttons = (self.open_button, self.action_button)
-        self.open_button.clicked.connect(self._open_directory)
+        self._buttons = (self.location.open_button, self.action_button)
         self.choice_group.buttonToggled.connect(self._update_action)
         self.action_button.clicked.connect(self._execute_action)
         self._update_action()
@@ -157,10 +136,6 @@ class DatabaseStartupDialog(QDialog):
             self._create()
         else:
             self.reject()
-
-    def _open_directory(self):
-        if not QDesktopServices.openUrl(QUrl.fromLocalFile(str(self._path.parent))):
-            self.status_label.setText(_("Unable to open the data directory. Use the database path shown above."))
 
     def _restore(self):
         filename, _filter = QFileDialog.getOpenFileName(self, _("Restore from database backup"), str(self._path.parent),
