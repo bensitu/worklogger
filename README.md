@@ -1,5 +1,8 @@
 # WorkLogger
 
+![License](https://img.shields.io/badge/license-GPLv3-blue)
+![Python](https://img.shields.io/badge/python-3.11+-green)
+
 Track working time, keep daily notes, and turn your records into daily, weekly,
 and monthly reports. WorkLogger brings your calendar, projects, and work summaries
 together in a local-first desktop application.
