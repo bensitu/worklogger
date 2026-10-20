@@ -20,9 +20,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from worklogger.domain.shared.errors import AppError
+from worklogger.domain.shared.errors import AppError, InfrastructureError
+from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
+from worklogger.presentation.job_runner import owned_callback
 from worklogger.presentation.settings import SettingsWorkflow
 from worklogger.presentation.shell.appearance_controller import WindowAppearanceController
 from worklogger.presentation.shell.lifecycle_controller import WindowLifecycleController
@@ -88,6 +90,7 @@ class MinimalView(QWidget):
         self._last_error: AppError | None = None
         self._settings_dialog = None
         self._refresh_pending = False
+        self._refresh_version = 0
 
         self.setObjectName("minimal_view")
         self.setWindowTitle(_("WorkLogger"))
@@ -143,6 +146,32 @@ class MinimalView(QWidget):
         self._last_error = None
         self.date_button.set_date(self._selected_day)
         self.account_label.setText(self._account_text())
+        if self._job_runner is not None:
+            self._refresh_version += 1
+            version = self._refresh_version
+            load = self.entry_panel.prepare_day_load(self._selected_day)
+            if load is None:
+                return False
+            def complete(result):
+                if version != self._refresh_version:
+                    return
+                if self.entry_panel.is_busy:
+                    self._refresh_pending = True
+                    return
+                if not result.ok:
+                    self._set_error(result.error)
+                    return
+                records, latest = result.value
+                self.entry_panel.apply_day_records(records, latest)
+                self._entry_dirty = self.entry_panel.is_dirty
+                self.history_widget.set_entries(records)
+            try:
+                self._job_runner.submit("load_compact_records", lambda _token: load(),
+                                        on_complete=owned_callback(self, complete))
+            except Exception:
+                complete(Result.failure(InfrastructureError("worklog_load_failed", "worklog_load_failed")))
+                return False
+            return True
         result = self.entry_panel.load_day(self._selected_day)
         self._entry_dirty = self.entry_panel.is_dirty
         if not result.ok:

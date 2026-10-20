@@ -582,14 +582,18 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
                 parent.layout().activate()
             self.layout().activate()
 
-    def _apply_result(self, result, *, refresh=True):
+    def _apply_result(self, result, *, refresh=True, notify=True):
         self._close_classification_picker()
         if not result.ok:
             plan = result.error.details.get("replacement")
             if isinstance(plan, EntryReplacement):
                 self._offer_replacement(plan)
                 return False
-            QMessageBox.warning(self, _("WorkLogger"), display_error_message(result.error))
+            if notify:
+                QMessageBox.warning(self, _("WorkLogger"), display_error_message(result.error))
+            else:
+                from worklogger.presentation.widgets.feedback import show_warning
+                show_warning(self, _("WorkLogger"), display_error_message(result.error))
             return False
         self._timer_failed = False
         recent = self.view_model.recent_contexts()
@@ -640,7 +644,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             try:
                 if on_complete is None:
                     if not repeated_failure:
-                        self._apply_result(result, refresh=refresh and (not automatic or result.value is not None))
+                        self._apply_result(result, refresh=refresh and (not automatic or result.value is not None), notify=False)
                 else:
                     on_complete(result)
             finally:

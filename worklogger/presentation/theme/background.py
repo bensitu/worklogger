@@ -28,6 +28,10 @@ class MainBackgroundWidget(QWidget):
     def background_active(self):
         return self._state.enabled and self._state.opacity > 0 and not self._frame.isNull()
 
+    @property
+    def animation_active(self):
+        return self.background_active and self._state.image is not None and self._state.image.animated
+
     def set_base_color(self, color):
         value = QColor(color)
         if value == self._base:

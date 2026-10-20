@@ -23,6 +23,7 @@ from worklogger.presentation.shell.app_window import AppWindowConfig
 from worklogger.presentation.job_runner import ImmediateJobRunner, QtJobRunner
 from worklogger.app.use_cases.ai import RewriteTextResult
 from worklogger.domain.shared.result import Result
+from tests.presentation.qt_support import wait_for_condition
 from PySide6.QtCore import QTime
 
 
@@ -65,9 +66,11 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         page = self.runtime.window.settings_page
         definitions = []
         def create_arrangement(dialog):
+            self.assertTrue(wait_for_condition(lambda: not dialog._busy))
             self.assertTrue(dialog.category_combo.isHidden())
             dialog.name_input.setText("Hybrid team")
             dialog.save_button.click()
+            self.assertTrue(wait_for_condition(lambda: not dialog._busy))
             definitions.append(dialog.type_list.currentItem().data(Qt.ItemDataRole.UserRole))
             return 1
         with patch.object(ClassificationManagerDialog, "exec", create_arrangement):
@@ -1135,9 +1138,11 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         definitions = []
 
         def create_type(dialog):
+            self.assertTrue(wait_for_condition(lambda: not dialog._busy))
             dialog.name_input.setText("Research")
             dialog.category_combo.setCurrentIndex(dialog.category_combo.findData("work"))
             dialog.save_button.click()
+            self.assertTrue(wait_for_condition(lambda: not dialog._busy))
             definitions.append(dialog.type_list.currentItem().data(256))
             return 1
 

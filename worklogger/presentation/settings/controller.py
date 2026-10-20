@@ -241,6 +241,7 @@ class SettingsWorkflowController:
         return page
 
     def _bind_surface(self, surface: SettingsPage) -> None:
+        surface.set_job_runner(self._job_runner)
         if self._cloud_workflow is not None:
             self._cloud_workflow.bind(surface.cloud_backup_panel)
         surface.set_data_directory(self._data_directory)
@@ -298,7 +299,7 @@ class SettingsWorkflowController:
 
     def _manage_classifications(self, surface: SettingsPage, *, work_modes=False) -> None:
         dialog = ClassificationManagerDialog(self._work_modes_view_model if work_modes else self._entry_types_view_model,
-            surface, work_modes=work_modes)
+            surface, work_modes=work_modes, job_runner=self._job_runner or shared_job_runner())
         dialog.exec()
         dialog.deleteLater()
         surface.entry_types_changed.emit()

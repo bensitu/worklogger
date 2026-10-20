@@ -467,10 +467,7 @@ class AppWindow(QMainWindow):
         if self.entry_panel.is_busy:
             self._records_refresh_pending = True
             return
-        self._refresh_calendar()
-        self._refresh_stats()
-        if not self.entry_panel.is_dirty:
-            self._refresh_entry()
+        self.refresh(asynchronous=self._job_runner is not None)
         self.entry_panel.refresh_projects()
 
     def _record_update_state(self, busy):
@@ -538,7 +535,7 @@ class AppWindow(QMainWindow):
             return
         self._last_error = error
         self._set_status(
-            display_error_message(error), notify=not self._refreshing, error=True
+            display_error_message(error), notify=False, error=True
         )
 
     def _set_status(

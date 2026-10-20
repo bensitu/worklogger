@@ -235,11 +235,20 @@ class DataSettingsWorkflow:
         )
 
     def import_ics(self, dialog: QWidget) -> bool:
+        if self._data_job_handle is not None or self._restore_validation_handle is not None:
+            _set_status(dialog, _("Please wait for the current data operation."))
+            return False
         path = self._ics_source_provider(dialog)
         if path is None:
             _set_status(dialog, _("Import cancelled"))
             return False
-        count = self._data_management_view_model.calendar_event_count()
+        if self._job_runner is not None:
+            _set_busy(dialog, "data", True)
+            return self._submit(dialog, "calendar_import_preview", self._data_management_view_model.calendar_event_count,
+                                lambda current, count: self._complete_ics_preview(current, path, count))
+        return self._complete_ics_preview(dialog, path, self._data_management_view_model.calendar_event_count())
+
+    def _complete_ics_preview(self, dialog, path, count):
         if not count.ok or count.value is None:
             return self._handle_data_result(
                 dialog,

@@ -73,6 +73,7 @@ class ReportsPage(QWidget):
         self._view_model = view_model
         self._ai_ready = bool(view_model is not None and getattr(view_model, "rewrite_available", True))
         self._selected_day = selected_day
+        self._calendar_day = selected_day
         self._states: dict[str, ReportEditorState] = {}
         self._saved_content: dict[str, str] = {}
         self._last_error: AppError | None = None
@@ -177,7 +178,8 @@ class ReportsPage(QWidget):
     def refresh(self, selected_day: date | None = None) -> bool:
         if not self.confirm_leave():
             return False
-        if selected_day is not None:
+        if selected_day is not None and selected_day != self._calendar_day:
+            self._calendar_day = selected_day
             self._selected_day = selected_day
         if self._view_model is None:
             self._set_status(_("Reports are not configured."), error=True)
@@ -409,7 +411,7 @@ class ReportsPage(QWidget):
     def _open_templates(self) -> None:
         if self._view_model is None or self.is_busy:
             return
-        dialog = ReportTemplateDialog(self._view_model, self._current_type(), self)
+        dialog = ReportTemplateDialog(self._view_model, self._current_type(), self, job_runner=self._job_runner)
         dialog.apply_requested.connect(self._apply_template)
         if dialog.refresh():
             dialog.exec()
@@ -578,4 +580,4 @@ class ReportsPage(QWidget):
             self._set_status(display_error_message(error), notify=False)
             return
         self._last_error = error
-        self._set_status(display_error_message(error), notify=True, error=True)
+        self._set_status(display_error_message(error), notify=False, error=True)

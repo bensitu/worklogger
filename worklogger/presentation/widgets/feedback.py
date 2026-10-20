@@ -37,3 +37,17 @@ def show_information(parent, title: str, message: str, *, detail: str = "") -> N
         dialog.exec()
     finally:
         dialog.deleteLater()
+
+
+def show_warning(parent, title: str, message: str) -> None:
+    dialog = parent.findChild(QMessageBox, "warning_feedback_dialog")
+    if dialog is None:
+        dialog = QMessageBox(QMessageBox.Icon.Warning, title, message, QMessageBox.StandardButton.Ok, parent)
+        dialog.setObjectName("warning_feedback_dialog")
+        dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        dialog.setWindowModality(Qt.WindowModality.NonModal)
+        dialog.setTextFormat(Qt.TextFormat.PlainText)
+    else:
+        dialog.setWindowTitle(title)
+        dialog.setText(message)
+    dialog.show()

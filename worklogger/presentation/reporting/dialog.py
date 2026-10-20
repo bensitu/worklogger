@@ -22,7 +22,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from worklogger.domain.shared.errors import AppError, CancellationError, ValidationError
+from worklogger.domain.shared.errors import AppError, CancellationError, InfrastructureError, ValidationError
+from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import ReportEditorState, ReportEditorViewModel
@@ -30,6 +31,7 @@ from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.processing import TextProcessingTask
+from worklogger.presentation.job_runner import owned_callback
 from worklogger.presentation.widgets.processing_progress import ProcessingProgress
 
 
@@ -46,11 +48,12 @@ def confirm_report_overwrite(parent: QWidget) -> bool:
 class ReportTemplateDialog(QDialog):
     apply_requested = Signal()
 
-    def __init__(self, view_model: ReportEditorViewModel, report_type: str, parent: QWidget | None = None) -> None:
+    def __init__(self, view_model: ReportEditorViewModel, report_type: str, parent: QWidget | None = None, *, job_runner=None) -> None:
         super().__init__(parent)
         self._view_model = view_model
         self._report_type = report_type
         self._saved_template = ""
+        self._runner, self._busy = job_runner, False
         self.setObjectName("report_template_dialog")
         self.setWindowTitle(_("Templates"))
         apply_window_icon(self)
@@ -87,46 +90,74 @@ class ReportTemplateDialog(QDialog):
         layout.addLayout(row)
 
     def refresh(self) -> bool:
-        result = self._view_model.load_template(self._report_type)
-        if not result.ok or result.value is None:
-            self.status_label.setText(display_error_message(result.error))
-            return False
+        return self._run(lambda: self._view_model.load_template(self._report_type), self._show_template)
+
+    def _show_template(self, result):
         self._saved_template = result.value
         self.editor.setPlainText(result.value)
         self._update_actions()
         self.status_label.clear()
-        return True
 
     def save_template(self) -> bool:
-        result = self._view_model.save_template(self._report_type, self.editor.toPlainText())
-        if not result.ok:
-            self.status_label.setText(display_error_message(result.error))
-            return False
-        self._saved_template = self.editor.toPlainText()
-        self._update_actions()
-        self.status_label.setText(_("Template saved."))
-        return True
+        return self._save_template()
+
+    def _save_template(self, after_save=None):
+        content = self.editor.toPlainText()
+        def complete(_result):
+            self._saved_template = content
+            self._update_actions()
+            self.status_label.setText(_("Template saved."))
+            if after_save is not None:
+                after_save()
+        return self._run(lambda: self._view_model.save_template(self._report_type, content), complete)
 
     def reset_template(self) -> bool:
         if QMessageBox.question(self, _("Reset template"), _("Reset this template to its default?"), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
             return False
-        result = self._view_model.reset_template(self._report_type)
-        if not result.ok:
-            self.status_label.setText(display_error_message(result.error))
-            return False
-        return self.refresh()
+        def reset():
+            result = self._view_model.reset_template(self._report_type)
+            return self._view_model.load_template(self._report_type) if result.ok else result
+        return self._run(reset, self._show_template)
 
     def apply_template(self) -> None:
-        if self.editor.toPlainText() != self._saved_template and not self.save_template():
-            return
-        self.apply_requested.emit()
-        self.accept()
+        def apply():
+            self.apply_requested.emit()
+            self.accept()
+        if self.editor.toPlainText() != self._saved_template:
+            self._save_template(apply)
+        else:
+            apply()
+
+    def _run(self, operation, completed):
+        if self._busy:
+            return False
+        def complete(result):
+            self._busy = False
+            self.setEnabled(True)
+            if result.ok:
+                completed(result)
+            else:
+                self.status_label.setText(display_error_message(result.error))
+        if self._runner is None:
+            result = operation()
+            complete(result)
+            return result.ok
+        self._busy = True
+        self.setEnabled(False)
+        try:
+            self._runner.submit("report_template_update", lambda _token: operation(), on_complete=owned_callback(self, complete))
+        except Exception:
+            complete(Result.failure(InfrastructureError("settings_save_failed", "settings_save_failed")))
+            return False
+        return True
 
     def _update_actions(self) -> None:
         if hasattr(self, "apply_button"):
             self.apply_button.setEnabled(bool(self.editor.toPlainText().strip()))
 
     def _confirm_close(self) -> bool:
+        if self._busy:
+            return False
         return self.editor.toPlainText() == self._saved_template or QMessageBox.question(self, _("Discard changes?"), _("You have unsaved template changes. Discard them?"), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes
 
     def reject(self) -> None:

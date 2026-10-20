@@ -185,6 +185,12 @@ must release pending handles and busy controls so users can retry without losing
 their input. Completed backup and restore operations retain their bookkeeping
 even when their originating settings view has closed.
 
+Settings writes and classification/template updates run through the injected
+background runner. Capture input before submission, serialize preference changes,
+and apply returned state on the UI thread. Calendar record rows reuse existing
+widgets; report histories share measurement layout and release offscreen text
+documents without limiting the user's selected search range.
+
 ## Data and Resources
 
 Use synthetic accounts and temporary databases. Never commit databases, exports,

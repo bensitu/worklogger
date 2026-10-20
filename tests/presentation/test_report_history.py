@@ -581,8 +581,8 @@ class ReportHistoryTests(unittest.TestCase):
         self.assertEqual(self.repository.list_by_type(self.user.id, "daily"), ())
         self.assertEqual(page.editor.toPlainText(), "Edited")
         self.assertTrue(page.has_unsaved_changes)
-        self.warning.assert_called_once()
-        self.assertIn("no longer available", self.warning.call_args.args[2])
+        self.warning.assert_not_called()
+        self.assertIn("no longer available", page.status_label.text())
 
     def test_storage_failure_keeps_saved_content_and_editor_changes(self):
         saved = self.seed("daily", "Original")
@@ -595,7 +595,8 @@ class ReportHistoryTests(unittest.TestCase):
         self.assertEqual(self.repository.list_by_type(self.user.id, "daily"), (saved,))
         self.assertEqual(page.editor.toPlainText(), "Edited")
         self.assertTrue(page.has_unsaved_changes)
-        self.assertIn("changes have been retained", self.warning.call_args.args[2])
+        self.warning.assert_not_called()
+        self.assertIn("changes have been retained", page.status_label.text())
 
     def test_update_rejects_other_accounts_types_and_periods(self):
         saved = self.seed("daily", "Original")

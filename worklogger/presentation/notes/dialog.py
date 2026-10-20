@@ -17,7 +17,7 @@ from worklogger.presentation.errors import display_error_code, display_error_mes
 from worklogger.presentation.job_runner import shared_job_runner, owned_callback
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon
-from worklogger.presentation.widgets.feedback import show_information
+from worklogger.presentation.widgets.feedback import show_information, show_warning
 from worklogger.presentation.processing import TextProcessingTask
 from worklogger.presentation.widgets.processing_progress import ProcessingProgress
 
@@ -402,7 +402,7 @@ class NoteEditorDialog(QDialog):
     def _set_error(self, error):
         self._last_error = error
         self._sync_history_selection()
-        QMessageBox.warning(self, _("Error"), display_error_message(error))
+        show_warning(self, _("Error"), display_error_message(error))
 
     def _request_close(self):
         if self._busy:

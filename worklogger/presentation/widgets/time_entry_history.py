@@ -2,7 +2,7 @@
 
 from PySide6.QtCore import QEvent, Signal
 from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
-from worklogger.infrastructure.i18n import _
+from worklogger.infrastructure.i18n import _, get_language
 from worklogger.presentation.date_labels import duration_label
 from worklogger.presentation.entry_type_labels import classification_label
 from worklogger.presentation.widgets.record_summary import RecordSummaryButton
@@ -25,6 +25,10 @@ class TimeEntryHistory(QWidget):
         self._hovered = None
         self.entry_buttons = {}
         self.event_buttons = {}
+        self._rendered_content = None
+        self._empty_label = QLabel(_("No records for the selected day."), self)
+        self._empty_label.setWordWrap(True)
+        self._empty_label.hide()
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -35,18 +39,21 @@ class TimeEntryHistory(QWidget):
         super().hideEvent(event)
 
     def set_entries(self, entries, events=()):
+        entries, events = tuple(entries), tuple(events)
+        selected = self.view_model.draft.original
+        content = (entries, events, get_language(), bool(getattr(self.view_model, "changes_available", False)),
+                   self.view_model.events_deletable)
+        if content == self._rendered_content:
+            self.set_selected_entry(selected.id if selected else None)
+            return
+        self._rendered_content = content
         self._hovered = None
+        old_entries, old_events = self.entry_buttons, self.event_buttons
         self.entry_buttons = {}
         self.event_buttons = {}
         while self.rows.count():
-            item = self.rows.takeAt(0)
-            if item.widget() is not None:
-                if isinstance(item.widget(), RecordSummaryButton):
-                    item.widget().setAutoExclusive(False)
-                    item.widget().setChecked(False)
-                item.widget().hide()
-                item.widget().deleteLater()
-        selected = self.view_model.draft.original
+            self.rows.takeAt(0)
+        self._empty_label.hide()
         for entry in entries:
             first_line = entry.note.splitlines()[0] if entry.note else ""
             content = first_line[:64] + ("..." if len(first_line) > 64 else "")
@@ -57,8 +64,15 @@ class TimeEntryHistory(QWidget):
                 text += "\n" + entry.context.label
             if content:
                 text += "\n" + content
-            button = self._button(text, actions_enabled=bool(getattr(self.view_model, "changes_available", False)))
-            button.actions_requested.connect(lambda position, entry=entry: self.entry_actions_requested.emit(entry, position))
+            button = old_entries.pop(entry.id, None)
+            if button is None:
+                button = self._button(text, actions_enabled=content[3])
+                button.actions_requested.connect(lambda position, button=button: self.entry_actions_requested.emit(button.property("record"), position))
+                button.clicked.connect(lambda _checked=False, button=button: self.entry_selected.emit(button.property("record")))
+                button.delete_requested.connect(lambda button=button: self.entry_delete_requested.emit(button.property("record")))
+            button.setProperty("record", entry)
+            button.label.setText(text)
+            self.rows.addWidget(button)
             button.setProperty("entry_id", entry.id)
             self.entry_buttons[entry.id] = button
             button.setCheckable(True)
@@ -66,21 +80,28 @@ class TimeEntryHistory(QWidget):
             button.setChecked(bool(selected and selected.id == entry.id))
             button.setToolTip("\n".join(value for value in (classification, entry.context.label, entry.note) if value))
             button.setAccessibleName(_("Edit record") + ": " + text)
-            button.clicked.connect(lambda _checked=False, entry=entry: self.entry_selected.emit(entry))
-            button.delete_requested.connect(lambda entry=entry: self.entry_delete_requested.emit(entry))
         for event in events:
             span = _("All day") if event.all_day else f"{event.start_time or '--:--'} - {event.end_time or '--:--'}"
-            button = self._button(f"{span}\n{_('Calendar event')}\n{event.summary}",
-                                  deletable=self.view_model.events_deletable)
+            text = f"{span}\n{_('Calendar event')}\n{event.summary}"
+            button = old_events.pop(event.id, None)
+            if button is None:
+                button = self._button(text, deletable=self.view_model.events_deletable)
+                button.clicked.connect(lambda _checked=False, button=button: self.event_selected.emit(button.property("record")))
+                button.delete_requested.connect(lambda button=button: self.event_delete_requested.emit(button.property("record")))
+            button.setProperty("record", event)
+            button.label.setText(text)
+            self.rows.addWidget(button)
             button.setToolTip(_("Create record from event"))
             self.event_buttons[event.id] = button
             button.setAccessibleName(_("Create record from event") + ": " + event.summary)
-            button.clicked.connect(lambda _checked=False, event=event: self.event_selected.emit(event))
-            button.delete_requested.connect(lambda event=event: self.event_delete_requested.emit(event))
+        for button in (*old_entries.values(), *old_events.values()):
+            button.setAutoExclusive(False)
+            button.hide()
+            button.deleteLater()
         if not entries and not events:
-            empty = QLabel(_("No records for the selected day."))
-            empty.setWordWrap(True)
-            self.rows.addWidget(empty)
+            self._empty_label.setText(_("No records for the selected day."))
+            self.rows.addWidget(self._empty_label)
+            self._empty_label.show()
         self.rows.addStretch(1)
 
     def _button(self, text, *, deletable=True, actions_enabled=False):

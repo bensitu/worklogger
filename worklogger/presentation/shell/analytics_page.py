@@ -13,7 +13,6 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QLabel,
-    QMessageBox,
     QScrollArea,
     QVBoxLayout,
     QWidget,
@@ -158,6 +157,7 @@ class AnalyticsPage(QWidget):
 
     def _export_async(self, destination, kind):
         if self._view_model is None or self._state is None or self._loading or self._exporting:
+            self._set_status(_("Please wait for the current request."))
             return False
         state = self._state
         exporter = self._view_model.export_csv if kind == "csv" else self._view_model.export_pdf
@@ -293,6 +293,9 @@ class AnalyticsPage(QWidget):
         if not hasattr(self, "_summary_grid"):
             return
         columns = 4 if self.width() >= 850 else 2
+        if columns == getattr(self, "_summary_columns", None):
+            return
+        self._summary_columns = columns
         cards = (self.monthly_hours_card, self.overtime_card, self.attendance_card, self.rest_card)
         for index, card in enumerate(cards):
             self._summary_grid.addWidget(card, index // columns, index % columns)
@@ -302,8 +305,6 @@ class AnalyticsPage(QWidget):
     def _set_status(self, message: str, *, error: bool = False) -> None:
         self.status_label.setText(message)
         self.status_label.setVisible(bool(message))
-        if message and error:
-            QMessageBox.warning(self, _("Analytics"), message)
 
     def _chart_card(self, title: str, *, donut: bool = False) -> CardFrame:
         card = CardFrame(object_name="analytics_chart_frame")
@@ -387,7 +388,7 @@ class AnalyticsPage(QWidget):
         self.period_combo.blockSignals(True)
         self.period_combo.clear()
         if scope == "annual":
-            values = [date(year, 1, 1) for year in range(min(9999, latest.year + 1), max(0, latest.year - 10), -1)]
+            values = [date(year, 1, 1) for year in range(latest.year, max(0, latest.year - 10), -1)]
         else:
             step = 3 if scope == "quarterly" else 1
             if step == 3:

@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 
-from PySide6.QtCore import QEvent, QSize, Qt, Signal, QTimer, QSignalBlocker
+from PySide6.QtCore import QEvent, QPoint, QSize, Qt, Signal, QTimer, QSignalBlocker
 from PySide6.QtGui import QAbstractTextDocumentLayout, QAction, QPainter, QPalette, QTextDocument
 from PySide6.QtWidgets import (
     QApplication, QComboBox, QLabel, QLayout, QLineEdit, QPushButton, QScrollArea, QSizePolicy, QProgressBar,
@@ -28,11 +28,12 @@ class ReportHistoryButton(HoverDeleteButton):
         super().__init__(_history_label(item), parent, deletable=allow_delete and item.report_id is not None,
                          delete_label=_("Delete report"))
         self._base_label = _history_label(item)
-        self._document = QTextDocument(self)
-        self._document.setDocumentMargin(0)
-        self._document.setPlainText(self.text())
-        self._measurement_document = QTextDocument(self)
-        self._measurement_document.setDocumentMargin(0)
+        self._paint_document = None
+        application = QApplication.instance()
+        if not hasattr(application, "_report_history_measurement"):
+            application._report_history_measurement = QTextDocument(application)
+            application._report_history_measurement.setDocumentMargin(0)
+        self._measurement_document = application._report_history_measurement
         self._height_cache = {}
         policy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         policy.setHeightForWidth(True)
@@ -42,6 +43,25 @@ class ReportHistoryButton(HoverDeleteButton):
 
     def sizeHint(self) -> QSize:
         return QSize(180, self.heightForWidth(180))
+
+    @property
+    def _document(self):
+        if self._paint_document is None:
+            self._paint_document = QTextDocument(self)
+            self._paint_document.setDocumentMargin(0)
+            self._update_document()
+        return self._paint_document
+
+    def _update_document(self):
+        if self._paint_document is not None:
+            self._paint_document.setDefaultFont(self.font())
+            self._paint_document.setPlainText(self.text())
+            self._paint_document.setTextWidth(max(1, self.width() - self._text_margins()))
+
+    def release_document(self):
+        if self._paint_document is not None:
+            self._paint_document.deleteLater()
+            self._paint_document = None
 
     def minimumSizeHint(self) -> QSize:
         return QSize(80, 60)
@@ -66,8 +86,7 @@ class ReportHistoryButton(HoverDeleteButton):
 
     def resizeEvent(self, event: object) -> None:
         super().resizeEvent(event)
-        self._document.setDefaultFont(self.font())
-        self._document.setTextWidth(max(1, self.width() - self._text_margins()))
+        self._update_document()
         self.setMinimumHeight(self.heightForWidth(self.width()))
 
     def paintEvent(self, _event: object) -> None:
@@ -96,9 +115,7 @@ class ReportHistoryButton(HoverDeleteButton):
         set_style_property(self, "active", current)
         self.setText(text)
         self.setAccessibleName(text)
-        self._document.setPlainText(text)
-        self._document.setDefaultFont(self.font())
-        self._document.setTextWidth(max(1, self.width() - self._text_margins()))
+        self._update_document()
         self.setToolTip(text)
         self.setMinimumHeight(self.heightForWidth(max(80, self.width())))
 
@@ -201,6 +218,7 @@ class ReportHistoryPanel(CardFrame):
         self.scroll_layout.setSpacing(8)
         self.scroll_layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
         self.scroll_area.setWidget(self.scroll_widget)
+        self.scroll_area.verticalScrollBar().valueChanged.connect(self._release_offscreen_documents)
         self.content_layout.addWidget(self.scroll_area, 1)
         self.more_button = QPushButton(_("Load more"))
         set_button_icon(self.more_button, "chevron-down")
@@ -348,6 +366,12 @@ class ReportHistoryPanel(CardFrame):
 
     def _track_hover(self, button):
         self._hovered_button = button
+
+    def _release_offscreen_documents(self):
+        viewport = self.scroll_area.viewport()
+        for button in self._buttons.values():
+            if not viewport.rect().intersects(button.rect().translated(button.mapTo(viewport, QPoint()))):
+                button.release_document()
 
     def eventFilter(self, watched, event):
         if event.type() == QEvent.Type.MouseMove and self.isVisible() and self._hovered_button is not None:

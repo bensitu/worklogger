@@ -55,7 +55,11 @@ class GlassThemeController(QObject):
         self._timer.setSingleShot(True)
         self._timer.setInterval(90)
         self._timer.timeout.connect(self._dispatch)
-        source.frame_changed.connect(self._queue_all)
+        self._frame_timer = QTimer(self)
+        self._frame_timer.setSingleShot(True)
+        self._frame_timer.setInterval(250)
+        self._frame_timer.timeout.connect(self._queue_all)
+        source.frame_changed.connect(self._queue_frame)
         window.installEventFilter(self)
         window.destroyed.connect(self.dispose)
 
@@ -120,6 +124,14 @@ class GlassThemeController(QObject):
     def _schedule(self, delay=90):
         if self._pending and (not self._timer.isActive() or delay == 0):
             self._timer.start(delay)
+
+    @Slot()
+    def _queue_frame(self):
+        if self._source.animation_active:
+            if not self._frame_timer.isActive():
+                self._frame_timer.start()
+        else:
+            self._queue_all()
 
     @Slot()
     def _queue_all(self):
@@ -202,6 +214,7 @@ class GlassThemeController(QObject):
             return
         self._disposed = True
         self._timer.stop()
+        self._frame_timer.stop()
         for handle in self._jobs.values():
             if handle is not None:
                 handle.cancel()

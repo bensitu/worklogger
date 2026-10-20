@@ -85,7 +85,7 @@ class ApplicationMenuController(QObject):
         self._window.destroyed.connect(self.dispose)
         application = QApplication.instance()
         application.focusChanged.connect(self._focus_changed)
-        application.clipboard().dataChanged.connect(self.refresh)
+        application.clipboard().dataChanged.connect(self._refresh_paste)
         self._focus_changed(None, application.focusWidget())
 
     def _action(self, menu, key, label, callback, shortcut=None, role=QAction.MenuRole.NoRole):
@@ -204,6 +204,16 @@ class ApplicationMenuController(QObject):
                                                editor.canPaste() if editor is not None else False)
         self.actions["paste"].setEnabled(editable and can_paste)
         self.actions["select_all"].setEnabled(editor is not None and text)
+
+    @Slot()
+    def _refresh_paste(self):
+        if self._disposed:
+            return
+        editor = self._focused_editor()
+        clipboard = QApplication.clipboard().mimeData()
+        can_paste = clipboard is not None and (clipboard.hasText() if isinstance(editor, QLineEdit) else
+                                               editor.canPaste() if editor is not None else False)
+        self.actions["paste"].setEnabled(editor is not None and not editor.isReadOnly() and can_paste)
 
     def eventFilter(self, watched, event):
         if event.type() in (QEvent.Type.EnabledChange, QEvent.Type.Show, QEvent.Type.Hide, QEvent.Type.WindowActivate):

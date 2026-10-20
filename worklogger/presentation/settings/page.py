@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import deque
 
 from PySide6.QtCore import Qt, Signal, QTimer
 from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
@@ -23,9 +24,11 @@ from worklogger.config.constants import (
 )
 from worklogger.config.themes import get_theme
 from worklogger.domain.auth.models import User
-from worklogger.domain.shared.errors import AppError
+from worklogger.domain.shared.errors import AppError, InfrastructureError
+from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
+from worklogger.presentation.job_runner import owned_callback
 from worklogger.presentation.settings.sections.about import AboutSection
 from worklogger.presentation.settings.sections.account import AccountSection
 from worklogger.presentation.settings.sections.actions import SectionActions
@@ -96,6 +99,8 @@ class SettingsPage(QWidget, SettingsSectionState):
         self._model_management_available = True
         self._updating = False
         self._last_error: AppError | None = None
+        self._job_runner = None
+        self._preference_queue = deque()
         self._saved_state_timer = QTimer(self)
         self._saved_state_timer.setSingleShot(True)
         self._saved_state_timer.timeout.connect(self._reload_saved_state)
@@ -122,6 +127,9 @@ class SettingsPage(QWidget, SettingsSectionState):
     @property
     def state(self):
         return self._state
+
+    def set_job_runner(self, runner):
+        self._job_runner = runner
 
     @property
     def is_busy(self) -> bool:
@@ -308,7 +316,7 @@ class SettingsPage(QWidget, SettingsSectionState):
     def _section_actions(self) -> SectionActions:
         return SectionActions(
             change_avatar_requested=self._change_avatar,
-            reset_avatar_requested=lambda: self._handle_save_result(self._view_model.set_avatar("")),
+            reset_avatar_requested=lambda: self._save_preference(lambda: self._view_model.set_avatar("")),
             backup_requested=self.backup_requested.emit,
             open_data_directory_requested=self.open_data_directory_requested.emit,
             change_password_requested=self.change_password_requested.emit,
@@ -409,31 +417,24 @@ class SettingsPage(QWidget, SettingsSectionState):
         dialog = AvatarCropDialog(result.value, self)
         try:
             if dialog.exec() == QDialog.DialogCode.Accepted:
-                self._handle_save_result(self._view_model.set_avatar(dialog.canvas.encoded_avatar()))
+                avatar = dialog.canvas.encoded_avatar()
+                self._save_preference(lambda: self._view_model.set_avatar(avatar))
         finally:
             dialog.deleteLater()
 
     def _language_changed(self) -> None:
         if self._updating:
             return
-        self._handle_save_result(
-            self._view_model.set_language(
-                str(self.language_combo.currentData() or "en_US")
-            )
-        )
-        if self._last_error is None:
-            self.status_label.setText(
-                _("Saved. Language changes apply after restarting.")
-            )
+        language = str(self.language_combo.currentData() or "en_US")
+        self._save_preference(lambda: self._view_model.set_language(language),
+                              message=_("Saved. Language changes apply after restarting."))
 
     def _theme_changed(self) -> None:
         self._update_custom_color_control()
         if self._updating:
             return
-        result = self._view_model.set_theme(
-            str(self.theme_combo.currentData() or "blue")
-        )
-        self._handle_save_result(result)
+        theme = str(self.theme_combo.currentData() or "blue")
+        self._save_preference(lambda: self._view_model.set_theme(theme))
 
     def _update_custom_color_control(self) -> None:
         self.custom_color_button.setVisible(get_theme(self.theme_combo.currentData()).customizable)
@@ -447,11 +448,13 @@ class SettingsPage(QWidget, SettingsSectionState):
     def _choose_custom_color(self) -> None:
         color = choose_custom_color(QColor(self._custom_color), self)
         if color.isValid():
-            result = self._view_model.set_custom_color(color.name())
-            self._handle_save_result(result)
-            if result.ok:
-                definition = get_theme(self.theme_combo.currentData())
-                self._handle_save_result(self._view_model.set_theme(definition.key if definition.customizable else "custom"))
+            definition = get_theme(self.theme_combo.currentData())
+            theme = definition.key if definition.customizable else "custom"
+            value = color.name()
+            def save():
+                result = self._view_model.set_custom_color(value)
+                return self._view_model.set_theme(theme) if result.ok else result
+            self._save_preference(save)
 
     def _update_color_swatch(self) -> None:
         pixmap = QPixmap(20, 20)
@@ -485,10 +488,8 @@ class SettingsPage(QWidget, SettingsSectionState):
             or self.external_api_key_line_edit.text() == self._state.external_api_key
         ):
             return
-        result = self._view_model.set_external_api_key(
-            self.external_api_key_line_edit.text()
-        )
-        self._handle_save_result(result)
+        value = self.external_api_key_line_edit.text()
+        self._save_preference(lambda: self._view_model.set_external_api_key(value))
 
 
 
@@ -505,19 +506,54 @@ class SettingsPage(QWidget, SettingsSectionState):
             return
         if key == MINIMAL_MODE_SETTING_KEY and not self._capabilities.minimal_view:
             return
-        self._handle_save_result(self._view_model.set_bool(key, enabled))
-        if key == MINIMAL_MODE_SETTING_KEY and self._last_error is None:
-            self.set_operation_status(_("Saved. View changes apply after restarting or signing in again."))
+        message = _("Saved. View changes apply after restarting or signing in again.") if key == MINIMAL_MODE_SETTING_KEY else None
+        self._save_preference(lambda: self._view_model.set_bool(key, enabled), message=message)
 
     def _set_number(self, key: str, value: float) -> None:
         if self._updating:
             return
-        self._handle_save_result(self._view_model.set_number(key, float(value)))
+        self._save_preference(lambda: self._view_model.set_number(key, float(value)))
 
     def _set_text(self, key: str, value: str) -> None:
         if self._updating:
             return
-        self._handle_save_result(self._view_model.set_text(key, value))
+        self._save_preference(lambda: self._view_model.set_text(key, value))
+
+    def _save_preference(self, operation, *, message=None):
+        if self._job_runner is None:
+            result = operation()
+            self._handle_save_result(result)
+            if result.ok and message:
+                self.set_operation_status(message)
+            return
+        self._preference_queue.append((operation, message))
+        if "preferences" not in self._busy_jobs:
+            self._save_next_preference()
+
+    def _save_next_preference(self):
+        if not self._preference_queue:
+            return
+        operation, message = self._preference_queue.popleft()
+        self._saved_state_timer.stop()
+        self.set_busy("preferences", True)
+        def work(_token):
+            result = operation()
+            return self._view_model.load(refresh_credentials=False) if result.ok else result
+        def complete(result):
+            self.set_busy("preferences", False)
+            if result.ok and result.value is not None:
+                self._last_error = None
+                if not self._preference_queue:
+                    self.set_state(result.value)
+                    self.settings_changed.emit(result.value)
+                self.set_operation_status(message or _("Saved"))
+            else:
+                self._set_error(result.error)
+            self._save_next_preference()
+        try:
+            self._job_runner.submit("save_preferences", work, on_complete=owned_callback(self, complete))
+        except Exception:
+            complete(Result.failure(InfrastructureError("settings_save_failed", "settings_save_failed")))
 
     def _handle_save_result(self, result: object) -> None:
         if not getattr(result, "ok", False):
