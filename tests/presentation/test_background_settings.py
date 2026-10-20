@@ -9,10 +9,10 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from tests.background_samples import animated_background_bytes, still_background_bytes
+from tests.presentation.qt_support import wait_for_condition
 from tests.presentation.test_app_window import MemoryWorkLogRepository, _window
 from tests.presentation.test_settings_presentation import (
     MemorySettingsRepository,
@@ -79,7 +79,7 @@ class BackgroundSettingsTests(unittest.TestCase):
         self.controls.enabled_switch.setChecked(True)
         self.assertTrue(self.window._background_surface.background_active)
         self.controls.opacity_slider.setValue(70)
-        QTest.qWait(300)
+        self.assertTrue(wait_for_condition(lambda: self.service.load().value.opacity == 70))
         state = self.service.load().value
         self.assertTrue(state.enabled)
         self.assertEqual(state.opacity, 70)

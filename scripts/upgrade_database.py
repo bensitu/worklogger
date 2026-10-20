@@ -3,6 +3,7 @@
 import argparse
 from dataclasses import asdict
 import json
+import re
 from pathlib import Path
 import sys
 
@@ -23,7 +24,8 @@ def main(argv=None):
         report = upgrade_database(args.source, args.destination, template_file=args.template_file,
                                   template_user=args.template_user, template_language=args.template_language)
     except Exception as exc:
-        print(f"Database upgrade failed ({type(exc).__name__}); the source and existing destination have been retained.", file=sys.stderr)
+        code = str(exc) if isinstance(exc, ValueError) and re.fullmatch(r"(?:database|restore|template|identity|username)_[a-z0-9_]+", str(exc)) else type(exc).__name__
+        print(f"Database upgrade failed ({code}); the source and existing destination have been retained.", file=sys.stderr)
         return 1
     print(json.dumps(asdict(report)))
     return 0

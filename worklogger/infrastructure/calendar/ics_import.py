@@ -66,7 +66,7 @@ class IcsCalendarImporter:
                         raise ValueError("ics_file_too_large")
             return Result.success(tuple(events))
         except ValueError as exc:
-            code = str(exc) if str(exc) in {"ics_recurrence_unbounded", "ics_file_too_large"} else "ics_import_failed"
+            code = str(exc) if str(exc) in {"ics_recurrence_unbounded", "ics_recurrence_unsupported", "ics_file_too_large"} else "ics_import_failed"
             return Result.failure(ValidationError(code, code))
         except Exception:
             return Result.failure(ValidationError("ics_import_failed", "ics_import_failed"))

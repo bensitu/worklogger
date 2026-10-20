@@ -23,22 +23,44 @@ def _decode_po_string(line: str) -> str:
 
 
 def read_po_entries(path: Path) -> dict[str, str]:
+    return _read_po_catalog(path)[0]
+
+
+def _read_po_catalog(path: Path) -> tuple[dict[str, str], dict[str, tuple[str, ...]]]:
     entries: dict[str, str] = {}
+    comments: dict[str, tuple[str, ...]] = {}
     if not path.exists():
-        return entries
+        return entries, comments
     current_id: str | None = None
     current_str = ""
     current_field: str | None = None
-    for raw_line in path.read_text(encoding="utf-8").splitlines():
+    current_comments: tuple[str, ...] = ()
+    pending_comments: list[str] = []
+
+    def store_entry():
+        if current_id is not None:
+            if current_id in entries:
+                raise ValueError(f"Duplicate gettext message in {path.name}: {current_id!r}")
+            entries[current_id] = current_str
+            comments[current_id] = current_comments
+
+    for number, raw_line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         line = raw_line.strip()
-        if not line or line.startswith("#"):
+        if not line or line.startswith("#~"):
+            continue
+        if (line.startswith(("msgid_plural ", "msgstr[", "msgctxt "))
+                or line.startswith("#,") and "fuzzy" in {flag.strip() for flag in line[2:].split(",")}):
+            raise ValueError(f"Unsupported gettext entry in {path.name}:{number}")
+        if line.startswith("#"):
+            pending_comments.append(raw_line)
             continue
         if line.startswith("msgid "):
-            if current_id is not None:
-                entries[current_id] = current_str
+            store_entry()
             current_id = _decode_po_string(line[6:].strip())
             current_str = ""
             current_field = "msgid"
+            current_comments = tuple(pending_comments)
+            pending_comments.clear()
         elif line.startswith("msgstr "):
             current_str = _decode_po_string(line[7:].strip())
             current_field = "msgstr"
@@ -46,9 +68,10 @@ def read_po_entries(path: Path) -> dict[str, str]:
             current_id += _decode_po_string(line)
         elif line.startswith('"') and current_field == "msgstr":
             current_str += _decode_po_string(line)
-    if current_id is not None:
-        entries[current_id] = current_str
-    return entries
+        else:
+            raise ValueError(f"Unsupported gettext syntax in {path.name}:{number}")
+    store_entry()
+    return entries, comments
 
 
 def read_po_msgids(path: Path) -> set[str]:
@@ -121,9 +144,9 @@ def write_pot(messages: set[str], path: Path = POT_PATH) -> None:
 
 def write_po(language: str, messages: set[str], locales_root: Path = LOCALES_ROOT) -> Path:
     path = locales_root / language / "LC_MESSAGES" / "messages.po"
-    existing = read_po_entries(path)
+    existing, comments = _read_po_catalog(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    lines = [
+    lines = [*comments.get("", ()),
         'msgid ""',
         'msgstr ""',
         f'"Project-Id-Version: WorkLogger {APP_VERSION}\\n"',
@@ -136,6 +159,7 @@ def write_po(language: str, messages: set[str], locales_root: Path = LOCALES_ROO
     ]
     for message in sorted(messages):
         translation = message if language == "en_US" else existing.get(message, "")
+        lines.extend(comments.get(message, ()))
         lines.append(f"msgid {_po_quote(message)}")
         lines.append(f"msgstr {_po_quote(translation)}")
         lines.append("")

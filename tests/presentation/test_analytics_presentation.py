@@ -224,7 +224,7 @@ class AnalyticsPresentationTests(unittest.TestCase):
         self.assertEqual(chart.objectName(), "combo_chart_widget")
 
     def test_historical_period_switching_keeps_current_periods_selectable(self) -> None:
-        today = date.today()
+        today = date(2026, 10, 21)
         scopes = ("monthly", "quarterly", "annual")
 
         def period_start(day, scope):
@@ -242,7 +242,7 @@ class AnalyticsPresentationTests(unittest.TestCase):
                         dashboard_handler=GetAnalyticsDashboardHandler(repository),
                         csv_exporter=AnalyticsCsvExporter(), pdf_exporter=AnalyticsPdfExporter(),
                     )
-                    page = AnalyticsPage(model, today)
+                    page = AnalyticsPage(model, today, today=today)
                     try:
                         page.scope_control.set_value(source)
                         page.period_combo.setCurrentIndex(page.period_combo.count() - 1)

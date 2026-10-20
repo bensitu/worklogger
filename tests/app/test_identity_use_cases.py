@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import datetime
+from datetime import datetime, timezone
 import unittest
 from unittest.mock import Mock
 
@@ -126,7 +126,7 @@ class MemoryAuth:
             username=username,
             is_admin=is_admin,
             must_change_password=must_change_password,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
             local_password_enabled=local_password_enabled,
         )
         self.users[user.id] = user

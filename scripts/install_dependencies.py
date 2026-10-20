@@ -52,8 +52,17 @@ def install_dependencies(requirements, *, lock_output, wheels=(), constraints=()
         lock_output.parent.mkdir(parents=True, exist_ok=True)
         lock_output.write_text(wheel_requirements(directory), encoding="utf-8")
         subprocess.run([sys.executable, "-m", "pip", "install", "--no-index", "--require-hashes",
-                        "--only-binary=:all:", "--find-links", str(directory), "--force-reinstall",
+                        "--only-binary=:all:", "--find-links", str(directory),
                         "-r", str(lock_output)], check=True)
+        if wheels:
+            artifacts = []
+            for wheel in wheels:
+                wheel = Path(wheel).resolve()
+                with wheel.open("rb") as stream:
+                    digest = hashlib.file_digest(stream, "sha256").hexdigest()
+                artifacts.append(wheel.as_uri() + "#sha256=" + digest)
+            subprocess.run([sys.executable, "-m", "pip", "install", "--no-index", "--no-deps",
+                            "--require-hashes", "--force-reinstall", *artifacts], check=True)
 
 
 def main():

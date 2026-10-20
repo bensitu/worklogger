@@ -171,6 +171,17 @@ only when the selected copy validates. Cancel leaves files unchanged. Recovery
 retains the previous copy; rollback also archives a replaced candidate separately.
 The latest three automatically generated `.bak_restore_*` snapshots are retained;
 manual backups and recovery-candidate archives are not rotated by this policy.
+
+| Restore State | Safe Next Action |
+| --- | --- |
+| Source validation or preparation fails | Keep using the unchanged database; select a compatible backup or resolve the reported storage problem. |
+| Replacement is interrupted and `.pre_restore` remains | Preserve the marker, journals, and retained copies; restart and choose a validated recovery option. |
+| Replacement completes | Sign in again with an account from the restored database. |
+
+Personal cloud restoration is different: it retains a local recovery archive and
+replaces only the current account's portable data inside a database transaction.
+Other accounts are unchanged; running timers must be stopped and record undo
+history is not restored. It does not use the whole-database replacement marker.
 Do not rename/reset a database after a lock, permission,
 or I/O error. Do not copy only the main file while committed data remains in WAL.
 

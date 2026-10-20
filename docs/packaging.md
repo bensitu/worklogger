@@ -58,6 +58,12 @@ input hashes, package versions, and wheel hashes. The adjacent TXT is the
 hash-pinned installation file. Use a lock matching the actual target; do not
 reuse Windows wheels or a lock from another Python version.
 
+Resolved dependency hashes verify the downloaded wheel set, not an independent
+publisher identity. Use trusted package indexes and review dependency changes
+before capturing a target lock. Installation does not force-reinstall packaging
+tools; explicitly supplied native wheels are replaced with hash verification so
+switching backend build profiles does not retain an older same-version binary.
+
 To build and capture a complete Windows target:
 
 ```powershell

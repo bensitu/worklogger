@@ -42,6 +42,11 @@ Synchronization preserves translations for current messages, removes unused
 catalog entries, and does not translate new messages. Before removing deferred
 `N_()` markers, check their consumers, including dynamically constructed error
 codes and classification labels.
+Translator comments and source references for retained messages survive
+synchronization. Catalog tools reject context-specific, indexed plural, fuzzy,
+and duplicate entries instead of silently discarding them. Keep singular and
+plural source messages as separate entries; the compiler combines the pairs
+referenced by `ngettext()` into runtime plural records.
 Missing runtime translations fall back to the English source.
 
 ## Activation and Qt

@@ -54,6 +54,17 @@ class MemoryGitHub:
 
 
 class GitHubReleaseTests(unittest.TestCase):
+    def test_optional_api_resources_use_http_status_not_cli_error_wording(self):
+        from types import SimpleNamespace
+        client = github_release.GitHubClient("example/app")
+        for status, body, expected in (("404 Not Found", '{"message":"Not Found"}', None),
+                                       ("200 OK", '{"object":{"sha":"abc"}}', {"object": {"sha": "abc"}})):
+            response = SimpleNamespace(returncode=1 if expected is None else 0,
+                                       stdout=f"HTTP/2.0 {status}\nContent-Type: application/json\n\n{body}",
+                                       stderr="Localized command error")
+            with self.subTest(status=status), patch.object(github_release.subprocess, "run", return_value=response):
+                self.assertEqual(client.request("git/ref/tags/v4.0.0", missing_ok=True), expected)
+
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)

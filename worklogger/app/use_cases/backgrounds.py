@@ -53,5 +53,5 @@ class BackgroundService:
             return Result.success(operation())
         except ValueError as error:
             return Result.failure(ValidationError(str(error), str(error)))
-        except Exception as error:  # noqa: BLE001 - Storage adapters have backend-specific failures.
+        except Exception as error:
             return Result.failure(infrastructure_failure('background_storage_failed', error, logger_name=__name__))

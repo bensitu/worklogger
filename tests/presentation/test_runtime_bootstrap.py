@@ -39,6 +39,7 @@ from worklogger.presentation.auth import AuthSession, LoginDialog
 from worklogger.presentation.settings import SettingsDialog
 from worklogger.presentation.shell import AppWindowConfig, MinimalView
 from worklogger.presentation.viewmodels import AuthViewModel
+from tests.presentation.qt_support import wait_for_condition
 
 
 class AutoRegisterAuthenticator:
@@ -192,7 +193,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             self.assertTrue(notes.rewrite_available)
             self.assertEqual(notes.rewrite("Synthetic note").value, "Revised synthetic text")
             runtime.window.settings_page.local_model_enabled_switch.click()
-            runtime.application.processEvents()
+            self.assertTrue(wait_for_condition(lambda: not runtime.window.settings_page.is_busy))
             self.assertFalse(reports.ai_assist_button.isEnabled())
             self.assertFalse(notes.rewrite_available)
             self.assertFalse(panel.polish_button.isEnabled())
@@ -491,6 +492,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 self.assertEqual(page.language_combo.currentData(), "ja_JP")
                 self.assertIsNone(self.preferences.load())
                 page.language_combo.setCurrentIndex(page.language_combo.findData("en_US"))
+                self.assertTrue(wait_for_condition(lambda: not page.is_busy))
                 self.assertEqual(self.preferences.load(), "en_US")
                 self.assertEqual(SQLiteSettingsRepository(first.value.connection_factory).get(first.value.user.id, "language"), "en_US")
                 self.assertEqual(get_language(), "ja_JP")

@@ -3,4 +3,10 @@ line-length = 120
 extend-exclude = ["worklogger/_vendor"]
 
 [lint]
-select = ["F"]
+select = ["F", "E9", "B006", "B008", "B012"]
+
+[lint.flake8-bugbear]
+extend-immutable-calls = [
+    "worklogger.domain.notes.preferences.NoteSharing",
+    "worklogger.domain.settings.work_schedule.WorkSchedule",
+]

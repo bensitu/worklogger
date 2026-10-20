@@ -132,7 +132,8 @@ class ShellPagesTests(unittest.TestCase):
         self.assertTrue(page.is_busy)
         self.assertTrue(page.editor.isReadOnly())
         self.assertEqual(tuple(control.isEnabled() for control in controls), enabled)
-        QTest.qWait(200)
+        from tests.presentation.qt_support import wait_for_condition
+        self.assertTrue(wait_for_condition(lambda: not page.load_progress.isHidden()))
         self.assertFalse(page.load_progress.isHidden())
         self.assertEqual(tuple(control.isEnabled() for control in controls), enabled)
         page.generate_button.click()
@@ -161,7 +162,8 @@ class ShellPagesTests(unittest.TestCase):
         page._job_runner = runner
         self.assertTrue(page.refresh())
         self.assertTrue(page.editor.isReadOnly())
-        QTest.qWait(200)
+        from tests.presentation.qt_support import wait_for_condition
+        self.assertTrue(wait_for_condition(lambda: not page.load_progress.isHidden()))
         self.assertFalse(page.load_progress.isHidden())
         self.assertTrue(page.previous_period_button.isEnabled())
         self.assertTrue(page.templates_button.isEnabled())
@@ -189,7 +191,7 @@ class ShellPagesTests(unittest.TestCase):
         self.assertTrue(page.previous_period_button.isEnabled())
         self.assertTrue(page.refresh())
         runner.complete(runner.job(CancellationToken()))
-        QTest.qWait(200)
+        self.assertTrue(wait_for_condition(lambda: not page.is_busy))
         self.assertTrue(page.copy_button.isEnabled())
         self.assertTrue(page.previous_period_button.isEnabled())
 

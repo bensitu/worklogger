@@ -10,6 +10,9 @@ sys.path.insert(0, str(root))
 from scripts.build_resources import bundled_resources, executable_icon, windows_version_resource
 from worklogger.__about__ import APP_ID, APP_VERSION
 
+if not (root / "build/build-info.json").is_file():
+    raise SystemExit("Build metadata is missing. Run python scripts/build.py to prepare and build the application.")
+
 datas = bundled_resources(root)
 datas += copy_metadata("numpy")
 datas += [(str(root / "build/build-info.json"), "."), (str(root / "LICENSE"), ".")]

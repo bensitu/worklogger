@@ -89,6 +89,10 @@ jobs:
           python -m unittest tests.domain.test_worklog_rules
           tests.infrastructure.test_calendar_import_infrastructure
           tests.infrastructure.test_language_preferences
+          tests.infrastructure.test_time_entries
+          tests.infrastructure.test_record_replacement
+          tests.infrastructure.test_data_portability_infrastructure
+          tests.app.test_cloud_backups
           tests.i18n.test_gettext_foundation
       - name: Import verification
         run: python -m worklogger.main --smoke-import
@@ -225,10 +229,15 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: ${{ matrix.python }}
-      - name: Audit dependency vulnerabilities
+      - name: Check dependency vulnerabilities
         uses: pypa/gh-action-pip-audit@1220774d901786e6f652ae159f7b6bc8fea6d266 # v1.1.0
         with:
-          inputs: requirements.txt requirements-build.txt requirements-dev.txt requirements-ai.txt
-          # Temporary exception: no fixed release; WorkLogger does not enable disk-backed inference caching.
-          # Remove when the backend supports a patched DiskCache release.
+          inputs: requirements.txt requirements-build.txt requirements-dev.txt
+      - name: Check native dependency vulnerabilities
+        uses: pypa/gh-action-pip-audit@1220774d901786e6f652ae159f7b6bc8fea6d266 # v1.1.0
+        with:
+          inputs: requirements-ai.txt
+          # Disk-backed inference caching is not enabled. Review by 2026-11-21.
+          # Remove this exception when the native backend accepts a patched DiskCache release.
+          # Upstream: https://github.com/advisories/GHSA-w8v5-vhqr-4h9v
           ignore-vulns: PYSEC-2026-2447

@@ -41,12 +41,12 @@ class TimeEntryHistory(QWidget):
     def set_entries(self, entries, events=()):
         entries, events = tuple(entries), tuple(events)
         selected = self.view_model.draft.original
-        content = (entries, events, get_language(), bool(getattr(self.view_model, "changes_available", False)),
-                   self.view_model.events_deletable)
-        if content == self._rendered_content:
+        actions_enabled = bool(getattr(self.view_model, "changes_available", False))
+        render_key = (entries, events, get_language(), actions_enabled, self.view_model.events_deletable)
+        if render_key == self._rendered_content:
             self.set_selected_entry(selected.id if selected else None)
             return
-        self._rendered_content = content
+        self._rendered_content = render_key
         self._hovered = None
         old_entries, old_events = self.entry_buttons, self.event_buttons
         self.entry_buttons = {}
@@ -66,7 +66,7 @@ class TimeEntryHistory(QWidget):
                 text += "\n" + content
             button = old_entries.pop(entry.id, None)
             if button is None:
-                button = self._button(text, actions_enabled=content[3])
+                button = self._button(text, actions_enabled=actions_enabled)
                 button.actions_requested.connect(lambda position, button=button: self.entry_actions_requested.emit(button.property("record"), position))
                 button.clicked.connect(lambda _checked=False, button=button: self.entry_selected.emit(button.property("record")))
                 button.delete_requested.connect(lambda button=button: self.entry_delete_requested.emit(button.property("record")))

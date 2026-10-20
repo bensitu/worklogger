@@ -80,6 +80,10 @@ class MemoryWorkLogRepository:
         record = self.get_for_day(user_id, day)
         return (record.entries or (record,)) if record else ()
 
+    def list_entries_range(self, user_id, start, end, *, limit=50001):
+        return tuple(entry for record in self.list_range(user_id, start, end)
+                     for entry in record.entries or (record,))[:limit]
+
     def get_entry(self, user_id, entry_id):
         return next((entry for record in self.list_all(user_id)
                      for entry in record.entries or (record,) if entry.id == entry_id), None)
@@ -416,8 +420,8 @@ class AppWindowTests(unittest.TestCase):
         assert window.last_error is not None
         self.assertEqual(window.last_error.code, "month_failed")
         self.assertEqual(window.status_label.text(), "The operation could not be completed. Please try again.")
-        self.assertTrue(window.status_label.isHidden())
-        self.warning.assert_called_once_with(window, "WorkLogger", "The operation could not be completed. Please try again.")
+        self.assertFalse(window.status_label.isHidden())
+        self.warning.assert_not_called()
 
     def test_app_window_exposes_account_label_and_logout_signal(self) -> None:
         window = _window(MemoryWorkLogRepository(), account_name="alice")

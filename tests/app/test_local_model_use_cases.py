@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 from worklogger.app.commands.local_model_commands import (
     DeleteLocalModelCommand,
@@ -144,6 +145,12 @@ class LocalModelUseCaseTests(unittest.TestCase):
 
         self.assertTrue(result.ok)
         self.assertEqual(settings.get(1, LOCAL_MODEL_ACTIVE_ID_SETTING_KEY), "model-a")
+
+        with patch.object(store, "verify_model", return_value=Result.success(
+                LocalModelFileStatus("model-a", available=True, verified=False))):
+            rejected = SelectLocalModelHandler(store=store, settings=settings).handle(SelectLocalModelCommand(2, "model-a"))
+        self.assertFalse(rejected.ok)
+        self.assertIsNone(settings.get(2, LOCAL_MODEL_ACTIVE_ID_SETTING_KEY))
 
     def test_runtime_status_respects_local_model_switch(self) -> None:
         settings = MemorySettings()

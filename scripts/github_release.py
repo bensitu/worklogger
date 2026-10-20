@@ -28,13 +28,21 @@ class GitHubClient:
             command.extend(["--input", "-"])
         if paginate:
             command.extend(["--paginate", "--slurp"])
+        if missing_ok:
+            command.append("--include")
         response = subprocess.run(command, input=json.dumps(body) if body is not None else None,
                                   capture_output=True, text=True, timeout=120)
-        if response.returncode:
-            if missing_ok and "(HTTP 404)" in response.stderr:
+        payload = response.stdout
+        if missing_ok:
+            header, separator, payload = payload.partition("\n\n")
+            status = re.search(r"^HTTP/\S+\s+(\d{3})\b", header, re.MULTILINE)
+            if status is None or not separator:
+                raise RuntimeError(f"GitHub API response has no HTTP status: {path}")
+            if status[1] == "404":
                 return None
+        if response.returncode:
             raise RuntimeError(f"GitHub API request failed: {path}")
-        return json.loads(response.stdout)
+        return json.loads(payload)
 
     def upload(self, tag, path):
         response = subprocess.run(["gh", "release", "upload", tag, str(path), "--repo", self.repository, "--clobber"],
