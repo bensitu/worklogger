@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -266,6 +266,26 @@ class NotesReportsPresentationTests(unittest.TestCase):
         self.assertFalse(dialog.empty_label.isHidden())
         self.assertEqual(dialog._day, other_day)
         dialog._draft_timer.stop()
+        dialog.history_browser.stop()
+
+    def test_draft_submission_failure_preserves_editing_and_allows_save_retry(self):
+        model, _notes, _quick, _factory = self._note_model()
+        dialog = NoteEditorDialog(model, date(2026, 5, 14), job_runner=ImmediateJobRunner())
+        self.addCleanup(dialog.deleteLater)
+        self.assertTrue(dialog.refresh())
+        dialog.editor.setPlainText("Pending note")
+        original_runner = dialog._job_runner
+        dialog._job_runner = Mock(submit=Mock(side_effect=RuntimeError("job_runner_closed")))
+        with patch.object(QMessageBox, "warning"):
+            dialog._persist_draft()
+        self.assertFalse(dialog._draft_busy)
+        self.assertFalse(dialog._busy)
+        self.assertTrue(dialog.editor.isEnabled())
+        self.assertEqual(dialog.editor.toPlainText(), "Pending note")
+        dialog._job_runner = original_runner
+        with patch("worklogger.presentation.notes.dialog.show_information"):
+            dialog._save()
+        self.assertFalse(dialog.has_unsaved_changes)
         dialog.history_browser.stop()
 
     def test_note_deletion_confirms_waits_for_drafts_and_preserves_conflicting_edits(self):

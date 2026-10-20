@@ -13,7 +13,7 @@ from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_code, display_error_message
-from worklogger.presentation.job_runner import QtJobRunner, owned_callback
+from worklogger.presentation.job_runner import shared_job_runner, owned_callback
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.file_location import FileLocationPanel
@@ -24,7 +24,7 @@ class DatabaseStartupDialog(QDialog):
     def __init__(self, path, error, handler, parent=None, *, job_runner=None):
         super().__init__(parent)
         self._path, self._handler = path, handler
-        self._runner = job_runner or QtJobRunner(self)
+        self._runner = job_runner or shared_job_runner()
         self._busy = False
         self.setObjectName("database_startup_dialog")
         self.setWindowTitle(_("Database recovery"))

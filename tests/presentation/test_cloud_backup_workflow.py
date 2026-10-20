@@ -59,6 +59,14 @@ class CloudBackupWorkflowTests(unittest.TestCase):
         callback()
         self.service.upload.assert_called_once_with()
 
+    def test_invalid_saved_backup_time_does_not_stop_scheduling(self):
+        configuration, credentials, _state = self.service.settings.return_value.value
+        self.service.settings.return_value = Result.success((configuration, credentials, {"last_success": "invalid"}))
+        workflow = self.workflow(0)
+        workflow.reload()
+        self.service.upload.assert_called_once_with()
+        self.assertFalse(workflow._busy)
+
     def test_automatic_backups_wait_for_busy_views_even_after_startup_delay(self):
         workflow = self.workflow(0)
         self.owner.entry_panel.is_busy = True

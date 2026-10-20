@@ -68,7 +68,7 @@ from worklogger.presentation.viewmodels.classifications import ClassificationMan
 from worklogger.presentation.widgets.classification_manager import ClassificationManagerDialog
 from worklogger.presentation.widgets.project_manager import ProjectManagerDialog
 from worklogger.app.ports import AIRequest
-from worklogger.presentation.job_runner import QtJobRunner, owned_callback
+from worklogger.presentation.job_runner import shared_job_runner, owned_callback
 from worklogger.app.use_cases.user_profile import UserProfileService
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.errors import CancellationError
@@ -178,7 +178,6 @@ class SettingsWorkflowController:
                 retry_max_seconds=cloud_backup_retry_max_seconds)
         self._projects_view_model = projects_view_model
         self._project_dialog = None
-        self._profile_runners: WeakKeyDictionary[SettingsPage, QtJobRunner] = WeakKeyDictionary()
         self._connection_tests: WeakKeyDictionary[SettingsPage, TextProcessingTask] = WeakKeyDictionary()
         if local_inference is not None:
             self._capabilities = replace(self._capabilities,
@@ -407,12 +406,7 @@ class SettingsWorkflowController:
     def _profile_runner(self, surface: SettingsPage):
         if self._job_runner is not None:
             return self._job_runner
-        runner = self._profile_runners.get(surface)
-        if runner is None:
-            runner = QtJobRunner(surface)
-            self._profile_runners[surface] = runner
-            surface.destroyed.connect(lambda: self._profile_runners.pop(surface, None))
-        return runner
+        return shared_job_runner()
 
     def _save_profile(self, surface: SettingsPage, value: str, expected: str):
         if surface.is_busy:

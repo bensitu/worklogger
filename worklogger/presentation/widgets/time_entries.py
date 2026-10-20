@@ -610,7 +610,12 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         self._polish_task.cancel()
         work = self.view_model.prepare_operation(operation)
         if self._job_runner is None:
-            result = self.view_model.apply_operation_result(work().value)
+            try:
+                result = work()
+                if result.ok:
+                    result = self.view_model.apply_operation_result(result.value)
+            except Exception:
+                result = Result.failure(InfrastructureError("worklog_save_failed", "worklog_save_failed"))
             if on_complete is None:
                 self._apply_result(result, refresh=refresh)
             else:

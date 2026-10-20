@@ -50,9 +50,11 @@ class ReportHistoryController(QObject):
 
         def complete(result):
             self._busy = False
-            if revision != self._revision or self._pending:
+            if self._pending:
                 self._pending = False
                 self._load()
+                return
+            if revision != self._revision:
                 return
             if not result.ok or result.value is None:
                 self.panel.set_loading(False)

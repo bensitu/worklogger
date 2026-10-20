@@ -14,7 +14,7 @@ from worklogger.presentation.settings.workflows.common import (
     _notify_success,
 )
 from worklogger.presentation.user_management import UserManagementDialog
-from worklogger.presentation.job_runner import QtJobRunner
+from worklogger.presentation.job_runner import shared_job_runner
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
 
@@ -48,7 +48,7 @@ class AccountSettingsWorkflow:
     def change_password(self, parent: QWidget | None) -> bool:
         dialog = self._change_password_dialog_factory(parent)
         changed = False
-        runner = self._job_runner or QtJobRunner(dialog)
+        runner = self._job_runner or shared_job_runner()
 
         def complete(result):
             nonlocal changed

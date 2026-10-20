@@ -295,6 +295,7 @@ class TimeEntryViewModel:
             return EntryType(value).category
         except ValueError:
             if self._custom_types is None:
+                self._custom_types = ()
                 self.list_entry_types()
             return next((definition.category for definition in self._custom_types or () if definition.value == value), None)
 

@@ -14,11 +14,19 @@ from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
-from worklogger.presentation.job_runner import QtJobRunner, owned_callback
+from worklogger.presentation.job_runner import shared_job_runner, owned_callback
 
 
 def _local_time(value):
-    return datetime.fromisoformat(value).astimezone().strftime("%Y-%m-%d %H:%M") if value else ""
+    parsed = _parse_time(value)
+    return parsed.astimezone().strftime("%Y-%m-%d %H:%M") if parsed else ""
+
+
+def _parse_time(value):
+    try:
+        return datetime.fromisoformat(value) if value else None
+    except (TypeError, ValueError, OverflowError):
+        return None
 
 
 class BackupTransferDialog(QDialog):
@@ -91,7 +99,7 @@ class CloudBackupWorkflow(QObject):
                  retry_initial_seconds=300, retry_max_seconds=3600, job_runner=None):
         super().__init__()
         self.service = service
-        self.runner = job_runner or QtJobRunner(self)
+        self.runner = job_runner or shared_job_runner()
         self._panels = WeakSet()
         self._configuration, self._credentials, self._state = None, None, {}
         self._busy, self._loaded = False, False
@@ -148,11 +156,11 @@ class CloudBackupWorkflow(QObject):
             status += ("\n" if status else "") + _("Some expired backups could not be removed. Cleanup will be retried.")
         for panel in tuple(self._panels):
             if isValid(panel):
-                panel.set_busy(self._busy, configured=self._configuration is not None)
+                panel.set_busy(self._busy or self._confirming, configured=self._configuration is not None)
                 panel.status_label.setText(_("Cloud backup operation in progress...") if self._busy else status)
 
     def _run(self, operation, *, success="", callback=None, configured=False, refresh=False, automatic=False):
-        if self._busy:
+        if self._busy or self._confirming:
             return False
         self._busy = True
         self._update()
@@ -209,7 +217,7 @@ class CloudBackupWorkflow(QObject):
         dialog.open()
 
     def _prepare(self, panel, *, restore):
-        if self._busy or panel.has_unsaved_changes:
+        if self._busy or self._confirming or panel.has_unsaved_changes:
             return
         if restore and not self._restore_allowed():
             self._message = _("Save or discard unsaved edits before restoring a cloud backup.")
@@ -229,9 +237,11 @@ class CloudBackupWorkflow(QObject):
                 return
             dialog = BackupTransferDialog(overview, restore=restore, parent=panel)
             self._confirming = True
+            self._update()
             try:
                 if dialog.exec() != QDialog.DialogCode.Accepted:
                     return
+                self._confirming = False
                 latest = overview.versions[0].revision if overview.versions else ""
                 if restore:
                     revision, force, passphrase = dialog.versions.currentData(), dialog.force.isChecked(), dialog.passphrase.text() or None
@@ -244,6 +254,7 @@ class CloudBackupWorkflow(QObject):
             finally:
                 self._confirming = False
                 dialog.deleteLater()
+                self._update()
         self._run(self.service.overview, callback=ready)
 
     def _restore(self, panel, operation):
@@ -267,7 +278,7 @@ class CloudBackupWorkflow(QObject):
             progress.deleteLater()
 
     def _prepare_local(self, panel):
-        if self._busy:
+        if self._busy or self._confirming:
             return
         if not self._restore_allowed():
             self._message = _("Save or discard unsaved edits before restoring a cloud backup.")
@@ -283,14 +294,17 @@ class CloudBackupWorkflow(QObject):
                 return
             dialog = BackupTransferDialog(result.value, restore=True, parent=panel, local_path=path)
             self._confirming = True
+            self._update()
             try:
                 if dialog.exec() == QDialog.DialogCode.Accepted:
+                    self._confirming = False
                     passphrase = dialog.passphrase.text()
                     self._restore(panel, lambda: self.service.restore_local(path, expected_local_digest=result.value.local_digest,
                         expected_archive_digest=result.value.archive_digest, passphrase=passphrase))
             finally:
                 self._confirming = False
                 dialog.deleteLater()
+                self._update()
         self._run(lambda: self.service.preview_local(path), callback=ready)
 
     def _owner_busy(self):
@@ -315,6 +329,6 @@ class CloudBackupWorkflow(QObject):
         if self._state.get("last_error") in {"cloud_conflict", "cloud_local_changed", "cloud_configuration_invalid"}:
             return
         last = self._state.get("last_success")
-        previous = datetime.fromisoformat(last) if last else None
+        previous = _parse_time(last)
         if backup_due(self._configuration, previous, datetime.now(get_localzone())):
             self._run(self.service.upload, success=_("Cloud backup uploaded."), automatic=True)

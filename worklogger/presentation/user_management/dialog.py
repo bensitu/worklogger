@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
 
 from worklogger.domain.shared.errors import AppError, InfrastructureError
 from worklogger.domain.shared.result import Result
-from worklogger.presentation.job_runner import QtJobRunner, owned_callback
+from worklogger.presentation.job_runner import shared_job_runner, owned_callback
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import (
@@ -52,7 +52,7 @@ class UserManagementDialog(QDialog):
         self._users: dict[int, UserListItem] = {}
         self._last_error: AppError | None = None
         self._selection_id: int | None = None
-        self._job_runner = job_runner or QtJobRunner(self)
+        self._job_runner = job_runner or shared_job_runner()
         self._busy = False
         self.setObjectName("user_management_dialog")
         self.setWindowTitle(_("Manage users"))

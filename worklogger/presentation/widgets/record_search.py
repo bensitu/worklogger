@@ -210,7 +210,7 @@ class RecordSearchDialog(QDialog):
             if not isValid(self) or version != self._version:
                 return
             self._job = None
-            self._loading = not result.ok
+            self._loading = False
             if not result.ok:
                 self.status_label.setText(display_error_message(result.error))
                 self._actions()

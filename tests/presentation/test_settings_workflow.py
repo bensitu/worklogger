@@ -206,6 +206,30 @@ def _settings_view_model(repository: MemorySettingsRepository) -> SettingsViewMo
 
 
 class SettingsWorkflowTests(unittest.TestCase):
+    def test_data_submission_failure_releases_controls_and_allows_retry(self):
+        model = _settings_view_model(MemorySettingsRepository())
+        controller = SettingsWorkflowController(
+            settings_view_model=model, auth_view_model=FakeAuthViewModel(),
+            user=User(1, "alice", is_admin=True), data_management_view_model=FakeDataManagementViewModel(),
+            job_runner=Mock(submit=Mock(side_effect=RuntimeError("job_runner_closed"))),
+            backup_destination_provider=lambda _owner: Path("backup.db"),
+            restore_source_provider=lambda _owner: Path("backup.db"),
+            csv_source_provider=lambda _owner: Path("records.csv"),
+            notify_success=Mock(), notify_error=Mock(),
+        )
+        dialog = SettingsDialog(model)
+        self.addCleanup(dialog.deleteLater)
+        workflow = controller._data_workflow
+        for operation in (workflow.restore_database, workflow.import_csv, workflow.backup_database):
+            with self.subTest(operation=operation.__name__):
+                self.assertFalse(operation(dialog))
+                self.assertIsNone(workflow._data_job_handle)
+                self.assertIsNone(workflow._restore_validation_handle)
+                self.assertFalse(dialog.page.is_busy)
+        workflow._job_runner = ImmediateJobRunner()
+        self.assertTrue(workflow.backup_database(dialog))
+        self.assertFalse(dialog.page.is_busy)
+
     def test_external_connection_test_uses_its_configured_timeout(self):
         from types import SimpleNamespace
 

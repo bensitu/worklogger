@@ -25,7 +25,7 @@ from worklogger.presentation.auth.dialogs import (
 from worklogger.presentation.errors import display_error_code, display_error_message
 from worklogger.presentation.identity.dialogs import IdentityConfigurationDialog
 from worklogger.presentation.identity_authorization import IdentityAuthorizationRequest
-from worklogger.presentation.job_runner import QtJobRunner
+from worklogger.presentation.job_runner import owned_callback, shared_job_runner
 from worklogger.presentation.viewmodels import AuthViewModel
 
 ChangePasswordDialogFactory = Callable[[QWidget | None], ChangePasswordDialog]
@@ -74,7 +74,7 @@ class AuthController:
         allow_remembered_session=True,
     ) -> None:
         self._view_model = view_model
-        self._job_runner = job_runner or QtJobRunner(parent)
+        self._job_runner = job_runner or shared_job_runner()
         self._parent = parent
         self._change_password_dialog_factory = (
             change_password_dialog_factory or ChangePasswordDialog
@@ -97,7 +97,7 @@ class AuthController:
             dialog.set_busy(False)
             complete(result)
         try:
-            self._job_runner.submit("authenticate", lambda _token: operation(), on_complete=finished)
+            self._job_runner.submit("authenticate", lambda _token: operation(), on_complete=owned_callback(dialog, finished))
         except Exception:
             finished(Result.failure(InfrastructureError("auth_state_failed", "auth_state_failed")))
 
@@ -213,7 +213,7 @@ class AuthController:
         dialog.login_submitted.connect(submit)
         dialog.register_requested.connect(switch_to_register)
         dialog.reset_password_requested.connect(switch_to_reset)
-        dialog.exec()
+        self._exec_dialog(dialog)
         return outcome
 
     def clear_remembered_session(self) -> Result[None]:
@@ -278,7 +278,7 @@ class AuthController:
         dialog.register_submitted.connect(submit)
         dialog.continue_requested.connect(continue_to_app)
         dialog.login_requested.connect(switch_to_login)
-        dialog.exec()
+        self._exec_dialog(dialog)
         return outcome
 
     def _run_reset_password_dialog(self) -> _AuthDialogOutcome:
@@ -308,7 +308,7 @@ class AuthController:
         dialog.reset_submitted.connect(submit)
         dialog.continue_requested.connect(continue_to_login)
         dialog.login_requested.connect(switch_to_login)
-        dialog.exec()
+        self._exec_dialog(dialog)
         return outcome
 
     def _run_change_password_dialog(self, user: User) -> _AuthDialogOutcome:
@@ -338,8 +338,15 @@ class AuthController:
 
         dialog.change_submitted.connect(submit)
         dialog.continue_requested.connect(continue_to_app)
-        dialog.exec()
+        self._exec_dialog(dialog)
         return outcome
+
+    @staticmethod
+    def _exec_dialog(dialog):
+        try:
+            return dialog.exec()
+        finally:
+            dialog.deleteLater()
 
 
 def _error_message(error: AppError | None) -> str:

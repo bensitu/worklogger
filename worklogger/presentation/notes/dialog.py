@@ -14,7 +14,7 @@ from worklogger.domain.shared.errors import CancellationError
 from worklogger.infrastructure.i18n import _, get_language
 from worklogger.presentation.notes.history import NoteHistoryBrowser
 from worklogger.presentation.errors import display_error_code, display_error_message
-from worklogger.presentation.job_runner import QtJobRunner, owned_callback
+from worklogger.presentation.job_runner import shared_job_runner, owned_callback
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.feedback import show_information
@@ -29,7 +29,7 @@ class NoteEditorDialog(QDialog):
         super().__init__(parent)
         self._view_model, self._day = view_model, day
         self._ai_ready = view_model.rewrite_available
-        self._job_runner = job_runner or QtJobRunner(self)
+        self._job_runner = job_runner or shared_job_runner()
         self._rewrite_task = TextProcessingTask(self, job_runner=self._job_runner)
         self._confirm_discard_changes = confirm_discard_changes
         self._state = None
@@ -283,6 +283,8 @@ class NoteEditorDialog(QDialog):
             self._job_runner.submit("save_note_draft", lambda _token: self._view_model.save_draft(state, content, sharing), on_complete=owned_callback(self, done))
         except Exception:
             self._draft_busy = False
+            self._after_draft = None
+            self._set_busy(False)
             self._set_error(InfrastructureError("note_save_failed", "note_save_failed"))
 
     def _transfer_previous_entries(self):

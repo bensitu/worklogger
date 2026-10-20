@@ -4,13 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
+from weakref import ref
 
 from PySide6.QtWidgets import QWidget
 from shiboken6 import isValid
 
 from worklogger.app.job_runner import JobHandle
 from worklogger.app.use_cases.data_portability import WorkLogCsvImportPreview
-from worklogger.domain.shared.errors import AppError, CancellationError
+from worklogger.domain.shared.errors import AppError, CancellationError, InfrastructureError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.settings.workflows.common import (
@@ -106,21 +107,13 @@ class DataSettingsWorkflow:
         if self._job_runner is not None:
             _set_status(dialog, _("Validating backup..."))
             _set_busy(dialog, "data", True)
-            self._restore_validation_handle = JobHandle(
-                job_id="restore_validate_pending", cancel=lambda: None
-            )
-            handle = self._job_runner.submit(
+            return self._submit(
+                dialog,
                 "restore_validate",
-                lambda _token: (
-                    self._data_management_view_model.validate_restore_database(path)
-                ),
-                on_complete=lambda result: self._restore_validated(
-                    dialog, path, result
-                ),
+                lambda: self._data_management_view_model.validate_restore_database(path),
+                lambda current, result: self._restore_validated(current, path, result),
+                attribute="_restore_validation_handle",
             )
-            if self._restore_validation_handle is not None:
-                self._restore_validation_handle = handle
-            return True
         return self._restore_validated(
             dialog,
             path,
@@ -131,6 +124,8 @@ class DataSettingsWorkflow:
         self, dialog: QWidget, path: Path, validation: object
     ) -> bool:
         self._restore_validation_handle = None
+        if not isValid(dialog):
+            return False
         _set_busy(dialog, "data", False)
         if not validation.ok:
             return self._handle_data_result(
@@ -188,17 +183,12 @@ class DataSettingsWorkflow:
                 dialog, path, self._data_management_view_model.preview_csv(path)
             )
         _set_busy(dialog, "data", True)
-        self._data_job_handle = JobHandle(
-            job_id="csv_preview_pending", cancel=lambda: None
-        )
-        handle = self._job_runner.submit(
+        return self._submit(
+            dialog,
             "csv_preview",
-            lambda _token: self._data_management_view_model.preview_csv(path),
-            on_complete=lambda result: self._complete_csv_preview(dialog, path, result),
+            lambda: self._data_management_view_model.preview_csv(path),
+            lambda current, result: self._complete_csv_preview(current, path, result),
         )
-        if self._data_job_handle is not None:
-            self._data_job_handle = handle
-        return True
 
     def _complete_csv_preview(
         self, dialog: QWidget, path: Path, result: Result[WorkLogCsvImportPreview]
@@ -291,7 +281,7 @@ class DataSettingsWorkflow:
         success_message: Callable[[DataManagementActionState], str],
     ) -> bool:
         if not result.ok or result.value is None:
-            if not isValid(dialog):
+            if dialog is None or not isValid(dialog):
                 return False
             message = _error_message(result.error)
             _set_status(dialog, message, "data")
@@ -306,14 +296,14 @@ class DataSettingsWorkflow:
                 if (
                     loaded.ok
                     and loaded.value is not None
-                    and isValid(dialog)
+                    and dialog is not None and isValid(dialog)
                 ):
                     dialog.set_backup_time(loaded.value.last_backup_at)
             else:
                 message += "\n" + _(
                     "Backup succeeded, but its timestamp could not be saved."
                 )
-        if isValid(dialog):
+        if dialog is not None and isValid(dialog):
             _set_status(dialog, message, "data")
             self._notify_success(dialog, title, message)
         return True
@@ -336,22 +326,35 @@ class DataSettingsWorkflow:
             return False
         _set_status(dialog, busy_message, "data")
         _set_busy(dialog, "data", True)
-        self._data_job_handle = JobHandle(
-            job_id="data_management_pending",
-            cancel=lambda: None,
-        )
-        handle = self._job_runner.submit(
+        return self._submit(
+            dialog,
             "data_management",
-            lambda _token: job(),
-            on_complete=lambda result: self._complete_data_job(
-                dialog,
-                title,
-                result,
-                success_message,
-            ),
+            job,
+            lambda current, result: self._complete_data_job(current, title, result, success_message),
+            finish_after_close=True,
         )
-        if self._data_job_handle is not None:
-            self._data_job_handle = handle
+
+    def _submit(self, dialog, name, operation, completed, *, attribute="_data_job_handle", finish_after_close=False):
+        reference = ref(dialog)
+        pending = JobHandle(job_id=name + "_pending", cancel=lambda: None)
+        setattr(self, attribute, pending)
+
+        def done(result):
+            setattr(self, attribute, None)
+            current = reference()
+            alive = current is not None and isValid(current)
+            if alive:
+                _set_busy(current, "data", False)
+            if alive or finish_after_close:
+                completed(current, result)
+
+        try:
+            handle = self._job_runner.submit(name, lambda _token: operation(), on_complete=done)
+        except Exception:
+            done(Result.failure(InfrastructureError("background_job_failed", "background_job_failed")))
+            return False
+        if getattr(self, attribute) is pending:
+            setattr(self, attribute, handle)
         return True
 
     def _complete_data_job(
@@ -362,7 +365,7 @@ class DataSettingsWorkflow:
         success_message: Callable[[DataManagementActionState], str],
     ) -> None:
         self._data_job_handle = None
-        if isValid(dialog):
+        if dialog is not None and isValid(dialog):
             _set_busy(dialog, "data", False)
         completed = self._handle_data_result(dialog, title, result, success_message)
         if (

@@ -179,6 +179,12 @@ custom painting; explicit color overrides are for intentional fixed-color conten
 application controls. Metric cards share `widgets/summary_card.py` and semantic
 text roles; their charts live independently in `widgets/progress_visuals.py`.
 
+Dialogs reuse the application-owned background runner unless one is explicitly
+injected. Completion callbacks must tolerate a closed owner. Submission failures
+must release pending handles and busy controls so users can retry without losing
+their input. Completed backup and restore operations retain their bookkeeping
+even when their originating settings view has closed.
+
 ## Data and Resources
 
 Use synthetic accounts and temporary databases. Never commit databases, exports,
