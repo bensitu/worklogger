@@ -6,6 +6,7 @@ import math
 import os
 import re
 import shutil
+import stat
 from collections.abc import Callable
 from pathlib import Path
 from urllib.error import HTTPError, URLError
@@ -159,8 +160,25 @@ def _download_to_temp(
             raise ValueError("local_model_disk_full")
         if progress is not None:
             progress(DownloadProgress(resume_from, total))
-        mode = "ab" if resume_from > 0 else "wb"
-        with destination.open(mode) as handle:
+        next_space_check = 0
+        descriptor = os.open(destination, os.O_CREAT | os.O_RDWR | getattr(os, "O_NOFOLLOW", 0), 0o600)
+        try:
+            opened = os.fstat(descriptor)
+            current = destination.lstat()
+            if (not stat.S_ISREG(opened.st_mode) or opened.st_nlink != 1
+                    or not stat.S_ISREG(current.st_mode) or (opened.st_dev, opened.st_ino) != (current.st_dev, current.st_ino)):
+                raise ValueError("local_model_filename_invalid")
+            handle = os.fdopen(descriptor, "r+b")
+        except BaseException:
+            os.close(descriptor)
+            raise
+        with handle:
+            if resume_from:
+                if opened.st_size != resume_from:
+                    raise ValueError("local_model_response_invalid")
+                handle.seek(resume_from)
+            else:
+                handle.truncate(0)
             while True:
                 check_download_cancelled(is_cancelled)
                 chunk = response.read(chunk_size)
@@ -168,6 +186,11 @@ def _download_to_temp(
                     break
                 if resume_from + received + len(chunk) > max_bytes:
                     raise ValueError("local_model_file_too_large")
+                if received >= next_space_check:
+                    free = shutil.disk_usage(destination.parent).free
+                    if len(chunk) > free:
+                        raise ValueError("local_model_disk_full")
+                    next_space_check = received + min(8 * 1024 * 1024, max(1, free // 2))
                 handle.write(chunk)
                 received += len(chunk)
                 if progress is not None and monotonic() - last_progress >= 0.1:

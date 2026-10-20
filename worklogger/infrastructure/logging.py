@@ -7,6 +7,7 @@ from pathlib import Path
 import logging as std_logging
 import os
 import re
+import stat
 import traceback
 from urllib.parse import unquote_plus
 
@@ -72,7 +73,7 @@ def setup_logging(
 
     path = _resolve_log_path(log_path, frozen=frozen)
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    descriptor = os.open(path, os.O_CREAT | os.O_APPEND | os.O_WRONLY, 0o600)
+    descriptor = _open_log(path)
     os.close(descriptor)
 
     level = std_logging.DEBUG if _debug_enabled(debug) else std_logging.INFO
@@ -107,7 +108,7 @@ def setup_logging(
 
 class _PrivateRotatingFileHandler(RotatingFileHandler):
     def _open(self):
-        descriptor = os.open(self.baseFilename, os.O_CREAT | os.O_APPEND | os.O_WRONLY, 0o600)
+        descriptor = _open_log(Path(self.baseFilename))
         try:
             if os.name != "nt":
                 os.fchmod(descriptor, 0o600)
@@ -115,6 +116,21 @@ class _PrivateRotatingFileHandler(RotatingFileHandler):
         except Exception:
             os.close(descriptor)
             raise
+
+
+def _open_log(path):
+    if path.is_symlink():
+        raise OSError("log_destination_invalid")
+    descriptor = os.open(path, os.O_CREAT | os.O_APPEND | os.O_WRONLY | getattr(os, "O_NOFOLLOW", 0), 0o600)
+    try:
+        opened, current = os.fstat(descriptor), path.lstat()
+        if (not stat.S_ISREG(opened.st_mode) or opened.st_nlink != 1 or not stat.S_ISREG(current.st_mode)
+                or (opened.st_dev, opened.st_ino) != (current.st_dev, current.st_ino)):
+            raise OSError("log_destination_invalid")
+        return descriptor
+    except BaseException:
+        os.close(descriptor)
+        raise
 
 
 def log_file_path() -> Path:

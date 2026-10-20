@@ -35,7 +35,7 @@ msgstr ""
 msgid "(Week {week})"
 msgstr ""
 
-msgid "+"
+msgid "+{hours:.1f}h"
 msgstr ""
 
 msgid "2.5 days off per week"
@@ -1649,6 +1649,9 @@ msgstr ""
 msgid "Only adjacent records with matching types and context can be merged."
 msgstr ""
 
+msgid "Only daily, weekly, monthly, or yearly recurrence is supported."
+msgstr ""
+
 msgid "Open"
 msgstr ""
 
@@ -3201,6 +3204,9 @@ msgid "{days} days"
 msgstr ""
 
 msgid "{duration} ({percent:.0f}%)"
+msgstr ""
+
+msgid "{hours:.1f}h"
 msgstr ""
 
 msgid "{hours}h {minutes}m"

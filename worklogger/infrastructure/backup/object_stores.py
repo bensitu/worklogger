@@ -5,6 +5,8 @@ import logging
 from urllib.error import HTTPError
 from urllib.error import URLError
 import ssl
+from http.client import HTTPException
+from time import sleep
 from urllib.parse import quote
 from urllib.request import Request
 from uuid import uuid4
@@ -68,6 +70,19 @@ class WebDAVBackupStore(ConditionalObjectStore):
         self._collections = set()
 
     def _request(self, method, key, *, data=None, headers=None, limit=0):
+        for attempt in range(3):
+            try:
+                return self._request_once(method, key, data=data, headers=headers, limit=limit)
+            except (URLError, TimeoutError, ConnectionError, HTTPException):
+                if attempt == 2:
+                    raise
+                if method == "PUT":
+                    found = self.get(key, limit=len(data))
+                    if found is not None and found.data == data:
+                        return found
+                sleep(0.25 * 2 ** attempt)
+
+    def _request_once(self, method, key, *, data=None, headers=None, limit=0):
         request = Request(self._root + _key(self._prefix + "/" + key), data=data, method=method,
                           headers={"Authorization": self._authorization, **(headers or {})})
         try:
@@ -85,6 +100,8 @@ class WebDAVBackupStore(ConditionalObjectStore):
                 raise ValueError("cloud_conflict") from None
             if status == 405 and method == "MKCOL":
                 return None
+            if status in {408, 429, 500, 502, 503, 504}:
+                raise
             raise ValueError("cloud_authentication_failed" if status in {401, 403} else "cloud_connection_failed") from None
         except URLError as error:
             if isinstance(error.reason, ssl.SSLCertVerificationError):

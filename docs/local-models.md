@@ -87,6 +87,13 @@ Persistent `models/catalog.json` entries override matching IDs and retain import
 Refresh uses an explicitly configured HTTPS remote catalog, if supplied, otherwise
 local catalog files.
 
+Remote catalog updates cannot replace bundled model identities or filenames.
+Additional remote entries still rely on the configured catalog publisher: their
+checksums establish file integrity, not independent publisher authentication.
+Only administrators or users who trust that source should configure a remote
+catalog URL. Keep installation directories and deployment environment variables
+protected against modification by untrusted users.
+
 Download entries need a filename, URL, and SHA-256 digest. Model context and output
 limits must match the intended backend. See [metadata format](data-formats.md).
 Do not add credentials to catalogs or commit model weights.

@@ -37,8 +37,8 @@ msgstr "명도(&V):"
 msgid "(Week {week})"
 msgstr "({week}주차)"
 
-msgid "+"
-msgstr "+"
+msgid "+{hours:.1f}h"
+msgstr "+{hours:.1f}h"
 
 msgid "2.5 days off per week"
 msgstr "주 2.5일 휴무"
@@ -1651,6 +1651,9 @@ msgstr "주 1일 휴무"
 msgid "Only adjacent records with matching types and context can be merged."
 msgstr "유형과 맥락이 일치하는 인접 기록만 병합할 수 있습니다."
 
+msgid "Only daily, weekly, monthly, or yearly recurrence is supported."
+msgstr "매일, 매주, 매월 또는 매년 반복만 지원합니다."
+
 msgid "Open"
 msgstr "열기"
 
@@ -3204,6 +3207,9 @@ msgstr "{days}일"
 
 msgid "{duration} ({percent:.0f}%)"
 msgstr "{duration} ({percent:.0f}%)"
+
+msgid "{hours:.1f}h"
+msgstr "{hours:.1f}h"
 
 msgid "{hours}h {minutes}m"
 msgstr "{hours}h {minutes}m"

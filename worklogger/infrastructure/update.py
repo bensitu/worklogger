@@ -45,7 +45,7 @@ class GitHubReleaseUpdateChecker:
                 raise ValueError("update_response_invalid")
             if data.get("draft") or data.get("prerelease"):
                 return Result.success(None)
-            latest = _normalize_version(str(data.get("tag_name") or data.get("name") or ""))
+            latest = _normalize_version(str(data.get("tag_name") or ""))
             current = _normalize_version(current_version)
             if "-" in latest.split("+", 1)[0]:
                 return Result.success(None)

@@ -373,9 +373,9 @@ def _cell_text_lines(
     lines = [str(cell_day.day)]
     if holiday_name:
         lines.append(holiday_name)
-    lines.append(f"{worked_hours:.1f}{_('h')}")
+    lines.append(_("{hours:.1f}h").format(hours=worked_hours))
     if round(overtime_hours, 1) > 0:
-        lines.append(f"{_('+')}{overtime_hours:.1f}{_('h')}")
+        lines.append(_("+{hours:.1f}h").format(hours=overtime_hours))
     return tuple(lines)
 
 

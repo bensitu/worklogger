@@ -411,7 +411,11 @@ def _safe_model_id(stem: str, digest: str) -> str:
 def _read_json_list(path: Path) -> list[object]:
     if not path.exists():
         return []
-    data = json.loads(path.read_text(encoding="utf-8"))
+    with path.open("rb") as stream:
+        content = stream.read(1024 * 1024 + 1)
+    if len(content) > 1024 * 1024:
+        raise ValueError("local_model_manifest_invalid")
+    data = json.loads(content.decode("utf-8"))
     return data if isinstance(data, list) else []
 
 

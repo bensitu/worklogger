@@ -41,6 +41,8 @@ class PersonalBackupArchive:
             raise ValueError("cloud_backup_invalid")
         try:
             if content[:1] == b"E":
+                if len(content) < 45:
+                    raise ValueError("cloud_backup_invalid")
                 salt, nonce = content[1:17], content[17:29]
                 content = AESGCM(_key(passphrase, salt)).decrypt(nonce, content[29:], _MAGIC)
             elif content[:1] == b"P":

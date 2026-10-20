@@ -37,8 +37,8 @@ msgstr "明度(&V)："
 msgid "(Week {week})"
 msgstr "（第{week}周）"
 
-msgid "+"
-msgstr "+"
+msgid "+{hours:.1f}h"
+msgstr "+{hours:.1f}h"
 
 msgid "2.5 days off per week"
 msgstr "每周休 2.5 天"
@@ -1651,6 +1651,9 @@ msgstr "单休"
 msgid "Only adjacent records with matching types and context can be merged."
 msgstr "仅可合并工作类型和关联一致的相邻记录。"
 
+msgid "Only daily, weekly, monthly, or yearly recurrence is supported."
+msgstr "仅支持按天、周、月或年重复。"
+
 msgid "Open"
 msgstr "打开"
 
@@ -3204,6 +3207,9 @@ msgstr "{days} 天"
 
 msgid "{duration} ({percent:.0f}%)"
 msgstr "{duration}（{percent:.0f}%）"
+
+msgid "{hours:.1f}h"
+msgstr "{hours:.1f}h"
 
 msgid "{hours}h {minutes}m"
 msgstr "{hours}h {minutes}m"

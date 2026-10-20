@@ -18,6 +18,7 @@ from worklogger.domain.shared.languages import SUPPORTED_LANGUAGES, DEFAULT_LANG
 _lock = threading.RLock()
 _current_language = DEFAULT_LANGUAGE
 _translation: gettext.NullTranslations = gettext.NullTranslations()
+_explicit_catalogs: dict[tuple[str, str], gettext.NullTranslations] = {}
 
 
 def locales_dir() -> Path:
@@ -53,6 +54,7 @@ def set_language(language: str | None) -> str:
     global _current_language, _translation
     normalized = normalize_language(language)
     with _lock:
+        _explicit_catalogs.clear()
         _current_language = normalized
         _translation = _catalog(normalized)
     return normalized
@@ -90,7 +92,14 @@ def _(message: str, *, language: str | None = None) -> str:
     if not message:
         return message
     with _lock:
-        translation = _translation if language is None else _catalog(normalize_language(language))
+        if language is None:
+            translation = _translation
+        else:
+            normalized = normalize_language(language)
+            key = (str(locales_dir()), normalized)
+            if key not in _explicit_catalogs:
+                _explicit_catalogs[key] = _catalog(normalized)
+            translation = _explicit_catalogs[key]
         return translation.gettext(message) or message
 
 

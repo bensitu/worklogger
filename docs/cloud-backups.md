@@ -42,6 +42,9 @@ move the local database.
 The service must allow reading, creating, updating, and deleting objects inside
 the chosen prefix. WebDAV also requires child-collection creation. A server
 that ignores conditional writes is rejected rather than allowing unsafe uploads.
+WebDAV transfers retry transient connection failures a bounded number of times.
+An uncertain upload is checked against the remote content before retrying; a
+version conflict is never retried as an unconditional overwrite.
 Never place credentials in the endpoint URL or public `worklogger.config.json`.
 
 ## Encryption and Credentials

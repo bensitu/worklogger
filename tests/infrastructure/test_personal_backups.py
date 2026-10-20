@@ -135,6 +135,9 @@ class PersonalBackupTests(unittest.TestCase):
         archive = PersonalBackupArchive()
         document = self.personal.capture()
         encrypted = archive.encode(document, encrypted=True, passphrase="example-backup-passphrase")
+        for length in (14, 28, 44):
+            with self.subTest(length=length), self.assertRaisesRegex(ValueError, "cloud_backup_invalid"):
+                archive.decode(encrypted[:len(b"WL-PERSONAL-1\n") + length], passphrase="example-backup-passphrase")
         self.assertNotIn(b"Personal work", encrypted)
         self.assertEqual(archive.decode(encrypted, passphrase="example-backup-passphrase"), document)
         for candidate, password in ((encrypted, "incorrect-passphrase"),

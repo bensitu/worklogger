@@ -53,7 +53,7 @@ def _bounded_occurrences(rule, start, remaining):
         raise ValueError("ics_recurrence_unbounded")
     frequency = str(rule.get("FREQ", [""])[0]).upper()
     if frequency not in _PERIOD_DAYS:
-        raise ValueError("ics_file_too_large")
+        raise ValueError("ics_recurrence_unsupported")
     interval = int(rule.get("INTERVAL", [1])[0])
     if interval < 1:
         raise ValueError("ics_import_failed")

@@ -96,6 +96,7 @@ _MESSAGE_GROUPS = (
     (("csv_file_too_large",), N_("The CSV file exceeds the supported size or row limit.")),
     (("csv_import_conflict",), N_("Some dates already have records. Review the import and confirm replacement.")),
     (("ics_recurrence_unbounded",), N_("Recurring events must have an end date or occurrence count.")),
+    (("ics_recurrence_unsupported",), N_("Only daily, weekly, monthly, or yearly recurrence is supported.")),
     (("report_not_found",), N_("The saved report is no longer available. Reload the reports and try again.")),
     (("report_save_failed",), N_("Unable to save the report. Your changes have been retained.")),
     (("report_delete_failed",), N_("Unable to delete the report. Your saved data has been retained.")),

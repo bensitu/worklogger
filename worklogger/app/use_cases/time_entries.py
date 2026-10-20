@@ -258,22 +258,24 @@ class TimeEntryService:
                     or break_interval is None or not break_interval[0] <= instant < break_interval[1]):
                     raise ValueError("worklog_entry_conflict")
             active_break = None
-            for ordinal in range(max(date.min.toordinal(), moment.date().toordinal() - 3),
-                                 min(date.max.toordinal(), moment.date().toordinal() + 3) + 1):
-                day = date.fromordinal(ordinal)
-                for record in self.repository.list_for_day(self.user_id, day):
-                    if break_entry is not None and record.id == break_entry.id:
-                        if record != break_entry:
-                            raise ValueError("worklog_entry_conflict")
-                        continue
-                    captured = record.started_at is not None and record.ended_at is not None
-                    interval = entry_interval(record) if captured else wall_interval(record)
-                    point = instant if captured else wall_position(moment)
-                    if (record.day == moment.date() and record.is_leave and not record.has_times) or (interval and interval[0] <= point < interval[1]):
-                        if break_entry is None and self._is_fixed_break(record):
-                            active_break = record
-                        else:
-                            raise ValueError("worklog_entry_overlap")
+            first = date.fromordinal(max(date.min.toordinal(), moment.date().toordinal() - 3))
+            last = date.fromordinal(min(date.max.toordinal(), moment.date().toordinal() + 3))
+            records = self.repository.list_entries_range(self.user_id, first, last)
+            if len(records) > 50000:
+                raise ValueError("record_range_too_large")
+            for record in records:
+                if break_entry is not None and record.id == break_entry.id:
+                    if record != break_entry:
+                        raise ValueError("worklog_entry_conflict")
+                    continue
+                captured = record.started_at is not None and record.ended_at is not None
+                interval = entry_interval(record) if captured else wall_interval(record)
+                point = instant if captured else wall_position(moment)
+                if (record.day == moment.date() and record.is_leave and not record.has_times) or (interval and interval[0] <= point < interval[1]):
+                    if break_entry is None and self._is_fixed_break(record):
+                        active_break = record
+                    else:
+                        raise ValueError("worklog_entry_overlap")
             if active_break is not None:
                 return Result.failure(ConflictError("fixed_break_active", "fixed_break_active", {"break_entry": active_break}))
             timer = EntryTimer(uuid4().hex, moment, definition, require_entry_content(content),

@@ -37,8 +37,8 @@ msgstr "明度(&V):"
 msgid "(Week {week})"
 msgstr "（第{week}週）"
 
-msgid "+"
-msgstr "+"
+msgid "+{hours:.1f}h"
+msgstr "+{hours:.1f}h"
 
 msgid "2.5 days off per week"
 msgstr "週休2.5日"
@@ -1651,6 +1651,9 @@ msgstr "週休1日"
 msgid "Only adjacent records with matching types and context can be merged."
 msgstr "種別と関連付けが一致する隣接記録だけを結合できます。"
 
+msgid "Only daily, weekly, monthly, or yearly recurrence is supported."
+msgstr "繰り返しは日単位、週単位、月単位、年単位に対応しています。"
+
 msgid "Open"
 msgstr "開く"
 
@@ -3204,6 +3207,9 @@ msgstr "{days}日"
 
 msgid "{duration} ({percent:.0f}%)"
 msgstr "{duration}（{percent:.0f}%）"
+
+msgid "{hours:.1f}h"
+msgstr "{hours:.1f}h"
 
 msgid "{hours}h {minutes}m"
 msgstr "{hours}h {minutes}m"

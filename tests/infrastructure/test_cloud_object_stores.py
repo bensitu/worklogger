@@ -5,7 +5,7 @@ import hashlib
 import io
 import unittest
 from unittest.mock import Mock, patch
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 
 import boto3
 from botocore.response import StreamingBody
@@ -47,6 +47,33 @@ class WebDAVServer:
 
 
 class CloudObjectStoreTests(unittest.TestCase):
+    def test_webdav_retries_reads_but_does_not_repeat_an_upload_already_published(self):
+        server = WebDAVServer()
+        dropped = {"PUT": False, "GET": False}
+        def transport(request, *, timeout):
+            response = server(request, timeout=timeout)
+            if request.method in dropped and not dropped[request.method]:
+                dropped[request.method] = True
+                response.close()
+                raise URLError("connection interrupted")
+            return response
+        store = WebDAVBackupStore(self.configuration, self.credentials, opener=transport)
+        with patch("worklogger.infrastructure.backup.object_stores.sleep"):
+            store.put("sample", b"published content", expected_etag=None)
+        self.assertEqual(store.get("sample", limit=32).data, b"published content")
+        self.assertEqual(sum(request.method == "PUT" for request in server.requests), 1)
+        self.assertTrue(all(response.closed for response in server.responses))
+
+    def test_webdav_conflicts_are_not_retried(self):
+        server = WebDAVServer()
+        store = WebDAVBackupStore(self.configuration, self.credentials, opener=server)
+        store.put("sample", b"original", expected_etag=None)
+        before = len(server.requests)
+        with patch("worklogger.infrastructure.backup.object_stores.sleep") as sleep:
+            with self.assertRaisesRegex(ValueError, "cloud_conflict"):
+                store.put("sample", b"conflicting", expected_etag=None)
+        self.assertEqual(len(server.requests) - before, 1)
+        sleep.assert_not_called()
     def test_cloud_transports_apply_account_proxy_without_environment_overrides(self):
         settings, password = Mock(), Mock()
         settings.get_many.return_value = {"network_proxy_enabled": "1", "network_proxy_address": "127.0.0.1",

@@ -34,13 +34,17 @@ class AccountHTTPTransport:
         if not setting_bool(values.get(NETWORK_PROXY_ENABLED_SETTING_KEY)):
             return None
         address = str(values.get(NETWORK_PROXY_ADDRESS_SETTING_KEY) or "").strip()
-        port = int(values.get(NETWORK_PROXY_PORT_SETTING_KEY) or "0")
+        try:
+            port = int(values.get(NETWORK_PROXY_PORT_SETTING_KEY) or "0")
+            parsed = urlparse(address if "://" in address else "http://" + address)
+            explicit_port = parsed.port
+        except (TypeError, ValueError, OverflowError):
+            raise ValueError("proxy_configuration_invalid") from None
         if not address or not 1 <= port <= 65535 or any(ord(char) < 32 for char in address):
             raise ValueError("proxy_configuration_invalid")
-        parsed = urlparse(address if "://" in address else "http://" + address)
         if (parsed.scheme != "http" or not parsed.hostname or parsed.username is not None
                 or parsed.password is not None or parsed.path not in {"", "/"} or parsed.query or parsed.fragment
-                or (parsed.port is not None and parsed.port != port)):
+                or (explicit_port is not None and explicit_port != port)):
             raise ValueError("proxy_configuration_invalid")
         host = f"[{parsed.hostname}]" if ":" in parsed.hostname else parsed.hostname
         username = str(values.get(NETWORK_PROXY_USERNAME_SETTING_KEY) or "").strip()

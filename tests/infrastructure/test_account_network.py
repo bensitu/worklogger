@@ -17,6 +17,13 @@ from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
 
 
 class AccountNetworkTests(unittest.TestCase):
+    def test_invalid_saved_proxy_values_have_a_stable_configuration_error(self):
+        for address, port in (("proxy.example", "invalid"), ("http://proxy.example:invalid", "8080"),
+                              ("http://[invalid", "8080")):
+            with self.subTest(address=address, port=port):
+                self.values.update(network_proxy_enabled="1", network_proxy_address=address, network_proxy_port=port)
+                with self.assertRaisesRegex(ValueError, "^proxy_configuration_invalid$"):
+                    self.transport.proxy_url()
     def test_public_connections_resolve_once_and_connect_only_to_validated_addresses(self):
         import socket
         from worklogger.infrastructure.http import _connect_public, validate_https_url

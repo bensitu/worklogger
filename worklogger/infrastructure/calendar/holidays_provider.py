@@ -62,11 +62,15 @@ def _timezone_countries() -> dict[str, str]:
     return mapping
 
 
-@lru_cache(maxsize=1)
 def supported_holiday_regions() -> dict[str, tuple[str, ...]]:
     module = _load_holidays_module()
     if module is None:
         return {}
+    return _supported_holiday_regions(module)
+
+
+@lru_cache(maxsize=1)
+def _supported_holiday_regions(module) -> dict[str, tuple[str, ...]]:
     return {country: tuple(subdivisions) for country, subdivisions in module.list_supported_countries().items()
             if len(country) == 2}
 

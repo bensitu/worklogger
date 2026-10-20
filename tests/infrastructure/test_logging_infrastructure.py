@@ -18,6 +18,17 @@ def _close_worklogger_handlers() -> None:
 
 
 class LoggingInfrastructureTests(unittest.TestCase):
+    def test_log_file_symlinks_cannot_redirect_output(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target, link = Path(directory) / "retained.txt", Path(directory) / "worklogger.log"
+            target.write_text("Retained content", encoding="utf-8")
+            try:
+                link.symlink_to(target)
+            except OSError:
+                self.skipTest("Symbolic links are unavailable on this system")
+            with self.assertRaises(OSError):
+                setup_logging(link)
+            self.assertEqual(target.read_text(encoding="utf-8"), "Retained content")
     def setUp(self):
         import sys
         import threading

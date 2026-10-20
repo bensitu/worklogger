@@ -284,7 +284,8 @@ deployment file. See [security](security.md).
 
 Optional `external_model_profiles` in `worklogger.config.json` configure generation
 parameters for an exact API base address and model ID. They do not enable external
-processing or change account credentials. For example, add this top-level property
+processing, select an endpoint, or change account credentials. The API address and
+model remain the values shown in the account's AI settings. For example, add this top-level property
 alongside `features`:
 
 ```json

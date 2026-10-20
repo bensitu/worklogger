@@ -85,6 +85,42 @@ class LocalModelInfrastructureTests(unittest.TestCase):
             self.assertEqual(result.error.code, "local_model_disk_full")
             self.assertFalse(path.exists())
 
+    def test_unknown_length_download_checks_space_before_writing(self):
+        from types import SimpleNamespace
+        from worklogger.infrastructure.local_model.download import HttpRangeDownloader
+        payload = b"GGUF" + b"model"
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "model.gguf"
+            downloader = HttpRangeDownloader(opener=lambda *_args, **_kwargs: FakeResponse(payload))
+            with patch("worklogger.infrastructure.local_model.download.shutil.disk_usage", return_value=SimpleNamespace(free=1)):
+                result = downloader.download(url="https://example.test/model.gguf", destination=path,
+                    expected_sha256=hashlib.sha256(payload).hexdigest())
+            self.assertEqual(result.error.code, "local_model_disk_full")
+            self.assertFalse(path.exists())
+            self.assertEqual(path.with_suffix(".gguf.tmp").read_bytes(), b"")
+
+    def test_replaced_download_temporary_file_cannot_redirect_writes(self):
+        from worklogger.infrastructure.local_model.download import HttpRangeDownloader
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target, destination = root / "retained.txt", root / "model.gguf"
+            target.write_bytes(b"Retained content")
+            link = destination.with_suffix(".gguf.tmp")
+            try:
+                link.symlink_to(target)
+            except OSError:
+                self.skipTest("Symbolic links are unavailable on this system")
+            link.unlink()
+            def open_request(*_args, **_kwargs):
+                link.symlink_to(target)
+                return FakeResponse(b"replacement")
+            result = HttpRangeDownloader(opener=open_request).download(
+                url="https://example.test/model.gguf", destination=destination,
+                expected_sha256=hashlib.sha256(b"replacement").hexdigest())
+            self.assertFalse(result.ok)
+            self.assertEqual(target.read_bytes(), b"Retained content")
+            self.assertFalse(destination.exists())
+
     def test_runtime_model_storage_applies_catalog_and_download_timeouts(self):
         from unittest.mock import Mock
         from worklogger.composition.context import build_local_model_store

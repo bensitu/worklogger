@@ -37,8 +37,8 @@ msgstr "&Val:"
 msgid "(Week {week})"
 msgstr "(Week {week})"
 
-msgid "+"
-msgstr "+"
+msgid "+{hours:.1f}h"
+msgstr "+{hours:.1f}h"
 
 msgid "2.5 days off per week"
 msgstr "2.5 days off per week"
@@ -1651,6 +1651,9 @@ msgstr "One day off per week"
 msgid "Only adjacent records with matching types and context can be merged."
 msgstr "Only adjacent records with matching types and context can be merged."
 
+msgid "Only daily, weekly, monthly, or yearly recurrence is supported."
+msgstr "Only daily, weekly, monthly, or yearly recurrence is supported."
+
 msgid "Open"
 msgstr "Open"
 
@@ -3204,6 +3207,9 @@ msgstr "{days} days"
 
 msgid "{duration} ({percent:.0f}%)"
 msgstr "{duration} ({percent:.0f}%)"
+
+msgid "{hours:.1f}h"
+msgstr "{hours:.1f}h"
 
 msgid "{hours}h {minutes}m"
 msgstr "{hours}h {minutes}m"
