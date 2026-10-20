@@ -79,7 +79,10 @@ jobs:
       - name: Static analysis
         run: python -m ruff check worklogger scripts tests
       - name: Unit and integration tests
-        run: python -m unittest discover -s tests -t . -p "test_*.py"
+        run: >-
+          python -c "import faulthandler, unittest;
+          faulthandler.dump_traceback_later(300, repeat=True);
+          unittest.main(module=None, argv=['unittest', 'discover', '-s', 'tests', '-t', '.', '-p', 'test_*.py', '-v'])"
       - name: Time zone and language compatibility
         if: runner.os == 'Linux' && matrix.python == '3.12'
         env:

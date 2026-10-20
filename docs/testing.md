@@ -107,6 +107,9 @@ git diff --check
 
 Default discovery includes functional Qt tests but excludes visual modules,
 whose names do not begin with `test`. Run the smallest relevant scope first.
+CI prints individual test names and thread stacks every five minutes while the
+suite remains active, so stalled native calls and event-loop waits can be located.
+These diagnostics do not change test outcomes or extend job timeouts.
 CI additionally runs calendar, daylight-saving, language preference, and gettext
 checks on Linux with `TZ=America/New_York` and `WORKLOGGER_LANG=ja_JP`. Dependency
 vulnerability checks use Python 3.11 and 3.12 to cover both supported Qt dependency
