@@ -114,12 +114,19 @@ class BuildDependencyTests(unittest.TestCase):
             self.assertEqual(captured["packages"][0]["sha256"], lock_environment.digest(wheel))
 
     def test_native_runtime_verification_initializes_and_releases_backend(self):
-        native = SimpleNamespace(llama_backend_init=Mock(), llama_backend_free=Mock(),
-                                 llama_print_system_info=Mock(return_value=b"Synthetic CPU backend"))
-        with patch.dict("sys.modules", {"llama_cpp": native}):
-            check_local_model_runtime()
-        native.llama_backend_init.assert_called_once_with()
-        native.llama_backend_free.assert_called_once_with()
+        for model in ("", "verification.gguf"):
+            native = SimpleNamespace(llama_backend_init=Mock(), llama_backend_free=Mock(),
+                                     llama_print_system_info=Mock(return_value=b"Synthetic CPU backend"))
+            with self.subTest(model=model), patch.dict("sys.modules", {"llama_cpp": native}), \
+                    patch.dict("os.environ", {"WORKLOGGER_VERIFY_MODEL_PATH": model}), \
+                    patch("worklogger.diagnostics._check_native_generation") as generate:
+                check_local_model_runtime()
+            native.llama_backend_init.assert_called_once_with()
+            native.llama_backend_free.assert_called_once_with()
+            if model:
+                generate.assert_called_once_with(Path(model))
+            else:
+                generate.assert_not_called()
 
     def test_native_runtime_verification_releases_backend_on_failure(self):
         native = SimpleNamespace(llama_backend_init=Mock(), llama_backend_free=Mock(),
