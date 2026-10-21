@@ -150,6 +150,10 @@ workflow identity. Its bundle contains the signature, certificate, and transpare
 log verification material. No persistent signing key is stored in the repository.
 See the [Sigstore CI documentation](https://docs.sigstore.dev/quickstart/quickstart-ci/).
 
+Use Cosign 3.1.3 or later for verification. Earlier versions can accept a legacy
+bundle without enforcing the requested certificate identity. Distributions use
+the standardized Sigstore bundle format; do not convert it to the legacy format.
+
 For files produced by the release workflow on `dev-v4`, verify the expected
 workflow identity before checking the archives:
 
