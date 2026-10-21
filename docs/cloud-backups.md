@@ -59,6 +59,11 @@ Backups use compressed account documents and authenticated AES-256-GCM
 encryption with a random salt and nonce and a scrypt-derived key. Archive input
 and decompressed output are bounded. A wrong passphrase or modified encrypted
 archive is rejected before any account data is replaced.
+New encrypted archives use format version 2, normalize canonically equivalent
+Unicode passphrases with NFC, and authenticate the complete encryption header.
+Earlier version 1 archives remain readable, including composed and decomposed
+forms of their original passphrases. This does not change local login passwords.
+Use the same or a newer application version on devices reading new archives.
 When encryption is enabled, restoration also rejects plaintext archives, even
 when the cloud history labels them as unencrypted. To restore a historical
 plaintext backup, explicitly disable encryption after reviewing the warning.
@@ -106,6 +111,9 @@ changed the cloud version, uploading requires an explicit overwrite confirmation
 Restoring over locally changed data also requires confirmation. Force permits
 the reviewed replacement; it does not bypass a change that happens after that
 confirmation. Such a race is rejected and requires a fresh review.
+Snapshot comparison uses stable primary-key ordering rather than physical row
+order. The first transfer after upgrading may request confirmation if the stored
+comparison digest was produced with a different ordering; review it normally.
 
 Uploads create immutable version objects, then publish the history using the
 server's ETag condition. Downloads verify the archive size, SHA-256 digest, and

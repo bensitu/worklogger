@@ -3,6 +3,8 @@
 from dataclasses import replace
 from datetime import date
 import json
+import gzip
+import unicodedata
 import unittest
 
 from tests.infrastructure import test_data_portability_infrastructure as portability
@@ -13,6 +15,42 @@ from worklogger.domain.worklog.models import WorkLog
 
 
 class PersonalBackupTests(unittest.TestCase):
+    def test_snapshot_digest_is_independent_of_setting_insertion_order(self):
+        with self.factory.transaction(write=True) as connection:
+            connection.execute("INSERT INTO settings(user_id,key,value) VALUES(?,'dark_mode','1')", (self.owner,))
+        before = self.personal.capture()
+        with self.factory.transaction(write=True) as connection:
+            connection.execute("DELETE FROM settings WHERE user_id=? AND key='standard_work_hours'", (self.owner,))
+            connection.execute("INSERT INTO settings(user_id,key,value) VALUES(?,'standard_work_hours','8')", (self.owner,))
+        self.assertEqual(self.personal.capture(), before)
+
+    def test_archive_passphrases_accept_canonical_unicode_and_previous_envelopes(self):
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+
+        archive = PersonalBackupArchive()
+        document = b'{"records":[]}'
+        composed = "p\u00e4ssw\u00f6rd-\u00f1and\u00fa-123456"
+        decomposed = unicodedata.normalize("NFD", composed)
+        current = archive.encode(document, encrypted=True, passphrase=decomposed)
+        self.assertTrue(current.startswith(b"WL-PERSONAL-2\n"))
+        self.assertEqual(archive.decode(current, passphrase=composed), document)
+        salt, nonce = b"s" * 16, b"n" * 12
+        for original in (composed, decomposed):
+            key = Scrypt(salt=salt, length=32, n=2**17, r=8, p=1).derive(original.encode("utf-8"))
+            previous = b"WL-PERSONAL-1\nE" + salt + nonce + AESGCM(key).encrypt(
+                nonce, gzip.compress(document), b"WL-PERSONAL-1\n")
+            for entered in (composed, decomposed):
+                with self.subTest(original=original, entered=entered):
+                    self.assertEqual(archive.decode(previous, passphrase=entered), document)
+
+    def test_damaged_compressed_streams_have_a_stable_error(self):
+        compressed = bytearray(gzip.compress(b"worklog data" * 500))
+        compressed[10] = (compressed[10] & ~6) | 6
+        for magic in (b"WL-PERSONAL-1\n", b"WL-PERSONAL-2\n"):
+            with self.subTest(magic=magic), self.assertRaisesRegex(ValueError, "cloud_backup_invalid"):
+                PersonalBackupArchive().decode(magic + b"P" + compressed)
+
     def test_cloud_and_local_recovery_round_trip_current_account_without_replacing_other_accounts(self):
         from pathlib import Path
         from tests.app.test_cloud_backups import MemoryObjects

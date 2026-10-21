@@ -22,6 +22,9 @@ _PORTABLE_SETTINGS = frozenset(key for key in SETTINGS_DEFAULTS
     if not key.startswith(("network_", "external_", "local_model", "enable_tray", "enable_menu_bar"))
     and key not in {"last_backup_at", "minimal_mode"})
 _AUTONUMBER = {"worklog", "quick_logs", "calendar_events", "reports", "report_templates"}
+_ORDER_COLUMNS = {table: "id" for table in _TABLES} | {
+    "daily_notes": "d", "settings": "key", "background_images": "user_id",
+}
 
 
 def _portable_key(key):
@@ -57,7 +60,8 @@ class SQLitePersonalData:
                 rows = connection.execute("SELECT v.* FROM report_revisions v JOIN reports r ON r.id=v.report_id "
                                           "WHERE r.user_id=? ORDER BY v.report_id,v.revision", (self.user_id,))
             else:
-                rows = connection.execute(f'SELECT * FROM "{table}" WHERE user_id=? ORDER BY rowid', (self.user_id,))
+                rows = connection.execute(
+                    f'SELECT * FROM "{table}" WHERE user_id=? ORDER BY "{_ORDER_COLUMNS[table]}"', (self.user_id,))
             values = []
             for row in rows:
                 value = {key: row[key] for key in self._columns[table]}
