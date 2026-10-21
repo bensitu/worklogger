@@ -1,7 +1,7 @@
 # Documentation
 
-These guides describe the current 4.0.0 development branch. For a published
-download, use the documentation at its release tag. Historical changelog entries
+These guides describe WorkLogger 4.0.0. For other versions, use the documentation
+at the matching release tag. Historical changelog entries
 describe their own versions, not current operating procedures.
 
 ## User Guides

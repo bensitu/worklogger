@@ -3,14 +3,15 @@
 Dependency-input fingerprints normalize text line endings. Wheel hashes remain
 byte-for-byte checksums for the declared target platform.
 
-## Trying a Development Build
+## Application Downloads
 
-For a published application, use [GitHub Releases](https://github.com/bensitu/worklogger/releases/latest)
-and follow that version's release notes. The 4.0.0 development workflow produces
-different archives from earlier releases; do not assume an older download has
-the features documented on this branch.
+Download the application from [GitHub Releases](https://github.com/bensitu/worklogger/releases/latest)
+and follow the matching release notes. WorkLogger 4.0.0 uses the archive layouts
+listed below; older versions can have different layouts and features.
 
-To try the current development branch without installing Python:
+### Continuous Integration Builds
+
+To run a specific source revision without installing Python:
 
 1. Open [Continuous Integration for dev-v4](https://github.com/bensitu/worklogger/actions/workflows/ci.yml?query=branch%3Adev-v4).
    Choose a successful run and check its source commit. Artifacts represent that
@@ -18,7 +19,8 @@ To try the current development branch without installing Python:
 2. Under Artifacts, choose the matching platform and Python 3.14 build when
    available, such as `WorkLogger-Windows-x64-Python-3.14-Attempt-1`. The attempt
    number varies. Downloading artifacts requires GitHub access, and older
-   artifacts may have expired. They are development builds, not published releases.
+   artifacts may have expired. Check the source revision and verification report
+   before using a build.
 3. Extract the downloaded artifact, then extract the application archive inside
    it. The JSON verification report and dependency locks are build records, not
    application launchers. Review the checksum and verification information below.
@@ -158,12 +160,12 @@ Use Cosign 3.1.3 or later for verification. Earlier versions can accept a legacy
 bundle without enforcing the requested certificate identity. Distributions use
 the standardized Sigstore bundle format; do not convert it to the legacy format.
 
-For files produced by the release workflow on `dev-v4`, verify the expected
+For files produced by the release workflow on `main`, verify the expected
 workflow identity before checking the archives:
 
 ```sh
 cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \
-  --certificate-identity https://github.com/bensitu/worklogger/.github/workflows/release.yml@refs/heads/dev-v4 \
+  --certificate-identity https://github.com/bensitu/worklogger/.github/workflows/release.yml@refs/heads/main \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 sha256sum --check SHA256SUMS
 ```

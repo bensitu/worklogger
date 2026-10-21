@@ -40,9 +40,8 @@ are included, with light/dark themes and an optional compact recording view.
 
 ## Download and Start
 
-**Choose the right version:** this README describes the 4.0.0 development version.
-Published releases may have a different interface and feature set; check the
-release notes and documentation for the version you download.
+This guide describes WorkLogger 4.0.0. For older versions, use the release notes
+and documentation at the matching version tag.
 
 1. Open [Releases](https://github.com/bensitu/worklogger/releases/latest) and choose
    the application download for your operating system, not the **Source code**
@@ -54,10 +53,10 @@ release notes and documentation for the version you download.
 4. In Calendar, choose a date, enter a time period and content, and save. Open
    Notes for a memo, Analytics for totals, or Reports to build a summary.
 
-Want to try the features on this branch? Follow the separate
-[development build instructions](docs/packaging.md#trying-a-development-build).
-Current development builds target Windows x64, Linux x64, and macOS Apple Silicon.
-Back up existing data first; upgraded databases cannot be downgraded.
+Application downloads are available for Windows x64, Linux x64, and macOS Apple
+Silicon. See [packaging and verification](docs/packaging.md) for archive layouts,
+checksums, and continuous integration builds. Back up existing data before
+upgrading; upgraded databases cannot be downgraded.
 
 Operating-system warnings can appear for unsigned applications. Verify the
 source and available checksums before deciding whether to run a download;

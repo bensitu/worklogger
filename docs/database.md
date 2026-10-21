@@ -79,8 +79,8 @@ account ownership and project membership. Identity bindings are normalized into
 the same uniqueness contract as new databases; conflicting ownership aborts the
 upgrade. Version 17 also gains custom work arrangements, `work_mode_label`, and
 the `work_modes` account catalog.
-Existing IDs, revisions, timers, and reversible snapshots are preserved. Unreleased development
-versions, including 14, 15, and 16, and unversioned development layouts are rejected
+Existing IDs, revisions, timers, and reversible snapshots are preserved. Unsupported
+schema versions, including 14, 15, and 16, and unrecognized unversioned layouts are rejected
 before writable initialization. They are never reset, relabeled, or upgraded by
 production startup. Preserve developer-local files and use fresh test data or a
 separately reviewed, explicitly approved one-time conversion outside production.

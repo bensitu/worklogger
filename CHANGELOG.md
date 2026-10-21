@@ -7,7 +7,7 @@ Version numbers use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Historical entries describe their respective releases; see the
 [user guide](docs/user-guide.md) for operating instructions.
 
-## [Unreleased](https://github.com/bensitu/worklogger/compare/v3.3.3...dev-v4)
+## [4.0.0](https://github.com/bensitu/worklogger/compare/v3.3.3...v4.0.0) - 2026.10.23
 
 **4.0.0: A more connected work history.** Time records, notes, reports, and
 analytics come together in a unified desktop workspace, with flexible
