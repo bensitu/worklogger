@@ -7,6 +7,7 @@ import json
 import math
 import os
 import re
+import tempfile
 from collections.abc import Callable
 from dataclasses import asdict
 from pathlib import Path
@@ -28,7 +29,7 @@ MANIFEST_FILENAME = "manifest.json"
 from worklogger.infrastructure.local_model.catalog import bundled_model_catalog_path as bundled_model_catalog_path
 from worklogger.infrastructure.local_model.catalog import catalog_entries
 from worklogger.infrastructure.local_model.download import HttpRangeDownloader, UrlOpen
-from worklogger.infrastructure.local_model.files import has_gguf_header, safe_model_filename, safe_model_url, sha256_of_file
+from worklogger.infrastructure.local_model.files import check_download_cancelled, has_gguf_header, safe_model_filename, safe_model_url, sha256_of_file
 
 
 class JsonLocalModelStore:
@@ -89,12 +90,9 @@ class JsonLocalModelStore:
         except Exception:
             return Result.failure(InfrastructureError("local_model_catalog_failed", "local_model_catalog_failed"))
 
-    def import_model(self, source: Path) -> Result[LocalModelEntry]:
-        with self._metadata_lock:
-            return self._import_model(source)
-
-    def _import_model(self, source: Path) -> Result[LocalModelEntry]:
+    def import_model(self, source: Path, *, is_cancelled=None) -> Result[LocalModelEntry]:
         try:
+            check_download_cancelled(is_cancelled)
             source = Path(source)
             if not source.is_file():
                 return Result.failure(ValidationError("local_model_file_missing", "local_model_file_missing"))
@@ -105,33 +103,43 @@ class JsonLocalModelStore:
             if not has_gguf_header(source):
                 return Result.failure(ValidationError("local_model_file_must_be_gguf", "local_model_file_must_be_gguf"))
             self._models_dir.mkdir(parents=True, exist_ok=True)
-            digest = sha256_of_file(source)
             filename = safe_model_filename(source.name)
-            destination, existing_verified = self._unique_destination(filename, digest)
-            if not existing_verified:
-                with atomic_destination(destination) as temporary:
-                    copied = hashlib.sha256()
-                    with source.open("rb") as reader, temporary.open("wb") as writer:
-                        for chunk in iter(lambda: reader.read(1024 * 1024), b""):
-                            writer.write(chunk)
-                            copied.update(chunk)
-                    if copied.hexdigest() != digest:
+            with tempfile.TemporaryDirectory(prefix=".import-", dir=self._models_dir) as directory:
+                temporary = Path(directory) / filename
+                copied = hashlib.sha256()
+                with source.open("rb") as reader, temporary.open("xb") as writer:
+                    before = os.fstat(reader.fileno())
+                    for chunk in iter(lambda: reader.read(1024 * 1024), b""):
+                        check_download_cancelled(is_cancelled)
+                        writer.write(chunk)
+                        copied.update(chunk)
+                    writer.flush()
+                    os.fsync(writer.fileno())
+                    after = os.fstat(reader.fileno())
+                    if (before.st_size, before.st_mtime_ns, before.st_ctime_ns) != (
+                            after.st_size, after.st_mtime_ns, after.st_ctime_ns):
                         raise ValueError("local_model_hash_mismatch")
-            entry = LocalModelEntry(
-                id=_safe_model_id(destination.stem, digest),
-                display_name=source.stem,
-                filename=destination.name,
-                status="local",
-                sha256=digest,
-                estimated_size_mb=max(1, int(destination.stat().st_size / 1_048_576)),
-                description=destination.name,
-            )
-            with self._metadata_lock:
-                catalog = [item for item in self._load_catalog() if item.id != entry.id]
-                catalog.append(entry)
-                self._save_catalog(catalog)
-                self._set_manifest_available(entry, True)
+                check_download_cancelled(is_cancelled)
+                if not has_gguf_header(temporary):
+                    raise ValueError("local_model_file_must_be_gguf")
+                digest = copied.hexdigest()
+                with self._metadata_lock:
+                    catalog = self._load_catalog()
+                    destination, existing_verified = self._unique_destination(filename, digest, is_cancelled=is_cancelled)
+                    check_download_cancelled(is_cancelled)
+                    if not existing_verified:
+                        os.replace(temporary, destination)
+                    entry = LocalModelEntry(
+                        id=_safe_model_id(destination.stem, digest), display_name=source.stem,
+                        filename=destination.name, status="local", sha256=digest,
+                        estimated_size_mb=max(1, int(destination.stat().st_size / 1_048_576)),
+                        description=destination.name,
+                    )
+                    self._save_catalog([item for item in catalog if item.id != entry.id] + [entry])
+                    self._set_manifest_available(entry, True)
             return Result.success(entry)
+        except InterruptedError:
+            return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
         except Exception as exc:
             return Result.failure(
                 InfrastructureError(
@@ -389,15 +397,15 @@ class JsonLocalModelStore:
             raise ValueError("local_model_filename_invalid")
         return resolved
 
-    def _unique_destination(self, filename: str, digest: str) -> tuple[Path, bool]:
+    def _unique_destination(self, filename: str, digest: str, *, is_cancelled=None) -> tuple[Path, bool]:
         destination = self._resolve(filename)
         if not destination.exists():
             return destination, False
-        if sha256_of_file(destination) == digest:
+        if sha256_of_file(destination, is_cancelled=is_cancelled) == digest:
             return destination, True
         candidate = self._resolve(f"{Path(filename).stem}-{digest[:8]}.gguf")
         if candidate.exists():
-            if sha256_of_file(candidate) != digest:
+            if sha256_of_file(candidate, is_cancelled=is_cancelled) != digest:
                 raise ValueError("local_model_hash_mismatch")
             return candidate, True
         return candidate, False

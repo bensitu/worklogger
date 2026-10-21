@@ -107,9 +107,9 @@ class LocalModelManagerViewModel:
             )
         return _with_message(self.load(), _("Catalog refreshed."))
 
-    def import_model(self, source: Path | str) -> Result[LocalModelManagerState]:
+    def import_model(self, source: Path | str, *, cancellation: CancellationToken | None = None) -> Result[LocalModelManagerState]:
         imported = self._import_handler.handle(
-            ImportLocalModelCommand(self._user_id, source)
+            ImportLocalModelCommand(self._user_id, source, cancellation)
         )
         if not imported.ok:
             return Result.failure(

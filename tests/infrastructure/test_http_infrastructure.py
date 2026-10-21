@@ -13,6 +13,33 @@ from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
 
 
 class HTTPInfrastructureTests(unittest.TestCase):
+    def test_slow_response_chunks_observe_the_deadline_and_cancellation(self):
+        from worklogger.app.job_runner import CancellationToken
+
+        clock, reads = [0.0], []
+        class DripResponse(io.BytesIO):
+            def read1(self, size):
+                reads.append(size)
+                clock[0] += 2
+                return super().read(1)
+        response = DripResponse(b'{"choices":[{"message":{"content":"response"}}]}')
+        with patch("worklogger.infrastructure.ai.external.time.monotonic", side_effect=lambda: clock[0]):
+            result = OpenAICompatibleGateway(api_key="synthetic", opener=lambda *_a, **_k: response).generate(
+                AIRequest(({"role": "user", "content": "source"},), "model", 5))
+        self.assertEqual(result.error.details["error_type"], "TimeoutError")
+        self.assertEqual(len(reads), 3)
+        self.assertTrue(response.closed)
+        token = CancellationToken()
+        class CancelResponse(io.BytesIO):
+            def read1(self, size):
+                token.cancel()
+                return super().read(1)
+        response = CancelResponse(b"response")
+        result = OpenAICompatibleGateway(api_key="synthetic", opener=lambda *_a, **_k: response).generate(
+            AIRequest(({"role": "user", "content": "source"},), "model", 5, cancellation_token=token))
+        self.assertEqual(result.error.code, "ai_rewrite_cancelled")
+        self.assertTrue(response.closed)
+
     def test_s3_certificate_bundle_contains_the_same_trusted_roots_as_https(self):
         import certifi
         from pathlib import Path

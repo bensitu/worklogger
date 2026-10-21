@@ -25,7 +25,7 @@ from worklogger.domain.local_model.models import (
     LocalModelListItem,
 )
 from worklogger.domain.settings.repositories import SettingsRepository
-from worklogger.domain.shared.errors import InfrastructureError, ValidationError
+from worklogger.domain.shared.errors import CancellationError, InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 
 
@@ -36,13 +36,13 @@ class LocalModelStore(Protocol):
     def refresh_catalog(self) -> Result[tuple[LocalModelEntry, ...]]:
         ...
 
-    def import_model(self, source: Path) -> Result[LocalModelEntry]:
+    def import_model(self, source: Path, *, is_cancelled: Callable[[], bool] | None = None) -> Result[LocalModelEntry]:
         ...
 
     def download_model(self, model_id: str, *, is_cancelled: Callable[[], bool] | None = None, progress=None) -> Result[LocalModelEntry]:
         ...
 
-    def verify_model(self, model_id: str) -> Result[LocalModelFileStatus]:
+    def verify_model(self, model_id: str, *, is_cancelled: Callable[[], bool] | None = None) -> Result[LocalModelFileStatus]:
         ...
 
     def delete_model(self, model_id: str) -> Result[None]:
@@ -188,14 +188,17 @@ class ImportLocalModelHandler:
 
     @storage_boundary("local_model_import_failed")
     def handle(self, command: ImportLocalModelCommand) -> Result[LocalModelEntry]:
-        imported = self._store.import_model(Path(command.source_path))
+        options = {"is_cancelled": command.cancellation.is_cancelled} if command.cancellation is not None else {}
+        imported = self._store.import_model(Path(command.source_path), **options)
         if not imported.ok or imported.value is None:
             return Result.failure(
                 imported.error or InfrastructureError("local_model_import_failed", "local_model_import_failed")
             )
-        verified = self._store.verify_model(imported.value.id)
+        verified = self._store.verify_model(imported.value.id, **options)
         if not verified.ok or verified.value is None or not verified.value.verified:
             return Result.failure(verified.error or ValidationError("local_model_not_ready", "local_model_not_ready"))
+        if command.cancellation is not None and command.cancellation.is_cancelled():
+            return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
         self._settings.set(
             command.user_id,
             LOCAL_MODEL_ACTIVE_ID_SETTING_KEY,

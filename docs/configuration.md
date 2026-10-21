@@ -212,6 +212,10 @@ Processing and model network timeouts also accept integer seconds:
 
 Rewrite and chat deadlines apply to both local and external processing. The
 connection-test timeout applies only to the sample request in Settings.
+External response bodies are read in bounded chunks with deadline and cancellation
+checks between reads. A blocked DNS, connection, or socket operation must still
+return before cooperative cancellation can finish; these values are not a
+process-level interrupt guarantee.
 Download and catalog timeouts apply to network operations, not a total duration
 limit for downloading an entire model. Existing size limits, integrity checks,
 proxy routing, and cancellation behavior remain in effect. Invalid timeout

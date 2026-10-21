@@ -4,10 +4,11 @@ import os
 import threading
 import time
 import unittest
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
@@ -22,6 +23,44 @@ def _app() -> QApplication:
 
 
 class BackgroundJobTests(unittest.TestCase):
+    def test_forced_shutdown_requires_a_delayed_option_and_explicit_confirmation(self):
+        from worklogger.presentation.widgets.shutdown_progress import BackgroundTaskShutdownDialog
+        dialog = BackgroundTaskShutdownDialog()
+        self.addCleanup(dialog.deleteLater)
+        requests = []
+        dialog.force_quit_requested.connect(lambda: requests.append(True))
+        dialog.force_button.click()
+        self.assertEqual(requests, [])
+        dialog.allow_force_quit()
+        with patch.object(QMessageBox, "exec", return_value=QMessageBox.StandardButton.No):
+            dialog.force_button.click()
+        self.assertEqual(requests, [])
+        with patch.object(QMessageBox, "exec", return_value=QMessageBox.StandardButton.Yes):
+            dialog.force_button.click()
+        self.assertEqual(requests, [True])
+
+    def test_shutdown_processes_user_events_without_releasing_running_work(self):
+        from PySide6.QtCore import QTimer
+        from worklogger.composition.lifecycle import stop_background_tasks
+        from worklogger.presentation.widgets.shutdown_progress import BackgroundTaskShutdownDialog
+        class Runner:
+            active = True
+            def shutdown(self, **_kwargs):
+                return not self.active
+        runner, exits = Runner(), []
+        def progress():
+            dialog = BackgroundTaskShutdownDialog()
+            QTimer.singleShot(0, dialog.force_button.click)
+            return dialog
+        def terminate(code):
+            exits.append(code)
+            runner.active = False
+        with patch("worklogger.composition.lifecycle.BackgroundTaskShutdownDialog", side_effect=progress), \
+                patch("worklogger.composition.lifecycle.monotonic", side_effect=[0, 16]), \
+                patch.object(QMessageBox, "exec", return_value=QMessageBox.StandardButton.Yes):
+            stop_background_tasks(runner, force_exit=terminate)
+        self.assertEqual(exits, [1])
+
     def test_slow_tasks_do_not_block_short_work_or_shutdown_events(self):
         from PySide6.QtCore import QTimer
         runner = QtJobRunner()

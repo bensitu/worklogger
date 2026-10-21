@@ -232,16 +232,36 @@ class LocalModelInfrastructureTests(unittest.TestCase):
             source.write_bytes(b"GGUF\x03\x00\x00\x00" + bytes(16) + b"model")
             with patch("worklogger.infrastructure.local_model.store.sha256_of_file", wraps=sha256_of_file) as hashing:
                 imported = store.import_model(source).value
-                self.assertEqual(hashing.call_count, 1)
+                self.assertEqual(hashing.call_count, 0)
                 duplicate = store.import_model(source).value
                 self.assertEqual(duplicate.id, imported.id)
-                self.assertEqual(hashing.call_count, 3)
+                self.assertEqual(hashing.call_count, 1)
             restored = JsonLocalModelStore(models, bundled_catalog_path=bundled)
             self.assertEqual({item.id for item in restored.list_models().value}, {"shared", imported.id})
             self.assertTrue(restored.delete_model(imported.id).ok)
             self.assertEqual([item.id for item in restored.list_models().value], ["shared"])
             catalog.write_bytes(b"x" * 128)
             self.assertFalse(JsonLocalModelStore(models, max_catalog_bytes=64).list_models().ok)
+
+    def test_cancelled_import_preserves_source_and_removes_unpublished_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "source.gguf"
+            payload = b"GGUF\x03\x00\x00\x00" + bytes(16) + b"x" * (2 * 1024 * 1024)
+            source.write_bytes(payload)
+            models = Path(directory) / "models"
+            checks = []
+            def cancelled():
+                checks.append(True)
+                return len(checks) >= 3
+            store = JsonLocalModelStore(models)
+            result = store.import_model(source, is_cancelled=cancelled)
+            self.assertEqual(result.error.code, "job_cancelled")
+            self.assertEqual(source.read_bytes(), payload)
+            self.assertEqual(tuple(models.iterdir()), ())
+            imported = store.import_model(source)
+            self.assertTrue(imported.ok, imported.error)
+            self.assertEqual(imported.value.sha256, hashlib.sha256(payload).hexdigest())
+            self.assertTrue(store.verify_model(imported.value.id).value.verified)
 
     def test_bundled_catalog_matches_the_supported_model_schema(self):
         catalog = bundled_model_catalog_path()

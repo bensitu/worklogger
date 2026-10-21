@@ -277,6 +277,9 @@ msgstr "Back up your database regularly to protect your local work logs, reports
 msgid "Background image"
 msgstr "Background image"
 
+msgid "Background tasks are taking longer than expected. You can keep waiting or confirm a forced exit."
+msgstr "Background tasks are taking longer than expected. You can keep waiting or confirm a forced exit."
+
 msgid "Backing up data..."
 msgstr "Backing up data..."
 
@@ -931,6 +934,9 @@ msgstr "Existing records"
 msgid "Exit"
 msgstr "Exit"
 
+msgid "Exit application"
+msgstr "Exit application"
+
 msgid "Exit without making changes"
 msgstr "Exit without making changes"
 
@@ -1017,6 +1023,12 @@ msgstr "First saved: oldest first"
 
 msgid "First saved: {time}"
 msgstr "First saved: {time}"
+
+msgid "Force quit"
+msgstr "Force quit"
+
+msgid "Force quitting may interrupt file operations. Keep database, journal, and recovery files if recovery is needed."
+msgstr "Force quitting may interrupt file operations. Keep database, journal, and recovery files if recovery is needed."
 
 msgid "Forgot Password?"
 msgstr "Forgot Password?"
@@ -1245,6 +1257,9 @@ msgstr "Keep this recovery key private. The saved file is not encrypted."
 
 msgid "Keep this temporary password private. The saved file is not encrypted."
 msgstr "Keep this temporary password private. The saved file is not encrypted."
+
+msgid "Keep waiting"
+msgstr "Keep waiting"
 
 msgid "Korean"
 msgstr "Korean"

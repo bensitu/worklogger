@@ -82,6 +82,17 @@ checks can run; the native prompt-evaluation abort callback applies to CPU only.
 
 ## Catalog Files
 
+Import copies and hashes the source in one pass without holding the catalog lock
+for the whole copy. **Cancel** stops copying or verification at a chunk boundary;
+unpublished files are removed and the source remains unchanged. Completed files
+are independently verified before selection. If cancellation arrives after a
+file is published, the completed import can remain available but is not selected.
+
+If a local catalog or manifest becomes unreadable, close the application and
+preserve the affected JSON file and model weights before making changes. Move the
+damaged metadata aside, restart with the bundled catalog, and re-import retained
+GGUF files. Do not delete model files merely to silence a metadata error.
+
 Source runs read root `model_catalog.json`; packaged runs use its bundled copy.
 Persistent `models/catalog.json` entries override matching IDs and retain imports.
 Refresh uses an explicitly configured HTTPS remote catalog, if supplied, otherwise

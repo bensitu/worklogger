@@ -83,7 +83,8 @@ class LocalModelsDialog(QDialog):
         if source is None:
             self.status_label.setText(_("Import cancelled"))
             return False
-        return self._run_state_job("local_model_import", lambda: self._view_model.import_model(source), _("Importing model..."))
+        return self._run_state_job("local_model_import", lambda token: self._view_model.import_model(source, cancellation=token),
+                                   _("Importing model..."), cancellable=True)
 
     def download_selected(self) -> bool:
         if self._pending_handle is not None:

@@ -73,10 +73,11 @@ class OpenAICompatibleGateway:
                 return Result.failure(CancellationError("ai_rewrite_cancelled", "ai_rewrite_cancelled"))
             remaining = deadline - time.monotonic()
             if remaining <= 0:
+                last_error = TimeoutError("ai_request_timeout")
                 break
             try:
                 with self._opener(url_request, timeout=remaining) as response:
-                    raw = response.read(self._max_response_bytes + 1)
+                    raw = _read_response(response, request, deadline, self._max_response_bytes)
                 if request.cancellation_token is not None and request.cancellation_token.is_cancelled():
                     return Result.failure(CancellationError("ai_rewrite_cancelled", "ai_rewrite_cancelled"))
                 if time.monotonic() >= deadline:
@@ -88,6 +89,8 @@ class OpenAICompatibleGateway:
                 if not text:
                     raise ValueError("ai_response_empty")
                 return Result.success(AIResponse(text=text, provider=self._provider))
+            except InterruptedError:
+                return Result.failure(CancellationError("ai_rewrite_cancelled", "ai_rewrite_cancelled"))
             except (HTTPError, URLError, HTTPException, TimeoutError, OSError, ValueError, json.JSONDecodeError) as exc:
                 last_error = exc
                 reason = exc.reason if isinstance(exc, URLError) else exc
@@ -96,10 +99,12 @@ class OpenAICompatibleGateway:
                 )
                 if isinstance(exc, HTTPError):
                     try:
-                        body = json.loads(exc.read(8193).decode("utf-8"))
+                        body = json.loads(_read_response(exc, request, deadline, 8192).decode("utf-8"))
                         value = body.get("error", {}).get("code") if isinstance(body, dict) and isinstance(body.get("error"), dict) else None
                         if value in ("invalid_api_key", "rate_limit_exceeded", "insufficient_quota", "model_not_found"):
                             error_code = value
+                    except InterruptedError:
+                        return Result.failure(CancellationError("ai_rewrite_cancelled", "ai_rewrite_cancelled"))
                     except (OSError, HTTPException, ValueError):
                         pass
                     finally:
@@ -115,6 +120,23 @@ class OpenAICompatibleGateway:
                 {"error_type": type(last_error).__name__, "status": last_error.code if isinstance(last_error, HTTPError) else None, "error_code": error_code},
             )
         )
+
+
+def _read_response(response, request, deadline, limit):
+    read = getattr(response, "read1", response.read)
+    chunks, received = [], 0
+    while True:
+        if request.cancellation_token is not None and request.cancellation_token.is_cancelled():
+            raise InterruptedError("ai_rewrite_cancelled")
+        if time.monotonic() >= deadline:
+            raise TimeoutError("ai_request_timeout")
+        chunk = read(min(65536, limit + 1 - received))
+        if not chunk:
+            return b"".join(chunks)
+        received += len(chunk)
+        if received > limit:
+            raise ValueError("ai_response_too_large")
+        chunks.append(chunk)
 
 
 def _extract_text(data: object) -> str:

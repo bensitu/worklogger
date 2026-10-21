@@ -277,6 +277,9 @@ msgstr "業務記録、レポート、設定、アカウント情報を保護す
 msgid "Background image"
 msgstr "背景画像"
 
+msgid "Background tasks are taking longer than expected. You can keep waiting or confirm a forced exit."
+msgstr "バックグラウンド処理に時間がかかっています。そのまま待つか、確認して強制終了できます。"
+
 msgid "Backing up data..."
 msgstr "データをバックアップ中..."
 
@@ -931,6 +934,9 @@ msgstr "既存の記録"
 msgid "Exit"
 msgstr "終了"
 
+msgid "Exit application"
+msgstr "アプリを終了"
+
 msgid "Exit without making changes"
 msgstr "変更せずに終了"
 
@@ -1017,6 +1023,12 @@ msgstr "初回保存日時：古い順"
 
 msgid "First saved: {time}"
 msgstr "初回保存: {time}"
+
+msgid "Force quit"
+msgstr "強制終了"
+
+msgid "Force quitting may interrupt file operations. Keep database, journal, and recovery files if recovery is needed."
+msgstr "強制終了するとファイル操作が中断される場合があります。復旧が必要な場合は、データベース、ジャーナル、復旧用ファイルを保持してください。"
 
 msgid "Forgot Password?"
 msgstr "パスワードをお忘れですか？"
@@ -1245,6 +1257,9 @@ msgstr "この復旧キーを他人に知らせないでください。保存フ
 
 msgid "Keep this temporary password private. The saved file is not encrypted."
 msgstr "この一時パスワードを他人に知らせないでください。保存ファイルは暗号化されません。"
+
+msgid "Keep waiting"
+msgstr "そのまま待つ"
 
 msgid "Korean"
 msgstr "韓国語"

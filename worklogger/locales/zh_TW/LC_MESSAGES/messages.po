@@ -277,6 +277,9 @@ msgstr "定期備份資料庫，保護本機工作記錄、報表、設定及帳
 msgid "Background image"
 msgstr "背景圖片"
 
+msgid "Background tasks are taking longer than expected. You can keep waiting or confirm a forced exit."
+msgstr "背景工作耗時較長。您可以繼續等待，或確認強制結束。"
+
 msgid "Backing up data..."
 msgstr "正在備份資料..."
 
@@ -931,6 +934,9 @@ msgstr "現有記錄"
 msgid "Exit"
 msgstr "結束"
 
+msgid "Exit application"
+msgstr "結束應用程式"
+
 msgid "Exit without making changes"
 msgstr "退出，不變更檔案"
 
@@ -1017,6 +1023,12 @@ msgstr "首次儲存：從舊到新"
 
 msgid "First saved: {time}"
 msgstr "首次儲存：{time}"
+
+msgid "Force quit"
+msgstr "強制結束"
+
+msgid "Force quitting may interrupt file operations. Keep database, journal, and recovery files if recovery is needed."
+msgstr "強制結束可能中斷檔案操作。如需還原，請保留資料庫、日誌及還原檔案。"
 
 msgid "Forgot Password?"
 msgstr "忘記密碼？"
@@ -1245,6 +1257,9 @@ msgstr "請妥善保管此復原金鑰，不要分享給他人。儲存的檔案
 
 msgid "Keep this temporary password private. The saved file is not encrypted."
 msgstr "請妥善保管此臨時密碼，不要分享給他人。儲存的檔案未加密。"
+
+msgid "Keep waiting"
+msgstr "繼續等待"
 
 msgid "Korean"
 msgstr "韓語"

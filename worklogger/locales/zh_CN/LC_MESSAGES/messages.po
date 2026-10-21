@@ -277,6 +277,9 @@ msgstr "定期备份数据库，保护本地工作记录、报表、设置及账
 msgid "Background image"
 msgstr "背景图片"
 
+msgid "Background tasks are taking longer than expected. You can keep waiting or confirm a forced exit."
+msgstr "后台任务耗时较长。您可以继续等待，或确认强制退出。"
+
 msgid "Backing up data..."
 msgstr "正在备份数据..."
 
@@ -931,6 +934,9 @@ msgstr "现有记录"
 msgid "Exit"
 msgstr "退出"
 
+msgid "Exit application"
+msgstr "退出应用"
+
 msgid "Exit without making changes"
 msgstr "退出，不更改文件"
 
@@ -1017,6 +1023,12 @@ msgstr "首次保存：从旧到新"
 
 msgid "First saved: {time}"
 msgstr "首次保存：{time}"
+
+msgid "Force quit"
+msgstr "强制退出"
+
+msgid "Force quitting may interrupt file operations. Keep database, journal, and recovery files if recovery is needed."
+msgstr "强制退出可能中断文件操作。如需恢复，请保留数据库、日志及恢复文件。"
 
 msgid "Forgot Password?"
 msgstr "忘记密码？"
@@ -1245,6 +1257,9 @@ msgstr "请妥善保管此恢复密钥，不要分享给他人。保存的文件
 
 msgid "Keep this temporary password private. The saved file is not encrypted."
 msgstr "请妥善保管此临时密码，不要分享给他人。保存的文件未加密。"
+
+msgid "Keep waiting"
+msgstr "继续等待"
 
 msgid "Korean"
 msgstr "韩语"

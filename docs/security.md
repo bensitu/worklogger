@@ -20,6 +20,11 @@ calendar/list requests. Shutdown cancels queued work and keeps processing UI
 events while active operations finish. If they take longer than five seconds,
 a stopping indicator remains visible. Account resources are not released and a
 different account is not opened while previous work can still access them.
+After 15 seconds, an explicit **Force quit** option becomes available. It requires
+confirmation and never runs automatically. Prefer waiting for file operations;
+forced termination can leave incomplete exports, downloads, or restore markers.
+Keep database journals and recovery files for the next startup, rather than
+deleting them to dismiss a warning.
 
 Only load models from sources you trust. GGUF files are processed by native code
 in the application process; checksums detect changed bytes, not a malicious

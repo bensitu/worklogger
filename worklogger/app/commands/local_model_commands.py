@@ -18,6 +18,7 @@ class RefreshLocalModelCatalogCommand:
 class ImportLocalModelCommand:
     user_id: int
     source_path: Path | str
+    cancellation: CancellationToken | None = None
 
 
 @dataclass(frozen=True)

@@ -1,26 +1,32 @@
 """Release account-scoped desktop resources before application teardown."""
 
-from PySide6.QtCore import QCoreApplication, QEvent, Qt
-from PySide6.QtWidgets import QProgressDialog, QWidget
+import os
+from time import monotonic
+
+from PySide6.QtCore import QCoreApplication, QEvent, QEventLoop
+from PySide6.QtWidgets import QWidget
 from shiboken6 import isValid
-from worklogger.infrastructure.i18n import _
+from worklogger.presentation.widgets.shutdown_progress import BackgroundTaskShutdownDialog
 
 
-def stop_background_tasks(runner) -> None:
+def stop_background_tasks(runner, *, force_exit=None) -> None:
+    deadline = monotonic() + 15
     finished = runner.shutdown(wait=True)
     if finished is False:
-        progress = QProgressDialog(_("Stopping background tasks..."), "", 0, 0)
-        progress.setCancelButton(None)
-        progress.setWindowModality(Qt.WindowModality.ApplicationModal)
-        progress.setWindowFlag(Qt.WindowType.WindowCloseButtonHint, False)
-        progress.setMinimumDuration(0)
+        progress = BackgroundTaskShutdownDialog()
+        def force_quit():
+            if runner.shutdown(wait=True, timeout_ms=0) is False:
+                (force_exit or os._exit)(1)
+        progress.force_quit_requested.connect(force_quit)
         progress.show()
         try:
             # Keep account resources alive until cancelled work has actually stopped.
             while runner.shutdown(wait=True, timeout_ms=250) is False:
-                pass
+                if monotonic() >= deadline:
+                    progress.allow_force_quit()
+                QCoreApplication.processEvents(QEventLoop.ProcessEventsFlag.AllEvents, 25)
         finally:
-            progress.close()
+            progress.hide()
             progress.deleteLater()
 
 
