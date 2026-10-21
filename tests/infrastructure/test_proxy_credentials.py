@@ -33,6 +33,26 @@ class FakeKeyring:
 
 
 class ProxyCredentialTests(unittest.TestCase):
+    def test_damaged_credential_pointer_can_be_replaced_or_removed(self):
+        from worklogger.infrastructure.security.key_store import KEYRING_SERVICE_NAME
+
+        name = self.store._name("damaged")
+        key = (KEYRING_SERVICE_NAME, name)
+        damaged = "worklogger:parts:1:invalid"
+        unrelated = (KEYRING_SERVICE_NAME, "other:part:0")
+        self.backend.values[unrelated] = "unrelated credential"
+        self.backend.values[key] = damaged
+        self.assertFalse(self.store.get_secret("damaged").ok)
+        with patch.object(self.backend, "set_password", side_effect=OSError("unavailable")), self.assertLogs(level="WARNING"):
+            self.assertFalse(self.store.set_secret("damaged", "replacement").ok)
+        self.assertEqual(self.backend.values[key], damaged)
+        for replacement in ("replacement", "large replacement" * 100, ""):
+            self.backend.values[key] = damaged
+            with self.assertLogs(level="WARNING"):
+                self.assertTrue(self.store.set_secret("damaged", replacement).ok)
+            self.assertEqual(self.store.get_secret("damaged").value, replacement or None)
+            self.assertEqual(self.backend.values[unrelated], "unrelated credential")
+
     def test_large_unicode_credentials_fit_system_limits_and_delete_all_parts(self):
         original = self.backend.set_password
         def bounded_write(service, name, value):

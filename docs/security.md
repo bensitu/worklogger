@@ -9,6 +9,10 @@ used for outgoing authenticated requests when protection fails.
 Larger OS-protected credentials are split into bounded values. A new set becomes
 visible only after its parts are stored; replacing or removing it also removes
 the previous parts when the OS credential service permits cleanup.
+An unreadable part index remains an error when reading, but does not prevent
+explicitly saving a replacement or clearing that credential. Unidentifiable old
+parts are not deleted by guessing their names; remove orphaned entries through
+the operating-system credential manager if necessary.
 
 New Windows credential files use the local application-data directory. Existing
 credential directories remain in use when they hold an earlier machine key,

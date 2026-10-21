@@ -32,9 +32,14 @@ def read_credential(backend, service, name):
 
 def write_credential(backend, service, name, value):
     previous = backend.get_password(service, name)
-    old_parts = _parts(name, previous)
     if len(value) > _PART_SIZE * _MAX_PARTS:
         raise ValueError("credential_storage_unavailable")
+    try:
+        old_parts = _parts(name, previous)
+    except ValueError:
+        # A damaged pointer cannot safely identify parts to remove.
+        old_parts = ()
+        LOGGER.warning("credential_cleanup_deferred")
     current_parts = ()
     published = value
     if len(value) > _PART_SIZE or value.startswith(_PREFIX):
