@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+from io import BytesIO
 import json
 import unittest
 from unittest.mock import Mock
@@ -122,16 +123,16 @@ class FakeCalendar:
 
 class FakeHttpResponse:
     def __init__(self, payload: dict) -> None:
-        self.payload = json.dumps(payload).encode("utf-8")
+        self.stream = BytesIO(json.dumps(payload).encode("utf-8"))
 
     def __enter__(self) -> "FakeHttpResponse":
         return self
 
     def __exit__(self, *args: object) -> None:
-        return None
+        self.stream.close()
 
-    def read(self, _size: int) -> bytes:
-        return self.payload
+    def read(self, size: int) -> bytes:
+        return self.stream.read(size)
 
 
 class AiUseCaseTests(unittest.TestCase):
