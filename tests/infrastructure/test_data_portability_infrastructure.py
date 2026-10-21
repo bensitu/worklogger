@@ -172,7 +172,17 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
                 (user_id, "ai_api_key", "previous test value"),
                 (user_id, "dark_mode", "1")))
 
-        backed_up = service.backup_database(backup_path)
+        from worklogger.infrastructure.backup.sqlite_backup import create_database_snapshot
+
+        def create_snapshot(source, destination):
+            if destination.parent == backup_path.parent:
+                self.assertEqual(source.execute(
+                    "SELECT COUNT(*) FROM settings WHERE key LIKE 'secret:%' OR key='ai_api_key'"
+                ).fetchone()[0], 0)
+            return create_database_snapshot(source, destination)
+
+        with patch("worklogger.infrastructure.backup.sqlite_backup.create_database_snapshot", side_effect=create_snapshot):
+            backed_up = service.backup_database(backup_path)
 
         self.assertTrue(backed_up.ok, backed_up.error)
         self.assertTrue(backup_path.is_file())

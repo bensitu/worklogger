@@ -23,6 +23,9 @@ class HTTPInfrastructureTests(unittest.TestCase):
         context = _certificate_context(str(path), stat.st_mtime_ns, stat.st_size)
         bundled = ssl.create_default_context(cafile=certificate_bundle())
         self.assertTrue(set(context.get_ca_certs(binary_form=True)).issubset(bundled.get_ca_certs(binary_form=True)))
+        Path(certificate_bundle()).unlink()
+        rebuilt = ssl.create_default_context(cafile=certificate_bundle())
+        self.assertEqual(set(bundled.get_ca_certs(binary_form=True)), set(rebuilt.get_ca_certs(binary_form=True)))
     def test_external_payload_includes_only_explicit_generation_parameters(self):
         for options, expected in (
             (ExternalGenerationOptions(), {}),

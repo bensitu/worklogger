@@ -63,14 +63,7 @@ class SQLiteBackupService:
                     raise ValueError("backup_destination_busy")
                 with self._connection_factory.connection() as connection:
                     _ensure_integrity(connection, "backup_integrity_failed")
-                    snapshot = create_database_snapshot(connection, destination)
-                with closing(sqlite3.connect(snapshot)) as backup:
-                    backup.execute("PRAGMA secure_delete=ON")
-                    backup.execute("DELETE FROM settings WHERE key IN (?, ?) OR key LIKE ?",
-                                   (NETWORK_PROXY_PASSWORD_SETTING_KEY, "ai_api_key", SECRET_SETTING_PREFIX + "%"))
-                    backup.commit()
-                    backup.execute("VACUUM")
-                    _ensure_integrity(backup, "backup_integrity_failed")
+                    snapshot = _sanitized_snapshot(connection, destination)
                 os.replace(snapshot, destination)
                 secure_database_files(destination)
         except ValueError as exc:
@@ -177,6 +170,18 @@ class SQLiteBackupService:
                     raise ValueError("restore_user_mismatch")
                 expected_id = user[0]
         validate_database_file(source, expected_username=self._expected_username, expected_user_id=expected_id)
+
+
+def _sanitized_snapshot(source: sqlite3.Connection, destination: Path) -> Path:
+    with tempfile.TemporaryDirectory(prefix="worklogger-backup-") as directory:
+        private = create_database_snapshot(source, Path(directory) / "worklog.db")
+        with closing(sqlite3.connect(private)) as backup:
+            backup.execute("PRAGMA secure_delete=ON")
+            backup.execute("DELETE FROM settings WHERE key IN (?, ?) OR key LIKE ?",
+                           (NETWORK_PROXY_PASSWORD_SETTING_KEY, "ai_api_key", SECRET_SETTING_PREFIX + "%"))
+            backup.commit()
+            backup.execute("VACUUM")
+            return create_database_snapshot(backup, destination)
 
 
 def create_database_snapshot(source: sqlite3.Connection, destination: Path) -> Path:

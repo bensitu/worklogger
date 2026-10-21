@@ -81,6 +81,7 @@ class LoggingInfrastructureTests(unittest.TestCase):
                 except ValueError:
                     logger.exception("credential_storage_failed")
                 logger.error("safe diagnostic")
+                logger.error("Invalid numeric value: %d", "private malformed payload")
                 from worklogger.app.use_cases._errors import infrastructure_failure
                 failure = infrastructure_failure("worklog_save_failed", OSError("private storage payload"), logger_name="worklogger.test")
                 self.assertEqual(failure.details, {"reason": "OSError"})
@@ -92,6 +93,8 @@ class LoggingInfrastructureTests(unittest.TestCase):
 
                 content = log_path.read_text(encoding="utf-8")
                 self.assertIn("safe diagnostic", content)
+                self.assertIn("Log message formatting failed", content)
+                self.assertNotIn("private malformed payload", content)
                 self.assertIn("remember_token_load_failed", content)
                 self.assertIn("credential_storage_failed", content)
                 self.assertIn("ValueError", content)

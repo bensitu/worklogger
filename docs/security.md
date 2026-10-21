@@ -126,7 +126,9 @@ Credential names remain stable for existing accounts.
 Do not regenerate or delete an unreadable key to silence a warning; preserve it
 before recovery. Database backup does not transfer OS keyring entries or session
 files. New backups exclude proxy passwords and API-key settings, including
-encrypted fallback values, but private pre-change snapshots can
+encrypted fallback values. Credential removal uses a private temporary directory;
+only the sanitized snapshot is written to the selected backup directory.
+Private pre-change snapshots can
 contain older credential material.
 
 Keep secrets out of public deployment configuration, model catalogs, logs,
@@ -136,6 +138,9 @@ representations, and exception messages.
 
 Ordinary recording is local. Update checks contact the release service; model
 downloads contact selected catalog/file hosts.
+Keep the operating-system trust store and any administrator-supplied certificate
+bundles current as well as the application's bundled roots. Removing a certificate
+from one trust source does not remove it from another source.
 
 The optional native inference backend depends on DiskCache, which has an
 unpatched pickle-deserialization advisory ([CVE-2025-69872](https://github.com/grantjenks/python-diskcache/issues/357)).

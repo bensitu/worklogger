@@ -32,7 +32,11 @@ class SensitiveDataFilter(std_logging.Filter):
     _QUERY_NAME = re.compile(_NAMES + r"|code", re.IGNORECASE)
 
     def filter(self, record: std_logging.LogRecord) -> bool:
-        record.msg = self._redact(record.getMessage())
+        try:
+            message = record.getMessage()
+        except Exception:
+            message = "Log message formatting failed"
+        record.msg = self._redact(message)
         record.args = ()
         for key, value in tuple(record.__dict__.items()):
             if key not in {"msg", "args", "exc_info", "exc_text"} and self._CREDENTIAL.match(key + "=value"):

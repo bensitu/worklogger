@@ -10,11 +10,14 @@ import os
 import tempfile
 from functools import lru_cache
 from pathlib import Path
+from threading import RLock
 from urllib.error import HTTPError
 from urllib.parse import urlparse, unquote
 from urllib.request import HTTPSHandler, HTTPRedirectHandler, ProxyHandler, build_opener
 
 import certifi
+
+_CERTIFICATE_BUNDLE_LOCK = RLock()
 
 
 def validate_https_url(url: str, *, public_only: bool = False) -> str:
@@ -128,7 +131,13 @@ def _certificate_bundle():
 
 def certificate_bundle() -> str:
     """Provide S3 with the system and bundled certificate roots used by HTTPS."""
-    return _certificate_bundle()[1]
+    with _CERTIFICATE_BUNDLE_LOCK:
+        directory, path = _certificate_bundle()
+        if not Path(path).is_file():
+            directory.cleanup()
+            _certificate_bundle.cache_clear()
+            _, path = _certificate_bundle()
+        return path
 
 
 def https_opener(*, public_only: bool = False, allow_redirects: bool = True, proxy_url: str | None = None):
