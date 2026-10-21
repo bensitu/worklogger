@@ -190,3 +190,21 @@ backups are separate account documents with client-side encryption enabled by
 default; they cannot be restored as SQLite files. Restrict local access and keep
 independent backups. Cross-device credentials may need re-entry.
 See [security](security.md).
+
+## Invalid Records
+
+If stored record values cannot be decoded, reads and overlap checks fail rather
+than silently dropping data or producing incomplete exports. The error directs
+you to **Settings > Data > Check records**. Inspection is read-only and limited
+to the signed-in account. Diagnostics identify record IDs without logging content.
+
+Review the listed IDs and dates. **Save a copy and remove invalid records**
+requires confirmation and a new private JSON file; existing files are not
+overwritten. The copy preserves all original columns, with explicit encodings
+for binary and non-finite values. Keep it for manual recovery or contributor
+assistance; do not publish it because it contains private record content.
+Only the reviewed invalid records are removed, in one transaction after the
+copy is saved. A changed inspection, copy failure, or database failure prevents
+removal. Valid records, notes, and other accounts are unchanged. No automatic
+repair guesses replacement times or work classifications. Database structure
+and released-version migration behavior are unchanged.

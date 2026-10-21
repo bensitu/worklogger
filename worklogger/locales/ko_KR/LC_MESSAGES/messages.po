@@ -343,9 +343,6 @@ msgstr "CSV"
 msgid "CSV (*.csv)"
 msgstr "CSV (*.csv)"
 
-msgid "CSV Data Management"
-msgstr "CSV 데이터 관리"
-
 msgid "CSV files (*.csv)"
 msgstr "CSV files (*.csv)"
 
@@ -396,6 +393,9 @@ msgstr "비밀번호를 변경하면 복구 키가 재설정됩니다."
 
 msgid "Check for updates"
 msgstr "업데이트 확인"
+
+msgid "Check records"
+msgstr "기록 검사"
 
 msgid "Checking for updates..."
 msgstr "업데이트 확인 중..."
@@ -1201,6 +1201,9 @@ msgstr "간격(시간)"
 msgid "Invalid date range"
 msgstr "날짜 범위가 올바르지 않습니다"
 
+msgid "Invalid records: {count}"
+msgstr "유효하지 않은 기록: {count}개"
+
 msgid "Invalid work schedule"
 msgstr "잘못된 근무 일정"
 
@@ -1921,6 +1924,9 @@ msgstr "중단된 복원 복구"
 msgid "Recovered draft"
 msgstr "복구된 초안"
 
+msgid "Recovery copy saved. Invalid records removed: {count}"
+msgstr "복구 사본을 저장하고 유효하지 않은 기록 {count}개를 제거했습니다."
+
 msgid "Recovery file: {path}"
 msgstr "복구 파일: {path}"
 
@@ -1965,6 +1971,9 @@ msgstr "배경 이미지를 삭제하시겠습니까?"
 
 msgid "Remove image"
 msgstr "이미지 삭제"
+
+msgid "Remove these invalid records only after saving a private recovery copy? Other records and accounts will not change."
+msgstr "비공개 복구 사본을 저장한 후 이 기록을 제거하시겠습니까? 다른 기록과 계정은 변경되지 않습니다."
 
 msgid "Replace"
 msgstr "바꾸기"
@@ -2140,6 +2149,9 @@ msgstr "저장"
 msgid "Save Report"
 msgstr "보고서 저장"
 
+msgid "Save a copy and remove invalid records"
+msgstr "사본 저장 후 잘못된 기록 제거"
+
 msgid "Save and apply"
 msgstr "저장 및 적용"
 
@@ -2154,6 +2166,9 @@ msgstr "표시 이름 저장"
 
 msgid "Save or discard unsaved edits before restoring a cloud backup."
 msgstr "클라우드 백업을 복원하기 전에 저장하지 않은 변경 사항을 저장하거나 취소하세요."
+
+msgid "Save recovery copy"
+msgstr "복구 사본 저장"
 
 msgid "Save recovery key"
 msgstr "복구 키 저장"
@@ -2380,6 +2395,9 @@ msgstr "일부 날짜에 기록이 이미 있습니다. 가져올 내용을 검�
 msgid "Some expired backups could not be removed. Cleanup will be retried."
 msgstr "일부 만료된 백업을 삭제하지 못했습니다. 나중에 다시 정리합니다."
 
+msgid "Some stored records are invalid. Open Settings > Data > Check records to review them. Records have not been skipped."
+msgstr "일부 저장된 기록이 유효하지 않습니다. 설정 > 데이터 > 기록 검사에서 확인하세요. 기록을 건너뛰지 않았습니다."
+
 msgid "Some stored records could not be converted safely. The original data and upgrade backup have been preserved."
 msgstr "일부 기록을 안전하게 변환할 수 없습니다. 원본 데이터와 업데이트 백업은 보존되었습니다."
 
@@ -2430,6 +2448,9 @@ msgstr "시작 도움말"
 
 msgid "State / province"
 msgstr "주 / 도"
+
+msgid "Stop automatic recording before removing invalid records."
+msgstr "유효하지 않은 기록을 제거하기 전에 자동 기록을 중지하세요."
 
 msgid "Stop automatic recording before restoring a cloud backup."
 msgstr "클라우드 백업을 복원하기 전에 자동 기록을 종료하세요."
@@ -2785,6 +2806,9 @@ msgstr "데이터베이스를 백업하지 못했습니다. 저장 위치와 디
 msgid "Unable to check for updates. Check your network connection and try again."
 msgstr "업데이트를 확인하지 못했습니다. 네트워크 연결을 확인하고 다시 시도하세요."
 
+msgid "Unable to check records. Existing data is unchanged."
+msgstr "기록을 검사할 수 없습니다. 기존 데이터는 변경되지 않았습니다."
+
 msgid "Unable to complete the AI request. Check your model settings and try again."
 msgstr "AI 요청을 완료하지 못했습니다. 모델 설정을 확인하고 다시 시도하세요."
 
@@ -2860,6 +2884,9 @@ msgstr "로그인 구성을 저장할 수 없습니다. 로컬 구성 디렉터�
 msgid "Unable to save the note. Your changes have been retained."
 msgstr "메모를 저장할 수 없습니다. 변경 내용은 유지됩니다."
 
+msgid "Unable to save the recovery copy or remove invalid records. Existing database records are unchanged. Choose a new JSON file in a writable private folder."
+msgstr "복구 사본 저장 또는 기록 제거에 실패했습니다. 기존 데이터베이스 기록은 변경되지 않았습니다. 쓰기 가능한 비공개 폴더에서 새 JSON 파일을 선택하세요."
+
 msgid "Unable to save the recovery key. Choose another location and try again."
 msgstr "복구 키를 저장할 수 없습니다. 다른 위치를 선택하고 다시 시도하세요."
 
@@ -2931,6 +2958,9 @@ msgstr "연결 해제"
 
 msgid "Unlinked"
 msgstr "미연결"
+
+msgid "Unreadable records are not skipped. Save their original values before removing them from this account."
+msgstr "읽을 수 없는 기록을 건너뛰지 않습니다. 이 계정에서 제거하기 전에 원본 값을 저장하세요."
 
 msgid "Unsaved changes"
 msgstr "저장되지 않은 변경 사항"
@@ -3087,6 +3117,9 @@ msgstr "작업 항목 ID"
 
 msgid "Work items"
 msgstr "작업 항목"
+
+msgid "Work log data"
+msgstr "기록 데이터"
 
 msgid "Work plan"
 msgstr "근무 계획"

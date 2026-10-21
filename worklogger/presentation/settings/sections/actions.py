@@ -9,6 +9,7 @@ class SectionActions:
     change_avatar_requested: Callable
     reset_avatar_requested: Callable
     backup_requested: Callable
+    check_records_requested: Callable
     change_password_requested: Callable
     choose_custom_color: Callable
     confirm_logout: Callable

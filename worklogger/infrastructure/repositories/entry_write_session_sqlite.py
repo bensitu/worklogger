@@ -11,7 +11,6 @@ from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.models import WorkLog, EntryCategory
 from worklogger.domain.worklog.rules import entries_overlap
 from worklogger.domain.worklog.timer_state import timer_payload
-from worklogger.infrastructure.repositories._mapping import map_rows
 from worklogger.infrastructure.repositories.project_sqlite import validate_record_context
 from worklogger.infrastructure.repositories.worklog_mapping_sqlite import WorkLogStorage
 
@@ -70,7 +69,7 @@ class EntryWriteSession:
             end = min(record.day.toordinal() + 3, date.max.toordinal())
             rows = connection.execute(self._storage.select + "WHERE w.user_id=? AND w.d BETWEEN ? AND ?",
                                       (record.user_id, date.fromordinal(start).isoformat(), date.fromordinal(end).isoformat())).fetchall()
-            others = map_rows(rows, self._storage.from_row)
+            others = self._storage.decode_rows(rows)
             if cached_rows is not None:
                 cached_rows[key] = others
         else:

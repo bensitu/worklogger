@@ -183,6 +183,7 @@ class SettingsWorkflowController:
             self._capabilities = replace(self._capabilities,
                 local_generation=self._capabilities.ai_enabled and local_inference.backend_available)
 
+        self._data_management_view_model = data_management_view_model
         self._data_workflow = DataSettingsWorkflow(
             data_management_view_model=data_management_view_model,
             settings_view_model=settings_view_model,
@@ -279,6 +280,8 @@ class SettingsWorkflowController:
                 lambda: self._identity_workflow.open(surface)
             )
         surface.backup_requested.connect(lambda: self._backup_database(surface))
+        surface.check_records_button.setEnabled(bool(getattr(self._data_management_view_model, "can_check_records", False)))
+        surface.check_records_requested.connect(lambda: self._check_records(surface))
         surface.restore_requested.connect(lambda: self._restore_database(surface))
         surface.export_csv_requested.connect(lambda: self._export_csv(surface))
         surface.import_csv_requested.connect(lambda: self._import_csv(surface))
@@ -290,6 +293,18 @@ class SettingsWorkflowController:
                 lambda: self._open_local_models(surface)
             )
             self._refresh_local_models_status(surface)
+
+    def _check_records(self, surface):
+        if not getattr(self._data_management_view_model, "can_check_records", False):
+            return
+        from worklogger.presentation.widgets.record_integrity import RecordIntegrityDialog
+        dialog = RecordIntegrityDialog(self._data_management_view_model, surface,
+                                       job_runner=self._job_runner)
+        dialog.records_changed.connect(surface.records_recovered.emit)
+        try:
+            dialog.exec()
+        finally:
+            dialog.deleteLater()
 
     def _open_local_models(self, surface: SettingsPage) -> None:
         if not self._capabilities.ai_enabled or not self._capabilities.model_management or self._local_models_workflow is None:

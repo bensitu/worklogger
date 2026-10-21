@@ -676,7 +676,7 @@ class TimeEntryTests(unittest.TestCase):
                 with self.factory.transaction(write=True) as connection:
                     connection.execute("UPDATE worklog SET entry_type=?,work_mode=?,project_label=? WHERE id=?",
                                        (entry_type, work_mode, project_label, record.id))
-                with self.assertRaisesRegex(ValueError, "stored_records_invalid"):
+                with self.assertRaisesRegex(ValueError, "stored_work_logs_invalid"):
                     self.repository.list_for_day(self.user.id, record.day)
                 with self.factory.connection() as connection:
                     stored = connection.execute("SELECT entry_type,work_mode,project_label,note FROM worklog WHERE id=?",

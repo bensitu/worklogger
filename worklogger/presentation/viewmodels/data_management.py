@@ -11,6 +11,7 @@ from worklogger.app.ports import BackupService, WorkLogCsvExporter, WorkLogIcsEx
 from worklogger.app.commands.data_portability_commands import ImportWorkLogsCsvCommand
 from worklogger.app.queries.work_log_queries import GetAllWorkLogsQuery
 from worklogger.app.use_cases.data_portability import WorkLogCsvImportResult, WorkLogCsvImportPreview
+from worklogger.app.use_cases.record_integrity import RecordIntegrityService
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
@@ -59,6 +60,7 @@ class DataManagementViewModel:
         ics_import_handler: IcsImportHandler | None = None,
         csv_import_handler: WorkLogCsvImportHandler | None = None,
         can_manage_database: bool = False,
+        record_integrity: RecordIntegrityService | None = None,
     ) -> None:
         self._user_id = user_id
         self._work_logs_handler = work_logs_handler
@@ -69,6 +71,21 @@ class DataManagementViewModel:
         self._ics_import_handler = ics_import_handler
         self._csv_import_handler = csv_import_handler
         self._can_manage_database = bool(can_manage_database)
+        self._record_integrity = record_integrity
+
+    @property
+    def can_check_records(self):
+        return self._record_integrity is not None
+
+    def check_records(self):
+        if self._record_integrity is None:
+            return Result.failure(ValidationError("record_check_failed", "record_check_failed"))
+        return self._record_integrity.inspect()
+
+    def archive_invalid_records(self, expected, destination):
+        if self._record_integrity is None:
+            return Result.failure(ValidationError("record_recovery_failed", "record_recovery_failed"))
+        return self._record_integrity.archive_invalid(expected, destination)
 
     def backup_database(self, destination: Path) -> Result[DataManagementActionState]:
         if not self._can_manage_database:

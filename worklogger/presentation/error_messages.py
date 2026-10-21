@@ -9,6 +9,10 @@ def N_(message: str) -> str:
 
 
 _MESSAGE_GROUPS = (
+    (("stored_work_logs_invalid",), N_("Some stored records are invalid. Open Settings > Data > Check records to review them. Records have not been skipped.")),
+    (("record_recovery_timer_active",), N_("Stop automatic recording before removing invalid records.")),
+    (("record_check_failed",), N_("Unable to check records. Existing data is unchanged.")),
+    (("record_recovery_failed",), N_("Unable to save the recovery copy or remove invalid records. Existing database records are unchanged. Choose a new JSON file in a writable private folder.")),
     (("startup_storage_readonly",), N_("The indicated location is read-only. Restore write access, then retry. A database also needs a writable directory for journal and lock files. Do not delete existing database files.")),
     (("startup_storage_full",), N_("There is not enough space on the affected drive, or its storage quota is exhausted. Free space without deleting database or recovery files, then retry.")),
     (("startup_storage_busy",), N_("The database is temporarily in use. Finish other database operations or close tools accessing it, then retry. Do not delete journal or lock files.")),

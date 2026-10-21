@@ -143,14 +143,14 @@ class SQLiteInfrastructureTests(unittest.TestCase):
             connection.execute("INSERT INTO worklog(user_id,d,\"break\",note,entry_type) VALUES(?, '2026-05-15X', 0, '', 'normal')", (user.id,))
             connection.execute("INSERT INTO worklog(user_id,d,\"break\",note,entry_type) VALUES(?, '2026-05-01', 0, '', 'normal')", (user.id,))
         with self.assertLogs("worklogger.infrastructure.repositories._mapping", level="WARNING"):
-            with self.assertRaisesRegex(ValueError, "stored_records_invalid"):
+            with self.assertRaisesRegex(ValueError, "stored_work_logs_invalid"):
                 SQLiteWorkLogRepository(self.factory).list_for_month(user.id, 2026, 5)
         with self.assertLogs("worklogger.infrastructure.repositories._mapping", level="WARNING"):
             quick_logs = repository.list_for_day(user.id, day)
         self.assertEqual(len(quick_logs), 1)
         self.assertIsNone(quick_logs[0].created_at)
         with self.assertLogs("worklogger.infrastructure.repositories._mapping", level="WARNING"):
-            with self.assertRaisesRegex(ValueError, "stored_records_invalid"):
+            with self.assertRaisesRegex(ValueError, "stored_work_logs_invalid"):
                 SQLiteWorkLogRepository(self.factory).list_export_rows(user.id)
         self.assertEqual(repository.list_for_day(user.id + 1, day), ())
         self.assertEqual(repository.list_for_range(user.id + 1, day, day), ())

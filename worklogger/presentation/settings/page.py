@@ -59,6 +59,8 @@ from worklogger.presentation.settings.sections.state import SettingsSectionState
 class SettingsPage(QWidget, SettingsSectionState):
     settings_changed = Signal(object)
     backup_requested = Signal()
+    check_records_requested = Signal()
+    records_recovered = Signal()
     open_data_directory_requested = Signal()
     change_password_requested = Signal()
     export_csv_requested = Signal()
@@ -318,6 +320,7 @@ class SettingsPage(QWidget, SettingsSectionState):
             change_avatar_requested=self._change_avatar,
             reset_avatar_requested=lambda: self._save_preference(lambda: self._view_model.set_avatar("")),
             backup_requested=self.backup_requested.emit,
+            check_records_requested=self.check_records_requested.emit,
             open_data_directory_requested=self.open_data_directory_requested.emit,
             change_password_requested=self.change_password_requested.emit,
             choose_custom_color=self._choose_custom_color,

@@ -3,7 +3,6 @@
 from datetime import date
 
 from worklogger.domain.worklog.rules import entries_overlap
-from worklogger.infrastructure.repositories._mapping import map_rows
 
 
 def overlapping_entries(connection, storage, record):
@@ -11,5 +10,5 @@ def overlapping_entries(connection, storage, record):
     end = date.fromordinal(min(record.day.toordinal() + 3, date.max.toordinal()))
     rows = connection.execute(storage.select + "WHERE w.user_id=? AND w.d BETWEEN ? AND ? ORDER BY w.d,w.start,w.id",
                               (record.user_id, start.isoformat(), end.isoformat())).fetchall()
-    return tuple(item for item in map_rows(rows, storage.from_row)
+    return tuple(item for item in storage.decode_rows(rows)
                  if item.id != record.id and entries_overlap(item, record))

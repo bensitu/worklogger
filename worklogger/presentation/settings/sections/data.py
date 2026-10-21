@@ -24,6 +24,7 @@ class DataSection(_SettingsScrollPage):
         "data_directory_input",
         "open_data_directory_button",
         "backup_button",
+        "check_records_button",
         "backup_status_label",
         "clear_calendar_events_button",
         "data_status_label",
@@ -53,7 +54,7 @@ class DataSection(_SettingsScrollPage):
         location.content_layout.addWidget(self.open_data_directory_button)
         page.layout().addWidget(location)
         csv_card = _action_card(
-            _("CSV Data Management"),
+            _("Work log data"),
             _(
                 "Import or export worklog records as CSV files for backup, migration, or spreadsheet analysis."
             ),
@@ -72,6 +73,12 @@ class DataSection(_SettingsScrollPage):
             csv_card, self.export_csv_button, self.import_csv_button, columns=2
         )
         page.layout().addWidget(csv_card)
+
+        self.check_records_button = QPushButton(_("Check records"))
+        self.check_records_button.setProperty("variant", "outline")
+        set_button_icon(self.check_records_button, "search")
+        self.check_records_button.clicked.connect(actions.check_records_requested)
+        csv_card.content_layout.addWidget(self.check_records_button)
 
         backup_card = _action_card(
             _("Database Backup"),

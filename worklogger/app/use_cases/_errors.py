@@ -8,6 +8,8 @@ from worklogger.domain.shared.result import Result
 
 
 def infrastructure_failure(code: str, error: Exception, *, logger_name: str) -> InfrastructureError:
+    if isinstance(error, ValueError) and str(error) == "stored_work_logs_invalid":
+        code = "stored_work_logs_invalid"
     logging.getLogger(logger_name).error("%s: %s", code, type(error).__name__)
     return InfrastructureError(code, code, {"reason": type(error).__name__})
 

@@ -17,6 +17,8 @@ from worklogger.app.use_cases.calendar import (
     ImportCalendarEventsHandler,
 )
 from worklogger.app.use_cases.data_portability import ImportWorkLogsCsvHandler
+from worklogger.app.use_cases.record_integrity import RecordIntegrityService
+from worklogger.infrastructure.repositories.record_integrity_sqlite import SQLiteRecordIntegrity
 from worklogger.app.use_cases.identity import (
     GetIdentityProvidersHandler,
     LinkIdentityHandler,
@@ -183,6 +185,7 @@ def _build_data_management_view_model(
     return DataManagementViewModel(
         user_id=user.id,
         can_manage_database=user.is_admin,
+        record_integrity=RecordIntegrityService(user.id, SQLiteRecordIntegrity(connection_factory)),
         work_logs_handler=GetAllWorkLogsHandler(
             repositories.work_logs, include_note_only=True
         ),

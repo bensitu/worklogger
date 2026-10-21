@@ -343,9 +343,6 @@ msgstr "CSV"
 msgid "CSV (*.csv)"
 msgstr "CSV (*.csv)"
 
-msgid "CSV Data Management"
-msgstr "CSV 資料管理"
-
 msgid "CSV files (*.csv)"
 msgstr "CSV files (*.csv)"
 
@@ -396,6 +393,9 @@ msgstr "變更密碼會重設復原金鑰。"
 
 msgid "Check for updates"
 msgstr "檢查更新"
+
+msgid "Check records"
+msgstr "檢查記錄"
 
 msgid "Checking for updates..."
 msgstr "正在檢查更新..."
@@ -1201,6 +1201,9 @@ msgstr "間隔（小時）"
 msgid "Invalid date range"
 msgstr "日期範圍無效"
 
+msgid "Invalid records: {count}"
+msgstr "異常記錄：{count} 筆"
+
 msgid "Invalid work schedule"
 msgstr "工作安排無效"
 
@@ -1921,6 +1924,9 @@ msgstr "處理未完成的還原"
 msgid "Recovered draft"
 msgstr "已復原草稿"
 
+msgid "Recovery copy saved. Invalid records removed: {count}"
+msgstr "已儲存復原副本，並移除 {count} 筆異常記錄。"
+
 msgid "Recovery file: {path}"
 msgstr "復原檔案：{path}"
 
@@ -1965,6 +1971,9 @@ msgstr "移除目前的背景圖片？"
 
 msgid "Remove image"
 msgstr "移除圖片"
+
+msgid "Remove these invalid records only after saving a private recovery copy? Other records and accounts will not change."
+msgstr "儲存私密的復原副本後，移除這些異常記錄？其他記錄及帳戶不會變更。"
 
 msgid "Replace"
 msgstr "取代"
@@ -2140,6 +2149,9 @@ msgstr "儲存"
 msgid "Save Report"
 msgstr "儲存報表"
 
+msgid "Save a copy and remove invalid records"
+msgstr "儲存副本並移除異常記錄"
+
 msgid "Save and apply"
 msgstr "儲存並套用"
 
@@ -2154,6 +2166,9 @@ msgstr "儲存顯示名稱"
 
 msgid "Save or discard unsaved edits before restoring a cloud backup."
 msgstr "還原雲端備份前，請儲存或捨棄未儲存的編輯。"
+
+msgid "Save recovery copy"
+msgstr "儲存復原副本"
 
 msgid "Save recovery key"
 msgstr "儲存復原金鑰"
@@ -2380,6 +2395,9 @@ msgstr "部分日期已有記錄。請檢查匯入內容並確認是否取代。
 msgid "Some expired backups could not be removed. Cleanup will be retried."
 msgstr "部分過期備份無法刪除，稍後會重試清理。"
 
+msgid "Some stored records are invalid. Open Settings > Data > Check records to review them. Records have not been skipped."
+msgstr "部分記錄的資料異常。請開啟「設定 > 資料 > 檢查記錄」進行檢查。系統沒有略過任何記錄。"
+
 msgid "Some stored records could not be converted safely. The original data and upgrade backup have been preserved."
 msgstr "部分記錄無法安全轉換。原始資料和升級備份均已保留。"
 
@@ -2430,6 +2448,9 @@ msgstr "啟動協助"
 
 msgid "State / province"
 msgstr "州 / 省"
+
+msgid "Stop automatic recording before removing invalid records."
+msgstr "請先停止自動記錄，再移除異常記錄。"
 
 msgid "Stop automatic recording before restoring a cloud backup."
 msgstr "還原雲端備份前，請先結束自動記錄。"
@@ -2785,6 +2806,9 @@ msgstr "無法備份資料庫，請檢查目標位置與可用磁碟空間。"
 msgid "Unable to check for updates. Check your network connection and try again."
 msgstr "無法檢查更新，請檢查網路連線後重試。"
 
+msgid "Unable to check records. Existing data is unchanged."
+msgstr "無法檢查記錄。現有資料未變更。"
+
 msgid "Unable to complete the AI request. Check your model settings and try again."
 msgstr "無法完成 AI 請求，請檢查模型設定後重試。"
 
@@ -2860,6 +2884,9 @@ msgstr "無法儲存登入設定。請檢查本機設定目錄的存取權限。
 msgid "Unable to save the note. Your changes have been retained."
 msgstr "無法儲存便箋，編輯內容已保留。"
 
+msgid "Unable to save the recovery copy or remove invalid records. Existing database records are unchanged. Choose a new JSON file in a writable private folder."
+msgstr "無法儲存復原副本或移除異常記錄。資料庫中的現有記錄未變更。請在可寫入的私密資料夾中選擇新的 JSON 檔案。"
+
 msgid "Unable to save the recovery key. Choose another location and try again."
 msgstr "無法儲存復原金鑰。請選擇其他位置後重試。"
 
@@ -2931,6 +2958,9 @@ msgstr "解除連結"
 
 msgid "Unlinked"
 msgstr "未關聯"
+
+msgid "Unreadable records are not skipped. Save their original values before removing them from this account."
+msgstr "系統不會略過無法讀取的記錄。請先儲存原始資料，再從本帳戶移除異常記錄。"
 
 msgid "Unsaved changes"
 msgstr "未儲存的變更"
@@ -3087,6 +3117,9 @@ msgstr "工作項目 ID"
 
 msgid "Work items"
 msgstr "工作項目"
+
+msgid "Work log data"
+msgstr "記錄資料"
 
 msgid "Work plan"
 msgstr "工作計畫"

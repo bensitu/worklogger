@@ -41,7 +41,7 @@ class SQLiteWorkLogQueries:
             rows = connection.execute(self._storage.select + " WHERE " + " AND ".join(conditions)
                 + " ORDER BY w.d DESC,COALESCE(w.start,'') DESC,w.id DESC LIMIT ?", (*parameters, limit + 1)).fetchall()
         next_cursor = EntryCursor(rows[limit - 1]["d"], rows[limit - 1]["start"] or "", rows[limit - 1]["id"]) if len(rows) > limit else None
-        return EntryPage(map_rows(rows[:limit], self._storage.from_row), next_cursor)
+        return EntryPage(self._storage.decode_rows(rows[:limit]), next_cursor)
 
     def get_for_day(self, user_id: int, day: date) -> WorkLog | None:
         summaries = aggregate_days(self.list_for_day(user_id, day))
@@ -57,7 +57,7 @@ class SQLiteWorkLogQueries:
                 + "WHERE w.user_id=? AND w.d BETWEEN ? AND ? ORDER BY w.d",
                 (user_id, f"{prefix}-01", f"{prefix}-31"),
             ).fetchall()
-        return aggregate_days(map_rows(rows, self._storage.from_row))
+        return aggregate_days(self._storage.decode_rows(rows))
 
     def list_range(self, user_id: int, start: date, end: date) -> tuple[WorkLog, ...]:
         with self._storage.connection_factory.connection() as connection:
@@ -66,7 +66,7 @@ class SQLiteWorkLogQueries:
                 + "WHERE w.user_id=? AND w.d BETWEEN ? AND ? ORDER BY w.d",
                 (user_id, start.isoformat(), end.isoformat()),
             ).fetchall()
-        return aggregate_days(map_rows(rows, self._storage.from_row))
+        return aggregate_days(self._storage.decode_rows(rows))
 
     def list_entries_range(self, user_id, start, end, *, limit=50001):
         if type(limit) is not int or not 1 <= limit <= 50001:
@@ -74,7 +74,7 @@ class SQLiteWorkLogQueries:
         with self._storage.connection_factory.connection() as connection:
             rows = connection.execute(self._storage.select + " WHERE w.user_id=? AND w.d BETWEEN ? AND ? ORDER BY w.d,w.start,w.id LIMIT ?",
                                       (user_id, start.isoformat(), end.isoformat(), limit)).fetchall()
-        return map_rows(rows, self._storage.from_row)
+        return self._storage.decode_rows(rows)
 
     def list_all(self, user_id: int) -> tuple[WorkLog, ...]:
         with self._storage.connection_factory.connection() as connection:
@@ -82,17 +82,15 @@ class SQLiteWorkLogQueries:
                 self._storage.select + "WHERE w.user_id=? ORDER BY w.d",
                 (user_id,),
             ).fetchall()
-        return aggregate_days(map_rows(rows, self._storage.from_row))
+        return aggregate_days(self._storage.decode_rows(rows))
 
     def list_export_rows(self, user_id: int) -> tuple[WorkLog, ...]:
         with self._storage.connection_factory.transaction(write=False) as connection:
-            records = map_rows(
+            records = self._storage.decode_rows(
                 connection.execute(
                     self._storage.select + "WHERE w.user_id=? ORDER BY w.d,w.start",
                     (user_id,),
                 ).fetchall(),
-                self._storage.from_row,
-                strict=True,
             )
             rows = connection.execute(
                 "SELECT d, content FROM daily_notes WHERE user_id=? AND content<>'' ",
@@ -112,7 +110,7 @@ class SQLiteWorkLogQueries:
                 + "WHERE w.user_id=? AND w.d=? ORDER BY w.start,w.id",
                 (user_id, day.isoformat()),
             ).fetchall()
-        return map_rows(rows, self._storage.from_row)
+        return self._storage.decode_rows(rows)
 
     def get_entry(self, user_id: int, entry_id: int) -> WorkLog | None:
         with self._storage.connection_factory.connection() as connection:

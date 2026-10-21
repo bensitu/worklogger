@@ -14,10 +14,13 @@ from worklogger.domain.worklog.rules import (
     parse_time,
 )
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
-from worklogger.infrastructure.repositories._mapping import parse_date, parse_offset_datetime
+from worklogger.infrastructure.repositories._mapping import map_rows, parse_date, parse_offset_datetime
 
 
 class WorkLogStorage:
+    def decode_rows(self, rows):
+        return map_rows(rows, self.from_row, invalid_code="stored_work_logs_invalid")
+
     def __init__(self, connection_factory: SQLiteConnectionFactory) -> None:
         self.connection_factory = connection_factory
         self.select = ('SELECT w.user_id,w.d,w.start,w.end,w."break",w.note,w.entry_type,w.overnight,'
