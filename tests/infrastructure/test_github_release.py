@@ -54,6 +54,25 @@ class MemoryGitHub:
 
 
 class GitHubReleaseTests(unittest.TestCase):
+    def test_signature_verification_binds_release_workflow_and_source_commit(self):
+        workflow = "example/app/.github/workflows/release-build.yml@refs/heads/dev-v4"
+        with patch.dict(github_release.os.environ, {"GITHUB_WORKFLOW_REF": workflow}), \
+                patch.object(github_release.subprocess, "run") as run:
+            github_release.verify_release_signature(Path("assets"), COMMIT, "example/app")
+        command = run.call_args.args[0]
+        self.assertEqual(command[command.index("--certificate-identity") + 1], "https://github.com/" + workflow)
+        self.assertEqual(command[command.index("--certificate-github-workflow-sha") + 1], COMMIT)
+        self.assertEqual(command[command.index("--certificate-oidc-issuer") + 1],
+                         "https://token.actions.githubusercontent.com")
+        for invalid in ("", workflow.replace("example/app/", "other/app/"),
+                        workflow.replace("release-build.yml", "ci.yml")):
+            with self.subTest(workflow=invalid), \
+                    patch.dict(github_release.os.environ, {"GITHUB_WORKFLOW_REF": invalid}), \
+                    patch.object(github_release.subprocess, "run") as run:
+                with self.assertRaises(ValueError):
+                    github_release.verify_release_signature(Path("assets"), COMMIT, "example/app")
+                run.assert_not_called()
+
     def test_optional_api_resources_use_http_status_not_cli_error_wording(self):
         from types import SimpleNamespace
         client = github_release.GitHubClient("example/app")

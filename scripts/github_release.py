@@ -112,7 +112,7 @@ def select_artifacts(client, run_id, attempt, commit, kind):
 
 def verify_release_signature(assets, commit, repository):
     workflow = os.environ.get("GITHUB_WORKFLOW_REF", "")
-    expected_prefix = repository + "/.github/workflows/release.yml@refs/"
+    expected_prefix = repository + "/.github/workflows/release-build.yml@refs/"
     if not workflow.startswith(expected_prefix) or not workflow[len(expected_prefix):].startswith(("heads/", "tags/")):
         raise ValueError("Release signing workflow identity is unavailable")
     subprocess.run(["cosign", "verify-blob", str(assets / "SHA256SUMS"),

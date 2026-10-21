@@ -115,8 +115,9 @@ application log with credential redaction. Timeouts retain the same diagnostics.
 ## GitHub Releases
 
 The **Build and Release WorkLogger** workflow is started manually from GitHub
-Actions. Once the workflow is present on the repository's default branch,
-choose **Run workflow**, select the source branch (normally `main`), and enter
+Actions. Its entry point is `.github/workflows/release-build.yml`, matching the
+repository's existing release workflow. Choose **Run workflow**, select the
+source branch (normally `main`), and enter
 the tag matching `APP_VERSION` in `worklogger/__about__.py`, such as `v4.0.0`.
 Enable **validate_only** to run the full verification and prepare release files
 without creating a tag or release.
@@ -165,12 +166,12 @@ workflow identity before checking the archives:
 
 ```sh
 cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \
-  --certificate-identity https://github.com/bensitu/worklogger/.github/workflows/release.yml@refs/heads/main \
+  --certificate-identity https://github.com/bensitu/worklogger/.github/workflows/release-build.yml@refs/heads/main \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 sha256sum --check SHA256SUMS
 ```
 
-For ordinary CI artifacts, use `.github/workflows/ci.yml` instead of `release.yml`.
+For ordinary CI artifacts, use `.github/workflows/ci.yml` instead of `release-build.yml`.
 Use the branch or tag you explicitly trust; do not take the expected identity
 from an untrusted download. For a known source revision, also supply
 `--certificate-github-workflow-sha <full-commit-sha>`. GitHub CLI can verify the
