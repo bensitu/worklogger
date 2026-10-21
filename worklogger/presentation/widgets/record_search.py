@@ -104,11 +104,14 @@ class RecordSearchDialog(QDialog):
         self.open_button.setProperty("variant", "primary")
         set_button_icon(self.open_button, "pencil")
         self.close_button = QPushButton(_("Close"))
+        set_button_icon(self.close_button, "x")
         self.associate_button = QPushButton(_("Assign context"))
-        set_button_icon(self.associate_button, "pencil")
+        set_button_icon(self.associate_button, "link")
         self.associate_button.setAutoDefault(False)
         for button in (self.more_button, self.open_button, self.close_button):
             button.setAutoDefault(False)
+        for button in (self.associate_button, self.close_button, self.open_button):
+            button.setProperty("dialog_action", True)
         results_status = QHBoxLayout()
         results_status.addWidget(self.status_label, 1)
         results_status.addWidget(self.more_button)

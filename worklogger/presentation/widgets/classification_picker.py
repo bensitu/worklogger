@@ -142,6 +142,9 @@ class ClassificationPicker(QFrame):
         self.apply_button = QPushButton(_("Apply"))
         self.apply_button.setObjectName("classification_apply_button")
         self.apply_button.setProperty("variant", "primary")
+        for button in (self.cancel_button, self.apply_button):
+            button.setProperty("dialog_action", True)
+        set_button_icon(self.cancel_button, "x")
         set_button_icon(self.apply_button, "check")
         footer.addWidget(self.cancel_button)
         footer.addWidget(self.apply_button)

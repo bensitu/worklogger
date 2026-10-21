@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 from worklogger.infrastructure.i18n import _
 from worklogger.infrastructure.images.avatar import decode_avatar, encode_avatar
 from worklogger.presentation.widgets.assets import apply_window_icon, pixmap_asset
+from worklogger.presentation.widgets.icons import set_button_icon
 
 
 def round_avatar(source, size):
@@ -138,6 +139,9 @@ class AvatarCropDialog(QDialog):
         cancel.clicked.connect(self.reject)
         self.save_button = QPushButton(_("Save"))
         self.save_button.setProperty("variant", "primary")
+        for button, icon in ((cancel, "x"), (self.save_button, "save")):
+            button.setProperty("dialog_action", True)
+            set_button_icon(button, icon)
         self.save_button.clicked.connect(self.accept)
         buttons.addWidget(cancel)
         buttons.addWidget(self.save_button)

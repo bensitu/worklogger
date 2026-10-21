@@ -82,10 +82,14 @@ class ReportTemplateDialog(QDialog):
         self.apply_button = QPushButton(_("Save and apply"))
         self.apply_button.clicked.connect(self.apply_template)
         self.apply_button.setProperty("variant", "primary")
+        set_button_icon(self.apply_button, "check")
         for button in (self.reset_button, self.save_button, self.apply_button):
             row.addWidget(button)
         self.close_button = QPushButton(_("Close"))
         self.close_button.clicked.connect(self.reject)
+        set_button_icon(self.close_button, "x")
+        for button in (self.reset_button, self.save_button, self.apply_button, self.close_button):
+            button.setProperty("dialog_action", True)
         row.addWidget(self.close_button)
         layout.addLayout(row)
 
@@ -263,6 +267,9 @@ class ReportDialog(QDialog):
         self.save_button.setObjectName("save_report_button")
         self.save_button.setProperty("variant", "primary")
         self.close_button = QPushButton(_("Close"))
+        for button, icon in ((self.close_button, "x"), (self.save_button, "save")):
+            button.setProperty("dialog_action", True)
+            set_button_icon(button, icon)
         bottom.addWidget(self.status_label, 1)
         bottom.addStretch()
         bottom.addWidget(self.close_button)

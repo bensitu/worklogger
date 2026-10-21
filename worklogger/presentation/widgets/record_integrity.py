@@ -50,6 +50,9 @@ class RecordIntegrityDialog(QDialog):
         set_button_icon(self.recover_button, "save")
         self.recover_button.clicked.connect(self.recover)
         self.close_button = QPushButton(_("Close"))
+        set_button_icon(self.close_button, "x")
+        for button in (self.refresh_button, self.recover_button, self.close_button):
+            button.setProperty("dialog_action", True)
         self.close_button.setDefault(True)
         self.close_button.clicked.connect(self.reject)
         actions.addWidget(self.refresh_button)

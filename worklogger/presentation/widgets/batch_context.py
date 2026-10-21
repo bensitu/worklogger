@@ -42,9 +42,11 @@ class BatchContextDialog(QDialog):
         footer = QHBoxLayout()
         footer.addStretch()
         self.close_button, self.apply_button = QPushButton(_("Cancel")), QPushButton(_("Apply"))
+        set_button_icon(self.close_button, "x")
         set_button_icon(self.apply_button, "check")
         self.apply_button.setProperty("variant", "primary")
         for button in (self.close_button, self.apply_button):
+            button.setProperty("dialog_action", True)
             button.setAutoDefault(False)
             footer.addWidget(button)
         root.addLayout(footer)

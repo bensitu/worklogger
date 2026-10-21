@@ -1,7 +1,7 @@
 """Compact project and work-item selection for record drafts."""
 
 from PySide6.QtCore import Signal, QSignalBlocker
-from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QVBoxLayout, QWidget, QSizePolicy, QToolButton, QMenu
+from PySide6.QtWidgets import QComboBox, QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget, QSizePolicy, QToolButton, QMenu
 from worklogger.domain.projects.models import WorkContext
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets.icons import set_button_icon
@@ -18,11 +18,12 @@ class WorkContextPicker(QWidget):
         self._snapshot = WorkContext()
         self.project_combo = QComboBox()
         self.work_item_combo = QComboBox()
-        row = QVBoxLayout(self) if vertical else QHBoxLayout(self)
+        row = QVBoxLayout(self) if vertical else QGridLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(8)
-        for field, label, name in ((self.project_combo, _("Project"), "project_combo"),
-                                   (self.work_item_combo, _("Work item"), "work_item_combo")):
+        fields = ((self.project_combo, _("Project"), "project_combo"),
+                  (self.work_item_combo, _("Work item"), "work_item_combo"))
+        for index, (field, label, name) in enumerate(fields):
             field.setObjectName(name)
             field.setAccessibleName(label)
             field.setMinimumWidth(0)
@@ -31,8 +32,6 @@ class WorkContextPicker(QWidget):
             caption = QLabel(label)
             caption.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
             caption.setBuddy(field)
-            column = QVBoxLayout()
-            column.setSpacing(3)
             heading = QHBoxLayout()
             heading.addWidget(caption, 1)
             if field is self.project_combo:
@@ -49,9 +48,17 @@ class WorkContextPicker(QWidget):
                 self.recent_button.setEnabled(False)
                 heading.addWidget(self.recent_button)
             caption.setMinimumHeight(28)
-            column.addLayout(heading)
-            column.addWidget(field)
-            row.addLayout(column, 1)
+            if vertical:
+                column = QVBoxLayout()
+                column.setSpacing(3)
+                column.addLayout(heading)
+                column.addWidget(field)
+                row.addLayout(column, 1)
+            else:
+                row.addLayout(heading, 0, index)
+                row.addWidget(field, 1, index)
+                row.setColumnStretch(index, 1)
+                row.setVerticalSpacing(3)
         self.project_combo.currentIndexChanged.connect(self._project_changed)
         self.work_item_combo.currentIndexChanged.connect(self._item_changed)
         self.set_context(WorkContext())

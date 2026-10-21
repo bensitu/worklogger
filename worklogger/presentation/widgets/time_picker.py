@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QDialog, QHBoxLayout, QPushButton, QTimeEdit, QVBo
 from worklogger.domain.worklog.rules import parse_time
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets.assets import apply_window_icon
+from worklogger.presentation.widgets.icons import set_button_icon
 
 
 class TimePickerDialog(QDialog):
@@ -35,6 +36,9 @@ class TimePickerDialog(QDialog):
         self.select_button.setObjectName("manual_time_picker_select_button")
         self.select_button.setProperty("variant", "primary")
         self.select_button.setDefault(True)
+        for button, icon in ((self.close_button, "x"), (self.select_button, "check")):
+            button.setProperty("dialog_action", True)
+            set_button_icon(button, icon)
         self.select_button.clicked.connect(self.accept)
         row.addWidget(self.select_button)
         root.addLayout(row)

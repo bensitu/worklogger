@@ -56,6 +56,9 @@ class EndTimerDialog(QDialog):
         footer = QHBoxLayout()
         self.cancel_button = QPushButton(_("Cancel"))
         self.end_button = QPushButton(_("End"))
+        for button in (self.cancel_button, self.end_button):
+            button.setProperty("dialog_action", True)
+        set_button_icon(self.cancel_button, "x")
         self.end_button.setProperty("variant", "primary")
         set_button_icon(self.end_button, "check")
         self.cancel_button.setAutoDefault(False)

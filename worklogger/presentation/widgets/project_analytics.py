@@ -81,9 +81,12 @@ class ProjectAnalyticsDialog(QDialog):
         footer = QHBoxLayout()
         footer.addStretch()
         close = QPushButton(_("Close"))
+        set_button_icon(close, "x")
         self.detail_button = QPushButton(_("View records"))
         self.detail_button.setProperty("variant", "primary")
         set_button_icon(self.detail_button, "search")
+        for button in (close, self.detail_button):
+            button.setProperty("dialog_action", True)
         footer.addWidget(close)
         footer.addWidget(self.detail_button)
         root.addLayout(footer)

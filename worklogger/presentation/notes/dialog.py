@@ -184,9 +184,12 @@ class NoteEditorDialog(QDialog):
         set_button_icon(self.delete_button, "trash")
         tools.addWidget(self.delete_button)
         self.close_button = QPushButton(_("Close"))
+        set_button_icon(self.close_button, "x")
         self.save_button = QPushButton(_("Save"))
         self.save_button.setProperty("variant", "primary")
         set_button_icon(self.save_button, "save")
+        for button in (self.delete_button, self.close_button, self.save_button):
+            button.setProperty("dialog_action", True)
         for button in (self.rewrite_button, self.copy_button, self.export_button, self.reload_button,
                        self.close_button, self.save_button, self.delete_button):
             button.setMinimumHeight(36)

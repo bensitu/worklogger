@@ -11,6 +11,12 @@ QToolButton {
   padding: {{ control_padding_vertical }} 14px;
 }
 
+QPushButton[dialog_action="true"],
+QDialogButtonBox QPushButton {
+  min-height: {{ control_min_height }};
+  max-height: {{ control_min_height }};
+}
+
 QPushButton:hover:enabled,
 QToolButton:hover:enabled,
 QPushButton[segment="true"]:hover:enabled {
