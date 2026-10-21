@@ -21,6 +21,7 @@ TARGETS = {
 }
 CHECKS = {"--smoke-import", "--smoke-startup", "--smoke-workflows", "--smoke-local-model-runtime"}
 SIGNATURE_FILES = {"SHA256SUMS.sigstore.json", "SHA256SUMS.provenance.json"}
+RELEASE_PYTHON = "3.14"
 
 
 def checksum(path):
@@ -63,7 +64,7 @@ def checked_files(directory, tag, commit, *, source_root=ROOT, staged=False):
                 or build["application_version"] != APP_VERSION or build["source_revision"] != commit
                 or build["source_dirty"] is not False or build["local_inference"] is not True
                 or target["system"] != system or target["machine"].lower() != machine
-                or target["python"].split(".")[:2] != ["3", "12"] or target["implementation"] != "CPython"
+                or target["python"].split(".")[:2] != RELEASE_PYTHON.split(".") or target["implementation"] != "CPython"
                 or lock["target"] != target or build["dependency_lock_digest"] != checksum(lock_path)
                 or packaged["name"] != archive.name or packaged["sha256"] != checksum(archive)):
             raise ValueError(f"Release build identity or checksum differs for {name}")

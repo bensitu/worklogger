@@ -15,8 +15,8 @@ To try the current development branch without installing Python:
 1. Open [Continuous Integration for dev-v4](https://github.com/bensitu/worklogger/actions/workflows/ci.yml?query=branch%3Adev-v4).
    Choose a successful run and check its source commit. Artifacts represent that
    commit, not later unpushed local changes.
-2. Under Artifacts, choose the matching platform and Python 3.12 build when
-   available, such as `WorkLogger-Windows-x64-Python-3.12-Attempt-1`. The attempt
+2. Under Artifacts, choose the matching platform and Python 3.14 build when
+   available, such as `WorkLogger-Windows-x64-Python-3.14-Attempt-1`. The attempt
    number varies. Downloading artifacts requires GitHub access, and older
    artifacts may have expired. They are development builds, not published releases.
 3. Extract the downloaded artifact, then extract the application archive inside
@@ -67,7 +67,7 @@ switching backend build profiles does not retain an older same-version binary.
 To build and capture a complete Windows target:
 
 ```powershell
-python -m venv .venv-release
+py -3.14 -m venv .venv-release
 .venv-release\Scripts\python.exe -m pip install -r requirements.txt -r requirements-build.txt
 .venv-release\Scripts\python.exe scripts/install_native_dependencies.py
 .venv-release\Scripts\python.exe scripts/i18n/i18n_compile.py
@@ -120,8 +120,12 @@ Enable **validate_only** to run the full verification and prepare release files
 without creating a tag or release.
 
 The workflow reuses CI's twelve Python/platform combinations. It selects the
-verified Python 3.12 Windows x64, Linux x64, and macOS ARM64 archives for
-distribution. Before creating a tag, it checks the source commit, version,
+verified Python 3.14 Windows x64, Linux x64, and macOS ARM64 archives for
+distribution. Python 3.14 jobs check for the latest stable patch available from
+`actions/setup-python`, rather than relying only on the runner's cached version.
+Exact patch versions are recorded in each target lock and verification report.
+Python 3.11 through 3.13 remain compatibility targets and are not substituted for
+missing 3.14 release artifacts. Before creating a tag, it checks the source commit, version,
 dependency locks, native backend inclusion, runtime verification results, and
 archive checksums. Release files include the archives, verification reports,
 platform-specific dependency locks, `SHA256SUMS`, a Cosign verification bundle,

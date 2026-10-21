@@ -47,6 +47,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           architecture: ${{ matrix.architecture }}
+          check-latest: ${{ matrix.python == '3.14' }}
           cache: pip
           cache-dependency-path: |
             requirements.txt
@@ -84,7 +85,7 @@ jobs:
           faulthandler.dump_traceback_later(300, repeat=True);
           unittest.main(module=None, argv=['unittest', 'discover', '-s', 'tests', '-t', '.', '-p', 'test_*.py', '-v'])"
       - name: Time zone and language compatibility
-        if: runner.os == 'Linux' && matrix.python == '3.12'
+        if: runner.os == 'Linux' && matrix.python == '3.14'
         env:
           TZ: America/New_York
           WORKLOGGER_LANG: ja_JP
@@ -141,6 +142,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           architecture: ${{ matrix.architecture }}
+          check-latest: ${{ matrix.python == '3.14' }}
           cache: pip
           cache-dependency-path: |
             requirements.txt
@@ -205,7 +207,8 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
-          python-version: '3.12'
+          python-version: '3.14'
+          check-latest: true
       - name: Prepare and sign verified distribution files
         uses: ./.github/actions/prepare-distribution
         with:
@@ -221,7 +224,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.11', '3.12']
+        python: ['3.11', '3.14']
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -232,6 +235,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: ${{ matrix.python }}
+          check-latest: ${{ matrix.python == '3.14' }}
       - name: Check dependency vulnerabilities
         uses: pypa/gh-action-pip-audit@1220774d901786e6f652ae159f7b6bc8fea6d266 # v1.1.0
         with:

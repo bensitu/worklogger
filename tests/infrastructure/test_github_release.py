@@ -78,7 +78,7 @@ class GitHubReleaseTests(unittest.TestCase):
             prefix = f"WorkLogger-{name}"
             archive = folder / (prefix + extension)
             archive.write_bytes(b"Synthetic verified archive")
-            target = {"system": system, "machine": machine, "python": "3.12.7", "implementation": "CPython"}
+            target = {"system": system, "machine": machine, "python": "3.14.8", "implementation": "CPython"}
             packages = [{"name": "llama-cpp-python", "version": "0.3.36", "sha256": "b" * 64}]
             inputs = {}
             for filename in ("requirements.txt", "requirements-build.txt", "requirements-ai.txt", "requirements/native-artifacts.json"):
@@ -115,6 +115,7 @@ class GitHubReleaseTests(unittest.TestCase):
             ("source_revision", "c" * 40), ("application_version", "0.0.0"),
             ("source_dirty", True), ("local_inference", False),
             ("target", original["build"]["target"] | {"python": "3.11.9"}),
+            ("target", original["build"]["target"] | {"python": "3.12.10"}),
         )
         for key, value in changes:
             with self.subTest(field=key):
@@ -147,6 +148,22 @@ class GitHubReleaseTests(unittest.TestCase):
         (self.output / "WorkLogger-Linux-x64.lock.txt").unlink()
         with self.assertRaises(ValueError):
             release_assets.validate_assets(self.output, TAG, COMMIT)
+
+    def test_release_rejects_other_python_series_with_matching_dependency_locks(self):
+        report_path, original = self.reports["Windows-x64"]
+        lock_path = self.builds / "Windows-x64" / "target.lock.json"
+        original_lock = json.loads(lock_path.read_text(encoding="utf-8"))
+        for version in ("3.12.10", "3.13.16", "3.15.0"):
+            with self.subTest(version=version):
+                report, lock = deepcopy(original), deepcopy(original_lock)
+                report["build"]["target"]["python"] = version
+                lock["target"]["python"] = version
+                lock_path.write_text(json.dumps(lock), encoding="utf-8")
+                report["build"]["dependency_lock_digest"] = release_assets.checksum(lock_path)
+                report_path.write_text(json.dumps(report), encoding="utf-8")
+                with self.assertRaises(ValueError):
+                    self.prepare()
+                self.assertFalse(self.output.exists())
 
     def test_changed_dependency_input_or_text_lock_is_rejected(self):
         folder = self.builds / "Windows-x64"
@@ -224,12 +241,16 @@ class GitHubReleaseTests(unittest.TestCase):
     def test_artifact_selection_recovers_mixed_attempts_and_rejects_wrong_commit_or_expiration(self):
         artifacts = []
         for identifier, platform in enumerate(("Windows-x64", "Linux-x64", "macOS-arm64"), 1):
-            artifacts.append({"id": identifier, "name": f"WorkLogger-{platform}-Python-3.12-Attempt-1",
+            artifacts.append({"id": identifier, "name": f"WorkLogger-{platform}-Python-3.14-Attempt-1",
                               "expired": False, "workflow_run": {"head_sha": COMMIT}})
-        artifacts.append(artifacts[0] | {"id": 4, "name": "WorkLogger-Windows-x64-Python-3.12-Attempt-2"})
+        artifacts.append(artifacts[0] | {"id": 4, "name": "WorkLogger-Windows-x64-Python-3.14-Attempt-2"})
+        artifacts.append(artifacts[0] | {"id": 5, "name": "WorkLogger-Windows-x64-Python-3.12-Attempt-2"})
         client = MemoryGitHub()
         with patch.object(client, "request", side_effect=[{"head_sha": COMMIT}, [{"artifacts": artifacts}]]):
             self.assertEqual(github_release.select_artifacts(client, 42, 2, COMMIT, "builds"), {"windows": 4, "linux": 2, "macos": 3})
+        older_windows = [item for item in artifacts if item["id"] not in {1, 4}]
+        with patch.object(client, "request", side_effect=[{"head_sha": COMMIT}, [{"artifacts": older_windows}]]), self.assertRaises(ValueError):
+            github_release.select_artifacts(client, 42, 2, COMMIT, "builds")
         with patch.object(client, "request", return_value={"head_sha": "c" * 40}), self.assertRaises(ValueError):
             github_release.select_artifacts(client, 42, 2, COMMIT, "builds")
         artifacts[1]["expired"] = True

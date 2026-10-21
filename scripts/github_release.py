@@ -12,7 +12,7 @@ import sys
 from urllib.parse import quote
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from scripts.release_assets import checksum, validate_assets, validate_identity
+from scripts.release_assets import RELEASE_PYTHON, checksum, validate_assets, validate_identity
 
 
 class GitHubClient:
@@ -87,9 +87,9 @@ def select_artifacts(client, run_id, attempt, commit, kind):
     if run_id < 1 or attempt < 1 or client.request(f"actions/runs/{run_id}")["head_sha"] != commit:
         raise ValueError("Artifacts must belong to the requested workflow run and commit")
     prefixes = ({"release": "WorkLogger-Release-Files"} if kind == "release" else {
-        "windows": "WorkLogger-Windows-x64-Python-3.12",
-        "linux": "WorkLogger-Linux-x64-Python-3.12",
-        "macos": "WorkLogger-macOS-arm64-Python-3.12",
+        "windows": f"WorkLogger-Windows-x64-Python-{RELEASE_PYTHON}",
+        "linux": f"WorkLogger-Linux-x64-Python-{RELEASE_PYTHON}",
+        "macos": f"WorkLogger-macOS-arm64-Python-{RELEASE_PYTHON}",
     })
     pages = client.request(f"actions/runs/{run_id}/artifacts?per_page=100", paginate=True)
     artifacts = [artifact for page in pages for artifact in page["artifacts"] if not artifact["expired"]]

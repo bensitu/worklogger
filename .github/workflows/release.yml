@@ -31,7 +31,8 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
-          python-version: '3.12'
+          python-version: '3.14'
+          check-latest: true
       - name: Validate version and existing release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -67,7 +68,8 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
-          python-version: '3.12'
+          python-version: '3.14'
+          check-latest: true
       - name: Prepare and sign verified release files
         uses: ./.github/actions/prepare-distribution
         with:
@@ -95,7 +97,8 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
-          python-version: '3.12'
+          python-version: '3.14'
+          check-latest: true
       - name: Select verified release artifact
         id: artifact
         env:
