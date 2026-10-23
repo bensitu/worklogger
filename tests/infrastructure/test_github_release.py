@@ -55,7 +55,7 @@ class MemoryGitHub:
 
 class GitHubReleaseTests(unittest.TestCase):
     def test_signature_verification_binds_release_workflow_and_source_commit(self):
-        workflow = "example/app/.github/workflows/release-build.yml@refs/heads/dev-v4"
+        workflow = "example/app/.github/workflows/release-build.yml@refs/heads/develop"
         with patch.dict(github_release.os.environ, {"GITHUB_WORKFLOW_REF": workflow}), \
                 patch.object(github_release.subprocess, "run") as run:
             github_release.verify_release_signature(Path("assets"), COMMIT, "example/app")

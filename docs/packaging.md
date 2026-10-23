@@ -13,7 +13,7 @@ listed below; older versions can have different layouts and features.
 
 To run a specific source revision without installing Python:
 
-1. Open [Continuous Integration for dev-v4](https://github.com/bensitu/worklogger/actions/workflows/ci.yml?query=branch%3Adev-v4).
+1. Open [Continuous Integration for develop](https://github.com/bensitu/worklogger/actions/workflows/ci.yml?query=branch%3Adevelop).
    Choose a successful run and check its source commit. Artifacts represent that
    commit, not later unpushed local changes.
 2. Under Artifacts, choose the matching platform and Python 3.14 build when

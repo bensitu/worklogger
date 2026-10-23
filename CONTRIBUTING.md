@@ -7,6 +7,9 @@ and [code of conduct](CODE_OF_CONDUCT.md). Use a virtual environment and synthet
 or temporary data. Do not include personal databases, credentials, exports,
 downloaded models, or generated distributions in a contribution.
 
+Use `develop` as the base and target branch for development contributions.
+The `main` branch is used for releases; `legacy/v3` retains the version 3 history.
+
 ## Design and Code
 
 - Keep domain calculations independent of Qt, SQLite, and network clients.

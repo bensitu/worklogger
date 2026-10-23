@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
   pull_request:
   push:
-    branches: [main, master, dev-v4]
+    branches: [main, master, develop]
 
 permissions:
   contents: read
