@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
+from worklogger.app.job_runner import CancellationToken
 
 from worklogger.app.commands.calendar_commands import ImportCalendarEventsCommand
 from worklogger.app.ports import BackupService, WorkLogCsvExporter, WorkLogIcsExporter
@@ -34,7 +35,8 @@ class IcsImportHandler(Protocol):
 
 class WorkLogCsvImportHandler(Protocol):
     def preview(self, command: ImportWorkLogsCsvCommand) -> Result[WorkLogCsvImportPreview]: ...
-    def apply(self, preview: WorkLogCsvImportPreview, *, overwrite: bool = False, replace_dates: bool = False) -> Result[WorkLogCsvImportResult]: ...
+    def apply(self, preview: WorkLogCsvImportPreview, *, overwrite: bool = False, replace_dates: bool = False,
+              cancellation: CancellationToken | None = None) -> Result[WorkLogCsvImportResult]: ...
     def handle(self, command: ImportWorkLogsCsvCommand) -> Result[WorkLogCsvImportResult]:
         ...
 
@@ -161,23 +163,26 @@ class DataManagementViewModel:
             )
         )
 
-    def preview_csv(self, source: Path) -> Result[WorkLogCsvImportPreview]:
+    def preview_csv(self, source: Path, *, cancellation: CancellationToken | None = None) -> Result[WorkLogCsvImportPreview]:
         if self._csv_import_handler is None:
             return Result.failure(ValidationError("csv_import_unavailable", "csv_import_unavailable"))
-        return self._csv_import_handler.preview(ImportWorkLogsCsvCommand(self._user_id, Path(source)))
+        return self._csv_import_handler.preview(ImportWorkLogsCsvCommand(self._user_id, Path(source), cancellation=cancellation))
 
     def import_csv(self, source: Path, *, preview: WorkLogCsvImportPreview | None = None,
-                   overwrite: bool = False, replace_dates: bool = False) -> Result[DataManagementActionState]:
+                   overwrite: bool = False, replace_dates: bool = False,
+                   cancellation: CancellationToken | None = None) -> Result[DataManagementActionState]:
         if self._csv_import_handler is None:
             return Result.failure(
                 ValidationError("csv_import_unavailable", "csv_import_unavailable")
             )
-        result = self._csv_import_handler.apply(preview, overwrite=overwrite, replace_dates=replace_dates) if preview is not None else self._csv_import_handler.handle(
+        options = {"cancellation": cancellation} if cancellation is not None else {}
+        result = self._csv_import_handler.apply(preview, overwrite=overwrite, replace_dates=replace_dates, **options) if preview is not None else self._csv_import_handler.handle(
             ImportWorkLogsCsvCommand(
                 user_id=self._user_id,
                 source_path=Path(source),
                 overwrite_existing=overwrite,
                 replace_dates=replace_dates,
+                cancellation=cancellation,
             )
         )
         if not result.ok or result.value is None:
@@ -204,6 +209,7 @@ class DataManagementViewModel:
         source: Path,
         *,
         replace_existing: bool,
+        cancellation: CancellationToken | None = None,
     ) -> Result[DataManagementActionState]:
         if self._ics_import_handler is None:
             return Result.failure(
@@ -214,6 +220,7 @@ class DataManagementViewModel:
                 user_id=self._user_id,
                 source_path=Path(source),
                 replace_existing=replace_existing,
+                cancellation=cancellation,
             )
         )
         if not result.ok or result.value is None:

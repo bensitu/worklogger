@@ -125,7 +125,7 @@ class FakeDataManagementViewModel:
             )
         )
 
-    def preview_csv(self, source: Path):
+    def preview_csv(self, source: Path, *, cancellation=None):
         return Result.success(WorkLogCsvImportPreview(()))
 
     def import_csv(self, source: Path, **kwargs) -> Result[DataManagementActionState]:
@@ -158,6 +158,7 @@ class FakeDataManagementViewModel:
         source: Path,
         *,
         replace_existing: bool,
+        cancellation=None,
     ) -> Result[DataManagementActionState]:
         action = "ics_import_replace" if replace_existing else "ics_import_append"
         self.calls.append((action, Path(source)))

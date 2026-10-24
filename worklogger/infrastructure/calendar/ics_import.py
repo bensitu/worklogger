@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, time, timedelta, tzinfo
 from pathlib import Path
+from collections.abc import Callable
 
 from icalendar import Calendar
 import recurring_ical_events
@@ -11,7 +12,7 @@ from tzlocal import get_localzone
 
 from worklogger.config.constants import ICS_MAX_BYTES
 from worklogger.domain.calendar.models import CalendarEvent
-from worklogger.domain.shared.errors import InfrastructureError, ValidationError
+from worklogger.domain.shared.errors import CancellationError, InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.calendar.recurrence import prepare_recurrence_calendar
 
@@ -23,7 +24,10 @@ class IcsCalendarImporter:
         self._max_events = int(max_events)
         self._timezone = local_timezone
 
-    def read_events(self, source: Path, *, user_id: int) -> Result[tuple[CalendarEvent, ...]]:
+    def read_events(self, source: Path, *, user_id: int,
+                    is_cancelled: Callable[[], bool] | None = None) -> Result[tuple[CalendarEvent, ...]]:
+        if is_cancelled is not None and is_cancelled():
+            return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
         try:
             with Path(source).open("rb") as handle:
                 raw = handle.read(self._max_bytes + 1)
@@ -36,6 +40,8 @@ class IcsCalendarImporter:
             if calendar.name != "VCALENDAR":
                 raise ValueError("ics_import_failed")
             for component in calendar.walk("VEVENT"):
+                if is_cancelled is not None and is_cancelled():
+                    return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
                 for field, maximum in (("SUMMARY", 1024), ("DESCRIPTION", 65536), ("LOCATION", 4096)):
                     if len(str(component.get(field, "")).encode("utf-8")) > maximum:
                         raise ValueError("ics_file_too_large")
@@ -56,11 +62,15 @@ class IcsCalendarImporter:
             calendar = prepare_recurrence_calendar(calendar, self._max_events)
             events = []
             for index, component in enumerate(recurring_ical_events.of(calendar).all()):
+                if is_cancelled is not None and is_cancelled():
+                    return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
                 if index >= self._max_events:
                     raise ValueError("ics_file_too_large")
                 if str(component.get("STATUS", "")).upper() == "CANCELLED":
                     continue
                 for event in _daily_events(component, user_id, Path(source).name, zone):
+                    if is_cancelled is not None and is_cancelled():
+                        return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
                     events.append(event)
                     if len(events) > self._max_events:
                         raise ValueError("ics_file_too_large")

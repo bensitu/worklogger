@@ -236,6 +236,11 @@ cancels and drains all pools.
 
 Cancellation is cooperative. Controllers reject stale results and completions
 for disposed owners; cancellation does not forcibly stop a native call.
+CSV and calendar imports check cancellation during parsing and before writing.
+Once an atomic database write or file replacement begins, it completes or rolls
+back through its storage contract; completion is not relabelled as cancellation
+after data has been committed. SQLite backup, integrity validation, and bounded
+third-party calendar expansion must return before shutdown can finish waiting.
 `ImmediateJobRunner` supplies deterministic behavior for isolated tests.
 
 SQLite connections are short-lived. The connection factory serializes writes;

@@ -6,10 +6,12 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
 from typing import Protocol
+from collections.abc import Callable
 
+from worklogger.app.job_runner import CancellationToken
 from worklogger.app.commands.data_portability_commands import ImportWorkLogsCsvCommand
 from worklogger.app.use_cases._errors import infrastructure_failure
-from worklogger.domain.shared.errors import ValidationError
+from worklogger.domain.shared.errors import CancellationError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog, WorkModeValue
 from worklogger.domain.projects.models import WorkContext
@@ -62,7 +64,7 @@ class WorkLogCsvImportPreview:
 
 
 class WorkLogCsvImporter(Protocol):
-    def parse(self, source: Path, user_id: int) -> Result[WorkLogCsvParseResult]:
+    def parse(self, source: Path, user_id: int, *, is_cancelled: Callable[[], bool] | None = None) -> Result[WorkLogCsvParseResult]:
         ...
 
 
@@ -80,10 +82,12 @@ class ImportWorkLogsCsvHandler:
         preview = self.preview(command)
         if not preview.ok or preview.value is None:
             return Result.failure(preview.error or ValidationError("csv_import_failed", "csv_import_failed"))
-        return self.apply(preview.value, overwrite=command.overwrite_existing, replace_dates=command.replace_dates)
+        return self.apply(preview.value, overwrite=command.overwrite_existing, replace_dates=command.replace_dates,
+                          cancellation=command.cancellation)
 
     def preview(self, command: ImportWorkLogsCsvCommand) -> Result[WorkLogCsvImportPreview]:
-        parsed = self._importer.parse(Path(command.source_path), command.user_id)
+        options = {"is_cancelled": command.cancellation.is_cancelled} if command.cancellation is not None else {}
+        parsed = self._importer.parse(Path(command.source_path), command.user_id, **options)
         if not parsed.ok or parsed.value is None:
             return Result.failure(parsed.error or ValidationError("csv_import_failed", "csv_import_failed"))
         rows = []
@@ -92,6 +96,8 @@ class ImportWorkLogsCsvHandler:
         timed_dates, untimed_dates, note_dates = set(), set(), set()
         errors = list(parsed.value.errors)
         for row in parsed.value.rows:
+            if command.cancellation is not None and command.cancellation.is_cancelled():
+                return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
             try:
                 work_log = normalize_work_log(
                     WorkLog(
@@ -113,6 +119,8 @@ class ImportWorkLogsCsvHandler:
                 errors.append(WorkLogCsvRowError(row.row_number, str(exc)))
         intervals = EntryIntervalIndex(record for _row, record in candidates)
         for row, work_log in candidates:
+            if command.cancellation is not None and command.cancellation.is_cancelled():
+                return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
             try:
                 if work_log.is_note_only:
                     if row.day in note_dates:
@@ -145,7 +153,9 @@ class ImportWorkLogsCsvHandler:
         return Result.success(WorkLogCsvImportPreview(tuple(rows), tuple(errors), len(existing & dates)))
 
     def apply(self, preview: WorkLogCsvImportPreview, *, overwrite: bool = False,
-              replace_dates: bool = False) -> Result[WorkLogCsvImportResult]:
+              replace_dates: bool = False, cancellation: CancellationToken | None = None) -> Result[WorkLogCsvImportResult]:
+        if cancellation is not None and cancellation.is_cancelled():
+            return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
         try:
             self._repository.import_many(preview.rows, overwrite=overwrite, replace_dates=replace_dates)
         except ValueError as exc:

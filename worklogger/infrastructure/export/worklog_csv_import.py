@@ -6,13 +6,14 @@ import csv
 from datetime import date, datetime
 from pathlib import Path
 import io
+from collections.abc import Callable
 
 from worklogger.app.use_cases.data_portability import (
     WorkLogCsvParseResult,
     WorkLogCsvRowDraft,
     WorkLogCsvRowError,
 )
-from worklogger.domain.shared.errors import InfrastructureError, ValidationError
+from worklogger.domain.shared.errors import CancellationError, InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import get_language
 from worklogger.infrastructure.export.csv_text import decode_text
@@ -25,8 +26,10 @@ class WorkLogCsvImporter:
         self._max_rows = max_rows
         self._encoding = encoding
 
-    def parse(self, source: Path, user_id: int) -> Result[WorkLogCsvParseResult]:
+    def parse(self, source: Path, user_id: int, *, is_cancelled: Callable[[], bool] | None = None) -> Result[WorkLogCsvParseResult]:
         del user_id
+        if is_cancelled is not None and is_cancelled():
+            return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
         path = Path(source)
         rows: list[WorkLogCsvRowDraft] = []
         errors: list[WorkLogCsvRowError] = []
@@ -51,6 +54,8 @@ class WorkLogCsvImporter:
                 if not ({"date", "d"} & set(headers)):
                     return Result.failure(ValidationError("csv_import_failed", "csv_import_failed"))
                 for row_number, row in enumerate(reader, start=2):
+                    if is_cancelled is not None and is_cancelled():
+                        return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
                     if row_number > self._max_rows + 1:
                         return Result.failure(ValidationError("csv_file_too_large", "csv_file_too_large"))
                     parsed = _parse_row(row_number, row)

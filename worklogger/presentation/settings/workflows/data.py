@@ -9,7 +9,7 @@ from weakref import ref
 from PySide6.QtWidgets import QWidget
 from shiboken6 import isValid
 
-from worklogger.app.job_runner import JobHandle
+from worklogger.app.job_runner import CancellationToken, JobHandle
 from worklogger.app.use_cases.data_portability import WorkLogCsvImportPreview
 from worklogger.domain.shared.errors import AppError, CancellationError, InfrastructureError
 from worklogger.domain.shared.result import Result
@@ -88,7 +88,7 @@ class DataSettingsWorkflow:
         return self._run_data_job(
             dialog,
             _("Backup Data"),
-            lambda: self._data_management_view_model.backup_database(path),
+            lambda _token: self._data_management_view_model.backup_database(path),
             lambda state: _("Backup saved: {path}").format(path=state.path),
             _("Backing up data..."),
         )
@@ -110,7 +110,7 @@ class DataSettingsWorkflow:
             return self._submit(
                 dialog,
                 "restore_validate",
-                lambda: self._data_management_view_model.validate_restore_database(path),
+                lambda _token: self._data_management_view_model.validate_restore_database(path),
                 lambda current, result: self._restore_validated(current, path, result),
                 attribute="_restore_validation_handle",
             )
@@ -140,7 +140,7 @@ class DataSettingsWorkflow:
         restored = self._run_data_job(
             dialog,
             _("Restore Data"),
-            lambda: self._data_management_view_model.restore_database(path),
+            lambda _token: self._data_management_view_model.restore_database(path),
             lambda _state: _("Data restored successfully."),
             _("Restoring data..."),
         )
@@ -160,7 +160,7 @@ class DataSettingsWorkflow:
         return self._run_data_job(
             dialog,
             _("Export CSV"),
-            lambda: self._data_management_view_model.export_csv(path),
+            lambda _token: self._data_management_view_model.export_csv(path),
             lambda state: _("Exported {count} records.").format(
                 count=state.record_count
             ),
@@ -186,7 +186,7 @@ class DataSettingsWorkflow:
         return self._submit(
             dialog,
             "csv_preview",
-            lambda: self._data_management_view_model.preview_csv(path),
+            lambda token: self._data_management_view_model.preview_csv(path, cancellation=token),
             lambda current, result: self._complete_csv_preview(current, path, result),
         )
 
@@ -209,9 +209,10 @@ class DataSettingsWorkflow:
         return self._run_data_job(
             dialog,
             _("Import CSV"),
-            lambda: self._data_management_view_model.import_csv(
+            lambda token: self._data_management_view_model.import_csv(
                 path, preview=preview, overwrite=preview.existing_date_count > 0,
                 replace_dates=mode == "replace_dates",
+                cancellation=token,
             ),
             lambda state: _("Imported {count} records.").format(
                 count=state.record_count
@@ -227,7 +228,7 @@ class DataSettingsWorkflow:
         return self._run_data_job(
             dialog,
             _("Export .ics"),
-            lambda: self._data_management_view_model.export_ics(path),
+            lambda _token: self._data_management_view_model.export_ics(path),
             lambda state: _("Exported {count} events.").format(
                 count=state.record_count
             ),
@@ -244,7 +245,7 @@ class DataSettingsWorkflow:
             return False
         if self._job_runner is not None:
             _set_busy(dialog, "data", True)
-            return self._submit(dialog, "calendar_import_preview", self._data_management_view_model.calendar_event_count,
+            return self._submit(dialog, "calendar_import_preview", lambda _token: self._data_management_view_model.calendar_event_count(),
                                 lambda current, count: self._complete_ics_preview(current, path, count))
         return self._complete_ics_preview(dialog, path, self._data_management_view_model.calendar_event_count())
 
@@ -268,9 +269,10 @@ class DataSettingsWorkflow:
         return self._run_data_job(
             dialog,
             _("Import .ics"),
-            lambda: self._data_management_view_model.import_ics(
+            lambda token: self._data_management_view_model.import_ics(
                 path,
                 replace_existing=replace_existing,
+                cancellation=token,
             ),
             lambda state: (
                 _("No events found.")
@@ -321,12 +323,12 @@ class DataSettingsWorkflow:
         self,
         dialog: QWidget,
         title: str,
-        job: Callable[[], Result[DataManagementActionState]],
+        job: Callable[[CancellationToken], Result[DataManagementActionState]],
         success_message: Callable[[DataManagementActionState], str],
         busy_message: str,
     ) -> bool:
         if self._job_runner is None:
-            return self._handle_data_result(dialog, title, job(), success_message)
+            return self._handle_data_result(dialog, title, job(CancellationToken()), success_message)
         if (
             self._data_job_handle is not None
             or self._restore_validation_handle is not None
@@ -358,7 +360,7 @@ class DataSettingsWorkflow:
                 completed(current, result)
 
         try:
-            handle = self._job_runner.submit(name, lambda _token: operation(), on_complete=done)
+            handle = self._job_runner.submit(name, operation, on_complete=done)
         except Exception:
             done(Result.failure(InfrastructureError("background_job_failed", "background_job_failed")))
             return False

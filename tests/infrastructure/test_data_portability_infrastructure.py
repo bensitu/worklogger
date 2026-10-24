@@ -33,6 +33,45 @@ from worklogger.infrastructure.security import PBKDF2PasswordHasher
 
 
 class DataPortabilityInfrastructureTests(unittest.TestCase):
+    def test_cancelled_import_parsing_and_preview_do_not_change_records(self):
+        from worklogger.app.commands.calendar_commands import ImportCalendarEventsCommand
+        from worklogger.app.job_runner import CancellationToken
+        from worklogger.app.use_cases.calendar import ImportCalendarEventsHandler
+        from worklogger.domain.shared.errors import CancellationError
+        from worklogger.infrastructure.calendar.ics_import import IcsCalendarImporter
+        from worklogger.infrastructure.repositories import SQLiteCalendarEventRepository
+
+        user = self.register_user("cancelled-import")
+        csv_source = Path(self._tempdir.name) / "cancelled.csv"
+        csv_source.write_text("date,start,end\n2026-05-01,09:00,10:00\n2026-05-02,09:00,10:00\n", encoding="utf-8")
+        ics_source = Path(self._tempdir.name) / "cancelled.ics"
+        ics_source.write_text("BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:one\nDTSTART:20260501T090000\nDTEND:20260501T100000\nSUMMARY:Meeting\nEND:VEVENT\nEND:VCALENDAR\n", encoding="utf-8")
+        records = SQLiteWorkLogRepository(self.factory)
+        calendar = SQLiteCalendarEventRepository(self.factory)
+        calls = []
+
+        def is_cancelled():
+            calls.append(True)
+            return len(calls) >= 3
+
+        for importer, source, method in ((WorkLogCsvImporter(), csv_source, "parse"),
+                                          (IcsCalendarImporter(), ics_source, "read_events")):
+            calls.clear()
+            result = getattr(importer, method)(source, user_id=user, is_cancelled=is_cancelled)
+            self.assertIsInstance(result.error, CancellationError)
+
+        token = CancellationToken()
+        csv_handler = ImportWorkLogsCsvHandler(importer=WorkLogCsvImporter(), repository=records)
+        preview = csv_handler.preview(ImportWorkLogsCsvCommand(user, csv_source)).value
+        token.cancel()
+        result = csv_handler.apply(preview, cancellation=token)
+        self.assertIsInstance(result.error, CancellationError)
+        result = ImportCalendarEventsHandler(calendar, IcsCalendarImporter()).handle(
+            ImportCalendarEventsCommand(user, ics_source, cancellation=token))
+        self.assertIsInstance(result.error, CancellationError)
+        self.assertEqual(records.list_all(user), ())
+        self.assertEqual(calendar.count(user), 0)
+
     def test_daily_saves_keep_record_content_separate_from_notes_and_check_previous_content(self):
         from worklogger.infrastructure.repositories import SQLiteDailyNoteRepository
         user = self.register_user("content-owner")

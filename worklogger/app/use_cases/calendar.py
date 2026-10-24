@@ -7,6 +7,7 @@ from worklogger.app.use_cases._errors import infrastructure_failure
 from pathlib import Path
 from datetime import date
 from typing import Protocol
+from collections.abc import Callable
 
 from worklogger.app.commands.calendar_commands import ImportCalendarEventsCommand
 from worklogger.app.use_cases._errors import storage_boundary
@@ -20,7 +21,7 @@ from worklogger.domain.calendar.repositories import (
     CalendarEventRepository,
     HolidayProvider,
 )
-from worklogger.domain.shared.errors import ValidationError
+from worklogger.domain.shared.errors import CancellationError, ValidationError
 from worklogger.domain.shared.result import Result
 
 
@@ -30,6 +31,7 @@ class CalendarEventImporter(Protocol):
         source: Path,
         *,
         user_id: int,
+        is_cancelled: Callable[[], bool] | None = None,
     ) -> Result[tuple[CalendarEvent, ...]]:
         ...
 
@@ -95,14 +97,18 @@ class ImportCalendarEventsHandler:
         self._importer = importer
 
     def handle(self, command: ImportCalendarEventsCommand) -> Result[int]:
+        options = {"is_cancelled": command.cancellation.is_cancelled} if command.cancellation is not None else {}
         events = self._importer.read_events(
             Path(command.source_path),
             user_id=command.user_id,
+            **options,
         )
         if not events.ok or events.value is None:
             return Result.failure(
                 events.error or ValidationError("ics_import_failed", "ics_import_failed")
             )
+        if command.cancellation is not None and command.cancellation.is_cancelled():
+            return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
         try:
             operation = self._repository.replace_all if command.replace_existing else self._repository.add_many
             imported = operation(command.user_id, events.value)
