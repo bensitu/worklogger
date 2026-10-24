@@ -4,12 +4,6 @@ QDialog[credential_form="true"] {
   background: {{ surface }};
 }
 
-QFrame[onboarding_surface="true"] {
-  background: {{ accent_dim }};
-  border: 1px solid {{ border }};
-  border-radius: 8px;
-}
-
 QFrame#login_hero_frame {
   background: {{ login_hero_background }};
 }

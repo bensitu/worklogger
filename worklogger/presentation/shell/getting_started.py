@@ -19,7 +19,6 @@ class GettingStartedController(QObject):
         self._loaded = False
         self._dismissed = False
         self._pending = False
-        self._closed = False
         self.panel = GettingStartedPanel(window)
         self.panel.hide()
         window.getting_started_layout.insertWidget(0, self.panel)
@@ -33,16 +32,18 @@ class GettingStartedController(QObject):
         self._timer.timeout.connect(self._load)
         window.installEventFilter(self)
         window.entry_panel.busy_changed.connect(self._ready)
+        window.entry_panel.busy_changed.connect(self.panel.record_button.setDisabled)
+        self.panel.record_button.setEnabled(not window.entry_panel.is_busy)
 
     def eventFilter(self, watched, event):
         if watched is self._window:
-            if event.type() == QEvent.Type.Show and not self._loaded:
-                self._timer.start()
+            if event.type() == QEvent.Type.Show:
+                if not self._loaded:
+                    self._timer.start()
+                else:
+                    QTimer.singleShot(0, self, self._ready)
             elif event.type() in (QEvent.Type.Hide, QEvent.Type.Close):
                 self._timer.stop()
-                self._closed = event.type() == QEvent.Type.Close
-            if event.type() == QEvent.Type.Show:
-                self._closed = False
         return False
 
     def _load(self):
@@ -50,11 +51,9 @@ class GettingStartedController(QObject):
             return
         self._loaded = True
         def complete(result):
-            if self._closed:
-                return
             self._pending = result.ok and result.value is True
             self._ready()
-        self._submit("load_getting_started", self._service.pending, complete)
+        self._submit("load_getting_started", self._service.pending, complete, error_code="settings_load_failed")
 
     def _ready(self, _busy=False):
         if (self._pending and not self._dismissed and self._window.isVisible()
@@ -80,16 +79,15 @@ class GettingStartedController(QObject):
         self._pending = False
         self.panel.hide()
         def complete(result):
-            if not result.ok and not self._closed:
+            if not result.ok and self._window.isVisible():
                 self._window._set_error(result.error)
-        self._submit("dismiss_getting_started", self._service.dismiss, complete)
+        self._submit("dismiss_getting_started", self._service.dismiss, complete, error_code="settings_save_failed")
 
-    def _submit(self, name, operation, complete):
+    def _submit(self, name, operation, complete, *, error_code):
         try:
             self._runner.submit(name, lambda _token: operation(), on_complete=owned_callback(self, complete))
         except Exception:
-            complete(Result.failure(InfrastructureError("settings_save_failed" if name.startswith("dismiss")
-                                                       else "settings_load_failed", "settings_operation_failed")))
+            complete(Result.failure(InfrastructureError(error_code, error_code)))
 
     def _record(self):
         if self._window.new_record():

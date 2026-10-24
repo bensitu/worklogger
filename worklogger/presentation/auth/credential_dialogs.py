@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
     QFormLayout,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QPushButton,
+    QScrollArea,
     QSizePolicy,
     QStackedWidget,
     QVBoxLayout,
@@ -38,7 +40,7 @@ class RegisterDialog(RecoveryKeyDialog):
         self.setWindowTitle(_("Create account"))
         apply_window_icon(self)
         self._build_ui()
-        self.resize(440, self.sizeHint().height())
+        self.resize(520, min(self.form_content.sizeHint().height(), self.screen().availableGeometry().height() - 48))
         self.setMinimumWidth(440)
 
     def set_initial_setup(self, initial: bool) -> None:
@@ -81,6 +83,7 @@ class RegisterDialog(RecoveryKeyDialog):
         self.register_button.setEnabled(True)
         set_button_icon(self.register_button, "chevron-right")
         fit_credential_result(self)
+        QTimer.singleShot(0, self, lambda: fit_credential_result(self))
 
     def set_error(self, message: str) -> None:
         super().set_error(message)
@@ -96,8 +99,13 @@ class RegisterDialog(RecoveryKeyDialog):
         outer.setContentsMargins(0, 0, 0, 0)
         self.pages = QStackedWidget()
         outer.addWidget(self.pages)
-        self.form_page = QWidget()
-        root, form = self._build_credential_form(_("Create account"), container=self.form_page)
+        self.form_page = QScrollArea()
+        self.form_page.setWidgetResizable(True)
+        self.form_page.setFrameShape(QFrame.Shape.NoFrame)
+        self.form_page.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.form_content = QWidget()
+        self.form_page.setWidget(self.form_content)
+        root, form = self._build_credential_form(_("Create account"), container=self.form_content)
         self.account_intro = QLabel(_(
             "Create a local account for your records. After registration, save your recovery key for password recovery."))
         self.account_intro.setWordWrap(True)
@@ -143,6 +151,7 @@ class RegisterDialog(RecoveryKeyDialog):
         self.login_button.clicked.connect(self.login_requested.emit)
         self.pages.addWidget(self.form_page)
         self.welcome_page = WelcomePage()
+        self.welcome_page.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Ignored)
         self.pages.addWidget(self.welcome_page)
         self.welcome_page.create_requested.connect(self._show_account_form)
         self.welcome_page.exit_requested.connect(self.reject)

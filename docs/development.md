@@ -61,6 +61,15 @@ authentication and validation failures.
 
 ## Interface Conventions
 
+First-use guidance stores account state under `getting_started_pending` in the
+existing settings table. Account creation initializes it in the same transaction
+for local and external identities; an absent value means no automatic guidance.
+This preserves existing accounts without a schema migration. Dismissal is
+account-scoped, and this interface state is not included in portable personal
+backups. Presentation reads and writes it through `GettingStartedService` using
+background jobs; optional guidance must not prevent startup or replace pending
+record edits.
+
 Use shared theme tokens, controls, fonts, and Lucide icons. Apply QSS at the
 application boundary, not on individual widgets.
 

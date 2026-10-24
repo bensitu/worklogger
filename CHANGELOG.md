@@ -7,6 +7,16 @@ Version numbers use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Historical entries describe their respective releases; see the
 [user guide](docs/user-guide.md) for operating instructions.
 
+## [4.1.0]
+
+### Added
+
+- A welcoming introduction before initial account setup, with clearer local
+  account and password-recovery guidance in all supported interface languages.
+- Optional, account-specific first-use guidance for recording time, with a Help
+  entry to reopen it in the main window or compact view. Existing accounts are
+  not interrupted after upgrading.
+
 ## [4.0.0](https://github.com/bensitu/worklogger/compare/v3.3.3...v4.0.0) - 2026.10.23
 
 **4.0.0: A more connected work history.** Time records, notes, reports, and

@@ -2,6 +2,12 @@
 
 ## Accounts
 
+On an installation without accounts, a welcome page explains local accounts and
+the recovery key before opening account creation. Choosing Create my account
+opens the form; Exit closes setup without creating an account. When another user
+chooses Create account from sign-in, the same account and recovery information
+appears above the registration fields.
+
 Create a local account on first use when registration is allowed. The first
 account is an administrator. Managed installations may disable self-registration;
 an empty database then needs administrator-authorized setup or a prepared database.
@@ -10,6 +16,21 @@ New login IDs may contain up to 120 characters. Existing longer IDs remain valid
 for sign-in and account recovery.
 Passwords require at least eight characters. Recovery uses the saved recovery
 key, so copy or save it privately when it is displayed.
+
+After registration, save or copy the recovery key before choosing Saved safely,
+start using WorkLogger. This key resets a forgotten password; it is not the
+sign-in password. Saving creates an unencrypted text file, so choose a private
+location. WorkLogger does not require saving a file if the key has been stored
+safely elsewhere.
+
+Each new account receives a short, nonmodal introduction after the main window
+and recording editor are ready. Record a time period opens a new manual record;
+it does not save sample data. Maybe later dismisses the introduction for that
+account. Use Help in the main sidebar, or the Getting started information button
+in compact view, to open it again. The User guide action opens this guide in
+your browser. Existing accounts are not automatically shown the introduction
+after an upgrade. Administrator-created and external sign-in accounts receive
+the introduction on first use, after any required password change.
 
 Sign in with your login ID and password. **Remember me** retains a local session
 credential for up to 30 days. Repeated failed attempts cause temporary lockouts.

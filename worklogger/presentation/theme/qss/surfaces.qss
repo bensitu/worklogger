@@ -80,6 +80,12 @@ QFrame[role="readonly_location"] {
   border-radius: {{ panel_radius }};
 }
 
+QFrame[onboarding_surface="true"] {
+  background: {{ accent_dim }};
+  border: 1px solid {{ border }};
+  border-radius: 8px;
+}
+
 QFrame#settings_separator_frame,
 QFrame#report_period_separator_frame {
   background: {{ panel_border }};
