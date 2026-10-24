@@ -1960,6 +1960,9 @@ msgstr "時間を記録"
 msgid "Record actions"
 msgstr "記録の操作"
 
+msgid "Record date"
+msgstr "記録日"
+
 msgid "Record references"
 msgstr "記録の参照情報"
 
@@ -2763,6 +2766,9 @@ msgstr "他の記録または実行中のタイマーと時間が重複してい
 
 msgid "This ID is already in use. Choose a different ID."
 msgstr "このIDはすでに使用されています。別のIDを選択してください。"
+
+msgid "This analytics export is too large. Choose a shorter period; the destination file is unchanged."
+msgstr "分析データが大きすぎます。期間を短くしてください。既存の出力先ファイルは変更されていません。"
 
 msgid "This authorization response is invalid. Return to WorkLogger."
 msgstr "この認証応答は無効です。WorkLogger に戻ってください。"

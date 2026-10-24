@@ -1960,6 +1960,9 @@ msgstr "記錄一段時間"
 msgid "Record actions"
 msgstr "紀錄操作"
 
+msgid "Record date"
+msgstr "記錄日期"
+
 msgid "Record references"
 msgstr "紀錄參照"
 
@@ -2763,6 +2766,9 @@ msgstr "該時段與其他記錄或正在執行的計時重疊，請選擇其他
 
 msgid "This ID is already in use. Choose a different ID."
 msgstr "此 ID 已被使用，請選擇其他 ID。"
+
+msgid "This analytics export is too large. Choose a shorter period; the destination file is unchanged."
+msgstr "本次統計匯出過大。請選擇較短的期間；原有目標檔案保持不變。"
 
 msgid "This authorization response is invalid. Return to WorkLogger."
 msgstr "此授權回應無效。請返回 WorkLogger。"

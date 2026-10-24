@@ -1960,6 +1960,9 @@ msgstr "Record a time period"
 msgid "Record actions"
 msgstr "Record actions"
 
+msgid "Record date"
+msgstr "Record date"
+
 msgid "Record references"
 msgstr "Record references"
 
@@ -2763,6 +2766,9 @@ msgstr "These times overlap another record or the active timer. Choose a differe
 
 msgid "This ID is already in use. Choose a different ID."
 msgstr "This ID is already in use. Choose a different ID."
+
+msgid "This analytics export is too large. Choose a shorter period; the destination file is unchanged."
+msgstr "This analytics export is too large. Choose a shorter period; the destination file is unchanged."
 
 msgid "This authorization response is invalid. Return to WorkLogger."
 msgstr "This authorization response is invalid. Return to WorkLogger."

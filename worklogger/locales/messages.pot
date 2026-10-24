@@ -1958,6 +1958,9 @@ msgstr ""
 msgid "Record actions"
 msgstr ""
 
+msgid "Record date"
+msgstr ""
+
 msgid "Record references"
 msgstr ""
 
@@ -2760,6 +2763,9 @@ msgid "These times overlap another record or the active timer. Choose a differen
 msgstr ""
 
 msgid "This ID is already in use. Choose a different ID."
+msgstr ""
+
+msgid "This analytics export is too large. Choose a shorter period; the destination file is unchanged."
 msgstr ""
 
 msgid "This authorization response is invalid. Return to WorkLogger."

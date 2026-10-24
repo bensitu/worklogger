@@ -53,6 +53,7 @@ _MESSAGE_GROUPS = (
     (("report_content_too_long",), N_("This report is too large to save. Your current content has been retained.")),
     (("record_range_too_large",), N_("Too many records. Choose a shorter date range to calculate complete totals.")),
     (("timesheet_too_large",), N_("This timesheet is too large. Choose a shorter period; the destination file is unchanged.")),
+    (("analytics_export_too_large",), N_("This analytics export is too large. Choose a shorter period; the destination file is unchanged.")),
     (("timesheet_invalid", "timesheet_format_invalid"), N_("Choose a valid timesheet period and format.")),
     (("timesheet_content_invalid",), N_("The timesheet contains content that cannot be represented in this format. The destination file is unchanged.")),
     (("timesheet_load_failed",), N_("Unable to load timesheet records. Your report draft is unchanged.")),

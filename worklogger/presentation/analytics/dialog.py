@@ -164,7 +164,7 @@ class AnalyticsDialog(QDialog):
         path, _selected_filter = QFileDialog.getSaveFileName(
             self,
             _("Export CSV"),
-            analytics_export_filename(self.scope_combo.currentData(), date(self.year_input.value(), self.month_input.value(), 1), "csv"),
+            self._export_filename("csv"),
             _("CSV files (*.csv)"),
         )
         if path:
@@ -174,11 +174,18 @@ class AnalyticsDialog(QDialog):
         path, _selected_filter = QFileDialog.getSaveFileName(
             self,
             _("Export PDF"),
-            analytics_export_filename(self.scope_combo.currentData(), date(self.year_input.value(), self.month_input.value(), 1), "pdf"),
+            self._export_filename("pdf"),
             _("PDF files (*.pdf)"),
         )
         if path:
             self.export_pdf(Path(path))
+
+    def _export_filename(self, kind):
+        state = self._state
+        scope = state.scope if state is not None else self.scope_combo.currentData()
+        day = date(state.year, state.month, 1) if state is not None else date(self.year_input.value(), self.month_input.value(), 1)
+        periods = state.bundle.periods if state is not None else ()
+        return analytics_export_filename(scope, day, kind, period=(periods[0][0], periods[-1][1]) if periods else None)
 
     def _set_error(self, error: AppError | None) -> None:
         self._last_error = error

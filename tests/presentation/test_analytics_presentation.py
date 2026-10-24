@@ -78,6 +78,8 @@ class AnalyticsPresentationTests(unittest.TestCase):
             self.assertEqual(analytics_export_filename(scope, date(2026, 10, 24), "csv", exported_at=stamp),
                              f"analytics-{scope}-{period}-20261024-153045-123.csv")
         button = ExportMenuButton("Export", (("csv", "CSV"), ("pdf", "PDF")))
+        self.assertEqual(analytics_export_filename("quarterly", date(2026, 10, 24), "csv", exported_at=stamp,
+            period=(date(2026, 1, 1), date(2026, 12, 31))), "analytics-quarterly-2026-20261024-153045-123.csv")
         self.addCleanup(button.close)
         self.assertTrue(all(not action.icon().isNull() for action in button.menu().actions()))
 
@@ -107,7 +109,10 @@ class AnalyticsPresentationTests(unittest.TestCase):
                 reader = csv.DictReader(handle)
                 rows = list(reader)
                 self.assertIn("Worked hours (h)", reader.fieldnames)
+                self.assertIn("Record date", reader.fieldnames)
                 self.assertNotIn("bar_value", reader.fieldnames)
+            from worklogger.infrastructure.export.worklog_csv_import import WorkLogCsvImporter
+            self.assertFalse(WorkLogCsvImporter().parse(path, user_id=1).ok)
         self.assertEqual(sum(float(row["Worked hours (h)"]) for row in rows), 15)
         self.assertEqual(sum(float(row["Rest hours (h)"]) for row in rows), 1)
         self.assertEqual(next(row for row in rows if row["Content"])["Content"], "'=SUM(1,2)")
@@ -227,6 +232,12 @@ class AnalyticsPresentationTests(unittest.TestCase):
                     self.assertIn(normalize(entry.entry_type.label), text)
                 self.assertIn(dashboard.period_start.isoformat(), text)
                 self.assertIn(dashboard.period_end.isoformat(), text)
+                if scope == "monthly":
+                    original = path.read_bytes()
+                    with patch("worklogger.infrastructure.export.analytics_pdf.write_dashboard_pdf", side_effect=OSError()):
+                        failed = AnalyticsPdfExporter().export_dashboard(path, dashboard, scope=scope)
+                    self.assertFalse(failed.ok)
+                    self.assertEqual(path.read_bytes(), original)
             set_language("en_US")
 
     @classmethod

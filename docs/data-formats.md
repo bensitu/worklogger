@@ -142,6 +142,8 @@ mark. Spreadsheet-sensitive text is protected. This is an analysis export,
 not the work-log import format, and has no corresponding import operation.
 The separate chart dialog exports readable period/work-hour/leave-hour columns
 for its selected chart metric.
+Its quarterly chart covers all four quarters, so that overview's filename
+identifies the full year instead of a single quarter.
 
 Suggested filenames identify the scope and period, for example
 `analytics-monthly-2026Oct-20261024-153045-123.csv`,

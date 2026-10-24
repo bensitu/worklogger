@@ -350,8 +350,21 @@ Project statistics separates work, rest, and leave by project and work item.
 Only work records can be linked to a project; break and leave remain unlinked.
 Distinct-day counts cannot be added across groups; overtime is a whole-day measure.
 
-CSV and PDF export calculated summaries. They are not work-log import files or
-database backups.
+Use Export to save the selected period. Suggested filenames include the month,
+quarter, or year and the export time, so repeated exports are easier to distinguish.
+CSV contains individual work, break, and leave records with readable translated
+headings, project/work-item context, content, decimal hours, and overnight end
+dates. It also identifies dates without records and available original timestamps.
+PDF includes all eight dashboard areas and complete numeric tables on following
+pages. The overview follows the selected breakdown dimension, while the tables
+include both classifications and work arrangements. PDF uses a light print layout
+even in dark mode.
+
+Exports use the currently loaded data snapshot. Refresh Analytics first if you
+need to include subsequent record changes. Exported files are not work-log import
+files or database backups. Larger exports run in the background; a failed export
+does not replace an existing destination file. Choose a shorter period if the
+export exceeds 50,000 entries or two million text characters.
 
 ## Settings and Optional Services
 

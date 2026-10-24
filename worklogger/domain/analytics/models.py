@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from worklogger.domain.worklog.models import CustomEntryType, EntryType, WorkModeValue, WorkLog
 
@@ -44,5 +44,5 @@ class AnalyticsDashboard:
     target_mode: str = "manual"
     planning_error: str = ""
     work_modes: tuple[tuple[WorkModeValue | None, float], ...] = ()
-    records: tuple[WorkLog, ...] = ()
+    records: tuple[WorkLog, ...] = field(default=(), repr=False)
     standard_work_hours: float = 8.0

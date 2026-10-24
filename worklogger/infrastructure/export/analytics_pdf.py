@@ -193,11 +193,11 @@ class _DashboardPdf:
                   align=Qt.AlignmentFlag.AlignCenter)
 
     def table(self, title, headers, rows, widths):
-        header_height = 36
+        header_height = 32
         if self.y + 100 > self.height - 35:
             self._new_page()
         self.text(QRectF(0, self.y, self.width, 24), title, size=15, bold=True)
-        self.y += 30
+        self.y += 26
         def headings():
             x = 0
             for text, fraction in zip(headers, widths):
@@ -215,12 +215,12 @@ class _DashboardPdf:
                 longest = max(str(value).split(), key=len, default="")
                 wrap = Qt.TextFlag.TextWrapAnywhere if metrics.horizontalAdvance(longest) > self.width * width - 14 else Qt.TextFlag.TextWordWrap
                 flags.append(int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter | wrap))
-            height = max(28, *(metrics.boundingRect(QRectF(0, 0, self.width * width - 14, 1000).toRect(), flag, str(value)).height() + 12
+            height = max(22, *(metrics.boundingRect(QRectF(0, 0, self.width * width - 14, 1000).toRect(), flag, str(value)).height() + 6
                               for value, width, flag in zip(row, widths, flags)))
             if self.y + height > self.height - 35:
                 self._new_page()
                 self.text(QRectF(0, self.y, self.width, 24), title, size=15, bold=True)
-                self.y += 30
+                self.y += 26
                 headings()
             x = 0
             for value, width, flag in zip(row, widths, flags):
@@ -231,7 +231,7 @@ class _DashboardPdf:
             self.painter.setPen(QPen(QColor(_BORDER), 0.6))
             self.painter.drawLine(0, int(self.y + height), self.width, int(self.y + height))
             self.y += height
-        self.y += 20
+        self.y += 12
 
     def details(self, dashboard):
         self._new_page()
@@ -256,8 +256,8 @@ class _DashboardPdf:
                     (_("Goal calculation"), _("From work schedule") if dashboard.target_mode == "schedule" else _("Custom target"), "-", "-"),
                     (_("Calendar days"), str(dashboard.total_days), str(dashboard.previous_total_days), "-"))
         self.table(_("Summary"), (_("Metric"), _("Selected period"), _("Previous period"), _("Change")), summary, (.34, .22, .22, .22))
-        self.text(QRectF(0, self.y, self.width, 48), _("Attendance counts dates with positive worked hours, including scheduled days off. Planned work follows the weekly schedule and enabled regional public holidays. This is not an attendance rate."), size=10, color=_MUTED)
-        self.y += 54
+        self.text(QRectF(0, self.y, self.width, 32), _("Attendance counts dates with positive worked hours, including scheduled days off. Planned work follows the weekly schedule and enabled regional public holidays. This is not an attendance rate."), size=10, color=_MUTED)
+        self.y += 38
         averages = dict(dashboard.average.bar_data)
         leave = dict(dashboard.trend.leave_hours_data)
         average_leave = dict(dashboard.average.leave_hours_data)

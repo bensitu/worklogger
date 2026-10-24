@@ -17,6 +17,15 @@ Historical entries describe their respective releases; see the
   entry to reopen it in the main window or compact view. Existing accounts are
   not interrupted after upgrading.
 
+### Changed
+
+- Analytics export filenames identify the selected month, quarter, or year and
+  export time. Export menu actions include file-format icons.
+- Analytics CSV provides localized, per-record details with project context,
+  explicit hour units, and overnight end dates for further analysis.
+- Analytics PDF includes all eight dashboard areas, previous-period comparison
+  boundaries, and complete paginated numeric tables in a print-friendly layout.
+
 ## [4.0.0](https://github.com/bensitu/worklogger/compare/v3.3.3...v4.0.0) - 2026.10.23
 
 **4.0.0: A more connected work history.** Time records, notes, reports, and

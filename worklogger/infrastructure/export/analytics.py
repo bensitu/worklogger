@@ -12,7 +12,7 @@ from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBund
 from worklogger.domain.reporting.timesheets import Timesheet
 from worklogger.infrastructure.entry_type_labels import work_mode_label
 from worklogger.infrastructure.export.timesheets import timesheet_rows
-from worklogger.domain.shared.errors import InfrastructureError
+from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 
 
@@ -25,7 +25,7 @@ class AnalyticsCsvExporter:
             sheet = _timesheet(dashboard)
             with atomic_destination(path) as temporary, temporary.open("w", encoding="utf-8-sig", newline="") as handle:
                 writer = csv.writer(handle)
-                writer.writerow((_("Date"), _("Start"), _("End"), _("End date"), _("Classification"),
+                writer.writerow((_("Record date"), _("Start"), _("End"), _("End date"), _("Classification"),
                     _("Accounting category"), _("Work arrangement"), _("Project"), _("Work item"), _("Content"),
                     _("Worked hours") + " (h)", _("Rest hours") + " (h)", _("Leave hours") + " (h)",
                     _("Record status"), _("Started at"), _("Ended at")))
@@ -40,8 +40,7 @@ class AnalyticsCsvExporter:
                         entry.ended_at.isoformat() if entry and entry.ended_at else "")
                     writer.writerow(tuple(spreadsheet_text(value) for value in row))
         except Exception as exc:
-            return Result.failure(InfrastructureError("analytics_csv_export_failed", "analytics_csv_export_failed",
-                                                       {"reason": type(exc).__name__}))
+            return _export_failure("analytics_csv_export_failed", exc)
         return Result.success(path)
 
     def export_bundle(self, destination: Path, bundle: ChartDataBundle, *, metric: str = "hours") -> Result[Path]:
@@ -90,8 +89,7 @@ class AnalyticsPdfExporter:
                 write_dashboard_pdf(temporary, dashboard, scope=scope, breakdown_dimension=breakdown_dimension,
                                     generated_at=sheet.generated_at)
         except Exception as exc:
-            return Result.failure(InfrastructureError("analytics_pdf_export_failed", "analytics_pdf_export_failed",
-                                                       {"reason": type(exc).__name__}))
+            return _export_failure("analytics_pdf_export_failed", exc)
         return Result.success(path)
 
     def export_bundle(
@@ -125,6 +123,12 @@ class AnalyticsPdfExporter:
                 )
             )
         return Result.success(path)
+
+
+def _export_failure(code, error):
+    if isinstance(error, ValueError) and str(error) == "timesheet_too_large":
+        return Result.failure(ValidationError("analytics_export_too_large", "analytics_export_too_large"))
+    return Result.failure(InfrastructureError(code, code, {"reason": type(error).__name__}))
 
 
 def _timesheet(dashboard):

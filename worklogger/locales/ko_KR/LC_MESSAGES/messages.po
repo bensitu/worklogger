@@ -1960,6 +1960,9 @@ msgstr "시간 기록"
 msgid "Record actions"
 msgstr "기록 작업"
 
+msgid "Record date"
+msgstr "기록 날짜"
+
 msgid "Record references"
 msgstr "기록 참조"
 
@@ -2763,6 +2766,9 @@ msgstr "다른 기록 또는 실행 중인 타이머와 시간이 겹칩니다. 
 
 msgid "This ID is already in use. Choose a different ID."
 msgstr "이 ID는 이미 사용 중입니다. 다른 ID를 선택하세요."
+
+msgid "This analytics export is too large. Choose a shorter period; the destination file is unchanged."
+msgstr "분석 내보내기 데이터가 너무 큽니다. 기간을 줄여 주세요. 기존 대상 파일은 변경되지 않았습니다."
 
 msgid "This authorization response is invalid. Return to WorkLogger."
 msgstr "이 인증 응답은 유효하지 않습니다. WorkLogger로 돌아가세요."
