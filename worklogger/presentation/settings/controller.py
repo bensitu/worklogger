@@ -4,28 +4,32 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import replace
-from typing import Protocol
 from pathlib import Path
-from weakref import WeakKeyDictionary
+from typing import Protocol
+
 from PySide6.QtCore import QTimer, QUrl
 from PySide6.QtGui import QDesktopServices
-
 from PySide6.QtWidgets import QDialog, QWidget
 from shiboken6 import isValid
 
 from worklogger.app.job_runner import JobRunner
 from worklogger.app.use_cases.data_portability import WorkLogCsvImportPreview
 from worklogger.app.use_cases.updates import CheckForUpdatesHandler
+from worklogger.app.use_cases.user_profile import UserProfileService
 from worklogger.config.constants import DEFAULT_CLOUD_BACKUP_STARTUP_DELAY_SECONDS
 from worklogger.domain.auth.models import User
+from worklogger.domain.shared.errors import InfrastructureError
+from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.auth.controller import (
     ChangePasswordDialogFactory,
     RememberSessionStore,
 )
-from worklogger.presentation.settings.dialog import SettingsDialog
 from worklogger.presentation.help import open_user_guide
+from worklogger.presentation.job_runner import shared_job_runner
+from worklogger.presentation.settings.dialog import SettingsDialog
 from worklogger.presentation.settings.page import SettingsPage
+from worklogger.presentation.settings.workflows.account import AccountSettingsWorkflow
 from worklogger.presentation.settings.workflows.contracts import (
     ConfirmationProvider,
     IcsImportModeProvider,
@@ -36,15 +40,21 @@ from worklogger.presentation.settings.workflows.contracts import (
     SettingsPageFactory,
     UserManagementDialogFactory,
 )
+from worklogger.presentation.settings.workflows.data import DataSettingsWorkflow
+from worklogger.presentation.settings.workflows.text_processing import TextProcessingSettingsWorkflow
+from worklogger.presentation.settings.workflows.updates import UpdatesSettingsWorkflow
 from worklogger.presentation.settings_capabilities import SettingsCapabilities
 from worklogger.presentation.user_management import UserManagementDialog
 from worklogger.presentation.viewmodels import (
     AuthViewModel,
     DataManagementViewModel,
+    LocalModelManagerViewModel,
     SettingsViewModel,
     UserManagementViewModel,
-    LocalModelManagerViewModel,
 )
+from worklogger.presentation.viewmodels.classifications import ClassificationManagerViewModel
+from worklogger.presentation.widgets.classification_manager import ClassificationManagerDialog
+from worklogger.presentation.widgets.project_manager import ProjectManagerDialog
 
 
 class SettingsWorkflow(Protocol):
@@ -61,49 +71,7 @@ class IdentityWorkflow(Protocol):
     def open(self, parent: QWidget | None = None) -> object: ...
 
 
-from worklogger.presentation.settings.workflows.account import AccountSettingsWorkflow
-from worklogger.presentation.settings.workflows.common import _error_message
-from worklogger.presentation.settings.workflows.data import DataSettingsWorkflow
-from worklogger.presentation.settings.workflows.updates import UpdatesSettingsWorkflow
-from worklogger.presentation.viewmodels.classifications import ClassificationManagerViewModel
-from worklogger.presentation.widgets.classification_manager import ClassificationManagerDialog
-from worklogger.presentation.widgets.project_manager import ProjectManagerDialog
-from worklogger.app.ports import AIRequest
-from worklogger.presentation.job_runner import shared_job_runner, owned_callback
-from worklogger.app.use_cases.user_profile import UserProfileService
-from worklogger.domain.shared.errors import InfrastructureError
-from worklogger.domain.shared.errors import CancellationError
-from worklogger.domain.shared.result import Result
-from worklogger.presentation.processing import TextProcessingTask
-
-
 class SettingsWorkflowController:
-    def initialize_processing(self, owner, callback):
-        if not self._capabilities.ai_enabled:
-            callback()
-            return
-        def load():
-            settings = self._settings_view_model.load()
-            model = self._local_models_workflow.view_model if self._local_models_workflow is not None else None
-            inventory = model.load() if model is not None else None
-            return settings, inventory
-
-        def complete(result):
-            if not result.ok:
-                return
-            settings, inventory = result.value
-            if settings.ok and settings.value is not None and self._ai_gateway is not None:
-                self._ai_gateway.update_configuration(settings.value)
-            if inventory is not None and inventory.ok and self._local_inference is not None:
-                self._local_inference.update_inventory(inventory.value.inventory)
-            callback()
-
-        if self._job_runner is None:
-            complete(Result.success(load()))
-        else:
-            self._job_runner.submit("initialize_text_processing", lambda _token: load(),
-                                    on_complete=owned_callback(owner, complete))
-
     def __init__(
         self,
         *,
@@ -164,9 +132,6 @@ class SettingsWorkflowController:
         self._page_factory = page_factory or SettingsPage
         self._entry_types_view_model = entry_types_view_model
         self._work_modes_view_model = work_modes_view_model
-        self._local_inference = local_inference
-        self._ai_gateway = ai_gateway
-        self._ai_connection_test_timeout_seconds = ai_connection_test_timeout_seconds
         self._profile_service = profile_service
         self._profile_revision = 0
         self._getting_started_handler = None
@@ -180,10 +145,17 @@ class SettingsWorkflowController:
                 retry_max_seconds=cloud_backup_retry_max_seconds)
         self._projects_view_model = projects_view_model
         self._project_dialog = None
-        self._connection_tests: WeakKeyDictionary[SettingsPage, TextProcessingTask] = WeakKeyDictionary()
         if local_inference is not None:
             self._capabilities = replace(self._capabilities,
                 local_generation=self._capabilities.ai_enabled and local_inference.backend_available)
+
+        self._processing_workflow = TextProcessingSettingsWorkflow(
+            settings_view_model=settings_view_model,
+            local_models_view_model=local_models_workflow.view_model if local_models_workflow is not None else None,
+            capabilities=self._capabilities, job_runner=job_runner,
+            local_inference=local_inference, ai_gateway=ai_gateway,
+            connection_test_timeout_seconds=ai_connection_test_timeout_seconds,
+        )
 
         self._data_management_view_model = data_management_view_model
         self._data_workflow = DataSettingsWorkflow(
@@ -224,7 +196,7 @@ class SettingsWorkflowController:
         dialog = self._dialog_factory(self._settings_view_model, parent)
         self._bind_surface(dialog.page)
         dialog.page.refresh()
-        self._sync_inference(dialog.page)
+        self._processing_workflow.sync(dialog.page)
         return dialog
 
     def set_restore_handler(self, handler: ReloadHandler) -> None:
@@ -253,7 +225,7 @@ class SettingsWorkflowController:
         page = self._page_factory(self._settings_view_model, parent)
         self._bind_surface(page)
         page.refresh()
-        self._sync_inference(page)
+        self._processing_workflow.sync(page)
         return page
 
     def _bind_surface(self, surface: SettingsPage) -> None:
@@ -269,10 +241,6 @@ class SettingsWorkflowController:
         if self._profile_service is not None:
             surface.profile_save_requested.connect(lambda value, expected: self._save_profile(surface, value, expected))
             surface.profile_refresh_requested.connect(lambda: self._refresh_profile(surface))
-        if self._local_inference is not None or self._ai_gateway is not None:
-            surface.settings_changed.connect(lambda _state: self._sync_inference(surface))
-        if self._ai_gateway is not None:
-            surface.test_external_model_requested.connect(lambda: self._test_external_model(surface))
         surface.set_entry_types_available(self._entry_types_view_model is not None)
         if self._entry_types_view_model is not None:
             surface.manage_entry_types_requested.connect(lambda: self._manage_classifications(surface))
@@ -310,7 +278,7 @@ class SettingsWorkflowController:
             surface.manage_local_models_requested.connect(
                 lambda: self._open_local_models(surface)
             )
-            self._refresh_local_models_status(surface)
+        self._processing_workflow.bind(surface)
 
     def _check_records(self, surface):
         if not getattr(self._data_management_view_model, "can_check_records", False):
@@ -328,7 +296,7 @@ class SettingsWorkflowController:
         if not self._capabilities.ai_enabled or not self._capabilities.model_management or self._local_models_workflow is None:
             return
         self._local_models_workflow.open(surface)
-        self._refresh_local_models_status(surface)
+        self._processing_workflow.refresh_models(surface)
 
     def _manage_classifications(self, surface: SettingsPage, *, work_modes=False) -> None:
         dialog = ClassificationManagerDialog(self._work_modes_view_model if work_modes else self._entry_types_view_model,
@@ -358,61 +326,13 @@ class SettingsWorkflowController:
             return False
         return True
 
-    def _refresh_local_models_status(self, surface: SettingsPage, *, retry=True) -> None:
-        view_model = self._local_models_workflow.view_model if self._local_models_workflow is not None else None
-        if view_model is None:
-            return
-
-        def complete(result: object) -> None:
-            if not isValid(surface):
-                return
-            if not result.ok or result.value is None:
-                surface.set_local_model_error(result.error)
-                return
-            inventory = result.value.inventory
-            if self._local_inference is not None:
-                if self._local_inference.update_inventory(inventory) is False:
-                    if retry:
-                        self._refresh_local_models_status(surface, retry=False)
-                    else:
-                        surface.set_local_model_error(InfrastructureError("local_model_list_failed", "local_model_list_failed"))
-                    return
-            active = next(
-                (
-                    item
-                    for item in inventory.items
-                    if item.entry.id == inventory.active_model_id
-                ),
-                None,
-            )
-            surface.set_local_model_status(
-                ready=active is not None and active.verified,
-                name=active.entry.display_name if active is not None else "",
-            )
-            surface.set_local_model_context_limit(active.entry.context_length if active is not None else None)
-            self._sync_inference(surface)
-
-        if self._job_runner is None:
-            complete(view_model.load())
-        else:
-            self._job_runner.submit(
-                "local_model_status",
-                lambda _token: view_model.load(),
-                on_complete=complete,
-            )
-
     def open(self, parent: QWidget | None = None) -> SettingsDialog:
         dialog = self.create_dialog(parent)
         dialog.exec()
         return dialog
 
-    def _sync_inference(self, surface: SettingsPage):
-        if self._ai_gateway is not None and surface.state is not None:
-            self._ai_gateway.update_configuration(surface.state)
-        if self._local_inference is not None:
-            surface.set_local_runtime_status(ready=self._local_inference.available, reason=self._local_inference.reason)
-        if self._local_inference is not None or self._ai_gateway is not None:
-            surface.ai_availability_changed.emit()
+    def initialize_processing(self, owner: QWidget, callback: Callable[[], None]) -> None:
+        self._processing_workflow.initialize(owner, callback)
 
     def _refresh_profile(self, surface: SettingsPage):
         if surface.is_busy:
@@ -464,27 +384,6 @@ class SettingsWorkflowController:
                 value, expected_display_name=expected), on_complete=complete)
         except Exception:
             complete(Result.failure(InfrastructureError("user_profile_save_failed", "user_profile_save_failed")))
-
-    def _test_external_model(self, surface: SettingsPage):
-        if not self._capabilities.ai_enabled or surface.is_busy or self._ai_gateway is None:
-            return
-        surface.set_busy("external_model_test", True)
-        surface.set_external_test_status("")
-        task = self._connection_tests.get(surface)
-        if task is None:
-            task = TextProcessingTask(surface, job_runner=self._job_runner)
-            self._connection_tests[surface] = task
-            surface.destroyed.connect(lambda: self._connection_tests.pop(surface, None))
-            surface.bind_external_test_progress(task)
-        def complete(result):
-            if not isValid(surface):
-                return
-            surface.set_busy("external_model_test", False)
-            surface.set_external_test_status(_("Connection succeeded.") if result.ok else
-                _("Operation cancelled.") if isinstance(result.error, CancellationError) else _error_message(result.error))
-        task.run("test_external_model", lambda _token: self._ai_gateway.generate(AIRequest(
-            messages=({"role": "user", "content": "Reply with OK."},), model="default",
-            timeout_seconds=self._ai_connection_test_timeout_seconds)), on_complete=complete)
 
     def _change_password(self, parent: QWidget | None) -> bool:
         return self._account_workflow.change_password(parent)

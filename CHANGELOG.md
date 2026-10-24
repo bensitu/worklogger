@@ -34,6 +34,8 @@ Historical entries describe their respective releases; see the
 - Repeated AI polishing separates additional editing requests from source text
   and supports explicit formatting changes. Unchanged responses are explained
   without overwriting the previous result or manual edits.
+- AI connection checks propagate cancellation to the request. Settings ignore
+  outdated model status results and remain usable if a background job cannot start.
 
 ## [4.0.0](https://github.com/bensitu/worklogger/compare/v3.3.3...v4.0.0) - 2026.10.23
 

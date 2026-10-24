@@ -177,7 +177,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             inventory = ListLocalModelsHandler(store=runtime.local_inference.store, settings=settings).handle(ListLocalModelsQuery(runtime.user.id)).value
             runtime.local_inference.update_inventory(inventory)
             runtime.window.settings_page.refresh()
-            runtime.window._settings_workflow._sync_inference(runtime.window.settings_page)
+            runtime.window.settings_page.settings_changed.emit(runtime.window.settings_page.state)
             panel = runtime.window.entry_panel
             panel.content_input.setPlainText("A local record description")
             self.assertTrue(panel.polish_button.isEnabled())
@@ -380,7 +380,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                             self.assertFalse(page.local_model_enabled_switch.isEnabled())
                             self.assertFalse(page.external_base_url_line_edit.isEnabled())
                             workflow._open_local_models(page)
-                            workflow._test_external_model(page)
+                            page.test_external_model_requested.emit()
                             if not minimal:
                                 self.assertFalse(window.reports_page.ai_assist_button.isEnabled())
                                 self.assertFalse(window.reports_page.ai_assist_button.isHidden())

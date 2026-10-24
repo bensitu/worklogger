@@ -240,6 +240,12 @@ AI service selection is account-scoped. Explicit external selection uses its
 configured endpoint and credentials; local selection uses a verified model and
 native backend. Failed requests do not silently choose another provider.
 
+`settings/workflows/text_processing.py` owns AI configuration delivery, local
+model status, and connection checks. Model status requests reject superseded
+results per settings surface. Connection checks pass the job cancellation token
+to the gateway; closing the surface cancels pending checks. Optional startup
+initialization completes even if background submission is unavailable.
+
 HTTP transports enforce certificate validation and account proxy policy.
 Provider authentication validates request binding and signed tokens before
 resolving a local identity. Keep credentials out of generic configuration,

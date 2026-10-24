@@ -271,11 +271,90 @@ class SettingsWorkflowTests(unittest.TestCase):
         )
         page = controller.create_page()
         try:
-            controller._test_external_model(page)
-            self.assertEqual(gateway.generate.call_args.args[0].timeout_seconds, 7)
+            page.test_external_model_requested.emit()
+            request = gateway.generate.call_args.args[0]
+            self.assertEqual(request.timeout_seconds, 7)
+            self.assertIsNotNone(request.cancellation_token)
             self.assertFalse(page.is_busy)
         finally:
             page.deleteLater()
+
+    def test_connection_check_cancellation_reaches_request_and_ignores_late_results(self):
+        from worklogger.app.job_runner import CancellationToken, JobHandle
+
+        token = CancellationToken()
+        requests = []
+        def submit(name, operation, *, on_complete):
+            requests.append((operation, on_complete))
+            return JobHandle(name, token.cancel)
+
+        gateway = Mock(generate=Mock(return_value=Result.success(None)))
+        controller = SettingsWorkflowController(
+            settings_view_model=_settings_view_model(MemorySettingsRepository()),
+            auth_view_model=FakeAuthViewModel(), user=User(1, "alice"),
+            data_management_view_model=FakeDataManagementViewModel(),
+            job_runner=Mock(submit=submit), ai_gateway=gateway,
+        )
+        page = controller.create_page()
+        self.addCleanup(page.deleteLater)
+        page.test_external_model_requested.emit()
+        operation, complete = requests[0]
+        operation(token)
+        self.assertIs(gateway.generate.call_args.args[0].cancellation_token, token)
+        page.external_processing_progress.cancel_button.click()
+        self.assertTrue(token.is_cancelled())
+        self.assertFalse(page.is_busy)
+        status = page.external_model_status_label.text()
+        complete(Result.success(None))
+        self.assertEqual(page.external_model_status_label.text(), status)
+
+    def test_model_status_ignores_superseded_and_disposed_surfaces(self):
+        from types import SimpleNamespace
+        from worklogger.app.job_runner import JobHandle
+        from shiboken6 import delete
+
+        requests = []
+        def submit(name, operation, *, on_complete):
+            requests.append(on_complete)
+            return JobHandle(name, lambda: None)
+
+        controller = SettingsWorkflowController(
+            settings_view_model=_settings_view_model(MemorySettingsRepository()),
+            auth_view_model=FakeAuthViewModel(), user=User(1, "alice"),
+            data_management_view_model=FakeDataManagementViewModel(),
+            job_runner=Mock(submit=submit), local_models_workflow=Mock(),
+        )
+        page = controller.create_page()
+        workflow = controller._processing_workflow
+        workflow.refresh_models(page)
+        def inventory(name):
+            entry = SimpleNamespace(id=name, display_name=name, context_length=2048)
+            return Result.success(SimpleNamespace(inventory=SimpleNamespace(
+                items=(SimpleNamespace(entry=entry, verified=True),), active_model_id=name)))
+        with patch.object(page, "set_local_model_status") as status:
+            requests[1](inventory("current"))
+            requests[0](inventory("previous"))
+            status.assert_called_once_with(ready=True, name="current")
+            workflow.refresh_models(page)
+            delete(page)
+            requests[2](inventory("disposed"))
+            self.assertEqual(status.call_count, 1)
+
+    def test_processing_submission_failure_does_not_block_initialization_or_settings(self):
+        controller = SettingsWorkflowController(
+            settings_view_model=_settings_view_model(MemorySettingsRepository()),
+            auth_view_model=FakeAuthViewModel(), user=User(1, "alice"),
+            data_management_view_model=FakeDataManagementViewModel(),
+            job_runner=Mock(submit=Mock(side_effect=RuntimeError("job_runner_closed"))),
+            local_models_workflow=Mock(), ai_gateway=Mock(),
+        )
+        page = controller.create_page()
+        self.addCleanup(page.deleteLater)
+        ready = Mock()
+        controller.initialize_processing(page, ready)
+        ready.assert_called_once_with()
+        page.test_external_model_requested.emit()
+        self.assertFalse(page.is_busy)
 
     def test_update_check_preserves_about_availability_and_prevents_duplicate_requests(self):
         from worklogger.app.job_runner import JobHandle, CancellationToken
