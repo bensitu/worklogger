@@ -30,6 +30,14 @@ QMenu::item {
   padding: 7px 28px 7px 12px;
 }
 
+QMenu[export_menu="true"] {
+  padding: 6px 10px;
+}
+
+QMenu[export_menu="true"]::item {
+  padding: 7px 12px 7px 4px;
+}
+
 QMenu::item:selected {
   background: {{ sidebar_active_background }};
   color: {{ accent }};

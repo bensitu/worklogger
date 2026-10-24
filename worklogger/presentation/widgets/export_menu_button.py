@@ -25,6 +25,7 @@ class ExportMenuButton(QToolButton):
         self.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         self.setProperty("variant", "outline")
         menu = QMenu(self)
+        menu.setProperty("export_menu", True)
         for key, text in actions:
             action = menu.addAction(text)
             if key in {"csv", "pdf"}:
