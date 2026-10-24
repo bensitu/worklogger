@@ -115,7 +115,7 @@ class AuthController:
         current_mode = mode.value.mode
         while True:
             if current_mode == "register":
-                outcome = self._run_register_dialog()
+                outcome = self._run_register_dialog(initial_setup=not mode.value.has_users)
             elif current_mode == "reset":
                 outcome = self._run_reset_password_dialog()
             else:
@@ -247,8 +247,10 @@ class AuthController:
         if self._remember_session_store is not None:
             self._remember_session_store.clear_token()
 
-    def _run_register_dialog(self) -> _AuthDialogOutcome:
+    def _run_register_dialog(self, *, initial_setup=False) -> _AuthDialogOutcome:
         dialog = self._register_dialog_factory(self._parent)
+        if isinstance(dialog, RegisterDialog):
+            dialog.set_initial_setup(initial_setup)
         outcome = _AuthDialogOutcome()
 
         def complete(result):
@@ -259,7 +261,8 @@ class AuthController:
                 user=result.value.user,
                 recovery_key=result.value.recovery_key,
             )
-            dialog.set_error(_("Save this recovery key before continuing."))
+            dialog.set_error(_(
+                "Use this key to reset a forgotten password. It is not your sign-in password. Keep it private."))
             dialog.mark_complete(result.value.recovery_key)
 
         def submit(draft: RegisterDraft) -> None:

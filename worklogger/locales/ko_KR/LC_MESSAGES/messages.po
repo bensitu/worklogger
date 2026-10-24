@@ -91,8 +91,8 @@ msgstr "정보"
 msgid "Account"
 msgstr "계정"
 
-msgid "Account created"
-msgstr "계정이 생성되었습니다"
+msgid "Account created. Save your recovery key."
+msgstr "계정이 생성되었습니다. 복구 키를 보관하세요."
 
 msgid "Account: {username}"
 msgstr "계정: {username}"
@@ -415,6 +415,9 @@ msgstr "예정 근무와 자동 목표를 계산하려면 공휴일 지역을 �
 msgid "Choose a local SQLite backup (.db, .sqlite or .sqlite3), not a CSV or personal cloud archive. WorkLogger checks a copy before replacement, keeps the current files, then opens sign-in for an account from the backup."
 msgstr "로컬 SQLite 백업(.db, .sqlite, .sqlite3)을 선택하세요. CSV나 개인 클라우드 백업 파일은 사용할 수 없습니다. 복사본을 검사하고 현재 파일을 보관한 뒤 교체합니다. 완료 후 백업에 포함된 계정으로 로그인하세요."
 
+msgid "Choose a login ID and password."
+msgstr "로그인 ID와 비밀번호를 설정하세요."
+
 msgid "Choose a split time strictly inside the recorded interval."
 msgstr "기록의 시작 및 종료 시간을 제외한 구간 내 분할 시간을 선택하세요."
 
@@ -444,6 +447,9 @@ msgstr "사용자 지정 색상 선택"
 
 msgid "Choose one action"
 msgstr "작업을 하나 선택하세요"
+
+msgid "Choose your own login ID; an email address is not required."
+msgstr "로그인 ID는 직접 정할 수 있으며 이메일 주소는 필요하지 않습니다."
 
 msgid "Classification"
 msgstr "기록 분류"
@@ -577,11 +583,17 @@ msgstr "노트를 불러올 수 없습니다"
 msgid "Could not load reports"
 msgstr "보고서를 불러올 수 없습니다"
 
+msgid "Create a local account for your records. After registration, save your recovery key for password recovery."
+msgstr "기록을 관리할 로컬 계정을 만드세요. 계정 생성 후 비밀번호 재설정에 사용할 복구 키를 보관하세요."
+
 msgid "Create account"
 msgstr "계정 만들기"
 
 msgid "Create an empty database and set up a new account? Existing database files will be retained; records will not be imported automatically."
 msgstr "빈 데이터베이스를 만들고 새 계정을 설정할까요? 기존 데이터베이스 파일은 보관되지만 기록은 자동으로 가져오지 않습니다."
+
+msgid "Create my account"
+msgstr "내 계정 만들기"
 
 msgid "Create new database..."
 msgstr "새 데이터베이스 만들기…"
@@ -837,6 +849,9 @@ msgstr "종료 시각"
 
 msgid "English"
 msgstr "영어"
+
+msgid "Enter a completed time period or start a timer for work in progress."
+msgstr "완료한 시간대를 입력하거나 진행 중인 작업의 타이머를 시작하세요."
 
 msgid "Enter a name of up to 80 characters and select an accounting category."
 msgstr "80자 이내의 이름을 입력하고 집계 분류를 선택하세요."
@@ -1260,6 +1275,9 @@ msgstr "이 임시 비밀번호를 다른 사람에게 공개하지 마세요. �
 
 msgid "Keep waiting"
 msgstr "계속 기다리기"
+
+msgid "Keep your recovery key"
+msgstr "복구 키 보관"
 
 msgid "Korean"
 msgstr "한국어"
@@ -1909,6 +1927,9 @@ msgstr "기록 검색을 사용할 수 없습니다."
 msgid "Record status"
 msgstr "기록 상태"
 
+msgid "Record work and breaks, keep daily notes, and prepare reports from your records."
+msgstr "업무와 휴식을 기록하고 일일 메모를 남기며 기록을 바탕으로 보고서를 작성하세요."
+
 msgid "Recorded"
 msgstr "기록됨"
 
@@ -2194,6 +2215,9 @@ msgstr "템플릿 저장"
 msgid "Save temporary password"
 msgstr "임시 비밀번호 저장"
 
+msgid "Save the key provided after registration so you can reset a forgotten password."
+msgstr "계정 생성 후 제공되는 키를 보관하면 비밀번호를 잊었을 때 재설정할 수 있습니다."
+
 msgid "Save the settings before connecting or transferring backups."
 msgstr "연결하거나 백업을 전송하기 전에 설정을 저장하세요."
 
@@ -2235,6 +2259,9 @@ msgstr "저장된 설정: {requested} 토큰. 실제 컨텍스트: {effective} �
 
 msgid "Saved report #{report_id}"
 msgstr "저장된 보고서 #{report_id}"
+
+msgid "Saved safely, start using WorkLogger"
+msgstr "보관 완료, 사용 시작"
 
 msgid "Saved weekly reports"
 msgstr "저장된 주간 보고서"
@@ -2454,6 +2481,9 @@ msgstr "계속하기 전에 기록 또는 휴식을 시작하세요."
 
 msgid "Start week on Monday"
 msgstr "월요일부터 한 주 시작"
+
+msgid "Start with your own local account. No online registration is required."
+msgstr "먼저 나만의 로컬 계정을 만드세요. 온라인 가입은 필요하지 않습니다."
 
 msgid "Started at"
 msgstr "시작 시각"
@@ -3019,6 +3049,9 @@ msgstr "외부 모델 사용"
 msgid "Use model"
 msgstr "모델 사용"
 
+msgid "Use this key to reset a forgotten password. It is not your sign-in password. Keep it private."
+msgstr "비밀번호를 잊으면 이 키로 재설정할 수 있습니다. 로그인 비밀번호와는 다릅니다. 다른 사람과 공유하지 말고 안전하게 보관하세요."
+
 msgid "User"
 msgstr "사용자"
 
@@ -3090,6 +3123,9 @@ msgstr "주간 보고서"
 
 msgid "Weekly planned work: {days:g} days"
 msgstr "주간 예정 근무: {days:g}일"
+
+msgid "Welcome to WorkLogger"
+msgstr "WorkLogger에 오신 것을 환영합니다"
 
 msgid "Welcome!"
 msgstr "환영합니다!"
@@ -3213,6 +3249,9 @@ msgstr "다른 곳에서 표시 이름이 변경되었습니다. 저장하기 �
 
 msgid "Your local database is stored here. Open this folder to locate it; use Backup Data to create a safe copy."
 msgstr "로컬 데이터베이스 저장 폴더입니다. 폴더를 열어 확인할 수 있으며 안전한 복사본은 '데이터 백업'으로 만드세요."
+
+msgid "Your records stay on this computer. AI assistance and cloud backups are optional."
+msgstr "기록은 이 컴퓨터에 저장됩니다. AI 지원과 클라우드 백업은 선택 사항입니다."
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."
 msgstr "저장된 로그인이 유효하지 않거나 만료되었습니다. 다시 로그인하세요."

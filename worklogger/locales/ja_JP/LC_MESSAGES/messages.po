@@ -91,8 +91,8 @@ msgstr "このアプリについて"
 msgid "Account"
 msgstr "アカウント"
 
-msgid "Account created"
-msgstr "アカウントを作成しました"
+msgid "Account created. Save your recovery key."
+msgstr "アカウントを作成しました。復旧キーを保存してください。"
 
 msgid "Account: {username}"
 msgstr "アカウント: {username}"
@@ -415,6 +415,9 @@ msgstr "予定勤務と自動目標を計算するには、祝日の地域を選
 msgid "Choose a local SQLite backup (.db, .sqlite or .sqlite3), not a CSV or personal cloud archive. WorkLogger checks a copy before replacement, keeps the current files, then opens sign-in for an account from the backup."
 msgstr "ローカルの SQLite バックアップ（.db、.sqlite、.sqlite3）を選択してください。CSV や個人用クラウドバックアップは使用できません。コピーを検証し、現在のファイルを保持してから置き換えます。完了後はバックアップ内のアカウントでサインインしてください。"
 
+msgid "Choose a login ID and password."
+msgstr "ログイン ID とパスワードを設定します。"
+
 msgid "Choose a split time strictly inside the recorded interval."
 msgstr "記録の開始・終了時刻を除く、区間内の分割時刻を選択してください。"
 
@@ -444,6 +447,9 @@ msgstr "カスタム色を選択"
 
 msgid "Choose one action"
 msgstr "操作を1つ選択"
+
+msgid "Choose your own login ID; an email address is not required."
+msgstr "ログイン ID は自由に設定できます。メールアドレスは不要です。"
 
 msgid "Classification"
 msgstr "記録の分類"
@@ -577,11 +583,17 @@ msgstr "ノートを読み込めませんでした"
 msgid "Could not load reports"
 msgstr "レポートを読み込めませんでした"
 
+msgid "Create a local account for your records. After registration, save your recovery key for password recovery."
+msgstr "自分の記録を管理するローカルアカウントを作成します。作成後、パスワードの再設定に使う復旧キーを保存してください。"
+
 msgid "Create account"
 msgstr "アカウントを作成"
 
 msgid "Create an empty database and set up a new account? Existing database files will be retained; records will not be imported automatically."
 msgstr "空のデータベースを作成して新しいアカウントを設定しますか？既存のデータベースファイルは保持されますが、記録は自動的に取り込まれません。"
+
+msgid "Create my account"
+msgstr "アカウントを作成"
 
 msgid "Create new database..."
 msgstr "データベースを新規作成…"
@@ -837,6 +849,9 @@ msgstr "終了日時"
 
 msgid "English"
 msgstr "英語"
+
+msgid "Enter a completed time period or start a timer for work in progress."
+msgstr "完了した作業の時間を入力するか、作業中ならタイマーを開始します。"
 
 msgid "Enter a name of up to 80 characters and select an accounting category."
 msgstr "80文字以内の名前を入力し、集計区分を選択してください。"
@@ -1260,6 +1275,9 @@ msgstr "この一時パスワードを他人に知らせないでください。
 
 msgid "Keep waiting"
 msgstr "そのまま待つ"
+
+msgid "Keep your recovery key"
+msgstr "復旧キーを保管"
 
 msgid "Korean"
 msgstr "韓国語"
@@ -1909,6 +1927,9 @@ msgstr "記録検索を利用できません。"
 msgid "Record status"
 msgstr "記録状態"
 
+msgid "Record work and breaks, keep daily notes, and prepare reports from your records."
+msgstr "仕事や休憩を記録し、日々のメモを残して、記録からレポートを作成できます。"
+
 msgid "Recorded"
 msgstr "記録済み"
 
@@ -2194,6 +2215,9 @@ msgstr "テンプレートを保存"
 msgid "Save temporary password"
 msgstr "一時パスワードを保存"
 
+msgid "Save the key provided after registration so you can reset a forgotten password."
+msgstr "アカウント作成後に表示されるキーを保存すると、パスワードを忘れたときに再設定できます。"
+
 msgid "Save the settings before connecting or transferring backups."
 msgstr "接続またはバックアップの転送前に設定を保存してください。"
 
@@ -2235,6 +2259,9 @@ msgstr "保存された設定: {requested} トークン。実効コンテキス�
 
 msgid "Saved report #{report_id}"
 msgstr "保存済みレポート #{report_id}"
+
+msgid "Saved safely, start using WorkLogger"
+msgstr "保管して利用を開始"
 
 msgid "Saved weekly reports"
 msgstr "保存済みの週報"
@@ -2454,6 +2481,9 @@ msgstr "続行する前に記録または休憩を開始してください。"
 
 msgid "Start week on Monday"
 msgstr "月曜始まり"
+
+msgid "Start with your own local account. No online registration is required."
+msgstr "まず自分用のローカルアカウントを作成します。オンライン登録は不要です。"
 
 msgid "Started at"
 msgstr "開始日時"
@@ -3019,6 +3049,9 @@ msgstr "外部モデルを使用"
 msgid "Use model"
 msgstr "モデルを使用"
 
+msgid "Use this key to reset a forgotten password. It is not your sign-in password. Keep it private."
+msgstr "このキーはパスワードを忘れたときの再設定に使用します。通常のログイン用パスワードではありません。他人に共有せず保管してください。"
+
 msgid "User"
 msgstr "ユーザー"
 
@@ -3090,6 +3123,9 @@ msgstr "週報"
 
 msgid "Weekly planned work: {days:g} days"
 msgstr "週の予定勤務：{days:g}日"
+
+msgid "Welcome to WorkLogger"
+msgstr "WorkLogger へようこそ"
 
 msgid "Welcome!"
 msgstr "ようこそ！"
@@ -3213,6 +3249,9 @@ msgstr "表示名が別の場所で変更されました。保存する前に編
 
 msgid "Your local database is stored here. Open this folder to locate it; use Backup Data to create a safe copy."
 msgstr "ローカルデータベースの保存先です。フォルダーで確認できます。安全なコピーは「データをバックアップ」で作成してください。"
+
+msgid "Your records stay on this computer. AI assistance and cloud backups are optional."
+msgstr "記録はこのコンピューターに保存されます。AI 支援やクラウドバックアップは任意で利用できます。"
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."
 msgstr "保存済みのログイン情報が無効か、有効期限が切れています。再度ログインしてください。"

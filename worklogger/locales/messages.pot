@@ -89,7 +89,7 @@ msgstr ""
 msgid "Account"
 msgstr ""
 
-msgid "Account created"
+msgid "Account created. Save your recovery key."
 msgstr ""
 
 msgid "Account: {username}"
@@ -413,6 +413,9 @@ msgstr ""
 msgid "Choose a local SQLite backup (.db, .sqlite or .sqlite3), not a CSV or personal cloud archive. WorkLogger checks a copy before replacement, keeps the current files, then opens sign-in for an account from the backup."
 msgstr ""
 
+msgid "Choose a login ID and password."
+msgstr ""
+
 msgid "Choose a split time strictly inside the recorded interval."
 msgstr ""
 
@@ -441,6 +444,9 @@ msgid "Choose custom color"
 msgstr ""
 
 msgid "Choose one action"
+msgstr ""
+
+msgid "Choose your own login ID; an email address is not required."
 msgstr ""
 
 msgid "Classification"
@@ -575,10 +581,16 @@ msgstr ""
 msgid "Could not load reports"
 msgstr ""
 
+msgid "Create a local account for your records. After registration, save your recovery key for password recovery."
+msgstr ""
+
 msgid "Create account"
 msgstr ""
 
 msgid "Create an empty database and set up a new account? Existing database files will be retained; records will not be imported automatically."
+msgstr ""
+
+msgid "Create my account"
 msgstr ""
 
 msgid "Create new database..."
@@ -834,6 +846,9 @@ msgid "Ended at"
 msgstr ""
 
 msgid "English"
+msgstr ""
+
+msgid "Enter a completed time period or start a timer for work in progress."
 msgstr ""
 
 msgid "Enter a name of up to 80 characters and select an accounting category."
@@ -1257,6 +1272,9 @@ msgid "Keep this temporary password private. The saved file is not encrypted."
 msgstr ""
 
 msgid "Keep waiting"
+msgstr ""
+
+msgid "Keep your recovery key"
 msgstr ""
 
 msgid "Korean"
@@ -1907,6 +1925,9 @@ msgstr ""
 msgid "Record status"
 msgstr ""
 
+msgid "Record work and breaks, keep daily notes, and prepare reports from your records."
+msgstr ""
+
 msgid "Recorded"
 msgstr ""
 
@@ -2192,6 +2213,9 @@ msgstr ""
 msgid "Save temporary password"
 msgstr ""
 
+msgid "Save the key provided after registration so you can reset a forgotten password."
+msgstr ""
+
 msgid "Save the settings before connecting or transferring backups."
 msgstr ""
 
@@ -2232,6 +2256,9 @@ msgid "Saved preference: {requested} tokens; effective context: {effective} toke
 msgstr ""
 
 msgid "Saved report #{report_id}"
+msgstr ""
+
+msgid "Saved safely, start using WorkLogger"
 msgstr ""
 
 msgid "Saved weekly reports"
@@ -2451,6 +2478,9 @@ msgid "Start recording or a break before continuing."
 msgstr ""
 
 msgid "Start week on Monday"
+msgstr ""
+
+msgid "Start with your own local account. No online registration is required."
 msgstr ""
 
 msgid "Started at"
@@ -3017,6 +3047,9 @@ msgstr ""
 msgid "Use model"
 msgstr ""
 
+msgid "Use this key to reset a forgotten password. It is not your sign-in password. Keep it private."
+msgstr ""
+
 msgid "User"
 msgstr ""
 
@@ -3087,6 +3120,9 @@ msgid "Weekly Report"
 msgstr ""
 
 msgid "Weekly planned work: {days:g} days"
+msgstr ""
+
+msgid "Welcome to WorkLogger"
 msgstr ""
 
 msgid "Welcome!"
@@ -3210,6 +3246,9 @@ msgid "Your display name changed elsewhere. Cancel to reload it before saving; y
 msgstr ""
 
 msgid "Your local database is stored here. Open this folder to locate it; use Backup Data to create a safe copy."
+msgstr ""
+
+msgid "Your records stay on this computer. AI assistance and cloud backups are optional."
 msgstr ""
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."

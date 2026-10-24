@@ -91,8 +91,8 @@ msgstr "关于"
 msgid "Account"
 msgstr "账户"
 
-msgid "Account created"
-msgstr "账户已创建"
+msgid "Account created. Save your recovery key."
+msgstr "账户已创建，请保存恢复密钥。"
 
 msgid "Account: {username}"
 msgstr "账户：{username}"
@@ -415,6 +415,9 @@ msgstr "请选择节假日地区，以计算计划工作与自动目标。"
 msgid "Choose a local SQLite backup (.db, .sqlite or .sqlite3), not a CSV or personal cloud archive. WorkLogger checks a copy before replacement, keeps the current files, then opens sign-in for an account from the backup."
 msgstr "选择本地 SQLite 数据库备份（.db、.sqlite 或 .sqlite3），而不是 CSV 或个人云备份归档。软件会先检查备份副本，保留当前文件后再替换。完成后请使用备份中的账户登录。"
 
+msgid "Choose a login ID and password."
+msgstr "设置登录 ID 和密码。"
+
 msgid "Choose a split time strictly inside the recorded interval."
 msgstr "请选择记录时段内的拆分时间，不能选择开始或结束时间。"
 
@@ -444,6 +447,9 @@ msgstr "选择自定义颜色"
 
 msgid "Choose one action"
 msgstr "请选择一种操作"
+
+msgid "Choose your own login ID; an email address is not required."
+msgstr "自行设置登录 ID，无需填写邮箱。"
 
 msgid "Classification"
 msgstr "记录分类"
@@ -577,11 +583,17 @@ msgstr "无法加载笔记"
 msgid "Could not load reports"
 msgstr "无法加载报表"
 
+msgid "Create a local account for your records. After registration, save your recovery key for password recovery."
+msgstr "创建本地账户来管理自己的记录。创建后，请保存用于重设密码的恢复密钥。"
+
 msgid "Create account"
 msgstr "创建账户"
 
 msgid "Create an empty database and set up a new account? Existing database files will be retained; records will not be imported automatically."
 msgstr "是否创建空数据库并设置新账户？现有数据库文件会保留，但不会自动导入原有记录。"
+
+msgid "Create my account"
+msgstr "创建我的账户"
 
 msgid "Create new database..."
 msgstr "新建数据库…"
@@ -837,6 +849,9 @@ msgstr "结束时间戳"
 
 msgid "English"
 msgstr "英语"
+
+msgid "Enter a completed time period or start a timer for work in progress."
+msgstr "填写已完成的时段，或为正在进行的工作启动计时。"
 
 msgid "Enter a name of up to 80 characters and select an accounting category."
 msgstr "请输入不超过80个字符的名称，并选择统计口径。"
@@ -1260,6 +1275,9 @@ msgstr "请妥善保管此临时密码，不要分享给他人。保存的文件
 
 msgid "Keep waiting"
 msgstr "继续等待"
+
+msgid "Keep your recovery key"
+msgstr "保管恢复密钥"
 
 msgid "Korean"
 msgstr "韩语"
@@ -1909,6 +1927,9 @@ msgstr "记录检索不可用。"
 msgid "Record status"
 msgstr "记录状态"
 
+msgid "Record work and breaks, keep daily notes, and prepare reports from your records."
+msgstr "记录工作与休息，整理每日笔记，并从记录中生成报表。"
+
 msgid "Recorded"
 msgstr "已记录"
 
@@ -2194,6 +2215,9 @@ msgstr "保存模板"
 msgid "Save temporary password"
 msgstr "保存临时密码"
 
+msgid "Save the key provided after registration so you can reset a forgotten password."
+msgstr "保存创建账户后提供的密钥，以便忘记密码时重设密码。"
+
 msgid "Save the settings before connecting or transferring backups."
 msgstr "请先保存设置，再连接或传输备份。"
 
@@ -2235,6 +2259,9 @@ msgstr "已保存的偏好：{requested} tokens；实际上下文：{effective} 
 
 msgid "Saved report #{report_id}"
 msgstr "已保存报表 #{report_id}"
+
+msgid "Saved safely, start using WorkLogger"
+msgstr "已妥善保存，开始使用"
 
 msgid "Saved weekly reports"
 msgstr "已保存周报"
@@ -2454,6 +2481,9 @@ msgstr "请先开始记录或休息。"
 
 msgid "Start week on Monday"
 msgstr "每周从周一开始"
+
+msgid "Start with your own local account. No online registration is required."
+msgstr "先为自己创建一个本地账户，无需注册在线服务。"
 
 msgid "Started at"
 msgstr "开始时间戳"
@@ -3019,6 +3049,9 @@ msgstr "使用外部模型"
 msgid "Use model"
 msgstr "使用模型"
 
+msgid "Use this key to reset a forgotten password. It is not your sign-in password. Keep it private."
+msgstr "忘记密码时，可用此密钥重设密码。它不是日常登录密码，请妥善保管，不要分享给他人。"
+
 msgid "User"
 msgstr "用户"
 
@@ -3090,6 +3123,9 @@ msgstr "周报"
 
 msgid "Weekly planned work: {days:g} days"
 msgstr "每周计划工作：{days:g} 天"
+
+msgid "Welcome to WorkLogger"
+msgstr "欢迎使用 WorkLogger"
 
 msgid "Welcome!"
 msgstr "欢迎！"
@@ -3213,6 +3249,9 @@ msgstr "显示名称已在其他位置修改。请取消编辑以重新加载后
 
 msgid "Your local database is stored here. Open this folder to locate it; use Backup Data to create a safe copy."
 msgstr "本地数据库保存在此目录中。可打开目录查看；请使用“备份数据”创建安全副本。"
+
+msgid "Your records stay on this computer. AI assistance and cloud backups are optional."
+msgstr "记录保存在这台电脑上，AI 辅助和云备份可按需开启。"
 
 msgid "Your saved sign-in is invalid or expired. Please sign in again."
 msgstr "已保存的登录无效或已过期，请重新登录。"

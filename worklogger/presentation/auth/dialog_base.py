@@ -69,9 +69,9 @@ class RecoveryKeyDialog(AuthDialog):
             widget.hide()
             layout.addWidget(widget)
 
-    def _build_credential_form(self, subtitle):
+    def _build_credential_form(self, subtitle, *, container=None):
         self.setProperty("credential_form", True)
-        root = QVBoxLayout(self)
+        root = QVBoxLayout(container if container is not None else self)
         root.setContentsMargins(24, 24, 24, 24)
         root.setSpacing(12)
         header = QWidget()

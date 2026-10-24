@@ -553,12 +553,20 @@ class AuthPresentationTests(unittest.TestCase):
                 dialogs.append(self)
 
             def exec(self) -> int:
+                self.assert_welcome_then_open_form()
                 self.username_input.setText("alice")
                 self.password_input.setText("secret123")
                 self.confirm_input.setText("secret123")
                 self.register_button.click()
                 self.register_button.click()
                 return int(QDialog.DialogCode.Accepted)
+
+            def assert_welcome_then_open_form(self):
+                if self.pages.currentWidget() is not self.welcome_page:
+                    raise AssertionError("Initial account setup did not show the welcome page")
+                self.welcome_page.create_button.click()
+                if self.pages.currentWidget() is not self.form_page:
+                    raise AssertionError("Account creation form did not open")
 
         controller = AuthController(
             view_model,
@@ -572,7 +580,7 @@ class AuthPresentationTests(unittest.TestCase):
         assert authenticated.value is not None
         self.assertEqual(authenticated.value.user.username, "alice")
         self.assertTrue(authenticated.value.recovery_key)
-        self.assertEqual(dialogs[0].register_button.text(), "Continue")
+        self.assertEqual(dialogs[0].register_button.text(), "Saved safely, start using WorkLogger")
         self.assertEqual(dialogs[0].recovery_key_label.text(), authenticated.value.recovery_key)
 
     def test_auth_controller_logs_in_existing_user(self) -> None:

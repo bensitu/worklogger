@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QPushButton,
     QSizePolicy,
+    QStackedWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -17,6 +18,7 @@ from PySide6.QtWidgets import (
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.auth.dialog_base import RecoveryKeyDialog
 from worklogger.presentation.auth.models import ChangePasswordDraft, RegisterDraft, ResetPasswordDraft
+from worklogger.presentation.auth.welcome_page import WelcomePage
 from worklogger.presentation.theme.widget_style import set_style_property
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.credential_actions import fit_credential_result
@@ -39,6 +41,21 @@ class RegisterDialog(RecoveryKeyDialog):
         self.resize(440, self.sizeHint().height())
         self.setMinimumWidth(440)
 
+    def set_initial_setup(self, initial: bool) -> None:
+        self.pages.setCurrentWidget(self.welcome_page if initial else self.form_page)
+        self.register_button.setDefault(not initial)
+        self.welcome_page.create_button.setDefault(initial)
+        if initial:
+            screen = self.screen().availableGeometry()
+            self.resize(min(600, screen.width() - 32), min(600, screen.height() - 48))
+            self.welcome_page.create_button.setFocus()
+
+    def _show_account_form(self) -> None:
+        self.pages.setCurrentWidget(self.form_page)
+        self.welcome_page.create_button.setDefault(False)
+        self.register_button.setDefault(True)
+        self.username_input.setFocus()
+
     def draft(self) -> RegisterDraft:
         return RegisterDraft(
             username=self.username_input.text(),
@@ -48,7 +65,9 @@ class RegisterDialog(RecoveryKeyDialog):
 
     def mark_complete(self, recovery_key: str) -> None:
         self._registration_complete = True
-        self._show_credential_completion(_("Account created"))
+        self._show_credential_completion(_("Account created. Save your recovery key."))
+        self.account_intro.hide()
+        self.login_id_hint.hide()
         self.set_recovery_key(recovery_key)
         self.username_input.setEnabled(False)
         self.password_input.setEnabled(False)
@@ -58,7 +77,7 @@ class RegisterDialog(RecoveryKeyDialog):
         self.password_input.clear()
         self.confirm_input.clear()
         self.password_fields.hide()
-        self.register_button.setText(_("Continue"))
+        self.register_button.setText(_("Saved safely, start using WorkLogger"))
         self.register_button.setEnabled(True)
         set_button_icon(self.register_button, "chevron-right")
         fit_credential_result(self)
@@ -73,10 +92,24 @@ class RegisterDialog(RecoveryKeyDialog):
         self._set_credential_busy(busy, completed=self._registration_complete)
 
     def _build_ui(self) -> None:
-        root, form = self._build_credential_form(_("Create account"))
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        self.pages = QStackedWidget()
+        outer.addWidget(self.pages)
+        self.form_page = QWidget()
+        root, form = self._build_credential_form(_("Create account"), container=self.form_page)
+        self.account_intro = QLabel(_(
+            "Create a local account for your records. After registration, save your recovery key for password recovery."))
+        self.account_intro.setWordWrap(True)
+        self.account_intro.setProperty("role", "secondary")
+        root.insertWidget(1, self.account_intro)
         self.username_input = QLineEdit()
         self.username_input.setObjectName("username_line_edit")
         form.addRow(_("Login ID"), self.username_input)
+        self.login_id_hint = QLabel(_("Choose your own login ID; an email address is not required."))
+        self.login_id_hint.setWordWrap(True)
+        self.login_id_hint.setProperty("role", "caption")
+        form.addRow(self.login_id_hint)
 
         self.password_input = PasswordLineEdit()
         self.password_input.setObjectName("password_line_edit")
@@ -108,6 +141,11 @@ class RegisterDialog(RecoveryKeyDialog):
 
         self.register_button.clicked.connect(self._handle_register_clicked)
         self.login_button.clicked.connect(self.login_requested.emit)
+        self.pages.addWidget(self.form_page)
+        self.welcome_page = WelcomePage()
+        self.pages.addWidget(self.welcome_page)
+        self.welcome_page.create_requested.connect(self._show_account_form)
+        self.welcome_page.exit_requested.connect(self.reject)
 
     def _handle_register_clicked(self) -> None:
         if self._registration_complete:
