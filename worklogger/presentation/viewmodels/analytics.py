@@ -30,6 +30,9 @@ class AnalyticsCsvExporterProtocol(Protocol):
 
 
 class AnalyticsPdfExporterProtocol(Protocol):
+    def export_dashboard(self, destination: Path, dashboard: AnalyticsDashboard, *, scope: str,
+                         breakdown_dimension: str = "entry_type") -> Result[Path]: ...
+
     def export_bundle(
         self,
         destination: Path,
@@ -147,6 +150,9 @@ class AnalyticsViewModel:
         return self._csv_exporter.export_bundle(destination, state.bundle, metric=state.metric)
 
     def export_pdf(self, destination: Path, state: AnalyticsState) -> Result[Path]:
+        if state.dashboard is not None:
+            return self._pdf_exporter.export_dashboard(destination, state.dashboard, scope=state.scope,
+                                                       breakdown_dimension=state.breakdown_dimension)
         return self._pdf_exporter.export_bundle(
             destination,
             state.bundle,

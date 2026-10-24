@@ -148,7 +148,20 @@ Suggested filenames identify the scope and period, for example
 `analytics-quarterly-2026Q4-20261024-153045-123.csv`, or
 `analytics-annual-2026-20261024-153045-123.pdf`. The final part is the local export
 date, time, and milliseconds; month abbreviations are consistently English.
-Analytics PDF is a paginated text summary rather than an image of the charts.
+Analytics dashboard PDF starts with a landscape overview of all eight areas:
+period hours and goal progress, overtime and comparison, actual attendance and
+planned work, rest dates, work-hour trends, average work hours, the selected
+classification/work-arrangement distribution, and daily averages. It uses a
+light print layout regardless of the interface theme, not a screenshot of the
+visible viewport. Following pages contain complete numeric tables with repeated
+headings, explicit period boundaries, both distribution dimensions, and the
+previous-period comparison range. Long labels remain complete in those tables;
+the overview groups distributions beyond five items under Other. Work and leave
+averages use their respective positive-work and leave-date counts.
+
+Both formats use the loaded dashboard snapshot rather than rereading records
+during export. Changing a period after starting an export does not change that
+export's data. Files replace their destination only after successful generation.
 
 ## Database Backups
 

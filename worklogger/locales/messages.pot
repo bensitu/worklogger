@@ -263,6 +263,9 @@ msgstr ""
 msgid "Average Work Hours"
 msgstr ""
 
+msgid "Average leave hours"
+msgstr ""
+
 msgid "Back to account"
 msgstr ""
 
@@ -359,6 +362,9 @@ msgstr ""
 msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
 msgstr ""
 
+msgid "Calendar days"
+msgstr ""
+
 msgid "Calendar display"
 msgstr ""
 
@@ -375,6 +381,9 @@ msgid "Cancel processing"
 msgstr ""
 
 msgid "Catalog refreshed."
+msgstr ""
+
+msgid "Change"
 msgstr ""
 
 msgid "Change avatar"
@@ -1067,6 +1076,9 @@ msgstr ""
 msgid "Full month"
 msgstr ""
 
+msgid "Full values are listed in the following tables."
+msgstr ""
+
 msgid "GGUF Model (*.gguf)"
 msgstr ""
 
@@ -1092,6 +1104,9 @@ msgid "Getting started"
 msgstr ""
 
 msgid "GitHub"
+msgstr ""
+
+msgid "Goal"
 msgstr ""
 
 msgid "Goal calculation"
@@ -1146,6 +1161,9 @@ msgid "Holiday country"
 msgstr ""
 
 msgid "Holiday data could not be loaded. Planned work and automatic goals are unavailable; recorded hours are unchanged."
+msgstr ""
+
+msgid "Hours"
 msgstr ""
 
 msgid "Hours goal"
@@ -1481,6 +1499,9 @@ msgstr ""
 msgid "Merge with previous record"
 msgstr ""
 
+msgid "Metric"
+msgstr ""
+
 msgid "Microsoft tenant ID"
 msgstr ""
 
@@ -1809,6 +1830,9 @@ msgid "Place historical break"
 msgstr ""
 
 msgid "Place the historical break before splitting or trimming this record."
+msgstr ""
+
+msgid "Planned work"
 msgstr ""
 
 msgid "Planned work unavailable"
@@ -2369,6 +2393,9 @@ msgstr ""
 msgid "Selected month (PDF)"
 msgstr ""
 
+msgid "Selected period"
+msgstr ""
+
 msgid "Selected records: {count} | Existing associations: {existing}"
 msgstr ""
 
@@ -2394,6 +2421,9 @@ msgid "Settings"
 msgstr ""
 
 msgid "Settings are not configured."
+msgstr ""
+
+msgid "Share"
 msgstr ""
 
 msgid "Show"
@@ -2529,6 +2559,9 @@ msgid "Stored securely"
 msgstr ""
 
 msgid "Stored securely; no request is sent when saving."
+msgstr ""
+
+msgid "Summary"
 msgstr ""
 
 msgid "Sun"

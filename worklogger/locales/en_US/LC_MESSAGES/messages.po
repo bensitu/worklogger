@@ -265,6 +265,9 @@ msgstr "Average"
 msgid "Average Work Hours"
 msgstr "Average Work Hours"
 
+msgid "Average leave hours"
+msgstr "Average leave hours"
+
 msgid "Back to account"
 msgstr "Back to account"
 
@@ -361,6 +364,9 @@ msgstr "Calendar Data"
 msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
 msgstr "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
 
+msgid "Calendar days"
+msgstr "Calendar days"
+
 msgid "Calendar display"
 msgstr "Calendar display"
 
@@ -378,6 +384,9 @@ msgstr "Cancel processing"
 
 msgid "Catalog refreshed."
 msgstr "Catalog refreshed."
+
+msgid "Change"
+msgstr "Change"
 
 msgid "Change avatar"
 msgstr "Change avatar"
@@ -1069,6 +1078,9 @@ msgstr "Full day"
 msgid "Full month"
 msgstr "Full month"
 
+msgid "Full values are listed in the following tables."
+msgstr "Full values are listed in the following tables."
+
 msgid "GGUF Model (*.gguf)"
 msgstr "GGUF Model (*.gguf)"
 
@@ -1095,6 +1107,9 @@ msgstr "Getting started"
 
 msgid "GitHub"
 msgstr "GitHub"
+
+msgid "Goal"
+msgstr "Goal"
 
 msgid "Goal calculation"
 msgstr "Goal calculation"
@@ -1149,6 +1164,9 @@ msgstr "Holiday country"
 
 msgid "Holiday data could not be loaded. Planned work and automatic goals are unavailable; recorded hours are unchanged."
 msgstr "Holiday data could not be loaded. Planned work and automatic goals are unavailable; recorded hours are unchanged."
+
+msgid "Hours"
+msgstr "Hours"
 
 msgid "Hours goal"
 msgstr "Hours goal"
@@ -1483,6 +1501,9 @@ msgstr "Merge these adjacent records? Their content will be combined."
 msgid "Merge with previous record"
 msgstr "Merge with previous record"
 
+msgid "Metric"
+msgstr "Metric"
+
 msgid "Microsoft tenant ID"
 msgstr "Microsoft tenant ID"
 
@@ -1812,6 +1833,9 @@ msgstr "Place historical break"
 
 msgid "Place the historical break before splitting or trimming this record."
 msgstr "Place the historical break before splitting or trimming this record."
+
+msgid "Planned work"
+msgstr "Planned work"
 
 msgid "Planned work unavailable"
 msgstr "Planned work unavailable"
@@ -2371,6 +2395,9 @@ msgstr "Selected month (Excel)"
 msgid "Selected month (PDF)"
 msgstr "Selected month (PDF)"
 
+msgid "Selected period"
+msgstr "Selected period"
+
 msgid "Selected records: {count} | Existing associations: {existing}"
 msgstr "Selected records: {count} | Existing associations: {existing}"
 
@@ -2397,6 +2424,9 @@ msgstr "Settings"
 
 msgid "Settings are not configured."
 msgstr "Settings are not configured."
+
+msgid "Share"
+msgstr "Share"
 
 msgid "Show"
 msgstr "Show"
@@ -2532,6 +2562,9 @@ msgstr "Stored securely"
 
 msgid "Stored securely; no request is sent when saving."
 msgstr "Stored securely; no request is sent when saving."
+
+msgid "Summary"
+msgstr "Summary"
 
 msgid "Sun"
 msgstr "Sun"

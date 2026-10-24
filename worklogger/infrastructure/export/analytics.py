@@ -22,9 +22,7 @@ class AnalyticsCsvExporter:
             path = Path(destination)
             if path.suffix.lower() != ".csv":
                 path = path.with_name(path.name + ".csv")
-            entries = tuple(entry for record in dashboard.records for entry in (record.entries or (record,)))
-            sheet = Timesheet(dashboard.period_start, dashboard.period_end, "", datetime.now().astimezone(),
-                              dashboard.standard_work_hours, entries)
+            sheet = _timesheet(dashboard)
             with atomic_destination(path) as temporary, temporary.open("w", encoding="utf-8-sig", newline="") as handle:
                 writer = csv.writer(handle)
                 writer.writerow((_("Date"), _("Start"), _("End"), _("End date"), _("Classification"),
@@ -54,7 +52,7 @@ class AnalyticsCsvExporter:
             with atomic_destination(path) as temporary, temporary.open("w", encoding="utf-8-sig", newline="") as handle:
                 writer = csv.writer(handle)
                 writer.writerow([_("Period"), (_("Average Work Hours") if metric == "average" else _("Work hours")) + " (h)",
-                                 _("Leave hours") + " (h)"])
+                                 (_("Average leave hours") if metric == "average" else _("Leave hours")) + " (h)"])
                 for index, (label, bar_value) in enumerate(bundle.bar_data):
                     leave_hours = (
                         bundle.leave_hours_data[index][1]
@@ -80,6 +78,22 @@ class AnalyticsCsvExporter:
 
 
 class AnalyticsPdfExporter:
+    def export_dashboard(self, destination: Path, dashboard: AnalyticsDashboard, *, scope: str,
+                         breakdown_dimension: str = "entry_type") -> Result[Path]:
+        try:
+            from worklogger.infrastructure.export.analytics_pdf import write_dashboard_pdf
+            sheet = _timesheet(dashboard)
+            path = Path(destination)
+            if path.suffix.lower() != ".pdf":
+                path = path.with_name(path.name + ".pdf")
+            with atomic_destination(path) as temporary:
+                write_dashboard_pdf(temporary, dashboard, scope=scope, breakdown_dimension=breakdown_dimension,
+                                    generated_at=sheet.generated_at)
+        except Exception as exc:
+            return Result.failure(InfrastructureError("analytics_pdf_export_failed", "analytics_pdf_export_failed",
+                                                       {"reason": type(exc).__name__}))
+        return Result.success(path)
+
     def export_bundle(
         self,
         destination: Path,
@@ -111,6 +125,12 @@ class AnalyticsPdfExporter:
                 )
             )
         return Result.success(path)
+
+
+def _timesheet(dashboard):
+    entries = tuple(entry for record in dashboard.records for entry in (record.entries or (record,)))
+    return Timesheet(dashboard.period_start, dashboard.period_end, "", datetime.now().astimezone(),
+                     dashboard.standard_work_hours, entries)
 
 
 def _write_pdf(destination: Path, lines: list[str]) -> None:

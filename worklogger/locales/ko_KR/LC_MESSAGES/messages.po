@@ -265,6 +265,9 @@ msgstr "평균"
 msgid "Average Work Hours"
 msgstr "평균 근무 시간"
 
+msgid "Average leave hours"
+msgstr "평균 휴가 시간"
+
 msgid "Back to account"
 msgstr "계정으로 돌아가기"
 
@@ -361,6 +364,9 @@ msgstr "달력 데이터"
 msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
 msgstr "달력 데이터가 이미 있습니다.\n\n바꾸기는 기존 일정을 지운 후 가져옵니다.\n추가는 기존 일정을 유지하고 가져온 일정을 추가합니다."
 
+msgid "Calendar days"
+msgstr "달력 일수"
+
 msgid "Calendar display"
 msgstr "달력 표시"
 
@@ -378,6 +384,9 @@ msgstr "처리 취소"
 
 msgid "Catalog refreshed."
 msgstr "모델 카탈로그를 새로 고쳤습니다."
+
+msgid "Change"
+msgstr "증감"
 
 msgid "Change avatar"
 msgstr "아바타 변경"
@@ -1069,6 +1078,9 @@ msgstr "종일 근무"
 msgid "Full month"
 msgstr "월 전체"
 
+msgid "Full values are listed in the following tables."
+msgstr "전체 수치는 다음 표에 나와 있습니다."
+
 msgid "GGUF Model (*.gguf)"
 msgstr "GGUF Model (*.gguf)"
 
@@ -1095,6 +1107,9 @@ msgstr "시작 안내"
 
 msgid "GitHub"
 msgstr "GitHub"
+
+msgid "Goal"
+msgstr "목표 시간"
 
 msgid "Goal calculation"
 msgstr "목표 계산 방식"
@@ -1149,6 +1164,9 @@ msgstr "공휴일 국가"
 
 msgid "Holiday data could not be loaded. Planned work and automatic goals are unavailable; recorded hours are unchanged."
 msgstr "공휴일 데이터를 불러올 수 없습니다. 예정 근무와 자동 목표를 사용할 수 없으며 기록된 시간은 변경되지 않습니다."
+
+msgid "Hours"
+msgstr "시간"
 
 msgid "Hours goal"
 msgstr "근무 시간 목표"
@@ -1483,6 +1501,9 @@ msgstr "인접한 기록을 병합하시겠습니까? 내용도 합쳐집니다.
 msgid "Merge with previous record"
 msgstr "이전 기록과 병합"
 
+msgid "Metric"
+msgstr "통계 항목"
+
 msgid "Microsoft tenant ID"
 msgstr "Microsoft 테넌트 ID"
 
@@ -1812,6 +1833,9 @@ msgstr "이전 휴식 위치 지정"
 
 msgid "Place the historical break before splitting or trimming this record."
 msgstr "이 기록을 분할하거나 줄이기 전에 기존 휴식의 위치를 지정하세요."
+
+msgid "Planned work"
+msgstr "예정 근무일"
 
 msgid "Planned work unavailable"
 msgstr "예정 근무를 계산할 수 없음"
@@ -2371,6 +2395,9 @@ msgstr "선택한 월(Excel)"
 msgid "Selected month (PDF)"
 msgstr "선택한 월(PDF)"
 
+msgid "Selected period"
+msgstr "선택 기간"
+
 msgid "Selected records: {count} | Existing associations: {existing}"
 msgstr "선택한 기록: {count}개 | 기존 연결: {existing}개"
 
@@ -2397,6 +2424,9 @@ msgstr "설정"
 
 msgid "Settings are not configured."
 msgstr "설정 기능이 구성되지 않았습니다."
+
+msgid "Share"
+msgstr "비중"
 
 msgid "Show"
 msgstr "표시"
@@ -2532,6 +2562,9 @@ msgstr "안전하게 저장됨"
 
 msgid "Stored securely; no request is sent when saving."
 msgstr "안전하게 저장되며 저장 시 요청을 보내지 않습니다."
+
+msgid "Summary"
+msgstr "요약"
 
 msgid "Sun"
 msgstr "일"

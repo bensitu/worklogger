@@ -194,6 +194,41 @@ class AnalyticsPresentationTests(unittest.TestCase):
             self.assertIn("勤務", normalized)
             self.assertIn("Work99", normalized)
 
+    def test_dashboard_pdf_contains_all_regions_and_complete_paginated_classification_data(self):
+        from worklogger.domain.analytics.rules import dashboard_data
+        entries = tuple(WorkLog(1, date(2026, 10, index % 28 + 1), "09:00", "09:15",
+            entry_type=CustomEntryType(f"custom:{index + 1:032x}", f"Research{index:02d}" + "Z" * 60, "work"))
+            for index in range(60))
+        set_language("en_US")
+        for scope in ("monthly", "quarterly", "annual"):
+            dashboard = dashboard_data(aggregate_days(entries), year=2026, month=10, scope=scope,
+                                       standard_hours=8, monthly_target=168)
+            with tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / "dashboard.pdf"
+                result = AnalyticsPdfExporter().export_dashboard(path, dashboard, scope=scope)
+                self.assertTrue(result.ok, result.error)
+                document = QPdfDocument()
+                self.assertEqual(document.load(str(path)), QPdfDocument.Error.None_)
+                try:
+                    self.assertGreater(document.pageCount(), 3)
+                    pages = [document.getAllText(page).text() for page in range(document.pageCount())]
+                finally:
+                    document.close()
+                    del document
+                from worklogger.infrastructure.i18n import _
+                normalize = lambda text: "".join(unicodedata.normalize("NFKC", text).split())
+                overview = normalize(pages[0])
+                for title in ({"monthly": _("Monthly Hours"), "quarterly": _("Quarterly Hours"), "annual": _("Annual Hours")}[scope],
+                              _("Overtime Hours"), _("Actual attendance"), _("Rest Days"), _("Work Hours Trend"),
+                              _("Average Work Hours"), _("Classification breakdown"), _("Daily Average")):
+                    self.assertIn(normalize(title), overview)
+                text = normalize("\n".join(pages))
+                for entry in entries:
+                    self.assertIn(normalize(entry.entry_type.label), text)
+                self.assertIn(dashboard.period_start.isoformat(), text)
+                self.assertIn(dashboard.period_end.isoformat(), text)
+            set_language("en_US")
+
     @classmethod
     def setUpClass(cls) -> None:
         cls._app = _app()

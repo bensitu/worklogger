@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from worklogger.presentation.theme.theme_engine import ThemeEngine, contrasting_text_color
 
-from math import ceil, floor, log10, isfinite
+from math import ceil, isfinite
+from worklogger.domain.analytics.scales import chart_tick_step as chart_tick_step
 
 from PySide6.QtCore import QEvent, QRectF, Qt
 from PySide6.QtGui import QBrush, QColor, QFont, QFontMetrics, QPainter, QPainterPath, QPen
@@ -14,14 +15,6 @@ from worklogger.domain.analytics.models import ChartDataBundle
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.theme.context import current_colors
 from worklogger.presentation.date_labels import duration_label
-
-
-def chart_tick_step(maximum: float) -> float:
-    if not isfinite(maximum):
-        maximum = 1.0
-    raw = max(1.0, maximum) / 4
-    magnitude = 10 ** floor(log10(raw))
-    return next(step * magnitude for step in (1, 2, 2.5, 5, 10) if step * magnitude >= raw)
 
 
 class ComboChart(QWidget):

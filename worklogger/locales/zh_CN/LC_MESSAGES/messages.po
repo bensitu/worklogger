@@ -265,6 +265,9 @@ msgstr "平均值"
 msgid "Average Work Hours"
 msgstr "平均工时"
 
+msgid "Average leave hours"
+msgstr "平均休假时长"
+
 msgid "Back to account"
 msgstr "返回账户"
 
@@ -361,6 +364,9 @@ msgstr "日历数据"
 msgid "Calendar data already exists.\n\nReplace clears previous calendar events before import.\nAppend keeps existing events and adds imported events."
 msgstr "已存在日历数据。\n\n替换会在导入前清空原有事件。\n追加会保留原有事件并添加导入的事件。"
 
+msgid "Calendar days"
+msgstr "自然日天数"
+
 msgid "Calendar display"
 msgstr "日历显示"
 
@@ -378,6 +384,9 @@ msgstr "取消处理"
 
 msgid "Catalog refreshed."
 msgstr "模型目录已刷新。"
+
+msgid "Change"
+msgstr "变化"
 
 msgid "Change avatar"
 msgstr "更换头像"
@@ -1069,6 +1078,9 @@ msgstr "全天工作"
 msgid "Full month"
 msgstr "全月"
 
+msgid "Full values are listed in the following tables."
+msgstr "完整数值见后续数据表。"
+
 msgid "GGUF Model (*.gguf)"
 msgstr "GGUF Model (*.gguf)"
 
@@ -1095,6 +1107,9 @@ msgstr "快速入门"
 
 msgid "GitHub"
 msgstr "GitHub"
+
+msgid "Goal"
+msgstr "目标工时"
 
 msgid "Goal calculation"
 msgstr "目标方式"
@@ -1149,6 +1164,9 @@ msgstr "假日国家"
 
 msgid "Holiday data could not be loaded. Planned work and automatic goals are unavailable; recorded hours are unchanged."
 msgstr "无法加载节假日数据，计划工作与自动目标暂不可用；已记录工时保持不变。"
+
+msgid "Hours"
+msgstr "时长"
 
 msgid "Hours goal"
 msgstr "工时目标"
@@ -1483,6 +1501,9 @@ msgstr "合并这两段相邻记录？内容也会合并。"
 msgid "Merge with previous record"
 msgstr "与前一条记录合并"
 
+msgid "Metric"
+msgstr "统计指标"
+
 msgid "Microsoft tenant ID"
 msgstr "Microsoft 租户 ID"
 
@@ -1812,6 +1833,9 @@ msgstr "指定历史休息位置"
 
 msgid "Place the historical break before splitting or trimming this record."
 msgstr "请先指定历史休息的位置，再拆分或缩短这条记录。"
+
+msgid "Planned work"
+msgstr "计划工作天数"
 
 msgid "Planned work unavailable"
 msgstr "计划工作暂不可用"
@@ -2371,6 +2395,9 @@ msgstr "所选月份（Excel）"
 msgid "Selected month (PDF)"
 msgstr "所选月份（PDF）"
 
+msgid "Selected period"
+msgstr "所选期间"
+
 msgid "Selected records: {count} | Existing associations: {existing}"
 msgstr "已选择：{count} 条记录 | 已有关联：{existing} 条"
 
@@ -2397,6 +2424,9 @@ msgstr "设置"
 
 msgid "Settings are not configured."
 msgstr "设置尚未配置。"
+
+msgid "Share"
+msgstr "占比"
 
 msgid "Show"
 msgstr "显示"
@@ -2532,6 +2562,9 @@ msgstr "已安全保存"
 
 msgid "Stored securely; no request is sent when saving."
 msgstr "安全存储，保存时不会发送请求。"
+
+msgid "Summary"
+msgstr "汇总"
 
 msgid "Sun"
 msgstr "日"
