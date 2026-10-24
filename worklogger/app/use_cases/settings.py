@@ -7,17 +7,12 @@ from worklogger.app.use_cases._errors import infrastructure_failure
 from collections.abc import Callable
 from typing import Protocol
 
-from worklogger.app.commands.settings_commands import (
-    SetActiveLocalModelCommand,
-    SetSettingCommand,
-)
+from worklogger.app.commands.settings_commands import SetSettingCommand
 from worklogger.app.event_bus import EventBus, SettingsChanged
 from worklogger.app.ports import KeyStore
 from worklogger.app.queries.settings_queries import GetSettingQuery
-from worklogger.app.use_cases._errors import storage_boundary
 from worklogger.config.constants import (
     HOLIDAY_REGION_SETTING_KEY,
-    LOCAL_MODEL_ACTIVE_ID_SETTING_KEY,
     NETWORK_PROXY_PASSWORD_SETTING_KEY,
 )
 from worklogger.domain.settings.repositories import SettingsRepository
@@ -123,35 +118,6 @@ class SetSettingHandler:
         if self._event_bus is not None:
             self._event_bus.publish(
                 SettingsChanged(user_id=command.user_id, key=key, value=value)
-            )
-        return Result.success(None)
-
-
-class SetActiveLocalModelHandler:
-    def __init__(
-        self,
-        repository: SettingsRepository,
-        event_bus: EventBus | None = None,
-    ) -> None:
-        self._repository = repository
-        self._event_bus = event_bus
-
-    @storage_boundary("settings_save_failed")
-    def handle(self, command: SetActiveLocalModelCommand) -> Result[None]:
-        model_id = command.model_id.strip() if isinstance(command.model_id, str) else None
-        if model_id:
-            self._repository.set(command.user_id, LOCAL_MODEL_ACTIVE_ID_SETTING_KEY, model_id)
-            value: str | None = model_id
-        else:
-            self._repository.delete(command.user_id, LOCAL_MODEL_ACTIVE_ID_SETTING_KEY)
-            value = None
-        if self._event_bus is not None:
-            self._event_bus.publish(
-                SettingsChanged(
-                    user_id=command.user_id,
-                    key=LOCAL_MODEL_ACTIVE_ID_SETTING_KEY,
-                    value=value,
-                )
             )
         return Result.success(None)
 

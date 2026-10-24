@@ -17,10 +17,7 @@ from worklogger.app.commands.auth_commands import (
     ResetPasswordCommand,
 )
 from worklogger.app.commands.report_commands import SaveReportCommand
-from worklogger.app.commands.settings_commands import SetActiveLocalModelCommand
-from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
 from worklogger.app.queries.analytics_queries import GetAnalyticsBundleQuery
-from worklogger.app.queries.quick_log_queries import GetQuickLogsForRangeQuery
 from worklogger.app.queries.report_queries import GetReportForPeriodQuery
 from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler
 from worklogger.app.use_cases.auth import (
@@ -30,16 +27,14 @@ from worklogger.app.use_cases.auth import (
     RegisterUserHandler,
     ResetPasswordHandler,
 )
-from worklogger.app.use_cases.quick_logs import GetQuickLogsForRangeHandler
 from worklogger.app.use_cases.reports import GetReportForPeriodHandler, SaveReportHandler
-from worklogger.app.use_cases.settings import SetActiveLocalModelHandler
-from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
 from worklogger.config.constants import LOCAL_MODEL_ACTIVE_ID_SETTING_KEY
 from worklogger.domain.auth.models import LinkedIdentity
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.quicklog.models import QuickLog
 from tests.quick_log_samples import insert_previous_entry
-from worklogger.domain.worklog.models import EntryType
+from worklogger.domain.worklog.models import EntryType, WorkLog
+from worklogger.domain.worklog.rules import normalize_work_log
 from worklogger.infrastructure.database import (
     MigrationRunner,
     SQLiteConnectionFactory,
@@ -341,8 +336,8 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         user_id = registered.value.user.id
 
         work_logs = SQLiteWorkLogRepository(self.factory)
-        saved_work_log = SaveWorkLogHandler(work_logs).handle(
-            SaveWorkLogCommand(
+        saved_work_log = work_logs.save_entry(normalize_work_log(
+            WorkLog(
                 user_id=user_id,
                 day=date(2026, 4, 20),
                 start_time="2200",
@@ -351,25 +346,25 @@ class SQLiteInfrastructureTests(unittest.TestCase):
                 note="Night shift",
                 entry_type=EntryType.NORMAL.value,
             )
-        )
-        self.assertTrue(saved_work_log.ok)
+        ))
+        self.assertIsNotNone(saved_work_log.id)
         fetched = work_logs.get_for_day(user_id, date(2026, 4, 20))
         self.assertIsNotNone(fetched)
         assert fetched is not None
         self.assertTrue(fetched.overnight)
         self.assertEqual(fetched.worked_hours(), 10.0)
 
-        SaveWorkLogHandler(work_logs).handle(
-            SaveWorkLogCommand(
+        work_logs.import_many((
+            WorkLog(
                 user_id=user_id,
                 day=date(2026, 4, 21),
                 start_time=None,
                 end_time=None,
                 break_hours=0.0,
                 note="Leave",
-                entry_type=EntryType.PAID_LEAVE.value,
-            )
-        )
+                entry_type=EntryType.PAID_LEAVE,
+            ),
+        ))
         analytics = GetAnalyticsBundleHandler(work_logs).handle(
             GetAnalyticsBundleQuery(
                 user_id=user_id,
@@ -385,19 +380,11 @@ class SQLiteInfrastructureTests(unittest.TestCase):
 
         quick_logs = SQLiteQuickLogRepository(self.factory)
         insert_previous_entry(self.factory, QuickLog(None, user_id, date(2026, 4, 20), "Meeting", "09:30", "10:00"))
-        listed = GetQuickLogsForRangeHandler(quick_logs).handle(
-            GetQuickLogsForRangeQuery(
-                user_id=user_id,
-                start_day=date(2026, 4, 1),
-                end_day=date(2026, 4, 30),
-            )
-        )
-        self.assertEqual(len(listed.value or ()), 1)
+        listed = quick_logs.list_for_range(user_id, date(2026, 4, 1), date(2026, 4, 30))
+        self.assertEqual(len(listed), 1)
 
         settings = SQLiteSettingsRepository(self.factory)
-        SetActiveLocalModelHandler(settings).handle(
-            SetActiveLocalModelCommand(user_id=user_id, model_id="model-a")
-        )
+        settings.set(user_id, LOCAL_MODEL_ACTIVE_ID_SETTING_KEY, "model-a")
         self.assertEqual(settings.get(user_id, LOCAL_MODEL_ACTIVE_ID_SETTING_KEY), "model-a")
 
         reports = SQLiteReportRepository(self.factory)

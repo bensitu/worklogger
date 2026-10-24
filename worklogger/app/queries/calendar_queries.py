@@ -7,12 +7,6 @@ from datetime import date
 
 
 @dataclass(frozen=True)
-class GetCalendarEventsForDayQuery:
-    user_id: int
-    day: date
-
-
-@dataclass(frozen=True)
 class GetCalendarEventsForRangeQuery:
     user_id: int
     start_day: date

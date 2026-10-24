@@ -6,7 +6,6 @@ from dataclasses import dataclass, replace
 from datetime import date
 import json
 import logging
-from worklogger.app.commands.note_commands import SaveDailyNoteCommand
 from worklogger.app.queries.note_queries import GetDailyNoteQuery
 from worklogger.app.use_cases._errors import infrastructure_failure
 from worklogger.domain.notes.models import MAX_NOTE_CONTENT_BYTES, DailyNote, NoteHistoryFilter, NoteHistoryPage
@@ -34,36 +33,6 @@ class GetDailyNoteHandler:
             return Result.success(self._repository.list_range(user_id, start, end))
         except Exception as error:
             return Result.failure(infrastructure_failure("note_load_failed", error, logger_name=__name__))
-
-
-class SaveDailyNoteHandler:
-    def __init__(self, repository: DailyNoteRepository) -> None:
-        self._repository = repository
-
-    def handle(self, command: SaveDailyNoteCommand) -> Result[DailyNote]:
-        if not isinstance(command.content, str):
-            return Result.failure(
-                ValidationError("note_content_must_be_string", "note_content_must_be_string")
-            )
-        if len(command.content.encode("utf-8")) > MAX_NOTE_CONTENT_BYTES:
-            return Result.failure(ValidationError("note_content_too_long", "note_content_too_long"))
-        note = DailyNote(
-            user_id=command.user_id,
-            day=command.day,
-            content=command.content,
-        )
-        try:
-            if command.expected_content is None:
-                self._repository.save(note)
-            else:
-                self._repository.save(note, expected_content=command.expected_content)
-        except ValueError as exc:
-            if str(exc) == "note_conflict":
-                return Result.failure(ConflictError("note_conflict", "note_conflict"))
-            return Result.failure(ValidationError(str(exc), str(exc)))
-        except Exception as error:
-            return Result.failure(infrastructure_failure("note_save_failed", error, logger_name=__name__))
-        return Result.success(note)
 
 
 @dataclass(frozen=True)

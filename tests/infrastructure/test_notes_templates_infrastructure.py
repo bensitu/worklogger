@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
+from dataclasses import replace
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -17,14 +18,11 @@ from worklogger.infrastructure.repositories import SQLiteCalendarEventRepository
 from worklogger.infrastructure.repositories import SQLiteSettingsRepository, SQLiteQuickLogRepository
 
 from worklogger.app.commands.auth_commands import RegisterUserCommand
-from worklogger.app.commands.note_commands import SaveDailyNoteCommand
 from worklogger.app.commands.report_commands import SaveReportTemplateCommand
-from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
 from worklogger.app.queries.note_queries import GetDailyNoteQuery
 from worklogger.app.use_cases.auth import RegisterUserHandler
-from worklogger.app.use_cases.notes import GetDailyNoteHandler, SaveDailyNoteHandler
+from worklogger.app.use_cases.notes import GetDailyNoteHandler
 from worklogger.app.use_cases.reports import SaveReportTemplateHandler
-from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
 from worklogger.domain.worklog.models import EntryType
 from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.notes.models import DailyNote, NoteHistoryFilter
@@ -283,15 +281,14 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
             self.assertEqual(notes.get_for_day(user.id, note_day).content, "standalone")
             self.assertIsNone(work_logs.get_for_day(user.id, note_day))
             notes.save(DailyNote(user.id, day, "edited"), expected_content="original")
-            saved_record = SaveWorkLogHandler(work_logs).handle(SaveWorkLogCommand(
-                user.id, day, "08:00", "18:00", 1.0, "edited record", "normal", expected_note="original"))
-            self.assertTrue(saved_record.ok, saved_record.error)
+            original = work_logs.list_for_day(user.id, day)[0]
+            saved_record = work_logs.save_entry(replace(original, start_time="08:00", note="edited record"))
+            self.assertEqual(saved_record.revision, original.revision + 1)
             self.assertEqual(work_logs.get_for_day(user.id, day).start_time, "08:00")
             self.assertEqual(work_logs.get_for_day(user.id, day).note, "edited record")
             self.assertEqual(notes.get_for_day(user.id, day).content, "edited")
-            rejected = SaveDailyNoteHandler(notes).handle(SaveDailyNoteCommand(
-                user.id, day, "other editor", expected_content="original"))
-            self.assertFalse(rejected.ok)
+            with self.assertRaisesRegex(ValueError, "note_conflict"):
+                notes.save(DailyNote(user.id, day, "other editor"), expected_content="original")
             work_logs.remove(user.id, day)
             self.assertEqual(notes.get_for_day(user.id, day).content, "edited")
             exported = work_logs.list_export_rows(user.id)
@@ -315,28 +312,25 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
             assert registered.value is not None
             user_id = registered.value.user.id
             work_logs = SQLiteWorkLogRepository(factory)
-            SaveWorkLogHandler(work_logs).handle(
-                SaveWorkLogCommand(
+            work_logs.save_entry(
+                WorkLog(
                     user_id=user_id,
                     day=date(2026, 5, 14),
                     start_time="09:00",
                     end_time="18:00",
                     break_hours=1.0,
                     note="old",
-                    entry_type=EntryType.REMOTE.value,
+                    entry_type=EntryType.REMOTE,
                 )
             )
             notes = SQLiteDailyNoteRepository(factory)
 
-            saved = SaveDailyNoteHandler(notes).handle(
-                SaveDailyNoteCommand(user_id, date(2026, 5, 14), "new note")
-            )
+            notes.save(DailyNote(user_id, date(2026, 5, 14), "new note"))
             loaded = GetDailyNoteHandler(notes).handle(
                 GetDailyNoteQuery(user_id, date(2026, 5, 14))
             )
             work_log = work_logs.get_for_day(user_id, date(2026, 5, 14))
 
-        self.assertTrue(saved.ok, saved.error)
         self.assertTrue(loaded.ok, loaded.error)
         assert loaded.value is not None
         self.assertEqual(loaded.value.content, "new note")

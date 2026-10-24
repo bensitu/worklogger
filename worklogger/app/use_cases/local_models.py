@@ -18,7 +18,6 @@ from worklogger.app.commands.local_model_commands import (
 )
 from worklogger.app.queries.local_model_queries import ListLocalModelsQuery
 from worklogger.config.constants import LOCAL_MODEL_ACTIVE_ID_SETTING_KEY
-from worklogger.config.constants import LOCAL_MODEL_ENABLED_SETTING_KEY
 from worklogger.domain.local_model.models import (
     LocalModelEntry,
     LocalModelFileStatus,
@@ -58,63 +57,6 @@ class LocalModelUsageReader(Protocol):
 class LocalModelInventory:
     items: tuple[LocalModelListItem, ...]
     active_model_id: str | None = None
-
-
-@dataclass(frozen=True)
-class LocalModelRuntimeStatus:
-    enabled: bool
-    ready: bool
-    active_model_id: str | None = None
-    reason: str = ""
-
-
-class GetLocalModelRuntimeStatusHandler:
-    def __init__(
-        self,
-        *,
-        store: LocalModelStore,
-        settings: SettingsRepository,
-    ) -> None:
-        self._store = store
-        self._settings = settings
-
-    @storage_boundary("local_model_verify_failed")
-    def handle(self, query: ListLocalModelsQuery) -> Result[LocalModelRuntimeStatus]:
-        enabled = str(
-            self._settings.get(query.user_id, LOCAL_MODEL_ENABLED_SETTING_KEY, "1")
-            or ""
-        ).strip().lower() in {"1", "true", "yes", "on"}
-        active_model_id = _active_model_id(self._settings, query.user_id)
-        if not enabled:
-            return Result.success(
-                LocalModelRuntimeStatus(
-                    enabled=False,
-                    ready=False,
-                    active_model_id=active_model_id,
-                    reason="local_model_disabled",
-                )
-            )
-        if not active_model_id:
-            return Result.success(
-                LocalModelRuntimeStatus(
-                    enabled=True,
-                    ready=False,
-                    reason="local_model_not_selected",
-                )
-            )
-        status = self._store.verify_model(active_model_id)
-        if not status.ok or status.value is None:
-            return Result.failure(
-                status.error or InfrastructureError("local_model_verify_failed", "local_model_verify_failed")
-            )
-        return Result.success(
-            LocalModelRuntimeStatus(
-                enabled=True,
-                ready=status.value.verified,
-                active_model_id=active_model_id,
-                reason=status.value.reason,
-            )
-        )
 
 
 class ListLocalModelsHandler:

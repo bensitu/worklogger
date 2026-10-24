@@ -11,9 +11,7 @@ from worklogger.app.commands.report_commands import (
 from worklogger.app.ports import TemplateProvider as TemplateProvider
 from worklogger.app.queries.report_queries import (
     GetReportForPeriodQuery,
-    GetReportTemplateQuery,
     ListReportsQuery,
-    ListReportTemplatesQuery,
 )
 from worklogger.app.use_cases._errors import infrastructure_failure, storage_boundary
 from worklogger.app.use_cases.report_generation import GeneratedReport as GeneratedReport
@@ -212,33 +210,3 @@ class ResetReportTemplateHandler:
         except Exception as error:
             return Result.failure(infrastructure_failure("template_save_failed", error, logger_name=__name__))
         return Result.success(None)
-
-
-class GetReportTemplateHandler:
-    def __init__(self, repository: ReportTemplateRepository) -> None:
-        self._repository = repository
-
-    def handle(self, query: GetReportTemplateQuery) -> Result[ReportTemplate | None]:
-        try:
-            template_type = normalize_template_type(query.template_type)
-            language = normalize_template_language(query.language)
-        except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
-        try:
-            return Result.success(self._repository.get(query.user_id, language, template_type))
-        except Exception as error:
-            return Result.failure(infrastructure_failure("template_load_failed", error, logger_name=__name__))
-
-
-class ListReportTemplatesHandler:
-    def __init__(self, repository: ReportTemplateRepository) -> None:
-        self._repository = repository
-
-    def handle(self, query: ListReportTemplatesQuery) -> Result[tuple[ReportTemplate, ...]]:
-        try:
-            language = normalize_template_language(query.language) if query.language is not None else None
-            return Result.success(self._repository.list_for_user(query.user_id, language))
-        except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
-        except Exception as error:
-            return Result.failure(infrastructure_failure("template_load_failed", error, logger_name=__name__))

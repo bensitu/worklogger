@@ -20,16 +20,3 @@ class ListReportsQuery:
     report_type: str
     period_start: date | None = None
     period_end: date | None = None
-
-
-@dataclass(frozen=True)
-class GetReportTemplateQuery:
-    user_id: int
-    language: str
-    template_type: str
-
-
-@dataclass(frozen=True)
-class ListReportTemplatesQuery:
-    user_id: int
-    language: str | None = None

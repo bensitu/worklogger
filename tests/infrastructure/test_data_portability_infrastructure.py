@@ -13,12 +13,10 @@ from unittest.mock import patch
 
 from worklogger.app.commands.auth_commands import RegisterUserCommand
 from worklogger.app.commands.data_portability_commands import ImportWorkLogsCsvCommand
-from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
 from worklogger.app.use_cases.auth import RegisterUserHandler
 from worklogger.app.use_cases.data_portability import ImportWorkLogsCsvHandler
-from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
 from worklogger.domain.worklog.models import WorkLog, EntryType, WorkMode
-from worklogger.domain.worklog.rules import shift_datetimes
+from worklogger.domain.worklog.rules import normalize_work_log, shift_datetimes
 from worklogger.infrastructure.backup import SQLiteBackupService
 from worklogger.infrastructure.backup import sqlite_backup
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
@@ -187,18 +185,16 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         break_hours: float = 1.0,
         entry_type: str = EntryType.NORMAL.value,
     ) -> None:
-        saved = SaveWorkLogHandler(SQLiteWorkLogRepository(self.factory)).handle(
-            SaveWorkLogCommand(
-                user_id=user_id,
-                day=day,
-                start_time=start_time,
-                end_time=end_time,
-                break_hours=break_hours,
-                note=note,
-                entry_type=entry_type,
-            )
-        )
-        self.assertTrue(saved.ok, saved.error)
+        record = normalize_work_log(WorkLog(
+            user_id=user_id,
+            day=day,
+            start_time=start_time,
+            end_time=end_time,
+            break_hours=break_hours,
+            note=note,
+            entry_type=entry_type,
+        ))
+        SQLiteWorkLogRepository(self.factory).import_many((record,), overwrite=True)
 
     def test_sqlite_backup_and_restore_round_trip_preserves_backup_snapshot(self) -> None:
         user_id = self.register_user("alice")

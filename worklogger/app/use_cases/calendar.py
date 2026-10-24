@@ -12,7 +12,6 @@ from collections.abc import Callable
 from worklogger.app.commands.calendar_commands import ImportCalendarEventsCommand
 from worklogger.app.use_cases._errors import storage_boundary
 from worklogger.app.queries.calendar_queries import (
-    GetCalendarEventsForDayQuery,
     GetCalendarEventsForRangeQuery,
     GetHolidaysForRangeQuery,
 )
@@ -34,20 +33,6 @@ class CalendarEventImporter(Protocol):
         is_cancelled: Callable[[], bool] | None = None,
     ) -> Result[tuple[CalendarEvent, ...]]:
         ...
-
-
-class GetCalendarEventsForDayHandler:
-    def __init__(self, repository: CalendarEventRepository) -> None:
-        self._repository = repository
-
-    def handle(
-        self,
-        query: GetCalendarEventsForDayQuery,
-    ) -> Result[tuple[CalendarEvent, ...]]:
-        try:
-            return Result.success(self._repository.list_for_day(query.user_id, query.day))
-        except Exception as error:
-            return Result.failure(infrastructure_failure('calendar_load_failed', error, logger_name=__name__))
 
 
 class GetCalendarEventsForRangeHandler:

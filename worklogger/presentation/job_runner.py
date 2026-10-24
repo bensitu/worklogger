@@ -169,5 +169,3 @@ def _run_job(job: JobCallable[object], token: CancellationToken) -> Result[objec
     if isinstance(value, Result):
         return value
     return Result.success(value)
-
-

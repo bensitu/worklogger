@@ -5,19 +5,15 @@ import unittest
 
 from PySide6.QtGui import QColor, QPalette
 
-from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
 from worklogger.app.queries.work_log_queries import GetMonthRecordsQuery
 from worklogger.app.use_cases.calendar import GetCalendarEventsForRangeHandler
-from worklogger.app.use_cases.work_logs import (
-    GetMonthRecordsHandler,
-    GetWorkLogHandler,
-    SaveWorkLogHandler,
-)
+from worklogger.app.use_cases.work_logs import GetMonthRecordsHandler
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.calendar.repositories import CalendarEventRepository
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog, EntryType, CustomEntryType
+from worklogger.domain.worklog.rules import normalize_work_log
 from worklogger.presentation.theme import ThemeEngine, normalize_hex_color
 from worklogger.presentation.viewmodels import (
     CalendarDisplayOptions,
@@ -102,8 +98,6 @@ class PresentationViewModelTests(unittest.TestCase):
     def setUp(self) -> None:
         self.work_logs = MemoryWorkLogRepository()
         self.month_handler = GetMonthRecordsHandler(self.work_logs)
-        self.get_handler = GetWorkLogHandler(self.work_logs)
-        self.save_handler = SaveWorkLogHandler(self.work_logs)
 
     def save_work_log(
         self,
@@ -115,20 +109,19 @@ class PresentationViewModelTests(unittest.TestCase):
         note: str,
         entry_type: EntryType,
     ) -> WorkLog:
-        result = self.save_handler.handle(
-            SaveWorkLogCommand(
+        record = normalize_work_log(
+            WorkLog(
                 user_id=1,
                 day=day,
                 start_time=start_time,
                 end_time=end_time,
                 break_hours=break_hours,
                 note=note,
-                entry_type=entry_type.value,
+                entry_type=entry_type,
             )
         )
-        self.assertTrue(result.ok, result.error)
-        assert result.value is not None
-        return result.value
+        self.work_logs.save(record)
+        return record
 
     def test_calendar_viewmodel_builds_month_cells_and_markers(self) -> None:
         self.save_work_log(

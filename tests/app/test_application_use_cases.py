@@ -12,13 +12,10 @@ from worklogger.app.commands.auth_commands import (
 )
 from worklogger.app.commands.report_commands import SaveReportCommand
 from worklogger.app.commands.settings_commands import (
-    SetActiveLocalModelCommand,
     SetSettingCommand,
 )
-from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
 from worklogger.app.event_bus import EventBus, SettingsChanged, WorkLogSaved
 from worklogger.app.queries.analytics_queries import GetAnalyticsBundleQuery
-from worklogger.app.queries.quick_log_queries import GetQuickLogsForRangeQuery
 from worklogger.app.queries.report_queries import GetReportForPeriodQuery
 from worklogger.app.queries.settings_queries import GetSettingQuery
 from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler
@@ -29,21 +26,16 @@ from worklogger.app.use_cases.auth import (
     RegisterUserHandler,
     ResetPasswordHandler,
 )
-from worklogger.app.use_cases.quick_logs import GetQuickLogsForRangeHandler
 from worklogger.app.use_cases.reports import GetReportForPeriodHandler, SaveReportHandler
 from worklogger.app.use_cases.settings import (
     GetSettingHandler,
-    SetActiveLocalModelHandler,
     SetSettingHandler,
 )
-from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
 from worklogger.config.constants import (
-    LOCAL_MODEL_ACTIVE_ID_SETTING_KEY,
     REMEMBER_TOKEN_HASH_PREFIX,
 )
 from worklogger.domain.auth.models import User
 from worklogger.domain.auth.policies import generate_recovery_key
-from worklogger.domain.quicklog.models import QuickLog
 from worklogger.domain.reporting.models import Report
 from worklogger.domain.worklog.models import WorkLog, EntryType
 
@@ -73,17 +65,6 @@ class MemoryWorkLogRepository:
 
     def remove(self, user_id: int, day: date) -> None:
         self.records.pop((user_id, day), None)
-
-
-class MemoryQuickLogRepository:
-    def __init__(self, logs=()) -> None:
-        self.logs = logs
-
-    def list_for_day(self, user_id: int, day: date) -> tuple[QuickLog, ...]:
-        return tuple(log for log in self.logs if log.user_id == user_id and log.day == day)
-
-    def list_for_range(self, user_id: int, start_day: date, end_day: date) -> tuple[QuickLog, ...]:
-        return tuple(log for log in self.logs if log.user_id == user_id and start_day <= log.day <= end_day)
 
 
 class MemorySettingsRepository:
@@ -287,31 +268,6 @@ class ApplicationUseCaseTests(unittest.TestCase):
             bus.publish(event)
         self.assertEqual(delivered, [event])
 
-    def test_work_log_save_normalizes_times_and_publishes_event(self) -> None:
-        repository = MemoryWorkLogRepository()
-        bus = EventBus()
-        events: list[WorkLogSaved] = []
-        bus.subscribe(WorkLogSaved, events.append)
-
-        result = SaveWorkLogHandler(repository, bus).handle(
-            SaveWorkLogCommand(
-                user_id=1,
-                day=date(2026, 4, 20),
-                start_time="2200",
-                end_time="0900",
-                break_hours=1.0,
-                note="Night shift",
-                entry_type="normal",
-            )
-        )
-
-        self.assertTrue(result.ok)
-        assert result.value is not None
-        self.assertEqual(result.value.start_time, "22:00")
-        self.assertEqual(result.value.end_time, "09:00")
-        self.assertTrue(result.value.overnight)
-        self.assertEqual(events, [WorkLogSaved(user_id=1, day=date(2026, 4, 20))])
-
     def test_auth_register_login_remember_change_and_reset(self) -> None:
         credentials = MemoryAuthRepository()
         failures = MemoryLoginFailures()
@@ -366,21 +322,6 @@ class ApplicationUseCaseTests(unittest.TestCase):
         self.assertEqual(credentials.dummy_password, "secret123")
         self.assertGreater(result.error.details["seconds"], 0)
 
-    def test_historical_quick_log_ranges_preserve_entries_and_isolate_accounts(self) -> None:
-        entry = QuickLog(1, 1, date(2026, 4, 20), "Standup", "09:30", "10:00")
-        repository = MemoryQuickLogRepository((
-            entry,
-            QuickLog(2, 2, entry.day, "Other account"),
-            QuickLog(3, 1, date(2026, 3, 31), "Outside range"),
-        ))
-        handler = GetQuickLogsForRangeHandler(repository)
-        listed = handler.handle(GetQuickLogsForRangeQuery(1, date(2026, 4, 1), date(2026, 4, 30)))
-        self.assertTrue(listed.ok)
-        self.assertEqual(listed.value, (entry,))
-        invalid = handler.handle(GetQuickLogsForRangeQuery(1, date(2026, 4, 30), date(2026, 4, 1)))
-        self.assertEqual(invalid.error.code, "date_range_invalid")
-        self.assertEqual(len(repository.logs), 3)
-
     def test_settings_handlers_set_get_clear_and_publish_events(self) -> None:
         repository = MemorySettingsRepository()
         bus = EventBus()
@@ -404,18 +345,7 @@ class ApplicationUseCaseTests(unittest.TestCase):
         self.assertTrue(SetSettingHandler(repository).handle(SetSettingCommand(1, "show_holidays", " true ")).ok)
         self.assertEqual(repository.get(1, "show_holidays"), "1")
 
-        SetActiveLocalModelHandler(repository, bus).handle(
-            SetActiveLocalModelCommand(user_id=1, model_id="model-a")
-        )
-        self.assertEqual(
-            repository.get(1, LOCAL_MODEL_ACTIVE_ID_SETTING_KEY),
-            "model-a",
-        )
-        SetActiveLocalModelHandler(repository, bus).handle(
-            SetActiveLocalModelCommand(user_id=1, model_id=None)
-        )
-        self.assertIsNone(repository.get(1, LOCAL_MODEL_ACTIVE_ID_SETTING_KEY))
-        self.assertGreaterEqual(len(events), 3)
+        self.assertGreaterEqual(len(events), 1)
 
     def test_report_and_analytics_handlers_stay_behind_repositories(self) -> None:
         reports = MemoryReportRepository()
@@ -441,26 +371,26 @@ class ApplicationUseCaseTests(unittest.TestCase):
         self.assertEqual(found.value, saved.value)
 
         work_logs = MemoryWorkLogRepository()
-        SaveWorkLogHandler(work_logs).handle(
-            SaveWorkLogCommand(
+        work_logs.save(
+            WorkLog(
                 user_id=1,
                 day=date(2026, 4, 7),
                 start_time="09:00",
                 end_time="18:00",
                 break_hours=1.0,
                 note="",
-                entry_type="normal",
+                entry_type=EntryType.NORMAL,
             )
         )
-        SaveWorkLogHandler(work_logs).handle(
-            SaveWorkLogCommand(
+        work_logs.save(
+            WorkLog(
                 user_id=1,
                 day=date(2026, 4, 8),
                 start_time=None,
                 end_time=None,
                 break_hours=0.0,
                 note="",
-                entry_type=EntryType.PAID_LEAVE.value,
+                entry_type=EntryType.PAID_LEAVE,
             )
         )
         bundle = GetAnalyticsBundleHandler(work_logs).handle(

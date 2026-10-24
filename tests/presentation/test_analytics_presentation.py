@@ -13,9 +13,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtWidgets import QApplication
 from PySide6.QtPdf import QPdfDocument
 
-from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
 from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler, GetAnalyticsDashboardHandler
-from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
 from worklogger.domain.worklog.models import CustomEntryType, WorkLog, EntryType, WorkMode
 from worklogger.domain.worklog.rules import aggregate_days
 from worklogger.domain.analytics.models import ChartDataBundle
@@ -247,27 +245,26 @@ class AnalyticsPresentationTests(unittest.TestCase):
 
     def test_analytics_dialog_loads_chart_and_exports_csv_pdf(self) -> None:
         repository = MemoryWorkLogRepository()
-        save = SaveWorkLogHandler(repository)
-        save.handle(
-            SaveWorkLogCommand(
+        repository.save(
+            WorkLog(
                 user_id=1,
                 day=date(2026, 5, 4),
                 start_time="09:00",
                 end_time="18:00",
                 break_hours=1.0,
                 note="Feature work",
-                entry_type=EntryType.NORMAL.value,
+                entry_type=EntryType.NORMAL,
             )
         )
-        save.handle(
-            SaveWorkLogCommand(
+        repository.save(
+            WorkLog(
                 user_id=1,
                 day=date(2026, 5, 5),
                 start_time=None,
                 end_time=None,
                 break_hours=0.0,
                 note="Leave",
-                entry_type=EntryType.PAID_LEAVE.value,
+                entry_type=EntryType.PAID_LEAVE,
             )
         )
         view_model = AnalyticsViewModel(

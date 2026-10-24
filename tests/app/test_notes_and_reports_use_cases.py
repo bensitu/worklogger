@@ -5,20 +5,16 @@ import unittest
 from unittest.mock import patch
 
 from worklogger.app.commands.ai_commands import RewriteTextCommand
-from worklogger.app.commands.note_commands import SaveDailyNoteCommand
 from worklogger.app.commands.report_commands import (
     GenerateReportCommand,
     ResetReportTemplateCommand,
     SaveReportTemplateCommand,
 )
 from worklogger.app.queries.note_queries import GetDailyNoteQuery
-from worklogger.app.queries.report_queries import GetReportTemplateQuery, ListReportTemplatesQuery
 from worklogger.app.use_cases.ai import RewriteTextHandler
-from worklogger.app.use_cases.notes import GetDailyNoteHandler, SaveDailyNoteHandler
+from worklogger.app.use_cases.notes import DailyNotesService, GetDailyNoteHandler
 from worklogger.app.use_cases.reports import (
     GenerateReportHandler,
-    GetReportTemplateHandler,
-    ListReportTemplatesHandler,
     ResetReportTemplateHandler,
     SaveReportTemplateHandler,
 )
@@ -39,7 +35,7 @@ class MemoryDailyNoteRepository:
     def get_for_day(self, user_id: int, day: date) -> DailyNote:
         return self.notes.get((user_id, day), DailyNote(user_id, day, ""))
 
-    def save(self, note: DailyNote, *, expected_content: str | None = None) -> None:
+    def save(self, note: DailyNote, *, expected_content: str | None = None, **options) -> None:
         self.notes[(note.user_id, note.day)] = note
 
 
@@ -245,11 +241,12 @@ class NotesReportsUseCaseTests(unittest.TestCase):
         self.assertNotIn("Quick Logs", content)
         self.assertEqual(values["total_hours"], "8.0")
 
-    def test_daily_note_handlers_persist_note_content(self) -> None:
+    def test_daily_note_service_persists_note_content(self) -> None:
         repository = MemoryDailyNoteRepository()
-        saved = SaveDailyNoteHandler(repository).handle(
-            SaveDailyNoteCommand(1, date(2026, 5, 14), "Daily note")
-        )
+        from unittest.mock import Mock
+        from worklogger.domain.notes.preferences import NoteSharing
+        service = DailyNotesService(user_id=1, notes=repository, settings=Mock(), previous_entries=MemoryQuickLogRepository())
+        saved = service.save(date(2026, 5, 14), "Daily note", "", NoteSharing())
 
         self.assertTrue(saved.ok, saved.error)
         loaded = GetDailyNoteHandler(repository).handle(
@@ -370,16 +367,8 @@ class NotesReportsUseCaseTests(unittest.TestCase):
                 content="# Daily {{date}}",
             )
         )
-        listed = ListReportTemplatesHandler(repository).handle(
-            ListReportTemplatesQuery(user_id=1, language="en_US")
-        )
-        loaded = GetReportTemplateHandler(repository).handle(
-            GetReportTemplateQuery(
-                user_id=1,
-                language="en_US",
-                template_type="daily",
-            )
-        )
+        listed = repository.list_for_user(1, "en_US")
+        loaded = repository.get(1, "en_US", "daily")
         reset = ResetReportTemplateHandler(repository).handle(
             ResetReportTemplateCommand(
                 user_id=1,
@@ -387,23 +376,14 @@ class NotesReportsUseCaseTests(unittest.TestCase):
                 template_type="daily",
             )
         )
-        after_reset = GetReportTemplateHandler(repository).handle(
-            GetReportTemplateQuery(
-                user_id=1,
-                language="en_US",
-                template_type="daily",
-            )
-        )
+        after_reset = repository.get(1, "en_US", "daily")
 
         self.assertTrue(save.ok, save.error)
-        self.assertTrue(listed.ok, listed.error)
-        self.assertEqual(len(listed.value or ()), 1)
-        self.assertTrue(loaded.ok, loaded.error)
-        assert loaded.value is not None
-        self.assertEqual(loaded.value.content, "# Daily {{date}}")
+        self.assertEqual(len(listed), 1)
+        self.assertIsNotNone(loaded)
+        self.assertEqual(loaded.content, "# Daily {{date}}")
         self.assertTrue(reset.ok, reset.error)
-        self.assertTrue(after_reset.ok, after_reset.error)
-        self.assertIsNone(after_reset.value)
+        self.assertIsNone(after_reset)
 
     def test_rewrite_handler_uses_gateway_and_handles_cancelled_requests(self) -> None:
         gateway = FakeGateway("Clean report")

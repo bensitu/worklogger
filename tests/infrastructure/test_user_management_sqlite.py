@@ -11,7 +11,6 @@ from worklogger.app.commands.auth_commands import (
     LoginCommand,
     RegisterUserCommand,
 )
-from worklogger.app.commands.work_log_commands import SaveWorkLogCommand
 from worklogger.app.use_cases.auth import (
     AdminResetPasswordHandler,
     CreateManagedUserHandler,
@@ -19,8 +18,7 @@ from worklogger.app.use_cases.auth import (
     LoginHandler,
     RegisterUserHandler,
 )
-from worklogger.app.use_cases.work_logs import SaveWorkLogHandler
-from worklogger.domain.worklog.models import EntryType
+from worklogger.domain.worklog.models import EntryType, WorkLog
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
 from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteWorkLogRepository
 from worklogger.infrastructure.security import PBKDF2PasswordHasher
@@ -130,18 +128,18 @@ class SQLiteUserManagementTests(unittest.TestCase):
         self.assertEqual(reset.value, "secret789")
 
         work_logs = SQLiteWorkLogRepository(self.factory)
-        saved = SaveWorkLogHandler(work_logs).handle(
-            SaveWorkLogCommand(
+        saved = work_logs.save_entry(
+            WorkLog(
                 user_id=user_id,
                 day=date(2026, 5, 14),
                 start_time="09:00",
                 end_time="18:00",
                 break_hours=1.0,
                 note="",
-                entry_type=EntryType.NORMAL.value,
+                entry_type=EntryType.NORMAL,
             )
         )
-        self.assertTrue(saved.ok, saved.error)
+        self.assertIsNotNone(saved.id)
         self.assertEqual(len(work_logs.list_all(user_id)), 1)
 
         deleted = DeleteManagedUserHandler(self.auth).handle(

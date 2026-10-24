@@ -7,14 +7,7 @@ from datetime import date
 
 
 @dataclass(frozen=True)
-class GetQuickLogsForDayQuery:
-    user_id: int
-    day: date
-
-
-@dataclass(frozen=True)
 class GetQuickLogsForRangeQuery:
     user_id: int
     start_day: date
     end_day: date
-

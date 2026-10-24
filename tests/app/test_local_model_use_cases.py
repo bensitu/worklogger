@@ -16,7 +16,6 @@ from worklogger.app.queries.local_model_queries import ListLocalModelsQuery
 from worklogger.app.use_cases.local_models import (
     DeleteLocalModelHandler,
     DownloadLocalModelHandler,
-    GetLocalModelRuntimeStatusHandler,
     ImportLocalModelHandler,
     ListLocalModelsHandler,
     SelectLocalModelHandler,
@@ -24,7 +23,6 @@ from worklogger.app.use_cases.local_models import (
 )
 from worklogger.config.constants import (
     LOCAL_MODEL_ACTIVE_ID_SETTING_KEY,
-    LOCAL_MODEL_ENABLED_SETTING_KEY,
 )
 from worklogger.domain.local_model.models import LocalModelEntry, LocalModelFileStatus
 from worklogger.domain.shared.errors import CancellationError
@@ -183,22 +181,6 @@ class LocalModelUseCaseTests(unittest.TestCase):
             rejected = SelectLocalModelHandler(store=store, settings=settings).handle(SelectLocalModelCommand(2, "model-a"))
         self.assertFalse(rejected.ok)
         self.assertIsNone(settings.get(2, LOCAL_MODEL_ACTIVE_ID_SETTING_KEY))
-
-    def test_runtime_status_respects_local_model_switch(self) -> None:
-        settings = MemorySettings()
-        store = MemoryStore()
-        settings.set(1, LOCAL_MODEL_ACTIVE_ID_SETTING_KEY, "model-a")
-        settings.set(1, LOCAL_MODEL_ENABLED_SETTING_KEY, "0")
-
-        result = GetLocalModelRuntimeStatusHandler(
-            store=store,
-            settings=settings,
-        ).handle(ListLocalModelsQuery(1))
-
-        self.assertTrue(result.ok)
-        assert result.value is not None
-        self.assertFalse(result.value.ready)
-        self.assertEqual(result.value.reason, "local_model_disabled")
 
 
 if __name__ == "__main__":
